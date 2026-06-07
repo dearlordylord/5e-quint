@@ -31,6 +31,7 @@ import {
   castFindFamiliar,
   deliverTouchSpellThroughFindFamiliar,
   discoverBattleActs,
+  findFamiliarCompanionForOwner,
   findFamiliarFormEligibilityForSpell,
   initiativeScore,
   reappearTemporarilyDismissedFindFamiliar,
@@ -38,11 +39,11 @@ import {
   temporarilyDismissFindFamiliar,
   type BattleState,
   type FindFamiliarFormEligibility,
-  type FindFamiliarState,
+  type BattleCompanionState,
 } from "./index.ts";
 
 type FindFamiliarSelectedIdentityProjection = {
-  readonly familiarStatus: FindFamiliarState["status"] | "none";
+  readonly familiarStatus: BattleCompanionState["status"] | "none";
   readonly formId: string;
   readonly familiarCombatantPresent: boolean;
   readonly replacementCombatantPresent: boolean;
@@ -155,7 +156,7 @@ function castFindFamiliarProjection(): FindFamiliarSelectedIdentityProjection {
   if (result.tag !== "resolved") {
     throw new Error(`Expected Find Familiar cast, got ${result.tag}.`);
   }
-  return projectFindFamiliarState(result.state, "cast");
+  return projectBattleCompanionState(result.state, "cast");
 }
 
 function recastFindFamiliarReplacementProjection(): FindFamiliarSelectedIdentityProjection {
@@ -167,7 +168,7 @@ function recastFindFamiliarReplacementProjection(): FindFamiliarSelectedIdentity
   if (second.tag !== "resolved") {
     throw new Error(`Expected Find Familiar recast, got ${second.tag}.`);
   }
-  return projectFindFamiliarState(second.state, "recast");
+  return projectBattleCompanionState(second.state, "recast");
 }
 
 function dismissAndReappearFindFamiliarProjection(): FindFamiliarSelectedIdentityProjection {
@@ -189,7 +190,6 @@ function dismissAndReappearFindFamiliarProjection(): FindFamiliarSelectedIdentit
     state: withFreshMagicAction(dismissed.state),
     casterId,
     catalog: statBlockCatalog,
-    eligibility: familiarEligibility,
     familiarId,
     initiative: initiativeScore(14),
     placement: { kind: "unoccupiedSpaceWithin30Feet" },
@@ -199,7 +199,10 @@ function dismissAndReappearFindFamiliarProjection(): FindFamiliarSelectedIdentit
       `Expected Find Familiar reappearance, got ${reappeared.tag}.`,
     );
   }
-  return projectFindFamiliarState(reappeared.state, "dismissedAndReappeared");
+  return projectBattleCompanionState(
+    reappeared.state,
+    "dismissedAndReappeared",
+  );
 }
 
 function deliverTouchSpellThroughFindFamiliarProjection(): FindFamiliarSelectedIdentityProjection {
@@ -221,8 +224,9 @@ function deliverTouchSpellThroughFindFamiliarProjection(): FindFamiliarSelectedI
     value: targetId,
     spatialFacts: [
       {
-        kind: "spellTarget" as const,
-        casterId,
+        kind: "findFamiliarTouchSpellTarget" as const,
+        ownerId: casterId,
+        familiarId,
         targetId,
         spellId: cureWoundsUnitId,
       },
@@ -265,7 +269,7 @@ function deliverTouchSpellThroughFindFamiliarProjection(): FindFamiliarSelectedI
       `Expected Find Familiar touch delivery, got ${delivered.tag}.`,
     );
   }
-  return projectFindFamiliarState(delivered.state, "touchDelivered");
+  return projectBattleCompanionState(delivered.state, "touchDelivered");
 }
 
 function startSpellcasterFixtureBattle(): BattleState {
@@ -384,15 +388,15 @@ function expectedFindFamiliarProjection(
   };
 }
 
-function projectFindFamiliarState(
+function projectBattleCompanionState(
   state: BattleState,
   lastResult: FindFamiliarSelectedIdentityProjection["lastResult"],
 ): FindFamiliarSelectedIdentityProjection {
-  const familiar = state.findFamiliars.get(casterId);
+  const familiar = findFamiliarCompanionForOwner(state, casterId);
   return {
     familiarStatus: familiar?.status ?? "none",
     formId:
-      familiar === undefined
+      familiar === null
         ? "none"
         : formSelectionProjection(familiar.formSelection),
     familiarCombatantPresent: state.combatants.has(familiarId),
@@ -412,7 +416,7 @@ function projectFindFamiliarState(
 }
 
 function formSelectionProjection(
-  selection: FindFamiliarState["formSelection"],
+  selection: BattleCompanionState["formSelection"],
 ): string {
   if (selection.tag === "challengeRatingZeroBeast")
     return selection.statBlockId;

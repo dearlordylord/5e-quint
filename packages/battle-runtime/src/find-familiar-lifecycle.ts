@@ -1,9 +1,17 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.find-familiar-lifecycle
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.FIND_FAMILIAR_COMPANION_LIFECYCLE
 import { spendAction } from "@dnd/shared-algebras/action-economy-algebra";
-import { Hp, type PositiveInteger } from "@dnd/shared/types";
+import {
+  Hp,
+  type PositiveInteger,
+  type SpellSlotLevel,
+} from "@dnd/shared/types";
 import type { StatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog";
-import type { SpellRecord, StatBlockRecord } from "@dnd/surface/surface/types";
+import type {
+  SpellRecord,
+  StatBlockRecord,
+  UnitRecord,
+} from "@dnd/surface/surface/types";
 import * as Either from "effect/Either";
 import * as Option from "effect/Option";
 
@@ -14,6 +22,10 @@ import type {
   BattleStateInitIssue,
 } from "./battle-reducer.ts";
 import { effectiveCharacterBattlePreparedSpells } from "./character-battle-resources.ts";
+import {
+  resourceHasUsesRemaining,
+  spendCharacterResourceUse,
+} from "./character-battle-resources.ts";
 import { currentActorId } from "./battle-reducer/creature-state-leaves.ts";
 import { snapshotBattle } from "./battle-reducer/dispatcher.ts";
 import {
@@ -22,13 +34,25 @@ import {
   removeBattleCombatants,
 } from "./battle-reducer/api-lifecycle.ts";
 import { battleStateInitIssue } from "./battle-reducer/domain-helpers.ts";
-import type {
-  BattleTablePositionId,
-  CombatantId,
-  InitiativeScore,
-} from "./identity.ts";
+import type { CombatantId, InitiativeScore } from "./identity.ts";
 import { spellId } from "./identity.ts";
 import { findPresentFamiliarById } from "./find-familiar-state.ts";
+import {
+  companionEntries,
+  findCompanionByOwner,
+  findCompanionEntryByOwner,
+  setCompanion,
+  type BattleCompanionAbsentState,
+  type BattleCompanionDisappearedAtZeroHitPointsState,
+  type BattleCompanionHitPoints,
+  type BattleCompanionPlacement,
+  type BattleCompanionPresentState,
+  type BattleCompanionSnapshot,
+  type BattleCompanionSelectedForm,
+  type BattleCompanionState,
+  type BattleCompanionStoredForm,
+  type BattleCompanionTemporarilyDismissedState,
+} from "./companion-state.ts";
 import type {
   FindFamiliarCreatureTypeOverride,
   FindFamiliarCreatureTypeOverrideChoice,
@@ -42,8 +66,10 @@ import {
   findFamiliarFormEligibilityForSpell,
   resolvePactOfTheChainFindFamiliarForm,
   resolveFindFamiliarForm,
-  resolveFindFamiliarSelectedForm,
 } from "./find-familiar-forms.ts";
+import { expendSpellSlot } from "./battle-reducer/spell-effects.ts";
+import { markSpellSlotExpendedThisTurn } from "./battle-reducer/spell-turn-resources.ts";
+import { DRUID_WILD_COMPANION_SPELL_CAST_SUPPORT_PROFILE } from "./unit-feature-support.ts";
 
 // Required SRD source-record id: Spells/Descriptions-E-L.md:313 says the
 // familiar leaves carried objects behind when it disappears; the dropped-object
@@ -52,69 +78,25 @@ const FIND_FAMILIAR_DROPPED_OBJECT_SOURCE_SPELL_ID = spellId(
   "find_familiar" satisfies SpellRecord["id"],
 );
 
-export type FindFamiliarPlacement =
-  | {
-      readonly kind: "unoccupiedSpaceWithinSpellRange";
-      readonly positionId?: BattleTablePositionId;
-    }
-  | {
-      readonly kind: "unoccupiedSpaceWithin30Feet";
-      readonly positionId?: BattleTablePositionId;
-    };
-
-type FindFamiliarStoredForm =
-  | {
-      readonly formAccess: "findFamiliar";
-      readonly formSelection: FindFamiliarFormSelection;
-    }
-  | {
-      readonly formAccess: "pactOfTheChain";
-      readonly formSelection: PactOfTheChainFindFamiliarFormSelection;
-    };
-
-type FindFamiliarHitPoints = {
-  readonly currentHp: FindFamiliarCurrentHitPoints;
-  readonly tempHp: Hp;
-};
+export type FindFamiliarPlacement = BattleCompanionPlacement;
+type FindFamiliarStoredForm = BattleCompanionStoredForm;
+type FindFamiliarSelectedForm = BattleCompanionSelectedForm;
+type FindFamiliarHitPoints = BattleCompanionHitPoints;
 type FindFamiliarCurrentHitPoints = Hp & PositiveInteger;
 
-export type FindFamiliarPresentState = FindFamiliarStoredForm & {
-  readonly status: "present";
-  readonly familiarId: CombatantId;
-  readonly creatureTypeOverride: FindFamiliarCreatureTypeOverride;
-  readonly placement: FindFamiliarPlacement;
-};
-
-export type FindFamiliarTemporarilyDismissedState = FindFamiliarStoredForm & {
-  readonly status: "temporarilyDismissed";
-  readonly creatureTypeOverride: FindFamiliarCreatureTypeOverride;
-  readonly hitPoints: FindFamiliarHitPoints;
-};
-
+export type FindFamiliarPresentState = BattleCompanionPresentState;
+export type FindFamiliarTemporarilyDismissedState =
+  BattleCompanionTemporarilyDismissedState;
 export type FindFamiliarDisappearedAtZeroHitPointsState =
-  FindFamiliarStoredForm & {
-    readonly status: "disappearedAtZeroHitPoints";
-    readonly creatureTypeOverride: FindFamiliarCreatureTypeOverride;
-  };
-
-export type FindFamiliarAbsentState =
-  | FindFamiliarTemporarilyDismissedState
-  | FindFamiliarDisappearedAtZeroHitPointsState;
-
-export type FindFamiliarState =
-  | FindFamiliarPresentState
-  | FindFamiliarAbsentState;
+  BattleCompanionDisappearedAtZeroHitPointsState;
+export type FindFamiliarAbsentState = BattleCompanionAbsentState;
+export type FindFamiliarState = BattleCompanionState;
 
 type FindFamiliarCombatantRemoval =
   | { readonly tag: "resolved"; readonly state: BattleState }
   | Extract<BattleResolutionResult, { readonly tag: "invalid" }>;
 
-export type FindFamiliarSnapshot =
-  | (FindFamiliarPresentState & {
-      readonly ownerId: CombatantId;
-      readonly initiative: InitiativeScore;
-    })
-  | (FindFamiliarAbsentState & { readonly ownerId: CombatantId });
+export type FindFamiliarSnapshot = BattleCompanionSnapshot;
 
 export type FindFamiliarOwnerInput = {
   readonly state: BattleState;
@@ -128,11 +110,11 @@ export type FindFamiliarLifecycleInputBase = FindFamiliarOwnerInput & {
 export type FindFamiliarCastInput = {
   readonly state: BattleState;
   readonly casterId: CombatantId;
+  readonly familiarId: CombatantId;
   readonly catalog: StatBlockCatalog;
   readonly eligibility: FindFamiliarFormEligibility;
   readonly selection: FindFamiliarFormSelection;
   readonly creatureTypeOverrideChoiceId: FindFamiliarCreatureTypeOverrideChoice["optionId"];
-  readonly familiarId: CombatantId;
   readonly initiative: InitiativeScore;
   readonly placement: Extract<
     FindFamiliarPlacement,
@@ -140,13 +122,32 @@ export type FindFamiliarCastInput = {
   >;
 };
 
+export type WildCompanionSpend =
+  | { readonly kind: "spellSlot"; readonly spellLevel: SpellSlotLevel }
+  | {
+      readonly kind: "wildShapeUse";
+      readonly resourceUnitId: "druid_wild_shape";
+    };
+
+export type WildCompanionCastInput = Omit<
+  FindFamiliarCastInput,
+  "creatureTypeOverrideChoiceId" | "eligibility"
+> & {
+  readonly findFamiliarSpell: SpellRecord;
+  readonly spend: WildCompanionSpend;
+};
+
+export type CompanionLongRestDisappearanceTrigger =
+  | { readonly tag: "ownerFinishedLongRest"; readonly ownerId: CombatantId }
+  | { readonly tag: "allCompanionOwnersFinishedLongRest" };
+
 export type FindFamiliarBattleAdmissionInput = {
   readonly state: BattleState;
   readonly casterId: CombatantId;
+  readonly familiarId: CombatantId;
   readonly catalog: StatBlockCatalog;
   readonly selection: PactOfTheChainFindFamiliarFormSelection;
   readonly creatureTypeOverrideChoiceId: FindFamiliarCreatureTypeOverrideChoice["optionId"];
-  readonly familiarId: CombatantId;
   readonly initiative: InitiativeScore;
   readonly currentHp?: Hp;
   readonly tempHp?: Hp;
@@ -161,9 +162,6 @@ export type FindFamiliarReappearanceInput = {
   readonly state: BattleState;
   readonly casterId: CombatantId;
   readonly catalog: StatBlockCatalog;
-  readonly eligibility:
-    | FindFamiliarFormEligibility
-    | PactOfTheChainFindFamiliarFormEligibility;
   readonly familiarId: CombatantId;
   readonly initiative: InitiativeScore;
   readonly placement: Extract<
@@ -182,11 +180,12 @@ export function castFindFamiliar(
       "Find Familiar caster is not in this battle.",
     );
   }
-  const priorFamiliar = input.state.findFamiliars.get(input.casterId);
-  const familiarId =
-    priorFamiliar?.status === "present"
-      ? priorFamiliar.familiarId
-      : input.familiarId;
+  const priorFamiliarEntry = findCompanionEntryByOwner(
+    input.state.companions,
+    input.casterId,
+  );
+  const priorFamiliar = priorFamiliarEntry?.companion;
+  const familiarId = priorFamiliarEntry?.companionId ?? input.familiarId;
   const identityIssue = findFamiliarIdentityIssue(
     input.state,
     input.casterId,
@@ -208,15 +207,18 @@ export function castFindFamiliar(
       resolvedForm.message,
     );
   }
-
   const nextFamiliar = findFamiliarPresentState({
-    storedForm: { formAccess: "findFamiliar", formSelection: input.selection },
-    familiarId,
+    form: {
+      formAccess: "findFamiliar",
+      formSelection: input.selection,
+    },
     creatureTypeOverride: resolvedForm.form.creatureTypeOverride,
     placement: input.placement,
+    ownerId: input.casterId,
   });
   const preservedHitPoints = hitPointsForFindFamiliarCast({
     state: input.state,
+    priorFamiliarId: priorFamiliarEntry?.companionId,
     priorFamiliar,
     statBlock: resolvedForm.form.statBlock,
   });
@@ -230,9 +232,117 @@ export function castFindFamiliar(
   const nextState = withFindFamiliarCombatant({
     state: input.state,
     casterId: input.casterId,
+    familiarId,
     familiar: nextFamiliar,
     initiative: input.initiative,
     statBlock: familiarStatBlockWithCreatureTypeOverride(resolvedForm.form),
+    ...(preservedHitPoints === null
+      ? {}
+      : {
+          currentHp: preservedHitPoints.currentHp,
+          tempHp: preservedHitPoints.tempHp,
+        }),
+  });
+  return nextState.tag === "invalid"
+    ? nextState
+    : resolvedFindFamiliarResult(nextState.state, []);
+}
+
+export function castWildCompanion(
+  input: WildCompanionCastInput,
+): BattleResolutionResult {
+  const eligibility = findFamiliarFormEligibilityForSpell(
+    input.findFamiliarSpell,
+  );
+  if (eligibility === null) {
+    return invalidFindFamiliarResult(
+      input.state,
+      "invalidFill",
+      "Wild Companion requires Find Familiar form eligibility.",
+    );
+  }
+  const owner = input.state.combatants.get(input.casterId);
+  if (owner?.origin.kind !== "character") {
+    return invalidFindFamiliarResult(
+      input.state,
+      "missingCombatant",
+      "Wild Companion caster is not a character in this battle.",
+    );
+  }
+  if (!characterHasWildCompanionFeature(owner.origin.characterUnitRefs)) {
+    return invalidFindFamiliarResult(
+      input.state,
+      "invalidFill",
+      "Wild Companion requires the Druid Wild Companion feature.",
+    );
+  }
+  const spent = spendWildCompanionCost({
+    state: input.state,
+    casterId: input.casterId,
+    spend: input.spend,
+  });
+  if (spent.tag === "invalid") {
+    return spent;
+  }
+  const resolvedForm = resolveFindFamiliarForm({
+    catalog: input.catalog,
+    eligibility,
+    selection: input.selection,
+    creatureTypeOverrideChoiceId: "fey",
+  });
+  if (resolvedForm.tag === "issue") {
+    return invalidFindFamiliarResult(
+      spent.state,
+      "invalidFill",
+      resolvedForm.message,
+    );
+  }
+  const priorFamiliarEntry = findCompanionEntryByOwner(
+    spent.state.companions,
+    input.casterId,
+  );
+  const priorFamiliar = priorFamiliarEntry?.companion;
+  const familiarId = priorFamiliarEntry?.companionId ?? input.familiarId;
+  const identityIssue = findFamiliarIdentityIssue(
+    spent.state,
+    input.casterId,
+    familiarId,
+  );
+  if (identityIssue !== null) {
+    return invalidFindFamiliarResult(spent.state, "invalidFill", identityIssue);
+  }
+  const nextFamiliar = findFamiliarPresentState({
+    form: {
+      formAccess: "druidWildCompanion",
+      formSelection: input.selection,
+    },
+    creatureTypeOverride: "fey",
+    placement: input.placement,
+    ownerId: input.casterId,
+  });
+  const preservedHitPoints = hitPointsForFindFamiliarCast({
+    state: spent.state,
+    priorFamiliarId: priorFamiliarEntry?.companionId,
+    priorFamiliar,
+    statBlock: resolvedForm.form.statBlock,
+  });
+  if (typeof preservedHitPoints === "string") {
+    return invalidFindFamiliarResult(
+      spent.state,
+      "invalidFill",
+      preservedHitPoints,
+    );
+  }
+  const nextState = withFindFamiliarCombatant({
+    state: spent.state,
+    casterId: input.casterId,
+    familiarId,
+    familiar: nextFamiliar,
+    initiative: input.initiative,
+    statBlock: familiarStatBlockWithCreatureTypeOverride({
+      statBlock: resolvedForm.form.statBlock,
+      creatureTypeOverride: "fey",
+    }),
     ...(preservedHitPoints === null
       ? {}
       : {
@@ -266,14 +376,15 @@ export function admitPresentFindFamiliarToBattle(
     return battleStateInitIssue(admittedForm.message);
   }
   const nextFamiliar = findFamiliarPresentState({
-    storedForm: admittedForm.storedForm,
-    familiarId: input.familiarId,
+    form: admittedForm.storedForm,
     creatureTypeOverride: admittedForm.form.creatureTypeOverride,
     placement: input.placement,
+    ownerId: input.casterId,
   });
   const nextState = withFindFamiliarCombatant({
     state: input.state,
     casterId: input.casterId,
+    familiarId: input.familiarId,
     familiar: nextFamiliar,
     initiative: input.initiative,
     statBlock: familiarStatBlockWithCreatureTypeOverride(admittedForm.form),
@@ -289,7 +400,7 @@ export function admitPresentFindFamiliarToBattle(
   );
 }
 
-type FindFamiliarAdmissionEligibility =
+export type FindFamiliarAdmissionEligibility =
   | {
       readonly tag: "resolved";
       readonly kind: "findFamiliar";
@@ -341,6 +452,7 @@ function resolveFindFamiliarAdmissionForm(input: {
           storedForm: {
             formAccess: "pactOfTheChain",
             formSelection: input.selection,
+            resolvedStatBlockId: form.form.statBlock.id,
           },
         };
   }
@@ -365,20 +477,21 @@ function resolveFindFamiliarAdmissionForm(input: {
         storedForm: {
           formAccess: "findFamiliar",
           formSelection: input.selection,
+          resolvedStatBlockId: form.form.statBlock.id,
         },
       };
 }
 
 function findFamiliarPresentState(input: {
-  readonly storedForm: FindFamiliarStoredForm;
-  readonly familiarId: CombatantId;
+  readonly form: FindFamiliarSelectedForm;
   readonly creatureTypeOverride: FindFamiliarCreatureTypeOverride;
   readonly placement: FindFamiliarPlacement;
+  readonly ownerId: CombatantId;
 }): FindFamiliarPresentState {
   return {
-    ...storedFindFamiliarForm(input.storedForm),
+    ...selectedFindFamiliarForm(input.form),
     status: "present",
-    familiarId: input.familiarId,
+    ownerId: input.ownerId,
     creatureTypeOverride: input.creatureTypeOverride,
     placement: input.placement,
   };
@@ -388,10 +501,12 @@ function findFamiliarTemporarilyDismissedState(input: {
   readonly storedForm: FindFamiliarStoredForm;
   readonly creatureTypeOverride: FindFamiliarCreatureTypeOverride;
   readonly hitPoints: FindFamiliarHitPoints;
+  readonly ownerId: CombatantId;
 }): FindFamiliarTemporarilyDismissedState {
   return {
     ...storedFindFamiliarForm(input.storedForm),
     status: "temporarilyDismissed",
+    ownerId: input.ownerId,
     creatureTypeOverride: input.creatureTypeOverride,
     hitPoints: input.hitPoints,
   };
@@ -400,10 +515,12 @@ function findFamiliarTemporarilyDismissedState(input: {
 function findFamiliarDisappearedAtZeroHitPointsState(input: {
   readonly storedForm: FindFamiliarStoredForm;
   readonly creatureTypeOverride: FindFamiliarCreatureTypeOverride;
+  readonly ownerId: CombatantId;
 }): FindFamiliarDisappearedAtZeroHitPointsState {
   return {
     ...storedFindFamiliarForm(input.storedForm),
     status: "disappearedAtZeroHitPoints",
+    ownerId: input.ownerId,
     creatureTypeOverride: input.creatureTypeOverride,
   };
 }
@@ -411,28 +528,95 @@ function findFamiliarDisappearedAtZeroHitPointsState(input: {
 function storedFindFamiliarForm(
   storedForm: FindFamiliarStoredForm,
 ): FindFamiliarStoredForm {
-  return storedForm.formAccess === "findFamiliar"
-    ? {
-        formAccess: "findFamiliar",
-        formSelection: storedForm.formSelection,
-      }
-    : {
-        formAccess: "pactOfTheChain",
-        formSelection: storedForm.formSelection,
-      };
+  if (storedForm.formAccess === "findFamiliar") {
+    return {
+      formAccess: "findFamiliar",
+      formSelection: storedForm.formSelection,
+      resolvedStatBlockId: storedForm.resolvedStatBlockId,
+    };
+  }
+  if (storedForm.formAccess === "druidWildCompanion") {
+    return {
+      formAccess: "druidWildCompanion",
+      formSelection: storedForm.formSelection,
+      resolvedStatBlockId: storedForm.resolvedStatBlockId,
+    };
+  }
+  if (storedForm.formAccess === "pactOfTheChain") {
+    return {
+      formAccess: "pactOfTheChain",
+      formSelection: storedForm.formSelection,
+      resolvedStatBlockId: storedForm.resolvedStatBlockId,
+    };
+  }
+  const _exhaustive: never = storedForm;
+  return _exhaustive;
 }
 
-function findFamiliarAdmissionEligibilityForOwner(input: {
+function selectedFindFamiliarForm(
+  form: FindFamiliarSelectedForm,
+): FindFamiliarSelectedForm {
+  if (form.formAccess === "findFamiliar") {
+    return {
+      formAccess: "findFamiliar",
+      formSelection: form.formSelection,
+    };
+  }
+  if (form.formAccess === "druidWildCompanion") {
+    return {
+      formAccess: "druidWildCompanion",
+      formSelection: form.formSelection,
+    };
+  }
+  if (form.formAccess === "pactOfTheChain") {
+    return {
+      formAccess: "pactOfTheChain",
+      formSelection: form.formSelection,
+    };
+  }
+  const _exhaustive: never = form;
+  return _exhaustive;
+}
+
+export function retainedStoredFormForPresentCompanion(input: {
+  readonly state: BattleState;
+  readonly companionId: CombatantId;
+  readonly companion: BattleCompanionPresentState;
+}): BattleCompanionStoredForm | string {
+  const combatant = input.state.combatants.get(input.companionId);
+  if (combatant?.origin.kind !== "statBlock") {
+    return "Present companion Stat Block combatant is missing.";
+  }
+  const resolvedStatBlockId = combatant.origin.statBlock.id;
+  if (input.companion.formAccess === "findFamiliar") {
+    return {
+      formAccess: "findFamiliar",
+      formSelection: input.companion.formSelection,
+      resolvedStatBlockId,
+    };
+  }
+  if (input.companion.formAccess === "druidWildCompanion") {
+    return {
+      formAccess: "druidWildCompanion",
+      formSelection: input.companion.formSelection,
+      resolvedStatBlockId,
+    };
+  }
+  if (input.companion.formAccess === "pactOfTheChain") {
+    return {
+      formAccess: "pactOfTheChain",
+      formSelection: input.companion.formSelection,
+      resolvedStatBlockId,
+    };
+  }
+  const _exhaustive: never = input.companion;
+  return _exhaustive;
+}
+
+export function findFamiliarAccessEligibilityForOwner(input: {
   readonly state: BattleState;
   readonly casterId: CombatantId;
 }): FindFamiliarAdmissionEligibility {
-  if (input.state.findFamiliars.has(input.casterId)) {
-    return {
-      tag: "issue",
-      message:
-        "Source-linked Find Familiar admission requires at most one familiar per source actor.",
-    };
-  }
   const owner = input.state.combatants.get(input.casterId);
   if (owner === undefined) {
     return {
@@ -488,6 +672,22 @@ function findFamiliarAdmissionEligibilityForOwner(input: {
   };
 }
 
+function findFamiliarAdmissionEligibilityForOwner(input: {
+  readonly state: BattleState;
+  readonly casterId: CombatantId;
+}): FindFamiliarAdmissionEligibility {
+  if (
+    findCompanionByOwner(input.state.companions, input.casterId) !== undefined
+  ) {
+    return {
+      tag: "issue",
+      message:
+        "Source-linked Find Familiar admission requires at most one familiar per source actor.",
+    };
+  }
+  return findFamiliarAccessEligibilityForOwner(input);
+}
+
 function findFamiliarEligibilityFromSpells(
   spells: readonly SpellRecord[],
 ): FindFamiliarFormEligibility | null {
@@ -516,6 +716,7 @@ function withInitialInitiativeOrder(
 
 function hitPointsForFindFamiliarCast(input: {
   readonly state: BattleState;
+  readonly priorFamiliarId: CombatantId | undefined;
   readonly priorFamiliar: FindFamiliarState | undefined;
   readonly statBlock: StatBlockRecord;
 }): FindFamiliarHitPoints | null | string {
@@ -527,7 +728,7 @@ function hitPointsForFindFamiliarCast(input: {
   }
   const hitPoints =
     input.priorFamiliar.status === "present"
-      ? presentFindFamiliarHitPoints(input.state, input.priorFamiliar)
+      ? presentFindFamiliarHitPoints(input.state, input.priorFamiliarId)
       : input.priorFamiliar.hitPoints;
   if (typeof hitPoints === "string") {
     return hitPoints;
@@ -540,9 +741,12 @@ function hitPointsForFindFamiliarCast(input: {
 
 function presentFindFamiliarHitPoints(
   state: BattleState,
-  familiar: FindFamiliarPresentState,
+  familiarId: CombatantId | undefined,
 ): FindFamiliarHitPoints | string {
-  const combatant = state.combatants.get(familiar.familiarId);
+  if (familiarId === undefined) {
+    return "Present Find Familiar combatant identity is missing.";
+  }
+  const combatant = state.combatants.get(familiarId);
   if (combatant === undefined) {
     return "Present Find Familiar combatant is missing.";
   }
@@ -588,14 +792,18 @@ function findFamiliarCurrentHitPoints(
 export function temporarilyDismissFindFamiliar(
   input: FindFamiliarLifecycleInputBase,
 ): BattleResolutionResult {
-  const familiar = input.state.findFamiliars.get(input.casterId);
-  if (familiar === undefined) {
+  const familiarEntry = findCompanionEntryByOwner(
+    input.state.companions,
+    input.casterId,
+  );
+  if (familiarEntry === undefined) {
     return invalidFindFamiliarResult(
       input.state,
       "invalidFill",
       "Find Familiar caster has no familiar to dismiss.",
     );
   }
+  const familiar = familiarEntry.companion;
   if (familiar.status !== "present") {
     return invalidFindFamiliarResult(
       input.state,
@@ -611,18 +819,30 @@ export function temporarilyDismissFindFamiliar(
   if (spent.tag === "invalid") {
     return spent;
   }
-  const hitPoints = presentFindFamiliarHitPoints(input.state, familiar);
+  const hitPoints = presentFindFamiliarHitPoints(
+    input.state,
+    familiarEntry.companionId,
+  );
   if (typeof hitPoints === "string") {
     return invalidFindFamiliarResult(input.state, "invalidFill", hitPoints);
   }
+  const retainedForm = retainedStoredFormForPresentCompanion({
+    state: input.state,
+    companionId: familiarEntry.companionId,
+    companion: familiar,
+  });
+  if (typeof retainedForm === "string") {
+    return invalidFindFamiliarResult(input.state, "invalidFill", retainedForm);
+  }
   const nextFamiliar = findFamiliarTemporarilyDismissedState({
-    storedForm: familiar,
+    storedForm: retainedForm,
     creatureTypeOverride: familiar.creatureTypeOverride,
     hitPoints,
+    ownerId: input.casterId,
   });
   const nextState = withoutPresentFindFamiliarCombatant(
-    withFindFamiliar(spent.state, input.casterId, nextFamiliar),
-    familiar.familiarId,
+    withFindFamiliar(spent.state, familiarEntry.companionId, nextFamiliar),
+    familiarEntry.companionId,
   );
   if (nextState.tag === "invalid") {
     return nextState;
@@ -631,7 +851,7 @@ export function temporarilyDismissFindFamiliar(
     nextState.state,
     droppedObjectsForFamiliarDisappearance({
       casterId: input.casterId,
-      familiarId: familiar.familiarId,
+      familiarId: familiarEntry.companionId,
       ...(input.heldObjectIds === undefined
         ? {}
         : { heldObjectIds: input.heldObjectIds }),
@@ -642,22 +862,34 @@ export function temporarilyDismissFindFamiliar(
 export function permanentlyDismissFindFamiliar(
   input: FindFamiliarOwnerInput,
 ): BattleResolutionResult {
-  const familiar = input.state.findFamiliars.get(input.casterId);
-  if (familiar === undefined) {
+  const familiarEntry = findCompanionEntryByOwner(
+    input.state.companions,
+    input.casterId,
+  );
+  if (familiarEntry === undefined) {
     return invalidFindFamiliarResult(
       input.state,
       "invalidFill",
       "Find Familiar caster has no familiar to dismiss forever.",
     );
   }
-  const findFamiliars = new Map(input.state.findFamiliars);
-  findFamiliars.delete(input.casterId);
+  const familiar = familiarEntry.companion;
+  const spent = spendFindFamiliarMagicAction(
+    input.state,
+    input.casterId,
+    "Find Familiar permanent dismissal",
+  );
+  if (spent.tag === "invalid") {
+    return spent;
+  }
+  const companions = new Map(spent.state.companions);
+  companions.delete(familiarEntry.companionId);
   if (familiar.status !== "present") {
-    return resolvedFindFamiliarResult({ ...input.state, findFamiliars }, []);
+    return resolvedFindFamiliarResult({ ...spent.state, companions }, []);
   }
   const nextState = withoutPresentFindFamiliarCombatant(
-    { ...input.state, findFamiliars },
-    familiar.familiarId,
+    { ...spent.state, companions },
+    familiarEntry.companionId,
   );
   return nextState.tag === "invalid"
     ? nextState
@@ -667,14 +899,21 @@ export function permanentlyDismissFindFamiliar(
 export function reappearTemporarilyDismissedFindFamiliar(
   input: FindFamiliarReappearanceInput,
 ): BattleResolutionResult {
-  const familiar = input.state.findFamiliars.get(input.casterId);
-  if (familiar === undefined || familiar.status !== "temporarilyDismissed") {
+  const familiarEntry = findCompanionEntryByOwner(
+    input.state.companions,
+    input.casterId,
+  );
+  if (
+    familiarEntry === undefined ||
+    familiarEntry.companion.status !== "temporarilyDismissed"
+  ) {
     return invalidFindFamiliarResult(
       input.state,
       "invalidFill",
       "Find Familiar can reappear only from temporary dismissal.",
     );
   }
+  const familiar = familiarEntry.companion;
   const identityIssue = findFamiliarIdentityIssue(
     input.state,
     input.casterId,
@@ -684,10 +923,10 @@ export function reappearTemporarilyDismissedFindFamiliar(
     return invalidFindFamiliarResult(input.state, "invalidFill", identityIssue);
   }
   const nextFamiliar = findFamiliarPresentState({
-    storedForm: familiar,
-    familiarId: input.familiarId,
+    form: familiar,
     creatureTypeOverride: familiar.creatureTypeOverride,
     placement: input.placement,
+    ownerId: input.casterId,
   });
   const spent = spendFindFamiliarMagicAction(
     input.state,
@@ -699,7 +938,6 @@ export function reappearTemporarilyDismissedFindFamiliar(
   }
   const resolvedForm = resolveStoredFindFamiliarForm({
     catalog: input.catalog,
-    eligibility: input.eligibility,
     storedForm: familiar,
     creatureTypeOverride: familiar.creatureTypeOverride,
   });
@@ -713,6 +951,7 @@ export function reappearTemporarilyDismissedFindFamiliar(
   const nextState = withFindFamiliarCombatant({
     state: spent.state,
     casterId: input.casterId,
+    familiarId: input.familiarId,
     familiar: nextFamiliar,
     initiative: input.initiative,
     statBlock: familiarStatBlockWithCreatureTypeOverride(resolvedForm.form),
@@ -726,50 +965,16 @@ export function reappearTemporarilyDismissedFindFamiliar(
 
 function resolveStoredFindFamiliarForm(input: {
   readonly catalog: StatBlockCatalog;
-  readonly eligibility:
-    | FindFamiliarFormEligibility
-    | PactOfTheChainFindFamiliarFormEligibility;
   readonly storedForm: FindFamiliarStoredForm;
   readonly creatureTypeOverride: FindFamiliarCreatureTypeOverride;
 }): FindFamiliarFormResolution {
-  if (input.storedForm.formAccess === "findFamiliar") {
-    return resolveFindFamiliarSelectedForm({
-      catalog: input.catalog,
-      eligibility: input.eligibility,
-      selection: input.storedForm.formSelection,
-      creatureTypeOverride: input.creatureTypeOverride,
-    });
-  }
-  if (!("specialForms" in input.eligibility)) {
-    return {
-      tag: "issue",
-      message:
-        "Pact of the Chain familiar forms require Pact of the Chain Find Familiar access.",
-    };
-  }
-  const selection = input.storedForm.formSelection;
-  if (selection.tag !== "pactOfTheChainSpecialForm") {
-    return resolveFindFamiliarSelectedForm({
-      catalog: input.catalog,
-      eligibility: input.eligibility,
-      selection,
-      creatureTypeOverride: input.creatureTypeOverride,
-    });
-  }
-  const formRef = input.eligibility.specialForms.find(
-    (candidate) => candidate.formId === selection.formId,
+  const statBlock = input.catalog.getStatBlock(
+    input.storedForm.resolvedStatBlockId,
   );
-  if (formRef === undefined) {
-    return {
-      tag: "issue",
-      message: `Pact of the Chain familiar form is not eligible: ${selection.formId}.`,
-    };
-  }
-  const statBlock = input.catalog.getStatBlock(formRef.statBlockId);
   return Option.isNone(statBlock)
     ? {
         tag: "issue",
-        message: `Pact of the Chain familiar form Stat Block is missing: ${formRef.statBlockId}.`,
+        message: `Retained familiar form Stat Block is missing: ${input.storedForm.resolvedStatBlockId}.`,
       }
     : {
         tag: "resolved",
@@ -793,13 +998,22 @@ export function applyFindFamiliarZeroHitPointDisappearance(input: {
       "Familiar identity is not a present Find Familiar familiar.",
     );
   }
+  const retainedForm = retainedStoredFormForPresentCompanion({
+    state: input.state,
+    companionId: input.familiarId,
+    companion: entry.familiar,
+  });
+  if (typeof retainedForm === "string") {
+    return invalidFindFamiliarResult(input.state, "invalidFill", retainedForm);
+  }
   const nextFamiliar = findFamiliarDisappearedAtZeroHitPointsState({
-    storedForm: entry.familiar,
+    storedForm: retainedForm,
     creatureTypeOverride: entry.familiar.creatureTypeOverride,
+    ownerId: entry.ownerId,
   });
   const nextState = withoutPresentFindFamiliarCombatant(
-    withFindFamiliar(input.state, entry.ownerId, nextFamiliar),
-    entry.familiar.familiarId,
+    withFindFamiliar(input.state, input.familiarId, nextFamiliar),
+    input.familiarId,
   );
   if (nextState.tag === "invalid") {
     return nextState;
@@ -808,7 +1022,7 @@ export function applyFindFamiliarZeroHitPointDisappearance(input: {
     nextState.state,
     droppedObjectsForFamiliarDisappearance({
       casterId: entry.ownerId,
-      familiarId: entry.familiar.familiarId,
+      familiarId: input.familiarId,
       ...(input.heldObjectIds === undefined
         ? {}
         : { heldObjectIds: input.heldObjectIds }),
@@ -816,9 +1030,65 @@ export function applyFindFamiliarZeroHitPointDisappearance(input: {
   );
 }
 
+export function applyCompanionLongRestDisappearance(input: {
+  readonly state: BattleState;
+  readonly trigger: CompanionLongRestDisappearanceTrigger;
+}): BattleResolutionResult {
+  const companionsToRemove = companionEntries(input.state.companions).filter(
+    (entry) =>
+      companionDisappearsAtLongRest(entry.companion) &&
+      (input.trigger.tag === "allCompanionOwnersFinishedLongRest" ||
+        entry.companion.ownerId === input.trigger.ownerId),
+  );
+  if (companionsToRemove.length === 0) {
+    return resolvedFindFamiliarResult(input.state, []);
+  }
+  const absentCompanionIds = companionsToRemove.flatMap((entry) =>
+    entry.companion.status === "present" ? [] : [entry.companionId],
+  );
+  const stateWithoutAbsentCompanions =
+    absentCompanionIds.length === 0
+      ? input.state
+      : {
+          ...input.state,
+          companions: new Map(
+            [...input.state.companions].filter(
+              ([companionId]) => !absentCompanionIds.includes(companionId),
+            ),
+          ),
+        };
+  const presentCompanionIds = companionsToRemove.flatMap((entry) =>
+    entry.companion.status === "present" ? [entry.companionId] : [],
+  );
+  if (presentCompanionIds.length === 0) {
+    return resolvedFindFamiliarResult(stateWithoutAbsentCompanions, []);
+  }
+  const removed = removeBattleCombatants({
+    state: stateWithoutAbsentCompanions,
+    combatantIds: presentCompanionIds,
+  });
+  return Either.isLeft(removed)
+    ? invalidFindFamiliarResult(
+        stateWithoutAbsentCompanions,
+        "invalidFill",
+        removed.left.message,
+      )
+    : resolvedFindFamiliarResult(removed.right, []);
+}
+
+function companionDisappearsAtLongRest(
+  companion: BattleCompanionState,
+): companion is Extract<
+  BattleCompanionState,
+  { readonly formAccess: "druidWildCompanion" }
+> {
+  return companion.formAccess === "druidWildCompanion";
+}
+
 function withFindFamiliarCombatant(input: {
   readonly state: BattleState;
   readonly casterId: CombatantId;
+  readonly familiarId: CombatantId;
   readonly familiar: FindFamiliarPresentState;
   readonly initiative: InitiativeScore;
   readonly statBlock: StatBlockRecord;
@@ -837,7 +1107,7 @@ function withFindFamiliarCombatant(input: {
   }
   const priorWithoutFamiliar = withoutPresentFindFamiliarCombatant(
     input.state,
-    input.familiar.familiarId,
+    input.familiarId,
   );
   if (priorWithoutFamiliar.tag === "invalid") {
     return priorWithoutFamiliar;
@@ -870,7 +1140,7 @@ function withFindFamiliarCombatant(input: {
   const added = addBattleCombatant({
     state: priorWithoutFamiliar.state,
     combatant: {
-      combatantId: input.familiar.familiarId,
+      combatantId: input.familiarId,
       displayName: input.statBlock.statBlock.displayName,
       initiative: input.initiative,
       side: owner.side,
@@ -892,7 +1162,7 @@ function withFindFamiliarCombatant(input: {
   }
   return {
     tag: "resolved",
-    state: withFindFamiliar(added.right, input.casterId, input.familiar),
+    state: withFindFamiliar(added.right, input.familiarId, input.familiar),
   };
 }
 
@@ -903,13 +1173,21 @@ function withoutPresentFindFamiliarCombatant(
   if (!state.combatants.has(familiarId)) {
     return { tag: "resolved", state };
   }
+  const companions = state.companions;
   const removed = removeBattleCombatants({
-    state,
+    state: {
+      ...state,
+      companions: new Map(
+        [...state.companions].filter(
+          ([companionId]) => companionId !== familiarId,
+        ),
+      ),
+    },
     combatantIds: [familiarId],
   });
   return Either.isLeft(removed)
     ? invalidFindFamiliarResult(state, "invalidFill", removed.left.message)
-    : { tag: "resolved", state: removed.right };
+    : { tag: "resolved", state: { ...removed.right, companions } };
 }
 
 function familiarStatBlockWithCreatureTypeOverride(input: {
@@ -935,12 +1213,12 @@ function familiarMaxHp(statBlock: StatBlockRecord): Hp | string {
 
 function withFindFamiliar(
   state: BattleState,
-  casterId: CombatantId,
+  familiarId: CombatantId,
   familiar: FindFamiliarState,
 ): BattleState {
   return {
     ...state,
-    findFamiliars: new Map(state.findFamiliars).set(casterId, familiar),
+    companions: setCompanion(state.companions, familiarId, familiar),
   };
 }
 
@@ -990,6 +1268,113 @@ function spendFindFamiliarMagicAction(
           currentTurnResources: spent.right,
         },
       };
+}
+
+function spendWildCompanionCost(input: {
+  readonly state: BattleState;
+  readonly casterId: CombatantId;
+  readonly spend: WildCompanionSpend;
+}):
+  | { readonly tag: "resolved"; readonly state: BattleState }
+  | Extract<BattleResolutionResult, { readonly tag: "invalid" }> {
+  const spentAction = spendFindFamiliarMagicAction(
+    input.state,
+    input.casterId,
+    "Wild Companion",
+  );
+  if (spentAction.tag === "invalid") {
+    return spentAction;
+  }
+  const actor = spentAction.state.combatants.get(input.casterId);
+  if (actor?.origin.kind !== "character") {
+    return invalidFindFamiliarResult(
+      input.state,
+      "missingCombatant",
+      "Wild Companion requires a character caster.",
+    );
+  }
+  const spend = input.spend;
+  if (spend.kind === "spellSlot") {
+    const slot = actor.origin.spellcasting?.spellSlots.find(
+      (candidate) =>
+        candidate.spellLevel === spend.spellLevel &&
+        candidate.count > candidate.expended,
+    );
+    if (slot === undefined) {
+      return invalidFindFamiliarResult(
+        input.state,
+        "staleSubject",
+        "Wild Companion requires the selected Spell Slot to be available.",
+      );
+    }
+    const markedSpellSlotUse = markSpellSlotExpendedThisTurn(
+      spentAction.state.currentTurnResources,
+      input.casterId,
+    );
+    if (Either.isLeft(markedSpellSlotUse)) {
+      return invalidFindFamiliarResult(
+        input.state,
+        "staleSubject",
+        "Wild Companion cannot expend more than one Spell Slot on the same turn.",
+      );
+    }
+    const stateWithMarkedSpellSlotUse = {
+      ...spentAction.state,
+      currentTurnResources: markedSpellSlotUse.right,
+    };
+    return {
+      tag: "resolved",
+      state: expendSpellSlot(
+        stateWithMarkedSpellSlotUse,
+        input.casterId,
+        spend.spellLevel,
+      ),
+    };
+  }
+  const resource = actor.origin.resources.find(
+    (candidate) => candidate.unit.id === spend.resourceUnitId,
+  );
+  if (resource === undefined || !resourceHasUsesRemaining(resource)) {
+    return invalidFindFamiliarResult(
+      input.state,
+      "staleSubject",
+      "Wild Companion requires an available Wild Shape use.",
+    );
+  }
+  const nextActor = {
+    ...actor,
+    origin: {
+      ...actor.origin,
+      resources: actor.origin.resources.map((candidate) =>
+        candidate.unit.id === spend.resourceUnitId
+          ? spendCharacterResourceUse(resource)
+          : candidate,
+      ),
+    },
+  };
+  return {
+    tag: "resolved",
+    state: {
+      ...spentAction.state,
+      combatants: new Map(spentAction.state.combatants).set(
+        input.casterId,
+        nextActor,
+      ),
+    },
+  };
+}
+
+function characterHasWildCompanionFeature(
+  characterUnitRefs: readonly {
+    readonly unitId: UnitRecord["id"];
+    readonly supportProfiles: readonly unknown[];
+  }[],
+): boolean {
+  return characterUnitRefs.some((unitRef) =>
+    unitRef.supportProfiles.some(
+      (profile) => profile === DRUID_WILD_COMPANION_SPELL_CAST_SUPPORT_PROFILE,
+    ),
+  );
 }
 
 function droppedObjectsForFamiliarDisappearance(input: {

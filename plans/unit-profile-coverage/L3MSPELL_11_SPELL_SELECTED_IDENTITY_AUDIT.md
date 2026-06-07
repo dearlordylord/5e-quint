@@ -42,7 +42,7 @@ data when any of these facts are missing or stale:
 For `packages/battle-runtime`, the reachability check requires the selected
 identity owner/import closure to reach public runtime entrypoints such as
 `startBattle`, `discoverBattleActs`, `resolveBattleSubject`, or
-`resolveBattleReaction`, or package-public runtime code exported from
+`resolveBattleInterrupt`, or package-public runtime code exported from
 `src/index.ts` for projection-only owners. This is the real app/MCP-facing
 runtime path, not a test-only action table.
 

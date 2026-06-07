@@ -43,8 +43,8 @@
     {
       "number": 7,
       "id": "L3TODAY-07-WILD-SHAPE-BEAST-SPELLS-SPLIT",
-      "status": "ready-for-implementation-after-light-research",
-      "title": "Split Beast Spells out of level-3 Wild Shape residuals"
+      "status": "blocked",
+      "title": "Park Beast Spells as level-18 Wild Shape follow-up"
     },
     {
       "number": 8,
@@ -157,14 +157,14 @@ Current generated facts:
 | 4 | L3TODAY-04-ACID-ARROW-RUNTIME-TRACER-BULLET | blocked | L3TODAY-03-ACID-ARROW-SURFACE-SHAPE | Full QNT/TS/MBT tracer bullet for the approved Surface shape. |
 | 5 | L3TODAY-05-WIZARD-EVOCATION-SAVANT-LEVEL3-TRIGGER | ready-for-research | none | Decide whether the level-3 subclass acquisition also triggers the new Wizard Spell Slot level grant. |
 | 6 | L3TODAY-06-WIZARD-EVOCATION-SAVANT-LEVEL3-IMPLEMENTATION | blocked | L3TODAY-05-WIZARD-EVOCATION-SAVANT-LEVEL3-TRIGGER | Runnable only if Task 5 decides the trigger applies at Wizard level 3. |
-| 7 | L3TODAY-07-WILD-SHAPE-BEAST-SPELLS-SPLIT | ready-for-implementation-after-light-research | none | Beast Spells is Druid level 18 pressure; ensure it cannot keep level-3 Wild Shape blocked. |
+| 7 | L3TODAY-07-WILD-SHAPE-BEAST-SPELLS-SPLIT | blocked | later-level-only | Beast Spells is Druid level 18 pressure; parked here beside Acid Arrow so it remains planned but not current level-3 work. |
 | 8 | L3TODAY-08-WILD-SHAPE-STAT-BLOCK-ACTION-INVENTORY | ready-for-research | none | Inventory the remaining level-3-reachable Beast-form Stat Block action pressure. |
 | 9 | L3TODAY-09-WILD-SHAPE-FIRST-STAT-BLOCK-ACTION-SLICE | blocked | L3TODAY-08-WILD-SHAPE-STAT-BLOCK-ACTION-INVENTORY | Promote the first inventory item only if it is level-3-reachable and battle-owned. |
 | 10 | L3TODAY-10-WILD-SHAPE-SENSE-LANGUAGE-PROJECTION | ready-for-research | none | Determine whether prior work already closed this or whether a shared projection tracer bullet remains. |
 | 11 | L3TODAY-11-METAMAGIC-POST-TASK22-ACCOUNTING | ready-for-implementation-after-light-research | none | Regenerate accounting after task 22 and remove stale residual wording. |
 | 12 | L3TODAY-12-METAMAGIC-REMAINING-QUICKENED-INVENTORY | blocked | L3TODAY-11-METAMAGIC-POST-TASK22-ACCOUNTING | Recompute remaining Quickened procedures after task 22. |
 | 13 | L3TODAY-13-METAMAGIC-NEXT-QUICKENED-SLICE | blocked | L3TODAY-12-METAMAGIC-REMAINING-QUICKENED-INVENTORY | Promote one selected next Quickened tracer bullet. |
-| 14 | L3TODAY-14-ULTRA-GOLDEN-CONSOLIDATION | blocked | Tasks 1, 2, 5, 7, 8, 10 and any implemented dependent task | Regenerate ledgers, update this plan, and summarize remaining level-3 ultra-golden pressure. |
+| 14 | L3TODAY-14-ULTRA-GOLDEN-CONSOLIDATION | blocked | Tasks 1, 2, 5, 8, 10 and any implemented dependent task | Regenerate ledgers, update this plan, and summarize remaining level-3 ultra-golden pressure. |
 
 ## Task Details
 
@@ -253,10 +253,12 @@ Acceptance:
 
 ### Task 7 - L3TODAY-07-WILD-SHAPE-BEAST-SPELLS-SPLIT
 
-Beast Spells is a Druid level 18 feature. Split that residual out of level-3
-Wild Shape accounting with `later-level-only` `firstTriggerCharacterLevel: 18`
-or an equivalent precise closure. Do not hide level-3-reachable Stat Block
-action pressure under this closure.
+Beast Spells is a Druid level 18 feature. This task is parked as planned
+later-level work, not runnable level-3 work. When level-18 Wild Shape support is
+in scope, split the current residual into a `later-level-only`
+`firstTriggerCharacterLevel: 18` closure or promote a proper Beast Spells
+tracer bullet. Do not hide level-2/3-reachable Stat Block action pressure under
+this closure.
 
 Acceptance:
 

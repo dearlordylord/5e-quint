@@ -326,6 +326,9 @@ export const SpellSubjectModeSchema = Schema.Union(
   }),
 );
 export type SpellSubjectMode = typeof SpellSubjectModeSchema.Type;
+const SpellCastSubjectModeSchema = Schema.Struct({
+  tag: Schema.Literal("cast"),
+});
 
 const NON_TRANSMUTED_SPELL_METAMAGIC_EFFECT_KINDS = [
   ...CHARACTER_BATTLE_METAMAGIC_EFFECT_KINDS.filter(
@@ -608,6 +611,35 @@ export const BattleSubjectSchema = Schema.Union(
     actorId: CombatantId,
     unitId: BattleSubjectTextSchema,
     action: Schema.Literal("dismiss"),
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("companionLifecycle"),
+    actorId: CombatantId,
+    companionId: CombatantId,
+    action: Schema.Literal(
+      "temporarilyDismiss",
+      "reappear",
+      "permanentlyDismiss",
+    ),
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("findFamiliarSharedSenses"),
+    actorId: CombatantId,
+    familiarId: CombatantId,
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("findFamiliarTouchSpell"),
+    actorId: CombatantId,
+    companionId: CombatantId,
+    spellAction: Schema.Literal("action", "bonusAction"),
+    invocation: SpellInvocationRefSchema,
+    mode: SpellCastSubjectModeSchema,
+    metamagic: Schema.optionalWith(SpellMetamagicSelectionsSchema, {
+      exact: true,
+    }),
+    componentWeaponItemId: Schema.optionalWith(BattleSubjectTextSchema, {
+      exact: true,
+    }),
   }),
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),
@@ -1025,6 +1057,29 @@ function battleSubjectKey(subject: BattleSubject): string {
       subject.unitId,
       subject.action,
       "formStatBlockId" in subject ? subject.formStatBlockId : null,
+    ]);
+  }
+  if (subject.tag === "companionLifecycle") {
+    return JSON.stringify([
+      subject.tag,
+      subject.actorId,
+      subject.companionId,
+      subject.action,
+    ]);
+  }
+  if (subject.tag === "findFamiliarSharedSenses") {
+    return JSON.stringify([subject.tag, subject.actorId, subject.familiarId]);
+  }
+  if (subject.tag === "findFamiliarTouchSpell") {
+    return JSON.stringify([
+      subject.tag,
+      subject.actorId,
+      subject.companionId,
+      subject.spellAction,
+      spellInvocationRefKey(subject.invocation),
+      spellSubjectModeKey(subject.mode),
+      spellMetamagicSelectionKey(subject.metamagic),
+      subject.componentWeaponItemId ?? null,
     ]);
   }
   if (subject.tag === "unitFeatureHeldWeaponActivation") {

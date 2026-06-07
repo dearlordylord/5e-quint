@@ -91,7 +91,7 @@ done if any answer is missing.
    vocabulary/fact support.
 2. TS MBT connectivity: the focused `*.mbt.test.ts` driver calls production
    package entrypoints from `./index.ts`, such as `startBattle`,
-   `discoverBattleActs`, `resolveBattleSubject`, `resolveBattleReaction`, and
+   `discoverBattleActs`, `resolveBattleSubject`, `resolveBattleInterrupt`, and
    `snapshotBattle`. It must not use a test-only reducer clone.
 3. Production reachability: the slice records a short production path note in
    the focused test file or task closeout, naming the chain from Surface/support

@@ -145,13 +145,10 @@ Round 2 architecture and connascence pass:
 - `pnpm unit-profile-coverage:check`
 - `pnpm rules-kernel-coverage:check`
 - `pnpm quality` failed in existing typecheck lanes outside this closure
-  task's touched ownership surface:
-  `packages/mcp/src/battle-tools.ts` still imports/uses removed reaction
-  helpers and `reactionDecision`, while
-  `packages/app/src/battle-scene/wizard-battle-demo-runtime.ts` and
-  `packages/app/src/battle-scene/wizard-battle-demo.ts` have the same reaction
-  field/helper drift plus missing `knownLanguages` on a demo character init.
-  Broad verification stopped there.
+  task's touched ownership surface at the time of this closure. Subsequent
+  reaction API cleanup migrated MCP to the interrupt API; any remaining broad
+  quality failures should be rechecked from current output rather than this
+  historical note.
 - MBT not run: this task records a closure decision and task claim only; it
   changes no promoted battle runtime behavior, QNT, profile parser, or MBT
   bridge behavior.

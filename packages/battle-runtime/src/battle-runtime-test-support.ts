@@ -389,6 +389,9 @@ export function subjectName(
   | "unitFeature"
   | "unitFeatureHeldWeaponActivation"
   | "druidWildShape"
+  | "companionLifecycle"
+  | "findFamiliarSharedSenses"
+  | "findFamiliarTouchSpell"
   | "endTurn"
   | "move"
   | "standFromProne"
@@ -457,6 +460,15 @@ export function subjectName(
   }
   if (subject.tag === "druidWildShape") {
     return "druidWildShape";
+  }
+  if (subject.tag === "companionLifecycle") {
+    return "companionLifecycle";
+  }
+  if (subject.tag === "findFamiliarSharedSenses") {
+    return "findFamiliarSharedSenses";
+  }
+  if (subject.tag === "findFamiliarTouchSpell") {
+    return "findFamiliarTouchSpell";
   }
   return subject.command;
 }

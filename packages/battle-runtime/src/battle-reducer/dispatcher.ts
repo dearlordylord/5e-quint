@@ -44,12 +44,30 @@ import { Match } from "effect";
 import * as Either from "effect/Either";
 
 import { type BattleInterruptTrigger } from "../battle-interrupt-triggers.ts";
-import type {
-  FindFamiliarPresentState,
-  FindFamiliarSnapshot,
+import {
+  permanentlyDismissFindFamiliar,
+  reappearTemporarilyDismissedFindFamiliar,
+  temporarilyDismissFindFamiliar,
 } from "../find-familiar-lifecycle.ts";
+import type { BattleCompanionSnapshot } from "../companion-state.ts";
+import {
+  deliverTouchSpellThroughFindFamiliar,
+  shareFindFamiliarSenses,
+  type FindFamiliarWithin100FeetFact,
+} from "../find-familiar-telepathy.ts";
+import {
+  companionReappearanceInitiativeHole,
+  companionReappearancePlacementHole,
+  findFamiliarConnectionHole,
+  companionHeldObjectFactsHole,
+  findFamiliarTouchDeliveryTargetHoles,
+} from "../find-familiar-companion-subjects.ts";
 import { resolvePactOfTheChainFamiliarReactionAttack } from "../find-familiar-pact-chain.ts";
-import { isPresentFindFamiliarCombatant } from "../find-familiar-state.ts";
+import {
+  battleCompanionEntries,
+  findFamiliarCompanionEntryForOwner,
+  isPresentFindFamiliarCombatant,
+} from "../find-familiar-state.ts";
 
 import {
   sameBattleSubject,
@@ -859,6 +877,15 @@ export function resolveBattleSubjectInternal(
     ) {
       return resolveStatBlockBonusActionOption({ ...input, subject });
     }
+    if (subject.tag === "companionLifecycle") {
+      return resolveCompanionLifecycleSubject({ ...input, subject });
+    }
+    if (subject.tag === "findFamiliarSharedSenses") {
+      return resolveFindFamiliarSharedSensesSubject({ ...input, subject });
+    }
+    if (subject.tag === "findFamiliarTouchSpell") {
+      return resolveFindFamiliarTouchSpellSubject({ ...input, subject });
+    }
     if (subject.tag === "actionSpell") {
       return resolveSpellAct({
         ...input,
@@ -1144,6 +1171,338 @@ export function resolveBattleSubjectInternal(
   return consumeOrCloseLegendaryActionWindow(input.subject, result);
 }
 
+function resolveCompanionLifecycleSubject(
+  input: BattleResolutionInputForSubject<
+    Extract<BattleSubject, { readonly tag: "companionLifecycle" }>
+  >,
+): BattleResolutionResult {
+  const familiarEntry = findFamiliarCompanionEntryForOwner(
+    input.state,
+    input.subject.actorId,
+  );
+  if (
+    familiarEntry === null ||
+    familiarEntry.companionId !== input.subject.companionId
+  ) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Familiar lifecycle act requires the actor's retained familiar.",
+    );
+  }
+  const familiar = familiarEntry.companion;
+  if (input.subject.action === "temporarilyDismiss") {
+    if (familiar.status !== "present") {
+      return invalidResult(
+        input.state,
+        "staleSubject",
+        "Familiar temporary dismissal requires the actor's present familiar.",
+      );
+    }
+    const heldObjectIds = companionHeldObjectIdsForDismissal(input);
+    return heldObjectIds.tag === "invalid"
+      ? heldObjectIds
+      : temporarilyDismissFindFamiliar({
+          state: input.state,
+          casterId: input.subject.actorId,
+          heldObjectIds: heldObjectIds.objectIds,
+        });
+  }
+  if (input.subject.action === "reappear") {
+    if (familiar.status !== "temporarilyDismissed") {
+      return invalidResult(
+        input.state,
+        "staleSubject",
+        "Familiar reappearance requires the actor's temporarily dismissed familiar.",
+      );
+    }
+    if (input.statBlockCatalog === undefined) {
+      return invalidResult(
+        input.state,
+        "invalidFill",
+        "Familiar reappearance requires a Stat Block catalog in resolver context.",
+      );
+    }
+    const placement = companionReappearancePlacement(input);
+    if (placement.tag === "needsHoles" || placement.tag === "invalid") {
+      return placement;
+    }
+    const initiative = companionReappearanceInitiative(input);
+    if (initiative.tag === "needsHoles" || initiative.tag === "invalid") {
+      return initiative;
+    }
+    return reappearTemporarilyDismissedFindFamiliar({
+      state: input.state,
+      casterId: input.subject.actorId,
+      catalog: input.statBlockCatalog,
+      familiarId: input.subject.companionId,
+      initiative: initiative.initiative,
+      placement: placement.placement,
+    });
+  }
+  if (input.subject.action === "permanentlyDismiss") {
+    return permanentlyDismissFindFamiliar({
+      state: input.state,
+      casterId: input.subject.actorId,
+    });
+  }
+  const _exhaustive: never = input.subject.action;
+  return _exhaustive;
+}
+
+function companionReappearancePlacement(
+  input: BattleResolutionInputForSubject<
+    Extract<BattleSubject, { readonly tag: "companionLifecycle" }>
+  >,
+):
+  | {
+      readonly tag: "resolved";
+      readonly placement: Extract<
+        Extract<
+          BattleFill,
+          { readonly kind: "companionReappearancePlacement" }
+        >["value"],
+        { readonly kind: "unoccupiedSpaceWithin30Feet" }
+      >;
+    }
+  | Extract<
+      BattleResolutionResult,
+      { readonly tag: "needsHoles" | "invalid" }
+    > {
+  const expectedHole = companionReappearancePlacementHole({
+    ownerId: input.subject.actorId,
+    companionId: input.subject.companionId,
+  });
+  const fill = input.fills.find(
+    (
+      candidate,
+    ): candidate is Extract<
+      BattleFill,
+      { readonly kind: "companionReappearancePlacement" }
+    > =>
+      candidate.kind === "companionReappearancePlacement" &&
+      candidate.holeId === expectedHole.holeId,
+  );
+  if (fill === undefined) {
+    return needsHolesResult(input.state, input.subject, [expectedHole]);
+  }
+  if (fill.value.kind !== "unoccupiedSpaceWithin30Feet") {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Familiar reappearance placement must be an unoccupied space within 30 feet.",
+    );
+  }
+  return { tag: "resolved", placement: fill.value };
+}
+
+function companionReappearanceInitiative(
+  input: BattleResolutionInputForSubject<
+    Extract<BattleSubject, { readonly tag: "companionLifecycle" }>
+  >,
+):
+  | {
+      readonly tag: "resolved";
+      readonly initiative: Extract<
+        BattleFill,
+        { readonly kind: "companionReappearanceInitiative" }
+      >["value"];
+    }
+  | Extract<
+      BattleResolutionResult,
+      { readonly tag: "needsHoles" | "invalid" }
+    > {
+  const expectedHole = companionReappearanceInitiativeHole({
+    ownerId: input.subject.actorId,
+    companionId: input.subject.companionId,
+  });
+  const fill = input.fills.find(
+    (
+      candidate,
+    ): candidate is Extract<
+      BattleFill,
+      { readonly kind: "companionReappearanceInitiative" }
+    > =>
+      candidate.kind === "companionReappearanceInitiative" &&
+      candidate.holeId === expectedHole.holeId,
+  );
+  return fill === undefined
+    ? needsHolesResult(input.state, input.subject, [expectedHole])
+    : { tag: "resolved", initiative: fill.value };
+}
+
+function resolveFindFamiliarSharedSensesSubject(
+  input: BattleResolutionInputForSubject<
+    Extract<BattleSubject, { readonly tag: "findFamiliarSharedSenses" }>
+  >,
+): BattleResolutionResult {
+  const connection = findFamiliarConnectionFact({
+    state: input.state,
+    ownerId: input.subject.actorId,
+    companionId: input.subject.familiarId,
+    fills: input.fills,
+    subject: input.subject,
+    actionLabel: "Familiar shared senses",
+  });
+  return connection.tag !== "resolved"
+    ? connection
+    : shareFindFamiliarSenses({
+        state: input.state,
+        casterId: input.subject.actorId,
+        fact: connection.fact,
+      });
+}
+
+function resolveFindFamiliarTouchSpellSubject(
+  input: BattleResolutionInputForSubject<
+    Extract<BattleSubject, { readonly tag: "findFamiliarTouchSpell" }>
+  >,
+): BattleResolutionResult {
+  const connection = findFamiliarConnectionFact({
+    state: input.state,
+    ownerId: input.subject.actorId,
+    companionId: input.subject.companionId,
+    fills: input.fills,
+    subject: input.subject,
+    actionLabel: "Familiar touch spell delivery",
+  });
+  if (connection.tag !== "resolved") {
+    return connection;
+  }
+  const spellSubject = findFamiliarTouchSpellSubject(input.subject);
+  if (spellSubject.tag === "invalid") {
+    return spellSubject;
+  }
+  const spellFills = input.fills.filter(
+    (fill) =>
+      !(
+        fill.kind === "findFamiliarConnection" &&
+        fill.holeId === connection.holeId
+      ),
+  );
+  const delivered = deliverTouchSpellThroughFindFamiliar({
+    state: input.state,
+    subject: spellSubject.subject,
+    fills: spellFills,
+    fact: connection.fact,
+  });
+  return delivered.tag === "needsHoles"
+    ? {
+        ...delivered,
+        subject: input.subject,
+        holes: findFamiliarTouchDeliveryTargetHoles(delivered.holes),
+      }
+    : delivered;
+}
+
+function companionHeldObjectIdsForDismissal(
+  input: BattleResolutionInputForSubject<
+    Extract<BattleSubject, { readonly tag: "companionLifecycle" }>
+  >,
+):
+  | {
+      readonly tag: "resolved";
+      readonly objectIds: readonly BattleDroppedObjectOutcome["objectId"][];
+    }
+  | Extract<BattleResolutionResult, { readonly tag: "invalid" }> {
+  const expectedHole = companionHeldObjectFactsHole({
+    companionId: input.subject.companionId,
+  });
+  const fill = input.fills.find(
+    (
+      candidate,
+    ): candidate is Extract<BattleFill, { readonly kind: "heldObjectFacts" }> =>
+      candidate.kind === "heldObjectFacts" &&
+      candidate.holeId === expectedHole.holeId,
+  );
+  return fill === undefined
+    ? invalidResult(
+        input.state,
+        "invalidFill",
+        "Familiar temporary dismissal requires held-object facts for the familiar.",
+      )
+    : { tag: "resolved", objectIds: fill.value.objectIds };
+}
+
+function findFamiliarConnectionFact(input: {
+  readonly state: BattleState;
+  readonly ownerId: CombatantId;
+  readonly companionId: CombatantId;
+  readonly fills: readonly BattleFill[];
+  readonly subject: BattleSubject;
+  readonly actionLabel: string;
+}):
+  | {
+      readonly tag: "resolved";
+      readonly fact: FindFamiliarWithin100FeetFact;
+      readonly holeId: BattleFill["holeId"];
+    }
+  | Extract<
+      BattleResolutionResult,
+      { readonly tag: "needsHoles" | "invalid" }
+    > {
+  const expectedHole = findFamiliarConnectionHole({
+    ownerId: input.ownerId,
+    companionId: input.companionId,
+  });
+  const fill = input.fills.find(
+    (candidate) =>
+      candidate.kind === "findFamiliarConnection" &&
+      candidate.holeId === expectedHole.holeId,
+  );
+  if (fill === undefined) {
+    return needsHolesResult(input.state, input.subject, [expectedHole]);
+  }
+  return {
+    tag: "resolved",
+    holeId: expectedHole.holeId,
+    fact: {
+      kind: "findFamiliarWithin100FeetOfOwner",
+      ownerId: input.ownerId,
+      familiarId: input.companionId,
+    },
+  };
+}
+
+function findFamiliarTouchSpellSubject(
+  subject: Extract<BattleSubject, { readonly tag: "findFamiliarTouchSpell" }>,
+):
+  | {
+      readonly tag: "resolved";
+      readonly subject: Extract<
+        BattleSubject,
+        { readonly tag: "actionSpell" | "bonusActionSpell" }
+      >;
+    }
+  | Extract<BattleResolutionResult, { readonly tag: "invalid" }> {
+  const base = {
+    actorId: subject.actorId,
+    invocation: subject.invocation,
+    mode: subject.mode,
+    ...(subject.metamagic === undefined
+      ? {}
+      : { metamagic: subject.metamagic }),
+    ...(subject.componentWeaponItemId === undefined
+      ? {}
+      : { componentWeaponItemId: subject.componentWeaponItemId }),
+  };
+  return subject.spellAction === "action"
+    ? {
+        tag: "resolved",
+        subject: {
+          tag: "actionSpell",
+          ...base,
+        },
+      }
+    : {
+        tag: "resolved",
+        subject: {
+          tag: "bonusActionSpell",
+          ...base,
+        },
+      };
+}
+
 function resolveDisperseFogCloudCommand(
   input: BattleResolutionInput & {
     readonly subject: Extract<
@@ -1271,7 +1630,10 @@ function subjectSuppressedByCommandHalt(subject: BattleSubject): boolean {
     subject.tag === "monkFocusFlurryOfBlowsStrike" ||
     subject.tag === "unitFeature" ||
     subject.tag === "unitFeatureHeldWeaponActivation" ||
-    subject.tag === "druidWildShape"
+    subject.tag === "druidWildShape" ||
+    subject.tag === "companionLifecycle" ||
+    subject.tag === "findFamiliarSharedSenses" ||
+    subject.tag === "findFamiliarTouchSpell"
   ) {
     return true;
   }
@@ -4143,14 +4505,24 @@ export function snapshotBattle(state: BattleState): BattleSnapshot {
       const combatant = state.combatants.get(id);
       return combatant == null ? [] : [combatantSnapshot(state, combatant)];
     }),
-    findFamiliars: [...state.findFamiliars].map(([ownerId, familiar]) => {
-      if (familiar.status !== "present") {
-        return { ...familiar, ownerId };
+    companions: battleCompanionEntries(state).map((entry) => {
+      if (entry.companion.status !== "present") {
+        return {
+          ...entry.companion,
+          companionId: entry.companionId,
+        };
       }
       return {
-        ...familiar,
-        ownerId,
-        initiative: requirePresentFamiliarCombatantInitiative(state, familiar),
+        ...entry.companion,
+        companionId: entry.companionId,
+        resolvedStatBlockId: requirePresentFamiliarCombatantStatBlockId(
+          state,
+          entry.companionId,
+        ),
+        initiative: requirePresentFamiliarCombatantInitiative(
+          state,
+          entry.companionId,
+        ),
       };
     }),
     lightEmitters: battleLightEmitters(state),
@@ -4204,13 +4576,32 @@ export function battleTurnSnapshot(state: BattleState): BattleTurnSnapshot {
 
 function requirePresentFamiliarCombatantInitiative(
   state: BattleState,
-  familiar: FindFamiliarPresentState,
-): Extract<FindFamiliarSnapshot, { readonly status: "present" }>["initiative"] {
-  const combatant = state.combatants.get(familiar.familiarId);
+  familiarId: CombatantId,
+): Extract<
+  BattleCompanionSnapshot,
+  { readonly status: "present" }
+>["initiative"] {
+  const combatant = state.combatants.get(familiarId);
   if (combatant === undefined) {
     throw new Error("Present Find Familiar snapshot requires a combatant.");
   }
   return combatant.initiative;
+}
+
+function requirePresentFamiliarCombatantStatBlockId(
+  state: BattleState,
+  familiarId: CombatantId,
+): Extract<
+  BattleCompanionSnapshot,
+  { readonly status: "present" }
+>["resolvedStatBlockId"] {
+  const combatant = state.combatants.get(familiarId);
+  if (combatant?.origin.kind !== "statBlock") {
+    throw new Error(
+      "Present Find Familiar snapshot requires a Stat Block combatant.",
+    );
+  }
+  return combatant.origin.statBlock.id;
 }
 
 export function pendingInterruptSnapshot(

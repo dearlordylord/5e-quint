@@ -42,8 +42,18 @@ import {
 } from "../battle-subjects.ts";
 
 import { CombatantId, spellId } from "../identity.ts";
-import { isPresentFindFamiliarCombatant } from "../find-familiar-state.ts";
+import {
+  findFamiliarCompanionEntryForOwner,
+  isPresentFindFamiliarCombatant,
+} from "../find-familiar-state.ts";
 import { combatantHasPactOfTheChainFindFamiliar } from "../find-familiar-pact-chain.ts";
+import {
+  companionHeldObjectFactsHole,
+  companionReappearanceInitiativeHole,
+  companionReappearancePlacementHole,
+  findFamiliarConnectionHole,
+  findFamiliarTouchDeliveryTargetHoles,
+} from "../find-familiar-companion-subjects.ts";
 
 import {
   attackActionOptionsForActor,
@@ -105,6 +115,9 @@ import {
 } from "./spell-condition-effects-helpers.ts";
 
 import { discoverSupportedSpellInvocations } from "./spells-discovery.ts";
+import { spellInvocationIsSpellcasting } from "./spell-turn-resources.ts";
+import { supportedSpellInvocationMatchesRef } from "./spells-invocation-ref.ts";
+import { supportedSpellActs } from "./spells-profiles.ts";
 import { combatantInsideActiveAntimagicFieldAura } from "./antimagic-field-action-interdiction.ts";
 import {
   activeSelfTransformationModeEffect,
@@ -163,6 +176,7 @@ import type {
   StatBlockBattleCreatureState,
   StatBlockMultiattackActionResource,
   SupportedLiteralMultiattackDispatch,
+  SupportedSpellInvocation,
   SupportedStatBlockBonusActionOption,
   SupportedStatBlockBonusActionStandardAction,
   SupportedStatBlockMultiattack,
@@ -602,9 +616,11 @@ export function discoverBattleActs(
   acts.push(...monkFocusActs(state, actorId));
   acts.push(...statBlockBonusActionOptionActs(state, actorId));
   acts.push(...supportedUnitFeatureActs(state, actorId));
-  if (combatantCanTakeActions(state.combatants.get(actorId))) {
-    acts.push(...discoverSupportedSpellInvocations(state, actorId));
-  }
+  const spellActs = combatantCanTakeActions(state.combatants.get(actorId))
+    ? discoverSupportedSpellInvocations(state, actorId)
+    : [];
+  acts.push(...companionProtocolActs(state, actorId, spellActs));
+  acts.push(...spellActs);
   acts.push(...spellCreatedHeldObjectReleaseActs(state, actorId));
   acts.push(...flamingSphereRepositionActs(state, actorId));
   acts.push(...flamingSphereRamActs(state, actorId));
@@ -636,6 +652,203 @@ export function discoverBattleActs(
   acts.push(...discoverLegendaryActionActs(state));
 
   return acts;
+}
+
+function companionProtocolActs(
+  state: BattleState,
+  actorId: CombatantId,
+  spellActs: readonly AvailableBattleAct[],
+): readonly AvailableBattleAct[] {
+  const familiarEntry = findFamiliarCompanionEntryForOwner(state, actorId);
+  if (familiarEntry === null) {
+    return [];
+  }
+  const familiar = familiarEntry.companion;
+  const familiarId = familiarEntry.companionId;
+  const actor = state.combatants.get(actorId);
+  const actorCanAct = combatantCanTakeActions(actor);
+  if (familiar.status !== "present") {
+    if (!actorCanAct || !canSpendAction(state.currentTurnResources, "magic")) {
+      return [];
+    }
+    const permanentlyDismiss: AvailableBattleAct = {
+      subject: {
+        tag: "companionLifecycle",
+        actorId,
+        companionId: familiarId,
+        action: "permanentlyDismiss",
+      },
+      label: "Dismiss Familiar Forever",
+      summary: "Use a Magic action to permanently dismiss a retained familiar.",
+      initialHoles: [],
+    };
+    if (familiar.status === "temporarilyDismissed") {
+      return [
+        {
+          subject: {
+            tag: "companionLifecycle",
+            actorId,
+            companionId: familiarId,
+            action: "reappear",
+          },
+          label: "Reappear Familiar",
+          summary:
+            "Use a Magic action to make a temporarily dismissed familiar reappear.",
+          initialHoles: [
+            companionReappearancePlacementHole({
+              ownerId: actorId,
+              companionId: familiarId,
+            }),
+            companionReappearanceInitiativeHole({
+              ownerId: actorId,
+              companionId: familiarId,
+            }),
+          ],
+        },
+        permanentlyDismiss,
+      ];
+    }
+    return [permanentlyDismiss];
+  }
+  const familiarCombatant = state.combatants.get(familiarId);
+  if (familiarCombatant === undefined) {
+    return [];
+  }
+  const acts: AvailableBattleAct[] = [];
+  if (actorCanAct && canSpendAction(state.currentTurnResources, "magic")) {
+    acts.push(
+      {
+        subject: {
+          tag: "companionLifecycle",
+          actorId,
+          companionId: familiarId,
+          action: "temporarilyDismiss",
+        },
+        label: "Dismiss Familiar",
+        summary:
+          "Use a Magic action to temporarily dismiss a present familiar.",
+        initialHoles: [
+          companionHeldObjectFactsHole({ companionId: familiarId }),
+        ],
+      },
+      {
+        subject: {
+          tag: "companionLifecycle",
+          actorId,
+          companionId: familiarId,
+          action: "permanentlyDismiss",
+        },
+        label: "Dismiss Familiar Forever",
+        summary:
+          "Use a Magic action to permanently dismiss a present familiar.",
+        initialHoles: [],
+      },
+    );
+  }
+  if (actorCanAct && state.currentTurnResources.currentHasBonusAction) {
+    acts.push({
+      subject: {
+        tag: "findFamiliarSharedSenses",
+        actorId,
+        familiarId,
+      },
+      label: "Share Familiar Senses",
+      summary: "Use a Bonus Action to see and hear through a present familiar.",
+      initialHoles: [
+        findFamiliarConnectionHole({
+          ownerId: actorId,
+          companionId: familiarId,
+        }),
+      ],
+    });
+  }
+  if (combatantCanTakeReactions(familiarCombatant)) {
+    acts.push(
+      ...findFamiliarTouchSpellActs({
+        state,
+        actorId,
+        companionId: familiarId,
+        spellActs,
+      }),
+    );
+  }
+  return acts;
+}
+
+function findFamiliarTouchSpellActs(input: {
+  readonly state: BattleState;
+  readonly actorId: CombatantId;
+  readonly companionId: CombatantId;
+  readonly spellActs: readonly AvailableBattleAct[];
+}): readonly AvailableBattleAct[] {
+  const actor = input.state.combatants.get(input.actorId);
+  if (actor?.origin.kind !== "character") {
+    return [];
+  }
+  const invocations = supportedSpellActs(actor, input.state);
+  return input.spellActs.flatMap((act): readonly AvailableBattleAct[] => {
+    const subject = act.subject;
+    if (
+      (subject.tag !== "actionSpell" && subject.tag !== "bonusActionSpell") ||
+      subject.mode.tag !== "cast"
+    ) {
+      return [];
+    }
+    const invocation = touchSpellDeliveryInvocation(invocations, subject);
+    if (invocation === null) {
+      return [];
+    }
+    const targetChoiceHoles = act.initialHoles.filter(
+      (hole) => hole.kind === "targetChoice",
+    );
+    if (targetChoiceHoles.length !== 1) {
+      return [];
+    }
+    return [
+      {
+        subject: {
+          tag: "findFamiliarTouchSpell",
+          actorId: input.actorId,
+          companionId: input.companionId,
+          spellAction: subject.tag === "actionSpell" ? "action" : "bonusAction",
+          invocation: subject.invocation,
+          mode: subject.mode,
+          ...(subject.metamagic === undefined
+            ? {}
+            : { metamagic: subject.metamagic }),
+          ...(subject.componentWeaponItemId === undefined
+            ? {}
+            : { componentWeaponItemId: subject.componentWeaponItemId }),
+        },
+        label: `Familiar Delivery: ${act.label}`,
+        summary: "Deliver a Touch spell through a present familiar.",
+        initialHoles: [
+          findFamiliarConnectionHole({
+            ownerId: input.actorId,
+            companionId: input.companionId,
+          }),
+          ...findFamiliarTouchDeliveryTargetHoles(act.initialHoles),
+        ],
+      },
+    ];
+  });
+}
+
+function touchSpellDeliveryInvocation(
+  invocations: readonly SupportedSpellInvocation[],
+  subject: Extract<
+    BattleSubject,
+    { readonly tag: "actionSpell" | "bonusActionSpell" }
+  >,
+): SupportedSpellInvocation | null {
+  const invocation = invocations.find((candidate) =>
+    supportedSpellInvocationMatchesRef(candidate, subject.invocation),
+  );
+  return invocation !== undefined &&
+    spellInvocationIsSpellcasting(invocation) &&
+    invocation.spell.mechanics.range.kind === "touch"
+    ? invocation
+    : null;
 }
 
 function levitateAltitudeControlActs(
@@ -761,11 +974,12 @@ function pactOfTheChainFamiliarAttackActs(
   ) {
     return [];
   }
-  const familiar = state.findFamiliars.get(actorId);
-  if (familiar?.status !== "present") {
+  const familiarEntry = findFamiliarCompanionEntryForOwner(state, actorId);
+  if (familiarEntry?.companion.status !== "present") {
     return [];
   }
-  const familiarCombatant = state.combatants.get(familiar.familiarId);
+  const familiarId = familiarEntry.companionId;
+  const familiarCombatant = state.combatants.get(familiarId);
   if (
     familiarCombatant?.origin.kind !== "statBlock" ||
     !combatantCanTakeReactions(familiarCombatant)
@@ -776,7 +990,7 @@ function pactOfTheChainFamiliarAttackActs(
     "actions",
     familiarCombatant.origin.statBlock.statBlock.actions,
   ).flatMap((attack) => {
-    const targetHole = attackTargetHole(state, familiar.familiarId, attack);
+    const targetHole = attackTargetHole(state, familiarId, attack);
     return targetHole.choices.length === 0
       ? []
       : [
@@ -784,7 +998,7 @@ function pactOfTheChainFamiliarAttackActs(
             subject: {
               tag: "pactOfTheChainFamiliarAttack" as const,
               actorId,
-              familiarId: familiar.familiarId,
+              familiarId,
               attackName: attackActionOptionName(attack),
             },
             label: "Pact Familiar Attack",

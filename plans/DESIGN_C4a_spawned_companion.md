@@ -28,6 +28,12 @@ Pattern-A units (inline level-parameterized stat block):
 - **Summon Celestial** (L5) — Celestial Spirit; mode = Avenger / Defender.
 - **Summon Fiend** (L6) — Fiendish Spirit; mode = Demon / Devil / Yugoloth.
 
+## Active Follow-Up Links
+
+- `plans/COMPANION_SESSION_ADMISSION_AND_REAPPEARANCE_PLAN.md` records the
+  deferred out-of-battle companion session/admission workflow and the generic
+  reducer-discovered reappearance path for temporarily dismissed companions.
+
 ## Concrete fields the stat block contains (per RAW text)
 
 Across all 11 units:
@@ -35,7 +41,7 @@ Across all 11 units:
 | Field | Always | Sometimes | Notes |
 |---|---|---|---|
 | size | ✓ | | Small / Medium / Large / Huge |
-| creature type | ✓ | | Fey / Fiend / Construct / Dragon / … — branch by spell name + mode |
+| creature type | ✓ | | Fey / Fiend / Construct / Dragon / ... derived from typed source/procedure facts and selected mode |
 | alignment | ✓ | | Usually Neutral; some spells tag Lawful/Chaotic by mode |
 | AC | ✓ | | Formula in spell level: `N + spell level` or flat per mode |
 | HP | ✓ | | Formula in spell level: `base + N per level above base` |

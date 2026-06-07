@@ -115,8 +115,10 @@ export {
 } from "./find-familiar-forms.ts";
 export {
   admitPresentFindFamiliarToBattle,
+  applyCompanionLongRestDisappearance,
   applyFindFamiliarZeroHitPointDisappearance,
   castFindFamiliar,
+  castWildCompanion,
   permanentlyDismissFindFamiliar,
   reappearTemporarilyDismissedFindFamiliar,
   temporarilyDismissFindFamiliar,
@@ -127,10 +129,18 @@ export {
   type FindFamiliarPlacement,
   type FindFamiliarPresentState,
   type FindFamiliarReappearanceInput,
-  type FindFamiliarSnapshot,
-  type FindFamiliarState,
+  type WildCompanionCastInput,
+  type WildCompanionSpend,
 } from "./find-familiar-lifecycle.ts";
-export { findFamiliarCreatureTypeOverrideForOwner } from "./find-familiar-state.ts";
+export type {
+  BattleCompanionSnapshot,
+  BattleCompanionState,
+} from "./companion-state.ts";
+export {
+  findFamiliarCompanionEntryForOwner,
+  findFamiliarCompanionForOwner,
+  findFamiliarCreatureTypeOverrideForOwner,
+} from "./find-familiar-state.ts";
 export {
   FIND_FAMILIAR_TELEPATHY_RANGE_FEET,
   deliverTouchSpellThroughFindFamiliar,
@@ -418,6 +428,7 @@ export {
   BATTLE_UNIT_SUPPORT_PROFILES,
   ATTACK_ROLL_MISS_TO_HIT_REPLACEMENT_SUPPORT_PROFILE,
   BARDIC_INSPIRATION_GRANT_SUPPORT_PROFILE,
+  DRUID_WILD_COMPANION_SPELL_CAST_SUPPORT_PROFILE,
   DRUID_WILD_SHAPE_KNOWN_FORM_SUPPORT_PROFILE,
   FAILED_ABILITY_CHECK_RESOURCE_BOOST_SUPPORT_PROFILE,
   PASSIVE_ABILITY_CHECK_ROLL_MODE_SUPPORT_PROFILE,
@@ -439,6 +450,7 @@ export {
   battleAttackActionAttackCountScalingSupportForUnit,
   battleBonusActionStandardActionSupportForUnit,
   battleBardicInspirationGrantSupportForUnit,
+  battleDruidWildCompanionSpellCastSupportForUnit,
   battleDruidWildShapeKnownFormSupportForUnit,
   battleAttackRollMissToHitReplacementSupportForUnit,
   battleFailedAbilityCheckResourceBoostSupportForUnit,

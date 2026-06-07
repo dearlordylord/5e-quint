@@ -175,6 +175,7 @@ describe("end-user MCP vertical", () => {
       "Attack",
       "Attack",
       ...GENERIC_COMBAT_ACTION_LABELS_WITH_SHOVE,
+      "Adrenaline Rush",
       "Second Wind",
       "Move",
       "End Turn",
@@ -468,6 +469,7 @@ describe("end-user MCP vertical", () => {
       "Attack",
       "Attack",
       ...GENERIC_COMBAT_ACTION_LABELS_WITH_HELP_AND_SHOVE,
+      "Adrenaline Rush",
       "Second Wind",
       "Action Surge",
       "Move",
@@ -523,6 +525,7 @@ describe("end-user MCP vertical", () => {
       "Attack",
       "Attack",
       ...GENERIC_COMBAT_ACTION_LABELS_WITH_HELP_AND_SHOVE,
+      "Adrenaline Rush",
       "Second Wind",
       "Move",
       "End Turn",
@@ -1987,8 +1990,8 @@ function resolveAttackWithShieldReaction(
       },
     },
   );
-  const reactionHole = requireHole(afterRoll.result.holes, "reactionDecision");
-  const shieldChoice = afterRoll.snapshot.pendingReaction.choices.find(
+  const reactionHole = requireHole(afterRoll.result.holes, "interruptDecision");
+  const shieldChoice = afterRoll.snapshot.pendingInterrupt.choices.find(
     (choice: {
       readonly kind: string;
       readonly invocation?: { readonly spellId?: string };
@@ -2000,11 +2003,11 @@ function resolveAttackWithShieldReaction(
   return callTool(root, "fill_battle_hole", {
     subject: afterRoll.result.subject ?? act.subject,
     fill: {
-      kind: "reactionDecision",
+      kind: "interruptDecision",
       holeId: reactionHole.holeId,
       value: {
         kind: "resolve",
-        reactorId: "wizard",
+        responderId: "wizard",
         choice: {
           kind: "castTriggeredReactionSpell",
           invocation: shieldChoice.invocation,

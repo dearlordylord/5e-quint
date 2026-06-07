@@ -79,6 +79,7 @@ import {
 } from "../character-battle-resources.ts";
 import type { CombatantId } from "../identity.ts";
 import { findPresentFamiliarById } from "../find-familiar-state.ts";
+import { retainedStoredFormForPresentCompanion } from "../find-familiar-lifecycle.ts";
 import { parseSupportedUnitFeatureProfile } from "../unit-feature-support.ts";
 import type { ZeroHpLifecycle } from "../zero-hp-lifecycle.ts";
 import { removeBattleCombatants } from "./api-lifecycle.ts";
@@ -771,32 +772,53 @@ function applyFindFamiliarZeroHitPointDisappearanceAfterDamage(input: {
   if (entry === null) {
     return input.state;
   }
-  const disappearedFamiliar =
-    entry.familiar.formAccess === "findFamiliar"
-      ? ({
-          formAccess: "findFamiliar",
-          formSelection: entry.familiar.formSelection,
-          status: "disappearedAtZeroHitPoints",
-          creatureTypeOverride: entry.familiar.creatureTypeOverride,
-        } as const)
-      : ({
-          formAccess: "pactOfTheChain",
-          formSelection: entry.familiar.formSelection,
-          status: "disappearedAtZeroHitPoints",
-          creatureTypeOverride: entry.familiar.creatureTypeOverride,
-        } as const);
-  const stateWithDisappearedFamiliar = {
-    ...input.state,
-    findFamiliars: new Map(input.state.findFamiliars).set(
-      entry.ownerId,
+  const retainedForm = retainedStoredFormForPresentCompanion({
+    state: input.state,
+    companionId: entry.companionId,
+    companion: entry.familiar,
+  });
+  if (typeof retainedForm === "string") {
+    return removeInvalidPresentFindFamiliarAfterZeroHitPointDamage({
+      state: input.state,
+      companionId: entry.companionId,
+    });
+  }
+  const disappearedFamiliar = {
+    ...retainedForm,
+    status: "disappearedAtZeroHitPoints" as const,
+    ownerId: entry.ownerId,
+    creatureTypeOverride: entry.familiar.creatureTypeOverride,
+  };
+  const removed = removeBattleCombatants({
+    state: input.state,
+    combatantIds: [input.targetId],
+  });
+  const stateWithoutFamiliar = Either.isLeft(removed)
+    ? input.state
+    : removed.right;
+  return {
+    ...stateWithoutFamiliar,
+    companions: new Map(stateWithoutFamiliar.companions).set(
+      entry.companionId,
       disappearedFamiliar,
     ),
   };
+}
+
+function removeInvalidPresentFindFamiliarAfterZeroHitPointDamage(input: {
+  readonly state: BattleState;
+  readonly companionId: CombatantId;
+}): BattleState {
   const removed = removeBattleCombatants({
-    state: stateWithDisappearedFamiliar,
-    combatantIds: [input.targetId],
+    state: input.state,
+    combatantIds: [input.companionId],
   });
-  return Either.isLeft(removed) ? stateWithDisappearedFamiliar : removed.right;
+  const stateWithoutCombatant = Either.isLeft(removed)
+    ? input.state
+    : removed.right;
+  const companions = new Map(stateWithoutCombatant.companions);
+  companions.delete(input.companionId);
+  return { ...stateWithoutCombatant, companions };
 }
 
 export function applyAttackDamage(

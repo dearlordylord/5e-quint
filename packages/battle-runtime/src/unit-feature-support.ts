@@ -98,6 +98,8 @@ export const MONK_FOCUS_BATTLE_OPTIONS_SUPPORT_PROFILE =
   "monkFocusBattleOptions";
 export const DRUID_WILD_SHAPE_KNOWN_FORM_SUPPORT_PROFILE =
   "druidWildShapeKnownForm";
+export const DRUID_WILD_COMPANION_SPELL_CAST_SUPPORT_PROFILE =
+  "druidWildCompanionSpellCast";
 export const SPELL_SLOT_HEALING_MODIFIER_SUPPORT_PROFILE =
   "spellSlotHealingModifier";
 export const MAGIC_ACTION_HEALING_POOL_SUPPORT_PROFILE =
@@ -190,6 +192,7 @@ export const BATTLE_UNIT_SUPPORT_PROFILES = [
   ATTACK_ACTION_ATTACK_COUNT_SCALING_SUPPORT_PROFILE,
   BARDIC_INSPIRATION_GRANT_SUPPORT_PROFILE,
   DRUID_WILD_SHAPE_KNOWN_FORM_SUPPORT_PROFILE,
+  DRUID_WILD_COMPANION_SPELL_CAST_SUPPORT_PROFILE,
   BONUS_ACTION_DASH_TEMPORARY_HIT_POINTS_SUPPORT_PROFILE,
   FAILED_ABILITY_CHECK_RESOURCE_BOOST_SUPPORT_PROFILE,
   MONK_FOCUS_BATTLE_OPTIONS_SUPPORT_PROFILE,
@@ -1264,6 +1267,17 @@ export function battleUnitSupportProfilesForUnit(input: {
   }
   if (druidWildShapeKnownFormSupport !== null) {
     supportProfiles.push(druidWildShapeKnownFormSupport);
+  }
+
+  const druidWildCompanionSpellCastSupport =
+    battleDruidWildCompanionSpellCastSupportForUnit(input.unit);
+  if (druidWildCompanionSpellCastSupport === "unsupported") {
+    return battleUnitSupportProfileIssue(
+      `Unsupported battle Druid Wild Companion Unit hook: ${input.unit.id}.`,
+    );
+  }
+  if (druidWildCompanionSpellCastSupport !== null) {
+    supportProfiles.push(druidWildCompanionSpellCastSupport);
   }
 
   const weaponMasterySapSupport = battleWeaponMasterySapSupportForUnit(
@@ -5008,6 +5022,30 @@ export function battleDruidWildShapeKnownFormSupportForUnit(
       ]),
     ) ?? "unsupported"
   );
+}
+
+export function battleDruidWildCompanionSpellCastSupportForUnit(
+  unit: UnitRecord,
+):
+  | typeof DRUID_WILD_COMPANION_SPELL_CAST_SUPPORT_PROFILE
+  | "unsupported"
+  | null {
+  if (
+    unit.kind !== "class_feature" ||
+    unit.className !== "druid" ||
+    unit.mechanics.family !== "druid_wild_companion_spell_cast"
+  ) {
+    return null;
+  }
+  return unit.mechanics.spellId === "find_familiar" &&
+    unit.mechanics.activationCost.kind === "standard_action" &&
+    unit.mechanics.activationCost.action === "magic" &&
+    unit.mechanics.componentOverride.material === "not_required" &&
+    unit.mechanics.spellModeOverride.kind ===
+      "fixed_creature_type_mode_option" &&
+    unit.mechanics.spellModeOverride.optionId === "fey"
+    ? DRUID_WILD_COMPANION_SPELL_CAST_SUPPORT_PROFILE
+    : "unsupported";
 }
 
 function battleDruidWildShapeKnownFormSupportForUnitAtClassLevels(

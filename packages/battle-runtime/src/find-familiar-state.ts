@@ -3,13 +3,46 @@
 import type { BattleState } from "./battle-reducer.ts";
 import type { CombatantId } from "./identity.ts";
 import type { FindFamiliarCreatureTypeOverride } from "./find-familiar-forms.ts";
-import type { FindFamiliarPresentState } from "./find-familiar-lifecycle.ts";
+import type {
+  BattleCompanionEntry,
+  BattleCompanionPresentState,
+  BattleCompanionState,
+} from "./companion-state.ts";
+import {
+  companionEntries,
+  findCompanionByOwner,
+  findCompanionEntryByOwner,
+} from "./companion-state.ts";
+export type { BattleCompanionEntry } from "./companion-state.ts";
+
+export function battleCompanionEntries(
+  state: BattleState,
+): readonly BattleCompanionEntry[] {
+  return companionEntries(state.companions);
+}
+
+export function findFamiliarCompanionEntryForOwner(
+  state: BattleState,
+  ownerId: CombatantId,
+): BattleCompanionEntry | null {
+  return findCompanionEntryByOwner(state.companions, ownerId) ?? null;
+}
+
+export function findFamiliarCompanionForOwner(
+  state: BattleState,
+  ownerId: CombatantId,
+): BattleCompanionState | null {
+  return findCompanionByOwner(state.companions, ownerId) ?? null;
+}
 
 export function findFamiliarCreatureTypeOverrideForOwner(
   state: BattleState,
   ownerId: CombatantId,
 ): FindFamiliarCreatureTypeOverride | null {
-  return state.findFamiliars.get(ownerId)?.creatureTypeOverride ?? null;
+  return (
+    findCompanionByOwner(state.companions, ownerId)?.creatureTypeOverride ??
+    null
+  );
 }
 
 export function findPresentFamiliarById(
@@ -17,12 +50,12 @@ export function findPresentFamiliarById(
   familiarId: CombatantId,
 ): {
   readonly ownerId: CombatantId;
-  readonly familiar: FindFamiliarPresentState;
+  readonly companionId: CombatantId;
+  readonly familiar: BattleCompanionPresentState;
 } | null {
-  for (const [ownerId, familiar] of state.findFamiliars) {
-    if (familiar.status === "present" && familiar.familiarId === familiarId) {
-      return { ownerId, familiar };
-    }
+  const familiar = state.companions.get(familiarId);
+  if (familiar?.status === "present") {
+    return { ownerId: familiar.ownerId, companionId: familiarId, familiar };
   }
   return null;
 }

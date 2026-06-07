@@ -2242,6 +2242,19 @@ function projectHole(hole: BattleHole): readonly MbtHole[] {
       "Generic battle runtime MBT leaves Wild Shape equipment disposition holes to focused Wild Shape equipment witnesses.",
     );
   }
+  if (hole.kind === "findFamiliarConnection") {
+    throw new Error(
+      "Generic battle runtime MBT leaves companion connection holes to focused companion witnesses.",
+    );
+  }
+  if (
+    hole.kind === "companionReappearancePlacement" ||
+    hole.kind === "companionReappearanceInitiative"
+  ) {
+    throw new Error(
+      "Generic battle runtime MBT leaves companion reappearance holes to focused companion witnesses.",
+    );
+  }
   return [
     Match.value(hole).pipe(
       Match.when({ kind: "targetChoice" }, () => "TargetChoice" as const),

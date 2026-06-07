@@ -139,7 +139,7 @@ flowchart LR
 
   subgraph TSTS["TS <-> TS"]
     T0["src/index.ts"]
-    T1["public reducer APIs<br/>startBattle, discoverBattleActs,<br/>resolveBattleSubject, resolveBattleReaction,<br/>snapshotBattle"]
+    T1["public reducer APIs<br/>startBattle, discoverBattleActs,<br/>resolveBattleSubject, resolveBattleInterrupt,<br/>snapshotBattle"]
     T2["split reducer modules"]
     T3["battle-trace-contract.ts"]
     T0 -->|"exports"| T1

@@ -1,7 +1,7 @@
 import {
   discoverBattleActs,
-  openCreatureFallsReactionWindow,
-  resolveBattleReaction,
+  openCreatureFallsInterruptWindow,
+  resolveBattleInterrupt,
   resolveBattleSubject,
   sameBattleSubject,
   snapshotBattle,
@@ -86,24 +86,29 @@ export function handleBattleToolCall(
       }
 
       const fills = [...(previous?.fills ?? []), matched.args.fill];
-      const replayState =
-        matched.args.fill.kind === "reactionDecision"
-          ? visibleState
-          : (previous?.baseState ?? visibleState);
-      const result =
-        matched.args.fill.kind === "reactionDecision"
-          ? resolveBattleReaction({
-              state: replayState,
-              fill: matched.args.fill,
-            })
-          : resolveBattleSubject({ state: replayState, subject, fills });
+      const isInterruptDecision =
+        matched.args.fill.kind === "interruptDecision";
+      const replayState = isInterruptDecision
+        ? visibleState
+        : (previous?.baseState ?? visibleState);
+      const result = isInterruptDecision
+        ? resolveBattleInterrupt({
+            state: replayState,
+            fill: matched.args.fill,
+          })
+        : resolveBattleSubject({
+            state: replayState,
+            subject,
+            fills,
+            statBlockCatalog: root.statBlockCatalog,
+          });
       const pendingTransaction = pendingTransactionForResult({
         result,
         filledSubject: subject,
         previous,
         fills,
         replayState,
-        isReactionDecision: matched.args.fill.kind === "reactionDecision",
+        isInterruptDecision,
       });
       storeBattleResolution(root, result, pendingTransaction);
       return schemaJsonContent(
@@ -121,7 +126,7 @@ export function handleBattleToolCall(
         matched.args.subject.tag === "runtimeCommand" &&
         matched.args.subject.command === "creatureFalls"
       ) {
-        const result = openCreatureFallsReactionWindow({
+        const result = openCreatureFallsInterruptWindow({
           state: state.right,
           fallingCreatureId: matched.args.subject.fallingCreatureId,
           reactionSpellTargetFacts: matched.args.reactionSpellTargetFacts,
@@ -135,7 +140,7 @@ export function handleBattleToolCall(
             previous: null,
             fills: [],
             replayState: state.right,
-            isReactionDecision: false,
+            isInterruptDecision: false,
           }),
         );
         return schemaJsonContent(
@@ -162,6 +167,7 @@ export function handleBattleToolCall(
         state: state.right,
         subject: matched.args.subject,
         fills: [],
+        statBlockCatalog: root.statBlockCatalog,
       });
       storeBattleResolution(
         root,
@@ -172,7 +178,7 @@ export function handleBattleToolCall(
           previous: null,
           fills: [],
           replayState: state.right,
-          isReactionDecision: false,
+          isInterruptDecision: false,
         }),
       );
       return schemaJsonContent(
@@ -194,6 +200,7 @@ export function handleBattleToolCall(
           command: "endTurn",
         },
         fills: [],
+        statBlockCatalog: root.statBlockCatalog,
       });
       storeBattleResolution(
         root,
@@ -208,7 +215,7 @@ export function handleBattleToolCall(
           previous: null,
           fills: [],
           replayState: state.right,
-          isReactionDecision: false,
+          isInterruptDecision: false,
         }),
       );
       return schemaJsonContent(
@@ -265,18 +272,18 @@ function pendingTransactionForResult({
   previous,
   fills,
   replayState,
-  isReactionDecision,
+  isInterruptDecision,
 }: {
   readonly result: BattleResolutionResult;
   readonly filledSubject: BattleFillSession["subject"];
   readonly previous: PendingBattleFillSession | null;
   readonly fills: readonly BattleFill[];
   readonly replayState: BattleState;
-  readonly isReactionDecision: boolean;
+  readonly isInterruptDecision: boolean;
 }): PendingBattleFillSession | null {
   if (result.tag !== "needsHoles") return null;
   if (
-    isReactionDecision &&
+    isInterruptDecision &&
     previous !== null &&
     sameBattleSubject(result.subject, filledSubject)
   ) {
@@ -287,9 +294,9 @@ function pendingTransactionForResult({
     };
   }
   return {
-    baseState: isReactionDecision ? result.state : replayState,
+    baseState: isInterruptDecision ? result.state : replayState,
     subject: result.subject,
-    fills: isReactionDecision ? [] : fills,
+    fills: isInterruptDecision ? [] : fills,
   };
 }
 

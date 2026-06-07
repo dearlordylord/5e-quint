@@ -477,15 +477,15 @@ describe("manual MCP battle surface coverage", () => {
 
     expect(afterAttackRoll.result).toMatchObject({
       tag: "needsHoles",
-      holes: [expect.objectContaining({ kind: "reactionDecision" })],
-      snapshot: { pendingReaction: { trigger: "attackHit" } },
+      holes: [expect.objectContaining({ kind: "interruptDecision" })],
+      snapshot: { pendingInterrupt: { trigger: "attackHit" } },
     });
     const reactionHole = requireHole(
       afterAttackRoll.result.holes,
-      "reactionDecision",
+      "interruptDecision",
     );
     const shieldChoice =
-      afterAttackRoll.result.snapshot.pendingReaction.choices.find(
+      afterAttackRoll.result.snapshot.pendingInterrupt.choices.find(
         (choice: Json) =>
           choice.kind === "castTriggeredReactionSpell" &&
           choice.invocation.spellId === "shield",
@@ -497,11 +497,11 @@ describe("manual MCP battle surface coverage", () => {
     const afterShield = call(root, "fill_battle_hole", {
       subject: goblinAttack.subject,
       fill: {
-        kind: "reactionDecision",
+        kind: "interruptDecision",
         holeId: reactionHole.holeId,
         value: {
           kind: "resolve",
-          reactorId: "fighter",
+          responderId: "fighter",
           choice: {
             kind: "castTriggeredReactionSpell",
             invocation: shieldChoice.invocation,
@@ -594,11 +594,11 @@ describe("manual MCP battle surface coverage", () => {
 
     expect(afterDamage.result).toMatchObject({
       tag: "needsHoles",
-      holes: [expect.objectContaining({ kind: "reactionDecision" })],
-      snapshot: { pendingReaction: { trigger: "afterDamage" } },
+      holes: [expect.objectContaining({ kind: "interruptDecision" })],
+      snapshot: { pendingInterrupt: { trigger: "afterDamage" } },
     });
     const hellishChoice =
-      afterDamage.result.snapshot.pendingReaction.choices.find(
+      afterDamage.result.snapshot.pendingInterrupt.choices.find(
         (choice: Json) =>
           choice.kind === "castTriggeredReactionSpell" &&
           choice.invocation.spellId === "hellish_rebuke" &&
@@ -611,16 +611,16 @@ describe("manual MCP battle surface coverage", () => {
     const damage = requireHole(hellishChoice.initialHoles, "rolledDice");
     const reactionHole = requireHole(
       afterDamage.result.holes,
-      "reactionDecision",
+      "interruptDecision",
     );
     const afterHellishRebuke = call(root, "fill_battle_hole", {
       subject: afterDamage.result.subject ?? goblinAttack.subject,
       fill: {
-        kind: "reactionDecision",
+        kind: "interruptDecision",
         holeId: reactionHole.holeId,
         value: {
           kind: "resolve",
-          reactorId: "fighter",
+          responderId: "fighter",
           choice: {
             kind: "castTriggeredReactionSpell",
             invocation: hellishChoice.invocation,
@@ -697,11 +697,11 @@ describe("manual MCP battle surface coverage", () => {
 
     expect(falling.result).toMatchObject({
       tag: "needsHoles",
-      holes: [expect.objectContaining({ kind: "reactionDecision" })],
-      snapshot: { pendingReaction: { trigger: "creatureFalls" } },
+      holes: [expect.objectContaining({ kind: "interruptDecision" })],
+      snapshot: { pendingInterrupt: { trigger: "creatureFalls" } },
     });
     const featherFallChoice =
-      falling.result.snapshot.pendingReaction.choices.find(
+      falling.result.snapshot.pendingInterrupt.choices.find(
         (choice: Json) =>
           choice.kind === "castTriggeredReactionSpell" &&
           choice.invocation.spellId === "feather_fall",
@@ -713,15 +713,15 @@ describe("manual MCP battle surface coverage", () => {
       featherFallChoice.initialHoles,
       "spellTargetList",
     );
-    const reactionHole = requireHole(falling.result.holes, "reactionDecision");
+    const reactionHole = requireHole(falling.result.holes, "interruptDecision");
     const resolved = call(root, "fill_battle_hole", {
       subject: falling.result.subject,
       fill: {
-        kind: "reactionDecision",
+        kind: "interruptDecision",
         holeId: reactionHole.holeId,
         value: {
           kind: "resolve",
-          reactorId: "fighter",
+          responderId: "fighter",
           choice: {
             kind: "castTriggeredReactionSpell",
             invocation: featherFallChoice.invocation,

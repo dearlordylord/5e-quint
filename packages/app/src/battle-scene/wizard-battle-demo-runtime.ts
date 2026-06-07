@@ -2,9 +2,9 @@ import {
   type AvailableBattleAct,
   type BattleFill,
   type BattleHole,
+  type BattleInterruptProcedureChoice,
   type BattleObjectDamageDisposition,
   type BattleObjectId,
-  type BattleReactionProcedureChoice,
   type BattleResolutionResult,
   type BattleState,
   type BattleSubject,
@@ -22,7 +22,7 @@ type CounterspellTriggerFact = Extract<
 >
 
 type CounterspellReactionChoice = Extract<
-  BattleReactionProcedureChoice,
+  BattleInterruptProcedureChoice,
   { readonly kind: "castTriggeredReactionSpell" }
 >
 
@@ -52,7 +52,7 @@ export function requireCounterspellChoice(
     readonly spellId: string
   }
 ): CounterspellReactionChoice {
-  const choice = result.snapshot.pendingReaction?.choices.find(
+  const choice = result.snapshot.pendingInterrupt?.choices.find(
     (candidate): candidate is CounterspellReactionChoice =>
       candidate.kind === "castTriggeredReactionSpell" &&
       candidate.reactorId === input.reactorId &&
@@ -71,10 +71,10 @@ export function counterspellDecision(
   reactorId: CombatantId,
   choice: CounterspellReactionChoice,
   fills: ReadonlyArray<BattleFill>
-): Extract<BattleFill, { readonly kind: "reactionDecision" }>["value"] {
+): Extract<BattleFill, { readonly kind: "interruptDecision" }>["value"] {
   return {
     kind: "resolve",
-    reactorId,
+    responderId: reactorId,
     choice: {
       kind: "castTriggeredReactionSpell",
       invocation: choice.invocation,
@@ -108,17 +108,17 @@ export function counterspellTriggerFact(input: {
   }
 }
 
-export function reactionDecisionFill(
-  hole: Extract<BattleHole, { readonly kind: "reactionDecision" }>,
-  value: Extract<BattleFill, { readonly kind: "reactionDecision" }>["value"]
-): Extract<BattleFill, { readonly kind: "reactionDecision" }> {
-  return { kind: "reactionDecision", holeId: hole.holeId, value }
+export function interruptDecisionFill(
+  hole: Extract<BattleHole, { readonly kind: "interruptDecision" }>,
+  value: Extract<BattleFill, { readonly kind: "interruptDecision" }>["value"]
+): Extract<BattleFill, { readonly kind: "interruptDecision" }> {
+  return { kind: "interruptDecision", holeId: hole.holeId, value }
 }
 
-export function declineReactionDecision(
+export function declineInterruptDecision(
   reactorId: CombatantId
-): Extract<BattleFill, { readonly kind: "reactionDecision" }>["value"] {
-  return { kind: "decline", reactorId }
+): Extract<BattleFill, { readonly kind: "interruptDecision" }>["value"] {
+  return { kind: "decline", responderId: reactorId }
 }
 
 export function fireballSavingThrowOutcomeFill(
@@ -218,7 +218,7 @@ export function requireNeedsReaction(
   message: string
 ): asserts result is Extract<BattleResolutionResult, { readonly tag: "needsHoles" }> {
   requireNeedsHoles(result, message)
-  if (result.snapshot.pendingReaction?.trigger !== "spellCast") {
+  if (result.snapshot.pendingInterrupt?.trigger !== "spellCast") {
     throw new Error(message)
   }
 }

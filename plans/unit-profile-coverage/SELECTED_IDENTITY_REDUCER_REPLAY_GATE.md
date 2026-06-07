@@ -21,7 +21,7 @@ For either shape, `scripts/unit-profile-coverage-claim-scan.cjs` checks:
 
 For `packages/battle-runtime`, full reducer replays are recognized through
 public battle runtime entrypoints such as `startBattle`, `discoverBattleActs`,
-`resolveBattleSubject`, and `resolveBattleReaction`. Projection/admission
+`resolveBattleSubject`, and `resolveBattleInterrupt`. Projection/admission
 witnesses that do not execute a battle step must still reach package-public
 runtime code exported from `src/index.ts`.
 

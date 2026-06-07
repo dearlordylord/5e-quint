@@ -30,6 +30,7 @@ import {
   combatantId,
   deliverTouchSpellThroughFindFamiliar,
   discoverBattleActs,
+  findFamiliarCompanionEntryForOwner,
   findFamiliarFormEligibilityForSpell,
   findFamiliarTelepathicConnection,
   initiativeScore,
@@ -354,12 +355,17 @@ function resolvePactFamiliarAttack(
 function findFamiliarCompanionProjection(
   state: FindFamiliarCompanionRuntimeState,
 ): FindFamiliarCompanionProjection {
-  const familiar = state.battle.findFamiliars.get(casterId);
+  const familiarEntry = findFamiliarCompanionEntryForOwner(
+    state.battle,
+    casterId,
+  );
+  const familiar = familiarEntry?.companion ?? null;
   const familiarCombatant =
-    familiar?.status === "present"
-      ? state.battle.combatants.get(familiar.familiarId)
+    familiarEntry !== null && familiarEntry.companion.status === "present"
+      ? state.battle.combatants.get(familiarEntry.companionId)
       : undefined;
-  const familiarReactionAvailable = familiarCombatant?.reactionAvailable === true;
+  const familiarReactionAvailable =
+    familiarCombatant?.reactionAvailable === true;
   const spellSlotCommitted =
     state.battle.currentTurnResources.spellSlotUsesThisTurn.some(
       (use) => use.kind === "committed",
@@ -380,7 +386,7 @@ function findFamiliarCompanionProjection(
     creatureTypeOverride: creatureTypeOverride(
       familiar?.creatureTypeOverride ?? "none",
     ),
-    companionCount: state.battle.findFamiliars.size,
+    companionCount: state.battle.companions.size,
     telepathyAvailable: connection !== null,
     sharedSensesActive: caster.activeEffects.some(
       (effect) =>
@@ -393,7 +399,8 @@ function findFamiliarCompanionProjection(
     ownerAttackAvailable:
       state.battle.currentTurnResources.actionResources.length > 0,
     familiarReactionAvailable,
-    touchDeliveryReactionSpent: spellSlotCommitted && !familiarReactionAvailable,
+    touchDeliveryReactionSpent:
+      spellSlotCommitted && !familiarReactionAvailable,
     pactReactionAttackResolved:
       targetHp === initialTargetHp - 1 && !spellSlotCommitted,
     spellSlotCommitted,
@@ -453,8 +460,9 @@ function touchSpellTargetFill(
     value: targetId,
     spatialFacts: [
       {
-        kind: "spellTarget",
-        casterId,
+        kind: "findFamiliarTouchSpellTarget",
+        ownerId: casterId,
+        familiarId,
         targetId,
         spellId: "cure_wounds",
       },

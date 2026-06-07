@@ -1219,7 +1219,7 @@ describe("MCP server route", () => {
         ],
         readiedResponses: { spells: [], movements: [] },
         helpAttackMarkers: [],
-        pendingReaction: null,
+        pendingInterrupt: null,
       },
       session: {
         selectedStatBlockId: "stat_block_goblin_warrior",
@@ -1272,6 +1272,7 @@ describe("MCP server route", () => {
       "Attack",
       "Attack",
       ...GENERIC_COMBAT_ACTION_LABELS_WITH_SHOVE,
+      "Adrenaline Rush",
       "Second Wind",
       "Move",
       "End Turn",
@@ -1751,7 +1752,7 @@ describe("MCP server route", () => {
     ]);
     expect(
       afterDamage.snapshot.acts.map((act: { label: string }) => act.label),
-    ).toEqual(["Second Wind", "Move", "End Turn"]);
+    ).toEqual(["Adrenaline Rush", "Second Wind", "Move", "End Turn"]);
     expect(root.sessionStore.pendingBattleFills).toBeNull();
 
     const afterEndTurn = readPayload(
@@ -2372,10 +2373,10 @@ describe("MCP server route", () => {
         },
         { combatantId: "wizard", origin: { kind: "character" } },
       ],
-      findFamiliars: [
+      companions: [
         {
           ownerId: "wizard",
-          familiarId: "wizard-familiar",
+          companionId: "wizard-familiar",
           formSelection: { tag: "normalNamedForm", formId: "cat" },
           creatureTypeOverride: "fey",
         },
@@ -2390,14 +2391,297 @@ describe("MCP server route", () => {
       tempHp: Hp(3),
     });
     expect(
-      root.sessionStore.battleState?.findFamiliars.get(combatantId("wizard")),
+      root.sessionStore.battleState?.companions.get(
+        combatantId("wizard-familiar"),
+      ),
     ).toMatchObject({
       status: "present",
-      familiarId: combatantId("wizard-familiar"),
     });
   });
 
-  test("start_battle admits spellbook Ritual source-linked Find Familiar without preparation", () => {
+  test("fills companion reappearance holes one at a time through MCP", () => {
+    const root = createMcpCompositionRoot();
+    const draftId = "draft:mcp-find-familiar-reappearance-fills";
+    createFinalizedWizardWithFindFamiliar(root, draftId);
+
+    readPayload(
+      handleToolCall(root, "start_battle", {
+        battleId: "battle:mcp-find-familiar-reappearance-fills",
+        initialCombatants: [
+          {
+            kind: "characterSession",
+            characterId: testCharacterId(draftId),
+            combatantId: "wizard",
+            initiative: 18,
+            side: "party",
+          },
+          {
+            kind: "statBlock",
+            combatantId: "wizard-familiar",
+            initiative: 12,
+            admissionSource: {
+              kind: "sourceLinked",
+              sourceActorId: "wizard",
+              selection: {
+                kind: "findFamiliarForm",
+                form: { tag: "normalNamedForm", formId: "cat" },
+                creatureTypeOverrideChoiceId: "fey",
+              },
+            },
+          },
+        ],
+      }),
+    );
+
+    const dismissalAct = readPayload(
+      handleToolCall(root, "discover_battle_acts", {}),
+    ).snapshot.acts.find(
+      (act: {
+        readonly subject: { readonly tag: string; readonly action?: string };
+      }) =>
+        act.subject.tag === "companionLifecycle" &&
+        act.subject.action === "temporarilyDismiss",
+    );
+    expect(dismissalAct).toBeDefined();
+    if (dismissalAct === undefined) return;
+    const heldObjectHole = dismissalAct.initialHoles.find(
+      (hole: { readonly kind: string }) => hole.kind === "heldObjectFacts",
+    );
+    expect(heldObjectHole).toBeDefined();
+    if (heldObjectHole === undefined) return;
+
+    const dismissed = readPayload(
+      handleToolCall(root, "fill_battle_hole", {
+        subject: dismissalAct.subject,
+        fill: {
+          kind: "heldObjectFacts",
+          holeId: heldObjectHole.holeId,
+          value: { objectIds: [] },
+        },
+      }),
+    );
+    expect(dismissed.result.tag).toBe("resolved");
+    expect(dismissed.snapshot.companions).toMatchObject([
+      { companionId: "wizard-familiar", status: "temporarilyDismissed" },
+    ]);
+
+    readPayload(handleToolCall(root, "end_turn", { actorId: "wizard" }));
+    const reappearanceAct = readPayload(
+      handleToolCall(root, "discover_battle_acts", {}),
+    ).snapshot.acts.find(
+      (act: {
+        readonly subject: { readonly tag: string; readonly action?: string };
+      }) =>
+        act.subject.tag === "companionLifecycle" &&
+        act.subject.action === "reappear",
+    );
+    expect(reappearanceAct).toBeDefined();
+    if (reappearanceAct === undefined) return;
+    const placementHole = reappearanceAct.initialHoles.find(
+      (hole: { readonly kind: string }) =>
+        hole.kind === "companionReappearancePlacement",
+    );
+    expect(placementHole).toBeDefined();
+    if (placementHole === undefined) return;
+
+    const afterPlacement = readPayload(
+      handleToolCall(root, "fill_battle_hole", {
+        subject: reappearanceAct.subject,
+        fill: {
+          kind: "companionReappearancePlacement",
+          holeId: placementHole.holeId,
+          value: { kind: "unoccupiedSpaceWithin30Feet" },
+        },
+      }),
+    );
+    expect(afterPlacement.result.tag).toBe("needsHoles");
+    expect(afterPlacement.session.transientBattleFills).toMatchObject({
+      subject: reappearanceAct.subject,
+      fills: [
+        expect.objectContaining({ kind: "companionReappearancePlacement" }),
+      ],
+    });
+    const initiativeHole = afterPlacement.result.holes.find(
+      (hole: { readonly kind: string }) =>
+        hole.kind === "companionReappearanceInitiative",
+    );
+    expect(initiativeHole).toBeDefined();
+    if (initiativeHole === undefined) return;
+
+    const afterInitiative = readPayload(
+      handleToolCall(root, "fill_battle_hole", {
+        subject: reappearanceAct.subject,
+        fill: {
+          kind: "companionReappearanceInitiative",
+          holeId: initiativeHole.holeId,
+          value: 14,
+        },
+      }),
+    );
+    expect(afterInitiative.result.tag).toBe("resolved");
+    expect(afterInitiative.session.transientBattleFills).toBeNull();
+    expect(afterInitiative.snapshot.companions).toMatchObject([
+      {
+        companionId: "wizard-familiar",
+        status: "present",
+        initiative: 14,
+      },
+    ]);
+  });
+
+  test("fills familiar touch spell delivery holes one at a time through MCP", () => {
+    const root = createMcpCompositionRoot();
+    const draftId = "draft:mcp-find-familiar-touch-delivery-fills";
+    createFinalizedWizardWithFindFamiliar(root, draftId, {
+      preparedSpells: ["find_familiar", "cure_wounds"],
+      spellcastingSafeLoadout: true,
+    });
+
+    readPayload(
+      handleToolCall(root, "start_battle", {
+        battleId: "battle:mcp-find-familiar-touch-delivery-fills",
+        initialCombatants: [
+          {
+            kind: "characterSession",
+            characterId: testCharacterId(draftId),
+            combatantId: "wizard",
+            initiative: 18,
+            side: "party",
+          },
+          {
+            kind: "statBlock",
+            combatantId: "wizard-familiar",
+            initiative: 12,
+            admissionSource: {
+              kind: "sourceLinked",
+              sourceActorId: "wizard",
+              selection: {
+                kind: "findFamiliarForm",
+                form: { tag: "normalNamedForm", formId: "cat" },
+                creatureTypeOverrideChoiceId: "fey",
+              },
+            },
+          },
+          {
+            kind: "statBlock",
+            statBlockId: "stat_block_goblin_warrior",
+            combatantId: "goblin",
+            initiative: 7,
+            currentHp: 1,
+            side: "opposition",
+            admissionSource: { kind: "encounterParticipant" },
+          },
+        ],
+      }),
+    );
+
+    const deliveryAct = readPayload(
+      handleToolCall(root, "discover_battle_acts", {}),
+    ).snapshot.acts.find(
+      (act: {
+        readonly subject: {
+          readonly tag: string;
+          readonly invocation?: { readonly spellId?: string };
+        };
+      }) =>
+        act.subject.tag === "findFamiliarTouchSpell" &&
+        act.subject.invocation?.spellId === "cure_wounds",
+    );
+    expect(deliveryAct).toBeDefined();
+    if (deliveryAct === undefined) return;
+    const connectionHole = deliveryAct.initialHoles.find(
+      (hole: { readonly kind: string }) =>
+        hole.kind === "findFamiliarConnection",
+    );
+    expect(connectionHole).toBeDefined();
+    if (connectionHole === undefined) return;
+
+    const afterConnection = readPayload(
+      handleToolCall(root, "fill_battle_hole", {
+        subject: deliveryAct.subject,
+        fill: {
+          kind: "findFamiliarConnection",
+          holeId: connectionHole.holeId,
+          value: { withinRange: true },
+        },
+      }),
+    );
+    expect(afterConnection.result.tag).toBe("needsHoles");
+    expect(afterConnection.session.transientBattleFills).toMatchObject({
+      subject: deliveryAct.subject,
+      fills: [expect.objectContaining({ kind: "findFamiliarConnection" })],
+    });
+    expect(
+      root.sessionStore.battleState?.combatants.get(
+        combatantId("wizard-familiar"),
+      )?.reactionAvailable,
+    ).toBe(true);
+    const targetHole = afterConnection.result.holes.find(
+      (hole: { readonly kind: string }) => hole.kind === "targetChoice",
+    );
+    expect(targetHole).toMatchObject({
+      label: "Familiar touch delivery target",
+      requiresTableSpatialFact: true,
+    });
+    if (targetHole === undefined) return;
+
+    const afterTarget = readPayload(
+      handleToolCall(root, "fill_battle_hole", {
+        subject: deliveryAct.subject,
+        fill: {
+          kind: "targetChoice",
+          holeId: targetHole.holeId,
+          value: "goblin",
+          spatialFacts: [
+            {
+              kind: "findFamiliarTouchSpellTarget",
+              ownerId: "wizard",
+              familiarId: "wizard-familiar",
+              targetId: "goblin",
+              spellId: "cure_wounds",
+            },
+          ],
+        },
+      }),
+    );
+    expect(afterTarget.result.tag).toBe("needsHoles");
+    expect(
+      root.sessionStore.battleState?.combatants.get(
+        combatantId("wizard-familiar"),
+      )?.reactionAvailable,
+    ).toBe(true);
+    const healingRollHole = afterTarget.result.holes.find(
+      (hole: { readonly kind: string }) => hole.kind === "rolledDice",
+    );
+    expect(healingRollHole).toBeDefined();
+    if (healingRollHole === undefined) return;
+
+    const afterHealingRoll = readPayload(
+      handleToolCall(root, "fill_battle_hole", {
+        subject: deliveryAct.subject,
+        fill: {
+          kind: "rolledDice",
+          holeId: healingRollHole.holeId,
+          value: [{ results: [4, 4] }],
+        },
+      }),
+    );
+    expect(afterHealingRoll.result.tag).toBe("resolved");
+    expect(afterHealingRoll.session.transientBattleFills).toBeNull();
+    expect(
+      root.sessionStore.battleState?.combatants.get(
+        combatantId("wizard-familiar"),
+      )?.reactionAvailable,
+    ).toBe(false);
+    expect(
+      afterHealingRoll.snapshot.combatants.find(
+        (combatant: { readonly combatantId: string }) =>
+          combatant.combatantId === "goblin",
+      ),
+    ).toMatchObject({ hp: 8 });
+  });
+
+  test("documents current source-linked admission gap for spellbook Ritual Find Familiar", () => {
     const root = createMcpCompositionRoot();
     const draftId = "draft:mcp-find-familiar-spellbook-ritual-admission";
     createFinalizedWizardWithFindFamiliar(root, draftId, {
@@ -2436,10 +2720,10 @@ describe("MCP server route", () => {
     expect(started.snapshot).toMatchObject({
       currentActorId: "wizard-familiar",
       turnOrder: ["wizard-familiar", "wizard"],
-      findFamiliars: [
+      companions: [
         {
           ownerId: "wizard",
-          familiarId: "wizard-familiar",
+          companionId: "wizard-familiar",
           formSelection: { tag: "normalNamedForm", formId: "owl" },
         },
       ],
@@ -2904,6 +3188,7 @@ describe("MCP server route", () => {
       "Attack",
       "Attack",
       ...GENERIC_COMBAT_ACTION_LABELS_WITH_SHOVE,
+      "Adrenaline Rush",
       "Second Wind",
       "Move",
       "End Turn",
@@ -5076,10 +5361,10 @@ describe("MCP server route", () => {
     expect(afterAttackRoll).toMatchObject({
       result: {
         tag: "needsHoles",
-        holes: [{ kind: "reactionDecision", trigger: "attackHit" }],
+        holes: [{ kind: "interruptDecision", trigger: "attackHit" }],
       },
       snapshot: {
-        pendingReaction: { trigger: "attackHit" },
+        pendingInterrupt: { trigger: "attackHit" },
       },
     });
 
@@ -5087,11 +5372,11 @@ describe("MCP server route", () => {
       handleToolCall(root, "fill_battle_hole", {
         subject: goblinAttack,
         fill: {
-          kind: "reactionDecision",
-          holeId: "battle:reaction:decision",
+          kind: "interruptDecision",
+          holeId: "battle:interrupt:decision",
           value: {
             kind: "resolve",
-            reactorId: "fighter",
+            responderId: "fighter",
             choice: {
               kind: "releaseReadiedSpell",
               readiedSpellCasterId: "fighter",
@@ -5112,7 +5397,7 @@ describe("MCP server route", () => {
         holes: [{ kind: "targetChoice" }],
       },
       snapshot: {
-        pendingReaction: { trigger: "attackHit" },
+        pendingInterrupt: { trigger: "attackHit" },
       },
     });
     expect(root.sessionStore.battleState?.interruptStack).toHaveLength(1);
@@ -5409,12 +5694,28 @@ function createFinalizedFighterSheet(
 function createFinalizedWizardWithFindFamiliar(
   root: ReturnType<typeof createMcpCompositionRoot>,
   draftId: string,
-  input: { readonly preparedSpells?: readonly string[] } = {},
+  input: {
+    readonly preparedSpells?: readonly string[];
+    readonly spellcastingSafeLoadout?: boolean;
+  } = {},
 ): CharacterBuild {
   const fighter = fighterCharacterBuild(root.unitLibrary);
   const build = {
     ...fighter,
     progression: wizardProgression(root),
+    ...(input.spellcastingSafeLoadout === true
+      ? {
+          equipment: {
+            ...fighter.equipment,
+            loadout: {
+              shield: testCharacterEquipmentItemId(
+                "shield",
+                "equipment_shield",
+              ),
+            },
+          },
+        }
+      : {}),
     spellcasting: testWizardSpellcasting({
       cantrips: [],
       spellbook: ["find_familiar"],

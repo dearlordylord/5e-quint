@@ -106,6 +106,7 @@ import type {
   UnitRecord,
   WeaponProficiency,
 } from "@dnd/surface/surface/types";
+import type { StatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog";
 import { Brand } from "effect";
 import type {
   CharacterUnarmedStrikeActionOption,
@@ -146,9 +147,10 @@ import {
 } from "./character-battle-resources.ts";
 import type { CharacterBattleClassLevel } from "./character-class-level.ts";
 import type {
-  FindFamiliarSnapshot,
-  FindFamiliarState,
-} from "./find-familiar-lifecycle.ts";
+  BattleCompanionPlacement,
+  BattleCompanionSnapshot,
+  BattleCompanionState,
+} from "./companion-state.ts";
 import type {
   BattleAreaId,
   BattleDancingLightId,
@@ -1504,6 +1506,13 @@ export type BattleTargetSpatialFact =
   | {
       readonly kind: "spellTarget";
       readonly casterId: CombatantId;
+      readonly targetId: CombatantId;
+      readonly spellId: SpellRecord["id"];
+    }
+  | {
+      readonly kind: "findFamiliarTouchSpellTarget";
+      readonly ownerId: CombatantId;
+      readonly familiarId: CombatantId;
       readonly targetId: CombatantId;
       readonly spellId: SpellRecord["id"];
     }
@@ -4077,7 +4086,7 @@ export type BattleState = {
   readonly battleId: BattleId;
   readonly initiative: InitiativeStack<CombatantId>;
   readonly combatants: ReadonlyMap<CombatantId, BattleCreatureState>;
-  readonly findFamiliars: ReadonlyMap<CombatantId, FindFamiliarState>;
+  readonly companions: ReadonlyMap<CombatantId, BattleCompanionState>;
   readonly objectOutlines: readonly BattleObjectOutline[];
   readonly lightEmitters: readonly BattleStoredLightEmitter[];
   readonly hidePrerequisites: ReadonlyMap<CombatantId, BattleHidePrerequisite>;
@@ -4369,6 +4378,32 @@ export type BattleHeldObjectFactsHole = {
   readonly kind: "heldObjectFacts";
   readonly label: string;
   readonly actorId: CombatantId;
+};
+export type BattleFindFamiliarConnectionHole = {
+  readonly holeInstanceKey: HoleInstanceKey;
+  readonly holeId: BattleHoleId;
+  readonly kind: "findFamiliarConnection";
+  readonly label: string;
+  readonly ownerId: CombatantId;
+  readonly companionId: CombatantId;
+  readonly rangeFeet: MovementFeet;
+  readonly requiresTableSpatialFact: true;
+};
+export type BattleCompanionReappearancePlacementHole = {
+  readonly holeInstanceKey: HoleInstanceKey;
+  readonly holeId: BattleHoleId;
+  readonly kind: "companionReappearancePlacement";
+  readonly label: string;
+  readonly ownerId: CombatantId;
+  readonly companionId: CombatantId;
+};
+export type BattleCompanionReappearanceInitiativeHole = {
+  readonly holeInstanceKey: HoleInstanceKey;
+  readonly holeId: BattleHoleId;
+  readonly kind: "companionReappearanceInitiative";
+  readonly label: string;
+  readonly ownerId: CombatantId;
+  readonly companionId: CombatantId;
 };
 export type BattleMagicWeaponTargetItemFact = {
   readonly kind: "nonmagicalWeaponItem";
@@ -5594,6 +5629,9 @@ export type BattleHole =
   | BattleTeleportDestinationHole
   | BattleSpiritualWeaponForcePositionHole
   | BattleHeldObjectFactsHole
+  | BattleFindFamiliarConnectionHole
+  | BattleCompanionReappearancePlacementHole
+  | BattleCompanionReappearanceInitiativeHole
   | BattleMagicWeaponTargetItemHole
   | BattleSpellDamageTypeChoiceHole
   | BattleSpellTargetAllocationHole
@@ -5821,6 +5859,23 @@ export type BattleFill =
       };
     }
   | {
+      readonly kind: "findFamiliarConnection";
+      readonly holeId: BattleHoleId;
+      readonly value: {
+        readonly withinRange: true;
+      };
+    }
+  | {
+      readonly kind: "companionReappearancePlacement";
+      readonly holeId: BattleHoleId;
+      readonly value: BattleCompanionPlacement;
+    }
+  | {
+      readonly kind: "companionReappearanceInitiative";
+      readonly holeId: BattleHoleId;
+      readonly value: InitiativeScore;
+    }
+  | {
       readonly kind: "magicWeaponTargetItem";
       readonly holeId: BattleHoleId;
       readonly value: BattleMagicWeaponTargetItemFact;
@@ -6006,6 +6061,7 @@ export type BattleResolutionInput = {
   readonly state: BattleState;
   readonly subject: BattleSubject;
   readonly fills: readonly BattleFill[];
+  readonly statBlockCatalog?: StatBlockCatalog;
 };
 export type BattleResolutionInputForSubject<TSubject extends BattleSubject> =
   Omit<BattleResolutionInput, "subject"> & {
@@ -6218,7 +6274,7 @@ export type BattleSnapshot = {
   readonly currentActorId: CombatantId;
   readonly turnOrder: readonly CombatantId[];
   readonly combatants: readonly BattleCreatureSnapshot[];
-  readonly findFamiliars: readonly FindFamiliarSnapshot[];
+  readonly companions: readonly BattleCompanionSnapshot[];
   readonly lightEmitters: readonly BattleLightEmitter[];
   readonly obscurementZones: readonly BattleObscurementZone[];
   readonly acts: readonly AvailableBattleAct[];

@@ -101,17 +101,13 @@ export type TurnAnchoredBattleActiveEffectExpiration = Extract<
   BattleActiveEffectExpiration,
   { readonly kind: "startOfTurn" } | { readonly kind: "endOfTurn" }
 >;
-export type AreaSpellEffectHeightenedRepeatSaveRider =
-  | null
-  | {
-      readonly kind: "heightenedSpellTargetDisadvantage";
-      readonly targetId: CombatantId;
-    };
-export type CombatantOwnedSpellEffectHeightenedRepeatSaveRider =
-  | null
-  | {
-      readonly kind: "heightenedSpellTargetDisadvantage";
-    };
+export type AreaSpellEffectHeightenedRepeatSaveRider = null | {
+  readonly kind: "heightenedSpellTargetDisadvantage";
+  readonly targetId: CombatantId;
+};
+export type CombatantOwnedSpellEffectHeightenedRepeatSaveRider = null | {
+  readonly kind: "heightenedSpellTargetDisadvantage";
+};
 export type BattleSpellEffectEarlyEnd =
   | { readonly kind: "targetDonsArmor" }
   | { readonly kind: "concentrationBroken" };
@@ -922,8 +918,14 @@ export type BattleActiveEffect =
             readonly light: BattleDancingLight;
           }
       ))
-  | (BattleSpellEffectBase & {
+  | {
       readonly kind: "findFamiliarSharedSenses";
+      readonly source: {
+        readonly kind: "companionSharedSenses";
+        readonly ownerId: CombatantId;
+        readonly companionId: CombatantId;
+      };
+      readonly sourceCombatantId: CombatantId;
       readonly familiarId: CombatantId;
       readonly canSeeThroughFamiliar: true;
       readonly canHearThroughFamiliar: true;
@@ -932,4 +934,4 @@ export type BattleActiveEffect =
         BattleActiveEffectExpiration,
         { readonly kind: "startOfTurn" }
       >;
-    });
+    };

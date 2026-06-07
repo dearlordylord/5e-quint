@@ -14,7 +14,7 @@ import {
   combatantId,
   endTurn,
   initiativeScore,
-  resolveBattleReaction,
+  resolveBattleInterrupt,
   resolveBattleSubject,
   snapshotBattle,
   startBattle
@@ -30,9 +30,9 @@ import {
   counterspellTriggerFact,
   damageRollFillWithGroups,
   deathSavingThrowFill,
-  declineReactionDecision,
+  declineInterruptDecision,
   fireballSavingThrowOutcomeFill,
-  reactionDecisionFill,
+  interruptDecisionFill,
   requireActionSpellAct,
   requireCounterspellChoice,
   requireHole,
@@ -719,28 +719,28 @@ function resolveCounterspellChain(
   chain: ReadonlyNonEmptyArray<CounterspellChainLink>
 ): Extract<BattleResolutionResult, { readonly tag: "needsHoles" }> {
   requireNeedsReaction(result, `Expected ${plan.spell.name} Counterspell window.`)
-  let pendingReaction = result
+  let pendingInterrupt = result
   for (const [index, link] of chain.entries()) {
     pushStep(builder, {
       title: "Counterspell window",
       detail: link.waitingDetail,
-      state: pendingReaction.state,
+      state: pendingInterrupt.state,
       cue: {
         reactingId: link.reactorId,
         spell: counterspellCue(link)
       }
     })
 
-    const choice = requireCounterspellChoice(pendingReaction, {
+    const choice = requireCounterspellChoice(pendingInterrupt, {
       reactorId: link.reactorId,
       slotLevel: counterspellSlotLevel,
       spellId: counterspellUnitId
     })
     const nextLink = chain.at(index + 1)
-    const reactionResult = resolveBattleReaction({
-      state: pendingReaction.state,
-      fill: reactionDecisionFill(
-        requireHole(pendingReaction.holes, "reactionDecision"),
+    const reactionResult = resolveBattleInterrupt({
+      state: pendingInterrupt.state,
+      fill: interruptDecisionFill(
+        requireHole(pendingInterrupt.holes, "interruptDecision"),
         counterspellDecision(
           link.reactorId,
           choice,
@@ -758,7 +758,7 @@ function resolveCounterspellChain(
     }
     requireNeedsReaction(reactionResult, `Expected ${nameOf(nextLink.reactorId)} Counterspell window.`)
     pushCounterspellCastStep(builder, link, reactionResult)
-    pendingReaction = reactionResult
+    pendingInterrupt = reactionResult
   }
   throw new Error(`Expected ${plan.spell.name} Counterspell chain to resume.`)
 }
@@ -806,11 +806,11 @@ function resolveDeclinedCounterspell(
       }
     }
   })
-  const declined = resolveBattleReaction({
+  const declined = resolveBattleInterrupt({
     state: result.state,
-    fill: reactionDecisionFill(
-      requireHole(result.holes, "reactionDecision"),
-      declineReactionDecision(decline.reactorId)
+    fill: interruptDecisionFill(
+      requireHole(result.holes, "interruptDecision"),
+      declineInterruptDecision(decline.reactorId)
     )
   })
   requireNeedsHoles(declined, `Expected ${plan.spell.name} to continue after declined Counterspell.`)
@@ -1073,6 +1073,7 @@ function wizardCreature(input: {
       },
       armorClass: defaultArmorClassState(),
       size: "medium",
+      knownLanguages: ["Common"],
       speed: { walkFeet: movementFeet(wizardWalkFeet) },
       currentHp: Hp(wizardHp),
       maxHp: Hp(wizardHp),

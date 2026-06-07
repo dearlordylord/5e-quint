@@ -1792,6 +1792,8 @@ These profile-subset rows have no selected-identity replay witness, but the decl
 | L3MMETA-21-HEIGHTENED-GUST-OF-WIND-LINE-REPEAT-SAVE-SLICE | completed-runtime-parity | `spell.invocation-gust-of-wind-line`, `unit-feature.metamagic-heightened-save-disadvantage` |
 | L3MMETA-22-HEIGHTENED-SAVE-GATED-CONDITION-MULTITARGET-REPEAT-SAVE-SLICE | qnt-proof | `spell.invocation-condition-save`, `unit-feature.metamagic-heightened-save-disadvantage` |
 | L3MMETA-22-HEIGHTENED-SAVE-GATED-CONDITION-MULTITARGET-REPEAT-SAVE-SLICE | completed-runtime-parity | `spell.invocation-condition-save`, `unit-feature.metamagic-heightened-save-disadvantage` |
+| L3COMP-FOLLOWUP-COMPANION-SESSION-PERSISTENCE | accepted-session-boundary-follow-up | _none_ |
+| L3COMP-FOLLOWUP-REDUCER-DISCOVERED-COMPANION-ACTS | accepted-runtime-discovery-mcp-surface-follow-up | _none_ |
 
 ## Supported Profiles Lacking Runtime Parity
 

@@ -7,9 +7,11 @@ import * as Either from "effect/Either";
 
 import type {
   BattleActiveEffect,
+  BattleFill,
   BattleResolutionInput,
   BattleResolutionResult,
   BattleState,
+  BattleTargetSpatialFact,
 } from "./battle-reducer.ts";
 import { currentActorId } from "./battle-reducer/creature-state-leaves.ts";
 import { combatantCanTakeReactions } from "./battle-reducer/creature-state.ts";
@@ -22,9 +24,9 @@ import { supportedSpellActs } from "./battle-reducer/spells-profiles.ts";
 import { spellInvocationIsSpellcasting } from "./battle-reducer/spells-discovery.ts";
 import { supportedSpellInvocationMatchesRef } from "./battle-reducer/spells-invocation-ref.ts";
 import type { BattleSubject } from "./battle-subjects.ts";
+import { findFamiliarCompanionEntryForOwner } from "./find-familiar-state.ts";
 import type { CombatantId } from "./identity.ts";
 
-const FIND_FAMILIAR_SPELL_ID = "find_familiar";
 export const FIND_FAMILIAR_TELEPATHY_RANGE_FEET = movementFeet(100);
 
 export type FindFamiliarWithin100FeetFact = {
@@ -49,10 +51,10 @@ export function findFamiliarTelepathicConnection(
   state: BattleState,
   fact: FindFamiliarWithin100FeetFact,
 ): FindFamiliarTelepathicConnection | null {
-  const familiar = state.findFamiliars.get(fact.ownerId);
+  const familiarEntry = findFamiliarCompanionEntryForOwner(state, fact.ownerId);
   if (
-    familiar?.status !== "present" ||
-    familiar.familiarId !== fact.familiarId
+    familiarEntry?.companion.status !== "present" ||
+    familiarEntry.companionId !== fact.familiarId
   ) {
     return null;
   }
@@ -189,35 +191,179 @@ export function deliverTouchSpellThroughFindFamiliar(input: {
       "Find Familiar touch delivery requires the familiar's available Reaction.",
     );
   }
-
+  const deliveryFills = findFamiliarTouchDeliveryFills({
+    fills: input.fills,
+    ownerId: input.subject.actorId,
+    familiarId: connection.familiarId,
+    spellId: invocation.spell.id,
+  });
+  if (deliveryFills.tag === "invalid") {
+    return invalidResult(input.state, "invalidFill", deliveryFills.message);
+  }
   const cast = resolveBattleSubject({
     state: input.state,
     subject: input.subject,
-    fills: input.fills,
+    fills: deliveryFills.fills,
   });
+  if (cast.tag === "invalid") {
+    return {
+      ...cast,
+      snapshot: snapshotBattle(input.state),
+    };
+  }
   if (cast.tag !== "resolved") {
     return cast;
   }
-  const nextFamiliar = cast.state.combatants.get(connection.familiarId);
-  if (nextFamiliar === undefined) {
+  if (!cast.state.combatants.has(connection.familiarId)) {
     return invalidResult(
       input.state,
       "invalidFill",
       "Find Familiar touch delivery requires the familiar to remain present.",
     );
   }
-  const nextState = {
-    ...cast.state,
-    combatants: new Map(cast.state.combatants).set(connection.familiarId, {
-      ...nextFamiliar,
-      reactionAvailable: false,
-    }),
-  };
+  if (deliveryFills.targetChoiceCount === 0) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Find Familiar touch delivery currently supports exactly one selected target choice.",
+    );
+  }
+  const stateWithSpentReaction = spendFindFamiliarTouchDeliveryReaction({
+    state: cast.state,
+    familiarId: connection.familiarId,
+  });
+  if (stateWithSpentReaction.tag === "invalid") {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      stateWithSpentReaction.message,
+    );
+  }
   return {
     tag: "resolved",
-    state: nextState,
-    snapshot: snapshotBattle(nextState),
+    state: stateWithSpentReaction.state,
+    snapshot: snapshotBattle(stateWithSpentReaction.state),
   };
+}
+
+function spendFindFamiliarTouchDeliveryReaction(input: {
+  readonly state: BattleState;
+  readonly familiarId: CombatantId;
+}):
+  | { readonly tag: "resolved"; readonly state: BattleState }
+  | { readonly tag: "invalid"; readonly message: string } {
+  const familiar = input.state.combatants.get(input.familiarId);
+  if (familiar === undefined) {
+    return {
+      tag: "invalid",
+      message:
+        "Find Familiar touch delivery requires the familiar to remain present.",
+    };
+  }
+  return {
+    tag: "resolved",
+    state: {
+      ...input.state,
+      combatants: new Map(input.state.combatants).set(input.familiarId, {
+        ...familiar,
+        reactionAvailable: false,
+      }),
+    },
+  };
+}
+
+function findFamiliarTouchDeliveryFills(input: {
+  readonly fills: BattleResolutionInput["fills"];
+  readonly ownerId: CombatantId;
+  readonly familiarId: CombatantId;
+  readonly spellId: string;
+}):
+  | {
+      readonly tag: "resolved";
+      readonly fills: BattleResolutionInput["fills"];
+      readonly targetChoiceCount: number;
+    }
+  | { readonly tag: "invalid"; readonly message: string } {
+  let targetChoiceCount = 0;
+  let deliveryTargetFactSeen = false;
+  const fills: BattleFill[] = [];
+  for (const fill of input.fills) {
+    if (
+      fill.kind === "spellTargetList" ||
+      fill.kind === "spellTargetAllocation"
+    ) {
+      return {
+        tag: "invalid",
+        message:
+          "Find Familiar touch delivery currently supports single target-choice Touch spells.",
+      };
+    }
+    if (fill.kind !== "targetChoice") {
+      fills.push(fill);
+      continue;
+    }
+    targetChoiceCount += 1;
+    if (targetChoiceCount > 1) {
+      return {
+        tag: "invalid",
+        message:
+          "Find Familiar touch delivery currently supports exactly one target choice.",
+      };
+    }
+    const facts = fill.spatialFacts ?? [];
+    const deliveryFact = facts.find((fact) =>
+      findFamiliarTouchSpellTargetFactMatches({
+        fact,
+        ownerId: input.ownerId,
+        familiarId: input.familiarId,
+        targetId: fill.value,
+        spellId: input.spellId,
+      }),
+    );
+    if (deliveryFact === undefined) {
+      fills.push(fill);
+      continue;
+    }
+    deliveryTargetFactSeen = true;
+    fills.push({
+      ...fill,
+      spatialFacts: [
+        ...facts.filter((fact) => fact.kind !== "findFamiliarTouchSpellTarget"),
+        {
+          kind: "spellTarget",
+          casterId: input.ownerId,
+          targetId: fill.value,
+          spellId: input.spellId,
+        },
+      ],
+    });
+  }
+  if (targetChoiceCount === 0) {
+    return { tag: "resolved", fills, targetChoiceCount };
+  }
+  return deliveryTargetFactSeen
+    ? { tag: "resolved", fills, targetChoiceCount }
+    : {
+        tag: "invalid",
+        message:
+          "Find Familiar touch delivery requires a table fact that the familiar can deliver the Touch spell to the selected target.",
+      };
+}
+
+function findFamiliarTouchSpellTargetFactMatches(input: {
+  readonly fact: BattleTargetSpatialFact;
+  readonly ownerId: CombatantId;
+  readonly familiarId: CombatantId;
+  readonly targetId: CombatantId;
+  readonly spellId: string;
+}): boolean {
+  return (
+    input.fact.kind === "findFamiliarTouchSpellTarget" &&
+    input.fact.ownerId === input.ownerId &&
+    input.fact.familiarId === input.familiarId &&
+    input.fact.targetId === input.targetId &&
+    input.fact.spellId === input.spellId
+  );
 }
 
 function findFamiliarSharedSensesEffect(input: {
@@ -227,7 +373,11 @@ function findFamiliarSharedSensesEffect(input: {
 }): FindFamiliarSharedSensesEffect {
   return {
     kind: "findFamiliarSharedSenses",
-    sourceSpellId: FIND_FAMILIAR_SPELL_ID,
+    source: {
+      kind: "companionSharedSenses",
+      ownerId: input.casterId,
+      companionId: input.familiarId,
+    },
     sourceCombatantId: input.casterId,
     familiarId: input.familiarId,
     canSeeThroughFamiliar: true,
