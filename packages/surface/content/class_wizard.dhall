@@ -45,7 +45,7 @@ let wizard =
       , primaryAbilities = { abilities = [ "int" ], kind = "all_of" }
       , provenance =
         { kind = "srd-5.2.1"
-        , section = "Classes/Wizard.md:3-25,31-36,56-82,94-114,134-190"
+        , section = "Classes/Wizard.md:3-25,31-39,56-82,94-114,134-190"
         }
       , savingThrowProficiencies = [ "int", "wis" ]
       , skillProficiencyChoice =
@@ -140,6 +140,25 @@ let wizard =
                 , spellSlots =
                   [ { spellLevel = 1, count = 4 }
                   , { spellLevel = 2, count = 2 }
+                  ]
+                }
+              , { atLevel = 4
+                , cantripCount = 4
+                , spellbookSpellCount = 12
+                , preparedSpellCount = 7
+                , spellSlots =
+                  [ { spellLevel = 1, count = 4 }
+                  , { spellLevel = 2, count = 3 }
+                  ]
+                }
+              , { atLevel = 5
+                , cantripCount = 4
+                , spellbookSpellCount = 14
+                , preparedSpellCount = 9
+                , spellSlots =
+                  [ { spellLevel = 1, count = 4 }
+                  , { spellLevel = 2, count = 3 }
+                  , { spellLevel = 3, count = 2 }
                   ]
                 }
               ] : List WizardSpellcastingProgressionRow

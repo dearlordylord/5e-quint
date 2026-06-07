@@ -1,3 +1,6 @@
+import * as path from "node:path";
+
+import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
 import { describe, expect, test } from "vitest";
 import { Either, Option } from "effect";
 import { readClassCreationFacts } from "@dnd/surface/surface/character-creation-readers";
@@ -47,6 +50,7 @@ import { wizardSpellcastingCreationAtLevel } from "./class-spellcasting.ts";
 
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-CLASS-WIZARD-SCHOLAR wizard_scholar
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-WIZARD-EVOKER-EVOCATION-SAVANT wizard_evocation_savant
+// KERNEL-COVERAGE: parity-witness CREATION.WIZARD_SPELLBOOK_LEARNING.CHOICE_FINALIZATION
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-creation.wizard-spellbook-learning-choice
 
 const unitCatalogResult = buildUnitCatalog({
@@ -58,6 +62,34 @@ if (unitCatalogResult.tag !== "ok") {
 }
 
 const unitLibrary = unitCatalogResult.catalog;
+
+const WIZARD_EVOCATION_SAVANT_UNIT_ID = "wizard_evocation_savant";
+const wizardEvocationSavantGrantReplayScenarios = [
+  "init",
+  "wizard-evocation-savant-level3-creation",
+] as const;
+type WizardEvocationSavantGrantReplayScenario =
+  (typeof wizardEvocationSavantGrantReplayScenarios)[number];
+type WizardEvocationSavantGrantProjection = {
+  readonly lastResult: WizardEvocationSavantGrantReplayScenario;
+  readonly featureUnitId: UnitRecord["id"] | "none";
+  readonly acquisitionChoiceCount: number;
+  readonly acquisitionMaximumSpellLevel: number;
+  readonly laterSlotAccessChoiceCount: number;
+  readonly laterSlotAccessTimingKind: string;
+  readonly laterSlotAccessCreatesCreationHole: boolean;
+  readonly level3CreationChoiceCount: number;
+  readonly finalSpellbookAddedCount: number;
+  readonly finalSpellbookTotalCount: number;
+  readonly firstLaterSlotAccessCharacterLevel: number;
+  readonly firstLaterNewSlotLevel: number;
+};
+type CreationChoiceHole = Extract<CreationHole, { readonly kind: "choice" }>;
+const wizardEvocationSavantGrantDriverSchema = {
+  init: {},
+  doProjectLevel3Creation: {},
+  step: {},
+} as const;
 
 describe("Wizard Scholar", () => {
   test("finalizes one listed owned skill as Scholar Expertise", () => {
@@ -342,6 +374,25 @@ describe("Wizard Scholar", () => {
     );
   });
 
+  test("replays Evocation Savant acquisition versus later slot-access grant", async () => {
+    await run({
+      spec: path.resolve(
+        import.meta.dirname,
+        "../character-creation-wizard-evocation-savant.mbt.qnt",
+      ),
+      init: "init",
+      step: "step",
+      driver: createWizardEvocationSavantGrantDriver(),
+      backend: "typescript",
+      nTraces: 1,
+      maxSteps: 1,
+      stateCheck: stateCheck(
+        normalizeWizardEvocationSavantGrantQuintState,
+        compareWizardEvocationSavantGrantState,
+      ),
+    });
+  }, 120_000);
+
   test("rejects duplicate Evocation Savant spellbook selections", () => {
     const wizard = completeSupportedProgressionDraft({
       draftId: "draft:srd-level-3-wizard-duplicate-evocation-savant",
@@ -371,6 +422,351 @@ describe("Wizard Scholar", () => {
     });
   });
 });
+
+function createWizardEvocationSavantGrantDriver() {
+  return defineDriver(wizardEvocationSavantGrantDriverSchema, () => {
+    let projection = initialWizardEvocationSavantGrantProjection();
+
+    function reset(): void {
+      projection = initialWizardEvocationSavantGrantProjection();
+    }
+
+    return {
+      init: reset,
+      doProjectLevel3Creation: () => {
+        projection = projectWizardEvocationSavantLevel3Creation();
+      },
+      step: () => {},
+      getState: () => projection,
+    };
+  });
+}
+
+function initialWizardEvocationSavantGrantProjection(): WizardEvocationSavantGrantProjection {
+  return {
+    lastResult: "init",
+    featureUnitId: "none",
+    acquisitionChoiceCount: 0,
+    acquisitionMaximumSpellLevel: 0,
+    laterSlotAccessChoiceCount: 0,
+    laterSlotAccessTimingKind: "none",
+    laterSlotAccessCreatesCreationHole: false,
+    level3CreationChoiceCount: 0,
+    finalSpellbookAddedCount: 0,
+    finalSpellbookTotalCount: 0,
+    firstLaterSlotAccessCharacterLevel: 0,
+    firstLaterNewSlotLevel: 0,
+  };
+}
+
+function projectWizardEvocationSavantLevel3Creation(): WizardEvocationSavantGrantProjection {
+  const feature = unitLibrary.requireUnit(WIZARD_EVOCATION_SAVANT_UNIT_ID);
+  if (
+    feature.kind !== "class_feature" ||
+    feature.mechanics.family !== "wizard_spellbook_learning"
+  ) {
+    throw new Error("Expected Evocation Savant wizard spellbook learning fact.");
+  }
+  const acquisitionGrant = feature.mechanics.grants.find(
+    (grant) => grant.timing.kind === "class_feature_acquisition",
+  );
+  const laterSlotAccessGrant = feature.mechanics.grants.find(
+    (grant) => grant.timing.kind === "new_spell_slot_level_access",
+  );
+  if (
+    acquisitionGrant === undefined ||
+    acquisitionGrant.eligibility.maximumSpellLevel !== 2
+  ) {
+    throw new Error("Expected Evocation Savant level-3 acquisition grant.");
+  }
+  if (laterSlotAccessGrant === undefined) {
+    throw new Error("Expected Evocation Savant later slot-access grant.");
+  }
+
+  const preferredOptionIdsBySource = evocationSavantPreferredOptions();
+  const level3CreationChoiceCount = evocationSavantCreationHoleChoiceCount(
+    preferredOptionIdsBySource,
+  );
+  const wizard = completeSupportedProgressionDraft({
+    draftId: "draft:srd-level-3-wizard-evocation-savant-qnt-replay",
+    progression: testProgression("class_wizard", 3),
+    preferredOptionIdsBySource,
+  });
+  const selectedSpellbookSpells = selectedChoiceOptionIds(
+    wizard,
+    WIZARD_EVOCATION_SAVANT_UNIT_ID,
+    WIZARD_SPELLBOOK_CHOICE_KEY,
+  );
+  const wizardBuild = finalizeCharacterDraft({ draft: wizard, unitLibrary });
+  if (wizardBuild.tag !== "ready") {
+    throw new Error("Expected Evocation Savant replay draft to finalize.");
+  }
+  const spellbook =
+    wizardBuild.build.spellcasting?.sources.find(
+      (source) => source.sourceUnitId === "class_wizard",
+    )?.spellbook ?? [];
+  const laterSlotAccess = firstLaterWizardSlotAccessAfterLevel(3);
+
+  return {
+    lastResult: "wizard-evocation-savant-level3-creation",
+    featureUnitId: feature.id,
+    acquisitionChoiceCount: acquisitionGrant.choiceCount,
+    acquisitionMaximumSpellLevel: acquisitionGrant.eligibility.maximumSpellLevel,
+    laterSlotAccessChoiceCount: laterSlotAccessGrant.choiceCount,
+    laterSlotAccessTimingKind: laterSlotAccessGrant.timing.kind,
+    laterSlotAccessCreatesCreationHole:
+      level3CreationChoiceCount > acquisitionGrant.choiceCount,
+    level3CreationChoiceCount,
+    finalSpellbookAddedCount: selectedSpellbookSpells.length,
+    finalSpellbookTotalCount: spellbook.length,
+    firstLaterSlotAccessCharacterLevel: laterSlotAccess.characterLevel,
+    firstLaterNewSlotLevel: laterSlotAccess.newSlotLevel,
+  };
+}
+
+function firstLaterWizardSlotAccessAfterLevel(level: number): {
+  readonly characterLevel: number;
+  readonly newSlotLevel: number;
+} {
+  const classFacts = readableClassFacts("class_wizard");
+  if (classFacts.spellcasting?.kind !== "wizard_spellcasting_creation") {
+    throw new Error("Expected Wizard spellcasting creation facts.");
+  }
+  const current = wizardSpellcastingCreationAtLevel(
+    classFacts.spellcasting,
+    level,
+  );
+  if (current === undefined) {
+    throw new Error(`Expected Wizard spellcasting facts at level ${level}.`);
+  }
+  const currentMaximumSlotLevel = maximumSpellSlotLevel(
+    current.spellSlotProjection.slots,
+  );
+
+  for (let candidateLevel = level + 1; candidateLevel <= 20; candidateLevel += 1) {
+    const candidate = wizardSpellcastingCreationAtLevel(
+      classFacts.spellcasting,
+      candidateLevel,
+    );
+    if (candidate === undefined) continue;
+    const candidateMaximumSlotLevel = maximumSpellSlotLevel(
+      candidate.spellSlotProjection.slots,
+    );
+    if (candidateMaximumSlotLevel > currentMaximumSlotLevel) {
+      return {
+        characterLevel: candidateLevel,
+        newSlotLevel: candidateMaximumSlotLevel,
+      };
+    }
+  }
+
+  throw new Error("Expected a later Wizard spell slot level increase.");
+}
+
+function maximumSpellSlotLevel(
+  slots: readonly { readonly count: number; readonly spellLevel: number }[],
+): number {
+  return Math.max(
+    ...slots
+      .filter((slot) => slot.count > 0)
+      .map((slot) => slot.spellLevel),
+  );
+}
+
+function evocationSavantCreationHoleChoiceCount(
+  preferredOptionIdsBySource: PreferredSupportedFillOptionIdsBySource,
+): number {
+  let draft = createCharacterDraft({
+    unitLibrary,
+    draftId: characterDraftId("draft:srd-level-3-wizard-evocation-savant-hole-count"),
+  });
+  const progression = testProgression("class_wizard", 3);
+  const progressionOption = progressionOptionId(progression);
+
+  for (let pass = 0; pass < 8; pass += 1) {
+    const holes = discoverCreationHoles({ draft, unitLibrary });
+    const evocationSavantHoleChoiceCount = holes
+      .filter(
+        (hole): hole is CreationChoiceHole =>
+          hole.kind === "choice" &&
+          hole.source.tag === "unitChoice" &&
+          hole.source.unitId === WIZARD_EVOCATION_SAVANT_UNIT_ID &&
+          hole.source.choiceKey === WIZARD_SPELLBOOK_CHOICE_KEY,
+      )
+      .reduce(
+        (sum, hole) => sum + choiceCardinalityBounds(hole.cardinality).max,
+        0,
+      );
+    if (evocationSavantHoleChoiceCount > 0) {
+      return evocationSavantHoleChoiceCount;
+    }
+    const result = fillCreationHoles({
+      draft,
+      unitLibrary,
+      expectedRevision: draft.revision,
+      fills: holes.map((hole) =>
+        supportedFillForHole({
+          hole,
+          preferredOptionIdsBySource,
+          progressionOption,
+        }),
+      ),
+    });
+    if (result.tag !== "accepted") {
+      throw new Error(
+        `Expected accepted Evocation Savant discovery fill batch, received ${JSON.stringify(result.issues)}`,
+      );
+    }
+    draft = result.draft;
+  }
+
+  throw new Error("Expected level-3 Evocation Savant spellbook choice hole.");
+}
+
+function evocationSavantPreferredOptions(): PreferredSupportedFillOptionIdsBySource {
+  return {
+    [testUnitChoiceSourceKey(
+      "class_wizard",
+      CLASS_SKILL_PROFICIENCY_CHOICE_KEY,
+    )]: [creationChoiceOptionId("insight"), creationChoiceOptionId("arcana")],
+    [testUnitChoiceSourceKey("class_wizard", CLASS_SUBCLASS_CHOICE_KEY)]: [
+      creationChoiceOptionId("subclass_wizard_evoker"),
+    ],
+    [testUnitChoiceSourceKey("class_wizard", WIZARD_SPELLBOOK_CHOICE_KEY)]: [
+      creationChoiceOptionId("detect_magic"),
+      creationChoiceOptionId("feather_fall"),
+      creationChoiceOptionId("mage_armor"),
+      creationChoiceOptionId("magic_missile"),
+      creationChoiceOptionId("shield"),
+      creationChoiceOptionId("sleep"),
+      creationChoiceOptionId("thunderwave"),
+      creationChoiceOptionId("chromatic_orb"),
+      creationChoiceOptionId("mirror_image"),
+      creationChoiceOptionId("misty_step"),
+    ],
+    [testUnitChoiceSourceKey(
+      WIZARD_EVOCATION_SAVANT_UNIT_ID,
+      WIZARD_SPELLBOOK_CHOICE_KEY,
+    )]: [
+      creationChoiceOptionId("continual_flame"),
+      creationChoiceOptionId("shatter"),
+    ],
+    [testUnitChoiceSourceKey(
+      "class_wizard",
+      WIZARD_PREPARED_SPELL_CHOICE_KEY,
+    )]: [
+      creationChoiceOptionId("magic_missile"),
+      creationChoiceOptionId("shield"),
+      creationChoiceOptionId("thunderwave"),
+      creationChoiceOptionId("chromatic_orb"),
+      creationChoiceOptionId("continual_flame"),
+      creationChoiceOptionId("shatter"),
+    ],
+  };
+}
+
+function normalizeWizardEvocationSavantGrantQuintState(
+  raw: unknown,
+): WizardEvocationSavantGrantProjection {
+  const state = quintStateRecord(raw);
+  return {
+    lastResult: wizardEvocationSavantGrantScenarioField(state["qLastResult"]),
+    featureUnitId: stringField(state["qFeatureUnitId"], "qFeatureUnitId"),
+    acquisitionChoiceCount: numberFromQuintInt(
+      state["qAcquisitionChoiceCount"],
+      "qAcquisitionChoiceCount",
+    ),
+    acquisitionMaximumSpellLevel: numberFromQuintInt(
+      state["qAcquisitionMaximumSpellLevel"],
+      "qAcquisitionMaximumSpellLevel",
+    ),
+    laterSlotAccessChoiceCount: numberFromQuintInt(
+      state["qLaterSlotAccessChoiceCount"],
+      "qLaterSlotAccessChoiceCount",
+    ),
+    laterSlotAccessTimingKind: stringField(
+      state["qLaterSlotAccessTimingKind"],
+      "qLaterSlotAccessTimingKind",
+    ),
+    laterSlotAccessCreatesCreationHole: booleanField(
+      state["qLaterSlotAccessCreatesCreationHole"],
+      "qLaterSlotAccessCreatesCreationHole",
+    ),
+    level3CreationChoiceCount: numberFromQuintInt(
+      state["qLevel3CreationChoiceCount"],
+      "qLevel3CreationChoiceCount",
+    ),
+    finalSpellbookAddedCount: numberFromQuintInt(
+      state["qFinalSpellbookAddedCount"],
+      "qFinalSpellbookAddedCount",
+    ),
+    finalSpellbookTotalCount: numberFromQuintInt(
+      state["qFinalSpellbookTotalCount"],
+      "qFinalSpellbookTotalCount",
+    ),
+    firstLaterSlotAccessCharacterLevel: numberFromQuintInt(
+      state["qFirstLaterSlotAccessCharacterLevel"],
+      "qFirstLaterSlotAccessCharacterLevel",
+    ),
+    firstLaterNewSlotLevel: numberFromQuintInt(
+      state["qFirstLaterNewSlotLevel"],
+      "qFirstLaterNewSlotLevel",
+    ),
+  };
+}
+
+function compareWizardEvocationSavantGrantState(
+  runtime: WizardEvocationSavantGrantProjection,
+  quint: WizardEvocationSavantGrantProjection,
+): boolean {
+  try {
+    expect(runtime).toEqual(quint);
+  } catch (error) {
+    if (error instanceof Error) throw new Error(error.message);
+    throw error;
+  }
+  return true;
+}
+
+function wizardEvocationSavantGrantScenarioField(
+  raw: unknown,
+): WizardEvocationSavantGrantReplayScenario {
+  if (typeof raw === "string" && isWizardEvocationSavantGrantScenario(raw)) {
+    return raw;
+  }
+  throw new Error(`Unknown Evocation Savant replay scenario ${String(raw)}.`);
+}
+
+function isWizardEvocationSavantGrantScenario(
+  raw: string,
+): raw is WizardEvocationSavantGrantReplayScenario {
+  return wizardEvocationSavantGrantReplayScenarios.some(
+    (scenario) => scenario === raw,
+  );
+}
+
+function quintStateRecord(raw: unknown): Readonly<Record<string, unknown>> {
+  if (raw === null || typeof raw !== "object" || Array.isArray(raw)) {
+    throw new Error("Expected Quint Evocation Savant state.");
+  }
+  return Object.fromEntries(Object.entries(raw));
+}
+
+function stringField(raw: unknown, field: string): string {
+  if (typeof raw === "string") return raw;
+  throw new Error(`Expected string field ${field}.`);
+}
+
+function numberFromQuintInt(raw: unknown, field: string): number {
+  if (typeof raw === "number") return raw;
+  if (typeof raw === "bigint") return Number(raw);
+  throw new Error(`Expected Quint integer field ${field}.`);
+}
+
+function booleanField(raw: unknown, field: string): boolean {
+  if (typeof raw === "boolean") return raw;
+  throw new Error(`Expected boolean field ${field}.`);
+}
 
 function testProgression(
   classUnitId: UnitRecord["id"],
@@ -488,6 +884,9 @@ function supportedFillForHole(input: {
     input.hole.source.tag === "draft" &&
     input.hole.source.path === "draft.progression.initial"
       ? [input.progressionOption]
+      : input.hole.source.tag === "draft" &&
+          input.hole.source.path === "draft.species"
+        ? [creationChoiceOptionId("species_orc")]
       : input.hole.source.tag === "draft" &&
           input.hole.source.path === "draft.background"
         ? [creationChoiceOptionId("background_soldier")]

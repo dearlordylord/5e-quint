@@ -29992,6 +29992,12 @@
       },
       "unitProfileDisposition": "profile-subset-supported",
       "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "deferred-mechanics",
+        "kind": "profile-subset-remaining-mechanics-closed",
+        "owner": "future character-advancement Wizard spellbook learning owner",
+        "reason": "Wizard level 3 owns subclass acquisition and the two level-2-or-lower Evocation spellbook choices. The separate new-spell-slot-level grant does not fire during that same level-3 creation event; the next new Wizard Spell Slot level is level 3 spells at Wizard level 5."
+      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -30000,7 +30006,7 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; L3MCHAR-05 Character Creation Wizard spellbook learning acquisition choice; Evocation Savant acquisition-time spellbook learning is discovered from the installed wizard_spellbook_learning Surface fact, filters existing Wizard spellbook Spell Access by Evocation school and spell level, finalizes selected spells into the existing Wizard spellbook projection, and rejects duplicate spellbook selections across class and feature grants. The later grant on future new Wizard Spell Slot levels remains closed by the Unit claim as a future character-advancement owner rather than duplicated in level-3 character creation.",
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; L3MCHAR-05 Character Creation Wizard spellbook learning acquisition choice; Evocation Savant acquisition-time spellbook learning is discovered from the installed wizard_spellbook_learning Surface fact, filters existing Wizard spellbook Spell Access by Evocation school and spell level, finalizes selected spells into the existing Wizard spellbook projection, and rejects duplicate spellbook selections across class and feature grants. The focused QNT/runtime replay proves the separate later grant on future new Wizard Spell Slot levels is present but does not create a level-3 Character Creation hole; that grant remains closed by the Unit claim as a future character-advancement owner starting at Wizard level 5.",
           "status": "owner evidence present"
         }
       ],

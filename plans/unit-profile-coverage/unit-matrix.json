@@ -2965,12 +2965,14 @@
     {
       "id": "character-creation.wizard-spellbook-learning-choice",
       "profileKind": "character-creation",
-      "qntOwners": [],
+      "qntOwners": [
+        "packages/character-creation-runtime/character-creation-wizard-evocation-savant.mbt.qnt"
+      ],
       "runtimeOwners": [
         "packages/character-creation-runtime/src/discovery.ts",
         "packages/character-creation-runtime/src/finalization.ts"
       ],
-      "sourceBoundary": "Surface wizard_spellbook_learning class-feature facts project acquisition-time Wizard spellbook choices from existing Wizard Spell Access, spell school, and spell level facts without a duplicate Evoker spell roster. Later spell-slot-level access is split to a future character-advancement owner.",
+      "sourceBoundary": "Surface wizard_spellbook_learning class-feature facts project acquisition-time Wizard spellbook choices from existing Wizard Spell Access, spell school, and spell level facts without a duplicate Evoker spell roster. The later new-spell-slot-level grant is represented as an advancement trigger that first occurs after level 3, so it does not create a level-3 Character Creation hole.",
       "taskRefs": [
         "L12G-FOLLOWUP-WIZARD-EVOKER-EVOCATION-SAVANT"
       ],
@@ -6705,7 +6707,9 @@
         ],
         "profileId": "character-creation.wizard-spellbook-learning-choice",
         "profileKind": "character-creation",
-        "qntOwners": []
+        "qntOwners": [
+          "packages/character-creation-runtime/character-creation-wizard-evocation-savant.mbt.qnt"
+        ]
       },
       {
         "joinStatus": "covered",
@@ -14953,7 +14957,7 @@
     },
     {
       "claimKind": "completed-runtime-parity",
-      "note": "Focused Character Creation runtime tests cover Evocation Savant acquisition-time Wizard Evocation spellbook choices, finalized spellbook projection, duplicate spellbook rejection, and retained subclass feature Unit refs. Later spell-slot-level access is split to the future character advancement owner.",
+      "note": "Focused Character Creation runtime tests and the Evocation Savant QNT replay cover acquisition-time Wizard Evocation spellbook choices, finalized spellbook projection, duplicate spellbook rejection, retained subclass feature Unit refs, and the fact that the separate later new-slot-level grant does not create a level-3 Character Creation hole. Later spell-slot-level access is split to the future character advancement owner starting at Wizard level 5.",
       "profileIds": [
         "character-creation.wizard-spellbook-learning-choice"
       ],
@@ -21555,17 +21559,13 @@
       "claim": {
         "deferredMechanics": [
           {
-            "followUpTaskId": "L12G-FOLLOWUP-WIZARD-EVOKER-EVOCATION-SAVANT-LATER-SLOT-ACCESS",
-            "mechanic": "Resolve whether Evocation Savant's one-spell new-slot-level grant triggers at Wizard level 3 when the subclass is acquired and Wizard level-2 slots first appear, or only on later Wizard advancement to a new slot level."
-          }
-        ],
-        "followUpTasks": [
-          {
-            "id": "L12G-FOLLOWUP-WIZARD-EVOKER-EVOCATION-SAVANT-LATER-SLOT-ACCESS",
-            "mechanic": "Decide and implement the Wizard level-3 Evocation Savant interaction between subclass acquisition and first access to Wizard level-2 Spell Slots, without treating a potentially level-3 trigger as later-level-only.",
-            "owner": "RAW/ASSUMPTIONS owner plus character-creation-runtime Wizard spellbook learning owner",
-            "requiredOutput": "Owner-approved RAW/ASSUMPTIONS decision; if the level-3 trigger applies, Character Creation must discover/finalize the extra Evocation spellbook choice at Wizard level 3 with deterministic admission/projection and selected-identity evidence. If the trigger is owner-decided to apply only on later advancement, record that decision explicitly and keep the later advancement grant out of the level-3 support claim.",
-            "title": "Wizard Evoker Evocation Savant Slot Access Trigger Audit"
+            "battleReadinessClosure": {
+              "firstTriggerCharacterLevel": 5,
+              "kind": "later-level-only",
+              "owner": "future character-advancement Wizard spellbook learning owner",
+              "reason": "Wizard level 3 owns subclass acquisition and the two level-2-or-lower Evocation spellbook choices. The separate new-spell-slot-level grant does not fire during that same level-3 creation event; the next new Wizard Spell Slot level is level 3 spells at Wizard level 5."
+            },
+            "mechanic": "Evocation Savant's one-spell new-slot-level grant starts when the Wizard later gains access to a new Wizard Spell Slot level after subclass acquisition; the first such trigger is Wizard level 5 and belongs to a future character-advancement owner, outside character-level-1-through-3 support."
           }
         ],
         "profileIds": [
@@ -21575,8 +21575,10 @@
           "Evocation Savant is installed as a level-3 Surface class-feature grant on subclass_wizard_evoker",
           "Selected Wizard Evoker subclass ownership retains the level-3 Evocation Savant class-feature Unit in CharacterBuild Unit refs when Wizard class level is 3 or higher",
           "Surface wizard_spellbook_learning represents the level-3 acquisition-time choice as exactly two Wizard Evocation spellbook spells of level 2 or lower",
+          "Surface wizard_spellbook_learning also represents the one-spell new-slot-level grant as a separate advancement trigger rather than a second acquisition-time grant",
           "Character Creation discovers exactly two acquisition-time Wizard Evocation spellbook choices from installed Wizard Spell Access, spell school, and spell level facts without duplicating an Evoker spell roster",
-          "Character Creation finalizes selected Evocation Savant spells into the Wizard spellbook without duplicating spellbook state and rejects duplicate spellbook selections across class and feature grants"
+          "Character Creation finalizes selected Evocation Savant spells into the Wizard spellbook without duplicating spellbook state and rejects duplicate spellbook selections across class and feature grants",
+          "Focused QNT/runtime replay proves the later new-slot-level grant is present but does not create a level-3 Character Creation hole"
         ],
         "tag": "profile-subset-supported"
       },
@@ -21599,12 +21601,14 @@
         {
           "id": "character-creation.wizard-spellbook-learning-choice",
           "profileKind": "character-creation",
-          "qntOwners": [],
+          "qntOwners": [
+            "packages/character-creation-runtime/character-creation-wizard-evocation-savant.mbt.qnt"
+          ],
           "runtimeOwners": [
             "packages/character-creation-runtime/src/discovery.ts",
             "packages/character-creation-runtime/src/finalization.ts"
           ],
-          "sourceBoundary": "Surface wizard_spellbook_learning class-feature facts project acquisition-time Wizard spellbook choices from existing Wizard Spell Access, spell school, and spell level facts without a duplicate Evoker spell roster. Later spell-slot-level access is split to a future character-advancement owner.",
+          "sourceBoundary": "Surface wizard_spellbook_learning class-feature facts project acquisition-time Wizard spellbook choices from existing Wizard Spell Access, spell school, and spell level facts without a duplicate Evoker spell roster. The later new-spell-slot-level grant is represented as an advancement trigger that first occurs after level 3, so it does not create a level-3 Character Creation hole.",
           "taskRefs": [
             "L12G-FOLLOWUP-WIZARD-EVOKER-EVOCATION-SAVANT"
           ],

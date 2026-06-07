@@ -3197,7 +3197,7 @@
     "srd521:classes/wizard:level-3:class-feature-grant:wizard_evocation_savant": {
       "taskId": "L3MCHAR-05",
       "profile": "Character Creation Wizard spellbook learning acquisition choice",
-      "summary": "Evocation Savant acquisition-time spellbook learning is discovered from the installed wizard_spellbook_learning Surface fact, filters existing Wizard spellbook Spell Access by Evocation school and spell level, finalizes selected spells into the existing Wizard spellbook projection, and rejects duplicate spellbook selections across class and feature grants. The later grant on future new Wizard Spell Slot levels remains closed by the Unit claim as a future character-advancement owner rather than duplicated in level-3 character creation.",
+      "summary": "Evocation Savant acquisition-time spellbook learning is discovered from the installed wizard_spellbook_learning Surface fact, filters existing Wizard spellbook Spell Access by Evocation school and spell level, finalizes selected spells into the existing Wizard spellbook projection, and rejects duplicate spellbook selections across class and feature grants. The focused QNT/runtime replay proves the separate later grant on future new Wizard Spell Slot levels is present but does not create a level-3 Character Creation hole; that grant remains closed by the Unit claim as a future character-advancement owner starting at Wizard level 5.",
       "discovery": [
         "packages/character-creation-runtime/src/discovery.ts:wizardSpellbookLearningChoiceHoles",
         "packages/character-creation-runtime/src/discovery.ts:wizardSpellbookLearningOptions"
@@ -3216,6 +3216,7 @@
       "tests": [
         "packages/character-creation-runtime/src/wizard-scholar.test.ts:discovers and finalizes Evocation Savant spellbook choices",
         "packages/character-creation-runtime/src/wizard-scholar.test.ts:rejects duplicate Evocation Savant spellbook selections",
+        "packages/character-creation-runtime/src/wizard-scholar.test.ts:replays Evocation Savant acquisition versus later slot-access grant",
         "packages/character-creation-runtime/src/class-feature-selected-identity.mbt.test.ts:selected-wizard-evocation-savant-finalizes-spellbook-grants"
       ]
     }

@@ -31,7 +31,7 @@
   },
   "provenance": {
     "kind": "srd-5.2.1",
-    "section": "Classes/Wizard.md:3-25,31-38,56-82,94-114,134-190"
+    "section": "Classes/Wizard.md:3-25,31-39,56-82,94-114,134-190"
   },
   "savingThrowProficiencies": ["int", "wis"],
   "skillProficiencyChoice": {
@@ -223,6 +223,26 @@
           }
         ],
         "spellbookSpellCount": 12
+      },
+      {
+        "atLevel": 5,
+        "cantripCount": 4,
+        "preparedSpellCount": 9,
+        "spellSlots": [
+          {
+            "count": 4,
+            "spellLevel": 1
+          },
+          {
+            "count": 3,
+            "spellLevel": 2
+          },
+          {
+            "count": 2,
+            "spellLevel": 3
+          }
+        ],
+        "spellbookSpellCount": 14
       }
     ]
   },

@@ -2550,12 +2550,12 @@
       "catalogStatus": "installed",
       "claimTag": "profile-subset-supported",
       "closureKinds": [
-        "follow-up-split"
+        "later-level-only"
       ],
       "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "class_feature",
-      "reason": "L12G-FOLLOWUP-WIZARD-EVOKER-EVOCATION-SAVANT-LATER-SLOT-ACCESS: Decide and implement the Wizard level-3 Evocation Savant interaction between subclass acquisition and first access to Wizard level-2 Spell Slots, without treating a potentially level-3 trigger as later-level-only. Owner: RAW/ASSUMPTIONS owner plus character-creation-runtime Wizard spellbook learning owner. Required output: Owner-approved RAW/ASSUMPTIONS decision; if the level-3 trigger applies, Character Creation must discover/finalize the extra Evocation spellbook choice at Wizard level 3 with deterministic admission/projection and selected-identity evidence. If the trigger is owner-decided to apply only on later advancement, record that decision explicitly and keep the later advancement grant out of the level-3 support claim.",
+      "reason": "Wizard level 3 owns subclass acquisition and the two level-2-or-lower Evocation spellbook choices. The separate new-spell-slot-level grant does not fire during that same level-3 creation event; the next new Wizard Spell Slot level is level 3 spells at Wizard level 5.",
       "selectedIdentity": {
         "reason": "The Unit has selected-identity-mbt evidence.",
         "status": "witness-present"
@@ -2575,7 +2575,7 @@
           }
         }
       ],
-      "status": "blocked-follow-up-split",
+      "status": "closed-later-level-only",
       "strictTargetClosed": true,
       "unitId": "wizard_evocation_savant"
     },
@@ -2850,22 +2850,21 @@
     },
     {
       "count": 3,
-      "description": "The Unit claim records concrete smaller follow-up splits for the remaining executable owner work.",
-      "status": "blocked-follow-up-split",
-      "unitIds": [
-        "druid_wild_shape",
-        "sorcerer_metamagic",
-        "wizard_evocation_savant"
-      ]
-    },
-    {
-      "count": 3,
       "description": "Character facts are owned while only runtime-detached adjudication remains.",
       "status": "closed-character-fact-and-runtime-detached-split",
       "unitIds": [
         "druid_druidic",
         "rogue_thieves_cant",
         "sorcerer_font_of_magic"
+      ]
+    },
+    {
+      "count": 2,
+      "description": "The Unit claim records concrete smaller follow-up splits for the remaining executable owner work.",
+      "status": "blocked-follow-up-split",
+      "unitIds": [
+        "druid_wild_shape",
+        "sorcerer_metamagic"
       ]
     },
     {
@@ -2878,11 +2877,12 @@
       ]
     },
     {
-      "count": 1,
+      "count": 2,
       "description": "The in-scope behavior is complete and every remaining residual is outside this strict accounting scope.",
       "status": "closed-later-level-only",
       "unitIds": [
-        "ranger_favored_enemy"
+        "ranger_favored_enemy",
+        "wizard_evocation_savant"
       ]
     }
   ],
@@ -10554,10 +10554,10 @@
       "unsupported-profile": 29
     },
     "groupsByStatus": {
-      "blocked-follow-up-split": 3,
+      "blocked-follow-up-split": 2,
       "closed-character-fact-and-runtime-detached-split": 3,
       "closed-companion-control-boundary": 2,
-      "closed-later-level-only": 1,
+      "closed-later-level-only": 2,
       "closed-outside-battle-runtime-boundary": 7,
       "closed-runtime-detached-table-adjudication": 35,
       "supported-profile": 146
