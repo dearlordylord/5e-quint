@@ -68,7 +68,10 @@ import {
   type FindFamiliarFormEligibility,
   type PactOfTheChainFamiliarAttackSubject,
 } from "./index.ts";
-import { presentCompanionCombatantId } from "./companion-state.ts";
+import {
+  presentCompanionCombatantId,
+  retainedCompanionStateId,
+} from "./companion-state.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
 import { ATTACK_TARGET_HOLE_ID } from "./battle-reducer.ts";
 import { battleCreatureStateWithoutKnockOut } from "./battle-reducer/creature-state.ts";
@@ -871,7 +874,6 @@ describe("Find Familiar lifecycle", () => {
 
     expect(result.tag).toBe("resolved");
     if (result.tag !== "resolved") return;
-    expect(result.state.companions.has(familiarId)).toBe(true);
     const familiar = findFamiliarCompanionForOwner(result.state, casterId);
     expect(familiar).toMatchObject({
       status: "present",
@@ -1000,7 +1002,11 @@ describe("Find Familiar lifecycle", () => {
     expect(collision.left.message).toBe(
       "Companion admission identity is already used by another companion.",
     );
-    expect(firstAdmission.right.companions.get("durable:first")).toMatchObject({
+    expect(
+      firstAdmission.right.companions.get(
+        retainedCompanionStateId("durable:first"),
+      ),
+    ).toMatchObject({
       ownerId: casterId,
       status: "temporarilyDismissed",
     });
@@ -1167,10 +1173,10 @@ describe("Find Familiar lifecycle", () => {
 
     expect(cast.tag).toBe("resolved");
     if (cast.tag !== "resolved") return;
-    expect(cast.state.companions.get(familiarId)).toMatchObject({
+    expect(findFamiliarCompanionForOwner(cast.state, casterId)).toMatchObject({
       status: "present",
       ownerId: casterId,
-      formAccess: "druidWildCompanion",
+      formAccess: "findFamiliar",
       formSelection: { tag: "normalNamedForm", formId: "cat" },
       creatureTypeOverride: "fey",
     });
@@ -1213,8 +1219,8 @@ describe("Find Familiar lifecycle", () => {
           )
         : undefined,
     ).toMatchObject({ usesRemaining: 1 });
-    expect(cast.state.companions.get(familiarId)).toMatchObject({
-      formAccess: "druidWildCompanion",
+    expect(findFamiliarCompanionForOwner(cast.state, casterId)).toMatchObject({
+      formAccess: "findFamiliar",
       creatureTypeOverride: "fey",
     });
   });
@@ -1277,7 +1283,7 @@ describe("Find Familiar lifecycle", () => {
       findFamiliarCompanionForOwner(reappeared.state, casterId),
     ).toMatchObject({
       status: "present",
-      formAccess: "druidWildCompanion",
+      formAccess: "findFamiliar",
       creatureTypeOverride: "fey",
     });
     expect(reappeared.state.combatants.get(familiarId)?.initiative).toBe(
@@ -1332,7 +1338,7 @@ describe("Find Familiar lifecycle", () => {
 
     expect(rested.tag).toBe("resolved");
     if (rested.tag !== "resolved") return;
-    expect(rested.state.companions.has(familiarId)).toBe(false);
+    expect(findFamiliarCompanionForOwner(rested.state, casterId)).toBeNull();
     expect(rested.state.combatants.has(familiarId)).toBe(false);
     expect(rested.snapshot.companions).toEqual([]);
   });
@@ -1544,7 +1550,6 @@ describe("Find Familiar lifecycle", () => {
     expect(dismissed.tag).toBe("resolved");
     if (dismissed.tag !== "resolved") return;
     expect(findFamiliarCompanionForOwner(dismissed.state, casterId)).toBeNull();
-    expect(dismissed.state.companions.has(familiarId)).toBe(false);
     expect(dismissed.state.combatants.has(familiarId)).toBe(false);
     expect(dismissed.snapshot.turnOrder).toEqual([casterId]);
     expect(dismissed.droppedObjects).toBeUndefined();
@@ -1781,7 +1786,6 @@ describe("Find Familiar lifecycle", () => {
     if (Either.isLeft(ownerRemoved)) return;
     expect(ownerRemoved.right.combatants.has(casterId)).toBe(false);
     expect(ownerRemoved.right.combatants.has(familiarId)).toBe(false);
-    expect(ownerRemoved.right.companions.has(familiarId)).toBe(false);
     expect(
       findFamiliarCompanionForOwner(ownerRemoved.right, casterId),
     ).toBeNull();
@@ -1798,7 +1802,6 @@ describe("Find Familiar lifecycle", () => {
     if (Either.isLeft(familiarRemoved)) return;
     expect(familiarRemoved.right.combatants.has(casterId)).toBe(true);
     expect(familiarRemoved.right.combatants.has(familiarId)).toBe(false);
-    expect(familiarRemoved.right.companions.has(familiarId)).toBe(false);
     expect(
       findFamiliarCompanionForOwner(familiarRemoved.right, casterId),
     ).toBeNull();
@@ -2211,7 +2214,6 @@ describe("Find Familiar lifecycle", () => {
     });
     expect(permanentlyDismissed.tag).toBe("resolved");
     if (permanentlyDismissed.tag !== "resolved") return;
-    expect(permanentlyDismissed.state.companions.has(familiarId)).toBe(false);
     expect(
       findFamiliarCompanionForOwner(permanentlyDismissed.state, casterId),
     ).toBeNull();

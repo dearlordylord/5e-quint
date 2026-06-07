@@ -88,11 +88,15 @@ module battleRuntimeModel {
   type FindFamiliarForm = FindFamiliarCat | FindFamiliarRat | FindFamiliarBat
   type FindFamiliarCreatureTypeOverride = FindFamiliarCelestial | FindFamiliarFey | FindFamiliarFiend
   type FindFamiliarPlacement = FindFamiliarUnoccupiedSpaceWithinSpellRange | FindFamiliarUnoccupiedSpaceWithin30Feet
+  type FindFamiliarIdentity = BattleOnlyFindFamiliarIdentity | RetainedFindFamiliarIdentity({ durableCompanion: Actor })
+  type FindFamiliarExpiration = FindFamiliarNoExpiration | FindFamiliarOwnerFinishedLongRestExpiration
   type FindFamiliarLifecycle =
     | NoFindFamiliar
     | PresentFindFamiliar({
         owner: Actor,
         familiar: Actor,
+        identity: FindFamiliarIdentity,
+        expiration: FindFamiliarExpiration,
         form: FindFamiliarForm,
         creatureTypeOverride: FindFamiliarCreatureTypeOverride,
         initiative: int,
@@ -100,11 +104,15 @@ module battleRuntimeModel {
       })
     | TemporarilyDismissedFindFamiliar({
         owner: Actor,
+        identity: FindFamiliarIdentity,
+        expiration: FindFamiliarExpiration,
         form: FindFamiliarForm,
         creatureTypeOverride: FindFamiliarCreatureTypeOverride,
       })
     | DisappearedAtZeroHitPointsFindFamiliar({
         owner: Actor,
+        identity: FindFamiliarIdentity,
+        expiration: FindFamiliarExpiration,
         form: FindFamiliarForm,
         creatureTypeOverride: FindFamiliarCreatureTypeOverride,
       })

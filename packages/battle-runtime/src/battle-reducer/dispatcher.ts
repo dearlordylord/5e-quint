@@ -4531,8 +4531,10 @@ export function snapshotBattle(state: BattleState): BattleSnapshot {
         entry.companionId,
         entry.companion,
       );
+      const { combatantId: _combatantId, ...snapshotCompanion } =
+        entry.companion;
       return {
-        ...entry.companion,
+        ...snapshotCompanion,
         companionId,
         resolvedStatBlockId: requirePresentFamiliarCombatantStatBlockId(
           state,

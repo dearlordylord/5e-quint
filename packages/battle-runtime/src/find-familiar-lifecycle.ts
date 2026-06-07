@@ -170,7 +170,7 @@ export type CompanionBattleAdmissionManifestation =
 
 export type CompanionBattleAdmissionFormEligibility =
   | {
-      readonly formAccess: "findFamiliar" | "druidWildCompanion";
+      readonly formAccess: "findFamiliar";
       readonly eligibility: FindFamiliarFormEligibility;
     }
   | {
@@ -266,6 +266,7 @@ export function castFindFamiliar(
       formAccess: "findFamiliar",
       formSelection: input.selection,
     },
+    combatantId: familiarId,
     identity: priorFamiliar?.identity ?? { tag: "battleOnly" },
     expiration: { tag: "none" },
     creatureTypeOverride: resolvedForm.form.creatureTypeOverride,
@@ -376,9 +377,10 @@ export function castWildCompanion(
   }
   const nextFamiliar = findFamiliarPresentState({
     form: {
-      formAccess: "druidWildCompanion",
+      formAccess: "findFamiliar",
       formSelection: input.selection,
     },
+    combatantId: familiarId,
     identity: priorFamiliar?.identity ?? { tag: "battleOnly" },
     expiration: { tag: "ownerFinishedLongRest" },
     creatureTypeOverride: "fey",
@@ -476,6 +478,7 @@ export function admitCompanionToBattle(
   }
   const nextCompanion = findFamiliarPresentState({
     form: input.manifestation.storedForm,
+    combatantId: input.companionId,
     identity: input.identity,
     expiration: input.expiration,
     creatureTypeOverride: input.manifestation.creatureTypeOverride,
@@ -580,6 +583,7 @@ function admitAbsentCompanionToBattle(
 
 function findFamiliarPresentState(input: {
   readonly form: FindFamiliarSelectedForm;
+  readonly combatantId: CombatantId;
   readonly identity: BattleCompanionIdentity;
   readonly expiration: BattleCompanionExpiration;
   readonly creatureTypeOverride: FindFamiliarCreatureTypeOverride;
@@ -589,6 +593,7 @@ function findFamiliarPresentState(input: {
   return {
     ...selectedFindFamiliarForm(input.form),
     status: "present",
+    combatantId: input.combatantId,
     ownerId: input.ownerId,
     identity: input.identity,
     expiration: input.expiration,
@@ -645,13 +650,6 @@ function storedFindFamiliarForm(
       resolvedStatBlockId: storedForm.resolvedStatBlockId,
     };
   }
-  if (storedForm.formAccess === "druidWildCompanion") {
-    return {
-      formAccess: "druidWildCompanion",
-      formSelection: storedForm.formSelection,
-      resolvedStatBlockId: storedForm.resolvedStatBlockId,
-    };
-  }
   if (storedForm.formAccess === "pactOfTheChain") {
     return {
       formAccess: "pactOfTheChain",
@@ -669,12 +667,6 @@ function selectedFindFamiliarForm(
   if (form.formAccess === "findFamiliar") {
     return {
       formAccess: "findFamiliar",
-      formSelection: form.formSelection,
-    };
-  }
-  if (form.formAccess === "druidWildCompanion") {
-    return {
-      formAccess: "druidWildCompanion",
       formSelection: form.formSelection,
     };
   }
@@ -701,13 +693,6 @@ export function retainedStoredFormForPresentCompanion(input: {
   if (input.companion.formAccess === "findFamiliar") {
     return {
       formAccess: "findFamiliar",
-      formSelection: input.companion.formSelection,
-      resolvedStatBlockId,
-    };
-  }
-  if (input.companion.formAccess === "druidWildCompanion") {
-    return {
-      formAccess: "druidWildCompanion",
       formSelection: input.companion.formSelection,
       resolvedStatBlockId,
     };
@@ -912,8 +897,11 @@ export function permanentlyDismissFindFamiliar(
   if (spent.tag === "invalid") {
     return spent;
   }
-  const companions = new Map(spent.state.companions);
-  companions.delete(familiarEntry.companionId);
+  const companions = new Map(
+    [...spent.state.companions].filter(
+      ([, companion]) => companion.ownerId !== input.casterId,
+    ),
+  );
   if (familiar.status !== "present") {
     return resolvedFindFamiliarResult({ ...spent.state, companions }, []);
   }
@@ -958,6 +946,7 @@ export function reappearTemporarilyDismissedFindFamiliar(
   }
   const nextFamiliar = findFamiliarPresentState({
     form: familiar,
+    combatantId: familiar.reappearanceCombatantId,
     identity: familiar.identity,
     expiration: familiar.expiration,
     creatureTypeOverride: familiar.creatureTypeOverride,
@@ -1160,7 +1149,7 @@ export function applyCompanionLongRestDisappearance(input: {
     return resolvedFindFamiliarResult(input.state, []);
   }
   const absentCompanionIds = companionsToRemove.flatMap((entry) =>
-    entry.companion.status === "present" ? [] : [entry.companionId],
+    entry.companion.status === "present" ? [] : [entry.companionStateId],
   );
   const stateWithoutAbsentCompanions =
     absentCompanionIds.length === 0

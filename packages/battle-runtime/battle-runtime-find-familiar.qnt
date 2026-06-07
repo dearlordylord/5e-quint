@@ -33,6 +33,8 @@ module battleRuntimeFindFamiliar {
           PresentFindFamiliar({
             owner: owner,
             familiar: present.familiar,
+            identity: present.identity,
+            expiration: FindFamiliarNoExpiration,
             form: form,
             creatureTypeOverride: creatureTypeOverride,
             initiative: initiative,
@@ -45,12 +47,38 @@ module battleRuntimeFindFamiliar {
           PresentFindFamiliar({
             owner: owner,
             familiar: familiar,
+            identity: BattleOnlyFindFamiliarIdentity,
+            expiration: FindFamiliarNoExpiration,
             form: form,
             creatureTypeOverride: creatureTypeOverride,
             initiative: initiative,
             placement: FindFamiliarUnoccupiedSpaceWithinSpellRange,
           })
     }
+
+  pure def admitRetainedFindFamiliarLifecycle(
+    prior: FindFamiliarLifecycle,
+    ordinaryCombatants: Set[Actor],
+    owner: Actor,
+    familiar: Actor,
+    durableCompanion: Actor,
+    expiration: FindFamiliarExpiration,
+    form: FindFamiliarForm,
+    creatureTypeOverride: FindFamiliarCreatureTypeOverride,
+    initiative: int
+  ): FindFamiliarLifecycle =
+    if (owner == familiar or ordinaryCombatants.contains(familiar)) prior
+    else
+      PresentFindFamiliar({
+        owner: owner,
+        familiar: familiar,
+        identity: RetainedFindFamiliarIdentity({ durableCompanion: durableCompanion }),
+        expiration: expiration,
+        form: form,
+        creatureTypeOverride: creatureTypeOverride,
+        initiative: initiative,
+        placement: FindFamiliarUnoccupiedSpaceWithinSpellRange,
+      })
 
   pure def temporarilyDismissFindFamiliarLifecycle(
     prior: FindFamiliarLifecycle,
@@ -62,6 +90,8 @@ module battleRuntimeFindFamiliar {
         if (magicActionAvailable) {
           lifecycle: TemporarilyDismissedFindFamiliar({
             owner: present.owner,
+            identity: present.identity,
+            expiration: present.expiration,
             form: present.form,
             creatureTypeOverride: present.creatureTypeOverride,
           }),
@@ -122,6 +152,8 @@ module battleRuntimeFindFamiliar {
           lifecycle: PresentFindFamiliar({
             owner: absent.owner,
             familiar: familiar,
+            identity: absent.identity,
+            expiration: absent.expiration,
             form: absent.form,
             creatureTypeOverride: absent.creatureTypeOverride,
             initiative: initiative,
@@ -149,6 +181,8 @@ module battleRuntimeFindFamiliar {
       | PresentFindFamiliar(present) => {
           lifecycle: DisappearedAtZeroHitPointsFindFamiliar({
             owner: present.owner,
+            identity: present.identity,
+            expiration: present.expiration,
             form: present.form,
             creatureTypeOverride: present.creatureTypeOverride,
           }),

@@ -2394,12 +2394,15 @@ describe("MCP server route", () => {
       tempHp: Hp(3),
     });
     expect(
-      root.sessionStore.battleState?.companions.get(
-        combatantId("wizard-familiar"),
-      ),
-    ).toMatchObject({
-      status: "present",
-    });
+      root.sessionStore.battleState === null
+        ? []
+        : snapshotBattle(root.sessionStore.battleState).companions,
+    ).toMatchObject([
+      {
+        companionId: combatantId("wizard-familiar"),
+        status: "present",
+      },
+    ]);
 
     const ended = readPayload(handleToolCall(root, "end_battle", {}));
     expect(ended.characters).toMatchObject([

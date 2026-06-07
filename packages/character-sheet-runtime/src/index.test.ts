@@ -577,6 +577,35 @@ describe("Character Sheet runtime", () => {
     expect(characterSheetCompanion(rested)).toEqual({ tag: "none" });
   });
 
+  test("clears surviving retained companion Temporary Hit Points on Long Rest", () => {
+    const sheet = requireRight(
+      createFreshCharacterSheet({
+        characterId: characterSheetId("character:familiar-rest-temp-hp"),
+        build,
+        maximumHp: Hp(12),
+        currentHp: Hp(12),
+        tempHp: Hp(0),
+        unitLibrary,
+        companion: retainedCompanionInput({
+          protocolTag: "ordinaryFamiliarLikeOneAtATime",
+        }),
+      }),
+    );
+
+    const rested = requireRight(completeLongRest({ sheet, unitLibrary }));
+    const companion = characterSheetCompanion(rested);
+
+    expect(companion).toMatchObject({
+      tag: "retainedOneAtATime",
+      companion: {
+        manifestation: {
+          tag: "embodiedOutsideBattle",
+          hitPoints: { currentHp: Hp(2), tempHp: Hp(0) },
+        },
+      },
+    });
+  });
+
   test("creates a fresh non-spellcasting Character Sheet at current HP", () => {
     const sheet = createFreshCharacterSheet({
       characterId: characterSheetId("character:test"),

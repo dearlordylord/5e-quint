@@ -46,10 +46,6 @@ export type BattleCompanionSelectedForm =
   | {
       readonly formAccess: "pactOfTheChain";
       readonly formSelection: PactOfTheChainFindFamiliarFormSelection;
-    }
-  | {
-      readonly formAccess: "druidWildCompanion";
-      readonly formSelection: FindFamiliarFormSelection;
     };
 
 export type BattleCompanionStoredForm =
@@ -62,12 +58,6 @@ export type BattleCompanionStoredForm =
   | (Extract<
       BattleCompanionSelectedForm,
       { readonly formAccess: "pactOfTheChain" }
-    > & {
-      readonly resolvedStatBlockId: StatBlockRecord["id"];
-    })
-  | (Extract<
-      BattleCompanionSelectedForm,
-      { readonly formAccess: "druidWildCompanion" }
     > & {
       readonly resolvedStatBlockId: StatBlockRecord["id"];
     });
@@ -89,6 +79,7 @@ export type BattleCompanionProtocolState = {
 export type BattleCompanionPresentState = BattleCompanionSelectedForm &
   BattleCompanionProtocolState & {
     readonly status: "present";
+    readonly combatantId: CombatantId;
     readonly placement: BattleCompanionPlacement;
   };
 
@@ -118,7 +109,7 @@ export type BattleCompanionState =
   | BattleCompanionAbsentState;
 
 export type BattleCompanionSnapshot =
-  | (BattleCompanionPresentState & {
+  | (Omit<BattleCompanionPresentState, "combatantId"> & {
       readonly companionId: CombatantId;
       readonly resolvedStatBlockId: StatBlockRecord["id"];
       readonly initiative: InitiativeScore;
@@ -128,11 +119,13 @@ export type BattleCompanionSnapshot =
     });
 
 export type BattleCompanionPresentEntry = {
+  readonly companionStateId: BattleCompanionStateId;
   readonly companionId: CombatantId;
   readonly companion: BattleCompanionPresentState;
 };
 
 export type BattleCompanionAbsentEntry = {
+  readonly companionStateId: BattleCompanionStateId;
   readonly companionId: BattleCompanionStateId;
   readonly companion: BattleCompanionAbsentState;
 };
@@ -145,14 +138,19 @@ export function companionEntries(
   companions: ReadonlyMap<BattleCompanionStateId, BattleCompanionState>,
 ): readonly BattleCompanionEntry[] {
   const entries: BattleCompanionEntry[] = [];
-  for (const [companionId, companion] of companions) {
+  for (const [companionStateId, companion] of companions) {
     if (companion.status === "present") {
       entries.push({
-        companionId: presentCompanionCombatantId(companionId, companion),
+        companionStateId,
+        companionId: presentCompanionCombatantId(companionStateId, companion),
         companion,
       });
     } else {
-      entries.push({ companionId, companion });
+      entries.push({
+        companionStateId,
+        companionId: absentCompanionDisplayId(companionStateId, companion),
+        companion,
+      });
     }
   }
   return entries;
@@ -194,7 +192,7 @@ export function setRetainedAbsentCompanion(
 ): ReadonlyMap<BattleCompanionStateId, BattleCompanionState> {
   return setCompanionByStateId(
     companions,
-    companion.identity.durableCompanionId,
+    retainedCompanionStateId(companion.identity.durableCompanionId),
     companion,
   );
 }
@@ -215,17 +213,36 @@ export function companionStateIdFor(
   companionId: CombatantId,
   companion: BattleCompanionState,
 ): BattleCompanionStateId {
-  return companion.status !== "present" &&
-    companion.identity.tag === "retainedBetweenBattles"
+  if (companion.identity.tag === "retainedBetweenBattles") {
+    return retainedCompanionStateId(companion.identity.durableCompanionId);
+  }
+  return battleOnlyCompanionStateId(companionId);
+}
+
+export function presentCompanionCombatantId(
+  _companionId: BattleCompanionStateId,
+  companion: BattleCompanionPresentState,
+): CombatantId {
+  return companion.combatantId;
+}
+
+function absentCompanionDisplayId(
+  companionId: BattleCompanionStateId,
+  companion: BattleCompanionAbsentState,
+): BattleCompanionStateId {
+  return companion.identity.tag === "retainedBetweenBattles"
     ? companion.identity.durableCompanionId
     : companionId;
 }
 
-export function presentCompanionCombatantId(
-  companionId: BattleCompanionStateId,
-  _companion: BattleCompanionPresentState,
-): CombatantId {
-  // Cast evidence: setCompanion keys present companions by their active battle
-  // combatant id, and present companion entries are created only from that map.
-  return companionId as CombatantId;
+export function retainedCompanionStateId(
+  durableCompanionId: BattleCompanionDurableId,
+): BattleCompanionStateId {
+  return `retained:${durableCompanionId}`;
+}
+
+export function battleOnlyCompanionStateId(
+  companionId: CombatantId,
+): BattleCompanionStateId {
+  return `battle:${companionId}`;
 }

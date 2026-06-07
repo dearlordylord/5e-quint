@@ -50,13 +50,10 @@ export function findPresentFamiliarById(
   familiarId: CombatantId,
 ): {
   readonly ownerId: CombatantId;
+  readonly companionStateId: BattleCompanionEntry["companionStateId"];
   readonly companionId: CombatantId;
   readonly familiar: BattleCompanionPresentState;
 } | null {
-  const familiar = state.companions.get(familiarId);
-  if (familiar?.status === "present") {
-    return { ownerId: familiar.ownerId, companionId: familiarId, familiar };
-  }
   const entry = battleCompanionEntries(state).find(
     (candidate) =>
       candidate.companion.status === "present" &&
@@ -65,6 +62,7 @@ export function findPresentFamiliarById(
   if (entry?.companion.status === "present") {
     return {
       ownerId: entry.companion.ownerId,
+      companionStateId: entry.companionStateId,
       companionId: familiarId,
       familiar: entry.companion,
     };

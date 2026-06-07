@@ -782,6 +782,7 @@ function applyFindFamiliarZeroHitPointDisappearanceAfterDamage(input: {
     return removeInvalidPresentFindFamiliarAfterZeroHitPointDamage({
       state: input.state,
       companionId: entry.companionId,
+      companionStateId: entry.companionStateId,
     });
   }
   const disappearedFamiliar = {
@@ -812,6 +813,12 @@ function applyFindFamiliarZeroHitPointDisappearanceAfterDamage(input: {
 function removeInvalidPresentFindFamiliarAfterZeroHitPointDamage(input: {
   readonly state: BattleState;
   readonly companionId: CombatantId;
+  readonly companionStateId: BattleState["companions"] extends ReadonlyMap<
+    infer K,
+    unknown
+  >
+    ? K
+    : never;
 }): BattleState {
   const removed = removeBattleCombatants({
     state: input.state,
@@ -821,7 +828,7 @@ function removeInvalidPresentFindFamiliarAfterZeroHitPointDamage(input: {
     ? input.state
     : removed.right;
   const companions = new Map(stateWithoutCombatant.companions);
-  companions.delete(input.companionId);
+  companions.delete(input.companionStateId);
   return { ...stateWithoutCombatant, companions };
 }
 

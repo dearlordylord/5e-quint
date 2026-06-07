@@ -1120,21 +1120,6 @@ function battleStoredFormForSheetCompanion(input: {
       },
     });
   }
-  if (formAccess.right === "druidWildCompanion") {
-    if (formSelection.right.tag === "pactOfTheChainSpecialForm") {
-      return characterSheetBattleHandoffIssue(
-        "Wild Companion retained companion access cannot use special companion forms.",
-      );
-    }
-    return Either.right({
-      formEligibility: formEligibility.right,
-      storedForm: {
-        formAccess: "druidWildCompanion",
-        formSelection: formSelection.right,
-        resolvedStatBlockId: proof.resolvedStatBlockId,
-      },
-    });
-  }
   return Either.right({
     formEligibility: formEligibility.right,
     storedForm: {
@@ -1349,9 +1334,6 @@ function battleFormAccessForSheetCompanion(input: {
   if (isAttackExceptionFamiliarLikeProtocol(input.protocol)) {
     return Either.right("pactOfTheChain");
   }
-  if (isOwnerLongRestFamiliarLikeProtocol(input.protocol)) {
-    return Either.right("druidWildCompanion");
-  }
   return Either.right("findFamiliar");
 }
 
@@ -1359,12 +1341,6 @@ function isAttackExceptionFamiliarLikeProtocol(
   protocol: CharacterSheetRetainedCompanionProtocol,
 ): protocol is CharacterSheetAttackExceptionFamiliarLikeOneAtATimeProtocol {
   return protocol.tag === "attackExceptionFamiliarLikeOneAtATime";
-}
-
-function isOwnerLongRestFamiliarLikeProtocol(
-  protocol: CharacterSheetRetainedCompanionProtocol,
-): protocol is CharacterSheetOwnerLongRestFamiliarLikeOneAtATimeProtocol {
-  return protocol.tag === "ownerLongRestFamiliarLikeOneAtATime";
 }
 
 function companionManifestationFromBattle(input: {

@@ -2833,7 +2833,30 @@ function companionAfterLongRest(
   if (companion.tag === "none") return companion;
   return isOwnerLongRestRetainedCompanionProtocol(companion.companion.protocol)
     ? { tag: "none" }
-    : companion;
+    : {
+        tag: "retainedOneAtATime",
+        companion: {
+          ...companion.companion,
+          manifestation: retainedCompanionManifestationAfterLongRest(
+            companion.companion.manifestation,
+          ),
+        },
+      };
+}
+
+function retainedCompanionManifestationAfterLongRest(
+  manifestation: CharacterSheetRetainedCompanionManifestation,
+): CharacterSheetRetainedCompanionManifestation {
+  if (manifestation.tag === "disappearedAtZeroHitPoints") {
+    return manifestation;
+  }
+  return {
+    ...manifestation,
+    hitPoints: {
+      ...manifestation.hitPoints,
+      tempHp: Hp(0),
+    },
+  };
 }
 
 export function interruptLongRest(
