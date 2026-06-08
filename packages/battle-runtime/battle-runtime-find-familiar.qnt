@@ -12,6 +12,9 @@
 // - .references/srd-5.2.1/Classes/Warlock.md lines 280-286:
 //   Pact of the Chain Find Familiar access, special form choice, and owner
 //   Attack-action forgo/reaction familiar attack.
+// - .references/srd-5.2.1/Classes/Druid.md lines 124-128:
+//   Wild Companion casts Find Familiar with a fixed Fey familiar that disappears
+//   when the Druid finishes a Long Rest.
 // - UBIQUITOUS_LANGUAGE.md: Companion Control, Companion Execution, Magic
 //   Action, Bonus Action, Reaction, and Attack Roll.
 
@@ -198,6 +201,45 @@ module battleRuntimeFindFamiliar {
           itemDropBoundaryEvents: Set(),
           magicActionSpent: false,
         }
+    }
+
+  pure def ownerLongRestFindFamiliarLifecycle(
+    prior: FindFamiliarLifecycle,
+    owner: Actor,
+  ): FindFamiliarLifecycle =
+    match prior {
+      | PresentFindFamiliar(present) =>
+        if (present.owner == owner and present.expiration == FindFamiliarOwnerFinishedLongRestExpiration)
+          NoFindFamiliar
+        else prior
+      | TemporarilyDismissedFindFamiliar(absent) =>
+        if (absent.owner == owner and absent.expiration == FindFamiliarOwnerFinishedLongRestExpiration)
+          NoFindFamiliar
+        else prior
+      | DisappearedAtZeroHitPointsFindFamiliar(absent) =>
+        if (absent.owner == owner and absent.expiration == FindFamiliarOwnerFinishedLongRestExpiration)
+          NoFindFamiliar
+        else prior
+      | NoFindFamiliar => NoFindFamiliar
+    }
+
+  pure def allOwnersLongRestFindFamiliarLifecycle(
+    prior: FindFamiliarLifecycle,
+  ): FindFamiliarLifecycle =
+    match prior {
+      | PresentFindFamiliar(present) =>
+        if (present.expiration == FindFamiliarOwnerFinishedLongRestExpiration)
+          NoFindFamiliar
+        else prior
+      | TemporarilyDismissedFindFamiliar(absent) =>
+        if (absent.expiration == FindFamiliarOwnerFinishedLongRestExpiration)
+          NoFindFamiliar
+        else prior
+      | DisappearedAtZeroHitPointsFindFamiliar(absent) =>
+        if (absent.expiration == FindFamiliarOwnerFinishedLongRestExpiration)
+          NoFindFamiliar
+        else prior
+      | NoFindFamiliar => NoFindFamiliar
     }
 
   pure def findFamiliarCombatants(lifecycle: FindFamiliarLifecycle): Set[Actor] =
