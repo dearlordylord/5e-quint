@@ -101,14 +101,14 @@ Every task must include:
 | # | Task | Status | Depends on | Notes |
 | ---: | --- | --- | --- | --- |
 | 1 | SHEETS-C01-TYPES-AND-IDS | ready-for-implementation-after-light-research | none | External mcp-WIP gate cleared 2026-06-10 (see header). |
-| 2 | SHEETS-C02-STATELESS-QUERIES | blocked | SHEETS-C01 | Lowest-risk extractions; witnesses: hit-point-maximum, armor-class, ability-check. |
-| 3 | SHEETS-C03-RESOURCES-HEALING | blocked | SHEETS-C02 | Monk's Focus / Uncanny Metabolism fold into resources. |
-| 4 | SHEETS-C04-SPELL-SLOTS-INVOCATION | blocked | SHEETS-C03 | Font of Magic folds into spell-slots. |
-| 5 | SHEETS-C05-FEATURE-DOMAINS | blocked | SHEETS-C04 | Druid + class-feature prepared spells. |
-| 6 | SHEETS-C06-LIFECYCLE-PARSING | blocked | SHEETS-C05 | Largest internal move (~2,400-line parser layer). |
-| 7 | SHEETS-C07-RESTS | blocked | SHEETS-C06 | Rest state machine consumes the spell-slots interface; weapon-mastery reselection folds in. |
-| 8 | SHEETS-C08-TIME-PASSAGE-AND-AUDIT | blocked | SHEETS-C07 | Final move + executable split audit + §7 status note. |
-| 9 | SHEETS-C09-TEST-REORG | blocked | SHEETS-C08 | Optional follow-up; can be deferred indefinitely. |
+| 2 | SHEETS-C02-STATELESS-QUERIES | blocked | SHEETS-C01-TYPES-AND-IDS | Lowest-risk extractions; witnesses: hit-point-maximum, armor-class, ability-check. |
+| 3 | SHEETS-C03-RESOURCES-HEALING | blocked | SHEETS-C02-STATELESS-QUERIES | Monk's Focus / Uncanny Metabolism fold into resources. |
+| 4 | SHEETS-C04-SPELL-SLOTS-INVOCATION | blocked | SHEETS-C03-RESOURCES-HEALING | Font of Magic folds into spell-slots. |
+| 5 | SHEETS-C05-FEATURE-DOMAINS | blocked | SHEETS-C04-SPELL-SLOTS-INVOCATION | Druid + class-feature prepared spells. |
+| 6 | SHEETS-C06-LIFECYCLE-PARSING | blocked | SHEETS-C05-FEATURE-DOMAINS | Largest internal move (~2,400-line parser layer). |
+| 7 | SHEETS-C07-RESTS | blocked | SHEETS-C06-LIFECYCLE-PARSING | Rest state machine consumes the spell-slots interface; weapon-mastery reselection folds in. |
+| 8 | SHEETS-C08-TIME-PASSAGE-AND-AUDIT | blocked | SHEETS-C07-RESTS | Final move + executable split audit + §7 status note. |
+| 9 | SHEETS-C09-TEST-REORG | blocked | SHEETS-C08-TIME-PASSAGE-AND-AUDIT | Optional follow-up; can be deferred indefinitely. |
 
 ## Task Details
 
