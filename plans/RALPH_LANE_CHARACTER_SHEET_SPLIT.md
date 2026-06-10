@@ -13,7 +13,7 @@
     {
       "number": 2,
       "id": "SHEETS-C02-STATELESS-QUERIES",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Extract hit-points, armor-class, and ability-checks query domains"
     },
     {
@@ -146,7 +146,7 @@ Every task must include:
 | # | Task | Status | Depends on | Notes |
 | ---: | --- | --- | --- | --- |
 | 1 | SHEETS-C01-TYPES-AND-IDS | ready-for-implementation-after-light-research | none | External mcp-WIP gate cleared 2026-06-10 (see header). |
-| 2 | SHEETS-C02-STATELESS-QUERIES | blocked | SHEETS-C01-TYPES-AND-IDS | Lowest-risk extractions; witnesses: hit-point-maximum, armor-class, ability-check. |
+| 2 | SHEETS-C02-STATELESS-QUERIES | ready-for-research | SHEETS-C01-TYPES-AND-IDS | Lowest-risk extractions; witnesses: hit-point-maximum, armor-class, ability-check. |
 | 3 | SHEETS-C03-RESOURCES-HEALING | blocked | SHEETS-C02-STATELESS-QUERIES | Monk's Focus / Uncanny Metabolism fold into resources. |
 | 4 | SHEETS-C04-SPELL-SLOTS-INVOCATION | blocked | SHEETS-C03-RESOURCES-HEALING | Font of Magic folds into spell-slots. |
 | 5 | SHEETS-C05-FEATURE-DOMAINS | blocked | SHEETS-C04-SPELL-SLOTS-INVOCATION | Druid + class-feature prepared spells. |
@@ -171,7 +171,7 @@ identical; no behavioural diff (moves only).
 
 ### Task 2 - SHEETS-C02-STATELESS-QUERIES
 
-Status: `blocked` · Mode: AFK
+Status: `ready-for-research` · Mode: AFK
 
 Output: `hit-points.ts`, `armor-class.ts`, `ability-checks.ts` extracted per
 §7 cluster ranges.
