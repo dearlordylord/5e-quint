@@ -1,29 +1,22 @@
 // KERNEL-COVERAGE: runtime-owner SHEET.HP_REST_HIT_DICE.TRANSITIONS
 // KERNEL-COVERAGE: runtime-owner SHEET.SPELL_SLOTS_PACT_SLOTS.TRANSITIONS
-// KERNEL-COVERAGE: runtime-owner SHEET.FEATURE_RESOURCES.TRANSITIONS
 // KERNEL-COVERAGE: runtime-owner SHEET.WEAPON_MASTERY.RESELECTION SHEET.WEAPON_MASTERY.CLASS_LEVEL_RESELECTION
 // KERNEL-COVERAGE: runtime-owner SHEET.SPELLBOOK_RITUAL.SPELL_ACCESS_PROJECTION
-// KERNEL-COVERAGE: runtime-owner SHEET.SPELL_REST_BENEFIT.APPLICATION
 // KERNEL-COVERAGE: runtime-owner SHEET.SPELL_ACCESS.CLASS_FEATURE_PREPARED_PROJECTION
 import {
   ALIGNMENT_MORALITIES,
   ALIGNMENT_ORDERS,
   abilityScoreAssignment,
   characterBuildFeatureUnitIds,
-  characterBuildHitPoints,
-  characterBuildResources,
   characterBuildSpellcastingSlotCapacity,
   classLevelForUnit,
-  classLevelLinearValueAtClassLevel,
   classUnitId,
   classUnitIdToClassName,
   CHARACTER_CLASS_LEVELS,
-  computeTotalLevel,
   characterBuildSorcererFontOfMagicFacts,
   characterBuildSorcererMetamagicFacts,
   characterBuildDruidWildShapeFacts,
   characterBuildMonkUncannyMetabolismFacts,
-  characterBuildMonksFocusFacts,
   eldritchInvocationOptionForInvocationId,
   eldritchInvocationRepeatableChoiceSatisfiesRule,
   eldritchInvocationId,
@@ -32,11 +25,8 @@ import {
   parseCharacterEquipmentItemId,
   progressionClassUnitIds,
   STANDARD_LANGUAGES,
-  isClassLevelLinearPerLevel,
-  isClassLevelThresholdTiers,
   replaceDruidWildShapeKnownForm,
   sorcererMetamagicOptionId,
-  thresholdTierValueAtClassLevel,
   validateDruidWildShapeKnownForms,
   weaponMasteryChoiceProfileForFeature,
   characterDraconicAncestrySelection,
@@ -45,10 +35,8 @@ import {
   type CharacterBuildEquipment,
   type CharacterBuildEldritchInvocationRepeatableChoice,
   type CharacterBuildFeature,
-  type CharacterBuildHitDiePool,
   type CharacterBuildPactMagicSlotPool,
   type CharacterBuildProficiencyChoiceSubject,
-  type CharacterBuildResource,
   type CharacterBuildSpeciesChoiceFacts,
   type CharacterBuildSpellcasting,
   type CharacterBuildSpellcastingFocus,
@@ -64,10 +52,7 @@ import {
   type SurfaceSkill,
 } from "@dnd/shared/game-facts";
 import {
-  DieRollResult,
   Hp,
-  characterLevel,
-  difficultyClass,
   resourceCount,
   spellSlotLevel,
   type ReadonlyNonEmptyArray,
@@ -80,7 +65,6 @@ import {
   parsePositiveElapsedTimeTicks,
   type ElapsedTimeTicks,
 } from "@dnd/shared/elapsed-time";
-import { abilityScoreToMod } from "@dnd/shared-algebras/ability-score-algebra";
 import type {
   DeathSaveCount,
   DeathSaves,
@@ -91,12 +75,10 @@ import type {
   SpellSlotLevel,
 } from "@dnd/shared/types";
 import type {
-  ChargePoolResource,
   ClassLevelPreparedSpellAccessGrant,
   DruidCircleLandChoice,
   LandChoicePreparedSpellAccessGrant,
   PassiveMechanics,
-  RestResetCadence,
   SpellRecord,
   UnitRecord,
   DragonbornSpeciesRecord,
@@ -115,7 +97,6 @@ import { readClassCreationFacts } from "@dnd/surface/surface/character-creation-
 import {
   DRUID_CIRCLE_LAND_CHOICES,
   isSupportedClassFeatureSpellFreeCastResourceTag,
-  supportedClassFeatureSpellFreeCastGrantsForUnit,
 } from "@dnd/surface/surface/types";
 import { Either, Match, Option } from "effect";
 
@@ -143,12 +124,23 @@ export {
   characterSheetArmorClassState,
 } from "./armor-class.ts";
 export {
+  applyCharacterSheetSpellRestBenefit,
+  applyLayOnHands,
+  characterSheetHitDice,
+} from "./healing-rest-benefit.ts";
+export {
   characterSheetCurrentHp,
   characterSheetHitPointMaximum,
   characterSheetHitPoints,
   characterSheetHitPointsCurrentHp,
   characterSheetTempHp,
 } from "./hit-points.ts";
+export {
+  characterSheetMonkUncannyMetabolismUseState,
+  characterSheetMonksFocusSaveDc,
+  characterSheetResources,
+  useMonkUncannyMetabolismWhenRollingInitiative,
+} from "./resources.ts";
 export type {
   CharacterPactSlotExpenditure,
   CharacterSheet,
@@ -247,7 +239,6 @@ import {
   CHARACTER_SHEET_LONG_REST_BASE_TICKS,
   CHARACTER_SHEET_LONG_REST_WAIT_TICKS,
   CHARACTER_SHEET_SHORT_REST_TICKS,
-  LAY_ON_HANDS_POISONED_REMOVAL_COST,
   MAGICAL_CUNNING_REST_FEATURE_TAG,
   RITUAL_ADDITIONAL_CASTING_TIME_MINUTES,
   SPELL_RECIPIENT_REST_LOCKOUT_TAG,
@@ -263,16 +254,13 @@ import {
   characterSheetShortRestCompletionBrand,
   characterSheetShortRestStartBrand,
   isCharacterSheetPointPoolResourceUnitId,
-  isCharacterSheetUseCountResourceUnitId,
 } from "./sheet-types.ts";
 import type {
   CharacterPactSlotExpenditure,
   CharacterSheet,
-  CharacterSheetArcaneRecoverySlotRefund,
   CharacterSheetBookOfShadowsPresence,
   CharacterSheetBookOfShadowsRitualInvocation,
   CharacterSheetClassFeaturePreparedSpellAccess,
-  CharacterSheetClassFeatureSpellFreeCastResource,
   CharacterSheetCondition,
   CharacterSheetCreatedSpellSlotState,
   CharacterSheetDruidCircleLand,
@@ -282,14 +270,8 @@ import type {
   CharacterSheetFontOfMagicSlotToSorceryPointsInput,
   CharacterSheetFontOfMagicSorceryPointsToSpellSlotInput,
   CharacterSheetFontOfMagicSpellSlotSource,
-  CharacterSheetHitDieSpend,
-  CharacterSheetHitDieState,
-  CharacterSheetId,
   CharacterSheetInput,
   CharacterSheetIssue,
-  CharacterSheetLayOnHandsInput,
-  CharacterSheetLayOnHandsResource,
-  CharacterSheetLayOnHandsResult,
   CharacterSheetLongRestCalendarGate,
   CharacterSheetLongRestCompletion,
   CharacterSheetLongRestCompletionInput,
@@ -301,17 +283,11 @@ import type {
   CharacterSheetLongRestStartInput,
   CharacterSheetLongRestStartTiming,
   CharacterSheetMagicalCunningInput,
-  CharacterSheetMonkUncannyMetabolismInitiativeInput,
-  CharacterSheetMonkUncannyMetabolismUseState,
-  CharacterSheetMonksFocusSaveDc,
   CharacterSheetPactSlotState,
-  CharacterSheetPointPoolResource,
   CharacterSheetPointPoolResourceUnitId,
   CharacterSheetPositiveHpUnconscious,
   CharacterSheetResourceExpenditure,
-  CharacterSheetResourceState,
   CharacterSheetRestFeatureUse,
-  CharacterSheetShortRestBenefitHpGate,
   CharacterSheetShortRestCompletion,
   CharacterSheetShortRestCompletionInput,
   CharacterSheetShortRestInput,
@@ -322,9 +298,6 @@ import type {
   CharacterSheetSorceryPointPoolResourceState,
   CharacterSheetSpellInvocation,
   CharacterSheetSpellInvocationInput,
-  CharacterSheetSpellRestBenefitInput,
-  CharacterSheetSpellRestBenefitRecipient,
-  CharacterSheetSpellRestBenefitResult,
   CharacterSheetSpellSlotSourceState,
   CharacterSheetSpellSlotState,
   CharacterSheetSpellbookRitualAccess,
@@ -333,7 +306,6 @@ import type {
   CharacterSheetSpentHitDiePool,
   CharacterSheetStableRecovery,
   CharacterSheetTimePassedInput,
-  CharacterSheetUseCountResource,
   CharacterSheetWeaponMasteryReselection,
   CharacterSheetWithSpellSlots,
   CharacterSheetZeroHpLifecycleInput,
@@ -344,7 +316,6 @@ import type {
   StoredClassFeatureLanguageFact,
   StoredClassFeatureLanguageProjection,
 } from "./sheet-types.ts";
-import { characterSheetProficiencyBonusForCharacterLevel } from "./ability-checks.ts";
 import {
   characterSheetCurrentHp,
   characterSheetHitPointCapacity,
@@ -352,29 +323,32 @@ import {
   invalidElapsedTimeResult,
   parseHp,
   passStableRecoveryTime,
-  recoverCharacterSheetHitPoints,
 } from "./hit-points.ts";
-// UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.healing-resource-action
-// UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.short-rest-spell-slot-recovery
+import {
+  characterBuildHitDice,
+  characterSheetSpellRestBenefitProfile,
+  completeShortRestBenefits,
+  isCharacterSheetWithSpellSlots,
+  ordinarySpellSlotStates,
+  restSpellSlotRecoveryProfileForBuild,
+} from "./healing-rest-benefit.ts";
+import {
+  characterSheetResources,
+  replacePointPoolResourceExpenditure,
+  resourceExpendituresFromInput,
+} from "./resources.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.spellbook-ritual-invocation
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.weapon-mastery-reselection character-sheet.weapon-mastery-class-level-reselection
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.pact-slot-recovery
-// UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.class-feature-use-count-resource
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.class-feature-long-rest-use-state
-// UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.class-feature-point-pool-resource
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.font-of-magic-slot-to-sorcery-points
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.font-of-magic-sorcery-points-to-spell-slot
-// UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.metamagic-battle-resource-bridge
-// UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.monk-uncanny-metabolism-initiative-recovery
-// UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.spell-rest-benefit-application
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.class-feature-prepared-spell-access
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.druid-circle-land-spell-access
 
 const DEFAULT_SRD_STAT_BLOCK_CATALOG_RESULT = buildStatBlockCatalog({
   collections: [srdStatBlockCollection],
 });
-const byKind = Match.discriminator("kind");
-
 export function createFreshCharacterSheet(
   input: CharacterSheetInput,
 ): Either.Either<CharacterSheet, CharacterSheetIssue> {
@@ -817,230 +791,6 @@ export function characterSheetPactSlots(
       };
 }
 
-export function characterSheetHitDice(
-  sheet: CharacterSheet,
-  unitLibrary: UnitCatalog,
-): Either.Either<readonly CharacterSheetHitDieState[], CharacterSheetIssue> {
-  const capacity = characterBuildHitDice(sheet.build, unitLibrary);
-  if (Either.isLeft(capacity)) return Either.left(capacity.left);
-  return Either.right(
-    capacity.right.map((pool) => ({
-      ...pool,
-      spent:
-        sheet.spentHitDice.find(
-          (spent) => spent.classUnitId === pool.classUnitId,
-        )?.spent ?? resourceCount(0),
-    })),
-  );
-}
-
-export function characterSheetResources(
-  sheet: CharacterSheet,
-  unitLibrary: UnitCatalog,
-): Either.Either<readonly CharacterSheetResourceState[], CharacterSheetIssue> {
-  const resources: CharacterSheetResourceState[] = [];
-  const layOnHandsResource = layOnHandsResourceForBuild(
-    sheet.build,
-    unitLibrary,
-  );
-  if (Either.isLeft(layOnHandsResource))
-    return Either.left(layOnHandsResource.left);
-  if (layOnHandsResource.right !== null) {
-    const count = characterSheetResourceCapacity({
-      build: sheet.build,
-      unitLibrary,
-      resource: layOnHandsResource.right,
-    });
-    if (Either.isLeft(count)) return Either.left(count.left);
-    resources.push({
-      ...layOnHandsResource.right,
-      tag: "layOnHandsHealingPool",
-      count: count.right,
-      expended:
-        sheet.resourceExpenditures.find(
-          (expenditure) => expenditure.tag === "layOnHandsHealingPool",
-        )?.expended ?? resourceCount(0),
-    });
-  }
-
-  const freeCastResources = classFeatureSpellFreeCastResourcesForBuild(
-    sheet.build,
-    unitLibrary,
-  );
-  if (Either.isLeft(freeCastResources)) {
-    return Either.left(freeCastResources.left);
-  }
-  for (const freeCastResource of freeCastResources.right) {
-    resources.push({
-      ...freeCastResource,
-      expended:
-        sheet.resourceExpenditures.find(
-          (expenditure) => expenditure.tag === freeCastResource.tag,
-        )?.expended ?? resourceCount(0),
-    });
-  }
-
-  const useCountResources = classFeatureUseCountResourcesForBuild(
-    sheet.build,
-    unitLibrary,
-  );
-  if (Either.isLeft(useCountResources)) {
-    return Either.left(useCountResources.left);
-  }
-  for (const useCountResource of useCountResources.right) {
-    const count = characterSheetResourceCapacity({
-      build: sheet.build,
-      unitLibrary,
-      resource: useCountResource,
-    });
-    if (Either.isLeft(count)) return Either.left(count.left);
-    resources.push({
-      ...useCountResource,
-      tag: "useCountResource",
-      count: count.right,
-      expended:
-        sheet.resourceExpenditures.find(
-          (expenditure) =>
-            expenditure.tag === "useCountResource" &&
-            expenditure.unitId === useCountResource.unitId,
-        )?.expended ?? resourceCount(0),
-    });
-  }
-
-  const pointPoolResources = classFeaturePointPoolResourcesForBuild(
-    sheet.build,
-    unitLibrary,
-  );
-  if (Either.isLeft(pointPoolResources)) {
-    return Either.left(pointPoolResources.left);
-  }
-  for (const pointPoolResource of pointPoolResources.right) {
-    const count = characterSheetResourceCapacity({
-      build: sheet.build,
-      unitLibrary,
-      resource: pointPoolResource,
-    });
-    if (Either.isLeft(count)) return Either.left(count.left);
-    resources.push({
-      ...pointPoolResource,
-      tag: "pointPoolResource",
-      count: count.right,
-      expended:
-        sheet.resourceExpenditures.find(
-          (expenditure) =>
-            expenditure.tag === "pointPoolResource" &&
-            expenditure.unitId === pointPoolResource.unitId,
-        )?.expended ?? resourceCount(0),
-    });
-  }
-
-  return Either.right(resources);
-}
-
-export function characterSheetMonksFocusSaveDc(
-  sheet: CharacterSheet,
-  unitLibrary: UnitCatalog,
-): Either.Either<
-  CharacterSheetMonksFocusSaveDc | undefined,
-  CharacterSheetIssue
-> {
-  const facts = characterBuildMonksFocusFacts({
-    build: sheet.build,
-    unitLibrary,
-  });
-  if (Either.isLeft(facts)) return characterSheetIssue(facts.left.message);
-  if (facts.right === undefined) return Either.right(undefined);
-
-  return Either.right({
-    unitId: facts.right.unitId,
-    dc: difficultyClass(
-      facts.right.saveDc.base +
-        abilityScoreToMod(
-          sheet.build.abilityScores[facts.right.saveDc.ability],
-        ) +
-        characterSheetProficiencyBonusForCharacterLevel(
-          characterLevel(computeTotalLevel(sheet.build.progression)),
-        ),
-    ),
-  });
-}
-
-export function characterSheetMonkUncannyMetabolismUseState(
-  sheet: CharacterSheet,
-  unitLibrary: UnitCatalog,
-): Either.Either<
-  CharacterSheetMonkUncannyMetabolismUseState | undefined,
-  CharacterSheetIssue
-> {
-  const facts = characterBuildMonkUncannyMetabolismFacts({
-    build: sheet.build,
-    unitLibrary,
-  });
-  if (Either.isLeft(facts)) return characterSheetIssue(facts.left.message);
-  if (facts.right === undefined) return Either.right(undefined);
-
-  return Either.right({
-    ...facts.right,
-    usedSinceLongRest: sheet.restFeatureUses.some(
-      (use) => use.tag === UNCANNY_METABOLISM_REST_FEATURE_TAG,
-    ),
-  });
-}
-
-export function useMonkUncannyMetabolismWhenRollingInitiative(
-  input: CharacterSheetMonkUncannyMetabolismInitiativeInput,
-): Either.Either<CharacterSheet, CharacterSheetIssue> {
-  const useState = characterSheetMonkUncannyMetabolismUseState(
-    input.sheet,
-    input.unitLibrary,
-  );
-  if (Either.isLeft(useState)) return Either.left(useState.left);
-  if (useState.right === undefined) {
-    return characterSheetIssue(
-      "Uncanny Metabolism requires the Monk Uncanny Metabolism feature.",
-    );
-  }
-  if (useState.right.usedSinceLongRest) {
-    return characterSheetIssue(
-      "Uncanny Metabolism cannot be used again until a Long Rest.",
-    );
-  }
-
-  const roll = Number(input.martialArtsRoll);
-  const dieSize = useState.right.healing.martialArtsDie.dieSize;
-  if (roll < 1 || roll > dieSize) {
-    return characterSheetIssue(
-      `Uncanny Metabolism Martial Arts die roll must be within d${dieSize}.`,
-    );
-  }
-
-  const healing = useState.right.healing.monkLevelBonus + roll;
-  const healed = recoverCharacterSheetHitPoints({
-    sheet: input.sheet,
-    healing: Hp(healing),
-    overflow: { tag: "capAtMaximum" },
-    deadCharacterMessage:
-      "Uncanny Metabolism cannot restore HP to a dead character.",
-  });
-  if (Either.isLeft(healed)) return Either.left(healed.left);
-
-  return Either.right({
-    ...healed.right,
-    restFeatureUses: [
-      ...healed.right.restFeatureUses,
-      {
-        tag: UNCANNY_METABOLISM_REST_FEATURE_TAG,
-        usedSinceLongRest: true,
-      },
-    ],
-    resourceExpenditures: replaceUseCountResourceExpenditure({
-      expenditures: healed.right.resourceExpenditures,
-      unitId: useState.right.focusRecovery.resourceUnitId,
-      expended: resourceCount(0),
-    }),
-  });
-}
-
 export function convertFontOfMagicSpellSlotToSorceryPoints(
   input: CharacterSheetFontOfMagicSlotToSorceryPointsInput,
 ): Either.Either<CharacterSheet, CharacterSheetIssue> {
@@ -1146,124 +896,6 @@ function fontOfMagicSpellSlotSpendForSorceryPoints(input: {
             : slot,
         ),
       });
-}
-
-function spendCharacterSheetSpellSlot(input: {
-  readonly sheet: CharacterSheet;
-  readonly spellLevel: SpellSlotLevel;
-  readonly spellSlotSource:
-    | CharacterSheetFontOfMagicSpellSlotSource
-    | undefined;
-}): Either.Either<CharacterSheet, CharacterSheetIssue> {
-  if (!isCharacterSheetWithSpellSlots(input.sheet)) {
-    return characterSheetIssue(
-      "Spell rest benefit application requires Spell Slot state.",
-    );
-  }
-  const spellSlotSpend = spendCharacterSheetSpellSlotSource({
-    sheet: input.sheet,
-    spellLevel: input.spellLevel,
-    spellSlotSource: input.spellSlotSource,
-  });
-  if (Either.isLeft(spellSlotSpend)) return Either.left(spellSlotSpend.left);
-  return Either.right({
-    ...input.sheet,
-    spellSlotExpenditures: spellSlotSpend.right.ordinarySpellSlotExpenditures,
-    createdSpellSlots: spellSlotSpend.right.createdSpellSlots,
-  });
-}
-
-function spendCharacterSheetSpellSlotSource(input: {
-  readonly sheet: CharacterSheetWithSpellSlots;
-  readonly spellLevel: SpellSlotLevel;
-  readonly spellSlotSource:
-    | CharacterSheetFontOfMagicSpellSlotSource
-    | undefined;
-}): Either.Either<CharacterSheetSpellSlotSourceState, CharacterSheetIssue> {
-  const ordinarySlot = ordinarySpellSlotStates(input.sheet).find(
-    (slot) => slot.spellLevel === input.spellLevel,
-  );
-  const createdSlot = input.sheet.createdSpellSlots.find(
-    (slot) => slot.spellLevel === input.spellLevel,
-  );
-  const ordinaryAvailable =
-    ordinarySlot !== undefined && ordinarySlot.expended < ordinarySlot.count;
-  const createdAvailable =
-    createdSlot !== undefined && createdSlot.expended < createdSlot.count;
-  const source = characterSheetSpellSlotSpendSource({
-    spellSlotSource: input.spellSlotSource,
-    ordinarySlot,
-    ordinaryAvailable,
-    createdSlot,
-    createdAvailable,
-  });
-  if (Either.isLeft(source)) return Either.left(source.left);
-  return source.right === "ordinary"
-    ? Either.right({
-        ordinarySpellSlotExpenditures: input.sheet.spellSlotExpenditures.map(
-          (slot) =>
-            slot.spellLevel === input.spellLevel
-              ? { ...slot, expended: resourceCount(slot.expended + 1) }
-              : slot,
-        ),
-        createdSpellSlots: input.sheet.createdSpellSlots,
-      })
-    : Either.right({
-        ordinarySpellSlotExpenditures: input.sheet.spellSlotExpenditures,
-        createdSpellSlots: input.sheet.createdSpellSlots.map((slot) =>
-          slot.spellLevel === input.spellLevel
-            ? { ...slot, expended: resourceCount(slot.expended + 1) }
-            : slot,
-        ),
-      });
-}
-
-function characterSheetSpellSlotSpendSource(input: {
-  readonly spellSlotSource:
-    | CharacterSheetFontOfMagicSpellSlotSource
-    | undefined;
-  readonly ordinarySlot: CharacterSheetSpellSlotState | undefined;
-  readonly ordinaryAvailable: boolean;
-  readonly createdSlot: CharacterSheetCreatedSpellSlotState | undefined;
-  readonly createdAvailable: boolean;
-}): Either.Either<
-  CharacterSheetFontOfMagicSpellSlotSource,
-  CharacterSheetIssue
-> {
-  if (input.spellSlotSource === "ordinary") {
-    return input.ordinaryAvailable
-      ? Either.right("ordinary")
-      : characterSheetIssue(
-          "Spell Slot spend requires an unexpended ordinary Spell Slot.",
-        );
-  }
-  if (input.spellSlotSource === "created") {
-    return input.createdAvailable
-      ? Either.right("created")
-      : characterSheetIssue(
-          "Spell Slot spend requires an unexpended created Spell Slot.",
-        );
-  }
-  if (input.ordinaryAvailable && input.createdAvailable) {
-    return characterSheetIssue(
-      "Spell Slot spend requires a source when ordinary and created Spell Slots are both available.",
-    );
-  }
-  if (input.ordinaryAvailable) return Either.right("ordinary");
-  if (input.createdAvailable) return Either.right("created");
-  if (input.ordinarySlot !== undefined && input.createdSlot === undefined) {
-    return characterSheetIssue(
-      "Spell Slot spend requires an unexpended ordinary Spell Slot.",
-    );
-  }
-  if (input.createdSlot !== undefined && input.ordinarySlot === undefined) {
-    return characterSheetIssue(
-      "Spell Slot spend requires an unexpended created Spell Slot.",
-    );
-  }
-  return characterSheetIssue(
-    "Spell Slot spend requires an unexpended Spell Slot.",
-  );
 }
 
 function fontOfMagicSpellSlotSourceForSorceryPointConversion(input: {
@@ -1509,48 +1141,6 @@ export function completeShortRest(
     hpGate: "requiresShortRestStartHp",
     spendHitDice: input.spendHitDice,
     arcaneRecovery: input.arcaneRecovery,
-  });
-}
-
-function completeShortRestBenefits(input: {
-  readonly sheet: CharacterSheet;
-  readonly unitLibrary: UnitCatalog;
-  readonly hpGate: CharacterSheetShortRestBenefitHpGate;
-  readonly spendHitDice?: readonly CharacterSheetHitDieSpend[] | undefined;
-  readonly arcaneRecovery?:
-    | {
-        readonly refundSpellSlots: readonly CharacterSheetArcaneRecoverySlotRefund[];
-      }
-    | undefined;
-}): Either.Either<CharacterSheet, CharacterSheetIssue> {
-  if (
-    input.hpGate === "requiresShortRestStartHp" &&
-    characterSheetCurrentHp(input.sheet) < Hp(1)
-  ) {
-    return characterSheetIssue(
-      "Short Rest requires the Character Sheet to have at least 1 HP.",
-    );
-  }
-  const pactRecovered = recoverPactSlots(input.sheet);
-  const useCountRecovered = recoverShortRestUseCountResources({
-    sheet: pactRecovered,
-    unitLibrary: input.unitLibrary,
-  });
-  if (Either.isLeft(useCountRecovered)) {
-    return Either.left(useCountRecovered.left);
-  }
-  const hitDiceSpent = spendHitDice({
-    sheet: useCountRecovered.right,
-    unitLibrary: input.unitLibrary,
-    spendHitDice: input.spendHitDice,
-  });
-  if (Either.isLeft(hitDiceSpent)) return Either.left(hitDiceSpent.left);
-  if (input.arcaneRecovery === undefined)
-    return Either.right(hitDiceSpent.right);
-  return applyArcaneRecovery({
-    sheet: hitDiceSpent.right,
-    unitLibrary: input.unitLibrary,
-    refundSpellSlots: input.arcaneRecovery.refundSpellSlots,
   });
 }
 
@@ -2150,87 +1740,6 @@ function characterBuildFeaturesWithWeaponMasteryReselections(
   return nextFeatures;
 }
 
-export function applyLayOnHands(
-  input: CharacterSheetLayOnHandsInput,
-): Either.Either<CharacterSheetLayOnHandsResult, CharacterSheetIssue> {
-  const spend = layOnHandsSpend(input);
-  if (Either.isLeft(spend)) return Either.left(spend.left);
-
-  const sourceAfterSpend = spendCharacterSheetResource({
-    sheet: input.source,
-    unitLibrary: input.unitLibrary,
-    amount: spend.right,
-  });
-  if (Either.isLeft(sourceAfterSpend))
-    return Either.left(sourceAfterSpend.left);
-
-  const sourceIsTarget = input.source.characterId === input.target.characterId;
-  const targetBase = sourceIsTarget ? sourceAfterSpend.right : input.target;
-  const targetAfterHealing = applyLayOnHandsTargetEffects({
-    sheet: targetBase,
-    restoreHp: input.restoreHp,
-    removePoisoned: input.removePoisoned,
-  });
-  if (Either.isLeft(targetAfterHealing)) {
-    return Either.left(targetAfterHealing.left);
-  }
-
-  return Either.right(
-    sourceIsTarget
-      ? {
-          source: targetAfterHealing.right,
-          target: targetAfterHealing.right,
-        }
-      : {
-          source: sourceAfterSpend.right,
-          target: targetAfterHealing.right,
-        },
-  );
-}
-
-export function applyCharacterSheetSpellRestBenefit(
-  input: CharacterSheetSpellRestBenefitInput,
-): Either.Either<CharacterSheetSpellRestBenefitResult, CharacterSheetIssue> {
-  const profile = characterSheetSpellRestBenefitProfile({
-    spellId: input.spellId,
-    unitLibrary: input.unitLibrary,
-  });
-  if (Either.isLeft(profile)) return Either.left(profile.left);
-  if (input.castLevel < profile.right.baseSpellLevel) {
-    return characterSheetIssue(
-      "Spell rest benefit application requires a Spell Slot at or above the spell's base level.",
-    );
-  }
-  const recipientIssue = spellRestBenefitRecipientIssue(input, profile.right);
-  if (recipientIssue !== null) return characterSheetIssue(recipientIssue);
-  const caster = spendCharacterSheetSpellSlot({
-    sheet: input.caster,
-    spellLevel: input.castLevel,
-    spellSlotSource: input.spellSlotSource,
-  });
-  if (Either.isLeft(caster)) return Either.left(caster.left);
-
-  let casterSheet = caster.right;
-  const recipients: CharacterSheet[] = [];
-  for (const recipient of input.recipients) {
-    const affected = applySpellRestBenefitToRecipient({
-      profile: profile.right,
-      recipient:
-        recipient.sheet.characterId === casterSheet.characterId
-          ? { ...recipient, sheet: casterSheet }
-          : recipient,
-      unitLibrary: input.unitLibrary,
-      castLevel: input.castLevel,
-    });
-    if (Either.isLeft(affected)) return Either.left(affected.left);
-    if (affected.right.characterId === casterSheet.characterId) {
-      casterSheet = affected.right;
-    }
-    recipients.push(affected.right);
-  }
-  return Either.right({ caster: casterSheet, recipients });
-}
-
 export function timePassed(
   input: CharacterSheetTimePassedInput,
 ): CharacterSheetElapsedTimeResult {
@@ -2261,18 +1770,6 @@ type CharacterSheetClassFeatureRecord = Extract<
   UnitRecord,
   { readonly kind: "class_feature" }
 >;
-type RestSpellSlotRecoveryMechanics = Extract<
-  CharacterSheetClassFeatureRecord["mechanics"],
-  { readonly family: "rest_spell_slot_recovery" }
->;
-type CharacterSheetRestSpellSlotRecoveryFeature =
-  CharacterSheetClassFeatureRecord & {
-    readonly mechanics: RestSpellSlotRecoveryMechanics;
-  };
-type CharacterSheetRestSpellSlotRecoveryProfile = {
-  readonly feature: CharacterSheetRestSpellSlotRecoveryFeature;
-  readonly classUnitId: UnitRecord["id"];
-};
 type PactSlotRecoveryMechanics = Extract<
   CharacterSheetClassFeatureRecord["mechanics"],
   { readonly family: "pact_slot_recovery" }
@@ -2499,36 +1996,6 @@ function spellHasRitualTag(spell: SpellRecord): boolean {
 
 function spellHasLeveledRitualTag(spell: SpellRecord): boolean {
   return spell.mechanics.level >= 1 && spellHasRitualTag(spell);
-}
-
-function requireSpellSlotExpenditure(
-  expenditures: readonly CharacterSpellSlotExpenditure[],
-  spellLevel: SpellSlotLevel,
-): CharacterSpellSlotExpenditure {
-  const expenditure = expenditures.find(
-    (candidate) => candidate.spellLevel === spellLevel,
-  );
-  if (expenditure !== undefined) return expenditure;
-  throw new Error(
-    `Available spellcasting Character Sheet is missing Spell Slot expenditure for level ${spellLevel}.`,
-  );
-}
-
-function ordinarySpellSlotStates(
-  sheet: CharacterSheetWithSpellSlots,
-): readonly CharacterSheetSpellSlotState[] {
-  return characterBuildSpellcastingSlotCapacity(sheet.build).map((slot) => {
-    const spellLevel = spellSlotLevel(slot.spellLevel);
-    const expenditure = requireSpellSlotExpenditure(
-      sheet.spellSlotExpenditures,
-      spellLevel,
-    );
-    return {
-      spellLevel,
-      count: resourceCount(slot.count),
-      expended: expenditure.expended,
-    };
-  });
 }
 
 function combineSpellSlotStates(
@@ -2922,1148 +2389,10 @@ function conditionsFromInput(
   return Either.right([...conditions]);
 }
 
-function resourceExpendituresFromInput(
-  input: Pick<
-    CharacterSheetInput,
-    "build" | "resourceExpenditures" | "unitLibrary"
-  >,
-): Either.Either<
-  readonly CharacterSheetResourceExpenditure[],
-  CharacterSheetIssue
-> {
-  const expenditures = input.resourceExpenditures ?? [];
-  const layOnHandsResource = layOnHandsResourceForBuild(
-    input.build,
-    input.unitLibrary,
-  );
-  if (Either.isLeft(layOnHandsResource)) {
-    return Either.left(layOnHandsResource.left);
-  }
-  const freeCastResources = classFeatureSpellFreeCastResourcesForBuild(
-    input.build,
-    input.unitLibrary,
-  );
-  if (Either.isLeft(freeCastResources)) {
-    return Either.left(freeCastResources.left);
-  }
-  const useCountResources = classFeatureUseCountResourcesForBuild(
-    input.build,
-    input.unitLibrary,
-  );
-  if (Either.isLeft(useCountResources)) {
-    return Either.left(useCountResources.left);
-  }
-  const pointPoolResources = classFeaturePointPoolResourcesForBuild(
-    input.build,
-    input.unitLibrary,
-  );
-  if (Either.isLeft(pointPoolResources)) {
-    return Either.left(pointPoolResources.left);
-  }
-  const seen: CharacterSheetResourceExpenditure[] = [];
-  const result: CharacterSheetResourceExpenditure[] = [];
-  for (const expenditure of expenditures) {
-    if (
-      seen.some((existing) =>
-        characterSheetResourceExpendituresMatch(existing, expenditure),
-      )
-    ) {
-      return characterSheetIssue(
-        "Character Sheet resource expenditure state must not duplicate.",
-      );
-    }
-    seen.push(expenditure);
-    const count = characterSheetResourceExpenditureCapacity({
-      build: input.build,
-      unitLibrary: input.unitLibrary,
-      layOnHandsResource: layOnHandsResource.right,
-      freeCastResources: freeCastResources.right,
-      useCountResources: useCountResources.right,
-      pointPoolResources: pointPoolResources.right,
-      expenditure,
-    });
-    if (Either.isLeft(count)) return Either.left(count.left);
-    if (
-      !Number.isInteger(expenditure.expended) ||
-      expenditure.expended < 0 ||
-      expenditure.expended > count.right
-    ) {
-      return characterSheetIssue(
-        "Character Sheet resource expenditure cannot exceed build resource capacity.",
-      );
-    }
-    if (expenditure.expended > 0) {
-      result.push(
-        characterSheetResourceExpenditureWithExpended(
-          expenditure,
-          resourceCount(expenditure.expended),
-        ),
-      );
-    }
-  }
-  return Either.right(result);
-}
-
-function characterSheetResourceExpenditureCapacity(input: {
-  readonly build: CharacterBuild;
-  readonly unitLibrary: UnitCatalog;
-  readonly layOnHandsResource: CharacterSheetLayOnHandsResource | null;
-  readonly freeCastResources: readonly CharacterSheetClassFeatureSpellFreeCastResource[];
-  readonly useCountResources: readonly CharacterSheetUseCountResource[];
-  readonly pointPoolResources: readonly CharacterSheetPointPoolResource[];
-  readonly expenditure: CharacterSheetResourceExpenditure;
-}): Either.Either<ResourceCount, CharacterSheetIssue> {
-  if (input.expenditure.tag === "layOnHandsHealingPool") {
-    if (input.layOnHandsResource === null) {
-      return characterSheetIssue(
-        "Lay On Hands healing pool expenditure requires the Paladin Lay On Hands feature.",
-      );
-    }
-    return characterSheetResourceCapacity({
-      build: input.build,
-      unitLibrary: input.unitLibrary,
-      resource: input.layOnHandsResource,
-    });
-  }
-  if (input.expenditure.tag === "useCountResource") {
-    const unitId = input.expenditure.unitId;
-    const useCountResource = input.useCountResources.find(
-      (resource) => resource.unitId === unitId,
-    );
-    if (useCountResource === undefined) {
-      return characterSheetIssue(
-        "Class feature use-count expenditure requires the matching class feature.",
-      );
-    }
-    return characterSheetResourceCapacity({
-      build: input.build,
-      unitLibrary: input.unitLibrary,
-      resource: useCountResource,
-    });
-  }
-  if (input.expenditure.tag === "pointPoolResource") {
-    const unitId = input.expenditure.unitId;
-    const pointPoolResource = input.pointPoolResources.find(
-      (resource) => resource.unitId === unitId,
-    );
-    if (pointPoolResource === undefined) {
-      return characterSheetIssue(
-        "Class feature point-pool expenditure requires the matching class feature.",
-      );
-    }
-    return characterSheetResourceCapacity({
-      build: input.build,
-      unitLibrary: input.unitLibrary,
-      resource: pointPoolResource,
-    });
-  }
-  const freeCastResource = input.freeCastResources.find(
-    (resource) => resource.tag === input.expenditure.tag,
-  );
-  if (freeCastResource === undefined) {
-    return characterSheetIssue(
-      "Class feature spell free-cast expenditure requires the matching class feature.",
-    );
-  }
-  return Either.right(freeCastResource.count);
-}
-
-function characterSheetResourceExpenditureWithExpended(
-  expenditure: CharacterSheetResourceExpenditure,
-  expended: ResourceCount,
-): CharacterSheetResourceExpenditure {
-  if (expenditure.tag === "useCountResource") {
-    return { tag: expenditure.tag, unitId: expenditure.unitId, expended };
-  }
-  if (expenditure.tag === "pointPoolResource") {
-    return { tag: expenditure.tag, unitId: expenditure.unitId, expended };
-  }
-  return { tag: expenditure.tag, expended };
-}
-
-function characterSheetResourceExpendituresMatch(
-  first: CharacterSheetResourceExpenditure,
-  second: CharacterSheetResourceExpenditure,
-): boolean {
-  if (first.tag !== second.tag) return false;
-  if (first.tag === "useCountResource" && second.tag === "useCountResource") {
-    return first.unitId === second.unitId;
-  }
-  if (first.tag === "pointPoolResource" && second.tag === "pointPoolResource") {
-    return first.unitId === second.unitId;
-  }
-  return true;
-}
-
-function layOnHandsResourceForBuild(
-  build: CharacterBuild,
-  unitLibrary: UnitCatalog,
-): Either.Either<CharacterSheetLayOnHandsResource | null, CharacterSheetIssue> {
-  for (const resource of characterBuildResources(build, unitLibrary)) {
-    const unit = getRequiredUnit(unitLibrary, resource.unitId);
-    if (Either.isLeft(unit)) return Either.left(unit.left);
-    const layOnHandsResource = layOnHandsHealingPoolResourceForUnit(unit.right);
-    if (layOnHandsResource !== null) {
-      return Either.right({
-        unitId: resource.unitId,
-        resource: layOnHandsResource,
-      });
-    }
-  }
-  return Either.right(null);
-}
-
-function layOnHandsHealingPoolResourceForUnit(
-  unit: UnitRecord,
-): ChargePoolResource | null {
-  if (unit.kind !== "class_feature" || unit.className !== "paladin") {
-    return null;
-  }
-  const mechanics = unit.mechanics;
-  if (
-    mechanics.family !== "activation" ||
-    mechanics.activationCost?.kind !== "bonus_action" ||
-    mechanics.resetCadence?.kind !== "long_rest" ||
-    mechanics.resource?.kind !== "charge_pool" ||
-    mechanics.resource.cap.kind !== "linear_per_level" ||
-    mechanics.resource.cap.axis !== "class" ||
-    mechanics.resource.cap.base !== 5 ||
-    mechanics.resource.cap.perLevel !== 5 ||
-    mechanics.resource.cap.startingAtLevel !== 1
-  ) {
-    return null;
-  }
-  const healsFromSpentPool = mechanics.phases.some(
-    (phase) =>
-      phase.kind === "direct" &&
-      (phase.effects?.some(
-        (effect) =>
-          effect.kind === "heal_hp" &&
-          effect.amount.kind === "resource_spent" &&
-          effect.target === "target_creature",
-      ) ??
-        false),
-  );
-  return healsFromSpentPool ? mechanics.resource : null;
-}
-
-function classFeatureSpellFreeCastResourcesForBuild(
-  build: CharacterBuild,
-  unitLibrary: UnitCatalog,
-): Either.Either<
-  readonly CharacterSheetClassFeatureSpellFreeCastResource[],
-  CharacterSheetIssue
-> {
-  const resources: CharacterSheetClassFeatureSpellFreeCastResource[] = [];
-  for (const featureUnitId of characterBuildFeatureUnitIds(
-    build,
-    unitLibrary,
-  )) {
-    const unit = unitLibrary.getUnit(featureUnitId);
-    if (Option.isNone(unit)) continue;
-    const resource = classFeatureSpellFreeCastResourceForUnit(unit.value);
-    if (resource !== null) {
-      resources.push({ unitId: featureUnitId, ...resource });
-    }
-  }
-  return Either.right(resources);
-}
-
-function classFeatureSpellFreeCastResourceForUnit(
-  unit: UnitRecord,
-): Pick<
-  CharacterSheetClassFeatureSpellFreeCastResource,
-  "tag" | "count"
-> | null {
-  const grants = supportedClassFeatureSpellFreeCastGrantsForUnit(unit);
-  if (grants === null) {
-    return null;
-  }
-  return {
-    tag: grants.profile.resourceTag,
-    count: resourceCount(grants.freeCastGrant.count),
-  };
-}
-
-function classFeatureUseCountResourcesForBuild(
-  build: CharacterBuild,
-  unitLibrary: UnitCatalog,
-): Either.Either<
-  readonly CharacterSheetUseCountResource[],
-  CharacterSheetIssue
-> {
-  const resources: CharacterSheetUseCountResource[] = [];
-  for (const resource of characterBuildResources(build, unitLibrary)) {
-    if (!isCharacterSheetUseCountResourceUnitId(resource.unitId)) continue;
-    const unit = getRequiredUnit(unitLibrary, resource.unitId);
-    if (Either.isLeft(unit)) return Either.left(unit.left);
-    const resetCadence = restResetCadenceForUseCountResourceUnit(unit.right);
-    if (resource.resource.kind !== "use_count" || resetCadence === undefined) {
-      return characterSheetIssue(
-        "Class feature use-count resource requires an installed rest-reset class feature.",
-      );
-    }
-    resources.push({
-      unitId: resource.unitId,
-      resource: resource.resource,
-      resetCadence,
-    });
-  }
-  return Either.right(resources);
-}
-
-function classFeaturePointPoolResourcesForBuild(
-  build: CharacterBuild,
-  unitLibrary: UnitCatalog,
-): Either.Either<
-  readonly CharacterSheetPointPoolResource[],
-  CharacterSheetIssue
-> {
-  const resources: CharacterSheetPointPoolResource[] = [];
-  for (const resource of characterBuildResources(build, unitLibrary)) {
-    if (!isCharacterSheetPointPoolResourceUnitId(resource.unitId)) continue;
-    const unit = getRequiredUnit(unitLibrary, resource.unitId);
-    if (Either.isLeft(unit)) return Either.left(unit.left);
-    const resetCadence = restResetCadenceForClassFeatureResourceUnit(
-      unit.right,
-    );
-    if (
-      resource.resource.kind !== "point_pool" ||
-      resetCadence?.kind !== "long_rest"
-    ) {
-      return characterSheetIssue(
-        "Class feature point-pool resource requires an installed Long Rest reset class feature.",
-      );
-    }
-    resources.push({
-      unitId: resource.unitId,
-      resource: resource.resource,
-      resetCadence,
-    });
-  }
-  return Either.right(resources);
-}
-
-function restResetCadenceForUseCountResourceUnit(
-  unit: UnitRecord,
-): RestResetCadence | undefined {
-  return restResetCadenceForClassFeatureResourceUnit(unit);
-}
-
-function restResetCadenceForClassFeatureResourceUnit(
-  unit: UnitRecord,
-): RestResetCadence | undefined {
-  if (unit.kind !== "class_feature") return undefined;
-  const mechanics = unit.mechanics;
-  if (!("resetCadence" in mechanics) || mechanics.resetCadence === undefined) {
-    return undefined;
-  }
-  return isRestResetCadence(mechanics.resetCadence)
-    ? mechanics.resetCadence
-    : undefined;
-}
-
-function isRestResetCadence(
-  resetCadence: RestResetCadence | { readonly kind: string },
-): resetCadence is RestResetCadence {
-  return (
-    resetCadence.kind === "short_or_long_rest" ||
-    resetCadence.kind === "long_rest" ||
-    resetCadence.kind === "short_rest" ||
-    resetCadence.kind === "partial_short_full_long"
-  );
-}
-
-type CharacterSheetResourceCapacityInput = {
-  readonly build: CharacterBuild;
-  readonly unitLibrary: UnitCatalog;
-  readonly resource: CharacterBuildResource;
-};
-
-function characterSheetResourceCapacity(
-  input: CharacterSheetResourceCapacityInput,
-): Either.Either<ResourceCount, CharacterSheetIssue> {
-  const unit = getRequiredUnit(input.unitLibrary, input.resource.unitId);
-  if (Either.isLeft(unit)) return Either.left(unit.left);
-  const cap = input.resource.resource.cap;
-  if (cap.kind === "fixed") return Either.right(resourceCount(cap.uses));
-  if (cap.kind === "linear_per_level") {
-    if (!isClassLevelLinearPerLevel(cap)) {
-      return characterSheetIssue(
-        "Character Sheet resource level scaling must use class level.",
-      );
-    }
-    if (unit.right.kind !== "class_feature") {
-      return characterSheetIssue(
-        "Class-level resource scaling requires a class feature Unit.",
-      );
-    }
-    const level = classFeatureOwnerLevel(input, unit.right);
-    if (Either.isLeft(level)) return Either.left(level.left);
-    return Either.right(
-      resourceCount(classLevelLinearValueAtClassLevel(cap, level.right)),
-    );
-  }
-  if (cap.kind === "threshold_tiers") {
-    if (!isClassLevelThresholdTiers(cap)) {
-      return characterSheetIssue(
-        "Character Sheet resource threshold scaling must use class level.",
-      );
-    }
-    if (unit.right.kind !== "class_feature") {
-      return characterSheetIssue(
-        "Class-level resource threshold scaling requires a class feature Unit.",
-      );
-    }
-    const level = classFeatureOwnerLevel(input, unit.right);
-    if (Either.isLeft(level)) return Either.left(level.left);
-    return Either.right(
-      resourceCount(thresholdTierValueAtClassLevel(cap, level.right)),
-    );
-  }
-  if (cap.kind === "proficiency_bonus") {
-    return Either.right(
-      resourceCount(
-        characterSheetProficiencyBonusForCharacterLevel(
-          characterLevel(input.build.progression.advancements.length + 1),
-        ),
-      ),
-    );
-  }
-  return characterSheetIssue(
-    "Character Sheet resource capacity is not supported by this runtime.",
-  );
-}
-
-function classFeatureOwnerLevel(
-  input: Pick<CharacterSheetResourceCapacityInput, "build" | "unitLibrary">,
-  feature: CharacterSheetClassFeatureRecord,
-): Either.Either<number, CharacterSheetIssue> {
-  for (const classId of progressionClassUnitIds(input.build.progression)) {
-    const classUnit = getRequiredUnit(input.unitLibrary, classId);
-    if (Either.isLeft(classUnit)) return Either.left(classUnit.left);
-    if (
-      classUnit.right.kind === "class" &&
-      classUnit.right.className === feature.className
-    ) {
-      return Either.right(classLevelForUnit(input.build.progression, classId));
-    }
-  }
-  return characterSheetIssue(
-    "Class-feature resource requires the owning class in progression.",
-  );
-}
-
-function characterBuildHitDice(
-  build: CharacterBuild,
-  unitLibrary: UnitCatalog,
-): Either.Either<readonly CharacterBuildHitDiePool[], CharacterSheetIssue> {
-  const hitPoints = characterBuildHitPoints(build, unitLibrary);
-  return Either.isLeft(hitPoints)
-    ? characterSheetIssue(
-        hitPoints.left.map((issue) => issue.message).join("; "),
-      )
-    : Either.right(hitPoints.right.hitDice);
-}
-
 function characterBuildPactSlotCapacity(
   build: Pick<CharacterBuild, "spellcasting">,
 ): CharacterBuildPactMagicSlotPool | undefined {
   return build.spellcasting?.slotPools.pactMagic;
-}
-
-function recoverPactSlots(sheet: CharacterSheet): CharacterSheet {
-  if (
-    !("pactSlotExpenditure" in sheet) ||
-    sheet.pactSlotExpenditure === undefined
-  ) {
-    return sheet;
-  }
-  return {
-    ...sheet,
-    pactSlotExpenditure: {
-      expended: resourceCount(0),
-    },
-  };
-}
-
-function recoverShortRestUseCountResources(input: {
-  readonly sheet: CharacterSheet;
-  readonly unitLibrary: UnitCatalog;
-}): Either.Either<CharacterSheet, CharacterSheetIssue> {
-  const resources = characterSheetResources(input.sheet, input.unitLibrary);
-  if (Either.isLeft(resources)) return Either.left(resources.left);
-  let resourceExpenditures = [...input.sheet.resourceExpenditures];
-  for (const resource of resources.right) {
-    if (resource.tag !== "useCountResource") continue;
-    const expended = shortRestUseCountExpendedAfterRecovery(resource);
-    resourceExpenditures = replaceUseCountResourceExpenditure({
-      expenditures: resourceExpenditures,
-      unitId: resource.unitId,
-      expended,
-    });
-  }
-  return Either.right({ ...input.sheet, resourceExpenditures });
-}
-
-function shortRestUseCountExpendedAfterRecovery(
-  resource: Extract<
-    CharacterSheetResourceState,
-    { readonly tag: "useCountResource" }
-  >,
-): ResourceCount {
-  return Match.value(resource.resetCadence).pipe(
-    byKind("short_or_long_rest", () => resourceCount(0)),
-    byKind("short_rest", () => resourceCount(0)),
-    byKind("long_rest", () => resource.expended),
-    byKind("partial_short_full_long", (cadence) =>
-      resourceCount(Math.max(0, resource.expended - cadence.shortRestRefill)),
-    ),
-    Match.exhaustive,
-  );
-}
-
-function replaceUseCountResourceExpenditure(input: {
-  readonly expenditures: readonly CharacterSheetResourceExpenditure[];
-  readonly unitId: UnitRecord["id"];
-  readonly expended: ResourceCount;
-}): CharacterSheetResourceExpenditure[] {
-  const next = input.expenditures.filter(
-    (expenditure) =>
-      expenditure.tag !== "useCountResource" ||
-      expenditure.unitId !== input.unitId,
-  );
-  if (input.expended > resourceCount(0)) {
-    next.push({
-      tag: "useCountResource",
-      unitId: input.unitId,
-      expended: input.expended,
-    });
-  }
-  return next;
-}
-
-function replacePointPoolResourceExpenditure(input: {
-  readonly expenditures: readonly CharacterSheetResourceExpenditure[];
-  readonly unitId: CharacterSheetPointPoolResourceUnitId;
-  readonly expended: ResourceCount;
-}): CharacterSheetResourceExpenditure[] {
-  const next = input.expenditures.filter(
-    (expenditure) =>
-      expenditure.tag !== "pointPoolResource" ||
-      expenditure.unitId !== input.unitId,
-  );
-  if (input.expended > resourceCount(0)) {
-    next.push({
-      tag: "pointPoolResource",
-      unitId: input.unitId,
-      expended: input.expended,
-    });
-  }
-  return next;
-}
-
-function spendHitDice(input: {
-  readonly sheet: CharacterSheet;
-  readonly unitLibrary: UnitCatalog;
-  readonly spendHitDice: readonly CharacterSheetHitDieSpend[] | undefined;
-}): Either.Either<CharacterSheet, CharacterSheetIssue> {
-  if (input.spendHitDice === undefined) return Either.right(input.sheet);
-  if (input.spendHitDice.length === 0) {
-    return characterSheetIssue("Short Rest Hit Dice spending cannot be empty.");
-  }
-  const hitDice = characterSheetHitDice(input.sheet, input.unitLibrary);
-  if (Either.isLeft(hitDice)) return Either.left(hitDice.left);
-  const hitDiceByClass = new Map(
-    hitDice.right.map((pool) => [pool.classUnitId, pool]),
-  );
-  const spentThisRest = new Map<UnitRecord["id"], ResourceCount>();
-  let healingTotal = 0;
-  const constitutionModifier = abilityScoreToMod(
-    input.sheet.build.abilityScores.con,
-  );
-  for (const spend of input.spendHitDice) {
-    const pool = hitDiceByClass.get(spend.classUnitId);
-    if (pool === undefined) {
-      return characterSheetIssue(
-        "Short Rest Hit Dice spend must match build Hit Dice.",
-      );
-    }
-    if (
-      !Number.isInteger(Number(spend.roll)) ||
-      spend.roll < 1 ||
-      spend.roll > pool.dieSize
-    ) {
-      return characterSheetIssue(
-        `Short Rest Hit Die roll must be within d${pool.dieSize}.`,
-      );
-    }
-    healingTotal += Math.max(1, spend.roll + constitutionModifier);
-    spentThisRest.set(
-      spend.classUnitId,
-      resourceCount((spentThisRest.get(spend.classUnitId) ?? 0) + 1),
-    );
-  }
-  const nextSpentHitDice = input.sheet.spentHitDice.map((spent) => ({
-    ...spent,
-  }));
-  for (const [classUnitId, spentCount] of spentThisRest.entries()) {
-    const pool = hitDiceByClass.get(classUnitId);
-    if (pool === undefined || pool.spent + spentCount > pool.total) {
-      return characterSheetIssue(
-        "Short Rest cannot spend more Hit Dice than remain.",
-      );
-    }
-    const existingIndex = nextSpentHitDice.findIndex(
-      (spent) => spent.classUnitId === classUnitId,
-    );
-    if (existingIndex === -1) {
-      nextSpentHitDice.push({ classUnitId, spent: spentCount });
-    } else {
-      nextSpentHitDice[existingIndex] = {
-        classUnitId,
-        spent: resourceCount(
-          nextSpentHitDice[existingIndex].spent + spentCount,
-        ),
-      };
-    }
-  }
-  const healed = recoverCharacterSheetHitPoints({
-    sheet: input.sheet,
-    healing: Hp(healingTotal),
-    overflow: { tag: "capAtMaximum" },
-    deadCharacterMessage:
-      "Short Rest Hit Dice cannot restore HP to a dead character.",
-  });
-  if (Either.isLeft(healed)) return Either.left(healed.left);
-  return Either.right({
-    ...healed.right,
-    spentHitDice: nextSpentHitDice,
-  });
-}
-
-type CharacterSheetSpellRestBenefitProfile = {
-  readonly spellId: UnitRecord["id"];
-  readonly baseSpellLevel: SpellSlotLevel;
-  readonly maxRecipients: number;
-  readonly healingBaseDice: number;
-  readonly healingDieSize: number;
-  readonly healingDicePerSlotAboveBase: number;
-};
-
-type CharacterSheetSpellRestBenefitHealingEffect = {
-  readonly kind: "heal_hp";
-  readonly target: "target_creature";
-  readonly amount: {
-    readonly kind: "linear_per_level";
-    readonly axis: "slot";
-    readonly base: {
-      readonly dice: number;
-      readonly dieSize: number;
-      readonly flat?: number;
-    };
-    readonly perLevel: {
-      readonly dice?: number;
-      readonly dieSize?: number;
-      readonly flat?: number;
-    };
-    readonly startingAtLevel: number;
-  };
-};
-
-type CharacterSheetSpellRestBenefitEffects = {
-  readonly healing: CharacterSheetSpellRestBenefitHealingEffect;
-};
-
-function characterSheetSpellRestBenefitProfile(input: {
-  readonly spellId: UnitRecord["id"];
-  readonly unitLibrary: UnitCatalog;
-}): Either.Either<CharacterSheetSpellRestBenefitProfile, CharacterSheetIssue> {
-  const unit = input.unitLibrary.getUnit(input.spellId);
-  if (Option.isNone(unit) || unit.value.kind !== "spell") {
-    return characterSheetIssue(
-      "Spell rest benefit application requires an installed Spell Definition.",
-    );
-  }
-  const mechanics = unit.value.mechanics;
-  if (mechanics.family !== "activation" || mechanics.level < 1) {
-    return characterSheetIssue(
-      "Spell rest benefit application requires a leveled activation Spell Definition.",
-    );
-  }
-  if (!isSpellRestBenefitCastingShell(mechanics)) {
-    return characterSheetIssue(
-      "Spell rest benefit application requires a 10-minute non-ritual spell with 30-foot point range and instantaneous duration.",
-    );
-  }
-  const phase = mechanics.phases.length === 1 ? mechanics.phases[0] : undefined;
-  if (phase === undefined || phase.kind !== "direct") {
-    return characterSheetIssue(
-      "Spell rest benefit application requires one direct spell phase.",
-    );
-  }
-  const selection =
-    phase.attachment.kind === "hole" && phase.attachment.value.kind === "target"
-      ? phase.attachment.value.selection
-      : undefined;
-  if (
-    selection === undefined ||
-    selection.mode !== "choose_up_to" ||
-    selection.count !== 5 ||
-    !isExactCreatureTargetKindList(selection.targetKinds) ||
-    !hasRemainWithinSpellRangeForEntireCastingRequirement(selection)
-  ) {
-    return characterSheetIssue(
-      "Spell rest benefit application requires up-to-five creature recipients that remain within range for the entire casting.",
-    );
-  }
-  const effects: readonly unknown[] = phase.effects ?? [];
-  const restBenefitEffects = characterSheetSpellRestBenefitEffects(
-    effects,
-    mechanics.level,
-  );
-  if (Either.isLeft(restBenefitEffects)) {
-    return Either.left(restBenefitEffects.left);
-  }
-  const { healing } = restBenefitEffects.right;
-  const healingDicePerSlotAboveBase = healing.amount.perLevel.dice;
-  if (healingDicePerSlotAboveBase === undefined) {
-    return characterSheetIssue(
-      "Spell rest benefit application requires slot-scaled healing, Short Rest benefit, and Long Rest lockout facts.",
-    );
-  }
-  return Either.right({
-    spellId: unit.value.id,
-    baseSpellLevel: spellSlotLevel(mechanics.level),
-    maxRecipients: selection.count,
-    healingBaseDice: healing.amount.base.dice,
-    healingDieSize: healing.amount.base.dieSize,
-    healingDicePerSlotAboveBase,
-  });
-}
-
-function isSpellRestBenefitCastingShell(mechanics: SpellRecord["mechanics"]) {
-  return (
-    mechanics.castingTime.kind === "minutes" &&
-    mechanics.castingTime.amount === 10 &&
-    mechanics.castingTime.ritual === false &&
-    mechanics.range.kind === "point" &&
-    mechanics.range.feet === 30 &&
-    mechanics.duration.kind === "instantaneous"
-  );
-}
-
-function isExactCreatureTargetKindList(
-  value: readonly unknown[] | undefined,
-): value is readonly ["creature"] {
-  return Array.isArray(value) && value.length === 1 && value[0] === "creature";
-}
-
-function hasRemainWithinSpellRangeForEntireCastingRequirement(
-  selection: Readonly<Record<string, unknown>>,
-): boolean {
-  const requirement = selection.castingRequirement;
-  return (
-    isRecord(requirement) &&
-    requirement.kind === "remain_within_spell_range_for_entire_casting"
-  );
-}
-
-function characterSheetSpellRestBenefitEffects(
-  effects: readonly unknown[],
-  baseSpellLevel: number,
-): Either.Either<CharacterSheetSpellRestBenefitEffects, CharacterSheetIssue> {
-  if (effects.length !== 3) {
-    return characterSheetIssue(
-      "Spell rest benefit application requires exactly healing, Short Rest benefit, and Long Rest lockout facts.",
-    );
-  }
-  let healing: CharacterSheetSpellRestBenefitHealingEffect | undefined;
-  let shortRestBenefit = false;
-  let lockout = false;
-  for (const effect of effects) {
-    if (isSpellRestBenefitHealingEffect(effect) && healing === undefined) {
-      healing = effect;
-      continue;
-    }
-    if (isSpellRestBenefitShortRestEffect(effect) && !shortRestBenefit) {
-      shortRestBenefit = true;
-      continue;
-    }
-    if (isSpellRestBenefitLockoutEffect(effect) && !lockout) {
-      lockout = true;
-      continue;
-    }
-    return characterSheetIssue(
-      "Spell rest benefit application cannot ignore unsupported spell effects.",
-    );
-  }
-  if (
-    healing === undefined ||
-    !shortRestBenefit ||
-    !lockout ||
-    healing.amount.startingAtLevel !== baseSpellLevel ||
-    healing.amount.base.flat !== undefined ||
-    healing.amount.perLevel.dice === undefined ||
-    healing.amount.perLevel.flat !== undefined ||
-    (healing.amount.perLevel.dieSize !== undefined &&
-      healing.amount.perLevel.dieSize !== healing.amount.base.dieSize)
-  ) {
-    return characterSheetIssue(
-      "Spell rest benefit application requires slot-scaled healing, Short Rest benefit, and Long Rest lockout facts.",
-    );
-  }
-  return Either.right({
-    healing,
-  });
-}
-
-function isSpellRestBenefitHealingEffect(
-  effect: unknown,
-): effect is CharacterSheetSpellRestBenefitHealingEffect {
-  if (!isRecord(effect) || effect.kind !== "heal_hp") return false;
-  if (effect.target !== "target_creature" || !isRecord(effect.amount)) {
-    return false;
-  }
-  const amount = effect.amount;
-  return (
-    amount.kind === "linear_per_level" &&
-    amount.axis === "slot" &&
-    isRecord(amount.base) &&
-    isRecord(amount.perLevel) &&
-    typeof amount.base.dice === "number" &&
-    typeof amount.base.dieSize === "number" &&
-    (amount.base.flat === undefined || typeof amount.base.flat === "number") &&
-    (amount.perLevel.dice === undefined ||
-      typeof amount.perLevel.dice === "number") &&
-    (amount.perLevel.dieSize === undefined ||
-      typeof amount.perLevel.dieSize === "number") &&
-    (amount.perLevel.flat === undefined ||
-      typeof amount.perLevel.flat === "number") &&
-    typeof amount.startingAtLevel === "number"
-  );
-}
-
-function isSpellRestBenefitShortRestEffect(effect: unknown): boolean {
-  return (
-    isRecord(effect) &&
-    effect.kind === "grant_rest_benefit" &&
-    effect.benefit === "short_rest" &&
-    effect.target === "target_creature"
-  );
-}
-
-function isSpellRestBenefitLockoutEffect(effect: unknown): boolean {
-  return (
-    isRecord(effect) &&
-    effect.kind === "spell_recipient_rest_lockout" &&
-    effect.resetBy === "target_finishes_long_rest" &&
-    effect.target === "target_creature"
-  );
-}
-
-function spellRestBenefitRecipientIssue(
-  input: CharacterSheetSpellRestBenefitInput,
-  profile: CharacterSheetSpellRestBenefitProfile,
-): string | null {
-  if (input.recipients.length > profile.maxRecipients) {
-    return "Spell rest benefit application cannot affect more recipients than the Spell Definition allows.";
-  }
-  const seenCharacterIds = new Set<CharacterSheetId>();
-  for (const recipient of input.recipients) {
-    if (recipient.eligibility.remainedWithinRangeForEntireCasting !== true) {
-      return "Spell rest benefit application requires caller-supplied completed-casting recipient eligibility.";
-    }
-    if (seenCharacterIds.has(recipient.sheet.characterId)) {
-      return "Spell rest benefit application cannot target the same Character Sheet twice.";
-    }
-    seenCharacterIds.add(recipient.sheet.characterId);
-    if (hasSpellRecipientRestLockout(recipient.sheet, profile.spellId)) {
-      return "Spell rest benefit recipient cannot be affected by this spell again until finishing a Long Rest.";
-    }
-  }
-  return null;
-}
-
-function applySpellRestBenefitToRecipient(input: {
-  readonly profile: CharacterSheetSpellRestBenefitProfile;
-  readonly recipient: CharacterSheetSpellRestBenefitRecipient;
-  readonly unitLibrary: UnitCatalog;
-  readonly castLevel: SpellSlotLevel;
-}): Either.Either<CharacterSheet, CharacterSheetIssue> {
-  const shortRested = completeShortRestBenefits({
-    sheet: input.recipient.sheet,
-    unitLibrary: input.unitLibrary,
-    hpGate: "spellGrantedRestBenefit",
-    spendHitDice: input.recipient.spendHitDice,
-    arcaneRecovery: input.recipient.arcaneRecovery,
-  });
-  if (Either.isLeft(shortRested)) return Either.left(shortRested.left);
-  const healing = spellRestBenefitHealingAmount({
-    profile: input.profile,
-    castLevel: input.castLevel,
-    healingRolls: input.recipient.healingRolls,
-  });
-  if (Either.isLeft(healing)) return Either.left(healing.left);
-  const healed = recoverCharacterSheetHitPoints({
-    sheet: shortRested.right,
-    healing: healing.right,
-    overflow: { tag: "capAtMaximum" },
-    deadCharacterMessage:
-      "Spell rest benefit healing cannot restore HP to a dead character.",
-  });
-  if (Either.isLeft(healed)) return Either.left(healed.left);
-  return Either.right({
-    ...healed.right,
-    restFeatureUses: [
-      ...healed.right.restFeatureUses,
-      {
-        tag: SPELL_RECIPIENT_REST_LOCKOUT_TAG,
-        spellId: input.profile.spellId,
-        usedSinceLongRest: true,
-      },
-    ],
-  });
-}
-
-function spellRestBenefitHealingAmount(input: {
-  readonly profile: CharacterSheetSpellRestBenefitProfile;
-  readonly castLevel: SpellSlotLevel;
-  readonly healingRolls: readonly DieRollResult[];
-}): Either.Either<HpType, CharacterSheetIssue> {
-  const dice =
-    input.profile.healingBaseDice +
-    (input.castLevel - input.profile.baseSpellLevel) *
-      input.profile.healingDicePerSlotAboveBase;
-  if (input.healingRolls.length !== dice) {
-    return characterSheetIssue(
-      "Spell rest benefit healing rolls must match the current cast level.",
-    );
-  }
-  const invalidRoll = input.healingRolls.find(
-    (roll) =>
-      !Number.isInteger(Number(roll)) ||
-      roll < 1 ||
-      roll > input.profile.healingDieSize,
-  );
-  if (invalidRoll !== undefined) {
-    return characterSheetIssue(
-      `Spell rest benefit healing roll must be within d${input.profile.healingDieSize}.`,
-    );
-  }
-  return Either.right(
-    Hp(input.healingRolls.reduce((total, roll) => total + roll, 0)),
-  );
-}
-
-function hasSpellRecipientRestLockout(
-  sheet: CharacterSheet,
-  spellId: UnitRecord["id"],
-): boolean {
-  return sheet.restFeatureUses.some(
-    (use) =>
-      use.tag === SPELL_RECIPIENT_REST_LOCKOUT_TAG && use.spellId === spellId,
-  );
-}
-
-function layOnHandsSpend(
-  input: Pick<CharacterSheetLayOnHandsInput, "restoreHp" | "removePoisoned">,
-): Either.Either<ResourceCount, CharacterSheetIssue> {
-  if (!Number.isInteger(input.restoreHp) || input.restoreHp < 0) {
-    return characterSheetIssue(
-      "Lay On Hands HP restoration must be nonnegative.",
-    );
-  }
-  const spend = resourceCount(
-    input.restoreHp +
-      (input.removePoisoned ? LAY_ON_HANDS_POISONED_REMOVAL_COST : 0),
-  );
-  return spend === 0
-    ? characterSheetIssue("Lay On Hands must restore HP or remove Poisoned.")
-    : Either.right(spend);
-}
-
-function spendCharacterSheetResource(input: {
-  readonly sheet: CharacterSheet;
-  readonly unitLibrary: UnitCatalog;
-  readonly amount: ResourceCount;
-}): Either.Either<CharacterSheet, CharacterSheetIssue> {
-  const resources = characterSheetResources(input.sheet, input.unitLibrary);
-  if (Either.isLeft(resources)) return Either.left(resources.left);
-  const resource = resources.right.find(
-    (candidate) => candidate.tag === "layOnHandsHealingPool",
-  );
-  if (resource === undefined) {
-    return characterSheetIssue(
-      "Lay On Hands requires the Paladin Lay On Hands feature.",
-    );
-  }
-  if (resource.expended + input.amount > resource.count) {
-    return characterSheetIssue(
-      "Lay On Hands cannot spend more healing pool than remains.",
-    );
-  }
-
-  const nextExpenditures = input.sheet.resourceExpenditures.filter(
-    (expenditure) => expenditure.tag !== "layOnHandsHealingPool",
-  );
-  nextExpenditures.push({
-    tag: "layOnHandsHealingPool",
-    expended: resourceCount(resource.expended + input.amount),
-  });
-  return Either.right({
-    ...input.sheet,
-    resourceExpenditures: nextExpenditures,
-  });
-}
-
-function applyLayOnHandsTargetEffects(input: {
-  readonly sheet: CharacterSheet;
-  readonly restoreHp: HpType;
-  readonly removePoisoned: boolean;
-}): Either.Either<CharacterSheet, CharacterSheetIssue> {
-  if (input.removePoisoned) {
-    if (!input.sheet.conditions.some((condition) => condition === "poisoned")) {
-      return characterSheetIssue(
-        "Lay On Hands Poisoned removal requires a Poisoned target.",
-      );
-    }
-  }
-  const conditions = input.removePoisoned
-    ? input.sheet.conditions.filter((condition) => condition !== "poisoned")
-    : input.sheet.conditions;
-
-  if (input.restoreHp === 0) {
-    return Either.right({ ...input.sheet, conditions });
-  }
-  const healed = recoverCharacterSheetHitPoints({
-    sheet: input.sheet,
-    healing: input.restoreHp,
-    overflow: {
-      tag: "rejectAboveMaximum",
-      message:
-        "Lay On Hands HP restoration cannot exceed the target's missing HP.",
-    },
-    deadCharacterMessage: "Lay On Hands cannot restore HP to a dead target.",
-  });
-  return Either.isLeft(healed)
-    ? Either.left(healed.left)
-    : Either.right({ ...healed.right, conditions });
-}
-
-function applyArcaneRecovery(input: {
-  readonly sheet: CharacterSheet;
-  readonly unitLibrary: UnitCatalog;
-  readonly refundSpellSlots: readonly CharacterSheetArcaneRecoverySlotRefund[];
-}): Either.Either<CharacterSheet, CharacterSheetIssue> {
-  if (!isCharacterSheetWithSpellSlots(input.sheet)) {
-    return characterSheetIssue(
-      "Arcane Recovery requires ordinary Spell Slot state.",
-    );
-  }
-  const profile = restSpellSlotRecoveryProfileForBuild(
-    input.sheet.build,
-    input.unitLibrary,
-  );
-  if (Either.isLeft(profile)) return Either.left(profile.left);
-  if (
-    input.sheet.restFeatureUses.some(
-      (use) => use.tag === ARCANE_RECOVERY_REST_FEATURE_TAG,
-    )
-  ) {
-    return characterSheetIssue(
-      "Arcane Recovery cannot be used again until a Long Rest.",
-    );
-  }
-  const sheet = input.sheet;
-  const refund = arcaneRecoverySpellSlotRefund({
-    sheet,
-    profile: profile.right,
-    refundSpellSlots: input.refundSpellSlots,
-  });
-  if (Either.isLeft(refund)) return Either.left(refund.left);
-  return Either.right({
-    ...sheet,
-    spellSlotExpenditures: refund.right,
-    restFeatureUses: [
-      ...sheet.restFeatureUses,
-      {
-        tag: ARCANE_RECOVERY_REST_FEATURE_TAG,
-        usedSinceLongRest: true,
-      },
-    ],
-  });
-}
-
-function arcaneRecoverySpellSlotRefund(input: {
-  readonly sheet: CharacterSheetWithSpellSlots;
-  readonly profile: CharacterSheetRestSpellSlotRecoveryProfile;
-  readonly refundSpellSlots: readonly CharacterSheetArcaneRecoverySlotRefund[];
-}): Either.Either<
-  readonly CharacterSpellSlotExpenditure[],
-  CharacterSheetIssue
-> {
-  if (input.refundSpellSlots.length === 0) {
-    return characterSheetIssue("Arcane Recovery must recover expended slots.");
-  }
-  const classLevel = classLevelForUnit(
-    input.sheet.build.progression,
-    input.profile.classUnitId,
-  );
-  const maximumCombinedSlotLevels = Math.ceil(classLevel / 2);
-  const maximumSlotLevelExclusive =
-    input.profile.feature.mechanics.recoveredSlotLevelCap
-      .maximumSlotLevelExclusive;
-  let combinedSlotLevels = 0;
-  const refundByLevel = new Map<SpellSlotLevel, ResourceCount>();
-  for (const refund of input.refundSpellSlots) {
-    if (refund.spellLevel >= spellSlotLevel(maximumSlotLevelExclusive)) {
-      return characterSheetIssue(
-        "Arcane Recovery cannot recover level 6 or higher Spell Slots.",
-      );
-    }
-    if (!Number.isInteger(refund.count) || refund.count < 1) {
-      return characterSheetIssue(
-        "Arcane Recovery refund counts must be positive.",
-      );
-    }
-    combinedSlotLevels += refund.spellLevel * refund.count;
-    refundByLevel.set(
-      refund.spellLevel,
-      resourceCount((refundByLevel.get(refund.spellLevel) ?? 0) + refund.count),
-    );
-  }
-  if (combinedSlotLevels > maximumCombinedSlotLevels) {
-    return characterSheetIssue(
-      "Arcane Recovery refund exceeds half Wizard level rounded up.",
-    );
-  }
-  const updated = input.sheet.spellSlotExpenditures.map((expenditure) => {
-    const refundCount = refundByLevel.get(expenditure.spellLevel) ?? 0;
-    return {
-      ...expenditure,
-      expended: resourceCount(expenditure.expended - refundCount),
-    };
-  });
-  const knownLevels = new Set(
-    input.sheet.spellSlotExpenditures.map((slot) => slot.spellLevel),
-  );
-  for (const [spellLevel, refundCount] of refundByLevel.entries()) {
-    if (!knownLevels.has(spellLevel)) {
-      return characterSheetIssue(
-        "Arcane Recovery refund must match existing Spell Slot levels.",
-      );
-    }
-    const original = input.sheet.spellSlotExpenditures.find(
-      (slot) => slot.spellLevel === spellLevel,
-    );
-    if (original === undefined || refundCount > original.expended) {
-      return characterSheetIssue(
-        "Arcane Recovery cannot refund more Spell Slots than are expended.",
-      );
-    }
-  }
-  return Either.right(updated);
 }
 
 function magicalCunningRecoveredPactSlots(input: {
@@ -4075,73 +2404,6 @@ function magicalCunningRecoveredPactSlots(input: {
       resourceCount(Math.ceil(input.pactSlots.count / 2)),
     ),
     Match.exhaustive,
-  );
-}
-
-function restSpellSlotRecoveryProfileForBuild(
-  build: CharacterBuild,
-  unitLibrary: UnitCatalog,
-): Either.Either<
-  CharacterSheetRestSpellSlotRecoveryProfile,
-  CharacterSheetIssue
-> {
-  const features: CharacterSheetRestSpellSlotRecoveryFeature[] = [];
-  for (const unitId of characterBuildFeatureUnitIds(build, unitLibrary)) {
-    const unit = getRequiredUnit(unitLibrary, unitId);
-    if (Either.isLeft(unit)) return Either.left(unit.left);
-    if (!isRestSpellSlotRecoveryFeature(unit.right)) {
-      continue;
-    }
-    features.push(unit.right);
-  }
-  if (features.length === 0) {
-    return characterSheetIssue(
-      "Arcane Recovery requires a Short Rest Spell Slot recovery feature.",
-    );
-  }
-  if (features.length > 1) {
-    return characterSheetIssue(
-      "Character Sheet supports only one Short Rest Spell Slot recovery feature.",
-    );
-  }
-  const feature = features[0];
-  if (feature === undefined) {
-    return characterSheetIssue(
-      "Arcane Recovery requires a Short Rest Spell Slot recovery feature.",
-    );
-  }
-  return restSpellSlotRecoveryProfileForFeature({
-    build,
-    unitLibrary,
-    feature,
-  });
-}
-
-function restSpellSlotRecoveryProfileForFeature(input: {
-  readonly build: CharacterBuild;
-  readonly unitLibrary: UnitCatalog;
-  readonly feature: CharacterSheetRestSpellSlotRecoveryFeature;
-}): Either.Either<
-  CharacterSheetRestSpellSlotRecoveryProfile,
-  CharacterSheetIssue
-> {
-  for (const progressionClassUnitId of progressionClassUnitIds(
-    input.build.progression,
-  )) {
-    const unit = getRequiredUnit(input.unitLibrary, progressionClassUnitId);
-    if (Either.isLeft(unit)) return Either.left(unit.left);
-    if (
-      unit.right.kind === "class" &&
-      unit.right.className === input.feature.className
-    ) {
-      return Either.right({
-        feature: input.feature,
-        classUnitId: progressionClassUnitId,
-      });
-    }
-  }
-  return characterSheetIssue(
-    "Short Rest Spell Slot recovery feature must belong to a class in the build progression.",
   );
 }
 
@@ -4186,24 +2448,6 @@ function pactSlotRecoveryProfileForBuild(
     );
   }
   return Either.right(profile);
-}
-
-function isCharacterSheetWithSpellSlots(
-  sheet: CharacterSheet,
-): sheet is CharacterSheetWithSpellSlots {
-  return "spellSlotExpenditures" in sheet;
-}
-
-function isRestSpellSlotRecoveryFeature(
-  unit: UnitRecord,
-): unit is CharacterSheetRestSpellSlotRecoveryFeature {
-  return (
-    unit.kind === "class_feature" &&
-    unit.mechanics.family === "rest_spell_slot_recovery" &&
-    unit.mechanics.recoveryTrigger === "short_rest" &&
-    unit.mechanics.resetCadence.kind === "long_rest" &&
-    unit.mechanics.recoveredSlotLevelCap.kind === "half_class_level_rounded_up"
-  );
 }
 
 function isPactSlotRecoveryFeature(
