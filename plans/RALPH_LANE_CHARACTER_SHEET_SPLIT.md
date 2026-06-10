@@ -37,13 +37,13 @@
     {
       "number": 6,
       "id": "SHEETS-C06-LIFECYCLE-PARSING",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Extract sheet-lifecycle and the internal stored-sheet parser"
     },
     {
       "number": 7,
       "id": "SHEETS-C07-RESTS",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Extract rests (with weapon-mastery reselection)"
     },
     {
@@ -150,8 +150,8 @@ Every task must include:
 | 3 | SHEETS-C03-RESOURCES-HEALING | ready-for-research | SHEETS-C02-STATELESS-QUERIES | Monk's Focus / Uncanny Metabolism fold into resources. |
 | 4 | SHEETS-C04-SPELL-SLOTS-INVOCATION | done | SHEETS-C03-RESOURCES-HEALING | Font of Magic folds into spell-slots. |
 | 5 | SHEETS-C05-FEATURE-DOMAINS | done | SHEETS-C04-SPELL-SLOTS-INVOCATION | Druid + class-feature prepared spells. |
-| 6 | SHEETS-C06-LIFECYCLE-PARSING | ready-for-research | SHEETS-C05-FEATURE-DOMAINS | Largest internal move (~2,400-line parser layer). |
-| 7 | SHEETS-C07-RESTS | blocked | SHEETS-C06-LIFECYCLE-PARSING | Rest state machine consumes the spell-slots interface; weapon-mastery reselection folds in. |
+| 6 | SHEETS-C06-LIFECYCLE-PARSING | done | SHEETS-C05-FEATURE-DOMAINS | Largest internal move (~2,400-line parser layer). |
+| 7 | SHEETS-C07-RESTS | ready-for-research | SHEETS-C06-LIFECYCLE-PARSING | Rest state machine consumes the spell-slots interface; weapon-mastery reselection folds in. |
 | 8 | SHEETS-C08-TIME-PASSAGE-AND-AUDIT | blocked | SHEETS-C07-RESTS | Final move + executable split audit + §7 status note. |
 | 9 | SHEETS-C09-TEST-REORG | blocked | SHEETS-C08-TIME-PASSAGE-AND-AUDIT | Optional follow-up; can be deferred indefinitely. |
 
@@ -215,7 +215,7 @@ passes unmodified.
 
 ### Task 6 - SHEETS-C06-LIFECYCLE-PARSING
 
-Status: `ready-for-research` · Mode: AFK
+Status: `done` · Mode: AFK
 
 Output: `sheet-lifecycle.ts` (`createFreshCharacterSheet` + init helpers,
 `parseCharacterSheet` dispatcher) and the internal `stored-sheet-parser.ts`
@@ -228,7 +228,7 @@ typecheck proves no type-only cycles.
 
 ### Task 7 - SHEETS-C07-RESTS
 
-Status: `blocked` · Mode: AFK
+Status: `ready-for-research` · Mode: AFK
 
 Output: `rests.ts` — Short/Long Rest state machines, Hit Dice, Arcane
 Recovery, post-Long-Rest weapon-mastery reselection fold — consuming the
