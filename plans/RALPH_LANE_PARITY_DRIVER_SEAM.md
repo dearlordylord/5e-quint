@@ -193,23 +193,23 @@ Every task must include:
 | # | Task | Status | Depends on | Notes |
 | ---: | --- | --- | --- | --- |
 | 1 | PDS-A01-DRIVER-KIT-TRACER | ready-for-implementation-after-light-research | none | Light research: kit API shape vs quint-connect exports (`transformITFValue`, ITF schemas, picks). |
-| 2 | PDS-A02-KIT-PILOTS | blocked | PDS-A01 | Proves the kit on all driver shapes; merges `battle-runtime-mbt-fixtures.ts`. |
-| 3 | PDS-A03-WITNESS-PROTOCOL-TRACER | blocked | PDS-A02 | Unblocks Lane B (`BPK-B04+`). Includes the quint 0.31.0 parameterized-type REPL check. |
-| 4 | PDS-A04-KIT-BATCH-1 | blocked | PDS-A03 | Self-discovering; ≤20 drivers. |
-| 5 | PDS-A05-KIT-BATCH-2 | blocked | PDS-A04 | |
-| 6 | PDS-A06-KIT-BATCH-3 | blocked | PDS-A05 | |
-| 7 | PDS-A07-KIT-BATCH-4 | blocked | PDS-A06 | |
-| 8 | PDS-A08-KIT-BATCH-5 | blocked | PDS-A07 | Drains the kit-unmigrated set. |
-| 9 | PDS-A09-KIT-GATE-AND-CLOSEOUT | blocked | PDS-A08 | Adds the quality gate; consolidated `MBT_TRACES=3` pass; prd/03 closeout numbers. |
-| 10 | PDS-A10-WITNESS-PILOTS | blocked | PDS-A09 | Trace-cost timing note and pilot line-delta report. |
-| 11 | PDS-A11-WITNESS-BATCH-1 | blocked | PDS-A10 | Self-discovering; ≤20 pairs; `MBT_TRACES=3` confidence pass per batch. |
-| 12 | PDS-A12-WITNESS-BATCH-2 | blocked | PDS-A11 | |
-| 13 | PDS-A13-WITNESS-BATCH-3 | blocked | PDS-A12 | |
-| 14 | PDS-A14-WITNESS-BATCH-4 | blocked | PDS-A13 | |
-| 15 | PDS-A15-WITNESS-BATCH-5 | blocked | PDS-A14 | Drains the protocol-unmigrated set. |
-| 16 | PDS-A16-WITNESS-GATE-AND-CLOSEOUT | blocked | PDS-A15 | Convention gate, ADR addendum, README skeleton, prd/04 closeout. |
-| 17 | PDS-A17-LITERAL-CAPTURE-PRD | blocked | PDS-A10 | HITL: owner reviews the PRD. Single-owner obligations only; multi-owner rows wait for BPK-B08. |
-| 18 | PDS-A18-RECURSIVE-NEXT-BATCH | blocked | PDS-A16 | Refill or close the lane. |
+| 2 | PDS-A02-KIT-PILOTS | blocked | PDS-A01-DRIVER-KIT-TRACER | Proves the kit on all driver shapes; merges `battle-runtime-mbt-fixtures.ts`. |
+| 3 | PDS-A03-WITNESS-PROTOCOL-TRACER | blocked | PDS-A02-KIT-PILOTS | Unblocks Lane B (`BPK-B04+`). Includes the quint 0.31.0 parameterized-type REPL check. |
+| 4 | PDS-A04-KIT-BATCH-1 | blocked | PDS-A03-WITNESS-PROTOCOL-TRACER | Self-discovering; ≤20 drivers. |
+| 5 | PDS-A05-KIT-BATCH-2 | blocked | PDS-A04-KIT-BATCH-1 | |
+| 6 | PDS-A06-KIT-BATCH-3 | blocked | PDS-A05-KIT-BATCH-2 | |
+| 7 | PDS-A07-KIT-BATCH-4 | blocked | PDS-A06-KIT-BATCH-3 | |
+| 8 | PDS-A08-KIT-BATCH-5 | blocked | PDS-A07-KIT-BATCH-4 | Drains the kit-unmigrated set. |
+| 9 | PDS-A09-KIT-GATE-AND-CLOSEOUT | blocked | PDS-A08-KIT-BATCH-5 | Adds the quality gate; consolidated `MBT_TRACES=3` pass; prd/03 closeout numbers. |
+| 10 | PDS-A10-WITNESS-PILOTS | blocked | PDS-A09-KIT-GATE-AND-CLOSEOUT | Trace-cost timing note and pilot line-delta report. |
+| 11 | PDS-A11-WITNESS-BATCH-1 | blocked | PDS-A10-WITNESS-PILOTS | Self-discovering; ≤20 pairs; `MBT_TRACES=3` confidence pass per batch. |
+| 12 | PDS-A12-WITNESS-BATCH-2 | blocked | PDS-A11-WITNESS-BATCH-1 | |
+| 13 | PDS-A13-WITNESS-BATCH-3 | blocked | PDS-A12-WITNESS-BATCH-2 | |
+| 14 | PDS-A14-WITNESS-BATCH-4 | blocked | PDS-A13-WITNESS-BATCH-3 | |
+| 15 | PDS-A15-WITNESS-BATCH-5 | blocked | PDS-A14-WITNESS-BATCH-4 | Drains the protocol-unmigrated set. |
+| 16 | PDS-A16-WITNESS-GATE-AND-CLOSEOUT | blocked | PDS-A15-WITNESS-BATCH-5 | Convention gate, ADR addendum, README skeleton, prd/04 closeout. |
+| 17 | PDS-A17-LITERAL-CAPTURE-PRD | blocked | PDS-A10-WITNESS-PILOTS | HITL: owner reviews the PRD. Single-owner obligations only; multi-owner rows wait for BPK-B08. |
+| 18 | PDS-A18-RECURSIVE-NEXT-BATCH | blocked | PDS-A16-WITNESS-GATE-AND-CLOSEOUT | Refill or close the lane. |
 
 ## Task Details
 
