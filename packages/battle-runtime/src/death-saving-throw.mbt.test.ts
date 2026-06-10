@@ -8,10 +8,12 @@ import {
   decodeWitnessProtocolState,
   defineDriver,
   focusedMbtMaxSteps,
+  mbtPickSchemas,
   mbtSpecPath,
   mbtTraceCount,
   numberFromQuintInt,
   quintField,
+  quintRecordField,
   quintStateRecord,
   quintVariantTag,
   run,
@@ -80,10 +82,9 @@ const deathSavingThrowTargetId = combatantId("death-saving-throw-target");
 const deathSavingThrowDriverSchema = {
   init: {},
   doDiscoverEndTurnDeathSavingThrow: {},
-  doFillDeathSavingThrowNaturalOne: {},
-  doFillDeathSavingThrowFailure: {},
-  doFillDeathSavingThrowSuccess: {},
-  doFillDeathSavingThrowNaturalTwenty: {},
+  doFillDeathSavingThrow: {
+    roll: mbtPickSchemas.int,
+  },
   doRejectWrongActorEndTurnAfterResolved: {},
   step: {},
 } as const;
@@ -120,17 +121,8 @@ function createDeathSavingThrowDriver() {
       doDiscoverEndTurnDeathSavingThrow: () => {
         submit([]);
       },
-      doFillDeathSavingThrowNaturalOne: () => {
-        fillDeathSavingThrow(1);
-      },
-      doFillDeathSavingThrowFailure: () => {
-        fillDeathSavingThrow(5);
-      },
-      doFillDeathSavingThrowSuccess: () => {
-        fillDeathSavingThrow(10);
-      },
-      doFillDeathSavingThrowNaturalTwenty: () => {
-        fillDeathSavingThrow(20);
+      doFillDeathSavingThrow: ({ roll }) => {
+        fillDeathSavingThrow(roll);
       },
       doRejectWrongActorEndTurnAfterResolved: () => {
         const snapshot = recorder.snapshot();
@@ -174,9 +166,10 @@ describe("Death Saving Throw MBT parity", () => {
 function normalizeDeathSavingThrowQuintState(
   raw: unknown,
 ): DeathSavingThrowMbtProjection {
-  const state = quintStateRecord(raw);
+  const state = quintRecordField(quintStateRecord(raw), "qState");
   const protocol = decodeWitnessProtocolState({
     state,
+    protocolField: "protocol",
     noInvalidReason: DEATH_SAVING_THROW_NO_INVALID_REASON,
     decodeHole: deathSavingThrowHoleName,
     compareHoles: (left, right) => left.localeCompare(right),
@@ -184,27 +177,30 @@ function normalizeDeathSavingThrowQuintState(
 
   return {
     currentTurnRole: stringLiteralValue(
-      quintField(state, "qCurrentTurnRole"),
-      "qCurrentTurnRole",
+      quintField(state, "currentTurnRole"),
+      "qState.currentTurnRole",
       DEATH_SAVING_THROW_MBT_TURN_ROLES,
     ),
-    targetHp: numberFromQuintInt(quintField(state, "qTargetHp"), "qTargetHp"),
-    targetUnconscious: booleanField(state, "qTargetUnconscious"),
-    targetStable: booleanField(state, "qTargetStable"),
-    targetDead: booleanField(state, "qTargetDead"),
+    targetHp: numberFromQuintInt(
+      quintField(state, "targetHp"),
+      "qState.targetHp",
+    ),
+    targetUnconscious: booleanField(state, "targetUnconscious"),
+    targetStable: booleanField(state, "targetStable"),
+    targetDead: booleanField(state, "targetDead"),
     targetDeathSuccesses: numberFromQuintInt(
-      quintField(state, "qTargetDeathSuccesses"),
-      "qTargetDeathSuccesses",
+      quintField(state, "targetDeathSuccesses"),
+      "qState.targetDeathSuccesses",
     ),
     targetDeathFailures: numberFromQuintInt(
-      quintField(state, "qTargetDeathFailures"),
-      "qTargetDeathFailures",
+      quintField(state, "targetDeathFailures"),
+      "qState.targetDeathFailures",
     ),
     holes: protocol.holes,
     lastResult: protocol.lastResult,
     lastInvalidReason: stringLiteralValue(
       protocol.lastInvalidReason,
-      "qLastInvalidReason",
+      "qState.protocol.result",
       DEATH_SAVING_THROW_MBT_LAST_INVALID_REASONS,
     ),
   };

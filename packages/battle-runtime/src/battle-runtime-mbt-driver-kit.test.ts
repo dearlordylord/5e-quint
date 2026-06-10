@@ -104,6 +104,43 @@ describe("battle-runtime MBT driver kit", () => {
     ]);
   });
 
+  it("decodes typed witness protocol records with variant results", () => {
+    const needsHolesProtocol = decodeWitnessProtocolState({
+      state: quintStateRecord({
+        protocol: {
+          holes: new Set([{ tag: "Second" }, { tag: "First" }]),
+          result: "WNeedsHoles",
+        },
+      }),
+      protocolField: "protocol",
+      noInvalidReason: "",
+      decodeHole: (raw): string => quintVariantTag(raw),
+      compareHoles: (left, right) => left.localeCompare(right),
+    });
+    const invalidProtocol = decodeWitnessProtocolState({
+      state: quintStateRecord({
+        protocol: {
+          holes: new Set(["Movement"]),
+          result: { tag: "WInvalid", value: "WWrongActor" },
+        },
+      }),
+      protocolField: "protocol",
+      noInvalidReason: "none",
+      decodeHole: (raw): string => stringLiteral(raw, ["Movement"]),
+    });
+
+    expect(needsHolesProtocol).toEqual({
+      holes: ["First", "Second"],
+      lastResult: "needsHoles",
+      lastInvalidReason: "",
+    });
+    expect(invalidProtocol).toEqual({
+      holes: ["Movement"],
+      lastResult: "invalid",
+      lastInvalidReason: "wrongActor",
+    });
+  });
+
   it("folds production resolution results into the configured witness protocol", () => {
     const initialState = battleState("initial");
     const resolvedState = battleState("resolved");

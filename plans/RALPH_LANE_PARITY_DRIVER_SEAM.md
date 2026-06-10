@@ -19,13 +19,13 @@
     {
       "number": 3,
       "id": "PDS-A03-WITNESS-PROTOCOL-TRACER",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Add the witness-protocol leaf and migrate the death-saving-throw witness/driver pair to record state and picks"
     },
     {
       "number": 4,
       "id": "PDS-A04-KIT-BATCH-1",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Kit batch migration 1 (~20 drivers, self-discovering)"
     },
     {
@@ -194,8 +194,8 @@ Every task must include:
 | ---: | --- | --- | --- | --- |
 | 1 | PDS-A01-DRIVER-KIT-TRACER | ready-for-implementation-after-light-research | none | Light research: kit API shape vs quint-connect exports (`transformITFValue`, ITF schemas, picks). |
 | 2 | PDS-A02-KIT-PILOTS | done | PDS-A01-DRIVER-KIT-TRACER | Proves the kit on all driver shapes; merges `battle-runtime-mbt-fixtures.ts`. |
-| 3 | PDS-A03-WITNESS-PROTOCOL-TRACER | ready-for-research | PDS-A02-KIT-PILOTS | Unblocks Lane B (`BPK-B04+`). Includes the quint 0.31.0 parameterized-type REPL check. |
-| 4 | PDS-A04-KIT-BATCH-1 | blocked | PDS-A03-WITNESS-PROTOCOL-TRACER | Self-discovering; ≤20 drivers. |
+| 3 | PDS-A03-WITNESS-PROTOCOL-TRACER | done | PDS-A02-KIT-PILOTS | Unblocks Lane B (`BPK-B04+`). Includes the quint 0.31.0 parameterized-type REPL check. |
+| 4 | PDS-A04-KIT-BATCH-1 | ready-for-research | PDS-A03-WITNESS-PROTOCOL-TRACER | Self-discovering; ≤20 drivers. |
 | 5 | PDS-A05-KIT-BATCH-2 | blocked | PDS-A04-KIT-BATCH-1 | |
 | 6 | PDS-A06-KIT-BATCH-3 | blocked | PDS-A05-KIT-BATCH-2 | |
 | 7 | PDS-A07-KIT-BATCH-4 | blocked | PDS-A06-KIT-BATCH-3 | |
@@ -251,7 +251,7 @@ pilot's projection fields and assertions pre/post).
 
 ### Task 3 - PDS-A03-WITNESS-PROTOCOL-TRACER
 
-Status: `ready-for-research` · Mode: AFK
+Status: `done` · Mode: AFK
 
 Input: `prd/04_TYPED_WITNESS_PROTOCOL.md` (whole document),
 `battle-runtime-death-saving-throw.mbt.qnt` + its driver,
@@ -272,7 +272,7 @@ line deltas reported; this task's merge unblocks `BPK-B04`/`BPK-B06`.
 
 ### Task 4 - PDS-A04-KIT-BATCH-1
 
-Status: `blocked` · Mode: AFK
+Status: `ready-for-research` · Mode: AFK
 
 Input: the kit-unmigrated discovery rule (Lane Rules) applied at task start.
 

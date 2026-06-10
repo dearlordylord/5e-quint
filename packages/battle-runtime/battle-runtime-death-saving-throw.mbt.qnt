@@ -2,143 +2,115 @@
 
 // Self-contained literal projection witness for the start-turn Death Saving Throw
 // lifecycle. Asserts the SRD outcomes directly instead of importing the hit-point
-// reducer, so the driver's import closure stays empty and its MBT trace generation
-// stays fast (see scripts/check-mbt-driver-closure.cjs). The fixture target begins
-// Unconscious at 0 Hit Points with 2 death-save successes and 1 failure; the facts
-// below are that reducer's SRD result for each die result. If the death-save rule
-// changes, update the literals here.
+// reducer, so the driver's import closure stays leaf-only and its MBT trace
+// generation stays fast (see scripts/check-mbt-driver-closure.cjs). The fixture
+// target begins Unconscious at 0 Hit Points with 2 death-save successes and 1
+// failure; the facts below are the SRD result for each sampled die edge. If the
+// death-save rule changes, update the literals here.
 module battleRuntimeDeathSavingThrowMbt {
+  import battleRuntimeWitnessProtocol.* from "./battle-runtime-witness-protocol"
+
   // Only the start-turn Death Saving Throw hole is exercised by this witness.
   type Hole = | DeathSavingThrow
 
-  var qCurrentTurnRole: str
-  var qTargetHp: int
-  var qTargetUnconscious: bool
-  var qTargetStable: bool
-  var qTargetDead: bool
-  var qTargetDeathSuccesses: int
-  var qTargetDeathFailures: int
-  var qHoles: Set[Hole]
-  var qLastResult: str
-  var qLastInvalidReason: str
+  type DeathSavingThrowWitnessState = {
+    currentTurnRole: str,
+    targetHp: int,
+    targetUnconscious: bool,
+    targetStable: bool,
+    targetDead: bool,
+    targetDeathSuccesses: int,
+    targetDeathFailures: int,
+    protocol: WitnessProtocol[Hole],
+  }
+
+  var qState: DeathSavingThrowWitnessState
 
   pure val actorTurnRole: str = "actor"
   pure val targetTurnRole: str = "target"
 
+  pure val initialDeathSavingThrowState: DeathSavingThrowWitnessState = {
+    currentTurnRole: actorTurnRole,
+    targetHp: 0,
+    targetUnconscious: true,
+    targetStable: false,
+    targetDead: false,
+    targetDeathSuccesses: 2,
+    targetDeathFailures: 1,
+    protocol: witnessInit(DeathSavingThrow),
+  }
+
+  pure def deathSavingThrowFilledState(
+    state: DeathSavingThrowWitnessState,
+    roll: int,
+  ): DeathSavingThrowWitnessState = {
+    val resolved = state
+      .with("currentTurnRole", targetTurnRole)
+      .with("targetHp", 0)
+      .with("targetUnconscious", true)
+      .with("targetStable", false)
+      .with("targetDead", false)
+      .with("targetDeathSuccesses", state.targetDeathSuccesses)
+      .with("targetDeathFailures", state.targetDeathFailures)
+      .with("protocol", witnessResolved(DeathSavingThrow))
+
+    if (roll == 1)
+      resolved
+        .with("targetDead", true)
+        .with("targetDeathFailures", 3)
+    else if (roll == 5)
+      resolved.with("targetDeathFailures", 2)
+    else if (roll == 10)
+      resolved
+        .with("targetStable", true)
+        .with("targetDeathSuccesses", 0)
+        .with("targetDeathFailures", 0)
+    else if (roll == 20)
+      resolved
+        .with("targetHp", 1)
+        .with("targetUnconscious", false)
+        .with("targetDeathSuccesses", 0)
+        .with("targetDeathFailures", 0)
+    else
+      state.with("protocol", witnessInvalid(DeathSavingThrow, WInvalidFill))
+  }
+
   action init = all {
-    qCurrentTurnRole' = actorTurnRole,
-    qTargetHp' = 0,
-    qTargetUnconscious' = true,
-    qTargetStable' = false,
-    qTargetDead' = false,
-    qTargetDeathSuccesses' = 2,
-    qTargetDeathFailures' = 1,
-    qHoles' = Set(),
-    qLastResult' = "init",
-    qLastInvalidReason' = "",
+    qState' = initialDeathSavingThrowState,
   }
 
   action doDiscoverEndTurnDeathSavingThrow = all {
-    qCurrentTurnRole == actorTurnRole,
-    qHoles == Set(),
-    qCurrentTurnRole' = qCurrentTurnRole,
-    qTargetHp' = qTargetHp,
-    qTargetUnconscious' = qTargetUnconscious,
-    qTargetStable' = qTargetStable,
-    qTargetDead' = qTargetDead,
-    qTargetDeathSuccesses' = qTargetDeathSuccesses,
-    qTargetDeathFailures' = qTargetDeathFailures,
-    qHoles' = Set(DeathSavingThrow),
-    qLastResult' = "needsHoles",
-    qLastInvalidReason' = "",
+    qState.currentTurnRole == actorTurnRole,
+    qState.protocol.holes == Set(),
+    qState' = qState.with(
+      "protocol",
+      witnessNeedsHoles(Set(DeathSavingThrow))
+    ),
   }
 
-  // Natural 1 counts as two failures: 1 + 2 = 3 failures, so the target dies.
-  action doFillDeathSavingThrowNaturalOne = all {
-    qCurrentTurnRole == actorTurnRole,
-    qHoles == Set(DeathSavingThrow),
-    qCurrentTurnRole' = targetTurnRole,
-    qTargetHp' = 0,
-    qTargetUnconscious' = true,
-    qTargetStable' = false,
-    qTargetDead' = true,
-    qTargetDeathSuccesses' = 2,
-    qTargetDeathFailures' = 3,
-    qHoles' = Set(),
-    qLastResult' = "resolved",
-    qLastInvalidReason' = "",
-  }
-
-  // A roll of 2-9 is one failure: failures 1 -> 2, target keeps rolling.
-  action doFillDeathSavingThrowFailure = all {
-    qCurrentTurnRole == actorTurnRole,
-    qHoles == Set(DeathSavingThrow),
-    qCurrentTurnRole' = targetTurnRole,
-    qTargetHp' = 0,
-    qTargetUnconscious' = true,
-    qTargetStable' = false,
-    qTargetDead' = false,
-    qTargetDeathSuccesses' = 2,
-    qTargetDeathFailures' = 2,
-    qHoles' = Set(),
-    qLastResult' = "resolved",
-    qLastInvalidReason' = "",
-  }
-
-  // A roll of 10-19 is one success: successes 2 -> 3, target becomes Stable
-  // and death saves reset.
-  action doFillDeathSavingThrowSuccess = all {
-    qCurrentTurnRole == actorTurnRole,
-    qHoles == Set(DeathSavingThrow),
-    qCurrentTurnRole' = targetTurnRole,
-    qTargetHp' = 0,
-    qTargetUnconscious' = true,
-    qTargetStable' = true,
-    qTargetDead' = false,
-    qTargetDeathSuccesses' = 0,
-    qTargetDeathFailures' = 0,
-    qHoles' = Set(),
-    qLastResult' = "resolved",
-    qLastInvalidReason' = "",
-  }
-
-  // Natural 20 regains 1 Hit Point: the target is conscious and death saves reset.
-  action doFillDeathSavingThrowNaturalTwenty = all {
-    qCurrentTurnRole == actorTurnRole,
-    qHoles == Set(DeathSavingThrow),
-    qCurrentTurnRole' = targetTurnRole,
-    qTargetHp' = 1,
-    qTargetUnconscious' = false,
-    qTargetStable' = false,
-    qTargetDead' = false,
-    qTargetDeathSuccesses' = 0,
-    qTargetDeathFailures' = 0,
-    qHoles' = Set(),
-    qLastResult' = "resolved",
-    qLastInvalidReason' = "",
+  action doFillDeathSavingThrow = {
+    // SRD 5.2.1 "Death Saving Throws": sample the rule edges for natural 1
+    // (two failures), 2-9 (failure), 10-19 (success), and natural 20 (1 HP).
+    nondet roll = Set(1, 5, 10, 20).oneOf()
+    all {
+      qState.currentTurnRole == actorTurnRole,
+      qState.protocol.holes == Set(DeathSavingThrow),
+      qState' = deathSavingThrowFilledState(qState, roll),
+    }
   }
 
   action doRejectWrongActorEndTurnAfterResolved = all {
-    qCurrentTurnRole == targetTurnRole,
-    qHoles == Set(),
-    qCurrentTurnRole' = qCurrentTurnRole,
-    qTargetHp' = qTargetHp,
-    qTargetUnconscious' = qTargetUnconscious,
-    qTargetStable' = qTargetStable,
-    qTargetDead' = qTargetDead,
-    qTargetDeathSuccesses' = qTargetDeathSuccesses,
-    qTargetDeathFailures' = qTargetDeathFailures,
-    qHoles' = Set(),
-    qLastResult' = "invalid",
-    qLastInvalidReason' = "wrongActor",
+    qState.currentTurnRole == targetTurnRole,
+    qState.protocol.holes == Set(),
+    qState' = qState.with(
+      "protocol",
+      witnessInvalid(DeathSavingThrow, WWrongActor)
+    ),
   }
 
   action step = any {
     doDiscoverEndTurnDeathSavingThrow,
-    doFillDeathSavingThrowNaturalOne,
-    doFillDeathSavingThrowFailure,
-    doFillDeathSavingThrowSuccess,
-    doFillDeathSavingThrowNaturalTwenty,
+    doFillDeathSavingThrow,
     doRejectWrongActorEndTurnAfterResolved,
   }
 }

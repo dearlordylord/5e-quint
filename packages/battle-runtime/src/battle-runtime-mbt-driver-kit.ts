@@ -105,6 +105,22 @@ export const MBT_WITNESS_LAST_RESULTS = [
 ] as const;
 export type MbtWitnessLastResult = (typeof MBT_WITNESS_LAST_RESULTS)[number];
 
+const MBT_WITNESS_LAST_RESULT_BY_VARIANT_TAG = {
+  WInit: "init",
+  WNeedsHoles: "needsHoles",
+  WResolved: "resolved",
+  WInvalid: "invalid",
+} as const satisfies Readonly<Record<string, MbtWitnessLastResult>>;
+
+const MBT_WITNESS_INVALID_REASON_VARIANT_TAG_BY_REASON = {
+  staleSubject: "WStaleSubject",
+  wrongActor: "WWrongActor",
+  missingCombatant: "WMissingCombatant",
+  invalidFill: "WInvalidFill",
+  unsupportedSubject: "WUnsupportedSubject",
+  unsupportedActOption: "WUnsupportedActOption",
+} as const satisfies Readonly<Record<BattleInvalidReasonCode, string>>;
+
 export type MbtWitnessLastInvalidReason<NoInvalidReason extends string> =
   | NoInvalidReason
   | BattleInvalidReasonCode;
@@ -295,9 +311,17 @@ export function decodeWitnessProtocolState<
   readonly state: Readonly<Record<string, unknown>>;
   readonly noInvalidReason: NoInvalidReason;
   readonly holesField?: string;
+  readonly protocolField?: string;
   readonly decodeHole: (raw: unknown) => Hole;
   readonly compareHoles?: (left: Hole, right: Hole) => number;
 }): MbtWitnessProtocolState<Hole, NoInvalidReason> {
+  if (input.protocolField !== undefined) {
+    return decodeTypedWitnessProtocolState({
+      ...input,
+      protocolField: input.protocolField,
+    });
+  }
+
   const holesField = input.holesField ?? "qHoles";
   return {
     holes: quintSet(quintField(input.state, holesField), holesField)
@@ -314,6 +338,70 @@ export function decodeWitnessProtocolState<
       mbtWitnessLastInvalidReasons(input.noInvalidReason),
     ),
   };
+}
+
+function decodeTypedWitnessProtocolState<
+  Hole,
+  const NoInvalidReason extends string,
+>(input: {
+  readonly state: Readonly<Record<string, unknown>>;
+  readonly noInvalidReason: NoInvalidReason;
+  readonly protocolField: string;
+  readonly decodeHole: (raw: unknown) => Hole;
+  readonly compareHoles?: (left: Hole, right: Hole) => number;
+}): MbtWitnessProtocolState<Hole, NoInvalidReason> {
+  const protocol = quintRecordField(input.state, input.protocolField);
+  const holesField = `${input.protocolField}.holes`;
+  const resultField = `${input.protocolField}.result`;
+  const resultRaw = quintField(protocol, "result");
+  const lastResult = mbtWitnessLastResultFromVariant(resultRaw, resultField);
+  return {
+    holes: quintSet(quintField(protocol, "holes"), holesField)
+      .map(input.decodeHole)
+      .sort(input.compareHoles),
+    lastResult,
+    lastInvalidReason:
+      lastResult === "invalid"
+        ? mbtWitnessInvalidReasonFromVariant(
+            quintVariantValue(resultRaw, "WInvalid", resultField),
+            resultField,
+          )
+        : input.noInvalidReason,
+  };
+}
+
+function mbtWitnessLastResultFromVariant(
+  raw: unknown,
+  field: string,
+): MbtWitnessLastResult {
+  const tag = quintVariantTag(raw, field);
+  if (isMbtWitnessLastResultVariantTag(tag)) {
+    return MBT_WITNESS_LAST_RESULT_BY_VARIANT_TAG[tag];
+  }
+
+  throw new Error(`Expected Quint witness result variant field ${field}.`);
+}
+
+function isMbtWitnessLastResultVariantTag(
+  tag: string,
+): tag is keyof typeof MBT_WITNESS_LAST_RESULT_BY_VARIANT_TAG {
+  return Object.hasOwn(MBT_WITNESS_LAST_RESULT_BY_VARIANT_TAG, tag);
+}
+
+function mbtWitnessInvalidReasonFromVariant(
+  raw: unknown,
+  field: string,
+): BattleInvalidReasonCode {
+  const tag = quintVariantTag(raw, field);
+  const reason = BATTLE_INVALID_REASON_CODES.find(
+    (candidate) =>
+      MBT_WITNESS_INVALID_REASON_VARIANT_TAG_BY_REASON[candidate] === tag,
+  );
+  if (reason !== undefined) {
+    return reason;
+  }
+
+  throw new Error(`Expected Quint witness invalid reason variant field ${field}.`);
 }
 
 export function createBattleSubjectResolutionRecorder<

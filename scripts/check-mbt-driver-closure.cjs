@@ -40,6 +40,7 @@ const BATTLE_RUNTIME_LEAF_MODULES = new Set([
   "battle-runtime-reaction-kinds.qnt",
   "battle-runtime-see-invisibility-constants.qnt",
   "battle-runtime-sorcerous-burst-damage-choice.qnt",
+  "battle-runtime-witness-protocol.qnt",
 ]);
 
 // Grandfathered heavy drivers (basename -> reason). These import a behavioural
