@@ -19,7 +19,7 @@
     {
       "number": 3,
       "id": "SHEETS-C03-RESOURCES-HEALING",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Extract resources (with Monk folds) and healing-rest-benefit"
     },
     {
@@ -182,7 +182,7 @@ Acceptance: standard verification; the three matching MBT drivers
 
 ### Task 3 - SHEETS-C03-RESOURCES-HEALING
 
-Status: `ready-for-research` · Mode: AFK
+Status: `done` · Mode: AFK
 
 Output: `resources.ts` (capacity/spending, including the Monk's Focus and
 Uncanny Metabolism folds §7 prescribes) and `healing-rest-benefit.ts`
