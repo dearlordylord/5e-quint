@@ -6,6 +6,7 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE
+// KERNEL-COVERAGE: runtime-owner BATTLE.HOLE.SEMANTIC_FRONTIER_CLASSIFICATION
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-object-contact-damage
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-d20-lifecycle
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-creature-size-change
@@ -95,6 +96,163 @@ import {
   hypnoticPatternShakeAwakeTargetChoices,
   sleepShakeAwakeTargetChoices,
 } from "./spell-condition-effects-helpers.ts";
+
+const byBattleHoleKind = Match.discriminator("kind");
+
+export type BattleHoleFamilyKind = BattleHole["kind"];
+
+export function battleHoleFamilyKind(
+  hole: BattleHole,
+): BattleHoleFamilyKind {
+  return Match.value(hole)
+    .pipe(
+      byBattleHoleKind("abilityCheck", () => "abilityCheck" as const),
+      byBattleHoleKind("abilityChoice", () => "abilityChoice" as const),
+      byBattleHoleKind(
+        "attackDamageDisposition",
+        () => "attackDamageDisposition" as const,
+      ),
+      byBattleHoleKind("attackRoll", () => "attackRoll" as const),
+      byBattleHoleKind(
+        "commandOptionChoice",
+        () => "commandOptionChoice" as const,
+      ),
+      byBattleHoleKind(
+        "companionReappearanceInitiative",
+        () => "companionReappearanceInitiative" as const,
+      ),
+      byBattleHoleKind(
+        "companionReappearancePlacement",
+        () => "companionReappearancePlacement" as const,
+      ),
+      byBattleHoleKind(
+        "concentrationSavingThrow",
+        () => "concentrationSavingThrow" as const,
+      ),
+      byBattleHoleKind("conditionChoice", () => "conditionChoice" as const),
+      byBattleHoleKind("damageTypeChoice", () => "damageTypeChoice" as const),
+      byBattleHoleKind(
+        "dancingLightsPlacement",
+        () => "dancingLightsPlacement" as const,
+      ),
+      byBattleHoleKind("deathSavingThrow", () => "deathSavingThrow" as const),
+      byBattleHoleKind(
+        "findFamiliarConnection",
+        () => "findFamiliarConnection" as const,
+      ),
+      byBattleHoleKind("grappleOutcome", () => "grappleOutcome" as const),
+      byBattleHoleKind(
+        "gustOfWindLineDirectionChoice",
+        () => "gustOfWindLineDirectionChoice" as const,
+      ),
+      byBattleHoleKind("heldObjectFacts", () => "heldObjectFacts" as const),
+    )
+    .pipe(
+      byBattleHoleKind(
+        "hitPointHealingDistribution",
+        () => "hitPointHealingDistribution" as const,
+      ),
+      byBattleHoleKind("interruptDecision", () => "interruptDecision" as const),
+      byBattleHoleKind(
+        "levitateAltitudeChange",
+        () => "levitateAltitudeChange" as const,
+      ),
+      byBattleHoleKind(
+        "levitateInitialRise",
+        () => "levitateInitialRise" as const,
+      ),
+      byBattleHoleKind(
+        "magicWeaponTargetItem",
+        () => "magicWeaponTargetItem" as const,
+      ),
+      byBattleHoleKind(
+        "movableZoneRamMovement",
+        () => "movableZoneRamMovement" as const,
+      ),
+      byBattleHoleKind(
+        "movableZoneRepositionMovement",
+        () => "movableZoneRepositionMovement" as const,
+      ),
+      byBattleHoleKind("movement", () => "movement" as const),
+      byBattleHoleKind(
+        "objectContactTargets",
+        () => "objectContactTargets" as const,
+      ),
+      byBattleHoleKind(
+        "objectDropResolution",
+        () => "objectDropResolution" as const,
+      ),
+      byBattleHoleKind(
+        "objectTargetChoice",
+        () => "objectTargetChoice" as const,
+      ),
+      byBattleHoleKind(
+        "ongoingSpellTargetChoice",
+        () => "ongoingSpellTargetChoice" as const,
+      ),
+      byBattleHoleKind("rolledDice", () => "rolledDice" as const),
+      byBattleHoleKind(
+        "sanctuaryInterdictionOutcome",
+        () => "sanctuaryInterdictionOutcome" as const,
+      ),
+      byBattleHoleKind(
+        "savingThrowOutcome",
+        () => "savingThrowOutcome" as const,
+      ),
+      byBattleHoleKind(
+        "selfTransformationModeChoice",
+        () => "selfTransformationModeChoice" as const,
+      ),
+    )
+    .pipe(
+      byBattleHoleKind("shoveOutcome", () => "shoveOutcome" as const),
+      byBattleHoleKind("skillChoice", () => "skillChoice" as const),
+      byBattleHoleKind("spellAreaChoice", () => "spellAreaChoice" as const),
+      byBattleHoleKind(
+        "spellTargetAllocation",
+        () => "spellTargetAllocation" as const,
+      ),
+      byBattleHoleKind("spellTargetList", () => "spellTargetList" as const),
+      byBattleHoleKind(
+        "spellcastingAbilityCheck",
+        () => "spellcastingAbilityCheck" as const,
+      ),
+      byBattleHoleKind(
+        "spiritualWeaponForcePosition",
+        () => "spiritualWeaponForcePosition" as const,
+      ),
+      byBattleHoleKind(
+        "statBlockRechargeRoll",
+        () => "statBlockRechargeRoll" as const,
+      ),
+      byBattleHoleKind(
+        "targetAbilityChoices",
+        () => "targetAbilityChoices" as const,
+      ),
+      byBattleHoleKind("targetChoice", () => "targetChoice" as const),
+      byBattleHoleKind(
+        "targetSpatialFacts",
+        () => "targetSpatialFacts" as const,
+      ),
+      byBattleHoleKind(
+        "teleportDestination",
+        () => "teleportDestination" as const,
+      ),
+      byBattleHoleKind(
+        "thaumaturgyActiveOneMinuteEffectCount",
+        () => "thaumaturgyActiveOneMinuteEffectCount" as const,
+      ),
+      byBattleHoleKind(
+        "unitFeatureDecision",
+        () => "unitFeatureDecision" as const,
+      ),
+      byBattleHoleKind(
+        "wildShapeEquipmentDisposition",
+        () => "wildShapeEquipmentDisposition" as const,
+      ),
+      Match.exhaustive,
+    );
+}
 
 export function bonusActionDashSubjectForSpeedKind(
   actorId: CombatantId,

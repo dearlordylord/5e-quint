@@ -147,18 +147,18 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 
 ## Battle Hole Frontier
 
-- Total classified rows: 115
+- Total classified rows: 121
 
 | Subject | Count |
 | --- | ---: |
-| battle-hole-family | 72 |
-| battle-fill-kind | 43 |
+| battle-hole-family | 75 |
+| battle-fill-kind | 46 |
 
 | Classification | Count |
 | --- | ---: |
-| semantic-frontier | 90 |
+| semantic-frontier | 92 |
 | deterministic-boundary-projection | 0 |
-| table-owned-fact | 25 |
+| table-owned-fact | 29 |
 | unsupported-dead-branch | 0 |
 
 | Subject | Id | Kind | Classification | Coverage | Follow-up |
@@ -170,6 +170,9 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | battle-hole-family | `BattleSpellAreaChoiceHole` | `spellAreaChoice` | table-owned-fact | `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | _none_ |
 | battle-hole-family | `BattleTeleportDestinationHole` | `teleportDestination` | table-owned-fact | `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | _none_ |
 | battle-hole-family | `BattleHeldObjectFactsHole` | `heldObjectFacts` | table-owned-fact | `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | _none_ |
+| battle-hole-family | `BattleFindFamiliarConnectionHole` | `findFamiliarConnection` | table-owned-fact | `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | _none_ |
+| battle-hole-family | `BattleCompanionReappearancePlacementHole` | `companionReappearancePlacement` | table-owned-fact | `BATTLE.SPELL.FIND_FAMILIAR_COMPANION_LIFECYCLE`, `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | _none_ |
+| battle-hole-family | `BattleCompanionReappearanceInitiativeHole` | `companionReappearanceInitiative` | semantic-frontier | `BATTLE.SPELL.FIND_FAMILIAR_COMPANION_LIFECYCLE` | _none_ |
 | battle-hole-family | `BattleSpellDamageTypeChoiceHole` | `damageTypeChoice` | semantic-frontier | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS`, `BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION` | _none_ |
 | battle-hole-family | `BattleSpellTargetAllocationHole` | `spellTargetAllocation` | semantic-frontier | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` | _none_ |
 | battle-hole-family | `BattleSpellTargetListHole` | `spellTargetList` | semantic-frontier | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` | _none_ |
@@ -263,6 +266,9 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | battle-hole-family | `BattleObjectContactSavingThrowOutcomeHole` | `savingThrowOutcome` | semantic-frontier | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` | _none_ |
 | battle-hole-family | `BattleObjectDropResolutionHole` | `objectDropResolution` | semantic-frontier | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` | _none_ |
 | battle-fill-kind | `objectDropResolution` | `objectDropResolution` | semantic-frontier | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` | _none_ |
+| battle-fill-kind | `findFamiliarConnection` | `findFamiliarConnection` | table-owned-fact | `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | _none_ |
+| battle-fill-kind | `companionReappearancePlacement` | `companionReappearancePlacement` | table-owned-fact | `BATTLE.SPELL.FIND_FAMILIAR_COMPANION_LIFECYCLE`, `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | _none_ |
+| battle-fill-kind | `companionReappearanceInitiative` | `companionReappearanceInitiative` | semantic-frontier | `BATTLE.SPELL.FIND_FAMILIAR_COMPANION_LIFECYCLE` | _none_ |
 | battle-hole-family | `BattleLevitateAltitudeChangeHole` | `levitateAltitudeChange` | semantic-frontier | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS`, `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | _none_ |
 | battle-fill-kind | `levitateAltitudeChange` | `levitateAltitudeChange` | semantic-frontier | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS`, `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | _none_ |
 | battle-hole-family | `BattleLevitateInitialRiseHole` | `levitateInitialRise` | semantic-frontier | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS`, `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | _none_ |

@@ -26,15 +26,15 @@
     "qntOwnerRoles[].profileScopes": "Report projection derived from profile-obligations.jsonl, obligations[].qntOwners, and plans/unit-profile-coverage/profiles.jsonl qntOwners for unit-feature profiles mapped to BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS."
   },
   "battleHoleFrontierSummary": {
-    "total": 115,
+    "total": 121,
     "bySubject": {
-      "battle-hole-family": 72,
-      "battle-fill-kind": 43
+      "battle-hole-family": 75,
+      "battle-fill-kind": 46
     },
     "byClassification": {
-      "semantic-frontier": 90,
+      "semantic-frontier": 92,
       "deterministic-boundary-projection": 0,
-      "table-owned-fact": 25,
+      "table-owned-fact": 29,
       "unsupported-dead-branch": 0
     }
   },
@@ -3925,6 +3925,40 @@
       "subject": "battle-hole-family"
     },
     {
+      "classification": "table-owned-fact",
+      "coveredByObligationIds": [
+        "BATTLE.TABLE.HOLE_FACT_BOUNDARIES"
+      ],
+      "followUpTaskIds": [],
+      "holeKind": "findFamiliarConnection",
+      "id": "BattleFindFamiliarConnectionHole",
+      "reason": "Find Familiar connection holes carry caller/table spatial evidence that the present familiar is within 100 feet of its owner. The reducer consumes the fact for Find Familiar shared senses and touch spell delivery without deriving map geometry, pathfinding, or durable position state.",
+      "subject": "battle-hole-family"
+    },
+    {
+      "classification": "table-owned-fact",
+      "coveredByObligationIds": [
+        "BATTLE.SPELL.FIND_FAMILIAR_COMPANION_LIFECYCLE",
+        "BATTLE.TABLE.HOLE_FACT_BOUNDARIES"
+      ],
+      "followUpTaskIds": [],
+      "holeKind": "companionReappearancePlacement",
+      "id": "BattleCompanionReappearancePlacementHole",
+      "reason": "Companion reappearance placement holes carry the caller/table-selected unoccupied space within 30 feet for a temporarily dismissed companion. The reducer validates the retained owner and companion identity and consumes the placement without deriving map geometry, occupancy, or pathfinding.",
+      "subject": "battle-hole-family"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.SPELL.FIND_FAMILIAR_COMPANION_LIFECYCLE"
+      ],
+      "followUpTaskIds": [],
+      "holeKind": "companionReappearanceInitiative",
+      "id": "BattleCompanionReappearanceInitiativeHole",
+      "reason": "Companion reappearance Initiative holes carry the caller-supplied Initiative score used when the retained companion combatant is reconstructed; the companion lifecycle obligation owns restoring the combatant with its retained identity and HP facts.",
+      "subject": "battle-hole-family"
+    },
+    {
       "classification": "semantic-frontier",
       "coveredByObligationIds": [
         "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
@@ -5044,6 +5078,40 @@
       "followUpTaskIds": [],
       "id": "objectDropResolution",
       "reason": "Object drop resolution fills select the RAW Heat Metal branch after a failed holding-or-wearing save: drop the object when possible, or retain it and apply the caster-turn-start-limited fallback penalty.",
+      "subject": "battle-fill-kind"
+    },
+    {
+      "classification": "table-owned-fact",
+      "coveredByObligationIds": [
+        "BATTLE.TABLE.HOLE_FACT_BOUNDARIES"
+      ],
+      "fillKind": "findFamiliarConnection",
+      "followUpTaskIds": [],
+      "id": "findFamiliarConnection",
+      "reason": "Find Familiar connection fills supply the table-verified within-100-feet fact for a present familiar. The reducer validates owner and familiar identity, then consumes the fact for shared senses or touch spell delivery without owning spatial derivation.",
+      "subject": "battle-fill-kind"
+    },
+    {
+      "classification": "table-owned-fact",
+      "coveredByObligationIds": [
+        "BATTLE.SPELL.FIND_FAMILIAR_COMPANION_LIFECYCLE",
+        "BATTLE.TABLE.HOLE_FACT_BOUNDARIES"
+      ],
+      "fillKind": "companionReappearancePlacement",
+      "followUpTaskIds": [],
+      "id": "companionReappearancePlacement",
+      "reason": "Companion reappearance placement fills supply the table-selected unoccupied space within 30 feet for the retained companion. The reducer consumes the typed placement while map geometry and occupancy derivation remain outside battle runtime.",
+      "subject": "battle-fill-kind"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.SPELL.FIND_FAMILIAR_COMPANION_LIFECYCLE"
+      ],
+      "fillKind": "companionReappearanceInitiative",
+      "followUpTaskIds": [],
+      "id": "companionReappearanceInitiative",
+      "reason": "Companion reappearance Initiative fills supply the ordering fact used to reinsert the retained companion combatant into battle state; lifecycle validation and Magic Action spending stay in the companion reducer.",
       "subject": "battle-fill-kind"
     },
     {

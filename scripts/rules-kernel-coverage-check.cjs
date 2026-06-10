@@ -61,6 +61,9 @@ const semanticCoreRunBlockBlocker =
   generatorReadinessScannerBlockers.semanticCoreRunBlock;
 const unitFeatureProcedureProfileObligationId =
   "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS";
+const battleHoleFamilyKindQntOwner =
+  "packages/battle-runtime/battle-runtime-hole-kinds.qnt";
+const battleHoleFamilyKindQntType = "BattleHoleFamilyKind";
 
 function isRecord(value) {
   return value != null && typeof value === "object" && !Array.isArray(value);
@@ -643,6 +646,46 @@ function extractBattleFrontierSource(rootPath) {
   return { fillKinds, holeFamilies };
 }
 
+function camelCaseToPascalCase(value) {
+  return value.length === 0
+    ? value
+    : `${value[0].toUpperCase()}${value.slice(1)}`;
+}
+
+function qntVariantForBattleHoleKind(holeKind) {
+  return `${camelCaseToPascalCase(holeKind)}HoleKind`;
+}
+
+function battleHoleKindForQntVariant(variant) {
+  if (!variant.endsWith("HoleKind")) return undefined;
+  const withoutSuffix = variant.slice(0, -"HoleKind".length);
+  return withoutSuffix.length === 0
+    ? undefined
+    : `${withoutSuffix[0].toLowerCase()}${withoutSuffix.slice(1)}`;
+}
+
+function extractQntVariantTypeMembers(rootPath, ownerPath, typeName) {
+  const ownerAbsolutePath = path.join(rootPath, ownerPath);
+  if (!fs.existsSync(ownerAbsolutePath)) return undefined;
+  const text = fs.readFileSync(ownerAbsolutePath, "utf8");
+  const source = stripCommentsPreserveLines(text);
+  const typePattern = new RegExp(`\\btype\\s+${escapeRegExp(typeName)}\\s*=`);
+  const match = typePattern.exec(source);
+  if (match === null) return undefined;
+  const bodyStart = match.index + match[0].length;
+  const rest = source.slice(bodyStart);
+  const nextTopLevel = /\n\s{0,2}(?:type|pure\s+def|def|val|run|action)\s+\w+\b|\n\s*}/.exec(
+    rest,
+  );
+  const body =
+    nextTopLevel === null ? rest : rest.slice(0, nextTopLevel.index);
+  const variants = [];
+  for (const variantMatch of body.matchAll(/\b([A-Z][A-Za-z0-9_]*)\b/g)) {
+    variants.push(variantMatch[1]);
+  }
+  return Array.from(new Set(variants));
+}
+
 function findObjectEnd(text, openBraceIndex) {
   let depth = 0;
   let quote = null;
@@ -1161,7 +1204,9 @@ function validateBattleFrontierRow(
     if (expectedHoleKind === undefined) {
       issues.push(`${context} references unknown BattleHole family ${row.id}.`);
     }
-    if (typeof row.holeKind !== "string" || row.holeKind.length === 0) {
+    if (row.holeKind === null) {
+      issues.push(`${context}.holeKind must not be null.`);
+    } else if (typeof row.holeKind !== "string" || row.holeKind.length === 0) {
       issues.push(`${context}.holeKind must be a non-empty string.`);
     } else if (
       expectedHoleKind !== undefined &&
@@ -1254,6 +1299,60 @@ function validateBattleFrontierRow(
     }
   }
 
+  return issues;
+}
+
+function validateBattleHoleFamilyKindQntJoin(
+  rootPath,
+  battleHoleFrontier,
+) {
+  const issues = [];
+  const qntVariants = extractQntVariantTypeMembers(
+    rootPath,
+    battleHoleFamilyKindQntOwner,
+    battleHoleFamilyKindQntType,
+  );
+  if (qntVariants === undefined) {
+    return [
+      `${battleHoleFamilyKindQntOwner} must define type ${battleHoleFamilyKindQntType}.`,
+    ];
+  }
+  const qntVariantSet = new Set(qntVariants);
+  const semanticFrontierVariants = new Map();
+  for (const [index, row] of battleHoleFrontier.entries()) {
+    if (
+      !isRecord(row) ||
+      row.subject !== "battle-hole-family" ||
+      row.classification !== "semantic-frontier" ||
+      typeof row.holeKind !== "string" ||
+      row.holeKind.length === 0
+    ) {
+      continue;
+    }
+    const qntVariant = qntVariantForBattleHoleKind(row.holeKind);
+    const existingRows = semanticFrontierVariants.get(qntVariant) ?? [];
+    existingRows.push(index + 1);
+    semanticFrontierVariants.set(qntVariant, existingRows);
+    if (!qntVariantSet.has(qntVariant)) {
+      issues.push(
+        `battle-hole-frontier row ${index + 1}.holeKind ${row.holeKind} maps to missing ${battleHoleFamilyKindQntType} variant ${qntVariant}.`,
+      );
+    }
+  }
+  for (const qntVariant of qntVariants) {
+    const mappedHoleKind = battleHoleKindForQntVariant(qntVariant);
+    if (mappedHoleKind === undefined) {
+      issues.push(
+        `${battleHoleFamilyKindQntOwner} ${battleHoleFamilyKindQntType} variant ${qntVariant} must end with HoleKind.`,
+      );
+      continue;
+    }
+    if (!semanticFrontierVariants.has(qntVariant)) {
+      issues.push(
+        `${battleHoleFamilyKindQntOwner} ${battleHoleFamilyKindQntType} variant ${qntVariant} has no semantic-frontier battle-hole-frontier row for holeKind ${mappedHoleKind}.`,
+      );
+    }
+  }
   return issues;
 }
 
@@ -2538,6 +2637,9 @@ function buildKernelCoverage({
       );
     }
   }
+  issues.push(
+    ...validateBattleHoleFamilyKindQntJoin(rootPath, battleHoleFrontier),
+  );
 
   const expectedQntOwnerPaths = qntOwnerPaths(obligations);
   for (const ownerPath of generatorReadinessOwnerPaths(generatorReadiness)) {

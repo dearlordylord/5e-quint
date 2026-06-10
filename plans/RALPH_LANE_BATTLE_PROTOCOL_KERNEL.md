@@ -93,7 +93,7 @@ Every task must include:
 
 | # | Task | Status | Depends on | Notes |
 | ---: | --- | --- | --- | --- |
-| 1 | BPK-B01-HOLE-KIND-VOCABULARY | ready-for-implementation-after-light-research | none | Light research: UL naming pass over the 34 semantic-frontier holeKinds; leaf layout (one module vs split). |
+| 1 | BPK-B01-HOLE-KIND-VOCABULARY | ready-for-implementation-after-light-research | none | Light research: UL naming pass over the 33 semantic-frontier holeKinds; leaf layout (one module vs split). |
 | 2 | BPK-B02-FILL-SUBJECT-VOCABULARY | blocked | BPK-B01 | Same treatment for 46 fill kinds + ~40 subjects. |
 | 3 | BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT | blocked | BPK-B02 | prd/02 M1 done after this. Unblocks the cleanroom-corpus value immediately. |
 | 4 | BPK-B04-WEAPON-ATTACK-ORDERING | blocked | BPK-B03 + cross-lane PDS-A01, PDS-A03 | Cross-lane gate: unblock manually when those Lane A tasks are merged. |

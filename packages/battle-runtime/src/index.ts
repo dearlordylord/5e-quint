@@ -49,7 +49,11 @@ export {
   battleWeaponItemHasMagicWeaponEnhancement,
   battleWeaponItemMagicWeaponEnhancementBonus,
 } from "./battle-reducer/attack-damage-apply.ts";
-export { thaumaturgyBoomingVoiceInfluenceAbilityCheckHole } from "./battle-reducer/hole-helpers.ts";
+export {
+  battleHoleFamilyKind,
+  thaumaturgyBoomingVoiceInfluenceAbilityCheckHole,
+  type BattleHoleFamilyKind,
+} from "./battle-reducer/hole-helpers.ts";
 export type {
   CharacterBattleClassLevel,
   CharacterBattleClassLevelInit,
