@@ -354,9 +354,10 @@ flowchart TD
   can take Reactions; resolution forgoes one Warlock attack and spends the
   familiar's Reaction while replaying the familiar attack through the shared
   Attack path.
-- Focused QNT slices constrain this implemented subset. Old root
-  `battle.qnt` remains broad legacy/Core proof and restore source material, not
-  the target for new runtime behavior.
+- Focused QNT slices constrain this implemented subset. The old root
+  `battle.qnt` monolith was removed from the worktree; it remains historical
+  restore material recoverable from git history, not the target for new
+  runtime behavior.
 - `src/weapon-attack-skeleton.mbt.test.ts` plus
   `battle-runtime-weapon-attack-skeleton.mbt.qnt` targets the public weapon
   Attack reducer path against Skeleton as one focused fixture. It does not
