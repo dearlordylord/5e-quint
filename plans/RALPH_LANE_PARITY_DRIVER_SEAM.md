@@ -4,24 +4,114 @@
 {
   "schema": "ralph-plan.v1",
   "tasks": [
-    { "number": 1, "id": "PDS-A01-DRIVER-KIT-TRACER", "status": "ready-for-implementation-after-light-research", "title": "Build the parity-driver kit and migrate the death-saving-throw driver through it" },
-    { "number": 2, "id": "PDS-A02-KIT-PILOTS", "status": "blocked", "title": "Migrate the remaining pilot drivers and merge battle-runtime-mbt-fixtures into the kit" },
-    { "number": 3, "id": "PDS-A03-WITNESS-PROTOCOL-TRACER", "status": "blocked", "title": "Add the witness-protocol leaf and migrate the death-saving-throw witness/driver pair to record state and picks" },
-    { "number": 4, "id": "PDS-A04-KIT-BATCH-1", "status": "blocked", "title": "Kit batch migration 1 (~20 drivers, self-discovering)" },
-    { "number": 5, "id": "PDS-A05-KIT-BATCH-2", "status": "blocked", "title": "Kit batch migration 2" },
-    { "number": 6, "id": "PDS-A06-KIT-BATCH-3", "status": "blocked", "title": "Kit batch migration 3" },
-    { "number": 7, "id": "PDS-A07-KIT-BATCH-4", "status": "blocked", "title": "Kit batch migration 4" },
-    { "number": 8, "id": "PDS-A08-KIT-BATCH-5", "status": "blocked", "title": "Kit batch migration 5 (drain)" },
-    { "number": 9, "id": "PDS-A09-KIT-GATE-AND-CLOSEOUT", "status": "blocked", "title": "Add the no-redeclared-helpers quality gate, README driver section, and close out prd/03" },
-    { "number": 10, "id": "PDS-A10-WITNESS-PILOTS", "status": "blocked", "title": "Migrate two more witness/driver pilot pairs and record trace-cost and line-delta evidence" },
-    { "number": 11, "id": "PDS-A11-WITNESS-BATCH-1", "status": "blocked", "title": "Witness-protocol batch migration 1 (~19 pairs, self-discovering)" },
-    { "number": 12, "id": "PDS-A12-WITNESS-BATCH-2", "status": "blocked", "title": "Witness-protocol batch migration 2" },
-    { "number": 13, "id": "PDS-A13-WITNESS-BATCH-3", "status": "blocked", "title": "Witness-protocol batch migration 3" },
-    { "number": 14, "id": "PDS-A14-WITNESS-BATCH-4", "status": "blocked", "title": "Witness-protocol batch migration 4" },
-    { "number": 15, "id": "PDS-A15-WITNESS-BATCH-5", "status": "blocked", "title": "Witness-protocol batch migration 5 (drain)" },
-    { "number": 16, "id": "PDS-A16-WITNESS-GATE-AND-CLOSEOUT", "status": "blocked", "title": "Add the witness-protocol convention gate, ADR addendum, README skeleton, and close out prd/04" },
-    { "number": 17, "id": "PDS-A17-LITERAL-CAPTURE-PRD", "status": "blocked", "title": "Write the literal-capture-gate PRD from the research note (single-owner scope)" },
-    { "number": 18, "id": "PDS-A18-RECURSIVE-NEXT-BATCH", "status": "blocked", "title": "Plan the next parity-seam batch if this lane drains" }
+    {
+      "number": 1,
+      "id": "PDS-A01-DRIVER-KIT-TRACER",
+      "status": "done",
+      "title": "Build the parity-driver kit and migrate the death-saving-throw driver through it"
+    },
+    {
+      "number": 2,
+      "id": "PDS-A02-KIT-PILOTS",
+      "status": "blocked",
+      "title": "Migrate the remaining pilot drivers and merge battle-runtime-mbt-fixtures into the kit"
+    },
+    {
+      "number": 3,
+      "id": "PDS-A03-WITNESS-PROTOCOL-TRACER",
+      "status": "blocked",
+      "title": "Add the witness-protocol leaf and migrate the death-saving-throw witness/driver pair to record state and picks"
+    },
+    {
+      "number": 4,
+      "id": "PDS-A04-KIT-BATCH-1",
+      "status": "blocked",
+      "title": "Kit batch migration 1 (~20 drivers, self-discovering)"
+    },
+    {
+      "number": 5,
+      "id": "PDS-A05-KIT-BATCH-2",
+      "status": "blocked",
+      "title": "Kit batch migration 2"
+    },
+    {
+      "number": 6,
+      "id": "PDS-A06-KIT-BATCH-3",
+      "status": "blocked",
+      "title": "Kit batch migration 3"
+    },
+    {
+      "number": 7,
+      "id": "PDS-A07-KIT-BATCH-4",
+      "status": "blocked",
+      "title": "Kit batch migration 4"
+    },
+    {
+      "number": 8,
+      "id": "PDS-A08-KIT-BATCH-5",
+      "status": "blocked",
+      "title": "Kit batch migration 5 (drain)"
+    },
+    {
+      "number": 9,
+      "id": "PDS-A09-KIT-GATE-AND-CLOSEOUT",
+      "status": "blocked",
+      "title": "Add the no-redeclared-helpers quality gate, README driver section, and close out prd/03"
+    },
+    {
+      "number": 10,
+      "id": "PDS-A10-WITNESS-PILOTS",
+      "status": "blocked",
+      "title": "Migrate two more witness/driver pilot pairs and record trace-cost and line-delta evidence"
+    },
+    {
+      "number": 11,
+      "id": "PDS-A11-WITNESS-BATCH-1",
+      "status": "blocked",
+      "title": "Witness-protocol batch migration 1 (~19 pairs, self-discovering)"
+    },
+    {
+      "number": 12,
+      "id": "PDS-A12-WITNESS-BATCH-2",
+      "status": "blocked",
+      "title": "Witness-protocol batch migration 2"
+    },
+    {
+      "number": 13,
+      "id": "PDS-A13-WITNESS-BATCH-3",
+      "status": "blocked",
+      "title": "Witness-protocol batch migration 3"
+    },
+    {
+      "number": 14,
+      "id": "PDS-A14-WITNESS-BATCH-4",
+      "status": "blocked",
+      "title": "Witness-protocol batch migration 4"
+    },
+    {
+      "number": 15,
+      "id": "PDS-A15-WITNESS-BATCH-5",
+      "status": "blocked",
+      "title": "Witness-protocol batch migration 5 (drain)"
+    },
+    {
+      "number": 16,
+      "id": "PDS-A16-WITNESS-GATE-AND-CLOSEOUT",
+      "status": "blocked",
+      "title": "Add the witness-protocol convention gate, ADR addendum, README skeleton, and close out prd/04"
+    },
+    {
+      "number": 17,
+      "id": "PDS-A17-LITERAL-CAPTURE-PRD",
+      "status": "blocked",
+      "title": "Write the literal-capture-gate PRD from the research note (single-owner scope)"
+    },
+    {
+      "number": 18,
+      "id": "PDS-A18-RECURSIVE-NEXT-BATCH",
+      "status": "blocked",
+      "title": "Plan the next parity-seam batch if this lane drains"
+    }
   ]
 }
 -->
@@ -125,7 +215,7 @@ Every task must include:
 
 ### Task 1 - PDS-A01-DRIVER-KIT-TRACER
 
-Status: `ready-for-implementation-after-light-research` · Mode: AFK
+Status: `done` · Mode: AFK
 
 Input: `prd/03_MBT_PARITY_DRIVER_KIT.md` (whole document; it is
 self-contained), `src/death-saving-throw.mbt.test.ts`,
