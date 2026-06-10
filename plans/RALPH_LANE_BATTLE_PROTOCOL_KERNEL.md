@@ -139,14 +139,14 @@ Every task must include:
 | # | Task | Status | Depends on | Notes |
 | ---: | --- | --- | --- | --- |
 | 1 | BPK-B01-HOLE-KIND-VOCABULARY | ready-for-implementation-after-light-research | none | Light research: UL naming pass over the 33 semantic-frontier holeKinds; leaf layout (one module vs split). |
-| 2 | BPK-B02-FILL-SUBJECT-VOCABULARY | blocked | BPK-B01 | Same treatment for 46 fill kinds + ~40 subjects. |
-| 3 | BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT | blocked | BPK-B02 | prd/02 M1 done after this. Unblocks the cleanroom-corpus value immediately. |
-| 4 | BPK-B04-WEAPON-ATTACK-ORDERING | blocked | BPK-B03 + cross-lane PDS-A01, PDS-A03 | Cross-lane gate: unblock manually when those Lane A tasks are merged. |
-| 5 | BPK-B05-SAVE-SPELL-ORDERING | blocked | BPK-B04 | Second procedure shape; reuses B04's slice skeleton. |
-| 6 | BPK-B06-INTERRUPT-NESTING-RESUME | blocked | BPK-B03 + cross-lane PDS-A01, PDS-A03 | May run before/parallel to B04 in queue order if the runner supports it; serial lane runs it after B05. |
-| 7 | BPK-B07-REPLAY-FROM-ROOT | blocked | BPK-B06 | |
-| 8 | BPK-B08-KERNEL-REGISTRY-CLOSEOUT | blocked | BPK-B04, BPK-B05, BPK-B06, BPK-B07 | Also produces the multi-owner outcome-oracle convention consumed by PDS-A17's PRD. |
-| 9 | BPK-B09-RECURSIVE-NEXT-SHAPES | blocked | BPK-B08 | Ordering coverage for further procedure shapes (healing, command, attack-roll spell, …). |
+| 2 | BPK-B02-FILL-SUBJECT-VOCABULARY | blocked | BPK-B01-HOLE-KIND-VOCABULARY | Same treatment for 46 fill kinds + ~40 subjects. |
+| 3 | BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT | blocked | BPK-B02-FILL-SUBJECT-VOCABULARY | prd/02 M1 done after this. Unblocks the cleanroom-corpus value immediately. |
+| 4 | BPK-B04-WEAPON-ATTACK-ORDERING | blocked | BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT | Cross-lane gate: unblock manually when Lane A PDS-A01 and PDS-A03 are merged. |
+| 5 | BPK-B05-SAVE-SPELL-ORDERING | blocked | BPK-B04-WEAPON-ATTACK-ORDERING | Second procedure shape; reuses B04's slice skeleton. |
+| 6 | BPK-B06-INTERRUPT-NESTING-RESUME | blocked | BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT | Cross-lane gate: unblock manually when Lane A PDS-A01 and PDS-A03 are merged; may run before/parallel to B04 in queue order if the runner supports it. |
+| 7 | BPK-B07-REPLAY-FROM-ROOT | blocked | BPK-B06-INTERRUPT-NESTING-RESUME | |
+| 8 | BPK-B08-KERNEL-REGISTRY-CLOSEOUT | blocked | BPK-B04-WEAPON-ATTACK-ORDERING, BPK-B05-SAVE-SPELL-ORDERING, BPK-B06-INTERRUPT-NESTING-RESUME, BPK-B07-REPLAY-FROM-ROOT | Also produces the multi-owner outcome-oracle convention consumed by PDS-A17's PRD. |
+| 9 | BPK-B09-RECURSIVE-NEXT-SHAPES | blocked | BPK-B08-KERNEL-REGISTRY-CLOSEOUT | Ordering coverage for further procedure shapes (healing, command, attack-roll spell, …). |
 
 ## Task Details
 
