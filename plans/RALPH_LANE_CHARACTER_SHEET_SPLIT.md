@@ -13,7 +13,7 @@
     {
       "number": 2,
       "id": "SHEETS-C02-STATELESS-QUERIES",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Extract hit-points, armor-class, and ability-checks query domains"
     },
     {
@@ -171,7 +171,7 @@ identical; no behavioural diff (moves only).
 
 ### Task 2 - SHEETS-C02-STATELESS-QUERIES
 
-Status: `ready-for-research` · Mode: AFK
+Status: `done` · Mode: AFK
 
 Output: `hit-points.ts`, `armor-class.ts`, `ability-checks.ts` extracted per
 §7 cluster ranges.
