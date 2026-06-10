@@ -1,21 +1,16 @@
-// KERNEL-COVERAGE: runtime-owner SHEET.ARMOR_CLASS.BASE_FORMULA_CHOICE
-// KERNEL-COVERAGE: runtime-owner SHEET.HIT_POINTS.MAXIMUM_DERIVATION
 // KERNEL-COVERAGE: runtime-owner SHEET.HP_REST_HIT_DICE.TRANSITIONS
 // KERNEL-COVERAGE: runtime-owner SHEET.SPELL_SLOTS_PACT_SLOTS.TRANSITIONS
 // KERNEL-COVERAGE: runtime-owner SHEET.FEATURE_RESOURCES.TRANSITIONS
 // KERNEL-COVERAGE: runtime-owner SHEET.WEAPON_MASTERY.RESELECTION SHEET.WEAPON_MASTERY.CLASS_LEVEL_RESELECTION
 // KERNEL-COVERAGE: runtime-owner SHEET.SPELLBOOK_RITUAL.SPELL_ACCESS_PROJECTION
-// KERNEL-COVERAGE: runtime-owner SHEET.ABILITY_CHECK.PROFICIENCY_BONUS
 // KERNEL-COVERAGE: runtime-owner SHEET.SPELL_REST_BENEFIT.APPLICATION
 // KERNEL-COVERAGE: runtime-owner SHEET.SPELL_ACCESS.CLASS_FEATURE_PREPARED_PROJECTION
 import {
   ALIGNMENT_MORALITIES,
   ALIGNMENT_ORDERS,
   abilityScoreAssignment,
-  characterBuildArmorTraining,
   characterBuildFeatureUnitIds,
   characterBuildHitPoints,
-  characterBuildProficiencies,
   characterBuildResources,
   characterBuildSpellcastingSlotCapacity,
   classLevelForUnit,
@@ -29,7 +24,6 @@ import {
   characterBuildDruidWildShapeFacts,
   characterBuildMonkUncannyMetabolismFacts,
   characterBuildMonksFocusFacts,
-  characterEquipmentItemSourceFromId,
   eldritchInvocationOptionForInvocationId,
   eldritchInvocationRepeatableChoiceSatisfiesRule,
   eldritchInvocationId,
@@ -74,11 +68,8 @@ import {
   Hp,
   characterLevel,
   difficultyClass,
-  proficiencyBonusForCharacterLevel,
   resourceCount,
   spellSlotLevel,
-  type CharacterLevel,
-  type ProficiencyBonus,
   type ReadonlyNonEmptyArray,
 } from "@dnd/shared/types";
 import {
@@ -89,33 +80,11 @@ import {
   parsePositiveElapsedTimeTicks,
   type ElapsedTimeTicks,
 } from "@dnd/shared/elapsed-time";
-import {
-  abilityModifier,
-  armorClass,
-  armorClassDelta,
-  currentArmorClass,
-  defaultArmorClassState,
-  zeroAbilityModifiers,
-  type ArmorClassBaseSource,
-  type ArmorClassState,
-} from "@dnd/shared-algebras/armor-class-algebra";
 import { abilityScoreToMod } from "@dnd/shared-algebras/ability-score-algebra";
 import type {
   DeathSaveCount,
   DeathSaves,
 } from "@dnd/shared-algebras/death-saves-algebra";
-import {
-  holeId,
-  holeInstanceKey,
-  type FilledHoleValue,
-  type RuntimeHole,
-} from "@dnd/shared-algebras/runtime-hole-algebra";
-import { validateRolledDiceForDiceExpr } from "@dnd/shared-algebras/runtime-dice-algebra";
-import {
-  STABLE_RECOVERY_ROLL_DICE_EXPR,
-  advanceStableRecovery,
-  advanceStableRecoveryWithRoll,
-} from "@dnd/shared-algebras/stable-recovery-algebra";
 import type {
   Hp as HpType,
   ResourceCount,
@@ -123,10 +92,8 @@ import type {
 } from "@dnd/shared/types";
 import type {
   ChargePoolResource,
-  ClassFeatureComponentMechanics,
   ClassLevelPreparedSpellAccessGrant,
   DruidCircleLandChoice,
-  EquipmentPredicate,
   LandChoicePreparedSpellAccessGrant,
   PassiveMechanics,
   RestResetCadence,
@@ -159,10 +126,29 @@ export {
   CHARACTER_SHEET_NO_OTHER_PROFICIENCY_BONUS,
   CHARACTER_SHEET_OTHER_PROFICIENCY_BONUS_APPLIES,
   CHARACTER_SHEET_SHORT_REST_TICKS,
+  characterSheetIssue,
   characterSheetId,
   isCharacterSheetPointPoolResourceUnitId,
   isCharacterSheetUseCountResourceUnitId,
 } from "./sheet-types.ts";
+export {
+  characterSheetAbilityCheckAbility,
+  characterSheetAbilityCheckProficiencyBonus,
+  characterSheetJumpDistanceAbility,
+  characterSheetLinkedSpeedGrants,
+  characterSheetProficiencyBonusForCharacterLevel,
+} from "./ability-checks.ts";
+export {
+  characterSheetArmorClass,
+  characterSheetArmorClassState,
+} from "./armor-class.ts";
+export {
+  characterSheetCurrentHp,
+  characterSheetHitPointMaximum,
+  characterSheetHitPoints,
+  characterSheetHitPointsCurrentHp,
+  characterSheetTempHp,
+} from "./hit-points.ts";
 export type {
   CharacterPactSlotExpenditure,
   CharacterSheet,
@@ -261,14 +247,17 @@ import {
   CHARACTER_SHEET_LONG_REST_BASE_TICKS,
   CHARACTER_SHEET_LONG_REST_WAIT_TICKS,
   CHARACTER_SHEET_SHORT_REST_TICKS,
-  JACK_OF_ALL_TRADES_PROFICIENCY_BONUS_DIVISOR,
   LAY_ON_HANDS_POISONED_REMOVAL_COST,
   MAGICAL_CUNNING_REST_FEATURE_TAG,
   RITUAL_ADDITIONAL_CASTING_TIME_MINUTES,
   SPELL_RECIPIENT_REST_LOCKOUT_TAG,
   UNCANNY_METABOLISM_REST_FEATURE_TAG,
   WEAPON_PROFICIENCY_CATEGORY_VALUES,
+  characterSheetIssue,
   characterSheetId,
+  getRequiredUnit,
+  isNonNegativeInteger,
+  isPositiveInteger,
   characterSheetLongRestCompletionBrand,
   characterSheetLongRestStartBrand,
   characterSheetShortRestCompletionBrand,
@@ -279,14 +268,7 @@ import {
 import type {
   CharacterPactSlotExpenditure,
   CharacterSheet,
-  CharacterSheetAbilityCheckAbility,
-  CharacterSheetAbilityCheckAbilityInput,
-  CharacterSheetAbilityCheckAbilitySubstitution,
-  CharacterSheetAbilityCheckProficiencyBonus,
-  CharacterSheetAbilityCheckProficiencyBonusInput,
   CharacterSheetArcaneRecoverySlotRefund,
-  CharacterSheetArmorClassBaseChoice,
-  CharacterSheetArmorClassStateInput,
   CharacterSheetBookOfShadowsPresence,
   CharacterSheetBookOfShadowsRitualInvocation,
   CharacterSheetClassFeaturePreparedSpellAccess,
@@ -302,19 +284,12 @@ import type {
   CharacterSheetFontOfMagicSpellSlotSource,
   CharacterSheetHitDieSpend,
   CharacterSheetHitDieState,
-  CharacterSheetHitPointRecoveryOverflow,
-  CharacterSheetHitPoints,
-  CharacterSheetHitPointsInput,
   CharacterSheetId,
   CharacterSheetInput,
   CharacterSheetIssue,
-  CharacterSheetJumpDistanceAbility,
-  CharacterSheetJumpDistanceAbilityInput,
-  CharacterSheetJumpDistanceAbilitySubstitution,
   CharacterSheetLayOnHandsInput,
   CharacterSheetLayOnHandsResource,
   CharacterSheetLayOnHandsResult,
-  CharacterSheetLinkedSpeedGrant,
   CharacterSheetLongRestCalendarGate,
   CharacterSheetLongRestCompletion,
   CharacterSheetLongRestCompletionInput,
@@ -361,7 +336,6 @@ import type {
   CharacterSheetUseCountResource,
   CharacterSheetWeaponMasteryReselection,
   CharacterSheetWithSpellSlots,
-  CharacterSheetZeroHpLifecycle,
   CharacterSheetZeroHpLifecycleInput,
   CharacterSpellSlotExpenditure,
   NonSpellcastingCharacterBuild,
@@ -370,12 +344,20 @@ import type {
   StoredClassFeatureLanguageFact,
   StoredClassFeatureLanguageProjection,
 } from "./sheet-types.ts";
-// UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.armor-class-base-formula
+import { characterSheetProficiencyBonusForCharacterLevel } from "./ability-checks.ts";
+import {
+  characterSheetCurrentHp,
+  characterSheetHitPointCapacity,
+  characterSheetHitPoints,
+  invalidElapsedTimeResult,
+  parseHp,
+  passStableRecoveryTime,
+  recoverCharacterSheetHitPoints,
+} from "./hit-points.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.healing-resource-action
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.short-rest-spell-slot-recovery
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.spellbook-ritual-invocation
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.weapon-mastery-reselection character-sheet.weapon-mastery-class-level-reselection
-// UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.ability-check-proficiency-bonus
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.pact-slot-recovery
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.class-feature-use-count-resource
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.class-feature-long-rest-use-state
@@ -387,242 +369,11 @@ import type {
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.spell-rest-benefit-application
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.class-feature-prepared-spell-access
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.druid-circle-land-spell-access
-// UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.ability-check-ability-substitution
-// UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.jump-distance-ability-substitution
-// UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.linked-speed-grant-projection
 
 const DEFAULT_SRD_STAT_BLOCK_CATALOG_RESULT = buildStatBlockCatalog({
   collections: [srdStatBlockCollection],
 });
 const byKind = Match.discriminator("kind");
-export function characterSheetIssue(
-  message: string,
-): Either.Either<never, CharacterSheetIssue> {
-  return Either.left({ tag: "characterSheetIssue", message });
-}
-
-export function characterSheetProficiencyBonusForCharacterLevel(
-  totalLevel: CharacterLevel,
-): ProficiencyBonus {
-  return proficiencyBonusForCharacterLevel(totalLevel);
-}
-
-export function characterSheetAbilityCheckProficiencyBonus(
-  input: CharacterSheetAbilityCheckProficiencyBonusInput,
-): Either.Either<
-  CharacterSheetAbilityCheckProficiencyBonus,
-  CharacterSheetIssue
-> {
-  const proficiencies = characterBuildProficiencies(
-    input.build,
-    input.unitLibrary,
-  );
-  if (Either.isLeft(proficiencies)) {
-    return characterSheetIssue(
-      proficiencies.left.map((issue) => issue.message).join("; "),
-    );
-  }
-
-  const proficiencyBonus = characterSheetProficiencyBonusForCharacterLevel(
-    characterLevel(computeTotalLevel(input.build.progression)),
-  );
-  if (proficiencies.right.expertise.includes(input.skill)) {
-    return Either.right({
-      tag: "expertise",
-      skill: input.skill,
-      bonus: proficiencyBonus * 2,
-    });
-  }
-  if (proficiencies.right.skills.includes(input.skill)) {
-    return Either.right({
-      tag: "skillProficiency",
-      skill: input.skill,
-      bonus: proficiencyBonus,
-    });
-  }
-  const jackOfAllTradesUnitId = characterBuildJackOfAllTradesFeatureUnitId(
-    input.build,
-    input.unitLibrary,
-  );
-  if (Either.isLeft(jackOfAllTradesUnitId)) {
-    return Either.left(jackOfAllTradesUnitId.left);
-  }
-  return Match.value(input.otherProficiencyBonus).pipe(
-    Match.when({ tag: "otherProficiencyBonusApplies" }, () =>
-      Either.right({
-        tag: "none" as const,
-        bonus: 0 as const,
-      }),
-    ),
-    Match.when({ tag: "noOtherProficiencyBonus" }, () =>
-      jackOfAllTradesUnitId.right !== undefined
-        ? Either.right({
-            tag: "jackOfAllTrades" as const,
-            sourceUnitId: jackOfAllTradesUnitId.right,
-            skill: input.skill,
-            bonus: Math.floor(
-              proficiencyBonus / JACK_OF_ALL_TRADES_PROFICIENCY_BONUS_DIVISOR,
-            ),
-          })
-        : Either.right({
-            tag: "none" as const,
-            bonus: 0 as const,
-          }),
-    ),
-    Match.exhaustive,
-  );
-}
-
-export function characterSheetAbilityCheckAbility(
-  input: CharacterSheetAbilityCheckAbilityInput,
-): Either.Either<CharacterSheetAbilityCheckAbility, CharacterSheetIssue> {
-  const optionalSubstitutions: CharacterSheetAbilityCheckAbilitySubstitution[] =
-    [];
-  const activeFeatureUnitIds = new Set(input.activeFeatureUnitIds);
-
-  for (const feature of characterSheetClassFeatureComponents(
-    input.build,
-    input.unitLibrary,
-  )) {
-    if (Either.isLeft(feature)) return Either.left(feature.left);
-    for (const grant of feature.right.mechanics.grants) {
-      if (
-        grant.kind !== "offer_ability_substitution_for_ability_checks" ||
-        !grant.skillFilter.skills.includes(input.skill)
-      ) {
-        continue;
-      }
-      if (
-        grant.requiredActiveFeature !== undefined &&
-        !activeFeatureUnitIds.has(grant.requiredActiveFeature.unitId)
-      ) {
-        continue;
-      }
-      optionalSubstitutions.push({
-        ability: grant.use,
-        sourceUnitId: feature.right.unitId,
-        ...(grant.requiredActiveFeature === undefined
-          ? {}
-          : {
-              requiredActiveFeatureUnitId: grant.requiredActiveFeature.unitId,
-            }),
-      });
-    }
-  }
-
-  return Either.right({
-    defaultAbility: input.defaultAbility,
-    optionalSubstitutions,
-  });
-}
-
-export function characterSheetJumpDistanceAbility(
-  input: CharacterSheetJumpDistanceAbilityInput,
-): Either.Either<CharacterSheetJumpDistanceAbility, CharacterSheetIssue> {
-  const optionalSubstitutions: CharacterSheetJumpDistanceAbilitySubstitution[] =
-    [];
-
-  for (const feature of characterSheetClassFeatureComponents(
-    input.build,
-    input.unitLibrary,
-  )) {
-    if (Either.isLeft(feature)) return Either.left(feature.left);
-    for (const grant of feature.right.mechanics.grants) {
-      if (
-        grant.kind === "offer_ability_substitution_for_jump_distance" &&
-        grant.replaces === input.defaultAbility
-      ) {
-        optionalSubstitutions.push({
-          ability: grant.use,
-          replaces: grant.replaces,
-          sourceUnitId: feature.right.unitId,
-        });
-      }
-    }
-  }
-
-  return Either.right({
-    defaultAbility: input.defaultAbility,
-    optionalSubstitutions,
-  });
-}
-
-export function characterSheetLinkedSpeedGrants(
-  build: CharacterBuild,
-  unitLibrary: UnitCatalog,
-): Either.Either<
-  readonly CharacterSheetLinkedSpeedGrant[],
-  CharacterSheetIssue
-> {
-  const grants: CharacterSheetLinkedSpeedGrant[] = [];
-  for (const feature of characterSheetClassFeatureComponents(
-    build,
-    unitLibrary,
-  )) {
-    if (Either.isLeft(feature)) return Either.left(feature.left);
-    for (const grant of feature.right.mechanics.grants) {
-      if (grant.kind !== "grant_speed") continue;
-      grants.push({
-        sourceUnitId: feature.right.unitId,
-        speedKind: grant.speedKind,
-        feet: grant.feet,
-      });
-    }
-  }
-  return Either.right(grants);
-}
-
-function* characterSheetClassFeatureComponents(
-  build: CharacterBuild,
-  unitLibrary: UnitCatalog,
-): Generator<
-  Either.Either<
-    {
-      readonly unitId: UnitRecord["id"];
-      readonly mechanics: PassiveMechanics;
-    },
-    CharacterSheetIssue
-  >
-> {
-  for (const unitId of characterBuildFeatureUnitIds(build, unitLibrary)) {
-    const unit = getRequiredUnit(unitLibrary, unitId);
-    if (Either.isLeft(unit)) {
-      yield Either.left(unit.left);
-      continue;
-    }
-    if (unit.right.kind !== "class_feature") continue;
-    if (unit.right.mechanics.family === "composite") {
-      for (const part of unit.right.mechanics.parts) {
-        if (part.family !== "passive") continue;
-        yield Either.right({ unitId, mechanics: part });
-      }
-      continue;
-    }
-    if (unit.right.mechanics.family === "passive") {
-      yield Either.right({ unitId, mechanics: unit.right.mechanics });
-    }
-  }
-}
-
-function characterBuildJackOfAllTradesFeatureUnitId(
-  build: Pick<CharacterBuild, "progression" | "features">,
-  unitLibrary: UnitCatalog,
-): Either.Either<UnitRecord["id"] | undefined, CharacterSheetIssue> {
-  for (const unitId of characterBuildFeatureUnitIds(build, unitLibrary)) {
-    const unit = getRequiredUnit(unitLibrary, unitId);
-    if (Either.isLeft(unit)) return Either.left(unit.left);
-    if (
-      unit.right.kind === "class_feature" &&
-      unit.right.mechanics.family === "passive" &&
-      unit.right.mechanics.grants.some(
-        (grant) => grant.kind === "jack_of_all_trades_ability_check_bonus",
-      )
-    ) {
-      return Either.right(unitId);
-    }
-  }
-  return Either.right(undefined);
-}
 
 export function createFreshCharacterSheet(
   input: CharacterSheetInput,
@@ -1000,70 +751,6 @@ export function parseCharacterSheet(
     },
     spellSlots.right,
   );
-}
-
-export function characterSheetHitPoints(
-  input: CharacterSheetHitPointsInput,
-): Either.Either<CharacterSheetHitPoints, CharacterSheetIssue> {
-  if (!isNonNegativeInteger(input.tempHp)) {
-    return characterSheetIssue(
-      "Character Sheet Temporary Hit Points must be nonnegative.",
-    );
-  }
-  const tempHp = input.tempHp;
-  if (Number(input.currentHp) > 0) {
-    if (input.zeroHpLifecycle !== undefined) {
-      return characterSheetIssue(
-        "Positive-HP Character Sheet cannot carry zero-HP state.",
-      );
-    }
-    if (
-      input.positiveHpUnconscious !== undefined &&
-      Number(input.currentHp) !== 1
-    ) {
-      return characterSheetIssue(
-        "Knocked Out Character Sheet must have exactly 1 current HP.",
-      );
-    }
-    return Either.right(
-      input.positiveHpUnconscious === undefined
-        ? { tag: "positive", currentHp: input.currentHp, tempHp }
-        : { tag: "knockedOut", tempHp },
-    );
-  }
-  if (input.positiveHpUnconscious !== undefined) {
-    return characterSheetIssue(
-      "Zero-HP Character Sheet cannot carry Knock Out Unconscious state.",
-    );
-  }
-  const lifecycle = canonicalZeroHpLifecycle(
-    input.zeroHpLifecycle ?? {
-      tag: "unstable",
-      deathSaves: { successes: 0, failures: 0 },
-    },
-  );
-  return Either.isLeft(lifecycle)
-    ? Either.left(lifecycle.left)
-    : Either.right({ tag: "zero", tempHp, lifecycle: lifecycle.right });
-}
-
-export function characterSheetCurrentHp(sheet: CharacterSheet): HpType {
-  return characterSheetHitPointsCurrentHp(sheet.hitPoints);
-}
-
-export function characterSheetTempHp(sheet: CharacterSheet): HpType {
-  return sheet.hitPoints.tempHp;
-}
-
-export function characterSheetHitPointMaximum(sheet: CharacterSheet): HpType {
-  return Hp(Number(sheet.maximumHp) - Number(sheet.hitPointMaximumReduction));
-}
-
-export function characterSheetHitPointsCurrentHp(
-  hitPoints: CharacterSheetHitPoints,
-): HpType {
-  if (hitPoints.tag === "positive") return hitPoints.currentHp;
-  return hitPoints.tag === "knockedOut" ? Hp(1) : Hp(0);
 }
 
 export function characterSheetSpellSlots(
@@ -2544,86 +2231,6 @@ export function applyCharacterSheetSpellRestBenefit(
   return Either.right({ caster: casterSheet, recipients });
 }
 
-export function characterSheetArmorClassState(
-  input: CharacterSheetArmorClassStateInput,
-): Either.Either<ArmorClassState, CharacterSheetIssue> {
-  const { build, unitLibrary } = input;
-  const loadout = build.equipment.loadout;
-  const defaultState = defaultArmorClassState();
-  const armorTraining = characterBuildArmorTraining(build, unitLibrary);
-  if (Either.isLeft(armorTraining)) {
-    return characterSheetIssue(
-      armorTraining.left.map((issue) => issue.message).join("; "),
-    );
-  }
-
-  const armor =
-    loadout.armor == null
-      ? undefined
-      : getRequiredUnit(
-          unitLibrary,
-          characterEquipmentItemSourceFromId(loadout.armor).unitId,
-        );
-  if (armor !== undefined && Either.isLeft(armor)) {
-    return Either.left(armor.left);
-  }
-
-  const shield =
-    loadout.shield == null
-      ? undefined
-      : getRequiredUnit(
-          unitLibrary,
-          characterEquipmentItemSourceFromId(loadout.shield).unitId,
-        );
-  if (shield !== undefined && Either.isLeft(shield)) {
-    return Either.left(shield.left);
-  }
-
-  const base =
-    armor?.right.kind === "armor"
-      ? Either.right(armorBaseSource(armor.right))
-      : selectedUnarmoredBaseSource(input, {
-          wearingArmor: false,
-          wieldingShield: shield?.right.kind === "shield",
-        });
-  if (Either.isLeft(base)) return Either.left(base.left);
-
-  const bonuses: ArmorClassState["bonuses"][number][] = [];
-  if (shield?.right.kind === "shield") {
-    bonuses.push({
-      kind: "shield",
-      bonus: armorClassDelta(shield.right.armorClassProjection.bonus),
-      handUse: shield.right.armorClassProjection.handUse,
-      trainingRequired: shield.right.armorClassProjection.trainingRequired,
-      sourceUnitId: shield.right.id,
-    });
-  }
-
-  return Either.right({
-    ...defaultState,
-    abilityModifiers: characterSheetAbilityModifiers(build),
-    base: base.right,
-    bonuses,
-    armorTraining: new Set(armorTraining.right),
-    leftHandUse:
-      shield?.right.kind === "shield"
-        ? "shield"
-        : loadout.offHandWeapon == null
-          ? "free"
-          : "offWeapon",
-    rightHandUse: loadout.weapon == null ? "free" : "mainWeapon",
-  });
-}
-
-export function characterSheetArmorClass(
-  input: CharacterSheetArmorClassStateInput,
-): Either.Either<ReturnType<typeof currentArmorClass>, CharacterSheetIssue> {
-  const state = characterSheetArmorClassState(input);
-  return Either.isLeft(state)
-    ? Either.left(state.left)
-    : Either.right(currentArmorClass(state.right));
-}
-
 export function timePassed(
   input: CharacterSheetTimePassedInput,
 ): CharacterSheetElapsedTimeResult {
@@ -2650,24 +2257,9 @@ export function timePassed(
   };
 }
 
-type CharacterSheetArmorClassBaseCandidate = {
-  readonly choice: CharacterSheetArmorClassBaseChoice;
-  readonly base: ArmorClassBaseSource;
-};
-type CharacterSheetArmorClassEquipmentState = {
-  readonly wearingArmor: boolean;
-  readonly wieldingShield: boolean;
-};
 type CharacterSheetClassFeatureRecord = Extract<
   UnitRecord,
   { readonly kind: "class_feature" }
->;
-type ModifyAcSetBaseGrant = Extract<
-  Extract<
-    ClassFeatureComponentMechanics,
-    { readonly family: "passive" }
-  >["grants"][number],
-  { readonly kind: "modify_ac_set_base" }
 >;
 type RestSpellSlotRecoveryMechanics = Extract<
   CharacterSheetClassFeatureRecord["mechanics"],
@@ -2700,223 +2292,6 @@ type SpellbookRitualAccessMechanics = Extract<
 type CharacterSheetSpellbookRitualFeature = CharacterSheetClassFeatureRecord & {
   readonly mechanics: SpellbookRitualAccessMechanics;
 };
-
-function selectedUnarmoredBaseSource(
-  input: CharacterSheetArmorClassStateInput,
-  equipment: CharacterSheetArmorClassEquipmentState,
-): Either.Either<ArmorClassBaseSource, CharacterSheetIssue> {
-  const defaultBase = {
-    choice: { kind: "default_unarmored" },
-    base: defaultArmorClassState().base,
-  } as const satisfies CharacterSheetArmorClassBaseCandidate;
-  const classFeatureCandidateResult =
-    characterSheetClassFeatureArmorClassBaseCandidates(
-      input.build,
-      input.unitLibrary,
-      equipment,
-    );
-  if (Either.isLeft(classFeatureCandidateResult)) {
-    return Either.left(classFeatureCandidateResult.left);
-  }
-  const candidates = [defaultBase, ...classFeatureCandidateResult.right];
-  const baseChoice = input.baseChoice;
-  if (baseChoice !== undefined) {
-    const selected = candidates.find((candidate) =>
-      armorClassChoiceEquals(candidate.choice, baseChoice),
-    );
-    return selected === undefined
-      ? characterSheetIssue(
-          "Selected Armor Class base formula is not available.",
-        )
-      : Either.right(selected.base);
-  }
-  const classFeatureCandidates = candidates.filter(
-    (candidate) => candidate.choice.kind === "class_feature",
-  );
-  if (classFeatureCandidates.length === 0)
-    return Either.right(defaultBase.base);
-  if (classFeatureCandidates.length === 1) {
-    return Either.right(classFeatureCandidates[0].base);
-  }
-  return characterSheetIssue(
-    "Multiple class-feature Armor Class base formulas are available; choose one.",
-  );
-}
-
-function characterSheetClassFeatureArmorClassBaseCandidates(
-  build: CharacterBuild,
-  unitLibrary: UnitCatalog,
-  equipment: CharacterSheetArmorClassEquipmentState,
-): Either.Either<
-  readonly CharacterSheetArmorClassBaseCandidate[],
-  CharacterSheetIssue
-> {
-  const candidates: CharacterSheetArmorClassBaseCandidate[] = [];
-  for (const unitId of characterBuildFeatureUnitIds(build, unitLibrary)) {
-    const unit = getRequiredUnit(unitLibrary, unitId);
-    if (Either.isLeft(unit)) return Either.left(unit.left);
-    candidates.push(...armorClassBaseCandidatesForUnit(unit.right, equipment));
-  }
-  return Either.right(candidates);
-}
-
-function armorClassBaseCandidatesForUnit(
-  unit: UnitRecord,
-  equipment: CharacterSheetArmorClassEquipmentState,
-): readonly CharacterSheetArmorClassBaseCandidate[] {
-  if (unit.kind !== "class_feature") return [];
-  return armorClassBaseCandidatesForClassFeatureMechanics(
-    unit.id,
-    unit.mechanics,
-    equipment,
-  );
-}
-
-function armorClassBaseCandidatesForClassFeatureMechanics(
-  unitId: UnitRecord["id"],
-  mechanics: CharacterSheetClassFeatureRecord["mechanics"],
-  equipment: CharacterSheetArmorClassEquipmentState,
-): readonly CharacterSheetArmorClassBaseCandidate[] {
-  if (mechanics.family === "composite") {
-    return mechanics.parts.flatMap((part) =>
-      armorClassBaseCandidatesForClassFeatureComponent(unitId, part, equipment),
-    );
-  }
-  if (mechanics.family !== "passive") return [];
-  return armorClassBaseCandidatesForClassFeatureComponent(
-    unitId,
-    mechanics,
-    equipment,
-  );
-}
-
-function armorClassBaseCandidatesForClassFeatureComponent(
-  unitId: UnitRecord["id"],
-  mechanics: ClassFeatureComponentMechanics,
-  equipment: CharacterSheetArmorClassEquipmentState,
-): readonly CharacterSheetArmorClassBaseCandidate[] {
-  if (mechanics.family !== "passive") return [];
-  if (!equipmentPredicateMatches(mechanics.condition, equipment)) {
-    return [];
-  }
-  return mechanics.grants.flatMap((grant) => {
-    if (grant.kind !== "modify_ac_set_base") return [];
-    const base = armorClassBaseSourceForFormula(unitId, grant.formula);
-    return base === undefined
-      ? []
-      : [{ choice: { kind: "class_feature", unitId }, base }];
-  });
-}
-
-function equipmentPredicateMatches(
-  predicate: EquipmentPredicate | undefined,
-  equipment: CharacterSheetArmorClassEquipmentState,
-): boolean {
-  if (predicate === undefined || predicate.kind === "always") return true;
-  if (predicate.kind === "unarmored") return !equipment.wearingArmor;
-  if (predicate.kind === "not_wielding_shield")
-    return !equipment.wieldingShield;
-  if (predicate.kind === "all_of") {
-    return predicate.predicates.every((part) =>
-      equipmentPredicateMatches(part, equipment),
-    );
-  }
-  if (predicate.kind === "holding_item") return false;
-  if (predicate.kind === "peering_through_item") return false;
-  if (predicate.kind === "wearing_item") return false;
-  if (predicate.kind === "unarmed_or_monk_weapons_only") return false;
-  if (predicate.kind === "wearing_armor") return false;
-  if (predicate.kind === "not_wearing_armor") return !equipment.wearingArmor;
-  if (predicate.kind === "wielding_weapon") return false;
-  const exhaustive: never = predicate;
-  return exhaustive;
-}
-
-function armorClassBaseSourceForFormula(
-  sourceUnitId: UnitRecord["id"],
-  formula: ModifyAcSetBaseGrant["formula"],
-): ArmorClassBaseSource | undefined {
-  if (formula.kind === "base_plus_dex") {
-    return {
-      kind: "ability_sum",
-      base: armorClass(formula.base),
-      abilityModifiers: ["dex"],
-      source: "spell_base_plus_ability",
-      sourceUnitId,
-    };
-  }
-  if (formula.kind === "base_plus_dex_con") {
-    return {
-      kind: "ability_sum",
-      base: armorClass(formula.base),
-      abilityModifiers: ["dex", "con"],
-      source: "unarmored_defense",
-      sourceUnitId,
-    };
-  }
-  if (formula.kind === "base_plus_dex_wis") {
-    return {
-      kind: "ability_sum",
-      base: armorClass(formula.base),
-      abilityModifiers: ["dex", "wis"],
-      source: "unarmored_defense",
-      sourceUnitId,
-    };
-  }
-  if (formula.kind === "base_plus_dex_cha") {
-    return {
-      kind: "ability_sum",
-      base: armorClass(formula.base),
-      abilityModifiers: ["dex", "cha"],
-      source: "class_feature_base_plus_ability",
-      sourceUnitId,
-    };
-  }
-  return undefined;
-}
-
-function armorBaseSource(
-  armor: Extract<UnitRecord, { readonly kind: "armor" }>,
-): ArmorClassBaseSource {
-  return {
-    kind: "armor",
-    formula: armor.acFormula,
-    category: armor.category,
-  };
-}
-
-function characterSheetAbilityModifiers(
-  build: Pick<CharacterBuild, "abilityScores">,
-): ArmorClassState["abilityModifiers"] {
-  return {
-    ...zeroAbilityModifiers(),
-    str: abilityModifier(abilityScoreToMod(build.abilityScores.str)),
-    dex: abilityModifier(abilityScoreToMod(build.abilityScores.dex)),
-    con: abilityModifier(abilityScoreToMod(build.abilityScores.con)),
-    int: abilityModifier(abilityScoreToMod(build.abilityScores.int)),
-    wis: abilityModifier(abilityScoreToMod(build.abilityScores.wis)),
-    cha: abilityModifier(abilityScoreToMod(build.abilityScores.cha)),
-  };
-}
-
-function armorClassChoiceEquals(
-  left: CharacterSheetArmorClassBaseChoice,
-  right: CharacterSheetArmorClassBaseChoice,
-): boolean {
-  return left.kind === "default_unarmored"
-    ? right.kind === "default_unarmored"
-    : right.kind === "class_feature" && left.unitId === right.unitId;
-}
-
-function getRequiredUnit(
-  unitLibrary: UnitCatalog,
-  unitId: UnitRecord["id"],
-): Either.Either<UnitRecord, CharacterSheetIssue> {
-  const unit = unitLibrary.getUnit(unitId);
-  return Option.isSome(unit)
-    ? Either.right(unit.value)
-    : characterSheetIssue(`Unknown Unit id: ${unitId}`);
-}
 
 function characterSheetBookOfShadowsRitualInvocation(
   input: CharacterSheetSpellInvocationInput,
@@ -4491,39 +3866,6 @@ function hasSpellRecipientRestLockout(
   );
 }
 
-// Rest and feature-resource callers share this owner for Character Sheet HP recovery.
-function recoverCharacterSheetHitPoints(input: {
-  readonly sheet: CharacterSheet;
-  readonly healing: HpType;
-  readonly overflow: CharacterSheetHitPointRecoveryOverflow;
-  readonly deadCharacterMessage: string;
-}): Either.Either<CharacterSheet, CharacterSheetIssue> {
-  if (input.healing === Hp(0)) return Either.right(input.sheet);
-  if (
-    input.sheet.hitPoints.tag === "zero" &&
-    input.sheet.hitPoints.lifecycle.tag === "dead"
-  ) {
-    return characterSheetIssue(input.deadCharacterMessage);
-  }
-
-  const currentHp = characterSheetCurrentHp(input.sheet);
-  const hitPointMaximum = characterSheetHitPointMaximum(input.sheet);
-  const recoveredHp = currentHp + input.healing;
-  if (
-    input.overflow.tag === "rejectAboveMaximum" &&
-    recoveredHp > hitPointMaximum
-  ) {
-    return characterSheetIssue(input.overflow.message);
-  }
-  const hitPoints = characterSheetHitPoints({
-    currentHp: Hp(Math.min(Number(hitPointMaximum), Number(recoveredHp))),
-    tempHp: characterSheetTempHp(input.sheet),
-  });
-  return Either.isLeft(hitPoints)
-    ? Either.left(hitPoints.left)
-    : Either.right({ ...input.sheet, hitPoints: hitPoints.right });
-}
-
 function layOnHandsSpend(
   input: Pick<CharacterSheetLayOnHandsInput, "restoreHp" | "removePoisoned">,
 ): Either.Either<ResourceCount, CharacterSheetIssue> {
@@ -4888,28 +4230,6 @@ function isSpellbookRitualAccessFeature(
     unit.mechanics.source === "spellbook" &&
     unit.mechanics.preparationRequirement === "not_prepared"
   );
-}
-
-function characterSheetHitPointCapacity(
-  input: Pick<
-    CharacterSheetInput,
-    "maximumHp" | "currentHp" | "hitPointMaximumReduction"
-  >,
-): Either.Either<void, CharacterSheetIssue> {
-  if (input.maximumHp < 1) {
-    return characterSheetIssue("Character Sheet maximum HP must be positive.");
-  }
-  if (input.hitPointMaximumReduction >= input.maximumHp) {
-    return characterSheetIssue(
-      "Character Sheet Hit Point maximum reduction must leave a positive Hit Point maximum.",
-    );
-  }
-  if (input.currentHp > input.maximumHp - input.hitPointMaximumReduction) {
-    return characterSheetIssue(
-      "Character Sheet current HP exceeds maximum HP.",
-    );
-  }
-  return Either.right(undefined);
 }
 
 type ParsedStoredHitPoints = {
@@ -5381,252 +4701,6 @@ function parseStoredRestFeatureUses(
   });
 }
 
-function passStableRecoveryTime(input: {
-  readonly sheet: CharacterSheet;
-  readonly ticks: ElapsedTimeTicks;
-  readonly fills: readonly FilledHoleValue[];
-}): CharacterSheetElapsedTimeResult {
-  if (input.sheet.hitPoints.tag !== "zero") {
-    return {
-      tag: "resolved",
-      sheet: input.sheet,
-      elapsedTicks: input.ticks,
-    };
-  }
-  const lifecycle = input.sheet.hitPoints.lifecycle;
-  if (lifecycle.tag !== "stable") {
-    return {
-      tag: "resolved",
-      sheet: input.sheet,
-      elapsedTicks: input.ticks,
-    };
-  }
-  if (lifecycle.recovery.kind === "regains1HpAfter") {
-    if (input.fills.length !== 0) {
-      return invalidElapsedTimeResult(
-        input.sheet,
-        "Elapsed-time recovery received fills when no roll is pending.",
-      );
-    }
-    return passStableRecoveryRule({
-      sheet: input.sheet,
-      ticks: input.ticks,
-    });
-  }
-  const hole = stableRecoveryRollHole(input.sheet.characterId);
-  const fill = stableRecoveryFillFor(input.fills, hole);
-  if (fill === undefined && input.fills.length !== 0) {
-    return invalidElapsedTimeResult(
-      input.sheet,
-      "Elapsed-time recovery received a fill for a different hole.",
-    );
-  }
-  if (fill !== undefined && input.fills.length !== 1) {
-    return invalidElapsedTimeResult(
-      input.sheet,
-      "Elapsed-time recovery accepts exactly one matching fill.",
-    );
-  }
-  if (fill === undefined) {
-    return passStableRecoveryRule({
-      sheet: input.sheet,
-      ticks: input.ticks,
-      hole,
-    });
-  }
-  const roll = stableRecoveryRollFromFill(fill);
-  return Either.isLeft(roll)
-    ? invalidElapsedTimeResult(input.sheet, roll.left.message)
-    : passStableRecoveryRuleWithRoll({
-        sheet: input.sheet,
-        ticks: input.ticks,
-        roll: roll.right,
-        hole,
-      });
-}
-
-function passStableRecoveryRule(input: {
-  readonly sheet: CharacterSheet;
-  readonly ticks: ElapsedTimeTicks;
-  readonly hole?: RuntimeHole;
-}): CharacterSheetElapsedTimeResult {
-  const sheet = input.sheet;
-  if (
-    sheet.hitPoints.tag !== "zero" ||
-    sheet.hitPoints.lifecycle.tag !== "stable"
-  ) {
-    return { tag: "resolved", sheet, elapsedTicks: input.ticks };
-  }
-  const recovery = sheet.hitPoints.lifecycle.recovery;
-  const advanced =
-    recovery.kind === "regains1HpAfter"
-      ? advanceStableRecovery({ recovery, ticks: input.ticks })
-      : advanceStableRecovery({ recovery, ticks: input.ticks });
-  if (Either.isLeft(advanced)) {
-    return invalidElapsedTimeResult(sheet, advanced.left.message);
-  }
-  if (advanced.right.tag === "needsStableRecoveryRoll") {
-    return {
-      tag: "needsHoles",
-      sheet,
-      holes: [input.hole ?? stableRecoveryRollHole(sheet.characterId)],
-      elapsedTicks: advanced.right.elapsedTicks,
-      remainingTicks: advanced.right.remainingTicks,
-    };
-  }
-  if (advanced.right.tag === "recovered") {
-    return {
-      tag: "resolved",
-      sheet: replaceCharacterSheetHitPoints(sheet, {
-        tag: "positive",
-        currentHp: Hp(1),
-        tempHp: sheet.hitPoints.tempHp,
-      }),
-      elapsedTicks: advanced.right.elapsedTicks,
-    };
-  }
-  return {
-    tag: "resolved",
-    sheet: replaceCharacterSheetHitPoints(sheet, {
-      ...sheet.hitPoints,
-      lifecycle: {
-        tag: "stable",
-        recovery: advanced.right.recovery,
-      },
-    }),
-    elapsedTicks: advanced.right.elapsedTicks,
-  };
-}
-
-function passStableRecoveryRuleWithRoll(input: {
-  readonly sheet: CharacterSheet;
-  readonly ticks: ElapsedTimeTicks;
-  readonly roll: DieRollResult;
-  readonly hole: RuntimeHole;
-}): CharacterSheetElapsedTimeResult {
-  const sheet = input.sheet;
-  if (
-    sheet.hitPoints.tag !== "zero" ||
-    sheet.hitPoints.lifecycle.tag !== "stable" ||
-    sheet.hitPoints.lifecycle.recovery.kind !== "regains1HpAfter1d4Hours"
-  ) {
-    return invalidElapsedTimeResult(
-      sheet,
-      "Elapsed-time recovery received a roll when no roll is pending.",
-    );
-  }
-  const advanced = advanceStableRecoveryWithRoll({
-    recovery: sheet.hitPoints.lifecycle.recovery,
-    ticks: input.ticks,
-    roll: input.roll,
-  });
-  if (Either.isLeft(advanced)) {
-    return invalidElapsedTimeResult(sheet, advanced.left.message);
-  }
-  if (advanced.right.tag === "needsStableRecoveryRoll") {
-    return {
-      tag: "needsHoles",
-      sheet,
-      holes: [input.hole],
-      elapsedTicks: advanced.right.elapsedTicks,
-      remainingTicks: advanced.right.remainingTicks,
-    };
-  }
-  if (advanced.right.tag === "recovered") {
-    return {
-      tag: "resolved",
-      sheet: replaceCharacterSheetHitPoints(sheet, {
-        tag: "positive",
-        currentHp: Hp(1),
-        tempHp: sheet.hitPoints.tempHp,
-      }),
-      elapsedTicks: advanced.right.elapsedTicks,
-    };
-  }
-  return {
-    tag: "resolved",
-    sheet: replaceCharacterSheetHitPoints(sheet, {
-      ...sheet.hitPoints,
-      lifecycle: {
-        tag: "stable",
-        recovery: advanced.right.recovery,
-      },
-    }),
-    elapsedTicks: advanced.right.elapsedTicks,
-  };
-}
-
-function stableRecoveryRollHole(characterId: CharacterSheetId): RuntimeHole {
-  return {
-    kind: "rolledDice",
-    holeId: holeId(`character-sheet:${characterId}:stable-recovery-roll`),
-    holeInstanceKey: holeInstanceKey(
-      `character-sheet:${characterId}:stable-recovery-roll`,
-    ),
-    label: "Stable recovery 1d4 hours",
-  };
-}
-
-function stableRecoveryFillFor(
-  fills: readonly FilledHoleValue[],
-  hole: RuntimeHole,
-): Extract<FilledHoleValue, { readonly kind: "rolledDice" }> | undefined {
-  return fills.find(
-    (
-      candidate,
-    ): candidate is Extract<FilledHoleValue, { readonly kind: "rolledDice" }> =>
-      candidate.kind === "rolledDice" && candidate.holeId === hole.holeId,
-  );
-}
-
-function stableRecoveryRollFromFill(
-  fill: Extract<FilledHoleValue, { readonly kind: "rolledDice" }>,
-): Either.Either<DieRollResult, CharacterSheetIssue> {
-  const validation = validateRolledDiceForDiceExpr(fill.value, {
-    dice: STABLE_RECOVERY_ROLL_DICE_EXPR.dice,
-    dieSize: STABLE_RECOVERY_ROLL_DICE_EXPR.dieSize,
-  });
-  if (validation !== null) {
-    return characterSheetIssue(validation.reason);
-  }
-  const group = fill.value[0];
-  const roll = group?.results[0];
-  return roll === undefined
-    ? characterSheetIssue("Stable recovery requires one d4 roll.")
-    : Either.right(roll);
-}
-
-function invalidElapsedTimeResult(
-  sheet: CharacterSheet,
-  message: string,
-): CharacterSheetElapsedTimeResult {
-  return {
-    tag: "invalid",
-    sheet,
-    reason: "invalidFill",
-    message,
-  };
-}
-
-function replaceCharacterSheetHitPoints(
-  sheet: CharacterSheet,
-  hitPoints: CharacterSheetHitPoints,
-): CharacterSheet {
-  return isCharacterSheetWithSpellSlots(sheet)
-    ? {
-        ...sheet,
-        hitPoints,
-        spellSlotExpenditures: sheet.spellSlotExpenditures,
-      }
-    : { ...sheet, hitPoints };
-}
-
-function parseHp(value: unknown): Either.Either<HpType, CharacterSheetIssue> {
-  return isNonNegativeInteger(value)
-    ? Either.right(Hp(value))
-    : characterSheetIssue("Expected nonnegative HP.");
-}
-
 function parseResourceCount(
   value: unknown,
 ): Either.Either<ResourceCount, CharacterSheetIssue> {
@@ -5649,28 +4723,6 @@ function parseSpellSlotLevel(
   return isPositiveInteger(value)
     ? Either.right(spellSlotLevel(value))
     : characterSheetIssue("Expected positive Spell Slot level.");
-}
-
-function canonicalZeroHpLifecycle(
-  lifecycle: CharacterSheetZeroHpLifecycleInput,
-): Either.Either<CharacterSheetZeroHpLifecycle, CharacterSheetIssue> {
-  if (lifecycle.tag === "stable") return Either.right(lifecycle);
-  if (lifecycle.tag === "dead") {
-    const { successes, failures } = lifecycle.deathSaves;
-    if (successes === 3 || failures !== 3) {
-      return characterSheetIssue(
-        "Dead Character Sheet requires exactly three death save failures.",
-      );
-    }
-    return Either.right({ tag: "dead", deathSaves: { successes, failures } });
-  }
-  const { successes, failures } = lifecycle.deathSaves;
-  if (successes === 3 || failures === 3) {
-    return characterSheetIssue(
-      "Unstable Character Sheet cannot carry terminal death save counts.",
-    );
-  }
-  return Either.right({ tag: "unstable", deathSaves: { successes, failures } });
 }
 
 function parseCharacterBuild(
@@ -7278,14 +6330,6 @@ function isStringArray(value: unknown): value is readonly string[] {
 
 function isDeathSaveCount(value: unknown): value is DeathSaveCount {
   return value === 0 || value === 1 || value === 2 || value === 3;
-}
-
-function isNonNegativeInteger(value: unknown): value is number {
-  return typeof value === "number" && Number.isInteger(value) && value >= 0;
-}
-
-function isPositiveInteger(value: unknown): value is number {
-  return typeof value === "number" && Number.isInteger(value) && value >= 1;
 }
 
 function isRecord(value: unknown): value is Readonly<Record<string, unknown>> {

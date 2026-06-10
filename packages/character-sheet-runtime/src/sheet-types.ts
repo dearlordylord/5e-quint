@@ -54,7 +54,7 @@ import {
   type UseCountResource,
 } from "@dnd/surface/surface/types";
 import { type SupportedClassFeatureSpellFreeCastResourceTag } from "@dnd/surface/surface/types";
-import { Brand } from "effect";
+import { Brand, Either, Option } from "effect";
 
 export const WEAPON_PROFICIENCY_CATEGORY_VALUES = [
   "simple",
@@ -689,6 +689,30 @@ export type CharacterSheetIssue = {
   readonly tag: "characterSheetIssue";
   readonly message: string;
 };
+
+export function characterSheetIssue(
+  message: string,
+): Either.Either<never, CharacterSheetIssue> {
+  return Either.left({ tag: "characterSheetIssue", message });
+}
+
+export function getRequiredUnit(
+  unitLibrary: UnitCatalog,
+  unitId: UnitRecord["id"],
+): Either.Either<UnitRecord, CharacterSheetIssue> {
+  const unit = unitLibrary.getUnit(unitId);
+  return Option.isSome(unit)
+    ? Either.right(unit.value)
+    : characterSheetIssue(`Unknown Unit id: ${unitId}`);
+}
+
+export function isNonNegativeInteger(value: unknown): value is number {
+  return Number.isInteger(value) && Number(value) >= 0;
+}
+
+export function isPositiveInteger(value: unknown): value is number {
+  return Number.isInteger(value) && Number(value) > 0;
+}
 
 export type CharacterSheetElapsedTimeResult =
   | {
