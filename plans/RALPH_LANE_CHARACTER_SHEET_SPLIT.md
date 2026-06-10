@@ -4,15 +4,60 @@
 {
   "schema": "ralph-plan.v1",
   "tasks": [
-    { "number": 1, "id": "SHEETS-C01-TYPES-AND-IDS", "status": "ready-for-implementation-after-light-research", "title": "Extract sheet-types and branded ids behind the unchanged barrel" },
-    { "number": 2, "id": "SHEETS-C02-STATELESS-QUERIES", "status": "blocked", "title": "Extract hit-points, armor-class, and ability-checks query domains" },
-    { "number": 3, "id": "SHEETS-C03-RESOURCES-HEALING", "status": "blocked", "title": "Extract resources (with Monk folds) and healing-rest-benefit" },
-    { "number": 4, "id": "SHEETS-C04-SPELL-SLOTS-INVOCATION", "status": "blocked", "title": "Extract spell-slots (with Font of Magic) and spell-invocation" },
-    { "number": 5, "id": "SHEETS-C05-FEATURE-DOMAINS", "status": "blocked", "title": "Extract druid-features and class-feature-spells" },
-    { "number": 6, "id": "SHEETS-C06-LIFECYCLE-PARSING", "status": "blocked", "title": "Extract sheet-lifecycle and the internal stored-sheet parser" },
-    { "number": 7, "id": "SHEETS-C07-RESTS", "status": "blocked", "title": "Extract rests (with weapon-mastery reselection)" },
-    { "number": 8, "id": "SHEETS-C08-TIME-PASSAGE-AND-AUDIT", "status": "blocked", "title": "Extract time-passage, finalize the barrel, add the split audit, close out §7" },
-    { "number": 9, "id": "SHEETS-C09-TEST-REORG", "status": "blocked", "title": "Reorganize the monolithic index.test.ts along the new module seams (optional follow-up)" }
+    {
+      "number": 1,
+      "id": "SHEETS-C01-TYPES-AND-IDS",
+      "status": "done",
+      "title": "Extract sheet-types and branded ids behind the unchanged barrel"
+    },
+    {
+      "number": 2,
+      "id": "SHEETS-C02-STATELESS-QUERIES",
+      "status": "blocked",
+      "title": "Extract hit-points, armor-class, and ability-checks query domains"
+    },
+    {
+      "number": 3,
+      "id": "SHEETS-C03-RESOURCES-HEALING",
+      "status": "blocked",
+      "title": "Extract resources (with Monk folds) and healing-rest-benefit"
+    },
+    {
+      "number": 4,
+      "id": "SHEETS-C04-SPELL-SLOTS-INVOCATION",
+      "status": "blocked",
+      "title": "Extract spell-slots (with Font of Magic) and spell-invocation"
+    },
+    {
+      "number": 5,
+      "id": "SHEETS-C05-FEATURE-DOMAINS",
+      "status": "blocked",
+      "title": "Extract druid-features and class-feature-spells"
+    },
+    {
+      "number": 6,
+      "id": "SHEETS-C06-LIFECYCLE-PARSING",
+      "status": "blocked",
+      "title": "Extract sheet-lifecycle and the internal stored-sheet parser"
+    },
+    {
+      "number": 7,
+      "id": "SHEETS-C07-RESTS",
+      "status": "blocked",
+      "title": "Extract rests (with weapon-mastery reselection)"
+    },
+    {
+      "number": 8,
+      "id": "SHEETS-C08-TIME-PASSAGE-AND-AUDIT",
+      "status": "blocked",
+      "title": "Extract time-passage, finalize the barrel, add the split audit, close out §7"
+    },
+    {
+      "number": 9,
+      "id": "SHEETS-C09-TEST-REORG",
+      "status": "blocked",
+      "title": "Reorganize the monolithic index.test.ts along the new module seams (optional follow-up)"
+    }
   ]
 }
 -->
@@ -114,7 +159,7 @@ Every task must include:
 
 ### Task 1 - SHEETS-C01-TYPES-AND-IDS
 
-Status: `ready-for-implementation-after-light-research` · Mode: AFK
+Status: `done` · Mode: AFK
 
 Output: `sheet-types.ts` (exported domain types, constants) and the branded
 `CharacterSheetId` + resource unit-id support sets (per §7, either inside
