@@ -180,7 +180,7 @@ Acceptance: focused MBT green (`MBT_TRACES=1` and `MBT_TRACES=3`); closure
 checker green with no allowlist growth (leaf adds 1 file); witness and driver
 line deltas reported; this task's merge unblocks `BPK-B04`/`BPK-B06`.
 
-### Tasks 4–8 - PDS-A04…A08-KIT-BATCH-1…5
+### Task 4 - PDS-A04-KIT-BATCH-1
 
 Status: `blocked` · Mode: AFK
 
@@ -192,6 +192,55 @@ handlers, projections, assertions unchanged in meaning).
 Acceptance per batch: focused MBT green for exactly the batch files; closure
 checker green; no `*.mbt.qnt` diff; batch line-delta reported. A08
 additionally asserts the discovery rule matches zero files.
+
+### Task 5 - PDS-A05-KIT-BATCH-2
+
+Status: `blocked` · Mode: AFK
+
+Input: the kit-unmigrated discovery rule (Lane Rules) applied at task start.
+
+Output: the next ≤20 drivers migrated, plumbing-only (fixtures, action
+handlers, projections, assertions unchanged in meaning).
+
+Acceptance: focused MBT green for exactly the batch files; closure checker
+green; no `*.mbt.qnt` diff; batch line-delta reported.
+
+### Task 6 - PDS-A06-KIT-BATCH-3
+
+Status: `blocked` · Mode: AFK
+
+Input: the kit-unmigrated discovery rule (Lane Rules) applied at task start.
+
+Output: the next ≤20 drivers migrated, plumbing-only (fixtures, action
+handlers, projections, assertions unchanged in meaning).
+
+Acceptance: focused MBT green for exactly the batch files; closure checker
+green; no `*.mbt.qnt` diff; batch line-delta reported.
+
+### Task 7 - PDS-A07-KIT-BATCH-4
+
+Status: `blocked` · Mode: AFK
+
+Input: the kit-unmigrated discovery rule (Lane Rules) applied at task start.
+
+Output: the next ≤20 drivers migrated, plumbing-only (fixtures, action
+handlers, projections, assertions unchanged in meaning).
+
+Acceptance: focused MBT green for exactly the batch files; closure checker
+green; no `*.mbt.qnt` diff; batch line-delta reported.
+
+### Task 8 - PDS-A08-KIT-BATCH-5
+
+Status: `blocked` · Mode: AFK
+
+Input: the kit-unmigrated discovery rule (Lane Rules) applied at task start.
+
+Output: the final kit-unmigrated driver batch migrated, plumbing-only
+(fixtures, action handlers, projections, assertions unchanged in meaning).
+
+Acceptance: focused MBT green for exactly the batch files; closure checker
+green; no `*.mbt.qnt` diff; batch line-delta reported; the discovery rule
+matches zero files after the batch.
 
 ### Task 9 - PDS-A09-KIT-GATE-AND-CLOSEOUT
 
@@ -221,7 +270,7 @@ closure-cost model) recorded in the task report.
 Acceptance: focused MBT green for the pairs; closure checker green; timing
 note shows no material per-trace regression.
 
-### Tasks 11–15 - PDS-A11…A15-WITNESS-BATCH-1…5
+### Task 11 - PDS-A11-WITNESS-BATCH-1
 
 Status: `blocked` · Mode: AFK
 
@@ -235,6 +284,63 @@ enumerated (prd/04 acceptance rule).
 Acceptance per batch: focused MBT green (`MBT_TRACES=1`) plus one
 `MBT_TRACES=3` confidence pass; closure checker green, allowlist unchanged.
 A15 additionally asserts `grep -l 'var qLastResult: str' *.mbt.qnt` is empty.
+
+### Task 12 - PDS-A12-WITNESS-BATCH-2
+
+Status: `blocked` · Mode: AFK
+
+Input: the protocol-unmigrated discovery rule applied at task start.
+
+Output: the next ≤20 witness/driver pairs migrated to record state + step
+helpers; enumerated literal-action families that are pure input sampling
+collapsed to picks actions, or annotated with the one-line reason they stay
+enumerated (prd/04 acceptance rule).
+
+Acceptance: focused MBT green (`MBT_TRACES=1`) plus one `MBT_TRACES=3`
+confidence pass; closure checker green, allowlist unchanged.
+
+### Task 13 - PDS-A13-WITNESS-BATCH-3
+
+Status: `blocked` · Mode: AFK
+
+Input: the protocol-unmigrated discovery rule applied at task start.
+
+Output: the next ≤20 witness/driver pairs migrated to record state + step
+helpers; enumerated literal-action families that are pure input sampling
+collapsed to picks actions, or annotated with the one-line reason they stay
+enumerated (prd/04 acceptance rule).
+
+Acceptance: focused MBT green (`MBT_TRACES=1`) plus one `MBT_TRACES=3`
+confidence pass; closure checker green, allowlist unchanged.
+
+### Task 14 - PDS-A14-WITNESS-BATCH-4
+
+Status: `blocked` · Mode: AFK
+
+Input: the protocol-unmigrated discovery rule applied at task start.
+
+Output: the next ≤20 witness/driver pairs migrated to record state + step
+helpers; enumerated literal-action families that are pure input sampling
+collapsed to picks actions, or annotated with the one-line reason they stay
+enumerated (prd/04 acceptance rule).
+
+Acceptance: focused MBT green (`MBT_TRACES=1`) plus one `MBT_TRACES=3`
+confidence pass; closure checker green, allowlist unchanged.
+
+### Task 15 - PDS-A15-WITNESS-BATCH-5
+
+Status: `blocked` · Mode: AFK
+
+Input: the protocol-unmigrated discovery rule applied at task start.
+
+Output: the final protocol-unmigrated witness/driver batch migrated to record
+state + step helpers; enumerated literal-action families that are pure input
+sampling collapsed to picks actions, or annotated with the one-line reason
+they stay enumerated (prd/04 acceptance rule).
+
+Acceptance: focused MBT green (`MBT_TRACES=1`) plus one `MBT_TRACES=3`
+confidence pass; closure checker green, allowlist unchanged; `grep -l 'var
+qLastResult: str' *.mbt.qnt` is empty.
 
 ### Task 16 - PDS-A16-WITNESS-GATE-AND-CLOSEOUT
 

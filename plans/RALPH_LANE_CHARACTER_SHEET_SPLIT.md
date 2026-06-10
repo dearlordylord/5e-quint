@@ -4,7 +4,7 @@
 {
   "schema": "ralph-plan.v1",
   "tasks": [
-    { "number": 1, "id": "SHEETS-C01-TYPES-AND-IDS", "status": "ready-for-implementation", "title": "Extract sheet-types and branded ids behind the unchanged barrel" },
+    { "number": 1, "id": "SHEETS-C01-TYPES-AND-IDS", "status": "ready-for-implementation-after-light-research", "title": "Extract sheet-types and branded ids behind the unchanged barrel" },
     { "number": 2, "id": "SHEETS-C02-STATELESS-QUERIES", "status": "blocked", "title": "Extract hit-points, armor-class, and ability-checks query domains" },
     { "number": 3, "id": "SHEETS-C03-RESOURCES-HEALING", "status": "blocked", "title": "Extract resources (with Monk folds) and healing-rest-benefit" },
     { "number": 4, "id": "SHEETS-C04-SPELL-SLOTS-INVOCATION", "status": "blocked", "title": "Extract spell-slots (with Font of Magic) and spell-invocation" },
@@ -30,7 +30,7 @@ uncommitted `packages/mcp` session-store WIP in the working tree. The 2-line
 default mcp test lane was red without it), and the session-store
 observability work moved to its own worktree/branch pending its consumer
 (see the 2026-06-10 landability assessment). `git status` is clean of
-`packages/mcp`; C01 is `ready-for-implementation`. This lane never touches
+`packages/mcp`; C01 is `ready-for-implementation-after-light-research`. This lane never touches
 `packages/mcp`; the gate was repo hygiene, not a file dependency.
 
 Wave coordination and the global MBT mutex: `plans/RALPH_QUINT_FIRST_WAVE.md`.
@@ -100,7 +100,7 @@ Every task must include:
 
 | # | Task | Status | Depends on | Notes |
 | ---: | --- | --- | --- | --- |
-| 1 | SHEETS-C01-TYPES-AND-IDS | ready-for-implementation | none | External mcp-WIP gate cleared 2026-06-10 (see header). |
+| 1 | SHEETS-C01-TYPES-AND-IDS | ready-for-implementation-after-light-research | none | External mcp-WIP gate cleared 2026-06-10 (see header). |
 | 2 | SHEETS-C02-STATELESS-QUERIES | blocked | SHEETS-C01 | Lowest-risk extractions; witnesses: hit-point-maximum, armor-class, ability-check. |
 | 3 | SHEETS-C03-RESOURCES-HEALING | blocked | SHEETS-C02 | Monk's Focus / Uncanny Metabolism fold into resources. |
 | 4 | SHEETS-C04-SPELL-SLOTS-INVOCATION | blocked | SHEETS-C03 | Font of Magic folds into spell-slots. |
@@ -114,7 +114,7 @@ Every task must include:
 
 ### Task 1 - SHEETS-C01-TYPES-AND-IDS
 
-Status: `ready-for-implementation` · Mode: AFK
+Status: `ready-for-implementation-after-light-research` · Mode: AFK
 
 Output: `sheet-types.ts` (exported domain types, constants) and the branded
 `CharacterSheetId` + resource unit-id support sets (per §7, either inside
