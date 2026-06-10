@@ -1,11 +1,21 @@
 import {
-  run,
-  stateCheck,
   type SimpleActionMap,
   type SimpleDriver,
 } from "@firfi/quint-connect";
 import { Match } from "effect";
 import { describe, expect, it } from "vitest";
+
+import {
+  MBT_TEST_TIMEOUT_MS,
+  booleanValue,
+  focusedMbtMaxSteps,
+  mbtTraceCount,
+  numberFromQuintInt,
+  quintField,
+  quintStateRecord,
+  run,
+  stateCheck,
+} from "./battle-runtime-mbt-driver-kit.ts";
 
 export type ProjectionFieldKind = "bool" | "int" | "str";
 export type ProjectionSchema = Readonly<Record<string, ProjectionFieldKind>>;
@@ -189,12 +199,12 @@ export function defineSelectedIdentityWitness<
           driver: createDriver,
           backend: "typescript",
           seed: process.env["QUINT_SEED"],
-          nTraces: Number(process.env["MBT_TRACES"] ?? 1),
-          maxSteps: Number(process.env["MBT_STEPS"] ?? 1),
+          nTraces: mbtTraceCount(),
+          maxSteps: focusedMbtMaxSteps(1),
           stateCheck: witnessStateCheck,
         });
       },
-      witness.mbtParityTimeoutMs ?? 120_000,
+      witness.mbtParityTimeoutMs ?? MBT_TEST_TIMEOUT_MS,
     );
   });
 }
@@ -255,14 +265,11 @@ function normalizeQuintState(
   raw: unknown,
   schema: RuntimeProjectionSchema,
 ): Readonly<Record<string, boolean | number | string>> {
-  if (raw === null || typeof raw !== "object" || Array.isArray(raw)) {
-    throw new Error("Expected Quint state record.");
-  }
-  const state = raw as Record<string, unknown>;
+  const state = quintStateRecord(raw);
   const result: Record<string, boolean | number | string> = {};
   for (const [field, spec] of Object.entries(schema)) {
     const qKey = quintFieldName(field);
-    result[field] = parseQuintField(state[qKey], spec, qKey);
+    result[field] = parseQuintField(quintField(state, qKey), spec, qKey);
   }
   return result;
 }
@@ -285,18 +292,11 @@ function parseQuintField(
 }
 
 function parseBool(value: unknown, qKey: string): boolean {
-  if (typeof value === "boolean") return value;
-  throw new Error(
-    `Expected boolean Quint field ${qKey}, got ${String(value)}.`,
-  );
+  return booleanValue(value, qKey);
 }
 
 function parseInt(value: unknown, qKey: string): number {
-  if (typeof value === "number") return value;
-  if (typeof value === "bigint") return Number(value);
-  throw new Error(
-    `Expected integer Quint field ${qKey}, got ${String(value)}.`,
-  );
+  return numberFromQuintInt(value, qKey);
 }
 
 function parseStr(

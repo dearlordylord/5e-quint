@@ -1,8 +1,5 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.ANTIMAGIC_FIELD_ACTION_INTERDICTION
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-antimagic-field-action-interdiction
-import * as path from "node:path";
-
-import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { classLevel, Hp, movementFeet } from "@dnd/shared/types";
 import * as Either from "effect/Either";
@@ -46,9 +43,14 @@ import {
 } from "./index.ts";
 import { battleMagicActionHealingPoolSupportForUnit } from "./unit-feature-support.ts";
 import {
+  MBT_TEST_TIMEOUT_MS,
+  defineDriver,
   focusedMbtMaxSteps,
-  promotedMbtTraces,
-} from "./battle-runtime-mbt-fixtures.ts";
+  mbtSpecPath,
+  mbtTraceCount,
+  run,
+  stateCheck,
+} from "./battle-runtime-mbt-driver-kit.ts";
 
 type AntimagicActionInterdictionProjection = {
   readonly actionSpellDiscovered: boolean;
@@ -81,19 +83,19 @@ const antimagicActionInterdictionDriverSchema = {
 describe("Antimagic Field action interdiction MBT", () => {
   it("replays action spell, Bonus Action spell, Reaction spell, and Magic Action interdiction", async () => {
     await run({
-      spec: path.resolve(
+      spec: mbtSpecPath(
         import.meta.dirname,
-        "../battle-runtime-antimagic-field-action-interdiction.mbt.qnt",
+        "battle-runtime-antimagic-field-action-interdiction.mbt.qnt",
       ),
       init: "init",
       step: "step",
       driver: createAntimagicActionInterdictionDriver(),
       backend: "typescript",
-      nTraces: promotedMbtTraces,
+      nTraces: mbtTraceCount(),
       maxSteps: focusedMbtMaxSteps(3),
       stateCheck: antimagicActionInterdictionStateCheck,
     });
-  }, 120_000);
+  }, MBT_TEST_TIMEOUT_MS);
 });
 
 function createAntimagicActionInterdictionDriver() {

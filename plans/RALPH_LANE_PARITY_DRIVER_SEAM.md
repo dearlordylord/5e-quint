@@ -13,13 +13,13 @@
     {
       "number": 2,
       "id": "PDS-A02-KIT-PILOTS",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Migrate the remaining pilot drivers and merge battle-runtime-mbt-fixtures into the kit"
     },
     {
       "number": 3,
       "id": "PDS-A03-WITNESS-PROTOCOL-TRACER",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Add the witness-protocol leaf and migrate the death-saving-throw witness/driver pair to record state and picks"
     },
     {
@@ -193,8 +193,8 @@ Every task must include:
 | # | Task | Status | Depends on | Notes |
 | ---: | --- | --- | --- | --- |
 | 1 | PDS-A01-DRIVER-KIT-TRACER | ready-for-implementation-after-light-research | none | Light research: kit API shape vs quint-connect exports (`transformITFValue`, ITF schemas, picks). |
-| 2 | PDS-A02-KIT-PILOTS | ready-for-research | PDS-A01-DRIVER-KIT-TRACER | Proves the kit on all driver shapes; merges `battle-runtime-mbt-fixtures.ts`. |
-| 3 | PDS-A03-WITNESS-PROTOCOL-TRACER | blocked | PDS-A02-KIT-PILOTS | Unblocks Lane B (`BPK-B04+`). Includes the quint 0.31.0 parameterized-type REPL check. |
+| 2 | PDS-A02-KIT-PILOTS | done | PDS-A01-DRIVER-KIT-TRACER | Proves the kit on all driver shapes; merges `battle-runtime-mbt-fixtures.ts`. |
+| 3 | PDS-A03-WITNESS-PROTOCOL-TRACER | ready-for-research | PDS-A02-KIT-PILOTS | Unblocks Lane B (`BPK-B04+`). Includes the quint 0.31.0 parameterized-type REPL check. |
 | 4 | PDS-A04-KIT-BATCH-1 | blocked | PDS-A03-WITNESS-PROTOCOL-TRACER | Self-discovering; ≤20 drivers. |
 | 5 | PDS-A05-KIT-BATCH-2 | blocked | PDS-A04-KIT-BATCH-1 | |
 | 6 | PDS-A06-KIT-BATCH-3 | blocked | PDS-A05-KIT-BATCH-2 | |
@@ -235,7 +235,7 @@ Acceptance: kit unit tests green; migrated driver passes its focused MBT
 
 ### Task 2 - PDS-A02-KIT-PILOTS
 
-Status: `ready-for-research` · Mode: AFK
+Status: `done` · Mode: AFK
 
 Input: prd/03 M1 pilot list: `direct-condition-lifecycle.mbt.test.ts`
 (computed oracle with picks), one selected-identity driver,
@@ -251,7 +251,7 @@ pilot's projection fields and assertions pre/post).
 
 ### Task 3 - PDS-A03-WITNESS-PROTOCOL-TRACER
 
-Status: `blocked` · Mode: AFK
+Status: `ready-for-research` · Mode: AFK
 
 Input: `prd/04_TYPED_WITNESS_PROTOCOL.md` (whole document),
 `battle-runtime-death-saving-throw.mbt.qnt` + its driver,

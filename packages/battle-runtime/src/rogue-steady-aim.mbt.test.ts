@@ -2,19 +2,19 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.rogue-steady-aim
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L3PUTB-01-ROGUE-STEADY-AIM-RUNTIME rogue_steady_aim
 // UNIT-IDENTITY-MBT-REPLAY: L3PUTB-01-ROGUE-STEADY-AIM-RUNTIME rogue_steady_aim doSteadyAim doRejectAfterMoved doRejectSecondAim
-import * as path from "node:path";
-
-import { run } from "@firfi/quint-connect";
 import { describe, expect, it } from "vitest";
 
 import {
+  MBT_TEST_TIMEOUT_MS,
   createRogueSteadyAimDriver,
   focusedMbtMaxSteps,
-  promotedMbtTraces,
+  mbtSpecPath,
+  mbtTraceCount,
   rogueSteadyAimStateCheck,
+  run,
   runSelectedUnitIdentityReplay,
   type RogueSteadyAimSelectedUnitIdentityReplay,
-} from "./battle-runtime-mbt-fixtures.ts";
+} from "./battle-runtime-mbt-driver-kit.ts";
 
 const rogueSteadyAimDriverSchema = {
   init: {},
@@ -88,17 +88,17 @@ describe("Rogue Steady Aim MBT", () => {
 
   it("replays Bonus Action aim, movement rejection, next attack Advantage, Speed 0, and cleanup", async () => {
     await run({
-      spec: path.resolve(
+      spec: mbtSpecPath(
         import.meta.dirname,
-        "../battle-runtime-rogue-steady-aim.mbt.qnt",
+        "battle-runtime-rogue-steady-aim.mbt.qnt",
       ),
       init: "init",
       step: "step",
       driver: createRogueSteadyAimDriver(rogueSteadyAimDriverSchema),
       backend: "typescript",
-      nTraces: promotedMbtTraces,
+      nTraces: mbtTraceCount(),
       maxSteps: focusedMbtMaxSteps(4),
       stateCheck: rogueSteadyAimStateCheck,
     });
-  }, 120_000);
+  }, MBT_TEST_TIMEOUT_MS);
 });
