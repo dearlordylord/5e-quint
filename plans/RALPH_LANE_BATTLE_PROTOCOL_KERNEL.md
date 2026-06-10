@@ -4,15 +4,60 @@
 {
   "schema": "ralph-plan.v1",
   "tasks": [
-    { "number": 1, "id": "BPK-B01-HOLE-KIND-VOCABULARY", "status": "ready-for-implementation-after-light-research", "title": "QNT hole-kind vocabulary leaf with executable two-direction join" },
-    { "number": 2, "id": "BPK-B02-FILL-SUBJECT-VOCABULARY", "status": "blocked", "title": "QNT fill-kind and subject-kind vocabulary with the same join" },
-    { "number": 3, "id": "BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT", "status": "blocked", "title": "Obligation, roles, and generator-readiness rows for the vocabulary tier" },
-    { "number": 4, "id": "BPK-B04-WEAPON-ATTACK-ORDERING", "status": "blocked", "title": "Hole-frontier ordering slice and witness for the weapon-attack procedure shape" },
-    { "number": 5, "id": "BPK-B05-SAVE-SPELL-ORDERING", "status": "blocked", "title": "Hole-frontier ordering slice and witness for the save-gated-spell procedure shape" },
-    { "number": 6, "id": "BPK-B06-INTERRUPT-NESTING-RESUME", "status": "blocked", "title": "Interrupt nesting and resume-with-active-effect-mutation slice and witness" },
-    { "number": 7, "id": "BPK-B07-REPLAY-FROM-ROOT", "status": "blocked", "title": "Replay-from-root equivalence slice and witness" },
-    { "number": 8, "id": "BPK-B08-KERNEL-REGISTRY-CLOSEOUT", "status": "blocked", "title": "Protocol-kernel registry closeout, IR-boundary evidence, and oracle disambiguation convention" },
-    { "number": 9, "id": "BPK-B09-RECURSIVE-NEXT-SHAPES", "status": "blocked", "title": "Queue the next procedure shapes for ordering coverage if the lane drains" }
+    {
+      "number": 1,
+      "id": "BPK-B01-HOLE-KIND-VOCABULARY",
+      "status": "done",
+      "title": "QNT hole-kind vocabulary leaf with executable two-direction join"
+    },
+    {
+      "number": 2,
+      "id": "BPK-B02-FILL-SUBJECT-VOCABULARY",
+      "status": "blocked",
+      "title": "QNT fill-kind and subject-kind vocabulary with the same join"
+    },
+    {
+      "number": 3,
+      "id": "BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT",
+      "status": "blocked",
+      "title": "Obligation, roles, and generator-readiness rows for the vocabulary tier"
+    },
+    {
+      "number": 4,
+      "id": "BPK-B04-WEAPON-ATTACK-ORDERING",
+      "status": "blocked",
+      "title": "Hole-frontier ordering slice and witness for the weapon-attack procedure shape"
+    },
+    {
+      "number": 5,
+      "id": "BPK-B05-SAVE-SPELL-ORDERING",
+      "status": "blocked",
+      "title": "Hole-frontier ordering slice and witness for the save-gated-spell procedure shape"
+    },
+    {
+      "number": 6,
+      "id": "BPK-B06-INTERRUPT-NESTING-RESUME",
+      "status": "blocked",
+      "title": "Interrupt nesting and resume-with-active-effect-mutation slice and witness"
+    },
+    {
+      "number": 7,
+      "id": "BPK-B07-REPLAY-FROM-ROOT",
+      "status": "blocked",
+      "title": "Replay-from-root equivalence slice and witness"
+    },
+    {
+      "number": 8,
+      "id": "BPK-B08-KERNEL-REGISTRY-CLOSEOUT",
+      "status": "blocked",
+      "title": "Protocol-kernel registry closeout, IR-boundary evidence, and oracle disambiguation convention"
+    },
+    {
+      "number": 9,
+      "id": "BPK-B09-RECURSIVE-NEXT-SHAPES",
+      "status": "blocked",
+      "title": "Queue the next procedure shapes for ordering coverage if the lane drains"
+    }
   ]
 }
 -->
@@ -107,7 +152,7 @@ Every task must include:
 
 ### Task 1 - BPK-B01-HOLE-KIND-VOCABULARY
 
-Status: `ready-for-implementation-after-light-research` · Mode: AFK
+Status: `done` · Mode: AFK
 
 Input: prd/02 Solution §1 and Implementation Decisions;
 `battle-hole-frontier.jsonl` (75 `battle-hole-family` rows, 48 distinct
