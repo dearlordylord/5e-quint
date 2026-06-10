@@ -19,7 +19,7 @@
     {
       "number": 3,
       "id": "SHEETS-C03-RESOURCES-HEALING",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Extract resources (with Monk folds) and healing-rest-benefit"
     },
     {
@@ -147,7 +147,7 @@ Every task must include:
 | ---: | --- | --- | --- | --- |
 | 1 | SHEETS-C01-TYPES-AND-IDS | ready-for-implementation-after-light-research | none | External mcp-WIP gate cleared 2026-06-10 (see header). |
 | 2 | SHEETS-C02-STATELESS-QUERIES | ready-for-research | SHEETS-C01-TYPES-AND-IDS | Lowest-risk extractions; witnesses: hit-point-maximum, armor-class, ability-check. |
-| 3 | SHEETS-C03-RESOURCES-HEALING | blocked | SHEETS-C02-STATELESS-QUERIES | Monk's Focus / Uncanny Metabolism fold into resources. |
+| 3 | SHEETS-C03-RESOURCES-HEALING | ready-for-research | SHEETS-C02-STATELESS-QUERIES | Monk's Focus / Uncanny Metabolism fold into resources. |
 | 4 | SHEETS-C04-SPELL-SLOTS-INVOCATION | blocked | SHEETS-C03-RESOURCES-HEALING | Font of Magic folds into spell-slots. |
 | 5 | SHEETS-C05-FEATURE-DOMAINS | blocked | SHEETS-C04-SPELL-SLOTS-INVOCATION | Druid + class-feature prepared spells. |
 | 6 | SHEETS-C06-LIFECYCLE-PARSING | blocked | SHEETS-C05-FEATURE-DOMAINS | Largest internal move (~2,400-line parser layer). |
@@ -182,7 +182,7 @@ Acceptance: standard verification; the three matching MBT drivers
 
 ### Task 3 - SHEETS-C03-RESOURCES-HEALING
 
-Status: `blocked` · Mode: AFK
+Status: `ready-for-research` · Mode: AFK
 
 Output: `resources.ts` (capacity/spending, including the Monk's Focus and
 Uncanny Metabolism folds §7 prescribes) and `healing-rest-benefit.ts`
