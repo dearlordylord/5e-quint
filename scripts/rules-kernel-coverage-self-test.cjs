@@ -76,6 +76,19 @@ function runSelfTest() {
     ].join("\n") + "\n",
   );
   writeFile(
+    path.join(root, "packages", "battle-runtime", "src", "battle-subjects.ts"),
+    [
+      "import { Schema } from 'effect';",
+      "export const BattleSubjectSchema = Schema.Union(",
+      "  Schema.Struct({",
+      "    tag: Schema.Literal('action'),",
+      "    action: Schema.Literal('attack'),",
+      "  }),",
+      ");",
+      "export type BattleSubject = typeof BattleSubjectSchema.Type;",
+    ].join("\n") + "\n",
+  );
+  writeFile(
     path.join(
       root,
       "plans",
@@ -101,6 +114,17 @@ function runSelfTest() {
         followUpTaskIds: [],
         reason: "sample semantic fill kind",
       }),
+      JSON.stringify({
+        subject: "battle-subject-kind",
+        id: "actionAttack",
+        subjectKind: "actionAttack",
+        tag: "action",
+        action: "attack",
+        classification: "semantic-frontier",
+        coveredByObligationIds: ["BATTLE.SAMPLE"],
+        followUpTaskIds: [],
+        reason: "sample semantic subject kind",
+      }),
     ].join("\n") + "\n",
   );
   writeFile(
@@ -113,12 +137,7 @@ function runSelfTest() {
     '{"profileId":"spell.sample","obligationIds":["BATTLE.SAMPLE"]}\n',
   );
   writeFile(
-    path.join(
-      root,
-      "plans",
-      "rules-kernel-coverage",
-      "qnt-owner-roles.jsonl",
-    ),
+    path.join(root, "plans", "rules-kernel-coverage", "qnt-owner-roles.jsonl"),
     [
       JSON.stringify({
         ownerPath: "sample.qnt",
@@ -191,12 +210,47 @@ function runSelfTest() {
     "// KERNEL-COVERAGE: qnt-owner BATTLE.SAMPLE\nmodule sample {}\n",
   );
   writeFile(
-    path.join(root, "packages", "battle-runtime", "battle-runtime-hole-kinds.qnt"),
+    path.join(
+      root,
+      "packages",
+      "battle-runtime",
+      "battle-runtime-hole-kinds.qnt",
+    ),
     [
       "// KERNEL-COVERAGE: qnt-owner BATTLE.SAMPLE",
       "module battleRuntimeHoleKinds {",
       "  type BattleHoleFamilyKind =",
       "    | TargetChoiceHoleKind",
+      "}",
+    ].join("\n") + "\n",
+  );
+  writeFile(
+    path.join(
+      root,
+      "packages",
+      "battle-runtime",
+      "battle-runtime-fill-kinds.qnt",
+    ),
+    [
+      "// KERNEL-COVERAGE: qnt-owner BATTLE.SAMPLE",
+      "module battleRuntimeFillKinds {",
+      "  type BattleFillKind =",
+      "    | TargetChoiceFillKind",
+      "}",
+    ].join("\n") + "\n",
+  );
+  writeFile(
+    path.join(
+      root,
+      "packages",
+      "battle-runtime",
+      "battle-runtime-subject-kinds.qnt",
+    ),
+    [
+      "// KERNEL-COVERAGE: qnt-owner BATTLE.SAMPLE",
+      "module battleRuntimeSubjectKinds {",
+      "  type BattleSubjectKind =",
+      "    | ActionAttackSubjectKind",
       "}",
     ].join("\n") + "\n",
   );
@@ -411,10 +465,11 @@ function runSelfTest() {
     unitFeatureObligationsPath,
     "utf8",
   );
-  const [sampleObligation, boundaryObligation] = initialUnitFeatureObligationsText
-    .trim()
-    .split("\n")
-    .map((line) => JSON.parse(line));
+  const [sampleObligation, boundaryObligation] =
+    initialUnitFeatureObligationsText
+      .trim()
+      .split("\n")
+      .map((line) => JSON.parse(line));
   const unitFeatureOwnerPath =
     "packages/shared-algebras/proofs/rule-core/unit-feature-sample.qnt";
   writeFile(
@@ -573,10 +628,7 @@ function runSelfTest() {
     false,
     `Expected proof-only run block exemption, got ${JSON.stringify(proofOnlyRunBlockResult.issues)}`,
   );
-  writeFile(
-    sampleInductiveQntPath,
-    initialSampleInductiveQntText,
-  );
+  writeFile(sampleInductiveQntPath, initialSampleInductiveQntText);
   writeFile(
     sampleQntPath,
     [
@@ -1059,6 +1111,17 @@ function runSelfTest() {
     sampleBattleReducerPath,
     "utf8",
   );
+  const sampleBattleSubjectsPath = path.join(
+    root,
+    "packages",
+    "battle-runtime",
+    "src",
+    "battle-subjects.ts",
+  );
+  const sampleBattleSubjectsText = fs.readFileSync(
+    sampleBattleSubjectsPath,
+    "utf8",
+  );
 
   writeFile(
     sampleBattleReducerPath,
@@ -1077,6 +1140,45 @@ function runSelfTest() {
     `Expected unmapped TS BattleHole variant issue, got ${JSON.stringify(unmappedTsHoleVariantResult.issues)}`,
   );
   writeFile(sampleBattleReducerPath, sampleBattleReducerText);
+
+  writeFile(
+    sampleBattleReducerPath,
+    [
+      "export type BattleTargetChoiceHole = { readonly kind: 'targetChoice'; };",
+      "export type BattleHole = BattleTargetChoiceHole;",
+      "export type BattleFill =",
+      "  | { readonly kind: 'targetChoice'; readonly holeId: string; readonly value: string; }",
+      "  | { readonly kind: 'unmappedFill'; readonly holeId: string; readonly value: string; };",
+    ].join("\n") + "\n",
+  );
+  const unmappedTsFillVariantResult = buildKernelCoverage({ root });
+  assert.ok(
+    unmappedTsFillVariantResult.issues.includes(
+      "battle-hole-frontier is missing BattleFill kind unmappedFill.",
+    ),
+    `Expected unmapped TS BattleFill variant issue, got ${JSON.stringify(unmappedTsFillVariantResult.issues)}`,
+  );
+  writeFile(sampleBattleReducerPath, sampleBattleReducerText);
+
+  writeFile(
+    sampleBattleSubjectsPath,
+    [
+      "import { Schema } from 'effect';",
+      "export const BattleSubjectSchema = Schema.Union(",
+      "  Schema.Struct({ tag: Schema.Literal('action'), action: Schema.Literal('attack') }),",
+      "  Schema.Struct({ tag: Schema.Literal('action'), action: Schema.Literal('unmappedAction') }),",
+      ");",
+      "export type BattleSubject = typeof BattleSubjectSchema.Type;",
+    ].join("\n") + "\n",
+  );
+  const unmappedTsSubjectVariantResult = buildKernelCoverage({ root });
+  assert.ok(
+    unmappedTsSubjectVariantResult.issues.includes(
+      "battle-hole-frontier is missing BattleSubject kind actionUnmappedAction.",
+    ),
+    `Expected unmapped TS BattleSubject variant issue, got ${JSON.stringify(unmappedTsSubjectVariantResult.issues)}`,
+  );
+  writeFile(sampleBattleSubjectsPath, sampleBattleSubjectsText);
 
   writeFile(
     sampleBattleHoleFrontierPath,
@@ -1098,6 +1200,17 @@ function runSelfTest() {
         coveredByObligationIds: ["BATTLE.SAMPLE"],
         followUpTaskIds: [],
         reason: "sample semantic fill kind",
+      }),
+      JSON.stringify({
+        subject: "battle-subject-kind",
+        id: "actionAttack",
+        subjectKind: "actionAttack",
+        tag: "action",
+        action: "attack",
+        classification: "semantic-frontier",
+        coveredByObligationIds: ["BATTLE.SAMPLE"],
+        followUpTaskIds: [],
+        reason: "sample semantic subject kind",
       }),
     ].join("\n") + "\n",
   );
@@ -1131,6 +1244,17 @@ function runSelfTest() {
         followUpTaskIds: [],
         reason: "sample semantic fill kind",
       }),
+      JSON.stringify({
+        subject: "battle-subject-kind",
+        id: "actionAttack",
+        subjectKind: "actionAttack",
+        tag: "action",
+        action: "attack",
+        classification: "semantic-frontier",
+        coveredByObligationIds: ["BATTLE.SAMPLE"],
+        followUpTaskIds: [],
+        reason: "sample semantic subject kind",
+      }),
     ].join("\n") + "\n",
   );
   const misKindedFrontierResult = buildKernelCoverage({ root });
@@ -1139,6 +1263,92 @@ function runSelfTest() {
       "battle-hole-frontier row 1.holeKind missingQntKind maps to missing BattleHoleFamilyKind variant MissingQntKindHoleKind.",
     ),
     `Expected mis-kinded frontier QNT join issue, got ${JSON.stringify(misKindedFrontierResult.issues)}`,
+  );
+  writeFile(sampleBattleHoleFrontierPath, sampleBattleHoleFrontierText);
+
+  writeFile(
+    sampleBattleHoleFrontierPath,
+    [
+      JSON.stringify({
+        subject: "battle-hole-family",
+        id: "BattleTargetChoiceHole",
+        holeKind: "targetChoice",
+        classification: "semantic-frontier",
+        coveredByObligationIds: ["BATTLE.SAMPLE"],
+        followUpTaskIds: [],
+        reason: "sample semantic hole family",
+      }),
+      JSON.stringify({
+        subject: "battle-fill-kind",
+        id: "missingQntFill",
+        fillKind: "missingQntFill",
+        classification: "semantic-frontier",
+        coveredByObligationIds: ["BATTLE.SAMPLE"],
+        followUpTaskIds: [],
+        reason: "sample mis-kinded semantic fill kind",
+      }),
+      JSON.stringify({
+        subject: "battle-subject-kind",
+        id: "actionAttack",
+        subjectKind: "actionAttack",
+        tag: "action",
+        action: "attack",
+        classification: "semantic-frontier",
+        coveredByObligationIds: ["BATTLE.SAMPLE"],
+        followUpTaskIds: [],
+        reason: "sample semantic subject kind",
+      }),
+    ].join("\n") + "\n",
+  );
+  const misKindedFillResult = buildKernelCoverage({ root });
+  assert.ok(
+    misKindedFillResult.issues.includes(
+      "battle-hole-frontier row 2.fillKind missingQntFill maps to missing BattleFillKind variant MissingQntFillFillKind.",
+    ),
+    `Expected mis-kinded fill QNT join issue, got ${JSON.stringify(misKindedFillResult.issues)}`,
+  );
+  writeFile(sampleBattleHoleFrontierPath, sampleBattleHoleFrontierText);
+
+  writeFile(
+    sampleBattleHoleFrontierPath,
+    [
+      JSON.stringify({
+        subject: "battle-hole-family",
+        id: "BattleTargetChoiceHole",
+        holeKind: "targetChoice",
+        classification: "semantic-frontier",
+        coveredByObligationIds: ["BATTLE.SAMPLE"],
+        followUpTaskIds: [],
+        reason: "sample semantic hole family",
+      }),
+      JSON.stringify({
+        subject: "battle-fill-kind",
+        id: "targetChoice",
+        fillKind: "targetChoice",
+        classification: "semantic-frontier",
+        coveredByObligationIds: ["BATTLE.SAMPLE"],
+        followUpTaskIds: [],
+        reason: "sample semantic fill kind",
+      }),
+      JSON.stringify({
+        subject: "battle-subject-kind",
+        id: "missingSubjectKind",
+        subjectKind: "missingSubjectKind",
+        tag: "action",
+        action: "attack",
+        classification: "semantic-frontier",
+        coveredByObligationIds: ["BATTLE.SAMPLE"],
+        followUpTaskIds: [],
+        reason: "sample mis-kinded semantic subject kind",
+      }),
+    ].join("\n") + "\n",
+  );
+  const misKindedSubjectResult = buildKernelCoverage({ root });
+  assert.ok(
+    misKindedSubjectResult.issues.includes(
+      "battle-hole-frontier row 3.subjectKind missingSubjectKind maps to missing BattleSubjectKind variant MissingSubjectKindSubjectKind.",
+    ),
+    `Expected mis-kinded subject QNT join issue, got ${JSON.stringify(misKindedSubjectResult.issues)}`,
   );
   writeFile(sampleBattleHoleFrontierPath, sampleBattleHoleFrontierText);
 
@@ -1163,6 +1373,17 @@ function runSelfTest() {
         followUpTaskIds: [],
         reason: "sample semantic fill kind",
       }),
+      JSON.stringify({
+        subject: "battle-subject-kind",
+        id: "actionAttack",
+        subjectKind: "actionAttack",
+        tag: "action",
+        action: "attack",
+        classification: "semantic-frontier",
+        coveredByObligationIds: ["BATTLE.SAMPLE"],
+        followUpTaskIds: [],
+        reason: "sample semantic subject kind",
+      }),
     ].join("\n") + "\n",
   );
   const nullHoleKindResult = buildKernelCoverage({ root });
@@ -1175,7 +1396,12 @@ function runSelfTest() {
   writeFile(sampleBattleHoleFrontierPath, sampleBattleHoleFrontierText);
 
   writeFile(
-    path.join(root, "packages", "battle-runtime", "battle-runtime-hole-kinds.qnt"),
+    path.join(
+      root,
+      "packages",
+      "battle-runtime",
+      "battle-runtime-hole-kinds.qnt",
+    ),
     [
       "// KERNEL-COVERAGE: qnt-owner BATTLE.SAMPLE",
       "module battleRuntimeHoleKinds {",
@@ -1193,12 +1419,95 @@ function runSelfTest() {
     `Expected unmapped QNT variant issue, got ${JSON.stringify(unmappedQntVariantResult.issues)}`,
   );
   writeFile(
-    path.join(root, "packages", "battle-runtime", "battle-runtime-hole-kinds.qnt"),
+    path.join(
+      root,
+      "packages",
+      "battle-runtime",
+      "battle-runtime-hole-kinds.qnt",
+    ),
     [
       "// KERNEL-COVERAGE: qnt-owner BATTLE.SAMPLE",
       "module battleRuntimeHoleKinds {",
       "  type BattleHoleFamilyKind =",
       "    | TargetChoiceHoleKind",
+      "}",
+    ].join("\n") + "\n",
+  );
+
+  writeFile(
+    path.join(
+      root,
+      "packages",
+      "battle-runtime",
+      "battle-runtime-fill-kinds.qnt",
+    ),
+    [
+      "// KERNEL-COVERAGE: qnt-owner BATTLE.SAMPLE",
+      "module battleRuntimeFillKinds {",
+      "  type BattleFillKind =",
+      "    | TargetChoiceFillKind",
+      "    | UnmappedFillKind",
+      "}",
+    ].join("\n") + "\n",
+  );
+  const unmappedFillQntVariantResult = buildKernelCoverage({ root });
+  assert.ok(
+    unmappedFillQntVariantResult.issues.includes(
+      "packages/battle-runtime/battle-runtime-fill-kinds.qnt BattleFillKind variant UnmappedFillKind has no semantic-frontier battle-hole-frontier row for fillKind unmapped.",
+    ),
+    `Expected unmapped fill QNT variant issue, got ${JSON.stringify(unmappedFillQntVariantResult.issues)}`,
+  );
+  writeFile(
+    path.join(
+      root,
+      "packages",
+      "battle-runtime",
+      "battle-runtime-fill-kinds.qnt",
+    ),
+    [
+      "// KERNEL-COVERAGE: qnt-owner BATTLE.SAMPLE",
+      "module battleRuntimeFillKinds {",
+      "  type BattleFillKind =",
+      "    | TargetChoiceFillKind",
+      "}",
+    ].join("\n") + "\n",
+  );
+
+  writeFile(
+    path.join(
+      root,
+      "packages",
+      "battle-runtime",
+      "battle-runtime-subject-kinds.qnt",
+    ),
+    [
+      "// KERNEL-COVERAGE: qnt-owner BATTLE.SAMPLE",
+      "module battleRuntimeSubjectKinds {",
+      "  type BattleSubjectKind =",
+      "    | ActionAttackSubjectKind",
+      "    | UnmappedSubjectKind",
+      "}",
+    ].join("\n") + "\n",
+  );
+  const unmappedSubjectQntVariantResult = buildKernelCoverage({ root });
+  assert.ok(
+    unmappedSubjectQntVariantResult.issues.includes(
+      "packages/battle-runtime/battle-runtime-subject-kinds.qnt BattleSubjectKind variant UnmappedSubjectKind has no semantic-frontier battle-hole-frontier row for subjectKind unmapped.",
+    ),
+    `Expected unmapped subject QNT variant issue, got ${JSON.stringify(unmappedSubjectQntVariantResult.issues)}`,
+  );
+  writeFile(
+    path.join(
+      root,
+      "packages",
+      "battle-runtime",
+      "battle-runtime-subject-kinds.qnt",
+    ),
+    [
+      "// KERNEL-COVERAGE: qnt-owner BATTLE.SAMPLE",
+      "module battleRuntimeSubjectKinds {",
+      "  type BattleSubjectKind =",
+      "    | ActionAttackSubjectKind",
       "}",
     ].join("\n") + "\n",
   );

@@ -32,6 +32,9 @@ const {
 const {
   witnessKindCatalogIssues,
 } = require("./evidence-witness-kind-config.cjs");
+const {
+  extractBattleSubjectKinds,
+} = require("./battle-subject-kind-folds.cjs");
 
 const root = process.env.RULES_KERNEL_COVERAGE_ROOT ?? process.cwd();
 const write = process.argv.includes("--write");
@@ -42,10 +45,7 @@ const generatorReadinessArrayFields = [
   "generatorSubset",
   "blockedBy",
 ];
-const kernelIrBoundaryArrayFields = [
-  "runtimeBoundaryPaths",
-  "obligationIds",
-];
+const kernelIrBoundaryArrayFields = ["runtimeBoundaryPaths", "obligationIds"];
 const generatorReadinessSemanticCoreStatuses = new Set([
   "semantic-core-candidate",
   "fixture-bound",
@@ -64,6 +64,12 @@ const unitFeatureProcedureProfileObligationId =
 const battleHoleFamilyKindQntOwner =
   "packages/battle-runtime/battle-runtime-hole-kinds.qnt";
 const battleHoleFamilyKindQntType = "BattleHoleFamilyKind";
+const battleFillKindQntOwner =
+  "packages/battle-runtime/battle-runtime-fill-kinds.qnt";
+const battleFillKindQntType = "BattleFillKind";
+const battleSubjectKindQntOwner =
+  "packages/battle-runtime/battle-runtime-subject-kinds.qnt";
+const battleSubjectKindQntType = "BattleSubjectKind";
 
 function isRecord(value) {
   return value != null && typeof value === "object" && !Array.isArray(value);
@@ -183,7 +189,9 @@ function scanSemanticCoreRunBlocks(rootPath, qntOwnerRoleRows) {
     }
     const ownerAbsolutePath = path.join(rootPath, row.ownerPath);
     if (!fs.existsSync(ownerAbsolutePath)) continue;
-    const lines = findQntRunBlockLines(fs.readFileSync(ownerAbsolutePath, "utf8"));
+    const lines = findQntRunBlockLines(
+      fs.readFileSync(ownerAbsolutePath, "utf8"),
+    );
     if (lines.length > 0) runBlocksByPath.set(row.ownerPath, lines);
   }
   return runBlocksByPath;
@@ -236,8 +244,7 @@ function qntConstructScanSource(text) {
 
 function hasQntRecordConstruct(source) {
   return (
-    /\btype\s+\w+\s*=\s*\{/.test(source) ||
-    /[=,(]\s*\{[\s\S]*?:/.test(source)
+    /\btype\s+\w+\s*=\s*\{/.test(source) || /[=,(]\s*\{[\s\S]*?:/.test(source)
   );
 }
 
@@ -245,8 +252,7 @@ function hasQntVariantConstruct(source) {
   return (
     /\btype\s+\w+\s*=\s*(?:\r?\n\s*\||[A-Z]\w*(?:\s*\([^)]*\))?\s*\|)/m.test(
       source,
-    ) ||
-    /\b[A-Z]\w*\s*\(/.test(source)
+    ) || /\b[A-Z]\w*\s*\(/.test(source)
   );
 }
 
@@ -259,9 +265,7 @@ function findQntGeneratorSubsetConstructs(text) {
   add("all-block", /\ball\s*\{/.test(source));
   add(
     "arithmetic",
-    /[+/%]|(^|[^.])\*|\bmax\s*\(|\bmin\s*\(|(^|[^=<>!])-($|[^>])/.test(
-      source,
-    ),
+    /[+/%]|(^|[^.])\*|\bmax\s*\(|\bmin\s*\(|(^|[^=<>!])-($|[^>])/.test(source),
   );
   add(
     "boolean-connective",
@@ -270,14 +274,9 @@ function findQntGeneratorSubsetConstructs(text) {
   add("bool", /\btrue\b|\bfalse\b|\bbool\b/.test(source));
   add(
     "comparison",
-    /==|!=|<=|>=|(^|[^=<>!])<($|[^=])|(^|[^=<>!])>($|[^=])/.test(
-      source,
-    ),
+    /==|!=|<=|>=|(^|[^=<>!])<($|[^=])|(^|[^=<>!])>($|[^=])/.test(source),
   );
-  add(
-    "constant-def",
-    /^\s*pure\s+def\s+\w+\s*(?:\(\s*\))?\s*:/m.test(source),
-  );
+  add("constant-def", /^\s*pure\s+def\s+\w+\s*(?:\(\s*\))?\s*:/m.test(source));
   add("constant-val", /^\s*pure\s+val\s+/m.test(source));
   add("exists", /\.exists\s*\(/.test(source));
   add("filter", /\.filter\s*\(/.test(source));
@@ -458,19 +457,18 @@ function validateRequiredStringArray(value, context) {
   return validateStringArray(value, context);
 }
 
-const ralphFollowUpTaskIdPattern = /^[ABC][0-9]+-[A-Z0-9-]+$/;
+const ralphFollowUpTaskIdPattern = /^(?:[ABC][0-9]+|BPK-B[0-9]+)-[A-Z0-9-]+$/;
 
 function validFollowUpTaskId(taskId) {
   return (
-    /^RKBC-[A-Z0-9-]+$/.test(taskId) ||
-    ralphFollowUpTaskIdPattern.test(taskId)
+    /^RKBC-[A-Z0-9-]+$/.test(taskId) || ralphFollowUpTaskIdPattern.test(taskId)
   );
 }
 
 function readKnownRalphTaskIds(rootPath) {
   const taskIds = new Set();
   const taskHeadingPattern =
-    /^### Task [0-9]+ - ([ABC][0-9]+-[A-Z0-9-]+) - /gm;
+    /^### Task [0-9]+ - ((?:[ABC][0-9]+|BPK-B[0-9]+)-[A-Z0-9-]+) - /gm;
   const plansPath = path.join(rootPath, "plans");
   const planNames = fs.existsSync(plansPath)
     ? fs
@@ -643,7 +641,11 @@ function extractBattleFrontierSource(rootPath) {
     fillKinds.add(kinds[0]);
   }
 
-  return { fillKinds, holeFamilies };
+  return {
+    fillKinds,
+    holeFamilies,
+    subjectKinds: extractBattleSubjectKinds(rootPath),
+  };
 }
 
 function camelCaseToPascalCase(value) {
@@ -656,9 +658,33 @@ function qntVariantForBattleHoleKind(holeKind) {
   return `${camelCaseToPascalCase(holeKind)}HoleKind`;
 }
 
+function qntVariantForBattleFillKind(fillKind) {
+  return `${camelCaseToPascalCase(fillKind)}FillKind`;
+}
+
+function qntVariantForBattleSubjectKind(subjectKind) {
+  return `${camelCaseToPascalCase(subjectKind)}SubjectKind`;
+}
+
 function battleHoleKindForQntVariant(variant) {
   if (!variant.endsWith("HoleKind")) return undefined;
   const withoutSuffix = variant.slice(0, -"HoleKind".length);
+  return withoutSuffix.length === 0
+    ? undefined
+    : `${withoutSuffix[0].toLowerCase()}${withoutSuffix.slice(1)}`;
+}
+
+function battleFillKindForQntVariant(variant) {
+  if (!variant.endsWith("FillKind")) return undefined;
+  const withoutSuffix = variant.slice(0, -"FillKind".length);
+  return withoutSuffix.length === 0
+    ? undefined
+    : `${withoutSuffix[0].toLowerCase()}${withoutSuffix.slice(1)}`;
+}
+
+function battleSubjectKindForQntVariant(variant) {
+  if (!variant.endsWith("SubjectKind")) return undefined;
+  const withoutSuffix = variant.slice(0, -"SubjectKind".length);
   return withoutSuffix.length === 0
     ? undefined
     : `${withoutSuffix[0].toLowerCase()}${withoutSuffix.slice(1)}`;
@@ -674,11 +700,9 @@ function extractQntVariantTypeMembers(rootPath, ownerPath, typeName) {
   if (match === null) return undefined;
   const bodyStart = match.index + match[0].length;
   const rest = source.slice(bodyStart);
-  const nextTopLevel = /\n\s{0,2}(?:type|pure\s+def|def|val|run|action)\s+\w+\b|\n\s*}/.exec(
-    rest,
-  );
-  const body =
-    nextTopLevel === null ? rest : rest.slice(0, nextTopLevel.index);
+  const nextTopLevel =
+    /\n\s{0,2}(?:type|pure\s+def|def|val|run|action)\s+\w+\b|\n\s*}/.exec(rest);
+  const body = nextTopLevel === null ? rest : rest.slice(0, nextTopLevel.index);
   const variants = [];
   for (const variantMatch of body.matchAll(/\b([A-Z][A-Za-z0-9_]*)\b/g)) {
     variants.push(variantMatch[1]);
@@ -1221,6 +1245,11 @@ function validateBattleFrontierRow(
         `${context}.fillKind is only valid for battle-fill-kind rows.`,
       );
     }
+    if (Object.prototype.hasOwnProperty.call(row, "subjectKind")) {
+      issues.push(
+        `${context}.subjectKind is only valid for battle-subject-kind rows.`,
+      );
+    }
   }
 
   if (row.subject === "battle-fill-kind") {
@@ -1243,6 +1272,40 @@ function validateBattleFrontierRow(
     if (Object.prototype.hasOwnProperty.call(row, "holeKind")) {
       issues.push(
         `${context}.holeKind is only valid for battle-hole-family rows.`,
+      );
+    }
+    if (Object.prototype.hasOwnProperty.call(row, "subjectKind")) {
+      issues.push(
+        `${context}.subjectKind is only valid for battle-subject-kind rows.`,
+      );
+    }
+  }
+
+  if (row.subject === "battle-subject-kind") {
+    if (typeof row.subjectKind !== "string" || row.subjectKind.length === 0) {
+      issues.push(`${context}.subjectKind must be a non-empty string.`);
+    } else if (!expectedBattleFrontier.subjectKinds.has(row.subjectKind)) {
+      issues.push(
+        `${context} references unknown BattleSubject kind ${row.subjectKind}.`,
+      );
+    }
+    if (
+      typeof row.id === "string" &&
+      typeof row.subjectKind === "string" &&
+      row.id !== row.subjectKind
+    ) {
+      issues.push(
+        `${context}.id must match subjectKind for battle-subject-kind rows.`,
+      );
+    }
+    if (Object.prototype.hasOwnProperty.call(row, "holeKind")) {
+      issues.push(
+        `${context}.holeKind is only valid for battle-hole-family rows.`,
+      );
+    }
+    if (Object.prototype.hasOwnProperty.call(row, "fillKind")) {
+      issues.push(
+        `${context}.fillKind is only valid for battle-fill-kind rows.`,
       );
     }
   }
@@ -1302,10 +1365,7 @@ function validateBattleFrontierRow(
   return issues;
 }
 
-function validateBattleHoleFamilyKindQntJoin(
-  rootPath,
-  battleHoleFrontier,
-) {
+function validateBattleHoleFamilyKindQntJoin(rootPath, battleHoleFrontier) {
   const issues = [];
   const qntVariants = extractQntVariantTypeMembers(
     rootPath,
@@ -1350,6 +1410,108 @@ function validateBattleHoleFamilyKindQntJoin(
     if (!semanticFrontierVariants.has(qntVariant)) {
       issues.push(
         `${battleHoleFamilyKindQntOwner} ${battleHoleFamilyKindQntType} variant ${qntVariant} has no semantic-frontier battle-hole-frontier row for holeKind ${mappedHoleKind}.`,
+      );
+    }
+  }
+  return issues;
+}
+
+function validateBattleFillKindQntJoin(rootPath, battleHoleFrontier) {
+  const issues = [];
+  const qntVariants = extractQntVariantTypeMembers(
+    rootPath,
+    battleFillKindQntOwner,
+    battleFillKindQntType,
+  );
+  if (qntVariants === undefined) {
+    return [
+      `${battleFillKindQntOwner} must define type ${battleFillKindQntType}.`,
+    ];
+  }
+  const qntVariantSet = new Set(qntVariants);
+  const semanticFrontierVariants = new Map();
+  for (const [index, row] of battleHoleFrontier.entries()) {
+    if (
+      !isRecord(row) ||
+      row.subject !== "battle-fill-kind" ||
+      row.classification !== "semantic-frontier" ||
+      typeof row.fillKind !== "string" ||
+      row.fillKind.length === 0
+    ) {
+      continue;
+    }
+    const qntVariant = qntVariantForBattleFillKind(row.fillKind);
+    const existingRows = semanticFrontierVariants.get(qntVariant) ?? [];
+    existingRows.push(index + 1);
+    semanticFrontierVariants.set(qntVariant, existingRows);
+    if (!qntVariantSet.has(qntVariant)) {
+      issues.push(
+        `battle-hole-frontier row ${index + 1}.fillKind ${row.fillKind} maps to missing ${battleFillKindQntType} variant ${qntVariant}.`,
+      );
+    }
+  }
+  for (const qntVariant of qntVariants) {
+    const mappedFillKind = battleFillKindForQntVariant(qntVariant);
+    if (mappedFillKind === undefined) {
+      issues.push(
+        `${battleFillKindQntOwner} ${battleFillKindQntType} variant ${qntVariant} must end with FillKind.`,
+      );
+      continue;
+    }
+    if (!semanticFrontierVariants.has(qntVariant)) {
+      issues.push(
+        `${battleFillKindQntOwner} ${battleFillKindQntType} variant ${qntVariant} has no semantic-frontier battle-hole-frontier row for fillKind ${mappedFillKind}.`,
+      );
+    }
+  }
+  return issues;
+}
+
+function validateBattleSubjectKindQntJoin(rootPath, battleHoleFrontier) {
+  const issues = [];
+  const qntVariants = extractQntVariantTypeMembers(
+    rootPath,
+    battleSubjectKindQntOwner,
+    battleSubjectKindQntType,
+  );
+  if (qntVariants === undefined) {
+    return [
+      `${battleSubjectKindQntOwner} must define type ${battleSubjectKindQntType}.`,
+    ];
+  }
+  const qntVariantSet = new Set(qntVariants);
+  const semanticFrontierVariants = new Map();
+  for (const [index, row] of battleHoleFrontier.entries()) {
+    if (
+      !isRecord(row) ||
+      row.subject !== "battle-subject-kind" ||
+      row.classification !== "semantic-frontier" ||
+      typeof row.subjectKind !== "string" ||
+      row.subjectKind.length === 0
+    ) {
+      continue;
+    }
+    const qntVariant = qntVariantForBattleSubjectKind(row.subjectKind);
+    const existingRows = semanticFrontierVariants.get(qntVariant) ?? [];
+    existingRows.push(index + 1);
+    semanticFrontierVariants.set(qntVariant, existingRows);
+    if (!qntVariantSet.has(qntVariant)) {
+      issues.push(
+        `battle-hole-frontier row ${index + 1}.subjectKind ${row.subjectKind} maps to missing ${battleSubjectKindQntType} variant ${qntVariant}.`,
+      );
+    }
+  }
+  for (const qntVariant of qntVariants) {
+    const mappedSubjectKind = battleSubjectKindForQntVariant(qntVariant);
+    if (mappedSubjectKind === undefined) {
+      issues.push(
+        `${battleSubjectKindQntOwner} ${battleSubjectKindQntType} variant ${qntVariant} must end with SubjectKind.`,
+      );
+      continue;
+    }
+    if (!semanticFrontierVariants.has(qntVariant)) {
+      issues.push(
+        `${battleSubjectKindQntOwner} ${battleSubjectKindQntType} variant ${qntVariant} has no semantic-frontier battle-hole-frontier row for subjectKind ${mappedSubjectKind}.`,
       );
     }
   }
@@ -1412,11 +1574,7 @@ function validateGeneratorReadiness(
       issues.push(`${context}.followUpTaskIds repeats ${duplicate}.`);
     }
     issues.push(
-      ...validateFollowUpTaskIds(
-        followUpTaskIds,
-        context,
-        knownRalphTaskIds,
-      ),
+      ...validateFollowUpTaskIds(followUpTaskIds, context, knownRalphTaskIds),
     );
   }
   for (const construct of generatorSubset) {
@@ -1491,7 +1649,8 @@ function validateGeneratorReadiness(
     issues.push(`${context}.blocked must not declare semanticCore.`);
   }
   const semanticCoreWithRunBlocks = semanticCore.filter(
-    (ownerPath) => (semanticCoreRunBlocksByPath.get(ownerPath) ?? []).length > 0,
+    (ownerPath) =>
+      (semanticCoreRunBlocksByPath.get(ownerPath) ?? []).length > 0,
   );
   if (
     semanticCoreWithRunBlocks.length > 0 &&
@@ -1771,12 +1930,7 @@ function validateCoveredEvidence(rootPath, obligation, markerIndex) {
         typeof witness.stepAction === "string"
       ) {
         if (
-          !declaresParityRunTarget(
-            rootPath,
-            witness,
-            witnessText,
-            helperTexts,
-          )
+          !declaresParityRunTarget(rootPath, witness, witnessText, helperTexts)
         ) {
           issues.push(
             `${obligation.id} parity witness ${witness.ownerPath} does not run ${witness.qntSpecPath} with step ${witness.stepAction} and stateCheck.`,
@@ -1857,7 +2011,8 @@ function validateRuntimeTestWitnessProfiles(
     const hasRuntimeTestWitness = runtimeTestWitnesses.some((witness) =>
       verificationOwners.some(
         (owner) =>
-          owner.kind === "runtime-test" && owner.ownerPath === witness.ownerPath,
+          owner.kind === "runtime-test" &&
+          owner.ownerPath === witness.ownerPath,
       ),
     );
     if (!hasRuntimeTestWitness) {
@@ -1871,7 +2026,8 @@ function validateRuntimeTestWitnessProfiles(
       const profile = profilesById.get(profileId);
       return (profile?.verificationOwners ?? []).some(
         (owner) =>
-          owner.kind === "runtime-test" && owner.ownerPath === witness.ownerPath,
+          owner.kind === "runtime-test" &&
+          owner.ownerPath === witness.ownerPath,
       );
     });
     if (!verifiesMappedProfile) {
@@ -1991,7 +2147,8 @@ function unitFeatureProfileOwnerRows(
         qntOwners: (profile.qntOwners ?? []).map((ownerPath) => {
           const profileObligationIds =
             obligationIdsByProfileId.get(profile.id) ?? [];
-          const ownerObligationIds = obligationIdsByQntOwner.get(ownerPath) ?? [];
+          const ownerObligationIds =
+            obligationIdsByQntOwner.get(ownerPath) ?? [];
           return {
             obligationIds: profileObligationIds.filter((obligationId) =>
               ownerObligationIds.includes(obligationId),
@@ -2105,8 +2262,7 @@ function buildMatrix(rootPath) {
   const obligationIdsByProfileId = new Map(
     profileObligations
       .filter(
-        (mapping) =>
-          isRecord(mapping) && typeof mapping.profileId === "string",
+        (mapping) => isRecord(mapping) && typeof mapping.profileId === "string",
       )
       .map((mapping) => [mapping.profileId, mapping.obligationIds ?? []]),
   );
@@ -2156,7 +2312,7 @@ function buildMatrix(rootPath) {
         profiles:
           obligation.id === unitFeatureProcedureProfileObligationId
             ? []
-            : profileIdsByObligation.get(obligation.id) ?? [],
+            : (profileIdsByObligation.get(obligation.id) ?? []),
       }),
     ),
     battleHoleFrontier: battleHoleFrontier.map((row) => stable(row)),
@@ -2189,9 +2345,7 @@ function buildMatrix(rootPath) {
       qntOwnerRolesByPath,
       semanticCoreRunBlocksByPath,
     ),
-    kernelIrBoundaries: kernelIrBoundaries.map((boundary) =>
-      stable(boundary),
-    ),
+    kernelIrBoundaries: kernelIrBoundaries.map((boundary) => stable(boundary)),
     profileIdsSeenFromUnitProfileCoverage: profiles
       .map((profile) => profile.id)
       .sort(),
@@ -2268,7 +2422,7 @@ function renderReport(matrix, issues) {
     );
     lines.push("| --- | --- | --- | --- | --- | --- |");
     for (const row of matrix.battleHoleFrontier) {
-      const kind = row.holeKind ?? row.fillKind ?? "";
+      const kind = row.holeKind ?? row.fillKind ?? row.subjectKind ?? "";
       const coverage =
         (row.coveredByObligationIds ?? [])
           .map((obligationId) => `\`${obligationId}\``)
@@ -2376,11 +2530,10 @@ function renderReport(matrix, issues) {
     lines.push("| --- | --- | --- | --- | --- |");
     for (const finding of matrix.semanticCoreRunBlockFindings) {
       const owners = finding.owners
-        .map(
-          (owner) =>
-            owner.lines
-              .map((line) => `\`${owner.ownerPath}:${line}\``)
-              .join(", "),
+        .map((owner) =>
+          owner.lines
+            .map((line) => `\`${owner.ownerPath}:${line}\``)
+            .join(", "),
         )
         .join("<br>");
       const followUp =
@@ -2594,6 +2747,7 @@ function buildKernelCoverage({
 
   const seenBattleHoleFamilies = new Set();
   const seenBattleFillKinds = new Set();
+  const seenBattleSubjectKinds = new Set();
   for (const [index, row] of battleHoleFrontier.entries()) {
     issues.push(
       ...validateBattleFrontierRow(
@@ -2621,6 +2775,14 @@ function buildKernelCoverage({
         }
         seenBattleFillKinds.add(row.id);
       }
+      if (row.subject === "battle-subject-kind") {
+        if (seenBattleSubjectKinds.has(row.id)) {
+          issues.push(
+            `battle-hole-frontier row ${index + 1}: duplicate BattleSubject kind ${row.id}.`,
+          );
+        }
+        seenBattleSubjectKinds.add(row.id);
+      }
     }
   }
   for (const expectedFamily of expectedBattleFrontier.holeFamilies.keys()) {
@@ -2637,8 +2799,17 @@ function buildKernelCoverage({
       );
     }
   }
+  for (const expectedSubjectKind of expectedBattleFrontier.subjectKinds) {
+    if (!seenBattleSubjectKinds.has(expectedSubjectKind)) {
+      issues.push(
+        `battle-hole-frontier is missing BattleSubject kind ${expectedSubjectKind}.`,
+      );
+    }
+  }
   issues.push(
     ...validateBattleHoleFamilyKindQntJoin(rootPath, battleHoleFrontier),
+    ...validateBattleFillKindQntJoin(rootPath, battleHoleFrontier),
+    ...validateBattleSubjectKindQntJoin(rootPath, battleHoleFrontier),
   );
 
   const expectedQntOwnerPaths = qntOwnerPaths(obligations);

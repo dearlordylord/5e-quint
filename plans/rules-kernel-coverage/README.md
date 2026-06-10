@@ -54,15 +54,18 @@ duplicate their profile lists; generated reports derive those lists from
 `profile-obligations.jsonl`.
 
 `battle-hole-frontier.jsonl` is the single source of truth for the current
-BattleHole/BattleFill frontier inventory. The checker parses
+BattleHole/BattleFill/BattleSubject protocol inventory. The checker parses
 `packages/battle-runtime/src/battle-reducer.ts` and requires one
-`battle-hole-family` row for every `BattleHole` union member and one
-`battle-fill-kind` row for every `BattleFill` discriminant. Boundary/table-owned
-rows must point at a non-semantic rules-kernel obligation; semantic rows must
-point at a covered obligation or at the Ralph follow-up task that will add the
-missing QNT/parity ownership. A semantic row may also point at a non-semantic
-boundary obligation when the same hole or fill carries caller/table facts, but
-that boundary coverage never substitutes for reducer-semantic ownership.
+`battle-hole-family` row for every `BattleHole` union member, one
+`battle-fill-kind` row for every `BattleFill` discriminant, and one
+`battle-subject-kind` row for every procedure-family fold over the
+schema-derived `BattleSubject` protocol kinds. Boundary/table-owned rows must
+point at a non-semantic rules-kernel
+obligation; semantic rows must point at a covered obligation or at the Ralph
+follow-up task that will add the missing QNT/parity ownership. A semantic row
+may also point at a non-semantic boundary obligation when the same hole, fill,
+or subject carries caller/table facts, but that boundary coverage never
+substitutes for reducer-semantic ownership.
 
 `generator-readiness.jsonl` records the separate C-axis question defined in
 [Generator Readiness Source Of Truth](#generator-readiness-source-of-truth).

@@ -147,16 +147,17 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 
 ## Battle Hole Frontier
 
-- Total classified rows: 121
+- Total classified rows: 157
 
 | Subject | Count |
 | --- | ---: |
 | battle-hole-family | 75 |
 | battle-fill-kind | 46 |
+| battle-subject-kind | 36 |
 
 | Classification | Count |
 | --- | ---: |
-| semantic-frontier | 92 |
+| semantic-frontier | 128 |
 | deterministic-boundary-projection | 0 |
 | table-owned-fact | 29 |
 | unsupported-dead-branch | 0 |
@@ -284,6 +285,42 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | battle-fill-kind | `spiritualWeaponForcePosition` | `spiritualWeaponForcePosition` | table-owned-fact | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS`, `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | _none_ |
 | battle-hole-family | `BattleWildShapeEquipmentDispositionHole` | `wildShapeEquipmentDisposition` | semantic-frontier | `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`, `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | _none_ |
 | battle-fill-kind | `wildShapeEquipmentDisposition` | `wildShapeEquipmentDisposition` | semantic-frontier | `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`, `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | _none_ |
+| battle-subject-kind | `actionAttack` | `actionAttack` | semantic-frontier | _none_ | `BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT` |
+| battle-subject-kind | `actionMovement` | `actionMovement` | semantic-frontier | _none_ | `BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT` |
+| battle-subject-kind | `actionAvoidance` | `actionAvoidance` | semantic-frontier | _none_ | `BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT` |
+| battle-subject-kind | `actionSupport` | `actionSupport` | semantic-frontier | _none_ | `BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT` |
+| battle-subject-kind | `actionExploration` | `actionExploration` | semantic-frontier | _none_ | `BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT` |
+| battle-subject-kind | `actionReady` | `actionReady` | semantic-frontier | _none_ | `BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT` |
+| battle-subject-kind | `actionContest` | `actionContest` | semantic-frontier | _none_ | `BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT` |
+| battle-subject-kind | `actionConditionIntervention` | `actionConditionIntervention` | semantic-frontier | _none_ | `BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT` |
+| battle-subject-kind | `companionAttack` | `companionAttack` | semantic-frontier | _none_ | `BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT` |
+| battle-subject-kind | `bonusActionAttack` | `bonusActionAttack` | semantic-frontier | _none_ | `BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT` |
+| battle-subject-kind | `bonusActionGrantedStandardAction` | `bonusActionGrantedStandardAction` | semantic-frontier | _none_ | `BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT` |
+| battle-subject-kind | `featureOption` | `featureOption` | semantic-frontier | _none_ | `BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT` |
+| battle-subject-kind | `featureAttack` | `featureAttack` | semantic-frontier | _none_ | `BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT` |
+| battle-subject-kind | `actionMagic` | `actionMagic` | semantic-frontier | _none_ | `BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT` |
+| battle-subject-kind | `bonusActionMagic` | `bonusActionMagic` | semantic-frontier | _none_ | `BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT` |
+| battle-subject-kind | `spellGrantedMovement` | `spellGrantedMovement` | semantic-frontier | _none_ | `BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT` |
+| battle-subject-kind | `featureActivation` | `featureActivation` | semantic-frontier | _none_ | `BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT` |
+| battle-subject-kind | `featureWeaponActivation` | `featureWeaponActivation` | semantic-frontier | _none_ | `BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT` |
+| battle-subject-kind | `formTransformation` | `formTransformation` | semantic-frontier | _none_ | `BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT` |
+| battle-subject-kind | `companionLifecycle` | `companionLifecycle` | semantic-frontier | _none_ | `BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT` |
+| battle-subject-kind | `companionSenses` | `companionSenses` | semantic-frontier | _none_ | `BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT` |
+| battle-subject-kind | `companionDeliveredMagic` | `companionDeliveredMagic` | semantic-frontier | _none_ | `BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT` |
+| battle-subject-kind | `runtimeTurnBoundary` | `runtimeTurnBoundary` | semantic-frontier | _none_ | `BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT` |
+| battle-subject-kind | `runtimeMovement` | `runtimeMovement` | semantic-frontier | _none_ | `BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT` |
+| battle-subject-kind | `runtimeReadiedResponse` | `runtimeReadiedResponse` | semantic-frontier | _none_ | `BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT` |
+| battle-subject-kind | `runtimeReaction` | `runtimeReaction` | semantic-frontier | _none_ | `BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT` |
+| battle-subject-kind | `runtimeLinkRelease` | `runtimeLinkRelease` | semantic-frontier | _none_ | `BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT` |
+| battle-subject-kind | `runtimeSavingThrow` | `runtimeSavingThrow` | semantic-frontier | _none_ | `BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT` |
+| battle-subject-kind | `runtimeEffectCleanup` | `runtimeEffectCleanup` | semantic-frontier | _none_ | `BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT` |
+| battle-subject-kind | `runtimeEffectControl` | `runtimeEffectControl` | semantic-frontier | _none_ | `BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT` |
+| battle-subject-kind | `runtimeHeldObjectRelease` | `runtimeHeldObjectRelease` | semantic-frontier | _none_ | `BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT` |
+| battle-subject-kind | `runtimeProtectionSave` | `runtimeProtectionSave` | semantic-frontier | _none_ | `BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT` |
+| battle-subject-kind | `runtimeTransformationMode` | `runtimeTransformationMode` | semantic-frontier | _none_ | `BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT` |
+| battle-subject-kind | `runtimeCompelledAction` | `runtimeCompelledAction` | semantic-frontier | _none_ | `BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT` |
+| battle-subject-kind | `runtimeAltitudeControl` | `runtimeAltitudeControl` | semantic-frontier | _none_ | `BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT` |
+| battle-subject-kind | `runtimeAreaEffect` | `runtimeAreaEffect` | semantic-frontier | _none_ | `BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT` |
 
 ## QNT Owner Roles
 

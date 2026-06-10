@@ -54,6 +54,12 @@ export {
   thaumaturgyBoomingVoiceInfluenceAbilityCheckHole,
   type BattleHoleFamilyKind,
 } from "./battle-reducer/hole-helpers.ts";
+export {
+  battleFillKind,
+  battleSubjectKind,
+  type BattleFillKind,
+  type BattleSubjectKind,
+} from "./battle-protocol-kinds.ts";
 export type {
   CharacterBattleClassLevel,
   CharacterBattleClassLevelInit,

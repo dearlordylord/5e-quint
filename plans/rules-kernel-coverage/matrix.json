@@ -26,13 +26,14 @@
     "qntOwnerRoles[].profileScopes": "Report projection derived from profile-obligations.jsonl, obligations[].qntOwners, and plans/unit-profile-coverage/profiles.jsonl qntOwners for unit-feature profiles mapped to BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS."
   },
   "battleHoleFrontierSummary": {
-    "total": 121,
+    "total": 157,
     "bySubject": {
       "battle-hole-family": 75,
-      "battle-fill-kind": 46
+      "battle-fill-kind": 46,
+      "battle-subject-kind": 36
     },
     "byClassification": {
-      "semantic-frontier": 92,
+      "semantic-frontier": 128,
       "deterministic-boundary-projection": 0,
       "table-owned-fact": 29,
       "unsupported-dead-branch": 0
@@ -5295,6 +5296,402 @@
       "id": "wildShapeEquipmentDisposition",
       "reason": "Wild Shape equipment disposition fills carry possibly empty selected-loadout disposition choices plus the current-form limb object-handling witness at an actor plus Beast-form-specific hole boundary. The reducer validates exact selected-loadout coverage, stores the limb witness on the active Wild Shape effect, stores merge choices as no-effect active Wild Shape equipment dispositions, stores practical worn armor/Shield and selected-loadout weapons as effective-loadout dispositions, emits droppedObjects for falls choices, and converts not-practical worn choices to the selected fall-or-merge fallback. Generic object/Utilize consumers must use the stored limb witness through a future generic object owner rather than derive form anatomy from authored identity or add Wild Shape-local object state.",
       "subject": "battle-fill-kind"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [],
+      "followUpTaskIds": [
+        "BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT"
+      ],
+      "id": "actionAttack",
+      "reason": "Procedure-family fold over one or more BattleSubject schema discriminants; BPK-B03 closes the vocabulary obligation metadata.",
+      "subject": "battle-subject-kind",
+      "subjectKind": "actionAttack"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [],
+      "followUpTaskIds": [
+        "BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT"
+      ],
+      "id": "actionMovement",
+      "reason": "Procedure-family fold over one or more BattleSubject schema discriminants; BPK-B03 closes the vocabulary obligation metadata.",
+      "subject": "battle-subject-kind",
+      "subjectKind": "actionMovement"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [],
+      "followUpTaskIds": [
+        "BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT"
+      ],
+      "id": "actionAvoidance",
+      "reason": "Procedure-family fold over one or more BattleSubject schema discriminants; BPK-B03 closes the vocabulary obligation metadata.",
+      "subject": "battle-subject-kind",
+      "subjectKind": "actionAvoidance"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [],
+      "followUpTaskIds": [
+        "BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT"
+      ],
+      "id": "actionSupport",
+      "reason": "Procedure-family fold over one or more BattleSubject schema discriminants; BPK-B03 closes the vocabulary obligation metadata.",
+      "subject": "battle-subject-kind",
+      "subjectKind": "actionSupport"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [],
+      "followUpTaskIds": [
+        "BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT"
+      ],
+      "id": "actionExploration",
+      "reason": "Procedure-family fold over one or more BattleSubject schema discriminants; BPK-B03 closes the vocabulary obligation metadata.",
+      "subject": "battle-subject-kind",
+      "subjectKind": "actionExploration"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [],
+      "followUpTaskIds": [
+        "BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT"
+      ],
+      "id": "actionReady",
+      "reason": "Procedure-family fold over one or more BattleSubject schema discriminants; BPK-B03 closes the vocabulary obligation metadata.",
+      "subject": "battle-subject-kind",
+      "subjectKind": "actionReady"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [],
+      "followUpTaskIds": [
+        "BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT"
+      ],
+      "id": "actionContest",
+      "reason": "Procedure-family fold over one or more BattleSubject schema discriminants; BPK-B03 closes the vocabulary obligation metadata.",
+      "subject": "battle-subject-kind",
+      "subjectKind": "actionContest"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [],
+      "followUpTaskIds": [
+        "BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT"
+      ],
+      "id": "actionConditionIntervention",
+      "reason": "Procedure-family fold over one or more BattleSubject schema discriminants; BPK-B03 closes the vocabulary obligation metadata.",
+      "subject": "battle-subject-kind",
+      "subjectKind": "actionConditionIntervention"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [],
+      "followUpTaskIds": [
+        "BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT"
+      ],
+      "id": "companionAttack",
+      "reason": "Procedure-family fold over one or more BattleSubject schema discriminants; BPK-B03 closes the vocabulary obligation metadata.",
+      "subject": "battle-subject-kind",
+      "subjectKind": "companionAttack"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [],
+      "followUpTaskIds": [
+        "BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT"
+      ],
+      "id": "bonusActionAttack",
+      "reason": "Procedure-family fold over one or more BattleSubject schema discriminants; BPK-B03 closes the vocabulary obligation metadata.",
+      "subject": "battle-subject-kind",
+      "subjectKind": "bonusActionAttack"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [],
+      "followUpTaskIds": [
+        "BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT"
+      ],
+      "id": "bonusActionGrantedStandardAction",
+      "reason": "Procedure-family fold over one or more BattleSubject schema discriminants; BPK-B03 closes the vocabulary obligation metadata.",
+      "subject": "battle-subject-kind",
+      "subjectKind": "bonusActionGrantedStandardAction"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [],
+      "followUpTaskIds": [
+        "BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT"
+      ],
+      "id": "featureOption",
+      "reason": "Procedure-family fold over one or more BattleSubject schema discriminants; BPK-B03 closes the vocabulary obligation metadata.",
+      "subject": "battle-subject-kind",
+      "subjectKind": "featureOption"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [],
+      "followUpTaskIds": [
+        "BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT"
+      ],
+      "id": "featureAttack",
+      "reason": "Procedure-family fold over one or more BattleSubject schema discriminants; BPK-B03 closes the vocabulary obligation metadata.",
+      "subject": "battle-subject-kind",
+      "subjectKind": "featureAttack"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [],
+      "followUpTaskIds": [
+        "BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT"
+      ],
+      "id": "actionMagic",
+      "reason": "Procedure-family fold over one or more BattleSubject schema discriminants; BPK-B03 closes the vocabulary obligation metadata.",
+      "subject": "battle-subject-kind",
+      "subjectKind": "actionMagic"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [],
+      "followUpTaskIds": [
+        "BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT"
+      ],
+      "id": "bonusActionMagic",
+      "reason": "Procedure-family fold over one or more BattleSubject schema discriminants; BPK-B03 closes the vocabulary obligation metadata.",
+      "subject": "battle-subject-kind",
+      "subjectKind": "bonusActionMagic"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [],
+      "followUpTaskIds": [
+        "BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT"
+      ],
+      "id": "spellGrantedMovement",
+      "reason": "Procedure-family fold over one or more BattleSubject schema discriminants; BPK-B03 closes the vocabulary obligation metadata.",
+      "subject": "battle-subject-kind",
+      "subjectKind": "spellGrantedMovement"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [],
+      "followUpTaskIds": [
+        "BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT"
+      ],
+      "id": "featureActivation",
+      "reason": "Procedure-family fold over one or more BattleSubject schema discriminants; BPK-B03 closes the vocabulary obligation metadata.",
+      "subject": "battle-subject-kind",
+      "subjectKind": "featureActivation"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [],
+      "followUpTaskIds": [
+        "BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT"
+      ],
+      "id": "featureWeaponActivation",
+      "reason": "Procedure-family fold over one or more BattleSubject schema discriminants; BPK-B03 closes the vocabulary obligation metadata.",
+      "subject": "battle-subject-kind",
+      "subjectKind": "featureWeaponActivation"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [],
+      "followUpTaskIds": [
+        "BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT"
+      ],
+      "id": "formTransformation",
+      "reason": "Procedure-family fold over one or more BattleSubject schema discriminants; BPK-B03 closes the vocabulary obligation metadata.",
+      "subject": "battle-subject-kind",
+      "subjectKind": "formTransformation"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [],
+      "followUpTaskIds": [
+        "BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT"
+      ],
+      "id": "companionLifecycle",
+      "reason": "Procedure-family fold over one or more BattleSubject schema discriminants; BPK-B03 closes the vocabulary obligation metadata.",
+      "subject": "battle-subject-kind",
+      "subjectKind": "companionLifecycle"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [],
+      "followUpTaskIds": [
+        "BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT"
+      ],
+      "id": "companionSenses",
+      "reason": "Procedure-family fold over one or more BattleSubject schema discriminants; BPK-B03 closes the vocabulary obligation metadata.",
+      "subject": "battle-subject-kind",
+      "subjectKind": "companionSenses"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [],
+      "followUpTaskIds": [
+        "BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT"
+      ],
+      "id": "companionDeliveredMagic",
+      "reason": "Procedure-family fold over one or more BattleSubject schema discriminants; BPK-B03 closes the vocabulary obligation metadata.",
+      "subject": "battle-subject-kind",
+      "subjectKind": "companionDeliveredMagic"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [],
+      "followUpTaskIds": [
+        "BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT"
+      ],
+      "id": "runtimeTurnBoundary",
+      "reason": "Procedure-family fold over one or more BattleSubject schema discriminants; BPK-B03 closes the vocabulary obligation metadata.",
+      "subject": "battle-subject-kind",
+      "subjectKind": "runtimeTurnBoundary"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [],
+      "followUpTaskIds": [
+        "BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT"
+      ],
+      "id": "runtimeMovement",
+      "reason": "Procedure-family fold over one or more BattleSubject schema discriminants; BPK-B03 closes the vocabulary obligation metadata.",
+      "subject": "battle-subject-kind",
+      "subjectKind": "runtimeMovement"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [],
+      "followUpTaskIds": [
+        "BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT"
+      ],
+      "id": "runtimeReadiedResponse",
+      "reason": "Procedure-family fold over one or more BattleSubject schema discriminants; BPK-B03 closes the vocabulary obligation metadata.",
+      "subject": "battle-subject-kind",
+      "subjectKind": "runtimeReadiedResponse"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [],
+      "followUpTaskIds": [
+        "BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT"
+      ],
+      "id": "runtimeReaction",
+      "reason": "Procedure-family fold over one or more BattleSubject schema discriminants; BPK-B03 closes the vocabulary obligation metadata.",
+      "subject": "battle-subject-kind",
+      "subjectKind": "runtimeReaction"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [],
+      "followUpTaskIds": [
+        "BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT"
+      ],
+      "id": "runtimeLinkRelease",
+      "reason": "Procedure-family fold over one or more BattleSubject schema discriminants; BPK-B03 closes the vocabulary obligation metadata.",
+      "subject": "battle-subject-kind",
+      "subjectKind": "runtimeLinkRelease"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [],
+      "followUpTaskIds": [
+        "BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT"
+      ],
+      "id": "runtimeSavingThrow",
+      "reason": "Procedure-family fold over one or more BattleSubject schema discriminants; BPK-B03 closes the vocabulary obligation metadata.",
+      "subject": "battle-subject-kind",
+      "subjectKind": "runtimeSavingThrow"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [],
+      "followUpTaskIds": [
+        "BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT"
+      ],
+      "id": "runtimeEffectCleanup",
+      "reason": "Procedure-family fold over one or more BattleSubject schema discriminants; BPK-B03 closes the vocabulary obligation metadata.",
+      "subject": "battle-subject-kind",
+      "subjectKind": "runtimeEffectCleanup"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [],
+      "followUpTaskIds": [
+        "BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT"
+      ],
+      "id": "runtimeEffectControl",
+      "reason": "Procedure-family fold over one or more BattleSubject schema discriminants; BPK-B03 closes the vocabulary obligation metadata.",
+      "subject": "battle-subject-kind",
+      "subjectKind": "runtimeEffectControl"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [],
+      "followUpTaskIds": [
+        "BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT"
+      ],
+      "id": "runtimeHeldObjectRelease",
+      "reason": "Procedure-family fold over one or more BattleSubject schema discriminants; BPK-B03 closes the vocabulary obligation metadata.",
+      "subject": "battle-subject-kind",
+      "subjectKind": "runtimeHeldObjectRelease"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [],
+      "followUpTaskIds": [
+        "BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT"
+      ],
+      "id": "runtimeProtectionSave",
+      "reason": "Procedure-family fold over one or more BattleSubject schema discriminants; BPK-B03 closes the vocabulary obligation metadata.",
+      "subject": "battle-subject-kind",
+      "subjectKind": "runtimeProtectionSave"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [],
+      "followUpTaskIds": [
+        "BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT"
+      ],
+      "id": "runtimeTransformationMode",
+      "reason": "Procedure-family fold over one or more BattleSubject schema discriminants; BPK-B03 closes the vocabulary obligation metadata.",
+      "subject": "battle-subject-kind",
+      "subjectKind": "runtimeTransformationMode"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [],
+      "followUpTaskIds": [
+        "BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT"
+      ],
+      "id": "runtimeCompelledAction",
+      "reason": "Procedure-family fold over one or more BattleSubject schema discriminants; BPK-B03 closes the vocabulary obligation metadata.",
+      "subject": "battle-subject-kind",
+      "subjectKind": "runtimeCompelledAction"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [],
+      "followUpTaskIds": [
+        "BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT"
+      ],
+      "id": "runtimeAltitudeControl",
+      "reason": "Procedure-family fold over one or more BattleSubject schema discriminants; BPK-B03 closes the vocabulary obligation metadata.",
+      "subject": "battle-subject-kind",
+      "subjectKind": "runtimeAltitudeControl"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [],
+      "followUpTaskIds": [
+        "BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT"
+      ],
+      "id": "runtimeAreaEffect",
+      "reason": "Procedure-family fold over one or more BattleSubject schema discriminants; BPK-B03 closes the vocabulary obligation metadata.",
+      "subject": "battle-subject-kind",
+      "subjectKind": "runtimeAreaEffect"
     }
   ],
   "profileObligations": [
