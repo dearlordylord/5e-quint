@@ -1,11 +1,11 @@
 // KERNEL-COVERAGE: runtime-owner SHEET.SPELL_REST_BENEFIT.APPLICATION
+// KERNEL-COVERAGE: runtime-owner SHEET.SPELL_SLOTS_PACT_SLOTS.TRANSITIONS
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.healing-resource-action
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.short-rest-spell-slot-recovery
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.spell-rest-benefit-application
 import {
   characterBuildFeatureUnitIds,
   characterBuildHitPoints,
-  characterBuildSpellcastingSlotCapacity,
   classLevelForUnit,
   progressionClassUnitIds,
   type CharacterBuild,
@@ -33,6 +33,10 @@ import {
   characterSheetResources,
   recoverShortRestUseCountResources,
 } from "./resources.ts";
+import {
+  isCharacterSheetWithSpellSlots,
+  ordinarySpellSlotStates,
+} from "./spell-slots.ts";
 import {
   ARCANE_RECOVERY_REST_FEATURE_TAG,
   LAY_ON_HANDS_POISONED_REMOVAL_COST,
@@ -364,23 +368,6 @@ export function characterBuildHitDice(
     : Either.right(hitPoints.right.hitDice);
 }
 
-export function ordinarySpellSlotStates(
-  sheet: CharacterSheetWithSpellSlots,
-): readonly CharacterSheetSpellSlotState[] {
-  return characterBuildSpellcastingSlotCapacity(sheet.build).map((slot) => {
-    const spellLevel = spellSlotLevel(slot.spellLevel);
-    const expenditure = requireSpellSlotExpenditure(
-      sheet.spellSlotExpenditures,
-      spellLevel,
-    );
-    return {
-      spellLevel,
-      count: resourceCount(slot.count),
-      expended: expenditure.expended,
-    };
-  });
-}
-
 export function restSpellSlotRecoveryProfileForBuild(
   build: CharacterBuild,
   unitLibrary: UnitCatalog,
@@ -418,12 +405,6 @@ export function restSpellSlotRecoveryProfileForBuild(
     unitLibrary,
     feature,
   });
-}
-
-export function isCharacterSheetWithSpellSlots(
-  sheet: CharacterSheet,
-): sheet is CharacterSheetWithSpellSlots {
-  return "spellSlotExpenditures" in sheet;
 }
 
 type CharacterSheetClassFeatureRecord = Extract<
@@ -599,19 +580,6 @@ function characterSheetSpellSlotSpendSource(input: {
   }
   return characterSheetIssue(
     "Spell Slot spend requires an unexpended Spell Slot.",
-  );
-}
-
-function requireSpellSlotExpenditure(
-  expenditures: readonly CharacterSpellSlotExpenditure[],
-  spellLevel: SpellSlotLevel,
-): CharacterSpellSlotExpenditure {
-  const expenditure = expenditures.find(
-    (candidate) => candidate.spellLevel === spellLevel,
-  );
-  if (expenditure !== undefined) return expenditure;
-  throw new Error(
-    `Available spellcasting Character Sheet is missing Spell Slot expenditure for level ${spellLevel}.`,
   );
 }
 

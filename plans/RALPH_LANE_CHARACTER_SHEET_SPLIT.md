@@ -25,13 +25,13 @@
     {
       "number": 4,
       "id": "SHEETS-C04-SPELL-SLOTS-INVOCATION",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Extract spell-slots (with Font of Magic) and spell-invocation"
     },
     {
       "number": 5,
       "id": "SHEETS-C05-FEATURE-DOMAINS",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Extract druid-features and class-feature-spells"
     },
     {
@@ -148,8 +148,8 @@ Every task must include:
 | 1 | SHEETS-C01-TYPES-AND-IDS | ready-for-implementation-after-light-research | none | External mcp-WIP gate cleared 2026-06-10 (see header). |
 | 2 | SHEETS-C02-STATELESS-QUERIES | ready-for-research | SHEETS-C01-TYPES-AND-IDS | Lowest-risk extractions; witnesses: hit-point-maximum, armor-class, ability-check. |
 | 3 | SHEETS-C03-RESOURCES-HEALING | ready-for-research | SHEETS-C02-STATELESS-QUERIES | Monk's Focus / Uncanny Metabolism fold into resources. |
-| 4 | SHEETS-C04-SPELL-SLOTS-INVOCATION | ready-for-research | SHEETS-C03-RESOURCES-HEALING | Font of Magic folds into spell-slots. |
-| 5 | SHEETS-C05-FEATURE-DOMAINS | blocked | SHEETS-C04-SPELL-SLOTS-INVOCATION | Druid + class-feature prepared spells. |
+| 4 | SHEETS-C04-SPELL-SLOTS-INVOCATION | done | SHEETS-C03-RESOURCES-HEALING | Font of Magic folds into spell-slots. |
+| 5 | SHEETS-C05-FEATURE-DOMAINS | ready-for-research | SHEETS-C04-SPELL-SLOTS-INVOCATION | Druid + class-feature prepared spells. |
 | 6 | SHEETS-C06-LIFECYCLE-PARSING | blocked | SHEETS-C05-FEATURE-DOMAINS | Largest internal move (~2,400-line parser layer). |
 | 7 | SHEETS-C07-RESTS | blocked | SHEETS-C06-LIFECYCLE-PARSING | Rest state machine consumes the spell-slots interface; weapon-mastery reselection folds in. |
 | 8 | SHEETS-C08-TIME-PASSAGE-AND-AUDIT | blocked | SHEETS-C07-RESTS | Final move + executable split audit + §7 status note. |
@@ -193,7 +193,7 @@ Acceptance: standard verification; `spell-rest-benefit-application` and
 
 ### Task 4 - SHEETS-C04-SPELL-SLOTS-INVOCATION
 
-Status: `ready-for-research` · Mode: AFK
+Status: `done` · Mode: AFK
 
 Output: `spell-slots.ts` (slot/created-slot/pact state machine including the
 Font of Magic conversion fold) and `spell-invocation.ts` (invocation, ritual
@@ -204,7 +204,7 @@ Acceptance: standard verification; `spell-slots-pact-slots` and
 
 ### Task 5 - SHEETS-C05-FEATURE-DOMAINS
 
-Status: `blocked` · Mode: AFK
+Status: `ready-for-research` · Mode: AFK
 
 Output: `druid-features.ts` (Wild Shape known forms, Circle of the Land) and
 `class-feature-spells.ts` (prepared-spell projection), consolidating the
