@@ -9,11 +9,10 @@
 // UNIT-IDENTITY-MBT-REPLAY: B12-LEVEL2-PROTECTION-SPELL-IDENTITY-BATCH mirror_image doDiscoverMirrorImageHitInterception
 // UNIT-IDENTITY-MBT-REPLAY: B12-LEVEL2-PROTECTION-SPELL-IDENTITY-BATCH pass_without_trace doDiscoverPassWithoutTraceStealthModifier
 // UNIT-IDENTITY-MBT-REPLAY: B12-LEVEL2-PROTECTION-SPELL-IDENTITY-BATCH warding_bond doDiscoverWardingBondLinkedEffect
-import * as path from "node:path";
-
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { expect } from "vitest";
 
+import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
 import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
 import type { BattleState } from "./index.ts";
 import {
@@ -92,9 +91,9 @@ const enhanceAbilitySecondTargetId = combatantId(
 defineSelectedIdentityWitness({
   describeLabel: "Level 2 protection spell selected identity MBT",
   taskId: "B12-LEVEL2-PROTECTION-SPELL-IDENTITY-BATCH",
-  specFile: path.resolve(
+  specFile: mbtSpecPath(
     import.meta.dirname,
-    "../battle-runtime-level2-protection-spell-selected-identity.mbt.qnt",
+    "battle-runtime-level2-protection-spell-selected-identity.mbt.qnt",
   ),
   projectionSchema: { lastResult: "str" },
   initialProjection: expectedProjection("init"),

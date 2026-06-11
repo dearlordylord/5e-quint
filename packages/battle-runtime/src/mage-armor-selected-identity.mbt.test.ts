@@ -1,7 +1,5 @@
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1H-MAGE-ARMOR mage_armor
 // UNIT-IDENTITY-MBT-REPLAY: L1H-MAGE-ARMOR mage_armor doDiscoverMageArmorUnarmoredSelfTarget doRejectMageArmorArmoredTarget doResolveMageArmorBaseArmorClassProjection doExpireMageArmorDuration
-import * as path from "node:path";
-
 import { Either } from "effect";
 
 import {
@@ -28,6 +26,7 @@ import type { SpellRecord } from "@dnd/surface/surface/types";
 
 import { activeEffectArmorClass } from "./battle-reducer/creature-state.ts";
 import { tickDurationEffects } from "./battle-reducer/turn-end-movement.ts";
+import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
 import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
 import {
   battleCombatantSide,
@@ -111,9 +110,9 @@ const unitLibrary = unitCatalogResult.catalog;
 defineSelectedIdentityWitness({
   describeLabel: "Mage Armor selected identity MBT",
   taskId: "L1H-MAGE-ARMOR",
-  specFile: path.resolve(
+  specFile: mbtSpecPath(
     import.meta.dirname,
-    "../battle-runtime-mage-armor-selected-identity.mbt.qnt",
+    "battle-runtime-mage-armor-selected-identity.mbt.qnt",
   ),
   projectionSchema: {
     selfTargetAdmitted: "bool",

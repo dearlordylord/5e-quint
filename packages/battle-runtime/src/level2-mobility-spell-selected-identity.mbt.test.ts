@@ -3,10 +3,9 @@
 // UNIT-IDENTITY-MBT-REPLAY: B11-LEVEL2-MOBILITY-SPELL-IDENTITY-BATCH fly doDiscoverFlySpeedGrant
 // UNIT-IDENTITY-MBT-REPLAY: B11-LEVEL2-MOBILITY-SPELL-IDENTITY-BATCH misty_step doDiscoverMistyStepSelfTeleport
 // UNIT-IDENTITY-MBT-REPLAY: B11-LEVEL2-MOBILITY-SPELL-IDENTITY-BATCH spider_climb doDiscoverSpiderClimbSpeedGrant
-import * as path from "node:path";
-
 import { expect } from "vitest";
 
+import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
 import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
 import {
   alterSelfUnitId,
@@ -64,9 +63,9 @@ function discoverInvocation(input: {
 defineSelectedIdentityWitness({
   describeLabel: "Level 2 mobility spell selected identity MBT",
   taskId: "B11-LEVEL2-MOBILITY-SPELL-IDENTITY-BATCH",
-  specFile: path.resolve(
+  specFile: mbtSpecPath(
     import.meta.dirname,
-    "../battle-runtime-level2-mobility-spell-selected-identity.mbt.qnt",
+    "battle-runtime-level2-mobility-spell-selected-identity.mbt.qnt",
   ),
   projectionSchema: { lastResult: "str" },
   initialProjection: { lastResult: "init" },

@@ -1,11 +1,20 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-object-contact-damage
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.HEAT_METAL_OBJECT_CONTACT_LIFECYCLE
-import * as path from "node:path";
-
 import { canSpendAction } from "@dnd/shared-algebras/action-economy-algebra";
-import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
 import { describe, expect, it } from "vitest";
 
+import {
+  MBT_TEST_TIMEOUT_MS,
+  booleanField,
+  defineDriver,
+  focusedMbtMaxSteps,
+  mbtSpecPath,
+  mbtTraceCount,
+  numberFromQuintInt,
+  quintStateRecord,
+  run,
+  stateCheck,
+} from "./battle-runtime-mbt-driver-kit.ts";
 import {
   damageRollFillWithGroups,
   requireCombatant,
@@ -171,19 +180,19 @@ describe("Heat Metal object-contact MBT parity", () => {
 
   it("matches the TS reducer slice against bounded random MBT traces", async () => {
     await run({
-      spec: path.resolve(
+      spec: mbtSpecPath(
         import.meta.dirname,
-        "../battle-runtime-heat-metal-object-contact.mbt.qnt",
+        "battle-runtime-heat-metal-object-contact.mbt.qnt",
       ),
       init: "init",
       step: "step",
       driver: createHeatMetalObjectContactDriver(),
       backend: "typescript",
-      nTraces: 10,
-      maxSteps: 6,
+      nTraces: mbtTraceCount(),
+      maxSteps: focusedMbtMaxSteps(6),
       stateCheck: heatMetalStateCheck,
     });
-  }, 120_000);
+  }, MBT_TEST_TIMEOUT_MS);
 });
 
 function initialRuntimeState(): HeatMetalRuntimeState {
@@ -456,31 +465,4 @@ function heatMetalLastResult(raw: unknown): HeatMetalLastResult {
     return raw;
   }
   throw new Error(`Unknown Heat Metal result: ${String(raw)}.`);
-}
-
-function quintStateRecord(raw: unknown): Readonly<Record<string, unknown>> {
-  if (!isRecord(raw)) {
-    throw new Error("Expected Quint Heat Metal state.");
-  }
-  return raw;
-}
-
-function numberFromQuintInt(raw: unknown, field: string): number {
-  if (typeof raw === "number") return raw;
-  if (typeof raw === "bigint") return Number(raw);
-  throw new Error(`Expected Quint integer field ${field}.`);
-}
-
-function booleanField(
-  state: Readonly<Record<string, unknown>>,
-  field: string,
-): boolean {
-  if (typeof state[field] === "boolean") {
-    return state[field];
-  }
-  throw new Error(`Expected Quint Boolean field ${field}.`);
-}
-
-function isRecord(raw: unknown): raw is Readonly<Record<string, unknown>> {
-  return typeof raw === "object" && raw !== null;
 }

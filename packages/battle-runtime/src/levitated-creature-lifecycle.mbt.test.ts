@@ -15,14 +15,24 @@
 //   Movement is deducted from the creature's movement budget.
 // - UBIQUITOUS_LANGUAGE.md: Magic Action, Movement, Concentration,
 //   Duration, and Spellcasting.
-import * as path from "node:path";
-
 import { canSpendAction } from "@dnd/shared-algebras/action-economy-algebra";
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { movementFeet } from "@dnd/shared/types";
-import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
 import { describe, expect, it } from "vitest";
 
+import {
+  MBT_TEST_TIMEOUT_MS,
+  booleanField,
+  defineDriver,
+  focusedMbtMaxSteps,
+  mbtSpecPath,
+  mbtTraceCount,
+  numberFromQuintInt,
+  quintSet,
+  quintStateRecord,
+  run,
+  stateCheck,
+} from "./battle-runtime-mbt-driver-kit.ts";
 import {
   movementFill,
   requireCombatant,
@@ -302,19 +312,19 @@ describe("Levitate creature lifecycle MBT parity", () => {
 
   it("matches the TS reducer slice against bounded random MBT traces", async () => {
     await run({
-      spec: path.resolve(
+      spec: mbtSpecPath(
         import.meta.dirname,
-        "../battle-runtime-levitated-creature-lifecycle.mbt.qnt",
+        "battle-runtime-levitated-creature-lifecycle.mbt.qnt",
       ),
       init: "init",
       step: "step",
       driver: createLevitatedCreatureLifecycleDriver(),
       backend: "typescript",
-      nTraces: 10,
-      maxSteps: 6,
+      nTraces: mbtTraceCount(),
+      maxSteps: focusedMbtMaxSteps(6),
       stateCheck: levitateCreatureStateCheck,
     });
-  }, 120_000);
+  }, MBT_TEST_TIMEOUT_MS);
 });
 
 function initialRuntimeState(): LevitateCreatureRuntimeState {
@@ -872,38 +882,4 @@ function lastResult(raw: unknown): LastResult {
     return raw as LastResult;
   }
   throw new Error(`Unknown Levitate creature result: ${String(raw)}.`);
-}
-
-function quintStateRecord(raw: unknown): Readonly<Record<string, unknown>> {
-  if (!isRecord(raw)) {
-    throw new Error("Expected Quint Levitate creature state.");
-  }
-  return raw;
-}
-
-function numberFromQuintInt(raw: unknown, field: string): number {
-  if (typeof raw === "number") return raw;
-  if (typeof raw === "bigint") return Number(raw);
-  throw new Error(`Expected Quint integer field ${field}.`);
-}
-
-function booleanField(
-  state: Readonly<Record<string, unknown>>,
-  field: string,
-): boolean {
-  if (typeof state[field] === "boolean") {
-    return state[field];
-  }
-  throw new Error(`Expected Quint Boolean field ${field}.`);
-}
-
-function quintSet(raw: unknown, field: string): readonly unknown[] {
-  if (raw instanceof Set) {
-    return [...raw];
-  }
-  throw new Error(`Expected Quint Set field ${field}.`);
-}
-
-function isRecord(raw: unknown): raw is Readonly<Record<string, unknown>> {
-  return typeof raw === "object" && raw !== null;
 }
