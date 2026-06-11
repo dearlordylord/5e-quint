@@ -55,8 +55,32 @@
     {
       "number": 9,
       "id": "BPK-B09-RECURSIVE-NEXT-SHAPES",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Queue the next procedure shapes for ordering coverage if the lane drains"
+    },
+    {
+      "number": 10,
+      "id": "BPK-B10-SPELL-ATTACK-ORDERING",
+      "status": "ready-for-research",
+      "title": "Hole-frontier ordering slice and witness for the attack-roll spell procedure shape"
+    },
+    {
+      "number": 11,
+      "id": "BPK-B11-HEALING-ORDERING",
+      "status": "ready-for-research",
+      "title": "Hole-frontier ordering slice and witness for spell and feature Hit Point restoration"
+    },
+    {
+      "number": 12,
+      "id": "BPK-B12-COMMAND-ORDERING",
+      "status": "ready-for-research",
+      "title": "Hole-frontier ordering slice and witness for Command option and next-turn procedures"
+    },
+    {
+      "number": 13,
+      "id": "BPK-B13-STAT-BLOCK-ACTION-ORDERING",
+      "status": "ready-for-research",
+      "title": "Hole-frontier ordering slice and witness for Stat Block action controls"
     }
   ]
 }
@@ -146,7 +170,11 @@ Every task must include:
 | 6 | BPK-B06-INTERRUPT-NESTING-RESUME | done | BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT | Cross-lane gate: unblock manually when Lane A PDS-A01 and PDS-A03 are merged; may run before/parallel to B04 in queue order if the runner supports it. |
 | 7 | BPK-B07-REPLAY-FROM-ROOT | done | BPK-B06-INTERRUPT-NESTING-RESUME | |
 | 8 | BPK-B08-KERNEL-REGISTRY-CLOSEOUT | done | BPK-B04-WEAPON-ATTACK-ORDERING, BPK-B05-SAVE-SPELL-ORDERING, BPK-B06-INTERRUPT-NESTING-RESUME, BPK-B07-REPLAY-FROM-ROOT | Also produces the multi-owner outcome-oracle convention consumed by PDS-A17's PRD. |
-| 9 | BPK-B09-RECURSIVE-NEXT-SHAPES | ready-for-research | BPK-B08-KERNEL-REGISTRY-CLOSEOUT | Ordering coverage for further procedure shapes (healing, command, attack-roll spell, …). |
+| 9 | BPK-B09-RECURSIVE-NEXT-SHAPES | done | BPK-B08-KERNEL-REGISTRY-CLOSEOUT | Registry audit found four next ordering shapes; Lane B is not drained. |
+| 10 | BPK-B10-SPELL-ATTACK-ORDERING | ready-for-research | BPK-B09-RECURSIVE-NEXT-SHAPES | Attack-roll spell shape over `BattleSpellAttackRollHole`, spell damage dice, target choice/list/allocation, and damage-type choice where applicable. |
+| 11 | BPK-B11-HEALING-ORDERING | ready-for-research | BPK-B10-SPELL-ATTACK-ORDERING | Hit Point restoration ordering over spell healing rolls and feature healing-pool distribution. |
+| 12 | BPK-B12-COMMAND-ORDERING | ready-for-research | BPK-B11-HEALING-ORDERING | Command option choice, save outcome, and next-turn consequence ordering; table route/object facts stay boundary-owned. |
+| 13 | BPK-B13-STAT-BLOCK-ACTION-ORDERING | ready-for-research | BPK-B12-COMMAND-ORDERING | Stat Block action, Multiattack, attack roll, damage dice/static damage, limited-use, and recharge roll ordering. |
 
 ## Task Details
 
@@ -282,9 +310,152 @@ checked off; disambiguation convention documented in
 
 ### Task 9 - BPK-B09-RECURSIVE-NEXT-SHAPES
 
-Status: `ready-for-research` · Mode: AFK
+Status: `done` · Mode: AFK
 
 Output: enumerate the next procedure shapes lacking ordering coverage
 (healing, command, attack-roll spell, stat-block actions, …) from the
 frontier registry and either append tasks to this lane or mark it drained in
 `plans/RALPH_QUINT_FIRST_WAVE.md`.
+
+Result: the lane is **not drained**. `battle-hole-frontier.jsonl` has no open
+Lane-B ordering `followUpTaskIds`; the remaining `objectContactTargets`
+follow-up points to non-Lane-B Surface/profile join evidence. However,
+`BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING` currently owns only weapon-attack and
+save-gated-spell order. The next reducer procedure shapes with semantic
+frontier rows and no reusable ordering owner are queued as B10-B13:
+
+- attack-roll spell: `BattleSpellAttackRollHole`, `BattleSpellDamageRollHole`,
+  `attackRoll`, `rolledDice`, plus target/list/allocation and damage-type
+  choice rows under `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS`,
+  `BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES`,
+  `BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE`, and
+  `BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE`;
+- healing: `BattleSpellHealingRollHole`,
+  `BattleHitPointHealingPoolDistributionHole`, `rolledDice`, and
+  `hitPointHealingDistribution` under
+  `BATTLE.SPELL.HIT_POINT_RESTORATION` and
+  `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`;
+- Command: `BattleCommandOptionChoiceHole`,
+  `BattleSpellSavingThrowOutcomeHole`, `commandOptionChoice`, and
+  `savingThrowOutcome` under `BATTLE.COMMAND.OPTION_AND_NEXT_TURN`;
+- Stat Block action controls: `BattleAttackRollHole`,
+  `BattleStatBlockRechargeRollHole`, `attackRoll`, and
+  `statBlockRechargeRoll` under `BATTLE.STAT_BLOCK.ATTACK_CONTROL`.
+
+The audit deliberately does not pull `table-owned-fact` rows into QNT. Route,
+range, cover, area membership, held-object inventory, and geometry facts remain
+boundary evidence under `BATTLE.TABLE.HOLE_FACT_BOUNDARIES`.
+
+### Task 10 - BPK-B10-SPELL-ATTACK-ORDERING
+
+Status: `ready-for-research` · Mode: AFK
+
+Input: prd/02 Solution §2; `battle-hole-frontier.jsonl` rows for
+`BattleSpellAttackRollHole`, `BattleSpellDamageRollHole`, `attackRoll`,
+`rolledDice`, `BattleTargetChoiceHole`, `targetChoice`,
+`BattleSpellTargetAllocationHole`, `spellTargetAllocation`,
+`BattleSpellTargetListHole`, `spellTargetList`,
+`BattleSpellDamageTypeChoiceHole`, and `damageTypeChoice`; existing ordering
+owners `battle-runtime-weapon-attack-ordering.qnt` and
+`battle-runtime-save-gated-spell-ordering.qnt`; spell attack reducer/profile
+paths (`spells-resolve.ts`, `spells-resolve-attack-sequence.ts`,
+`spell-procedure-profiles/spell-attack-damage.ts`,
+`spell-procedure-profiles/spell-attack-sequence.ts`,
+`spell-procedure-profiles/chained-spell-attack-damage.ts`); SRD passages
+`Playing-the-Game.md#Making an Attack`, `#Damage Rolls`,
+`Spells/Gaining-and-Casting.md#Attack Rolls`, and UL `Attack Roll`,
+`Spell Invocation`, and `Spell Effect`.
+
+Output: extend `BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING` with a focused
+attack-roll-spell shape over the B01/B02 vocabulary. Cover target choice or
+target-list/allocation before Spell Attack Roll, Spell Attack Roll before
+hit-gated damage dice, and damage-type choice ordering for typed spell attack
+damage where the reducer exposes it. Keep chained or independent repeated
+attack sequencing at family grain; do not add per-spell kinds. Add one focused
+MBT witness that drives production `resolveBattleSubject` through a bounded
+attack-roll spell fixture and asserts the projected frontier order.
+
+Acceptance: focused MBT green (`MBT_TRACES=1` plus `MBT_TRACES=3`); closure
+checker green; `BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING` reason and
+`surfaceEvidence` updated for spell attack scope; qnt-owner roles and
+generator-readiness still green; no table-owned range, cover, sight, or object
+facts pulled into the ordering owner.
+
+### Task 11 - BPK-B11-HEALING-ORDERING
+
+Status: `ready-for-research` · Mode: AFK
+
+Input: prd/02 Solution §2; `battle-hole-frontier.jsonl` rows for
+`BattleSpellHealingRollHole`, `BattleHitPointHealingPoolDistributionHole`,
+`rolledDice`, and `hitPointHealingDistribution`; obligations
+`BATTLE.SPELL.HIT_POINT_RESTORATION` and
+`BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`; healing reducer/profile paths for
+spell Hit Point restoration and feature healing-pool distribution; SRD passages
+`Playing-the-Game.md#Healing`, `#Dropping to 0 Hit Points`, and UL `Hit
+Points (HP)`, `Hit Point Maximum`, and `Stable`.
+
+Output: extend or add a sibling ordering slice for Hit Point restoration. Cover
+target or distribution choice before healing roll/allocation resolution,
+healing amount before Hit Point restoration, and zero-Hit-Point lifecycle
+cleanup after restored Hit Points. Separate spell healing rolls from feature
+healing-pool distribution only if the protocol stages genuinely differ; keep
+the obligation family-grained.
+
+Acceptance: focused MBT green (`MBT_TRACES=1` plus `MBT_TRACES=3`); closure
+checker green; registry rows and obligation reason identify both spell healing
+and feature healing-pool distribution scope; no duplicate HP state introduced
+beside the existing shared Hit Point lifecycle owners.
+
+### Task 12 - BPK-B12-COMMAND-ORDERING
+
+Status: `ready-for-research` · Mode: AFK
+
+Input: prd/02 Solution §2 and Lane Rules on table-owned facts;
+`battle-hole-frontier.jsonl` rows for `BattleCommandOptionChoiceHole`,
+`commandOptionChoice`, `BattleSpellSavingThrowOutcomeHole`,
+`savingThrowOutcome`, `BattleMovementHole`, `movement`,
+`BattleHeldObjectFactsHole`, and `heldObjectFacts`; obligation
+`BATTLE.COMMAND.OPTION_AND_NEXT_TURN`; Command reducer/profile paths; SRD
+passage `Spells/Descriptions-A-D.md#Command`, `Playing-the-Game.md#Saving
+Throws`, and UL `Saving Throw`, `Movement`, `Apply`, and `Advance`.
+
+Output: extend `BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING` with the Command
+procedure shape. Cover option choice before or alongside the initial failed-save
+resolution as the reducer actually exposes it, failed Wisdom Saving Throw
+before pending next-turn effects, and next-turn consequence ordering for Halt,
+Grovel, Drop, Approach, and Flee. Route choice, fastest/direct route facts, and
+held-object inventory remain table-owned boundary facts; the ordering owner
+only owns reducer-visible Command option, save, movement fill admission, and
+held-object release sequencing.
+
+Acceptance: focused MBT green (`MBT_TRACES=1` plus `MBT_TRACES=3`); closure
+checker green; obligation reason records any reducer protocol choice the SRD
+does not prescribe; no authored Command option identity is used as runtime
+dispatch outside typed option facts.
+
+### Task 13 - BPK-B13-STAT-BLOCK-ACTION-ORDERING
+
+Status: `ready-for-research` · Mode: AFK
+
+Input: prd/02 Solution §2; `battle-hole-frontier.jsonl` rows for
+`BattleAttackRollHole`, `BattleDamageRollHole`,
+`BattleStatBlockRechargeRollHole`, `attackRoll`, `rolledDice`, and
+`statBlockRechargeRoll`; obligation `BATTLE.STAT_BLOCK.ATTACK_CONTROL`;
+stat-block bridge/control QNT and reducer paths for Stat Block actions,
+Multiattack, limited-use, recharge, reactions, and legendary actions; SRD
+passages `Rules-Glossary.md#Stat Block`,
+`Playing-the-Game.md#Making an Attack`, and `#Damage Rolls`; UL `Stat Block`,
+`Attack Roll`, and `Damage`.
+
+Output: add a focused ordering slice and witness for Stat Block action
+controls. Cover action or Multiattack control before constituent attacks,
+Stat Block Attack Roll before damage dice when the Stat Block entry uses rolled
+damage, static-damage branches without invented dice holes, and recharge roll
+timing before recharge-gated action availability. Keep the task at generic Stat
+Block action/control grain; do not add per-monster procedure kinds.
+
+Acceptance: focused MBT green (`MBT_TRACES=1` plus `MBT_TRACES=3`); closure
+checker green; `BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING` reason names Stat Block
+scope or a sibling protocol-order obligation if the implementer splits by
+domain fit; stat-block data provenance remains Surface-owned and no monster
+authored identity dispatch is introduced.
