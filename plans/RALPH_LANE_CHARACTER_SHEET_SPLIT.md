@@ -55,7 +55,7 @@
     {
       "number": 9,
       "id": "SHEETS-C09-TEST-REORG",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Reorganize the monolithic index.test.ts along the new module seams (optional follow-up)"
     }
   ]
@@ -257,7 +257,7 @@ pre-split export list.
 
 ### Task 9 - SHEETS-C09-TEST-REORG
 
-Status: `ready-for-research` · Mode: AFK
+Status: `done` · Mode: AFK
 
 Output: split the 5,039-line `index.test.ts` along the new module seams
 (per-domain test files), no assertion changes; delete the monolith when
