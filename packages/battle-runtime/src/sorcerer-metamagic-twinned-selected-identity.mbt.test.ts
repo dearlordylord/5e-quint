@@ -11,8 +11,7 @@
 //   for each slot level above level 1.
 // - UBIQUITOUS_LANGUAGE.md: Spell Level, Cast Level, Spell Slot, Spell
 //   Invocation, Sorcery Points as a Pool, and Spend.
-import * as path from "node:path";
-
+import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
 import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
 import {
   projectBattleState,
@@ -23,9 +22,9 @@ import {
 defineSelectedIdentityWitness({
   describeLabel: "Sorcerer Metamagic Twinned Spell selected identity MBT",
   taskId: "L3META-07-TWINNED-SPELL-UPCAST-TARGETING",
-  specFile: path.resolve(
+  specFile: mbtSpecPath(
     import.meta.dirname,
-    "../battle-runtime-sorcerer-metamagic-twinned-selected-identity.mbt.qnt",
+    "battle-runtime-sorcerer-metamagic-twinned-selected-identity.mbt.qnt",
   ),
   projectionSchema: {
     magicActionAvailable: "bool",

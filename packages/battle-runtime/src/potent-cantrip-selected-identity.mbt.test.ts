@@ -2,8 +2,7 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.potent-cantrip
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L3PUTB-05 wizard_potent_cantrip
 // UNIT-IDENTITY-MBT-REPLAY: L3PUTB-05 wizard_potent_cantrip doAttackMissHalfDamage doAttackMissNoAdditionalEffect doAttackMissNoLightEmitter doSaveSuccessHalfDamage doSaveSuccessNoAdditionalEffect doRejectObjectMissHalfDamage
-import * as path from "node:path";
-
+import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
 import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
 import {
   armorClass,
@@ -61,9 +60,9 @@ const potentCantripUnitRef = supportedBattleUnitRef(potentCantripUnit);
 defineSelectedIdentityWitness({
   describeLabel: "Potent Cantrip selected identity MBT",
   taskId: "L3PUTB-05",
-  specFile: path.resolve(
+  specFile: mbtSpecPath(
     import.meta.dirname,
-    "../battle-runtime-potent-cantrip.mbt.qnt",
+    "battle-runtime-potent-cantrip.mbt.qnt",
   ),
   projectionSchema: {
     targetHp: "int",

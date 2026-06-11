@@ -7,8 +7,6 @@
 // UNIT-IDENTITY-MBT-REPLAY: condition-saving-throw-lifecycle hypnotic_pattern doResolveHypnoticPatternFailedSavingThrow
 // UNIT-IDENTITY-MBT-REPLAY: condition-saving-throw-lifecycle sleep doResolveSleepRepeatSavingThrowFailure
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE
-import * as path from "node:path";
-
 import { Either } from "effect";
 
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
@@ -50,6 +48,7 @@ import {
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
 import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
+import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
 import { spellConditionChoiceFill } from "./unit-profile-admission-spell-fill-support.ts";
 
 type ConditionSavingThrowSelectedIdentityProjection = {
@@ -113,9 +112,9 @@ const hypnoticPatternSpell = decodeHypnoticPatternSpellRecord();
 defineSelectedIdentityWitness({
   describeLabel: "Condition Saving Throw selected identity MBT",
   taskId: "condition-saving-throw-lifecycle",
-  specFile: path.resolve(
+  specFile: mbtSpecPath(
     import.meta.dirname,
-    "../battle-runtime-condition-saving-throw-selected-identity.mbt.qnt",
+    "battle-runtime-condition-saving-throw-selected-identity.mbt.qnt",
   ),
   projectionSchema: {
     targetCharmed: "bool",

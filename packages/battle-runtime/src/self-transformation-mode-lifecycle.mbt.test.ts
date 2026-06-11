@@ -13,11 +13,20 @@
 //   damage rolls.
 // - UBIQUITOUS_LANGUAGE.md: Action, Concentration, Damage Roll, Speed, Spell
 //   Effect, Spell Slot, and Unarmed Strike.
-import * as path from "node:path";
-
 import { PHYSICAL_DAMAGE_TYPES } from "@dnd/shared/types";
 import { canSpendAction } from "@dnd/shared-algebras/action-economy-algebra";
-import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
+import {
+  MBT_TEST_TIMEOUT_MS,
+  booleanField,
+  defineDriver,
+  focusedMbtMaxSteps,
+  mbtSpecPath,
+  mbtTraceCount,
+  numberFromQuintInt,
+  quintStateRecord,
+  run,
+  stateCheck,
+} from "./battle-runtime-mbt-driver-kit.ts";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -247,21 +256,25 @@ describe("Self-transformation mode lifecycle MBT parity", () => {
     });
   });
 
-  it("matches the focused self-transformation mode slice against bounded random MBT traces", async () => {
-    await run({
-      spec: path.resolve(
-        import.meta.dirname,
-        "../battle-runtime-self-transformation-mode-lifecycle.mbt.qnt",
-      ),
-      init: "init",
-      step: "step",
-      driver: createSelfTransformationModeLifecycleDriver(),
-      backend: "typescript",
-      nTraces: 10,
-      maxSteps: 6,
-      stateCheck: selfTransformationStateCheck,
-    });
-  }, 120_000);
+  it(
+    "matches the focused self-transformation mode slice against bounded random MBT traces",
+    async () => {
+      await run({
+        spec: mbtSpecPath(
+          import.meta.dirname,
+          "battle-runtime-self-transformation-mode-lifecycle.mbt.qnt",
+        ),
+        init: "init",
+        step: "step",
+        driver: createSelfTransformationModeLifecycleDriver(),
+        backend: "typescript",
+        nTraces: mbtTraceCount(),
+        maxSteps: focusedMbtMaxSteps(6),
+        stateCheck: selfTransformationStateCheck,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
 });
 
 function initialRuntimeState(): SelfTransformationRuntimeState {
@@ -554,26 +567,41 @@ function normalizeSelfTransformationQuintState(
     magicActionAvailable: booleanField(state, "qMagicActionAvailable"),
     castSpellAvailable: booleanField(state, "qCastSpellAvailable"),
     modeReplacementAvailable: booleanField(state, "qModeReplacementAvailable"),
-    spellSlotExpended: numberField(state, "qSpellSlotExpended"),
+    spellSlotExpended: numberFromQuintInt(
+      state["qSpellSlotExpended"],
+      "qSpellSlotExpended",
+    ),
     slotSpellCastThisTurn: booleanField(state, "qSlotSpellCastThisTurn"),
     casterConcentrating: booleanField(state, "qCasterConcentrating"),
     activeMode: selfTransformationMode(state["qActiveMode"]),
     waterBreathing: booleanField(state, "qWaterBreathing"),
-    walkSpeedFeet: numberField(state, "qWalkSpeedFeet"),
-    swimSpeedFeet: numberField(state, "qSwimSpeedFeet"),
+    walkSpeedFeet: numberFromQuintInt(
+      state["qWalkSpeedFeet"],
+      "qWalkSpeedFeet",
+    ),
+    swimSpeedFeet: numberFromQuintInt(
+      state["qSwimSpeedFeet"],
+      "qSwimSpeedFeet",
+    ),
     naturalWeaponDamageType: naturalWeaponDamageType(
       state["qNaturalWeaponDamageType"],
     ),
-    naturalWeaponDamageDieSize: numberField(
-      state,
+    naturalWeaponDamageDieSize: numberFromQuintInt(
+      state["qNaturalWeaponDamageDieSize"],
       "qNaturalWeaponDamageDieSize",
     ),
-    naturalWeaponAttackBonus: numberField(state, "qNaturalWeaponAttackBonus"),
-    naturalWeaponDamageOnRoll4: numberField(
-      state,
+    naturalWeaponAttackBonus: numberFromQuintInt(
+      state["qNaturalWeaponAttackBonus"],
+      "qNaturalWeaponAttackBonus",
+    ),
+    naturalWeaponDamageOnRoll4: numberFromQuintInt(
+      state["qNaturalWeaponDamageOnRoll4"],
       "qNaturalWeaponDamageOnRoll4",
     ),
-    durationTicks: numberField(state, "qDurationTicks"),
+    durationTicks: numberFromQuintInt(
+      state["qDurationTicks"],
+      "qDurationTicks",
+    ),
     lastResult: lastResult(state["qLastResult"]),
   };
 }
@@ -584,48 +612,6 @@ function compareSelfTransformationStates(
 ): boolean {
   expect(runtime).toStrictEqual(quint);
   return true;
-}
-
-function quintStateRecord(raw: unknown): Readonly<Record<string, unknown>> {
-  expect(raw).toBeTypeOf("object");
-  expect(raw).not.toBeNull();
-  if (!isReadonlyRecord(raw)) {
-    throw new Error("Expected Quint state record.");
-  }
-  return raw;
-}
-
-function isReadonlyRecord(
-  raw: unknown,
-): raw is Readonly<Record<string, unknown>> {
-  return typeof raw === "object" && raw !== null;
-}
-
-function booleanField(
-  state: Readonly<Record<string, unknown>>,
-  field: string,
-): boolean {
-  const value = state[field];
-  expect(value).toBeTypeOf("boolean");
-  if (typeof value !== "boolean") {
-    throw new Error(`Expected boolean Quint field ${field}.`);
-  }
-  return value;
-}
-
-function numberField(
-  state: Readonly<Record<string, unknown>>,
-  field: string,
-): number {
-  const value = state[field];
-  if (typeof value === "bigint") {
-    return Number(value);
-  }
-  expect(value).toBeTypeOf("number");
-  if (typeof value !== "number") {
-    throw new Error(`Expected number Quint field ${field}.`);
-  }
-  return value;
 }
 
 function selfTransformationMode(

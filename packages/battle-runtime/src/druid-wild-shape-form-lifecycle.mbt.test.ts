@@ -13,15 +13,24 @@
 //   shape-shifting effects specify their own form rules and revert on death.
 // - UBIQUITOUS_LANGUAGE.md: Temporary Hit Points, Creature, Stat Block,
 //   Character Sheet, and Action Lifecycle.
-import * as path from "node:path";
-
 import { canSpendBonusAction } from "@dnd/shared-algebras/action-economy-algebra";
 import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
 import { Hp } from "@dnd/shared/types";
 import type { StatBlockRecord } from "@dnd/surface/surface/types";
-import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
 import { describe, expect, it } from "vitest";
 
+import {
+  MBT_TEST_TIMEOUT_MS,
+  booleanField,
+  defineDriver,
+  focusedMbtMaxSteps,
+  mbtSpecPath,
+  mbtTraceCount,
+  numberFromQuintInt,
+  quintStateRecord,
+  run,
+  stateCheck,
+} from "./battle-runtime-mbt-driver-kit.ts";
 import {
   activeDruidWildShapeEffect,
   activeDruidWildShapeForm,
@@ -226,27 +235,27 @@ describe("Druid Wild Shape form lifecycle MBT parity", () => {
 
   it("matches the focused form lifecycle against bounded random MBT traces", async () => {
     await run({
-      spec: path.resolve(
+      spec: mbtSpecPath(
         import.meta.dirname,
-        "../battle-runtime-druid-wild-shape-form-lifecycle.mbt.qnt",
+        "battle-runtime-druid-wild-shape-form-lifecycle.mbt.qnt",
       ),
       init: "init",
       step: "step",
       driver: createDruidWildShapeFormLifecycleDriver(),
       backend: "typescript",
-      nTraces: 10,
-      maxSteps: 5,
+      nTraces: mbtTraceCount(),
+      maxSteps: focusedMbtMaxSteps(5),
       stateCheck: druidWildShapeFormStateCheck,
     });
-  }, 120_000);
+  }, MBT_TEST_TIMEOUT_MS);
 });
 
 defineSelectedIdentityWitness({
   describeLabel: "Druid Wild Shape selected identity MBT",
   taskId: selectedIdentityTaskId,
-  specFile: path.resolve(
+  specFile: mbtSpecPath(
     import.meta.dirname,
-    "../battle-runtime-druid-wild-shape-form-lifecycle.mbt.qnt",
+    "battle-runtime-druid-wild-shape-form-lifecycle.mbt.qnt",
   ),
   projectionSchema: {
     activeForm: "str",
@@ -762,31 +771,4 @@ function literalField<const T extends readonly string[]>(
     return raw;
   }
   throw new Error(`Unexpected literal value: ${String(raw)}.`);
-}
-
-function quintStateRecord(raw: unknown): Readonly<Record<string, unknown>> {
-  if (!isRecord(raw)) {
-    throw new Error("Expected Quint Druid Wild Shape form lifecycle state.");
-  }
-  return raw;
-}
-
-function numberFromQuintInt(raw: unknown, field: string): number {
-  if (typeof raw === "number") return raw;
-  if (typeof raw === "bigint") return Number(raw);
-  throw new Error(`Expected Quint integer field ${field}.`);
-}
-
-function booleanField(
-  state: Readonly<Record<string, unknown>>,
-  field: string,
-): boolean {
-  if (typeof state[field] === "boolean") {
-    return state[field];
-  }
-  throw new Error(`Expected Quint Boolean field ${field}.`);
-}
-
-function isRecord(raw: unknown): raw is Readonly<Record<string, unknown>> {
-  return typeof raw === "object" && raw !== null;
 }

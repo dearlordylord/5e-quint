@@ -14,8 +14,7 @@
 //   2d8 Cold damage at level 5.
 // - UBIQUITOUS_LANGUAGE.md: Magic Action, Spell Invocation, Damage Roll,
 //   Sorcery Points as a Pool, and Spend.
-import * as path from "node:path";
-
+import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
 import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
 import {
   empoweredSorcererMetamagicBattle,
@@ -26,9 +25,9 @@ import {
 defineSelectedIdentityWitness({
   describeLabel: "Sorcerer Metamagic Empowered Spell selected identity MBT",
   taskId: "L3MMETA-19-EMPOWERED-SPELL-DAMAGE-REROLL-SLICE",
-  specFile: path.resolve(
+  specFile: mbtSpecPath(
     import.meta.dirname,
-    "../battle-runtime-sorcerer-metamagic-empowered-selected-identity.mbt.qnt",
+    "battle-runtime-sorcerer-metamagic-empowered-selected-identity.mbt.qnt",
   ),
   projectionSchema: {
     magicActionAvailable: "bool",

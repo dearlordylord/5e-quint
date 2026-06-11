@@ -1,8 +1,6 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.find-familiar-lifecycle
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt B22-FIND-FAMILIAR-IDENTITY-WITNESS find_familiar
 // UNIT-IDENTITY-MBT-REPLAY: B22-FIND-FAMILIAR-IDENTITY-WITNESS find_familiar doCastFindFamiliar doRecastFindFamiliarReplacement doDismissAndReappearFindFamiliar doDeliverTouchSpellThroughFindFamiliar
-import * as path from "node:path";
-
 import {
   DieRollResult,
   abilityModifier,
@@ -11,6 +9,7 @@ import {
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import * as Either from "effect/Either";
 
+import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
 import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
 import { ATTACK_TARGET_HOLE_ID } from "./battle-reducer.ts";
 import {
@@ -78,9 +77,9 @@ if (firstTypeOverride === undefined) {
 defineSelectedIdentityWitness({
   describeLabel: "Find Familiar selected identity MBT",
   taskId: "B22-FIND-FAMILIAR-IDENTITY-WITNESS",
-  specFile: path.resolve(
+  specFile: mbtSpecPath(
     import.meta.dirname,
-    "../battle-runtime-find-familiar-selected-identity.mbt.qnt",
+    "battle-runtime-find-familiar-selected-identity.mbt.qnt",
   ),
   projectionSchema: {
     familiarStatus: "str",

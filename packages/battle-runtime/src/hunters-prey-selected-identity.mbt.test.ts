@@ -2,10 +2,9 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.hunters-prey
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L3PUTB-07-RANGER-HUNTERS-PREY-RUNTIME ranger_hunters_prey
 // UNIT-IDENTITY-MBT-REPLAY: L3PUTB-07-RANGER-HUNTERS-PREY-RUNTIME ranger_hunters_prey doColossusSlayer doSkipThenUseColossusSlayer doHordeBreaker doHordeBreakerAfterPrimaryMiss doRejectMissingSelection doRejectSameTarget doRejectInvalidTargetPredicate doSecondHordeBreakerUnavailable
-import * as path from "node:path";
-
 import { movementFeet } from "@dnd/shared/types";
 
+import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
 import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
 import type { BattleUnitRef } from "./index.ts";
 import {
@@ -51,9 +50,9 @@ const syntheticExtraAttackUnitId = "test_hunters_prey_extra_attack";
 defineSelectedIdentityWitness({
   describeLabel: "Hunter's Prey selected identity MBT",
   taskId: "L3PUTB-07-RANGER-HUNTERS-PREY-RUNTIME",
-  specFile: path.resolve(
+  specFile: mbtSpecPath(
     import.meta.dirname,
-    "../battle-runtime-hunters-prey.mbt.qnt",
+    "battle-runtime-hunters-prey.mbt.qnt",
   ),
   projectionSchema: {
     colossusTargetHp: "int",

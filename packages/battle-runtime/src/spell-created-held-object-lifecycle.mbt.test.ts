@@ -13,15 +13,23 @@
 //   Obscured area.
 // - UBIQUITOUS_LANGUAGE.md: Holding / Wielding, Free Hand, Magic Action,
 //   Bonus Action, Spell Attack, Concentration, Illumination, and Spell Slot.
-import * as path from "node:path";
-
 import {
   canSpendAction,
   canSpendBonusAction,
 } from "@dnd/shared-algebras/action-economy-algebra";
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { movementFeet, type HandUse } from "@dnd/shared/types";
-import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
+import {
+  booleanField,
+  defineDriver,
+  focusedMbtMaxSteps,
+  mbtSpecPath,
+  mbtTraceCount,
+  numberFromQuintInt,
+  quintStateRecord,
+  run,
+  stateCheck,
+} from "./battle-runtime-mbt-driver-kit.ts";
 import { describe, expect, it } from "vitest";
 
 import type {
@@ -252,16 +260,16 @@ describe("Spell-created held object lifecycle MBT parity", () => {
 
   it("matches the focused spell-created held object lifecycle against bounded random MBT traces", async () => {
     await run({
-      spec: path.resolve(
+      spec: mbtSpecPath(
         import.meta.dirname,
-        "../battle-runtime-spell-created-held-object-lifecycle.mbt.qnt",
+        "battle-runtime-spell-created-held-object-lifecycle.mbt.qnt",
       ),
       init: "init",
       step: "step",
       driver: createSpellCreatedHeldObjectLifecycleDriver(),
       backend: "typescript",
-      nTraces: 10,
-      maxSteps: 6,
+      nTraces: mbtTraceCount(),
+      maxSteps: focusedMbtMaxSteps(6),
       stateCheck: spellCreatedHeldObjectStateCheck,
     });
   }, 120_000);
@@ -629,14 +637,17 @@ function normalizeSpellCreatedHeldObjectQuintState(
     freeHandAvailable: booleanField(state, "qFreeHandAvailable"),
     casterConcentrating: booleanField(state, "qCasterConcentrating"),
     lightProjected: booleanField(state, "qLightProjected"),
-    spellSlotExpended: numberField(state, "qSpellSlotExpended"),
+    spellSlotExpended: numberFromQuintInt(
+      state["qSpellSlotExpended"],
+      "qSpellSlotExpended",
+    ),
     spellSlotCommittedThisTurn: booleanField(
       state,
       "qSpellSlotCommittedThisTurn",
     ),
     attackAvailable: booleanField(state, "qAttackAvailable"),
     reEvokeAvailable: booleanField(state, "qReEvokeAvailable"),
-    targetHp: numberField(state, "qTargetHp"),
+    targetHp: numberFromQuintInt(state["qTargetHp"], "qTargetHp"),
     lastResult: lastResult(state["qLastResult"]),
   };
 }
@@ -647,48 +658,6 @@ function compareSpellCreatedHeldObjectStates(
 ): boolean {
   expect(runtime).toStrictEqual(quint);
   return true;
-}
-
-function quintStateRecord(raw: unknown): Readonly<Record<string, unknown>> {
-  expect(raw).toBeTypeOf("object");
-  expect(raw).not.toBeNull();
-  if (!isReadonlyRecord(raw)) {
-    throw new Error("Expected Quint state record.");
-  }
-  return raw;
-}
-
-function isReadonlyRecord(
-  raw: unknown,
-): raw is Readonly<Record<string, unknown>> {
-  return typeof raw === "object" && raw !== null;
-}
-
-function booleanField(
-  state: Readonly<Record<string, unknown>>,
-  field: string,
-): boolean {
-  const value = state[field];
-  expect(value).toBeTypeOf("boolean");
-  if (typeof value !== "boolean") {
-    throw new Error(`Expected boolean Quint field ${field}.`);
-  }
-  return value;
-}
-
-function numberField(
-  state: Readonly<Record<string, unknown>>,
-  field: string,
-): number {
-  const value = state[field];
-  if (typeof value === "bigint") {
-    return Number(value);
-  }
-  expect(value).toBeTypeOf("number");
-  if (typeof value !== "number") {
-    throw new Error(`Expected number Quint field ${field}.`);
-  }
-  return value;
 }
 
 function lastResult(raw: unknown): LastResult {

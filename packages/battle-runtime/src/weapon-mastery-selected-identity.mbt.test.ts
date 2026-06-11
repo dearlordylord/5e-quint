@@ -2,8 +2,7 @@
 // UNIT-IDENTITY-MBT-REPLAY: weapon-mastery-properties mastery_sap doResolveSapMasteryPropertyHit
 // UNIT-IDENTITY-MBT-REPLAY: weapon-mastery-properties mastery_topple doResolveToppleMasteryPropertyFailedSavingThrow
 // UNIT-IDENTITY-MBT-REPLAY: weapon-mastery-properties mastery_cleave doResolveCleaveMasteryPropertySecondTargetHit
-import * as path from "node:path";
-
+import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
 import { Either } from "effect";
 
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
@@ -92,9 +91,9 @@ type WeaponMasteryPropertyUnitId = keyof typeof weaponMasteryPropertyScenarios;
 defineSelectedIdentityWitness({
   describeLabel: "Weapon Mastery selected identity MBT",
   taskId: "weapon-mastery-properties",
-  specFile: path.resolve(
+  specFile: mbtSpecPath(
     import.meta.dirname,
-    "../battle-runtime-weapon-mastery-selected-identity.mbt.qnt",
+    "battle-runtime-weapon-mastery-selected-identity.mbt.qnt",
   ),
   projectionSchema: {
     primaryTargetHp: "int",

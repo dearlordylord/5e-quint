@@ -1,9 +1,8 @@
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt B4-CLASS-FEATURE-IDENTITY-BATCH-1 barbarian_danger_sense
 // UNIT-IDENTITY-MBT-REPLAY: B4-CLASS-FEATURE-IDENTITY-BATCH-1 barbarian_danger_sense doProjectDangerSenseDexterityAdvantage doSuppressDangerSenseWhileIncapacitated
-import * as path from "node:path";
-
 import { savingThrowRollModeProjections } from "./battle-reducer/spells-damage-fills.ts";
 import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
+import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
 import { characterCreature } from "./unit-profile-admission-creature-fixture-support.ts";
 import {
   applyCondition,
@@ -39,9 +38,9 @@ type DangerSenseProjection = {
 defineSelectedIdentityWitness({
   describeLabel: "Battle Runtime Danger Sense selected identity MBT",
   taskId: "B4-CLASS-FEATURE-IDENTITY-BATCH-1",
-  specFile: path.resolve(
+  specFile: mbtSpecPath(
     import.meta.dirname,
-    "../battle-runtime-danger-sense-selected-identity.mbt.qnt",
+    "battle-runtime-danger-sense-selected-identity.mbt.qnt",
   ),
   projectionSchema: {
     lastResult: "str",

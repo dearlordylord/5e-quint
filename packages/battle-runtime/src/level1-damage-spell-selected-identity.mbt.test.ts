@@ -8,8 +8,6 @@
 // UNIT-IDENTITY-MBT-REPLAY: level1-damage-spell-selected-identity sorcerous_burst doResolveSorcerousBurstSpellAttackDamage
 // UNIT-IDENTITY-MBT-REPLAY: level1-damage-spell-selected-identity starry_wisp doResolveStarryWispObjectSpellAttackDamageAndDimLight
 // UNIT-IDENTITY-MBT-REPLAY: level1-damage-spell-selected-identity vicious_mockery doResolveViciousMockeryWisdomSavingThrowPsychicDamageAndNextAttackDisadvantage
-import * as path from "node:path";
-
 import { Either } from "effect";
 
 import {
@@ -59,6 +57,7 @@ import {
   CHROMATIC_ORB_DAMAGE_TYPES,
   CHROMATIC_ORB_LEAP_RANGE_FEET,
 } from "./battle-reducer/domain-constants.ts";
+import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
 import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
 
 const level1DamageSpellUnitIds = [
@@ -527,9 +526,9 @@ const level1DamageSpellDiscoveries = {
 defineSelectedIdentityWitness({
   describeLabel: "Level 1 damage spell selected identity MBT",
   taskId: "level1-damage-spell-selected-identity",
-  specFile: path.resolve(
+  specFile: mbtSpecPath(
     import.meta.dirname,
-    "../battle-runtime-level1-damage-spell-selected-identity.mbt.qnt",
+    "battle-runtime-level1-damage-spell-selected-identity.mbt.qnt",
   ),
   projectionSchema: {
     actionAvailable: "bool",

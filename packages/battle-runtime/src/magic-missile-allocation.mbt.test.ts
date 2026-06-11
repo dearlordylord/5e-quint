@@ -1,29 +1,29 @@
-import * as path from "node:path";
-
-import { run } from "@firfi/quint-connect";
 import { describe, it } from "vitest";
 
 import {
+  MBT_TEST_TIMEOUT_MS,
   battleRuntimeStateCheck,
   createMagicMissileDriver,
   focusedMbtMaxSteps,
-  promotedMbtTraces,
-} from "./battle-runtime-mbt-fixtures.ts";
+  mbtSpecPath,
+  mbtTraceCount,
+  run,
+} from "./battle-runtime-mbt-driver-kit.ts";
 
 describe("Magic Missile allocation MBT", () => {
   it("replays target allocation against a Skeleton target", async () => {
     await run({
-      spec: path.resolve(
+      spec: mbtSpecPath(
         import.meta.dirname,
-        "../battle-runtime-magic-missile.mbt.qnt",
+        "battle-runtime-magic-missile.mbt.qnt",
       ),
       init: "init",
       step: "step",
       driver: createMagicMissileDriver(),
       backend: "typescript",
-      nTraces: promotedMbtTraces,
+      nTraces: mbtTraceCount(),
       maxSteps: focusedMbtMaxSteps(2),
       stateCheck: battleRuntimeStateCheck,
     });
-  }, 120_000);
+  }, MBT_TEST_TIMEOUT_MS);
 });

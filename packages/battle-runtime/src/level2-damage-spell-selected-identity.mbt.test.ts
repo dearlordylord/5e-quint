@@ -9,14 +9,13 @@
 // UNIT-IDENTITY-MBT-REPLAY: B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH scorching_ray doDiscoverScorchingRayAttackSequence
 // UNIT-IDENTITY-MBT-REPLAY: B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH shatter doDiscoverShatterSaveGatedDamage
 // UNIT-IDENTITY-MBT-REPLAY: B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH spiritual_weapon doDiscoverSpiritualWeaponAttackProxy
-import * as path from "node:path";
-
 import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { expect } from "vitest";
 
 import dragonsBreathInput from "../../surface/content/dragons_breath.json";
 import rayOfEnfeeblementInput from "../../surface/content/ray_of_enfeeblement.json";
+import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
 import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
 import type { BattleState } from "./index.ts";
 import {
@@ -80,9 +79,9 @@ type SelectedLevel2DamageSpellInvocation = {
 defineSelectedIdentityWitness({
   describeLabel: "Level 2 damage spell selected identity MBT",
   taskId: "B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH",
-  specFile: path.resolve(
+  specFile: mbtSpecPath(
     import.meta.dirname,
-    "../battle-runtime-level2-damage-spell-selected-identity.mbt.qnt",
+    "battle-runtime-level2-damage-spell-selected-identity.mbt.qnt",
   ),
   projectionSchema: { lastResult: "str" },
   initialProjection: expectedProjection("init"),

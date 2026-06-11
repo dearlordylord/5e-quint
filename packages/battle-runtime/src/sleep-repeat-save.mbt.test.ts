@@ -1,8 +1,18 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-sleep-repeat-save-lifecycle
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.SLEEP_REPEAT_SAVE_LIFECYCLE
-import * as path from "node:path";
-
-import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
+import {
+  MBT_TEST_TIMEOUT_MS,
+  booleanField,
+  defineDriver,
+  focusedMbtMaxSteps,
+  mbtSpecPath,
+  mbtTraceCount,
+  quintSet,
+  quintStateRecord,
+  quintVariantTag,
+  run,
+  stateCheck,
+} from "./battle-runtime-mbt-driver-kit.ts";
 import { Either } from "effect";
 import { describe, expect, it } from "vitest";
 
@@ -198,21 +208,25 @@ const sleepRepeatSaveStateCheck = stateCheck(
 );
 
 describe("Sleep repeat-save MBT parity", () => {
-  it("replays Sleep pending repeat-save lifecycle and concentration cleanup", async () => {
-    await run({
-      spec: path.resolve(
-        import.meta.dirname,
-        "../battle-runtime-sleep-repeat-save.mbt.qnt",
-      ),
-      init: "init",
-      step: "step",
-      driver: createSleepRepeatSaveDriver(),
-      backend: "typescript",
-      nTraces: Number(process.env["MBT_TRACES"] ?? 1),
-      maxSteps: focusedMbtMaxSteps(4),
-      stateCheck: sleepRepeatSaveStateCheck,
-    });
-  }, 120_000);
+  it(
+    "replays Sleep pending repeat-save lifecycle and concentration cleanup",
+    async () => {
+      await run({
+        spec: mbtSpecPath(
+          import.meta.dirname,
+          "battle-runtime-sleep-repeat-save.mbt.qnt",
+        ),
+        init: "init",
+        step: "step",
+        driver: createSleepRepeatSaveDriver(),
+        backend: "typescript",
+        nTraces: mbtTraceCount(),
+        maxSteps: focusedMbtMaxSteps(4),
+        stateCheck: sleepRepeatSaveStateCheck,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
 });
 
 function normalizeSleepRepeatSaveQuintState(
@@ -230,7 +244,7 @@ function normalizeSleepRepeatSaveQuintState(
     targetProne: booleanField(state, "qTargetProne"),
     casterConcentrating: booleanField(state, "qCasterConcentrating"),
     actionAvailable: booleanField(state, "qActionAvailable"),
-    holes: quintHoleSet(state["qHoles"])
+    holes: quintSet(state["qHoles"], "qHoles")
       .map(sleepRepeatSaveHoleName)
       .sort(),
     lastResult: sleepRepeatSaveMbtLastResult(state["qLastResult"]),
@@ -504,9 +518,7 @@ function projectSleepRepeatSaveHoles(
   return holes.map(projectSleepRepeatSaveHole).sort();
 }
 
-function projectSleepRepeatSaveHole(
-  hole: BattleHole,
-): SleepRepeatSaveMbtHole {
+function projectSleepRepeatSaveHole(hole: BattleHole): SleepRepeatSaveMbtHole {
   if (hole.kind === "savingThrowOutcome") {
     return "SavingThrowOutcome";
   }
@@ -532,31 +544,6 @@ function sleepRepeatSaveMbtTurnRole(
   }
 
   throw new Error(`Expected Sleep repeat-save MBT turn role field ${field}.`);
-}
-
-function focusedMbtMaxSteps(domainMaxSteps: number): number {
-  const requestedSteps = Number(process.env["MBT_STEPS"] ?? domainMaxSteps);
-  return Math.min(requestedSteps, domainMaxSteps);
-}
-
-function booleanField(
-  state: Readonly<Record<string, unknown>>,
-  field: string,
-): boolean {
-  const value = state[field];
-  if (typeof value === "boolean") {
-    return value;
-  }
-
-  throw new Error(`Expected Quint boolean field ${field}.`);
-}
-
-function quintHoleSet(raw: unknown): readonly unknown[] {
-  if (raw instanceof Set) {
-    return [...raw];
-  }
-
-  throw new Error("Expected Quint qHoles field to be a Set.");
 }
 
 function sleepRepeatSaveMbtLastResult(
@@ -587,28 +574,4 @@ function sleepRepeatSaveMbtLastInvalidReason(
   }
 
   throw new Error(`Unknown Quint invalid reason: ${String(raw)}.`);
-}
-
-function quintStateRecord(raw: unknown): Readonly<Record<string, unknown>> {
-  if (!isRecord(raw)) {
-    throw new Error("Expected Quint state to be an object.");
-  }
-
-  return raw;
-}
-
-function quintVariantTag(raw: unknown): string {
-  if (isRecord(raw) && typeof raw["tag"] === "string") {
-    return raw["tag"];
-  }
-
-  if (typeof raw === "string") {
-    return raw;
-  }
-
-  throw new Error(`Expected Quint variant tag, got ${String(raw)}.`);
-}
-
-function isRecord(raw: unknown): raw is Readonly<Record<string, unknown>> {
-  return typeof raw === "object" && raw !== null;
 }

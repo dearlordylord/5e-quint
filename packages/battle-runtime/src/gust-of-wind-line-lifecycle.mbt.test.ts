@@ -1,12 +1,22 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-gust-of-wind-line
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.GUST_OF_WIND_LINE_LIFECYCLE
-import * as path from "node:path";
-
 import { canSpendAction } from "@dnd/shared-algebras/action-economy-algebra";
 import { movementFeet } from "@dnd/shared/types";
-import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
 import { describe, expect, it } from "vitest";
 
+import {
+  MBT_TEST_TIMEOUT_MS,
+  booleanField,
+  defineDriver,
+  focusedMbtMaxSteps,
+  mbtSpecPath,
+  mbtTraceCount,
+  numberFromQuintInt,
+  quintSet,
+  quintStateRecord,
+  run,
+  stateCheck,
+} from "./battle-runtime-mbt-driver-kit.ts";
 import {
   movementFill,
   requireCombatant,
@@ -224,19 +234,19 @@ describe("Gust of Wind Line lifecycle MBT parity", () => {
 
   it("matches the TS reducer slice against bounded random MBT traces", async () => {
     await run({
-      spec: path.resolve(
+      spec: mbtSpecPath(
         import.meta.dirname,
-        "../battle-runtime-gust-of-wind-line-lifecycle.mbt.qnt",
+        "battle-runtime-gust-of-wind-line-lifecycle.mbt.qnt",
       ),
       init: "init",
       step: "step",
       driver: createGustOfWindLineDriver(),
       backend: "typescript",
-      nTraces: 10,
-      maxSteps: 7,
+      nTraces: mbtTraceCount(),
+      maxSteps: focusedMbtMaxSteps(7),
       stateCheck: gustStateCheck,
     });
-  }, 120_000);
+  }, MBT_TEST_TIMEOUT_MS);
 });
 
 function initialRuntimeState(): GustRuntimeState {
@@ -712,38 +722,4 @@ function gustLastResult(raw: unknown): GustLastResult {
     return raw;
   }
   throw new Error(`Unknown Gust of Wind result: ${String(raw)}.`);
-}
-
-function quintStateRecord(raw: unknown): Readonly<Record<string, unknown>> {
-  if (!isRecord(raw)) {
-    throw new Error("Expected Quint Gust of Wind state.");
-  }
-  return raw;
-}
-
-function numberFromQuintInt(raw: unknown, field: string): number {
-  if (typeof raw === "number") return raw;
-  if (typeof raw === "bigint") return Number(raw);
-  throw new Error(`Expected Quint integer field ${field}.`);
-}
-
-function booleanField(
-  state: Readonly<Record<string, unknown>>,
-  field: string,
-): boolean {
-  if (typeof state[field] === "boolean") {
-    return state[field];
-  }
-  throw new Error(`Expected Quint Boolean field ${field}.`);
-}
-
-function quintSet(raw: unknown, field: string): readonly unknown[] {
-  if (raw instanceof Set) {
-    return [...raw];
-  }
-  throw new Error(`Expected Quint Set field ${field}.`);
-}
-
-function isRecord(raw: unknown): raw is Readonly<Record<string, unknown>> {
-  return typeof raw === "object" && raw !== null;
 }

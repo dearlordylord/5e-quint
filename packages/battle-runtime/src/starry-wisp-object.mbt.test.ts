@@ -1,6 +1,18 @@
-import * as path from "node:path";
-
-import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
+import {
+  booleanField,
+  booleanValue,
+  defineDriver,
+  focusedMbtMaxSteps,
+  mbtSpecPath,
+  mbtTraceCount,
+  numberFromQuintInt,
+  quintSet,
+  quintStateRecord,
+  quintVariantTag,
+  quintVariantValue,
+  run,
+  stateCheck,
+} from "./battle-runtime-mbt-driver-kit.ts";
 import { Match } from "effect";
 import { describe, expect, it } from "vitest";
 
@@ -299,15 +311,15 @@ const starryWispObjectStateCheck = stateCheck(
 describe("Starry Wisp object MBT parity", () => {
   it("replays Starry Wisp object target attack and object damage outcomes", async () => {
     await run({
-      spec: path.resolve(
+      spec: mbtSpecPath(
         import.meta.dirname,
-        "../battle-runtime-starry-wisp-object.mbt.qnt",
+        "battle-runtime-starry-wisp-object.mbt.qnt",
       ),
       init: "init",
       step: "step",
       driver: createStarryWispObjectDriver(),
       backend: "typescript",
-      nTraces: Number(process.env["MBT_TRACES"] ?? 1),
+      nTraces: mbtTraceCount(),
       maxSteps: focusedMbtMaxSteps(4),
       stateCheck: starryWispObjectStateCheck,
     });
@@ -322,7 +334,9 @@ function normalizeStarryWispObjectQuintState(
   const lightEmitters = lightEmittersFromQuint(state["qLightEmitters"]);
   return {
     actionAvailable: booleanField(state, "qActionAvailable"),
-    holes: quintHoleSet(state["qHoles"]).map(starryWispObjectHoleName).sort(),
+    holes: quintSet(state["qHoles"], "qHoles")
+      .map(starryWispObjectHoleName)
+      .sort(),
     objectDamage: objectDamageFromQuint(state["qObjectDamage"]),
     lightEmitters,
     objectInvisibleBenefitDenied:
@@ -826,7 +840,7 @@ function lightEmitterAttachmentFromQuint(
       kind: "dancingLight",
       lightId: String(numberFromQuintInt(fields["light"], "light")),
       positionId: String(numberFromQuintInt(fields["position"], "position")),
-      form: booleanFromQuint(fields["combined"], "combined")
+      form: booleanValue(fields["combined"], "combined")
         ? "combinedMediumForm"
         : "separateLights",
     };
@@ -1011,86 +1025,13 @@ function starryWispObjectMbtInvalidReason(
   throw new Error(`Unexpected Starry Wisp object invalid reason: ${reason}`);
 }
 
-function focusedMbtMaxSteps(domainMaxSteps: number): number {
-  const requestedSteps = Number(process.env["MBT_STEPS"] ?? domainMaxSteps);
-  return Math.min(requestedSteps, domainMaxSteps);
-}
-
 function compareJsonStable(left: unknown, right: unknown): number {
   return JSON.stringify(left).localeCompare(JSON.stringify(right));
-}
-
-function quintStateRecord(raw: unknown): Readonly<Record<string, unknown>> {
-  if (!isRecord(raw)) {
-    throw new Error("Expected Quint state to be an object.");
-  }
-
-  return raw;
-}
-
-function numberFromQuintInt(raw: unknown, field: string): number {
-  if (typeof raw === "number") {
-    return raw;
-  }
-  if (typeof raw === "bigint") {
-    return Number(raw);
-  }
-
-  throw new Error(`Expected Quint integer field ${field}.`);
-}
-
-function booleanField(
-  state: Readonly<Record<string, unknown>>,
-  field: string,
-): boolean {
-  return booleanFromQuint(state[field], field);
-}
-
-function booleanFromQuint(value: unknown, field: string): boolean {
-  if (typeof value === "boolean") {
-    return value;
-  }
-
-  throw new Error(`Expected Quint boolean field ${field}.`);
-}
-
-function quintHoleSet(raw: unknown): readonly unknown[] {
-  return quintSet(raw, "qHoles");
-}
-
-function quintSet(raw: unknown, field: string): readonly unknown[] {
-  if (raw instanceof Set) {
-    return [...raw];
-  }
-
-  throw new Error(`Expected Quint ${field} field to be a Set.`);
-}
-
-function quintVariantTag(raw: unknown): string {
-  if (!isRecord(raw) || typeof raw["tag"] !== "string") {
-    throw new Error("Expected Quint variant with tag.");
-  }
-  return raw["tag"];
-}
-
-function quintVariantValue(raw: unknown, tag: string): unknown {
-  if (!isRecord(raw) || raw["tag"] !== tag || !("value" in raw)) {
-    throw new Error(`Expected Quint ${tag} variant value.`);
-  }
-  return raw["value"];
 }
 
 function quintVariantRecordValue(
   raw: unknown,
   tag: string,
 ): Readonly<Record<string, unknown>> {
-  const value = quintVariantValue(raw, tag);
-  if (!isRecord(value)) {
-    throw new Error(`Expected Quint ${tag} record value.`);
-  }
-  return value;
-}
-
-function isRecord(value: unknown): value is Readonly<Record<string, unknown>> {
-  return typeof value === "object" && value !== null;
+  return quintStateRecord(quintVariantValue(raw, tag));
 }

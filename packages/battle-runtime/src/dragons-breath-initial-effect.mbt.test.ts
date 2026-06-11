@@ -10,8 +10,6 @@
 // - UBIQUITOUS_LANGUAGE.md: Magic Action, Bonus Action, Spell Slot,
 //   Concentration, Spell Invocation, Spell Effect, Cast Level, Duration, and
 //   Area of Effect.
-import * as path from "node:path";
-
 import {
   canSpendAction,
   canSpendBonusAction,
@@ -20,11 +18,22 @@ import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import type { DamageType } from "@dnd/shared/types";
 import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
 import type { SpellRecord } from "@dnd/surface/surface/types";
-import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
-import { Schema } from "effect";
 import { describe, expect, it } from "vitest";
 import dragonsBreathInput from "../../surface/content/dragons_breath.json";
 
+import {
+  MBT_TEST_TIMEOUT_MS,
+  booleanField,
+  defineDriver,
+  focusedMbtMaxSteps,
+  mbtPickSchemas,
+  mbtSpecPath,
+  mbtTraceCount,
+  numberFromQuintInt,
+  quintStateRecord,
+  run,
+  stateCheck,
+} from "./battle-runtime-mbt-driver-kit.ts";
 import {
   breakBattleConcentration,
   discoverBattleActs,
@@ -94,20 +103,11 @@ const DRAGONS_BREATH_DAMAGE_TYPES = [
   "poison",
 ] as const satisfies ReadonlyArray<DamageType>;
 
-const QuintIntAsNumber = Schema.transform(
-  Schema.BigIntFromSelf,
-  Schema.Number,
-  { strict: true, decode: (n) => Number(n), encode: (n) => BigInt(n) },
-);
-
-const intSchema = Schema.standardSchemaV1(QuintIntAsNumber);
-const unknownSchema = Schema.standardSchemaV1(Schema.Unknown);
-
 const driverSchema = {
   init: {},
   doCastDragonsBreath: {
-    damageType: unknownSchema,
-    slotLevel: intSchema,
+    damageType: mbtPickSchemas.unknown,
+    slotLevel: mbtPickSchemas.int,
   },
   doEndCasterTurn: {},
   doBreakConcentration: {},
@@ -217,21 +217,25 @@ describe("Dragon's Breath initial-effect MBT parity", () => {
     ]);
   });
 
-  it("matches the TS reducer slice against bounded random MBT traces", async () => {
-    await run({
-      spec: path.resolve(
-        import.meta.dirname,
-        "../battle-runtime-dragons-breath-initial-effect.mbt.qnt",
-      ),
-      init: "init",
-      step: "step",
-      driver: createDragonsBreathInitialEffectDriver(),
-      backend: "typescript",
-      nTraces: 10,
-      maxSteps: 5,
-      stateCheck: dragonsBreathInitialEffectStateCheck,
-    });
-  }, 120_000);
+  it(
+    "matches the TS reducer slice against bounded random MBT traces",
+    async () => {
+      await run({
+        spec: mbtSpecPath(
+          import.meta.dirname,
+          "battle-runtime-dragons-breath-initial-effect.mbt.qnt",
+        ),
+        init: "init",
+        step: "step",
+        driver: createDragonsBreathInitialEffectDriver(),
+        backend: "typescript",
+        nTraces: mbtTraceCount(),
+        maxSteps: focusedMbtMaxSteps(5),
+        stateCheck: dragonsBreathInitialEffectStateCheck,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
 });
 
 function initialRuntimeState(): DragonsBreathInitialRuntimeState {
@@ -496,31 +500,4 @@ function dragonsBreathLastResult(raw: unknown): DragonsBreathLastResult {
     return raw;
   }
   throw new Error(`Unknown Dragon's Breath result: ${String(raw)}.`);
-}
-
-function quintStateRecord(raw: unknown): Readonly<Record<string, unknown>> {
-  if (!isRecord(raw)) {
-    throw new Error("Expected Quint Dragon's Breath state.");
-  }
-  return raw;
-}
-
-function numberFromQuintInt(raw: unknown, field: string): number {
-  if (typeof raw === "number") return raw;
-  if (typeof raw === "bigint") return Number(raw);
-  throw new Error(`Expected Quint integer field ${field}.`);
-}
-
-function booleanField(
-  state: Readonly<Record<string, unknown>>,
-  field: string,
-): boolean {
-  if (typeof state[field] === "boolean") {
-    return state[field];
-  }
-  throw new Error(`Expected Quint Boolean field ${field}.`);
-}
-
-function isRecord(raw: unknown): raw is Readonly<Record<string, unknown>> {
-  return typeof raw === "object" && raw !== null;
 }

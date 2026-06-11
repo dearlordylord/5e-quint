@@ -12,14 +12,24 @@
 //   effects end when their creator loses Concentration.
 // - UBIQUITOUS_LANGUAGE.md: Size, Advantage and Disadvantage, Spell
 //   Invocation, Spell Effect, and Damage.
-import * as path from "node:path";
-
 import { canSpendAction } from "@dnd/shared-algebras/action-economy-algebra";
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import type { Size } from "@dnd/surface/surface/types";
-import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
 import { describe, expect, it } from "vitest";
 
+import {
+  MBT_TEST_TIMEOUT_MS,
+  booleanField,
+  defineDriver,
+  focusedMbtMaxSteps,
+  mbtSpecPath,
+  mbtTraceCount,
+  numberFromQuintInt,
+  quintSet,
+  quintStateRecord,
+  run,
+  stateCheck,
+} from "./battle-runtime-mbt-driver-kit.ts";
 import { combatantEffectiveSize } from "./battle-reducer/druid-wild-shape.ts";
 import { INITIAL_TURN_RESOURCES } from "./battle-reducer/battle-runtime-protocol.ts";
 import { requiredAbilityCheckRollMode } from "./battle-reducer/hole-helpers.ts";
@@ -254,21 +264,25 @@ describe("Enlarge/Reduce creature size-change lifecycle MBT parity", () => {
     });
   });
 
-  it("matches the TS reducer slice against bounded random MBT traces", async () => {
-    await run({
-      spec: path.resolve(
-        import.meta.dirname,
-        "../battle-runtime-creature-size-change-lifecycle.mbt.qnt",
-      ),
-      init: "init",
-      step: "step",
-      driver: createCreatureSizeChangeLifecycleDriver(),
-      backend: "typescript",
-      nTraces: 10,
-      maxSteps: 6,
-      stateCheck: creatureSizeChangeStateCheck,
-    });
-  }, 120_000);
+  it(
+    "matches the TS reducer slice against bounded random MBT traces",
+    async () => {
+      await run({
+        spec: mbtSpecPath(
+          import.meta.dirname,
+          "battle-runtime-creature-size-change-lifecycle.mbt.qnt",
+        ),
+        init: "init",
+        step: "step",
+        driver: createCreatureSizeChangeLifecycleDriver(),
+        backend: "typescript",
+        nTraces: mbtTraceCount(),
+        maxSteps: focusedMbtMaxSteps(6),
+        stateCheck: creatureSizeChangeStateCheck,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
 });
 
 function initialRuntimeState(): CreatureSizeChangeRuntimeState {
@@ -695,38 +709,4 @@ function sizeField(raw: unknown): Size {
     return raw;
   }
   throw new Error(`Unknown Size field: ${String(raw)}.`);
-}
-
-function quintStateRecord(raw: unknown): Readonly<Record<string, unknown>> {
-  if (!isRecord(raw)) {
-    throw new Error("Expected Quint Enlarge/Reduce state.");
-  }
-  return raw;
-}
-
-function numberFromQuintInt(raw: unknown, field: string): number {
-  if (typeof raw === "number") return raw;
-  if (typeof raw === "bigint") return Number(raw);
-  throw new Error(`Expected Quint integer field ${field}.`);
-}
-
-function booleanField(
-  state: Readonly<Record<string, unknown>>,
-  field: string,
-): boolean {
-  if (typeof state[field] === "boolean") {
-    return state[field];
-  }
-  throw new Error(`Expected Quint Boolean field ${field}.`);
-}
-
-function quintSet(raw: unknown, field: string): readonly unknown[] {
-  if (raw instanceof Set) {
-    return [...raw];
-  }
-  throw new Error(`Expected Quint Set field ${field}.`);
-}
-
-function isRecord(raw: unknown): raw is Readonly<Record<string, unknown>> {
-  return typeof raw === "object" && raw !== null;
 }

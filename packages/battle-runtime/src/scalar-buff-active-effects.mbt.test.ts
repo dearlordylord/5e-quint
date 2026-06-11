@@ -18,9 +18,18 @@
 //   separate movement modes affected by Speed changes.
 // - UBIQUITOUS_LANGUAGE.md: Armor Class, Speed, Hit Point Maximum, Temporary
 //   Hit Points, Spell Invocation, and Spell Effect.
-import * as path from "node:path";
-
-import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
+import {
+  MBT_TEST_TIMEOUT_MS,
+  booleanField,
+  defineDriver,
+  focusedMbtMaxSteps,
+  mbtSpecPath,
+  mbtTraceCount,
+  numberFromQuintInt,
+  quintStateRecord,
+  run,
+  stateCheck,
+} from "./battle-runtime-mbt-driver-kit.ts";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -169,21 +178,25 @@ describe("scalar buff active-effects MBT parity", () => {
     });
   });
 
-  it("matches the focused scalar buff active-effects slice against bounded MBT traces", async () => {
-    await run({
-      spec: path.resolve(
-        import.meta.dirname,
-        "../battle-runtime-scalar-buff-active-effects.mbt.qnt",
-      ),
-      init: "init",
-      step: "step",
-      driver: createScalarBuffActiveEffectsDriver(),
-      backend: "typescript",
-      nTraces: 1,
-      maxSteps: 6,
-      stateCheck: scalarBuffActiveEffectsStateCheck,
-    });
-  }, 120_000);
+  it(
+    "matches the focused scalar buff active-effects slice against bounded MBT traces",
+    async () => {
+      await run({
+        spec: mbtSpecPath(
+          import.meta.dirname,
+          "battle-runtime-scalar-buff-active-effects.mbt.qnt",
+        ),
+        init: "init",
+        step: "step",
+        driver: createScalarBuffActiveEffectsDriver(),
+        backend: "typescript",
+        nTraces: mbtTraceCount(),
+        maxSteps: focusedMbtMaxSteps(6),
+        stateCheck: scalarBuffActiveEffectsStateCheck,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
 });
 
 function initialRuntimeState(): ScalarBuffRuntimeState {
@@ -226,11 +239,7 @@ function castShieldOfFaith(): ScalarBuffRuntimeState {
     }),
     "Expected Shield of Faith to resolve.",
   );
-  return projectScalarBuffState(
-    resolved.state,
-    spellTargetId,
-    "shieldOfFaith",
-  );
+  return projectScalarBuffState(resolved.state, spellTargetId, "shieldOfFaith");
 }
 
 function castLongstrider(): ScalarBuffRuntimeState {
@@ -348,7 +357,8 @@ function projectScalarBuffState(
       ),
       speedDeltaActive: affected.activeEffects.some(
         (effect) =>
-          effect.kind === "speedDelta" && effect.sourceSpellId === sourceSpellId,
+          effect.kind === "speedDelta" &&
+          effect.sourceSpellId === sourceSpellId,
       ),
       specialSpeedGrantActive: affected.activeEffects.some(
         (effect) =>
@@ -398,13 +408,28 @@ function normalizeScalarBuffQuintState(
 ): ScalarBuffActiveEffectsProjection {
   const state = quintStateRecord(raw);
   return {
-    affectedArmorClass: numberField(state, "qAffectedArmorClass"),
-    affectedSpeedFeet: numberField(state, "qAffectedSpeedFeet"),
-    affectedClimbSpeedFeet: numberField(state, "qAffectedClimbSpeedFeet"),
-    affectedHitPointMaximum: numberField(state, "qAffectedHitPointMaximum"),
-    affectedHitPoints: numberField(state, "qAffectedHitPoints"),
-    affectedTemporaryHitPoints: numberField(
-      state,
+    affectedArmorClass: numberFromQuintInt(
+      state["qAffectedArmorClass"],
+      "qAffectedArmorClass",
+    ),
+    affectedSpeedFeet: numberFromQuintInt(
+      state["qAffectedSpeedFeet"],
+      "qAffectedSpeedFeet",
+    ),
+    affectedClimbSpeedFeet: numberFromQuintInt(
+      state["qAffectedClimbSpeedFeet"],
+      "qAffectedClimbSpeedFeet",
+    ),
+    affectedHitPointMaximum: numberFromQuintInt(
+      state["qAffectedHitPointMaximum"],
+      "qAffectedHitPointMaximum",
+    ),
+    affectedHitPoints: numberFromQuintInt(
+      state["qAffectedHitPoints"],
+      "qAffectedHitPoints",
+    ),
+    affectedTemporaryHitPoints: numberFromQuintInt(
+      state["qAffectedTemporaryHitPoints"],
       "qAffectedTemporaryHitPoints",
     ),
     armorClassBonusActive: booleanField(state, "qArmorClassBonusActive"),
@@ -425,48 +450,6 @@ function compareScalarBuffStates(
 ): boolean {
   expect(runtime).toStrictEqual(quint);
   return true;
-}
-
-function quintStateRecord(raw: unknown): Readonly<Record<string, unknown>> {
-  expect(raw).toBeTypeOf("object");
-  expect(raw).not.toBeNull();
-  if (!isReadonlyRecord(raw)) {
-    throw new Error("Expected Quint state record.");
-  }
-  return raw;
-}
-
-function isReadonlyRecord(
-  raw: unknown,
-): raw is Readonly<Record<string, unknown>> {
-  return typeof raw === "object" && raw !== null;
-}
-
-function booleanField(
-  state: Readonly<Record<string, unknown>>,
-  field: string,
-): boolean {
-  const value = state[field];
-  expect(value).toBeTypeOf("boolean");
-  if (typeof value !== "boolean") {
-    throw new Error(`Expected boolean Quint field ${field}.`);
-  }
-  return value;
-}
-
-function numberField(
-  state: Readonly<Record<string, unknown>>,
-  field: string,
-): number {
-  const value = state[field];
-  if (typeof value === "bigint") {
-    return Number(value);
-  }
-  expect(value).toBeTypeOf("number");
-  if (typeof value !== "number") {
-    throw new Error(`Expected number Quint field ${field}.`);
-  }
-  return value;
 }
 
 function lastResult(raw: unknown): LastResult {

@@ -1,10 +1,18 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.ATTACK.MINIMAL_RESOLUTION
-import * as path from "node:path";
-
-import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
-import { Schema } from "effect";
 import { describe, expect, it } from "vitest";
 
+import {
+  MBT_TEST_TIMEOUT_MS,
+  defineDriver,
+  focusedMbtMaxSteps,
+  mbtPickSchemas,
+  mbtSpecPath,
+  mbtTraceCount,
+  numberFromQuintInt,
+  quintStateRecord,
+  run,
+  stateCheck,
+} from "./battle-runtime-mbt-driver-kit.ts";
 import {
   resolveCreatureAttack,
   type CreatureAttackState,
@@ -17,24 +25,15 @@ const initialState: CreatureAttackState = {
   creatureBHp: INITIAL_HP,
 };
 
-const QuintIntAsNumber = Schema.transform(
-  Schema.BigIntFromSelf,
-  Schema.Number,
-  { strict: true, decode: (n) => Number(n), encode: (n) => BigInt(n) },
-);
-
-const damageSchema = Schema.standardSchemaV1(QuintIntAsNumber);
-const hitSchema = Schema.standardSchemaV1(Schema.Boolean);
-
 const driverSchema = {
   init: {},
   doAttackerAAttacks: {
-    damage: damageSchema,
-    hit: hitSchema,
+    damage: mbtPickSchemas.int,
+    hit: mbtPickSchemas.bool,
   },
   doAttackerBAttacks: {
-    damage: damageSchema,
-    hit: hitSchema,
+    damage: mbtPickSchemas.int,
+    hit: mbtPickSchemas.bool,
   },
   step: {},
 } as const;
@@ -64,32 +63,26 @@ const creatureAttackStateCheck = stateCheck(
 );
 
 describe("creature-attack minimal MBT parity", () => {
-  it("matches TS reducer against bounded random MBT traces", async () => {
-    await run({
-      spec: path.resolve(
-        import.meta.dirname,
-        "../creature-attack.mbt.qnt",
-      ),
-      init: "init",
-      step: "step",
-      driver: createCreatureAttackDriver(),
-      backend: "typescript",
-      nTraces: 10,
-      maxSteps: 6,
-      stateCheck: creatureAttackStateCheck,
-    });
-  }, 120_000);
+  it(
+    "matches TS reducer against bounded random MBT traces",
+    async () => {
+      await run({
+        spec: mbtSpecPath(import.meta.dirname, "creature-attack.mbt.qnt"),
+        init: "init",
+        step: "step",
+        driver: createCreatureAttackDriver(),
+        backend: "typescript",
+        nTraces: mbtTraceCount(),
+        maxSteps: focusedMbtMaxSteps(6),
+        stateCheck: creatureAttackStateCheck,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
 });
 
-function normalizeCreatureAttackQuintState(
-  raw: unknown,
-): CreatureAttackState {
-  if (raw == null || typeof raw !== "object" || Array.isArray(raw)) {
-    throw new Error("Expected Quint creature-attack state object.");
-  }
-  const state: Readonly<Record<string, unknown>> = Object.fromEntries(
-    Object.entries(raw),
-  );
+function normalizeCreatureAttackQuintState(raw: unknown): CreatureAttackState {
+  const state = quintStateRecord(raw);
   return {
     creatureAHp: numberFromQuintInt(state["qCreatureAHp"], "qCreatureAHp"),
     creatureBHp: numberFromQuintInt(state["qCreatureBHp"], "qCreatureBHp"),
@@ -109,10 +102,4 @@ function compareCreatureAttackState(
     throw error;
   }
   return true;
-}
-
-function numberFromQuintInt(raw: unknown, field: string): number {
-  if (typeof raw === "number") return raw;
-  if (typeof raw === "bigint") return Number(raw);
-  throw new Error(`Expected Quint integer field ${field}.`);
 }

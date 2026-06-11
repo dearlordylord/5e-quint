@@ -1,16 +1,26 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE
-import * as path from "node:path";
-
-import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
 import {
   applyCondition,
   hasCondition,
 } from "@dnd/shared-algebras/conditions-algebra";
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { movementFeet, spellSlotLevel } from "@dnd/shared/types";
-import { Schema } from "effect";
 import { describe, expect, it } from "vitest";
 
+import {
+  MBT_TEST_TIMEOUT_MS,
+  booleanField,
+  defineDriver,
+  focusedMbtMaxSteps,
+  mbtPickSchemas,
+  mbtSpecPath,
+  mbtTraceCount,
+  numberFromQuintInt,
+  quintField,
+  quintStateRecord,
+  run,
+  stateCheck,
+} from "./battle-runtime-mbt-driver-kit.ts";
 import {
   applyDirectConditionSpellEffects,
   battleStateAfterDirectConditionTargetActionEarlyEndForActor,
@@ -107,22 +117,13 @@ function spellSlotLevelForBattle(
   throw new Error(`Invalid battle Spell Slot level ${slotLevel}.`);
 }
 
-const QuintIntAsNumber = Schema.transform(
-  Schema.BigIntFromSelf,
-  Schema.Number,
-  { strict: true, decode: (n) => Number(n), encode: (n) => BigInt(n) },
-);
-
-const intSchema = Schema.standardSchemaV1(QuintIntAsNumber);
-const boolSchema = Schema.standardSchemaV1(Schema.Boolean);
-
 const driverSchema = {
   init: {
-    slotLedgerLevel: intSchema,
-    hasNonSpellSource: boolSchema,
+    slotLedgerLevel: mbtPickSchemas.int,
+    hasNonSpellSource: mbtPickSchemas.bool,
   },
   doCastDirectCondition: {
-    slotLevel: intSchema,
+    slotLevel: mbtPickSchemas.int,
   },
   doInvalidUpperSlotCast: {},
   doBeginLaterTurn: {},
@@ -468,49 +469,38 @@ describe("Direct condition lifecycle MBT parity", () => {
 
   it("matches the TS reducer slice against bounded random MBT traces", async () => {
     await run({
-      spec: path.resolve(
+      spec: mbtSpecPath(
         import.meta.dirname,
-        "../battle-runtime-direct-condition-lifecycle.mbt.qnt",
+        "battle-runtime-direct-condition-lifecycle.mbt.qnt",
       ),
       init: "init",
       step: "step",
       driver: createDirectConditionLifecycleDriver(),
       backend: "typescript",
-      nTraces: 10,
-      maxSteps: 6,
+      nTraces: mbtTraceCount(),
+      maxSteps: focusedMbtMaxSteps(6),
       stateCheck: directConditionLifecycleStateCheck,
     });
-  }, 120_000);
+  }, MBT_TEST_TIMEOUT_MS);
 });
 
 function normalizeDirectConditionLifecycleQuintState(
   raw: unknown,
 ): DirectConditionLifecycleState {
-  if (raw == null || typeof raw !== "object" || Array.isArray(raw)) {
-    throw new Error("Expected Quint direct-condition lifecycle state.");
-  }
-  const state: Readonly<Record<string, unknown>> = Object.fromEntries(
-    Object.entries(raw),
-  );
+  const state = quintStateRecord(raw);
   const normalized = {
-    actionAvailable: booleanFromQuint(
-      state["qActionAvailable"],
-      "qActionAvailable",
-    ),
+    actionAvailable: booleanField(state, "qActionAvailable"),
     slotLedger: {
       slotLevel: numberFromQuintInt(
-        state["qSlotLedgerLevel"],
+        quintField(state, "qSlotLedgerLevel"),
         "qSlotLedgerLevel",
       ),
       slotsRemaining: numberFromQuintInt(
-        state["qSlotsRemaining"],
+        quintField(state, "qSlotsRemaining"),
         "qSlotsRemaining",
       ),
     },
-    slotSpellCastThisTurn: booleanFromQuint(
-      state["qSlotSpellCastThisTurn"],
-      "qSlotSpellCastThisTurn",
-    ),
+    slotSpellCastThisTurn: booleanField(state, "qSlotSpellCastThisTurn"),
     targetCondition: directConditionTargetFromQuintState(state),
   };
   expectDerivedQuintFlag(
@@ -529,16 +519,10 @@ function normalizeDirectConditionLifecycleQuintState(
 function directConditionTargetFromQuintState(
   state: Readonly<Record<string, unknown>>,
 ): DirectConditionLifecycleState["targetCondition"] {
-  const hasNonSpellSource = booleanFromQuint(
-    state["qTargetHasNonSpellSource"],
-    "qTargetHasNonSpellSource",
-  );
-  const hasSpellSource = booleanFromQuint(
-    state["qTargetHasSpellSource"],
-    "qTargetHasSpellSource",
-  );
+  const hasNonSpellSource = booleanField(state, "qTargetHasNonSpellSource");
+  const hasSpellSource = booleanField(state, "qTargetHasSpellSource");
   const durationTicks = numberFromQuintInt(
-    state["qTargetSpellDurationTicks"],
+    quintField(state, "qTargetSpellDurationTicks"),
     "qTargetSpellDurationTicks",
   );
 
@@ -569,23 +553,12 @@ function compareDirectConditionLifecycleState(
   return true;
 }
 
-function numberFromQuintInt(raw: unknown, field: string): number {
-  if (typeof raw === "number") return raw;
-  if (typeof raw === "bigint") return Number(raw);
-  throw new Error(`Expected Quint integer field ${field}.`);
-}
-
-function booleanFromQuint(raw: unknown, field: string): boolean {
-  if (typeof raw === "boolean") return raw;
-  throw new Error(`Expected Quint Boolean field ${field}.`);
-}
-
 function expectDerivedQuintFlag(
   state: Readonly<Record<string, unknown>>,
   field: string,
   expected: boolean,
 ): void {
-  const actual = booleanFromQuint(state[field], field);
+  const actual = booleanField(state, field);
   if (actual !== expected) {
     throw new Error(`Expected Quint ${field} to be ${String(expected)}.`);
   }

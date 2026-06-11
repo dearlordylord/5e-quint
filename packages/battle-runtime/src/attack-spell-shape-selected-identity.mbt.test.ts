@@ -4,8 +4,6 @@
 // UNIT-IDENTITY-MBT-REPLAY: attack-spell-shape guiding_bolt doGuidingBoltNextAttackAdvantage
 // UNIT-IDENTITY-MBT-REPLAY: attack-spell-shape inflict_wounds doInflictWoundsFailedSave doInflictWoundsSuccessfulSave
 // UNIT-IDENTITY-MBT-REPLAY: attack-spell-shape shocking_grasp doShockingGraspOpportunityAttackDenied
-import * as path from "node:path";
-
 import { Either } from "effect";
 
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
@@ -46,6 +44,7 @@ import {
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
 import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
+import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
 
 const attackSpellShapeSpellIds = [
   "fire_bolt",
@@ -99,9 +98,9 @@ const unitLibrary = unitCatalogResult.catalog;
 defineSelectedIdentityWitness({
   describeLabel: "Attack spell shape selected identity MBT",
   taskId: "attack-spell-shape",
-  specFile: path.resolve(
+  specFile: mbtSpecPath(
     import.meta.dirname,
-    "../battle-runtime-attack-spell-shape-selected-identity.mbt.qnt",
+    "battle-runtime-attack-spell-shape-selected-identity.mbt.qnt",
   ),
   projectionSchema: {
     targetHp: "int",
@@ -655,7 +654,9 @@ function projectAttackSpellShapeSelectedIdentityState(
   return {
     targetHp: target.hp,
     spellSlotSpentThisTurn:
-      state.currentTurnResources.spellSlotUsesThisTurn.some((use) => use.kind === "committed"),
+      state.currentTurnResources.spellSlotUsesThisTurn.some(
+        (use) => use.kind === "committed",
+      ),
     level1SlotsRemaining: level1SlotsRemaining(state, casterId),
     activeEffectKind: effectKind,
     activeEffectCount: activeEffectCount(state, effectKind),

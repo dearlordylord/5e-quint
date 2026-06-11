@@ -1,19 +1,19 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.bonus-action-dash-temporary-hit-points
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1H-ORC-ADRENALINE-RUSH orc_adrenaline_rush
 // UNIT-IDENTITY-MBT-REPLAY: L1H-ORC-ADRENALINE-RUSH orc_adrenaline_rush doAdrenalineRushDash doRejectSecondDash
-import * as path from "node:path";
-
-import { run } from "@firfi/quint-connect";
 import { describe, expect, it } from "vitest";
 
 import {
+  MBT_TEST_TIMEOUT_MS,
   adrenalineRushStateCheck,
   createAdrenalineRushDriver,
   focusedMbtMaxSteps,
-  promotedMbtTraces,
+  mbtSpecPath,
+  mbtTraceCount,
+  run,
   runSelectedUnitIdentityReplay,
   type AdrenalineRushSelectedUnitIdentityReplay,
-} from "./battle-runtime-mbt-fixtures.ts";
+} from "./battle-runtime-mbt-driver-kit.ts";
 
 const adrenalineRushDriverSchema = {
   init: {},
@@ -69,17 +69,17 @@ describe("Adrenaline Rush MBT", () => {
 
   it("replays Orc Adrenaline Rush Bonus Action Dash and Temporary Hit Points", async () => {
     await run({
-      spec: path.resolve(
+      spec: mbtSpecPath(
         import.meta.dirname,
-        "../battle-runtime-adrenaline-rush.mbt.qnt",
+        "battle-runtime-adrenaline-rush.mbt.qnt",
       ),
       init: "init",
       step: "step",
       driver: createAdrenalineRushDriver(adrenalineRushDriverSchema),
       backend: "typescript",
-      nTraces: promotedMbtTraces,
+      nTraces: mbtTraceCount(),
       maxSteps: focusedMbtMaxSteps(2),
       stateCheck: adrenalineRushStateCheck,
     });
-  }, 120_000);
+  }, MBT_TEST_TIMEOUT_MS);
 });

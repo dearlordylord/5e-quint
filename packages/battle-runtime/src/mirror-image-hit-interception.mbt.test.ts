@@ -1,10 +1,18 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.MIRROR_IMAGE_HIT_INTERCEPTION
-import * as path from "node:path";
-
-import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
 import { Schema } from "effect";
 import { describe, expect, it } from "vitest";
 
+import {
+  MBT_TEST_TIMEOUT_MS,
+  booleanValue,
+  defineDriver,
+  focusedMbtMaxSteps,
+  mbtSpecPath,
+  mbtTraceCount,
+  numberFromQuintInt,
+  run,
+  stateCheck,
+} from "./battle-runtime-mbt-driver-kit.ts";
 import {
   MIRROR_IMAGE_HIT_INTERCEPTION_DUPLICATE_COUNTS,
   resolveMirrorImageHitInterception,
@@ -54,21 +62,25 @@ const mirrorImageHitInterceptionStateCheck = stateCheck(
 );
 
 describe("Mirror Image hit-interception MBT parity", () => {
-  it("matches the TS reducer slice against bounded random MBT traces", async () => {
-    await run({
-      spec: path.resolve(
-        import.meta.dirname,
-        "../battle-runtime-mirror-image-hit-interception.mbt.qnt",
-      ),
-      init: "init",
-      step: "step",
-      driver: createMirrorImageHitInterceptionDriver(),
-      backend: "typescript",
-      nTraces: 10,
-      maxSteps: 6,
-      stateCheck: mirrorImageHitInterceptionStateCheck,
-    });
-  }, 120_000);
+  it(
+    "matches the TS reducer slice against bounded random MBT traces",
+    async () => {
+      await run({
+        spec: mbtSpecPath(
+          import.meta.dirname,
+          "battle-runtime-mirror-image-hit-interception.mbt.qnt",
+        ),
+        init: "init",
+        step: "step",
+        driver: createMirrorImageHitInterceptionDriver(),
+        backend: "typescript",
+        nTraces: mbtTraceCount(),
+        maxSteps: focusedMbtMaxSteps(6),
+        stateCheck: mirrorImageHitInterceptionStateCheck,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
 });
 
 function normalizeMirrorImageHitInterceptionQuintState(
@@ -84,7 +96,7 @@ function normalizeMirrorImageHitInterceptionQuintState(
     remainingDuplicates: mirrorImageHitInterceptionDuplicateCount(
       numberFromQuintInt(state["qRemainingDuplicates"], "qRemainingDuplicates"),
     ),
-    normalDamageContinues: booleanFromQuint(
+    normalDamageContinues: booleanValue(
       state["qNormalDamageContinues"],
       "qNormalDamageContinues",
     ),
@@ -113,18 +125,9 @@ function mirrorImageHitInterceptionDuplicateCount(
     (candidate) => candidate === value,
   );
   if (count === undefined) {
-    throw new Error(`Expected Mirror Image duplicate count 0..3, got ${value}.`);
+    throw new Error(
+      `Expected Mirror Image duplicate count 0..3, got ${value}.`,
+    );
   }
   return count;
-}
-
-function numberFromQuintInt(raw: unknown, field: string): number {
-  if (typeof raw === "number") return raw;
-  if (typeof raw === "bigint") return Number(raw);
-  throw new Error(`Expected Quint integer field ${field}.`);
-}
-
-function booleanFromQuint(raw: unknown, field: string): boolean {
-  if (typeof raw === "boolean") return raw;
-  throw new Error(`Expected Quint Boolean field ${field}.`);
 }
