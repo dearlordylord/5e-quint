@@ -11,10 +11,15 @@
     { "number": 5, "id": "CSC-T05-COMPANION-REST-ASSUMPTION", "status": "done", "title": "Record the companion rest-participation assumption; align sheet long-rest THP/HP" },
     { "number": 6, "id": "CSC-T06-RECAST-SEMANTICS", "status": "done", "title": "Record recast assumptions; one recast semantic across sheet and battle layers" },
     { "number": 7, "id": "CSC-T07-FORM-VOCAB-HOIST-CREATION-MOVE", "status": "done", "title": "Hoist the familiar-form vocabulary; move out-of-battle creation into character-sheet-runtime" },
-    { "number": 8, "id": "CSC-T08-CREATION-HP-SURFACE", "status": "ready-for-implementation", "title": "Remove caller-minted companion HP/THP from the MCP creation operation" },
+    { "number": 8, "id": "CSC-T08-CREATION-HP-SURFACE", "status": "blocked", "title": "Remove caller-minted companion HP/THP from the MCP creation operation" },
     { "number": 9, "id": "CSC-T09-FORM-CATALOG-REFERENCE", "status": "blocked", "title": "Replace the first-match familiar-form-catalog scan with an executable uniqueness boundary" },
-    { "number": 10, "id": "CSC-T10-SMALL-FINDINGS-BATCH", "status": "blocked", "title": "Close the small review findings (narrowing, dead exports, duplicate rules, id constructor)" },
-    { "number": 11, "id": "CSC-T11-CONVERGENCE-CLOSEOUT", "status": "blocked", "title": "Reviewer-loop convergence and L13COMP plan-doc closeout" }
+    { "number": 10, "id": "CSC-T10-SMALL-FINDINGS-BATCH", "status": "blocked", "title": "Close the small review findings (narrowing, dead exports, duplicate rules, id constructor, durable-id uniqueness owner)" },
+    { "number": 11, "id": "CSC-T11-CONVERGENCE-CLOSEOUT", "status": "blocked", "title": "Reviewer-loop convergence and L13COMP plan-doc closeout" },
+    { "number": 12, "id": "CSC-T12-R0-LONG-REST-COMPANION-RESTORE", "status": "ready-for-implementation", "title": "Restore the merge-dropped Long Rest companion expiration and the sheet companion tests" },
+    { "number": 13, "id": "CSC-T13-R3LITE-ALIAS-FAMILY-DELETION", "status": "blocked", "title": "Delete the FindFamiliar type-alias family; keep rule-source module names (ADR 0005)" },
+    { "number": 14, "id": "CSC-T14-R4A-FORMS-SHIM-DELETION", "status": "blocked", "title": "Delete the battle-runtime find-familiar-forms compatibility re-export shim" },
+    { "number": 15, "id": "CSC-T15-R2-PROTOCOL-TAG-HOIST", "status": "blocked", "title": "Hoist the companion protocol tag to a shared-algebras leaf; battle state carries the tag" },
+    { "number": 16, "id": "CSC-T16-R1-SINGLE-SETTLEMENT-OPERATION", "status": "blocked", "title": "One settlement operation for character battle handoff; move companion handoff into its own module" }
   ]
 }
 -->
@@ -35,6 +40,19 @@ never rebase onto or merge `master`; master has moved past this branch
 Adrenaline Rush hunk — that is expected and merges clean; PR-level merge is
 owner-owned).
 
+**Second review round (2026-06-11).** After the `origin/master` merge
+`e5d9ccea6`, a post-merge architecture review added tasks 12–16 to this lane
+(review record: `plans/COMPANION_SESSION_ARCH_REVIEW_FOLLOWUPS.md`; naming
+decision: `docs/adr/0005-battle-companion-rule-source-module-naming.md`).
+Task 12 is a regression fix — that merge silently dropped the Long Rest
+companion expiration and the entire sheet-side companion test suite — and
+runs before T08. Tasks 15–16 are approved refactors and run after T10 so the
+heavily shared files move once. **This index is the authoritative status
+ledger for tasks 12–16**; the review-record file does not track status.
+Another master merge is expected before PR merge (qfw-lane-a-r7); after any
+master merge, run the sheet companion suite as the merge-loss canary (Task
+12's restored tests are that canary).
+
 ## Context Budget
 
 Read only what the current task needs:
@@ -43,6 +61,10 @@ Read only what the current task needs:
   cited regions.
 - `plans/COMPANION_SESSION_ADMISSION_AND_REAPPEARANCE_PLAN.md` — the design
   doc this branch implements; tasks must keep it truthful.
+- For tasks 12–16: `plans/COMPANION_SESSION_ARCH_REVIEW_FOLLOWUPS.md` (review
+  record/background) and `docs/adr/0005-battle-companion-rule-source-module-naming.md`
+  (naming decision Task 13 implements). Task bodies below are self-contained;
+  read the record only when background is needed.
 - RAW anchors: `.references/srd-5.2.1/Spells/Descriptions-E-L.md` (Find
   Familiar, line ~296), `.references/srd-5.2.1/Classes/Warlock.md` (Pact of
   the Chain), `.references/srd-5.2.1/Classes/Druid.md` (Wild Companion, line
@@ -137,10 +159,15 @@ a task's change invalidates them):
 | 5 | CSC-T05-COMPANION-REST-ASSUMPTION | done | T04 | HITL; sheet-side counterpart of T04's deletion. |
 | 6 | CSC-T06-RECAST-SEMANTICS | done | T05 | HITL; depends on T03's outcome union for the battle half. |
 | 7 | CSC-T07-FORM-VOCAB-HOIST-CREATION-MOVE | done | T06 | Package move lands after semantics settle, so code moves once. |
-| 8 | CSC-T08-CREATION-HP-SURFACE | ready-for-implementation | T07 | Edits the creation op wherever T07 left it. |
+| 12 | CSC-T12-R0-LONG-REST-COMPANION-RESTORE | ready-for-implementation | none | Regression fix first: restores a direct-RAW rule the master merge dropped, plus the canary tests every later task (and the next master merge) needs. |
+| 13 | CSC-T13-R3LITE-ALIAS-FAMILY-DELETION | blocked | T12 | Trivial battle-runtime-only cleanup; sequenced early to get the dual vocabulary out of files later tasks read. |
+| 14 | CSC-T14-R4A-FORMS-SHIM-DELETION | blocked | T13 | Same-session-sized battle-runtime cleanup; touches imports in files T13 just edited. |
+| 8 | CSC-T08-CREATION-HP-SURFACE | blocked | T14 | Edits the creation op wherever T07 left it; runs after the cheap cleanups so the queue front stays unblocked. |
 | 9 | CSC-T09-FORM-CATALOG-REFERENCE | blocked | T08 | Touches admission eligibility helpers T07 may have relocated. |
-| 10 | CSC-T10-SMALL-FINDINGS-BATCH | blocked | T09 | Sweep of remaining small findings in now-stable files. |
-| 11 | CSC-T11-CONVERGENCE-CLOSEOUT | blocked | T10 | Full-gate run + plan-doc truth update. |
+| 10 | CSC-T10-SMALL-FINDINGS-BATCH | blocked | T09 | Sweep of remaining small findings in now-stable files; now also owns the durable-id uniqueness decision (R4b). |
+| 15 | CSC-T15-R2-PROTOCOL-TAG-HOIST | blocked | T10 | Owner-approved refactor; reshapes protocol threading and deletes the settlement inverse mapping before T16 moves the code. |
+| 16 | CSC-T16-R1-SINGLE-SETTLEMENT-OPERATION | blocked | T15 | Code moves once, in its post-T15 final shape (the T07 rationale). |
+| 11 | CSC-T11-CONVERGENCE-CLOSEOUT | blocked | T16 | Full-gate run + plan-doc truth update over the whole lane, tasks 1–16. |
 
 ## Task Details
 
@@ -723,6 +750,24 @@ Close the remaining review findings (F11 batch), each small and local:
   left it alive); duplicated spell-slot branch in
   `spendRetainedCompanionCreationSourceCost`; entry/snapshot
   `combatantId`/`companionId` rename noise if any survived T01.
+- **Durable companion id uniqueness owner (added 2026-06-11, arch-review
+  R4b):** ids are caller-minted (`character-tools.ts:317` brands the raw tool
+  string); the only cross-companion uniqueness check is at battle admission
+  (`find-familiar-lifecycle.ts` `companionDurableIdentityInUse`), so two
+  characters with coincidentally equal companion ids both parse at creation
+  and fail only at `start_battle` with a confusing admission error. Options:
+  (1) recommended/default — session-store uniqueness: the MCP creation
+  operation rejects a durable companion id already used by a different
+  character's retained companion (typed rejection + server test); (2)
+  server-minted ids (wire change); (3) document caller-owned collision risk.
+  HITL: flag the choice in the task output; proceed with (1) if unanswered —
+  the owner may veto in PR review.
+- **Do not dedupe the protocol constructors here** (arch-review R4c):
+  `ordinaryFamiliarLikeProtocol`/`pactFamiliarLikeProtocol`/
+  `ownerLongRestExpiringFamiliarLikeProtocol` are duplicated across
+  `companions.ts:823–833` and `character-battle-runtime/src/index.ts:438–448`,
+  but Task 15 absorbs them into the shared-algebras leaf. Dedupe in T10 only
+  if Task 15 has been rejected by the time T10 runs.
 
 Several of these may already be dissolved by T01–T07; verify each against
 HEAD before editing and record "already closed by Tnn" where true.
@@ -736,10 +781,13 @@ Status: `blocked` · Mode: AFK
 
 Run the full gate set and make the documentation truthful:
 
-- Full verification: all four package typechecks; battle-runtime,
-  character-sheet-runtime, character-battle-runtime, mcp test suites; the two
-  companion MBT files (mutex protocol); `test:qnt-proofs`;
-  `pnpm unit-profile-coverage:check`; `git diff --check`.
+- Full verification: typechecks for shared-algebras, battle-runtime,
+  character-sheet-runtime, character-battle-runtime, mcp; their test suites
+  (including the restored `character-sheet-runtime/src/companions.test.ts`
+  from T12); the two companion MBT files plus
+  `character-battle-settlement.mbt.test.ts` (mutex protocol);
+  `test:qnt-proofs`; `pnpm unit-profile-coverage:check`;
+  `node scripts/audit-character-sheet-runtime-split.mjs`; `git diff --check`.
 - Reviewer-loop convergence over the whole lane diff (RAW traceability,
   ubiquitous language, architecture/connascence, code review) until no
   reasonable findings remain; document rejected notes with reasons.
@@ -748,8 +796,272 @@ Run the full gate set and make the documentation truthful:
   no session-level admission copy, creation in sheet-runtime), and the
   L13COMP-03 row records the explicit deferrals from T03/T04 (battle-created
   familiar settlement; wired Magic-action casting with its admission gates).
-- Confirm ASSUMPTIONS.md A46/A47 wording matches the implemented behavior.
+- Confirm `plans/COMPANION_SESSION_ARCH_REVIEW_FOLLOWUPS.md` and
+  `docs/adr/0005-battle-companion-rule-source-module-naming.md` match what
+  tasks 12–16 actually landed (e.g. the T16 error-code decision, the T10
+  durable-id decision).
+- Confirm ASSUMPTIONS.md A46/A47 wording matches the implemented behavior —
+  in particular that T12 restored the A46 semantics exactly.
 
-Acceptance: all gates green in one run from a clean tree; plan doc and
+Acceptance: all gates green in one run from a clean tree; plan docs, ADR, and
 assumptions match the code; lane summary in the task output lists each review
-finding F1–F11 with its closing task/commit.
+finding F1–F11 and arch-review item R0–R4 with its closing task/commit.
+
+### Task 12 - CSC-T12-R0-LONG-REST-COMPANION-RESTORE
+
+Status: `ready-for-implementation` · Mode: AFK · Regression fix (arch-review
+R0)
+
+**Finding (regression introduced by merge `e5d9ccea6`).** The origin/master
+merge (parents `64bd4ec90` = T07, `bb28c152e` = master) adopted master's
+split of the sheet runtime (`84198a859` dissolved `index.ts`/`index.test.ts`
+into per-module files) and silently dropped two things this branch had
+landed:
+
+- `companionAfterLongRest` — present at `1b0d227c5`
+  (`packages/character-sheet-runtime/src/index.ts:2781` call inside
+  `completeLongRest`, `:2861` definition). At HEAD, `completeLongRest`
+  (`packages/character-sheet-runtime/src/rests.ts:214`) spreads `...sheet`
+  on both return paths with no companion transform: a Wild Companion
+  familiar no longer disappears when its owner finishes a Long Rest — direct
+  SRD RAW (Druid Wild Companion), the behavior T05 landed under A46.
+  `retainedCompanionProtocolFacts(...).expiration` has exactly one
+  production reader left (admission threading,
+  `character-battle-runtime/src/index.ts:321`); the rule executes nowhere.
+- The entire sheet-side companion test block — 48 companion references at
+  `1b0d227c5` `index.test.ts` (~lines 322–590: `retainedCompanionInput` /
+  `retainedCompanionProtocolInput` fixtures plus eight tests); zero
+  companion references in any `character-sheet-runtime` test at HEAD. The
+  866-line `companions.ts` has no direct test file.
+
+**Direction.** Restore with better locality than before:
+
+1. Reintroduce `companionAfterLongRest(companion): CharacterSheetCompanion`
+   in `packages/character-sheet-runtime/src/companions.ts` with the A46
+   comment from the `1b0d227c5` version (owner's Long Rest leaves a
+   surviving companion untouched — HP and Temporary Hit Points persist; only
+   the owner-long-rest protocol's companion is removed, via
+   `isOwnerLongRestRetainedCompanionProtocol` /
+   `retainedCompanionProtocolFacts(...).expiration`). Export from
+   `companions.ts` for intra-package use; do **not** add it to the
+   `index.ts` barrel (keeps `scripts/audit-character-sheet-runtime-split.mjs`
+   EXPECTED_EXPORTS untouched).
+2. In `completeLongRest` (`rests.ts`): compute
+   `const companion = companionAfterLongRest(sheet.companion)` once before
+   the spellcasting branch and include `companion` in **both** return-path
+   spreads (the T06 shape).
+3. Recover the test block from
+   `git show 1b0d227c5:packages/character-sheet-runtime/src/index.test.ts`
+   (region ~322–590) into a new
+   `packages/character-sheet-runtime/src/companions.test.ts`, adapted to the
+   post-split module layout. The eight tests: empty-slot create/parse;
+   retained companion with resolved form proof; reject zero current HP;
+   reject empty durable id; reject protocol hybrids (parameterized:
+   special-form without attack-exception; owner-long-rest without Fey
+   override); reject unknown stored protocol tag; owner-long-rest companion
+   removed on Long Rest; surviving companion HP/THP unchanged on Long Rest
+   (A46 — the discriminating 1/2-HP + 1-THP fixture asserting 1/1 after).
+
+**RAW anchors (re-read before implementing):**
+`.references/srd-5.2.1/Classes/Druid.md` Wild Companion;
+`.references/srd-5.2.1/Playing-the-Game.md` Temporary Hit Points, Long Rest;
+`ASSUMPTIONS.md` A46/A47; `UBIQUITOUS_LANGUAGE.md` "Controlled Creatures And
+Companions".
+
+Acceptance: `completeLongRest` removes a retained companion iff its
+protocol's expiration fact is `ownerFinishedLongRest`, on both return paths;
+all other companions round-trip unchanged (HP and THP). `companions.test.ts`
+exists with the eight tests green;
+`pnpm --filter @dnd/character-sheet-runtime test` + typecheck green; task
+output cites the grep showing `companionAfterLongRest` called from
+`rests.ts`; `node scripts/audit-character-sheet-runtime-split.mjs` green (no
+new barrel exports).
+
+### Task 13 - CSC-T13-R3LITE-ALIAS-FAMILY-DELETION
+
+Status: `blocked` (depends on Task 12) · Mode: AFK · Arch-review R3-lite
+
+**Finding.** `find-familiar-lifecycle.ts:82–100` defines a type-alias family
+(`FindFamiliarState = BattleCompanionState` and siblings:
+Present/TemporarilyDismissed/DisappearedAtZeroHitPoints/Absent states,
+`Snapshot`, `Placement`, `StoredForm`, `SelectedForm`, `HitPoints`,
+`CurrentHitPoints`), and `companion-state.ts:99` defines the reverse alias
+`FindFamiliarDisappearedAtZeroHitPointsState`. Verified usage: ~6 internal
+sites in the lifecycle module, 2 barrel re-exports in
+`battle-runtime/src/index.ts`, zero consumers in character-battle-runtime,
+mcp, or app. Two names for one concept.
+
+The larger rename (module/profile to `companion-lifecycle`) was **rejected**
+— see `docs/adr/0005-battle-companion-rule-source-module-naming.md`: the
+battle mechanics are Find Familiar SRD text; the QNT slice, both witnesses,
+and the `spell.find-familiar-lifecycle` coverage profile
+(`plans/unit-profile-coverage/profiles.jsonl` pins the paths) name that rule
+source. Do not rename or split files in this task.
+
+**Direction.** Delete the alias block and the reverse alias; replace the ~9
+use sites and the barrel re-exports with the `BattleCompanion*` names. Keep
+the genuinely distinct operation-input types (`FindFamiliarCastInput`,
+`WildCompanionCastInput`, `FindFamiliarReappearanceInput`,
+`FindFamiliarOwnerInput`, `FindFamiliarLifecycleInputBase`) — authored-route
+inputs, not duplicate state vocabulary.
+
+Acceptance: grep shows none of the deleted alias names repo-wide;
+battle-runtime typecheck green; focused tests green
+(`pnpm --filter @dnd/battle-runtime exec vitest run src/find-familiar-lifecycle.test.ts src/battle-runtime-find-familiar-and-pact.test.ts`);
+`profiles.jsonl`, evidence files, and coverage marker comments unchanged.
+
+### Task 14 - CSC-T14-R4A-FORMS-SHIM-DELETION
+
+Status: `blocked` (depends on Task 13) · Mode: AFK · Arch-review R4a
+
+**Finding.** `packages/battle-runtime/src/find-familiar-forms.ts` (21 lines)
+is a pure pass-through re-export of
+`@dnd/surface/surface/find-familiar-forms`, left by T07 as a "compatibility"
+shim — which contradicts the repo's no-external-consumers rule.
+`character-sheet-runtime` and `mcp` already import the surface module
+directly.
+
+**Direction.** Delete the shim; repoint the internal importers
+(`companion-state.ts:9`, `find-familiar-state.ts:5`,
+`find-familiar-lifecycle.ts:66,70`, `character-battle-resources.ts:41`,
+`battle-reducer/battle-codecs.ts:81–82`) to
+`@dnd/surface/surface/find-familiar-forms`. For the barrel re-export
+(`battle-runtime/src/index.ts:125` region): grep which consumers import the
+form vocabulary via `@dnd/battle-runtime`; prefer repointing them to surface
+and dropping the barrel re-export so the vocabulary has one import home.
+
+Acceptance: shim file deleted; grep shows no import of
+`battle-runtime/src/find-familiar-forms` (relative or via barrel);
+battle-runtime + affected package typechecks and focused suites green.
+
+### Task 15 - CSC-T15-R2-PROTOCOL-TAG-HOIST
+
+Status: `blocked` (depends on Task 10) · Mode: AFK · Arch-review R2,
+owner-approved 2026-06-11
+
+**Finding (connascence of algorithm).** The durable companion protocol tag is
+projected into battle as two facts and reconstructed by a hand-maintained
+inverse mapping: forward, `battleFormAccessForSheetCompanion`
+(`character-battle-runtime/src/index.ts:725`) derives `formAccess` from the
+protocol tag and admission threads
+`retainedCompanionProtocolFacts(...).expiration` (`:321`); inverse,
+`retainedCompanionProtocolFromBattle` (`:424`) reconstructs the tag from
+`formAccess` + `expiration` at settlement, assuming
+`formAccess === "pactOfTheChain"` implies the attack-exception protocol. The
+first protocol that reuses Pact form access without the attack exception (or
+any fourth protocol, e.g. Find Steed) silently mislabels the settled Sheet
+protocol instead of failing to compile.
+
+Pre-verified facts (2026-06-11; re-verify only if an earlier task changed
+them):
+
+- Battle-side `expiration` is pure freight: every TS read
+  (`find-familiar-lifecycle.ts:472–1095`,
+  `battle-reducer/damage-apply.ts:793`) and every QNT read
+  (`battle-runtime-find-familiar.qnt`) copies it through transitions;
+  nothing branches on it since T04 deleted the battle long-rest lane.
+- The Pact attack exception does **not** read companion protocol facts: the
+  gate is `combatantHasPactOfTheChainFindFamiliar`
+  (`find-familiar-pact-chain.ts:107`), reading the owner's
+  `invocationSpellAccesses`. **Keep that gate where it is** — moving it to
+  protocol facts would be a rule-semantics change outside this lane.
+- Neither companion MBT witness mentions `expiration` (witness `.qnt` files
+  stay unmodified; driver glue has no expiration mapping). No MCP test
+  asserts it; `BattleCompanionExpirationSchema`
+  (`battle-reducer/battle-codecs.ts:141`) is internal state codec only.
+
+**Direction.**
+
+1. New leaf `packages/shared-algebras/companion-protocol-algebra.ts`
+   (matches the package's domain-named algebra convention; sheet, battle,
+   and bridge already depend on `@dnd/shared-algebras`): the
+   `RETAINED_COMPANION_PROTOCOL_TAGS` const array, derived tag type, facts
+   type + table (moved from
+   `character-sheet-runtime/src/sheet-types.ts:190–242`), the three protocol
+   constructors (absorbing the duplicates in `companions.ts:823–833` and
+   `character-battle-runtime/src/index.ts:438–448`), the tag guards, and a
+   new `formCatalog: "findFamiliar" | "pactOfTheChain"` column so the
+   form-family derivation is table-driven. Protocol tags are rule
+   vocabulary, not authored catalog identity — shared-algebras, not surface.
+2. **QNT-first:** replace `FindFamiliarExpiration` with a three-tag
+   `FindFamiliarProtocol` in `battle-runtime-model.qnt:92–127` (all
+   lifecycle variants); thread through `battle-runtime-find-familiar.qnt`
+   (mechanical — the field is freight) and the proofs in
+   `battle-runtime-core-combat-tests.qnt`.
+3. TS battle: `BattleCompanionProtocolState` carries `protocol` (the tag)
+   instead of `expiration`; delete `BattleCompanionExpiration`; casts choose
+   tags (`castWildCompanion` → owner-long-rest, `castFindFamiliar` →
+   ordinary); update threading sites mechanically; codec schema becomes a
+   literal-union tag schema.
+4. Bridge: admission threads `protocol: companion.protocol.tag`; settlement
+   **copies** the tag back; delete `retainedCompanionProtocolFromBattle` and
+   the duplicated constructors; derive the stored-form family from the facts
+   table.
+5. Sheet: `CharacterSheetRetainedCompanionProtocol` re-points to the leaf
+   tag type; update the `scripts/audit-character-sheet-runtime-split.mjs`
+   EXPECTED_EXPORTS allowlist for any barrel names that move.
+
+Notes: battle-only cast familiars now carry a protocol tag from birth — the
+hook the deferred L13COMP-03 battle-only settlement needs. The facts table's
+`attack`/`dismissal`/`initiative` columns deliberately stay despite having
+no executable consumer today; they become load-bearing when a protocol
+actually differs.
+
+Acceptance: one tags/facts/constructors definition site repo-wide (grep); no
+`retainedCompanionProtocolFromBattle`, no `BattleCompanionExpiration`;
+witness `.qnt` files unmodified; both companion MBT files green under the
+mutex protocol; touched proof modules green (`quint test
+battle-runtime-core-combat-tests.qnt` or the full `test:qnt-proofs` lane);
+typecheck + focused suites green for shared-algebras, battle-runtime,
+character-sheet-runtime, character-battle-runtime, mcp;
+`pnpm unit-profile-coverage:check` and the sheet split audit green.
+
+### Task 16 - CSC-T16-R1-SINGLE-SETTLEMENT-OPERATION
+
+Status: `blocked` (depends on Task 15) · Mode: AFK · Arch-review R1
+
+**Finding (caller-sequencing connascence; CLAUDE.md "replace caller
+sequencing requirements with one operation").** Settlement of one domain
+event is exposed as two operations the caller must sequence:
+`applyBattleHandoffToCharacterSheet`
+(`character-battle-runtime/src/index.ts:190`) then
+`applyBattleCompanionHandoffToCharacterSheet` (`:362`) on the result. The
+ordering knowledge lives in the sole production caller,
+`packages/mcp/src/battle-handoff.ts:34,47`. A future settlement caller that
+forgets the second call silently keeps a stale durable companion on the
+sheet. The deferred L13COMP-03 battle-only settlement belongs behind this
+same seam.
+
+**Direction.**
+
+1. One exported operation in `character-battle-runtime`:
+   `settleCharacterSheetFromBattle({ sheet, state, combatant, unitLibrary,
+   statBlockCatalog })` performing creature handoff then companion handoff
+   internally; the two existing functions become private helpers.
+2. Move the companion admission/settlement section (post-T15 location of the
+   `index.ts:294–825` region) into a module, e.g. `companion-handoff.ts`,
+   matching the package's existing layout; `index.ts` stays the barrel.
+   Preserve any `KERNEL-COVERAGE`/`UNIT-PROFILE-COVERAGE` markers with the
+   moved code.
+3. Update `mcp/src/battle-handoff.ts` to the single call. No MCP test
+   asserts the `CHARACTER_SESSION_HANDOFF_INVALID` /
+   `COMPANION_SESSION_HANDOFF_INVALID` split (verified by grep), so collapse
+   to one error code with the issue message and record the wire change in
+   the task output; if review wants the phase distinction kept, add a phase
+   discriminant to `CharacterSheetBattleHandoffIssue` instead of a second
+   exported operation.
+4. Rewrite test call sites against the combined operation: 22 usages in
+   `character-battle-runtime/src/index.test.ts`, 9 in
+   `character-battle-settlement.mbt.test.ts` (driver glue only — the
+   settlement witness `.qnt` stays unmodified; a state with no battle
+   companion makes companion handoff a no-op, so creature-only expectations
+   carry over mechanically). If a half must stay exported as the settlement
+   MBT's implementation-under-test, record that as an explicit exception per
+   the T04 `castFindFamiliar` precedent; otherwise privatize both.
+
+Acceptance: one exported settlement operation; grep shows no production
+caller of the two halves; `pnpm --filter @dnd/character-battle-runtime`
+typecheck + unit suite green; `pnpm --filter @dnd/mcp` typecheck +
+`server.test.ts` green; `character-battle-settlement.mbt.test.ts` green
+under the MBT mutex protocol; `pnpm unit-profile-coverage:check` green if
+marked code moved.
