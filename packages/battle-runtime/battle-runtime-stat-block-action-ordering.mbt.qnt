@@ -6,14 +6,29 @@ module battleRuntimeStatBlockActionOrderingMbt {
   import battleRuntimeStatBlockActionOrdering.* from "./battle-runtime-stat-block-action-ordering"
   import battleRuntimeHoleKinds.* from "./battle-runtime-hole-kinds"
   import battleRuntimeFillKinds.* from "./battle-runtime-fill-kinds"
+  import battleRuntimeWitnessProtocol.* from "./battle-runtime-witness-protocol"
 
   var qStage: StatBlockActionFrontierStage
-  var qHoles: Set[BattleHoleFamilyKind]
-  var qLastResult: str
+  var qProtocol: WitnessProtocol[BattleHoleFamilyKind]
   var qLastOrderingError: str
   var qMultiattackDispatchesAvailable: int
   var qRechargeActionAvailable: bool
   var qUsesRolledDamage: bool
+
+  pure val witnessHoleType: BattleHoleFamilyKind = TargetChoiceHoleKind
+
+  pure def witnessProtocolForProjection(
+    stage: StatBlockActionFrontierStage,
+    result: WitnessResult,
+  ): WitnessProtocol[BattleHoleFamilyKind] = {
+    val holes = statBlockActionHoleFrontier(stage)
+    match result {
+      | WInit => witnessInit(witnessHoleType)
+      | WNeedsHoles => witnessNeedsHoles(holes)
+      | WResolved => witnessResolved(witnessHoleType)
+      | WInvalid(reason) => witnessInvalidWithHoles(holes, reason)
+    }
+  }
 
   pure def orderingErrorLabel(error: StatBlockActionFillOrderingError): str =
     match error {
@@ -32,12 +47,12 @@ module battleRuntimeStatBlockActionOrderingMbt {
       | StatBlockActionFillNotOrderingError(stage) => stage
     }
 
-  pure def acceptedRuntimeResult(result: StatBlockActionFillOrderResult): str =
+  pure def acceptedRuntimeResult(result: StatBlockActionFillOrderResult): WitnessResult =
     match result {
       | StatBlockActionFillAccepted(stage) =>
-          if (stage == StatBlockResolvedStage) "resolved" else "needsHoles"
-      | StatBlockActionFillRejected(_) => "invalid"
-      | StatBlockActionFillNotOrderingError(_) => "needsHoles"
+          if (stage == StatBlockResolvedStage) WResolved else WNeedsHoles
+      | StatBlockActionFillRejected(_) => WInvalid(WInvalidFill)
+      | StatBlockActionFillNotOrderingError(_) => WNeedsHoles
     }
 
   pure def rejectedOrderingLabel(result: StatBlockActionFillOrderResult): str =
@@ -49,15 +64,14 @@ module battleRuntimeStatBlockActionOrderingMbt {
 
   action recordProjection(
     stage: StatBlockActionFrontierStage,
-    lastResult: str,
+    result: WitnessResult,
     lastOrderingError: str,
     multiattackDispatchesAvailable: int,
     rechargeActionAvailable: bool,
     usesRolledDamage: bool,
   ): bool = all {
     qStage' = stage,
-    qHoles' = statBlockActionHoleFrontier(stage),
-    qLastResult' = lastResult,
+    qProtocol' = witnessProtocolForProjection(stage, result),
     qLastOrderingError' = lastOrderingError,
     qMultiattackDispatchesAvailable' = multiattackDispatchesAvailable,
     qRechargeActionAvailable' = rechargeActionAvailable,
@@ -66,7 +80,7 @@ module battleRuntimeStatBlockActionOrderingMbt {
 
   action init = recordProjection(
     StatBlockActSelectionStage,
-    "init",
+    WInit,
     "",
     0,
     true,
@@ -77,7 +91,7 @@ module battleRuntimeStatBlockActionOrderingMbt {
     qStage == StatBlockActSelectionStage,
     recordProjection(
       StatBlockAttackTargetChoiceStage,
-      "needsHoles",
+      WNeedsHoles,
       "",
       2,
       false,
@@ -89,7 +103,7 @@ module battleRuntimeStatBlockActionOrderingMbt {
     qStage == StatBlockActSelectionStage,
     recordProjection(
       StatBlockAttackTargetChoiceStage,
-      "needsHoles",
+      WNeedsHoles,
       "",
       0,
       qRechargeActionAvailable,
@@ -101,7 +115,7 @@ module battleRuntimeStatBlockActionOrderingMbt {
     qStage == StatBlockActSelectionStage,
     recordProjection(
       StatBlockAttackTargetChoiceStage,
-      "needsHoles",
+      WNeedsHoles,
       "",
       0,
       false,
@@ -212,7 +226,7 @@ module battleRuntimeStatBlockActionOrderingMbt {
     qStage == StatBlockActSelectionStage,
     recordProjection(
       StatBlockRechargeRollStage,
-      "needsHoles",
+      WNeedsHoles,
       "",
       0,
       false,
