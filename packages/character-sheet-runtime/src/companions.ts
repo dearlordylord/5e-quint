@@ -157,8 +157,6 @@ export function createRetainedFamiliarLikeCompanion(
         })
       : retainedCompanionCreationHitPoints({
           statBlock: resolved.right.statBlock,
-          currentHp: input.currentHp,
-          tempHp: input.tempHp,
         });
   if (Either.isLeft(hitPoints)) return Either.left(hitPoints.left);
   const spentSheet = spendRetainedCompanionCreationSourceCost({
@@ -211,7 +209,8 @@ export function companionFromInput(
 export function parseStoredCharacterSheetCompanion(
   value: unknown,
 ): Either.Either<CharacterSheetCompanion, CharacterSheetIssue> {
-  if (value === undefined || value === null) return Either.right({ tag: "none" });
+  if (value === undefined || value === null)
+    return Either.right({ tag: "none" });
   if (!isRecord(value)) {
     return characterSheetIssue("Expected Character Sheet companion state.");
   }
@@ -316,7 +315,9 @@ function parseStoredRetainedCompanionManifestation(
     value.selectedForm,
   );
   if (Either.isLeft(selectedForm)) return Either.left(selectedForm.left);
-  if (!isCharacterSheetCompanionCreatureTypeOverride(value.creatureTypeOverride)) {
+  if (
+    !isCharacterSheetCompanionCreatureTypeOverride(value.creatureTypeOverride)
+  ) {
     return characterSheetIssue(
       "Retained companion requires a creature type override.",
     );
@@ -757,8 +758,6 @@ function retainedCompanionRecastHitPoints(input: {
   if (input.manifestation.tag === "disappearedAtZeroHitPoints") {
     return retainedCompanionCreationHitPoints({
       statBlock: input.statBlock,
-      currentHp: undefined,
-      tempHp: undefined,
     });
   }
   const maxHp = statBlockLiteralHp(input.statBlock);
@@ -788,16 +787,16 @@ function retainedCompanionRecastHitPoints(input: {
 
 function retainedCompanionCreationHitPoints(input: {
   readonly statBlock: StatBlockRecord;
-  readonly currentHp: HpType | undefined;
-  readonly tempHp: HpType | undefined;
 }): Either.Either<
   CharacterSheetRetainedCompanionHitPoints,
   CharacterSheetIssue
 > {
-  const currentHp = input.currentHp ?? statBlockLiteralHp(input.statBlock);
+  const currentHp = statBlockLiteralHp(input.statBlock);
   if (currentHp === null) {
+    // Future non-literal Stat Block HP support needs an explicit table-provided
+    // rolled-HP witness instead of reviving caller-minted creation HP.
     return characterSheetIssue(
-      "Retained companion creation requires literal Stat Block HP or caller-provided current HP.",
+      "Retained companion creation requires literal Stat Block HP.",
     );
   }
   if (currentHp < Hp(1)) {
@@ -810,7 +809,7 @@ function retainedCompanionCreationHitPoints(input: {
     // proves the retained companion positive-current-HP alias.
     currentHp:
       currentHp as CharacterSheetRetainedCompanionHitPoints["currentHp"],
-    tempHp: input.tempHp ?? Hp(0),
+    tempHp: Hp(0),
   });
 }
 

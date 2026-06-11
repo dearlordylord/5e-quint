@@ -323,12 +323,6 @@ function applyRetainOneAtATimeCompanionOperation(
           creatureTypeOverrideChoiceId:
             input.operation.creatureTypeOverrideChoiceId,
         }),
-    ...(input.operation.currentHp === undefined
-      ? {}
-      : { currentHp: Hp(input.operation.currentHp) }),
-    ...(input.operation.tempHp === undefined
-      ? {}
-      : { tempHp: Hp(input.operation.tempHp) }),
   });
   if (Either.isLeft(updated)) {
     return errorContent("Character session operation failed.", {

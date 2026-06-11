@@ -26,11 +26,6 @@ const NonNegativeIntegerSchema = Schema.Number.pipe(
   Schema.int(),
   Schema.greaterThanOrEqualTo(0),
 );
-const PositiveIntegerSchema = Schema.Number.pipe(
-  Schema.int(),
-  Schema.greaterThanOrEqualTo(1),
-);
-const HpSchema = NonNegativeIntegerSchema;
 const EmptyArgsSchema = Schema.Struct({});
 
 const DraftIdArgsSchema = Schema.Struct({
@@ -201,8 +196,6 @@ const RetainOneAtATimeCompanionOperationArgsSchema = Schema.Struct({
       exact: true,
     },
   ),
-  currentHp: Schema.optionalWith(PositiveIntegerSchema, { exact: true }),
-  tempHp: Schema.optionalWith(HpSchema, { exact: true }),
 });
 const CharacterSessionOperationArgsSchema = Schema.Union(
   RetainOneAtATimeCompanionOperationArgsSchema,

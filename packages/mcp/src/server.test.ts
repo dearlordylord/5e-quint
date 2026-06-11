@@ -1027,6 +1027,31 @@ describe("MCP server route", () => {
     ]);
   });
 
+  test("does not expose retained companion creation HP inputs in the MCP schema", () => {
+    const applyOperationTool = characterToolDefinitions.find(
+      (tool) => tool.name === "apply_character_session_operation",
+    );
+    // Cast evidence: mcpObjectJsonSchema returns an object JSON schema for
+    // tool input schemas; this test inspects that generated object shape.
+    const inputSchema = applyOperationTool?.inputSchema as
+      | {
+          readonly properties?: {
+            readonly operation?: {
+              readonly properties?: Readonly<Record<string, unknown>>;
+            };
+          };
+        }
+      | undefined;
+    const operationSchema = inputSchema?.properties?.operation;
+
+    expect(operationSchema?.properties?.kind).toEqual({
+      type: "string",
+      enum: ["retainOneAtATimeCompanion"],
+    });
+    expect(operationSchema?.properties).not.toHaveProperty("currentHp");
+    expect(operationSchema?.properties).not.toHaveProperty("tempHp");
+  });
+
   test("registers battle tool names", () => {
     expect(battleToolDefinitions.map((tool) => tool.name)).toEqual([
       "select_stat_block",
@@ -2336,7 +2361,7 @@ describe("MCP server route", () => {
     const root = createMcpCompositionRoot();
     const draftId = "draft:mcp-find-familiar-admission";
     createFinalizedWizardWithFindFamiliar(root, draftId);
-    setRetainedFamiliarCompanion(root, draftId, {
+    setStoredRetainedFamiliarCompanion(root, draftId, {
       formId: "cat",
       currentHp: Hp(1),
       tempHp: Hp(3),
@@ -2779,11 +2804,40 @@ describe("MCP server route", () => {
           manifestation: {
             tag: "embodiedOutsideBattle",
             resolvedStatBlockId: "stat_block_cat",
+            hitPoints: { currentHp: 2, tempHp: 0 },
           },
         },
       },
       spellSlotExpenditures: [{ spellLevel: 1, expended: 1 }],
     });
+  });
+
+  test("apply_character_session_operation rejects caller-minted companion HP", () => {
+    const root = createMcpCompositionRoot();
+    const draftId = "draft:mcp-find-familiar-hp-input-rejected";
+    createFinalizedWizardWithFindFamiliar(root, draftId);
+
+    const rejected = readPayload(
+      handleToolCall(root, "apply_character_session_operation", {
+        characterId: testCharacterId(draftId),
+        operation: {
+          kind: "retainOneAtATimeCompanion",
+          companionId: "durable-hp-forged-familiar",
+          source: { tag: "ritualSpell", spellId: "find_familiar" },
+          selectedForm: { tag: "normalNamedForm", formId: "cat" },
+          creatureTypeOverrideChoiceId: "fey",
+          currentHp: 999999,
+          tempHp: 50,
+        },
+      }),
+    );
+
+    expect(rejected).toMatchObject({
+      details: { code: "INVALID_ARGUMENTS" },
+    });
+    expect(root.sessionStore.characters.get(testCharacterId(draftId))).toEqual(
+      expect.objectContaining({ companion: { tag: "none" } }),
+    );
   });
 
   test("start_battle orders retained companion ties after the initial owner roster", () => {
@@ -5879,8 +5933,6 @@ function setRetainedFamiliarCompanion(
   draftId: string,
   input: {
     readonly formId?: string;
-    readonly currentHp?: Hp;
-    readonly tempHp?: Hp;
   } = {},
 ) {
   const formId = input.formId ?? "cat";
@@ -5893,10 +5945,6 @@ function setRetainedFamiliarCompanion(
         source: { tag: "ritualSpell", spellId: "find_familiar" },
         selectedForm: { tag: "normalNamedForm", formId },
         creatureTypeOverrideChoiceId: "fey",
-        ...(input.currentHp === undefined
-          ? {}
-          : { currentHp: Number(input.currentHp) }),
-        ...(input.tempHp === undefined ? {} : { tempHp: Number(input.tempHp) }),
       },
     }),
   );
@@ -5911,6 +5959,29 @@ function setRetainedFamiliarCompanion(
       },
     },
   });
+}
+
+function setStoredRetainedFamiliarCompanion(
+  root: ReturnType<typeof createMcpCompositionRoot>,
+  draftId: string,
+  input: {
+    readonly formId?: string;
+    readonly currentHp?: Hp;
+    readonly tempHp?: Hp;
+  } = {},
+) {
+  const session = root.sessionStore.characters.get(testCharacterId(draftId));
+  if (session?.tag !== "available") {
+    throw new Error("Expected test character session.");
+  }
+  root.sessionStore.characters.set(
+    expectRight(
+      replaceCharacterSheetCompanion({
+        sheet: session,
+        companion: retainedFamiliarCompanionInput(input),
+      }),
+    ),
+  );
 }
 
 function retainedFamiliarCompanionInput(

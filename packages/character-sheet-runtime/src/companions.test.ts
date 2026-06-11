@@ -1,9 +1,16 @@
 import { describe, expect, test } from "vitest";
 import type { Hp as HpType } from "@dnd/shared/types";
+import {
+  buildStatBlockCatalog,
+  srdStatBlockCollection,
+  type StatBlockCatalog,
+} from "@dnd/surface/surface/stat-block-catalog";
+import { Option } from "effect";
 
 import {
   characterSheetCompanion,
   characterSheetRetainedCompanionId,
+  createRetainedFamiliarLikeCompanion,
   type CharacterSheet,
   type CharacterSheetCompanion,
   type CharacterSheetCompanionCreatureTypeOverride,
@@ -19,8 +26,19 @@ import {
   Hp,
   parseCharacterSheet,
   requireRight,
+  spellbookRitualSheet,
   unitLibrary,
 } from "./test-support.ts";
+
+const statBlockCatalogResult = buildStatBlockCatalog({
+  collections: [srdStatBlockCollection],
+});
+if (statBlockCatalogResult.tag !== "ok") {
+  throw new Error(
+    "Character Sheet companion test Stat Block catalog must build.",
+  );
+}
+const statBlockCatalog = statBlockCatalogResult.catalog;
 
 function retainedCompanionInput(
   input: {
@@ -111,6 +129,79 @@ describe("Character Sheet runtime / companions", () => {
     });
   });
 
+  test("creates retained companion Hit Points from literal Stat Block HP with zero Temporary Hit Points", () => {
+    const sheet = spellbookRitualSheet({
+      characterIdText: "character:companion-creation-hp",
+      spellbook: ["find_familiar"],
+    });
+
+    const retained = requireRight(
+      createRetainedFamiliarLikeCompanion({
+        sheet,
+        unitLibrary,
+        statBlockCatalog,
+        companionId: characterSheetRetainedCompanionId("companion:cat"),
+        source: { tag: "ritualSpell", spellId: "find_familiar" },
+        selectedForm: { tag: "normalNamedForm", formId: "cat" },
+        creatureTypeOverrideChoiceId: "fey",
+      }),
+    );
+
+    expect(characterSheetCompanion(retained)).toMatchObject({
+      tag: "retainedOneAtATime",
+      companion: {
+        manifestation: {
+          tag: "embodiedOutsideBattle",
+          resolvedStatBlockId: "stat_block_cat",
+          hitPoints: { currentHp: Hp(2), tempHp: Hp(0) },
+        },
+      },
+    });
+  });
+
+  test("rejects retained companion creation when resolved Stat Block HP is not literal", () => {
+    const sheet = spellbookRitualSheet({
+      characterIdText: "character:companion-nonliteral-hp",
+      spellbook: ["find_familiar"],
+    });
+    const cat = statBlockCatalog.requireStatBlock("stat_block_cat");
+    const nonliteralHpCat = {
+      ...cat,
+      statBlock: {
+        ...cat.statBlock,
+        hp: { kind: "caster_derived", source: "proficiency_bonus" },
+      },
+    } as const;
+    const nonliteralHpCatalog: StatBlockCatalog = {
+      getStatBlock: (id) =>
+        id === "stat_block_cat"
+          ? Option.some(nonliteralHpCat)
+          : statBlockCatalog.getStatBlock(id),
+      listStatBlocks: () => statBlockCatalog.listStatBlocks(),
+      requireStatBlock: (id) =>
+        id === "stat_block_cat"
+          ? nonliteralHpCat
+          : statBlockCatalog.requireStatBlock(id),
+    };
+
+    expect(
+      createRetainedFamiliarLikeCompanion({
+        sheet,
+        unitLibrary,
+        statBlockCatalog: nonliteralHpCatalog,
+        companionId: characterSheetRetainedCompanionId("companion:cat"),
+        source: { tag: "ritualSpell", spellId: "find_familiar" },
+        selectedForm: { tag: "normalNamedForm", formId: "cat" },
+        creatureTypeOverrideChoiceId: "fey",
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        message: "Retained companion creation requires literal Stat Block HP.",
+      },
+    });
+  });
+
   test("rejects retained embodied companions with zero current HP", () => {
     expect(
       createFreshCharacterSheet({
@@ -191,9 +282,7 @@ describe("Character Sheet runtime / companions", () => {
   test("rejects a stored retained companion protocol with an unknown tag", () => {
     const sheet = requireRight(
       createFreshCharacterSheet({
-        characterId: characterSheetId(
-          "character:unknown-companion-protocol",
-        ),
+        characterId: characterSheetId("character:unknown-companion-protocol"),
         build,
         maximumHp: Hp(12),
         currentHp: Hp(12),

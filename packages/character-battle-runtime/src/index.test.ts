@@ -75,6 +75,7 @@ import {
   type CharacterSheet,
   type CharacterSheetCompanionFormSelection,
   type CharacterSheetInput,
+  type CharacterSheetRetainedCompanionCurrentHitPoints,
   type CharacterSheetRetainedCompanionManifestation,
 } from "@dnd/character-sheet-runtime";
 import { currentArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
@@ -5055,7 +5056,7 @@ function retainedOrdinaryCompanionSheet(input: {
       unitLibrary,
     }),
   );
-  return expectRight(
+  const retained = expectRight(
     createRetainedFamiliarLikeCompanion({
       sheet,
       unitLibrary,
@@ -5064,10 +5065,26 @@ function retainedOrdinaryCompanionSheet(input: {
       source: { tag: "ritualSpell", spellId: "find_familiar" },
       selectedForm: input.selectedForm,
       creatureTypeOverrideChoiceId: "fey",
-      currentHp: input.currentHp,
-      tempHp: input.tempHp,
     }),
   );
+  if (input.currentHp < Hp(1)) {
+    throw new Error("Expected positive retained companion fixture HP.");
+  }
+  return retainedCompanionSheetWithManifestation(retained, (manifestation) => {
+    if (manifestation.tag === "disappearedAtZeroHitPoints") {
+      throw new Error("Expected embodied retained companion fixture.");
+    }
+    return {
+      ...manifestation,
+      hitPoints: {
+        // Cast evidence: retainedOrdinaryCompanionSheet is a test fixture
+        // helper, and the guard above proves positive HP for recast cases.
+        currentHp:
+          input.currentHp as unknown as CharacterSheetRetainedCompanionCurrentHitPoints,
+        tempHp: input.tempHp,
+      },
+    };
+  });
 }
 
 function retainedCompanionSheetWithManifestation(

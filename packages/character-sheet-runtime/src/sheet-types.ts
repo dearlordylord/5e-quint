@@ -316,8 +316,6 @@ export type CharacterSheetRetainedCompanionCreationInput = {
   readonly source: CharacterSheetRetainedCompanionCreationSource;
   readonly selectedForm: CharacterSheetCompanionFormSelection;
   readonly creatureTypeOverrideChoiceId?: FindFamiliarCreatureTypeOverrideChoice["optionId"];
-  readonly currentHp?: HpType;
-  readonly tempHp?: HpType;
 };
 
 export type SpellcastingCharacterBuild = CharacterBuild & {
