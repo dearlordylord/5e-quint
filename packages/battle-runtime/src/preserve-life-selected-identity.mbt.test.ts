@@ -2,8 +2,6 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.magic-action-healing-pool
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L3PUTB-04 cleric_preserve_life
 // UNIT-IDENTITY-MBT-REPLAY: L3PUTB-04 cleric_preserve_life doDistributeHealing doSelfHealing doRejectNonBloodied doRejectOverPool doRejectOverCap doRejectMissingRange doRejectMissingResource doRejectMissingMagicAction
-import * as path from "node:path";
-
 import { Hp, movementFeet } from "@dnd/shared/types";
 import * as Either from "effect/Either";
 
@@ -15,6 +13,7 @@ import {
   type BattleState,
   type CombatantId,
 } from "./index.ts";
+import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
 import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
 import {
   clericChannelDivinityUnitId,
@@ -69,9 +68,9 @@ const secondTargetId = combatantId("preserve-life-selected-second-target");
 defineSelectedIdentityWitness({
   describeLabel: "Preserve Life selected identity MBT",
   taskId: "L3PUTB-04",
-  specFile: path.resolve(
+  specFile: mbtSpecPath(
     import.meta.dirname,
-    "../battle-runtime-preserve-life.mbt.qnt",
+    "battle-runtime-preserve-life.mbt.qnt",
   ),
   projectionSchema: {
     casterHp: "int",

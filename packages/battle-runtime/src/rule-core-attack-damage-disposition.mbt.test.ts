@@ -1,9 +1,17 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP
-import * as path from "node:path";
-
-import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
 import { describe, expect, it } from "vitest";
 
+import {
+  MBT_TEST_TIMEOUT_MS,
+  booleanValue,
+  defineDriver,
+  focusedMbtMaxSteps,
+  mbtSpecPath,
+  mbtTraceCount,
+  numberFromQuintInt,
+  run,
+  stateCheck,
+} from "./battle-runtime-mbt-driver-kit.ts";
 import { battleId, combatantId, resolveBattleSubject } from "./index.ts";
 import {
   attackDamageDispositionFill,
@@ -93,21 +101,25 @@ const attackDamageDispositionStateCheck = stateCheck(
 );
 
 describe("rule-core attack damage disposition deterministic QNT replay", () => {
-  it("replays Knock Out disposition acceptance and ranged rejection", async () => {
-    await run({
-      spec: path.resolve(
-        import.meta.dirname,
-        "../rule-core-attack-damage-disposition.mbt.qnt",
-      ),
-      init: "init",
-      step: "step",
-      driver: createDriver(),
-      backend: "typescript",
-      nTraces: 1,
-      maxSteps: scenarios.length - 1,
-      stateCheck: attackDamageDispositionStateCheck,
-    });
-  }, 120_000);
+  it(
+    "replays Knock Out disposition acceptance and ranged rejection",
+    async () => {
+      await run({
+        spec: mbtSpecPath(
+          import.meta.dirname,
+          "rule-core-attack-damage-disposition.mbt.qnt",
+        ),
+        init: "init",
+        step: "step",
+        driver: createDriver(),
+        backend: "typescript",
+        nTraces: mbtTraceCount(),
+        maxSteps: focusedMbtMaxSteps(scenarios.length - 1),
+        stateCheck: attackDamageDispositionStateCheck,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
 });
 
 function resolveMeleeKnockOut(): Projection {
@@ -250,14 +262,14 @@ function normalizeQuintState(raw: unknown): Projection {
   );
   return {
     lastScenario: scenarioField(state["qLastScenario"]),
-    accepted: booleanField(state["qAccepted"], "qAccepted"),
+    accepted: booleanValue(state["qAccepted"], "qAccepted"),
     targetHp: numberFromQuintInt(state["qTargetHp"], "qTargetHp"),
-    targetUnconscious: booleanField(
+    targetUnconscious: booleanValue(
       state["qTargetUnconscious"],
       "qTargetUnconscious",
     ),
-    targetDead: booleanField(state["qTargetDead"], "qTargetDead"),
-    knockOutRecovery: booleanField(
+    targetDead: booleanValue(state["qTargetDead"], "qTargetDead"),
+    knockOutRecovery: booleanValue(
       state["qKnockOutRecovery"],
       "qKnockOutRecovery",
     ),
@@ -277,15 +289,4 @@ function scenarioField(raw: unknown): Scenario {
 
 function isScenario(raw: unknown): raw is Scenario {
   return typeof raw === "string" && scenarioSet.has(raw);
-}
-
-function numberFromQuintInt(raw: unknown, field: string): number {
-  if (typeof raw === "number") return raw;
-  if (typeof raw === "bigint") return Number(raw);
-  throw new Error(`Expected Quint integer field ${field}.`);
-}
-
-function booleanField(raw: unknown, field: string): boolean {
-  if (typeof raw === "boolean") return raw;
-  throw new Error(`Expected Quint boolean field ${field}.`);
 }

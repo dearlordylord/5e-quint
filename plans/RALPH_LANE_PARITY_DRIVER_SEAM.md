@@ -37,13 +37,13 @@
     {
       "number": 6,
       "id": "PDS-A06-KIT-BATCH-3",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Kit batch migration 3"
     },
     {
       "number": 7,
       "id": "PDS-A07-KIT-BATCH-4",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Kit batch migration 4"
     },
     {
@@ -197,8 +197,8 @@ Every task must include:
 | 3 | PDS-A03-WITNESS-PROTOCOL-TRACER | done | PDS-A02-KIT-PILOTS | Unblocks Lane B (`BPK-B04+`). Includes the quint 0.31.0 parameterized-type REPL check. |
 | 4 | PDS-A04-KIT-BATCH-1 | done | PDS-A03-WITNESS-PROTOCOL-TRACER | Self-discovering; ≤20 drivers. |
 | 5 | PDS-A05-KIT-BATCH-2 | done | PDS-A04-KIT-BATCH-1 | Self-discovering; ≤20 drivers. |
-| 6 | PDS-A06-KIT-BATCH-3 | ready-for-research | PDS-A05-KIT-BATCH-2 | |
-| 7 | PDS-A07-KIT-BATCH-4 | blocked | PDS-A06-KIT-BATCH-3 | |
+| 6 | PDS-A06-KIT-BATCH-3 | done | PDS-A05-KIT-BATCH-2 | |
+| 7 | PDS-A07-KIT-BATCH-4 | ready-for-research | PDS-A06-KIT-BATCH-3 | |
 | 8 | PDS-A08-KIT-BATCH-5 | blocked | PDS-A07-KIT-BATCH-4 | Drains the kit-unmigrated set. |
 | 9 | PDS-A09-KIT-GATE-AND-CLOSEOUT | blocked | PDS-A08-KIT-BATCH-5 | Adds the quality gate; consolidated `MBT_TRACES=3` pass; prd/03 closeout numbers. |
 | 10 | PDS-A10-WITNESS-PILOTS | blocked | PDS-A09-KIT-GATE-AND-CLOSEOUT | Trace-cost timing note and pilot line-delta report. |
@@ -301,7 +301,7 @@ Batch result: 20 drivers migrated; line delta `18619 -> 18424`, net `-195`.
 
 ### Task 6 - PDS-A06-KIT-BATCH-3
 
-Status: `ready-for-research` · Mode: AFK
+Status: `done` · Mode: AFK
 
 Input: the kit-unmigrated discovery rule (Lane Rules) applied at task start.
 
@@ -311,9 +311,11 @@ handlers, projections, assertions unchanged in meaning).
 Acceptance: focused MBT green for exactly the batch files; closure checker
 green; no `*.mbt.qnt` diff; batch line-delta reported.
 
+Batch result: 20 drivers migrated; line delta `12086 -> 12005`, net `-81`.
+
 ### Task 7 - PDS-A07-KIT-BATCH-4
 
-Status: `blocked` · Mode: AFK
+Status: `ready-for-research` · Mode: AFK
 
 Input: the kit-unmigrated discovery rule (Lane Rules) applied at task start.
 

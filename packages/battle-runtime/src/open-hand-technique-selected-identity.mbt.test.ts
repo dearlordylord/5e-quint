@@ -2,8 +2,7 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.open-hand-technique
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L3PUTB-06-MONK-OPEN-HAND-TECHNIQUE-RUNTIME monk_open_hand_technique
 // UNIT-IDENTITY-MBT-REPLAY: L3PUTB-06-MONK-OPEN-HAND-TECHNIQUE-RUNTIME monk_open_hand_technique doAddle doPushSaveSucceeded doPushSaveFailed doToppleSaveSucceeded doToppleSaveFailed doRejectNonFlurry doRejectPushTooFar doRejectTopplePushDisposition
-import * as path from "node:path";
-
+import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
 import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
 import { battleTablePositionId } from "./index.ts";
 import type { BattleResolutionResult } from "./index.ts";
@@ -51,9 +50,9 @@ const openHandTechniqueUnitRef = supportedBattleUnitRef(openHandTechniqueUnit);
 defineSelectedIdentityWitness({
   describeLabel: "Open Hand Technique selected identity MBT",
   taskId: "L3PUTB-06-MONK-OPEN-HAND-TECHNIQUE-RUNTIME",
-  specFile: path.resolve(
+  specFile: mbtSpecPath(
     import.meta.dirname,
-    "../battle-runtime-open-hand-technique.mbt.qnt",
+    "battle-runtime-open-hand-technique.mbt.qnt",
   ),
   projectionSchema: {
     targetOpportunityAttackDenied: "bool",
@@ -317,7 +316,9 @@ function projectResult(
         effect.sourceUnitId === "monk_open_hand_technique",
     ),
     targetProne: hasCondition(target.conditions, "prone"),
-    pushDistanceFeet: Number(result.shovePushes?.[0]?.disposition.distanceFeet ?? 0),
+    pushDistanceFeet: Number(
+      result.shovePushes?.[0]?.disposition.distanceFeet ?? 0,
+    ),
     lastResult,
   });
 }
@@ -406,7 +407,9 @@ function openHandSavingThrowFill(
   succeeded: boolean,
   push?: BattleShovePushOutcome,
 ): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {
-  const fill = savingThrowOutcomeFill(hole, [{ targetId: goblinId, succeeded }]);
+  const fill = savingThrowOutcomeFill(hole, [
+    { targetId: goblinId, succeeded },
+  ]);
   return push === undefined
     ? fill
     : { ...fill, value: { ...fill.value, openHandTechniquePush: push } };

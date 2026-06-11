@@ -1,9 +1,17 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES BATTLE.COMMAND.OPTION_AND_NEXT_TURN
-import * as path from "node:path";
-
-import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
 import { describe, expect, it } from "vitest";
 
+import {
+  MBT_TEST_TIMEOUT_MS,
+  booleanValue,
+  defineDriver,
+  focusedMbtMaxSteps,
+  mbtSpecPath,
+  mbtTraceCount,
+  numberFromQuintInt,
+  run,
+  stateCheck,
+} from "./battle-runtime-mbt-driver-kit.ts";
 import {
   commandUnitId,
   enhanceAbilityUnitId,
@@ -312,23 +320,27 @@ const abilitySkillCommandStateCheck = stateCheck(
 );
 
 describe("rule-core ability, skill, Search, and Command deterministic QNT replay", () => {
-  it("replays closed reducer choices and Command next-turn consequences", async () => {
-    expectGuidanceReplaySkillsMatchRuntimeChoices();
+  it(
+    "replays closed reducer choices and Command next-turn consequences",
+    async () => {
+      expectGuidanceReplaySkillsMatchRuntimeChoices();
 
-    await run({
-      spec: path.resolve(
-        import.meta.dirname,
-        "../rule-core-ability-skill-command.mbt.qnt",
-      ),
-      init: "init",
-      step: "step",
-      driver: createDriver(),
-      backend: "typescript",
-      nTraces: 1,
-      maxSteps: replayStepCount,
-      stateCheck: abilitySkillCommandStateCheck,
-    });
-  }, 120_000);
+      await run({
+        spec: mbtSpecPath(
+          import.meta.dirname,
+          "rule-core-ability-skill-command.mbt.qnt",
+        ),
+        init: "init",
+        step: "step",
+        driver: createDriver(),
+        backend: "typescript",
+        nTraces: mbtTraceCount(),
+        maxSteps: focusedMbtMaxSteps(replayStepCount),
+        stateCheck: abilitySkillCommandStateCheck,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
 });
 
 function expectGuidanceReplaySkillsMatchRuntimeChoices(): void {
@@ -910,8 +922,8 @@ function normalizeQuintState(raw: unknown): Projection {
   );
   return {
     lastScenario: scenarioField(state["qLastScenario"]),
-    targetHidden: booleanField(state["qTargetHidden"], "qTargetHidden"),
-    targetProne: booleanField(state["qTargetProne"], "qTargetProne"),
+    targetHidden: booleanValue(state["qTargetHidden"], "qTargetHidden"),
+    targetProne: booleanValue(state["qTargetProne"], "qTargetProne"),
     targetEffectCount: numberFromQuintInt(
       state["qTargetEffectCount"],
       "qTargetEffectCount",
@@ -920,11 +932,11 @@ function normalizeQuintState(raw: unknown): Projection {
       state["qCasterEffectCount"],
       "qCasterEffectCount",
     ),
-    actionAvailable: booleanField(
+    actionAvailable: booleanValue(
       state["qActionAvailable"],
       "qActionAvailable",
     ),
-    bonusActionAvailable: booleanField(
+    bonusActionAvailable: booleanValue(
       state["qBonusActionAvailable"],
       "qBonusActionAvailable",
     ),
@@ -940,11 +952,11 @@ function normalizeQuintState(raw: unknown): Projection {
       state["qDroppedObjectCount"],
       "qDroppedObjectCount",
     ),
-    reactionWindowOpen: booleanField(
+    reactionWindowOpen: booleanValue(
       state["qReactionWindowOpen"],
       "qReactionWindowOpen",
     ),
-    haltSuppressed: booleanField(state["qHaltSuppressed"], "qHaltSuppressed"),
+    haltSuppressed: booleanValue(state["qHaltSuppressed"], "qHaltSuppressed"),
     d20ModifierSkill: d20ModifierSkillField(state["qD20ModifierSkill"]),
     abilityCheckModeAbility: abilityCheckModeAbilityField(
       state["qAbilityCheckModeAbility"],
@@ -1019,15 +1031,4 @@ function replayIndexForScenario(scenario: ReplayScenario): number {
     throw new Error(`Unexpected replay scenario ${scenario}.`);
   }
   return index;
-}
-
-function numberFromQuintInt(raw: unknown, field: string): number {
-  if (typeof raw === "number") return raw;
-  if (typeof raw === "bigint") return Number(raw);
-  throw new Error(`Expected Quint integer field ${field}.`);
-}
-
-function booleanField(raw: unknown, field: string): boolean {
-  if (typeof raw === "boolean") return raw;
-  throw new Error(`Expected Quint boolean field ${field}.`);
 }

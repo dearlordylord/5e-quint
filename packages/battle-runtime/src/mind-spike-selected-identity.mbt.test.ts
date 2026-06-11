@@ -1,17 +1,21 @@
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L13UG-A01-MIND-SPIKE-SELECTED-IDENTITY mind_spike
 // UNIT-IDENTITY-MBT-REPLAY: L13UG-A01-MIND-SPIKE-SELECTED-IDENTITY mind_spike doResolveMindSpikeFailedSaveConcentrationDuration doResolveMindSpikeSuccessfulSaveHalfDamage
-import * as path from "node:path";
-
-import {
-  run,
-  stateCheck,
-  type SimpleActionMap,
-  type SimpleDriver,
-} from "@firfi/quint-connect";
+import { type SimpleActionMap, type SimpleDriver } from "@firfi/quint-connect";
 import { describe, expect, it } from "vitest";
 
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 
+import {
+  MBT_TEST_TIMEOUT_MS,
+  booleanField,
+  focusedMbtMaxSteps,
+  mbtSpecPath,
+  mbtTraceCount,
+  numberFromQuintInt,
+  quintStateRecord,
+  run,
+  stateCheck,
+} from "./battle-runtime-mbt-driver-kit.ts";
 import { tickDurationEffects } from "./battle-reducer/turn-end-movement.ts";
 import type { BattleState } from "./index.ts";
 import {
@@ -144,22 +148,26 @@ describe("Mind Spike selected identity MBT", () => {
     }
   });
 
-  it("replays MBT parity", async () => {
-    await run({
-      spec: path.resolve(
-        import.meta.dirname,
-        "../battle-runtime-mind-spike-selected-identity.mbt.qnt",
-      ),
-      init: "init",
-      step: "step",
-      driver: createDriver,
-      backend: "typescript",
-      seed: process.env["QUINT_SEED"],
-      nTraces: Number(process.env["MBT_TRACES"] ?? 1),
-      maxSteps: Number(process.env["MBT_STEPS"] ?? 1),
-      stateCheck: mindSpikeStateCheck,
-    });
-  }, 120_000);
+  it(
+    "replays MBT parity",
+    async () => {
+      await run({
+        spec: mbtSpecPath(
+          import.meta.dirname,
+          "battle-runtime-mind-spike-selected-identity.mbt.qnt",
+        ),
+        init: "init",
+        step: "step",
+        driver: createDriver,
+        backend: "typescript",
+        seed: process.env["QUINT_SEED"],
+        nTraces: mbtTraceCount(),
+        maxSteps: focusedMbtMaxSteps(1),
+        stateCheck: mindSpikeStateCheck,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
 });
 
 const mindSpikeStateCheck = stateCheck(
@@ -377,25 +385,22 @@ function tickExpiredMindSpikeDuration(
   state: BattleState,
 ): BattleState["combatants"] {
   const caster = requireCombatant(state, spellCasterId);
-  const nearlyExpiredCombatants = new Map(state.combatants).set(
-    spellCasterId,
-    {
-      ...caster,
-      activeEffects: caster.activeEffects.map((effect) =>
-        effect.kind === "spellConcentrationDuration" &&
-        effect.sourceSpellId === mindSpikeUnitId &&
-        effect.expiresAt.kind === "concentration"
-          ? {
-              ...effect,
-              expiresAt: {
-                ...effect.expiresAt,
-                durationTicks: elapsedTimeTicks(1),
-              },
-            }
-          : effect,
-      ),
-    },
-  );
+  const nearlyExpiredCombatants = new Map(state.combatants).set(spellCasterId, {
+    ...caster,
+    activeEffects: caster.activeEffects.map((effect) =>
+      effect.kind === "spellConcentrationDuration" &&
+      effect.sourceSpellId === mindSpikeUnitId &&
+      effect.expiresAt.kind === "concentration"
+        ? {
+            ...effect,
+            expiresAt: {
+              ...effect.expiresAt,
+              durationTicks: elapsedTimeTicks(1),
+            },
+          }
+        : effect,
+    ),
+  });
   return tickDurationEffects(nearlyExpiredCombatants).value;
 }
 
@@ -467,45 +472,26 @@ function normalizeMindSpikeQuintState(
 ): MindSpikeSelectedIdentityProjection {
   const state = quintStateRecord(raw);
   return {
-    level2SlotsRemaining: quintInt(state, "qLevel2SlotsRemaining"),
-    targetHp: quintInt(state, "qTargetHp"),
-    casterConcentratingOnMindSpike: quintBool(
+    level2SlotsRemaining: numberFromQuintInt(
+      state["qLevel2SlotsRemaining"],
+      "qLevel2SlotsRemaining",
+    ),
+    targetHp: numberFromQuintInt(state["qTargetHp"], "qTargetHp"),
+    casterConcentratingOnMindSpike: booleanField(
       state,
       "qCasterConcentratingOnMindSpike",
     ),
-    mindSpikeDurationActive: quintBool(state, "qMindSpikeDurationActive"),
-    mindSpikeDurationCleanedUp: quintBool(state, "qMindSpikeDurationCleanedUp"),
-    targetActiveEffectCount: quintInt(state, "qTargetActiveEffectCount"),
+    mindSpikeDurationActive: booleanField(state, "qMindSpikeDurationActive"),
+    mindSpikeDurationCleanedUp: booleanField(
+      state,
+      "qMindSpikeDurationCleanedUp",
+    ),
+    targetActiveEffectCount: numberFromQuintInt(
+      state["qTargetActiveEffectCount"],
+      "qTargetActiveEffectCount",
+    ),
     lastResult: quintSelectedIdentityResult(state, "qLastResult"),
   };
-}
-
-function quintStateRecord(raw: unknown): Readonly<Record<string, unknown>> {
-  if (raw === null || typeof raw !== "object" || Array.isArray(raw)) {
-    throw new Error("Expected Mind Spike selected identity Quint state record.");
-  }
-  // Quint stateCheck supplies a record after the object guard; the cast only
-  // gives TypeScript an index signature for q-prefixed field lookup.
-  return raw as Readonly<Record<string, unknown>>;
-}
-
-function quintBool(
-  state: Readonly<Record<string, unknown>>,
-  key: string,
-): boolean {
-  const value = state[key];
-  if (typeof value === "boolean") return value;
-  throw new Error(`Expected boolean Mind Spike Quint field ${key}.`);
-}
-
-function quintInt(
-  state: Readonly<Record<string, unknown>>,
-  key: string,
-): number {
-  const value = state[key];
-  if (typeof value === "number") return value;
-  if (typeof value === "bigint") return Number(value);
-  throw new Error(`Expected integer Mind Spike Quint field ${key}.`);
 }
 
 function quintSelectedIdentityResult(
