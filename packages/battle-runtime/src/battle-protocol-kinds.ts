@@ -1,4 +1,4 @@
-// KERNEL-COVERAGE: runtime-owner BATTLE.HOLE.SEMANTIC_FRONTIER_CLASSIFICATION
+// KERNEL-COVERAGE: runtime-owner BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY
 
 import { Match } from "effect";
 import type { BattleSubject } from "./battle-subjects.ts";

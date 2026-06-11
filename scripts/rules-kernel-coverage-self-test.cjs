@@ -298,6 +298,54 @@ function runSelfTest() {
   assert.equal(result.matrix.semanticCoreRunBlockFindings.length, 0);
   assert.equal(result.matrix.kernelIrBoundaries.length, 8);
 
+  const witnessShapeObligationsPath = path.join(
+    root,
+    "plans",
+    "rules-kernel-coverage",
+    "obligations.jsonl",
+  );
+  const initialWitnessShapeObligationsText = fs.readFileSync(
+    witnessShapeObligationsPath,
+    "utf8",
+  );
+  const [sampleObligationForWitness, boundaryObligationForWitness] =
+    initialWitnessShapeObligationsText
+      .trim()
+      .split("\n")
+      .map((line) => JSON.parse(line));
+  writeFile(
+    witnessShapeObligationsPath,
+    [
+      JSON.stringify({
+        ...sampleObligationForWitness,
+        parityWitnesses: [
+          {
+            kind: "contract-test",
+            ownerPath: "sample.mbt.qnt",
+            qntSpecPath: "sample.mbt.qnt",
+            stepAction: "step",
+            deterministicReplayRationale:
+              "contract tests are not deterministic QNT replays.",
+          },
+        ],
+      }),
+      JSON.stringify(boundaryObligationForWitness),
+    ].join("\n") + "\n",
+  );
+  const invalidContractTestWitnessResult = buildKernelCoverage({ root });
+  for (const issue of [
+    "obligations.jsonl:1: BATTLE.SAMPLE.parityWitnesses[0].ownerPath must point to a .test.ts file.",
+    "obligations.jsonl:1: BATTLE.SAMPLE.parityWitnesses[0].qntSpecPath is not valid for contract-test.",
+    "obligations.jsonl:1: BATTLE.SAMPLE.parityWitnesses[0].stepAction is not valid for contract-test.",
+    "obligations.jsonl:1: BATTLE.SAMPLE.parityWitnesses[0].deterministicReplayRationale is not valid for contract-test.",
+  ]) {
+    assert.ok(
+      invalidContractTestWitnessResult.issues.includes(issue),
+      `Expected invalid contract-test witness issue ${issue}, got ${JSON.stringify(invalidContractTestWitnessResult.issues)}`,
+    );
+  }
+  writeFile(witnessShapeObligationsPath, initialWitnessShapeObligationsText);
+
   const sampleProfileObligationsPath = path.join(
     root,
     "plans",

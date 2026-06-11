@@ -1,3 +1,5 @@
+// KERNEL-COVERAGE: parity-witness BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY
+
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";

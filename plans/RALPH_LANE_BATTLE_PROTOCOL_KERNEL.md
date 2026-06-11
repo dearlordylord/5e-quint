@@ -19,7 +19,7 @@
     {
       "number": 3,
       "id": "BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Obligation, roles, and generator-readiness rows for the vocabulary tier"
     },
     {
@@ -140,7 +140,7 @@ Every task must include:
 | ---: | --- | --- | --- | --- |
 | 1 | BPK-B01-HOLE-KIND-VOCABULARY | ready-for-implementation-after-light-research | none | Light research: UL naming pass over the 33 semantic-frontier holeKinds; leaf layout (one module vs split). |
 | 2 | BPK-B02-FILL-SUBJECT-VOCABULARY | done | BPK-B01-HOLE-KIND-VOCABULARY | Same treatment for 46 fill kinds + ~40 subjects. |
-| 3 | BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT | ready-for-implementation | BPK-B02-FILL-SUBJECT-VOCABULARY | prd/02 M1 done after this. Unblocks the cleanroom-corpus value immediately. |
+| 3 | BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT | done | BPK-B02-FILL-SUBJECT-VOCABULARY | prd/02 M1 done after this. Unblocks the cleanroom-corpus value immediately. |
 | 4 | BPK-B04-WEAPON-ATTACK-ORDERING | blocked | BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT | Cross-lane gate: unblock manually when Lane A PDS-A01 and PDS-A03 are merged. |
 | 5 | BPK-B05-SAVE-SPELL-ORDERING | blocked | BPK-B04-WEAPON-ATTACK-ORDERING | Second procedure shape; reuses B04's slice skeleton. |
 | 6 | BPK-B06-INTERRUPT-NESTING-RESUME | blocked | BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT | Cross-lane gate: unblock manually when Lane A PDS-A01 and PDS-A03 are merged; may run before/parallel to B04 in queue order if the runner supports it. |
@@ -192,7 +192,7 @@ gates still green.
 
 ### Task 3 - BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT
 
-Status: `ready-for-implementation` · Mode: AFK
+Status: `done` · Mode: AFK
 
 Output: obligation row(s) for the vocabulary tier (suggested
 `BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY`) with SRD/UL `surfaceEvidence`;

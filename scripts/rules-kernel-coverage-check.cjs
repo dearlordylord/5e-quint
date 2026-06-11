@@ -887,6 +887,26 @@ function witnessNamesSpecPath(rootPath, ownerPath, witnessText, qntSpecPath) {
   return false;
 }
 
+function validateTestFileOnlyWitness(witness, context, kind) {
+  const issues = [];
+  if (
+    typeof witness.ownerPath === "string" &&
+    !witness.ownerPath.endsWith(".test.ts")
+  ) {
+    issues.push(`${context}.ownerPath must point to a .test.ts file.`);
+  }
+  for (const field of [
+    "qntSpecPath",
+    "stepAction",
+    "deterministicReplayRationale",
+  ]) {
+    if (witness[field] !== undefined) {
+      issues.push(`${context}.${field} is not valid for ${kind}.`);
+    }
+  }
+  return issues;
+}
+
 function validateWitness(witness, context) {
   const issues = [];
   if (!isRecord(witness)) return [`${context} must be an object.`];
@@ -945,21 +965,10 @@ function validateWitness(witness, context) {
     }
   }
   if (witness.kind === "runtime-test") {
-    if (
-      typeof witness.ownerPath === "string" &&
-      !witness.ownerPath.endsWith(".test.ts")
-    ) {
-      issues.push(`${context}.ownerPath must point to a .test.ts file.`);
-    }
-    for (const field of [
-      "qntSpecPath",
-      "stepAction",
-      "deterministicReplayRationale",
-    ]) {
-      if (witness[field] !== undefined) {
-        issues.push(`${context}.${field} is not valid for runtime-test.`);
-      }
-    }
+    issues.push(...validateTestFileOnlyWitness(witness, context, witness.kind));
+  }
+  if (witness.kind === "contract-test") {
+    issues.push(...validateTestFileOnlyWitness(witness, context, witness.kind));
   }
   return issues;
 }

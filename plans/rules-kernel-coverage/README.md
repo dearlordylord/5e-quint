@@ -195,9 +195,10 @@ QNT owner roles are:
 - **Support profile:** the typed runtime procedure shape admitted from Surface.
   Multiple Surface records can map to one profile.
 - **Parity witness:** an executable TS test that runs production runtime code and
-  either compares a QNT-owned projection or, for a profile-specific lifecycle
-  already carrying profile-level QNT proof, exercises the deterministic runtime
-  reducer path named by that profile.
+  either compares a QNT-owned projection, exercises a deterministic runtime
+  reducer path named by a profile that already carries profile-level QNT proof,
+  or checks an executable registry/QNT/TS contract where the join itself is the
+  covered obligation.
 - **Boundary-only:** parser/client/session/protocol behavior that does not
   change legal table-observable game state.
 - **Battle hole frontier:** the current set of battle reducer holes and fills
@@ -261,9 +262,10 @@ New reducer semantics are QNT-first:
 ## Parity Witness Modes
 
 Rules-kernel parity witness rows use the checked witness-kind vocabulary
-`focused-mbt`, `deterministic-qnt-replay`, and `runtime-test`. MCP scenario
-evidence uses `mcp-scenario` in `plans/unit-profile-coverage/`; it is an
-ultra-golden user-flow layer, not a rules-kernel parity witness.
+`focused-mbt`, `deterministic-qnt-replay`, `runtime-test`, and
+`contract-test`. MCP scenario evidence uses `mcp-scenario` in
+`plans/unit-profile-coverage/`; it is an ultra-golden user-flow layer, not a
+rules-kernel parity witness.
 
 The default witness for reducer procedures is focused MBT with random traces.
 Use it for sequencing, holes, reactions, resources, active-effect lifecycle,
@@ -301,6 +303,12 @@ single Surface-backed lifecycle obligation when the corresponding profile row
 already records QNT proof ownership and deterministic runtime parity. They must
 not be used for reusable sequencing, interleaving, or shared reducer semantics
 where branch interaction is the risk.
+
+Contract-test witnesses are narrower still. They may close an obligation only
+when the executable semantic claim is a checked registry join, protocol
+vocabulary mapping, or boundary inventory contract rather than a reducer trace.
+They must not be used as a substitute for QNT replay or MBT when runtime state
+transition behavior is the obligation.
 
 ## Anti-Explosion Rule
 

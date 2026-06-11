@@ -4,14 +4,14 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 
 ## Summary
 
-- Total obligations: 114
-- Covered obligations: 108
+- Total obligations: 115
+- Covered obligations: 109
 - Open transitional obligations: 0
 - Boundary or unsupported obligations: 6
 
 | Status | Count |
 | --- | ---: |
-| covered | 108 |
+| covered | 109 |
 | needs-qnt-owner | 0 |
 | needs-parity-witness | 0 |
 | needs-surface-evidence | 0 |
@@ -21,7 +21,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | Runtime | Count |
 | --- | ---: |
 | shared-algebras | 1 |
-| battle | 84 |
+| battle | 85 |
 | character-creation | 14 |
 | character-sheet | 12 |
 | character-battle | 3 |
@@ -111,6 +111,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `CREATION.ELDRITCH_INVOCATION.CHOICE_LIFECYCLE` | character-creation | covered | `character-creation.eldritch-invocation-choice` |
 | `SHEET.ARMOR_CLASS.BASE_FORMULA_CHOICE` | character-sheet | covered | `character-sheet.armor-class-base-formula` |
 | `BATTLE.HOLE.SEMANTIC_FRONTIER_CLASSIFICATION` | battle | boundary-only | _outside reducer semantics_ |
+| `BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY` | battle | covered | _direct reducer entrypoint_ |
 | `BATTLE.SURFACE.EXECUTABLE_PROFILE_JOIN` | battle | boundary-only | _outside reducer semantics_ |
 | `CREATION.CLASS_FEATURE_FEAT.CHOICE_FINALIZATION` | character-creation | covered | `character-creation.class-feature-feat-choice` |
 | `CREATION.WEAPON_MASTERY.CHOICE_FINALIZATION` | character-creation | covered | `character-creation.weapon-mastery-choice` |
@@ -285,42 +286,42 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | battle-fill-kind | `spiritualWeaponForcePosition` | `spiritualWeaponForcePosition` | table-owned-fact | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS`, `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | _none_ |
 | battle-hole-family | `BattleWildShapeEquipmentDispositionHole` | `wildShapeEquipmentDisposition` | semantic-frontier | `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`, `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | _none_ |
 | battle-fill-kind | `wildShapeEquipmentDisposition` | `wildShapeEquipmentDisposition` | semantic-frontier | `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`, `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | _none_ |
-| battle-subject-kind | `actionAttack` | `actionAttack` | semantic-frontier | _none_ | `BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT` |
-| battle-subject-kind | `actionMovement` | `actionMovement` | semantic-frontier | _none_ | `BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT` |
-| battle-subject-kind | `actionAvoidance` | `actionAvoidance` | semantic-frontier | _none_ | `BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT` |
-| battle-subject-kind | `actionSupport` | `actionSupport` | semantic-frontier | _none_ | `BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT` |
-| battle-subject-kind | `actionExploration` | `actionExploration` | semantic-frontier | _none_ | `BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT` |
-| battle-subject-kind | `actionReady` | `actionReady` | semantic-frontier | _none_ | `BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT` |
-| battle-subject-kind | `actionContest` | `actionContest` | semantic-frontier | _none_ | `BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT` |
-| battle-subject-kind | `actionConditionIntervention` | `actionConditionIntervention` | semantic-frontier | _none_ | `BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT` |
-| battle-subject-kind | `companionAttack` | `companionAttack` | semantic-frontier | _none_ | `BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT` |
-| battle-subject-kind | `bonusActionAttack` | `bonusActionAttack` | semantic-frontier | _none_ | `BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT` |
-| battle-subject-kind | `bonusActionGrantedStandardAction` | `bonusActionGrantedStandardAction` | semantic-frontier | _none_ | `BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT` |
-| battle-subject-kind | `featureOption` | `featureOption` | semantic-frontier | _none_ | `BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT` |
-| battle-subject-kind | `featureAttack` | `featureAttack` | semantic-frontier | _none_ | `BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT` |
-| battle-subject-kind | `actionMagic` | `actionMagic` | semantic-frontier | _none_ | `BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT` |
-| battle-subject-kind | `bonusActionMagic` | `bonusActionMagic` | semantic-frontier | _none_ | `BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT` |
-| battle-subject-kind | `spellGrantedMovement` | `spellGrantedMovement` | semantic-frontier | _none_ | `BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT` |
-| battle-subject-kind | `featureActivation` | `featureActivation` | semantic-frontier | _none_ | `BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT` |
-| battle-subject-kind | `featureWeaponActivation` | `featureWeaponActivation` | semantic-frontier | _none_ | `BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT` |
-| battle-subject-kind | `formTransformation` | `formTransformation` | semantic-frontier | _none_ | `BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT` |
-| battle-subject-kind | `companionLifecycle` | `companionLifecycle` | semantic-frontier | _none_ | `BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT` |
-| battle-subject-kind | `companionSenses` | `companionSenses` | semantic-frontier | _none_ | `BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT` |
-| battle-subject-kind | `companionDeliveredMagic` | `companionDeliveredMagic` | semantic-frontier | _none_ | `BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT` |
-| battle-subject-kind | `runtimeTurnBoundary` | `runtimeTurnBoundary` | semantic-frontier | _none_ | `BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT` |
-| battle-subject-kind | `runtimeMovement` | `runtimeMovement` | semantic-frontier | _none_ | `BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT` |
-| battle-subject-kind | `runtimeReadiedResponse` | `runtimeReadiedResponse` | semantic-frontier | _none_ | `BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT` |
-| battle-subject-kind | `runtimeReaction` | `runtimeReaction` | semantic-frontier | _none_ | `BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT` |
-| battle-subject-kind | `runtimeLinkRelease` | `runtimeLinkRelease` | semantic-frontier | _none_ | `BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT` |
-| battle-subject-kind | `runtimeSavingThrow` | `runtimeSavingThrow` | semantic-frontier | _none_ | `BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT` |
-| battle-subject-kind | `runtimeEffectCleanup` | `runtimeEffectCleanup` | semantic-frontier | _none_ | `BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT` |
-| battle-subject-kind | `runtimeEffectControl` | `runtimeEffectControl` | semantic-frontier | _none_ | `BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT` |
-| battle-subject-kind | `runtimeHeldObjectRelease` | `runtimeHeldObjectRelease` | semantic-frontier | _none_ | `BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT` |
-| battle-subject-kind | `runtimeProtectionSave` | `runtimeProtectionSave` | semantic-frontier | _none_ | `BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT` |
-| battle-subject-kind | `runtimeTransformationMode` | `runtimeTransformationMode` | semantic-frontier | _none_ | `BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT` |
-| battle-subject-kind | `runtimeCompelledAction` | `runtimeCompelledAction` | semantic-frontier | _none_ | `BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT` |
-| battle-subject-kind | `runtimeAltitudeControl` | `runtimeAltitudeControl` | semantic-frontier | _none_ | `BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT` |
-| battle-subject-kind | `runtimeAreaEffect` | `runtimeAreaEffect` | semantic-frontier | _none_ | `BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT` |
+| battle-subject-kind | `actionAttack` | `actionAttack` | semantic-frontier | `BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY` | _none_ |
+| battle-subject-kind | `actionMovement` | `actionMovement` | semantic-frontier | `BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY` | _none_ |
+| battle-subject-kind | `actionAvoidance` | `actionAvoidance` | semantic-frontier | `BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY` | _none_ |
+| battle-subject-kind | `actionSupport` | `actionSupport` | semantic-frontier | `BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY` | _none_ |
+| battle-subject-kind | `actionExploration` | `actionExploration` | semantic-frontier | `BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY` | _none_ |
+| battle-subject-kind | `actionReady` | `actionReady` | semantic-frontier | `BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY` | _none_ |
+| battle-subject-kind | `actionContest` | `actionContest` | semantic-frontier | `BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY` | _none_ |
+| battle-subject-kind | `actionConditionIntervention` | `actionConditionIntervention` | semantic-frontier | `BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY` | _none_ |
+| battle-subject-kind | `companionAttack` | `companionAttack` | semantic-frontier | `BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY` | _none_ |
+| battle-subject-kind | `bonusActionAttack` | `bonusActionAttack` | semantic-frontier | `BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY` | _none_ |
+| battle-subject-kind | `bonusActionGrantedStandardAction` | `bonusActionGrantedStandardAction` | semantic-frontier | `BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY` | _none_ |
+| battle-subject-kind | `featureOption` | `featureOption` | semantic-frontier | `BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY` | _none_ |
+| battle-subject-kind | `featureAttack` | `featureAttack` | semantic-frontier | `BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY` | _none_ |
+| battle-subject-kind | `actionMagic` | `actionMagic` | semantic-frontier | `BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY` | _none_ |
+| battle-subject-kind | `bonusActionMagic` | `bonusActionMagic` | semantic-frontier | `BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY` | _none_ |
+| battle-subject-kind | `spellGrantedMovement` | `spellGrantedMovement` | semantic-frontier | `BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY` | _none_ |
+| battle-subject-kind | `featureActivation` | `featureActivation` | semantic-frontier | `BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY` | _none_ |
+| battle-subject-kind | `featureWeaponActivation` | `featureWeaponActivation` | semantic-frontier | `BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY` | _none_ |
+| battle-subject-kind | `formTransformation` | `formTransformation` | semantic-frontier | `BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY` | _none_ |
+| battle-subject-kind | `companionLifecycle` | `companionLifecycle` | semantic-frontier | `BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY` | _none_ |
+| battle-subject-kind | `companionSenses` | `companionSenses` | semantic-frontier | `BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY` | _none_ |
+| battle-subject-kind | `companionDeliveredMagic` | `companionDeliveredMagic` | semantic-frontier | `BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY` | _none_ |
+| battle-subject-kind | `runtimeTurnBoundary` | `runtimeTurnBoundary` | semantic-frontier | `BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY` | _none_ |
+| battle-subject-kind | `runtimeMovement` | `runtimeMovement` | semantic-frontier | `BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY` | _none_ |
+| battle-subject-kind | `runtimeReadiedResponse` | `runtimeReadiedResponse` | semantic-frontier | `BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY` | _none_ |
+| battle-subject-kind | `runtimeReaction` | `runtimeReaction` | semantic-frontier | `BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY` | _none_ |
+| battle-subject-kind | `runtimeLinkRelease` | `runtimeLinkRelease` | semantic-frontier | `BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY` | _none_ |
+| battle-subject-kind | `runtimeSavingThrow` | `runtimeSavingThrow` | semantic-frontier | `BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY` | _none_ |
+| battle-subject-kind | `runtimeEffectCleanup` | `runtimeEffectCleanup` | semantic-frontier | `BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY` | _none_ |
+| battle-subject-kind | `runtimeEffectControl` | `runtimeEffectControl` | semantic-frontier | `BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY` | _none_ |
+| battle-subject-kind | `runtimeHeldObjectRelease` | `runtimeHeldObjectRelease` | semantic-frontier | `BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY` | _none_ |
+| battle-subject-kind | `runtimeProtectionSave` | `runtimeProtectionSave` | semantic-frontier | `BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY` | _none_ |
+| battle-subject-kind | `runtimeTransformationMode` | `runtimeTransformationMode` | semantic-frontier | `BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY` | _none_ |
+| battle-subject-kind | `runtimeCompelledAction` | `runtimeCompelledAction` | semantic-frontier | `BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY` | _none_ |
+| battle-subject-kind | `runtimeAltitudeControl` | `runtimeAltitudeControl` | semantic-frontier | `BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY` | _none_ |
+| battle-subject-kind | `runtimeAreaEffect` | `runtimeAreaEffect` | semantic-frontier | `BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY` | _none_ |
 
 ## QNT Owner Roles
 
@@ -508,6 +509,9 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core-examples.qnt` | proof-only | _none_ |
 | `packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core-examples.qnt` | proof-only | _none_ |
 | `packages/shared-algebras/proofs/rule-core/unit-feature-zero-hit-point-core-examples.qnt` | proof-only | _none_ |
+| `packages/battle-runtime/battle-runtime-hole-kinds.qnt` | semantic-core | `BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY` |
+| `packages/battle-runtime/battle-runtime-fill-kinds.qnt` | semantic-core | `BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY` |
+| `packages/battle-runtime/battle-runtime-subject-kinds.qnt` | semantic-core | `BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY` |
 
 ## Unit Feature Profile QNT Owners
 
@@ -645,6 +649,7 @@ Rows here are derived from `plans/unit-profile-coverage/profiles.jsonl` for prof
 | `BATTLE.ATTACK.MINIMAL_RESOLUTION` | generation-subset-clean | `import`, `variant`, `record`, `pure-def`, `int`, `bool`, `if-expression`, `arithmetic`, `boolean-connective`, `pattern-match` |  |  |
 | `BATTLE.FEATURE.METAMAGIC_SEEKING_SPELL_ATTACK_REROLL` | generation-subset-clean | `import`, `variant`, `record`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `set-operators`, `map`, `fold`, `forall`, `exists`, `membership`, `size`, `record-update` |  |  |
 | `BATTLE.FEATURE.METAMAGIC_EMPOWERED_DAMAGE_DICE_REROLL` | generation-subset-clean | `import`, `variant`, `record`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `set-operators`, `map`, `fold`, `forall`, `exists`, `membership`, `size`, `record-update` |  |  |
+| `BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY` | generation-subset-clean | `variant` |  |  |
 
 ### Generator Readiness Backlog
 
@@ -662,8 +667,8 @@ No semantic-core QNT owners contain run blocks.
 
 | Boundary | Obligations | Runtime Paths | Summary |
 | --- | --- | --- | --- |
-| command | `BATTLE.COMMAND.OPTION_AND_NEXT_TURN`, `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` | `packages/battle-runtime/src/battle-reducer.ts`, `packages/battle-runtime/src/battle-subjects.ts` | Executable reducer commands are selected Battle subjects and command-option choices, not authored spell names. |
-| fill | `BATTLE.HOLE.SEMANTIC_FRONTIER_CLASSIFICATION`, `BATTLE.TABLE.HOLE_FACT_BOUNDARIES`, `BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES` | `packages/battle-runtime/src/battle-reducer.ts`, `packages/battle-runtime/src/battle-reducer/spells-resolve-fill-set.ts`, `packages/battle-runtime/src/battle-reducer/attack-fill-set.ts` | Caller, table, roll, choice, and result facts enter through typed hole/fill frontiers. |
+| command | `BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY`, `BATTLE.COMMAND.OPTION_AND_NEXT_TURN`, `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` | `packages/battle-runtime/src/battle-reducer.ts`, `packages/battle-runtime/src/battle-subjects.ts` | Executable reducer commands are selected Battle subjects and command-option choices, not authored spell names. |
+| fill | `BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY`, `BATTLE.HOLE.SEMANTIC_FRONTIER_CLASSIFICATION`, `BATTLE.TABLE.HOLE_FACT_BOUNDARIES`, `BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES` | `packages/battle-runtime/src/battle-reducer.ts`, `packages/battle-runtime/src/battle-reducer/spells-resolve-fill-set.ts`, `packages/battle-runtime/src/battle-reducer/attack-fill-set.ts` | Caller, table, roll, choice, and result facts enter through typed hole/fill frontiers. |
 | result | `BATTLE.REACTION.OFFER_DECLINE_RESUME`, `CREATION.DRAFT.FILL_BATCH_SLICE_REPLAY`, `SHEET.SPELL_REST_BENEFIT.APPLICATION` | `packages/battle-runtime/src/battle-reducer.ts`, `packages/battle-runtime/src/battle-reducer/result-helpers.ts`, `packages/character-creation-runtime/src/index.ts`, `packages/character-sheet-runtime/src/index.ts` | Reducer results distinguish resolved state, requested holes, and typed invalid outcomes. |
 | state | `SHARED.HIT_POINTS.POSITIVE_DAMAGE`, `SHEET.HP_REST_HIT_DICE.TRANSITIONS`, `CHARACTER.BATTLE.HANDOFF.INIT_PROJECTION` | `packages/battle-runtime/src/battle-reducer.ts`, `packages/character-creation-runtime/src/types.ts`, `packages/character-sheet-runtime/src/index.ts`, `packages/character-battle-runtime/src/battle-creature-init.ts` | Mutable reducer state remains runtime-owned and is projected from shared algebras, Surface records, and character-sheet facts. |
 | active-effect | `BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE`, `BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE`, `BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS`, `BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS` | `packages/battle-runtime/src/active-effect/types.ts`, `packages/battle-runtime/src/active-effect/lifecycle.ts`, `packages/battle-runtime/src/battle-reducer/spells-active-effects.ts`, `packages/battle-runtime/src/battle-reducer/turn-end-movement.ts` | Battle active effects are typed occurrence state with expiration and cleanup semantics. |

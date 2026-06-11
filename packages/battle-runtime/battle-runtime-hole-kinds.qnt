@@ -1,6 +1,6 @@
 // -*- mode: Bluespec; -*-
 
-// KERNEL-COVERAGE: qnt-owner BATTLE.HOLE.SEMANTIC_FRONTIER_CLASSIFICATION
+// KERNEL-COVERAGE: qnt-owner BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY
 
 // Battle hole-family vocabulary shared by protocol witnesses and the
 // rules-kernel frontier registry.

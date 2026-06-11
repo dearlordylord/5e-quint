@@ -1,12 +1,14 @@
 const focusedMbtWitnessKind = "focused-mbt";
 const deterministicQntReplayWitnessKind = "deterministic-qnt-replay";
 const runtimeTestWitnessKind = "runtime-test";
+const contractTestWitnessKind = "contract-test";
 const mcpScenarioWitnessKind = "mcp-scenario";
 
 const parityWitnessKindValues = [
   focusedMbtWitnessKind,
   deterministicQntReplayWitnessKind,
   runtimeTestWitnessKind,
+  contractTestWitnessKind,
 ];
 
 const witnessKindDescriptions = Object.freeze({
@@ -16,6 +18,8 @@ const witnessKindDescriptions = Object.freeze({
     "Closed-case QNT replay evidence for fixed projections, scalar checks, or tiny named fixtures; not random MBT coverage.",
   [runtimeTestWitnessKind]:
     "Focused runtime test evidence for a profile-scoped reducer or projection path that already has profile-level QNT proof ownership or declared semantic-core QNT ownership.",
+  [contractTestWitnessKind]:
+    "Focused contract test evidence for checked registry joins, protocol vocabulary mappings, or boundary inventories where the executable obligation is the join itself rather than a reducer trace.",
   [mcpScenarioWitnessKind]:
     "Package-local MCP acceptance scenario evidence for user-facing tool and workflow flows.",
 });
@@ -43,6 +47,7 @@ function witnessKindCatalogIssues() {
 }
 
 module.exports = {
+  contractTestWitnessKind,
   deterministicQntReplayWitnessKind,
   focusedMbtWitnessKind,
   mcpScenarioWitnessKind,

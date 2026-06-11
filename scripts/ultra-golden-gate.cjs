@@ -1491,7 +1491,7 @@ function renderUltraGoldenGate(gate) {
     "",
     "## Witness Kind Vocabulary",
     "",
-    "The metric distinguishes reducer parity witnesses from MCP scenario evidence by checked witness kind. Rules-kernel parity rows may use `focused-mbt`, `deterministic-qnt-replay`, or `runtime-test`; MCP scenario rows must use `mcp-scenario`.",
+    "The metric distinguishes reducer parity witnesses from MCP scenario evidence by checked witness kind. Rules-kernel parity rows may use `focused-mbt`, `deterministic-qnt-replay`, `runtime-test`, or `contract-test`; MCP scenario rows must use `mcp-scenario`.",
     "",
     "| Witness kind | Meaning |",
     "| --- | --- |",
