@@ -2891,15 +2891,22 @@
           "ownerPath": "packages/battle-runtime/src/spell-attack-ordering.mbt.test.ts",
           "qntSpecPath": "packages/battle-runtime/battle-runtime-spell-attack-ordering.mbt.qnt",
           "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/hit-point-restoration-ordering.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-hit-point-restoration-ordering.mbt.qnt",
+          "stepAction": "step"
         }
       ],
       "profiles": [],
       "qntOwners": [
         "packages/battle-runtime/battle-runtime-weapon-attack-ordering.qnt",
         "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.qnt",
-        "packages/battle-runtime/battle-runtime-spell-attack-ordering.qnt"
+        "packages/battle-runtime/battle-runtime-spell-attack-ordering.qnt",
+        "packages/battle-runtime/battle-runtime-hit-point-restoration-ordering.qnt"
       ],
-      "reason": "Weapon-attack scope: the SRD attack structure fixes Choose a Target before resolving the attack, and Resolve the Attack makes the Attack Roll before hit damage dice. Save-gated-spell scope: the SRD defines affected targets or an area as the source of saving throws, the save result is determined by that effect, and damaging save effects roll damage after the affected creatures' save outcomes are known. Spell-attack scope: the same SRD attack structure applies to attacks made as part of a spell, the spellcasting rules define Spell Attack Rolls, and spell damage dice are rolled only after a hit unless a spell says otherwise. Typed spell-attack damage-type choice is modeled as a runtime Spell Invocation frontier that can be supplied alongside target choice before the Spell Attack Roll. The QNT owners record those frontier stages over the B01/B02 hole/fill vocabulary. For save-gated condition spells with a target-list and condition-choice hole, and for typed spell attacks with damage-type choice and target-choice holes, sibling frontiers exposed together may be filled in either order before advancing to the next d20 frontier. Runtime-backed weapon-attack ordering rejections remain explicit invalid fills; save-gated spell and spell-attack later-fill submissions are modeled as earliest-needed-frontier requests when the reducer accepts prefilling rather than rejecting. Table-owned range, cover, sight, area geometry, object target facts, modifier facts, later damage-disposition validation, and stale-subject rejection remain boundary or reducer evidence outside this ordering-error relation.",
+      "reason": "Weapon-attack scope: the SRD attack structure fixes Choose a Target before resolving the attack, and Resolve the Attack makes the Attack Roll before hit damage dice. Save-gated-spell scope: the SRD defines affected targets or an area as the source of saving throws, the save result is determined by that effect, and damaging save effects roll damage after the affected creatures' save outcomes are known. Spell-attack scope: the same SRD attack structure applies to attacks made as part of a spell, the spellcasting rules define Spell Attack Rolls, and spell damage dice are rolled only after a hit unless a spell says otherwise. Typed spell-attack damage-type choice is modeled as a runtime Spell Invocation frontier that can be supplied alongside target choice before the Spell Attack Roll. Hit Point restoration scope: spell healing chooses a target or target list before the spell healing roll supplies the restored Hit Point amount; feature healing-pool procedures expose one distribution frontier whose allocations are chosen before the feature resolves allocation legality, resource spend, restored Hit Points, and the shared Hit Point lifecycle owner applies any zero-Hit-Point cleanup. The QNT owners record those frontier stages over the B01/B02 hole/fill vocabulary. For save-gated condition spells with a target-list and condition-choice hole, and for typed spell attacks with damage-type choice and target-choice holes, sibling frontiers exposed together may be filled in either order before advancing to the next d20 frontier. Runtime-backed weapon-attack ordering rejections remain explicit invalid fills; save-gated spell, spell-attack, and healing later-fill submissions are modeled as earliest-needed-frontier requests when the reducer accepts prefilling rather than rejecting. Table-owned range, cover, sight, area geometry, object target facts, healing-pool range facts, modifier facts, later damage-disposition validation, and stale-subject rejection remain boundary or reducer evidence outside this ordering-error relation.",
       "runtime": "battle",
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer/attack-main.ts",
@@ -2913,6 +2920,8 @@
         "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/spell-attack-sequence.ts",
         "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/chained-spell-attack-damage.ts",
         "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/save-gated-condition.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/direct-hit-point-restoration.ts",
+        "packages/battle-runtime/src/battle-reducer/unit-features.ts",
         "packages/battle-runtime/src/battle-trace-contract.ts"
       ],
       "status": "covered",
@@ -2921,14 +2930,17 @@
         ".references/srd-5.2.1/Playing-the-Game.md#Attack Rolls",
         ".references/srd-5.2.1/Playing-the-Game.md#Saving Throws",
         ".references/srd-5.2.1/Playing-the-Game.md#Damage Rolls",
+        ".references/srd-5.2.1/Playing-the-Game.md#Healing",
+        ".references/srd-5.2.1/Playing-the-Game.md#Dropping to 0 Hit Points",
         ".references/srd-5.2.1/Spells/Gaining-and-Casting.md#Attack Rolls",
         ".references/srd-5.2.1/Rules-Glossary.md#Area of Effect",
         ".references/srd-5.2.1/Rules-Glossary.md#Target",
         "UBIQUITOUS_LANGUAGE.md#D20 Rolls",
         "UBIQUITOUS_LANGUAGE.md#Combat",
-        "UBIQUITOUS_LANGUAGE.md#Spellcasting"
+        "UBIQUITOUS_LANGUAGE.md#Spellcasting",
+        "UBIQUITOUS_LANGUAGE.md#Hit Points and Death"
       ],
-      "title": "Battle protocol hole frontiers order weapon-attack, save-gated-spell, and spell-attack procedure fills before resolution"
+      "title": "Battle protocol hole frontiers order weapon-attack, save-gated-spell, spell-attack, and Hit Point restoration procedure fills before resolution"
     },
     {
       "id": "BATTLE.SURFACE.EXECUTABLE_PROFILE_JOIN",
@@ -4282,23 +4294,25 @@
     {
       "classification": "semantic-frontier",
       "coveredByObligationIds": [
-        "BATTLE.SPELL.HIT_POINT_RESTORATION"
+        "BATTLE.SPELL.HIT_POINT_RESTORATION",
+        "BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING"
       ],
       "followUpTaskIds": [],
       "holeKind": "rolledDice",
       "id": "BattleSpellHealingRollHole",
-      "reason": "Healing rolls restore Hit Points and may clear zero-Hit-Point lifecycle state; the dedicated spell Hit Point restoration obligation owns the established healing subset.",
+      "reason": "Healing rolls restore Hit Points and may clear zero-Hit-Point lifecycle state; the dedicated spell Hit Point restoration obligation owns the healing state transition, and the protocol ordering obligation owns target choice before spell healing-roll resolution.",
       "subject": "battle-hole-family"
     },
     {
       "classification": "semantic-frontier",
       "coveredByObligationIds": [
-        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+        "BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING"
       ],
       "followUpTaskIds": [],
       "holeKind": "hitPointHealingDistribution",
       "id": "BattleHitPointHealingPoolDistributionHole",
-      "reason": "Hit Point healing pool distribution holes collect caller-selected Bloodied targets and allocation amounts for supported Unit feature procedures. Non-self range facts remain caller/table spatial evidence, while the reducer-owned semantics validate eligibility, spend the feature resource and Magic Action, and apply Hit Point restoration.",
+      "reason": "Hit Point healing pool distribution holes collect caller-selected Bloodied targets and allocation amounts for supported Unit feature procedures. Non-self range facts remain caller/table spatial evidence, while the reducer-owned semantics validate eligibility, spend the feature resource and Magic Action, and apply Hit Point restoration. The protocol ordering obligation owns the healing-pool distribution frontier before allocation resolution.",
       "subject": "battle-hole-family"
     },
     {
@@ -4693,6 +4707,7 @@
         "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
         "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
         "BATTLE.SPELL.HIT_POINT_RESTORATION",
+        "BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING",
         "SHARED.HIT_POINTS.POSITIVE_DAMAGE",
         "BATTLE.DAMAGE.ATTACK_BRANCHES",
         "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
@@ -4708,18 +4723,19 @@
       "fillKind": "rolledDice",
       "followUpTaskIds": [],
       "id": "rolledDice",
-      "reason": "Rolled Dice fills are shared by damage, healing, mitigation, linked effects, and feature-roll procedures. Generic damage branch, healing, type/reduction, disposition, shared HP, linked-effect, and specialized spell roll joins are covered by dedicated obligations.",
+      "reason": "Rolled Dice fills are shared by damage, healing, mitigation, linked effects, and feature-roll procedures. Generic damage branch, healing, protocol ordering, type/reduction, disposition, shared HP, linked-effect, and specialized spell roll joins are covered by dedicated obligations.",
       "subject": "battle-fill-kind"
     },
     {
       "classification": "semantic-frontier",
       "coveredByObligationIds": [
-        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+        "BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING"
       ],
       "fillKind": "hitPointHealingDistribution",
       "followUpTaskIds": [],
       "id": "hitPointHealingDistribution",
-      "reason": "Hit Point healing distribution fills choose target allocations for a supported Unit feature healing pool. Target selection and allocation amounts change reducer legality and resulting Hit Point state; non-self range facts carried with the fill stay caller/table spatial evidence.",
+      "reason": "Hit Point healing distribution fills choose target allocations for a supported Unit feature healing pool. Target selection and allocation amounts change reducer legality and resulting Hit Point state; non-self range facts carried with the fill stay caller/table spatial evidence. The protocol ordering obligation owns the distribution fill as the feature healing-pool frontier before allocation resolution.",
       "subject": "battle-fill-kind"
     },
     {
@@ -8612,6 +8628,14 @@
       ],
       "ownerPath": "packages/battle-runtime/battle-runtime-subject-kinds.qnt",
       "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-hit-point-restoration-ordering.qnt carries the reusable Hit Point restoration hole-frontier order over protocol vocabulary variants: spell target choice or target list, spell healing roll, feature healing-pool distribution, resolution, and the runtime-backed distinction between the healing state transition and earliest-needed-frontier requests when later healing fills arrive before target/distribution frontiers.",
+      "obligationIds": [
+        "BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-hit-point-restoration-ordering.qnt",
+      "role": "semantic-core"
     }
   ],
   "unitFeatureProfileOwnerRows": [
@@ -11906,7 +11930,8 @@
       "semanticCore": [
         "packages/battle-runtime/battle-runtime-weapon-attack-ordering.qnt",
         "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.qnt",
-        "packages/battle-runtime/battle-runtime-spell-attack-ordering.qnt"
+        "packages/battle-runtime/battle-runtime-spell-attack-ordering.qnt",
+        "packages/battle-runtime/battle-runtime-hit-point-restoration-ordering.qnt"
       ],
       "status": "generation-subset-clean"
     },
@@ -11949,7 +11974,7 @@
   "kernelIrBoundaries": [
     {
       "boundary": "command",
-      "evidence": "Command is represented by BattleSubject plus BattleCommandOptionChoiceHole/BattleFill commandOptionChoice. BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY owns the QNT subject/fill vocabulary join; BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING owns weapon-attack, save-gated-spell, and spell-attack command frontier order; BATTLE.PROTOCOL.INTERRUPT_STACK_RESUME_REPLAY owns suspended command resume and replay-from-root protocol. Supported procedure profiles and typed fills own reducer execution.",
+      "evidence": "Command is represented by BattleSubject plus BattleCommandOptionChoiceHole/BattleFill commandOptionChoice. BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY owns the QNT subject/fill vocabulary join; BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING owns weapon-attack, save-gated-spell, spell-attack, and Hit Point restoration command frontier order; BATTLE.PROTOCOL.INTERRUPT_STACK_RESUME_REPLAY owns suspended command resume and replay-from-root protocol. Supported procedure profiles and typed fills own reducer execution.",
       "obligationIds": [
         "BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY",
         "BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING",
@@ -11965,7 +11990,7 @@
     },
     {
       "boundary": "fill",
-      "evidence": "BattleHole and BattleFill are parsed by the frontier checker and joined to QNT hole/fill vocabulary leaves by BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY. BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING owns the QNT fill-order relations for weapon attacks, save-gated spells, and spell attacks; BATTLE.PROTOCOL.INTERRUPT_STACK_RESUME_REPLAY owns recorded fill replay through suspended continuations. Future IR should reuse the hole/fill split instead of embedding table facts in command state.",
+      "evidence": "BattleHole and BattleFill are parsed by the frontier checker and joined to QNT hole/fill vocabulary leaves by BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY. BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING owns the QNT fill-order relations for weapon attacks, save-gated spells, spell attacks, and Hit Point restoration; BATTLE.PROTOCOL.INTERRUPT_STACK_RESUME_REPLAY owns recorded fill replay through suspended continuations. Future IR should reuse the hole/fill split instead of embedding table facts in command state.",
       "obligationIds": [
         "BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY",
         "BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING",

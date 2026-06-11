@@ -67,7 +67,7 @@
     {
       "number": 11,
       "id": "BPK-B11-HEALING-ORDERING",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Hole-frontier ordering slice and witness for spell and feature Hit Point restoration"
     },
     {
@@ -383,7 +383,7 @@ facts pulled into the ordering owner.
 
 ### Task 11 - BPK-B11-HEALING-ORDERING
 
-Status: `ready-for-research` · Mode: AFK
+Status: `done` · Mode: AFK
 
 Input: prd/02 Solution §2; `battle-hole-frontier.jsonl` rows for
 `BattleSpellHealingRollHole`, `BattleHitPointHealingPoolDistributionHole`,
