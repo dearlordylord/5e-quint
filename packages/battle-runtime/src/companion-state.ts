@@ -96,9 +96,6 @@ export type BattleCompanionDisappearedAtZeroHitPointsState =
       readonly status: "disappearedAtZeroHitPoints";
     };
 
-export type FindFamiliarDisappearedAtZeroHitPointsState =
-  BattleCompanionDisappearedAtZeroHitPointsState;
-
 export type BattleCompanionAbsentState =
   | BattleCompanionTemporarilyDismissedState
   | BattleCompanionDisappearedAtZeroHitPointsState;

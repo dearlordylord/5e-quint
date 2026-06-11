@@ -1,11 +1,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.find-familiar-lifecycle
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.FIND_FAMILIAR_COMPANION_LIFECYCLE
 import { spendAction } from "@dnd/shared-algebras/action-economy-algebra";
-import {
-  Hp,
-  type PositiveInteger,
-  type SpellSlotLevel,
-} from "@dnd/shared/types";
+import { Hp, type SpellSlotLevel } from "@dnd/shared/types";
 import type { StatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog";
 import type {
   SpellRecord,
@@ -41,7 +37,7 @@ import {
   findCompanionByOwner,
   findCompanionEntryByOwner,
   setCompanion,
-  type BattleCompanionAbsentState,
+  type BattleCompanionCurrentHitPoints,
   type BattleCompanionDismissedForeverState,
   type BattleCompanionDisappearedAtZeroHitPointsState,
   type BattleCompanionDurableId,
@@ -50,7 +46,6 @@ import {
   type BattleCompanionIdentity,
   type BattleCompanionPlacement,
   type BattleCompanionPresentState,
-  type BattleCompanionSnapshot,
   type BattleCompanionSelectedForm,
   type BattleCompanionState,
   type BattleCompanionStoredForm,
@@ -79,25 +74,9 @@ const FIND_FAMILIAR_DROPPED_OBJECT_SOURCE_SPELL_ID = spellId(
   "find_familiar" satisfies SpellRecord["id"],
 );
 
-export type FindFamiliarPlacement = BattleCompanionPlacement;
-type FindFamiliarStoredForm = BattleCompanionStoredForm;
-type FindFamiliarSelectedForm = BattleCompanionSelectedForm;
-type FindFamiliarHitPoints = BattleCompanionHitPoints;
-type FindFamiliarCurrentHitPoints = Hp & PositiveInteger;
-
-export type FindFamiliarPresentState = BattleCompanionPresentState;
-export type FindFamiliarTemporarilyDismissedState =
-  BattleCompanionTemporarilyDismissedState;
-export type FindFamiliarDisappearedAtZeroHitPointsState =
-  BattleCompanionDisappearedAtZeroHitPointsState;
-export type FindFamiliarAbsentState = BattleCompanionAbsentState;
-export type FindFamiliarState = BattleCompanionState;
-
 type FindFamiliarCombatantRemoval =
   | { readonly tag: "resolved"; readonly state: BattleState }
   | Extract<BattleResolutionResult, { readonly tag: "invalid" }>;
-
-export type FindFamiliarSnapshot = BattleCompanionSnapshot;
 
 export type FindFamiliarOwnerInput = {
   readonly state: BattleState;
@@ -118,7 +97,7 @@ export type FindFamiliarCastInput = {
   readonly creatureTypeOverrideChoiceId: FindFamiliarCreatureTypeOverrideChoice["optionId"];
   readonly initiative: InitiativeScore;
   readonly placement: Extract<
-    FindFamiliarPlacement,
+    BattleCompanionPlacement,
     { readonly kind: "unoccupiedSpaceWithinSpellRange" }
   >;
 };
@@ -146,7 +125,7 @@ export type CompanionBattleAdmissionManifestation =
       readonly hitPoints: BattleCompanionHitPoints;
       readonly initiative: InitiativeScore;
       readonly placement: Extract<
-        FindFamiliarPlacement,
+        BattleCompanionPlacement,
         { readonly kind: "unoccupiedSpaceWithinSpellRange" }
       >;
     }
@@ -207,7 +186,7 @@ export type FindFamiliarReappearanceInput = {
   readonly catalog: StatBlockCatalog;
   readonly initiative: InitiativeScore;
   readonly placement: Extract<
-    FindFamiliarPlacement,
+    BattleCompanionPlacement,
     { readonly kind: "unoccupiedSpaceWithin30Feet" }
   >;
 };
@@ -560,14 +539,14 @@ function admitAbsentCompanionToBattle(
 }
 
 function findFamiliarPresentState(input: {
-  readonly form: FindFamiliarSelectedForm;
+  readonly form: BattleCompanionSelectedForm;
   readonly combatantId: CombatantId;
   readonly identity: BattleCompanionIdentity;
   readonly expiration: BattleCompanionExpiration;
   readonly creatureTypeOverride: FindFamiliarCreatureTypeOverride;
-  readonly placement: FindFamiliarPlacement;
+  readonly placement: BattleCompanionPlacement;
   readonly ownerId: CombatantId;
-}): FindFamiliarPresentState {
+}): BattleCompanionPresentState {
   return {
     ...selectedFindFamiliarForm(input.form),
     status: "present",
@@ -581,14 +560,14 @@ function findFamiliarPresentState(input: {
 }
 
 function findFamiliarTemporarilyDismissedState(input: {
-  readonly storedForm: FindFamiliarStoredForm;
+  readonly storedForm: BattleCompanionStoredForm;
   readonly identity: BattleCompanionIdentity;
   readonly expiration: BattleCompanionExpiration;
   readonly creatureTypeOverride: FindFamiliarCreatureTypeOverride;
-  readonly hitPoints: FindFamiliarHitPoints;
+  readonly hitPoints: BattleCompanionHitPoints;
   readonly reappearanceCombatantId: CombatantId;
   readonly ownerId: CombatantId;
-}): FindFamiliarTemporarilyDismissedState {
+}): BattleCompanionTemporarilyDismissedState {
   return {
     ...storedFindFamiliarForm(input.storedForm),
     status: "temporarilyDismissed",
@@ -602,12 +581,12 @@ function findFamiliarTemporarilyDismissedState(input: {
 }
 
 function findFamiliarDisappearedAtZeroHitPointsState(input: {
-  readonly storedForm: FindFamiliarStoredForm;
+  readonly storedForm: BattleCompanionStoredForm;
   readonly identity: BattleCompanionIdentity;
   readonly expiration: BattleCompanionExpiration;
   readonly creatureTypeOverride: FindFamiliarCreatureTypeOverride;
   readonly ownerId: CombatantId;
-}): FindFamiliarDisappearedAtZeroHitPointsState {
+}): BattleCompanionDisappearedAtZeroHitPointsState {
   return {
     ...storedFindFamiliarForm(input.storedForm),
     status: "disappearedAtZeroHitPoints",
@@ -619,8 +598,8 @@ function findFamiliarDisappearedAtZeroHitPointsState(input: {
 }
 
 function storedFindFamiliarForm(
-  storedForm: FindFamiliarStoredForm,
-): FindFamiliarStoredForm {
+  storedForm: BattleCompanionStoredForm,
+): BattleCompanionStoredForm {
   if (storedForm.formAccess === "findFamiliar") {
     return {
       formAccess: "findFamiliar",
@@ -640,8 +619,8 @@ function storedFindFamiliarForm(
 }
 
 function selectedFindFamiliarForm(
-  form: FindFamiliarSelectedForm,
-): FindFamiliarSelectedForm {
+  form: BattleCompanionSelectedForm,
+): BattleCompanionSelectedForm {
   if (form.formAccess === "findFamiliar") {
     return {
       formAccess: "findFamiliar",
@@ -703,9 +682,9 @@ function withInitialInitiativeOrder(
 function hitPointsForFindFamiliarCast(input: {
   readonly state: BattleState;
   readonly priorFamiliarId: CombatantId | undefined;
-  readonly priorFamiliar: FindFamiliarState | undefined;
+  readonly priorFamiliar: BattleCompanionState | undefined;
   readonly statBlock: StatBlockRecord;
-}): FindFamiliarHitPoints | null | string {
+}): BattleCompanionHitPoints | null | string {
   if (
     input.priorFamiliar === undefined ||
     input.priorFamiliar.status === "disappearedAtZeroHitPoints" ||
@@ -729,7 +708,7 @@ function hitPointsForFindFamiliarCast(input: {
 function presentFindFamiliarHitPoints(
   state: BattleState,
   familiarId: CombatantId | undefined,
-): FindFamiliarHitPoints | string {
+): BattleCompanionHitPoints | string {
   if (familiarId === undefined) {
     return "Present Find Familiar combatant identity is missing.";
   }
@@ -747,9 +726,9 @@ function presentFindFamiliarHitPoints(
 }
 
 function hitPointsForAdoptedFamiliarForm(input: {
-  readonly hitPoints: FindFamiliarHitPoints;
+  readonly hitPoints: BattleCompanionHitPoints;
   readonly statBlock: StatBlockRecord;
-}): FindFamiliarHitPoints | string {
+}): BattleCompanionHitPoints | string {
   const maxHp = familiarMaxHp(input.statBlock);
   if (typeof maxHp === "string") {
     return maxHp;
@@ -767,13 +746,13 @@ function hitPointsForAdoptedFamiliarForm(input: {
 
 function findFamiliarCurrentHitPoints(
   currentHp: Hp,
-): FindFamiliarCurrentHitPoints | string {
+): BattleCompanionCurrentHitPoints | string {
   if (currentHp < Hp(1)) {
     return "Present Find Familiar current HP must be above 0.";
   }
   // Cast evidence: Hp already proves non-negative integer HP, and the guard
-  // above proves the positive part of this lifecycle-specific alias.
-  return currentHp as FindFamiliarCurrentHitPoints;
+  // above proves the positive part of BattleCompanionCurrentHitPoints.
+  return currentHp as BattleCompanionCurrentHitPoints;
 }
 
 export function temporarilyDismissFindFamiliar(
@@ -971,7 +950,7 @@ export function reappearTemporarilyDismissedFindFamiliar(
 function resolveStoredFindFamiliarForm(input: {
   readonly catalog: StatBlockCatalog;
   readonly formEligibility?: CompanionBattleAdmissionFormEligibility;
-  readonly storedForm: FindFamiliarStoredForm;
+  readonly storedForm: BattleCompanionStoredForm;
   readonly creatureTypeOverride: FindFamiliarCreatureTypeOverride;
 }): FindFamiliarFormResolution {
   if (input.formEligibility !== undefined) {
@@ -1006,7 +985,7 @@ function resolveStoredFindFamiliarForm(input: {
 
 function storedFormResolvedStatBlockIdIssue(input: {
   readonly catalog: StatBlockCatalog;
-  readonly storedForm: FindFamiliarStoredForm;
+  readonly storedForm: BattleCompanionStoredForm;
   readonly formEligibility: CompanionBattleAdmissionFormEligibility;
 }): string | null {
   if (input.storedForm.formAccess !== input.formEligibility.formAccess) {
@@ -1021,7 +1000,7 @@ function storedFormResolvedStatBlockIdIssue(input: {
 
 function selectedStoredFormStatBlockId(input: {
   readonly catalog: StatBlockCatalog;
-  readonly storedForm: FindFamiliarStoredForm;
+  readonly storedForm: BattleCompanionStoredForm;
   readonly formEligibility: CompanionBattleAdmissionFormEligibility;
 }): StatBlockRecord["id"] | { readonly message: string } {
   const selection = input.storedForm.formSelection;
@@ -1119,7 +1098,7 @@ function withFindFamiliarCombatant(input: {
   readonly state: BattleState;
   readonly casterId: CombatantId;
   readonly familiarId: CombatantId;
-  readonly familiar: FindFamiliarPresentState;
+  readonly familiar: BattleCompanionPresentState;
   readonly initiative: InitiativeScore;
   readonly statBlock: StatBlockRecord;
   readonly currentHp?: Hp;
@@ -1239,7 +1218,7 @@ function familiarMaxHp(statBlock: StatBlockRecord): Hp | string {
 
 function withFindFamiliar(
   state: BattleState,
-  familiar: FindFamiliarState,
+  familiar: BattleCompanionState,
 ): BattleState {
   return {
     ...state,

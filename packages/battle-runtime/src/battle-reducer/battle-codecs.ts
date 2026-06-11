@@ -72,7 +72,7 @@ import {
 } from "../identity.ts";
 import type {
   BattleCompanionSnapshot,
-  BattleCompanionPlacement as FindFamiliarPlacement,
+  BattleCompanionPlacement,
   BattleCompanionDurableId,
 } from "../companion-state.ts";
 import type {
@@ -164,7 +164,7 @@ const FindFamiliarCreatureTypeOverrideSchema = Schema.Literal(
   "fey",
   "fiend",
 );
-const FindFamiliarPlacementSchema = Schema.Union(
+const BattleCompanionPlacementSchema = Schema.Union(
   Schema.Struct({
     kind: Schema.Literal("unoccupiedSpaceWithinSpellRange"),
     positionId: Schema.optionalWith(BattleTablePositionId, { exact: true }),
@@ -175,8 +175,8 @@ const FindFamiliarPlacementSchema = Schema.Union(
   }),
   // Cast evidence is local to this union: both placement variants and their
   // optional branded position ids are parsed here. Effect Schema keeps the
-  // structure but does not infer the imported discriminated-union alias.
-) as unknown as Schema.Schema<FindFamiliarPlacement>;
+  // structure but does not infer the imported discriminated union type.
+) as unknown as Schema.Schema<BattleCompanionPlacement>;
 // Hp is a branded non-negative integer number. Effect Schema validates the
 // runtime number shape here; the brand is erased at runtime, and Schema has no
 // helper that preserves this repo's nominal brand through numeric filters.
@@ -191,7 +191,7 @@ const PositiveHpSchema = Schema.Number.pipe(
 const InitiativeScoreSchema = Schema.Number.pipe(
   Schema.int(),
 ) as unknown as Schema.Schema<InitiativeScore, number, never>;
-const FindFamiliarHitPointsSchema = Schema.Struct({
+const BattleCompanionHitPointsSchema = Schema.Struct({
   currentHp: PositiveHpSchema,
   tempHp: HpSchema,
 });
@@ -2646,7 +2646,7 @@ type BattleFillEncoded =
   | {
       readonly kind: "companionReappearancePlacement";
       readonly holeId: string;
-      readonly value: FindFamiliarPlacement;
+      readonly value: BattleCompanionPlacement;
     }
   | {
       readonly kind: "companionReappearanceInitiative";
@@ -3445,7 +3445,7 @@ export const BattleFillSchema: Schema.Schema<
     Schema.Struct({
       kind: Schema.Literal("companionReappearancePlacement"),
       holeId: BattleHoleIdSchema,
-      value: FindFamiliarPlacementSchema,
+      value: BattleCompanionPlacementSchema,
     }),
     Schema.Struct({
       kind: Schema.Literal("companionReappearanceInitiative"),
@@ -4265,7 +4265,7 @@ const BattleCompanionSnapshotSchema = Schema.Union(
     resolvedStatBlockId: BattleCompanionResolvedStatBlockIdSchema,
     creatureTypeOverride: FindFamiliarCreatureTypeOverrideSchema,
     initiative: Schema.Number,
-    placement: FindFamiliarPlacementSchema,
+    placement: BattleCompanionPlacementSchema,
   }),
   Schema.Struct({
     status: Schema.Literal("present"),
@@ -4278,7 +4278,7 @@ const BattleCompanionSnapshotSchema = Schema.Union(
     resolvedStatBlockId: BattleCompanionResolvedStatBlockIdSchema,
     creatureTypeOverride: FindFamiliarCreatureTypeOverrideSchema,
     initiative: Schema.Number,
-    placement: FindFamiliarPlacementSchema,
+    placement: BattleCompanionPlacementSchema,
   }),
   Schema.Struct({
     status: Schema.Literal("temporarilyDismissed"),
@@ -4290,7 +4290,7 @@ const BattleCompanionSnapshotSchema = Schema.Union(
     formSelection: FindFamiliarFormSelectionSchema,
     resolvedStatBlockId: BattleCompanionResolvedStatBlockIdSchema,
     creatureTypeOverride: FindFamiliarCreatureTypeOverrideSchema,
-    hitPoints: FindFamiliarHitPointsSchema,
+    hitPoints: BattleCompanionHitPointsSchema,
   }),
   Schema.Struct({
     status: Schema.Literal("temporarilyDismissed"),
@@ -4302,7 +4302,7 @@ const BattleCompanionSnapshotSchema = Schema.Union(
     formSelection: PactOfTheChainFindFamiliarFormSelectionSchema,
     resolvedStatBlockId: BattleCompanionResolvedStatBlockIdSchema,
     creatureTypeOverride: FindFamiliarCreatureTypeOverrideSchema,
-    hitPoints: FindFamiliarHitPointsSchema,
+    hitPoints: BattleCompanionHitPointsSchema,
   }),
   Schema.Struct({
     status: Schema.Literal("disappearedAtZeroHitPoints"),
