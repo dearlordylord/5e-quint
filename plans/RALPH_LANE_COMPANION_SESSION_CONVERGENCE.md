@@ -85,7 +85,7 @@
     {
       "number": 14,
       "id": "CSC-T14-R4A-FORMS-SHIM-DELETION",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Delete the battle-runtime find-familiar-forms compatibility re-export shim"
     },
     {
@@ -992,7 +992,7 @@ battle-runtime typecheck green; focused tests green
 
 ### Task 14 - CSC-T14-R4A-FORMS-SHIM-DELETION
 
-Status: `ready-for-research` (depends on Task 13) · Mode: AFK · Arch-review R4a
+Status: `done` (depends on Task 13) · Mode: AFK · Arch-review R4a
 
 **Finding.** `packages/battle-runtime/src/find-familiar-forms.ts` (21 lines)
 is a pure pass-through re-export of
