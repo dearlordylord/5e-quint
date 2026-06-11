@@ -25,13 +25,13 @@
     {
       "number": 4,
       "id": "BPK-B04-WEAPON-ATTACK-ORDERING",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Hole-frontier ordering slice and witness for the weapon-attack procedure shape"
     },
     {
       "number": 5,
       "id": "BPK-B05-SAVE-SPELL-ORDERING",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Hole-frontier ordering slice and witness for the save-gated-spell procedure shape"
     },
     {
@@ -141,8 +141,8 @@ Every task must include:
 | 1 | BPK-B01-HOLE-KIND-VOCABULARY | ready-for-implementation-after-light-research | none | Light research: UL naming pass over the 33 semantic-frontier holeKinds; leaf layout (one module vs split). |
 | 2 | BPK-B02-FILL-SUBJECT-VOCABULARY | done | BPK-B01-HOLE-KIND-VOCABULARY | Same treatment for 46 fill kinds + ~40 subjects. |
 | 3 | BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT | done | BPK-B02-FILL-SUBJECT-VOCABULARY | prd/02 M1 done after this. Unblocks the cleanroom-corpus value immediately. |
-| 4 | BPK-B04-WEAPON-ATTACK-ORDERING | ready-for-research | BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT | Cross-lane gate: unblock manually when Lane A PDS-A01 and PDS-A03 are merged. |
-| 5 | BPK-B05-SAVE-SPELL-ORDERING | blocked | BPK-B04-WEAPON-ATTACK-ORDERING | Second procedure shape; reuses B04's slice skeleton. |
+| 4 | BPK-B04-WEAPON-ATTACK-ORDERING | done | BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT | Cross-lane gate: unblock manually when Lane A PDS-A01 and PDS-A03 are merged. |
+| 5 | BPK-B05-SAVE-SPELL-ORDERING | ready-for-research | BPK-B04-WEAPON-ATTACK-ORDERING | Second procedure shape; reuses B04's slice skeleton. |
 | 6 | BPK-B06-INTERRUPT-NESTING-RESUME | ready-for-research | BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT | Cross-lane gate: unblock manually when Lane A PDS-A01 and PDS-A03 are merged; may run before/parallel to B04 in queue order if the runner supports it. |
 | 7 | BPK-B07-REPLAY-FROM-ROOT | blocked | BPK-B06-INTERRUPT-NESTING-RESUME | |
 | 8 | BPK-B08-KERNEL-REGISTRY-CLOSEOUT | blocked | BPK-B04-WEAPON-ATTACK-ORDERING, BPK-B05-SAVE-SPELL-ORDERING, BPK-B06-INTERRUPT-NESTING-RESUME, BPK-B07-REPLAY-FROM-ROOT | Also produces the multi-owner outcome-oracle convention consumed by PDS-A17's PRD. |
@@ -207,7 +207,7 @@ checked off in the task report.
 
 ### Task 4 - BPK-B04-WEAPON-ATTACK-ORDERING
 
-Status: `ready-for-research` (cross-lane gate: PDS-A01 + PDS-A03 merged) · Mode: AFK
+Status: `done` (cross-lane gate: PDS-A01 + PDS-A03 merged) · Mode: AFK
 
 Input: prd/02 Solution §2; `battle-runtime-public-trace-contract.qnt` (the
 narrow precedent to generalize); the weapon-attack reducer path
@@ -226,7 +226,7 @@ witness-protocol leaf within budget); registry checks green.
 
 ### Task 5 - BPK-B05-SAVE-SPELL-ORDERING
 
-Status: `blocked` · Mode: AFK
+Status: `ready-for-research` · Mode: AFK
 
 Output: same slice/witness treatment for the save-gated-spell shape
 (targets/area → save outcome → damage/condition choice ordering), extending

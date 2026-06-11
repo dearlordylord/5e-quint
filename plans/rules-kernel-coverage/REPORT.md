@@ -4,14 +4,14 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 
 ## Summary
 
-- Total obligations: 115
-- Covered obligations: 109
+- Total obligations: 116
+- Covered obligations: 110
 - Open transitional obligations: 0
 - Boundary or unsupported obligations: 6
 
 | Status | Count |
 | --- | ---: |
-| covered | 109 |
+| covered | 110 |
 | needs-qnt-owner | 0 |
 | needs-parity-witness | 0 |
 | needs-surface-evidence | 0 |
@@ -21,7 +21,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | Runtime | Count |
 | --- | ---: |
 | shared-algebras | 1 |
-| battle | 85 |
+| battle | 86 |
 | character-creation | 14 |
 | character-sheet | 12 |
 | character-battle | 3 |
@@ -112,6 +112,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `SHEET.ARMOR_CLASS.BASE_FORMULA_CHOICE` | character-sheet | covered | `character-sheet.armor-class-base-formula` |
 | `BATTLE.HOLE.SEMANTIC_FRONTIER_CLASSIFICATION` | battle | boundary-only | _outside reducer semantics_ |
 | `BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY` | battle | covered | _direct reducer entrypoint_ |
+| `BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING` | battle | covered | _direct reducer entrypoint_ |
 | `BATTLE.SURFACE.EXECUTABLE_PROFILE_JOIN` | battle | boundary-only | _outside reducer semantics_ |
 | `CREATION.CLASS_FEATURE_FEAT.CHOICE_FINALIZATION` | character-creation | covered | `character-creation.class-feature-feat-choice` |
 | `CREATION.WEAPON_MASTERY.CHOICE_FINALIZATION` | character-creation | covered | `character-creation.weapon-mastery-choice` |
@@ -429,6 +430,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `packages/character-sheet-runtime/character-sheet-spellbook-ritual-selected-identity.mbt.qnt` | selected-identity-trace | `SHEET.SPELLBOOK_RITUAL.SPELL_ACCESS_PROJECTION` |
 | `packages/shared-algebras/proofs/rule-core/weapon-mastery-reselection.qnt` | semantic-core | `CREATION.WEAPON_MASTERY.CLASS_LEVEL_ADVANCEMENT`, `SHEET.WEAPON_MASTERY.CLASS_LEVEL_RESELECTION`, `SHEET.WEAPON_MASTERY.RESELECTION` |
 | `packages/character-sheet-runtime/character-sheet-weapon-mastery-containers-selected-identity.mbt.qnt` | selected-identity-trace | `SHEET.WEAPON_MASTERY.RESELECTION` |
+| `packages/battle-runtime/battle-runtime-weapon-attack-ordering.qnt` | semantic-core | `BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING` |
 | `packages/shared-algebras/proofs/death-saves-algebra-inductive.qnt` | proof-only | `BATTLE.DAMAGE.DEATH_SAVING_THROW_LIFECYCLE` |
 | `packages/shared-algebras/proofs/rule-core/attack-damage-composition.qnt` | semantic-core | `BATTLE.DAMAGE.ATTACK_BRANCHES`, `BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP` |
 | `packages/shared-algebras/proofs/rule-core/damage-component-adjustments.qnt` | semantic-core | `BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION` |
@@ -650,6 +652,7 @@ Rows here are derived from `plans/unit-profile-coverage/profiles.jsonl` for prof
 | `BATTLE.FEATURE.METAMAGIC_SEEKING_SPELL_ATTACK_REROLL` | generation-subset-clean | `import`, `variant`, `record`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `set-operators`, `map`, `fold`, `forall`, `exists`, `membership`, `size`, `record-update` |  |  |
 | `BATTLE.FEATURE.METAMAGIC_EMPOWERED_DAMAGE_DICE_REROLL` | generation-subset-clean | `import`, `variant`, `record`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `set-operators`, `map`, `fold`, `forall`, `exists`, `membership`, `size`, `record-update` |  |  |
 | `BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY` | generation-subset-clean | `variant` |  |  |
+| `BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING` | generation-subset-clean | `import`, `variant`, `pure-def`, `bool`, `if-expression`, `comparison`, `pattern-match`, `set` |  |  |
 
 ### Generator Readiness Backlog
 

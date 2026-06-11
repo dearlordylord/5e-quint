@@ -1,18 +1,18 @@
 {
   "summary": {
-    "total": 115,
-    "covered": 109,
+    "total": 116,
+    "covered": 110,
     "open": 0,
     "nonSemantic": 6,
     "byRuntime": {
       "shared-algebras": 1,
-      "battle": 85,
+      "battle": 86,
       "character-creation": 14,
       "character-sheet": 12,
       "character-battle": 3
     },
     "byStatus": {
-      "covered": 109,
+      "covered": 110,
       "needs-qnt-owner": 0,
       "needs-parity-witness": 0,
       "needs-surface-evidence": 0,
@@ -2869,6 +2869,38 @@
         "UBIQUITOUS_LANGUAGE.md#Movement"
       ],
       "title": "Battle protocol hole-family, fill-kind, and subject-kind vocabulary leaves are executable QNT semantic core joined to current TypeScript protocol unions"
+    },
+    {
+      "id": "BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING",
+      "kind": "hole-frontier",
+      "parityWitnesses": [
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/weapon-attack-ordering.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-weapon-attack-ordering.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profiles": [],
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime-weapon-attack-ordering.qnt"
+      ],
+      "reason": "Weapon-attack scope only. The SRD attack structure fixes Choose a Target before resolving the attack, and Resolve the Attack makes the Attack Roll before hit damage dice. The QNT owner records those frontier stages over the B01 hole/fill vocabulary and classifies the runtime-backed ordering rejections for attack-roll or damage fills before target choice and damage fills before attack roll; table-owned range, cover, sight, modifier facts, later damage-disposition validation, and stale-subject rejection remain boundary or reducer evidence outside this ordering-error relation.",
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer/attack-main.ts",
+        "packages/battle-runtime/src/battle-reducer/attack-resolution.ts",
+        "packages/battle-runtime/src/battle-trace-contract.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Playing-the-Game.md#Making an Attack",
+        ".references/srd-5.2.1/Playing-the-Game.md#Attack Rolls",
+        ".references/srd-5.2.1/Playing-the-Game.md#Damage Rolls",
+        "UBIQUITOUS_LANGUAGE.md#D20 Rolls",
+        "UBIQUITOUS_LANGUAGE.md#Combat"
+      ],
+      "title": "Battle protocol weapon-attack hole frontier orders target choice before Attack Roll and hit damage dice before resolution"
     },
     {
       "id": "BATTLE.SURFACE.EXECUTABLE_PROFILE_JOIN",
@@ -7703,6 +7735,14 @@
       "role": "selected-identity-trace"
     },
     {
+      "evidence": "packages/battle-runtime/battle-runtime-weapon-attack-ordering.qnt carries the reusable weapon-attack hole-frontier order over protocol vocabulary variants: target choice, Attack Roll, hit damage dice, resolution, and the runtime-backed ordering rejection classification for attack-roll or damage fills before their prerequisite frontier.",
+      "obligationIds": [
+        "BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-weapon-attack-ordering.qnt",
+      "role": "semantic-core"
+    },
+    {
       "evidence": "packages/shared-algebras/proofs/death-saves-algebra-inductive.qnt is an inductive proof owner for covered algebra, not an implementation source.",
       "obligationIds": [
         "BATTLE.DAMAGE.DEATH_SAVING_THROW_LIFECYCLE"
@@ -11747,6 +11787,25 @@
         "packages/battle-runtime/battle-runtime-hole-kinds.qnt",
         "packages/battle-runtime/battle-runtime-fill-kinds.qnt",
         "packages/battle-runtime/battle-runtime-subject-kinds.qnt"
+      ],
+      "status": "generation-subset-clean"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [
+        "import",
+        "variant",
+        "pure-def",
+        "bool",
+        "if-expression",
+        "comparison",
+        "pattern-match",
+        "set"
+      ],
+      "obligationId": "BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING",
+      "proofOnly": [],
+      "semanticCore": [
+        "packages/battle-runtime/battle-runtime-weapon-attack-ordering.qnt"
       ],
       "status": "generation-subset-clean"
     }
