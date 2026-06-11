@@ -2,8 +2,12 @@
   "name": "@dnd/mcp",
   "private": true,
   "type": "module",
+  "exports": {
+    "./experimental-admin-mirror-contract": "./src/admin-mirror-contract.ts"
+  },
   "scripts": {
     "dev": "tsx src/index.ts",
+    "mirror": "tsx src/admin-mirror-server.ts",
     "lint": "eslint --no-inline-config -c eslint.config.mjs src && prettier --check src && jscpd src --threshold 2 --ignore \"**/*.test.ts\"",
     "circular": "madge --extensions ts --circular src",
     "typecheck": "tsc --noEmit",

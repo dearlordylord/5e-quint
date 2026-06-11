@@ -1,4 +1,3 @@
-import type { CharacterId } from "@dnd/battle-runtime";
 import {
   createCharacterDraft,
   discoverCreationHoles,
@@ -8,19 +7,15 @@ import {
   type CharacterDraft,
   type CharacterDraftId,
 } from "@dnd/character-creation-runtime";
-import { characterSheetHitPointMaximum } from "@dnd/character-sheet-runtime";
 import { Hp } from "@dnd/shared/types";
-import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
 import { Either, Match } from "effect";
 
-import { characterBuildDisplayName } from "./character-display.ts";
+import { publishAdminProjectionBestEffort } from "./admin-mirror.ts";
+import { characterListRows } from "./character-session-rows.ts";
 import type { McpCompositionRoot } from "./composition-root.ts";
 import {
   availableCharacterSession,
   characterIdFromDraftId,
-  characterBattleSpellSlots,
-  characterSessionCurrentHp,
-  type CharacterSession,
 } from "./session-store.ts";
 import {
   CHARACTER_TOOL_NAMES,
@@ -38,7 +33,6 @@ import {
   FillCreationHolesOutputSchema,
   FinalizeCharacterOutputSchema,
   ListCharactersOutputSchema,
-  type CharacterSessionRow,
 } from "./character-tool-output.ts";
 import { mcpOutputJsonSchema, schemaJsonContent } from "./schema-codec.ts";
 import { errorContent } from "./tool-content.ts";
@@ -114,6 +108,7 @@ export function handleCharacterToolCall(
         return duplicateDraftIdContent(draft.draftId, "finalizedSession");
       }
       root.sessionStore.drafts.set(draft.draftId, draft);
+      publishAdminProjectionBestEffort(root);
       return schemaJsonContent(
         CreationDraftOutputSchema,
         creationDraftPayload(root, draft),
@@ -145,6 +140,7 @@ export function handleCharacterToolCall(
 
       if (result.tag === "accepted") {
         root.sessionStore.drafts.set(result.draft.draftId, result.draft);
+        publishAdminProjectionBestEffort(root);
       }
 
       return schemaJsonContent(FillCreationHolesOutputSchema, {
@@ -199,6 +195,7 @@ export function handleCharacterToolCall(
         }
         root.sessionStore.characters.set(session.right);
         root.sessionStore.drafts.delete(draftId);
+        publishAdminProjectionBestEffort(root);
       }
 
       return schemaJsonContent(FinalizeCharacterOutputSchema, {
@@ -267,46 +264,4 @@ function creationDraftPayload(root: McpCompositionRoot, draft: CharacterDraft) {
     }),
     session: root.sessionStore.snapshot(),
   };
-}
-
-function characterListRows(
-  root: McpCompositionRoot,
-): Either.Either<readonly CharacterSessionRow[], string> {
-  const rows: CharacterSessionRow[] = [];
-  for (const [characterId, session] of root.sessionStore.characters.entries()) {
-    const row = characterListRow(root.unitLibrary, characterId, session);
-    if (Either.isLeft(row)) return Either.left(row.left);
-    rows.push(row.right);
-  }
-  return Either.right(rows);
-}
-
-function characterListRow(
-  unitLibrary: UnitCatalog,
-  characterId: CharacterId,
-  session: CharacterSession,
-): Either.Either<CharacterSessionRow, string> {
-  if (session.tag === "available") {
-    const spellSlots = characterBattleSpellSlots(session);
-    return Either.right({
-      characterId,
-      status: session.tag,
-      displayName: characterBuildDisplayName(unitLibrary, session.build),
-      build: session.build,
-      hitPoints: {
-        current: characterSessionCurrentHp(session),
-        maximum: characterSheetHitPointMaximum(session),
-        state: session.hitPoints,
-      },
-      ...(spellSlots === undefined ? {} : { spellSlots }),
-    });
-  }
-
-  return Either.right({
-    characterId,
-    status: session.tag,
-    displayName: null,
-    build: session.sheet.build,
-    battleId: session.battleId,
-  });
 }

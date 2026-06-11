@@ -97,7 +97,7 @@ export const CreationFinalizationSchema = Schema.Union(
     issues: Schema.NonEmptyArray(CreationFinalizationIssueSchema),
   }),
 );
-const CharacterSessionRowSchema = Schema.Union(
+export const CharacterSessionRowSchema = Schema.Union(
   Schema.Struct({
     characterId: Schema.String,
     status: Schema.Literal("available"),

@@ -11,6 +11,7 @@ import {
 } from "@dnd/battle-runtime";
 import { Either, Match } from "effect";
 
+import { publishAdminProjectionBestEffort } from "./admin-mirror.ts";
 import type { McpCompositionRoot } from "./composition-root.ts";
 import { battleToolNames, type BattleToolCall } from "./battle-tool-input.ts";
 export {
@@ -42,6 +43,8 @@ export function handleBattleToolCall(
 ): BattleToolResult {
   return Match.value(call).pipe(
     Match.when({ name: battleToolNames.selectStatBlock }, (matched) => {
+      const previousSelectedStatBlockId =
+        root.sessionStore.snapshot().selectedStatBlockId;
       const selected = root.sessionStore.selectStatBlock(
         matched.args.statBlockId,
       );
@@ -50,6 +53,9 @@ export function handleBattleToolCall(
           matched.args.statBlockId,
           selected.left.message,
         );
+      }
+      if (previousSelectedStatBlockId !== selected.right.id) {
+        publishAdminProjectionBestEffort(root);
       }
       return schemaJsonContent(SelectStatBlockOutputSchema, {
         selectedStatBlock: selected.right,
@@ -110,7 +116,9 @@ export function handleBattleToolCall(
         replayState,
         isInterruptDecision,
       });
-      storeBattleResolution(root, result, pendingTransaction);
+      if (storeBattleResolution(root, result, pendingTransaction)) {
+        publishAdminProjectionBestEffort(root);
+      }
       return schemaJsonContent(
         BattleResolutionOutputSchema,
         battleResolutionPayload(root, result),
@@ -131,18 +139,22 @@ export function handleBattleToolCall(
           fallingCreatureId: matched.args.subject.fallingCreatureId,
           reactionSpellTargetFacts: matched.args.reactionSpellTargetFacts,
         });
-        storeBattleResolution(
-          root,
-          result,
-          pendingTransactionForResult({
+        if (
+          storeBattleResolution(
+            root,
             result,
-            filledSubject: matched.args.subject,
-            previous: null,
-            fills: [],
-            replayState: state.right,
-            isInterruptDecision: false,
-          }),
-        );
+            pendingTransactionForResult({
+              result,
+              filledSubject: matched.args.subject,
+              previous: null,
+              fills: [],
+              replayState: state.right,
+              isInterruptDecision: false,
+            }),
+          )
+        ) {
+          publishAdminProjectionBestEffort(root);
+        }
         return schemaJsonContent(
           BattleResolutionOutputSchema,
           battleResolutionPayload(root, result),
@@ -169,18 +181,22 @@ export function handleBattleToolCall(
         fills: [],
         statBlockCatalog: root.statBlockCatalog,
       });
-      storeBattleResolution(
-        root,
-        result,
-        pendingTransactionForResult({
+      if (
+        storeBattleResolution(
+          root,
           result,
-          filledSubject: matched.args.subject,
-          previous: null,
-          fills: [],
-          replayState: state.right,
-          isInterruptDecision: false,
-        }),
-      );
+          pendingTransactionForResult({
+            result,
+            filledSubject: matched.args.subject,
+            previous: null,
+            fills: [],
+            replayState: state.right,
+            isInterruptDecision: false,
+          }),
+        )
+      ) {
+        publishAdminProjectionBestEffort(root);
+      }
       return schemaJsonContent(
         BattleResolutionOutputSchema,
         battleResolutionPayload(root, result),
@@ -202,22 +218,26 @@ export function handleBattleToolCall(
         fills: [],
         statBlockCatalog: root.statBlockCatalog,
       });
-      storeBattleResolution(
-        root,
-        result,
-        pendingTransactionForResult({
+      if (
+        storeBattleResolution(
+          root,
           result,
-          filledSubject: {
-            tag: "runtimeCommand",
-            actorId: matched.args.actorId,
-            command: "endTurn",
-          },
-          previous: null,
-          fills: [],
-          replayState: state.right,
-          isInterruptDecision: false,
-        }),
-      );
+          pendingTransactionForResult({
+            result,
+            filledSubject: {
+              tag: "runtimeCommand",
+              actorId: matched.args.actorId,
+              command: "endTurn",
+            },
+            previous: null,
+            fills: [],
+            replayState: state.right,
+            isInterruptDecision: false,
+          }),
+        )
+      ) {
+        publishAdminProjectionBestEffort(root);
+      }
       return schemaJsonContent(
         BattleResolutionOutputSchema,
         battleResolutionPayload(root, result),
@@ -234,6 +254,7 @@ export function handleBattleToolCall(
       if (handoff !== null) return handoff;
       root.sessionStore.battleState = null;
       root.sessionStore.pendingBattleFills = null;
+      publishAdminProjectionBestEffort(root);
 
       return schemaJsonContent(EndBattleOutputSchema, {
         endedBattleId: state.right.battleId,
@@ -254,16 +275,18 @@ function storeBattleResolution(
   root: McpCompositionRoot,
   result: BattleResolutionResult,
   pendingTransaction: PendingBattleFillSession | null,
-): void {
+): boolean {
   if (result.tag === "resolved") {
     root.sessionStore.battleState = result.state;
     root.sessionStore.pendingBattleFills = null;
-    return;
+    return true;
   }
   if (result.tag === "needsHoles") {
     root.sessionStore.battleState = result.state;
     root.sessionStore.pendingBattleFills = pendingTransaction;
+    return true;
   }
+  return false;
 }
 
 function pendingTransactionForResult({

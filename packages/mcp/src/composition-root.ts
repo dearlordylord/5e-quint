@@ -12,6 +12,16 @@ import {
 } from "@dnd/surface/surface/unit-catalog";
 
 import {
+  createHttpAdminMirrorPublisher,
+  disabledAdminMirrorPublication,
+  enabledAdminMirrorPublication,
+  type AdminMirrorPublication,
+} from "./admin-mirror.ts";
+import {
+  adminMirrorPublisherInstanceId,
+  adminMirrorSessionId,
+} from "./admin-mirror-contract.ts";
+import {
   createMcpSessionStore,
   type McpSessionStore,
 } from "./session-store.ts";
@@ -20,6 +30,7 @@ export type McpCompositionRoot = {
   readonly unitLibrary: UnitCatalog;
   readonly statBlockCatalog: StatBlockCatalog;
   readonly sessionStore: McpSessionStore;
+  readonly adminMirrorPublication: AdminMirrorPublication;
 };
 
 export function createMcpCompositionRoot(): McpCompositionRoot {
@@ -49,7 +60,29 @@ export function createMcpCompositionRoot(): McpCompositionRoot {
     unitLibrary: unitCatalog.catalog,
     statBlockCatalog: statBlockCatalog.catalog,
     sessionStore: createMcpSessionStore(statBlockCatalog.catalog),
+    adminMirrorPublication: createAdminMirrorPublicationFromEnv(),
   };
+}
+
+function createAdminMirrorPublicationFromEnv(): AdminMirrorPublication {
+  const endpoint = process.env.DND_ADMIN_MIRROR_URL;
+  const sessionId = process.env.DND_ADMIN_MIRROR_SESSION_ID;
+  if (endpoint === undefined || sessionId === undefined) {
+    return disabledAdminMirrorPublication();
+  }
+  try {
+    return enabledAdminMirrorPublication({
+      mirrorSessionId: adminMirrorSessionId(sessionId),
+      publisher: createHttpAdminMirrorPublisher({
+        endpoint: new URL(endpoint),
+      }),
+      publisherInstanceId: adminMirrorPublisherInstanceId(
+        `${process.pid}:${Date.now()}`,
+      ),
+    });
+  } catch {
+    return disabledAdminMirrorPublication();
+  }
 }
 
 function formatBuildIssues(
