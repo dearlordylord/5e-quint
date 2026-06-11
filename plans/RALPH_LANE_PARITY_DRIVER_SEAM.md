@@ -115,13 +115,13 @@
     {
       "number": 19,
       "id": "PDS-A19-SCENARIO-OUTCOME-AUDIT",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Classify remaining qScenario outcome projections and choose the migration shape"
     },
     {
       "number": 20,
       "id": "PDS-A20-SCENARIO-OUTCOME-BATCH-1",
-      "status": "blocked",
+      "status": "ready",
       "title": "Migrate the first qScenario outcome-projection batch"
     },
     {
@@ -253,8 +253,8 @@ decision.
 | 16 | PDS-A16-WITNESS-GATE-AND-CLOSEOUT | done | PDS-A15-WITNESS-BATCH-5 | Convention gate, ADR addendum, README skeleton, prd/04 closeout. |
 | 17 | PDS-A17-LITERAL-CAPTURE-PRD | done | PDS-A10-WITNESS-PILOTS | HITL: owner reviews the PRD. Single-owner obligations only; multi-owner rows wait for BPK-B08. |
 | 18 | PDS-A18-RECURSIVE-NEXT-BATCH | done | PDS-A16-WITNESS-GATE-AND-CLOSEOUT | Recursive audit found concrete follow-up work; Lane A is not drained. |
-| 19 | PDS-A19-SCENARIO-OUTCOME-AUDIT | ready-for-research | PDS-A18-RECURSIVE-NEXT-BATCH | Classify the 60 `qScenario*` files into typed-outcome migration candidates versus explicit projection labels to keep. |
-| 20 | PDS-A20-SCENARIO-OUTCOME-BATCH-1 | blocked | PDS-A19-SCENARIO-OUTCOME-AUDIT | First ≤20 scenario-outcome stragglers, using A19's chosen shape. |
+| 19 | PDS-A19-SCENARIO-OUTCOME-AUDIT | done | PDS-A18-RECURSIVE-NEXT-BATCH | All 60 `qScenario*` files are typed-outcome migration candidates; no string kept-label set. See `plans/SCENARIO_OUTCOME_AUDIT.md`. |
+| 20 | PDS-A20-SCENARIO-OUTCOME-BATCH-1 | ready | PDS-A19-SCENARIO-OUTCOME-AUDIT | First ≤20 scenario-outcome stragglers, using the typed local-outcome shape in `plans/SCENARIO_OUTCOME_AUDIT.md`. |
 | 21 | PDS-A21-SCENARIO-OUTCOME-BATCH-2 | blocked | PDS-A20-SCENARIO-OUTCOME-BATCH-1 | Next ≤20 scenario-outcome stragglers. |
 | 22 | PDS-A22-SCENARIO-OUTCOME-BATCH-3-DRAIN | blocked | PDS-A21-SCENARIO-OUTCOME-BATCH-2 | Final scenario-outcome stragglers; assert the discovery command is empty or that the kept-label set is documented. |
 | 23 | PDS-A23-CHARACTER-PACKAGE-WITNESS-FEASIBILITY | ready-for-research | PDS-A18-RECURSIVE-NEXT-BATCH | Research-only stretch decision for the 24 non-battle MBT witness/driver pairs named by prd/03 and prd/04. |
@@ -550,7 +550,7 @@ drivers/witnesses still use package-local decoding and `qLastResult: str`.
 
 ### Task 19 - PDS-A19-SCENARIO-OUTCOME-AUDIT
 
-Status: `ready-for-research` · Mode: AFK
+Status: `done` · Mode: AFK
 
 Input: prd/04 closeout, ADR-0001 addendum, and the current result of
 `rg -l 'qScenario(Result|InvalidReason)' packages/battle-runtime --glob
@@ -568,12 +568,19 @@ self-discovery command those batches must use, and records whether a quality
 gate should be added after the drain. No MBT is required unless this task edits
 executable witnesses or drivers.
 
+Result: `plans/SCENARIO_OUTCOME_AUDIT.md` classifies all 60 discovered
+`qScenarioResult` / `qScenarioInvalidReason` witnesses as typed
+scenario-outcome migration candidates and records no kept string projection
+labels. A20-A22 should use local QNT variants or derive pure protocol outcomes
+from `WitnessProtocol`, remove the `qScenario*` names, and add the post-drain
+gate in A22.
+
 ### Task 20 - PDS-A20-SCENARIO-OUTCOME-BATCH-1
 
-Status: `blocked` · Mode: AFK
+Status: `ready` · Mode: AFK
 
-Input: A19's chosen scenario-outcome migration shape and the first ≤20
-alphabetical files from the A19 discovery command.
+Input: `plans/SCENARIO_OUTCOME_AUDIT.md` and the first ≤20 alphabetical files
+from the A19 discovery command.
 
 Output: the first batch of battle-runtime scenario-outcome projection
 stragglers migrated or explicitly annotated according to A19. Paired drivers
