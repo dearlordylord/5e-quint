@@ -1,5 +1,5 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-independent-attack-sequence
-// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING
 //
 // The spellAttackSequence Spell Procedure Profile: an action-time spell attack
 // that resolves multiple independent spell attack parts from one spell

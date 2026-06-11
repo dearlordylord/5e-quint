@@ -435,6 +435,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `packages/character-sheet-runtime/character-sheet-weapon-mastery-containers-selected-identity.mbt.qnt` | selected-identity-trace | `SHEET.WEAPON_MASTERY.RESELECTION` |
 | `packages/battle-runtime/battle-runtime-weapon-attack-ordering.qnt` | semantic-core | `BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING` |
 | `packages/battle-runtime/battle-runtime-save-gated-spell-ordering.qnt` | semantic-core | `BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING` |
+| `packages/battle-runtime/battle-runtime-spell-attack-ordering.qnt` | semantic-core | `BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING` |
 | `packages/shared-algebras/proofs/death-saves-algebra-inductive.qnt` | proof-only | `BATTLE.DAMAGE.DEATH_SAVING_THROW_LIFECYCLE` |
 | `packages/shared-algebras/proofs/rule-core/attack-damage-composition.qnt` | semantic-core | `BATTLE.DAMAGE.ATTACK_BRANCHES`, `BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP` |
 | `packages/shared-algebras/proofs/rule-core/damage-component-adjustments.qnt` | semantic-core | `BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION` |
@@ -656,7 +657,7 @@ Rows here are derived from `plans/unit-profile-coverage/profiles.jsonl` for prof
 | `BATTLE.FEATURE.METAMAGIC_SEEKING_SPELL_ATTACK_REROLL` | generation-subset-clean | `import`, `variant`, `record`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `set-operators`, `map`, `fold`, `forall`, `exists`, `membership`, `size`, `record-update` |  |  |
 | `BATTLE.FEATURE.METAMAGIC_EMPOWERED_DAMAGE_DICE_REROLL` | generation-subset-clean | `import`, `variant`, `record`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `set-operators`, `map`, `fold`, `forall`, `exists`, `membership`, `size`, `record-update` |  |  |
 | `BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY` | generation-subset-clean | `variant` |  |  |
-| `BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING` | generation-subset-clean | `import`, `variant`, `pure-def`, `bool`, `if-expression`, `comparison`, `pattern-match`, `set` |  |  |
+| `BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING` | generation-subset-clean | `import`, `variant`, `record`, `pure-def`, `bool`, `if-expression`, `comparison`, `pattern-match`, `set` |  |  |
 | `BATTLE.PROTOCOL.INTERRUPT_STACK_RESUME_REPLAY` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `all-block`, `pattern-match`, `set`, `map`, `set-operators`, `membership`, `list` |  |  |
 
 ### Generator Readiness Backlog

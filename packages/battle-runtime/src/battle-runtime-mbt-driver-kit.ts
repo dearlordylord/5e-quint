@@ -38,6 +38,7 @@ import {
 import magicMissileInput from "../../surface/content/magic_missile.json";
 import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
 import type {
+  DamageType,
   SpellRecord,
   StatBlockRecord,
   UnitRecord,
@@ -53,6 +54,7 @@ import {
   battleUnitRefWithSupportProfiles,
   battleId,
   battleCombatantSide,
+  cantripSpellInvocationRef,
   characterBattleResourceUsage,
   characterId,
   combatantId,
@@ -587,6 +589,30 @@ type SaveGatedSpellOrderingHole =
   | "conditionChoice"
   | "savingThrowOutcome"
   | "rolledDice";
+type SpellAttackOrderingStage =
+  | "actSelection"
+  | "targetChoice"
+  | "typedTargetChoice"
+  | "targetList"
+  | "targetAllocation"
+  | "damageTypeAndTargetChoice"
+  | "damageTypeChoice"
+  | "attackRoll"
+  | "damageDice"
+  | "resolved";
+type SpellAttackOrderingError =
+  | ""
+  | "targetRequired"
+  | "damageTypeRequired"
+  | "targetOrDamageTypeRequired"
+  | "attackRollRequired";
+type SpellAttackOrderingHole =
+  | "targetChoice"
+  | "spellTargetList"
+  | "spellTargetAllocation"
+  | "damageTypeChoice"
+  | "attackRoll"
+  | "rolledDice";
 type MbtProjection = {
   readonly skeletonHp: number;
   readonly skeletonDead: boolean;
@@ -608,6 +634,12 @@ type SaveGatedSpellOrderingProjection = {
   readonly holes: readonly SaveGatedSpellOrderingHole[];
   readonly lastResult: MbtLastResult;
   readonly orderingError: SaveGatedSpellOrderingError;
+};
+type SpellAttackOrderingProjection = {
+  readonly stage: SpellAttackOrderingStage;
+  readonly holes: readonly SpellAttackOrderingHole[];
+  readonly lastResult: MbtLastResult;
+  readonly orderingError: SpellAttackOrderingError;
 };
 
 export type ExtraAttackMbtProjection = {
@@ -720,6 +752,23 @@ const saveGatedSpellOrderingDriverSchema = {
   doFillConditionChoiceBeforeTargetList: {},
   doFillTargetListAfterConditionChoice: {},
   doFillConditionSavingThrow: {},
+  step: {},
+} as const;
+
+const spellAttackOrderingDriverSchema = {
+  init: {},
+  doDiscoverSingleTargetSpellAttack: {},
+  doSubmitAttackRollBeforeTargetChoice: {},
+  doFillTargetChoice: {},
+  doSubmitDamageBeforeAttackRoll: {},
+  doFillAttackRollMiss: {},
+  doFillAttackRollHit: {},
+  doFillDamageDice: {},
+  doDiscoverTypedSpellAttack: {},
+  doFillDamageTypeBeforeTargetChoice: {},
+  doFillTargetChoiceBeforeDamageType: {},
+  doFillDamageTypeAfterTargetChoice: {},
+  doFillTargetChoiceAfterDamageType: {},
   step: {},
 } as const;
 
@@ -1440,6 +1489,215 @@ export function createSaveGatedSpellOrderingDriver() {
   });
 }
 
+export function createSpellAttackOrderingDriver() {
+  return defineDriver(spellAttackOrderingDriverSchema, () => {
+    let state = spellAttackOrderingBattle("fire_bolt");
+    let subject: Extract<BattleSubject, { readonly tag: "actionSpell" }> =
+      spellAttackSubject("fire_bolt", "spellAttackDamage");
+    let fills: readonly BattleFill[] = [];
+    let holes: readonly BattleHole[] = [];
+    let stage: SpellAttackOrderingProjection["stage"] = "actSelection";
+    let lastResult: SpellAttackOrderingProjection["lastResult"] = "init";
+    let orderingError: SpellAttackOrderingProjection["orderingError"] = "";
+
+    function reset(): void {
+      state = spellAttackOrderingBattle("fire_bolt");
+      subject = spellAttackSubject("fire_bolt", "spellAttackDamage");
+      fills = [];
+      holes = [];
+      stage = "actSelection";
+      lastResult = "init";
+      orderingError = "";
+    }
+
+    function discoverSpellAttack(
+      spellId: "fire_bolt" | "sorcerous_burst",
+      nextStage: SpellAttackOrderingProjection["stage"],
+    ): void {
+      state = spellAttackOrderingBattle(spellId);
+      subject = spellAttackSubject(spellId, "spellAttackDamage");
+      fills = [];
+      holes = discoverSpellAttackHoles(state, subject, spellId);
+      stage = nextStage;
+      lastResult = "needsHoles";
+      orderingError = "";
+    }
+
+    function recordAccepted(
+      result: BattleResolutionResult,
+      nextStage: SpellAttackOrderingProjection["stage"],
+    ): void {
+      lastResult = result.tag;
+      if (result.tag === "resolved") {
+        state = result.state;
+        holes = [];
+        stage = nextStage;
+        orderingError = "";
+        return;
+      }
+      if (result.tag === "needsHoles") {
+        state = result.state;
+        holes = result.holes;
+        stage = nextStage;
+        orderingError = "";
+        return;
+      }
+      throw new Error(
+        `Expected accepted spell attack ordering fill, got ${result.tag}: ${
+          "message" in result ? result.message : ""
+        }`,
+      );
+    }
+
+    function recordNeedsEarlierHole(
+      result: BattleResolutionResult,
+      expectedOrderingError: Exclude<
+        SpellAttackOrderingProjection["orderingError"],
+        ""
+      >,
+      expectedStage: SpellAttackOrderingProjection["stage"],
+    ): void {
+      if (result.tag !== "needsHoles") {
+        throw new Error("Expected spell attack fill to request earlier holes.");
+      }
+      lastResult = result.tag;
+      holes = result.holes;
+      stage = expectedStage;
+      orderingError = expectedOrderingError;
+    }
+
+    return {
+      init: reset,
+      doDiscoverSingleTargetSpellAttack: () => {
+        discoverSpellAttack("fire_bolt", "targetChoice");
+      },
+      doSubmitAttackRollBeforeTargetChoice: () => {
+        const target = requireHole(holes, "targetChoice");
+        const attackRoll = requireHole(
+          spellAttackHolesAfterFills(state, subject, [
+            spellTargetChoiceFill(target, skeletonId, "fire_bolt"),
+          ]),
+          "attackRoll",
+        );
+        recordNeedsEarlierHole(
+          resolveBattleSubject({
+            state,
+            subject,
+            fills: [
+              attackRollFill(attackRoll, { total: 14, naturalD20: 10 }),
+            ],
+          }),
+          "targetRequired",
+          "targetChoice",
+        );
+      },
+      doFillTargetChoice: () => {
+        const target = requireHole(holes, "targetChoice");
+        fills = [spellTargetChoiceFill(target, skeletonId, "fire_bolt")];
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills }),
+          "attackRoll",
+        );
+      },
+      doSubmitDamageBeforeAttackRoll: () => {
+        const attackRoll = requireHole(holes, "attackRoll");
+        const damage = requireHole(
+          spellAttackHolesAfterFills(state, subject, [
+            ...fills,
+            attackRollFill(attackRoll, { total: 14, naturalD20: 10 }),
+          ]),
+          "rolledDice",
+        );
+        recordNeedsEarlierHole(
+          resolveBattleSubject({
+            state,
+            subject,
+            fills: [...fills, damageRollFill(damage, 3)],
+          }),
+          "attackRollRequired",
+          "attackRoll",
+        );
+      },
+      doFillAttackRollMiss: () => {
+        const attackRoll = requireHole(holes, "attackRoll");
+        fills = [
+          ...fills,
+          attackRollFill(attackRoll, { total: 1, naturalD20: 1 }),
+        ];
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills }),
+          "resolved",
+        );
+      },
+      doFillAttackRollHit: () => {
+        const attackRoll = requireHole(holes, "attackRoll");
+        fills = [
+          ...fills,
+          attackRollFill(attackRoll, { total: 14, naturalD20: 10 }),
+        ];
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills }),
+          "damageDice",
+        );
+      },
+      doFillDamageDice: () => {
+        const damage = requireHole(holes, "rolledDice");
+        fills = [...fills, damageRollFill(damage, 3)];
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills }),
+          "resolved",
+        );
+      },
+      doDiscoverTypedSpellAttack: () => {
+        discoverSpellAttack("sorcerous_burst", "damageTypeAndTargetChoice");
+      },
+      doFillDamageTypeBeforeTargetChoice: () => {
+        const damageType = requireHole(holes, "damageTypeChoice");
+        fills = [spellDamageTypeChoiceFill(damageType, "fire")];
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills }),
+          "typedTargetChoice",
+        );
+      },
+      doFillTargetChoiceBeforeDamageType: () => {
+        const target = requireHole(holes, "targetChoice");
+        fills = [spellTargetChoiceFill(target, skeletonId, "sorcerous_burst")];
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills }),
+          "damageTypeChoice",
+        );
+      },
+      doFillDamageTypeAfterTargetChoice: () => {
+        const damageType = requireHole(holes, "damageTypeChoice");
+        fills = [...fills, spellDamageTypeChoiceFill(damageType, "fire")];
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills }),
+          "attackRoll",
+        );
+      },
+      doFillTargetChoiceAfterDamageType: () => {
+        const target = requireHole(holes, "targetChoice");
+        fills = [
+          ...fills,
+          spellTargetChoiceFill(target, skeletonId, "sorcerous_burst"),
+        ];
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills }),
+          "attackRoll",
+        );
+      },
+      step: () => {},
+      getState: () =>
+        projectSpellAttackOrderingState({
+          holes,
+          stage,
+          lastResult,
+          orderingError,
+        }),
+    };
+  });
+}
+
 export function createExtraAttackDriver(
   unitId: ExtraAttackMbtUnitId = "fighter_extra_attack",
   schema: typeof extraAttackDriverSchema = extraAttackDriverSchema,
@@ -1899,6 +2157,21 @@ function normalizeSaveGatedSpellOrderingQuintState(
   };
 }
 
+function normalizeSpellAttackOrderingQuintState(
+  raw: unknown,
+): SpellAttackOrderingProjection {
+  const state = quintStateRecord(raw);
+
+  return {
+    stage: spellAttackOrderingStage(state["qStage"]),
+    holes: quintSet(state["qHoles"], "qHoles")
+      .map(spellAttackOrderingHole)
+      .sort(),
+    lastResult: mbtLastResult(state["qLastResult"]),
+    orderingError: spellAttackOrderingError(state["qLastOrderingError"]),
+  };
+}
+
 function normalizeExtraAttackQuintState(
   raw: unknown,
 ): ExtraAttackMbtProjection {
@@ -2024,6 +2297,16 @@ export const saveGatedSpellOrderingStateCheck = stateCheck(
     return true;
   },
 );
+export const spellAttackOrderingStateCheck = stateCheck(
+  normalizeSpellAttackOrderingQuintState,
+  (
+    spec: SpellAttackOrderingProjection,
+    impl: SpellAttackOrderingProjection,
+  ) => {
+    expect(impl).toEqual(spec);
+    return true;
+  },
+);
 export const extraAttackStateCheck = stateCheck(
   normalizeExtraAttackQuintState,
   (spec: ExtraAttackMbtProjection, impl: ExtraAttackMbtProjection) => {
@@ -2113,6 +2396,20 @@ function projectSaveGatedSpellOrderingState(input: {
   return {
     stage: input.stage,
     holes: input.holes.map(saveGatedSpellOrderingHoleFromRuntime).sort(),
+    lastResult: input.lastResult,
+    orderingError: input.orderingError,
+  };
+}
+
+function projectSpellAttackOrderingState(input: {
+  readonly holes: readonly BattleHole[];
+  readonly stage: SpellAttackOrderingProjection["stage"];
+  readonly lastResult: SpellAttackOrderingProjection["lastResult"];
+  readonly orderingError: SpellAttackOrderingProjection["orderingError"];
+}): SpellAttackOrderingProjection {
+  return {
+    stage: input.stage,
+    holes: input.holes.flatMap(spellAttackOrderingHoleFromRuntime).sort(),
     lastResult: input.lastResult,
     orderingError: input.orderingError,
   };
@@ -2328,6 +2625,24 @@ function discoverSaveGatedSpellHoles(
   return act.initialHoles;
 }
 
+function discoverSpellAttackHoles(
+  state: BattleState,
+  subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>,
+  spellId: string,
+): readonly BattleHole[] {
+  const act = discoverBattleActs(state).find(
+    (candidate) =>
+      candidate.subject.tag === "actionSpell" &&
+      candidate.subject.actorId === subject.actorId &&
+      candidate.subject.invocation.spellId === spellId,
+  );
+  if (act == null) {
+    throw new Error(`Expected ${spellId} spell attack act.`);
+  }
+
+  return act.initialHoles;
+}
+
 function holesAfterFills(
   state: BattleState,
   subject: Extract<
@@ -2352,6 +2667,19 @@ function saveGatedSpellHolesAfterFills(
   const result = resolveBattleSubject({ state, subject, fills });
   if (result.tag !== "needsHoles") {
     throw new Error("Expected save-gated spell fills to request more holes.");
+  }
+
+  return result.holes;
+}
+
+function spellAttackHolesAfterFills(
+  state: BattleState,
+  subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>,
+  fills: readonly BattleFill[],
+): readonly BattleHole[] {
+  const result = resolveBattleSubject({ state, subject, fills });
+  if (result.tag !== "needsHoles") {
+    throw new Error("Expected spell attack fills to request more holes.");
   }
 
   return result.holes;
@@ -2461,6 +2789,18 @@ function saveGatedSpellSubject(
     tag: "actionSpell",
     actorId: fighterId,
     invocation: spellSlotInvocationRef(spellId, slotLevel, procedure),
+    mode: { tag: "cast" },
+  };
+}
+
+function spellAttackSubject(
+  spellId: "fire_bolt" | "sorcerous_burst",
+  procedure: "spellAttackDamage",
+): Extract<BattleSubject, { readonly tag: "actionSpell" }> {
+  return {
+    tag: "actionSpell",
+    actorId: fighterId,
+    invocation: cantripSpellInvocationRef(spellId, procedure),
     mode: { tag: "cast" },
   };
 }
@@ -2608,6 +2948,21 @@ function saveGatedSpellOrderingBattle(
         initiative: 20,
         spellId,
         slotLevel,
+      }),
+      skeletonCreatureInit({ initiative: 10 }),
+    ],
+  });
+}
+
+function spellAttackOrderingBattle(
+  spellId: "fire_bolt" | "sorcerous_burst",
+): BattleState {
+  return startBattleRight({
+    battleId: battleId("battle-runtime-mbt-spell-attack-ordering"),
+    combatants: [
+      spellAttackOrderingCasterCreatureInit({
+        initiative: 20,
+        spellId,
       }),
       skeletonCreatureInit({ initiative: 10 }),
     ],
@@ -2896,6 +3251,51 @@ function saveGatedSpellOrderingCasterCreatureInit(input: {
   };
 }
 
+function spellAttackOrderingCasterCreatureInit(input: {
+  readonly initiative: number;
+  readonly spellId: "fire_bolt" | "sorcerous_burst";
+}): BattleCreatureInit {
+  const unit = unitLibrary.requireUnit(input.spellId);
+  if (unit.kind !== "spell") {
+    throw new Error(`Expected ${input.spellId} spell Unit.`);
+  }
+  return {
+    combatantId: fighterId,
+    displayName: "Spell Attack Caster",
+    initiative: initiativeScore(input.initiative),
+    side: partySide,
+    creatureInit: {
+      kind: "character",
+      characterId: characterId("spell-attack-ordering-caster-character"),
+      characterUnitRefs: [],
+      classLevels: [{ className: "sorcerer", level: 1 }],
+      knownLanguages: ["Common"],
+      d20Statistics: testCharacterD20Statistics({ str: 16 }),
+      armorClass: defaultArmorClassState(),
+      size: "medium",
+      speed: { walkFeet: movementFeet(30) },
+      currentHp: Hp(20),
+      maxHp: Hp(20),
+      tempHp: Hp(0),
+      selectedLoadout: {},
+      attack: null,
+      unarmedStrike: baseUnarmedStrike(),
+      spellcasting: {
+        sourceClassName: "sorcerer",
+        spellcastingAbilityModifier: 3,
+        proficiencyBonus: proficiencyBonus(2),
+        canCastSpells: true,
+        cantrips: [unit],
+        preparedSpells: [],
+        featurePreparedSpells: [],
+        spellbookRitualSpellAccesses: [],
+        invocationSpellAccesses: [],
+        spellSlots: [],
+      },
+    },
+  };
+}
+
 function extraAttackUnitRef(
   unit: UnitRecord,
 ): Extract<
@@ -3162,6 +3562,20 @@ function saveGatedSpellConditionChoiceFill(
   }
   return {
     kind: "conditionChoice",
+    holeId: hole.holeId,
+    value,
+  };
+}
+
+function spellDamageTypeChoiceFill(
+  hole: BattleHole,
+  value: DamageType,
+): Extract<BattleFill, { readonly kind: "damageTypeChoice" }> {
+  if (hole.kind !== "damageTypeChoice") {
+    throw new Error("Expected damage type choice hole.");
+  }
+  return {
+    kind: "damageTypeChoice",
     holeId: hole.holeId,
     value,
   };
@@ -3645,6 +4059,64 @@ function saveGatedSpellOrderingError(
   }
 
   throw new Error(`Unknown save-gated spell ordering error: ${String(raw)}.`);
+}
+
+function spellAttackOrderingStage(raw: unknown): SpellAttackOrderingStage {
+  const tag = quintVariantTag(raw);
+  if (tag === "SpellAttackActSelectionStage") return "actSelection";
+  if (tag === "SpellAttackTargetChoiceStage") return "targetChoice";
+  if (tag === "SpellAttackTypedTargetChoiceStage") return "typedTargetChoice";
+  if (tag === "SpellAttackTargetListStage") return "targetList";
+  if (tag === "SpellAttackTargetAllocationStage") return "targetAllocation";
+  if (tag === "SpellAttackDamageTypeAndTargetChoiceStage") {
+    return "damageTypeAndTargetChoice";
+  }
+  if (tag === "SpellAttackDamageTypeChoiceStage") return "damageTypeChoice";
+  if (tag === "SpellAttackAttackRollStage") return "attackRoll";
+  if (tag === "SpellAttackDamageDiceStage") return "damageDice";
+  if (tag === "SpellAttackResolvedStage") return "resolved";
+
+  throw new Error(`Unknown spell attack ordering stage: ${tag}`);
+}
+
+function spellAttackOrderingHole(raw: unknown): SpellAttackOrderingHole {
+  const tag = quintVariantTag(raw);
+  if (tag === "TargetChoiceHoleKind") return "targetChoice";
+  if (tag === "SpellTargetListHoleKind") return "spellTargetList";
+  if (tag === "SpellTargetAllocationHoleKind") return "spellTargetAllocation";
+  if (tag === "DamageTypeChoiceHoleKind") return "damageTypeChoice";
+  if (tag === "AttackRollHoleKind") return "attackRoll";
+  if (tag === "RolledDiceHoleKind") return "rolledDice";
+
+  throw new Error(`Unknown spell attack ordering hole: ${tag}`);
+}
+
+function spellAttackOrderingHoleFromRuntime(
+  hole: Pick<BattleHole, "kind">,
+): readonly SpellAttackOrderingHole[] {
+  if (hole.kind === "targetChoice") return ["targetChoice"];
+  if (hole.kind === "spellTargetList") return ["spellTargetList"];
+  if (hole.kind === "spellTargetAllocation") return ["spellTargetAllocation"];
+  if (hole.kind === "damageTypeChoice") return ["damageTypeChoice"];
+  if (hole.kind === "attackRoll") return ["attackRoll"];
+  if (hole.kind === "rolledDice") return ["rolledDice"];
+  if (hole.kind === "objectTargetChoice") return [];
+
+  throw new Error(`Unexpected spell attack ordering hole: ${hole.kind}`);
+}
+
+function spellAttackOrderingError(raw: unknown): SpellAttackOrderingError {
+  if (
+    raw === "" ||
+    raw === "targetRequired" ||
+    raw === "damageTypeRequired" ||
+    raw === "targetOrDamageTypeRequired" ||
+    raw === "attackRollRequired"
+  ) {
+    return raw;
+  }
+
+  throw new Error(`Unknown spell attack ordering error: ${String(raw)}.`);
 }
 
 function quintHoleSet(raw: unknown): readonly unknown[] {
