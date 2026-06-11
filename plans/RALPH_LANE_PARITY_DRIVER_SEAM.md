@@ -121,7 +121,7 @@
     {
       "number": 20,
       "id": "PDS-A20-SCENARIO-OUTCOME-BATCH-1",
-      "status": "deferred",
+      "status": "ready-for-research",
       "title": "Migrate the first qScenario outcome-projection batch"
     },
     {
@@ -260,7 +260,7 @@ decision.
 |  17 | PDS-A17-LITERAL-CAPTURE-PRD                   | done     | PDS-A10-WITNESS-PILOTS                                                                                             | HITL: owner reviews the PRD. Single-owner obligations only; multi-owner rows wait for BPK-B08.                                                                                                                                                                     |
 |  18 | PDS-A18-RECURSIVE-NEXT-BATCH                  | done     | PDS-A16-WITNESS-GATE-AND-CLOSEOUT                                                                                  | Recursive audit found concrete follow-up work; Lane A is not drained.                                                                                                                                                                                              |
 |  19 | PDS-A19-SCENARIO-OUTCOME-AUDIT                | done     | PDS-A18-RECURSIVE-NEXT-BATCH                                                                                       | All 60 `qScenario*` files are typed-outcome migration candidates; no string kept-label set. See `plans/SCENARIO_OUTCOME_AUDIT.md`.                                                                                                                                 |
-|  20 | PDS-A20-SCENARIO-OUTCOME-BATCH-1              | deferred | PDS-A19-SCENARIO-OUTCOME-AUDIT                                                                                     | Owner-directed freeze after A23; unfreeze later by restoring this row and Task 20 status to `ready`.                                                                                                                                                               |
+|  20 | PDS-A20-SCENARIO-OUTCOME-BATCH-1              | ready-for-research | PDS-A19-SCENARIO-OUTCOME-AUDIT                                                                                     | First <=20 scenario-outcome stragglers, using the typed local-outcome shape in `plans/SCENARIO_OUTCOME_AUDIT.md`.                                                                                                                                                  |
 |  21 | PDS-A21-SCENARIO-OUTCOME-BATCH-2              | blocked  | PDS-A20-SCENARIO-OUTCOME-BATCH-1                                                                                   | Next ≤20 scenario-outcome stragglers.                                                                                                                                                                                                                              |
 |  22 | PDS-A22-SCENARIO-OUTCOME-BATCH-3-DRAIN        | blocked  | PDS-A21-SCENARIO-OUTCOME-BATCH-2                                                                                   | Final scenario-outcome stragglers; assert the discovery command is empty or that the kept-label set is documented.                                                                                                                                                 |
 |  23 | PDS-A23-CHARACTER-PACKAGE-WITNESS-FEASIBILITY | done     | PDS-A18-RECURSIVE-NEXT-BATCH                                                                                       | Research-only stretch decision for the 24 non-battle MBT witness/driver pairs named by prd/03 and prd/04. See `plans/CHARACTER_PACKAGE_WITNESS_FEASIBILITY.md`.                                                                                                    |
@@ -584,11 +584,7 @@ gate in A22.
 
 ### Task 20 - PDS-A20-SCENARIO-OUTCOME-BATCH-1
 
-Status: `deferred` · Mode: HITL
-
-Owner freeze: park this batch until the owner explicitly unfreezes Lane A
-later today. Unfreeze by restoring this task's index row and detail status to
-`ready`; A21 and A22 remain dependency-blocked behind this task.
+Status: `ready-for-research` · Mode: AFK
 
 Input: `plans/SCENARIO_OUTCOME_AUDIT.md` and the first ≤20 alphabetical files
 from the A19 discovery command.
