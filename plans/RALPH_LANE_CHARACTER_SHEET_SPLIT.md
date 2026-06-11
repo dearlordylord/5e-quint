@@ -4,15 +4,60 @@
 {
   "schema": "ralph-plan.v1",
   "tasks": [
-    { "number": 1, "id": "SHEETS-C01-TYPES-AND-IDS", "status": "ready-for-implementation-after-light-research", "title": "Extract sheet-types and branded ids behind the unchanged barrel" },
-    { "number": 2, "id": "SHEETS-C02-STATELESS-QUERIES", "status": "blocked", "title": "Extract hit-points, armor-class, and ability-checks query domains" },
-    { "number": 3, "id": "SHEETS-C03-RESOURCES-HEALING", "status": "blocked", "title": "Extract resources (with Monk folds) and healing-rest-benefit" },
-    { "number": 4, "id": "SHEETS-C04-SPELL-SLOTS-INVOCATION", "status": "blocked", "title": "Extract spell-slots (with Font of Magic) and spell-invocation" },
-    { "number": 5, "id": "SHEETS-C05-FEATURE-DOMAINS", "status": "blocked", "title": "Extract druid-features and class-feature-spells" },
-    { "number": 6, "id": "SHEETS-C06-LIFECYCLE-PARSING", "status": "blocked", "title": "Extract sheet-lifecycle and the internal stored-sheet parser" },
-    { "number": 7, "id": "SHEETS-C07-RESTS", "status": "blocked", "title": "Extract rests (with weapon-mastery reselection)" },
-    { "number": 8, "id": "SHEETS-C08-TIME-PASSAGE-AND-AUDIT", "status": "blocked", "title": "Extract time-passage, finalize the barrel, add the split audit, close out §7" },
-    { "number": 9, "id": "SHEETS-C09-TEST-REORG", "status": "blocked", "title": "Reorganize the monolithic index.test.ts along the new module seams (optional follow-up)" }
+    {
+      "number": 1,
+      "id": "SHEETS-C01-TYPES-AND-IDS",
+      "status": "done",
+      "title": "Extract sheet-types and branded ids behind the unchanged barrel"
+    },
+    {
+      "number": 2,
+      "id": "SHEETS-C02-STATELESS-QUERIES",
+      "status": "done",
+      "title": "Extract hit-points, armor-class, and ability-checks query domains"
+    },
+    {
+      "number": 3,
+      "id": "SHEETS-C03-RESOURCES-HEALING",
+      "status": "done",
+      "title": "Extract resources (with Monk folds) and healing-rest-benefit"
+    },
+    {
+      "number": 4,
+      "id": "SHEETS-C04-SPELL-SLOTS-INVOCATION",
+      "status": "done",
+      "title": "Extract spell-slots (with Font of Magic) and spell-invocation"
+    },
+    {
+      "number": 5,
+      "id": "SHEETS-C05-FEATURE-DOMAINS",
+      "status": "done",
+      "title": "Extract druid-features and class-feature-spells"
+    },
+    {
+      "number": 6,
+      "id": "SHEETS-C06-LIFECYCLE-PARSING",
+      "status": "done",
+      "title": "Extract sheet-lifecycle and the internal stored-sheet parser"
+    },
+    {
+      "number": 7,
+      "id": "SHEETS-C07-RESTS",
+      "status": "done",
+      "title": "Extract rests (with weapon-mastery reselection)"
+    },
+    {
+      "number": 8,
+      "id": "SHEETS-C08-TIME-PASSAGE-AND-AUDIT",
+      "status": "done",
+      "title": "Extract time-passage, finalize the barrel, add the split audit, close out §7"
+    },
+    {
+      "number": 9,
+      "id": "SHEETS-C09-TEST-REORG",
+      "status": "done",
+      "title": "Reorganize the monolithic index.test.ts along the new module seams (optional follow-up)"
+    }
   ]
 }
 -->
@@ -100,21 +145,21 @@ Every task must include:
 
 | # | Task | Status | Depends on | Notes |
 | ---: | --- | --- | --- | --- |
-| 1 | SHEETS-C01-TYPES-AND-IDS | ready-for-implementation-after-light-research | none | External mcp-WIP gate cleared 2026-06-10 (see header). |
-| 2 | SHEETS-C02-STATELESS-QUERIES | blocked | SHEETS-C01-TYPES-AND-IDS | Lowest-risk extractions; witnesses: hit-point-maximum, armor-class, ability-check. |
-| 3 | SHEETS-C03-RESOURCES-HEALING | blocked | SHEETS-C02-STATELESS-QUERIES | Monk's Focus / Uncanny Metabolism fold into resources. |
-| 4 | SHEETS-C04-SPELL-SLOTS-INVOCATION | blocked | SHEETS-C03-RESOURCES-HEALING | Font of Magic folds into spell-slots. |
-| 5 | SHEETS-C05-FEATURE-DOMAINS | blocked | SHEETS-C04-SPELL-SLOTS-INVOCATION | Druid + class-feature prepared spells. |
-| 6 | SHEETS-C06-LIFECYCLE-PARSING | blocked | SHEETS-C05-FEATURE-DOMAINS | Largest internal move (~2,400-line parser layer). |
-| 7 | SHEETS-C07-RESTS | blocked | SHEETS-C06-LIFECYCLE-PARSING | Rest state machine consumes the spell-slots interface; weapon-mastery reselection folds in. |
-| 8 | SHEETS-C08-TIME-PASSAGE-AND-AUDIT | blocked | SHEETS-C07-RESTS | Final move + executable split audit + §7 status note. |
-| 9 | SHEETS-C09-TEST-REORG | blocked | SHEETS-C08-TIME-PASSAGE-AND-AUDIT | Optional follow-up; can be deferred indefinitely. |
+| 1 | SHEETS-C01-TYPES-AND-IDS | done | none | External mcp-WIP gate cleared 2026-06-10 (see header). |
+| 2 | SHEETS-C02-STATELESS-QUERIES | done | SHEETS-C01-TYPES-AND-IDS | Lowest-risk extractions; witnesses: hit-point-maximum, armor-class, ability-check. |
+| 3 | SHEETS-C03-RESOURCES-HEALING | done | SHEETS-C02-STATELESS-QUERIES | Monk's Focus / Uncanny Metabolism fold into resources. |
+| 4 | SHEETS-C04-SPELL-SLOTS-INVOCATION | done | SHEETS-C03-RESOURCES-HEALING | Font of Magic folds into spell-slots. |
+| 5 | SHEETS-C05-FEATURE-DOMAINS | done | SHEETS-C04-SPELL-SLOTS-INVOCATION | Druid + class-feature prepared spells. |
+| 6 | SHEETS-C06-LIFECYCLE-PARSING | done | SHEETS-C05-FEATURE-DOMAINS | Largest internal move (~2,400-line parser layer). |
+| 7 | SHEETS-C07-RESTS | done | SHEETS-C06-LIFECYCLE-PARSING | Rest state machine consumes the spell-slots interface; weapon-mastery reselection folds in. |
+| 8 | SHEETS-C08-TIME-PASSAGE-AND-AUDIT | done | SHEETS-C07-RESTS | Final move + executable split audit + §7 status note. |
+| 9 | SHEETS-C09-TEST-REORG | done | SHEETS-C08-TIME-PASSAGE-AND-AUDIT | Optional follow-up; can be deferred indefinitely. |
 
 ## Task Details
 
 ### Task 1 - SHEETS-C01-TYPES-AND-IDS
 
-Status: `ready-for-implementation-after-light-research` · Mode: AFK
+Status: `done` · Mode: AFK
 
 Output: `sheet-types.ts` (exported domain types, constants) and the branded
 `CharacterSheetId` + resource unit-id support sets (per §7, either inside
@@ -126,7 +171,7 @@ identical; no behavioural diff (moves only).
 
 ### Task 2 - SHEETS-C02-STATELESS-QUERIES
 
-Status: `blocked` · Mode: AFK
+Status: `done` · Mode: AFK
 
 Output: `hit-points.ts`, `armor-class.ts`, `ability-checks.ts` extracted per
 §7 cluster ranges.
@@ -137,7 +182,7 @@ Acceptance: standard verification; the three matching MBT drivers
 
 ### Task 3 - SHEETS-C03-RESOURCES-HEALING
 
-Status: `blocked` · Mode: AFK
+Status: `done` · Mode: AFK
 
 Output: `resources.ts` (capacity/spending, including the Monk's Focus and
 Uncanny Metabolism folds §7 prescribes) and `healing-rest-benefit.ts`
@@ -148,7 +193,7 @@ Acceptance: standard verification; `spell-rest-benefit-application` and
 
 ### Task 4 - SHEETS-C04-SPELL-SLOTS-INVOCATION
 
-Status: `blocked` · Mode: AFK
+Status: `done` · Mode: AFK
 
 Output: `spell-slots.ts` (slot/created-slot/pact state machine including the
 Font of Magic conversion fold) and `spell-invocation.ts` (invocation, ritual
@@ -159,7 +204,7 @@ Acceptance: standard verification; `spell-slots-pact-slots` and
 
 ### Task 5 - SHEETS-C05-FEATURE-DOMAINS
 
-Status: `blocked` · Mode: AFK
+Status: `done` · Mode: AFK
 
 Output: `druid-features.ts` (Wild Shape known forms, Circle of the Land) and
 `class-feature-spells.ts` (prepared-spell projection), consolidating the
@@ -170,7 +215,7 @@ passes unmodified.
 
 ### Task 6 - SHEETS-C06-LIFECYCLE-PARSING
 
-Status: `blocked` · Mode: AFK
+Status: `done` · Mode: AFK
 
 Output: `sheet-lifecycle.ts` (`createFreshCharacterSheet` + init helpers,
 `parseCharacterSheet` dispatcher) and the internal `stored-sheet-parser.ts`
@@ -183,7 +228,7 @@ typecheck proves no type-only cycles.
 
 ### Task 7 - SHEETS-C07-RESTS
 
-Status: `blocked` · Mode: AFK
+Status: `done` · Mode: AFK
 
 Output: `rests.ts` — Short/Long Rest state machines, Hit Dice, Arcane
 Recovery, post-Long-Rest weapon-mastery reselection fold — consuming the
@@ -195,7 +240,7 @@ Acceptance: standard verification; `hp-rest-hit-dice` and
 
 ### Task 8 - SHEETS-C08-TIME-PASSAGE-AND-AUDIT
 
-Status: `blocked` · Mode: AFK
+Status: `done` · Mode: AFK
 
 Output: `time-passage.ts` (the `timePassed` omnibus, moved whole with a
 header comment naming it the time-domain state machine per §7 risk note);
@@ -212,7 +257,7 @@ pre-split export list.
 
 ### Task 9 - SHEETS-C09-TEST-REORG
 
-Status: `blocked` · Mode: AFK
+Status: `done` · Mode: AFK
 
 Output: split the 5,039-line `index.test.ts` along the new module seams
 (per-domain test files), no assertion changes; delete the monolith when

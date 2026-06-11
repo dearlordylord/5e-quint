@@ -469,6 +469,11 @@ slot coupling means `rests.ts` consumes the `spell-slots.ts` interface.
 
 Timing: start after the in-flight `packages/mcp` working-tree changes land.
 
+Status: Task 8 closed the implementation split by moving the elapsed-time
+state machine to `time-passage.ts`, reducing `src/index.ts` to explicit
+re-exports, and adding `scripts/audit-character-sheet-runtime-split.mjs` as
+the executable public-surface audit.
+
 Benefits:
 
 - Character Sheet becomes easier to widen without editing a single entrypoint.

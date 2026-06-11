@@ -1121,7 +1121,7 @@
       ],
       "runtime": "character-sheet",
       "runtimeOwners": [
-        "packages/character-sheet-runtime/src/index.ts"
+        "packages/character-sheet-runtime/src/healing-rest-benefit.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [
@@ -2802,7 +2802,7 @@
       ],
       "runtime": "character-sheet",
       "runtimeOwners": [
-        "packages/character-sheet-runtime/src/index.ts",
+        "packages/character-sheet-runtime/src/armor-class.ts",
         "packages/shared-algebras/src/armor-class-algebra.ts",
         "packages/surface/src/surface/unit-catalog.ts"
       ],
@@ -3131,7 +3131,7 @@
       ],
       "runtime": "character-sheet",
       "runtimeOwners": [
-        "packages/character-sheet-runtime/src/index.ts",
+        "packages/character-sheet-runtime/src/resources.ts",
         "packages/character-battle-runtime/src/index.ts"
       ],
       "status": "covered",
@@ -3166,7 +3166,7 @@
       ],
       "runtime": "character-sheet",
       "runtimeOwners": [
-        "packages/character-sheet-runtime/src/index.ts"
+        "packages/character-sheet-runtime/src/ability-checks.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [
@@ -3388,7 +3388,8 @@
       ],
       "runtime": "character-sheet",
       "runtimeOwners": [
-        "packages/character-sheet-runtime/src/index.ts"
+        "packages/character-sheet-runtime/src/rests.ts",
+        "packages/character-sheet-runtime/src/healing-rest-benefit.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [
@@ -3418,8 +3419,8 @@
       ],
       "runtime": "character-sheet",
       "runtimeOwners": [
-        "packages/character-creation-runtime/src/finalization.ts",
-        "packages/character-sheet-runtime/src/index.ts"
+        "packages/character-sheet-runtime/src/hit-points.ts",
+        "packages/character-creation-runtime/src/finalization.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [
@@ -3453,7 +3454,9 @@
       ],
       "runtime": "character-sheet",
       "runtimeOwners": [
-        "packages/character-sheet-runtime/src/index.ts"
+        "packages/character-sheet-runtime/src/spell-slots.ts",
+        "packages/character-sheet-runtime/src/rests.ts",
+        "packages/character-sheet-runtime/src/healing-rest-benefit.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [
@@ -3523,7 +3526,7 @@
       ],
       "runtime": "character-sheet",
       "runtimeOwners": [
-        "packages/character-sheet-runtime/src/index.ts"
+        "packages/character-sheet-runtime/src/rests.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [
@@ -3555,7 +3558,7 @@
       "reason": "Fighter and Barbarian Weapon Mastery use class-level choice count tables rather than the fixed two-choice selected-identity replay fixture. The reusable semantic core owns opaque-ref reselection semantics, while focused Character Sheet runtime tests cover deriving the active count from the current class level and applying the one-choice Long Rest replacement limit without adding sheet-local Weapon Mastery state.",
       "runtime": "character-sheet",
       "runtimeOwners": [
-        "packages/character-sheet-runtime/src/index.ts"
+        "packages/character-sheet-runtime/src/rests.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [
@@ -3587,7 +3590,7 @@
       ],
       "runtime": "character-sheet",
       "runtimeOwners": [
-        "packages/character-sheet-runtime/src/index.ts"
+        "packages/character-sheet-runtime/src/spell-invocation.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [
@@ -3621,7 +3624,7 @@
       ],
       "runtime": "character-sheet",
       "runtimeOwners": [
-        "packages/character-sheet-runtime/src/index.ts"
+        "packages/character-sheet-runtime/src/class-feature-spells.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [
