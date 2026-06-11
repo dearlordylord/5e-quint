@@ -55,7 +55,7 @@
     {
       "number": 9,
       "id": "CSC-T09-FORM-CATALOG-REFERENCE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Replace the first-match familiar-form-catalog scan with an executable uniqueness boundary"
     },
     {
@@ -768,7 +768,7 @@ post-T07) suites green.
 
 ### Task 9 - CSC-T09-FORM-CATALOG-REFERENCE
 
-Status: `ready-for-research` · Mode: AFK
+Status: `done` · Mode: AFK
 
 **Finding (review F10, "first" trigger word).**
 `retainedFamiliarLikeFormEligibility` (`character-battle-runtime/src/index.ts:1214`,
