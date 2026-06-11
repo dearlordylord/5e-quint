@@ -138,10 +138,6 @@ export type WildCompanionCastInput = Omit<
   readonly spend: WildCompanionSpend;
 };
 
-export type CompanionLongRestDisappearanceTrigger =
-  | { readonly tag: "ownerFinishedLongRest"; readonly ownerId: CombatantId }
-  | { readonly tag: "allCompanionOwnersFinishedLongRest" };
-
 export type CompanionBattleAdmissionManifestation =
   | {
       readonly tag: "embodiedOutsideBattle";
@@ -1117,61 +1113,6 @@ export function applyFindFamiliarZeroHitPointDisappearance(input: {
         : { heldObjectIds: input.heldObjectIds }),
     }),
   );
-}
-
-export function applyCompanionLongRestDisappearance(input: {
-  readonly state: BattleState;
-  readonly trigger: CompanionLongRestDisappearanceTrigger;
-}): BattleResolutionResult {
-  const companionsToRemove = companionEntries(input.state.companions).filter(
-    (entry) =>
-      companionDisappearsAtLongRest(entry.companion) &&
-      (input.trigger.tag === "allCompanionOwnersFinishedLongRest" ||
-        entry.companion.ownerId === input.trigger.ownerId),
-  );
-  if (companionsToRemove.length === 0) {
-    return resolvedFindFamiliarResult(input.state, []);
-  }
-  const absentOwnerIds = companionsToRemove.flatMap((entry) =>
-    entry.companion.status === "present" ? [] : [entry.ownerId],
-  );
-  const stateWithoutAbsentCompanions =
-    absentOwnerIds.length === 0
-      ? input.state
-      : {
-          ...input.state,
-          companions: new Map(
-            [...input.state.companions].filter(
-              ([ownerId]) => !absentOwnerIds.includes(ownerId),
-            ),
-          ),
-        };
-  const presentCompanionIds: CombatantId[] = [];
-  for (const entry of companionsToRemove) {
-    if (entry.companion.status === "present") {
-      presentCompanionIds.push(entry.companion.combatantId);
-    }
-  }
-  if (presentCompanionIds.length === 0) {
-    return resolvedFindFamiliarResult(stateWithoutAbsentCompanions, []);
-  }
-  const removed = removeBattleCombatants({
-    state: stateWithoutAbsentCompanions,
-    combatantIds: presentCompanionIds,
-  });
-  return Either.isLeft(removed)
-    ? invalidFindFamiliarResult(
-        stateWithoutAbsentCompanions,
-        "invalidFill",
-        removed.left.message,
-      )
-    : resolvedFindFamiliarResult(removed.right, []);
-}
-
-function companionDisappearsAtLongRest(
-  companion: BattleCompanionState,
-): boolean {
-  return companion.expiration.tag === "ownerFinishedLongRest";
 }
 
 function withFindFamiliarCombatant(input: {

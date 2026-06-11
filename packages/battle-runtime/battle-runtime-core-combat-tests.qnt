@@ -341,48 +341,6 @@ module battleRuntimeCoreCombatTests {
     }
   }
 
-  run test_retained_find_familiar_long_rest_disappearance_respects_expiration = {
-    val ordinaryPresent = castFindFamiliarLifecycle(
-      NoFindFamiliar,
-      Set(Fighter),
-      Fighter,
-      Goblin,
-      FindFamiliarCat,
-      FindFamiliarFey,
-      18
-    )
-    val expiringPresent = admitRetainedFindFamiliarLifecycle(
-      NoFindFamiliar,
-      Set(Fighter),
-      Fighter,
-      Goblin,
-      Fighter,
-      FindFamiliarOwnerFinishedLongRestExpiration,
-      FindFamiliarBat,
-      FindFamiliarFey,
-      16
-    )
-    val expiringDismissed = temporarilyDismissFindFamiliarLifecycle(
-      expiringPresent,
-      true,
-      Set()
-    )
-    val otherOwnerLongRest = ownerLongRestFindFamiliarLifecycle(
-      expiringPresent,
-      Goblin
-    )
-
-    all {
-      assert(ownerLongRestFindFamiliarLifecycle(ordinaryPresent, Fighter) == ordinaryPresent),
-      assert(ownerLongRestFindFamiliarLifecycle(expiringPresent, Fighter) == NoFindFamiliar),
-      assert(ownerLongRestFindFamiliarLifecycle(expiringDismissed.lifecycle, Fighter) == NoFindFamiliar),
-      assert(otherOwnerLongRest == expiringPresent),
-      assert(allOwnersLongRestFindFamiliarLifecycle(ordinaryPresent) == ordinaryPresent),
-      assert(allOwnersLongRestFindFamiliarLifecycle(expiringPresent) == NoFindFamiliar),
-      assert(allOwnersLongRestFindFamiliarLifecycle(expiringDismissed.lifecycle) == NoFindFamiliar),
-    }
-  }
-
   run test_find_familiar_zero_hit_points_disappears_until_recast = {
     val present = castFindFamiliarLifecycle(
       NoFindFamiliar,

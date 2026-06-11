@@ -115,7 +115,6 @@ export {
 } from "./find-familiar-forms.ts";
 export {
   admitCompanionToBattle,
-  applyCompanionLongRestDisappearance,
   applyFindFamiliarZeroHitPointDisappearance,
   castFindFamiliar,
   castWildCompanion,

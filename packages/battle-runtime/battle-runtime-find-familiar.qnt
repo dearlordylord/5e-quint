@@ -220,47 +220,6 @@ module battleRuntimeFindFamiliar {
         }
     }
 
-  pure def ownerLongRestFindFamiliarLifecycle(
-    prior: FindFamiliarLifecycle,
-    owner: Actor,
-  ): FindFamiliarLifecycle =
-    match prior {
-      | PresentFindFamiliar(present) =>
-        if (present.owner == owner and present.expiration == FindFamiliarOwnerFinishedLongRestExpiration)
-          NoFindFamiliar
-        else prior
-      | TemporarilyDismissedFindFamiliar(absent) =>
-        if (absent.owner == owner and absent.expiration == FindFamiliarOwnerFinishedLongRestExpiration)
-          NoFindFamiliar
-        else prior
-      | DisappearedAtZeroHitPointsFindFamiliar(absent) =>
-        if (absent.owner == owner and absent.expiration == FindFamiliarOwnerFinishedLongRestExpiration)
-          NoFindFamiliar
-        else prior
-      | DismissedForeverFindFamiliar(_) => prior
-      | NoFindFamiliar => NoFindFamiliar
-    }
-
-  pure def allOwnersLongRestFindFamiliarLifecycle(
-    prior: FindFamiliarLifecycle,
-  ): FindFamiliarLifecycle =
-    match prior {
-      | PresentFindFamiliar(present) =>
-        if (present.expiration == FindFamiliarOwnerFinishedLongRestExpiration)
-          NoFindFamiliar
-        else prior
-      | TemporarilyDismissedFindFamiliar(absent) =>
-        if (absent.expiration == FindFamiliarOwnerFinishedLongRestExpiration)
-          NoFindFamiliar
-        else prior
-      | DisappearedAtZeroHitPointsFindFamiliar(absent) =>
-        if (absent.expiration == FindFamiliarOwnerFinishedLongRestExpiration)
-          NoFindFamiliar
-        else prior
-      | DismissedForeverFindFamiliar(_) => prior
-      | NoFindFamiliar => NoFindFamiliar
-    }
-
   pure def findFamiliarCombatants(lifecycle: FindFamiliarLifecycle): Set[Actor] =
     match lifecycle {
       | PresentFindFamiliar(present) => Set(present.familiar)

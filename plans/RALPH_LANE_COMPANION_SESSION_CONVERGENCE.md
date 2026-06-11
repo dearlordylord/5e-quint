@@ -7,8 +7,8 @@
     { "number": 1, "id": "CSC-T01-OWNER-KEYED-COMPANIONS", "status": "done", "title": "Key battle companions by owner; delete the synthetic companion-state id space" },
     { "number": 2, "id": "CSC-T02-PROTOCOL-TAG-UNION", "status": "done", "title": "Reduce the durable companion protocol to a tag union with one derivation table" },
     { "number": 3, "id": "CSC-T03-SETTLEMENT-OUTCOME", "status": "done", "title": "Make battle state carry the full settle-able companion outcome; drop session companionAdmission" },
-    { "number": 4, "id": "CSC-T04-DEAD-BATTLE-LONG-REST-LANE", "status": "ready-for-implementation", "title": "Delete the unreachable battle-state long-rest companion lane; decide castFindFamiliar wiring" },
-    { "number": 5, "id": "CSC-T05-COMPANION-REST-ASSUMPTION", "status": "blocked", "title": "Record the companion rest-participation assumption; align sheet long-rest THP/HP" },
+    { "number": 4, "id": "CSC-T04-DEAD-BATTLE-LONG-REST-LANE", "status": "done", "title": "Delete the unreachable battle-state long-rest companion lane; decide castFindFamiliar wiring" },
+    { "number": 5, "id": "CSC-T05-COMPANION-REST-ASSUMPTION", "status": "ready-for-implementation", "title": "Record the companion rest-participation assumption; align sheet long-rest THP/HP" },
     { "number": 6, "id": "CSC-T06-RECAST-SEMANTICS", "status": "blocked", "title": "Record recast assumptions; one recast semantic across sheet and battle layers" },
     { "number": 7, "id": "CSC-T07-FORM-VOCAB-HOIST-CREATION-MOVE", "status": "blocked", "title": "Hoist the familiar-form vocabulary; move out-of-battle creation into character-sheet-runtime" },
     { "number": 8, "id": "CSC-T08-CREATION-HP-SURFACE", "status": "blocked", "title": "Remove caller-minted companion HP/THP from the MCP creation operation" },
@@ -133,8 +133,8 @@ a task's change invalidates them):
 | 1 | CSC-T01-OWNER-KEYED-COMPANIONS | done | none | Foundation: every later battle-side task reads/writes the companions map; do the key model first so nothing is built on the synthetic id space. |
 | 2 | CSC-T02-PROTOCOL-TAG-UNION | done | T01 | Shrinks the protocol vocabulary T03's settlement must write. |
 | 3 | CSC-T03-SETTLEMENT-OUTCOME | done | T02 | The core domain rework; consumes T01's key model and T02's protocol shape. |
-| 4 | CSC-T04-DEAD-BATTLE-LONG-REST-LANE | ready-for-implementation | T03 | Whether battle `expiration` survives depends on T03's settlement projection. |
-| 5 | CSC-T05-COMPANION-REST-ASSUMPTION | blocked | T04 | HITL; sheet-side counterpart of T04's deletion. |
+| 4 | CSC-T04-DEAD-BATTLE-LONG-REST-LANE | done | T03 | Whether battle `expiration` survives depends on T03's settlement projection. |
+| 5 | CSC-T05-COMPANION-REST-ASSUMPTION | ready-for-implementation | T04 | HITL; sheet-side counterpart of T04's deletion. |
 | 6 | CSC-T06-RECAST-SEMANTICS | blocked | T05 | HITL; depends on T03's outcome union for the battle half. |
 | 7 | CSC-T07-FORM-VOCAB-HOIST-CREATION-MOVE | blocked | T06 | Package move lands after semantics settle, so code moves once. |
 | 8 | CSC-T08-CREATION-HP-SURFACE | blocked | T07 | Edits the creation op wherever T07 left it. |
@@ -398,7 +398,37 @@ mutex; mcp server tests + acceptance scenarios green.
 
 ### Task 4 - CSC-T04-DEAD-BATTLE-LONG-REST-LANE
 
-Status: `blocked` · Mode: AFK (one HITL flag)
+Status: `done` · Mode: AFK (one HITL flag)
+
+**Outcome.** Deleted the unreachable battle-state long-rest lane: the TS
+`applyCompanionLongRestDisappearance` + `CompanionLongRestDisappearanceTrigger`
++ the private `companionDisappearsAtLongRest` helper, its barrel export, and its
+test; the QNT `ownerLongRestFindFamiliarLifecycle` /
+`allOwnersLongRestFindFamiliarLifecycle` defs and their proof block
+(`test_retained_find_familiar_long_rest_disappearance_respects_expiration`). A
+Long Rest cannot mutate a live `BattleState` (rests are out-of-battle); the
+sheet's `companionAfterLongRest` owns Wild Companion expiration. Battle-side
+`expiration` survives because T03's settlement derives the durable protocol from
+it (`retainedCompanionProtocolFromBattle`).
+
+**castFindFamiliar decision (HITL, owner-resolved): KEEP.** Owner decision 3
+originally said "delete," premised on it being dead/tests-only. Research found
+that premise contradicted: `castFindFamiliar` is the load-bearing
+implementation-under-test for **both** companion MBT witnesses
+(`find-familiar-companion-lifecycle` and `find-familiar-selected-identity`),
+which verify cast, recast/form-adoption (RAW "adopt a new form"), dismissal, and
+touch delivery. Deleting it would tear down both flagship parity drivers and the
+witnesses the lane mandates stay green/unmodified. Surfaced via AskUserQuestion;
+owner chose **keep it (record exception)**. Recorded here and pointed to in the
+L13COMP-03 plan-doc section (it is intentionally not wired into discovery;
+L13COMP-03 wires it with the Magic-action gates Pact/Wild-Companion RAW
+requires).
+
+Verification: battle-runtime TS typecheck + QNT typecheck green; `quint test
+battle-runtime-core-combat-tests.qnt` green (105s, the only proof module
+touched); battle-runtime non-MBT failing set unchanged from base (3 pre-existing
+`unit-profile-admission-*` failures, unrelated). Companion MBT unaffected (no
+battle-behavior change; witnesses unmodified) — green in T03.
 
 **Finding (review F3-battle-half + dead exports).**
 `applyCompanionLongRestDisappearance` + `CompanionLongRestDisappearanceTrigger`

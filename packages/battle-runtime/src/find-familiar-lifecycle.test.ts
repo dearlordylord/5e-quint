@@ -31,7 +31,6 @@ import type { SpellRecord } from "@dnd/surface/surface/types";
 
 import {
   admitCompanionToBattle,
-  applyCompanionLongRestDisappearance,
   applyFindFamiliarZeroHitPointDisappearance,
   battleAvailableDruidWildShapeKnownForms,
   battleDruidWildShapeKnownFormSupportForUnit,
@@ -1305,35 +1304,6 @@ describe("Find Familiar lifecycle", () => {
       reason: "invalidFill",
       message: "Wild Companion requires the Druid Wild Companion feature.",
     });
-  });
-
-  test("removes Wild Companion familiars when their owner finishes a Long Rest", () => {
-    const cast = castWildCompanion({
-      state: startWildCompanionDruidFixtureBattle({
-        spellSlots: [{ spellLevel: 1, count: 1 }],
-      }),
-      casterId,
-      catalog: statBlockCatalog,
-      findFamiliarSpell,
-      selection: { tag: "normalNamedForm", formId: "cat" },
-      spend: { kind: "spellSlot", spellLevel: spellSlotLevel(1) },
-      familiarId,
-      initiative: initiativeScore(18),
-      placement: { kind: "unoccupiedSpaceWithinSpellRange" },
-    });
-    expect(cast.tag).toBe("resolved");
-    if (cast.tag !== "resolved") return;
-
-    const rested = applyCompanionLongRestDisappearance({
-      state: cast.state,
-      trigger: { tag: "ownerFinishedLongRest", ownerId: casterId },
-    });
-
-    expect(rested.tag).toBe("resolved");
-    if (rested.tag !== "resolved") return;
-    expect(findFamiliarCompanionForOwner(rested.state, casterId)).toBeNull();
-    expect(rested.state.combatants.has(familiarId)).toBe(false);
-    expect(rested.snapshot.companions).toEqual([]);
   });
 
   test("keeps one familiar per caster and atomically replaces form on recast", () => {

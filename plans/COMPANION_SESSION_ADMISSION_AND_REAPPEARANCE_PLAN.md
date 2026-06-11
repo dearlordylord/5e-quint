@@ -379,6 +379,15 @@ Required output:
   the reducer-discovered act path still lacks typed Find Familiar form-catalog
   facts at the battle boundary; do not solve that by branching on the raw
   `druid_wild_companion` or `find_familiar` ids in reducers or MCP.
+- In-battle Find Familiar casting wiring. The low-level `castFindFamiliar`
+  reducer is retained (it is the implementation under test for the two companion
+  MBT witnesses, which verify cast, recast/form-adoption, dismissal, and touch
+  delivery) but is intentionally **not** wired into act discovery: the Companion
+  Session Convergence lane (CSC-T04) kept it as an explicit exception instead of
+  deleting it. Wiring it requires the Magic-action gates Pact-of-the-Chain and
+  Wild Companion RAW require, and ordinary Find Familiar (1-hour/Ritual casting
+  time) must never become a battle act — so discovery must gate on parsed casting
+  access, not expose a bare in-battle cast.
 - Generic fills for selected form, creature type mode, companion identity,
   Initiative, placement, source-cost choice, and any table-supplied facts the
   selected act requires.
