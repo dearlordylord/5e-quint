@@ -547,7 +547,7 @@ describe("Character Sheet runtime", () => {
     expect(characterSheetCompanion(rested)).toEqual({ tag: "none" });
   });
 
-  test("clears surviving retained companion Temporary Hit Points on Long Rest", () => {
+  test("leaves a surviving retained companion's Hit Points and Temporary Hit Points unchanged on Long Rest (A46)", () => {
     const sheet = requireRight(
       createFreshCharacterSheet({
         characterId: characterSheetId("character:familiar-rest-temp-hp"),
@@ -556,8 +556,12 @@ describe("Character Sheet runtime", () => {
         currentHp: Hp(12),
         tempHp: Hp(0),
         unitLibrary,
+        // 1/2 HP (below the cat's max of 2) with 1 Temporary Hit Point, so the
+        // assertion distinguishes no-participation (1/1) from shared-rest heal
+        // (2/0) and from the prior clear-THP-only half-behavior (1/0).
         companion: retainedCompanionInput({
           protocolTag: "ordinaryFamiliarLikeOneAtATime",
+          currentHp: Hp(1),
         }),
       }),
     );
@@ -570,7 +574,7 @@ describe("Character Sheet runtime", () => {
       companion: {
         manifestation: {
           tag: "embodiedOutsideBattle",
-          hitPoints: { currentHp: Hp(2), tempHp: Hp(0) },
+          hitPoints: { currentHp: Hp(1), tempHp: Hp(1) },
         },
       },
     });

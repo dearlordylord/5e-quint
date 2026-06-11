@@ -2862,32 +2862,13 @@ function companionAfterLongRest(
   companion: CharacterSheetCompanion,
 ): CharacterSheetCompanion {
   if (companion.tag === "none") return companion;
+  // A46: the owner's Long Rest does not touch a surviving retained companion --
+  // its Hit Points and Temporary Hit Points both persist. The only companion the
+  // owner's rest removes is the Wild Companion (owner-long-rest) familiar, which
+  // disappears when its owner finishes a Long Rest (SRD Druid Wild Companion).
   return isOwnerLongRestRetainedCompanionProtocol(companion.companion.protocol)
     ? { tag: "none" }
-    : {
-        tag: "retainedOneAtATime",
-        companion: {
-          ...companion.companion,
-          manifestation: retainedCompanionManifestationAfterLongRest(
-            companion.companion.manifestation,
-          ),
-        },
-      };
-}
-
-function retainedCompanionManifestationAfterLongRest(
-  manifestation: CharacterSheetRetainedCompanionManifestation,
-): CharacterSheetRetainedCompanionManifestation {
-  if (manifestation.tag === "disappearedAtZeroHitPoints") {
-    return manifestation;
-  }
-  return {
-    ...manifestation,
-    hitPoints: {
-      ...manifestation.hitPoints,
-      tempHp: Hp(0),
-    },
-  };
+    : companion;
 }
 
 export function interruptLongRest(

@@ -8,8 +8,8 @@
     { "number": 2, "id": "CSC-T02-PROTOCOL-TAG-UNION", "status": "done", "title": "Reduce the durable companion protocol to a tag union with one derivation table" },
     { "number": 3, "id": "CSC-T03-SETTLEMENT-OUTCOME", "status": "done", "title": "Make battle state carry the full settle-able companion outcome; drop session companionAdmission" },
     { "number": 4, "id": "CSC-T04-DEAD-BATTLE-LONG-REST-LANE", "status": "done", "title": "Delete the unreachable battle-state long-rest companion lane; decide castFindFamiliar wiring" },
-    { "number": 5, "id": "CSC-T05-COMPANION-REST-ASSUMPTION", "status": "ready-for-implementation", "title": "Record the companion rest-participation assumption; align sheet long-rest THP/HP" },
-    { "number": 6, "id": "CSC-T06-RECAST-SEMANTICS", "status": "blocked", "title": "Record recast assumptions; one recast semantic across sheet and battle layers" },
+    { "number": 5, "id": "CSC-T05-COMPANION-REST-ASSUMPTION", "status": "done", "title": "Record the companion rest-participation assumption; align sheet long-rest THP/HP" },
+    { "number": 6, "id": "CSC-T06-RECAST-SEMANTICS", "status": "ready-for-implementation", "title": "Record recast assumptions; one recast semantic across sheet and battle layers" },
     { "number": 7, "id": "CSC-T07-FORM-VOCAB-HOIST-CREATION-MOVE", "status": "blocked", "title": "Hoist the familiar-form vocabulary; move out-of-battle creation into character-sheet-runtime" },
     { "number": 8, "id": "CSC-T08-CREATION-HP-SURFACE", "status": "blocked", "title": "Remove caller-minted companion HP/THP from the MCP creation operation" },
     { "number": 9, "id": "CSC-T09-FORM-CATALOG-REFERENCE", "status": "blocked", "title": "Replace the first-match familiar-form-catalog scan with an executable uniqueness boundary" },
@@ -134,8 +134,8 @@ a task's change invalidates them):
 | 2 | CSC-T02-PROTOCOL-TAG-UNION | done | T01 | Shrinks the protocol vocabulary T03's settlement must write. |
 | 3 | CSC-T03-SETTLEMENT-OUTCOME | done | T02 | The core domain rework; consumes T01's key model and T02's protocol shape. |
 | 4 | CSC-T04-DEAD-BATTLE-LONG-REST-LANE | done | T03 | Whether battle `expiration` survives depends on T03's settlement projection. |
-| 5 | CSC-T05-COMPANION-REST-ASSUMPTION | ready-for-implementation | T04 | HITL; sheet-side counterpart of T04's deletion. |
-| 6 | CSC-T06-RECAST-SEMANTICS | blocked | T05 | HITL; depends on T03's outcome union for the battle half. |
+| 5 | CSC-T05-COMPANION-REST-ASSUMPTION | done | T04 | HITL; sheet-side counterpart of T04's deletion. |
+| 6 | CSC-T06-RECAST-SEMANTICS | ready-for-implementation | T05 | HITL; depends on T03's outcome union for the battle half. |
 | 7 | CSC-T07-FORM-VOCAB-HOIST-CREATION-MOVE | blocked | T06 | Package move lands after semantics settle, so code moves once. |
 | 8 | CSC-T08-CREATION-HP-SURFACE | blocked | T07 | Edits the creation op wherever T07 left it. |
 | 9 | CSC-T09-FORM-CATALOG-REFERENCE | blocked | T08 | Touches admission eligibility helpers T07 may have relocated. |
@@ -463,7 +463,20 @@ decision recorded.
 
 ### Task 5 - CSC-T05-COMPANION-REST-ASSUMPTION
 
-Status: `blocked` · Mode: HITL (assumption), AFK (implementation)
+Status: `done` · Mode: HITL (assumption), AFK (implementation)
+
+**Outcome.** Owner decision 1 (resolved 2026-06-10): RAW-literal — the owner's
+Long Rest does not touch a surviving companion; HP and THP both persist. Landed
+ASSUMPTIONS.md **A46** to that effect (owner-curated; wording subject to owner
+revision in PR). Aligned `companionAfterLongRest`: it now removes a surviving
+companion only for the Wild Companion (owner-long-rest) protocol (direct SRD
+Druid Wild Companion) and otherwise returns the companion unchanged; the prior
+`retainedCompanionManifestationAfterLongRest` Temporary-Hit-Point-clearing
+transform (the F3 half-behavior: cleared THP without restoring HP) is deleted.
+The discriminating test now uses a 1/2-HP companion with 1 THP and asserts it
+stays 1/1 after the owner's Long Rest — distinguishing no-participation (1/1)
+from shared-rest heal (2/0) and the old half-behavior (1/0). Verification:
+character-sheet-runtime typecheck + 95 tests green.
 
 **Finding (review F3-sheet-half, RAW traceability).**
 `companionAfterLongRest` / `retainedCompanionManifestationAfterLongRest`
