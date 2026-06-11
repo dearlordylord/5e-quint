@@ -5,8 +5,8 @@
   "schema": "ralph-plan.v1",
   "tasks": [
     { "number": 1, "id": "CSC-T01-OWNER-KEYED-COMPANIONS", "status": "done", "title": "Key battle companions by owner; delete the synthetic companion-state id space" },
-    { "number": 2, "id": "CSC-T02-PROTOCOL-TAG-UNION", "status": "ready-for-implementation", "title": "Reduce the durable companion protocol to a tag union with one derivation table" },
-    { "number": 3, "id": "CSC-T03-SETTLEMENT-OUTCOME", "status": "blocked", "title": "Make battle state carry the full settle-able companion outcome; drop session companionAdmission" },
+    { "number": 2, "id": "CSC-T02-PROTOCOL-TAG-UNION", "status": "done", "title": "Reduce the durable companion protocol to a tag union with one derivation table" },
+    { "number": 3, "id": "CSC-T03-SETTLEMENT-OUTCOME", "status": "ready-for-implementation", "title": "Make battle state carry the full settle-able companion outcome; drop session companionAdmission" },
     { "number": 4, "id": "CSC-T04-DEAD-BATTLE-LONG-REST-LANE", "status": "blocked", "title": "Delete the unreachable battle-state long-rest companion lane; decide castFindFamiliar wiring" },
     { "number": 5, "id": "CSC-T05-COMPANION-REST-ASSUMPTION", "status": "blocked", "title": "Record the companion rest-participation assumption; align sheet long-rest THP/HP" },
     { "number": 6, "id": "CSC-T06-RECAST-SEMANTICS", "status": "blocked", "title": "Record recast assumptions; one recast semantic across sheet and battle layers" },
@@ -131,8 +131,8 @@ a task's change invalidates them):
 | # | Task | Status | Depends on | Why this order |
 | ---: | --- | --- | --- | --- |
 | 1 | CSC-T01-OWNER-KEYED-COMPANIONS | done | none | Foundation: every later battle-side task reads/writes the companions map; do the key model first so nothing is built on the synthetic id space. |
-| 2 | CSC-T02-PROTOCOL-TAG-UNION | ready-for-implementation | T01 | Shrinks the protocol vocabulary T03's settlement must write. |
-| 3 | CSC-T03-SETTLEMENT-OUTCOME | blocked | T02 | The core domain rework; consumes T01's key model and T02's protocol shape. |
+| 2 | CSC-T02-PROTOCOL-TAG-UNION | done | T01 | Shrinks the protocol vocabulary T03's settlement must write. |
+| 3 | CSC-T03-SETTLEMENT-OUTCOME | ready-for-implementation | T02 | The core domain rework; consumes T01's key model and T02's protocol shape. |
 | 4 | CSC-T04-DEAD-BATTLE-LONG-REST-LANE | blocked | T03 | Whether battle `expiration` survives depends on T03's settlement projection. |
 | 5 | CSC-T05-COMPANION-REST-ASSUMPTION | blocked | T04 | HITL; sheet-side counterpart of T04's deletion. |
 | 6 | CSC-T06-RECAST-SEMANTICS | blocked | T05 | HITL; depends on T03's outcome union for the battle half. |
@@ -234,7 +234,24 @@ shows no `retained:`/`battle:` prefix construction; the
 
 ### Task 2 - CSC-T02-PROTOCOL-TAG-UNION
 
-Status: `blocked` · Mode: AFK
+Status: `done` · Mode: AFK
+
+**Outcome.** `CharacterSheetRetainedCompanionProtocol` is now `{ tag }` over the
+three-literal `RETAINED_COMPANION_PROTOCOL_TAGS` (derived per repo convention).
+A single `retainedCompanionProtocolFacts(protocol)` table
+(`as const satisfies Record<Tag, CharacterSheetRetainedCompanionProtocolFacts>`)
+derives initiative/attack/dismissal/expiration; the one production reader
+(`character-battle-runtime` admission `expiration`) consults it. The three
+per-variant protocol types and the ~120-line cross-field
+`parseStoredRetainedCompanionProtocol` (plus its attack/expiration helpers)
+collapsed to a tag parse; the contradiction-rejection parser test became an
+unknown-tag rejection test. Constructors return `{ tag }`; the tag-guards return
+boolean (their literal comparisons stay compile-time-protected by the tag
+union). Tag/behavior contradiction is now unrepresentable. Verification:
+sheet/character-battle/mcp typecheck + suites green (95/77/93); the only
+initiative/attack/dismissal protocol constants in the repo are the facts type
+and the derivation table in one file. Pre-existing duplicate attack-exception
+tag guards across sheet and battle are left for T10.
 
 **Finding (review F6, state-space minimality).** Each
 `CharacterSheetRetainedCompanionProtocol` variant

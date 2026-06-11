@@ -366,10 +366,7 @@ describe("Character Sheet battle handoff", () => {
     expect(characterSheetCompanion(retained)).toMatchObject({
       tag: "retainedOneAtATime",
       companion: {
-        protocol: {
-          attack: { tag: "cannotAttack" },
-          expiration: { tag: "ownerFinishedLongRest" },
-        },
+        protocol: { tag: "ownerLongRestFamiliarLikeOneAtATime" },
         manifestation: {
           tag: "embodiedOutsideBattle",
           selectedForm: { tag: "normalNamedForm", formId: "cat" },
@@ -440,10 +437,7 @@ describe("Character Sheet battle handoff", () => {
     expect(characterSheetCompanion(retained)).toMatchObject({
       tag: "retainedOneAtATime",
       companion: {
-        protocol: {
-          attack: { tag: "cannotAttack" },
-          expiration: { tag: "none" },
-        },
+        protocol: { tag: "ordinaryFamiliarLikeOneAtATime" },
         manifestation: {
           tag: "embodiedOutsideBattle",
           selectedForm: { tag: "normalNamedForm", formId: "cat" },

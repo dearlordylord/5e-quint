@@ -56,15 +56,13 @@ import {
   replaceCharacterSheetCompanion,
   replaceCharacterSheetSpellSlotSourceState,
   spendCharacterSheetSpellSlot,
+  retainedCompanionProtocolFacts,
   type CharacterSheet,
-  type CharacterSheetAttackExceptionFamiliarLikeOneAtATimeProtocol,
   type CharacterSheetBookOfShadowsPresence,
   type CharacterSheetCompanion,
   type CharacterSheetCompanionCreatureTypeOverride,
   type CharacterSheetCompanionFormSelection,
   type CharacterSheetIssue,
-  type CharacterSheetOrdinaryFamiliarLikeOneAtATimeProtocol,
-  type CharacterSheetOwnerLongRestFamiliarLikeOneAtATimeProtocol,
   type CharacterSheetPositiveHpUnconscious,
   type CharacterSheetPointPoolResourceUnitId,
   type CharacterSheetRetainedCompanionHitPoints,
@@ -443,7 +441,9 @@ export function admitCharacterSheetCompanionToBattle(
       tag: "retainedBetweenBattles" as const,
       durableCompanionId: sheetCompanion.companion.companionId,
     },
-    expiration: sheetCompanion.companion.protocol.expiration,
+    expiration: retainedCompanionProtocolFacts(
+      sheetCompanion.companion.protocol,
+    ).expiration,
     catalog: input.statBlockCatalog,
     formEligibility: manifestation.right.formEligibility,
     initialCombatantOrder: input.initialCombatantOrder,
@@ -620,7 +620,7 @@ type RetainedCompanionCreationSourceFacts =
   | {
       readonly tag: "ordinaryFamiliarLike";
       readonly eligibility: FindFamiliarFormEligibility;
-      readonly protocol: CharacterSheetOrdinaryFamiliarLikeOneAtATimeProtocol;
+      readonly protocol: CharacterSheetRetainedCompanionProtocol;
       readonly spend:
         | { readonly tag: "none" }
         | { readonly tag: "spellSlot"; readonly spellLevel: SpellSlotLevel };
@@ -629,14 +629,14 @@ type RetainedCompanionCreationSourceFacts =
   | {
       readonly tag: "pactFamiliarLike";
       readonly eligibility: PactOfTheChainFindFamiliarFormEligibility;
-      readonly protocol: CharacterSheetAttackExceptionFamiliarLikeOneAtATimeProtocol;
+      readonly protocol: CharacterSheetRetainedCompanionProtocol;
       readonly spend: { readonly tag: "none" };
       readonly fixedCreatureTypeOverrideChoiceId?: never;
     }
   | {
       readonly tag: "ownerLongRestExpiringFamiliarLike";
       readonly eligibility: FindFamiliarFormEligibility;
-      readonly protocol: CharacterSheetOwnerLongRestFamiliarLikeOneAtATimeProtocol;
+      readonly protocol: CharacterSheetRetainedCompanionProtocol;
       readonly fixedCreatureTypeOverrideChoiceId: FindFamiliarCreatureTypeOverrideChoice["optionId"];
       readonly spend: Extract<
         CharacterSheetRetainedCompanionCreationSource,
@@ -1033,34 +1033,16 @@ function requiredSpell(
       );
 }
 
-function ordinaryFamiliarLikeProtocol(): CharacterSheetOrdinaryFamiliarLikeOneAtATimeProtocol {
-  return {
-    tag: "ordinaryFamiliarLikeOneAtATime",
-    initiative: "own",
-    attack: { tag: "cannotAttack" },
-    dismissal: { tag: "temporaryDismissalAndReappearance" },
-    expiration: { tag: "none" },
-  };
+function ordinaryFamiliarLikeProtocol(): CharacterSheetRetainedCompanionProtocol {
+  return { tag: "ordinaryFamiliarLikeOneAtATime" };
 }
 
-function pactFamiliarLikeProtocol(): CharacterSheetAttackExceptionFamiliarLikeOneAtATimeProtocol {
-  return {
-    tag: "attackExceptionFamiliarLikeOneAtATime",
-    initiative: "own",
-    attack: { tag: "ownerForgoesAttackForReactionAttack" },
-    dismissal: { tag: "temporaryDismissalAndReappearance" },
-    expiration: { tag: "none" },
-  };
+function pactFamiliarLikeProtocol(): CharacterSheetRetainedCompanionProtocol {
+  return { tag: "attackExceptionFamiliarLikeOneAtATime" };
 }
 
-function ownerLongRestExpiringFamiliarLikeProtocol(): CharacterSheetOwnerLongRestFamiliarLikeOneAtATimeProtocol {
-  return {
-    tag: "ownerLongRestFamiliarLikeOneAtATime",
-    initiative: "own",
-    attack: { tag: "cannotAttack" },
-    dismissal: { tag: "temporaryDismissalAndReappearance" },
-    expiration: { tag: "ownerFinishedLongRest" },
-  };
+function ownerLongRestExpiringFamiliarLikeProtocol(): CharacterSheetRetainedCompanionProtocol {
+  return { tag: "ownerLongRestFamiliarLikeOneAtATime" };
 }
 
 type BattleStoredFormForSheetCompanion = {
@@ -1337,7 +1319,7 @@ function battleFormAccessForSheetCompanion(input: {
 
 function isAttackExceptionFamiliarLikeProtocol(
   protocol: CharacterSheetRetainedCompanionProtocol,
-): protocol is CharacterSheetAttackExceptionFamiliarLikeOneAtATimeProtocol {
+): boolean {
   return protocol.tag === "attackExceptionFamiliarLikeOneAtATime";
 }
 

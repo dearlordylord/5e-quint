@@ -361,31 +361,7 @@ function retainedCompanionInput(
 function retainedCompanionProtocolInput(
   protocolTag: CharacterSheetRetainedCompanionProtocol["tag"] | undefined,
 ): CharacterSheetRetainedCompanionProtocol {
-  if (protocolTag === "attackExceptionFamiliarLikeOneAtATime") {
-    return {
-      tag: "attackExceptionFamiliarLikeOneAtATime",
-      initiative: "own",
-      attack: { tag: "ownerForgoesAttackForReactionAttack" },
-      dismissal: { tag: "temporaryDismissalAndReappearance" },
-      expiration: { tag: "none" },
-    };
-  }
-  if (protocolTag === "ownerLongRestFamiliarLikeOneAtATime") {
-    return {
-      tag: "ownerLongRestFamiliarLikeOneAtATime",
-      initiative: "own",
-      attack: { tag: "cannotAttack" },
-      dismissal: { tag: "temporaryDismissalAndReappearance" },
-      expiration: { tag: "ownerFinishedLongRest" },
-    };
-  }
-  return {
-    tag: "ordinaryFamiliarLikeOneAtATime",
-    initiative: "own",
-    attack: { tag: "cannotAttack" },
-    dismissal: { tag: "temporaryDismissalAndReappearance" },
-    expiration: { tag: "none" },
-  };
+  return { tag: protocolTag ?? "ordinaryFamiliarLikeOneAtATime" };
 }
 
 describe("Character Sheet runtime", () => {
@@ -511,11 +487,11 @@ describe("Character Sheet runtime", () => {
     },
   );
 
-  test("rejects stored retained companion protocol products with contradictory fields", () => {
+  test("rejects a stored retained companion protocol with an unknown tag", () => {
     const sheet = requireRight(
       createFreshCharacterSheet({
         characterId: characterSheetId(
-          "character:stored-bad-companion-protocol",
+          "character:unknown-companion-protocol",
         ),
         build,
         maximumHp: Hp(12),
@@ -539,10 +515,7 @@ describe("Character Sheet runtime", () => {
             tag: "retainedOneAtATime",
             companion: {
               ...companion.companion,
-              protocol: {
-                ...companion.companion.protocol,
-                expiration: { tag: "ownerFinishedLongRest" },
-              },
+              protocol: { tag: "somethingElseFamiliarLike" },
             },
           },
         },
@@ -550,10 +523,7 @@ describe("Character Sheet runtime", () => {
       ),
     ).toMatchObject({
       _tag: "Left",
-      left: {
-        message:
-          "Attack-exception retained companion protocol requires the owner-forgoes-attack reaction and no Long Rest expiration.",
-      },
+      left: { message: "Expected retained companion protocol." },
     });
   });
 

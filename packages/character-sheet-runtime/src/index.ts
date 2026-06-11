@@ -342,34 +342,65 @@ export type CharacterSheetCompanionFormSelection =
       readonly formId: string;
     };
 
-export type CharacterSheetOrdinaryFamiliarLikeOneAtATimeProtocol = {
-  readonly tag: "ordinaryFamiliarLikeOneAtATime";
-  readonly initiative: "own";
-  readonly attack: { readonly tag: "cannotAttack" };
-  readonly dismissal: { readonly tag: "temporaryDismissalAndReappearance" };
-  readonly expiration: { readonly tag: "none" };
+// SRD Find Familiar-like retained companions are one-at-a-time and always roll
+// their own Initiative with temporary-dismissal-and-reappearance; the three
+// protocols differ only in attack permission and Long Rest expiration. Those
+// facts are fully determined by the tag, so the tag is the single stored fact
+// and the behavior is derived from retainedCompanionProtocolFacts. This makes a
+// tag/behavior contradiction unrepresentable instead of cross-validated.
+export const RETAINED_COMPANION_PROTOCOL_TAGS = [
+  "ordinaryFamiliarLikeOneAtATime",
+  "attackExceptionFamiliarLikeOneAtATime",
+  "ownerLongRestFamiliarLikeOneAtATime",
+] as const;
+
+export type CharacterSheetRetainedCompanionProtocolTag =
+  (typeof RETAINED_COMPANION_PROTOCOL_TAGS)[number];
+
+export type CharacterSheetRetainedCompanionProtocol = {
+  readonly tag: CharacterSheetRetainedCompanionProtocolTag;
 };
 
-export type CharacterSheetAttackExceptionFamiliarLikeOneAtATimeProtocol = {
-  readonly tag: "attackExceptionFamiliarLikeOneAtATime";
+export type CharacterSheetRetainedCompanionProtocolFacts = {
   readonly initiative: "own";
-  readonly attack: { readonly tag: "ownerForgoesAttackForReactionAttack" };
+  readonly attack:
+    | { readonly tag: "cannotAttack" }
+    | { readonly tag: "ownerForgoesAttackForReactionAttack" };
   readonly dismissal: { readonly tag: "temporaryDismissalAndReappearance" };
-  readonly expiration: { readonly tag: "none" };
+  readonly expiration:
+    | { readonly tag: "none" }
+    | { readonly tag: "ownerFinishedLongRest" };
 };
 
-export type CharacterSheetOwnerLongRestFamiliarLikeOneAtATimeProtocol = {
-  readonly tag: "ownerLongRestFamiliarLikeOneAtATime";
-  readonly initiative: "own";
-  readonly attack: { readonly tag: "cannotAttack" };
-  readonly dismissal: { readonly tag: "temporaryDismissalAndReappearance" };
-  readonly expiration: { readonly tag: "ownerFinishedLongRest" };
-};
+const RETAINED_COMPANION_PROTOCOL_FACTS = {
+  ordinaryFamiliarLikeOneAtATime: {
+    initiative: "own",
+    attack: { tag: "cannotAttack" },
+    dismissal: { tag: "temporaryDismissalAndReappearance" },
+    expiration: { tag: "none" },
+  },
+  attackExceptionFamiliarLikeOneAtATime: {
+    initiative: "own",
+    attack: { tag: "ownerForgoesAttackForReactionAttack" },
+    dismissal: { tag: "temporaryDismissalAndReappearance" },
+    expiration: { tag: "none" },
+  },
+  ownerLongRestFamiliarLikeOneAtATime: {
+    initiative: "own",
+    attack: { tag: "cannotAttack" },
+    dismissal: { tag: "temporaryDismissalAndReappearance" },
+    expiration: { tag: "ownerFinishedLongRest" },
+  },
+} as const satisfies Record<
+  CharacterSheetRetainedCompanionProtocolTag,
+  CharacterSheetRetainedCompanionProtocolFacts
+>;
 
-export type CharacterSheetRetainedCompanionProtocol =
-  | CharacterSheetOrdinaryFamiliarLikeOneAtATimeProtocol
-  | CharacterSheetAttackExceptionFamiliarLikeOneAtATimeProtocol
-  | CharacterSheetOwnerLongRestFamiliarLikeOneAtATimeProtocol;
+export function retainedCompanionProtocolFacts(
+  protocol: CharacterSheetRetainedCompanionProtocol,
+): CharacterSheetRetainedCompanionProtocolFacts {
+  return RETAINED_COMPANION_PROTOCOL_FACTS[protocol.tag];
+}
 
 export type CharacterSheetRetainedCompanionCurrentHitPoints = HpType &
   PositiveInteger;
@@ -1546,13 +1577,13 @@ function retainedCompanionProtocolIssue(
 
 function isAttackExceptionRetainedCompanionProtocol(
   protocol: CharacterSheetRetainedCompanionProtocol,
-): protocol is CharacterSheetAttackExceptionFamiliarLikeOneAtATimeProtocol {
+): boolean {
   return protocol.tag === "attackExceptionFamiliarLikeOneAtATime";
 }
 
 function isOwnerLongRestRetainedCompanionProtocol(
   protocol: CharacterSheetRetainedCompanionProtocol,
-): protocol is CharacterSheetOwnerLongRestFamiliarLikeOneAtATimeProtocol {
+): boolean {
   return protocol.tag === "ownerLongRestFamiliarLikeOneAtATime";
 }
 
@@ -5860,114 +5891,13 @@ function parseStoredRetainedCompanionProtocol(
   if (!isRecord(value)) {
     return characterSheetIssue("Expected retained companion protocol.");
   }
-  if (
-    value.tag !== "ordinaryFamiliarLikeOneAtATime" &&
-    value.tag !== "attackExceptionFamiliarLikeOneAtATime" &&
-    value.tag !== "ownerLongRestFamiliarLikeOneAtATime"
-  ) {
+  const tag = RETAINED_COMPANION_PROTOCOL_TAGS.find(
+    (candidate) => candidate === value.tag,
+  );
+  if (tag === undefined) {
     return characterSheetIssue("Expected retained companion protocol.");
   }
-  if (value.initiative !== "own") {
-    return characterSheetIssue(
-      "Retained companion protocol requires own Initiative.",
-    );
-  }
-  const attack = parseStoredRetainedCompanionAttack(value.attack);
-  if (Either.isLeft(attack)) return Either.left(attack.left);
-  if (
-    !isRecord(value.dismissal) ||
-    value.dismissal.tag !== "temporaryDismissalAndReappearance"
-  ) {
-    return characterSheetIssue(
-      "Retained companion protocol requires temporary dismissal and reappearance.",
-    );
-  }
-  const expiration = parseStoredRetainedCompanionExpiration(value.expiration);
-  if (Either.isLeft(expiration)) return Either.left(expiration.left);
-  if (value.tag === "ordinaryFamiliarLikeOneAtATime") {
-    if (
-      attack.right.tag !== "cannotAttack" ||
-      expiration.right.tag !== "none"
-    ) {
-      return characterSheetIssue(
-        "Ordinary retained companion protocol cannot attack and does not expire at Long Rest.",
-      );
-    }
-    return Either.right({
-      tag: "ordinaryFamiliarLikeOneAtATime",
-      initiative: "own",
-      attack: { tag: "cannotAttack" },
-      dismissal: { tag: "temporaryDismissalAndReappearance" },
-      expiration: { tag: "none" },
-    });
-  }
-  if (value.tag === "attackExceptionFamiliarLikeOneAtATime") {
-    if (
-      attack.right.tag !== "ownerForgoesAttackForReactionAttack" ||
-      expiration.right.tag !== "none"
-    ) {
-      return characterSheetIssue(
-        "Attack-exception retained companion protocol requires the owner-forgoes-attack reaction and no Long Rest expiration.",
-      );
-    }
-    return Either.right({
-      tag: "attackExceptionFamiliarLikeOneAtATime",
-      initiative: "own",
-      attack: { tag: "ownerForgoesAttackForReactionAttack" },
-      dismissal: { tag: "temporaryDismissalAndReappearance" },
-      expiration: { tag: "none" },
-    });
-  }
-  if (
-    attack.right.tag !== "cannotAttack" ||
-    expiration.right.tag !== "ownerFinishedLongRest"
-  ) {
-    return characterSheetIssue(
-      "Owner-long-rest retained companion protocol cannot attack and must expire when the owner finishes a Long Rest.",
-    );
-  }
-  return Either.right({
-    tag: "ownerLongRestFamiliarLikeOneAtATime",
-    initiative: "own",
-    attack: { tag: "cannotAttack" },
-    dismissal: { tag: "temporaryDismissalAndReappearance" },
-    expiration: { tag: "ownerFinishedLongRest" },
-  });
-}
-
-function parseStoredRetainedCompanionAttack(
-  value: unknown,
-): Either.Either<
-  CharacterSheetRetainedCompanionProtocol["attack"],
-  CharacterSheetIssue
-> {
-  if (!isRecord(value)) {
-    return characterSheetIssue("Expected retained companion attack protocol.");
-  }
-  if (value.tag === "cannotAttack")
-    return Either.right({ tag: "cannotAttack" });
-  if (value.tag === "ownerForgoesAttackForReactionAttack") {
-    return Either.right({ tag: "ownerForgoesAttackForReactionAttack" });
-  }
-  return characterSheetIssue("Expected retained companion attack protocol.");
-}
-
-function parseStoredRetainedCompanionExpiration(
-  value: unknown,
-): Either.Either<
-  CharacterSheetRetainedCompanionProtocol["expiration"],
-  CharacterSheetIssue
-> {
-  if (!isRecord(value)) {
-    return characterSheetIssue(
-      "Expected retained companion expiration policy.",
-    );
-  }
-  if (value.tag === "none") return Either.right({ tag: "none" });
-  if (value.tag === "ownerFinishedLongRest") {
-    return Either.right({ tag: "ownerFinishedLongRest" });
-  }
-  return characterSheetIssue("Expected retained companion expiration policy.");
+  return Either.right({ tag });
 }
 
 function parseStoredRetainedCompanionManifestation(

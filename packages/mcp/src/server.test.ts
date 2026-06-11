@@ -5879,13 +5879,7 @@ function retainedFamiliarCompanionInput(
     tag: "retainedOneAtATime",
     companion: {
       companionId: characterSheetRetainedCompanionId("durable-wizard-familiar"),
-      protocol: {
-        tag: "ordinaryFamiliarLikeOneAtATime",
-        initiative: "own",
-        attack: { tag: "cannotAttack" },
-        dismissal: { tag: "temporaryDismissalAndReappearance" },
-        expiration: { tag: "none" },
-      },
+      protocol: { tag: "ordinaryFamiliarLikeOneAtATime" },
       manifestation: {
         tag: "embodiedOutsideBattle",
         selectedForm: { tag: "normalNamedForm", formId },
