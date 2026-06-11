@@ -6,11 +6,24 @@ module battleRuntimeSpellAttackOrderingMbt {
   import battleRuntimeSpellAttackOrdering.* from "./battle-runtime-spell-attack-ordering"
   import battleRuntimeHoleKinds.* from "./battle-runtime-hole-kinds"
   import battleRuntimeFillKinds.* from "./battle-runtime-fill-kinds"
+  import battleRuntimeWitnessProtocol.* from "./battle-runtime-witness-protocol"
 
   var qStage: SpellAttackFrontierStage
-  var qHoles: Set[BattleHoleFamilyKind]
-  var qLastResult: str
+  var qProtocol: WitnessProtocol[BattleHoleFamilyKind]
   var qLastOrderingError: str
+
+  pure def qHoles: Set[BattleHoleFamilyKind] = qProtocol.holes
+
+  pure val witnessHoleType: BattleHoleFamilyKind = TargetChoiceHoleKind
+
+  pure def witnessProtocolForProjection(
+    holes: Set[BattleHoleFamilyKind],
+    lastResult: str,
+  ): WitnessProtocol[BattleHoleFamilyKind] =
+    if (lastResult == "init") witnessInit(witnessHoleType)
+    else if (lastResult == "invalid") witnessInvalidWithHoles(holes, WInvalidFill)
+    else if (holes != Set()) witnessNeedsHoles(holes)
+    else witnessResolved(witnessHoleType)
 
   pure def orderingErrorLabel(error: SpellAttackFillOrderingError): str =
     match error {
@@ -51,8 +64,10 @@ module battleRuntimeSpellAttackOrderingMbt {
     lastOrderingError: str,
   ): bool = all {
     qStage' = stage,
-    qHoles' = spellAttackHoleFrontier(stage),
-    qLastResult' = lastResult,
+    qProtocol' = witnessProtocolForProjection(
+      spellAttackHoleFrontier(stage),
+      lastResult,
+    ),
     qLastOrderingError' = lastOrderingError,
   }
 

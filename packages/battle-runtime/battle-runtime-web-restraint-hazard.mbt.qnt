@@ -1,6 +1,10 @@
 // -*- mode: Bluespec; -*-
 
 module battleRuntimeWebRestraintHazardMbt {
+  import battleRuntimeWitnessProtocol.* from "./battle-runtime-witness-protocol"
+
+  type Hole = str
+
   var qCurrentTurnRole: str
   var qActionAvailable: bool
   var qSpellAvailable: bool
@@ -10,8 +14,11 @@ module battleRuntimeWebRestraintHazardMbt {
   var qEntrySavedThisTurn: bool
   var qStartTurnSavedThisTurn: bool
   var qMovementSpentFeet: int
-  var qHoles: Set[str]
-  var qLastResult: str
+  var qProtocol: WitnessProtocol[Hole]
+  var qScenarioResult: str
+
+  pure def qHoles: Set[Hole] = qProtocol.holes
+  pure def qLastResult: str = qScenarioResult
 
   pure val casterTurnRole: str = "caster"
   pure val targetTurnRole: str = "target"
@@ -19,6 +26,14 @@ module battleRuntimeWebRestraintHazardMbt {
   pure val entrySavingThrowOutcomeHoles: Set[str] = Set("EntrySavingThrowOutcome")
   pure val startTurnSavingThrowOutcomeHoles: Set[str] = Set("StartTurnSavingThrowOutcome")
   pure val webMovementSpentFeet: int = 15
+
+  pure def webProtocolForProjection(
+    holes: Set[Hole],
+    scenarioResult: str,
+  ): WitnessProtocol[Hole] =
+    if (scenarioResult == "init") witnessInit("EntrySavingThrowOutcome")
+    else if (holes != Set()) witnessNeedsHoles(holes)
+    else witnessResolved("EntrySavingThrowOutcome")
 
   action recordWebState(
     currentTurnRole: str,
@@ -42,8 +57,8 @@ module battleRuntimeWebRestraintHazardMbt {
     qEntrySavedThisTurn' = entrySavedThisTurn,
     qStartTurnSavedThisTurn' = startTurnSavedThisTurn,
     qMovementSpentFeet' = movementSpentFeet,
-    qHoles' = holes,
-    qLastResult' = lastResult,
+    qProtocol' = webProtocolForProjection(holes, lastResult),
+    qScenarioResult' = lastResult,
   }
 
   action init = all {

@@ -5,10 +5,23 @@
 // reducer to recompute it. Keeps the import closure empty so MBT trace generation
 // stays fast (see scripts/check-mbt-driver-closure.cjs).
 module monkMartialArtsSelectedIdentityMbt {
+  import battleRuntimeWitnessProtocol.* from "./battle-runtime-witness-protocol"
+
+  type WitnessHole = | WitnessProtocolHole
+
   var qClassLevel: int
   var qDamageDieSize: int
   var qUnitBound: bool
-  var qLastResult: str
+  var qScenarioResult: str
+  var qProtocol: WitnessProtocol[WitnessHole]
+
+  pure def qLastResult: str = qScenarioResult
+
+  pure def witnessProtocolForProjection(
+    result: str,
+  ): WitnessProtocol[WitnessHole] =
+    if (result == "init") witnessInit(WitnessProtocolHole)
+    else witnessResolved(WitnessProtocolHole)
 
   action recordProjection(
     classLevel: int,
@@ -19,7 +32,8 @@ module monkMartialArtsSelectedIdentityMbt {
     qClassLevel' = classLevel,
     qDamageDieSize' = damageDieSize,
     qUnitBound' = unitBound,
-    qLastResult' = result,
+    qScenarioResult' = result,
+    qProtocol' = witnessProtocolForProjection(result),
   }
 
   action init = recordProjection(0, 0, false, "init")

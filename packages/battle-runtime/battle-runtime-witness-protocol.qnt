@@ -60,4 +60,12 @@ module battleRuntimeWitnessProtocol {
     holes: Set(),
     result: WInvalid(reason),
   }
+
+  pure def witnessInvalidWithHoles(
+    holes: Set[h],
+    reason: WitnessInvalidReason,
+  ): WitnessProtocol[h] = {
+    holes: holes,
+    result: WInvalid(reason),
+  }
 }

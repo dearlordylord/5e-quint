@@ -454,6 +454,101 @@ Opportunity Attack.
 The default 6-step run is the minimum focused lane that can resolve a Grapple,
 advance to the Grappled target's turn, and resolve Escape Grapple.
 
+## Battle-Runtime Witness Authoring Skeleton
+
+New battle-runtime MBT witnesses use the driver kit and the typed witness
+protocol leaf. The canonical small example is
+`battle-runtime-death-saving-throw.mbt.qnt` with
+`src/death-saving-throw.mbt.test.ts`.
+
+QNT witness shape:
+
+```quint
+module battleRuntimeExampleMbt {
+  import battleRuntimeWitnessProtocol.* from "./battle-runtime-witness-protocol"
+
+  type Hole = | ExampleHole
+
+  type ExampleState = {
+    protocol: WitnessProtocol[Hole],
+    scenarioValue: int,
+  }
+
+  var qState: ExampleState
+
+  pure val initialState: ExampleState = {
+    protocol: witnessInit(ExampleHole),
+    scenarioValue: 0,
+  }
+
+  action init = all {
+    qState' = initialState,
+  }
+
+  action doDiscoverExample = all {
+    qState.protocol.holes == Set(),
+    qState' = qState.with("protocol", witnessNeedsHoles(Set(ExampleHole))),
+  }
+
+  action doFillExample = {
+    nondet sampledInput = Set(1, 5, 10, 20).oneOf()
+    all {
+      qState.protocol.holes == Set(ExampleHole),
+      // State the expected SRD outcome as literal facts keyed by sampledInput.
+      qState' = qState
+        .with("protocol", witnessResolved(ExampleHole))
+        .with("scenarioValue", sampledInput),
+    }
+  }
+
+  action step = any {
+    doDiscoverExample,
+    doFillExample,
+  }
+}
+```
+
+Driver shape:
+
+```ts
+const exampleStateCheck = stateCheck(
+  normalizeExampleQuintState,
+  (spec: ExampleProjection, impl: ExampleProjection) => {
+    expect(impl).toEqual(spec);
+    return true;
+  },
+);
+
+await run({
+  spec: mbtSpecPath(import.meta.dirname, "battle-runtime-example.mbt.qnt"),
+  init: "init",
+  step: "step",
+  driver: createExampleDriver(),
+  backend: "typescript",
+  nTraces: mbtTraceCount(),
+  maxSteps: focusedMbtMaxSteps(3),
+  stateCheck: exampleStateCheck,
+});
+```
+
+Authoring rules:
+
+- import only small leaf modules from a simulated `*.mbt.qnt` witness;
+- put result and holes in `WitnessProtocol[h]`, not mutable `qLastResult`,
+  `qLastInvalidReason`, or `qHoles` vars;
+- use picks for sampled inputs and pass those picks through the TS action
+  handler;
+- keep separate actions for different procedure paths such as discover, fill,
+  reject, interrupt, and resume;
+- keep outcome literals in the witness unless the driver is an intentional
+  computed oracle whose projection depends on mutable reducer state.
+
+The quality gate in `scripts/check-mbt-driver-closure.cjs` rejects the legacy
+mutable protocol names above. It does not reject every `qScenarioResult`-style
+domain projection string; those labels are still used by some existing drivers
+as scenario-specific expected-output facts and should not be used as new
+protocol storage.
+
 Migration map from the PBA13A authored-id violation set:
 
 - `fighter_action_surge` maps to `UnitProfile.extraActionGrant`.

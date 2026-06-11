@@ -2,6 +2,7 @@
 
 module ruleCoreStatBlockControlsMbt {
   import statBlockControls.* from "../shared-algebras/proofs/rule-core/stat-block-controls"
+  import battleRuntimeWitnessProtocol.* from "./battle-runtime-witness-protocol"
 
   // Fixture bounds:
   // - one Stat Block actor with a two-dispatch Multiattack and one target;
@@ -16,9 +17,23 @@ module ruleCoreStatBlockControlsMbt {
   var qMovementSpentFeet: int
   var qMovementRemainingFeet: int
   var qMultiattackContinuationOpen: bool
-  var qHoles: Set[str]
-  var qLastResult: str
-  var qLastInvalidReason: str
+  var qProtocol: WitnessProtocol[str]
+
+  pure def qHoles: Set[str] = qProtocol.holes
+
+  pure def witnessInvalidReasonForProjection(reason: str): WitnessInvalidReason =
+    if (reason == "staleSubject") WStaleSubject else WInvalidFill
+
+  pure def witnessProtocolForProjection(
+    holes: Set[str],
+    result: str,
+    invalidReason: str,
+  ): WitnessProtocol[str] =
+    if (result == "init") witnessInit("Movement")
+    else if (result == "invalid")
+      witnessInvalidWithHoles(holes, witnessInvalidReasonForProjection(invalidReason))
+    else if (holes != Set()) witnessNeedsHoles(holes)
+    else witnessResolved("Movement")
 
   pure def initialMovementRemainingFeet: int = 30
   pure def interleavedMovementFeet: int = 5
@@ -47,9 +62,7 @@ module ruleCoreStatBlockControlsMbt {
     qMovementSpentFeet' = movementSpentFeet,
     qMovementRemainingFeet' = movementRemainingFeet,
     qMultiattackContinuationOpen' = multiattackContinuationOpen,
-    qHoles' = holes,
-    qLastResult' = result,
-    qLastInvalidReason' = invalidReason,
+    qProtocol' = witnessProtocolForProjection(holes, result, invalidReason),
   }
 
   action init = recordProjection(

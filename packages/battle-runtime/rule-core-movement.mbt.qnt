@@ -4,6 +4,7 @@ module ruleCoreMovementMbt {
   import attackDamageComposition.* from "../shared-algebras/proofs/rule-core/attack-damage-composition"
   import movementSpatialGrapple.* from "../shared-algebras/proofs/rule-core/movement-spatial-grapple"
   import actionTurnProcedures.* from "../shared-algebras/proofs/rule-core/action-turn-procedures"
+  import battleRuntimeWitnessProtocol.* from "./battle-runtime-witness-protocol"
 
   var qCurrentActor: str
   var qMovementSpentFeet: int
@@ -13,10 +14,10 @@ module ruleCoreMovementMbt {
   var qActionAvailable: bool
   var qGrappleActive: bool
   var qGrappleEscapeDc: int
-  var qHoles: Set[str]
+  var qProtocol: WitnessProtocol[str]
   var qPendingOpportunityAttack: bool
-  var qLastResult: str
-  var qLastInvalidReason: str
+
+  pure def qHoles: Set[str] = qProtocol.holes
 
   pure def fighterActor: str = "Fighter"
   pure def grappledTargetActor: str = "GrappledTarget"
@@ -26,6 +27,20 @@ module ruleCoreMovementMbt {
   pure def movementFullCostFeet: int = 30
   pure def movementOverspendCostFeet: int = 35
   pure def runtimeGrappleEscapeDc: int = 10
+
+  pure def witnessInvalidReasonForProjection(reason: str): WitnessInvalidReason =
+    if (reason == "staleSubject") WStaleSubject else WInvalidFill
+
+  pure def witnessProtocolForProjection(
+    holes: Set[str],
+    result: str,
+    invalidReason: str,
+  ): WitnessProtocol[str] =
+    if (result == "init") witnessInit("Movement")
+    else if (result == "invalid")
+      witnessInvalidWithHoles(holes, witnessInvalidReasonForProjection(invalidReason))
+    else if (holes != Set()) witnessNeedsHoles(holes)
+    else witnessResolved("Movement")
 
   pure def qTurnState: TurnProcedureState =
     initialTurnProcedureState
@@ -56,10 +71,8 @@ module ruleCoreMovementMbt {
     turn.actionQuota == ActionAvailable
 
   action clearSuccessfulHoles(result: str): bool = all {
-    qHoles' = Set(),
+    qProtocol' = witnessProtocolForProjection(Set(), result, "none"),
     qPendingOpportunityAttack' = false,
-    qLastResult' = result,
-    qLastInvalidReason' = "none",
   }
 
   action recordFighterMovementState(state: MovementGrappleState): bool = all {
@@ -107,10 +120,8 @@ module ruleCoreMovementMbt {
     qCurrentActor' = qCurrentActor,
     qGrappleActive' = qGrappleActive,
     qGrappleEscapeDc' = qGrappleEscapeDc,
-    qHoles' = qHoles,
+    qProtocol' = witnessProtocolForProjection(qHoles, "invalid", reason),
     qPendingOpportunityAttack' = qPendingOpportunityAttack,
-    qLastResult' = "invalid",
-    qLastInvalidReason' = reason,
   }
 
   action init = all {
@@ -122,10 +133,8 @@ module ruleCoreMovementMbt {
     qActionAvailable' = true,
     qGrappleActive' = false,
     qGrappleEscapeDc' = 0,
-    qHoles' = Set(),
+    qProtocol' = witnessProtocolForProjection(Set(), "init", "none"),
     qPendingOpportunityAttack' = false,
-    qLastResult' = "init",
-    qLastInvalidReason' = "none",
   }
 
   action doDiscoverMovement = all {
@@ -140,10 +149,8 @@ module ruleCoreMovementMbt {
     qCurrentActor' = qCurrentActor,
     qGrappleActive' = qGrappleActive,
     qGrappleEscapeDc' = qGrappleEscapeDc,
-    qHoles' = Set("Movement"),
+    qProtocol' = witnessProtocolForProjection(Set("Movement"), "needsHoles", "none"),
     qPendingOpportunityAttack' = false,
-    qLastResult' = "needsHoles",
-    qLastInvalidReason' = "none",
   }
 
   action doSpendMovement = all {
@@ -202,10 +209,8 @@ module ruleCoreMovementMbt {
     qCurrentActor' = qCurrentActor,
     qGrappleActive' = qGrappleActive,
     qGrappleEscapeDc' = qGrappleEscapeDc,
-    qHoles' = Set("ReactionDecision"),
+    qProtocol' = witnessProtocolForProjection(Set("ReactionDecision"), "needsHoles", "none"),
     qPendingOpportunityAttack' = true,
-    qLastResult' = "needsHoles",
-    qLastInvalidReason' = "none",
   }
 
   action doMoveThreatSuppressedByDisengage = all {
@@ -284,10 +289,8 @@ module ruleCoreMovementMbt {
     qCurrentActor' = qCurrentActor,
     qGrappleActive' = qGrappleActive,
     qGrappleEscapeDc' = qGrappleEscapeDc,
-    qHoles' = Set("TargetChoice"),
+    qProtocol' = witnessProtocolForProjection(Set("TargetChoice"), "needsHoles", "none"),
     qPendingOpportunityAttack' = false,
-    qLastResult' = "needsHoles",
-    qLastInvalidReason' = "none",
   }
 
   action doSelectGrappleTarget = all {
@@ -300,10 +303,8 @@ module ruleCoreMovementMbt {
     qCurrentActor' = qCurrentActor,
     qGrappleActive' = qGrappleActive,
     qGrappleEscapeDc' = qGrappleEscapeDc,
-    qHoles' = Set("GrappleOutcome"),
+    qProtocol' = witnessProtocolForProjection(Set("GrappleOutcome"), "needsHoles", "none"),
     qPendingOpportunityAttack' = false,
-    qLastResult' = "needsHoles",
-    qLastInvalidReason' = "none",
   }
 
   action doResolveGrappleSuccess = all {
@@ -330,10 +331,8 @@ module ruleCoreMovementMbt {
     qActionAvailable' = true,
     qGrappleActive' = qGrappleActive,
     qGrappleEscapeDc' = qGrappleEscapeDc,
-    qHoles' = Set(),
+    qProtocol' = witnessProtocolForProjection(Set(), "resolved", "none"),
     qPendingOpportunityAttack' = false,
-    qLastResult' = "resolved",
-    qLastInvalidReason' = "none",
   }
 
   action doDiscoverEscapeGrapple = all {
@@ -349,10 +348,8 @@ module ruleCoreMovementMbt {
     qCurrentActor' = qCurrentActor,
     qGrappleActive' = qGrappleActive,
     qGrappleEscapeDc' = qGrappleEscapeDc,
-    qHoles' = Set("GrappleOutcome"),
+    qProtocol' = witnessProtocolForProjection(Set("GrappleOutcome"), "needsHoles", "none"),
     qPendingOpportunityAttack' = false,
-    qLastResult' = "needsHoles",
-    qLastInvalidReason' = "none",
   }
 
   action doResolveEscapeSuccess = all {

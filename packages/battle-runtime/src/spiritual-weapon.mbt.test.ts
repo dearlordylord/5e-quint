@@ -1,12 +1,12 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-spiritual-weapon-attack-proxy
 import {
   booleanField,
+  decodeWitnessProtocolState,
   defineDriver,
   focusedMbtMaxSteps,
   mbtSpecPath,
   mbtTraceCount,
   numberFromQuintInt,
-  quintSet,
   quintStateRecord,
   quintVariantTag,
   run,
@@ -259,6 +259,13 @@ function normalizeSpiritualWeaponQuintState(
   raw: unknown,
 ): SpiritualWeaponMbtProjection {
   const state = quintStateRecord(raw);
+  const protocol = decodeWitnessProtocolState({
+    state,
+    protocolField: "qProtocol",
+    noInvalidReason: "",
+    decodeHole: spiritualWeaponHoleName,
+    compareHoles: (left, right) => left.localeCompare(right),
+  });
 
   return {
     targetHp: numberFromQuintInt(state["qTargetHp"], "qTargetHp"),
@@ -268,12 +275,10 @@ function normalizeSpiritualWeaponQuintState(
       state["qForcePositionId"],
       "qForcePositionId",
     ),
-    holes: quintSet(state["qHoles"], "qHoles")
-      .map(spiritualWeaponHoleName)
-      .sort(),
-    lastResult: spiritualWeaponMbtLastResult(state["qLastResult"]),
+    holes: protocol.holes,
+    lastResult: spiritualWeaponMbtLastResult(protocol.lastResult),
     lastInvalidReason: spiritualWeaponMbtLastInvalidReason(
-      state["qLastInvalidReason"],
+      protocol.lastInvalidReason,
     ),
   };
 }

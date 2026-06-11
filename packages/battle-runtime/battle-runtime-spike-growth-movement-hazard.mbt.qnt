@@ -1,6 +1,10 @@
 // -*- mode: Bluespec; -*-
 
 module battleRuntimeSpikeGrowthMovementHazardMbt {
+  import battleRuntimeWitnessProtocol.* from "./battle-runtime-witness-protocol"
+
+  type Hole = str
+
   var qCurrentTurnRole: str
   var qActionAvailable: bool
   var qSpellAvailable: bool
@@ -8,8 +12,11 @@ module battleRuntimeSpikeGrowthMovementHazardMbt {
   var qCasterConcentrating: bool
   var qTargetHp: int
   var qMovementSpentFeet: int
-  var qHoles: Set[str]
-  var qLastResult: str
+  var qProtocol: WitnessProtocol[Hole]
+  var qScenarioResult: str
+
+  pure def qHoles: Set[Hole] = qProtocol.holes
+  pure def qLastResult: str = qScenarioResult
 
   pure val casterTurnRole: str = "caster"
   pure val targetTurnRole: str = "target"
@@ -25,6 +32,14 @@ module battleRuntimeSpikeGrowthMovementHazardMbt {
   pure val movementTotalFeet: int = 10
   pure val difficultTerrainDistanceFeet: int = damageDistanceFeet
   pure val movementCostFeet: int = movementTotalFeet + difficultTerrainDistanceFeet
+
+  pure def spikeGrowthProtocolForProjection(
+    holes: Set[Hole],
+    scenarioResult: str,
+  ): WitnessProtocol[Hole] =
+    if (scenarioResult == "init") witnessInit("MovementDamage")
+    else if (holes != Set()) witnessNeedsHoles(holes)
+    else witnessResolved("MovementDamage")
 
   action recordSpikeGrowthState(
     currentTurnRole: str,
@@ -44,8 +59,8 @@ module battleRuntimeSpikeGrowthMovementHazardMbt {
     qCasterConcentrating' = casterConcentrating,
     qTargetHp' = targetHp,
     qMovementSpentFeet' = movementSpentFeet,
-    qHoles' = holes,
-    qLastResult' = lastResult,
+    qProtocol' = spikeGrowthProtocolForProjection(holes, lastResult),
+    qScenarioResult' = lastResult,
   }
 
   action init = all {

@@ -2831,9 +2831,14 @@ function normalizeQuintState(raw: unknown): MbtProjection {
   const state = Object.hasOwn(root, "qState")
     ? quintRecordField(root, "qState")
     : root;
+  const protocolField = Object.hasOwn(state, "qProtocol")
+    ? "qProtocol"
+    : Object.hasOwn(state, "protocol")
+      ? "protocol"
+      : undefined;
   const protocol = decodeWitnessProtocolState({
     state,
-    ...(Object.hasOwn(state, "protocol") ? { protocolField: "protocol" } : {}),
+    ...(protocolField === undefined ? {} : { protocolField }),
     noInvalidReason: "",
     decodeHole: holeName,
   });
@@ -2857,13 +2862,18 @@ function normalizeWeaponAttackOrderingQuintState(
   raw: unknown,
 ): WeaponAttackOrderingProjection {
   const state = quintStateRecord(raw);
+  const protocol = decodeWitnessProtocolState({
+    state,
+    protocolField: "qProtocol",
+    noInvalidReason: "",
+    decodeHole: weaponAttackOrderingHole,
+    compareHoles: (left, right) => left.localeCompare(right),
+  });
 
   return {
     stage: weaponAttackOrderingStage(state["qStage"]),
-    holes: quintSet(state["qHoles"], "qHoles")
-      .map(weaponAttackOrderingHole)
-      .sort(),
-    lastResult: mbtLastResult(state["qLastResult"]),
+    holes: protocol.holes,
+    lastResult: mbtLastResult(protocol.lastResult),
     orderingError: weaponAttackOrderingError(state["qLastOrderingError"]),
   };
 }
@@ -2872,13 +2882,18 @@ function normalizeSaveGatedSpellOrderingQuintState(
   raw: unknown,
 ): SaveGatedSpellOrderingProjection {
   const state = quintStateRecord(raw);
+  const protocol = decodeWitnessProtocolState({
+    state,
+    protocolField: "qProtocol",
+    noInvalidReason: "",
+    decodeHole: saveGatedSpellOrderingHole,
+    compareHoles: (left, right) => left.localeCompare(right),
+  });
 
   return {
     stage: saveGatedSpellOrderingStage(state["qStage"]),
-    holes: quintSet(state["qHoles"], "qHoles")
-      .map(saveGatedSpellOrderingHole)
-      .sort(),
-    lastResult: mbtLastResult(state["qLastResult"]),
+    holes: protocol.holes,
+    lastResult: mbtLastResult(protocol.lastResult),
     orderingError: saveGatedSpellOrderingError(state["qLastOrderingError"]),
   };
 }
@@ -2887,13 +2902,18 @@ function normalizeSpellAttackOrderingQuintState(
   raw: unknown,
 ): SpellAttackOrderingProjection {
   const state = quintStateRecord(raw);
+  const protocol = decodeWitnessProtocolState({
+    state,
+    protocolField: "qProtocol",
+    noInvalidReason: "",
+    decodeHole: spellAttackOrderingHole,
+    compareHoles: (left, right) => left.localeCompare(right),
+  });
 
   return {
     stage: spellAttackOrderingStage(state["qStage"]),
-    holes: quintSet(state["qHoles"], "qHoles")
-      .map(spellAttackOrderingHole)
-      .sort(),
-    lastResult: mbtLastResult(state["qLastResult"]),
+    holes: protocol.holes,
+    lastResult: mbtLastResult(protocol.lastResult),
     orderingError: spellAttackOrderingError(state["qLastOrderingError"]),
   };
 }
@@ -2902,13 +2922,18 @@ function normalizeHitPointRestorationOrderingQuintState(
   raw: unknown,
 ): HitPointRestorationOrderingProjection {
   const state = quintStateRecord(raw);
+  const protocol = decodeWitnessProtocolState({
+    state,
+    protocolField: "qProtocol",
+    noInvalidReason: "",
+    decodeHole: hitPointRestorationOrderingHole,
+    compareHoles: (left, right) => left.localeCompare(right),
+  });
 
   return {
     stage: hitPointRestorationOrderingStage(state["qStage"]),
-    holes: quintSet(state["qHoles"], "qHoles")
-      .map(hitPointRestorationOrderingHole)
-      .sort(),
-    lastResult: mbtLastResult(state["qLastResult"]),
+    holes: protocol.holes,
+    lastResult: mbtLastResult(protocol.lastResult),
     orderingError: hitPointRestorationOrderingError(
       state["qLastOrderingError"],
     ),
@@ -2932,12 +2957,19 @@ function normalizeCommandOrderingQuintState(
   raw: unknown,
 ): CommandOrderingProjection {
   const state = quintStateRecord(raw);
+  const protocol = decodeWitnessProtocolState({
+    state,
+    protocolField: "qProtocol",
+    noInvalidReason: "",
+    decodeHole: commandOrderingHole,
+    compareHoles: (left, right) => left.localeCompare(right),
+  });
 
   return {
     stage: commandOrderingStage(state["qStage"]),
-    holes: quintSet(state["qHoles"], "qHoles").map(commandOrderingHole).sort(),
+    holes: protocol.holes,
     tableFactFrontierOpen: booleanField(state, "qTableFactFrontierOpen"),
-    lastResult: mbtLastResult(state["qLastResult"]),
+    lastResult: mbtLastResult(protocol.lastResult),
     orderingError: commandOrderingError(state["qLastOrderingError"]),
     pendingCommandOption: commandOrderingPendingOption(
       state["qPendingCommandOption"],
