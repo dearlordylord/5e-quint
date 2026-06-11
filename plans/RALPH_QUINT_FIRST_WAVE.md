@@ -3,7 +3,8 @@
 Date: 2026-06-10
 
 Status: in progress. Lane B's recursive audit extended the battle protocol
-kernel queue on 2026-06-11; the wave is not drained.
+kernel queue on 2026-06-11, and Lane A's recursive audit extended the parity
+driver seam queue on 2026-06-11; the wave is not drained.
 
 This wave turns the 2026-06-10 architecture-review PRDs into three Ralph
 lanes. Source documents:
@@ -16,9 +17,10 @@ lanes. Source documents:
   refreshed 2026-06-10)
   → `plans/RALPH_LANE_CHARACTER_SHEET_SPLIT.md` (Lane C, ids `SHEETS-C*`)
 
-Deferred, deliberately not a lane yet:
-`plans/RESEARCH_witness_literal_capture_gate.md` becomes a PRD only at
-`PDS-A17` (after the typed-witness shape exists).
+Follow-up PRD already drafted:
+`PDS-A17` turned `plans/RESEARCH_witness_literal_capture_gate.md` into
+`prd/05_WITNESS_LITERAL_CAPTURE_GATE.md`. Its implementation work is outside
+this original three-lane wave unless a later decider explicitly schedules it.
 
 ## Lane B Recursive Frontier Audit
 
@@ -38,6 +40,23 @@ shapes without ordering coverage. Lane B therefore continues with:
 Table-owned route, area, range, cover, sight, held-object inventory, and
 geometry facts remain boundary evidence; these follow-ups own only
 reducer-visible ordering over the protocol vocabulary.
+
+## Lane A Recursive Follow-Up Audit
+
+`PDS-A18` confirmed the original battle-runtime string witness protocol is
+drained, but the prd/04 closeout intentionally left separate scenario-outcome
+projection labels unresolved. Lane A therefore continues with:
+
+- `PDS-A19-SCENARIO-OUTCOME-AUDIT` to classify the 60 remaining
+  `qScenarioResult` / `qScenarioInvalidReason` battle-runtime witnesses and
+  choose whether they become typed outcome variants or stay explicit
+  projection labels;
+- `PDS-A20` through `PDS-A22` to migrate or document those scenario-outcome
+  stragglers in batches;
+- `PDS-A23-CHARACTER-PACKAGE-WITNESS-FEASIBILITY` to decide whether the
+  battle-runtime kit/protocol should be shared with the 24 non-battle
+  character-package MBT witnesses, without taking over Lane C's
+  character-sheet implementation work.
 
 ## Why The PRDs Map To Lanes This Way
 

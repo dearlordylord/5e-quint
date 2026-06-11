@@ -109,8 +109,38 @@
     {
       "number": 18,
       "id": "PDS-A18-RECURSIVE-NEXT-BATCH",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Plan the next parity-seam batch if this lane drains"
+    },
+    {
+      "number": 19,
+      "id": "PDS-A19-SCENARIO-OUTCOME-AUDIT",
+      "status": "ready-for-research",
+      "title": "Classify remaining qScenario outcome projections and choose the migration shape"
+    },
+    {
+      "number": 20,
+      "id": "PDS-A20-SCENARIO-OUTCOME-BATCH-1",
+      "status": "blocked",
+      "title": "Migrate the first qScenario outcome-projection batch"
+    },
+    {
+      "number": 21,
+      "id": "PDS-A21-SCENARIO-OUTCOME-BATCH-2",
+      "status": "blocked",
+      "title": "Migrate the second qScenario outcome-projection batch"
+    },
+    {
+      "number": 22,
+      "id": "PDS-A22-SCENARIO-OUTCOME-BATCH-3-DRAIN",
+      "status": "blocked",
+      "title": "Drain remaining qScenario outcome-projection stragglers"
+    },
+    {
+      "number": 23,
+      "id": "PDS-A23-CHARACTER-PACKAGE-WITNESS-FEASIBILITY",
+      "status": "ready-for-research",
+      "title": "Decide whether the witness protocol should extend to character-package MBT"
     }
   ]
 }
@@ -139,7 +169,10 @@ Read only these by default:
 - `scripts/check-mbt-driver-closure.cjs` when a task touches witness imports.
 
 Do not reread closed Ralph lanes. Do not read `packages/mcp` or
-`packages/character-sheet-runtime` — other lanes own them.
+`packages/character-sheet-runtime` — other lanes own them. The exception is
+A23's research-only feasibility audit, which may inspect character-package MBT
+files but must not edit Lane C-owned implementation files unless a later plan
+adds an explicit cross-lane dependency.
 
 ## Lane Rules
 
@@ -167,10 +200,15 @@ Do not reread closed Ralph lanes. Do not read `packages/mcp` or
   - **Protocol-unmigrated witness:** a `*.mbt.qnt` matching
     `grep -l 'var qLastResult: str'`. Take the first ≤20 in alphabetical
     order and migrate each paired driver in the same task.
+  - **Scenario-outcome straggler:** a battle-runtime `*.mbt.qnt` matching
+    `rg -l 'qScenario(Result|InvalidReason)' packages/battle-runtime --glob
+    '*.mbt.qnt'`. These are not the old mutable protocol storage banned by
+    A16; they are outcome projection labels that need a separate decision
+    before migration.
 
 ## Verification
 
-Every task must include:
+Every implementation task must include:
 
 - Reviewer-loop convergence (RAW traceability, ubiquitous language,
   architecture/connascence, code review) until no reasonable findings remain.
@@ -187,6 +225,11 @@ Every task must include:
 - MBT failure protocol: reproduce with the reported `QUINT_SEED` before any
   fix; never dismiss as flaky.
 - `git diff --check`
+
+Planning-only tasks (A17, A18, A19, A23) do not run MBT unless they edit
+executable driver or witness files. They still run `git diff --check`, and
+they must record the commands or source reads that justify the planning
+decision.
 
 ## DAG / Queue Order
 
@@ -208,8 +251,13 @@ Every task must include:
 | 14 | PDS-A14-WITNESS-BATCH-4 | done | PDS-A13-WITNESS-BATCH-3 | |
 | 15 | PDS-A15-WITNESS-BATCH-5 | done | PDS-A14-WITNESS-BATCH-4 | Drains the protocol-unmigrated set. |
 | 16 | PDS-A16-WITNESS-GATE-AND-CLOSEOUT | done | PDS-A15-WITNESS-BATCH-5 | Convention gate, ADR addendum, README skeleton, prd/04 closeout. |
-| 17 | PDS-A17-LITERAL-CAPTURE-PRD | ready-for-research | PDS-A10-WITNESS-PILOTS | HITL: owner reviews the PRD. Single-owner obligations only; multi-owner rows wait for BPK-B08. |
-| 18 | PDS-A18-RECURSIVE-NEXT-BATCH | ready-for-research | PDS-A16-WITNESS-GATE-AND-CLOSEOUT | Refill or close the lane. |
+| 17 | PDS-A17-LITERAL-CAPTURE-PRD | done | PDS-A10-WITNESS-PILOTS | HITL: owner reviews the PRD. Single-owner obligations only; multi-owner rows wait for BPK-B08. |
+| 18 | PDS-A18-RECURSIVE-NEXT-BATCH | done | PDS-A16-WITNESS-GATE-AND-CLOSEOUT | Recursive audit found concrete follow-up work; Lane A is not drained. |
+| 19 | PDS-A19-SCENARIO-OUTCOME-AUDIT | ready-for-research | PDS-A18-RECURSIVE-NEXT-BATCH | Classify the 60 `qScenario*` files into typed-outcome migration candidates versus explicit projection labels to keep. |
+| 20 | PDS-A20-SCENARIO-OUTCOME-BATCH-1 | blocked | PDS-A19-SCENARIO-OUTCOME-AUDIT | First ≤20 scenario-outcome stragglers, using A19's chosen shape. |
+| 21 | PDS-A21-SCENARIO-OUTCOME-BATCH-2 | blocked | PDS-A20-SCENARIO-OUTCOME-BATCH-1 | Next ≤20 scenario-outcome stragglers. |
+| 22 | PDS-A22-SCENARIO-OUTCOME-BATCH-3-DRAIN | blocked | PDS-A21-SCENARIO-OUTCOME-BATCH-2 | Final scenario-outcome stragglers; assert the discovery command is empty or that the kept-label set is documented. |
+| 23 | PDS-A23-CHARACTER-PACKAGE-WITNESS-FEASIBILITY | ready-for-research | PDS-A18-RECURSIVE-NEXT-BATCH | Research-only stretch decision for the 24 non-battle MBT witness/driver pairs named by prd/03 and prd/04. |
 
 ## Task Details
 
@@ -483,10 +531,105 @@ gates are restated as task gates.
 
 ### Task 18 - PDS-A18-RECURSIVE-NEXT-BATCH
 
-Status: `ready-for-research` · Mode: AFK
+Status: `done` · Mode: AFK
 
 Output: if witness/driver stragglers or follow-ups accumulated (e.g. the
 remaining `qScenario*` projection strings recorded in the prd/04 closeout or
 the character-package witnesses noted as stretch in prd/03/04), append a new
 batch of tasks to this lane; otherwise mark the lane drained in
 `plans/RALPH_QUINT_FIRST_WAVE.md`.
+
+Result: Lane A is **not drained**. The old battle-runtime string protocol
+storage is drained (`rg -l 'var qLastResult: str' packages/battle-runtime
+--glob '*.mbt.qnt'` returns no files), but prd/04's separate closeout debt
+remains: `rg -l 'qScenario(Result|InvalidReason)' packages/battle-runtime
+--glob '*.mbt.qnt'` reports 60 battle-runtime witness files with scenario
+outcome projection labels. The character-package stretch surface also remains
+real: 9 character-creation, 11 character-sheet, and 4 character-battle MBT
+drivers/witnesses still use package-local decoding and `qLastResult: str`.
+
+### Task 19 - PDS-A19-SCENARIO-OUTCOME-AUDIT
+
+Status: `ready-for-research` · Mode: AFK
+
+Input: prd/04 closeout, ADR-0001 addendum, and the current result of
+`rg -l 'qScenario(Result|InvalidReason)' packages/battle-runtime --glob
+'*.mbt.qnt'`.
+
+Output: a short checked-in audit note or plan update classifying all 60
+scenario-outcome files as either:
+
+- typed scenario-outcome migration candidates; or
+- explicit driver projection labels that should remain strings because their
+  domain vocabulary is local to one witness and not protocol storage.
+
+Acceptance: the audit chooses one migration shape for A20-A22, names the
+self-discovery command those batches must use, and records whether a quality
+gate should be added after the drain. No MBT is required unless this task edits
+executable witnesses or drivers.
+
+### Task 20 - PDS-A20-SCENARIO-OUTCOME-BATCH-1
+
+Status: `blocked` · Mode: AFK
+
+Input: A19's chosen scenario-outcome migration shape and the first ≤20
+alphabetical files from the A19 discovery command.
+
+Output: the first batch of battle-runtime scenario-outcome projection
+stragglers migrated or explicitly annotated according to A19. Paired drivers
+must keep projected fields and assertions semantically unchanged.
+
+Acceptance: focused MBT green for exactly the touched driver files
+(`MBT_TRACES=1`); closure checker green; `git diff --check` green; batch
+line-delta and remaining discovery count reported.
+
+### Task 21 - PDS-A21-SCENARIO-OUTCOME-BATCH-2
+
+Status: `blocked` · Mode: AFK
+
+Input: the next ≤20 alphabetical files from the A19 discovery command after
+A20 lands.
+
+Output: second batch of scenario-outcome projection stragglers migrated or
+annotated according to A19, with paired driver semantics preserved.
+
+Acceptance: focused MBT green for exactly the touched driver files
+(`MBT_TRACES=1`); closure checker green; `git diff --check` green; batch
+line-delta and remaining discovery count reported.
+
+### Task 22 - PDS-A22-SCENARIO-OUTCOME-BATCH-3-DRAIN
+
+Status: `blocked` · Mode: AFK
+
+Input: the remaining scenario-outcome projection stragglers after A21 lands.
+
+Output: final scenario-outcome batch migrated or annotated according to A19.
+If A19 selected a hard migration, add or update the appropriate quality gate;
+if A19 selected an explicit kept-label set, record that set where future
+reviewers will find it.
+
+Acceptance: focused MBT green for exactly the touched driver files
+(`MBT_TRACES=1`) plus one `MBT_TRACES=3` confidence pass over the final batch;
+closure checker green; `git diff --check` green; discovery command returns
+zero files or only the documented kept-label set.
+
+### Task 23 - PDS-A23-CHARACTER-PACKAGE-WITNESS-FEASIBILITY
+
+Status: `ready-for-research` · Mode: AFK
+
+Input: prd/03's stretch note for non-battle drivers, prd/04's witness-outside
+battle-runtime note, and the 24 current non-battle MBT witness/driver pairs in
+`packages/character-creation-runtime`, `packages/character-sheet-runtime`, and
+`packages/character-battle-runtime`.
+
+Output: a feasibility decision that either:
+
+- keeps the battle-runtime kit/protocol package-local and opens a separate
+  future lane for character-package MBT cleanup; or
+- proposes a shared test-support extraction with concrete file ownership,
+  package boundaries, and verification commands.
+
+Acceptance: no runtime behavior changes; no MBT required unless executable
+files are edited. The output must respect Lane C ownership of
+`packages/character-sheet-runtime` by either avoiding edits there or naming the
+cross-lane dependency that must land first.
