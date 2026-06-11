@@ -2,8 +2,6 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.spell-slot-healing-modifier
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L3PUTB-03 cleric_disciple_of_life
 // UNIT-IDENTITY-MBT-REPLAY: L3PUTB-03 cleric_disciple_of_life doSlotHealingModifier doNonModifierSlotHealing doNonSlotHealingExcluded doEachCreatureHealed
-import * as path from "node:path";
-
 import { Hp } from "@dnd/shared/types";
 
 import {
@@ -12,6 +10,7 @@ import {
   type CombatantId,
 } from "./battle-runtime-test-support.ts";
 import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
+import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
 import {
   clericDiscipleOfLifeUnitId,
   cureWoundsUnitId,
@@ -62,9 +61,9 @@ if (secondTargetId === undefined) {
 defineSelectedIdentityWitness({
   describeLabel: "Disciple of Life selected identity MBT",
   taskId: "L3PUTB-03",
-  specFile: path.resolve(
+  specFile: mbtSpecPath(
     import.meta.dirname,
-    "../battle-runtime-disciple-of-life.mbt.qnt",
+    "battle-runtime-disciple-of-life.mbt.qnt",
   ),
   projectionSchema: {
     targetHp: "int",
@@ -251,7 +250,9 @@ function resolveCureWounds(
     fills: [target],
   });
   if (awaitingHealing.tag !== "needsHoles") {
-    throw new Error(`Expected Cure Wounds healing roll, got ${awaitingHealing.tag}.`);
+    throw new Error(
+      `Expected Cure Wounds healing roll, got ${awaitingHealing.tag}.`,
+    );
   }
   const healingRoll = requireHole(awaitingHealing.holes, "rolledDice");
   return recordResolvedState(
@@ -326,19 +327,20 @@ function spellSlotsRemaining(state: BattleState): number {
   if (caster?.origin.kind !== "character") {
     throw new Error("Disciple of Life witness requires a character caster.");
   }
-  return caster.origin.spellcasting?.spellSlots.reduce(
-    (remaining, slot) => remaining + Number(slot.count - slot.expended),
-    0,
-  ) ?? 0;
+  return (
+    caster.origin.spellcasting?.spellSlots.reduce(
+      (remaining, slot) => remaining + Number(slot.count - slot.expended),
+      0,
+    ) ?? 0
+  );
 }
 
 function requireDiscipleOfLifeSupport(): Exclude<
   ReturnType<typeof battleSpellSlotHealingModifierSupportForUnit>,
   null | "unsupported"
 > {
-  const support = battleSpellSlotHealingModifierSupportForUnit(
-    discipleOfLifeUnit,
-  );
+  const support =
+    battleSpellSlotHealingModifierSupportForUnit(discipleOfLifeUnit);
   if (support === null || support === "unsupported") {
     throw new Error("Disciple of Life support profile is required.");
   }

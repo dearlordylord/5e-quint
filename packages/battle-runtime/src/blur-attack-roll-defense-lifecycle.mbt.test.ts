@@ -10,12 +10,21 @@
 //   Advantage and Disadvantage cancel to a normal d20 roll.
 // - UBIQUITOUS_LANGUAGE.md: Attack Roll, Advantage and Disadvantage,
 //   Concentration, Blindsight, and Truesight.
-import * as path from "node:path";
-
 import { canSpendAction } from "@dnd/shared-algebras/action-economy-algebra";
-import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
 import { describe, expect, it } from "vitest";
 
+import {
+  MBT_TEST_TIMEOUT_MS,
+  booleanField,
+  defineDriver,
+  focusedMbtMaxSteps,
+  mbtSpecPath,
+  mbtTraceCount,
+  numberFromQuintInt,
+  quintStateRecord,
+  run,
+  stateCheck,
+} from "./battle-runtime-mbt-driver-kit.ts";
 import type {
   BattleFill,
   BattleHole,
@@ -242,21 +251,25 @@ describe("Blur attack-roll defense lifecycle MBT parity", () => {
     });
   });
 
-  it("matches the TS reducer slice against bounded random MBT traces", async () => {
-    await run({
-      spec: path.resolve(
-        import.meta.dirname,
-        "../battle-runtime-blur-attack-roll-defense-lifecycle.mbt.qnt",
-      ),
-      init: "init",
-      step: "step",
-      driver: createBlurAttackRollDefenseLifecycleDriver(),
-      backend: "typescript",
-      nTraces: 10,
-      maxSteps: 6,
-      stateCheck: blurAttackRollDefenseStateCheck,
-    });
-  }, 120_000);
+  it(
+    "matches the TS reducer slice against bounded random MBT traces",
+    async () => {
+      await run({
+        spec: mbtSpecPath(
+          import.meta.dirname,
+          "battle-runtime-blur-attack-roll-defense-lifecycle.mbt.qnt",
+        ),
+        init: "init",
+        step: "step",
+        driver: createBlurAttackRollDefenseLifecycleDriver(),
+        backend: "typescript",
+        nTraces: mbtTraceCount(),
+        maxSteps: focusedMbtMaxSteps(6),
+        stateCheck: blurAttackRollDefenseStateCheck,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
 });
 
 function initialRuntimeState(): BlurAttackRollDefenseRuntimeState {
@@ -464,7 +477,10 @@ function normalizeBlurAttackRollDefenseQuintState(
   return {
     actionAvailable: booleanField(state, "qActionAvailable"),
     spellAvailable: booleanField(state, "qSpellAvailable"),
-    spellSlotExpended: numberField(state, "qSpellSlotExpended"),
+    spellSlotExpended: numberFromQuintInt(
+      state["qSpellSlotExpended"],
+      "qSpellSlotExpended",
+    ),
     slotSpellCastThisTurn: booleanField(state, "qSlotSpellCastThisTurn"),
     blurredEffectActive: booleanField(state, "qBlurredEffectActive"),
     casterConcentrating: booleanField(state, "qCasterConcentrating"),
@@ -488,48 +504,6 @@ function compareBlurAttackRollDefenseStates(
 ): boolean {
   expect(runtime).toStrictEqual(quint);
   return true;
-}
-
-function quintStateRecord(raw: unknown): Readonly<Record<string, unknown>> {
-  expect(raw).toBeTypeOf("object");
-  expect(raw).not.toBeNull();
-  if (!isReadonlyRecord(raw)) {
-    throw new Error("Expected Quint state record.");
-  }
-  return raw;
-}
-
-function isReadonlyRecord(
-  raw: unknown,
-): raw is Readonly<Record<string, unknown>> {
-  return typeof raw === "object" && raw !== null;
-}
-
-function booleanField(
-  state: Readonly<Record<string, unknown>>,
-  field: string,
-): boolean {
-  const value = state[field];
-  expect(value).toBeTypeOf("boolean");
-  if (typeof value !== "boolean") {
-    throw new Error(`Expected boolean Quint field ${field}.`);
-  }
-  return value;
-}
-
-function numberField(
-  state: Readonly<Record<string, unknown>>,
-  field: string,
-): number {
-  const value = state[field];
-  if (typeof value === "bigint") {
-    return Number(value);
-  }
-  expect(value).toBeTypeOf("number");
-  if (typeof value !== "number") {
-    throw new Error(`Expected number Quint field ${field}.`);
-  }
-  return value;
 }
 
 function attackRollMode(raw: unknown): AttackRollMode {

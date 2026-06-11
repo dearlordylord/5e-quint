@@ -8,17 +8,27 @@
 // - .references/srd-5.2.1/Rules-Glossary.md#Spell Attack.
 // - UBIQUITOUS_LANGUAGE.md: Spell Attack, Damage Roll, Damage Type, Spell
 //   Slot, and Cast Level.
-import * as path from "node:path";
-
 import {
   DieRollResult,
   movementFeet,
   type DamageType,
 } from "@dnd/shared/types";
-import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
-import { Schema } from "effect";
 import { describe, expect, it } from "vitest";
 
+import {
+  MBT_TEST_TIMEOUT_MS,
+  booleanField,
+  defineDriver,
+  focusedMbtMaxSteps,
+  mbtPickSchemas,
+  mbtSpecPath,
+  mbtTraceCount,
+  numberFromQuintInt,
+  quintSet,
+  quintStateRecord,
+  run,
+  stateCheck,
+} from "./battle-runtime-mbt-driver-kit.ts";
 import {
   chromaticOrbUnitId,
   spellCasterId,
@@ -163,19 +173,10 @@ const targetIdsByLabel = {
   third: thirdTargetId,
 } as const satisfies Record<ChainedTargetLabel, CombatantId>;
 
-const QuintIntAsNumber = Schema.transform(
-  Schema.BigIntFromSelf,
-  Schema.Number,
-  { strict: true, decode: (n) => Number(n), encode: (n) => BigInt(n) },
-);
-
-const intSchema = Schema.standardSchemaV1(QuintIntAsNumber);
-const unknownSchema = Schema.standardSchemaV1(Schema.Unknown);
-
 const chainedAttackDriverSchema = {
   init: {},
-  doStartCast: { slotLevel: intSchema },
-  doChooseDamageType: { damageType: unknownSchema },
+  doStartCast: { slotLevel: mbtPickSchemas.int },
+  doChooseDamageType: { damageType: mbtPickSchemas.unknown },
   doChooseInitialTarget: {},
   doResolveStep0AttackHit: {},
   doResolveStep0DamageNoDuplicate: {},
@@ -351,21 +352,25 @@ describe("Chained attack sequence MBT parity", () => {
     expect(secondLeapTargetHole.choices).not.toContain(secondTargetId);
   });
 
-  it("matches focused chained attack traces against Quint", async () => {
-    await run({
-      spec: path.resolve(
-        import.meta.dirname,
-        "../battle-runtime-chained-attack-sequence.mbt.qnt",
-      ),
-      init: "init",
-      step: "step",
-      driver: createChainedAttackSequenceDriver(),
-      backend: "typescript",
-      nTraces: Number(process.env["MBT_TRACES"] ?? 8),
-      maxSteps: Number(process.env["MBT_STEPS"] ?? 8),
-      stateCheck: chainedAttackSequenceStateCheck,
-    });
-  }, 120_000);
+  it(
+    "matches focused chained attack traces against Quint",
+    async () => {
+      await run({
+        spec: mbtSpecPath(
+          import.meta.dirname,
+          "battle-runtime-chained-attack-sequence.mbt.qnt",
+        ),
+        init: "init",
+        step: "step",
+        driver: createChainedAttackSequenceDriver(),
+        backend: "typescript",
+        nTraces: mbtTraceCount(),
+        maxSteps: focusedMbtMaxSteps(8),
+        stateCheck: chainedAttackSequenceStateCheck,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
 });
 
 function createChainedAttackSequenceDriver() {
@@ -1039,36 +1044,6 @@ function chainedLastResult(raw: unknown): ChainedLastResult {
   throw new Error(`Unknown chained attack result: ${String(raw)}.`);
 }
 
-function quintStateRecord(raw: unknown): Readonly<Record<string, unknown>> {
-  if (!isRecord(raw)) {
-    throw new Error("Expected Quint chained attack state.");
-  }
-  return raw;
-}
-
-function numberFromQuintInt(raw: unknown, field: string): number {
-  if (typeof raw === "number") return raw;
-  if (typeof raw === "bigint") return Number(raw);
-  throw new Error(`Expected Quint integer field ${field}.`);
-}
-
-function booleanField(
-  state: Readonly<Record<string, unknown>>,
-  field: string,
-): boolean {
-  if (typeof state[field] === "boolean") {
-    return state[field];
-  }
-  throw new Error(`Expected Quint Boolean field ${field}.`);
-}
-
-function quintSet(raw: unknown, field: string): readonly unknown[] {
-  if (raw instanceof Set) {
-    return [...raw];
-  }
-  throw new Error(`Expected Quint Set field ${field}.`);
-}
-
 function isChainedDamageType(raw: unknown): raw is ChainedDamageType {
   return CHAINED_DAMAGE_TYPES.some((value) => value === raw);
 }
@@ -1083,8 +1058,4 @@ function isChainedHole(raw: unknown): raw is ChainedHole {
 
 function isChainedLastResult(raw: unknown): raw is ChainedLastResult {
   return CHAINED_LAST_RESULTS.some((value) => value === raw);
-}
-
-function isRecord(raw: unknown): raw is Readonly<Record<string, unknown>> {
-  return typeof raw === "object" && raw !== null;
 }

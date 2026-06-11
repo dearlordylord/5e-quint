@@ -2,8 +2,6 @@
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt B19-ANTIMAGIC-FIELD-IDENTITY-WITNESS antimagic_field
 // UNIT-IDENTITY-MBT-REPLAY: B19-ANTIMAGIC-FIELD-IDENTITY-WITNESS antimagic_field doSuppressOrdinarySpell doSuppressArtifactSpell doBreakAntimagicConcentration
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.ANTIMAGIC_FIELD_ONGOING_SUPPRESSION
-import * as path from "node:path";
-
 import { abilityModifier } from "@dnd/shared-algebras/armor-class-algebra";
 import { canSpendAction } from "@dnd/shared-algebras/action-economy-algebra";
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
@@ -13,7 +11,6 @@ import {
   proficiencyBonus,
   Round,
 } from "@dnd/shared/types";
-import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
 import { describe, expect, it } from "vitest";
 
 import { parseBattleSpellEffectLevel } from "./battle-reducer/spells-effective-level.ts";
@@ -35,6 +32,18 @@ import {
   spellTargetId,
   spiritualWeaponUnitId,
 } from "./unit-profile-admission-catalog-support.ts";
+import {
+  MBT_TEST_TIMEOUT_MS,
+  booleanField,
+  defineDriver,
+  focusedMbtMaxSteps,
+  mbtSpecPath,
+  mbtTraceCount,
+  numberFromQuintInt,
+  quintStateRecord,
+  run,
+  stateCheck,
+} from "./battle-runtime-mbt-driver-kit.ts";
 import {
   battleAreaId,
   battleTablePositionId,
@@ -268,21 +277,25 @@ describe("Antimagic Field ongoing suppression MBT parity", () => {
     });
   });
 
-  it("matches the TS reducer slice against bounded random MBT traces", async () => {
-    await run({
-      spec: path.resolve(
-        import.meta.dirname,
-        "../battle-runtime-antimagic-field-ongoing-suppression.mbt.qnt",
-      ),
-      init: "init",
-      step: "step",
-      driver: createAntimagicFieldOngoingSuppressionDriver(),
-      backend: "typescript",
-      nTraces: 10,
-      maxSteps: 4,
-      stateCheck: antimagicStateCheck,
-    });
-  }, 120_000);
+  it(
+    "matches the TS reducer slice against bounded random MBT traces",
+    async () => {
+      await run({
+        spec: mbtSpecPath(
+          import.meta.dirname,
+          "battle-runtime-antimagic-field-ongoing-suppression.mbt.qnt",
+        ),
+        init: "init",
+        step: "step",
+        driver: createAntimagicFieldOngoingSuppressionDriver(),
+        backend: "typescript",
+        nTraces: mbtTraceCount(),
+        maxSteps: focusedMbtMaxSteps(4),
+        stateCheck: antimagicStateCheck,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
 });
 
 function initialRuntimeState(): AntimagicRuntimeState {
@@ -590,31 +603,4 @@ function antimagicLastResult(raw: unknown): AntimagicLastResult {
     return raw;
   }
   throw new Error(`Unknown Antimagic Field result: ${String(raw)}.`);
-}
-
-function quintStateRecord(raw: unknown): Readonly<Record<string, unknown>> {
-  if (!isRecord(raw)) {
-    throw new Error("Expected Quint Antimagic Field state.");
-  }
-  return raw;
-}
-
-function numberFromQuintInt(raw: unknown, field: string): number {
-  if (typeof raw === "number") return raw;
-  if (typeof raw === "bigint") return Number(raw);
-  throw new Error(`Expected Quint integer field ${field}.`);
-}
-
-function booleanField(
-  state: Readonly<Record<string, unknown>>,
-  field: string,
-): boolean {
-  if (typeof state[field] === "boolean") {
-    return state[field];
-  }
-  throw new Error(`Expected Quint Boolean field ${field}.`);
-}
-
-function isRecord(raw: unknown): raw is Readonly<Record<string, unknown>> {
-  return typeof raw === "object" && raw !== null;
 }

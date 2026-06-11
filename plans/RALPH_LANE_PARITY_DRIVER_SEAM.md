@@ -25,13 +25,13 @@
     {
       "number": 4,
       "id": "PDS-A04-KIT-BATCH-1",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Kit batch migration 1 (~20 drivers, self-discovering)"
     },
     {
       "number": 5,
       "id": "PDS-A05-KIT-BATCH-2",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Kit batch migration 2"
     },
     {
@@ -195,8 +195,8 @@ Every task must include:
 | 1 | PDS-A01-DRIVER-KIT-TRACER | ready-for-implementation-after-light-research | none | Light research: kit API shape vs quint-connect exports (`transformITFValue`, ITF schemas, picks). |
 | 2 | PDS-A02-KIT-PILOTS | done | PDS-A01-DRIVER-KIT-TRACER | Proves the kit on all driver shapes; merges `battle-runtime-mbt-fixtures.ts`. |
 | 3 | PDS-A03-WITNESS-PROTOCOL-TRACER | done | PDS-A02-KIT-PILOTS | Unblocks Lane B (`BPK-B04+`). Includes the quint 0.31.0 parameterized-type REPL check. |
-| 4 | PDS-A04-KIT-BATCH-1 | ready-for-research | PDS-A03-WITNESS-PROTOCOL-TRACER | Self-discovering; ≤20 drivers. |
-| 5 | PDS-A05-KIT-BATCH-2 | blocked | PDS-A04-KIT-BATCH-1 | |
+| 4 | PDS-A04-KIT-BATCH-1 | done | PDS-A03-WITNESS-PROTOCOL-TRACER | Self-discovering; ≤20 drivers. |
+| 5 | PDS-A05-KIT-BATCH-2 | ready-for-research | PDS-A04-KIT-BATCH-1 | |
 | 6 | PDS-A06-KIT-BATCH-3 | blocked | PDS-A05-KIT-BATCH-2 | |
 | 7 | PDS-A07-KIT-BATCH-4 | blocked | PDS-A06-KIT-BATCH-3 | |
 | 8 | PDS-A08-KIT-BATCH-5 | blocked | PDS-A07-KIT-BATCH-4 | Drains the kit-unmigrated set. |
@@ -272,7 +272,7 @@ line deltas reported; this task's merge unblocks `BPK-B04`/`BPK-B06`.
 
 ### Task 4 - PDS-A04-KIT-BATCH-1
 
-Status: `ready-for-research` · Mode: AFK
+Status: `done` · Mode: AFK
 
 Input: the kit-unmigrated discovery rule (Lane Rules) applied at task start.
 
@@ -283,9 +283,11 @@ Acceptance per batch: focused MBT green for exactly the batch files; closure
 checker green; no `*.mbt.qnt` diff; batch line-delta reported. A08
 additionally asserts the discovery rule matches zero files.
 
+Batch result: 20 drivers migrated; line delta `12046 -> 11884`, net `-162`.
+
 ### Task 5 - PDS-A05-KIT-BATCH-2
 
-Status: `blocked` · Mode: AFK
+Status: `ready-for-research` · Mode: AFK
 
 Input: the kit-unmigrated discovery rule (Lane Rules) applied at task start.
 
