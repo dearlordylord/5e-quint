@@ -40,6 +40,7 @@ const BATTLE_RUNTIME_LEAF_MODULES = new Set([
   "battle-runtime-hole-kinds.qnt",
   "battle-runtime-mirror-image-constants.qnt",
   "battle-runtime-reaction-kinds.qnt",
+  "battle-runtime-replay-equivalence.qnt",
   "battle-runtime-save-gated-spell-ordering.qnt",
   "battle-runtime-see-invisibility-constants.qnt",
   "battle-runtime-subject-kinds.qnt",

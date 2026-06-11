@@ -41,7 +41,10 @@ import {
   attackInitialTargetHole,
   attackRollFill,
   attackRollHoleAfterTarget,
+  damageRollFill,
   fighterAttackSubject,
+  fighterId,
+  fighterVsGoblinBattle,
   fighterTurnWithReadiedAcidAndSecondReadiedRay,
   findHole,
   goblinId,
@@ -53,6 +56,7 @@ import {
   wizardId,
 } from "./battle-runtime-test-support.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
+import { replayContinuationFrame } from "./battle-reducer/dispatcher.ts";
 import {
   battleCombatantSide,
   battleId,
@@ -69,6 +73,7 @@ import {
   type BattleFill,
   type BattleHole,
   type BattleInterruptProcedureChoice,
+  type BattleInterruptedProcedure,
   type BattleResolutionResult,
   type BattleState,
   type BattleSubject,
@@ -79,6 +84,7 @@ const interruptStackResumeDriverSchema = {
   init: {},
   doNestedDeclineResumesOuterInterrupt: {},
   doShieldMutationResumesInterruptedAttack: {},
+  doReplayRecordedProcedureFromRoot: {},
   step: {},
 } as const;
 
@@ -91,13 +97,15 @@ type InterruptStackResumeHole = "none" | "rolledDice";
 type InterruptStackResumeLastResult =
   | "init"
   | "nestedDeclineResumedOuter"
-  | "activeEffectMutationResumed";
+  | "activeEffectMutationResumed"
+  | "replayFromRootResolved";
 type InterruptStackResumeProjection = {
   readonly maxStackDepthObserved: number;
   readonly finalStackDepth: number;
   readonly pendingTrigger: InterruptStackResumeTrigger;
   readonly resumedHole: InterruptStackResumeHole;
   readonly activeEffectMutationSeenOnResume: boolean;
+  readonly replayFromRootEquivalent: boolean;
   readonly responderReactionAvailable: boolean;
   readonly targetHp: number;
   readonly lastResult: InterruptStackResumeLastResult;
@@ -108,6 +116,7 @@ type InterruptStackResumeRuntimeState = {
   readonly maxStackDepthObserved: number;
   readonly resumedHole: InterruptStackResumeHole;
   readonly activeEffectMutationSeenOnResume: boolean;
+  readonly replayFromRootEquivalent: boolean;
   readonly responderId: CombatantId;
   readonly targetId: CombatantId;
   readonly lastResult: InterruptStackResumeLastResult;
@@ -158,6 +167,15 @@ const replaySequences = [
       activeEffectMutationSeenOnResume: true,
       responderReactionAvailable: false,
       lastResult: "activeEffectMutationResumed",
+    }),
+  },
+  {
+    name: "replay-recorded-procedure-from-root",
+    actions: ["doReplayRecordedProcedureFromRoot"],
+    expected: expectedInterruptStackResumeProjection({
+      replayFromRootEquivalent: true,
+      targetHp: 3,
+      lastResult: "replayFromRootResolved",
     }),
   },
 ] as const satisfies ReadonlyArray<InterruptStackResumeReplaySequence>;
@@ -226,6 +244,9 @@ function createInterruptStackResumeDriver() {
       doShieldMutationResumesInterruptedAttack: () => {
         state = shieldMutationResumesInterruptedAttack();
       },
+      doReplayRecordedProcedureFromRoot: () => {
+        state = replayRecordedProcedureFromRoot();
+      },
       step: () => {},
       getState: () => interruptStackResumeProjection(state),
     };
@@ -238,6 +259,7 @@ function initialRuntimeState(): InterruptStackResumeRuntimeState {
     maxStackDepthObserved: 0,
     resumedHole: "none",
     activeEffectMutationSeenOnResume: false,
+    replayFromRootEquivalent: false,
     responderId: shieldCasterId,
     targetId: shieldCasterId,
     lastResult: "init",
@@ -318,6 +340,7 @@ function nestedDeclineResumesOuterInterrupt(): InterruptStackResumeRuntimeState 
     maxStackDepthObserved,
     resumedHole,
     activeEffectMutationSeenOnResume: false,
+    replayFromRootEquivalent: false,
     responderId: secondWizardId,
     targetId: goblinId,
     lastResult: "nestedDeclineResumedOuter",
@@ -378,9 +401,76 @@ function shieldMutationResumesInterruptedAttack(): InterruptStackResumeRuntimeSt
       resolved.state,
       shieldCasterId,
     ),
+    replayFromRootEquivalent: false,
     responderId: shieldCasterId,
     targetId: shieldCasterId,
     lastResult: "activeEffectMutationResumed",
+  };
+}
+
+function replayRecordedProcedureFromRoot(): InterruptStackResumeRuntimeState {
+  const state = fighterVsGoblinBattle();
+  const subject = fighterAttackSubject();
+  const target = attackInitialTargetHole(state, subject);
+  const attackRoll = attackRollHoleAfterTarget(state, target, subject);
+  const recordedFills = [
+    targetFill(target, goblinId),
+    attackRollFill(attackRoll, { total: 15, naturalD20: 10 }),
+  ] as const satisfies readonly BattleFill[];
+  const continuation = {
+    kind: "replay",
+    subject,
+    fills: recordedFills,
+  } as const satisfies Extract<
+    BattleInterruptedProcedure,
+    { readonly kind: "replay" }
+  >;
+  const independentNeedsDamage = resolveBattleSubject({
+    state,
+    subject,
+    fills: recordedFills,
+  });
+  if (independentNeedsDamage.tag !== "needsHoles") {
+    throw new Error("Expected independent root path to request damage.");
+  }
+  const damageHole = requireHoleFromArray(
+    independentNeedsDamage.holes,
+    "rolledDice",
+  );
+  const damageFill = damageRollFill(damageHole, 4);
+  const completedFills = [...recordedFills, damageFill] as const;
+  const independentResolved = resolveBattleSubject({
+    state,
+    subject,
+    fills: completedFills,
+  });
+  const replayFrameState = {
+    ...state,
+    interruptStack: [replayContinuationFrame(continuation, "attackHit")],
+  };
+  const replayFromRoot = resolveBattleSubject({
+    state: replayFrameState,
+    subject,
+    fills: [damageFill],
+  });
+  if (
+    independentResolved.tag !== "resolved" ||
+    replayFromRoot.tag !== "resolved"
+  ) {
+    throw new Error("Expected replay-from-root comparison to resolve.");
+  }
+  return {
+    battle: independentResolved.state,
+    maxStackDepthObserved: 0,
+    resumedHole: "none",
+    activeEffectMutationSeenOnResume: false,
+    replayFromRootEquivalent: equivalentResolvedProjection(
+      independentResolved,
+      replayFromRoot,
+    ),
+    responderId: fighterId,
+    targetId: goblinId,
+    lastResult: "replayFromRootResolved",
   };
 }
 
@@ -587,6 +677,7 @@ function interruptStackResumeProjection(
     ),
     resumedHole: state.resumedHole,
     activeEffectMutationSeenOnResume: state.activeEffectMutationSeenOnResume,
+    replayFromRootEquivalent: state.replayFromRootEquivalent,
     responderReactionAvailable: responder.reactionAvailable,
     targetHp: target.hp,
     lastResult: state.lastResult,
@@ -602,6 +693,7 @@ function expectedInterruptStackResumeProjection(
     pendingTrigger: "none",
     resumedHole: "none",
     activeEffectMutationSeenOnResume: false,
+    replayFromRootEquivalent: false,
     responderReactionAvailable: true,
     targetHp: initialHp,
     lastResult: "init",
@@ -639,6 +731,7 @@ function normalizeInterruptStackResumeQuintState(
       state,
       "qActiveEffectMutationSeenOnResume",
     ),
+    replayFromRootEquivalent: booleanField(state, "qReplayFromRootEquivalent"),
     responderReactionAvailable: booleanField(
       state,
       "qResponderReactionAvailable",
@@ -670,11 +763,21 @@ function interruptStackResumeLastResult(
   if (
     raw === "init" ||
     raw === "nestedDeclineResumedOuter" ||
-    raw === "activeEffectMutationResumed"
+    raw === "activeEffectMutationResumed" ||
+    raw === "replayFromRootResolved"
   ) {
     return raw;
   }
   throw new Error(
     `Unexpected interrupt stack resume result ${String(raw)}.`,
   );
+}
+
+function equivalentResolvedProjection(
+  left: Extract<BattleResolutionResult, { readonly tag: "resolved" }>,
+  right: Extract<BattleResolutionResult, { readonly tag: "resolved" }>,
+): boolean {
+  const leftSnapshot = snapshotBattle(left.state);
+  const rightSnapshot = snapshotBattle(right.state);
+  return JSON.stringify(leftSnapshot) === JSON.stringify(rightSnapshot);
 }

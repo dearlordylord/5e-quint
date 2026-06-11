@@ -4093,7 +4093,121 @@ export function resolveReplayContinuation(input: {
     stateWithoutFrame,
     input.frame.continuation,
     input.frame.handledInterruptTrigger,
-    input.fills,
+    replayContinuationFills(input.frame.continuation.fills, input.fills),
+  );
+}
+
+function replayContinuationFills(
+  recordedFills: readonly BattleFill[],
+  submittedFills: readonly BattleFill[],
+): readonly BattleFill[] {
+  return [
+    ...recordedFills,
+    ...replayContinuationSuffixFills(recordedFills, submittedFills),
+  ];
+}
+
+function replayContinuationSuffixFills(
+  recordedFills: readonly BattleFill[],
+  submittedFills: readonly BattleFill[],
+): readonly BattleFill[] {
+  let recordedSearchStart = 0;
+  return submittedFills.filter((submittedFill) => {
+    const recordedIndex = recordedFills.findIndex(
+      (recordedFill, index) =>
+        index >= recordedSearchStart &&
+        replayContinuationRecordedFillMatches(recordedFill, submittedFill),
+    );
+    if (recordedIndex === -1) {
+      return true;
+    }
+    recordedSearchStart = recordedIndex + 1;
+    return false;
+  });
+}
+
+const replayContinuationSemanticFillKinds = [
+  "targetChoice",
+  "attackRoll",
+  "rolledDice",
+] as const satisfies ReadonlyArray<BattleFill["kind"]>;
+
+type ReplayContinuationSemanticFill = Extract<
+  BattleFill,
+  { readonly kind: (typeof replayContinuationSemanticFillKinds)[number] }
+>;
+
+function replayContinuationRecordedFillMatches(
+  recordedFill: BattleFill,
+  submittedFill: BattleFill,
+): boolean {
+  if (recordedFill === submittedFill) {
+    return true;
+  }
+  return replayContinuationSemanticFillEquals(recordedFill, submittedFill);
+}
+
+function replayContinuationSemanticFillEquals(
+  recordedFill: BattleFill,
+  submittedFill: BattleFill,
+): boolean {
+  if (
+    !isReplayContinuationSemanticFill(recordedFill) ||
+    !isReplayContinuationSemanticFill(submittedFill)
+  ) {
+    return false;
+  }
+  if (recordedFill.kind !== submittedFill.kind) {
+    return false;
+  }
+  return replayContinuationSameKindSemanticFillEquals(
+    recordedFill,
+    submittedFill,
+  );
+}
+
+function isReplayContinuationSemanticFill(
+  fill: BattleFill,
+): fill is ReplayContinuationSemanticFill {
+  return replayContinuationSemanticFillKinds.some(
+    (kind) => kind === fill.kind,
+  );
+}
+
+function replayContinuationSameKindSemanticFillEquals(
+  recordedFill: ReplayContinuationSemanticFill,
+  submittedFill: ReplayContinuationSemanticFill,
+): boolean {
+  if (recordedFill.kind === "targetChoice") {
+    return (
+      submittedFill.kind === "targetChoice" &&
+      recordedFill.holeId === submittedFill.holeId &&
+      recordedFill.value === submittedFill.value
+    );
+  }
+  if (recordedFill.kind === "attackRoll") {
+    return (
+      submittedFill.kind === "attackRoll" &&
+      battleFillEquals(recordedFill, submittedFill)
+    );
+  }
+  if (recordedFill.kind === "rolledDice") {
+    return (
+      submittedFill.kind === "rolledDice" &&
+      battleFillEquals(recordedFill, submittedFill)
+    );
+  }
+  const exhaustive: never = recordedFill;
+  return exhaustive;
+}
+
+function battleFillPrefixAccumulated(
+  prefix: readonly BattleFill[],
+  fills: readonly BattleFill[],
+): boolean {
+  return (
+    fills.length >= prefix.length &&
+    prefix.every((fill, index) => battleFillEquals(fill, fills[index]!))
   );
 }
 
@@ -4359,9 +4473,7 @@ export function attackDamageContinuationConcentrationFill(
     ...continuation.fills,
     ...attackDamageContinuationConcentrationFills(continuation),
   ];
-  const accumulated =
-    fills.length >= prefix.length &&
-    prefix.every((fill, index) => battleFillEquals(fill, fills[index]!));
+  const accumulated = battleFillPrefixAccumulated(prefix, fills);
   const remaining = accumulated ? fills.slice(prefix.length) : fills;
   if (remaining.length === 0) {
     return { tag: "ok", value: undefined };

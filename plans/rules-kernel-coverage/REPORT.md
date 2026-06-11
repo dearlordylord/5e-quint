@@ -374,6 +374,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `packages/battle-runtime/battle-runtime-protection-from-poison.qnt` | semantic-core | `BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION` |
 | `packages/battle-runtime/battle-runtime-reaction-window.qnt` | semantic-core | `BATTLE.PROTOCOL.INTERRUPT_STACK_RESUME_REPLAY`, `BATTLE.REACTION.OFFER_DECLINE_RESUME`, `BATTLE.SPELL.REACTION_CASTING_TIME` |
 | `packages/battle-runtime/battle-runtime-reaction-resolution.qnt` | semantic-core | `BATTLE.PROTOCOL.INTERRUPT_STACK_RESUME_REPLAY` |
+| `packages/battle-runtime/battle-runtime-replay-equivalence.qnt` | semantic-core | `BATTLE.PROTOCOL.INTERRUPT_STACK_RESUME_REPLAY` |
 | `packages/battle-runtime/battle-runtime-remarkable-athlete-critical-movement.qnt` | proof-only | profile-scoped: `unit-feature.remarkable-athlete` (`BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
 | `packages/battle-runtime/battle-runtime-remarkable-athlete-roll-modes.qnt` | proof-only | profile-scoped: `unit-feature.remarkable-athlete` (`BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
 | `packages/battle-runtime/battle-runtime-paladin-sacred-weapon-activation.qnt` | proof-only | profile-scoped: `unit-feature.paladin-sacred-weapon` (`BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |

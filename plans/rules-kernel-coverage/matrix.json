@@ -3941,9 +3941,10 @@
       "profiles": [],
       "qntOwners": [
         "packages/battle-runtime/battle-runtime-reaction-window.qnt",
-        "packages/battle-runtime/battle-runtime-reaction-resolution.qnt"
+        "packages/battle-runtime/battle-runtime-reaction-resolution.qnt",
+        "packages/battle-runtime/battle-runtime-replay-equivalence.qnt"
       ],
-      "reason": "This row covers the reducer protocol shape beyond the single Reaction offer: the battle-runtime reaction-window owner projects interrupt stack frames through the existing rule-core ReactionWindowState depth, decline, and advance-continuation semantics, while the reaction-resolution owner resumes suspended procedures from the post-Reaction BattleState after active Spell Effects may have changed. The SRD anchors the Reaction timing and continuation rule; choosing concrete interrupt stack frames and replay calls is reducer protocol evidence, not a separate RAW ordering interpretation.",
+      "reason": "This row covers the reducer protocol shape beyond the single Reaction offer: the battle-runtime reaction-window owner projects interrupt stack frames through the existing rule-core ReactionWindowState depth, decline, and advance-continuation semantics, the reaction-resolution owner resumes suspended procedures from the post-Reaction BattleState after active Spell Effects may have changed, and the replay-equivalence owner computes replay-from-root projection by combining the recorded continuation subject/fills with newly supplied suffix fills. The focused witness compares independently resolving recorded subject+fills from the root state against the production replay-continuation frame path over the same root state, recorded continuation, handled trigger, and suffix fill sequence. The SRD anchors the Reaction timing and continuation rule; choosing concrete interrupt stack frames and replay calls is reducer protocol evidence, not a separate RAW ordering interpretation.",
       "runtime": "battle",
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
@@ -3958,7 +3959,7 @@
         "UBIQUITOUS_LANGUAGE.md#Action Lifecycle",
         "UBIQUITOUS_LANGUAGE.md#Spellcasting"
       ],
-      "title": "Battle protocol interrupt stack nesting, decline/resume discipline, and resume from current active Spell Effect state"
+      "title": "Battle protocol interrupt stack nesting, decline/resume discipline, active Spell Effect resume, and replay-from-root equivalence"
     }
   ],
   "battleHoleFrontier": [
@@ -7236,6 +7237,14 @@
         "BATTLE.PROTOCOL.INTERRUPT_STACK_RESUME_REPLAY"
       ],
       "ownerPath": "packages/battle-runtime/battle-runtime-reaction-resolution.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-replay-equivalence.qnt is the covered obligation QNT owner carrying replay-from-root projection computation and equivalence semantics over recorded subject and fill protocol vocabulary.",
+      "obligationIds": [
+        "BATTLE.PROTOCOL.INTERRUPT_STACK_RESUME_REPLAY"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-replay-equivalence.qnt",
       "role": "semantic-core"
     },
     {
@@ -11905,7 +11914,8 @@
       "proofOnly": [],
       "semanticCore": [
         "packages/battle-runtime/battle-runtime-reaction-window.qnt",
-        "packages/battle-runtime/battle-runtime-reaction-resolution.qnt"
+        "packages/battle-runtime/battle-runtime-reaction-resolution.qnt",
+        "packages/battle-runtime/battle-runtime-replay-equivalence.qnt"
       ],
       "status": "generation-subset-clean"
     }

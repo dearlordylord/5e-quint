@@ -3,11 +3,14 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.PROTOCOL.INTERRUPT_STACK_RESUME_REPLAY
 
 module battleRuntimeInterruptStackResumeMbt {
+  import battleRuntimeReplayEquivalence.* from "./battle-runtime-replay-equivalence"
+
   var qMaxStackDepthObserved: int
   var qFinalStackDepth: int
   var qPendingTrigger: str
   var qResumedHole: str
   var qActiveEffectMutationSeenOnResume: bool
+  var qReplayFromRootEquivalent: bool
   var qResponderReactionAvailable: bool
   var qTargetHp: int
   var qLastResult: str
@@ -18,6 +21,15 @@ module battleRuntimeInterruptStackResumeMbt {
   pure def damageRollHole: str = "rolledDice"
   pure def initialHp: int = 12
   pure def nestedFixtureTargetHp: int = 10
+  pure def replayFixtureTargetHp: int = 3
+  pure def replayRecordedAttackFromRootEquivalent: bool =
+    battleRuntimeReplayFromRootEquivalent(
+      independentRecordedWeaponAttackReplayProjection(replayFixtureTargetHp),
+      recordedWeaponAttackReplayRoot(initialHp),
+      recordedWeaponAttackReplayContinuation,
+      recordedWeaponAttackReplaySuffixFills,
+      replayFixtureTargetHp,
+    )
 
   action recordInterruptStackResumeState(
     maxStackDepthObserved: int,
@@ -25,6 +37,7 @@ module battleRuntimeInterruptStackResumeMbt {
     pendingTrigger: str,
     resumedHole: str,
     activeEffectMutationSeenOnResume: bool,
+    replayFromRootEquivalent: bool,
     responderReactionAvailable: bool,
     targetHp: int,
     lastResult: str,
@@ -34,6 +47,7 @@ module battleRuntimeInterruptStackResumeMbt {
     qPendingTrigger' = pendingTrigger,
     qResumedHole' = resumedHole,
     qActiveEffectMutationSeenOnResume' = activeEffectMutationSeenOnResume,
+    qReplayFromRootEquivalent' = replayFromRootEquivalent,
     qResponderReactionAvailable' = responderReactionAvailable,
     qTargetHp' = targetHp,
     qLastResult' = lastResult,
@@ -44,6 +58,7 @@ module battleRuntimeInterruptStackResumeMbt {
     0,
     noTrigger,
     noResumedHole,
+    false,
     false,
     true,
     initialHp,
@@ -57,6 +72,7 @@ module battleRuntimeInterruptStackResumeMbt {
       1,
       attackHitTrigger,
       damageRollHole,
+      false,
       false,
       true,
       nestedFixtureTargetHp,
@@ -73,13 +89,30 @@ module battleRuntimeInterruptStackResumeMbt {
       noResumedHole,
       true,
       false,
+      false,
       initialHp,
       "activeEffectMutationResumed",
+    ),
+  }
+
+  action doReplayRecordedProcedureFromRoot = all {
+    qLastResult == "init",
+    recordInterruptStackResumeState(
+      0,
+      0,
+      noTrigger,
+      noResumedHole,
+      false,
+      replayRecordedAttackFromRootEquivalent,
+      true,
+      replayFixtureTargetHp,
+      "replayFromRootResolved",
     ),
   }
 
   action step = any {
     doNestedDeclineResumesOuterInterrupt,
     doShieldMutationResumesInterruptedAttack,
+    doReplayRecordedProcedureFromRoot,
   }
 }

@@ -43,13 +43,13 @@
     {
       "number": 7,
       "id": "BPK-B07-REPLAY-FROM-ROOT",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Replay-from-root equivalence slice and witness"
     },
     {
       "number": 8,
       "id": "BPK-B08-KERNEL-REGISTRY-CLOSEOUT",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Protocol-kernel registry closeout, IR-boundary evidence, and oracle disambiguation convention"
     },
     {
@@ -144,8 +144,8 @@ Every task must include:
 | 4 | BPK-B04-WEAPON-ATTACK-ORDERING | done | BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT | Cross-lane gate: unblock manually when Lane A PDS-A01 and PDS-A03 are merged. |
 | 5 | BPK-B05-SAVE-SPELL-ORDERING | done | BPK-B04-WEAPON-ATTACK-ORDERING | Second procedure shape; reuses B04's slice skeleton. |
 | 6 | BPK-B06-INTERRUPT-NESTING-RESUME | done | BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT | Cross-lane gate: unblock manually when Lane A PDS-A01 and PDS-A03 are merged; may run before/parallel to B04 in queue order if the runner supports it. |
-| 7 | BPK-B07-REPLAY-FROM-ROOT | ready-for-research | BPK-B06-INTERRUPT-NESTING-RESUME | |
-| 8 | BPK-B08-KERNEL-REGISTRY-CLOSEOUT | blocked | BPK-B04-WEAPON-ATTACK-ORDERING, BPK-B05-SAVE-SPELL-ORDERING, BPK-B06-INTERRUPT-NESTING-RESUME, BPK-B07-REPLAY-FROM-ROOT | Also produces the multi-owner outcome-oracle convention consumed by PDS-A17's PRD. |
+| 7 | BPK-B07-REPLAY-FROM-ROOT | done | BPK-B06-INTERRUPT-NESTING-RESUME | |
+| 8 | BPK-B08-KERNEL-REGISTRY-CLOSEOUT | ready-for-research | BPK-B04-WEAPON-ATTACK-ORDERING, BPK-B05-SAVE-SPELL-ORDERING, BPK-B06-INTERRUPT-NESTING-RESUME, BPK-B07-REPLAY-FROM-ROOT | Also produces the multi-owner outcome-oracle convention consumed by PDS-A17's PRD. |
 | 9 | BPK-B09-RECURSIVE-NEXT-SHAPES | blocked | BPK-B08-KERNEL-REGISTRY-CLOSEOUT | Ordering coverage for further procedure shapes (healing, command, attack-roll spell, …). |
 
 ## Task Details
@@ -255,7 +255,7 @@ only).
 
 ### Task 7 - BPK-B07-REPLAY-FROM-ROOT
 
-Status: `ready-for-research` · Mode: AFK
+Status: `done` · Mode: AFK
 
 Output: replay-from-root equivalence owned in QNT (replaying recorded
 subject+fills from the root state reproduces the resolved state) at abstract
@@ -266,7 +266,7 @@ Acceptance: as B04.
 
 ### Task 8 - BPK-B08-KERNEL-REGISTRY-CLOSEOUT
 
-Status: `blocked` · Mode: AFK
+Status: `ready-for-research` · Mode: AFK
 
 Output: registry closeout for the kernel tier (`qnt-owner-roles.jsonl`,
 `generator-readiness.jsonl`, `kernel-ir-boundaries.jsonl` `command`/`fill`
