@@ -91,13 +91,13 @@
     {
       "number": 15,
       "id": "CSC-T15-R2-PROTOCOL-TAG-HOIST",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Hoist the companion protocol tag to a shared-algebras leaf; battle state carries the tag"
     },
     {
       "number": 16,
       "id": "CSC-T16-R1-SINGLE-SETTLEMENT-OPERATION",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "One settlement operation for character battle handoff; move companion handoff into its own module"
     }
   ]
