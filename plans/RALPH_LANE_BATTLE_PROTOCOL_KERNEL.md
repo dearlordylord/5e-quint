@@ -37,7 +37,7 @@
     {
       "number": 6,
       "id": "BPK-B06-INTERRUPT-NESTING-RESUME",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Interrupt nesting and resume-with-active-effect-mutation slice and witness"
     },
     {
