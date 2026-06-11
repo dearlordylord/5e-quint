@@ -103,7 +103,7 @@
     {
       "number": 17,
       "id": "PDS-A17-LITERAL-CAPTURE-PRD",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Write the literal-capture-gate PRD from the research note (single-owner scope)"
     },
     {
@@ -466,7 +466,7 @@ Acceptance: `pnpm quality` green including the new gate;
 
 ### Task 17 - PDS-A17-LITERAL-CAPTURE-PRD
 
-Status: `ready-for-research` · Mode: HITL (owner reviews the resulting PRD)
+Status: `done` · Mode: HITL (owner reviews the resulting PRD)
 
 Input: `plans/RESEARCH_witness_literal_capture_gate.md` (design, gates, and
 do-not list), the post-A10 witness shape.
