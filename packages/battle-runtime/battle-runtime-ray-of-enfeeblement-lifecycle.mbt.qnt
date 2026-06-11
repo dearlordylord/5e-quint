@@ -3,6 +3,8 @@
 module battleRuntimeRayOfEnfeeblementLifecycleMbt {
   import battleRuntimeWitnessProtocol.* from "./battle-runtime-witness-protocol"
 
+  type RayOfEnfeeblementLifecycleScenarioOutcome = | Init | Resolved | NeedsHoles | Maintained | Ended
+
   type RayOfEnfeeblementLifecycleWitnessState = {
     qCurrentTurnRole: str,
     qActionAvailable: bool,
@@ -14,7 +16,7 @@ module battleRuntimeRayOfEnfeeblementLifecycleMbt {
     qStrAbilityCheckDisadvantage: bool,
     qStrSavingThrowDisadvantage: bool,
     qLastDamageAfterPenalty: int,
-    qScenarioResult: str,
+    qScenarioOutcome: RayOfEnfeeblementLifecycleScenarioOutcome,
     protocol: WitnessProtocol[str],
   }
 
@@ -31,7 +33,7 @@ module battleRuntimeRayOfEnfeeblementLifecycleMbt {
   pure def qStrSavingThrowDisadvantage: bool = qState.qStrSavingThrowDisadvantage
   pure def qLastDamageAfterPenalty: int = qState.qLastDamageAfterPenalty
   pure def qHoles: Set[str] = qState.protocol.holes
-  pure def qLastResult: str = qState.qScenarioResult
+  pure def qLastResult: RayOfEnfeeblementLifecycleScenarioOutcome = qState.qScenarioOutcome
 
   pure val casterTurnRole: str = "caster"
   pure val targetTurnRole: str = "target"
@@ -49,10 +51,10 @@ module battleRuntimeRayOfEnfeeblementLifecycleMbt {
 
   pure def witnessProtocolForProjection(
     holes: Set[str],
-    scenarioResult: str,
+    scenarioResult: RayOfEnfeeblementLifecycleScenarioOutcome,
     scenarioInvalidReason: str,
   ): WitnessProtocol[str] =
-    if (scenarioResult == "init") witnessInit("")
+    if (scenarioResult == Init) witnessInit("")
     else if (scenarioInvalidReason == "invalidFill") witnessInvalid("", WInvalidFill)
     else if (scenarioInvalidReason == "staleSubject") witnessInvalid("", WStaleSubject)
     else if (holes != Set()) witnessNeedsHoles(holes)
@@ -66,7 +68,7 @@ module battleRuntimeRayOfEnfeeblementLifecycleMbt {
     casterConcentrating: bool,
     holes: Set[str],
     lastDamageAfterPenalty: int,
-    lastResult: str,
+    lastResult: RayOfEnfeeblementLifecycleScenarioOutcome,
   ): bool = all {
     qState' = {
       qCurrentTurnRole: currentTurnRole,
@@ -79,7 +81,7 @@ module battleRuntimeRayOfEnfeeblementLifecycleMbt {
       qStrAbilityCheckDisadvantage: effectActive,
       qStrSavingThrowDisadvantage: effectActive,
       qLastDamageAfterPenalty: lastDamageAfterPenalty,
-      qScenarioResult: lastResult,
+      qScenarioOutcome: lastResult,
       protocol: witnessProtocolForProjection(holes, lastResult, ""),
     },
   }
@@ -93,7 +95,7 @@ module battleRuntimeRayOfEnfeeblementLifecycleMbt {
       false,
       noHoles,
       noDamageResolved,
-      "init",
+      Init,
     ),
   }
 
@@ -110,7 +112,7 @@ module battleRuntimeRayOfEnfeeblementLifecycleMbt {
       true,
       noHoles,
       qLastDamageAfterPenalty,
-      "resolved",
+      Resolved,
     ),
   }
 
@@ -127,7 +129,7 @@ module battleRuntimeRayOfEnfeeblementLifecycleMbt {
       true,
       noHoles,
       qLastDamageAfterPenalty,
-      "resolved",
+      Resolved,
     ),
   }
 
@@ -147,7 +149,7 @@ module battleRuntimeRayOfEnfeeblementLifecycleMbt {
         true,
         noHoles,
         damageAfterRayPenalty(6, penaltyRoll),
-        "resolved",
+        Resolved,
       ),
     }
   }
@@ -165,7 +167,7 @@ module battleRuntimeRayOfEnfeeblementLifecycleMbt {
       true,
       savingThrowOutcomeHoles,
       qLastDamageAfterPenalty,
-      "needsHoles",
+      NeedsHoles,
     ),
   }
 
@@ -180,7 +182,7 @@ module battleRuntimeRayOfEnfeeblementLifecycleMbt {
       true,
       noHoles,
       qLastDamageAfterPenalty,
-      "maintained",
+      Maintained,
     ),
   }
 
@@ -195,7 +197,7 @@ module battleRuntimeRayOfEnfeeblementLifecycleMbt {
       false,
       noHoles,
       qLastDamageAfterPenalty,
-      "ended",
+      Ended,
     ),
   }
 

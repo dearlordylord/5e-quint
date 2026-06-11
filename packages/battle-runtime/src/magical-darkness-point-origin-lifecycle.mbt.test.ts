@@ -27,6 +27,7 @@ import {
   mbtSpecPath,
   mbtTraceCount,
   quintStateRecord,
+  quintVariantTag,
   quintRecordField,
   run,
   stateCheck,
@@ -71,7 +72,14 @@ const LAST_RESULTS = [
   "durationCleaned",
 ] as const;
 type LastResult = (typeof LAST_RESULTS)[number];
-const LAST_RESULT_SET: ReadonlySet<string> = new Set(LAST_RESULTS);
+const MAGICAL_DARKNESS_POINT_ORIGIN_LIFECYCLE_SCENARIO_OUTCOME_BY_TAG: Readonly<
+  Record<string, LastResult>
+> = {
+  Init: "init",
+  CastWithAreaAndLightWitnesses: "castWithAreaAndLightWitnesses",
+  ConcentrationCleaned: "concentrationCleaned",
+  DurationCleaned: "durationCleaned",
+};
 
 const WITNESS_RESULTS = ["none", "heavilyObscured", "darkness"] as const;
 type WitnessResult = (typeof WITNESS_RESULTS)[number];
@@ -513,7 +521,7 @@ function normalizeDarknessQuintState(raw: unknown): DarknessProjection {
       "Expected Darkness point-origin witness holes to be empty.",
     );
   }
-  const lastResultValue = lastResult(state["qScenarioResult"]);
+  const lastResultValue = lastResult(state["qScenarioOutcome"]);
   assertWitnessProtocolConsistentWithScenario({
     label: "Darkness point-origin lifecycle",
     scenarioResult: lastResultValue,
@@ -577,8 +585,11 @@ function witnessResult(raw: unknown): WitnessResult {
 }
 
 function lastResult(raw: unknown): LastResult {
-  if (typeof raw === "string" && LAST_RESULT_SET.has(raw)) {
-    return raw as LastResult;
+  const tag = quintVariantTag(raw, "qScenarioOutcome");
+  const value =
+    MAGICAL_DARKNESS_POINT_ORIGIN_LIFECYCLE_SCENARIO_OUTCOME_BY_TAG[tag];
+  if (value !== undefined) {
+    return value;
   }
-  throw new Error(`Unknown Darkness result: ${String(raw)}.`);
+  throw new Error(`Unknown Darkness result: ${tag}.`);
 }

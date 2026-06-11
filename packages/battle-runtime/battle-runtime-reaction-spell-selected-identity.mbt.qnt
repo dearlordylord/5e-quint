@@ -5,6 +5,9 @@ module battleRuntimeReactionSpellSelectedIdentityMbt {
 
   type WitnessHole = | WitnessProtocolHole
 
+  type ReactionSpellSelectedIdentityScenarioOutcome = | Init | Resolved
+
+
   type ReactionSpellSelectedIdentityWitnessState = {
     qReactorHp: int,
     qTriggerCreatureHp: int,
@@ -14,7 +17,7 @@ module battleRuntimeReactionSpellSelectedIdentityMbt {
     qFirstLevelSlotsExpended: int,
     qSecondLevelSlotsExpended: int,
     qThirdLevelSlotsExpended: int,
-    qScenarioResult: str,
+    qScenarioOutcome: ReactionSpellSelectedIdentityScenarioOutcome,
     protocol: WitnessProtocol[WitnessHole],
   }
 
@@ -28,14 +31,14 @@ module battleRuntimeReactionSpellSelectedIdentityMbt {
   pure def qFirstLevelSlotsExpended: int = qState.qFirstLevelSlotsExpended
   pure def qSecondLevelSlotsExpended: int = qState.qSecondLevelSlotsExpended
   pure def qThirdLevelSlotsExpended: int = qState.qThirdLevelSlotsExpended
-  pure def qLastResult: str = qState.qScenarioResult
+  pure def qLastResult: ReactionSpellSelectedIdentityScenarioOutcome = qState.qScenarioOutcome
 
   pure def selectedIdentityProtocolForProjection(
     holes: Set[WitnessHole],
-    scenarioResult: str,
+    scenarioResult: ReactionSpellSelectedIdentityScenarioOutcome,
     scenarioInvalidReason: str,
   ): WitnessProtocol[WitnessHole] =
-    if (scenarioResult == "init") witnessInit(WitnessProtocolHole)
+    if (scenarioResult == Init) witnessInit(WitnessProtocolHole)
     else if (scenarioInvalidReason == "invalidFill") witnessInvalid(WitnessProtocolHole, WInvalidFill)
     else if (holes != Set()) witnessNeedsHoles(holes)
     else witnessResolved(WitnessProtocolHole)
@@ -49,7 +52,7 @@ module battleRuntimeReactionSpellSelectedIdentityMbt {
     firstLevelSlotsExpended: int,
     secondLevelSlotsExpended: int,
     thirdLevelSlotsExpended: int,
-    lastResult: str,
+    lastResult: ReactionSpellSelectedIdentityScenarioOutcome,
   ): bool = all {
     qState' = {
       qReactorHp: reactorHp,
@@ -60,25 +63,25 @@ module battleRuntimeReactionSpellSelectedIdentityMbt {
       qFirstLevelSlotsExpended: firstLevelSlotsExpended,
       qSecondLevelSlotsExpended: secondLevelSlotsExpended,
       qThirdLevelSlotsExpended: thirdLevelSlotsExpended,
-      qScenarioResult: lastResult,
+      qScenarioOutcome: lastResult,
       protocol: selectedIdentityProtocolForProjection(Set(), lastResult, ""),
     },
   }
-  action init = recordProjection(12, 12, 10, true, 0, 0, 0, 0, "init")
+  action init = recordProjection(12, 12, 10, true, 0, 0, 0, 0, Init)
 
   action doResolveShieldReactionSpellHit = all {
-    qLastResult == "init",
-    recordProjection(12, 12, 15, false, 0, 1, 0, 0, "resolved"),
+    qLastResult == Init,
+    recordProjection(12, 12, 15, false, 0, 1, 0, 0, Resolved),
   }
 
   action doResolveHellishRebukeFailedSavingThrow = all {
-    qLastResult == "init",
-    recordProjection(11, 9, 10, false, 0, 0, 1, 0, "resolved"),
+    qLastResult == Init,
+    recordProjection(11, 9, 10, false, 0, 0, 1, 0, Resolved),
   }
 
   action doResolveCounterspellMagicMissileCast = all {
-    qLastResult == "init",
-    recordProjection(12, 12, 10, false, 0, 0, 0, 1, "resolved"),
+    qLastResult == Init,
+    recordProjection(12, 12, 10, false, 0, 0, 0, 1, Resolved),
   }
 
   action step = any {

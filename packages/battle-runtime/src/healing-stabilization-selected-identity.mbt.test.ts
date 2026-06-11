@@ -72,6 +72,11 @@ if (unitCatalogResult.tag !== "ok") {
 }
 const unitLibrary = unitCatalogResult.catalog;
 
+const HEALING_STABILIZATION_SELECTED_IDENTITY_SCENARIO_OUTCOME_BY_TAG = {
+  Init: "init",
+  Resolved: "resolved",
+} as const satisfies Readonly<Record<string, "init" | "resolved">>;
+
 defineSelectedIdentityWitness({
   describeLabel: "Healing stabilization selected identity MBT",
   taskId: "healing-stabilization",
@@ -82,7 +87,10 @@ defineSelectedIdentityWitness({
   quintStateField: "qState",
   quintStateFieldPrefix: "q",
   witnessProtocolField: "protocol",
-  quintFieldNames: { lastResult: "qScenarioResult" },
+  quintFieldNames: { lastResult: "qScenarioOutcome" },
+  quintVariantFieldTags: {
+    lastResult: HEALING_STABILIZATION_SELECTED_IDENTITY_SCENARIO_OUTCOME_BY_TAG,
+  },
   projectionSchema: {
     targetHp: "int",
     targetStable: "bool",
@@ -90,7 +98,7 @@ defineSelectedIdentityWitness({
     targetDeathSuccesses: "int",
     targetDeathFailures: "int",
     actionAvailable: "bool",
-    lastResult: "str",
+    lastResult: "variant",
   },
   initialProjection: {
     targetHp: 0,

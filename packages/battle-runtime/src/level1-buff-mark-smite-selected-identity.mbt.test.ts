@@ -93,6 +93,7 @@ import {
   numberFromQuintInt,
   quintRecordField,
   quintStateRecord,
+  quintVariantTag,
 } from "./battle-runtime-mbt-driver-kit.ts";
 import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
 
@@ -815,7 +816,7 @@ defineSelectedIdentityWitness({
   quintStateField: "qState",
   quintStateFieldPrefix: "q",
   witnessProtocolField: "protocol",
-  quintFieldNames: { lastResult: "qScenarioResult" },
+  quintFieldNames: { lastResult: "qScenarioOutcome" },
   projectionSchema: {},
   initialProjection: expectedProjection(),
   normalizeQuintState: normalizeLevel1BuffMarkSmiteSelectedIdentityQuintState,
@@ -3320,7 +3321,7 @@ function normalizeLevel1BuffMarkSmiteSelectedIdentityQuintState(
       "Expected level-1 buff/mark/smite witness holes to be empty.",
     );
   }
-  const scenarioResult = mbtLastResult(state["qScenarioResult"]);
+  const scenarioResult = mbtLastResult(state["qScenarioOutcome"]);
   assertWitnessProtocolConsistentWithScenario({
     label: "level-1 buff/mark/smite selected identity",
     scenarioResult,
@@ -4131,24 +4132,31 @@ function trueStrikeDamageTypeFromQuint(raw: unknown): "radiant" {
   throw new Error(`Unexpected True Strike damage type ${String(raw)}.`);
 }
 
+const LEVEL1_BUFF_MARK_SMITE_SELECTED_IDENTITY_SCENARIO_OUTCOME_BY_TAG: Readonly<
+  Record<string, Level1BuffMarkSmiteSelectedIdentityProjection["lastResult"]>
+> = {
+  Init: "init",
+  DivineFavor: "divineFavor",
+  DivineSmite: "divineSmite",
+  EnsnaringStrike: "ensnaringStrike",
+  FalseLife: "falseLife",
+  Heroism: "heroism",
+  HuntersMark: "huntersMark",
+  Hex: "hex",
+  Longstrider: "longstrider",
+  SearingSmite: "searingSmite",
+  Shillelagh: "shillelagh",
+  TrueStrike: "trueStrike",
+};
+
 function mbtLastResult(
   raw: unknown,
 ): Level1BuffMarkSmiteSelectedIdentityProjection["lastResult"] {
-  if (
-    raw === "init" ||
-    raw === "divineFavor" ||
-    raw === "divineSmite" ||
-    raw === "ensnaringStrike" ||
-    raw === "falseLife" ||
-    raw === "heroism" ||
-    raw === "huntersMark" ||
-    raw === "hex" ||
-    raw === "longstrider" ||
-    raw === "searingSmite" ||
-    raw === "shillelagh" ||
-    raw === "trueStrike"
-  ) {
-    return raw;
+  const tag = quintVariantTag(raw, "qScenarioOutcome");
+  const value =
+    LEVEL1_BUFF_MARK_SMITE_SELECTED_IDENTITY_SCENARIO_OUTCOME_BY_TAG[tag];
+  if (value !== undefined) {
+    return value;
   }
-  throw new Error(`Unexpected MBT result ${String(raw)}.`);
+  throw new Error(`Unexpected level-1 buff/mark/smite result ${tag}.`);
 }

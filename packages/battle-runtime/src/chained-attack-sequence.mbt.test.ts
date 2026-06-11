@@ -94,6 +94,22 @@ type ChainedDamageType = (typeof CHAINED_DAMAGE_TYPES)[number];
 type ChainedDamageTypeState = ChainedDamageType | "none";
 type ChainedHole = (typeof CHAINED_HOLE_NAMES)[number];
 type ChainedLastResult = (typeof CHAINED_LAST_RESULTS)[number];
+const CHAINED_ATTACK_SEQUENCE_SCENARIO_OUTCOME_BY_TAG: Readonly<
+  Record<string, ChainedLastResult>
+> = {
+  Init: "init",
+  AwaitingDamageType: "awaitingDamageType",
+  AwaitingInitialTarget: "awaitingInitialTarget",
+  AwaitingStep0Attack: "awaitingStep0Attack",
+  AwaitingStep0Damage: "awaitingStep0Damage",
+  Step0NoLeapComplete: "step0NoLeapComplete",
+  AwaitingFirstLeapTarget: "awaitingFirstLeapTarget",
+  AwaitingStep1Attack: "awaitingStep1Attack",
+  AwaitingStep1Damage: "awaitingStep1Damage",
+  Slot1LeapLimitComplete: "slot1LeapLimitComplete",
+  AwaitingSecondLeapTarget: "awaitingSecondLeapTarget",
+} as const;
+
 type ChainedTargetLabel = (typeof CHAINED_TARGET_LABELS)[number];
 type ChainedPreviousTarget = ChainedTargetLabel | "none";
 type ChainedSlotLevel = 1 | 2;
@@ -938,7 +954,7 @@ function normalizeChainedAttackQuintState(
   raw: unknown,
 ): ChainedAttackSequenceState {
   const state = quintRecordField(quintStateRecord(raw), "qState");
-  const lastResult = chainedLastResult(state["qScenarioResult"]);
+  const lastResult = chainedLastResult(state["qScenarioOutcome"]);
   const protocol = decodeWitnessProtocolState({
     state,
     protocolField: "protocol",
@@ -1056,10 +1072,14 @@ function chainedHole(raw: unknown): ChainedHole {
 }
 
 function chainedLastResult(raw: unknown): ChainedLastResult {
-  if (isChainedLastResult(raw)) {
-    return raw;
+  const tag = quintVariantTag(raw, "qScenarioOutcome");
+  const value = CHAINED_ATTACK_SEQUENCE_SCENARIO_OUTCOME_BY_TAG[tag];
+  if (value !== undefined) {
+    return value;
   }
-  throw new Error(`Unknown chained attack result: ${String(raw)}.`);
+  throw new Error(
+    `Expected Quint scenario outcome variant qScenarioOutcome, got ${tag}.`,
+  );
 }
 
 function isChainedDamageType(raw: unknown): raw is ChainedDamageType {
@@ -1072,8 +1092,4 @@ function isChainedTargetLabel(raw: unknown): raw is ChainedTargetLabel {
 
 function isChainedHole(raw: unknown): raw is ChainedHole {
   return CHAINED_HOLE_NAMES.some((value) => value === raw);
-}
-
-function isChainedLastResult(raw: unknown): raw is ChainedLastResult {
-  return CHAINED_LAST_RESULTS.some((value) => value === raw);
 }

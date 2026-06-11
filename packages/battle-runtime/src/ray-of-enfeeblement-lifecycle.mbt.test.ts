@@ -20,6 +20,7 @@ import {
   numberFromQuintInt,
   quintRecordField,
   quintStateRecord,
+  quintVariantTag,
   run,
   stateCheck,
 } from "./battle-runtime-mbt-driver-kit.ts";
@@ -68,6 +69,13 @@ type RayLastResult =
   | "resolved"
   | "maintained"
   | "ended";
+const RAY_LAST_RESULT_BY_SCENARIO_OUTCOME_TAG = {
+  Init: "init",
+  NeedsHoles: "needsHoles",
+  Resolved: "resolved",
+  Maintained: "maintained",
+  Ended: "ended",
+} as const satisfies Readonly<Record<string, RayLastResult>>;
 type RayHole = "SavingThrowOutcome";
 
 type RayOfEnfeeblementLifecycleState = {
@@ -527,7 +535,7 @@ function normalizeRayOfEnfeeblementQuintState(
     noInvalidReason: "",
     decodeHole: rayHole,
   });
-  const lastResultValue = rayLastResult(state["qScenarioResult"]);
+  const lastResultValue = rayLastResult(state["qScenarioOutcome"]);
   assertWitnessProtocolConsistentWithScenario({
     label: "Ray of Enfeeblement lifecycle",
     scenarioResult: lastResultValue,
@@ -598,14 +606,10 @@ function rayHole(raw: unknown): RayHole {
 }
 
 function rayLastResult(raw: unknown): RayLastResult {
-  if (
-    raw === "init" ||
-    raw === "needsHoles" ||
-    raw === "resolved" ||
-    raw === "maintained" ||
-    raw === "ended"
-  ) {
-    return raw;
+  const tag = quintVariantTag(raw, "qScenarioOutcome");
+  const result = RAY_LAST_RESULT_BY_SCENARIO_OUTCOME_TAG[tag];
+  if (result !== undefined) {
+    return result;
   }
-  throw new Error(`Unknown Ray of Enfeeblement result: ${String(raw)}.`);
+  throw new Error(`Unknown Ray of Enfeeblement result tag: ${tag}.`);
 }

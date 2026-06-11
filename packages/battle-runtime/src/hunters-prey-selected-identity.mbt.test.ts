@@ -47,6 +47,18 @@ type HuntersPreyProjection = {
 type HuntersPreyOptionId = "colossusSlayer" | "hordeBreaker";
 const syntheticExtraAttackUnitId = "test_hunters_prey_extra_attack";
 
+const HUNTERS_PREY_SELECTED_IDENTITY_SCENARIO_OUTCOME_BY_TAG = {
+  Init: "init",
+  ColossusSlayer: "colossusSlayer",
+  SkipThenUseColossusSlayer: "skipThenUseColossusSlayer",
+  HordeBreaker: "hordeBreaker",
+  HordeBreakerAfterPrimaryMiss: "hordeBreakerAfterPrimaryMiss",
+  RejectMissingSelection: "rejectMissingSelection",
+  RejectSameTarget: "rejectSameTarget",
+  RejectInvalidTargetPredicate: "rejectInvalidTargetPredicate",
+  SecondHordeBreakerUnavailable: "secondHordeBreakerUnavailable",
+} as const satisfies Readonly<Record<string, HuntersPreyProjection["lastResult"]>>;
+
 defineSelectedIdentityWitness({
   describeLabel: "Hunter's Prey selected identity MBT",
   taskId: "L3PUTB-07-RANGER-HUNTERS-PREY-RUNTIME",
@@ -58,8 +70,10 @@ defineSelectedIdentityWitness({
   quintStateFieldPrefix: "q",
   witnessProtocolField: "protocol",
   quintFieldNames: {
-    lastResult: "qScenarioResult",
-    lastInvalidReason: "qScenarioInvalidReason",
+    lastResult: "qScenarioOutcome",
+  },
+  quintVariantFieldTags: {
+    lastResult: HUNTERS_PREY_SELECTED_IDENTITY_SCENARIO_OUTCOME_BY_TAG,
   },
   witnessInvalidScenarioReasons: {
     rejectMissingSelection: "invalidFill",
@@ -71,7 +85,7 @@ defineSelectedIdentityWitness({
     hordeTargetHp: "int",
     colossusUsed: "bool",
     hordeBreakerUsed: "bool",
-    lastResult: "str",
+    lastResult: "variant",
     lastInvalidReason: "str",
   },
   initialProjection: expectedProjection(),

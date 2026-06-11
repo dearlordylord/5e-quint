@@ -269,7 +269,21 @@ defineSelectedIdentityWitness({
   quintStateField: "qState",
   quintStateFieldPrefix: "q",
   witnessProtocolField: "protocol",
-  quintFieldNames: { lastResult: "qScenarioResult" },
+  quintFieldNames: { lastResult: "qScenarioOutcome" },
+  quintVariantFieldTags: {
+    lastResult: {
+      Init: "init",
+      WardCreated: "wardCreated",
+      AttackLost: "attackLost",
+      SpellSaveSucceeded: "spellSaveSucceeded",
+      ReplacementAdmitted: "replacementAdmitted",
+      ReplacementRejected: "replacementRejected",
+      AreaEffectExcluded: "areaEffectExcluded",
+      AttackRollEndedWard: "attackRollEndedWard",
+      SpellCastEndedWard: "spellCastEndedWard",
+      DamageEndedWard: "damageEndedWard",
+    },
+  },
   projectionSchema: {
     wardPresent: "bool",
     wardSourceIsSanctuary: "bool",
@@ -280,7 +294,7 @@ defineSelectedIdentityWitness({
     illegalReplacementRejected: "bool",
     areaEffectBypassedInterdiction: "bool",
     wardedHp: "int",
-    lastResult: "str",
+    lastResult: "variant",
   },
   initialProjection: projectInitialBattle(),
   units: selectedUnitIdentityReplays.map((replay) => ({

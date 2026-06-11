@@ -247,14 +247,26 @@ defineSelectedIdentityWitness({
   quintStateField: "qState",
   quintStateFieldPrefix: "q",
   witnessProtocolField: "protocol",
-  quintFieldNames: { lastResult: "qScenarioResult" },
+  quintFieldNames: { lastResult: "qScenarioOutcome" },
+  quintVariantFieldTags: {
+    lastResult: {
+      Init: "init",
+      Activated: "activated",
+      NoResource: "noResource",
+      RangedWeapon: "rangedWeapon",
+      Recast: "recast",
+      AttackEffects: "attackEffects",
+      Dismissed: "dismissed",
+      NotCarryingWeapon: "notCarryingWeapon",
+    },
+  },
   projectionSchema: {
     activationOffered: "bool",
     channelDivinityUsesRemaining: "int",
     boundWeaponItemId: "str",
     activeEffectCount: "int",
     rejected: "bool",
-    lastResult: "str",
+    lastResult: "variant",
   },
   initialProjection: {
     activationOffered: false,

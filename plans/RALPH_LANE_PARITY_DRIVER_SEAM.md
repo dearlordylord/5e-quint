@@ -121,19 +121,19 @@
     {
       "number": 20,
       "id": "PDS-A20-SCENARIO-OUTCOME-BATCH-1",
-      "status": "deferred",
+      "status": "done",
       "title": "Migrate the first qScenario outcome-projection batch"
     },
     {
       "number": 21,
       "id": "PDS-A21-SCENARIO-OUTCOME-BATCH-2",
-      "status": "blocked",
+      "status": "done",
       "title": "Migrate the second qScenario outcome-projection batch"
     },
     {
       "number": 22,
       "id": "PDS-A22-SCENARIO-OUTCOME-BATCH-3-DRAIN",
-      "status": "blocked",
+      "status": "done",
       "title": "Drain remaining qScenario outcome-projection stragglers"
     },
     {
@@ -147,6 +147,12 @@
       "id": "PDS-A24-CHARACTER-PACKAGE-MBT-CLEANUP-LANE",
       "status": "deferred",
       "title": "Open the character-package MBT cleanup lane after Lane C ownership resolves"
+    },
+    {
+      "number": 25,
+      "id": "PDS-A25-STAT-BLOCK-WITNESS-PROTOCOL-DRAIN",
+      "status": "done",
+      "title": "Migrate the stat-block action ordering witness to WitnessProtocol"
     }
   ]
 }
@@ -260,11 +266,12 @@ decision.
 |  17 | PDS-A17-LITERAL-CAPTURE-PRD                   | done     | PDS-A10-WITNESS-PILOTS                                                                                             | HITL: owner reviews the PRD. Single-owner obligations only; multi-owner rows wait for BPK-B08.                                                                                                                                                                     |
 |  18 | PDS-A18-RECURSIVE-NEXT-BATCH                  | done     | PDS-A16-WITNESS-GATE-AND-CLOSEOUT                                                                                  | Recursive audit found concrete follow-up work; Lane A is not drained.                                                                                                                                                                                              |
 |  19 | PDS-A19-SCENARIO-OUTCOME-AUDIT                | done     | PDS-A18-RECURSIVE-NEXT-BATCH                                                                                       | All 60 `qScenario*` files are typed-outcome migration candidates; no string kept-label set. See `plans/SCENARIO_OUTCOME_AUDIT.md`.                                                                                                                                 |
-|  20 | PDS-A20-SCENARIO-OUTCOME-BATCH-1              | deferred | PDS-A19-SCENARIO-OUTCOME-AUDIT                                                                                     | Owner-directed freeze after A23; unfreeze later by restoring this row and Task 20 status to `ready`.                                                                                                                                                               |
-|  21 | PDS-A21-SCENARIO-OUTCOME-BATCH-2              | blocked  | PDS-A20-SCENARIO-OUTCOME-BATCH-1                                                                                   | Next ≤20 scenario-outcome stragglers.                                                                                                                                                                                                                              |
-|  22 | PDS-A22-SCENARIO-OUTCOME-BATCH-3-DRAIN        | blocked  | PDS-A21-SCENARIO-OUTCOME-BATCH-2                                                                                   | Final scenario-outcome stragglers; assert the discovery command is empty or that the kept-label set is documented.                                                                                                                                                 |
+|  20 | PDS-A20-SCENARIO-OUTCOME-BATCH-1              | done     | PDS-A19-SCENARIO-OUTCOME-AUDIT                                                                                     | First <=20 scenario-outcome stragglers, using the typed local-outcome shape in `plans/SCENARIO_OUTCOME_AUDIT.md`.                                                                                                                                                  |
+|  21 | PDS-A21-SCENARIO-OUTCOME-BATCH-2              | done     | PDS-A20-SCENARIO-OUTCOME-BATCH-1                                                                                   | Next ≤20 scenario-outcome stragglers.                                                                                                                                                                                                                              |
+|  22 | PDS-A22-SCENARIO-OUTCOME-BATCH-3-DRAIN        | done     | PDS-A21-SCENARIO-OUTCOME-BATCH-2                                                                                   | Final scenario-outcome stragglers; assert the discovery command is empty or that the kept-label set is documented.                                                                                                                                                 |
 |  23 | PDS-A23-CHARACTER-PACKAGE-WITNESS-FEASIBILITY | done     | PDS-A18-RECURSIVE-NEXT-BATCH                                                                                       | Research-only stretch decision for the 24 non-battle MBT witness/driver pairs named by prd/03 and prd/04. See `plans/CHARACTER_PACKAGE_WITNESS_FEASIBILITY.md`.                                                                                                    |
 |  24 | PDS-A24-CHARACTER-PACKAGE-MBT-CLEANUP-LANE    | deferred | PDS-A23-CHARACTER-PACKAGE-WITNESS-FEASIBILITY + Lane C ownership resolution for `packages/character-sheet-runtime` | Deferred follow-up opened by Task 23. Create the separate character-package MBT cleanup lane from `plans/CHARACTER_PACKAGE_WITNESS_FEASIBILITY.md`; do not edit character-sheet-runtime before the Lane C dependency lands.                                        |
+|  25 | PDS-A25-STAT-BLOCK-WITNESS-PROTOCOL-DRAIN     | ready-for-research | PDS-A22-SCENARIO-OUTCOME-BATCH-3-DRAIN                                                                              | Migrate the remaining battle-runtime `qLastResult: str` / `qHoles` stat-block action ordering witness so the closure checker can be a green global gate again.                                                                                                      |
 
 ## Task Details
 
@@ -584,11 +591,7 @@ gate in A22.
 
 ### Task 20 - PDS-A20-SCENARIO-OUTCOME-BATCH-1
 
-Status: `deferred` · Mode: HITL
-
-Owner freeze: park this batch until the owner explicitly unfreezes Lane A
-later today. Unfreeze by restoring this task's index row and detail status to
-`ready`; A21 and A22 remain dependency-blocked behind this task.
+Status: `done` · Mode: AFK
 
 Input: `plans/SCENARIO_OUTCOME_AUDIT.md` and the first ≤20 alphabetical files
 from the A19 discovery command.
@@ -603,7 +606,7 @@ line-delta and remaining discovery count reported.
 
 ### Task 21 - PDS-A21-SCENARIO-OUTCOME-BATCH-2
 
-Status: `blocked` · Mode: AFK
+Status: `done` · Mode: AFK
 
 Input: the next ≤20 alphabetical files from the A19 discovery command after
 A20 lands.
@@ -617,7 +620,7 @@ line-delta and remaining discovery count reported.
 
 ### Task 22 - PDS-A22-SCENARIO-OUTCOME-BATCH-3-DRAIN
 
-Status: `blocked` · Mode: AFK
+Status: `done` · Mode: AFK
 
 Input: the remaining scenario-outcome projection stragglers after A21 lands.
 
@@ -630,6 +633,12 @@ Acceptance: focused MBT green for exactly the touched driver files
 (`MBT_TRACES=1`) plus one `MBT_TRACES=3` confidence pass over the final batch;
 closure checker green; `git diff --check` green; discovery command returns
 zero files or only the documented kept-label set.
+
+Result: scenario-outcome projection labels are drained from battle-runtime MBT
+witnesses, and the post-drain quality gate now rejects
+`qScenarioResult` / `qScenarioInvalidReason`. The pre-existing
+`battle-runtime-stat-block-action-ordering.mbt.qnt` protocol witness still
+keeps the global closure checker red; PDS-A25 owns that remaining gate debt.
 
 ### Task 23 - PDS-A23-CHARACTER-PACKAGE-WITNESS-FEASIBILITY
 
@@ -675,3 +684,27 @@ scenario-outcome batches, name the package-local QNT witness-protocol leaves or
 state why they are not needed, and include verification commands for each
 affected package. No executable character-package files are edited by this
 placeholder task.
+
+### Task 25 - PDS-A25-STAT-BLOCK-WITNESS-PROTOCOL-DRAIN
+
+Status: `done` · Mode: AFK
+
+Input: `battle-runtime-stat-block-action-ordering.mbt.qnt`,
+`src/stat-block-action-ordering.mbt.test.ts`, the A16 witness-protocol gate in
+`scripts/check-mbt-driver-closure.cjs`, and the current closure-checker
+failure for `var qLastResult: str` / `var qHoles`.
+
+Output: migrate the stat-block action ordering witness from parallel mutable
+`qLastResult: str` and `qHoles` variables to the package-local
+`WitnessProtocol` record and helper constructors, updating the paired TS driver
+decoder without changing the stat-block ordering stages, hole frontier, or
+projected runtime assertions.
+
+Acceptance: focused MBT green for
+`src/stat-block-action-ordering.mbt.test.ts` (`MBT_TRACES=1`);
+`node scripts/check-mbt-driver-closure.cjs` green; `git diff --check` green;
+the discovery command returns zero files:
+
+```bash
+rg -l 'var qLastResult: str|var qHoles:' packages/battle-runtime --glob '*.mbt.qnt'
+```

@@ -8,10 +8,13 @@ module battleRuntimeDarkOnesBlessingMbt {
 
   type WitnessHole = | DarkOnesBlessing
 
+  type DarkOnesBlessingScenarioOutcome = | Init | SelfKill | NearbyOtherKill | SameSideOtherKill | OutOfRangeRejected | NonEnemyRejected | MinimumTemporaryHitPoints | TemporaryHitPointReplacement
+
+
   type WitnessState = {
     qWarlockTempHp: int,
     qTargetHp: int,
-    qScenarioResult: str,
+    qScenarioOutcome: DarkOnesBlessingScenarioOutcome,
     protocol: WitnessProtocol[WitnessHole],
   }
 
@@ -19,72 +22,72 @@ module battleRuntimeDarkOnesBlessingMbt {
 
   pure def qWarlockTempHp: int = qState.qWarlockTempHp
   pure def qTargetHp: int = qState.qTargetHp
-  pure def qScenarioResult: str = qState.qScenarioResult
+  pure def qScenarioOutcome: DarkOnesBlessingScenarioOutcome = qState.qScenarioOutcome
 
 
   action recordProjection(
     warlockTempHp: int,
     targetHp: int,
-    scenarioResult: str,
+    scenarioOutcome: DarkOnesBlessingScenarioOutcome,
     protocol: WitnessProtocol[WitnessHole],
   ): bool = all {
     qState' = {
       qWarlockTempHp: warlockTempHp,
       qTargetHp: targetHp,
-      qScenarioResult: scenarioResult,
+      qScenarioOutcome: scenarioOutcome,
       protocol: protocol,
     },
   }
 
-  action init = recordProjection(0, 5, "init",
+  action init = recordProjection(0, 5, Init,
     witnessInit(DarkOnesBlessing),
   )
 
   action doSelfKill = all {
-    qScenarioResult == "init",
-    recordProjection(6, 0, "selfKill",
+    qScenarioOutcome == Init,
+    recordProjection(6, 0, SelfKill,
     witnessResolved(DarkOnesBlessing),
   ),
   }
 
   action doNearbyOtherKill = all {
-    qScenarioResult == "init",
-    recordProjection(6, 0, "nearbyOtherKill",
+    qScenarioOutcome == Init,
+    recordProjection(6, 0, NearbyOtherKill,
     witnessResolved(DarkOnesBlessing),
   ),
   }
 
   action doSameSideOtherKill = all {
-    qScenarioResult == "init",
-    recordProjection(6, 0, "sameSideOtherKill",
+    qScenarioOutcome == Init,
+    recordProjection(6, 0, SameSideOtherKill,
     witnessResolved(DarkOnesBlessing),
   ),
   }
 
   action doRejectOutOfRangeOtherKill = all {
-    qScenarioResult == "init",
-    recordProjection(0, 0, "outOfRangeRejected",
+    qScenarioOutcome == Init,
+    recordProjection(0, 0, OutOfRangeRejected,
     witnessResolved(DarkOnesBlessing),
   ),
   }
 
   action doRejectNonEnemyKill = all {
-    qScenarioResult == "init",
-    recordProjection(0, 0, "nonEnemyRejected",
+    qScenarioOutcome == Init,
+    recordProjection(0, 0, NonEnemyRejected,
     witnessResolved(DarkOnesBlessing),
   ),
   }
 
   action doMinimumTemporaryHitPoints = all {
-    qScenarioResult == "init",
-    recordProjection(1, 0, "minimumTemporaryHitPoints",
+    qScenarioOutcome == Init,
+    recordProjection(1, 0, MinimumTemporaryHitPoints,
     witnessResolved(DarkOnesBlessing),
   ),
   }
 
   action doTemporaryHitPointReplacement = all {
-    qScenarioResult == "init",
-    recordProjection(8, 0, "temporaryHitPointReplacement",
+    qScenarioOutcome == Init,
+    recordProjection(8, 0, TemporaryHitPointReplacement,
     witnessResolved(DarkOnesBlessing),
   ),
   }

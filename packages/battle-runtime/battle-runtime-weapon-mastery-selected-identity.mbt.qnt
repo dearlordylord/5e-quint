@@ -5,22 +5,25 @@ module battleRuntimeWeaponMasterySelectedIdentityMbt {
 
   type WitnessHole = | WitnessProtocolHole
 
+  type WeaponMasterySelectedIdentityScenarioOutcome = | Init | NeedsHoles | Resolved
+
+
   var qPrimaryTargetHp: int
   var qSecondTargetHp: int
   var qActionAvailable: bool
   var qPrimaryTargetHasSapEffect: bool
   var qPrimaryTargetProne: bool
   var qCleaveUsed: bool
-  var qScenarioResult: str
+  var qScenarioOutcome: WeaponMasterySelectedIdentityScenarioOutcome
   var qProtocol: WitnessProtocol[WitnessHole]
 
-  pure def qLastResult: str = qScenarioResult
+  pure def qLastResult: WeaponMasterySelectedIdentityScenarioOutcome = qScenarioOutcome
 
   pure def witnessProtocolForProjection(
-    scenarioResult: str,
+    scenarioResult: WeaponMasterySelectedIdentityScenarioOutcome,
   ): WitnessProtocol[WitnessHole] =
-    if (scenarioResult == "init") witnessInit(WitnessProtocolHole)
-    else if (scenarioResult == "needsHoles") witnessNeedsHoles(Set(WitnessProtocolHole))
+    if (scenarioResult == Init) witnessInit(WitnessProtocolHole)
+    else if (scenarioResult == NeedsHoles) witnessNeedsHoles(Set(WitnessProtocolHole))
     else witnessResolved(WitnessProtocolHole)
 
   action recordProjection(
@@ -30,7 +33,7 @@ module battleRuntimeWeaponMasterySelectedIdentityMbt {
     primaryTargetHasSapEffect: bool,
     primaryTargetProne: bool,
     cleaveUsed: bool,
-    lastResult: str,
+    lastResult: WeaponMasterySelectedIdentityScenarioOutcome,
   ): bool = all {
     qPrimaryTargetHp' = primaryTargetHp,
     qSecondTargetHp' = secondTargetHp,
@@ -38,25 +41,25 @@ module battleRuntimeWeaponMasterySelectedIdentityMbt {
     qPrimaryTargetHasSapEffect' = primaryTargetHasSapEffect,
     qPrimaryTargetProne' = primaryTargetProne,
     qCleaveUsed' = cleaveUsed,
-    qScenarioResult' = lastResult,
+    qScenarioOutcome' = lastResult,
     qProtocol' = witnessProtocolForProjection(lastResult),
   }
 
-  action init = recordProjection(13, 13, true, false, false, false, "init")
+  action init = recordProjection(13, 13, true, false, false, false, Init)
 
   action doResolveSapMasteryPropertyHit = all {
-    qLastResult == "init",
-    recordProjection(9, 13, false, true, false, false, "resolved"),
+    qLastResult == Init,
+    recordProjection(9, 13, false, true, false, false, Resolved),
   }
 
   action doResolveToppleMasteryPropertyFailedSavingThrow = all {
-    qLastResult == "init",
-    recordProjection(13, 13, true, false, true, false, "needsHoles"),
+    qLastResult == Init,
+    recordProjection(13, 13, true, false, true, false, NeedsHoles),
   }
 
   action doResolveCleaveMasteryPropertySecondTargetHit = all {
-    qLastResult == "init",
-    recordProjection(9, 9, false, false, false, true, "resolved"),
+    qLastResult == Init,
+    recordProjection(9, 9, false, false, false, true, Resolved),
   }
 
   action step = any {

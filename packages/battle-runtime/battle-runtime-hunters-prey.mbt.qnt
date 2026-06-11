@@ -8,13 +8,14 @@ module battleRuntimeHuntersPreyMbt {
 
   type WitnessHole = | WitnessProtocolHole
 
+  type HuntersPreyScenarioOutcome = | Init | ColossusSlayer | SkipThenUseColossusSlayer | HordeBreaker | HordeBreakerAfterPrimaryMiss | RejectMissingSelection | RejectSameTarget | RejectInvalidTargetPredicate | SecondHordeBreakerUnavailable
+
   type HuntersPreyWitnessState = {
     qColossusTargetHp: int,
     qHordeTargetHp: int,
     qColossusUsed: bool,
     qHordeBreakerUsed: bool,
-    qScenarioResult: str,
-    qScenarioInvalidReason: str,
+    qScenarioOutcome: HuntersPreyScenarioOutcome,
     protocol: WitnessProtocol[WitnessHole],
   }
 
@@ -24,21 +25,14 @@ module battleRuntimeHuntersPreyMbt {
   pure def qHordeTargetHp: int = qState.qHordeTargetHp
   pure def qColossusUsed: bool = qState.qColossusUsed
   pure def qHordeBreakerUsed: bool = qState.qHordeBreakerUsed
-  pure def qLastResult: str = qState.qScenarioResult
-  pure def qLastInvalidReason: str = qState.qScenarioInvalidReason
+  pure def qLastResult: HuntersPreyScenarioOutcome = qState.qScenarioOutcome
 
   pure def huntersPreyProtocolForProjection(
     holes: Set[WitnessHole],
-    scenarioResult: str,
-    scenarioInvalidReason: str,
+    scenarioResult: HuntersPreyScenarioOutcome,
   ): WitnessProtocol[WitnessHole] =
-    if (scenarioResult == "init") witnessInit(WitnessProtocolHole)
-    else if (scenarioInvalidReason == "invalidFill") witnessInvalid(WitnessProtocolHole, WInvalidFill)
-    else if (scenarioInvalidReason == "staleSubject") witnessInvalid(WitnessProtocolHole, WStaleSubject)
-    else if (scenarioInvalidReason == "wrongActor") witnessInvalid(WitnessProtocolHole, WWrongActor)
-    else if (scenarioInvalidReason == "missingCombatant") witnessInvalid(WitnessProtocolHole, WMissingCombatant)
-    else if (scenarioInvalidReason == "unsupportedSubject") witnessInvalid(WitnessProtocolHole, WUnsupportedSubject)
-    else if (scenarioInvalidReason == "unsupportedActOption") witnessInvalid(WitnessProtocolHole, WUnsupportedActOption)
+    if (scenarioResult == Init) witnessInit(WitnessProtocolHole)
+    else if (scenarioResult.in(Set(RejectMissingSelection, RejectSameTarget, RejectInvalidTargetPredicate))) witnessInvalid(WitnessProtocolHole, WInvalidFill)
     else if (holes != Set()) witnessNeedsHoles(holes)
     else witnessResolved(WitnessProtocolHole)
 
@@ -48,60 +42,58 @@ module battleRuntimeHuntersPreyMbt {
     hordeTargetHp: int,
     colossusUsed: bool,
     hordeBreakerUsed: bool,
-    lastResult: str,
-    lastInvalidReason: str,
+    lastResult: HuntersPreyScenarioOutcome,
   ): bool = all {
     qState' = {
       qColossusTargetHp: colossusTargetHp,
       qHordeTargetHp: hordeTargetHp,
       qColossusUsed: colossusUsed,
       qHordeBreakerUsed: hordeBreakerUsed,
-      qScenarioResult: lastResult,
-      qScenarioInvalidReason: lastInvalidReason,
-      protocol: huntersPreyProtocolForProjection(Set(), lastResult, lastInvalidReason),
+      qScenarioOutcome: lastResult,
+      protocol: huntersPreyProtocolForProjection(Set(), lastResult),
     },
   }
 
-  action init = recordProjection(7, 10, false, false, "init", "")
+  action init = recordProjection(7, 10, false, false, Init)
 
   action doColossusSlayer = all {
-    qLastResult == "init",
-    recordProjection(1, 10, true, false, "colossusSlayer", ""),
+    qLastResult == Init,
+    recordProjection(1, 10, true, false, ColossusSlayer),
   }
 
   action doSkipThenUseColossusSlayer = all {
-    qLastResult == "init",
-    recordProjection(2, 10, true, false, "skipThenUseColossusSlayer", ""),
+    qLastResult == Init,
+    recordProjection(2, 10, true, false, SkipThenUseColossusSlayer),
   }
 
   action doHordeBreaker = all {
-    qLastResult == "init",
-    recordProjection(7, 6, false, true, "hordeBreaker", ""),
+    qLastResult == Init,
+    recordProjection(7, 6, false, true, HordeBreaker),
   }
 
   action doHordeBreakerAfterPrimaryMiss = all {
-    qLastResult == "init",
-    recordProjection(7, 6, false, true, "hordeBreakerAfterPrimaryMiss", ""),
+    qLastResult == Init,
+    recordProjection(7, 6, false, true, HordeBreakerAfterPrimaryMiss),
   }
 
   action doRejectMissingSelection = all {
-    qLastResult == "init",
-    recordProjection(7, 10, false, false, "rejectMissingSelection", "invalidFill"),
+    qLastResult == Init,
+    recordProjection(7, 10, false, false, RejectMissingSelection),
   }
 
   action doRejectSameTarget = all {
-    qLastResult == "init",
-    recordProjection(7, 10, false, false, "rejectSameTarget", "invalidFill"),
+    qLastResult == Init,
+    recordProjection(7, 10, false, false, RejectSameTarget),
   }
 
   action doRejectInvalidTargetPredicate = all {
-    qLastResult == "init",
-    recordProjection(7, 10, false, false, "rejectInvalidTargetPredicate", "invalidFill"),
+    qLastResult == Init,
+    recordProjection(7, 10, false, false, RejectInvalidTargetPredicate),
   }
 
   action doSecondHordeBreakerUnavailable = all {
-    qLastResult == "init",
-    recordProjection(7, 10, false, true, "secondHordeBreakerUnavailable", ""),
+    qLastResult == Init,
+    recordProjection(7, 10, false, true, SecondHordeBreakerUnavailable),
   }
 
   action step = any {

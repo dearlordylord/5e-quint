@@ -34,6 +34,7 @@ import {
   numberFromQuintInt,
   quintRecordField,
   quintStateRecord,
+  quintVariantTag,
   run,
   stateCheck,
 } from "./battle-runtime-mbt-driver-kit.ts";
@@ -100,7 +101,21 @@ const LAST_RESULTS = [
   "rejectedPriorLevelOnePlusSpell",
 ] as const;
 type LastResult = (typeof LAST_RESULTS)[number];
-const LAST_RESULT_SET: ReadonlySet<string> = new Set(LAST_RESULTS);
+const LAST_RESULT_BY_SCENARIO_OUTCOME_TAG = {
+  Init: "init",
+  ResolvedQuickenedRestoration: "resolvedQuickenedRestoration",
+  ResolvedQuickenedSaveGatedCondition: "resolvedQuickenedSaveGatedCondition",
+  ResolvedQuickenedSaveGatedConditionImmunity:
+    "resolvedQuickenedSaveGatedConditionImmunity",
+  ResolvedQuickenedDirectCondition: "resolvedQuickenedDirectCondition",
+  ResolvedQuickenedRollModifier: "resolvedQuickenedRollModifier",
+  ResolvedAfterMagicActionSpent: "resolvedAfterMagicActionSpent",
+  RejectedUnaffordable: "rejectedUnaffordable",
+  RejectedUnknownOption: "rejectedUnknownOption",
+  RejectedUnsupportedSecondOption: "rejectedUnsupportedSecondOption",
+  RejectedOnePerSpell: "rejectedOnePerSpell",
+  RejectedPriorLevelOnePlusSpell: "rejectedPriorLevelOnePlusSpell",
+} as const satisfies Readonly<Record<string, LastResult>>;
 
 type QuickenedSpellGovernorProjection = {
   readonly quickenedCureWoundsOffered: boolean;
@@ -932,7 +947,7 @@ function normalizeQuickenedSpellGovernorQuintState(
       "Expected Quickened Spell Governor witness holes to be empty.",
     );
   }
-  const lastResultValue = lastResult(state["qScenarioResult"]);
+  const lastResultValue = lastResult(state["qScenarioOutcome"]);
   assertWitnessProtocolConsistentWithScenario({
     label: "Quickened Spell Governor",
     scenarioResult: lastResultValue,
@@ -995,8 +1010,10 @@ function invalidKind(raw: unknown): InvalidKind {
 }
 
 function lastResult(raw: unknown): LastResult {
-  if (typeof raw === "string" && LAST_RESULT_SET.has(raw)) {
-    return raw as LastResult;
+  const tag = quintVariantTag(raw, "qScenarioOutcome");
+  const result = LAST_RESULT_BY_SCENARIO_OUTCOME_TAG[tag];
+  if (result !== undefined) {
+    return result;
   }
-  throw new Error(`Unknown Quickened Spell result: ${String(raw)}.`);
+  throw new Error(`Unknown Quickened Spell result tag: ${tag}.`);
 }

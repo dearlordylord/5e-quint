@@ -5,6 +5,9 @@ module battleRuntimeAntimagicFieldOngoingSuppressionMbt {
 
   type WitnessHole = | AntimagicOngoingSuppression
 
+  type AntimagicFieldOngoingSuppressionScenarioOutcome = | Init | SuppressedOrdinarySpell | SuppressedArtifactSpell | Restored
+
+
   type WitnessState = {
     qActionAvailable: bool,
     qSpellAvailable: bool,
@@ -13,7 +16,7 @@ module battleRuntimeAntimagicFieldOngoingSuppressionMbt {
     qSuppressedEffectRefCount: int,
     qOngoingSpellSuppressed: bool,
     qAntimagicCasterConcentrating: bool,
-    qScenarioResult: str,
+    qScenarioOutcome: AntimagicFieldOngoingSuppressionScenarioOutcome,
     protocol: WitnessProtocol[WitnessHole],
   }
 
@@ -26,7 +29,7 @@ module battleRuntimeAntimagicFieldOngoingSuppressionMbt {
   pure def qSuppressedEffectRefCount: int = qState.qSuppressedEffectRefCount
   pure def qOngoingSpellSuppressed: bool = qState.qOngoingSpellSuppressed
   pure def qAntimagicCasterConcentrating: bool = qState.qAntimagicCasterConcentrating
-  pure def qScenarioResult: str = qState.qScenarioResult
+  pure def qScenarioOutcome: AntimagicFieldOngoingSuppressionScenarioOutcome = qState.qScenarioOutcome
 
 
   action recordAntimagicFieldState(
@@ -37,7 +40,7 @@ module battleRuntimeAntimagicFieldOngoingSuppressionMbt {
     suppressedEffectRefCount: int,
     ongoingSpellSuppressed: bool,
     antimagicCasterConcentrating: bool,
-    scenarioResult: str,
+    scenarioOutcome: AntimagicFieldOngoingSuppressionScenarioOutcome,
     protocol: WitnessProtocol[WitnessHole],
   ): bool = all {
     qState' = {
@@ -48,7 +51,7 @@ module battleRuntimeAntimagicFieldOngoingSuppressionMbt {
       qSuppressedEffectRefCount: suppressedEffectRefCount,
       qOngoingSpellSuppressed: ongoingSpellSuppressed,
       qAntimagicCasterConcentrating: antimagicCasterConcentrating,
-      qScenarioResult: scenarioResult,
+      qScenarioOutcome: scenarioOutcome,
       protocol: protocol,
     },
   }
@@ -62,7 +65,7 @@ module battleRuntimeAntimagicFieldOngoingSuppressionMbt {
       0,
       false,
       false,
-      "init",
+      Init,
     witnessInit(AntimagicOngoingSuppression),
   ),
   }
@@ -80,7 +83,7 @@ module battleRuntimeAntimagicFieldOngoingSuppressionMbt {
       1,
       true,
       true,
-      "suppressedOrdinarySpell",
+      SuppressedOrdinarySpell,
     witnessResolved(AntimagicOngoingSuppression),
   ),
   }
@@ -98,7 +101,7 @@ module battleRuntimeAntimagicFieldOngoingSuppressionMbt {
       0,
       false,
       true,
-      "suppressedArtifactSpell",
+      SuppressedArtifactSpell,
     witnessResolved(AntimagicOngoingSuppression),
   ),
   }
@@ -114,7 +117,7 @@ module battleRuntimeAntimagicFieldOngoingSuppressionMbt {
       0,
       false,
       false,
-      "restored",
+      Restored,
     witnessResolved(AntimagicOngoingSuppression),
   ),
   }

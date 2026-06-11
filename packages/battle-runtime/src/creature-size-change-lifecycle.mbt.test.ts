@@ -94,7 +94,20 @@ const LAST_RESULTS = [
   "durationExpired",
 ] as const;
 type LastResult = (typeof LAST_RESULTS)[number];
-const LAST_RESULT_SET: ReadonlySet<string> = new Set(LAST_RESULTS);
+const CREATURE_SIZE_CHANGE_LIFECYCLE_SCENARIO_OUTCOME_BY_TAG: Readonly<
+  Record<string, LastResult>
+> = {
+  Init: "init",
+  NeedsHoles: "needsHoles",
+  UnwillingSaveSucceeded: "unwillingSaveSucceeded",
+  UnwillingSaveFailed: "unwillingSaveFailed",
+  WillingEnlarge: "willingEnlarge",
+  WillingReduce: "willingReduce",
+  AttackDamageAdjusted: "attackDamageAdjusted",
+  ConcentrationBroken: "concentrationBroken",
+  DurationExpired: "durationExpired",
+} as const;
+
 
 type CreatureSizeChangeHole = "SavingThrowOutcome";
 
@@ -622,7 +635,7 @@ function normalizeCreatureSizeChangeQuintState(
   raw: unknown,
 ): CreatureSizeChangeProjection {
   const state = quintRecordField(quintStateRecord(raw), "qState");
-  const scenarioResult = lastResult(state["qScenarioResult"]);
+  const scenarioResult = lastResult(state["qScenarioOutcome"]);
   const protocol = decodeWitnessProtocolState({
     state,
     protocolField: "protocol",
@@ -698,10 +711,14 @@ function rollMode(raw: unknown): RollMode {
 }
 
 function lastResult(raw: unknown): LastResult {
-  if (typeof raw === "string" && LAST_RESULT_SET.has(raw)) {
-    return raw as LastResult;
+  const tag = quintVariantTag(raw, "qScenarioOutcome");
+  const value = CREATURE_SIZE_CHANGE_LIFECYCLE_SCENARIO_OUTCOME_BY_TAG[tag];
+  if (value !== undefined) {
+    return value;
   }
-  throw new Error(`Unknown Enlarge/Reduce result: ${String(raw)}.`);
+  throw new Error(
+    `Expected Quint scenario outcome variant qScenarioOutcome, got ${tag}.`,
+  );
 }
 
 function creatureSizeChangeHole(raw: unknown): CreatureSizeChangeHole {

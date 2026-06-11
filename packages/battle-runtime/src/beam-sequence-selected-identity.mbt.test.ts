@@ -56,6 +56,15 @@ type BeamSequenceLastResult =
   | "sameTargetResolved"
   | "splitTargetResolved"
   | "creatureObjectResolved";
+
+const BEAM_SEQUENCE_SELECTED_IDENTITY_SCENARIO_OUTCOME_BY_TAG = {
+  Init: "init",
+  Discovered: "discovered",
+  SameTargetResolved: "sameTargetResolved",
+  SplitTargetResolved: "splitTargetResolved",
+  CreatureObjectResolved: "creatureObjectResolved",
+} as const;
+
 type BeamSequenceProjection = {
   readonly initialCreatureTargetHoles: number;
   readonly initialObjectTargetHoles: number;
@@ -122,7 +131,8 @@ defineSelectedIdentityWitness({
   quintStateField: "qState",
   quintStateFieldPrefix: "q",
   witnessProtocolField: "protocol",
-  quintFieldNames: { lastResult: "qScenarioResult" },
+  quintFieldNames: { lastResult: "qScenarioOutcome" },
+  quintVariantFieldTags: { lastResult: BEAM_SEQUENCE_SELECTED_IDENTITY_SCENARIO_OUTCOME_BY_TAG },
   projectionSchema: {
     initialCreatureTargetHoles: "int",
     initialObjectTargetHoles: "int",
@@ -130,7 +140,7 @@ defineSelectedIdentityWitness({
     zombieHp: "int",
     objectHp: "int",
     actionAvailable: "bool",
-    lastResult: "str",
+    lastResult: "variant",
   },
   initialProjection: projectInitialBattle("init"),
   units: [

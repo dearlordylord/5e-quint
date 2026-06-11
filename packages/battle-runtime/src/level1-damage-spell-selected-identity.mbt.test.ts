@@ -523,6 +523,20 @@ const level1DamageSpellDiscoveries = {
   () => Level1DamageSpellSelectedIdentityProjection
 >;
 
+const LEVEL1_DAMAGE_SPELL_SELECTED_IDENTITY_SCENARIO_OUTCOME_BY_TAG = {
+  Init: "init",
+  BurningHandsMixedConeSavingThrows: "burningHandsMixedConeSavingThrows",
+  ChromaticOrbDuplicateDamageLeap: "chromaticOrbDuplicateDamageLeap",
+  IceKnifeHitAttackDamageAndBurstSavingThrows: "iceKnifeHitAttackDamageAndBurstSavingThrows",
+  IceKnifeMissBurstSavingThrows: "iceKnifeMissBurstSavingThrows",
+  PoisonSpraySpellAttackDamage: "poisonSpraySpellAttackDamage",
+  RayOfSicknessSpellAttackDamageAndPoisoned: "rayOfSicknessSpellAttackDamageAndPoisoned",
+  SacredFlameDexteritySavingThrowRadiantDamage: "sacredFlameDexteritySavingThrowRadiantDamage",
+  SorcerousBurstSpellAttackDamage: "sorcerousBurstSpellAttackDamage",
+  StarryWispObjectSpellAttackDamageAndDimLight: "starryWispObjectSpellAttackDamageAndDimLight",
+  ViciousMockeryWisdomSavingThrowPsychicDamageAndNextAttackDisadvantage: "viciousMockeryWisdomSavingThrowPsychicDamageAndNextAttackDisadvantage",
+} as const satisfies Readonly<Record<string, Level1DamageSpellSelectedIdentityResult>>;
+
 defineSelectedIdentityWitness({
   describeLabel: "Level 1 damage spell selected identity MBT",
   taskId: "level1-damage-spell-selected-identity",
@@ -533,7 +547,10 @@ defineSelectedIdentityWitness({
   quintStateField: "qState",
   quintStateFieldPrefix: "q",
   witnessProtocolField: "protocol",
-  quintFieldNames: { lastResult: "qScenarioResult" },
+  quintFieldNames: { lastResult: "qScenarioOutcome" },
+  quintVariantFieldTags: {
+    lastResult: LEVEL1_DAMAGE_SPELL_SELECTED_IDENTITY_SCENARIO_OUTCOME_BY_TAG,
+  },
   projectionSchema: {
     actionAvailable: "bool",
     spellSlotSpentThisTurn: "bool",
@@ -542,7 +559,7 @@ defineSelectedIdentityWitness({
     primaryTargetPoisoned: "bool",
     primaryTargetNextAttackRollDisadvantage: "bool",
     secondaryTargetHp: "int",
-    lastResult: "str",
+    lastResult: "variant",
   },
   initialProjection: expectedProjection(),
   units: selectedUnitIdentityReplays.map((replay) => ({

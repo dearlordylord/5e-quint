@@ -8,11 +8,14 @@ module battleRuntimeOpenHandTechniqueMbt {
 
   type WitnessHole = | WitnessProtocolHole
 
+  type OpenHandTechniqueScenarioOutcome = | Init | Addle | PushSaveSucceeded | PushSaveFailed | ToppleSaveSucceeded | ToppleSaveFailed | RejectNonFlurry | RejectPushTooFar | RejectTopplePushDisposition
+
+
   type OpenHandTechniqueWitnessState = {
     qTargetOpportunityAttackDenied: bool,
     qTargetProne: bool,
     qPushDistanceFeet: int,
-    qScenarioResult: str,
+    qScenarioOutcome: OpenHandTechniqueScenarioOutcome,
     protocol: WitnessProtocol[WitnessHole],
   }
 
@@ -21,14 +24,14 @@ module battleRuntimeOpenHandTechniqueMbt {
   pure def qTargetOpportunityAttackDenied: bool = qState.qTargetOpportunityAttackDenied
   pure def qTargetProne: bool = qState.qTargetProne
   pure def qPushDistanceFeet: int = qState.qPushDistanceFeet
-  pure def qLastResult: str = qState.qScenarioResult
+  pure def qLastResult: OpenHandTechniqueScenarioOutcome = qState.qScenarioOutcome
 
   pure def selectedIdentityProtocolForProjection(
     holes: Set[WitnessHole],
-    scenarioResult: str,
+    scenarioResult: OpenHandTechniqueScenarioOutcome,
     scenarioInvalidReason: str,
   ): WitnessProtocol[WitnessHole] =
-    if (scenarioResult == "init") witnessInit(WitnessProtocolHole)
+    if (scenarioResult == Init) witnessInit(WitnessProtocolHole)
     else if (scenarioInvalidReason == "invalidFill") witnessInvalid(WitnessProtocolHole, WInvalidFill)
     else if (holes != Set()) witnessNeedsHoles(holes)
     else witnessResolved(WitnessProtocolHole)
@@ -37,57 +40,57 @@ module battleRuntimeOpenHandTechniqueMbt {
     targetOpportunityAttackDenied: bool,
     targetProne: bool,
     pushDistanceFeet: int,
-    lastResult: str,
+    lastResult: OpenHandTechniqueScenarioOutcome,
     lastInvalidReason: str,
   ): bool = all {
     qState' = {
       qTargetOpportunityAttackDenied: targetOpportunityAttackDenied,
       qTargetProne: targetProne,
       qPushDistanceFeet: pushDistanceFeet,
-      qScenarioResult: lastResult,
+      qScenarioOutcome: lastResult,
       protocol: selectedIdentityProtocolForProjection(Set(), lastResult, lastInvalidReason),
     },
   }
-  action init = recordProjection(false, false, 0, "init", "")
+  action init = recordProjection(false, false, 0, Init, "")
 
   action doAddle = all {
-    qLastResult == "init",
-    recordProjection(true, false, 0, "addle", ""),
+    qLastResult == Init,
+    recordProjection(true, false, 0, Addle, ""),
   }
 
   action doPushSaveSucceeded = all {
-    qLastResult == "init",
-    recordProjection(false, false, 0, "pushSaveSucceeded", ""),
+    qLastResult == Init,
+    recordProjection(false, false, 0, PushSaveSucceeded, ""),
   }
 
   action doPushSaveFailed = all {
-    qLastResult == "init",
-    recordProjection(false, false, 10, "pushSaveFailed", ""),
+    qLastResult == Init,
+    recordProjection(false, false, 10, PushSaveFailed, ""),
   }
 
   action doToppleSaveSucceeded = all {
-    qLastResult == "init",
-    recordProjection(false, false, 0, "toppleSaveSucceeded", ""),
+    qLastResult == Init,
+    recordProjection(false, false, 0, ToppleSaveSucceeded, ""),
   }
 
   action doToppleSaveFailed = all {
-    qLastResult == "init",
-    recordProjection(false, true, 0, "toppleSaveFailed", ""),
+    qLastResult == Init,
+    recordProjection(false, true, 0, ToppleSaveFailed, ""),
   }
 
   action doRejectNonFlurry = all {
-    qLastResult == "init",
-    recordProjection(false, false, 0, "rejectNonFlurry", "invalidFill"),
+    qLastResult == Init,
+    recordProjection(false, false, 0, RejectNonFlurry, "invalidFill"),
   }
 
   action doRejectPushTooFar = all {
-    qLastResult == "init",
-    recordProjection(false, false, 0, "rejectPushTooFar", "invalidFill"),
+    qLastResult == Init,
+    recordProjection(false, false, 0, RejectPushTooFar, "invalidFill"),
   }
 
   action doRejectTopplePushDisposition = all {
-    qLastResult == "init",
-    recordProjection(false, false, 0, "rejectTopplePushDisposition", "invalidFill"),
+    qLastResult == Init,
+    recordProjection(false, false, 0, RejectTopplePushDisposition, "invalidFill"),
   }
 
   action step = any {
