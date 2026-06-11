@@ -44,6 +44,7 @@ import {
   numberFromQuintInt,
   quintRecordField,
   quintStateRecord,
+  quintVariantTag,
   run,
   stateCheck,
 } from "./battle-runtime-mbt-driver-kit.ts";
@@ -96,6 +97,12 @@ type ReactionCastingTimeLastResult =
   | "counterspellEndedSpellCast"
   | "counterspellAllowedSpellCastResume"
   | "hellishRebukeAfterDamage";
+const REACTION_CASTING_TIME_LAST_RESULT_BY_SCENARIO_OUTCOME_TAG = {
+  Init: "init",
+  CounterspellEndedSpellCast: "counterspellEndedSpellCast",
+  CounterspellAllowedSpellCastResume: "counterspellAllowedSpellCastResume",
+  HellishRebukeAfterDamage: "hellishRebukeAfterDamage",
+} as const satisfies Readonly<Record<string, ReactionCastingTimeLastResult>>;
 
 type ReactionCastingTimeProjection = {
   readonly triggerKind: ReactionCastingTimeTriggerKind;
@@ -974,7 +981,7 @@ function normalizeReactionCastingTimeQuintState(
     );
   }
   const lastResultValue = reactionCastingTimeLastResult(
-    state["qScenarioResult"],
+    state["qScenarioOutcome"],
   );
   assertWitnessProtocolConsistentWithScenario({
     label: "Reaction casting time",
@@ -1047,13 +1054,10 @@ function reactionCastingTimeContinuationKind(
 function reactionCastingTimeLastResult(
   raw: unknown,
 ): ReactionCastingTimeLastResult {
-  if (
-    raw === "init" ||
-    raw === "counterspellEndedSpellCast" ||
-    raw === "counterspellAllowedSpellCastResume" ||
-    raw === "hellishRebukeAfterDamage"
-  ) {
-    return raw;
+  const tag = quintVariantTag(raw, "qScenarioOutcome");
+  const result = REACTION_CASTING_TIME_LAST_RESULT_BY_SCENARIO_OUTCOME_TAG[tag];
+  if (result !== undefined) {
+    return result;
   }
-  throw new Error(`Unexpected Reaction casting time result ${String(raw)}.`);
+  throw new Error(`Unexpected Reaction casting time result tag ${tag}.`);
 }

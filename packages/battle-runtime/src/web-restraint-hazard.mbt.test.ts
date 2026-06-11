@@ -12,6 +12,7 @@ import {
   mbtTraceCount,
   numberFromQuintInt,
   quintStateRecord,
+  quintVariantTag,
   run,
   stateCheck,
 } from "./battle-runtime-mbt-driver-kit.ts";
@@ -67,6 +68,18 @@ type WebLastResult =
   | "leftArea"
   | "moved"
   | "removed";
+const WEB_LAST_RESULT_BY_SCENARIO_OUTCOME_TAG = {
+  Init: "init",
+  NeedsHoles: "needsHoles",
+  Resolved: "resolved",
+  Restrained: "restrained",
+  Saved: "saved",
+  EscapeFailed: "escapeFailed",
+  Escaped: "escaped",
+  LeftArea: "leftArea",
+  Moved: "moved",
+  Removed: "removed",
+} as const satisfies Readonly<Record<string, WebLastResult>>;
 
 type WebRestraintHazardState = {
   readonly currentTurnRole: WebTurnRole;
@@ -524,7 +537,7 @@ function normalizeWebQuintState(raw: unknown): WebRestraintHazardState {
     decodeHole: webHole,
     compareHoles: (left, right) => left.localeCompare(right),
   });
-  const scenarioResult = webLastResult(state["qScenarioResult"]);
+  const scenarioResult = webLastResult(state["qScenarioOutcome"]);
   assertWitnessProtocolConsistentWithScenario({
     label: "Web restraint hazard",
     scenarioResult,
@@ -590,19 +603,10 @@ function webHole(raw: unknown): WebHole {
 }
 
 function webLastResult(raw: unknown): WebLastResult {
-  if (
-    raw === "init" ||
-    raw === "needsHoles" ||
-    raw === "resolved" ||
-    raw === "restrained" ||
-    raw === "saved" ||
-    raw === "escapeFailed" ||
-    raw === "escaped" ||
-    raw === "leftArea" ||
-    raw === "moved" ||
-    raw === "removed"
-  ) {
-    return raw;
+  const tag = quintVariantTag(raw, "qScenarioOutcome");
+  const result = WEB_LAST_RESULT_BY_SCENARIO_OUTCOME_TAG[tag];
+  if (result !== undefined) {
+    return result;
   }
-  throw new Error(`Unknown Web result: ${String(raw)}.`);
+  throw new Error(`Unknown Web result tag: ${tag}.`);
 }

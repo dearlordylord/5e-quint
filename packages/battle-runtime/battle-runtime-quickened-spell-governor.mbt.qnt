@@ -18,6 +18,9 @@ module battleRuntimeQuickenedSpellGovernorMbt {
   //   Sorcery Points as a Pool, and Spend.
   type WitnessHole = | WitnessProtocolHole
 
+  type QuickenedSpellGovernorScenarioOutcome = | Init | ResolvedQuickenedRestoration | ResolvedQuickenedSaveGatedCondition | ResolvedQuickenedSaveGatedConditionImmunity | ResolvedQuickenedDirectCondition | ResolvedQuickenedRollModifier | ResolvedAfterMagicActionSpent | RejectedUnaffordable | RejectedUnknownOption | RejectedUnsupportedSecondOption | RejectedOnePerSpell | RejectedPriorLevelOnePlusSpell
+
+
   type QuickenedSpellGovernorWitnessState = {
     qQuickenedCureWoundsOffered: bool,
     qColorSprayBlinded: bool,
@@ -33,7 +36,7 @@ module battleRuntimeQuickenedSpellGovernorMbt {
     qQuickenedLevelOnePlusCastThisTurn: bool,
     qSpellSlotActsAvailable: bool,
     qInvalidKind: str,
-    qScenarioResult: str,
+    qScenarioOutcome: QuickenedSpellGovernorScenarioOutcome,
     protocol: WitnessProtocol[WitnessHole],
   }
 
@@ -53,7 +56,7 @@ module battleRuntimeQuickenedSpellGovernorMbt {
   pure def qQuickenedLevelOnePlusCastThisTurn: bool = qState.qQuickenedLevelOnePlusCastThisTurn
   pure def qSpellSlotActsAvailable: bool = qState.qSpellSlotActsAvailable
   pure def qInvalidKind: str = qState.qInvalidKind
-  pure def qLastResult: str = qState.qScenarioResult
+  pure def qLastResult: QuickenedSpellGovernorScenarioOutcome = qState.qScenarioOutcome
 
   pure val initialSorceryPoints: int = 4
   pure val highSorceryPoints: int = 5
@@ -63,10 +66,10 @@ module battleRuntimeQuickenedSpellGovernorMbt {
 
   pure def witnessProtocolForProjection(
     holes: Set[WitnessHole],
-    scenarioResult: str,
+    scenarioResult: QuickenedSpellGovernorScenarioOutcome,
     scenarioInvalidReason: str,
   ): WitnessProtocol[WitnessHole] =
-    if (scenarioResult == "init") witnessInit(WitnessProtocolHole)
+    if (scenarioResult == Init) witnessInit(WitnessProtocolHole)
     else if (scenarioInvalidReason == "invalidFill") witnessInvalid(WitnessProtocolHole, WInvalidFill)
     else if (scenarioInvalidReason == "staleSubject") witnessInvalid(WitnessProtocolHole, WStaleSubject)
     else if (holes != Set()) witnessNeedsHoles(holes)
@@ -87,7 +90,7 @@ module battleRuntimeQuickenedSpellGovernorMbt {
     quickenedLevelOnePlusCastThisTurn: bool,
     spellSlotActsAvailable: bool,
     invalidKind: str,
-    lastResult: str,
+    lastResult: QuickenedSpellGovernorScenarioOutcome,
   ): bool = all {
     qState' = {
       qQuickenedCureWoundsOffered: quickenedCureWoundsOffered,
@@ -104,7 +107,7 @@ module battleRuntimeQuickenedSpellGovernorMbt {
       qQuickenedLevelOnePlusCastThisTurn: quickenedLevelOnePlusCastThisTurn,
       qSpellSlotActsAvailable: spellSlotActsAvailable,
       qInvalidKind: invalidKind,
-      qScenarioResult: lastResult,
+      qScenarioOutcome: lastResult,
       protocol: witnessProtocolForProjection(Set(), lastResult, ""),
     },
   }
@@ -124,7 +127,7 @@ module battleRuntimeQuickenedSpellGovernorMbt {
     false,
     true,
     "none",
-    "init",
+    Init,
   )
 
   action doResolveQuickenedRestoration = recordQuickenedGovernorState(
@@ -142,7 +145,7 @@ module battleRuntimeQuickenedSpellGovernorMbt {
     true,
     false,
     "none",
-    "resolvedQuickenedRestoration",
+    ResolvedQuickenedRestoration,
   )
 
   action doResolveQuickenedSaveGatedCondition = recordQuickenedGovernorState(
@@ -160,7 +163,7 @@ module battleRuntimeQuickenedSpellGovernorMbt {
     true,
     false,
     "none",
-    "resolvedQuickenedSaveGatedCondition",
+    ResolvedQuickenedSaveGatedCondition,
   )
 
   action doResolveQuickenedSaveGatedConditionImmunity = recordQuickenedGovernorState(
@@ -178,7 +181,7 @@ module battleRuntimeQuickenedSpellGovernorMbt {
     true,
     false,
     "none",
-    "resolvedQuickenedSaveGatedConditionImmunity",
+    ResolvedQuickenedSaveGatedConditionImmunity,
   )
 
   action doResolveQuickenedDirectCondition = recordQuickenedGovernorState(
@@ -196,7 +199,7 @@ module battleRuntimeQuickenedSpellGovernorMbt {
     true,
     false,
     "none",
-    "resolvedQuickenedDirectCondition",
+    ResolvedQuickenedDirectCondition,
   )
 
   action doResolveQuickenedRollModifier = recordQuickenedGovernorState(
@@ -214,7 +217,7 @@ module battleRuntimeQuickenedSpellGovernorMbt {
     true,
     false,
     "none",
-    "resolvedQuickenedRollModifier",
+    ResolvedQuickenedRollModifier,
   )
 
   action doResolveQuickenedAfterMagicActionSpent = recordQuickenedGovernorState(
@@ -232,7 +235,7 @@ module battleRuntimeQuickenedSpellGovernorMbt {
     true,
     false,
     "none",
-    "resolvedAfterMagicActionSpent",
+    ResolvedAfterMagicActionSpent,
   )
 
   action doRejectUnaffordable = recordQuickenedGovernorState(
@@ -250,7 +253,7 @@ module battleRuntimeQuickenedSpellGovernorMbt {
     false,
     true,
     "unaffordable",
-    "rejectedUnaffordable",
+    RejectedUnaffordable,
   )
 
   action doRejectUnknownOption = recordQuickenedGovernorState(
@@ -268,7 +271,7 @@ module battleRuntimeQuickenedSpellGovernorMbt {
     false,
     true,
     "unknownOption",
-    "rejectedUnknownOption",
+    RejectedUnknownOption,
   )
 
   action doRejectUnsupportedSecondOption = recordQuickenedGovernorState(
@@ -286,7 +289,7 @@ module battleRuntimeQuickenedSpellGovernorMbt {
     false,
     true,
     "unsupportedSecondOption",
-    "rejectedUnsupportedSecondOption",
+    RejectedUnsupportedSecondOption,
   )
 
   action doRejectOnePerSpell = recordQuickenedGovernorState(
@@ -304,7 +307,7 @@ module battleRuntimeQuickenedSpellGovernorMbt {
     false,
     true,
     "onePerSpell",
-    "rejectedOnePerSpell",
+    RejectedOnePerSpell,
   )
 
   action doRejectPriorLevelOnePlusSpell = recordQuickenedGovernorState(
@@ -322,7 +325,7 @@ module battleRuntimeQuickenedSpellGovernorMbt {
     false,
     true,
     "sameTurnLevelOnePlus",
-    "rejectedPriorLevelOnePlusSpell",
+    RejectedPriorLevelOnePlusSpell,
   )
 
   action step = any {

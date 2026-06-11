@@ -102,11 +102,18 @@ defineSelectedIdentityWitness({
     primaryTargetHasSapEffect: "bool",
     primaryTargetProne: "bool",
     cleaveUsed: "bool",
-    lastResult: "str",
+    lastResult: "variant",
   },
   witnessProtocolField: "qProtocol",
   witnessDecodeHole: weaponMasteryWitnessHole,
-  quintFieldNames: { lastResult: "qScenarioResult" },
+  quintFieldNames: { lastResult: "qScenarioOutcome" },
+  quintVariantFieldTags: {
+    lastResult: {
+      Init: "init",
+      NeedsHoles: "needsHoles",
+      Resolved: "resolved",
+    },
+  },
   initialProjection: initialProjection("mastery_sap"),
   units: [
     {

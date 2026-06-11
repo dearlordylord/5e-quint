@@ -12,6 +12,7 @@ import {
   mbtTraceCount,
   numberFromQuintInt,
   quintStateRecord,
+  quintVariantTag,
   run,
   stateCheck,
 } from "./battle-runtime-mbt-driver-kit.ts";
@@ -73,6 +74,14 @@ type SpikeGrowthLastResult =
   | "needsHoles"
   | "damaged"
   | "concentrationBroken";
+const SPIKE_GROWTH_LAST_RESULT_BY_SCENARIO_OUTCOME_TAG = {
+  Init: "init",
+  Cast: "cast",
+  TargetTurn: "targetTurn",
+  NeedsHoles: "needsHoles",
+  Damaged: "damaged",
+  ConcentrationBroken: "concentrationBroken",
+} as const satisfies Readonly<Record<string, SpikeGrowthLastResult>>;
 
 type SpikeGrowthMovementHazardState = {
   readonly currentTurnRole: SpikeGrowthTurnRole;
@@ -467,7 +476,7 @@ function normalizeSpikeGrowthQuintState(
     decodeHole: spikeGrowthHole,
     compareHoles: (left, right) => left.localeCompare(right),
   });
-  const scenarioResult = spikeGrowthLastResult(state["qScenarioResult"]);
+  const scenarioResult = spikeGrowthLastResult(state["qScenarioOutcome"]);
   assertWitnessProtocolConsistentWithScenario({
     label: "Spike Growth movement hazard",
     scenarioResult,
@@ -526,15 +535,10 @@ function spikeGrowthHole(raw: unknown): SpikeGrowthHole {
 }
 
 function spikeGrowthLastResult(raw: unknown): SpikeGrowthLastResult {
-  if (
-    raw === "init" ||
-    raw === "cast" ||
-    raw === "targetTurn" ||
-    raw === "needsHoles" ||
-    raw === "damaged" ||
-    raw === "concentrationBroken"
-  ) {
-    return raw;
+  const tag = quintVariantTag(raw, "qScenarioOutcome");
+  const result = SPIKE_GROWTH_LAST_RESULT_BY_SCENARIO_OUTCOME_TAG[tag];
+  if (result !== undefined) {
+    return result;
   }
-  throw new Error(`Unknown Spike Growth result: ${String(raw)}.`);
+  throw new Error(`Unknown Spike Growth result tag: ${tag}.`);
 }

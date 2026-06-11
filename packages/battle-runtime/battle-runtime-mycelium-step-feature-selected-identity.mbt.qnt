@@ -5,10 +5,13 @@ module battleRuntimeMyceliumStepFeatureSelectedIdentityMbt {
 
   type WitnessHole = | WitnessProtocolHole
 
+  type MyceliumStepFeatureSelectedIdentityScenarioOutcome = | Init | Discovered | Dashed
+
+
   type MyceliumStepFeatureSelectedIdentityWitnessState = {
     qBonusActionAvailable: bool,
     qDashBonusFeet: int,
-    qScenarioResult: str,
+    qScenarioOutcome: MyceliumStepFeatureSelectedIdentityScenarioOutcome,
     protocol: WitnessProtocol[WitnessHole],
   }
 
@@ -16,14 +19,14 @@ module battleRuntimeMyceliumStepFeatureSelectedIdentityMbt {
 
   pure def qBonusActionAvailable: bool = qState.qBonusActionAvailable
   pure def qDashBonusFeet: int = qState.qDashBonusFeet
-  pure def qLastResult: str = qState.qScenarioResult
+  pure def qLastResult: MyceliumStepFeatureSelectedIdentityScenarioOutcome = qState.qScenarioOutcome
 
   pure def selectedIdentityProtocolForProjection(
     holes: Set[WitnessHole],
-    scenarioResult: str,
+    scenarioResult: MyceliumStepFeatureSelectedIdentityScenarioOutcome,
     scenarioInvalidReason: str,
   ): WitnessProtocol[WitnessHole] =
-    if (scenarioResult == "init") witnessInit(WitnessProtocolHole)
+    if (scenarioResult == Init) witnessInit(WitnessProtocolHole)
     else if (scenarioInvalidReason == "invalidFill") witnessInvalid(WitnessProtocolHole, WInvalidFill)
     else if (holes != Set()) witnessNeedsHoles(holes)
     else witnessResolved(WitnessProtocolHole)
@@ -31,36 +34,36 @@ module battleRuntimeMyceliumStepFeatureSelectedIdentityMbt {
   action recordProjection(
     bonusActionAvailable: bool,
     dashBonusFeet: int,
-    lastResult: str,
+    lastResult: MyceliumStepFeatureSelectedIdentityScenarioOutcome,
   ): bool = all {
     qState' = {
       qBonusActionAvailable: bonusActionAvailable,
       qDashBonusFeet: dashBonusFeet,
-      qScenarioResult: lastResult,
+      qScenarioOutcome: lastResult,
       protocol: selectedIdentityProtocolForProjection(Set(), lastResult, ""),
     },
   }
   action init = recordProjection(
     true,
     0,
-    "init",
+    Init,
   )
 
   action doDiscoverMyceliumStepDash = all {
-    qLastResult == "init",
+    qLastResult == Init,
     recordProjection(
       true,
       0,
-      "discovered",
+      Discovered,
     ),
   }
 
   action doDashAsBonusAction = all {
-    qLastResult == "init",
+    qLastResult == Init,
     recordProjection(
       false,
       30,
-      "dashed",
+      Dashed,
     ),
   }
 

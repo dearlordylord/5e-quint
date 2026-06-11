@@ -57,7 +57,14 @@ defineSelectedIdentityWitness({
   quintStateField: "qState",
   quintStateFieldPrefix: "q",
   witnessProtocolField: "protocol",
-  quintFieldNames: { lastResult: "qScenarioResult" },
+  quintFieldNames: { lastResult: "qScenarioOutcome" },
+  quintVariantFieldTags: {
+    lastResult: {
+      Init: "init",
+      Projected: "projected",
+      CriticalMovement: "criticalMovement",
+    },
+  },
   projectionSchema: {
     initiativeRollMode: "str",
     strengthAthleticsRollMode: "str",
@@ -69,7 +76,7 @@ defineSelectedIdentityWitness({
     criticalMovementBudgetFeet: "int",
     criticalMovementProvokesOpportunityAttacks: "bool",
     criticalMovementAccepted: "bool",
-    lastResult: "str",
+    lastResult: "variant",
   },
   initialProjection: {
     initiativeRollMode: "normal",
