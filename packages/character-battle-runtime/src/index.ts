@@ -563,8 +563,6 @@ function battleStoredFormForSheetCompanion(input: {
   const formEligibility = battleCompanionFormEligibilityForAccess({
     formAccess: formAccess.right,
     unitLibrary: input.unitLibrary,
-    selectedForm: proof.selectedForm,
-    resolvedStatBlockId: proof.resolvedStatBlockId,
   });
   if (Either.isLeft(formEligibility)) return Either.left(formEligibility.left);
   if (formAccess.right === "findFamiliar") {
@@ -595,17 +593,11 @@ function battleStoredFormForSheetCompanion(input: {
 function battleCompanionFormEligibilityForAccess(input: {
   readonly formAccess: BattleCompanionStoredForm["formAccess"];
   readonly unitLibrary: UnitCatalog;
-  readonly selectedForm: CharacterSheetCompanionFormSelection;
-  readonly resolvedStatBlockId: StatBlockRecord["id"];
 }): Either.Either<
   CompanionBattleAdmissionFormEligibility,
   CharacterSheetBattleHandoffIssue
 > {
-  const eligibility = retainedFamiliarLikeFormEligibility({
-    unitLibrary: input.unitLibrary,
-    selectedForm: input.selectedForm,
-    resolvedStatBlockId: input.resolvedStatBlockId,
-  });
+  const eligibility = retainedFamiliarLikeFormEligibility(input.unitLibrary);
   if (Either.isLeft(eligibility)) return Either.left(eligibility.left);
   if (input.formAccess === "pactOfTheChain") {
     return Either.right({
@@ -656,32 +648,22 @@ function retainedCompanionResolvedFormProofIssue(input: {
       : "Retained companion special form proof does not match its resolved Stat Block id.";
   }
   const selectedForm = input.selectedForm;
-  const eligibility = retainedFamiliarLikeFormEligibility({
-    unitLibrary: input.unitLibrary,
-    selectedForm: input.selectedForm,
+  const eligibility = retainedFamiliarLikeFormEligibility(input.unitLibrary);
+  if (Either.isLeft(eligibility)) return eligibility.left.message;
+  return retainedFamiliarLikeNormalFormProofIssue({
+    eligibility: eligibility.right,
+    selectedForm,
     resolvedStatBlockId: input.resolvedStatBlockId,
   });
-  if (Either.isLeft(eligibility)) return eligibility.left.message;
-  const normalForm = eligibility.right.normalForms.find(
-    (form) => form.formId === selectedForm.formId,
-  );
-  if (normalForm === undefined) {
-    return "Retained companion normal form is not eligible for the familiar-like form catalog.";
-  }
-  return normalForm.statBlockId === input.resolvedStatBlockId
-    ? null
-    : "Retained companion normal form proof does not match its resolved Stat Block id.";
 }
 
-function retainedFamiliarLikeFormEligibility(input: {
-  readonly unitLibrary: UnitCatalog;
-  readonly selectedForm: CharacterSheetCompanionFormSelection;
-  readonly resolvedStatBlockId: StatBlockRecord["id"];
-}): Either.Either<
+function retainedFamiliarLikeFormEligibility(
+  unitLibrary: UnitCatalog,
+): Either.Either<
   FindFamiliarFormEligibility,
   CharacterSheetBattleHandoffIssue
 > {
-  const eligible = input.unitLibrary
+  const eligible = unitLibrary
     .listUnits()
     .flatMap((unit) =>
       unit.kind === "spell"
@@ -696,32 +678,31 @@ function retainedFamiliarLikeFormEligibility(input: {
       "Retained companion admission requires a familiar-like form catalog.",
     );
   }
-  const eligibility = eligible.find((candidate) =>
-    retainedFamiliarLikeEligibilityMatchesStoredForm({
-      eligibility: candidate,
-      selectedForm: input.selectedForm,
-      resolvedStatBlockId: input.resolvedStatBlockId,
-    }),
-  );
-  return eligibility === undefined
-    ? characterSheetBattleHandoffIssue(
-        "Retained companion admission requires a familiar-like form catalog matching the retained form.",
-      )
-    : Either.right(eligibility);
+  if (eligible.length > 1) {
+    return characterSheetBattleHandoffIssue(
+      "Retained companion admission requires exactly one familiar-like form catalog.",
+    );
+  }
+  return Either.right(eligible[0]);
 }
 
-function retainedFamiliarLikeEligibilityMatchesStoredForm(input: {
+function retainedFamiliarLikeNormalFormProofIssue(input: {
   readonly eligibility: FindFamiliarFormEligibility;
-  readonly selectedForm: CharacterSheetCompanionFormSelection;
+  readonly selectedForm: Extract<
+    CharacterSheetCompanionFormSelection,
+    { readonly tag: "normalNamedForm" }
+  >;
   readonly resolvedStatBlockId: StatBlockRecord["id"];
-}): boolean {
-  const selectedForm = input.selectedForm;
-  if (selectedForm.tag !== "normalNamedForm") return true;
-  return input.eligibility.normalForms.some(
-    (form) =>
-      form.formId === selectedForm.formId &&
-      form.statBlockId === input.resolvedStatBlockId,
+}): string | null {
+  const normalForm = input.eligibility.normalForms.find(
+    (form) => form.formId === input.selectedForm.formId,
   );
+  if (normalForm === undefined) {
+    return "Retained companion normal form is not eligible for the familiar-like form catalog.";
+  }
+  return normalForm.statBlockId === input.resolvedStatBlockId
+    ? null
+    : "Retained companion normal form proof does not match its resolved Stat Block id.";
 }
 
 function battleFormAccessForSheetCompanion(input: {

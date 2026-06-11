@@ -94,6 +94,7 @@ import {
 import {
   buildUnitCatalog,
   srdUnitCollection,
+  type UnitCatalog,
 } from "@dnd/surface/surface/unit-catalog";
 import {
   buildStatBlockCatalog,
@@ -717,7 +718,7 @@ describe("Character Sheet battle handoff", () => {
       _tag: "Left",
       left: {
         message:
-          "Retained companion admission requires a familiar-like form catalog matching the retained form.",
+          "Retained companion normal form is not eligible for the familiar-like form catalog.",
       },
     });
   });
@@ -827,6 +828,57 @@ describe("Character Sheet battle handoff", () => {
       left: {
         message:
           "Retained companion Challenge Rating 0 Beast form must resolve to a CR 0 Beast Stat Block.",
+      },
+    });
+  });
+
+  test("rejects retained companion battle admission when multiple familiar-like form catalogs exist", () => {
+    const sheet = retainedOrdinaryCompanionSheet({
+      characterIdValue: "character:retained-multiple-form-catalogs",
+      companionIdValue: "companion:retained-multiple-form-catalogs",
+      selectedForm: {
+        tag: "challengeRatingZeroBeast",
+        statBlockId: "stat_block_cat",
+      },
+      currentHp: Hp(2),
+      tempHp: Hp(0),
+    });
+    const ownerId = combatantId("multiple-form-catalogs-owner");
+    const companionId = combatantId("multiple-form-catalogs-companion");
+    const state = expectRight(
+      startBattle({
+        battleId: battleId("battle-multiple-form-catalogs"),
+        combatants: [
+          battleCreatureInitFromStatBlock({
+            combatantId: ownerId,
+            statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+            initiative: initiativeScore(12),
+            side: battleCombatantSide("party"),
+          }),
+        ],
+      }),
+    );
+
+    const admitted = admitCharacterSheetCompanionToBattle({
+      sheet,
+      state,
+      unitLibrary: unitLibraryWithSyntheticFamiliarFormCatalog(),
+      ownerCombatantId: ownerId,
+      companionCombatantId: companionId,
+      initiative: initiativeScore(14),
+      placement: { kind: "unoccupiedSpaceWithinSpellRange" },
+      initialCombatantOrder: new Map([
+        [ownerId, 0],
+        [companionId, 1],
+      ]),
+      statBlockCatalog,
+    });
+
+    expect(admitted).toMatchObject({
+      _tag: "Left",
+      left: {
+        message:
+          "Retained companion admission requires exactly one familiar-like form catalog.",
       },
     });
   });
@@ -5109,6 +5161,33 @@ function retainedCompanionSheetWithManifestation(
       },
     }),
   );
+}
+
+function unitLibraryWithSyntheticFamiliarFormCatalog(): UnitCatalog {
+  const findFamiliarUnit = unitLibrary.requireUnit("find_familiar");
+  if (findFamiliarUnit.kind !== "spell") {
+    throw new Error("Find Familiar fixture must be a Spell.");
+  }
+  const syntheticCatalog = {
+    ...findFamiliarUnit,
+    id: "synthetic_familiar_form_catalog",
+    name: "Synthetic Familiar Form Catalog",
+    provenance: {
+      ...findFamiliarUnit.provenance,
+      section: "Synthetic Familiar Form Catalog",
+    },
+  } satisfies typeof findFamiliarUnit;
+  return {
+    getUnit: (id) =>
+      id === syntheticCatalog.id
+        ? Option.some(syntheticCatalog)
+        : unitLibrary.getUnit(id),
+    listUnits: () => [...unitLibrary.listUnits(), syntheticCatalog],
+    requireUnit: (id) =>
+      id === syntheticCatalog.id
+        ? syntheticCatalog
+        : unitLibrary.requireUnit(id),
+  };
 }
 
 function testSorcererMetamagicOptionId(optionId: string) {
