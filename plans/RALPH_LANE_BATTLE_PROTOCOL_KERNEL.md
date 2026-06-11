@@ -79,7 +79,7 @@
     {
       "number": 13,
       "id": "BPK-B13-STAT-BLOCK-ACTION-ORDERING",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Hole-frontier ordering slice and witness for Stat Block action controls"
     }
   ]
@@ -435,7 +435,7 @@ dispatch outside typed option facts.
 
 ### Task 13 - BPK-B13-STAT-BLOCK-ACTION-ORDERING
 
-Status: `ready-for-research` · Mode: AFK
+Status: `done` · Mode: AFK
 
 Input: prd/02 Solution §2; `battle-hole-frontier.jsonl` rows for
 `BattleAttackRollHole`, `BattleDamageRollHole`,

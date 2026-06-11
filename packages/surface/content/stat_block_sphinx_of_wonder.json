@@ -37,7 +37,8 @@
                   "dieSize": 4,
                   "flat": 3
                 },
-                "kind": "fixed"
+                "kind": "fixed",
+                "static": 5
               },
               "damageType": "slashing",
               "kind": "damage"
@@ -48,7 +49,8 @@
                   "dice": 2,
                   "dieSize": 6
                 },
-                "kind": "fixed"
+                "kind": "fixed",
+                "static": 7
               },
               "damageType": "radiant",
               "kind": "damage"
@@ -65,7 +67,10 @@
       "value": 39
     },
     "initiativeModifier": 3,
-    "languages": ["Celestial", "Common"],
+    "languages": [
+      "Celestial",
+      "Common"
+    ],
     "reactions": {
       "specials": [
         {
@@ -79,7 +84,11 @@
       ]
     },
     "resistances": {
-      "damageTypes": ["necrotic", "psychic", "radiant"],
+      "damageTypes": [
+        "necrotic",
+        "psychic",
+        "radiant"
+      ],
       "kind": "fixed"
     },
     "senses": [

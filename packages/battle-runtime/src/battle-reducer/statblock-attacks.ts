@@ -93,6 +93,7 @@ export function supportedStatBlockAttackDamage(
 
   return {
     expr: damage.expr,
+    ...(damage.static === undefined ? {} : { static: damage.static }),
     damageType: damage.damageType,
     ...(bonus === undefined ? {} : { advantageBonus: bonus }),
   };
@@ -101,32 +102,63 @@ export function supportedStatBlockAttackDamage(
 export function supportedStatBlockBaseDamageEffect(
   effect: CreatureNamedAttackRoll["onHit"][number],
 ): readonly StatBlockAttackDamage[] {
-  return effect.kind === "damage" &&
-    effect.amount.kind === "fixed" &&
-    typeof effect.damageType === "string"
-    ? [
-        {
-          expr: effect.amount.expr,
-          damageType: effect.damageType,
-        },
-      ]
-    : [];
+  if (
+    effect.kind !== "damage" ||
+    effect.amount.kind !== "fixed" ||
+    typeof effect.damageType !== "string"
+  ) {
+    return [];
+  }
+
+  const staticDamage = statBlockDamageNotationStaticAmount(effect.amount);
+  return [
+    {
+      expr: effect.amount.expr,
+      ...(staticDamage === undefined ? {} : { static: staticDamage }),
+      damageType: effect.damageType,
+    },
+  ];
 }
 
 export function supportedStatBlockAdvantageBonusDamageEffect(
   effect: CreatureNamedAttackRoll["onHit"][number],
 ): readonly Required<StatBlockAttackDamage>["advantageBonus"][] {
-  return effect.kind === "conditional_bonus_damage" &&
-    effect.when.kind === "attack_roll_had_advantage" &&
-    effect.amount.kind === "fixed" &&
-    typeof effect.damageType === "string"
-    ? [
-        {
-          expr: effect.amount.expr,
-          damageType: effect.damageType,
-        },
-      ]
-    : [];
+  if (
+    effect.kind !== "conditional_bonus_damage" ||
+    effect.when.kind !== "attack_roll_had_advantage" ||
+    effect.amount.kind !== "fixed" ||
+    typeof effect.damageType !== "string"
+  ) {
+    return [];
+  }
+
+  const staticDamage = statBlockDamageNotationStaticAmount(effect.amount);
+  return [
+    {
+      expr: effect.amount.expr,
+      ...(staticDamage === undefined ? {} : { static: staticDamage }),
+      damageType: effect.damageType,
+    },
+  ];
+}
+
+function statBlockDamageNotationStaticAmount(amount: {
+  readonly kind: "fixed";
+  readonly expr: DiceExpr;
+}): number | undefined {
+  return "static" in amount && typeof amount.static === "number"
+    ? amount.static
+    : undefined;
+}
+
+export function statBlockAttackDamageSupportsStaticNotation(
+  damage: StatBlockAttackDamage,
+): boolean {
+  return (
+    damage.static !== undefined &&
+    (damage.advantageBonus === undefined ||
+      damage.advantageBonus.static !== undefined)
+  );
 }
 
 export function supportedStatBlockAttackTargetConstraint(
@@ -769,33 +801,41 @@ export function attackDamageComponents(
     Match.when({ kind: "statBlockAttack" }, (statBlockAttack) => {
       const damage = statBlockAttackDamage(statBlockAttack);
       const base = damage.expr;
-      const baseComponent = {
-        expr: {
-          dice: critical ? base.dice * 2 : base.dice,
-          dieSize: base.dieSize,
-        },
-        damageType: damage.damageType,
-      };
+      const baseComponents =
+        statBlockAttack.damageNotation === "static" &&
+        damage.static !== undefined
+          ? []
+          : [
+              {
+                expr: {
+                  dice: critical ? base.dice * 2 : base.dice,
+                  dieSize: base.dieSize,
+                },
+                damageType: damage.damageType,
+              },
+            ];
       const advantageBonus = damage.advantageBonus;
       if (
         attackRoll?.rollMode !== "advantage" ||
         advantageBonus === undefined
       ) {
-        return [baseComponent];
+        return baseComponents;
       }
 
-      return [
-        baseComponent,
-        {
-          expr: {
-            dice: critical
-              ? advantageBonus.expr.dice * 2
-              : advantageBonus.expr.dice,
-            dieSize: advantageBonus.expr.dieSize,
-          },
-          damageType: advantageBonus.damageType,
+      const advantageBonusComponent = {
+        expr: {
+          dice: critical
+            ? advantageBonus.expr.dice * 2
+            : advantageBonus.expr.dice,
+          dieSize: advantageBonus.expr.dieSize,
         },
-      ];
+        damageType: advantageBonus.damageType,
+      };
+
+      return statBlockAttack.damageNotation === "static" &&
+        advantageBonus.static !== undefined
+        ? baseComponents
+        : [...baseComponents, advantageBonusComponent];
     }),
     Match.exhaustive,
   );

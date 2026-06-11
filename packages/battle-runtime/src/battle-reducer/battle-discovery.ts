@@ -1833,7 +1833,9 @@ export function supportedStatBlockMultiattacks(
 
       const dispatches = literalDispatches.flatMap((dispatch) => {
         const matchingAttacks = actionAttacks.filter(
-          (candidate) => candidate.attack.name === dispatch.name,
+          (candidate) =>
+            candidate.attack.name === dispatch.name &&
+            candidate.damageNotation === "rolled",
         );
         const [attack] = matchingAttacks;
         if (attack === undefined || matchingAttacks.length !== 1) return [];

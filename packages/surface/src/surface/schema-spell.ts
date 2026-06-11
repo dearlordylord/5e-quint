@@ -12,6 +12,7 @@ import {
   DamageTypeSchema,
   DiceAmountSchema,
   DiceDeltaSchema,
+  DiceExprSchema,
   DurationValueSchema,
   GrantedSpellDurationOverrideSchema,
   GrantedSpellTargetRestrictionSchema,
@@ -4052,6 +4053,36 @@ export const CreatureSenseSchema = Schema.Struct({
   rangeFeet: Schema.Number,
 });
 
+const StatBlockDamageNotationAmountSchema = Schema.Struct({
+  kind: Schema.Literal("fixed"),
+  expr: DiceExprSchema,
+  static: optionalExact(Schema.Number),
+});
+
+const CreatureAttackEffectAtomSchema = Schema.Union(
+  Schema.Struct({
+    kind: Schema.Literal("damage"),
+    damageType: DamageTypeRefSchema,
+    amount: StatBlockDamageNotationAmountSchema,
+    timing: optionalExact(Schema.Literal("end_of_next_turn")),
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("conditional_bonus_damage"),
+    when: Schema.Union(
+      Schema.Struct({
+        kind: Schema.Literal("target_creature_type"),
+        types: nonEmpty(CreatureTypeSchema),
+      }),
+      Schema.Struct({
+        kind: Schema.Literal("attack_roll_had_advantage"),
+      }),
+    ),
+    damageType: DamageTypeRefSchema,
+    amount: StatBlockDamageNotationAmountSchema,
+  }),
+  EffectAtomSchema,
+);
+
 export const CreatureNamedAttackRollSchema = Schema.Struct({
   name: Schema.String,
   description: optionalExact(Schema.String),
@@ -4064,7 +4095,7 @@ export const CreatureNamedAttackRollSchema = Schema.Struct({
       long: Schema.Number,
     }),
   ),
-  onHit: nonEmpty(EffectAtomSchema),
+  onHit: nonEmpty(CreatureAttackEffectAtomSchema),
   multiattackCount: optionalExact(StatBlockValueSchema),
   limitedUse: optionalExact(Schema.suspend(() => CreatureLimitedUseSchema)),
 });

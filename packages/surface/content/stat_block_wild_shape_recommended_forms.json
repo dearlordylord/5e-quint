@@ -38,7 +38,8 @@
                     "dieSize": 8,
                     "flat": 3
                   },
-                  "kind": "fixed"
+                  "kind": "fixed",
+                  "static": 7
                 },
                 "damageType": "bludgeoning",
                 "kind": "damage"
@@ -110,7 +111,8 @@
                     "dieSize": 6,
                     "flat": 2
                   },
-                  "kind": "fixed"
+                  "kind": "fixed",
+                  "static": 5
                 },
                 "damageType": "piercing",
                 "kind": "damage"

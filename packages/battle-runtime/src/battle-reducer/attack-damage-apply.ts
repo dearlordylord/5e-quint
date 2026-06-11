@@ -340,10 +340,14 @@ export function attackActionOptionForSubject(
     { readonly tag: "action"; readonly action: "attack" }
   >,
 ): SupportedAttackActionOption | undefined {
+  const damageNotation = subject.statBlockDamageNotation ?? "rolled";
   return attackActionOptionsForActor(state, subject.actorId).find(
     (attack) =>
       attackActionOptionName(attack) === subject.attackName &&
-      statBlockSectionMatchesSubject(attack, subject.statBlockSection),
+      statBlockSectionMatchesSubject(attack, subject.statBlockSection) &&
+      (attack.kind === "statBlockAttack"
+        ? attack.damageNotation === damageNotation
+        : subject.statBlockDamageNotation === undefined),
   );
 }
 

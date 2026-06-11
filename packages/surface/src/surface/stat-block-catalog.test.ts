@@ -240,13 +240,13 @@ describe("Stat Block catalog boundary", () => {
         goblin.statBlock.actions?.attacks?.map((attack) => attack.name),
       ).toEqual(["Scimitar", "Shortbow"]);
       expect(goblin.statBlock.actions?.attacks?.[0]?.onHit).toContainEqual({
-        amount: { expr: { dice: 1, dieSize: 4 }, kind: "fixed" },
+        amount: { expr: { dice: 1, dieSize: 4 }, kind: "fixed", static: 2 },
         damageType: "slashing",
         kind: "conditional_bonus_damage",
         when: { kind: "attack_roll_had_advantage" },
       });
       expect(goblin.statBlock.actions?.attacks?.[1]?.onHit).toContainEqual({
-        amount: { expr: { dice: 1, dieSize: 4 }, kind: "fixed" },
+        amount: { expr: { dice: 1, dieSize: 4 }, kind: "fixed", static: 2 },
         damageType: "piercing",
         kind: "conditional_bonus_damage",
         when: { kind: "attack_roll_had_advantage" },
