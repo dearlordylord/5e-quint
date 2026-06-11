@@ -49,7 +49,7 @@
     {
       "number": 8,
       "id": "PDS-A08-KIT-BATCH-5",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Kit batch migration 5 (drain)"
     },
     {
@@ -199,7 +199,7 @@ Every task must include:
 | 5 | PDS-A05-KIT-BATCH-2 | done | PDS-A04-KIT-BATCH-1 | Self-discovering; ≤20 drivers. |
 | 6 | PDS-A06-KIT-BATCH-3 | done | PDS-A05-KIT-BATCH-2 | |
 | 7 | PDS-A07-KIT-BATCH-4 | ready-for-research | PDS-A06-KIT-BATCH-3 | |
-| 8 | PDS-A08-KIT-BATCH-5 | blocked | PDS-A07-KIT-BATCH-4 | Drains the kit-unmigrated set. |
+| 8 | PDS-A08-KIT-BATCH-5 | ready-for-research | PDS-A07-KIT-BATCH-4 | Drains the kit-unmigrated set. |
 | 9 | PDS-A09-KIT-GATE-AND-CLOSEOUT | blocked | PDS-A08-KIT-BATCH-5 | Adds the quality gate; consolidated `MBT_TRACES=3` pass; prd/03 closeout numbers. |
 | 10 | PDS-A10-WITNESS-PILOTS | blocked | PDS-A09-KIT-GATE-AND-CLOSEOUT | Trace-cost timing note and pilot line-delta report. |
 | 11 | PDS-A11-WITNESS-BATCH-1 | blocked | PDS-A10-WITNESS-PILOTS | Self-discovering; ≤20 pairs; `MBT_TRACES=3` confidence pass per batch. |
@@ -327,7 +327,7 @@ green; no `*.mbt.qnt` diff; batch line-delta reported.
 
 ### Task 8 - PDS-A08-KIT-BATCH-5
 
-Status: `blocked` · Mode: AFK
+Status: `ready-for-research` · Mode: AFK
 
 Input: the kit-unmigrated discovery rule (Lane Rules) applied at task start.
 
