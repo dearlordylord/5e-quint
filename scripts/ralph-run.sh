@@ -889,7 +889,7 @@ lookup_task_row() {
 
 task_status_is_runnable() {
   local status="$1"
-  [[ "$status" == "ready-for-research" || "$status" == "ready-for-implementation-after-light-research" ]]
+  [[ "$status" == "ready-for-research" || "$status" == "ready-for-implementation" || "$status" == "ready-for-implementation-after-light-research" ]]
 }
 
 write_ready_tasks_file() {
@@ -1965,6 +1965,9 @@ disposition_from_task_status() {
       ;;
     ready-for-research)
       printf 'needs-more-research\n'
+      ;;
+    ready-for-implementation)
+      printf 'retry-same-task\n'
       ;;
     ready-for-implementation-after-light-research)
       printf 'retry-same-task\n'
