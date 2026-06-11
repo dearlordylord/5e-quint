@@ -2897,6 +2897,12 @@
           "ownerPath": "packages/battle-runtime/src/hit-point-restoration-ordering.mbt.test.ts",
           "qntSpecPath": "packages/battle-runtime/battle-runtime-hit-point-restoration-ordering.mbt.qnt",
           "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/command-ordering.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-command-ordering.mbt.qnt",
+          "stepAction": "step"
         }
       ],
       "profiles": [],
@@ -2904,13 +2910,16 @@
         "packages/battle-runtime/battle-runtime-weapon-attack-ordering.qnt",
         "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.qnt",
         "packages/battle-runtime/battle-runtime-spell-attack-ordering.qnt",
-        "packages/battle-runtime/battle-runtime-hit-point-restoration-ordering.qnt"
+        "packages/battle-runtime/battle-runtime-hit-point-restoration-ordering.qnt",
+        "packages/battle-runtime/battle-runtime-command-ordering.qnt"
       ],
-      "reason": "Weapon-attack scope: the SRD attack structure fixes Choose a Target before resolving the attack, and Resolve the Attack makes the Attack Roll before hit damage dice. Save-gated-spell scope: the SRD defines affected targets or an area as the source of saving throws, the save result is determined by that effect, and damaging save effects roll damage after the affected creatures' save outcomes are known. Spell-attack scope: the same SRD attack structure applies to attacks made as part of a spell, the spellcasting rules define Spell Attack Rolls, and spell damage dice are rolled only after a hit unless a spell says otherwise. Typed spell-attack damage-type choice is modeled as a runtime Spell Invocation frontier that can be supplied alongside target choice before the Spell Attack Roll. Hit Point restoration scope: spell healing chooses a target or target list before the spell healing roll supplies the restored Hit Point amount; feature healing-pool procedures expose one distribution frontier whose allocations are chosen before the feature resolves allocation legality, resource spend, restored Hit Points, and the shared Hit Point lifecycle owner applies any zero-Hit-Point cleanup. The QNT owners record those frontier stages over the B01/B02 hole/fill vocabulary. For save-gated condition spells with a target-list and condition-choice hole, and for typed spell attacks with damage-type choice and target-choice holes, sibling frontiers exposed together may be filled in either order before advancing to the next d20 frontier. Runtime-backed weapon-attack ordering rejections remain explicit invalid fills; save-gated spell, spell-attack, and healing later-fill submissions are modeled as earliest-needed-frontier requests when the reducer accepts prefilling rather than rejecting. Table-owned range, cover, sight, area geometry, object target facts, healing-pool range facts, modifier facts, later damage-disposition validation, and stale-subject rejection remain boundary or reducer evidence outside this ordering-error relation.",
+      "reason": "Weapon-attack scope: the SRD attack structure fixes Choose a Target before resolving the attack, and Resolve the Attack makes the Attack Roll before hit damage dice. Save-gated-spell scope: the SRD defines affected targets or an area as the source of saving throws, the save result is determined by that effect, and damaging save effects roll damage after the affected creatures' save outcomes are known. Spell-attack scope: the same SRD attack structure applies to attacks made as part of a spell, the spellcasting rules define Spell Attack Rolls, and spell damage dice are rolled only after a hit unless a spell says otherwise. Typed spell-attack damage-type choice is modeled as a runtime Spell Invocation frontier that can be supplied alongside target choice before the Spell Attack Roll. Hit Point restoration scope: spell healing chooses a target or target list before the spell healing roll supplies the restored Hit Point amount; feature healing-pool procedures expose one distribution frontier whose allocations are chosen before the feature resolves allocation legality, resource spend, restored Hit Points, and the shared Hit Point lifecycle owner applies any zero-Hit-Point cleanup. Command scope: the SRD says the caster chooses a command option, the target makes a Wisdom Saving Throw, and failed-save targets follow that option on their next turn. The reducer exposes target list and Command option as initial sibling holes but its resolution protocol requests target list before option choice before Saving Throw outcome; this is a reducer protocol choice not prescribed by the SRD. Failed Saving Throw outcomes must resolve before pending next-turn Command effects exist. On the target turn, Grovel applies Prone and ends the turn, Drop releases held objects after table-owned held-object facts are supplied when no canonical loadout exists, Halt suppresses Movement, Action, and Bonus Action through turn resources, and Approach/Flee admit Movement fills only after their pending command act opens. Approach/Flee route facts and Flee fastest-available validation remain caller/table facts carried by the Movement fill; opportunity-attack continuation is an interrupt frontier, not a Command ordering hole. The QNT owners record these frontier stages over the B01/B02 hole/fill vocabulary. For save-gated condition spells with a target-list and condition-choice hole, and for typed spell attacks with damage-type choice and target-choice holes, sibling frontiers exposed together may be filled in either order before advancing to the next d20 frontier. Runtime-backed weapon-attack and partial Command Flee ordering rejections remain explicit invalid fills; save-gated spell, spell-attack, healing, and Command earlier-fill submissions are modeled as earliest-needed-frontier requests when the reducer accepts prefilling rather than rejecting. Table-owned range, cover, sight, area geometry, object target facts, held-object inventory identity, healing-pool range facts, modifier facts, later damage-disposition validation, and stale-subject rejection remain boundary or reducer evidence outside this ordering-error relation.",
       "runtime": "battle",
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer/attack-main.ts",
         "packages/battle-runtime/src/battle-reducer/attack-resolution.ts",
+        "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/command.ts",
         "packages/battle-runtime/src/battle-reducer/spells-resolve.ts",
         "packages/battle-runtime/src/battle-reducer/spells-resolve-attack-sequence.ts",
         "packages/battle-runtime/src/battle-reducer/spells-resolve-chained.ts",
@@ -2921,6 +2930,7 @@
         "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/chained-spell-attack-damage.ts",
         "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/save-gated-condition.ts",
         "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/direct-hit-point-restoration.ts",
+        "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts",
         "packages/battle-runtime/src/battle-reducer/unit-features.ts",
         "packages/battle-runtime/src/battle-trace-contract.ts"
       ],
@@ -2932,15 +2942,19 @@
         ".references/srd-5.2.1/Playing-the-Game.md#Damage Rolls",
         ".references/srd-5.2.1/Playing-the-Game.md#Healing",
         ".references/srd-5.2.1/Playing-the-Game.md#Dropping to 0 Hit Points",
+        ".references/srd-5.2.1/Playing-the-Game.md#Movement and Position",
+        ".references/srd-5.2.1/Spells/Descriptions-A-D.md#Command",
         ".references/srd-5.2.1/Spells/Gaining-and-Casting.md#Attack Rolls",
         ".references/srd-5.2.1/Rules-Glossary.md#Area of Effect",
         ".references/srd-5.2.1/Rules-Glossary.md#Target",
         "UBIQUITOUS_LANGUAGE.md#D20 Rolls",
+        "UBIQUITOUS_LANGUAGE.md#Action Lifecycle",
         "UBIQUITOUS_LANGUAGE.md#Combat",
         "UBIQUITOUS_LANGUAGE.md#Spellcasting",
-        "UBIQUITOUS_LANGUAGE.md#Hit Points and Death"
+        "UBIQUITOUS_LANGUAGE.md#Hit Points and Death",
+        "UBIQUITOUS_LANGUAGE.md#Movement"
       ],
-      "title": "Battle protocol hole frontiers order weapon-attack, save-gated-spell, spell-attack, and Hit Point restoration procedure fills before resolution"
+      "title": "Battle protocol hole frontiers order weapon-attack, save-gated-spell, spell-attack, Hit Point restoration, and Command procedure fills before resolution"
     },
     {
       "id": "BATTLE.SURFACE.EXECUTABLE_PROFILE_JOIN",
@@ -4377,12 +4391,13 @@
     {
       "classification": "semantic-frontier",
       "coveredByObligationIds": [
-        "BATTLE.COMMAND.OPTION_AND_NEXT_TURN"
+        "BATTLE.COMMAND.OPTION_AND_NEXT_TURN",
+        "BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING"
       ],
       "followUpTaskIds": [],
       "holeKind": "commandOptionChoice",
       "id": "BattleCommandOptionChoiceHole",
-      "reason": "Command option choice selects RAW-fixed reducer consequences for Halt, Grovel, Drop, Approach, or Flee; route and object facts remain table-owned boundary facts.",
+      "reason": "Command option choice selects RAW-fixed reducer consequences for Halt, Grovel, Drop, Approach, or Flee. The protocol ordering obligation owns its reducer-visible position before the Saving Throw outcome; route and object facts remain table-owned boundary facts.",
       "subject": "battle-hole-family"
     },
     {
@@ -4402,6 +4417,7 @@
         "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
         "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
         "BATTLE.COMMAND.OPTION_AND_NEXT_TURN",
+        "BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING",
         "BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE",
         "BATTLE.SPELL.REACTION_CASTING_TIME",
         "BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS",
@@ -4410,7 +4426,7 @@
       "followUpTaskIds": [],
       "holeKind": "savingThrowOutcome",
       "id": "BattleSpellSavingThrowOutcomeHole",
-      "reason": "Spell Saving Throw outcomes determine damage, conditions, Command consequences, Counterspell, timed after-hit continuations, area results, and failed-save Attack Roll Advantage effects. Covered branches point to their semantic obligations.",
+      "reason": "Spell Saving Throw outcomes determine damage, conditions, Command consequences, Counterspell, timed after-hit continuations, area results, and failed-save Attack Roll Advantage effects. The protocol ordering obligation owns save-outcome frontier order for save-gated and Command procedure shapes; semantic branches point to their dedicated obligations.",
       "subject": "battle-hole-family"
     },
     {
@@ -4620,12 +4636,13 @@
       "classification": "semantic-frontier",
       "coveredByObligationIds": [
         "BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND",
+        "BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING",
         "BATTLE.TABLE.HOLE_FACT_BOUNDARIES"
       ],
       "followUpTaskIds": [],
       "holeKind": "movement",
       "id": "BattleMovementHole",
-      "reason": "Reducer-owned movement budget spend, Stand/Drop Prone, Grapple movement constraints, and Opportunity Attack frontier facts are covered by the movement obligation. Grease terrain distance, Command approach/flee route witnesses, forced-movement geometry, and Jump route/landing witnesses are table facts covered by the boundary obligation rather than stored path or map state. Jump failed-landing Prone stays coupled to the route/landing witness, and profile joins are recorded in profile-obligations.jsonl.",
+      "reason": "Reducer-owned movement budget spend, Stand/Drop Prone, Grapple movement constraints, and Opportunity Attack frontier facts are covered by the movement obligation. The protocol ordering obligation owns Command Approach/Flee Movement fill admission after failed-save pending effects reach the target turn. Grease terrain distance, Command route witnesses, forced-movement geometry, and Jump route/landing witnesses are table facts covered by the boundary obligation rather than stored path or map state. Jump failed-landing Prone stays coupled to the route/landing witness, and profile joins are recorded in profile-obligations.jsonl.",
       "subject": "battle-hole-family"
     },
     {
@@ -4757,6 +4774,7 @@
         "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
         "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
         "BATTLE.COMMAND.OPTION_AND_NEXT_TURN",
+        "BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING",
         "BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE",
         "BATTLE.SPELL.REACTION_CASTING_TIME",
         "BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS",
@@ -4767,7 +4785,7 @@
       "fillKind": "savingThrowOutcome",
       "followUpTaskIds": [],
       "id": "savingThrowOutcome",
-      "reason": "Saving Throw outcomes drive damage, condition, Command, creature-type protection, poison protection, feature, reaction-casting, and active-effect lifecycle branches. Covered branches point to semantic obligations, including Protection from Poison's condition-scoped Saving Throw Advantage projection.",
+      "reason": "Saving Throw outcomes drive damage, condition, Command, creature-type protection, poison protection, feature, reaction-casting, and active-effect lifecycle branches. Protocol ordering owns when Saving Throw outcome fills are admitted in save-gated and Command procedure shapes; semantic branches point to dedicated obligations, including Protection from Poison's condition-scoped Saving Throw Advantage projection.",
       "subject": "battle-fill-kind"
     },
     {
@@ -4831,12 +4849,13 @@
     {
       "classification": "semantic-frontier",
       "coveredByObligationIds": [
-        "BATTLE.COMMAND.OPTION_AND_NEXT_TURN"
+        "BATTLE.COMMAND.OPTION_AND_NEXT_TURN",
+        "BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING"
       ],
       "fillKind": "commandOptionChoice",
       "followUpTaskIds": [],
       "id": "commandOptionChoice",
-      "reason": "Command option fills select the RAW branch whose reducer-visible consequences are modeled; route and held-object details remain table facts.",
+      "reason": "Command option fills select the RAW branch whose reducer-visible consequences are modeled. The protocol ordering obligation owns their reducer-visible ordering before the Saving Throw outcome; route and held-object details remain table facts.",
       "subject": "battle-fill-kind"
     },
     {
@@ -5046,12 +5065,13 @@
       "classification": "semantic-frontier",
       "coveredByObligationIds": [
         "BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND",
+        "BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING",
         "BATTLE.TABLE.HOLE_FACT_BOUNDARIES"
       ],
       "fillKind": "movement",
       "followUpTaskIds": [],
       "id": "movement",
-      "reason": "Movement fills spend movement budget and carry Opportunity Attack frontier facts covered by the movement obligation. The greaseGroundDifficultTerrain, jumpMovementReplacement route/landing witness, commandApproach, commandFlee, forced-movement route, terrain, and placement facts are caller/table evidence covered by the boundary obligation; route selection and geometry stay out of rules-kernel state. Jump failed-landing Prone stays coupled to the route/landing witness, and profile joins are recorded in profile-obligations.jsonl.",
+      "reason": "Movement fills spend movement budget and carry Opportunity Attack frontier facts covered by the movement obligation. The protocol ordering obligation owns Command Approach/Flee Movement fill admission after the target-turn command act opens. The greaseGroundDifficultTerrain, jumpMovementReplacement route/landing witness, commandApproach, commandFlee, forced-movement route, terrain, and placement facts are caller/table evidence covered by the boundary obligation; route selection and geometry stay out of rules-kernel state. Jump failed-landing Prone stays coupled to the route/landing witness, and profile joins are recorded in profile-obligations.jsonl.",
       "subject": "battle-fill-kind"
     },
     {
@@ -8636,6 +8656,14 @@
       ],
       "ownerPath": "packages/battle-runtime/battle-runtime-hit-point-restoration-ordering.qnt",
       "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-command-ordering.qnt carries the reusable Command hole-frontier order over protocol vocabulary variants: target list and Command option choice, Saving Throw outcome, failed-save next-turn consequence stages, Movement fill admission for Approach/Flee, table-fact frontier marking for Drop held-object release, and the reducer-backed distinction between earliest-needed-frontier requests and the explicit partial-Flee Movement rejection.",
+      "obligationIds": [
+        "BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-command-ordering.qnt",
+      "role": "semantic-core"
     }
   ],
   "unitFeatureProfileOwnerRows": [
@@ -11931,7 +11959,8 @@
         "packages/battle-runtime/battle-runtime-weapon-attack-ordering.qnt",
         "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.qnt",
         "packages/battle-runtime/battle-runtime-spell-attack-ordering.qnt",
-        "packages/battle-runtime/battle-runtime-hit-point-restoration-ordering.qnt"
+        "packages/battle-runtime/battle-runtime-hit-point-restoration-ordering.qnt",
+        "packages/battle-runtime/battle-runtime-command-ordering.qnt"
       ],
       "status": "generation-subset-clean"
     },

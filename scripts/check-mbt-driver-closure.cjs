@@ -38,6 +38,7 @@ const AGGREGATION_BARRELS = {
 const BATTLE_RUNTIME_LEAF_MODULES = new Set([
   "battle-runtime-fill-kinds.qnt",
   "battle-runtime-hole-kinds.qnt",
+  "battle-runtime-command-ordering.qnt",
   "battle-runtime-hit-point-restoration-ordering.qnt",
   "battle-runtime-mirror-image-constants.qnt",
   "battle-runtime-reaction-kinds.qnt",

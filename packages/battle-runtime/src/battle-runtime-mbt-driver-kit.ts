@@ -25,6 +25,7 @@ import {
   abilityModifier,
   attackBonus,
   classLevel,
+  difficultyClass,
   movementFeet,
   proficiencyBonus,
 } from "@dnd/shared/types";
@@ -53,6 +54,7 @@ import { battleMagicActionHealingPoolSupportForUnit } from "./unit-feature-suppo
 import {
   ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE,
   BATTLE_INVALID_REASON_CODES,
+  battleObjectId,
   battleUnitRefWithSupportProfiles,
   battleId,
   battleCombatantSide,
@@ -632,6 +634,35 @@ type HitPointRestorationOrderingHole =
   | "spellTargetList"
   | "rolledDice"
   | "hitPointHealingDistribution";
+type CommandOrderingStage =
+  | "actSelection"
+  | "targetListAndOptionChoice"
+  | "targetList"
+  | "optionChoice"
+  | "savingThrowOutcome"
+  | "dropHeldObjectFacts"
+  | "approachMovement"
+  | "fleeMovement"
+  | "resolved";
+type CommandOrderingError =
+  | ""
+  | "commandTargetListRequired"
+  | "commandOptionChoiceRequired"
+  | "commandSavingThrowRequired"
+  | "commandHeldObjectFactsRequired"
+  | "commandMovementRequired";
+type CommandOrderingHole =
+  | "spellTargetList"
+  | "commandOptionChoice"
+  | "savingThrowOutcome"
+  | "movement";
+type CommandOrderingPendingOption =
+  | "none"
+  | "grovel"
+  | "drop"
+  | "halt"
+  | "approach"
+  | "flee";
 type MbtProjection = {
   readonly skeletonHp: number;
   readonly skeletonDead: boolean;
@@ -669,6 +700,20 @@ type HitPointRestorationOrderingProjection = {
   readonly spellTargetZeroHpLifecycleCleared: boolean;
   readonly featureTargetHp: number;
   readonly featureTargetZeroHpLifecycleCleared: boolean;
+};
+type CommandOrderingProjection = {
+  readonly stage: CommandOrderingStage;
+  readonly holes: readonly CommandOrderingHole[];
+  readonly tableFactFrontierOpen: boolean;
+  readonly lastResult: MbtLastResult;
+  readonly orderingError: CommandOrderingError;
+  readonly pendingCommandOption: CommandOrderingPendingOption;
+  readonly targetProne: boolean;
+  readonly droppedObjectCount: number;
+  readonly haltSuppressed: boolean;
+  readonly movementSpentFeet: number;
+  readonly currentActor: "Caster" | "Target";
+  readonly reactionWindowOpen: boolean;
 };
 
 export type ExtraAttackMbtProjection = {
@@ -812,6 +857,30 @@ const hitPointRestorationOrderingDriverSchema = {
   doFillSpellHealingRoll: {},
   doDiscoverFeatureHealingPool: {},
   doFillFeatureHealingDistribution: {},
+  step: {},
+} as const;
+
+const commandOrderingDriverSchema = {
+  init: {},
+  doDiscoverCommand: {},
+  doSubmitOptionBeforeTargetList: {},
+  doFillTargetList: {},
+  doSubmitSavingThrowBeforeOption: {},
+  doFillGrovelOption: {},
+  doFillFailedGrovelSavingThrow: {},
+  doFollowGrovel: {},
+  doDropNeedsHeldObjectFacts: {},
+  doFillDropHeldObjectFacts: {},
+  doHaltSuppresses: {},
+  doApproachMovementContinues: {},
+  doFillApproachMovementContinues: {},
+  doFillApproachMovementWithinFive: {},
+  doApproachNoMovement: {},
+  doFleeMovement: {},
+  doFillFleeMovement: {},
+  doRejectFleePartialMovement: {},
+  doFleeNoMovement: {},
+  doFleeOpportunityAttack: {},
   step: {},
 } as const;
 
@@ -1952,6 +2021,346 @@ export function createHitPointRestorationOrderingDriver() {
   });
 }
 
+export function createCommandOrderingDriver() {
+  return defineDriver(commandOrderingDriverSchema, () => {
+    let state = commandOrderingBattle();
+    let subject: BattleSubject = commandOrderingCastSubject();
+    let fills: readonly BattleFill[] = [];
+    let holes: readonly BattleHole[] = [];
+    let stage: CommandOrderingProjection["stage"] = "actSelection";
+    let lastResult: CommandOrderingProjection["lastResult"] = "init";
+    let orderingError: CommandOrderingProjection["orderingError"] = "";
+    let pendingCommandOption: CommandOrderingPendingOption = "none";
+    let droppedObjectCount = 0;
+
+    function reset(): void {
+      state = commandOrderingBattle();
+      subject = commandOrderingCastSubject();
+      fills = [];
+      holes = [];
+      stage = "actSelection";
+      lastResult = "init";
+      orderingError = "";
+      pendingCommandOption = "none";
+      droppedObjectCount = 0;
+    }
+
+    function recordAccepted(
+      result: BattleResolutionResult,
+      nextStage: CommandOrderingProjection["stage"],
+    ): void {
+      lastResult = result.tag;
+      if (result.tag === "resolved") {
+        state = result.state;
+        holes = [];
+        stage = nextStage;
+        orderingError = "";
+        droppedObjectCount =
+          "droppedObjects" in result ? result.droppedObjects?.length ?? 0 : 0;
+        pendingCommandOption = commandPendingOption(state);
+        return;
+      }
+      if (result.tag === "needsHoles") {
+        state = result.state;
+        holes = result.holes;
+        stage = nextStage;
+        orderingError = "";
+        pendingCommandOption = commandPendingOption(state);
+        return;
+      }
+      throw new Error(
+        `Expected accepted Command ordering fill, got ${result.tag}: ${
+          "message" in result ? result.message : ""
+        }`,
+      );
+    }
+
+    function recordNeedsEarlierHole(
+      result: BattleResolutionResult,
+      expectedOrderingError: Exclude<CommandOrderingProjection["orderingError"], "">,
+      expectedStage: CommandOrderingProjection["stage"],
+    ): void {
+      if (result.tag !== "needsHoles") {
+        throw new Error("Expected Command fill to request an earlier hole.");
+      }
+      lastResult = result.tag;
+      holes = result.holes;
+      stage = expectedStage;
+      orderingError = expectedOrderingError;
+      pendingCommandOption = commandPendingOption(state);
+    }
+
+    function recordInvalid(
+      result: BattleResolutionResult,
+      expectedOrderingError: Exclude<CommandOrderingProjection["orderingError"], "">,
+    ): void {
+      if (result.tag !== "invalid" || result.reason !== "invalidFill") {
+        throw new Error("Expected Command ordering invalid fill.");
+      }
+      lastResult = result.tag;
+      orderingError = expectedOrderingError;
+      pendingCommandOption = commandPendingOption(state);
+    }
+
+    function discoverCommand(): void {
+      state = commandOrderingBattle();
+      const act = commandOrderingCastAct(state);
+      subject = act.subject;
+      fills = [];
+      holes = act.initialHoles;
+      stage = "targetListAndOptionChoice";
+      lastResult = "needsHoles";
+      orderingError = "";
+      pendingCommandOption = "none";
+      droppedObjectCount = 0;
+    }
+
+    function startRuntimeCommand(
+      option: Exclude<CommandOrderingPendingOption, "none">,
+      input: CommandTargetTurnInput = {},
+    ): void {
+      state = commandTargetTurn(option, input);
+      const act = commandRuntimeAct(state, option);
+      subject = act.subject;
+      fills = [];
+      holes = act.initialHoles;
+      lastResult = holes.length === 0 ? "resolved" : "needsHoles";
+      orderingError = "";
+      pendingCommandOption = commandPendingOption(state);
+      droppedObjectCount = 0;
+    }
+
+    return {
+      init: reset,
+      doDiscoverCommand: discoverCommand,
+      doSubmitOptionBeforeTargetList: () => {
+        const commandOption = requireHole(holes, "commandOptionChoice");
+        recordNeedsEarlierHole(
+          resolveBattleSubject({
+            state,
+            subject,
+            fills: [commandOptionFill(commandOption, "grovel")],
+          }),
+          "commandTargetListRequired",
+          "targetList",
+        );
+      },
+      doFillTargetList: () => {
+        const targetList = requireHole(holes, "spellTargetList");
+        fills = [spellTargetListFill(targetList, "command", [skeletonId])];
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills }),
+          "optionChoice",
+        );
+      },
+      doSubmitSavingThrowBeforeOption: () => {
+        const commandOption = requireHole(holes, "commandOptionChoice");
+        if (subject.tag !== "actionSpell") {
+          throw new Error("Expected Command cast subject.");
+        }
+        const savingThrow = requireHole(
+          commandHolesAfterFills(state, subject, [
+            ...fills,
+            commandOptionFill(commandOption, "grovel"),
+          ]),
+          "savingThrowOutcome",
+        );
+        recordNeedsEarlierHole(
+          resolveBattleSubject({
+            state,
+            subject,
+            fills: [
+              ...fills,
+              saveGatedSpellSavingThrowOutcomeFill(savingThrow, [
+                { targetId: skeletonId, succeeded: false },
+              ]),
+            ],
+          }),
+          "commandOptionChoiceRequired",
+          "optionChoice",
+        );
+      },
+      doFillGrovelOption: () => {
+        const commandOption = requireHole(holes, "commandOptionChoice");
+        fills = [...fills, commandOptionFill(commandOption, "grovel")];
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills }),
+          "savingThrowOutcome",
+        );
+      },
+      doFillFailedGrovelSavingThrow: () => {
+        const savingThrow = requireHole(holes, "savingThrowOutcome");
+        fills = [
+          ...fills,
+          saveGatedSpellSavingThrowOutcomeFill(savingThrow, [
+            { targetId: skeletonId, succeeded: false },
+          ]),
+        ];
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills }),
+          "resolved",
+        );
+      },
+      doFollowGrovel: () => {
+        const targetTurn = requireResolved(
+          resolveBattleSubject({
+            state,
+            subject: endTurnSubjectFor(fighterId),
+            fills: [],
+          }),
+        ).state;
+        const command = commandRuntimeAct(targetTurn, "grovel");
+        recordAccepted(
+          resolveBattleSubject({
+            state: targetTurn,
+            subject: command.subject,
+            fills: [],
+          }),
+          "resolved",
+        );
+      },
+      doDropNeedsHeldObjectFacts: () => {
+        startRuntimeCommand("drop");
+        stage = "dropHeldObjectFacts";
+        lastResult = "needsHoles";
+      },
+      doFillDropHeldObjectFacts: () => {
+        const heldObjectFacts = requireHole(holes, "heldObjectFacts");
+        fills = [
+          {
+            kind: "heldObjectFacts",
+            holeId: heldObjectFacts.holeId,
+            value: {
+              objectIds: [
+                battleObjectId("command-ordering:main-hand"),
+                battleObjectId("command-ordering:off-hand"),
+              ],
+            },
+          },
+        ];
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills }),
+          "resolved",
+        );
+      },
+      doHaltSuppresses: () => {
+        state = commandTargetTurn("halt");
+        subject = endTurnSubjectFor(skeletonId);
+        fills = [];
+        holes = [];
+        stage = "resolved";
+        lastResult = "resolved";
+        orderingError = "";
+        pendingCommandOption = commandPendingOption(state);
+        droppedObjectCount = 0;
+      },
+      doApproachMovementContinues: () => {
+        startRuntimeCommand("approach");
+        stage = "approachMovement";
+      },
+      doFillApproachMovementContinues: () => {
+        const movement = requireHole(holes, "movement");
+        fills = [
+          commandApproachMovementFill(movement, {
+            movementCostFeet: 10,
+            movedWithinFiveFeetOfCaster: false,
+          }),
+        ];
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills }),
+          "resolved",
+        );
+      },
+      doFillApproachMovementWithinFive: () => {
+        const movement = requireHole(holes, "movement");
+        fills = [
+          commandApproachMovementFill(movement, {
+            movementCostFeet: 10,
+            movedWithinFiveFeetOfCaster: true,
+          }),
+        ];
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills }),
+          "resolved",
+        );
+      },
+      doApproachNoMovement: () => {
+        startRuntimeCommand("approach", { grappledByCaster: true });
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills: [] }),
+          "resolved",
+        );
+      },
+      doFleeMovement: () => {
+        startRuntimeCommand("flee");
+        stage = "fleeMovement";
+      },
+      doFillFleeMovement: () => {
+        const movement = requireHole(holes, "movement");
+        fills = [
+          commandFleeMovementFill(movement, {
+            movementCostFeet: 30,
+            provokedOpportunityAttacks: [],
+          }),
+        ];
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills }),
+          "resolved",
+        );
+      },
+      doRejectFleePartialMovement: () => {
+        const movement = requireHole(holes, "movement");
+        recordInvalid(
+          resolveBattleSubject({
+            state,
+            subject,
+            fills: [
+              commandFleeMovementFill(movement, {
+                movementCostFeet: 10,
+                provokedOpportunityAttacks: [],
+              }),
+            ],
+          }),
+          "commandMovementRequired",
+        );
+      },
+      doFleeNoMovement: () => {
+        startRuntimeCommand("flee", { grappledByCaster: true });
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills: [] }),
+          "resolved",
+        );
+      },
+      doFleeOpportunityAttack: () => {
+        const movement = requireHole(holes, "movement");
+        fills = [
+          commandFleeMovementFill(movement, {
+            movementCostFeet: 30,
+            provokedOpportunityAttacks: [
+              { reactorId: fighterId, attackName: "Unarmed Strike" },
+            ],
+          }),
+        ];
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills }),
+          "resolved",
+        );
+      },
+      step: () => {},
+      getState: () =>
+        projectCommandOrderingState({
+          state,
+          holes,
+          stage,
+          lastResult,
+          orderingError,
+          pendingCommandOption,
+          droppedObjectCount,
+        }),
+    };
+  });
+}
+
 export function createExtraAttackDriver(
   unitId: ExtraAttackMbtUnitId = "fighter_extra_attack",
   schema: typeof extraAttackDriverSchema = extraAttackDriverSchema,
@@ -2456,6 +2865,35 @@ function normalizeHitPointRestorationOrderingQuintState(
   };
 }
 
+function normalizeCommandOrderingQuintState(
+  raw: unknown,
+): CommandOrderingProjection {
+  const state = quintStateRecord(raw);
+
+  return {
+    stage: commandOrderingStage(state["qStage"]),
+    holes: quintSet(state["qHoles"], "qHoles").map(commandOrderingHole).sort(),
+    tableFactFrontierOpen: booleanField(state, "qTableFactFrontierOpen"),
+    lastResult: mbtLastResult(state["qLastResult"]),
+    orderingError: commandOrderingError(state["qLastOrderingError"]),
+    pendingCommandOption: commandOrderingPendingOption(
+      state["qPendingCommandOption"],
+    ),
+    targetProne: booleanField(state, "qTargetProne"),
+    droppedObjectCount: numberFromQuintInt(
+      state["qDroppedObjectCount"],
+      "qDroppedObjectCount",
+    ),
+    haltSuppressed: booleanField(state, "qHaltSuppressed"),
+    movementSpentFeet: numberFromQuintInt(
+      state["qMovementSpentFeet"],
+      "qMovementSpentFeet",
+    ),
+    currentActor: commandOrderingActor(state["qCurrentActor"]),
+    reactionWindowOpen: booleanField(state, "qReactionWindowOpen"),
+  };
+}
+
 function normalizeExtraAttackQuintState(
   raw: unknown,
 ): ExtraAttackMbtProjection {
@@ -2601,6 +3039,13 @@ export const hitPointRestorationOrderingStateCheck = stateCheck(
     return true;
   },
 );
+export const commandOrderingStateCheck = stateCheck(
+  normalizeCommandOrderingQuintState,
+  (spec: CommandOrderingProjection, impl: CommandOrderingProjection) => {
+    expect(impl).toEqual(spec);
+    return true;
+  },
+);
 export const extraAttackStateCheck = stateCheck(
   normalizeExtraAttackQuintState,
   (spec: ExtraAttackMbtProjection, impl: ExtraAttackMbtProjection) => {
@@ -2730,6 +3175,38 @@ function projectHitPointRestorationOrderingState(input: {
     featureTargetHp: input.featureTargetHp,
     featureTargetZeroHpLifecycleCleared:
       input.featureTargetZeroHpLifecycleCleared,
+  };
+}
+
+function projectCommandOrderingState(input: {
+  readonly state: BattleState;
+  readonly holes: readonly BattleHole[];
+  readonly stage: CommandOrderingProjection["stage"];
+  readonly lastResult: CommandOrderingProjection["lastResult"];
+  readonly orderingError: CommandOrderingProjection["orderingError"];
+  readonly pendingCommandOption: CommandOrderingProjection["pendingCommandOption"];
+  readonly droppedObjectCount: number;
+}): CommandOrderingProjection {
+  const snapshot = snapshotBattle(input.state);
+  const targetSnapshot = snapshot.combatants.find(
+    (combatant) => combatant.combatantId === skeletonId,
+  );
+  return {
+    stage: input.stage,
+    holes: input.holes.flatMap(commandOrderingHoleFromRuntime).sort(),
+    tableFactFrontierOpen: input.holes.some(
+      (hole) => hole.kind === "heldObjectFacts",
+    ),
+    lastResult: input.lastResult,
+    orderingError: input.orderingError,
+    pendingCommandOption: input.pendingCommandOption,
+    targetProne: targetSnapshot?.conditions.includes("prone") ?? false,
+    droppedObjectCount: input.droppedObjectCount,
+    haltSuppressed: input.state.currentTurnResources.commandHalt !== null,
+    movementSpentFeet:
+      targetSnapshot === undefined ? 0 : Number(targetSnapshot.movement.spentFeet),
+    currentActor: commandOrderingActorId(snapshot.currentActorId),
+    reactionWindowOpen: input.state.interruptStack.length > 0,
   };
 }
 
@@ -3012,6 +3489,19 @@ function saveGatedSpellHolesAfterFills(
   const result = resolveBattleSubject({ state, subject, fills });
   if (result.tag !== "needsHoles") {
     throw new Error("Expected save-gated spell fills to request more holes.");
+  }
+
+  return result.holes;
+}
+
+function commandHolesAfterFills(
+  state: BattleState,
+  subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>,
+  fills: readonly BattleFill[],
+): readonly BattleHole[] {
+  const result = resolveBattleSubject({ state, subject, fills });
+  if (result.tag !== "needsHoles") {
+    throw new Error("Expected Command fills to request more holes.");
   }
 
   return result.holes;
@@ -3355,6 +3845,16 @@ function saveGatedSpellOrderingBattle(
   });
 }
 
+function commandOrderingBattle(): BattleState {
+  return startBattleRight({
+    battleId: battleId("battle-runtime-mbt-command-ordering"),
+    combatants: [
+      commandOrderingCasterCreatureInit({ initiative: 20 }),
+      skeletonCreatureInit({ initiative: 10 }),
+    ],
+  });
+}
+
 function spellAttackOrderingBattle(
   spellId: "fire_bolt" | "sorcerous_burst",
 ): BattleState {
@@ -3419,6 +3919,124 @@ function endTurnSubject(): Extract<
   return endTurnSubjectFor(fighterId);
 }
 
+function commandOrderingCastSubject(): Extract<
+  BattleSubject,
+  { readonly tag: "actionSpell" }
+> {
+  return {
+    tag: "actionSpell",
+    actorId: fighterId,
+    invocation: spellSlotInvocationRef("command", 1, "command"),
+    mode: { tag: "cast" },
+  };
+}
+
+function commandOrderingCastAct(
+  state: BattleState,
+): ReturnType<typeof discoverBattleActs>[number] & {
+  readonly subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>;
+} {
+  const act = discoverBattleActs(state).find(
+    (
+      candidate,
+    ): candidate is ReturnType<typeof discoverBattleActs>[number] & {
+      readonly subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>;
+    } =>
+      candidate.subject.tag === "actionSpell" &&
+      candidate.subject.invocation.procedure === "command",
+  );
+  if (act === undefined) {
+    throw new Error("Expected Command cast act.");
+  }
+  return act;
+}
+
+type RuntimeCommandOption = Exclude<CommandOrderingPendingOption, "none">;
+type CommandRuntimeSubject = Extract<
+  BattleSubject,
+  { readonly tag: "runtimeCommand" }
+>;
+type CommandTargetTurnInput = {
+  readonly grappledByCaster?: boolean;
+};
+
+function commandRuntimeAct(
+  state: BattleState,
+  option: RuntimeCommandOption,
+): ReturnType<typeof discoverBattleActs>[number] & {
+  readonly subject: CommandRuntimeSubject;
+} {
+  const command = commandSubjectForOption(option);
+  const act = discoverBattleActs(state).find(
+    (
+      candidate,
+    ): candidate is ReturnType<typeof discoverBattleActs>[number] & {
+      readonly subject: CommandRuntimeSubject;
+    } =>
+      candidate.subject.tag === "runtimeCommand" &&
+      candidate.subject.command === command,
+  );
+  if (act === undefined) {
+    throw new Error(`Expected runtime Command act ${command}.`);
+  }
+  return act;
+}
+
+function commandSubjectForOption(
+  option: RuntimeCommandOption,
+): CommandRuntimeSubject["command"] {
+  if (option === "grovel") return "commandGrovel";
+  if (option === "drop") return "commandDrop";
+  if (option === "approach") return "commandApproach";
+  if (option === "flee") return "commandFlee";
+  throw new Error("Command Halt does not expose a runtime command act.");
+}
+
+function commandTargetTurn(
+  option: RuntimeCommandOption,
+  input: CommandTargetTurnInput = {},
+): BattleState {
+  const cast = castCommandForOrdering(option);
+  const targetTurn = requireResolved(
+    resolveBattleSubject({
+      state: cast.state,
+      subject: endTurnSubjectFor(fighterId),
+      fills: [],
+    }),
+  ).state;
+  return input.grappledByCaster === true
+    ? grappledByCaster(targetTurn)
+    : targetTurn;
+}
+
+function castCommandForOrdering(
+  option: RuntimeCommandOption,
+): Extract<BattleResolutionResult, { readonly tag: "resolved" }> {
+  const state = commandOrderingBattle();
+  const act = commandOrderingCastAct(state);
+  const target = requireHole(act.initialHoles, "spellTargetList");
+  const commandOption = requireHole(act.initialHoles, "commandOptionChoice");
+  const targetSelection = spellTargetListFill(target, "command", [skeletonId]);
+  const optionSelection = commandOptionFill(commandOption, option);
+  const savingThrow = requireHole(
+    commandHolesAfterFills(state, act.subject, [targetSelection, optionSelection]),
+    "savingThrowOutcome",
+  );
+  return requireResolved(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        targetSelection,
+        optionSelection,
+        saveGatedSpellSavingThrowOutcomeFill(savingThrow, [
+          { targetId: skeletonId, succeeded: false },
+        ]),
+      ],
+    }),
+  );
+}
+
 function endTurnSubjectFor(
   actorId: CombatantId,
 ): Extract<
@@ -3426,6 +4044,39 @@ function endTurnSubjectFor(
   { readonly tag: "runtimeCommand"; readonly command: "endTurn" }
 > {
   return { tag: "runtimeCommand", actorId, command: "endTurn" };
+}
+
+function commandPendingOption(state: BattleState): CommandOrderingPendingOption {
+  const target = state.combatants.get(skeletonId);
+  const effect = target?.activeEffects.find(
+    (candidate) => candidate.kind === "commandPending",
+  );
+  return effect?.kind === "commandPending" ? effect.option : "none";
+}
+
+function commandOrderingActorId(
+  actorId: CombatantId,
+): CommandOrderingProjection["currentActor"] {
+  if (actorId === fighterId) return "Caster";
+  if (actorId === skeletonId) return "Target";
+  throw new Error(`Unexpected Command ordering actor ${actorId}.`);
+}
+
+function grappledByCaster(state: BattleState): BattleState {
+  return {
+    ...state,
+    grapples: [
+      ...state.grapples,
+      {
+        grapplerId: fighterId,
+        targetId: skeletonId,
+        escapeDc: difficultyClass(12),
+        reachFeet: movementFeet(5),
+        hand: "left",
+        targetExemptFromDragCost: false,
+      },
+    ],
+  };
 }
 
 function rogueCreatureInit(input: {
@@ -3689,6 +4340,50 @@ function saveGatedSpellOrderingCasterCreatureInit(input: {
         spellbookRitualSpellAccesses: [],
         invocationSpellAccesses: [],
         spellSlots: [{ spellLevel: input.slotLevel, count: 1 }],
+      },
+    },
+  };
+}
+
+function commandOrderingCasterCreatureInit(input: {
+  readonly initiative: number;
+}): BattleCreatureInit {
+  const unit = unitLibrary.requireUnit("command");
+  if (unit.kind !== "spell") {
+    throw new Error("Expected Command spell Unit.");
+  }
+  return {
+    combatantId: fighterId,
+    displayName: "Command Ordering Caster",
+    initiative: initiativeScore(input.initiative),
+    side: partySide,
+    creatureInit: {
+      kind: "character",
+      characterId: characterId("command-ordering-caster-character"),
+      characterUnitRefs: [],
+      classLevels: [{ className: "wizard", level: 5 }],
+      knownLanguages: ["Common"],
+      d20Statistics: testCharacterD20Statistics({ str: 16 }),
+      armorClass: defaultArmorClassState(),
+      size: "medium",
+      speed: { walkFeet: movementFeet(30) },
+      currentHp: Hp(20),
+      maxHp: Hp(20),
+      tempHp: Hp(0),
+      selectedLoadout: {},
+      attack: null,
+      unarmedStrike: baseUnarmedStrike(),
+      spellcasting: {
+        sourceClassName: "wizard",
+        spellcastingAbilityModifier: 3,
+        proficiencyBonus: proficiencyBonus(2),
+        canCastSpells: true,
+        cantrips: [],
+        preparedSpells: [unit],
+        featurePreparedSpells: [],
+        spellbookRitualSpellAccesses: [],
+        invocationSpellAccesses: [],
+        spellSlots: [{ spellLevel: 1, count: 1 }],
       },
     },
   };
@@ -4044,6 +4739,19 @@ function requireHole(
   return hole;
 }
 
+function requireResolved(
+  result: BattleResolutionResult,
+): Extract<BattleResolutionResult, { readonly tag: "resolved" }> {
+  if (result.tag !== "resolved") {
+    throw new Error(
+      `Expected resolved battle result, got ${result.tag}: ${
+        "message" in result ? result.message : ""
+      }`,
+    );
+  }
+  return result;
+}
+
 function fillsWithMbtSpellCastReactionFacts(
   holes: readonly BattleHole[],
   fills: readonly BattleFill[],
@@ -4206,6 +4914,20 @@ function saveGatedSpellSavingThrowOutcomeFill(
   };
 }
 
+function commandOptionFill(
+  hole: BattleHole,
+  value: Exclude<CommandOrderingPendingOption, "none">,
+): Extract<BattleFill, { readonly kind: "commandOptionChoice" }> {
+  if (hole.kind !== "commandOptionChoice") {
+    throw new Error("Expected Command option-choice hole.");
+  }
+  return {
+    kind: "commandOptionChoice",
+    holeId: hole.holeId,
+    value,
+  };
+}
+
 function movementFill(
   hole: BattleHole,
   value: { readonly movementCostFeet: number },
@@ -4221,6 +4943,58 @@ function movementFill(
       speedKind: "walk",
       movementCostFeet: movementFeet(value.movementCostFeet),
       provokedOpportunityAttacks: [],
+    },
+  };
+}
+
+function commandApproachMovementFill(
+  hole: BattleHole,
+  value: {
+    readonly movementCostFeet: number;
+    readonly movedWithinFiveFeetOfCaster: boolean;
+  },
+): Extract<BattleFill, { readonly kind: "movement" }> {
+  if (hole.kind !== "movement") {
+    throw new Error("Expected Command Approach movement hole.");
+  }
+  return {
+    kind: "movement",
+    holeId: hole.holeId,
+    value: {
+      speedKind: "walk",
+      movementCostFeet: movementFeet(value.movementCostFeet),
+      provokedOpportunityAttacks: [],
+      commandApproach: {
+        kind: "commandApproachShortestDirectRouteTowardCaster",
+        movedWithinFiveFeetOfCaster: value.movedWithinFiveFeetOfCaster,
+      },
+    },
+  };
+}
+
+function commandFleeMovementFill(
+  hole: BattleHole,
+  value: {
+    readonly movementCostFeet: number;
+    readonly provokedOpportunityAttacks: readonly {
+      readonly reactorId: CombatantId;
+      readonly attackName: string;
+    }[];
+  },
+): Extract<BattleFill, { readonly kind: "movement" }> {
+  if (hole.kind !== "movement") {
+    throw new Error("Expected Command Flee movement hole.");
+  }
+  return {
+    kind: "movement",
+    holeId: hole.holeId,
+    value: {
+      speedKind: "walk",
+      movementCostFeet: movementFeet(value.movementCostFeet),
+      provokedOpportunityAttacks: value.provokedOpportunityAttacks,
+      commandFlee: {
+        kind: "commandFleeFastestAvailableRouteAwayFromCaster",
+      },
     },
   };
 }
@@ -4809,6 +5583,85 @@ function hitPointRestorationOrderingError(
   throw new Error(
     `Unknown Hit Point restoration ordering error: ${String(raw)}.`,
   );
+}
+
+function commandOrderingStage(raw: unknown): CommandOrderingStage {
+  const tag = quintVariantTag(raw);
+  if (tag === "CommandActSelectionStage") return "actSelection";
+  if (tag === "CommandTargetListAndOptionChoiceStage") {
+    return "targetListAndOptionChoice";
+  }
+  if (tag === "CommandTargetListStage") return "targetList";
+  if (tag === "CommandOptionChoiceStage") return "optionChoice";
+  if (tag === "CommandSavingThrowOutcomeStage") return "savingThrowOutcome";
+  if (tag === "CommandDropHeldObjectFactsStage") {
+    return "dropHeldObjectFacts";
+  }
+  if (tag === "CommandApproachMovementStage") return "approachMovement";
+  if (tag === "CommandFleeMovementStage") return "fleeMovement";
+  if (tag === "CommandResolvedStage") return "resolved";
+
+  throw new Error(`Unknown Command ordering stage: ${tag}`);
+}
+
+function commandOrderingHole(raw: unknown): CommandOrderingHole {
+  const tag = quintVariantTag(raw);
+  if (tag === "SpellTargetListHoleKind") return "spellTargetList";
+  if (tag === "CommandOptionChoiceHoleKind") return "commandOptionChoice";
+  if (tag === "SavingThrowOutcomeHoleKind") return "savingThrowOutcome";
+  if (tag === "MovementHoleKind") return "movement";
+
+  throw new Error(`Unknown Command ordering hole: ${tag}`);
+}
+
+function commandOrderingHoleFromRuntime(
+  hole: Pick<BattleHole, "kind">,
+): readonly CommandOrderingHole[] {
+  if (hole.kind === "spellTargetList") return ["spellTargetList"];
+  if (hole.kind === "commandOptionChoice") return ["commandOptionChoice"];
+  if (hole.kind === "savingThrowOutcome") return ["savingThrowOutcome"];
+  if (hole.kind === "movement") return ["movement"];
+  if (hole.kind === "heldObjectFacts") return [];
+  if (hole.kind === "interruptDecision") return [];
+
+  throw new Error(`Unexpected Command ordering hole: ${hole.kind}`);
+}
+
+function commandOrderingError(raw: unknown): CommandOrderingError {
+  if (
+    raw === "" ||
+    raw === "commandTargetListRequired" ||
+    raw === "commandOptionChoiceRequired" ||
+    raw === "commandSavingThrowRequired" ||
+    raw === "commandHeldObjectFactsRequired" ||
+    raw === "commandMovementRequired"
+  ) {
+    return raw;
+  }
+
+  throw new Error(`Unknown Command ordering error: ${String(raw)}.`);
+}
+
+function commandOrderingPendingOption(
+  raw: unknown,
+): CommandOrderingPendingOption {
+  if (
+    raw === "none" ||
+    raw === "grovel" ||
+    raw === "drop" ||
+    raw === "halt" ||
+    raw === "approach" ||
+    raw === "flee"
+  ) {
+    return raw;
+  }
+
+  throw new Error(`Unknown Command pending option: ${String(raw)}.`);
+}
+
+function commandOrderingActor(raw: unknown): CommandOrderingProjection["currentActor"] {
+  if (raw === "Caster" || raw === "Target") return raw;
+  throw new Error(`Unknown Command ordering actor: ${String(raw)}.`);
 }
 
 function quintHoleSet(raw: unknown): readonly unknown[] {
