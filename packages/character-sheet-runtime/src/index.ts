@@ -11,7 +11,7 @@ export {
   CHARACTER_SHEET_SHORT_REST_TICKS,
   characterSheetIssue,
   characterSheetId,
-  characterSheetRetainedCompanionId,
+  parseCharacterSheetRetainedCompanionId,
   isCharacterSheetPointPoolResourceUnitId,
   isCharacterSheetUseCountResourceUnitId,
   retainedCompanionProtocolFacts,

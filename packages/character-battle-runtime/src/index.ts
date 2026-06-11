@@ -14,7 +14,9 @@ import {
   type BattleCompanionPlacement,
   type BattleCompanionState,
   type BattleCompanionStoredForm,
+  type CompanionBattleEmbodiedAdmissionManifestation,
   type CompanionBattleAdmissionFormEligibility,
+  type CompanionBattleStoredAdmissionManifestation,
   type BattleCreatureState,
   type BattleState,
   type CharacterZeroHpLifecycleInit,
@@ -327,16 +329,10 @@ export function admitCharacterSheetCompanionToBattle(
     formEligibility: manifestation.right.formEligibility,
     initialCombatantOrder: input.initialCombatantOrder,
   };
-  if (manifestation.right.manifestation.tag === "embodiedOutsideBattle") {
-    const companionCombatantId = input.companionCombatantId;
-    if (companionCombatantId === undefined) {
-      return characterSheetBattleHandoffIssue(
-        "Present companion admission requires a companion combatant id.",
-      );
-    }
+  if (manifestation.right.tag === "embodiedOutsideBattle") {
     const admitted = admitCompanionToBattle({
       ...admissionBase,
-      companionId: companionCombatantId,
+      companionId: manifestation.right.companionId,
       manifestation: manifestation.right.manifestation,
     });
     return Either.isLeft(admitted)
@@ -449,6 +445,19 @@ function ownerLongRestExpiringFamiliarLikeProtocol(): CharacterSheetRetainedComp
   return { tag: "ownerLongRestFamiliarLikeOneAtATime" };
 }
 
+type CharacterSheetCompanionAdmissionProjection =
+  | {
+      readonly tag: "embodiedOutsideBattle";
+      readonly companionId: CombatantId;
+      readonly formEligibility: CompanionBattleAdmissionFormEligibility;
+      readonly manifestation: CompanionBattleEmbodiedAdmissionManifestation;
+    }
+  | {
+      readonly tag: "storedOutsideBattle";
+      readonly formEligibility: CompanionBattleAdmissionFormEligibility;
+      readonly manifestation: CompanionBattleStoredAdmissionManifestation;
+    };
+
 function companionAdmissionManifestation(input: {
   readonly companion: Extract<
     CharacterSheetCompanion,
@@ -463,14 +472,7 @@ function companionAdmissionManifestation(input: {
     { readonly kind: "unoccupiedSpaceWithinSpellRange" }
   >;
 }): Either.Either<
-  {
-    readonly formEligibility: Parameters<
-      typeof admitCompanionToBattle
-    >[0]["formEligibility"];
-    readonly manifestation: Parameters<
-      typeof admitCompanionToBattle
-    >[0]["manifestation"];
-  },
+  CharacterSheetCompanionAdmissionProjection,
   CharacterSheetBattleHandoffIssue
 > {
   const storedForm = battleStoredFormForSheetCompanion({
@@ -491,6 +493,8 @@ function companionAdmissionManifestation(input: {
       );
     }
     return Either.right({
+      tag: "embodiedOutsideBattle",
+      companionId: input.companionCombatantId,
       formEligibility: storedForm.right.formEligibility,
       manifestation: {
         tag: "embodiedOutsideBattle",
@@ -509,6 +513,7 @@ function companionAdmissionManifestation(input: {
       );
     }
     return Either.right({
+      tag: "storedOutsideBattle",
       formEligibility: storedForm.right.formEligibility,
       manifestation: {
         tag: "temporarilyDismissed",
@@ -520,6 +525,7 @@ function companionAdmissionManifestation(input: {
     });
   }
   return Either.right({
+    tag: "storedOutsideBattle",
     formEligibility: storedForm.right.formEligibility,
     manifestation: {
       tag: "disappearedAtZeroHitPoints",

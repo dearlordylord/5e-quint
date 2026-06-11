@@ -38,7 +38,7 @@ import { characterSheetSpellInvocation } from "./spell-invocation.ts";
 import { spendCharacterSheetSpellSlot } from "./spell-slots.ts";
 import {
   characterSheetIssue,
-  characterSheetRetainedCompanionId,
+  parseCharacterSheetRetainedCompanionId,
   RETAINED_COMPANION_PROTOCOL_TAGS,
   retainedCompanionProtocolFacts,
   type CharacterSheet,
@@ -100,10 +100,7 @@ export function replaceCharacterSheetCompanion(input: {
   readonly sheet: CharacterSheet;
   readonly companion: CharacterSheetCompanion;
 }): Either.Either<CharacterSheet, CharacterSheetIssue> {
-  const companion = companionFromInput(input.companion);
-  return Either.isLeft(companion)
-    ? Either.left(companion.left)
-    : Either.right({ ...input.sheet, companion: companion.right });
+  return Either.right({ ...input.sheet, companion: input.companion });
 }
 
 export function companionAfterLongRest(
@@ -123,9 +120,6 @@ export function companionAfterLongRest(
 export function createRetainedFamiliarLikeCompanion(
   input: CharacterSheetRetainedCompanionCreationInput,
 ): Either.Either<CharacterSheet, CharacterSheetIssue> {
-  if (input.companionId.length === 0) {
-    return characterSheetIssue("Retained companion requires companion id.");
-  }
   const source = retainedCompanionCreationSource(input);
   if (Either.isLeft(source)) return Either.left(source.left);
   const resolved = retainedCompanionResolvedForm({
@@ -194,9 +188,6 @@ export function companionFromInput(
   if (companion.tag !== "retainedOneAtATime") {
     return characterSheetIssue("Character Sheet companion state is invalid.");
   }
-  if (companion.companion.companionId.length === 0) {
-    return characterSheetIssue("Retained companion requires companion id.");
-  }
   const hitPointsIssue = retainedCompanionHitPointsIssue(
     companion.companion.manifestation,
   );
@@ -222,6 +213,10 @@ export function parseStoredCharacterSheetCompanion(
   if (typeof companion.companionId !== "string") {
     return characterSheetIssue("Retained companion requires companion id.");
   }
+  const companionId = parseCharacterSheetRetainedCompanionId(
+    companion.companionId,
+  );
+  if (Either.isLeft(companionId)) return Either.left(companionId.left);
   const protocol = parseStoredRetainedCompanionProtocol(companion.protocol);
   if (Either.isLeft(protocol)) return Either.left(protocol.left);
   const manifestation = parseStoredRetainedCompanionManifestation(
@@ -231,7 +226,7 @@ export function parseStoredCharacterSheetCompanion(
   return Either.right({
     tag: "retainedOneAtATime",
     companion: {
-      companionId: characterSheetRetainedCompanionId(companion.companionId),
+      companionId: companionId.right,
       protocol: protocol.right,
       manifestation: manifestation.right,
     },
@@ -253,17 +248,14 @@ function retainedCompanionProtocolIssue(
   companion: CharacterSheetRetainedCompanionState,
 ): string | null {
   const selectedForm = companion.manifestation.selectedForm;
+  // SRD Warlock.md Pact of the Chain grants special familiar forms and the
+  // attack exception together; a stored special-form companion must retain
+  // that protocol.
   if (
     selectedForm.tag === "pactOfTheChainSpecialForm" &&
     !isAttackExceptionRetainedCompanionProtocol(companion.protocol)
   ) {
     return "Retained companion special forms require the attack-exception protocol.";
-  }
-  if (
-    isOwnerLongRestRetainedCompanionProtocol(companion.protocol) &&
-    companion.manifestation.creatureTypeOverride !== "fey"
-  ) {
-    return "Owner-long-rest expiring retained companions must use the Fey creature type override.";
   }
   return null;
 }
@@ -272,12 +264,6 @@ function isAttackExceptionRetainedCompanionProtocol(
   protocol: CharacterSheetRetainedCompanionProtocol,
 ): boolean {
   return protocol.tag === "attackExceptionFamiliarLikeOneAtATime";
-}
-
-function isOwnerLongRestRetainedCompanionProtocol(
-  protocol: CharacterSheetRetainedCompanionProtocol,
-): boolean {
-  return protocol.tag === "ownerLongRestFamiliarLikeOneAtATime";
 }
 
 function parseStoredRetainedCompanionProtocol(
@@ -678,10 +664,7 @@ function spendRetainedCompanionCreationSourceCost(input: {
   readonly unitLibrary: UnitCatalog;
   readonly source: RetainedCompanionCreationSourceFacts;
 }): Either.Either<CharacterSheet, CharacterSheetIssue> {
-  if (
-    input.source.tag === "ordinaryFamiliarLike" &&
-    input.source.spend.tag === "spellSlot"
-  ) {
+  if (input.source.spend.tag === "spellSlot") {
     return spendCharacterSheetSpellSlot({
       sheet: input.sheet,
       spellLevel: input.source.spend.spellLevel,
@@ -690,13 +673,6 @@ function spendRetainedCompanionCreationSourceCost(input: {
   }
   if (input.source.tag !== "ownerLongRestExpiringFamiliarLike") {
     return Either.right(input.sheet);
-  }
-  if (input.source.spend.tag === "spellSlot") {
-    return spendCharacterSheetSpellSlot({
-      sheet: input.sheet,
-      spellLevel: input.source.spend.spellLevel,
-      spellSlotSource: undefined,
-    });
   }
   return spendRetainedCompanionUseCountResource({
     sheet: input.sheet,

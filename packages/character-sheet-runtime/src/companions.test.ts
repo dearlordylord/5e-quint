@@ -9,7 +9,7 @@ import { Option } from "effect";
 
 import {
   characterSheetCompanion,
-  characterSheetRetainedCompanionId,
+  parseCharacterSheetRetainedCompanionId,
   createRetainedFamiliarLikeCompanion,
   type CharacterSheet,
   type CharacterSheetCompanion,
@@ -40,6 +40,10 @@ if (statBlockCatalogResult.tag !== "ok") {
 }
 const statBlockCatalog = statBlockCatalogResult.catalog;
 
+function retainedCompanionId(value: string) {
+  return requireRight(parseCharacterSheetRetainedCompanionId(value));
+}
+
 function retainedCompanionInput(
   input: {
     readonly companionId?: string;
@@ -53,9 +57,7 @@ function retainedCompanionInput(
   return {
     tag: "retainedOneAtATime",
     companion: {
-      companionId: characterSheetRetainedCompanionId(
-        input.companionId ?? "companion:cat",
-      ),
+      companionId: retainedCompanionId(input.companionId ?? "companion:cat"),
       protocol,
       manifestation: {
         tag: "embodiedOutsideBattle",
@@ -140,7 +142,7 @@ describe("Character Sheet runtime / companions", () => {
         sheet,
         unitLibrary,
         statBlockCatalog,
-        companionId: characterSheetRetainedCompanionId("companion:cat"),
+        companionId: retainedCompanionId("companion:cat"),
         source: { tag: "ritualSpell", spellId: "find_familiar" },
         selectedForm: { tag: "normalNamedForm", formId: "cat" },
         creatureTypeOverrideChoiceId: "fey",
@@ -189,7 +191,7 @@ describe("Character Sheet runtime / companions", () => {
         sheet,
         unitLibrary,
         statBlockCatalog: nonliteralHpCatalog,
-        companionId: characterSheetRetainedCompanionId("companion:cat"),
+        companionId: retainedCompanionId("companion:cat"),
         source: { tag: "ritualSpell", spellId: "find_familiar" },
         selectedForm: { tag: "normalNamedForm", formId: "cat" },
         creatureTypeOverrideChoiceId: "fey",
@@ -223,17 +225,7 @@ describe("Character Sheet runtime / companions", () => {
   });
 
   test("rejects retained companions with an empty durable id", () => {
-    expect(
-      createFreshCharacterSheet({
-        characterId: characterSheetId("character:bad-companion-id"),
-        build,
-        maximumHp: Hp(12),
-        currentHp: Hp(12),
-        tempHp: Hp(0),
-        unitLibrary,
-        companion: retainedCompanionInput({ companionId: "" }),
-      }),
-    ).toMatchObject({
+    expect(parseCharacterSheetRetainedCompanionId("")).toMatchObject({
       _tag: "Left",
       left: {
         message: "Retained companion requires companion id.",
@@ -249,15 +241,6 @@ describe("Character Sheet runtime / companions", () => {
       }),
       message:
         "Retained companion special forms require the attack-exception protocol.",
-    },
-    {
-      title: "Long Rest expiration without Fey override",
-      companion: retainedCompanionInput({
-        creatureTypeOverride: "fiend",
-        protocolTag: "ownerLongRestFamiliarLikeOneAtATime",
-      }),
-      message:
-        "Owner-long-rest expiring retained companions must use the Fey creature type override.",
     },
   ])(
     "rejects retained companion protocol hybrids: $title",

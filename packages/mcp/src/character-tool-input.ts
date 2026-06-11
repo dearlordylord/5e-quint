@@ -250,12 +250,6 @@ type ApplyCharacterSessionOperationArgs = Schema.Schema.Type<
 type CharacterSessionOperationArgs =
   ApplyCharacterSessionOperationArgs["operation"];
 
-export type RetainedCompanionFormSelectionToolInput =
-  CharacterSessionOperationArgs extends {
-    readonly kind: "retainOneAtATimeCompanion";
-  }
-    ? CharacterSessionOperationArgs["selectedForm"]
-    : never;
 export type ApplyCharacterSessionOperationToolInput = {
   readonly characterId: string;
   readonly operation: CharacterSessionOperationArgs;

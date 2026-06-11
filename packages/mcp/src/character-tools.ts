@@ -11,9 +11,10 @@ import {
 import {
   characterSheetCompanion,
   characterSheetHitPointMaximum,
-  characterSheetRetainedCompanionId,
+  parseCharacterSheetRetainedCompanionId,
   createRetainedFamiliarLikeCompanion,
   type CharacterSheetCompanionFormSelection,
+  type CharacterSheetRetainedCompanionId,
   type CharacterSheetRetainedCompanionCreationSource,
 } from "@dnd/character-sheet-runtime";
 import { Hp, spellSlotLevel } from "@dnd/shared/types";
@@ -310,11 +311,34 @@ function applyRetainOneAtATimeCompanionOperation(
       message: selectedForm.left,
     });
   }
+  const companionId = parseCharacterSheetRetainedCompanionId(
+    input.operation.companionId,
+  );
+  if (Either.isLeft(companionId)) {
+    return errorContent("Character session operation failed.", {
+      code: "CHARACTER_SESSION_OPERATION_INVALID",
+      characterId: input.characterId,
+      message: companionId.left.message,
+    });
+  }
+  if (
+    retainedCompanionIdUsedByAnotherCharacter(root, {
+      characterId: characterId(input.characterId),
+      companionId: companionId.right,
+    })
+  ) {
+    return errorContent("Character session operation failed.", {
+      code: "CHARACTER_SESSION_OPERATION_INVALID",
+      characterId: input.characterId,
+      message:
+        "Retained companion id is already used by another character session.",
+    });
+  }
   const updated = createRetainedFamiliarLikeCompanion({
     sheet: input.session,
     unitLibrary: root.unitLibrary,
     statBlockCatalog: root.statBlockCatalog,
-    companionId: characterSheetRetainedCompanionId(input.operation.companionId),
+    companionId: companionId.right,
     source: retainedCompanionSourceFromTool(input.operation.source),
     selectedForm: selectedForm.right,
     ...(input.operation.creatureTypeOverrideChoiceId === undefined
@@ -336,6 +360,27 @@ function applyRetainOneAtATimeCompanionOperation(
     character: updated.right,
     session: root.sessionStore.snapshot(),
   });
+}
+
+function retainedCompanionIdUsedByAnotherCharacter(
+  root: McpCompositionRoot,
+  input: {
+    readonly characterId: CharacterId;
+    readonly companionId: CharacterSheetRetainedCompanionId;
+  },
+): boolean {
+  for (const [characterId, session] of root.sessionStore.characters.entries()) {
+    if (characterId === input.characterId) continue;
+    const sheet = session.tag === "inBattle" ? session.sheet : session;
+    const companion = characterSheetCompanion(sheet);
+    if (
+      companion.tag === "retainedOneAtATime" &&
+      companion.companion.companionId === input.companionId
+    ) {
+      return true;
+    }
+  }
+  return false;
 }
 
 function retainedCompanionFormSelectionFromTool(

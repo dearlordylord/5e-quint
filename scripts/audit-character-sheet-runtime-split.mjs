@@ -147,7 +147,7 @@ const EXPECTED_EXPORTS = [
   "characterSheetPactSlots",
   "characterSheetProficiencyBonusForCharacterLevel",
   "characterSheetResources",
-  "characterSheetRetainedCompanionId",
+  "parseCharacterSheetRetainedCompanionId",
   "characterSheetSpellInvocation",
   "characterSheetSpellSlotSourceState",
   "characterSheetSpellSlots",

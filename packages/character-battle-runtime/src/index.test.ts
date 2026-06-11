@@ -61,7 +61,7 @@ import {
   characterSheetDruidWildShapeKnownForms,
   characterSheetHitPointMaximum,
   characterSheetResources,
-  characterSheetRetainedCompanionId,
+  parseCharacterSheetRetainedCompanionId,
   characterSheetSpellSlotSourceState,
   characterSheetSpellSlots,
   characterSheetId,
@@ -354,7 +354,7 @@ describe("Character Sheet battle handoff", () => {
         sheet,
         unitLibrary,
         statBlockCatalog,
-        companionId: characterSheetRetainedCompanionId("companion:wild-cat"),
+        companionId: retainedCompanionId("companion:wild-cat"),
         source: {
           tag: "classFeatureSpellCast",
           featureUnitId: "druid_wild_companion",
@@ -427,7 +427,7 @@ describe("Character Sheet battle handoff", () => {
         sheet,
         unitLibrary,
         statBlockCatalog,
-        companionId: characterSheetRetainedCompanionId("companion:slot-cat"),
+        companionId: retainedCompanionId("companion:slot-cat"),
         source: {
           tag: "spellSlotSpellCast",
           spellId: "find_familiar",
@@ -473,7 +473,7 @@ describe("Character Sheet battle handoff", () => {
         sheet,
         unitLibrary,
         statBlockCatalog,
-        companionId: characterSheetRetainedCompanionId(
+        companionId: retainedCompanionId(
           "companion:recast-embodied",
         ),
         source: { tag: "ritualSpell", spellId: "find_familiar" },
@@ -523,7 +523,7 @@ describe("Character Sheet battle handoff", () => {
         sheet: dismissed,
         unitLibrary,
         statBlockCatalog,
-        companionId: characterSheetRetainedCompanionId(
+        companionId: retainedCompanionId(
           "companion:recast-dismissed",
         ),
         source: { tag: "ritualSpell", spellId: "find_familiar" },
@@ -569,7 +569,7 @@ describe("Character Sheet battle handoff", () => {
         sheet: disappeared,
         unitLibrary,
         statBlockCatalog,
-        companionId: characterSheetRetainedCompanionId(
+        companionId: retainedCompanionId(
           "companion:recast-disappeared",
         ),
         source: { tag: "ritualSpell", spellId: "find_familiar" },
@@ -605,7 +605,7 @@ describe("Character Sheet battle handoff", () => {
       sheet,
       unitLibrary,
       statBlockCatalog,
-      companionId: characterSheetRetainedCompanionId("companion:replacement"),
+      companionId: retainedCompanionId("companion:replacement"),
       source: { tag: "ritualSpell", spellId: "find_familiar" },
       selectedForm: { tag: "normalNamedForm", formId: "bat" },
       creatureTypeOverrideChoiceId: "fey",
@@ -656,7 +656,7 @@ describe("Character Sheet battle handoff", () => {
         sheet,
         unitLibrary,
         statBlockCatalog,
-        companionId: characterSheetRetainedCompanionId("companion:forged-form"),
+        companionId: retainedCompanionId("companion:forged-form"),
         source: { tag: "ritualSpell", spellId: "find_familiar" },
         selectedForm: { tag: "normalNamedForm", formId: "cat" },
         creatureTypeOverrideChoiceId: "fey",
@@ -759,7 +759,7 @@ describe("Character Sheet battle handoff", () => {
         sheet,
         unitLibrary,
         statBlockCatalog,
-        companionId: characterSheetRetainedCompanionId(
+        companionId: retainedCompanionId(
           "companion:forged-cr0-beast",
         ),
         source: { tag: "ritualSpell", spellId: "find_familiar" },
@@ -5071,6 +5071,10 @@ function expectRight<T, E>(result: Either.Either<T, E>): T {
   return result.right;
 }
 
+function retainedCompanionId(value: string) {
+  return expectRight(parseCharacterSheetRetainedCompanionId(value));
+}
+
 function retainedOrdinaryCompanionSheet(input: {
   readonly characterIdValue: string;
   readonly companionIdValue: string;
@@ -5113,7 +5117,7 @@ function retainedOrdinaryCompanionSheet(input: {
       sheet,
       unitLibrary,
       statBlockCatalog,
-      companionId: characterSheetRetainedCompanionId(input.companionIdValue),
+      companionId: retainedCompanionId(input.companionIdValue),
       source: { tag: "ritualSpell", spellId: "find_familiar" },
       selectedForm: input.selectedForm,
       creatureTypeOverrideChoiceId: "fey",

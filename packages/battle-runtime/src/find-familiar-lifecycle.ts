@@ -142,6 +142,16 @@ export type CompanionBattleAdmissionManifestation =
       readonly creatureTypeOverride: FindFamiliarCreatureTypeOverride;
     };
 
+export type CompanionBattleEmbodiedAdmissionManifestation = Extract<
+  CompanionBattleAdmissionManifestation,
+  { readonly tag: "embodiedOutsideBattle" }
+>;
+
+export type CompanionBattleStoredAdmissionManifestation = Exclude<
+  CompanionBattleAdmissionManifestation,
+  { readonly tag: "embodiedOutsideBattle" }
+>;
+
 export type CompanionBattleAdmissionFormEligibility =
   | {
       readonly formAccess: "findFamiliar";
@@ -168,16 +178,10 @@ type CompanionBattleAdmissionInputBase = {
 export type CompanionBattleAdmissionInput =
   | (CompanionBattleAdmissionInputBase & {
       readonly companionId: CombatantId;
-      readonly manifestation: Extract<
-        CompanionBattleAdmissionManifestation,
-        { readonly tag: "embodiedOutsideBattle" }
-      >;
+      readonly manifestation: CompanionBattleEmbodiedAdmissionManifestation;
     })
   | (CompanionBattleAdmissionInputBase & {
-      readonly manifestation: Exclude<
-        CompanionBattleAdmissionManifestation,
-        { readonly tag: "embodiedOutsideBattle" }
-      >;
+      readonly manifestation: CompanionBattleStoredAdmissionManifestation;
     });
 
 export type FindFamiliarReappearanceInput = {

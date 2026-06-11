@@ -63,7 +63,8 @@ import {
   characterIdFromDraftId,
 } from "./session-store.ts";
 import {
-  characterSheetRetainedCompanionId,
+  parseCharacterSheet,
+  parseCharacterSheetRetainedCompanionId,
   replaceCharacterSheetCompanion,
   type CharacterSheetCompanion,
   type CharacterSheetRetainedCompanionCurrentHitPoints,
@@ -225,6 +226,10 @@ function expectRight<T, E>(result: Either.Either<T, E>): T {
   }
 
   return result.right;
+}
+
+function retainedCompanionId(value: string) {
+  return expectRight(parseCharacterSheetRetainedCompanionId(value));
 }
 
 const fighterId = combatantId("fighter");
@@ -2812,6 +2817,51 @@ describe("MCP server route", () => {
     });
   });
 
+  test("apply_character_session_operation rejects a durable companion id used by another character", () => {
+    const root = createMcpCompositionRoot();
+    const firstDraftId = "draft:mcp-duplicate-durable-familiar-first";
+    const secondDraftId = "draft:mcp-duplicate-durable-familiar-second";
+    createFinalizedWizardWithFindFamiliar(root, firstDraftId);
+    createFinalizedWizardWithFindFamiliar(root, secondDraftId);
+
+    readPayload(
+      handleToolCall(root, "apply_character_session_operation", {
+        characterId: testCharacterId(firstDraftId),
+        operation: {
+          kind: "retainOneAtATimeCompanion",
+          companionId: "shared-durable-familiar",
+          source: { tag: "ritualSpell", spellId: "find_familiar" },
+          selectedForm: { tag: "normalNamedForm", formId: "cat" },
+          creatureTypeOverrideChoiceId: "fey",
+        },
+      }),
+    );
+
+    const rejected = readPayload(
+      handleToolCall(root, "apply_character_session_operation", {
+        characterId: testCharacterId(secondDraftId),
+        operation: {
+          kind: "retainOneAtATimeCompanion",
+          companionId: "shared-durable-familiar",
+          source: { tag: "ritualSpell", spellId: "find_familiar" },
+          selectedForm: { tag: "normalNamedForm", formId: "owl" },
+          creatureTypeOverrideChoiceId: "fey",
+        },
+      }),
+    );
+
+    expect(rejected).toMatchObject({
+      details: {
+        code: "CHARACTER_SESSION_OPERATION_INVALID",
+        message:
+          "Retained companion id is already used by another character session.",
+      },
+    });
+    expect(
+      root.sessionStore.characters.get(testCharacterId(secondDraftId)),
+    ).toMatchObject({ companion: { tag: "none" } });
+  });
+
   test("apply_character_session_operation rejects caller-minted companion HP", () => {
     const root = createMcpCompositionRoot();
     const draftId = "draft:mcp-find-familiar-hp-input-rejected";
@@ -3030,18 +3080,20 @@ describe("MCP server route", () => {
       throw new Error("Expected test character session.");
     }
 
-    const rejected = replaceCharacterSheetCompanion({
-      sheet: session,
-      companion: retainedFamiliarCompanionInput({
-        currentHp: Hp(0),
-      }),
-    });
+    const rejected = parseCharacterSheet(
+      {
+        ...session,
+        companion: retainedFamiliarCompanionInput({
+          currentHp: Hp(0),
+        }),
+      },
+      root.unitLibrary,
+    );
 
     expect(rejected).toMatchObject({
       _tag: "Left",
       left: {
-        message:
-          "Retained companion current HP must be positive unless it disappeared at 0 HP.",
+        message: "Retained companion current HP must be positive.",
       },
     });
     expect(root.sessionStore.battleState).toBeNull();
@@ -5995,7 +6047,7 @@ function retainedFamiliarCompanionInput(
   return {
     tag: "retainedOneAtATime",
     companion: {
-      companionId: characterSheetRetainedCompanionId("durable-wizard-familiar"),
+      companionId: retainedCompanionId("durable-wizard-familiar"),
       protocol: { tag: "ordinaryFamiliarLikeOneAtATime" },
       manifestation: {
         tag: "embodiedOutsideBattle",

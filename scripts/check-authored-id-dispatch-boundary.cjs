@@ -43,6 +43,10 @@ const ALLOWLIST_PATH_RULES = [
       /^packages\/character-creation-runtime\/src\/(?:phase1-manifest|support-gates)\.ts$/,
   },
   {
+    reason: "character-sheet-retained-companion-support-admission-boundary",
+    pattern: /^packages\/character-sheet-runtime\/src\/companions\.ts$/,
+  },
+  {
     reason: "battle-runtime-spell-access-boundary",
     pattern: /^packages\/battle-runtime\/src\/character-battle-resources\.ts$/,
   },

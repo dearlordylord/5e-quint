@@ -175,10 +175,12 @@ export type CharacterSheetRetainedCompanionId = string &
 const CharacterSheetRetainedCompanionId =
   Brand.nominal<CharacterSheetRetainedCompanionId>();
 
-export function characterSheetRetainedCompanionId(
+export function parseCharacterSheetRetainedCompanionId(
   value: string,
-): CharacterSheetRetainedCompanionId {
-  return CharacterSheetRetainedCompanionId(value);
+): Either.Either<CharacterSheetRetainedCompanionId, CharacterSheetIssue> {
+  return value.length === 0
+    ? characterSheetIssue("Retained companion requires companion id.")
+    : Either.right(CharacterSheetRetainedCompanionId(value));
 }
 
 export type CharacterSheetCompanionCreatureTypeOverride =
