@@ -1,8 +1,3 @@
-import type { CharacterBuild } from "@dnd/character-creation-runtime";
-import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared/elapsed-time";
-import type { UnitRecord } from "@dnd/surface/surface/types";
-import { Either } from "effect";
-
 export {
   createFreshCharacterSheet,
   parseCharacterSheet,
@@ -66,6 +61,7 @@ export {
   startShortRest,
 } from "./rests.ts";
 export {
+  characterBuildHasSpellbookSpell,
   characterSheetSpellInvocation,
   characterSheetSpellbookRitualAccess,
   characterSheetSpellbookRitualAccessesForBuild,
@@ -78,6 +74,7 @@ export {
   convertFontOfMagicSpellSlotToSorceryPoints,
   replaceCharacterSheetSpellSlotSourceState,
 } from "./spell-slots.ts";
+export { timePassed } from "./time-passage.ts";
 export type {
   CharacterPactSlotExpenditure,
   CharacterSheet,
@@ -168,48 +165,3 @@ export type {
   CharacterSheetZeroHpLifecycleInput,
   CharacterSpellSlotExpenditure,
 } from "./sheet-types.ts";
-import type {
-  CharacterSheetElapsedTimeResult,
-  CharacterSheetTimePassedInput,
-} from "./sheet-types.ts";
-import {
-  invalidElapsedTimeResult,
-  passStableRecoveryTime,
-} from "./hit-points.ts";
-
-export function characterBuildHasSpellbookSpell(input: {
-  readonly build: CharacterBuild;
-  readonly spellId: UnitRecord["id"];
-}): boolean {
-  return (
-    input.build.spellcasting?.sources.some((source) =>
-      source.spellbook.some((spellId) => spellId === input.spellId),
-    ) ?? false
-  );
-}
-
-export function timePassed(
-  input: CharacterSheetTimePassedInput,
-): CharacterSheetElapsedTimeResult {
-  // Future ASSUMPTIONS.md work: out-of-battle elapsed rounds may imply
-  // turn-boundary Death Saving Throws, but this operation currently only
-  // handles calendar-time Stable recovery.
-  const totalTicks = elapsedTimeTicksFromTimeSpanDuration(input.duration);
-  if (Either.isLeft(totalTicks)) {
-    return invalidElapsedTimeResult(
-      input.sheet,
-      `Invalid elapsed-time duration: ${totalTicks.left.kind}.`,
-    );
-  }
-  const consumed = passStableRecoveryTime({
-    sheet: input.sheet,
-    ticks: totalTicks.right,
-    fills: input.fills,
-  });
-  if (consumed.tag !== "resolved") return consumed;
-  return {
-    tag: "resolved",
-    sheet: consumed.sheet,
-    elapsedTicks: consumed.elapsedTicks,
-  };
-}

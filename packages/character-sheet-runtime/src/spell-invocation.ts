@@ -100,6 +100,17 @@ export function characterSheetSpellbookRitualAccessesForBuild(input: {
   return Either.right(accesses);
 }
 
+export function characterBuildHasSpellbookSpell(input: {
+  readonly build: CharacterBuild;
+  readonly spellId: UnitRecord["id"];
+}): boolean {
+  return (
+    input.build.spellcasting?.sources.some((source) =>
+      source.spellbook.some((spellId) => spellId === input.spellId),
+    ) ?? false
+  );
+}
+
 function characterSheetBookOfShadowsRitualInvocation(
   input: CharacterSheetSpellInvocationInput,
 ): Either.Either<

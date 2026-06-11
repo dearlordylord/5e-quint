@@ -49,13 +49,13 @@
     {
       "number": 8,
       "id": "SHEETS-C08-TIME-PASSAGE-AND-AUDIT",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Extract time-passage, finalize the barrel, add the split audit, close out §7"
     },
     {
       "number": 9,
       "id": "SHEETS-C09-TEST-REORG",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Reorganize the monolithic index.test.ts along the new module seams (optional follow-up)"
     }
   ]
@@ -152,8 +152,8 @@ Every task must include:
 | 5 | SHEETS-C05-FEATURE-DOMAINS | done | SHEETS-C04-SPELL-SLOTS-INVOCATION | Druid + class-feature prepared spells. |
 | 6 | SHEETS-C06-LIFECYCLE-PARSING | done | SHEETS-C05-FEATURE-DOMAINS | Largest internal move (~2,400-line parser layer). |
 | 7 | SHEETS-C07-RESTS | ready-for-research | SHEETS-C06-LIFECYCLE-PARSING | Rest state machine consumes the spell-slots interface; weapon-mastery reselection folds in. |
-| 8 | SHEETS-C08-TIME-PASSAGE-AND-AUDIT | ready-for-research | SHEETS-C07-RESTS | Final move + executable split audit + §7 status note. |
-| 9 | SHEETS-C09-TEST-REORG | blocked | SHEETS-C08-TIME-PASSAGE-AND-AUDIT | Optional follow-up; can be deferred indefinitely. |
+| 8 | SHEETS-C08-TIME-PASSAGE-AND-AUDIT | done | SHEETS-C07-RESTS | Final move + executable split audit + §7 status note. |
+| 9 | SHEETS-C09-TEST-REORG | ready-for-research | SHEETS-C08-TIME-PASSAGE-AND-AUDIT | Optional follow-up; can be deferred indefinitely. |
 
 ## Task Details
 
@@ -240,7 +240,7 @@ Acceptance: standard verification; `hp-rest-hit-dice` and
 
 ### Task 8 - SHEETS-C08-TIME-PASSAGE-AND-AUDIT
 
-Status: `ready-for-research` · Mode: AFK
+Status: `done` · Mode: AFK
 
 Output: `time-passage.ts` (the `timePassed` omnibus, moved whole with a
 header comment naming it the time-domain state machine per §7 risk note);
@@ -257,7 +257,7 @@ pre-split export list.
 
 ### Task 9 - SHEETS-C09-TEST-REORG
 
-Status: `blocked` · Mode: AFK
+Status: `ready-for-research` · Mode: AFK
 
 Output: split the 5,039-line `index.test.ts` along the new module seams
 (per-domain test files), no assertion changes; delete the monolith when
