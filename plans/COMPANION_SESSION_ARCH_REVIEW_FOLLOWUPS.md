@@ -19,8 +19,11 @@ recoverable from this file's git history (commit `e265546e9`).
   (`CSC-T12-R0-LONG-REST-COMPANION-RESTORE`), queued first.
 - **R1 — settlement is two half-operations the caller must sequence**
   (`mcp/battle-handoff.ts:34,47`). One `settleCharacterSheetFromBattle`
-  operation; companion handoff section moves to its own module. → Lane
-  **Task 16** (`CSC-T16-R1-SINGLE-SETTLEMENT-OPERATION`), after Task 15.
+  operation; companion handoff section moves to its own module. Task 16 also
+  collapsed MCP settlement failure reporting to the single
+  `CHARACTER_SESSION_HANDOFF_INVALID` code because callers now invoke one
+  settlement operation. → Lane **Task 16**
+  (`CSC-T16-R1-SINGLE-SETTLEMENT-OPERATION`), after Task 15.
 - **R2 — battle state stores a lossy projection of the durable protocol
   (`formAccess` + `expiration`) and settlement inverts it by hand.**
   Owner-approved 2026-06-11: hoist the protocol tags/facts table to a
@@ -45,7 +48,9 @@ recoverable from this file's git history (commit `e265546e9`).
   - R4b: durable companion id uniqueness has no owner (caller-minted ids,
     uniqueness checked only at battle admission). → Folded into lane
     **Task 10** (`CSC-T10-SMALL-FINDINGS-BATCH`) with a recorded default
-    (session-store uniqueness) and a HITL flag.
+    (session-store uniqueness) and a HITL flag. Task 10 landed that default:
+    MCP rejects a durable companion id already retained by a different
+    character in the session store.
   - R4c: protocol-constructor duplication across `companions.ts` and
     `character-battle-runtime/index.ts`. → **Superseded by Task 15**; do in
     T10 only if Task 15 is rejected.

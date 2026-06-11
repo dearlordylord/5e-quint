@@ -1,30 +1,30 @@
 # Companion Session Admission And Reappearance Plan
 
-Status: future work; not part of the reducer-discovered battle-act slice.
+Status: session admission and reducer-discovered reappearance are landed;
+remaining companion-act coverage is deferred to L13COMP-03.
 
 ## Task Index
 
 | Task                                          | Status   | Summary                                                                                                                                                 |
 | --------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `L13COMP-01-COMPANION-SESSION-ADMISSION`      | designed | Create an out-of-battle/session workflow that can build a character with companion access and start battle with an already-present companion combatant. |
+| `L13COMP-01-COMPANION-SESSION-ADMISSION`      | done     | Character Sheet owns retained companion creation; start-battle admits durable sheet companions; settlement writes the battle outcome back without session-local admission state. |
 | `L13COMP-02-COMPANION-REAPPEARANCE-DISCOVERY` | done     | Normal battle act discovery and resolution can reappear a temporarily dismissed familiar without adding MCP-local companion procedures.                 |
 | `L13COMP-03-GENERIC-MCP-COMPANION-ACTS`       | deferred | Complete remaining MCP companion coverage through reducer-discovered battle acts and fills, without public authored-identity companion tools.           |
 
 ## L13COMP-01-COMPANION-SESSION-ADMISSION
 
-The missing workflow is outside the battle reducer. A caller should be able to
-create a character with a supported companion source, record the table-selected
-companion form and mutable retained facts, and start a battle with the companion
-already admitted as a source-linked combatant.
+Implemented. The workflow lives outside the battle reducer: a caller can create
+a character with a supported companion source, record the table-selected form
+and mutable retained facts on the Character Sheet, and start battle with that
+durable companion admitted as a separate combatant.
 
-Battle admission must not care whether the companion was produced by a ritual,
+Battle admission does not decide whether the companion was produced by a Ritual,
 a Spell Slot cast, a class feature, or another legal out-of-battle source. The
-battle boundary should receive typed companion/source facts and a combatant init
-shape. Source-specific eligibility and cost rules belong at the session,
-Character Sheet, or character-creation boundary that owns the out-of-battle
-event.
+battle boundary receives typed companion protocol/source facts and caller battle
+facts. Source-specific eligibility and cost rules are checked by the
+Character Sheet/session boundary that owns the out-of-battle event.
 
-Required output:
+Landed output:
 
 - A generic MCP/session path for selecting and retaining an out-of-battle
   companion form/source fact, including owning character, selected form,
@@ -47,11 +47,12 @@ Non-goals:
 - Do not add a table-owned tactics or placement policy; callers still supply
   placement, Initiative, and other table facts at the boundary.
 
-Current gap to remove in this follow-up: `start_battle` source-linked familiar
-admission still derives eligibility from prepared spell, spellbook Ritual, and
-Pact access on the battle character. That is retained only as the pre-session
-companion bridge; the target architecture is typed durable companion facts at
-the battle boundary.
+Closed gap: `start_battle` no longer uses inline `sourceLinked.findFamiliarForm`
+admission or derives retained-companion eligibility from the battle character.
+It consumes durable Character Sheet companion facts plus caller battle facts.
+The session-level `companionAdmission` copy was removed; `end_battle`
+settlement now reads the battle companion outcome inside the single
+`settleCharacterSheetFromBattle` operation.
 
 ### Pre-Research Findings
 
@@ -80,14 +81,12 @@ stat block, Initiative, turn resources, reactions, and placement are battle
 facts; they must not be duplicated on the sheet while the companion has an
 active battle combatant.
 
-The current MCP admission path is the bridge to remove. `start_battle` accepts a
-`sourceLinked` Stat Block combatant with `findFamiliarForm` selection, then
-calls `admitPresentFindFamiliarToBattle`. That reducer still derives admission
-eligibility from the battle character's prepared spells, spellbook Ritual
-accesses, or Pact of the Chain access. The desired boundary is the inverse:
-session/sheet workflows validate source-specific out-of-battle creation, store a
-typed durable companion fact, and battle admission consumes that fact without
-asking how the companion was produced.
+The old MCP admission bridge has been removed. `start_battle` accepts
+`companionAdmissions` that refer to retained Character Sheet companion facts,
+then projects them through `character-battle-runtime` into
+`admitCompanionToBattle`. Session/sheet workflows validate source-specific
+out-of-battle creation, store a typed durable companion fact, and battle
+admission consumes that fact without asking how the companion was produced.
 
 RAW/domain anchors for the implementation:
 
@@ -120,8 +119,8 @@ RAW/domain anchors for the implementation:
 
 ### Durable State Design
 
-Add durable companion state to `CharacterSheet`, not to MCP-local session maps.
-For the level 1-3 slice, the parsed `CharacterSheet` should expose a
+Durable companion state lives on `CharacterSheet`, not in MCP-local session maps.
+For the level 1-3 slice, the parsed `CharacterSheet` exposes a
 discriminated durable companion slot, e.g.
 `companion: { tag: "none" } | { tag: "retainedOneAtATime"; companion: CharacterSheetRetainedCompanionState }`.
 That encodes the familiar-like one-companion rule once. Ordinary spell access,
@@ -205,7 +204,7 @@ so protocols that lack that operation cannot represent this manifestation.
 
 `character-sheet-runtime` owns durable companion parsing, construction,
 long-rest effects, and any out-of-battle source-cost settlement that changes
-sheet resources. It should add helpers analogous to existing sheet accessors for
+sheet resources. It added helpers analogous to existing sheet accessors for
 HP/spell slots/Wild Shape known forms:
 
 - read durable companion facts from a parsed sheet;
@@ -228,10 +227,10 @@ complete support.
 
 `character-battle-runtime` owns projection and settlement:
 
-- `characterSheetBattleInit` should continue to project only the owner
+- `characterSheetBattleInit` continues to project only the owner
   combatant. Companion admission is a sibling projection because companions are
   separate battle combatants, not fields on the owner creature init.
-- Add a function that projects sheet companion facts plus caller battle facts
+- It provides a function that projects sheet companion facts plus caller battle facts
   into typed battle companion admissions. Caller facts include battle
   combatant id, Initiative, placement, and any table spatial facts. For
   owner-linked companions whose battle side is the owner's side, derive side
@@ -239,25 +238,25 @@ complete support.
   projection must create a typed admission identity from durable companion id
   and battle combatant id, and battle companion state must retain the durable id
   so settlement can map back even when battle combatant ids are caller-chosen.
-- Add a settlement function that reads `BattleState.companions` for each
+- `settleCharacterSheetFromBattle` reads `BattleState.companions` for each
   character owner and writes the post-battle durable companion fact back to the
-  owner sheet. Present companions settle HP/Temporary Hit Points from their
-  battle combatant and resolved stat block id/form proof from companion state or
-  the combatant's Stat Block origin. Temporarily dismissed companions settle
-  retained HP/Temporary Hit Points plus resolved stat block id/form proof from
-  companion state. Zero-HP disappeared companions settle as disappeared, with no
-  live combatant HP.
+  owner sheet as part of the single character-battle handoff operation. Present
+  companions settle HP/Temporary Hit Points from their battle combatant and
+  resolved stat block id/form proof from companion state or the combatant's Stat
+  Block origin. Temporarily dismissed companions settle retained HP/Temporary Hit
+  Points plus resolved stat block id/form proof from companion state. Zero-HP
+  disappeared companions settle as disappeared, with no live combatant HP.
 - Handoff must reject or precisely report conflicts: owner missing, companion
   owner mismatch, live companion combatant missing, duplicate durable companion
   for one-at-a-time source, or battle companion state that cannot be represented
   durably.
 
-`battle-runtime` should keep companion execution and battle lifecycle. Replace
-the source-linked admission helper with a typed companion admission helper that
-receives already-validated protocol/source facts. It may resolve selected forms
-against the Stat Block catalog and enforce battle-local constraints, but it must
-not inspect prepared spells, spellbook Ritual access, Pact invocation identity,
-or Druid feature identity to decide whether admission is legal.
+`battle-runtime` keeps companion execution and battle lifecycle. The
+source-linked admission helper was replaced by a typed companion admission helper
+that receives already-validated protocol/source facts. It may resolve selected
+forms against the Stat Block catalog and enforce battle-local constraints, but it
+must not inspect prepared spells, spellbook Ritual access, Pact invocation
+identity, or Druid feature identity to decide whether admission is legal.
 
 `mcp` remains a transport/application layer:
 
@@ -268,36 +267,36 @@ or Druid feature identity to decide whether admission is legal.
   decoder/delegator to a `character-sheet-runtime` typed operation. MCP must not
   own familiar eligibility, form legality, source cost, replacement, or
   lifecycle semantics in a bespoke "record familiar" path;
-- `start_battle` should admit companions from durable sheet companion facts plus
+- `start_battle` admits companions from durable sheet companion facts plus
   caller-provided battle facts, not from inline `findFamiliarForm` source-linked
   eligibility;
-- MCP tests should prove existing `discover_battle_acts`,
+- MCP tests prove existing `discover_battle_acts`,
   `resolve_battle_act`, and `fill_battle_hole` still expose touch delivery,
   dismissal, and reappearance through runtime-discovered subjects/fills.
 
-### Implementation Slices
+### Landed Slices
 
-1. Add Character Sheet durable familiar-slot types, parser support, constructor
+1. Added Character Sheet durable familiar-slot types, parser support, constructor
    support, and accessors. Update parse/create tests for empty, one-companion,
    duplicate retained-companion rejection, protocol lifecycle, and resolved-form
    proof with retained HP.
-2. Add Character Sheet out-of-battle companion creation/replacement helpers for
+2. Added Character Sheet out-of-battle companion creation/replacement helpers for
    supported familiar-like retained companion protocols. Validate source access
    at this boundary using typed facts derived from character build/sheet state
    and Surface support profiles; do not branch in reducers on authored ids.
-3. Add long-rest settlement for Wild Companion disappearance at the sheet/session
+3. Added long-rest settlement for Wild Companion disappearance at the sheet/session
    boundary.
-4. Add `character-battle-runtime` projection/settlement helpers for companion
+4. Added `character-battle-runtime` projection/settlement helpers for companion
    admission identity and handoff. Keep owner creature projection separate from
    companion combatant projection.
-5. Add a generic battle-runtime admission helper that consumes typed companion
-   admission facts. During the migration branch, keep the existing helper only
-   for tests or call sites not yet moved; final implementation should delete it
-   or restrict it once MCP stops using it.
-6. Migrate MCP `start_battle` from inline `sourceLinked.findFamiliarForm` to
+5. Added a generic battle-runtime admission helper that consumes typed companion
+   admission facts. The source-linked helper is gone; the retained low-level
+   `castFindFamiliar` reducer is deliberately deferred from act discovery to
+   L13COMP-03.
+6. Migrated MCP `start_battle` from inline `sourceLinked.findFamiliarForm` to
    durable-sheet companion admission facts plus caller battle facts. Preserve
    ordinary Stat Block encounter participants.
-7. Add focused MCP/session tests:
+7. Added focused MCP/session tests:
    - create/finalize a character, record a durable familiar, start battle with
      it present, and deliver a Touch-range spell through existing battle acts;
    - end battle and confirm companion HP/state is retained on the sheet;
@@ -309,7 +308,7 @@ or Druid feature identity to decide whether admission is legal.
      for companion rest participation;
    - no public spell- or feature-named MCP companion tools exist.
 
-### Verification Plan
+### Verification Requirements And Task 11 Status
 
 - RAW/ubiquitous-language pass: re-read the Find Familiar spell, Ritual
   glossary, Wizard Ritual Adept, Pact of the Chain, Druid Wild Companion, the
@@ -328,16 +327,30 @@ or Druid feature identity to decide whether admission is legal.
   architecture/connascence, and code-review passes until no reasonable findings
   remain. If a note is rejected, document the concrete reason next to the review
   result before stopping the loop.
-- Test gates for implementation:
-  - `pnpm --filter @dnd/character-sheet-runtime test -- src/index.test.ts`
-  - `pnpm --filter @dnd/character-battle-runtime test -- src/index.test.ts`
-  - focused MCP tests covering start/end battle and discovered battle acts
-  - focused battle-runtime companion tests touched by admission changes
-  - `pnpm --filter @dnd/character-sheet-runtime typecheck`
-  - `pnpm --filter @dnd/character-battle-runtime typecheck`
-  - `pnpm --filter @dnd/battle-runtime typecheck`
-  - `pnpm --filter @dnd/mcp typecheck`
-  - `pnpm unit-profile-coverage:check`
+- Task 11 closeout verification status: blocked by unrelated baseline failures
+  outside the companion-session docs. Current `pnpm quality` verification stops
+  at `check:authored-id-dispatch`, which reports
+  `packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts` dispatching on
+  the authored identity `"fire_bolt"` in MBT driver glue. Package-local
+  verification also observed an `@dnd/battle-runtime typecheck` baseline
+  failure: TS7053 index errors in unrelated MBT files such as
+  `quickened-spell-governor.mbt.test.ts`,
+  `ray-of-enfeeblement-lifecycle.mbt.test.ts`,
+  `reaction-casting-time.mbt.test.ts`,
+  `roll-modifier-active-effects.mbt.test.ts`,
+  `spike-growth-movement-hazard.mbt.test.ts`, and
+  `web-restraint-hazard.mbt.test.ts`.
+- Task 11 closeout has verified: base check; dependency repair with
+  `CI=true pnpm install`; typechecks for `@dnd/shared-algebras`,
+  `@dnd/character-sheet-runtime`, `@dnd/character-battle-runtime`, and
+  `@dnd/mcp`; `git diff --check`.
+- Task 11 did not run, per the repo broad-verification stop rule after the
+  unrelated baseline failures: full package test suites, the two focused
+  companion MBT files, `character-battle-settlement.mbt.test.ts`,
+  `test:qnt-proofs`, `pnpm unit-profile-coverage:check`, and
+  `node scripts/audit-character-sheet-runtime-split.mjs`. These gates must be
+  rerun by a later Task 11 closeout run after the baseline failures are
+  repaired or otherwise explicitly exempted.
 - MBT runs are not part of pre-research. If implementation changes QNT/MBT-owned
   companion behavior, run only the focused companion MBT after code changes and
   follow the repo seed-reproduction protocol for failures.
@@ -431,3 +444,53 @@ Non-goals:
   stat-block design pressure.
 - Complete Find Steed remains blocked on a mounted-combat core owner; do not
   use this plan to add ridden controlled-mount semantics.
+
+## Companion Session Convergence Closeout
+
+Ralph lane `csc-r2-post-t16` has a complete finding ledger for the companion
+session admission review, but Task 11 full verification is currently blocked by
+unrelated MBT-driver baseline failures described above: the current
+authored-identity dispatch quality gate stops on `battle-runtime-mbt-driver-kit`
+before the earlier observed `@dnd/battle-runtime typecheck` TS7053 errors can be
+reached by `pnpm quality`. Runtime behavior remains traced to SRD 5.2.1 Find
+Familiar, Druid Wild Companion, Pact of the Chain, Ritual, Long Rest, Temporary
+Hit Points, and the repo's controlled-companion vocabulary. A46 and A47 match
+the landed implementation: an owner's Long Rest leaves surviving non-Wild
+retained companions unchanged, Wild Companion disappears at owner Long Rest, and
+recast updates the retained companion in place with preserve-and-clamp HP
+semantics.
+
+### Review Finding Ledger
+
+| Finding | Closed by | Commit | Closeout |
+| --- | --- | --- | --- |
+| F1 | CSC-T03-SETTLEMENT-OUTCOME | `4e3034374` | Battle state now carries settlement-ready companion outcome data. |
+| F2 | CSC-T03-SETTLEMENT-OUTCOME | `4e3034374` | Session-level `companionAdmission` state was removed. |
+| F3 battle half | CSC-T04-DEAD-BATTLE-LONG-REST-LANE | `fec8b52b9` | Dead battle long-rest companion expiration lane was deleted. |
+| F3 sheet half | CSC-T05-COMPANION-REST-ASSUMPTION | `c8702a9a2` | A46 records owner-rest semantics and sheet long-rest behavior preserves surviving retained companion HP/Temporary Hit Points. |
+| F4 battle half | CSC-T03-SETTLEMENT-OUTCOME | `4e3034374` | Battle settlement outcome became the single handoff source for companion result state. |
+| F4 cross-layer consistency | CSC-T06-RECAST-SEMANTICS | `1b0d227c5` | A47 records one recast semantic across sheet and battle layers. |
+| F5 | CSC-T01-OWNER-KEYED-COMPANIONS | `bcde5dd5f` | Battle companions are keyed by owner; synthetic companion-state ids were deleted. |
+| F6 | CSC-T02-PROTOCOL-TAG-UNION | `5ac0dd082` | Retained companion protocol is a tag union with one derivation table. |
+| F7 | CSC-T07-FORM-VOCAB-HOIST-CREATION-MOVE | `64bd4ec90` | Familiar-form vocabulary moved to the Surface/sheet boundary. |
+| F8 | CSC-T07-FORM-VOCAB-HOIST-CREATION-MOVE | `64bd4ec90` | Out-of-battle companion creation moved into `character-sheet-runtime`. |
+| F9 | CSC-T08-CREATION-HP-SURFACE | `064ac6e13` | MCP callers no longer mint companion HP/Temporary Hit Points for creation. |
+| F10 | CSC-T09-FORM-CATALOG-REFERENCE | `803337c6d` | Familiar-form catalog lookup has an executable uniqueness boundary instead of first-match order dependence. |
+| F11 | CSC-T10-SMALL-FINDINGS-BATCH | `53973e276` | Narrowing, dead exports, duplicated rules, id parsing, and durable-id uniqueness ownership were closed or recorded. |
+
+### Architecture Review Ledger
+
+| Item | Closed by | Commit | Closeout |
+| --- | --- | --- | --- |
+| R0 | CSC-T12-R0-LONG-REST-COMPANION-RESTORE | `ac389e7fc` | Restored Wild Companion Long Rest disappearance and the sheet companion canary tests after the master merge dropped them. |
+| R1 | CSC-T16-R1-SINGLE-SETTLEMENT-OPERATION | `c7d17afdf` | `settleCharacterSheetFromBattle` is the single exported settlement operation; MCP reports one handoff error code. |
+| R2 | CSC-T15-R2-PROTOCOL-TAG-HOIST | `f67e03fbe` | Retained companion protocol tags/facts/constructors live in `shared-algebras`; battle carries the tag instead of a lossy projection. |
+| R3 | CSC-T13-R3LITE-ALIAS-FAMILY-DELETION | `5acda5047` | The `FindFamiliar* = BattleCompanion*` alias family was deleted; ADR 0005 records why rule-source module names stay. |
+| R4a | CSC-T14-R4A-FORMS-SHIM-DELETION | `9c0319fe5` | The battle-runtime `find-familiar-forms` compatibility shim was deleted. |
+| R4b | CSC-T10-SMALL-FINDINGS-BATCH | `53973e276` | Session-store companion-id uniqueness is the default durable-id owner. |
+| R4c | CSC-T15-R2-PROTOCOL-TAG-HOIST | `f67e03fbe` | Protocol-constructor duplication was superseded by the shared-algebras protocol leaf. |
+
+Deferred work is intentionally limited to L13COMP-03: battle-created familiar
+durable settlement, wired in-battle Magic-action Find Familiar/Wild Companion
+casting with the required admission gates, and remaining reducer-discovered
+companion act/fill coverage.
