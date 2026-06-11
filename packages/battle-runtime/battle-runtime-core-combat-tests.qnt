@@ -172,7 +172,7 @@ module battleRuntimeCoreCombatTests {
         owner: Fighter,
         familiar: Goblin,
         identity: BattleOnlyFindFamiliarIdentity,
-        expiration: FindFamiliarNoExpiration,
+        protocol: OrdinaryFamiliarLikeOneAtATime,
         form: FindFamiliarCat,
         creatureTypeOverride: FindFamiliarFey,
         initiative: 18,
@@ -184,7 +184,7 @@ module battleRuntimeCoreCombatTests {
         owner: Fighter,
         familiar: Goblin,
         identity: BattleOnlyFindFamiliarIdentity,
-        expiration: FindFamiliarNoExpiration,
+        protocol: OrdinaryFamiliarLikeOneAtATime,
         form: FindFamiliarRat,
         creatureTypeOverride: FindFamiliarCelestial,
         initiative: 12,
@@ -280,7 +280,7 @@ module battleRuntimeCoreCombatTests {
       assert(dismissed.lifecycle == TemporarilyDismissedFindFamiliar({
         owner: Fighter,
         identity: BattleOnlyFindFamiliarIdentity,
-        expiration: FindFamiliarNoExpiration,
+        protocol: OrdinaryFamiliarLikeOneAtATime,
         form: FindFamiliarBat,
         creatureTypeOverride: FindFamiliarFiend,
       })),
@@ -298,7 +298,7 @@ module battleRuntimeCoreCombatTests {
         owner: Fighter,
         familiar: Goblin,
         identity: BattleOnlyFindFamiliarIdentity,
-        expiration: FindFamiliarNoExpiration,
+        protocol: OrdinaryFamiliarLikeOneAtATime,
         form: FindFamiliarBat,
         creatureTypeOverride: FindFamiliarFiend,
         initiative: 15,
@@ -308,20 +308,21 @@ module battleRuntimeCoreCombatTests {
       assert(forever.lifecycle == DismissedForeverFindFamiliar({
         owner: Fighter,
         identity: BattleOnlyFindFamiliarIdentity,
+        protocol: OrdinaryFamiliarLikeOneAtATime,
       })),
       assert(not(forever.magicActionSpent)),
       assert(forever.itemDropBoundaryEvents == Set()),
     }
   }
 
-  run test_retained_find_familiar_temporary_dismissal_preserves_identity_and_expiration = {
+  run test_retained_find_familiar_temporary_dismissal_preserves_identity_and_protocol = {
     val present = admitRetainedFindFamiliarLifecycle(
       NoFindFamiliar,
       Set(Fighter),
       Fighter,
       Goblin,
       Fighter,
-      FindFamiliarOwnerFinishedLongRestExpiration,
+      OwnerLongRestFamiliarLikeOneAtATime,
       FindFamiliarBat,
       FindFamiliarFey,
       16
@@ -332,7 +333,7 @@ module battleRuntimeCoreCombatTests {
       assert(dismissed.lifecycle == TemporarilyDismissedFindFamiliar({
         owner: Fighter,
         identity: RetainedFindFamiliarIdentity({ durableCompanion: Fighter }),
-        expiration: FindFamiliarOwnerFinishedLongRestExpiration,
+        protocol: OwnerLongRestFamiliarLikeOneAtATime,
         form: FindFamiliarBat,
         creatureTypeOverride: FindFamiliarFey,
       })),
@@ -366,7 +367,7 @@ module battleRuntimeCoreCombatTests {
       assert(disappeared.lifecycle == DisappearedAtZeroHitPointsFindFamiliar({
         owner: Fighter,
         identity: BattleOnlyFindFamiliarIdentity,
-        expiration: FindFamiliarNoExpiration,
+        protocol: OrdinaryFamiliarLikeOneAtATime,
         form: FindFamiliarCat,
         creatureTypeOverride: FindFamiliarFey,
       })),
@@ -380,7 +381,7 @@ module battleRuntimeCoreCombatTests {
         owner: Fighter,
         familiar: Goblin,
         identity: BattleOnlyFindFamiliarIdentity,
-        expiration: FindFamiliarNoExpiration,
+        protocol: OrdinaryFamiliarLikeOneAtATime,
         form: FindFamiliarRat,
         creatureTypeOverride: FindFamiliarFey,
         initiative: 17,

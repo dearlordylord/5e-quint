@@ -933,7 +933,7 @@ describe("Find Familiar lifecycle", () => {
         tag: "retainedBetweenBattles",
         durableCompanionId: "durable:first",
       },
-      expiration: { tag: "none" },
+      protocol: { tag: "ordinaryFamiliarLikeOneAtATime" },
       catalog: statBlockCatalog,
       formEligibility: {
         formAccess: "findFamiliar",
@@ -973,7 +973,7 @@ describe("Find Familiar lifecycle", () => {
         tag: "retainedBetweenBattles",
         durableCompanionId: "durable:first",
       },
-      expiration: { tag: "none" },
+      protocol: { tag: "ordinaryFamiliarLikeOneAtATime" },
       catalog: statBlockCatalog,
       formEligibility: {
         formAccess: "findFamiliar",
@@ -1028,7 +1028,7 @@ describe("Find Familiar lifecycle", () => {
         tag: "retainedBetweenBattles",
         durableCompanionId: "",
       },
-      expiration: { tag: "none" },
+      protocol: { tag: "ordinaryFamiliarLikeOneAtATime" },
       catalog: statBlockCatalog,
       formEligibility: {
         formAccess: "findFamiliar",
@@ -1075,7 +1075,7 @@ describe("Find Familiar lifecycle", () => {
         tag: "retainedBetweenBattles",
         durableCompanionId: "durable:mismatched-proof",
       },
-      expiration: { tag: "none" },
+      protocol: { tag: "ordinaryFamiliarLikeOneAtATime" },
       catalog: statBlockCatalog,
       formEligibility: {
         formAccess: "findFamiliar",
@@ -1122,7 +1122,7 @@ describe("Find Familiar lifecycle", () => {
         tag: "retainedBetweenBattles",
         durableCompanionId: "durable:forged-cr0-beast",
       },
-      expiration: { tag: "none" },
+      protocol: { tag: "ordinaryFamiliarLikeOneAtATime" },
       catalog: statBlockCatalog,
       formEligibility: {
         formAccess: "findFamiliar",
@@ -1466,7 +1466,7 @@ describe("Find Familiar lifecycle", () => {
         tag: "retainedBetweenBattles",
         durableCompanionId: "durable:ordinary-reappearance-id",
       },
-      expiration: { tag: "none" },
+      protocol: { tag: "ordinaryFamiliarLikeOneAtATime" },
       catalog: statBlockCatalog,
       formEligibility: {
         formAccess: "findFamiliar",
@@ -2662,7 +2662,7 @@ describe("Find Familiar lifecycle", () => {
         ownerId: casterId,
         companionId: familiarId,
         identity: { tag: "battleOnly" },
-        expiration: { tag: "none" },
+        protocol: { tag: "ordinaryFamiliarLikeOneAtATime" },
         formAccess: "findFamiliar",
         formSelection: { tag: "normalNamedForm", formId: "cat" },
         resolvedStatBlockId: "stat_block_cat",
@@ -2715,7 +2715,7 @@ describe("Find Familiar lifecycle", () => {
           companionId: familiarId,
           ownerId: casterId,
           identity: { tag: "battleOnly" },
-          expiration: { tag: "none" },
+          protocol: { tag: "ordinaryFamiliarLikeOneAtATime" },
           reappearanceCombatantId: familiarId,
           formAccess: "findFamiliar",
           formSelection: { tag: "normalNamedForm", formId: "cat" },

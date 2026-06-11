@@ -36,6 +36,15 @@ import type {
   DeathSaveCount,
   DeathSaves,
 } from "@dnd/shared-algebras/death-saves-algebra";
+import {
+  RETAINED_COMPANION_PROTOCOL_TAGS,
+  retainedCompanionProtocolFacts,
+} from "@dnd/shared-algebras/companion-protocol-algebra";
+import type {
+  RetainedCompanionProtocol,
+  RetainedCompanionProtocolFacts,
+  RetainedCompanionProtocolTag,
+} from "@dnd/shared-algebras/companion-protocol-algebra";
 import type {
   FilledHoleValue,
   RuntimeHole,
@@ -189,59 +198,16 @@ export type CharacterSheetCompanionCreatureTypeOverride =
 export type CharacterSheetCompanionFormSelection =
   PactOfTheChainFindFamiliarFormSelection;
 
-export const RETAINED_COMPANION_PROTOCOL_TAGS = [
-  "ordinaryFamiliarLikeOneAtATime",
-  "attackExceptionFamiliarLikeOneAtATime",
-  "ownerLongRestFamiliarLikeOneAtATime",
-] as const;
+export { RETAINED_COMPANION_PROTOCOL_TAGS, retainedCompanionProtocolFacts };
 
 export type CharacterSheetRetainedCompanionProtocolTag =
-  (typeof RETAINED_COMPANION_PROTOCOL_TAGS)[number];
+  RetainedCompanionProtocolTag;
 
-export type CharacterSheetRetainedCompanionProtocol = {
-  readonly tag: CharacterSheetRetainedCompanionProtocolTag;
-};
+export type CharacterSheetRetainedCompanionProtocol =
+  RetainedCompanionProtocol;
 
-export type CharacterSheetRetainedCompanionProtocolFacts = {
-  readonly initiative: "own";
-  readonly attack:
-    | { readonly tag: "cannotAttack" }
-    | { readonly tag: "ownerForgoesAttackForReactionAttack" };
-  readonly dismissal: { readonly tag: "temporaryDismissalAndReappearance" };
-  readonly expiration:
-    | { readonly tag: "none" }
-    | { readonly tag: "ownerFinishedLongRest" };
-};
-
-const RETAINED_COMPANION_PROTOCOL_FACTS = {
-  ordinaryFamiliarLikeOneAtATime: {
-    initiative: "own",
-    attack: { tag: "cannotAttack" },
-    dismissal: { tag: "temporaryDismissalAndReappearance" },
-    expiration: { tag: "none" },
-  },
-  attackExceptionFamiliarLikeOneAtATime: {
-    initiative: "own",
-    attack: { tag: "ownerForgoesAttackForReactionAttack" },
-    dismissal: { tag: "temporaryDismissalAndReappearance" },
-    expiration: { tag: "none" },
-  },
-  ownerLongRestFamiliarLikeOneAtATime: {
-    initiative: "own",
-    attack: { tag: "cannotAttack" },
-    dismissal: { tag: "temporaryDismissalAndReappearance" },
-    expiration: { tag: "ownerFinishedLongRest" },
-  },
-} as const satisfies Record<
-  CharacterSheetRetainedCompanionProtocolTag,
-  CharacterSheetRetainedCompanionProtocolFacts
->;
-
-export function retainedCompanionProtocolFacts(
-  protocol: CharacterSheetRetainedCompanionProtocol,
-): CharacterSheetRetainedCompanionProtocolFacts {
-  return RETAINED_COMPANION_PROTOCOL_FACTS[protocol.tag];
-}
+export type CharacterSheetRetainedCompanionProtocolFacts =
+  RetainedCompanionProtocolFacts;
 
 export type CharacterSheetRetainedCompanionCurrentHitPoints = HpType &
   PositiveInteger;

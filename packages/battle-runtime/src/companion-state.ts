@@ -1,5 +1,6 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.find-familiar-lifecycle
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.FIND_FAMILIAR_COMPANION_LIFECYCLE
+import type { RetainedCompanionProtocol } from "@dnd/shared-algebras/companion-protocol-algebra";
 import { Hp, type PositiveInteger } from "@dnd/shared/types";
 
 import type {
@@ -23,9 +24,7 @@ export type BattleCompanionIdentity =
       readonly durableCompanionId: BattleCompanionDurableId;
     };
 
-export type BattleCompanionExpiration =
-  | { readonly tag: "none" }
-  | { readonly tag: "ownerFinishedLongRest" };
+export type BattleCompanionProtocol = RetainedCompanionProtocol;
 
 export type BattleCompanionPlacement =
   | {
@@ -71,7 +70,7 @@ export type BattleCompanionHitPoints = {
 export type BattleCompanionProtocolState = {
   readonly ownerId: CombatantId;
   readonly identity: BattleCompanionIdentity;
-  readonly expiration: BattleCompanionExpiration;
+  readonly protocol: BattleCompanionProtocol;
   readonly creatureTypeOverride: FindFamiliarCreatureTypeOverride;
 };
 

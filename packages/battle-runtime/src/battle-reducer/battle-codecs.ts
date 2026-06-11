@@ -14,6 +14,7 @@
 
 import { ATTACK_ROLL_MODES } from "@dnd/shared-algebras/runtime-hole-algebra";
 import type { ArmorClass as BattleArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
+import { RETAINED_COMPANION_PROTOCOL_TAGS } from "@dnd/shared-algebras/companion-protocol-algebra";
 import { STANDARD_ACTION_KINDS } from "@dnd/shared/game-facts";
 import {
   CONDITIONS as ALL_CONDITIONS,
@@ -74,6 +75,7 @@ import type {
   BattleCompanionSnapshot,
   BattleCompanionPlacement,
   BattleCompanionDurableId,
+  BattleCompanionProtocol,
 } from "../companion-state.ts";
 import type {
   FindFamiliarFormSelection,
@@ -138,10 +140,9 @@ const BattleCompanionIdentitySchema = Schema.Union(
     durableCompanionId: BattleCompanionDurableIdSchema,
   }),
 );
-const BattleCompanionExpirationSchema = Schema.Union(
-  Schema.Struct({ tag: Schema.Literal("none") }),
-  Schema.Struct({ tag: Schema.Literal("ownerFinishedLongRest") }),
-);
+const BattleCompanionProtocolSchema = Schema.Struct({
+  tag: Schema.Literal(...RETAINED_COMPANION_PROTOCOL_TAGS),
+}) as unknown as Schema.Schema<BattleCompanionProtocol>;
 const PactOfTheChainSpecialFormIdSchema = pactOfTheChainSpecialFormIdSchema();
 const PactOfTheChainFindFamiliarFormSelectionSchema = Schema.Union(
   FindFamiliarFormSelectionSchema,
@@ -4259,7 +4260,7 @@ const BattleCompanionSnapshotSchema = Schema.Union(
     ownerId: CombatantId,
     companionId: CombatantId,
     identity: BattleCompanionIdentitySchema,
-    expiration: BattleCompanionExpirationSchema,
+    protocol: BattleCompanionProtocolSchema,
     formAccess: Schema.Literal("findFamiliar"),
     formSelection: FindFamiliarFormSelectionSchema,
     resolvedStatBlockId: BattleCompanionResolvedStatBlockIdSchema,
@@ -4272,7 +4273,7 @@ const BattleCompanionSnapshotSchema = Schema.Union(
     ownerId: CombatantId,
     companionId: CombatantId,
     identity: BattleCompanionIdentitySchema,
-    expiration: BattleCompanionExpirationSchema,
+    protocol: BattleCompanionProtocolSchema,
     formAccess: Schema.Literal("pactOfTheChain"),
     formSelection: PactOfTheChainFindFamiliarFormSelectionSchema,
     resolvedStatBlockId: BattleCompanionResolvedStatBlockIdSchema,
@@ -4284,7 +4285,7 @@ const BattleCompanionSnapshotSchema = Schema.Union(
     status: Schema.Literal("temporarilyDismissed"),
     ownerId: CombatantId,
     identity: BattleCompanionIdentitySchema,
-    expiration: BattleCompanionExpirationSchema,
+    protocol: BattleCompanionProtocolSchema,
     reappearanceCombatantId: CombatantId,
     formAccess: Schema.Literal("findFamiliar"),
     formSelection: FindFamiliarFormSelectionSchema,
@@ -4296,7 +4297,7 @@ const BattleCompanionSnapshotSchema = Schema.Union(
     status: Schema.Literal("temporarilyDismissed"),
     ownerId: CombatantId,
     identity: BattleCompanionIdentitySchema,
-    expiration: BattleCompanionExpirationSchema,
+    protocol: BattleCompanionProtocolSchema,
     reappearanceCombatantId: CombatantId,
     formAccess: Schema.Literal("pactOfTheChain"),
     formSelection: PactOfTheChainFindFamiliarFormSelectionSchema,
@@ -4308,7 +4309,7 @@ const BattleCompanionSnapshotSchema = Schema.Union(
     status: Schema.Literal("disappearedAtZeroHitPoints"),
     ownerId: CombatantId,
     identity: BattleCompanionIdentitySchema,
-    expiration: BattleCompanionExpirationSchema,
+    protocol: BattleCompanionProtocolSchema,
     formAccess: Schema.Literal("findFamiliar"),
     formSelection: FindFamiliarFormSelectionSchema,
     resolvedStatBlockId: BattleCompanionResolvedStatBlockIdSchema,
@@ -4318,7 +4319,7 @@ const BattleCompanionSnapshotSchema = Schema.Union(
     status: Schema.Literal("disappearedAtZeroHitPoints"),
     ownerId: CombatantId,
     identity: BattleCompanionIdentitySchema,
-    expiration: BattleCompanionExpirationSchema,
+    protocol: BattleCompanionProtocolSchema,
     formAccess: Schema.Literal("pactOfTheChain"),
     formSelection: PactOfTheChainFindFamiliarFormSelectionSchema,
     resolvedStatBlockId: BattleCompanionResolvedStatBlockIdSchema,

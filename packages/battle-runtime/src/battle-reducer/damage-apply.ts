@@ -9,7 +9,7 @@
 //   - breakBattleConcentration, breakBattleConcentrationAfterDamage,
 //     resolveBattleConcentrationDamage (from H, cycle #10)
 //   - applyTemporaryHitPoints (from H, cycle #13)
-// Spell-condition expiration helpers live in spell-condition-effects-helpers.ts
+// Spell-condition protocol helpers live in spell-condition-effects-helpers.ts
 // (cycle #19) so both M and P can import them without a cycle.
 // KERNEL-COVERAGE: runtime-owner SHARED.HIT_POINTS.POSITIVE_DAMAGE BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP BATTLE.DAMAGE.DEATH_SAVING_THROW_LIFECYCLE BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_DAMAGE_PENALTY
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.HEAT_METAL_OBJECT_CONTACT_LIFECYCLE
@@ -790,7 +790,7 @@ function applyFindFamiliarZeroHitPointDisappearanceAfterDamage(input: {
     status: "disappearedAtZeroHitPoints" as const,
     ownerId: entry.ownerId,
     identity: entry.familiar.identity,
-    expiration: entry.familiar.expiration,
+    protocol: entry.familiar.protocol,
     creatureTypeOverride: entry.familiar.creatureTypeOverride,
   };
   const removed = removeBattleCombatants({

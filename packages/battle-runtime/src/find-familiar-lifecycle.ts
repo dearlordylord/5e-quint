@@ -1,6 +1,10 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.find-familiar-lifecycle
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.FIND_FAMILIAR_COMPANION_LIFECYCLE
 import { spendAction } from "@dnd/shared-algebras/action-economy-algebra";
+import {
+  ordinaryFamiliarLikeProtocol,
+  ownerLongRestExpiringFamiliarLikeProtocol,
+} from "@dnd/shared-algebras/companion-protocol-algebra";
 import { Hp, type SpellSlotLevel } from "@dnd/shared/types";
 import type { StatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog";
 import type {
@@ -41,11 +45,11 @@ import {
   type BattleCompanionDismissedForeverState,
   type BattleCompanionDisappearedAtZeroHitPointsState,
   type BattleCompanionDurableId,
-  type BattleCompanionExpiration,
   type BattleCompanionHitPoints,
   type BattleCompanionIdentity,
   type BattleCompanionPlacement,
   type BattleCompanionPresentState,
+  type BattleCompanionProtocol,
   type BattleCompanionSelectedForm,
   type BattleCompanionState,
   type BattleCompanionStoredForm,
@@ -169,7 +173,7 @@ type CompanionBattleAdmissionInputBase = {
     BattleCompanionIdentity,
     { readonly tag: "retainedBetweenBattles" }
   >;
-  readonly expiration: BattleCompanionExpiration;
+  readonly protocol: BattleCompanionProtocol;
   readonly catalog: StatBlockCatalog;
   readonly formEligibility: CompanionBattleAdmissionFormEligibility;
   readonly initialCombatantOrder: ReadonlyMap<CombatantId, number>;
@@ -243,7 +247,7 @@ export function castFindFamiliar(
     },
     combatantId: familiarId,
     identity: priorFamiliar?.identity ?? { tag: "battleOnly" },
-    expiration: { tag: "none" },
+    protocol: ordinaryFamiliarLikeProtocol(),
     creatureTypeOverride: resolvedForm.form.creatureTypeOverride,
     placement: input.placement,
     ownerId: input.casterId,
@@ -354,7 +358,7 @@ export function castWildCompanion(
     },
     combatantId: familiarId,
     identity: priorFamiliar?.identity ?? { tag: "battleOnly" },
-    expiration: { tag: "ownerFinishedLongRest" },
+    protocol: ownerLongRestExpiringFamiliarLikeProtocol(),
     creatureTypeOverride: "fey",
     placement: input.placement,
     ownerId: input.casterId,
@@ -452,7 +456,7 @@ export function admitCompanionToBattle(
     form: input.manifestation.storedForm,
     combatantId: input.companionId,
     identity: input.identity,
-    expiration: input.expiration,
+    protocol: input.protocol,
     creatureTypeOverride: input.manifestation.creatureTypeOverride,
     placement: input.manifestation.placement,
     ownerId: input.ownerId,
@@ -517,7 +521,7 @@ function admitAbsentCompanionToBattle(
       ? findFamiliarTemporarilyDismissedState({
           storedForm: input.manifestation.storedForm,
           identity: input.identity,
-          expiration: input.expiration,
+          protocol: input.protocol,
           creatureTypeOverride: input.manifestation.creatureTypeOverride,
           hitPoints: input.manifestation.hitPoints,
           reappearanceCombatantId:
@@ -527,7 +531,7 @@ function admitAbsentCompanionToBattle(
       : findFamiliarDisappearedAtZeroHitPointsState({
           storedForm: input.manifestation.storedForm,
           identity: input.identity,
-          expiration: input.expiration,
+          protocol: input.protocol,
           creatureTypeOverride: input.manifestation.creatureTypeOverride,
           ownerId: input.ownerId,
         });
@@ -546,7 +550,7 @@ function findFamiliarPresentState(input: {
   readonly form: BattleCompanionSelectedForm;
   readonly combatantId: CombatantId;
   readonly identity: BattleCompanionIdentity;
-  readonly expiration: BattleCompanionExpiration;
+  readonly protocol: BattleCompanionProtocol;
   readonly creatureTypeOverride: FindFamiliarCreatureTypeOverride;
   readonly placement: BattleCompanionPlacement;
   readonly ownerId: CombatantId;
@@ -557,7 +561,7 @@ function findFamiliarPresentState(input: {
     combatantId: input.combatantId,
     ownerId: input.ownerId,
     identity: input.identity,
-    expiration: input.expiration,
+    protocol: input.protocol,
     creatureTypeOverride: input.creatureTypeOverride,
     placement: input.placement,
   };
@@ -566,7 +570,7 @@ function findFamiliarPresentState(input: {
 function findFamiliarTemporarilyDismissedState(input: {
   readonly storedForm: BattleCompanionStoredForm;
   readonly identity: BattleCompanionIdentity;
-  readonly expiration: BattleCompanionExpiration;
+  readonly protocol: BattleCompanionProtocol;
   readonly creatureTypeOverride: FindFamiliarCreatureTypeOverride;
   readonly hitPoints: BattleCompanionHitPoints;
   readonly reappearanceCombatantId: CombatantId;
@@ -577,7 +581,7 @@ function findFamiliarTemporarilyDismissedState(input: {
     status: "temporarilyDismissed",
     ownerId: input.ownerId,
     identity: input.identity,
-    expiration: input.expiration,
+    protocol: input.protocol,
     creatureTypeOverride: input.creatureTypeOverride,
     reappearanceCombatantId: input.reappearanceCombatantId,
     hitPoints: input.hitPoints,
@@ -587,7 +591,7 @@ function findFamiliarTemporarilyDismissedState(input: {
 function findFamiliarDisappearedAtZeroHitPointsState(input: {
   readonly storedForm: BattleCompanionStoredForm;
   readonly identity: BattleCompanionIdentity;
-  readonly expiration: BattleCompanionExpiration;
+  readonly protocol: BattleCompanionProtocol;
   readonly creatureTypeOverride: FindFamiliarCreatureTypeOverride;
   readonly ownerId: CombatantId;
 }): BattleCompanionDisappearedAtZeroHitPointsState {
@@ -596,7 +600,7 @@ function findFamiliarDisappearedAtZeroHitPointsState(input: {
     status: "disappearedAtZeroHitPoints",
     ownerId: input.ownerId,
     identity: input.identity,
-    expiration: input.expiration,
+    protocol: input.protocol,
     creatureTypeOverride: input.creatureTypeOverride,
   };
 }
@@ -808,7 +812,7 @@ export function temporarilyDismissFindFamiliar(
   const nextFamiliar = findFamiliarTemporarilyDismissedState({
     storedForm: retainedForm,
     identity: familiar.identity,
-    expiration: familiar.expiration,
+    protocol: familiar.protocol,
     creatureTypeOverride: familiar.creatureTypeOverride,
     hitPoints,
     reappearanceCombatantId: familiarId,
@@ -865,7 +869,7 @@ export function permanentlyDismissFindFamiliar(
     status: "dismissedForever",
     ownerId: familiar.ownerId,
     identity: familiar.identity,
-    expiration: familiar.expiration,
+    protocol: familiar.protocol,
     creatureTypeOverride: familiar.creatureTypeOverride,
   };
   const companions = setCompanion(spent.state.companions, tombstone);
@@ -911,7 +915,7 @@ export function reappearTemporarilyDismissedFindFamiliar(
     form: familiar,
     combatantId: familiar.reappearanceCombatantId,
     identity: familiar.identity,
-    expiration: familiar.expiration,
+    protocol: familiar.protocol,
     creatureTypeOverride: familiar.creatureTypeOverride,
     placement: input.placement,
     ownerId: input.casterId,
@@ -1075,7 +1079,7 @@ export function applyFindFamiliarZeroHitPointDisappearance(input: {
   const nextFamiliar = findFamiliarDisappearedAtZeroHitPointsState({
     storedForm: retainedForm,
     identity: entry.familiar.identity,
-    expiration: entry.familiar.expiration,
+    protocol: entry.familiar.protocol,
     creatureTypeOverride: entry.familiar.creatureTypeOverride,
     ownerId: entry.ownerId,
   });

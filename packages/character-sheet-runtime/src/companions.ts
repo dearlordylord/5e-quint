@@ -12,6 +12,13 @@ import {
   type SpellSlotLevel,
 } from "@dnd/shared/types";
 import {
+  isAttackExceptionRetainedCompanionProtocol,
+  isRetainedCompanionProtocolTag,
+  ordinaryFamiliarLikeProtocol,
+  ownerLongRestExpiringFamiliarLikeProtocol,
+  pactFamiliarLikeProtocol,
+} from "@dnd/shared-algebras/companion-protocol-algebra";
+import {
   PACT_OF_THE_CHAIN_SPECIAL_FORM_REFS,
   findFamiliarFormEligibilityForSpell,
   isFindFamiliarCreatureTypeOverride,
@@ -39,7 +46,6 @@ import { spendCharacterSheetSpellSlot } from "./spell-slots.ts";
 import {
   characterSheetIssue,
   parseCharacterSheetRetainedCompanionId,
-  RETAINED_COMPANION_PROTOCOL_TAGS,
   retainedCompanionProtocolFacts,
   type CharacterSheet,
   type CharacterSheetCompanion,
@@ -260,25 +266,16 @@ function retainedCompanionProtocolIssue(
   return null;
 }
 
-function isAttackExceptionRetainedCompanionProtocol(
-  protocol: CharacterSheetRetainedCompanionProtocol,
-): boolean {
-  return protocol.tag === "attackExceptionFamiliarLikeOneAtATime";
-}
-
 function parseStoredRetainedCompanionProtocol(
   value: unknown,
 ): Either.Either<CharacterSheetRetainedCompanionProtocol, CharacterSheetIssue> {
   if (!isRecord(value)) {
     return characterSheetIssue("Expected retained companion protocol.");
   }
-  const protocolTag = RETAINED_COMPANION_PROTOCOL_TAGS.find(
-    (tag) => tag === value.tag,
-  );
-  if (protocolTag === undefined) {
+  if (!isRetainedCompanionProtocolTag(value.tag)) {
     return characterSheetIssue("Expected retained companion protocol tag.");
   }
-  return Either.right({ tag: protocolTag });
+  return Either.right({ tag: value.tag });
 }
 
 function parseStoredRetainedCompanionManifestation(
@@ -808,18 +805,6 @@ function requiredSpellRecord(
     : characterSheetIssue(
         "Retained companion source must reference a Spell record.",
       );
-}
-
-function ordinaryFamiliarLikeProtocol(): CharacterSheetRetainedCompanionProtocol {
-  return { tag: "ordinaryFamiliarLikeOneAtATime" };
-}
-
-function pactFamiliarLikeProtocol(): CharacterSheetRetainedCompanionProtocol {
-  return { tag: "attackExceptionFamiliarLikeOneAtATime" };
-}
-
-function ownerLongRestExpiringFamiliarLikeProtocol(): CharacterSheetRetainedCompanionProtocol {
-  return { tag: "ownerLongRestFamiliarLikeOneAtATime" };
 }
 
 function hasSelectedEldritchInvocation(

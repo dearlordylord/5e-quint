@@ -322,9 +322,7 @@ export function admitCharacterSheetCompanionToBattle(
       tag: "retainedBetweenBattles" as const,
       durableCompanionId: sheetCompanion.companion.companionId,
     },
-    expiration: retainedCompanionProtocolFacts(
-      sheetCompanion.companion.protocol,
-    ).expiration,
+    protocol: sheetCompanion.companion.protocol,
     catalog: input.statBlockCatalog,
     formEligibility: manifestation.right.formEligibility,
     initialCombatantOrder: input.initialCombatantOrder,
@@ -355,8 +353,7 @@ export function admitCharacterSheetCompanionToBattle(
 //   - battle-only entry   -> deferred to L13COMP-03; no Sheet slot to update.
 //   - dismissedForever    -> the owner ended the companion in battle; clear slot.
 //   - present/temporarily-dismissed/disappeared -> write the manifestation and
-//     the protocol derived from the battle facts (so a battle-side recast cannot
-//     diverge from the Sheet protocol).
+//     the battle protocol tag.
 export function applyBattleCompanionHandoffToCharacterSheet(input: {
   readonly sheet: CharacterSheet;
   readonly state: BattleState;
@@ -407,42 +404,11 @@ export function applyBattleCompanionHandoffToCharacterSheet(input: {
       tag: "retainedOneAtATime",
       companion: {
         companionId: sheetCompanion.companion.companionId,
-        protocol: retainedCompanionProtocolFromBattle(battleCompanion),
+        protocol: battleCompanion.protocol,
         manifestation: manifestation.right,
       },
     },
   });
-}
-
-// Reconstruct the durable protocol from battle facts: Pact-of-the-Chain form
-// access is the attack-exception protocol; otherwise the Long Rest expiration
-// distinguishes the Wild Companion (owner-long-rest) protocol from the ordinary
-// familiar-like protocol. Round-trips the protocol admitted in
-// admitCharacterSheetCompanionToBattle.
-function retainedCompanionProtocolFromBattle(
-  companion: Exclude<
-    BattleCompanionState,
-    { readonly status: "dismissedForever" }
-  >,
-): CharacterSheetRetainedCompanionProtocol {
-  if (companion.formAccess === "pactOfTheChain") {
-    return pactFamiliarLikeProtocol();
-  }
-  return companion.expiration.tag === "ownerFinishedLongRest"
-    ? ownerLongRestExpiringFamiliarLikeProtocol()
-    : ordinaryFamiliarLikeProtocol();
-}
-
-function ordinaryFamiliarLikeProtocol(): CharacterSheetRetainedCompanionProtocol {
-  return { tag: "ordinaryFamiliarLikeOneAtATime" };
-}
-
-function pactFamiliarLikeProtocol(): CharacterSheetRetainedCompanionProtocol {
-  return { tag: "attackExceptionFamiliarLikeOneAtATime" };
-}
-
-function ownerLongRestExpiringFamiliarLikeProtocol(): CharacterSheetRetainedCompanionProtocol {
-  return { tag: "ownerLongRestFamiliarLikeOneAtATime" };
 }
 
 type CharacterSheetCompanionAdmissionProjection =
@@ -718,24 +684,16 @@ function battleFormAccessForSheetCompanion(input: {
   BattleCompanionStoredForm["formAccess"],
   CharacterSheetBattleHandoffIssue
 > {
+  const formAccess = retainedCompanionProtocolFacts(input.protocol).formCatalog;
   if (input.selectedForm.tag === "pactOfTheChainSpecialForm") {
-    if (!isAttackExceptionFamiliarLikeProtocol(input.protocol)) {
+    if (formAccess !== "pactOfTheChain") {
       return characterSheetBattleHandoffIssue(
         "Special retained companion forms require an attack-exception protocol.",
       );
     }
     return Either.right("pactOfTheChain");
   }
-  if (isAttackExceptionFamiliarLikeProtocol(input.protocol)) {
-    return Either.right("pactOfTheChain");
-  }
-  return Either.right("findFamiliar");
-}
-
-function isAttackExceptionFamiliarLikeProtocol(
-  protocol: CharacterSheetRetainedCompanionProtocol,
-): boolean {
-  return protocol.tag === "attackExceptionFamiliarLikeOneAtATime";
+  return Either.right(formAccess);
 }
 
 function companionManifestationFromBattle(input: {

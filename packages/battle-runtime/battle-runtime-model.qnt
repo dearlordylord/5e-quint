@@ -89,14 +89,17 @@ module battleRuntimeModel {
   type FindFamiliarCreatureTypeOverride = FindFamiliarCelestial | FindFamiliarFey | FindFamiliarFiend
   type FindFamiliarPlacement = FindFamiliarUnoccupiedSpaceWithinSpellRange | FindFamiliarUnoccupiedSpaceWithin30Feet
   type FindFamiliarIdentity = BattleOnlyFindFamiliarIdentity | RetainedFindFamiliarIdentity({ durableCompanion: Actor })
-  type FindFamiliarExpiration = FindFamiliarNoExpiration | FindFamiliarOwnerFinishedLongRestExpiration
+  type FindFamiliarProtocol =
+    | OrdinaryFamiliarLikeOneAtATime
+    | AttackExceptionFamiliarLikeOneAtATime
+    | OwnerLongRestFamiliarLikeOneAtATime
   type FindFamiliarLifecycle =
     | NoFindFamiliar
     | PresentFindFamiliar({
         owner: Actor,
         familiar: Actor,
         identity: FindFamiliarIdentity,
-        expiration: FindFamiliarExpiration,
+        protocol: FindFamiliarProtocol,
         form: FindFamiliarForm,
         creatureTypeOverride: FindFamiliarCreatureTypeOverride,
         initiative: int,
@@ -105,14 +108,14 @@ module battleRuntimeModel {
     | TemporarilyDismissedFindFamiliar({
         owner: Actor,
         identity: FindFamiliarIdentity,
-        expiration: FindFamiliarExpiration,
+        protocol: FindFamiliarProtocol,
         form: FindFamiliarForm,
         creatureTypeOverride: FindFamiliarCreatureTypeOverride,
       })
     | DisappearedAtZeroHitPointsFindFamiliar({
         owner: Actor,
         identity: FindFamiliarIdentity,
-        expiration: FindFamiliarExpiration,
+        protocol: FindFamiliarProtocol,
         form: FindFamiliarForm,
         creatureTypeOverride: FindFamiliarCreatureTypeOverride,
       })
@@ -124,6 +127,7 @@ module battleRuntimeModel {
     | DismissedForeverFindFamiliar({
         owner: Actor,
         identity: FindFamiliarIdentity,
+        protocol: FindFamiliarProtocol,
       })
   type FindFamiliarItemDropBoundaryEvent = {
     owner: Actor,

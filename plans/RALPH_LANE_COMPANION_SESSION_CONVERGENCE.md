@@ -245,8 +245,8 @@ a task's change invalidates them):
 | 8 | CSC-T08-CREATION-HP-SURFACE | ready-for-research | CSC-T14-R4A-FORMS-SHIM-DELETION | Edits the creation op wherever T07 left it; runs after the cheap cleanups so the queue front stays unblocked. |
 | 9 | CSC-T09-FORM-CATALOG-REFERENCE | ready-for-research | CSC-T08-CREATION-HP-SURFACE | Touches admission eligibility helpers T07 may have relocated. |
 | 10 | CSC-T10-SMALL-FINDINGS-BATCH | done | CSC-T09-FORM-CATALOG-REFERENCE | Sweep of remaining small findings in now-stable files; now also owns the durable-id uniqueness decision (R4b). |
-| 15 | CSC-T15-R2-PROTOCOL-TAG-HOIST | ready-for-research | CSC-T10-SMALL-FINDINGS-BATCH | Owner-approved refactor; reshapes protocol threading and deletes the settlement inverse mapping before T16 moves the code. |
-| 16 | CSC-T16-R1-SINGLE-SETTLEMENT-OPERATION | blocked | CSC-T15-R2-PROTOCOL-TAG-HOIST | Code moves once, in its post-T15 final shape (the T07 rationale). |
+| 15 | CSC-T15-R2-PROTOCOL-TAG-HOIST | done | CSC-T10-SMALL-FINDINGS-BATCH | Owner-approved refactor; reshapes protocol threading and deletes the settlement inverse mapping before T16 moves the code. |
+| 16 | CSC-T16-R1-SINGLE-SETTLEMENT-OPERATION | ready-for-research | CSC-T15-R2-PROTOCOL-TAG-HOIST | Code moves once, in its post-T15 final shape (the T07 rationale). |
 | 11 | CSC-T11-CONVERGENCE-CLOSEOUT | blocked | CSC-T16-R1-SINGLE-SETTLEMENT-OPERATION | Full-gate run + plan-doc truth update over the whole lane, tasks 1–16. |
 
 ## Task Details
@@ -1016,7 +1016,7 @@ battle-runtime + affected package typechecks and focused suites green.
 
 ### Task 15 - CSC-T15-R2-PROTOCOL-TAG-HOIST
 
-Status: `ready-for-research` · Mode: AFK · Arch-review R2,
+Status: `done` · Mode: AFK · Arch-review R2,
 owner-approved 2026-06-11
 
 **Finding (connascence of algorithm).** The durable companion protocol tag is
@@ -1096,9 +1096,18 @@ typecheck + focused suites green for shared-algebras, battle-runtime,
 character-sheet-runtime, character-battle-runtime, mcp;
 `pnpm unit-profile-coverage:check` and the sheet split audit green.
 
+Supervisor closeout note (2026-06-11): automated Ralph review/decider was
+stopped after repeated usage-limit failures. Supervisor recovered the missing
+untracked shared leaf from the task log, re-verified the focused gates, and
+committed the task manually. `@dnd/battle-runtime` typecheck remains blocked
+by pre-existing TS7053 MBT indexing errors outside this task; `pnpm
+unit-profile-coverage:check` remains blocked by broad pre-existing MBT replay
+reachability noise across unrelated files. Focused Task 15 checks passed,
+including both companion MBT files under the mutex protocol.
+
 ### Task 16 - CSC-T16-R1-SINGLE-SETTLEMENT-OPERATION
 
-Status: `blocked` (depends on Task 15) · Mode: AFK · Arch-review R1
+Status: `ready-for-research` (depends on Task 15) · Mode: AFK · Arch-review R1
 
 **Finding (caller-sequencing connascence; CLAUDE.md "replace caller
 sequencing requirements with one operation").** Settlement of one domain
