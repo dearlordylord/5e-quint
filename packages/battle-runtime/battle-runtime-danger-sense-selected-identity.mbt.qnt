@@ -5,8 +5,11 @@ module battleRuntimeDangerSenseSelectedIdentityMbt {
 
   type WitnessHole = | DangerSense
 
+  type DangerSenseSelectedIdentityScenarioOutcome = | Init | DangerSenseDexterityAdvantage | DangerSenseIncapacitatedSuppressed
+
+
   type WitnessState = {
-    qScenarioResult: str,
+    qScenarioOutcome: DangerSenseSelectedIdentityScenarioOutcome,
     protocol: WitnessProtocol[WitnessHole],
     qSourceUnitId: str,
     qDexterityRollModeCount: int,
@@ -17,7 +20,7 @@ module battleRuntimeDangerSenseSelectedIdentityMbt {
 
   var qState: WitnessState
 
-  pure def qScenarioResult: str = qState.qScenarioResult
+  pure def qScenarioOutcome: DangerSenseSelectedIdentityScenarioOutcome = qState.qScenarioOutcome
   pure def qSourceUnitId: str = qState.qSourceUnitId
   pure def qDexterityRollModeCount: int = qState.qDexterityRollModeCount
   pure def qConstitutionRollModeCount: int = qState.qConstitutionRollModeCount
@@ -26,7 +29,7 @@ module battleRuntimeDangerSenseSelectedIdentityMbt {
 
 
   action recordProjection(
-    scenarioResult: str,
+    scenarioOutcome: DangerSenseSelectedIdentityScenarioOutcome,
     sourceUnitId: str,
     dexterityRollModeCount: int,
     constitutionRollModeCount: int,
@@ -35,7 +38,7 @@ module battleRuntimeDangerSenseSelectedIdentityMbt {
     protocol: WitnessProtocol[WitnessHole],
   ): bool = all {
     qState' = {
-      qScenarioResult: scenarioResult,
+      qScenarioOutcome: scenarioOutcome,
       protocol: protocol,
       qSourceUnitId: sourceUnitId,
       qDexterityRollModeCount: dexterityRollModeCount,
@@ -47,7 +50,7 @@ module battleRuntimeDangerSenseSelectedIdentityMbt {
 
   action init =
     recordProjection(
-      "init",
+      Init,
       "none",
       0,
       0,
@@ -57,9 +60,9 @@ module battleRuntimeDangerSenseSelectedIdentityMbt {
     )
 
   action doProjectDangerSenseDexterityAdvantage = all {
-    qScenarioResult == "init",
+    qScenarioOutcome == Init,
     recordProjection(
-      "danger-sense-dexterity-advantage",
+      DangerSenseDexterityAdvantage,
       "barbarian_danger_sense",
       1,
       0,
@@ -70,9 +73,9 @@ module battleRuntimeDangerSenseSelectedIdentityMbt {
   }
 
   action doSuppressDangerSenseWhileIncapacitated = all {
-    qScenarioResult == "init",
+    qScenarioOutcome == Init,
     recordProjection(
-      "danger-sense-incapacitated-suppressed",
+      DangerSenseIncapacitatedSuppressed,
       "barbarian_danger_sense",
       0,
       0,

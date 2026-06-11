@@ -5,6 +5,9 @@ module battleRuntimeCreatureTypeProtectionAndCharmSelectedIdentityMbt {
 
   type WitnessHole = | CreatureTypeProtectionCharm
 
+  type CreatureTypeProtectionAndCharmSelectedIdentityScenarioOutcome = | Init | Discovered | Resolved | DamageBreakResolved | ProtectionResolved | ProtectionAttackProjected | ProtectionCharmPrevented | ProtectionRelevantSaveResolved
+
+
   type WitnessState = {
     qBeastTargetAdmitted: bool,
     qHumanoidTargetAdmitted: bool,
@@ -23,7 +26,7 @@ module battleRuntimeCreatureTypeProtectionAndCharmSelectedIdentityMbt {
     qAnimalFriendshipEffectPresent: bool,
     qActionAvailable: bool,
     qFirstLevelSlotsExpended: int,
-    qScenarioResult: str,
+    qScenarioOutcome: CreatureTypeProtectionAndCharmSelectedIdentityScenarioOutcome,
     protocol: WitnessProtocol[WitnessHole],
   }
 
@@ -46,7 +49,7 @@ module battleRuntimeCreatureTypeProtectionAndCharmSelectedIdentityMbt {
   pure def qAnimalFriendshipEffectPresent: bool = qState.qAnimalFriendshipEffectPresent
   pure def qActionAvailable: bool = qState.qActionAvailable
   pure def qFirstLevelSlotsExpended: int = qState.qFirstLevelSlotsExpended
-  pure def qScenarioResult: str = qState.qScenarioResult
+  pure def qScenarioOutcome: CreatureTypeProtectionAndCharmSelectedIdentityScenarioOutcome = qState.qScenarioOutcome
 
 
   action recordProjection(
@@ -67,7 +70,7 @@ module battleRuntimeCreatureTypeProtectionAndCharmSelectedIdentityMbt {
     animalFriendshipEffectPresent: bool,
     actionAvailable: bool,
     firstLevelSlotsExpended: int,
-    scenarioResult: str,
+    scenarioOutcome: CreatureTypeProtectionAndCharmSelectedIdentityScenarioOutcome,
     protocol: WitnessProtocol[WitnessHole],
   ): bool = all {
     qState' = {
@@ -88,7 +91,7 @@ module battleRuntimeCreatureTypeProtectionAndCharmSelectedIdentityMbt {
       qAnimalFriendshipEffectPresent: animalFriendshipEffectPresent,
       qActionAvailable: actionAvailable,
       qFirstLevelSlotsExpended: firstLevelSlotsExpended,
-      qScenarioResult: scenarioResult,
+      qScenarioOutcome: scenarioOutcome,
       protocol: protocol,
     },
   }
@@ -111,12 +114,12 @@ module battleRuntimeCreatureTypeProtectionAndCharmSelectedIdentityMbt {
     false,
     true,
     0,
-    "init",
+    Init,
     witnessInit(CreatureTypeProtectionCharm),
   )
 
   action doDiscoverAnimalFriendshipBeastTargetAdmission = all {
-    qScenarioResult == "init",
+    qScenarioOutcome == Init,
     recordProjection(
       true,
       false,
@@ -135,13 +138,13 @@ module battleRuntimeCreatureTypeProtectionAndCharmSelectedIdentityMbt {
       false,
       true,
       0,
-      "discovered",
+      Discovered,
     witnessResolved(CreatureTypeProtectionCharm),
   ),
   }
 
   action doResolveAnimalFriendshipFailedSaveCharmed = all {
-    qScenarioResult == "init",
+    qScenarioOutcome == Init,
     recordProjection(
       true,
       false,
@@ -160,13 +163,13 @@ module battleRuntimeCreatureTypeProtectionAndCharmSelectedIdentityMbt {
       true,
       false,
       1,
-      "resolved",
+      Resolved,
     witnessResolved(CreatureTypeProtectionCharm),
   ),
   }
 
   action doResolveAnimalFriendshipCasterDamageBreak = all {
-    qScenarioResult == "init",
+    qScenarioOutcome == Init,
     recordProjection(
       true,
       false,
@@ -185,13 +188,13 @@ module battleRuntimeCreatureTypeProtectionAndCharmSelectedIdentityMbt {
       false,
       false,
       1,
-      "damageBreakResolved",
+      DamageBreakResolved,
     witnessResolved(CreatureTypeProtectionCharm),
   ),
   }
 
   action doResolveProtectionFromEvilAndGoodKnownWillingTargetProtection = all {
-    qScenarioResult == "init",
+    qScenarioOutcome == Init,
     recordProjection(
       false,
       false,
@@ -210,13 +213,13 @@ module battleRuntimeCreatureTypeProtectionAndCharmSelectedIdentityMbt {
       false,
       false,
       1,
-      "protectionResolved",
+      ProtectionResolved,
     witnessResolved(CreatureTypeProtectionCharm),
   ),
   }
 
   action doProjectProtectionFromEvilAndGoodScopedAttackDisadvantage = all {
-    qScenarioResult == "init",
+    qScenarioOutcome == Init,
     recordProjection(
       false,
       false,
@@ -235,13 +238,13 @@ module battleRuntimeCreatureTypeProtectionAndCharmSelectedIdentityMbt {
       false,
       false,
       1,
-      "protectionAttackProjected",
+      ProtectionAttackProjected,
     witnessResolved(CreatureTypeProtectionCharm),
   ),
   }
 
   action doPreventProtectionFromEvilAndGoodScopedCharmAndPossession = all {
-    qScenarioResult == "init",
+    qScenarioOutcome == Init,
     recordProjection(
       false,
       false,
@@ -260,13 +263,13 @@ module battleRuntimeCreatureTypeProtectionAndCharmSelectedIdentityMbt {
       false,
       false,
       1,
-      "protectionCharmPrevented",
+      ProtectionCharmPrevented,
     witnessResolved(CreatureTypeProtectionCharm),
   ),
   }
 
   action doResolveProtectionFromEvilAndGoodRelevantCharmSaveAdvantage = all {
-    qScenarioResult == "init",
+    qScenarioOutcome == Init,
     recordProjection(
       false,
       false,
@@ -285,7 +288,7 @@ module battleRuntimeCreatureTypeProtectionAndCharmSelectedIdentityMbt {
       false,
       false,
       1,
-      "protectionRelevantSaveResolved",
+      ProtectionRelevantSaveResolved,
     witnessResolved(CreatureTypeProtectionCharm),
   ),
   }

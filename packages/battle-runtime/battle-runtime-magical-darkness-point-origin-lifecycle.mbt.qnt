@@ -17,6 +17,8 @@ module battleRuntimeMagicalDarknessPointOriginLifecycleMbt {
   //   Obscurement, Darkvision, and Spell Slot.
   type WitnessHole = | WitnessProtocolHole
 
+  type MagicalDarknessPointOriginLifecycleScenarioOutcome = | Init | CastWithAreaAndLightWitnesses | ConcentrationCleaned | DurationCleaned
+
   type MagicalDarknessPointOriginLifecycleWitnessState = {
     qActionAvailable: bool,
     qSpellAvailable: bool,
@@ -29,7 +31,7 @@ module battleRuntimeMagicalDarknessPointOriginLifecycleMbt {
     qOverlappingLowLevelSpellLightActive: bool,
     qOverlappingHighLevelSpellLightActive: bool,
     qNonOverlappingLowLevelSpellLightActive: bool,
-    qScenarioResult: str,
+    qScenarioOutcome: MagicalDarknessPointOriginLifecycleScenarioOutcome,
     protocol: WitnessProtocol[WitnessHole],
   }
 
@@ -46,14 +48,14 @@ module battleRuntimeMagicalDarknessPointOriginLifecycleMbt {
   pure def qOverlappingLowLevelSpellLightActive: bool = qState.qOverlappingLowLevelSpellLightActive
   pure def qOverlappingHighLevelSpellLightActive: bool = qState.qOverlappingHighLevelSpellLightActive
   pure def qNonOverlappingLowLevelSpellLightActive: bool = qState.qNonOverlappingLowLevelSpellLightActive
-  pure def qLastResult: str = qState.qScenarioResult
+  pure def qLastResult: MagicalDarknessPointOriginLifecycleScenarioOutcome = qState.qScenarioOutcome
 
   pure def witnessProtocolForProjection(
     holes: Set[WitnessHole],
-    scenarioResult: str,
+    scenarioResult: MagicalDarknessPointOriginLifecycleScenarioOutcome,
     scenarioInvalidReason: str,
   ): WitnessProtocol[WitnessHole] =
-    if (scenarioResult == "init") witnessInit(WitnessProtocolHole)
+    if (scenarioResult == Init) witnessInit(WitnessProtocolHole)
     else if (scenarioInvalidReason == "invalidFill") witnessInvalid(WitnessProtocolHole, WInvalidFill)
     else if (scenarioInvalidReason == "staleSubject") witnessInvalid(WitnessProtocolHole, WStaleSubject)
     else if (holes != Set()) witnessNeedsHoles(holes)
@@ -71,7 +73,7 @@ module battleRuntimeMagicalDarknessPointOriginLifecycleMbt {
     overlappingLowLevelSpellLightActive: bool,
     overlappingHighLevelSpellLightActive: bool,
     nonOverlappingLowLevelSpellLightActive: bool,
-    lastResult: str,
+    lastResult: MagicalDarknessPointOriginLifecycleScenarioOutcome,
   ): bool = all {
     qState' = {
       qActionAvailable: actionAvailable,
@@ -85,7 +87,7 @@ module battleRuntimeMagicalDarknessPointOriginLifecycleMbt {
       qOverlappingLowLevelSpellLightActive: overlappingLowLevelSpellLightActive,
       qOverlappingHighLevelSpellLightActive: overlappingHighLevelSpellLightActive,
       qNonOverlappingLowLevelSpellLightActive: nonOverlappingLowLevelSpellLightActive,
-      qScenarioResult: lastResult,
+      qScenarioOutcome: lastResult,
       protocol: witnessProtocolForProjection(Set(), lastResult, ""),
     },
   }
@@ -102,7 +104,7 @@ module battleRuntimeMagicalDarknessPointOriginLifecycleMbt {
     true,
     true,
     true,
-    "init",
+    Init,
   )
 
   action doCastWithAreaAndLightWitnesses = all {
@@ -124,7 +126,7 @@ module battleRuntimeMagicalDarknessPointOriginLifecycleMbt {
       false,
       true,
       true,
-      "castWithAreaAndLightWitnesses",
+      CastWithAreaAndLightWitnesses,
     ),
   }
 
@@ -143,7 +145,7 @@ module battleRuntimeMagicalDarknessPointOriginLifecycleMbt {
       qOverlappingLowLevelSpellLightActive,
       qOverlappingHighLevelSpellLightActive,
       qNonOverlappingLowLevelSpellLightActive,
-      "concentrationCleaned",
+      ConcentrationCleaned,
     ),
   }
 
@@ -162,7 +164,7 @@ module battleRuntimeMagicalDarknessPointOriginLifecycleMbt {
       qOverlappingLowLevelSpellLightActive,
       qOverlappingHighLevelSpellLightActive,
       qNonOverlappingLowLevelSpellLightActive,
-      "durationCleaned",
+      DurationCleaned,
     ),
   }
 

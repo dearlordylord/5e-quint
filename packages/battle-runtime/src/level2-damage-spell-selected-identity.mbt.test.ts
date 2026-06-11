@@ -76,6 +76,20 @@ type SelectedLevel2DamageSpellInvocation = {
   readonly result: Exclude<Level2DamageSpellSelectedIdentityResult, "init">;
 };
 
+const LEVEL2_DAMAGE_SPELL_SELECTED_IDENTITY_SCENARIO_OUTCOME_BY_TAG = {
+  Init: "init",
+  AcidArrowAttackTiming: "acidArrowAttackTiming",
+  DragonsBreathInitial: "dragonsBreathInitial",
+  FlameBladeHeldObject: "flameBladeHeldObject",
+  FlamingSphereHazard: "flamingSphereHazard",
+  HeatMetalObjectContact: "heatMetalObjectContact",
+  MoonbeamMovableZone: "moonbeamMovableZone",
+  RayOfEnfeeblementSaveGate: "rayOfEnfeeblementSaveGate",
+  ScorchingRayAttackSequence: "scorchingRayAttackSequence",
+  ShatterSaveGatedDamage: "shatterSaveGatedDamage",
+  SpiritualWeaponAttackProxy: "spiritualWeaponAttackProxy",
+} as const satisfies Readonly<Record<string, Level2DamageSpellSelectedIdentityResult>>;
+
 defineSelectedIdentityWitness({
   describeLabel: "Level 2 damage spell selected identity MBT",
   taskId: "B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH",
@@ -86,8 +100,11 @@ defineSelectedIdentityWitness({
   quintStateField: "qState",
   quintStateFieldPrefix: "q",
   witnessProtocolField: "protocol",
-  quintFieldNames: { lastResult: "qScenarioResult" },
-  projectionSchema: { lastResult: "str" },
+  quintFieldNames: { lastResult: "qScenarioOutcome" },
+  quintVariantFieldTags: {
+    lastResult: LEVEL2_DAMAGE_SPELL_SELECTED_IDENTITY_SCENARIO_OUTCOME_BY_TAG,
+  },
+  projectionSchema: { lastResult: "variant" },
   initialProjection: expectedProjection("init"),
   units: [
     {

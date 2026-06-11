@@ -36,6 +36,7 @@ import {
   mbtTraceCount,
   numberFromQuintInt,
   quintStateRecord,
+  quintVariantTag,
   run,
   stateCheck,
 } from "./battle-runtime-mbt-driver-kit.ts";
@@ -101,6 +102,14 @@ type InterruptStackResumeLastResult =
   | "nestedDeclineResumedOuter"
   | "activeEffectMutationResumed"
   | "replayFromRootResolved";
+const INTERRUPT_STACK_RESUME_SCENARIO_OUTCOME_BY_TAG: Readonly<
+  Record<string, InterruptStackResumeLastResult>
+> = {
+  Init: "init",
+  NestedDeclineResumedOuter: "nestedDeclineResumedOuter",
+  ActiveEffectMutationResumed: "activeEffectMutationResumed",
+  ReplayFromRootResolved: "replayFromRootResolved",
+};
 type InterruptStackResumeProjection = {
   readonly maxStackDepthObserved: number;
   readonly finalStackDepth: number;
@@ -725,7 +734,7 @@ function normalizeInterruptStackResumeQuintState(
     decodeHole: interruptStackResumeUnexpectedHole,
   });
   const scenarioResult = interruptStackResumeLastResult(
-    state["qScenarioResult"],
+    state["qScenarioOutcome"],
   );
   assertWitnessProtocolConsistentWithScenario({
     label: "interrupt stack resume",
@@ -782,17 +791,13 @@ function interruptStackResumeHole(raw: unknown): InterruptStackResumeHole {
 function interruptStackResumeLastResult(
   raw: unknown,
 ): InterruptStackResumeLastResult {
-  if (
-    raw === "init" ||
-    raw === "nestedDeclineResumedOuter" ||
-    raw === "activeEffectMutationResumed" ||
-    raw === "replayFromRootResolved"
-  ) {
-    return raw;
+  const tag = quintVariantTag(raw, "qScenarioOutcome");
+  const value =
+    INTERRUPT_STACK_RESUME_SCENARIO_OUTCOME_BY_TAG[tag];
+  if (value !== undefined) {
+    return value;
   }
-  throw new Error(
-    `Unexpected interrupt stack resume result ${String(raw)}.`,
-  );
+  throw new Error(`Unexpected interrupt stack resume result ${tag}.`);
 }
 
 function equivalentResolvedProjection(

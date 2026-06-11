@@ -25,6 +25,7 @@ import {
   numberFromQuintInt,
   quintRecordField,
   quintStateRecord,
+  quintVariantTag,
   run,
   stateCheck,
 } from "./battle-runtime-mbt-driver-kit.ts";
@@ -75,7 +76,19 @@ const LAST_RESULTS = [
   "concentrationBroken",
 ] as const;
 type LastResult = (typeof LAST_RESULTS)[number];
-const LAST_RESULT_SET: ReadonlySet<string> = new Set(LAST_RESULTS);
+const BLUR_ATTACK_ROLL_DEFENSE_LIFECYCLE_SCENARIO_OUTCOME_BY_TAG: Readonly<
+  Record<string, LastResult>
+> = {
+  Init: "init",
+  BlurCast: "blurCast",
+  BlindsightBypass: "blindsightBypass",
+  TruesightBypass: "truesightBypass",
+  NoBypass: "noBypass",
+  OtherAdvantage: "otherAdvantage",
+  NoOtherAdvantage: "noOtherAdvantage",
+  ConcentrationBroken: "concentrationBroken",
+} as const;
+
 
 type BlurBypassSense = Extract<
   BattleTargetSpatialFact,
@@ -477,7 +490,7 @@ function normalizeBlurAttackRollDefenseQuintState(
   raw: unknown,
 ): BlurAttackRollDefenseProjection {
   const state = quintRecordField(quintStateRecord(raw), "qState");
-  const scenarioResult = lastResult(state["qScenarioResult"]);
+  const scenarioResult = lastResult(state["qScenarioOutcome"]);
   const protocol = decodeWitnessProtocolState({
     state,
     protocolField: "protocol",
@@ -541,17 +554,17 @@ function attackRollMode(raw: unknown): AttackRollMode {
 }
 
 function lastResult(raw: unknown): LastResult {
-  expect(raw).toBeTypeOf("string");
-  if (typeof raw !== "string" || !isLastResult(raw)) {
-    throw new Error(`Unexpected Blur result ${String(raw)}.`);
+  const tag = quintVariantTag(raw, "qScenarioOutcome");
+  const value =
+    BLUR_ATTACK_ROLL_DEFENSE_LIFECYCLE_SCENARIO_OUTCOME_BY_TAG[tag];
+  if (value !== undefined) {
+    return value;
   }
-  return raw;
+  throw new Error(
+    `Expected Quint scenario outcome variant qScenarioOutcome, got ${tag}.`,
+  );
 }
 
 function isAttackRollMode(value: string): value is AttackRollMode {
   return ATTACK_ROLL_MODE_SET.has(value);
-}
-
-function isLastResult(value: string): value is LastResult {
-  return LAST_RESULT_SET.has(value);
 }

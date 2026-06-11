@@ -10,6 +10,9 @@ module battleRuntimeSanctuarySelectedIdentityMbt {
 
   type WitnessHole = | WitnessProtocolHole
 
+  type SanctuarySelectedIdentityScenarioOutcome = | Init | WardCreated | AttackLost | SpellSaveSucceeded | ReplacementAdmitted | ReplacementRejected | AreaEffectExcluded | AttackRollEndedWard | SpellCastEndedWard | DamageEndedWard
+
+
   type SanctuarySelectedIdentityWitnessState = {
     qWardPresent: bool,
     qWardSourceIsSanctuary: bool,
@@ -20,7 +23,7 @@ module battleRuntimeSanctuarySelectedIdentityMbt {
     qIllegalReplacementRejected: bool,
     qAreaEffectBypassedInterdiction: bool,
     qWardedHp: int,
-    qScenarioResult: str,
+    qScenarioOutcome: SanctuarySelectedIdentityScenarioOutcome,
     protocol: WitnessProtocol[WitnessHole],
   }
 
@@ -35,7 +38,7 @@ module battleRuntimeSanctuarySelectedIdentityMbt {
   pure def qIllegalReplacementRejected: bool = qState.qIllegalReplacementRejected
   pure def qAreaEffectBypassedInterdiction: bool = qState.qAreaEffectBypassedInterdiction
   pure def qWardedHp: int = qState.qWardedHp
-  pure def qLastResult: str = qState.qScenarioResult
+  pure def qLastResult: SanctuarySelectedIdentityScenarioOutcome = qState.qScenarioOutcome
 
   pure def initialWardedHp: int = 12
   pure def damageDealtByWardedCreature: int = 1
@@ -43,10 +46,10 @@ module battleRuntimeSanctuarySelectedIdentityMbt {
 
   pure def selectedIdentityProtocolForProjection(
     holes: Set[WitnessHole],
-    scenarioResult: str,
+    scenarioResult: SanctuarySelectedIdentityScenarioOutcome,
     scenarioInvalidReason: str,
   ): WitnessProtocol[WitnessHole] =
-    if (scenarioResult == "init") witnessInit(WitnessProtocolHole)
+    if (scenarioResult == Init) witnessInit(WitnessProtocolHole)
     else if (scenarioInvalidReason == "invalidFill") witnessInvalid(WitnessProtocolHole, WInvalidFill)
     else if (holes != Set()) witnessNeedsHoles(holes)
     else witnessResolved(WitnessProtocolHole)
@@ -61,7 +64,7 @@ module battleRuntimeSanctuarySelectedIdentityMbt {
     illegalReplacementRejected: bool,
     areaEffectBypassedInterdiction: bool,
     wardedHp: int,
-    lastResult: str,
+    lastResult: SanctuarySelectedIdentityScenarioOutcome,
   ): bool = all {
     qState' = {
       qWardPresent: wardPresent,
@@ -73,7 +76,7 @@ module battleRuntimeSanctuarySelectedIdentityMbt {
       qIllegalReplacementRejected: illegalReplacementRejected,
       qAreaEffectBypassedInterdiction: areaEffectBypassedInterdiction,
       qWardedHp: wardedHp,
-      qScenarioResult: lastResult,
+      qScenarioOutcome: lastResult,
       protocol: selectedIdentityProtocolForProjection(Set(), lastResult, ""),
     },
   }
@@ -87,11 +90,11 @@ module battleRuntimeSanctuarySelectedIdentityMbt {
     false,
     false,
     initialWardedHp,
-    "init",
+    Init,
   )
 
   action doCastSanctuaryWardCreation = all {
-    qLastResult == "init",
+    qLastResult == Init,
     recordProjection(
       true,
       true,
@@ -102,12 +105,12 @@ module battleRuntimeSanctuarySelectedIdentityMbt {
       false,
       false,
       initialWardedHp,
-      "wardCreated",
+      WardCreated,
     ),
   }
 
   action doInterdictDirectAttackFailedSaveLoss = all {
-    qLastResult == "init",
+    qLastResult == Init,
     recordProjection(
       true,
       true,
@@ -118,12 +121,12 @@ module battleRuntimeSanctuarySelectedIdentityMbt {
       false,
       false,
       initialWardedHp,
-      "attackLost",
+      AttackLost,
     ),
   }
 
   action doInterdictDirectSpellSuccessfulSavePassThrough = all {
-    qLastResult == "init",
+    qLastResult == Init,
     recordProjection(
       true,
       true,
@@ -134,12 +137,12 @@ module battleRuntimeSanctuarySelectedIdentityMbt {
       false,
       false,
       initialWardedHp,
-      "spellSaveSucceeded",
+      SpellSaveSucceeded,
     ),
   }
 
   action doRetargetDirectAttackToLegalReplacement = all {
-    qLastResult == "init",
+    qLastResult == Init,
     recordProjection(
       true,
       true,
@@ -150,12 +153,12 @@ module battleRuntimeSanctuarySelectedIdentityMbt {
       false,
       false,
       initialWardedHp,
-      "replacementAdmitted",
+      ReplacementAdmitted,
     ),
   }
 
   action doRejectIllegalReplacementTarget = all {
-    qLastResult == "init",
+    qLastResult == Init,
     recordProjection(
       true,
       true,
@@ -166,12 +169,12 @@ module battleRuntimeSanctuarySelectedIdentityMbt {
       true,
       false,
       initialWardedHp,
-      "replacementRejected",
+      ReplacementRejected,
     ),
   }
 
   action doExcludeAreaEffectFromInterdiction = all {
-    qLastResult == "init",
+    qLastResult == Init,
     recordProjection(
       true,
       true,
@@ -182,12 +185,12 @@ module battleRuntimeSanctuarySelectedIdentityMbt {
       false,
       true,
       initialWardedHp,
-      "areaEffectExcluded",
+      AreaEffectExcluded,
     ),
   }
 
   action doEndWardOnWardedAttackRoll = all {
-    qLastResult == "init",
+    qLastResult == Init,
     recordProjection(
       false,
       false,
@@ -198,12 +201,12 @@ module battleRuntimeSanctuarySelectedIdentityMbt {
       false,
       false,
       initialWardedHp,
-      "attackRollEndedWard",
+      AttackRollEndedWard,
     ),
   }
 
   action doEndWardOnWardedSpellCast = all {
-    qLastResult == "init",
+    qLastResult == Init,
     recordProjection(
       false,
       false,
@@ -214,12 +217,12 @@ module battleRuntimeSanctuarySelectedIdentityMbt {
       false,
       false,
       initialWardedHp,
-      "spellCastEndedWard",
+      SpellCastEndedWard,
     ),
   }
 
   action doEndWardOnWardedDamageDealt = all {
-    qLastResult == "init",
+    qLastResult == Init,
     recordProjection(
       false,
       false,
@@ -230,7 +233,7 @@ module battleRuntimeSanctuarySelectedIdentityMbt {
       false,
       false,
       wardedHpAfterDamage,
-      "damageEndedWard",
+      DamageEndedWard,
     ),
   }
 

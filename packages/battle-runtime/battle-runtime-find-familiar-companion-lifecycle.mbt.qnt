@@ -5,6 +5,8 @@ module battleRuntimeFindFamiliarCompanionLifecycleMbt {
 
   type WitnessHole = | WitnessProtocolHole
 
+  type FindFamiliarCompanionLifecycleScenarioOutcome = | Init | CreatedCat | ReplacedRat | SharedSenses | TouchDelivered | PactAttack
+
   type FindFamiliarCompanionLifecycleWitnessState = {
     qFamiliarStatus: str,
     qFamiliarId: str,
@@ -20,7 +22,7 @@ module battleRuntimeFindFamiliarCompanionLifecycleMbt {
     qPactReactionAttackResolved: bool,
     qSpellSlotCommitted: bool,
     qTargetHp: int,
-    qScenarioResult: str,
+    qScenarioOutcome: FindFamiliarCompanionLifecycleScenarioOutcome,
     protocol: WitnessProtocol[WitnessHole],
   }
 
@@ -40,14 +42,14 @@ module battleRuntimeFindFamiliarCompanionLifecycleMbt {
   pure def qPactReactionAttackResolved: bool = qState.qPactReactionAttackResolved
   pure def qSpellSlotCommitted: bool = qState.qSpellSlotCommitted
   pure def qTargetHp: int = qState.qTargetHp
-  pure def qLastResult: str = qState.qScenarioResult
+  pure def qLastResult: FindFamiliarCompanionLifecycleScenarioOutcome = qState.qScenarioOutcome
 
   pure def findFamiliarCompanionLifecycleProtocolForProjection(
     holes: Set[WitnessHole],
-    scenarioResult: str,
+    scenarioResult: FindFamiliarCompanionLifecycleScenarioOutcome,
     _scenarioInvalidReason: str,
   ): WitnessProtocol[WitnessHole] =
-    if (scenarioResult == "init") witnessInit(WitnessProtocolHole)
+    if (scenarioResult == Init) witnessInit(WitnessProtocolHole)
     else if (holes != Set()) witnessNeedsHoles(holes)
     else witnessResolved(WitnessProtocolHole)
 
@@ -89,7 +91,7 @@ module battleRuntimeFindFamiliarCompanionLifecycleMbt {
     pactReactionAttackResolved: bool,
     spellSlotCommitted: bool,
     targetHp: int,
-    lastResult: str,
+    lastResult: FindFamiliarCompanionLifecycleScenarioOutcome,
   ): bool = all {
     qState' = {
       qFamiliarStatus: familiarStatus,
@@ -106,7 +108,7 @@ module battleRuntimeFindFamiliarCompanionLifecycleMbt {
       qPactReactionAttackResolved: pactReactionAttackResolved,
       qSpellSlotCommitted: spellSlotCommitted,
       qTargetHp: targetHp,
-      qScenarioResult: lastResult,
+      qScenarioOutcome: lastResult,
       protocol: findFamiliarCompanionLifecycleProtocolForProjection(Set(), lastResult, ""),
     },
   }
@@ -126,7 +128,7 @@ module battleRuntimeFindFamiliarCompanionLifecycleMbt {
     false,
     false,
     initialTargetHp,
-    "init",
+    Init,
   )
 
   action doCreateCatFamiliar = all {
@@ -146,7 +148,7 @@ module battleRuntimeFindFamiliarCompanionLifecycleMbt {
       qPactReactionAttackResolved,
       qSpellSlotCommitted,
       qTargetHp,
-      "createdCat",
+      CreatedCat,
     ),
   }
 
@@ -169,7 +171,7 @@ module battleRuntimeFindFamiliarCompanionLifecycleMbt {
       qPactReactionAttackResolved,
       qSpellSlotCommitted,
       qTargetHp,
-      "replacedRat",
+      ReplacedRat,
     ),
   }
 
@@ -192,7 +194,7 @@ module battleRuntimeFindFamiliarCompanionLifecycleMbt {
       qPactReactionAttackResolved,
       qSpellSlotCommitted,
       qTargetHp,
-      "sharedSenses",
+      SharedSenses,
     ),
   }
 
@@ -217,7 +219,7 @@ module battleRuntimeFindFamiliarCompanionLifecycleMbt {
       false,
       true,
       qTargetHp,
-      "touchDelivered",
+      TouchDelivered,
     ),
   }
 
@@ -241,7 +243,7 @@ module battleRuntimeFindFamiliarCompanionLifecycleMbt {
       true,
       qSpellSlotCommitted,
       qTargetHp - pactScratchDamage,
-      "pactAttack",
+      PactAttack,
     ),
   }
 

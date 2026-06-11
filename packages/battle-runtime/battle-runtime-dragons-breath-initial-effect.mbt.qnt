@@ -5,6 +5,9 @@ module battleRuntimeDragonsBreathInitialEffectMbt {
 
   type WitnessHole = | DragonsBreathInitialEffect
 
+  type DragonsBreathInitialEffectScenarioOutcome = | Init | Cast | TargetTurn | ConcentrationBroken
+
+
   // RAW trace:
   // - .references/srd-5.2.1/Spells/Descriptions-A-D.md#Dragon's Breath:
   //   Bonus Action, Touch, Concentration up to 1 minute; one willing creature;
@@ -26,7 +29,7 @@ module battleRuntimeDragonsBreathInitialEffectMbt {
     qEffectDurationTicks: int,
     qCasterConcentrating: bool,
     qGrantedMagicActionAvailable: bool,
-    qScenarioResult: str,
+    qScenarioOutcome: DragonsBreathInitialEffectScenarioOutcome,
     protocol: WitnessProtocol[WitnessHole],
   }
 
@@ -42,7 +45,7 @@ module battleRuntimeDragonsBreathInitialEffectMbt {
   pure def qEffectDurationTicks: int = qState.qEffectDurationTicks
   pure def qCasterConcentrating: bool = qState.qCasterConcentrating
   pure def qGrantedMagicActionAvailable: bool = qState.qGrantedMagicActionAvailable
-  pure def qScenarioResult: str = qState.qScenarioResult
+  pure def qScenarioOutcome: DragonsBreathInitialEffectScenarioOutcome = qState.qScenarioOutcome
 
   pure val casterTurnRole: str = "caster"
   pure val targetTurnRole: str = "target"
@@ -63,7 +66,7 @@ module battleRuntimeDragonsBreathInitialEffectMbt {
     effectDurationTicks: int,
     casterConcentrating: bool,
     grantedMagicActionAvailable: bool,
-    scenarioResult: str,
+    scenarioOutcome: DragonsBreathInitialEffectScenarioOutcome,
     protocol: WitnessProtocol[WitnessHole],
   ): bool = all {
     qState' = {
@@ -77,7 +80,7 @@ module battleRuntimeDragonsBreathInitialEffectMbt {
       qEffectDurationTicks: effectDurationTicks,
       qCasterConcentrating: casterConcentrating,
       qGrantedMagicActionAvailable: grantedMagicActionAvailable,
-      qScenarioResult: scenarioResult,
+      qScenarioOutcome: scenarioOutcome,
       protocol: protocol,
     },
   }
@@ -94,7 +97,7 @@ module battleRuntimeDragonsBreathInitialEffectMbt {
       0,
       false,
       false,
-      "init",
+      Init,
     witnessInit(DragonsBreathInitialEffect),
   ),
   }
@@ -119,7 +122,7 @@ module battleRuntimeDragonsBreathInitialEffectMbt {
         dragonsBreathDurationTicks,
         true,
         false,
-        "cast",
+        Cast,
     witnessResolved(DragonsBreathInitialEffect),
   ),
     }
@@ -140,7 +143,7 @@ module battleRuntimeDragonsBreathInitialEffectMbt {
       qEffectDurationTicks,
       true,
       true,
-      "targetTurn",
+      TargetTurn,
     witnessResolved(DragonsBreathInitialEffect),
   ),
   }
@@ -159,7 +162,7 @@ module battleRuntimeDragonsBreathInitialEffectMbt {
       0,
       false,
       false,
-      "concentrationBroken",
+      ConcentrationBroken,
     witnessResolved(DragonsBreathInitialEffect),
   ),
   }

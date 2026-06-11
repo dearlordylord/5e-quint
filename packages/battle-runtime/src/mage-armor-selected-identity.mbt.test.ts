@@ -107,6 +107,14 @@ if (unitCatalogResult.tag !== "ok") {
 }
 const unitLibrary = unitCatalogResult.catalog;
 
+const MAGE_ARMOR_SELECTED_IDENTITY_SCENARIO_OUTCOME_BY_TAG = {
+  Init: "init",
+  Discovered: "discovered",
+  ArmoredRejected: "armoredRejected",
+  Resolved: "resolved",
+  DurationExpired: "durationExpired",
+} as const satisfies Readonly<Record<string, MageArmorSelectedIdentityLastResult>>;
+
 defineSelectedIdentityWitness({
   describeLabel: "Mage Armor selected identity MBT",
   taskId: "L1H-MAGE-ARMOR",
@@ -117,7 +125,10 @@ defineSelectedIdentityWitness({
   quintStateField: "qState",
   quintStateFieldPrefix: "q",
   witnessProtocolField: "protocol",
-  quintFieldNames: { lastResult: "qScenarioResult" },
+  quintFieldNames: { lastResult: "qScenarioOutcome" },
+  quintVariantFieldTags: {
+    lastResult: MAGE_ARMOR_SELECTED_IDENTITY_SCENARIO_OUTCOME_BY_TAG,
+  },
   projectionSchema: {
     selfTargetAdmitted: "bool",
     armoredTargetRejected: "bool",
@@ -128,7 +139,7 @@ defineSelectedIdentityWitness({
     mageArmorDurationTicks: "int",
     level1SlotsExpended: "int",
     actionAvailable: "bool",
-    lastResult: "str",
+    lastResult: "variant",
   },
   initialProjection: expectedProjection(),
   units: [

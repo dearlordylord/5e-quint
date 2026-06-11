@@ -29,6 +29,7 @@ import {
   numberFromQuintInt,
   quintRecordField,
   quintStateRecord,
+  quintVariantTag,
   run,
   stateCheck,
 } from "./battle-runtime-mbt-driver-kit.ts";
@@ -73,7 +74,17 @@ const LAST_RESULTS = [
   "antimagicAuraUnaffected",
 ] as const;
 type LastResult = (typeof LAST_RESULTS)[number];
-const LAST_RESULT_SET: ReadonlySet<string> = new Set(LAST_RESULTS);
+const DISPEL_MAGIC_ONGOING_SPELL_ENDING_SCENARIO_OUTCOME_BY_TAG: Readonly<
+  Record<string, LastResult>
+> = {
+  Init: "init",
+  NeedsHigherLevelCheck: "needsHigherLevelCheck",
+  FailedHigherLevelCheck: "failedHigherLevelCheck",
+  SucceededHigherLevelCheck: "succeededHigherLevelCheck",
+  UpcastAutoEnded: "upcastAutoEnded",
+  AntimagicAuraUnaffected: "antimagicAuraUnaffected",
+} as const;
+
 
 type DispelMagicOngoingSpellEndingProjection = {
   readonly actionAvailable: boolean;
@@ -688,7 +699,7 @@ function normalizeDispelMagicQuintState(
   raw: unknown,
 ): DispelMagicOngoingSpellEndingProjection {
   const state = quintRecordField(quintStateRecord(raw), "qState");
-  const scenarioResult = lastResult(state["qScenarioResult"]);
+  const scenarioResult = lastResult(state["qScenarioOutcome"]);
   const protocol = decodeWitnessProtocolState({
     state,
     protocolField: "protocol",
@@ -750,15 +761,17 @@ function compareDispelMagicStates(
 }
 
 function lastResult(raw: unknown): LastResult {
-  if (isLastResult(raw)) {
-    return raw;
+  const tag = quintVariantTag(raw, "qScenarioOutcome");
+  const value =
+    DISPEL_MAGIC_ONGOING_SPELL_ENDING_SCENARIO_OUTCOME_BY_TAG[tag];
+  if (value !== undefined) {
+    return value;
   }
-  throw new Error(`Unknown Dispel Magic result: ${String(raw)}.`);
+  throw new Error(
+    `Expected Quint scenario outcome variant qScenarioOutcome, got ${tag}.`,
+  );
 }
 
-function isLastResult(raw: unknown): raw is LastResult {
-  return typeof raw === "string" && LAST_RESULT_SET.has(raw);
-}
 
 function isCharacterBattleCreatureState(
   combatant: BattleCreatureState,

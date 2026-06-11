@@ -9,39 +9,42 @@ module monkMartialArtsSelectedIdentityMbt {
 
   type WitnessHole = | WitnessProtocolHole
 
+  type MonkMartialArtsSelectedIdentityScenarioOutcome = | Init | Projected
+
+
   var qClassLevel: int
   var qDamageDieSize: int
   var qUnitBound: bool
-  var qScenarioResult: str
+  var qScenarioOutcome: MonkMartialArtsSelectedIdentityScenarioOutcome
   var qProtocol: WitnessProtocol[WitnessHole]
 
-  pure def qLastResult: str = qScenarioResult
+  pure def qLastResult: MonkMartialArtsSelectedIdentityScenarioOutcome = qScenarioOutcome
 
   pure def witnessProtocolForProjection(
-    result: str,
+    result: MonkMartialArtsSelectedIdentityScenarioOutcome,
   ): WitnessProtocol[WitnessHole] =
-    if (result == "init") witnessInit(WitnessProtocolHole)
+    if (result == Init) witnessInit(WitnessProtocolHole)
     else witnessResolved(WitnessProtocolHole)
 
   action recordProjection(
     classLevel: int,
     damageDieSize: int,
     unitBound: bool,
-    result: str,
+    result: MonkMartialArtsSelectedIdentityScenarioOutcome,
   ): bool = all {
     qClassLevel' = classLevel,
     qDamageDieSize' = damageDieSize,
     qUnitBound' = unitBound,
-    qScenarioResult' = result,
+    qScenarioOutcome' = result,
     qProtocol' = witnessProtocolForProjection(result),
   }
 
-  action init = recordProjection(0, 0, false, "init")
+  action init = recordProjection(0, 0, false, Init)
 
   // At 17th level the Monk's Martial Arts die is a d12, and a Monk weapon is an
   // eligible Martial Arts attack, so the projection succeeds.
   action doProjectMartialArtsD12 = all {
-    recordProjection(17, 12, true, "projected"),
+    recordProjection(17, 12, true, Projected),
   }
 
   action step = any {

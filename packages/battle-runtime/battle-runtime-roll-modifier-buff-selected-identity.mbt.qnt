@@ -9,6 +9,9 @@ module battleRuntimeRollModifierBuffSelectedIdentityMbt {
 
   type WitnessHole = | WitnessProtocolHole
 
+  type RollModifierBuffSelectedIdentityScenarioOutcome = | Init | Bless | Bane | Guidance | Resistance | ShieldOfFaith
+
+
   type RollModifierBuffSelectedIdentityWitnessState = {
     qCasterConcentrating: bool,
     qCasterHp: int,
@@ -25,7 +28,7 @@ module battleRuntimeRollModifierBuffSelectedIdentityMbt {
     qInvalidTargetRejected: bool,
     qDamageReductionType: str,
     qDamageReductionUsed: bool,
-    qScenarioResult: str,
+    qScenarioOutcome: RollModifierBuffSelectedIdentityScenarioOutcome,
     protocol: WitnessProtocol[WitnessHole],
   }
 
@@ -46,14 +49,14 @@ module battleRuntimeRollModifierBuffSelectedIdentityMbt {
   pure def qInvalidTargetRejected: bool = qState.qInvalidTargetRejected
   pure def qDamageReductionType: str = qState.qDamageReductionType
   pure def qDamageReductionUsed: bool = qState.qDamageReductionUsed
-  pure def qLastResult: str = qState.qScenarioResult
+  pure def qLastResult: RollModifierBuffSelectedIdentityScenarioOutcome = qState.qScenarioOutcome
 
   pure def selectedIdentityProtocolForProjection(
     holes: Set[WitnessHole],
-    scenarioResult: str,
+    scenarioResult: RollModifierBuffSelectedIdentityScenarioOutcome,
     scenarioInvalidReason: str,
   ): WitnessProtocol[WitnessHole] =
-    if (scenarioResult == "init") witnessInit(WitnessProtocolHole)
+    if (scenarioResult == Init) witnessInit(WitnessProtocolHole)
     else if (scenarioInvalidReason == "invalidFill") witnessInvalid(WitnessProtocolHole, WInvalidFill)
     else if (holes != Set()) witnessNeedsHoles(holes)
     else witnessResolved(WitnessProtocolHole)
@@ -74,7 +77,7 @@ module battleRuntimeRollModifierBuffSelectedIdentityMbt {
     invalidTargetRejected: bool,
     damageReductionType: str,
     damageReductionUsed: bool,
-    lastResult: str,
+    lastResult: RollModifierBuffSelectedIdentityScenarioOutcome,
   ): bool = all {
     qState' = {
       qCasterConcentrating: casterConcentrating,
@@ -92,55 +95,55 @@ module battleRuntimeRollModifierBuffSelectedIdentityMbt {
       qInvalidTargetRejected: invalidTargetRejected,
       qDamageReductionType: damageReductionType,
       qDamageReductionUsed: damageReductionUsed,
-      qScenarioResult: lastResult,
+      qScenarioOutcome: lastResult,
       protocol: selectedIdentityProtocolForProjection(Set(), lastResult, ""),
     },
   }
   action init = recordProjection(
     false, 12, 0, 0, 0, 10, 12, "none", false, false, false,
-    "none", false, "none", false, "init",
+    "none", false, "none", false, Init,
   )
 
   action doBlessAttackAndSaveModifier = all {
-    qLastResult == "init",
+    qLastResult == Init,
     recordProjection(
       true, 12, 0, 1, 1, 10, 12, "+", true, true, false,
-      "none", false, "none", false, "bless",
+      "none", false, "none", false, Bless,
     ),
   }
 
   action doBaneFailedSavePenalty = all {
-    qLastResult == "init",
+    qLastResult == Init,
     recordProjection(
       true, 12, 0, 1, 0, 10, 12, "-", true, true, false,
-      "none", false, "none", false, "bane",
+      "none", false, "none", false, Bane,
     ),
   }
 
   action doGuidanceSkillAbilityCheckModifier = all {
-    qLastResult == "init",
+    qLastResult == Init,
     recordProjection(
       true, 12, 1, 0, 0, 10, 12, "+", false, false, true,
-      "stealth", true, "none", false, "guidance",
+      "stealth", true, "none", false, Guidance,
     ),
   }
 
   action doResistanceReducesMatchingDamage = {
     all {
-      qLastResult == "init",
+      qLastResult == Init,
       recordProjection(
         true, 12, 1, 0, 0, 10, 12, "none", false, false, false,
         "none", false, "bludgeoning", true,
-        "resistance",
+        Resistance,
       ),
     }
   }
 
   action doShieldOfFaithArmorClassBonus = all {
-    qLastResult == "init",
+    qLastResult == Init,
     recordProjection(
       true, 12, 0, 1, 0, 12, 12, "none", false, false, false,
-      "none", false, "none", false, "shieldOfFaith",
+      "none", false, "none", false, ShieldOfFaith,
     ),
   }
 

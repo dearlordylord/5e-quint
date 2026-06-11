@@ -35,6 +35,12 @@ type DangerSenseProjection = {
   readonly accepted: boolean;
 };
 
+const DANGER_SENSE_SELECTED_IDENTITY_SCENARIO_OUTCOME_BY_TAG = {
+  Init: "init",
+  DangerSenseDexterityAdvantage: "danger-sense-dexterity-advantage",
+  DangerSenseIncapacitatedSuppressed: "danger-sense-incapacitated-suppressed",
+} as const;
+
 defineSelectedIdentityWitness({
   describeLabel: "Battle Runtime Danger Sense selected identity MBT",
   taskId: "B4-CLASS-FEATURE-IDENTITY-BATCH-1",
@@ -45,9 +51,10 @@ defineSelectedIdentityWitness({
   quintStateField: "qState",
   quintStateFieldPrefix: "q",
   witnessProtocolField: "protocol",
-  quintFieldNames: { lastResult: "qScenarioResult" },
+  quintFieldNames: { lastResult: "qScenarioOutcome" },
+  quintVariantFieldTags: { lastResult: DANGER_SENSE_SELECTED_IDENTITY_SCENARIO_OUTCOME_BY_TAG },
   projectionSchema: {
-    lastResult: "str",
+    lastResult: "variant",
     sourceUnitId: "str",
     dexterityRollModeCount: "int",
     constitutionRollModeCount: "int",

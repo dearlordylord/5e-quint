@@ -76,6 +76,16 @@ type AttackSpellShapeSelectedIdentityProjection = {
     | "shockingGrasp";
 };
 
+const ATTACK_SPELL_SHAPE_SELECTED_IDENTITY_SCENARIO_OUTCOME_BY_TAG = {
+  Init: "init",
+  FireBolt: "fireBolt",
+  ChillTouch: "chillTouch",
+  GuidingBolt: "guidingBolt",
+  InflictWoundsFailure: "inflictWoundsFailure",
+  InflictWoundsSuccess: "inflictWoundsSuccess",
+  ShockingGrasp: "shockingGrasp",
+} as const;
+
 type ActionSpellAct = AvailableBattleAct & {
   readonly subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>;
 };
@@ -105,14 +115,15 @@ defineSelectedIdentityWitness({
   quintStateField: "qState",
   quintStateFieldPrefix: "q",
   witnessProtocolField: "protocol",
-  quintFieldNames: { lastResult: "qScenarioResult" },
+  quintFieldNames: { lastResult: "qScenarioOutcome" },
+  quintVariantFieldTags: { lastResult: ATTACK_SPELL_SHAPE_SELECTED_IDENTITY_SCENARIO_OUTCOME_BY_TAG },
   projectionSchema: {
     targetHp: "int",
     spellSlotSpentThisTurn: "bool",
     level1SlotsRemaining: "int",
     activeEffectKind: "str",
     activeEffectCount: "int",
-    lastResult: "str",
+    lastResult: "variant",
   },
   initialProjection: expectedProjection(),
   units: [

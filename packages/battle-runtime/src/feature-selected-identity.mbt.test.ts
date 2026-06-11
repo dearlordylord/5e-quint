@@ -49,6 +49,14 @@ type InnateSorcerySelectedIdentityLastResult =
   | "activated"
   | "spellBenefitsProjected"
   | "nonSorcererExcluded";
+
+const FEATURE_SELECTED_IDENTITY_SCENARIO_OUTCOME_BY_TAG = {
+  Init: "init",
+  Activated: "activated",
+  SpellBenefitsProjected: "spellBenefitsProjected",
+  NonSorcererExcluded: "nonSorcererExcluded",
+} as const;
+
 type InnateSorceryOccurrenceProjection =
   | "inactive"
   | "activeUntilEndOfRound11";
@@ -100,14 +108,15 @@ defineSelectedIdentityWitness({
   quintStateField: "qState",
   quintStateFieldPrefix: "q",
   witnessProtocolField: "protocol",
-  quintFieldNames: { lastResult: "qScenarioResult" },
+  quintFieldNames: { lastResult: "qScenarioOutcome" },
+  quintVariantFieldTags: { lastResult: FEATURE_SELECTED_IDENTITY_SCENARIO_OUTCOME_BY_TAG },
   projectionSchema: {
     bonusActionAvailable: "bool",
     featureUsesRemaining: "int",
     innateSorceryOccurrence: "str",
     spellSaveDc: "int",
     spellAttackRollMode: "str",
-    lastResult: "str",
+    lastResult: "variant",
   },
   initialProjection: expectedProjection(),
   units: [

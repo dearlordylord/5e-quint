@@ -5,20 +5,23 @@ module battleRuntimeThaumaturgySelectedIdentityMbt {
 
   type WitnessHole = | WitnessProtocolHole
 
+  type ThaumaturgySelectedIdentityScenarioOutcome = | Init | Resolved
+
+
   var qCasterEffectCount: int
   var qActionAvailable: bool
   var qIntimidationRollMode: str
   var qWisdomIntimidationRollMode: str
   var qPerceptionRollMode: str
-  var qScenarioResult: str
+  var qScenarioOutcome: ThaumaturgySelectedIdentityScenarioOutcome
   var qProtocol: WitnessProtocol[WitnessHole]
 
-  pure def qLastResult: str = qScenarioResult
+  pure def qLastResult: ThaumaturgySelectedIdentityScenarioOutcome = qScenarioOutcome
 
   pure def witnessProtocolForProjection(
-    scenarioResult: str,
+    scenarioResult: ThaumaturgySelectedIdentityScenarioOutcome,
   ): WitnessProtocol[WitnessHole] =
-    if (scenarioResult == "init") witnessInit(WitnessProtocolHole)
+    if (scenarioResult == Init) witnessInit(WitnessProtocolHole)
     else witnessResolved(WitnessProtocolHole)
 
   action recordProjection(
@@ -27,22 +30,22 @@ module battleRuntimeThaumaturgySelectedIdentityMbt {
     intimidationRollMode: str,
     wisdomIntimidationRollMode: str,
     perceptionRollMode: str,
-    lastResult: str,
+    lastResult: ThaumaturgySelectedIdentityScenarioOutcome,
   ): bool = all {
     qCasterEffectCount' = casterEffectCount,
     qActionAvailable' = actionAvailable,
     qIntimidationRollMode' = intimidationRollMode,
     qWisdomIntimidationRollMode' = wisdomIntimidationRollMode,
     qPerceptionRollMode' = perceptionRollMode,
-    qScenarioResult' = lastResult,
+    qScenarioOutcome' = lastResult,
     qProtocol' = witnessProtocolForProjection(lastResult),
   }
 
-  action init = recordProjection(0, true, "normal", "normal", "normal", "init")
+  action init = recordProjection(0, true, "normal", "normal", "normal", Init)
 
   action doResolveThaumaturgyBoomingVoice = all {
-    qLastResult == "init",
-    recordProjection(1, false, "advantage", "normal", "normal", "resolved"),
+    qLastResult == Init,
+    recordProjection(1, false, "advantage", "normal", "normal", Resolved),
   }
 
   action step = any {

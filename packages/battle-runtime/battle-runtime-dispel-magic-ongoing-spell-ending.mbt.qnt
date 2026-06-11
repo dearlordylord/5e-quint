@@ -5,6 +5,9 @@ module battleRuntimeDispelMagicOngoingSpellEndingMbt {
 
   type WitnessHole = | DispelMagicOngoingSpellEnding
 
+  type DispelMagicOngoingSpellEndingScenarioOutcome = | Init | NeedsHigherLevelCheck | FailedHigherLevelCheck | SucceededHigherLevelCheck | UpcastAutoEnded | AntimagicAuraUnaffected
+
+
   // RAW trace:
   // - .references/srd-5.2.1/Spells/Descriptions-A-D.md#Dispel Magic:
   //   choose a creature, object, or magical effect within range; ongoing spells
@@ -27,7 +30,7 @@ module battleRuntimeDispelMagicOngoingSpellEndingMbt {
     qHigherLevelCheckHoleCount: int,
     qHigherLevelCheckDc: int,
     qHighLevelCasterConcentrating: bool,
-    qScenarioResult: str,
+    qScenarioOutcome: DispelMagicOngoingSpellEndingScenarioOutcome,
     protocol: WitnessProtocol[WitnessHole],
   }
 
@@ -42,7 +45,7 @@ module battleRuntimeDispelMagicOngoingSpellEndingMbt {
   pure def qHigherLevelCheckHoleCount: int = qState.qHigherLevelCheckHoleCount
   pure def qHigherLevelCheckDc: int = qState.qHigherLevelCheckDc
   pure def qHighLevelCasterConcentrating: bool = qState.qHighLevelCasterConcentrating
-  pure def qScenarioResult: str = qState.qScenarioResult
+  pure def qScenarioOutcome: DispelMagicOngoingSpellEndingScenarioOutcome = qState.qScenarioOutcome
 
   pure val baseSlotLevel: int = 3
   pure val upcastSlotLevel: int = 4
@@ -60,7 +63,7 @@ module battleRuntimeDispelMagicOngoingSpellEndingMbt {
     higherLevelCheckHoleCount: int,
     higherLevelCheckDc: int,
     highLevelCasterConcentrating: bool,
-    scenarioResult: str,
+    scenarioOutcome: DispelMagicOngoingSpellEndingScenarioOutcome,
     protocol: WitnessProtocol[WitnessHole],
   ): bool = all {
     qState' = {
@@ -73,7 +76,7 @@ module battleRuntimeDispelMagicOngoingSpellEndingMbt {
       qHigherLevelCheckHoleCount: higherLevelCheckHoleCount,
       qHigherLevelCheckDc: higherLevelCheckDc,
       qHighLevelCasterConcentrating: highLevelCasterConcentrating,
-      qScenarioResult: scenarioResult,
+      qScenarioOutcome: scenarioOutcome,
       protocol: protocol,
     },
   }
@@ -88,7 +91,7 @@ module battleRuntimeDispelMagicOngoingSpellEndingMbt {
     0,
     0,
     true,
-    "init",
+    Init,
     witnessInit(DispelMagicOngoingSpellEnding),
   )
 
@@ -108,7 +111,7 @@ module battleRuntimeDispelMagicOngoingSpellEndingMbt {
       1,
       higherLevelCheckDc,
       true,
-      "needsHigherLevelCheck",
+      NeedsHigherLevelCheck,
     witnessResolved(DispelMagicOngoingSpellEnding),
   ),
   }
@@ -130,7 +133,7 @@ module battleRuntimeDispelMagicOngoingSpellEndingMbt {
       0,
       0,
       true,
-      "failedHigherLevelCheck",
+      FailedHigherLevelCheck,
     witnessResolved(DispelMagicOngoingSpellEnding),
   ),
   }
@@ -152,7 +155,7 @@ module battleRuntimeDispelMagicOngoingSpellEndingMbt {
       0,
       0,
       false,
-      "succeededHigherLevelCheck",
+      SucceededHigherLevelCheck,
     witnessResolved(DispelMagicOngoingSpellEnding),
   ),
   }
@@ -173,7 +176,7 @@ module battleRuntimeDispelMagicOngoingSpellEndingMbt {
       0,
       0,
       false,
-      "upcastAutoEnded",
+      UpcastAutoEnded,
     witnessResolved(DispelMagicOngoingSpellEnding),
   ),
   }
@@ -194,7 +197,7 @@ module battleRuntimeDispelMagicOngoingSpellEndingMbt {
       0,
       0,
       true,
-      "antimagicAuraUnaffected",
+      AntimagicAuraUnaffected,
     witnessResolved(DispelMagicOngoingSpellEnding),
   ),
   }
@@ -211,7 +214,7 @@ module battleRuntimeDispelMagicOngoingSpellEndingMbt {
       qHigherLevelCheckHoleCount,
       qHigherLevelCheckDc,
       qHighLevelCasterConcentrating,
-      qScenarioResult,
+      qScenarioOutcome,
     qState.protocol,),
   }
 

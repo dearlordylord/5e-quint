@@ -40,6 +40,7 @@ import {
   numberFromQuintInt,
   quintRecordField,
   quintStateRecord,
+  quintVariantTag,
   run,
   stateCheck,
 } from "./battle-runtime-mbt-driver-kit.ts";
@@ -132,7 +133,24 @@ const LAST_RESULTS = [
   "concentrationBroken",
 ] as const;
 type LastResult = (typeof LAST_RESULTS)[number];
-const LAST_RESULT_SET: ReadonlySet<string> = new Set(LAST_RESULTS);
+const LAST_RESULT_BY_SCENARIO_OUTCOME_TAG = {
+  Init: "init",
+  NeedsBaneSave: "needsBaneSave",
+  BaneFailedTarget: "baneFailedTarget",
+  BlessTarget: "blessTarget",
+  NeedsGuidanceSkill: "needsGuidanceSkill",
+  GuidanceStealth: "guidanceStealth",
+  PassWithoutTraceStealth: "passWithoutTraceStealth",
+  NeedsEnhanceAbility: "needsEnhanceAbility",
+  EnhanceDex: "enhanceDex",
+  NeedsEnhanceTargetAbilities: "needsEnhanceTargetAbilities",
+  EnhancePerTarget: "enhancePerTarget",
+  EnthrallPerception: "enthrallPerception",
+  NeedsThaumaturgyCount: "needsThaumaturgyCount",
+  ThaumaturgyBoomingVoice: "thaumaturgyBoomingVoice",
+  ThaumaturgyCancelled: "thaumaturgyCancelled",
+  ConcentrationBroken: "concentrationBroken",
+} as const satisfies Readonly<Record<string, LastResult>>;
 
 type RollModifierActiveEffectsProjection = {
   readonly actionAvailable: boolean;
@@ -942,7 +960,7 @@ function normalizeRollModifierActiveEffectsQuintState(
     noInvalidReason: "",
     decodeHole: rollModifierHole,
   });
-  const lastResultValue = lastResultField(state, "qScenarioResult");
+  const lastResultValue = lastResultField(state, "qScenarioOutcome");
   assertWitnessProtocolConsistentWithScenario({
     label: "Roll modifier active effects",
     scenarioResult: lastResultValue,
@@ -1053,10 +1071,10 @@ function lastResultField(
   state: Record<string, unknown>,
   fieldName: string,
 ): LastResult {
-  const raw = state[fieldName];
-  if (typeof raw === "string" && LAST_RESULT_SET.has(raw)) {
-    // LAST_RESULT_SET is derived from LAST_RESULTS, so membership proves the local harness union.
-    return raw as LastResult;
+  const tag = quintVariantTag(state[fieldName], fieldName);
+  const result = LAST_RESULT_BY_SCENARIO_OUTCOME_TAG[tag];
+  if (result !== undefined) {
+    return result;
   }
-  throw new Error(`Unknown ${fieldName}: ${String(raw)}.`);
+  throw new Error(`Unknown ${fieldName} tag: ${tag}.`);
 }

@@ -5,6 +5,8 @@ module battleRuntimeLevel1SpatialWitnessSelectedIdentityMbt {
 
   type WitnessHole = | WitnessProtocolHole
 
+  type Level1SpatialWitnessSelectedIdentityScenarioOutcome = | Init | DancingLightsMovableDimLight | FaerieFireOutlineAdvantageInvisibleDimLight | FeatherFallReactionMitigationLanding | FogCloudAreaIdentityObscurementStrongWindCleanup | GreaseCastGroundHazardSavingThrows | GreaseMovementAndTurnTriggers | JumpMovementReplacementLandingWitness | LightObjectEmitterProjectionReplacementCleanup | ProduceFlameHeldLightProjectionHurlCleanup | ThunderwaveSavePushObjectsBoom
+
   type Level1SpatialWitnessSelectedIdentityWitnessState = {
     qLightEmitterCount: int,
     qDimLightEmitterCount: int,
@@ -95,7 +97,7 @@ module battleRuntimeLevel1SpatialWitnessSelectedIdentityMbt {
     qCasterConcentrating: bool,
     qMagicActionAvailable: bool,
     qBonusActionAvailable: bool,
-    qScenarioResult: str,
+    qScenarioOutcome: Level1SpatialWitnessSelectedIdentityScenarioOutcome,
     protocol: WitnessProtocol[WitnessHole],
   }
 
@@ -190,14 +192,14 @@ module battleRuntimeLevel1SpatialWitnessSelectedIdentityMbt {
   pure def qCasterConcentrating: bool = qState.qCasterConcentrating
   pure def qMagicActionAvailable: bool = qState.qMagicActionAvailable
   pure def qBonusActionAvailable: bool = qState.qBonusActionAvailable
-  pure def qLastResult: str = qState.qScenarioResult
+  pure def qLastResult: Level1SpatialWitnessSelectedIdentityScenarioOutcome = qState.qScenarioOutcome
 
   pure def level1SpatialWitnessSelectedIdentityProtocolForProjection(
     holes: Set[WitnessHole],
-    scenarioResult: str,
+    scenarioResult: Level1SpatialWitnessSelectedIdentityScenarioOutcome,
     _scenarioInvalidReason: str,
   ): WitnessProtocol[WitnessHole] =
-    if (scenarioResult == "init") witnessInit(WitnessProtocolHole)
+    if (scenarioResult == Init) witnessInit(WitnessProtocolHole)
     else if (holes != Set()) witnessNeedsHoles(holes)
     else witnessResolved(WitnessProtocolHole)
 
@@ -305,7 +307,7 @@ module battleRuntimeLevel1SpatialWitnessSelectedIdentityMbt {
     casterConcentrating: bool,
     magicActionAvailable: bool,
     bonusActionAvailable: bool,
-    lastResult: str,
+    lastResult: Level1SpatialWitnessSelectedIdentityScenarioOutcome,
   ): bool = all {
     qState' = {
       qLightEmitterCount: lightEmitterCount,
@@ -397,7 +399,7 @@ module battleRuntimeLevel1SpatialWitnessSelectedIdentityMbt {
       qCasterConcentrating: casterConcentrating,
       qMagicActionAvailable: magicActionAvailable,
       qBonusActionAvailable: bonusActionAvailable,
-      qScenarioResult: lastResult,
+      qScenarioOutcome: lastResult,
       protocol: level1SpatialWitnessSelectedIdentityProtocolForProjection(Set(), lastResult, ""),
     },
   }
@@ -416,11 +418,11 @@ module battleRuntimeLevel1SpatialWitnessSelectedIdentityMbt {
       0, false, false, false, 0, 0, 0, 0, false, false, false, false,
       "darkness", "heavilyObscured", "lightlyObscured", "darkness",
       0, false, true, true,
-      "init",
+      Init,
     )
 
   action doDancingLightsMovableDimLight = all {
-    qLastResult == "init",
+    qLastResult == Init,
     recordProjection(
       2, 2, 2,
       false, 0, 0, "darkness", "darkness", false, false,
@@ -434,12 +436,12 @@ module battleRuntimeLevel1SpatialWitnessSelectedIdentityMbt {
       0, false, false, false, 0, 0, 0, 0, false, false, false, false,
       "dimLight", "lightlyObscured", "unobscured", "darkness",
       0, true, false, false,
-      "dancingLightsMovableDimLight",
+      DancingLightsMovableDimLight,
     ),
   }
 
   action doFaerieFireOutlineAdvantageInvisibleDimLight = all {
-    qLastResult == "init",
+    qLastResult == Init,
     recordProjection(
       2, 2, 0,
       false, 0, 0, "darkness", "darkness", false, false,
@@ -453,12 +455,12 @@ module battleRuntimeLevel1SpatialWitnessSelectedIdentityMbt {
       0, false, false, false, 0, 0, 0, 0, false, false, false, false,
       "dimLight", "lightlyObscured", "unobscured", "darkness",
       0, true, true, true,
-      "faerieFireOutlineAdvantageInvisibleDimLight",
+      FaerieFireOutlineAdvantageInvisibleDimLight,
     ),
   }
 
   action doFeatherFallReactionMitigationLanding = all {
-    qLastResult == "init",
+    qLastResult == Init,
     recordProjection(
       0, 0, 0,
       false, 0, 0, "darkness", "darkness", false, false,
@@ -472,12 +474,12 @@ module battleRuntimeLevel1SpatialWitnessSelectedIdentityMbt {
       0, false, false, false, 0, 0, 0, 0, false, false, false, false,
       "darkness", "heavilyObscured", "lightlyObscured", "darkness",
       0, false, true, true,
-      "featherFallReactionMitigationLanding",
+      FeatherFallReactionMitigationLanding,
     ),
   }
 
   action doFogCloudAreaIdentityObscurementStrongWindCleanup = all {
-    qLastResult == "init",
+    qLastResult == Init,
     recordProjection(
       0, 0, 0,
       false, 0, 0, "darkness", "darkness", false, false,
@@ -492,12 +494,12 @@ module battleRuntimeLevel1SpatialWitnessSelectedIdentityMbt {
       0, false, false, false, 0, 0, 0, 0, false, false, false, false,
       "darkness", "heavilyObscured", "lightlyObscured", "darkness",
       0, false, false, true,
-      "fogCloudAreaIdentityObscurementStrongWindCleanup",
+      FogCloudAreaIdentityObscurementStrongWindCleanup,
     ),
   }
 
   action doGreaseCastGroundHazardSavingThrows = all {
-    qLastResult == "init",
+    qLastResult == Init,
     recordProjection(
       0, 0, 0,
       false, 0, 0, "darkness", "darkness", false, false,
@@ -511,12 +513,12 @@ module battleRuntimeLevel1SpatialWitnessSelectedIdentityMbt {
       0, false, false, false, 0, 0, 0, 0, false, false, false, false,
       "darkness", "heavilyObscured", "lightlyObscured", "darkness",
       0, false, false, true,
-      "greaseCastGroundHazardSavingThrows",
+      GreaseCastGroundHazardSavingThrows,
     ),
   }
 
   action doGreaseMovementAndTurnTriggers = all {
-    qLastResult == "init",
+    qLastResult == Init,
     recordProjection(
       0, 0, 0,
       false, 0, 0, "darkness", "darkness", false, false,
@@ -532,12 +534,12 @@ module battleRuntimeLevel1SpatialWitnessSelectedIdentityMbt {
       0, false, false, false, 0, 0, 0, 0, false, false, false, false,
       "darkness", "heavilyObscured", "lightlyObscured", "darkness",
       0, false, true, true,
-      "greaseMovementAndTurnTriggers",
+      GreaseMovementAndTurnTriggers,
     ),
   }
 
   action doJumpMovementReplacementLandingWitness = all {
-    qLastResult == "init",
+    qLastResult == Init,
     recordProjection(
       0, 0, 0,
       false, 0, 0, "darkness", "darkness", false, false,
@@ -551,12 +553,12 @@ module battleRuntimeLevel1SpatialWitnessSelectedIdentityMbt {
       0, false, false, false, 0, 0, 0, 0, false, false, false, false,
       "darkness", "heavilyObscured", "lightlyObscured", "darkness",
       0, false, true, true,
-      "jumpMovementReplacementLandingWitness",
+      JumpMovementReplacementLandingWitness,
     ),
   }
 
   action doLightObjectEmitterProjectionReplacementCleanup = all {
-    qLastResult == "init",
+    qLastResult == Init,
     recordProjection(
       1, 0, 0,
       true, 3, qLightOneHourDurationTicks, "brightLight", "darkness", true, true,
@@ -570,12 +572,12 @@ module battleRuntimeLevel1SpatialWitnessSelectedIdentityMbt {
       0, false, false, false, 0, 0, 0, 0, false, false, false, false,
       "dimLight", "lightlyObscured", "unobscured", "darkness",
       0, false, false, true,
-      "lightObjectEmitterProjectionReplacementCleanup",
+      LightObjectEmitterProjectionReplacementCleanup,
     ),
   }
 
   action doProduceFlameHeldLightProjectionHurlCleanup = all {
-    qLastResult == "init",
+    qLastResult == Init,
     recordProjection(
       1, 0, 0,
       false, 0, 0, "darkness", "darkness", false, false,
@@ -590,12 +592,12 @@ module battleRuntimeLevel1SpatialWitnessSelectedIdentityMbt {
       0, false, false, false, 0, 0, 0, 0, false, false, false, false,
       "dimLight", "lightlyObscured", "unobscured", "darkness",
       0, false, true, false,
-      "produceFlameHeldLightProjectionHurlCleanup",
+      ProduceFlameHeldLightProjectionHurlCleanup,
     ),
   }
 
   action doThunderwaveSavePushObjectsBoom = all {
-    qLastResult == "init",
+    qLastResult == Init,
     recordProjection(
       0, 0, 0,
       false, 0, 0, "darkness", "darkness", false, false,
@@ -612,7 +614,7 @@ module battleRuntimeLevel1SpatialWitnessSelectedIdentityMbt {
       true, true, true, true,
       "darkness", "heavilyObscured", "lightlyObscured", "darkness",
       0, false, false, true,
-      "thunderwaveSavePushObjectsBoom",
+      ThunderwaveSavePushObjectsBoom,
     ),
   }
 

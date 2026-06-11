@@ -34,6 +34,7 @@ import {
   numberFromQuintInt,
   quintRecordField,
   quintStateRecord,
+  quintVariantTag,
   run,
   stateCheck,
 } from "./battle-runtime-mbt-driver-kit.ts";
@@ -71,6 +72,15 @@ type DragonsBreathLastResult =
   | "cast"
   | "targetTurn"
   | "concentrationBroken";
+const DRAGONS_BREATH_INITIAL_EFFECT_SCENARIO_OUTCOME_BY_TAG: Readonly<
+  Record<string, DragonsBreathLastResult>
+> = {
+  Init: "init",
+  Cast: "cast",
+  TargetTurn: "targetTurn",
+  ConcentrationBroken: "concentrationBroken",
+} as const;
+
 
 type DragonsBreathInitialEffectState = {
   readonly turnRole: DragonsBreathTurnRole;
@@ -429,7 +439,7 @@ function normalizeDragonsBreathQuintState(
   raw: unknown,
 ): DragonsBreathInitialEffectState {
   const state = quintRecordField(quintStateRecord(raw), "qState");
-  const scenarioResult = dragonsBreathLastResult(state["qScenarioResult"]);
+  const scenarioResult = dragonsBreathLastResult(state["qScenarioOutcome"]);
   const protocol = decodeWitnessProtocolState({
     state,
     protocolField: "protocol",
@@ -517,13 +527,12 @@ function dragonsBreathDamageTypeOrNone(raw: unknown): DragonsBreathDamageType {
 }
 
 function dragonsBreathLastResult(raw: unknown): DragonsBreathLastResult {
-  if (
-    raw === "init" ||
-    raw === "cast" ||
-    raw === "targetTurn" ||
-    raw === "concentrationBroken"
-  ) {
-    return raw;
+  const tag = quintVariantTag(raw, "qScenarioOutcome");
+  const value = DRAGONS_BREATH_INITIAL_EFFECT_SCENARIO_OUTCOME_BY_TAG[tag];
+  if (value !== undefined) {
+    return value;
   }
-  throw new Error(`Unknown Dragon's Breath result: ${String(raw)}.`);
+  throw new Error(
+    `Expected Quint scenario outcome variant qScenarioOutcome, got ${tag}.`,
+  );
 }

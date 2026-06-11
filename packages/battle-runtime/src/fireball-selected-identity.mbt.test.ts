@@ -17,6 +17,11 @@ import {
 import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
 import { spellSlotInvocationRef } from "./unit-profile-admission-test-support.ts";
 
+const FIREBALL_SELECTED_IDENTITY_SCENARIO_OUTCOME_BY_TAG = {
+  Init: "init",
+  FireballSaveGatedDamage: "fireballSaveGatedDamage",
+} as const satisfies Readonly<Record<string, string>>;
+
 defineSelectedIdentityWitness({
   describeLabel: "Fireball selected identity MBT",
   taskId: "B23-FIREBALL-IDENTITY-WITNESS",
@@ -27,8 +32,11 @@ defineSelectedIdentityWitness({
   quintStateField: "qState",
   quintStateFieldPrefix: "q",
   witnessProtocolField: "protocol",
-  quintFieldNames: { lastResult: "qScenarioResult" },
-  projectionSchema: { lastResult: "str" },
+  quintFieldNames: { lastResult: "qScenarioOutcome" },
+  quintVariantFieldTags: {
+    lastResult: FIREBALL_SELECTED_IDENTITY_SCENARIO_OUTCOME_BY_TAG,
+  },
+  projectionSchema: { lastResult: "variant" },
   initialProjection: { lastResult: "init" },
   units: [
     {

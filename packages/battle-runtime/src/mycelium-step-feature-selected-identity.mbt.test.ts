@@ -73,11 +73,14 @@ defineSelectedIdentityWitness({
   quintStateField: "qState",
   quintStateFieldPrefix: "q",
   witnessProtocolField: "protocol",
-  quintFieldNames: { lastResult: "qScenarioResult" },
+  quintFieldNames: { lastResult: "qScenarioOutcome" },
+  quintVariantFieldTags: {
+    lastResult: { Init: "init", Discovered: "discovered", Dashed: "dashed" },
+  },
   projectionSchema: {
     bonusActionAvailable: "bool",
     dashBonusFeet: "int",
-    lastResult: "str",
+    lastResult: "variant",
   },
   initialProjection: projectBattleState(myceliumStepBattle(), "init"),
   units: [

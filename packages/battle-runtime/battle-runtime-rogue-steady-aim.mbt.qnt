@@ -18,6 +18,9 @@ module battleRuntimeRogueSteadyAimMbt {
   //   Movement.
   type WitnessHole = | WitnessProtocolHole
 
+  type RogueSteadyAimScenarioOutcome = | Init | Resolved | Invalid
+
+
   type RogueSteadyAimWitnessState = {
     qBonusActionAvailable: bool,
     qActorSpeedFeet: int,
@@ -25,7 +28,7 @@ module battleRuntimeRogueSteadyAimMbt {
     qSpeedZeroActive: bool,
     qAttackRollAdvantage: bool,
     qMovedThisTurn: bool,
-    qScenarioResult: str,
+    qScenarioOutcome: RogueSteadyAimScenarioOutcome,
     protocol: WitnessProtocol[WitnessHole],
   }
 
@@ -37,17 +40,17 @@ module battleRuntimeRogueSteadyAimMbt {
   pure def qSpeedZeroActive: bool = qState.qSpeedZeroActive
   pure def qAttackRollAdvantage: bool = qState.qAttackRollAdvantage
   pure def qMovedThisTurn: bool = qState.qMovedThisTurn
-  pure def qLastResult: str = qState.qScenarioResult
+  pure def qLastResult: RogueSteadyAimScenarioOutcome = qState.qScenarioOutcome
 
   pure val normalSpeedFeet: int = 30
   pure val zeroSpeedFeet: int = 0
 
   pure def witnessProtocolForProjection(
     holes: Set[WitnessHole],
-    scenarioResult: str,
+    scenarioResult: RogueSteadyAimScenarioOutcome,
     scenarioInvalidReason: str,
   ): WitnessProtocol[WitnessHole] =
-    if (scenarioResult == "init") witnessInit(WitnessProtocolHole)
+    if (scenarioResult == Init) witnessInit(WitnessProtocolHole)
     else if (scenarioInvalidReason == "invalidFill") witnessInvalid(WitnessProtocolHole, WInvalidFill)
     else if (scenarioInvalidReason == "staleSubject") witnessInvalid(WitnessProtocolHole, WStaleSubject)
     else if (holes != Set()) witnessNeedsHoles(holes)
@@ -60,7 +63,7 @@ module battleRuntimeRogueSteadyAimMbt {
     speedZeroActive: bool,
     attackRollAdvantage: bool,
     movedThisTurn: bool,
-    lastResult: str,
+    lastResult: RogueSteadyAimScenarioOutcome,
     lastInvalidReason: str,
   ): bool = all {
     qState' = {
@@ -70,13 +73,13 @@ module battleRuntimeRogueSteadyAimMbt {
       qSpeedZeroActive: speedZeroActive,
       qAttackRollAdvantage: attackRollAdvantage,
       qMovedThisTurn: movedThisTurn,
-      qScenarioResult: lastResult,
+      qScenarioOutcome: lastResult,
       protocol: witnessProtocolForProjection(Set(), lastResult, lastInvalidReason),
     },
   }
 
   action init = all {
-    recordProjection(true, normalSpeedFeet, false, false, false, false, "init", ""),
+    recordProjection(true, normalSpeedFeet, false, false, false, false, Init, ""),
   }
 
   action doSteadyAim = all {
@@ -92,7 +95,7 @@ module battleRuntimeRogueSteadyAimMbt {
       true,
       true,
       false,
-      "resolved",
+      Resolved,
       "",
     ),
   }
@@ -110,7 +113,7 @@ module battleRuntimeRogueSteadyAimMbt {
       false,
       false,
       true,
-      "invalid",
+      Invalid,
       "staleSubject",
     ),
   }
@@ -126,7 +129,7 @@ module battleRuntimeRogueSteadyAimMbt {
       qSpeedZeroActive,
       qAttackRollAdvantage,
       qMovedThisTurn,
-      "invalid",
+      Invalid,
       "staleSubject",
     ),
   }
@@ -141,14 +144,14 @@ module battleRuntimeRogueSteadyAimMbt {
       true,
       false,
       qMovedThisTurn,
-      "resolved",
+      Resolved,
       "",
     ),
   }
 
   action doEndTurnCleanup = all {
     qSpeedZeroActive,
-    recordProjection(true, normalSpeedFeet, false, false, false, false, "resolved", "")
+    recordProjection(true, normalSpeedFeet, false, false, false, false, Resolved, "")
   }
 
   action step = any {

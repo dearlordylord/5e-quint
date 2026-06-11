@@ -5,13 +5,16 @@ module battleRuntimeDispelMagicSelectedIdentityMbt {
 
   type WitnessHole = | DispelMagicSelectedIdentity
 
+  type DispelMagicSelectedIdentityScenarioOutcome = | Init | ObjectSpellLightEnded | SelectedMagicalEffectEnded | OutOfRangeObjectRejected
+
+
   type WitnessState = {
     qMagicActionAvailable: bool,
     qThirdLevelSlotCommitted: bool,
     qSpellLightEmitterCount: int,
     qSelectedActiveEffectPresent: bool,
     qRetainedActiveEffectPresent: bool,
-    qScenarioResult: str,
+    qScenarioOutcome: DispelMagicSelectedIdentityScenarioOutcome,
     protocol: WitnessProtocol[WitnessHole],
   }
 
@@ -22,7 +25,7 @@ module battleRuntimeDispelMagicSelectedIdentityMbt {
   pure def qSpellLightEmitterCount: int = qState.qSpellLightEmitterCount
   pure def qSelectedActiveEffectPresent: bool = qState.qSelectedActiveEffectPresent
   pure def qRetainedActiveEffectPresent: bool = qState.qRetainedActiveEffectPresent
-  pure def qScenarioResult: str = qState.qScenarioResult
+  pure def qScenarioOutcome: DispelMagicSelectedIdentityScenarioOutcome = qState.qScenarioOutcome
 
 
   action recordDispelMagicState(
@@ -31,7 +34,7 @@ module battleRuntimeDispelMagicSelectedIdentityMbt {
     spellLightEmitterCount: int,
     selectedActiveEffectPresent: bool,
     retainedActiveEffectPresent: bool,
-    scenarioResult: str,
+    scenarioOutcome: DispelMagicSelectedIdentityScenarioOutcome,
     protocol: WitnessProtocol[WitnessHole],
   ): bool = all {
     qState' = {
@@ -40,7 +43,7 @@ module battleRuntimeDispelMagicSelectedIdentityMbt {
       qSpellLightEmitterCount: spellLightEmitterCount,
       qSelectedActiveEffectPresent: selectedActiveEffectPresent,
       qRetainedActiveEffectPresent: retainedActiveEffectPresent,
-      qScenarioResult: scenarioResult,
+      qScenarioOutcome: scenarioOutcome,
       protocol: protocol,
     },
   }
@@ -52,7 +55,7 @@ module battleRuntimeDispelMagicSelectedIdentityMbt {
       1,
       true,
       true,
-      "init",
+      Init,
     witnessInit(DispelMagicSelectedIdentity),
   ),
   }
@@ -65,7 +68,7 @@ module battleRuntimeDispelMagicSelectedIdentityMbt {
       0,
       false,
       false,
-      "objectSpellLightEnded",
+      ObjectSpellLightEnded,
     witnessResolved(DispelMagicSelectedIdentity),
   ),
   }
@@ -78,7 +81,7 @@ module battleRuntimeDispelMagicSelectedIdentityMbt {
       0,
       false,
       true,
-      "selectedMagicalEffectEnded",
+      SelectedMagicalEffectEnded,
     witnessResolved(DispelMagicSelectedIdentity),
   ),
   }
@@ -91,7 +94,7 @@ module battleRuntimeDispelMagicSelectedIdentityMbt {
       1,
       false,
       false,
-      "outOfRangeObjectRejected",
+      OutOfRangeObjectRejected,
     witnessInvalid(DispelMagicSelectedIdentity, WInvalidFill),
   ),
   }

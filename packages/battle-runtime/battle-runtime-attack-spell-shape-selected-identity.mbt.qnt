@@ -5,13 +5,16 @@ module battleRuntimeAttackSpellShapeSelectedIdentityMbt {
 
   type WitnessHole = | AttackSpellShape
 
+  type AttackSpellShapeSelectedIdentityScenarioOutcome = | Init | FireBolt | ChillTouch | GuidingBolt | InflictWoundsFailure | InflictWoundsSuccess | ShockingGrasp
+
+
   type WitnessState = {
     qTargetHp: int,
     qSpellSlotSpentThisTurn: bool,
     qLevel1SlotsRemaining: int,
     qActiveEffectKind: str,
     qActiveEffectCount: int,
-    qScenarioResult: str,
+    qScenarioOutcome: AttackSpellShapeSelectedIdentityScenarioOutcome,
     protocol: WitnessProtocol[WitnessHole],
   }
 
@@ -22,7 +25,7 @@ module battleRuntimeAttackSpellShapeSelectedIdentityMbt {
   pure def qLevel1SlotsRemaining: int = qState.qLevel1SlotsRemaining
   pure def qActiveEffectKind: str = qState.qActiveEffectKind
   pure def qActiveEffectCount: int = qState.qActiveEffectCount
-  pure def qScenarioResult: str = qState.qScenarioResult
+  pure def qScenarioOutcome: AttackSpellShapeSelectedIdentityScenarioOutcome = qState.qScenarioOutcome
 
 
   action recordProjection(
@@ -31,7 +34,7 @@ module battleRuntimeAttackSpellShapeSelectedIdentityMbt {
     level1SlotsRemaining: int,
     activeEffectKind: str,
     activeEffectCount: int,
-    scenarioResult: str,
+    scenarioOutcome: AttackSpellShapeSelectedIdentityScenarioOutcome,
     protocol: WitnessProtocol[WitnessHole],
   ): bool = all {
     qState' = {
@@ -40,53 +43,53 @@ module battleRuntimeAttackSpellShapeSelectedIdentityMbt {
       qLevel1SlotsRemaining: level1SlotsRemaining,
       qActiveEffectKind: activeEffectKind,
       qActiveEffectCount: activeEffectCount,
-      qScenarioResult: scenarioResult,
+      qScenarioOutcome: scenarioOutcome,
       protocol: protocol,
     },
   }
 
-  action init = recordProjection(12, false, 2, "none", 0, "init",
+  action init = recordProjection(12, false, 2, "none", 0, Init,
     witnessInit(AttackSpellShape),
   )
 
   action doFireBoltHit = all {
-    qScenarioResult == "init",
-    recordProjection(8, false, 2, "none", 0, "fireBolt",
+    qScenarioOutcome == Init,
+    recordProjection(8, false, 2, "none", 0, FireBolt,
     witnessResolved(AttackSpellShape),
   ),
   }
 
   action doChillTouchHitPointRegainPrevention = all {
-    qScenarioResult == "init",
-    recordProjection(8, false, 2, "hitPointRegainPrevented", 1, "chillTouch",
+    qScenarioOutcome == Init,
+    recordProjection(8, false, 2, "hitPointRegainPrevented", 1, ChillTouch,
     witnessResolved(AttackSpellShape),
   ),
   }
 
   action doGuidingBoltNextAttackAdvantage = all {
-    qScenarioResult == "init",
-    recordProjection(8, true, 1, "nextAttackRollAgainstSelf", 1, "guidingBolt",
+    qScenarioOutcome == Init,
+    recordProjection(8, true, 1, "nextAttackRollAgainstSelf", 1, GuidingBolt,
     witnessResolved(AttackSpellShape),
   ),
   }
 
   action doInflictWoundsFailedSave = all {
-    qScenarioResult == "init",
-    recordProjection(6, true, 1, "none", 0, "inflictWoundsFailure",
+    qScenarioOutcome == Init,
+    recordProjection(6, true, 1, "none", 0, InflictWoundsFailure,
     witnessResolved(AttackSpellShape),
   ),
   }
 
   action doInflictWoundsSuccessfulSave = all {
-    qScenarioResult == "init",
-    recordProjection(9, true, 1, "none", 0, "inflictWoundsSuccess",
+    qScenarioOutcome == Init,
+    recordProjection(9, true, 1, "none", 0, InflictWoundsSuccess,
     witnessResolved(AttackSpellShape),
   ),
   }
 
   action doShockingGraspOpportunityAttackDenied = all {
-    qScenarioResult == "init",
-    recordProjection(8, false, 2, "opportunityAttackDenied", 1, "shockingGrasp",
+    qScenarioOutcome == Init,
+    recordProjection(8, false, 2, "opportunityAttackDenied", 1, ShockingGrasp,
     witnessResolved(AttackSpellShape),
   ),
   }

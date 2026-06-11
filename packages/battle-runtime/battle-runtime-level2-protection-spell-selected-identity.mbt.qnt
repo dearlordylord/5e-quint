@@ -5,87 +5,89 @@ module battleRuntimeLevel2ProtectionSpellSelectedIdentityMbt {
 
   type WitnessHole = | WitnessProtocolHole
 
+  type Level2ProtectionSpellSelectedIdentityScenarioOutcome = | Init | AidHitPointBuff | BarkskinArmorClassFloor | BlurAttackRollDefense | ContinualFlameObjectLight | EnhanceAbilityRollModifier | EnhanceAbilityHigherSlotPerTarget | EnlargeReduceSizeIncrease | MagicWeaponEnhancement | MirrorImageHitInterception | PassWithoutTraceStealthModifier | WardingBondLinkedEffect
+
   type Level2ProtectionSpellSelectedIdentityWitnessState = {
-    qScenarioResult: str,
+    qScenarioOutcome: Level2ProtectionSpellSelectedIdentityScenarioOutcome,
     protocol: WitnessProtocol[WitnessHole],
   }
 
   var qState: Level2ProtectionSpellSelectedIdentityWitnessState
 
-  pure def qLastResult: str = qState.qScenarioResult
+  pure def qLastResult: Level2ProtectionSpellSelectedIdentityScenarioOutcome = qState.qScenarioOutcome
 
   pure def level2ProtectionSpellSelectedIdentityProtocolForProjection(
     holes: Set[WitnessHole],
-    scenarioResult: str,
+    scenarioResult: Level2ProtectionSpellSelectedIdentityScenarioOutcome,
     _scenarioInvalidReason: str,
   ): WitnessProtocol[WitnessHole] =
-    if (scenarioResult == "init") witnessInit(WitnessProtocolHole)
+    if (scenarioResult == Init) witnessInit(WitnessProtocolHole)
     else if (holes != Set()) witnessNeedsHoles(holes)
     else witnessResolved(WitnessProtocolHole)
 
 
-  action recordProjection(lastResult: str): bool = all {
+  action recordProjection(lastResult: Level2ProtectionSpellSelectedIdentityScenarioOutcome): bool = all {
     qState' = {
-      qScenarioResult: lastResult,
+      qScenarioOutcome: lastResult,
       protocol: level2ProtectionSpellSelectedIdentityProtocolForProjection(Set(), lastResult, ""),
     },
   }
 
-  action init = recordProjection("init")
+  action init = recordProjection(Init)
 
   action doDiscoverAidHitPointBuff = all {
-    qLastResult == "init",
-    recordProjection("aidHitPointBuff"),
+    qLastResult == Init,
+    recordProjection(AidHitPointBuff),
   }
 
   action doDiscoverBarkskinArmorClassFloor = all {
-    qLastResult == "init",
-    recordProjection("barkskinArmorClassFloor"),
+    qLastResult == Init,
+    recordProjection(BarkskinArmorClassFloor),
   }
 
   action doDiscoverBlurAttackRollDefense = all {
-    qLastResult == "init",
-    recordProjection("blurAttackRollDefense"),
+    qLastResult == Init,
+    recordProjection(BlurAttackRollDefense),
   }
 
   action doDiscoverContinualFlameObjectLight = all {
-    qLastResult == "init",
-    recordProjection("continualFlameObjectLight"),
+    qLastResult == Init,
+    recordProjection(ContinualFlameObjectLight),
   }
 
   action doDiscoverEnhanceAbilityRollModifier = all {
-    qLastResult == "init",
-    recordProjection("enhanceAbilityRollModifier"),
+    qLastResult == Init,
+    recordProjection(EnhanceAbilityRollModifier),
   }
 
   action doResolveEnhanceAbilityHigherSlotPerTarget = all {
-    qLastResult == "init",
-    recordProjection("enhanceAbilityHigherSlotPerTarget"),
+    qLastResult == Init,
+    recordProjection(EnhanceAbilityHigherSlotPerTarget),
   }
 
   action doDiscoverEnlargeReduceSizeIncrease = all {
-    qLastResult == "init",
-    recordProjection("enlargeReduceSizeIncrease"),
+    qLastResult == Init,
+    recordProjection(EnlargeReduceSizeIncrease),
   }
 
   action doDiscoverMagicWeaponEnhancement = all {
-    qLastResult == "init",
-    recordProjection("magicWeaponEnhancement"),
+    qLastResult == Init,
+    recordProjection(MagicWeaponEnhancement),
   }
 
   action doDiscoverMirrorImageHitInterception = all {
-    qLastResult == "init",
-    recordProjection("mirrorImageHitInterception"),
+    qLastResult == Init,
+    recordProjection(MirrorImageHitInterception),
   }
 
   action doDiscoverPassWithoutTraceStealthModifier = all {
-    qLastResult == "init",
-    recordProjection("passWithoutTraceStealthModifier"),
+    qLastResult == Init,
+    recordProjection(PassWithoutTraceStealthModifier),
   }
 
   action doDiscoverWardingBondLinkedEffect = all {
-    qLastResult == "init",
-    recordProjection("wardingBondLinkedEffect"),
+    qLastResult == Init,
+    recordProjection(WardingBondLinkedEffect),
   }
 
   action step = any {

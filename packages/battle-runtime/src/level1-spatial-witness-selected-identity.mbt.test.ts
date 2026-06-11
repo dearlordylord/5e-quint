@@ -792,6 +792,30 @@ const selectedUnitIdentityReplays = [
   },
 ] as const satisfies ReadonlyArray<SelectedUnitIdentityReplay>;
 
+const LEVEL1_SPATIAL_WITNESS_SELECTED_IDENTITY_SCENARIO_OUTCOME_BY_TAG = {
+  Init: "init",
+  DancingLightsMovableDimLight: "dancingLightsMovableDimLight",
+  FaerieFireOutlineAdvantageInvisibleDimLight: "faerieFireOutlineAdvantageInvisibleDimLight",
+  FeatherFallReactionMitigationLanding: "featherFallReactionMitigationLanding",
+  FogCloudAreaIdentityObscurementStrongWindCleanup: "fogCloudAreaIdentityObscurementStrongWindCleanup",
+  GreaseCastGroundHazardSavingThrows: "greaseCastGroundHazardSavingThrows",
+  GreaseMovementAndTurnTriggers: "greaseMovementAndTurnTriggers",
+  JumpMovementReplacementLandingWitness: "jumpMovementReplacementLandingWitness",
+  LightObjectEmitterProjectionReplacementCleanup: "lightObjectEmitterProjectionReplacementCleanup",
+  ProduceFlameHeldLightProjectionHurlCleanup: "produceFlameHeldLightProjectionHurlCleanup",
+  ThunderwaveSavePushObjectsBoom: "thunderwaveSavePushObjectsBoom",
+} as const satisfies Readonly<Record<string, | "init"
+    | "dancingLightsMovableDimLight"
+    | "faerieFireOutlineAdvantageInvisibleDimLight"
+    | "featherFallReactionMitigationLanding"
+    | "fogCloudAreaIdentityObscurementStrongWindCleanup"
+    | "greaseCastGroundHazardSavingThrows"
+    | "greaseMovementAndTurnTriggers"
+    | "jumpMovementReplacementLandingWitness"
+    | "lightObjectEmitterProjectionReplacementCleanup"
+    | "produceFlameHeldLightProjectionHurlCleanup"
+    | "thunderwaveSavePushObjectsBoom">>;
+
 defineSelectedIdentityWitness({
   describeLabel: "Level 1 spatial witness selected identity MBT",
   taskId: "level1-spatial-witness",
@@ -802,7 +826,10 @@ defineSelectedIdentityWitness({
   quintStateField: "qState",
   quintStateFieldPrefix: "q",
   witnessProtocolField: "protocol",
-  quintFieldNames: { lastResult: "qScenarioResult" },
+  quintFieldNames: { lastResult: "qScenarioOutcome" },
+  quintVariantFieldTags: {
+    lastResult: LEVEL1_SPATIAL_WITNESS_SELECTED_IDENTITY_SCENARIO_OUTCOME_BY_TAG,
+  },
   projectionSchema: {
     lightEmitterCount: "int",
     dimLightEmitterCount: "int",
@@ -893,7 +920,7 @@ defineSelectedIdentityWitness({
     casterConcentrating: "bool",
     magicActionAvailable: "bool",
     bonusActionAvailable: "bool",
-    lastResult: "str",
+    lastResult: "variant",
   },
   initialProjection: expectedProjection(),
   units: selectedUnitIdentityReplays.map((replay) => ({

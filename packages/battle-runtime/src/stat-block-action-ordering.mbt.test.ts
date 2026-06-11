@@ -15,12 +15,12 @@ import {
 import {
   MBT_TEST_TIMEOUT_MS,
   booleanField,
+  decodeWitnessProtocolState,
   defineDriver,
   focusedMbtMaxSteps,
   mbtSpecPath,
   mbtTraceCount,
   numberFromQuintInt,
-  quintSet,
   quintStateRecord,
   quintVariantTag,
   run,
@@ -773,12 +773,17 @@ function normalizeStatBlockActionOrderingQuintState(
   raw: unknown,
 ): StatBlockActionOrderingProjection {
   const state = quintStateRecord(raw);
+  const protocol = decodeWitnessProtocolState({
+    state,
+    protocolField: "qProtocol",
+    noInvalidReason: "",
+    decodeHole: statBlockActionOrderingHole,
+    compareHoles: (left, right) => left.localeCompare(right),
+  });
   return {
     stage: statBlockActionOrderingStage(state["qStage"]),
-    holes: quintSet(state["qHoles"], "qHoles")
-      .map(statBlockActionOrderingHole)
-      .sort(),
-    lastResult: statBlockActionOrderingResult(state["qLastResult"]),
+    holes: protocol.holes,
+    lastResult: protocol.lastResult,
     orderingError: statBlockActionOrderingError(state["qLastOrderingError"]),
     multiattackDispatchesAvailable: numberFromQuintInt(
       state["qMultiattackDispatchesAvailable"],
@@ -823,20 +828,6 @@ function statBlockActionOrderingHoleFromRuntime(
   if (hole.kind === "rolledDice") return "rolledDice";
   if (hole.kind === "statBlockRechargeRoll") return "statBlockRechargeRoll";
   throw new Error(`Unexpected Stat Block action ordering hole: ${hole.kind}`);
-}
-
-function statBlockActionOrderingResult(
-  raw: unknown,
-): StatBlockActionOrderingProjection["lastResult"] {
-  if (
-    raw === "init" ||
-    raw === "needsHoles" ||
-    raw === "resolved" ||
-    raw === "invalid"
-  ) {
-    return raw;
-  }
-  throw new Error(`Unknown Stat Block action ordering result: ${String(raw)}.`);
 }
 
 function statBlockActionOrderingError(
