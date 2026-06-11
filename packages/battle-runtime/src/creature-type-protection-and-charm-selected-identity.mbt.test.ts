@@ -371,6 +371,10 @@ defineSelectedIdentityWitness({
     import.meta.dirname,
     "battle-runtime-creature-type-protection-and-charm-selected-identity.mbt.qnt",
   ),
+  quintStateField: "qState",
+  quintStateFieldPrefix: "q",
+  witnessProtocolField: "protocol",
+  quintFieldNames: { lastResult: "qScenarioResult" },
   projectionSchema: {
     beastTargetAdmitted: "bool",
     humanoidTargetAdmitted: "bool",

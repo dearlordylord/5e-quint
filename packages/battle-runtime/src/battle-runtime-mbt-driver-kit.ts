@@ -374,6 +374,41 @@ function decodeTypedWitnessProtocolState<
   };
 }
 
+export function assertWitnessProtocolConsistentWithScenario(input: {
+  readonly label: string;
+  readonly scenarioResult: string;
+  readonly protocol: Pick<
+    MbtWitnessProtocolState<unknown, string>,
+    "holes" | "lastResult"
+  > & { readonly lastInvalidReason?: string };
+  readonly initScenarioResult?: string;
+  readonly invalidScenarioReasons?: Readonly<Record<string, string>>;
+}): void {
+  const initScenarioResult = input.initScenarioResult ?? "init";
+  const invalidReason = input.invalidScenarioReasons?.[input.scenarioResult];
+  const expected: MbtWitnessLastResult =
+    invalidReason !== undefined
+      ? "invalid"
+      : input.scenarioResult === initScenarioResult
+      ? "init"
+      : input.protocol.holes.length > 0
+        ? "needsHoles"
+        : "resolved";
+  if (input.protocol.lastResult !== expected) {
+    throw new Error(
+      `Expected ${input.label} witness protocol result ${expected} for scenario ${input.scenarioResult}, got ${input.protocol.lastResult}.`,
+    );
+  }
+  if (
+    invalidReason !== undefined &&
+    input.protocol.lastInvalidReason !== invalidReason
+  ) {
+    throw new Error(
+      `Expected ${input.label} witness invalid reason ${invalidReason} for scenario ${input.scenarioResult}, got ${String(input.protocol.lastInvalidReason)}.`,
+    );
+  }
+}
+
 function mbtWitnessLastResultFromVariant(
   raw: unknown,
   field: string,
@@ -1656,7 +1691,16 @@ function normalizeExtraAttackQuintState(
 function normalizeAdrenalineRushQuintState(
   raw: unknown,
 ): AdrenalineRushMbtProjection {
-  const state = quintStateRecord(raw);
+  const state = quintRecordField(quintStateRecord(raw), "qState");
+  const protocol = decodeWitnessProtocolState({
+    state,
+    protocolField: "protocol",
+    noInvalidReason: "",
+    decodeHole: adrenalineRushUnexpectedHole,
+  });
+  if (protocol.holes.length !== 0) {
+    throw new Error("Expected Adrenaline Rush witness holes to be empty.");
+  }
 
   return {
     actorTempHp: numberFromQuintInt(state["qActorTempHp"], "qActorTempHp"),
@@ -1669,9 +1713,15 @@ function normalizeAdrenalineRushQuintState(
       state["qFeatureUsesRemaining"],
       "qFeatureUsesRemaining",
     ),
-    lastResult: mbtLastResult(state["qLastResult"]),
-    lastInvalidReason: mbtLastInvalidReason(state["qLastInvalidReason"]),
+    lastResult: protocol.lastResult,
+    lastInvalidReason: mbtLastInvalidReason(protocol.lastInvalidReason),
   };
+}
+
+function adrenalineRushUnexpectedHole(raw: unknown): never {
+  throw new Error(
+    `Adrenaline Rush witness does not expect holes; received ${String(raw)}.`,
+  );
 }
 
 function normalizeRogueSteadyAimQuintState(

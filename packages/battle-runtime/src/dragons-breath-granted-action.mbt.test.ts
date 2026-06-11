@@ -19,15 +19,18 @@ import dragonsBreathInput from "../../surface/content/dragons_breath.json";
 
 import {
   MBT_TEST_TIMEOUT_MS,
+  assertWitnessProtocolConsistentWithScenario,
   booleanField,
+  decodeWitnessProtocolState,
   defineDriver,
   focusedMbtMaxSteps,
   mbtPickSchemas,
   mbtSpecPath,
   mbtTraceCount,
   numberFromQuintInt,
-  quintSet,
+  quintRecordField,
   quintStateRecord,
+  quintVariantTag,
   run,
   stateCheck,
 } from "./battle-runtime-mbt-driver-kit.ts";
@@ -765,7 +768,20 @@ function requireResolved(
 function normalizeDragonsBreathQuintState(
   raw: unknown,
 ): DragonsBreathGrantedActionState {
-  const state = quintStateRecord(raw);
+  const state = quintRecordField(quintStateRecord(raw), "qState");
+  const lastResult = dragonsBreathLastResult(state["qScenarioResult"]);
+  const protocol = decodeWitnessProtocolState({
+    state,
+    protocolField: "protocol",
+    noInvalidReason: "none",
+    decodeHole: dragonsBreathHole,
+    compareHoles: (left, right) => left.localeCompare(right),
+  });
+  assertWitnessProtocolConsistentWithScenario({
+    label: "Dragon's Breath granted action",
+    scenarioResult: lastResult,
+    protocol,
+  });
   return {
     turnRole: dragonsBreathTurnRole(state["qTurnRole"]),
     magicActionAvailable: booleanField(state, "qMagicActionAvailable"),
@@ -787,8 +803,8 @@ function normalizeDragonsBreathQuintState(
     ),
     casterHp: numberFromQuintInt(state["qCasterHp"], "qCasterHp"),
     casterConcentrating: booleanField(state, "qCasterConcentrating"),
-    holes: quintSet(state["qHoles"], "qHoles").map(dragonsBreathHole).sort(),
-    lastResult: dragonsBreathLastResult(state["qLastResult"]),
+    holes: protocol.holes,
+    lastResult,
   };
 }
 
@@ -841,12 +857,13 @@ function dragonsBreathSaveOutcome(raw: unknown): DragonsBreathSaveOutcome {
 }
 
 function dragonsBreathHole(raw: unknown): DragonsBreathHole {
+  const tag = quintVariantTag(raw, "protocol.holes");
   if (
-    raw === "SavingThrowOutcome" ||
-    raw === "DamageRoll" ||
-    raw === "ConcentrationSavingThrow"
+    tag === "SavingThrowOutcome" ||
+    tag === "DamageRoll" ||
+    tag === "ConcentrationSavingThrow"
   ) {
-    return raw;
+    return tag;
   }
   throw new Error(`Unknown Dragon's Breath hole: ${String(raw)}.`);
 }

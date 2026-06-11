@@ -68,6 +68,10 @@ defineSelectedIdentityWitness({
     import.meta.dirname,
     "battle-runtime-condition-removal-protection-selected-identity.mbt.qnt",
   ),
+  quintStateField: "qState",
+  quintStateFieldPrefix: "q",
+  witnessProtocolField: "protocol",
+  quintFieldNames: { lastResult: "qScenarioResult" },
   projectionSchema: {
     targetParalyzed: "bool",
     targetPoisoned: "bool",

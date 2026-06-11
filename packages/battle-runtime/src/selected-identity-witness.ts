@@ -7,6 +7,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   MBT_TEST_TIMEOUT_MS,
+  assertWitnessProtocolConsistentWithScenario,
   booleanValue,
   decodeWitnessProtocolState,
   focusedMbtMaxSteps,
@@ -54,8 +55,11 @@ type SelectedIdentityWitnessBase<P extends ProjectionRecord> = {
   readonly units: ReadonlyArray<SelectedIdentityUnit<P>>;
   readonly mbtParityTimeoutMs?: number;
   readonly quintStateField?: string;
+  readonly quintStateFieldPrefix?: "q";
+  readonly quintFieldNames?: Readonly<Record<string, string>>;
   readonly witnessProtocolField?: string;
   readonly witnessNoInvalidReason?: string;
+  readonly witnessInvalidScenarioReasons?: Readonly<Record<string, string>>;
 };
 
 export type FlatSelectedIdentityWitness<S extends ProjectionSchema> =
@@ -271,7 +275,12 @@ function normalizeQuintState(
   schema: RuntimeProjectionSchema,
   witness: Pick<
     SelectedIdentityWitnessBase<ProjectionRecord>,
-    "quintStateField" | "witnessProtocolField" | "witnessNoInvalidReason"
+    | "quintStateField"
+    | "quintStateFieldPrefix"
+    | "quintFieldNames"
+    | "witnessProtocolField"
+    | "witnessNoInvalidReason"
+    | "witnessInvalidScenarioReasons"
   >,
 ): Readonly<Record<string, boolean | number | string>> {
   const root = quintStateRecord(raw);
@@ -293,7 +302,12 @@ function normalizeQuintState(
   }
   const result: Record<string, boolean | number | string> = {};
   for (const [field, spec] of Object.entries(schema)) {
-    if (field === "lastResult" && protocol !== undefined) {
+    const configuredField = witness.quintFieldNames?.[field];
+    if (
+      field === "lastResult" &&
+      protocol !== undefined &&
+      configuredField === undefined
+    ) {
       result[field] = parseStr(
         protocol.lastResult,
         spec.allowedStrings,
@@ -301,16 +315,45 @@ function normalizeQuintState(
       );
       continue;
     }
-    const qKey = quintFieldName(field, witness.quintStateField);
+    const qKey =
+      configuredField ??
+      quintFieldName(
+        field,
+        witness.quintStateField,
+        witness.quintStateFieldPrefix,
+      );
     result[field] = parseQuintField(quintField(state, qKey), spec, qKey);
+  }
+  const scenarioResultField = witness.quintFieldNames?.["lastResult"];
+  const scenarioResult = result["lastResult"];
+  if (
+    protocol !== undefined &&
+    scenarioResultField !== undefined &&
+    typeof scenarioResult === "string"
+  ) {
+    const invalidScenarioReasons = witness.witnessInvalidScenarioReasons;
+    assertWitnessProtocolConsistentWithScenario({
+      label: "selected identity",
+      scenarioResult,
+      protocol,
+      ...(invalidScenarioReasons === undefined
+        ? {}
+        : { invalidScenarioReasons }),
+    });
   }
   return result;
 }
 
-function quintFieldName(field: string, stateField: string | undefined): string {
-  return stateField === undefined
-    ? `q${field.charAt(0).toUpperCase()}${field.slice(1)}`
-    : field;
+function quintFieldName(
+  field: string,
+  stateField: string | undefined,
+  stateFieldPrefix: "q" | undefined,
+): string {
+  if (stateField === undefined || stateFieldPrefix === "q") {
+    return `q${field.charAt(0).toUpperCase()}${field.slice(1)}`;
+  }
+
+  return field;
 }
 
 function selectedIdentityUnexpectedHole(raw: unknown): never {

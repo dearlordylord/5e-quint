@@ -7,6 +7,10 @@
 // interdiction. The paired TypeScript driver executes production reducers; this
 // driver asserts the SRD outcomes without importing the battle-runtime model.
 module battleRuntimeAntimagicFieldActionInterdictionMbt {
+  import battleRuntimeWitnessProtocol.* from "./battle-runtime-witness-protocol"
+
+  type WitnessHole = | AntimagicActionInterdiction
+
   // RAW trace:
   // - .references/srd-5.2.1/Spells/Descriptions-A-D.md "Antimagic Field":
   //   no one can cast spells or take Magic Actions inside the aura.
@@ -14,48 +18,90 @@ module battleRuntimeAntimagicFieldActionInterdictionMbt {
   //   included unless its creator decides otherwise.
   // - UBIQUITOUS_LANGUAGE.md: Magic Action, Spell Invocation, Reaction, and
   //   Area of Effect/Emanation.
-  var qActionSpellDiscovered: bool
-  var qBonusActionSpellDiscovered: bool
-  var qMagicActionDiscovered: bool
-  var qLastResult: str
-  var qLastInvalidReason: str
+  type WitnessState = {
+    qActionSpellDiscovered: bool,
+    qBonusActionSpellDiscovered: bool,
+    qMagicActionDiscovered: bool,
+    protocol: WitnessProtocol[WitnessHole],
+  }
 
-  action recordProjection(
+  var qState: WitnessState
+
+  pure def qActionSpellDiscovered: bool = qState.qActionSpellDiscovered
+  pure def qBonusActionSpellDiscovered: bool = qState.qBonusActionSpellDiscovered
+  pure def qMagicActionDiscovered: bool = qState.qMagicActionDiscovered
+
+  pure def antimagicActionInterdictionState(
     actionSpellDiscovered: bool,
     bonusActionSpellDiscovered: bool,
     magicActionDiscovered: bool,
-    lastResult: str,
-    lastInvalidReason: str,
-  ): bool = all {
-    qActionSpellDiscovered' = actionSpellDiscovered,
-    qBonusActionSpellDiscovered' = bonusActionSpellDiscovered,
-    qMagicActionDiscovered' = magicActionDiscovered,
-    qLastResult' = lastResult,
-    qLastInvalidReason' = lastInvalidReason,
+    protocol: WitnessProtocol[WitnessHole],
+  ): WitnessState = {
+    qActionSpellDiscovered: actionSpellDiscovered,
+    qBonusActionSpellDiscovered: bonusActionSpellDiscovered,
+    qMagicActionDiscovered: magicActionDiscovered,
+    protocol: protocol,
   }
 
-  action init = recordProjection(true, true, true, "init", "")
+  action init = all {
+    qState' = antimagicActionInterdictionState(
+      true,
+      true,
+      true,
+      witnessInit(AntimagicActionInterdiction)
+    ),
+  }
 
-  action doBlockDiscoveryInsideAura =
-    recordProjection(false, false, false, "discovered", "")
+  action doBlockDiscoveryInsideAura = all {
+    qState' = antimagicActionInterdictionState(
+      false,
+      false,
+      false,
+      witnessResolved(AntimagicActionInterdiction)
+    ),
+  }
 
-  action doAllowOriginExcluded =
-    recordProjection(true, true, true, "discovered", "")
+  action doAllowOriginExcluded = all {
+    qState' = antimagicActionInterdictionState(
+      true,
+      true,
+      true,
+      witnessResolved(AntimagicActionInterdiction)
+    ),
+  }
 
-  action doRejectStaleActionSpell =
-    recordProjection(false, false, false, "invalid", "staleSubject")
+  action doRejectStaleActionSpell = all {
+    qState' = antimagicActionInterdictionState(
+      false,
+      false,
+      false,
+      witnessInvalid(AntimagicActionInterdiction, WStaleSubject)
+    ),
+  }
 
-  action doRejectStaleMagicAction =
-    recordProjection(false, false, false, "invalid", "staleSubject")
+  action doRejectStaleMagicAction = all {
+    qState' = antimagicActionInterdictionState(
+      false,
+      false,
+      false,
+      witnessInvalid(AntimagicActionInterdiction, WStaleSubject)
+    ),
+  }
 
-  action doRejectTriggeredReactionSpell =
-    recordProjection(false, false, false, "invalid", "staleSubject")
+  action doRejectTriggeredReactionSpell = all {
+    qState' = antimagicActionInterdictionState(
+      false,
+      false,
+      false,
+      witnessInvalid(AntimagicActionInterdiction, WStaleSubject)
+    ),
+  }
 
   action step = any {
-    doBlockDiscoveryInsideAura,
-    doAllowOriginExcluded,
-    doRejectStaleActionSpell,
-    doRejectStaleMagicAction,
-    doRejectTriggeredReactionSpell,
+    any { doBlockDiscoveryInsideAura, },
+    any { doAllowOriginExcluded, },
+    any { doRejectStaleActionSpell, },
+    any { doRejectStaleMagicAction, },
+    any { doRejectTriggeredReactionSpell, },
   }
 }

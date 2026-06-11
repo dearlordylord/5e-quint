@@ -17,7 +17,9 @@ import { describe, expect, it } from "vitest";
 
 import {
   MBT_TEST_TIMEOUT_MS,
+  assertWitnessProtocolConsistentWithScenario,
   booleanField,
+  decodeWitnessProtocolState,
   defineDriver,
   focusedMbtMaxSteps,
   mbtPickSchemas,
@@ -25,6 +27,8 @@ import {
   mbtTraceCount,
   numberFromQuintInt,
   quintSet,
+  quintVariantTag,
+  quintRecordField,
   quintStateRecord,
   run,
   stateCheck,
@@ -933,7 +937,20 @@ function combatantHp(state: BattleState, combatantId: CombatantId): number {
 function normalizeChainedAttackQuintState(
   raw: unknown,
 ): ChainedAttackSequenceState {
-  const state = quintStateRecord(raw);
+  const state = quintRecordField(quintStateRecord(raw), "qState");
+  const lastResult = chainedLastResult(state["qScenarioResult"]);
+  const protocol = decodeWitnessProtocolState({
+    state,
+    protocolField: "protocol",
+    noInvalidReason: "none",
+    decodeHole: chainedHole,
+    compareHoles: (left, right) => left.localeCompare(right),
+  });
+  assertWitnessProtocolConsistentWithScenario({
+    label: "chained attack",
+    scenarioResult: lastResult,
+    protocol,
+  });
   return {
     damageType: chainedDamageTypeOrNone(state["qDamageType"]),
     slotLevel: numberFromQuintInt(state["qSlotLevel"], "qSlotLevel"),
@@ -981,8 +998,8 @@ function normalizeChainedAttackQuintState(
       "qStep1DamageTotal",
     ),
     step1DamageHasDuplicate: booleanField(state, "qStep1DamageHasDuplicate"),
-    holes: quintSet(state["qHoles"], "qHoles").map(chainedHole).sort(),
-    lastResult: chainedLastResult(state["qLastResult"]),
+    holes: protocol.holes,
+    lastResult,
   };
 }
 
@@ -1031,8 +1048,9 @@ function chainedPreviousTarget(raw: unknown): ChainedPreviousTarget {
 }
 
 function chainedHole(raw: unknown): ChainedHole {
-  if (isChainedHole(raw)) {
-    return raw;
+  const tag = quintVariantTag(raw, "protocol.holes");
+  if (isChainedHole(tag)) {
+    return tag;
   }
   throw new Error(`Unknown chained attack hole: ${String(raw)}.`);
 }

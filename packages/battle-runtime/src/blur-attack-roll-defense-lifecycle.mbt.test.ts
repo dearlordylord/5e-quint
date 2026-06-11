@@ -15,12 +15,15 @@ import { describe, expect, it } from "vitest";
 
 import {
   MBT_TEST_TIMEOUT_MS,
+  assertWitnessProtocolConsistentWithScenario,
   booleanField,
+  decodeWitnessProtocolState,
   defineDriver,
   focusedMbtMaxSteps,
   mbtSpecPath,
   mbtTraceCount,
   numberFromQuintInt,
+  quintRecordField,
   quintStateRecord,
   run,
   stateCheck,
@@ -473,7 +476,24 @@ function requireResolved(
 function normalizeBlurAttackRollDefenseQuintState(
   raw: unknown,
 ): BlurAttackRollDefenseProjection {
-  const state = quintStateRecord(raw);
+  const state = quintRecordField(quintStateRecord(raw), "qState");
+  const scenarioResult = lastResult(state["qScenarioResult"]);
+  const protocol = decodeWitnessProtocolState({
+    state,
+    protocolField: "protocol",
+    noInvalidReason: "",
+    decodeHole: blurAttackRollDefenseUnexpectedHole,
+  });
+  if (protocol.holes.length !== 0) {
+    throw new Error(
+      "Expected Blur attack-roll defense witness holes to be empty.",
+    );
+  }
+  assertWitnessProtocolConsistentWithScenario({
+    label: "Blur attack-roll defense",
+    scenarioResult,
+    protocol,
+  });
   return {
     actionAvailable: booleanField(state, "qActionAvailable"),
     spellAvailable: booleanField(state, "qSpellAvailable"),
@@ -494,8 +514,14 @@ function normalizeBlurAttackRollDefenseQuintState(
     ),
     otherAttackAdvantage: booleanField(state, "qOtherAttackAdvantage"),
     attackRollMode: attackRollMode(state["qAttackRollMode"]),
-    lastResult: lastResult(state["qLastResult"]),
+    lastResult: scenarioResult,
   };
+}
+
+function blurAttackRollDefenseUnexpectedHole(raw: unknown): never {
+  throw new Error(
+    `Blur attack-roll defense witness does not expect holes; received ${String(raw)}.`,
+  );
 }
 
 function compareBlurAttackRollDefenseStates(

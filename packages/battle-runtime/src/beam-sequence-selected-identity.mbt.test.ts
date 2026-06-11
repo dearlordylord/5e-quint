@@ -119,6 +119,10 @@ defineSelectedIdentityWitness({
     import.meta.dirname,
     "battle-runtime-beam-sequence-selected-identity.mbt.qnt",
   ),
+  quintStateField: "qState",
+  quintStateFieldPrefix: "q",
+  witnessProtocolField: "protocol",
+  quintFieldNames: { lastResult: "qScenarioResult" },
   projectionSchema: {
     initialCreatureTargetHoles: "int",
     initialObjectTargetHoles: "int",

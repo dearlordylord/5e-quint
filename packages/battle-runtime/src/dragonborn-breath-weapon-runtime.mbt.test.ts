@@ -70,6 +70,15 @@ defineSelectedIdentityWitness({
     import.meta.dirname,
     "battle-runtime-dragonborn-breath-weapon.mbt.qnt",
   ),
+  quintStateField: "qState",
+  quintStateFieldPrefix: "q",
+  witnessProtocolField: "protocol",
+  quintFieldNames: { lastResult: "qScenarioResult" },
+  witnessInvalidScenarioReasons: {
+    rejectMissingResource: "invalidFill",
+    rejectMismatchedArea: "invalidFill",
+    rejectInvalidDamageRoll: "invalidFill",
+  },
   projectionSchema: {
     targetHp: "int",
     secondTargetHp: "int",

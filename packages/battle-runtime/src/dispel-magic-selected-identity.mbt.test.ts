@@ -77,6 +77,13 @@ defineSelectedIdentityWitness({
     import.meta.dirname,
     "battle-runtime-dispel-magic-selected-identity.mbt.qnt",
   ),
+  quintStateField: "qState",
+  quintStateFieldPrefix: "q",
+  witnessProtocolField: "protocol",
+  quintFieldNames: { lastResult: "qScenarioResult" },
+  witnessInvalidScenarioReasons: {
+    outOfRangeObjectRejected: "invalidFill",
+  },
   projectionSchema: {
     magicActionAvailable: "bool",
     thirdLevelSlotCommitted: "bool",

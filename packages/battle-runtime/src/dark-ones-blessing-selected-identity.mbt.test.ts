@@ -57,6 +57,10 @@ defineSelectedIdentityWitness({
     import.meta.dirname,
     "battle-runtime-dark-ones-blessing.mbt.qnt",
   ),
+  quintStateField: "qState",
+  quintStateFieldPrefix: "q",
+  witnessProtocolField: "protocol",
+  quintFieldNames: { lastResult: "qScenarioResult" },
   projectionSchema: {
     warlockTempHp: "int",
     targetHp: "int",

@@ -23,13 +23,16 @@ import dragonsBreathInput from "../../surface/content/dragons_breath.json";
 
 import {
   MBT_TEST_TIMEOUT_MS,
+  assertWitnessProtocolConsistentWithScenario,
   booleanField,
+  decodeWitnessProtocolState,
   defineDriver,
   focusedMbtMaxSteps,
   mbtPickSchemas,
   mbtSpecPath,
   mbtTraceCount,
   numberFromQuintInt,
+  quintRecordField,
   quintStateRecord,
   run,
   stateCheck,
@@ -425,7 +428,24 @@ function requireResolved(
 function normalizeDragonsBreathQuintState(
   raw: unknown,
 ): DragonsBreathInitialEffectState {
-  const state = quintStateRecord(raw);
+  const state = quintRecordField(quintStateRecord(raw), "qState");
+  const scenarioResult = dragonsBreathLastResult(state["qScenarioResult"]);
+  const protocol = decodeWitnessProtocolState({
+    state,
+    protocolField: "protocol",
+    noInvalidReason: "",
+    decodeHole: dragonsBreathInitialEffectUnexpectedHole,
+  });
+  if (protocol.holes.length !== 0) {
+    throw new Error(
+      "Expected Dragon's Breath initial-effect witness holes to be empty.",
+    );
+  }
+  assertWitnessProtocolConsistentWithScenario({
+    label: "Dragon's Breath initial effect",
+    scenarioResult,
+    protocol,
+  });
   return {
     turnRole: dragonsBreathTurnRole(state["qTurnRole"]),
     bonusActionAvailable: booleanField(state, "qBonusActionAvailable"),
@@ -449,8 +469,14 @@ function normalizeDragonsBreathQuintState(
       state,
       "qGrantedMagicActionAvailable",
     ),
-    lastResult: dragonsBreathLastResult(state["qLastResult"]),
+    lastResult: scenarioResult,
   };
+}
+
+function dragonsBreathInitialEffectUnexpectedHole(raw: unknown): never {
+  throw new Error(
+    `Dragon's Breath initial-effect witness does not expect holes; received ${String(raw)}.`,
+  );
 }
 
 function compareDragonsBreathStates(
