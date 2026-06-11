@@ -43,7 +43,7 @@
     {
       "number": 7,
       "id": "PDS-A07-KIT-BATCH-4",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Kit batch migration 4"
     },
     {
@@ -315,7 +315,7 @@ Batch result: 20 drivers migrated; line delta `12086 -> 12005`, net `-81`.
 
 ### Task 7 - PDS-A07-KIT-BATCH-4
 
-Status: `ready-for-research` · Mode: AFK
+Status: `done` · Mode: AFK
 
 Input: the kit-unmigrated discovery rule (Lane Rules) applied at task start.
 
