@@ -61,7 +61,7 @@
     {
       "number": 10,
       "id": "BPK-B10-SPELL-ATTACK-ORDERING",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Hole-frontier ordering slice and witness for the attack-roll spell procedure shape"
     },
     {
@@ -348,7 +348,7 @@ boundary evidence under `BATTLE.TABLE.HOLE_FACT_BOUNDARIES`.
 
 ### Task 10 - BPK-B10-SPELL-ATTACK-ORDERING
 
-Status: `ready-for-research` · Mode: AFK
+Status: `done` · Mode: AFK
 
 Input: prd/02 Solution §2; `battle-hole-frontier.jsonl` rows for
 `BattleSpellAttackRollHole`, `BattleSpellDamageRollHole`, `attackRoll`,
