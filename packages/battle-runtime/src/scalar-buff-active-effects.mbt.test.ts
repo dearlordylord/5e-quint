@@ -20,12 +20,15 @@
 //   Hit Points, Spell Invocation, and Spell Effect.
 import {
   MBT_TEST_TIMEOUT_MS,
+  assertWitnessProtocolConsistentWithScenario,
   booleanField,
+  decodeWitnessProtocolState,
   defineDriver,
   focusedMbtMaxSteps,
   mbtSpecPath,
   mbtTraceCount,
   numberFromQuintInt,
+  quintRecordField,
   quintStateRecord,
   run,
   stateCheck,
@@ -406,41 +409,53 @@ function requireResolved(
 function normalizeScalarBuffQuintState(
   raw: unknown,
 ): ScalarBuffActiveEffectsProjection {
-  const state = quintStateRecord(raw);
+  const state = quintRecordField(quintStateRecord(raw), "qState");
+  const scenarioResult = lastResult(state["scenarioResult"]);
+  const protocol = decodeWitnessProtocolState({
+    state,
+    protocolField: "protocol",
+    noInvalidReason: "",
+    decodeHole: scalarBuffActiveEffectsUnexpectedHole,
+  });
+  assertWitnessProtocolConsistentWithScenario({
+    label: "scalar buff active effects",
+    scenarioResult,
+    protocol,
+  });
   return {
     affectedArmorClass: numberFromQuintInt(
-      state["qAffectedArmorClass"],
-      "qAffectedArmorClass",
+      state["affectedArmorClass"],
+      "qState.affectedArmorClass",
     ),
     affectedSpeedFeet: numberFromQuintInt(
-      state["qAffectedSpeedFeet"],
-      "qAffectedSpeedFeet",
+      state["affectedSpeedFeet"],
+      "qState.affectedSpeedFeet",
     ),
     affectedClimbSpeedFeet: numberFromQuintInt(
-      state["qAffectedClimbSpeedFeet"],
-      "qAffectedClimbSpeedFeet",
+      state["affectedClimbSpeedFeet"],
+      "qState.affectedClimbSpeedFeet",
     ),
     affectedHitPointMaximum: numberFromQuintInt(
-      state["qAffectedHitPointMaximum"],
-      "qAffectedHitPointMaximum",
+      state["affectedHitPointMaximum"],
+      "qState.affectedHitPointMaximum",
     ),
     affectedHitPoints: numberFromQuintInt(
-      state["qAffectedHitPoints"],
-      "qAffectedHitPoints",
+      state["affectedHitPoints"],
+      "qState.affectedHitPoints",
     ),
     affectedTemporaryHitPoints: numberFromQuintInt(
-      state["qAffectedTemporaryHitPoints"],
-      "qAffectedTemporaryHitPoints",
+      state["affectedTemporaryHitPoints"],
+      "qState.affectedTemporaryHitPoints",
     ),
-    armorClassBonusActive: booleanField(state, "qArmorClassBonusActive"),
-    speedDeltaActive: booleanField(state, "qSpeedDeltaActive"),
-    specialSpeedGrantActive: booleanField(state, "qSpecialSpeedGrantActive"),
+    armorClassBonusActive: booleanField(state, "armorClassBonusActive"),
+    speedDeltaActive: booleanField(state, "speedDeltaActive"),
+    specialSpeedGrantActive: booleanField(state, "specialSpeedGrantActive"),
     hitPointMaximumIncreaseActive: booleanField(
       state,
-      "qHitPointMaximumIncreaseActive",
+      "hitPointMaximumIncreaseActive",
     ),
-    casterConcentrating: booleanField(state, "qCasterConcentrating"),
-    lastResult: lastResult(state["qLastResult"]),
+    casterConcentrating: booleanField(state, "casterConcentrating"),
+    lastResult: scenarioResult,
   };
 }
 
@@ -462,4 +477,10 @@ function lastResult(raw: unknown): LastResult {
 
 function isLastResult(value: string): value is LastResult {
   return LAST_RESULT_SET.has(value);
+}
+
+function scalarBuffActiveEffectsUnexpectedHole(raw: unknown): never {
+  throw new Error(
+    `Scalar buff active-effects witness does not expect holes; received ${String(raw)}.`,
+  );
 }

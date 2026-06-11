@@ -1,45 +1,47 @@
 // -*- mode: Bluespec; -*-
 
 module battleRuntimeScalarBuffMbt {
+  import battleRuntimeWitnessProtocol.* from "./battle-runtime-witness-protocol"
+
   type Hole =
     | TargetChoice
 
-  var qFighterSpeed: int
-  var qGoblinSpeed: int
-  var qActionAvailable: bool
-  var qHoles: Set[Hole]
-  var qLastResult: str
-  var qLastInvalidReason: str
+  type ScalarBuffWitnessState = {
+    fighterSpeed: int,
+    goblinSpeed: int,
+    actionAvailable: bool,
+    protocol: WitnessProtocol[Hole],
+  }
+
+  var qState: ScalarBuffWitnessState
 
   action init = all {
-    qFighterSpeed' = 30,
-    qGoblinSpeed' = 30,
-    qActionAvailable' = true,
-    qHoles' = Set(TargetChoice),
-    qLastResult' = "init",
-    qLastInvalidReason' = "",
+    qState' = {
+      fighterSpeed: 30,
+      goblinSpeed: 30,
+      actionAvailable: true,
+      protocol: witnessInitWithHoles(Set(TargetChoice)),
+    },
   }
 
   action doFillLongstriderTarget = all {
-    qActionAvailable,
-    qHoles == Set(TargetChoice),
-    qFighterSpeed' = 30,
-    qGoblinSpeed' = 40,
-    qActionAvailable' = false,
-    qHoles' = Set(),
-    qLastResult' = "resolved",
-    qLastInvalidReason' = "",
+    qState.actionAvailable,
+    qState.protocol.holes == Set(TargetChoice),
+    qState' = {
+      fighterSpeed: 30,
+      goblinSpeed: 40,
+      actionAvailable: false,
+      protocol: witnessResolved(TargetChoice),
+    },
   }
 
   action doRejectStaleAfterResolved = all {
-    not(qActionAvailable),
-    qHoles == Set(),
-    qFighterSpeed' = qFighterSpeed,
-    qGoblinSpeed' = qGoblinSpeed,
-    qActionAvailable' = qActionAvailable,
-    qHoles' = qHoles,
-    qLastResult' = "invalid",
-    qLastInvalidReason' = "staleSubject",
+    not(qState.actionAvailable),
+    qState.protocol.holes == Set(),
+    qState' = qState.with(
+      "protocol",
+      witnessInvalid(TargetChoice, WStaleSubject)
+    ),
   }
 
   action step = any {

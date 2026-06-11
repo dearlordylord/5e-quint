@@ -1,6 +1,8 @@
 // -*- mode: Bluespec; -*-
 
 module battleRuntimeSpellCreatedHeldObjectLifecycleMbt {
+  import battleRuntimeWitnessProtocol.* from "./battle-runtime-witness-protocol"
+
   // RAW trace:
   // - .references/srd-5.2.1/Spells/Descriptions-E-L.md#Flame Blade:
   //   the spell evokes a fiery blade in a free hand; it lasts for the
@@ -14,20 +16,27 @@ module battleRuntimeSpellCreatedHeldObjectLifecycleMbt {
   //   Obscured area.
   // - UBIQUITOUS_LANGUAGE.md: Holding / Wielding, Free Hand, Magic Action,
   //   Bonus Action, Spell Attack, Concentration, Illumination, and Spell Slot.
-  var qMagicActionAvailable: bool
-  var qBonusActionAvailable: bool
-  var qInitialCastAvailable: bool
-  var qHeldObjectEffectActive: bool
-  var qHeldObjectHeld: bool
-  var qFreeHandAvailable: bool
-  var qCasterConcentrating: bool
-  var qLightProjected: bool
-  var qSpellSlotExpended: int
-  var qSpellSlotCommittedThisTurn: bool
-  var qAttackAvailable: bool
-  var qReEvokeAvailable: bool
-  var qTargetHp: int
-  var qLastResult: str
+  type Hole = | NoHole
+
+  type SpellCreatedHeldObjectWitnessState = {
+    magicActionAvailable: bool,
+    bonusActionAvailable: bool,
+    initialCastAvailable: bool,
+    heldObjectEffectActive: bool,
+    heldObjectHeld: bool,
+    freeHandAvailable: bool,
+    casterConcentrating: bool,
+    lightProjected: bool,
+    spellSlotExpended: int,
+    spellSlotCommittedThisTurn: bool,
+    attackAvailable: bool,
+    reEvokeAvailable: bool,
+    targetHp: int,
+    scenarioResult: str,
+    protocol: WitnessProtocol[Hole],
+  }
+
+  var qState: SpellCreatedHeldObjectWitnessState
 
   pure val initialTargetHp: int = 20
   pure val hitTargetHp: int = 8
@@ -46,22 +55,26 @@ module battleRuntimeSpellCreatedHeldObjectLifecycleMbt {
     attackAvailable: bool,
     reEvokeAvailable: bool,
     targetHp: int,
-    lastResult: str,
+    scenarioResult: str,
+    protocol: WitnessProtocol[Hole],
   ): bool = all {
-    qMagicActionAvailable' = magicActionAvailable,
-    qBonusActionAvailable' = bonusActionAvailable,
-    qInitialCastAvailable' = initialCastAvailable,
-    qHeldObjectEffectActive' = heldObjectEffectActive,
-    qHeldObjectHeld' = heldObjectHeld,
-    qFreeHandAvailable' = freeHandAvailable,
-    qCasterConcentrating' = casterConcentrating,
-    qLightProjected' = lightProjected,
-    qSpellSlotExpended' = spellSlotExpended,
-    qSpellSlotCommittedThisTurn' = spellSlotCommittedThisTurn,
-    qAttackAvailable' = attackAvailable,
-    qReEvokeAvailable' = reEvokeAvailable,
-    qTargetHp' = targetHp,
-    qLastResult' = lastResult,
+    qState' = {
+      magicActionAvailable: magicActionAvailable,
+      bonusActionAvailable: bonusActionAvailable,
+      initialCastAvailable: initialCastAvailable,
+      heldObjectEffectActive: heldObjectEffectActive,
+      heldObjectHeld: heldObjectHeld,
+      freeHandAvailable: freeHandAvailable,
+      casterConcentrating: casterConcentrating,
+      lightProjected: lightProjected,
+      spellSlotExpended: spellSlotExpended,
+      spellSlotCommittedThisTurn: spellSlotCommittedThisTurn,
+      attackAvailable: attackAvailable,
+      reEvokeAvailable: reEvokeAvailable,
+      targetHp: targetHp,
+      scenarioResult: scenarioResult,
+      protocol: protocol,
+    },
   }
 
   action init = recordSpellCreatedHeldObjectState(
@@ -79,13 +92,14 @@ module battleRuntimeSpellCreatedHeldObjectLifecycleMbt {
     false,
     initialTargetHp,
     "init",
+    witnessInit(NoHole),
   )
 
   action doCastHeldObject = all {
-    qInitialCastAvailable,
-    qBonusActionAvailable,
-    qFreeHandAvailable,
-    qSpellSlotExpended == 0,
+    qState.initialCastAvailable,
+    qState.bonusActionAvailable,
+    qState.freeHandAvailable,
+    qState.spellSlotExpended == 0,
     recordSpellCreatedHeldObjectState(
       true,
       false,
@@ -101,82 +115,86 @@ module battleRuntimeSpellCreatedHeldObjectLifecycleMbt {
       false,
       initialTargetHp,
       "castHeldObject",
+      witnessResolved(NoHole),
     ),
   }
 
   action doAttackHeldObject = all {
-    qHeldObjectEffectActive,
-    qHeldObjectHeld,
-    qMagicActionAvailable,
-    qTargetHp == initialTargetHp,
+    qState.heldObjectEffectActive,
+    qState.heldObjectHeld,
+    qState.magicActionAvailable,
+    qState.targetHp == initialTargetHp,
     recordSpellCreatedHeldObjectState(
       false,
-      qBonusActionAvailable,
+      qState.bonusActionAvailable,
       false,
       true,
       true,
       false,
       true,
       true,
-      qSpellSlotExpended,
-      qSpellSlotCommittedThisTurn,
+      qState.spellSlotExpended,
+      qState.spellSlotCommittedThisTurn,
       false,
       false,
       hitTargetHp,
       "attackedHeldObject",
+      witnessResolved(NoHole),
     ),
   }
 
   action doReleaseHeldObject = all {
-    qHeldObjectEffectActive,
-    qHeldObjectHeld,
+    qState.heldObjectEffectActive,
+    qState.heldObjectHeld,
     recordSpellCreatedHeldObjectState(
-      qMagicActionAvailable,
-      qBonusActionAvailable,
+      qState.magicActionAvailable,
+      qState.bonusActionAvailable,
       false,
       true,
       false,
       true,
       true,
       false,
-      qSpellSlotExpended,
-      qSpellSlotCommittedThisTurn,
+      qState.spellSlotExpended,
+      qState.spellSlotCommittedThisTurn,
       false,
-      qBonusActionAvailable,
-      qTargetHp,
+      qState.bonusActionAvailable,
+      qState.targetHp,
       "releasedHeldObject",
+      witnessResolved(NoHole),
     ),
   }
 
   action doAdvanceToCasterTurn = all {
-    qHeldObjectEffectActive,
-    qCasterConcentrating,
+    qState.heldObjectEffectActive,
+    qState.casterConcentrating,
     recordSpellCreatedHeldObjectState(
       true,
       true,
       false,
       true,
-      qHeldObjectHeld,
-      not(qHeldObjectHeld),
+      qState.heldObjectHeld,
+      not(qState.heldObjectHeld),
       true,
-      qHeldObjectHeld,
-      qSpellSlotExpended,
+      qState.heldObjectHeld,
+      qState.spellSlotExpended,
       false,
-      qHeldObjectHeld,
-      not(qHeldObjectHeld),
-      qTargetHp,
+      qState.heldObjectHeld,
+      not(qState.heldObjectHeld),
+      qState.targetHp,
       "nextCasterTurn",
+      witnessResolved(NoHole),
     ),
   }
 
   action doReEvokeHeldObject = all {
-    qHeldObjectEffectActive,
-    not(qHeldObjectHeld),
-    qReEvokeAvailable,
-    qBonusActionAvailable,
-    qFreeHandAvailable,
+    qState.heldObjectEffectActive,
+    not(qState.heldObjectHeld),
+    qState.reEvokeAvailable,
+    qState.bonusActionAvailable,
+    qState.freeHandAvailable,
     recordSpellCreatedHeldObjectState(
-      qMagicActionAvailable,
+      qState.magicActionAvailable,
       false,
       false,
       true,
@@ -184,39 +202,41 @@ module battleRuntimeSpellCreatedHeldObjectLifecycleMbt {
       false,
       true,
       true,
-      qSpellSlotExpended,
+      qState.spellSlotExpended,
       false,
-      qMagicActionAvailable,
+      qState.magicActionAvailable,
       false,
-      qTargetHp,
+      qState.targetHp,
       "reEvokedHeldObject",
+      witnessResolved(NoHole),
     ),
   }
 
   action doBreakConcentration = all {
-    qHeldObjectEffectActive,
-    qCasterConcentrating,
+    qState.heldObjectEffectActive,
+    qState.casterConcentrating,
     recordSpellCreatedHeldObjectState(
-      qMagicActionAvailable,
-      qBonusActionAvailable,
+      qState.magicActionAvailable,
+      qState.bonusActionAvailable,
       false,
       false,
       false,
       true,
       false,
       false,
-      qSpellSlotExpended,
-      qSpellSlotCommittedThisTurn,
+      qState.spellSlotExpended,
+      qState.spellSlotCommittedThisTurn,
       false,
       false,
-      qTargetHp,
+      qState.targetHp,
       "concentrationCleaned",
+      witnessResolved(NoHole),
     ),
   }
 
   action doExpireDuration = all {
-    qHeldObjectEffectActive,
-    qCasterConcentrating,
+    qState.heldObjectEffectActive,
+    qState.casterConcentrating,
     recordSpellCreatedHeldObjectState(
       true,
       true,
@@ -226,30 +246,32 @@ module battleRuntimeSpellCreatedHeldObjectLifecycleMbt {
       true,
       false,
       false,
-      qSpellSlotExpended,
+      qState.spellSlotExpended,
       false,
       false,
       false,
-      qTargetHp,
+      qState.targetHp,
       "durationCleaned",
+      witnessResolved(NoHole),
     ),
   }
 
   action doStutter = recordSpellCreatedHeldObjectState(
-    qMagicActionAvailable,
-    qBonusActionAvailable,
-    qInitialCastAvailable,
-    qHeldObjectEffectActive,
-    qHeldObjectHeld,
-    qFreeHandAvailable,
-    qCasterConcentrating,
-    qLightProjected,
-    qSpellSlotExpended,
-    qSpellSlotCommittedThisTurn,
-    qAttackAvailable,
-    qReEvokeAvailable,
-    qTargetHp,
-    qLastResult,
+    qState.magicActionAvailable,
+    qState.bonusActionAvailable,
+    qState.initialCastAvailable,
+    qState.heldObjectEffectActive,
+    qState.heldObjectHeld,
+    qState.freeHandAvailable,
+    qState.casterConcentrating,
+    qState.lightProjected,
+    qState.spellSlotExpended,
+    qState.spellSlotCommittedThisTurn,
+    qState.attackAvailable,
+    qState.reEvokeAvailable,
+    qState.targetHp,
+    qState.scenarioResult,
+    qState.protocol,
   )
 
   action step = any {

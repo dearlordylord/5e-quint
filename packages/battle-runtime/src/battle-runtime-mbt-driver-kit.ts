@@ -1805,15 +1805,25 @@ function rogueSteadyAimUnexpectedHole(raw: unknown): never {
 }
 
 function normalizeScalarBuffQuintState(raw: unknown): ScalarBuffMbtProjection {
-  const state = quintStateRecord(raw);
+  const state = quintRecordField(quintStateRecord(raw), "qState");
+  const protocol = decodeWitnessProtocolState({
+    state,
+    protocolField: "protocol",
+    noInvalidReason: "",
+    decodeHole: holeName,
+    compareHoles: (left, right) => left.localeCompare(right),
+  });
 
   return {
-    fighterSpeed: numberFromQuintInt(state["qFighterSpeed"], "qFighterSpeed"),
-    goblinSpeed: numberFromQuintInt(state["qGoblinSpeed"], "qGoblinSpeed"),
-    actionAvailable: booleanField(state, "qActionAvailable"),
-    holes: quintHoleSet(state["qHoles"]).map(holeName).sort(),
-    lastResult: mbtLastResult(state["qLastResult"]),
-    lastInvalidReason: mbtLastInvalidReason(state["qLastInvalidReason"]),
+    fighterSpeed: numberFromQuintInt(
+      state["fighterSpeed"],
+      "qState.fighterSpeed",
+    ),
+    goblinSpeed: numberFromQuintInt(state["goblinSpeed"], "qState.goblinSpeed"),
+    actionAvailable: booleanField(state, "actionAvailable"),
+    holes: protocol.holes,
+    lastResult: mbtLastResult(protocol.lastResult),
+    lastInvalidReason: mbtLastInvalidReason(protocol.lastInvalidReason),
   };
 }
 
@@ -3222,10 +3232,6 @@ function weaponAttackOrderingError(raw: unknown): WeaponAttackOrderingError {
   }
 
   throw new Error(`Unknown weapon attack ordering error: ${String(raw)}.`);
-}
-
-function quintHoleSet(raw: unknown): readonly unknown[] {
-  return quintSet(raw, "qHoles");
 }
 
 function mbtLastResult(raw: unknown): MbtLastResult {

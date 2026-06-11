@@ -78,6 +78,9 @@ defineSelectedIdentityWitness({
     import.meta.dirname,
     "battle-runtime-species-passive-trait-selected-identity.mbt.qnt",
   ),
+  quintStateField: "qState",
+  witnessProtocolField: "protocol",
+  quintFieldNames: { lastResult: "scenarioResult" },
   projectionSchema: {
     dragonbornFireDamageAfter: "int",
     dragonbornColdDamageAfter: "int",

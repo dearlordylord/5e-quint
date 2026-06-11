@@ -52,6 +52,9 @@ defineSelectedIdentityWitness({
     import.meta.dirname,
     "battle-runtime-sorcerer-metamagic-distant-selected-identity.mbt.qnt",
   ),
+  quintStateField: "qState",
+  witnessProtocolField: "protocol",
+  quintFieldNames: { lastResult: "scenarioResult" },
   projectionSchema: {
     sorceryPointsRemaining: "int",
     lightEmitterCount: "int",

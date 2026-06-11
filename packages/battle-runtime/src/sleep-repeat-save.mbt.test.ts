@@ -3,11 +3,12 @@
 import {
   MBT_TEST_TIMEOUT_MS,
   booleanField,
+  decodeWitnessProtocolState,
   defineDriver,
   focusedMbtMaxSteps,
   mbtSpecPath,
   mbtTraceCount,
-  quintSet,
+  quintRecordField,
   quintStateRecord,
   quintVariantTag,
   run,
@@ -232,24 +233,29 @@ describe("Sleep repeat-save MBT parity", () => {
 function normalizeSleepRepeatSaveQuintState(
   raw: unknown,
 ): SleepRepeatSaveMbtProjection {
-  const state = quintStateRecord(raw);
+  const state = quintRecordField(quintStateRecord(raw), "qState");
+  const protocol = decodeWitnessProtocolState({
+    state,
+    protocolField: "protocol",
+    noInvalidReason: "",
+    decodeHole: sleepRepeatSaveHoleName,
+    compareHoles: (left, right) => left.localeCompare(right),
+  });
 
   return {
     currentTurnRole: sleepRepeatSaveMbtTurnRole(
-      state["qCurrentTurnRole"],
-      "qCurrentTurnRole",
+      state["currentTurnRole"],
+      "qState.currentTurnRole",
     ),
-    targetIncapacitated: booleanField(state, "qTargetIncapacitated"),
-    targetUnconscious: booleanField(state, "qTargetUnconscious"),
-    targetProne: booleanField(state, "qTargetProne"),
-    casterConcentrating: booleanField(state, "qCasterConcentrating"),
-    actionAvailable: booleanField(state, "qActionAvailable"),
-    holes: quintSet(state["qHoles"], "qHoles")
-      .map(sleepRepeatSaveHoleName)
-      .sort(),
-    lastResult: sleepRepeatSaveMbtLastResult(state["qLastResult"]),
+    targetIncapacitated: booleanField(state, "targetIncapacitated"),
+    targetUnconscious: booleanField(state, "targetUnconscious"),
+    targetProne: booleanField(state, "targetProne"),
+    casterConcentrating: booleanField(state, "casterConcentrating"),
+    actionAvailable: booleanField(state, "actionAvailable"),
+    holes: protocol.holes,
+    lastResult: sleepRepeatSaveMbtLastResult(protocol.lastResult),
     lastInvalidReason: sleepRepeatSaveMbtLastInvalidReason(
-      state["qLastInvalidReason"],
+      protocol.lastInvalidReason,
     ),
   };
 }

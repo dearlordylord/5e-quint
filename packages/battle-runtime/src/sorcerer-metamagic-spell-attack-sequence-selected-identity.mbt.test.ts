@@ -27,6 +27,9 @@ defineSelectedIdentityWitness({
     import.meta.dirname,
     "battle-runtime-sorcerer-metamagic-spell-attack-sequence-selected-identity.mbt.qnt",
   ),
+  quintStateField: "qState",
+  witnessProtocolField: "protocol",
+  quintFieldNames: { lastResult: "scenarioResult" },
   projectionSchema: {
     magicActionAvailable: "bool",
     bonusActionAvailable: "bool",

@@ -10,167 +10,166 @@
 // (incapacitated, unconscious, prone, caster-concentrating, action-available).
 // If the underlying rules change, update the literals here.
 module battleRuntimeSleepRepeatSaveMbt {
+  import battleRuntimeWitnessProtocol.* from "./battle-runtime-witness-protocol"
+
   // Only the repeat Saving Throw hole is exercised by this witness.
   type Hole = | SavingThrowOutcome
 
-  var qCurrentTurnRole: str
-  var qTargetIncapacitated: bool
-  var qTargetUnconscious: bool
-  var qTargetProne: bool
-  var qCasterConcentrating: bool
-  var qActionAvailable: bool
-  var qHoles: Set[Hole]
-  var qLastResult: str
-  var qLastInvalidReason: str
+  type SleepRepeatSaveWitnessState = {
+    currentTurnRole: str,
+    targetIncapacitated: bool,
+    targetUnconscious: bool,
+    targetProne: bool,
+    casterConcentrating: bool,
+    actionAvailable: bool,
+    protocol: WitnessProtocol[Hole],
+  }
+
+  var qState: SleepRepeatSaveWitnessState
 
   pure val casterTurnRole: str = "caster"
   pure val targetTurnRole: str = "target"
 
   action init = all {
-    qCurrentTurnRole' = casterTurnRole,
-    qTargetIncapacitated' = false,
-    qTargetUnconscious' = false,
-    qTargetProne' = false,
-    qCasterConcentrating' = false,
-    qActionAvailable' = true,
-    qHoles' = Set(SavingThrowOutcome),
-    qLastResult' = "init",
-    qLastInvalidReason' = "",
+    qState' = {
+      currentTurnRole: casterTurnRole,
+      targetIncapacitated: false,
+      targetUnconscious: false,
+      targetProne: false,
+      casterConcentrating: false,
+      actionAvailable: true,
+      protocol: witnessInitWithHoles(Set(SavingThrowOutcome)),
+    },
   }
 
   // Failing the initial save: the target is incapacitated and the caster is now
   // concentrating on Sleep; the casting spent the action.
   action doFillInitialSaveFailure = all {
-    qCurrentTurnRole == casterTurnRole,
-    qActionAvailable,
-    qHoles == Set(SavingThrowOutcome),
-    qCurrentTurnRole' = casterTurnRole,
-    qTargetIncapacitated' = true,
-    qTargetUnconscious' = false,
-    qTargetProne' = false,
-    qCasterConcentrating' = true,
-    qActionAvailable' = false,
-    qHoles' = Set(),
-    qLastResult' = "resolved",
-    qLastInvalidReason' = "",
+    qState.currentTurnRole == casterTurnRole,
+    qState.actionAvailable,
+    qState.protocol.holes == Set(SavingThrowOutcome),
+    qState' = {
+      currentTurnRole: casterTurnRole,
+      targetIncapacitated: true,
+      targetUnconscious: false,
+      targetProne: false,
+      casterConcentrating: true,
+      actionAvailable: false,
+      protocol: witnessResolved(SavingThrowOutcome),
+    },
   }
 
   // Breaking Concentration ends the Sleep effect: the target is no longer
   // incapacitated and the caster no longer concentrates.
   action doBreakConcentrationBeforeRepeat = all {
-    qCurrentTurnRole == casterTurnRole,
-    not(qActionAvailable),
-    qCasterConcentrating,
-    qHoles == Set(),
-    qCurrentTurnRole' = casterTurnRole,
-    qTargetIncapacitated' = false,
-    qTargetUnconscious' = false,
-    qTargetProne' = false,
-    qCasterConcentrating' = false,
-    qActionAvailable' = false,
-    qHoles' = Set(),
-    qLastResult' = "resolved",
-    qLastInvalidReason' = "",
+    qState.currentTurnRole == casterTurnRole,
+    not(qState.actionAvailable),
+    qState.casterConcentrating,
+    qState.protocol.holes == Set(),
+    qState' = {
+      currentTurnRole: casterTurnRole,
+      targetIncapacitated: false,
+      targetUnconscious: false,
+      targetProne: false,
+      casterConcentrating: false,
+      actionAvailable: false,
+      protocol: witnessResolved(SavingThrowOutcome),
+    },
   }
 
   // Ending the caster turn while Sleep persists: the target stays incapacitated,
   // Concentration continues, and the new turn refreshes the action.
   action doEndCasterTurn = all {
-    qCurrentTurnRole == casterTurnRole,
-    not(qActionAvailable),
-    qCasterConcentrating,
-    qHoles == Set(),
-    qCurrentTurnRole' = targetTurnRole,
-    qTargetIncapacitated' = true,
-    qTargetUnconscious' = false,
-    qTargetProne' = false,
-    qCasterConcentrating' = true,
-    qActionAvailable' = true,
-    qHoles' = Set(),
-    qLastResult' = "resolved",
-    qLastInvalidReason' = "",
+    qState.currentTurnRole == casterTurnRole,
+    not(qState.actionAvailable),
+    qState.casterConcentrating,
+    qState.protocol.holes == Set(),
+    qState' = {
+      currentTurnRole: targetTurnRole,
+      targetIncapacitated: true,
+      targetUnconscious: false,
+      targetProne: false,
+      casterConcentrating: true,
+      actionAvailable: true,
+      protocol: witnessResolved(SavingThrowOutcome),
+    },
   }
 
   // Ending the caster turn after Concentration broke: Sleep is gone, action refreshes.
   action doEndCasterTurnAfterConcentrationBreak = all {
-    qCurrentTurnRole == casterTurnRole,
-    not(qActionAvailable),
-    not(qCasterConcentrating),
-    qHoles == Set(),
-    qCurrentTurnRole' = targetTurnRole,
-    qTargetIncapacitated' = false,
-    qTargetUnconscious' = false,
-    qTargetProne' = false,
-    qCasterConcentrating' = false,
-    qActionAvailable' = true,
-    qHoles' = Set(),
-    qLastResult' = "resolved",
-    qLastInvalidReason' = "",
+    qState.currentTurnRole == casterTurnRole,
+    not(qState.actionAvailable),
+    not(qState.casterConcentrating),
+    qState.protocol.holes == Set(),
+    qState' = {
+      currentTurnRole: targetTurnRole,
+      targetIncapacitated: false,
+      targetUnconscious: false,
+      targetProne: false,
+      casterConcentrating: false,
+      actionAvailable: true,
+      protocol: witnessResolved(SavingThrowOutcome),
+    },
   }
 
   // Ending the target turn after Concentration broke advances to the next round
   // with Sleep still gone.
   action doEndTargetTurnAfterConcentrationBreak = all {
-    qCurrentTurnRole == targetTurnRole,
-    qActionAvailable,
-    not(qTargetIncapacitated),
-    not(qCasterConcentrating),
-    qHoles == Set(),
-    qCurrentTurnRole' = casterTurnRole,
-    qTargetIncapacitated' = false,
-    qTargetUnconscious' = false,
-    qTargetProne' = false,
-    qCasterConcentrating' = false,
-    qActionAvailable' = true,
-    qHoles' = Set(),
-    qLastResult' = "resolved",
-    qLastInvalidReason' = "",
+    qState.currentTurnRole == targetTurnRole,
+    qState.actionAvailable,
+    not(qState.targetIncapacitated),
+    not(qState.casterConcentrating),
+    qState.protocol.holes == Set(),
+    qState' = {
+      currentTurnRole: casterTurnRole,
+      targetIncapacitated: false,
+      targetUnconscious: false,
+      targetProne: false,
+      casterConcentrating: false,
+      actionAvailable: true,
+      protocol: witnessResolved(SavingThrowOutcome),
+    },
   }
 
   action doDiscoverRepeatSave = all {
-    qCurrentTurnRole == targetTurnRole,
-    qTargetIncapacitated,
-    qCasterConcentrating,
-    qHoles == Set(),
-    qCurrentTurnRole' = targetTurnRole,
-    qTargetIncapacitated' = qTargetIncapacitated,
-    qTargetUnconscious' = qTargetUnconscious,
-    qTargetProne' = qTargetProne,
-    qCasterConcentrating' = qCasterConcentrating,
-    qActionAvailable' = qActionAvailable,
-    qHoles' = Set(SavingThrowOutcome),
-    qLastResult' = "needsHoles",
-    qLastInvalidReason' = "",
+    qState.currentTurnRole == targetTurnRole,
+    qState.targetIncapacitated,
+    qState.casterConcentrating,
+    qState.protocol.holes == Set(),
+    qState' = qState.with(
+      "protocol",
+      witnessNeedsHoles(Set(SavingThrowOutcome))
+    ),
   }
 
   // Succeeding the repeat save wakes the target while Concentration continues.
   action doFillRepeatSaveSuccess = all {
-    qCurrentTurnRole == targetTurnRole,
-    qHoles == Set(SavingThrowOutcome),
-    qCurrentTurnRole' = casterTurnRole,
-    qTargetIncapacitated' = false,
-    qTargetUnconscious' = false,
-    qTargetProne' = false,
-    qCasterConcentrating' = true,
-    qActionAvailable' = true,
-    qHoles' = Set(),
-    qLastResult' = "resolved",
-    qLastInvalidReason' = "",
+    qState.currentTurnRole == targetTurnRole,
+    qState.protocol.holes == Set(SavingThrowOutcome),
+    qState' = {
+      currentTurnRole: casterTurnRole,
+      targetIncapacitated: false,
+      targetUnconscious: false,
+      targetProne: false,
+      casterConcentrating: true,
+      actionAvailable: true,
+      protocol: witnessResolved(SavingThrowOutcome),
+    },
   }
 
   // Failing the repeat save keeps the target Unconscious and Prone.
   action doFillRepeatSaveFailure = all {
-    qCurrentTurnRole == targetTurnRole,
-    qHoles == Set(SavingThrowOutcome),
-    qCurrentTurnRole' = casterTurnRole,
-    qTargetIncapacitated' = true,
-    qTargetUnconscious' = true,
-    qTargetProne' = true,
-    qCasterConcentrating' = true,
-    qActionAvailable' = true,
-    qHoles' = Set(),
-    qLastResult' = "resolved",
-    qLastInvalidReason' = "",
+    qState.currentTurnRole == targetTurnRole,
+    qState.protocol.holes == Set(SavingThrowOutcome),
+    qState' = {
+      currentTurnRole: casterTurnRole,
+      targetIncapacitated: true,
+      targetUnconscious: true,
+      targetProne: true,
+      casterConcentrating: true,
+      actionAvailable: true,
+      protocol: witnessResolved(SavingThrowOutcome),
+    },
   }
 
   action step = any {

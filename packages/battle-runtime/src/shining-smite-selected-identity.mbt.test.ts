@@ -38,6 +38,9 @@ defineSelectedIdentityWitness({
     import.meta.dirname,
     "battle-runtime-shining-smite-selected-identity.mbt.qnt",
   ),
+  quintStateField: "qState",
+  witnessProtocolField: "protocol",
+  quintFieldNames: { lastResult: "scenarioResult" },
   projectionSchema: { lastResult: "str" },
   initialProjection: { lastResult: "init" },
   units: [
