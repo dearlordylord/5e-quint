@@ -49,7 +49,7 @@
     {
       "number": 8,
       "id": "SHEETS-C08-TIME-PASSAGE-AND-AUDIT",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Extract time-passage, finalize the barrel, add the split audit, close out §7"
     },
     {
@@ -152,7 +152,7 @@ Every task must include:
 | 5 | SHEETS-C05-FEATURE-DOMAINS | done | SHEETS-C04-SPELL-SLOTS-INVOCATION | Druid + class-feature prepared spells. |
 | 6 | SHEETS-C06-LIFECYCLE-PARSING | done | SHEETS-C05-FEATURE-DOMAINS | Largest internal move (~2,400-line parser layer). |
 | 7 | SHEETS-C07-RESTS | ready-for-research | SHEETS-C06-LIFECYCLE-PARSING | Rest state machine consumes the spell-slots interface; weapon-mastery reselection folds in. |
-| 8 | SHEETS-C08-TIME-PASSAGE-AND-AUDIT | blocked | SHEETS-C07-RESTS | Final move + executable split audit + §7 status note. |
+| 8 | SHEETS-C08-TIME-PASSAGE-AND-AUDIT | ready-for-research | SHEETS-C07-RESTS | Final move + executable split audit + §7 status note. |
 | 9 | SHEETS-C09-TEST-REORG | blocked | SHEETS-C08-TIME-PASSAGE-AND-AUDIT | Optional follow-up; can be deferred indefinitely. |
 
 ## Task Details
@@ -240,7 +240,7 @@ Acceptance: standard verification; `hp-rest-hit-dice` and
 
 ### Task 8 - SHEETS-C08-TIME-PASSAGE-AND-AUDIT
 
-Status: `blocked` · Mode: AFK
+Status: `ready-for-research` · Mode: AFK
 
 Output: `time-passage.ts` (the `timePassed` omnibus, moved whole with a
 header comment naming it the time-domain state machine per §7 risk note);
