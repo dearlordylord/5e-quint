@@ -5,6 +5,9 @@ module battleRuntimeConditionRemovalProtectionSelectedIdentityMbt {
 
   type WitnessHole = | ConditionRemovalProtection
 
+  type ConditionRemovalProtectionSelectedIdentityScenarioOutcome = | Init | LesserRestorationChoice | LesserRestorationConcentration | ProtectionFromPoison
+
+
   type WitnessState = {
     qTargetParalyzed: bool,
     qTargetPoisoned: bool,
@@ -15,7 +18,7 @@ module battleRuntimeConditionRemovalProtectionSelectedIdentityMbt {
     qSecondLevelSlotsExpended: int,
     qActionAvailable: bool,
     qBonusActionAvailable: bool,
-    qScenarioResult: str,
+    qScenarioOutcome: ConditionRemovalProtectionSelectedIdentityScenarioOutcome,
     protocol: WitnessProtocol[WitnessHole],
   }
 
@@ -30,7 +33,7 @@ module battleRuntimeConditionRemovalProtectionSelectedIdentityMbt {
   pure def qSecondLevelSlotsExpended: int = qState.qSecondLevelSlotsExpended
   pure def qActionAvailable: bool = qState.qActionAvailable
   pure def qBonusActionAvailable: bool = qState.qBonusActionAvailable
-  pure def qScenarioResult: str = qState.qScenarioResult
+  pure def qScenarioOutcome: ConditionRemovalProtectionSelectedIdentityScenarioOutcome = qState.qScenarioOutcome
 
 
   action recordProjection(
@@ -43,7 +46,7 @@ module battleRuntimeConditionRemovalProtectionSelectedIdentityMbt {
     secondLevelSlotsExpended: int,
     actionAvailable: bool,
     bonusActionAvailable: bool,
-    scenarioResult: str,
+    scenarioOutcome: ConditionRemovalProtectionSelectedIdentityScenarioOutcome,
     protocol: WitnessProtocol[WitnessHole],
   ): bool = all {
     qState' = {
@@ -56,7 +59,7 @@ module battleRuntimeConditionRemovalProtectionSelectedIdentityMbt {
       qSecondLevelSlotsExpended: secondLevelSlotsExpended,
       qActionAvailable: actionAvailable,
       qBonusActionAvailable: bonusActionAvailable,
-      qScenarioResult: scenarioResult,
+      qScenarioOutcome: scenarioOutcome,
       protocol: protocol,
     },
   }
@@ -71,12 +74,12 @@ module battleRuntimeConditionRemovalProtectionSelectedIdentityMbt {
     0,
     true,
     true,
-    "init",
+    Init,
     witnessInit(ConditionRemovalProtection),
   )
 
   action doResolveLesserRestorationChoice = all {
-    qScenarioResult == "init",
+    qScenarioOutcome == Init,
     recordProjection(
       false,
       true,
@@ -87,13 +90,13 @@ module battleRuntimeConditionRemovalProtectionSelectedIdentityMbt {
       1,
       true,
       false,
-      "lesserRestorationChoice",
+      LesserRestorationChoice,
     witnessResolved(ConditionRemovalProtection),
   ),
   }
 
   action doResolveLesserRestorationConcentrationCleanup = all {
-    qScenarioResult == "init",
+    qScenarioOutcome == Init,
     recordProjection(
       false,
       false,
@@ -104,13 +107,13 @@ module battleRuntimeConditionRemovalProtectionSelectedIdentityMbt {
       1,
       true,
       false,
-      "lesserRestorationConcentration",
+      LesserRestorationConcentration,
     witnessResolved(ConditionRemovalProtection),
   ),
   }
 
   action doResolveProtectionFromPoison = all {
-    qScenarioResult == "init",
+    qScenarioOutcome == Init,
     recordProjection(
       false,
       false,
@@ -121,7 +124,7 @@ module battleRuntimeConditionRemovalProtectionSelectedIdentityMbt {
       1,
       false,
       true,
-      "protectionFromPoison",
+      ProtectionFromPoison,
     witnessResolved(ConditionRemovalProtection),
   ),
   }

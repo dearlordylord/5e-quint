@@ -12,8 +12,6 @@ module battleRuntimeExtraAttackMbt {
     qExtraAttackSlotsAvailable: int,
     qMovementSpentFeet: int,
     qTurnEnded: bool,
-    qScenarioResult: str,
-    qScenarioInvalidReason: str,
     protocol: WitnessProtocol[WitnessHole],
   }
 
@@ -25,24 +23,6 @@ module battleRuntimeExtraAttackMbt {
   pure def qExtraAttackSlotsAvailable: int = qState.qExtraAttackSlotsAvailable
   pure def qMovementSpentFeet: int = qState.qMovementSpentFeet
   pure def qTurnEnded: bool = qState.qTurnEnded
-  pure def qLastResult: str = qState.qScenarioResult
-  pure def qLastInvalidReason: str = qState.qScenarioInvalidReason
-
-  pure def extraAttackProtocolForProjection(
-    holes: Set[WitnessHole],
-    scenarioResult: str,
-    scenarioInvalidReason: str,
-  ): WitnessProtocol[WitnessHole] =
-    if (scenarioResult == "init") witnessInit(WitnessProtocolHole)
-    else if (scenarioInvalidReason == "invalidFill") witnessInvalid(WitnessProtocolHole, WInvalidFill)
-    else if (scenarioInvalidReason == "staleSubject") witnessInvalid(WitnessProtocolHole, WStaleSubject)
-    else if (scenarioInvalidReason == "wrongActor") witnessInvalid(WitnessProtocolHole, WWrongActor)
-    else if (scenarioInvalidReason == "missingCombatant") witnessInvalid(WitnessProtocolHole, WMissingCombatant)
-    else if (scenarioInvalidReason == "unsupportedSubject") witnessInvalid(WitnessProtocolHole, WUnsupportedSubject)
-    else if (scenarioInvalidReason == "unsupportedActOption") witnessInvalid(WitnessProtocolHole, WUnsupportedActOption)
-    else if (holes != Set()) witnessNeedsHoles(holes)
-    else witnessResolved(WitnessProtocolHole)
-
 
   action recordProjection(
     extraAttackAdditionalAttacks: int,
@@ -50,8 +30,7 @@ module battleRuntimeExtraAttackMbt {
     actionAvailable: bool,
     extraAttackSlotsAvailable: int,
     movementSpentFeet: int,
-    lastResult: str,
-    lastInvalidReason: str,
+    protocol: WitnessProtocol[WitnessHole],
     turnEnded: bool,
   ): bool = all {
     qState' = {
@@ -61,22 +40,20 @@ module battleRuntimeExtraAttackMbt {
       qExtraAttackSlotsAvailable: extraAttackSlotsAvailable,
       qMovementSpentFeet: movementSpentFeet,
       qTurnEnded: turnEnded,
-      qScenarioResult: lastResult,
-      qScenarioInvalidReason: lastInvalidReason,
-      protocol: extraAttackProtocolForProjection(Set(), lastResult, lastInvalidReason),
+      protocol: protocol,
     },
   }
 
   // Count variants stay enumerated because the TS harness runs each as a
   // distinct init action for count-specific entrypoints, not a fill-value pick.
   action initOneAdditionalAttack =
-    recordProjection(1, 13, true, 0, 0, "init", "", false)
+    recordProjection(1, 13, true, 0, 0, witnessInit(WitnessProtocolHole), false)
 
   action initTwoAdditionalAttacks =
-    recordProjection(2, 13, true, 0, 0, "init", "", false)
+    recordProjection(2, 13, true, 0, 0, witnessInit(WitnessProtocolHole), false)
 
   action initThreeAdditionalAttacks =
-    recordProjection(3, 13, true, 0, 0, "init", "", false)
+    recordProjection(3, 13, true, 0, 0, witnessInit(WitnessProtocolHole), false)
 
   action init = initOneAdditionalAttack
 
@@ -91,8 +68,7 @@ module battleRuntimeExtraAttackMbt {
       false,
       qExtraAttackAdditionalAttacks,
       qMovementSpentFeet,
-      "resolved",
-      "",
+      witnessResolved(WitnessProtocolHole),
       false
     ),
   }
@@ -108,8 +84,7 @@ module battleRuntimeExtraAttackMbt {
       false,
       qExtraAttackSlotsAvailable,
       5,
-      "resolved",
-      "",
+      witnessResolved(WitnessProtocolHole),
       false
     ),
   }
@@ -125,8 +100,7 @@ module battleRuntimeExtraAttackMbt {
       false,
       qExtraAttackSlotsAvailable - 1,
       qMovementSpentFeet,
-      "resolved",
-      "",
+      witnessResolved(WitnessProtocolHole),
       false
     ),
   }
@@ -141,8 +115,7 @@ module battleRuntimeExtraAttackMbt {
       false,
       0,
       qMovementSpentFeet,
-      "invalid",
-      "staleSubject",
+      witnessInvalid(WitnessProtocolHole, WStaleSubject),
       false
     ),
   }
@@ -157,8 +130,7 @@ module battleRuntimeExtraAttackMbt {
       true,
       0,
       qMovementSpentFeet,
-      "resolved",
-      "",
+      witnessResolved(WitnessProtocolHole),
       true
     ),
   }

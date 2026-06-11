@@ -121,13 +121,13 @@
     {
       "number": 20,
       "id": "PDS-A20-SCENARIO-OUTCOME-BATCH-1",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Migrate the first qScenario outcome-projection batch"
     },
     {
       "number": 21,
       "id": "PDS-A21-SCENARIO-OUTCOME-BATCH-2",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Migrate the second qScenario outcome-projection batch"
     },
     {
@@ -260,8 +260,8 @@ decision.
 |  17 | PDS-A17-LITERAL-CAPTURE-PRD                   | done     | PDS-A10-WITNESS-PILOTS                                                                                             | HITL: owner reviews the PRD. Single-owner obligations only; multi-owner rows wait for BPK-B08.                                                                                                                                                                     |
 |  18 | PDS-A18-RECURSIVE-NEXT-BATCH                  | done     | PDS-A16-WITNESS-GATE-AND-CLOSEOUT                                                                                  | Recursive audit found concrete follow-up work; Lane A is not drained.                                                                                                                                                                                              |
 |  19 | PDS-A19-SCENARIO-OUTCOME-AUDIT                | done     | PDS-A18-RECURSIVE-NEXT-BATCH                                                                                       | All 60 `qScenario*` files are typed-outcome migration candidates; no string kept-label set. See `plans/SCENARIO_OUTCOME_AUDIT.md`.                                                                                                                                 |
-|  20 | PDS-A20-SCENARIO-OUTCOME-BATCH-1              | ready-for-research | PDS-A19-SCENARIO-OUTCOME-AUDIT                                                                                     | First <=20 scenario-outcome stragglers, using the typed local-outcome shape in `plans/SCENARIO_OUTCOME_AUDIT.md`.                                                                                                                                                  |
-|  21 | PDS-A21-SCENARIO-OUTCOME-BATCH-2              | blocked  | PDS-A20-SCENARIO-OUTCOME-BATCH-1                                                                                   | Next ≤20 scenario-outcome stragglers.                                                                                                                                                                                                                              |
+|  20 | PDS-A20-SCENARIO-OUTCOME-BATCH-1              | done     | PDS-A19-SCENARIO-OUTCOME-AUDIT                                                                                     | First <=20 scenario-outcome stragglers, using the typed local-outcome shape in `plans/SCENARIO_OUTCOME_AUDIT.md`.                                                                                                                                                  |
+|  21 | PDS-A21-SCENARIO-OUTCOME-BATCH-2              | ready-for-research | PDS-A20-SCENARIO-OUTCOME-BATCH-1                                                                                   | Next ≤20 scenario-outcome stragglers.                                                                                                                                                                                                                              |
 |  22 | PDS-A22-SCENARIO-OUTCOME-BATCH-3-DRAIN        | blocked  | PDS-A21-SCENARIO-OUTCOME-BATCH-2                                                                                   | Final scenario-outcome stragglers; assert the discovery command is empty or that the kept-label set is documented.                                                                                                                                                 |
 |  23 | PDS-A23-CHARACTER-PACKAGE-WITNESS-FEASIBILITY | done     | PDS-A18-RECURSIVE-NEXT-BATCH                                                                                       | Research-only stretch decision for the 24 non-battle MBT witness/driver pairs named by prd/03 and prd/04. See `plans/CHARACTER_PACKAGE_WITNESS_FEASIBILITY.md`.                                                                                                    |
 |  24 | PDS-A24-CHARACTER-PACKAGE-MBT-CLEANUP-LANE    | deferred | PDS-A23-CHARACTER-PACKAGE-WITNESS-FEASIBILITY + Lane C ownership resolution for `packages/character-sheet-runtime` | Deferred follow-up opened by Task 23. Create the separate character-package MBT cleanup lane from `plans/CHARACTER_PACKAGE_WITNESS_FEASIBILITY.md`; do not edit character-sheet-runtime before the Lane C dependency lands.                                        |
@@ -584,7 +584,7 @@ gate in A22.
 
 ### Task 20 - PDS-A20-SCENARIO-OUTCOME-BATCH-1
 
-Status: `ready-for-research` · Mode: AFK
+Status: `done` · Mode: AFK
 
 Input: `plans/SCENARIO_OUTCOME_AUDIT.md` and the first ≤20 alphabetical files
 from the A19 discovery command.
@@ -599,7 +599,7 @@ line-delta and remaining discovery count reported.
 
 ### Task 21 - PDS-A21-SCENARIO-OUTCOME-BATCH-2
 
-Status: `blocked` · Mode: AFK
+Status: `ready-for-research` · Mode: AFK
 
 Input: the next ≤20 alphabetical files from the A19 discovery command after
 A20 lands.

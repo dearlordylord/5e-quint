@@ -84,6 +84,19 @@ type DragonsBreathLastResult =
   | "needsConcentration"
   | "exhaled"
   | "concentrationBroken";
+const DRAGONS_BREATH_GRANTED_ACTION_SCENARIO_OUTCOME_BY_TAG: Readonly<
+  Record<string, DragonsBreathLastResult>
+> = {
+  Init: "init",
+  Cast: "cast",
+  TargetTurn: "targetTurn",
+  NeedsSave: "needsSave",
+  NeedsDamage: "needsDamage",
+  NeedsConcentration: "needsConcentration",
+  Exhaled: "exhaled",
+  ConcentrationBroken: "concentrationBroken",
+} as const;
+
 
 type DragonsBreathGrantedActionState = {
   readonly turnRole: DragonsBreathTurnRole;
@@ -769,7 +782,7 @@ function normalizeDragonsBreathQuintState(
   raw: unknown,
 ): DragonsBreathGrantedActionState {
   const state = quintRecordField(quintStateRecord(raw), "qState");
-  const lastResult = dragonsBreathLastResult(state["qScenarioResult"]);
+  const lastResult = dragonsBreathLastResult(state["qScenarioOutcome"]);
   const protocol = decodeWitnessProtocolState({
     state,
     protocolField: "protocol",
@@ -869,17 +882,12 @@ function dragonsBreathHole(raw: unknown): DragonsBreathHole {
 }
 
 function dragonsBreathLastResult(raw: unknown): DragonsBreathLastResult {
-  if (
-    raw === "init" ||
-    raw === "cast" ||
-    raw === "targetTurn" ||
-    raw === "needsSave" ||
-    raw === "needsDamage" ||
-    raw === "needsConcentration" ||
-    raw === "exhaled" ||
-    raw === "concentrationBroken"
-  ) {
-    return raw;
+  const tag = quintVariantTag(raw, "qScenarioOutcome");
+  const value = DRAGONS_BREATH_GRANTED_ACTION_SCENARIO_OUTCOME_BY_TAG[tag];
+  if (value !== undefined) {
+    return value;
   }
-  throw new Error(`Unknown Dragon's Breath result: ${String(raw)}.`);
+  throw new Error(
+    `Expected Quint scenario outcome variant qScenarioOutcome, got ${tag}.`,
+  );
 }

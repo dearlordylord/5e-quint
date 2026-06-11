@@ -5,6 +5,9 @@ module battleRuntimeBeamSequenceSelectedIdentityMbt {
 
   type WitnessHole = | BeamSequence
 
+  type BeamSequenceSelectedIdentityScenarioOutcome = | Init | Discovered | SameTargetResolved | SplitTargetResolved | CreatureObjectResolved
+
+
   type WitnessState = {
     qInitialCreatureTargetHoles: int,
     qInitialObjectTargetHoles: int,
@@ -12,7 +15,7 @@ module battleRuntimeBeamSequenceSelectedIdentityMbt {
     qZombieHp: int,
     qObjectHp: int,
     qActionAvailable: bool,
-    qScenarioResult: str,
+    qScenarioOutcome: BeamSequenceSelectedIdentityScenarioOutcome,
     protocol: WitnessProtocol[WitnessHole],
   }
 
@@ -24,7 +27,7 @@ module battleRuntimeBeamSequenceSelectedIdentityMbt {
   pure def qZombieHp: int = qState.qZombieHp
   pure def qObjectHp: int = qState.qObjectHp
   pure def qActionAvailable: bool = qState.qActionAvailable
-  pure def qScenarioResult: str = qState.qScenarioResult
+  pure def qScenarioOutcome: BeamSequenceSelectedIdentityScenarioOutcome = qState.qScenarioOutcome
 
 
   action recordProjection(
@@ -34,7 +37,7 @@ module battleRuntimeBeamSequenceSelectedIdentityMbt {
     zombieHp: int,
     objectHp: int,
     actionAvailable: bool,
-    scenarioResult: str,
+    scenarioOutcome: BeamSequenceSelectedIdentityScenarioOutcome,
     protocol: WitnessProtocol[WitnessHole],
   ): bool = all {
     qState' = {
@@ -44,39 +47,39 @@ module battleRuntimeBeamSequenceSelectedIdentityMbt {
       qZombieHp: zombieHp,
       qObjectHp: objectHp,
       qActionAvailable: actionAvailable,
-      qScenarioResult: scenarioResult,
+      qScenarioOutcome: scenarioOutcome,
       protocol: protocol,
     },
   }
 
-  action init = recordProjection(2, 2, 13, 11, 5, true, "init",
+  action init = recordProjection(2, 2, 13, 11, 5, true, Init,
     witnessInit(BeamSequence),
   )
 
   action doDiscoverLevelFiveBeamTargetHoles = all {
-    qScenarioResult == "init",
-    recordProjection(2, 2, 13, 11, 5, true, "discovered",
+    qScenarioOutcome == Init,
+    recordProjection(2, 2, 13, 11, 5, true, Discovered,
     witnessResolved(BeamSequence),
   ),
   }
 
   action doResolveTwoCreatureBeamsSameTarget = all {
-    qScenarioResult == "init",
-    recordProjection(2, 2, 9, 11, 5, false, "sameTargetResolved",
+    qScenarioOutcome == Init,
+    recordProjection(2, 2, 9, 11, 5, false, SameTargetResolved,
     witnessResolved(BeamSequence),
   ),
   }
 
   action doResolveTwoCreatureBeamsSplitTargets = all {
-    qScenarioResult == "init",
-    recordProjection(2, 2, 9, 7, 5, false, "splitTargetResolved",
+    qScenarioOutcome == Init,
+    recordProjection(2, 2, 9, 7, 5, false, SplitTargetResolved,
     witnessResolved(BeamSequence),
   ),
   }
 
   action doResolveCreatureAndObjectBeamTargets = all {
-    qScenarioResult == "init",
-    recordProjection(2, 2, 9, 11, 1, false, "creatureObjectResolved",
+    qScenarioOutcome == Init,
+    recordProjection(2, 2, 9, 11, 1, false, CreatureObjectResolved,
     witnessResolved(BeamSequence),
   ),
   }

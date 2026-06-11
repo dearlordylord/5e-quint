@@ -12,6 +12,9 @@ module battleRuntimeChainedAttackSequenceMbt {
     | AttackRoll1
     | DamageRoll1
     | TargetChoice2
+  type ChainedAttackSequenceScenarioOutcome = | Init | AwaitingDamageType | AwaitingInitialTarget | AwaitingStep0Attack | AwaitingStep0Damage | Step0NoLeapComplete | AwaitingFirstLeapTarget | AwaitingStep1Attack | AwaitingStep1Damage | Slot1LeapLimitComplete | AwaitingSecondLeapTarget
+
+
 
   // RAW trace:
   // - .references/srd-5.2.1/Spells/Descriptions-A-D.md#Chromatic Orb:
@@ -40,7 +43,7 @@ module battleRuntimeChainedAttackSequenceMbt {
     qStep1NaturalD20: int,
     qStep1DamageTotal: int,
     qStep1DamageHasDuplicate: bool,
-    qScenarioResult: str,
+    qScenarioOutcome: ChainedAttackSequenceScenarioOutcome,
     protocol: WitnessProtocol[WitnessHole],
   }
 
@@ -64,7 +67,7 @@ module battleRuntimeChainedAttackSequenceMbt {
   pure def qStep1DamageTotal: int = qState.qStep1DamageTotal
   pure def qStep1DamageHasDuplicate: bool = qState.qStep1DamageHasDuplicate
   pure def protocolHoles: Set[WitnessHole] = qState.protocol.holes
-  pure def qScenarioResult: str = qState.qScenarioResult
+  pure def qScenarioOutcome: ChainedAttackSequenceScenarioOutcome = qState.qScenarioOutcome
 
   pure val noDamageType: str = "none"
   pure val noTarget: str = "none"
@@ -101,7 +104,7 @@ module battleRuntimeChainedAttackSequenceMbt {
     step1NaturalD20: int,
     step1DamageTotal: int,
     step1DamageHasDuplicate: bool,
-    scenarioResult: str,
+    scenarioOutcome: ChainedAttackSequenceScenarioOutcome,
     protocol: WitnessProtocol[WitnessHole],
   ): bool = all {
     qState' = {
@@ -122,7 +125,7 @@ module battleRuntimeChainedAttackSequenceMbt {
       qStep1NaturalD20: step1NaturalD20,
       qStep1DamageTotal: step1DamageTotal,
       qStep1DamageHasDuplicate: step1DamageHasDuplicate,
-      qScenarioResult: scenarioResult,
+      qScenarioOutcome: scenarioOutcome,
       protocol: protocol,
     },
   }
@@ -145,14 +148,14 @@ module battleRuntimeChainedAttackSequenceMbt {
     0,
     0,
     false,
-    "init",
+    Init,
     witnessInit(DamageTypeChoice),
   )
 
   action doStartCast = {
     nondet slotLevel = 1.to(2).oneOf()
     all {
-      qScenarioResult == "init",
+      qScenarioOutcome == Init,
       recordChainedAttackState(
         noDamageType,
         slotLevel,
@@ -171,7 +174,7 @@ module battleRuntimeChainedAttackSequenceMbt {
         0,
         0,
         false,
-        "awaitingDamageType",
+        AwaitingDamageType,
     witnessNeedsHoles(damageTypeChoiceHoles),
   ),
     }
@@ -199,7 +202,7 @@ module battleRuntimeChainedAttackSequenceMbt {
         0,
         0,
         false,
-        "awaitingInitialTarget",
+        AwaitingInitialTarget,
     witnessNeedsHoles(targetChoice0Holes),
   ),
     }
@@ -225,7 +228,7 @@ module battleRuntimeChainedAttackSequenceMbt {
       0,
       0,
       false,
-      "awaitingStep0Attack",
+      AwaitingStep0Attack,
     witnessNeedsHoles(attackRoll0Holes),
   ),
   }
@@ -250,7 +253,7 @@ module battleRuntimeChainedAttackSequenceMbt {
       0,
       0,
       false,
-      "awaitingStep0Damage",
+      AwaitingStep0Damage,
     witnessNeedsHoles(damageRoll0Holes),
   ),
   }
@@ -277,7 +280,7 @@ module battleRuntimeChainedAttackSequenceMbt {
         0,
         0,
         false,
-        "step0NoLeapComplete",
+        Step0NoLeapComplete,
     witnessResolved(DamageTypeChoice),
   ),
     }
@@ -305,7 +308,7 @@ module battleRuntimeChainedAttackSequenceMbt {
         0,
         0,
         false,
-        "awaitingFirstLeapTarget",
+        AwaitingFirstLeapTarget,
     witnessNeedsHoles(targetChoice1Holes),
   ),
     }
@@ -333,7 +336,7 @@ module battleRuntimeChainedAttackSequenceMbt {
       0,
       0,
       false,
-      "awaitingStep1Attack",
+      AwaitingStep1Attack,
     witnessNeedsHoles(attackRoll1Holes),
   ),
   }
@@ -358,7 +361,7 @@ module battleRuntimeChainedAttackSequenceMbt {
       12,
       0,
       false,
-      "awaitingStep1Damage",
+      AwaitingStep1Damage,
     witnessNeedsHoles(damageRoll1Holes),
   ),
   }
@@ -384,7 +387,7 @@ module battleRuntimeChainedAttackSequenceMbt {
       qStep1NaturalD20,
       3,
       true,
-      "slot1LeapLimitComplete",
+      Slot1LeapLimitComplete,
     witnessResolved(DamageTypeChoice),
   ),
   }
@@ -410,7 +413,7 @@ module battleRuntimeChainedAttackSequenceMbt {
       qStep1NaturalD20,
       4,
       true,
-      "awaitingSecondLeapTarget",
+      AwaitingSecondLeapTarget,
     witnessNeedsHoles(targetChoice2Holes),
   ),
   }

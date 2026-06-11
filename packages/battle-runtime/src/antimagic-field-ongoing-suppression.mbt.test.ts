@@ -44,6 +44,7 @@ import {
   numberFromQuintInt,
   quintRecordField,
   quintStateRecord,
+  quintVariantTag,
   run,
   stateCheck,
 } from "./battle-runtime-mbt-driver-kit.ts";
@@ -71,6 +72,15 @@ type AntimagicLastResult =
   | "suppressedOrdinarySpell"
   | "suppressedArtifactSpell"
   | "restored";
+const ANTIMAGIC_FIELD_ONGOING_SUPPRESSION_SCENARIO_OUTCOME_BY_TAG: Readonly<
+  Record<string, AntimagicLastResult>
+> = {
+  Init: "init",
+  SuppressedOrdinarySpell: "suppressedOrdinarySpell",
+  SuppressedArtifactSpell: "suppressedArtifactSpell",
+  Restored: "restored",
+} as const;
+
 type AntimagicSuppressionSourceKind = Extract<
   BattleAntimagicFieldAffectedOngoingSpellEffect["sourceKind"],
   "ordinarySpell" | "artifact"
@@ -552,7 +562,7 @@ function normalizeAntimagicQuintState(
   raw: unknown,
 ): AntimagicFieldOngoingSuppressionState {
   const state = quintRecordField(quintStateRecord(raw), "qState");
-  const scenarioResult = antimagicLastResult(state["qScenarioResult"]);
+  const scenarioResult = antimagicLastResult(state["qScenarioOutcome"]);
   const protocol = decodeWitnessProtocolState({
     state,
     protocolField: "protocol",
@@ -620,13 +630,13 @@ function requireResolved(
 }
 
 function antimagicLastResult(raw: unknown): AntimagicLastResult {
-  if (
-    raw === "init" ||
-    raw === "suppressedOrdinarySpell" ||
-    raw === "suppressedArtifactSpell" ||
-    raw === "restored"
-  ) {
-    return raw;
+  const tag = quintVariantTag(raw, "qScenarioOutcome");
+  const value =
+    ANTIMAGIC_FIELD_ONGOING_SUPPRESSION_SCENARIO_OUTCOME_BY_TAG[tag];
+  if (value !== undefined) {
+    return value;
   }
-  throw new Error(`Unknown Antimagic Field result: ${String(raw)}.`);
+  throw new Error(
+    `Expected Quint scenario outcome variant qScenarioOutcome, got ${tag}.`,
+  );
 }

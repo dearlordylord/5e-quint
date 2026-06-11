@@ -69,6 +69,18 @@ type CreatureTypeProtectionAndCharmSelectedIdentityLastResult =
   | "protectionAttackProjected"
   | "protectionCharmPrevented"
   | "protectionRelevantSaveResolved";
+
+const CREATURE_TYPE_PROTECTION_AND_CHARM_SELECTED_IDENTITY_SCENARIO_OUTCOME_BY_TAG = {
+  Init: "init",
+  Discovered: "discovered",
+  Resolved: "resolved",
+  DamageBreakResolved: "damageBreakResolved",
+  ProtectionResolved: "protectionResolved",
+  ProtectionAttackProjected: "protectionAttackProjected",
+  ProtectionCharmPrevented: "protectionCharmPrevented",
+  ProtectionRelevantSaveResolved: "protectionRelevantSaveResolved",
+} as const;
+
 type AnimalFriendshipTargetAdmission = {
   readonly beastTargetAdmitted: boolean;
   readonly humanoidTargetAdmitted: boolean;
@@ -374,7 +386,8 @@ defineSelectedIdentityWitness({
   quintStateField: "qState",
   quintStateFieldPrefix: "q",
   witnessProtocolField: "protocol",
-  quintFieldNames: { lastResult: "qScenarioResult" },
+  quintFieldNames: { lastResult: "qScenarioOutcome" },
+  quintVariantFieldTags: { lastResult: CREATURE_TYPE_PROTECTION_AND_CHARM_SELECTED_IDENTITY_SCENARIO_OUTCOME_BY_TAG },
   projectionSchema: {
     beastTargetAdmitted: "bool",
     humanoidTargetAdmitted: "bool",
@@ -393,7 +406,7 @@ defineSelectedIdentityWitness({
     animalFriendshipEffectPresent: "bool",
     actionAvailable: "bool",
     firstLevelSlotsExpended: "int",
-    lastResult: "str",
+    lastResult: "variant",
   },
   initialProjection: expectedProjection(),
   units: selectedUnitIdentityReplays.map((replay) => ({

@@ -50,6 +50,16 @@ type BreathWeaponLastResult =
   | "rejectMissingResource"
   | "rejectMismatchedArea"
   | "rejectInvalidDamageRoll";
+
+const DRAGONBORN_BREATH_WEAPON_SCENARIO_OUTCOME_BY_TAG = {
+  Init: "init",
+  Resolved: "resolved",
+  OpenedExtraAttack: "openedExtraAttack",
+  RejectMissingResource: "rejectMissingResource",
+  RejectMismatchedArea: "rejectMismatchedArea",
+  RejectInvalidDamageRoll: "rejectInvalidDamageRoll",
+} as const;
+
 type BreathWeaponProjection = {
   readonly targetHp: number;
   readonly secondTargetHp: number;
@@ -73,7 +83,8 @@ defineSelectedIdentityWitness({
   quintStateField: "qState",
   quintStateFieldPrefix: "q",
   witnessProtocolField: "protocol",
-  quintFieldNames: { lastResult: "qScenarioResult" },
+  quintFieldNames: { lastResult: "qScenarioOutcome" },
+  quintVariantFieldTags: { lastResult: DRAGONBORN_BREATH_WEAPON_SCENARIO_OUTCOME_BY_TAG },
   witnessInvalidScenarioReasons: {
     rejectMissingResource: "invalidFill",
     rejectMismatchedArea: "invalidFill",
@@ -84,7 +95,7 @@ defineSelectedIdentityWitness({
     secondTargetHp: "int",
     breathWeaponUsesRemaining: "int",
     actionResourcesRemaining: "int",
-    lastResult: "str",
+    lastResult: "variant",
   },
   initialProjection: expectedProjection(),
   units: [

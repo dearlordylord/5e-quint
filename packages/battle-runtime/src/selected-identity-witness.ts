@@ -13,18 +13,19 @@ import {
   quintField,
   quintRecordField,
   quintStateRecord,
+  quintVariantTag,
   run,
   stateCheck,
 } from "./battle-runtime-mbt-driver-kit.ts";
 
-export type ProjectionFieldKind = "bool" | "int" | "str";
+export type ProjectionFieldKind = "bool" | "int" | "str" | "variant";
 export type ProjectionSchema = Readonly<Record<string, ProjectionFieldKind>>;
 export type ProjectionOf<S extends ProjectionSchema> = Readonly<{
   [K in keyof S]: S[K] extends "bool"
     ? boolean
     : S[K] extends "int"
       ? number
-      : S[K] extends "str"
+      : S[K] extends "str" | "variant"
         ? string
         : never;
 }>;
@@ -58,6 +59,9 @@ type SelectedIdentityWitnessBase<P extends ProjectionRecord> = {
   readonly witnessNoInvalidReason?: string;
   readonly witnessInvalidScenarioReasons?: Readonly<Record<string, string>>;
   readonly witnessDecodeHole?: (raw: unknown) => unknown;
+  readonly quintVariantFieldTags?: Readonly<
+    Record<string, Readonly<Record<string, string>>>
+  >;
 };
 
 export type FlatSelectedIdentityWitness<S extends ProjectionSchema> =
@@ -219,6 +223,7 @@ export function defineSelectedIdentityWitness<
 type RuntimeProjectionField = {
   readonly kind: ProjectionFieldKind;
   readonly allowedStrings: ReadonlySet<string>;
+  readonly variantTagValues: Readonly<Record<string, string>>;
 };
 type RuntimeProjectionSchema = Readonly<Record<string, RuntimeProjectionField>>;
 
@@ -228,7 +233,7 @@ function projectionRuntimeSchema<
 >(
   witness: Pick<
     SelectedIdentityWitnessBase<P> & { readonly projectionSchema: S },
-    "projectionSchema" | "initialProjection" | "units"
+    "projectionSchema" | "initialProjection" | "units" | "quintVariantFieldTags"
   >,
 ): RuntimeProjectionSchema {
   const stringValues = new Map<string, Set<string>>();
@@ -237,7 +242,10 @@ function projectionRuntimeSchema<
       return;
     }
     for (const [field, value] of Object.entries(projection)) {
-      if (witness.projectionSchema[field] === "str") {
+      if (
+        witness.projectionSchema[field] === "str" ||
+        witness.projectionSchema[field] === "variant"
+      ) {
         if (typeof value !== "string") {
           throw new Error(
             `Expected selected identity projection field ${field} to declare a string value.`,
@@ -263,6 +271,7 @@ function projectionRuntimeSchema<
       {
         kind,
         allowedStrings: stringValues.get(field) ?? new Set<string>(),
+        variantTagValues: witness.quintVariantFieldTags?.[field] ?? {},
       },
     ]),
   );
@@ -280,6 +289,7 @@ function normalizeQuintState(
     | "witnessNoInvalidReason"
     | "witnessInvalidScenarioReasons"
     | "witnessDecodeHole"
+    | "quintVariantFieldTags"
   >,
 ): Readonly<Record<string, boolean | number | string>> {
   const root = quintStateRecord(raw);
@@ -386,6 +396,7 @@ function parseQuintField(
     Match.when("bool", () => parseBool(value, qKey)),
     Match.when("int", () => parseInt(value, qKey)),
     Match.when("str", () => parseStr(value, spec.allowedStrings, qKey)),
+    Match.when("variant", () => parseVariant(value, spec, qKey)),
     Match.exhaustive,
   )(spec.kind);
 }
@@ -414,4 +425,19 @@ function parseStr(
     );
   }
   return value;
+}
+
+function parseVariant(
+  value: unknown,
+  spec: RuntimeProjectionField,
+  qKey: string,
+): string {
+  const tag = quintVariantTag(value, qKey);
+  const projectedValue = spec.variantTagValues[tag];
+  if (projectedValue === undefined) {
+    throw new Error(
+      `Unexpected Quint variant field ${qKey} tag ${tag}; expected one of ${Object.keys(spec.variantTagValues).join(", ")}.`,
+    );
+  }
+  return parseStr(projectedValue, spec.allowedStrings, qKey);
 }
