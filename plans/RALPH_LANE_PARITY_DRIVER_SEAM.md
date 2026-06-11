@@ -151,7 +151,7 @@
     {
       "number": 25,
       "id": "PDS-A25-STAT-BLOCK-WITNESS-PROTOCOL-DRAIN",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Migrate the stat-block action ordering witness to WitnessProtocol"
     }
   ]
@@ -687,7 +687,7 @@ placeholder task.
 
 ### Task 25 - PDS-A25-STAT-BLOCK-WITNESS-PROTOCOL-DRAIN
 
-Status: `ready-for-research` · Mode: AFK
+Status: `done` · Mode: AFK
 
 Input: `battle-runtime-stat-block-action-ordering.mbt.qnt`,
 `src/stat-block-action-ordering.mbt.test.ts`, the A16 witness-protocol gate in
