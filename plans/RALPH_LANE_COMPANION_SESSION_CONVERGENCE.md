@@ -61,7 +61,7 @@
     {
       "number": 10,
       "id": "CSC-T10-SMALL-FINDINGS-BATCH",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Close the small review findings (narrowing, dead exports, duplicate rules, id constructor, durable-id uniqueness owner)"
     },
     {
@@ -244,7 +244,7 @@ a task's change invalidates them):
 | 14 | CSC-T14-R4A-FORMS-SHIM-DELETION | ready-for-research | CSC-T13-R3LITE-ALIAS-FAMILY-DELETION | Same-session-sized battle-runtime cleanup; touches imports in files T13 just edited. |
 | 8 | CSC-T08-CREATION-HP-SURFACE | ready-for-research | CSC-T14-R4A-FORMS-SHIM-DELETION | Edits the creation op wherever T07 left it; runs after the cheap cleanups so the queue front stays unblocked. |
 | 9 | CSC-T09-FORM-CATALOG-REFERENCE | ready-for-research | CSC-T08-CREATION-HP-SURFACE | Touches admission eligibility helpers T07 may have relocated. |
-| 10 | CSC-T10-SMALL-FINDINGS-BATCH | blocked | CSC-T09-FORM-CATALOG-REFERENCE | Sweep of remaining small findings in now-stable files; now also owns the durable-id uniqueness decision (R4b). |
+| 10 | CSC-T10-SMALL-FINDINGS-BATCH | ready-for-research | CSC-T09-FORM-CATALOG-REFERENCE | Sweep of remaining small findings in now-stable files; now also owns the durable-id uniqueness decision (R4b). |
 | 15 | CSC-T15-R2-PROTOCOL-TAG-HOIST | blocked | CSC-T10-SMALL-FINDINGS-BATCH | Owner-approved refactor; reshapes protocol threading and deletes the settlement inverse mapping before T16 moves the code. |
 | 16 | CSC-T16-R1-SINGLE-SETTLEMENT-OPERATION | blocked | CSC-T15-R2-PROTOCOL-TAG-HOIST | Code moves once, in its post-T15 final shape (the T07 rationale). |
 | 11 | CSC-T11-CONVERGENCE-CLOSEOUT | blocked | CSC-T16-R1-SINGLE-SETTLEMENT-OPERATION | Full-gate run + plan-doc truth update over the whole lane, tasks 1–16. |
@@ -796,7 +796,7 @@ catalog fixture) or the persisted-facts path; suites green.
 
 ### Task 10 - CSC-T10-SMALL-FINDINGS-BATCH
 
-Status: `blocked` · Mode: AFK
+Status: `ready-for-research` · Mode: AFK
 
 Close the remaining review findings (F11 batch), each small and local:
 
