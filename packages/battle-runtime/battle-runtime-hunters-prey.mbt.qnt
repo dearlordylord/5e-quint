@@ -4,12 +4,44 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.hunters-prey
 
 module battleRuntimeHuntersPreyMbt {
-  var qColossusTargetHp: int
-  var qHordeTargetHp: int
-  var qColossusUsed: bool
-  var qHordeBreakerUsed: bool
-  var qLastResult: str
-  var qLastInvalidReason: str
+  import battleRuntimeWitnessProtocol.* from "./battle-runtime-witness-protocol"
+
+  type WitnessHole = | WitnessProtocolHole
+
+  type HuntersPreyWitnessState = {
+    qColossusTargetHp: int,
+    qHordeTargetHp: int,
+    qColossusUsed: bool,
+    qHordeBreakerUsed: bool,
+    qScenarioResult: str,
+    qScenarioInvalidReason: str,
+    protocol: WitnessProtocol[WitnessHole],
+  }
+
+  var qState: HuntersPreyWitnessState
+
+  pure def qColossusTargetHp: int = qState.qColossusTargetHp
+  pure def qHordeTargetHp: int = qState.qHordeTargetHp
+  pure def qColossusUsed: bool = qState.qColossusUsed
+  pure def qHordeBreakerUsed: bool = qState.qHordeBreakerUsed
+  pure def qLastResult: str = qState.qScenarioResult
+  pure def qLastInvalidReason: str = qState.qScenarioInvalidReason
+
+  pure def huntersPreyProtocolForProjection(
+    holes: Set[WitnessHole],
+    scenarioResult: str,
+    scenarioInvalidReason: str,
+  ): WitnessProtocol[WitnessHole] =
+    if (scenarioResult == "init") witnessInit(WitnessProtocolHole)
+    else if (scenarioInvalidReason == "invalidFill") witnessInvalid(WitnessProtocolHole, WInvalidFill)
+    else if (scenarioInvalidReason == "staleSubject") witnessInvalid(WitnessProtocolHole, WStaleSubject)
+    else if (scenarioInvalidReason == "wrongActor") witnessInvalid(WitnessProtocolHole, WWrongActor)
+    else if (scenarioInvalidReason == "missingCombatant") witnessInvalid(WitnessProtocolHole, WMissingCombatant)
+    else if (scenarioInvalidReason == "unsupportedSubject") witnessInvalid(WitnessProtocolHole, WUnsupportedSubject)
+    else if (scenarioInvalidReason == "unsupportedActOption") witnessInvalid(WitnessProtocolHole, WUnsupportedActOption)
+    else if (holes != Set()) witnessNeedsHoles(holes)
+    else witnessResolved(WitnessProtocolHole)
+
 
   action recordProjection(
     colossusTargetHp: int,
@@ -19,12 +51,15 @@ module battleRuntimeHuntersPreyMbt {
     lastResult: str,
     lastInvalidReason: str,
   ): bool = all {
-    qColossusTargetHp' = colossusTargetHp,
-    qHordeTargetHp' = hordeTargetHp,
-    qColossusUsed' = colossusUsed,
-    qHordeBreakerUsed' = hordeBreakerUsed,
-    qLastResult' = lastResult,
-    qLastInvalidReason' = lastInvalidReason,
+    qState' = {
+      qColossusTargetHp: colossusTargetHp,
+      qHordeTargetHp: hordeTargetHp,
+      qColossusUsed: colossusUsed,
+      qHordeBreakerUsed: hordeBreakerUsed,
+      qScenarioResult: lastResult,
+      qScenarioInvalidReason: lastInvalidReason,
+      protocol: huntersPreyProtocolForProjection(Set(), lastResult, lastInvalidReason),
+    },
   }
 
   action init = recordProjection(7, 10, false, false, "init", "")

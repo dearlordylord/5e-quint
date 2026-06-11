@@ -83,6 +83,10 @@ defineSelectedIdentityWitness({
     import.meta.dirname,
     "battle-runtime-level2-damage-spell-selected-identity.mbt.qnt",
   ),
+  quintStateField: "qState",
+  quintStateFieldPrefix: "q",
+  witnessProtocolField: "protocol",
+  quintFieldNames: { lastResult: "qScenarioResult" },
   projectionSchema: { lastResult: "str" },
   initialProjection: expectedProjection("init"),
   units: [

@@ -21,12 +21,15 @@ import { describe, expect, it } from "vitest";
 
 import {
   MBT_TEST_TIMEOUT_MS,
+  assertWitnessProtocolConsistentWithScenario,
   booleanField,
+  decodeWitnessProtocolState,
   defineDriver,
   focusedMbtMaxSteps,
   mbtSpecPath,
   mbtTraceCount,
   numberFromQuintInt,
+  quintRecordField,
   quintStateRecord,
   run,
   stateCheck,
@@ -257,6 +260,10 @@ defineSelectedIdentityWitness({
     import.meta.dirname,
     "battle-runtime-druid-wild-shape-form-lifecycle.mbt.qnt",
   ),
+  quintStateField: "qState",
+  quintStateFieldPrefix: "q",
+  witnessProtocolField: "protocol",
+  quintFieldNames: { lastResult: "qScenarioResult" },
   projectionSchema: {
     activeForm: "str",
     bonusActionAvailable: "bool",
@@ -713,7 +720,22 @@ function snapshotCreature(
 function normalizeDruidWildShapeFormQuintState(
   raw: unknown,
 ): DruidWildShapeFormLifecycleProjection {
-  const state = quintStateRecord(raw);
+  const state = quintRecordField(quintStateRecord(raw), "qState");
+  const protocol = decodeWitnessProtocolState({
+    state,
+    protocolField: "protocol",
+    noInvalidReason: "",
+    decodeHole: druidWildShapeUnexpectedHole,
+  });
+  if (protocol.holes.length !== 0) {
+    throw new Error("Expected Druid Wild Shape witness holes to be empty.");
+  }
+  const scenarioResult = literalField(state["qScenarioResult"], LAST_RESULTS);
+  assertWitnessProtocolConsistentWithScenario({
+    label: "Druid Wild Shape form lifecycle",
+    scenarioResult,
+    protocol,
+  });
   return {
     activeForm: literalField(state["qActiveForm"], ACTIVE_FORMS),
     bonusActionAvailable: booleanField(state, "qBonusActionAvailable"),
@@ -738,8 +760,12 @@ function normalizeDruidWildShapeFormQuintState(
     druidAlive: druidStatusIsAlive(
       literalField(state["qDruidStatus"], DRUID_STATUSES),
     ),
-    lastResult: literalField(state["qLastResult"], LAST_RESULTS),
+    lastResult: scenarioResult,
   };
+}
+
+function druidWildShapeUnexpectedHole(raw: unknown): never {
+  throw new Error(`Unexpected Druid Wild Shape witness hole ${String(raw)}.`);
 }
 
 function druidStatusIsAlive(status: DruidStatus): boolean {

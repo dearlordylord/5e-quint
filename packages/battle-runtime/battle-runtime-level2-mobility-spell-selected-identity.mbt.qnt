@@ -1,10 +1,34 @@
 // -*- mode: Bluespec; -*-
 
 module battleRuntimeLevel2MobilitySpellSelectedIdentityMbt {
-  var qLastResult: str
+  import battleRuntimeWitnessProtocol.* from "./battle-runtime-witness-protocol"
+
+  type WitnessHole = | WitnessProtocolHole
+
+  type Level2MobilitySpellSelectedIdentityWitnessState = {
+    qScenarioResult: str,
+    protocol: WitnessProtocol[WitnessHole],
+  }
+
+  var qState: Level2MobilitySpellSelectedIdentityWitnessState
+
+  pure def qLastResult: str = qState.qScenarioResult
+
+  pure def level2MobilitySpellSelectedIdentityProtocolForProjection(
+    holes: Set[WitnessHole],
+    scenarioResult: str,
+    _scenarioInvalidReason: str,
+  ): WitnessProtocol[WitnessHole] =
+    if (scenarioResult == "init") witnessInit(WitnessProtocolHole)
+    else if (holes != Set()) witnessNeedsHoles(holes)
+    else witnessResolved(WitnessProtocolHole)
+
 
   action recordProjection(lastResult: str): bool = all {
-    qLastResult' = lastResult,
+    qState' = {
+      qScenarioResult: lastResult,
+      protocol: level2MobilitySpellSelectedIdentityProtocolForProjection(Set(), lastResult, ""),
+    },
   }
 
   action init = recordProjection("init")

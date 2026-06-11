@@ -79,6 +79,10 @@ defineSelectedIdentityWitness({
     import.meta.dirname,
     "battle-runtime-healing-stabilization-selected-identity.mbt.qnt",
   ),
+  quintStateField: "qState",
+  quintStateFieldPrefix: "q",
+  witnessProtocolField: "protocol",
+  quintFieldNames: { lastResult: "qScenarioResult" },
   projectionSchema: {
     targetHp: "int",
     targetStable: "bool",

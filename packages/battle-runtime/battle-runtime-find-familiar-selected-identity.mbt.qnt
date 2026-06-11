@@ -1,15 +1,44 @@
 // -*- mode: Bluespec; -*-
 
 module battleRuntimeFindFamiliarSelectedIdentityMbt {
-  var qFamiliarStatus: str
-  var qFormId: str
-  var qFamiliarCombatantPresent: bool
-  var qReplacementCombatantPresent: bool
-  var qFamiliarReactionAvailable: bool
-  var qOwnerActionAvailable: bool
-  var qOwnerSpellSlotCommitted: bool
-  var qTargetHp: int
-  var qLastResult: str
+  import battleRuntimeWitnessProtocol.* from "./battle-runtime-witness-protocol"
+
+  type WitnessHole = | WitnessProtocolHole
+
+  type FindFamiliarSelectedIdentityWitnessState = {
+    qFamiliarStatus: str,
+    qFormId: str,
+    qFamiliarCombatantPresent: bool,
+    qReplacementCombatantPresent: bool,
+    qFamiliarReactionAvailable: bool,
+    qOwnerActionAvailable: bool,
+    qOwnerSpellSlotCommitted: bool,
+    qTargetHp: int,
+    qScenarioResult: str,
+    protocol: WitnessProtocol[WitnessHole],
+  }
+
+  var qState: FindFamiliarSelectedIdentityWitnessState
+
+  pure def qFamiliarStatus: str = qState.qFamiliarStatus
+  pure def qFormId: str = qState.qFormId
+  pure def qFamiliarCombatantPresent: bool = qState.qFamiliarCombatantPresent
+  pure def qReplacementCombatantPresent: bool = qState.qReplacementCombatantPresent
+  pure def qFamiliarReactionAvailable: bool = qState.qFamiliarReactionAvailable
+  pure def qOwnerActionAvailable: bool = qState.qOwnerActionAvailable
+  pure def qOwnerSpellSlotCommitted: bool = qState.qOwnerSpellSlotCommitted
+  pure def qTargetHp: int = qState.qTargetHp
+  pure def qLastResult: str = qState.qScenarioResult
+
+  pure def findFamiliarSelectedIdentityProtocolForProjection(
+    holes: Set[WitnessHole],
+    scenarioResult: str,
+    _scenarioInvalidReason: str,
+  ): WitnessProtocol[WitnessHole] =
+    if (scenarioResult == "init") witnessInit(WitnessProtocolHole)
+    else if (holes != Set()) witnessNeedsHoles(holes)
+    else witnessResolved(WitnessProtocolHole)
+
 
   action recordFindFamiliarState(
     familiarStatus: str,
@@ -22,15 +51,18 @@ module battleRuntimeFindFamiliarSelectedIdentityMbt {
     targetHp: int,
     lastResult: str,
   ): bool = all {
-    qFamiliarStatus' = familiarStatus,
-    qFormId' = formId,
-    qFamiliarCombatantPresent' = familiarCombatantPresent,
-    qReplacementCombatantPresent' = replacementCombatantPresent,
-    qFamiliarReactionAvailable' = familiarReactionAvailable,
-    qOwnerActionAvailable' = ownerActionAvailable,
-    qOwnerSpellSlotCommitted' = ownerSpellSlotCommitted,
-    qTargetHp' = targetHp,
-    qLastResult' = lastResult,
+    qState' = {
+      qFamiliarStatus: familiarStatus,
+      qFormId: formId,
+      qFamiliarCombatantPresent: familiarCombatantPresent,
+      qReplacementCombatantPresent: replacementCombatantPresent,
+      qFamiliarReactionAvailable: familiarReactionAvailable,
+      qOwnerActionAvailable: ownerActionAvailable,
+      qOwnerSpellSlotCommitted: ownerSpellSlotCommitted,
+      qTargetHp: targetHp,
+      qScenarioResult: lastResult,
+      protocol: findFamiliarSelectedIdentityProtocolForProjection(Set(), lastResult, ""),
+    },
   }
 
   action init = recordFindFamiliarState(

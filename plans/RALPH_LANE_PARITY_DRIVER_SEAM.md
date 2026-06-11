@@ -73,13 +73,13 @@
     {
       "number": 12,
       "id": "PDS-A12-WITNESS-BATCH-2",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Witness-protocol batch migration 2"
     },
     {
       "number": 13,
       "id": "PDS-A13-WITNESS-BATCH-3",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Witness-protocol batch migration 3"
     },
     {
@@ -203,8 +203,8 @@ Every task must include:
 | 9 | PDS-A09-KIT-GATE-AND-CLOSEOUT | deferred | PDS-A08-KIT-BATCH-5 | Owner intervention 2026-06-11: repeated attempts showed the PRD/03 20% line-footprint target was missed by the completed kit batches and is not a prerequisite for prd/04 witness-protocol work. Revive only with explicit extraction scope or revised acceptance. |
 | 10 | PDS-A10-WITNESS-PILOTS | done | PDS-A08-KIT-BATCH-5 | Trace-cost timing note and pilot line-delta report. Does not depend on PDS-A09 or the PRD/03 20% line-footprint metric. |
 | 11 | PDS-A11-WITNESS-BATCH-1 | done | PDS-A10-WITNESS-PILOTS | Self-discovering; ≤20 pairs; `MBT_TRACES=3` confidence pass per batch. |
-| 12 | PDS-A12-WITNESS-BATCH-2 | ready-for-research | PDS-A11-WITNESS-BATCH-1 | |
-| 13 | PDS-A13-WITNESS-BATCH-3 | blocked | PDS-A12-WITNESS-BATCH-2 | |
+| 12 | PDS-A12-WITNESS-BATCH-2 | done | PDS-A11-WITNESS-BATCH-1 | |
+| 13 | PDS-A13-WITNESS-BATCH-3 | ready-for-research | PDS-A12-WITNESS-BATCH-2 | |
 | 14 | PDS-A14-WITNESS-BATCH-4 | blocked | PDS-A13-WITNESS-BATCH-3 | |
 | 15 | PDS-A15-WITNESS-BATCH-5 | blocked | PDS-A14-WITNESS-BATCH-4 | Drains the protocol-unmigrated set. |
 | 16 | PDS-A16-WITNESS-GATE-AND-CLOSEOUT | blocked | PDS-A15-WITNESS-BATCH-5 | Convention gate, ADR addendum, README skeleton, prd/04 closeout. |
@@ -393,7 +393,7 @@ A15 additionally asserts `grep -l 'var qLastResult: str' *.mbt.qnt` is empty.
 
 ### Task 12 - PDS-A12-WITNESS-BATCH-2
 
-Status: `ready-for-research` · Mode: AFK
+Status: `done` · Mode: AFK
 
 Input: the protocol-unmigrated discovery rule applied at task start.
 
@@ -407,7 +407,7 @@ confidence pass; closure checker green, allowlist unchanged.
 
 ### Task 13 - PDS-A13-WITNESS-BATCH-3
 
-Status: `blocked` · Mode: AFK
+Status: `ready-for-research` · Mode: AFK
 
 Input: the protocol-unmigrated discovery rule applied at task start.
 

@@ -6,6 +6,38 @@
 // Self-contained literal projection witness for Druid Land's Aid. The paired
 // TypeScript selected-identity driver executes production battle entrypoints.
 module battleRuntimeDruidLandsAidMbt {
+  import battleRuntimeWitnessProtocol.* from "./battle-runtime-witness-protocol"
+
+  type WitnessHole = | WitnessProtocolHole
+
+  type DruidLandsAidWitnessState = {
+    qTargetHp: int,
+    qSecondTargetHp: int,
+    qHealingTargetHp: int,
+    qWildShapeUsesRemaining: int,
+    qActionResourcesRemaining: int,
+    qScenarioResult: str,
+    protocol: WitnessProtocol[WitnessHole],
+  }
+
+  var qState: DruidLandsAidWitnessState
+
+  pure def qTargetHp: int = qState.qTargetHp
+  pure def qSecondTargetHp: int = qState.qSecondTargetHp
+  pure def qHealingTargetHp: int = qState.qHealingTargetHp
+  pure def qWildShapeUsesRemaining: int = qState.qWildShapeUsesRemaining
+  pure def qActionResourcesRemaining: int = qState.qActionResourcesRemaining
+  pure def qLastResult: str = qState.qScenarioResult
+
+  pure def druidLandsAidProtocolForProjection(
+    holes: Set[WitnessHole],
+    scenarioResult: str,
+    _scenarioInvalidReason: str,
+  ): WitnessProtocol[WitnessHole] =
+    if (scenarioResult == "init") witnessInit(WitnessProtocolHole)
+    else if (holes != Set()) witnessNeedsHoles(holes)
+    else witnessResolved(WitnessProtocolHole)
+
   // RAW trace:
   // - .references/srd-5.2.1/Classes/Druid.md:406-411: Land's Aid is a Magic
   //   Action that spends Wild Shape, uses a caller-selected 10-foot-radius
@@ -15,12 +47,6 @@ module battleRuntimeDruidLandsAidMbt {
   //   Druid level 14.
   // - UBIQUITOUS_LANGUAGE.md: Magic Action, Saving Throw, Area of Effect,
   //   Sphere, Damage Type, Hit Points, and Creature.
-  var qTargetHp: int
-  var qSecondTargetHp: int
-  var qHealingTargetHp: int
-  var qWildShapeUsesRemaining: int
-  var qActionResourcesRemaining: int
-  var qLastResult: str
 
   action recordProjection(
     targetHp: int,
@@ -30,16 +56,21 @@ module battleRuntimeDruidLandsAidMbt {
     actionResourcesRemaining: int,
     lastResult: str,
   ): bool = all {
-    qTargetHp' = targetHp,
-    qSecondTargetHp' = secondTargetHp,
-    qHealingTargetHp' = healingTargetHp,
-    qWildShapeUsesRemaining' = wildShapeUsesRemaining,
-    qActionResourcesRemaining' = actionResourcesRemaining,
-    qLastResult' = lastResult,
+    qState' = {
+      qTargetHp: targetHp,
+      qSecondTargetHp: secondTargetHp,
+      qHealingTargetHp: healingTargetHp,
+      qWildShapeUsesRemaining: wildShapeUsesRemaining,
+      qActionResourcesRemaining: actionResourcesRemaining,
+      qScenarioResult: lastResult,
+      protocol: druidLandsAidProtocolForProjection(Set(), lastResult, ""),
+    },
   }
 
   action init = recordProjection(20, 20, 5, 2, 1, "init")
 
+  // Level variants stay enumerated because each one witnesses a distinct
+  // Druid-level fixture and die-count projection, not a sampled fill value.
   action doResolveAreaSaveDamageHealing = all {
     qLastResult == "init",
     recordProjection(12, 16, 12, 1, 0, "resolved"),

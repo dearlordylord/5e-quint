@@ -1,15 +1,44 @@
 // -*- mode: Bluespec; -*-
 
 module battleRuntimeHeatMetalObjectContactMbt {
-  var qCurrentTurnRole: str
-  var qActionAvailable: bool
-  var qBonusActionAvailable: bool
-  var qSpellAvailable: bool
-  var qRepeatAvailable: bool
-  var qObjectContactEffectActive: bool
-  var qCasterConcentrating: bool
-  var qTargetHp: int
-  var qLastResult: str
+  import battleRuntimeWitnessProtocol.* from "./battle-runtime-witness-protocol"
+
+  type WitnessHole = | WitnessProtocolHole
+
+  type HeatMetalObjectContactWitnessState = {
+    qCurrentTurnRole: str,
+    qActionAvailable: bool,
+    qBonusActionAvailable: bool,
+    qSpellAvailable: bool,
+    qRepeatAvailable: bool,
+    qObjectContactEffectActive: bool,
+    qCasterConcentrating: bool,
+    qTargetHp: int,
+    qScenarioResult: str,
+    protocol: WitnessProtocol[WitnessHole],
+  }
+
+  var qState: HeatMetalObjectContactWitnessState
+
+  pure def qCurrentTurnRole: str = qState.qCurrentTurnRole
+  pure def qActionAvailable: bool = qState.qActionAvailable
+  pure def qBonusActionAvailable: bool = qState.qBonusActionAvailable
+  pure def qSpellAvailable: bool = qState.qSpellAvailable
+  pure def qRepeatAvailable: bool = qState.qRepeatAvailable
+  pure def qObjectContactEffectActive: bool = qState.qObjectContactEffectActive
+  pure def qCasterConcentrating: bool = qState.qCasterConcentrating
+  pure def qTargetHp: int = qState.qTargetHp
+  pure def qLastResult: str = qState.qScenarioResult
+
+  pure def heatMetalObjectContactProtocolForProjection(
+    holes: Set[WitnessHole],
+    scenarioResult: str,
+    _scenarioInvalidReason: str,
+  ): WitnessProtocol[WitnessHole] =
+    if (scenarioResult == "init") witnessInit(WitnessProtocolHole)
+    else if (holes != Set()) witnessNeedsHoles(holes)
+    else witnessResolved(WitnessProtocolHole)
+
 
   pure val casterTurnRole: str = "caster"
   pure val targetTurnRole: str = "target"
@@ -28,15 +57,18 @@ module battleRuntimeHeatMetalObjectContactMbt {
     targetHp: int,
     lastResult: str,
   ): bool = all {
-    qCurrentTurnRole' = currentTurnRole,
-    qActionAvailable' = actionAvailable,
-    qBonusActionAvailable' = bonusActionAvailable,
-    qSpellAvailable' = spellAvailable,
-    qRepeatAvailable' = repeatAvailable,
-    qObjectContactEffectActive' = objectContactEffectActive,
-    qCasterConcentrating' = casterConcentrating,
-    qTargetHp' = targetHp,
-    qLastResult' = lastResult,
+    qState' = {
+      qCurrentTurnRole: currentTurnRole,
+      qActionAvailable: actionAvailable,
+      qBonusActionAvailable: bonusActionAvailable,
+      qSpellAvailable: spellAvailable,
+      qRepeatAvailable: repeatAvailable,
+      qObjectContactEffectActive: objectContactEffectActive,
+      qCasterConcentrating: casterConcentrating,
+      qTargetHp: targetHp,
+      qScenarioResult: lastResult,
+      protocol: heatMetalObjectContactProtocolForProjection(Set(), lastResult, ""),
+    },
   }
 
   action init = all {

@@ -1,6 +1,56 @@
 // -*- mode: Bluespec; -*-
 
 module battleRuntimeFindFamiliarCompanionLifecycleMbt {
+  import battleRuntimeWitnessProtocol.* from "./battle-runtime-witness-protocol"
+
+  type WitnessHole = | WitnessProtocolHole
+
+  type FindFamiliarCompanionLifecycleWitnessState = {
+    qFamiliarStatus: str,
+    qFamiliarId: str,
+    qFamiliarForm: str,
+    qCreatureTypeOverride: str,
+    qCompanionCount: int,
+    qTelepathyAvailable: bool,
+    qSharedSensesActive: bool,
+    qBonusActionAvailable: bool,
+    qOwnerAttackAvailable: bool,
+    qFamiliarReactionAvailable: bool,
+    qTouchDeliveryReactionSpent: bool,
+    qPactReactionAttackResolved: bool,
+    qSpellSlotCommitted: bool,
+    qTargetHp: int,
+    qScenarioResult: str,
+    protocol: WitnessProtocol[WitnessHole],
+  }
+
+  var qState: FindFamiliarCompanionLifecycleWitnessState
+
+  pure def qFamiliarStatus: str = qState.qFamiliarStatus
+  pure def qFamiliarId: str = qState.qFamiliarId
+  pure def qFamiliarForm: str = qState.qFamiliarForm
+  pure def qCreatureTypeOverride: str = qState.qCreatureTypeOverride
+  pure def qCompanionCount: int = qState.qCompanionCount
+  pure def qTelepathyAvailable: bool = qState.qTelepathyAvailable
+  pure def qSharedSensesActive: bool = qState.qSharedSensesActive
+  pure def qBonusActionAvailable: bool = qState.qBonusActionAvailable
+  pure def qOwnerAttackAvailable: bool = qState.qOwnerAttackAvailable
+  pure def qFamiliarReactionAvailable: bool = qState.qFamiliarReactionAvailable
+  pure def qTouchDeliveryReactionSpent: bool = qState.qTouchDeliveryReactionSpent
+  pure def qPactReactionAttackResolved: bool = qState.qPactReactionAttackResolved
+  pure def qSpellSlotCommitted: bool = qState.qSpellSlotCommitted
+  pure def qTargetHp: int = qState.qTargetHp
+  pure def qLastResult: str = qState.qScenarioResult
+
+  pure def findFamiliarCompanionLifecycleProtocolForProjection(
+    holes: Set[WitnessHole],
+    scenarioResult: str,
+    _scenarioInvalidReason: str,
+  ): WitnessProtocol[WitnessHole] =
+    if (scenarioResult == "init") witnessInit(WitnessProtocolHole)
+    else if (holes != Set()) witnessNeedsHoles(holes)
+    else witnessResolved(WitnessProtocolHole)
+
   // RAW trace:
   // - .references/srd-5.2.1/Spells/Descriptions-E-L.md#Find Familiar:
   //   chosen familiar form, Celestial/Fey/Fiend type override, telepathic
@@ -13,21 +63,6 @@ module battleRuntimeFindFamiliarCompanionLifecycleMbt {
   //   Reaction.
   // - UBIQUITOUS_LANGUAGE.md: Companion, Magic Action, Bonus Action, Reaction,
   //   Spell Invocation, Spell Effect, Attack Roll, and Hit Points.
-  var qFamiliarStatus: str
-  var qFamiliarId: str
-  var qFamiliarForm: str
-  var qCreatureTypeOverride: str
-  var qCompanionCount: int
-  var qTelepathyAvailable: bool
-  var qSharedSensesActive: bool
-  var qBonusActionAvailable: bool
-  var qOwnerAttackAvailable: bool
-  var qFamiliarReactionAvailable: bool
-  var qTouchDeliveryReactionSpent: bool
-  var qPactReactionAttackResolved: bool
-  var qSpellSlotCommitted: bool
-  var qTargetHp: int
-  var qLastResult: str
 
   pure val noFamiliarStatus: str = "none"
   pure val presentFamiliarStatus: str = "present"
@@ -56,21 +91,24 @@ module battleRuntimeFindFamiliarCompanionLifecycleMbt {
     targetHp: int,
     lastResult: str,
   ): bool = all {
-    qFamiliarStatus' = familiarStatus,
-    qFamiliarId' = familiarId,
-    qFamiliarForm' = familiarForm,
-    qCreatureTypeOverride' = creatureTypeOverride,
-    qCompanionCount' = companionCount,
-    qTelepathyAvailable' = telepathyAvailable,
-    qSharedSensesActive' = sharedSensesActive,
-    qBonusActionAvailable' = bonusActionAvailable,
-    qOwnerAttackAvailable' = ownerAttackAvailable,
-    qFamiliarReactionAvailable' = familiarReactionAvailable,
-    qTouchDeliveryReactionSpent' = touchDeliveryReactionSpent,
-    qPactReactionAttackResolved' = pactReactionAttackResolved,
-    qSpellSlotCommitted' = spellSlotCommitted,
-    qTargetHp' = targetHp,
-    qLastResult' = lastResult,
+    qState' = {
+      qFamiliarStatus: familiarStatus,
+      qFamiliarId: familiarId,
+      qFamiliarForm: familiarForm,
+      qCreatureTypeOverride: creatureTypeOverride,
+      qCompanionCount: companionCount,
+      qTelepathyAvailable: telepathyAvailable,
+      qSharedSensesActive: sharedSensesActive,
+      qBonusActionAvailable: bonusActionAvailable,
+      qOwnerAttackAvailable: ownerAttackAvailable,
+      qFamiliarReactionAvailable: familiarReactionAvailable,
+      qTouchDeliveryReactionSpent: touchDeliveryReactionSpent,
+      qPactReactionAttackResolved: pactReactionAttackResolved,
+      qSpellSlotCommitted: spellSlotCommitted,
+      qTargetHp: targetHp,
+      qScenarioResult: lastResult,
+      protocol: findFamiliarCompanionLifecycleProtocolForProjection(Set(), lastResult, ""),
+    },
   }
 
   action init = recordFindFamiliarState(

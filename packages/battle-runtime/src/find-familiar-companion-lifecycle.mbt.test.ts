@@ -23,12 +23,15 @@ import { describe, expect, it } from "vitest";
 
 import {
   MBT_TEST_TIMEOUT_MS,
+  assertWitnessProtocolConsistentWithScenario,
   booleanField,
+  decodeWitnessProtocolState,
   defineDriver,
   focusedMbtMaxSteps,
   mbtSpecPath,
   mbtTraceCount,
   numberFromQuintInt,
+  quintRecordField,
   quintStateRecord,
   run,
   stateCheck,
@@ -614,7 +617,22 @@ function requireResolved(result: BattleResolutionResult): BattleState {
 function normalizeFindFamiliarCompanionQuintState(
   raw: unknown,
 ): FindFamiliarCompanionProjection {
-  const state = quintStateRecord(raw);
+  const state = quintRecordField(quintStateRecord(raw), "qState");
+  const protocol = decodeWitnessProtocolState({
+    state,
+    protocolField: "protocol",
+    noInvalidReason: "",
+    decodeHole: findFamiliarCompanionUnexpectedHole,
+  });
+  if (protocol.holes.length !== 0) {
+    throw new Error("Expected Find Familiar companion witness holes to be empty.");
+  }
+  const scenarioResult = literalField(state["qScenarioResult"], LAST_RESULTS);
+  assertWitnessProtocolConsistentWithScenario({
+    label: "Find Familiar companion lifecycle",
+    scenarioResult,
+    protocol,
+  });
   return {
     familiarStatus: literalField(state["qFamiliarStatus"], FAMILIAR_STATUSES),
     familiarId: literalField(state["qFamiliarId"], FAMILIAR_IDS),
@@ -645,8 +663,14 @@ function normalizeFindFamiliarCompanionQuintState(
     ),
     spellSlotCommitted: booleanField(state, "qSpellSlotCommitted"),
     targetHp: numberFromQuintInt(state["qTargetHp"], "qTargetHp"),
-    lastResult: literalField(state["qLastResult"], LAST_RESULTS),
+    lastResult: scenarioResult,
   };
+}
+
+function findFamiliarCompanionUnexpectedHole(raw: unknown): never {
+  throw new Error(
+    `Unexpected Find Familiar companion witness hole ${String(raw)}.`,
+  );
 }
 
 function compareFindFamiliarCompanionStates(

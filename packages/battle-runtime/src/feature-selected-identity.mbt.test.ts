@@ -97,6 +97,10 @@ defineSelectedIdentityWitness({
     import.meta.dirname,
     "battle-runtime-feature-selected-identity.mbt.qnt",
   ),
+  quintStateField: "qState",
+  quintStateFieldPrefix: "q",
+  witnessProtocolField: "protocol",
+  quintFieldNames: { lastResult: "qScenarioResult" },
   projectionSchema: {
     bonusActionAvailable: "bool",
     featureUsesRemaining: "int",

@@ -75,6 +75,10 @@ defineSelectedIdentityWitness({
     import.meta.dirname,
     "battle-runtime-druid-lands-aid.mbt.qnt",
   ),
+  quintStateField: "qState",
+  quintStateFieldPrefix: "q",
+  witnessProtocolField: "protocol",
+  quintFieldNames: { lastResult: "qScenarioResult" },
   projectionSchema: {
     targetHp: "int",
     secondTargetHp: "int",

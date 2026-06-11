@@ -1670,7 +1670,16 @@ function normalizeWeaponAttackOrderingQuintState(
 function normalizeExtraAttackQuintState(
   raw: unknown,
 ): ExtraAttackMbtProjection {
-  const state = quintStateRecord(raw);
+  const state = quintRecordField(quintStateRecord(raw), "qState");
+  const protocol = decodeWitnessProtocolState({
+    state,
+    protocolField: "protocol",
+    noInvalidReason: "",
+    decodeHole: extraAttackUnexpectedHole,
+  });
+  if (protocol.holes.length !== 0) {
+    throw new Error("Expected Extra Attack witness holes to be empty.");
+  }
 
   return {
     skeletonHp: numberFromQuintInt(state["qSkeletonHp"], "qSkeletonHp"),
@@ -1683,9 +1692,13 @@ function normalizeExtraAttackQuintState(
       state["qMovementSpentFeet"],
       "qMovementSpentFeet",
     ),
-    lastResult: mbtLastResult(state["qLastResult"]),
-    lastInvalidReason: mbtLastInvalidReason(state["qLastInvalidReason"]),
+    lastResult: mbtLastResult(protocol.lastResult),
+    lastInvalidReason: mbtLastInvalidReason(protocol.lastInvalidReason),
   };
+}
+
+function extraAttackUnexpectedHole(raw: unknown): never {
+  throw new Error(`Unexpected Extra Attack witness hole ${String(raw)}.`);
 }
 
 function normalizeAdrenalineRushQuintState(

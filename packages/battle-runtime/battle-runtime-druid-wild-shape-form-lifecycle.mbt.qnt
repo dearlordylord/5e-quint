@@ -1,6 +1,52 @@
 // -*- mode: Bluespec; -*-
 
 module battleRuntimeDruidWildShapeFormLifecycleMbt {
+  import battleRuntimeWitnessProtocol.* from "./battle-runtime-witness-protocol"
+
+  type WitnessHole = | WitnessProtocolHole
+
+  type DruidWildShapeFormLifecycleWitnessState = {
+    qActiveForm: str,
+    qBonusActionAvailable: bool,
+    qUsesRemaining: int,
+    qTempHp: int,
+    qArmorClass: int,
+    qCreatureSize: str,
+    qSpeedFeet: int,
+    qShoveDc: int,
+    qSpellAvailable: bool,
+    qActiveFormEffectCount: int,
+    qMergedEquipmentCount: int,
+    qDruidStatus: str,
+    qScenarioResult: str,
+    protocol: WitnessProtocol[WitnessHole],
+  }
+
+  var qState: DruidWildShapeFormLifecycleWitnessState
+
+  pure def qActiveForm: str = qState.qActiveForm
+  pure def qBonusActionAvailable: bool = qState.qBonusActionAvailable
+  pure def qUsesRemaining: int = qState.qUsesRemaining
+  pure def qTempHp: int = qState.qTempHp
+  pure def qArmorClass: int = qState.qArmorClass
+  pure def qCreatureSize: str = qState.qCreatureSize
+  pure def qSpeedFeet: int = qState.qSpeedFeet
+  pure def qShoveDc: int = qState.qShoveDc
+  pure def qSpellAvailable: bool = qState.qSpellAvailable
+  pure def qActiveFormEffectCount: int = qState.qActiveFormEffectCount
+  pure def qMergedEquipmentCount: int = qState.qMergedEquipmentCount
+  pure def qDruidStatus: str = qState.qDruidStatus
+  pure def qLastResult: str = qState.qScenarioResult
+
+  pure def druidWildShapeFormLifecycleProtocolForProjection(
+    holes: Set[WitnessHole],
+    scenarioResult: str,
+    _scenarioInvalidReason: str,
+  ): WitnessProtocol[WitnessHole] =
+    if (scenarioResult == "init") witnessInit(WitnessProtocolHole)
+    else if (holes != Set()) witnessNeedsHoles(holes)
+    else witnessResolved(WitnessProtocolHole)
+
   // RAW trace:
   // - .references/srd-5.2.1/Classes/Druid.md#Level 2: Wild Shape:
   //   Bonus Action known Beast form assumption, use spending, Temporary Hit
@@ -12,19 +58,6 @@ module battleRuntimeDruidWildShapeFormLifecycleMbt {
   //   shape-shifting effects specify their own form rules and revert on death.
   // - UBIQUITOUS_LANGUAGE.md: Temporary Hit Points, Creature, Stat Block,
   //   Character Sheet, and Action Lifecycle.
-  var qActiveForm: str
-  var qBonusActionAvailable: bool
-  var qUsesRemaining: int
-  var qTempHp: int
-  var qArmorClass: int
-  var qCreatureSize: str
-  var qSpeedFeet: int
-  var qShoveDc: int
-  var qSpellAvailable: bool
-  var qActiveFormEffectCount: int
-  var qMergedEquipmentCount: int
-  var qDruidStatus: str
-  var qLastResult: str
 
   pure val ableDruidStatus: str = "able"
   pure val incapacitatedDruidStatus: str = "incapacitated"
@@ -63,19 +96,22 @@ module battleRuntimeDruidWildShapeFormLifecycleMbt {
     druidStatus: str,
     lastResult: str,
   ): bool = all {
-    qActiveForm' = activeForm,
-    qBonusActionAvailable' = bonusActionAvailable,
-    qUsesRemaining' = usesRemaining,
-    qTempHp' = tempHp,
-    qArmorClass' = armorClass,
-    qCreatureSize' = creatureSize,
-    qSpeedFeet' = speedFeet,
-    qShoveDc' = shoveDc,
-    qSpellAvailable' = spellAvailable,
-    qActiveFormEffectCount' = activeFormEffectCount,
-    qMergedEquipmentCount' = mergedEquipmentCount,
-    qDruidStatus' = druidStatus,
-    qLastResult' = lastResult,
+    qState' = {
+      qActiveForm: activeForm,
+      qBonusActionAvailable: bonusActionAvailable,
+      qUsesRemaining: usesRemaining,
+      qTempHp: tempHp,
+      qArmorClass: armorClass,
+      qCreatureSize: creatureSize,
+      qSpeedFeet: speedFeet,
+      qShoveDc: shoveDc,
+      qSpellAvailable: spellAvailable,
+      qActiveFormEffectCount: activeFormEffectCount,
+      qMergedEquipmentCount: mergedEquipmentCount,
+      qDruidStatus: druidStatus,
+      qScenarioResult: lastResult,
+      protocol: druidWildShapeFormLifecycleProtocolForProjection(Set(), lastResult, ""),
+    },
   }
 
   action init = recordWildShapeState(

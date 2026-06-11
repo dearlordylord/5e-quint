@@ -1,16 +1,43 @@
 // -*- mode: Bluespec; -*-
 
 module battleRuntimeGustOfWindLineLifecycleMbt {
-  var qCurrentTurnRole: str
-  var qActionAvailable: bool
-  var qBonusActionAvailable: bool
-  var qSpellAvailable: bool
-  var qLineActive: bool
-  var qCasterConcentrating: bool
-  var qLineDirection: str
-  var qLineMovementCostFeet: int
-  var qHoles: Set[str]
-  var qLastResult: str
+  import battleRuntimeWitnessProtocol.* from "./battle-runtime-witness-protocol"
+
+  type GustOfWindLineLifecycleWitnessState = {
+    qCurrentTurnRole: str,
+    qActionAvailable: bool,
+    qBonusActionAvailable: bool,
+    qSpellAvailable: bool,
+    qLineActive: bool,
+    qCasterConcentrating: bool,
+    qLineDirection: str,
+    qLineMovementCostFeet: int,
+    qScenarioResult: str,
+    protocol: WitnessProtocol[str],
+  }
+
+  var qState: GustOfWindLineLifecycleWitnessState
+
+  pure def qCurrentTurnRole: str = qState.qCurrentTurnRole
+  pure def qActionAvailable: bool = qState.qActionAvailable
+  pure def qBonusActionAvailable: bool = qState.qBonusActionAvailable
+  pure def qSpellAvailable: bool = qState.qSpellAvailable
+  pure def qLineActive: bool = qState.qLineActive
+  pure def qCasterConcentrating: bool = qState.qCasterConcentrating
+  pure def qLineDirection: str = qState.qLineDirection
+  pure def qLineMovementCostFeet: int = qState.qLineMovementCostFeet
+  pure def qLastResult: str = qState.qScenarioResult
+  pure def qHoles: Set[str] = qState.protocol.holes
+
+  pure def gustOfWindLineLifecycleProtocolForProjection(
+    holes: Set[str],
+    scenarioResult: str,
+    _scenarioInvalidReason: str,
+  ): WitnessProtocol[str] =
+    if (scenarioResult == "init") witnessInit("WitnessHole")
+    else if (holes != Set()) witnessNeedsHoles(holes)
+    else witnessResolved("WitnessHole")
+
 
   pure val casterTurnRole: str = "caster"
   pure val targetTurnRole: str = "target"
@@ -37,16 +64,18 @@ module battleRuntimeGustOfWindLineLifecycleMbt {
     holes: Set[str],
     lastResult: str,
   ): bool = all {
-    qCurrentTurnRole' = currentTurnRole,
-    qActionAvailable' = actionAvailable,
-    qBonusActionAvailable' = bonusActionAvailable,
-    qSpellAvailable' = spellAvailable,
-    qLineActive' = lineActive,
-    qCasterConcentrating' = casterConcentrating,
-    qLineDirection' = lineDirection,
-    qLineMovementCostFeet' = lineMovementCostFeet,
-    qHoles' = holes,
-    qLastResult' = lastResult,
+    qState' = {
+      qCurrentTurnRole: currentTurnRole,
+      qActionAvailable: actionAvailable,
+      qBonusActionAvailable: bonusActionAvailable,
+      qSpellAvailable: spellAvailable,
+      qLineActive: lineActive,
+      qCasterConcentrating: casterConcentrating,
+      qLineDirection: lineDirection,
+      qLineMovementCostFeet: lineMovementCostFeet,
+      qScenarioResult: lastResult,
+      protocol: gustOfWindLineLifecycleProtocolForProjection(holes, lastResult, ""),
+    },
   }
 
   action init = all {
