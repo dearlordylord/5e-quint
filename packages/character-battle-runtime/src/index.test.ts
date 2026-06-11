@@ -72,7 +72,9 @@ import {
   replaceCharacterSheetCompanion,
   useMonkUncannyMetabolismWhenRollingInitiative,
   type CharacterSheet,
+  type CharacterSheetCompanionFormSelection,
   type CharacterSheetInput,
+  type CharacterSheetRetainedCompanionManifestation,
 } from "@dnd/character-sheet-runtime";
 import { currentArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
 import { elapsedTimeTicks } from "@dnd/shared/elapsed-time";
@@ -453,6 +455,167 @@ describe("Character Sheet battle handoff", () => {
         expended: resourceCount(1),
       },
     ]);
+  });
+
+  test("recasting an embodied retained companion keeps identity and clamps carried Hit Points (A47)", () => {
+    const sheet = retainedOrdinaryCompanionSheet({
+      characterIdValue: "character:retained-recast-embodied",
+      companionIdValue: "companion:recast-embodied",
+      selectedForm: { tag: "normalNamedForm", formId: "cat" },
+      currentHp: Hp(2),
+      tempHp: Hp(1),
+    });
+
+    const recast = expectRight(
+      createRetainedFamiliarLikeCompanion({
+        sheet,
+        unitLibrary,
+        statBlockCatalog,
+        companionId: characterSheetRetainedCompanionId(
+          "companion:recast-embodied",
+        ),
+        source: { tag: "ritualSpell", spellId: "find_familiar" },
+        selectedForm: { tag: "normalNamedForm", formId: "bat" },
+        creatureTypeOverrideChoiceId: "fey",
+      }),
+    );
+
+    expect(characterSheetCompanion(recast)).toMatchObject({
+      tag: "retainedOneAtATime",
+      companion: {
+        companionId: "companion:recast-embodied",
+        protocol: { tag: "ordinaryFamiliarLikeOneAtATime" },
+        manifestation: {
+          tag: "embodiedOutsideBattle",
+          selectedForm: { tag: "normalNamedForm", formId: "bat" },
+          resolvedStatBlockId: "stat_block_bat",
+          hitPoints: { currentHp: 1, tempHp: 1 },
+        },
+      },
+    });
+  });
+
+  test("recasting a temporarily dismissed retained companion carries clamped Hit Points (A47)", () => {
+    const sheet = retainedOrdinaryCompanionSheet({
+      characterIdValue: "character:retained-recast-dismissed",
+      companionIdValue: "companion:recast-dismissed",
+      selectedForm: { tag: "normalNamedForm", formId: "cat" },
+      currentHp: Hp(2),
+      tempHp: Hp(1),
+    });
+    const dismissed = retainedCompanionSheetWithManifestation(
+      sheet,
+      (manifestation) => {
+        if (manifestation.tag === "disappearedAtZeroHitPoints") {
+          throw new Error("Expected embodied retained companion fixture.");
+        }
+        return {
+          ...manifestation,
+          tag: "temporarilyDismissed",
+        };
+      },
+    );
+
+    const recast = expectRight(
+      createRetainedFamiliarLikeCompanion({
+        sheet: dismissed,
+        unitLibrary,
+        statBlockCatalog,
+        companionId: characterSheetRetainedCompanionId(
+          "companion:recast-dismissed",
+        ),
+        source: { tag: "ritualSpell", spellId: "find_familiar" },
+        selectedForm: { tag: "normalNamedForm", formId: "bat" },
+        creatureTypeOverrideChoiceId: "fey",
+      }),
+    );
+
+    expect(characterSheetCompanion(recast)).toMatchObject({
+      tag: "retainedOneAtATime",
+      companion: {
+        companionId: "companion:recast-dismissed",
+        manifestation: {
+          tag: "embodiedOutsideBattle",
+          selectedForm: { tag: "normalNamedForm", formId: "bat" },
+          resolvedStatBlockId: "stat_block_bat",
+          hitPoints: { currentHp: 1, tempHp: 1 },
+        },
+      },
+    });
+  });
+
+  test("recasting a retained companion disappeared at 0 Hit Points mints fresh form Hit Points (A47)", () => {
+    const sheet = retainedOrdinaryCompanionSheet({
+      characterIdValue: "character:retained-recast-disappeared",
+      companionIdValue: "companion:recast-disappeared",
+      selectedForm: { tag: "normalNamedForm", formId: "cat" },
+      currentHp: Hp(1),
+      tempHp: Hp(1),
+    });
+    const disappeared = retainedCompanionSheetWithManifestation(
+      sheet,
+      (manifestation) => ({
+        tag: "disappearedAtZeroHitPoints",
+        selectedForm: manifestation.selectedForm,
+        creatureTypeOverride: manifestation.creatureTypeOverride,
+        resolvedStatBlockId: manifestation.resolvedStatBlockId,
+      }),
+    );
+
+    const recast = expectRight(
+      createRetainedFamiliarLikeCompanion({
+        sheet: disappeared,
+        unitLibrary,
+        statBlockCatalog,
+        companionId: characterSheetRetainedCompanionId(
+          "companion:recast-disappeared",
+        ),
+        source: { tag: "ritualSpell", spellId: "find_familiar" },
+        selectedForm: { tag: "normalNamedForm", formId: "cat" },
+        creatureTypeOverrideChoiceId: "fey",
+      }),
+    );
+
+    expect(characterSheetCompanion(recast)).toMatchObject({
+      tag: "retainedOneAtATime",
+      companion: {
+        companionId: "companion:recast-disappeared",
+        manifestation: {
+          tag: "embodiedOutsideBattle",
+          selectedForm: { tag: "normalNamedForm", formId: "cat" },
+          resolvedStatBlockId: "stat_block_cat",
+          hitPoints: { currentHp: 2, tempHp: 0 },
+        },
+      },
+    });
+  });
+
+  test("recasting an occupied retained companion slot rejects replacement durable identity (A47)", () => {
+    const sheet = retainedOrdinaryCompanionSheet({
+      characterIdValue: "character:retained-recast-replacement-id",
+      companionIdValue: "companion:occupied-slot",
+      selectedForm: { tag: "normalNamedForm", formId: "cat" },
+      currentHp: Hp(2),
+      tempHp: Hp(0),
+    });
+
+    const recast = createRetainedFamiliarLikeCompanion({
+      sheet,
+      unitLibrary,
+      statBlockCatalog,
+      companionId: characterSheetRetainedCompanionId("companion:replacement"),
+      source: { tag: "ritualSpell", spellId: "find_familiar" },
+      selectedForm: { tag: "normalNamedForm", formId: "bat" },
+      creatureTypeOverrideChoiceId: "fey",
+    });
+
+    expect(recast).toMatchObject({
+      _tag: "Left",
+      left: {
+        message:
+          "Retained companion recast cannot replace the durable identity of an occupied companion slot.",
+      },
+    });
   });
 
   test("rejects forged retained normal-form proof before battle admission", () => {
@@ -4853,6 +5016,82 @@ function expectRight<T, E>(result: Either.Either<T, E>): T {
   }
   expect(Either.isRight(result)).toBe(true);
   return result.right;
+}
+
+function retainedOrdinaryCompanionSheet(input: {
+  readonly characterIdValue: string;
+  readonly companionIdValue: string;
+  readonly selectedForm: CharacterSheetCompanionFormSelection;
+  readonly currentHp: ReturnType<typeof Hp>;
+  readonly tempHp: ReturnType<typeof Hp>;
+}): CharacterSheet {
+  const sheet = expectRight(
+    createFreshCharacterSheet({
+      characterId: characterSheetId(input.characterIdValue),
+      build: {
+        ...trueStrikeWizardBuild(),
+        spellcasting: {
+          sources: [
+            {
+              sourceUnitId: "class_wizard",
+              spellcastingAbility: "int",
+              cantrips: ["true_strike"],
+              spellbook: ["find_familiar"],
+              preparedSpells: ["find_familiar"],
+              spellcastingFocuses: ["spellbook"],
+            },
+          ],
+          slotPools: {
+            spellcasting: {
+              kind: "spellcasting",
+              slots: [{ spellLevel: 1, count: 2 }],
+            },
+          },
+        },
+      },
+      maximumHp: Hp(8),
+      currentHp: Hp(8),
+      tempHp: Hp(0),
+      unitLibrary,
+    }),
+  );
+  return expectRight(
+    createRetainedFamiliarLikeCompanion({
+      sheet,
+      unitLibrary,
+      statBlockCatalog,
+      companionId: characterSheetRetainedCompanionId(input.companionIdValue),
+      source: { tag: "ritualSpell", spellId: "find_familiar" },
+      selectedForm: input.selectedForm,
+      creatureTypeOverrideChoiceId: "fey",
+      currentHp: input.currentHp,
+      tempHp: input.tempHp,
+    }),
+  );
+}
+
+function retainedCompanionSheetWithManifestation(
+  sheet: CharacterSheet,
+  manifestation: (
+    current: CharacterSheetRetainedCompanionManifestation,
+  ) => CharacterSheetRetainedCompanionManifestation,
+): CharacterSheet {
+  const companion = characterSheetCompanion(sheet);
+  if (companion.tag !== "retainedOneAtATime") {
+    throw new Error("Expected retained companion fixture.");
+  }
+  return expectRight(
+    replaceCharacterSheetCompanion({
+      sheet,
+      companion: {
+        tag: "retainedOneAtATime",
+        companion: {
+          ...companion.companion,
+          manifestation: manifestation(companion.companion.manifestation),
+        },
+      },
+    }),
+  );
 }
 
 function testSorcererMetamagicOptionId(optionId: string) {

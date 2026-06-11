@@ -271,11 +271,35 @@ export function createRetainedFamiliarLikeCompanion(
   });
   if (Either.isLeft(resolved)) return Either.left(resolved.left);
 
-  const hitPoints = retainedCompanionCreationHitPoints({
-    statBlock: resolved.right.statBlock,
-    currentHp: input.currentHp,
-    tempHp: input.tempHp,
-  });
+  const existing = characterSheetCompanion(input.sheet);
+  // A47: a recast over an occupied durable slot continues the existing
+  // companion in place and cannot replace its durable identity.
+  if (
+    existing.tag === "retainedOneAtATime" &&
+    existing.companion.companionId !== input.companionId
+  ) {
+    return characterSheetBattleHandoffIssue(
+      "Retained companion recast cannot replace the durable identity of an occupied companion slot.",
+    );
+  }
+  const companionId =
+    existing.tag === "retainedOneAtATime"
+      ? existing.companion.companionId
+      : input.companionId;
+  // A47: a form-adoption recast carries current HP clamped to the new form's
+  // maximum (keeping Temporary HP); a recast after a 0-HP disappearance, or a
+  // creation into an empty slot, mints the new form's HP.
+  const hitPoints =
+    existing.tag === "retainedOneAtATime"
+      ? retainedCompanionRecastHitPoints({
+          statBlock: resolved.right.statBlock,
+          manifestation: existing.companion.manifestation,
+        })
+      : retainedCompanionCreationHitPoints({
+          statBlock: resolved.right.statBlock,
+          currentHp: input.currentHp,
+          tempHp: input.tempHp,
+        });
   if (Either.isLeft(hitPoints)) return Either.left(hitPoints.left);
   const spentSheet = spendRetainedCompanionCreationSourceCost({
     sheet: input.sheet,
@@ -289,7 +313,7 @@ export function createRetainedFamiliarLikeCompanion(
     companion: {
       tag: "retainedOneAtATime",
       companion: {
-        companionId: input.companionId,
+        companionId,
         protocol: source.right.protocol,
         manifestation: {
           tag: "embodiedOutsideBattle",
@@ -994,6 +1018,50 @@ function spendRetainedCompanionUseCountResource(input: {
   return Either.right({
     ...input.sheet,
     resourceExpenditures: nextExpenditures,
+  });
+}
+
+// A47: derive the recast companion's Hit Points from the existing companion. A
+// companion that disappeared at 0 HP re-forms with fresh form HP; an embodied or
+// temporarily dismissed companion carries its current HP clamped to the new
+// form's maximum and keeps its Temporary HP. Mirrors the in-battle
+// hitPointsForFindFamiliarCast / hitPointsForAdoptedFamiliarForm semantics.
+function retainedCompanionRecastHitPoints(input: {
+  readonly statBlock: StatBlockRecord;
+  readonly manifestation: CharacterSheetRetainedCompanionManifestation;
+}): Either.Either<
+  CharacterSheetRetainedCompanionHitPoints,
+  CharacterSheetBattleHandoffIssue
+> {
+  if (input.manifestation.tag === "disappearedAtZeroHitPoints") {
+    return retainedCompanionCreationHitPoints({
+      statBlock: input.statBlock,
+      currentHp: undefined,
+      tempHp: undefined,
+    });
+  }
+  const maxHp = statBlockLiteralHp(input.statBlock);
+  if (maxHp === null) {
+    return characterSheetBattleHandoffIssue(
+      "Retained companion recast requires literal Stat Block HP.",
+    );
+  }
+  const clampedCurrentHp = Hp(
+    Math.min(Number(input.manifestation.hitPoints.currentHp), Number(maxHp)),
+  );
+  if (clampedCurrentHp < Hp(1)) {
+    return characterSheetBattleHandoffIssue(
+      "Retained companion recast current HP must be positive.",
+    );
+  }
+  const carriedCurrentHp = clampedCurrentHp as unknown as
+    CharacterSheetRetainedCompanionHitPoints["currentHp"];
+  return Either.right({
+    // Cast evidence: Hp proves non-negative integer HP, and the guard above
+    // proves the retained companion positive-current-HP alias for the carried,
+    // clamped value.
+    currentHp: carriedCurrentHp,
+    tempHp: input.manifestation.hitPoints.tempHp,
   });
 }
 

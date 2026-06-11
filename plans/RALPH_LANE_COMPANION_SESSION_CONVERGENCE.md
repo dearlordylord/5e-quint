@@ -9,8 +9,8 @@
     { "number": 3, "id": "CSC-T03-SETTLEMENT-OUTCOME", "status": "done", "title": "Make battle state carry the full settle-able companion outcome; drop session companionAdmission" },
     { "number": 4, "id": "CSC-T04-DEAD-BATTLE-LONG-REST-LANE", "status": "done", "title": "Delete the unreachable battle-state long-rest companion lane; decide castFindFamiliar wiring" },
     { "number": 5, "id": "CSC-T05-COMPANION-REST-ASSUMPTION", "status": "done", "title": "Record the companion rest-participation assumption; align sheet long-rest THP/HP" },
-    { "number": 6, "id": "CSC-T06-RECAST-SEMANTICS", "status": "ready-for-implementation", "title": "Record recast assumptions; one recast semantic across sheet and battle layers" },
-    { "number": 7, "id": "CSC-T07-FORM-VOCAB-HOIST-CREATION-MOVE", "status": "blocked", "title": "Hoist the familiar-form vocabulary; move out-of-battle creation into character-sheet-runtime" },
+    { "number": 6, "id": "CSC-T06-RECAST-SEMANTICS", "status": "done", "title": "Record recast assumptions; one recast semantic across sheet and battle layers" },
+    { "number": 7, "id": "CSC-T07-FORM-VOCAB-HOIST-CREATION-MOVE", "status": "ready-for-implementation", "title": "Hoist the familiar-form vocabulary; move out-of-battle creation into character-sheet-runtime" },
     { "number": 8, "id": "CSC-T08-CREATION-HP-SURFACE", "status": "blocked", "title": "Remove caller-minted companion HP/THP from the MCP creation operation" },
     { "number": 9, "id": "CSC-T09-FORM-CATALOG-REFERENCE", "status": "blocked", "title": "Replace the first-match familiar-form-catalog scan with an executable uniqueness boundary" },
     { "number": 10, "id": "CSC-T10-SMALL-FINDINGS-BATCH", "status": "blocked", "title": "Close the small review findings (narrowing, dead exports, duplicate rules, id constructor)" },
@@ -135,8 +135,8 @@ a task's change invalidates them):
 | 3 | CSC-T03-SETTLEMENT-OUTCOME | done | T02 | The core domain rework; consumes T01's key model and T02's protocol shape. |
 | 4 | CSC-T04-DEAD-BATTLE-LONG-REST-LANE | done | T03 | Whether battle `expiration` survives depends on T03's settlement projection. |
 | 5 | CSC-T05-COMPANION-REST-ASSUMPTION | done | T04 | HITL; sheet-side counterpart of T04's deletion. |
-| 6 | CSC-T06-RECAST-SEMANTICS | ready-for-implementation | T05 | HITL; depends on T03's outcome union for the battle half. |
-| 7 | CSC-T07-FORM-VOCAB-HOIST-CREATION-MOVE | blocked | T06 | Package move lands after semantics settle, so code moves once. |
+| 6 | CSC-T06-RECAST-SEMANTICS | done | T05 | HITL; depends on T03's outcome union for the battle half. |
+| 7 | CSC-T07-FORM-VOCAB-HOIST-CREATION-MOVE | ready-for-implementation | T06 | Package move lands after semantics settle, so code moves once. |
 | 8 | CSC-T08-CREATION-HP-SURFACE | blocked | T07 | Edits the creation op wherever T07 left it. |
 | 9 | CSC-T09-FORM-CATALOG-REFERENCE | blocked | T08 | Touches admission eligibility helpers T07 may have relocated. |
 | 10 | CSC-T10-SMALL-FINDINGS-BATCH | blocked | T09 | Sweep of remaining small findings in now-stable files. |
@@ -504,7 +504,29 @@ heal/no-heal and THP-keep/clear; sheet tests green.
 
 ### Task 6 - CSC-T06-RECAST-SEMANTICS
 
-Status: `blocked` · Mode: HITL (assumptions), AFK (implementation)
+Status: `done` · Mode: HITL (assumptions), AFK (implementation)
+
+**Outcome.** Owner decision 2 (resolved 2026-06-10): preserve+clamp. Landed
+ASSUMPTIONS.md **A47**: recasting an existing retained one-at-a-time companion
+continues the durable identity, adopts the newly selected form, carries current
+Hit Points clamped to the new form's maximum, keeps Temporary Hit Points, and
+uses fresh form Hit Points/no Temporary Hit Points only when recasting after
+0-HP disappearance. The out-of-battle creation path now reads the existing
+Character Sheet companion: occupied-slot recasts reject a different durable
+`companionId`, write the existing durable id, and derive Hit Points from the
+existing manifestation; empty-slot creation keeps the prior full-HP minting
+path. Tests cover recast-over-embodied, recast-over-temporarily-dismissed,
+recast-over-disappeared-at-0, and replacement-id rejection. The in-battle
+`castFindFamiliar` form-adoption path was already preserve+clamp and remains
+unchanged; focused battle-runtime recast tests stayed green. Verification:
+RAW/ubiquitous-language check against SRD 5.2.1 Find Familiar + Druid Wild
+Companion and `UBIQUITOUS_LANGUAGE.md` "Controlled Creatures And Companions";
+character-battle-runtime typecheck + 81 tests green; character-sheet-runtime
+typecheck + full package test command green (120 tests); mcp typecheck + 94
+tests green; focused battle-runtime recast tests green; `git diff --check`
+green. Reviewer-loop notes: no reasonable RAW/domain/connascence/code-review
+findings remained after tightening the occupied-slot path to write the existing
+durable id rather than the caller value.
 
 **Finding (review F4, RAW traceability + cross-layer consistency).**
 Recasting over an existing companion has two different semantics by layer:
