@@ -6,6 +6,10 @@ import {
   abilityModifier,
   proficiencyBonus,
 } from "@dnd/shared/types";
+import {
+  findFamiliarFormEligibilityForSpell,
+  type FindFamiliarFormEligibility,
+} from "@dnd/surface/surface/find-familiar-forms";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import * as Either from "effect/Either";
 
@@ -31,13 +35,11 @@ import {
   deliverTouchSpellThroughFindFamiliar,
   discoverBattleActs,
   findFamiliarCompanionForOwner,
-  findFamiliarFormEligibilityForSpell,
   initiativeScore,
   reappearTemporarilyDismissedFindFamiliar,
   startBattle,
   temporarilyDismissFindFamiliar,
   type BattleState,
-  type FindFamiliarFormEligibility,
   type BattleCompanionState,
 } from "./index.ts";
 

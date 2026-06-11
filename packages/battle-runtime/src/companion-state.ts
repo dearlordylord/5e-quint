@@ -6,7 +6,7 @@ import type {
   FindFamiliarCreatureTypeOverride,
   FindFamiliarFormSelection,
   PactOfTheChainFindFamiliarFormSelection,
-} from "./find-familiar-forms.ts";
+} from "@dnd/surface/surface/find-familiar-forms";
 import type { StatBlockRecord } from "@dnd/surface/surface/types";
 import type {
   BattleTablePositionId,

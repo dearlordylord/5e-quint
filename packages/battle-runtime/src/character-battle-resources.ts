@@ -38,7 +38,7 @@ import {
 import {
   pactOfTheChainFindFamiliarFormEligibilityForSpell,
   type PactOfTheChainFindFamiliarFormEligibility,
-} from "./find-familiar-forms.ts";
+} from "@dnd/surface/surface/find-familiar-forms";
 import * as Either from "effect/Either";
 
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.attack-action-area-save-damage-replacement unit-feature.magic-action-healing-pool

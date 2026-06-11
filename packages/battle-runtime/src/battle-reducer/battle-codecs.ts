@@ -78,8 +78,8 @@ import type {
 import type {
   FindFamiliarFormSelection,
   PactOfTheChainFindFamiliarFormSelection,
-} from "../find-familiar-forms.ts";
-import { PACT_OF_THE_CHAIN_SPECIAL_FORM_REFS } from "../find-familiar-forms.ts";
+} from "@dnd/surface/surface/find-familiar-forms";
+import { PACT_OF_THE_CHAIN_SPECIAL_FORM_REFS } from "@dnd/surface/surface/find-familiar-forms";
 import {
   BATTLE_ANTIMAGIC_FIELD_ONGOING_SPELL_EFFECT_SOURCE_KINDS,
   BATTLE_ATTACK_RANGE_BANDS,

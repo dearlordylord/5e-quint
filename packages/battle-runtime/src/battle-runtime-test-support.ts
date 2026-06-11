@@ -8,6 +8,12 @@
 import { Schema } from "effect";
 import * as Either from "effect/Either";
 import * as Option from "effect/Option";
+import {
+  findFamiliarFormEligibilityForSpell,
+  pactOfTheChainFindFamiliarFormEligibilityForSpell,
+  resolveFindFamiliarForm,
+  resolvePactOfTheChainFindFamiliarForm,
+} from "@dnd/surface/surface/find-familiar-forms";
 
 import {
   ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE,
@@ -47,7 +53,6 @@ import {
   combatantId,
   discoverBattleActs,
   endTurn,
-  findFamiliarFormEligibilityForSpell,
   initiativeScore,
   KNOCKED_OUT_UNCONSCIOUS,
   objectInvisibleBenefitDenied,
@@ -62,10 +67,7 @@ import {
   spellSaveDcForCaster,
   spellSlotInvocationRef,
   startBattle,
-  pactOfTheChainFindFamiliarFormEligibilityForSpell,
   resolveFailedAbilityCheckResourceBoost,
-  resolveFindFamiliarForm,
-  resolvePactOfTheChainFindFamiliarForm,
   resolveSuccessfulAbilityCheckReactionReduction,
   type BattleAreaId,
   type BattleFill,

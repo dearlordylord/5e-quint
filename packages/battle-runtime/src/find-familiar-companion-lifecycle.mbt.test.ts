@@ -18,6 +18,10 @@ import {
   DieRollResult,
   proficiencyBonus,
 } from "@dnd/shared/types";
+import {
+  findFamiliarFormEligibilityForSpell,
+  type FindFamiliarFormEligibility,
+} from "@dnd/surface/surface/find-familiar-forms";
 import * as Either from "effect/Either";
 import { describe, expect, it } from "vitest";
 
@@ -44,7 +48,6 @@ import {
   deliverTouchSpellThroughFindFamiliar,
   discoverBattleActs,
   findFamiliarCompanionEntryForOwner,
-  findFamiliarFormEligibilityForSpell,
   findFamiliarTelepathicConnection,
   initiativeScore,
   resolveBattleSubject,
@@ -56,7 +59,6 @@ import {
   type BattleState,
   type AvailableBattleAct,
   type BattleSubject,
-  type FindFamiliarFormEligibility,
   type PactOfTheChainFamiliarAttackSubject,
 } from "./index.ts";
 import {

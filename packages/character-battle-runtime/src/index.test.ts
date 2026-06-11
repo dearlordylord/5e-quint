@@ -37,12 +37,12 @@ import {
   combatantId,
   castFindFamiliar,
   discoverBattleActs,
-  findFamiliarFormEligibilityForSpell,
   initiativeScore,
   resolveBattleSubject,
   spendCharacterPointPoolResource,
   startBattle,
 } from "@dnd/battle-runtime";
+import { findFamiliarFormEligibilityForSpell } from "@dnd/surface/surface/find-familiar-forms";
 import {
   abilityScoreAssignment,
   characterDraconicAncestrySelection,

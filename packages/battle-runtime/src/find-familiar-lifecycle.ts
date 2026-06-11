@@ -58,11 +58,11 @@ import type {
   FindFamiliarFormResolution,
   FindFamiliarFormSelection,
   PactOfTheChainFindFamiliarFormEligibility,
-} from "./find-familiar-forms.ts";
+} from "@dnd/surface/surface/find-familiar-forms";
 import {
   findFamiliarFormEligibilityForSpell,
   resolveFindFamiliarForm,
-} from "./find-familiar-forms.ts";
+} from "@dnd/surface/surface/find-familiar-forms";
 import { expendSpellSlot } from "./battle-reducer/spell-effects.ts";
 import { markSpellSlotExpendedThisTurn } from "./battle-reducer/spell-turn-resources.ts";
 import { DRUID_WILD_COMPANION_SPELL_CAST_SUPPORT_PROFILE } from "./unit-feature-support.ts";

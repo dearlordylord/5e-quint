@@ -7,9 +7,7 @@ import {
   characterBattleResourceIsPointPool,
   characterBattleResourceMaxPoints,
   characterBattleResourceMaxUses,
-  findFamiliarFormEligibilityForSpell,
   findFamiliarCompanionEntryForOwner,
-  PACT_OF_THE_CHAIN_SPECIAL_FORM_REFS,
   retainedStoredFormForPresentCompanion,
   KNOCKED_OUT_UNCONSCIOUS,
   parseSupportedUnitFeatureProfile,
@@ -21,7 +19,6 @@ import {
   type BattleState,
   type CharacterZeroHpLifecycleInit,
   type CombatantId,
-  type FindFamiliarFormEligibility,
   type InitiativeScore,
 } from "@dnd/battle-runtime";
 import { characterBuildDruidWildShapeFacts } from "@dnd/character-creation-runtime";
@@ -71,6 +68,11 @@ import {
   hasCondition,
 } from "@dnd/shared-algebras/conditions-algebra";
 import { isSupportedClassFeatureSpellFreeCastResourceTag } from "@dnd/surface/surface/types";
+import {
+  findFamiliarFormEligibilityForSpell,
+  PACT_OF_THE_CHAIN_SPECIAL_FORM_REFS,
+  type FindFamiliarFormEligibility,
+} from "@dnd/surface/surface/find-familiar-forms";
 import type { StatBlockRecord } from "@dnd/surface/surface/types";
 import type { StatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog";
 import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";

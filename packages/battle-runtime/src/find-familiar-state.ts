@@ -2,7 +2,7 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.FIND_FAMILIAR_COMPANION_LIFECYCLE
 import type { BattleState } from "./battle-reducer.ts";
 import type { CombatantId } from "./identity.ts";
-import type { FindFamiliarCreatureTypeOverride } from "./find-familiar-forms.ts";
+import type { FindFamiliarCreatureTypeOverride } from "@dnd/surface/surface/find-familiar-forms";
 import type {
   BattleCompanionEntry,
   BattleCompanionPresentState,

@@ -26,6 +26,10 @@ import {
   buildUnitCatalog,
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
+import {
+  findFamiliarFormEligibilityForSpell,
+  type FindFamiliarFormEligibility,
+} from "@dnd/surface/surface/find-familiar-forms";
 import type { StatBlockRecord } from "@dnd/surface/surface/types";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 
@@ -45,7 +49,6 @@ import {
   deliverTouchSpellThroughFindFamiliar,
   discoverBattleActs,
   DRUID_WILD_COMPANION_SPELL_CAST_SUPPORT_PROFILE,
-  findFamiliarFormEligibilityForSpell,
   findFamiliarCompanionEntryForOwner,
   findFamiliarCompanionForOwner,
   findFamiliarCreatureTypeOverrideForOwner,
@@ -64,7 +67,6 @@ import {
   type BattleHole,
   type BattleCreatureInit,
   type BattleState,
-  type FindFamiliarFormEligibility,
   type PactOfTheChainFamiliarAttackSubject,
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
