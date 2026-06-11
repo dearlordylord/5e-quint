@@ -55,13 +55,13 @@
     {
       "number": 9,
       "id": "PDS-A09-KIT-GATE-AND-CLOSEOUT",
-      "status": "ready-for-research",
-      "title": "Add the no-redeclared-helpers quality gate, README driver section, and close out prd/03"
+      "status": "deferred",
+      "title": "Deferred PRD/03 gate, docs, and line-footprint closeout"
     },
     {
       "number": 10,
       "id": "PDS-A10-WITNESS-PILOTS",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Migrate two more witness/driver pilot pairs and record trace-cost and line-delta evidence"
     },
     {
@@ -200,8 +200,8 @@ Every task must include:
 | 6 | PDS-A06-KIT-BATCH-3 | done | PDS-A05-KIT-BATCH-2 | |
 | 7 | PDS-A07-KIT-BATCH-4 | done | PDS-A06-KIT-BATCH-3 | |
 | 8 | PDS-A08-KIT-BATCH-5 | done | PDS-A07-KIT-BATCH-4 | Drains the kit-unmigrated set. |
-| 9 | PDS-A09-KIT-GATE-AND-CLOSEOUT | ready-for-research | PDS-A08-KIT-BATCH-5 | Adds the quality gate; consolidated `MBT_TRACES=3` pass; prd/03 closeout numbers. |
-| 10 | PDS-A10-WITNESS-PILOTS | blocked | PDS-A09-KIT-GATE-AND-CLOSEOUT | Trace-cost timing note and pilot line-delta report. |
+| 9 | PDS-A09-KIT-GATE-AND-CLOSEOUT | deferred | PDS-A08-KIT-BATCH-5 | Owner intervention 2026-06-11: repeated attempts showed the PRD/03 20% line-footprint target was missed by the completed kit batches and is not a prerequisite for prd/04 witness-protocol work. Revive only with explicit extraction scope or revised acceptance. |
+| 10 | PDS-A10-WITNESS-PILOTS | ready-for-research | PDS-A08-KIT-BATCH-5 | Trace-cost timing note and pilot line-delta report. Does not depend on PDS-A09 or the PRD/03 20% line-footprint metric. |
 | 11 | PDS-A11-WITNESS-BATCH-1 | blocked | PDS-A10-WITNESS-PILOTS | Self-discovering; ≤20 pairs; `MBT_TRACES=3` confidence pass per batch. |
 | 12 | PDS-A12-WITNESS-BATCH-2 | blocked | PDS-A11-WITNESS-BATCH-1 | |
 | 13 | PDS-A13-WITNESS-BATCH-3 | blocked | PDS-A12-WITNESS-BATCH-2 | |
@@ -340,22 +340,29 @@ matches zero files after the batch.
 
 ### Task 9 - PDS-A09-KIT-GATE-AND-CLOSEOUT
 
-Status: `ready-for-research` · Mode: AFK
+Status: `deferred` · Mode: HITL
 
-Output: quality-lane check that fails when a `*.mbt.test.ts` re-declares
-kit-owned helper names (pattern: `scripts/check-mbt-driver-closure.cjs`;
-named after the invariant); battle-runtime README "writing a parity driver"
-section; prd/03 acceptance sweep (helper-name greps return zero; total
-driver line count vs the 64,410 baseline reported — target ≥20% reduction);
-one consolidated `MBT_TRACES=3` pass over a sampled spread of migrated
-drivers.
+Owner intervention, 2026-06-11: this task is deferred and removed from the
+blocking path to prd/04. Repeated implementation/review rounds established
+that the completed kit migration reduced comparable battle-runtime driver
+source from the 64,410-line baseline to about 62,568 lines, not the <=51,528
+lines required by the PRD/03 20% target. The attempted fix of moving driver
+bodies into imported support modules did not reduce comparable source and
+should not be treated as closeout.
 
-Acceptance: `pnpm quality` green including the new check; prd/03 acceptance
-criteria all checked off in the closeout note.
+This is not a hard dependency for PDS-A10 or later typed witness-protocol
+tasks. Those tasks depend on the completed kit and witness-protocol tracer
+work, not on the PRD/03 line-footprint success metric. Revive PDS-A09 only if
+the owner chooses one of these scopes:
+
+- add explicit extraction work sufficient to remove the remaining comparable
+  source gap; or
+- revise PRD/03 acceptance so the gate/docs/closeout task can record the
+  missed 20% target without blocking prd/04.
 
 ### Task 10 - PDS-A10-WITNESS-PILOTS
 
-Status: `blocked` · Mode: AFK
+Status: `ready-for-research` · Mode: AFK
 
 Output: two more pairs migrated to the witness protocol (one
 selected-identity pair; `direct-condition-lifecycle` gaining the record

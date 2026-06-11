@@ -205,6 +205,24 @@ for a typical literal witness.
 - A short "writing a parity driver" section in the battle-runtime README shows
   the post-kit driver skeleton.
 
+## Ralph Lane Intervention
+
+Date: 2026-06-11
+
+Lane A PDS-A09 attempted to close this PRD after the kit migration batches.
+Those attempts established that the 20% line-footprint target was not achieved:
+the comparable battle-runtime driver source footprint remained about 62,568
+lines, above the 51,528-line target. Moving large bodies into imported support
+modules was not accepted as a real reduction because it preserved comparable
+driver source.
+
+This miss is recorded as a PRD/03 closeout finding, not as a dependency for
+`prd/04_TYPED_WITNESS_PROTOCOL.md`. The typed witness-protocol lane depends on
+the completed driver kit and migrated driver surface, not on satisfying this
+line-count success metric. Future work may either add explicit extraction scope
+to remove the remaining comparable-source gap or revise this PRD's acceptance
+target; neither blocks PDS-A10+ witness-protocol tasks.
+
 ## Verification
 
 1. Reviewer-loop convergence: RAW/UL pass (kit vocabulary and README wording),
