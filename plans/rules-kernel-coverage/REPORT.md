@@ -431,6 +431,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `packages/shared-algebras/proofs/rule-core/weapon-mastery-reselection.qnt` | semantic-core | `CREATION.WEAPON_MASTERY.CLASS_LEVEL_ADVANCEMENT`, `SHEET.WEAPON_MASTERY.CLASS_LEVEL_RESELECTION`, `SHEET.WEAPON_MASTERY.RESELECTION` |
 | `packages/character-sheet-runtime/character-sheet-weapon-mastery-containers-selected-identity.mbt.qnt` | selected-identity-trace | `SHEET.WEAPON_MASTERY.RESELECTION` |
 | `packages/battle-runtime/battle-runtime-weapon-attack-ordering.qnt` | semantic-core | `BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING` |
+| `packages/battle-runtime/battle-runtime-save-gated-spell-ordering.qnt` | semantic-core | `BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING` |
 | `packages/shared-algebras/proofs/death-saves-algebra-inductive.qnt` | proof-only | `BATTLE.DAMAGE.DEATH_SAVING_THROW_LIFECYCLE` |
 | `packages/shared-algebras/proofs/rule-core/attack-damage-composition.qnt` | semantic-core | `BATTLE.DAMAGE.ATTACK_BRANCHES`, `BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP` |
 | `packages/shared-algebras/proofs/rule-core/damage-component-adjustments.qnt` | semantic-core | `BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION` |

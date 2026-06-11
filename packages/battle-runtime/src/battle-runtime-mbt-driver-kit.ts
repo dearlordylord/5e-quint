@@ -569,6 +569,24 @@ type WeaponAttackOrderingError =
   | "targetChoiceRequired"
   | "attackRollRequired";
 type WeaponAttackOrderingHole = "targetChoice" | "attackRoll" | "rolledDice";
+type SaveGatedSpellOrderingStage =
+  | "actSelection"
+  | "targetListAndConditionChoice"
+  | "targetList"
+  | "conditionChoice"
+  | "damageSavingThrowOutcome"
+  | "conditionSavingThrowOutcome"
+  | "damageDice"
+  | "resolved";
+type SaveGatedSpellOrderingError =
+  | ""
+  | "targetOrAreaRequired"
+  | "savingThrowRequired";
+type SaveGatedSpellOrderingHole =
+  | "spellTargetList"
+  | "conditionChoice"
+  | "savingThrowOutcome"
+  | "rolledDice";
 type MbtProjection = {
   readonly skeletonHp: number;
   readonly skeletonDead: boolean;
@@ -584,6 +602,12 @@ type WeaponAttackOrderingProjection = {
   readonly holes: readonly WeaponAttackOrderingHole[];
   readonly lastResult: MbtLastResult;
   readonly orderingError: WeaponAttackOrderingError;
+};
+type SaveGatedSpellOrderingProjection = {
+  readonly stage: SaveGatedSpellOrderingStage;
+  readonly holes: readonly SaveGatedSpellOrderingHole[];
+  readonly lastResult: MbtLastResult;
+  readonly orderingError: SaveGatedSpellOrderingError;
 };
 
 export type ExtraAttackMbtProjection = {
@@ -681,6 +705,21 @@ const weaponAttackOrderingDriverSchema = {
   doFillAttackRollMiss: {},
   doFillAttackRollHit: {},
   doFillDamageDice: {},
+  step: {},
+} as const;
+
+const saveGatedSpellOrderingDriverSchema = {
+  init: {},
+  doDiscoverAreaSaveDamage: {},
+  doSubmitDamageBeforeSavingThrow: {},
+  doFillAreaSaveFailed: {},
+  doFillAreaDamageDice: {},
+  doDiscoverTargetListConditionChoice: {},
+  doFillTargetListBeforeConditionChoice: {},
+  doFillConditionChoiceAfterTargetList: {},
+  doFillConditionChoiceBeforeTargetList: {},
+  doFillTargetListAfterConditionChoice: {},
+  doFillConditionSavingThrow: {},
   step: {},
 } as const;
 
@@ -1188,6 +1227,219 @@ export function createWeaponAttackOrderingDriver() {
   });
 }
 
+export function createSaveGatedSpellOrderingDriver() {
+  return defineDriver(saveGatedSpellOrderingDriverSchema, () => {
+    let state = saveGatedSpellOrderingBattle("lightning_bolt", 3);
+    let subject: Extract<BattleSubject, { readonly tag: "actionSpell" }> =
+      lightningBoltSubject();
+    let fills: readonly BattleFill[] = [];
+    let holes: readonly BattleHole[] = [];
+    let stage: SaveGatedSpellOrderingProjection["stage"] = "actSelection";
+    let lastResult: SaveGatedSpellOrderingProjection["lastResult"] = "init";
+    let orderingError: SaveGatedSpellOrderingProjection["orderingError"] = "";
+
+    function reset(): void {
+      state = saveGatedSpellOrderingBattle("lightning_bolt", 3);
+      subject = lightningBoltSubject();
+      fills = [];
+      holes = [];
+      stage = "actSelection";
+      lastResult = "init";
+      orderingError = "";
+    }
+
+    function discoverSpell(
+      spellId: "lightning_bolt" | "blindness_deafness",
+      slotLevel: 2 | 3,
+      procedure: "saveGatedDamage" | "saveGatedCondition",
+      nextStage: SaveGatedSpellOrderingProjection["stage"],
+    ): void {
+      state = saveGatedSpellOrderingBattle(spellId, slotLevel);
+      subject = saveGatedSpellSubject(spellId, slotLevel, procedure);
+      fills = [];
+      holes = discoverSaveGatedSpellHoles(state, subject, spellId);
+      stage = nextStage;
+      lastResult = "needsHoles";
+      orderingError = "";
+    }
+
+    function recordAccepted(
+      result: BattleResolutionResult,
+      nextStage: SaveGatedSpellOrderingProjection["stage"],
+    ): void {
+      lastResult = result.tag;
+      if (result.tag === "resolved") {
+        state = result.state;
+        holes = [];
+        stage = nextStage;
+        orderingError = "";
+        return;
+      }
+      if (result.tag === "needsHoles") {
+        state = result.state;
+        holes = result.holes;
+        stage = nextStage;
+        orderingError = "";
+        return;
+      }
+      throw new Error(
+        `Expected accepted save-gated spell ordering fill, got ${result.tag}: ${
+          "message" in result ? result.message : ""
+        }`,
+      );
+    }
+
+    function recordNeedsEarlierHole(
+      result: BattleResolutionResult,
+      expectedOrderingError: Exclude<
+        SaveGatedSpellOrderingProjection["orderingError"],
+        ""
+      >,
+      expectedStage: SaveGatedSpellOrderingProjection["stage"],
+    ): void {
+      if (result.tag !== "needsHoles") {
+        throw new Error("Expected save-gated spell fill to request earlier holes.");
+      }
+      lastResult = result.tag;
+      holes = result.holes;
+      stage = expectedStage;
+      orderingError = expectedOrderingError;
+    }
+
+    return {
+      init: reset,
+      doDiscoverAreaSaveDamage: () => {
+        discoverSpell(
+          "lightning_bolt",
+          3,
+          "saveGatedDamage",
+          "damageSavingThrowOutcome",
+        );
+      },
+      doSubmitDamageBeforeSavingThrow: () => {
+        const savingThrow = requireHole(holes, "savingThrowOutcome");
+        const damage = requireHole(
+          saveGatedSpellHolesAfterFills(state, subject, [
+            saveGatedSpellSavingThrowOutcomeFill(savingThrow, [
+              { targetId: skeletonId, succeeded: false },
+            ]),
+          ]),
+          "rolledDice",
+        );
+        recordNeedsEarlierHole(
+          resolveBattleSubject({
+            state,
+            subject,
+            fills: [
+              damageRollFillWithGroups(damage, [
+                [6, 6, 6, 6, 6, 6, 6, 6],
+              ]),
+            ],
+          }),
+          "savingThrowRequired",
+          "damageSavingThrowOutcome",
+        );
+      },
+      doFillAreaSaveFailed: () => {
+        const savingThrow = requireHole(holes, "savingThrowOutcome");
+        fills = [
+          saveGatedSpellSavingThrowOutcomeFill(savingThrow, [
+            { targetId: skeletonId, succeeded: false },
+          ]),
+        ];
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills }),
+          "damageDice",
+        );
+      },
+      doFillAreaDamageDice: () => {
+        const damage = requireHole(holes, "rolledDice");
+        fills = [
+          ...fills,
+          damageRollFillWithGroups(damage, [[6, 6, 6, 6, 6, 6, 6, 6]]),
+        ];
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills }),
+          "resolved",
+        );
+      },
+      doDiscoverTargetListConditionChoice: () => {
+        discoverSpell(
+          "blindness_deafness",
+          2,
+          "saveGatedCondition",
+          "targetListAndConditionChoice",
+        );
+      },
+      doFillTargetListBeforeConditionChoice: () => {
+        const targetList = requireHole(holes, "spellTargetList");
+        fills = [
+          saveGatedSpellTargetListFill(targetList, "blindness_deafness", [
+            skeletonId,
+          ]),
+        ];
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills }),
+          "conditionChoice",
+        );
+      },
+      doFillConditionChoiceAfterTargetList: () => {
+        const conditionChoice = requireHole(holes, "conditionChoice");
+        fills = [
+          ...fills,
+          saveGatedSpellConditionChoiceFill(conditionChoice, "blinded"),
+        ];
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills }),
+          "conditionSavingThrowOutcome",
+        );
+      },
+      doFillConditionChoiceBeforeTargetList: () => {
+        const conditionChoice = requireHole(holes, "conditionChoice");
+        fills = [saveGatedSpellConditionChoiceFill(conditionChoice, "blinded")];
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills }),
+          "targetList",
+        );
+      },
+      doFillTargetListAfterConditionChoice: () => {
+        const targetList = requireHole(holes, "spellTargetList");
+        fills = [
+          ...fills,
+          saveGatedSpellTargetListFill(targetList, "blindness_deafness", [
+            skeletonId,
+          ]),
+        ];
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills }),
+          "conditionSavingThrowOutcome",
+        );
+      },
+      doFillConditionSavingThrow: () => {
+        const savingThrow = requireHole(holes, "savingThrowOutcome");
+        fills = [
+          ...fills,
+          saveGatedSpellSavingThrowOutcomeFill(savingThrow, [
+            { targetId: skeletonId, succeeded: false },
+          ]),
+        ];
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills }),
+          "resolved",
+        );
+      },
+      step: () => {},
+      getState: () =>
+        projectSaveGatedSpellOrderingState({
+          holes,
+          stage,
+          lastResult,
+          orderingError,
+        }),
+    };
+  });
+}
+
 export function createExtraAttackDriver(
   unitId: ExtraAttackMbtUnitId = "fighter_extra_attack",
   schema: typeof extraAttackDriverSchema = extraAttackDriverSchema,
@@ -1632,6 +1884,21 @@ function normalizeWeaponAttackOrderingQuintState(
   };
 }
 
+function normalizeSaveGatedSpellOrderingQuintState(
+  raw: unknown,
+): SaveGatedSpellOrderingProjection {
+  const state = quintStateRecord(raw);
+
+  return {
+    stage: saveGatedSpellOrderingStage(state["qStage"]),
+    holes: quintSet(state["qHoles"], "qHoles")
+      .map(saveGatedSpellOrderingHole)
+      .sort(),
+    lastResult: mbtLastResult(state["qLastResult"]),
+    orderingError: saveGatedSpellOrderingError(state["qLastOrderingError"]),
+  };
+}
+
 function normalizeExtraAttackQuintState(
   raw: unknown,
 ): ExtraAttackMbtProjection {
@@ -1747,6 +2014,16 @@ export const weaponAttackOrderingStateCheck = stateCheck(
     return true;
   },
 );
+export const saveGatedSpellOrderingStateCheck = stateCheck(
+  normalizeSaveGatedSpellOrderingQuintState,
+  (
+    spec: SaveGatedSpellOrderingProjection,
+    impl: SaveGatedSpellOrderingProjection,
+  ) => {
+    expect(impl).toEqual(spec);
+    return true;
+  },
+);
 export const extraAttackStateCheck = stateCheck(
   normalizeExtraAttackQuintState,
   (spec: ExtraAttackMbtProjection, impl: ExtraAttackMbtProjection) => {
@@ -1822,6 +2099,20 @@ function projectWeaponAttackOrderingState(input: {
   return {
     stage: input.stage,
     holes: input.holes.map(weaponAttackOrderingHoleFromRuntime).sort(),
+    lastResult: input.lastResult,
+    orderingError: input.orderingError,
+  };
+}
+
+function projectSaveGatedSpellOrderingState(input: {
+  readonly holes: readonly BattleHole[];
+  readonly stage: SaveGatedSpellOrderingProjection["stage"];
+  readonly lastResult: SaveGatedSpellOrderingProjection["lastResult"];
+  readonly orderingError: SaveGatedSpellOrderingProjection["orderingError"];
+}): SaveGatedSpellOrderingProjection {
+  return {
+    stage: input.stage,
+    holes: input.holes.map(saveGatedSpellOrderingHoleFromRuntime).sort(),
     lastResult: input.lastResult,
     orderingError: input.orderingError,
   };
@@ -2019,6 +2310,24 @@ function discoverMagicMissileHoles(
   return act.initialHoles;
 }
 
+function discoverSaveGatedSpellHoles(
+  state: BattleState,
+  subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>,
+  spellId: string,
+): readonly BattleHole[] {
+  const act = discoverBattleActs(state).find(
+    (candidate) =>
+      candidate.subject.tag === "actionSpell" &&
+      candidate.subject.actorId === subject.actorId &&
+      candidate.subject.invocation.spellId === spellId,
+  );
+  if (act == null) {
+    throw new Error(`Expected ${spellId} save-gated spell act.`);
+  }
+
+  return act.initialHoles;
+}
+
 function holesAfterFills(
   state: BattleState,
   subject: Extract<
@@ -2030,6 +2339,19 @@ function holesAfterFills(
   const result = resolveBattleSubject({ state, subject, fills });
   if (result.tag !== "needsHoles") {
     throw new Error("Expected attack fills to request more holes.");
+  }
+
+  return result.holes;
+}
+
+function saveGatedSpellHolesAfterFills(
+  state: BattleState,
+  subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>,
+  fills: readonly BattleFill[],
+): readonly BattleHole[] {
+  const result = resolveBattleSubject({ state, subject, fills });
+  if (result.tag !== "needsHoles") {
+    throw new Error("Expected save-gated spell fills to request more holes.");
   }
 
   return result.holes;
@@ -2119,6 +2441,26 @@ function longstriderSubject(): Extract<
     tag: "actionSpell",
     actorId: fighterId,
     invocation: spellSlotInvocationRef("longstrider", 1, "scalarBuff"),
+    mode: { tag: "cast" },
+  };
+}
+
+function lightningBoltSubject(): Extract<
+  BattleSubject,
+  { readonly tag: "actionSpell" }
+> {
+  return saveGatedSpellSubject("lightning_bolt", 3, "saveGatedDamage");
+}
+
+function saveGatedSpellSubject(
+  spellId: "lightning_bolt" | "blindness_deafness",
+  slotLevel: 2 | 3,
+  procedure: "saveGatedDamage" | "saveGatedCondition",
+): Extract<BattleSubject, { readonly tag: "actionSpell" }> {
+  return {
+    tag: "actionSpell",
+    actorId: fighterId,
+    invocation: spellSlotInvocationRef(spellId, slotLevel, procedure),
     mode: { tag: "cast" },
   };
 }
@@ -2250,6 +2592,23 @@ function scalarBuffBattle(): BattleState {
     battleId: battleId("battle-runtime-mbt-scalar-buff"),
     combatants: [
       scalarBuffCasterCreatureInit({ initiative: 20 }),
+      skeletonCreatureInit({ initiative: 10 }),
+    ],
+  });
+}
+
+function saveGatedSpellOrderingBattle(
+  spellId: "lightning_bolt" | "blindness_deafness",
+  slotLevel: 2 | 3,
+): BattleState {
+  return startBattleRight({
+    battleId: battleId("battle-runtime-mbt-save-gated-spell-ordering"),
+    combatants: [
+      saveGatedSpellOrderingCasterCreatureInit({
+        initiative: 20,
+        spellId,
+        slotLevel,
+      }),
       skeletonCreatureInit({ initiative: 10 }),
     ],
   });
@@ -2491,6 +2850,52 @@ function scalarBuffCasterCreatureInit(input: {
   };
 }
 
+function saveGatedSpellOrderingCasterCreatureInit(input: {
+  readonly initiative: number;
+  readonly spellId: "lightning_bolt" | "blindness_deafness";
+  readonly slotLevel: 2 | 3;
+}): BattleCreatureInit {
+  const unit = unitLibrary.requireUnit(input.spellId);
+  if (unit.kind !== "spell") {
+    throw new Error(`Expected ${input.spellId} spell Unit.`);
+  }
+  return {
+    combatantId: fighterId,
+    displayName: "Save-Gated Spell Caster",
+    initiative: initiativeScore(input.initiative),
+    side: partySide,
+    creatureInit: {
+      kind: "character",
+      characterId: characterId("save-gated-spell-ordering-caster-character"),
+      characterUnitRefs: [],
+      classLevels: [{ className: "wizard", level: 5 }],
+      knownLanguages: ["Common"],
+      d20Statistics: testCharacterD20Statistics({ str: 16 }),
+      armorClass: defaultArmorClassState(),
+      size: "medium",
+      speed: { walkFeet: movementFeet(30) },
+      currentHp: Hp(20),
+      maxHp: Hp(20),
+      tempHp: Hp(0),
+      selectedLoadout: {},
+      attack: null,
+      unarmedStrike: baseUnarmedStrike(),
+      spellcasting: {
+        sourceClassName: "wizard",
+        spellcastingAbilityModifier: 3,
+        proficiencyBonus: proficiencyBonus(2),
+        canCastSpells: true,
+        cantrips: [],
+        preparedSpells: [unit],
+        featurePreparedSpells: [],
+        spellbookRitualSpellAccesses: [],
+        invocationSpellAccesses: [],
+        spellSlots: [{ spellLevel: input.slotLevel, count: 1 }],
+      },
+    },
+  };
+}
+
 function extraAttackUnitRef(
   unit: UnitRecord,
 ): Extract<
@@ -2724,6 +3129,69 @@ function spellTargetChoiceFill(
         spellId,
       },
     ],
+  };
+}
+
+function saveGatedSpellTargetListFill(
+  hole: BattleHole,
+  spellId: string,
+  targetIds: readonly CombatantId[],
+): Extract<BattleFill, { readonly kind: "spellTargetList" }> {
+  if (hole.kind !== "spellTargetList") {
+    throw new Error("Expected spell target-list hole.");
+  }
+  return {
+    kind: "spellTargetList",
+    holeId: hole.holeId,
+    value: { targetIds },
+    spatialFacts: targetIds.map((targetId) => ({
+      kind: "spellTarget",
+      casterId: fighterId,
+      targetId,
+      spellId,
+    })),
+  };
+}
+
+function saveGatedSpellConditionChoiceFill(
+  hole: BattleHole,
+  value: "blinded" | "deafened",
+): Extract<BattleFill, { readonly kind: "conditionChoice" }> {
+  if (hole.kind !== "conditionChoice") {
+    throw new Error("Expected condition choice hole.");
+  }
+  return {
+    kind: "conditionChoice",
+    holeId: hole.holeId,
+    value,
+  };
+}
+
+function saveGatedSpellSavingThrowOutcomeFill(
+  hole: BattleHole,
+  outcomes: readonly {
+    readonly targetId: CombatantId;
+    readonly succeeded: boolean;
+  }[],
+): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {
+  if (hole.kind !== "savingThrowOutcome") {
+    throw new Error("Expected Saving Throw outcome hole.");
+  }
+  return {
+    kind: "savingThrowOutcome",
+    holeId: hole.holeId,
+    value:
+      "spell" in hole &&
+      hole.spell.targeting.kind !== "singleCombatant" &&
+      hole.spell.targeting.kind !== "targetList"
+        ? {
+            area: {
+              originAnchorId: fighterId,
+              affectedTargetIds: outcomes.map((outcome) => outcome.targetId),
+            },
+            outcomes,
+          }
+        : { outcomes },
   };
 }
 
@@ -3116,6 +3584,67 @@ function weaponAttackOrderingError(raw: unknown): WeaponAttackOrderingError {
   }
 
   throw new Error(`Unknown weapon attack ordering error: ${String(raw)}.`);
+}
+
+function saveGatedSpellOrderingStage(
+  raw: unknown,
+): SaveGatedSpellOrderingStage {
+  const tag = quintVariantTag(raw);
+  if (tag === "SaveGatedSpellActSelectionStage") return "actSelection";
+  if (tag === "SaveGatedSpellTargetListAndConditionChoiceStage") {
+    return "targetListAndConditionChoice";
+  }
+  if (tag === "SaveGatedSpellTargetListStage") return "targetList";
+  if (tag === "SaveGatedSpellConditionChoiceStage") {
+    return "conditionChoice";
+  }
+  if (tag === "SaveGatedSpellDamageSavingThrowOutcomeStage") {
+    return "damageSavingThrowOutcome";
+  }
+  if (tag === "SaveGatedSpellConditionSavingThrowOutcomeStage") {
+    return "conditionSavingThrowOutcome";
+  }
+  if (tag === "SaveGatedSpellDamageDiceStage") return "damageDice";
+  if (tag === "SaveGatedSpellResolvedStage") return "resolved";
+
+  throw new Error(`Unknown save-gated spell ordering stage: ${tag}`);
+}
+
+function saveGatedSpellOrderingHole(
+  raw: unknown,
+): SaveGatedSpellOrderingHole {
+  const tag = quintVariantTag(raw);
+  if (tag === "SpellTargetListHoleKind") return "spellTargetList";
+  if (tag === "ConditionChoiceHoleKind") return "conditionChoice";
+  if (tag === "SavingThrowOutcomeHoleKind") return "savingThrowOutcome";
+  if (tag === "RolledDiceHoleKind") return "rolledDice";
+
+  throw new Error(`Unknown save-gated spell ordering hole: ${tag}`);
+}
+
+function saveGatedSpellOrderingHoleFromRuntime(
+  hole: Pick<BattleHole, "kind">,
+): SaveGatedSpellOrderingHole {
+  if (hole.kind === "spellTargetList") return "spellTargetList";
+  if (hole.kind === "conditionChoice") return "conditionChoice";
+  if (hole.kind === "savingThrowOutcome") return "savingThrowOutcome";
+  if (hole.kind === "rolledDice") return "rolledDice";
+
+  throw new Error(`Unexpected save-gated spell ordering hole: ${hole.kind}`);
+}
+
+function saveGatedSpellOrderingError(
+  raw: unknown,
+): SaveGatedSpellOrderingError {
+  if (
+    raw === "" ||
+    raw === "targetOrAreaRequired" ||
+    raw === "savingThrowRequired"
+  ) {
+    return raw;
+  }
+
+  throw new Error(`Unknown save-gated spell ordering error: ${String(raw)}.`);
 }
 
 function quintHoleSet(raw: unknown): readonly unknown[] {

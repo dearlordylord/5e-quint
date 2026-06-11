@@ -2879,28 +2879,42 @@
           "ownerPath": "packages/battle-runtime/src/weapon-attack-ordering.mbt.test.ts",
           "qntSpecPath": "packages/battle-runtime/battle-runtime-weapon-attack-ordering.mbt.qnt",
           "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/save-gated-spell-ordering.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.mbt.qnt",
+          "stepAction": "step"
         }
       ],
       "profiles": [],
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime-weapon-attack-ordering.qnt"
+        "packages/battle-runtime/battle-runtime-weapon-attack-ordering.qnt",
+        "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.qnt"
       ],
-      "reason": "Weapon-attack scope only. The SRD attack structure fixes Choose a Target before resolving the attack, and Resolve the Attack makes the Attack Roll before hit damage dice. The QNT owner records those frontier stages over the B01 hole/fill vocabulary and classifies the runtime-backed ordering rejections for attack-roll or damage fills before target choice and damage fills before attack roll; table-owned range, cover, sight, modifier facts, later damage-disposition validation, and stale-subject rejection remain boundary or reducer evidence outside this ordering-error relation.",
+      "reason": "Weapon-attack scope: the SRD attack structure fixes Choose a Target before resolving the attack, and Resolve the Attack makes the Attack Roll before hit damage dice. Save-gated-spell scope: the SRD defines affected targets or an area as the source of saving throws, the save result is determined by that effect, and damaging save effects roll damage after the affected creatures' save outcomes are known. The QNT owners record those frontier stages over the B01/B02 hole/fill vocabulary. For save-gated condition spells with a target-list and condition-choice hole, the modeled target-list/condition-choice ordering is a runtime protocol choice: the reducer exposes both holes before the Saving Throw, accepts either order between those two fills, and then advances to the Saving Throw outcome. Runtime-backed weapon-attack ordering rejections remain explicit invalid fills; save-gated spell later-fill submissions are modeled as earliest-needed-frontier requests when the reducer accepts prefilling rather than rejecting. Table-owned range, cover, sight, area geometry, modifier facts, later damage-disposition validation, and stale-subject rejection remain boundary or reducer evidence outside this ordering-error relation.",
       "runtime": "battle",
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer/attack-main.ts",
         "packages/battle-runtime/src/battle-reducer/attack-resolution.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-fill-set.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-save-gates.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/save-gated-condition.ts",
         "packages/battle-runtime/src/battle-trace-contract.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [
         ".references/srd-5.2.1/Playing-the-Game.md#Making an Attack",
         ".references/srd-5.2.1/Playing-the-Game.md#Attack Rolls",
+        ".references/srd-5.2.1/Playing-the-Game.md#Saving Throws",
         ".references/srd-5.2.1/Playing-the-Game.md#Damage Rolls",
+        ".references/srd-5.2.1/Rules-Glossary.md#Area of Effect",
+        ".references/srd-5.2.1/Rules-Glossary.md#Target",
         "UBIQUITOUS_LANGUAGE.md#D20 Rolls",
-        "UBIQUITOUS_LANGUAGE.md#Combat"
+        "UBIQUITOUS_LANGUAGE.md#Combat",
+        "UBIQUITOUS_LANGUAGE.md#Spellcasting"
       ],
-      "title": "Battle protocol weapon-attack hole frontier orders target choice before Attack Roll and hit damage dice before resolution"
+      "title": "Battle protocol hole frontiers order weapon-attack and save-gated-spell procedure fills before resolution"
     },
     {
       "id": "BATTLE.SURFACE.EXECUTABLE_PROFILE_JOIN",
@@ -7746,6 +7760,14 @@
       "role": "semantic-core"
     },
     {
+      "evidence": "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.qnt carries the reusable save-gated-spell hole-frontier order over protocol vocabulary variants: target-list or area-bearing save outcomes, optional condition choice, Saving Throw outcomes, damage dice, resolution, and the runtime-backed distinction between explicit ordering labels and reducer-prefilled later fills that request the earliest still-needed frontier.",
+      "obligationIds": [
+        "BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.qnt",
+      "role": "semantic-core"
+    },
+    {
       "evidence": "packages/shared-algebras/proofs/death-saves-algebra-inductive.qnt is an inductive proof owner for covered algebra, not an implementation source.",
       "obligationIds": [
         "BATTLE.DAMAGE.DEATH_SAVING_THROW_LIFECYCLE"
@@ -11808,7 +11830,8 @@
       "obligationId": "BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING",
       "proofOnly": [],
       "semanticCore": [
-        "packages/battle-runtime/battle-runtime-weapon-attack-ordering.qnt"
+        "packages/battle-runtime/battle-runtime-weapon-attack-ordering.qnt",
+        "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.qnt"
       ],
       "status": "generation-subset-clean"
     }

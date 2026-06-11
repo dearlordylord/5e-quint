@@ -7,7 +7,7 @@
 // Spell replay fill parser extracted from spells-resolve.ts.
 // Owns classification and validation of supplied fills against spell replay holes.
 
-// KERNEL-COVERAGE: runtime-owner BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES BATTLE.COMMAND.OPTION_AND_NEXT_TURN BATTLE.FEATURE.METAMAGIC_DISTANT_CAST_RANGE_INCREASE
+// KERNEL-COVERAGE: runtime-owner BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES BATTLE.COMMAND.OPTION_AND_NEXT_TURN BATTLE.FEATURE.METAMAGIC_DISTANT_CAST_RANGE_INCREASE BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING
 import { type AttackRollResult } from "@dnd/shared-algebras/runtime-hole-algebra";
 import type { Condition, MovementFeet } from "@dnd/shared/types";
 import type { Ability, Skill } from "@dnd/surface/surface/types";
