@@ -4,24 +4,24 @@
 // UNIT-IDENTITY-MBT-REPLAY: extra-attack-count-scaling fighter_extra_attack doResolveFirstExtraAttackMiss doResolveSecondExtraAttackMiss
 // UNIT-IDENTITY-MBT-REPLAY: extra-attack-count-scaling paladin_extra_attack doResolveFirstExtraAttackMiss doResolveSecondExtraAttackMiss
 // UNIT-IDENTITY-MBT-REPLAY: extra-attack-count-scaling ranger_extra_attack doResolveFirstExtraAttackMiss doResolveSecondExtraAttackMiss
-import * as path from "node:path";
-
-import { run } from "@firfi/quint-connect";
 import { describe, expect, it } from "vitest";
 
 import {
+  MBT_TEST_TIMEOUT_MS,
   createExtraAttackDriver,
   extraAttackMbtAdditionalAttackCounts,
   extraAttackMbtInitAction,
   extraAttackStateCheck,
   focusedMbtMaxSteps,
-  promotedMbtTraces,
+  mbtSpecPath,
+  mbtTraceCount,
+  run,
   runSelectedUnitIdentityReplay,
   type ExtraAttackDriverAction,
   type ExtraAttackMbtProjection,
   type ExtraAttackSelectedUnitIdentityReplay,
   type SelectedUnitIdentityReplaySequence,
-} from "./battle-runtime-mbt-fixtures.ts";
+} from "./battle-runtime-mbt-driver-kit.ts";
 
 const extraAttackDriverSchema = {
   init: {},
@@ -116,9 +116,9 @@ describe("Extra Attack count MBT", () => {
     "replays Extra Attack count %i slot spending",
     async (additionalAttacks) => {
       await run({
-        spec: path.resolve(
+        spec: mbtSpecPath(
           import.meta.dirname,
-          "../battle-runtime-extra-attack.mbt.qnt",
+          "battle-runtime-extra-attack.mbt.qnt",
         ),
         init: extraAttackMbtInitAction(additionalAttacks),
         step: "stepSpendAllSlots",
@@ -127,21 +127,21 @@ describe("Extra Attack count MBT", () => {
           extraAttackDriverSchema,
         ),
         backend: "typescript",
-        nTraces: promotedMbtTraces,
+        nTraces: mbtTraceCount(),
         maxSteps: focusedMbtMaxSteps(additionalAttacks + 3),
         stateCheck: extraAttackStateCheck,
       });
     },
-    120_000,
+    MBT_TEST_TIMEOUT_MS,
   );
 
   it.each(extraAttackMbtAdditionalAttackCounts)(
     "replays Extra Attack count %i end-turn slot closure",
     async (additionalAttacks) => {
       await run({
-        spec: path.resolve(
+        spec: mbtSpecPath(
           import.meta.dirname,
-          "../battle-runtime-extra-attack.mbt.qnt",
+          "battle-runtime-extra-attack.mbt.qnt",
         ),
         init: extraAttackMbtInitAction(additionalAttacks),
         step: "stepEndTurnAfterOpeningSlots",
@@ -150,11 +150,11 @@ describe("Extra Attack count MBT", () => {
           extraAttackDriverSchema,
         ),
         backend: "typescript",
-        nTraces: promotedMbtTraces,
+        nTraces: mbtTraceCount(),
         maxSteps: focusedMbtMaxSteps(2),
         stateCheck: extraAttackStateCheck,
       });
     },
-    120_000,
+    MBT_TEST_TIMEOUT_MS,
   );
 });

@@ -1,6 +1,8 @@
 // -*- mode: Bluespec; -*-
 
 module battleRuntimeRollModifierActiveEffectsMbt {
+  import battleRuntimeWitnessProtocol.* from "./battle-runtime-witness-protocol"
+
   // RAW trace:
   // - .references/srd-5.2.1/Spells/Descriptions-A-D.md#Bane:
   //   failed Charisma Saving Throws subtract 1d4 from attack rolls and
@@ -24,24 +26,47 @@ module battleRuntimeRollModifierActiveEffectsMbt {
   //   Advantage and Disadvantage cancel to a normal d20 roll.
   // - UBIQUITOUS_LANGUAGE.md: D20 Rolls, Advantage and Disadvantage, and
   //   Spell Invocation / Spell Effect.
-  var qActionAvailable: bool
-  var qSpellAvailable: bool
-  var qCasterConcentrating: bool
-  var qTargetAttackModifier: str
-  var qTargetSavingThrowModifier: str
-  var qCasterAbilityCheckModifier: str
-  var qTargetAbilityCheckModifier: str
-  var qCasterSkill: str
-  var qTargetSkill: str
-  var qTargetAbilityChoice: str
-  var qSecondTargetAbilityChoice: str
-  var qTargetAbilityCheckRollMode: str
-  var qSecondTargetAbilityCheckRollMode: str
-  var qThaumaturgyIntimidationRollMode: str
-  var qThaumaturgyEffectActive: bool
-  var qHoles: Set[str]
-  var qPassivePerceptionDelta: int
-  var qLastResult: str
+  type RollModifierActiveEffectsWitnessState = {
+    qActionAvailable: bool,
+    qSpellAvailable: bool,
+    qCasterConcentrating: bool,
+    qTargetAttackModifier: str,
+    qTargetSavingThrowModifier: str,
+    qCasterAbilityCheckModifier: str,
+    qTargetAbilityCheckModifier: str,
+    qCasterSkill: str,
+    qTargetSkill: str,
+    qTargetAbilityChoice: str,
+    qSecondTargetAbilityChoice: str,
+    qTargetAbilityCheckRollMode: str,
+    qSecondTargetAbilityCheckRollMode: str,
+    qThaumaturgyIntimidationRollMode: str,
+    qThaumaturgyEffectActive: bool,
+    qPassivePerceptionDelta: int,
+    qScenarioResult: str,
+    protocol: WitnessProtocol[str],
+  }
+
+  var qState: RollModifierActiveEffectsWitnessState
+
+  pure def qActionAvailable: bool = qState.qActionAvailable
+  pure def qSpellAvailable: bool = qState.qSpellAvailable
+  pure def qCasterConcentrating: bool = qState.qCasterConcentrating
+  pure def qTargetAttackModifier: str = qState.qTargetAttackModifier
+  pure def qTargetSavingThrowModifier: str = qState.qTargetSavingThrowModifier
+  pure def qCasterAbilityCheckModifier: str = qState.qCasterAbilityCheckModifier
+  pure def qTargetAbilityCheckModifier: str = qState.qTargetAbilityCheckModifier
+  pure def qCasterSkill: str = qState.qCasterSkill
+  pure def qTargetSkill: str = qState.qTargetSkill
+  pure def qTargetAbilityChoice: str = qState.qTargetAbilityChoice
+  pure def qSecondTargetAbilityChoice: str = qState.qSecondTargetAbilityChoice
+  pure def qTargetAbilityCheckRollMode: str = qState.qTargetAbilityCheckRollMode
+  pure def qSecondTargetAbilityCheckRollMode: str = qState.qSecondTargetAbilityCheckRollMode
+  pure def qThaumaturgyIntimidationRollMode: str = qState.qThaumaturgyIntimidationRollMode
+  pure def qThaumaturgyEffectActive: bool = qState.qThaumaturgyEffectActive
+  pure def qPassivePerceptionDelta: int = qState.qPassivePerceptionDelta
+  pure def qHoles: Set[str] = qState.protocol.holes
+  pure def qLastResult: str = qState.qScenarioResult
 
   pure val noModifier: str = "none"
   pure val plusD4Modifier: str = "+1d4"
@@ -61,6 +86,17 @@ module battleRuntimeRollModifierActiveEffectsMbt {
   pure val abilityChoiceHoles: Set[str] = Set("AbilityChoice")
   pure val targetAbilityChoicesHoles: Set[str] = Set("TargetAbilityChoices")
   pure val thaumaturgyCountHoles: Set[str] = Set("ThaumaturgyActiveOneMinuteEffectCount")
+
+  pure def witnessProtocolForProjection(
+    holes: Set[str],
+    scenarioResult: str,
+    scenarioInvalidReason: str,
+  ): WitnessProtocol[str] =
+    if (scenarioResult == "init") witnessInit("")
+    else if (scenarioInvalidReason == "invalidFill") witnessInvalid("", WInvalidFill)
+    else if (scenarioInvalidReason == "staleSubject") witnessInvalid("", WStaleSubject)
+    else if (holes != Set()) witnessNeedsHoles(holes)
+    else witnessResolved("")
 
   action recordRollModifierState(
     actionAvailable: bool,
@@ -82,24 +118,26 @@ module battleRuntimeRollModifierActiveEffectsMbt {
     passivePerceptionDelta: int,
     lastResult: str,
   ): bool = all {
-    qActionAvailable' = actionAvailable,
-    qSpellAvailable' = spellAvailable,
-    qCasterConcentrating' = casterConcentrating,
-    qTargetAttackModifier' = targetAttackModifier,
-    qTargetSavingThrowModifier' = targetSavingThrowModifier,
-    qCasterAbilityCheckModifier' = casterAbilityCheckModifier,
-    qTargetAbilityCheckModifier' = targetAbilityCheckModifier,
-    qCasterSkill' = casterSkill,
-    qTargetSkill' = targetSkill,
-    qTargetAbilityChoice' = targetAbilityChoice,
-    qSecondTargetAbilityChoice' = secondTargetAbilityChoice,
-    qTargetAbilityCheckRollMode' = targetAbilityCheckRollMode,
-    qSecondTargetAbilityCheckRollMode' = secondTargetAbilityCheckRollMode,
-    qThaumaturgyIntimidationRollMode' = thaumaturgyIntimidationRollMode,
-    qThaumaturgyEffectActive' = thaumaturgyEffectActive,
-    qHoles' = holes,
-    qPassivePerceptionDelta' = passivePerceptionDelta,
-    qLastResult' = lastResult,
+    qState' = {
+      qActionAvailable: actionAvailable,
+      qSpellAvailable: spellAvailable,
+      qCasterConcentrating: casterConcentrating,
+      qTargetAttackModifier: targetAttackModifier,
+      qTargetSavingThrowModifier: targetSavingThrowModifier,
+      qCasterAbilityCheckModifier: casterAbilityCheckModifier,
+      qTargetAbilityCheckModifier: targetAbilityCheckModifier,
+      qCasterSkill: casterSkill,
+      qTargetSkill: targetSkill,
+      qTargetAbilityChoice: targetAbilityChoice,
+      qSecondTargetAbilityChoice: secondTargetAbilityChoice,
+      qTargetAbilityCheckRollMode: targetAbilityCheckRollMode,
+      qSecondTargetAbilityCheckRollMode: secondTargetAbilityCheckRollMode,
+      qThaumaturgyIntimidationRollMode: thaumaturgyIntimidationRollMode,
+      qThaumaturgyEffectActive: thaumaturgyEffectActive,
+      qPassivePerceptionDelta: passivePerceptionDelta,
+      qScenarioResult: lastResult,
+      protocol: witnessProtocolForProjection(holes, lastResult, ""),
+    },
   }
 
   action recordNoEffectState(

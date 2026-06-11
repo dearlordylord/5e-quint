@@ -1,9 +1,8 @@
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt B24-LIGHTNING-BOLT-IDENTITY-WITNESS lightning_bolt
 // UNIT-IDENTITY-MBT-REPLAY: B24-LIGHTNING-BOLT-IDENTITY-WITNESS lightning_bolt doDiscoverLightningBoltSaveGatedDamage
-import * as path from "node:path";
-
 import { expect } from "vitest";
 
+import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
 import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
 import {
   lightningBoltUnitId,
@@ -21,10 +20,14 @@ import { spellSlotInvocationRef } from "./unit-profile-admission-test-support.ts
 defineSelectedIdentityWitness({
   describeLabel: "Lightning Bolt selected identity MBT",
   taskId: "B24-LIGHTNING-BOLT-IDENTITY-WITNESS",
-  specFile: path.resolve(
+  specFile: mbtSpecPath(
     import.meta.dirname,
-    "../battle-runtime-lightning-bolt-selected-identity.mbt.qnt",
+    "battle-runtime-lightning-bolt-selected-identity.mbt.qnt",
   ),
+  quintStateField: "qState",
+  quintStateFieldPrefix: "q",
+  witnessProtocolField: "protocol",
+  quintFieldNames: { lastResult: "qScenarioResult" },
   projectionSchema: { lastResult: "str" },
   initialProjection: { lastResult: "init" },
   units: [

@@ -52,14 +52,20 @@ const ALLOWLIST_PATH_RULES = [
       /^packages\/battle-runtime\/src\/unit-profile-admission-spell-fill-support\.ts$/,
   },
   {
-    reason: "battle-runtime-mbt-fixture-boundary",
-    pattern: /^packages\/battle-runtime\/src\/battle-runtime-mbt-fixtures\.ts$/,
-  },
-  {
     reason: "battle-runtime-unit-feature-support-profile-boundary",
     pattern: /^packages\/battle-runtime\/src\/unit-feature-support\.ts$/,
   },
 ];
+
+const INLINE_ALLOWLIST_PATH_RULES = [
+  {
+    reason: "battle-runtime-mbt-fixture-boundary",
+    pattern: /^packages\/battle-runtime\/src\/battle-runtime-mbt-driver-kit\.ts$/,
+  },
+];
+
+const INLINE_ALLOWLIST_COMMENT =
+  /\bauthored-id-dispatch-allow:\s*([a-z0-9-]+)/;
 
 function escapeForRegExp(text) {
   return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -1113,7 +1119,39 @@ function findViolationsForFile(
       importedContainers,
       importedNamespaceContainers,
     ),
-  ]);
+  ]).filter(
+    (violation) => !isInlineAllowlistedViolation(content, violation),
+  );
+}
+
+function inlineAllowlistReasonForLine(content, line) {
+  const lines = content.split("\n");
+  const lineIndexes = [line - 1, line - 2];
+
+  for (const lineIndex of lineIndexes) {
+    if (lineIndex < 0 || lineIndex >= lines.length) {
+      continue;
+    }
+
+    const match = INLINE_ALLOWLIST_COMMENT.exec(lines[lineIndex] ?? "");
+    if (match != null && match[1] != null) {
+      return match[1];
+    }
+  }
+
+  return null;
+}
+
+function isInlineAllowlistedViolation(content, violation) {
+  const boundaryReason = classifyPath(
+    violation.relativePath,
+    INLINE_ALLOWLIST_PATH_RULES,
+  );
+  if (boundaryReason == null) {
+    return false;
+  }
+
+  return inlineAllowlistReasonForLine(content, violation.line) === boundaryReason;
 }
 
 function formatCountMapEntries(map) {
@@ -1237,6 +1275,40 @@ function runSelfTest() {
     selectedIdentityViolations,
     [],
     `Self-test failed: selected identity projection should not be a dispatch violation. Got ${JSON.stringify(selectedIdentityViolations)}`,
+  );
+
+  const battleRuntimeMbtFixtureProjection = [
+    "export function fixtureProjection(usage) {",
+    "  return {",
+    "      // authored-id-dispatch-allow: battle-runtime-mbt-fixture-boundary",
+    '    sneakAttackUsed: usage.unitId === "magic_missile",',
+    "  };",
+    "}",
+  ].join("\n");
+
+  const fixtureProjectionViolations = findViolationsForFile(
+    "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts",
+    battleRuntimeMbtFixtureProjection,
+    authoredAlternation,
+    new Set(),
+    new Map(),
+  );
+  assert.deepEqual(
+    fixtureProjectionViolations,
+    [],
+    `Self-test failed: inline fixture-boundary allowlist should suppress only marked kit violations. Got ${JSON.stringify(fixtureProjectionViolations)}`,
+  );
+
+  const misplacedFixtureProjectionViolations = findViolationsForFile(
+    "packages/battle-runtime/src/battle-reducer/runtime.ts",
+    battleRuntimeMbtFixtureProjection,
+    authoredAlternation,
+    new Set(),
+    new Map(),
+  );
+  assert(
+    misplacedFixtureProjectionViolations.length > 0,
+    "Self-test failed: inline fixture-boundary allowlist should not apply outside the driver kit.",
   );
 
   assert.equal(

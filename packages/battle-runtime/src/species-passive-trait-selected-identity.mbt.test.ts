@@ -5,8 +5,7 @@
 // UNIT-IDENTITY-MBT-REPLAY: L3MSPEC-11-SPECIES-SELECTED-IDENTITY-AUDIT species_dragonborn_damage_resistance doDragonbornDamageResistance
 // UNIT-IDENTITY-MBT-REPLAY: L3MSPEC-11-SPECIES-SELECTED-IDENTITY-AUDIT dwarf_dwarven_resilience doDwarvenResilience
 // UNIT-IDENTITY-MBT-REPLAY: L3MSPEC-11-SPECIES-SELECTED-IDENTITY-AUDIT species_goliath_powerful_build doGoliathPowerfulBuild
-import * as path from "node:path";
-
+import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
 import { decodeSpeciesRecordSync } from "@dnd/surface/surface/schema";
 import * as Either from "effect/Either";
 
@@ -75,10 +74,13 @@ type SpeciesPassiveTraitProjection = {
 defineSelectedIdentityWitness({
   describeLabel: "Species passive trait selected identity MBT",
   taskId: "L3MSPEC-11-SPECIES-SELECTED-IDENTITY-AUDIT",
-  specFile: path.resolve(
+  specFile: mbtSpecPath(
     import.meta.dirname,
-    "../battle-runtime-species-passive-trait-selected-identity.mbt.qnt",
+    "battle-runtime-species-passive-trait-selected-identity.mbt.qnt",
   ),
+  quintStateField: "qState",
+  witnessProtocolField: "protocol",
+  quintFieldNames: { lastResult: "scenarioResult" },
   projectionSchema: {
     dragonbornFireDamageAfter: "int",
     dragonbornColdDamageAfter: "int",

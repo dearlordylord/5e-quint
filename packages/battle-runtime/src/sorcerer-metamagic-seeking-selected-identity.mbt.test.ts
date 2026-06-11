@@ -12,8 +12,7 @@
 //   Ray of Frost is an action-cast ranged Spell Attack cantrip.
 // - UBIQUITOUS_LANGUAGE.md: Magic Action, Spell Invocation, Attack Roll,
 //   Damage Roll, Sorcery Points as a Pool, and Spend.
-import * as path from "node:path";
-
+import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
 import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
 import {
   projectBattleState,
@@ -24,10 +23,13 @@ import {
 defineSelectedIdentityWitness({
   describeLabel: "Sorcerer Metamagic Seeking Spell selected identity MBT",
   taskId: "L3MMETA-18-SEEKING-SPELL-ATTACK-REROLL-SLICE",
-  specFile: path.resolve(
+  specFile: mbtSpecPath(
     import.meta.dirname,
-    "../battle-runtime-sorcerer-metamagic-seeking-selected-identity.mbt.qnt",
+    "battle-runtime-sorcerer-metamagic-seeking-selected-identity.mbt.qnt",
   ),
+  quintStateField: "qState",
+  witnessProtocolField: "protocol",
+  quintFieldNames: { lastResult: "scenarioResult" },
   projectionSchema: {
     magicActionAvailable: "bool",
     bonusActionAvailable: "bool",

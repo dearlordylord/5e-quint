@@ -15,6 +15,17 @@ module battleRuntimeReactionWindowTests {
     continuation: ResumeMovement({ speedKind: WalkSpeedKind, movementCost: 10 }),
   }
 
+  pure def damageInterruptionOfferFrame(
+    eligibleReactors: Set[Actor],
+    offeredReactors: Set[Actor],
+  ): PendingReactionFrame = {
+    trigger: AfterDamage,
+    procedure: DamageInterruptionReactionProcedure,
+    eligibleReactors: eligibleReactors,
+    offeredReactors: offeredReactors,
+    continuation: ResumeAfterDamage,
+  }
+
   run test_reaction_offer_opens_decision_frame = {
     val frame = opportunityAttackOfferFrame(Set(Fighter), Set())
     val opened = openReactionWindow(initialState, frame)
@@ -54,6 +65,33 @@ module battleRuntimeReactionWindowTests {
     all {
       assert(not(spent.fighter.reactionAvailable)),
       assert(spent.goblin.reactionAvailable),
+    }
+  }
+
+  run test_interrupt_stack_resume_declines_nested_to_outer_replay = {
+    val outer = openReactionWindow(initialState, opportunityAttackOfferFrame(Set(Fighter), Set()))
+    val nested = openReactionWindow(outer, damageInterruptionOfferFrame(Set(Goblin), Set()))
+    val declined = stateAfterDecliningReactionOffer(nested, Goblin)
+    all {
+      assert(battleRuntimeInterruptStackReactionDepth(outer) == 1),
+      assert(battleRuntimeInterruptStackReactionDepth(nested) == 2),
+      assert(battleRuntimeInterruptStackWithinReactionDepth(nested)),
+      assert(battleRuntimeInterruptStackDepthMatchesRuleCore(nested)),
+      assert(battleRuntimeClosedReactionDecisionMatchesRuleCore(nested, declined)),
+      assert(battleRuntimeInterruptStackReactionDepth(declined) == 1),
+      assert(battleRuntimeInterruptStackDepthMatchesRuleCore(declined)),
+    }
+  }
+
+  run test_interrupt_stack_resume_observes_active_effect_change_from_battle_state = {
+    val opened = openReactionWindow(initialState, opportunityAttackOfferFrame(Set(Fighter), Set()))
+    val shieldedBeforeResume = applyShieldReactionSpell(opened, Goblin)
+    val declined = stateAfterDecliningReactionOffer(shieldedBeforeResume, Fighter)
+    all {
+      assert(battleRuntimeActiveEffectsChangedBetween(opened, shieldedBeforeResume)),
+      assert(battleRuntimeReactionWindowStableAcrossActiveEffectChange(opened, shieldedBeforeResume)),
+      assert(battleRuntimeClosedReactionDecisionMatchesRuleCore(shieldedBeforeResume, declined)),
+      assert(battleRuntimeActiveEffectsChangedBetween(opened, declined)),
     }
   }
 }

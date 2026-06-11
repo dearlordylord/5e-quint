@@ -12,14 +12,25 @@
 //   spell says so.
 // - UBIQUITOUS_LANGUAGE.md: Area of Effect, Concentration, Illumination,
 //   Obscurement, Darkvision, and Spell Slot.
-import * as path from "node:path";
-
 import { canSpendAction } from "@dnd/shared-algebras/action-economy-algebra";
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { movementFeet } from "@dnd/shared/types";
-import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
 import { describe, expect, it } from "vitest";
 
+import {
+  MBT_TEST_TIMEOUT_MS,
+  assertWitnessProtocolConsistentWithScenario,
+  booleanField,
+  defineDriver,
+  decodeWitnessProtocolState,
+  focusedMbtMaxSteps,
+  mbtSpecPath,
+  mbtTraceCount,
+  quintStateRecord,
+  quintRecordField,
+  run,
+  stateCheck,
+} from "./battle-runtime-mbt-driver-kit.ts";
 import { parseBattleSpellEffectLevel } from "./battle-reducer/spells-effective-level.ts";
 import { battleSpellEffectOccurrenceId } from "./identity.ts";
 import {
@@ -187,21 +198,25 @@ describe("Magical Darkness point-origin lifecycle MBT parity", () => {
     });
   });
 
-  it("matches the focused magical Darkness point-origin lifecycle against bounded random MBT traces", async () => {
-    await run({
-      spec: path.resolve(
-        import.meta.dirname,
-        "../battle-runtime-magical-darkness-point-origin-lifecycle.mbt.qnt",
-      ),
-      init: "init",
-      step: "step",
-      driver: createMagicalDarknessPointOriginLifecycleDriver(),
-      backend: "typescript",
-      nTraces: 10,
-      maxSteps: 4,
-      stateCheck: darknessStateCheck,
-    });
-  }, 120_000);
+  it(
+    "matches the focused magical Darkness point-origin lifecycle against bounded random MBT traces",
+    async () => {
+      await run({
+        spec: mbtSpecPath(
+          import.meta.dirname,
+          "battle-runtime-magical-darkness-point-origin-lifecycle.mbt.qnt",
+        ),
+        init: "init",
+        step: "step",
+        driver: createMagicalDarknessPointOriginLifecycleDriver(),
+        backend: "typescript",
+        nTraces: mbtTraceCount(),
+        maxSteps: focusedMbtMaxSteps(4),
+        stateCheck: darknessStateCheck,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
 });
 
 function initialRuntimeState(): DarknessRuntimeState {
@@ -305,14 +320,14 @@ function darknessProjection(state: DarknessRuntimeState): DarknessProjection {
     ordinarySightObscurement:
       zone === undefined
         ? "none"
-        : battleMagicalDarknessSightObscurement(zone, {
+        : (battleMagicalDarknessSightObscurement(zone, {
             kind: "sightThroughArea",
             areaId: DARKNESS_AREA_ID,
-          }) ?? "none",
+          }) ?? "none"),
     darkvisionSightObscurement:
       zone === undefined
         ? "none"
-        : battleMagicalDarknessSightObscurement(
+        : (battleMagicalDarknessSightObscurement(
             zone,
             {
               kind: "sightThroughArea",
@@ -323,14 +338,14 @@ function darknessProjection(state: DarknessRuntimeState): DarknessProjection {
               rangeFeet: movementFeet(60),
               distanceFeet: movementFeet(30),
             },
-          ) ?? "none",
+          ) ?? "none"),
     nonmagicalLightIllumination:
       zone === undefined
         ? "none"
-        : battleMagicalDarknessNonmagicalLightIllumination(zone, {
+        : (battleMagicalDarknessNonmagicalLightIllumination(zone, {
             kind: "nonmagicalLightInArea",
             areaId: DARKNESS_AREA_ID,
-          }) ?? "none",
+          }) ?? "none"),
     overlappingLowLevelSpellLightActive: spellLightEmitterActive(
       state.battle,
       OVERLAPPING_LOW_LEVEL_LIGHT_ID,
@@ -369,7 +384,9 @@ function trackedObjectSpellLightEmitter(input: {
 }): BattleTrackedOngoingSpellLightEmitter {
   const sourceSpellLevel = parseBattleSpellEffectLevel(input.sourceSpellLevel);
   if (sourceSpellLevel === null) {
-    throw new Error(`Invalid test spell effect level ${input.sourceSpellLevel}.`);
+    throw new Error(
+      `Invalid test spell effect level ${input.sourceSpellLevel}.`,
+    );
   }
   return {
     kind: "spellLightEmitter",
@@ -420,10 +437,9 @@ function magicalDarknessZone(
 
 function magicalDarknessActiveEffect(
   state: BattleState,
-): Extract<
-  BattleActiveEffect,
-  { readonly kind: "magicalDarknessPointOrigin" }
-> | undefined {
+):
+  | Extract<BattleActiveEffect, { readonly kind: "magicalDarknessPointOrigin" }>
+  | undefined {
   const caster = requireCombatant(state, spellCasterId);
   return caster.activeEffects.find(
     (
@@ -485,7 +501,24 @@ function requireResolved(
 }
 
 function normalizeDarknessQuintState(raw: unknown): DarknessProjection {
-  const state = quintStateRecord(raw);
+  const state = quintRecordField(quintStateRecord(raw), "qState");
+  const protocol = decodeWitnessProtocolState({
+    state,
+    protocolField: "protocol",
+    noInvalidReason: "",
+    decodeHole: darknessUnexpectedHole,
+  });
+  if (protocol.holes.length !== 0) {
+    throw new Error(
+      "Expected Darkness point-origin witness holes to be empty.",
+    );
+  }
+  const lastResultValue = lastResult(state["qScenarioResult"]);
+  assertWitnessProtocolConsistentWithScenario({
+    label: "Darkness point-origin lifecycle",
+    scenarioResult: lastResultValue,
+    protocol,
+  });
   return {
     actionAvailable: booleanField(state, "qActionAvailable"),
     spellAvailable: booleanField(state, "qSpellAvailable"),
@@ -511,8 +544,14 @@ function normalizeDarknessQuintState(raw: unknown): DarknessProjection {
       state,
       "qNonOverlappingLowLevelSpellLightActive",
     ),
-    lastResult: lastResult(state["qLastResult"]),
+    lastResult: lastResultValue,
   };
+}
+
+function darknessUnexpectedHole(raw: unknown): never {
+  throw new Error(
+    `Darkness point-origin witness does not expect holes; received ${String(raw)}.`,
+  );
 }
 
 function compareDarknessStates(
@@ -542,25 +581,4 @@ function lastResult(raw: unknown): LastResult {
     return raw as LastResult;
   }
   throw new Error(`Unknown Darkness result: ${String(raw)}.`);
-}
-
-function quintStateRecord(raw: unknown): Readonly<Record<string, unknown>> {
-  if (!isRecord(raw)) {
-    throw new Error("Expected Quint Darkness state.");
-  }
-  return raw;
-}
-
-function booleanField(
-  state: Readonly<Record<string, unknown>>,
-  field: string,
-): boolean {
-  if (typeof state[field] === "boolean") {
-    return state[field];
-  }
-  throw new Error(`Expected Quint Boolean field ${field}.`);
-}
-
-function isRecord(raw: unknown): raw is Readonly<Record<string, unknown>> {
-  return typeof raw === "object" && raw !== null;
 }

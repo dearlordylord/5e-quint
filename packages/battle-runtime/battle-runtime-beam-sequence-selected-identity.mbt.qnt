@@ -1,13 +1,31 @@
 // -*- mode: Bluespec; -*-
 
 module battleRuntimeBeamSequenceSelectedIdentityMbt {
-  var qInitialCreatureTargetHoles: int
-  var qInitialObjectTargetHoles: int
-  var qSkeletonHp: int
-  var qZombieHp: int
-  var qObjectHp: int
-  var qActionAvailable: bool
-  var qLastResult: str
+  import battleRuntimeWitnessProtocol.* from "./battle-runtime-witness-protocol"
+
+  type WitnessHole = | BeamSequence
+
+  type WitnessState = {
+    qInitialCreatureTargetHoles: int,
+    qInitialObjectTargetHoles: int,
+    qSkeletonHp: int,
+    qZombieHp: int,
+    qObjectHp: int,
+    qActionAvailable: bool,
+    qScenarioResult: str,
+    protocol: WitnessProtocol[WitnessHole],
+  }
+
+  var qState: WitnessState
+
+  pure def qInitialCreatureTargetHoles: int = qState.qInitialCreatureTargetHoles
+  pure def qInitialObjectTargetHoles: int = qState.qInitialObjectTargetHoles
+  pure def qSkeletonHp: int = qState.qSkeletonHp
+  pure def qZombieHp: int = qState.qZombieHp
+  pure def qObjectHp: int = qState.qObjectHp
+  pure def qActionAvailable: bool = qState.qActionAvailable
+  pure def qScenarioResult: str = qState.qScenarioResult
+
 
   action recordProjection(
     initialCreatureTargetHoles: int,
@@ -16,37 +34,51 @@ module battleRuntimeBeamSequenceSelectedIdentityMbt {
     zombieHp: int,
     objectHp: int,
     actionAvailable: bool,
-    lastResult: str,
+    scenarioResult: str,
+    protocol: WitnessProtocol[WitnessHole],
   ): bool = all {
-    qInitialCreatureTargetHoles' = initialCreatureTargetHoles,
-    qInitialObjectTargetHoles' = initialObjectTargetHoles,
-    qSkeletonHp' = skeletonHp,
-    qZombieHp' = zombieHp,
-    qObjectHp' = objectHp,
-    qActionAvailable' = actionAvailable,
-    qLastResult' = lastResult,
+    qState' = {
+      qInitialCreatureTargetHoles: initialCreatureTargetHoles,
+      qInitialObjectTargetHoles: initialObjectTargetHoles,
+      qSkeletonHp: skeletonHp,
+      qZombieHp: zombieHp,
+      qObjectHp: objectHp,
+      qActionAvailable: actionAvailable,
+      qScenarioResult: scenarioResult,
+      protocol: protocol,
+    },
   }
 
-  action init = recordProjection(2, 2, 13, 11, 5, true, "init")
+  action init = recordProjection(2, 2, 13, 11, 5, true, "init",
+    witnessInit(BeamSequence),
+  )
 
   action doDiscoverLevelFiveBeamTargetHoles = all {
-    qLastResult == "init",
-    recordProjection(2, 2, 13, 11, 5, true, "discovered"),
+    qScenarioResult == "init",
+    recordProjection(2, 2, 13, 11, 5, true, "discovered",
+    witnessResolved(BeamSequence),
+  ),
   }
 
   action doResolveTwoCreatureBeamsSameTarget = all {
-    qLastResult == "init",
-    recordProjection(2, 2, 9, 11, 5, false, "sameTargetResolved"),
+    qScenarioResult == "init",
+    recordProjection(2, 2, 9, 11, 5, false, "sameTargetResolved",
+    witnessResolved(BeamSequence),
+  ),
   }
 
   action doResolveTwoCreatureBeamsSplitTargets = all {
-    qLastResult == "init",
-    recordProjection(2, 2, 9, 7, 5, false, "splitTargetResolved"),
+    qScenarioResult == "init",
+    recordProjection(2, 2, 9, 7, 5, false, "splitTargetResolved",
+    witnessResolved(BeamSequence),
+  ),
   }
 
   action doResolveCreatureAndObjectBeamTargets = all {
-    qLastResult == "init",
-    recordProjection(2, 2, 9, 11, 1, false, "creatureObjectResolved"),
+    qScenarioResult == "init",
+    recordProjection(2, 2, 9, 11, 1, false, "creatureObjectResolved",
+    witnessResolved(BeamSequence),
+  ),
   }
 
   action step = any {

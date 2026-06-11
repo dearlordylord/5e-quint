@@ -1,12 +1,21 @@
 // -*- mode: Bluespec; -*-
 
 module battleRuntimeSorcererMetamagicTransmutedSelectedIdentityMbt {
-  var qMagicActionAvailable: bool
-  var qBonusActionAvailable: bool
-  var qSorceryPointsRemaining: int
-  var qTargetHp: int
-  var qTargetActiveEffectCount: int
-  var qLastResult: str
+  import battleRuntimeWitnessProtocol.* from "./battle-runtime-witness-protocol"
+
+  type Hole = | NoHole
+
+  type SorcererMetamagicTransmutedSelectedIdentityWitnessState = {
+    magicActionAvailable: bool,
+    bonusActionAvailable: bool,
+    sorceryPointsRemaining: int,
+    targetHp: int,
+    targetActiveEffectCount: int,
+    scenarioResult: str,
+    protocol: WitnessProtocol[Hole],
+  }
+
+  var qState: SorcererMetamagicTransmutedSelectedIdentityWitnessState
 
   action recordProjection(
     magicActionAvailable: bool,
@@ -14,26 +23,36 @@ module battleRuntimeSorcererMetamagicTransmutedSelectedIdentityMbt {
     sorceryPointsRemaining: int,
     targetHp: int,
     targetActiveEffectCount: int,
-    lastResult: str,
+    scenarioResult: str,
+    protocol: WitnessProtocol[Hole],
   ): bool = all {
-    qMagicActionAvailable' = magicActionAvailable,
-    qBonusActionAvailable' = bonusActionAvailable,
-    qSorceryPointsRemaining' = sorceryPointsRemaining,
-    qTargetHp' = targetHp,
-    qTargetActiveEffectCount' = targetActiveEffectCount,
-    qLastResult' = lastResult,
+    qState' = {
+      magicActionAvailable: magicActionAvailable,
+      bonusActionAvailable: bonusActionAvailable,
+      sorceryPointsRemaining: sorceryPointsRemaining,
+      targetHp: targetHp,
+      targetActiveEffectCount: targetActiveEffectCount,
+      scenarioResult: scenarioResult,
+      protocol: protocol,
+    },
   }
 
-  action init = recordProjection(true, true, 4, 10, 0, "init")
+  action init = recordProjection(true, true, 4, 10, 0, "init", witnessInit(NoHole))
 
   action doResolveTransmutedSaveGatedDamage = all {
-    qLastResult == "init",
-    recordProjection(false, true, 3, 1, 0, "transmutedSaveGatedDamage")
+    qState.protocol.result == WInit,
+    recordProjection(
+      false, true, 3, 1, 0, "transmutedSaveGatedDamage",
+      witnessResolved(NoHole),
+    )
   }
 
   action doResolveTransmutedSpellAttack = all {
-    qLastResult == "init",
-    recordProjection(false, true, 3, 3, 1, "transmutedSpellAttack")
+    qState.protocol.result == WInit,
+    recordProjection(
+      false, true, 3, 3, 1, "transmutedSpellAttack",
+      witnessResolved(NoHole),
+    )
   }
 
   action step = any {

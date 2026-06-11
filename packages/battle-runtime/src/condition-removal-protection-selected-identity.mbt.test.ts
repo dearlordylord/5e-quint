@@ -2,9 +2,8 @@
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt RKBC-SPELL-DIRECT-CONDITION-REMOVAL-PARITY lesser_restoration protection_from_poison
 // UNIT-IDENTITY-MBT-REPLAY: RKBC-SPELL-DIRECT-CONDITION-REMOVAL-PARITY lesser_restoration doResolveLesserRestorationChoice doResolveLesserRestorationConcentrationCleanup
 // UNIT-IDENTITY-MBT-REPLAY: RKBC-SPELL-DIRECT-CONDITION-REMOVAL-PARITY protection_from_poison doResolveProtectionFromPoison
-import * as path from "node:path";
-
 import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
+import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
 import type { BattleActiveEffect } from "./index.ts";
 import { resolveBattleSubject, snapshotBattle } from "./index.ts";
 import {
@@ -65,10 +64,14 @@ type ConditionSavingThrowRollModeEffect = Extract<
 defineSelectedIdentityWitness({
   describeLabel: "Condition removal and protection selected identity MBT",
   taskId: "RKBC-SPELL-DIRECT-CONDITION-REMOVAL-PARITY",
-  specFile: path.resolve(
+  specFile: mbtSpecPath(
     import.meta.dirname,
-    "../battle-runtime-condition-removal-protection-selected-identity.mbt.qnt",
+    "battle-runtime-condition-removal-protection-selected-identity.mbt.qnt",
   ),
+  quintStateField: "qState",
+  quintStateFieldPrefix: "q",
+  witnessProtocolField: "protocol",
+  quintFieldNames: { lastResult: "qScenarioResult" },
   projectionSchema: {
     targetParalyzed: "bool",
     targetPoisoned: "bool",
@@ -403,7 +406,9 @@ function secondLevelSlotsExpended(
   caster: ReturnType<typeof requireCombatant>,
 ): number {
   if (caster.origin.kind !== "character") {
-    throw new Error("Expected condition removal/protection caster to be a character.");
+    throw new Error(
+      "Expected condition removal/protection caster to be a character.",
+    );
   }
   return Number(
     caster.origin.spellcasting?.spellSlots.find(

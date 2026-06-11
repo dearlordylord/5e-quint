@@ -1,15 +1,44 @@
 // -*- mode: Bluespec; -*-
 
 module battleRuntimeReactionSpellSelectedIdentityMbt {
-  var qReactorHp: int
-  var qTriggerCreatureHp: int
-  var qReactorArmorClass: int
-  var qReactorReactionAvailable: bool
-  var qTriggerCreatureFirstLevelSlotsExpended: int
-  var qFirstLevelSlotsExpended: int
-  var qSecondLevelSlotsExpended: int
-  var qThirdLevelSlotsExpended: int
-  var qLastResult: str
+  import battleRuntimeWitnessProtocol.* from "./battle-runtime-witness-protocol"
+
+  type WitnessHole = | WitnessProtocolHole
+
+  type ReactionSpellSelectedIdentityWitnessState = {
+    qReactorHp: int,
+    qTriggerCreatureHp: int,
+    qReactorArmorClass: int,
+    qReactorReactionAvailable: bool,
+    qTriggerCreatureFirstLevelSlotsExpended: int,
+    qFirstLevelSlotsExpended: int,
+    qSecondLevelSlotsExpended: int,
+    qThirdLevelSlotsExpended: int,
+    qScenarioResult: str,
+    protocol: WitnessProtocol[WitnessHole],
+  }
+
+  var qState: ReactionSpellSelectedIdentityWitnessState
+
+  pure def qReactorHp: int = qState.qReactorHp
+  pure def qTriggerCreatureHp: int = qState.qTriggerCreatureHp
+  pure def qReactorArmorClass: int = qState.qReactorArmorClass
+  pure def qReactorReactionAvailable: bool = qState.qReactorReactionAvailable
+  pure def qTriggerCreatureFirstLevelSlotsExpended: int = qState.qTriggerCreatureFirstLevelSlotsExpended
+  pure def qFirstLevelSlotsExpended: int = qState.qFirstLevelSlotsExpended
+  pure def qSecondLevelSlotsExpended: int = qState.qSecondLevelSlotsExpended
+  pure def qThirdLevelSlotsExpended: int = qState.qThirdLevelSlotsExpended
+  pure def qLastResult: str = qState.qScenarioResult
+
+  pure def selectedIdentityProtocolForProjection(
+    holes: Set[WitnessHole],
+    scenarioResult: str,
+    scenarioInvalidReason: str,
+  ): WitnessProtocol[WitnessHole] =
+    if (scenarioResult == "init") witnessInit(WitnessProtocolHole)
+    else if (scenarioInvalidReason == "invalidFill") witnessInvalid(WitnessProtocolHole, WInvalidFill)
+    else if (holes != Set()) witnessNeedsHoles(holes)
+    else witnessResolved(WitnessProtocolHole)
 
   action recordProjection(
     reactorHp: int,
@@ -22,17 +51,19 @@ module battleRuntimeReactionSpellSelectedIdentityMbt {
     thirdLevelSlotsExpended: int,
     lastResult: str,
   ): bool = all {
-    qReactorHp' = reactorHp,
-    qTriggerCreatureHp' = triggerCreatureHp,
-    qReactorArmorClass' = reactorArmorClass,
-    qReactorReactionAvailable' = reactorReactionAvailable,
-    qTriggerCreatureFirstLevelSlotsExpended' = triggerCreatureFirstLevelSlotsExpended,
-    qFirstLevelSlotsExpended' = firstLevelSlotsExpended,
-    qSecondLevelSlotsExpended' = secondLevelSlotsExpended,
-    qThirdLevelSlotsExpended' = thirdLevelSlotsExpended,
-    qLastResult' = lastResult,
+    qState' = {
+      qReactorHp: reactorHp,
+      qTriggerCreatureHp: triggerCreatureHp,
+      qReactorArmorClass: reactorArmorClass,
+      qReactorReactionAvailable: reactorReactionAvailable,
+      qTriggerCreatureFirstLevelSlotsExpended: triggerCreatureFirstLevelSlotsExpended,
+      qFirstLevelSlotsExpended: firstLevelSlotsExpended,
+      qSecondLevelSlotsExpended: secondLevelSlotsExpended,
+      qThirdLevelSlotsExpended: thirdLevelSlotsExpended,
+      qScenarioResult: lastResult,
+      protocol: selectedIdentityProtocolForProjection(Set(), lastResult, ""),
+    },
   }
-
   action init = recordProjection(12, 12, 10, true, 0, 0, 0, 0, "init")
 
   action doResolveShieldReactionSpellHit = all {

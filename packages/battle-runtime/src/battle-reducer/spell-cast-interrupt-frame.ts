@@ -1,4 +1,4 @@
-// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.REACTION_CASTING_TIME
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.REACTION_CASTING_TIME BATTLE.PROTOCOL.INTERRUPT_STACK_RESUME_REPLAY
 import type {
   BattleSpellCastReactionFactsHole,
   BattleSpellCastReactionFact,

@@ -2,8 +2,6 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.magic-action-area-save-damage-healing
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L3PUTB-08-DRUID-LANDS-AID-RUNTIME druid_lands_aid
 // UNIT-IDENTITY-MBT-REPLAY: L3PUTB-08-DRUID-LANDS-AID-RUNTIME druid_lands_aid doResolveAreaSaveDamageHealing doResolveAreaSaveDamageHealingLevel10 doResolveAreaSaveDamageHealingLevel14 doRejectMissingResource doRejectMissingAreaMembership doRejectDuplicateSaveFill doRejectInvalidHealingTarget doRejectInvalidDamageRoll doRejectInvalidHealingRoll
-import * as path from "node:path";
-
 import { DieRollResult, movementFeet } from "@dnd/shared/types";
 import * as Either from "effect/Either";
 
@@ -21,6 +19,7 @@ import {
   wizardSpellcasting,
 } from "./battle-runtime-test-support.ts";
 import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
+import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
 import {
   druidLandsAidUnitId,
   oppositionSide,
@@ -72,10 +71,14 @@ const healingTargetId = combatantId("lands-aid-selected-healing-target");
 defineSelectedIdentityWitness({
   describeLabel: "Druid Land's Aid selected identity MBT",
   taskId: "L3PUTB-08-DRUID-LANDS-AID-RUNTIME",
-  specFile: path.resolve(
+  specFile: mbtSpecPath(
     import.meta.dirname,
-    "../battle-runtime-druid-lands-aid.mbt.qnt",
+    "battle-runtime-druid-lands-aid.mbt.qnt",
   ),
+  quintStateField: "qState",
+  quintStateFieldPrefix: "q",
+  witnessProtocolField: "protocol",
+  quintFieldNames: { lastResult: "qScenarioResult" },
   projectionSchema: {
     targetHp: "int",
     secondTargetHp: "int",
@@ -107,7 +110,11 @@ defineSelectedIdentityWitness({
                     { targetId: spellTargetId, succeeded: false },
                     { targetId: secondTargetId, succeeded: true },
                   ],
-                  areaTargetIds: [spellTargetId, secondTargetId, healingTargetId],
+                  areaTargetIds: [
+                    spellTargetId,
+                    secondTargetId,
+                    healingTargetId,
+                  ],
                   healingTargetId,
                   damageRolls: [4, 4],
                   healingRolls: [3, 4],
@@ -134,7 +141,11 @@ defineSelectedIdentityWitness({
                     { targetId: spellTargetId, succeeded: false },
                     { targetId: secondTargetId, succeeded: true },
                   ],
-                  areaTargetIds: [spellTargetId, secondTargetId, healingTargetId],
+                  areaTargetIds: [
+                    spellTargetId,
+                    secondTargetId,
+                    healingTargetId,
+                  ],
                   healingTargetId,
                   damageRolls: [4, 4, 4],
                   healingRolls: [3, 4, 5],
@@ -161,7 +172,11 @@ defineSelectedIdentityWitness({
                     { targetId: spellTargetId, succeeded: false },
                     { targetId: secondTargetId, succeeded: true },
                   ],
-                  areaTargetIds: [spellTargetId, secondTargetId, healingTargetId],
+                  areaTargetIds: [
+                    spellTargetId,
+                    secondTargetId,
+                    healingTargetId,
+                  ],
                   healingTargetId,
                   damageRolls: [4, 4, 4, 4],
                   healingRolls: [3, 4, 5, 6],
@@ -453,9 +468,7 @@ function landsAidSavingThrowFill(
     holeId: hole.holeId,
     value: { outcomes },
     spatialFacts:
-      areaTargetIds.length === 0
-        ? []
-        : [landsAidAreaFact(areaTargetIds)],
+      areaTargetIds.length === 0 ? [] : [landsAidAreaFact(areaTargetIds)],
   };
 }
 
@@ -561,9 +574,8 @@ function requireLandsAidUnitRef(druidLevel = 3) {
   if (Either.isLeft(unitRef)) {
     throw new Error(unitRef.left.message);
   }
-  const support = battleMagicActionAreaSaveDamageHealingSupportForUnit(
-    landsAidUnit,
-  );
+  const support =
+    battleMagicActionAreaSaveDamageHealingSupportForUnit(landsAidUnit);
   if (support === null || support === "unsupported") {
     throw new Error("Expected Land's Aid damage/healing support.");
   }

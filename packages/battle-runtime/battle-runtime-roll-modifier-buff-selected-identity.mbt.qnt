@@ -1,26 +1,62 @@
 // -*- mode: Bluespec; -*-
 
 module battleRuntimeRollModifierBuffSelectedIdentityMbt {
+  import battleRuntimeWitnessProtocol.* from "./battle-runtime-witness-protocol"
+
   // Self-contained literal projection witness for fixed roll-modifier buff
   // selected-identity scenarios. The TS witness independently discovers these
   // projections from runtime, so this QNT side keeps no reducer imports.
 
-  var qCasterConcentrating: bool
-  var qCasterHp: int
-  var qCasterEffectCount: int
-  var qPrimaryTargetEffectCount: int
-  var qSecondaryTargetEffectCount: int
-  var qPrimaryTargetArmorClass: int
-  var qPrimaryTargetHp: int
-  var qD20ModifierSign: str
-  var qD20ModifierAttackRoll: bool
-  var qD20ModifierSavingThrow: bool
-  var qD20ModifierAbilityCheck: bool
-  var qD20ModifierSkill: str
-  var qInvalidTargetRejected: bool
-  var qDamageReductionType: str
-  var qDamageReductionUsed: bool
-  var qLastResult: str
+  type WitnessHole = | WitnessProtocolHole
+
+  type RollModifierBuffSelectedIdentityWitnessState = {
+    qCasterConcentrating: bool,
+    qCasterHp: int,
+    qCasterEffectCount: int,
+    qPrimaryTargetEffectCount: int,
+    qSecondaryTargetEffectCount: int,
+    qPrimaryTargetArmorClass: int,
+    qPrimaryTargetHp: int,
+    qD20ModifierSign: str,
+    qD20ModifierAttackRoll: bool,
+    qD20ModifierSavingThrow: bool,
+    qD20ModifierAbilityCheck: bool,
+    qD20ModifierSkill: str,
+    qInvalidTargetRejected: bool,
+    qDamageReductionType: str,
+    qDamageReductionUsed: bool,
+    qScenarioResult: str,
+    protocol: WitnessProtocol[WitnessHole],
+  }
+
+  var qState: RollModifierBuffSelectedIdentityWitnessState
+
+  pure def qCasterConcentrating: bool = qState.qCasterConcentrating
+  pure def qCasterHp: int = qState.qCasterHp
+  pure def qCasterEffectCount: int = qState.qCasterEffectCount
+  pure def qPrimaryTargetEffectCount: int = qState.qPrimaryTargetEffectCount
+  pure def qSecondaryTargetEffectCount: int = qState.qSecondaryTargetEffectCount
+  pure def qPrimaryTargetArmorClass: int = qState.qPrimaryTargetArmorClass
+  pure def qPrimaryTargetHp: int = qState.qPrimaryTargetHp
+  pure def qD20ModifierSign: str = qState.qD20ModifierSign
+  pure def qD20ModifierAttackRoll: bool = qState.qD20ModifierAttackRoll
+  pure def qD20ModifierSavingThrow: bool = qState.qD20ModifierSavingThrow
+  pure def qD20ModifierAbilityCheck: bool = qState.qD20ModifierAbilityCheck
+  pure def qD20ModifierSkill: str = qState.qD20ModifierSkill
+  pure def qInvalidTargetRejected: bool = qState.qInvalidTargetRejected
+  pure def qDamageReductionType: str = qState.qDamageReductionType
+  pure def qDamageReductionUsed: bool = qState.qDamageReductionUsed
+  pure def qLastResult: str = qState.qScenarioResult
+
+  pure def selectedIdentityProtocolForProjection(
+    holes: Set[WitnessHole],
+    scenarioResult: str,
+    scenarioInvalidReason: str,
+  ): WitnessProtocol[WitnessHole] =
+    if (scenarioResult == "init") witnessInit(WitnessProtocolHole)
+    else if (scenarioInvalidReason == "invalidFill") witnessInvalid(WitnessProtocolHole, WInvalidFill)
+    else if (holes != Set()) witnessNeedsHoles(holes)
+    else witnessResolved(WitnessProtocolHole)
 
   action recordProjection(
     casterConcentrating: bool,
@@ -40,24 +76,26 @@ module battleRuntimeRollModifierBuffSelectedIdentityMbt {
     damageReductionUsed: bool,
     lastResult: str,
   ): bool = all {
-    qCasterConcentrating' = casterConcentrating,
-    qCasterHp' = casterHp,
-    qCasterEffectCount' = casterEffectCount,
-    qPrimaryTargetEffectCount' = primaryTargetEffectCount,
-    qSecondaryTargetEffectCount' = secondaryTargetEffectCount,
-    qPrimaryTargetArmorClass' = primaryTargetArmorClass,
-    qPrimaryTargetHp' = primaryTargetHp,
-    qD20ModifierSign' = d20ModifierSign,
-    qD20ModifierAttackRoll' = d20ModifierAttackRoll,
-    qD20ModifierSavingThrow' = d20ModifierSavingThrow,
-    qD20ModifierAbilityCheck' = d20ModifierAbilityCheck,
-    qD20ModifierSkill' = d20ModifierSkill,
-    qInvalidTargetRejected' = invalidTargetRejected,
-    qDamageReductionType' = damageReductionType,
-    qDamageReductionUsed' = damageReductionUsed,
-    qLastResult' = lastResult,
+    qState' = {
+      qCasterConcentrating: casterConcentrating,
+      qCasterHp: casterHp,
+      qCasterEffectCount: casterEffectCount,
+      qPrimaryTargetEffectCount: primaryTargetEffectCount,
+      qSecondaryTargetEffectCount: secondaryTargetEffectCount,
+      qPrimaryTargetArmorClass: primaryTargetArmorClass,
+      qPrimaryTargetHp: primaryTargetHp,
+      qD20ModifierSign: d20ModifierSign,
+      qD20ModifierAttackRoll: d20ModifierAttackRoll,
+      qD20ModifierSavingThrow: d20ModifierSavingThrow,
+      qD20ModifierAbilityCheck: d20ModifierAbilityCheck,
+      qD20ModifierSkill: d20ModifierSkill,
+      qInvalidTargetRejected: invalidTargetRejected,
+      qDamageReductionType: damageReductionType,
+      qDamageReductionUsed: damageReductionUsed,
+      qScenarioResult: lastResult,
+      protocol: selectedIdentityProtocolForProjection(Set(), lastResult, ""),
+    },
   }
-
   action init = recordProjection(
     false, 12, 0, 0, 0, 10, 12, "none", false, false, false,
     "none", false, "none", false, "init",

@@ -12,14 +12,26 @@
 //   ability checks compare the total to a Difficulty Class.
 // - UBIQUITOUS_LANGUAGE.md: Ability Check, Difficulty Class, Magic Action,
 //   Spell Slot, and Concentration.
-import * as path from "node:path";
-
 import { canSpendAction } from "@dnd/shared-algebras/action-economy-algebra";
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { movementFeet, Round } from "@dnd/shared/types";
-import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
 import { describe, expect, it } from "vitest";
 
+import {
+  MBT_TEST_TIMEOUT_MS,
+  assertWitnessProtocolConsistentWithScenario,
+  booleanField,
+  decodeWitnessProtocolState,
+  defineDriver,
+  focusedMbtMaxSteps,
+  mbtSpecPath,
+  mbtTraceCount,
+  numberFromQuintInt,
+  quintRecordField,
+  quintStateRecord,
+  run,
+  stateCheck,
+} from "./battle-runtime-mbt-driver-kit.ts";
 import { parseBattleSpellEffectLevel } from "./battle-reducer/spells-effective-level.ts";
 import type {
   BattleOngoingSpellTarget,
@@ -243,21 +255,25 @@ describe("Dispel Magic ongoing spell ending MBT parity", () => {
     });
   });
 
-  it("matches the focused ongoing spell ending slice against bounded random MBT traces", async () => {
-    await run({
-      spec: path.resolve(
-        import.meta.dirname,
-        "../battle-runtime-dispel-magic-ongoing-spell-ending.mbt.qnt",
-      ),
-      init: "init",
-      step: "step",
-      driver: createDispelMagicOngoingSpellEndingDriver(),
-      backend: "typescript",
-      nTraces: 10,
-      maxSteps: 4,
-      stateCheck: dispelMagicStateCheck,
-    });
-  }, 120_000);
+  it(
+    "matches the focused ongoing spell ending slice against bounded random MBT traces",
+    async () => {
+      await run({
+        spec: mbtSpecPath(
+          import.meta.dirname,
+          "battle-runtime-dispel-magic-ongoing-spell-ending.mbt.qnt",
+        ),
+        init: "init",
+        step: "step",
+        driver: createDispelMagicOngoingSpellEndingDriver(),
+        backend: "typescript",
+        nTraces: mbtTraceCount(),
+        maxSteps: focusedMbtMaxSteps(4),
+        stateCheck: dispelMagicStateCheck,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
 });
 
 function initialRuntimeState(): DispelMagicRuntimeState {
@@ -671,7 +687,24 @@ function testBattleSpellEffectLevel(sourceSpellLevel: number) {
 function normalizeDispelMagicQuintState(
   raw: unknown,
 ): DispelMagicOngoingSpellEndingProjection {
-  const state = quintStateRecord(raw);
+  const state = quintRecordField(quintStateRecord(raw), "qState");
+  const scenarioResult = lastResult(state["qScenarioResult"]);
+  const protocol = decodeWitnessProtocolState({
+    state,
+    protocolField: "protocol",
+    noInvalidReason: "",
+    decodeHole: dispelMagicOngoingSpellEndingUnexpectedHole,
+  });
+  if (protocol.holes.length !== 0) {
+    throw new Error(
+      "Expected Dispel Magic ongoing spell ending witness holes to be empty.",
+    );
+  }
+  assertWitnessProtocolConsistentWithScenario({
+    label: "Dispel Magic ongoing spell ending",
+    scenarioResult,
+    protocol,
+  });
   return {
     actionAvailable: booleanField(state, "qActionAvailable"),
     slot3Available: booleanField(state, "qSlot3Available"),
@@ -691,8 +724,14 @@ function normalizeDispelMagicQuintState(
       state,
       "qHighLevelCasterConcentrating",
     ),
-    lastResult: lastResult(state["qLastResult"]),
+    lastResult: scenarioResult,
   };
+}
+
+function dispelMagicOngoingSpellEndingUnexpectedHole(raw: unknown): never {
+  throw new Error(
+    `Dispel Magic ongoing spell ending witness does not expect holes; received ${String(raw)}.`,
+  );
 }
 
 function compareDispelMagicStates(
@@ -725,31 +764,4 @@ function isCharacterBattleCreatureState(
   combatant: BattleCreatureState,
 ): combatant is CharacterBattleCreatureState {
   return combatant.origin.kind === "character";
-}
-
-function quintStateRecord(raw: unknown): Readonly<Record<string, unknown>> {
-  if (!isRecord(raw)) {
-    throw new Error("Expected Quint Dispel Magic state.");
-  }
-  return raw;
-}
-
-function numberFromQuintInt(raw: unknown, field: string): number {
-  if (typeof raw === "number") return raw;
-  if (typeof raw === "bigint") return Number(raw);
-  throw new Error(`Expected Quint integer field ${field}.`);
-}
-
-function booleanField(
-  state: Readonly<Record<string, unknown>>,
-  field: string,
-): boolean {
-  if (typeof state[field] === "boolean") {
-    return state[field];
-  }
-  throw new Error(`Expected Quint Boolean field ${field}.`);
-}
-
-function isRecord(raw: unknown): raw is Readonly<Record<string, unknown>> {
-  return typeof raw === "object" && raw !== null;
 }

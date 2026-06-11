@@ -1,12 +1,29 @@
 // -*- mode: Bluespec; -*-
 
 module battleRuntimeDispelMagicSelectedIdentityMbt {
-  var qMagicActionAvailable: bool
-  var qThirdLevelSlotCommitted: bool
-  var qSpellLightEmitterCount: int
-  var qSelectedActiveEffectPresent: bool
-  var qRetainedActiveEffectPresent: bool
-  var qLastResult: str
+  import battleRuntimeWitnessProtocol.* from "./battle-runtime-witness-protocol"
+
+  type WitnessHole = | DispelMagicSelectedIdentity
+
+  type WitnessState = {
+    qMagicActionAvailable: bool,
+    qThirdLevelSlotCommitted: bool,
+    qSpellLightEmitterCount: int,
+    qSelectedActiveEffectPresent: bool,
+    qRetainedActiveEffectPresent: bool,
+    qScenarioResult: str,
+    protocol: WitnessProtocol[WitnessHole],
+  }
+
+  var qState: WitnessState
+
+  pure def qMagicActionAvailable: bool = qState.qMagicActionAvailable
+  pure def qThirdLevelSlotCommitted: bool = qState.qThirdLevelSlotCommitted
+  pure def qSpellLightEmitterCount: int = qState.qSpellLightEmitterCount
+  pure def qSelectedActiveEffectPresent: bool = qState.qSelectedActiveEffectPresent
+  pure def qRetainedActiveEffectPresent: bool = qState.qRetainedActiveEffectPresent
+  pure def qScenarioResult: str = qState.qScenarioResult
+
 
   action recordDispelMagicState(
     magicActionAvailable: bool,
@@ -14,14 +31,18 @@ module battleRuntimeDispelMagicSelectedIdentityMbt {
     spellLightEmitterCount: int,
     selectedActiveEffectPresent: bool,
     retainedActiveEffectPresent: bool,
-    lastResult: str,
+    scenarioResult: str,
+    protocol: WitnessProtocol[WitnessHole],
   ): bool = all {
-    qMagicActionAvailable' = magicActionAvailable,
-    qThirdLevelSlotCommitted' = thirdLevelSlotCommitted,
-    qSpellLightEmitterCount' = spellLightEmitterCount,
-    qSelectedActiveEffectPresent' = selectedActiveEffectPresent,
-    qRetainedActiveEffectPresent' = retainedActiveEffectPresent,
-    qLastResult' = lastResult,
+    qState' = {
+      qMagicActionAvailable: magicActionAvailable,
+      qThirdLevelSlotCommitted: thirdLevelSlotCommitted,
+      qSpellLightEmitterCount: spellLightEmitterCount,
+      qSelectedActiveEffectPresent: selectedActiveEffectPresent,
+      qRetainedActiveEffectPresent: retainedActiveEffectPresent,
+      qScenarioResult: scenarioResult,
+      protocol: protocol,
+    },
   }
 
   action init = all {
@@ -32,7 +53,8 @@ module battleRuntimeDispelMagicSelectedIdentityMbt {
       true,
       true,
       "init",
-    ),
+    witnessInit(DispelMagicSelectedIdentity),
+  ),
   }
 
   action doEndObjectAttachedSpellLight = all {
@@ -44,7 +66,8 @@ module battleRuntimeDispelMagicSelectedIdentityMbt {
       false,
       false,
       "objectSpellLightEnded",
-    ),
+    witnessResolved(DispelMagicSelectedIdentity),
+  ),
   }
 
   action doEndSelectedMagicalEffectActiveEffect = all {
@@ -56,7 +79,8 @@ module battleRuntimeDispelMagicSelectedIdentityMbt {
       false,
       true,
       "selectedMagicalEffectEnded",
-    ),
+    witnessResolved(DispelMagicSelectedIdentity),
+  ),
   }
 
   action doRejectOutOfRangeObjectTarget = all {
@@ -68,7 +92,8 @@ module battleRuntimeDispelMagicSelectedIdentityMbt {
       false,
       false,
       "outOfRangeObjectRejected",
-    ),
+    witnessInvalid(DispelMagicSelectedIdentity, WInvalidFill),
+  ),
   }
 
   action step = any {

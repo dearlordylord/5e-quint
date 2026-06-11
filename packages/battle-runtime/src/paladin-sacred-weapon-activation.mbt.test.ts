@@ -4,10 +4,9 @@
 // UNIT-IDENTITY-MBT-REPLAY: L3CF-04-PALADIN-SACRED-WEAPON-ATTACK-DAMAGE-LIGHT paladin_sacred_weapon doProjectSacredWeaponAttackDamageAndLight doDismissSacredWeapon doEndSacredWeaponWhenNotCarryingWeapon
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.paladin-sacred-weapon
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.paladin-sacred-weapon
-import * as path from "node:path";
-
 import { describe, expect, test } from "vitest";
 
+import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
 import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
 import {
   attackTargetFill,
@@ -241,10 +240,14 @@ describe("Sacred Weapon activation", () => {
 defineSelectedIdentityWitness({
   describeLabel: "Paladin Sacred Weapon selected identity MBT",
   taskId: "L3CF-03-PALADIN-SACRED-WEAPON-ACTIVATION",
-  specFile: path.resolve(
+  specFile: mbtSpecPath(
     import.meta.dirname,
-    "../battle-runtime-paladin-sacred-weapon-selected-identity.mbt.qnt",
+    "battle-runtime-paladin-sacred-weapon-selected-identity.mbt.qnt",
   ),
+  quintStateField: "qState",
+  quintStateFieldPrefix: "q",
+  witnessProtocolField: "protocol",
+  quintFieldNames: { lastResult: "qScenarioResult" },
   projectionSchema: {
     activationOffered: "bool",
     channelDivinityUsesRemaining: "int",
@@ -593,7 +596,9 @@ function sacredWeaponProjection(
   };
 }
 
-function sacredWeaponActorResourceUnitIds(state: BattleState): readonly string[] {
+function sacredWeaponActorResourceUnitIds(
+  state: BattleState,
+): readonly string[] {
   const actor = state.combatants.get(paladinId);
   if (actor?.origin.kind !== "character") {
     throw new Error("Expected Sacred Weapon character actor.");

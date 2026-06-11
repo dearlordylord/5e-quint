@@ -3,6 +3,8 @@
 // UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-self-teleport
 
 module battleRuntimeSelfTeleportLifecycleMbt {
+  import battleRuntimeWitnessProtocol.* from "./battle-runtime-witness-protocol"
+
   // RAW trace:
   // - .references/srd-5.2.1/Spells/Descriptions-M-P.md#Misty Step:
   //   Misty Step is a level 2 Bonus Action spell with range Self that
@@ -17,21 +19,28 @@ module battleRuntimeSelfTeleportLifecycleMbt {
   //   no one can teleport into or out of the aura or use planar travel there.
   // - UBIQUITOUS_LANGUAGE.md: Bonus Action, Spell Slot, Movement,
   //   Opportunity Attack, Teleportation, and Holding / Wielding.
-  var qBonusActionAvailable: bool
-  var qSpellAvailable: bool
-  var qDestinationWitnessAvailable: bool
-  var qDestinationWitnessConsumed: bool
-  var qTeleportEmitted: bool
-  var qMovementSpentFeet: int
-  var qMovementRemainingFeet: int
-  var qSpellSlotExpended: int
-  var qSpellSlotCommittedThisTurn: bool
-  var qNoOpportunityAttackProjected: bool
-  var qEquipmentTransportProjected: bool
-  var qDestinationDistanceFeet: int
-  var qDestinationInsideAntimagicAuraWitness: bool
-  var qAntimagicTransitBlocked: bool
-  var qLastResult: str
+  type Hole = | NoHole
+
+  type SelfTeleportWitnessState = {
+    bonusActionAvailable: bool,
+    spellAvailable: bool,
+    destinationWitnessAvailable: bool,
+    destinationWitnessConsumed: bool,
+    teleportEmitted: bool,
+    movementSpentFeet: int,
+    movementRemainingFeet: int,
+    spellSlotExpended: int,
+    spellSlotCommittedThisTurn: bool,
+    noOpportunityAttackProjected: bool,
+    equipmentTransportProjected: bool,
+    destinationDistanceFeet: int,
+    destinationInsideAntimagicAuraWitness: bool,
+    antimagicTransitBlocked: bool,
+    scenarioResult: str,
+    protocol: WitnessProtocol[Hole],
+  }
+
+  var qState: SelfTeleportWitnessState
 
   action recordSelfTeleportState(
     bonusActionAvailable: bool,
@@ -48,23 +57,27 @@ module battleRuntimeSelfTeleportLifecycleMbt {
     destinationDistanceFeet: int,
     destinationInsideAntimagicAuraWitness: bool,
     antimagicTransitBlocked: bool,
-    lastResult: str,
+    scenarioResult: str,
+    protocol: WitnessProtocol[Hole],
   ): bool = all {
-    qBonusActionAvailable' = bonusActionAvailable,
-    qSpellAvailable' = spellAvailable,
-    qDestinationWitnessAvailable' = destinationWitnessAvailable,
-    qDestinationWitnessConsumed' = destinationWitnessConsumed,
-    qTeleportEmitted' = teleportEmitted,
-    qMovementSpentFeet' = movementSpentFeet,
-    qMovementRemainingFeet' = movementRemainingFeet,
-    qSpellSlotExpended' = spellSlotExpended,
-    qSpellSlotCommittedThisTurn' = spellSlotCommittedThisTurn,
-    qNoOpportunityAttackProjected' = noOpportunityAttackProjected,
-    qEquipmentTransportProjected' = equipmentTransportProjected,
-    qDestinationDistanceFeet' = destinationDistanceFeet,
-    qDestinationInsideAntimagicAuraWitness' = destinationInsideAntimagicAuraWitness,
-    qAntimagicTransitBlocked' = antimagicTransitBlocked,
-    qLastResult' = lastResult,
+    qState' = {
+      bonusActionAvailable: bonusActionAvailable,
+      spellAvailable: spellAvailable,
+      destinationWitnessAvailable: destinationWitnessAvailable,
+      destinationWitnessConsumed: destinationWitnessConsumed,
+      teleportEmitted: teleportEmitted,
+      movementSpentFeet: movementSpentFeet,
+      movementRemainingFeet: movementRemainingFeet,
+      spellSlotExpended: spellSlotExpended,
+      spellSlotCommittedThisTurn: spellSlotCommittedThisTurn,
+      noOpportunityAttackProjected: noOpportunityAttackProjected,
+      equipmentTransportProjected: equipmentTransportProjected,
+      destinationDistanceFeet: destinationDistanceFeet,
+      destinationInsideAntimagicAuraWitness: destinationInsideAntimagicAuraWitness,
+      antimagicTransitBlocked: antimagicTransitBlocked,
+      scenarioResult: scenarioResult,
+      protocol: protocol,
+    },
   }
 
   action init = recordSelfTeleportState(
@@ -83,36 +96,38 @@ module battleRuntimeSelfTeleportLifecycleMbt {
     false,
     false,
     "init",
+    witnessInit(NoHole),
   )
 
   action doRequestDestinationWitness = all {
-    qSpellAvailable,
-    qDestinationWitnessAvailable,
-    not(qDestinationWitnessConsumed),
+    qState.spellAvailable,
+    qState.destinationWitnessAvailable,
+    not(qState.destinationWitnessConsumed),
     recordSelfTeleportState(
-      qBonusActionAvailable,
+      qState.bonusActionAvailable,
       true,
       true,
       false,
       false,
-      qMovementSpentFeet,
-      qMovementRemainingFeet,
-      qSpellSlotExpended,
-      qSpellSlotCommittedThisTurn,
+      qState.movementSpentFeet,
+      qState.movementRemainingFeet,
+      qState.spellSlotExpended,
+      qState.spellSlotCommittedThisTurn,
       false,
       false,
       0,
       false,
       false,
       "destinationWitnessRequired",
+      witnessResolved(NoHole),
     ),
   }
 
   action doCastSelfTeleport = all {
-    qBonusActionAvailable,
-    qSpellAvailable,
-    qDestinationWitnessAvailable,
-    qSpellSlotExpended == 0,
+    qState.bonusActionAvailable,
+    qState.spellAvailable,
+    qState.destinationWitnessAvailable,
+    qState.spellSlotExpended == 0,
     recordSelfTeleportState(
       false,
       false,
@@ -129,14 +144,15 @@ module battleRuntimeSelfTeleportLifecycleMbt {
       false,
       false,
       "selfTeleported",
+      witnessResolved(NoHole),
     ),
   }
 
   action doRejectAntimagicDestinationTransit = all {
-    qBonusActionAvailable,
-    qSpellAvailable,
-    qDestinationWitnessAvailable,
-    qSpellSlotExpended == 0,
+    qState.bonusActionAvailable,
+    qState.spellAvailable,
+    qState.destinationWitnessAvailable,
+    qState.spellSlotExpended == 0,
     recordSelfTeleportState(
       true,
       true,
@@ -153,25 +169,27 @@ module battleRuntimeSelfTeleportLifecycleMbt {
       true,
       true,
       "antimagicTransitBlocked",
+      witnessResolved(NoHole),
     ),
   }
 
   action doStutter = recordSelfTeleportState(
-    qBonusActionAvailable,
-    qSpellAvailable,
-    qDestinationWitnessAvailable,
-    qDestinationWitnessConsumed,
-    qTeleportEmitted,
-    qMovementSpentFeet,
-    qMovementRemainingFeet,
-    qSpellSlotExpended,
-    qSpellSlotCommittedThisTurn,
-    qNoOpportunityAttackProjected,
-    qEquipmentTransportProjected,
-    qDestinationDistanceFeet,
-    qDestinationInsideAntimagicAuraWitness,
-    qAntimagicTransitBlocked,
-    qLastResult,
+    qState.bonusActionAvailable,
+    qState.spellAvailable,
+    qState.destinationWitnessAvailable,
+    qState.destinationWitnessConsumed,
+    qState.teleportEmitted,
+    qState.movementSpentFeet,
+    qState.movementRemainingFeet,
+    qState.spellSlotExpended,
+    qState.spellSlotCommittedThisTurn,
+    qState.noOpportunityAttackProjected,
+    qState.equipmentTransportProjected,
+    qState.destinationDistanceFeet,
+    qState.destinationInsideAntimagicAuraWitness,
+    qState.antimagicTransitBlocked,
+    qState.scenarioResult,
+    qState.protocol,
   )
 
   action step = any {

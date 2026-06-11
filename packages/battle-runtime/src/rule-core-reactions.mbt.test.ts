@@ -1,10 +1,22 @@
 // RAW-COVERAGE: verification-owner:focused-mbt RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-RULES-GLOSSARY-CONCENTRATION-DAMAGE-001
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.reaction-roll-or-damage-reduction spell.reaction-shield
 // KERNEL-COVERAGE: parity-witness BATTLE.REACTION.OFFER_DECLINE_RESUME
-import * as path from "node:path";
 import { isDeepStrictEqual } from "node:util";
 
-import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
+import {
+  MBT_TEST_TIMEOUT_MS,
+  booleanField,
+  defineDriver,
+  focusedMbtMaxSteps,
+  mbtSpecPath,
+  mbtTraceCount,
+  numberFromQuintInt,
+  quintSet,
+  quintStateRecord,
+  quintVariantTag,
+  run,
+  stateCheck,
+} from "./battle-runtime-mbt-driver-kit.ts";
 import { Either } from "effect";
 import { describe, it } from "vitest";
 
@@ -39,6 +51,7 @@ import {
   type CombatantId,
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
+import { zeroAbilityWeaponAttack } from "./unit-profile-admission-creature-fixture-support.ts";
 
 const ruleCoreReactionMbtHoles = ["ReactionDecision", "DamageRoll"] as const;
 type RuleCoreReactionMbtHole = (typeof ruleCoreReactionMbtHoles)[number];
@@ -83,6 +96,7 @@ const movementResumeCostFeet = 10;
 const readiedMovementShortCostFeet = 5;
 const readiedMovementFillCostFeet = 10;
 const concentrationSpellId = "rule_core_concentration_fixture";
+const ruleCoreReactionAttackName = "Longsword";
 
 const driverSchema = {
   init: {},
@@ -192,7 +206,7 @@ function createRuleCoreReactionDriver() {
               movementFill(requireMovementHole(holes), {
                 movementCostFeet: movementResumeCostFeet,
                 provokedOpportunityAttacks: [
-                  { reactorId, attackName: "Unarmed Strike" },
+                  { reactorId, attackName: ruleCoreReactionAttackName },
                 ],
               }),
             ],
@@ -337,21 +351,23 @@ const reactionStateCheck = stateCheck(
 const ruleCoreReactionDefaultMbtSteps = 6;
 
 describe("rule-core Reaction focused MBT", () => {
-  it("replays QCORE8 Reaction, continuation, Readied Movement, and Concentration parity", async () => {
-    await run({
-      spec: path.resolve(import.meta.dirname, "../rule-core-reactions.mbt.qnt"),
-      init: "init",
-      step: "step",
-      driver: createRuleCoreReactionDriver(),
-      backend: "typescript",
-      seed: process.env["QUINT_SEED"],
-      nTraces: Number(process.env["MBT_TRACES"] ?? 1),
-      maxSteps: Number(
-        process.env["MBT_STEPS"] ?? ruleCoreReactionDefaultMbtSteps,
-      ),
-      stateCheck: reactionStateCheck,
-    });
-  }, 120_000);
+  it(
+    "replays QCORE8 Reaction, continuation, Readied Movement, and Concentration parity",
+    async () => {
+      await run({
+        spec: mbtSpecPath(import.meta.dirname, "rule-core-reactions.mbt.qnt"),
+        init: "init",
+        step: "step",
+        driver: createRuleCoreReactionDriver(),
+        backend: "typescript",
+        seed: process.env["QUINT_SEED"],
+        nTraces: mbtTraceCount(),
+        maxSteps: focusedMbtMaxSteps(ruleCoreReactionDefaultMbtSteps),
+        stateCheck: reactionStateCheck,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
 });
 
 function ruleCoreReactionBattle(): BattleState {
@@ -434,7 +450,7 @@ function reactionCreature(input: {
       maxHp: Hp(12),
       tempHp: Hp(0),
       selectedLoadout: {},
-      attack: null,
+      attack: zeroAbilityWeaponAttack("weapon_longsword"),
       unarmedStrike: {
         kind: "unarmedStrike",
         effect: {
@@ -458,7 +474,7 @@ function interruptedAttackSubject(): Extract<
     tag: "action",
     actorId: interruptedId,
     action: "attack",
-    attackName: "Unarmed Strike",
+    attackName: ruleCoreReactionAttackName,
   };
 }
 
@@ -508,7 +524,9 @@ function projectRuleCoreReactionState(input: {
     reactorMovementSpentFeet: reactor.movement.spentFeet,
     interruptedConcentration: interrupted.concentrating,
     reactorConcentration: reactor.concentrating,
-    pendingTrigger: pendingTrigger(snapshot.pendingInterrupt?.trigger ?? "none"),
+    pendingTrigger: pendingTrigger(
+      snapshot.pendingInterrupt?.trigger ?? "none",
+    ),
     pendingStackDepth: snapshot.pendingInterrupt?.stackDepth ?? 0,
     holes: input.holes.map(projectReactionHole),
     lastConcentrationSaveDc: input.lastConcentrationSaveDc,
@@ -551,7 +569,7 @@ function attackTargetFill(
         kind: "attackTargetInMeleeReach",
         actorId: interruptedId,
         targetId,
-        attackName: "Unarmed Strike",
+        attackName: ruleCoreReactionAttackName,
       },
     ],
   };
@@ -595,7 +613,9 @@ function requireMovementHole(
 function requireReactionDecisionHole(
   holes: readonly BattleHole[],
 ): Extract<BattleHole, { readonly kind: "interruptDecision" }> {
-  const hole = holes.find((candidate) => candidate.kind === "interruptDecision");
+  const hole = holes.find(
+    (candidate) => candidate.kind === "interruptDecision",
+  );
   if (hole === undefined) {
     throw new Error("Expected interrupt decision hole.");
   }
@@ -651,7 +671,7 @@ function normalizeRuleCoreReactionQuintState(
     reactorConcentration: booleanField(state, "qReactorConcentration"),
     pendingTrigger: pendingTrigger(state["qPendingTrigger"]),
     pendingStackDepth: reactionWindowDepth(state["qReactionWindow"]),
-    holes: quintHoleSet(state["qHoles"]).map(reactionHoleName),
+    holes: quintSet(state["qHoles"], "qHoles").map(reactionHoleName),
     lastConcentrationSaveDc: numberFromQuintInt(
       state["qLastConcentrationSaveDc"],
       "qLastConcentrationSaveDc",
@@ -666,26 +686,6 @@ function compareRuleCoreReactionState(
   runtime: RuleCoreReactionProjection,
 ): boolean {
   return isDeepStrictEqual(runtime, quint);
-}
-
-function numberFromQuintInt(raw: unknown, field: string): number {
-  if (typeof raw === "number") return raw;
-  if (typeof raw === "bigint") return Number(raw);
-  throw new Error(`Expected Quint integer field ${field}.`);
-}
-
-function booleanField(
-  state: Readonly<Record<string, unknown>>,
-  field: string,
-): boolean {
-  const value = state[field];
-  if (typeof value === "boolean") return value;
-  throw new Error(`Expected Quint boolean field ${field}.`);
-}
-
-function quintHoleSet(raw: unknown): readonly unknown[] {
-  if (raw instanceof Set) return [...raw];
-  throw new Error("Expected Quint qHoles field to be a Set.");
 }
 
 function reactionHoleName(raw: unknown): RuleCoreReactionMbtHole {
@@ -736,21 +736,4 @@ function isRuleCoreReactionTrigger(
 function reactionWindowDepth(raw: unknown): number {
   const tag = quintVariantTag(raw);
   return tag === "NoReactionWindow" ? 0 : 1;
-}
-
-function quintVariantTag(raw: unknown): string {
-  if (isRecord(raw) && typeof raw["tag"] === "string") return raw["tag"];
-  if (typeof raw === "string") return raw;
-  throw new Error(`Expected Quint variant tag, got ${String(raw)}.`);
-}
-
-function quintStateRecord(raw: unknown): Readonly<Record<string, unknown>> {
-  if (!isRecord(raw)) {
-    throw new Error("Expected Quint state to be an object.");
-  }
-  return raw;
-}
-
-function isRecord(raw: unknown): raw is Readonly<Record<string, unknown>> {
-  return typeof raw === "object" && raw !== null;
 }

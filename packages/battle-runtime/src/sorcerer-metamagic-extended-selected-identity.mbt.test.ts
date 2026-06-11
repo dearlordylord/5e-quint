@@ -8,8 +8,6 @@
 //   when it requires Concentration, grants Advantage on maintenance saves.
 // - .references/srd-5.2.1/Spells/Descriptions-E-L.md#Enlarge/Reduce:
 //   Concentration up to 1 minute and a creature size-change effect.
-import * as path from "node:path";
-
 import { resourceCount } from "@dnd/shared/types";
 
 import { concentrationSavingThrowHole } from "./battle-reducer/damage-apply.ts";
@@ -19,6 +17,7 @@ import {
   type CharacterBattleMetamagicOptionFact,
   type CharacterBattlePointPoolResourceState,
 } from "./character-battle-resources.ts";
+import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
 import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
 import {
   enlargeReduceUnitId,
@@ -45,10 +44,13 @@ type ExtendedCreatureSizeProjection = {
 defineSelectedIdentityWitness({
   describeLabel: "Sorcerer Extended Spell creature-size selected identity MBT",
   taskId: "L3MMETA-16-EXTENDED-CAST-DURATION-CONCENTRATION-SLICE",
-  specFile: path.resolve(
+  specFile: mbtSpecPath(
     import.meta.dirname,
-    "../battle-runtime-sorcerer-metamagic-extended-selected-identity.mbt.qnt",
+    "battle-runtime-sorcerer-metamagic-extended-selected-identity.mbt.qnt",
   ),
+  quintStateField: "qState",
+  witnessProtocolField: "protocol",
+  quintFieldNames: { lastResult: "scenarioResult" },
   projectionSchema: {
     sorceryPointsRemaining: "int",
     durationTicks: "int",

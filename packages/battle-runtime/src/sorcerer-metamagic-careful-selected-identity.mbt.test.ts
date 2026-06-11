@@ -17,8 +17,7 @@
 //   successful save.
 // - UBIQUITOUS_LANGUAGE.md: Magic Action, Spell Invocation, Saving Throw,
 //   Sorcery Points as a Pool, and Spend.
-import * as path from "node:path";
-
+import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
 import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
 import {
   carefulSorcererMetamagicBattle,
@@ -30,10 +29,13 @@ import {
 defineSelectedIdentityWitness({
   describeLabel: "Sorcerer Metamagic Careful Spell selected identity MBT",
   taskId: "L3META-04-SORCERER-METAMAGIC-CAREFUL-SAVE-PROFILES",
-  specFile: path.resolve(
+  specFile: mbtSpecPath(
     import.meta.dirname,
-    "../battle-runtime-sorcerer-metamagic-careful-selected-identity.mbt.qnt",
+    "battle-runtime-sorcerer-metamagic-careful-selected-identity.mbt.qnt",
   ),
+  quintStateField: "qState",
+  witnessProtocolField: "protocol",
+  quintFieldNames: { lastResult: "scenarioResult" },
   projectionSchema: {
     magicActionAvailable: "bool",
     bonusActionAvailable: "bool",

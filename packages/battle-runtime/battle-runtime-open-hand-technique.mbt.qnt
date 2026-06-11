@@ -4,11 +4,34 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.open-hand-technique
 
 module battleRuntimeOpenHandTechniqueMbt {
-  var qTargetOpportunityAttackDenied: bool
-  var qTargetProne: bool
-  var qPushDistanceFeet: int
-  var qLastResult: str
-  var qLastInvalidReason: str
+  import battleRuntimeWitnessProtocol.* from "./battle-runtime-witness-protocol"
+
+  type WitnessHole = | WitnessProtocolHole
+
+  type OpenHandTechniqueWitnessState = {
+    qTargetOpportunityAttackDenied: bool,
+    qTargetProne: bool,
+    qPushDistanceFeet: int,
+    qScenarioResult: str,
+    protocol: WitnessProtocol[WitnessHole],
+  }
+
+  var qState: OpenHandTechniqueWitnessState
+
+  pure def qTargetOpportunityAttackDenied: bool = qState.qTargetOpportunityAttackDenied
+  pure def qTargetProne: bool = qState.qTargetProne
+  pure def qPushDistanceFeet: int = qState.qPushDistanceFeet
+  pure def qLastResult: str = qState.qScenarioResult
+
+  pure def selectedIdentityProtocolForProjection(
+    holes: Set[WitnessHole],
+    scenarioResult: str,
+    scenarioInvalidReason: str,
+  ): WitnessProtocol[WitnessHole] =
+    if (scenarioResult == "init") witnessInit(WitnessProtocolHole)
+    else if (scenarioInvalidReason == "invalidFill") witnessInvalid(WitnessProtocolHole, WInvalidFill)
+    else if (holes != Set()) witnessNeedsHoles(holes)
+    else witnessResolved(WitnessProtocolHole)
 
   action recordProjection(
     targetOpportunityAttackDenied: bool,
@@ -17,13 +40,14 @@ module battleRuntimeOpenHandTechniqueMbt {
     lastResult: str,
     lastInvalidReason: str,
   ): bool = all {
-    qTargetOpportunityAttackDenied' = targetOpportunityAttackDenied,
-    qTargetProne' = targetProne,
-    qPushDistanceFeet' = pushDistanceFeet,
-    qLastResult' = lastResult,
-    qLastInvalidReason' = lastInvalidReason,
+    qState' = {
+      qTargetOpportunityAttackDenied: targetOpportunityAttackDenied,
+      qTargetProne: targetProne,
+      qPushDistanceFeet: pushDistanceFeet,
+      qScenarioResult: lastResult,
+      protocol: selectedIdentityProtocolForProjection(Set(), lastResult, lastInvalidReason),
+    },
   }
-
   action init = recordProjection(false, false, 0, "init", "")
 
   action doAddle = all {

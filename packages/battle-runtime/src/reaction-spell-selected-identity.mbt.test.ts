@@ -2,8 +2,6 @@
 // UNIT-IDENTITY-MBT-REPLAY: reaction-interruption shield doResolveShieldReactionSpellHit
 // UNIT-IDENTITY-MBT-REPLAY: reaction-interruption hellish_rebuke doResolveHellishRebukeFailedSavingThrow
 // UNIT-IDENTITY-MBT-REPLAY: reaction-interruption counterspell doResolveCounterspellMagicMissileCast
-import * as path from "node:path";
-
 import { Either } from "effect";
 
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
@@ -44,6 +42,7 @@ import {
   type CombatantId,
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
+import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
 import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
 
 type ReactionSpellProjection = {
@@ -91,10 +90,14 @@ const unitLibrary = unitCatalogResult.catalog;
 defineSelectedIdentityWitness({
   describeLabel: "Reaction spell selected identity MBT",
   taskId: "reaction-interruption",
-  specFile: path.resolve(
+  specFile: mbtSpecPath(
     import.meta.dirname,
-    "../battle-runtime-reaction-spell-selected-identity.mbt.qnt",
+    "battle-runtime-reaction-spell-selected-identity.mbt.qnt",
   ),
+  quintStateField: "qState",
+  quintStateFieldPrefix: "q",
+  witnessProtocolField: "protocol",
+  quintFieldNames: { lastResult: "qScenarioResult" },
   projectionSchema: {
     reactorHp: "int",
     triggerCreatureHp: "int",

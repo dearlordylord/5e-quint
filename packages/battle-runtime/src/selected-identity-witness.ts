@@ -1,11 +1,21 @@
-import {
-  run,
-  stateCheck,
-  type SimpleActionMap,
-  type SimpleDriver,
-} from "@firfi/quint-connect";
+import { type SimpleActionMap, type SimpleDriver } from "@firfi/quint-connect";
 import { Match } from "effect";
 import { describe, expect, it } from "vitest";
+
+import {
+  MBT_TEST_TIMEOUT_MS,
+  assertWitnessProtocolConsistentWithScenario,
+  booleanValue,
+  decodeWitnessProtocolState,
+  focusedMbtMaxSteps,
+  mbtTraceCount,
+  numberFromQuintInt,
+  quintField,
+  quintRecordField,
+  quintStateRecord,
+  run,
+  stateCheck,
+} from "./battle-runtime-mbt-driver-kit.ts";
 
 export type ProjectionFieldKind = "bool" | "int" | "str";
 export type ProjectionSchema = Readonly<Record<string, ProjectionFieldKind>>;
@@ -41,6 +51,12 @@ type SelectedIdentityWitnessBase<P extends ProjectionRecord> = {
   readonly initialProjection: P;
   readonly units: ReadonlyArray<SelectedIdentityUnit<P>>;
   readonly mbtParityTimeoutMs?: number;
+  readonly quintStateField?: string;
+  readonly quintStateFieldPrefix?: "q";
+  readonly quintFieldNames?: Readonly<Record<string, string>>;
+  readonly witnessProtocolField?: string;
+  readonly witnessNoInvalidReason?: string;
+  readonly witnessInvalidScenarioReasons?: Readonly<Record<string, string>>;
 };
 
 export type FlatSelectedIdentityWitness<S extends ProjectionSchema> =
@@ -139,7 +155,7 @@ export function defineSelectedIdentityWitness<
       if (runtimeSchema === undefined) {
         throw new Error("Expected selected identity flat projection schema.");
       }
-      const normalized = normalizeQuintState(raw, runtimeSchema);
+      const normalized = normalizeQuintState(raw, runtimeSchema, witness);
       // The runtime schema is derived from the same projection schema that
       // defines the flat witness type, so every decoded field has the mapped
       // bool/int/string type required by ProjectionOf<S>.
@@ -189,12 +205,12 @@ export function defineSelectedIdentityWitness<
           driver: createDriver,
           backend: "typescript",
           seed: process.env["QUINT_SEED"],
-          nTraces: Number(process.env["MBT_TRACES"] ?? 1),
-          maxSteps: Number(process.env["MBT_STEPS"] ?? 1),
+          nTraces: mbtTraceCount(),
+          maxSteps: focusedMbtMaxSteps(1),
           stateCheck: witnessStateCheck,
         });
       },
-      witness.mbtParityTimeoutMs ?? 120_000,
+      witness.mbtParityTimeoutMs ?? MBT_TEST_TIMEOUT_MS,
     );
   });
 }
@@ -254,21 +270,105 @@ function projectionRuntimeSchema<
 function normalizeQuintState(
   raw: unknown,
   schema: RuntimeProjectionSchema,
+  witness: Pick<
+    SelectedIdentityWitnessBase<ProjectionRecord>,
+    | "quintStateField"
+    | "quintStateFieldPrefix"
+    | "quintFieldNames"
+    | "witnessProtocolField"
+    | "witnessNoInvalidReason"
+    | "witnessInvalidScenarioReasons"
+  >,
 ): Readonly<Record<string, boolean | number | string>> {
-  if (raw === null || typeof raw !== "object" || Array.isArray(raw)) {
-    throw new Error("Expected Quint state record.");
+  const root = quintStateRecord(raw);
+  const state =
+    witness.quintStateField === undefined
+      ? root
+      : quintRecordField(root, witness.quintStateField);
+  const protocol =
+    witness.witnessProtocolField === undefined
+      ? undefined
+      : decodeWitnessProtocolState({
+          state,
+          protocolField: witness.witnessProtocolField,
+          noInvalidReason: witness.witnessNoInvalidReason ?? "",
+          decodeHole: selectedIdentityUnexpectedHole,
+        });
+  if (protocol !== undefined && protocol.holes.length !== 0) {
+    throw new Error("Expected selected identity witness holes to be empty.");
   }
-  const state = raw as Record<string, unknown>;
   const result: Record<string, boolean | number | string> = {};
   for (const [field, spec] of Object.entries(schema)) {
-    const qKey = quintFieldName(field);
-    result[field] = parseQuintField(state[qKey], spec, qKey);
+    const configuredField = witness.quintFieldNames?.[field];
+    if (
+      field === "lastResult" &&
+      protocol !== undefined &&
+      configuredField === undefined
+    ) {
+      result[field] = parseStr(
+        protocol.lastResult,
+        spec.allowedStrings,
+        `${witness.quintStateField ?? "root"}.${witness.witnessProtocolField}.result`,
+      );
+      continue;
+    }
+    if (
+      field === "lastInvalidReason" &&
+      protocol !== undefined &&
+      configuredField === undefined
+    ) {
+      result[field] = parseStr(
+        protocol.lastInvalidReason,
+        spec.allowedStrings,
+        `${witness.quintStateField ?? "root"}.${witness.witnessProtocolField}.result`,
+      );
+      continue;
+    }
+    const qKey =
+      configuredField ??
+      quintFieldName(
+        field,
+        witness.quintStateField,
+        witness.quintStateFieldPrefix,
+      );
+    result[field] = parseQuintField(quintField(state, qKey), spec, qKey);
+  }
+  const scenarioResultField = witness.quintFieldNames?.["lastResult"];
+  const scenarioResult = result["lastResult"];
+  if (
+    protocol !== undefined &&
+    scenarioResultField !== undefined &&
+    typeof scenarioResult === "string"
+  ) {
+    const invalidScenarioReasons = witness.witnessInvalidScenarioReasons;
+    assertWitnessProtocolConsistentWithScenario({
+      label: "selected identity",
+      scenarioResult,
+      protocol,
+      ...(invalidScenarioReasons === undefined
+        ? {}
+        : { invalidScenarioReasons }),
+    });
   }
   return result;
 }
 
-function quintFieldName(field: string): string {
-  return `q${field.charAt(0).toUpperCase()}${field.slice(1)}`;
+function quintFieldName(
+  field: string,
+  stateField: string | undefined,
+  stateFieldPrefix: "q" | undefined,
+): string {
+  if (stateField === undefined || stateFieldPrefix === "q") {
+    return `q${field.charAt(0).toUpperCase()}${field.slice(1)}`;
+  }
+
+  return field;
+}
+
+function selectedIdentityUnexpectedHole(raw: unknown): never {
+  throw new Error(
+    `Selected identity witness protocol does not expect holes; received ${String(raw)}.`,
+  );
 }
 
 function parseQuintField(
@@ -285,18 +385,11 @@ function parseQuintField(
 }
 
 function parseBool(value: unknown, qKey: string): boolean {
-  if (typeof value === "boolean") return value;
-  throw new Error(
-    `Expected boolean Quint field ${qKey}, got ${String(value)}.`,
-  );
+  return booleanValue(value, qKey);
 }
 
 function parseInt(value: unknown, qKey: string): number {
-  if (typeof value === "number") return value;
-  if (typeof value === "bigint") return Number(value);
-  throw new Error(
-    `Expected integer Quint field ${qKey}, got ${String(value)}.`,
-  );
+  return numberFromQuintInt(value, qKey);
 }
 
 function parseStr(

@@ -1,6 +1,10 @@
 // -*- mode: Bluespec; -*-
 
 module battleRuntimeBlurAttackRollDefenseLifecycleMbt {
+  import battleRuntimeWitnessProtocol.* from "./battle-runtime-witness-protocol"
+
+  type WitnessHole = | BlurAttackRollDefense
+
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeBlurAttackRollDefense.* from "./battle-runtime-blur-attack-roll-defense"
 
@@ -14,17 +18,34 @@ module battleRuntimeBlurAttackRollDefenseLifecycleMbt {
   //   Advantage and Disadvantage cancel to a normal d20 roll.
   // - UBIQUITOUS_LANGUAGE.md: Attack Roll, Advantage and Disadvantage,
   //   Concentration, Blindsight, and Truesight.
-  var qActionAvailable: bool
-  var qSpellAvailable: bool
-  var qSpellSlotExpended: int
-  var qSlotSpellCastThisTurn: bool
-  var qBlurredEffectActive: bool
-  var qCasterConcentrating: bool
-  var qAttackerPerceivesWithBlindsight: bool
-  var qAttackerPerceivesWithTruesight: bool
-  var qOtherAttackAdvantage: bool
-  var qAttackRollMode: str
-  var qLastResult: str
+  type WitnessState = {
+    qActionAvailable: bool,
+    qSpellAvailable: bool,
+    qSpellSlotExpended: int,
+    qSlotSpellCastThisTurn: bool,
+    qBlurredEffectActive: bool,
+    qCasterConcentrating: bool,
+    qAttackerPerceivesWithBlindsight: bool,
+    qAttackerPerceivesWithTruesight: bool,
+    qOtherAttackAdvantage: bool,
+    qAttackRollMode: str,
+    qScenarioResult: str,
+    protocol: WitnessProtocol[WitnessHole],
+  }
+
+  var qState: WitnessState
+
+  pure def qActionAvailable: bool = qState.qActionAvailable
+  pure def qSpellAvailable: bool = qState.qSpellAvailable
+  pure def qSpellSlotExpended: int = qState.qSpellSlotExpended
+  pure def qSlotSpellCastThisTurn: bool = qState.qSlotSpellCastThisTurn
+  pure def qBlurredEffectActive: bool = qState.qBlurredEffectActive
+  pure def qCasterConcentrating: bool = qState.qCasterConcentrating
+  pure def qAttackerPerceivesWithBlindsight: bool = qState.qAttackerPerceivesWithBlindsight
+  pure def qAttackerPerceivesWithTruesight: bool = qState.qAttackerPerceivesWithTruesight
+  pure def qOtherAttackAdvantage: bool = qState.qOtherAttackAdvantage
+  pure def qAttackRollMode: str = qState.qAttackRollMode
+  pure def qScenarioResult: str = qState.qScenarioResult
 
   pure val normalAttackRoll: str = "normal"
   pure val advantageAttackRoll: str = "advantage"
@@ -61,6 +82,7 @@ module battleRuntimeBlurAttackRollDefenseLifecycleMbt {
     }
   }
 
+
   action recordBlurState(
     actionAvailable: bool,
     spellAvailable: bool,
@@ -71,24 +93,28 @@ module battleRuntimeBlurAttackRollDefenseLifecycleMbt {
     attackerPerceivesWithBlindsight: bool,
     attackerPerceivesWithTruesight: bool,
     otherAttackAdvantage: bool,
-    lastResult: str,
+    scenarioResult: str,
+    protocol: WitnessProtocol[WitnessHole],
   ): bool = all {
-    qActionAvailable' = actionAvailable,
-    qSpellAvailable' = spellAvailable,
-    qSpellSlotExpended' = spellSlotExpended,
-    qSlotSpellCastThisTurn' = slotSpellCastThisTurn,
-    qBlurredEffectActive' = blurredEffectActive,
-    qCasterConcentrating' = casterConcentrating,
-    qAttackerPerceivesWithBlindsight' = attackerPerceivesWithBlindsight,
-    qAttackerPerceivesWithTruesight' = attackerPerceivesWithTruesight,
-    qOtherAttackAdvantage' = otherAttackAdvantage,
-    qAttackRollMode' = projectedAttackRollMode(
+    qState' = {
+      qActionAvailable: actionAvailable,
+      qSpellAvailable: spellAvailable,
+      qSpellSlotExpended: spellSlotExpended,
+      qSlotSpellCastThisTurn: slotSpellCastThisTurn,
+      qBlurredEffectActive: blurredEffectActive,
+      qCasterConcentrating: casterConcentrating,
+      qAttackerPerceivesWithBlindsight: attackerPerceivesWithBlindsight,
+      qAttackerPerceivesWithTruesight: attackerPerceivesWithTruesight,
+      qOtherAttackAdvantage: otherAttackAdvantage,
+      qAttackRollMode: projectedAttackRollMode(
       blurredEffectActive,
       attackerPerceivesWithBlindsight,
       attackerPerceivesWithTruesight,
       otherAttackAdvantage,
     ),
-    qLastResult' = lastResult,
+      qScenarioResult: scenarioResult,
+      protocol: protocol,
+    },
   }
 
   action init = recordBlurState(
@@ -102,6 +128,7 @@ module battleRuntimeBlurAttackRollDefenseLifecycleMbt {
     false,
     false,
     "init",
+    witnessInit(BlurAttackRollDefense),
   )
 
   action doCastBlur = all {
@@ -121,7 +148,8 @@ module battleRuntimeBlurAttackRollDefenseLifecycleMbt {
       qAttackerPerceivesWithTruesight,
       qOtherAttackAdvantage,
       "blurCast",
-    ),
+    witnessResolved(BlurAttackRollDefense),
+  ),
   }
 
   action doSetBlindsightBypass = recordBlurState(
@@ -135,6 +163,7 @@ module battleRuntimeBlurAttackRollDefenseLifecycleMbt {
     false,
     qOtherAttackAdvantage,
     "blindsightBypass",
+    witnessResolved(BlurAttackRollDefense),
   )
 
   action doSetTruesightBypass = recordBlurState(
@@ -148,6 +177,7 @@ module battleRuntimeBlurAttackRollDefenseLifecycleMbt {
     true,
     qOtherAttackAdvantage,
     "truesightBypass",
+    witnessResolved(BlurAttackRollDefense),
   )
 
   action doClearBypass = recordBlurState(
@@ -161,6 +191,7 @@ module battleRuntimeBlurAttackRollDefenseLifecycleMbt {
     false,
     qOtherAttackAdvantage,
     "noBypass",
+    witnessResolved(BlurAttackRollDefense),
   )
 
   action doSetOtherAttackAdvantage = recordBlurState(
@@ -174,6 +205,7 @@ module battleRuntimeBlurAttackRollDefenseLifecycleMbt {
     qAttackerPerceivesWithTruesight,
     true,
     "otherAdvantage",
+    witnessResolved(BlurAttackRollDefense),
   )
 
   action doClearOtherAttackAdvantage = recordBlurState(
@@ -187,6 +219,7 @@ module battleRuntimeBlurAttackRollDefenseLifecycleMbt {
     qAttackerPerceivesWithTruesight,
     false,
     "noOtherAdvantage",
+    witnessResolved(BlurAttackRollDefense),
   )
 
   action doBreakConcentration = all {
@@ -205,7 +238,8 @@ module battleRuntimeBlurAttackRollDefenseLifecycleMbt {
       qAttackerPerceivesWithTruesight,
       qOtherAttackAdvantage,
       "concentrationBroken",
-    ),
+    witnessResolved(BlurAttackRollDefense),
+  ),
   }
 
   action doStutter = recordBlurState(
@@ -218,8 +252,8 @@ module battleRuntimeBlurAttackRollDefenseLifecycleMbt {
     qAttackerPerceivesWithBlindsight,
     qAttackerPerceivesWithTruesight,
     qOtherAttackAdvantage,
-    qLastResult,
-  )
+    qScenarioResult,
+    qState.protocol,)
 
   action step = any {
     doCastBlur,

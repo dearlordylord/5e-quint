@@ -1,5 +1,5 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.hit-point-restoration unit-feature.spell-slot-healing-modifier
-// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.HIT_POINT_RESTORATION
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.HIT_POINT_RESTORATION BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING
 //
 // The directHitPointRestoration Spell Procedure Profile: prepared spells that
 // directly restore Hit Points through target fills and one healing roll, with

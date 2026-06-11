@@ -391,39 +391,95 @@ Benefits:
 
 ### 7. Character Sheet Runtime
 
+> **Refreshed 2026-06-10** from a structure exploration of the current file
+> (architecture-review candidate; cluster map with line ranges in the session
+> record). The file has nearly doubled since this section was written, and new
+> domains exist that the original module list predates.
+
 Files:
 
-- `packages/character-sheet-runtime/src/index.ts` at 4,184 lines.
+- `packages/character-sheet-runtime/src/index.ts` at 7,929 lines and 143
+  exports (was 4,184 when this section was first written). The companion
+  `src/index.test.ts` is 5,039 lines.
 
 Problem:
 
 The package has a useful public interface, but implementation now mixes sheet
 creation/parsing, HP and zero-HP lifecycle, rests, resources, Lay On Hands,
 Arcane Recovery, armor class, ritual invocation, Spell Slots, Pact Slots,
-Hit Dice, and stored build parsing.
+Font of Magic conversion, Hit Dice, Monk's Focus/Uncanny Metabolism, Druid
+Wild Shape and Circle of the Land state, class-feature prepared-spell
+projection, the ~2,100-line `timePassed` time-domain state machine, and
+~2,400 lines of stored build/sheet parsing.
+
+Evidence the seams are real: the package's 11 `*.mbt.qnt`/`*.mbt.test.ts`
+witness pairs already cluster exactly along these domains (hp-rest-hit-dice,
+spell-slots-pact-slots, ability-check-proficiency-bonus, armor-class,
+spell-rest-benefit, spellbook-ritual, class-feature, weapon-mastery, …). All
+external consumers (`@dnd/character-battle-runtime`, `@dnd/mcp`) import only
+through the package barrel — no subpath imports — so the split is
+consumer-invisible. No circular imports exist today.
 
 Solution:
 
-Keep `src/index.ts` as the public barrel and split implementation modules:
+Keep `src/index.ts` as the public barrel and split implementation modules
+(deep modules only; shallow candidates from the exploration are folded into
+their owning domain):
 
-- `sheet-types.ts`: exported domain types and branded `CharacterSheetId`.
-- `sheet-lifecycle.ts`: creation, parsing, top-level sheet accessors.
-- `hit-points.ts`: HP, Temporary Hit Points, zero-HP lifecycle, Stable recovery,
-  Knock Out state.
+- `sheet-types.ts`: exported domain types, constants, branded
+  `CharacterSheetId`, resource unit-id support sets.
+- `sheet-lifecycle.ts`: `createFreshCharacterSheet` plus init helpers, and the
+  `parseCharacterSheet` dispatcher.
+- `stored-sheet-parser.ts`: the internal `parse*`/type-guard layer
+  (~2,400 lines), shared by all domains.
+- `hit-points.ts`: HP, Temporary Hit Points, zero-HP lifecycle, Stable
+  recovery, Knock Out state.
 - `rests.ts`: Short Rest, Long Rest, Hit Dice recovery, Pact Slot recovery,
-  Arcane Recovery.
-- `resources.ts`: Lay On Hands, Favored Enemy free-cast resources, generic
-  resource expenditure capacity.
-- `spell-invocation.ts`: ordinary Spell Slot and Pact Slot invocation, Wizard
-  Ritual Adept, Book of Shadows ritual access.
+  Arcane Recovery, and post-Long-Rest weapon-mastery reselection (too coupled
+  to Long Rest to stand alone).
+- `resources.ts`: generic expenditure capacity/spending plus the small
+  Monk's Focus / Uncanny Metabolism queries (fold; too shallow alone).
+- `healing-rest-benefit.ts`: Lay On Hands and Spell Rest Benefit application
+  (own MBT witness; distinct from capacity rules).
+- `spell-slots.ts`: Spell Slot / Created Slot / Pact Slot state machine plus
+  Font of Magic conversion (fold; conversion mostly wraps slot helpers).
+- `spell-invocation.ts`: invocation, Wizard Ritual Adept, Book of Shadows and
+  spellbook ritual access.
+- `ability-checks.ts`: Proficiency Bonus application, ability substitution,
+  jump distance, linked speed grants.
 - `armor-class.ts`: armor loadout, Unarmored Defense base choice, current AC.
-- `stored-sheet-parser.ts`: parse stored build/sheet/session records.
+- `druid-features.ts`: Wild Shape known forms, Circle of the Land state and
+  prepared-spell access.
+- `class-feature-spells.ts`: class-feature prepared-spell projection.
+- `time-passage.ts`: the `timePassed` omnibus. Accepted as one deep
+  time-domain module by design — it legitimately spans HP, conditions, death
+  saves, and stable recovery; do not force-split it further.
+
+Migration order (lowest risk first): types → stateless query domains
+(hit-points, armor-class, ability-checks) → resources/healing → spell slots →
+feature domains → lifecycle/parsing → rests → time-passage → final barrel.
+Run the package's 11 MBT witness files after each phase; they import via the
+barrel and must pass unmodified. Reorganizing the monolithic `index.test.ts`
+into per-domain test files is follow-up work, not part of the split.
+
+Known risks: type-only circular imports if input/output types leak out of
+`sheet-types.ts` (keep them there; `import type` elsewhere); `timePassed`
+calls into several domains (acceptable for the omnibus module); rest ↔ spell
+slot coupling means `rests.ts` consumes the `spell-slots.ts` interface.
+
+Timing: start after the in-flight `packages/mcp` working-tree changes land.
+
+Status: Task 8 closed the implementation split by moving the elapsed-time
+state machine to `time-passage.ts`, reducing `src/index.ts` to explicit
+re-exports, and adding `scripts/audit-character-sheet-runtime-split.mjs` as
+the executable public-surface audit.
 
 Benefits:
 
 - Character Sheet becomes easier to widen without editing a single entrypoint.
 - In-play state domains remain separate from build-derived projections.
 - Parser failures stay typed and local.
+- Each MBT witness pair gains a one-module home for the behavior it proves.
 
 ### 8. Battle Reducer Type and Codec Surface
 

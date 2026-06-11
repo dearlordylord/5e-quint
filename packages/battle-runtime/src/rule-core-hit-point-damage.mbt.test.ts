@@ -1,7 +1,15 @@
 // KERNEL-COVERAGE: parity-witness SHARED.HIT_POINTS.POSITIVE_DAMAGE
-import * as path from "node:path";
-
-import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
+import {
+  MBT_TEST_TIMEOUT_MS,
+  booleanValue as booleanField,
+  defineDriver,
+  focusedMbtMaxSteps,
+  mbtSpecPath,
+  mbtTraceCount,
+  numberFromQuintInt,
+  run,
+  stateCheck,
+} from "./battle-runtime-mbt-driver-kit.ts";
 import { hasCondition } from "@dnd/shared-algebras/conditions-algebra";
 import { describe, expect, it } from "vitest";
 
@@ -146,21 +154,25 @@ const hitPointDamageStateCheck = stateCheck(
 );
 
 describe("rule-core Hit Point damage deterministic QNT replay", () => {
-  it("replays positive-HP resolved damage against battle-runtime reducers", async () => {
-    await run({
-      spec: path.resolve(
-        import.meta.dirname,
-        "../rule-core-hit-point-damage.mbt.qnt",
-      ),
-      init: "init",
-      step: "step",
-      driver: createHitPointDamageDriver(),
-      backend: "typescript",
-      nTraces: 1,
-      maxSteps: hitPointDamageReplayStepCount,
-      stateCheck: hitPointDamageStateCheck,
-    });
-  }, 120_000);
+  it(
+    "replays positive-HP resolved damage against battle-runtime reducers",
+    async () => {
+      await run({
+        spec: mbtSpecPath(
+          import.meta.dirname,
+          "rule-core-hit-point-damage.mbt.qnt",
+        ),
+        init: "init",
+        step: "step",
+        driver: createHitPointDamageDriver(),
+        backend: "typescript",
+        nTraces: mbtTraceCount(),
+        maxSteps: focusedMbtMaxSteps(hitPointDamageReplayStepCount),
+        stateCheck: hitPointDamageStateCheck,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
 });
 
 function applyScenario(
@@ -341,15 +353,4 @@ function replayIndexForScenario(
     throw new Error(`Unexpected Hit Point damage replay scenario ${scenario}.`);
   }
   return index;
-}
-
-function numberFromQuintInt(raw: unknown, field: string): number {
-  if (typeof raw === "number") return raw;
-  if (typeof raw === "bigint") return Number(raw);
-  throw new Error(`Expected Quint integer field ${field}.`);
-}
-
-function booleanField(raw: unknown, field: string): boolean {
-  if (typeof raw === "boolean") return raw;
-  throw new Error(`Expected Quint boolean field ${field}.`);
 }

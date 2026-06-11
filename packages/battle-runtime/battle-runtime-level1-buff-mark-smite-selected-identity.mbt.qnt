@@ -1,98 +1,204 @@
 // -*- mode: Bluespec; -*-
 
 module battleRuntimeLevel1BuffMarkSmiteSelectedIdentityMbt {
-  var qDivineFavorActiveRiderCount: int
-  var qTargetHp: int
-  var qLongstriderTargetSpeedFeet: int
-  var qLongstriderSpeedEffectSourceSpellId: str
-  var qLongstriderSpeedEffectTarget: str
-  var qLongstriderSpeedDeltaFeet: int
-  var qCasterTempHp: int
-  var qCasterFrightened: bool
-  var qSpellSlotSpentThisTurn: bool
-  var qLevel1SlotsRemaining: int
-  var qDamageRiderSourceSpellId: str
-  var qDamageRiderDamageType: str
-  var qDamageRiderDice: int
-  var qDamageRiderDieSize: int
-  var qTemporaryHitPointsSourceSpellId: str
-  var qTemporaryHitPointsDice: int
-  var qTemporaryHitPointsDieSize: int
-  var qTemporaryHitPointsFlat: int
-  var qFrightenedImmunitySourceSpellId: str
-  var qFrightenedImmunityCondition: str
-  var qTurnStartTemporaryHitPointsSourceSpellId: str
-  var qTurnStartTemporaryHitPointsAmount: int
-  var qEnsnaringStrikeRestrainedBeforeEscape: bool
-  var qTargetRestrained: bool
-  var qCasterConcentrating: bool
-  var qEnsnaringStrikeSaveSourceSpellId: str
-  var qEnsnaringStrikeSaveAbility: str
-  var qTurnStartDamageSourceSpellId: str
-  var qTurnStartDamageDamageType: str
-  var qTurnStartDamageDice: int
-  var qTurnStartDamageDieSize: int
-  var qEscapeCheckAbility: str
-  var qEscapeCheckSkill: str
-  var qHuntersMarkDamageHoleSourceSpellId: str
-  var qHuntersMarkDamageHoleDamageType: str
-  var qHuntersMarkDamageHoleDice: int
-  var qHuntersMarkDamageHoleDieSize: int
-  var qHuntersMarkActiveMarkSourceSpellId: str
-  var qHuntersMarkActiveMarkTarget: str
-  var qHuntersMarkConcentrationSourceSpellId: str
-  var qHuntersMarkTransferKindOnDropTurn: str
-  var qHuntersMarkActiveMarkTransferKind: str
-  var qHuntersMarkActiveMarkRetargetTiming: str
-  var qHuntersMarkTransferVisibleOnDropTurn: bool
-  var qHexDamageHoleSourceSpellId: str
-  var qHexDamageHoleDamageType: str
-  var qHexDamageHoleDice: int
-  var qHexDamageHoleDieSize: int
-  var qHexActiveMarkSourceSpellId: str
-  var qHexActiveMarkTarget: str
-  var qHexAbilityCheckAbility: str
-  var qHexTransferKindOnDropTurn: str
-  var qHexActiveMarkTransferKind: str
-  var qHexActiveMarkRetargetTiming: str
-  var qHexTransferVisibleOnDropTurn: bool
-  var qSearingSmiteImmediateDamageSourceSpellId: str
-  var qSearingSmiteImmediateDamageDamageType: str
-  var qSearingSmiteImmediateDamageDice: int
-  var qSearingSmiteImmediateDamageDieSize: int
-  var qSearingSmiteActiveBeforeSuccessfulSave: bool
-  var qSearingSmiteTurnStartDamageSourceSpellId: str
-  var qSearingSmiteTurnStartDamageDamageType: str
-  var qSearingSmiteTurnStartDamageDice: int
-  var qSearingSmiteTurnStartDamageDieSize: int
-  var qSearingSmiteTurnStartSaveSourceSpellId: str
-  var qSearingSmiteTurnStartSaveAbility: str
-  var qSearingSmiteTurnStartSaveSuccessEnds: str
-  var qSearingSmiteActiveAfterSuccessfulSave: bool
-  var qShillelaghOverrideSourceSpellId: str
-  var qShillelaghOverrideWeaponUnitId: str
-  var qShillelaghSpellcastingAbilityModifier: int
-  var qShillelaghOverrideAttackBonus: int
-  var qShillelaghOverrideDamageDice: int
-  var qShillelaghOverrideDamageDieSize: int
-  var qShillelaghForceAttackName: str
-  var qShillelaghForceAttackBonus: int
-  var qShillelaghForceDamageType: str
-  var qShillelaghForceDamageDice: int
-  var qShillelaghForceDamageDieSize: int
-  var qShillelaghForceDamageModifier: int
-  var qTrueStrikeSourceSpellId: str
-  var qTrueStrikeComponentWeaponItemId: str
-  var qTrueStrikeWeaponUnitId: str
-  var qTrueStrikeAttackName: str
-  var qTrueStrikeAttackBonus: int
-  var qTrueStrikeDamageType: str
-  var qTrueStrikeDamageDice: int
-  var qTrueStrikeDamageDieSize: int
-  var qTrueStrikeDamageModifier: int
-  var qLastResult: str
+  import battleRuntimeWitnessProtocol.* from "./battle-runtime-witness-protocol"
 
-  action recordProjection(
+  type WitnessHole = | WitnessProtocolHole
+
+  type Level1BuffMarkSmiteSelectedIdentityWitnessState = {
+    qDivineFavorActiveRiderCount: int,
+    qTargetHp: int,
+    qLongstriderTargetSpeedFeet: int,
+    qLongstriderSpeedEffectSourceSpellId: str,
+    qLongstriderSpeedEffectTarget: str,
+    qLongstriderSpeedDeltaFeet: int,
+    qCasterTempHp: int,
+    qCasterFrightened: bool,
+    qSpellSlotSpentThisTurn: bool,
+    qLevel1SlotsRemaining: int,
+    qDamageRiderSourceSpellId: str,
+    qDamageRiderDamageType: str,
+    qDamageRiderDice: int,
+    qDamageRiderDieSize: int,
+    qTemporaryHitPointsSourceSpellId: str,
+    qTemporaryHitPointsDice: int,
+    qTemporaryHitPointsDieSize: int,
+    qTemporaryHitPointsFlat: int,
+    qFrightenedImmunitySourceSpellId: str,
+    qFrightenedImmunityCondition: str,
+    qTurnStartTemporaryHitPointsSourceSpellId: str,
+    qTurnStartTemporaryHitPointsAmount: int,
+    qEnsnaringStrikeRestrainedBeforeEscape: bool,
+    qTargetRestrained: bool,
+    qCasterConcentrating: bool,
+    qEnsnaringStrikeSaveSourceSpellId: str,
+    qEnsnaringStrikeSaveAbility: str,
+    qTurnStartDamageSourceSpellId: str,
+    qTurnStartDamageDamageType: str,
+    qTurnStartDamageDice: int,
+    qTurnStartDamageDieSize: int,
+    qEscapeCheckAbility: str,
+    qEscapeCheckSkill: str,
+    qHuntersMarkDamageHoleSourceSpellId: str,
+    qHuntersMarkDamageHoleDamageType: str,
+    qHuntersMarkDamageHoleDice: int,
+    qHuntersMarkDamageHoleDieSize: int,
+    qHuntersMarkActiveMarkSourceSpellId: str,
+    qHuntersMarkActiveMarkTarget: str,
+    qHuntersMarkConcentrationSourceSpellId: str,
+    qHuntersMarkTransferKindOnDropTurn: str,
+    qHuntersMarkActiveMarkTransferKind: str,
+    qHuntersMarkActiveMarkRetargetTiming: str,
+    qHuntersMarkTransferVisibleOnDropTurn: bool,
+    qHexDamageHoleSourceSpellId: str,
+    qHexDamageHoleDamageType: str,
+    qHexDamageHoleDice: int,
+    qHexDamageHoleDieSize: int,
+    qHexActiveMarkSourceSpellId: str,
+    qHexActiveMarkTarget: str,
+    qHexAbilityCheckAbility: str,
+    qHexTransferKindOnDropTurn: str,
+    qHexActiveMarkTransferKind: str,
+    qHexActiveMarkRetargetTiming: str,
+    qHexTransferVisibleOnDropTurn: bool,
+    qSearingSmiteImmediateDamageSourceSpellId: str,
+    qSearingSmiteImmediateDamageDamageType: str,
+    qSearingSmiteImmediateDamageDice: int,
+    qSearingSmiteImmediateDamageDieSize: int,
+    qSearingSmiteActiveBeforeSuccessfulSave: bool,
+    qSearingSmiteTurnStartDamageSourceSpellId: str,
+    qSearingSmiteTurnStartDamageDamageType: str,
+    qSearingSmiteTurnStartDamageDice: int,
+    qSearingSmiteTurnStartDamageDieSize: int,
+    qSearingSmiteTurnStartSaveSourceSpellId: str,
+    qSearingSmiteTurnStartSaveAbility: str,
+    qSearingSmiteTurnStartSaveSuccessEnds: str,
+    qSearingSmiteActiveAfterSuccessfulSave: bool,
+    qShillelaghOverrideSourceSpellId: str,
+    qShillelaghOverrideWeaponUnitId: str,
+    qShillelaghSpellcastingAbilityModifier: int,
+    qShillelaghOverrideAttackBonus: int,
+    qShillelaghOverrideDamageDice: int,
+    qShillelaghOverrideDamageDieSize: int,
+    qShillelaghForceAttackName: str,
+    qShillelaghForceAttackBonus: int,
+    qShillelaghForceDamageType: str,
+    qShillelaghForceDamageDice: int,
+    qShillelaghForceDamageDieSize: int,
+    qShillelaghForceDamageModifier: int,
+    qTrueStrikeSourceSpellId: str,
+    qTrueStrikeComponentWeaponItemId: str,
+    qTrueStrikeWeaponUnitId: str,
+    qTrueStrikeAttackName: str,
+    qTrueStrikeAttackBonus: int,
+    qTrueStrikeDamageType: str,
+    qTrueStrikeDamageDice: int,
+    qTrueStrikeDamageDieSize: int,
+    qTrueStrikeDamageModifier: int,
+    qScenarioResult: str,
+    protocol: WitnessProtocol[WitnessHole],
+  }
+
+  var qState: Level1BuffMarkSmiteSelectedIdentityWitnessState
+
+  pure def qDivineFavorActiveRiderCount: int = qState.qDivineFavorActiveRiderCount
+  pure def qTargetHp: int = qState.qTargetHp
+  pure def qLongstriderTargetSpeedFeet: int = qState.qLongstriderTargetSpeedFeet
+  pure def qLongstriderSpeedEffectSourceSpellId: str = qState.qLongstriderSpeedEffectSourceSpellId
+  pure def qLongstriderSpeedEffectTarget: str = qState.qLongstriderSpeedEffectTarget
+  pure def qLongstriderSpeedDeltaFeet: int = qState.qLongstriderSpeedDeltaFeet
+  pure def qCasterTempHp: int = qState.qCasterTempHp
+  pure def qCasterFrightened: bool = qState.qCasterFrightened
+  pure def qSpellSlotSpentThisTurn: bool = qState.qSpellSlotSpentThisTurn
+  pure def qLevel1SlotsRemaining: int = qState.qLevel1SlotsRemaining
+  pure def qDamageRiderSourceSpellId: str = qState.qDamageRiderSourceSpellId
+  pure def qDamageRiderDamageType: str = qState.qDamageRiderDamageType
+  pure def qDamageRiderDice: int = qState.qDamageRiderDice
+  pure def qDamageRiderDieSize: int = qState.qDamageRiderDieSize
+  pure def qTemporaryHitPointsSourceSpellId: str = qState.qTemporaryHitPointsSourceSpellId
+  pure def qTemporaryHitPointsDice: int = qState.qTemporaryHitPointsDice
+  pure def qTemporaryHitPointsDieSize: int = qState.qTemporaryHitPointsDieSize
+  pure def qTemporaryHitPointsFlat: int = qState.qTemporaryHitPointsFlat
+  pure def qFrightenedImmunitySourceSpellId: str = qState.qFrightenedImmunitySourceSpellId
+  pure def qFrightenedImmunityCondition: str = qState.qFrightenedImmunityCondition
+  pure def qTurnStartTemporaryHitPointsSourceSpellId: str = qState.qTurnStartTemporaryHitPointsSourceSpellId
+  pure def qTurnStartTemporaryHitPointsAmount: int = qState.qTurnStartTemporaryHitPointsAmount
+  pure def qEnsnaringStrikeRestrainedBeforeEscape: bool = qState.qEnsnaringStrikeRestrainedBeforeEscape
+  pure def qTargetRestrained: bool = qState.qTargetRestrained
+  pure def qCasterConcentrating: bool = qState.qCasterConcentrating
+  pure def qEnsnaringStrikeSaveSourceSpellId: str = qState.qEnsnaringStrikeSaveSourceSpellId
+  pure def qEnsnaringStrikeSaveAbility: str = qState.qEnsnaringStrikeSaveAbility
+  pure def qTurnStartDamageSourceSpellId: str = qState.qTurnStartDamageSourceSpellId
+  pure def qTurnStartDamageDamageType: str = qState.qTurnStartDamageDamageType
+  pure def qTurnStartDamageDice: int = qState.qTurnStartDamageDice
+  pure def qTurnStartDamageDieSize: int = qState.qTurnStartDamageDieSize
+  pure def qEscapeCheckAbility: str = qState.qEscapeCheckAbility
+  pure def qEscapeCheckSkill: str = qState.qEscapeCheckSkill
+  pure def qHuntersMarkDamageHoleSourceSpellId: str = qState.qHuntersMarkDamageHoleSourceSpellId
+  pure def qHuntersMarkDamageHoleDamageType: str = qState.qHuntersMarkDamageHoleDamageType
+  pure def qHuntersMarkDamageHoleDice: int = qState.qHuntersMarkDamageHoleDice
+  pure def qHuntersMarkDamageHoleDieSize: int = qState.qHuntersMarkDamageHoleDieSize
+  pure def qHuntersMarkActiveMarkSourceSpellId: str = qState.qHuntersMarkActiveMarkSourceSpellId
+  pure def qHuntersMarkActiveMarkTarget: str = qState.qHuntersMarkActiveMarkTarget
+  pure def qHuntersMarkConcentrationSourceSpellId: str = qState.qHuntersMarkConcentrationSourceSpellId
+  pure def qHuntersMarkTransferKindOnDropTurn: str = qState.qHuntersMarkTransferKindOnDropTurn
+  pure def qHuntersMarkActiveMarkTransferKind: str = qState.qHuntersMarkActiveMarkTransferKind
+  pure def qHuntersMarkActiveMarkRetargetTiming: str = qState.qHuntersMarkActiveMarkRetargetTiming
+  pure def qHuntersMarkTransferVisibleOnDropTurn: bool = qState.qHuntersMarkTransferVisibleOnDropTurn
+  pure def qHexDamageHoleSourceSpellId: str = qState.qHexDamageHoleSourceSpellId
+  pure def qHexDamageHoleDamageType: str = qState.qHexDamageHoleDamageType
+  pure def qHexDamageHoleDice: int = qState.qHexDamageHoleDice
+  pure def qHexDamageHoleDieSize: int = qState.qHexDamageHoleDieSize
+  pure def qHexActiveMarkSourceSpellId: str = qState.qHexActiveMarkSourceSpellId
+  pure def qHexActiveMarkTarget: str = qState.qHexActiveMarkTarget
+  pure def qHexAbilityCheckAbility: str = qState.qHexAbilityCheckAbility
+  pure def qHexTransferKindOnDropTurn: str = qState.qHexTransferKindOnDropTurn
+  pure def qHexActiveMarkTransferKind: str = qState.qHexActiveMarkTransferKind
+  pure def qHexActiveMarkRetargetTiming: str = qState.qHexActiveMarkRetargetTiming
+  pure def qHexTransferVisibleOnDropTurn: bool = qState.qHexTransferVisibleOnDropTurn
+  pure def qSearingSmiteImmediateDamageSourceSpellId: str = qState.qSearingSmiteImmediateDamageSourceSpellId
+  pure def qSearingSmiteImmediateDamageDamageType: str = qState.qSearingSmiteImmediateDamageDamageType
+  pure def qSearingSmiteImmediateDamageDice: int = qState.qSearingSmiteImmediateDamageDice
+  pure def qSearingSmiteImmediateDamageDieSize: int = qState.qSearingSmiteImmediateDamageDieSize
+  pure def qSearingSmiteActiveBeforeSuccessfulSave: bool = qState.qSearingSmiteActiveBeforeSuccessfulSave
+  pure def qSearingSmiteTurnStartDamageSourceSpellId: str = qState.qSearingSmiteTurnStartDamageSourceSpellId
+  pure def qSearingSmiteTurnStartDamageDamageType: str = qState.qSearingSmiteTurnStartDamageDamageType
+  pure def qSearingSmiteTurnStartDamageDice: int = qState.qSearingSmiteTurnStartDamageDice
+  pure def qSearingSmiteTurnStartDamageDieSize: int = qState.qSearingSmiteTurnStartDamageDieSize
+  pure def qSearingSmiteTurnStartSaveSourceSpellId: str = qState.qSearingSmiteTurnStartSaveSourceSpellId
+  pure def qSearingSmiteTurnStartSaveAbility: str = qState.qSearingSmiteTurnStartSaveAbility
+  pure def qSearingSmiteTurnStartSaveSuccessEnds: str = qState.qSearingSmiteTurnStartSaveSuccessEnds
+  pure def qSearingSmiteActiveAfterSuccessfulSave: bool = qState.qSearingSmiteActiveAfterSuccessfulSave
+  pure def qShillelaghOverrideSourceSpellId: str = qState.qShillelaghOverrideSourceSpellId
+  pure def qShillelaghOverrideWeaponUnitId: str = qState.qShillelaghOverrideWeaponUnitId
+  pure def qShillelaghSpellcastingAbilityModifier: int = qState.qShillelaghSpellcastingAbilityModifier
+  pure def qShillelaghOverrideAttackBonus: int = qState.qShillelaghOverrideAttackBonus
+  pure def qShillelaghOverrideDamageDice: int = qState.qShillelaghOverrideDamageDice
+  pure def qShillelaghOverrideDamageDieSize: int = qState.qShillelaghOverrideDamageDieSize
+  pure def qShillelaghForceAttackName: str = qState.qShillelaghForceAttackName
+  pure def qShillelaghForceAttackBonus: int = qState.qShillelaghForceAttackBonus
+  pure def qShillelaghForceDamageType: str = qState.qShillelaghForceDamageType
+  pure def qShillelaghForceDamageDice: int = qState.qShillelaghForceDamageDice
+  pure def qShillelaghForceDamageDieSize: int = qState.qShillelaghForceDamageDieSize
+  pure def qShillelaghForceDamageModifier: int = qState.qShillelaghForceDamageModifier
+  pure def qTrueStrikeSourceSpellId: str = qState.qTrueStrikeSourceSpellId
+  pure def qTrueStrikeComponentWeaponItemId: str = qState.qTrueStrikeComponentWeaponItemId
+  pure def qTrueStrikeWeaponUnitId: str = qState.qTrueStrikeWeaponUnitId
+  pure def qTrueStrikeAttackName: str = qState.qTrueStrikeAttackName
+  pure def qTrueStrikeAttackBonus: int = qState.qTrueStrikeAttackBonus
+  pure def qTrueStrikeDamageType: str = qState.qTrueStrikeDamageType
+  pure def qTrueStrikeDamageDice: int = qState.qTrueStrikeDamageDice
+  pure def qTrueStrikeDamageDieSize: int = qState.qTrueStrikeDamageDieSize
+  pure def qTrueStrikeDamageModifier: int = qState.qTrueStrikeDamageModifier
+  pure def qLastResult: str = qState.qScenarioResult
+
+  pure def witnessProtocolForScenario(
+    scenarioResult: str,
+  ): WitnessProtocol[WitnessHole] =
+    if (scenarioResult == "init") witnessInit(WitnessProtocolHole)
+    else witnessResolved(WitnessProtocolHole)
+
+  pure def recordProjectionState(
     divineFavorActiveRiderCount: int,
     targetHp: int,
     longstriderTargetSpeedFeet: int,
@@ -149,66 +255,101 @@ module battleRuntimeLevel1BuffMarkSmiteSelectedIdentityMbt {
     hexActiveMarkRetargetTiming: str,
     hexTransferVisibleOnDropTurn: bool,
     lastResult: str,
-  ): bool = all {
-    qDivineFavorActiveRiderCount' = divineFavorActiveRiderCount,
-    qTargetHp' = targetHp,
-    qLongstriderTargetSpeedFeet' = longstriderTargetSpeedFeet,
-    qLongstriderSpeedEffectSourceSpellId' = longstriderSpeedEffectSourceSpellId,
-    qLongstriderSpeedEffectTarget' = longstriderSpeedEffectTarget,
-    qLongstriderSpeedDeltaFeet' = longstriderSpeedDeltaFeet,
-    qCasterTempHp' = casterTempHp,
-    qCasterFrightened' = casterFrightened,
-    qSpellSlotSpentThisTurn' = spellSlotSpentThisTurn,
-    qLevel1SlotsRemaining' = level1SlotsRemaining,
-    qDamageRiderSourceSpellId' = damageRiderSourceSpellId,
-    qDamageRiderDamageType' = damageRiderDamageType,
-    qDamageRiderDice' = damageRiderDice,
-    qDamageRiderDieSize' = damageRiderDieSize,
-    qTemporaryHitPointsSourceSpellId' = temporaryHitPointsSourceSpellId,
-    qTemporaryHitPointsDice' = temporaryHitPointsDice,
-    qTemporaryHitPointsDieSize' = temporaryHitPointsDieSize,
-    qTemporaryHitPointsFlat' = temporaryHitPointsFlat,
-    qFrightenedImmunitySourceSpellId' = frightenedImmunitySourceSpellId,
-    qFrightenedImmunityCondition' = frightenedImmunityCondition,
-    qTurnStartTemporaryHitPointsSourceSpellId' = turnStartTemporaryHitPointsSourceSpellId,
-    qTurnStartTemporaryHitPointsAmount' = turnStartTemporaryHitPointsAmount,
-    qEnsnaringStrikeRestrainedBeforeEscape' = ensnaringStrikeRestrainedBeforeEscape,
-    qTargetRestrained' = targetRestrained,
-    qCasterConcentrating' = casterConcentrating,
-    qEnsnaringStrikeSaveSourceSpellId' = ensnaringStrikeSaveSourceSpellId,
-    qEnsnaringStrikeSaveAbility' = ensnaringStrikeSaveAbility,
-    qTurnStartDamageSourceSpellId' = turnStartDamageSourceSpellId,
-    qTurnStartDamageDamageType' = turnStartDamageDamageType,
-    qTurnStartDamageDice' = turnStartDamageDice,
-    qTurnStartDamageDieSize' = turnStartDamageDieSize,
-    qEscapeCheckAbility' = escapeCheckAbility,
-    qEscapeCheckSkill' = escapeCheckSkill,
-    qHuntersMarkDamageHoleSourceSpellId' = huntersMarkDamageHoleSourceSpellId,
-    qHuntersMarkDamageHoleDamageType' = huntersMarkDamageHoleDamageType,
-    qHuntersMarkDamageHoleDice' = huntersMarkDamageHoleDice,
-    qHuntersMarkDamageHoleDieSize' = huntersMarkDamageHoleDieSize,
-    qHuntersMarkActiveMarkSourceSpellId' = huntersMarkActiveMarkSourceSpellId,
-    qHuntersMarkActiveMarkTarget' = huntersMarkActiveMarkTarget,
-    qHuntersMarkConcentrationSourceSpellId' = huntersMarkConcentrationSourceSpellId,
-    qHuntersMarkTransferKindOnDropTurn' = huntersMarkTransferKindOnDropTurn,
-    qHuntersMarkActiveMarkTransferKind' = huntersMarkActiveMarkTransferKind,
-    qHuntersMarkActiveMarkRetargetTiming' = huntersMarkActiveMarkRetargetTiming,
-    qHuntersMarkTransferVisibleOnDropTurn' = huntersMarkTransferVisibleOnDropTurn,
-    qHexDamageHoleSourceSpellId' = hexDamageHoleSourceSpellId,
-    qHexDamageHoleDamageType' = hexDamageHoleDamageType,
-    qHexDamageHoleDice' = hexDamageHoleDice,
-    qHexDamageHoleDieSize' = hexDamageHoleDieSize,
-    qHexActiveMarkSourceSpellId' = hexActiveMarkSourceSpellId,
-    qHexActiveMarkTarget' = hexActiveMarkTarget,
-    qHexAbilityCheckAbility' = hexAbilityCheckAbility,
-    qHexTransferKindOnDropTurn' = hexTransferKindOnDropTurn,
-    qHexActiveMarkTransferKind' = hexActiveMarkTransferKind,
-    qHexActiveMarkRetargetTiming' = hexActiveMarkRetargetTiming,
-    qHexTransferVisibleOnDropTurn' = hexTransferVisibleOnDropTurn,
-    qLastResult' = lastResult,
+  ): Level1BuffMarkSmiteSelectedIdentityWitnessState = {
+      qDivineFavorActiveRiderCount: divineFavorActiveRiderCount,
+      qTargetHp: targetHp,
+      qLongstriderTargetSpeedFeet: longstriderTargetSpeedFeet,
+      qLongstriderSpeedEffectSourceSpellId: longstriderSpeedEffectSourceSpellId,
+      qLongstriderSpeedEffectTarget: longstriderSpeedEffectTarget,
+      qLongstriderSpeedDeltaFeet: longstriderSpeedDeltaFeet,
+      qCasterTempHp: casterTempHp,
+      qCasterFrightened: casterFrightened,
+      qSpellSlotSpentThisTurn: spellSlotSpentThisTurn,
+      qLevel1SlotsRemaining: level1SlotsRemaining,
+      qDamageRiderSourceSpellId: damageRiderSourceSpellId,
+      qDamageRiderDamageType: damageRiderDamageType,
+      qDamageRiderDice: damageRiderDice,
+      qDamageRiderDieSize: damageRiderDieSize,
+      qTemporaryHitPointsSourceSpellId: temporaryHitPointsSourceSpellId,
+      qTemporaryHitPointsDice: temporaryHitPointsDice,
+      qTemporaryHitPointsDieSize: temporaryHitPointsDieSize,
+      qTemporaryHitPointsFlat: temporaryHitPointsFlat,
+      qFrightenedImmunitySourceSpellId: frightenedImmunitySourceSpellId,
+      qFrightenedImmunityCondition: frightenedImmunityCondition,
+      qTurnStartTemporaryHitPointsSourceSpellId: turnStartTemporaryHitPointsSourceSpellId,
+      qTurnStartTemporaryHitPointsAmount: turnStartTemporaryHitPointsAmount,
+      qEnsnaringStrikeRestrainedBeforeEscape: ensnaringStrikeRestrainedBeforeEscape,
+      qTargetRestrained: targetRestrained,
+      qCasterConcentrating: casterConcentrating,
+      qEnsnaringStrikeSaveSourceSpellId: ensnaringStrikeSaveSourceSpellId,
+      qEnsnaringStrikeSaveAbility: ensnaringStrikeSaveAbility,
+      qTurnStartDamageSourceSpellId: turnStartDamageSourceSpellId,
+      qTurnStartDamageDamageType: turnStartDamageDamageType,
+      qTurnStartDamageDice: turnStartDamageDice,
+      qTurnStartDamageDieSize: turnStartDamageDieSize,
+      qEscapeCheckAbility: escapeCheckAbility,
+      qEscapeCheckSkill: escapeCheckSkill,
+      qHuntersMarkDamageHoleSourceSpellId: huntersMarkDamageHoleSourceSpellId,
+      qHuntersMarkDamageHoleDamageType: huntersMarkDamageHoleDamageType,
+      qHuntersMarkDamageHoleDice: huntersMarkDamageHoleDice,
+      qHuntersMarkDamageHoleDieSize: huntersMarkDamageHoleDieSize,
+      qHuntersMarkActiveMarkSourceSpellId: huntersMarkActiveMarkSourceSpellId,
+      qHuntersMarkActiveMarkTarget: huntersMarkActiveMarkTarget,
+      qHuntersMarkConcentrationSourceSpellId: huntersMarkConcentrationSourceSpellId,
+      qHuntersMarkTransferKindOnDropTurn: huntersMarkTransferKindOnDropTurn,
+      qHuntersMarkActiveMarkTransferKind: huntersMarkActiveMarkTransferKind,
+      qHuntersMarkActiveMarkRetargetTiming: huntersMarkActiveMarkRetargetTiming,
+      qHuntersMarkTransferVisibleOnDropTurn: huntersMarkTransferVisibleOnDropTurn,
+      qHexDamageHoleSourceSpellId: hexDamageHoleSourceSpellId,
+      qHexDamageHoleDamageType: hexDamageHoleDamageType,
+      qHexDamageHoleDice: hexDamageHoleDice,
+      qHexDamageHoleDieSize: hexDamageHoleDieSize,
+      qHexActiveMarkSourceSpellId: hexActiveMarkSourceSpellId,
+      qHexActiveMarkTarget: hexActiveMarkTarget,
+      qHexAbilityCheckAbility: hexAbilityCheckAbility,
+      qHexTransferKindOnDropTurn: hexTransferKindOnDropTurn,
+      qHexActiveMarkTransferKind: hexActiveMarkTransferKind,
+      qHexActiveMarkRetargetTiming: hexActiveMarkRetargetTiming,
+      qHexTransferVisibleOnDropTurn: hexTransferVisibleOnDropTurn,
+      qSearingSmiteImmediateDamageSourceSpellId: "none",
+      qSearingSmiteImmediateDamageDamageType: "none",
+      qSearingSmiteImmediateDamageDice: 0,
+      qSearingSmiteImmediateDamageDieSize: 0,
+      qSearingSmiteActiveBeforeSuccessfulSave: false,
+      qSearingSmiteTurnStartDamageSourceSpellId: "none",
+      qSearingSmiteTurnStartDamageDamageType: "none",
+      qSearingSmiteTurnStartDamageDice: 0,
+      qSearingSmiteTurnStartDamageDieSize: 0,
+      qSearingSmiteTurnStartSaveSourceSpellId: "none",
+      qSearingSmiteTurnStartSaveAbility: "none",
+      qSearingSmiteTurnStartSaveSuccessEnds: "none",
+      qSearingSmiteActiveAfterSuccessfulSave: false,
+      qShillelaghOverrideSourceSpellId: "none",
+      qShillelaghOverrideWeaponUnitId: "none",
+      qShillelaghSpellcastingAbilityModifier: 0,
+      qShillelaghOverrideAttackBonus: 0,
+      qShillelaghOverrideDamageDice: 0,
+      qShillelaghOverrideDamageDieSize: 0,
+      qShillelaghForceAttackName: "none",
+      qShillelaghForceAttackBonus: 0,
+      qShillelaghForceDamageType: "none",
+      qShillelaghForceDamageDice: 0,
+      qShillelaghForceDamageDieSize: 0,
+      qShillelaghForceDamageModifier: 0,
+      qTrueStrikeSourceSpellId: "none",
+      qTrueStrikeComponentWeaponItemId: "none",
+      qTrueStrikeWeaponUnitId: "none",
+      qTrueStrikeAttackName: "none",
+      qTrueStrikeAttackBonus: 0,
+      qTrueStrikeDamageType: "none",
+      qTrueStrikeDamageDice: 0,
+      qTrueStrikeDamageDieSize: 0,
+      qTrueStrikeDamageModifier: 0,
+      qScenarioResult: lastResult,
+      protocol: witnessProtocolForScenario(lastResult),
   }
 
-  action recordWithoutMarkedDamageProjection(
+  pure def recordWithoutMarkedDamageProjectionState(
     divineFavorActiveRiderCount: int,
     targetHp: int,
     casterTempHp: int,
@@ -239,7 +380,7 @@ module battleRuntimeLevel1BuffMarkSmiteSelectedIdentityMbt {
     escapeCheckAbility: str,
     escapeCheckSkill: str,
     lastResult: str,
-  ): bool = recordProjection(
+  ): Level1BuffMarkSmiteSelectedIdentityWitnessState = recordProjectionState(
     divineFavorActiveRiderCount,
     targetHp,
     30,
@@ -298,7 +439,7 @@ module battleRuntimeLevel1BuffMarkSmiteSelectedIdentityMbt {
     lastResult,
   )
 
-  action recordLongstriderSpeedProjection(
+  pure def recordLongstriderSpeedProjectionState(
     targetHp: int,
     longstriderTargetSpeedFeet: int,
     longstriderSpeedEffectSourceSpellId: str,
@@ -307,7 +448,7 @@ module battleRuntimeLevel1BuffMarkSmiteSelectedIdentityMbt {
     spellSlotSpentThisTurn: bool,
     level1SlotsRemaining: int,
     lastResult: str,
-  ): bool = recordProjection(
+  ): Level1BuffMarkSmiteSelectedIdentityWitnessState = recordProjectionState(
     0,
     targetHp,
     longstriderTargetSpeedFeet,
@@ -366,7 +507,8 @@ module battleRuntimeLevel1BuffMarkSmiteSelectedIdentityMbt {
     lastResult,
   )
 
-  action recordSearingSmiteLifecycleProjection(
+  pure def recordSearingSmiteLifecycleProjectionState(
+    state: Level1BuffMarkSmiteSelectedIdentityWitnessState,
     immediateDamageSourceSpellId: str,
     immediateDamageDamageType: str,
     immediateDamageDice: int,
@@ -380,30 +522,35 @@ module battleRuntimeLevel1BuffMarkSmiteSelectedIdentityMbt {
     turnStartSaveAbility: str,
     turnStartSaveSuccessEnds: str,
     activeAfterSuccessfulSave: bool,
-  ): bool = all {
-    qSearingSmiteImmediateDamageSourceSpellId' = immediateDamageSourceSpellId,
-    qSearingSmiteImmediateDamageDamageType' = immediateDamageDamageType,
-    qSearingSmiteImmediateDamageDice' = immediateDamageDice,
-    qSearingSmiteImmediateDamageDieSize' = immediateDamageDieSize,
-    qSearingSmiteActiveBeforeSuccessfulSave' = activeBeforeSuccessfulSave,
-    qSearingSmiteTurnStartDamageSourceSpellId' = turnStartDamageSourceSpellId,
-    qSearingSmiteTurnStartDamageDamageType' = turnStartDamageDamageType,
-    qSearingSmiteTurnStartDamageDice' = turnStartDamageDice,
-    qSearingSmiteTurnStartDamageDieSize' = turnStartDamageDieSize,
-    qSearingSmiteTurnStartSaveSourceSpellId' = turnStartSaveSourceSpellId,
-    qSearingSmiteTurnStartSaveAbility' = turnStartSaveAbility,
-    qSearingSmiteTurnStartSaveSuccessEnds' = turnStartSaveSuccessEnds,
-    qSearingSmiteActiveAfterSuccessfulSave' = activeAfterSuccessfulSave,
-  }
 
-  action clearSearingSmiteLifecycleProjection =
-    recordSearingSmiteLifecycleProjection(
+  ): Level1BuffMarkSmiteSelectedIdentityWitnessState =
+    state
+      .with("qSearingSmiteImmediateDamageSourceSpellId", immediateDamageSourceSpellId)
+      .with("qSearingSmiteImmediateDamageDamageType", immediateDamageDamageType)
+      .with("qSearingSmiteImmediateDamageDice", immediateDamageDice)
+      .with("qSearingSmiteImmediateDamageDieSize", immediateDamageDieSize)
+      .with("qSearingSmiteActiveBeforeSuccessfulSave", activeBeforeSuccessfulSave)
+      .with("qSearingSmiteTurnStartDamageSourceSpellId", turnStartDamageSourceSpellId)
+      .with("qSearingSmiteTurnStartDamageDamageType", turnStartDamageDamageType)
+      .with("qSearingSmiteTurnStartDamageDice", turnStartDamageDice)
+      .with("qSearingSmiteTurnStartDamageDieSize", turnStartDamageDieSize)
+      .with("qSearingSmiteTurnStartSaveSourceSpellId", turnStartSaveSourceSpellId)
+      .with("qSearingSmiteTurnStartSaveAbility", turnStartSaveAbility)
+      .with("qSearingSmiteTurnStartSaveSuccessEnds", turnStartSaveSuccessEnds)
+      .with("qSearingSmiteActiveAfterSuccessfulSave", activeAfterSuccessfulSave)
+
+  pure def clearSearingSmiteLifecycleProjectionState(
+    state: Level1BuffMarkSmiteSelectedIdentityWitnessState,
+  ): Level1BuffMarkSmiteSelectedIdentityWitnessState =
+    recordSearingSmiteLifecycleProjectionState(
+      state,
       "none", "none", 0, 0, false,
       "none", "none", 0, 0,
       "none", "none", "none", false,
     )
 
-  action recordShillelaghWeaponAttackOverrideProjection(
+  pure def recordShillelaghWeaponAttackOverrideProjectionState(
+    state: Level1BuffMarkSmiteSelectedIdentityWitnessState,
     overrideSourceSpellId: str,
     overrideWeaponUnitId: str,
     spellcastingAbilityModifier: int,
@@ -416,28 +563,33 @@ module battleRuntimeLevel1BuffMarkSmiteSelectedIdentityMbt {
     forceDamageDice: int,
     forceDamageDieSize: int,
     forceDamageModifier: int,
-  ): bool = all {
-    qShillelaghOverrideSourceSpellId' = overrideSourceSpellId,
-    qShillelaghOverrideWeaponUnitId' = overrideWeaponUnitId,
-    qShillelaghSpellcastingAbilityModifier' = spellcastingAbilityModifier,
-    qShillelaghOverrideAttackBonus' = overrideAttackBonus,
-    qShillelaghOverrideDamageDice' = overrideDamageDice,
-    qShillelaghOverrideDamageDieSize' = overrideDamageDieSize,
-    qShillelaghForceAttackName' = forceAttackName,
-    qShillelaghForceAttackBonus' = forceAttackBonus,
-    qShillelaghForceDamageType' = forceDamageType,
-    qShillelaghForceDamageDice' = forceDamageDice,
-    qShillelaghForceDamageDieSize' = forceDamageDieSize,
-    qShillelaghForceDamageModifier' = forceDamageModifier,
-  }
 
-  action clearShillelaghWeaponAttackOverrideProjection =
-    recordShillelaghWeaponAttackOverrideProjection(
+  ): Level1BuffMarkSmiteSelectedIdentityWitnessState =
+    state
+      .with("qShillelaghOverrideSourceSpellId", overrideSourceSpellId)
+      .with("qShillelaghOverrideWeaponUnitId", overrideWeaponUnitId)
+      .with("qShillelaghSpellcastingAbilityModifier", spellcastingAbilityModifier)
+      .with("qShillelaghOverrideAttackBonus", overrideAttackBonus)
+      .with("qShillelaghOverrideDamageDice", overrideDamageDice)
+      .with("qShillelaghOverrideDamageDieSize", overrideDamageDieSize)
+      .with("qShillelaghForceAttackName", forceAttackName)
+      .with("qShillelaghForceAttackBonus", forceAttackBonus)
+      .with("qShillelaghForceDamageType", forceDamageType)
+      .with("qShillelaghForceDamageDice", forceDamageDice)
+      .with("qShillelaghForceDamageDieSize", forceDamageDieSize)
+      .with("qShillelaghForceDamageModifier", forceDamageModifier)
+
+  pure def clearShillelaghWeaponAttackOverrideProjectionState(
+    state: Level1BuffMarkSmiteSelectedIdentityWitnessState,
+  ): Level1BuffMarkSmiteSelectedIdentityWitnessState =
+    recordShillelaghWeaponAttackOverrideProjectionState(
+      state,
       "none", "none", 0, 0, 0, 0,
       "none", 0, "none", 0, 0, 0,
     )
 
-  action recordTrueStrikeSpellHostedWeaponAttackProjection(
+  pure def recordTrueStrikeSpellHostedWeaponAttackProjectionState(
+    state: Level1BuffMarkSmiteSelectedIdentityWitnessState,
     sourceSpellId: str,
     componentWeaponItemId: str,
     weaponUnitId: str,
@@ -447,67 +599,62 @@ module battleRuntimeLevel1BuffMarkSmiteSelectedIdentityMbt {
     damageDice: int,
     damageDieSize: int,
     damageModifier: int,
-  ): bool = all {
-    qTrueStrikeSourceSpellId' = sourceSpellId,
-    qTrueStrikeComponentWeaponItemId' = componentWeaponItemId,
-    qTrueStrikeWeaponUnitId' = weaponUnitId,
-    qTrueStrikeAttackName' = attackName,
-    qTrueStrikeAttackBonus' = attackBonus,
-    qTrueStrikeDamageType' = damageType,
-    qTrueStrikeDamageDice' = damageDice,
-    qTrueStrikeDamageDieSize' = damageDieSize,
-    qTrueStrikeDamageModifier' = damageModifier,
-  }
 
-  action clearTrueStrikeSpellHostedWeaponAttackProjection =
-    recordTrueStrikeSpellHostedWeaponAttackProjection(
+  ): Level1BuffMarkSmiteSelectedIdentityWitnessState =
+    state
+      .with("qTrueStrikeSourceSpellId", sourceSpellId)
+      .with("qTrueStrikeComponentWeaponItemId", componentWeaponItemId)
+      .with("qTrueStrikeWeaponUnitId", weaponUnitId)
+      .with("qTrueStrikeAttackName", attackName)
+      .with("qTrueStrikeAttackBonus", attackBonus)
+      .with("qTrueStrikeDamageType", damageType)
+      .with("qTrueStrikeDamageDice", damageDice)
+      .with("qTrueStrikeDamageDieSize", damageDieSize)
+      .with("qTrueStrikeDamageModifier", damageModifier)
+
+  pure def clearTrueStrikeSpellHostedWeaponAttackProjectionState(
+    state: Level1BuffMarkSmiteSelectedIdentityWitnessState,
+  ): Level1BuffMarkSmiteSelectedIdentityWitnessState =
+    recordTrueStrikeSpellHostedWeaponAttackProjectionState(
+      state,
       "none", "none", "none", "none", 0, "none", 0, 0, 0,
     )
 
   action init = all {
-    recordWithoutMarkedDamageProjection(
+    qState' = recordWithoutMarkedDamageProjectionState(
       0, 12, 0, false, false, 2, "none", "none", 0, 0,
       "none", 0, 0, 0,
       "none", "none", "none", 0,
       false, false, false, "none", "none", "none", "none", 0, 0, "none", "none",
       "init",
     ),
-    clearSearingSmiteLifecycleProjection,
-    clearShillelaghWeaponAttackOverrideProjection,
-    clearTrueStrikeSpellHostedWeaponAttackProjection,
   }
 
   action doDivineFavorWeaponDamageRider = all {
     qLastResult == "init",
-    recordWithoutMarkedDamageProjection(
+    qState' = recordWithoutMarkedDamageProjectionState(
       1, 5, 0, false, true, 1, "divine_favor", "radiant", 1, 4,
       "none", 0, 0, 0,
       "none", "none", "none", 0,
       false, false, false, "none", "none", "none", "none", 0, 0, "none", "none",
       "divineFavor",
     ),
-    clearSearingSmiteLifecycleProjection,
-    clearShillelaghWeaponAttackOverrideProjection,
-    clearTrueStrikeSpellHostedWeaponAttackProjection,
   }
 
   action doDivineSmiteAfterHitDamage = all {
     qLastResult == "init",
-    recordWithoutMarkedDamageProjection(
+    qState' = recordWithoutMarkedDamageProjectionState(
       0, 1, 0, false, true, 1, "divine_smite", "radiant", 2, 8,
       "none", 0, 0, 0,
       "none", "none", "none", 0,
       false, false, false, "none", "none", "none", "none", 0, 0, "none", "none",
       "divineSmite",
     ),
-    clearSearingSmiteLifecycleProjection,
-    clearShillelaghWeaponAttackOverrideProjection,
-    clearTrueStrikeSpellHostedWeaponAttackProjection,
   }
 
   action doEnsnaringStrikeAfterHitRestraintTurnStartDamageAndEscape = all {
     qLastResult == "init",
-    recordWithoutMarkedDamageProjection(
+    qState' = recordWithoutMarkedDamageProjectionState(
       0, 5, 0, false, false, 1, "none", "none", 0, 0,
       "none", 0, 0, 0,
       "none", "none", "none", 0,
@@ -517,56 +664,44 @@ module battleRuntimeLevel1BuffMarkSmiteSelectedIdentityMbt {
       "str", "athletics",
       "ensnaringStrike",
     ),
-    clearSearingSmiteLifecycleProjection,
-    clearShillelaghWeaponAttackOverrideProjection,
-    clearTrueStrikeSpellHostedWeaponAttackProjection,
   }
 
   action doFalseLifeTemporaryHitPoints = all {
     qLastResult == "init",
-    recordWithoutMarkedDamageProjection(
+    qState' = recordWithoutMarkedDamageProjectionState(
       0, 12, 11, false, true, 1, "none", "none", 0, 0,
       "false_life", 2, 4, 4,
       "none", "none", "none", 0,
       false, false, false, "none", "none", "none", "none", 0, 0, "none", "none",
       "falseLife",
     ),
-    clearSearingSmiteLifecycleProjection,
-    clearShillelaghWeaponAttackOverrideProjection,
-    clearTrueStrikeSpellHostedWeaponAttackProjection,
   }
 
   action doHeroismFrightenedImmunityTurnStartTemporaryHitPoints = all {
     qLastResult == "init",
-    recordWithoutMarkedDamageProjection(
+    qState' = recordWithoutMarkedDamageProjectionState(
       0, 12, 3, false, false, 1, "none", "none", 0, 0,
       "none", 0, 0, 0,
       "heroism", "frightened", "heroism", 3,
       false, false, true, "none", "none", "none", "none", 0, 0, "none", "none",
       "heroism",
     ),
-    clearSearingSmiteLifecycleProjection,
-    clearShillelaghWeaponAttackOverrideProjection,
-    clearTrueStrikeSpellHostedWeaponAttackProjection,
   }
 
   action doHeroismFrightenedImmunityTurnStartTemporaryHitPointsCleanup = all {
     qLastResult == "init",
-    recordWithoutMarkedDamageProjection(
+    qState' = recordWithoutMarkedDamageProjectionState(
       0, 12, 3, true, false, 1, "none", "none", 0, 0,
       "none", 0, 0, 0,
       "none", "none", "none", 0,
       false, false, false, "none", "none", "none", "none", 0, 0, "none", "none",
       "heroism",
     ),
-    clearSearingSmiteLifecycleProjection,
-    clearShillelaghWeaponAttackOverrideProjection,
-    clearTrueStrikeSpellHostedWeaponAttackProjection,
   }
 
   action doHuntersMarkMarkedDamageRiderConcentrationAndSameTurnTransfer = all {
     qLastResult == "init",
-    recordProjection(
+    qState' = recordProjectionState(
       0, 0, 30, "none", "none", 0, 0, false, false, 1, "none", "none", 0, 0,
       "none", 0, 0, 0,
       "none", "none", "none", 0,
@@ -579,14 +714,11 @@ module battleRuntimeLevel1BuffMarkSmiteSelectedIdentityMbt {
       "none", "none", "none", false,
       "huntersMark",
     ),
-    clearSearingSmiteLifecycleProjection,
-    clearShillelaghWeaponAttackOverrideProjection,
-    clearTrueStrikeSpellHostedWeaponAttackProjection,
   }
 
   action doHexMarkedDamageRiderAndLaterTurnTransfer = all {
     qLastResult == "init",
-    recordProjection(
+    qState' = recordProjectionState(
       0, 0, 30, "none", "none", 0, 0, false, false, 1, "none", "none", 0, 0,
       "none", 0, 0, 0,
       "none", "none", "none", 0,
@@ -599,14 +731,11 @@ module battleRuntimeLevel1BuffMarkSmiteSelectedIdentityMbt {
       "availableAfterTurn", "awaitingTargetDrop", "laterTurn", false,
       "hex",
     ),
-    clearSearingSmiteLifecycleProjection,
-    clearShillelaghWeaponAttackOverrideProjection,
-    clearTrueStrikeSpellHostedWeaponAttackProjection,
   }
 
   action doLongstriderSpeedIncrease = all {
     qLastResult == "init",
-    recordLongstriderSpeedProjection(
+    qState' = recordLongstriderSpeedProjectionState(
       12,
       40,
       "longstrider",
@@ -616,58 +745,49 @@ module battleRuntimeLevel1BuffMarkSmiteSelectedIdentityMbt {
       1,
       "longstrider",
     ),
-    clearSearingSmiteLifecycleProjection,
-    clearShillelaghWeaponAttackOverrideProjection,
-    clearTrueStrikeSpellHostedWeaponAttackProjection,
   }
 
   action doSearingSmiteAfterHitTimedDamageAndSaveCleanup = all {
     qLastResult == "init",
-    recordWithoutMarkedDamageProjection(
+    qState' = recordSearingSmiteLifecycleProjectionState(
+      recordWithoutMarkedDamageProjectionState(
       0, 1, 0, false, false, 1, "none", "none", 0, 0,
       "none", 0, 0, 0,
       "none", "none", "none", 0,
       false, false, false, "none", "none", "none", "none", 0, 0, "none", "none",
       "searingSmite",
     ),
-    recordSearingSmiteLifecycleProjection(
       "searing_smite", "fire", 1, 6, true,
       "searing_smite", "fire", 1, 6,
       "searing_smite", "con", "spell", false,
     ),
-    clearShillelaghWeaponAttackOverrideProjection,
-    clearTrueStrikeSpellHostedWeaponAttackProjection,
   }
 
   action doShillelaghWeaponAttackOverride = all {
     qLastResult == "init",
-    recordWithoutMarkedDamageProjection(
+    qState' = recordShillelaghWeaponAttackOverrideProjectionState(
+      recordWithoutMarkedDamageProjectionState(
       0, 5, 0, false, false, 2, "none", "none", 0, 0,
       "none", 0, 0, 0,
       "none", "none", "none", 0,
       false, false, false, "none", "none", "none", "none", 0, 0, "none", "none",
       "shillelagh",
     ),
-    clearSearingSmiteLifecycleProjection,
-    recordShillelaghWeaponAttackOverrideProjection(
       "shillelagh", "weapon_quarterstaff", 3, 5, 1, 8,
       "Quarterstaff (force)", 5, "force", 1, 8, 3,
     ),
-    clearTrueStrikeSpellHostedWeaponAttackProjection,
   }
 
   action doTrueStrikeSpellHostedWeaponAttack = all {
     qLastResult == "init",
-    recordWithoutMarkedDamageProjection(
+    qState' = recordTrueStrikeSpellHostedWeaponAttackProjectionState(
+      recordWithoutMarkedDamageProjectionState(
       0, 5, 0, false, false, 2, "none", "none", 0, 0,
       "none", 0, 0, 0,
       "none", "none", "none", 0,
       false, false, false, "none", "none", "none", "none", 0, 0, "none", "none",
       "trueStrike",
     ),
-    clearSearingSmiteLifecycleProjection,
-    clearShillelaghWeaponAttackOverrideProjection,
-    recordTrueStrikeSpellHostedWeaponAttackProjection(
       "true_strike", "main:weapon_dagger", "weapon_dagger", "Dagger",
       5, "radiant", 1, 4, 3,
     ),

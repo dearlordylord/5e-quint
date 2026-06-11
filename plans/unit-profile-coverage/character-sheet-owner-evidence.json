@@ -8,13 +8,13 @@
       "profile": "Character Sheet Armor Class base formula runtime",
       "summary": "Barbarian Unarmored Defense is read from the installed Surface class-feature record and projected into a Character Sheet Armor Class base formula when the build is not wearing armor. The projection keeps Shield handling separate and supports explicit base-formula selection when multiple class-feature formulas are available.",
       "runtimeProjection": [
-        "packages/character-sheet-runtime/src/index.ts:characterSheetArmorClassState",
-        "packages/character-sheet-runtime/src/index.ts:selectedUnarmoredBaseSource",
-        "packages/character-sheet-runtime/src/index.ts:armorClassBaseSourceForFormula"
+        "packages/character-sheet-runtime/src/armor-class.ts:characterSheetArmorClassState",
+        "packages/character-sheet-runtime/src/armor-class.ts:selectedUnarmoredBaseSource",
+        "packages/character-sheet-runtime/src/armor-class.ts:armorClassBaseSourceForFormula"
       ],
       "tests": [
-        "packages/character-sheet-runtime/src/index.test.ts:armorClassBuild",
-        "packages/character-sheet-runtime/src/index.test.ts:expectRight"
+        "packages/character-sheet-runtime/src/armor-class.test.ts:armorClassBuild",
+        "packages/character-sheet-runtime/src/rests.test.ts:expectRight"
       ]
     },
     "srd521:classes/monk:level-1:class-feature-grant:monk_unarmored_defense": {
@@ -22,13 +22,13 @@
       "profile": "Character Sheet Armor Class base formula runtime",
       "summary": "Monk Unarmored Defense is read from the installed Surface class-feature record and projected into a Character Sheet Armor Class base formula only while the build is not wearing armor and not wielding a Shield. The projection supports explicit base-formula selection when multiple class-feature formulas are available.",
       "runtimeProjection": [
-        "packages/character-sheet-runtime/src/index.ts:characterSheetArmorClassState",
-        "packages/character-sheet-runtime/src/index.ts:equipmentPredicateMatches",
-        "packages/character-sheet-runtime/src/index.ts:armorClassBaseSourceForFormula"
+        "packages/character-sheet-runtime/src/armor-class.ts:characterSheetArmorClassState",
+        "packages/character-sheet-runtime/src/armor-class.ts:equipmentPredicateMatches",
+        "packages/character-sheet-runtime/src/armor-class.ts:armorClassBaseSourceForFormula"
       ],
       "tests": [
-        "packages/character-sheet-runtime/src/index.test.ts:armorClassBuild",
-        "packages/character-sheet-runtime/src/index.test.ts:expectRight"
+        "packages/character-sheet-runtime/src/armor-class.test.ts:armorClassBuild",
+        "packages/character-sheet-runtime/src/armor-class.test.ts:expectRight"
       ]
     },
     "srd521:classes/monk:level-2:class-feature-grant:monk_monks_focus": {
@@ -36,15 +36,15 @@
       "profile": "Character Sheet class-feature use-count resource runtime",
       "summary": "Monk's Focus is read from CharacterBuild resources and the installed Surface feature record, then projected as Character Sheet Focus Point use-count state. The runtime derives capacity from Monk class level, stores only expended Focus Point uses, restores all expended uses on Short or Long Rest, and derives the Focus save DC from the authored Wisdom source, current ability scores, and Proficiency Bonus without storing duplicate DC state.",
       "runtimeProjection": [
-        "packages/character-sheet-runtime/src/index.ts:characterSheetResources",
-        "packages/character-sheet-runtime/src/index.ts:classFeatureUseCountResourcesForBuild",
-        "packages/character-sheet-runtime/src/index.ts:recoverShortRestUseCountResources",
-        "packages/character-sheet-runtime/src/index.ts:completeShortRest",
-        "packages/character-sheet-runtime/src/index.ts:completeLongRest",
-        "packages/character-sheet-runtime/src/index.ts:characterSheetMonksFocusSaveDc"
+        "packages/character-sheet-runtime/src/resources.ts:characterSheetResources",
+        "packages/character-sheet-runtime/src/resources.ts:classFeatureUseCountResourcesForBuild",
+        "packages/character-sheet-runtime/src/resources.ts:recoverShortRestUseCountResources",
+        "packages/character-sheet-runtime/src/rests.ts:completeShortRest",
+        "packages/character-sheet-runtime/src/rests.ts:completeLongRest",
+        "packages/character-sheet-runtime/src/resources.ts:characterSheetMonksFocusSaveDc"
       ],
       "tests": [
-        "packages/character-sheet-runtime/src/index.test.ts:monksFocusShortRestRecoveryTestName"
+        "packages/character-sheet-runtime/src/resources.test.ts:monksFocusShortRestRecoveryTestName"
       ]
     },
     "srd521:classes/sorcerer:level-2:class-feature-grant:sorcerer_font_of_magic": {
@@ -52,24 +52,24 @@
       "profile": "Character Sheet class-feature point-pool resource and Spell Slot conversion runtime",
       "summary": "Font of Magic is read from CharacterBuild resources and the installed Surface feature record, then projected as Character Sheet Sorcery Point point-pool state. The runtime derives capacity from Sorcerer class level, stores only expended Sorcery Points, restores all expended points on Long Rest, executes the no-action source-aware Spell Slot to Sorcery Point conversion for ordinary and created Spell Slots, and records the Character Sheet state transition from Sorcery Points to created Spell Slots from the installed Creating Spell Slots table. Created Spell Slot state stores only the delta above ordinary build capacity, exposes aggregate capacity for Character Battle init, is preserved exactly when Character Battle handoff is source-unambiguous, and is cleared on Long Rest without duplicating class progression, action-economy state, or Metamagic option state. Battle Bonus Action/source handling is closed at the Character Sheet conversion and aggregate handoff boundary rather than by adding a duplicate battle-local Spell Slot source pool.",
       "runtimeProjection": [
-        "packages/character-sheet-runtime/src/index.ts:characterSheetResources",
-        "packages/character-sheet-runtime/src/index.ts:characterSheetSpellSlots",
-        "packages/character-sheet-runtime/src/index.ts:classFeaturePointPoolResourcesForBuild",
-        "packages/character-sheet-runtime/src/index.ts:parseStoredResourceExpenditures",
-        "packages/character-sheet-runtime/src/index.ts:completeLongRest",
-        "packages/character-sheet-runtime/src/index.ts:convertFontOfMagicSpellSlotToSorceryPoints",
-        "packages/character-sheet-runtime/src/index.ts:convertFontOfMagicSorceryPointsToSpellSlot",
-        "packages/character-sheet-runtime/src/index.ts:characterSheetSpellSlotSourceState",
-        "packages/character-sheet-runtime/src/index.ts:replaceCharacterSheetSpellSlotSourceState",
-        "packages/character-sheet-runtime/src/index.ts:addCreatedSpellSlot",
-        "packages/character-sheet-runtime/src/index.ts:replacePointPoolResourceExpenditure"
+        "packages/character-sheet-runtime/src/resources.ts:characterSheetResources",
+        "packages/character-sheet-runtime/src/spell-slots.ts:characterSheetSpellSlots",
+        "packages/character-sheet-runtime/src/resources.ts:classFeaturePointPoolResourcesForBuild",
+        "packages/character-sheet-runtime/src/stored-sheet-parser.ts:parseStoredResourceExpenditures",
+        "packages/character-sheet-runtime/src/rests.ts:completeLongRest",
+        "packages/character-sheet-runtime/src/spell-slots.ts:convertFontOfMagicSpellSlotToSorceryPoints",
+        "packages/character-sheet-runtime/src/spell-slots.ts:convertFontOfMagicSorceryPointsToSpellSlot",
+        "packages/character-sheet-runtime/src/spell-slots.ts:characterSheetSpellSlotSourceState",
+        "packages/character-sheet-runtime/src/spell-slots.ts:replaceCharacterSheetSpellSlotSourceState",
+        "packages/character-sheet-runtime/src/spell-slots.ts:addCreatedSpellSlot",
+        "packages/character-sheet-runtime/src/resources.ts:replacePointPoolResourceExpenditure"
       ],
       "tests": [
-        "packages/character-sheet-runtime/src/index.test.ts:sorcererFontOfMagicLongRestRecoveryTestName",
-        "packages/character-sheet-runtime/src/index.test.ts:sorcererFontOfMagicSlotConversionTestName",
-        "packages/character-sheet-runtime/src/index.test.ts:sorcererFontOfMagicSlotConversionGateTestName",
-        "packages/character-sheet-runtime/src/index.test.ts:sorcererFontOfMagicSlotCreationTestName",
-        "packages/character-sheet-runtime/src/index.test.ts:sorcererFontOfMagicSlotCreationGateTestName"
+        "packages/character-sheet-runtime/src/resources.test.ts:sorcererFontOfMagicLongRestRecoveryTestName",
+        "packages/character-sheet-runtime/src/spell-slots.test.ts:sorcererFontOfMagicSlotConversionTestName",
+        "packages/character-sheet-runtime/src/spell-slots.test.ts:sorcererFontOfMagicSlotConversionGateTestName",
+        "packages/character-sheet-runtime/src/spell-slots.test.ts:sorcererFontOfMagicSlotCreationTestName",
+        "packages/character-sheet-runtime/src/spell-slots.test.ts:sorcererFontOfMagicSlotCreationGateTestName"
       ]
     },
     "srd521:classes/sorcerer:level-2:class-feature-grant:sorcerer_metamagic": {
@@ -77,14 +77,14 @@
       "profile": "Character Sheet Metamagic battle resource bridge runtime",
       "summary": "Metamagic selected option facts are preserved through Character Sheet parsing only when they match the retained Sorcerer Metamagic feature and Sorcerer-level known-option count. Those parsed CharacterBuild facts provide the Character Battle bridge source for typed Metamagic effectKind, stackingMode, and cost facts while the shared Font of Magic Sorcery Point point-pool remains owned by the existing Character Sheet resource expenditure state.",
       "runtimeProjection": [
-        "packages/character-sheet-runtime/src/index.ts:parseCharacterBuild",
-        "packages/character-sheet-runtime/src/index.ts:parseStoredResourceExpenditures",
-        "packages/character-sheet-runtime/src/index.ts:storedSorcererMetamagicSelectionIssue",
-        "packages/character-sheet-runtime/src/index.ts:parseStoredFeatures"
+        "packages/character-sheet-runtime/src/stored-sheet-parser.ts:parseCharacterBuild",
+        "packages/character-sheet-runtime/src/stored-sheet-parser.ts:parseStoredResourceExpenditures",
+        "packages/character-sheet-runtime/src/stored-sheet-parser.ts:storedSorcererMetamagicSelectionIssue",
+        "packages/character-sheet-runtime/src/stored-sheet-parser.ts:parseStoredFeatures"
       ],
       "tests": [
-        "packages/character-sheet-runtime/src/index.test.ts:sorcererMetamagicKnownOptionsSheetParsingTestName",
-        "packages/character-sheet-runtime/src/index.test.ts:sorcererMetamagicKnownOptionsGateTestName"
+        "packages/character-sheet-runtime/src/sheet-lifecycle.test.ts:sorcererMetamagicKnownOptionsSheetParsingTestName",
+        "packages/character-sheet-runtime/src/sheet-lifecycle.test.ts:sorcererMetamagicKnownOptionsGateTestName"
       ]
     },
     "srd521:classes/monk:level-2:class-feature-grant:monk_uncanny_metabolism": {
@@ -92,18 +92,18 @@
       "profile": "Character Sheet Uncanny Metabolism Initiative recovery and Long Rest use state runtime",
       "summary": "Uncanny Metabolism is read from CharacterBuild source facts and the installed Surface feature record, then projected as a once-per-Long-Rest feature use state and optional Initiative-window recovery. The runtime validates that stored use state belongs only to sheets whose build retains Uncanny Metabolism, stores only the used-since-Long-Rest marker, preserves that marker across Short Rests, clears it on Long Rest, derives the current Martial Arts die from CharacterBuild facts, validates the caller-supplied die roll, clears all shared Monk's Focus expenditures, and applies capped self-healing without storing duplicate resource or die projections.",
       "runtimeProjection": [
-        "packages/character-sheet-runtime/src/index.ts:characterSheetMonkUncannyMetabolismUseState",
-        "packages/character-sheet-runtime/src/index.ts:useMonkUncannyMetabolismWhenRollingInitiative",
-        "packages/character-sheet-runtime/src/index.ts:restFeatureUseStateMatchesBuild",
-        "packages/character-sheet-runtime/src/index.ts:parseStoredRestFeatureUses",
-        "packages/character-sheet-runtime/src/index.ts:completeShortRest",
-        "packages/character-sheet-runtime/src/index.ts:completeLongRest"
+        "packages/character-sheet-runtime/src/resources.ts:characterSheetMonkUncannyMetabolismUseState",
+        "packages/character-sheet-runtime/src/resources.ts:useMonkUncannyMetabolismWhenRollingInitiative",
+        "packages/character-sheet-runtime/src/sheet-lifecycle.ts:restFeatureUseStateMatchesBuild",
+        "packages/character-sheet-runtime/src/sheet-lifecycle.ts:parseStoredRestFeatureUses",
+        "packages/character-sheet-runtime/src/rests.ts:completeShortRest",
+        "packages/character-sheet-runtime/src/rests.ts:completeLongRest"
       ],
       "tests": [
-        "packages/character-sheet-runtime/src/index.test.ts:uncannyMetabolismLongRestUseStateTestName",
-        "packages/character-sheet-runtime/src/index.test.ts:uncannyMetabolismInitiativeRecoveryTestName",
-        "packages/character-sheet-runtime/src/index.test.ts:uncannyMetabolismInitiativeGatesTestName",
-        "packages/character-sheet-runtime/src/index.test.ts:uncannyMetabolismRejectsUnownedUseStateTestName"
+        "packages/character-sheet-runtime/src/resources.test.ts:uncannyMetabolismLongRestUseStateTestName",
+        "packages/character-sheet-runtime/src/resources.test.ts:uncannyMetabolismInitiativeRecoveryTestName",
+        "packages/character-sheet-runtime/src/resources.test.ts:uncannyMetabolismInitiativeGatesTestName",
+        "packages/character-sheet-runtime/src/resources.test.ts:uncannyMetabolismRejectsUnownedUseStateTestName"
       ]
     },
     "srd521:classes/paladin:level-1:class-feature-grant:paladin_lay_on_hands": {
@@ -111,17 +111,17 @@
       "profile": "Character Sheet healing resource action runtime",
       "summary": "Paladin Lay On Hands is read from the installed Surface class-feature record and projected as a Character Sheet healing pool action. The runtime derives pool capacity from the character's Paladin level, stores only spent resource state, applies one spend to HP restoration plus the SRD 5 HP Poisoned-removal cost, rejects overspending, and restores the pool on Long Rest.",
       "runtimeProjection": [
-        "packages/character-sheet-runtime/src/index.ts:characterSheetResources",
-        "packages/character-sheet-runtime/src/index.ts:applyLayOnHands",
-        "packages/character-sheet-runtime/src/index.ts:layOnHandsSpend",
-        "packages/character-sheet-runtime/src/index.ts:spendCharacterSheetResource",
-        "packages/character-sheet-runtime/src/index.ts:applyLayOnHandsTargetEffects",
-        "packages/character-sheet-runtime/src/index.ts:completeLongRest"
+        "packages/character-sheet-runtime/src/resources.ts:characterSheetResources",
+        "packages/character-sheet-runtime/src/healing-rest-benefit.ts:applyLayOnHands",
+        "packages/character-sheet-runtime/src/healing-rest-benefit.ts:layOnHandsSpend",
+        "packages/character-sheet-runtime/src/healing-rest-benefit.ts:spendCharacterSheetResource",
+        "packages/character-sheet-runtime/src/healing-rest-benefit.ts:applyLayOnHandsTargetEffects",
+        "packages/character-sheet-runtime/src/rests.ts:completeLongRest"
       ],
       "tests": [
-        "packages/character-sheet-runtime/src/index.test.ts:layOnHandsSpendsHealingPoolTestName",
-        "packages/character-sheet-runtime/src/index.test.ts:layOnHandsRejectsDivergentPoolsTestName",
-        "packages/character-sheet-runtime/src/index.test.ts:layOnHandsLongRestRecoveryTestName"
+        "packages/character-sheet-runtime/src/healing-rest-benefit.test.ts:layOnHandsSpendsHealingPoolTestName",
+        "packages/character-sheet-runtime/src/healing-rest-benefit.test.ts:layOnHandsRejectsDivergentPoolsTestName",
+        "packages/character-sheet-runtime/src/healing-rest-benefit.test.ts:layOnHandsLongRestRecoveryTestName"
       ]
     },
     "srd521:classes/druid:level-2:class-feature-grant:druid_wild_shape": {
@@ -129,17 +129,17 @@
       "profile": "Character Sheet class-feature use-count resource runtime",
       "summary": "Druid Wild Shape is read from the installed Surface class-feature record and projected as Character Sheet use-count and known-form state. The runtime requires explicit selected known Beast form Stat Block identities for Wild Shape sheet creation, validates and stores them as current known-form state, derives capacity and reset cadence from CharacterBuild resources and Surface feature facts, stores only expended use-count state plus current known-form identities, regains one expended use on Short Rest, clears expended uses on Long Rest, and applies one eligible known-form replacement on Long Rest.",
       "runtimeProjection": [
-        "packages/character-sheet-runtime/src/index.ts:characterSheetResources",
-        "packages/character-sheet-runtime/src/index.ts:characterSheetDruidWildShapeKnownForms",
-        "packages/character-sheet-runtime/src/index.ts:classFeatureUseCountResourcesForBuild",
-        "packages/character-sheet-runtime/src/index.ts:druidWildShapeKnownFormsFromInput",
-        "packages/character-sheet-runtime/src/index.ts:recoverShortRestUseCountResources",
-        "packages/character-sheet-runtime/src/index.ts:completeShortRest",
-        "packages/character-sheet-runtime/src/index.ts:completeLongRest",
-        "packages/character-sheet-runtime/src/index.ts:druidWildShapeKnownFormsAfterLongRest"
+        "packages/character-sheet-runtime/src/resources.ts:characterSheetResources",
+        "packages/character-sheet-runtime/src/druid-features.ts:characterSheetDruidWildShapeKnownForms",
+        "packages/character-sheet-runtime/src/resources.ts:classFeatureUseCountResourcesForBuild",
+        "packages/character-sheet-runtime/src/druid-features.ts:druidWildShapeKnownFormsFromInput",
+        "packages/character-sheet-runtime/src/resources.ts:recoverShortRestUseCountResources",
+        "packages/character-sheet-runtime/src/rests.ts:completeShortRest",
+        "packages/character-sheet-runtime/src/rests.ts:completeLongRest",
+        "packages/character-sheet-runtime/src/druid-features.ts:druidWildShapeKnownFormsAfterLongRest"
       ],
       "tests": [
-        "packages/character-sheet-runtime/src/index.test.ts:druidWildShapeShortRestRecoveryTestName"
+        "packages/character-sheet-runtime/src/druid-features.test.ts:druidWildShapeShortRestRecoveryTestName"
       ]
     },
     "srd521:classes/fighter:level-1:mastery-pressure:fighter_weapon_mastery": {
@@ -147,15 +147,15 @@
       "profile": "Character Sheet Weapon Mastery Long Rest reselection runtime",
       "summary": "Fighter Weapon Mastery is read from the installed Surface class-feature record and applied during Long Rest as a one-choice reselection over eligible Simple or Martial weapons. The runtime replaces selected CharacterBuild class-choice refs and stores no parallel Weapon Mastery state.",
       "runtimeProjection": [
-        "packages/character-sheet-runtime/src/index.ts:completeLongRest",
-        "packages/character-sheet-runtime/src/index.ts:characterBuildWithWeaponMasteryReselections",
-        "packages/character-sheet-runtime/src/index.ts:selectedWeaponMasteryUnitIdsForLongRest",
-        "packages/character-sheet-runtime/src/index.ts:characterBuildFeaturesWithWeaponMasteryReselections"
+        "packages/character-sheet-runtime/src/rests.ts:completeLongRest",
+        "packages/character-sheet-runtime/src/rests.ts:characterBuildWithWeaponMasteryReselections",
+        "packages/character-sheet-runtime/src/rests.ts:selectedWeaponMasteryUnitIdsForLongRest",
+        "packages/character-sheet-runtime/src/rests.ts:characterBuildFeaturesWithWeaponMasteryReselections"
       ],
       "tests": [
-        "packages/character-sheet-runtime/src/index.test.ts:weaponMasteryLongRestReselectionTestName",
-        "packages/character-sheet-runtime/src/index.test.ts:weaponMasteryBuild",
-        "packages/character-sheet-runtime/src/index.test.ts:selectedClassChoiceUnitIds"
+        "packages/character-sheet-runtime/src/rests.test.ts:weaponMasteryLongRestReselectionTestName",
+        "packages/character-sheet-runtime/src/rests.test.ts:weaponMasteryBuild",
+        "packages/character-sheet-runtime/src/rests.test.ts:selectedClassChoiceUnitIds"
       ]
     },
     "srd521:classes/barbarian:level-1:mastery-pressure:barbarian_weapon_mastery": {
@@ -163,15 +163,15 @@
       "profile": "Character Sheet Weapon Mastery Long Rest reselection runtime",
       "summary": "Barbarian Weapon Mastery is read from the installed Surface class-feature record and applied during Long Rest as a one-choice reselection over eligible Simple or Martial Melee weapons. The runtime replaces selected CharacterBuild class-choice refs and stores no parallel Weapon Mastery state.",
       "runtimeProjection": [
-        "packages/character-sheet-runtime/src/index.ts:completeLongRest",
-        "packages/character-sheet-runtime/src/index.ts:characterBuildWithWeaponMasteryReselections",
-        "packages/character-sheet-runtime/src/index.ts:selectedWeaponMasteryUnitIdsForLongRest",
-        "packages/character-sheet-runtime/src/index.ts:characterBuildFeaturesWithWeaponMasteryReselections"
+        "packages/character-sheet-runtime/src/rests.ts:completeLongRest",
+        "packages/character-sheet-runtime/src/rests.ts:characterBuildWithWeaponMasteryReselections",
+        "packages/character-sheet-runtime/src/rests.ts:selectedWeaponMasteryUnitIdsForLongRest",
+        "packages/character-sheet-runtime/src/rests.ts:characterBuildFeaturesWithWeaponMasteryReselections"
       ],
       "tests": [
-        "packages/character-sheet-runtime/src/index.test.ts:weaponMasteryLongRestReselectionTestName",
-        "packages/character-sheet-runtime/src/index.test.ts:weaponMasteryBuild",
-        "packages/character-sheet-runtime/src/index.test.ts:selectedClassChoiceUnitIds"
+        "packages/character-sheet-runtime/src/rests.test.ts:weaponMasteryLongRestReselectionTestName",
+        "packages/character-sheet-runtime/src/rests.test.ts:weaponMasteryBuild",
+        "packages/character-sheet-runtime/src/rests.test.ts:selectedClassChoiceUnitIds"
       ]
     },
     "srd521:classes/paladin:level-1:mastery-pressure:paladin_weapon_mastery": {
@@ -179,15 +179,15 @@
       "profile": "Character Sheet Weapon Mastery Long Rest reselection runtime",
       "summary": "Paladin Weapon Mastery is read from the installed Surface class-feature record and applied during Long Rest as a two-choice reselection over eligible proficient weapons. The runtime replaces selected CharacterBuild class-choice refs and stores no parallel Weapon Mastery state.",
       "runtimeProjection": [
-        "packages/character-sheet-runtime/src/index.ts:completeLongRest",
-        "packages/character-sheet-runtime/src/index.ts:characterBuildWithWeaponMasteryReselections",
-        "packages/character-sheet-runtime/src/index.ts:selectedWeaponMasteryUnitIdsForLongRest",
-        "packages/character-sheet-runtime/src/index.ts:characterBuildFeaturesWithWeaponMasteryReselections"
+        "packages/character-sheet-runtime/src/rests.ts:completeLongRest",
+        "packages/character-sheet-runtime/src/rests.ts:characterBuildWithWeaponMasteryReselections",
+        "packages/character-sheet-runtime/src/rests.ts:selectedWeaponMasteryUnitIdsForLongRest",
+        "packages/character-sheet-runtime/src/rests.ts:characterBuildFeaturesWithWeaponMasteryReselections"
       ],
       "tests": [
-        "packages/character-sheet-runtime/src/index.test.ts:weaponMasteryLongRestReselectionTestName",
-        "packages/character-sheet-runtime/src/index.test.ts:weaponMasteryBuild",
-        "packages/character-sheet-runtime/src/index.test.ts:selectedClassChoiceUnitIds"
+        "packages/character-sheet-runtime/src/rests.test.ts:weaponMasteryLongRestReselectionTestName",
+        "packages/character-sheet-runtime/src/rests.test.ts:weaponMasteryBuild",
+        "packages/character-sheet-runtime/src/rests.test.ts:selectedClassChoiceUnitIds"
       ]
     },
     "srd521:classes/ranger:level-1:mastery-pressure:ranger_weapon_mastery": {
@@ -195,15 +195,15 @@
       "profile": "Character Sheet Weapon Mastery Long Rest reselection runtime",
       "summary": "Ranger Weapon Mastery is read from the installed Surface class-feature record and applied during Long Rest as a two-choice reselection over eligible proficient weapons. The runtime replaces selected CharacterBuild class-choice refs and stores no parallel Weapon Mastery state.",
       "runtimeProjection": [
-        "packages/character-sheet-runtime/src/index.ts:completeLongRest",
-        "packages/character-sheet-runtime/src/index.ts:characterBuildWithWeaponMasteryReselections",
-        "packages/character-sheet-runtime/src/index.ts:selectedWeaponMasteryUnitIdsForLongRest",
-        "packages/character-sheet-runtime/src/index.ts:characterBuildFeaturesWithWeaponMasteryReselections"
+        "packages/character-sheet-runtime/src/rests.ts:completeLongRest",
+        "packages/character-sheet-runtime/src/rests.ts:characterBuildWithWeaponMasteryReselections",
+        "packages/character-sheet-runtime/src/rests.ts:selectedWeaponMasteryUnitIdsForLongRest",
+        "packages/character-sheet-runtime/src/rests.ts:characterBuildFeaturesWithWeaponMasteryReselections"
       ],
       "tests": [
-        "packages/character-sheet-runtime/src/index.test.ts:weaponMasteryLongRestReselectionTestName",
-        "packages/character-sheet-runtime/src/index.test.ts:weaponMasteryBuild",
-        "packages/character-sheet-runtime/src/index.test.ts:selectedClassChoiceUnitIds"
+        "packages/character-sheet-runtime/src/rests.test.ts:weaponMasteryLongRestReselectionTestName",
+        "packages/character-sheet-runtime/src/rests.test.ts:weaponMasteryBuild",
+        "packages/character-sheet-runtime/src/rests.test.ts:selectedClassChoiceUnitIds"
       ]
     },
     "srd521:classes/rogue:level-1:mastery-pressure:rogue_weapon_mastery": {
@@ -211,15 +211,15 @@
       "profile": "Character Sheet Weapon Mastery Long Rest reselection runtime",
       "summary": "Rogue Weapon Mastery is read from the installed Surface class-feature record and applied during Long Rest as a two-choice reselection over eligible proficient weapons. The runtime replaces selected CharacterBuild class-choice refs and stores no parallel Weapon Mastery state.",
       "runtimeProjection": [
-        "packages/character-sheet-runtime/src/index.ts:completeLongRest",
-        "packages/character-sheet-runtime/src/index.ts:characterBuildWithWeaponMasteryReselections",
-        "packages/character-sheet-runtime/src/index.ts:selectedWeaponMasteryUnitIdsForLongRest",
-        "packages/character-sheet-runtime/src/index.ts:characterBuildFeaturesWithWeaponMasteryReselections"
+        "packages/character-sheet-runtime/src/rests.ts:completeLongRest",
+        "packages/character-sheet-runtime/src/rests.ts:characterBuildWithWeaponMasteryReselections",
+        "packages/character-sheet-runtime/src/rests.ts:selectedWeaponMasteryUnitIdsForLongRest",
+        "packages/character-sheet-runtime/src/rests.ts:characterBuildFeaturesWithWeaponMasteryReselections"
       ],
       "tests": [
-        "packages/character-sheet-runtime/src/index.test.ts:weaponMasteryLongRestReselectionTestName",
-        "packages/character-sheet-runtime/src/index.test.ts:weaponMasteryBuild",
-        "packages/character-sheet-runtime/src/index.test.ts:selectedClassChoiceUnitIds"
+        "packages/character-sheet-runtime/src/rests.test.ts:weaponMasteryLongRestReselectionTestName",
+        "packages/character-sheet-runtime/src/rests.test.ts:weaponMasteryBuild",
+        "packages/character-sheet-runtime/src/rests.test.ts:selectedClassChoiceUnitIds"
       ]
     },
     "srd521:classes/wizard:level-1:class-feature-grant:wizard_ritual_adept": {
@@ -227,16 +227,16 @@
       "profile": "Character Sheet spellbook ritual invocation runtime",
       "summary": "Wizard Ritual Adept is read from the installed Surface class-feature record and projected as a Character Sheet ritual spell invocation. The runtime derives eligibility from existing CharacterBuild spellbook Spell Access and the Surface Spell Definition ritual tag, admits spellbook rituals without requiring preparation or spending a Spell Slot, rejects prepared-only spells, rejects non-ritual Spell Definitions, and rejects spellbook ritual invocation without the spellbook Ritual Access feature.",
       "runtimeProjection": [
-        "packages/character-sheet-runtime/src/index.ts:characterSheetSpellInvocation",
-        "packages/character-sheet-runtime/src/index.ts:characterSheetSpellbookRitualInvocation",
+        "packages/character-sheet-runtime/src/spell-invocation.ts:characterSheetSpellInvocation",
+        "packages/character-sheet-runtime/src/spell-invocation.ts:characterSheetSpellbookRitualInvocation",
         "packages/character-sheet-runtime/src/index.ts:spellbookRitualAccessFeatureForBuild",
-        "packages/character-sheet-runtime/src/index.ts:spellHasRitualTag"
+        "packages/character-sheet-runtime/src/spell-invocation.ts:spellHasRitualTag"
       ],
       "tests": [
-        "packages/character-sheet-runtime/src/index.test.ts:ritualAdeptAdmitsSpellbookRitualTestName",
-        "packages/character-sheet-runtime/src/index.test.ts:ritualAdeptRejectsPreparedOnlySpellTestName",
-        "packages/character-sheet-runtime/src/index.test.ts:ritualAdeptRejectsNonRitualSpellTestName",
-        "packages/character-sheet-runtime/src/index.test.ts:ritualAdeptRejectsMissingFeatureTestName"
+        "packages/character-sheet-runtime/src/spell-invocation.test.ts:ritualAdeptAdmitsSpellbookRitualTestName",
+        "packages/character-sheet-runtime/src/spell-invocation.test.ts:ritualAdeptRejectsPreparedOnlySpellTestName",
+        "packages/character-sheet-runtime/src/spell-invocation.test.ts:ritualAdeptRejectsNonRitualSpellTestName",
+        "packages/character-sheet-runtime/src/spell-invocation.test.ts:ritualAdeptRejectsMissingFeatureTestName"
       ]
     },
     "srd521:classes/wizard:level-1:class-feature-grant:wizard_arcane_recovery": {
@@ -244,18 +244,18 @@
       "profile": "Character Sheet Rest and Spell Slot Recovery runtime",
       "summary": "Character Sheet rest completion models Short Rest Hit Dice spending, Long Rest spent Hit Dice recovery, Pact Slot recovery, ordinary Spell Slot recovery, and Wizard Arcane Recovery as distinct runtime facts. Wizard Arcane Recovery is read from the installed Surface class-feature record and applied during Short Rest completion as a distinct ordinary Spell Slot refund; the runtime enforces feature ownership, the Short Rest trigger, once-per-Long-Rest feature use, half-Wizard-level rounded-up recovery budget, level 6+ exclusion, and expended-slot ceiling.",
       "runtimeProjection": [
-        "packages/character-sheet-runtime/src/index.ts:characterSheetHitDice",
-        "packages/character-sheet-runtime/src/index.ts:completeShortRest",
-        "packages/character-sheet-runtime/src/index.ts:spendHitDice",
-        "packages/character-sheet-runtime/src/index.ts:applyArcaneRecovery",
-        "packages/character-sheet-runtime/src/index.ts:restSpellSlotRecoveryProfileForFeature",
-        "packages/character-sheet-runtime/src/index.ts:arcaneRecoverySpellSlotRefund",
-        "packages/character-sheet-runtime/src/index.ts:completeLongRest"
+        "packages/character-sheet-runtime/src/healing-rest-benefit.ts:characterSheetHitDice",
+        "packages/character-sheet-runtime/src/rests.ts:completeShortRest",
+        "packages/character-sheet-runtime/src/healing-rest-benefit.ts:spendHitDice",
+        "packages/character-sheet-runtime/src/healing-rest-benefit.ts:applyArcaneRecovery",
+        "packages/character-sheet-runtime/src/healing-rest-benefit.ts:restSpellSlotRecoveryProfileForFeature",
+        "packages/character-sheet-runtime/src/healing-rest-benefit.ts:arcaneRecoverySpellSlotRefund",
+        "packages/character-sheet-runtime/src/rests.ts:completeLongRest"
       ],
       "tests": [
-        "packages/character-sheet-runtime/src/index.test.ts:wizardBuild",
-        "packages/character-sheet-runtime/src/index.test.ts:wizardWarlockBuild",
-        "packages/character-sheet-runtime/src/index.test.ts:expectRight"
+        "packages/character-sheet-runtime/src/rests.test.ts:wizardBuild",
+        "packages/character-sheet-runtime/src/rests.test.ts:wizardWarlockBuild",
+        "packages/character-sheet-runtime/src/armor-class.test.ts:expectRight"
       ]
     },
     "srd521:classes/bard:level-2:class-feature-grant:bard_jack_of_all_trades": {
@@ -263,15 +263,15 @@
       "profile": "Character Sheet Ability Check Proficiency Bonus runtime",
       "summary": "Bard Jack of All Trades is read from the installed Surface class-feature record and projected by the Character Sheet runtime only for unproficient skill Ability Checks when no other Proficiency Bonus applies. The runtime derives ordinary skill proficiency and Expertise from existing CharacterBuild proficiency facts, derives Jack ownership from the Bard level 2 class feature grant, and stores no parallel skill state.",
       "runtimeProjection": [
-        "packages/character-sheet-runtime/src/index.ts:characterSheetAbilityCheckProficiencyBonus",
-        "packages/character-sheet-runtime/src/index.ts:characterBuildJackOfAllTradesFeatureUnitId",
-        "packages/character-sheet-runtime/src/index.ts:characterSheetProficiencyBonusForCharacterLevel"
+        "packages/character-sheet-runtime/src/ability-checks.ts:characterSheetAbilityCheckProficiencyBonus",
+        "packages/character-sheet-runtime/src/ability-checks.ts:characterBuildJackOfAllTradesFeatureUnitId",
+        "packages/character-sheet-runtime/src/ability-checks.ts:characterSheetProficiencyBonusForCharacterLevel"
       ],
       "tests": [
-        "packages/character-sheet-runtime/src/index.test.ts:jackOfAllTradesAddsHalfProficiencyBonusTestName",
-        "packages/character-sheet-runtime/src/index.test.ts:skillProficiencyOverridesJackOfAllTradesTestName",
-        "packages/character-sheet-runtime/src/index.test.ts:jackOfAllTradesRequiresNoOtherProficiencyBonusTestName",
-        "packages/character-sheet-runtime/src/index.test.ts:jackOfAllTradesRequiresBardLevelTwoFeatureTestName"
+        "packages/character-sheet-runtime/src/ability-checks.test.ts:jackOfAllTradesAddsHalfProficiencyBonusTestName",
+        "packages/character-sheet-runtime/src/ability-checks.test.ts:skillProficiencyOverridesJackOfAllTradesTestName",
+        "packages/character-sheet-runtime/src/ability-checks.test.ts:jackOfAllTradesRequiresNoOtherProficiencyBonusTestName",
+        "packages/character-sheet-runtime/src/ability-checks.test.ts:jackOfAllTradesRequiresBardLevelTwoFeatureTestName"
       ]
     },
     "srd521:classes/cleric:spell-level-2:spell-unit-pressure:cleric_spell_list_prayer_of_healing": {
@@ -279,15 +279,15 @@
       "profile": "Character Sheet spell-granted Short Rest benefit runtime",
       "summary": "Prayer of Healing is read from the installed Surface Spell Definition shape and applied after caller-provided completed-casting eligibility. The runtime spends one level-2-or-higher Spell Slot at completion, applies existing Short Rest benefit logic to each selected Character Sheet without duplicating rest algorithms, applies slot-scaled healing capped by Hit Point maximum, records a same-spell recipient Long Rest lockout in Long Rest-cleared sheet rest state, and leaves automatic range tracking and interruption to caller/table facts.",
       "runtimeProjection": [
-        "packages/character-sheet-runtime/src/index.ts:applyCharacterSheetSpellRestBenefit",
-        "packages/character-sheet-runtime/src/index.ts:characterSheetSpellRestBenefitProfile",
-        "packages/character-sheet-runtime/src/index.ts:completeShortRestBenefits",
-        "packages/character-sheet-runtime/src/index.ts:recoverCharacterSheetHitPoints",
-        "packages/character-sheet-runtime/src/index.ts:spendCharacterSheetSpellSlot",
-        "packages/character-sheet-runtime/src/index.ts:completeLongRest"
+        "packages/character-sheet-runtime/src/healing-rest-benefit.ts:applyCharacterSheetSpellRestBenefit",
+        "packages/character-sheet-runtime/src/healing-rest-benefit.ts:characterSheetSpellRestBenefitProfile",
+        "packages/character-sheet-runtime/src/healing-rest-benefit.ts:completeShortRestBenefits",
+        "packages/character-sheet-runtime/src/hit-points.ts:recoverCharacterSheetHitPoints",
+        "packages/character-sheet-runtime/src/healing-rest-benefit.ts:spendCharacterSheetSpellSlot",
+        "packages/character-sheet-runtime/src/rests.ts:completeLongRest"
       ],
       "tests": [
-        "packages/character-sheet-runtime/src/index.test.ts:prayerOfHealingRestBenefitApplicationTestName"
+        "packages/character-sheet-runtime/src/healing-rest-benefit.test.ts:prayerOfHealingRestBenefitApplicationTestName"
       ]
     },
     "srd521:classes/paladin:spell-level-2:spell-unit-pressure:paladin_spell_list_prayer_of_healing": {
@@ -295,15 +295,15 @@
       "profile": "Character Sheet spell-granted Short Rest benefit runtime",
       "summary": "Prayer of Healing is read from the installed Surface Spell Definition shape and applied after caller-provided completed-casting eligibility. The runtime spends one level-2-or-higher Spell Slot at completion, applies existing Short Rest benefit logic to each selected Character Sheet without duplicating rest algorithms, applies slot-scaled healing capped by Hit Point maximum, records a same-spell recipient Long Rest lockout in Long Rest-cleared sheet rest state, and leaves automatic range tracking and interruption to caller/table facts.",
       "runtimeProjection": [
-        "packages/character-sheet-runtime/src/index.ts:applyCharacterSheetSpellRestBenefit",
-        "packages/character-sheet-runtime/src/index.ts:characterSheetSpellRestBenefitProfile",
-        "packages/character-sheet-runtime/src/index.ts:completeShortRestBenefits",
-        "packages/character-sheet-runtime/src/index.ts:recoverCharacterSheetHitPoints",
-        "packages/character-sheet-runtime/src/index.ts:spendCharacterSheetSpellSlot",
-        "packages/character-sheet-runtime/src/index.ts:completeLongRest"
+        "packages/character-sheet-runtime/src/healing-rest-benefit.ts:applyCharacterSheetSpellRestBenefit",
+        "packages/character-sheet-runtime/src/healing-rest-benefit.ts:characterSheetSpellRestBenefitProfile",
+        "packages/character-sheet-runtime/src/healing-rest-benefit.ts:completeShortRestBenefits",
+        "packages/character-sheet-runtime/src/hit-points.ts:recoverCharacterSheetHitPoints",
+        "packages/character-sheet-runtime/src/healing-rest-benefit.ts:spendCharacterSheetSpellSlot",
+        "packages/character-sheet-runtime/src/rests.ts:completeLongRest"
       ],
       "tests": [
-        "packages/character-sheet-runtime/src/index.test.ts:prayerOfHealingRestBenefitApplicationTestName"
+        "packages/character-sheet-runtime/src/healing-rest-benefit.test.ts:prayerOfHealingRestBenefitApplicationTestName"
       ]
     },
     "srd521:classes/druid:level-3:subclass-spell-access:druid_circle_of_the_land_spells": {
@@ -311,16 +311,16 @@
       "profile": "Character Sheet selected-land prepared Spell Access runtime",
       "summary": "Druid Circle of the Land Spells is retained from the selected subclass feature grants in CharacterBuild, stores the current Long Rest land choice as Character Sheet state, and derives prepared Spell Access from the installed Surface land-choice table for the character's Druid level and lower. The runtime preserves the selected land before deriving spell ids, changes that state only through explicit Long Rest choice input, stores no duplicate prepared-spell list, and rejects Book of Shadows selections that duplicate the current land-derived Spell Access.",
       "runtimeProjection": [
-        "packages/character-sheet-runtime/src/index.ts:characterSheetDruidCircleLandPreparedSpellAccess",
-        "packages/character-sheet-runtime/src/index.ts:druidCircleLandAfterLongRest",
-        "packages/character-sheet-runtime/src/index.ts:druidCircleLandPreparedSpellAccessForBuild",
-        "packages/character-sheet-runtime/src/index.ts:storedBookOfShadowsDruidCircleLandSelectionIssue"
+        "packages/character-sheet-runtime/src/druid-features.ts:characterSheetDruidCircleLandPreparedSpellAccess",
+        "packages/character-sheet-runtime/src/druid-features.ts:druidCircleLandAfterLongRest",
+        "packages/character-sheet-runtime/src/druid-features.ts:druidCircleLandPreparedSpellAccessForBuild",
+        "packages/character-sheet-runtime/src/druid-features.ts:storedBookOfShadowsDruidCircleLandSelectionIssue"
       ],
       "tests": [
-        "packages/character-sheet-runtime/src/index.test.ts:druidCircleLandSpellAccessProjectionTestName",
-        "packages/character-sheet-runtime/src/index.test.ts:druidCircleLandSpellAccessSelectedLandGateTestName",
-        "packages/character-sheet-runtime/src/index.test.ts:druidCircleLandSpellcastingSourceGateTestName",
-        "packages/character-sheet-runtime/src/index.test.ts:druidCircleLandSpellAccessBookOfShadowsDuplicateTestName"
+        "packages/character-sheet-runtime/src/druid-features.test.ts:druidCircleLandSpellAccessProjectionTestName",
+        "packages/character-sheet-runtime/src/druid-features.test.ts:druidCircleLandSpellAccessSelectedLandGateTestName",
+        "packages/character-sheet-runtime/src/druid-features.test.ts:druidCircleLandSpellcastingSourceGateTestName",
+        "packages/character-sheet-runtime/src/druid-features.test.ts:druidCircleLandSpellAccessBookOfShadowsDuplicateTestName"
       ]
     },
     "srd521:classes/cleric:level-3:subclass-spell-access:cleric_life_domain_spells": {
@@ -329,12 +329,12 @@
       "summary": "Cleric Life Domain Spells is retained from the selected subclass feature grants in CharacterBuild and projected by Character Sheet as prepared spell access from installed Surface class-level tier facts. The runtime derives ownership from the selected Cleric subclass and Cleric level, stores no duplicate prepared-spell state, and rejects Book of Shadows selections that duplicate the retained subclass spell access.",
       "runtimeProjection": [
         "packages/character-creation-runtime/src/finalization.ts:characterBuildFeatureUnitIds",
-        "packages/character-sheet-runtime/src/index.ts:featurePreparedSpellIdsForBuild",
-        "packages/character-sheet-runtime/src/index.ts:storedBookOfShadowsSelectionIssue"
+        "packages/character-sheet-runtime/src/class-feature-spells.ts:featurePreparedSpellIdsForBuild",
+        "packages/character-sheet-runtime/src/stored-sheet-parser.ts:storedBookOfShadowsSelectionIssue"
       ],
       "tests": [
-        "packages/character-sheet-runtime/src/index.test.ts:subclassPreparedSpellAccessProgressionTestName",
-        "packages/character-sheet-runtime/src/index.test.ts:subclassPreparedSpellAccessBlocksBookOfShadowsDuplicateTestName"
+        "packages/character-sheet-runtime/src/class-feature-spells.test.ts:subclassPreparedSpellAccessProgressionTestName",
+        "packages/character-sheet-runtime/src/class-feature-spells.test.ts:subclassPreparedSpellAccessBlocksBookOfShadowsDuplicateTestName"
       ]
     },
     "srd521:classes/paladin:level-3:subclass-spell-access:paladin_oath_of_devotion_spells": {
@@ -343,12 +343,12 @@
       "summary": "Paladin Oath of Devotion Spells is retained from the selected subclass feature grants in CharacterBuild and projected by Character Sheet as prepared spell access from installed Surface class-level tier facts. The runtime derives ownership from the selected Paladin subclass and Paladin level, stores no duplicate prepared-spell state, and rejects Book of Shadows selections that duplicate the retained subclass spell access.",
       "runtimeProjection": [
         "packages/character-creation-runtime/src/finalization.ts:characterBuildFeatureUnitIds",
-        "packages/character-sheet-runtime/src/index.ts:featurePreparedSpellIdsForBuild",
-        "packages/character-sheet-runtime/src/index.ts:storedBookOfShadowsSelectionIssue"
+        "packages/character-sheet-runtime/src/class-feature-spells.ts:featurePreparedSpellIdsForBuild",
+        "packages/character-sheet-runtime/src/stored-sheet-parser.ts:storedBookOfShadowsSelectionIssue"
       ],
       "tests": [
-        "packages/character-sheet-runtime/src/index.test.ts:subclassPreparedSpellAccessProgressionTestName",
-        "packages/character-sheet-runtime/src/index.test.ts:subclassPreparedSpellAccessBlocksBookOfShadowsDuplicateTestName"
+        "packages/character-sheet-runtime/src/class-feature-spells.test.ts:subclassPreparedSpellAccessProgressionTestName",
+        "packages/character-sheet-runtime/src/class-feature-spells.test.ts:subclassPreparedSpellAccessBlocksBookOfShadowsDuplicateTestName"
       ]
     },
     "srd521:classes/sorcerer:level-3:subclass-spell-access:sorcerer_draconic_spells": {
@@ -357,12 +357,12 @@
       "summary": "Sorcerer Draconic Spells is retained from the selected subclass feature grants in CharacterBuild and projected by Character Sheet as prepared spell access from installed Surface class-level tier facts. The runtime derives ownership from the selected Sorcerer subclass and Sorcerer level, stores no duplicate prepared-spell state, and rejects Book of Shadows selections that duplicate the retained subclass spell access.",
       "runtimeProjection": [
         "packages/character-creation-runtime/src/finalization.ts:characterBuildFeatureUnitIds",
-        "packages/character-sheet-runtime/src/index.ts:featurePreparedSpellIdsForBuild",
-        "packages/character-sheet-runtime/src/index.ts:storedBookOfShadowsSelectionIssue"
+        "packages/character-sheet-runtime/src/class-feature-spells.ts:featurePreparedSpellIdsForBuild",
+        "packages/character-sheet-runtime/src/stored-sheet-parser.ts:storedBookOfShadowsSelectionIssue"
       ],
       "tests": [
-        "packages/character-sheet-runtime/src/index.test.ts:subclassPreparedSpellAccessProgressionTestName",
-        "packages/character-sheet-runtime/src/index.test.ts:subclassPreparedSpellAccessBlocksBookOfShadowsDuplicateTestName"
+        "packages/character-sheet-runtime/src/class-feature-spells.test.ts:subclassPreparedSpellAccessProgressionTestName",
+        "packages/character-sheet-runtime/src/class-feature-spells.test.ts:subclassPreparedSpellAccessBlocksBookOfShadowsDuplicateTestName"
       ]
     },
     "srd521:classes/warlock:level-3:subclass-spell-access:warlock_fiend_spells": {
@@ -371,12 +371,12 @@
       "summary": "Warlock Fiend Spells is retained from the selected subclass feature grants in CharacterBuild and projected by Character Sheet as prepared spell access from installed Surface class-level tier facts. The runtime derives ownership from the selected Warlock subclass and Warlock level, stores no duplicate prepared-spell state, and rejects Book of Shadows selections that duplicate the retained subclass spell access.",
       "runtimeProjection": [
         "packages/character-creation-runtime/src/finalization.ts:characterBuildFeatureUnitIds",
-        "packages/character-sheet-runtime/src/index.ts:featurePreparedSpellIdsForBuild",
-        "packages/character-sheet-runtime/src/index.ts:storedBookOfShadowsSelectionIssue"
+        "packages/character-sheet-runtime/src/class-feature-spells.ts:featurePreparedSpellIdsForBuild",
+        "packages/character-sheet-runtime/src/stored-sheet-parser.ts:storedBookOfShadowsSelectionIssue"
       ],
       "tests": [
-        "packages/character-sheet-runtime/src/index.test.ts:subclassPreparedSpellAccessProgressionTestName",
-        "packages/character-sheet-runtime/src/index.test.ts:subclassPreparedSpellAccessBlocksBookOfShadowsDuplicateTestName"
+        "packages/character-sheet-runtime/src/class-feature-spells.test.ts:subclassPreparedSpellAccessProgressionTestName",
+        "packages/character-sheet-runtime/src/class-feature-spells.test.ts:subclassPreparedSpellAccessBlocksBookOfShadowsDuplicateTestName"
       ]
     },
     "srd521:classes/warlock:level-2:class-feature-grant:warlock_magical_cunning": {
@@ -384,16 +384,16 @@
       "profile": "Character Sheet Pact Slot recovery runtime",
       "summary": "Warlock Magical Cunning is read from the installed Surface class-feature record and applied by the Character Sheet runtime as a completed 1-minute rite that recovers expended Pact Slots from the existing Pact Magic slot pool. The runtime enforces Warlock level 2 feature ownership, requires expended Pact Slots, recovers no more than half the Pact Slot maximum rounded up, records once-per-Long-Rest use state, and clears that use state on Long Rest while the existing Pact Slot rest path restores the pool.",
       "runtimeProjection": [
-        "packages/character-sheet-runtime/src/index.ts:completeMagicalCunningRite",
-        "packages/character-sheet-runtime/src/index.ts:pactSlotRecoveryProfileForBuild",
-        "packages/character-sheet-runtime/src/index.ts:isPactSlotRecoveryFeature",
-        "packages/character-sheet-runtime/src/index.ts:magicalCunningRecoveredPactSlots",
-        "packages/character-sheet-runtime/src/index.ts:characterSheetPactSlots",
-        "packages/character-sheet-runtime/src/index.ts:completeLongRest"
+        "packages/character-sheet-runtime/src/rests.ts:completeMagicalCunningRite",
+        "packages/character-sheet-runtime/src/rests.ts:pactSlotRecoveryProfileForBuild",
+        "packages/character-sheet-runtime/src/rests.ts:isPactSlotRecoveryFeature",
+        "packages/character-sheet-runtime/src/rests.ts:magicalCunningRecoveredPactSlots",
+        "packages/character-sheet-runtime/src/spell-slots.ts:characterSheetPactSlots",
+        "packages/character-sheet-runtime/src/rests.ts:completeLongRest"
       ],
       "tests": [
-        "packages/character-sheet-runtime/src/index.test.ts:warlockMagicalCunningBuild",
-        "packages/character-sheet-runtime/src/index.test.ts:requireRight"
+        "packages/character-sheet-runtime/src/rests.test.ts:warlockMagicalCunningBuild",
+        "packages/character-sheet-runtime/src/rests.test.ts:requireRight"
       ]
     },
     "srd521:classes/barbarian:level-3:class-feature-grant:barbarian_primal_knowledge": {
@@ -401,10 +401,10 @@
       "profile": "Character Sheet Ability Check ability substitution projection",
       "summary": "Barbarian Primal Knowledge is read from the retained class-feature Unit and projected by Character Sheet as a Rage-active optional Strength substitution for the listed skill Ability Checks. The runtime requires caller-supplied active Rage evidence and derives the skill list from the Surface feature fact without duplicating skill proficiency state.",
       "runtimeProjection": [
-        "packages/character-sheet-runtime/src/index.ts:characterSheetAbilityCheckAbility"
+        "packages/character-sheet-runtime/src/ability-checks.ts:characterSheetAbilityCheckAbility"
       ],
       "tests": [
-        "packages/character-sheet-runtime/src/index.test.ts:primalKnowledgeAbilitySubstitutionProjectionTestName"
+        "packages/character-sheet-runtime/src/ability-checks.test.ts:primalKnowledgeAbilitySubstitutionProjectionTestName"
       ]
     },
     "srd521:classes/rogue:level-3:class-feature-grant:rogue_second_story_work": {
@@ -412,11 +412,11 @@
       "profile": "Character Sheet linked-Speed and jump-distance projections",
       "summary": "Rogue Second-Story Work is read from the selected Thief subclass feature grants and projected by Character Sheet as a Climb Speed linked to walk Speed plus an optional Dexterity-for-Strength jump-distance ability substitution. The linked Speed remains a source link rather than a copied numeric Speed.",
       "runtimeProjection": [
-        "packages/character-sheet-runtime/src/index.ts:characterSheetLinkedSpeedGrants",
-        "packages/character-sheet-runtime/src/index.ts:characterSheetJumpDistanceAbility"
+        "packages/character-sheet-runtime/src/ability-checks.ts:characterSheetLinkedSpeedGrants",
+        "packages/character-sheet-runtime/src/ability-checks.ts:characterSheetJumpDistanceAbility"
       ],
       "tests": [
-        "packages/character-sheet-runtime/src/index.test.ts:secondStoryWorkProjectionTestName"
+        "packages/character-sheet-runtime/src/ability-checks.test.ts:secondStoryWorkProjectionTestName"
       ]
     },
     "srd521:classes/sorcerer:level-3:class-feature-grant:sorcerer_draconic_resilience": {
@@ -424,11 +424,11 @@
       "profile": "Character Sheet Armor Class base formula projection",
       "summary": "Sorcerer Draconic Resilience is read from the selected Draconic Sorcery subclass feature grants and projected by Character Sheet as an unarmored base Armor Class of 10 plus Dexterity and Charisma modifiers from the installed Surface modify_ac_set_base fact and equipment predicate.",
       "runtimeProjection": [
-        "packages/character-sheet-runtime/src/index.ts:characterSheetArmorClassState",
-        "packages/character-sheet-runtime/src/index.ts:armorClassBaseSourceForFormula"
+        "packages/character-sheet-runtime/src/armor-class.ts:characterSheetArmorClassState",
+        "packages/character-sheet-runtime/src/armor-class.ts:armorClassBaseSourceForFormula"
       ],
       "tests": [
-        "packages/character-sheet-runtime/src/index.test.ts:draconicResilienceArmorClassProjectionTestName"
+        "packages/character-sheet-runtime/src/armor-class.test.ts:draconicResilienceArmorClassProjectionTestName"
       ]
     }
   }

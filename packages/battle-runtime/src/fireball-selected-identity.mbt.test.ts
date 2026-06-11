@@ -1,9 +1,8 @@
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt B23-FIREBALL-IDENTITY-WITNESS fireball
 // UNIT-IDENTITY-MBT-REPLAY: B23-FIREBALL-IDENTITY-WITNESS fireball doDiscoverFireballSaveGatedDamage
-import * as path from "node:path";
-
 import { expect } from "vitest";
 
+import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
 import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
 import {
   fireballUnitId,
@@ -21,10 +20,14 @@ import { spellSlotInvocationRef } from "./unit-profile-admission-test-support.ts
 defineSelectedIdentityWitness({
   describeLabel: "Fireball selected identity MBT",
   taskId: "B23-FIREBALL-IDENTITY-WITNESS",
-  specFile: path.resolve(
+  specFile: mbtSpecPath(
     import.meta.dirname,
-    "../battle-runtime-fireball-selected-identity.mbt.qnt",
+    "battle-runtime-fireball-selected-identity.mbt.qnt",
   ),
+  quintStateField: "qState",
+  quintStateFieldPrefix: "q",
+  witnessProtocolField: "protocol",
+  quintFieldNames: { lastResult: "qScenarioResult" },
   projectionSchema: { lastResult: "str" },
   initialProjection: { lastResult: "init" },
   units: [

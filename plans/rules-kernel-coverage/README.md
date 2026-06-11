@@ -54,15 +54,18 @@ duplicate their profile lists; generated reports derive those lists from
 `profile-obligations.jsonl`.
 
 `battle-hole-frontier.jsonl` is the single source of truth for the current
-BattleHole/BattleFill frontier inventory. The checker parses
+BattleHole/BattleFill/BattleSubject protocol inventory. The checker parses
 `packages/battle-runtime/src/battle-reducer.ts` and requires one
-`battle-hole-family` row for every `BattleHole` union member and one
-`battle-fill-kind` row for every `BattleFill` discriminant. Boundary/table-owned
-rows must point at a non-semantic rules-kernel obligation; semantic rows must
-point at a covered obligation or at the Ralph follow-up task that will add the
-missing QNT/parity ownership. A semantic row may also point at a non-semantic
-boundary obligation when the same hole or fill carries caller/table facts, but
-that boundary coverage never substitutes for reducer-semantic ownership.
+`battle-hole-family` row for every `BattleHole` union member, one
+`battle-fill-kind` row for every `BattleFill` discriminant, and one
+`battle-subject-kind` row for every procedure-family fold over the
+schema-derived `BattleSubject` protocol kinds. Boundary/table-owned rows must
+point at a non-semantic rules-kernel
+obligation; semantic rows must point at a covered obligation or at the Ralph
+follow-up task that will add the missing QNT/parity ownership. A semantic row
+may also point at a non-semantic boundary obligation when the same hole, fill,
+or subject carries caller/table facts, but that boundary coverage never
+substitutes for reducer-semantic ownership.
 
 `generator-readiness.jsonl` records the separate C-axis question defined in
 [Generator Readiness Source Of Truth](#generator-readiness-source-of-truth).
@@ -88,6 +91,26 @@ a non-owner, or if a generator-readiness `semanticCore` path is classified as
 anything other than `semantic-core`. A globally semantic-core owner may still
 appear in a row's `proofOnly` list when that row uses it as supporting proof
 evidence rather than as its own generator input.
+
+## Outcome Oracle Disambiguation
+
+Some covered obligations intentionally list multiple `qntOwners` because a
+single reducer obligation is factored across reusable semantic cores, bridges,
+or procedure-shape owners. For consumers that need one outcome oracle, such as
+the future literal-capture gate, use this ordering rule rather than inferring
+from filenames:
+
+1. If the selected parity witness declares `qntSpecPath`, that witness spec is
+   the oracle for the captured trace.
+2. Otherwise, use the first path in the obligation's
+   `generator-readiness.jsonl` `semanticCore` list.
+3. If no readiness row is in scope, use the first `obligations.jsonl`
+   `qntOwners` path whose `qnt-owner-roles.jsonl` role is `semantic-core`.
+
+The listed order is therefore intentional: put the operation-specific semantic
+owner before supporting proof, bridge, fixture, or vocabulary owners. If no
+single owner can serve as the oracle, split the obligation or add a focused
+witness before adding literal-capture evidence.
 
 ## Generator Readiness Source Of Truth
 
@@ -192,9 +215,10 @@ QNT owner roles are:
 - **Support profile:** the typed runtime procedure shape admitted from Surface.
   Multiple Surface records can map to one profile.
 - **Parity witness:** an executable TS test that runs production runtime code and
-  either compares a QNT-owned projection or, for a profile-specific lifecycle
-  already carrying profile-level QNT proof, exercises the deterministic runtime
-  reducer path named by that profile.
+  either compares a QNT-owned projection, exercises a deterministic runtime
+  reducer path named by a profile that already carries profile-level QNT proof,
+  or checks an executable registry/QNT/TS contract where the join itself is the
+  covered obligation.
 - **Boundary-only:** parser/client/session/protocol behavior that does not
   change legal table-observable game state.
 - **Battle hole frontier:** the current set of battle reducer holes and fills
@@ -258,9 +282,10 @@ New reducer semantics are QNT-first:
 ## Parity Witness Modes
 
 Rules-kernel parity witness rows use the checked witness-kind vocabulary
-`focused-mbt`, `deterministic-qnt-replay`, and `runtime-test`. MCP scenario
-evidence uses `mcp-scenario` in `plans/unit-profile-coverage/`; it is an
-ultra-golden user-flow layer, not a rules-kernel parity witness.
+`focused-mbt`, `deterministic-qnt-replay`, `runtime-test`, and
+`contract-test`. MCP scenario evidence uses `mcp-scenario` in
+`plans/unit-profile-coverage/`; it is an ultra-golden user-flow layer, not a
+rules-kernel parity witness.
 
 The default witness for reducer procedures is focused MBT with random traces.
 Use it for sequencing, holes, reactions, resources, active-effect lifecycle,
@@ -298,6 +323,12 @@ single Surface-backed lifecycle obligation when the corresponding profile row
 already records QNT proof ownership and deterministic runtime parity. They must
 not be used for reusable sequencing, interleaving, or shared reducer semantics
 where branch interaction is the risk.
+
+Contract-test witnesses are narrower still. They may close an obligation only
+when the executable semantic claim is a checked registry join, protocol
+vocabulary mapping, or boundary inventory contract rather than a reducer trace.
+They must not be used as a substitute for QNT replay or MBT when runtime state
+transition behavior is the obligation.
 
 ## Anti-Explosion Rule
 

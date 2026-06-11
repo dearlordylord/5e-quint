@@ -1,7 +1,5 @@
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1D2-MYCELIUM-STEP mycelium_step
 // UNIT-IDENTITY-MBT-REPLAY: L1D2-MYCELIUM-STEP mycelium_step doDiscoverMyceliumStepDash doDashAsBonusAction
-import * as path from "node:path";
-
 import { Either } from "effect";
 import { expect } from "vitest";
 
@@ -31,6 +29,7 @@ import {
   type CombatantId,
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
+import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
 import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
 import {
   battleUnitSupportProfilesForUnit,
@@ -67,10 +66,14 @@ const myceliumStepSupportProfile =
 defineSelectedIdentityWitness({
   describeLabel: "Mycelium Step feature selected identity MBT",
   taskId: "L1D2-MYCELIUM-STEP",
-  specFile: path.resolve(
+  specFile: mbtSpecPath(
     import.meta.dirname,
-    "../battle-runtime-mycelium-step-feature-selected-identity.mbt.qnt",
+    "battle-runtime-mycelium-step-feature-selected-identity.mbt.qnt",
   ),
+  quintStateField: "qState",
+  quintStateFieldPrefix: "q",
+  witnessProtocolField: "protocol",
+  quintFieldNames: { lastResult: "qScenarioResult" },
   projectionSchema: {
     bonusActionAvailable: "bool",
     dashBonusFeet: "int",

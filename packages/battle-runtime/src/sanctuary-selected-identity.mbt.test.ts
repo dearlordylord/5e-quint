@@ -1,8 +1,6 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.SANCTUARY.TARGETING_INTERDICTION
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1H-SANCTUARY sanctuary
 // UNIT-IDENTITY-MBT-REPLAY: L1H-SANCTUARY sanctuary doCastSanctuaryWardCreation doInterdictDirectAttackFailedSaveLoss doInterdictDirectSpellSuccessfulSavePassThrough doRetargetDirectAttackToLegalReplacement doRejectIllegalReplacementTarget doExcludeAreaEffectFromInterdiction doEndWardOnWardedAttackRoll doEndWardOnWardedSpellCast doEndWardOnWardedDamageDealt
-import * as path from "node:path";
-
 import { Either } from "effect";
 
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
@@ -42,6 +40,7 @@ import {
   type CombatantId,
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
+import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
 import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
 
 type SanctuarySelectedIdentityLastResult =
@@ -263,10 +262,14 @@ const sanctuaryDiscoveries = {
 defineSelectedIdentityWitness({
   describeLabel: "Sanctuary selected identity MBT",
   taskId: "sanctuary-selected-identity",
-  specFile: path.resolve(
+  specFile: mbtSpecPath(
     import.meta.dirname,
-    "../battle-runtime-sanctuary-selected-identity.mbt.qnt",
+    "battle-runtime-sanctuary-selected-identity.mbt.qnt",
   ),
+  quintStateField: "qState",
+  quintStateFieldPrefix: "q",
+  witnessProtocolField: "protocol",
+  quintFieldNames: { lastResult: "qScenarioResult" },
   projectionSchema: {
     wardPresent: "bool",
     wardSourceIsSanctuary: "bool",

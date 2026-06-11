@@ -1,7 +1,5 @@
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1D2-SORCERER-INNATE-SORCERY sorcerer_innate_sorcery
 // UNIT-IDENTITY-MBT-REPLAY: L1D2-SORCERER-INNATE-SORCERY sorcerer_innate_sorcery doActivateInnateSorcery doProjectInnateSorcerySpellBenefits doExcludeInnateSorceryNonSorcererSpellBenefits
-import * as path from "node:path";
-
 import { Either } from "effect";
 import { expect } from "vitest";
 
@@ -42,6 +40,7 @@ import {
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
 import { ongoingFeatureSourceKeyForUnit } from "./battle-reducer/creature-state.ts";
+import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
 import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
 
 type InnateSorcerySpellAttackRollMode = "none" | "advantage" | "disadvantage";
@@ -94,10 +93,14 @@ const unitLibrary = unitCatalogResult.catalog;
 defineSelectedIdentityWitness({
   describeLabel: "Innate Sorcery selected identity MBT",
   taskId: "L1D2-SORCERER-INNATE-SORCERY",
-  specFile: path.resolve(
+  specFile: mbtSpecPath(
     import.meta.dirname,
-    "../battle-runtime-feature-selected-identity.mbt.qnt",
+    "battle-runtime-feature-selected-identity.mbt.qnt",
   ),
+  quintStateField: "qState",
+  quintStateFieldPrefix: "q",
+  witnessProtocolField: "protocol",
+  quintFieldNames: { lastResult: "qScenarioResult" },
   projectionSchema: {
     bonusActionAvailable: "bool",
     featureUsesRemaining: "int",

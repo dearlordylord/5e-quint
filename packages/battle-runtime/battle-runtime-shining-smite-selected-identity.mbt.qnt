@@ -1,17 +1,35 @@
 // -*- mode: Bluespec; -*-
 
 module battleRuntimeShiningSmiteSelectedIdentityMbt {
-  var qLastResult: str
+  import battleRuntimeWitnessProtocol.* from "./battle-runtime-witness-protocol"
 
-  action recordProjection(lastResult: str): bool = all {
-    qLastResult' = lastResult,
+  type Hole = | NoHole
+
+  type ShiningSmiteSelectedIdentityWitnessState = {
+    scenarioResult: str,
+    protocol: WitnessProtocol[Hole],
   }
 
-  action init = recordProjection("init")
+  var qState: ShiningSmiteSelectedIdentityWitnessState
+
+  action recordProjection(
+    scenarioResult: str,
+    protocol: WitnessProtocol[Hole],
+  ): bool = all {
+    qState' = {
+      scenarioResult: scenarioResult,
+      protocol: protocol,
+    },
+  }
+
+  action init = recordProjection("init", witnessInit(NoHole))
 
   action doDiscoverShiningSmiteAfterHitDamageIllumination = all {
-    qLastResult == "init",
-    recordProjection("shiningSmiteAfterHitDamageIllumination"),
+    qState.protocol.result == WInit,
+    recordProjection(
+      "shiningSmiteAfterHitDamageIllumination",
+      witnessResolved(NoHole),
+    ),
   }
 
   action step = any {

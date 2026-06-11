@@ -1,8 +1,19 @@
 // RAW-COVERAGE: verification-owner:focused-mbt RAW-PTG-REACTIONS-003 RAW-QCORE7-MOVEMENT-GRAPPLE-001
 // KERNEL-COVERAGE: parity-witness BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND
-import * as path from "node:path";
-
-import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
+import {
+  MBT_TEST_TIMEOUT_MS,
+  booleanField,
+  defineDriver,
+  focusedMbtMaxSteps,
+  mbtSpecPath,
+  mbtTraceCount,
+  numberFromQuintInt,
+  quintSet,
+  quintStateRecord,
+  quintVariantTag,
+  run,
+  stateCheck,
+} from "./battle-runtime-mbt-driver-kit.ts";
 import { Either } from "effect";
 import { describe, expect, it } from "vitest";
 
@@ -323,20 +334,22 @@ const movementStateCheck = stateCheck(
 const ruleCoreMovementDefaultMbtSteps = 6;
 
 describe("rule-core Movement focused MBT", () => {
-  it("replays QCORE7 Movement, Grapple, and OA-decline against battle-runtime reducers", async () => {
-    await run({
-      spec: path.resolve(import.meta.dirname, "../rule-core-movement.mbt.qnt"),
-      init: "init",
-      step: "step",
-      driver: createRuleCoreMovementDriver(),
-      backend: "typescript",
-      nTraces: Number(process.env["MBT_TRACES"] ?? 1),
-      maxSteps: Number(
-        process.env["MBT_STEPS"] ?? ruleCoreMovementDefaultMbtSteps,
-      ),
-      stateCheck: movementStateCheck,
-    });
-  }, 120_000);
+  it(
+    "replays QCORE7 Movement, Grapple, and OA-decline against battle-runtime reducers",
+    async () => {
+      await run({
+        spec: mbtSpecPath(import.meta.dirname, "rule-core-movement.mbt.qnt"),
+        init: "init",
+        step: "step",
+        driver: createRuleCoreMovementDriver(),
+        backend: "typescript",
+        nTraces: mbtTraceCount(),
+        maxSteps: focusedMbtMaxSteps(ruleCoreMovementDefaultMbtSteps),
+        stateCheck: movementStateCheck,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
 });
 
 function ruleCoreMovementBattle(): BattleState {
@@ -547,7 +560,9 @@ function requireGrappleOutcomeHole(
 function requireReactionDecisionHole(
   holes: readonly BattleHole[],
 ): Extract<BattleHole, { readonly kind: "interruptDecision" }> {
-  const hole = holes.find((candidate) => candidate.kind === "interruptDecision");
+  const hole = holes.find(
+    (candidate) => candidate.kind === "interruptDecision",
+  );
   if (hole === undefined) {
     throw new Error("Expected interrupt decision hole.");
   }
@@ -590,7 +605,7 @@ function normalizeRuleCoreMovementQuintState(
       state["qGrappleEscapeDc"],
       "qGrappleEscapeDc",
     ),
-    holes: quintHoleSet(state["qHoles"]).map(movementHoleName),
+    holes: quintSet(state["qHoles"], "qHoles").map(movementHoleName),
     pendingOpportunityAttack: booleanField(state, "qPendingOpportunityAttack"),
     lastResult: movementResult(state["qLastResult"]),
     lastInvalidReason: movementInvalidReason(state["qLastInvalidReason"]),
@@ -610,26 +625,6 @@ function compareRuleCoreMovementState(
     throw error;
   }
   return true;
-}
-
-function numberFromQuintInt(raw: unknown, field: string): number {
-  if (typeof raw === "number") return raw;
-  if (typeof raw === "bigint") return Number(raw);
-  throw new Error(`Expected Quint integer field ${field}.`);
-}
-
-function booleanField(
-  state: Readonly<Record<string, unknown>>,
-  field: string,
-): boolean {
-  const value = state[field];
-  if (typeof value === "boolean") return value;
-  throw new Error(`Expected Quint boolean field ${field}.`);
-}
-
-function quintHoleSet(raw: unknown): readonly unknown[] {
-  if (raw instanceof Set) return [...raw];
-  throw new Error("Expected Quint qHoles field to be a Set.");
 }
 
 function movementHoleName(raw: unknown): RuleCoreMovementMbtHole {
@@ -671,21 +666,4 @@ function currentActorName(
 ): RuleCoreMovementProjection["currentActor"] {
   if (raw === fighterActor || raw === grappledTargetActor) return raw;
   throw new Error(`Unknown Quint rule-core Movement actor: ${String(raw)}.`);
-}
-
-function quintVariantTag(raw: unknown): string {
-  if (isRecord(raw) && typeof raw["tag"] === "string") return raw["tag"];
-  if (typeof raw === "string") return raw;
-  throw new Error(`Expected Quint variant tag, got ${String(raw)}.`);
-}
-
-function quintStateRecord(raw: unknown): Readonly<Record<string, unknown>> {
-  if (!isRecord(raw)) {
-    throw new Error("Expected Quint state to be an object.");
-  }
-  return raw;
-}
-
-function isRecord(raw: unknown): raw is Readonly<Record<string, unknown>> {
-  return typeof raw === "object" && raw !== null;
 }

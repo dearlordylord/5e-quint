@@ -27,8 +27,7 @@
 //   end of each target's turns.
 // - UBIQUITOUS_LANGUAGE.md: Magic Action, Spell Invocation, Saving Throw,
 //   Disadvantage, Sorcery Points as a Pool, and Spend.
-import * as path from "node:path";
-
+import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
 import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
 import {
   heightenedSorcererMetamagicBattle,
@@ -43,10 +42,13 @@ import {
 defineSelectedIdentityWitness({
   describeLabel: "Sorcerer Metamagic Heightened Spell selected identity MBT",
   taskId: "L3META-05-HEIGHTENED-SPELL-SAVE-PROFILES",
-  specFile: path.resolve(
+  specFile: mbtSpecPath(
     import.meta.dirname,
-    "../battle-runtime-sorcerer-metamagic-heightened-selected-identity.mbt.qnt",
+    "battle-runtime-sorcerer-metamagic-heightened-selected-identity.mbt.qnt",
   ),
+  quintStateField: "qState",
+  witnessProtocolField: "protocol",
+  quintFieldNames: { lastResult: "scenarioResult" },
   projectionSchema: {
     magicActionAvailable: "bool",
     bonusActionAvailable: "bool",

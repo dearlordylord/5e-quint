@@ -1,6 +1,10 @@
 // -*- mode: Bluespec; -*-
 
 module battleRuntimeDispelMagicOngoingSpellEndingMbt {
+  import battleRuntimeWitnessProtocol.* from "./battle-runtime-witness-protocol"
+
+  type WitnessHole = | DispelMagicOngoingSpellEnding
+
   // RAW trace:
   // - .references/srd-5.2.1/Spells/Descriptions-A-D.md#Dispel Magic:
   //   choose a creature, object, or magical effect within range; ongoing spells
@@ -13,21 +17,38 @@ module battleRuntimeDispelMagicOngoingSpellEndingMbt {
   //   ability checks compare the total to a Difficulty Class.
   // - UBIQUITOUS_LANGUAGE.md: Ability Check, Difficulty Class, Magic Action,
   //   Spell Slot, and Concentration.
-  var qActionAvailable: bool
-  var qSlot3Available: bool
-  var qSlot4Available: bool
-  var qLowLevelEffectActive: bool
-  var qHighLevelEffectActive: bool
-  var qAntimagicAuraActive: bool
-  var qHigherLevelCheckHoleCount: int
-  var qHigherLevelCheckDc: int
-  var qHighLevelCasterConcentrating: bool
-  var qLastResult: str
+  type WitnessState = {
+    qActionAvailable: bool,
+    qSlot3Available: bool,
+    qSlot4Available: bool,
+    qLowLevelEffectActive: bool,
+    qHighLevelEffectActive: bool,
+    qAntimagicAuraActive: bool,
+    qHigherLevelCheckHoleCount: int,
+    qHigherLevelCheckDc: int,
+    qHighLevelCasterConcentrating: bool,
+    qScenarioResult: str,
+    protocol: WitnessProtocol[WitnessHole],
+  }
+
+  var qState: WitnessState
+
+  pure def qActionAvailable: bool = qState.qActionAvailable
+  pure def qSlot3Available: bool = qState.qSlot3Available
+  pure def qSlot4Available: bool = qState.qSlot4Available
+  pure def qLowLevelEffectActive: bool = qState.qLowLevelEffectActive
+  pure def qHighLevelEffectActive: bool = qState.qHighLevelEffectActive
+  pure def qAntimagicAuraActive: bool = qState.qAntimagicAuraActive
+  pure def qHigherLevelCheckHoleCount: int = qState.qHigherLevelCheckHoleCount
+  pure def qHigherLevelCheckDc: int = qState.qHigherLevelCheckDc
+  pure def qHighLevelCasterConcentrating: bool = qState.qHighLevelCasterConcentrating
+  pure def qScenarioResult: str = qState.qScenarioResult
 
   pure val baseSlotLevel: int = 3
   pure val upcastSlotLevel: int = 4
   pure val higherLevelSourceSpellLevel: int = 4
   pure val higherLevelCheckDc: int = 10 + higherLevelSourceSpellLevel
+
 
   action recordDispelState(
     actionAvailable: bool,
@@ -39,18 +60,22 @@ module battleRuntimeDispelMagicOngoingSpellEndingMbt {
     higherLevelCheckHoleCount: int,
     higherLevelCheckDc: int,
     highLevelCasterConcentrating: bool,
-    lastResult: str,
+    scenarioResult: str,
+    protocol: WitnessProtocol[WitnessHole],
   ): bool = all {
-    qActionAvailable' = actionAvailable,
-    qSlot3Available' = slot3Available,
-    qSlot4Available' = slot4Available,
-    qLowLevelEffectActive' = lowLevelEffectActive,
-    qHighLevelEffectActive' = highLevelEffectActive,
-    qAntimagicAuraActive' = antimagicAuraActive,
-    qHigherLevelCheckHoleCount' = higherLevelCheckHoleCount,
-    qHigherLevelCheckDc' = higherLevelCheckDc,
-    qHighLevelCasterConcentrating' = highLevelCasterConcentrating,
-    qLastResult' = lastResult,
+    qState' = {
+      qActionAvailable: actionAvailable,
+      qSlot3Available: slot3Available,
+      qSlot4Available: slot4Available,
+      qLowLevelEffectActive: lowLevelEffectActive,
+      qHighLevelEffectActive: highLevelEffectActive,
+      qAntimagicAuraActive: antimagicAuraActive,
+      qHigherLevelCheckHoleCount: higherLevelCheckHoleCount,
+      qHigherLevelCheckDc: higherLevelCheckDc,
+      qHighLevelCasterConcentrating: highLevelCasterConcentrating,
+      qScenarioResult: scenarioResult,
+      protocol: protocol,
+    },
   }
 
   action init = recordDispelState(
@@ -64,6 +89,7 @@ module battleRuntimeDispelMagicOngoingSpellEndingMbt {
     0,
     true,
     "init",
+    witnessInit(DispelMagicOngoingSpellEnding),
   )
 
   action doRequestHigherLevelCheck = all {
@@ -83,7 +109,8 @@ module battleRuntimeDispelMagicOngoingSpellEndingMbt {
       higherLevelCheckDc,
       true,
       "needsHigherLevelCheck",
-    ),
+    witnessResolved(DispelMagicOngoingSpellEnding),
+  ),
   }
 
   action doFailHigherLevelCheck = all {
@@ -104,7 +131,8 @@ module battleRuntimeDispelMagicOngoingSpellEndingMbt {
       0,
       true,
       "failedHigherLevelCheck",
-    ),
+    witnessResolved(DispelMagicOngoingSpellEnding),
+  ),
   }
 
   action doSucceedHigherLevelCheck = all {
@@ -125,7 +153,8 @@ module battleRuntimeDispelMagicOngoingSpellEndingMbt {
       0,
       false,
       "succeededHigherLevelCheck",
-    ),
+    witnessResolved(DispelMagicOngoingSpellEnding),
+  ),
   }
 
   action doUpcastAutoEnd = all {
@@ -145,7 +174,8 @@ module battleRuntimeDispelMagicOngoingSpellEndingMbt {
       0,
       false,
       "upcastAutoEnded",
-    ),
+    witnessResolved(DispelMagicOngoingSpellEnding),
+  ),
   }
 
   action doTargetAntimagicAura = all {
@@ -165,7 +195,8 @@ module battleRuntimeDispelMagicOngoingSpellEndingMbt {
       0,
       true,
       "antimagicAuraUnaffected",
-    ),
+    witnessResolved(DispelMagicOngoingSpellEnding),
+  ),
   }
 
   action doStutter = all {
@@ -180,8 +211,8 @@ module battleRuntimeDispelMagicOngoingSpellEndingMbt {
       qHigherLevelCheckHoleCount,
       qHigherLevelCheckDc,
       qHighLevelCasterConcentrating,
-      qLastResult,
-    ),
+      qScenarioResult,
+    qState.protocol,),
   }
 
   action step = any {

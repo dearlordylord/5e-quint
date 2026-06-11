@@ -1,14 +1,33 @@
 // -*- mode: Bluespec; -*-
 
 module battleRuntimeAntimagicFieldOngoingSuppressionMbt {
-  var qActionAvailable: bool
-  var qSpellAvailable: bool
-  var qOngoingSpellEffectActive: bool
-  var qSuppressionActive: bool
-  var qSuppressedEffectRefCount: int
-  var qOngoingSpellSuppressed: bool
-  var qAntimagicCasterConcentrating: bool
-  var qLastResult: str
+  import battleRuntimeWitnessProtocol.* from "./battle-runtime-witness-protocol"
+
+  type WitnessHole = | AntimagicOngoingSuppression
+
+  type WitnessState = {
+    qActionAvailable: bool,
+    qSpellAvailable: bool,
+    qOngoingSpellEffectActive: bool,
+    qSuppressionActive: bool,
+    qSuppressedEffectRefCount: int,
+    qOngoingSpellSuppressed: bool,
+    qAntimagicCasterConcentrating: bool,
+    qScenarioResult: str,
+    protocol: WitnessProtocol[WitnessHole],
+  }
+
+  var qState: WitnessState
+
+  pure def qActionAvailable: bool = qState.qActionAvailable
+  pure def qSpellAvailable: bool = qState.qSpellAvailable
+  pure def qOngoingSpellEffectActive: bool = qState.qOngoingSpellEffectActive
+  pure def qSuppressionActive: bool = qState.qSuppressionActive
+  pure def qSuppressedEffectRefCount: int = qState.qSuppressedEffectRefCount
+  pure def qOngoingSpellSuppressed: bool = qState.qOngoingSpellSuppressed
+  pure def qAntimagicCasterConcentrating: bool = qState.qAntimagicCasterConcentrating
+  pure def qScenarioResult: str = qState.qScenarioResult
+
 
   action recordAntimagicFieldState(
     actionAvailable: bool,
@@ -18,16 +37,20 @@ module battleRuntimeAntimagicFieldOngoingSuppressionMbt {
     suppressedEffectRefCount: int,
     ongoingSpellSuppressed: bool,
     antimagicCasterConcentrating: bool,
-    lastResult: str,
+    scenarioResult: str,
+    protocol: WitnessProtocol[WitnessHole],
   ): bool = all {
-    qActionAvailable' = actionAvailable,
-    qSpellAvailable' = spellAvailable,
-    qOngoingSpellEffectActive' = ongoingSpellEffectActive,
-    qSuppressionActive' = suppressionActive,
-    qSuppressedEffectRefCount' = suppressedEffectRefCount,
-    qOngoingSpellSuppressed' = ongoingSpellSuppressed,
-    qAntimagicCasterConcentrating' = antimagicCasterConcentrating,
-    qLastResult' = lastResult,
+    qState' = {
+      qActionAvailable: actionAvailable,
+      qSpellAvailable: spellAvailable,
+      qOngoingSpellEffectActive: ongoingSpellEffectActive,
+      qSuppressionActive: suppressionActive,
+      qSuppressedEffectRefCount: suppressedEffectRefCount,
+      qOngoingSpellSuppressed: ongoingSpellSuppressed,
+      qAntimagicCasterConcentrating: antimagicCasterConcentrating,
+      qScenarioResult: scenarioResult,
+      protocol: protocol,
+    },
   }
 
   action init = all {
@@ -40,7 +63,8 @@ module battleRuntimeAntimagicFieldOngoingSuppressionMbt {
       false,
       false,
       "init",
-    ),
+    witnessInit(AntimagicOngoingSuppression),
+  ),
   }
 
   action doSuppressOrdinarySpell = all {
@@ -57,7 +81,8 @@ module battleRuntimeAntimagicFieldOngoingSuppressionMbt {
       true,
       true,
       "suppressedOrdinarySpell",
-    ),
+    witnessResolved(AntimagicOngoingSuppression),
+  ),
   }
 
   action doSuppressArtifactSpell = all {
@@ -74,7 +99,8 @@ module battleRuntimeAntimagicFieldOngoingSuppressionMbt {
       false,
       true,
       "suppressedArtifactSpell",
-    ),
+    witnessResolved(AntimagicOngoingSuppression),
+  ),
   }
 
   action doBreakAntimagicConcentration = all {
@@ -89,7 +115,8 @@ module battleRuntimeAntimagicFieldOngoingSuppressionMbt {
       false,
       false,
       "restored",
-    ),
+    witnessResolved(AntimagicOngoingSuppression),
+  ),
   }
 
   action step = any {

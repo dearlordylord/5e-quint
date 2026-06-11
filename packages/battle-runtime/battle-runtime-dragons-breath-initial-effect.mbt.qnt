@@ -1,6 +1,10 @@
 // -*- mode: Bluespec; -*-
 
 module battleRuntimeDragonsBreathInitialEffectMbt {
+  import battleRuntimeWitnessProtocol.* from "./battle-runtime-witness-protocol"
+
+  type WitnessHole = | DragonsBreathInitialEffect
+
   // RAW trace:
   // - .references/srd-5.2.1/Spells/Descriptions-A-D.md#Dragon's Breath:
   //   Bonus Action, Touch, Concentration up to 1 minute; one willing creature;
@@ -11,17 +15,34 @@ module battleRuntimeDragonsBreathInitialEffectMbt {
   // - UBIQUITOUS_LANGUAGE.md: Magic Action, Bonus Action, Spell Slot,
   //   Concentration, Spell Invocation, Spell Effect, Cast Level, Duration, and
   //   Area of Effect.
-  var qTurnRole: str
-  var qBonusActionAvailable: bool
-  var qSpellInvocationAvailable: bool
-  var qTargetEffectActive: bool
-  var qEffectDamageType: str
-  var qEffectOriginalSlotLevel: int
-  var qEffectSpellSaveDc: int
-  var qEffectDurationTicks: int
-  var qCasterConcentrating: bool
-  var qGrantedMagicActionAvailable: bool
-  var qLastResult: str
+  type WitnessState = {
+    qTurnRole: str,
+    qBonusActionAvailable: bool,
+    qSpellInvocationAvailable: bool,
+    qTargetEffectActive: bool,
+    qEffectDamageType: str,
+    qEffectOriginalSlotLevel: int,
+    qEffectSpellSaveDc: int,
+    qEffectDurationTicks: int,
+    qCasterConcentrating: bool,
+    qGrantedMagicActionAvailable: bool,
+    qScenarioResult: str,
+    protocol: WitnessProtocol[WitnessHole],
+  }
+
+  var qState: WitnessState
+
+  pure def qTurnRole: str = qState.qTurnRole
+  pure def qBonusActionAvailable: bool = qState.qBonusActionAvailable
+  pure def qSpellInvocationAvailable: bool = qState.qSpellInvocationAvailable
+  pure def qTargetEffectActive: bool = qState.qTargetEffectActive
+  pure def qEffectDamageType: str = qState.qEffectDamageType
+  pure def qEffectOriginalSlotLevel: int = qState.qEffectOriginalSlotLevel
+  pure def qEffectSpellSaveDc: int = qState.qEffectSpellSaveDc
+  pure def qEffectDurationTicks: int = qState.qEffectDurationTicks
+  pure def qCasterConcentrating: bool = qState.qCasterConcentrating
+  pure def qGrantedMagicActionAvailable: bool = qState.qGrantedMagicActionAvailable
+  pure def qScenarioResult: str = qState.qScenarioResult
 
   pure val casterTurnRole: str = "caster"
   pure val targetTurnRole: str = "target"
@@ -29,6 +50,7 @@ module battleRuntimeDragonsBreathInitialEffectMbt {
   pure val dragonsBreathDurationTicks: int = 10
   pure val casterSpellSaveDc: int = 13
   pure val legalDamageTypes: Set[str] = Set("acid", "cold", "fire", "lightning", "poison")
+
 
   action recordDragonsBreathState(
     turnRole: str,
@@ -41,19 +63,23 @@ module battleRuntimeDragonsBreathInitialEffectMbt {
     effectDurationTicks: int,
     casterConcentrating: bool,
     grantedMagicActionAvailable: bool,
-    lastResult: str,
+    scenarioResult: str,
+    protocol: WitnessProtocol[WitnessHole],
   ): bool = all {
-    qTurnRole' = turnRole,
-    qBonusActionAvailable' = bonusActionAvailable,
-    qSpellInvocationAvailable' = spellInvocationAvailable,
-    qTargetEffectActive' = targetEffectActive,
-    qEffectDamageType' = effectDamageType,
-    qEffectOriginalSlotLevel' = effectOriginalSlotLevel,
-    qEffectSpellSaveDc' = effectSpellSaveDc,
-    qEffectDurationTicks' = effectDurationTicks,
-    qCasterConcentrating' = casterConcentrating,
-    qGrantedMagicActionAvailable' = grantedMagicActionAvailable,
-    qLastResult' = lastResult,
+    qState' = {
+      qTurnRole: turnRole,
+      qBonusActionAvailable: bonusActionAvailable,
+      qSpellInvocationAvailable: spellInvocationAvailable,
+      qTargetEffectActive: targetEffectActive,
+      qEffectDamageType: effectDamageType,
+      qEffectOriginalSlotLevel: effectOriginalSlotLevel,
+      qEffectSpellSaveDc: effectSpellSaveDc,
+      qEffectDurationTicks: effectDurationTicks,
+      qCasterConcentrating: casterConcentrating,
+      qGrantedMagicActionAvailable: grantedMagicActionAvailable,
+      qScenarioResult: scenarioResult,
+      protocol: protocol,
+    },
   }
 
   action init = all {
@@ -69,7 +95,8 @@ module battleRuntimeDragonsBreathInitialEffectMbt {
       false,
       false,
       "init",
-    ),
+    witnessInit(DragonsBreathInitialEffect),
+  ),
   }
 
   action doCastDragonsBreath = {
@@ -93,7 +120,8 @@ module battleRuntimeDragonsBreathInitialEffectMbt {
         true,
         false,
         "cast",
-      ),
+    witnessResolved(DragonsBreathInitialEffect),
+  ),
     }
   }
 
@@ -113,7 +141,8 @@ module battleRuntimeDragonsBreathInitialEffectMbt {
       true,
       true,
       "targetTurn",
-    ),
+    witnessResolved(DragonsBreathInitialEffect),
+  ),
   }
 
   action doBreakConcentration = all {
@@ -131,7 +160,8 @@ module battleRuntimeDragonsBreathInitialEffectMbt {
       false,
       false,
       "concentrationBroken",
-    ),
+    witnessResolved(DragonsBreathInitialEffect),
+  ),
   }
 
   action step = any {

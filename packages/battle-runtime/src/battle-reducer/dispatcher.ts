@@ -19,7 +19,7 @@
 // RAW-COVERAGE: runtime-owner RAW-QCORE7-MOVEMENT-GRAPPLE-001 RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-QCORE9-UNIT-FEATURE-PROFILES-001 RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-after-hit-damage-illumination spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.invocation-feather-fall-mitigation spell.invocation-mirror-image-hit-interception spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-counterspell spell.reaction-hellish-rebuke spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.DRAGONS_BREATH_GRANTED_ACTION
-// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE BATTLE.SPELL.FEATHER_FALL_MITIGATION_LIFECYCLE BATTLE.SPELL.REACTION_CASTING_TIME
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE BATTLE.SPELL.FEATHER_FALL_MITIGATION_LIFECYCLE BATTLE.SPELL.REACTION_CASTING_TIME BATTLE.PROTOCOL.INTERRUPT_STACK_RESUME_REPLAY
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS
 
 import {
@@ -4097,7 +4097,121 @@ export function resolveReplayContinuation(input: {
     stateWithoutFrame,
     input.frame.continuation,
     input.frame.handledInterruptTrigger,
-    input.fills,
+    replayContinuationFills(input.frame.continuation.fills, input.fills),
+  );
+}
+
+function replayContinuationFills(
+  recordedFills: readonly BattleFill[],
+  submittedFills: readonly BattleFill[],
+): readonly BattleFill[] {
+  return [
+    ...recordedFills,
+    ...replayContinuationSuffixFills(recordedFills, submittedFills),
+  ];
+}
+
+function replayContinuationSuffixFills(
+  recordedFills: readonly BattleFill[],
+  submittedFills: readonly BattleFill[],
+): readonly BattleFill[] {
+  let recordedSearchStart = 0;
+  return submittedFills.filter((submittedFill) => {
+    const recordedIndex = recordedFills.findIndex(
+      (recordedFill, index) =>
+        index >= recordedSearchStart &&
+        replayContinuationRecordedFillMatches(recordedFill, submittedFill),
+    );
+    if (recordedIndex === -1) {
+      return true;
+    }
+    recordedSearchStart = recordedIndex + 1;
+    return false;
+  });
+}
+
+const replayContinuationSemanticFillKinds = [
+  "targetChoice",
+  "attackRoll",
+  "rolledDice",
+] as const satisfies ReadonlyArray<BattleFill["kind"]>;
+
+type ReplayContinuationSemanticFill = Extract<
+  BattleFill,
+  { readonly kind: (typeof replayContinuationSemanticFillKinds)[number] }
+>;
+
+function replayContinuationRecordedFillMatches(
+  recordedFill: BattleFill,
+  submittedFill: BattleFill,
+): boolean {
+  if (recordedFill === submittedFill) {
+    return true;
+  }
+  return replayContinuationSemanticFillEquals(recordedFill, submittedFill);
+}
+
+function replayContinuationSemanticFillEquals(
+  recordedFill: BattleFill,
+  submittedFill: BattleFill,
+): boolean {
+  if (
+    !isReplayContinuationSemanticFill(recordedFill) ||
+    !isReplayContinuationSemanticFill(submittedFill)
+  ) {
+    return false;
+  }
+  if (recordedFill.kind !== submittedFill.kind) {
+    return false;
+  }
+  return replayContinuationSameKindSemanticFillEquals(
+    recordedFill,
+    submittedFill,
+  );
+}
+
+function isReplayContinuationSemanticFill(
+  fill: BattleFill,
+): fill is ReplayContinuationSemanticFill {
+  return replayContinuationSemanticFillKinds.some(
+    (kind) => kind === fill.kind,
+  );
+}
+
+function replayContinuationSameKindSemanticFillEquals(
+  recordedFill: ReplayContinuationSemanticFill,
+  submittedFill: ReplayContinuationSemanticFill,
+): boolean {
+  if (recordedFill.kind === "targetChoice") {
+    return (
+      submittedFill.kind === "targetChoice" &&
+      recordedFill.holeId === submittedFill.holeId &&
+      recordedFill.value === submittedFill.value
+    );
+  }
+  if (recordedFill.kind === "attackRoll") {
+    return (
+      submittedFill.kind === "attackRoll" &&
+      battleFillEquals(recordedFill, submittedFill)
+    );
+  }
+  if (recordedFill.kind === "rolledDice") {
+    return (
+      submittedFill.kind === "rolledDice" &&
+      battleFillEquals(recordedFill, submittedFill)
+    );
+  }
+  const exhaustive: never = recordedFill;
+  return exhaustive;
+}
+
+function battleFillPrefixAccumulated(
+  prefix: readonly BattleFill[],
+  fills: readonly BattleFill[],
+): boolean {
+  return (
+    fills.length >= prefix.length &&
+    prefix.every((fill, index) => battleFillEquals(fill, fills[index]!))
   );
 }
 
@@ -4363,9 +4477,7 @@ export function attackDamageContinuationConcentrationFill(
     ...continuation.fills,
     ...attackDamageContinuationConcentrationFills(continuation),
   ];
-  const accumulated =
-    fills.length >= prefix.length &&
-    prefix.every((fill, index) => battleFillEquals(fill, fills[index]!));
+  const accumulated = battleFillPrefixAccumulated(prefix, fills);
   const remaining = accumulated ? fills.slice(prefix.length) : fills;
   if (remaining.length === 0) {
     return { tag: "ok", value: undefined };

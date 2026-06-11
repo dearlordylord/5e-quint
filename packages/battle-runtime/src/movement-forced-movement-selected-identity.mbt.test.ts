@@ -7,8 +7,6 @@
 // UNIT-IDENTITY-MBT-REPLAY: movement-forced-movement barbarian_fast_movement doBarbarianFastMovementDash
 // UNIT-IDENTITY-MBT-REPLAY: B5-CLASS-FEATURE-IDENTITY-BATCH-2 monk_unarmored_movement doMonkUnarmoredMovementDash
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.EXPEDITIOUS_RETREAT_DASH_LIFECYCLE BATTLE.SPELL.FORCED_REACTION_MOVEMENT_LIFECYCLE
-import * as path from "node:path";
-
 import { Either } from "effect";
 
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
@@ -51,6 +49,7 @@ import {
   type CombatantId,
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
+import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
 import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
 
 const movementForcedMovementSpellIds = [
@@ -136,10 +135,14 @@ const unitLibrary = unitCatalogResult.catalog;
 defineSelectedIdentityWitness({
   describeLabel: "Movement and forced movement selected identity MBT",
   taskId: "movement-forced-movement",
-  specFile: path.resolve(
+  specFile: mbtSpecPath(
     import.meta.dirname,
-    "../battle-runtime-movement-forced-movement-selected-identity.mbt.qnt",
+    "battle-runtime-movement-forced-movement-selected-identity.mbt.qnt",
   ),
+  quintStateField: "qState",
+  quintStateFieldPrefix: "q",
+  witnessProtocolField: "protocol",
+  quintFieldNames: { lastResult: "qScenarioResult" },
   projectionSchema: {
     casterSpeedFeet: "int",
     casterRemainingFeet: "int",
@@ -287,8 +290,7 @@ function resolvedProjection(
   }
   return projectMovementForcedMovementSelectedIdentityState(result.state, {
     lastResult: flags.lastResult,
-    dissonantMovementFillRequired:
-      flags.dissonantMovementFillRequired ?? false,
+    dissonantMovementFillRequired: flags.dissonantMovementFillRequired ?? false,
     commandMovementFillRequired: flags.commandMovementFillRequired ?? false,
     commandPendingEffectObserved: flags.commandPendingEffectObserved ?? false,
   });
@@ -321,7 +323,8 @@ function commandFleeTargetTurn(): MovementForcedMovementSelectedIdentityProjecti
     resolveCommandFleeTargetTurn(
       state,
       (castState) => {
-        commandPendingEffectObserved = commandPendingEffectCount(castState) === 1;
+        commandPendingEffectObserved =
+          commandPendingEffectCount(castState) === 1;
       },
       () => {
         commandMovementFillRequired = true;
@@ -352,9 +355,12 @@ function rangerRovingClimbSwimMovement(): MovementForcedMovementSelectedIdentity
 }
 
 function barbarianFastMovementDash(): MovementForcedMovementSelectedIdentityProjection {
-  return resolvedProjection(resolveBarbarianFastMovementDash(fastMovementBattle()), {
-    lastResult: "barbarianFastMovement",
-  });
+  return resolvedProjection(
+    resolveBarbarianFastMovementDash(fastMovementBattle()),
+    {
+      lastResult: "barbarianFastMovement",
+    },
+  );
 }
 
 function monkUnarmoredMovementDash(): MovementForcedMovementSelectedIdentityProjection {
@@ -1063,7 +1069,9 @@ function projectMovementForcedMovementSelectedIdentityState(
     casterBonusActionAvailable: snapshot.turn.bonusActionAvailable,
     casterConcentrating: casterState.concentration !== null,
     spellSlotSpentThisTurn:
-      state.currentTurnResources.spellSlotUsesThisTurn.some((use) => use.kind === "committed"),
+      state.currentTurnResources.spellSlotUsesThisTurn.some(
+        (use) => use.kind === "committed",
+      ),
     level1SlotsRemaining: level1SlotsRemaining(state, casterId),
     spellDashBonusActionEffectCount: spellDashBonusActionEffectCount(state),
     targetHp: target.hp,

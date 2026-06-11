@@ -1,8 +1,6 @@
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1H-ELDRITCH-BLAST eldritch_blast
 // UNIT-IDENTITY-MBT-REPLAY: L1H-ELDRITCH-BLAST eldritch_blast doDiscoverLevelFiveBeamTargetHoles doResolveTwoCreatureBeamsSameTarget doResolveTwoCreatureBeamsSplitTargets doResolveCreatureAndObjectBeamTargets
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE
-import * as path from "node:path";
-
 import { Either } from "effect";
 
 import {
@@ -45,6 +43,7 @@ import {
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
 import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
+import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
 
 const eldritchBlastUnitId = "eldritch_blast";
 const initialSkeletonHp = 13;
@@ -116,10 +115,14 @@ const unitLibrary = unitCatalogResult.catalog;
 defineSelectedIdentityWitness({
   describeLabel: "Beam sequence selected identity MBT",
   taskId: "L1H-ELDRITCH-BLAST",
-  specFile: path.resolve(
+  specFile: mbtSpecPath(
     import.meta.dirname,
-    "../battle-runtime-beam-sequence-selected-identity.mbt.qnt",
+    "battle-runtime-beam-sequence-selected-identity.mbt.qnt",
   ),
+  quintStateField: "qState",
+  quintStateFieldPrefix: "q",
+  witnessProtocolField: "protocol",
+  quintFieldNames: { lastResult: "qScenarioResult" },
   projectionSchema: {
     initialCreatureTargetHoles: "int",
     initialObjectTargetHoles: "int",
@@ -463,9 +466,7 @@ function eldritchBlastAct(state: BattleState): ActionSpellAct {
 function beamTargetHoles(holes: readonly BattleHole[]): BeamTargetHoles {
   return {
     creature: holes.filter(
-      (
-        hole,
-      ): hole is Extract<BattleHole, { readonly kind: "targetChoice" }> =>
+      (hole): hole is Extract<BattleHole, { readonly kind: "targetChoice" }> =>
         hole.kind === "targetChoice",
     ),
     object: holes.filter(

@@ -15,8 +15,6 @@
 //   Damage Roll, and Boundary Crossing.
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.reaction-counterspell spell.reaction-hellish-rebuke
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.REACTION_CASTING_TIME
-import * as path from "node:path";
-
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
 import {
   abilityModifier,
@@ -31,10 +29,24 @@ import {
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
 import type { SpellRecord } from "@dnd/surface/surface/types";
-import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
 import * as Either from "effect/Either";
 import { describe, expect, it } from "vitest";
 
+import {
+  MBT_TEST_TIMEOUT_MS,
+  assertWitnessProtocolConsistentWithScenario,
+  booleanField,
+  decodeWitnessProtocolState,
+  defineDriver,
+  focusedMbtMaxSteps,
+  mbtSpecPath,
+  mbtTraceCount,
+  numberFromQuintInt,
+  quintRecordField,
+  quintStateRecord,
+  run,
+  stateCheck,
+} from "./battle-runtime-mbt-driver-kit.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
 import {
   battleCombatantSide,
@@ -209,21 +221,25 @@ describe("Reaction casting time MBT", () => {
     );
   });
 
-  it("matches focused Reaction casting time traces against Quint", async () => {
-    await run({
-      spec: path.resolve(
-        import.meta.dirname,
-        "../battle-runtime-reaction-casting-time.mbt.qnt",
-      ),
-      init: "init",
-      step: "step",
-      driver: createReactionCastingTimeDriver(),
-      backend: "typescript",
-      nTraces: Number(process.env["MBT_TRACES"] ?? 4),
-      maxSteps: Number(process.env["MBT_STEPS"] ?? 1),
-      stateCheck: reactionCastingTimeStateCheck,
-    });
-  }, 120_000);
+  it(
+    "matches focused Reaction casting time traces against Quint",
+    async () => {
+      await run({
+        spec: mbtSpecPath(
+          import.meta.dirname,
+          "battle-runtime-reaction-casting-time.mbt.qnt",
+        ),
+        init: "init",
+        step: "step",
+        driver: createReactionCastingTimeDriver(),
+        backend: "typescript",
+        nTraces: mbtTraceCount(),
+        maxSteps: focusedMbtMaxSteps(1),
+        stateCheck: reactionCastingTimeStateCheck,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
 });
 
 function createReactionCastingTimeDriver() {
@@ -576,7 +592,9 @@ function resolveUnarmedStrikeAgainstReactor(
   state: BattleState,
 ): ReturnType<typeof resolveBattleSubject> {
   const attackAct = discoverBattleActs(state).find(
-    (act): act is AvailableBattleAct & {
+    (
+      act,
+    ): act is AvailableBattleAct & {
       readonly subject: Extract<
         BattleSubject,
         { readonly tag: "action"; readonly action: "attack" }
@@ -652,7 +670,10 @@ function magicMissileSubject(slotLevel: number): BattleSubject {
 }
 
 function magicMissileTargetAllocationFill(input: {
-  readonly hole: Extract<BattleHole, { readonly kind: "spellTargetAllocation" }>;
+  readonly hole: Extract<
+    BattleHole,
+    { readonly kind: "spellTargetAllocation" }
+  >;
   readonly dartCount: number;
 }): Extract<BattleFill, { readonly kind: "spellTargetAllocation" }> {
   return {
@@ -928,7 +949,10 @@ function expendedSlotsForSpellLevel(
 
 const reactionCastingTimeStateCheck = stateCheck(
   normalizeReactionCastingTimeQuintState,
-  (spec: ReactionCastingTimeProjection, impl: ReactionCastingTimeProjection) => {
+  (
+    spec: ReactionCastingTimeProjection,
+    impl: ReactionCastingTimeProjection,
+  ) => {
     expect(impl).toEqual(spec);
     return true;
   },
@@ -937,7 +961,26 @@ const reactionCastingTimeStateCheck = stateCheck(
 function normalizeReactionCastingTimeQuintState(
   raw: unknown,
 ): ReactionCastingTimeProjection {
-  const state = quintStateRecord(raw);
+  const state = quintRecordField(quintStateRecord(raw), "qState");
+  const protocol = decodeWitnessProtocolState({
+    state,
+    protocolField: "protocol",
+    noInvalidReason: "",
+    decodeHole: reactionCastingTimeUnexpectedHole,
+  });
+  if (protocol.holes.length !== 0) {
+    throw new Error(
+      "Expected Reaction casting time witness holes to be empty.",
+    );
+  }
+  const lastResultValue = reactionCastingTimeLastResult(
+    state["qScenarioResult"],
+  );
+  assertWitnessProtocolConsistentWithScenario({
+    label: "Reaction casting time",
+    scenarioResult: lastResultValue,
+    protocol,
+  });
   return {
     triggerKind: reactionCastingTimeTriggerKind(state["qTriggerKind"]),
     continuationKind: reactionCastingTimeContinuationKind(
@@ -966,30 +1009,14 @@ function normalizeReactionCastingTimeQuintState(
       "qReactorThirdLevelSlotsExpended",
     ),
     reactionWindowCleared: booleanField(state, "qReactionWindowCleared"),
-    lastResult: reactionCastingTimeLastResult(state["qLastResult"]),
+    lastResult: lastResultValue,
   };
 }
 
-function quintStateRecord(raw: unknown): Readonly<Record<string, unknown>> {
-  if (raw === null || typeof raw !== "object" || Array.isArray(raw)) {
-    throw new Error("Expected Quint state record.");
-  }
-  return Object.fromEntries(Object.entries(raw));
-}
-
-function numberFromQuintInt(raw: unknown, field: string): number {
-  if (typeof raw === "number") return raw;
-  if (typeof raw === "bigint") return Number(raw);
-  throw new Error(`Expected Quint integer field ${field}.`);
-}
-
-function booleanField(
-  state: Readonly<Record<string, unknown>>,
-  field: string,
-): boolean {
-  const value = state[field];
-  if (typeof value === "boolean") return value;
-  throw new Error(`Expected Quint boolean field ${field}.`);
+function reactionCastingTimeUnexpectedHole(raw: unknown): never {
+  throw new Error(
+    `Reaction casting time witness does not expect holes; received ${String(raw)}.`,
+  );
 }
 
 function reactionCastingTimeTriggerKind(

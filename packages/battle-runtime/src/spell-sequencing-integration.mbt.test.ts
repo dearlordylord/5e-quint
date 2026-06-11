@@ -13,13 +13,24 @@
 // Scope: this is a bounded fixture-world integration MBT for sequencing already
 // promoted spell procedures. It intentionally does not add new generated
 // coverage markers, catalog rows, geometry, or new spell semantics.
-import * as path from "node:path";
-
 import { canSpendAction } from "@dnd/shared-algebras/action-economy-algebra";
 import { Hp, type DamageType } from "@dnd/shared/types";
 import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
 import type { SpellRecord } from "@dnd/surface/surface/types";
-import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
+import {
+  assertWitnessProtocolConsistentWithScenario,
+  booleanField,
+  decodeWitnessProtocolState,
+  defineDriver,
+  focusedMbtMaxSteps,
+  mbtSpecPath,
+  mbtTraceCount,
+  numberFromQuintInt,
+  quintRecordField,
+  quintStateRecord,
+  run,
+  stateCheck,
+} from "./battle-runtime-mbt-driver-kit.ts";
 import { describe, expect, it } from "vitest";
 import dragonsBreathInput from "../../surface/content/dragons_breath.json";
 
@@ -221,16 +232,16 @@ describe("Spell sequencing integration MBT", () => {
 
   it("matches the bounded fixture sequence against Quint-owned traces", async () => {
     await run({
-      spec: path.resolve(
+      spec: mbtSpecPath(
         import.meta.dirname,
-        "../battle-runtime-spell-sequencing-integration.mbt.qnt",
+        "battle-runtime-spell-sequencing-integration.mbt.qnt",
       ),
       init: "init",
       step: "step",
       driver: createSpellSequencingIntegrationDriver(),
       backend: "typescript",
-      nTraces: 4,
-      maxSteps: 8,
+      nTraces: mbtTraceCount(),
+      maxSteps: focusedMbtMaxSteps(8),
       stateCheck: spellSequencingStateCheck,
     });
   }, 120_000);
@@ -650,18 +661,30 @@ function damageRollTotal(rollGroups: readonly (readonly number[])[]): number {
 function normalizeSpellSequencingQuintState(
   raw: unknown,
 ): SpellSequencingProjection {
-  const state = quintStateRecord(raw);
+  const state = quintRecordField(quintStateRecord(raw), "qState");
+  const scenarioResult = lastResult(state["scenarioResult"]);
+  const protocol = decodeWitnessProtocolState({
+    state,
+    protocolField: "protocol",
+    noInvalidReason: "",
+    decodeHole: spellSequencingUnexpectedHole,
+  });
+  assertWitnessProtocolConsistentWithScenario({
+    label: "spell sequencing",
+    scenarioResult,
+    protocol,
+  });
   return {
-    turnRole: turnRole(state["qTurnRole"]),
-    magicActionAvailable: booleanField(state, "qMagicActionAvailable"),
-    bonusActionAvailable: booleanField(state, "qBonusActionAvailable"),
-    dragonsBreathActive: booleanField(state, "qDragonsBreathActive"),
-    heatMetalActive: booleanField(state, "qHeatMetalActive"),
-    concentrationSpell: concentrationSpellName(state["qConcentrationSpell"]),
-    heatMetalRepeatAvailable: booleanField(state, "qHeatMetalRepeatAvailable"),
-    casterHp: numberFromQuintInt(state["qCasterHp"], "qCasterHp"),
-    targetHp: numberFromQuintInt(state["qTargetHp"], "qTargetHp"),
-    lastResult: lastResult(state["qLastResult"]),
+    turnRole: turnRole(state["turnRole"]),
+    magicActionAvailable: booleanField(state, "magicActionAvailable"),
+    bonusActionAvailable: booleanField(state, "bonusActionAvailable"),
+    dragonsBreathActive: booleanField(state, "dragonsBreathActive"),
+    heatMetalActive: booleanField(state, "heatMetalActive"),
+    concentrationSpell: concentrationSpellName(state["concentrationSpell"]),
+    heatMetalRepeatAvailable: booleanField(state, "heatMetalRepeatAvailable"),
+    casterHp: numberFromQuintInt(state["casterHp"], "qState.casterHp"),
+    targetHp: numberFromQuintInt(state["targetHp"], "qState.targetHp"),
+    lastResult: scenarioResult,
   };
 }
 
@@ -713,29 +736,8 @@ function lastResult(raw: unknown): SpellSequencingLastResult {
   throw new Error(`Unknown spell sequencing result: ${String(raw)}.`);
 }
 
-function quintStateRecord(raw: unknown): Readonly<Record<string, unknown>> {
-  if (!isRecord(raw)) {
-    throw new Error("Expected Quint spell sequencing state.");
-  }
-  return raw;
-}
-
-function numberFromQuintInt(raw: unknown, field: string): number {
-  if (typeof raw === "number") return raw;
-  if (typeof raw === "bigint") return Number(raw);
-  throw new Error(`Expected Quint integer field ${field}.`);
-}
-
-function booleanField(
-  state: Readonly<Record<string, unknown>>,
-  field: string,
-): boolean {
-  if (typeof state[field] === "boolean") {
-    return state[field];
-  }
-  throw new Error(`Expected Quint Boolean field ${field}.`);
-}
-
-function isRecord(raw: unknown): raw is Readonly<Record<string, unknown>> {
-  return typeof raw === "object" && raw !== null;
+function spellSequencingUnexpectedHole(raw: unknown): never {
+  throw new Error(
+    `Spell sequencing witness does not expect holes; received ${String(raw)}.`,
+  );
 }

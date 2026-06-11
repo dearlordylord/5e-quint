@@ -2,8 +2,6 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.enemy-zero-hit-point-temporary-hit-points
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L3PUTB-02 warlock_dark_ones_blessing
 // UNIT-IDENTITY-MBT-REPLAY: L3PUTB-02 warlock_dark_ones_blessing doSelfKill doNearbyOtherKill doSameSideOtherKill doRejectOutOfRangeOtherKill doRejectNonEnemyKill doMinimumTemporaryHitPoints doTemporaryHitPointReplacement
-import * as path from "node:path";
-
 import { Hp, movementFeet } from "@dnd/shared/types";
 
 import {
@@ -21,6 +19,7 @@ import {
 } from "./battle-runtime-test-support.ts";
 import type { BattleTargetSpatialFact } from "./battle-reducer.ts";
 import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
+import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
 import { battleEnemyZeroHitPointTemporaryHitPointsSupportForUnit } from "./unit-feature-support.ts";
 
 type DarkOnesBlessingSupportProfile = Exclude<
@@ -54,10 +53,14 @@ const supportProfile = requireDarkOnesBlessingSupportProfile();
 defineSelectedIdentityWitness({
   describeLabel: "Dark One's Blessing selected identity MBT",
   taskId: "L3PUTB-02",
-  specFile: path.resolve(
+  specFile: mbtSpecPath(
     import.meta.dirname,
-    "../battle-runtime-dark-ones-blessing.mbt.qnt",
+    "battle-runtime-dark-ones-blessing.mbt.qnt",
   ),
+  quintStateField: "qState",
+  quintStateFieldPrefix: "q",
+  witnessProtocolField: "protocol",
+  quintFieldNames: { lastResult: "qScenarioResult" },
   projectionSchema: {
     warlockTempHp: "int",
     targetHp: "int",
@@ -121,7 +124,9 @@ defineSelectedIdentityWitness({
                 targetId: enemyId,
                 warlockCha: 16,
                 warlockLevel: 3,
-                spatialFacts: [darkOnesBlessingRangeFact(otherEnemyId, enemyId)],
+                spatialFacts: [
+                  darkOnesBlessingRangeFact(otherEnemyId, enemyId),
+                ],
               }),
               enemyId,
               "sameSideOtherKill",

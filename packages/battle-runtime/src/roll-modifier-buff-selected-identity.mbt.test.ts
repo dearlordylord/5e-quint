@@ -5,8 +5,6 @@
 // UNIT-IDENTITY-MBT-REPLAY: roll-modifier-buff resistance doResistanceReducesMatchingDamage
 // UNIT-IDENTITY-MBT-REPLAY: roll-modifier-buff shield_of_faith doShieldOfFaithArmorClassBonus
 // KERNEL-COVERAGE: parity-witness BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION
-import * as path from "node:path";
-
 import { Either } from "effect";
 
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
@@ -47,6 +45,7 @@ import {
   type CombatantId,
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
+import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
 import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
 
 const rollModifierBuffSpellIds = [
@@ -120,10 +119,14 @@ const unitLibrary = unitCatalogResult.catalog;
 defineSelectedIdentityWitness({
   describeLabel: "Roll modifier buff selected identity MBT",
   taskId: "roll-modifier-buff",
-  specFile: path.resolve(
+  specFile: mbtSpecPath(
     import.meta.dirname,
-    "../battle-runtime-roll-modifier-buff-selected-identity.mbt.qnt",
+    "battle-runtime-roll-modifier-buff-selected-identity.mbt.qnt",
   ),
+  quintStateField: "qState",
+  quintStateFieldPrefix: "q",
+  witnessProtocolField: "protocol",
+  quintFieldNames: { lastResult: "qScenarioResult" },
   projectionSchema: {
     casterConcentrating: "bool",
     casterHp: "int",
@@ -332,10 +335,7 @@ function resistanceReducesMatchingDamage(): RollModifierBuffSelectedIdentityProj
   });
   const act = actionSpellAct(state, "resistance");
   const target = requireHoleFromList(act.initialHoles, "targetChoice");
-  const damageType = requireHoleFromList(
-    act.initialHoles,
-    "damageTypeChoice",
-  );
+  const damageType = requireHoleFromList(act.initialHoles, "damageTypeChoice");
   const cast = requireResolved(
     resolveBattleSubject({
       state,
@@ -355,11 +355,7 @@ function resistanceReducesMatchingDamage(): RollModifierBuffSelectedIdentityProj
     resolveBattleSubject({ state: postTurnState, subject, fills: [] }),
     "targetChoice",
   );
-  const targetFill = attackTargetFill(
-    attackTarget,
-    primaryTargetId,
-    casterId,
-  );
+  const targetFill = attackTargetFill(attackTarget, primaryTargetId, casterId);
   const attack = requireResultHole(
     resolveBattleSubject({
       state: postTurnState,
@@ -382,7 +378,11 @@ function resistanceReducesMatchingDamage(): RollModifierBuffSelectedIdentityProj
     resolveBattleSubject({
       state: postTurnState,
       subject,
-      fills: [targetFill, attackFill, damageRollFillWithGroups(reduction, [[1]])],
+      fills: [
+        targetFill,
+        attackFill,
+        damageRollFillWithGroups(reduction, [[1]]),
+      ],
     }),
     false,
     "resistance",
@@ -409,7 +409,10 @@ function shieldOfFaithArmorClassBonus(): RollModifierBuffSelectedIdentityProject
 function resolvedProjection(
   result: BattleResolutionResult,
   invalidTargetRejected: boolean,
-  lastResult: Exclude<RollModifierBuffSelectedIdentityProjection["lastResult"], "init">,
+  lastResult: Exclude<
+    RollModifierBuffSelectedIdentityProjection["lastResult"],
+    "init"
+  >,
 ): RollModifierBuffSelectedIdentityProjection {
   if (result.tag !== "resolved") {
     throw new Error(

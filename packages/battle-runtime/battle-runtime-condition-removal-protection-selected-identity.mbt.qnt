@@ -1,16 +1,37 @@
 // -*- mode: Bluespec; -*-
 
 module battleRuntimeConditionRemovalProtectionSelectedIdentityMbt {
-  var qTargetParalyzed: bool
-  var qTargetPoisoned: bool
-  var qTargetEffectCount: int
-  var qCasterConcentrating: bool
-  var qTargetHasPoisonResistance: bool
-  var qTargetHasPoisonSaveAdvantage: bool
-  var qSecondLevelSlotsExpended: int
-  var qActionAvailable: bool
-  var qBonusActionAvailable: bool
-  var qLastResult: str
+  import battleRuntimeWitnessProtocol.* from "./battle-runtime-witness-protocol"
+
+  type WitnessHole = | ConditionRemovalProtection
+
+  type WitnessState = {
+    qTargetParalyzed: bool,
+    qTargetPoisoned: bool,
+    qTargetEffectCount: int,
+    qCasterConcentrating: bool,
+    qTargetHasPoisonResistance: bool,
+    qTargetHasPoisonSaveAdvantage: bool,
+    qSecondLevelSlotsExpended: int,
+    qActionAvailable: bool,
+    qBonusActionAvailable: bool,
+    qScenarioResult: str,
+    protocol: WitnessProtocol[WitnessHole],
+  }
+
+  var qState: WitnessState
+
+  pure def qTargetParalyzed: bool = qState.qTargetParalyzed
+  pure def qTargetPoisoned: bool = qState.qTargetPoisoned
+  pure def qTargetEffectCount: int = qState.qTargetEffectCount
+  pure def qCasterConcentrating: bool = qState.qCasterConcentrating
+  pure def qTargetHasPoisonResistance: bool = qState.qTargetHasPoisonResistance
+  pure def qTargetHasPoisonSaveAdvantage: bool = qState.qTargetHasPoisonSaveAdvantage
+  pure def qSecondLevelSlotsExpended: int = qState.qSecondLevelSlotsExpended
+  pure def qActionAvailable: bool = qState.qActionAvailable
+  pure def qBonusActionAvailable: bool = qState.qBonusActionAvailable
+  pure def qScenarioResult: str = qState.qScenarioResult
+
 
   action recordProjection(
     targetParalyzed: bool,
@@ -22,18 +43,22 @@ module battleRuntimeConditionRemovalProtectionSelectedIdentityMbt {
     secondLevelSlotsExpended: int,
     actionAvailable: bool,
     bonusActionAvailable: bool,
-    lastResult: str,
+    scenarioResult: str,
+    protocol: WitnessProtocol[WitnessHole],
   ): bool = all {
-    qTargetParalyzed' = targetParalyzed,
-    qTargetPoisoned' = targetPoisoned,
-    qTargetEffectCount' = targetEffectCount,
-    qCasterConcentrating' = casterConcentrating,
-    qTargetHasPoisonResistance' = targetHasPoisonResistance,
-    qTargetHasPoisonSaveAdvantage' = targetHasPoisonSaveAdvantage,
-    qSecondLevelSlotsExpended' = secondLevelSlotsExpended,
-    qActionAvailable' = actionAvailable,
-    qBonusActionAvailable' = bonusActionAvailable,
-    qLastResult' = lastResult,
+    qState' = {
+      qTargetParalyzed: targetParalyzed,
+      qTargetPoisoned: targetPoisoned,
+      qTargetEffectCount: targetEffectCount,
+      qCasterConcentrating: casterConcentrating,
+      qTargetHasPoisonResistance: targetHasPoisonResistance,
+      qTargetHasPoisonSaveAdvantage: targetHasPoisonSaveAdvantage,
+      qSecondLevelSlotsExpended: secondLevelSlotsExpended,
+      qActionAvailable: actionAvailable,
+      qBonusActionAvailable: bonusActionAvailable,
+      qScenarioResult: scenarioResult,
+      protocol: protocol,
+    },
   }
 
   action init = recordProjection(
@@ -47,10 +72,11 @@ module battleRuntimeConditionRemovalProtectionSelectedIdentityMbt {
     true,
     true,
     "init",
+    witnessInit(ConditionRemovalProtection),
   )
 
   action doResolveLesserRestorationChoice = all {
-    qLastResult == "init",
+    qScenarioResult == "init",
     recordProjection(
       false,
       true,
@@ -62,11 +88,12 @@ module battleRuntimeConditionRemovalProtectionSelectedIdentityMbt {
       true,
       false,
       "lesserRestorationChoice",
-    ),
+    witnessResolved(ConditionRemovalProtection),
+  ),
   }
 
   action doResolveLesserRestorationConcentrationCleanup = all {
-    qLastResult == "init",
+    qScenarioResult == "init",
     recordProjection(
       false,
       false,
@@ -78,11 +105,12 @@ module battleRuntimeConditionRemovalProtectionSelectedIdentityMbt {
       true,
       false,
       "lesserRestorationConcentration",
-    ),
+    witnessResolved(ConditionRemovalProtection),
+  ),
   }
 
   action doResolveProtectionFromPoison = all {
-    qLastResult == "init",
+    qScenarioResult == "init",
     recordProjection(
       false,
       false,
@@ -94,7 +122,8 @@ module battleRuntimeConditionRemovalProtectionSelectedIdentityMbt {
       false,
       true,
       "protectionFromPoison",
-    ),
+    witnessResolved(ConditionRemovalProtection),
+  ),
   }
 
   action step = any {

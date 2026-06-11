@@ -23,14 +23,26 @@
 //   Advantage and Disadvantage cancel to a normal d20 roll.
 // - UBIQUITOUS_LANGUAGE.md: D20 Rolls, Advantage and Disadvantage, Spell
 //   Invocation, and Spell Effect.
-import * as path from "node:path";
-
 import { canSpendAction } from "@dnd/shared-algebras/action-economy-algebra";
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { difficultyClass } from "@dnd/shared/types";
-import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
 import { describe, expect, it } from "vitest";
 
+import {
+  MBT_TEST_TIMEOUT_MS,
+  assertWitnessProtocolConsistentWithScenario,
+  booleanField,
+  decodeWitnessProtocolState,
+  defineDriver,
+  focusedMbtMaxSteps,
+  mbtSpecPath,
+  mbtTraceCount,
+  numberFromQuintInt,
+  quintRecordField,
+  quintStateRecord,
+  run,
+  stateCheck,
+} from "./battle-runtime-mbt-driver-kit.ts";
 import {
   passivePerceptionModifierDelta,
   requiredAbilityCheckRollMode,
@@ -333,21 +345,25 @@ describe("roll-modifier active effects MBT parity", () => {
     });
   });
 
-  it("matches the TS reducer slice against bounded random MBT traces", async () => {
-    await run({
-      spec: path.resolve(
-        import.meta.dirname,
-        "../battle-runtime-roll-modifier-active-effects.mbt.qnt",
-      ),
-      init: "init",
-      step: "step",
-      driver: createRollModifierActiveEffectsDriver(),
-      backend: "typescript",
-      nTraces: 10,
-      maxSteps: 4,
-      stateCheck: rollModifierActiveEffectsStateCheck,
-    });
-  }, 120_000);
+  it(
+    "matches the TS reducer slice against bounded random MBT traces",
+    async () => {
+      await run({
+        spec: mbtSpecPath(
+          import.meta.dirname,
+          "battle-runtime-roll-modifier-active-effects.mbt.qnt",
+        ),
+        init: "init",
+        step: "step",
+        driver: createRollModifierActiveEffectsDriver(),
+        backend: "typescript",
+        nTraces: mbtTraceCount(),
+        maxSteps: focusedMbtMaxSteps(4),
+        stateCheck: rollModifierActiveEffectsStateCheck,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
 });
 
 function initialRuntimeState(): RollModifierActiveEffectsRuntimeState {
@@ -919,7 +935,19 @@ function withCharismaDisadvantageAgainstCaster(
 function normalizeRollModifierActiveEffectsQuintState(
   raw: unknown,
 ): RollModifierActiveEffectsProjection {
-  const state = quintStateRecord(raw);
+  const state = quintRecordField(quintStateRecord(raw), "qState");
+  const protocol = decodeWitnessProtocolState({
+    state,
+    protocolField: "protocol",
+    noInvalidReason: "",
+    decodeHole: rollModifierHole,
+  });
+  const lastResultValue = lastResultField(state, "qScenarioResult");
+  assertWitnessProtocolConsistentWithScenario({
+    label: "Roll modifier active effects",
+    scenarioResult: lastResultValue,
+    protocol,
+  });
   return {
     actionAvailable: booleanField(state, "qActionAvailable"),
     spellAvailable: booleanField(state, "qSpellAvailable"),
@@ -954,12 +982,12 @@ function normalizeRollModifierActiveEffectsQuintState(
       "qThaumaturgyIntimidationRollMode",
     ),
     thaumaturgyEffectActive: booleanField(state, "qThaumaturgyEffectActive"),
-    holes: quintSet(state["qHoles"], "qHoles").map(rollModifierHole).sort(),
+    holes: protocol.holes,
     passivePerceptionDelta: numberFromQuintInt(
       state["qPassivePerceptionDelta"],
       "qPassivePerceptionDelta",
     ),
-    lastResult: lastResultField(state, "qLastResult"),
+    lastResult: lastResultValue,
   };
 }
 
@@ -1031,38 +1059,4 @@ function lastResultField(
     return raw as LastResult;
   }
   throw new Error(`Unknown ${fieldName}: ${String(raw)}.`);
-}
-
-function quintStateRecord(raw: unknown): Record<string, unknown> {
-  if (raw !== null && typeof raw === "object") {
-    // Quint-connect gives this boundary as unknown; the object guard is enough for field projection.
-    return raw as Record<string, unknown>;
-  }
-  throw new Error("Expected Quint state record.");
-}
-
-function booleanField(
-  state: Record<string, unknown>,
-  fieldName: string,
-): boolean {
-  const raw = state[fieldName];
-  if (typeof raw === "boolean") return raw;
-  throw new Error(`Expected boolean ${fieldName}.`);
-}
-
-function quintSet(raw: unknown, fieldName: string): unknown[] {
-  if (raw instanceof Set) return [...raw];
-  if (Array.isArray(raw)) return raw;
-  if (raw !== null && typeof raw === "object" && "set" in raw) {
-    // The ITF set adapter shape was established by the property guard above.
-    const value = (raw as { readonly set: unknown }).set;
-    if (Array.isArray(value)) return value;
-  }
-  throw new Error(`Expected Quint set ${fieldName}.`);
-}
-
-function numberFromQuintInt(raw: unknown, fieldName: string): number {
-  if (typeof raw === "number") return raw;
-  if (typeof raw === "bigint") return Number(raw);
-  throw new Error(`Expected Quint int ${fieldName}.`);
 }

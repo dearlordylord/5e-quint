@@ -1,7 +1,15 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.SHOVE.OUTCOME_AND_PUSH_BOUNDARY
-import * as path from "node:path";
-
-import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
+import {
+  MBT_TEST_TIMEOUT_MS,
+  booleanValue as booleanField,
+  defineDriver,
+  focusedMbtMaxSteps,
+  mbtSpecPath,
+  mbtTraceCount,
+  numberFromQuintInt,
+  run,
+  stateCheck,
+} from "./battle-runtime-mbt-driver-kit.ts";
 import { describe, expect, it } from "vitest";
 
 import { battleTablePositionId } from "./index.ts";
@@ -185,21 +193,25 @@ const shoveOutcomeStateCheck = stateCheck(
 );
 
 describe("rule-core Shove outcome deterministic QNT replay", () => {
-  it("replays Shove Prone and push dispositions against battle-runtime reducers", async () => {
-    await run({
-      spec: path.resolve(
-        import.meta.dirname,
-        "../rule-core-shove-outcome.mbt.qnt",
-      ),
-      init: "init",
-      step: "step",
-      driver: createShoveOutcomeDriver(),
-      backend: "typescript",
-      nTraces: 1,
-      maxSteps: shoveOutcomeReplayStepCount,
-      stateCheck: shoveOutcomeStateCheck,
-    });
-  }, 120_000);
+  it(
+    "replays Shove Prone and push dispositions against battle-runtime reducers",
+    async () => {
+      await run({
+        spec: mbtSpecPath(
+          import.meta.dirname,
+          "rule-core-shove-outcome.mbt.qnt",
+        ),
+        init: "init",
+        step: "step",
+        driver: createShoveOutcomeDriver(),
+        backend: "typescript",
+        nTraces: mbtTraceCount(),
+        maxSteps: focusedMbtMaxSteps(shoveOutcomeReplayStepCount),
+        stateCheck: shoveOutcomeStateCheck,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
 });
 
 function applyScenario(
@@ -357,15 +369,4 @@ function replayIndexForScenario(scenario: ShoveOutcomeReplayScenario): number {
     throw new Error(`Unexpected Shove outcome replay scenario ${scenario}.`);
   }
   return index;
-}
-
-function numberFromQuintInt(raw: unknown, field: string): number {
-  if (typeof raw === "number") return raw;
-  if (typeof raw === "bigint") return Number(raw);
-  throw new Error(`Expected Quint integer field ${field}.`);
-}
-
-function booleanField(raw: unknown, field: string): boolean {
-  if (typeof raw === "boolean") return raw;
-  throw new Error(`Expected Quint boolean field ${field}.`);
 }

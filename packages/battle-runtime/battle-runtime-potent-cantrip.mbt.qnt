@@ -4,12 +4,38 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.potent-cantrip
 
 module battleRuntimePotentCantripMbt {
-  var qTargetHp: int
-  var qActionResourcesRemaining: int
-  var qTargetActiveEffectCount: int
-  var qLightEmitterCount: int
-  var qObjectDamageCount: int
-  var qLastResult: str
+  import battleRuntimeWitnessProtocol.* from "./battle-runtime-witness-protocol"
+
+  type WitnessHole = | WitnessProtocolHole
+
+  type PotentCantripWitnessState = {
+    qTargetHp: int,
+    qActionResourcesRemaining: int,
+    qTargetActiveEffectCount: int,
+    qLightEmitterCount: int,
+    qObjectDamageCount: int,
+    qScenarioResult: str,
+    protocol: WitnessProtocol[WitnessHole],
+  }
+
+  var qState: PotentCantripWitnessState
+
+  pure def qTargetHp: int = qState.qTargetHp
+  pure def qActionResourcesRemaining: int = qState.qActionResourcesRemaining
+  pure def qTargetActiveEffectCount: int = qState.qTargetActiveEffectCount
+  pure def qLightEmitterCount: int = qState.qLightEmitterCount
+  pure def qObjectDamageCount: int = qState.qObjectDamageCount
+  pure def qLastResult: str = qState.qScenarioResult
+
+  pure def selectedIdentityProtocolForProjection(
+    holes: Set[WitnessHole],
+    scenarioResult: str,
+    scenarioInvalidReason: str,
+  ): WitnessProtocol[WitnessHole] =
+    if (scenarioResult == "init") witnessInit(WitnessProtocolHole)
+    else if (scenarioInvalidReason == "invalidFill") witnessInvalid(WitnessProtocolHole, WInvalidFill)
+    else if (holes != Set()) witnessNeedsHoles(holes)
+    else witnessResolved(WitnessProtocolHole)
 
   action recordProjection(
     targetHp: int,
@@ -19,14 +45,16 @@ module battleRuntimePotentCantripMbt {
     objectDamageCount: int,
     lastResult: str,
   ): bool = all {
-    qTargetHp' = targetHp,
-    qActionResourcesRemaining' = actionResourcesRemaining,
-    qTargetActiveEffectCount' = targetActiveEffectCount,
-    qLightEmitterCount' = lightEmitterCount,
-    qObjectDamageCount' = objectDamageCount,
-    qLastResult' = lastResult,
+    qState' = {
+      qTargetHp: targetHp,
+      qActionResourcesRemaining: actionResourcesRemaining,
+      qTargetActiveEffectCount: targetActiveEffectCount,
+      qLightEmitterCount: lightEmitterCount,
+      qObjectDamageCount: objectDamageCount,
+      qScenarioResult: lastResult,
+      protocol: selectedIdentityProtocolForProjection(Set(), lastResult, ""),
+    },
   }
-
   action init = recordProjection(13, 1, 0, 0, 0, "init")
 
   action doAttackMissHalfDamage = all {

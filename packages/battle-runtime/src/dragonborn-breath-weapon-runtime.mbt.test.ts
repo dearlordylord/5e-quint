@@ -4,8 +4,6 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.attack-action-area-save-damage-replacement
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L3MSPEC-03-DRAGONBORN-BREATH-WEAPON-RUNTIME species_dragonborn_breath_weapon
 // UNIT-IDENTITY-MBT-REPLAY: L3MSPEC-03-DRAGONBORN-BREATH-WEAPON-RUNTIME species_dragonborn_breath_weapon doResolveBreathWeapon doOpenExtraAttackSlot doRejectMissingResource doRejectMismatchedArea doRejectInvalidDamageRoll
-import * as path from "node:path";
-
 import { describe, expect, test } from "vitest";
 
 import { DieRollResult } from "@dnd/shared/types";
@@ -43,6 +41,7 @@ import {
 } from "./unit-profile-admission-test-support.ts";
 import { extraAttackBattleUnitRef } from "./unit-profile-admission-feature-fixture-support.ts";
 import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
+import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
 
 type BreathWeaponLastResult =
   | "init"
@@ -67,10 +66,19 @@ const secondTargetId = combatantId("dragonborn-breath-second-target");
 defineSelectedIdentityWitness({
   describeLabel: "Dragonborn Breath Weapon selected identity MBT",
   taskId: "L3MSPEC-03-DRAGONBORN-BREATH-WEAPON-RUNTIME",
-  specFile: path.resolve(
+  specFile: mbtSpecPath(
     import.meta.dirname,
-    "../battle-runtime-dragonborn-breath-weapon.mbt.qnt",
+    "battle-runtime-dragonborn-breath-weapon.mbt.qnt",
   ),
+  quintStateField: "qState",
+  quintStateFieldPrefix: "q",
+  witnessProtocolField: "protocol",
+  quintFieldNames: { lastResult: "qScenarioResult" },
+  witnessInvalidScenarioReasons: {
+    rejectMissingResource: "invalidFill",
+    rejectMismatchedArea: "invalidFill",
+    rejectInvalidDamageRoll: "invalidFill",
+  },
   projectionSchema: {
     targetHp: "int",
     secondTargetHp: "int",

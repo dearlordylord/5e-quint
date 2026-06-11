@@ -1,10 +1,20 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE
-import * as path from "node:path";
-
-import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
 import { Schema } from "effect";
 import { describe, expect, it } from "vitest";
 
+import {
+  MBT_TEST_TIMEOUT_MS,
+  booleanValue,
+  defineDriver,
+  focusedMbtMaxSteps,
+  mbtSpecPath,
+  mbtTraceCount,
+  numberFromQuintInt,
+  quintVariantTag,
+  quintVariantValue,
+  run,
+  stateCheck,
+} from "./battle-runtime-mbt-driver-kit.ts";
 import {
   beginMoonbeamLaterTurn,
   resolveMoonbeamCast,
@@ -198,15 +208,11 @@ describe("Moonbeam movable zone MBT parity", () => {
       }),
     ).toEqual(first);
     expect(
-      resolveMoonbeamSave(
-        resetMoonbeamSavedThisTurn(first),
-        "endsTurnInArea",
-        {
-          savingThrowSucceeded: true,
-          rolledDamage: 10,
-          moveFeet: 0,
-        },
-      ).targetVitals.hitPoints,
+      resolveMoonbeamSave(resetMoonbeamSavedThisTurn(first), "endsTurnInArea", {
+        savingThrowSucceeded: true,
+        rolledDamage: 10,
+        moveFeet: 0,
+      }).targetVitals.hitPoints,
     ).toBe(5);
   });
 
@@ -243,21 +249,25 @@ describe("Moonbeam movable zone MBT parity", () => {
     expect(resolveMoonbeamReposition(laterTurn, 61)).toEqual(laterTurn);
   });
 
-  it("matches the TS reducer slice against bounded random MBT traces", async () => {
-    await run({
-      spec: path.resolve(
-        import.meta.dirname,
-        "../battle-runtime-moonbeam-movable-zone.mbt.qnt",
-      ),
-      init: "init",
-      step: "step",
-      driver: createMoonbeamMovableZoneDriver(),
-      backend: "typescript",
-      nTraces: 10,
-      maxSteps: 6,
-      stateCheck: moonbeamMovableZoneStateCheck,
-    });
-  }, 120_000);
+  it(
+    "matches the TS reducer slice against bounded random MBT traces",
+    async () => {
+      await run({
+        spec: mbtSpecPath(
+          import.meta.dirname,
+          "battle-runtime-moonbeam-movable-zone.mbt.qnt",
+        ),
+        init: "init",
+        step: "step",
+        driver: createMoonbeamMovableZoneDriver(),
+        backend: "typescript",
+        nTraces: mbtTraceCount(),
+        maxSteps: focusedMbtMaxSteps(6),
+        stateCheck: moonbeamMovableZoneStateCheck,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
 });
 
 function normalizeMoonbeamMovableZoneQuintState(
@@ -270,7 +280,7 @@ function normalizeMoonbeamMovableZoneQuintState(
     Object.entries(raw),
   );
   return {
-    actionAvailable: booleanFromQuint(
+    actionAvailable: booleanValue(
       state["qActionAvailable"],
       "qActionAvailable",
     ),
@@ -285,7 +295,7 @@ function normalizeMoonbeamMovableZoneQuintState(
         "qSlotsRemaining",
       ),
     },
-    slotSpellCastThisTurn: booleanFromQuint(
+    slotSpellCastThisTurn: booleanValue(
       state["qSlotSpellCastThisTurn"],
       "qSlotSpellCastThisTurn",
     ),
@@ -303,8 +313,8 @@ function normalizeMoonbeamMovableZoneQuintState(
         state["qTargetTemporaryHitPoints"],
         "qTargetTemporaryHitPoints",
       ),
-      dead: booleanFromQuint(state["qTargetDead"], "qTargetDead"),
-      unconscious: booleanFromQuint(
+      dead: booleanValue(state["qTargetDead"], "qTargetDead"),
+      unconscious: booleanValue(
         state["qTargetUnconscious"],
         "qTargetUnconscious",
       ),
@@ -318,7 +328,7 @@ function normalizeMoonbeamMovableZoneQuintState(
 function zoneFromQuintState(
   state: Readonly<Record<string, unknown>>,
 ): MoonbeamMovableZoneState["zone"] {
-  const zoneActive = booleanFromQuint(state["qZoneActive"], "qZoneActive");
+  const zoneActive = booleanValue(state["qZoneActive"], "qZoneActive");
   return zoneActive
     ? {
         tag: "active",
@@ -334,7 +344,7 @@ function zoneFromQuintState(
           state["qZoneRepositionMaxMoveFeet"],
           "qZoneRepositionMaxMoveFeet",
         ),
-        savedThisTurn: booleanFromQuint(
+        savedThisTurn: booleanValue(
           state["qZoneSavedThisTurn"],
           "qZoneSavedThisTurn",
         ),
@@ -374,13 +384,15 @@ function targetShapeShiftStateFromQuint(
     return { tag: "suppressedTrueForm" };
   }
   if (tag === "MoonbeamTargetUnsuppressed") {
-    const value = quintVariantValue(raw);
+    const value = quintVariantValue(raw, "MoonbeamTargetUnsuppressed");
     if (
       value === null ||
       typeof value !== "object" ||
       !("shapeShift" in value)
     ) {
-      throw new Error("Expected Quint Moonbeam unsuppressed shape-shift value.");
+      throw new Error(
+        "Expected Quint Moonbeam unsuppressed shape-shift value.",
+      );
     }
     const shapeShiftTag = quintVariantTag(value.shapeShift);
     if (shapeShiftTag === "TrueForm") {
@@ -392,31 +404,4 @@ function targetShapeShiftStateFromQuint(
     throw new Error(`Unknown Quint shared shape-shift state: ${shapeShiftTag}`);
   }
   throw new Error(`Unknown Quint Moonbeam shape-shift state: ${tag}`);
-}
-
-function quintVariantTag(raw: unknown): string {
-  if (typeof raw === "string") return raw;
-  if (raw !== null && typeof raw === "object" && "tag" in raw) {
-    const tag = raw.tag;
-    if (typeof tag === "string") return tag;
-  }
-  throw new Error(`Expected Quint variant tag, got ${String(raw)}.`);
-}
-
-function quintVariantValue(raw: unknown): unknown {
-  if (raw !== null && typeof raw === "object" && "value" in raw) {
-    return raw.value;
-  }
-  throw new Error(`Expected Quint variant value, got ${String(raw)}.`);
-}
-
-function numberFromQuintInt(raw: unknown, field: string): number {
-  if (typeof raw === "number") return raw;
-  if (typeof raw === "bigint") return Number(raw);
-  throw new Error(`Expected Quint integer field ${field}.`);
-}
-
-function booleanFromQuint(raw: unknown, field: string): boolean {
-  if (typeof raw === "boolean") return raw;
-  throw new Error(`Expected Quint Boolean field ${field}.`);
 }

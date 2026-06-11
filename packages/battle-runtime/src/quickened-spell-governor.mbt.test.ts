@@ -13,18 +13,30 @@
 //   Slot to cast a spell.
 // - UBIQUITOUS_LANGUAGE.md: Magic Action, Bonus Action, Spell Slot,
 //   Sorcery Points as a Pool, and Spend.
-import * as path from "node:path";
-
 import {
   canSpendAction,
   spendAction,
 } from "@dnd/shared-algebras/action-economy-algebra";
 import { hasCondition } from "@dnd/shared-algebras/conditions-algebra";
 import { resourceCount } from "@dnd/shared/types";
-import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
 import * as Either from "effect/Either";
 import { describe, expect, it } from "vitest";
 
+import {
+  MBT_TEST_TIMEOUT_MS,
+  assertWitnessProtocolConsistentWithScenario,
+  booleanField,
+  decodeWitnessProtocolState,
+  defineDriver,
+  focusedMbtMaxSteps,
+  mbtSpecPath,
+  mbtTraceCount,
+  numberFromQuintInt,
+  quintRecordField,
+  quintStateRecord,
+  run,
+  stateCheck,
+} from "./battle-runtime-mbt-driver-kit.ts";
 import {
   EMPOWERED_METAMAGIC_EFFECT_KIND,
   QUICKENED_METAMAGIC_EFFECT_KIND,
@@ -316,21 +328,21 @@ describe("Quickened Spell governor MBT parity", () => {
   });
 
   it("rejects unknown, unaffordable, unsupported, and same-turn level 1+ Quickened casts", () => {
-    expect(quickenedSpellGovernorProjection(rejectUnaffordable())).toMatchObject(
-      {
-        quickenedCureWoundsOffered: false,
-        sorceryPointsRemaining: UNAFFORDABLE_SORCERY_POINTS,
-        invalidKind: "unaffordable",
-        lastResult: "rejectedUnaffordable",
-      },
-    );
-    expect(quickenedSpellGovernorProjection(rejectUnknownOption())).toMatchObject(
-      {
-        quickenedCureWoundsOffered: true,
-        invalidKind: "unknownOption",
-        lastResult: "rejectedUnknownOption",
-      },
-    );
+    expect(
+      quickenedSpellGovernorProjection(rejectUnaffordable()),
+    ).toMatchObject({
+      quickenedCureWoundsOffered: false,
+      sorceryPointsRemaining: UNAFFORDABLE_SORCERY_POINTS,
+      invalidKind: "unaffordable",
+      lastResult: "rejectedUnaffordable",
+    });
+    expect(
+      quickenedSpellGovernorProjection(rejectUnknownOption()),
+    ).toMatchObject({
+      quickenedCureWoundsOffered: true,
+      invalidKind: "unknownOption",
+      lastResult: "rejectedUnknownOption",
+    });
     expect(
       quickenedSpellGovernorProjection(rejectUnsupportedSecondOption()),
     ).toMatchObject({
@@ -338,11 +350,13 @@ describe("Quickened Spell governor MBT parity", () => {
       invalidKind: "unsupportedSecondOption",
       lastResult: "rejectedUnsupportedSecondOption",
     });
-    expect(quickenedSpellGovernorProjection(rejectOnePerSpell())).toMatchObject({
-      sorceryPointsRemaining: HIGH_SORCERY_POINTS,
-      invalidKind: "onePerSpell",
-      lastResult: "rejectedOnePerSpell",
-    });
+    expect(quickenedSpellGovernorProjection(rejectOnePerSpell())).toMatchObject(
+      {
+        sorceryPointsRemaining: HIGH_SORCERY_POINTS,
+        invalidKind: "onePerSpell",
+        lastResult: "rejectedOnePerSpell",
+      },
+    );
     expect(
       quickenedSpellGovernorProjection(rejectPriorLevelOnePlusSpell()),
     ).toMatchObject({
@@ -353,21 +367,25 @@ describe("Quickened Spell governor MBT parity", () => {
     });
   });
 
-  it("matches the focused Quickened Spell governor slice against bounded random MBT traces", async () => {
-    await run({
-      spec: path.resolve(
-        import.meta.dirname,
-        "../battle-runtime-quickened-spell-governor.mbt.qnt",
-      ),
-      init: "init",
-      step: "step",
-      driver: createQuickenedSpellGovernorDriver(),
-      backend: "typescript",
-      nTraces: 10,
-      maxSteps: 4,
-      stateCheck: quickenedSpellGovernorStateCheck,
-    });
-  }, 120_000);
+  it(
+    "matches the focused Quickened Spell governor slice against bounded random MBT traces",
+    async () => {
+      await run({
+        spec: mbtSpecPath(
+          import.meta.dirname,
+          "battle-runtime-quickened-spell-governor.mbt.qnt",
+        ),
+        init: "init",
+        step: "step",
+        driver: createQuickenedSpellGovernorDriver(),
+        backend: "typescript",
+        nTraces: mbtTraceCount(),
+        maxSteps: focusedMbtMaxSteps(4),
+        stateCheck: quickenedSpellGovernorStateCheck,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
 });
 
 function initialRuntimeState(
@@ -888,10 +906,7 @@ function sorceryPointsRemaining(state: BattleState) {
   return resource.pointsRemaining;
 }
 
-function expectInvalid(
-  result: BattleResolutionResult,
-  message: string,
-): void {
+function expectInvalid(result: BattleResolutionResult, message: string): void {
   expect(result).toMatchObject({ tag: "invalid", message });
 }
 
@@ -905,7 +920,24 @@ function expectRight<T, E>(result: Either.Either<T, E>): T {
 function normalizeQuickenedSpellGovernorQuintState(
   raw: unknown,
 ): QuickenedSpellGovernorProjection {
-  const state = quintStateRecord(raw);
+  const state = quintRecordField(quintStateRecord(raw), "qState");
+  const protocol = decodeWitnessProtocolState({
+    state,
+    protocolField: "protocol",
+    noInvalidReason: "",
+    decodeHole: quickenedSpellGovernorUnexpectedHole,
+  });
+  if (protocol.holes.length !== 0) {
+    throw new Error(
+      "Expected Quickened Spell Governor witness holes to be empty.",
+    );
+  }
+  const lastResultValue = lastResult(state["qScenarioResult"]);
+  assertWitnessProtocolConsistentWithScenario({
+    label: "Quickened Spell Governor",
+    scenarioResult: lastResultValue,
+    protocol,
+  });
   return {
     quickenedCureWoundsOffered: booleanField(
       state,
@@ -923,18 +955,21 @@ function normalizeQuickenedSpellGovernorQuintState(
     ),
     targetHp: numberFromQuintInt(state["qTargetHp"], "qTargetHp"),
     spellSlotCommitted: booleanField(state, "qSpellSlotCommitted"),
-    levelOnePlusCastThisTurn: booleanField(
-      state,
-      "qLevelOnePlusCastThisTurn",
-    ),
+    levelOnePlusCastThisTurn: booleanField(state, "qLevelOnePlusCastThisTurn"),
     quickenedLevelOnePlusCastThisTurn: booleanField(
       state,
       "qQuickenedLevelOnePlusCastThisTurn",
     ),
     spellSlotActsAvailable: booleanField(state, "qSpellSlotActsAvailable"),
     invalidKind: invalidKind(state["qInvalidKind"]),
-    lastResult: lastResult(state["qLastResult"]),
+    lastResult: lastResultValue,
   };
+}
+
+function quickenedSpellGovernorUnexpectedHole(raw: unknown): never {
+  throw new Error(
+    `Quickened Spell Governor witness does not expect holes; received ${String(raw)}.`,
+  );
 }
 
 function compareQuickenedSpellGovernorStates(
@@ -964,30 +999,4 @@ function lastResult(raw: unknown): LastResult {
     return raw as LastResult;
   }
   throw new Error(`Unknown Quickened Spell result: ${String(raw)}.`);
-}
-
-function quintStateRecord(raw: unknown): Readonly<Record<string, unknown>> {
-  if (!isRecord(raw)) {
-    throw new Error("Expected Quint Quickened Spell governor state.");
-  }
-  return raw;
-}
-
-function numberFromQuintInt(raw: unknown, field: string): number {
-  if (typeof raw === "number") return raw;
-  if (typeof raw === "bigint") return Number(raw);
-  throw new Error(`Expected numeric Quint field ${field}.`);
-}
-
-function booleanField(
-  record: Readonly<Record<string, unknown>>,
-  field: string,
-): boolean {
-  const value = record[field];
-  if (typeof value === "boolean") return value;
-  throw new Error(`Expected boolean Quint field ${field}.`);
-}
-
-function isRecord(raw: unknown): raw is Readonly<Record<string, unknown>> {
-  return typeof raw === "object" && raw !== null;
 }

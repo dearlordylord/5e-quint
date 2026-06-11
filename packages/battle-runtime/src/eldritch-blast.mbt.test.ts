@@ -1,7 +1,4 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-independent-attack-sequence
-import * as path from "node:path";
-
-import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
 import { Either } from "effect";
 import { describe, expect, it } from "vitest";
 
@@ -12,6 +9,22 @@ import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
+import {
+  MBT_TEST_TIMEOUT_MS,
+  booleanField,
+  decodeWitnessProtocolState,
+  defineDriver,
+  focusedMbtMaxSteps,
+  mbtSpecPath,
+  mbtTraceCount,
+  numberFromQuintInt,
+  quintField,
+  quintRecordField,
+  quintStateRecord,
+  quintVariantTag,
+  run,
+  stateCheck,
+} from "./battle-runtime-mbt-driver-kit.ts";
 import {
   attackRollFill,
   damageRollFillWithGroups,
@@ -208,35 +221,43 @@ const eldritchBlastStateCheck = stateCheck(
 describe("Eldritch Blast MBT parity", () => {
   it("replays Eldritch Blast beam sequencing", async () => {
     await run({
-      spec: path.resolve(
+      spec: mbtSpecPath(
         import.meta.dirname,
-        "../battle-runtime-eldritch-blast.mbt.qnt",
+        "battle-runtime-eldritch-blast.mbt.qnt",
       ),
       init: "init",
       step: "step",
       driver: createEldritchBlastDriver(),
       backend: "typescript",
-      nTraces: Number(process.env["MBT_TRACES"] ?? 1),
+      nTraces: mbtTraceCount(),
       maxSteps: focusedMbtMaxSteps(4),
       stateCheck: eldritchBlastStateCheck,
     });
-  }, 120_000);
+  }, MBT_TEST_TIMEOUT_MS);
 });
 
 function normalizeEldritchBlastQuintState(
   raw: unknown,
 ): EldritchBlastMbtProjection {
-  const state = quintStateRecord(raw);
+  const state = quintRecordField(quintStateRecord(raw), "qState");
+  const protocol = decodeWitnessProtocolState({
+    state,
+    protocolField: "protocol",
+    noInvalidReason: "",
+    decodeHole: eldritchBlastHoleName,
+    compareHoles: (left, right) => left.localeCompare(right),
+  });
 
   return {
     actionAvailable: booleanField(state, "qActionAvailable"),
-    targetHp: numberFromQuintInt(state["qTargetHp"], "qTargetHp"),
-    holes: quintHoleSet(state["qHoles"])
-      .map(eldritchBlastHoleName)
-      .sort(),
-    lastResult: eldritchBlastMbtLastResult(state["qLastResult"]),
+    targetHp: numberFromQuintInt(
+      quintField(state, "qTargetHp"),
+      "qState.qTargetHp",
+    ),
+    holes: protocol.holes,
+    lastResult: eldritchBlastMbtLastResult(protocol.lastResult),
     lastInvalidReason: eldritchBlastMbtLastInvalidReason(
-      state["qLastInvalidReason"],
+      protocol.lastInvalidReason,
     ),
   };
 }
@@ -515,11 +536,6 @@ function eldritchBlastMbtInvalidReason(
   throw new Error(`Unexpected Eldritch Blast invalid reason: ${reason}`);
 }
 
-function focusedMbtMaxSteps(domainMaxSteps: number): number {
-  const requestedSteps = Number(process.env["MBT_STEPS"] ?? domainMaxSteps);
-  return Math.min(requestedSteps, domainMaxSteps);
-}
-
 function startBattleRight(
   input: Parameters<typeof startBattle>[0],
 ): BattleState {
@@ -528,58 +544,4 @@ function startBattleRight(
     throw new Error(result.left.message);
   }
   return result.right;
-}
-
-function quintStateRecord(raw: unknown): Readonly<Record<string, unknown>> {
-  if (!isRecord(raw)) {
-    throw new Error("Expected Quint state to be an object.");
-  }
-
-  return raw;
-}
-
-function numberFromQuintInt(raw: unknown, field: string): number {
-  if (typeof raw === "number") {
-    return raw;
-  }
-  if (typeof raw === "bigint") {
-    return Number(raw);
-  }
-
-  throw new Error(`Expected Quint integer field ${field}.`);
-}
-
-function booleanField(
-  state: Readonly<Record<string, unknown>>,
-  field: string,
-): boolean {
-  const value = state[field];
-  if (typeof value === "boolean") {
-    return value;
-  }
-
-  throw new Error(`Expected Quint boolean field ${field}.`);
-}
-
-function quintHoleSet(raw: unknown): readonly unknown[] {
-  if (raw instanceof Set) {
-    return [...raw];
-  }
-
-  throw new Error("Expected Quint qHoles field to be a Set.");
-}
-
-function quintVariantTag(raw: unknown): string {
-  if (isRecord(raw) && typeof raw["tag"] === "string") {
-    return raw["tag"];
-  }
-  if (typeof raw === "string") {
-    return raw;
-  }
-
-  throw new Error("Expected Quint variant value.");
-}
-
-function isRecord(raw: unknown): raw is Readonly<Record<string, unknown>> {
-  return typeof raw === "object" && raw !== null && !Array.isArray(raw);
 }

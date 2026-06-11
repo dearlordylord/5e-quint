@@ -1,17 +1,38 @@
 // -*- mode: Bluespec; -*-
 
 module battleRuntimeReactionCastingTimeMbt {
-  var qTriggerKind: str
-  var qContinuationKind: str
-  var qReactorHp: int
-  var qTriggerCreatureHp: int
-  var qReactorReactionAvailable: bool
-  var qTriggerCreatureFirstLevelSlotsExpended: int
-  var qTriggerCreatureFourthLevelSlotsExpended: int
-  var qReactorSecondLevelSlotsExpended: int
-  var qReactorThirdLevelSlotsExpended: int
-  var qReactionWindowCleared: bool
-  var qLastResult: str
+  import battleRuntimeWitnessProtocol.* from "./battle-runtime-witness-protocol"
+
+  type WitnessHole = | WitnessProtocolHole
+
+  type ReactionCastingTimeWitnessState = {
+    qTriggerKind: str,
+    qContinuationKind: str,
+    qReactorHp: int,
+    qTriggerCreatureHp: int,
+    qReactorReactionAvailable: bool,
+    qTriggerCreatureFirstLevelSlotsExpended: int,
+    qTriggerCreatureFourthLevelSlotsExpended: int,
+    qReactorSecondLevelSlotsExpended: int,
+    qReactorThirdLevelSlotsExpended: int,
+    qReactionWindowCleared: bool,
+    qScenarioResult: str,
+    protocol: WitnessProtocol[WitnessHole],
+  }
+
+  var qState: ReactionCastingTimeWitnessState
+
+  pure def qTriggerKind: str = qState.qTriggerKind
+  pure def qContinuationKind: str = qState.qContinuationKind
+  pure def qReactorHp: int = qState.qReactorHp
+  pure def qTriggerCreatureHp: int = qState.qTriggerCreatureHp
+  pure def qReactorReactionAvailable: bool = qState.qReactorReactionAvailable
+  pure def qTriggerCreatureFirstLevelSlotsExpended: int = qState.qTriggerCreatureFirstLevelSlotsExpended
+  pure def qTriggerCreatureFourthLevelSlotsExpended: int = qState.qTriggerCreatureFourthLevelSlotsExpended
+  pure def qReactorSecondLevelSlotsExpended: int = qState.qReactorSecondLevelSlotsExpended
+  pure def qReactorThirdLevelSlotsExpended: int = qState.qReactorThirdLevelSlotsExpended
+  pure def qReactionWindowCleared: bool = qState.qReactionWindowCleared
+  pure def qLastResult: str = qState.qScenarioResult
 
   pure val noTrigger: str = "none"
   pure val spellCastTrigger: str = "spellCast"
@@ -24,6 +45,17 @@ module battleRuntimeReactionCastingTimeMbt {
   pure val magicMissileFourthLevelDamage: int = 12
   pure val unarmedStrikeDamage: int = 1
   pure val hellishRebukeDamage: int = 3
+
+  pure def witnessProtocolForProjection(
+    holes: Set[WitnessHole],
+    scenarioResult: str,
+    scenarioInvalidReason: str,
+  ): WitnessProtocol[WitnessHole] =
+    if (scenarioResult == "init") witnessInit(WitnessProtocolHole)
+    else if (scenarioInvalidReason == "invalidFill") witnessInvalid(WitnessProtocolHole, WInvalidFill)
+    else if (scenarioInvalidReason == "staleSubject") witnessInvalid(WitnessProtocolHole, WStaleSubject)
+    else if (holes != Set()) witnessNeedsHoles(holes)
+    else witnessResolved(WitnessProtocolHole)
 
   action recordReactionCastingTimeState(
     triggerKind: str,
@@ -38,17 +70,20 @@ module battleRuntimeReactionCastingTimeMbt {
     reactionWindowCleared: bool,
     lastResult: str,
   ): bool = all {
-    qTriggerKind' = triggerKind,
-    qContinuationKind' = continuationKind,
-    qReactorHp' = reactorHp,
-    qTriggerCreatureHp' = triggerCreatureHp,
-    qReactorReactionAvailable' = reactorReactionAvailable,
-    qTriggerCreatureFirstLevelSlotsExpended' = triggerCreatureFirstLevelSlotsExpended,
-    qTriggerCreatureFourthLevelSlotsExpended' = triggerCreatureFourthLevelSlotsExpended,
-    qReactorSecondLevelSlotsExpended' = reactorSecondLevelSlotsExpended,
-    qReactorThirdLevelSlotsExpended' = reactorThirdLevelSlotsExpended,
-    qReactionWindowCleared' = reactionWindowCleared,
-    qLastResult' = lastResult,
+    qState' = {
+      qTriggerKind: triggerKind,
+      qContinuationKind: continuationKind,
+      qReactorHp: reactorHp,
+      qTriggerCreatureHp: triggerCreatureHp,
+      qReactorReactionAvailable: reactorReactionAvailable,
+      qTriggerCreatureFirstLevelSlotsExpended: triggerCreatureFirstLevelSlotsExpended,
+      qTriggerCreatureFourthLevelSlotsExpended: triggerCreatureFourthLevelSlotsExpended,
+      qReactorSecondLevelSlotsExpended: reactorSecondLevelSlotsExpended,
+      qReactorThirdLevelSlotsExpended: reactorThirdLevelSlotsExpended,
+      qReactionWindowCleared: reactionWindowCleared,
+      qScenarioResult: lastResult,
+      protocol: witnessProtocolForProjection(Set(), lastResult, ""),
+    },
   }
 
   action init = recordReactionCastingTimeState(

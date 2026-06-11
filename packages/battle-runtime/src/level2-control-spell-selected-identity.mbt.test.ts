@@ -9,11 +9,10 @@
 // UNIT-IDENTITY-MBT-REPLAY: B10-LEVEL2-CONTROL-SPELL-IDENTITY-BATCH see_invisibility doDiscoverSeeInvisibilityObserverSight
 // UNIT-IDENTITY-MBT-REPLAY: B10-LEVEL2-CONTROL-SPELL-IDENTITY-BATCH spike_growth doDiscoverSpikeGrowthMovementHazard
 // UNIT-IDENTITY-MBT-REPLAY: B10-LEVEL2-CONTROL-SPELL-IDENTITY-BATCH web doDiscoverWebRestraintHazard
-import * as path from "node:path";
-
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { expect } from "vitest";
 
+import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
 import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
 import type { BattleState } from "./index.ts";
 import {
@@ -72,10 +71,14 @@ type SelectedLevel2ControlSpellInvocation = {
 defineSelectedIdentityWitness({
   describeLabel: "Level 2 control spell selected identity MBT",
   taskId: "B10-LEVEL2-CONTROL-SPELL-IDENTITY-BATCH",
-  specFile: path.resolve(
+  specFile: mbtSpecPath(
     import.meta.dirname,
-    "../battle-runtime-level2-control-spell-selected-identity.mbt.qnt",
+    "battle-runtime-level2-control-spell-selected-identity.mbt.qnt",
   ),
+  quintStateField: "qState",
+  quintStateFieldPrefix: "q",
+  witnessProtocolField: "protocol",
+  quintFieldNames: { lastResult: "qScenarioResult" },
   projectionSchema: { lastResult: "str" },
   initialProjection: expectedProjection("init"),
   units: [

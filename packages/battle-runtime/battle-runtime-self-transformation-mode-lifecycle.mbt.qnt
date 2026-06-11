@@ -1,6 +1,8 @@
 // -*- mode: Bluespec; -*-
 
 module battleRuntimeSelfTransformationModeLifecycleMbt {
+  import battleRuntimeWitnessProtocol.* from "./battle-runtime-witness-protocol"
+
   // RAW trace:
   // - .references/srd-5.2.1/Spells/Descriptions-A-D.md#Alter Self:
   //   Alter Self is a level 2 Action spell with range Self and Concentration
@@ -14,22 +16,29 @@ module battleRuntimeSelfTransformationModeLifecycleMbt {
   //   damage rolls.
   // - UBIQUITOUS_LANGUAGE.md: Action, Concentration, Damage Roll, Speed,
   //   Spell Effect, Spell Slot, and Unarmed Strike.
-  var qMagicActionAvailable: bool
-  var qCastSpellAvailable: bool
-  var qModeReplacementAvailable: bool
-  var qSpellSlotExpended: int
-  var qSlotSpellCastThisTurn: bool
-  var qCasterConcentrating: bool
-  var qActiveMode: str
-  var qWaterBreathing: bool
-  var qWalkSpeedFeet: int
-  var qSwimSpeedFeet: int
-  var qNaturalWeaponDamageType: str
-  var qNaturalWeaponDamageDieSize: int
-  var qNaturalWeaponAttackBonus: int
-  var qNaturalWeaponDamageOnRoll4: int
-  var qDurationTicks: int
-  var qLastResult: str
+  type Hole = | NoHole
+
+  type SelfTransformationWitnessState = {
+    magicActionAvailable: bool,
+    castSpellAvailable: bool,
+    modeReplacementAvailable: bool,
+    spellSlotExpended: int,
+    slotSpellCastThisTurn: bool,
+    casterConcentrating: bool,
+    activeMode: str,
+    waterBreathing: bool,
+    walkSpeedFeet: int,
+    swimSpeedFeet: int,
+    naturalWeaponDamageType: str,
+    naturalWeaponDamageDieSize: int,
+    naturalWeaponAttackBonus: int,
+    naturalWeaponDamageOnRoll4: int,
+    durationTicks: int,
+    scenarioResult: str,
+    protocol: WitnessProtocol[Hole],
+  }
+
+  var qState: SelfTransformationWitnessState
 
   pure val noMode: str = "none"
   pure val aquaticAdaptationMode: str = "aquaticAdaptation"
@@ -55,27 +64,31 @@ module battleRuntimeSelfTransformationModeLifecycleMbt {
     activeMode: str,
     naturalWeaponDamageType: str,
     durationTicks: int,
-    lastResult: str,
+    scenarioResult: str,
+    protocol: WitnessProtocol[Hole],
   ): bool = all {
-    qMagicActionAvailable' = magicActionAvailable,
-    qCastSpellAvailable' = castSpellAvailable,
-    qModeReplacementAvailable' = modeReplacementAvailable,
-    qSpellSlotExpended' = spellSlotExpended,
-    qSlotSpellCastThisTurn' = slotSpellCastThisTurn,
-    qCasterConcentrating' = casterConcentrating,
-    qActiveMode' = activeMode,
-    qWaterBreathing' = activeMode == aquaticAdaptationMode,
-    qWalkSpeedFeet' = walkSpeedFeet,
-    qSwimSpeedFeet' = if (activeMode == aquaticAdaptationMode) walkSpeedFeet else 0,
-    qNaturalWeaponDamageType' =
-      if (activeMode == naturalWeaponsMode) naturalWeaponDamageType else noDamageType,
-    qNaturalWeaponDamageDieSize' = if (activeMode == naturalWeaponsMode) 6 else 0,
-    qNaturalWeaponAttackBonus' =
-      if (activeMode == naturalWeaponsMode) spellcastingAttackBonus else 0,
-    qNaturalWeaponDamageOnRoll4' =
-      if (activeMode == naturalWeaponsMode) 4 + spellcastingAbilityModifier else 0,
-    qDurationTicks' = durationTicks,
-    qLastResult' = lastResult,
+    qState' = {
+      magicActionAvailable: magicActionAvailable,
+      castSpellAvailable: castSpellAvailable,
+      modeReplacementAvailable: modeReplacementAvailable,
+      spellSlotExpended: spellSlotExpended,
+      slotSpellCastThisTurn: slotSpellCastThisTurn,
+      casterConcentrating: casterConcentrating,
+      activeMode: activeMode,
+      waterBreathing: activeMode == aquaticAdaptationMode,
+      walkSpeedFeet: walkSpeedFeet,
+      swimSpeedFeet: if (activeMode == aquaticAdaptationMode) walkSpeedFeet else 0,
+      naturalWeaponDamageType:
+        if (activeMode == naturalWeaponsMode) naturalWeaponDamageType else noDamageType,
+      naturalWeaponDamageDieSize: if (activeMode == naturalWeaponsMode) 6 else 0,
+      naturalWeaponAttackBonus:
+        if (activeMode == naturalWeaponsMode) spellcastingAttackBonus else 0,
+      naturalWeaponDamageOnRoll4:
+        if (activeMode == naturalWeaponsMode) 4 + spellcastingAbilityModifier else 0,
+      durationTicks: durationTicks,
+      scenarioResult: scenarioResult,
+      protocol: protocol,
+    },
   }
 
   action init = recordSelfTransformationState(
@@ -89,12 +102,13 @@ module battleRuntimeSelfTransformationModeLifecycleMbt {
     noDamageType,
     0,
     "init",
+    witnessInit(NoHole),
   )
 
   action doCastAquaticAdaptation = all {
-    qMagicActionAvailable,
-    qCastSpellAvailable,
-    qSpellSlotExpended == 0,
+    qState.magicActionAvailable,
+    qState.castSpellAvailable,
+    qState.spellSlotExpended == 0,
     recordSelfTransformationState(
       false,
       false,
@@ -106,13 +120,14 @@ module battleRuntimeSelfTransformationModeLifecycleMbt {
       noDamageType,
       alterSelfDurationTicks,
       "aquaticCast",
+      witnessResolved(NoHole),
     ),
   }
 
   action doCastNaturalWeapons = all {
-    qMagicActionAvailable,
-    qCastSpellAvailable,
-    qSpellSlotExpended == 0,
+    qState.magicActionAvailable,
+    qState.castSpellAvailable,
+    qState.spellSlotExpended == 0,
     recordSelfTransformationState(
       false,
       false,
@@ -124,76 +139,81 @@ module battleRuntimeSelfTransformationModeLifecycleMbt {
       slashingDamageType,
       alterSelfDurationTicks,
       "naturalWeaponsCast",
+      witnessResolved(NoHole),
     ),
   }
 
   action doStartNextCasterTurn = all {
-    qActiveMode != noMode,
-    not(qMagicActionAvailable),
-    qDurationTicks > 0,
+    qState.activeMode != noMode,
+    not(qState.magicActionAvailable),
+    qState.durationTicks > 0,
     recordSelfTransformationState(
       true,
       false,
       true,
-      qSpellSlotExpended,
+      qState.spellSlotExpended,
       false,
-      qCasterConcentrating,
-      qActiveMode,
-      qNaturalWeaponDamageType,
-      qDurationTicks - 1,
+      qState.casterConcentrating,
+      qState.activeMode,
+      qState.naturalWeaponDamageType,
+      qState.durationTicks - 1,
       "nextCasterTurn",
+      witnessResolved(NoHole),
     ),
   }
 
   action doReplaceChangeAppearance = all {
-    qMagicActionAvailable,
-    qModeReplacementAvailable,
-    qActiveMode != noMode,
-    qActiveMode != changeAppearanceMode,
+    qState.magicActionAvailable,
+    qState.modeReplacementAvailable,
+    qState.activeMode != noMode,
+    qState.activeMode != changeAppearanceMode,
     recordSelfTransformationState(
       false,
       false,
       false,
-      qSpellSlotExpended,
+      qState.spellSlotExpended,
       false,
       true,
       changeAppearanceMode,
       noDamageType,
-      qDurationTicks,
+      qState.durationTicks,
       "changeAppearanceReplacement",
+      witnessResolved(NoHole),
     ),
   }
 
   action doReplaceNaturalWeapons = all {
-    qMagicActionAvailable,
-    qModeReplacementAvailable,
-    qActiveMode != noMode,
-    qActiveMode != naturalWeaponsMode,
+    qState.magicActionAvailable,
+    qState.modeReplacementAvailable,
+    qState.activeMode != noMode,
+    qState.activeMode != naturalWeaponsMode,
     recordSelfTransformationState(
       false,
       false,
       false,
-      qSpellSlotExpended,
+      qState.spellSlotExpended,
       false,
       true,
       naturalWeaponsMode,
       piercingDamageType,
-      qDurationTicks,
+      qState.durationTicks,
       "naturalWeaponsReplacement",
+      witnessResolved(NoHole),
     ),
   }
 
   action doStutter = recordSelfTransformationState(
-    qMagicActionAvailable,
-    qCastSpellAvailable,
-    qModeReplacementAvailable,
-    qSpellSlotExpended,
-    qSlotSpellCastThisTurn,
-    qCasterConcentrating,
-    qActiveMode,
-    qNaturalWeaponDamageType,
-    qDurationTicks,
-    qLastResult,
+    qState.magicActionAvailable,
+    qState.castSpellAvailable,
+    qState.modeReplacementAvailable,
+    qState.spellSlotExpended,
+    qState.slotSpellCastThisTurn,
+    qState.casterConcentrating,
+    qState.activeMode,
+    qState.naturalWeaponDamageType,
+    qState.durationTicks,
+    qState.scenarioResult,
+    qState.protocol,
   )
 
   action step = any {

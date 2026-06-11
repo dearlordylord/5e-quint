@@ -1,7 +1,5 @@
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1D2-BARDIC-INSPIRATION-SCALING bard_bardic_inspiration
 // UNIT-IDENTITY-MBT-REPLAY: L1D2-BARDIC-INSPIRATION-SCALING bard_bardic_inspiration doGrantBardicInspirationD12
-import * as path from "node:path";
-
 import * as Either from "effect/Either";
 import { expect } from "vitest";
 
@@ -38,6 +36,7 @@ import {
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
 import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
+import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
 
 type BardicInspirationProjection = {
   readonly bonusActionAvailable: boolean;
@@ -55,17 +54,22 @@ const unitCatalogResult = buildUnitCatalog({
   collections: [srdUnitCollection],
 });
 if (unitCatalogResult.tag !== "ok") {
-  throw new Error("Bardic Inspiration selected identity Unit catalog must build.");
+  throw new Error(
+    "Bardic Inspiration selected identity Unit catalog must build.",
+  );
 }
 const unitLibrary = unitCatalogResult.catalog;
 
 defineSelectedIdentityWitness({
   describeLabel: "Bardic Inspiration selected identity MBT",
   taskId: "L1D2-BARDIC-INSPIRATION-SCALING",
-  specFile: path.resolve(
+  specFile: mbtSpecPath(
     import.meta.dirname,
-    "../bardic-inspiration-selected-identity.mbt.qnt",
+    "bardic-inspiration-selected-identity.mbt.qnt",
   ),
+  quintStateField: "qState",
+  quintStateFieldPrefix: "q",
+  witnessProtocolField: "protocol",
   projectionSchema: {
     bonusActionAvailable: "bool",
     featureUsesRemaining: "int",

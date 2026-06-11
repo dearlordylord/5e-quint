@@ -29,10 +29,22 @@
 // UNIT-IDENTITY-MBT-REPLAY: L1H-FIGHTER-TACTICAL-MIND fighter_tactical_mind doTacticalMindConvertedSuccess doTacticalMindStillFailed
 // UNIT-IDENTITY-MBT-REPLAY: L1H-BOON-COMBAT-PROWESS feat_boon_of_combat_prowess doCombatProwessMissToHit
 // UNIT-IDENTITY-MBT-REPLAY: L1H-MYCELIUM-STEP mycelium_step doMyceliumStepDash
-import * as path from "node:path";
 import { isDeepStrictEqual } from "node:util";
 
-import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
+import {
+  MBT_TEST_TIMEOUT_MS,
+  booleanField,
+  defineDriver,
+  focusedMbtMaxSteps,
+  mbtSpecPath,
+  mbtTraceCount,
+  numberFromQuintInt,
+  quintSet,
+  quintStateRecord,
+  quintVariantTag,
+  run,
+  stateCheck,
+} from "./battle-runtime-mbt-driver-kit.ts";
 import { Either } from "effect";
 import { describe, expect, it } from "vitest";
 
@@ -1550,21 +1562,23 @@ describe("rule-core Feature focused MBT", () => {
     }
   });
 
-  it("replays QCORE9 feature procedure parity through battle-runtime reducers", async () => {
-    await run({
-      spec: path.resolve(import.meta.dirname, "../rule-core-features.mbt.qnt"),
-      init: "init",
-      step: "step",
-      driver: createRuleCoreFeatureDriver(),
-      backend: "typescript",
-      seed: process.env["QUINT_SEED"],
-      nTraces: Number(process.env["MBT_TRACES"] ?? 1),
-      maxSteps: Number(
-        process.env["MBT_STEPS"] ?? ruleCoreFeatureDefaultMbtSteps,
-      ),
-      stateCheck: featureStateCheck,
-    });
-  }, 120_000);
+  it(
+    "replays QCORE9 feature procedure parity through battle-runtime reducers",
+    async () => {
+      await run({
+        spec: mbtSpecPath(import.meta.dirname, "rule-core-features.mbt.qnt"),
+        init: "init",
+        step: "step",
+        driver: createRuleCoreFeatureDriver(),
+        backend: "typescript",
+        seed: process.env["QUINT_SEED"],
+        nTraces: mbtTraceCount(),
+        maxSteps: focusedMbtMaxSteps(ruleCoreFeatureDefaultMbtSteps),
+        stateCheck: featureStateCheck,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
 });
 
 function startBattleRight(
@@ -2582,7 +2596,7 @@ function normalizeRuleCoreFeatureQuintState(
       state["qActorArmorClass"],
       "qActorArmorClass",
     ),
-    holes: quintHoleSet(state["qHoles"]).map(featureHoleName),
+    holes: quintSet(state["qHoles"], "qHoles").map(featureHoleName),
     pendingInterrupt: booleanField(state, "qPendingReaction"),
     lastResult: featureResult(state["qLastResult"]),
     lastInvalidReason: featureInvalidReason(state["qLastInvalidReason"]),
@@ -2676,26 +2690,6 @@ function deflectAttacksUnit(): Extract<
   return unit;
 }
 
-function numberFromQuintInt(raw: unknown, field: string): number {
-  if (typeof raw === "number") return raw;
-  if (typeof raw === "bigint") return Number(raw);
-  throw new Error(`Expected Quint integer field ${field}.`);
-}
-
-function booleanField(
-  state: Readonly<Record<string, unknown>>,
-  field: string,
-): boolean {
-  const value = state[field];
-  if (typeof value === "boolean") return value;
-  throw new Error(`Expected Quint boolean field ${field}.`);
-}
-
-function quintHoleSet(raw: unknown): readonly unknown[] {
-  if (raw instanceof Set) return [...raw];
-  throw new Error("Expected Quint qHoles field to be a Set.");
-}
-
 function featureHoleName(raw: unknown): RuleCoreFeatureMbtHole {
   const tag = quintVariantTag(raw);
   if (isRuleCoreFeatureMbtHole(tag)) return tag;
@@ -2736,19 +2730,4 @@ function actionSurgeGrantName(raw: unknown): ActionSurgeGrant {
 
 function isActionSurgeGrant(raw: unknown): raw is ActionSurgeGrant {
   return actionSurgeGrants.some((grant) => grant === raw);
-}
-
-function quintVariantTag(raw: unknown): string {
-  if (isRecord(raw) && typeof raw["tag"] === "string") return raw["tag"];
-  if (typeof raw === "string") return raw;
-  throw new Error(`Expected Quint variant tag, got ${String(raw)}.`);
-}
-
-function quintStateRecord(raw: unknown): Readonly<Record<string, unknown>> {
-  if (!isRecord(raw)) throw new Error("Expected Quint state object.");
-  return raw;
-}
-
-function isRecord(raw: unknown): raw is Readonly<Record<string, unknown>> {
-  return typeof raw === "object" && raw !== null;
 }

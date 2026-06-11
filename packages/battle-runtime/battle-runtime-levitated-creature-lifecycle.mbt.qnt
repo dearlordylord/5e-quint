@@ -1,6 +1,37 @@
 // -*- mode: Bluespec; -*-
 
 module battleRuntimeLevitatedCreatureLifecycleMbt {
+  import battleRuntimeWitnessProtocol.* from "./battle-runtime-witness-protocol"
+
+  type LevitatedCreatureLifecycleWitnessState = {
+    qActionAvailable: bool,
+    qSpellAvailable: bool,
+    qEffectActive: bool,
+    qCasterConcentrating: bool,
+    qAltitudeFeet: int,
+    qScenarioResult: str,
+    protocol: WitnessProtocol[str],
+  }
+
+  var qState: LevitatedCreatureLifecycleWitnessState
+
+  pure def qActionAvailable: bool = qState.qActionAvailable
+  pure def qSpellAvailable: bool = qState.qSpellAvailable
+  pure def qEffectActive: bool = qState.qEffectActive
+  pure def qCasterConcentrating: bool = qState.qCasterConcentrating
+  pure def qAltitudeFeet: int = qState.qAltitudeFeet
+  pure def qLastResult: str = qState.qScenarioResult
+  pure def qHoles: Set[str] = qState.protocol.holes
+
+  pure def levitatedCreatureLifecycleProtocolForProjection(
+    holes: Set[str],
+    scenarioResult: str,
+    _scenarioInvalidReason: str,
+  ): WitnessProtocol[str] =
+    if (scenarioResult == "init") witnessInit("WitnessHole")
+    else if (holes != Set()) witnessNeedsHoles(holes)
+    else witnessResolved("WitnessHole")
+
   // RAW trace:
   // - .references/srd-5.2.1/Spells/Descriptions-E-L.md#Levitate:
   //   Concentration up to 10 minutes; one visible creature rises up to
@@ -16,13 +47,6 @@ module battleRuntimeLevitatedCreatureLifecycleMbt {
   //   Movement is deducted from the creature's movement budget.
   // - UBIQUITOUS_LANGUAGE.md: Magic Action, Movement, Concentration,
   //   Duration, and Spellcasting.
-  var qActionAvailable: bool
-  var qSpellAvailable: bool
-  var qEffectActive: bool
-  var qCasterConcentrating: bool
-  var qAltitudeFeet: int
-  var qHoles: Set[str]
-  var qLastResult: str
 
   pure val noAltitude: int = -1
   pure val noHoles: Set[str] = Set()
@@ -48,13 +72,15 @@ module battleRuntimeLevitatedCreatureLifecycleMbt {
     holes: Set[str],
     lastResult: str,
   ): bool = all {
-    qActionAvailable' = actionAvailable,
-    qSpellAvailable' = spellAvailable,
-    qEffectActive' = effectActive,
-    qCasterConcentrating' = casterConcentrating,
-    qAltitudeFeet' = altitudeFeet,
-    qHoles' = holes,
-    qLastResult' = lastResult,
+    qState' = {
+      qActionAvailable: actionAvailable,
+      qSpellAvailable: spellAvailable,
+      qEffectActive: effectActive,
+      qCasterConcentrating: casterConcentrating,
+      qAltitudeFeet: altitudeFeet,
+      qScenarioResult: lastResult,
+      protocol: levitatedCreatureLifecycleProtocolForProjection(holes, lastResult, ""),
+    },
   }
 
   action recordNoEffectState(

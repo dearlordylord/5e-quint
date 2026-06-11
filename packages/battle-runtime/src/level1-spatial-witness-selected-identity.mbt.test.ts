@@ -9,8 +9,6 @@
 // UNIT-IDENTITY-MBT-REPLAY: level1-spatial-witness produce_flame doProduceFlameHeldLightProjectionHurlCleanup
 // UNIT-IDENTITY-MBT-REPLAY: level1-spatial-witness thunderwave doThunderwaveSavePushObjectsBoom
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE BATTLE.SPELL.FOG_CLOUD_OBSCUREMENT_LIFECYCLE BATTLE.SPELL.OBJECT_LIGHT_EMITTER_LIFECYCLE BATTLE.SPELL.HELD_LIGHT_EMITTER_LIFECYCLE BATTLE.SPELL.DANCING_LIGHTS_EMITTER_LIFECYCLE BATTLE.SPELL.FEATHER_FALL_MITIGATION_LIFECYCLE BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE
-import * as path from "node:path";
-
 import { Either } from "effect";
 
 import {
@@ -90,6 +88,7 @@ import {
   type CombatantId,
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
+import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
 import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
 
 type Level1SpatialWitnessSelectedIdentityProjection = {
@@ -796,10 +795,14 @@ const selectedUnitIdentityReplays = [
 defineSelectedIdentityWitness({
   describeLabel: "Level 1 spatial witness selected identity MBT",
   taskId: "level1-spatial-witness",
-  specFile: path.resolve(
+  specFile: mbtSpecPath(
     import.meta.dirname,
-    "../battle-runtime-level1-spatial-witness-selected-identity.mbt.qnt",
+    "battle-runtime-level1-spatial-witness-selected-identity.mbt.qnt",
   ),
+  quintStateField: "qState",
+  quintStateFieldPrefix: "q",
+  witnessProtocolField: "protocol",
+  quintFieldNames: { lastResult: "qScenarioResult" },
   projectionSchema: {
     lightEmitterCount: "int",
     dimLightEmitterCount: "int",

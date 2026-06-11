@@ -1,8 +1,5 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.ANTIMAGIC_FIELD_ACTION_INTERDICTION
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-antimagic-field-action-interdiction
-import * as path from "node:path";
-
-import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { classLevel, Hp, movementFeet } from "@dnd/shared/types";
 import * as Either from "effect/Either";
@@ -46,15 +43,25 @@ import {
 } from "./index.ts";
 import { battleMagicActionHealingPoolSupportForUnit } from "./unit-feature-support.ts";
 import {
+  MBT_TEST_TIMEOUT_MS,
+  booleanField,
+  decodeWitnessProtocolState,
+  defineDriver,
   focusedMbtMaxSteps,
-  promotedMbtTraces,
-} from "./battle-runtime-mbt-fixtures.ts";
+  mbtSpecPath,
+  mbtTraceCount,
+  quintRecordField,
+  quintStateRecord,
+  run,
+  stateCheck,
+  type MbtWitnessLastResult,
+} from "./battle-runtime-mbt-driver-kit.ts";
 
 type AntimagicActionInterdictionProjection = {
   readonly actionSpellDiscovered: boolean;
   readonly bonusActionSpellDiscovered: boolean;
   readonly magicActionDiscovered: boolean;
-  readonly lastResult: "init" | "discovered" | "invalid";
+  readonly lastResult: MbtWitnessLastResult;
   readonly lastInvalidReason: "" | "staleSubject";
 };
 
@@ -81,30 +88,26 @@ const antimagicActionInterdictionDriverSchema = {
 describe("Antimagic Field action interdiction MBT", () => {
   it("replays action spell, Bonus Action spell, Reaction spell, and Magic Action interdiction", async () => {
     await run({
-      spec: path.resolve(
+      spec: mbtSpecPath(
         import.meta.dirname,
-        "../battle-runtime-antimagic-field-action-interdiction.mbt.qnt",
+        "battle-runtime-antimagic-field-action-interdiction.mbt.qnt",
       ),
       init: "init",
       step: "step",
       driver: createAntimagicActionInterdictionDriver(),
       backend: "typescript",
-      nTraces: promotedMbtTraces,
+      nTraces: mbtTraceCount(),
       maxSteps: focusedMbtMaxSteps(3),
       stateCheck: antimagicActionInterdictionStateCheck,
     });
-  }, 120_000);
+  }, MBT_TEST_TIMEOUT_MS);
 });
 
 function createAntimagicActionInterdictionDriver() {
   return defineDriver(antimagicActionInterdictionDriverSchema, () => {
     let projection = initProjection();
-
-    return {
-      init: () => {
-        projection = initProjection();
-      },
-      doBlockDiscoveryInsideAura: () => {
+    const actionHandlers = {
+      doBlockDiscoveryInsideAura() {
         projection = discoveryProjection(
           activeAntimagicAuraState(
             spellInterdictionBattle(),
@@ -124,7 +127,7 @@ function createAntimagicActionInterdictionDriver() {
           ),
         );
       },
-      doAllowOriginExcluded: () => {
+      doAllowOriginExcluded() {
         projection = discoveryProjection(
           activeAntimagicAuraState(
             spellInterdictionBattle(),
@@ -137,7 +140,7 @@ function createAntimagicActionInterdictionDriver() {
           preserveLifeBattle(),
         );
       },
-      doRejectStaleActionSpell: () => {
+      doRejectStaleActionSpell() {
         const base = spellInterdictionBattle();
         const act = spellAct({ state: base, spellId: rayOfFrostUnitId });
         projection = invalidProjection(
@@ -155,7 +158,7 @@ function createAntimagicActionInterdictionDriver() {
           }),
         );
       },
-      doRejectStaleMagicAction: () => {
+      doRejectStaleMagicAction() {
         const base = preserveLifeBattle();
         const act = preserveLifeAct(base);
         projection = invalidProjection(
@@ -173,7 +176,7 @@ function createAntimagicActionInterdictionDriver() {
           }),
         );
       },
-      doRejectTriggeredReactionSpell: () => {
+      doRejectTriggeredReactionSpell() {
         projection = invalidProjection(
           resolveBattleSubject({
             state: activeAntimagicAuraState(
@@ -199,6 +202,13 @@ function createAntimagicActionInterdictionDriver() {
           }),
         );
       },
+    } as const;
+
+    return {
+      init: () => {
+        projection = initProjection();
+      },
+      ...actionHandlers,
       step: () => {},
       getState: () => projection,
     };
@@ -219,33 +229,48 @@ const antimagicActionInterdictionStateCheck = stateCheck(
 function normalizeAntimagicActionInterdictionQuintState(
   raw: unknown,
 ): AntimagicActionInterdictionProjection {
-  const actionSpellDiscovered = quintStateField(raw, "qActionSpellDiscovered");
-  const bonusActionSpellDiscovered = quintStateField(
-    raw,
-    "qBonusActionSpellDiscovered",
-  );
-  const magicActionDiscovered = quintStateField(raw, "qMagicActionDiscovered");
-  const lastResult = quintStateField(raw, "qLastResult");
-  const lastInvalidReason = quintStateField(raw, "qLastInvalidReason");
+  const state = quintRecordField(quintStateRecord(raw), "qState");
+  const protocol = decodeWitnessProtocolState({
+    state,
+    protocolField: "protocol",
+    noInvalidReason: "",
+    decodeHole: antimagicActionInterdictionUnexpectedHole,
+  });
+  if (protocol.holes.length !== 0) {
+    throw new Error(
+      "Expected Antimagic Field action interdiction witness holes to be empty.",
+    );
+  }
   return {
-    actionSpellDiscovered: actionSpellDiscovered === true,
-    bonusActionSpellDiscovered: bonusActionSpellDiscovered === true,
-    magicActionDiscovered: magicActionDiscovered === true,
-    lastResult:
-      lastResult === "init" ||
-      lastResult === "discovered" ||
-      lastResult === "invalid"
-        ? lastResult
-        : "invalid",
-    lastInvalidReason:
-      lastInvalidReason === "staleSubject" ? "staleSubject" : "",
+    actionSpellDiscovered: booleanField(state, "qActionSpellDiscovered"),
+    bonusActionSpellDiscovered: booleanField(
+      state,
+      "qBonusActionSpellDiscovered",
+    ),
+    magicActionDiscovered: booleanField(state, "qMagicActionDiscovered"),
+    lastResult: protocol.lastResult,
+    lastInvalidReason: antimagicActionInterdictionInvalidReason(
+      protocol.lastInvalidReason,
+    ),
   };
 }
 
-function quintStateField(raw: unknown, fieldName: string): unknown {
-  return raw !== null && typeof raw === "object"
-    ? Reflect.get(raw, fieldName)
-    : undefined;
+function antimagicActionInterdictionUnexpectedHole(raw: unknown): never {
+  throw new Error(
+    `Antimagic Field action interdiction witness does not expect holes; received ${String(raw)}.`,
+  );
+}
+
+function antimagicActionInterdictionInvalidReason(
+  raw: unknown,
+): "" | "staleSubject" {
+  if (raw === "" || raw === "staleSubject") {
+    return raw;
+  }
+
+  throw new Error(
+    `Unexpected Antimagic Field action interdiction invalid reason: ${String(raw)}.`,
+  );
 }
 
 function initProjection(): AntimagicActionInterdictionProjection {
@@ -271,7 +296,7 @@ function discoveryProjection(
       undefined,
     magicActionDiscovered:
       preserveLifeActOrUndefined(magicActionState) !== undefined,
-    lastResult: "discovered",
+    lastResult: "resolved",
     lastInvalidReason: "",
   };
 }

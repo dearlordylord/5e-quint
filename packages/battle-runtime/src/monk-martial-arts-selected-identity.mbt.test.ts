@@ -1,7 +1,5 @@
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1D2-MONK-MARTIAL-ARTS-SCALING monk_martial_arts
 // UNIT-IDENTITY-MBT-REPLAY: L1D2-MONK-MARTIAL-ARTS-SCALING monk_martial_arts doProjectMartialArtsD12
-import * as path from "node:path";
-
 import {
   classLevel,
   DAMAGE_DIE_SIZES,
@@ -13,6 +11,7 @@ import {
 } from "@dnd/surface/surface/unit-catalog";
 
 import { martialArtsAttackProjectionProfileForUnit } from "./index.ts";
+import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
 import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
 
 type MonkMartialArtsLastResult = "init" | "projected" | "invalid";
@@ -38,9 +37,9 @@ const unitLibrary = unitCatalogResult.catalog;
 defineSelectedIdentityWitness({
   describeLabel: "Monk Martial Arts selected identity MBT",
   taskId: "L1D2-MONK-MARTIAL-ARTS-SCALING",
-  specFile: path.resolve(
+  specFile: mbtSpecPath(
     import.meta.dirname,
-    "../monk-martial-arts-selected-identity.mbt.qnt",
+    "monk-martial-arts-selected-identity.mbt.qnt",
   ),
   projectionSchema: {
     classLevel: "int",

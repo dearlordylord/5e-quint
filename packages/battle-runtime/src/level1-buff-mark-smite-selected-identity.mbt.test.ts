@@ -21,8 +21,6 @@
 // UNIT-IDENTITY-MBT-REPLAY: L1E-SEARING-SMITE searing_smite doSearingSmiteAfterHitTimedDamageAndSaveCleanup
 // UNIT-IDENTITY-MBT-REPLAY: L1E-SHILLELAGH shillelagh doShillelaghWeaponAttackOverride
 // UNIT-IDENTITY-MBT-REPLAY: L1E-TRUE-STRIKE true_strike doTrueStrikeSpellHostedWeaponAttack
-import * as path from "node:path";
-
 import { Either } from "effect";
 
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
@@ -87,6 +85,15 @@ import {
   applyBattleHitPointDamage,
   breakBattleConcentration,
 } from "./battle-reducer/damage-apply.ts";
+import {
+  assertWitnessProtocolConsistentWithScenario,
+  booleanField,
+  decodeWitnessProtocolState,
+  mbtSpecPath,
+  numberFromQuintInt,
+  quintRecordField,
+  quintStateRecord,
+} from "./battle-runtime-mbt-driver-kit.ts";
 import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
 
 type Level1BuffMarkSmiteSelectedIdentityAction =
@@ -801,10 +808,14 @@ const selectedUnitIdentityReplays = [
 defineSelectedIdentityWitness({
   describeLabel: "Level 1 buff mark smite selected identity MBT",
   taskId: "level1-buff-mark-smite-selected-identity",
-  specFile: path.resolve(
+  specFile: mbtSpecPath(
     import.meta.dirname,
-    "../battle-runtime-level1-buff-mark-smite-selected-identity.mbt.qnt",
+    "battle-runtime-level1-buff-mark-smite-selected-identity.mbt.qnt",
   ),
+  quintStateField: "qState",
+  quintStateFieldPrefix: "q",
+  witnessProtocolField: "protocol",
+  quintFieldNames: { lastResult: "qScenarioResult" },
   projectionSchema: {},
   initialProjection: expectedProjection(),
   normalizeQuintState: normalizeLevel1BuffMarkSmiteSelectedIdentityQuintState,
@@ -3297,7 +3308,24 @@ function level1SlotsRemaining(state: BattleState): number {
 function normalizeLevel1BuffMarkSmiteSelectedIdentityQuintState(
   raw: unknown,
 ): Level1BuffMarkSmiteSelectedIdentityProjection {
-  const state = quintStateRecord(raw);
+  const state = quintRecordField(quintStateRecord(raw), "qState");
+  const protocol = decodeWitnessProtocolState({
+    state,
+    protocolField: "protocol",
+    noInvalidReason: "",
+    decodeHole: level1BuffMarkSmiteUnexpectedHole,
+  });
+  if (protocol.holes.length !== 0) {
+    throw new Error(
+      "Expected level-1 buff/mark/smite witness holes to be empty.",
+    );
+  }
+  const scenarioResult = mbtLastResult(state["qScenarioResult"]);
+  assertWitnessProtocolConsistentWithScenario({
+    label: "level-1 buff/mark/smite selected identity",
+    scenarioResult,
+    protocol,
+  });
   return {
     divineFavorActiveRiderCount: numberFromQuintInt(
       state["qDivineFavorActiveRiderCount"],
@@ -3476,30 +3504,14 @@ function normalizeLevel1BuffMarkSmiteSelectedIdentityQuintState(
       shillelaghWeaponAttackOverrideFromQuint(state),
     trueStrikeSpellHostedWeaponAttack:
       trueStrikeSpellHostedWeaponAttackFromQuint(state),
-    lastResult: mbtLastResult(state["qLastResult"]),
+    lastResult: scenarioResult,
   };
 }
 
-function quintStateRecord(raw: unknown): Readonly<Record<string, unknown>> {
-  if (raw === null || typeof raw !== "object" || Array.isArray(raw)) {
-    throw new Error("Expected Quint state record.");
-  }
-  return Object.fromEntries(Object.entries(raw));
-}
-
-function numberFromQuintInt(raw: unknown, field: string): number {
-  if (typeof raw === "number") return raw;
-  if (typeof raw === "bigint") return Number(raw);
-  throw new Error(`Expected Quint integer field ${field}.`);
-}
-
-function booleanField(
-  state: Readonly<Record<string, unknown>>,
-  field: string,
-): boolean {
-  const value = state[field];
-  if (typeof value === "boolean") return value;
-  throw new Error(`Expected Quint boolean field ${field}.`);
+function level1BuffMarkSmiteUnexpectedHole(raw: unknown): never {
+  throw new Error(
+    `Unexpected level-1 buff/mark/smite witness hole ${String(raw)}.`,
+  );
 }
 
 function damageRiderSourceSpellIdFromQuint(

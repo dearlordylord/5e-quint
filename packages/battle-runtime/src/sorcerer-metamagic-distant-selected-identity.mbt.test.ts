@@ -7,8 +7,6 @@
 //   becomes 30 feet for the selected cast and spends 1 Sorcery Point.
 // - .references/srd-5.2.1/Spells/Descriptions-E-L.md#Light: the object
 //   emits Bright Light 20 feet plus Dim Light for 20 more feet.
-import * as path from "node:path";
-
 import { resourceCount } from "@dnd/shared/types";
 
 import { DISTANT_METAMAGIC_EFFECT_KIND } from "./battle-reducer/metamagic.ts";
@@ -17,6 +15,7 @@ import {
   type CharacterBattleMetamagicOptionFact,
   type CharacterBattlePointPoolResourceState,
 } from "./character-battle-resources.ts";
+import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
 import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
 import {
   lightUnitId,
@@ -49,10 +48,13 @@ type DistantObjectLightProjection = {
 defineSelectedIdentityWitness({
   describeLabel: "Sorcerer Distant Spell object-light selected identity MBT",
   taskId: "L3MMETA-15-DISTANT-OBJECT-LIGHT",
-  specFile: path.resolve(
+  specFile: mbtSpecPath(
     import.meta.dirname,
-    "../battle-runtime-sorcerer-metamagic-distant-selected-identity.mbt.qnt",
+    "battle-runtime-sorcerer-metamagic-distant-selected-identity.mbt.qnt",
   ),
+  quintStateField: "qState",
+  witnessProtocolField: "protocol",
+  quintFieldNames: { lastResult: "scenarioResult" },
   projectionSchema: {
     sorceryPointsRemaining: "int",
     lightEmitterCount: "int",

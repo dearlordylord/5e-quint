@@ -1,10 +1,19 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE
-import * as path from "node:path";
-
-import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
-import { Schema } from "effect";
 import { describe, expect, it } from "vitest";
 
+import {
+  MBT_TEST_TIMEOUT_MS,
+  booleanValue,
+  defineDriver,
+  focusedMbtMaxSteps,
+  mbtPickSchemas,
+  mbtSpecPath,
+  mbtTraceCount,
+  numberFromQuintInt,
+  quintStateRecord,
+  run,
+  stateCheck,
+} from "./battle-runtime-mbt-driver-kit.ts";
 import {
   resolveFlamingSphereCast,
   resolveFlamingSphereHazardRam,
@@ -29,30 +38,21 @@ function initialState(slotLedgerLevel: number): FlamingSphereHazardRamState {
   };
 }
 
-const QuintIntAsNumber = Schema.transform(
-  Schema.BigIntFromSelf,
-  Schema.Number,
-  { strict: true, decode: (n) => Number(n), encode: (n) => BigInt(n) },
-);
-
-const intSchema = Schema.standardSchemaV1(QuintIntAsNumber);
-const boolSchema = Schema.standardSchemaV1(Schema.Boolean);
-
 const driverSchema = {
   init: {
-    slotLedgerLevel: intSchema,
+    slotLedgerLevel: mbtPickSchemas.int,
   },
   doCastFlamingSphere: {
-    slotLevel: intSchema,
+    slotLevel: mbtPickSchemas.int,
   },
   doEndWithinFiveFeet: {
-    savingThrowSucceeded: boolSchema,
-    rolledDamage: intSchema,
+    savingThrowSucceeded: mbtPickSchemas.bool,
+    rolledDamage: mbtPickSchemas.int,
   },
   doRam: {
-    savingThrowSucceeded: boolSchema,
-    rolledDamage: intSchema,
-    moveFeet: intSchema,
+    savingThrowSucceeded: mbtPickSchemas.bool,
+    rolledDamage: mbtPickSchemas.int,
+    moveFeet: mbtPickSchemas.int,
   },
   step: {},
 } as const;
@@ -141,36 +141,31 @@ describe("Flaming Sphere hazard/ram MBT parity", () => {
 
   it("matches the TS reducer slice against bounded random MBT traces", async () => {
     await run({
-      spec: path.resolve(
+      spec: mbtSpecPath(
         import.meta.dirname,
-        "../battle-runtime-flaming-sphere-hazard-ram.mbt.qnt",
+        "battle-runtime-flaming-sphere-hazard-ram.mbt.qnt",
       ),
       init: "init",
       step: "step",
       driver: createFlamingSphereHazardRamDriver(),
       backend: "typescript",
-      nTraces: 10,
-      maxSteps: 6,
+      nTraces: mbtTraceCount(),
+      maxSteps: focusedMbtMaxSteps(6),
       stateCheck: flamingSphereHazardRamStateCheck,
     });
-  }, 120_000);
+  }, MBT_TEST_TIMEOUT_MS);
 });
 
 function normalizeFlamingSphereHazardRamQuintState(
   raw: unknown,
 ): FlamingSphereHazardRamState {
-  if (raw == null || typeof raw !== "object" || Array.isArray(raw)) {
-    throw new Error("Expected Quint Flaming Sphere hazard/ram state.");
-  }
-  const state: Readonly<Record<string, unknown>> = Object.fromEntries(
-    Object.entries(raw),
-  );
+  const state = quintStateRecord(raw);
   return {
-    actionAvailable: booleanFromQuint(
+    actionAvailable: booleanValue(
       state["qActionAvailable"],
       "qActionAvailable",
     ),
-    casterHasBonusAction: booleanFromQuint(
+    casterHasBonusAction: booleanValue(
       state["qCasterHasBonusAction"],
       "qCasterHasBonusAction",
     ),
@@ -185,7 +180,7 @@ function normalizeFlamingSphereHazardRamQuintState(
         "qSlotsRemaining",
       ),
     },
-    slotSpellCastThisTurn: booleanFromQuint(
+    slotSpellCastThisTurn: booleanValue(
       state["qSlotSpellCastThisTurn"],
       "qSlotSpellCastThisTurn",
     ),
@@ -203,8 +198,8 @@ function normalizeFlamingSphereHazardRamQuintState(
         state["qTargetTemporaryHitPoints"],
         "qTargetTemporaryHitPoints",
       ),
-      dead: booleanFromQuint(state["qTargetDead"], "qTargetDead"),
-      unconscious: booleanFromQuint(
+      dead: booleanValue(state["qTargetDead"], "qTargetDead"),
+      unconscious: booleanValue(
         state["qTargetUnconscious"],
         "qTargetUnconscious",
       ),
@@ -215,7 +210,7 @@ function normalizeFlamingSphereHazardRamQuintState(
 function sphereFromQuintState(
   state: Readonly<Record<string, unknown>>,
 ): FlamingSphereHazardRamState["sphere"] {
-  const sphereActive = booleanFromQuint(
+  const sphereActive = booleanValue(
     state["qSphereActive"],
     "qSphereActive",
   );
@@ -251,15 +246,4 @@ function compareFlamingSphereHazardRamState(
     throw error;
   }
   return true;
-}
-
-function numberFromQuintInt(raw: unknown, field: string): number {
-  if (typeof raw === "number") return raw;
-  if (typeof raw === "bigint") return Number(raw);
-  throw new Error(`Expected Quint integer field ${field}.`);
-}
-
-function booleanFromQuint(raw: unknown, field: string): boolean {
-  if (typeof raw === "boolean") return raw;
-  throw new Error(`Expected Quint Boolean field ${field}.`);
 }

@@ -1,8 +1,5 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.ANTIMAGIC_FIELD_MAGICAL_EFFECT_INTERDICTION
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-antimagic-field-magical-effect-interdiction
-import * as path from "node:path";
-
-import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { classLevel, Hp, movementFeet } from "@dnd/shared/types";
 import * as Either from "effect/Either";
@@ -57,16 +54,26 @@ import {
 } from "./index.ts";
 import { battleMagicActionHealingPoolSupportForUnit } from "./unit-feature-support.ts";
 import {
+  MBT_TEST_TIMEOUT_MS,
+  booleanField,
+  decodeWitnessProtocolState,
+  defineDriver,
   focusedMbtMaxSteps,
-  promotedMbtTraces,
-} from "./battle-runtime-mbt-fixtures.ts";
+  mbtSpecPath,
+  mbtTraceCount,
+  quintRecordField,
+  quintStateRecord,
+  run,
+  stateCheck,
+  type MbtWitnessLastResult,
+} from "./battle-runtime-mbt-driver-kit.ts";
 
 type AntimagicMagicalEffectInterdictionProjection = {
   readonly spellTargetAllowed: boolean;
   readonly spellAreaDeliveryAllowed: boolean;
   readonly objectContactDeliveryAllowed: boolean;
   readonly otherMagicalEffectTargetAllowed: boolean;
-  readonly lastResult: "init" | "allowed" | "invalid";
+  readonly lastResult: MbtWitnessLastResult;
 };
 
 const antimagicFieldAreaId = battleAreaId(
@@ -94,19 +101,19 @@ const antimagicMagicalEffectInterdictionDriverSchema = {
 describe("Antimagic Field magical-effect interdiction MBT", () => {
   it("replays magical-effect target and delivery interdiction", async () => {
     await run({
-      spec: path.resolve(
+      spec: mbtSpecPath(
         import.meta.dirname,
-        "../battle-runtime-antimagic-field-magical-effect-interdiction.mbt.qnt",
+        "battle-runtime-antimagic-field-magical-effect-interdiction.mbt.qnt",
       ),
       init: "init",
       step: "step",
       driver: createAntimagicMagicalEffectInterdictionDriver(),
       backend: "typescript",
-      nTraces: promotedMbtTraces,
+      nTraces: mbtTraceCount(),
       maxSteps: focusedMbtMaxSteps(3),
       stateCheck: antimagicMagicalEffectInterdictionStateCheck,
     });
-  }, 120_000);
+  }, MBT_TEST_TIMEOUT_MS);
 });
 
 function createAntimagicMagicalEffectInterdictionDriver() {
@@ -114,12 +121,8 @@ function createAntimagicMagicalEffectInterdictionDriver() {
     antimagicMagicalEffectInterdictionDriverSchema,
     () => {
       let projection = initProjection();
-
-      return {
-        init: () => {
-          projection = initProjection();
-        },
-        doAllowOutsideAura: () => {
+      const actionHandlers = {
+        doAllowOutsideAura() {
           projection = {
             spellTargetAllowed:
               !spellTargetInterdicted(outsideAuraSpellTargetState()),
@@ -131,10 +134,10 @@ function createAntimagicMagicalEffectInterdictionDriver() {
               !otherMagicalEffectTargetInterdicted(
                 outsideAuraOtherMagicalEffectState(),
               ),
-            lastResult: "allowed",
+            lastResult: "resolved",
           };
         },
-        doRejectSpellTargetInsideAura: () => {
+        doRejectSpellTargetInsideAura() {
           projection = {
             ...initProjection(),
             spellTargetAllowed:
@@ -142,7 +145,7 @@ function createAntimagicMagicalEffectInterdictionDriver() {
             lastResult: "invalid",
           };
         },
-        doRejectSpellAreaDeliveryInsideAura: () => {
+        doRejectSpellAreaDeliveryInsideAura() {
           projection = {
             ...initProjection(),
             spellAreaDeliveryAllowed:
@@ -150,7 +153,7 @@ function createAntimagicMagicalEffectInterdictionDriver() {
             lastResult: "invalid",
           };
         },
-        doRejectObjectContactDeliveryInsideAura: () => {
+        doRejectObjectContactDeliveryInsideAura() {
           projection = {
             ...initProjection(),
             objectContactDeliveryAllowed:
@@ -158,7 +161,7 @@ function createAntimagicMagicalEffectInterdictionDriver() {
             lastResult: "invalid",
           };
         },
-        doRejectOtherMagicalEffectTargetInsideAura: () => {
+        doRejectOtherMagicalEffectTargetInsideAura() {
           projection = {
             ...initProjection(),
             otherMagicalEffectTargetAllowed:
@@ -168,6 +171,13 @@ function createAntimagicMagicalEffectInterdictionDriver() {
             lastResult: "invalid",
           };
         },
+      } as const;
+
+      return {
+        init: () => {
+          projection = initProjection();
+        },
+        ...actionHandlers,
         step: () => {},
         getState: () => projection,
       };
@@ -189,38 +199,37 @@ const antimagicMagicalEffectInterdictionStateCheck = stateCheck(
 function normalizeAntimagicMagicalEffectInterdictionQuintState(
   raw: unknown,
 ): AntimagicMagicalEffectInterdictionProjection {
-  const spellTargetAllowed = quintStateField(raw, "qSpellTargetAllowed");
-  const spellAreaDeliveryAllowed = quintStateField(
-    raw,
-    "qSpellAreaDeliveryAllowed",
-  );
-  const objectContactDeliveryAllowed = quintStateField(
-    raw,
-    "qObjectContactDeliveryAllowed",
-  );
-  const otherMagicalEffectTargetAllowed = quintStateField(
-    raw,
-    "qOtherMagicalEffectTargetAllowed",
-  );
-  const lastResult = quintStateField(raw, "qLastResult");
+  const state = quintRecordField(quintStateRecord(raw), "qState");
+  const protocol = decodeWitnessProtocolState({
+    state,
+    protocolField: "protocol",
+    noInvalidReason: "",
+    decodeHole: antimagicMagicalEffectInterdictionUnexpectedHole,
+  });
+  if (protocol.holes.length !== 0) {
+    throw new Error(
+      "Expected Antimagic Field magical-effect interdiction witness holes to be empty.",
+    );
+  }
   return {
-    spellTargetAllowed: spellTargetAllowed === true,
-    spellAreaDeliveryAllowed: spellAreaDeliveryAllowed === true,
-    objectContactDeliveryAllowed: objectContactDeliveryAllowed === true,
-    otherMagicalEffectTargetAllowed: otherMagicalEffectTargetAllowed === true,
-    lastResult:
-      lastResult === "init" ||
-      lastResult === "allowed" ||
-      lastResult === "invalid"
-        ? lastResult
-        : "invalid",
+    spellTargetAllowed: booleanField(state, "qSpellTargetAllowed"),
+    spellAreaDeliveryAllowed: booleanField(state, "qSpellAreaDeliveryAllowed"),
+    objectContactDeliveryAllowed: booleanField(
+      state,
+      "qObjectContactDeliveryAllowed",
+    ),
+    otherMagicalEffectTargetAllowed: booleanField(
+      state,
+      "qOtherMagicalEffectTargetAllowed",
+    ),
+    lastResult: protocol.lastResult,
   };
 }
 
-function quintStateField(raw: unknown, fieldName: string): unknown {
-  return raw !== null && typeof raw === "object"
-    ? Reflect.get(raw, fieldName)
-    : undefined;
+function antimagicMagicalEffectInterdictionUnexpectedHole(raw: unknown): never {
+  throw new Error(
+    `Antimagic Field magical-effect interdiction witness does not expect holes; received ${String(raw)}.`,
+  );
 }
 
 function initProjection(): AntimagicMagicalEffectInterdictionProjection {

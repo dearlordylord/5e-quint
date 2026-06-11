@@ -1,8 +1,6 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-ongoing-spell-ending
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt B21-DISPEL-MAGIC-IDENTITY-WITNESS dispel_magic
 // UNIT-IDENTITY-MBT-REPLAY: B21-DISPEL-MAGIC-IDENTITY-WITNESS dispel_magic doEndObjectAttachedSpellLight doEndSelectedMagicalEffectActiveEffect doRejectOutOfRangeObjectTarget
-import * as path from "node:path";
-
 import { canSpendAction } from "@dnd/shared-algebras/action-economy-algebra";
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { movementFeet, Round } from "@dnd/shared/types";
@@ -11,6 +9,7 @@ import { expect } from "vitest";
 import { parseBattleSpellEffectLevel } from "./battle-reducer/spells-effective-level.ts";
 import { battleSpellEffectOccurrenceId } from "./identity.ts";
 import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
+import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
 import {
   continualFlameUnitId,
   dispelMagicUnitId,
@@ -74,10 +73,17 @@ const retainedActiveEffectId = battleSpellEffectOccurrenceId(
 defineSelectedIdentityWitness({
   describeLabel: "Dispel Magic selected identity MBT",
   taskId: "B21-DISPEL-MAGIC-IDENTITY-WITNESS",
-  specFile: path.resolve(
+  specFile: mbtSpecPath(
     import.meta.dirname,
-    "../battle-runtime-dispel-magic-selected-identity.mbt.qnt",
+    "battle-runtime-dispel-magic-selected-identity.mbt.qnt",
   ),
+  quintStateField: "qState",
+  quintStateFieldPrefix: "q",
+  witnessProtocolField: "protocol",
+  quintFieldNames: { lastResult: "qScenarioResult" },
+  witnessInvalidScenarioReasons: {
+    outOfRangeObjectRejected: "invalidFill",
+  },
   projectionSchema: {
     magicActionAvailable: "bool",
     thirdLevelSlotCommitted: "bool",

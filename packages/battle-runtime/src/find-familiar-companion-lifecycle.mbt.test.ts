@@ -12,18 +12,30 @@
 //   Reaction.
 // - UBIQUITOUS_LANGUAGE.md: Companion, Magic Action, Bonus Action, Reaction,
 //   Spell Invocation, Spell Effect, Attack Roll, and Hit Points.
-import * as path from "node:path";
-
 import { canSpendBonusAction } from "@dnd/shared-algebras/action-economy-algebra";
 import {
   abilityModifier,
   DieRollResult,
   proficiencyBonus,
 } from "@dnd/shared/types";
-import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
 import * as Either from "effect/Either";
 import { describe, expect, it } from "vitest";
 
+import {
+  MBT_TEST_TIMEOUT_MS,
+  assertWitnessProtocolConsistentWithScenario,
+  booleanField,
+  decodeWitnessProtocolState,
+  defineDriver,
+  focusedMbtMaxSteps,
+  mbtSpecPath,
+  mbtTraceCount,
+  numberFromQuintInt,
+  quintRecordField,
+  quintStateRecord,
+  run,
+  stateCheck,
+} from "./battle-runtime-mbt-driver-kit.ts";
 import {
   battleId,
   castFindFamiliar,
@@ -212,19 +224,19 @@ describe("Find Familiar companion lifecycle MBT parity", () => {
 
   it("matches the focused companion lifecycle against bounded random MBT traces", async () => {
     await run({
-      spec: path.resolve(
+      spec: mbtSpecPath(
         import.meta.dirname,
-        "../battle-runtime-find-familiar-companion-lifecycle.mbt.qnt",
+        "battle-runtime-find-familiar-companion-lifecycle.mbt.qnt",
       ),
       init: "init",
       step: "step",
       driver: createFindFamiliarCompanionLifecycleDriver(),
       backend: "typescript",
-      nTraces: 10,
-      maxSteps: 5,
+      nTraces: mbtTraceCount(),
+      maxSteps: focusedMbtMaxSteps(5),
       stateCheck: findFamiliarCompanionStateCheck,
     });
-  }, 120_000);
+  }, MBT_TEST_TIMEOUT_MS);
 });
 
 function initialRuntimeState(): FindFamiliarCompanionRuntimeState {
@@ -607,7 +619,22 @@ function requireResolved(result: BattleResolutionResult): BattleState {
 function normalizeFindFamiliarCompanionQuintState(
   raw: unknown,
 ): FindFamiliarCompanionProjection {
-  const state = quintStateRecord(raw);
+  const state = quintRecordField(quintStateRecord(raw), "qState");
+  const protocol = decodeWitnessProtocolState({
+    state,
+    protocolField: "protocol",
+    noInvalidReason: "",
+    decodeHole: findFamiliarCompanionUnexpectedHole,
+  });
+  if (protocol.holes.length !== 0) {
+    throw new Error("Expected Find Familiar companion witness holes to be empty.");
+  }
+  const scenarioResult = literalField(state["qScenarioResult"], LAST_RESULTS);
+  assertWitnessProtocolConsistentWithScenario({
+    label: "Find Familiar companion lifecycle",
+    scenarioResult,
+    protocol,
+  });
   return {
     familiarStatus: literalField(state["qFamiliarStatus"], FAMILIAR_STATUSES),
     familiarId: literalField(state["qFamiliarId"], FAMILIAR_IDS),
@@ -638,8 +665,14 @@ function normalizeFindFamiliarCompanionQuintState(
     ),
     spellSlotCommitted: booleanField(state, "qSpellSlotCommitted"),
     targetHp: numberFromQuintInt(state["qTargetHp"], "qTargetHp"),
-    lastResult: literalField(state["qLastResult"], LAST_RESULTS),
+    lastResult: scenarioResult,
   };
+}
+
+function findFamiliarCompanionUnexpectedHole(raw: unknown): never {
+  throw new Error(
+    `Unexpected Find Familiar companion witness hole ${String(raw)}.`,
+  );
 }
 
 function compareFindFamiliarCompanionStates(
@@ -675,31 +708,4 @@ function literalField<const T extends readonly string[]>(
     return raw;
   }
   throw new Error(`Unexpected literal value: ${String(raw)}.`);
-}
-
-function quintStateRecord(raw: unknown): Readonly<Record<string, unknown>> {
-  if (!isRecord(raw)) {
-    throw new Error("Expected Quint Find Familiar companion state.");
-  }
-  return raw;
-}
-
-function numberFromQuintInt(raw: unknown, field: string): number {
-  if (typeof raw === "number") return raw;
-  if (typeof raw === "bigint") return Number(raw);
-  throw new Error(`Expected Quint integer field ${field}.`);
-}
-
-function booleanField(
-  state: Readonly<Record<string, unknown>>,
-  field: string,
-): boolean {
-  if (typeof state[field] === "boolean") {
-    return state[field];
-  }
-  throw new Error(`Expected Quint Boolean field ${field}.`);
-}
-
-function isRecord(raw: unknown): raw is Readonly<Record<string, unknown>> {
-  return typeof raw === "object" && raw !== null;
 }

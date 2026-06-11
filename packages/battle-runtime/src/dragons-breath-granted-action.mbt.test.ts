@@ -10,17 +10,30 @@
 //   provenance for the spell record used by this driver.
 // - UBIQUITOUS_LANGUAGE.md: Magic Action, Saving Throw, Concentration, Cast
 //   Level, Spell Effect, Damage Roll, and Area of Effect.
-import * as path from "node:path";
-
 import { canSpendAction } from "@dnd/shared-algebras/action-economy-algebra";
 import { Hp, type DamageType } from "@dnd/shared/types";
 import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
 import type { SpellRecord } from "@dnd/surface/surface/types";
-import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
-import { Schema } from "effect";
 import { describe, expect, it } from "vitest";
 import dragonsBreathInput from "../../surface/content/dragons_breath.json";
 
+import {
+  MBT_TEST_TIMEOUT_MS,
+  assertWitnessProtocolConsistentWithScenario,
+  booleanField,
+  decodeWitnessProtocolState,
+  defineDriver,
+  focusedMbtMaxSteps,
+  mbtPickSchemas,
+  mbtSpecPath,
+  mbtTraceCount,
+  numberFromQuintInt,
+  quintRecordField,
+  quintStateRecord,
+  quintVariantTag,
+  run,
+  stateCheck,
+} from "./battle-runtime-mbt-driver-kit.ts";
 import {
   damageRollFillWithGroups,
   requireCombatant,
@@ -125,29 +138,20 @@ const DRAGONS_BREATH_DAMAGE_ROLLS = {
 
 const CASTER_FULL_HP = 12;
 
-const QuintIntAsNumber = Schema.transform(
-  Schema.BigIntFromSelf,
-  Schema.Number,
-  { strict: true, decode: (n) => Number(n), encode: (n) => BigInt(n) },
-);
-
-const intSchema = Schema.standardSchemaV1(QuintIntAsNumber);
-const unknownSchema = Schema.standardSchemaV1(Schema.Unknown);
-
 const driverSchema = {
   init: {},
   doCastDragonsBreath: {
-    damageType: unknownSchema,
-    slotLevel: intSchema,
+    damageType: mbtPickSchemas.unknown,
+    slotLevel: mbtPickSchemas.int,
   },
   doEndCasterTurn: {},
   doRequestSavingThrow: {},
   doResolveSavingThrow: {
-    saveSucceeded: Schema.standardSchemaV1(Schema.Boolean),
+    saveSucceeded: mbtPickSchemas.bool,
   },
   doResolveDamageRoll: {},
   doResolveConcentration: {
-    concentrationSucceeded: Schema.standardSchemaV1(Schema.Boolean),
+    concentrationSucceeded: mbtPickSchemas.bool,
   },
   doBreakConcentration: {},
   step: {},
@@ -298,21 +302,25 @@ describe("Dragon's Breath granted-action MBT parity", () => {
     ]);
   });
 
-  it("matches the TS reducer slice against bounded random MBT traces", async () => {
-    await run({
-      spec: path.resolve(
-        import.meta.dirname,
-        "../battle-runtime-dragons-breath-granted-action.mbt.qnt",
-      ),
-      init: "init",
-      step: "step",
-      driver: createDragonsBreathGrantedActionDriver(),
-      backend: "typescript",
-      nTraces: 10,
-      maxSteps: 7,
-      stateCheck: dragonsBreathGrantedActionStateCheck,
-    });
-  }, 120_000);
+  it(
+    "matches the TS reducer slice against bounded random MBT traces",
+    async () => {
+      await run({
+        spec: mbtSpecPath(
+          import.meta.dirname,
+          "battle-runtime-dragons-breath-granted-action.mbt.qnt",
+        ),
+        init: "init",
+        step: "step",
+        driver: createDragonsBreathGrantedActionDriver(),
+        backend: "typescript",
+        nTraces: mbtTraceCount(),
+        maxSteps: focusedMbtMaxSteps(7),
+        stateCheck: dragonsBreathGrantedActionStateCheck,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
 });
 
 function initialRuntimeState(): DragonsBreathRuntimeState {
@@ -760,7 +768,20 @@ function requireResolved(
 function normalizeDragonsBreathQuintState(
   raw: unknown,
 ): DragonsBreathGrantedActionState {
-  const state = quintStateRecord(raw);
+  const state = quintRecordField(quintStateRecord(raw), "qState");
+  const lastResult = dragonsBreathLastResult(state["qScenarioResult"]);
+  const protocol = decodeWitnessProtocolState({
+    state,
+    protocolField: "protocol",
+    noInvalidReason: "none",
+    decodeHole: dragonsBreathHole,
+    compareHoles: (left, right) => left.localeCompare(right),
+  });
+  assertWitnessProtocolConsistentWithScenario({
+    label: "Dragon's Breath granted action",
+    scenarioResult: lastResult,
+    protocol,
+  });
   return {
     turnRole: dragonsBreathTurnRole(state["qTurnRole"]),
     magicActionAvailable: booleanField(state, "qMagicActionAvailable"),
@@ -782,8 +803,8 @@ function normalizeDragonsBreathQuintState(
     ),
     casterHp: numberFromQuintInt(state["qCasterHp"], "qCasterHp"),
     casterConcentrating: booleanField(state, "qCasterConcentrating"),
-    holes: quintSet(state["qHoles"], "qHoles").map(dragonsBreathHole).sort(),
-    lastResult: dragonsBreathLastResult(state["qLastResult"]),
+    holes: protocol.holes,
+    lastResult,
   };
 }
 
@@ -836,12 +857,13 @@ function dragonsBreathSaveOutcome(raw: unknown): DragonsBreathSaveOutcome {
 }
 
 function dragonsBreathHole(raw: unknown): DragonsBreathHole {
+  const tag = quintVariantTag(raw, "protocol.holes");
   if (
-    raw === "SavingThrowOutcome" ||
-    raw === "DamageRoll" ||
-    raw === "ConcentrationSavingThrow"
+    tag === "SavingThrowOutcome" ||
+    tag === "DamageRoll" ||
+    tag === "ConcentrationSavingThrow"
   ) {
-    return raw;
+    return tag;
   }
   throw new Error(`Unknown Dragon's Breath hole: ${String(raw)}.`);
 }
@@ -860,38 +882,4 @@ function dragonsBreathLastResult(raw: unknown): DragonsBreathLastResult {
     return raw;
   }
   throw new Error(`Unknown Dragon's Breath result: ${String(raw)}.`);
-}
-
-function quintStateRecord(raw: unknown): Readonly<Record<string, unknown>> {
-  if (!isRecord(raw)) {
-    throw new Error("Expected Quint Dragon's Breath state.");
-  }
-  return raw;
-}
-
-function numberFromQuintInt(raw: unknown, field: string): number {
-  if (typeof raw === "number") return raw;
-  if (typeof raw === "bigint") return Number(raw);
-  throw new Error(`Expected Quint integer field ${field}.`);
-}
-
-function booleanField(
-  state: Readonly<Record<string, unknown>>,
-  field: string,
-): boolean {
-  if (typeof state[field] === "boolean") {
-    return state[field];
-  }
-  throw new Error(`Expected Quint Boolean field ${field}.`);
-}
-
-function quintSet(raw: unknown, field: string): readonly unknown[] {
-  if (raw instanceof Set) {
-    return [...raw];
-  }
-  throw new Error(`Expected Quint Set field ${field}.`);
-}
-
-function isRecord(raw: unknown): raw is Readonly<Record<string, unknown>> {
-  return typeof raw === "object" && raw !== null;
 }

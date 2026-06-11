@@ -1,14 +1,25 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-see-invisible-observer-sight
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.SEE_INVISIBILITY_OBSERVER_SIGHT
-import * as path from "node:path";
-
 import {
   applyCondition,
   hasCondition,
   removeCondition,
 } from "@dnd/shared-algebras/conditions-algebra";
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
-import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
+import {
+  MBT_TEST_TIMEOUT_MS,
+  booleanValue as booleanFromQuint,
+  defineDriver,
+  focusedMbtMaxSteps,
+  mbtSpecPath,
+  mbtTraceCount,
+  numberFromQuintInt,
+  quintStateRecord,
+  quintVariantTag,
+  quintVariantValue,
+  run,
+  stateCheck,
+} from "./battle-runtime-mbt-driver-kit.ts";
 import { Schema } from "effect";
 import { describe, expect, it } from "vitest";
 
@@ -304,21 +315,25 @@ describe("See Invisibility observer-sight MBT parity", () => {
     ).toEqual({ tag: "absent" });
   });
 
-  it("matches the TS reducer slice against bounded random MBT traces", async () => {
-    await run({
-      spec: path.resolve(
-        import.meta.dirname,
-        "../battle-runtime-see-invisibility-observer-sight.mbt.qnt",
-      ),
-      init: "init",
-      step: "step",
-      driver: createSeeInvisibilityObserverSightDriver(),
-      backend: "typescript",
-      nTraces: 10,
-      maxSteps: 6,
-      stateCheck: seeInvisibilityObserverSightStateCheck,
-    });
-  }, 120_000);
+  it(
+    "matches the TS reducer slice against bounded random MBT traces",
+    async () => {
+      await run({
+        spec: mbtSpecPath(
+          import.meta.dirname,
+          "battle-runtime-see-invisibility-observer-sight.mbt.qnt",
+        ),
+        init: "init",
+        step: "step",
+        driver: createSeeInvisibilityObserverSightDriver(),
+        backend: "typescript",
+        nTraces: mbtTraceCount(),
+        maxSteps: focusedMbtMaxSteps(6),
+        stateCheck: seeInvisibilityObserverSightStateCheck,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
 });
 
 function castSeeInvisibilityInRuntimeState(
@@ -572,35 +587,9 @@ function witnessPlaneFromQuint(raw: unknown): SeeInvisibilityWitnessPlane {
   throw new Error(`Unknown Quint See Invisibility witness plane: ${tag}`);
 }
 
-function quintVariantTag(raw: unknown): string {
-  if (typeof raw === "string") return raw;
-  if (isRecord(raw) && typeof raw["tag"] === "string") {
-    return raw["tag"];
-  }
-  throw new Error(`Expected Quint variant tag, got ${String(raw)}.`);
-}
-
 function quintVariantRecordValue(
   raw: unknown,
   tag: string,
 ): Readonly<Record<string, unknown>> {
-  if (isRecord(raw) && raw["tag"] === tag && isRecord(raw["value"])) {
-    return raw["value"];
-  }
-  throw new Error(`Expected Quint ${tag} variant record value.`);
-}
-
-function numberFromQuintInt(raw: unknown, field: string): number {
-  if (typeof raw === "number") return raw;
-  if (typeof raw === "bigint") return Number(raw);
-  throw new Error(`Expected Quint integer field ${field}.`);
-}
-
-function booleanFromQuint(raw: unknown, field: string): boolean {
-  if (typeof raw === "boolean") return raw;
-  throw new Error(`Expected Quint Boolean field ${field}.`);
-}
-
-function isRecord(raw: unknown): raw is Readonly<Record<string, unknown>> {
-  return typeof raw === "object" && raw !== null;
+  return quintStateRecord(quintVariantValue(raw, tag));
 }

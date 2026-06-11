@@ -4,43 +4,72 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.spell-slot-healing-modifier
 
 module battleRuntimeDiscipleOfLifeMbt {
-  var qTargetHp: int
-  var qSecondTargetHp: int
-  var qSpellSlotsRemaining: int
-  var qLastResult: str
+  import battleRuntimeWitnessProtocol.* from "./battle-runtime-witness-protocol"
+
+  type WitnessHole = | DiscipleOfLife
+
+  type WitnessState = {
+    qTargetHp: int,
+    qSecondTargetHp: int,
+    qSpellSlotsRemaining: int,
+    qScenarioResult: str,
+    protocol: WitnessProtocol[WitnessHole],
+  }
+
+  var qState: WitnessState
+
+  pure def qTargetHp: int = qState.qTargetHp
+  pure def qSecondTargetHp: int = qState.qSecondTargetHp
+  pure def qSpellSlotsRemaining: int = qState.qSpellSlotsRemaining
+  pure def qScenarioResult: str = qState.qScenarioResult
+
 
   action recordProjection(
     targetHp: int,
     secondTargetHp: int,
     spellSlotsRemaining: int,
-    lastResult: str,
+    scenarioResult: str,
+    protocol: WitnessProtocol[WitnessHole],
   ): bool = all {
-    qTargetHp' = targetHp,
-    qSecondTargetHp' = secondTargetHp,
-    qSpellSlotsRemaining' = spellSlotsRemaining,
-    qLastResult' = lastResult,
+    qState' = {
+      qTargetHp: targetHp,
+      qSecondTargetHp: secondTargetHp,
+      qSpellSlotsRemaining: spellSlotsRemaining,
+      qScenarioResult: scenarioResult,
+      protocol: protocol,
+    },
   }
 
-  action init = recordProjection(1, 1, 1, "init")
+  action init = recordProjection(1, 1, 1, "init",
+    witnessInit(DiscipleOfLife),
+  )
 
   action doSlotHealingModifier = all {
-    qLastResult == "init",
-    recordProjection(9, 1, 0, "slotHealingModifier"),
+    qScenarioResult == "init",
+    recordProjection(9, 1, 0, "slotHealingModifier",
+    witnessResolved(DiscipleOfLife),
+  ),
   }
 
   action doNonModifierSlotHealing = all {
-    qLastResult == "init",
-    recordProjection(6, 1, 0, "nonModifierSlotHealing"),
+    qScenarioResult == "init",
+    recordProjection(6, 1, 0, "nonModifierSlotHealing",
+    witnessResolved(DiscipleOfLife),
+  ),
   }
 
   action doNonSlotHealingExcluded = all {
-    qLastResult == "init",
-    recordProjection(1, 1, 1, "nonSlotHealingExcluded"),
+    qScenarioResult == "init",
+    recordProjection(1, 1, 1, "nonSlotHealingExcluded",
+    witnessResolved(DiscipleOfLife),
+  ),
   }
 
   action doEachCreatureHealed = all {
-    qLastResult == "init",
-    recordProjection(11, 11, 0, "eachCreatureHealed"),
+    qScenarioResult == "init",
+    recordProjection(11, 11, 0, "eachCreatureHealed",
+    witnessResolved(DiscipleOfLife),
+  ),
   }
 
   action step = any {

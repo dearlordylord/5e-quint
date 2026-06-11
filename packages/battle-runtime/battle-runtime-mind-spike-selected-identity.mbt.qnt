@@ -1,13 +1,40 @@
 // -*- mode: Bluespec; -*-
 
 module battleRuntimeMindSpikeSelectedIdentityMbt {
-  var qLevel2SlotsRemaining: int
-  var qTargetHp: int
-  var qCasterConcentratingOnMindSpike: bool
-  var qMindSpikeDurationActive: bool
-  var qMindSpikeDurationCleanedUp: bool
-  var qTargetActiveEffectCount: int
-  var qLastResult: str
+  import battleRuntimeWitnessProtocol.* from "./battle-runtime-witness-protocol"
+
+  type WitnessHole = | WitnessProtocolHole
+
+  type MindSpikeSelectedIdentityWitnessState = {
+    qLevel2SlotsRemaining: int,
+    qTargetHp: int,
+    qCasterConcentratingOnMindSpike: bool,
+    qMindSpikeDurationActive: bool,
+    qMindSpikeDurationCleanedUp: bool,
+    qTargetActiveEffectCount: int,
+    qScenarioResult: str,
+    protocol: WitnessProtocol[WitnessHole],
+  }
+
+  var qState: MindSpikeSelectedIdentityWitnessState
+
+  pure def qLevel2SlotsRemaining: int = qState.qLevel2SlotsRemaining
+  pure def qTargetHp: int = qState.qTargetHp
+  pure def qCasterConcentratingOnMindSpike: bool = qState.qCasterConcentratingOnMindSpike
+  pure def qMindSpikeDurationActive: bool = qState.qMindSpikeDurationActive
+  pure def qMindSpikeDurationCleanedUp: bool = qState.qMindSpikeDurationCleanedUp
+  pure def qTargetActiveEffectCount: int = qState.qTargetActiveEffectCount
+  pure def qLastResult: str = qState.qScenarioResult
+
+  pure def selectedIdentityProtocolForProjection(
+    holes: Set[WitnessHole],
+    scenarioResult: str,
+    scenarioInvalidReason: str,
+  ): WitnessProtocol[WitnessHole] =
+    if (scenarioResult == "init") witnessInit(WitnessProtocolHole)
+    else if (scenarioInvalidReason == "invalidFill") witnessInvalid(WitnessProtocolHole, WInvalidFill)
+    else if (holes != Set()) witnessNeedsHoles(holes)
+    else witnessResolved(WitnessProtocolHole)
 
   action recordProjection(
     level2SlotsRemaining: int,
@@ -18,15 +45,17 @@ module battleRuntimeMindSpikeSelectedIdentityMbt {
     targetActiveEffectCount: int,
     lastResult: str,
   ): bool = all {
-    qLevel2SlotsRemaining' = level2SlotsRemaining,
-    qTargetHp' = targetHp,
-    qCasterConcentratingOnMindSpike' = casterConcentratingOnMindSpike,
-    qMindSpikeDurationActive' = mindSpikeDurationActive,
-    qMindSpikeDurationCleanedUp' = mindSpikeDurationCleanedUp,
-    qTargetActiveEffectCount' = targetActiveEffectCount,
-    qLastResult' = lastResult,
+    qState' = {
+      qLevel2SlotsRemaining: level2SlotsRemaining,
+      qTargetHp: targetHp,
+      qCasterConcentratingOnMindSpike: casterConcentratingOnMindSpike,
+      qMindSpikeDurationActive: mindSpikeDurationActive,
+      qMindSpikeDurationCleanedUp: mindSpikeDurationCleanedUp,
+      qTargetActiveEffectCount: targetActiveEffectCount,
+      qScenarioResult: lastResult,
+      protocol: selectedIdentityProtocolForProjection(Set(), lastResult, ""),
+    },
   }
-
   action init = recordProjection(1, 30, false, false, false, 0, "init")
 
   action doResolveMindSpikeFailedSaveConcentrationDuration = all {
