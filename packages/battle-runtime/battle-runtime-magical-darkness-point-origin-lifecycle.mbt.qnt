@@ -1,6 +1,8 @@
 // -*- mode: Bluespec; -*-
 
 module battleRuntimeMagicalDarknessPointOriginLifecycleMbt {
+  import battleRuntimeWitnessProtocol.* from "./battle-runtime-witness-protocol"
+
   // RAW trace:
   // - .references/srd-5.2.1/Spells/Descriptions-A-D.md#Darkness:
   //   magical Darkness spreads from a point within range and fills a
@@ -13,18 +15,49 @@ module battleRuntimeMagicalDarknessPointOriginLifecycleMbt {
   //   when a spell says so.
   // - UBIQUITOUS_LANGUAGE.md: Area of Effect, Concentration, Illumination,
   //   Obscurement, Darkvision, and Spell Slot.
-  var qActionAvailable: bool
-  var qSpellAvailable: bool
-  var qDarknessActive: bool
-  var qZoneProjected: bool
-  var qCasterConcentrating: bool
-  var qOrdinarySightObscurement: str
-  var qDarkvisionSightObscurement: str
-  var qNonmagicalLightIllumination: str
-  var qOverlappingLowLevelSpellLightActive: bool
-  var qOverlappingHighLevelSpellLightActive: bool
-  var qNonOverlappingLowLevelSpellLightActive: bool
-  var qLastResult: str
+  type WitnessHole = | WitnessProtocolHole
+
+  type MagicalDarknessPointOriginLifecycleWitnessState = {
+    qActionAvailable: bool,
+    qSpellAvailable: bool,
+    qDarknessActive: bool,
+    qZoneProjected: bool,
+    qCasterConcentrating: bool,
+    qOrdinarySightObscurement: str,
+    qDarkvisionSightObscurement: str,
+    qNonmagicalLightIllumination: str,
+    qOverlappingLowLevelSpellLightActive: bool,
+    qOverlappingHighLevelSpellLightActive: bool,
+    qNonOverlappingLowLevelSpellLightActive: bool,
+    qScenarioResult: str,
+    protocol: WitnessProtocol[WitnessHole],
+  }
+
+  var qState: MagicalDarknessPointOriginLifecycleWitnessState
+
+  pure def qActionAvailable: bool = qState.qActionAvailable
+  pure def qSpellAvailable: bool = qState.qSpellAvailable
+  pure def qDarknessActive: bool = qState.qDarknessActive
+  pure def qZoneProjected: bool = qState.qZoneProjected
+  pure def qCasterConcentrating: bool = qState.qCasterConcentrating
+  pure def qOrdinarySightObscurement: str = qState.qOrdinarySightObscurement
+  pure def qDarkvisionSightObscurement: str = qState.qDarkvisionSightObscurement
+  pure def qNonmagicalLightIllumination: str = qState.qNonmagicalLightIllumination
+  pure def qOverlappingLowLevelSpellLightActive: bool = qState.qOverlappingLowLevelSpellLightActive
+  pure def qOverlappingHighLevelSpellLightActive: bool = qState.qOverlappingHighLevelSpellLightActive
+  pure def qNonOverlappingLowLevelSpellLightActive: bool = qState.qNonOverlappingLowLevelSpellLightActive
+  pure def qLastResult: str = qState.qScenarioResult
+
+  pure def witnessProtocolForProjection(
+    holes: Set[WitnessHole],
+    scenarioResult: str,
+    scenarioInvalidReason: str,
+  ): WitnessProtocol[WitnessHole] =
+    if (scenarioResult == "init") witnessInit(WitnessProtocolHole)
+    else if (scenarioInvalidReason == "invalidFill") witnessInvalid(WitnessProtocolHole, WInvalidFill)
+    else if (scenarioInvalidReason == "staleSubject") witnessInvalid(WitnessProtocolHole, WStaleSubject)
+    else if (holes != Set()) witnessNeedsHoles(holes)
+    else witnessResolved(WitnessProtocolHole)
 
   action recordDarknessState(
     actionAvailable: bool,
@@ -40,18 +73,21 @@ module battleRuntimeMagicalDarknessPointOriginLifecycleMbt {
     nonOverlappingLowLevelSpellLightActive: bool,
     lastResult: str,
   ): bool = all {
-    qActionAvailable' = actionAvailable,
-    qSpellAvailable' = spellAvailable,
-    qDarknessActive' = darknessActive,
-    qZoneProjected' = zoneProjected,
-    qCasterConcentrating' = casterConcentrating,
-    qOrdinarySightObscurement' = ordinarySightObscurement,
-    qDarkvisionSightObscurement' = darkvisionSightObscurement,
-    qNonmagicalLightIllumination' = nonmagicalLightIllumination,
-    qOverlappingLowLevelSpellLightActive' = overlappingLowLevelSpellLightActive,
-    qOverlappingHighLevelSpellLightActive' = overlappingHighLevelSpellLightActive,
-    qNonOverlappingLowLevelSpellLightActive' = nonOverlappingLowLevelSpellLightActive,
-    qLastResult' = lastResult,
+    qState' = {
+      qActionAvailable: actionAvailable,
+      qSpellAvailable: spellAvailable,
+      qDarknessActive: darknessActive,
+      qZoneProjected: zoneProjected,
+      qCasterConcentrating: casterConcentrating,
+      qOrdinarySightObscurement: ordinarySightObscurement,
+      qDarkvisionSightObscurement: darkvisionSightObscurement,
+      qNonmagicalLightIllumination: nonmagicalLightIllumination,
+      qOverlappingLowLevelSpellLightActive: overlappingLowLevelSpellLightActive,
+      qOverlappingHighLevelSpellLightActive: overlappingHighLevelSpellLightActive,
+      qNonOverlappingLowLevelSpellLightActive: nonOverlappingLowLevelSpellLightActive,
+      qScenarioResult: lastResult,
+      protocol: witnessProtocolForProjection(Set(), lastResult, ""),
+    },
   }
 
   action init = recordDarknessState(

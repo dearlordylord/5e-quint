@@ -72,6 +72,10 @@ defineSelectedIdentityWitness({
     import.meta.dirname,
     "battle-runtime-preserve-life.mbt.qnt",
   ),
+  quintStateField: "qState",
+  quintStateFieldPrefix: "q",
+  witnessProtocolField: "protocol",
+  quintFieldNames: { lastResult: "qScenarioResult" },
   projectionSchema: {
     casterHp: "int",
     targetHp: "int",

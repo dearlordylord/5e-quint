@@ -10,13 +10,15 @@ import rayOfEnfeeblementInput from "../../surface/content/ray_of_enfeeblement.js
 
 import {
   MBT_TEST_TIMEOUT_MS,
+  assertWitnessProtocolConsistentWithScenario,
   booleanField,
+  decodeWitnessProtocolState,
   defineDriver,
   focusedMbtMaxSteps,
   mbtSpecPath,
   mbtTraceCount,
   numberFromQuintInt,
-  quintSet,
+  quintRecordField,
   quintStateRecord,
   run,
   stateCheck,
@@ -518,7 +520,19 @@ function battleHolesToRayHoles(
 function normalizeRayOfEnfeeblementQuintState(
   raw: unknown,
 ): RayOfEnfeeblementLifecycleState {
-  const state = quintStateRecord(raw);
+  const state = quintRecordField(quintStateRecord(raw), "qState");
+  const protocol = decodeWitnessProtocolState({
+    state,
+    protocolField: "protocol",
+    noInvalidReason: "",
+    decodeHole: rayHole,
+  });
+  const lastResultValue = rayLastResult(state["qScenarioResult"]);
+  assertWitnessProtocolConsistentWithScenario({
+    label: "Ray of Enfeeblement lifecycle",
+    scenarioResult: lastResultValue,
+    protocol,
+  });
   return {
     currentTurnRole: rayTurnRole(state["qCurrentTurnRole"]),
     actionAvailable: booleanField(state, "qActionAvailable"),
@@ -538,12 +552,12 @@ function normalizeRayOfEnfeeblementQuintState(
       state,
       "qStrSavingThrowDisadvantage",
     ),
-    holes: quintSet(state["qHoles"], "qHoles").map(rayHole).sort(),
+    holes: protocol.holes,
     lastDamageAfterPenalty: numberFromQuintInt(
       state["qLastDamageAfterPenalty"],
       "qLastDamageAfterPenalty",
     ),
-    lastResult: rayLastResult(state["qLastResult"]),
+    lastResult: lastResultValue,
   };
 }
 

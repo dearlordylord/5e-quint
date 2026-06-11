@@ -266,6 +266,10 @@ defineSelectedIdentityWitness({
     import.meta.dirname,
     "battle-runtime-sanctuary-selected-identity.mbt.qnt",
   ),
+  quintStateField: "qState",
+  quintStateFieldPrefix: "q",
+  witnessProtocolField: "protocol",
+  quintFieldNames: { lastResult: "qScenarioResult" },
   projectionSchema: {
     wardPresent: "bool",
     wardSourceIsSanctuary: "bool",

@@ -79,13 +79,13 @@
     {
       "number": 13,
       "id": "PDS-A13-WITNESS-BATCH-3",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Witness-protocol batch migration 3"
     },
     {
       "number": 14,
       "id": "PDS-A14-WITNESS-BATCH-4",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Witness-protocol batch migration 4"
     },
     {
@@ -204,8 +204,8 @@ Every task must include:
 | 10 | PDS-A10-WITNESS-PILOTS | done | PDS-A08-KIT-BATCH-5 | Trace-cost timing note and pilot line-delta report. Does not depend on PDS-A09 or the PRD/03 20% line-footprint metric. |
 | 11 | PDS-A11-WITNESS-BATCH-1 | done | PDS-A10-WITNESS-PILOTS | Self-discovering; ≤20 pairs; `MBT_TRACES=3` confidence pass per batch. |
 | 12 | PDS-A12-WITNESS-BATCH-2 | done | PDS-A11-WITNESS-BATCH-1 | |
-| 13 | PDS-A13-WITNESS-BATCH-3 | ready-for-research | PDS-A12-WITNESS-BATCH-2 | |
-| 14 | PDS-A14-WITNESS-BATCH-4 | blocked | PDS-A13-WITNESS-BATCH-3 | |
+| 13 | PDS-A13-WITNESS-BATCH-3 | done | PDS-A12-WITNESS-BATCH-2 | |
+| 14 | PDS-A14-WITNESS-BATCH-4 | ready-for-research | PDS-A13-WITNESS-BATCH-3 | |
 | 15 | PDS-A15-WITNESS-BATCH-5 | blocked | PDS-A14-WITNESS-BATCH-4 | Drains the protocol-unmigrated set. |
 | 16 | PDS-A16-WITNESS-GATE-AND-CLOSEOUT | blocked | PDS-A15-WITNESS-BATCH-5 | Convention gate, ADR addendum, README skeleton, prd/04 closeout. |
 | 17 | PDS-A17-LITERAL-CAPTURE-PRD | ready-for-research | PDS-A10-WITNESS-PILOTS | HITL: owner reviews the PRD. Single-owner obligations only; multi-owner rows wait for BPK-B08. |
@@ -407,7 +407,7 @@ confidence pass; closure checker green, allowlist unchanged.
 
 ### Task 13 - PDS-A13-WITNESS-BATCH-3
 
-Status: `ready-for-research` · Mode: AFK
+Status: `done` · Mode: AFK
 
 Input: the protocol-unmigrated discovery rule applied at task start.
 
@@ -421,7 +421,7 @@ confidence pass; closure checker green, allowlist unchanged.
 
 ### Task 14 - PDS-A14-WITNESS-BATCH-4
 
-Status: `blocked` · Mode: AFK
+Status: `ready-for-research` · Mode: AFK
 
 Input: the protocol-unmigrated discovery rule applied at task start.
 

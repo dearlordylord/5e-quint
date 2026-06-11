@@ -1,7 +1,4 @@
-import {
-  type SimpleActionMap,
-  type SimpleDriver,
-} from "@firfi/quint-connect";
+import { type SimpleActionMap, type SimpleDriver } from "@firfi/quint-connect";
 import { Match } from "effect";
 import { describe, expect, it } from "vitest";
 
@@ -310,6 +307,18 @@ function normalizeQuintState(
     ) {
       result[field] = parseStr(
         protocol.lastResult,
+        spec.allowedStrings,
+        `${witness.quintStateField ?? "root"}.${witness.witnessProtocolField}.result`,
+      );
+      continue;
+    }
+    if (
+      field === "lastInvalidReason" &&
+      protocol !== undefined &&
+      configuredField === undefined
+    ) {
+      result[field] = parseStr(
+        protocol.lastInvalidReason,
         spec.allowedStrings,
         `${witness.quintStateField ?? "root"}.${witness.witnessProtocolField}.result`,
       );

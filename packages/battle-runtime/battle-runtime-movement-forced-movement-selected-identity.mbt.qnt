@@ -1,24 +1,62 @@
 // -*- mode: Bluespec; -*-
 
 module battleRuntimeMovementForcedMovementSelectedIdentityMbt {
-  var qCasterSpeedFeet: int
-  var qCasterRemainingFeet: int
-  var qCasterDashBonusFeet: int
-  var qCasterBonusActionAvailable: bool
-  var qCasterConcentrating: bool
-  var qSpellSlotSpentThisTurn: bool
-  var qLevel1SlotsRemaining: int
-  var qSpellDashBonusActionEffectCount: int
-  var qTargetHp: int
-  var qTargetReactionAvailable: bool
-  var qDissonantMovementFillRequired: bool
-  var qTargetMovementSpentFeet: int
-  var qCommandMovementFillRequired: bool
-  var qCommandPendingEffectObserved: bool
-  var qCommandPendingEffectCount: int
-  var qClimbSpeedFeet: int
-  var qSwimSpeedFeet: int
-  var qLastResult: str
+  import battleRuntimeWitnessProtocol.* from "./battle-runtime-witness-protocol"
+
+  type WitnessHole = | WitnessProtocolHole
+
+  type MovementForcedMovementSelectedIdentityWitnessState = {
+    qCasterSpeedFeet: int,
+    qCasterRemainingFeet: int,
+    qCasterDashBonusFeet: int,
+    qCasterBonusActionAvailable: bool,
+    qCasterConcentrating: bool,
+    qSpellSlotSpentThisTurn: bool,
+    qLevel1SlotsRemaining: int,
+    qSpellDashBonusActionEffectCount: int,
+    qTargetHp: int,
+    qTargetReactionAvailable: bool,
+    qDissonantMovementFillRequired: bool,
+    qTargetMovementSpentFeet: int,
+    qCommandMovementFillRequired: bool,
+    qCommandPendingEffectObserved: bool,
+    qCommandPendingEffectCount: int,
+    qClimbSpeedFeet: int,
+    qSwimSpeedFeet: int,
+    qScenarioResult: str,
+    protocol: WitnessProtocol[WitnessHole],
+  }
+
+  var qState: MovementForcedMovementSelectedIdentityWitnessState
+
+  pure def qCasterSpeedFeet: int = qState.qCasterSpeedFeet
+  pure def qCasterRemainingFeet: int = qState.qCasterRemainingFeet
+  pure def qCasterDashBonusFeet: int = qState.qCasterDashBonusFeet
+  pure def qCasterBonusActionAvailable: bool = qState.qCasterBonusActionAvailable
+  pure def qCasterConcentrating: bool = qState.qCasterConcentrating
+  pure def qSpellSlotSpentThisTurn: bool = qState.qSpellSlotSpentThisTurn
+  pure def qLevel1SlotsRemaining: int = qState.qLevel1SlotsRemaining
+  pure def qSpellDashBonusActionEffectCount: int = qState.qSpellDashBonusActionEffectCount
+  pure def qTargetHp: int = qState.qTargetHp
+  pure def qTargetReactionAvailable: bool = qState.qTargetReactionAvailable
+  pure def qDissonantMovementFillRequired: bool = qState.qDissonantMovementFillRequired
+  pure def qTargetMovementSpentFeet: int = qState.qTargetMovementSpentFeet
+  pure def qCommandMovementFillRequired: bool = qState.qCommandMovementFillRequired
+  pure def qCommandPendingEffectObserved: bool = qState.qCommandPendingEffectObserved
+  pure def qCommandPendingEffectCount: int = qState.qCommandPendingEffectCount
+  pure def qClimbSpeedFeet: int = qState.qClimbSpeedFeet
+  pure def qSwimSpeedFeet: int = qState.qSwimSpeedFeet
+  pure def qLastResult: str = qState.qScenarioResult
+
+  pure def selectedIdentityProtocolForProjection(
+    holes: Set[WitnessHole],
+    scenarioResult: str,
+    scenarioInvalidReason: str,
+  ): WitnessProtocol[WitnessHole] =
+    if (scenarioResult == "init") witnessInit(WitnessProtocolHole)
+    else if (scenarioInvalidReason == "invalidFill") witnessInvalid(WitnessProtocolHole, WInvalidFill)
+    else if (holes != Set()) witnessNeedsHoles(holes)
+    else witnessResolved(WitnessProtocolHole)
 
   action recordProjection(
     casterSpeedFeet: int,
@@ -40,26 +78,28 @@ module battleRuntimeMovementForcedMovementSelectedIdentityMbt {
     swimSpeedFeet: int,
     lastResult: str,
   ): bool = all {
-    qCasterSpeedFeet' = casterSpeedFeet,
-    qCasterRemainingFeet' = casterRemainingFeet,
-    qCasterDashBonusFeet' = casterDashBonusFeet,
-    qCasterBonusActionAvailable' = casterBonusActionAvailable,
-    qCasterConcentrating' = casterConcentrating,
-    qSpellSlotSpentThisTurn' = spellSlotSpentThisTurn,
-    qLevel1SlotsRemaining' = level1SlotsRemaining,
-    qSpellDashBonusActionEffectCount' = spellDashBonusActionEffectCount,
-    qTargetHp' = targetHp,
-    qTargetReactionAvailable' = targetReactionAvailable,
-    qDissonantMovementFillRequired' = dissonantMovementFillRequired,
-    qTargetMovementSpentFeet' = targetMovementSpentFeet,
-    qCommandMovementFillRequired' = commandMovementFillRequired,
-    qCommandPendingEffectObserved' = commandPendingEffectObserved,
-    qCommandPendingEffectCount' = commandPendingEffectCount,
-    qClimbSpeedFeet' = climbSpeedFeet,
-    qSwimSpeedFeet' = swimSpeedFeet,
-    qLastResult' = lastResult,
+    qState' = {
+      qCasterSpeedFeet: casterSpeedFeet,
+      qCasterRemainingFeet: casterRemainingFeet,
+      qCasterDashBonusFeet: casterDashBonusFeet,
+      qCasterBonusActionAvailable: casterBonusActionAvailable,
+      qCasterConcentrating: casterConcentrating,
+      qSpellSlotSpentThisTurn: spellSlotSpentThisTurn,
+      qLevel1SlotsRemaining: level1SlotsRemaining,
+      qSpellDashBonusActionEffectCount: spellDashBonusActionEffectCount,
+      qTargetHp: targetHp,
+      qTargetReactionAvailable: targetReactionAvailable,
+      qDissonantMovementFillRequired: dissonantMovementFillRequired,
+      qTargetMovementSpentFeet: targetMovementSpentFeet,
+      qCommandMovementFillRequired: commandMovementFillRequired,
+      qCommandPendingEffectObserved: commandPendingEffectObserved,
+      qCommandPendingEffectCount: commandPendingEffectCount,
+      qClimbSpeedFeet: climbSpeedFeet,
+      qSwimSpeedFeet: swimSpeedFeet,
+      qScenarioResult: lastResult,
+      protocol: selectedIdentityProtocolForProjection(Set(), lastResult, ""),
+    },
   }
-
   action init =
     recordProjection(
       30, 30, 0, true, false, false, 2, 0,

@@ -123,6 +123,10 @@ defineSelectedIdentityWitness({
     import.meta.dirname,
     "battle-runtime-roll-modifier-buff-selected-identity.mbt.qnt",
   ),
+  quintStateField: "qState",
+  quintStateFieldPrefix: "q",
+  witnessProtocolField: "protocol",
+  quintFieldNames: { lastResult: "qScenarioResult" },
   projectionSchema: {
     casterConcentrating: "bool",
     casterHp: "int",

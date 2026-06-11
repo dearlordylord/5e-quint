@@ -4,12 +4,38 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.magic-action-healing-pool
 
 module battleRuntimePreserveLifeMbt {
-  var qCasterHp: int
-  var qTargetHp: int
-  var qSecondTargetHp: int
-  var qChannelDivinityUsesRemaining: int
-  var qActionResourcesRemaining: int
-  var qLastResult: str
+  import battleRuntimeWitnessProtocol.* from "./battle-runtime-witness-protocol"
+
+  type WitnessHole = | WitnessProtocolHole
+
+  type PreserveLifeWitnessState = {
+    qCasterHp: int,
+    qTargetHp: int,
+    qSecondTargetHp: int,
+    qChannelDivinityUsesRemaining: int,
+    qActionResourcesRemaining: int,
+    qScenarioResult: str,
+    protocol: WitnessProtocol[WitnessHole],
+  }
+
+  var qState: PreserveLifeWitnessState
+
+  pure def qCasterHp: int = qState.qCasterHp
+  pure def qTargetHp: int = qState.qTargetHp
+  pure def qSecondTargetHp: int = qState.qSecondTargetHp
+  pure def qChannelDivinityUsesRemaining: int = qState.qChannelDivinityUsesRemaining
+  pure def qActionResourcesRemaining: int = qState.qActionResourcesRemaining
+  pure def qLastResult: str = qState.qScenarioResult
+
+  pure def selectedIdentityProtocolForProjection(
+    holes: Set[WitnessHole],
+    scenarioResult: str,
+    scenarioInvalidReason: str,
+  ): WitnessProtocol[WitnessHole] =
+    if (scenarioResult == "init") witnessInit(WitnessProtocolHole)
+    else if (scenarioInvalidReason == "invalidFill") witnessInvalid(WitnessProtocolHole, WInvalidFill)
+    else if (holes != Set()) witnessNeedsHoles(holes)
+    else witnessResolved(WitnessProtocolHole)
 
   action recordProjection(
     casterHp: int,
@@ -19,14 +45,16 @@ module battleRuntimePreserveLifeMbt {
     actionResourcesRemaining: int,
     lastResult: str,
   ): bool = all {
-    qCasterHp' = casterHp,
-    qTargetHp' = targetHp,
-    qSecondTargetHp' = secondTargetHp,
-    qChannelDivinityUsesRemaining' = channelDivinityUsesRemaining,
-    qActionResourcesRemaining' = actionResourcesRemaining,
-    qLastResult' = lastResult,
+    qState' = {
+      qCasterHp: casterHp,
+      qTargetHp: targetHp,
+      qSecondTargetHp: secondTargetHp,
+      qChannelDivinityUsesRemaining: channelDivinityUsesRemaining,
+      qActionResourcesRemaining: actionResourcesRemaining,
+      qScenarioResult: lastResult,
+      protocol: selectedIdentityProtocolForProjection(Set(), lastResult, ""),
+    },
   }
-
   action init = recordProjection(20, 2, 3, 2, 1, "init")
 
   action doDistributeHealing = all {

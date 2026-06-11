@@ -94,6 +94,10 @@ defineSelectedIdentityWitness({
     import.meta.dirname,
     "battle-runtime-reaction-spell-selected-identity.mbt.qnt",
   ),
+  quintStateField: "qState",
+  quintStateFieldPrefix: "q",
+  witnessProtocolField: "protocol",
+  quintFieldNames: { lastResult: "qScenarioResult" },
   projectionSchema: {
     reactorHp: "int",
     triggerCreatureHp: "int",

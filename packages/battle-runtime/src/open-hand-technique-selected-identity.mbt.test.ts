@@ -54,6 +54,10 @@ defineSelectedIdentityWitness({
     import.meta.dirname,
     "battle-runtime-open-hand-technique.mbt.qnt",
   ),
+  quintStateField: "qState",
+  quintStateFieldPrefix: "q",
+  witnessProtocolField: "protocol",
+  quintFieldNames: { lastResult: "qScenarioResult" },
   projectionSchema: {
     targetOpportunityAttackDenied: "bool",
     targetProne: "bool",
@@ -62,6 +66,11 @@ defineSelectedIdentityWitness({
     lastInvalidReason: "str",
   },
   initialProjection: expectedProjection(),
+  witnessInvalidScenarioReasons: {
+    rejectNonFlurry: "invalidFill",
+    rejectPushTooFar: "invalidFill",
+    rejectTopplePushDisposition: "invalidFill",
+  },
   units: [
     {
       unitId: "monk_open_hand_technique",

@@ -19,12 +19,15 @@ import { describe, expect, it } from "vitest";
 
 import {
   MBT_TEST_TIMEOUT_MS,
+  assertWitnessProtocolConsistentWithScenario,
   booleanField,
   defineDriver,
+  decodeWitnessProtocolState,
   focusedMbtMaxSteps,
   mbtSpecPath,
   mbtTraceCount,
   quintStateRecord,
+  quintRecordField,
   run,
   stateCheck,
 } from "./battle-runtime-mbt-driver-kit.ts";
@@ -498,7 +501,24 @@ function requireResolved(
 }
 
 function normalizeDarknessQuintState(raw: unknown): DarknessProjection {
-  const state = quintStateRecord(raw);
+  const state = quintRecordField(quintStateRecord(raw), "qState");
+  const protocol = decodeWitnessProtocolState({
+    state,
+    protocolField: "protocol",
+    noInvalidReason: "",
+    decodeHole: darknessUnexpectedHole,
+  });
+  if (protocol.holes.length !== 0) {
+    throw new Error(
+      "Expected Darkness point-origin witness holes to be empty.",
+    );
+  }
+  const lastResultValue = lastResult(state["qScenarioResult"]);
+  assertWitnessProtocolConsistentWithScenario({
+    label: "Darkness point-origin lifecycle",
+    scenarioResult: lastResultValue,
+    protocol,
+  });
   return {
     actionAvailable: booleanField(state, "qActionAvailable"),
     spellAvailable: booleanField(state, "qSpellAvailable"),
@@ -524,8 +544,14 @@ function normalizeDarknessQuintState(raw: unknown): DarknessProjection {
       state,
       "qNonOverlappingLowLevelSpellLightActive",
     ),
-    lastResult: lastResult(state["qLastResult"]),
+    lastResult: lastResultValue,
   };
+}
+
+function darknessUnexpectedHole(raw: unknown): never {
+  throw new Error(
+    `Darkness point-origin witness does not expect holes; received ${String(raw)}.`,
+  );
 }
 
 function compareDarknessStates(

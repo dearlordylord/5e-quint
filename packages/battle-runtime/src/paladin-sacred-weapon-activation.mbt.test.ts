@@ -244,6 +244,10 @@ defineSelectedIdentityWitness({
     import.meta.dirname,
     "battle-runtime-paladin-sacred-weapon-selected-identity.mbt.qnt",
   ),
+  quintStateField: "qState",
+  quintStateFieldPrefix: "q",
+  witnessProtocolField: "protocol",
+  quintFieldNames: { lastResult: "qScenarioResult" },
   projectionSchema: {
     activationOffered: "bool",
     channelDivinityUsesRemaining: "int",

@@ -34,12 +34,15 @@ import { describe, expect, it } from "vitest";
 
 import {
   MBT_TEST_TIMEOUT_MS,
+  assertWitnessProtocolConsistentWithScenario,
   booleanField,
+  decodeWitnessProtocolState,
   defineDriver,
   focusedMbtMaxSteps,
   mbtSpecPath,
   mbtTraceCount,
   numberFromQuintInt,
+  quintRecordField,
   quintStateRecord,
   run,
   stateCheck,
@@ -958,7 +961,26 @@ const reactionCastingTimeStateCheck = stateCheck(
 function normalizeReactionCastingTimeQuintState(
   raw: unknown,
 ): ReactionCastingTimeProjection {
-  const state = quintStateRecord(raw);
+  const state = quintRecordField(quintStateRecord(raw), "qState");
+  const protocol = decodeWitnessProtocolState({
+    state,
+    protocolField: "protocol",
+    noInvalidReason: "",
+    decodeHole: reactionCastingTimeUnexpectedHole,
+  });
+  if (protocol.holes.length !== 0) {
+    throw new Error(
+      "Expected Reaction casting time witness holes to be empty.",
+    );
+  }
+  const lastResultValue = reactionCastingTimeLastResult(
+    state["qScenarioResult"],
+  );
+  assertWitnessProtocolConsistentWithScenario({
+    label: "Reaction casting time",
+    scenarioResult: lastResultValue,
+    protocol,
+  });
   return {
     triggerKind: reactionCastingTimeTriggerKind(state["qTriggerKind"]),
     continuationKind: reactionCastingTimeContinuationKind(
@@ -987,8 +1009,14 @@ function normalizeReactionCastingTimeQuintState(
       "qReactorThirdLevelSlotsExpended",
     ),
     reactionWindowCleared: booleanField(state, "qReactionWindowCleared"),
-    lastResult: reactionCastingTimeLastResult(state["qLastResult"]),
+    lastResult: lastResultValue,
   };
+}
+
+function reactionCastingTimeUnexpectedHole(raw: unknown): never {
+  throw new Error(
+    `Reaction casting time witness does not expect holes; received ${String(raw)}.`,
+  );
 }
 
 function reactionCastingTimeTriggerKind(

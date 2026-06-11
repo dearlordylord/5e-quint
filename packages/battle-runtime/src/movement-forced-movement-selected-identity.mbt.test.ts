@@ -139,6 +139,10 @@ defineSelectedIdentityWitness({
     import.meta.dirname,
     "battle-runtime-movement-forced-movement-selected-identity.mbt.qnt",
   ),
+  quintStateField: "qState",
+  quintStateFieldPrefix: "q",
+  witnessProtocolField: "protocol",
+  quintFieldNames: { lastResult: "qScenarioResult" },
   projectionSchema: {
     casterSpeedFeet: "int",
     casterRemainingFeet: "int",

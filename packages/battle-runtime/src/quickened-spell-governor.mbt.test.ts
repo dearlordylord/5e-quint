@@ -24,12 +24,15 @@ import { describe, expect, it } from "vitest";
 
 import {
   MBT_TEST_TIMEOUT_MS,
+  assertWitnessProtocolConsistentWithScenario,
   booleanField,
+  decodeWitnessProtocolState,
   defineDriver,
   focusedMbtMaxSteps,
   mbtSpecPath,
   mbtTraceCount,
   numberFromQuintInt,
+  quintRecordField,
   quintStateRecord,
   run,
   stateCheck,
@@ -917,7 +920,24 @@ function expectRight<T, E>(result: Either.Either<T, E>): T {
 function normalizeQuickenedSpellGovernorQuintState(
   raw: unknown,
 ): QuickenedSpellGovernorProjection {
-  const state = quintStateRecord(raw);
+  const state = quintRecordField(quintStateRecord(raw), "qState");
+  const protocol = decodeWitnessProtocolState({
+    state,
+    protocolField: "protocol",
+    noInvalidReason: "",
+    decodeHole: quickenedSpellGovernorUnexpectedHole,
+  });
+  if (protocol.holes.length !== 0) {
+    throw new Error(
+      "Expected Quickened Spell Governor witness holes to be empty.",
+    );
+  }
+  const lastResultValue = lastResult(state["qScenarioResult"]);
+  assertWitnessProtocolConsistentWithScenario({
+    label: "Quickened Spell Governor",
+    scenarioResult: lastResultValue,
+    protocol,
+  });
   return {
     quickenedCureWoundsOffered: booleanField(
       state,
@@ -942,8 +962,14 @@ function normalizeQuickenedSpellGovernorQuintState(
     ),
     spellSlotActsAvailable: booleanField(state, "qSpellSlotActsAvailable"),
     invalidKind: invalidKind(state["qInvalidKind"]),
-    lastResult: lastResult(state["qLastResult"]),
+    lastResult: lastResultValue,
   };
+}
+
+function quickenedSpellGovernorUnexpectedHole(raw: unknown): never {
+  throw new Error(
+    `Quickened Spell Governor witness does not expect holes; received ${String(raw)}.`,
+  );
 }
 
 function compareQuickenedSpellGovernorStates(
