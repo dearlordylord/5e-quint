@@ -9,15 +9,15 @@ import {
   type CharacterDraftId,
 } from "@dnd/character-creation-runtime";
 import {
-  createRetainedFamiliarLikeCompanion,
-  type CharacterSheetRetainedCompanionCreationSource,
-} from "@dnd/character-battle-runtime";
-import {
   characterSheetCompanion,
   characterSheetHitPointMaximum,
   characterSheetRetainedCompanionId,
+  createRetainedFamiliarLikeCompanion,
+  type CharacterSheetCompanionFormSelection,
+  type CharacterSheetRetainedCompanionCreationSource,
 } from "@dnd/character-sheet-runtime";
 import { Hp, spellSlotLevel } from "@dnd/shared/types";
+import { PACT_OF_THE_CHAIN_SPECIAL_FORM_REFS } from "@dnd/surface/surface/find-familiar-forms";
 import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
 import { Either, Match } from "effect";
 
@@ -300,13 +300,23 @@ function applyRetainOneAtATimeCompanionOperation(
     >;
   },
 ): CharacterToolResult {
+  const selectedForm = retainedCompanionFormSelectionFromTool(
+    input.operation.selectedForm,
+  );
+  if (Either.isLeft(selectedForm)) {
+    return errorContent("Character session operation failed.", {
+      code: "CHARACTER_SESSION_OPERATION_INVALID",
+      characterId: input.characterId,
+      message: selectedForm.left,
+    });
+  }
   const updated = createRetainedFamiliarLikeCompanion({
     sheet: input.session,
     unitLibrary: root.unitLibrary,
     statBlockCatalog: root.statBlockCatalog,
     companionId: characterSheetRetainedCompanionId(input.operation.companionId),
     source: retainedCompanionSourceFromTool(input.operation.source),
-    selectedForm: input.operation.selectedForm,
+    selectedForm: selectedForm.right,
     ...(input.operation.creatureTypeOverrideChoiceId === undefined
       ? {}
       : {
@@ -332,6 +342,31 @@ function applyRetainOneAtATimeCompanionOperation(
     character: updated.right,
     session: root.sessionStore.snapshot(),
   });
+}
+
+function retainedCompanionFormSelectionFromTool(
+  selectedForm: Extract<
+    Extract<
+      CharacterToolCall,
+      {
+        readonly name: typeof characterToolNames.applyCharacterSessionOperation;
+      }
+    >["args"]["operation"],
+    { readonly kind: "retainOneAtATimeCompanion" }
+  >["selectedForm"],
+): Either.Either<CharacterSheetCompanionFormSelection, string> {
+  if (selectedForm.tag !== "pactOfTheChainSpecialForm") {
+    return Either.right(selectedForm);
+  }
+  const specialForm = PACT_OF_THE_CHAIN_SPECIAL_FORM_REFS.find(
+    (form) => form.formId === selectedForm.formId,
+  );
+  return specialForm === undefined
+    ? Either.left("Unknown retained companion special form.")
+    : Either.right({
+        tag: "pactOfTheChainSpecialForm",
+        formId: specialForm.formId,
+      });
 }
 
 function retainedCompanionSourceFromTool(

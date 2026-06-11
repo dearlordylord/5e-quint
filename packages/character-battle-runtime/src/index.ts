@@ -1,20 +1,15 @@
 // KERNEL-COVERAGE: runtime-owner SHEET.FEATURE_RESOURCES.TRANSITIONS CHARACTER.BATTLE.HANDOFF.INIT_PROJECTION CHARACTER.BATTLE.HANDOFF.SETTLEMENT CHARACTER.BATTLE.HANDOFF.IDENTITY_CONFLICTS
 import {
   admitCompanionToBattle,
-  battleDruidWildCompanionSpellCastSupportForUnit,
   combatantKnockedOutUnconscious,
   combatantHasActiveDruidWildShape,
   classFeatureSpellFreeCastProfileForResource,
   characterBattleResourceIsPointPool,
   characterBattleResourceMaxPoints,
   characterBattleResourceMaxUses,
-  effectiveCharacterBattlePreparedSpells,
   findFamiliarFormEligibilityForSpell,
   findFamiliarCompanionEntryForOwner,
   PACT_OF_THE_CHAIN_SPECIAL_FORM_REFS,
-  pactOfTheChainFindFamiliarFormEligibilityForSpell,
-  resolveFindFamiliarForm,
-  resolvePactOfTheChainFindFamiliarForm,
   retainedStoredFormForPresentCompanion,
   KNOCKED_OUT_UNCONSCIOUS,
   parseSupportedUnitFeatureProfile,
@@ -26,18 +21,10 @@ import {
   type BattleState,
   type CharacterZeroHpLifecycleInit,
   type CombatantId,
-  type FindFamiliarCreatureTypeOverride,
-  type FindFamiliarCreatureTypeOverrideChoice,
   type FindFamiliarFormEligibility,
-  type FindFamiliarFormSelection,
   type InitiativeScore,
-  type PactOfTheChainFindFamiliarFormEligibility,
-  type PactOfTheChainFindFamiliarFormSelection,
 } from "@dnd/battle-runtime";
-import {
-  characterBuildDruidWildShapeFacts,
-  characterBuildFeatureUnitIds,
-} from "@dnd/character-creation-runtime";
+import { characterBuildDruidWildShapeFacts } from "@dnd/character-creation-runtime";
 import {
   CHARACTER_SHEET_KNOCKED_OUT_UNCONSCIOUS,
   characterSheetCurrentHp,
@@ -45,8 +32,6 @@ import {
   characterSheetCompanion,
   characterSheetHitPointMaximum,
   characterSheetPactSlots,
-  characterSheetResources,
-  characterSheetSpellInvocation,
   characterSheetSpellSlotSourceState,
   characterSheetSpellSlots,
   characterSheetTempHp,
@@ -55,7 +40,6 @@ import {
   isCharacterSheetUseCountResourceUnitId,
   replaceCharacterSheetCompanion,
   replaceCharacterSheetSpellSlotSourceState,
-  spendCharacterSheetSpellSlot,
   retainedCompanionProtocolFacts,
   type CharacterSheet,
   type CharacterSheetBookOfShadowsPresence,
@@ -66,12 +50,10 @@ import {
   type CharacterSheetPositiveHpUnconscious,
   type CharacterSheetPointPoolResourceUnitId,
   type CharacterSheetRetainedCompanionHitPoints,
-  type CharacterSheetRetainedCompanionId,
   type CharacterSheetRetainedCompanionManifestation,
   type CharacterSheetRetainedCompanionProtocol,
   type CharacterSheetRetainedCompanionResolvedFormProof,
   type CharacterSheetResourceExpenditure,
-  type CharacterSheetResourceState,
   type CharacterSheetSpellSlotSourceState,
   type CharacterSheetStableRecovery,
   type CharacterSheetUseCountResourceUnitId,
@@ -81,23 +63,15 @@ import { elapsedTimeTicks } from "@dnd/shared/elapsed-time";
 import {
   CONDITIONS,
   resourceCount,
-  Hp,
   type Condition,
-  type Hp as HpType,
   type ResourceCount,
-  type SpellSlotLevel,
 } from "@dnd/shared/types";
 import {
   EMPTY_CONDITION_STATE,
   hasCondition,
 } from "@dnd/shared-algebras/conditions-algebra";
 import { isSupportedClassFeatureSpellFreeCastResourceTag } from "@dnd/surface/surface/types";
-import type {
-  ClassFeatureRecord,
-  SpellRecord,
-  StatBlockRecord,
-  UnitRecord,
-} from "@dnd/surface/surface/types";
+import type { StatBlockRecord } from "@dnd/surface/surface/types";
 import type { StatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog";
 import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
 import { Either, Option } from "effect";
@@ -108,7 +82,6 @@ import {
 } from "./battle-creature-init.ts";
 import {
   battleCreatureInitIssue,
-  characterSpellcasting,
   type BattleCreatureInitIssue,
 } from "./battle-character-build-projection.ts";
 
@@ -185,43 +158,6 @@ export type CharacterSheetCompanionBattleAdmissionInput = {
   readonly statBlockCatalog: StatBlockCatalog;
 };
 
-export type CharacterSheetRetainedCompanionCreationSource =
-  | {
-      readonly tag: "spellSlotSpellCast";
-      readonly spellId: UnitRecord["id"];
-      readonly spellLevel: SpellSlotLevel;
-    }
-  | {
-      readonly tag: "ritualSpell";
-      readonly spellId: UnitRecord["id"];
-    }
-  | {
-      readonly tag: "invocationSpellAccess";
-      readonly spellId: UnitRecord["id"];
-    }
-  | {
-      readonly tag: "classFeatureSpellCast";
-      readonly featureUnitId: UnitRecord["id"];
-      readonly spend:
-        | { readonly tag: "spellSlot"; readonly spellLevel: SpellSlotLevel }
-        | {
-            readonly tag: "useCountResource";
-            readonly resourceUnitId: UnitRecord["id"];
-          };
-    };
-
-export type CharacterSheetRetainedCompanionCreationInput = {
-  readonly sheet: CharacterSheet;
-  readonly unitLibrary: UnitCatalog;
-  readonly statBlockCatalog: StatBlockCatalog;
-  readonly companionId: CharacterSheetRetainedCompanionId;
-  readonly source: CharacterSheetRetainedCompanionCreationSource;
-  readonly selectedForm: CharacterSheetCompanionFormSelection;
-  readonly creatureTypeOverrideChoiceId?: FindFamiliarCreatureTypeOverrideChoice["optionId"];
-  readonly currentHp?: HpType;
-  readonly tempHp?: HpType;
-};
-
 export function characterSheetBattleInit(input: CharacterSheetBattleInitInput) {
   const { sheet, unitLibrary, statBlockCatalog, ...battleInput } = input;
   const stableRecoveryIssue = unsupportedStableRecoveryBattleBoundary(sheet);
@@ -248,82 +184,6 @@ export function characterSheetBattleInit(input: CharacterSheetBattleInitInput) {
     ...(druidWildShapeAvailableForms.right === undefined
       ? {}
       : { druidWildShapeAvailableForms: druidWildShapeAvailableForms.right }),
-  });
-}
-
-export function createRetainedFamiliarLikeCompanion(
-  input: CharacterSheetRetainedCompanionCreationInput,
-): Either.Either<CharacterSheet, CharacterSheetBattleHandoffIssue> {
-  if (input.companionId.length === 0) {
-    return characterSheetBattleHandoffIssue(
-      "Retained companion requires companion id.",
-    );
-  }
-  const selectedForm = battleFormSelectionForSheetForm(input.selectedForm);
-  if (Either.isLeft(selectedForm)) return Either.left(selectedForm.left);
-  const source = retainedCompanionCreationSource(input);
-  if (Either.isLeft(source)) return Either.left(source.left);
-  const resolved = retainedCompanionResolvedForm({
-    source: source.right,
-    selectedForm: selectedForm.right,
-    statBlockCatalog: input.statBlockCatalog,
-    creatureTypeOverrideChoiceId: input.creatureTypeOverrideChoiceId,
-  });
-  if (Either.isLeft(resolved)) return Either.left(resolved.left);
-
-  const existing = characterSheetCompanion(input.sheet);
-  // A47: a recast over an occupied durable slot continues the existing
-  // companion in place and cannot replace its durable identity.
-  if (
-    existing.tag === "retainedOneAtATime" &&
-    existing.companion.companionId !== input.companionId
-  ) {
-    return characterSheetBattleHandoffIssue(
-      "Retained companion recast cannot replace the durable identity of an occupied companion slot.",
-    );
-  }
-  const companionId =
-    existing.tag === "retainedOneAtATime"
-      ? existing.companion.companionId
-      : input.companionId;
-  // A47: a form-adoption recast carries current HP clamped to the new form's
-  // maximum (keeping Temporary HP); a recast after a 0-HP disappearance, or a
-  // creation into an empty slot, mints the new form's HP.
-  const hitPoints =
-    existing.tag === "retainedOneAtATime"
-      ? retainedCompanionRecastHitPoints({
-          statBlock: resolved.right.statBlock,
-          manifestation: existing.companion.manifestation,
-        })
-      : retainedCompanionCreationHitPoints({
-          statBlock: resolved.right.statBlock,
-          currentHp: input.currentHp,
-          tempHp: input.tempHp,
-        });
-  if (Either.isLeft(hitPoints)) return Either.left(hitPoints.left);
-  const spentSheet = spendRetainedCompanionCreationSourceCost({
-    sheet: input.sheet,
-    unitLibrary: input.unitLibrary,
-    source: source.right,
-  });
-  if (Either.isLeft(spentSheet)) return Either.left(spentSheet.left);
-
-  return replaceCharacterSheetCompanion({
-    sheet: spentSheet.right,
-    companion: {
-      tag: "retainedOneAtATime",
-      companion: {
-        companionId,
-        protocol: source.right.protocol,
-        manifestation: {
-          tag: "embodiedOutsideBattle",
-          selectedForm: input.selectedForm,
-          creatureTypeOverride: resolved.right.creatureTypeOverride,
-          resolvedStatBlockId: resolved.right.statBlock.id,
-          hitPoints: hitPoints.right,
-        },
-      },
-    },
   });
 }
 
@@ -575,6 +435,18 @@ function retainedCompanionProtocolFromBattle(
     : ordinaryFamiliarLikeProtocol();
 }
 
+function ordinaryFamiliarLikeProtocol(): CharacterSheetRetainedCompanionProtocol {
+  return { tag: "ordinaryFamiliarLikeOneAtATime" };
+}
+
+function pactFamiliarLikeProtocol(): CharacterSheetRetainedCompanionProtocol {
+  return { tag: "attackExceptionFamiliarLikeOneAtATime" };
+}
+
+function ownerLongRestExpiringFamiliarLikeProtocol(): CharacterSheetRetainedCompanionProtocol {
+  return { tag: "ownerLongRestFamiliarLikeOneAtATime" };
+}
+
 function companionAdmissionManifestation(input: {
   readonly companion: Extract<
     CharacterSheetCompanion,
@@ -655,479 +527,6 @@ function companionAdmissionManifestation(input: {
   });
 }
 
-type RetainedCompanionCreationSourceFacts =
-  | {
-      readonly tag: "ordinaryFamiliarLike";
-      readonly eligibility: FindFamiliarFormEligibility;
-      readonly protocol: CharacterSheetRetainedCompanionProtocol;
-      readonly spend:
-        | { readonly tag: "none" }
-        | { readonly tag: "spellSlot"; readonly spellLevel: SpellSlotLevel };
-      readonly fixedCreatureTypeOverrideChoiceId?: never;
-    }
-  | {
-      readonly tag: "pactFamiliarLike";
-      readonly eligibility: PactOfTheChainFindFamiliarFormEligibility;
-      readonly protocol: CharacterSheetRetainedCompanionProtocol;
-      readonly spend: { readonly tag: "none" };
-      readonly fixedCreatureTypeOverrideChoiceId?: never;
-    }
-  | {
-      readonly tag: "ownerLongRestExpiringFamiliarLike";
-      readonly eligibility: FindFamiliarFormEligibility;
-      readonly protocol: CharacterSheetRetainedCompanionProtocol;
-      readonly fixedCreatureTypeOverrideChoiceId: FindFamiliarCreatureTypeOverrideChoice["optionId"];
-      readonly spend: Extract<
-        CharacterSheetRetainedCompanionCreationSource,
-        { readonly tag: "classFeatureSpellCast" }
-      >["spend"];
-    };
-
-function retainedCompanionCreationSource(
-  input: CharacterSheetRetainedCompanionCreationInput,
-): Either.Either<
-  RetainedCompanionCreationSourceFacts,
-  CharacterSheetBattleHandoffIssue
-> {
-  const source = input.source;
-  if (source.tag === "spellSlotSpellCast") {
-    const spellSlots = characterSheetSpellSlots(input.sheet);
-    const spellcasting = characterSpellcasting({
-      build: input.sheet.build,
-      unitLibrary: input.unitLibrary,
-      ...(spellSlots === undefined ? {} : { spellSlots }),
-    });
-    if (Either.isLeft(spellcasting)) {
-      return characterSheetBattleHandoffIssue(spellcasting.left.message);
-    }
-    const spell = effectiveCharacterBattlePreparedSpells({
-      preparedSpells: spellcasting.right.preparedSpells,
-      bookOfShadowsSpellAccesses:
-        spellcasting.right.bookOfShadowsSpellAccesses ?? [],
-    }).find((candidate) => candidate.id === source.spellId);
-    if (spell === undefined) {
-      return characterSheetBattleHandoffIssue(
-        "Retained companion spell-slot source requires the selected spell prepared or otherwise effective as prepared.",
-      );
-    }
-    if (source.spellLevel < spell.mechanics.level) {
-      return characterSheetBattleHandoffIssue(
-        "Retained companion spell-slot source requires a slot at least as high as the selected spell level.",
-      );
-    }
-    const eligibility = findFamiliarFormEligibilityForSpell(spell);
-    return eligibility === null
-      ? characterSheetBattleHandoffIssue(
-          "Retained companion spell-slot source must provide familiar form eligibility.",
-        )
-      : Either.right({
-          tag: "ordinaryFamiliarLike",
-          eligibility,
-          protocol: ordinaryFamiliarLikeProtocol(),
-          spend: { tag: "spellSlot", spellLevel: source.spellLevel },
-        });
-  }
-  if (source.tag === "ritualSpell") {
-    const invocation = characterSheetSpellInvocation({
-      sheet: input.sheet,
-      unitLibrary: input.unitLibrary,
-      spellId: source.spellId,
-      invocation: { kind: "ritual" },
-    });
-    if (Either.isLeft(invocation)) return Either.left(invocation.left);
-    const spell = requiredSpell(input.unitLibrary, invocation.right.spellId);
-    if (Either.isLeft(spell)) return Either.left(spell.left);
-    const eligibility = findFamiliarFormEligibilityForSpell(spell.right);
-    return eligibility === null
-      ? characterSheetBattleHandoffIssue(
-          "Retained companion ritual source must provide familiar form eligibility.",
-        )
-      : Either.right({
-          tag: "ordinaryFamiliarLike",
-          eligibility,
-          protocol: ordinaryFamiliarLikeProtocol(),
-          spend: { tag: "none" },
-        });
-  }
-
-  if (source.tag === "invocationSpellAccess") {
-    const spellSlots = characterSheetSpellSlots(input.sheet);
-    const spellcasting = characterSpellcasting({
-      build: input.sheet.build,
-      unitLibrary: input.unitLibrary,
-      ...(spellSlots === undefined ? {} : { spellSlots }),
-    });
-    if (Either.isLeft(spellcasting)) {
-      return characterSheetBattleHandoffIssue(spellcasting.left.message);
-    }
-    const access = spellcasting.right.invocationSpellAccesses.find(
-      (candidate) =>
-        candidate.tag === "pactOfTheChainFindFamiliar" &&
-        candidate.spell.id === source.spellId,
-    );
-    if (access === undefined) {
-      return characterSheetBattleHandoffIssue(
-        "Retained companion invocation source must provide familiar form eligibility.",
-      );
-    }
-    const eligibility = pactOfTheChainFindFamiliarFormEligibilityForSpell(
-      access.spell,
-    );
-    return eligibility === null
-      ? characterSheetBattleHandoffIssue(
-          "Retained companion invocation source must provide familiar form catalog references.",
-        )
-      : Either.right({
-          tag: "pactFamiliarLike",
-          eligibility,
-          protocol: pactFamiliarLikeProtocol(),
-          spend: { tag: "none" },
-        });
-  }
-
-  const feature = retainedCompanionSpellCastFeature({ ...input, source });
-  if (Either.isLeft(feature)) return Either.left(feature.left);
-  const spendIssue = retainedCompanionFeatureSpendIssue({
-    feature: feature.right,
-    spend: source.spend,
-  });
-  if (spendIssue !== null) return characterSheetBattleHandoffIssue(spendIssue);
-  const spell = requiredSpell(
-    input.unitLibrary,
-    feature.right.mechanics.spellId,
-  );
-  if (Either.isLeft(spell)) return Either.left(spell.left);
-  const eligibility = findFamiliarFormEligibilityForSpell(spell.right);
-  return eligibility === null
-    ? characterSheetBattleHandoffIssue(
-        "Retained companion class-feature spell source must provide familiar form eligibility.",
-      )
-    : Either.right({
-        tag: "ownerLongRestExpiringFamiliarLike",
-        eligibility,
-        protocol: ownerLongRestExpiringFamiliarLikeProtocol(),
-        fixedCreatureTypeOverrideChoiceId:
-          feature.right.mechanics.spellModeOverride.optionId,
-        spend: source.spend,
-      });
-}
-
-type RetainedCompanionSpellCastFeature = Extract<
-  ClassFeatureRecord,
-  { readonly kind: "class_feature" }
-> & {
-  readonly mechanics: Extract<
-    ClassFeatureRecord["mechanics"],
-    { readonly family: "druid_wild_companion_spell_cast" }
-  >;
-};
-
-function retainedCompanionSpellCastFeature(
-  input: CharacterSheetRetainedCompanionCreationInput & {
-    readonly source: Extract<
-      CharacterSheetRetainedCompanionCreationSource,
-      { readonly tag: "classFeatureSpellCast" }
-    >;
-  },
-): Either.Either<
-  RetainedCompanionSpellCastFeature,
-  CharacterSheetBattleHandoffIssue
-> {
-  if (
-    !characterBuildFeatureUnitIds(
-      input.sheet.build,
-      input.unitLibrary,
-    ).includes(input.source.featureUnitId)
-  ) {
-    return characterSheetBattleHandoffIssue(
-      "Retained companion class-feature spell source requires the selected feature on the Character Sheet.",
-    );
-  }
-  const unit = input.unitLibrary.getUnit(input.source.featureUnitId);
-  if (Option.isNone(unit)) {
-    return characterSheetBattleHandoffIssue(
-      `Unknown retained companion feature Unit id: ${input.source.featureUnitId}`,
-    );
-  }
-  const support = battleDruidWildCompanionSpellCastSupportForUnit(unit.value);
-  if (support !== "druidWildCompanionSpellCast") {
-    return characterSheetBattleHandoffIssue(
-      "Retained companion class-feature spell source must match the supported familiar-like spell-cast profile.",
-    );
-  }
-  if (!isRetainedCompanionSpellCastFeature(unit.value)) {
-    return characterSheetBattleHandoffIssue(
-      "Retained companion class-feature spell source is malformed.",
-    );
-  }
-  return Either.right(unit.value);
-}
-
-function isRetainedCompanionSpellCastFeature(
-  unit: UnitRecord,
-): unit is RetainedCompanionSpellCastFeature {
-  return (
-    unit.kind === "class_feature" &&
-    unit.mechanics.family === "druid_wild_companion_spell_cast"
-  );
-}
-
-function retainedCompanionFeatureSpendIssue(input: {
-  readonly feature: RetainedCompanionSpellCastFeature;
-  readonly spend: Extract<
-    CharacterSheetRetainedCompanionCreationSource,
-    { readonly tag: "classFeatureSpellCast" }
-  >["spend"];
-}): string | null {
-  const matchingSpend = input.feature.mechanics.spendOptions.find((option) => {
-    if (input.spend.tag === "spellSlot") return option.kind === "spell_slot";
-    return (
-      option.kind === "one_class_feature_use" &&
-      option.resourceUnitId === input.spend.resourceUnitId
-    );
-  });
-  return matchingSpend === undefined
-    ? "Retained companion class-feature spend must match one of the feature spend options."
-    : null;
-}
-
-function retainedCompanionResolvedForm(input: {
-  readonly source: RetainedCompanionCreationSourceFacts;
-  readonly selectedForm:
-    | FindFamiliarFormSelection
-    | PactOfTheChainFindFamiliarFormSelection;
-  readonly statBlockCatalog: StatBlockCatalog;
-  readonly creatureTypeOverrideChoiceId:
-    | FindFamiliarCreatureTypeOverrideChoice["optionId"]
-    | undefined;
-}): Either.Either<
-  {
-    readonly statBlock: StatBlockRecord;
-    readonly creatureTypeOverride: FindFamiliarCreatureTypeOverride;
-  },
-  CharacterSheetBattleHandoffIssue
-> {
-  const creatureTypeOverrideChoiceId =
-    input.source.fixedCreatureTypeOverrideChoiceId ??
-    input.creatureTypeOverrideChoiceId;
-  if (creatureTypeOverrideChoiceId === undefined) {
-    return characterSheetBattleHandoffIssue(
-      "Retained companion creation requires a creature type mode choice.",
-    );
-  }
-  const resolved =
-    input.source.tag === "pactFamiliarLike"
-      ? resolvePactOfTheChainFindFamiliarForm({
-          catalog: input.statBlockCatalog,
-          eligibility: input.source.eligibility,
-          selection: input.selectedForm,
-          creatureTypeOverrideChoiceId,
-        })
-      : input.selectedForm.tag === "pactOfTheChainSpecialForm"
-        ? {
-            tag: "issue" as const,
-            message:
-              "Retained companion source does not allow special familiar forms.",
-          }
-        : resolveFindFamiliarForm({
-            catalog: input.statBlockCatalog,
-            eligibility: input.source.eligibility,
-            selection: input.selectedForm,
-            creatureTypeOverrideChoiceId,
-          });
-  return resolved.tag === "issue"
-    ? characterSheetBattleHandoffIssue(resolved.message)
-    : Either.right(resolved.form);
-}
-
-function spendRetainedCompanionCreationSourceCost(input: {
-  readonly sheet: CharacterSheet;
-  readonly unitLibrary: UnitCatalog;
-  readonly source: RetainedCompanionCreationSourceFacts;
-}): Either.Either<CharacterSheet, CharacterSheetBattleHandoffIssue> {
-  if (
-    input.source.tag === "ordinaryFamiliarLike" &&
-    input.source.spend.tag === "spellSlot"
-  ) {
-    const spent = spendCharacterSheetSpellSlot({
-      sheet: input.sheet,
-      spellLevel: input.source.spend.spellLevel,
-      spellSlotSource: undefined,
-    });
-    return Either.isLeft(spent)
-      ? characterSheetBattleHandoffIssue(spent.left.message)
-      : Either.right(spent.right);
-  }
-  if (input.source.tag !== "ownerLongRestExpiringFamiliarLike") {
-    return Either.right(input.sheet);
-  }
-  if (input.source.spend.tag === "spellSlot") {
-    const spent = spendCharacterSheetSpellSlot({
-      sheet: input.sheet,
-      spellLevel: input.source.spend.spellLevel,
-      spellSlotSource: undefined,
-    });
-    return Either.isLeft(spent)
-      ? characterSheetBattleHandoffIssue(spent.left.message)
-      : Either.right(spent.right);
-  }
-  return spendRetainedCompanionUseCountResource({
-    sheet: input.sheet,
-    unitLibrary: input.unitLibrary,
-    resourceUnitId: input.source.spend.resourceUnitId,
-  });
-}
-
-function spendRetainedCompanionUseCountResource(input: {
-  readonly sheet: CharacterSheet;
-  readonly unitLibrary: UnitCatalog;
-  readonly resourceUnitId: UnitRecord["id"];
-}): Either.Either<CharacterSheet, CharacterSheetBattleHandoffIssue> {
-  const resources = characterSheetResources(input.sheet, input.unitLibrary);
-  if (Either.isLeft(resources)) return Either.left(resources.left);
-  const resource = resources.right.find(
-    (
-      candidate,
-    ): candidate is Extract<
-      CharacterSheetResourceState,
-      { readonly tag: "useCountResource" }
-    > =>
-      candidate.tag === "useCountResource" &&
-      candidate.unitId === input.resourceUnitId,
-  );
-  if (resource === undefined) {
-    return characterSheetBattleHandoffIssue(
-      "Retained companion class-feature spend requires the selected use-count resource.",
-    );
-  }
-  if (resource.expended >= resource.count) {
-    return characterSheetBattleHandoffIssue(
-      "Retained companion class-feature spend requires an unexpended use-count resource.",
-    );
-  }
-  const nextExpenditures = input.sheet.resourceExpenditures.filter(
-    (expenditure) =>
-      expenditure.tag !== "useCountResource" ||
-      expenditure.unitId !== input.resourceUnitId,
-  );
-  nextExpenditures.push({
-    tag: "useCountResource",
-    unitId: input.resourceUnitId,
-    expended: resourceCount(resource.expended + 1),
-  });
-  return Either.right({
-    ...input.sheet,
-    resourceExpenditures: nextExpenditures,
-  });
-}
-
-// A47: derive the recast companion's Hit Points from the existing companion. A
-// companion that disappeared at 0 HP re-forms with fresh form HP; an embodied or
-// temporarily dismissed companion carries its current HP clamped to the new
-// form's maximum and keeps its Temporary HP. Mirrors the in-battle
-// hitPointsForFindFamiliarCast / hitPointsForAdoptedFamiliarForm semantics.
-function retainedCompanionRecastHitPoints(input: {
-  readonly statBlock: StatBlockRecord;
-  readonly manifestation: CharacterSheetRetainedCompanionManifestation;
-}): Either.Either<
-  CharacterSheetRetainedCompanionHitPoints,
-  CharacterSheetBattleHandoffIssue
-> {
-  if (input.manifestation.tag === "disappearedAtZeroHitPoints") {
-    return retainedCompanionCreationHitPoints({
-      statBlock: input.statBlock,
-      currentHp: undefined,
-      tempHp: undefined,
-    });
-  }
-  const maxHp = statBlockLiteralHp(input.statBlock);
-  if (maxHp === null) {
-    return characterSheetBattleHandoffIssue(
-      "Retained companion recast requires literal Stat Block HP.",
-    );
-  }
-  const clampedCurrentHp = Hp(
-    Math.min(Number(input.manifestation.hitPoints.currentHp), Number(maxHp)),
-  );
-  if (clampedCurrentHp < Hp(1)) {
-    return characterSheetBattleHandoffIssue(
-      "Retained companion recast current HP must be positive.",
-    );
-  }
-  const carriedCurrentHp = clampedCurrentHp as unknown as
-    CharacterSheetRetainedCompanionHitPoints["currentHp"];
-  return Either.right({
-    // Cast evidence: Hp proves non-negative integer HP, and the guard above
-    // proves the retained companion positive-current-HP alias for the carried,
-    // clamped value.
-    currentHp: carriedCurrentHp,
-    tempHp: input.manifestation.hitPoints.tempHp,
-  });
-}
-
-function retainedCompanionCreationHitPoints(input: {
-  readonly statBlock: StatBlockRecord;
-  readonly currentHp: HpType | undefined;
-  readonly tempHp: HpType | undefined;
-}): Either.Either<
-  CharacterSheetRetainedCompanionHitPoints,
-  CharacterSheetBattleHandoffIssue
-> {
-  const currentHp = input.currentHp ?? statBlockLiteralHp(input.statBlock);
-  if (currentHp === null) {
-    return characterSheetBattleHandoffIssue(
-      "Retained companion creation requires literal Stat Block HP or caller-provided current HP.",
-    );
-  }
-  if (currentHp < Hp(1)) {
-    return characterSheetBattleHandoffIssue(
-      "Retained companion current HP must be positive.",
-    );
-  }
-  return Either.right({
-    // Cast evidence: Hp proves non-negative integer HP, and the guard above
-    // proves the retained companion positive-current-HP alias.
-    currentHp:
-      currentHp as CharacterSheetRetainedCompanionHitPoints["currentHp"],
-    tempHp: input.tempHp ?? Hp(0),
-  });
-}
-
-function statBlockLiteralHp(statBlock: StatBlockRecord): HpType | null {
-  return statBlock.statBlock.hp.kind === "literal"
-    ? Hp(statBlock.statBlock.hp.value)
-    : null;
-}
-
-function requiredSpell(
-  unitLibrary: UnitCatalog,
-  spellId: UnitRecord["id"],
-): Either.Either<SpellRecord, CharacterSheetBattleHandoffIssue> {
-  const unit = unitLibrary.getUnit(spellId);
-  if (Option.isNone(unit)) {
-    return characterSheetBattleHandoffIssue(
-      `Unknown Spell Unit id: ${spellId}`,
-    );
-  }
-  return unit.value.kind === "spell"
-    ? Either.right(unit.value)
-    : characterSheetBattleHandoffIssue(
-        "Retained companion source must reference a Spell record.",
-      );
-}
-
-function ordinaryFamiliarLikeProtocol(): CharacterSheetRetainedCompanionProtocol {
-  return { tag: "ordinaryFamiliarLikeOneAtATime" };
-}
-
-function pactFamiliarLikeProtocol(): CharacterSheetRetainedCompanionProtocol {
-  return { tag: "attackExceptionFamiliarLikeOneAtATime" };
-}
-
-function ownerLongRestExpiringFamiliarLikeProtocol(): CharacterSheetRetainedCompanionProtocol {
-  return { tag: "ownerLongRestFamiliarLikeOneAtATime" };
-}
-
 type BattleStoredFormForSheetCompanion = {
   readonly storedForm: BattleCompanionStoredForm;
   readonly formEligibility: CompanionBattleAdmissionFormEligibility;
@@ -1145,8 +544,6 @@ function battleStoredFormForSheetCompanion(input: {
   CharacterSheetBattleHandoffIssue
 > {
   const proof = input.companion.manifestation;
-  const formSelection = battleFormSelectionForSheetForm(proof.selectedForm);
-  if (Either.isLeft(formSelection)) return Either.left(formSelection.left);
   const formAccess = battleFormAccessForSheetCompanion({
     protocol: input.companion.protocol,
     selectedForm: proof.selectedForm,
@@ -1169,7 +566,7 @@ function battleStoredFormForSheetCompanion(input: {
   });
   if (Either.isLeft(formEligibility)) return Either.left(formEligibility.left);
   if (formAccess.right === "findFamiliar") {
-    if (formSelection.right.tag === "pactOfTheChainSpecialForm") {
+    if (proof.selectedForm.tag === "pactOfTheChainSpecialForm") {
       return characterSheetBattleHandoffIssue(
         "Find Familiar retained companion access cannot use special companion forms.",
       );
@@ -1178,7 +575,7 @@ function battleStoredFormForSheetCompanion(input: {
       formEligibility: formEligibility.right,
       storedForm: {
         formAccess: "findFamiliar",
-        formSelection: formSelection.right,
+        formSelection: proof.selectedForm,
         resolvedStatBlockId: proof.resolvedStatBlockId,
       },
     });
@@ -1187,7 +584,7 @@ function battleStoredFormForSheetCompanion(input: {
     formEligibility: formEligibility.right,
     storedForm: {
       formAccess: "pactOfTheChain",
-      formSelection: formSelection.right,
+      formSelection: proof.selectedForm,
       resolvedStatBlockId: proof.resolvedStatBlockId,
     },
   });
@@ -1244,7 +641,7 @@ function retainedCompanionResolvedFormProofIssue(input: {
       ? null
       : "Retained companion Challenge Rating 0 Beast form must resolve to a CR 0 Beast Stat Block.";
   }
-  if (input.selectedForm.tag === "specialForm") {
+  if (input.selectedForm.tag === "pactOfTheChainSpecialForm") {
     const selectedForm = input.selectedForm;
     const specialForm = PACT_OF_THE_CHAIN_SPECIAL_FORM_REFS.find(
       (form) => form.formId === selectedForm.formId,
@@ -1325,29 +722,6 @@ function retainedFamiliarLikeEligibilityMatchesStoredForm(input: {
   );
 }
 
-function battleFormSelectionForSheetForm(
-  selectedForm: CharacterSheetCompanionFormSelection,
-): Either.Either<
-  FindFamiliarFormSelection | PactOfTheChainFindFamiliarFormSelection,
-  CharacterSheetBattleHandoffIssue
-> {
-  if (selectedForm.tag === "specialForm") {
-    const specialForm = PACT_OF_THE_CHAIN_SPECIAL_FORM_REFS.find(
-      (form) => form.formId === selectedForm.formId,
-    );
-    if (specialForm === undefined) {
-      return characterSheetBattleHandoffIssue(
-        "Unknown retained companion special form.",
-      );
-    }
-    return Either.right({
-      tag: "pactOfTheChainSpecialForm",
-      formId: specialForm.formId,
-    });
-  }
-  return Either.right(selectedForm);
-}
-
 function battleFormAccessForSheetCompanion(input: {
   readonly protocol: CharacterSheetRetainedCompanionProtocol;
   readonly selectedForm: CharacterSheetCompanionFormSelection;
@@ -1355,7 +729,7 @@ function battleFormAccessForSheetCompanion(input: {
   BattleCompanionStoredForm["formAccess"],
   CharacterSheetBattleHandoffIssue
 > {
-  if (input.selectedForm.tag === "specialForm") {
+  if (input.selectedForm.tag === "pactOfTheChainSpecialForm") {
     if (!isAttackExceptionFamiliarLikeProtocol(input.protocol)) {
       return characterSheetBattleHandoffIssue(
         "Special retained companion forms require an attack-exception protocol.",
@@ -1444,22 +818,10 @@ function sheetCompanionResolvedFormProofFromBattle(input: {
   readonly creatureTypeOverride: CharacterSheetCompanionCreatureTypeOverride;
 }): CharacterSheetRetainedCompanionResolvedFormProof {
   return {
-    selectedForm: sheetCompanionSelectedFormFromBattle(input.storedForm),
+    selectedForm: input.storedForm.formSelection,
     creatureTypeOverride: input.creatureTypeOverride,
     resolvedStatBlockId: input.storedForm.resolvedStatBlockId,
   };
-}
-
-function sheetCompanionSelectedFormFromBattle(
-  storedForm: BattleCompanionStoredForm,
-): CharacterSheetCompanionFormSelection {
-  if (storedForm.formSelection.tag === "pactOfTheChainSpecialForm") {
-    return {
-      tag: "specialForm",
-      formId: storedForm.formSelection.formId,
-    };
-  }
-  return storedForm.formSelection;
 }
 
 function characterSheetSpellSlotSourceStateFromBattle(input: {

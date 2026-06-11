@@ -10,8 +10,8 @@
     { "number": 4, "id": "CSC-T04-DEAD-BATTLE-LONG-REST-LANE", "status": "done", "title": "Delete the unreachable battle-state long-rest companion lane; decide castFindFamiliar wiring" },
     { "number": 5, "id": "CSC-T05-COMPANION-REST-ASSUMPTION", "status": "done", "title": "Record the companion rest-participation assumption; align sheet long-rest THP/HP" },
     { "number": 6, "id": "CSC-T06-RECAST-SEMANTICS", "status": "done", "title": "Record recast assumptions; one recast semantic across sheet and battle layers" },
-    { "number": 7, "id": "CSC-T07-FORM-VOCAB-HOIST-CREATION-MOVE", "status": "ready-for-implementation", "title": "Hoist the familiar-form vocabulary; move out-of-battle creation into character-sheet-runtime" },
-    { "number": 8, "id": "CSC-T08-CREATION-HP-SURFACE", "status": "blocked", "title": "Remove caller-minted companion HP/THP from the MCP creation operation" },
+    { "number": 7, "id": "CSC-T07-FORM-VOCAB-HOIST-CREATION-MOVE", "status": "done", "title": "Hoist the familiar-form vocabulary; move out-of-battle creation into character-sheet-runtime" },
+    { "number": 8, "id": "CSC-T08-CREATION-HP-SURFACE", "status": "ready-for-implementation", "title": "Remove caller-minted companion HP/THP from the MCP creation operation" },
     { "number": 9, "id": "CSC-T09-FORM-CATALOG-REFERENCE", "status": "blocked", "title": "Replace the first-match familiar-form-catalog scan with an executable uniqueness boundary" },
     { "number": 10, "id": "CSC-T10-SMALL-FINDINGS-BATCH", "status": "blocked", "title": "Close the small review findings (narrowing, dead exports, duplicate rules, id constructor)" },
     { "number": 11, "id": "CSC-T11-CONVERGENCE-CLOSEOUT", "status": "blocked", "title": "Reviewer-loop convergence and L13COMP plan-doc closeout" }
@@ -136,8 +136,8 @@ a task's change invalidates them):
 | 4 | CSC-T04-DEAD-BATTLE-LONG-REST-LANE | done | T03 | Whether battle `expiration` survives depends on T03's settlement projection. |
 | 5 | CSC-T05-COMPANION-REST-ASSUMPTION | done | T04 | HITL; sheet-side counterpart of T04's deletion. |
 | 6 | CSC-T06-RECAST-SEMANTICS | done | T05 | HITL; depends on T03's outcome union for the battle half. |
-| 7 | CSC-T07-FORM-VOCAB-HOIST-CREATION-MOVE | ready-for-implementation | T06 | Package move lands after semantics settle, so code moves once. |
-| 8 | CSC-T08-CREATION-HP-SURFACE | blocked | T07 | Edits the creation op wherever T07 left it. |
+| 7 | CSC-T07-FORM-VOCAB-HOIST-CREATION-MOVE | done | T06 | Package move lands after semantics settle, so code moves once. |
+| 8 | CSC-T08-CREATION-HP-SURFACE | ready-for-implementation | T07 | Edits the creation op wherever T07 left it. |
 | 9 | CSC-T09-FORM-CATALOG-REFERENCE | blocked | T08 | Touches admission eligibility helpers T07 may have relocated. |
 | 10 | CSC-T10-SMALL-FINDINGS-BATCH | blocked | T09 | Sweep of remaining small findings in now-stable files. |
 | 11 | CSC-T11-CONVERGENCE-CLOSEOUT | blocked | T10 | Full-gate run + plan-doc truth update. |
@@ -559,7 +559,40 @@ sheet/character-battle/mcp tests green.
 
 ### Task 7 - CSC-T07-FORM-VOCAB-HOIST-CREATION-MOVE
 
-Status: `blocked` · Mode: AFK
+Status: `done` · Mode: AFK
+
+**Outcome.** Familiar-form vocabulary now lives at the Surface structural-reader
+boundary (`packages/surface/src/surface/find-familiar-forms.ts`), with
+`@dnd/battle-runtime` retaining only a compatibility re-export. The sheet layer
+uses the same `PactOfTheChainFindFamiliarFormSelection` shape as Surface and
+battle; the `specialForm`/`pactOfTheChainSpecialForm` translation helpers are
+deleted. `createRetainedFamiliarLikeCompanion` and its out-of-battle route/cost
+validation moved into `character-sheet-runtime`; `character-battle-runtime` now
+only admits/settles already-retained sheet companion facts. The MCP delegator
+imports the creation operation from sheet-runtime and narrows tool-supplied Pact
+special form ids at the boundary. `spendCharacterSheetSpellSlot` is private
+again.
+
+Verification: base check against `3ed43a403` green; RAW/ubiquitous-language
+review found no new rule semantics beyond moving the existing creation boundary;
+architecture/connascence review removed the duplicate form tag and stale
+creation helper block. Green gates:
+`pnpm --filter @dnd/surface typecheck`,
+`pnpm --filter @dnd/battle-runtime typecheck`,
+`pnpm --filter @dnd/character-sheet-runtime typecheck`,
+`pnpm --filter @dnd/character-battle-runtime typecheck`,
+`pnpm --filter @dnd/mcp typecheck`,
+`pnpm unit-profile-coverage:check`,
+`pnpm --filter @dnd/character-sheet-runtime test -- src/index.test.ts`,
+`pnpm --filter @dnd/character-battle-runtime exec vitest run src/index.test.ts`,
+`pnpm --filter @dnd/mcp test -- src/server.test.ts`,
+`pnpm --filter @dnd/battle-runtime exec vitest run src/battle-runtime-find-familiar-and-pact.test.ts src/find-familiar-lifecycle.test.ts`,
+and
+`pnpm --filter @dnd/surface exec vitest run src/surface/stat-block-catalog.test.ts src/surface/unit-catalog.test.ts`.
+The broader `pnpm --filter @dnd/surface test` run still has an unrelated
+Wizard spellcasting fixture expectation mismatch in
+`src/surface/character-creation-records.test.ts`; the moved familiar-form
+reader's catalog tests passed.
 
 **Findings (review F7+F8, boundary placement + duplicated vocabulary).**
 Out-of-battle creation lives in `character-battle-runtime`

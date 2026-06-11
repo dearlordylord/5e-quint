@@ -145,7 +145,7 @@ const RetainedCompanionChallengeRatingZeroBeastSelectionArgsSchema =
     statBlockId: Schema.NonEmptyTrimmedString,
   });
 const RetainedCompanionSpecialFormSelectionArgsSchema = Schema.Struct({
-  tag: Schema.Literal("specialForm"),
+  tag: Schema.Literal("pactOfTheChainSpecialForm"),
   formId: Schema.NonEmptyTrimmedString,
 });
 const RetainedCompanionFormSelectionArgsSchema = Schema.Union(

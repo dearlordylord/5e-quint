@@ -6,6 +6,7 @@
   "exports": {
     "./surface/character-creation-readers": "./src/surface/character-creation-readers.ts",
     "./surface/druid-wild-shape-readers": "./src/surface/druid-wild-shape-readers.ts",
+    "./surface/find-familiar-forms": "./src/surface/find-familiar-forms.ts",
     "./surface/stat-block-catalog": "./src/surface/stat-block-catalog.ts",
     "./surface/unit-catalog": "./src/surface/unit-catalog.ts",
     "./surface/types": "./src/surface/types.ts",

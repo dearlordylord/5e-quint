@@ -453,7 +453,7 @@ describe("Character Sheet runtime", () => {
     {
       title: "special form without attack exception",
       companion: retainedCompanionInput({
-        selectedForm: { tag: "specialForm", formId: "sprite" },
+        selectedForm: { tag: "pactOfTheChainSpecialForm", formId: "sprite" },
       }),
       message:
         "Retained companion special forms require the attack-exception protocol.",
@@ -490,9 +490,7 @@ describe("Character Sheet runtime", () => {
   test("rejects a stored retained companion protocol with an unknown tag", () => {
     const sheet = requireRight(
       createFreshCharacterSheet({
-        characterId: characterSheetId(
-          "character:unknown-companion-protocol",
-        ),
+        characterId: characterSheetId("character:unknown-companion-protocol"),
         build,
         maximumHp: Hp(12),
         currentHp: Hp(12),
