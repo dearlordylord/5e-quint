@@ -3,13 +3,14 @@
 import { canSpendAction } from "@dnd/shared-algebras/action-economy-algebra";
 import { Hp, movementFeet } from "@dnd/shared/types";
 import {
+  assertWitnessProtocolConsistentWithScenario,
   booleanField,
+  decodeWitnessProtocolState,
   defineDriver,
   focusedMbtMaxSteps,
   mbtSpecPath,
   mbtTraceCount,
   numberFromQuintInt,
-  quintSet,
   quintStateRecord,
   run,
   stateCheck,
@@ -459,6 +460,19 @@ function normalizeSpikeGrowthQuintState(
   raw: unknown,
 ): SpikeGrowthMovementHazardState {
   const state = quintStateRecord(raw);
+  const protocol = decodeWitnessProtocolState({
+    state,
+    protocolField: "qProtocol",
+    noInvalidReason: "",
+    decodeHole: spikeGrowthHole,
+    compareHoles: (left, right) => left.localeCompare(right),
+  });
+  const scenarioResult = spikeGrowthLastResult(state["qScenarioResult"]);
+  assertWitnessProtocolConsistentWithScenario({
+    label: "Spike Growth movement hazard",
+    scenarioResult,
+    protocol,
+  });
   return {
     currentTurnRole: spikeGrowthTurnRole(state["qCurrentTurnRole"]),
     actionAvailable: booleanField(state, "qActionAvailable"),
@@ -470,8 +484,8 @@ function normalizeSpikeGrowthQuintState(
       state["qMovementSpentFeet"],
       "qMovementSpentFeet",
     ),
-    holes: quintSet(state["qHoles"], "qHoles").map(spikeGrowthHole).sort(),
-    lastResult: spikeGrowthLastResult(state["qLastResult"]),
+    holes: protocol.holes,
+    lastResult: scenarioResult,
   };
 }
 

@@ -62,6 +62,8 @@ defineSelectedIdentityWitness({
     perceptionRollMode: "str",
     lastResult: "str",
   },
+  witnessProtocolField: "qProtocol",
+  quintFieldNames: { lastResult: "qScenarioResult" },
   initialProjection: {
     casterEffectCount: 0,
     actionAvailable: true,

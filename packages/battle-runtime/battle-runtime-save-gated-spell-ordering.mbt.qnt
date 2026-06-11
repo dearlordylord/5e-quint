@@ -6,11 +6,24 @@ module battleRuntimeSaveGatedSpellOrderingMbt {
   import battleRuntimeSaveGatedSpellOrdering.* from "./battle-runtime-save-gated-spell-ordering"
   import battleRuntimeHoleKinds.* from "./battle-runtime-hole-kinds"
   import battleRuntimeFillKinds.* from "./battle-runtime-fill-kinds"
+  import battleRuntimeWitnessProtocol.* from "./battle-runtime-witness-protocol"
 
   var qStage: SaveGatedSpellFrontierStage
-  var qHoles: Set[BattleHoleFamilyKind]
-  var qLastResult: str
+  var qProtocol: WitnessProtocol[BattleHoleFamilyKind]
   var qLastOrderingError: str
+
+  pure def qHoles: Set[BattleHoleFamilyKind] = qProtocol.holes
+
+  pure val witnessHoleType: BattleHoleFamilyKind = TargetChoiceHoleKind
+
+  pure def witnessProtocolForProjection(
+    holes: Set[BattleHoleFamilyKind],
+    lastResult: str,
+  ): WitnessProtocol[BattleHoleFamilyKind] =
+    if (lastResult == "init") witnessInit(witnessHoleType)
+    else if (lastResult == "invalid") witnessInvalidWithHoles(holes, WInvalidFill)
+    else if (holes != Set()) witnessNeedsHoles(holes)
+    else witnessResolved(witnessHoleType)
 
   pure def orderingErrorLabel(error: SaveGatedSpellFillOrderingError): str =
     match error {
@@ -49,8 +62,10 @@ module battleRuntimeSaveGatedSpellOrderingMbt {
     lastOrderingError: str,
   ): bool = all {
     qStage' = stage,
-    qHoles' = saveGatedSpellHoleFrontier(stage),
-    qLastResult' = lastResult,
+    qProtocol' = witnessProtocolForProjection(
+      saveGatedSpellHoleFrontier(stage),
+      lastResult,
+    ),
     qLastOrderingError' = lastOrderingError,
   }
 

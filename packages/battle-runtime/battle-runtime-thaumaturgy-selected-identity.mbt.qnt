@@ -1,12 +1,25 @@
 // -*- mode: Bluespec; -*-
 
 module battleRuntimeThaumaturgySelectedIdentityMbt {
+  import battleRuntimeWitnessProtocol.* from "./battle-runtime-witness-protocol"
+
+  type WitnessHole = | WitnessProtocolHole
+
   var qCasterEffectCount: int
   var qActionAvailable: bool
   var qIntimidationRollMode: str
   var qWisdomIntimidationRollMode: str
   var qPerceptionRollMode: str
-  var qLastResult: str
+  var qScenarioResult: str
+  var qProtocol: WitnessProtocol[WitnessHole]
+
+  pure def qLastResult: str = qScenarioResult
+
+  pure def witnessProtocolForProjection(
+    scenarioResult: str,
+  ): WitnessProtocol[WitnessHole] =
+    if (scenarioResult == "init") witnessInit(WitnessProtocolHole)
+    else witnessResolved(WitnessProtocolHole)
 
   action recordProjection(
     casterEffectCount: int,
@@ -21,7 +34,8 @@ module battleRuntimeThaumaturgySelectedIdentityMbt {
     qIntimidationRollMode' = intimidationRollMode,
     qWisdomIntimidationRollMode' = wisdomIntimidationRollMode,
     qPerceptionRollMode' = perceptionRollMode,
-    qLastResult' = lastResult,
+    qScenarioResult' = lastResult,
+    qProtocol' = witnessProtocolForProjection(lastResult),
   }
 
   action init = recordProjection(0, true, "normal", "normal", "normal", "init")

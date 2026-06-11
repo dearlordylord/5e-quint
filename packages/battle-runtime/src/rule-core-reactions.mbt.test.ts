@@ -6,12 +6,12 @@ import { isDeepStrictEqual } from "node:util";
 import {
   MBT_TEST_TIMEOUT_MS,
   booleanField,
+  decodeWitnessProtocolState,
   defineDriver,
   focusedMbtMaxSteps,
   mbtSpecPath,
   mbtTraceCount,
   numberFromQuintInt,
-  quintSet,
   quintStateRecord,
   quintVariantTag,
   run,
@@ -652,6 +652,12 @@ function normalizeRuleCoreReactionQuintState(
   raw: unknown,
 ): RuleCoreReactionProjection {
   const state = quintStateRecord(raw);
+  const protocol = decodeWitnessProtocolState({
+    state,
+    protocolField: "qProtocol",
+    noInvalidReason: "none",
+    decodeHole: reactionHoleName,
+  });
   return {
     interruptedMovementSpentFeet: numberFromQuintInt(
       state["qInterruptedMovementSpentFeet"],
@@ -671,13 +677,13 @@ function normalizeRuleCoreReactionQuintState(
     reactorConcentration: booleanField(state, "qReactorConcentration"),
     pendingTrigger: pendingTrigger(state["qPendingTrigger"]),
     pendingStackDepth: reactionWindowDepth(state["qReactionWindow"]),
-    holes: quintSet(state["qHoles"], "qHoles").map(reactionHoleName),
+    holes: protocol.holes,
     lastConcentrationSaveDc: numberFromQuintInt(
       state["qLastConcentrationSaveDc"],
       "qLastConcentrationSaveDc",
     ),
-    lastResult: reactionResult(state["qLastResult"]),
-    lastInvalidReason: reactionInvalidReason(state["qLastInvalidReason"]),
+    lastResult: reactionResult(protocol.lastResult),
+    lastInvalidReason: reactionInvalidReason(protocol.lastInvalidReason),
   };
 }
 

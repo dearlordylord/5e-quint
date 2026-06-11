@@ -7,6 +7,7 @@ module ruleCoreSpellsMbt {
   import spellDirectDamageProjectionCore.* from "../shared-algebras/proofs/rule-core/spell-direct-damage-projection-core"
   import spellReadiedSpellResponseCore.* from "../shared-algebras/proofs/rule-core/spell-readied-spell-response-core"
   import spellProcedureProfiles.* from "../shared-algebras/proofs/rule-core/spell-procedure-profiles"
+  import battleRuntimeWitnessProtocol.* from "./battle-runtime-witness-protocol"
 
   // Fixture bounds:
   // - one spellcaster and up to two targets;
@@ -30,9 +31,23 @@ module ruleCoreSpellsMbt {
   var qReadiedHeld: bool
   var qReadiedReleased: bool
   var qConcentrationActive: bool
-  var qHoles: Set[str]
-  var qLastResult: str
-  var qLastInvalidReason: str
+  var qProtocol: WitnessProtocol[str]
+
+  pure def qHoles: Set[str] = qProtocol.holes
+
+  pure def witnessInvalidReasonForProjection(reason: str): WitnessInvalidReason =
+    if (reason == "staleSubject") WStaleSubject else WInvalidFill
+
+  pure def witnessProtocolForProjection(
+    holes: Set[str],
+    result: str,
+    invalidReason: str,
+  ): WitnessProtocol[str] =
+    if (result == "init") witnessInit("TargetChoice")
+    else if (result == "invalid")
+      witnessInvalidWithHoles(holes, witnessInvalidReasonForProjection(invalidReason))
+    else if (holes != Set()) witnessNeedsHoles(holes)
+    else witnessResolved("TargetChoice")
 
   pure def initialCasterHp: int = 12
   pure def initialTargetHp: int = 13
@@ -77,9 +92,7 @@ module ruleCoreSpellsMbt {
     qReadiedHeld' = readiedHeld,
     qReadiedReleased' = readiedReleased,
     qConcentrationActive' = concentrationActive,
-    qHoles' = holes,
-    qLastResult' = result,
-    qLastInvalidReason' = invalidReason,
+    qProtocol' = witnessProtocolForProjection(holes, result, invalidReason),
   }
 
   action init = recordProjection(

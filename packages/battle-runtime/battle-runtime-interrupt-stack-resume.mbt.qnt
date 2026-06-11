@@ -4,6 +4,9 @@
 
 module battleRuntimeInterruptStackResumeMbt {
   import battleRuntimeReplayEquivalence.* from "./battle-runtime-replay-equivalence"
+  import battleRuntimeWitnessProtocol.* from "./battle-runtime-witness-protocol"
+
+  type WitnessHole = | WitnessProtocolHole
 
   var qMaxStackDepthObserved: int
   var qFinalStackDepth: int
@@ -13,7 +16,16 @@ module battleRuntimeInterruptStackResumeMbt {
   var qReplayFromRootEquivalent: bool
   var qResponderReactionAvailable: bool
   var qTargetHp: int
-  var qLastResult: str
+  var qScenarioResult: str
+  var qProtocol: WitnessProtocol[WitnessHole]
+
+  pure def qLastResult: str = qScenarioResult
+
+  pure def witnessProtocolForProjection(
+    result: str,
+  ): WitnessProtocol[WitnessHole] =
+    if (result == "init") witnessInit(WitnessProtocolHole)
+    else witnessResolved(WitnessProtocolHole)
 
   pure def noTrigger: str = "none"
   pure def attackHitTrigger: str = "attackHit"
@@ -50,7 +62,8 @@ module battleRuntimeInterruptStackResumeMbt {
     qReplayFromRootEquivalent' = replayFromRootEquivalent,
     qResponderReactionAvailable' = responderReactionAvailable,
     qTargetHp' = targetHp,
-    qLastResult' = lastResult,
+    qScenarioResult' = lastResult,
+    qProtocol' = witnessProtocolForProjection(lastResult),
   }
 
   action init = recordInterruptStackResumeState(

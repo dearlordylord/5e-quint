@@ -3,12 +3,12 @@
 import {
   MBT_TEST_TIMEOUT_MS,
   booleanField,
+  decodeWitnessProtocolState,
   defineDriver,
   focusedMbtMaxSteps,
   mbtSpecPath,
   mbtTraceCount,
   numberFromQuintInt,
-  quintSet,
   quintStateRecord,
   quintVariantTag,
   run,
@@ -581,6 +581,12 @@ function normalizeRuleCoreMovementQuintState(
   raw: unknown,
 ): RuleCoreMovementProjection {
   const state = quintStateRecord(raw);
+  const protocol = decodeWitnessProtocolState({
+    state,
+    protocolField: "qProtocol",
+    noInvalidReason: "none",
+    decodeHole: movementHoleName,
+  });
   const movementSpentFeet = numberFromQuintInt(
     state["qMovementSpentFeet"],
     "qMovementSpentFeet",
@@ -605,10 +611,10 @@ function normalizeRuleCoreMovementQuintState(
       state["qGrappleEscapeDc"],
       "qGrappleEscapeDc",
     ),
-    holes: quintSet(state["qHoles"], "qHoles").map(movementHoleName),
+    holes: protocol.holes,
     pendingOpportunityAttack: booleanField(state, "qPendingOpportunityAttack"),
-    lastResult: movementResult(state["qLastResult"]),
-    lastInvalidReason: movementInvalidReason(state["qLastInvalidReason"]),
+    lastResult: movementResult(protocol.lastResult),
+    lastInvalidReason: movementInvalidReason(protocol.lastInvalidReason),
   };
 }
 

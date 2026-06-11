@@ -3,13 +3,14 @@
 import { canSpendAction } from "@dnd/shared-algebras/action-economy-algebra";
 import { movementFeet } from "@dnd/shared/types";
 import {
+  assertWitnessProtocolConsistentWithScenario,
   booleanField,
+  decodeWitnessProtocolState,
   defineDriver,
   focusedMbtMaxSteps,
   mbtSpecPath,
   mbtTraceCount,
   numberFromQuintInt,
-  quintSet,
   quintStateRecord,
   run,
   stateCheck,
@@ -516,6 +517,19 @@ function battleHolesToWebHoles(
 
 function normalizeWebQuintState(raw: unknown): WebRestraintHazardState {
   const state = quintStateRecord(raw);
+  const protocol = decodeWitnessProtocolState({
+    state,
+    protocolField: "qProtocol",
+    noInvalidReason: "",
+    decodeHole: webHole,
+    compareHoles: (left, right) => left.localeCompare(right),
+  });
+  const scenarioResult = webLastResult(state["qScenarioResult"]);
+  assertWitnessProtocolConsistentWithScenario({
+    label: "Web restraint hazard",
+    scenarioResult,
+    protocol,
+  });
   return {
     currentTurnRole: webTurnRole(state["qCurrentTurnRole"]),
     actionAvailable: booleanField(state, "qActionAvailable"),
@@ -529,8 +543,8 @@ function normalizeWebQuintState(raw: unknown): WebRestraintHazardState {
       state["qMovementSpentFeet"],
       "qMovementSpentFeet",
     ),
-    holes: quintSet(state["qHoles"], "qHoles").map(webHole).sort(),
-    lastResult: webLastResult(state["qLastResult"]),
+    holes: protocol.holes,
+    lastResult: scenarioResult,
   };
 }
 

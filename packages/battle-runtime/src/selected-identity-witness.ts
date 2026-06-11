@@ -57,6 +57,7 @@ type SelectedIdentityWitnessBase<P extends ProjectionRecord> = {
   readonly witnessProtocolField?: string;
   readonly witnessNoInvalidReason?: string;
   readonly witnessInvalidScenarioReasons?: Readonly<Record<string, string>>;
+  readonly witnessDecodeHole?: (raw: unknown) => unknown;
 };
 
 export type FlatSelectedIdentityWitness<S extends ProjectionSchema> =
@@ -278,6 +279,7 @@ function normalizeQuintState(
     | "witnessProtocolField"
     | "witnessNoInvalidReason"
     | "witnessInvalidScenarioReasons"
+    | "witnessDecodeHole"
   >,
 ): Readonly<Record<string, boolean | number | string>> {
   const root = quintStateRecord(raw);
@@ -292,9 +294,13 @@ function normalizeQuintState(
           state,
           protocolField: witness.witnessProtocolField,
           noInvalidReason: witness.witnessNoInvalidReason ?? "",
-          decodeHole: selectedIdentityUnexpectedHole,
+          decodeHole: witness.witnessDecodeHole ?? selectedIdentityUnexpectedHole,
         });
-  if (protocol !== undefined && protocol.holes.length !== 0) {
+  if (
+    protocol !== undefined &&
+    witness.witnessDecodeHole === undefined &&
+    protocol.holes.length !== 0
+  ) {
     throw new Error("Expected selected identity witness holes to be empty.");
   }
   const result: Record<string, boolean | number | string> = {};

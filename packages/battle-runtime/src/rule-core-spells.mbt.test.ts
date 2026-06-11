@@ -17,12 +17,12 @@ import { isDeepStrictEqual } from "node:util";
 import {
   MBT_TEST_TIMEOUT_MS,
   booleanField,
+  decodeWitnessProtocolState,
   defineDriver,
   focusedMbtMaxSteps,
   mbtSpecPath,
   mbtTraceCount,
   numberFromQuintInt,
-  quintSet,
   quintStateRecord,
   run,
   stateCheck,
@@ -2061,6 +2061,13 @@ function normalizeRuleCoreSpellQuintState(
   raw: unknown,
 ): RuleCoreSpellProjection {
   const state = quintStateRecord(raw);
+  const protocol = decodeWitnessProtocolState({
+    state,
+    protocolField: "qProtocol",
+    noInvalidReason: "none",
+    decodeHole: (rawHole) => spellHoleName(spellHoleTag(rawHole)),
+    compareHoles: (left, right) => left.localeCompare(right),
+  });
   return {
     actionAvailable: booleanField(state, "qActionAvailable"),
     bonusActionAvailable: booleanField(state, "qBonusActionAvailable"),
@@ -2089,12 +2096,9 @@ function normalizeRuleCoreSpellQuintState(
     readiedHeld: booleanField(state, "qReadiedHeld"),
     readiedReleased: booleanField(state, "qReadiedReleased"),
     concentrationActive: booleanField(state, "qConcentrationActive"),
-    holes: quintSet(state["qHoles"], "qHoles")
-      .map(spellHoleTag)
-      .sort()
-      .map(spellHoleName),
-    lastResult: spellResult(state["qLastResult"]),
-    lastInvalidReason: spellInvalidReason(state["qLastInvalidReason"]),
+    holes: protocol.holes,
+    lastResult: spellResult(protocol.lastResult),
+    lastInvalidReason: spellInvalidReason(protocol.lastInvalidReason),
   };
 }
 

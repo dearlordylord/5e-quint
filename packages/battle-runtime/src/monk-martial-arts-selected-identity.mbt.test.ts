@@ -47,6 +47,8 @@ defineSelectedIdentityWitness({
     unitBound: "bool",
     lastResult: "str",
   },
+  witnessProtocolField: "qProtocol",
+  quintFieldNames: { lastResult: "qScenarioResult" },
   initialProjection: initialProjection(),
   units: [
     {

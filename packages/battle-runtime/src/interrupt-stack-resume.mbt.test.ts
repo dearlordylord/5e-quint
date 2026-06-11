@@ -27,7 +27,9 @@ import { describe, expect, it } from "vitest";
 
 import {
   MBT_TEST_TIMEOUT_MS,
+  assertWitnessProtocolConsistentWithScenario,
   booleanField,
+  decodeWitnessProtocolState,
   defineDriver,
   focusedMbtMaxSteps,
   mbtSpecPath,
@@ -716,6 +718,20 @@ function normalizeInterruptStackResumeQuintState(
   raw: unknown,
 ): InterruptStackResumeProjection {
   const state = quintStateRecord(raw);
+  const protocol = decodeWitnessProtocolState({
+    state,
+    protocolField: "qProtocol",
+    noInvalidReason: "",
+    decodeHole: interruptStackResumeUnexpectedHole,
+  });
+  const scenarioResult = interruptStackResumeLastResult(
+    state["qScenarioResult"],
+  );
+  assertWitnessProtocolConsistentWithScenario({
+    label: "interrupt stack resume",
+    scenarioResult,
+    protocol,
+  });
   return {
     maxStackDepthObserved: numberFromQuintInt(
       state["qMaxStackDepthObserved"],
@@ -737,8 +753,14 @@ function normalizeInterruptStackResumeQuintState(
       "qResponderReactionAvailable",
     ),
     targetHp: numberFromQuintInt(state["qTargetHp"], "qTargetHp"),
-    lastResult: interruptStackResumeLastResult(state["qLastResult"]),
+    lastResult: scenarioResult,
   };
+}
+
+function interruptStackResumeUnexpectedHole(raw: unknown): never {
+  throw new Error(
+    `Interrupt stack resume witness protocol does not expect holes; received ${String(raw)}.`,
+  );
 }
 
 function interruptStackResumeTrigger(

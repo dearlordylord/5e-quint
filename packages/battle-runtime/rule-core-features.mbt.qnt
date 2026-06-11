@@ -16,6 +16,7 @@ module ruleCoreFeaturesMbt {
   import unitFeaturePassiveMovementDefenseCore.* from "../shared-algebras/proofs/rule-core/unit-feature-passive-movement-defense-core"
   import unitFeatureZeroHitPointCore.* from "../shared-algebras/proofs/rule-core/unit-feature-zero-hit-point-core"
   import zeroHitPointLifecycle.* from "../shared-algebras/proofs/rule-core/zero-hit-point-lifecycle"
+  import battleRuntimeWitnessProtocol.* from "./battle-runtime-witness-protocol"
 
   // Fixture bounds:
   // - one acting character and one target unless the reaction fixture makes the
@@ -43,10 +44,24 @@ module ruleCoreFeaturesMbt {
   var qAbilityCheckBoostedSucceeded: bool
   var qActorArmorClass: int
   var qCritical: bool
-  var qHoles: Set[str]
+  var qProtocol: WitnessProtocol[str]
   var qPendingReaction: bool
-  var qLastResult: str
-  var qLastInvalidReason: str
+
+  pure def qHoles: Set[str] = qProtocol.holes
+
+  pure def witnessInvalidReasonForProjection(reason: str): WitnessInvalidReason =
+    if (reason == "staleSubject") WStaleSubject else WInvalidFill
+
+  pure def witnessProtocolForProjection(
+    holes: Set[str],
+    result: str,
+    invalidReason: str,
+  ): WitnessProtocol[str] =
+    if (result == "init") witnessInit("DamageRoll")
+    else if (result == "invalid")
+      witnessInvalidWithHoles(holes, witnessInvalidReasonForProjection(invalidReason))
+    else if (holes != Set()) witnessNeedsHoles(holes)
+    else witnessResolved("DamageRoll")
 
   pure def qTurn: TurnProcedureState =
     initialTurnProcedureState
@@ -121,10 +136,8 @@ module ruleCoreFeaturesMbt {
     qLastDamageAmount' = lastDamageAmount,
     qCritical' = critical,
     qActorArmorClass' = actorArmorClass,
-    qHoles' = holes,
+    qProtocol' = witnessProtocolForProjection(holes, result, invalidReason),
     qPendingReaction' = pendingReaction,
-    qLastResult' = result,
-    qLastInvalidReason' = invalidReason,
   }
 
   action recordProjection(

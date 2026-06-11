@@ -6,15 +6,28 @@ module battleRuntimeHitPointRestorationOrderingMbt {
   import battleRuntimeHitPointRestorationOrdering.* from "./battle-runtime-hit-point-restoration-ordering"
   import battleRuntimeHoleKinds.* from "./battle-runtime-hole-kinds"
   import battleRuntimeFillKinds.* from "./battle-runtime-fill-kinds"
+  import battleRuntimeWitnessProtocol.* from "./battle-runtime-witness-protocol"
 
   var qStage: HitPointRestorationFrontierStage
-  var qHoles: Set[BattleHoleFamilyKind]
-  var qLastResult: str
+  var qProtocol: WitnessProtocol[BattleHoleFamilyKind]
   var qLastOrderingError: str
   var qSpellTargetHp: int
   var qSpellTargetZeroHpLifecycleCleared: bool
   var qFeatureTargetHp: int
   var qFeatureTargetZeroHpLifecycleCleared: bool
+
+  pure def qHoles: Set[BattleHoleFamilyKind] = qProtocol.holes
+
+  pure val witnessHoleType: BattleHoleFamilyKind = TargetChoiceHoleKind
+
+  pure def witnessProtocolForProjection(
+    holes: Set[BattleHoleFamilyKind],
+    lastResult: str,
+  ): WitnessProtocol[BattleHoleFamilyKind] =
+    if (lastResult == "init") witnessInit(witnessHoleType)
+    else if (lastResult == "invalid") witnessInvalidWithHoles(holes, WInvalidFill)
+    else if (holes != Set()) witnessNeedsHoles(holes)
+    else witnessResolved(witnessHoleType)
 
   pure def orderingErrorLabel(error: HitPointRestorationFillOrderingError): str =
     match error {
@@ -57,8 +70,10 @@ module battleRuntimeHitPointRestorationOrderingMbt {
     featureTargetZeroHpLifecycleCleared: bool,
   ): bool = all {
     qStage' = stage,
-    qHoles' = hitPointRestorationHoleFrontier(stage),
-    qLastResult' = lastResult,
+    qProtocol' = witnessProtocolForProjection(
+      hitPointRestorationHoleFrontier(stage),
+      lastResult,
+    ),
     qLastOrderingError' = lastOrderingError,
     qSpellTargetHp' = spellTargetHp,
     qSpellTargetZeroHpLifecycleCleared' = spellTargetZeroHpLifecycleCleared,

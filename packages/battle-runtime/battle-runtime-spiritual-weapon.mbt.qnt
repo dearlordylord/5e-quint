@@ -1,6 +1,8 @@
 // -*- mode: Bluespec; -*-
 
 module battleRuntimeSpiritualWeaponMbt {
+  import battleRuntimeWitnessProtocol.* from "./battle-runtime-witness-protocol"
+
   type Hole =
     | TargetChoice
     | SpiritualWeaponForcePosition
@@ -11,18 +13,28 @@ module battleRuntimeSpiritualWeaponMbt {
   var qBonusActionAvailable: bool
   var qCasterConcentrating: bool
   var qForcePositionId: int
-  var qHoles: Set[Hole]
-  var qLastResult: str
-  var qLastInvalidReason: str
+  var qProtocol: WitnessProtocol[Hole]
+
+  pure def qHoles: Set[Hole] = qProtocol.holes
+
+  pure def spiritualWeaponProtocolForProjection(
+    holes: Set[Hole],
+    lastResult: str,
+  ): WitnessProtocol[Hole] =
+    if (lastResult == "init") witnessInitWithHoles(holes)
+    else if (lastResult == "invalid") witnessInvalidWithHoles(holes, WInvalidFill)
+    else if (holes != Set()) witnessNeedsHoles(holes)
+    else witnessResolved(TargetChoice)
 
   action init = all {
     qTargetHp' = 13,
     qBonusActionAvailable' = true,
     qCasterConcentrating' = false,
     qForcePositionId' = 0,
-    qHoles' = Set(TargetChoice, SpiritualWeaponForcePosition),
-    qLastResult' = "init",
-    qLastInvalidReason' = "",
+    qProtocol' = spiritualWeaponProtocolForProjection(
+      Set(TargetChoice, SpiritualWeaponForcePosition),
+      "init",
+    ),
   }
 
   action doFillCastTargetAndForce = all {
@@ -32,9 +44,7 @@ module battleRuntimeSpiritualWeaponMbt {
     qBonusActionAvailable' = qBonusActionAvailable,
     qCasterConcentrating' = qCasterConcentrating,
     qForcePositionId' = qForcePositionId,
-    qHoles' = Set(AttackRoll),
-    qLastResult' = "needsHoles",
-    qLastInvalidReason' = "",
+    qProtocol' = spiritualWeaponProtocolForProjection(Set(AttackRoll), "needsHoles"),
   }
 
   action doFillCastAttackHit = all {
@@ -45,9 +55,7 @@ module battleRuntimeSpiritualWeaponMbt {
     qBonusActionAvailable' = false,
     qCasterConcentrating' = true,
     qForcePositionId' = 1,
-    qHoles' = Set(SpellDamageRoll),
-    qLastResult' = "needsHoles",
-    qLastInvalidReason' = "",
+    qProtocol' = spiritualWeaponProtocolForProjection(Set(SpellDamageRoll), "needsHoles"),
   }
 
   action doFillCastDamageLow = all {
@@ -58,9 +66,7 @@ module battleRuntimeSpiritualWeaponMbt {
     qBonusActionAvailable' = false,
     qCasterConcentrating' = true,
     qForcePositionId' = qForcePositionId,
-    qHoles' = Set(),
-    qLastResult' = "resolved",
-    qLastInvalidReason' = "",
+    qProtocol' = spiritualWeaponProtocolForProjection(Set(), "resolved"),
   }
 
   action doAdvanceToLaterCasterTurn = all {
@@ -72,9 +78,7 @@ module battleRuntimeSpiritualWeaponMbt {
     qBonusActionAvailable' = true,
     qCasterConcentrating' = qCasterConcentrating,
     qForcePositionId' = qForcePositionId,
-    qHoles' = qHoles,
-    qLastResult' = "resolved",
-    qLastInvalidReason' = "",
+    qProtocol' = spiritualWeaponProtocolForProjection(qHoles, "resolved"),
   }
 
   action doFillRepeatTargetAndForce = all {
@@ -86,9 +90,7 @@ module battleRuntimeSpiritualWeaponMbt {
     qBonusActionAvailable' = qBonusActionAvailable,
     qCasterConcentrating' = qCasterConcentrating,
     qForcePositionId' = qForcePositionId,
-    qHoles' = Set(AttackRoll),
-    qLastResult' = "needsHoles",
-    qLastInvalidReason' = "",
+    qProtocol' = spiritualWeaponProtocolForProjection(Set(AttackRoll), "needsHoles"),
   }
 
   action doFillRepeatAttackHit = all {
@@ -101,9 +103,7 @@ module battleRuntimeSpiritualWeaponMbt {
     qBonusActionAvailable' = qBonusActionAvailable,
     qCasterConcentrating' = qCasterConcentrating,
     qForcePositionId' = qForcePositionId,
-    qHoles' = Set(SpellDamageRoll),
-    qLastResult' = "needsHoles",
-    qLastInvalidReason' = "",
+    qProtocol' = spiritualWeaponProtocolForProjection(Set(SpellDamageRoll), "needsHoles"),
   }
 
   action doFillRepeatDamageLow = all {
@@ -114,9 +114,7 @@ module battleRuntimeSpiritualWeaponMbt {
     qBonusActionAvailable' = false,
     qCasterConcentrating' = qCasterConcentrating,
     qForcePositionId' = 2,
-    qHoles' = Set(),
-    qLastResult' = "resolved",
-    qLastInvalidReason' = "",
+    qProtocol' = spiritualWeaponProtocolForProjection(Set(), "resolved"),
   }
 
   action step = any {
