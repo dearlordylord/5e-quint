@@ -73,7 +73,7 @@
     {
       "number": 12,
       "id": "BPK-B12-COMMAND-ORDERING",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Hole-frontier ordering slice and witness for Command option and next-turn procedures"
     },
     {
@@ -408,7 +408,7 @@ beside the existing shared Hit Point lifecycle owners.
 
 ### Task 12 - BPK-B12-COMMAND-ORDERING
 
-Status: `ready-for-research` · Mode: AFK
+Status: `done` · Mode: AFK
 
 Input: prd/02 Solution §2 and Lane Rules on table-owned facts;
 `battle-hole-frontier.jsonl` rows for `BattleCommandOptionChoiceHole`,
