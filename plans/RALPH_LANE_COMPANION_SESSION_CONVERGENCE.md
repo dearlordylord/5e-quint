@@ -887,7 +887,7 @@ Acceptance: all gates green in one run from a clean tree; plan docs, ADR, and
 assumptions match the code; lane summary in the task output lists each review
 finding F1–F11 and arch-review item R0–R4 with its closing task/commit.
 
-#### Retry Guidance
+### Retry Guidance
 
 Before rerunning Task 11 closeout, repair or explicitly exempt the current
 unrelated MBT-driver baseline failures. `pnpm quality` currently stops in
