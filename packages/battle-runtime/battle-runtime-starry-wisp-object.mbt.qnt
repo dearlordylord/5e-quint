@@ -3,79 +3,88 @@
 module battleRuntimeStarryWispObjectMbt {
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeSpellAttack.* from "./battle-runtime-spell-attack"
+  import battleRuntimeWitnessProtocol.* from "./battle-runtime-witness-protocol"
 
   type ObjectDamageOutcomeOption =
     | NoObjectDamage
     | SomeObjectDamage(ObjectDamageOutcome)
 
   var qActionAvailable: bool
-  var qHoles: Set[Hole]
+  var qProtocol: WitnessProtocol[Hole]
   var qObjectDamage: ObjectDamageOutcomeOption
   var qLightEmitters: Set[LightEmitter]
-  var qLastResult: str
-  var qLastInvalidReason: str
+
+  pure def qHoles: Set[Hole] = qProtocol.holes
 
   pure val starryWispObjectArmorClass: int = 13
   pure val starryWispObjectHitPoints: int = 5
 
+  pure def starryWispObjectProtocolForProjection(
+    holes: Set[Hole],
+    lastResult: str,
+    invalidReason: str,
+  ): WitnessProtocol[Hole] =
+    if (lastResult == "init") witnessInitWithHoles(holes)
+    else if (lastResult == "invalid")
+      witnessInvalidWithHoles(
+        holes,
+        if (invalidReason == "staleSubject") WStaleSubject else WInvalidFill,
+      )
+    else if (holes != Set()) witnessNeedsHoles(holes)
+    else witnessResolved(TargetChoice)
+
   action init = all {
     qActionAvailable' = true,
-    qHoles' = Set(TargetChoice, ObjectTargetChoice),
+    qProtocol' = starryWispObjectProtocolForProjection(
+      Set(TargetChoice, ObjectTargetChoice),
+      "init",
+      "",
+    ),
     qObjectDamage' = NoObjectDamage,
     qLightEmitters' = Set(),
-    qLastResult' = "init",
-    qLastInvalidReason' = "",
   }
 
   action doFillObjectTarget = all {
     qActionAvailable,
     qHoles == Set(TargetChoice, ObjectTargetChoice),
     qActionAvailable' = qActionAvailable,
-    qHoles' = Set(AttackRoll),
+    qProtocol' = starryWispObjectProtocolForProjection(Set(AttackRoll), "needsHoles", ""),
     qObjectDamage' = qObjectDamage,
     qLightEmitters' = qLightEmitters,
-    qLastResult' = "needsHoles",
-    qLastInvalidReason' = "",
   }
 
   action doRejectObjectWithoutFact = all {
     qActionAvailable,
     qHoles == Set(TargetChoice, ObjectTargetChoice),
     qActionAvailable' = qActionAvailable,
-    qHoles' = qHoles,
+    qProtocol' = starryWispObjectProtocolForProjection(qHoles, "invalid", "invalidFill"),
     qObjectDamage' = qObjectDamage,
     qLightEmitters' = qLightEmitters,
-    qLastResult' = "invalid",
-    qLastInvalidReason' = "invalidFill",
   }
 
   action doFillObjectAttackRollMiss = all {
     qActionAvailable,
     qHoles == Set(AttackRoll),
     qActionAvailable' = false,
-    qHoles' = Set(),
+    qProtocol' = starryWispObjectProtocolForProjection(Set(), "resolved", ""),
     qObjectDamage' = NoObjectDamage,
     qLightEmitters' = Set(),
-    qLastResult' = "resolved",
-    qLastInvalidReason' = "",
   }
 
   action doFillObjectAttackRollHit = all {
     qActionAvailable,
     qHoles == Set(AttackRoll),
     qActionAvailable' = qActionAvailable,
-    qHoles' = Set(SpellDamageRoll),
+    qProtocol' = starryWispObjectProtocolForProjection(Set(SpellDamageRoll), "needsHoles", ""),
     qObjectDamage' = qObjectDamage,
     qLightEmitters' = qLightEmitters,
-    qLastResult' = "needsHoles",
-    qLastInvalidReason' = "",
   }
 
   action doFillObjectDamageLow = all {
     qActionAvailable,
     qHoles == Set(SpellDamageRoll),
     qActionAvailable' = false,
-    qHoles' = Set(),
+    qProtocol' = starryWispObjectProtocolForProjection(Set(), "resolved", ""),
     qObjectDamage' = SomeObjectDamage(spellObjectDamageOutcome(
       StarryWispSpellAttack,
       StarryWispObjectTarget,
@@ -87,15 +96,13 @@ module battleRuntimeStarryWispObjectMbt {
       Fighter,
       ObjectLightEmitter({ object: StarryWispObjectTarget }),
     )),
-    qLastResult' = "resolved",
-    qLastInvalidReason' = "",
   }
 
   action doFillObjectDamageHigh = all {
     qActionAvailable,
     qHoles == Set(SpellDamageRoll),
     qActionAvailable' = false,
-    qHoles' = Set(),
+    qProtocol' = starryWispObjectProtocolForProjection(Set(), "resolved", ""),
     qObjectDamage' = SomeObjectDamage(spellObjectDamageOutcome(
       StarryWispSpellAttack,
       StarryWispObjectTarget,
@@ -107,19 +114,15 @@ module battleRuntimeStarryWispObjectMbt {
       Fighter,
       ObjectLightEmitter({ object: StarryWispObjectTarget }),
     )),
-    qLastResult' = "resolved",
-    qLastInvalidReason' = "",
   }
 
   action doRejectStaleAfterResolved = all {
     not(qActionAvailable),
     qHoles == Set(),
     qActionAvailable' = qActionAvailable,
-    qHoles' = qHoles,
+    qProtocol' = starryWispObjectProtocolForProjection(qHoles, "invalid", "staleSubject"),
     qObjectDamage' = qObjectDamage,
     qLightEmitters' = qLightEmitters,
-    qLastResult' = "invalid",
-    qLastInvalidReason' = "staleSubject",
   }
 
   action step = any {

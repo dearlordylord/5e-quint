@@ -1,6 +1,13 @@
 // -*- mode: Bluespec; -*-
 
 module battleRuntimeWebRestraintHazardMbt {
+  import battleRuntimeWitnessProtocol.* from "./battle-runtime-witness-protocol"
+
+  type Hole = str
+
+  type WebRestraintHazardScenarioOutcome = | Init | Resolved | NeedsHoles | Restrained | Saved | EscapeFailed | Escaped | LeftArea | Moved | Removed
+
+
   var qCurrentTurnRole: str
   var qActionAvailable: bool
   var qSpellAvailable: bool
@@ -10,8 +17,11 @@ module battleRuntimeWebRestraintHazardMbt {
   var qEntrySavedThisTurn: bool
   var qStartTurnSavedThisTurn: bool
   var qMovementSpentFeet: int
-  var qHoles: Set[str]
-  var qLastResult: str
+  var qProtocol: WitnessProtocol[Hole]
+  var qScenarioOutcome: WebRestraintHazardScenarioOutcome
+
+  pure def qHoles: Set[Hole] = qProtocol.holes
+  pure def qLastResult: WebRestraintHazardScenarioOutcome = qScenarioOutcome
 
   pure val casterTurnRole: str = "caster"
   pure val targetTurnRole: str = "target"
@@ -19,6 +29,14 @@ module battleRuntimeWebRestraintHazardMbt {
   pure val entrySavingThrowOutcomeHoles: Set[str] = Set("EntrySavingThrowOutcome")
   pure val startTurnSavingThrowOutcomeHoles: Set[str] = Set("StartTurnSavingThrowOutcome")
   pure val webMovementSpentFeet: int = 15
+
+  pure def webProtocolForProjection(
+    holes: Set[Hole],
+    scenarioResult: WebRestraintHazardScenarioOutcome,
+  ): WitnessProtocol[Hole] =
+    if (scenarioResult == Init) witnessInit("EntrySavingThrowOutcome")
+    else if (holes != Set()) witnessNeedsHoles(holes)
+    else witnessResolved("EntrySavingThrowOutcome")
 
   action recordWebState(
     currentTurnRole: str,
@@ -31,7 +49,7 @@ module battleRuntimeWebRestraintHazardMbt {
     startTurnSavedThisTurn: bool,
     movementSpentFeet: int,
     holes: Set[str],
-    lastResult: str,
+    lastResult: WebRestraintHazardScenarioOutcome,
   ): bool = all {
     qCurrentTurnRole' = currentTurnRole,
     qActionAvailable' = actionAvailable,
@@ -42,8 +60,8 @@ module battleRuntimeWebRestraintHazardMbt {
     qEntrySavedThisTurn' = entrySavedThisTurn,
     qStartTurnSavedThisTurn' = startTurnSavedThisTurn,
     qMovementSpentFeet' = movementSpentFeet,
-    qHoles' = holes,
-    qLastResult' = lastResult,
+    qProtocol' = webProtocolForProjection(holes, lastResult),
+    qScenarioOutcome' = lastResult,
   }
 
   action init = all {
@@ -58,7 +76,7 @@ module battleRuntimeWebRestraintHazardMbt {
       false,
       0,
       noHoles,
-      "init",
+      Init,
     ),
   }
 
@@ -79,7 +97,7 @@ module battleRuntimeWebRestraintHazardMbt {
       false,
       qMovementSpentFeet,
       noHoles,
-      "resolved",
+      Resolved,
     ),
   }
 
@@ -99,7 +117,7 @@ module battleRuntimeWebRestraintHazardMbt {
       qStartTurnSavedThisTurn,
       qMovementSpentFeet,
       noHoles,
-      "resolved",
+      Resolved,
     ),
   }
 
@@ -119,7 +137,7 @@ module battleRuntimeWebRestraintHazardMbt {
       qStartTurnSavedThisTurn,
       qMovementSpentFeet,
       entrySavingThrowOutcomeHoles,
-      "needsHoles",
+      NeedsHoles,
     ),
   }
 
@@ -139,7 +157,7 @@ module battleRuntimeWebRestraintHazardMbt {
       false,
       qMovementSpentFeet,
       startTurnSavingThrowOutcomeHoles,
-      "needsHoles",
+      NeedsHoles,
     ),
   }
 
@@ -157,7 +175,7 @@ module battleRuntimeWebRestraintHazardMbt {
       qStartTurnSavedThisTurn,
       qMovementSpentFeet,
       noHoles,
-      "restrained",
+      Restrained,
     ),
   }
 
@@ -175,7 +193,7 @@ module battleRuntimeWebRestraintHazardMbt {
       qStartTurnSavedThisTurn,
       qMovementSpentFeet,
       noHoles,
-      "saved",
+      Saved,
     ),
   }
 
@@ -193,7 +211,7 @@ module battleRuntimeWebRestraintHazardMbt {
       true,
       qMovementSpentFeet,
       noHoles,
-      "restrained",
+      Restrained,
     ),
   }
 
@@ -211,7 +229,7 @@ module battleRuntimeWebRestraintHazardMbt {
       true,
       qMovementSpentFeet,
       noHoles,
-      "saved",
+      Saved,
     ),
   }
 
@@ -231,7 +249,7 @@ module battleRuntimeWebRestraintHazardMbt {
       qStartTurnSavedThisTurn,
       qMovementSpentFeet,
       noHoles,
-      "escapeFailed",
+      EscapeFailed,
     ),
   }
 
@@ -251,7 +269,7 @@ module battleRuntimeWebRestraintHazardMbt {
       qStartTurnSavedThisTurn,
       qMovementSpentFeet,
       noHoles,
-      "escaped",
+      Escaped,
     ),
   }
 
@@ -271,7 +289,7 @@ module battleRuntimeWebRestraintHazardMbt {
       qStartTurnSavedThisTurn,
       qMovementSpentFeet,
       noHoles,
-      "leftArea",
+      LeftArea,
     ),
   }
 
@@ -292,7 +310,7 @@ module battleRuntimeWebRestraintHazardMbt {
       qStartTurnSavedThisTurn,
       webMovementSpentFeet,
       noHoles,
-      "moved",
+      Moved,
     ),
   }
 
@@ -310,7 +328,7 @@ module battleRuntimeWebRestraintHazardMbt {
       false,
       qMovementSpentFeet,
       noHoles,
-      "removed",
+      Removed,
     ),
   }
 

@@ -44,6 +44,15 @@ type DiscipleOfLifeLastResult =
   | "nonModifierSlotHealing"
   | "nonSlotHealingExcluded"
   | "eachCreatureHealed";
+
+const DISCIPLE_OF_LIFE_SCENARIO_OUTCOME_BY_TAG = {
+  Init: "init",
+  SlotHealingModifier: "slotHealingModifier",
+  NonModifierSlotHealing: "nonModifierSlotHealing",
+  NonSlotHealingExcluded: "nonSlotHealingExcluded",
+  EachCreatureHealed: "eachCreatureHealed",
+} as const;
+
 type DiscipleOfLifeProjection = {
   readonly targetHp: number;
   readonly secondTargetHp: number;
@@ -68,12 +77,13 @@ defineSelectedIdentityWitness({
   quintStateField: "qState",
   quintStateFieldPrefix: "q",
   witnessProtocolField: "protocol",
-  quintFieldNames: { lastResult: "qScenarioResult" },
+  quintFieldNames: { lastResult: "qScenarioOutcome" },
+  quintVariantFieldTags: { lastResult: DISCIPLE_OF_LIFE_SCENARIO_OUTCOME_BY_TAG },
   projectionSchema: {
     targetHp: "int",
     secondTargetHp: "int",
     spellSlotsRemaining: "int",
-    lastResult: "str",
+    lastResult: "variant",
   },
   initialProjection: expectedProjection(),
   units: [

@@ -1,6 +1,7 @@
 import {
   booleanField,
   booleanValue,
+  decodeWitnessProtocolState,
   defineDriver,
   focusedMbtMaxSteps,
   mbtSpecPath,
@@ -330,20 +331,25 @@ function normalizeStarryWispObjectQuintState(
   raw: unknown,
 ): StarryWispObjectMbtProjection {
   const state = quintStateRecord(raw);
+  const protocol = decodeWitnessProtocolState({
+    state,
+    protocolField: "qProtocol",
+    noInvalidReason: "",
+    decodeHole: starryWispObjectHoleName,
+    compareHoles: (left, right) => left.localeCompare(right),
+  });
 
   const lightEmitters = lightEmittersFromQuint(state["qLightEmitters"]);
   return {
     actionAvailable: booleanField(state, "qActionAvailable"),
-    holes: quintSet(state["qHoles"], "qHoles")
-      .map(starryWispObjectHoleName)
-      .sort(),
+    holes: protocol.holes,
     objectDamage: objectDamageFromQuint(state["qObjectDamage"]),
     lightEmitters,
     objectInvisibleBenefitDenied:
       objectInvisibleBenefitDeniedFromLightEmitters(lightEmitters),
-    lastResult: starryWispObjectMbtLastResult(state["qLastResult"]),
+    lastResult: starryWispObjectMbtLastResult(protocol.lastResult),
     lastInvalidReason: starryWispObjectMbtLastInvalidReason(
-      state["qLastInvalidReason"],
+      protocol.lastInvalidReason,
     ),
   };
 }

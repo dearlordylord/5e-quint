@@ -67,14 +67,25 @@ defineSelectedIdentityWitness({
   quintStateField: "qState",
   quintStateFieldPrefix: "q",
   witnessProtocolField: "protocol",
-  quintFieldNames: { lastResult: "qScenarioResult" },
+  quintFieldNames: { lastResult: "qScenarioOutcome" },
+  quintVariantFieldTags: {
+    lastResult: {
+      Init: "init",
+      AttackMissHalfDamage: "attackMissHalfDamage",
+      AttackMissNoAdditionalEffect: "attackMissNoAdditionalEffect",
+      AttackMissNoLightEmitter: "attackMissNoLightEmitter",
+      SaveSuccessHalfDamage: "saveSuccessHalfDamage",
+      SaveSuccessNoAdditionalEffect: "saveSuccessNoAdditionalEffect",
+      RejectObjectMissHalfDamage: "rejectObjectMissHalfDamage",
+    },
+  },
   projectionSchema: {
     targetHp: "int",
     actionResourcesRemaining: "int",
     targetActiveEffectCount: "int",
     lightEmitterCount: "int",
     objectDamageCount: "int",
-    lastResult: "str",
+    lastResult: "variant",
   },
   initialProjection: expectedProjection(),
   units: [

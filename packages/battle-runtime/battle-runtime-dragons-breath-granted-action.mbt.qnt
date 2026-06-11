@@ -7,6 +7,9 @@ module battleRuntimeDragonsBreathGrantedActionMbt {
     | SavingThrowOutcome
     | DamageRoll
     | ConcentrationSavingThrow
+  type DragonsBreathGrantedActionScenarioOutcome = | Init | Cast | TargetTurn | NeedsSave | NeedsDamage | NeedsConcentration | Exhaled | ConcentrationBroken
+
+
 
   // RAW trace:
   // - .references/srd-5.2.1/Spells/Descriptions-A-D.md#Dragon's Breath:
@@ -30,7 +33,7 @@ module battleRuntimeDragonsBreathGrantedActionMbt {
     qDamageRollTotal: int,
     qCasterHp: int,
     qCasterConcentrating: bool,
-    qScenarioResult: str,
+    qScenarioOutcome: DragonsBreathGrantedActionScenarioOutcome,
     protocol: WitnessProtocol[WitnessHole],
   }
 
@@ -48,7 +51,7 @@ module battleRuntimeDragonsBreathGrantedActionMbt {
   pure def qCasterHp: int = qState.qCasterHp
   pure def qCasterConcentrating: bool = qState.qCasterConcentrating
   pure def protocolHoles: Set[WitnessHole] = qState.protocol.holes
-  pure def qScenarioResult: str = qState.qScenarioResult
+  pure def qScenarioOutcome: DragonsBreathGrantedActionScenarioOutcome = qState.qScenarioOutcome
 
   pure val casterTurnRole: str = "caster"
   pure val targetTurnRole: str = "target"
@@ -81,7 +84,7 @@ module battleRuntimeDragonsBreathGrantedActionMbt {
     damageRollTotal: int,
     casterHp: int,
     casterConcentrating: bool,
-    scenarioResult: str,
+    scenarioOutcome: DragonsBreathGrantedActionScenarioOutcome,
     protocol: WitnessProtocol[WitnessHole],
   ): bool = all {
     qState' = {
@@ -96,7 +99,7 @@ module battleRuntimeDragonsBreathGrantedActionMbt {
       qDamageRollTotal: damageRollTotal,
       qCasterHp: casterHp,
       qCasterConcentrating: casterConcentrating,
-      qScenarioResult: scenarioResult,
+      qScenarioOutcome: scenarioOutcome,
       protocol: protocol,
     },
   }
@@ -114,7 +117,7 @@ module battleRuntimeDragonsBreathGrantedActionMbt {
       0,
       casterFullHp,
       false,
-      "init",
+      Init,
     witnessInit(SavingThrowOutcome),
   ),
   }
@@ -139,7 +142,7 @@ module battleRuntimeDragonsBreathGrantedActionMbt {
         0,
         qCasterHp,
         true,
-        "cast",
+        Cast,
     witnessResolved(SavingThrowOutcome),
   ),
     }
@@ -162,7 +165,7 @@ module battleRuntimeDragonsBreathGrantedActionMbt {
       0,
       qCasterHp,
       true,
-      "targetTurn",
+      TargetTurn,
     witnessResolved(SavingThrowOutcome),
   ),
   }
@@ -184,7 +187,7 @@ module battleRuntimeDragonsBreathGrantedActionMbt {
       0,
       qCasterHp,
       true,
-      "needsSave",
+      NeedsSave,
     witnessNeedsHoles(savingThrowOutcomeHoles),
   ),
   }
@@ -209,7 +212,7 @@ module battleRuntimeDragonsBreathGrantedActionMbt {
         0,
         qCasterHp,
         true,
-        "needsDamage",
+        NeedsDamage,
     witnessNeedsHoles(damageRollHoles),
   ),
     }
@@ -232,7 +235,7 @@ module battleRuntimeDragonsBreathGrantedActionMbt {
       dragonsBreathDamageRollTotal(qEffectOriginalSlotLevel),
       qCasterHp,
       true,
-      "needsConcentration",
+      NeedsConcentration,
     witnessNeedsHoles(concentrationSavingThrowHoles),
   ),
   }
@@ -257,7 +260,7 @@ module battleRuntimeDragonsBreathGrantedActionMbt {
         qDamageRollTotal,
         qCasterHp - damageTaken,
         concentrationSucceeded,
-        "exhaled",
+        Exhaled,
     witnessResolved(SavingThrowOutcome),
   ),
     }
@@ -279,7 +282,7 @@ module battleRuntimeDragonsBreathGrantedActionMbt {
       qDamageRollTotal,
       qCasterHp,
       false,
-      "concentrationBroken",
+      ConcentrationBroken,
     witnessResolved(SavingThrowOutcome),
   ),
   }

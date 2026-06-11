@@ -4,6 +4,11 @@
 
 module battleRuntimeInterruptStackResumeMbt {
   import battleRuntimeReplayEquivalence.* from "./battle-runtime-replay-equivalence"
+  import battleRuntimeWitnessProtocol.* from "./battle-runtime-witness-protocol"
+
+  type WitnessHole = | WitnessProtocolHole
+
+  type InterruptStackResumeScenarioOutcome = | Init | NestedDeclineResumedOuter | ActiveEffectMutationResumed | ReplayFromRootResolved
 
   var qMaxStackDepthObserved: int
   var qFinalStackDepth: int
@@ -13,7 +18,16 @@ module battleRuntimeInterruptStackResumeMbt {
   var qReplayFromRootEquivalent: bool
   var qResponderReactionAvailable: bool
   var qTargetHp: int
-  var qLastResult: str
+  var qScenarioOutcome: InterruptStackResumeScenarioOutcome
+  var qProtocol: WitnessProtocol[WitnessHole]
+
+  pure def qLastResult: InterruptStackResumeScenarioOutcome = qScenarioOutcome
+
+  pure def witnessProtocolForProjection(
+    result: InterruptStackResumeScenarioOutcome,
+  ): WitnessProtocol[WitnessHole] =
+    if (result == Init) witnessInit(WitnessProtocolHole)
+    else witnessResolved(WitnessProtocolHole)
 
   pure def noTrigger: str = "none"
   pure def attackHitTrigger: str = "attackHit"
@@ -40,7 +54,7 @@ module battleRuntimeInterruptStackResumeMbt {
     replayFromRootEquivalent: bool,
     responderReactionAvailable: bool,
     targetHp: int,
-    lastResult: str,
+    lastResult: InterruptStackResumeScenarioOutcome,
   ): bool = all {
     qMaxStackDepthObserved' = maxStackDepthObserved,
     qFinalStackDepth' = finalStackDepth,
@@ -50,7 +64,8 @@ module battleRuntimeInterruptStackResumeMbt {
     qReplayFromRootEquivalent' = replayFromRootEquivalent,
     qResponderReactionAvailable' = responderReactionAvailable,
     qTargetHp' = targetHp,
-    qLastResult' = lastResult,
+    qScenarioOutcome' = lastResult,
+    qProtocol' = witnessProtocolForProjection(lastResult),
   }
 
   action init = recordInterruptStackResumeState(
@@ -62,11 +77,11 @@ module battleRuntimeInterruptStackResumeMbt {
     false,
     true,
     initialHp,
-    "init",
+    Init,
   )
 
   action doNestedDeclineResumesOuterInterrupt = all {
-    qLastResult == "init",
+    qLastResult == Init,
     recordInterruptStackResumeState(
       2,
       1,
@@ -76,12 +91,12 @@ module battleRuntimeInterruptStackResumeMbt {
       false,
       true,
       nestedFixtureTargetHp,
-      "nestedDeclineResumedOuter",
+      NestedDeclineResumedOuter,
     ),
   }
 
   action doShieldMutationResumesInterruptedAttack = all {
-    qLastResult == "init",
+    qLastResult == Init,
     recordInterruptStackResumeState(
       1,
       0,
@@ -91,12 +106,12 @@ module battleRuntimeInterruptStackResumeMbt {
       false,
       false,
       initialHp,
-      "activeEffectMutationResumed",
+      ActiveEffectMutationResumed,
     ),
   }
 
   action doReplayRecordedProcedureFromRoot = all {
-    qLastResult == "init",
+    qLastResult == Init,
     recordInterruptStackResumeState(
       0,
       0,
@@ -106,7 +121,7 @@ module battleRuntimeInterruptStackResumeMbt {
       replayRecordedAttackFromRootEquivalent,
       true,
       replayFixtureTargetHp,
-      "replayFromRootResolved",
+      ReplayFromRootResolved,
     ),
   }
 

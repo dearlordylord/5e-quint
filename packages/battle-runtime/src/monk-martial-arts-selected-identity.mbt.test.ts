@@ -45,7 +45,12 @@ defineSelectedIdentityWitness({
     classLevel: "int",
     damageDieSize: "int",
     unitBound: "bool",
-    lastResult: "str",
+    lastResult: "variant",
+  },
+  witnessProtocolField: "qProtocol",
+  quintFieldNames: { lastResult: "qScenarioOutcome" },
+  quintVariantFieldTags: {
+    lastResult: { Init: "init", Projected: "projected" },
   },
   initialProjection: initialProjection(),
   units: [

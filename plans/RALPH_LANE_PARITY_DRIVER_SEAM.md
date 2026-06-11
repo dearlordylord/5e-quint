@@ -91,26 +91,68 @@
     {
       "number": 15,
       "id": "PDS-A15-WITNESS-BATCH-5",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Witness-protocol batch migration 5 (drain)"
     },
     {
       "number": 16,
       "id": "PDS-A16-WITNESS-GATE-AND-CLOSEOUT",
-      "status": "blocked",
+      "status": "done",
       "title": "Add the witness-protocol convention gate, ADR addendum, README skeleton, and close out prd/04"
     },
     {
       "number": 17,
       "id": "PDS-A17-LITERAL-CAPTURE-PRD",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Write the literal-capture-gate PRD from the research note (single-owner scope)"
     },
     {
       "number": 18,
       "id": "PDS-A18-RECURSIVE-NEXT-BATCH",
-      "status": "blocked",
+      "status": "done",
       "title": "Plan the next parity-seam batch if this lane drains"
+    },
+    {
+      "number": 19,
+      "id": "PDS-A19-SCENARIO-OUTCOME-AUDIT",
+      "status": "done",
+      "title": "Classify remaining qScenario outcome projections and choose the migration shape"
+    },
+    {
+      "number": 20,
+      "id": "PDS-A20-SCENARIO-OUTCOME-BATCH-1",
+      "status": "done",
+      "title": "Migrate the first qScenario outcome-projection batch"
+    },
+    {
+      "number": 21,
+      "id": "PDS-A21-SCENARIO-OUTCOME-BATCH-2",
+      "status": "done",
+      "title": "Migrate the second qScenario outcome-projection batch"
+    },
+    {
+      "number": 22,
+      "id": "PDS-A22-SCENARIO-OUTCOME-BATCH-3-DRAIN",
+      "status": "done",
+      "title": "Drain remaining qScenario outcome-projection stragglers"
+    },
+    {
+      "number": 23,
+      "id": "PDS-A23-CHARACTER-PACKAGE-WITNESS-FEASIBILITY",
+      "status": "done",
+      "title": "Decide whether the witness protocol should extend to character-package MBT"
+    },
+    {
+      "number": 24,
+      "id": "PDS-A24-CHARACTER-PACKAGE-MBT-CLEANUP-LANE",
+      "status": "deferred",
+      "title": "Open the character-package MBT cleanup lane after Lane C ownership resolves"
+    },
+    {
+      "number": 25,
+      "id": "PDS-A25-STAT-BLOCK-WITNESS-PROTOCOL-DRAIN",
+      "status": "done",
+      "title": "Migrate the stat-block action ordering witness to WitnessProtocol"
     }
   ]
 }
@@ -139,7 +181,10 @@ Read only these by default:
 - `scripts/check-mbt-driver-closure.cjs` when a task touches witness imports.
 
 Do not reread closed Ralph lanes. Do not read `packages/mcp` or
-`packages/character-sheet-runtime` — other lanes own them.
+`packages/character-sheet-runtime` — other lanes own them. The exception is
+A23's research-only feasibility audit, which may inspect character-package MBT
+files but must not edit Lane C-owned implementation files unless a later plan
+adds an explicit cross-lane dependency.
 
 ## Lane Rules
 
@@ -167,10 +212,15 @@ Do not reread closed Ralph lanes. Do not read `packages/mcp` or
   - **Protocol-unmigrated witness:** a `*.mbt.qnt` matching
     `grep -l 'var qLastResult: str'`. Take the first ≤20 in alphabetical
     order and migrate each paired driver in the same task.
+  - **Scenario-outcome straggler:** a battle-runtime `*.mbt.qnt` matching
+    `rg -l 'qScenario(Result|InvalidReason)' packages/battle-runtime --glob '*.mbt.qnt'`.
+    These are not the old mutable protocol storage banned by
+    A16; they are outcome projection labels that need a separate decision
+    before migration.
 
 ## Verification
 
-Every task must include:
+Every implementation task must include:
 
 - Reviewer-loop convergence (RAW traceability, ubiquitous language,
   architecture/connascence, code review) until no reasonable findings remain.
@@ -188,28 +238,40 @@ Every task must include:
   fix; never dismiss as flaky.
 - `git diff --check`
 
+Planning-only tasks (A17, A18, A19, A23) do not run MBT unless they edit
+executable driver or witness files. They still run `git diff --check`, and
+they must record the commands or source reads that justify the planning
+decision.
+
 ## DAG / Queue Order
 
-| # | Task | Status | Depends on | Notes |
-| ---: | --- | --- | --- | --- |
-| 1 | PDS-A01-DRIVER-KIT-TRACER | done | none | Light research: kit API shape vs quint-connect exports (`transformITFValue`, ITF schemas, picks). |
-| 2 | PDS-A02-KIT-PILOTS | done | PDS-A01-DRIVER-KIT-TRACER | Proves the kit on all driver shapes; merges `battle-runtime-mbt-fixtures.ts`. |
-| 3 | PDS-A03-WITNESS-PROTOCOL-TRACER | done | PDS-A02-KIT-PILOTS | Unblocks Lane B (`BPK-B04+`). Includes the quint 0.31.0 parameterized-type REPL check. |
-| 4 | PDS-A04-KIT-BATCH-1 | done | PDS-A03-WITNESS-PROTOCOL-TRACER | Self-discovering; ≤20 drivers. |
-| 5 | PDS-A05-KIT-BATCH-2 | done | PDS-A04-KIT-BATCH-1 | Self-discovering; ≤20 drivers. |
-| 6 | PDS-A06-KIT-BATCH-3 | done | PDS-A05-KIT-BATCH-2 | |
-| 7 | PDS-A07-KIT-BATCH-4 | done | PDS-A06-KIT-BATCH-3 | |
-| 8 | PDS-A08-KIT-BATCH-5 | done | PDS-A07-KIT-BATCH-4 | Drains the kit-unmigrated set. |
-| 9 | PDS-A09-KIT-GATE-AND-CLOSEOUT | deferred | PDS-A08-KIT-BATCH-5 | Owner intervention 2026-06-11: repeated attempts showed the PRD/03 20% line-footprint target was missed by the completed kit batches and is not a prerequisite for prd/04 witness-protocol work. Revive only with explicit extraction scope or revised acceptance. |
-| 10 | PDS-A10-WITNESS-PILOTS | done | PDS-A08-KIT-BATCH-5 | Trace-cost timing note and pilot line-delta report. Does not depend on PDS-A09 or the PRD/03 20% line-footprint metric. |
-| 11 | PDS-A11-WITNESS-BATCH-1 | done | PDS-A10-WITNESS-PILOTS | Self-discovering; ≤20 pairs; `MBT_TRACES=3` confidence pass per batch. |
-| 12 | PDS-A12-WITNESS-BATCH-2 | done | PDS-A11-WITNESS-BATCH-1 | |
-| 13 | PDS-A13-WITNESS-BATCH-3 | done | PDS-A12-WITNESS-BATCH-2 | |
-| 14 | PDS-A14-WITNESS-BATCH-4 | done | PDS-A13-WITNESS-BATCH-3 | |
-| 15 | PDS-A15-WITNESS-BATCH-5 | ready-for-research | PDS-A14-WITNESS-BATCH-4 | Drains the protocol-unmigrated set. |
-| 16 | PDS-A16-WITNESS-GATE-AND-CLOSEOUT | blocked | PDS-A15-WITNESS-BATCH-5 | Convention gate, ADR addendum, README skeleton, prd/04 closeout. |
-| 17 | PDS-A17-LITERAL-CAPTURE-PRD | ready-for-research | PDS-A10-WITNESS-PILOTS | HITL: owner reviews the PRD. Single-owner obligations only; multi-owner rows wait for BPK-B08. |
-| 18 | PDS-A18-RECURSIVE-NEXT-BATCH | blocked | PDS-A16-WITNESS-GATE-AND-CLOSEOUT | Refill or close the lane. |
+|   # | Task                                          | Status   | Depends on                                                                                                         | Notes                                                                                                                                                                                                                                                              |
+| --: | --------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+|   1 | PDS-A01-DRIVER-KIT-TRACER                     | done     | none                                                                                                               | Light research: kit API shape vs quint-connect exports (`transformITFValue`, ITF schemas, picks).                                                                                                                                                                  |
+|   2 | PDS-A02-KIT-PILOTS                            | done     | PDS-A01-DRIVER-KIT-TRACER                                                                                          | Proves the kit on all driver shapes; merges `battle-runtime-mbt-fixtures.ts`.                                                                                                                                                                                      |
+|   3 | PDS-A03-WITNESS-PROTOCOL-TRACER               | done     | PDS-A02-KIT-PILOTS                                                                                                 | Unblocks Lane B (`BPK-B04+`). Includes the quint 0.31.0 parameterized-type REPL check.                                                                                                                                                                             |
+|   4 | PDS-A04-KIT-BATCH-1                           | done     | PDS-A03-WITNESS-PROTOCOL-TRACER                                                                                    | Self-discovering; ≤20 drivers.                                                                                                                                                                                                                                     |
+|   5 | PDS-A05-KIT-BATCH-2                           | done     | PDS-A04-KIT-BATCH-1                                                                                                | Self-discovering; ≤20 drivers.                                                                                                                                                                                                                                     |
+|   6 | PDS-A06-KIT-BATCH-3                           | done     | PDS-A05-KIT-BATCH-2                                                                                                |                                                                                                                                                                                                                                                                    |
+|   7 | PDS-A07-KIT-BATCH-4                           | done     | PDS-A06-KIT-BATCH-3                                                                                                |                                                                                                                                                                                                                                                                    |
+|   8 | PDS-A08-KIT-BATCH-5                           | done     | PDS-A07-KIT-BATCH-4                                                                                                | Drains the kit-unmigrated set.                                                                                                                                                                                                                                     |
+|   9 | PDS-A09-KIT-GATE-AND-CLOSEOUT                 | deferred | PDS-A08-KIT-BATCH-5                                                                                                | Owner intervention 2026-06-11: repeated attempts showed the PRD/03 20% line-footprint target was missed by the completed kit batches and is not a prerequisite for prd/04 witness-protocol work. Revive only with explicit extraction scope or revised acceptance. |
+|  10 | PDS-A10-WITNESS-PILOTS                        | done     | PDS-A08-KIT-BATCH-5                                                                                                | Trace-cost timing note and pilot line-delta report. Does not depend on PDS-A09 or the PRD/03 20% line-footprint metric.                                                                                                                                            |
+|  11 | PDS-A11-WITNESS-BATCH-1                       | done     | PDS-A10-WITNESS-PILOTS                                                                                             | Self-discovering; ≤20 pairs; `MBT_TRACES=3` confidence pass per batch.                                                                                                                                                                                             |
+|  12 | PDS-A12-WITNESS-BATCH-2                       | done     | PDS-A11-WITNESS-BATCH-1                                                                                            |                                                                                                                                                                                                                                                                    |
+|  13 | PDS-A13-WITNESS-BATCH-3                       | done     | PDS-A12-WITNESS-BATCH-2                                                                                            |                                                                                                                                                                                                                                                                    |
+|  14 | PDS-A14-WITNESS-BATCH-4                       | done     | PDS-A13-WITNESS-BATCH-3                                                                                            |                                                                                                                                                                                                                                                                    |
+|  15 | PDS-A15-WITNESS-BATCH-5                       | done     | PDS-A14-WITNESS-BATCH-4                                                                                            | Drains the protocol-unmigrated set.                                                                                                                                                                                                                                |
+|  16 | PDS-A16-WITNESS-GATE-AND-CLOSEOUT             | done     | PDS-A15-WITNESS-BATCH-5                                                                                            | Convention gate, ADR addendum, README skeleton, prd/04 closeout.                                                                                                                                                                                                   |
+|  17 | PDS-A17-LITERAL-CAPTURE-PRD                   | done     | PDS-A10-WITNESS-PILOTS                                                                                             | HITL: owner reviews the PRD. Single-owner obligations only; multi-owner rows wait for BPK-B08.                                                                                                                                                                     |
+|  18 | PDS-A18-RECURSIVE-NEXT-BATCH                  | done     | PDS-A16-WITNESS-GATE-AND-CLOSEOUT                                                                                  | Recursive audit found concrete follow-up work; Lane A is not drained.                                                                                                                                                                                              |
+|  19 | PDS-A19-SCENARIO-OUTCOME-AUDIT                | done     | PDS-A18-RECURSIVE-NEXT-BATCH                                                                                       | All 60 `qScenario*` files are typed-outcome migration candidates; no string kept-label set. See `plans/SCENARIO_OUTCOME_AUDIT.md`.                                                                                                                                 |
+|  20 | PDS-A20-SCENARIO-OUTCOME-BATCH-1              | done     | PDS-A19-SCENARIO-OUTCOME-AUDIT                                                                                     | First <=20 scenario-outcome stragglers, using the typed local-outcome shape in `plans/SCENARIO_OUTCOME_AUDIT.md`.                                                                                                                                                  |
+|  21 | PDS-A21-SCENARIO-OUTCOME-BATCH-2              | done     | PDS-A20-SCENARIO-OUTCOME-BATCH-1                                                                                   | Next ≤20 scenario-outcome stragglers.                                                                                                                                                                                                                              |
+|  22 | PDS-A22-SCENARIO-OUTCOME-BATCH-3-DRAIN        | done     | PDS-A21-SCENARIO-OUTCOME-BATCH-2                                                                                   | Final scenario-outcome stragglers; assert the discovery command is empty or that the kept-label set is documented.                                                                                                                                                 |
+|  23 | PDS-A23-CHARACTER-PACKAGE-WITNESS-FEASIBILITY | done     | PDS-A18-RECURSIVE-NEXT-BATCH                                                                                       | Research-only stretch decision for the 24 non-battle MBT witness/driver pairs named by prd/03 and prd/04. See `plans/CHARACTER_PACKAGE_WITNESS_FEASIBILITY.md`.                                                                                                    |
+|  24 | PDS-A24-CHARACTER-PACKAGE-MBT-CLEANUP-LANE    | deferred | PDS-A23-CHARACTER-PACKAGE-WITNESS-FEASIBILITY + Lane C ownership resolution for `packages/character-sheet-runtime` | Deferred follow-up opened by Task 23. Create the separate character-package MBT cleanup lane from `plans/CHARACTER_PACKAGE_WITNESS_FEASIBILITY.md`; do not edit character-sheet-runtime before the Lane C dependency lands.                                        |
+|  25 | PDS-A25-STAT-BLOCK-WITNESS-PROTOCOL-DRAIN     | ready-for-research | PDS-A22-SCENARIO-OUTCOME-BATCH-3-DRAIN                                                                              | Migrate the remaining battle-runtime `qLastResult: str` / `qHoles` stat-block action ordering witness so the closure checker can be a green global gate again.                                                                                                      |
 
 ## Task Details
 
@@ -435,7 +497,7 @@ confidence pass; closure checker green, allowlist unchanged.
 
 ### Task 15 - PDS-A15-WITNESS-BATCH-5
 
-Status: `ready-for-research` · Mode: AFK
+Status: `done` · Mode: AFK
 
 Input: the protocol-unmigrated discovery rule applied at task start.
 
@@ -450,7 +512,7 @@ qLastResult: str' *.mbt.qnt` is empty.
 
 ### Task 16 - PDS-A16-WITNESS-GATE-AND-CLOSEOUT
 
-Status: `blocked` · Mode: AFK
+Status: `done` · Mode: AFK
 
 Output: quality gate forbidding string-protocol vars in battle-runtime
 witnesses; the ADR (or ADR-0001 addendum) recording the witness-protocol
@@ -466,7 +528,7 @@ Acceptance: `pnpm quality` green including the new gate;
 
 ### Task 17 - PDS-A17-LITERAL-CAPTURE-PRD
 
-Status: `ready-for-research` · Mode: HITL (owner reviews the resulting PRD)
+Status: `done` · Mode: HITL (owner reviews the resulting PRD)
 
 Input: `plans/RESEARCH_witness_literal_capture_gate.md` (design, gates, and
 do-not list), the post-A10 witness shape.
@@ -483,9 +545,166 @@ gates are restated as task gates.
 
 ### Task 18 - PDS-A18-RECURSIVE-NEXT-BATCH
 
-Status: `blocked` · Mode: AFK
+Status: `done` · Mode: AFK
 
 Output: if witness/driver stragglers or follow-ups accumulated (e.g. the
-character-package witnesses noted as stretch in prd/03/04), append a new
+remaining `qScenario*` projection strings recorded in the prd/04 closeout or
+the character-package witnesses noted as stretch in prd/03/04), append a new
 batch of tasks to this lane; otherwise mark the lane drained in
 `plans/RALPH_QUINT_FIRST_WAVE.md`.
+
+Result: Lane A is **not drained**. The old battle-runtime string protocol
+storage is drained (`rg -l 'var qLastResult: str' packages/battle-runtime
+--glob '*.mbt.qnt'` returns no files), but prd/04's separate closeout debt
+remains: `rg -l 'qScenario(Result|InvalidReason)' packages/battle-runtime
+--glob '*.mbt.qnt'` reports 60 battle-runtime witness files with scenario
+outcome projection labels. The character-package stretch surface also remains
+real: 9 character-creation, 11 character-sheet, and 4 character-battle MBT
+drivers/witnesses still use package-local decoding and `qLastResult: str`.
+
+### Task 19 - PDS-A19-SCENARIO-OUTCOME-AUDIT
+
+Status: `done` · Mode: AFK
+
+Input: prd/04 closeout, ADR-0001 addendum, and the current result of
+`rg -l 'qScenario(Result|InvalidReason)' packages/battle-runtime --glob
+'*.mbt.qnt'`.
+
+Output: a short checked-in audit note or plan update classifying all 60
+scenario-outcome files as either:
+
+- typed scenario-outcome migration candidates; or
+- explicit driver projection labels that should remain strings because their
+  domain vocabulary is local to one witness and not protocol storage.
+
+Acceptance: the audit chooses one migration shape for A20-A22, names the
+self-discovery command those batches must use, and records whether a quality
+gate should be added after the drain. No MBT is required unless this task edits
+executable witnesses or drivers.
+
+Result: `plans/SCENARIO_OUTCOME_AUDIT.md` classifies all 60 discovered
+`qScenarioResult` / `qScenarioInvalidReason` witnesses as typed
+scenario-outcome migration candidates and records no kept string projection
+labels. A20-A22 should use local QNT variants or derive pure protocol outcomes
+from `WitnessProtocol`, remove the `qScenario*` names, and add the post-drain
+gate in A22.
+
+### Task 20 - PDS-A20-SCENARIO-OUTCOME-BATCH-1
+
+Status: `done` · Mode: AFK
+
+Input: `plans/SCENARIO_OUTCOME_AUDIT.md` and the first ≤20 alphabetical files
+from the A19 discovery command.
+
+Output: the first batch of battle-runtime scenario-outcome projection
+stragglers migrated or explicitly annotated according to A19. Paired drivers
+must keep projected fields and assertions semantically unchanged.
+
+Acceptance: focused MBT green for exactly the touched driver files
+(`MBT_TRACES=1`); closure checker green; `git diff --check` green; batch
+line-delta and remaining discovery count reported.
+
+### Task 21 - PDS-A21-SCENARIO-OUTCOME-BATCH-2
+
+Status: `done` · Mode: AFK
+
+Input: the next ≤20 alphabetical files from the A19 discovery command after
+A20 lands.
+
+Output: second batch of scenario-outcome projection stragglers migrated or
+annotated according to A19, with paired driver semantics preserved.
+
+Acceptance: focused MBT green for exactly the touched driver files
+(`MBT_TRACES=1`); closure checker green; `git diff --check` green; batch
+line-delta and remaining discovery count reported.
+
+### Task 22 - PDS-A22-SCENARIO-OUTCOME-BATCH-3-DRAIN
+
+Status: `done` · Mode: AFK
+
+Input: the remaining scenario-outcome projection stragglers after A21 lands.
+
+Output: final scenario-outcome batch migrated or annotated according to A19.
+If A19 selected a hard migration, add or update the appropriate quality gate;
+if A19 selected an explicit kept-label set, record that set where future
+reviewers will find it.
+
+Acceptance: focused MBT green for exactly the touched driver files
+(`MBT_TRACES=1`) plus one `MBT_TRACES=3` confidence pass over the final batch;
+closure checker green; `git diff --check` green; discovery command returns
+zero files or only the documented kept-label set.
+
+Result: scenario-outcome projection labels are drained from battle-runtime MBT
+witnesses, and the post-drain quality gate now rejects
+`qScenarioResult` / `qScenarioInvalidReason`. The pre-existing
+`battle-runtime-stat-block-action-ordering.mbt.qnt` protocol witness still
+keeps the global closure checker red; PDS-A25 owns that remaining gate debt.
+
+### Task 23 - PDS-A23-CHARACTER-PACKAGE-WITNESS-FEASIBILITY
+
+Status: `done` · Mode: AFK
+
+Input: prd/03's stretch note for non-battle drivers, prd/04's witness-outside
+battle-runtime note, and the 24 current non-battle MBT witness/driver pairs in
+`packages/character-creation-runtime`, `packages/character-sheet-runtime`, and
+`packages/character-battle-runtime`.
+
+Output: a feasibility decision that either:
+
+- keeps the battle-runtime kit/protocol package-local and opens a separate
+  future lane for character-package MBT cleanup; or
+- proposes a shared test-support extraction with concrete file ownership,
+  package boundaries, and verification commands.
+
+Acceptance: no runtime behavior changes; no MBT required unless executable
+files are edited. The output must respect Lane C ownership of
+`packages/character-sheet-runtime` by either avoiding edits there or naming the
+cross-lane dependency that must land first.
+
+### Task 24 - PDS-A24-CHARACTER-PACKAGE-MBT-CLEANUP-LANE
+
+Status: `deferred` · Mode: HITL
+
+Input: `plans/CHARACTER_PACKAGE_WITNESS_FEASIBILITY.md`, Lane C's ownership
+state for `packages/character-sheet-runtime`, and the 24 current character
+package MBT witness/driver pairs across `packages/character-creation-runtime`,
+`packages/character-sheet-runtime`, and `packages/character-battle-runtime`.
+
+Output: a separate character-package MBT cleanup lane or PRD that owns the
+post-Lane-C migration path for package-local typed witness protocols and any
+later domain-neutral TS test-support extraction. The lane must keep the
+battle-runtime kit/protocol package-local unless it deliberately opens a
+shared-support extraction with concrete package boundaries and verification
+commands.
+
+Acceptance: deferred until Lane C either lands its `character-sheet-runtime`
+ownership work or explicitly hands off that package. The new lane must keep
+character-package witness cleanup separate from Lane A's battle-runtime
+scenario-outcome batches, name the package-local QNT witness-protocol leaves or
+state why they are not needed, and include verification commands for each
+affected package. No executable character-package files are edited by this
+placeholder task.
+
+### Task 25 - PDS-A25-STAT-BLOCK-WITNESS-PROTOCOL-DRAIN
+
+Status: `done` · Mode: AFK
+
+Input: `battle-runtime-stat-block-action-ordering.mbt.qnt`,
+`src/stat-block-action-ordering.mbt.test.ts`, the A16 witness-protocol gate in
+`scripts/check-mbt-driver-closure.cjs`, and the current closure-checker
+failure for `var qLastResult: str` / `var qHoles`.
+
+Output: migrate the stat-block action ordering witness from parallel mutable
+`qLastResult: str` and `qHoles` variables to the package-local
+`WitnessProtocol` record and helper constructors, updating the paired TS driver
+decoder without changing the stat-block ordering stages, hole frontier, or
+projected runtime assertions.
+
+Acceptance: focused MBT green for
+`src/stat-block-action-ordering.mbt.test.ts` (`MBT_TRACES=1`);
+`node scripts/check-mbt-driver-closure.cjs` green; `git diff --check` green;
+the discovery command returns zero files:
+
+```bash
+rg -l 'var qLastResult: str|var qHoles:' packages/battle-runtime --glob '*.mbt.qnt'
+```

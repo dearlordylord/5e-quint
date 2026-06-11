@@ -5,13 +5,16 @@ module battleRuntimePaladinSacredWeaponSelectedIdentityMbt {
 
   type WitnessHole = | WitnessProtocolHole
 
+  type PaladinSacredWeaponSelectedIdentityScenarioOutcome = | Init | Activated | NoResource | RangedWeapon | Recast | AttackEffects | Dismissed | NotCarryingWeapon
+
+
   type PaladinSacredWeaponSelectedIdentityWitnessState = {
     qActivationOffered: bool,
     qChannelDivinityUsesRemaining: int,
     qBoundWeaponItemId: str,
     qActiveEffectCount: int,
     qRejected: bool,
-    qScenarioResult: str,
+    qScenarioOutcome: PaladinSacredWeaponSelectedIdentityScenarioOutcome,
     protocol: WitnessProtocol[WitnessHole],
   }
 
@@ -22,14 +25,14 @@ module battleRuntimePaladinSacredWeaponSelectedIdentityMbt {
   pure def qBoundWeaponItemId: str = qState.qBoundWeaponItemId
   pure def qActiveEffectCount: int = qState.qActiveEffectCount
   pure def qRejected: bool = qState.qRejected
-  pure def qLastResult: str = qState.qScenarioResult
+  pure def qLastResult: PaladinSacredWeaponSelectedIdentityScenarioOutcome = qState.qScenarioOutcome
 
   pure def selectedIdentityProtocolForProjection(
     holes: Set[WitnessHole],
-    scenarioResult: str,
+    scenarioResult: PaladinSacredWeaponSelectedIdentityScenarioOutcome,
     scenarioInvalidReason: str,
   ): WitnessProtocol[WitnessHole] =
-    if (scenarioResult == "init") witnessInit(WitnessProtocolHole)
+    if (scenarioResult == Init) witnessInit(WitnessProtocolHole)
     else if (scenarioInvalidReason == "invalidFill") witnessInvalid(WitnessProtocolHole, WInvalidFill)
     else if (holes != Set()) witnessNeedsHoles(holes)
     else witnessResolved(WitnessProtocolHole)
@@ -40,7 +43,7 @@ module battleRuntimePaladinSacredWeaponSelectedIdentityMbt {
     boundWeaponItemId: str,
     activeEffectCount: int,
     rejected: bool,
-    lastResult: str,
+    lastResult: PaladinSacredWeaponSelectedIdentityScenarioOutcome,
   ): bool = all {
     qState' = {
       qActivationOffered: activationOffered,
@@ -48,45 +51,45 @@ module battleRuntimePaladinSacredWeaponSelectedIdentityMbt {
       qBoundWeaponItemId: boundWeaponItemId,
       qActiveEffectCount: activeEffectCount,
       qRejected: rejected,
-      qScenarioResult: lastResult,
+      qScenarioOutcome: lastResult,
       protocol: selectedIdentityProtocolForProjection(Set(), lastResult, ""),
     },
   }
-  action init = recordProjection(false, 2, "none", 0, false, "init")
+  action init = recordProjection(false, 2, "none", 0, false, Init)
 
   action doActivateSacredWeapon = all {
-    qLastResult == "init",
-    recordProjection(false, 1, "main:weapon_longsword", 1, false, "activated"),
+    qLastResult == Init,
+    recordProjection(false, 1, "main:weapon_longsword", 1, false, Activated),
   }
 
   action doRejectSacredWeaponNoResource = all {
-    qLastResult == "init",
-    recordProjection(false, 0, "none", 0, true, "noResource"),
+    qLastResult == Init,
+    recordProjection(false, 0, "none", 0, true, NoResource),
   }
 
   action doRejectSacredWeaponRangedWeapon = all {
-    qLastResult == "init",
-    recordProjection(false, 2, "none", 0, true, "rangedWeapon"),
+    qLastResult == Init,
+    recordProjection(false, 2, "none", 0, true, RangedWeapon),
   }
 
   action doRecastSacredWeapon = all {
-    qLastResult == "init",
-    recordProjection(false, 0, "second:weapon_longsword", 1, false, "recast"),
+    qLastResult == Init,
+    recordProjection(false, 0, "second:weapon_longsword", 1, false, Recast),
   }
 
   action doProjectSacredWeaponAttackDamageAndLight = all {
-    qLastResult == "init",
-    recordProjection(false, 1, "main:weapon_longsword", 1, false, "attackEffects"),
+    qLastResult == Init,
+    recordProjection(false, 1, "main:weapon_longsword", 1, false, AttackEffects),
   }
 
   action doDismissSacredWeapon = all {
-    qLastResult == "init",
-    recordProjection(false, 1, "none", 0, false, "dismissed"),
+    qLastResult == Init,
+    recordProjection(false, 1, "none", 0, false, Dismissed),
   }
 
   action doEndSacredWeaponWhenNotCarryingWeapon = all {
-    qLastResult == "init",
-    recordProjection(false, 1, "none", 0, false, "notCarryingWeapon"),
+    qLastResult == Init,
+    recordProjection(false, 1, "none", 0, false, NotCarryingWeapon),
   }
 
   action step = any {

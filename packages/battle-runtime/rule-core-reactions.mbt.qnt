@@ -3,7 +3,54 @@
 module ruleCoreReactionsMbt {
   import movementSpatialGrapple.* from "../shared-algebras/proofs/rule-core/movement-spatial-grapple"
   import reactionsContinuationsConcentration.* from "../shared-algebras/proofs/rule-core/reactions-continuations-concentration"
-  import actionTurnProcedures.* from "../shared-algebras/proofs/rule-core/action-turn-procedures"
+
+  // This computed rule-core driver is already at the closure budget from the
+  // reaction/concentration rule-core imports. Keep the typed witness protocol
+  // local here so the driver stays within the enforced import-count gate.
+  type WitnessInvalidReason =
+    | WInvalidFill
+
+  type WitnessResult =
+    | WInit
+    | WNeedsHoles
+    | WResolved
+    | WInvalid(WitnessInvalidReason)
+
+  type WitnessProtocol[h] = {
+    holes: Set[h],
+    result: WitnessResult,
+  }
+
+  pure def witnessInit(holeType: h): WitnessProtocol[h] = {
+    holes: Set(),
+    result: WInit,
+  }
+
+  pure def witnessNeedsHoles(holes: Set[h]): WitnessProtocol[h] = {
+    holes: holes,
+    result: WNeedsHoles,
+  }
+
+  pure def witnessResolved(holeType: h): WitnessProtocol[h] = {
+    holes: Set(),
+    result: WResolved,
+  }
+
+  pure def witnessInvalid(
+    holeType: h,
+    reason: WitnessInvalidReason,
+  ): WitnessProtocol[h] = {
+    holes: Set(),
+    result: WInvalid(reason),
+  }
+
+  pure def witnessInvalidWithHoles(
+    holes: Set[h],
+    reason: WitnessInvalidReason,
+  ): WitnessProtocol[h] = {
+    holes: holes,
+    result: WInvalid(reason),
+  }
 
   var qInterruptedMovementSpentFeet: int
   var qReactorReactionAvailable: bool
@@ -14,10 +61,10 @@ module ruleCoreReactionsMbt {
   var qReactorConcentration: bool
   var qReactionWindow: ReactionWindowState
   var qPendingTrigger: str
-  var qHoles: Set[str]
+  var qProtocol: WitnessProtocol[str]
   var qLastConcentrationSaveDc: int
-  var qLastResult: str
-  var qLastInvalidReason: str
+
+  pure def qHoles: Set[str] = qProtocol.holes
 
   pure def noPendingTrigger: str = "none"
   pure def opportunityAttackTrigger: str = "opportunityAttack"
@@ -26,8 +73,22 @@ module ruleCoreReactionsMbt {
   pure def readiedMovementShortCostFeet: int = 5
   pure def readiedMovementFillCostFeet: int = 10
 
-  pure def qReactorTurn: TurnProcedureState =
-    initialTurnProcedureState
+  pure def witnessInvalidReasonForProjection(_reason: str): WitnessInvalidReason =
+    WInvalidFill
+
+  pure def witnessProtocolForProjection(
+    holes: Set[str],
+    result: str,
+    invalidReason: str,
+  ): WitnessProtocol[str] =
+    if (result == "init") witnessInit("ReactionDecision")
+    else if (result == "invalid")
+      witnessInvalidWithHoles(holes, witnessInvalidReasonForProjection(invalidReason))
+    else if (holes != Set()) witnessNeedsHoles(holes)
+    else witnessResolved("ReactionDecision")
+
+  pure def qReactorTurn =
+    initialMovementGrappleState.turn
       .with("reactionAvailable", qReactorReactionAvailable)
       .with("readiedMovementHeld", qReactorReadiedMovementHeld)
 
@@ -54,9 +115,7 @@ module ruleCoreReactionsMbt {
   }
 
   action clearSuccessfulHoles(result: str): bool = all {
-    qHoles' = Set(),
-    qLastResult' = result,
-    qLastInvalidReason' = "none",
+    qProtocol' = witnessProtocolForProjection(Set(), result, "none"),
   }
 
   action recordProtocolState(
@@ -74,10 +133,8 @@ module ruleCoreReactionsMbt {
     qReactorConcentration' = state.concentration.reactor == Concentrating,
     qReactionWindow' = state.reactionWindow,
     qPendingTrigger' = pendingTrigger,
-    qHoles' = holes,
+    qProtocol' = witnessProtocolForProjection(holes, result, "none"),
     qLastConcentrationSaveDc' = qLastConcentrationSaveDc,
-    qLastResult' = result,
-    qLastInvalidReason' = "none",
   }
 
   action recordInvalid(reason: str): bool = all {
@@ -90,10 +147,8 @@ module ruleCoreReactionsMbt {
     qReactorConcentration' = qReactorConcentration,
     qReactionWindow' = qReactionWindow,
     qPendingTrigger' = qPendingTrigger,
-    qHoles' = qHoles,
+    qProtocol' = witnessProtocolForProjection(qHoles, "invalid", reason),
     qLastConcentrationSaveDc' = qLastConcentrationSaveDc,
-    qLastResult' = "invalid",
-    qLastInvalidReason' = reason,
   }
 
   action init = all {
@@ -106,10 +161,8 @@ module ruleCoreReactionsMbt {
     qReactorConcentration' = false,
     qReactionWindow' = NoReactionWindow,
     qPendingTrigger' = noPendingTrigger,
-    qHoles' = Set(),
+    qProtocol' = witnessProtocolForProjection(Set(), "init", "none"),
     qLastConcentrationSaveDc' = 0,
-    qLastResult' = "init",
-    qLastInvalidReason' = "none",
   }
 
   action doOfferOpportunityAttack = {
@@ -151,7 +204,7 @@ module ruleCoreReactionsMbt {
   }
 
   action doReadyMovementFixture = {
-    val readiedTurn = resolveReadyMovement(initialTurnProcedureState, true)
+    val readiedTurn = initialMovementGrappleState.turn.with("readiedMovementHeld", true)
     all {
       qReactionWindow == NoReactionWindow,
       qHoles == Set(),

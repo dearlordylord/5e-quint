@@ -246,13 +246,29 @@ describe("battle runtime: Stat Block actions", () => {
         tag: "action",
         actorId: goblinId,
         action: "attack",
+        attackName: "Scimitar",
+        statBlockDamageNotation: "static",
+      },
+      {
+        tag: "action",
+        actorId: goblinId,
+        action: "attack",
         attackName: "Shortbow",
+      },
+      {
+        tag: "action",
+        actorId: goblinId,
+        action: "attack",
+        attackName: "Shortbow",
+        statBlockDamageNotation: "static",
       },
       { tag: "runtimeCommand", actorId: goblinId, command: "move" },
       { tag: "runtimeCommand", actorId: goblinId, command: "endTurn" },
     ]);
     expect(continuationSubjects).not.toContainEqual(subject);
     expect(continuationActs.map((act) => act.label)).toEqual([
+      "Attack",
+      "Attack",
       "Attack",
       "Attack",
       "Move",

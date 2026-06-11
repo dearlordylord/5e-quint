@@ -37,7 +37,8 @@
                   "dieSize": 6,
                   "flat": 2
                 },
-                "kind": "fixed"
+                "kind": "fixed",
+                "static": 5
               },
               "damageType": "slashing",
               "kind": "damage"
@@ -48,7 +49,8 @@
                   "dice": 1,
                   "dieSize": 4
                 },
-                "kind": "fixed"
+                "kind": "fixed",
+                "static": 2
               },
               "damageType": "slashing",
               "kind": "conditional_bonus_damage",
@@ -74,7 +76,8 @@
                   "dieSize": 6,
                   "flat": 2
                 },
-                "kind": "fixed"
+                "kind": "fixed",
+                "static": 5
               },
               "damageType": "piercing",
               "kind": "damage"
@@ -85,7 +88,8 @@
                   "dice": 1,
                   "dieSize": 4
                 },
-                "kind": "fixed"
+                "kind": "fixed",
+                "static": 2
               },
               "damageType": "piercing",
               "kind": "conditional_bonus_damage",

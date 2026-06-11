@@ -5,6 +5,8 @@ module battleRuntimeHeatMetalObjectContactMbt {
 
   type WitnessHole = | WitnessProtocolHole
 
+  type HeatMetalObjectContactScenarioOutcome = | Init | CastNoContact | CastContactDamage | RepeatBlocked | EndCasterTurn | EndTargetTurn | RepeatContactDamage | ConcentrationBroken
+
   type HeatMetalObjectContactWitnessState = {
     qCurrentTurnRole: str,
     qActionAvailable: bool,
@@ -14,7 +16,7 @@ module battleRuntimeHeatMetalObjectContactMbt {
     qObjectContactEffectActive: bool,
     qCasterConcentrating: bool,
     qTargetHp: int,
-    qScenarioResult: str,
+    qScenarioOutcome: HeatMetalObjectContactScenarioOutcome,
     protocol: WitnessProtocol[WitnessHole],
   }
 
@@ -28,14 +30,14 @@ module battleRuntimeHeatMetalObjectContactMbt {
   pure def qObjectContactEffectActive: bool = qState.qObjectContactEffectActive
   pure def qCasterConcentrating: bool = qState.qCasterConcentrating
   pure def qTargetHp: int = qState.qTargetHp
-  pure def qLastResult: str = qState.qScenarioResult
+  pure def qLastResult: HeatMetalObjectContactScenarioOutcome = qState.qScenarioOutcome
 
   pure def heatMetalObjectContactProtocolForProjection(
     holes: Set[WitnessHole],
-    scenarioResult: str,
+    scenarioResult: HeatMetalObjectContactScenarioOutcome,
     _scenarioInvalidReason: str,
   ): WitnessProtocol[WitnessHole] =
-    if (scenarioResult == "init") witnessInit(WitnessProtocolHole)
+    if (scenarioResult == Init) witnessInit(WitnessProtocolHole)
     else if (holes != Set()) witnessNeedsHoles(holes)
     else witnessResolved(WitnessProtocolHole)
 
@@ -55,7 +57,7 @@ module battleRuntimeHeatMetalObjectContactMbt {
     objectContactEffectActive: bool,
     casterConcentrating: bool,
     targetHp: int,
-    lastResult: str,
+    lastResult: HeatMetalObjectContactScenarioOutcome,
   ): bool = all {
     qState' = {
       qCurrentTurnRole: currentTurnRole,
@@ -66,7 +68,7 @@ module battleRuntimeHeatMetalObjectContactMbt {
       qObjectContactEffectActive: objectContactEffectActive,
       qCasterConcentrating: casterConcentrating,
       qTargetHp: targetHp,
-      qScenarioResult: lastResult,
+      qScenarioOutcome: lastResult,
       protocol: heatMetalObjectContactProtocolForProjection(Set(), lastResult, ""),
     },
   }
@@ -81,7 +83,7 @@ module battleRuntimeHeatMetalObjectContactMbt {
       false,
       false,
       initialTargetHp,
-      "init",
+      Init,
     ),
   }
 
@@ -99,7 +101,7 @@ module battleRuntimeHeatMetalObjectContactMbt {
       true,
       true,
       qTargetHp,
-      "castNoContact",
+      CastNoContact,
     ),
   }
 
@@ -117,7 +119,7 @@ module battleRuntimeHeatMetalObjectContactMbt {
       true,
       true,
       qTargetHp - castDamage,
-      "castContactDamage",
+      CastContactDamage,
     ),
   }
 
@@ -135,7 +137,7 @@ module battleRuntimeHeatMetalObjectContactMbt {
       true,
       true,
       qTargetHp,
-      "repeatBlocked",
+      RepeatBlocked,
     ),
   }
 
@@ -152,7 +154,7 @@ module battleRuntimeHeatMetalObjectContactMbt {
       true,
       true,
       qTargetHp,
-      "endCasterTurn",
+      EndCasterTurn,
     ),
   }
 
@@ -169,7 +171,7 @@ module battleRuntimeHeatMetalObjectContactMbt {
       true,
       true,
       qTargetHp,
-      "endTargetTurn",
+      EndTargetTurn,
     ),
   }
 
@@ -188,7 +190,7 @@ module battleRuntimeHeatMetalObjectContactMbt {
       true,
       true,
       qTargetHp - repeatDamage,
-      "repeatContactDamage",
+      RepeatContactDamage,
     ),
   }
 
@@ -204,7 +206,7 @@ module battleRuntimeHeatMetalObjectContactMbt {
       false,
       false,
       qTargetHp,
-      "concentrationBroken",
+      ConcentrationBroken,
     ),
   }
 

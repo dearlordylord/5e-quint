@@ -10,6 +10,9 @@ module battleRuntimeDragonbornBreathWeaponMbt {
 
   type WitnessHole = | DragonbornBreathWeapon
 
+  type DragonbornBreathWeaponScenarioOutcome = | Init | Resolved | OpenedExtraAttack | RejectMissingResource | RejectMismatchedArea | RejectInvalidDamageRoll
+
+
   // RAW trace:
   // - .references/srd-5.2.1/Character-Origins.md:107-121 defines Draconic
   //   Ancestry and Breath Weapon: replace one attack in the Attack action,
@@ -24,7 +27,7 @@ module battleRuntimeDragonbornBreathWeaponMbt {
     qSecondTargetHp: int,
     qBreathWeaponUsesRemaining: int,
     qActionResourcesRemaining: int,
-    qScenarioResult: str,
+    qScenarioOutcome: DragonbornBreathWeaponScenarioOutcome,
     protocol: WitnessProtocol[WitnessHole],
   }
 
@@ -34,7 +37,7 @@ module battleRuntimeDragonbornBreathWeaponMbt {
   pure def qSecondTargetHp: int = qState.qSecondTargetHp
   pure def qBreathWeaponUsesRemaining: int = qState.qBreathWeaponUsesRemaining
   pure def qActionResourcesRemaining: int = qState.qActionResourcesRemaining
-  pure def qScenarioResult: str = qState.qScenarioResult
+  pure def qScenarioOutcome: DragonbornBreathWeaponScenarioOutcome = qState.qScenarioOutcome
 
 
   action recordProjection(
@@ -42,7 +45,7 @@ module battleRuntimeDragonbornBreathWeaponMbt {
     secondTargetHp: int,
     breathWeaponUsesRemaining: int,
     actionResourcesRemaining: int,
-    scenarioResult: str,
+    scenarioOutcome: DragonbornBreathWeaponScenarioOutcome,
     protocol: WitnessProtocol[WitnessHole],
   ): bool = all {
     qState' = {
@@ -50,46 +53,46 @@ module battleRuntimeDragonbornBreathWeaponMbt {
       qSecondTargetHp: secondTargetHp,
       qBreathWeaponUsesRemaining: breathWeaponUsesRemaining,
       qActionResourcesRemaining: actionResourcesRemaining,
-      qScenarioResult: scenarioResult,
+      qScenarioOutcome: scenarioOutcome,
       protocol: protocol,
     },
   }
 
-  action init = recordProjection(20, 20, 3, 1, "init",
+  action init = recordProjection(20, 20, 3, 1, Init,
     witnessInit(DragonbornBreathWeapon),
   )
 
   action doResolveBreathWeapon = all {
-    qScenarioResult == "init",
-    recordProjection(10, 15, 2, 0, "resolved",
+    qScenarioOutcome == Init,
+    recordProjection(10, 15, 2, 0, Resolved,
     witnessResolved(DragonbornBreathWeapon),
   ),
   }
 
   action doOpenExtraAttackSlot = all {
-    qScenarioResult == "init",
-    recordProjection(10, 20, 2, 1, "openedExtraAttack",
+    qScenarioOutcome == Init,
+    recordProjection(10, 20, 2, 1, OpenedExtraAttack,
     witnessResolved(DragonbornBreathWeapon),
   ),
   }
 
   action doRejectMissingResource = all {
-    qScenarioResult == "init",
-    recordProjection(20, 20, 0, 1, "rejectMissingResource",
+    qScenarioOutcome == Init,
+    recordProjection(20, 20, 0, 1, RejectMissingResource,
     witnessInvalid(DragonbornBreathWeapon, WInvalidFill),
   ),
   }
 
   action doRejectMismatchedArea = all {
-    qScenarioResult == "init",
-    recordProjection(20, 20, 3, 1, "rejectMismatchedArea",
+    qScenarioOutcome == Init,
+    recordProjection(20, 20, 3, 1, RejectMismatchedArea,
     witnessInvalid(DragonbornBreathWeapon, WInvalidFill),
   ),
   }
 
   action doRejectInvalidDamageRoll = all {
-    qScenarioResult == "init",
-    recordProjection(20, 20, 3, 1, "rejectInvalidDamageRoll",
+    qScenarioOutcome == Init,
+    recordProjection(20, 20, 3, 1, RejectInvalidDamageRoll,
     witnessInvalid(DragonbornBreathWeapon, WInvalidFill),
   ),
   }

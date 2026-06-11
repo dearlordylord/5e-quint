@@ -5,6 +5,8 @@ module battleRuntimeLevel1DamageSpellSelectedIdentityMbt {
 
   type WitnessHole = | WitnessProtocolHole
 
+  type Level1DamageSpellSelectedIdentityScenarioOutcome = | Init | BurningHandsMixedConeSavingThrows | ChromaticOrbDuplicateDamageLeap | IceKnifeHitAttackDamageAndBurstSavingThrows | IceKnifeMissBurstSavingThrows | PoisonSpraySpellAttackDamage | RayOfSicknessSpellAttackDamageAndPoisoned | SacredFlameDexteritySavingThrowRadiantDamage | SorcerousBurstSpellAttackDamage | StarryWispObjectSpellAttackDamageAndDimLight | ViciousMockeryWisdomSavingThrowPsychicDamageAndNextAttackDisadvantage
+
   type Level1DamageSpellSelectedIdentityWitnessState = {
     qActionAvailable: bool,
     qSpellSlotSpentThisTurn: bool,
@@ -13,7 +15,7 @@ module battleRuntimeLevel1DamageSpellSelectedIdentityMbt {
     qPrimaryTargetPoisoned: bool,
     qPrimaryTargetNextAttackRollDisadvantage: bool,
     qSecondaryTargetHp: int,
-    qScenarioResult: str,
+    qScenarioOutcome: Level1DamageSpellSelectedIdentityScenarioOutcome,
     protocol: WitnessProtocol[WitnessHole],
   }
 
@@ -26,14 +28,14 @@ module battleRuntimeLevel1DamageSpellSelectedIdentityMbt {
   pure def qPrimaryTargetPoisoned: bool = qState.qPrimaryTargetPoisoned
   pure def qPrimaryTargetNextAttackRollDisadvantage: bool = qState.qPrimaryTargetNextAttackRollDisadvantage
   pure def qSecondaryTargetHp: int = qState.qSecondaryTargetHp
-  pure def qLastResult: str = qState.qScenarioResult
+  pure def qLastResult: Level1DamageSpellSelectedIdentityScenarioOutcome = qState.qScenarioOutcome
 
   pure def level1DamageSpellSelectedIdentityProtocolForProjection(
     holes: Set[WitnessHole],
-    scenarioResult: str,
+    scenarioResult: Level1DamageSpellSelectedIdentityScenarioOutcome,
     _scenarioInvalidReason: str,
   ): WitnessProtocol[WitnessHole] =
-    if (scenarioResult == "init") witnessInit(WitnessProtocolHole)
+    if (scenarioResult == Init) witnessInit(WitnessProtocolHole)
     else if (holes != Set()) witnessNeedsHoles(holes)
     else witnessResolved(WitnessProtocolHole)
 
@@ -46,7 +48,7 @@ module battleRuntimeLevel1DamageSpellSelectedIdentityMbt {
     primaryTargetPoisoned: bool,
     primaryTargetNextAttackRollDisadvantage: bool,
     secondaryTargetHp: int,
-    lastResult: str,
+    lastResult: Level1DamageSpellSelectedIdentityScenarioOutcome,
   ): bool = all {
     qState' = {
       qActionAvailable: actionAvailable,
@@ -56,15 +58,15 @@ module battleRuntimeLevel1DamageSpellSelectedIdentityMbt {
       qPrimaryTargetPoisoned: primaryTargetPoisoned,
       qPrimaryTargetNextAttackRollDisadvantage: primaryTargetNextAttackRollDisadvantage,
       qSecondaryTargetHp: secondaryTargetHp,
-      qScenarioResult: lastResult,
+      qScenarioOutcome: lastResult,
       protocol: level1DamageSpellSelectedIdentityProtocolForProjection(Set(), lastResult, ""),
     },
   }
 
-  action init = recordProjection(true, false, 1, 12, false, false, 12, "init")
+  action init = recordProjection(true, false, 1, 12, false, false, 12, Init)
 
   action doResolveBurningHandsMixedConeSavingThrows = all {
-    qLastResult == "init",
+    qLastResult == Init,
     recordProjection(
       false,
       true,
@@ -73,12 +75,12 @@ module battleRuntimeLevel1DamageSpellSelectedIdentityMbt {
       false,
       false,
       9,
-      "burningHandsMixedConeSavingThrows",
+      BurningHandsMixedConeSavingThrows,
     ),
   }
 
   action doResolveChromaticOrbDuplicateDamageLeap = all {
-    qLastResult == "init",
+    qLastResult == Init,
     recordProjection(
       false,
       true,
@@ -87,12 +89,12 @@ module battleRuntimeLevel1DamageSpellSelectedIdentityMbt {
       false,
       false,
       9,
-      "chromaticOrbDuplicateDamageLeap",
+      ChromaticOrbDuplicateDamageLeap,
     ),
   }
 
   action doResolveIceKnifeHitAttackDamageAndBurstSavingThrows = all {
-    qLastResult == "init",
+    qLastResult == Init,
     recordProjection(
       false,
       true,
@@ -101,12 +103,12 @@ module battleRuntimeLevel1DamageSpellSelectedIdentityMbt {
       false,
       false,
       12,
-      "iceKnifeHitAttackDamageAndBurstSavingThrows",
+      IceKnifeHitAttackDamageAndBurstSavingThrows,
     ),
   }
 
   action doResolveIceKnifeMissBurstSavingThrows = all {
-    qLastResult == "init",
+    qLastResult == Init,
     recordProjection(
       false,
       true,
@@ -115,12 +117,12 @@ module battleRuntimeLevel1DamageSpellSelectedIdentityMbt {
       false,
       false,
       12,
-      "iceKnifeMissBurstSavingThrows",
+      IceKnifeMissBurstSavingThrows,
     ),
   }
 
   action doResolvePoisonSpraySpellAttackDamage = all {
-    qLastResult == "init",
+    qLastResult == Init,
     recordProjection(
       false,
       false,
@@ -129,12 +131,12 @@ module battleRuntimeLevel1DamageSpellSelectedIdentityMbt {
       false,
       false,
       12,
-      "poisonSpraySpellAttackDamage",
+      PoisonSpraySpellAttackDamage,
     ),
   }
 
   action doResolveRayOfSicknessSpellAttackDamageAndPoisoned = all {
-    qLastResult == "init",
+    qLastResult == Init,
     recordProjection(
       false,
       true,
@@ -143,12 +145,12 @@ module battleRuntimeLevel1DamageSpellSelectedIdentityMbt {
       true,
       false,
       12,
-      "rayOfSicknessSpellAttackDamageAndPoisoned",
+      RayOfSicknessSpellAttackDamageAndPoisoned,
     ),
   }
 
   action doResolveSacredFlameDexteritySavingThrowRadiantDamage = all {
-    qLastResult == "init",
+    qLastResult == Init,
     recordProjection(
       false,
       false,
@@ -157,12 +159,12 @@ module battleRuntimeLevel1DamageSpellSelectedIdentityMbt {
       false,
       false,
       12,
-      "sacredFlameDexteritySavingThrowRadiantDamage",
+      SacredFlameDexteritySavingThrowRadiantDamage,
     ),
   }
 
   action doResolveSorcerousBurstSpellAttackDamage = all {
-    qLastResult == "init",
+    qLastResult == Init,
     recordProjection(
       false,
       false,
@@ -171,12 +173,12 @@ module battleRuntimeLevel1DamageSpellSelectedIdentityMbt {
       false,
       false,
       12,
-      "sorcerousBurstSpellAttackDamage",
+      SorcerousBurstSpellAttackDamage,
     ),
   }
 
   action doResolveStarryWispObjectSpellAttackDamageAndDimLight = all {
-    qLastResult == "init",
+    qLastResult == Init,
     recordProjection(
       false,
       false,
@@ -185,12 +187,12 @@ module battleRuntimeLevel1DamageSpellSelectedIdentityMbt {
       false,
       false,
       12,
-      "starryWispObjectSpellAttackDamageAndDimLight",
+      StarryWispObjectSpellAttackDamageAndDimLight,
     ),
   }
 
   action doResolveViciousMockeryWisdomSavingThrowPsychicDamageAndNextAttackDisadvantage = all {
-    qLastResult == "init",
+    qLastResult == Init,
     recordProjection(
       false,
       false,
@@ -199,7 +201,7 @@ module battleRuntimeLevel1DamageSpellSelectedIdentityMbt {
       false,
       true,
       12,
-      "viciousMockeryWisdomSavingThrowPsychicDamageAndNextAttackDisadvantage",
+      ViciousMockeryWisdomSavingThrowPsychicDamageAndNextAttackDisadvantage,
     ),
   }
 

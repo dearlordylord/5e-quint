@@ -8,13 +8,16 @@ module battleRuntimePreserveLifeMbt {
 
   type WitnessHole = | WitnessProtocolHole
 
+  type PreserveLifeScenarioOutcome = | Init | Distributed | Self | RejectNonBloodied | RejectOverPool | RejectOverCap | RejectMissingRange | RejectMissingResource | RejectMissingMagicAction
+
+
   type PreserveLifeWitnessState = {
     qCasterHp: int,
     qTargetHp: int,
     qSecondTargetHp: int,
     qChannelDivinityUsesRemaining: int,
     qActionResourcesRemaining: int,
-    qScenarioResult: str,
+    qScenarioOutcome: PreserveLifeScenarioOutcome,
     protocol: WitnessProtocol[WitnessHole],
   }
 
@@ -25,14 +28,14 @@ module battleRuntimePreserveLifeMbt {
   pure def qSecondTargetHp: int = qState.qSecondTargetHp
   pure def qChannelDivinityUsesRemaining: int = qState.qChannelDivinityUsesRemaining
   pure def qActionResourcesRemaining: int = qState.qActionResourcesRemaining
-  pure def qLastResult: str = qState.qScenarioResult
+  pure def qLastResult: PreserveLifeScenarioOutcome = qState.qScenarioOutcome
 
   pure def selectedIdentityProtocolForProjection(
     holes: Set[WitnessHole],
-    scenarioResult: str,
+    scenarioResult: PreserveLifeScenarioOutcome,
     scenarioInvalidReason: str,
   ): WitnessProtocol[WitnessHole] =
-    if (scenarioResult == "init") witnessInit(WitnessProtocolHole)
+    if (scenarioResult == Init) witnessInit(WitnessProtocolHole)
     else if (scenarioInvalidReason == "invalidFill") witnessInvalid(WitnessProtocolHole, WInvalidFill)
     else if (holes != Set()) witnessNeedsHoles(holes)
     else witnessResolved(WitnessProtocolHole)
@@ -43,7 +46,7 @@ module battleRuntimePreserveLifeMbt {
     secondTargetHp: int,
     channelDivinityUsesRemaining: int,
     actionResourcesRemaining: int,
-    lastResult: str,
+    lastResult: PreserveLifeScenarioOutcome,
   ): bool = all {
     qState' = {
       qCasterHp: casterHp,
@@ -51,50 +54,50 @@ module battleRuntimePreserveLifeMbt {
       qSecondTargetHp: secondTargetHp,
       qChannelDivinityUsesRemaining: channelDivinityUsesRemaining,
       qActionResourcesRemaining: actionResourcesRemaining,
-      qScenarioResult: lastResult,
+      qScenarioOutcome: lastResult,
       protocol: selectedIdentityProtocolForProjection(Set(), lastResult, ""),
     },
   }
-  action init = recordProjection(20, 2, 3, 2, 1, "init")
+  action init = recordProjection(20, 2, 3, 2, 1, Init)
 
   action doDistributeHealing = all {
-    qLastResult == "init",
-    recordProjection(20, 10, 10, 1, 0, "distributed"),
+    qLastResult == Init,
+    recordProjection(20, 10, 10, 1, 0, Distributed),
   }
 
   action doSelfHealing = all {
-    qLastResult == "init",
-    recordProjection(10, 12, 3, 1, 0, "self"),
+    qLastResult == Init,
+    recordProjection(10, 12, 3, 1, 0, Self),
   }
 
   action doRejectNonBloodied = all {
-    qLastResult == "init",
-    recordProjection(20, 11, 3, 2, 1, "rejectNonBloodied"),
+    qLastResult == Init,
+    recordProjection(20, 11, 3, 2, 1, RejectNonBloodied),
   }
 
   action doRejectOverPool = all {
-    qLastResult == "init",
-    recordProjection(20, 0, 0, 2, 1, "rejectOverPool"),
+    qLastResult == Init,
+    recordProjection(20, 0, 0, 2, 1, RejectOverPool),
   }
 
   action doRejectOverCap = all {
-    qLastResult == "init",
-    recordProjection(20, 2, 3, 2, 1, "rejectOverCap"),
+    qLastResult == Init,
+    recordProjection(20, 2, 3, 2, 1, RejectOverCap),
   }
 
   action doRejectMissingRange = all {
-    qLastResult == "init",
-    recordProjection(20, 2, 3, 2, 1, "rejectMissingRange"),
+    qLastResult == Init,
+    recordProjection(20, 2, 3, 2, 1, RejectMissingRange),
   }
 
   action doRejectMissingResource = all {
-    qLastResult == "init",
-    recordProjection(20, 2, 3, 0, 1, "rejectMissingResource"),
+    qLastResult == Init,
+    recordProjection(20, 2, 3, 0, 1, RejectMissingResource),
   }
 
   action doRejectMissingMagicAction = all {
-    qLastResult == "init",
-    recordProjection(20, 2, 3, 2, 0, "rejectMissingMagicAction"),
+    qLastResult == Init,
+    recordProjection(20, 2, 3, 2, 0, RejectMissingMagicAction),
   }
 
   action step = any {

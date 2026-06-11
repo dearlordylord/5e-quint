@@ -3,13 +3,15 @@
 module battleRuntimeLevitatedCreatureLifecycleMbt {
   import battleRuntimeWitnessProtocol.* from "./battle-runtime-witness-protocol"
 
+  type LevitatedCreatureLifecycleScenarioOutcome = | Init | NeedsSave | UnwillingSaveSucceeded | NeedsWillingInitialRise | WillingLevitated | UnwillingSaveFailed | NeedsTargetMovement | TargetMoved | NeedsCasterControl | CasterControlled | MissingWitnessRejected | OutOfRangeRejected | ConcentrationBroken | DurationExpired
+
   type LevitatedCreatureLifecycleWitnessState = {
     qActionAvailable: bool,
     qSpellAvailable: bool,
     qEffectActive: bool,
     qCasterConcentrating: bool,
     qAltitudeFeet: int,
-    qScenarioResult: str,
+    qScenarioOutcome: LevitatedCreatureLifecycleScenarioOutcome,
     protocol: WitnessProtocol[str],
   }
 
@@ -20,15 +22,15 @@ module battleRuntimeLevitatedCreatureLifecycleMbt {
   pure def qEffectActive: bool = qState.qEffectActive
   pure def qCasterConcentrating: bool = qState.qCasterConcentrating
   pure def qAltitudeFeet: int = qState.qAltitudeFeet
-  pure def qLastResult: str = qState.qScenarioResult
+  pure def qLastResult: LevitatedCreatureLifecycleScenarioOutcome = qState.qScenarioOutcome
   pure def qHoles: Set[str] = qState.protocol.holes
 
   pure def levitatedCreatureLifecycleProtocolForProjection(
     holes: Set[str],
-    scenarioResult: str,
+    scenarioResult: LevitatedCreatureLifecycleScenarioOutcome,
     _scenarioInvalidReason: str,
   ): WitnessProtocol[str] =
-    if (scenarioResult == "init") witnessInit("WitnessHole")
+    if (scenarioResult == Init) witnessInit("WitnessHole")
     else if (holes != Set()) witnessNeedsHoles(holes)
     else witnessResolved("WitnessHole")
 
@@ -70,7 +72,7 @@ module battleRuntimeLevitatedCreatureLifecycleMbt {
     casterConcentrating: bool,
     altitudeFeet: int,
     holes: Set[str],
-    lastResult: str,
+    lastResult: LevitatedCreatureLifecycleScenarioOutcome,
   ): bool = all {
     qState' = {
       qActionAvailable: actionAvailable,
@@ -78,7 +80,7 @@ module battleRuntimeLevitatedCreatureLifecycleMbt {
       qEffectActive: effectActive,
       qCasterConcentrating: casterConcentrating,
       qAltitudeFeet: altitudeFeet,
-      qScenarioResult: lastResult,
+      qScenarioOutcome: lastResult,
       protocol: levitatedCreatureLifecycleProtocolForProjection(holes, lastResult, ""),
     },
   }
@@ -86,7 +88,7 @@ module battleRuntimeLevitatedCreatureLifecycleMbt {
   action recordNoEffectState(
     actionAvailable: bool,
     spellAvailable: bool,
-    lastResult: str,
+    lastResult: LevitatedCreatureLifecycleScenarioOutcome,
   ): bool =
     recordLevitatedCreatureState(
       actionAvailable,
@@ -102,7 +104,7 @@ module battleRuntimeLevitatedCreatureLifecycleMbt {
     actionAvailable: bool,
     altitudeFeet: int,
     holes: Set[str],
-    lastResult: str,
+    lastResult: LevitatedCreatureLifecycleScenarioOutcome,
   ): bool =
     recordLevitatedCreatureState(
       actionAvailable,
@@ -122,7 +124,7 @@ module battleRuntimeLevitatedCreatureLifecycleMbt {
       false,
       noAltitude,
       noHoles,
-      "init",
+      Init,
     ),
   }
 
@@ -131,7 +133,7 @@ module battleRuntimeLevitatedCreatureLifecycleMbt {
     qSpellAvailable,
     not(qEffectActive),
     qHoles == noHoles,
-    qLastResult == "init",
+    qLastResult == Init,
     recordLevitatedCreatureState(
       true,
       true,
@@ -139,18 +141,18 @@ module battleRuntimeLevitatedCreatureLifecycleMbt {
       false,
       noAltitude,
       savingThrowOutcomeHoles,
-      "needsSave",
+      NeedsSave,
     ),
   }
 
   action doCastUnwillingSaveSuccess = all {
     qHoles == savingThrowOutcomeHoles,
-    recordNoEffectState(false, false, "unwillingSaveSucceeded"),
+    recordNoEffectState(false, false, UnwillingSaveSucceeded),
   }
 
   action doCastUnwillingSaveFailureAt10Feet = all {
     qHoles == savingThrowOutcomeHoles,
-    recordEffectState(false, 10, noHoles, "unwillingSaveFailed"),
+    recordEffectState(false, 10, noHoles, UnwillingSaveFailed),
   }
 
   action doDiscoverWillingInitialRise = all {
@@ -158,7 +160,7 @@ module battleRuntimeLevitatedCreatureLifecycleMbt {
     qSpellAvailable,
     not(qEffectActive),
     qHoles == noHoles,
-    qLastResult == "init",
+    qLastResult == Init,
     recordLevitatedCreatureState(
       true,
       true,
@@ -166,82 +168,82 @@ module battleRuntimeLevitatedCreatureLifecycleMbt {
       false,
       noAltitude,
       initialRiseHoles,
-      "needsWillingInitialRise",
+      NeedsWillingInitialRise,
     ),
   }
 
   action doCastWillingAt12Feet = all {
     qHoles == initialRiseHoles,
-    qLastResult == "needsWillingInitialRise",
-    recordEffectState(false, 12, noHoles, "willingLevitated"),
+    qLastResult == NeedsWillingInitialRise,
+    recordEffectState(false, 12, noHoles, WillingLevitated),
   }
 
   action doDiscoverTargetMovement = all {
     qEffectActive,
     qHoles == noHoles,
-    qLastResult.in(Set("willingLevitated", "unwillingSaveFailed")),
-    recordEffectState(true, qAltitudeFeet, movementHoles, "needsTargetMovement"),
+    qLastResult.in(Set(WillingLevitated, UnwillingSaveFailed)),
+    recordEffectState(true, qAltitudeFeet, movementHoles, NeedsTargetMovement),
   }
 
   action doRejectTargetMovementWithoutWitness = all {
     qEffectActive,
     qHoles == movementHoles,
-    recordEffectState(true, qAltitudeFeet, noHoles, "missingWitnessRejected"),
+    recordEffectState(true, qAltitudeFeet, noHoles, MissingWitnessRejected),
   }
 
   action doMoveTargetWithWitnessUp5Feet = all {
     qEffectActive,
     qHoles == movementHoles,
-    recordEffectState(true, altitudeAfterChange(qAltitudeFeet, true, 5), noHoles, "targetMoved"),
+    recordEffectState(true, altitudeAfterChange(qAltitudeFeet, true, 5), noHoles, TargetMoved),
   }
 
   action doDiscoverCasterControl = all {
     qEffectActive,
     qHoles == noHoles,
     qLastResult.in(Set(
-      "willingLevitated",
-      "unwillingSaveFailed",
-      "missingWitnessRejected",
-      "targetMoved",
+      WillingLevitated,
+      UnwillingSaveFailed,
+      MissingWitnessRejected,
+      TargetMoved,
     )),
-    recordEffectState(true, qAltitudeFeet, altitudeChangeHoles, "needsCasterControl"),
+    recordEffectState(true, qAltitudeFeet, altitudeChangeHoles, NeedsCasterControl),
   }
 
   action doRejectOutOfRangeCasterControl = all {
     qEffectActive,
     qHoles == altitudeChangeHoles,
-    recordEffectState(true, qAltitudeFeet, noHoles, "outOfRangeRejected"),
+    recordEffectState(true, qAltitudeFeet, noHoles, OutOfRangeRejected),
   }
 
   action doControlAltitudeDown10Feet = all {
     qEffectActive,
     qHoles == altitudeChangeHoles,
-    recordEffectState(false, altitudeAfterChange(qAltitudeFeet, false, 10), noHoles, "casterControlled"),
+    recordEffectState(false, altitudeAfterChange(qAltitudeFeet, false, 10), noHoles, CasterControlled),
   }
 
   action doBreakConcentration = all {
     qEffectActive,
     qCasterConcentrating,
     qHoles == noHoles,
-    qLastResult.in(Set("willingLevitated", "unwillingSaveFailed")),
-    recordNoEffectState(qActionAvailable, false, "concentrationBroken"),
+    qLastResult.in(Set(WillingLevitated, UnwillingSaveFailed)),
+    recordNoEffectState(qActionAvailable, false, ConcentrationBroken),
   }
 
   action doExpireDuration = all {
     qEffectActive,
     qCasterConcentrating,
     qHoles == noHoles,
-    qLastResult.in(Set("willingLevitated", "unwillingSaveFailed")),
-    recordNoEffectState(true, false, "durationExpired"),
+    qLastResult.in(Set(WillingLevitated, UnwillingSaveFailed)),
+    recordNoEffectState(true, false, DurationExpired),
   }
 
   action doStutter = all {
     qLastResult.in(Set(
-      "unwillingSaveSucceeded",
-      "outOfRangeRejected",
-      "casterControlled",
-      "concentrationBroken",
-      "durationExpired",
+      UnwillingSaveSucceeded,
+      OutOfRangeRejected,
+      CasterControlled,
+      ConcentrationBroken,
+      DurationExpired,
     )),
     recordLevitatedCreatureState(
       qActionAvailable,

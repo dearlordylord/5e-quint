@@ -10,13 +10,16 @@ module battleRuntimeDruidLandsAidMbt {
 
   type WitnessHole = | WitnessProtocolHole
 
+  type DruidLandsAidScenarioOutcome = | Init | Resolved | RejectMissingResource | RejectMissingAreaMembership | RejectDuplicateSaveFill | RejectInvalidHealingTarget | RejectInvalidDamageRoll | RejectInvalidHealingRoll
+
+
   type DruidLandsAidWitnessState = {
     qTargetHp: int,
     qSecondTargetHp: int,
     qHealingTargetHp: int,
     qWildShapeUsesRemaining: int,
     qActionResourcesRemaining: int,
-    qScenarioResult: str,
+    qScenarioOutcome: DruidLandsAidScenarioOutcome,
     protocol: WitnessProtocol[WitnessHole],
   }
 
@@ -27,14 +30,14 @@ module battleRuntimeDruidLandsAidMbt {
   pure def qHealingTargetHp: int = qState.qHealingTargetHp
   pure def qWildShapeUsesRemaining: int = qState.qWildShapeUsesRemaining
   pure def qActionResourcesRemaining: int = qState.qActionResourcesRemaining
-  pure def qLastResult: str = qState.qScenarioResult
+  pure def qLastResult: DruidLandsAidScenarioOutcome = qState.qScenarioOutcome
 
   pure def druidLandsAidProtocolForProjection(
     holes: Set[WitnessHole],
-    scenarioResult: str,
+    scenarioOutcome: DruidLandsAidScenarioOutcome,
     _scenarioInvalidReason: str,
   ): WitnessProtocol[WitnessHole] =
-    if (scenarioResult == "init") witnessInit(WitnessProtocolHole)
+    if (scenarioOutcome == Init) witnessInit(WitnessProtocolHole)
     else if (holes != Set()) witnessNeedsHoles(holes)
     else witnessResolved(WitnessProtocolHole)
 
@@ -54,7 +57,7 @@ module battleRuntimeDruidLandsAidMbt {
     healingTargetHp: int,
     wildShapeUsesRemaining: int,
     actionResourcesRemaining: int,
-    lastResult: str,
+    lastResult: DruidLandsAidScenarioOutcome,
   ): bool = all {
     qState' = {
       qTargetHp: targetHp,
@@ -62,58 +65,58 @@ module battleRuntimeDruidLandsAidMbt {
       qHealingTargetHp: healingTargetHp,
       qWildShapeUsesRemaining: wildShapeUsesRemaining,
       qActionResourcesRemaining: actionResourcesRemaining,
-      qScenarioResult: lastResult,
+      qScenarioOutcome: lastResult,
       protocol: druidLandsAidProtocolForProjection(Set(), lastResult, ""),
     },
   }
 
-  action init = recordProjection(20, 20, 5, 2, 1, "init")
+  action init = recordProjection(20, 20, 5, 2, 1, Init)
 
   // Level variants stay enumerated because each one witnesses a distinct
   // Druid-level fixture and die-count projection, not a sampled fill value.
   action doResolveAreaSaveDamageHealing = all {
-    qLastResult == "init",
-    recordProjection(12, 16, 12, 1, 0, "resolved"),
+    qLastResult == Init,
+    recordProjection(12, 16, 12, 1, 0, Resolved),
   }
 
   action doResolveAreaSaveDamageHealingLevel10 = all {
-    qLastResult == "init",
-    recordProjection(8, 14, 17, 1, 0, "resolved"),
+    qLastResult == Init,
+    recordProjection(8, 14, 17, 1, 0, Resolved),
   }
 
   action doResolveAreaSaveDamageHealingLevel14 = all {
-    qLastResult == "init",
-    recordProjection(4, 12, 20, 1, 0, "resolved"),
+    qLastResult == Init,
+    recordProjection(4, 12, 20, 1, 0, Resolved),
   }
 
   action doRejectMissingResource = all {
-    qLastResult == "init",
-    recordProjection(20, 20, 5, 0, 1, "rejectMissingResource"),
+    qLastResult == Init,
+    recordProjection(20, 20, 5, 0, 1, RejectMissingResource),
   }
 
   action doRejectMissingAreaMembership = all {
-    qLastResult == "init",
-    recordProjection(20, 20, 5, 2, 1, "rejectMissingAreaMembership"),
+    qLastResult == Init,
+    recordProjection(20, 20, 5, 2, 1, RejectMissingAreaMembership),
   }
 
   action doRejectDuplicateSaveFill = all {
-    qLastResult == "init",
-    recordProjection(20, 20, 5, 2, 1, "rejectDuplicateSaveFill"),
+    qLastResult == Init,
+    recordProjection(20, 20, 5, 2, 1, RejectDuplicateSaveFill),
   }
 
   action doRejectInvalidHealingTarget = all {
-    qLastResult == "init",
-    recordProjection(20, 20, 5, 2, 1, "rejectInvalidHealingTarget"),
+    qLastResult == Init,
+    recordProjection(20, 20, 5, 2, 1, RejectInvalidHealingTarget),
   }
 
   action doRejectInvalidDamageRoll = all {
-    qLastResult == "init",
-    recordProjection(20, 20, 5, 2, 1, "rejectInvalidDamageRoll"),
+    qLastResult == Init,
+    recordProjection(20, 20, 5, 2, 1, RejectInvalidDamageRoll),
   }
 
   action doRejectInvalidHealingRoll = all {
-    qLastResult == "init",
-    recordProjection(20, 20, 5, 2, 1, "rejectInvalidHealingRoll"),
+    qLastResult == Init,
+    recordProjection(20, 20, 5, 2, 1, RejectInvalidHealingRoll),
   }
 
   action step = any {

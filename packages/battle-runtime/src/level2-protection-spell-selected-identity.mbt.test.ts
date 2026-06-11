@@ -88,6 +88,21 @@ const enhanceAbilitySecondTargetId = combatantId(
   "level2-protection-selected-enhance-ability-second-target",
 );
 
+const LEVEL2_PROTECTION_SPELL_SELECTED_IDENTITY_SCENARIO_OUTCOME_BY_TAG = {
+  Init: "init",
+  AidHitPointBuff: "aidHitPointBuff",
+  BarkskinArmorClassFloor: "barkskinArmorClassFloor",
+  BlurAttackRollDefense: "blurAttackRollDefense",
+  ContinualFlameObjectLight: "continualFlameObjectLight",
+  EnhanceAbilityRollModifier: "enhanceAbilityRollModifier",
+  EnhanceAbilityHigherSlotPerTarget: "enhanceAbilityHigherSlotPerTarget",
+  EnlargeReduceSizeIncrease: "enlargeReduceSizeIncrease",
+  MagicWeaponEnhancement: "magicWeaponEnhancement",
+  MirrorImageHitInterception: "mirrorImageHitInterception",
+  PassWithoutTraceStealthModifier: "passWithoutTraceStealthModifier",
+  WardingBondLinkedEffect: "wardingBondLinkedEffect",
+} as const satisfies Readonly<Record<string, Level2ProtectionSpellSelectedIdentityResult>>;
+
 defineSelectedIdentityWitness({
   describeLabel: "Level 2 protection spell selected identity MBT",
   taskId: "B12-LEVEL2-PROTECTION-SPELL-IDENTITY-BATCH",
@@ -98,8 +113,11 @@ defineSelectedIdentityWitness({
   quintStateField: "qState",
   quintStateFieldPrefix: "q",
   witnessProtocolField: "protocol",
-  quintFieldNames: { lastResult: "qScenarioResult" },
-  projectionSchema: { lastResult: "str" },
+  quintFieldNames: { lastResult: "qScenarioOutcome" },
+  quintVariantFieldTags: {
+    lastResult: LEVEL2_PROTECTION_SPELL_SELECTED_IDENTITY_SCENARIO_OUTCOME_BY_TAG,
+  },
+  projectionSchema: { lastResult: "variant" },
   initialProjection: expectedProjection("init"),
   units: [
     {

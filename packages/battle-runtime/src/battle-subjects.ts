@@ -38,6 +38,7 @@ import {
   TRANSMUTED_METAMAGIC_EFFECT_KIND,
   TRANSMUTED_SPELL_DAMAGE_TYPES,
 } from "./battle-reducer/metamagic-transmuted-facts.ts";
+import { STAT_BLOCK_DAMAGE_NOTATIONS } from "./battle-action-options.ts";
 
 export const BATTLE_SUBJECT_ACTIONS = [
   "attack",
@@ -375,6 +376,10 @@ export const BattleSubjectSchema = Schema.Union(
         "reactions",
         "legendaryActions",
       ),
+      { exact: true },
+    ),
+    statBlockDamageNotation: Schema.optionalWith(
+      Schema.Literal(...STAT_BLOCK_DAMAGE_NOTATIONS),
       { exact: true },
     ),
   }),
@@ -1092,6 +1097,7 @@ function battleSubjectKey(subject: BattleSubject): string {
         attack.action,
         attack.attackName,
         attack.statBlockSection ?? null,
+        attack.statBlockDamageNotation ?? "rolled",
       ]),
     ),
     Match.when({ tag: "pactOfTheChainFamiliarAttack" }, (attack) =>

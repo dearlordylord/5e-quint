@@ -3,14 +3,16 @@
 import { canSpendAction } from "@dnd/shared-algebras/action-economy-algebra";
 import { movementFeet } from "@dnd/shared/types";
 import {
+  assertWitnessProtocolConsistentWithScenario,
   booleanField,
+  decodeWitnessProtocolState,
   defineDriver,
   focusedMbtMaxSteps,
   mbtSpecPath,
   mbtTraceCount,
   numberFromQuintInt,
-  quintSet,
   quintStateRecord,
+  quintVariantTag,
   run,
   stateCheck,
 } from "./battle-runtime-mbt-driver-kit.ts";
@@ -66,6 +68,18 @@ type WebLastResult =
   | "leftArea"
   | "moved"
   | "removed";
+const WEB_LAST_RESULT_BY_SCENARIO_OUTCOME_TAG = {
+  Init: "init",
+  NeedsHoles: "needsHoles",
+  Resolved: "resolved",
+  Restrained: "restrained",
+  Saved: "saved",
+  EscapeFailed: "escapeFailed",
+  Escaped: "escaped",
+  LeftArea: "leftArea",
+  Moved: "moved",
+  Removed: "removed",
+} as const satisfies Readonly<Record<string, WebLastResult>>;
 
 type WebRestraintHazardState = {
   readonly currentTurnRole: WebTurnRole;
@@ -516,6 +530,19 @@ function battleHolesToWebHoles(
 
 function normalizeWebQuintState(raw: unknown): WebRestraintHazardState {
   const state = quintStateRecord(raw);
+  const protocol = decodeWitnessProtocolState({
+    state,
+    protocolField: "qProtocol",
+    noInvalidReason: "",
+    decodeHole: webHole,
+    compareHoles: (left, right) => left.localeCompare(right),
+  });
+  const scenarioResult = webLastResult(state["qScenarioOutcome"]);
+  assertWitnessProtocolConsistentWithScenario({
+    label: "Web restraint hazard",
+    scenarioResult,
+    protocol,
+  });
   return {
     currentTurnRole: webTurnRole(state["qCurrentTurnRole"]),
     actionAvailable: booleanField(state, "qActionAvailable"),
@@ -529,8 +556,8 @@ function normalizeWebQuintState(raw: unknown): WebRestraintHazardState {
       state["qMovementSpentFeet"],
       "qMovementSpentFeet",
     ),
-    holes: quintSet(state["qHoles"], "qHoles").map(webHole).sort(),
-    lastResult: webLastResult(state["qLastResult"]),
+    holes: protocol.holes,
+    lastResult: scenarioResult,
   };
 }
 
@@ -576,19 +603,10 @@ function webHole(raw: unknown): WebHole {
 }
 
 function webLastResult(raw: unknown): WebLastResult {
-  if (
-    raw === "init" ||
-    raw === "needsHoles" ||
-    raw === "resolved" ||
-    raw === "restrained" ||
-    raw === "saved" ||
-    raw === "escapeFailed" ||
-    raw === "escaped" ||
-    raw === "leftArea" ||
-    raw === "moved" ||
-    raw === "removed"
-  ) {
-    return raw;
+  const tag = quintVariantTag(raw, "qScenarioOutcome");
+  const result = WEB_LAST_RESULT_BY_SCENARIO_OUTCOME_TAG[tag];
+  if (result !== undefined) {
+    return result;
   }
-  throw new Error(`Unknown Web result: ${String(raw)}.`);
+  throw new Error(`Unknown Web result tag: ${tag}.`);
 }

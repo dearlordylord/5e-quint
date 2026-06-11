@@ -46,6 +46,14 @@ type DispelMagicLastResult =
   | "objectSpellLightEnded"
   | "selectedMagicalEffectEnded"
   | "outOfRangeObjectRejected";
+
+const DISPEL_MAGIC_SELECTED_IDENTITY_SCENARIO_OUTCOME_BY_TAG = {
+  Init: "init",
+  ObjectSpellLightEnded: "objectSpellLightEnded",
+  SelectedMagicalEffectEnded: "selectedMagicalEffectEnded",
+  OutOfRangeObjectRejected: "outOfRangeObjectRejected",
+} as const;
+
 type DispelMagicSelectedIdentityState = {
   readonly magicActionAvailable: boolean;
   readonly thirdLevelSlotCommitted: boolean;
@@ -80,7 +88,8 @@ defineSelectedIdentityWitness({
   quintStateField: "qState",
   quintStateFieldPrefix: "q",
   witnessProtocolField: "protocol",
-  quintFieldNames: { lastResult: "qScenarioResult" },
+  quintFieldNames: { lastResult: "qScenarioOutcome" },
+  quintVariantFieldTags: { lastResult: DISPEL_MAGIC_SELECTED_IDENTITY_SCENARIO_OUTCOME_BY_TAG },
   witnessInvalidScenarioReasons: {
     outOfRangeObjectRejected: "invalidFill",
   },
@@ -90,7 +99,7 @@ defineSelectedIdentityWitness({
     spellLightEmitterCount: "int",
     selectedActiveEffectPresent: "bool",
     retainedActiveEffectPresent: "bool",
-    lastResult: "str",
+    lastResult: "variant",
   },
   initialProjection: dispelMagicProjection(initialRuntimeState()),
   units: [

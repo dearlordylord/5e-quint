@@ -60,8 +60,11 @@ defineSelectedIdentityWitness({
     intimidationRollMode: "str",
     wisdomIntimidationRollMode: "str",
     perceptionRollMode: "str",
-    lastResult: "str",
+    lastResult: "variant",
   },
+  witnessProtocolField: "qProtocol",
+  quintFieldNames: { lastResult: "qScenarioOutcome" },
+  quintVariantFieldTags: { lastResult: { Init: "init", Resolved: "resolved" } },
   initialProjection: {
     casterEffectCount: 0,
     actionAvailable: true,

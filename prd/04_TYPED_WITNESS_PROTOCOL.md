@@ -2,7 +2,7 @@
 
 Date: 2026-06-10
 
-Status: Draft
+Status: Closed
 
 Owner: battle-runtime QNT architecture
 
@@ -247,3 +247,36 @@ lines total; 95 carry the string protocol vars; 0 use record state; 11 use
 death-saving-throw pair (145-line witness + 452-line driver for a 6-action
 protocol) is the canonical before-picture; keep its migrated after-picture as
 the README example.
+
+## Closeout (2026-06-11)
+
+Task PDS-A16 closed M3 with the legacy-name convention gate, ADR addendum, and
+battle-runtime README skeleton in place.
+
+Corpus measurements at closeout:
+
+- `find packages/battle-runtime -maxdepth 1 -name '*.mbt.qnt'` reports 112
+  battle-runtime witnesses.
+- `find packages/battle-runtime -maxdepth 1 -name '*.mbt.qnt' -print0 | xargs
+  -0 wc -l | tail -n 1` reports 19,868 total witness lines versus the original
+  15,903-line baseline.
+- `rg '^\\s*var\\s+(qLastResult|qLastInvalidReason|qHoles|qLastHoles)\\s*:'
+  packages/battle-runtime --glob '*.mbt.qnt'` reports zero pre-protocol mutable
+  protocol-name vars. The remaining `pure def qLastResult` / `pure def qHoles`
+  occurrences are read-only driver-kit aliases/projections, not storage under
+  the old mutable names; some still project from the `qScenario*` strings
+  tracked below.
+- `rg -l 'qScenario(Result|InvalidReason)' packages/battle-runtime --glob
+  '*.mbt.qnt' | wc -l` reports 60 files with remaining scenario outcome label
+  strings; 6 of those are top-level mutable `qScenarioResult` declarations.
+  These are domain projection labels or legacy renamed protocol-adjacent facts,
+  not covered by the PDS-A16 legacy-name gate. A future migration should decide
+  whether to type them as scenario-outcome variants or keep them as explicit
+  driver projection labels.
+
+Registry paths remained stable through the typed witness migration. The witness
+file names were not renamed, and the closeout did not edit
+`plans/rules-kernel-coverage/obligations.jsonl`,
+`plans/rules-kernel-coverage/profile-obligations.jsonl`,
+`plans/rules-kernel-coverage/qnt-owner-roles.jsonl`, or
+`plans/unit-profile-coverage/profiles.jsonl`.

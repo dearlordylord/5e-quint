@@ -53,6 +53,18 @@ type LandsAidLastResult =
   | "rejectInvalidHealingTarget"
   | "rejectInvalidDamageRoll"
   | "rejectInvalidHealingRoll";
+
+const DRUID_LANDS_AID_SCENARIO_OUTCOME_BY_TAG = {
+  Init: "init",
+  Resolved: "resolved",
+  RejectMissingResource: "rejectMissingResource",
+  RejectMissingAreaMembership: "rejectMissingAreaMembership",
+  RejectDuplicateSaveFill: "rejectDuplicateSaveFill",
+  RejectInvalidHealingTarget: "rejectInvalidHealingTarget",
+  RejectInvalidDamageRoll: "rejectInvalidDamageRoll",
+  RejectInvalidHealingRoll: "rejectInvalidHealingRoll",
+} as const;
+
 type LandsAidProjection = {
   readonly targetHp: number;
   readonly secondTargetHp: number;
@@ -78,14 +90,15 @@ defineSelectedIdentityWitness({
   quintStateField: "qState",
   quintStateFieldPrefix: "q",
   witnessProtocolField: "protocol",
-  quintFieldNames: { lastResult: "qScenarioResult" },
+  quintFieldNames: { lastResult: "qScenarioOutcome" },
+  quintVariantFieldTags: { lastResult: DRUID_LANDS_AID_SCENARIO_OUTCOME_BY_TAG },
   projectionSchema: {
     targetHp: "int",
     secondTargetHp: "int",
     healingTargetHp: "int",
     wildShapeUsesRemaining: "int",
     actionResourcesRemaining: "int",
-    lastResult: "str",
+    lastResult: "variant",
   },
   initialProjection: expectedProjection(),
   units: [

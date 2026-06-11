@@ -5,6 +5,9 @@ module battleRuntimeBlurAttackRollDefenseLifecycleMbt {
 
   type WitnessHole = | BlurAttackRollDefense
 
+  type BlurAttackRollDefenseLifecycleScenarioOutcome = | Init | BlurCast | BlindsightBypass | TruesightBypass | NoBypass | OtherAdvantage | NoOtherAdvantage | ConcentrationBroken
+
+
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeBlurAttackRollDefense.* from "./battle-runtime-blur-attack-roll-defense"
 
@@ -29,7 +32,7 @@ module battleRuntimeBlurAttackRollDefenseLifecycleMbt {
     qAttackerPerceivesWithTruesight: bool,
     qOtherAttackAdvantage: bool,
     qAttackRollMode: str,
-    qScenarioResult: str,
+    qScenarioOutcome: BlurAttackRollDefenseLifecycleScenarioOutcome,
     protocol: WitnessProtocol[WitnessHole],
   }
 
@@ -45,7 +48,7 @@ module battleRuntimeBlurAttackRollDefenseLifecycleMbt {
   pure def qAttackerPerceivesWithTruesight: bool = qState.qAttackerPerceivesWithTruesight
   pure def qOtherAttackAdvantage: bool = qState.qOtherAttackAdvantage
   pure def qAttackRollMode: str = qState.qAttackRollMode
-  pure def qScenarioResult: str = qState.qScenarioResult
+  pure def qScenarioOutcome: BlurAttackRollDefenseLifecycleScenarioOutcome = qState.qScenarioOutcome
 
   pure val normalAttackRoll: str = "normal"
   pure val advantageAttackRoll: str = "advantage"
@@ -93,7 +96,7 @@ module battleRuntimeBlurAttackRollDefenseLifecycleMbt {
     attackerPerceivesWithBlindsight: bool,
     attackerPerceivesWithTruesight: bool,
     otherAttackAdvantage: bool,
-    scenarioResult: str,
+    scenarioOutcome: BlurAttackRollDefenseLifecycleScenarioOutcome,
     protocol: WitnessProtocol[WitnessHole],
   ): bool = all {
     qState' = {
@@ -112,7 +115,7 @@ module battleRuntimeBlurAttackRollDefenseLifecycleMbt {
       attackerPerceivesWithTruesight,
       otherAttackAdvantage,
     ),
-      qScenarioResult: scenarioResult,
+      qScenarioOutcome: scenarioOutcome,
       protocol: protocol,
     },
   }
@@ -127,7 +130,7 @@ module battleRuntimeBlurAttackRollDefenseLifecycleMbt {
     false,
     false,
     false,
-    "init",
+    Init,
     witnessInit(BlurAttackRollDefense),
   )
 
@@ -147,7 +150,7 @@ module battleRuntimeBlurAttackRollDefenseLifecycleMbt {
       qAttackerPerceivesWithBlindsight,
       qAttackerPerceivesWithTruesight,
       qOtherAttackAdvantage,
-      "blurCast",
+      BlurCast,
     witnessResolved(BlurAttackRollDefense),
   ),
   }
@@ -162,7 +165,7 @@ module battleRuntimeBlurAttackRollDefenseLifecycleMbt {
     true,
     false,
     qOtherAttackAdvantage,
-    "blindsightBypass",
+    BlindsightBypass,
     witnessResolved(BlurAttackRollDefense),
   )
 
@@ -176,7 +179,7 @@ module battleRuntimeBlurAttackRollDefenseLifecycleMbt {
     false,
     true,
     qOtherAttackAdvantage,
-    "truesightBypass",
+    TruesightBypass,
     witnessResolved(BlurAttackRollDefense),
   )
 
@@ -190,7 +193,7 @@ module battleRuntimeBlurAttackRollDefenseLifecycleMbt {
     false,
     false,
     qOtherAttackAdvantage,
-    "noBypass",
+    NoBypass,
     witnessResolved(BlurAttackRollDefense),
   )
 
@@ -204,7 +207,7 @@ module battleRuntimeBlurAttackRollDefenseLifecycleMbt {
     qAttackerPerceivesWithBlindsight,
     qAttackerPerceivesWithTruesight,
     true,
-    "otherAdvantage",
+    OtherAdvantage,
     witnessResolved(BlurAttackRollDefense),
   )
 
@@ -218,7 +221,7 @@ module battleRuntimeBlurAttackRollDefenseLifecycleMbt {
     qAttackerPerceivesWithBlindsight,
     qAttackerPerceivesWithTruesight,
     false,
-    "noOtherAdvantage",
+    NoOtherAdvantage,
     witnessResolved(BlurAttackRollDefense),
   )
 
@@ -237,7 +240,7 @@ module battleRuntimeBlurAttackRollDefenseLifecycleMbt {
       qAttackerPerceivesWithBlindsight,
       qAttackerPerceivesWithTruesight,
       qOtherAttackAdvantage,
-      "concentrationBroken",
+      ConcentrationBroken,
     witnessResolved(BlurAttackRollDefense),
   ),
   }
@@ -252,7 +255,7 @@ module battleRuntimeBlurAttackRollDefenseLifecycleMbt {
     qAttackerPerceivesWithBlindsight,
     qAttackerPerceivesWithTruesight,
     qOtherAttackAdvantage,
-    qScenarioResult,
+    qScenarioOutcome,
     qState.protocol,)
 
   action step = any {

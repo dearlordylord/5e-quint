@@ -17,6 +17,7 @@ let SaveAction =
           { amount :
               { expr : { dice : Natural, dieSize : Natural, flat : Optional Natural }
               , kind : Text
+              , static : Optional Natural
               }
           , damageType : Text
           , kind : Text
@@ -44,6 +45,7 @@ in  [ { challengeRating = 0.25
             [ { amount =
                 { expr = { dice = 1, dieSize = 8, flat = Some 3 }
                 , kind = "fixed"
+                , static = Some 7
                 }
               , damageType = "bludgeoning"
               , kind = "damage"
@@ -100,6 +102,7 @@ in  [ { challengeRating = 0.25
             [ { amount =
                 { expr = { dice = 1, dieSize = 6, flat = Some 2 }
                 , kind = "fixed"
+                , static = Some 5
                 }
               , damageType = "piercing"
               , kind = "damage"

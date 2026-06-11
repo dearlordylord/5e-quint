@@ -1,6 +1,8 @@
 // -*- mode: Bluespec; -*-
 
 module battleRuntimeWeaponAttackSkeletonMbt {
+  import battleRuntimeWitnessProtocol.* from "./battle-runtime-witness-protocol"
+
   // Self-contained literal projection witness for the promoted bounded battle
   // replay. This driver asserts the fixed Skeleton weapon-damage outcomes
   // directly instead of importing the damage reducer and model barrel.
@@ -14,12 +16,26 @@ module battleRuntimeWeaponAttackSkeletonMbt {
   var qActionAvailable: bool
   var qMultiattackDispatchesAvailable: int
   var qSneakAttackUsedThisTurn: bool
-  var qHoles: Set[Hole]
-  var qLastResult: str
-  var qLastInvalidReason: str
+  var qProtocol: WitnessProtocol[Hole]
+
+  pure def qHoles: Set[Hole] = qProtocol.holes
 
   pure val skeletonInitialHp: int = 13
   pure val rogueAttackModifier: int = 3
+
+  pure def weaponAttackSkeletonProtocolForProjection(
+    holes: Set[Hole],
+    lastResult: str,
+    invalidReason: str,
+  ): WitnessProtocol[Hole] =
+    if (lastResult == "init") witnessInitWithHoles(holes)
+    else if (lastResult == "invalid")
+      witnessInvalidWithHoles(
+        holes,
+        if (invalidReason == "staleSubject") WStaleSubject else WInvalidFill,
+      )
+    else if (holes != Set()) witnessNeedsHoles(holes)
+    else witnessResolved(TargetChoice)
 
   pure def skeletonHpAfterPiercingWeaponDamage(
     hp: int,
@@ -35,9 +51,11 @@ module battleRuntimeWeaponAttackSkeletonMbt {
     qActionAvailable' = true,
     qMultiattackDispatchesAvailable' = 0,
     qSneakAttackUsedThisTurn' = false,
-    qHoles' = Set(TargetChoice),
-    qLastResult' = "init",
-    qLastInvalidReason' = "",
+    qProtocol' = weaponAttackSkeletonProtocolForProjection(
+      Set(TargetChoice),
+      "init",
+      "",
+    ),
   }
 
   action doDiscoverAttack = all {
@@ -48,9 +66,7 @@ module battleRuntimeWeaponAttackSkeletonMbt {
     qActionAvailable' = qActionAvailable,
     qMultiattackDispatchesAvailable' = qMultiattackDispatchesAvailable,
     qSneakAttackUsedThisTurn' = qSneakAttackUsedThisTurn,
-    qHoles' = Set(TargetChoice),
-    qLastResult' = "needsHoles",
-    qLastInvalidReason' = "",
+    qProtocol' = weaponAttackSkeletonProtocolForProjection(Set(TargetChoice), "needsHoles", ""),
   }
 
   action doFillTarget = all {
@@ -61,9 +77,7 @@ module battleRuntimeWeaponAttackSkeletonMbt {
     qActionAvailable' = qActionAvailable,
     qMultiattackDispatchesAvailable' = qMultiattackDispatchesAvailable,
     qSneakAttackUsedThisTurn' = qSneakAttackUsedThisTurn,
-    qHoles' = Set(AttackRoll),
-    qLastResult' = "needsHoles",
-    qLastInvalidReason' = "",
+    qProtocol' = weaponAttackSkeletonProtocolForProjection(Set(AttackRoll), "needsHoles", ""),
   }
 
   action doRejectWrongTarget = all {
@@ -74,9 +88,7 @@ module battleRuntimeWeaponAttackSkeletonMbt {
     qActionAvailable' = qActionAvailable,
     qMultiattackDispatchesAvailable' = qMultiattackDispatchesAvailable,
     qSneakAttackUsedThisTurn' = qSneakAttackUsedThisTurn,
-    qHoles' = qHoles,
-    qLastResult' = "invalid",
-    qLastInvalidReason' = "invalidFill",
+    qProtocol' = weaponAttackSkeletonProtocolForProjection(qHoles, "invalid", "invalidFill"),
   }
 
   action doFillAttackRollMiss = all {
@@ -87,9 +99,7 @@ module battleRuntimeWeaponAttackSkeletonMbt {
     qActionAvailable' = false,
     qMultiattackDispatchesAvailable' = qMultiattackDispatchesAvailable,
     qSneakAttackUsedThisTurn' = qSneakAttackUsedThisTurn,
-    qHoles' = Set(),
-    qLastResult' = "resolved",
-    qLastInvalidReason' = "",
+    qProtocol' = weaponAttackSkeletonProtocolForProjection(Set(), "resolved", ""),
   }
 
   action doFillAttackRollHit = all {
@@ -100,9 +110,7 @@ module battleRuntimeWeaponAttackSkeletonMbt {
     qActionAvailable' = qActionAvailable,
     qMultiattackDispatchesAvailable' = qMultiattackDispatchesAvailable,
     qSneakAttackUsedThisTurn' = qSneakAttackUsedThisTurn,
-    qHoles' = Set(DamageRoll),
-    qLastResult' = "needsHoles",
-    qLastInvalidReason' = "",
+    qProtocol' = weaponAttackSkeletonProtocolForProjection(Set(DamageRoll), "needsHoles", ""),
   }
 
   action doFillDamageLow = all {
@@ -113,9 +121,7 @@ module battleRuntimeWeaponAttackSkeletonMbt {
     qActionAvailable' = false,
     qMultiattackDispatchesAvailable' = qMultiattackDispatchesAvailable,
     qSneakAttackUsedThisTurn' = qSneakAttackUsedThisTurn,
-    qHoles' = Set(),
-    qLastResult' = "resolved",
-    qLastInvalidReason' = "",
+    qProtocol' = weaponAttackSkeletonProtocolForProjection(Set(), "resolved", ""),
   }
 
   action doFillDamageHigh = all {
@@ -126,9 +132,7 @@ module battleRuntimeWeaponAttackSkeletonMbt {
     qActionAvailable' = false,
     qMultiattackDispatchesAvailable' = qMultiattackDispatchesAvailable,
     qSneakAttackUsedThisTurn' = qSneakAttackUsedThisTurn,
-    qHoles' = Set(),
-    qLastResult' = "resolved",
-    qLastInvalidReason' = "",
+    qProtocol' = weaponAttackSkeletonProtocolForProjection(Set(), "resolved", ""),
   }
 
   action doFillDamageLowSneakAttack = all {
@@ -140,9 +144,7 @@ module battleRuntimeWeaponAttackSkeletonMbt {
     qActionAvailable' = false,
     qMultiattackDispatchesAvailable' = qMultiattackDispatchesAvailable,
     qSneakAttackUsedThisTurn' = true,
-    qHoles' = Set(),
-    qLastResult' = "resolved",
-    qLastInvalidReason' = "",
+    qProtocol' = weaponAttackSkeletonProtocolForProjection(Set(), "resolved", ""),
   }
 
   action doFillDamageHighSneakAttack = all {
@@ -154,9 +156,7 @@ module battleRuntimeWeaponAttackSkeletonMbt {
     qActionAvailable' = false,
     qMultiattackDispatchesAvailable' = qMultiattackDispatchesAvailable,
     qSneakAttackUsedThisTurn' = true,
-    qHoles' = Set(),
-    qLastResult' = "resolved",
-    qLastInvalidReason' = "",
+    qProtocol' = weaponAttackSkeletonProtocolForProjection(Set(), "resolved", ""),
   }
 
   action doRejectStaleAfterResolved = all {
@@ -167,9 +167,7 @@ module battleRuntimeWeaponAttackSkeletonMbt {
     qActionAvailable' = qActionAvailable,
     qMultiattackDispatchesAvailable' = qMultiattackDispatchesAvailable,
     qSneakAttackUsedThisTurn' = qSneakAttackUsedThisTurn,
-    qHoles' = qHoles,
-    qLastResult' = "invalid",
-    qLastInvalidReason' = "staleSubject",
+    qProtocol' = weaponAttackSkeletonProtocolForProjection(qHoles, "invalid", "staleSubject"),
   }
 
   action doStartSkeletonTurn = all {
@@ -180,9 +178,7 @@ module battleRuntimeWeaponAttackSkeletonMbt {
     qActionAvailable' = true,
     qMultiattackDispatchesAvailable' = 0,
     qSneakAttackUsedThisTurn' = qSneakAttackUsedThisTurn,
-    qHoles' = Set(),
-    qLastResult' = "resolved",
-    qLastInvalidReason' = "",
+    qProtocol' = weaponAttackSkeletonProtocolForProjection(Set(), "resolved", ""),
   }
 
   action doResolveSkeletonMultiattack = all {
@@ -194,9 +190,7 @@ module battleRuntimeWeaponAttackSkeletonMbt {
     qActionAvailable' = false,
     qMultiattackDispatchesAvailable' = 1,
     qSneakAttackUsedThisTurn' = qSneakAttackUsedThisTurn,
-    qHoles' = Set(),
-    qLastResult' = "resolved",
-    qLastInvalidReason' = "",
+    qProtocol' = weaponAttackSkeletonProtocolForProjection(Set(), "resolved", ""),
   }
 
   action doRejectRecursiveSkeletonMultiattack = all {
@@ -208,9 +202,7 @@ module battleRuntimeWeaponAttackSkeletonMbt {
     qActionAvailable' = qActionAvailable,
     qMultiattackDispatchesAvailable' = qMultiattackDispatchesAvailable,
     qSneakAttackUsedThisTurn' = qSneakAttackUsedThisTurn,
-    qHoles' = qHoles,
-    qLastResult' = "invalid",
-    qLastInvalidReason' = "staleSubject",
+    qProtocol' = weaponAttackSkeletonProtocolForProjection(qHoles, "invalid", "staleSubject"),
   }
 
   action doSpendSkeletonMultiattackDispatch = all {
@@ -222,9 +214,7 @@ module battleRuntimeWeaponAttackSkeletonMbt {
     qActionAvailable' = qActionAvailable,
     qMultiattackDispatchesAvailable' = qMultiattackDispatchesAvailable - 1,
     qSneakAttackUsedThisTurn' = qSneakAttackUsedThisTurn,
-    qHoles' = Set(),
-    qLastResult' = "resolved",
-    qLastInvalidReason' = "",
+    qProtocol' = weaponAttackSkeletonProtocolForProjection(Set(), "resolved", ""),
   }
 
   action step = any {

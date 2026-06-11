@@ -33,6 +33,7 @@ import {
   numberFromQuintInt,
   quintRecordField,
   quintStateRecord,
+  quintVariantTag,
   run,
   stateCheck,
 } from "./battle-runtime-mbt-driver-kit.ts";
@@ -86,6 +87,16 @@ const LAST_RESULTS = [
   "pactAttack",
 ] as const;
 type LastResult = (typeof LAST_RESULTS)[number];
+const FIND_FAMILIAR_COMPANION_LIFECYCLE_SCENARIO_OUTCOME_BY_TAG: Readonly<
+  Record<string, LastResult>
+> = {
+  Init: "init",
+  CreatedCat: "createdCat",
+  ReplacedRat: "replacedRat",
+  SharedSenses: "sharedSenses",
+  TouchDelivered: "touchDelivered",
+  PactAttack: "pactAttack",
+};
 
 type FindFamiliarCompanionProjection = {
   readonly familiarStatus: FamiliarStatus;
@@ -629,7 +640,9 @@ function normalizeFindFamiliarCompanionQuintState(
   if (protocol.holes.length !== 0) {
     throw new Error("Expected Find Familiar companion witness holes to be empty.");
   }
-  const scenarioResult = literalField(state["qScenarioResult"], LAST_RESULTS);
+  const scenarioResult = findFamiliarCompanionLastResult(
+    state["qScenarioOutcome"],
+  );
   assertWitnessProtocolConsistentWithScenario({
     label: "Find Familiar companion lifecycle",
     scenarioResult,
@@ -673,6 +686,16 @@ function findFamiliarCompanionUnexpectedHole(raw: unknown): never {
   throw new Error(
     `Unexpected Find Familiar companion witness hole ${String(raw)}.`,
   );
+}
+
+function findFamiliarCompanionLastResult(raw: unknown): LastResult {
+  const tag = quintVariantTag(raw, "qScenarioOutcome");
+  const value =
+    FIND_FAMILIAR_COMPANION_LIFECYCLE_SCENARIO_OUTCOME_BY_TAG[tag];
+  if (value !== undefined) {
+    return value;
+  }
+  throw new Error(`Unknown Find Familiar companion result: ${tag}.`);
 }
 
 function compareFindFamiliarCompanionStates(

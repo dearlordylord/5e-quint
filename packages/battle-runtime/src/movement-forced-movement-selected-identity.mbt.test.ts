@@ -142,7 +142,18 @@ defineSelectedIdentityWitness({
   quintStateField: "qState",
   quintStateFieldPrefix: "q",
   witnessProtocolField: "protocol",
-  quintFieldNames: { lastResult: "qScenarioResult" },
+  quintFieldNames: { lastResult: "qScenarioOutcome" },
+  quintVariantFieldTags: {
+    lastResult: {
+      Init: "init",
+      DissonantWhispers: "dissonantWhispers",
+      CommandFlee: "commandFlee",
+      ExpeditiousRetreat: "expeditiousRetreat",
+      RangerRoving: "rangerRoving",
+      BarbarianFastMovement: "barbarianFastMovement",
+      MonkUnarmoredMovement: "monkUnarmoredMovement",
+    },
+  },
   projectionSchema: {
     casterSpeedFeet: "int",
     casterRemainingFeet: "int",
@@ -161,7 +172,7 @@ defineSelectedIdentityWitness({
     commandPendingEffectCount: "int",
     climbSpeedFeet: "int",
     swimSpeedFeet: "int",
-    lastResult: "str",
+    lastResult: "variant",
   },
   initialProjection: expectedProjection(),
   units: [

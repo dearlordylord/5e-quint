@@ -5,6 +5,9 @@ module battleRuntimeReactionCastingTimeMbt {
 
   type WitnessHole = | WitnessProtocolHole
 
+  type ReactionCastingTimeScenarioOutcome = | Init | CounterspellEndedSpellCast | CounterspellAllowedSpellCastResume | HellishRebukeAfterDamage
+
+
   type ReactionCastingTimeWitnessState = {
     qTriggerKind: str,
     qContinuationKind: str,
@@ -16,7 +19,7 @@ module battleRuntimeReactionCastingTimeMbt {
     qReactorSecondLevelSlotsExpended: int,
     qReactorThirdLevelSlotsExpended: int,
     qReactionWindowCleared: bool,
-    qScenarioResult: str,
+    qScenarioOutcome: ReactionCastingTimeScenarioOutcome,
     protocol: WitnessProtocol[WitnessHole],
   }
 
@@ -32,7 +35,7 @@ module battleRuntimeReactionCastingTimeMbt {
   pure def qReactorSecondLevelSlotsExpended: int = qState.qReactorSecondLevelSlotsExpended
   pure def qReactorThirdLevelSlotsExpended: int = qState.qReactorThirdLevelSlotsExpended
   pure def qReactionWindowCleared: bool = qState.qReactionWindowCleared
-  pure def qLastResult: str = qState.qScenarioResult
+  pure def qLastResult: ReactionCastingTimeScenarioOutcome = qState.qScenarioOutcome
 
   pure val noTrigger: str = "none"
   pure val spellCastTrigger: str = "spellCast"
@@ -48,10 +51,10 @@ module battleRuntimeReactionCastingTimeMbt {
 
   pure def witnessProtocolForProjection(
     holes: Set[WitnessHole],
-    scenarioResult: str,
+    scenarioResult: ReactionCastingTimeScenarioOutcome,
     scenarioInvalidReason: str,
   ): WitnessProtocol[WitnessHole] =
-    if (scenarioResult == "init") witnessInit(WitnessProtocolHole)
+    if (scenarioResult == Init) witnessInit(WitnessProtocolHole)
     else if (scenarioInvalidReason == "invalidFill") witnessInvalid(WitnessProtocolHole, WInvalidFill)
     else if (scenarioInvalidReason == "staleSubject") witnessInvalid(WitnessProtocolHole, WStaleSubject)
     else if (holes != Set()) witnessNeedsHoles(holes)
@@ -68,7 +71,7 @@ module battleRuntimeReactionCastingTimeMbt {
     reactorSecondLevelSlotsExpended: int,
     reactorThirdLevelSlotsExpended: int,
     reactionWindowCleared: bool,
-    lastResult: str,
+    lastResult: ReactionCastingTimeScenarioOutcome,
   ): bool = all {
     qState' = {
       qTriggerKind: triggerKind,
@@ -81,7 +84,7 @@ module battleRuntimeReactionCastingTimeMbt {
       qReactorSecondLevelSlotsExpended: reactorSecondLevelSlotsExpended,
       qReactorThirdLevelSlotsExpended: reactorThirdLevelSlotsExpended,
       qReactionWindowCleared: reactionWindowCleared,
-      qScenarioResult: lastResult,
+      qScenarioOutcome: lastResult,
       protocol: witnessProtocolForProjection(Set(), lastResult, ""),
     },
   }
@@ -97,11 +100,11 @@ module battleRuntimeReactionCastingTimeMbt {
     0,
     0,
     false,
-    "init",
+    Init,
   )
 
   action doCounterspellEndsSpellCast = all {
-    qLastResult == "init",
+    qLastResult == Init,
     recordReactionCastingTimeState(
       spellCastTrigger,
       spellCastEnded,
@@ -113,12 +116,12 @@ module battleRuntimeReactionCastingTimeMbt {
       0,
       1,
       true,
-      "counterspellEndedSpellCast",
+      CounterspellEndedSpellCast,
     ),
   }
 
   action doCounterspellAllowsSpellCastResume = all {
-    qLastResult == "init",
+    qLastResult == Init,
     recordReactionCastingTimeState(
       spellCastTrigger,
       spellCastResumed,
@@ -130,12 +133,12 @@ module battleRuntimeReactionCastingTimeMbt {
       0,
       1,
       true,
-      "counterspellAllowedSpellCastResume",
+      CounterspellAllowedSpellCastResume,
     ),
   }
 
   action doHellishRebukeAfterDamage = all {
-    qLastResult == "init",
+    qLastResult == Init,
     recordReactionCastingTimeState(
       afterDamageTrigger,
       afterDamageResolved,
@@ -147,7 +150,7 @@ module battleRuntimeReactionCastingTimeMbt {
       1,
       0,
       true,
-      "hellishRebukeAfterDamage",
+      HellishRebukeAfterDamage,
     ),
   }
 

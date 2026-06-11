@@ -36,6 +36,18 @@ type DarkOnesBlessingLastResult =
   | "nonEnemyRejected"
   | "minimumTemporaryHitPoints"
   | "temporaryHitPointReplacement";
+
+const DARK_ONES_BLESSING_SCENARIO_OUTCOME_BY_TAG = {
+  Init: "init",
+  SelfKill: "selfKill",
+  NearbyOtherKill: "nearbyOtherKill",
+  SameSideOtherKill: "sameSideOtherKill",
+  OutOfRangeRejected: "outOfRangeRejected",
+  NonEnemyRejected: "nonEnemyRejected",
+  MinimumTemporaryHitPoints: "minimumTemporaryHitPoints",
+  TemporaryHitPointReplacement: "temporaryHitPointReplacement",
+} as const;
+
 type DarkOnesBlessingProjection = {
   readonly warlockTempHp: number;
   readonly targetHp: number;
@@ -60,11 +72,12 @@ defineSelectedIdentityWitness({
   quintStateField: "qState",
   quintStateFieldPrefix: "q",
   witnessProtocolField: "protocol",
-  quintFieldNames: { lastResult: "qScenarioResult" },
+  quintFieldNames: { lastResult: "qScenarioOutcome" },
+  quintVariantFieldTags: { lastResult: DARK_ONES_BLESSING_SCENARIO_OUTCOME_BY_TAG },
   projectionSchema: {
     warlockTempHp: "int",
     targetHp: "int",
-    lastResult: "str",
+    lastResult: "variant",
   },
   initialProjection: expectedProjection(),
   units: [

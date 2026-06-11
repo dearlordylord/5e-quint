@@ -31,6 +31,7 @@ import {
   numberFromQuintInt,
   quintRecordField,
   quintStateRecord,
+  quintVariantTag,
   run,
   stateCheck,
 } from "./battle-runtime-mbt-driver-kit.ts";
@@ -97,6 +98,18 @@ type DruidWildShapeFormLifecycleProjection = {
   readonly druidAlive: boolean;
   readonly lastResult: LastResult;
 };
+
+const DRUID_WILD_SHAPE_FORM_LIFECYCLE_SCENARIO_OUTCOME_BY_TAG: Readonly<
+  Record<string, LastResult>
+> = {
+  Init: "init",
+  AssumedRidingHorse: "assumedRidingHorse",
+  NextTurn: "nextTurn",
+  ReusedCat: "reusedCat",
+  Dismissed: "dismissed",
+  FormIncapacitated: "incapacitated",
+  FormDead: "dead",
+} as const;
 
 type DruidWildShapeFormLifecycleRuntimeState = {
   readonly battle: BattleState;
@@ -263,7 +276,8 @@ defineSelectedIdentityWitness({
   quintStateField: "qState",
   quintStateFieldPrefix: "q",
   witnessProtocolField: "protocol",
-  quintFieldNames: { lastResult: "qScenarioResult" },
+  quintFieldNames: { lastResult: "qScenarioOutcome" },
+  quintVariantFieldTags: { lastResult: DRUID_WILD_SHAPE_FORM_LIFECYCLE_SCENARIO_OUTCOME_BY_TAG },
   projectionSchema: {
     activeForm: "str",
     bonusActionAvailable: "bool",
@@ -277,7 +291,7 @@ defineSelectedIdentityWitness({
     activeFormEffectCount: "int",
     mergedEquipmentCount: "int",
     druidAlive: "bool",
-    lastResult: "str",
+    lastResult: "variant",
   },
   normalizeQuintState: normalizeDruidWildShapeFormQuintState,
   initialProjection: expectedDruidWildShapeFormProjection(),
@@ -730,7 +744,7 @@ function normalizeDruidWildShapeFormQuintState(
   if (protocol.holes.length !== 0) {
     throw new Error("Expected Druid Wild Shape witness holes to be empty.");
   }
-  const scenarioResult = literalField(state["qScenarioResult"], LAST_RESULTS);
+  const scenarioResult = wildShapeLastResult(state["qScenarioOutcome"]);
   assertWitnessProtocolConsistentWithScenario({
     label: "Druid Wild Shape form lifecycle",
     scenarioResult,
@@ -797,4 +811,16 @@ function literalField<const T extends readonly string[]>(
     return raw;
   }
   throw new Error(`Unexpected literal value: ${String(raw)}.`);
+}
+
+function wildShapeLastResult(raw: unknown): LastResult {
+  const tag = quintVariantTag(raw, "qScenarioOutcome");
+  const value =
+    DRUID_WILD_SHAPE_FORM_LIFECYCLE_SCENARIO_OUTCOME_BY_TAG[tag];
+  if (value !== undefined) {
+    return value;
+  }
+  throw new Error(
+    `Expected Quint scenario outcome variant qScenarioOutcome, got ${tag}.`,
+  );
 }

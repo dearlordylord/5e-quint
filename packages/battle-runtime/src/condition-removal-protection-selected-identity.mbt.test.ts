@@ -52,6 +52,13 @@ type ConditionRemovalProtectionSelectedIdentityProjection = {
     | "protectionFromPoison";
 };
 
+const CONDITION_REMOVAL_PROTECTION_SELECTED_IDENTITY_SCENARIO_OUTCOME_BY_TAG = {
+  Init: "init",
+  LesserRestorationChoice: "lesserRestorationChoice",
+  LesserRestorationConcentration: "lesserRestorationConcentration",
+  ProtectionFromPoison: "protectionFromPoison",
+} as const;
+
 type DamageResistanceEffect = Extract<
   BattleActiveEffect,
   { readonly kind: "damageResistance" }
@@ -71,7 +78,8 @@ defineSelectedIdentityWitness({
   quintStateField: "qState",
   quintStateFieldPrefix: "q",
   witnessProtocolField: "protocol",
-  quintFieldNames: { lastResult: "qScenarioResult" },
+  quintFieldNames: { lastResult: "qScenarioOutcome" },
+  quintVariantFieldTags: { lastResult: CONDITION_REMOVAL_PROTECTION_SELECTED_IDENTITY_SCENARIO_OUTCOME_BY_TAG },
   projectionSchema: {
     targetParalyzed: "bool",
     targetPoisoned: "bool",
@@ -82,7 +90,7 @@ defineSelectedIdentityWitness({
     secondLevelSlotsExpended: "int",
     actionAvailable: "bool",
     bonusActionAvailable: "bool",
-    lastResult: "str",
+    lastResult: "variant",
   },
   initialProjection: expectedProjection(),
   units: [

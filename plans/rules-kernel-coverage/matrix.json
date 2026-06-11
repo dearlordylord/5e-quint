@@ -2903,6 +2903,12 @@
           "ownerPath": "packages/battle-runtime/src/command-ordering.mbt.test.ts",
           "qntSpecPath": "packages/battle-runtime/battle-runtime-command-ordering.mbt.qnt",
           "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/stat-block-action-ordering.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-stat-block-action-ordering.mbt.qnt",
+          "stepAction": "step"
         }
       ],
       "profiles": [],
@@ -2911,9 +2917,10 @@
         "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.qnt",
         "packages/battle-runtime/battle-runtime-spell-attack-ordering.qnt",
         "packages/battle-runtime/battle-runtime-hit-point-restoration-ordering.qnt",
-        "packages/battle-runtime/battle-runtime-command-ordering.qnt"
+        "packages/battle-runtime/battle-runtime-command-ordering.qnt",
+        "packages/battle-runtime/battle-runtime-stat-block-action-ordering.qnt"
       ],
-      "reason": "Weapon-attack scope: the SRD attack structure fixes Choose a Target before resolving the attack, and Resolve the Attack makes the Attack Roll before hit damage dice. Save-gated-spell scope: the SRD defines affected targets or an area as the source of saving throws, the save result is determined by that effect, and damaging save effects roll damage after the affected creatures' save outcomes are known. Spell-attack scope: the same SRD attack structure applies to attacks made as part of a spell, the spellcasting rules define Spell Attack Rolls, and spell damage dice are rolled only after a hit unless a spell says otherwise. Typed spell-attack damage-type choice is modeled as a runtime Spell Invocation frontier that can be supplied alongside target choice before the Spell Attack Roll. Hit Point restoration scope: spell healing chooses a target or target list before the spell healing roll supplies the restored Hit Point amount; feature healing-pool procedures expose one distribution frontier whose allocations are chosen before the feature resolves allocation legality, resource spend, restored Hit Points, and the shared Hit Point lifecycle owner applies any zero-Hit-Point cleanup. Command scope: the SRD says the caster chooses a command option, the target makes a Wisdom Saving Throw, and failed-save targets follow that option on their next turn. The reducer exposes target list and Command option as initial sibling holes but its resolution protocol requests target list before option choice before Saving Throw outcome; this is a reducer protocol choice not prescribed by the SRD. Failed Saving Throw outcomes must resolve before pending next-turn Command effects exist. On the target turn, Grovel applies Prone and ends the turn, Drop releases held objects after table-owned held-object facts are supplied when no canonical loadout exists, Halt suppresses Movement, Action, and Bonus Action through turn resources, and Approach/Flee admit Movement fills only after their pending command act opens. Approach/Flee route facts and Flee fastest-available validation remain caller/table facts carried by the Movement fill; opportunity-attack continuation is an interrupt frontier, not a Command ordering hole. The QNT owners record these frontier stages over the B01/B02 hole/fill vocabulary. For save-gated condition spells with a target-list and condition-choice hole, and for typed spell attacks with damage-type choice and target-choice holes, sibling frontiers exposed together may be filled in either order before advancing to the next d20 frontier. Runtime-backed weapon-attack and partial Command Flee ordering rejections remain explicit invalid fills; save-gated spell, spell-attack, healing, and Command earlier-fill submissions are modeled as earliest-needed-frontier requests when the reducer accepts prefilling rather than rejecting. Table-owned range, cover, sight, area geometry, object target facts, held-object inventory identity, healing-pool range facts, modifier facts, later damage-disposition validation, and stale-subject rejection remain boundary or reducer evidence outside this ordering-error relation.",
+      "reason": "Weapon-attack scope: the SRD attack structure fixes Choose a Target before resolving the attack, and Resolve the Attack makes the Attack Roll before hit damage dice. Save-gated-spell scope: the SRD defines affected targets or an area as the source of saving throws, the save result is determined by that effect, and damaging save effects roll damage after the affected creatures' save outcomes are known. Spell-attack scope: the same SRD attack structure applies to attacks made as part of a spell, the spellcasting rules define Spell Attack Rolls, and spell damage dice are rolled only after a hit unless a spell says otherwise. Typed spell-attack damage-type choice is modeled as a runtime Spell Invocation frontier that can be supplied alongside target choice before the Spell Attack Roll. Hit Point restoration scope: spell healing chooses a target or target list before the spell healing roll supplies the restored Hit Point amount; feature healing-pool procedures expose one distribution frontier whose allocations are chosen before the feature resolves allocation legality, resource spend, restored Hit Points, and the shared Hit Point lifecycle owner applies any zero-Hit-Point cleanup. Command scope: the SRD says the caster chooses a command option, the target makes a Wisdom Saving Throw, and failed-save targets follow that option on their next turn. The reducer exposes target list and Command option as initial sibling holes but its resolution protocol requests target list before option choice before Saving Throw outcome; this is a reducer protocol choice not prescribed by the SRD. Failed Saving Throw outcomes must resolve before pending next-turn Command effects exist. On the target turn, Grovel applies Prone and ends the turn, Drop releases held objects after table-owned held-object facts are supplied when no canonical loadout exists, Halt suppresses Movement, Action, and Bonus Action through turn resources, and Approach/Flee admit Movement fills only after their pending command act opens. Approach/Flee route facts and Flee fastest-available validation remain caller/table facts carried by the Movement fill; opportunity-attack continuation is an interrupt frontier, not a Command ordering hole. The QNT owners record these frontier stages over the B01/B02 hole/fill vocabulary. For save-gated condition spells with a target-list and condition-choice hole, and for typed spell attacks with damage-type choice and target-choice holes, sibling frontiers exposed together may be filled in either order before advancing to the next d20 frontier. Runtime-backed weapon-attack and partial Command Flee ordering rejections remain explicit invalid fills; save-gated spell, spell-attack, healing, and Command earlier-fill submissions are modeled as earliest-needed-frontier requests when the reducer accepts prefilling rather than rejecting. Table-owned range, cover, sight, area geometry, object target facts, held-object inventory identity, healing-pool range facts, modifier facts, later damage-disposition validation, and stale-subject rejection remain boundary or reducer evidence outside this ordering-error relation. Stat Block scope: the SRD Stat Block entry lists monster Actions, Reactions, Attack Notation, and Damage Notation. The reducer exposes Stat Block action or Multiattack control before constituent attacks, requests target choice before the Stat Block Attack Roll, requests rolled damage dice only after a hit when the chosen Stat Block damage notation uses rolled damage, resolves static-damage branches without a rolled-dice frontier, and requests the start-turn Stat Block Recharge Roll before a recharge-gated action becomes available again. Limited-use availability, Multiattack dispatch resources, Reaction and Legendary Action resource semantics remain covered by BATTLE.STAT_BLOCK.ATTACK_CONTROL; this protocol owner records their reducer-visible hole-frontier order without dispatching on monster authored identity.",
       "runtime": "battle",
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer/attack-main.ts",
@@ -2932,7 +2939,8 @@
         "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/direct-hit-point-restoration.ts",
         "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts",
         "packages/battle-runtime/src/battle-reducer/unit-features.ts",
-        "packages/battle-runtime/src/battle-trace-contract.ts"
+        "packages/battle-runtime/src/battle-trace-contract.ts",
+        "packages/battle-runtime/src/battle-reducer/damage-helpers.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [
@@ -2952,9 +2960,11 @@
         "UBIQUITOUS_LANGUAGE.md#Combat",
         "UBIQUITOUS_LANGUAGE.md#Spellcasting",
         "UBIQUITOUS_LANGUAGE.md#Hit Points and Death",
-        "UBIQUITOUS_LANGUAGE.md#Movement"
+        "UBIQUITOUS_LANGUAGE.md#Movement",
+        ".references/srd-5.2.1/Rules-Glossary.md#Stat Block",
+        "UBIQUITOUS_LANGUAGE.md#Creatures and Stat Blocks"
       ],
-      "title": "Battle protocol hole frontiers order weapon-attack, save-gated-spell, spell-attack, Hit Point restoration, and Command procedure fills before resolution"
+      "title": "Battle protocol hole frontiers order weapon-attack, save-gated-spell, spell-attack, Hit Point restoration, Command, and Stat Block action procedure fills before resolution"
     },
     {
       "id": "BATTLE.SURFACE.EXECUTABLE_PROFILE_JOIN",
@@ -4158,12 +4168,13 @@
       "coveredByObligationIds": [
         "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
         "BATTLE.STAT_BLOCK.ATTACK_CONTROL",
-        "BATTLE.DAMAGE.ATTACK_BRANCHES"
+        "BATTLE.DAMAGE.ATTACK_BRANCHES",
+        "BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING"
       ],
       "followUpTaskIds": [],
       "holeKind": "attackRoll",
       "id": "BattleAttackRollHole",
-      "reason": "Attack Roll results drive hit, miss, Critical Hit, replacement, and post-hit continuation semantics across attacks and feature riders; generic attack branch coverage is now split from feature-specific follow-ups.",
+      "reason": "Attack Roll results drive hit, miss, Critical Hit, replacement, and post-hit continuation semantics across attacks and feature riders; generic attack branch coverage is now split from feature-specific follow-ups. The protocol ordering obligation also owns the Stat Block Attack Roll position after Stat Block target choice or Multiattack dispatch control.",
       "subject": "battle-hole-family"
     },
     {
@@ -4188,12 +4199,13 @@
         "SHARED.HIT_POINTS.POSITIVE_DAMAGE",
         "BATTLE.DAMAGE.ATTACK_BRANCHES",
         "BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION",
-        "BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP"
+        "BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP",
+        "BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING"
       ],
       "followUpTaskIds": [],
       "holeKind": "rolledDice",
       "id": "BattleDamageRollHole",
-      "reason": "Weapon damage rolls feed attack branch damage, by-type adjustment/reduction, Critical Hit dice, damage-dice choices, shared HP damage, and zero-Hit-Point disposition without duplicating shared HP semantics.",
+      "reason": "Weapon damage rolls feed attack branch damage, by-type adjustment/reduction, Critical Hit dice, damage-dice choices, shared HP damage, and zero-Hit-Point disposition without duplicating shared HP semantics. The protocol ordering obligation also owns Stat Block rolled-damage dice after a hit and excludes invented dice holes for static Stat Block damage notation.",
       "subject": "battle-hole-family"
     },
     {
@@ -4602,12 +4614,13 @@
     {
       "classification": "semantic-frontier",
       "coveredByObligationIds": [
-        "BATTLE.STAT_BLOCK.ATTACK_CONTROL"
+        "BATTLE.STAT_BLOCK.ATTACK_CONTROL",
+        "BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING"
       ],
       "followUpTaskIds": [],
       "holeKind": "statBlockRechargeRoll",
       "id": "BattleStatBlockRechargeRollHole",
-      "reason": "Recharge rolls affect stat block limited-use/recharge availability and are already covered by the stat-block attack-control obligation.",
+      "reason": "Recharge rolls affect stat block limited-use/recharge availability and are covered by the stat-block attack-control obligation; the protocol ordering obligation owns their start-turn frontier before recharge-gated action availability is restored.",
       "subject": "battle-hole-family"
     },
     {
@@ -4710,12 +4723,13 @@
         "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
         "BATTLE.STAT_BLOCK.ATTACK_CONTROL",
         "BATTLE.DAMAGE.ATTACK_BRANCHES",
-        "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES"
+        "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
+        "BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING"
       ],
       "fillKind": "attackRoll",
       "followUpTaskIds": [],
       "id": "attackRoll",
-      "reason": "Attack Roll fills drive hit, miss, Critical Hit, replacement, and downstream attack or spell damage/continuation semantics.",
+      "reason": "Attack Roll fills drive hit, miss, Critical Hit, replacement, and downstream attack or spell damage/continuation semantics. The protocol ordering obligation also owns Stat Block Attack Roll fills after Stat Block target choice or Multiattack dispatch control.",
       "subject": "battle-fill-kind"
     },
     {
@@ -4740,7 +4754,7 @@
       "fillKind": "rolledDice",
       "followUpTaskIds": [],
       "id": "rolledDice",
-      "reason": "Rolled Dice fills are shared by damage, healing, mitigation, linked effects, and feature-roll procedures. Generic damage branch, healing, protocol ordering, type/reduction, disposition, shared HP, linked-effect, and specialized spell roll joins are covered by dedicated obligations.",
+      "reason": "Rolled Dice fills are shared by damage, healing, mitigation, linked effects, and feature-roll procedures. Generic damage branch, healing, protocol ordering, type/reduction, disposition, shared HP, linked-effect, and specialized spell roll joins are covered by dedicated obligations. The protocol ordering obligation also owns Stat Block rolled-damage fills after hit Attack Rolls while static Stat Block damage notation resolves without a rolled-dice fill.",
       "subject": "battle-fill-kind"
     },
     {
@@ -5008,12 +5022,13 @@
     {
       "classification": "semantic-frontier",
       "coveredByObligationIds": [
-        "BATTLE.STAT_BLOCK.ATTACK_CONTROL"
+        "BATTLE.STAT_BLOCK.ATTACK_CONTROL",
+        "BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING"
       ],
       "fillKind": "statBlockRechargeRoll",
       "followUpTaskIds": [],
       "id": "statBlockRechargeRoll",
-      "reason": "Recharge roll fills mutate stat block recharge availability and are already covered by the stat-block obligation.",
+      "reason": "Recharge roll fills mutate stat block recharge availability under the stat-block obligation; the protocol ordering obligation owns their start-turn position before recharge-gated action availability is restored.",
       "subject": "battle-fill-kind"
     },
     {
@@ -8664,6 +8679,14 @@
       ],
       "ownerPath": "packages/battle-runtime/battle-runtime-command-ordering.qnt",
       "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-stat-block-action-ordering.qnt carries reusable Stat Block action-control hole-frontier order over protocol vocabulary variants: action or Multiattack control before constituent attack target choice, Stat Block Attack Roll before rolled damage dice, static-damage resolution without invented dice holes, and Stat Block Recharge Roll timing before recharge-gated action availability is restored.",
+      "obligationIds": [
+        "BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-stat-block-action-ordering.qnt",
+      "role": "semantic-core"
     }
   ],
   "unitFeatureProfileOwnerRows": [
@@ -11960,7 +11983,8 @@
         "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.qnt",
         "packages/battle-runtime/battle-runtime-spell-attack-ordering.qnt",
         "packages/battle-runtime/battle-runtime-hit-point-restoration-ordering.qnt",
-        "packages/battle-runtime/battle-runtime-command-ordering.qnt"
+        "packages/battle-runtime/battle-runtime-command-ordering.qnt",
+        "packages/battle-runtime/battle-runtime-stat-block-action-ordering.qnt"
       ],
       "status": "generation-subset-clean"
     },
@@ -12003,7 +12027,7 @@
   "kernelIrBoundaries": [
     {
       "boundary": "command",
-      "evidence": "Command is represented by BattleSubject plus BattleCommandOptionChoiceHole/BattleFill commandOptionChoice. BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY owns the QNT subject/fill vocabulary join; BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING owns weapon-attack, save-gated-spell, spell-attack, and Hit Point restoration command frontier order; BATTLE.PROTOCOL.INTERRUPT_STACK_RESUME_REPLAY owns suspended command resume and replay-from-root protocol. Supported procedure profiles and typed fills own reducer execution.",
+      "evidence": "Command is represented by BattleSubject plus BattleCommandOptionChoiceHole/BattleFill commandOptionChoice. BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY owns the QNT subject/fill vocabulary join; BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING owns weapon-attack, save-gated-spell, spell-attack, Hit Point restoration, Command, and Stat Block action frontier order; BATTLE.PROTOCOL.INTERRUPT_STACK_RESUME_REPLAY owns suspended command resume and replay-from-root protocol. Supported procedure profiles and typed fills own reducer execution.",
       "obligationIds": [
         "BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY",
         "BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING",
@@ -12019,7 +12043,7 @@
     },
     {
       "boundary": "fill",
-      "evidence": "BattleHole and BattleFill are parsed by the frontier checker and joined to QNT hole/fill vocabulary leaves by BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY. BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING owns the QNT fill-order relations for weapon attacks, save-gated spells, spell attacks, and Hit Point restoration; BATTLE.PROTOCOL.INTERRUPT_STACK_RESUME_REPLAY owns recorded fill replay through suspended continuations. Future IR should reuse the hole/fill split instead of embedding table facts in command state.",
+      "evidence": "BattleHole and BattleFill are parsed by the frontier checker and joined to QNT hole/fill vocabulary leaves by BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY. BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING owns the QNT fill-order relations for weapon attacks, save-gated spells, spell attacks, Hit Point restoration, Command, and Stat Block action controls; BATTLE.PROTOCOL.INTERRUPT_STACK_RESUME_REPLAY owns recorded fill replay through suspended continuations. Future IR should reuse the hole/fill split instead of embedding table facts in command state.",
       "obligationIds": [
         "BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY",
         "BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING",

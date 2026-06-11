@@ -5,6 +5,8 @@ module battleRuntimeMindSpikeSelectedIdentityMbt {
 
   type WitnessHole = | WitnessProtocolHole
 
+  type MindSpikeSelectedIdentityScenarioOutcome = | Init | MindSpikeFailedSaveConcentrationDuration | MindSpikeSuccessfulSaveHalfDamage
+
   type MindSpikeSelectedIdentityWitnessState = {
     qLevel2SlotsRemaining: int,
     qTargetHp: int,
@@ -12,7 +14,7 @@ module battleRuntimeMindSpikeSelectedIdentityMbt {
     qMindSpikeDurationActive: bool,
     qMindSpikeDurationCleanedUp: bool,
     qTargetActiveEffectCount: int,
-    qScenarioResult: str,
+    qScenarioOutcome: MindSpikeSelectedIdentityScenarioOutcome,
     protocol: WitnessProtocol[WitnessHole],
   }
 
@@ -24,14 +26,14 @@ module battleRuntimeMindSpikeSelectedIdentityMbt {
   pure def qMindSpikeDurationActive: bool = qState.qMindSpikeDurationActive
   pure def qMindSpikeDurationCleanedUp: bool = qState.qMindSpikeDurationCleanedUp
   pure def qTargetActiveEffectCount: int = qState.qTargetActiveEffectCount
-  pure def qLastResult: str = qState.qScenarioResult
+  pure def qLastResult: MindSpikeSelectedIdentityScenarioOutcome = qState.qScenarioOutcome
 
   pure def selectedIdentityProtocolForProjection(
     holes: Set[WitnessHole],
-    scenarioResult: str,
+    scenarioResult: MindSpikeSelectedIdentityScenarioOutcome,
     scenarioInvalidReason: str,
   ): WitnessProtocol[WitnessHole] =
-    if (scenarioResult == "init") witnessInit(WitnessProtocolHole)
+    if (scenarioResult == Init) witnessInit(WitnessProtocolHole)
     else if (scenarioInvalidReason == "invalidFill") witnessInvalid(WitnessProtocolHole, WInvalidFill)
     else if (holes != Set()) witnessNeedsHoles(holes)
     else witnessResolved(WitnessProtocolHole)
@@ -43,7 +45,7 @@ module battleRuntimeMindSpikeSelectedIdentityMbt {
     mindSpikeDurationActive: bool,
     mindSpikeDurationCleanedUp: bool,
     targetActiveEffectCount: int,
-    lastResult: str,
+    lastResult: MindSpikeSelectedIdentityScenarioOutcome,
   ): bool = all {
     qState' = {
       qLevel2SlotsRemaining: level2SlotsRemaining,
@@ -52,14 +54,14 @@ module battleRuntimeMindSpikeSelectedIdentityMbt {
       qMindSpikeDurationActive: mindSpikeDurationActive,
       qMindSpikeDurationCleanedUp: mindSpikeDurationCleanedUp,
       qTargetActiveEffectCount: targetActiveEffectCount,
-      qScenarioResult: lastResult,
+      qScenarioOutcome: lastResult,
       protocol: selectedIdentityProtocolForProjection(Set(), lastResult, ""),
     },
   }
-  action init = recordProjection(1, 30, false, false, false, 0, "init")
+  action init = recordProjection(1, 30, false, false, false, 0, Init)
 
   action doResolveMindSpikeFailedSaveConcentrationDuration = all {
-    qLastResult == "init",
+    qLastResult == Init,
     recordProjection(
       0,
       18,
@@ -67,12 +69,12 @@ module battleRuntimeMindSpikeSelectedIdentityMbt {
       true,
       true,
       0,
-      "mindSpikeFailedSaveConcentrationDuration",
+      MindSpikeFailedSaveConcentrationDuration,
     ),
   }
 
   action doResolveMindSpikeSuccessfulSaveHalfDamage = all {
-    qLastResult == "init",
+    qLastResult == Init,
     recordProjection(
       0,
       24,
@@ -80,7 +82,7 @@ module battleRuntimeMindSpikeSelectedIdentityMbt {
       false,
       false,
       0,
-      "mindSpikeSuccessfulSaveHalfDamage",
+      MindSpikeSuccessfulSaveHalfDamage,
     ),
   }
 

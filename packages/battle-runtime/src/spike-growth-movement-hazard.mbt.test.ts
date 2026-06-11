@@ -3,14 +3,16 @@
 import { canSpendAction } from "@dnd/shared-algebras/action-economy-algebra";
 import { Hp, movementFeet } from "@dnd/shared/types";
 import {
+  assertWitnessProtocolConsistentWithScenario,
   booleanField,
+  decodeWitnessProtocolState,
   defineDriver,
   focusedMbtMaxSteps,
   mbtSpecPath,
   mbtTraceCount,
   numberFromQuintInt,
-  quintSet,
   quintStateRecord,
+  quintVariantTag,
   run,
   stateCheck,
 } from "./battle-runtime-mbt-driver-kit.ts";
@@ -72,6 +74,14 @@ type SpikeGrowthLastResult =
   | "needsHoles"
   | "damaged"
   | "concentrationBroken";
+const SPIKE_GROWTH_LAST_RESULT_BY_SCENARIO_OUTCOME_TAG = {
+  Init: "init",
+  Cast: "cast",
+  TargetTurn: "targetTurn",
+  NeedsHoles: "needsHoles",
+  Damaged: "damaged",
+  ConcentrationBroken: "concentrationBroken",
+} as const satisfies Readonly<Record<string, SpikeGrowthLastResult>>;
 
 type SpikeGrowthMovementHazardState = {
   readonly currentTurnRole: SpikeGrowthTurnRole;
@@ -459,6 +469,19 @@ function normalizeSpikeGrowthQuintState(
   raw: unknown,
 ): SpikeGrowthMovementHazardState {
   const state = quintStateRecord(raw);
+  const protocol = decodeWitnessProtocolState({
+    state,
+    protocolField: "qProtocol",
+    noInvalidReason: "",
+    decodeHole: spikeGrowthHole,
+    compareHoles: (left, right) => left.localeCompare(right),
+  });
+  const scenarioResult = spikeGrowthLastResult(state["qScenarioOutcome"]);
+  assertWitnessProtocolConsistentWithScenario({
+    label: "Spike Growth movement hazard",
+    scenarioResult,
+    protocol,
+  });
   return {
     currentTurnRole: spikeGrowthTurnRole(state["qCurrentTurnRole"]),
     actionAvailable: booleanField(state, "qActionAvailable"),
@@ -470,8 +493,8 @@ function normalizeSpikeGrowthQuintState(
       state["qMovementSpentFeet"],
       "qMovementSpentFeet",
     ),
-    holes: quintSet(state["qHoles"], "qHoles").map(spikeGrowthHole).sort(),
-    lastResult: spikeGrowthLastResult(state["qLastResult"]),
+    holes: protocol.holes,
+    lastResult: scenarioResult,
   };
 }
 
@@ -512,15 +535,10 @@ function spikeGrowthHole(raw: unknown): SpikeGrowthHole {
 }
 
 function spikeGrowthLastResult(raw: unknown): SpikeGrowthLastResult {
-  if (
-    raw === "init" ||
-    raw === "cast" ||
-    raw === "targetTurn" ||
-    raw === "needsHoles" ||
-    raw === "damaged" ||
-    raw === "concentrationBroken"
-  ) {
-    return raw;
+  const tag = quintVariantTag(raw, "qScenarioOutcome");
+  const result = SPIKE_GROWTH_LAST_RESULT_BY_SCENARIO_OUTCOME_TAG[tag];
+  if (result !== undefined) {
+    return result;
   }
-  throw new Error(`Unknown Spike Growth result: ${String(raw)}.`);
+  throw new Error(`Unknown Spike Growth result tag: ${tag}.`);
 }

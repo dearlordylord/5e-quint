@@ -24,6 +24,7 @@ import type {
   StatBlockResourceSnapshot,
   SupportedAttackActionOption,
   SupportedCreatureNamedAttackRoll,
+  SupportedStaticDamageCreatureNamedAttackRoll,
 } from "../battle-action-options.ts";
 import {
   type BattleState,
@@ -35,19 +36,59 @@ import {
   activeDruidWildShape,
   updateActiveDruidWildShapeResources,
 } from "./druid-wild-shape.ts";
+import {
+  statBlockAttackDamageSupportsStaticNotation,
+  supportedStatBlockAttackDamage,
+} from "./statblock-attacks.ts";
 
 export function supportedStatBlockAttackActionOption(
   attack: CreatureNamedAttackRoll,
   part: StatBlockPartKey,
+): Extract<
+  StatBlockAttackActionOption,
+  { readonly damageNotation: "rolled" }
+> | null;
+export function supportedStatBlockAttackActionOption(
+  attack: CreatureNamedAttackRoll,
+  part: StatBlockPartKey,
+  damageNotation: "rolled",
+): Extract<
+  StatBlockAttackActionOption,
+  { readonly damageNotation: "rolled" }
+> | null;
+export function supportedStatBlockAttackActionOption(
+  attack: CreatureNamedAttackRoll,
+  part: StatBlockPartKey,
+  damageNotation: "static",
+): Extract<
+  StatBlockAttackActionOption,
+  { readonly damageNotation: "static" }
+> | null;
+export function supportedStatBlockAttackActionOption(
+  attack: CreatureNamedAttackRoll,
+  part: StatBlockPartKey,
+  damageNotation: StatBlockAttackActionOption["damageNotation"] = "rolled",
 ): StatBlockAttackActionOption | null {
   if (!isSupportedCreatureNamedAttackRoll(attack)) {
     return null;
+  }
+
+  if (damageNotation === "static") {
+    return statBlockAttackSupportsStaticDamageNotation(attack)
+      ? {
+          kind: "statBlockAttack",
+          attack,
+          part,
+          damageNotation,
+        }
+      : null;
   }
 
   return {
     kind: "statBlockAttack",
     attack,
     part,
+    damageNotation: "rolled",
   };
 }
 
@@ -78,11 +119,18 @@ export function statBlockActionSectionAttackOptions(
 ): readonly StatBlockAttackActionOption[] {
   return (
     actions?.attacks?.flatMap((attack) => {
-      const option = supportedStatBlockAttackActionOption(attack, {
+      const part = {
         section,
         name: attack.name,
-      });
-      return option == null ? [] : [option];
+      };
+      const option = supportedStatBlockAttackActionOption(attack, part);
+      if (option == null) return [];
+      const staticOption = supportedStatBlockAttackActionOption(
+        attack,
+        part,
+        "static",
+      );
+      return staticOption === null ? [option] : [option, staticOption];
     }) ?? []
   );
 }
@@ -91,6 +139,14 @@ export function isSupportedCreatureNamedAttackRoll(
   attack: CreatureNamedAttackRoll,
 ): attack is SupportedCreatureNamedAttackRoll {
   return creatureNamedAttackRollIsSupported(attack);
+}
+
+function statBlockAttackSupportsStaticDamageNotation(
+  attack: SupportedCreatureNamedAttackRoll,
+): attack is SupportedStaticDamageCreatureNamedAttackRoll {
+  return statBlockAttackDamageSupportsStaticNotation(
+    supportedStatBlockAttackDamage(attack),
+  );
 }
 
 export function statBlockResourceState(
@@ -458,15 +514,19 @@ export function statBlockSectionMatchesSubject(
 
 export function statBlockSubjectPart(attack: SupportedAttackActionOption): {
   readonly statBlockSection?: StatBlockPartSection;
+  readonly statBlockDamageNotation?: "static";
 } {
   return Match.value(attack).pipe(
     Match.when({ kind: "weapon" }, () => ({})),
     Match.when({ kind: "unarmedStrike" }, () => ({})),
-    Match.when({ kind: "statBlockAttack" }, (option) =>
-      option.part.section === "actions"
+    Match.when({ kind: "statBlockAttack" }, (option) => ({
+      ...(option.part.section === "actions"
         ? {}
-        : { statBlockSection: option.part.section },
-    ),
+        : { statBlockSection: option.part.section }),
+      ...(option.damageNotation === "static"
+        ? { statBlockDamageNotation: "static" as const }
+        : {}),
+    })),
     Match.exhaustive,
   );
 }

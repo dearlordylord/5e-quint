@@ -34,12 +34,12 @@ import { isDeepStrictEqual } from "node:util";
 import {
   MBT_TEST_TIMEOUT_MS,
   booleanField,
+  decodeWitnessProtocolState,
   defineDriver,
   focusedMbtMaxSteps,
   mbtSpecPath,
   mbtTraceCount,
   numberFromQuintInt,
-  quintSet,
   quintStateRecord,
   quintVariantTag,
   run,
@@ -2558,6 +2558,12 @@ function normalizeRuleCoreFeatureQuintState(
   raw: unknown,
 ): RuleCoreFeatureProjection {
   const state = quintStateRecord(raw);
+  const protocol = decodeWitnessProtocolState({
+    state,
+    protocolField: "qProtocol",
+    noInvalidReason: "none",
+    decodeHole: featureHoleName,
+  });
   return {
     actionAvailable: booleanField(state, "qActionAvailable"),
     bonusActionAvailable: booleanField(state, "qBonusActionAvailable"),
@@ -2596,10 +2602,10 @@ function normalizeRuleCoreFeatureQuintState(
       state["qActorArmorClass"],
       "qActorArmorClass",
     ),
-    holes: quintSet(state["qHoles"], "qHoles").map(featureHoleName),
+    holes: protocol.holes,
     pendingInterrupt: booleanField(state, "qPendingReaction"),
-    lastResult: featureResult(state["qLastResult"]),
-    lastInvalidReason: featureInvalidReason(state["qLastInvalidReason"]),
+    lastResult: featureResult(protocol.lastResult),
+    lastInvalidReason: featureInvalidReason(protocol.lastInvalidReason),
   };
 }
 

@@ -102,7 +102,17 @@ defineSelectedIdentityWitness({
     primaryTargetHasSapEffect: "bool",
     primaryTargetProne: "bool",
     cleaveUsed: "bool",
-    lastResult: "str",
+    lastResult: "variant",
+  },
+  witnessProtocolField: "qProtocol",
+  witnessDecodeHole: weaponMasteryWitnessHole,
+  quintFieldNames: { lastResult: "qScenarioOutcome" },
+  quintVariantFieldTags: {
+    lastResult: {
+      Init: "init",
+      NeedsHoles: "needsHoles",
+      Resolved: "resolved",
+    },
   },
   initialProjection: initialProjection("mastery_sap"),
   units: [
@@ -162,6 +172,21 @@ defineSelectedIdentityWitness({
     },
   ],
 });
+
+function weaponMasteryWitnessHole(raw: unknown): "witnessProtocolHole" {
+  if (raw === "WitnessProtocolHole") return "witnessProtocolHole";
+  if (
+    typeof raw === "object" &&
+    raw !== null &&
+    "tag" in raw &&
+    raw.tag === "WitnessProtocolHole"
+  ) {
+    return "witnessProtocolHole";
+  }
+  throw new Error(
+    `Unexpected Weapon Mastery witness protocol hole ${String(raw)}.`,
+  );
+}
 
 function initialProjection(
   unitId: WeaponMasteryPropertyUnitId,

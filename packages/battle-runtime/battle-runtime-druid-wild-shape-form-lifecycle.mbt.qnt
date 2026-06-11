@@ -5,6 +5,9 @@ module battleRuntimeDruidWildShapeFormLifecycleMbt {
 
   type WitnessHole = | WitnessProtocolHole
 
+  type DruidWildShapeFormLifecycleScenarioOutcome = | Init | AssumedRidingHorse | NextTurn | ReusedCat | Dismissed | FormIncapacitated | FormDead
+
+
   type DruidWildShapeFormLifecycleWitnessState = {
     qActiveForm: str,
     qBonusActionAvailable: bool,
@@ -18,7 +21,7 @@ module battleRuntimeDruidWildShapeFormLifecycleMbt {
     qActiveFormEffectCount: int,
     qMergedEquipmentCount: int,
     qDruidStatus: str,
-    qScenarioResult: str,
+    qScenarioOutcome: DruidWildShapeFormLifecycleScenarioOutcome,
     protocol: WitnessProtocol[WitnessHole],
   }
 
@@ -36,14 +39,14 @@ module battleRuntimeDruidWildShapeFormLifecycleMbt {
   pure def qActiveFormEffectCount: int = qState.qActiveFormEffectCount
   pure def qMergedEquipmentCount: int = qState.qMergedEquipmentCount
   pure def qDruidStatus: str = qState.qDruidStatus
-  pure def qLastResult: str = qState.qScenarioResult
+  pure def qLastResult: DruidWildShapeFormLifecycleScenarioOutcome = qState.qScenarioOutcome
 
   pure def druidWildShapeFormLifecycleProtocolForProjection(
     holes: Set[WitnessHole],
-    scenarioResult: str,
+    scenarioOutcome: DruidWildShapeFormLifecycleScenarioOutcome,
     _scenarioInvalidReason: str,
   ): WitnessProtocol[WitnessHole] =
-    if (scenarioResult == "init") witnessInit(WitnessProtocolHole)
+    if (scenarioOutcome == Init) witnessInit(WitnessProtocolHole)
     else if (holes != Set()) witnessNeedsHoles(holes)
     else witnessResolved(WitnessProtocolHole)
 
@@ -94,7 +97,7 @@ module battleRuntimeDruidWildShapeFormLifecycleMbt {
     activeFormEffectCount: int,
     mergedEquipmentCount: int,
     druidStatus: str,
-    lastResult: str,
+    lastResult: DruidWildShapeFormLifecycleScenarioOutcome,
   ): bool = all {
     qState' = {
       qActiveForm: activeForm,
@@ -109,7 +112,7 @@ module battleRuntimeDruidWildShapeFormLifecycleMbt {
       qActiveFormEffectCount: activeFormEffectCount,
       qMergedEquipmentCount: mergedEquipmentCount,
       qDruidStatus: druidStatus,
-      qScenarioResult: lastResult,
+      qScenarioOutcome: lastResult,
       protocol: druidWildShapeFormLifecycleProtocolForProjection(Set(), lastResult, ""),
     },
   }
@@ -127,7 +130,7 @@ module battleRuntimeDruidWildShapeFormLifecycleMbt {
     0,
     0,
     ableDruidStatus,
-    "init",
+    Init,
   )
 
   action doAssumeRidingHorse = all {
@@ -147,7 +150,7 @@ module battleRuntimeDruidWildShapeFormLifecycleMbt {
       1,
       selectedLoadoutMergedEquipmentCount,
       ableDruidStatus,
-      "assumedRidingHorse",
+      AssumedRidingHorse,
     ),
   }
 
@@ -167,7 +170,7 @@ module battleRuntimeDruidWildShapeFormLifecycleMbt {
       qActiveFormEffectCount,
       qMergedEquipmentCount,
       qDruidStatus,
-      "nextTurn",
+      NextTurn,
     ),
   }
 
@@ -189,7 +192,7 @@ module battleRuntimeDruidWildShapeFormLifecycleMbt {
       1,
       selectedLoadoutMergedEquipmentCount,
       ableDruidStatus,
-      "reusedCat",
+      ReusedCat,
     ),
   }
 
@@ -210,7 +213,7 @@ module battleRuntimeDruidWildShapeFormLifecycleMbt {
       0,
       0,
       ableDruidStatus,
-      "dismissed",
+      Dismissed,
     ),
   }
 
@@ -230,7 +233,7 @@ module battleRuntimeDruidWildShapeFormLifecycleMbt {
       0,
       0,
       incapacitatedDruidStatus,
-      "incapacitated",
+      FormIncapacitated,
     ),
   }
 
@@ -250,7 +253,7 @@ module battleRuntimeDruidWildShapeFormLifecycleMbt {
       0,
       0,
       deadDruidStatus,
-      "dead",
+      FormDead,
     ),
   }
 

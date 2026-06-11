@@ -43,6 +43,7 @@ in  [ { challengeRating = 0.0
             [ { amount =
                 { expr = { dice = 0, dieSize = 1, flat = Some 1 }
                 , kind = "fixed"
+                , static = Some 1
                 }
               , damageType = "piercing"
               , kind = "damage"
@@ -100,6 +101,7 @@ in  [ { challengeRating = 0.0
             [ { amount =
                 { expr = { dice = 0, dieSize = 1, flat = Some 1 }
                 , kind = "fixed"
+                , static = Some 1
                 }
               , damageType = "slashing"
               , kind = "damage"
@@ -164,6 +166,7 @@ in  [ { challengeRating = 0.0
             [ { amount =
                 { expr = { dice = 0, dieSize = 1, flat = Some 1 }
                 , kind = "fixed"
+                , static = Some 1
                 }
               , damageType = "piercing"
               , kind = "damage"
@@ -231,6 +234,7 @@ in  [ { challengeRating = 0.0
             [ { amount =
                 { expr = { dice = 0, dieSize = 1, flat = Some 1 }
                 , kind = "fixed"
+                , static = Some 1
                 }
               , damageType = "slashing"
               , kind = "damage"
@@ -287,6 +291,7 @@ in  [ { challengeRating = 0.0
             [ { amount =
                 { expr = { dice = 0, dieSize = 1, flat = Some 1 }
                 , kind = "fixed"
+                , static = Some 1
                 }
               , damageType = "piercing"
               , kind = "damage"
@@ -349,6 +354,7 @@ in  [ { challengeRating = 0.0
             [ { amount =
                 { expr = { dice = 0, dieSize = 1, flat = Some 1 }
                 , kind = "fixed"
+                , static = Some 1
                 }
               , damageType = "bludgeoning"
               , kind = "damage"
@@ -416,6 +422,7 @@ in  [ { challengeRating = 0.0
             [ { amount =
                 { expr = { dice = 0, dieSize = 1, flat = Some 1 }
                 , kind = "fixed"
+                , static = Some 1
                 }
               , damageType = "slashing"
               , kind = "damage"
@@ -480,6 +487,7 @@ in  [ { challengeRating = 0.0
             [ { amount =
                 { expr = { dice = 0, dieSize = 1, flat = Some 1 }
                 , kind = "fixed"
+                , static = Some 1
                 }
               , damageType = "piercing"
               , kind = "damage"
@@ -542,6 +550,7 @@ in  [ { challengeRating = 0.0
             [ { amount =
                 { expr = { dice = 0, dieSize = 1, flat = Some 1 }
                 , kind = "fixed"
+                , static = Some 1
                 }
               , damageType = "piercing"
               , kind = "damage"
@@ -603,6 +612,7 @@ in  [ { challengeRating = 0.0
             [ { amount =
                 { expr = { dice = 0, dieSize = 1, flat = Some 1 }
                 , kind = "fixed"
+                , static = Some 1
                 }
               , damageType = "piercing"
               , kind = "damage"
@@ -610,6 +620,7 @@ in  [ { challengeRating = 0.0
             , { amount =
                 { expr = { dice = 1, dieSize = 4, flat = None Natural }
                 , kind = "fixed"
+                , static = Some 2
                 }
               , damageType = "poison"
               , kind = "damage"
@@ -675,6 +686,7 @@ in  [ { challengeRating = 0.0
             [ { amount =
                 { expr = { dice = 0, dieSize = 1, flat = Some 1 }
                 , kind = "fixed"
+                , static = Some 1
                 }
               , damageType = "piercing"
               , kind = "damage"
@@ -736,6 +748,7 @@ in  [ { challengeRating = 0.0
             [ { amount =
                 { expr = { dice = 1, dieSize = 4, flat = Some 2 }
                 , kind = "fixed"
+                , static = Some 4
                 }
               , damageType = "piercing"
               , kind = "damage"
@@ -743,6 +756,7 @@ in  [ { challengeRating = 0.0
             , { amount =
                 { expr = { dice = 1, dieSize = 6, flat = None Natural }
                 , kind = "fixed"
+                , static = Some 3
                 }
               , damageType = "poison"
               , kind = "damage"
@@ -801,6 +815,7 @@ in  [ { challengeRating = 0.0
             [ { amount =
                 { expr = { dice = 1, dieSize = 6, flat = Some 3 }
                 , kind = "fixed"
+                , static = Some 6
                 }
               , damageType = "piercing"
               , kind = "damage"
@@ -808,6 +823,7 @@ in  [ { challengeRating = 0.0
             , { amount =
                 { expr = { dice = 2, dieSize = 6, flat = None Natural }
                 , kind = "fixed"
+                , static = Some 7
                 }
               , damageType = "poison"
               , kind = "damage"
@@ -887,6 +903,7 @@ in  [ { challengeRating = 0.0
             [ { amount =
                 { expr = { dice = 1, dieSize = 4, flat = Some 2 }
                 , kind = "fixed"
+                , static = Some 4
                 }
               , damageType = "piercing"
               , kind = "damage"
@@ -975,6 +992,7 @@ in  [ { challengeRating = 0.0
             [ { amount =
                 { expr = { dice = 1, dieSize = 4, flat = Some 3 }
                 , kind = "fixed"
+                , static = Some 5
                 }
               , damageType = "slashing"
               , kind = "damage"
@@ -1053,6 +1071,7 @@ in  [ { challengeRating = 0.0
             [ { amount =
                 { expr = { dice = 1, dieSize = 4, flat = Some 4 }
                 , kind = "fixed"
+                , static = Some 6
                 }
               , damageType = "piercing"
               , kind = "damage"
@@ -1071,6 +1090,7 @@ in  [ { challengeRating = 0.0
             [ { amount =
                 { expr = { dice = 0, dieSize = 1, flat = Some 1 }
                 , kind = "fixed"
+                , static = Some 1
                 }
               , damageType = "piercing"
               , kind = "damage"

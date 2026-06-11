@@ -6,11 +6,24 @@ module battleRuntimeWeaponAttackOrderingMbt {
   import battleRuntimeWeaponAttackOrdering.* from "./battle-runtime-weapon-attack-ordering"
   import battleRuntimeHoleKinds.* from "./battle-runtime-hole-kinds"
   import battleRuntimeFillKinds.* from "./battle-runtime-fill-kinds"
+  import battleRuntimeWitnessProtocol.* from "./battle-runtime-witness-protocol"
 
   var qStage: WeaponAttackFrontierStage
-  var qHoles: Set[BattleHoleFamilyKind]
-  var qLastResult: str
+  var qProtocol: WitnessProtocol[BattleHoleFamilyKind]
   var qLastOrderingError: str
+
+  pure def qHoles: Set[BattleHoleFamilyKind] = qProtocol.holes
+
+  pure val witnessHoleType: BattleHoleFamilyKind = TargetChoiceHoleKind
+
+  pure def witnessProtocolForProjection(
+    holes: Set[BattleHoleFamilyKind],
+    lastResult: str,
+  ): WitnessProtocol[BattleHoleFamilyKind] =
+    if (lastResult == "init") witnessInit(witnessHoleType)
+    else if (lastResult == "invalid") witnessInvalidWithHoles(holes, WInvalidFill)
+    else if (holes != Set()) witnessNeedsHoles(holes)
+    else witnessResolved(witnessHoleType)
 
   pure def orderingErrorLabel(error: WeaponAttackFillOrderingError): str =
     match error {
@@ -27,24 +40,27 @@ module battleRuntimeWeaponAttackOrderingMbt {
 
   action init = all {
     qStage' = WeaponAttackActSelectionStage,
-    qHoles' = weaponAttackHoleFrontier(WeaponAttackActSelectionStage),
-    qLastResult' = "init",
+    qProtocol' = witnessProtocolForProjection(
+      weaponAttackHoleFrontier(WeaponAttackActSelectionStage),
+      "init",
+    ),
     qLastOrderingError' = "",
   }
 
   action doDiscoverAttack = all {
     qStage == WeaponAttackActSelectionStage,
     qStage' = WeaponAttackTargetChoiceStage,
-    qHoles' = weaponAttackHoleFrontier(WeaponAttackTargetChoiceStage),
-    qLastResult' = "needsHoles",
+    qProtocol' = witnessProtocolForProjection(
+      weaponAttackHoleFrontier(WeaponAttackTargetChoiceStage),
+      "needsHoles",
+    ),
     qLastOrderingError' = "",
   }
 
   action doRejectAttackRollBeforeTargetChoice = all {
     qStage == WeaponAttackTargetChoiceStage,
     qStage' = qStage,
-    qHoles' = qHoles,
-    qLastResult' = "invalid",
+    qProtocol' = witnessProtocolForProjection(qHoles, "invalid"),
     qLastOrderingError' =
       rejectedOrderingLabel(
         weaponAttackFillOrderResult(qStage, AttackRollFillKind, false)
@@ -54,16 +70,17 @@ module battleRuntimeWeaponAttackOrderingMbt {
   action doFillTargetChoice = all {
     qStage == WeaponAttackTargetChoiceStage,
     qStage' = WeaponAttackAttackRollStage,
-    qHoles' = weaponAttackHoleFrontier(WeaponAttackAttackRollStage),
-    qLastResult' = "needsHoles",
+    qProtocol' = witnessProtocolForProjection(
+      weaponAttackHoleFrontier(WeaponAttackAttackRollStage),
+      "needsHoles",
+    ),
     qLastOrderingError' = "",
   }
 
   action doRejectDamageBeforeAttackRoll = all {
     qStage == WeaponAttackAttackRollStage,
     qStage' = qStage,
-    qHoles' = qHoles,
-    qLastResult' = "invalid",
+    qProtocol' = witnessProtocolForProjection(qHoles, "invalid"),
     qLastOrderingError' =
       rejectedOrderingLabel(
         weaponAttackFillOrderResult(qStage, RolledDiceFillKind, false)
@@ -73,24 +90,30 @@ module battleRuntimeWeaponAttackOrderingMbt {
   action doFillAttackRollMiss = all {
     qStage == WeaponAttackAttackRollStage,
     qStage' = WeaponAttackResolvedStage,
-    qHoles' = weaponAttackHoleFrontier(WeaponAttackResolvedStage),
-    qLastResult' = "resolved",
+    qProtocol' = witnessProtocolForProjection(
+      weaponAttackHoleFrontier(WeaponAttackResolvedStage),
+      "resolved",
+    ),
     qLastOrderingError' = "",
   }
 
   action doFillAttackRollHit = all {
     qStage == WeaponAttackAttackRollStage,
     qStage' = WeaponAttackDamageDiceStage,
-    qHoles' = weaponAttackHoleFrontier(WeaponAttackDamageDiceStage),
-    qLastResult' = "needsHoles",
+    qProtocol' = witnessProtocolForProjection(
+      weaponAttackHoleFrontier(WeaponAttackDamageDiceStage),
+      "needsHoles",
+    ),
     qLastOrderingError' = "",
   }
 
   action doFillDamageDice = all {
     qStage == WeaponAttackDamageDiceStage,
     qStage' = WeaponAttackResolvedStage,
-    qHoles' = weaponAttackHoleFrontier(WeaponAttackResolvedStage),
-    qLastResult' = "resolved",
+    qProtocol' = witnessProtocolForProjection(
+      weaponAttackHoleFrontier(WeaponAttackResolvedStage),
+      "resolved",
+    ),
     qLastOrderingError' = "",
   }
 

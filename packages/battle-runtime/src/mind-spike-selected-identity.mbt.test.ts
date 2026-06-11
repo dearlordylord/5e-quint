@@ -16,6 +16,7 @@ import {
   numberFromQuintInt,
   quintRecordField,
   quintStateRecord,
+  quintVariantTag,
   run,
   stateCheck,
 } from "./battle-runtime-mbt-driver-kit.ts";
@@ -59,11 +60,16 @@ const mindSpikeSelectedIdentityResults = [
   "mindSpikeFailedSaveConcentrationDuration",
   "mindSpikeSuccessfulSaveHalfDamage",
 ] as const;
-const mindSpikeSelectedIdentityResultSet: ReadonlySet<string> = new Set(
-  mindSpikeSelectedIdentityResults,
-);
 type MindSpikeSelectedIdentityResult =
   (typeof mindSpikeSelectedIdentityResults)[number];
+const MIND_SPIKE_SELECTED_IDENTITY_SCENARIO_OUTCOME_BY_TAG: Readonly<
+  Record<string, MindSpikeSelectedIdentityResult>
+> = {
+  Init: "init",
+  MindSpikeFailedSaveConcentrationDuration:
+    "mindSpikeFailedSaveConcentrationDuration",
+  MindSpikeSuccessfulSaveHalfDamage: "mindSpikeSuccessfulSaveHalfDamage",
+};
 type MindSpikeSelectedIdentityProjection = {
   readonly level2SlotsRemaining: number;
   readonly targetHp: number;
@@ -483,7 +489,7 @@ function normalizeMindSpikeQuintState(
   if (protocol.holes.length !== 0) {
     throw new Error("Expected Mind Spike selected identity holes to be empty.");
   }
-  const lastResult = quintSelectedIdentityResult(state, "qScenarioResult");
+  const lastResult = quintSelectedIdentityResult(state, "qScenarioOutcome");
   assertWitnessProtocolConsistentWithScenario({
     label: "Mind Spike selected identity",
     scenarioResult: lastResult,
@@ -522,17 +528,11 @@ function quintSelectedIdentityResult(
   state: Readonly<Record<string, unknown>>,
   key: string,
 ): MindSpikeSelectedIdentityResult {
-  const value = state[key];
-  if (isMindSpikeSelectedIdentityResult(value)) {
+  const tag = quintVariantTag(state[key], key);
+  const value =
+    MIND_SPIKE_SELECTED_IDENTITY_SCENARIO_OUTCOME_BY_TAG[tag];
+  if (value !== undefined) {
     return value;
   }
   throw new Error(`Expected Mind Spike selected identity result field ${key}.`);
-}
-
-function isMindSpikeSelectedIdentityResult(
-  value: unknown,
-): value is MindSpikeSelectedIdentityResult {
-  return (
-    typeof value === "string" && mindSpikeSelectedIdentityResultSet.has(value)
-  );
 }

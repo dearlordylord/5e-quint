@@ -586,6 +586,7 @@ export function resolveSelectedAttackProcedure(
       : fixedAttackDamageByTypeEntries(
           attackRolledState.combatants.get(attackerId),
           attack,
+          fillSet.attackRoll,
         )
     : null;
   const fixedDamageAmount =
@@ -728,7 +729,7 @@ export function resolveSelectedAttackProcedure(
       return invalidResult(
         input.state,
         "invalidFill",
-        "Fixed Unarmed Strike damage does not use a rolled damage fill.",
+        "Fixed attack damage does not use a rolled damage fill.",
       );
     }
     const damageEvent = {

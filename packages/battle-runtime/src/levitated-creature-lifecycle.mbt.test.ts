@@ -32,6 +32,7 @@ import {
   numberFromQuintInt,
   quintRecordField,
   quintStateRecord,
+  quintVariantTag,
   run,
   stateCheck,
 } from "./battle-runtime-mbt-driver-kit.ts";
@@ -97,7 +98,24 @@ const LAST_RESULTS = [
   "durationExpired",
 ] as const;
 type LastResult = (typeof LAST_RESULTS)[number];
-const LAST_RESULT_SET: ReadonlySet<string> = new Set(LAST_RESULTS);
+const LEVITATED_CREATURE_LIFECYCLE_SCENARIO_OUTCOME_BY_TAG: Readonly<
+  Record<string, LastResult>
+> = {
+  Init: "init",
+  NeedsSave: "needsSave",
+  UnwillingSaveSucceeded: "unwillingSaveSucceeded",
+  UnwillingSaveFailed: "unwillingSaveFailed",
+  NeedsWillingInitialRise: "needsWillingInitialRise",
+  WillingLevitated: "willingLevitated",
+  NeedsTargetMovement: "needsTargetMovement",
+  MissingWitnessRejected: "missingWitnessRejected",
+  TargetMoved: "targetMoved",
+  NeedsCasterControl: "needsCasterControl",
+  OutOfRangeRejected: "outOfRangeRejected",
+  CasterControlled: "casterControlled",
+  ConcentrationBroken: "concentrationBroken",
+  DurationExpired: "durationExpired",
+};
 
 type LevitateCreatureProjection = {
   readonly actionAvailable: boolean;
@@ -842,7 +860,7 @@ function normalizeLevitateCreatureQuintState(
     decodeHole: levitateCreatureHole,
     compareHoles: (left, right) => left.localeCompare(right),
   });
-  const scenarioResult = lastResult(state["qScenarioResult"]);
+  const scenarioResult = lastResult(state["qScenarioOutcome"]);
   assertWitnessProtocolConsistentWithScenario({
     label: "Levitate creature lifecycle",
     scenarioResult,
@@ -893,8 +911,11 @@ function levitateCreatureHole(raw: unknown): LevitateCreatureHole {
 }
 
 function lastResult(raw: unknown): LastResult {
-  if (typeof raw === "string" && LAST_RESULT_SET.has(raw)) {
-    return raw as LastResult;
+  const tag = quintVariantTag(raw, "qScenarioOutcome");
+  const value =
+    LEVITATED_CREATURE_LIFECYCLE_SCENARIO_OUTCOME_BY_TAG[tag];
+  if (value !== undefined) {
+    return value;
   }
-  throw new Error(`Unknown Levitate creature result: ${String(raw)}.`);
+  throw new Error(`Unknown Levitate creature result: ${tag}.`);
 }

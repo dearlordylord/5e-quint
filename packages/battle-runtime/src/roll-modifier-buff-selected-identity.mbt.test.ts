@@ -126,7 +126,17 @@ defineSelectedIdentityWitness({
   quintStateField: "qState",
   quintStateFieldPrefix: "q",
   witnessProtocolField: "protocol",
-  quintFieldNames: { lastResult: "qScenarioResult" },
+  quintFieldNames: { lastResult: "qScenarioOutcome" },
+  quintVariantFieldTags: {
+    lastResult: {
+      Init: "init",
+      Bless: "bless",
+      Bane: "bane",
+      Guidance: "guidance",
+      Resistance: "resistance",
+      ShieldOfFaith: "shieldOfFaith",
+    },
+  },
   projectionSchema: {
     casterConcentrating: "bool",
     casterHp: "int",
@@ -143,7 +153,7 @@ defineSelectedIdentityWitness({
     invalidTargetRejected: "bool",
     damageReductionType: "str",
     damageReductionUsed: "bool",
-    lastResult: "str",
+    lastResult: "variant",
   },
   initialProjection: expectedProjection(),
   units: [

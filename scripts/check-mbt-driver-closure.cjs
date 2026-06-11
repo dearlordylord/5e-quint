@@ -31,8 +31,42 @@ const path = require("node:path");
 const ROOT = path.resolve(__dirname, "..");
 const BUDGET_FILES = 8;
 
+// Legacy mutable protocol names from the pre-WitnessProtocol convention.
+const LEGACY_WITNESS_PROTOCOL_NAMES = [
+  {
+    label: "qLastResult string result var",
+    pattern: /^\s*var\s+qLastResult\s*:\s*str\b/m,
+  },
+  {
+    label: "qLastInvalidReason string reason var",
+    pattern: /^\s*var\s+qLastInvalidReason\s*:\s*str\b/m,
+  },
+  {
+    label: "qHoles parallel holes var",
+    pattern: /^\s*var\s+qHoles\s*:\s*Set\[/m,
+  },
+  {
+    label: "qLastHoles parallel holes var",
+    pattern: /^\s*var\s+qLastHoles\s*:\s*Set\[/m,
+  },
+];
+
+// Scenario outcome projection labels must be closed local variants, not open
+// string fields. See plans/SCENARIO_OUTCOME_AUDIT.md.
+const LEGACY_SCENARIO_OUTCOME_NAMES = [
+  {
+    label: "qScenarioResult string outcome",
+    pattern: /\bqScenarioResult\b/,
+  },
+  {
+    label: "qScenarioInvalidReason string reason",
+    pattern: /\bqScenarioInvalidReason\b/,
+  },
+];
+
 const AGGREGATION_BARRELS = {
-  "packages/battle-runtime/battle-runtime-model.qnt": "battle-runtime type-model barrel",
+  "packages/battle-runtime/battle-runtime-model.qnt":
+    "battle-runtime type-model barrel",
 };
 
 const BATTLE_RUNTIME_LEAF_MODULES = new Set([
@@ -46,6 +80,7 @@ const BATTLE_RUNTIME_LEAF_MODULES = new Set([
   "battle-runtime-save-gated-spell-ordering.qnt",
   "battle-runtime-see-invisibility-constants.qnt",
   "battle-runtime-spell-attack-ordering.qnt",
+  "battle-runtime-stat-block-action-ordering.qnt",
   "battle-runtime-subject-kinds.qnt",
   "battle-runtime-sorcerous-burst-damage-choice.qnt",
   "battle-runtime-witness-protocol.qnt",
@@ -64,17 +99,28 @@ const BATTLE_RUNTIME_LEAF_MODULES = new Set([
 //     REPL, then assert them). adrenaline-rush / death-saving-throw / sleep-repeat-save
 //     / bardic-inspiration / monk-martial-arts were migrated this way; do the rest.
 const ALLOWLIST = {
-  "battle-runtime-direct-condition-lifecycle.mbt.qnt": "computed oracle: condition source, duration, slot, and concentration projections depend on mutable lifecycle state",
-  "battle-runtime-flaming-sphere-hazard-ram.mbt.qnt": "computed oracle: active sphere, bonus action, slot, ram movement, saving throw, and target vitals all mutate through the reducer",
-  "battle-runtime-blur-attack-roll-defense-lifecycle.mbt.qnt": "computed oracle: attack-roll mode depends on mutable bypass/advantage state",
-  "battle-runtime-mirror-image-hit-interception.mbt.qnt": "computed oracle: duplicate interception depends on mutable remaining-duplicate count and attack context",
-  "battle-runtime-moonbeam-movable-zone.mbt.qnt": "computed oracle: zone lifecycle, saved-this-turn, reposition, vitals, and shapeshift projection depend on mutable reducer state",
-  "battle-runtime-warding-bond-damage-sharing.mbt.qnt": "computed oracle: shared damage and cleanup outcomes depend on mutable source/ward hit points and bond presence",
-  "creature-attack.mbt.qnt": "computed oracle: attacker choice and hit result mutate the two-creature hit point state",
-  "rule-core-stat-block-controls.mbt.qnt": "computed oracle: dispatch resolution depends on mutable remaining-dispatch counts",
-  "battle-runtime-starry-wisp-object.mbt.qnt": "convertible but projects complex ObjectDamageOutcome/LightEmitter records",
-  "rule-core-spells.mbt.qnt": "convertible: ~33-action fixed-outcome rule-core spell tracer",
-  "rule-core-features.mbt.qnt": "convertible: ~32-action rule-core feature tracer (partly state-dependent)",
+  "battle-runtime-direct-condition-lifecycle.mbt.qnt":
+    "computed oracle: condition source, duration, slot, and concentration projections depend on mutable lifecycle state",
+  "battle-runtime-flaming-sphere-hazard-ram.mbt.qnt":
+    "computed oracle: active sphere, bonus action, slot, ram movement, saving throw, and target vitals all mutate through the reducer",
+  "battle-runtime-blur-attack-roll-defense-lifecycle.mbt.qnt":
+    "computed oracle: attack-roll mode depends on mutable bypass/advantage state",
+  "battle-runtime-mirror-image-hit-interception.mbt.qnt":
+    "computed oracle: duplicate interception depends on mutable remaining-duplicate count and attack context",
+  "battle-runtime-moonbeam-movable-zone.mbt.qnt":
+    "computed oracle: zone lifecycle, saved-this-turn, reposition, vitals, and shapeshift projection depend on mutable reducer state",
+  "battle-runtime-warding-bond-damage-sharing.mbt.qnt":
+    "computed oracle: shared damage and cleanup outcomes depend on mutable source/ward hit points and bond presence",
+  "creature-attack.mbt.qnt":
+    "computed oracle: attacker choice and hit result mutate the two-creature hit point state",
+  "rule-core-stat-block-controls.mbt.qnt":
+    "computed oracle: dispatch resolution depends on mutable remaining-dispatch counts",
+  "battle-runtime-starry-wisp-object.mbt.qnt":
+    "convertible but projects complex ObjectDamageOutcome/LightEmitter records",
+  "rule-core-spells.mbt.qnt":
+    "convertible: ~33-action fixed-outcome rule-core spell tracer",
+  "rule-core-features.mbt.qnt":
+    "convertible: ~32-action rule-core feature tracer (partly state-dependent)",
 };
 
 const IMPORT_RE = /from "((?:\.\/|\.\.\/)[A-Za-z0-9/\-]+)"/g;
@@ -167,27 +213,76 @@ function checkMbtDriverClosure(root) {
     if (base in ALLOWLIST) {
       seenAllowed.add(base);
       if (count <= BUDGET_FILES && forbiddenPaths.length === 0) {
-        graduated.push(`${base}: now imports ${count} files (<= ${BUDGET_FILES}) and has no forbidden imports. Remove it from ALLOWLIST to lock the win.`);
+        graduated.push(
+          `${base}: now imports ${count} files (<= ${BUDGET_FILES}) and has no forbidden imports. Remove it from ALLOWLIST to lock the win.`,
+        );
       }
     } else {
       if (count > BUDGET_FILES) {
-        failures.push(`${base}: imports ${count} files (budget ${BUDGET_FILES}). Compose over leaf modules, not barrels/behaviour. If unavoidable, add to ALLOWLIST with a reason.`);
+        failures.push(
+          `${base}: imports ${count} files (budget ${BUDGET_FILES}). Compose over leaf modules, not barrels/behaviour. If unavoidable, add to ALLOWLIST with a reason.`,
+        );
       }
       for (const { chain, reason } of forbiddenPaths) {
-        failures.push(`${base}: forbidden ${reason} import path: ${formatImportPath(root, chain)}. Compose over leaf modules, not barrels/behaviour. If unavoidable, add to ALLOWLIST with a reason.`);
+        failures.push(
+          `${base}: forbidden ${reason} import path: ${formatImportPath(root, chain)}. Compose over leaf modules, not barrels/behaviour. If unavoidable, add to ALLOWLIST with a reason.`,
+        );
       }
     }
   }
   for (const base of Object.keys(ALLOWLIST)) {
-    if (!seenAllowed.has(base)) graduated.push(`${base}: no longer present. Remove its stale ALLOWLIST entry.`);
+    if (!seenAllowed.has(base))
+      graduated.push(
+        `${base}: no longer present. Remove its stale ALLOWLIST entry.`,
+      );
   }
   return { failures, graduated };
 }
 
+function checkLegacyWitnessProtocolNames(root) {
+  const runtimeDir = path.join(root, "packages/battle-runtime");
+  const failures = [];
+  for (const witness of listDrivers(runtimeDir)) {
+    const text = fs.readFileSync(witness, "utf8");
+    for (const { label, pattern } of LEGACY_WITNESS_PROTOCOL_NAMES) {
+      const match = pattern.exec(text);
+      if (match) {
+        const line = text.slice(0, match.index).split("\n").length;
+        failures.push(
+          `${toRepoPath(root, witness)}:${line}: legacy ${label}. Use battle-runtime-witness-protocol.qnt's WitnessProtocol record and helper constructors instead of the pre-protocol mutable names.`,
+        );
+      }
+    }
+  }
+  return failures;
+}
+
+function checkLegacyScenarioOutcomeNames(root) {
+  const runtimeDir = path.join(root, "packages/battle-runtime");
+  const failures = [];
+  for (const witness of listDrivers(runtimeDir)) {
+    const text = fs.readFileSync(witness, "utf8");
+    for (const { label, pattern } of LEGACY_SCENARIO_OUTCOME_NAMES) {
+      const match = pattern.exec(text);
+      if (match) {
+        const line = text.slice(0, match.index).split("\n").length;
+        failures.push(
+          `${toRepoPath(root, witness)}:${line}: legacy ${label}. Use a file-local scenario outcome variant field named qScenarioOutcome instead of open string projection labels.`,
+        );
+      }
+    }
+  }
+  return failures;
+}
+
 function withFixtureRoot(fn) {
-  const fixtureRoot = fs.mkdtempSync(path.join(os.tmpdir(), "mbt-driver-closure-"));
+  const fixtureRoot = fs.mkdtempSync(
+    path.join(os.tmpdir(), "mbt-driver-closure-"),
+  );
   try {
-    fs.mkdirSync(path.join(fixtureRoot, "packages/battle-runtime"), { recursive: true });
+    fs.mkdirSync(path.join(fixtureRoot, "packages/battle-runtime"), {
+      recursive: true,
+    });
     fn(fixtureRoot);
   } finally {
     fs.rmSync(fixtureRoot, { recursive: true, force: true });
@@ -214,19 +309,72 @@ function runSelfTest() {
     const expectedPath =
       "fixture-forbidden-model.mbt.qnt: forbidden battle-runtime type-model barrel import path: packages/battle-runtime/fixture-forbidden-model.mbt.qnt -> packages/battle-runtime/battle-runtime-model.qnt.";
     if (!failures.some((failure) => failure.startsWith(expectedPath))) {
-      throw new Error(`Self-test failed: expected semantic forbidden import failure, got ${JSON.stringify(failures)}`);
+      throw new Error(
+        `Self-test failed: expected semantic forbidden import failure, got ${JSON.stringify(failures)}`,
+      );
     }
-    if (failures.some((failure) => failure.includes("imports 1 files (budget"))) {
-      throw new Error(`Self-test failed: forbidden import fixture failed only by closure count, got ${JSON.stringify(failures)}`);
+    if (
+      failures.some((failure) => failure.includes("imports 1 files (budget"))
+    ) {
+      throw new Error(
+        `Self-test failed: forbidden import fixture failed only by closure count, got ${JSON.stringify(failures)}`,
+      );
+    }
+    fs.writeFileSync(
+      path.join(runtimeDir, "fixture-legacy-protocol.mbt.qnt"),
+      [
+        "module fixtureLegacyProtocolMbt {",
+        "  var qLastResult: str",
+        "}",
+        "",
+      ].join("\n"),
+    );
+    const protocolFailures = checkLegacyWitnessProtocolNames(fixtureRoot);
+    const expectedProtocolFailure =
+      "packages/battle-runtime/fixture-legacy-protocol.mbt.qnt:2: legacy qLastResult string result var.";
+    if (
+      !protocolFailures.some((failure) =>
+        failure.startsWith(expectedProtocolFailure),
+      )
+    ) {
+      throw new Error(
+        `Self-test failed: expected legacy protocol-var failure, got ${JSON.stringify(protocolFailures)}`,
+      );
+    }
+    fs.writeFileSync(
+      path.join(runtimeDir, "fixture-legacy-scenario-outcome.mbt.qnt"),
+      [
+        "module fixtureLegacyScenarioOutcomeMbt {",
+        "  var qScenarioResult: str",
+        "}",
+        "",
+      ].join("\n"),
+    );
+    const scenarioOutcomeFailures =
+      checkLegacyScenarioOutcomeNames(fixtureRoot);
+    const expectedScenarioOutcomeFailure =
+      "packages/battle-runtime/fixture-legacy-scenario-outcome.mbt.qnt:2: legacy qScenarioResult string outcome.";
+    if (
+      !scenarioOutcomeFailures.some((failure) =>
+        failure.startsWith(expectedScenarioOutcomeFailure),
+      )
+    ) {
+      throw new Error(
+        `Self-test failed: expected legacy scenario outcome failure, got ${JSON.stringify(scenarioOutcomeFailures)}`,
+      );
     }
   });
-  console.log("MBT driver closure self-test OK.");
+  console.log(
+    "MBT driver closure and legacy witness protocol name self-test OK.",
+  );
 }
 
 if (process.argv.includes("--self-test")) {
   runSelfTest();
 } else {
   const { failures, graduated } = checkMbtDriverClosure(ROOT);
+  const protocolFailures = checkLegacyWitnessProtocolNames(ROOT);
+  const scenarioOutcomeFailures = checkLegacyScenarioOutcomeNames(ROOT);
   if (graduated.length) {
     console.log("MBT driver closure gate -- tighten the allowlist:");
     for (const g of graduated) console.log("  - " + g);
@@ -237,5 +385,23 @@ if (process.argv.includes("--self-test")) {
     for (const f of failures) console.error("  - " + f);
     process.exit(1);
   }
-  console.log(`MBT driver closure gate passed (budget ${BUDGET_FILES} files; ${Object.keys(ALLOWLIST).length} grandfathered drivers tracked for migration).`);
+  if (protocolFailures.length) {
+    console.error("MBT legacy witness protocol name gate FAILED:");
+    for (const f of protocolFailures) console.error("  - " + f);
+    process.exit(1);
+  }
+  if (scenarioOutcomeFailures.length) {
+    console.error("MBT legacy scenario outcome name gate FAILED:");
+    for (const f of scenarioOutcomeFailures) console.error("  - " + f);
+    process.exit(1);
+  }
+  console.log(
+    `MBT driver closure gate passed (budget ${BUDGET_FILES} files; ${Object.keys(ALLOWLIST).length} grandfathered drivers tracked for migration).`,
+  );
+  console.log(
+    "MBT legacy witness protocol name gate passed (no pre-protocol mutable qLast*/qHoles vars).",
+  );
+  console.log(
+    "MBT legacy scenario outcome name gate passed (no qScenarioResult/qScenarioInvalidReason strings).",
+  );
 }

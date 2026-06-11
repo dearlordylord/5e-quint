@@ -6,11 +6,11 @@ module battleRuntimeCommandOrderingMbt {
   import battleRuntimeCommandOrdering.* from "./battle-runtime-command-ordering"
   import battleRuntimeHoleKinds.* from "./battle-runtime-hole-kinds"
   import battleRuntimeFillKinds.* from "./battle-runtime-fill-kinds"
+  import battleRuntimeWitnessProtocol.* from "./battle-runtime-witness-protocol"
 
   var qStage: CommandFrontierStage
-  var qHoles: Set[BattleHoleFamilyKind]
+  var qProtocol: WitnessProtocol[BattleHoleFamilyKind]
   var qTableFactFrontierOpen: bool
-  var qLastResult: str
   var qLastOrderingError: str
   var qPendingCommandOption: str
   var qTargetProne: bool
@@ -19,6 +19,19 @@ module battleRuntimeCommandOrderingMbt {
   var qMovementSpentFeet: int
   var qCurrentActor: str
   var qReactionWindowOpen: bool
+
+  pure def qHoles: Set[BattleHoleFamilyKind] = qProtocol.holes
+
+  pure val witnessHoleType: BattleHoleFamilyKind = TargetChoiceHoleKind
+
+  pure def witnessProtocolForProjection(
+    holes: Set[BattleHoleFamilyKind],
+    lastResult: str,
+  ): WitnessProtocol[BattleHoleFamilyKind] =
+    if (lastResult == "init") witnessInit(witnessHoleType)
+    else if (lastResult == "invalid") witnessInvalidWithHoles(holes, WInvalidFill)
+    else if (holes != Set()) witnessNeedsHoles(holes)
+    else witnessResolved(witnessHoleType)
 
   pure def orderingErrorLabel(error: CommandFillOrderingError): str =
     match error {
@@ -70,9 +83,11 @@ module battleRuntimeCommandOrderingMbt {
     reactionWindowOpen: bool,
   ): bool = all {
     qStage' = stage,
-    qHoles' = commandHoleFrontier(stage),
+    qProtocol' = witnessProtocolForProjection(
+      commandHoleFrontier(stage),
+      lastResult,
+    ),
     qTableFactFrontierOpen' = commandHoleFrontierIncludesTableFacts(stage),
-    qLastResult' = lastResult,
     qLastOrderingError' = lastOrderingError,
     qPendingCommandOption' = pendingCommandOption,
     qTargetProne' = targetProne,

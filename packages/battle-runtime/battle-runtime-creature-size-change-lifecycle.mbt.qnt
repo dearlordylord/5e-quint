@@ -5,6 +5,9 @@ module battleRuntimeCreatureSizeChangeLifecycleMbt {
 
   type WitnessHole = | SavingThrowOutcome
 
+  type CreatureSizeChangeLifecycleScenarioOutcome = | Init | NeedsHoles | UnwillingSaveSucceeded | UnwillingSaveFailed | WillingEnlarge | WillingReduce | AttackDamageAdjusted | ConcentrationBroken | DurationExpired
+
+
   // RAW trace:
   // - .references/srd-5.2.1/Spells/Descriptions-E-L.md#Enlarge/Reduce:
   //   Concentration up to 1 minute; unwilling creatures make a Constitution
@@ -27,7 +30,7 @@ module battleRuntimeCreatureSizeChangeLifecycleMbt {
     qStrengthAbilityCheckRollMode: str,
     qStrengthSavingThrowRollMode: str,
     qLastDamageApplied: int,
-    qScenarioResult: str,
+    qScenarioOutcome: CreatureSizeChangeLifecycleScenarioOutcome,
     protocol: WitnessProtocol[WitnessHole],
   }
 
@@ -43,7 +46,7 @@ module battleRuntimeCreatureSizeChangeLifecycleMbt {
   pure def qStrengthSavingThrowRollMode: str = qState.qStrengthSavingThrowRollMode
   pure def protocolHoles: Set[WitnessHole] = qState.protocol.holes
   pure def qLastDamageApplied: int = qState.qLastDamageApplied
-  pure def qScenarioResult: str = qState.qScenarioResult
+  pure def qScenarioOutcome: CreatureSizeChangeLifecycleScenarioOutcome = qState.qScenarioOutcome
 
   pure val noMode: str = "none"
   pure val increaseMode: str = "increase"
@@ -68,7 +71,7 @@ module battleRuntimeCreatureSizeChangeLifecycleMbt {
     strengthAbilityCheckRollMode: str,
     strengthSavingThrowRollMode: str,
     lastDamageApplied: int,
-    scenarioResult: str,
+    scenarioOutcome: CreatureSizeChangeLifecycleScenarioOutcome,
     protocol: WitnessProtocol[WitnessHole],
   ): bool = all {
     qState' = {
@@ -81,7 +84,7 @@ module battleRuntimeCreatureSizeChangeLifecycleMbt {
       qStrengthAbilityCheckRollMode: strengthAbilityCheckRollMode,
       qStrengthSavingThrowRollMode: strengthSavingThrowRollMode,
       qLastDamageApplied: lastDamageApplied,
-      qScenarioResult: scenarioResult,
+      qScenarioOutcome: scenarioOutcome,
       protocol: protocol,
     },
   }
@@ -89,7 +92,7 @@ module battleRuntimeCreatureSizeChangeLifecycleMbt {
   action recordNoEffectState(
     actionAvailable: bool,
     spellAvailable: bool,
-    scenarioResult: str,
+    scenarioOutcome: CreatureSizeChangeLifecycleScenarioOutcome,
     protocol: WitnessProtocol[WitnessHole],
   ): bool =
     recordCreatureSizeChangeState(
@@ -102,13 +105,13 @@ module battleRuntimeCreatureSizeChangeLifecycleMbt {
       normalRollMode,
       normalRollMode,
       noDamageResolved,
-      scenarioResult,
+      scenarioOutcome,
       protocol,
     )
 
   action recordIncreaseEffectState(
     lastDamageApplied: int,
-    scenarioResult: str,
+    scenarioOutcome: CreatureSizeChangeLifecycleScenarioOutcome,
     protocol: WitnessProtocol[WitnessHole],
   ): bool =
     recordCreatureSizeChangeState(
@@ -121,13 +124,13 @@ module battleRuntimeCreatureSizeChangeLifecycleMbt {
       advantageRollMode,
       advantageRollMode,
       lastDamageApplied,
-      scenarioResult,
+      scenarioOutcome,
       protocol,
     )
 
   action recordDecreaseEffectState(
     lastDamageApplied: int,
-    scenarioResult: str,
+    scenarioOutcome: CreatureSizeChangeLifecycleScenarioOutcome,
     protocol: WitnessProtocol[WitnessHole],
   ): bool =
     recordCreatureSizeChangeState(
@@ -140,7 +143,7 @@ module battleRuntimeCreatureSizeChangeLifecycleMbt {
       disadvantageRollMode,
       disadvantageRollMode,
       lastDamageApplied,
-      scenarioResult,
+      scenarioOutcome,
       protocol,
     )
 
@@ -155,7 +158,7 @@ module battleRuntimeCreatureSizeChangeLifecycleMbt {
       normalRollMode,
       normalRollMode,
       noDamageResolved,
-      "init",
+      Init,
       witnessInit(SavingThrowOutcome),
     ),
   }
@@ -165,7 +168,7 @@ module battleRuntimeCreatureSizeChangeLifecycleMbt {
     qSpellAvailable,
     not(qSizeEffectActive),
     protocolHoles == noHoles,
-    qScenarioResult == "init",
+    qScenarioOutcome == Init,
     recordCreatureSizeChangeState(
       true,
       true,
@@ -176,7 +179,7 @@ module battleRuntimeCreatureSizeChangeLifecycleMbt {
       normalRollMode,
       normalRollMode,
       noDamageResolved,
-      "needsHoles",
+      NeedsHoles,
       witnessNeedsHoles(savingThrowOutcomeHoles),
     ),
   }
@@ -186,7 +189,7 @@ module battleRuntimeCreatureSizeChangeLifecycleMbt {
     recordNoEffectState(
       false,
       false,
-      "unwillingSaveSucceeded",
+      UnwillingSaveSucceeded,
       witnessResolved(SavingThrowOutcome),
     ),
   }
@@ -195,7 +198,7 @@ module battleRuntimeCreatureSizeChangeLifecycleMbt {
     protocolHoles == savingThrowOutcomeHoles,
     recordDecreaseEffectState(
       noDamageResolved,
-      "unwillingSaveFailed",
+      UnwillingSaveFailed,
       witnessResolved(SavingThrowOutcome),
     ),
   }
@@ -205,10 +208,10 @@ module battleRuntimeCreatureSizeChangeLifecycleMbt {
     qSpellAvailable,
     not(qSizeEffectActive),
     protocolHoles == noHoles,
-    qScenarioResult == "init",
+    qScenarioOutcome == Init,
     recordIncreaseEffectState(
       noDamageResolved,
-      "willingEnlarge",
+      WillingEnlarge,
       witnessResolved(SavingThrowOutcome),
     ),
   }
@@ -218,10 +221,10 @@ module battleRuntimeCreatureSizeChangeLifecycleMbt {
     qSpellAvailable,
     not(qSizeEffectActive),
     protocolHoles == noHoles,
-    qScenarioResult == "init",
+    qScenarioOutcome == Init,
     recordDecreaseEffectState(
       noDamageResolved,
-      "willingReduce",
+      WillingReduce,
       witnessResolved(SavingThrowOutcome),
     ),
   }
@@ -230,10 +233,10 @@ module battleRuntimeCreatureSizeChangeLifecycleMbt {
     qSizeEffectActive,
     qSizeChangeMode == increaseMode,
     protocolHoles == noHoles,
-    qScenarioResult.in(Set("willingEnlarge")),
+    qScenarioOutcome.in(Set(WillingEnlarge)),
     recordIncreaseEffectState(
       7,
-      "attackDamageAdjusted",
+      AttackDamageAdjusted,
       witnessResolved(SavingThrowOutcome),
     ),
   }
@@ -242,10 +245,10 @@ module battleRuntimeCreatureSizeChangeLifecycleMbt {
     qSizeEffectActive,
     qSizeChangeMode == decreaseMode,
     protocolHoles == noHoles,
-    qScenarioResult.in(Set("willingReduce", "unwillingSaveFailed")),
+    qScenarioOutcome.in(Set(WillingReduce, UnwillingSaveFailed)),
     recordDecreaseEffectState(
       1,
-      "attackDamageAdjusted",
+      AttackDamageAdjusted,
       witnessResolved(SavingThrowOutcome),
     ),
   }
@@ -254,11 +257,11 @@ module battleRuntimeCreatureSizeChangeLifecycleMbt {
     qSizeEffectActive,
     qCasterConcentrating,
     protocolHoles == noHoles,
-    qScenarioResult.in(Set("willingEnlarge", "willingReduce", "unwillingSaveFailed")),
+    qScenarioOutcome.in(Set(WillingEnlarge, WillingReduce, UnwillingSaveFailed)),
     recordNoEffectState(
       qActionAvailable,
       qSpellAvailable,
-      "concentrationBroken",
+      ConcentrationBroken,
       witnessResolved(SavingThrowOutcome),
     ),
   }
@@ -267,21 +270,21 @@ module battleRuntimeCreatureSizeChangeLifecycleMbt {
     qSizeEffectActive,
     qCasterConcentrating,
     protocolHoles == noHoles,
-    qScenarioResult.in(Set("willingEnlarge", "willingReduce", "unwillingSaveFailed")),
+    qScenarioOutcome.in(Set(WillingEnlarge, WillingReduce, UnwillingSaveFailed)),
     recordNoEffectState(
       true,
       qSpellAvailable,
-      "durationExpired",
+      DurationExpired,
       witnessResolved(SavingThrowOutcome),
     ),
   }
 
   action doStutter = all {
-    qScenarioResult.in(Set(
-      "unwillingSaveSucceeded",
-      "attackDamageAdjusted",
-      "concentrationBroken",
-      "durationExpired",
+    qScenarioOutcome.in(Set(
+      UnwillingSaveSucceeded,
+      AttackDamageAdjusted,
+      ConcentrationBroken,
+      DurationExpired,
     )),
     recordCreatureSizeChangeState(
       qActionAvailable,
@@ -293,7 +296,7 @@ module battleRuntimeCreatureSizeChangeLifecycleMbt {
       qStrengthAbilityCheckRollMode,
       qStrengthSavingThrowRollMode,
       qLastDamageApplied,
-      qScenarioResult,
+      qScenarioOutcome,
       qState.protocol,
     ),
   }
