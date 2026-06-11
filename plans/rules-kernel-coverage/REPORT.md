@@ -4,14 +4,14 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 
 ## Summary
 
-- Total obligations: 116
-- Covered obligations: 110
+- Total obligations: 117
+- Covered obligations: 111
 - Open transitional obligations: 0
 - Boundary or unsupported obligations: 6
 
 | Status | Count |
 | --- | ---: |
-| covered | 110 |
+| covered | 111 |
 | needs-qnt-owner | 0 |
 | needs-parity-witness | 0 |
 | needs-surface-evidence | 0 |
@@ -21,7 +21,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | Runtime | Count |
 | --- | ---: |
 | shared-algebras | 1 |
-| battle | 86 |
+| battle | 87 |
 | character-creation | 14 |
 | character-sheet | 12 |
 | character-battle | 3 |
@@ -146,6 +146,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `BATTLE.FEATURE.METAMAGIC_SEEKING_SPELL_ATTACK_REROLL` | battle | covered | `unit-feature.metamagic-missed-spell-attack-reroll` |
 | `BATTLE.FEATURE.METAMAGIC_EMPOWERED_DAMAGE_DICE_REROLL` | battle | covered | `unit-feature.metamagic-damage-dice-reroll` |
 | `BATTLE.SPELL.ACID_ARROW_ATTACK_TIMING` | battle | covered | `spell.invocation-acid-arrow-attack-timing` |
+| `BATTLE.PROTOCOL.INTERRUPT_STACK_RESUME_REPLAY` | battle | covered | _direct reducer entrypoint_ |
 
 ## Battle Hole Frontier
 
@@ -371,7 +372,8 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `packages/battle-runtime/battle-runtime-object-contact-damage.qnt` | semantic-core | `BATTLE.SPELL.DISPEL_MAGIC_ONGOING_SPELL_ENDING`, `BATTLE.SPELL.HEAT_METAL_OBJECT_CONTACT_LIFECYCLE` |
 | `packages/battle-runtime/battle-runtime-ongoing-spell-dispel.qnt` | semantic-core | `BATTLE.SPELL.DISPEL_MAGIC_ONGOING_SPELL_ENDING` |
 | `packages/battle-runtime/battle-runtime-protection-from-poison.qnt` | semantic-core | `BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION` |
-| `packages/battle-runtime/battle-runtime-reaction-window.qnt` | semantic-core | `BATTLE.REACTION.OFFER_DECLINE_RESUME`, `BATTLE.SPELL.REACTION_CASTING_TIME` |
+| `packages/battle-runtime/battle-runtime-reaction-window.qnt` | semantic-core | `BATTLE.PROTOCOL.INTERRUPT_STACK_RESUME_REPLAY`, `BATTLE.REACTION.OFFER_DECLINE_RESUME`, `BATTLE.SPELL.REACTION_CASTING_TIME` |
+| `packages/battle-runtime/battle-runtime-reaction-resolution.qnt` | semantic-core | `BATTLE.PROTOCOL.INTERRUPT_STACK_RESUME_REPLAY` |
 | `packages/battle-runtime/battle-runtime-remarkable-athlete-critical-movement.qnt` | proof-only | profile-scoped: `unit-feature.remarkable-athlete` (`BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
 | `packages/battle-runtime/battle-runtime-remarkable-athlete-roll-modes.qnt` | proof-only | profile-scoped: `unit-feature.remarkable-athlete` (`BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
 | `packages/battle-runtime/battle-runtime-paladin-sacred-weapon-activation.qnt` | proof-only | profile-scoped: `unit-feature.paladin-sacred-weapon` (`BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
@@ -654,6 +656,7 @@ Rows here are derived from `plans/unit-profile-coverage/profiles.jsonl` for prof
 | `BATTLE.FEATURE.METAMAGIC_EMPOWERED_DAMAGE_DICE_REROLL` | generation-subset-clean | `import`, `variant`, `record`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `set-operators`, `map`, `fold`, `forall`, `exists`, `membership`, `size`, `record-update` |  |  |
 | `BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY` | generation-subset-clean | `variant` |  |  |
 | `BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING` | generation-subset-clean | `import`, `variant`, `pure-def`, `bool`, `if-expression`, `comparison`, `pattern-match`, `set` |  |  |
+| `BATTLE.PROTOCOL.INTERRUPT_STACK_RESUME_REPLAY` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `all-block`, `pattern-match`, `set`, `map`, `set-operators`, `membership`, `list` |  |  |
 
 ### Generator Readiness Backlog
 

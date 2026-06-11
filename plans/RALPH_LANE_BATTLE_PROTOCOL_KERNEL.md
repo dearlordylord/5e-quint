@@ -143,8 +143,8 @@ Every task must include:
 | 3 | BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT | done | BPK-B02-FILL-SUBJECT-VOCABULARY | prd/02 M1 done after this. Unblocks the cleanroom-corpus value immediately. |
 | 4 | BPK-B04-WEAPON-ATTACK-ORDERING | done | BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT | Cross-lane gate: unblock manually when Lane A PDS-A01 and PDS-A03 are merged. |
 | 5 | BPK-B05-SAVE-SPELL-ORDERING | done | BPK-B04-WEAPON-ATTACK-ORDERING | Second procedure shape; reuses B04's slice skeleton. |
-| 6 | BPK-B06-INTERRUPT-NESTING-RESUME | ready-for-research | BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT | Cross-lane gate: unblock manually when Lane A PDS-A01 and PDS-A03 are merged; may run before/parallel to B04 in queue order if the runner supports it. |
-| 7 | BPK-B07-REPLAY-FROM-ROOT | blocked | BPK-B06-INTERRUPT-NESTING-RESUME | |
+| 6 | BPK-B06-INTERRUPT-NESTING-RESUME | done | BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT | Cross-lane gate: unblock manually when Lane A PDS-A01 and PDS-A03 are merged; may run before/parallel to B04 in queue order if the runner supports it. |
+| 7 | BPK-B07-REPLAY-FROM-ROOT | ready-for-research | BPK-B06-INTERRUPT-NESTING-RESUME | |
 | 8 | BPK-B08-KERNEL-REGISTRY-CLOSEOUT | blocked | BPK-B04-WEAPON-ATTACK-ORDERING, BPK-B05-SAVE-SPELL-ORDERING, BPK-B06-INTERRUPT-NESTING-RESUME, BPK-B07-REPLAY-FROM-ROOT | Also produces the multi-owner outcome-oracle convention consumed by PDS-A17's PRD. |
 | 9 | BPK-B09-RECURSIVE-NEXT-SHAPES | blocked | BPK-B08-KERNEL-REGISTRY-CLOSEOUT | Ordering coverage for further procedure shapes (healing, command, attack-roll spell, …). |
 
@@ -236,7 +236,7 @@ Acceptance: as B04.
 
 ### Task 6 - BPK-B06-INTERRUPT-NESTING-RESUME
 
-Status: `ready-for-research` (cross-lane gate: PDS-A01 + PDS-A03 merged) · Mode: AFK
+Status: `done` (cross-lane gate: PDS-A01 + PDS-A03 merged) · Mode: AFK
 
 Input: prd/02 Solution §3; `battle-runtime-reaction-window.qnt`,
 `battle-runtime-interrupt-bridge.qnt`, rule-core
@@ -255,7 +255,7 @@ only).
 
 ### Task 7 - BPK-B07-REPLAY-FROM-ROOT
 
-Status: `blocked` · Mode: AFK
+Status: `ready-for-research` · Mode: AFK
 
 Output: replay-from-root equivalence owned in QNT (replaying recorded
 subject+fills from the root state reproduces the resolved state) at abstract

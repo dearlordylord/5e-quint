@@ -1,18 +1,18 @@
 {
   "summary": {
-    "total": 116,
-    "covered": 110,
+    "total": 117,
+    "covered": 111,
     "open": 0,
     "nonSemantic": 6,
     "byRuntime": {
       "shared-algebras": 1,
-      "battle": 86,
+      "battle": 87,
       "character-creation": 14,
       "character-sheet": 12,
       "character-battle": 3
     },
     "byStatus": {
-      "covered": 110,
+      "covered": 111,
       "needs-qnt-owner": 0,
       "needs-parity-witness": 0,
       "needs-surface-evidence": 0,
@@ -3926,6 +3926,39 @@
         "UBIQUITOUS_LANGUAGE.md#Damage Roll"
       ],
       "title": "Battle Acid Arrow applies immediate Acid damage, miss-half-initial-only damage, hit-only target-end delayed Acid damage, slot scaling, and one-shot cleanup"
+    },
+    {
+      "id": "BATTLE.PROTOCOL.INTERRUPT_STACK_RESUME_REPLAY",
+      "kind": "reaction-continuation",
+      "parityWitnesses": [
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/interrupt-stack-resume.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-interrupt-stack-resume.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profiles": [],
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime-reaction-window.qnt",
+        "packages/battle-runtime/battle-runtime-reaction-resolution.qnt"
+      ],
+      "reason": "This row covers the reducer protocol shape beyond the single Reaction offer: the battle-runtime reaction-window owner projects interrupt stack frames through the existing rule-core ReactionWindowState depth, decline, and advance-continuation semantics, while the reaction-resolution owner resumes suspended procedures from the post-Reaction BattleState after active Spell Effects may have changed. The SRD anchors the Reaction timing and continuation rule; choosing concrete interrupt stack frames and replay calls is reducer protocol evidence, not a separate RAW ordering interpretation.",
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-cast-interrupt-frame.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Playing-the-Game.md#Reactions",
+        ".references/srd-5.2.1/Rules-Glossary.md#Reaction",
+        ".references/srd-5.2.1/Rules-Glossary.md#Ready-Action",
+        ".references/srd-5.2.1/Spells/Gaining-and-Casting.md#Reaction-and-Bonus-Action-Triggers",
+        "UBIQUITOUS_LANGUAGE.md#Action Lifecycle",
+        "UBIQUITOUS_LANGUAGE.md#Spellcasting"
+      ],
+      "title": "Battle protocol interrupt stack nesting, decline/resume discipline, and resume from current active Spell Effect state"
     }
   ],
   "battleHoleFrontier": [
@@ -7190,10 +7223,19 @@
     {
       "evidence": "packages/battle-runtime/battle-runtime-reaction-window.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
       "obligationIds": [
+        "BATTLE.PROTOCOL.INTERRUPT_STACK_RESUME_REPLAY",
         "BATTLE.REACTION.OFFER_DECLINE_RESUME",
         "BATTLE.SPELL.REACTION_CASTING_TIME"
       ],
       "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-reaction-resolution.qnt is the covered obligation QNT owner carrying reaction procedure resolution and suspended continuation resume semantics.",
+      "obligationIds": [
+        "BATTLE.PROTOCOL.INTERRUPT_STACK_RESUME_REPLAY"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-reaction-resolution.qnt",
       "role": "semantic-core"
     },
     {
@@ -11832,6 +11874,38 @@
       "semanticCore": [
         "packages/battle-runtime/battle-runtime-weapon-attack-ordering.qnt",
         "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.qnt"
+      ],
+      "status": "generation-subset-clean"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [
+        "import",
+        "variant",
+        "record",
+        "record-update",
+        "pure-def",
+        "constant-def",
+        "int",
+        "bool",
+        "if-expression",
+        "let-binding",
+        "arithmetic",
+        "comparison",
+        "boolean-connective",
+        "all-block",
+        "pattern-match",
+        "set",
+        "map",
+        "set-operators",
+        "membership",
+        "list"
+      ],
+      "obligationId": "BATTLE.PROTOCOL.INTERRUPT_STACK_RESUME_REPLAY",
+      "proofOnly": [],
+      "semanticCore": [
+        "packages/battle-runtime/battle-runtime-reaction-window.qnt",
+        "packages/battle-runtime/battle-runtime-reaction-resolution.qnt"
       ],
       "status": "generation-subset-clean"
     }
