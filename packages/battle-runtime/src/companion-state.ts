@@ -14,7 +14,6 @@ import type {
   InitiativeScore,
 } from "./identity.ts";
 
-export type BattleCompanionStateId = string;
 export type BattleCompanionDurableId = string;
 
 export type BattleCompanionIdentity =
@@ -114,135 +113,45 @@ export type BattleCompanionSnapshot =
       readonly resolvedStatBlockId: StatBlockRecord["id"];
       readonly initiative: InitiativeScore;
     })
-  | (BattleCompanionAbsentState & {
-      readonly companionId: BattleCompanionStateId;
-    });
+  | BattleCompanionAbsentState;
 
-export type BattleCompanionPresentEntry = {
-  readonly companionStateId: BattleCompanionStateId;
-  readonly companionId: CombatantId;
-  readonly companion: BattleCompanionPresentState;
+// Battle companions are filed one-per-owner: the map is keyed by the owner's
+// CombatantId. SRD Find Familiar grants the owner a single familiar at a time, so
+// one entry per owner is the structural invariant. Widening to multiple
+// companions per owner later means widening this map's value to a small per-owner
+// collection (see plans/COMPANION_SESSION_ADMISSION_AND_REAPPEARANCE_PLAN.md),
+// not reviving a synthetic per-companion key space.
+export type BattleCompanions = ReadonlyMap<CombatantId, BattleCompanionState>;
+
+export type BattleCompanionEntry = {
+  readonly ownerId: CombatantId;
+  readonly companion: BattleCompanionState;
 };
-
-export type BattleCompanionAbsentEntry = {
-  readonly companionStateId: BattleCompanionStateId;
-  readonly companionId: BattleCompanionStateId;
-  readonly companion: BattleCompanionAbsentState;
-};
-
-export type BattleCompanionEntry =
-  | BattleCompanionPresentEntry
-  | BattleCompanionAbsentEntry;
 
 export function companionEntries(
-  companions: ReadonlyMap<BattleCompanionStateId, BattleCompanionState>,
+  companions: BattleCompanions,
 ): readonly BattleCompanionEntry[] {
-  const entries: BattleCompanionEntry[] = [];
-  for (const [companionStateId, companion] of companions) {
-    if (companion.status === "present") {
-      entries.push({
-        companionStateId,
-        companionId: presentCompanionCombatantId(companionStateId, companion),
-        companion,
-      });
-    } else {
-      entries.push({
-        companionStateId,
-        companionId: absentCompanionDisplayId(companionStateId, companion),
-        companion,
-      });
-    }
-  }
-  return entries;
+  return [...companions].map(([ownerId, companion]) => ({ ownerId, companion }));
 }
 
 export function findCompanionByOwner(
-  companions: ReadonlyMap<BattleCompanionStateId, BattleCompanionState>,
+  companions: BattleCompanions,
   ownerId: CombatantId,
 ): BattleCompanionState | undefined {
-  return findCompanionEntryByOwner(companions, ownerId)?.companion;
+  return companions.get(ownerId);
 }
 
 export function findCompanionEntryByOwner(
-  companions: ReadonlyMap<BattleCompanionStateId, BattleCompanionState>,
+  companions: BattleCompanions,
   ownerId: CombatantId,
 ): BattleCompanionEntry | undefined {
-  return companionEntries(companions).find(
-    (entry) => entry.companion.ownerId === ownerId,
-  );
+  const companion = companions.get(ownerId);
+  return companion === undefined ? undefined : { ownerId, companion };
 }
 
 export function setCompanion(
-  companions: ReadonlyMap<BattleCompanionStateId, BattleCompanionState>,
-  companionId: CombatantId,
+  companions: BattleCompanions,
   companion: BattleCompanionState,
-): ReadonlyMap<BattleCompanionStateId, BattleCompanionState> {
-  const companionStateId = companionStateIdFor(companionId, companion);
-  return setCompanionByStateId(companions, companionStateId, companion);
-}
-
-export function setRetainedAbsentCompanion(
-  companions: ReadonlyMap<BattleCompanionStateId, BattleCompanionState>,
-  companion: BattleCompanionAbsentState & {
-    readonly identity: Extract<
-      BattleCompanionIdentity,
-      { readonly tag: "retainedBetweenBattles" }
-    >;
-  },
-): ReadonlyMap<BattleCompanionStateId, BattleCompanionState> {
-  return setCompanionByStateId(
-    companions,
-    retainedCompanionStateId(companion.identity.durableCompanionId),
-    companion,
-  );
-}
-
-function setCompanionByStateId(
-  companions: ReadonlyMap<BattleCompanionStateId, BattleCompanionState>,
-  companionStateId: BattleCompanionStateId,
-  companion: BattleCompanionState,
-): ReadonlyMap<BattleCompanionStateId, BattleCompanionState> {
-  const withoutSameOwner = [...companions].filter(
-    ([key, candidate]) =>
-      candidate.ownerId !== companion.ownerId && key !== companionStateId,
-  );
-  return new Map(withoutSameOwner).set(companionStateId, companion);
-}
-
-export function companionStateIdFor(
-  companionId: CombatantId,
-  companion: BattleCompanionState,
-): BattleCompanionStateId {
-  if (companion.identity.tag === "retainedBetweenBattles") {
-    return retainedCompanionStateId(companion.identity.durableCompanionId);
-  }
-  return battleOnlyCompanionStateId(companionId);
-}
-
-export function presentCompanionCombatantId(
-  _companionId: BattleCompanionStateId,
-  companion: BattleCompanionPresentState,
-): CombatantId {
-  return companion.combatantId;
-}
-
-function absentCompanionDisplayId(
-  companionId: BattleCompanionStateId,
-  companion: BattleCompanionAbsentState,
-): BattleCompanionStateId {
-  return companion.identity.tag === "retainedBetweenBattles"
-    ? companion.identity.durableCompanionId
-    : companionId;
-}
-
-export function retainedCompanionStateId(
-  durableCompanionId: BattleCompanionDurableId,
-): BattleCompanionStateId {
-  return `retained:${durableCompanionId}`;
-}
-
-export function battleOnlyCompanionStateId(
-  companionId: CombatantId,
-): BattleCompanionStateId {
-  return `battle:${companionId}`;
+): BattleCompanions {
+  return new Map(companions).set(companion.ownerId, companion);
 }

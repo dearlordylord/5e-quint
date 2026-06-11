@@ -73,7 +73,7 @@ import {
 import type {
   BattleCompanionSnapshot,
   BattleCompanionPlacement as FindFamiliarPlacement,
-  BattleCompanionStateId,
+  BattleCompanionDurableId,
 } from "../companion-state.ts";
 import type {
   FindFamiliarFormSelection,
@@ -129,13 +129,13 @@ const BattleCompanionResolvedStatBlockIdSchema =
   Schema.NonEmptyTrimmedString as unknown as Schema.Schema<
     StatBlockRecord["id"]
   >;
-const BattleCompanionStateIdSchema =
-  Schema.NonEmptyTrimmedString as unknown as Schema.Schema<BattleCompanionStateId>;
+const BattleCompanionDurableIdSchema =
+  Schema.NonEmptyTrimmedString as unknown as Schema.Schema<BattleCompanionDurableId>;
 const BattleCompanionIdentitySchema = Schema.Union(
   Schema.Struct({ tag: Schema.Literal("battleOnly") }),
   Schema.Struct({
     tag: Schema.Literal("retainedBetweenBattles"),
-    durableCompanionId: BattleCompanionStateIdSchema,
+    durableCompanionId: BattleCompanionDurableIdSchema,
   }),
 );
 const BattleCompanionExpirationSchema = Schema.Union(
@@ -1176,13 +1176,11 @@ export const BattleHoleSchema = Schema.Union(
     ...BattleHoleBaseSchema,
     kind: Schema.Literal("companionReappearancePlacement"),
     ownerId: CombatantId,
-    companionId: BattleCompanionStateIdSchema,
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
     kind: Schema.Literal("companionReappearanceInitiative"),
     ownerId: CombatantId,
-    companionId: BattleCompanionStateIdSchema,
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
@@ -4285,7 +4283,6 @@ const BattleCompanionSnapshotSchema = Schema.Union(
   Schema.Struct({
     status: Schema.Literal("temporarilyDismissed"),
     ownerId: CombatantId,
-    companionId: BattleCompanionStateIdSchema,
     identity: BattleCompanionIdentitySchema,
     expiration: BattleCompanionExpirationSchema,
     reappearanceCombatantId: CombatantId,
@@ -4298,7 +4295,6 @@ const BattleCompanionSnapshotSchema = Schema.Union(
   Schema.Struct({
     status: Schema.Literal("temporarilyDismissed"),
     ownerId: CombatantId,
-    companionId: BattleCompanionStateIdSchema,
     identity: BattleCompanionIdentitySchema,
     expiration: BattleCompanionExpirationSchema,
     reappearanceCombatantId: CombatantId,
@@ -4311,7 +4307,6 @@ const BattleCompanionSnapshotSchema = Schema.Union(
   Schema.Struct({
     status: Schema.Literal("disappearedAtZeroHitPoints"),
     ownerId: CombatantId,
-    companionId: BattleCompanionStateIdSchema,
     identity: BattleCompanionIdentitySchema,
     expiration: BattleCompanionExpirationSchema,
     formAccess: Schema.Literal("findFamiliar"),
@@ -4322,7 +4317,6 @@ const BattleCompanionSnapshotSchema = Schema.Union(
   Schema.Struct({
     status: Schema.Literal("disappearedAtZeroHitPoints"),
     ownerId: CombatantId,
-    companionId: BattleCompanionStateIdSchema,
     identity: BattleCompanionIdentitySchema,
     expiration: BattleCompanionExpirationSchema,
     formAccess: Schema.Literal("pactOfTheChain"),

@@ -141,7 +141,6 @@ export type {
   BattleCompanionIdentity,
   BattleCompanionSnapshot,
   BattleCompanionState,
-  BattleCompanionStateId,
   BattleCompanionStoredForm,
 } from "./companion-state.ts";
 export {

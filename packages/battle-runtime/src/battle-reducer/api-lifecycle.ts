@@ -21,7 +21,7 @@ import * as Option from "effect/Option";
 import type { BattleCreatureInit } from "../battle-init.ts";
 
 import { BattleId, CombatantId } from "../identity.ts";
-import { presentCompanionCombatantId } from "../companion-state.ts";
+import type { BattleCompanionState } from "../companion-state.ts";
 import { battleCompanionEntries } from "../find-familiar-state.ts";
 
 import {
@@ -521,9 +521,9 @@ function combatantIdsWithPresentFindFamiliarDependents(
   combatantIds: readonly CombatantId[],
 ): ReadonlySet<CombatantId> {
   const removeIds = new Set(combatantIds);
-  for (const { companionId, companion } of battleCompanionEntries(state)) {
+  for (const { companion } of battleCompanionEntries(state)) {
     if (companion.status === "present" && removeIds.has(companion.ownerId)) {
-      removeIds.add(presentCompanionCombatantId(companionId, companion));
+      removeIds.add(companion.combatantId);
     }
   }
   return removeIds;
@@ -533,27 +533,19 @@ function companionsAfterCombatantRemoval(
   state: BattleState,
   removeIds: ReadonlySet<CombatantId>,
 ): BattleState["companions"] {
-  const retainedEntries: Array<
-    readonly [
-      BattleState["companions"] extends ReadonlyMap<infer K, unknown>
-        ? K
-        : never,
-      BattleState["companions"] extends ReadonlyMap<unknown, infer V>
-        ? V
-        : never,
-    ]
-  > = [];
-  for (const { companionId, companion } of battleCompanionEntries(state)) {
+  const retainedEntries: Array<readonly [CombatantId, BattleCompanionState]> =
+    [];
+  for (const { ownerId, companion } of battleCompanionEntries(state)) {
     if (removeIds.has(companion.ownerId)) {
       continue;
     }
     if (
       companion.status === "present" &&
-      removeIds.has(presentCompanionCombatantId(companionId, companion))
+      removeIds.has(companion.combatantId)
     ) {
       continue;
     }
-    retainedEntries.push([companionId, companion]);
+    retainedEntries.push([ownerId, companion]);
   }
   return new Map(retainedEntries);
 }

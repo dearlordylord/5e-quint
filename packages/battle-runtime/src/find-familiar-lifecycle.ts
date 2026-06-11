@@ -40,9 +40,7 @@ import {
   companionEntries,
   findCompanionByOwner,
   findCompanionEntryByOwner,
-  presentCompanionCombatantId,
   setCompanion,
-  setRetainedAbsentCompanion,
   type BattleCompanionAbsentState,
   type BattleCompanionDisappearedAtZeroHitPointsState,
   type BattleCompanionDurableId,
@@ -234,10 +232,7 @@ export function castFindFamiliar(
   const priorFamiliar = priorFamiliarEntry?.companion;
   const priorPresentFamiliarId =
     priorFamiliarEntry?.companion.status === "present"
-      ? presentCompanionCombatantId(
-          priorFamiliarEntry.companionId,
-          priorFamiliarEntry.companion,
-        )
+      ? priorFamiliarEntry.companion.combatantId
       : undefined;
   const familiarId = priorPresentFamiliarId ?? input.familiarId;
   const identityIssue = findFamiliarIdentityIssue(
@@ -361,10 +356,7 @@ export function castWildCompanion(
   const priorFamiliar = priorFamiliarEntry?.companion;
   const priorPresentFamiliarId =
     priorFamiliarEntry?.companion.status === "present"
-      ? presentCompanionCombatantId(
-          priorFamiliarEntry.companionId,
-          priorFamiliarEntry.companion,
-        )
+      ? priorFamiliarEntry.companion.combatantId
       : undefined;
   const familiarId = priorPresentFamiliarId ?? input.familiarId;
   const identityIssue = findFamiliarIdentityIssue(
@@ -564,20 +556,9 @@ function admitAbsentCompanionToBattle(
       "Retained companion admission requires retained identity.",
     );
   }
-  // Cast evidence: the immediately preceding guard proves the widened
-  // constructor result carries retained identity for this admission branch.
-  const retainedCompanion = companion as BattleCompanionAbsentState & {
-    readonly identity: Extract<
-      BattleCompanionIdentity,
-      { readonly tag: "retainedBetweenBattles" }
-    >;
-  };
   return Either.right({
     ...input.state,
-    companions: setRetainedAbsentCompanion(
-      input.state.companions,
-      retainedCompanion,
-    ),
+    companions: setCompanion(input.state.companions, companion),
   });
 }
 
@@ -819,10 +800,7 @@ export function temporarilyDismissFindFamiliar(
       "Find Familiar can be temporarily dismissed only while present.",
     );
   }
-  const familiarId = presentCompanionCombatantId(
-    familiarEntry.companionId,
-    familiar,
-  );
+  const familiarId = familiar.combatantId;
   const spent = spendFindFamiliarMagicAction(
     input.state,
     input.casterId,
@@ -856,7 +834,7 @@ export function temporarilyDismissFindFamiliar(
     ownerId: input.casterId,
   });
   const nextState = withoutPresentFindFamiliarCombatant(
-    withFindFamiliar(spent.state, familiarId, nextFamiliar),
+    withFindFamiliar(spent.state, nextFamiliar),
     familiarId,
   );
   if (nextState.tag === "invalid") {
@@ -905,10 +883,7 @@ export function permanentlyDismissFindFamiliar(
   if (familiar.status !== "present") {
     return resolvedFindFamiliarResult({ ...spent.state, companions }, []);
   }
-  const familiarId = presentCompanionCombatantId(
-    familiarEntry.companionId,
-    familiar,
-  );
+  const familiarId = familiar.combatantId;
   const nextState = withoutPresentFindFamiliarCombatant(
     { ...spent.state, companions },
     familiarId,
@@ -1117,7 +1092,7 @@ export function applyFindFamiliarZeroHitPointDisappearance(input: {
     ownerId: entry.ownerId,
   });
   const nextState = withoutPresentFindFamiliarCombatant(
-    withFindFamiliar(input.state, input.familiarId, nextFamiliar),
+    withFindFamiliar(input.state, nextFamiliar),
     input.familiarId,
   );
   if (nextState.tag === "invalid") {
@@ -1148,26 +1123,24 @@ export function applyCompanionLongRestDisappearance(input: {
   if (companionsToRemove.length === 0) {
     return resolvedFindFamiliarResult(input.state, []);
   }
-  const absentCompanionIds = companionsToRemove.flatMap((entry) =>
-    entry.companion.status === "present" ? [] : [entry.companionStateId],
+  const absentOwnerIds = companionsToRemove.flatMap((entry) =>
+    entry.companion.status === "present" ? [] : [entry.ownerId],
   );
   const stateWithoutAbsentCompanions =
-    absentCompanionIds.length === 0
+    absentOwnerIds.length === 0
       ? input.state
       : {
           ...input.state,
           companions: new Map(
             [...input.state.companions].filter(
-              ([companionId]) => !absentCompanionIds.includes(companionId),
+              ([ownerId]) => !absentOwnerIds.includes(ownerId),
             ),
           ),
         };
   const presentCompanionIds: CombatantId[] = [];
   for (const entry of companionsToRemove) {
     if (entry.companion.status === "present") {
-      presentCompanionIds.push(
-        presentCompanionCombatantId(entry.companionId, entry.companion),
-      );
+      presentCompanionIds.push(entry.companion.combatantId);
     }
   }
   if (presentCompanionIds.length === 0) {
@@ -1269,7 +1242,7 @@ function withFindFamiliarCombatant(input: {
   }
   return {
     tag: "resolved",
-    state: withFindFamiliar(added.right, input.familiarId, input.familiar),
+    state: withFindFamiliar(added.right, input.familiar),
   };
 }
 
@@ -1280,16 +1253,12 @@ function withoutPresentFindFamiliarCombatant(
   if (!state.combatants.has(familiarId)) {
     return { tag: "resolved", state };
   }
+  // Preserve the companion entry the caller already transitioned (dismissed or
+  // removed): removing the familiar combatant must not disturb the owner-keyed
+  // companions map.
   const companions = state.companions;
   const removed = removeBattleCombatants({
-    state: {
-      ...state,
-      companions: new Map(
-        [...state.companions].filter(
-          ([companionId]) => companionId !== familiarId,
-        ),
-      ),
-    },
+    state,
     combatantIds: [familiarId],
   });
   return Either.isLeft(removed)
@@ -1320,12 +1289,11 @@ function familiarMaxHp(statBlock: StatBlockRecord): Hp | string {
 
 function withFindFamiliar(
   state: BattleState,
-  familiarId: CombatantId,
   familiar: FindFamiliarState,
 ): BattleState {
   return {
     ...state,
-    companions: setCompanion(state.companions, familiarId, familiar),
+    companions: setCompanion(state.companions, familiar),
   };
 }
 

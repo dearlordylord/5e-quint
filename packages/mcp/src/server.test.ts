@@ -2482,7 +2482,11 @@ describe("MCP server route", () => {
     expect(dismissed.result.tag).toBe("resolved");
     expect(dismissed.snapshot.companions).toMatchObject([
       {
-        companionId: "durable-wizard-familiar",
+        ownerId: "wizard",
+        identity: {
+          tag: "retainedBetweenBattles",
+          durableCompanionId: "durable-wizard-familiar",
+        },
         status: "temporarilyDismissed",
       },
     ]);

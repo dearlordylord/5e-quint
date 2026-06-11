@@ -4,8 +4,8 @@
 {
   "schema": "ralph-plan.v1",
   "tasks": [
-    { "number": 1, "id": "CSC-T01-OWNER-KEYED-COMPANIONS", "status": "ready-for-implementation", "title": "Key battle companions by owner; delete the synthetic companion-state id space" },
-    { "number": 2, "id": "CSC-T02-PROTOCOL-TAG-UNION", "status": "blocked", "title": "Reduce the durable companion protocol to a tag union with one derivation table" },
+    { "number": 1, "id": "CSC-T01-OWNER-KEYED-COMPANIONS", "status": "done", "title": "Key battle companions by owner; delete the synthetic companion-state id space" },
+    { "number": 2, "id": "CSC-T02-PROTOCOL-TAG-UNION", "status": "ready-for-implementation", "title": "Reduce the durable companion protocol to a tag union with one derivation table" },
     { "number": 3, "id": "CSC-T03-SETTLEMENT-OUTCOME", "status": "blocked", "title": "Make battle state carry the full settle-able companion outcome; drop session companionAdmission" },
     { "number": 4, "id": "CSC-T04-DEAD-BATTLE-LONG-REST-LANE", "status": "blocked", "title": "Delete the unreachable battle-state long-rest companion lane; decide castFindFamiliar wiring" },
     { "number": 5, "id": "CSC-T05-COMPANION-REST-ASSUMPTION", "status": "blocked", "title": "Record the companion rest-participation assumption; align sheet long-rest THP/HP" },
@@ -130,8 +130,8 @@ a task's change invalidates them):
 
 | # | Task | Status | Depends on | Why this order |
 | ---: | --- | --- | --- | --- |
-| 1 | CSC-T01-OWNER-KEYED-COMPANIONS | ready-for-implementation | none | Foundation: every later battle-side task reads/writes the companions map; do the key model first so nothing is built on the synthetic id space. |
-| 2 | CSC-T02-PROTOCOL-TAG-UNION | blocked | T01 | Shrinks the protocol vocabulary T03's settlement must write. |
+| 1 | CSC-T01-OWNER-KEYED-COMPANIONS | done | none | Foundation: every later battle-side task reads/writes the companions map; do the key model first so nothing is built on the synthetic id space. |
+| 2 | CSC-T02-PROTOCOL-TAG-UNION | ready-for-implementation | T01 | Shrinks the protocol vocabulary T03's settlement must write. |
 | 3 | CSC-T03-SETTLEMENT-OUTCOME | blocked | T02 | The core domain rework; consumes T01's key model and T02's protocol shape. |
 | 4 | CSC-T04-DEAD-BATTLE-LONG-REST-LANE | blocked | T03 | Whether battle `expiration` survives depends on T03's settlement projection. |
 | 5 | CSC-T05-COMPANION-REST-ASSUMPTION | blocked | T04 | HITL; sheet-side counterpart of T04's deletion. |
@@ -146,7 +146,29 @@ a task's change invalidates them):
 
 ### Task 1 - CSC-T01-OWNER-KEYED-COMPANIONS
 
-Status: `ready-for-implementation` · Mode: AFK
+Status: `done` · Mode: AFK
+
+**Outcome (wire-shape decision).** `BattleState.companions` is now
+`ReadonlyMap<CombatantId, BattleCompanionState>` keyed by the owner (new
+`BattleCompanions` alias, documented one-per-owner with the widening path). The
+synthetic id space is gone: `BattleCompanionStateId`, both prefix constructors,
+`companionStateIdFor`, `absentCompanionDisplayId`, `setRetainedAbsentCompanion`,
+and `presentCompanionCombatantId` are deleted; `BattleCompanionEntry` is now
+`{ ownerId, companion }` and present consumers read `companion.combatantId`
+directly. Table-facing id decision: the redundant `companionId` field was
+**removed** from the `companionLifecycle` subject and the two companion
+reappearance holes — the owner `actorId`/`ownerId` is the universal handle
+(one-per-owner is structural, no in-battle recast can swap the familiar, and no
+single id type covers present + disappeared + battle-only companions). The
+absent snapshot drops its redundant `companionId` and is now exactly
+`BattleCompanionAbsentState` (durable identity already lives in
+`identity.durableCompanionId`); the present snapshot keeps `companionId`
+(the live combatant). The `companionManifestationFromBattle` cast is gone. The
+witness `.mbt.qnt` files are unmodified; only the TS driver glue changed.
+Verification: battle-runtime/character-battle-runtime/mcp typecheck green; full
+non-MBT battle-runtime failing set identical to base (3 pre-existing
+`unit-profile-admission-*` failures unrelated to companions); both companion MBT
+files pass; character-battle-runtime 77 and mcp 93 unit tests green.
 
 **Finding (review F5, state design).**
 `packages/battle-runtime/src/companion-state.ts` introduced

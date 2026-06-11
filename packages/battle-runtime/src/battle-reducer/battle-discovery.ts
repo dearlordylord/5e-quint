@@ -42,7 +42,6 @@ import {
 } from "../battle-subjects.ts";
 
 import { CombatantId, spellId } from "../identity.ts";
-import { presentCompanionCombatantId } from "../companion-state.ts";
 import {
   findFamiliarCompanionEntryForOwner,
   isPresentFindFamiliarCombatant,
@@ -668,7 +667,6 @@ function companionProtocolActs(
   const actor = state.combatants.get(actorId);
   const actorCanAct = combatantCanTakeActions(actor);
   if (familiar.status !== "present") {
-    const familiarId = familiarEntry.companionId;
     if (!actorCanAct || !canSpendAction(state.currentTurnResources, "magic")) {
       return [];
     }
@@ -676,7 +674,6 @@ function companionProtocolActs(
       subject: {
         tag: "companionLifecycle",
         actorId,
-        companionId: familiarId,
         action: "permanentlyDismiss",
       },
       label: "Dismiss Familiar Forever",
@@ -689,21 +686,14 @@ function companionProtocolActs(
           subject: {
             tag: "companionLifecycle",
             actorId,
-            companionId: familiarId,
             action: "reappear",
           },
           label: "Reappear Familiar",
           summary:
             "Use a Magic action to make a temporarily dismissed familiar reappear.",
           initialHoles: [
-            companionReappearancePlacementHole({
-              ownerId: actorId,
-              companionId: familiarId,
-            }),
-            companionReappearanceInitiativeHole({
-              ownerId: actorId,
-              companionId: familiarId,
-            }),
+            companionReappearancePlacementHole({ ownerId: actorId }),
+            companionReappearanceInitiativeHole({ ownerId: actorId }),
           ],
         },
         permanentlyDismiss,
@@ -711,10 +701,7 @@ function companionProtocolActs(
     }
     return [permanentlyDismiss];
   }
-  const familiarId = presentCompanionCombatantId(
-    familiarEntry.companionId,
-    familiar,
-  );
+  const familiarId = familiar.combatantId;
   const familiarCombatant = state.combatants.get(familiarId);
   if (familiarCombatant === undefined) {
     return [];
@@ -726,7 +713,6 @@ function companionProtocolActs(
         subject: {
           tag: "companionLifecycle",
           actorId,
-          companionId: familiarId,
           action: "temporarilyDismiss",
         },
         label: "Dismiss Familiar",
@@ -740,7 +726,6 @@ function companionProtocolActs(
         subject: {
           tag: "companionLifecycle",
           actorId,
-          companionId: familiarId,
           action: "permanentlyDismiss",
         },
         label: "Dismiss Familiar Forever",
@@ -983,10 +968,7 @@ function pactOfTheChainFamiliarAttackActs(
   if (familiarEntry?.companion.status !== "present") {
     return [];
   }
-  const familiarId = presentCompanionCombatantId(
-    familiarEntry.companionId,
-    familiarEntry.companion,
-  );
+  const familiarId = familiarEntry.companion.combatantId;
   const familiarCombatant = state.combatants.get(familiarId);
   if (
     familiarCombatant?.origin.kind !== "statBlock" ||

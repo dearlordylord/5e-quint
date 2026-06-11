@@ -49,10 +49,7 @@ import {
   reappearTemporarilyDismissedFindFamiliar,
   temporarilyDismissFindFamiliar,
 } from "../find-familiar-lifecycle.ts";
-import {
-  presentCompanionCombatantId,
-  type BattleCompanionSnapshot,
-} from "../companion-state.ts";
+import type { BattleCompanionSnapshot } from "../companion-state.ts";
 import {
   deliverTouchSpellThroughFindFamiliar,
   shareFindFamiliarSenses,
@@ -1183,10 +1180,7 @@ function resolveCompanionLifecycleSubject(
     input.state,
     input.subject.actorId,
   );
-  if (
-    familiarEntry === null ||
-    familiarEntry.companionId !== input.subject.companionId
-  ) {
+  if (familiarEntry === null) {
     return invalidResult(
       input.state,
       "staleSubject",
@@ -1273,7 +1267,6 @@ function companionReappearancePlacement(
     > {
   const expectedHole = companionReappearancePlacementHole({
     ownerId: input.subject.actorId,
-    companionId: input.subject.companionId,
   });
   const fill = input.fills.find(
     (
@@ -1316,7 +1309,6 @@ function companionReappearanceInitiative(
     > {
   const expectedHole = companionReappearanceInitiativeHole({
     ownerId: input.subject.actorId,
-    companionId: input.subject.companionId,
   });
   const fill = input.fills.find(
     (
@@ -1418,10 +1410,7 @@ function companionHeldObjectIdsForDismissal(
       "Familiar dismissal held-object facts require a present familiar.",
     );
   }
-  const companionId = presentCompanionCombatantId(
-    companionEntry.companionId,
-    companionEntry.companion,
-  );
+  const companionId = companionEntry.companion.combatantId;
   const expectedHole = companionHeldObjectFactsHole({ companionId });
   const fill = input.fills.find(
     (
@@ -4522,27 +4511,19 @@ export function snapshotBattle(state: BattleState): BattleSnapshot {
     }),
     companions: battleCompanionEntries(state).map((entry) => {
       if (entry.companion.status !== "present") {
-        return {
-          ...entry.companion,
-          companionId: entry.companionId,
-        };
+        return entry.companion;
       }
-      const companionId = presentCompanionCombatantId(
-        entry.companionId,
-        entry.companion,
-      );
-      const { combatantId: _combatantId, ...snapshotCompanion } =
-        entry.companion;
+      const { combatantId, ...snapshotCompanion } = entry.companion;
       return {
         ...snapshotCompanion,
-        companionId,
+        companionId: combatantId,
         resolvedStatBlockId: requirePresentFamiliarCombatantStatBlockId(
           state,
-          companionId,
+          combatantId,
         ),
         initiative: requirePresentFamiliarCombatantInitiative(
           state,
-          companionId,
+          combatantId,
         ),
       };
     }) satisfies readonly BattleCompanionSnapshot[],

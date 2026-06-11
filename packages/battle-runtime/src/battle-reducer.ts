@@ -149,8 +149,7 @@ import type { CharacterBattleClassLevel } from "./character-class-level.ts";
 import type {
   BattleCompanionPlacement,
   BattleCompanionSnapshot,
-  BattleCompanionStateId,
-  BattleCompanionState,
+  BattleCompanions,
 } from "./companion-state.ts";
 import type {
   BattleAreaId,
@@ -4087,7 +4086,7 @@ export type BattleState = {
   readonly battleId: BattleId;
   readonly initiative: InitiativeStack<CombatantId>;
   readonly combatants: ReadonlyMap<CombatantId, BattleCreatureState>;
-  readonly companions: ReadonlyMap<BattleCompanionStateId, BattleCompanionState>;
+  readonly companions: BattleCompanions;
   readonly objectOutlines: readonly BattleObjectOutline[];
   readonly lightEmitters: readonly BattleStoredLightEmitter[];
   readonly hidePrerequisites: ReadonlyMap<CombatantId, BattleHidePrerequisite>;
@@ -4396,7 +4395,6 @@ export type BattleCompanionReappearancePlacementHole = {
   readonly kind: "companionReappearancePlacement";
   readonly label: string;
   readonly ownerId: CombatantId;
-  readonly companionId: BattleCompanionStateId;
 };
 export type BattleCompanionReappearanceInitiativeHole = {
   readonly holeInstanceKey: HoleInstanceKey;
@@ -4404,7 +4402,6 @@ export type BattleCompanionReappearanceInitiativeHole = {
   readonly kind: "companionReappearanceInitiative";
   readonly label: string;
   readonly ownerId: CombatantId;
-  readonly companionId: BattleCompanionStateId;
 };
 export type BattleMagicWeaponTargetItemFact = {
   readonly kind: "nonmagicalWeaponItem";

@@ -46,7 +46,6 @@ import {
   type FindFamiliarFormEligibility,
   type PactOfTheChainFamiliarAttackSubject,
 } from "./index.ts";
-import { presentCompanionCombatantId } from "./companion-state.ts";
 import {
   characterCreature,
   requireCombatant,
@@ -363,12 +362,7 @@ function findFamiliarCompanionProjection(
   const familiar = familiarEntry?.companion ?? null;
   const familiarCombatant =
     familiarEntry !== null && familiarEntry.companion.status === "present"
-      ? state.battle.combatants.get(
-          presentCompanionCombatantId(
-            familiarEntry.companionId,
-            familiarEntry.companion,
-          ),
-        )
+      ? state.battle.combatants.get(familiarEntry.companion.combatantId)
       : undefined;
   const familiarReactionAvailable =
     familiarCombatant?.reactionAvailable === true;

@@ -20,7 +20,6 @@ import {
   parseSupportedUnitFeatureProfile,
   type BattleCompanionPlacement,
   type BattleCompanionState,
-  type BattleCompanionStateId,
   type BattleCompanionStoredForm,
   type CompanionBattleAdmissionFormEligibility,
   type BattleCreatureState,
@@ -522,7 +521,6 @@ export function applyBattleCompanionHandoffToCharacterSheet(input: {
   }
   const manifestation = companionManifestationFromBattle({
     state: input.state,
-    companionId: battleEntry.companionId,
     companion: battleEntry.companion,
   });
   if (Either.isLeft(manifestation)) return Either.left(manifestation.left);
@@ -1345,17 +1343,13 @@ function isAttackExceptionFamiliarLikeProtocol(
 
 function companionManifestationFromBattle(input: {
   readonly state: BattleState;
-  readonly companionId: BattleCompanionStateId;
   readonly companion: BattleCompanionState;
 }): Either.Either<
   CharacterSheetRetainedCompanionManifestation,
   CharacterSheetBattleHandoffIssue
 > {
   if (input.companion.status === "present") {
-    // Cast evidence: present companion entries are keyed by active battle
-    // combatant id; absent retained companions are the branch that may use a
-    // durable companion state id instead.
-    const companionCombatantId = input.companionId as CombatantId;
+    const companionCombatantId = input.companion.combatantId;
     const combatant = input.state.combatants.get(companionCombatantId);
     if (combatant === undefined) {
       return characterSheetBattleHandoffIssue(

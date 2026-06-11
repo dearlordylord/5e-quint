@@ -68,10 +68,6 @@ import {
   type FindFamiliarFormEligibility,
   type PactOfTheChainFamiliarAttackSubject,
 } from "./index.ts";
-import {
-  presentCompanionCombatantId,
-  retainedCompanionStateId,
-} from "./companion-state.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
 import { ATTACK_TARGET_HOLE_ID } from "./battle-reducer.ts";
 import { battleCreatureStateWithoutKnockOut } from "./battle-reducer/creature-state.ts";
@@ -553,10 +549,7 @@ function withFamiliarHitPoints(
   if (familiarEntry?.companion.status !== "present") {
     throw new Error("Expected present familiar.");
   }
-  const familiarCombatantId = presentCompanionCombatantId(
-    familiarEntry.companionId,
-    familiarEntry.companion,
-  );
+  const familiarCombatantId = familiarEntry.companion.combatantId;
   const combatant = state.combatants.get(familiarCombatantId);
   if (combatant === undefined) {
     throw new Error("Expected familiar combatant.");
@@ -1002,13 +995,13 @@ describe("Find Familiar lifecycle", () => {
     expect(collision.left.message).toBe(
       "Companion admission identity is already used by another companion.",
     );
-    expect(
-      firstAdmission.right.companions.get(
-        retainedCompanionStateId("durable:first"),
-      ),
-    ).toMatchObject({
+    expect(firstAdmission.right.companions.get(casterId)).toMatchObject({
       ownerId: casterId,
       status: "temporarilyDismissed",
+      identity: {
+        tag: "retainedBetweenBattles",
+        durableCompanionId: "durable:first",
+      },
     });
   });
 
@@ -1585,8 +1578,14 @@ describe("Find Familiar lifecycle", () => {
         status: "present",
       },
     );
+    const recastEntry = findFamiliarCompanionEntryForOwner(
+      recast.state,
+      casterId,
+    );
     expect(
-      findFamiliarCompanionEntryForOwner(recast.state, casterId)?.companionId,
+      recastEntry?.companion.status === "present"
+        ? recastEntry.companion.combatantId
+        : undefined,
     ).toBe(replacementFamiliarId);
     expect(recast.state.combatants.has(familiarId)).toBe(false);
     expect(recast.state.combatants.has(replacementFamiliarId)).toBe(true);
@@ -2760,9 +2759,12 @@ describe("Find Familiar lifecycle", () => {
     );
     expect(familiarEntry).not.toBeNull();
     if (familiarEntry === null) return;
+    if (familiarEntry.companion.status !== "present") {
+      throw new Error("Expected present familiar after cast.");
+    }
 
     expect(snapshotBattle(cast.state).companions).toMatchObject([
-      { ownerId: casterId, companionId: familiarEntry.companionId },
+      { ownerId: casterId, companionId: familiarEntry.companion.combatantId },
     ]);
   });
 });
