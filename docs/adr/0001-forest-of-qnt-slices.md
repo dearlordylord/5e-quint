@@ -24,3 +24,16 @@ This yields three enforceable rules, consistent with "state minimal, composition
 - **Simulated `*.mbt.qnt` drivers import leaves only** — small pure modules of types/tags and `pure def` facts, never a barrel or a behavioural rule module. Enforced by `scripts/check-mbt-driver-closure.cjs` (transitive import file-count ≤ 8), run in `pnpm quality`.
 - **Type-vocabulary modules stay free of behavioural imports.** A widely-imported type module (e.g. `battle-runtime-model`) must source any type it needs from a leaf shared with the behaviour, never by importing the behaviour itself.
 - **Prefer literal projection witnesses over computed-oracle drivers.** A deterministic scenario should assert its SRD outcome as literal facts (self-contained, fast). Import the rule reducer to _derive_ the projection only when it genuinely depends on mutable state the reducer computes; never reimplement the rule inside the witness to avoid the import — that duplicates rule logic and weakens parity.
+
+## Addendum (2026-06-11): typed witness protocol and picks
+
+Battle-runtime MBT witnesses use `packages/battle-runtime/battle-runtime-witness-protocol.qnt` for their replay protocol state. The leaf defines `WitnessResult`, `WitnessInvalidReason`, and `WitnessProtocol[h]` plus pure helper constructors such as `witnessInit`, `witnessNeedsHoles`, `witnessResolved`, and `witnessInvalid`. Witnesses keep procedure-specific facts in their local state record, but protocol result and holes live in the typed protocol record instead of the pre-protocol mutable names `qLastResult: str`, `qLastInvalidReason: str`, or `qHoles`.
+
+The decision rule for Quint picks is:
+
+- use picks for input sampling, such as die results, slot levels, or other table facts whose sampled value is forwarded to the production driver;
+- keep separate actions for different procedure paths, such as discovery, fill, rejection, interrupt, or resume steps.
+
+Literal witnesses still state their expected outcomes in Quint. A conditional literal keyed by a picked value is acceptable because the value travels in the trace; importing a reducer or reimplementing one inside the witness is still reserved for genuine computed-oracle drivers.
+
+`scripts/check-mbt-driver-closure.cjs`, run by `pnpm quality`, enforces both the import-closure budget and the absence of those legacy mutable witness-protocol names in battle-runtime witnesses. It does not type all scenario outcome projection labels; remaining `qScenarioResult`-style domain strings are separate projection facts and need their own future migration if they should become variants.

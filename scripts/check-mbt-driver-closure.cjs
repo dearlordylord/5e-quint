@@ -31,6 +31,29 @@ const path = require("node:path");
 const ROOT = path.resolve(__dirname, "..");
 const BUDGET_FILES = 8;
 
+// Legacy mutable protocol names from the pre-WitnessProtocol convention. This
+// gate intentionally does not ban domain-specific scenario outcome labels such
+// as qScenarioResult; those are projection facts whose typing needs a separate
+// witness/driver migration.
+const LEGACY_WITNESS_PROTOCOL_NAMES = [
+  {
+    label: "qLastResult string result var",
+    pattern: /^\s*var\s+qLastResult\s*:\s*str\b/m,
+  },
+  {
+    label: "qLastInvalidReason string reason var",
+    pattern: /^\s*var\s+qLastInvalidReason\s*:\s*str\b/m,
+  },
+  {
+    label: "qHoles parallel holes var",
+    pattern: /^\s*var\s+qHoles\s*:\s*Set\[/m,
+  },
+  {
+    label: "qLastHoles parallel holes var",
+    pattern: /^\s*var\s+qLastHoles\s*:\s*Set\[/m,
+  },
+];
+
 const AGGREGATION_BARRELS = {
   "packages/battle-runtime/battle-runtime-model.qnt": "battle-runtime type-model barrel",
 };
@@ -184,6 +207,24 @@ function checkMbtDriverClosure(root) {
   return { failures, graduated };
 }
 
+function checkLegacyWitnessProtocolNames(root) {
+  const runtimeDir = path.join(root, "packages/battle-runtime");
+  const failures = [];
+  for (const witness of listDrivers(runtimeDir)) {
+    const text = fs.readFileSync(witness, "utf8");
+    for (const { label, pattern } of LEGACY_WITNESS_PROTOCOL_NAMES) {
+      const match = pattern.exec(text);
+      if (match) {
+        const line = text.slice(0, match.index).split("\n").length;
+        failures.push(
+          `${toRepoPath(root, witness)}:${line}: legacy ${label}. Use battle-runtime-witness-protocol.qnt's WitnessProtocol record and helper constructors instead of the pre-protocol mutable names.`,
+        );
+      }
+    }
+  }
+  return failures;
+}
+
 function withFixtureRoot(fn) {
   const fixtureRoot = fs.mkdtempSync(path.join(os.tmpdir(), "mbt-driver-closure-"));
   try {
@@ -219,14 +260,30 @@ function runSelfTest() {
     if (failures.some((failure) => failure.includes("imports 1 files (budget"))) {
       throw new Error(`Self-test failed: forbidden import fixture failed only by closure count, got ${JSON.stringify(failures)}`);
     }
+    fs.writeFileSync(
+      path.join(runtimeDir, "fixture-legacy-protocol.mbt.qnt"),
+      [
+        "module fixtureLegacyProtocolMbt {",
+        "  var qLastResult: str",
+        "}",
+        "",
+      ].join("\n"),
+    );
+    const protocolFailures = checkLegacyWitnessProtocolNames(fixtureRoot);
+    const expectedProtocolFailure =
+      "packages/battle-runtime/fixture-legacy-protocol.mbt.qnt:2: legacy qLastResult string result var.";
+    if (!protocolFailures.some((failure) => failure.startsWith(expectedProtocolFailure))) {
+      throw new Error(`Self-test failed: expected legacy protocol-var failure, got ${JSON.stringify(protocolFailures)}`);
+    }
   });
-  console.log("MBT driver closure self-test OK.");
+  console.log("MBT driver closure and legacy witness protocol name self-test OK.");
 }
 
 if (process.argv.includes("--self-test")) {
   runSelfTest();
 } else {
   const { failures, graduated } = checkMbtDriverClosure(ROOT);
+  const protocolFailures = checkLegacyWitnessProtocolNames(ROOT);
   if (graduated.length) {
     console.log("MBT driver closure gate -- tighten the allowlist:");
     for (const g of graduated) console.log("  - " + g);
@@ -237,5 +294,11 @@ if (process.argv.includes("--self-test")) {
     for (const f of failures) console.error("  - " + f);
     process.exit(1);
   }
+  if (protocolFailures.length) {
+    console.error("MBT legacy witness protocol name gate FAILED:");
+    for (const f of protocolFailures) console.error("  - " + f);
+    process.exit(1);
+  }
   console.log(`MBT driver closure gate passed (budget ${BUDGET_FILES} files; ${Object.keys(ALLOWLIST).length} grandfathered drivers tracked for migration).`);
+  console.log("MBT legacy witness protocol name gate passed (no pre-protocol mutable qLast*/qHoles vars).");
 }

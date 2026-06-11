@@ -97,7 +97,7 @@
     {
       "number": 16,
       "id": "PDS-A16-WITNESS-GATE-AND-CLOSEOUT",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Add the witness-protocol convention gate, ADR addendum, README skeleton, and close out prd/04"
     },
     {
@@ -109,7 +109,7 @@
     {
       "number": 18,
       "id": "PDS-A18-RECURSIVE-NEXT-BATCH",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Plan the next parity-seam batch if this lane drains"
     }
   ]
@@ -207,9 +207,9 @@ Every task must include:
 | 13 | PDS-A13-WITNESS-BATCH-3 | done | PDS-A12-WITNESS-BATCH-2 | |
 | 14 | PDS-A14-WITNESS-BATCH-4 | done | PDS-A13-WITNESS-BATCH-3 | |
 | 15 | PDS-A15-WITNESS-BATCH-5 | done | PDS-A14-WITNESS-BATCH-4 | Drains the protocol-unmigrated set. |
-| 16 | PDS-A16-WITNESS-GATE-AND-CLOSEOUT | ready-for-research | PDS-A15-WITNESS-BATCH-5 | Convention gate, ADR addendum, README skeleton, prd/04 closeout. |
+| 16 | PDS-A16-WITNESS-GATE-AND-CLOSEOUT | done | PDS-A15-WITNESS-BATCH-5 | Convention gate, ADR addendum, README skeleton, prd/04 closeout. |
 | 17 | PDS-A17-LITERAL-CAPTURE-PRD | ready-for-research | PDS-A10-WITNESS-PILOTS | HITL: owner reviews the PRD. Single-owner obligations only; multi-owner rows wait for BPK-B08. |
-| 18 | PDS-A18-RECURSIVE-NEXT-BATCH | blocked | PDS-A16-WITNESS-GATE-AND-CLOSEOUT | Refill or close the lane. |
+| 18 | PDS-A18-RECURSIVE-NEXT-BATCH | ready-for-research | PDS-A16-WITNESS-GATE-AND-CLOSEOUT | Refill or close the lane. |
 
 ## Task Details
 
@@ -450,7 +450,7 @@ qLastResult: str' *.mbt.qnt` is empty.
 
 ### Task 16 - PDS-A16-WITNESS-GATE-AND-CLOSEOUT
 
-Status: `ready-for-research` · Mode: AFK
+Status: `done` · Mode: AFK
 
 Output: quality gate forbidding string-protocol vars in battle-runtime
 witnesses; the ADR (or ADR-0001 addendum) recording the witness-protocol
@@ -483,9 +483,10 @@ gates are restated as task gates.
 
 ### Task 18 - PDS-A18-RECURSIVE-NEXT-BATCH
 
-Status: `blocked` · Mode: AFK
+Status: `ready-for-research` · Mode: AFK
 
 Output: if witness/driver stragglers or follow-ups accumulated (e.g. the
-character-package witnesses noted as stretch in prd/03/04), append a new
+remaining `qScenario*` projection strings recorded in the prd/04 closeout or
+the character-package witnesses noted as stretch in prd/03/04), append a new
 batch of tasks to this lane; otherwise mark the lane drained in
 `plans/RALPH_QUINT_FIRST_WAVE.md`.
