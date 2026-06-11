@@ -5,37 +5,39 @@ module battleRuntimeFireballSelectedIdentityMbt {
 
   type WitnessHole = | WitnessProtocolHole
 
+  type FireballSelectedIdentityScenarioOutcome = | Init | FireballSaveGatedDamage
+
   type FireballSelectedIdentityWitnessState = {
-    qScenarioResult: str,
+    qScenarioOutcome: FireballSelectedIdentityScenarioOutcome,
     protocol: WitnessProtocol[WitnessHole],
   }
 
   var qState: FireballSelectedIdentityWitnessState
 
-  pure def qLastResult: str = qState.qScenarioResult
+  pure def qLastResult: FireballSelectedIdentityScenarioOutcome = qState.qScenarioOutcome
 
   pure def fireballSelectedIdentityProtocolForProjection(
     holes: Set[WitnessHole],
-    scenarioResult: str,
+    scenarioResult: FireballSelectedIdentityScenarioOutcome,
     _scenarioInvalidReason: str,
   ): WitnessProtocol[WitnessHole] =
-    if (scenarioResult == "init") witnessInit(WitnessProtocolHole)
+    if (scenarioResult == Init) witnessInit(WitnessProtocolHole)
     else if (holes != Set()) witnessNeedsHoles(holes)
     else witnessResolved(WitnessProtocolHole)
 
 
-  action recordProjection(lastResult: str): bool = all {
+  action recordProjection(lastResult: FireballSelectedIdentityScenarioOutcome): bool = all {
     qState' = {
-      qScenarioResult: lastResult,
+      qScenarioOutcome: lastResult,
       protocol: fireballSelectedIdentityProtocolForProjection(Set(), lastResult, ""),
     },
   }
 
-  action init = recordProjection("init")
+  action init = recordProjection(Init)
 
   action doDiscoverFireballSaveGatedDamage = all {
-    qLastResult == "init",
-    recordProjection("fireballSaveGatedDamage"),
+    qLastResult == Init,
+    recordProjection(FireballSaveGatedDamage),
   }
 
   action step = any {

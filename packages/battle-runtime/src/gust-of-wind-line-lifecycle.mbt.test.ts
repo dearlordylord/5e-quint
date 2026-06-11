@@ -16,6 +16,7 @@ import {
   numberFromQuintInt,
   quintRecordField,
   quintStateRecord,
+  quintVariantTag,
   run,
   stateCheck,
 } from "./battle-runtime-mbt-driver-kit.ts";
@@ -75,6 +76,21 @@ type GustLastResult =
   | "movedCloser"
   | "directionChanged"
   | "concentrationBroken";
+const GUST_OF_WIND_LINE_LIFECYCLE_SCENARIO_OUTCOME_BY_TAG: Readonly<
+  Record<string, GustLastResult>
+> = {
+  Init: "init",
+  NeedsHoles: "needsHoles",
+  InitialSaveSucceeded: "initialSaveSucceeded",
+  InitialSaveFailed: "initialSaveFailed",
+  MovedCloser: "movedCloser",
+  EndTurnSaveSucceeded: "endTurnSaveSucceeded",
+  EndTurnSaveFailed: "endTurnSaveFailed",
+  DirectionChanged: "directionChanged",
+  DirectionChangeBlocked: "directionChangeBlocked",
+  EndCasterTurn: "endCasterTurn",
+  ConcentrationBroken: "concentrationBroken",
+};
 
 type GustOfWindLineState = {
   readonly currentTurnRole: GustTurnRole;
@@ -648,7 +664,7 @@ function normalizeGustQuintState(raw: unknown): GustOfWindLineState {
     decodeHole: gustHole,
     compareHoles: (left, right) => left.localeCompare(right),
   });
-  const scenarioResult = gustLastResult(state["qScenarioResult"]);
+  const scenarioResult = gustLastResult(state["qScenarioOutcome"]);
   assertWitnessProtocolConsistentWithScenario({
     label: "Gust of Wind Line lifecycle",
     scenarioResult,
@@ -721,20 +737,11 @@ function gustHole(raw: unknown): GustHole {
 }
 
 function gustLastResult(raw: unknown): GustLastResult {
-  if (
-    raw === "init" ||
-    raw === "needsHoles" ||
-    raw === "initialSaveSucceeded" ||
-    raw === "initialSaveFailed" ||
-    raw === "directionChangeBlocked" ||
-    raw === "endCasterTurn" ||
-    raw === "endTurnSaveSucceeded" ||
-    raw === "endTurnSaveFailed" ||
-    raw === "movedCloser" ||
-    raw === "directionChanged" ||
-    raw === "concentrationBroken"
-  ) {
-    return raw;
+  const tag = quintVariantTag(raw, "qScenarioOutcome");
+  const value =
+    GUST_OF_WIND_LINE_LIFECYCLE_SCENARIO_OUTCOME_BY_TAG[tag];
+  if (value !== undefined) {
+    return value;
   }
-  throw new Error(`Unknown Gust of Wind result: ${String(raw)}.`);
+  throw new Error(`Unknown Gust of Wind result: ${tag}.`);
 }

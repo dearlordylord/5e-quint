@@ -15,6 +15,7 @@ import {
   numberFromQuintInt,
   quintRecordField,
   quintStateRecord,
+  quintVariantTag,
   run,
   stateCheck,
 } from "./battle-runtime-mbt-driver-kit.ts";
@@ -64,6 +65,18 @@ type HeatMetalLastResult =
   | "endTargetTurn"
   | "repeatContactDamage"
   | "concentrationBroken";
+const HEAT_METAL_OBJECT_CONTACT_SCENARIO_OUTCOME_BY_TAG: Readonly<
+  Record<string, HeatMetalLastResult>
+> = {
+  Init: "init",
+  CastNoContact: "castNoContact",
+  CastContactDamage: "castContactDamage",
+  RepeatBlocked: "repeatBlocked",
+  EndCasterTurn: "endCasterTurn",
+  EndTargetTurn: "endTargetTurn",
+  RepeatContactDamage: "repeatContactDamage",
+  ConcentrationBroken: "concentrationBroken",
+};
 
 type HeatMetalObjectContactState = {
   readonly currentTurnRole: HeatMetalTurnRole;
@@ -416,7 +429,7 @@ function normalizeHeatMetalQuintState(
   if (protocol.holes.length !== 0) {
     throw new Error("Expected Heat Metal witness holes to be empty.");
   }
-  const scenarioResult = heatMetalLastResult(state["qScenarioResult"]);
+  const scenarioResult = heatMetalLastResult(state["qScenarioOutcome"]);
   assertWitnessProtocolConsistentWithScenario({
     label: "Heat Metal object-contact lifecycle",
     scenarioResult,
@@ -474,17 +487,11 @@ function heatMetalTurnRole(raw: unknown): HeatMetalTurnRole {
 }
 
 function heatMetalLastResult(raw: unknown): HeatMetalLastResult {
-  if (
-    raw === "init" ||
-    raw === "castNoContact" ||
-    raw === "castContactDamage" ||
-    raw === "repeatBlocked" ||
-    raw === "endCasterTurn" ||
-    raw === "endTargetTurn" ||
-    raw === "repeatContactDamage" ||
-    raw === "concentrationBroken"
-  ) {
-    return raw;
+  const tag = quintVariantTag(raw, "qScenarioOutcome");
+  const value =
+    HEAT_METAL_OBJECT_CONTACT_SCENARIO_OUTCOME_BY_TAG[tag];
+  if (value !== undefined) {
+    return value;
   }
-  throw new Error(`Unknown Heat Metal result: ${String(raw)}.`);
+  throw new Error(`Unknown Heat Metal result: ${tag}.`);
 }

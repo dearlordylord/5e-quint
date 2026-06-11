@@ -5,52 +5,54 @@ module battleRuntimeLevel2MobilitySpellSelectedIdentityMbt {
 
   type WitnessHole = | WitnessProtocolHole
 
+  type Level2MobilitySpellSelectedIdentityScenarioOutcome = | Init | AlterSelfTransformationMode | FlySpeedGrant | MistyStepSelfTeleport | SpiderClimbSpeedGrant
+
   type Level2MobilitySpellSelectedIdentityWitnessState = {
-    qScenarioResult: str,
+    qScenarioOutcome: Level2MobilitySpellSelectedIdentityScenarioOutcome,
     protocol: WitnessProtocol[WitnessHole],
   }
 
   var qState: Level2MobilitySpellSelectedIdentityWitnessState
 
-  pure def qLastResult: str = qState.qScenarioResult
+  pure def qLastResult: Level2MobilitySpellSelectedIdentityScenarioOutcome = qState.qScenarioOutcome
 
   pure def level2MobilitySpellSelectedIdentityProtocolForProjection(
     holes: Set[WitnessHole],
-    scenarioResult: str,
+    scenarioResult: Level2MobilitySpellSelectedIdentityScenarioOutcome,
     _scenarioInvalidReason: str,
   ): WitnessProtocol[WitnessHole] =
-    if (scenarioResult == "init") witnessInit(WitnessProtocolHole)
+    if (scenarioResult == Init) witnessInit(WitnessProtocolHole)
     else if (holes != Set()) witnessNeedsHoles(holes)
     else witnessResolved(WitnessProtocolHole)
 
 
-  action recordProjection(lastResult: str): bool = all {
+  action recordProjection(lastResult: Level2MobilitySpellSelectedIdentityScenarioOutcome): bool = all {
     qState' = {
-      qScenarioResult: lastResult,
+      qScenarioOutcome: lastResult,
       protocol: level2MobilitySpellSelectedIdentityProtocolForProjection(Set(), lastResult, ""),
     },
   }
 
-  action init = recordProjection("init")
+  action init = recordProjection(Init)
 
   action doDiscoverAlterSelfTransformationMode = all {
-    qLastResult == "init",
-    recordProjection("alterSelfTransformationMode"),
+    qLastResult == Init,
+    recordProjection(AlterSelfTransformationMode),
   }
 
   action doDiscoverFlySpeedGrant = all {
-    qLastResult == "init",
-    recordProjection("flySpeedGrant"),
+    qLastResult == Init,
+    recordProjection(FlySpeedGrant),
   }
 
   action doDiscoverMistyStepSelfTeleport = all {
-    qLastResult == "init",
-    recordProjection("mistyStepSelfTeleport"),
+    qLastResult == Init,
+    recordProjection(MistyStepSelfTeleport),
   }
 
   action doDiscoverSpiderClimbSpeedGrant = all {
-    qLastResult == "init",
-    recordProjection("spiderClimbSpeedGrant"),
+    qLastResult == Init,
+    recordProjection(SpiderClimbSpeedGrant),
   }
 
   action step = any {

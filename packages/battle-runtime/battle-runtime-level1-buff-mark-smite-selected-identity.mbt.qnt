@@ -5,6 +5,8 @@ module battleRuntimeLevel1BuffMarkSmiteSelectedIdentityMbt {
 
   type WitnessHole = | WitnessProtocolHole
 
+  type Level1BuffMarkSmiteSelectedIdentityScenarioOutcome = | Init | DivineFavor | DivineSmite | EnsnaringStrike | FalseLife | Heroism | HuntersMark | Hex | Longstrider | SearingSmite | Shillelagh | TrueStrike
+
   type Level1BuffMarkSmiteSelectedIdentityWitnessState = {
     qDivineFavorActiveRiderCount: int,
     qTargetHp: int,
@@ -95,7 +97,7 @@ module battleRuntimeLevel1BuffMarkSmiteSelectedIdentityMbt {
     qTrueStrikeDamageDice: int,
     qTrueStrikeDamageDieSize: int,
     qTrueStrikeDamageModifier: int,
-    qScenarioResult: str,
+    qScenarioOutcome: Level1BuffMarkSmiteSelectedIdentityScenarioOutcome,
     protocol: WitnessProtocol[WitnessHole],
   }
 
@@ -190,12 +192,12 @@ module battleRuntimeLevel1BuffMarkSmiteSelectedIdentityMbt {
   pure def qTrueStrikeDamageDice: int = qState.qTrueStrikeDamageDice
   pure def qTrueStrikeDamageDieSize: int = qState.qTrueStrikeDamageDieSize
   pure def qTrueStrikeDamageModifier: int = qState.qTrueStrikeDamageModifier
-  pure def qLastResult: str = qState.qScenarioResult
+  pure def qLastResult: Level1BuffMarkSmiteSelectedIdentityScenarioOutcome = qState.qScenarioOutcome
 
   pure def witnessProtocolForScenario(
-    scenarioResult: str,
+    scenarioResult: Level1BuffMarkSmiteSelectedIdentityScenarioOutcome,
   ): WitnessProtocol[WitnessHole] =
-    if (scenarioResult == "init") witnessInit(WitnessProtocolHole)
+    if (scenarioResult == Init) witnessInit(WitnessProtocolHole)
     else witnessResolved(WitnessProtocolHole)
 
   pure def recordProjectionState(
@@ -254,7 +256,7 @@ module battleRuntimeLevel1BuffMarkSmiteSelectedIdentityMbt {
     hexActiveMarkTransferKind: str,
     hexActiveMarkRetargetTiming: str,
     hexTransferVisibleOnDropTurn: bool,
-    lastResult: str,
+    lastResult: Level1BuffMarkSmiteSelectedIdentityScenarioOutcome,
   ): Level1BuffMarkSmiteSelectedIdentityWitnessState = {
       qDivineFavorActiveRiderCount: divineFavorActiveRiderCount,
       qTargetHp: targetHp,
@@ -345,7 +347,7 @@ module battleRuntimeLevel1BuffMarkSmiteSelectedIdentityMbt {
       qTrueStrikeDamageDice: 0,
       qTrueStrikeDamageDieSize: 0,
       qTrueStrikeDamageModifier: 0,
-      qScenarioResult: lastResult,
+      qScenarioOutcome: lastResult,
       protocol: witnessProtocolForScenario(lastResult),
   }
 
@@ -379,7 +381,7 @@ module battleRuntimeLevel1BuffMarkSmiteSelectedIdentityMbt {
     turnStartDamageDieSize: int,
     escapeCheckAbility: str,
     escapeCheckSkill: str,
-    lastResult: str,
+    lastResult: Level1BuffMarkSmiteSelectedIdentityScenarioOutcome,
   ): Level1BuffMarkSmiteSelectedIdentityWitnessState = recordProjectionState(
     divineFavorActiveRiderCount,
     targetHp,
@@ -447,7 +449,7 @@ module battleRuntimeLevel1BuffMarkSmiteSelectedIdentityMbt {
     longstriderSpeedDeltaFeet: int,
     spellSlotSpentThisTurn: bool,
     level1SlotsRemaining: int,
-    lastResult: str,
+    lastResult: Level1BuffMarkSmiteSelectedIdentityScenarioOutcome,
   ): Level1BuffMarkSmiteSelectedIdentityWitnessState = recordProjectionState(
     0,
     targetHp,
@@ -626,34 +628,34 @@ module battleRuntimeLevel1BuffMarkSmiteSelectedIdentityMbt {
       "none", 0, 0, 0,
       "none", "none", "none", 0,
       false, false, false, "none", "none", "none", "none", 0, 0, "none", "none",
-      "init",
+      Init,
     ),
   }
 
   action doDivineFavorWeaponDamageRider = all {
-    qLastResult == "init",
+    qLastResult == Init,
     qState' = recordWithoutMarkedDamageProjectionState(
       1, 5, 0, false, true, 1, "divine_favor", "radiant", 1, 4,
       "none", 0, 0, 0,
       "none", "none", "none", 0,
       false, false, false, "none", "none", "none", "none", 0, 0, "none", "none",
-      "divineFavor",
+      DivineFavor,
     ),
   }
 
   action doDivineSmiteAfterHitDamage = all {
-    qLastResult == "init",
+    qLastResult == Init,
     qState' = recordWithoutMarkedDamageProjectionState(
       0, 1, 0, false, true, 1, "divine_smite", "radiant", 2, 8,
       "none", 0, 0, 0,
       "none", "none", "none", 0,
       false, false, false, "none", "none", "none", "none", 0, 0, "none", "none",
-      "divineSmite",
+      DivineSmite,
     ),
   }
 
   action doEnsnaringStrikeAfterHitRestraintTurnStartDamageAndEscape = all {
-    qLastResult == "init",
+    qLastResult == Init,
     qState' = recordWithoutMarkedDamageProjectionState(
       0, 5, 0, false, false, 1, "none", "none", 0, 0,
       "none", 0, 0, 0,
@@ -662,45 +664,45 @@ module battleRuntimeLevel1BuffMarkSmiteSelectedIdentityMbt {
       "ensnaring_strike", "str",
       "ensnaring_strike", "piercing", 1, 6,
       "str", "athletics",
-      "ensnaringStrike",
+      EnsnaringStrike,
     ),
   }
 
   action doFalseLifeTemporaryHitPoints = all {
-    qLastResult == "init",
+    qLastResult == Init,
     qState' = recordWithoutMarkedDamageProjectionState(
       0, 12, 11, false, true, 1, "none", "none", 0, 0,
       "false_life", 2, 4, 4,
       "none", "none", "none", 0,
       false, false, false, "none", "none", "none", "none", 0, 0, "none", "none",
-      "falseLife",
+      FalseLife,
     ),
   }
 
   action doHeroismFrightenedImmunityTurnStartTemporaryHitPoints = all {
-    qLastResult == "init",
+    qLastResult == Init,
     qState' = recordWithoutMarkedDamageProjectionState(
       0, 12, 3, false, false, 1, "none", "none", 0, 0,
       "none", 0, 0, 0,
       "heroism", "frightened", "heroism", 3,
       false, false, true, "none", "none", "none", "none", 0, 0, "none", "none",
-      "heroism",
+      Heroism,
     ),
   }
 
   action doHeroismFrightenedImmunityTurnStartTemporaryHitPointsCleanup = all {
-    qLastResult == "init",
+    qLastResult == Init,
     qState' = recordWithoutMarkedDamageProjectionState(
       0, 12, 3, true, false, 1, "none", "none", 0, 0,
       "none", 0, 0, 0,
       "none", "none", "none", 0,
       false, false, false, "none", "none", "none", "none", 0, 0, "none", "none",
-      "heroism",
+      Heroism,
     ),
   }
 
   action doHuntersMarkMarkedDamageRiderConcentrationAndSameTurnTransfer = all {
-    qLastResult == "init",
+    qLastResult == Init,
     qState' = recordProjectionState(
       0, 0, 30, "none", "none", 0, 0, false, false, 1, "none", "none", 0, 0,
       "none", 0, 0, 0,
@@ -712,12 +714,12 @@ module battleRuntimeLevel1BuffMarkSmiteSelectedIdentityMbt {
       "none", "none", 0, 0,
       "none", "none", "none",
       "none", "none", "none", false,
-      "huntersMark",
+      HuntersMark,
     ),
   }
 
   action doHexMarkedDamageRiderAndLaterTurnTransfer = all {
-    qLastResult == "init",
+    qLastResult == Init,
     qState' = recordProjectionState(
       0, 0, 30, "none", "none", 0, 0, false, false, 1, "none", "none", 0, 0,
       "none", 0, 0, 0,
@@ -729,12 +731,12 @@ module battleRuntimeLevel1BuffMarkSmiteSelectedIdentityMbt {
       "hex", "necrotic", 1, 6,
       "hex", "transferTarget", "wis",
       "availableAfterTurn", "awaitingTargetDrop", "laterTurn", false,
-      "hex",
+      Hex,
     ),
   }
 
   action doLongstriderSpeedIncrease = all {
-    qLastResult == "init",
+    qLastResult == Init,
     qState' = recordLongstriderSpeedProjectionState(
       12,
       40,
@@ -743,19 +745,19 @@ module battleRuntimeLevel1BuffMarkSmiteSelectedIdentityMbt {
       10,
       true,
       1,
-      "longstrider",
+      Longstrider,
     ),
   }
 
   action doSearingSmiteAfterHitTimedDamageAndSaveCleanup = all {
-    qLastResult == "init",
+    qLastResult == Init,
     qState' = recordSearingSmiteLifecycleProjectionState(
       recordWithoutMarkedDamageProjectionState(
       0, 1, 0, false, false, 1, "none", "none", 0, 0,
       "none", 0, 0, 0,
       "none", "none", "none", 0,
       false, false, false, "none", "none", "none", "none", 0, 0, "none", "none",
-      "searingSmite",
+      SearingSmite,
     ),
       "searing_smite", "fire", 1, 6, true,
       "searing_smite", "fire", 1, 6,
@@ -764,14 +766,14 @@ module battleRuntimeLevel1BuffMarkSmiteSelectedIdentityMbt {
   }
 
   action doShillelaghWeaponAttackOverride = all {
-    qLastResult == "init",
+    qLastResult == Init,
     qState' = recordShillelaghWeaponAttackOverrideProjectionState(
       recordWithoutMarkedDamageProjectionState(
       0, 5, 0, false, false, 2, "none", "none", 0, 0,
       "none", 0, 0, 0,
       "none", "none", "none", 0,
       false, false, false, "none", "none", "none", "none", 0, 0, "none", "none",
-      "shillelagh",
+      Shillelagh,
     ),
       "shillelagh", "weapon_quarterstaff", 3, 5, 1, 8,
       "Quarterstaff (force)", 5, "force", 1, 8, 3,
@@ -779,14 +781,14 @@ module battleRuntimeLevel1BuffMarkSmiteSelectedIdentityMbt {
   }
 
   action doTrueStrikeSpellHostedWeaponAttack = all {
-    qLastResult == "init",
+    qLastResult == Init,
     qState' = recordTrueStrikeSpellHostedWeaponAttackProjectionState(
       recordWithoutMarkedDamageProjectionState(
       0, 5, 0, false, false, 2, "none", "none", 0, 0,
       "none", 0, 0, 0,
       "none", "none", "none", 0,
       false, false, false, "none", "none", "none", "none", 0, 0, "none", "none",
-      "trueStrike",
+      TrueStrike,
     ),
       "true_strike", "main:weapon_dagger", "weapon_dagger", "Dagger",
       5, "radiant", 1, 4, 3,

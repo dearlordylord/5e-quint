@@ -5,37 +5,39 @@ module battleRuntimeLightningBoltSelectedIdentityMbt {
 
   type WitnessHole = | WitnessProtocolHole
 
+  type LightningBoltSelectedIdentityScenarioOutcome = | Init | LightningBoltSaveGatedDamage
+
   type LightningBoltSelectedIdentityWitnessState = {
-    qScenarioResult: str,
+    qScenarioOutcome: LightningBoltSelectedIdentityScenarioOutcome,
     protocol: WitnessProtocol[WitnessHole],
   }
 
   var qState: LightningBoltSelectedIdentityWitnessState
 
-  pure def qLastResult: str = qState.qScenarioResult
+  pure def qLastResult: LightningBoltSelectedIdentityScenarioOutcome = qState.qScenarioOutcome
 
   pure def selectedIdentityProtocolForProjection(
     holes: Set[WitnessHole],
-    scenarioResult: str,
+    scenarioResult: LightningBoltSelectedIdentityScenarioOutcome,
     scenarioInvalidReason: str,
   ): WitnessProtocol[WitnessHole] =
-    if (scenarioResult == "init") witnessInit(WitnessProtocolHole)
+    if (scenarioResult == Init) witnessInit(WitnessProtocolHole)
     else if (scenarioInvalidReason == "invalidFill") witnessInvalid(WitnessProtocolHole, WInvalidFill)
     else if (holes != Set()) witnessNeedsHoles(holes)
     else witnessResolved(WitnessProtocolHole)
 
-  action recordProjection(lastResult: str): bool = all {
+  action recordProjection(lastResult: LightningBoltSelectedIdentityScenarioOutcome): bool = all {
     qState' = {
 
-      qScenarioResult: lastResult,
+      qScenarioOutcome: lastResult,
       protocol: selectedIdentityProtocolForProjection(Set(), lastResult, ""),
     },
   }
-  action init = recordProjection("init")
+  action init = recordProjection(Init)
 
   action doDiscoverLightningBoltSaveGatedDamage = all {
-    qLastResult == "init",
-    recordProjection("lightningBoltSaveGatedDamage"),
+    qLastResult == Init,
+    recordProjection(LightningBoltSaveGatedDamage),
   }
 
   action step = any {

@@ -68,6 +68,20 @@ type SelectedLevel2ControlSpellInvocation = {
   readonly result: Exclude<Level2ControlSpellSelectedIdentityResult, "init">;
 };
 
+const LEVEL2_CONTROL_SPELL_SELECTED_IDENTITY_SCENARIO_OUTCOME_BY_TAG = {
+  Init: "init",
+  CalmEmotionsConditionImmunity: "calmEmotionsConditionImmunity",
+  CharmPersonSaveGatedCondition: "charmPersonSaveGatedCondition",
+  DarknessPointOrigin: "darknessPointOrigin",
+  EnthrallPerceptionPenalty: "enthrallPerceptionPenalty",
+  GustOfWindLine: "gustOfWindLine",
+  InvisibilityDirectCondition: "invisibilityDirectCondition",
+  LevitateCreature: "levitateCreature",
+  SeeInvisibilityObserverSight: "seeInvisibilityObserverSight",
+  SpikeGrowthMovementHazard: "spikeGrowthMovementHazard",
+  WebRestraintHazard: "webRestraintHazard",
+} as const satisfies Readonly<Record<string, Level2ControlSpellSelectedIdentityResult>>;
+
 defineSelectedIdentityWitness({
   describeLabel: "Level 2 control spell selected identity MBT",
   taskId: "B10-LEVEL2-CONTROL-SPELL-IDENTITY-BATCH",
@@ -78,8 +92,11 @@ defineSelectedIdentityWitness({
   quintStateField: "qState",
   quintStateFieldPrefix: "q",
   witnessProtocolField: "protocol",
-  quintFieldNames: { lastResult: "qScenarioResult" },
-  projectionSchema: { lastResult: "str" },
+  quintFieldNames: { lastResult: "qScenarioOutcome" },
+  quintVariantFieldTags: {
+    lastResult: LEVEL2_CONTROL_SPELL_SELECTED_IDENTITY_SCENARIO_OUTCOME_BY_TAG,
+  },
+  projectionSchema: { lastResult: "variant" },
   initialProjection: expectedProjection("init"),
   units: [
     {

@@ -74,6 +74,18 @@ if (firstTypeOverride === undefined) {
   throw new Error("Expected Find Familiar creature type override choices.");
 }
 
+const FIND_FAMILIAR_SELECTED_IDENTITY_SCENARIO_OUTCOME_BY_TAG = {
+  Init: "init",
+  Cast: "cast",
+  Recast: "recast",
+  DismissedAndReappeared: "dismissedAndReappeared",
+  TouchDelivered: "touchDelivered",
+} as const satisfies Readonly<Record<string, | "init"
+    | "cast"
+    | "recast"
+    | "dismissedAndReappeared"
+    | "touchDelivered">>;
+
 defineSelectedIdentityWitness({
   describeLabel: "Find Familiar selected identity MBT",
   taskId: "B22-FIND-FAMILIAR-IDENTITY-WITNESS",
@@ -84,7 +96,10 @@ defineSelectedIdentityWitness({
   quintStateField: "qState",
   quintStateFieldPrefix: "q",
   witnessProtocolField: "protocol",
-  quintFieldNames: { lastResult: "qScenarioResult" },
+  quintFieldNames: { lastResult: "qScenarioOutcome" },
+  quintVariantFieldTags: {
+    lastResult: FIND_FAMILIAR_SELECTED_IDENTITY_SCENARIO_OUTCOME_BY_TAG,
+  },
   projectionSchema: {
     familiarStatus: "str",
     formId: "str",
@@ -94,7 +109,7 @@ defineSelectedIdentityWitness({
     ownerActionAvailable: "bool",
     ownerSpellSlotCommitted: "bool",
     targetHp: "int",
-    lastResult: "str",
+    lastResult: "variant",
   },
   initialProjection: expectedFindFamiliarProjection({}),
   units: [

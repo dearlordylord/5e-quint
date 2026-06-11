@@ -5,6 +5,8 @@ module battleRuntimeFindFamiliarSelectedIdentityMbt {
 
   type WitnessHole = | WitnessProtocolHole
 
+  type FindFamiliarSelectedIdentityScenarioOutcome = | Init | Cast | Recast | DismissedAndReappeared | TouchDelivered
+
   type FindFamiliarSelectedIdentityWitnessState = {
     qFamiliarStatus: str,
     qFormId: str,
@@ -14,7 +16,7 @@ module battleRuntimeFindFamiliarSelectedIdentityMbt {
     qOwnerActionAvailable: bool,
     qOwnerSpellSlotCommitted: bool,
     qTargetHp: int,
-    qScenarioResult: str,
+    qScenarioOutcome: FindFamiliarSelectedIdentityScenarioOutcome,
     protocol: WitnessProtocol[WitnessHole],
   }
 
@@ -28,14 +30,14 @@ module battleRuntimeFindFamiliarSelectedIdentityMbt {
   pure def qOwnerActionAvailable: bool = qState.qOwnerActionAvailable
   pure def qOwnerSpellSlotCommitted: bool = qState.qOwnerSpellSlotCommitted
   pure def qTargetHp: int = qState.qTargetHp
-  pure def qLastResult: str = qState.qScenarioResult
+  pure def qLastResult: FindFamiliarSelectedIdentityScenarioOutcome = qState.qScenarioOutcome
 
   pure def findFamiliarSelectedIdentityProtocolForProjection(
     holes: Set[WitnessHole],
-    scenarioResult: str,
+    scenarioResult: FindFamiliarSelectedIdentityScenarioOutcome,
     _scenarioInvalidReason: str,
   ): WitnessProtocol[WitnessHole] =
-    if (scenarioResult == "init") witnessInit(WitnessProtocolHole)
+    if (scenarioResult == Init) witnessInit(WitnessProtocolHole)
     else if (holes != Set()) witnessNeedsHoles(holes)
     else witnessResolved(WitnessProtocolHole)
 
@@ -49,7 +51,7 @@ module battleRuntimeFindFamiliarSelectedIdentityMbt {
     ownerActionAvailable: bool,
     ownerSpellSlotCommitted: bool,
     targetHp: int,
-    lastResult: str,
+    lastResult: FindFamiliarSelectedIdentityScenarioOutcome,
   ): bool = all {
     qState' = {
       qFamiliarStatus: familiarStatus,
@@ -60,7 +62,7 @@ module battleRuntimeFindFamiliarSelectedIdentityMbt {
       qOwnerActionAvailable: ownerActionAvailable,
       qOwnerSpellSlotCommitted: ownerSpellSlotCommitted,
       qTargetHp: targetHp,
-      qScenarioResult: lastResult,
+      qScenarioOutcome: lastResult,
       protocol: findFamiliarSelectedIdentityProtocolForProjection(Set(), lastResult, ""),
     },
   }
@@ -74,11 +76,11 @@ module battleRuntimeFindFamiliarSelectedIdentityMbt {
     true,
     false,
     1,
-    "init",
+    Init,
   )
 
   action doCastFindFamiliar = all {
-    qLastResult == "init",
+    qLastResult == Init,
     recordFindFamiliarState(
       "present",
       "cat",
@@ -88,12 +90,12 @@ module battleRuntimeFindFamiliarSelectedIdentityMbt {
       true,
       false,
       1,
-      "cast",
+      Cast,
     ),
   }
 
   action doRecastFindFamiliarReplacement = all {
-    qLastResult == "init",
+    qLastResult == Init,
     recordFindFamiliarState(
       "present",
       "rat",
@@ -103,12 +105,12 @@ module battleRuntimeFindFamiliarSelectedIdentityMbt {
       true,
       false,
       1,
-      "recast",
+      Recast,
     ),
   }
 
   action doDismissAndReappearFindFamiliar = all {
-    qLastResult == "init",
+    qLastResult == Init,
     recordFindFamiliarState(
       "present",
       "cat",
@@ -118,12 +120,12 @@ module battleRuntimeFindFamiliarSelectedIdentityMbt {
       false,
       false,
       1,
-      "dismissedAndReappeared",
+      DismissedAndReappeared,
     ),
   }
 
   action doDeliverTouchSpellThroughFindFamiliar = all {
-    qLastResult == "init",
+    qLastResult == Init,
     recordFindFamiliarState(
       "present",
       "cat",
@@ -133,7 +135,7 @@ module battleRuntimeFindFamiliarSelectedIdentityMbt {
       false,
       true,
       12,
-      "touchDelivered",
+      TouchDelivered,
     ),
   }
 

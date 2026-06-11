@@ -60,6 +60,14 @@ function discoverInvocation(input: {
   });
 }
 
+const LEVEL2_MOBILITY_SPELL_SELECTED_IDENTITY_SCENARIO_OUTCOME_BY_TAG = {
+  Init: "init",
+  AlterSelfTransformationMode: "alterSelfTransformationMode",
+  FlySpeedGrant: "flySpeedGrant",
+  MistyStepSelfTeleport: "mistyStepSelfTeleport",
+  SpiderClimbSpeedGrant: "spiderClimbSpeedGrant",
+} as const satisfies Readonly<Record<string, string>>;
+
 defineSelectedIdentityWitness({
   describeLabel: "Level 2 mobility spell selected identity MBT",
   taskId: "B11-LEVEL2-MOBILITY-SPELL-IDENTITY-BATCH",
@@ -70,8 +78,11 @@ defineSelectedIdentityWitness({
   quintStateField: "qState",
   quintStateFieldPrefix: "q",
   witnessProtocolField: "protocol",
-  quintFieldNames: { lastResult: "qScenarioResult" },
-  projectionSchema: { lastResult: "str" },
+  quintFieldNames: { lastResult: "qScenarioOutcome" },
+  quintVariantFieldTags: {
+    lastResult: LEVEL2_MOBILITY_SPELL_SELECTED_IDENTITY_SCENARIO_OUTCOME_BY_TAG,
+  },
+  projectionSchema: { lastResult: "variant" },
   initialProjection: { lastResult: "init" },
   units: [
     {
