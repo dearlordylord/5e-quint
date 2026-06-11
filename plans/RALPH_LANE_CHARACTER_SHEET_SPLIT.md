@@ -43,7 +43,7 @@
     {
       "number": 7,
       "id": "SHEETS-C07-RESTS",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Extract rests (with weapon-mastery reselection)"
     },
     {
@@ -228,7 +228,7 @@ typecheck proves no type-only cycles.
 
 ### Task 7 - SHEETS-C07-RESTS
 
-Status: `ready-for-research` · Mode: AFK
+Status: `done` · Mode: AFK
 
 Output: `rests.ts` — Short/Long Rest state machines, Hit Dice, Arcane
 Recovery, post-Long-Rest weapon-mastery reselection fold — consuming the
