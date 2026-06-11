@@ -38,7 +38,8 @@
                     "dieSize": 1,
                     "flat": 1
                   },
-                  "kind": "fixed"
+                  "kind": "fixed",
+                  "static": 1
                 },
                 "damageType": "piercing",
                 "kind": "damage"
@@ -55,7 +56,9 @@
         "value": 1
       },
       "initiativeModifier": 2,
-      "languages": ["None"],
+      "languages": [
+        "None"
+      ],
       "senses": [
         {
           "kind": "blindsight",
@@ -120,7 +123,8 @@
                     "dieSize": 1,
                     "flat": 1
                   },
-                  "kind": "fixed"
+                  "kind": "fixed",
+                  "static": 1
                 },
                 "damageType": "slashing",
                 "kind": "damage"
@@ -137,7 +141,9 @@
         "value": 2
       },
       "initiativeModifier": 2,
-      "languages": ["None"],
+      "languages": [
+        "None"
+      ],
       "senses": [
         {
           "kind": "darkvision",
@@ -218,7 +224,8 @@
                     "dieSize": 1,
                     "flat": 1
                   },
-                  "kind": "fixed"
+                  "kind": "fixed",
+                  "static": 1
                 },
                 "damageType": "piercing",
                 "kind": "damage"
@@ -235,7 +242,9 @@
         "value": 1
       },
       "initiativeModifier": 1,
-      "languages": ["None"],
+      "languages": [
+        "None"
+      ],
       "senses": [
         {
           "kind": "darkvision",
@@ -320,7 +329,8 @@
                     "dieSize": 1,
                     "flat": 1
                   },
-                  "kind": "fixed"
+                  "kind": "fixed",
+                  "static": 1
                 },
                 "damageType": "slashing",
                 "kind": "damage"
@@ -337,7 +347,9 @@
         "value": 1
       },
       "initiativeModifier": 3,
-      "languages": ["None"],
+      "languages": [
+        "None"
+      ],
       "size": "tiny",
       "skillModifiers": [
         {
@@ -402,7 +414,8 @@
                     "dieSize": 1,
                     "flat": 1
                   },
-                  "kind": "fixed"
+                  "kind": "fixed",
+                  "static": 1
                 },
                 "damageType": "piercing",
                 "kind": "damage"
@@ -419,7 +432,9 @@
         "value": 2
       },
       "initiativeModifier": 0,
-      "languages": ["None"],
+      "languages": [
+        "None"
+      ],
       "senses": [
         {
           "kind": "darkvision",
@@ -490,7 +505,8 @@
                     "dieSize": 1,
                     "flat": 1
                   },
-                  "kind": "fixed"
+                  "kind": "fixed",
+                  "static": 1
                 },
                 "damageType": "bludgeoning",
                 "kind": "damage"
@@ -507,7 +523,9 @@
         "value": 3
       },
       "initiativeModifier": 2,
-      "languages": ["None"],
+      "languages": [
+        "None"
+      ],
       "senses": [
         {
           "kind": "darkvision",
@@ -592,7 +610,8 @@
                     "dieSize": 1,
                     "flat": 1
                   },
-                  "kind": "fixed"
+                  "kind": "fixed",
+                  "static": 1
                 },
                 "damageType": "slashing",
                 "kind": "damage"
@@ -609,7 +628,9 @@
         "value": 1
       },
       "initiativeModifier": 1,
-      "languages": ["None"],
+      "languages": [
+        "None"
+      ],
       "senses": [
         {
           "kind": "darkvision",
@@ -690,7 +711,8 @@
                     "dieSize": 1,
                     "flat": 1
                   },
-                  "kind": "fixed"
+                  "kind": "fixed",
+                  "static": 1
                 },
                 "damageType": "piercing",
                 "kind": "damage"
@@ -707,7 +729,9 @@
         "value": 1
       },
       "initiativeModifier": 0,
-      "languages": ["None"],
+      "languages": [
+        "None"
+      ],
       "senses": [
         {
           "kind": "darkvision",
@@ -784,7 +808,8 @@
                     "dieSize": 1,
                     "flat": 1
                   },
-                  "kind": "fixed"
+                  "kind": "fixed",
+                  "static": 1
                 },
                 "damageType": "piercing",
                 "kind": "damage"
@@ -801,7 +826,9 @@
         "value": 2
       },
       "initiativeModifier": 2,
-      "languages": ["None"],
+      "languages": [
+        "None"
+      ],
       "size": "tiny",
       "skillModifiers": [
         {
@@ -872,7 +899,8 @@
                     "dieSize": 1,
                     "flat": 1
                   },
-                  "kind": "fixed"
+                  "kind": "fixed",
+                  "static": 1
                 },
                 "damageType": "piercing",
                 "kind": "damage"
@@ -883,7 +911,8 @@
                     "dice": 1,
                     "dieSize": 4
                   },
-                  "kind": "fixed"
+                  "kind": "fixed",
+                  "static": 2
                 },
                 "damageType": "poison",
                 "kind": "damage"
@@ -900,7 +929,9 @@
         "value": 1
       },
       "initiativeModifier": 2,
-      "languages": ["None"],
+      "languages": [
+        "None"
+      ],
       "senses": [
         {
           "kind": "darkvision",
@@ -981,7 +1012,8 @@
                     "dieSize": 1,
                     "flat": 1
                   },
-                  "kind": "fixed"
+                  "kind": "fixed",
+                  "static": 1
                 },
                 "damageType": "piercing",
                 "kind": "damage"
@@ -998,7 +1030,9 @@
         "value": 1
       },
       "initiativeModifier": 3,
-      "languages": ["None"],
+      "languages": [
+        "None"
+      ],
       "senses": [
         {
           "kind": "darkvision",
@@ -1077,7 +1111,8 @@
                     "dieSize": 4,
                     "flat": 2
                   },
-                  "kind": "fixed"
+                  "kind": "fixed",
+                  "static": 4
                 },
                 "damageType": "piercing",
                 "kind": "damage"
@@ -1088,7 +1123,8 @@
                     "dice": 1,
                     "dieSize": 6
                   },
-                  "kind": "fixed"
+                  "kind": "fixed",
+                  "static": 3
                 },
                 "damageType": "poison",
                 "kind": "damage"
@@ -1105,7 +1141,9 @@
         "value": 5
       },
       "initiativeModifier": 2,
-      "languages": ["None"],
+      "languages": [
+        "None"
+      ],
       "senses": [
         {
           "kind": "blindsight",
@@ -1170,7 +1208,8 @@
                     "dieSize": 6,
                     "flat": 3
                   },
-                  "kind": "fixed"
+                  "kind": "fixed",
+                  "static": 6
                 },
                 "damageType": "piercing",
                 "kind": "damage"
@@ -1181,7 +1220,8 @@
                     "dice": 2,
                     "dieSize": 6
                   },
-                  "kind": "fixed"
+                  "kind": "fixed",
+                  "static": 7
                 },
                 "damageType": "poison",
                 "kind": "damage"
@@ -1208,13 +1248,23 @@
         "value": 21
       },
       "immunities": {
-        "conditions": ["poisoned"],
-        "damageTypes": ["fire", "poison"]
+        "conditions": [
+          "poisoned"
+        ],
+        "damageTypes": [
+          "fire",
+          "poison"
+        ]
       },
       "initiativeModifier": 3,
-      "languages": ["Common", "Infernal"],
+      "languages": [
+        "Common",
+        "Infernal"
+      ],
       "resistances": {
-        "damageTypes": ["cold"],
+        "damageTypes": [
+          "cold"
+        ],
         "kind": "fixed"
       },
       "senses": [
@@ -1301,7 +1351,8 @@
                     "dieSize": 4,
                     "flat": 2
                   },
-                  "kind": "fixed"
+                  "kind": "fixed",
+                  "static": 4
                 },
                 "damageType": "piercing",
                 "kind": "damage"
@@ -1361,7 +1412,9 @@
         "value": 10
       },
       "initiativeModifier": 2,
-      "languages": ["Understands Common and Draconic but can't speak"],
+      "languages": [
+        "Understands Common and Draconic but can't speak"
+      ],
       "senses": [
         {
           "kind": "blindsight",
@@ -1447,7 +1500,8 @@
                     "dieSize": 4,
                     "flat": 3
                   },
-                  "kind": "fixed"
+                  "kind": "fixed",
+                  "static": 5
                 },
                 "damageType": "slashing",
                 "kind": "damage"
@@ -1482,13 +1536,24 @@
         "value": 25
       },
       "immunities": {
-        "conditions": ["poisoned"],
-        "damageTypes": ["poison"]
+        "conditions": [
+          "poisoned"
+        ],
+        "damageTypes": [
+          "poison"
+        ]
       },
       "initiativeModifier": 3,
-      "languages": ["Abyssal", "Common"],
+      "languages": [
+        "Abyssal",
+        "Common"
+      ],
       "resistances": {
-        "damageTypes": ["cold", "fire", "lightning"],
+        "damageTypes": [
+          "cold",
+          "fire",
+          "lightning"
+        ],
         "kind": "fixed"
       },
       "senses": [
@@ -1560,7 +1625,8 @@
                     "dieSize": 4,
                     "flat": 4
                   },
-                  "kind": "fixed"
+                  "kind": "fixed",
+                  "static": 6
                 },
                 "damageType": "piercing",
                 "kind": "damage"
@@ -1584,7 +1650,8 @@
                     "dieSize": 1,
                     "flat": 1
                   },
-                  "kind": "fixed"
+                  "kind": "fixed",
+                  "static": 1
                 },
                 "damageType": "piercing",
                 "kind": "damage"
@@ -1614,7 +1681,11 @@
         "value": 10
       },
       "initiativeModifier": 4,
-      "languages": ["Common", "Elvish", "Sylvan"],
+      "languages": [
+        "Common",
+        "Elvish",
+        "Sylvan"
+      ],
       "size": "tiny",
       "skillModifiers": [
         {

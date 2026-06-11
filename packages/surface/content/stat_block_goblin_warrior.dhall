@@ -4,7 +4,7 @@ let DiceExpr
 
 let DamageAmount
     : Type
-    = { expr : DiceExpr, kind : Text }
+    = { expr : DiceExpr, kind : Text, static : Optional Natural }
 
 let AdvantageCondition
     : Type
@@ -40,6 +40,7 @@ let scimitar : Attack =
         [ { amount =
             { expr = { dice = 1, dieSize = 6, flat = Some 2 }
             , kind = "fixed"
+            , static = Some 5
             }
           , damageType = "slashing"
           , kind = "damage"
@@ -48,6 +49,7 @@ let scimitar : Attack =
         , { amount =
             { expr = { dice = 1, dieSize = 4, flat = None Natural }
             , kind = "fixed"
+            , static = Some 2
             }
           , damageType = "slashing"
           , kind = "conditional_bonus_damage"
@@ -66,6 +68,7 @@ let shortbow : Attack =
         [ { amount =
             { expr = { dice = 1, dieSize = 6, flat = Some 2 }
             , kind = "fixed"
+            , static = Some 5
             }
           , damageType = "piercing"
           , kind = "damage"
@@ -74,6 +77,7 @@ let shortbow : Attack =
         , { amount =
             { expr = { dice = 1, dieSize = 4, flat = None Natural }
             , kind = "fixed"
+            , static = Some 2
             }
           , damageType = "piercing"
           , kind = "conditional_bonus_damage"

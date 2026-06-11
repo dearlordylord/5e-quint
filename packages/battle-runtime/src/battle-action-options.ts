@@ -88,7 +88,11 @@ type SupportedStatBlockBaseDamageEffect = Extract<
   CreatureNamedAttackRoll["onHit"][number],
   { readonly kind: "damage" }
 > & {
-  readonly amount: { readonly kind: "fixed"; readonly expr: DiceExpr };
+  readonly amount: {
+    readonly kind: "fixed";
+    readonly expr: DiceExpr;
+    readonly static?: number;
+  };
   readonly damageType: DamageType;
 };
 
@@ -97,7 +101,11 @@ type SupportedStatBlockAdvantageBonusDamageEffect = Extract<
   { readonly kind: "conditional_bonus_damage" }
 > & {
   readonly when: { readonly kind: "attack_roll_had_advantage" };
-  readonly amount: { readonly kind: "fixed"; readonly expr: DiceExpr };
+  readonly amount: {
+    readonly kind: "fixed";
+    readonly expr: DiceExpr;
+    readonly static?: number;
+  };
   readonly damageType: DamageType;
 };
 
@@ -110,6 +118,31 @@ type SupportedStatBlockAttackEffectList =
   | readonly [
       SupportedStatBlockAdvantageBonusDamageEffect,
       SupportedStatBlockBaseDamageEffect,
+    ];
+
+type SupportedStaticStatBlockBaseDamageEffect =
+  SupportedStatBlockBaseDamageEffect & {
+    readonly amount: SupportedStatBlockBaseDamageEffect["amount"] & {
+      readonly static: number;
+    };
+  };
+
+type SupportedStaticStatBlockAdvantageBonusDamageEffect =
+  SupportedStatBlockAdvantageBonusDamageEffect & {
+    readonly amount: SupportedStatBlockAdvantageBonusDamageEffect["amount"] & {
+      readonly static: number;
+    };
+  };
+
+type SupportedStaticStatBlockAttackEffectList =
+  | readonly [SupportedStaticStatBlockBaseDamageEffect]
+  | readonly [
+      SupportedStaticStatBlockBaseDamageEffect,
+      SupportedStaticStatBlockAdvantageBonusDamageEffect,
+    ]
+  | readonly [
+      SupportedStaticStatBlockAdvantageBonusDamageEffect,
+      SupportedStaticStatBlockBaseDamageEffect,
     ];
 
 export type SupportedCreatureNamedAttackRoll = Omit<
@@ -137,6 +170,11 @@ export type SupportedCreatureNamedAttackRoll = Omit<
       }
   );
 
+export type SupportedStaticDamageCreatureNamedAttackRoll =
+  SupportedCreatureNamedAttackRoll & {
+    readonly onHit: SupportedStaticStatBlockAttackEffectList;
+  };
+
 export type StatBlockPartSection =
   | "actions"
   | "bonusActions"
@@ -148,11 +186,27 @@ export type StatBlockPartKey = {
   readonly name: string;
 };
 
-export type StatBlockAttackActionOption = {
+export const STAT_BLOCK_DAMAGE_NOTATIONS = ["rolled", "static"] as const;
+export type StatBlockDamageNotation =
+  (typeof STAT_BLOCK_DAMAGE_NOTATIONS)[number];
+
+export type RolledStatBlockAttackActionOption = {
   readonly kind: "statBlockAttack";
   readonly attack: SupportedCreatureNamedAttackRoll;
   readonly part: StatBlockPartKey;
+  readonly damageNotation: "rolled";
 };
+
+export type StaticStatBlockAttackActionOption = {
+  readonly kind: "statBlockAttack";
+  readonly attack: SupportedStaticDamageCreatureNamedAttackRoll;
+  readonly part: StatBlockPartKey;
+  readonly damageNotation: "static";
+};
+
+export type StatBlockAttackActionOption =
+  | RolledStatBlockAttackActionOption
+  | StaticStatBlockAttackActionOption;
 
 export type SupportedAttackActionOption =
   | CharacterAttackActionOption
@@ -201,9 +255,11 @@ export type StatBlockMutableResourceState = {
 
 export type StatBlockAttackDamage = {
   readonly expr: DiceExpr;
+  readonly static?: number;
   readonly damageType: DamageType;
   readonly advantageBonus?: {
     readonly expr: DiceExpr;
+    readonly static?: number;
     readonly damageType: DamageType;
   };
 };

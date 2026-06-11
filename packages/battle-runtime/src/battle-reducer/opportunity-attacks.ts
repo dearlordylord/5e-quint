@@ -301,19 +301,21 @@ export function resolveOpportunityAttackCommand(
           attackRolledState.combatants.get(subject.reactorId),
           target,
           attack,
+          fillSet.attackRoll,
         );
   if (fixedDamageAmount !== null) {
     if (fillSet.damageRoll != null) {
       return invalidResult(
         input.state,
         "invalidFill",
-        "Opportunity Attack Fixed Unarmed Strike damage does not use a rolled damage fill.",
+        "Fixed attack damage does not use a rolled damage fill.",
       );
     }
     const fixedDamageByTypeBeforeTargetAdjustments =
       fixedAttackDamageByTypeEntries(
         attackRolledState.combatants.get(subject.reactorId),
         attack,
+        fillSet.attackRoll,
       );
     if (fixedDamageByTypeBeforeTargetAdjustments === null) {
       return invalidResult(

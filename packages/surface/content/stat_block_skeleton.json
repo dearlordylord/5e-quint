@@ -1,8 +1,8 @@
 {
+  "challengeRating": 0.25,
   "id": "stat_block_skeleton",
   "kind": "statBlock",
   "name": "Skeleton",
-  "challengeRating": 0.25,
   "provenance": {
     "kind": "srd-5.2.1",
     "section": "Monsters/Monsters-P-S.md:1152-1175"
@@ -37,7 +37,8 @@
                   "dieSize": 6,
                   "flat": 3
                 },
-                "kind": "fixed"
+                "kind": "fixed",
+                "static": 6
               },
               "damageType": "piercing",
               "kind": "damage"
@@ -60,7 +61,8 @@
                   "dieSize": 6,
                   "flat": 3
                 },
-                "kind": "fixed"
+                "kind": "fixed",
+                "static": 6
               },
               "damageType": "piercing",
               "kind": "damage"

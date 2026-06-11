@@ -25,6 +25,7 @@
           [ { amount =
               { expr = { dice = 1, dieSize = 4, flat = Some 3 }
               , kind = "fixed"
+              , static = Some 5
               }
             , damageType = "slashing"
             , kind = "damage"
@@ -32,6 +33,7 @@
           , { amount =
               { expr = { dice = 2, dieSize = 6, flat = None Natural }
               , kind = "fixed"
+              , static = Some 7
               }
             , damageType = "radiant"
             , kind = "damage"

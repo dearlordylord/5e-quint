@@ -9,6 +9,7 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_DAMAGE_PENALTY
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE
+// KERNEL-COVERAGE: runtime-owner BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING
 // Cluster N (damage_helpers). Mechanical extraction — no behavior change.
 // Consumes only G (creature_state) and W (statblock_attacks).
 
@@ -55,6 +56,7 @@ import { combatantHasWardingBondResistance } from "./warding-bond.ts";
 import {
   attackDamageComponents,
   attackDamageModifier,
+  statBlockAttackDamage,
 } from "./statblock-attacks.ts";
 import {
   activeCreatureSizeChangeEffect,
@@ -70,8 +72,9 @@ export function fixedAttackDamageAmount(
   attacker: BattleCreatureState | undefined,
   target: BattleCreatureState,
   attack: SupportedAttackActionOption,
+  attackRoll?: AttackRollResult,
 ): number | null {
-  const entries = fixedAttackDamageByTypeEntries(attacker, attack);
+  const entries = fixedAttackDamageByTypeEntries(attacker, attack, attackRoll);
   return entries === null
     ? null
     : damageAmountByTypeAfterTargetAdjustments(
@@ -83,6 +86,7 @@ export function fixedAttackDamageAmount(
 export function fixedAttackDamageByTypeEntries(
   attacker: BattleCreatureState | undefined,
   attack: SupportedAttackActionOption,
+  attackRoll?: AttackRollResult,
 ): readonly DamageAmountByTypeEntry[] | null {
   return Match.value(attack).pipe(
     Match.when({ kind: "unarmedStrike" }, (unarmedStrike) => {
@@ -101,7 +105,36 @@ export function fixedAttackDamageByTypeEntries(
       ];
     }),
     Match.when({ kind: "weapon" }, () => null),
-    Match.when({ kind: "statBlockAttack" }, () => null),
+    Match.when({ kind: "statBlockAttack" }, (statBlockAttack) => {
+      const damage = statBlockAttackDamage(statBlockAttack);
+      if (statBlockAttack.damageNotation !== "static") {
+        return null;
+      }
+      const baseStaticDamage = damage.static;
+      if (baseStaticDamage === undefined) return null;
+      const advantageBonus =
+        damage.advantageBonus !== undefined &&
+        attackRoll?.rollMode === "advantage"
+          ? damage.advantageBonus
+          : undefined;
+      if (
+        advantageBonus !== undefined &&
+        advantageBonus.static === undefined
+      ) {
+        return null;
+      }
+      return [
+        {
+          damageType: damage.damageType,
+          amount: Math.max(
+            0,
+            baseStaticDamage +
+              (advantageBonus?.static ?? 0) +
+              ongoingFeatureDamageModifier(attacker, statBlockAttack),
+          ),
+        },
+      ];
+    }),
     Match.exhaustive,
   );
 }
@@ -151,6 +184,7 @@ export function attackDamageByType(
   const fixedBaseDamageEntries = fixedAttackDamageByTypeEntries(
     attacker,
     attack,
+    attackRoll,
   );
   const damageByType = damageRoll.value.reduce<ReadonlyMap<DamageType, number>>(
     (totals, group, index) => {

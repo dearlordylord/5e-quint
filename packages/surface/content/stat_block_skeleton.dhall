@@ -4,7 +4,7 @@ let DiceExpr
 
 let DamageAmount
     : Type
-    = { expr : DiceExpr, kind : Text }
+    = { expr : DiceExpr, kind : Text, static : Optional Natural }
 
 let HitEffect
     : Type
@@ -32,6 +32,7 @@ let shortsword : Attack =
         [ { amount =
             { expr = { dice = 1, dieSize = 6, flat = Some +3 }
             , kind = "fixed"
+            , static = Some 6
             }
           , damageType = "piercing"
           , kind = "damage"
@@ -49,6 +50,7 @@ let shortbow : Attack =
         [ { amount =
             { expr = { dice = 1, dieSize = 6, flat = Some +3 }
             , kind = "fixed"
+            , static = Some 6
             }
           , damageType = "piercing"
           , kind = "damage"
