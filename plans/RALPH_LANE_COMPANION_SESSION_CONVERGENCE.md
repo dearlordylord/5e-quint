@@ -4,22 +4,102 @@
 {
   "schema": "ralph-plan.v1",
   "tasks": [
-    { "number": 1, "id": "CSC-T01-OWNER-KEYED-COMPANIONS", "status": "done", "title": "Key battle companions by owner; delete the synthetic companion-state id space" },
-    { "number": 2, "id": "CSC-T02-PROTOCOL-TAG-UNION", "status": "done", "title": "Reduce the durable companion protocol to a tag union with one derivation table" },
-    { "number": 3, "id": "CSC-T03-SETTLEMENT-OUTCOME", "status": "done", "title": "Make battle state carry the full settle-able companion outcome; drop session companionAdmission" },
-    { "number": 4, "id": "CSC-T04-DEAD-BATTLE-LONG-REST-LANE", "status": "done", "title": "Delete the unreachable battle-state long-rest companion lane; decide castFindFamiliar wiring" },
-    { "number": 5, "id": "CSC-T05-COMPANION-REST-ASSUMPTION", "status": "done", "title": "Record the companion rest-participation assumption; align sheet long-rest THP/HP" },
-    { "number": 6, "id": "CSC-T06-RECAST-SEMANTICS", "status": "done", "title": "Record recast assumptions; one recast semantic across sheet and battle layers" },
-    { "number": 7, "id": "CSC-T07-FORM-VOCAB-HOIST-CREATION-MOVE", "status": "done", "title": "Hoist the familiar-form vocabulary; move out-of-battle creation into character-sheet-runtime" },
-    { "number": 8, "id": "CSC-T08-CREATION-HP-SURFACE", "status": "blocked", "title": "Remove caller-minted companion HP/THP from the MCP creation operation" },
-    { "number": 9, "id": "CSC-T09-FORM-CATALOG-REFERENCE", "status": "blocked", "title": "Replace the first-match familiar-form-catalog scan with an executable uniqueness boundary" },
-    { "number": 10, "id": "CSC-T10-SMALL-FINDINGS-BATCH", "status": "blocked", "title": "Close the small review findings (narrowing, dead exports, duplicate rules, id constructor, durable-id uniqueness owner)" },
-    { "number": 11, "id": "CSC-T11-CONVERGENCE-CLOSEOUT", "status": "blocked", "title": "Reviewer-loop convergence and L13COMP plan-doc closeout" },
-    { "number": 12, "id": "CSC-T12-R0-LONG-REST-COMPANION-RESTORE", "status": "ready-for-implementation", "title": "Restore the merge-dropped Long Rest companion expiration and the sheet companion tests" },
-    { "number": 13, "id": "CSC-T13-R3LITE-ALIAS-FAMILY-DELETION", "status": "blocked", "title": "Delete the FindFamiliar type-alias family; keep rule-source module names (ADR 0005)" },
-    { "number": 14, "id": "CSC-T14-R4A-FORMS-SHIM-DELETION", "status": "blocked", "title": "Delete the battle-runtime find-familiar-forms compatibility re-export shim" },
-    { "number": 15, "id": "CSC-T15-R2-PROTOCOL-TAG-HOIST", "status": "blocked", "title": "Hoist the companion protocol tag to a shared-algebras leaf; battle state carries the tag" },
-    { "number": 16, "id": "CSC-T16-R1-SINGLE-SETTLEMENT-OPERATION", "status": "blocked", "title": "One settlement operation for character battle handoff; move companion handoff into its own module" }
+    {
+      "number": 1,
+      "id": "CSC-T01-OWNER-KEYED-COMPANIONS",
+      "status": "done",
+      "title": "Key battle companions by owner; delete the synthetic companion-state id space"
+    },
+    {
+      "number": 2,
+      "id": "CSC-T02-PROTOCOL-TAG-UNION",
+      "status": "done",
+      "title": "Reduce the durable companion protocol to a tag union with one derivation table"
+    },
+    {
+      "number": 3,
+      "id": "CSC-T03-SETTLEMENT-OUTCOME",
+      "status": "done",
+      "title": "Make battle state carry the full settle-able companion outcome; drop session companionAdmission"
+    },
+    {
+      "number": 4,
+      "id": "CSC-T04-DEAD-BATTLE-LONG-REST-LANE",
+      "status": "done",
+      "title": "Delete the unreachable battle-state long-rest companion lane; decide castFindFamiliar wiring"
+    },
+    {
+      "number": 5,
+      "id": "CSC-T05-COMPANION-REST-ASSUMPTION",
+      "status": "done",
+      "title": "Record the companion rest-participation assumption; align sheet long-rest THP/HP"
+    },
+    {
+      "number": 6,
+      "id": "CSC-T06-RECAST-SEMANTICS",
+      "status": "done",
+      "title": "Record recast assumptions; one recast semantic across sheet and battle layers"
+    },
+    {
+      "number": 7,
+      "id": "CSC-T07-FORM-VOCAB-HOIST-CREATION-MOVE",
+      "status": "done",
+      "title": "Hoist the familiar-form vocabulary; move out-of-battle creation into character-sheet-runtime"
+    },
+    {
+      "number": 8,
+      "id": "CSC-T08-CREATION-HP-SURFACE",
+      "status": "blocked",
+      "title": "Remove caller-minted companion HP/THP from the MCP creation operation"
+    },
+    {
+      "number": 9,
+      "id": "CSC-T09-FORM-CATALOG-REFERENCE",
+      "status": "blocked",
+      "title": "Replace the first-match familiar-form-catalog scan with an executable uniqueness boundary"
+    },
+    {
+      "number": 10,
+      "id": "CSC-T10-SMALL-FINDINGS-BATCH",
+      "status": "blocked",
+      "title": "Close the small review findings (narrowing, dead exports, duplicate rules, id constructor, durable-id uniqueness owner)"
+    },
+    {
+      "number": 11,
+      "id": "CSC-T11-CONVERGENCE-CLOSEOUT",
+      "status": "blocked",
+      "title": "Reviewer-loop convergence and L13COMP plan-doc closeout"
+    },
+    {
+      "number": 12,
+      "id": "CSC-T12-R0-LONG-REST-COMPANION-RESTORE",
+      "status": "done",
+      "title": "Restore the merge-dropped Long Rest companion expiration and the sheet companion tests"
+    },
+    {
+      "number": 13,
+      "id": "CSC-T13-R3LITE-ALIAS-FAMILY-DELETION",
+      "status": "blocked",
+      "title": "Delete the FindFamiliar type-alias family; keep rule-source module names (ADR 0005)"
+    },
+    {
+      "number": 14,
+      "id": "CSC-T14-R4A-FORMS-SHIM-DELETION",
+      "status": "blocked",
+      "title": "Delete the battle-runtime find-familiar-forms compatibility re-export shim"
+    },
+    {
+      "number": 15,
+      "id": "CSC-T15-R2-PROTOCOL-TAG-HOIST",
+      "status": "blocked",
+      "title": "Hoist the companion protocol tag to a shared-algebras leaf; battle state carries the tag"
+    },
+    {
+      "number": 16,
+      "id": "CSC-T16-R1-SINGLE-SETTLEMENT-OPERATION",
+      "status": "blocked",
+      "title": "One settlement operation for character battle handoff; move companion handoff into its own module"
+    }
   ]
 }
 -->
@@ -809,7 +889,7 @@ finding F1–F11 and arch-review item R0–R4 with its closing task/commit.
 
 ### Task 12 - CSC-T12-R0-LONG-REST-COMPANION-RESTORE
 
-Status: `ready-for-implementation` · Mode: AFK · Regression fix (arch-review
+Status: `done` · Mode: AFK · Regression fix (arch-review
 R0)
 
 **Finding (regression introduced by merge `e5d9ccea6`).** The origin/master
