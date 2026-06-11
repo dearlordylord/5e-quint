@@ -43,7 +43,7 @@
     {
       "number": 7,
       "id": "BPK-B07-REPLAY-FROM-ROOT",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Replay-from-root equivalence slice and witness"
     },
     {
