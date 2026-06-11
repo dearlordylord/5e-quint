@@ -49,7 +49,7 @@
     {
       "number": 8,
       "id": "CSC-T08-CREATION-HP-SURFACE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Remove caller-minted companion HP/THP from the MCP creation operation"
     },
     {
@@ -742,7 +742,7 @@ four package suites green.
 
 ### Task 8 - CSC-T08-CREATION-HP-SURFACE
 
-Status: `ready-for-research` · Mode: AFK
+Status: `done` · Mode: AFK
 
 **Finding (review F9, absurdity check).** The MCP creation op accepts
 arbitrary `currentHp`/`tempHp`
