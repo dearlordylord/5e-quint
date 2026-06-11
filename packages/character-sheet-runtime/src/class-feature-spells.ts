@@ -1,3 +1,5 @@
+// KERNEL-COVERAGE: runtime-owner SHEET.SPELL_ACCESS.CLASS_FEATURE_PREPARED_PROJECTION
+// UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.class-feature-prepared-spell-access
 import {
   characterBuildFeatureUnitIds,
   classLevelForUnit,

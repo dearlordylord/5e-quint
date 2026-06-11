@@ -1,14 +1,11 @@
 import {
   characterBuildMonkUncannyMetabolismFacts,
-  classLevelForUnit,
-  progressionClassUnitIds,
   type CharacterBuild,
   type UnitCatalog,
 } from "@dnd/character-creation-runtime";
 import { resourceCount, type ResourceCount } from "@dnd/shared/types";
 import type { UnitRecord } from "@dnd/surface/surface/types";
-import { readClassCreationFacts } from "@dnd/surface/surface/character-creation-readers";
-import { Either, Match, Option } from "effect";
+import { Either } from "effect";
 
 import {
   characterSheetHitPointCapacity,
@@ -21,6 +18,7 @@ import {
   restSpellSlotRecoveryProfileForBuild,
 } from "./healing-rest-benefit.ts";
 import { resourceExpendituresFromInput } from "./resources.ts";
+import { pactSlotRecoveryProfileForBuild } from "./rests.ts";
 import {
   pactSlotExpenditureFromInput,
   spellSlotStateFromInput,
@@ -38,13 +36,11 @@ import {
   UNCANNY_METABOLISM_REST_FEATURE_TAG,
   characterSheetId,
   characterSheetIssue,
-  getRequiredUnit,
   type CharacterSheet,
   type CharacterSheetBookOfShadowsPresence,
   type CharacterSheetCondition,
   type CharacterSheetInput,
   type CharacterSheetIssue,
-  type CharacterSheetPactSlotState,
   type CharacterSheetRestFeatureUse,
   type CharacterSheetSpellSlotSourceState,
   type CharacterSheetSpentHitDiePool,
@@ -315,22 +311,6 @@ export function parseCharacterSheet(
   );
 }
 
-type CharacterSheetClassFeatureRecord = Extract<
-  UnitRecord,
-  { readonly kind: "class_feature" }
->;
-type PactSlotRecoveryMechanics = Extract<
-  CharacterSheetClassFeatureRecord["mechanics"],
-  { readonly family: "pact_slot_recovery" }
->;
-type CharacterSheetPactSlotRecoveryFeature =
-  CharacterSheetClassFeatureRecord & {
-    readonly mechanics: PactSlotRecoveryMechanics;
-  };
-type CharacterSheetPactSlotRecoveryProfile = {
-  readonly feature: CharacterSheetPactSlotRecoveryFeature;
-  readonly classUnitId: UnitRecord["id"];
-};
 function spentHitDiceFromInput(
   input: Pick<CharacterSheetInput, "build" | "spentHitDice" | "unitLibrary">,
 ): Either.Either<
@@ -475,76 +455,6 @@ function conditionsFromInput(
     active.add(condition);
   }
   return Either.right([...conditions]);
-}
-
-export function magicalCunningRecoveredPactSlots(input: {
-  readonly pactSlots: CharacterSheetPactSlotState;
-  readonly profile: CharacterSheetPactSlotRecoveryProfile;
-}): ResourceCount {
-  return Match.value(input.profile.feature.mechanics.recoveryCap.kind).pipe(
-    Match.when("half_maximum_rounded_up", () =>
-      resourceCount(Math.ceil(input.pactSlots.count / 2)),
-    ),
-    Match.exhaustive,
-  );
-}
-
-export function pactSlotRecoveryProfileForBuild(
-  build: CharacterBuild,
-  unitLibrary: UnitCatalog,
-): Either.Either<CharacterSheetPactSlotRecoveryProfile, CharacterSheetIssue> {
-  const profiles: CharacterSheetPactSlotRecoveryProfile[] = [];
-  for (const classUnitId of progressionClassUnitIds(build.progression)) {
-    const unit = getRequiredUnit(unitLibrary, classUnitId);
-    if (Either.isLeft(unit)) return Either.left(unit.left);
-    const facts = readClassCreationFacts(unit.right);
-    if (facts.tag !== "readable") continue;
-    const classLevel = classLevelForUnit(build.progression, classUnitId);
-    for (const grant of facts.value.featureGrants) {
-      if (grant.level > classLevel) continue;
-      const feature = unitLibrary.getUnit(grant.unitId);
-      if (
-        Option.isSome(feature) &&
-        isPactSlotRecoveryFeature(feature.value) &&
-        unit.right.kind === "class" &&
-        unit.right.className === feature.value.className
-      ) {
-        profiles.push({ feature: feature.value, classUnitId });
-      }
-    }
-  }
-  if (profiles.length === 0) {
-    return characterSheetIssue(
-      "Magical Cunning requires the Warlock Magical Cunning feature.",
-    );
-  }
-  if (profiles.length > 1) {
-    return characterSheetIssue(
-      "Character Sheet supports only one Pact Slot recovery feature.",
-    );
-  }
-  const profile = profiles[0];
-  if (profile === undefined) {
-    return characterSheetIssue(
-      "Magical Cunning requires the Warlock Magical Cunning feature.",
-    );
-  }
-  return Either.right(profile);
-}
-
-function isPactSlotRecoveryFeature(
-  unit: UnitRecord,
-): unit is CharacterSheetPactSlotRecoveryFeature {
-  return (
-    unit.kind === "class_feature" &&
-    unit.mechanics.family === "pact_slot_recovery" &&
-    unit.mechanics.activationCost.kind === "one_minute_rite" &&
-    unit.mechanics.resource.kind === "pact_slots" &&
-    unit.mechanics.resource.source === "class_record_pact_magic" &&
-    unit.mechanics.requiresExpendedSlots === true &&
-    unit.mechanics.recoveryCap.kind === "half_maximum_rounded_up" &&
-    unit.mechanics.resetCadence.kind === "long_rest"
-  );
 }
 
 function parseStoredSpentHitDice(

@@ -1177,7 +1177,7 @@
         "packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt"
       ],
       "runtimeOwners": [
-        "packages/character-sheet-runtime/src/index.ts"
+        "packages/character-sheet-runtime/src/healing-rest-benefit.ts"
       ],
       "taskRefs": [
         "SRDINV25"
@@ -1195,7 +1195,8 @@
       "profileKind": "character-sheet",
       "qntOwners": [],
       "runtimeOwners": [
-        "packages/character-sheet-runtime/src/index.ts"
+        "packages/character-sheet-runtime/src/healing-rest-benefit.ts",
+        "packages/character-sheet-runtime/src/rests.ts"
       ],
       "sourceBoundary": "CharacterBuild Wizard progression plus installed Arcane Recovery class-feature Unit; ordinary Spell Slot expenditure state remains separate from Pact Slot recovery",
       "taskRefs": [
@@ -1217,7 +1218,7 @@
         "packages/character-sheet-runtime/character-sheet-spellbook-ritual-selected-identity.mbt.qnt"
       ],
       "runtimeOwners": [
-        "packages/character-sheet-runtime/src/index.ts"
+        "packages/character-sheet-runtime/src/spell-invocation.ts"
       ],
       "sourceBoundary": "CharacterBuild spellbook Spell Access plus Surface Spell Definition ritual tag and spellbook Ritual Access feature",
       "taskRefs": [
@@ -1239,7 +1240,7 @@
         "packages/character-sheet-runtime/character-sheet-weapon-mastery-containers-selected-identity.mbt.qnt"
       ],
       "runtimeOwners": [
-        "packages/character-sheet-runtime/src/index.ts"
+        "packages/character-sheet-runtime/src/rests.ts"
       ],
       "sourceBoundary": "CharacterBuild selected class-choice refs plus Surface Weapon Mastery class-feature choose, Long Rest change count, and eligible weapon facts; selected mastery-property execution remains owned by selected Mastery Property Unit profiles",
       "taskRefs": [
@@ -1260,7 +1261,7 @@
         "packages/shared-algebras/proofs/rule-core/weapon-mastery-reselection.qnt"
       ],
       "runtimeOwners": [
-        "packages/character-sheet-runtime/src/index.ts"
+        "packages/character-sheet-runtime/src/rests.ts"
       ],
       "sourceBoundary": "CharacterBuild selected class-choice refs plus Surface Weapon Mastery class-feature class-level choose table, one-choice Long Rest change count, and eligible weapon facts; selected mastery-property execution remains owned by selected Mastery Property Unit profiles. The fixed two-choice selected-identity replay witness remains attached only to units advertised by that witness.",
       "taskRefs": [
@@ -2604,7 +2605,7 @@
       "profileKind": "character-sheet",
       "qntOwners": [],
       "runtimeOwners": [
-        "packages/character-sheet-runtime/src/index.ts"
+        "packages/character-sheet-runtime/src/armor-class.ts"
       ],
       "sourceBoundary": "CharacterBuild plus Character Sheet loadout projection",
       "taskRefs": [
@@ -3014,7 +3015,7 @@
       "profileKind": "character-sheet",
       "qntOwners": [],
       "runtimeOwners": [
-        "packages/character-sheet-runtime/src/index.ts"
+        "packages/character-sheet-runtime/src/ability-checks.ts"
       ],
       "sourceBoundary": "CharacterBuild class progression, Surface Bard level 2 feature grant, CharacterBuild skill and Expertise proficiency facts, caller-supplied Ability Check skill witness, and caller-supplied no-other-Proficiency-Bonus gate.",
       "taskRefs": [
@@ -3033,7 +3034,7 @@
       "profileKind": "character-sheet",
       "qntOwners": [],
       "runtimeOwners": [
-        "packages/character-sheet-runtime/src/index.ts"
+        "packages/character-sheet-runtime/src/rests.ts"
       ],
       "sourceBoundary": "CharacterBuild Warlock level-2 progression plus installed Magical Cunning class-feature Unit and Pact Magic slot pool state derived from the Warlock class record.",
       "taskRefs": [
@@ -3055,7 +3056,7 @@
         "packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt"
       ],
       "runtimeOwners": [
-        "packages/character-sheet-runtime/src/index.ts",
+        "packages/character-sheet-runtime/src/resources.ts",
         "packages/app/src/components/character-creation/characterCreationRuntime.ts",
         "packages/mcp/src/session-store.ts",
         "packages/mcp/src/character-tools.ts",
@@ -3094,7 +3095,7 @@
         "packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt"
       ],
       "runtimeOwners": [
-        "packages/character-sheet-runtime/src/index.ts"
+        "packages/character-sheet-runtime/src/resources.ts"
       ],
       "sourceBoundary": "CharacterBuild class-feature point-pool resources plus installed Surface Long Rest reset facts; Character Sheet stores only expended point-pool state, derives capacity from the feature and class progression, and clears the expenditure on Long Rest without executing Spell Slot conversion or Metamagic options.",
       "taskRefs": [
@@ -3117,7 +3118,7 @@
         "packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt"
       ],
       "runtimeOwners": [
-        "packages/character-sheet-runtime/src/index.ts"
+        "packages/character-sheet-runtime/src/spell-slots.ts"
       ],
       "sourceBoundary": "Character Sheet consumes retained Font of Magic source facts, source-aware ordinary or created Spell Slot expenditure state, and the shared Sorcery Point point-pool expenditure. The conversion spends one unexpended Spell Slot, requires an explicit slot source when ordinary and created Spell Slots of the same level are both available, and restores expended Sorcery Points equal to the slot level only when the full gain fits under the Sorcerer-level cap; Pact Slots and Metamagic execution remain outside this profile.",
       "taskRefs": [
@@ -3141,7 +3142,7 @@
         "packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt"
       ],
       "runtimeOwners": [
-        "packages/character-sheet-runtime/src/index.ts",
+        "packages/character-sheet-runtime/src/spell-slots.ts",
         "packages/character-battle-runtime/src/index.ts"
       ],
       "sourceBoundary": "Character Sheet consumes retained Font of Magic source facts, the shared Sorcery Point point-pool expenditure, and the Creating Spell Slots table from the installed Surface feature. This is a Character Sheet conversion-state boundary: it spends the table cost, enforces the Sorcerer-level minimum and level-5 table cap, stores only created Spell Slot delta state, exposes aggregate Spell Slot capacity to Character Battle init, rejects source-ambiguous battle handoff expenditure for levels with both ordinary and created slots, and clears created slots on Long Rest. Character Battle does not advertise this conversion as a Unit feature Bonus Action or duplicate ordinary-vs-created source pools; battle use remains aggregate and source-ambiguous settlement is rejected.",
@@ -3167,7 +3168,7 @@
         "packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt"
       ],
       "runtimeOwners": [
-        "packages/character-sheet-runtime/src/index.ts",
+        "packages/character-sheet-runtime/src/resources.ts",
         "packages/character-battle-runtime/src/index.ts",
         "packages/character-battle-runtime/src/battle-creature-init.ts",
         "packages/battle-runtime/src/character-battle-resources.ts",
@@ -3202,7 +3203,7 @@
         "packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt"
       ],
       "runtimeOwners": [
-        "packages/character-sheet-runtime/src/index.ts"
+        "packages/character-sheet-runtime/src/rests.ts"
       ],
       "sourceBoundary": "Character Sheet stores feature-scoped used-since-Long-Rest state only for retained class features with authored Long Rest reset facts, preserves that state across Short Rests, clears it on Long Rest, and derives related source links from CharacterBuild and Surface facts rather than storing duplicate resource or die projections.",
       "taskRefs": [
@@ -3226,7 +3227,7 @@
         "packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt"
       ],
       "runtimeOwners": [
-        "packages/character-sheet-runtime/src/index.ts",
+        "packages/character-sheet-runtime/src/resources.ts",
         "packages/character-battle-runtime/src/index.ts"
       ],
       "sourceBoundary": "Character Sheet consumes retained Uncanny Metabolism source facts, the shared Monk's Focus use-count expenditure owner, current Martial Arts die source projection, and once-per-Long-Rest use state at the Initiative roll boundary; it recovers all expended Focus Points, applies capped self Hit Point healing, records the Long Rest use marker, and Character Battle init carries the updated sheet resource and HP state into battle without a duplicate battle resource pool.",
@@ -4037,7 +4038,7 @@
         "packages/character-sheet-runtime/character-sheet-spell-rest-benefit-application.mbt.qnt"
       ],
       "runtimeOwners": [
-        "packages/character-sheet-runtime/src/index.ts"
+        "packages/character-sheet-runtime/src/healing-rest-benefit.ts"
       ],
       "sourceBoundary": "Character Sheet consumes an installed Surface Spell Definition shape with caller-selected creature recipients, slot-scaled Hit Point healing, a granted Short Rest benefit, and a same-spell recipient lockout reset by the recipient finishing a Long Rest. The runtime spends one Spell Slot at completion, applies existing Short Rest benefit logic per selected Character Sheet without duplicating rest algorithms, applies capped spell healing from caller-supplied dice, stores only the same-spell recipient lockout source reference in Long Rest-cleared sheet rest state, and leaves completed 10-minute casting, range maintenance, and interruption tracking to caller/table facts.",
       "taskRefs": [
@@ -4372,8 +4373,8 @@
       "profileKind": "character-sheet",
       "qntOwners": [],
       "runtimeOwners": [
-        "packages/character-creation-runtime/src/finalization.ts",
-        "packages/character-sheet-runtime/src/index.ts"
+        "packages/character-sheet-runtime/src/class-feature-spells.ts",
+        "packages/character-creation-runtime/src/finalization.ts"
       ],
       "sourceBoundary": "Character Creation retains selected subclass feature grants in CharacterBuild feature refs from the selected subclass and class level. Character Sheet consumes those retained feature refs, installed Surface passive grant_spell_access facts, and installed Surface grant_class_level_prepared_spell_access tier facts to derive prepared spell access from the existing build class level, including duplicate-selection rejection for Book of Shadows, without storing a parallel prepared-spell list. Individual Spell Definition legality, spell-list membership, and invocation behavior remain owned by spell profiles.",
       "taskRefs": [
@@ -4392,7 +4393,7 @@
       "profileKind": "character-sheet",
       "qntOwners": [],
       "runtimeOwners": [
-        "packages/character-sheet-runtime/src/index.ts"
+        "packages/character-sheet-runtime/src/druid-features.ts"
       ],
       "sourceBoundary": "Character Sheet consumes the retained Circle of the Land feature ref from CharacterBuild, the installed Surface Long Rest land-choice spell table, current selected land sheet state, and the Druid spellcasting source and class level. It requires explicit selected-land state, changes that state only through Long Rest choice input, derives prepared Spell Access without storing the resulting spell list, and leaves individual Spell Definition invocation support to spell profiles.",
       "taskRefs": [
@@ -4445,7 +4446,7 @@
       "profileKind": "character-sheet",
       "qntOwners": [],
       "runtimeOwners": [
-        "packages/character-sheet-runtime/src/index.ts"
+        "packages/character-sheet-runtime/src/ability-checks.ts"
       ],
       "sourceBoundary": "Character Sheet consumes CharacterBuild class progression, installed Surface class-feature grants, a caller-supplied skill Ability Check witness, and caller-supplied active feature witnesses. It derives optional substitutions available for that check while preserving the default Ability and without storing duplicate skill proficiency or active-feature state.",
       "taskRefs": [
@@ -4464,7 +4465,7 @@
       "profileKind": "character-sheet",
       "qntOwners": [],
       "runtimeOwners": [
-        "packages/character-sheet-runtime/src/index.ts"
+        "packages/character-sheet-runtime/src/ability-checks.ts"
       ],
       "sourceBoundary": "Character Sheet consumes CharacterBuild class progression, selected subclass feature grants, and installed Surface class-feature jump-distance substitution grants to derive optional jump-distance Ability substitutions from source facts rather than storing a parallel movement rule.",
       "taskRefs": [
@@ -4483,7 +4484,7 @@
       "profileKind": "character-sheet",
       "qntOwners": [],
       "runtimeOwners": [
-        "packages/character-sheet-runtime/src/index.ts"
+        "packages/character-sheet-runtime/src/ability-checks.ts"
       ],
       "sourceBoundary": "Character Sheet consumes retained class-feature grant_speed facts, including selected subclass feature grants, and preserves linked-speed projections such as Climb Speed equal to Speed as a link to the walk Speed source, not as a copied numeric Speed.",
       "taskRefs": [
@@ -16549,7 +16550,7 @@
             "packages/shared-algebras/proofs/rule-core/weapon-mastery-reselection.qnt"
           ],
           "runtimeOwners": [
-            "packages/character-sheet-runtime/src/index.ts"
+            "packages/character-sheet-runtime/src/rests.ts"
           ],
           "sourceBoundary": "CharacterBuild selected class-choice refs plus Surface Weapon Mastery class-feature class-level choose table, one-choice Long Rest change count, and eligible weapon facts; selected mastery-property execution remains owned by selected Mastery Property Unit profiles. The fixed two-choice selected-identity replay witness remains attached only to units advertised by that witness.",
           "taskRefs": [
@@ -17070,7 +17071,7 @@
           "profileKind": "character-sheet",
           "qntOwners": [],
           "runtimeOwners": [
-            "packages/character-sheet-runtime/src/index.ts"
+            "packages/character-sheet-runtime/src/armor-class.ts"
           ],
           "sourceBoundary": "CharacterBuild plus Character Sheet loadout projection",
           "taskRefs": [
@@ -17349,7 +17350,7 @@
           "profileKind": "character-sheet",
           "qntOwners": [],
           "runtimeOwners": [
-            "packages/character-sheet-runtime/src/index.ts"
+            "packages/character-sheet-runtime/src/ability-checks.ts"
           ],
           "sourceBoundary": "Character Sheet consumes CharacterBuild class progression, installed Surface class-feature grants, a caller-supplied skill Ability Check witness, and caller-supplied active feature witnesses. It derives optional substitutions available for that check while preserving the default Ability and without storing duplicate skill proficiency or active-feature state.",
           "taskRefs": [
@@ -17456,7 +17457,7 @@
             "packages/shared-algebras/proofs/rule-core/weapon-mastery-reselection.qnt"
           ],
           "runtimeOwners": [
-            "packages/character-sheet-runtime/src/index.ts"
+            "packages/character-sheet-runtime/src/rests.ts"
           ],
           "sourceBoundary": "CharacterBuild selected class-choice refs plus Surface Weapon Mastery class-feature class-level choose table, one-choice Long Rest change count, and eligible weapon facts; selected mastery-property execution remains owned by selected Mastery Property Unit profiles. The fixed two-choice selected-identity replay witness remains attached only to units advertised by that witness.",
           "taskRefs": [
@@ -17761,7 +17762,7 @@
           "profileKind": "character-sheet",
           "qntOwners": [],
           "runtimeOwners": [
-            "packages/character-sheet-runtime/src/index.ts"
+            "packages/character-sheet-runtime/src/ability-checks.ts"
           ],
           "sourceBoundary": "CharacterBuild class progression, Surface Bard level 2 feature grant, CharacterBuild skill and Expertise proficiency facts, caller-supplied Ability Check skill witness, and caller-supplied no-other-Proficiency-Bonus gate.",
           "taskRefs": [
@@ -18012,8 +18013,8 @@
           "profileKind": "character-sheet",
           "qntOwners": [],
           "runtimeOwners": [
-            "packages/character-creation-runtime/src/finalization.ts",
-            "packages/character-sheet-runtime/src/index.ts"
+            "packages/character-sheet-runtime/src/class-feature-spells.ts",
+            "packages/character-creation-runtime/src/finalization.ts"
           ],
           "sourceBoundary": "Character Creation retains selected subclass feature grants in CharacterBuild feature refs from the selected subclass and class level. Character Sheet consumes those retained feature refs, installed Surface passive grant_spell_access facts, and installed Surface grant_class_level_prepared_spell_access tier facts to derive prepared spell access from the existing build class level, including duplicate-selection rejection for Book of Shadows, without storing a parallel prepared-spell list. Individual Spell Definition legality, spell-list membership, and invocation behavior remain owned by spell profiles.",
           "taskRefs": [
@@ -18150,7 +18151,7 @@
           "profileKind": "character-sheet",
           "qntOwners": [],
           "runtimeOwners": [
-            "packages/character-sheet-runtime/src/index.ts"
+            "packages/character-sheet-runtime/src/druid-features.ts"
           ],
           "sourceBoundary": "Character Sheet consumes the retained Circle of the Land feature ref from CharacterBuild, the installed Surface Long Rest land-choice spell table, current selected land sheet state, and the Druid spellcasting source and class level. It requires explicit selected-land state, changes that state only through Long Rest choice input, derives prepared Spell Access without storing the resulting spell list, and leaves individual Spell Definition invocation support to spell profiles.",
           "taskRefs": [
@@ -18448,7 +18449,7 @@
             "packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt"
           ],
           "runtimeOwners": [
-            "packages/character-sheet-runtime/src/index.ts",
+            "packages/character-sheet-runtime/src/resources.ts",
             "packages/app/src/components/character-creation/characterCreationRuntime.ts",
             "packages/mcp/src/session-store.ts",
             "packages/mcp/src/character-tools.ts",
@@ -18763,7 +18764,7 @@
             "packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt"
           ],
           "runtimeOwners": [
-            "packages/character-sheet-runtime/src/index.ts",
+            "packages/character-sheet-runtime/src/resources.ts",
             "packages/app/src/components/character-creation/characterCreationRuntime.ts",
             "packages/mcp/src/session-store.ts",
             "packages/mcp/src/character-tools.ts",
@@ -18873,7 +18874,7 @@
           "profileKind": "character-sheet",
           "qntOwners": [],
           "runtimeOwners": [
-            "packages/character-sheet-runtime/src/index.ts"
+            "packages/character-sheet-runtime/src/armor-class.ts"
           ],
           "sourceBoundary": "CharacterBuild plus Character Sheet loadout projection",
           "taskRefs": [
@@ -19032,7 +19033,7 @@
             "packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt"
           ],
           "runtimeOwners": [
-            "packages/character-sheet-runtime/src/index.ts"
+            "packages/character-sheet-runtime/src/rests.ts"
           ],
           "sourceBoundary": "Character Sheet stores feature-scoped used-since-Long-Rest state only for retained class features with authored Long Rest reset facts, preserves that state across Short Rests, clears it on Long Rest, and derives related source links from CharacterBuild and Surface facts rather than storing duplicate resource or die projections.",
           "taskRefs": [
@@ -19056,7 +19057,7 @@
             "packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt"
           ],
           "runtimeOwners": [
-            "packages/character-sheet-runtime/src/index.ts",
+            "packages/character-sheet-runtime/src/resources.ts",
             "packages/character-battle-runtime/src/index.ts"
           ],
           "sourceBoundary": "Character Sheet consumes retained Uncanny Metabolism source facts, the shared Monk's Focus use-count expenditure owner, current Martial Arts die source projection, and once-per-Long-Rest use state at the Initiative roll boundary; it recovers all expended Focus Points, applies capped self Hit Point healing, records the Long Rest use marker, and Character Battle init carries the updated sheet resource and HP state into battle without a duplicate battle resource pool.",
@@ -19854,7 +19855,7 @@
           "profileKind": "character-sheet",
           "qntOwners": [],
           "runtimeOwners": [
-            "packages/character-sheet-runtime/src/index.ts"
+            "packages/character-sheet-runtime/src/ability-checks.ts"
           ],
           "sourceBoundary": "Character Sheet consumes retained class-feature grant_speed facts, including selected subclass feature grants, and preserves linked-speed projections such as Climb Speed equal to Speed as a link to the walk Speed source, not as a copied numeric Speed.",
           "taskRefs": [
@@ -19873,7 +19874,7 @@
           "profileKind": "character-sheet",
           "qntOwners": [],
           "runtimeOwners": [
-            "packages/character-sheet-runtime/src/index.ts"
+            "packages/character-sheet-runtime/src/ability-checks.ts"
           ],
           "sourceBoundary": "Character Sheet consumes CharacterBuild class progression, selected subclass feature grants, and installed Surface class-feature jump-distance substitution grants to derive optional jump-distance Ability substitutions from source facts rather than storing a parallel movement rule.",
           "taskRefs": [
@@ -20216,7 +20217,7 @@
             "packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt"
           ],
           "runtimeOwners": [
-            "packages/character-sheet-runtime/src/index.ts"
+            "packages/character-sheet-runtime/src/resources.ts"
           ],
           "sourceBoundary": "CharacterBuild class-feature point-pool resources plus installed Surface Long Rest reset facts; Character Sheet stores only expended point-pool state, derives capacity from the feature and class progression, and clears the expenditure on Long Rest without executing Spell Slot conversion or Metamagic options.",
           "taskRefs": [
@@ -20239,7 +20240,7 @@
             "packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt"
           ],
           "runtimeOwners": [
-            "packages/character-sheet-runtime/src/index.ts"
+            "packages/character-sheet-runtime/src/spell-slots.ts"
           ],
           "sourceBoundary": "Character Sheet consumes retained Font of Magic source facts, source-aware ordinary or created Spell Slot expenditure state, and the shared Sorcery Point point-pool expenditure. The conversion spends one unexpended Spell Slot, requires an explicit slot source when ordinary and created Spell Slots of the same level are both available, and restores expended Sorcery Points equal to the slot level only when the full gain fits under the Sorcerer-level cap; Pact Slots and Metamagic execution remain outside this profile.",
           "taskRefs": [
@@ -20263,7 +20264,7 @@
             "packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt"
           ],
           "runtimeOwners": [
-            "packages/character-sheet-runtime/src/index.ts",
+            "packages/character-sheet-runtime/src/spell-slots.ts",
             "packages/character-battle-runtime/src/index.ts"
           ],
           "sourceBoundary": "Character Sheet consumes retained Font of Magic source facts, the shared Sorcery Point point-pool expenditure, and the Creating Spell Slots table from the installed Surface feature. This is a Character Sheet conversion-state boundary: it spends the table cost, enforces the Sorcerer-level minimum and level-5 table cap, stores only created Spell Slot delta state, exposes aggregate Spell Slot capacity to Character Battle init, rejects source-ambiguous battle handoff expenditure for levels with both ordinary and created slots, and clears created slots on Long Rest. Character Battle does not advertise this conversion as a Unit feature Bonus Action or duplicate ordinary-vs-created source pools; battle use remains aggregate and source-ambiguous settlement is rejected.",
@@ -20289,7 +20290,7 @@
             "packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt"
           ],
           "runtimeOwners": [
-            "packages/character-sheet-runtime/src/index.ts",
+            "packages/character-sheet-runtime/src/resources.ts",
             "packages/character-battle-runtime/src/index.ts",
             "packages/character-battle-runtime/src/battle-creature-init.ts",
             "packages/battle-runtime/src/character-battle-resources.ts",
@@ -20546,7 +20547,7 @@
             "packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt"
           ],
           "runtimeOwners": [
-            "packages/character-sheet-runtime/src/index.ts",
+            "packages/character-sheet-runtime/src/resources.ts",
             "packages/character-battle-runtime/src/index.ts",
             "packages/character-battle-runtime/src/battle-creature-init.ts",
             "packages/battle-runtime/src/character-battle-resources.ts",
@@ -20976,7 +20977,7 @@
           "profileKind": "character-sheet",
           "qntOwners": [],
           "runtimeOwners": [
-            "packages/character-sheet-runtime/src/index.ts"
+            "packages/character-sheet-runtime/src/armor-class.ts"
           ],
           "sourceBoundary": "CharacterBuild plus Character Sheet loadout projection",
           "taskRefs": [
@@ -21033,8 +21034,8 @@
           "profileKind": "character-sheet",
           "qntOwners": [],
           "runtimeOwners": [
-            "packages/character-creation-runtime/src/finalization.ts",
-            "packages/character-sheet-runtime/src/index.ts"
+            "packages/character-sheet-runtime/src/class-feature-spells.ts",
+            "packages/character-creation-runtime/src/finalization.ts"
           ],
           "sourceBoundary": "Character Creation retains selected subclass feature grants in CharacterBuild feature refs from the selected subclass and class level. Character Sheet consumes those retained feature refs, installed Surface passive grant_spell_access facts, and installed Surface grant_class_level_prepared_spell_access tier facts to derive prepared spell access from the existing build class level, including duplicate-selection rejection for Book of Shadows, without storing a parallel prepared-spell list. Individual Spell Definition legality, spell-list membership, and invocation behavior remain owned by spell profiles.",
           "taskRefs": [
@@ -21320,7 +21321,7 @@
           "profileKind": "character-sheet",
           "qntOwners": [],
           "runtimeOwners": [
-            "packages/character-sheet-runtime/src/index.ts"
+            "packages/character-sheet-runtime/src/rests.ts"
           ],
           "sourceBoundary": "CharacterBuild Warlock level-2 progression plus installed Magical Cunning class-feature Unit and Pact Magic slot pool state derived from the Warlock class record.",
           "taskRefs": [
@@ -21377,8 +21378,8 @@
           "profileKind": "character-sheet",
           "qntOwners": [],
           "runtimeOwners": [
-            "packages/character-creation-runtime/src/finalization.ts",
-            "packages/character-sheet-runtime/src/index.ts"
+            "packages/character-sheet-runtime/src/class-feature-spells.ts",
+            "packages/character-creation-runtime/src/finalization.ts"
           ],
           "sourceBoundary": "Character Creation retains selected subclass feature grants in CharacterBuild feature refs from the selected subclass and class level. Character Sheet consumes those retained feature refs, installed Surface passive grant_spell_access facts, and installed Surface grant_class_level_prepared_spell_access tier facts to derive prepared spell access from the existing build class level, including duplicate-selection rejection for Book of Shadows, without storing a parallel prepared-spell list. Individual Spell Definition legality, spell-list membership, and invocation behavior remain owned by spell profiles.",
           "taskRefs": [
@@ -21433,7 +21434,7 @@
             "packages/character-sheet-runtime/character-sheet-spellbook-ritual-selected-identity.mbt.qnt"
           ],
           "runtimeOwners": [
-            "packages/character-sheet-runtime/src/index.ts"
+            "packages/character-sheet-runtime/src/spell-invocation.ts"
           ],
           "sourceBoundary": "CharacterBuild spellbook Spell Access plus Surface Spell Definition ritual tag and spellbook Ritual Access feature",
           "taskRefs": [
@@ -21485,7 +21486,8 @@
           "profileKind": "character-sheet",
           "qntOwners": [],
           "runtimeOwners": [
-            "packages/character-sheet-runtime/src/index.ts"
+            "packages/character-sheet-runtime/src/healing-rest-benefit.ts",
+            "packages/character-sheet-runtime/src/rests.ts"
           ],
           "sourceBoundary": "CharacterBuild Wizard progression plus installed Arcane Recovery class-feature Unit; ordinary Spell Slot expenditure state remains separate from Pact Slot recovery",
           "taskRefs": [
@@ -22212,7 +22214,7 @@
             "packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt"
           ],
           "runtimeOwners": [
-            "packages/character-sheet-runtime/src/index.ts"
+            "packages/character-sheet-runtime/src/healing-rest-benefit.ts"
           ],
           "taskRefs": [
             "SRDINV25"
@@ -22437,8 +22439,8 @@
           "profileKind": "character-sheet",
           "qntOwners": [],
           "runtimeOwners": [
-            "packages/character-creation-runtime/src/finalization.ts",
-            "packages/character-sheet-runtime/src/index.ts"
+            "packages/character-sheet-runtime/src/class-feature-spells.ts",
+            "packages/character-creation-runtime/src/finalization.ts"
           ],
           "sourceBoundary": "Character Creation retains selected subclass feature grants in CharacterBuild feature refs from the selected subclass and class level. Character Sheet consumes those retained feature refs, installed Surface passive grant_spell_access facts, and installed Surface grant_class_level_prepared_spell_access tier facts to derive prepared spell access from the existing build class level, including duplicate-selection rejection for Book of Shadows, without storing a parallel prepared-spell list. Individual Spell Definition legality, spell-list membership, and invocation behavior remain owned by spell profiles.",
           "taskRefs": [
@@ -22677,7 +22679,7 @@
             "packages/character-sheet-runtime/character-sheet-weapon-mastery-containers-selected-identity.mbt.qnt"
           ],
           "runtimeOwners": [
-            "packages/character-sheet-runtime/src/index.ts"
+            "packages/character-sheet-runtime/src/rests.ts"
           ],
           "sourceBoundary": "CharacterBuild selected class-choice refs plus Surface Weapon Mastery class-feature choose, Long Rest change count, and eligible weapon facts; selected mastery-property execution remains owned by selected Mastery Property Unit profiles",
           "taskRefs": [
@@ -22989,7 +22991,7 @@
             "packages/character-sheet-runtime/character-sheet-weapon-mastery-containers-selected-identity.mbt.qnt"
           ],
           "runtimeOwners": [
-            "packages/character-sheet-runtime/src/index.ts"
+            "packages/character-sheet-runtime/src/rests.ts"
           ],
           "sourceBoundary": "CharacterBuild selected class-choice refs plus Surface Weapon Mastery class-feature choose, Long Rest change count, and eligible weapon facts; selected mastery-property execution remains owned by selected Mastery Property Unit profiles",
           "taskRefs": [
@@ -23079,7 +23081,7 @@
             "packages/character-sheet-runtime/character-sheet-weapon-mastery-containers-selected-identity.mbt.qnt"
           ],
           "runtimeOwners": [
-            "packages/character-sheet-runtime/src/index.ts"
+            "packages/character-sheet-runtime/src/rests.ts"
           ],
           "sourceBoundary": "CharacterBuild selected class-choice refs plus Surface Weapon Mastery class-feature choose, Long Rest change count, and eligible weapon facts; selected mastery-property execution remains owned by selected Mastery Property Unit profiles",
           "taskRefs": [
@@ -29371,7 +29373,7 @@
             "packages/character-sheet-runtime/character-sheet-spell-rest-benefit-application.mbt.qnt"
           ],
           "runtimeOwners": [
-            "packages/character-sheet-runtime/src/index.ts"
+            "packages/character-sheet-runtime/src/healing-rest-benefit.ts"
           ],
           "sourceBoundary": "Character Sheet consumes an installed Surface Spell Definition shape with caller-selected creature recipients, slot-scaled Hit Point healing, a granted Short Rest benefit, and a same-spell recipient lockout reset by the recipient finishing a Long Rest. The runtime spends one Spell Slot at completion, applies existing Short Rest benefit logic per selected Character Sheet without duplicating rest algorithms, applies capped spell healing from caller-supplied dice, stores only the same-spell recipient lockout source reference in Long Rest-cleared sheet rest state, and leaves completed 10-minute casting, range maintenance, and interruption tracking to caller/table facts.",
           "taskRefs": [

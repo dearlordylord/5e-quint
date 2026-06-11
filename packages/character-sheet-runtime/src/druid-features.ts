@@ -1,3 +1,4 @@
+// UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.druid-circle-land-spell-access
 import {
   characterBuildDruidWildShapeFacts,
   characterBuildFeatureUnitIds,
