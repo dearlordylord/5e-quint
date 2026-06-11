@@ -66,7 +66,7 @@ seams are:
 - `packages/mcp/src/start-battle-tool.ts` calls `characterSheetBattleInit`,
   starts `BattleState`, and then marks each participating sheet `inBattle`.
 - `packages/mcp/src/battle-handoff.ts` calls
-  `applyBattleHandoffToCharacterSheet` for every character-origin combatant
+  `settleCharacterSheetFromBattle` for every character-origin combatant
   before clearing the active battle.
 - `packages/character-battle-runtime/src/index.ts` owns sheet/battle projection
   and settlement, including HP, Temporary Hit Points, conditions, spell slots,
@@ -405,8 +405,8 @@ Required output:
 - Durable settlement of battle-created (battle-only) familiars. Deferred here
   from the Companion Session Convergence lane (CSC-T03). That lane shipped the
   `dismissedForever` battle tombstone and made `end_battle` settlement read the
-  battle companion outcome alone (`applyBattleCompanionHandoffToCharacterSheet`,
-  with the session-level `companionAdmission` copy removed). A battle-only
+  battle companion outcome inside the single `settleCharacterSheetFromBattle`
+  operation, with the session-level `companionAdmission` copy removed. A battle-only
   familiar (no durable Character Sheet identity) currently leaves the Sheet
   untouched at settlement rather than evaporating; settling it as a new durable
   companion belongs here, once in-battle Find Familiar casting is wired with the

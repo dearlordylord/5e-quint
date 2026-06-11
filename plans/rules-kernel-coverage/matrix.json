@@ -3367,7 +3367,8 @@
       ],
       "runtime": "character-battle",
       "runtimeOwners": [
-        "packages/character-battle-runtime/src/index.ts"
+        "packages/character-battle-runtime/src/index.ts",
+        "packages/character-battle-runtime/src/companion-handoff.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [
@@ -3407,7 +3408,8 @@
       ],
       "runtime": "character-battle",
       "runtimeOwners": [
-        "packages/character-battle-runtime/src/index.ts"
+        "packages/character-battle-runtime/src/index.ts",
+        "packages/character-battle-runtime/src/companion-handoff.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [
@@ -12146,7 +12148,7 @@
     },
     {
       "boundary": "handoff",
-      "evidence": "characterSheetBattleInit, battleCreatureInitFromCharacterBuild, and applyBattleHandoffToCharacterSheet own deterministic cross-runtime projection, conflict rejection, and durable state settlement.",
+      "evidence": "characterSheetBattleInit, battleCreatureInitFromCharacterBuild, and settleCharacterSheetFromBattle own deterministic cross-runtime projection, conflict rejection, and durable state settlement.",
       "obligationIds": [
         "CHARACTER.BATTLE.HANDOFF.INIT_PROJECTION",
         "CHARACTER.BATTLE.HANDOFF.SETTLEMENT",
@@ -12154,6 +12156,7 @@
       ],
       "runtimeBoundaryPaths": [
         "packages/character-battle-runtime/src/index.ts",
+        "packages/character-battle-runtime/src/companion-handoff.ts",
         "packages/character-battle-runtime/src/battle-creature-init.ts",
         "packages/character-battle-runtime/src/battle-character-build-projection.ts",
         "packages/character-battle-runtime/src/battle-support-profiles.ts"

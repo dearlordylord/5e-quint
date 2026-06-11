@@ -105,8 +105,6 @@ import { Either, Option } from "effect";
 import { describe, expect, test } from "vitest";
 
 import {
-  applyBattleHandoffToCharacterSheet,
-  applyBattleCompanionHandoffToCharacterSheet,
   admitCharacterSheetCompanionToBattle,
   battleCreatureInitFromCharacterBuild,
   characterUnitRefsWithBattleSupportProfiles,
@@ -115,6 +113,7 @@ import {
   characterBattleInitiativeScore,
   characterBattleResourceInitsFromBuild,
   characterSpellcasting,
+  settleCharacterSheetFromBattle,
   startBattleFromCharacterBuildAndStatBlock,
 } from "./index.ts";
 
@@ -189,7 +188,7 @@ describe("Character Sheet battle handoff", () => {
     expect(Either.isRight(sheet)).toBe(true);
     if (Either.isLeft(sheet)) return;
 
-    const handoff = applyBattleHandoffToCharacterSheet({
+    const handoff = settleHandoffBranchToCharacterSheet({
       sheet: sheet.right,
       unitLibrary,
       combatant: handoffBranchCombatant({
@@ -215,7 +214,7 @@ describe("Character Sheet battle handoff", () => {
     expect(Either.isRight(sheet)).toBe(true);
     if (Either.isLeft(sheet)) return;
 
-    const handoff = applyBattleHandoffToCharacterSheet({
+    const handoff = settleHandoffBranchToCharacterSheet({
       sheet: sheet.right,
       unitLibrary,
       combatant: handoffBranchCombatant({
@@ -244,7 +243,7 @@ describe("Character Sheet battle handoff", () => {
     expect(Either.isRight(sheet)).toBe(true);
     if (Either.isLeft(sheet)) return;
 
-    const handoff = applyBattleHandoffToCharacterSheet({
+    const handoff = settleHandoffBranchToCharacterSheet({
       sheet: sheet.right,
       unitLibrary,
       combatant: handoffBranchCombatant({
@@ -278,7 +277,7 @@ describe("Character Sheet battle handoff", () => {
     expect(Either.isRight(sheet)).toBe(true);
     if (Either.isLeft(sheet)) return;
 
-    const handoff = applyBattleHandoffToCharacterSheet({
+    const handoff = settleHandoffBranchToCharacterSheet({
       sheet: sheet.right,
       unitLibrary,
       combatant: handoffBranchCombatant({
@@ -312,7 +311,7 @@ describe("Character Sheet battle handoff", () => {
     expect(Either.isRight(sheet)).toBe(true);
     if (Either.isLeft(sheet)) return;
 
-    const handoff = applyBattleHandoffToCharacterSheet({
+    const handoff = settleHandoffBranchToCharacterSheet({
       sheet: sheet.right,
       unitLibrary,
       combatant: handoffBranchCombatant({
@@ -473,9 +472,7 @@ describe("Character Sheet battle handoff", () => {
         sheet,
         unitLibrary,
         statBlockCatalog,
-        companionId: retainedCompanionId(
-          "companion:recast-embodied",
-        ),
+        companionId: retainedCompanionId("companion:recast-embodied"),
         source: { tag: "ritualSpell", spellId: "find_familiar" },
         selectedForm: { tag: "normalNamedForm", formId: "bat" },
         creatureTypeOverrideChoiceId: "fey",
@@ -523,9 +520,7 @@ describe("Character Sheet battle handoff", () => {
         sheet: dismissed,
         unitLibrary,
         statBlockCatalog,
-        companionId: retainedCompanionId(
-          "companion:recast-dismissed",
-        ),
+        companionId: retainedCompanionId("companion:recast-dismissed"),
         source: { tag: "ritualSpell", spellId: "find_familiar" },
         selectedForm: { tag: "normalNamedForm", formId: "bat" },
         creatureTypeOverrideChoiceId: "fey",
@@ -569,9 +564,7 @@ describe("Character Sheet battle handoff", () => {
         sheet: disappeared,
         unitLibrary,
         statBlockCatalog,
-        companionId: retainedCompanionId(
-          "companion:recast-disappeared",
-        ),
+        companionId: retainedCompanionId("companion:recast-disappeared"),
         source: { tag: "ritualSpell", spellId: "find_familiar" },
         selectedForm: { tag: "normalNamedForm", formId: "cat" },
         creatureTypeOverrideChoiceId: "fey",
@@ -759,9 +752,7 @@ describe("Character Sheet battle handoff", () => {
         sheet,
         unitLibrary,
         statBlockCatalog,
-        companionId: retainedCompanionId(
-          "companion:forged-cr0-beast",
-        ),
+        companionId: retainedCompanionId("companion:forged-cr0-beast"),
         source: { tag: "ritualSpell", spellId: "find_familiar" },
         selectedForm: {
           tag: "challengeRatingZeroBeast",
@@ -890,25 +881,29 @@ describe("Character Sheet battle handoff", () => {
           "character:battle-only-companion-handoff",
         ),
         build,
-        maximumHp: Hp(12),
-        currentHp: Hp(12),
+        maximumHp: Hp(10),
+        currentHp: Hp(10),
         tempHp: Hp(0),
         unitLibrary,
       }),
     );
     const ownerId = combatantId("battle-only-companion-owner");
     const battleOnlyCompanionId = combatantId("battle-only-companion");
+    const ownerInit = expectRight(
+      characterSheetBattleInit({
+        sheet,
+        unitLibrary,
+        statBlockCatalog,
+        combatantId: ownerId,
+        displayName: "Owner",
+        initiative: initiativeScore(12),
+        side: battleCombatantSide("party"),
+      }),
+    );
     const state = expectRight(
       startBattle({
         battleId: battleId("battle-only-companion-handoff"),
-        combatants: [
-          battleCreatureInitFromStatBlock({
-            combatantId: ownerId,
-            statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
-            initiative: initiativeScore(12),
-            side: battleCombatantSide("party"),
-          }),
-        ],
+        combatants: [ownerInit],
       }),
     );
     const findFamiliarUnit = unitLibrary.requireUnit("find_familiar");
@@ -934,10 +929,12 @@ describe("Character Sheet battle handoff", () => {
     if (cast.tag !== "resolved") return;
 
     const handoff = expectRight(
-      applyBattleCompanionHandoffToCharacterSheet({
+      settleCharacterSheetFromBattle({
         sheet,
         state: cast.state,
-        ownerCombatantId: ownerId,
+        combatant: requireCombatant(cast.state, ownerId),
+        unitLibrary,
+        statBlockCatalog,
       }),
     );
 
@@ -959,7 +956,7 @@ describe("Character Sheet battle handoff", () => {
     if (Either.isLeft(sheet)) return;
 
     const countedStatBlockCatalog = statBlockCatalogWithLookupCount();
-    const handoff = applyBattleHandoffToCharacterSheet({
+    const handoff = settleHandoffBranchToCharacterSheet({
       sheet: sheet.right,
       unitLibrary,
       statBlockCatalog: countedStatBlockCatalog.catalog,
@@ -1553,7 +1550,7 @@ describe("Character Sheet battle handoff", () => {
     const assume = requireResolvedBattleSubject(
       resolveDruidWildShapeAssumeFormWithoutLoadoutEquipment(state),
     );
-    const activeHandoff = applyBattleHandoffToCharacterSheet({
+    const activeHandoff = settleHandoffBranchToCharacterSheet({
       sheet: sheet.right,
       unitLibrary,
       combatant: requireCombatant(assume.state, combatantId("druid")),
@@ -1569,7 +1566,7 @@ describe("Character Sheet battle handoff", () => {
       }),
     );
     const handoff = expectRight(
-      applyBattleHandoffToCharacterSheet({
+      settleHandoffBranchToCharacterSheet({
         sheet: sheet.right,
         unitLibrary,
         combatant: requireCombatant(dismissed.state, combatantId("druid")),
@@ -1602,7 +1599,7 @@ describe("Character Sheet battle handoff", () => {
     expect(Either.isRight(sheet)).toBe(true);
     if (Either.isLeft(sheet)) return;
 
-    const handoff = applyBattleHandoffToCharacterSheet({
+    const handoff = settleHandoffBranchToCharacterSheet({
       sheet: sheet.right,
       unitLibrary,
       combatant: handoffBranchCombatant({
@@ -1651,7 +1648,7 @@ describe("Character Sheet battle handoff", () => {
     expect(Either.isRight(sheet)).toBe(true);
     if (Either.isLeft(sheet)) return;
 
-    const handoff = applyBattleHandoffToCharacterSheet({
+    const handoff = settleHandoffBranchToCharacterSheet({
       sheet: sheet.right,
       unitLibrary,
       combatant: handoffBranchCombatant({
@@ -1729,7 +1726,7 @@ describe("Character Sheet battle handoff", () => {
     ]);
 
     const unchangedHandoff = expectRight(
-      applyBattleHandoffToCharacterSheet({
+      settleHandoffBranchToCharacterSheet({
         sheet: created,
         unitLibrary,
         combatant: handoffBranchCombatant({
@@ -1781,7 +1778,7 @@ describe("Character Sheet battle handoff", () => {
       createdSpellSlots: [{ spellLevel: 3, count: 1, expended: 0 }],
     });
 
-    const ambiguousHandoff = applyBattleHandoffToCharacterSheet({
+    const ambiguousHandoff = settleHandoffBranchToCharacterSheet({
       sheet: created,
       unitLibrary,
       combatant: handoffBranchCombatant({
@@ -2015,7 +2012,7 @@ describe("Character Sheet battle handoff", () => {
     });
 
     const handoff = expectRight(
-      applyBattleHandoffToCharacterSheet({
+      settleHandoffBranchToCharacterSheet({
         sheet,
         unitLibrary,
         combatant: spentSorcerer,
@@ -2043,7 +2040,7 @@ describe("Character Sheet battle handoff", () => {
     expect(Either.isRight(sheet)).toBe(true);
     if (Either.isLeft(sheet)) return;
 
-    const handoff = applyBattleHandoffToCharacterSheet({
+    const handoff = settleHandoffBranchToCharacterSheet({
       sheet: sheet.right,
       unitLibrary,
       combatant: handoffBranchCombatant({
@@ -2080,7 +2077,7 @@ describe("Character Sheet battle handoff", () => {
     const favoredEnemyResource = characterBattleResourceForUnit(favoredEnemy);
     expect(hasFixedCharacterBattleResourceCap(favoredEnemyResource)).toBe(true);
     if (!hasFixedCharacterBattleResourceCap(favoredEnemyResource)) return;
-    const handoff = applyBattleHandoffToCharacterSheet({
+    const handoff = settleHandoffBranchToCharacterSheet({
       sheet: sheet.right,
       unitLibrary,
       combatant: handoffBranchCombatant({
@@ -2162,7 +2159,7 @@ describe("Character Sheet battle handoff", () => {
       }),
     );
 
-    const handoff = applyBattleHandoffToCharacterSheet({
+    const handoff = settleHandoffBranchToCharacterSheet({
       sheet: sheet.right,
       unitLibrary,
       combatant: handoffBranchCombatant({
@@ -2255,7 +2252,7 @@ describe("Character Sheet battle handoff", () => {
     );
     expect(initFocusResource).not.toHaveProperty("usesRemaining");
 
-    const handoff = applyBattleHandoffToCharacterSheet({
+    const handoff = settleHandoffBranchToCharacterSheet({
       sheet: recovered,
       unitLibrary,
       combatant: handoffBranchCombatant({
@@ -2310,7 +2307,7 @@ describe("Character Sheet battle handoff", () => {
       true,
     );
     if (!hasFixedCharacterBattleResourceCap(paladinsSmiteResource)) return;
-    const handoff = applyBattleHandoffToCharacterSheet({
+    const handoff = settleHandoffBranchToCharacterSheet({
       sheet: sheet.right,
       unitLibrary,
       combatant: handoffBranchCombatant({
@@ -2372,7 +2369,7 @@ describe("Character Sheet battle handoff", () => {
       true,
     );
     if (!hasLimitedCharacterBattleResourceCap(favoredEnemyResource)) return;
-    const handoff = applyBattleHandoffToCharacterSheet({
+    const handoff = settleHandoffBranchToCharacterSheet({
       sheet: sheet.right,
       unitLibrary,
       combatant: handoffBranchCombatant({
@@ -5198,6 +5195,35 @@ function testSorcererMetamagicOptionId(optionId: string) {
   return expectRight(sorcererMetamagicOptionId(optionId));
 }
 
+function settleHandoffBranchToCharacterSheet(
+  input: Omit<Parameters<typeof settleCharacterSheetFromBattle>[0], "state">,
+): ReturnType<typeof settleCharacterSheetFromBattle> {
+  return settleCharacterSheetFromBattle({
+    ...input,
+    state: handoffBranchState(input.combatant),
+  });
+}
+
+function handoffBranchState(combatant: BattleCreatureState): BattleState {
+  const state = expectRight(
+    startBattle({
+      battleId: battleId("battle:handoff-branch"),
+      combatants: [
+        battleCreatureInitFromStatBlock({
+          combatantId: combatant.combatantId,
+          statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+          initiative: initiativeScore(10),
+          side: battleCombatantSide("monsters"),
+        }),
+      ],
+    }),
+  );
+  return {
+    ...state,
+    combatants: new Map(state.combatants).set(combatant.combatantId, combatant),
+  };
+}
+
 function handoffBranchCombatant(
   combatant: Omit<Partial<BattleCreatureState>, "origin"> & {
     readonly origin: Partial<
@@ -5211,6 +5237,7 @@ function handoffBranchCombatant(
   // Branch-specific handoff fixtures provide every field read before the tested
   // branch exits. BattleCreatureState's remaining fields are unreachable here.
   return {
+    combatantId: combatantId("combatant:handoff-branch"),
     ...combatant,
     origin: {
       classLevels: [],

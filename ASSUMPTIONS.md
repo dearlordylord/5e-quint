@@ -123,7 +123,7 @@ active verification authority.
 
 **Rules basis (SRD 5.2.1 Druid Level 2 "Wild Shape"):** The SRD defines how long a Wild Shape form lasts and says the druid can leave the form early as a Bonus Action, or that the form ends when Wild Shape is used again, the druid has the Incapacitated condition, or dies. The SRD does not define a cross-boundary persistence protocol for writing durable Character Sheet state while the battle projection is still in Beast form. Blocking handoff until reversion is therefore an architectural boundary choice rather than a direct RAW handoff rule.
 
-**Changes:** `packages/character-battle-runtime/src/index.ts`: `applyBattleHandoffToCharacterSheet` rejects combatants with `combatantHasActiveDruidWildShape(input.combatant)`. `packages/character-battle-runtime/character-battle-settlement.mbt.qnt` and `packages/character-battle-runtime/src/character-battle-settlement.mbt.test.ts` include deterministic witness cases for active Wild Shape handoff rejection.
+**Changes:** `packages/character-battle-runtime/src/index.ts`: `settleCharacterSheetFromBattle` rejects combatants with `combatantHasActiveDruidWildShape(input.combatant)`. `packages/character-battle-runtime/character-battle-settlement.mbt.qnt` and `packages/character-battle-runtime/src/character-battle-settlement.mbt.test.ts` include deterministic witness cases for active Wild Shape handoff rejection.
 
 ## A32: Trigger taxonomy — inferred from reaction catalog (battle layer)
 

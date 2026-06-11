@@ -67,7 +67,7 @@
     {
       "number": 11,
       "id": "CSC-T11-CONVERGENCE-CLOSEOUT",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Reviewer-loop convergence and L13COMP plan-doc closeout"
     },
     {
@@ -97,7 +97,7 @@
     {
       "number": 16,
       "id": "CSC-T16-R1-SINGLE-SETTLEMENT-OPERATION",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "One settlement operation for character battle handoff; move companion handoff into its own module"
     }
   ]
@@ -246,8 +246,8 @@ a task's change invalidates them):
 | 9 | CSC-T09-FORM-CATALOG-REFERENCE | ready-for-research | CSC-T08-CREATION-HP-SURFACE | Touches admission eligibility helpers T07 may have relocated. |
 | 10 | CSC-T10-SMALL-FINDINGS-BATCH | done | CSC-T09-FORM-CATALOG-REFERENCE | Sweep of remaining small findings in now-stable files; now also owns the durable-id uniqueness decision (R4b). |
 | 15 | CSC-T15-R2-PROTOCOL-TAG-HOIST | done | CSC-T10-SMALL-FINDINGS-BATCH | Owner-approved refactor; reshapes protocol threading and deletes the settlement inverse mapping before T16 moves the code. |
-| 16 | CSC-T16-R1-SINGLE-SETTLEMENT-OPERATION | ready-for-research | CSC-T15-R2-PROTOCOL-TAG-HOIST | Code moves once, in its post-T15 final shape (the T07 rationale). |
-| 11 | CSC-T11-CONVERGENCE-CLOSEOUT | blocked | CSC-T16-R1-SINGLE-SETTLEMENT-OPERATION | Full-gate run + plan-doc truth update over the whole lane, tasks 1–16. |
+| 16 | CSC-T16-R1-SINGLE-SETTLEMENT-OPERATION | done | CSC-T15-R2-PROTOCOL-TAG-HOIST | Code moves once, in its post-T15 final shape (the T07 rationale). |
+| 11 | CSC-T11-CONVERGENCE-CLOSEOUT | ready-for-research | CSC-T16-R1-SINGLE-SETTLEMENT-OPERATION | Full-gate run + plan-doc truth update over the whole lane, tasks 1–16. |
 
 ## Task Details
 
@@ -857,7 +857,7 @@ already-dissolved; suites + typechecks green.
 
 ### Task 11 - CSC-T11-CONVERGENCE-CLOSEOUT
 
-Status: `blocked` · Mode: AFK
+Status: `ready-for-research` · Mode: AFK
 
 Run the full gate set and make the documentation truthful:
 
@@ -1107,7 +1107,7 @@ including both companion MBT files under the mutex protocol.
 
 ### Task 16 - CSC-T16-R1-SINGLE-SETTLEMENT-OPERATION
 
-Status: `ready-for-research` (depends on Task 15) · Mode: AFK · Arch-review R1
+Status: `done` (depends on Task 15) · Mode: AFK · Arch-review R1
 
 **Finding (caller-sequencing connascence; CLAUDE.md "replace caller
 sequencing requirements with one operation").** Settlement of one domain

@@ -12,6 +12,7 @@ import {
   spendCharacterPointPoolResource,
   startBattle,
   type BattleCreatureState,
+  type BattleState,
   type CharacterBattleSpellcastingState,
 } from "@dnd/battle-runtime";
 import {
@@ -53,8 +54,8 @@ import { Either } from "effect";
 import { describe, expect, it } from "vitest";
 
 import {
-  applyBattleHandoffToCharacterSheet,
   characterSheetBattleInit,
+  settleCharacterSheetFromBattle,
 } from "./index.ts";
 
 const settlementScenarios = [
@@ -99,6 +100,11 @@ type CharacterBattleCombatant = BattleCreatureState & {
     BattleCreatureState["origin"],
     { readonly kind: "character" }
   >;
+};
+
+type CharacterBattleSession = {
+  readonly state: BattleState;
+  readonly combatant: CharacterBattleCombatant;
 };
 
 const driverSchema = {
@@ -207,11 +213,12 @@ function settleHitPointsConditionsSlotsAndPreservedSheetState(): BattleSettlemen
     spentHitDice: [{ classUnitId: "class_wizard", spent: resourceCount(1) }],
     restFeatureUses: [{ tag: "arcaneRecovery", usedSinceLongRest: true }],
   });
-  const combatant = startCharacterBattle({
+  const battle = startCharacterBattle({
     battleIdText: "battle:settlement-sheet-state",
     combatantId: combatantId("combatant:battle-settlement-sheet-state"),
     sheet,
   });
+  const combatant = battle.combatant;
   const spellcasting = requireCharacterSpellcasting(combatant);
   const settledCombatant: CharacterBattleCombatant = {
     ...combatant,
@@ -235,7 +242,8 @@ function settleHitPointsConditionsSlotsAndPreservedSheetState(): BattleSettlemen
     },
   };
   const settled = requireRight(
-    applyBattleHandoffToCharacterSheet({
+    settleCharacterSheetFromBattle({
+      state: battleStateWithCombatant(battle.state, settledCombatant),
       sheet,
       unitLibrary,
       combatant: settledCombatant,
@@ -265,11 +273,12 @@ function settleFeatureResourceExpenditure(): BattleSettlementProjection {
       },
     ],
   });
-  const combatant = startCharacterBattle({
+  const battle = startCharacterBattle({
     battleIdText: "battle:settlement-feature-resource",
     combatantId: combatantId("combatant:battle-settlement-feature-resource"),
     sheet,
   });
+  const combatant = battle.combatant;
   const sorceryPoints = combatant.origin.resources.find(
     characterBattleResourceIsPointPool,
   );
@@ -295,7 +304,8 @@ function settleFeatureResourceExpenditure(): BattleSettlementProjection {
     },
   };
   const settled = requireRight(
-    applyBattleHandoffToCharacterSheet({
+    settleCharacterSheetFromBattle({
+      state: battleStateWithCombatant(battle.state, settledCombatant),
       sheet,
       unitLibrary,
       combatant: settledCombatant,
@@ -342,11 +352,12 @@ function rejectAmbiguousCreatedSpellSlotSource(): BattleSettlementProjection {
       spellLevel: spellSlotLevel(3),
     }),
   );
-  const combatant = startCharacterBattle({
+  const battle = startCharacterBattle({
     battleIdText: "battle:settlement-ambiguous-slot",
     combatantId: combatantId("combatant:battle-settlement-ambiguous-slot"),
     sheet: withCreatedSlot,
   });
+  const combatant = battle.combatant;
   const spellcasting = requireCharacterSpellcasting(combatant);
   const ambiguousCombatant: CharacterBattleCombatant = {
     ...combatant,
@@ -363,7 +374,8 @@ function rejectAmbiguousCreatedSpellSlotSource(): BattleSettlementProjection {
       },
     },
   };
-  const result = applyBattleHandoffToCharacterSheet({
+  const result = settleCharacterSheetFromBattle({
+    state: battleStateWithCombatant(battle.state, ambiguousCombatant),
     sheet: withCreatedSlot,
     unitLibrary,
     combatant: ambiguousCombatant,
@@ -388,21 +400,24 @@ function rejectMismatchedCharacterIdentity(): BattleSettlementProjection {
     maximumHp: wizardBattleFixtureMaximumHp,
     currentHp: wizardBattleFixtureMaximumHp,
   });
-  const combatant = startCharacterBattle({
+  const battle = startCharacterBattle({
     battleIdText: "battle:settlement-identity-mismatch",
     combatantId: combatantId("combatant:settlement-identity-mismatch"),
     sheet,
   });
-  const result = applyBattleHandoffToCharacterSheet({
+  const combatant = battle.combatant;
+  const mismatchedCombatant: CharacterBattleCombatant = {
+    ...combatant,
+    origin: {
+      ...combatant.origin,
+      characterId: characterId("character:battle-settlement-other-sheet"),
+    },
+  };
+  const result = settleCharacterSheetFromBattle({
+    state: battleStateWithCombatant(battle.state, mismatchedCombatant),
     sheet,
     unitLibrary,
-    combatant: {
-      ...combatant,
-      origin: {
-        ...combatant.origin,
-        characterId: characterId("character:battle-settlement-other-sheet"),
-      },
-    },
+    combatant: mismatchedCombatant,
   });
   if (Either.isRight(result)) {
     throw new Error("Expected mismatched identity handoff rejection.");
@@ -422,18 +437,21 @@ function rejectMaximumHpDrift(): BattleSettlementProjection {
     maximumHp: wizardBattleFixtureMaximumHp,
     currentHp: wizardBattleFixtureMaximumHp,
   });
-  const combatant = startCharacterBattle({
+  const battle = startCharacterBattle({
     battleIdText: "battle:settlement-maximum-drift",
     combatantId: combatantId("combatant:settlement-maximum-drift"),
     sheet,
   });
-  const result = applyBattleHandoffToCharacterSheet({
+  const combatant = battle.combatant;
+  const driftedCombatant: CharacterBattleCombatant = {
+    ...combatant,
+    maxHp: Hp(wizardBattleFixtureMaximumHp + 1),
+  };
+  const result = settleCharacterSheetFromBattle({
+    state: battleStateWithCombatant(battle.state, driftedCombatant),
     sheet,
     unitLibrary,
-    combatant: {
-      ...combatant,
-      maxHp: Hp(wizardBattleFixtureMaximumHp + 1),
-    },
+    combatant: driftedCombatant,
   });
   if (Either.isRight(result)) {
     throw new Error("Expected maximum HP drift handoff rejection.");
@@ -455,38 +473,41 @@ function rejectActiveWildShapeHandoff(): BattleSettlementProjection {
     statBlockCatalog,
     druidWildShapeKnownFormStatBlockIds: DRUID_WILD_SHAPE_KNOWN_FORM_IDS,
   });
-  const combatant = startCharacterBattle({
+  const battle = startCharacterBattle({
     battleIdText: "battle:settlement-active-wild-shape",
     combatantId: combatantId("combatant:settlement-active-wild-shape"),
     sheet,
   });
-  const result = applyBattleHandoffToCharacterSheet({
+  const combatant = battle.combatant;
+  const activeWildShapeCombatant: CharacterBattleCombatant = {
+    ...combatant,
+    activeEffects: [
+      ...combatant.activeEffects,
+      {
+        kind: "druidWildShapeForm",
+        sourceUnitId: "druid_wild_shape",
+        sourceCombatantId: combatant.combatantId,
+        formStatBlockId: "stat_block_cat",
+        formLimbs: { kind: "cannotHandleObjects" },
+        equipmentDisposition: [],
+        resources: {
+          legendaryActionUsesRemaining: resourceCount(0),
+          dailyUses: [],
+          unavailableRechargeParts: [],
+          unavailableRestRechargeParts: [],
+        },
+        expiresAt: {
+          kind: "duration",
+          durationTicks: elapsedTimeTicks(600),
+        },
+      },
+    ],
+  };
+  const result = settleCharacterSheetFromBattle({
+    state: battleStateWithCombatant(battle.state, activeWildShapeCombatant),
     sheet,
     unitLibrary,
-    combatant: {
-      ...combatant,
-      activeEffects: [
-        ...combatant.activeEffects,
-        {
-          kind: "druidWildShapeForm",
-          sourceUnitId: "druid_wild_shape",
-          sourceCombatantId: combatant.combatantId,
-          formStatBlockId: "stat_block_cat",
-          formLimbs: { kind: "cannotHandleObjects" },
-          equipmentDisposition: [],
-          resources: {
-            legendaryActionUsesRemaining: resourceCount(0),
-            dailyUses: [],
-            unavailableRechargeParts: [],
-            unavailableRestRechargeParts: [],
-          },
-          expiresAt: {
-            kind: "duration",
-            durationTicks: elapsedTimeTicks(600),
-          },
-        },
-      ],
-    },
+    combatant: activeWildShapeCombatant,
   });
   if (Either.isRight(result)) {
     throw new Error("Expected active Wild Shape handoff rejection.");
@@ -519,32 +540,35 @@ function rejectStableRecoveryProgressHandoff(): BattleSettlementProjection {
       },
     },
   });
-  const combatant = startCharacterBattle({
+  const battle = startCharacterBattle({
     battleIdText: "battle:settlement-stable-recovery",
     combatantId: combatantId("combatant:settlement-stable-recovery"),
     sheet: startedSheet,
   });
-  const result = applyBattleHandoffToCharacterSheet({
-    sheet: stableSheet,
-    unitLibrary,
-    combatant: {
-      ...combatant,
-      origin: {
-        ...combatant.origin,
-        characterId: characterId("character:stable-recovery-sheet"),
-      },
-      hp: Hp(0),
-      positiveHpUnconscious: null,
-      zeroHpLifecycle: {
-        policy: "usesDeathSavingThrows",
-        deathSaves: {
-          deathSaves: { successes: 0, failures: 0 },
-          stable: true,
-          dead: false,
-          hpRegained: false,
-        },
+  const combatant = battle.combatant;
+  const stableRecoveryCombatant: CharacterBattleCombatant = {
+    ...combatant,
+    origin: {
+      ...combatant.origin,
+      characterId: characterId("character:stable-recovery-sheet"),
+    },
+    hp: Hp(0),
+    positiveHpUnconscious: null,
+    zeroHpLifecycle: {
+      policy: "usesDeathSavingThrows",
+      deathSaves: {
+        deathSaves: { successes: 0, failures: 0 },
+        stable: true,
+        dead: false,
+        hpRegained: false,
       },
     },
+  };
+  const result = settleCharacterSheetFromBattle({
+    state: battleStateWithCombatant(battle.state, stableRecoveryCombatant),
+    sheet: stableSheet,
+    unitLibrary,
+    combatant: stableRecoveryCombatant,
   });
   if (Either.isRight(result)) {
     throw new Error("Expected in-progress Stable recovery handoff rejection.");
@@ -579,33 +603,36 @@ function settleZeroHpStableLifecycle(): BattleSettlementProjection {
       },
     },
   });
-  const combatant = startCharacterBattle({
+  const battle = startCharacterBattle({
     battleIdText: "battle:settlement-stable-recovery-accepted",
     combatantId: combatantId("combatant:settlement-stable-recovery-accepted"),
     sheet: startedSheet,
   });
+  const combatant = battle.combatant;
+  const stableCombatant: CharacterBattleCombatant = {
+    ...combatant,
+    origin: {
+      ...combatant.origin,
+      characterId: characterId("character:stable-recovery-sheet-accepted"),
+    },
+    hp: Hp(0),
+    positiveHpUnconscious: null,
+    zeroHpLifecycle: {
+      policy: "usesDeathSavingThrows",
+      deathSaves: {
+        deathSaves: { successes: 0, failures: 0 },
+        stable: true,
+        dead: false,
+        hpRegained: false,
+      },
+    },
+  };
   const settled = requireRight(
-    applyBattleHandoffToCharacterSheet({
+    settleCharacterSheetFromBattle({
+      state: battleStateWithCombatant(battle.state, stableCombatant),
       sheet: stableSheet,
       unitLibrary,
-      combatant: {
-        ...combatant,
-        origin: {
-          ...combatant.origin,
-          characterId: characterId("character:stable-recovery-sheet-accepted"),
-        },
-        hp: Hp(0),
-        positiveHpUnconscious: null,
-        zeroHpLifecycle: {
-          policy: "usesDeathSavingThrows",
-          deathSaves: {
-            deathSaves: { successes: 0, failures: 0 },
-            stable: true,
-            dead: false,
-            hpRegained: false,
-          },
-        },
-      },
+      combatant: stableCombatant,
     }),
   );
   return projectFromSheet({
@@ -622,7 +649,7 @@ function startCharacterBattle(input: {
   readonly battleIdText: string;
   readonly combatantId: ReturnType<typeof combatantId>;
   readonly sheet: CharacterSheet;
-}): CharacterBattleCombatant {
+}): CharacterBattleSession {
   const characterInit = requireRight(
     characterSheetBattleInit({
       sheet: input.sheet,
@@ -652,7 +679,17 @@ function startCharacterBattle(input: {
   if (!isCharacterBattleCombatant(combatant)) {
     throw new Error("Expected character-origin battle combatant.");
   }
-  return combatant;
+  return { state, combatant };
+}
+
+function battleStateWithCombatant(
+  state: BattleState,
+  combatant: BattleCreatureState,
+): BattleState {
+  return {
+    ...state,
+    combatants: new Map(state.combatants).set(combatant.combatantId, combatant),
+  };
 }
 
 function isCharacterBattleCombatant(
