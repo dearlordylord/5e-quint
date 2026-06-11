@@ -79,7 +79,7 @@
     {
       "number": 13,
       "id": "CSC-T13-R3LITE-ALIAS-FAMILY-DELETION",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Delete the FindFamiliar type-alias family; keep rule-source module names (ADR 0005)"
     },
     {
@@ -240,7 +240,7 @@ a task's change invalidates them):
 | 6 | CSC-T06-RECAST-SEMANTICS | done | CSC-T05-COMPANION-REST-ASSUMPTION | HITL; depends on T03's outcome union for the battle half. |
 | 7 | CSC-T07-FORM-VOCAB-HOIST-CREATION-MOVE | done | CSC-T06-RECAST-SEMANTICS | Package move lands after semantics settle, so code moves once. |
 | 12 | CSC-T12-R0-LONG-REST-COMPANION-RESTORE | done | none | Regression fix first: restores a direct-RAW rule the master merge dropped, plus the canary tests every later task (and the next master merge) needs. |
-| 13 | CSC-T13-R3LITE-ALIAS-FAMILY-DELETION | blocked | CSC-T12-R0-LONG-REST-COMPANION-RESTORE | Trivial battle-runtime-only cleanup; sequenced early to get the dual vocabulary out of files later tasks read. |
+| 13 | CSC-T13-R3LITE-ALIAS-FAMILY-DELETION | ready-for-research | CSC-T12-R0-LONG-REST-COMPANION-RESTORE | Trivial battle-runtime-only cleanup; sequenced early to get the dual vocabulary out of files later tasks read. |
 | 14 | CSC-T14-R4A-FORMS-SHIM-DELETION | blocked | CSC-T13-R3LITE-ALIAS-FAMILY-DELETION | Same-session-sized battle-runtime cleanup; touches imports in files T13 just edited. |
 | 8 | CSC-T08-CREATION-HP-SURFACE | blocked | CSC-T14-R4A-FORMS-SHIM-DELETION | Edits the creation op wherever T07 left it; runs after the cheap cleanups so the queue front stays unblocked. |
 | 9 | CSC-T09-FORM-CATALOG-REFERENCE | blocked | CSC-T08-CREATION-HP-SURFACE | Touches admission eligibility helpers T07 may have relocated. |
@@ -959,7 +959,7 @@ new barrel exports).
 
 ### Task 13 - CSC-T13-R3LITE-ALIAS-FAMILY-DELETION
 
-Status: `blocked` (depends on Task 12) · Mode: AFK · Arch-review R3-lite
+Status: `ready-for-research` (depends on Task 12) · Mode: AFK · Arch-review R3-lite
 
 **Finding.** `find-familiar-lifecycle.ts:82–100` defines a type-alias family
 (`FindFamiliarState = BattleCompanionState` and siblings:
