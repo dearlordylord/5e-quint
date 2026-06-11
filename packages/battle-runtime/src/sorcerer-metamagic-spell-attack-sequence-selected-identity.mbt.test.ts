@@ -11,8 +11,7 @@
 //   Eldritch Blast is an action-cast ranged Spell Attack sequence cantrip.
 // - UBIQUITOUS_LANGUAGE.md: Magic Action, Bonus Action, Spell Invocation,
 //   Attack Roll, Damage Roll, Sorcery Points as a Pool, and Spend.
-import * as path from "node:path";
-
+import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
 import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
 import {
   projectBattleState,
@@ -24,9 +23,9 @@ defineSelectedIdentityWitness({
   describeLabel:
     "Sorcerer Metamagic spell attack sequence selected identity MBT",
   taskId: "L3MMETA-07-QUICKENED-NEXT-PROCEDURE-SLICE",
-  specFile: path.resolve(
+  specFile: mbtSpecPath(
     import.meta.dirname,
-    "../battle-runtime-sorcerer-metamagic-spell-attack-sequence-selected-identity.mbt.qnt",
+    "battle-runtime-sorcerer-metamagic-spell-attack-sequence-selected-identity.mbt.qnt",
   ),
   projectionSchema: {
     magicActionAvailable: "bool",

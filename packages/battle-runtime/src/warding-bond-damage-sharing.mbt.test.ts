@@ -1,8 +1,16 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING
-import * as path from "node:path";
-
-import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
-import { Schema } from "effect";
+import {
+  booleanValue,
+  defineDriver,
+  focusedMbtMaxSteps,
+  mbtPickSchemas,
+  mbtSpecPath,
+  mbtTraceCount,
+  numberFromQuintInt,
+  quintStateRecord,
+  run,
+  stateCheck,
+} from "./battle-runtime-mbt-driver-kit.ts";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -20,29 +28,20 @@ function initialState(input: {
   return wardingBondDamageSharingInitialState(input);
 }
 
-const QuintIntAsNumber = Schema.transform(
-  Schema.BigIntFromSelf,
-  Schema.Number,
-  { strict: true, decode: (n) => Number(n), encode: (n) => BigInt(n) },
-);
-
-const intSchema = Schema.standardSchemaV1(QuintIntAsNumber);
-const boolSchema = Schema.standardSchemaV1(Schema.Boolean);
-
 const driverSchema = {
   init: {
-    sourceHitPoints: intSchema,
-    wardHitPoints: intSchema,
-    bondPresent: boolSchema,
+    sourceHitPoints: mbtPickSchemas.int,
+    wardHitPoints: mbtPickSchemas.int,
+    bondPresent: mbtPickSchemas.bool,
   },
   doSharedDamage: {
-    incomingDamage: intSchema,
+    incomingDamage: mbtPickSchemas.int,
   },
   doSeparationCleanup: {
-    separatedBeyondSixtyFeet: boolSchema,
+    separatedBeyondSixtyFeet: mbtPickSchemas.bool,
   },
   doRecastCleanup: {
-    recastOnConnectedCreature: boolSchema,
+    recastOnConnectedCreature: mbtPickSchemas.bool,
   },
   step: {},
 } as const;
@@ -159,16 +158,16 @@ describe("Warding Bond damage-sharing MBT parity", () => {
 
   it("matches the TS reducer slice against bounded random MBT traces", async () => {
     await run({
-      spec: path.resolve(
+      spec: mbtSpecPath(
         import.meta.dirname,
-        "../battle-runtime-warding-bond-damage-sharing.mbt.qnt",
+        "battle-runtime-warding-bond-damage-sharing.mbt.qnt",
       ),
       init: "init",
       step: "step",
       driver: createWardingBondDamageSharingDriver(),
       backend: "typescript",
-      nTraces: 10,
-      maxSteps: 6,
+      nTraces: mbtTraceCount(),
+      maxSteps: focusedMbtMaxSteps(6),
       stateCheck: wardingBondDamageSharingStateCheck,
     });
   }, 120_000);
@@ -177,12 +176,7 @@ describe("Warding Bond damage-sharing MBT parity", () => {
 function normalizeWardingBondDamageSharingQuintState(
   raw: unknown,
 ): WardingBondDamageSharingState {
-  if (raw == null || typeof raw !== "object" || Array.isArray(raw)) {
-    throw new Error("Expected Quint Warding Bond damage-sharing state.");
-  }
-  const state: Readonly<Record<string, unknown>> = Object.fromEntries(
-    Object.entries(raw),
-  );
+  const state = quintStateRecord(raw);
   return {
     sourceHitPoints: numberFromQuintInt(
       state["qSourceHitPoints"],
@@ -192,8 +186,8 @@ function normalizeWardingBondDamageSharingQuintState(
       state["qWardHitPoints"],
       "qWardHitPoints",
     ),
-    bondPresent: booleanFromQuint(state["qBondPresent"], "qBondPresent"),
-    sourceTookSharedDamage: booleanFromQuint(
+    bondPresent: booleanValue(state["qBondPresent"], "qBondPresent"),
+    sourceTookSharedDamage: booleanValue(
       state["qSourceTookSharedDamage"],
       "qSourceTookSharedDamage",
     ),
@@ -213,15 +207,4 @@ function compareWardingBondDamageSharingState(
     throw error;
   }
   return true;
-}
-
-function numberFromQuintInt(raw: unknown, field: string): number {
-  if (typeof raw === "number") return raw;
-  if (typeof raw === "bigint") return Number(raw);
-  throw new Error(`Expected Quint integer field ${field}.`);
-}
-
-function booleanFromQuint(raw: unknown, field: string): boolean {
-  if (typeof raw === "boolean") return raw;
-  throw new Error(`Expected Quint Boolean field ${field}.`);
 }

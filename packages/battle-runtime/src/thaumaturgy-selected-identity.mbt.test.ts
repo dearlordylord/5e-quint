@@ -1,7 +1,6 @@
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1D2-THAUMATURGY-BOOMING-VOICE thaumaturgy
 // UNIT-IDENTITY-MBT-REPLAY: L1D2-THAUMATURGY-BOOMING-VOICE thaumaturgy doResolveThaumaturgyBoomingVoice
-import * as path from "node:path";
-
+import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 
 import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
@@ -51,9 +50,9 @@ const thaumaturgySubject = {
 defineSelectedIdentityWitness({
   describeLabel: "Thaumaturgy selected identity MBT",
   taskId: "L1D2-THAUMATURGY-BOOMING-VOICE",
-  specFile: path.resolve(
+  specFile: mbtSpecPath(
     import.meta.dirname,
-    "../battle-runtime-thaumaturgy-selected-identity.mbt.qnt",
+    "battle-runtime-thaumaturgy-selected-identity.mbt.qnt",
   ),
   projectionSchema: {
     casterEffectCount: "int",

@@ -1,7 +1,17 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-spiritual-weapon-attack-proxy
-import * as path from "node:path";
-
-import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
+import {
+  booleanField,
+  defineDriver,
+  focusedMbtMaxSteps,
+  mbtSpecPath,
+  mbtTraceCount,
+  numberFromQuintInt,
+  quintSet,
+  quintStateRecord,
+  quintVariantTag,
+  run,
+  stateCheck,
+} from "./battle-runtime-mbt-driver-kit.ts";
 import { Either } from "effect";
 import { describe, expect, it } from "vitest";
 
@@ -230,15 +240,15 @@ const spiritualWeaponStateCheck = stateCheck(
 describe("Spiritual Weapon MBT parity", () => {
   it("replays force placement and later repeat attack", async () => {
     await run({
-      spec: path.resolve(
+      spec: mbtSpecPath(
         import.meta.dirname,
-        "../battle-runtime-spiritual-weapon.mbt.qnt",
+        "battle-runtime-spiritual-weapon.mbt.qnt",
       ),
       init: "init",
       step: "step",
       driver: createSpiritualWeaponDriver(),
       backend: "typescript",
-      nTraces: Number(process.env["MBT_TRACES"] ?? 1),
+      nTraces: mbtTraceCount(),
       maxSteps: focusedMbtMaxSteps(6),
       stateCheck: spiritualWeaponStateCheck,
     });
@@ -258,7 +268,7 @@ function normalizeSpiritualWeaponQuintState(
       state["qForcePositionId"],
       "qForcePositionId",
     ),
-    holes: quintHoleSet(state["qHoles"])
+    holes: quintSet(state["qHoles"], "qHoles")
       .map(spiritualWeaponHoleName)
       .sort(),
     lastResult: spiritualWeaponMbtLastResult(state["qLastResult"]),
@@ -609,45 +619,6 @@ function spiritualWeaponHoleName(raw: unknown): SpiritualWeaponMbtHole {
   throw new Error(`Unknown Spiritual Weapon Quint hole variant: ${tag}`);
 }
 
-function quintStateRecord(raw: unknown): Readonly<Record<string, unknown>> {
-  if (!isRecord(raw)) {
-    throw new Error("Expected Quint state to be an object.");
-  }
-
-  return raw;
-}
-
-function numberFromQuintInt(raw: unknown, field: string): number {
-  if (typeof raw === "number") {
-    return raw;
-  }
-  if (typeof raw === "bigint") {
-    return Number(raw);
-  }
-
-  throw new Error(`Expected Quint integer field ${field}.`);
-}
-
-function booleanField(
-  state: Readonly<Record<string, unknown>>,
-  field: string,
-): boolean {
-  const value = state[field];
-  if (typeof value === "boolean") {
-    return value;
-  }
-
-  throw new Error(`Expected Quint boolean field ${field}.`);
-}
-
-function quintHoleSet(raw: unknown): readonly unknown[] {
-  if (raw instanceof Set) {
-    return [...raw];
-  }
-
-  throw new Error("Expected Quint qHoles field to be a Set.");
-}
-
 function spiritualWeaponMbtLastResult(
   raw: unknown,
 ): SpiritualWeaponMbtLastResult {
@@ -676,25 +647,4 @@ function spiritualWeaponMbtLastInvalidReason(
   }
 
   throw new Error(`Unknown Quint invalid reason: ${String(raw)}.`);
-}
-
-function quintVariantTag(raw: unknown): string {
-  if (isRecord(raw) && typeof raw["tag"] === "string") {
-    return raw["tag"];
-  }
-
-  if (typeof raw === "string") {
-    return raw;
-  }
-
-  throw new Error(`Expected Quint variant tag, got ${String(raw)}.`);
-}
-
-function isRecord(raw: unknown): raw is Readonly<Record<string, unknown>> {
-  return typeof raw === "object" && raw !== null;
-}
-
-function focusedMbtMaxSteps(domainMaxSteps: number): number {
-  const requestedSteps = Number(process.env["MBT_STEPS"] ?? domainMaxSteps);
-  return Math.min(requestedSteps, domainMaxSteps);
 }
