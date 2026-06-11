@@ -8,10 +8,12 @@ import { describe, expect, it } from "vitest";
 import {
   MBT_TEST_TIMEOUT_MS,
   booleanValue,
+  decodeWitnessProtocolState,
   focusedMbtMaxSteps,
   mbtTraceCount,
   numberFromQuintInt,
   quintField,
+  quintRecordField,
   quintStateRecord,
   run,
   stateCheck,
@@ -51,6 +53,9 @@ type SelectedIdentityWitnessBase<P extends ProjectionRecord> = {
   readonly initialProjection: P;
   readonly units: ReadonlyArray<SelectedIdentityUnit<P>>;
   readonly mbtParityTimeoutMs?: number;
+  readonly quintStateField?: string;
+  readonly witnessProtocolField?: string;
+  readonly witnessNoInvalidReason?: string;
 };
 
 export type FlatSelectedIdentityWitness<S extends ProjectionSchema> =
@@ -149,7 +154,7 @@ export function defineSelectedIdentityWitness<
       if (runtimeSchema === undefined) {
         throw new Error("Expected selected identity flat projection schema.");
       }
-      const normalized = normalizeQuintState(raw, runtimeSchema);
+      const normalized = normalizeQuintState(raw, runtimeSchema, witness);
       // The runtime schema is derived from the same projection schema that
       // defines the flat witness type, so every decoded field has the mapped
       // bool/int/string type required by ProjectionOf<S>.
@@ -264,18 +269,54 @@ function projectionRuntimeSchema<
 function normalizeQuintState(
   raw: unknown,
   schema: RuntimeProjectionSchema,
+  witness: Pick<
+    SelectedIdentityWitnessBase<ProjectionRecord>,
+    "quintStateField" | "witnessProtocolField" | "witnessNoInvalidReason"
+  >,
 ): Readonly<Record<string, boolean | number | string>> {
-  const state = quintStateRecord(raw);
+  const root = quintStateRecord(raw);
+  const state =
+    witness.quintStateField === undefined
+      ? root
+      : quintRecordField(root, witness.quintStateField);
+  const protocol =
+    witness.witnessProtocolField === undefined
+      ? undefined
+      : decodeWitnessProtocolState({
+          state,
+          protocolField: witness.witnessProtocolField,
+          noInvalidReason: witness.witnessNoInvalidReason ?? "",
+          decodeHole: selectedIdentityUnexpectedHole,
+        });
+  if (protocol !== undefined && protocol.holes.length !== 0) {
+    throw new Error("Expected selected identity witness holes to be empty.");
+  }
   const result: Record<string, boolean | number | string> = {};
   for (const [field, spec] of Object.entries(schema)) {
-    const qKey = quintFieldName(field);
+    if (field === "lastResult" && protocol !== undefined) {
+      result[field] = parseStr(
+        protocol.lastResult,
+        spec.allowedStrings,
+        `${witness.quintStateField ?? "root"}.${witness.witnessProtocolField}.result`,
+      );
+      continue;
+    }
+    const qKey = quintFieldName(field, witness.quintStateField);
     result[field] = parseQuintField(quintField(state, qKey), spec, qKey);
   }
   return result;
 }
 
-function quintFieldName(field: string): string {
-  return `q${field.charAt(0).toUpperCase()}${field.slice(1)}`;
+function quintFieldName(field: string, stateField: string | undefined): string {
+  return stateField === undefined
+    ? `q${field.charAt(0).toUpperCase()}${field.slice(1)}`
+    : field;
+}
+
+function selectedIdentityUnexpectedHole(raw: unknown): never {
+  throw new Error(
+    `Selected identity witness protocol does not expect holes; received ${String(raw)}.`,
+  );
 }
 
 function parseQuintField(

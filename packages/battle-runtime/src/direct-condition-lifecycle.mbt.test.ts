@@ -10,6 +10,7 @@ import { describe, expect, it } from "vitest";
 import {
   MBT_TEST_TIMEOUT_MS,
   booleanField,
+  decodeWitnessProtocolState,
   defineDriver,
   focusedMbtMaxSteps,
   mbtPickSchemas,
@@ -17,9 +18,14 @@ import {
   mbtTraceCount,
   numberFromQuintInt,
   quintField,
+  quintRecordField,
   quintStateRecord,
+  quintVariantTag,
+  quintVariantValue,
   run,
   stateCheck,
+  stringLiteralValue,
+  type MbtWitnessLastResult,
 } from "./battle-runtime-mbt-driver-kit.ts";
 import {
   applyDirectConditionSpellEffects,
@@ -58,7 +64,19 @@ type DirectConditionSpellInvocation = Extract<
 type DirectConditionRuntimeState = {
   readonly battle: BattleState;
   readonly compact: DirectConditionLifecycleState;
+  readonly lastResult: DirectConditionLifecycleMbtLastResult;
 };
+type DirectConditionLifecycleMbtLastResult = Extract<
+  MbtWitnessLastResult,
+  "init" | "resolved"
+>;
+type DirectConditionLifecycleMbtProjection = DirectConditionLifecycleState & {
+  readonly lastResult: DirectConditionLifecycleMbtLastResult;
+};
+type DirectConditionLifecycleMbtHole = "DirectConditionLifecycle";
+
+const DIRECT_CONDITION_NO_INVALID_REASON = "";
+const DIRECT_CONDITION_MBT_LAST_RESULTS = ["init", "resolved"] as const;
 
 function initialState(
   input: {
@@ -101,6 +119,7 @@ function initialRuntimeState(
         ? battleWithTargetNonSpellCondition(battle)
         : battle,
     compact: initialState(input),
+    lastResult: "init",
   };
 }
 
@@ -143,54 +162,72 @@ function createDirectConditionLifecycleDriver() {
         state = initialRuntimeState({ slotLedgerLevel, hasNonSpellSource });
       },
       doCastDirectCondition: ({ slotLevel }) => {
-        state = castDirectConditionInRuntimeState(state, slotLevel);
+        state = resolveDirectConditionMbtStep(
+          castDirectConditionInRuntimeState(state, slotLevel),
+        );
       },
       doInvalidUpperSlotCast: () => {
-        state = castDirectConditionInRuntimeState(state, 10);
+        state = resolveDirectConditionMbtStep(
+          castDirectConditionInRuntimeState(state, 10),
+        );
       },
       doBeginLaterTurn: () => {
-        state = {
+        state = resolveDirectConditionMbtStep({
           ...state,
           compact: beginDirectConditionLaterTurn(state.compact),
-        };
+        });
       },
       doAttackRollEarlyEnd: () => {
-        state = endDirectConditionForTargetActionInRuntimeState(
-          state,
-          "attackRoll",
+        state = resolveDirectConditionMbtStep(
+          endDirectConditionForTargetActionInRuntimeState(
+            state,
+            "attackRoll",
+          ),
         );
       },
       doDamageEarlyEnd: () => {
-        state = endDirectConditionForTargetActionInRuntimeState(
-          state,
-          "damage",
+        state = resolveDirectConditionMbtStep(
+          endDirectConditionForTargetActionInRuntimeState(
+            state,
+            "damage",
+          ),
         );
       },
       doSpellCastEarlyEnd: () => {
-        state = endDirectConditionForTargetActionInRuntimeState(
-          state,
-          "spellCast",
+        state = resolveDirectConditionMbtStep(
+          endDirectConditionForTargetActionInRuntimeState(
+            state,
+            "spellCast",
+          ),
         );
       },
       doConcentrationCleanup: () => {
-        state = {
+        state = resolveDirectConditionMbtStep({
           battle: breakBattleConcentration(state.battle, spellCasterId),
           compact: resolveDirectConditionConcentrationCleanup(state.compact),
-        };
+          lastResult: state.lastResult,
+        });
       },
       doDurationTick: () => {
-        state = {
+        state = resolveDirectConditionMbtStep({
           battle: {
             ...state.battle,
             combatants: tickDurationEffects(state.battle.combatants).value,
           },
           compact: tickDirectConditionDuration(state.compact),
-        };
+          lastResult: state.lastResult,
+        });
       },
       step: () => {},
-      getState: () => directConditionRuntimeProjection(state),
+      getState: () => directConditionMbtProjection(state),
     };
   });
+}
+
+function resolveDirectConditionMbtStep(
+  state: DirectConditionRuntimeState,
+): DirectConditionRuntimeState {
+  return { ...state, lastResult: "resolved" };
 }
 
 function castDirectConditionInRuntimeState(
@@ -203,6 +240,7 @@ function castDirectConditionInRuntimeState(
   }
   const concentrated = battleWithCasterConcentration(state.battle);
   return {
+    ...state,
     compact,
     battle: applyDirectConditionSpellEffects(
       concentrated,
@@ -218,6 +256,7 @@ function endDirectConditionForTargetActionInRuntimeState(
   trigger: "attackRoll" | "damage" | "spellCast",
 ): DirectConditionRuntimeState {
   return {
+    ...state,
     battle: battleStateAfterDirectConditionTargetActionEarlyEndForActor(
       state.battle,
       spellTargetId,
@@ -227,7 +266,7 @@ function endDirectConditionForTargetActionInRuntimeState(
 }
 
 function directConditionRuntimeProjection(
-  state: DirectConditionRuntimeState,
+  state: Pick<DirectConditionRuntimeState, "battle" | "compact">,
 ): DirectConditionLifecycleState {
   const projection = {
     ...state.compact,
@@ -244,6 +283,15 @@ function directConditionRuntimeProjection(
     });
   }
   return projection;
+}
+
+function directConditionMbtProjection(
+  state: DirectConditionRuntimeState,
+): DirectConditionLifecycleMbtProjection {
+  return {
+    ...directConditionRuntimeProjection(state),
+    lastResult: state.lastResult,
+  };
 }
 
 function directConditionTargetProjection(
@@ -486,61 +534,113 @@ describe("Direct condition lifecycle MBT parity", () => {
 
 function normalizeDirectConditionLifecycleQuintState(
   raw: unknown,
-): DirectConditionLifecycleState {
-  const state = quintStateRecord(raw);
+): DirectConditionLifecycleMbtProjection {
+  const state = quintRecordField(quintStateRecord(raw), "qState");
+  const lifecycle = quintRecordField(state, "lifecycle");
+  const protocol = decodeWitnessProtocolState({
+    state,
+    protocolField: "protocol",
+    noInvalidReason: DIRECT_CONDITION_NO_INVALID_REASON,
+    decodeHole: directConditionLifecycleHoleName,
+  });
+  if (protocol.holes.length !== 0) {
+    throw new Error("Expected Direct Condition lifecycle witness holes to be empty.");
+  }
   const normalized = {
-    actionAvailable: booleanField(state, "qActionAvailable"),
+    actionAvailable: booleanField(lifecycle, "actionAvailable"),
     slotLedger: {
       slotLevel: numberFromQuintInt(
-        quintField(state, "qSlotLedgerLevel"),
-        "qSlotLedgerLevel",
+        quintField(
+          quintRecordField(lifecycle, "slotLedger"),
+          "slotLevel",
+        ),
+        "qState.lifecycle.slotLedger.slotLevel",
       ),
       slotsRemaining: numberFromQuintInt(
-        quintField(state, "qSlotsRemaining"),
-        "qSlotsRemaining",
+        quintField(
+          quintRecordField(lifecycle, "slotLedger"),
+          "slotsRemaining",
+        ),
+        "qState.lifecycle.slotLedger.slotsRemaining",
       ),
     },
-    slotSpellCastThisTurn: booleanField(state, "qSlotSpellCastThisTurn"),
-    targetCondition: directConditionTargetFromQuintState(state),
+    slotSpellCastThisTurn: booleanField(lifecycle, "slotSpellCastThisTurn"),
+    targetCondition: directConditionTargetFromQuintValue(
+      quintField(lifecycle, "targetCondition"),
+    ),
+    lastResult: stringLiteralValue(
+      protocol.lastResult,
+      "qState.protocol.result",
+      DIRECT_CONDITION_MBT_LAST_RESULTS,
+    ),
   };
-  expectDerivedQuintFlag(
-    state,
-    "qTargetConditionProjected",
-    directConditionRemainsProjected(normalized),
-  );
-  expectDerivedQuintFlag(
-    state,
-    "qCasterConcentrating",
-    directConditionCasterConcentrating(normalized),
-  );
   return normalized;
 }
 
-function directConditionTargetFromQuintState(
-  state: Readonly<Record<string, unknown>>,
-): DirectConditionLifecycleState["targetCondition"] {
-  const hasNonSpellSource = booleanField(state, "qTargetHasNonSpellSource");
-  const hasSpellSource = booleanField(state, "qTargetHasSpellSource");
-  const durationTicks = numberFromQuintInt(
-    quintField(state, "qTargetSpellDurationTicks"),
-    "qTargetSpellDurationTicks",
+function directConditionLifecycleHoleName(
+  raw: unknown,
+): DirectConditionLifecycleMbtHole {
+  return stringLiteralValue(
+    raw,
+    "qState.protocol.holes",
+    ["DirectConditionLifecycle"] as const,
   );
+}
 
-  if (hasNonSpellSource && hasSpellSource) {
-    return { tag: "spellAndNonSpell", durationTicks };
+function directConditionTargetFromQuintValue(
+  raw: unknown,
+): DirectConditionLifecycleState["targetCondition"] {
+  const tag = quintVariantTag(raw, "qState.lifecycle.targetCondition");
+  if (tag === "DirectConditionAbsent") {
+    return { tag: "absent" };
   }
-  if (hasNonSpellSource) {
+  if (tag === "DirectConditionNonSpellSource") {
     return { tag: "nonSpellSource" };
   }
-  if (hasSpellSource) {
-    return { tag: "spellOnly", durationTicks };
+  if (tag === "DirectConditionSpellOnly") {
+    return {
+      tag: "spellOnly",
+      durationTicks: directConditionDurationFromQuintVariant(
+        raw,
+        "DirectConditionSpellOnly",
+      ),
+    };
   }
-  return { tag: "absent" };
+  if (tag === "DirectConditionSpellAndNonSpell") {
+    return {
+      tag: "spellAndNonSpell",
+      durationTicks: directConditionDurationFromQuintVariant(
+        raw,
+        "DirectConditionSpellAndNonSpell",
+      ),
+    };
+  }
+  throw new Error(`Unexpected Direct Condition target variant ${tag}.`);
+}
+
+function directConditionDurationFromQuintVariant(
+  raw: unknown,
+  expectedTag: string,
+): number {
+  const payload = quintRecordField(
+    {
+      payload: quintVariantValue(
+        raw,
+        expectedTag,
+        "qState.lifecycle.targetCondition",
+      ),
+    },
+    "payload",
+  );
+  return numberFromQuintInt(
+    quintField(payload, "durationTicks"),
+    "qState.lifecycle.targetCondition.durationTicks",
+  );
 }
 
 function compareDirectConditionLifecycleState(
-  runtime: DirectConditionLifecycleState,
-  quint: DirectConditionLifecycleState,
+  runtime: DirectConditionLifecycleMbtProjection,
+  quint: DirectConditionLifecycleMbtProjection,
 ): boolean {
   try {
     expect(runtime).toEqual(quint);
@@ -551,15 +651,4 @@ function compareDirectConditionLifecycleState(
     throw error;
   }
   return true;
-}
-
-function expectDerivedQuintFlag(
-  state: Readonly<Record<string, unknown>>,
-  field: string,
-  expected: boolean,
-): void {
-  const actual = booleanField(state, field);
-  if (actual !== expected) {
-    throw new Error(`Expected Quint ${field} to be ${String(expected)}.`);
-  }
 }
