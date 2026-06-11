@@ -133,6 +133,8 @@ defineSelectedIdentityWitness({
     thirdLevelSlotsExpended: "int",
     lastResult: "str",
   },
+  quintStateField: "qState",
+  witnessProtocolField: "protocol",
   initialProjection: expectedProjection(),
   units: [
     {

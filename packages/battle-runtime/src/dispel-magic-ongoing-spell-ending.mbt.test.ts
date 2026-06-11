@@ -19,12 +19,15 @@ import { describe, expect, it } from "vitest";
 
 import {
   MBT_TEST_TIMEOUT_MS,
+  assertWitnessProtocolConsistentWithScenario,
   booleanField,
+  decodeWitnessProtocolState,
   defineDriver,
   focusedMbtMaxSteps,
   mbtSpecPath,
   mbtTraceCount,
   numberFromQuintInt,
+  quintRecordField,
   quintStateRecord,
   run,
   stateCheck,
@@ -684,7 +687,24 @@ function testBattleSpellEffectLevel(sourceSpellLevel: number) {
 function normalizeDispelMagicQuintState(
   raw: unknown,
 ): DispelMagicOngoingSpellEndingProjection {
-  const state = quintStateRecord(raw);
+  const state = quintRecordField(quintStateRecord(raw), "qState");
+  const scenarioResult = lastResult(state["qScenarioResult"]);
+  const protocol = decodeWitnessProtocolState({
+    state,
+    protocolField: "protocol",
+    noInvalidReason: "",
+    decodeHole: dispelMagicOngoingSpellEndingUnexpectedHole,
+  });
+  if (protocol.holes.length !== 0) {
+    throw new Error(
+      "Expected Dispel Magic ongoing spell ending witness holes to be empty.",
+    );
+  }
+  assertWitnessProtocolConsistentWithScenario({
+    label: "Dispel Magic ongoing spell ending",
+    scenarioResult,
+    protocol,
+  });
   return {
     actionAvailable: booleanField(state, "qActionAvailable"),
     slot3Available: booleanField(state, "qSlot3Available"),
@@ -704,8 +724,14 @@ function normalizeDispelMagicQuintState(
       state,
       "qHighLevelCasterConcentrating",
     ),
-    lastResult: lastResult(state["qLastResult"]),
+    lastResult: scenarioResult,
   };
+}
+
+function dispelMagicOngoingSpellEndingUnexpectedHole(raw: unknown): never {
+  throw new Error(
+    `Dispel Magic ongoing spell ending witness does not expect holes; received ${String(raw)}.`,
+  );
 }
 
 function compareDispelMagicStates(

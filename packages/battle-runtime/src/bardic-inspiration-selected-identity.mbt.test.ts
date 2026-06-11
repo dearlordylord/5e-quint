@@ -67,6 +67,9 @@ defineSelectedIdentityWitness({
     import.meta.dirname,
     "bardic-inspiration-selected-identity.mbt.qnt",
   ),
+  quintStateField: "qState",
+  quintStateFieldPrefix: "q",
+  witnessProtocolField: "protocol",
   projectionSchema: {
     bonusActionAvailable: "bool",
     featureUsesRemaining: "int",

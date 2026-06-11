@@ -20,12 +20,15 @@ import {
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { movementFeet, type HandUse } from "@dnd/shared/types";
 import {
+  assertWitnessProtocolConsistentWithScenario,
   booleanField,
+  decodeWitnessProtocolState,
   defineDriver,
   focusedMbtMaxSteps,
   mbtSpecPath,
   mbtTraceCount,
   numberFromQuintInt,
+  quintRecordField,
   quintStateRecord,
   run,
   stateCheck,
@@ -627,28 +630,40 @@ function requireResolved(
 function normalizeSpellCreatedHeldObjectQuintState(
   raw: unknown,
 ): SpellCreatedHeldObjectProjection {
-  const state = quintStateRecord(raw);
+  const state = quintRecordField(quintStateRecord(raw), "qState");
+  const scenarioResult = lastResult(state["scenarioResult"]);
+  const protocol = decodeWitnessProtocolState({
+    state,
+    protocolField: "protocol",
+    noInvalidReason: "",
+    decodeHole: spellCreatedHeldObjectUnexpectedHole,
+  });
+  assertWitnessProtocolConsistentWithScenario({
+    label: "spell-created held object",
+    scenarioResult,
+    protocol,
+  });
   return {
-    magicActionAvailable: booleanField(state, "qMagicActionAvailable"),
-    bonusActionAvailable: booleanField(state, "qBonusActionAvailable"),
-    initialCastAvailable: booleanField(state, "qInitialCastAvailable"),
-    heldObjectEffectActive: booleanField(state, "qHeldObjectEffectActive"),
-    heldObjectHeld: booleanField(state, "qHeldObjectHeld"),
-    freeHandAvailable: booleanField(state, "qFreeHandAvailable"),
-    casterConcentrating: booleanField(state, "qCasterConcentrating"),
-    lightProjected: booleanField(state, "qLightProjected"),
+    magicActionAvailable: booleanField(state, "magicActionAvailable"),
+    bonusActionAvailable: booleanField(state, "bonusActionAvailable"),
+    initialCastAvailable: booleanField(state, "initialCastAvailable"),
+    heldObjectEffectActive: booleanField(state, "heldObjectEffectActive"),
+    heldObjectHeld: booleanField(state, "heldObjectHeld"),
+    freeHandAvailable: booleanField(state, "freeHandAvailable"),
+    casterConcentrating: booleanField(state, "casterConcentrating"),
+    lightProjected: booleanField(state, "lightProjected"),
     spellSlotExpended: numberFromQuintInt(
-      state["qSpellSlotExpended"],
-      "qSpellSlotExpended",
+      state["spellSlotExpended"],
+      "qState.spellSlotExpended",
     ),
     spellSlotCommittedThisTurn: booleanField(
       state,
-      "qSpellSlotCommittedThisTurn",
+      "spellSlotCommittedThisTurn",
     ),
-    attackAvailable: booleanField(state, "qAttackAvailable"),
-    reEvokeAvailable: booleanField(state, "qReEvokeAvailable"),
-    targetHp: numberFromQuintInt(state["qTargetHp"], "qTargetHp"),
-    lastResult: lastResult(state["qLastResult"]),
+    attackAvailable: booleanField(state, "attackAvailable"),
+    reEvokeAvailable: booleanField(state, "reEvokeAvailable"),
+    targetHp: numberFromQuintInt(state["targetHp"], "qState.targetHp"),
+    lastResult: scenarioResult,
   };
 }
 
@@ -672,4 +687,10 @@ function lastResult(raw: unknown): LastResult {
 
 function isLastResult(value: string): value is LastResult {
   return LAST_RESULT_SET.has(value);
+}
+
+function spellCreatedHeldObjectUnexpectedHole(raw: unknown): never {
+  throw new Error(
+    `Spell-created held object witness does not expect holes; received ${String(raw)}.`,
+  );
 }

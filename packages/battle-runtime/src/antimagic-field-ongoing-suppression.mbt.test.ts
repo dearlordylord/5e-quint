@@ -34,12 +34,15 @@ import {
 } from "./unit-profile-admission-catalog-support.ts";
 import {
   MBT_TEST_TIMEOUT_MS,
+  assertWitnessProtocolConsistentWithScenario,
   booleanField,
+  decodeWitnessProtocolState,
   defineDriver,
   focusedMbtMaxSteps,
   mbtSpecPath,
   mbtTraceCount,
   numberFromQuintInt,
+  quintRecordField,
   quintStateRecord,
   run,
   stateCheck,
@@ -548,7 +551,24 @@ function spiritualWeaponActiveEffect(): Extract<
 function normalizeAntimagicQuintState(
   raw: unknown,
 ): AntimagicFieldOngoingSuppressionState {
-  const state = quintStateRecord(raw);
+  const state = quintRecordField(quintStateRecord(raw), "qState");
+  const scenarioResult = antimagicLastResult(state["qScenarioResult"]);
+  const protocol = decodeWitnessProtocolState({
+    state,
+    protocolField: "protocol",
+    noInvalidReason: "",
+    decodeHole: antimagicOngoingSuppressionUnexpectedHole,
+  });
+  if (protocol.holes.length !== 0) {
+    throw new Error(
+      "Expected Antimagic Field ongoing suppression witness holes to be empty.",
+    );
+  }
+  assertWitnessProtocolConsistentWithScenario({
+    label: "Antimagic Field ongoing suppression",
+    scenarioResult,
+    protocol,
+  });
   return {
     actionAvailable: booleanField(state, "qActionAvailable"),
     spellAvailable: booleanField(state, "qSpellAvailable"),
@@ -563,8 +583,14 @@ function normalizeAntimagicQuintState(
       state,
       "qAntimagicCasterConcentrating",
     ),
-    lastResult: antimagicLastResult(state["qLastResult"]),
+    lastResult: scenarioResult,
   };
+}
+
+function antimagicOngoingSuppressionUnexpectedHole(raw: unknown): never {
+  throw new Error(
+    `Antimagic Field ongoing suppression witness does not expect holes; received ${String(raw)}.`,
+  );
 }
 
 function compareAntimagicStates(

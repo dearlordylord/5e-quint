@@ -1,12 +1,21 @@
 // -*- mode: Bluespec; -*-
 
 module battleRuntimeSorcererMetamagicSpellAttackSequenceSelectedIdentityMbt {
-  var qMagicActionAvailable: bool
-  var qBonusActionAvailable: bool
-  var qSorceryPointsRemaining: int
-  var qTargetHp: int
-  var qTargetActiveEffectCount: int
-  var qLastResult: str
+  import battleRuntimeWitnessProtocol.* from "./battle-runtime-witness-protocol"
+
+  type Hole = | NoHole
+
+  type SorcererMetamagicSpellAttackSequenceSelectedIdentityWitnessState = {
+    magicActionAvailable: bool,
+    bonusActionAvailable: bool,
+    sorceryPointsRemaining: int,
+    targetHp: int,
+    targetActiveEffectCount: int,
+    scenarioResult: str,
+    protocol: WitnessProtocol[Hole],
+  }
+
+  var qState: SorcererMetamagicSpellAttackSequenceSelectedIdentityWitnessState
 
   action recordProjection(
     magicActionAvailable: bool,
@@ -14,21 +23,28 @@ module battleRuntimeSorcererMetamagicSpellAttackSequenceSelectedIdentityMbt {
     sorceryPointsRemaining: int,
     targetHp: int,
     targetActiveEffectCount: int,
-    lastResult: str,
+    scenarioResult: str,
+    protocol: WitnessProtocol[Hole],
   ): bool = all {
-    qMagicActionAvailable' = magicActionAvailable,
-    qBonusActionAvailable' = bonusActionAvailable,
-    qSorceryPointsRemaining' = sorceryPointsRemaining,
-    qTargetHp' = targetHp,
-    qTargetActiveEffectCount' = targetActiveEffectCount,
-    qLastResult' = lastResult,
+    qState' = {
+      magicActionAvailable: magicActionAvailable,
+      bonusActionAvailable: bonusActionAvailable,
+      sorceryPointsRemaining: sorceryPointsRemaining,
+      targetHp: targetHp,
+      targetActiveEffectCount: targetActiveEffectCount,
+      scenarioResult: scenarioResult,
+      protocol: protocol,
+    },
   }
 
-  action init = recordProjection(true, true, 4, 10, 0, "init")
+  action init = recordProjection(true, true, 4, 10, 0, "init", witnessInit(NoHole))
 
   action doResolveQuickenedSpellAttackSequence = all {
-    qLastResult == "init",
-    recordProjection(true, false, 2, 6, 0, "quickenedSpellAttackSequence")
+    qState.protocol.result == WInit,
+    recordProjection(
+      true, false, 2, 6, 0, "quickenedSpellAttackSequence",
+      witnessResolved(NoHole),
+    )
   }
 
   action step = any {

@@ -18,12 +18,15 @@ import { Hp, type DamageType } from "@dnd/shared/types";
 import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import {
+  assertWitnessProtocolConsistentWithScenario,
   booleanField,
+  decodeWitnessProtocolState,
   defineDriver,
   focusedMbtMaxSteps,
   mbtSpecPath,
   mbtTraceCount,
   numberFromQuintInt,
+  quintRecordField,
   quintStateRecord,
   run,
   stateCheck,
@@ -658,18 +661,30 @@ function damageRollTotal(rollGroups: readonly (readonly number[])[]): number {
 function normalizeSpellSequencingQuintState(
   raw: unknown,
 ): SpellSequencingProjection {
-  const state = quintStateRecord(raw);
+  const state = quintRecordField(quintStateRecord(raw), "qState");
+  const scenarioResult = lastResult(state["scenarioResult"]);
+  const protocol = decodeWitnessProtocolState({
+    state,
+    protocolField: "protocol",
+    noInvalidReason: "",
+    decodeHole: spellSequencingUnexpectedHole,
+  });
+  assertWitnessProtocolConsistentWithScenario({
+    label: "spell sequencing",
+    scenarioResult,
+    protocol,
+  });
   return {
-    turnRole: turnRole(state["qTurnRole"]),
-    magicActionAvailable: booleanField(state, "qMagicActionAvailable"),
-    bonusActionAvailable: booleanField(state, "qBonusActionAvailable"),
-    dragonsBreathActive: booleanField(state, "qDragonsBreathActive"),
-    heatMetalActive: booleanField(state, "qHeatMetalActive"),
-    concentrationSpell: concentrationSpellName(state["qConcentrationSpell"]),
-    heatMetalRepeatAvailable: booleanField(state, "qHeatMetalRepeatAvailable"),
-    casterHp: numberFromQuintInt(state["qCasterHp"], "qCasterHp"),
-    targetHp: numberFromQuintInt(state["qTargetHp"], "qTargetHp"),
-    lastResult: lastResult(state["qLastResult"]),
+    turnRole: turnRole(state["turnRole"]),
+    magicActionAvailable: booleanField(state, "magicActionAvailable"),
+    bonusActionAvailable: booleanField(state, "bonusActionAvailable"),
+    dragonsBreathActive: booleanField(state, "dragonsBreathActive"),
+    heatMetalActive: booleanField(state, "heatMetalActive"),
+    concentrationSpell: concentrationSpellName(state["concentrationSpell"]),
+    heatMetalRepeatAvailable: booleanField(state, "heatMetalRepeatAvailable"),
+    casterHp: numberFromQuintInt(state["casterHp"], "qState.casterHp"),
+    targetHp: numberFromQuintInt(state["targetHp"], "qState.targetHp"),
+    lastResult: scenarioResult,
   };
 }
 
@@ -719,4 +734,10 @@ function lastResult(raw: unknown): SpellSequencingLastResult {
     return raw;
   }
   throw new Error(`Unknown spell sequencing result: ${String(raw)}.`);
+}
+
+function spellSequencingUnexpectedHole(raw: unknown): never {
+  throw new Error(
+    `Spell sequencing witness does not expect holes; received ${String(raw)}.`,
+  );
 }

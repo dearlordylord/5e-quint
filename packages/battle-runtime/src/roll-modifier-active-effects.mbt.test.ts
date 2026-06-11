@@ -30,12 +30,15 @@ import { describe, expect, it } from "vitest";
 
 import {
   MBT_TEST_TIMEOUT_MS,
+  assertWitnessProtocolConsistentWithScenario,
   booleanField,
+  decodeWitnessProtocolState,
   defineDriver,
   focusedMbtMaxSteps,
   mbtSpecPath,
   mbtTraceCount,
   numberFromQuintInt,
+  quintRecordField,
   quintStateRecord,
   run,
   stateCheck,
@@ -932,7 +935,19 @@ function withCharismaDisadvantageAgainstCaster(
 function normalizeRollModifierActiveEffectsQuintState(
   raw: unknown,
 ): RollModifierActiveEffectsProjection {
-  const state = quintStateRecord(raw);
+  const state = quintRecordField(quintStateRecord(raw), "qState");
+  const protocol = decodeWitnessProtocolState({
+    state,
+    protocolField: "protocol",
+    noInvalidReason: "",
+    decodeHole: rollModifierHole,
+  });
+  const lastResultValue = lastResultField(state, "qScenarioResult");
+  assertWitnessProtocolConsistentWithScenario({
+    label: "Roll modifier active effects",
+    scenarioResult: lastResultValue,
+    protocol,
+  });
   return {
     actionAvailable: booleanField(state, "qActionAvailable"),
     spellAvailable: booleanField(state, "qSpellAvailable"),
@@ -967,12 +982,12 @@ function normalizeRollModifierActiveEffectsQuintState(
       "qThaumaturgyIntimidationRollMode",
     ),
     thaumaturgyEffectActive: booleanField(state, "qThaumaturgyEffectActive"),
-    holes: quintSet(state["qHoles"], "qHoles").map(rollModifierHole).sort(),
+    holes: protocol.holes,
     passivePerceptionDelta: numberFromQuintInt(
       state["qPassivePerceptionDelta"],
       "qPassivePerceptionDelta",
     ),
-    lastResult: lastResultField(state, "qLastResult"),
+    lastResult: lastResultValue,
   };
 }
 
@@ -1044,15 +1059,4 @@ function lastResultField(
     return raw as LastResult;
   }
   throw new Error(`Unknown ${fieldName}: ${String(raw)}.`);
-}
-
-function quintSet(raw: unknown, fieldName: string): unknown[] {
-  if (raw instanceof Set) return [...raw];
-  if (Array.isArray(raw)) return raw;
-  if (raw !== null && typeof raw === "object" && "set" in raw) {
-    // The ITF set adapter shape was established by the property guard above.
-    const value = (raw as { readonly set: unknown }).set;
-    if (Array.isArray(value)) return value;
-  }
-  throw new Error(`Expected Quint set ${fieldName}.`);
 }

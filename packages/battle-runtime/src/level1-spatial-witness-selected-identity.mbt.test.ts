@@ -799,6 +799,10 @@ defineSelectedIdentityWitness({
     import.meta.dirname,
     "battle-runtime-level1-spatial-witness-selected-identity.mbt.qnt",
   ),
+  quintStateField: "qState",
+  quintStateFieldPrefix: "q",
+  witnessProtocolField: "protocol",
+  quintFieldNames: { lastResult: "qScenarioResult" },
   projectionSchema: {
     lightEmitterCount: "int",
     dimLightEmitterCount: "int",

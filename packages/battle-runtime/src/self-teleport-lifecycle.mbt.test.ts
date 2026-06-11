@@ -18,12 +18,15 @@ import { canSpendBonusAction } from "@dnd/shared-algebras/action-economy-algebra
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import {
   MBT_TEST_TIMEOUT_MS,
+  assertWitnessProtocolConsistentWithScenario,
   booleanField,
+  decodeWitnessProtocolState,
   defineDriver,
   focusedMbtMaxSteps,
   mbtSpecPath,
   mbtTraceCount,
   numberFromQuintInt,
+  quintRecordField,
   quintStateRecord,
   run,
   stateCheck,
@@ -586,53 +589,65 @@ function auraMembership(input: {
 }
 
 function normalizeSelfTeleportQuintState(raw: unknown): SelfTeleportProjection {
-  const state = quintStateRecord(raw);
+  const state = quintRecordField(quintStateRecord(raw), "qState");
+  const scenarioResult = lastResult(state["scenarioResult"]);
+  const protocol = decodeWitnessProtocolState({
+    state,
+    protocolField: "protocol",
+    noInvalidReason: "",
+    decodeHole: selfTeleportUnexpectedHole,
+  });
+  assertWitnessProtocolConsistentWithScenario({
+    label: "self teleport",
+    scenarioResult,
+    protocol,
+  });
   return {
-    bonusActionAvailable: booleanField(state, "qBonusActionAvailable"),
-    spellAvailable: booleanField(state, "qSpellAvailable"),
+    bonusActionAvailable: booleanField(state, "bonusActionAvailable"),
+    spellAvailable: booleanField(state, "spellAvailable"),
     destinationWitnessAvailable: booleanField(
       state,
-      "qDestinationWitnessAvailable",
+      "destinationWitnessAvailable",
     ),
     destinationWitnessConsumed: booleanField(
       state,
-      "qDestinationWitnessConsumed",
+      "destinationWitnessConsumed",
     ),
-    teleportEmitted: booleanField(state, "qTeleportEmitted"),
+    teleportEmitted: booleanField(state, "teleportEmitted"),
     movementSpentFeet: numberFromQuintInt(
-      state["qMovementSpentFeet"],
-      "qMovementSpentFeet",
+      state["movementSpentFeet"],
+      "qState.movementSpentFeet",
     ),
     movementRemainingFeet: numberFromQuintInt(
-      state["qMovementRemainingFeet"],
-      "qMovementRemainingFeet",
+      state["movementRemainingFeet"],
+      "qState.movementRemainingFeet",
     ),
     spellSlotExpended: numberFromQuintInt(
-      state["qSpellSlotExpended"],
-      "qSpellSlotExpended",
+      state["spellSlotExpended"],
+      "qState.spellSlotExpended",
     ),
     spellSlotCommittedThisTurn: booleanField(
       state,
-      "qSpellSlotCommittedThisTurn",
+      "spellSlotCommittedThisTurn",
     ),
     noOpportunityAttackProjected: booleanField(
       state,
-      "qNoOpportunityAttackProjected",
+      "noOpportunityAttackProjected",
     ),
     equipmentTransportProjected: booleanField(
       state,
-      "qEquipmentTransportProjected",
+      "equipmentTransportProjected",
     ),
     destinationDistanceFeet: numberFromQuintInt(
-      state["qDestinationDistanceFeet"],
-      "qDestinationDistanceFeet",
+      state["destinationDistanceFeet"],
+      "qState.destinationDistanceFeet",
     ),
     destinationInsideAntimagicAuraWitness: booleanField(
       state,
-      "qDestinationInsideAntimagicAuraWitness",
+      "destinationInsideAntimagicAuraWitness",
     ),
-    antimagicTransitBlocked: booleanField(state, "qAntimagicTransitBlocked"),
-    lastResult: lastResult(state["qLastResult"]),
+    antimagicTransitBlocked: booleanField(state, "antimagicTransitBlocked"),
+    lastResult: scenarioResult,
   };
 }
 
@@ -654,4 +669,10 @@ function lastResult(raw: unknown): LastResult {
 
 function isLastResult(value: string): value is LastResult {
   return LAST_RESULT_SET.has(value);
+}
+
+function selfTeleportUnexpectedHole(raw: unknown): never {
+  throw new Error(
+    `Self-teleport witness does not expect holes; received ${String(raw)}.`,
+  );
 }

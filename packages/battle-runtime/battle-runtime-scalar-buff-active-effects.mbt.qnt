@@ -1,6 +1,8 @@
 // -*- mode: Bluespec; -*-
 
 module battleRuntimeScalarBuffActiveEffectsMbt {
+  import battleRuntimeWitnessProtocol.* from "./battle-runtime-witness-protocol"
+
   // RAW trace:
   // - .references/srd-5.2.1/Spells/Descriptions-A-D.md#Aid:
   //   targets' Hit Point maximum and current Hit Points increase for the
@@ -19,18 +21,25 @@ module battleRuntimeScalarBuffActiveEffectsMbt {
   //   separate movement modes affected by Speed changes.
   // - UBIQUITOUS_LANGUAGE.md: Armor Class, Speed, Hit Point Maximum, Temporary
   //   Hit Points, Spell Invocation, and Spell Effect.
-  var qAffectedArmorClass: int
-  var qAffectedSpeedFeet: int
-  var qAffectedClimbSpeedFeet: int
-  var qAffectedHitPointMaximum: int
-  var qAffectedHitPoints: int
-  var qAffectedTemporaryHitPoints: int
-  var qArmorClassBonusActive: bool
-  var qSpeedDeltaActive: bool
-  var qSpecialSpeedGrantActive: bool
-  var qHitPointMaximumIncreaseActive: bool
-  var qCasterConcentrating: bool
-  var qLastResult: str
+  type Hole = | NoHole
+
+  type ScalarBuffActiveEffectsWitnessState = {
+    affectedArmorClass: int,
+    affectedSpeedFeet: int,
+    affectedClimbSpeedFeet: int,
+    affectedHitPointMaximum: int,
+    affectedHitPoints: int,
+    affectedTemporaryHitPoints: int,
+    armorClassBonusActive: bool,
+    speedDeltaActive: bool,
+    specialSpeedGrantActive: bool,
+    hitPointMaximumIncreaseActive: bool,
+    casterConcentrating: bool,
+    scenarioResult: str,
+    protocol: WitnessProtocol[Hole],
+  }
+
+  var qState: ScalarBuffActiveEffectsWitnessState
 
   action recordScalarBuffState(
     affectedArmorClass: int,
@@ -44,20 +53,24 @@ module battleRuntimeScalarBuffActiveEffectsMbt {
     specialSpeedGrantActive: bool,
     hitPointMaximumIncreaseActive: bool,
     casterConcentrating: bool,
-    lastResult: str,
+    scenarioResult: str,
+    protocol: WitnessProtocol[Hole],
   ): bool = all {
-    qAffectedArmorClass' = affectedArmorClass,
-    qAffectedSpeedFeet' = affectedSpeedFeet,
-    qAffectedClimbSpeedFeet' = affectedClimbSpeedFeet,
-    qAffectedHitPointMaximum' = affectedHitPointMaximum,
-    qAffectedHitPoints' = affectedHitPoints,
-    qAffectedTemporaryHitPoints' = affectedTemporaryHitPoints,
-    qArmorClassBonusActive' = armorClassBonusActive,
-    qSpeedDeltaActive' = speedDeltaActive,
-    qSpecialSpeedGrantActive' = specialSpeedGrantActive,
-    qHitPointMaximumIncreaseActive' = hitPointMaximumIncreaseActive,
-    qCasterConcentrating' = casterConcentrating,
-    qLastResult' = lastResult,
+    qState' = {
+      affectedArmorClass: affectedArmorClass,
+      affectedSpeedFeet: affectedSpeedFeet,
+      affectedClimbSpeedFeet: affectedClimbSpeedFeet,
+      affectedHitPointMaximum: affectedHitPointMaximum,
+      affectedHitPoints: affectedHitPoints,
+      affectedTemporaryHitPoints: affectedTemporaryHitPoints,
+      armorClassBonusActive: armorClassBonusActive,
+      speedDeltaActive: speedDeltaActive,
+      specialSpeedGrantActive: specialSpeedGrantActive,
+      hitPointMaximumIncreaseActive: hitPointMaximumIncreaseActive,
+      casterConcentrating: casterConcentrating,
+      scenarioResult: scenarioResult,
+      protocol: protocol,
+    },
   }
 
   action init = recordScalarBuffState(
@@ -73,10 +86,11 @@ module battleRuntimeScalarBuffActiveEffectsMbt {
     false,
     false,
     "init",
+    witnessInit(NoHole),
   )
 
   action doCastShieldOfFaith = all {
-    qLastResult == "init",
+    qState.scenarioResult == "init",
     recordScalarBuffState(
       12,
       30,
@@ -90,11 +104,12 @@ module battleRuntimeScalarBuffActiveEffectsMbt {
       false,
       true,
       "shieldOfFaith",
+      witnessResolved(NoHole),
     ),
   }
 
   action doCastLongstrider = all {
-    qLastResult == "shieldOfFaith",
+    qState.scenarioResult == "shieldOfFaith",
     recordScalarBuffState(
       10,
       40,
@@ -108,11 +123,12 @@ module battleRuntimeScalarBuffActiveEffectsMbt {
       false,
       false,
       "longstrider",
+      witnessResolved(NoHole),
     ),
   }
 
   action doCastSpiderClimb = all {
-    qLastResult == "longstrider",
+    qState.scenarioResult == "longstrider",
     recordScalarBuffState(
       10,
       30,
@@ -126,11 +142,12 @@ module battleRuntimeScalarBuffActiveEffectsMbt {
       false,
       true,
       "spiderClimb",
+      witnessResolved(NoHole),
     ),
   }
 
   action doCastAid = all {
-    qLastResult == "spiderClimb",
+    qState.scenarioResult == "spiderClimb",
     recordScalarBuffState(
       10,
       30,
@@ -144,11 +161,12 @@ module battleRuntimeScalarBuffActiveEffectsMbt {
       true,
       false,
       "aid",
+      witnessResolved(NoHole),
     ),
   }
 
   action doCastFalseLife = all {
-    qLastResult == "aid",
+    qState.scenarioResult == "aid",
     recordScalarBuffState(
       10,
       30,
@@ -162,24 +180,26 @@ module battleRuntimeScalarBuffActiveEffectsMbt {
       false,
       false,
       "falseLife",
+      witnessResolved(NoHole),
     ),
   }
 
   action doStutter = all {
-    qLastResult == "falseLife",
+    qState.scenarioResult == "falseLife",
     recordScalarBuffState(
-      qAffectedArmorClass,
-      qAffectedSpeedFeet,
-      qAffectedClimbSpeedFeet,
-      qAffectedHitPointMaximum,
-      qAffectedHitPoints,
-      qAffectedTemporaryHitPoints,
-      qArmorClassBonusActive,
-      qSpeedDeltaActive,
-      qSpecialSpeedGrantActive,
-      qHitPointMaximumIncreaseActive,
-      qCasterConcentrating,
-      qLastResult,
+      qState.affectedArmorClass,
+      qState.affectedSpeedFeet,
+      qState.affectedClimbSpeedFeet,
+      qState.affectedHitPointMaximum,
+      qState.affectedHitPoints,
+      qState.affectedTemporaryHitPoints,
+      qState.armorClassBonusActive,
+      qState.speedDeltaActive,
+      qState.specialSpeedGrantActive,
+      qState.hitPointMaximumIncreaseActive,
+      qState.casterConcentrating,
+      qState.scenarioResult,
+      qState.protocol,
     ),
   }
 

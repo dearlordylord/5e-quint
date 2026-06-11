@@ -114,6 +114,10 @@ defineSelectedIdentityWitness({
     import.meta.dirname,
     "battle-runtime-mage-armor-selected-identity.mbt.qnt",
   ),
+  quintStateField: "qState",
+  quintStateFieldPrefix: "q",
+  witnessProtocolField: "protocol",
+  quintFieldNames: { lastResult: "qScenarioResult" },
   projectionSchema: {
     selfTargetAdmitted: "bool",
     armoredTargetRejected: "bool",

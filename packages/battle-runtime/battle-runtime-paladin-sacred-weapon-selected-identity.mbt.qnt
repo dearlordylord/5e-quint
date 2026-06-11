@@ -1,12 +1,38 @@
 // -*- mode: Bluespec; -*-
 
 module battleRuntimePaladinSacredWeaponSelectedIdentityMbt {
-  var qActivationOffered: bool
-  var qChannelDivinityUsesRemaining: int
-  var qBoundWeaponItemId: str
-  var qActiveEffectCount: int
-  var qRejected: bool
-  var qLastResult: str
+  import battleRuntimeWitnessProtocol.* from "./battle-runtime-witness-protocol"
+
+  type WitnessHole = | WitnessProtocolHole
+
+  type PaladinSacredWeaponSelectedIdentityWitnessState = {
+    qActivationOffered: bool,
+    qChannelDivinityUsesRemaining: int,
+    qBoundWeaponItemId: str,
+    qActiveEffectCount: int,
+    qRejected: bool,
+    qScenarioResult: str,
+    protocol: WitnessProtocol[WitnessHole],
+  }
+
+  var qState: PaladinSacredWeaponSelectedIdentityWitnessState
+
+  pure def qActivationOffered: bool = qState.qActivationOffered
+  pure def qChannelDivinityUsesRemaining: int = qState.qChannelDivinityUsesRemaining
+  pure def qBoundWeaponItemId: str = qState.qBoundWeaponItemId
+  pure def qActiveEffectCount: int = qState.qActiveEffectCount
+  pure def qRejected: bool = qState.qRejected
+  pure def qLastResult: str = qState.qScenarioResult
+
+  pure def selectedIdentityProtocolForProjection(
+    holes: Set[WitnessHole],
+    scenarioResult: str,
+    scenarioInvalidReason: str,
+  ): WitnessProtocol[WitnessHole] =
+    if (scenarioResult == "init") witnessInit(WitnessProtocolHole)
+    else if (scenarioInvalidReason == "invalidFill") witnessInvalid(WitnessProtocolHole, WInvalidFill)
+    else if (holes != Set()) witnessNeedsHoles(holes)
+    else witnessResolved(WitnessProtocolHole)
 
   action recordProjection(
     activationOffered: bool,
@@ -16,14 +42,16 @@ module battleRuntimePaladinSacredWeaponSelectedIdentityMbt {
     rejected: bool,
     lastResult: str,
   ): bool = all {
-    qActivationOffered' = activationOffered,
-    qChannelDivinityUsesRemaining' = channelDivinityUsesRemaining,
-    qBoundWeaponItemId' = boundWeaponItemId,
-    qActiveEffectCount' = activeEffectCount,
-    qRejected' = rejected,
-    qLastResult' = lastResult,
+    qState' = {
+      qActivationOffered: activationOffered,
+      qChannelDivinityUsesRemaining: channelDivinityUsesRemaining,
+      qBoundWeaponItemId: boundWeaponItemId,
+      qActiveEffectCount: activeEffectCount,
+      qRejected: rejected,
+      qScenarioResult: lastResult,
+      protocol: selectedIdentityProtocolForProjection(Set(), lastResult, ""),
+    },
   }
-
   action init = recordProjection(false, 2, "none", 0, false, "init")
 
   action doActivateSacredWeapon = all {

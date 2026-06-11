@@ -17,12 +17,15 @@ import { PHYSICAL_DAMAGE_TYPES } from "@dnd/shared/types";
 import { canSpendAction } from "@dnd/shared-algebras/action-economy-algebra";
 import {
   MBT_TEST_TIMEOUT_MS,
+  assertWitnessProtocolConsistentWithScenario,
   booleanField,
+  decodeWitnessProtocolState,
   defineDriver,
   focusedMbtMaxSteps,
   mbtSpecPath,
   mbtTraceCount,
   numberFromQuintInt,
+  quintRecordField,
   quintStateRecord,
   run,
   stateCheck,
@@ -562,47 +565,59 @@ function requireResolved(
 function normalizeSelfTransformationQuintState(
   raw: unknown,
 ): SelfTransformationProjection {
-  const state = quintStateRecord(raw);
+  const state = quintRecordField(quintStateRecord(raw), "qState");
+  const scenarioResult = lastResult(state["scenarioResult"]);
+  const protocol = decodeWitnessProtocolState({
+    state,
+    protocolField: "protocol",
+    noInvalidReason: "",
+    decodeHole: selfTransformationUnexpectedHole,
+  });
+  assertWitnessProtocolConsistentWithScenario({
+    label: "self transformation",
+    scenarioResult,
+    protocol,
+  });
   return {
-    magicActionAvailable: booleanField(state, "qMagicActionAvailable"),
-    castSpellAvailable: booleanField(state, "qCastSpellAvailable"),
-    modeReplacementAvailable: booleanField(state, "qModeReplacementAvailable"),
+    magicActionAvailable: booleanField(state, "magicActionAvailable"),
+    castSpellAvailable: booleanField(state, "castSpellAvailable"),
+    modeReplacementAvailable: booleanField(state, "modeReplacementAvailable"),
     spellSlotExpended: numberFromQuintInt(
-      state["qSpellSlotExpended"],
-      "qSpellSlotExpended",
+      state["spellSlotExpended"],
+      "qState.spellSlotExpended",
     ),
-    slotSpellCastThisTurn: booleanField(state, "qSlotSpellCastThisTurn"),
-    casterConcentrating: booleanField(state, "qCasterConcentrating"),
-    activeMode: selfTransformationMode(state["qActiveMode"]),
-    waterBreathing: booleanField(state, "qWaterBreathing"),
+    slotSpellCastThisTurn: booleanField(state, "slotSpellCastThisTurn"),
+    casterConcentrating: booleanField(state, "casterConcentrating"),
+    activeMode: selfTransformationMode(state["activeMode"]),
+    waterBreathing: booleanField(state, "waterBreathing"),
     walkSpeedFeet: numberFromQuintInt(
-      state["qWalkSpeedFeet"],
-      "qWalkSpeedFeet",
+      state["walkSpeedFeet"],
+      "qState.walkSpeedFeet",
     ),
     swimSpeedFeet: numberFromQuintInt(
-      state["qSwimSpeedFeet"],
-      "qSwimSpeedFeet",
+      state["swimSpeedFeet"],
+      "qState.swimSpeedFeet",
     ),
     naturalWeaponDamageType: naturalWeaponDamageType(
-      state["qNaturalWeaponDamageType"],
+      state["naturalWeaponDamageType"],
     ),
     naturalWeaponDamageDieSize: numberFromQuintInt(
-      state["qNaturalWeaponDamageDieSize"],
-      "qNaturalWeaponDamageDieSize",
+      state["naturalWeaponDamageDieSize"],
+      "qState.naturalWeaponDamageDieSize",
     ),
     naturalWeaponAttackBonus: numberFromQuintInt(
-      state["qNaturalWeaponAttackBonus"],
-      "qNaturalWeaponAttackBonus",
+      state["naturalWeaponAttackBonus"],
+      "qState.naturalWeaponAttackBonus",
     ),
     naturalWeaponDamageOnRoll4: numberFromQuintInt(
-      state["qNaturalWeaponDamageOnRoll4"],
-      "qNaturalWeaponDamageOnRoll4",
+      state["naturalWeaponDamageOnRoll4"],
+      "qState.naturalWeaponDamageOnRoll4",
     ),
     durationTicks: numberFromQuintInt(
-      state["qDurationTicks"],
-      "qDurationTicks",
+      state["durationTicks"],
+      "qState.durationTicks",
     ),
-    lastResult: lastResult(state["qLastResult"]),
+    lastResult: scenarioResult,
   };
 }
 
@@ -656,4 +671,10 @@ function isNaturalWeaponDamageType(
 
 function isLastResult(value: string): value is LastResult {
   return LAST_RESULT_SET.has(value);
+}
+
+function selfTransformationUnexpectedHole(raw: unknown): never {
+  throw new Error(
+    `Self-transformation witness does not expect holes; received ${String(raw)}.`,
+  );
 }

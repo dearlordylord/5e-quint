@@ -86,9 +86,12 @@ import {
   breakBattleConcentration,
 } from "./battle-reducer/damage-apply.ts";
 import {
+  assertWitnessProtocolConsistentWithScenario,
   booleanField,
+  decodeWitnessProtocolState,
   mbtSpecPath,
   numberFromQuintInt,
+  quintRecordField,
   quintStateRecord,
 } from "./battle-runtime-mbt-driver-kit.ts";
 import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
@@ -809,6 +812,10 @@ defineSelectedIdentityWitness({
     import.meta.dirname,
     "battle-runtime-level1-buff-mark-smite-selected-identity.mbt.qnt",
   ),
+  quintStateField: "qState",
+  quintStateFieldPrefix: "q",
+  witnessProtocolField: "protocol",
+  quintFieldNames: { lastResult: "qScenarioResult" },
   projectionSchema: {},
   initialProjection: expectedProjection(),
   normalizeQuintState: normalizeLevel1BuffMarkSmiteSelectedIdentityQuintState,
@@ -3301,7 +3308,24 @@ function level1SlotsRemaining(state: BattleState): number {
 function normalizeLevel1BuffMarkSmiteSelectedIdentityQuintState(
   raw: unknown,
 ): Level1BuffMarkSmiteSelectedIdentityProjection {
-  const state = quintStateRecord(raw);
+  const state = quintRecordField(quintStateRecord(raw), "qState");
+  const protocol = decodeWitnessProtocolState({
+    state,
+    protocolField: "protocol",
+    noInvalidReason: "",
+    decodeHole: level1BuffMarkSmiteUnexpectedHole,
+  });
+  if (protocol.holes.length !== 0) {
+    throw new Error(
+      "Expected level-1 buff/mark/smite witness holes to be empty.",
+    );
+  }
+  const scenarioResult = mbtLastResult(state["qScenarioResult"]);
+  assertWitnessProtocolConsistentWithScenario({
+    label: "level-1 buff/mark/smite selected identity",
+    scenarioResult,
+    protocol,
+  });
   return {
     divineFavorActiveRiderCount: numberFromQuintInt(
       state["qDivineFavorActiveRiderCount"],
@@ -3480,8 +3504,14 @@ function normalizeLevel1BuffMarkSmiteSelectedIdentityQuintState(
       shillelaghWeaponAttackOverrideFromQuint(state),
     trueStrikeSpellHostedWeaponAttack:
       trueStrikeSpellHostedWeaponAttackFromQuint(state),
-    lastResult: mbtLastResult(state["qLastResult"]),
+    lastResult: scenarioResult,
   };
+}
+
+function level1BuffMarkSmiteUnexpectedHole(raw: unknown): never {
+  throw new Error(
+    `Unexpected level-1 buff/mark/smite witness hole ${String(raw)}.`,
+  );
 }
 
 function damageRiderSourceSpellIdFromQuint(

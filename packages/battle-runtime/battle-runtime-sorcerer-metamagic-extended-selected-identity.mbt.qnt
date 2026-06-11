@@ -1,35 +1,44 @@
 // -*- mode: Bluespec; -*-
 
 module battleRuntimeSorcererMetamagicExtendedSelectedIdentity {
-  var qSorceryPointsRemaining: int
-  var qDurationTicks: int
-  var qConcentrationSavingThrowMode: str
-  var qLastResult: str
+  import battleRuntimeWitnessProtocol.* from "./battle-runtime-witness-protocol"
 
-  pure def initialProjection = {
-    sorceryPointsRemaining: 2,
-    durationTicks: 0,
-    concentrationSavingThrowMode: "normal",
-    lastResult: "init",
+  type Hole = | NoHole
+
+  type SorcererMetamagicExtendedSelectedIdentityWitnessState = {
+    sorceryPointsRemaining: int,
+    durationTicks: int,
+    concentrationSavingThrowMode: str,
+    scenarioResult: str,
+    protocol: WitnessProtocol[Hole],
   }
+
+  var qState: SorcererMetamagicExtendedSelectedIdentityWitnessState
 
   action recordProjection(
     sorceryPointsRemaining: int,
     durationTicks: int,
     concentrationSavingThrowMode: str,
-    lastResult: str,
+    scenarioResult: str,
+    protocol: WitnessProtocol[Hole],
   ): bool = all {
-    qSorceryPointsRemaining' = sorceryPointsRemaining,
-    qDurationTicks' = durationTicks,
-    qConcentrationSavingThrowMode' = concentrationSavingThrowMode,
-    qLastResult' = lastResult,
+    qState' = {
+      sorceryPointsRemaining: sorceryPointsRemaining,
+      durationTicks: durationTicks,
+      concentrationSavingThrowMode: concentrationSavingThrowMode,
+      scenarioResult: scenarioResult,
+      protocol: protocol,
+    },
   }
 
-  action init = recordProjection(2, 0, "normal", "init")
+  action init = recordProjection(2, 0, "normal", "init", witnessInit(NoHole))
 
   action doResolveExtendedCreatureSizeIncrease = all {
-    qLastResult == "init",
-    recordProjection(1, 20, "advantage", "extendedCreatureSizeIncrease")
+    qState.protocol.result == WInit,
+    recordProjection(
+      1, 20, "advantage", "extendedCreatureSizeIncrease",
+      witnessResolved(NoHole),
+    )
   }
 
   action step = any {

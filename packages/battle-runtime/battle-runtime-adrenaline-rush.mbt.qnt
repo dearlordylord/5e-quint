@@ -7,12 +7,24 @@
 // facts are the movement reducer's SRD formalization for this fixture; if that
 // rule changes, update the literals here.
 module battleRuntimeAdrenalineRushMbt {
-  var qActorTempHp: int
-  var qBonusActionAvailable: bool
-  var qDashBonusFeet: int
-  var qFeatureUsesRemaining: int
-  var qLastResult: str
-  var qLastInvalidReason: str
+  import battleRuntimeWitnessProtocol.* from "./battle-runtime-witness-protocol"
+
+  type WitnessHole = | AdrenalineRush
+
+  type WitnessState = {
+    qActorTempHp: int,
+    qBonusActionAvailable: bool,
+    qDashBonusFeet: int,
+    qFeatureUsesRemaining: int,
+    protocol: WitnessProtocol[WitnessHole],
+  }
+
+  var qState: WitnessState
+
+  pure def qActorTempHp: int = qState.qActorTempHp
+  pure def qBonusActionAvailable: bool = qState.qBonusActionAvailable
+  pure def qDashBonusFeet: int = qState.qDashBonusFeet
+  pure def qFeatureUsesRemaining: int = qState.qFeatureUsesRemaining
 
   pure val adrenalineRushProficiencyBonus: int = 3
   pure val adrenalineRushSpeedFeet: int = 30
@@ -22,19 +34,19 @@ module battleRuntimeAdrenalineRushMbt {
     bonusActionAvailable: bool,
     dashBonusFeet: int,
     featureUsesRemaining: int,
-    lastResult: str,
-    lastInvalidReason: str,
+    protocol: WitnessProtocol[WitnessHole],
   ): bool = all {
-    qActorTempHp' = actorTempHp,
-    qBonusActionAvailable' = bonusActionAvailable,
-    qDashBonusFeet' = dashBonusFeet,
-    qFeatureUsesRemaining' = featureUsesRemaining,
-    qLastResult' = lastResult,
-    qLastInvalidReason' = lastInvalidReason,
+    qState' = {
+      qActorTempHp: actorTempHp,
+      qBonusActionAvailable: bonusActionAvailable,
+      qDashBonusFeet: dashBonusFeet,
+      qFeatureUsesRemaining: featureUsesRemaining,
+      protocol: protocol,
+    },
   }
 
   action init =
-    recordProjection(1, true, 0, 3, "init", "")
+    recordProjection(1, true, 0, 3, witnessInit(AdrenalineRush))
 
   // SRD outcome for this fixture (one use spent from 3, fighter at walk speed 30,
   // proficiency bonus 3): the Bonus Action Dash adds the walk speed to movement,
@@ -48,8 +60,7 @@ module battleRuntimeAdrenalineRushMbt {
       false,
       adrenalineRushSpeedFeet,
       qFeatureUsesRemaining - 1,
-      "resolved",
-      ""
+      witnessResolved(AdrenalineRush)
     ),
   }
 
@@ -60,8 +71,7 @@ module battleRuntimeAdrenalineRushMbt {
       qBonusActionAvailable,
       qDashBonusFeet,
       qFeatureUsesRemaining,
-      "invalid",
-      "staleSubject"
+      witnessInvalid(AdrenalineRush, WStaleSubject)
     ),
   }
 

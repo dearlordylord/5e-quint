@@ -1,18 +1,37 @@
 // -*- mode: Bluespec; -*-
 
 module battleRuntimeRayOfEnfeeblementLifecycleMbt {
-  var qCurrentTurnRole: str
-  var qActionAvailable: bool
-  var qD20EffectActive: bool
-  var qDamagePenaltyActive: bool
-  var qCasterConcentrating: bool
-  var qSpellAvailable: bool
-  var qStrAttackRollDisadvantage: bool
-  var qStrAbilityCheckDisadvantage: bool
-  var qStrSavingThrowDisadvantage: bool
-  var qHoles: Set[str]
-  var qLastDamageAfterPenalty: int
-  var qLastResult: str
+  import battleRuntimeWitnessProtocol.* from "./battle-runtime-witness-protocol"
+
+  type RayOfEnfeeblementLifecycleWitnessState = {
+    qCurrentTurnRole: str,
+    qActionAvailable: bool,
+    qD20EffectActive: bool,
+    qDamagePenaltyActive: bool,
+    qCasterConcentrating: bool,
+    qSpellAvailable: bool,
+    qStrAttackRollDisadvantage: bool,
+    qStrAbilityCheckDisadvantage: bool,
+    qStrSavingThrowDisadvantage: bool,
+    qLastDamageAfterPenalty: int,
+    qScenarioResult: str,
+    protocol: WitnessProtocol[str],
+  }
+
+  var qState: RayOfEnfeeblementLifecycleWitnessState
+
+  pure def qCurrentTurnRole: str = qState.qCurrentTurnRole
+  pure def qActionAvailable: bool = qState.qActionAvailable
+  pure def qD20EffectActive: bool = qState.qD20EffectActive
+  pure def qDamagePenaltyActive: bool = qState.qDamagePenaltyActive
+  pure def qCasterConcentrating: bool = qState.qCasterConcentrating
+  pure def qSpellAvailable: bool = qState.qSpellAvailable
+  pure def qStrAttackRollDisadvantage: bool = qState.qStrAttackRollDisadvantage
+  pure def qStrAbilityCheckDisadvantage: bool = qState.qStrAbilityCheckDisadvantage
+  pure def qStrSavingThrowDisadvantage: bool = qState.qStrSavingThrowDisadvantage
+  pure def qLastDamageAfterPenalty: int = qState.qLastDamageAfterPenalty
+  pure def qHoles: Set[str] = qState.protocol.holes
+  pure def qLastResult: str = qState.qScenarioResult
 
   pure val casterTurnRole: str = "caster"
   pure val targetTurnRole: str = "target"
@@ -28,6 +47,17 @@ module battleRuntimeRayOfEnfeeblementLifecycleMbt {
     else
       rolledDamage - penaltyRoll
 
+  pure def witnessProtocolForProjection(
+    holes: Set[str],
+    scenarioResult: str,
+    scenarioInvalidReason: str,
+  ): WitnessProtocol[str] =
+    if (scenarioResult == "init") witnessInit("")
+    else if (scenarioInvalidReason == "invalidFill") witnessInvalid("", WInvalidFill)
+    else if (scenarioInvalidReason == "staleSubject") witnessInvalid("", WStaleSubject)
+    else if (holes != Set()) witnessNeedsHoles(holes)
+    else witnessResolved("")
+
   action recordRayState(
     currentTurnRole: str,
     actionAvailable: bool,
@@ -38,18 +68,20 @@ module battleRuntimeRayOfEnfeeblementLifecycleMbt {
     lastDamageAfterPenalty: int,
     lastResult: str,
   ): bool = all {
-    qCurrentTurnRole' = currentTurnRole,
-    qActionAvailable' = actionAvailable,
-    qSpellAvailable' = spellAvailable,
-    qD20EffectActive' = effectActive,
-    qDamagePenaltyActive' = effectActive,
-    qCasterConcentrating' = casterConcentrating,
-    qStrAttackRollDisadvantage' = effectActive,
-    qStrAbilityCheckDisadvantage' = effectActive,
-    qStrSavingThrowDisadvantage' = effectActive,
-    qHoles' = holes,
-    qLastDamageAfterPenalty' = lastDamageAfterPenalty,
-    qLastResult' = lastResult,
+    qState' = {
+      qCurrentTurnRole: currentTurnRole,
+      qActionAvailable: actionAvailable,
+      qSpellAvailable: spellAvailable,
+      qD20EffectActive: effectActive,
+      qDamagePenaltyActive: effectActive,
+      qCasterConcentrating: casterConcentrating,
+      qStrAttackRollDisadvantage: effectActive,
+      qStrAbilityCheckDisadvantage: effectActive,
+      qStrSavingThrowDisadvantage: effectActive,
+      qLastDamageAfterPenalty: lastDamageAfterPenalty,
+      qScenarioResult: lastResult,
+      protocol: witnessProtocolForProjection(holes, lastResult, ""),
+    },
   }
 
   action init = all {

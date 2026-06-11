@@ -22,13 +22,15 @@ import { describe, expect, it } from "vitest";
 
 import {
   MBT_TEST_TIMEOUT_MS,
+  assertWitnessProtocolConsistentWithScenario,
   booleanField,
+  decodeWitnessProtocolState,
   defineDriver,
   focusedMbtMaxSteps,
   mbtSpecPath,
   mbtTraceCount,
   numberFromQuintInt,
-  quintSet,
+  quintRecordField,
   quintStateRecord,
   run,
   stateCheck,
@@ -832,15 +834,28 @@ function battleHolesToLevitateCreatureHoles(
 function normalizeLevitateCreatureQuintState(
   raw: unknown,
 ): LevitateCreatureProjection {
-  const state = quintStateRecord(raw);
+  const state = quintRecordField(quintStateRecord(raw), "qState");
+  const protocol = decodeWitnessProtocolState({
+    state,
+    protocolField: "protocol",
+    noInvalidReason: "",
+    decodeHole: levitateCreatureHole,
+    compareHoles: (left, right) => left.localeCompare(right),
+  });
+  const scenarioResult = lastResult(state["qScenarioResult"]);
+  assertWitnessProtocolConsistentWithScenario({
+    label: "Levitate creature lifecycle",
+    scenarioResult,
+    protocol,
+  });
   return {
     actionAvailable: booleanField(state, "qActionAvailable"),
     spellAvailable: booleanField(state, "qSpellAvailable"),
     effectActive: booleanField(state, "qEffectActive"),
     casterConcentrating: booleanField(state, "qCasterConcentrating"),
     altitudeFeet: numberFromQuintInt(state["qAltitudeFeet"], "qAltitudeFeet"),
-    holes: quintSet(state["qHoles"], "qHoles").map(levitateCreatureHole).sort(),
-    lastResult: lastResult(state["qLastResult"]),
+    holes: protocol.holes,
+    lastResult: scenarioResult,
   };
 }
 

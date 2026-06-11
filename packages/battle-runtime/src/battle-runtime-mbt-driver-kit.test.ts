@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  assertWitnessProtocolConsistentWithScenario,
   booleanField,
   createBattleInterruptResolutionRecorder,
   decodeWitnessProtocolState,
@@ -139,6 +140,77 @@ describe("battle-runtime MBT driver kit", () => {
       lastResult: "invalid",
       lastInvalidReason: "wrongActor",
     });
+  });
+
+  it("asserts scenario labels stay consistent with typed witness protocol results", () => {
+    expect(() =>
+      assertWitnessProtocolConsistentWithScenario({
+        label: "test",
+        scenarioResult: "init",
+        protocol: {
+          holes: [],
+          lastResult: "init",
+        },
+      }),
+    ).not.toThrow();
+    expect(() =>
+      assertWitnessProtocolConsistentWithScenario({
+        label: "test",
+        scenarioResult: "awaitingFill",
+        protocol: {
+          holes: ["Fill"],
+          lastResult: "needsHoles",
+        },
+      }),
+    ).not.toThrow();
+    expect(() =>
+      assertWitnessProtocolConsistentWithScenario({
+        label: "test",
+        scenarioResult: "complete",
+        protocol: {
+          holes: [],
+          lastResult: "resolved",
+        },
+      }),
+    ).not.toThrow();
+    expect(() =>
+      assertWitnessProtocolConsistentWithScenario({
+        label: "test",
+        scenarioResult: "rejected",
+        protocol: {
+          holes: [],
+          lastResult: "invalid",
+          lastInvalidReason: "invalidFill",
+        },
+        invalidScenarioReasons: { rejected: "invalidFill" },
+      }),
+    ).not.toThrow();
+    expect(() =>
+      assertWitnessProtocolConsistentWithScenario({
+        label: "test",
+        scenarioResult: "complete",
+        protocol: {
+          holes: [],
+          lastResult: "init",
+        },
+      }),
+    ).toThrow(
+      "Expected test witness protocol result resolved for scenario complete, got init.",
+    );
+    expect(() =>
+      assertWitnessProtocolConsistentWithScenario({
+        label: "test",
+        scenarioResult: "rejected",
+        protocol: {
+          holes: [],
+          lastResult: "invalid",
+          lastInvalidReason: "wrongActor",
+        },
+        invalidScenarioReasons: { rejected: "invalidFill" },
+      }),
+    ).toThrow(
+      "Expected test witness invalid reason invalidFill for scenario rejected, got wrongActor.",
+    );
   });
 
   it("folds production resolution results into the configured witness protocol", () => {

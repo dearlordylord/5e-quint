@@ -24,6 +24,10 @@ defineSelectedIdentityWitness({
     import.meta.dirname,
     "battle-runtime-lightning-bolt-selected-identity.mbt.qnt",
   ),
+  quintStateField: "qState",
+  quintStateFieldPrefix: "q",
+  witnessProtocolField: "protocol",
+  quintFieldNames: { lastResult: "qScenarioResult" },
   projectionSchema: { lastResult: "str" },
   initialProjection: { lastResult: "init" },
   units: [

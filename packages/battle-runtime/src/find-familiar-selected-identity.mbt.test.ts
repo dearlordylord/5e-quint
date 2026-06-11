@@ -81,6 +81,10 @@ defineSelectedIdentityWitness({
     import.meta.dirname,
     "battle-runtime-find-familiar-selected-identity.mbt.qnt",
   ),
+  quintStateField: "qState",
+  quintStateFieldPrefix: "q",
+  witnessProtocolField: "protocol",
+  quintFieldNames: { lastResult: "qScenarioResult" },
   projectionSchema: {
     familiarStatus: "str",
     formId: "str",

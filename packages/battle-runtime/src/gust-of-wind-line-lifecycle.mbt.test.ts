@@ -6,13 +6,15 @@ import { describe, expect, it } from "vitest";
 
 import {
   MBT_TEST_TIMEOUT_MS,
+  assertWitnessProtocolConsistentWithScenario,
   booleanField,
+  decodeWitnessProtocolState,
   defineDriver,
   focusedMbtMaxSteps,
   mbtSpecPath,
   mbtTraceCount,
   numberFromQuintInt,
-  quintSet,
+  quintRecordField,
   quintStateRecord,
   run,
   stateCheck,
@@ -638,7 +640,20 @@ function battleHolesToGustHoles(
 }
 
 function normalizeGustQuintState(raw: unknown): GustOfWindLineState {
-  const state = quintStateRecord(raw);
+  const state = quintRecordField(quintStateRecord(raw), "qState");
+  const protocol = decodeWitnessProtocolState({
+    state,
+    protocolField: "protocol",
+    noInvalidReason: "",
+    decodeHole: gustHole,
+    compareHoles: (left, right) => left.localeCompare(right),
+  });
+  const scenarioResult = gustLastResult(state["qScenarioResult"]);
+  assertWitnessProtocolConsistentWithScenario({
+    label: "Gust of Wind Line lifecycle",
+    scenarioResult,
+    protocol,
+  });
   return {
     currentTurnRole: gustTurnRole(state["qCurrentTurnRole"]),
     actionAvailable: booleanField(state, "qActionAvailable"),
@@ -651,8 +666,8 @@ function normalizeGustQuintState(raw: unknown): GustOfWindLineState {
       state["qLineMovementCostFeet"],
       "qLineMovementCostFeet",
     ),
-    holes: quintSet(state["qHoles"], "qHoles").map(gustHole).sort(),
-    lastResult: gustLastResult(state["qLastResult"]),
+    holes: protocol.holes,
+    lastResult: scenarioResult,
   };
 }
 

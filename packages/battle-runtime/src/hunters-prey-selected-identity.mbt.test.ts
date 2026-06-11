@@ -54,6 +54,18 @@ defineSelectedIdentityWitness({
     import.meta.dirname,
     "battle-runtime-hunters-prey.mbt.qnt",
   ),
+  quintStateField: "qState",
+  quintStateFieldPrefix: "q",
+  witnessProtocolField: "protocol",
+  quintFieldNames: {
+    lastResult: "qScenarioResult",
+    lastInvalidReason: "qScenarioInvalidReason",
+  },
+  witnessInvalidScenarioReasons: {
+    rejectMissingSelection: "invalidFill",
+    rejectSameTarget: "invalidFill",
+    rejectInvalidTargetPredicate: "invalidFill",
+  },
   projectionSchema: {
     colossusTargetHp: "int",
     hordeTargetHp: "int",

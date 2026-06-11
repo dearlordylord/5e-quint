@@ -38,6 +38,11 @@ module battleRuntimeWitnessProtocol {
     result: WInit,
   }
 
+  pure def witnessInitWithHoles(holes: Set[h]): WitnessProtocol[h] = {
+    holes: holes,
+    result: WInit,
+  }
+
   pure def witnessNeedsHoles(holes: Set[h]): WitnessProtocol[h] = {
     holes: holes,
     result: WNeedsHoles,

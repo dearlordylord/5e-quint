@@ -2,67 +2,38 @@
 
 module battleRuntimeDirectConditionLifecycleMbt {
   import battleRuntimeDirectConditionLifecycle.* from "./battle-runtime-direct-condition-lifecycle"
+  import battleRuntimeWitnessProtocol.* from "./battle-runtime-witness-protocol"
 
-  var qActionAvailable: bool
-  var qSlotLedgerLevel: int
-  var qSlotsRemaining: int
-  var qSlotSpellCastThisTurn: bool
-  var qTargetHasNonSpellSource: bool
-  var qTargetHasSpellSource: bool
-  var qTargetSpellDurationTicks: int
-  var qTargetConditionProjected: bool
-  var qCasterConcentrating: bool
+  type Hole = | DirectConditionLifecycle
 
-  pure def directConditionTarget(
-    hasNonSpellSource: bool,
-    hasSpellSource: bool,
-    durationTicks: int,
-  ): DirectConditionTarget =
-    if (hasNonSpellSource and hasSpellSource)
-      DirectConditionSpellAndNonSpell({ durationTicks: durationTicks })
-    else if (hasNonSpellSource)
-      DirectConditionNonSpellSource
-    else if (hasSpellSource)
-      DirectConditionSpellOnly({ durationTicks: durationTicks })
-    else
-      DirectConditionAbsent
+  type DirectConditionLifecycleWitnessState = {
+    lifecycle: DirectConditionLifecycleState,
+    protocol: WitnessProtocol[Hole],
+  }
 
-  pure def currentDirectConditionLifecycleState: DirectConditionLifecycleState = {
-    actionAvailable: qActionAvailable,
-    slotLedger: {
-      slotLevel: qSlotLedgerLevel,
-      slotsRemaining: qSlotsRemaining,
-    },
-    slotSpellCastThisTurn: qSlotSpellCastThisTurn,
-    targetCondition: directConditionTarget(
-      qTargetHasNonSpellSource,
-      qTargetHasSpellSource,
-      qTargetSpellDurationTicks,
-    ),
+  var qState: DirectConditionLifecycleWitnessState
+
+  pure def directConditionWitnessState(
+    nextState: DirectConditionLifecycleState,
+    protocol: WitnessProtocol[Hole],
+  ): DirectConditionLifecycleWitnessState = {
+    lifecycle: nextState,
+    protocol: protocol,
   }
 
   action recordNextState(nextState: DirectConditionLifecycleState): bool = all {
-    qActionAvailable' = nextState.actionAvailable,
-    qSlotLedgerLevel' = nextState.slotLedger.slotLevel,
-    qSlotsRemaining' = nextState.slotLedger.slotsRemaining,
-    qSlotSpellCastThisTurn' = nextState.slotSpellCastThisTurn,
-    qTargetHasNonSpellSource' = match nextState.targetCondition {
-      | DirectConditionAbsent => false
-      | DirectConditionNonSpellSource => true
-      | DirectConditionSpellOnly(_) => false
-      | DirectConditionSpellAndNonSpell(_) => true
-    },
-    qTargetHasSpellSource' = directConditionTargetHasSpellSource(nextState.targetCondition),
-    qTargetSpellDurationTicks' = directConditionDuration(nextState.targetCondition),
-    qTargetConditionProjected' = directConditionRemainsProjected(nextState),
-    qCasterConcentrating' = directConditionCasterConcentrating(nextState),
+    qState' = directConditionWitnessState(
+      nextState,
+      witnessResolved(DirectConditionLifecycle),
+    ),
   }
 
   action init = {
     nondet slotLedgerLevel = directConditionMinimumSlotLevel.to(directConditionMaximumSlotLevel).oneOf()
     nondet hasNonSpellSource = Set(true, false).oneOf()
     all {
-      recordNextState({
+      qState' = directConditionWitnessState(
+        {
         actionAvailable: true,
         slotLedger: {
           slotLevel: slotLedgerLevel,
@@ -74,55 +45,57 @@ module battleRuntimeDirectConditionLifecycleMbt {
             DirectConditionNonSpellSource
           else
             DirectConditionAbsent,
-      }),
+        },
+        witnessInit(DirectConditionLifecycle),
+      ),
     }
   }
 
   action doCastDirectCondition = {
     nondet slotLevel = directConditionMinimumSlotLevel.to(4).oneOf()
     all {
-      recordNextState(resolveDirectConditionCast(currentDirectConditionLifecycleState, slotLevel)),
+      recordNextState(resolveDirectConditionCast(qState.lifecycle, slotLevel)),
     }
   }
 
   action doInvalidUpperSlotCast = all {
     recordNextState(resolveDirectConditionCast(
-      currentDirectConditionLifecycleState,
+      qState.lifecycle,
       directConditionMaximumSlotLevel + 1,
     )),
   }
 
   action doBeginLaterTurn = all {
-    recordNextState(beginDirectConditionLaterTurn(currentDirectConditionLifecycleState)),
+    recordNextState(beginDirectConditionLaterTurn(qState.lifecycle)),
   }
 
   action doAttackRollEarlyEnd = all {
     recordNextState(resolveDirectConditionEarlyEnd(
-      currentDirectConditionLifecycleState,
+      qState.lifecycle,
       DirectConditionAttackRoll,
     )),
   }
 
   action doDamageEarlyEnd = all {
     recordNextState(resolveDirectConditionEarlyEnd(
-      currentDirectConditionLifecycleState,
+      qState.lifecycle,
       DirectConditionDamage,
     )),
   }
 
   action doSpellCastEarlyEnd = all {
     recordNextState(resolveDirectConditionEarlyEnd(
-      currentDirectConditionLifecycleState,
+      qState.lifecycle,
       DirectConditionSpellCast,
     )),
   }
 
   action doConcentrationCleanup = all {
-    recordNextState(resolveDirectConditionConcentrationCleanup(currentDirectConditionLifecycleState)),
+    recordNextState(resolveDirectConditionConcentrationCleanup(qState.lifecycle)),
   }
 
   action doDurationTick = all {
-    recordNextState(tickDirectConditionDuration(currentDirectConditionLifecycleState)),
+    recordNextState(tickDirectConditionDuration(qState.lifecycle)),
   }
 
   action step = any {

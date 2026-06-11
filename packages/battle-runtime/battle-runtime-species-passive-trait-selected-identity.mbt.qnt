@@ -1,6 +1,8 @@
 // -*- mode: Bluespec; -*-
 
 module battleRuntimeSpeciesPassiveTraitSelectedIdentityMbt {
+  import battleRuntimeWitnessProtocol.* from "./battle-runtime-witness-protocol"
+
   // Self-contained literal projection witness for selected passive species
   // traits. The paired TypeScript witness independently discovers these facts
   // through production battle-runtime entrypoints and typed support profiles.
@@ -15,15 +17,22 @@ module battleRuntimeSpeciesPassiveTraitSelectedIdentityMbt {
   //   Advantage on Ability Checks made to end Grappled.
   // - .references/srd-5.2.1/Rules-Glossary.md:514 and 828-830 define Grapple
   //   escape checks and Resistance damage halving.
-  var qDragonbornFireDamageAfter: int
-  var qDragonbornColdDamageAfter: int
-  var qDwarfPoisonDamageAfter: int
-  var qDwarfFireDamageAfter: int
-  var qDwarfPoisonedSaveAdvantage: bool
-  var qDwarfCharmedSaveAdvantage: bool
-  var qGoliathEscapeRollMode: str
-  var qGoliathPoisonedEscapeRollMode: str
-  var qLastResult: str
+  type Hole = | NoHole
+
+  type SpeciesPassiveTraitSelectedIdentityWitnessState = {
+    dragonbornFireDamageAfter: int,
+    dragonbornColdDamageAfter: int,
+    dwarfPoisonDamageAfter: int,
+    dwarfFireDamageAfter: int,
+    dwarfPoisonedSaveAdvantage: bool,
+    dwarfCharmedSaveAdvantage: bool,
+    goliathEscapeRollMode: str,
+    goliathPoisonedEscapeRollMode: str,
+    scenarioResult: str,
+    protocol: WitnessProtocol[Hole],
+  }
+
+  var qState: SpeciesPassiveTraitSelectedIdentityWitnessState
 
   action recordProjection(
     dragonbornFireDamageAfter: int,
@@ -34,44 +43,52 @@ module battleRuntimeSpeciesPassiveTraitSelectedIdentityMbt {
     dwarfCharmedSaveAdvantage: bool,
     goliathEscapeRollMode: str,
     goliathPoisonedEscapeRollMode: str,
-    lastResult: str,
+    scenarioResult: str,
+    protocol: WitnessProtocol[Hole],
   ): bool = all {
-    qDragonbornFireDamageAfter' = dragonbornFireDamageAfter,
-    qDragonbornColdDamageAfter' = dragonbornColdDamageAfter,
-    qDwarfPoisonDamageAfter' = dwarfPoisonDamageAfter,
-    qDwarfFireDamageAfter' = dwarfFireDamageAfter,
-    qDwarfPoisonedSaveAdvantage' = dwarfPoisonedSaveAdvantage,
-    qDwarfCharmedSaveAdvantage' = dwarfCharmedSaveAdvantage,
-    qGoliathEscapeRollMode' = goliathEscapeRollMode,
-    qGoliathPoisonedEscapeRollMode' = goliathPoisonedEscapeRollMode,
-    qLastResult' = lastResult,
+    qState' = {
+      dragonbornFireDamageAfter: dragonbornFireDamageAfter,
+      dragonbornColdDamageAfter: dragonbornColdDamageAfter,
+      dwarfPoisonDamageAfter: dwarfPoisonDamageAfter,
+      dwarfFireDamageAfter: dwarfFireDamageAfter,
+      dwarfPoisonedSaveAdvantage: dwarfPoisonedSaveAdvantage,
+      dwarfCharmedSaveAdvantage: dwarfCharmedSaveAdvantage,
+      goliathEscapeRollMode: goliathEscapeRollMode,
+      goliathPoisonedEscapeRollMode: goliathPoisonedEscapeRollMode,
+      scenarioResult: scenarioResult,
+      protocol: protocol,
+    },
   }
 
   action init = recordProjection(
     9, 9, 9, 9, false, false, "normal", "normal", "init",
+    witnessInit(NoHole),
   )
 
   action doDragonbornDamageResistance = all {
-    qLastResult == "init",
+    qState.protocol.result == WInit,
     recordProjection(
       4, 9, 9, 9, false, false, "normal", "normal",
       "dragonbornDamageResistance",
+      witnessResolved(NoHole),
     ),
   }
 
   action doDwarvenResilience = all {
-    qLastResult == "init",
+    qState.protocol.result == WInit,
     recordProjection(
       9, 9, 4, 9, true, false, "normal", "normal",
       "dwarvenResilience",
+      witnessResolved(NoHole),
     ),
   }
 
   action doGoliathPowerfulBuild = all {
-    qLastResult == "init",
+    qState.protocol.result == WInit,
     recordProjection(
       9, 9, 9, 9, false, false, "advantage", "normal",
       "goliathPowerfulBuild",
+      witnessResolved(NoHole),
     ),
   }
 

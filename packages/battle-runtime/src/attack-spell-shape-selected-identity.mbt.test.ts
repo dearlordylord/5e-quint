@@ -102,6 +102,10 @@ defineSelectedIdentityWitness({
     import.meta.dirname,
     "battle-runtime-attack-spell-shape-selected-identity.mbt.qnt",
   ),
+  quintStateField: "qState",
+  quintStateFieldPrefix: "q",
+  witnessProtocolField: "protocol",
+  quintFieldNames: { lastResult: "qScenarioResult" },
   projectionSchema: {
     targetHp: "int",
     spellSlotSpentThisTurn: "bool",

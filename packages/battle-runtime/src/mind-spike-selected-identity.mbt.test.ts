@@ -7,11 +7,14 @@ import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 
 import {
   MBT_TEST_TIMEOUT_MS,
+  assertWitnessProtocolConsistentWithScenario,
   booleanField,
+  decodeWitnessProtocolState,
   focusedMbtMaxSteps,
   mbtSpecPath,
   mbtTraceCount,
   numberFromQuintInt,
+  quintRecordField,
   quintStateRecord,
   run,
   stateCheck,
@@ -470,7 +473,22 @@ function expectedProjection(
 function normalizeMindSpikeQuintState(
   raw: unknown,
 ): MindSpikeSelectedIdentityProjection {
-  const state = quintStateRecord(raw);
+  const state = quintRecordField(quintStateRecord(raw), "qState");
+  const protocol = decodeWitnessProtocolState({
+    state,
+    protocolField: "protocol",
+    noInvalidReason: "",
+    decodeHole: mindSpikeUnexpectedHole,
+  });
+  if (protocol.holes.length !== 0) {
+    throw new Error("Expected Mind Spike selected identity holes to be empty.");
+  }
+  const lastResult = quintSelectedIdentityResult(state, "qScenarioResult");
+  assertWitnessProtocolConsistentWithScenario({
+    label: "Mind Spike selected identity",
+    scenarioResult: lastResult,
+    protocol,
+  });
   return {
     level2SlotsRemaining: numberFromQuintInt(
       state["qLevel2SlotsRemaining"],
@@ -490,8 +508,14 @@ function normalizeMindSpikeQuintState(
       state["qTargetActiveEffectCount"],
       "qTargetActiveEffectCount",
     ),
-    lastResult: quintSelectedIdentityResult(state, "qLastResult"),
+    lastResult,
   };
+}
+
+function mindSpikeUnexpectedHole(raw: unknown): never {
+  throw new Error(
+    `Mind Spike selected identity witness does not expect holes; received ${String(raw)}.`,
+  );
 }
 
 function quintSelectedIdentityResult(

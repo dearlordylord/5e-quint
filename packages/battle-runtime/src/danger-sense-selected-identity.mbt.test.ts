@@ -42,6 +42,10 @@ defineSelectedIdentityWitness({
     import.meta.dirname,
     "battle-runtime-danger-sense-selected-identity.mbt.qnt",
   ),
+  quintStateField: "qState",
+  quintStateFieldPrefix: "q",
+  witnessProtocolField: "protocol",
+  quintFieldNames: { lastResult: "qScenarioResult" },
   projectionSchema: {
     lastResult: "str",
     sourceUnitId: "str",

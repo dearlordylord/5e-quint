@@ -19,14 +19,17 @@ import { describe, expect, it } from "vitest";
 
 import {
   MBT_TEST_TIMEOUT_MS,
+  assertWitnessProtocolConsistentWithScenario,
   booleanField,
+  decodeWitnessProtocolState,
   defineDriver,
   focusedMbtMaxSteps,
   mbtSpecPath,
   mbtTraceCount,
   numberFromQuintInt,
-  quintSet,
+  quintRecordField,
   quintStateRecord,
+  quintVariantTag,
   run,
   stateCheck,
 } from "./battle-runtime-mbt-driver-kit.ts";
@@ -618,7 +621,20 @@ function battleHolesToCreatureSizeChangeHoles(
 function normalizeCreatureSizeChangeQuintState(
   raw: unknown,
 ): CreatureSizeChangeProjection {
-  const state = quintStateRecord(raw);
+  const state = quintRecordField(quintStateRecord(raw), "qState");
+  const scenarioResult = lastResult(state["qScenarioResult"]);
+  const protocol = decodeWitnessProtocolState({
+    state,
+    protocolField: "protocol",
+    noInvalidReason: "none",
+    decodeHole: creatureSizeChangeHole,
+    compareHoles: (left, right) => left.localeCompare(right),
+  });
+  assertWitnessProtocolConsistentWithScenario({
+    label: "Enlarge/Reduce",
+    scenarioResult,
+    protocol,
+  });
   return {
     actionAvailable: booleanField(state, "qActionAvailable"),
     spellAvailable: booleanField(state, "qSpellAvailable"),
@@ -632,14 +648,12 @@ function normalizeCreatureSizeChangeQuintState(
     strengthSavingThrowRollMode: rollMode(
       state["qStrengthSavingThrowRollMode"],
     ),
-    holes: quintSet(state["qHoles"], "qHoles")
-      .map(creatureSizeChangeHole)
-      .sort(),
+    holes: protocol.holes,
     lastDamageApplied: numberFromQuintInt(
       state["qLastDamageApplied"],
       "qLastDamageApplied",
     ),
-    lastResult: lastResult(state["qLastResult"]),
+    lastResult: scenarioResult,
   };
 }
 
@@ -691,8 +705,9 @@ function lastResult(raw: unknown): LastResult {
 }
 
 function creatureSizeChangeHole(raw: unknown): CreatureSizeChangeHole {
-  if (raw === "SavingThrowOutcome") {
-    return raw;
+  const tag = quintVariantTag(raw, "protocol.holes");
+  if (tag === "SavingThrowOutcome") {
+    return tag;
   }
   throw new Error(`Unknown Enlarge/Reduce hole: ${String(raw)}.`);
 }

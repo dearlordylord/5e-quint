@@ -61,37 +61,37 @@
     {
       "number": 10,
       "id": "PDS-A10-WITNESS-PILOTS",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Migrate two more witness/driver pilot pairs and record trace-cost and line-delta evidence"
     },
     {
       "number": 11,
       "id": "PDS-A11-WITNESS-BATCH-1",
-      "status": "blocked",
+      "status": "done",
       "title": "Witness-protocol batch migration 1 (~19 pairs, self-discovering)"
     },
     {
       "number": 12,
       "id": "PDS-A12-WITNESS-BATCH-2",
-      "status": "blocked",
+      "status": "done",
       "title": "Witness-protocol batch migration 2"
     },
     {
       "number": 13,
       "id": "PDS-A13-WITNESS-BATCH-3",
-      "status": "blocked",
+      "status": "done",
       "title": "Witness-protocol batch migration 3"
     },
     {
       "number": 14,
       "id": "PDS-A14-WITNESS-BATCH-4",
-      "status": "blocked",
+      "status": "done",
       "title": "Witness-protocol batch migration 4"
     },
     {
       "number": 15,
       "id": "PDS-A15-WITNESS-BATCH-5",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Witness-protocol batch migration 5 (drain)"
     },
     {
@@ -103,7 +103,7 @@
     {
       "number": 17,
       "id": "PDS-A17-LITERAL-CAPTURE-PRD",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Write the literal-capture-gate PRD from the research note (single-owner scope)"
     },
     {
@@ -201,14 +201,14 @@ Every task must include:
 | 7 | PDS-A07-KIT-BATCH-4 | done | PDS-A06-KIT-BATCH-3 | |
 | 8 | PDS-A08-KIT-BATCH-5 | done | PDS-A07-KIT-BATCH-4 | Drains the kit-unmigrated set. |
 | 9 | PDS-A09-KIT-GATE-AND-CLOSEOUT | deferred | PDS-A08-KIT-BATCH-5 | Owner intervention 2026-06-11: repeated attempts showed the PRD/03 20% line-footprint target was missed by the completed kit batches and is not a prerequisite for prd/04 witness-protocol work. Revive only with explicit extraction scope or revised acceptance. |
-| 10 | PDS-A10-WITNESS-PILOTS | ready-for-research | PDS-A08-KIT-BATCH-5 | Trace-cost timing note and pilot line-delta report. Does not depend on PDS-A09 or the PRD/03 20% line-footprint metric. |
-| 11 | PDS-A11-WITNESS-BATCH-1 | blocked | PDS-A10-WITNESS-PILOTS | Self-discovering; ≤20 pairs; `MBT_TRACES=3` confidence pass per batch. |
-| 12 | PDS-A12-WITNESS-BATCH-2 | blocked | PDS-A11-WITNESS-BATCH-1 | |
-| 13 | PDS-A13-WITNESS-BATCH-3 | blocked | PDS-A12-WITNESS-BATCH-2 | |
-| 14 | PDS-A14-WITNESS-BATCH-4 | blocked | PDS-A13-WITNESS-BATCH-3 | |
-| 15 | PDS-A15-WITNESS-BATCH-5 | blocked | PDS-A14-WITNESS-BATCH-4 | Drains the protocol-unmigrated set. |
+| 10 | PDS-A10-WITNESS-PILOTS | done | PDS-A08-KIT-BATCH-5 | Trace-cost timing note and pilot line-delta report. Does not depend on PDS-A09 or the PRD/03 20% line-footprint metric. |
+| 11 | PDS-A11-WITNESS-BATCH-1 | done | PDS-A10-WITNESS-PILOTS | Self-discovering; ≤20 pairs; `MBT_TRACES=3` confidence pass per batch. |
+| 12 | PDS-A12-WITNESS-BATCH-2 | done | PDS-A11-WITNESS-BATCH-1 | |
+| 13 | PDS-A13-WITNESS-BATCH-3 | done | PDS-A12-WITNESS-BATCH-2 | |
+| 14 | PDS-A14-WITNESS-BATCH-4 | done | PDS-A13-WITNESS-BATCH-3 | |
+| 15 | PDS-A15-WITNESS-BATCH-5 | ready-for-research | PDS-A14-WITNESS-BATCH-4 | Drains the protocol-unmigrated set. |
 | 16 | PDS-A16-WITNESS-GATE-AND-CLOSEOUT | blocked | PDS-A15-WITNESS-BATCH-5 | Convention gate, ADR addendum, README skeleton, prd/04 closeout. |
-| 17 | PDS-A17-LITERAL-CAPTURE-PRD | blocked | PDS-A10-WITNESS-PILOTS | HITL: owner reviews the PRD. Single-owner obligations only; multi-owner rows wait for BPK-B08. |
+| 17 | PDS-A17-LITERAL-CAPTURE-PRD | ready-for-research | PDS-A10-WITNESS-PILOTS | HITL: owner reviews the PRD. Single-owner obligations only; multi-owner rows wait for BPK-B08. |
 | 18 | PDS-A18-RECURSIVE-NEXT-BATCH | blocked | PDS-A16-WITNESS-GATE-AND-CLOSEOUT | Refill or close the lane. |
 
 ## Task Details
@@ -362,7 +362,7 @@ the owner chooses one of these scopes:
 
 ### Task 10 - PDS-A10-WITNESS-PILOTS
 
-Status: `ready-for-research` · Mode: AFK
+Status: `done` · Mode: AFK
 
 Output: two more pairs migrated to the witness protocol (one
 selected-identity pair; `direct-condition-lifecycle` gaining the record
@@ -373,9 +373,12 @@ closure-cost model) recorded in the task report.
 Acceptance: focused MBT green for the pairs; closure checker green; timing
 note shows no material per-trace regression.
 
+Pilot result: witness QNT line count `250 -> 240`, net `-10`; focused
+two-driver trace run completed in `7s`.
+
 ### Task 11 - PDS-A11-WITNESS-BATCH-1
 
-Status: `blocked` · Mode: AFK
+Status: `done` · Mode: AFK
 
 Input: the protocol-unmigrated discovery rule applied at task start.
 
@@ -390,7 +393,7 @@ A15 additionally asserts `grep -l 'var qLastResult: str' *.mbt.qnt` is empty.
 
 ### Task 12 - PDS-A12-WITNESS-BATCH-2
 
-Status: `blocked` · Mode: AFK
+Status: `done` · Mode: AFK
 
 Input: the protocol-unmigrated discovery rule applied at task start.
 
@@ -404,7 +407,7 @@ confidence pass; closure checker green, allowlist unchanged.
 
 ### Task 13 - PDS-A13-WITNESS-BATCH-3
 
-Status: `blocked` · Mode: AFK
+Status: `done` · Mode: AFK
 
 Input: the protocol-unmigrated discovery rule applied at task start.
 
@@ -418,7 +421,7 @@ confidence pass; closure checker green, allowlist unchanged.
 
 ### Task 14 - PDS-A14-WITNESS-BATCH-4
 
-Status: `blocked` · Mode: AFK
+Status: `done` · Mode: AFK
 
 Input: the protocol-unmigrated discovery rule applied at task start.
 
@@ -432,7 +435,7 @@ confidence pass; closure checker green, allowlist unchanged.
 
 ### Task 15 - PDS-A15-WITNESS-BATCH-5
 
-Status: `blocked` · Mode: AFK
+Status: `ready-for-research` · Mode: AFK
 
 Input: the protocol-unmigrated discovery rule applied at task start.
 
@@ -463,7 +466,7 @@ Acceptance: `pnpm quality` green including the new gate;
 
 ### Task 17 - PDS-A17-LITERAL-CAPTURE-PRD
 
-Status: `blocked` · Mode: HITL (owner reviews the resulting PRD)
+Status: `ready-for-research` · Mode: HITL (owner reviews the resulting PRD)
 
 Input: `plans/RESEARCH_witness_literal_capture_gate.md` (design, gates, and
 do-not list), the post-A10 witness shape.

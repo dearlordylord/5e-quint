@@ -70,6 +70,10 @@ defineSelectedIdentityWitness({
     import.meta.dirname,
     "battle-runtime-mycelium-step-feature-selected-identity.mbt.qnt",
   ),
+  quintStateField: "qState",
+  quintStateFieldPrefix: "q",
+  witnessProtocolField: "protocol",
+  quintFieldNames: { lastResult: "qScenarioResult" },
   projectionSchema: {
     bonusActionAvailable: "bool",
     dashBonusFeet: "int",

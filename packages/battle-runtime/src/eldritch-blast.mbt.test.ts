@@ -12,12 +12,14 @@ import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics
 import {
   MBT_TEST_TIMEOUT_MS,
   booleanField,
+  decodeWitnessProtocolState,
   defineDriver,
   focusedMbtMaxSteps,
   mbtSpecPath,
   mbtTraceCount,
   numberFromQuintInt,
-  quintSet,
+  quintField,
+  quintRecordField,
   quintStateRecord,
   quintVariantTag,
   run,
@@ -237,17 +239,25 @@ describe("Eldritch Blast MBT parity", () => {
 function normalizeEldritchBlastQuintState(
   raw: unknown,
 ): EldritchBlastMbtProjection {
-  const state = quintStateRecord(raw);
+  const state = quintRecordField(quintStateRecord(raw), "qState");
+  const protocol = decodeWitnessProtocolState({
+    state,
+    protocolField: "protocol",
+    noInvalidReason: "",
+    decodeHole: eldritchBlastHoleName,
+    compareHoles: (left, right) => left.localeCompare(right),
+  });
 
   return {
     actionAvailable: booleanField(state, "qActionAvailable"),
-    targetHp: numberFromQuintInt(state["qTargetHp"], "qTargetHp"),
-    holes: quintSet(state["qHoles"], "qHoles")
-      .map(eldritchBlastHoleName)
-      .sort(),
-    lastResult: eldritchBlastMbtLastResult(state["qLastResult"]),
+    targetHp: numberFromQuintInt(
+      quintField(state, "qTargetHp"),
+      "qState.qTargetHp",
+    ),
+    holes: protocol.holes,
+    lastResult: eldritchBlastMbtLastResult(protocol.lastResult),
     lastInvalidReason: eldritchBlastMbtLastInvalidReason(
-      state["qLastInvalidReason"],
+      protocol.lastInvalidReason,
     ),
   };
 }

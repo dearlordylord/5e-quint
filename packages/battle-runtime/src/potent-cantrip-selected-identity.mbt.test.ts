@@ -64,6 +64,10 @@ defineSelectedIdentityWitness({
     import.meta.dirname,
     "battle-runtime-potent-cantrip.mbt.qnt",
   ),
+  quintStateField: "qState",
+  quintStateFieldPrefix: "q",
+  witnessProtocolField: "protocol",
+  quintFieldNames: { lastResult: "qScenarioResult" },
   projectionSchema: {
     targetHp: "int",
     actionResourcesRemaining: "int",

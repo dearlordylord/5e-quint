@@ -1,6 +1,10 @@
 // -*- mode: Bluespec; -*-
 
 module battleRuntimeCreatureSizeChangeLifecycleMbt {
+  import battleRuntimeWitnessProtocol.* from "./battle-runtime-witness-protocol"
+
+  type WitnessHole = | SavingThrowOutcome
+
   // RAW trace:
   // - .references/srd-5.2.1/Spells/Descriptions-E-L.md#Enlarge/Reduce:
   //   Concentration up to 1 minute; unwilling creatures make a Constitution
@@ -13,17 +17,33 @@ module battleRuntimeCreatureSizeChangeLifecycleMbt {
   //   effects end when their creator loses Concentration.
   // - UBIQUITOUS_LANGUAGE.md: Size, Advantage and Disadvantage, Spell
   //   Invocation, Spell Effect, and Damage.
-  var qActionAvailable: bool
-  var qSpellAvailable: bool
-  var qSizeEffectActive: bool
-  var qCasterConcentrating: bool
-  var qSizeChangeMode: str
-  var qTargetEffectiveSize: str
-  var qStrengthAbilityCheckRollMode: str
-  var qStrengthSavingThrowRollMode: str
-  var qHoles: Set[str]
-  var qLastDamageApplied: int
-  var qLastResult: str
+  type WitnessState = {
+    qActionAvailable: bool,
+    qSpellAvailable: bool,
+    qSizeEffectActive: bool,
+    qCasterConcentrating: bool,
+    qSizeChangeMode: str,
+    qTargetEffectiveSize: str,
+    qStrengthAbilityCheckRollMode: str,
+    qStrengthSavingThrowRollMode: str,
+    qLastDamageApplied: int,
+    qScenarioResult: str,
+    protocol: WitnessProtocol[WitnessHole],
+  }
+
+  var qState: WitnessState
+
+  pure def qActionAvailable: bool = qState.qActionAvailable
+  pure def qSpellAvailable: bool = qState.qSpellAvailable
+  pure def qSizeEffectActive: bool = qState.qSizeEffectActive
+  pure def qCasterConcentrating: bool = qState.qCasterConcentrating
+  pure def qSizeChangeMode: str = qState.qSizeChangeMode
+  pure def qTargetEffectiveSize: str = qState.qTargetEffectiveSize
+  pure def qStrengthAbilityCheckRollMode: str = qState.qStrengthAbilityCheckRollMode
+  pure def qStrengthSavingThrowRollMode: str = qState.qStrengthSavingThrowRollMode
+  pure def protocolHoles: Set[WitnessHole] = qState.protocol.holes
+  pure def qLastDamageApplied: int = qState.qLastDamageApplied
+  pure def qScenarioResult: str = qState.qScenarioResult
 
   pure val noMode: str = "none"
   pure val increaseMode: str = "increase"
@@ -35,8 +55,8 @@ module battleRuntimeCreatureSizeChangeLifecycleMbt {
   pure val advantageRollMode: str = "advantage"
   pure val disadvantageRollMode: str = "disadvantage"
   pure val noDamageResolved: int = -1
-  pure val noHoles: Set[str] = Set()
-  pure val savingThrowOutcomeHoles: Set[str] = Set("SavingThrowOutcome")
+  pure val noHoles: Set[WitnessHole] = Set()
+  pure val savingThrowOutcomeHoles: Set[WitnessHole] = Set(SavingThrowOutcome)
 
   action recordCreatureSizeChangeState(
     actionAvailable: bool,
@@ -47,27 +67,30 @@ module battleRuntimeCreatureSizeChangeLifecycleMbt {
     targetEffectiveSize: str,
     strengthAbilityCheckRollMode: str,
     strengthSavingThrowRollMode: str,
-    holes: Set[str],
     lastDamageApplied: int,
-    lastResult: str,
+    scenarioResult: str,
+    protocol: WitnessProtocol[WitnessHole],
   ): bool = all {
-    qActionAvailable' = actionAvailable,
-    qSpellAvailable' = spellAvailable,
-    qSizeEffectActive' = sizeEffectActive,
-    qCasterConcentrating' = casterConcentrating,
-    qSizeChangeMode' = sizeChangeMode,
-    qTargetEffectiveSize' = targetEffectiveSize,
-    qStrengthAbilityCheckRollMode' = strengthAbilityCheckRollMode,
-    qStrengthSavingThrowRollMode' = strengthSavingThrowRollMode,
-    qHoles' = holes,
-    qLastDamageApplied' = lastDamageApplied,
-    qLastResult' = lastResult,
+    qState' = {
+      qActionAvailable: actionAvailable,
+      qSpellAvailable: spellAvailable,
+      qSizeEffectActive: sizeEffectActive,
+      qCasterConcentrating: casterConcentrating,
+      qSizeChangeMode: sizeChangeMode,
+      qTargetEffectiveSize: targetEffectiveSize,
+      qStrengthAbilityCheckRollMode: strengthAbilityCheckRollMode,
+      qStrengthSavingThrowRollMode: strengthSavingThrowRollMode,
+      qLastDamageApplied: lastDamageApplied,
+      qScenarioResult: scenarioResult,
+      protocol: protocol,
+    },
   }
 
   action recordNoEffectState(
     actionAvailable: bool,
     spellAvailable: bool,
-    lastResult: str,
+    scenarioResult: str,
+    protocol: WitnessProtocol[WitnessHole],
   ): bool =
     recordCreatureSizeChangeState(
       actionAvailable,
@@ -78,14 +101,15 @@ module battleRuntimeCreatureSizeChangeLifecycleMbt {
       mediumSize,
       normalRollMode,
       normalRollMode,
-      noHoles,
       noDamageResolved,
-      lastResult,
+      scenarioResult,
+      protocol,
     )
 
   action recordIncreaseEffectState(
     lastDamageApplied: int,
-    lastResult: str,
+    scenarioResult: str,
+    protocol: WitnessProtocol[WitnessHole],
   ): bool =
     recordCreatureSizeChangeState(
       false,
@@ -96,14 +120,15 @@ module battleRuntimeCreatureSizeChangeLifecycleMbt {
       largeSize,
       advantageRollMode,
       advantageRollMode,
-      noHoles,
       lastDamageApplied,
-      lastResult,
+      scenarioResult,
+      protocol,
     )
 
   action recordDecreaseEffectState(
     lastDamageApplied: int,
-    lastResult: str,
+    scenarioResult: str,
+    protocol: WitnessProtocol[WitnessHole],
   ): bool =
     recordCreatureSizeChangeState(
       false,
@@ -114,9 +139,9 @@ module battleRuntimeCreatureSizeChangeLifecycleMbt {
       smallSize,
       disadvantageRollMode,
       disadvantageRollMode,
-      noHoles,
       lastDamageApplied,
-      lastResult,
+      scenarioResult,
+      protocol,
     )
 
   action init = all {
@@ -129,9 +154,9 @@ module battleRuntimeCreatureSizeChangeLifecycleMbt {
       mediumSize,
       normalRollMode,
       normalRollMode,
-      noHoles,
       noDamageResolved,
       "init",
+      witnessInit(SavingThrowOutcome),
     ),
   }
 
@@ -139,8 +164,8 @@ module battleRuntimeCreatureSizeChangeLifecycleMbt {
     qActionAvailable,
     qSpellAvailable,
     not(qSizeEffectActive),
-    qHoles == noHoles,
-    qLastResult == "init",
+    protocolHoles == noHoles,
+    qScenarioResult == "init",
     recordCreatureSizeChangeState(
       true,
       true,
@@ -150,74 +175,109 @@ module battleRuntimeCreatureSizeChangeLifecycleMbt {
       mediumSize,
       normalRollMode,
       normalRollMode,
-      savingThrowOutcomeHoles,
       noDamageResolved,
       "needsHoles",
+      witnessNeedsHoles(savingThrowOutcomeHoles),
     ),
   }
 
   action doCastUnwillingSaveSuccess = all {
-    qHoles == savingThrowOutcomeHoles,
-    recordNoEffectState(false, false, "unwillingSaveSucceeded"),
+    protocolHoles == savingThrowOutcomeHoles,
+    recordNoEffectState(
+      false,
+      false,
+      "unwillingSaveSucceeded",
+      witnessResolved(SavingThrowOutcome),
+    ),
   }
 
   action doCastUnwillingSaveFailure = all {
-    qHoles == savingThrowOutcomeHoles,
-    recordDecreaseEffectState(noDamageResolved, "unwillingSaveFailed"),
+    protocolHoles == savingThrowOutcomeHoles,
+    recordDecreaseEffectState(
+      noDamageResolved,
+      "unwillingSaveFailed",
+      witnessResolved(SavingThrowOutcome),
+    ),
   }
 
   action doCastWillingEnlarge = all {
     qActionAvailable,
     qSpellAvailable,
     not(qSizeEffectActive),
-    qHoles == noHoles,
-    qLastResult == "init",
-    recordIncreaseEffectState(noDamageResolved, "willingEnlarge"),
+    protocolHoles == noHoles,
+    qScenarioResult == "init",
+    recordIncreaseEffectState(
+      noDamageResolved,
+      "willingEnlarge",
+      witnessResolved(SavingThrowOutcome),
+    ),
   }
 
   action doCastWillingReduce = all {
     qActionAvailable,
     qSpellAvailable,
     not(qSizeEffectActive),
-    qHoles == noHoles,
-    qLastResult == "init",
-    recordDecreaseEffectState(noDamageResolved, "willingReduce"),
+    protocolHoles == noHoles,
+    qScenarioResult == "init",
+    recordDecreaseEffectState(
+      noDamageResolved,
+      "willingReduce",
+      witnessResolved(SavingThrowOutcome),
+    ),
   }
 
   action doResolveEnlargedWeaponHitDamage = all {
     qSizeEffectActive,
     qSizeChangeMode == increaseMode,
-    qHoles == noHoles,
-    qLastResult.in(Set("willingEnlarge")),
-    recordIncreaseEffectState(7, "attackDamageAdjusted"),
+    protocolHoles == noHoles,
+    qScenarioResult.in(Set("willingEnlarge")),
+    recordIncreaseEffectState(
+      7,
+      "attackDamageAdjusted",
+      witnessResolved(SavingThrowOutcome),
+    ),
   }
 
   action doResolveReducedWeaponHitDamage = all {
     qSizeEffectActive,
     qSizeChangeMode == decreaseMode,
-    qHoles == noHoles,
-    qLastResult.in(Set("willingReduce", "unwillingSaveFailed")),
-    recordDecreaseEffectState(1, "attackDamageAdjusted"),
+    protocolHoles == noHoles,
+    qScenarioResult.in(Set("willingReduce", "unwillingSaveFailed")),
+    recordDecreaseEffectState(
+      1,
+      "attackDamageAdjusted",
+      witnessResolved(SavingThrowOutcome),
+    ),
   }
 
   action doBreakConcentration = all {
     qSizeEffectActive,
     qCasterConcentrating,
-    qHoles == noHoles,
-    qLastResult.in(Set("willingEnlarge", "willingReduce", "unwillingSaveFailed")),
-    recordNoEffectState(qActionAvailable, qSpellAvailable, "concentrationBroken"),
+    protocolHoles == noHoles,
+    qScenarioResult.in(Set("willingEnlarge", "willingReduce", "unwillingSaveFailed")),
+    recordNoEffectState(
+      qActionAvailable,
+      qSpellAvailable,
+      "concentrationBroken",
+      witnessResolved(SavingThrowOutcome),
+    ),
   }
 
   action doExpireDuration = all {
     qSizeEffectActive,
     qCasterConcentrating,
-    qHoles == noHoles,
-    qLastResult.in(Set("willingEnlarge", "willingReduce", "unwillingSaveFailed")),
-    recordNoEffectState(true, qSpellAvailable, "durationExpired"),
+    protocolHoles == noHoles,
+    qScenarioResult.in(Set("willingEnlarge", "willingReduce", "unwillingSaveFailed")),
+    recordNoEffectState(
+      true,
+      qSpellAvailable,
+      "durationExpired",
+      witnessResolved(SavingThrowOutcome),
+    ),
   }
 
   action doStutter = all {
-    qLastResult.in(Set(
+    qScenarioResult.in(Set(
       "unwillingSaveSucceeded",
       "attackDamageAdjusted",
       "concentrationBroken",
@@ -232,9 +292,9 @@ module battleRuntimeCreatureSizeChangeLifecycleMbt {
       qTargetEffectiveSize,
       qStrengthAbilityCheckRollMode,
       qStrengthSavingThrowRollMode,
-      qHoles,
       qLastDamageApplied,
-      qLastResult,
+      qScenarioResult,
+      qState.protocol,
     ),
   }
 

@@ -1,16 +1,36 @@
 // -*- mode: Bluespec; -*-
 
 module battleRuntimeMageArmorSelectedIdentityMbt {
-  var qSelfTargetAdmitted: bool
-  var qArmoredTargetRejected: bool
-  var qMageArmorEffectPresent: bool
-  var qStoredArmorBaseStillUnarmored: bool
-  var qProjectedBaseIsMageArmor: bool
-  var qArmorClass: int
-  var qMageArmorDurationTicks: int
-  var qLevel1SlotsExpended: int
-  var qActionAvailable: bool
-  var qLastResult: str
+  import battleRuntimeWitnessProtocol.* from "./battle-runtime-witness-protocol"
+
+  type WitnessHole = | WitnessProtocolHole
+
+  type MageArmorSelectedIdentityWitnessState = {
+    qSelfTargetAdmitted: bool,
+    qArmoredTargetRejected: bool,
+    qMageArmorEffectPresent: bool,
+    qStoredArmorBaseStillUnarmored: bool,
+    qProjectedBaseIsMageArmor: bool,
+    qArmorClass: int,
+    qMageArmorDurationTicks: int,
+    qLevel1SlotsExpended: int,
+    qActionAvailable: bool,
+    qScenarioResult: str,
+    protocol: WitnessProtocol[WitnessHole],
+  }
+
+  var qState: MageArmorSelectedIdentityWitnessState
+
+  pure def qSelfTargetAdmitted: bool = qState.qSelfTargetAdmitted
+  pure def qArmoredTargetRejected: bool = qState.qArmoredTargetRejected
+  pure def qMageArmorEffectPresent: bool = qState.qMageArmorEffectPresent
+  pure def qStoredArmorBaseStillUnarmored: bool = qState.qStoredArmorBaseStillUnarmored
+  pure def qProjectedBaseIsMageArmor: bool = qState.qProjectedBaseIsMageArmor
+  pure def qArmorClass: int = qState.qArmorClass
+  pure def qMageArmorDurationTicks: int = qState.qMageArmorDurationTicks
+  pure def qLevel1SlotsExpended: int = qState.qLevel1SlotsExpended
+  pure def qActionAvailable: bool = qState.qActionAvailable
+  pure def qLastResult: str = qState.qScenarioResult
 
   pure def defaultUnarmoredBaseArmorClass: int = 10
   pure def mageArmorBaseArmorClass: int = 13
@@ -19,6 +39,16 @@ module battleRuntimeMageArmorSelectedIdentityMbt {
   pure def initialArmorClass: int = defaultUnarmoredBaseArmorClass + mageArmorDexModifier
   pure def mageArmorArmorClass: int = mageArmorBaseArmorClass + mageArmorDexModifier
   pure def mageArmorDurationTicks: int = 8 * elapsedTimeTicksPerHour
+
+  pure def selectedIdentityProtocolForProjection(
+    holes: Set[WitnessHole],
+    scenarioResult: str,
+    scenarioInvalidReason: str,
+  ): WitnessProtocol[WitnessHole] =
+    if (scenarioResult == "init") witnessInit(WitnessProtocolHole)
+    else if (scenarioInvalidReason == "invalidFill") witnessInvalid(WitnessProtocolHole, WInvalidFill)
+    else if (holes != Set()) witnessNeedsHoles(holes)
+    else witnessResolved(WitnessProtocolHole)
 
   action recordProjection(
     selfTargetAdmitted: bool,
@@ -32,18 +62,20 @@ module battleRuntimeMageArmorSelectedIdentityMbt {
     actionAvailable: bool,
     lastResult: str,
   ): bool = all {
-    qSelfTargetAdmitted' = selfTargetAdmitted,
-    qArmoredTargetRejected' = armoredTargetRejected,
-    qMageArmorEffectPresent' = mageArmorEffectPresent,
-    qStoredArmorBaseStillUnarmored' = storedArmorBaseStillUnarmored,
-    qProjectedBaseIsMageArmor' = projectedBaseIsMageArmor,
-    qArmorClass' = armorClass,
-    qMageArmorDurationTicks' = durationTicks,
-    qLevel1SlotsExpended' = level1SlotsExpended,
-    qActionAvailable' = actionAvailable,
-    qLastResult' = lastResult,
+    qState' = {
+      qSelfTargetAdmitted: selfTargetAdmitted,
+      qArmoredTargetRejected: armoredTargetRejected,
+      qMageArmorEffectPresent: mageArmorEffectPresent,
+      qStoredArmorBaseStillUnarmored: storedArmorBaseStillUnarmored,
+      qProjectedBaseIsMageArmor: projectedBaseIsMageArmor,
+      qArmorClass: armorClass,
+      qMageArmorDurationTicks: durationTicks,
+      qLevel1SlotsExpended: level1SlotsExpended,
+      qActionAvailable: actionAvailable,
+      qScenarioResult: lastResult,
+      protocol: selectedIdentityProtocolForProjection(Set(), lastResult, ""),
+    },
   }
-
   action init = recordProjection(
     true,
     false,

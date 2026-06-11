@@ -175,7 +175,9 @@ export function mbtSpecPath(
   return path.resolve(importMetaDirname, "..", specFileName);
 }
 
-export function quintStateRecord(raw: unknown): Readonly<Record<string, unknown>> {
+export function quintStateRecord(
+  raw: unknown,
+): Readonly<Record<string, unknown>> {
   if (!isRecord(raw)) {
     throw new Error("Expected Quint state to be an object.");
   }
@@ -297,7 +299,9 @@ export function quintVariantValue(
     return raw["value"];
   }
 
-  throw new Error(`Expected Quint ${expectedTag} variant value field ${field}.`);
+  throw new Error(
+    `Expected Quint ${expectedTag} variant value field ${field}.`,
+  );
 }
 
 export function mbtWitnessLastInvalidReasons<
@@ -374,6 +378,41 @@ function decodeTypedWitnessProtocolState<
   };
 }
 
+export function assertWitnessProtocolConsistentWithScenario(input: {
+  readonly label: string;
+  readonly scenarioResult: string;
+  readonly protocol: Pick<
+    MbtWitnessProtocolState<unknown, string>,
+    "holes" | "lastResult"
+  > & { readonly lastInvalidReason?: string };
+  readonly initScenarioResult?: string;
+  readonly invalidScenarioReasons?: Readonly<Record<string, string>>;
+}): void {
+  const initScenarioResult = input.initScenarioResult ?? "init";
+  const invalidReason = input.invalidScenarioReasons?.[input.scenarioResult];
+  const expected: MbtWitnessLastResult =
+    invalidReason !== undefined
+      ? "invalid"
+      : input.scenarioResult === initScenarioResult
+        ? "init"
+        : input.protocol.holes.length > 0
+          ? "needsHoles"
+          : "resolved";
+  if (input.protocol.lastResult !== expected) {
+    throw new Error(
+      `Expected ${input.label} witness protocol result ${expected} for scenario ${input.scenarioResult}, got ${input.protocol.lastResult}.`,
+    );
+  }
+  if (
+    invalidReason !== undefined &&
+    input.protocol.lastInvalidReason !== invalidReason
+  ) {
+    throw new Error(
+      `Expected ${input.label} witness invalid reason ${invalidReason} for scenario ${input.scenarioResult}, got ${String(input.protocol.lastInvalidReason)}.`,
+    );
+  }
+}
+
 function mbtWitnessLastResultFromVariant(
   raw: unknown,
   field: string,
@@ -405,7 +444,9 @@ function mbtWitnessInvalidReasonFromVariant(
     return reason;
   }
 
-  throw new Error(`Expected Quint witness invalid reason variant field ${field}.`);
+  throw new Error(
+    `Expected Quint witness invalid reason variant field ${field}.`,
+  );
 }
 
 export function createBattleSubjectResolutionRecorder<
@@ -544,7 +585,6 @@ export function recordBattleResolutionResult<
   );
 }
 
-
 type MbtHole =
   | "TargetChoice"
   | "ObjectTargetChoice"
@@ -634,7 +674,9 @@ const unitCatalogResult = buildUnitCatalog({
   collections: [srdUnitCollection],
 });
 
-function startBattleRight(input: Parameters<typeof startBattle>[0]): BattleState {
+function startBattleRight(
+  input: Parameters<typeof startBattle>[0],
+): BattleState {
   const result = startBattle(input);
   if (Either.isLeft(result)) {
     throw new Error(result.left.message);
@@ -687,8 +729,7 @@ const weaponAttackOrderingDriverSchema = {
 const magicMissileDriverSchema = {
   init: {},
   doFillMagicMissileAllocation: {},
-  doFillMagicMissileDamageLow: {},
-  doFillMagicMissileDamageHigh: {},
+  doFillMagicMissileDamage: { dartRollTotal: mbtPickSchemas.int },
   step: {},
 } as const;
 
@@ -1342,13 +1383,14 @@ export function createMagicMissileDriver() {
         const allocation = requireHole(holes, "spellTargetAllocation");
         submit([spellTargetAllocationFill(allocation, skeletonId, 3)]);
       },
-      doFillMagicMissileDamageLow: () => {
+      doFillMagicMissileDamage: ({ dartRollTotal }) => {
         const damage = requireHole(holes, "rolledDice");
-        submit([...fills, damageRollFillWithGroups(damage, [[1, 1, 1]])]);
-      },
-      doFillMagicMissileDamageHigh: () => {
-        const damage = requireHole(holes, "rolledDice");
-        submit([...fills, damageRollFillWithGroups(damage, [[4, 4, 4]])]);
+        submit([
+          ...fills,
+          damageRollFillWithGroups(damage, [
+            magicMissileDamageRollGroup(dartRollTotal),
+          ]),
+        ]);
       },
       step: () => {},
       getState: () =>
@@ -1360,6 +1402,18 @@ export function createMagicMissileDriver() {
         }),
     };
   });
+}
+
+function magicMissileDamageRollGroup(
+  dartRollTotal: number,
+): readonly [number, number, number] {
+  if (dartRollTotal === 3) {
+    return [1, 1, 1];
+  }
+  if (dartRollTotal === 12) {
+    return [4, 4, 4];
+  }
+  throw new Error(`Unexpected Magic Missile dart roll total ${dartRollTotal}.`);
 }
 
 export function createScalarBuffDriver() {
@@ -1600,7 +1654,16 @@ export function createRogueSteadyAimDriver(
 }
 
 function normalizeQuintState(raw: unknown): MbtProjection {
-  const state = quintStateRecord(raw);
+  const root = quintStateRecord(raw);
+  const state = Object.hasOwn(root, "qState")
+    ? quintRecordField(root, "qState")
+    : root;
+  const protocol = decodeWitnessProtocolState({
+    state,
+    ...(Object.hasOwn(state, "protocol") ? { protocolField: "protocol" } : {}),
+    noInvalidReason: "",
+    decodeHole: holeName,
+  });
 
   return {
     skeletonHp: numberFromQuintInt(state["qSkeletonHp"], "qSkeletonHp"),
@@ -1611,9 +1674,9 @@ function normalizeQuintState(raw: unknown): MbtProjection {
       "qMultiattackDispatchesAvailable",
     ),
     sneakAttackUsedThisTurn: booleanField(state, "qSneakAttackUsedThisTurn"),
-    holes: quintHoleSet(state["qHoles"]).map(holeName).sort(),
-    lastResult: mbtLastResult(state["qLastResult"]),
-    lastInvalidReason: mbtLastInvalidReason(state["qLastInvalidReason"]),
+    holes: protocol.holes,
+    lastResult: mbtLastResult(protocol.lastResult),
+    lastInvalidReason: mbtLastInvalidReason(protocol.lastInvalidReason),
   };
 }
 
@@ -1635,7 +1698,16 @@ function normalizeWeaponAttackOrderingQuintState(
 function normalizeExtraAttackQuintState(
   raw: unknown,
 ): ExtraAttackMbtProjection {
-  const state = quintStateRecord(raw);
+  const state = quintRecordField(quintStateRecord(raw), "qState");
+  const protocol = decodeWitnessProtocolState({
+    state,
+    protocolField: "protocol",
+    noInvalidReason: "",
+    decodeHole: extraAttackUnexpectedHole,
+  });
+  if (protocol.holes.length !== 0) {
+    throw new Error("Expected Extra Attack witness holes to be empty.");
+  }
 
   return {
     skeletonHp: numberFromQuintInt(state["qSkeletonHp"], "qSkeletonHp"),
@@ -1648,15 +1720,28 @@ function normalizeExtraAttackQuintState(
       state["qMovementSpentFeet"],
       "qMovementSpentFeet",
     ),
-    lastResult: mbtLastResult(state["qLastResult"]),
-    lastInvalidReason: mbtLastInvalidReason(state["qLastInvalidReason"]),
+    lastResult: mbtLastResult(protocol.lastResult),
+    lastInvalidReason: mbtLastInvalidReason(protocol.lastInvalidReason),
   };
+}
+
+function extraAttackUnexpectedHole(raw: unknown): never {
+  throw new Error(`Unexpected Extra Attack witness hole ${String(raw)}.`);
 }
 
 function normalizeAdrenalineRushQuintState(
   raw: unknown,
 ): AdrenalineRushMbtProjection {
-  const state = quintStateRecord(raw);
+  const state = quintRecordField(quintStateRecord(raw), "qState");
+  const protocol = decodeWitnessProtocolState({
+    state,
+    protocolField: "protocol",
+    noInvalidReason: "",
+    decodeHole: adrenalineRushUnexpectedHole,
+  });
+  if (protocol.holes.length !== 0) {
+    throw new Error("Expected Adrenaline Rush witness holes to be empty.");
+  }
 
   return {
     actorTempHp: numberFromQuintInt(state["qActorTempHp"], "qActorTempHp"),
@@ -1669,15 +1754,30 @@ function normalizeAdrenalineRushQuintState(
       state["qFeatureUsesRemaining"],
       "qFeatureUsesRemaining",
     ),
-    lastResult: mbtLastResult(state["qLastResult"]),
-    lastInvalidReason: mbtLastInvalidReason(state["qLastInvalidReason"]),
+    lastResult: protocol.lastResult,
+    lastInvalidReason: mbtLastInvalidReason(protocol.lastInvalidReason),
   };
+}
+
+function adrenalineRushUnexpectedHole(raw: unknown): never {
+  throw new Error(
+    `Adrenaline Rush witness does not expect holes; received ${String(raw)}.`,
+  );
 }
 
 function normalizeRogueSteadyAimQuintState(
   raw: unknown,
 ): RogueSteadyAimMbtProjection {
-  const state = quintStateRecord(raw);
+  const state = quintRecordField(quintStateRecord(raw), "qState");
+  const protocol = decodeWitnessProtocolState({
+    state,
+    protocolField: "protocol",
+    noInvalidReason: "",
+    decodeHole: rogueSteadyAimUnexpectedHole,
+  });
+  if (protocol.holes.length !== 0) {
+    throw new Error("Expected Rogue Steady Aim witness holes to be empty.");
+  }
 
   return {
     bonusActionAvailable: booleanField(state, "qBonusActionAvailable"),
@@ -1693,21 +1793,37 @@ function normalizeRogueSteadyAimQuintState(
     attackRollMode: booleanField(state, "qAttackRollAdvantage")
       ? "advantage"
       : "normal",
-    lastResult: mbtLastResult(state["qLastResult"]),
-    lastInvalidReason: mbtLastInvalidReason(state["qLastInvalidReason"]),
+    lastResult: mbtLastResult(protocol.lastResult),
+    lastInvalidReason: mbtLastInvalidReason(protocol.lastInvalidReason),
   };
 }
 
+function rogueSteadyAimUnexpectedHole(raw: unknown): never {
+  throw new Error(
+    `Rogue Steady Aim witness does not expect holes; received ${String(raw)}.`,
+  );
+}
+
 function normalizeScalarBuffQuintState(raw: unknown): ScalarBuffMbtProjection {
-  const state = quintStateRecord(raw);
+  const state = quintRecordField(quintStateRecord(raw), "qState");
+  const protocol = decodeWitnessProtocolState({
+    state,
+    protocolField: "protocol",
+    noInvalidReason: "",
+    decodeHole: holeName,
+    compareHoles: (left, right) => left.localeCompare(right),
+  });
 
   return {
-    fighterSpeed: numberFromQuintInt(state["qFighterSpeed"], "qFighterSpeed"),
-    goblinSpeed: numberFromQuintInt(state["qGoblinSpeed"], "qGoblinSpeed"),
-    actionAvailable: booleanField(state, "qActionAvailable"),
-    holes: quintHoleSet(state["qHoles"]).map(holeName).sort(),
-    lastResult: mbtLastResult(state["qLastResult"]),
-    lastInvalidReason: mbtLastInvalidReason(state["qLastInvalidReason"]),
+    fighterSpeed: numberFromQuintInt(
+      state["fighterSpeed"],
+      "qState.fighterSpeed",
+    ),
+    goblinSpeed: numberFromQuintInt(state["goblinSpeed"], "qState.goblinSpeed"),
+    actionAvailable: booleanField(state, "actionAvailable"),
+    holes: protocol.holes,
+    lastResult: mbtLastResult(protocol.lastResult),
+    lastInvalidReason: mbtLastInvalidReason(protocol.lastInvalidReason),
   };
 }
 
@@ -3118,11 +3234,6 @@ function weaponAttackOrderingError(raw: unknown): WeaponAttackOrderingError {
   throw new Error(`Unknown weapon attack ordering error: ${String(raw)}.`);
 }
 
-function quintHoleSet(raw: unknown): readonly unknown[] {
-  return quintSet(raw, "qHoles");
-}
-
-
 function mbtLastResult(raw: unknown): MbtLastResult {
   if (
     raw === "init" ||
@@ -3149,7 +3260,10 @@ function mbtLastInvalidReason(raw: unknown): MbtLastInvalidReason {
   throw new Error(`Unknown Quint invalid reason: ${String(raw)}.`);
 }
 
-function numberFromEnv(name: "MBT_STEPS" | "MBT_TRACES", fallback: number): number {
+function numberFromEnv(
+  name: "MBT_STEPS" | "MBT_TRACES",
+  fallback: number,
+): number {
   const raw = process.env[name];
   if (raw === undefined) {
     return fallback;

@@ -5,12 +5,15 @@ import { describe, expect, it } from "vitest";
 
 import {
   MBT_TEST_TIMEOUT_MS,
+  assertWitnessProtocolConsistentWithScenario,
   booleanField,
+  decodeWitnessProtocolState,
   defineDriver,
   focusedMbtMaxSteps,
   mbtSpecPath,
   mbtTraceCount,
   numberFromQuintInt,
+  quintRecordField,
   quintStateRecord,
   run,
   stateCheck,
@@ -403,7 +406,22 @@ function heatMetalProjection(
 function normalizeHeatMetalQuintState(
   raw: unknown,
 ): HeatMetalObjectContactState {
-  const state = quintStateRecord(raw);
+  const state = quintRecordField(quintStateRecord(raw), "qState");
+  const protocol = decodeWitnessProtocolState({
+    state,
+    protocolField: "protocol",
+    noInvalidReason: "",
+    decodeHole: heatMetalUnexpectedHole,
+  });
+  if (protocol.holes.length !== 0) {
+    throw new Error("Expected Heat Metal witness holes to be empty.");
+  }
+  const scenarioResult = heatMetalLastResult(state["qScenarioResult"]);
+  assertWitnessProtocolConsistentWithScenario({
+    label: "Heat Metal object-contact lifecycle",
+    scenarioResult,
+    protocol,
+  });
   return {
     currentTurnRole: heatMetalTurnRole(state["qCurrentTurnRole"]),
     actionAvailable: booleanField(state, "qActionAvailable"),
@@ -416,8 +434,12 @@ function normalizeHeatMetalQuintState(
     ),
     casterConcentrating: booleanField(state, "qCasterConcentrating"),
     targetHp: numberFromQuintInt(state["qTargetHp"], "qTargetHp"),
-    lastResult: heatMetalLastResult(state["qLastResult"]),
+    lastResult: scenarioResult,
   };
+}
+
+function heatMetalUnexpectedHole(raw: unknown): never {
+  throw new Error(`Unexpected Heat Metal witness hole ${String(raw)}.`);
 }
 
 function compareHeatMetalStates(
