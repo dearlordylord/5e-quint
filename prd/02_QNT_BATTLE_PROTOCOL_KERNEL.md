@@ -222,7 +222,7 @@ QNT owners as evidence.
   attack and save-gated spell); obligation row.
 - **M3 — interrupt/resume/replay slice + witnesses.** Nesting, resume with
   active-effect mutation, replay-from-root equivalence; obligation row.
-- **M4 — registry closeout.** `qnt-owner-roles.jsonl`,
+- **M4 — registry closeout (done).** `qnt-owner-roles.jsonl`,
   `generator-readiness.jsonl`, `kernel-ir-boundaries.jsonl`, regenerate
   `plans/rules-kernel-coverage/REPORT.md` via the checker, and update
   `plans/QNT_COVERAGE_PROGRAM.md`'s queue map.

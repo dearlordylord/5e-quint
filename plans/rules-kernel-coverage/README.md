@@ -92,6 +92,26 @@ anything other than `semantic-core`. A globally semantic-core owner may still
 appear in a row's `proofOnly` list when that row uses it as supporting proof
 evidence rather than as its own generator input.
 
+## Outcome Oracle Disambiguation
+
+Some covered obligations intentionally list multiple `qntOwners` because a
+single reducer obligation is factored across reusable semantic cores, bridges,
+or procedure-shape owners. For consumers that need one outcome oracle, such as
+the future literal-capture gate, use this ordering rule rather than inferring
+from filenames:
+
+1. If the selected parity witness declares `qntSpecPath`, that witness spec is
+   the oracle for the captured trace.
+2. Otherwise, use the first path in the obligation's
+   `generator-readiness.jsonl` `semanticCore` list.
+3. If no readiness row is in scope, use the first `obligations.jsonl`
+   `qntOwners` path whose `qnt-owner-roles.jsonl` role is `semantic-core`.
+
+The listed order is therefore intentional: put the operation-specific semantic
+owner before supporting proof, bridge, fixture, or vocabulary owners. If no
+single owner can serve as the oracle, split the obligation or add a focused
+witness before adding literal-capture evidence.
+
 ## Generator Readiness Source Of Truth
 
 Generator readiness is a per-obligation C-lane assessment of whether a covered

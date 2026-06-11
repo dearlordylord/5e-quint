@@ -11925,9 +11925,11 @@
   "kernelIrBoundaries": [
     {
       "boundary": "command",
-      "evidence": "Command is represented by BattleSubject plus BattleCommandOptionChoiceHole/BattleFill commandOptionChoice. BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY owns the QNT subject/fill vocabulary join; supported procedure profiles and typed fills own reducer execution.",
+      "evidence": "Command is represented by BattleSubject plus BattleCommandOptionChoiceHole/BattleFill commandOptionChoice. BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY owns the QNT subject/fill vocabulary join; BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING owns weapon-attack and save-gated-spell command frontier order; BATTLE.PROTOCOL.INTERRUPT_STACK_RESUME_REPLAY owns suspended command resume and replay-from-root protocol. Supported procedure profiles and typed fills own reducer execution.",
       "obligationIds": [
         "BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY",
+        "BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING",
+        "BATTLE.PROTOCOL.INTERRUPT_STACK_RESUME_REPLAY",
         "BATTLE.COMMAND.OPTION_AND_NEXT_TURN",
         "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS"
       ],
@@ -11939,9 +11941,11 @@
     },
     {
       "boundary": "fill",
-      "evidence": "BattleHole and BattleFill are parsed by the frontier checker and joined to QNT hole/fill vocabulary leaves by BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY; future IR should reuse the hole/fill split instead of embedding table facts in command state.",
+      "evidence": "BattleHole and BattleFill are parsed by the frontier checker and joined to QNT hole/fill vocabulary leaves by BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY. BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING owns the QNT fill-order relations for weapon attacks and save-gated spells; BATTLE.PROTOCOL.INTERRUPT_STACK_RESUME_REPLAY owns recorded fill replay through suspended continuations. Future IR should reuse the hole/fill split instead of embedding table facts in command state.",
       "obligationIds": [
         "BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY",
+        "BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING",
+        "BATTLE.PROTOCOL.INTERRUPT_STACK_RESUME_REPLAY",
         "BATTLE.HOLE.SEMANTIC_FRONTIER_CLASSIFICATION",
         "BATTLE.TABLE.HOLE_FACT_BOUNDARIES",
         "BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES"

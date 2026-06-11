@@ -49,13 +49,13 @@
     {
       "number": 8,
       "id": "BPK-B08-KERNEL-REGISTRY-CLOSEOUT",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Protocol-kernel registry closeout, IR-boundary evidence, and oracle disambiguation convention"
     },
     {
       "number": 9,
       "id": "BPK-B09-RECURSIVE-NEXT-SHAPES",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Queue the next procedure shapes for ordering coverage if the lane drains"
     }
   ]
@@ -145,8 +145,8 @@ Every task must include:
 | 5 | BPK-B05-SAVE-SPELL-ORDERING | done | BPK-B04-WEAPON-ATTACK-ORDERING | Second procedure shape; reuses B04's slice skeleton. |
 | 6 | BPK-B06-INTERRUPT-NESTING-RESUME | done | BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT | Cross-lane gate: unblock manually when Lane A PDS-A01 and PDS-A03 are merged; may run before/parallel to B04 in queue order if the runner supports it. |
 | 7 | BPK-B07-REPLAY-FROM-ROOT | done | BPK-B06-INTERRUPT-NESTING-RESUME | |
-| 8 | BPK-B08-KERNEL-REGISTRY-CLOSEOUT | ready-for-research | BPK-B04-WEAPON-ATTACK-ORDERING, BPK-B05-SAVE-SPELL-ORDERING, BPK-B06-INTERRUPT-NESTING-RESUME, BPK-B07-REPLAY-FROM-ROOT | Also produces the multi-owner outcome-oracle convention consumed by PDS-A17's PRD. |
-| 9 | BPK-B09-RECURSIVE-NEXT-SHAPES | blocked | BPK-B08-KERNEL-REGISTRY-CLOSEOUT | Ordering coverage for further procedure shapes (healing, command, attack-roll spell, …). |
+| 8 | BPK-B08-KERNEL-REGISTRY-CLOSEOUT | done | BPK-B04-WEAPON-ATTACK-ORDERING, BPK-B05-SAVE-SPELL-ORDERING, BPK-B06-INTERRUPT-NESTING-RESUME, BPK-B07-REPLAY-FROM-ROOT | Also produces the multi-owner outcome-oracle convention consumed by PDS-A17's PRD. |
+| 9 | BPK-B09-RECURSIVE-NEXT-SHAPES | ready-for-research | BPK-B08-KERNEL-REGISTRY-CLOSEOUT | Ordering coverage for further procedure shapes (healing, command, attack-roll spell, …). |
 
 ## Task Details
 
@@ -266,7 +266,7 @@ Acceptance: as B04.
 
 ### Task 8 - BPK-B08-KERNEL-REGISTRY-CLOSEOUT
 
-Status: `ready-for-research` · Mode: AFK
+Status: `done` · Mode: AFK
 
 Output: registry closeout for the kernel tier (`qnt-owner-roles.jsonl`,
 `generator-readiness.jsonl`, `kernel-ir-boundaries.jsonl` `command`/`fill`
@@ -282,7 +282,7 @@ checked off; disambiguation convention documented in
 
 ### Task 9 - BPK-B09-RECURSIVE-NEXT-SHAPES
 
-Status: `blocked` · Mode: AFK
+Status: `ready-for-research` · Mode: AFK
 
 Output: enumerate the next procedure shapes lacking ordering coverage
 (healing, command, attack-roll spell, stat-block actions, …) from the
