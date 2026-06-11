@@ -29,6 +29,7 @@ import type { UnitRecord } from "@dnd/surface/surface/types";
 import { readClassCreationFacts } from "@dnd/surface/surface/character-creation-readers";
 import { Either, Match, Option } from "effect";
 
+import { companionAfterLongRest } from "./companions.ts";
 import {
   druidCircleLandAfterLongRest,
   druidWildShapeKnownFormsAfterLongRest,
@@ -225,6 +226,7 @@ export function completeLongRest(
     tempHp: Hp(0),
   });
   if (Either.isLeft(hitPoints)) return Either.left(hitPoints.left);
+  const companion = companionAfterLongRest(sheet.companion);
   if (isCharacterSheetWithSpellSlots(sheet)) {
     const build = characterSheetLongRestBuild(input, sheet.build);
     if (Either.isLeft(build)) return Either.left(build.left);
@@ -251,6 +253,7 @@ export function completeLongRest(
       spentHitDice: [],
       restFeatureUses: [],
       resourceExpenditures: [],
+      companion,
       ...(druidWildShapeKnownForms.right === undefined
         ? {}
         : { druidWildShapeKnownForms: druidWildShapeKnownForms.right }),
@@ -293,6 +296,7 @@ export function completeLongRest(
     spentHitDice: [],
     restFeatureUses: [],
     resourceExpenditures: [],
+    companion,
     ...(druidWildShapeKnownForms.right === undefined
       ? {}
       : { druidWildShapeKnownForms: druidWildShapeKnownForms.right }),
