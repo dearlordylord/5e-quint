@@ -55,7 +55,7 @@
     {
       "number": 9,
       "id": "CSC-T09-FORM-CATALOG-REFERENCE",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Replace the first-match familiar-form-catalog scan with an executable uniqueness boundary"
     },
     {
@@ -243,7 +243,7 @@ a task's change invalidates them):
 | 13 | CSC-T13-R3LITE-ALIAS-FAMILY-DELETION | done | CSC-T12-R0-LONG-REST-COMPANION-RESTORE | Trivial battle-runtime-only cleanup; sequenced early to get the dual vocabulary out of files later tasks read. |
 | 14 | CSC-T14-R4A-FORMS-SHIM-DELETION | ready-for-research | CSC-T13-R3LITE-ALIAS-FAMILY-DELETION | Same-session-sized battle-runtime cleanup; touches imports in files T13 just edited. |
 | 8 | CSC-T08-CREATION-HP-SURFACE | ready-for-research | CSC-T14-R4A-FORMS-SHIM-DELETION | Edits the creation op wherever T07 left it; runs after the cheap cleanups so the queue front stays unblocked. |
-| 9 | CSC-T09-FORM-CATALOG-REFERENCE | blocked | CSC-T08-CREATION-HP-SURFACE | Touches admission eligibility helpers T07 may have relocated. |
+| 9 | CSC-T09-FORM-CATALOG-REFERENCE | ready-for-research | CSC-T08-CREATION-HP-SURFACE | Touches admission eligibility helpers T07 may have relocated. |
 | 10 | CSC-T10-SMALL-FINDINGS-BATCH | blocked | CSC-T09-FORM-CATALOG-REFERENCE | Sweep of remaining small findings in now-stable files; now also owns the durable-id uniqueness decision (R4b). |
 | 15 | CSC-T15-R2-PROTOCOL-TAG-HOIST | blocked | CSC-T10-SMALL-FINDINGS-BATCH | Owner-approved refactor; reshapes protocol threading and deletes the settlement inverse mapping before T16 moves the code. |
 | 16 | CSC-T16-R1-SINGLE-SETTLEMENT-OPERATION | blocked | CSC-T15-R2-PROTOCOL-TAG-HOIST | Code moves once, in its post-T15 final shape (the T07 rationale). |
@@ -768,7 +768,7 @@ post-T07) suites green.
 
 ### Task 9 - CSC-T09-FORM-CATALOG-REFERENCE
 
-Status: `blocked` · Mode: AFK
+Status: `ready-for-research` · Mode: AFK
 
 **Finding (review F10, "first" trigger word).**
 `retainedFamiliarLikeFormEligibility` (`character-battle-runtime/src/index.ts:1214`,
