@@ -133,7 +133,7 @@
     {
       "number": 22,
       "id": "PDS-A22-SCENARIO-OUTCOME-BATCH-3-DRAIN",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Drain remaining qScenario outcome-projection stragglers"
     },
     {
@@ -262,7 +262,7 @@ decision.
 |  19 | PDS-A19-SCENARIO-OUTCOME-AUDIT                | done     | PDS-A18-RECURSIVE-NEXT-BATCH                                                                                       | All 60 `qScenario*` files are typed-outcome migration candidates; no string kept-label set. See `plans/SCENARIO_OUTCOME_AUDIT.md`.                                                                                                                                 |
 |  20 | PDS-A20-SCENARIO-OUTCOME-BATCH-1              | done     | PDS-A19-SCENARIO-OUTCOME-AUDIT                                                                                     | First <=20 scenario-outcome stragglers, using the typed local-outcome shape in `plans/SCENARIO_OUTCOME_AUDIT.md`.                                                                                                                                                  |
 |  21 | PDS-A21-SCENARIO-OUTCOME-BATCH-2              | ready-for-research | PDS-A20-SCENARIO-OUTCOME-BATCH-1                                                                                   | Next ≤20 scenario-outcome stragglers.                                                                                                                                                                                                                              |
-|  22 | PDS-A22-SCENARIO-OUTCOME-BATCH-3-DRAIN        | blocked  | PDS-A21-SCENARIO-OUTCOME-BATCH-2                                                                                   | Final scenario-outcome stragglers; assert the discovery command is empty or that the kept-label set is documented.                                                                                                                                                 |
+|  22 | PDS-A22-SCENARIO-OUTCOME-BATCH-3-DRAIN        | ready-for-research | PDS-A21-SCENARIO-OUTCOME-BATCH-2                                                                                   | Final scenario-outcome stragglers; assert the discovery command is empty or that the kept-label set is documented.                                                                                                                                                 |
 |  23 | PDS-A23-CHARACTER-PACKAGE-WITNESS-FEASIBILITY | done     | PDS-A18-RECURSIVE-NEXT-BATCH                                                                                       | Research-only stretch decision for the 24 non-battle MBT witness/driver pairs named by prd/03 and prd/04. See `plans/CHARACTER_PACKAGE_WITNESS_FEASIBILITY.md`.                                                                                                    |
 |  24 | PDS-A24-CHARACTER-PACKAGE-MBT-CLEANUP-LANE    | deferred | PDS-A23-CHARACTER-PACKAGE-WITNESS-FEASIBILITY + Lane C ownership resolution for `packages/character-sheet-runtime` | Deferred follow-up opened by Task 23. Create the separate character-package MBT cleanup lane from `plans/CHARACTER_PACKAGE_WITNESS_FEASIBILITY.md`; do not edit character-sheet-runtime before the Lane C dependency lands.                                        |
 
@@ -613,7 +613,7 @@ line-delta and remaining discovery count reported.
 
 ### Task 22 - PDS-A22-SCENARIO-OUTCOME-BATCH-3-DRAIN
 
-Status: `blocked` · Mode: AFK
+Status: `ready-for-research` · Mode: AFK
 
 Input: the remaining scenario-outcome projection stragglers after A21 lands.
 
