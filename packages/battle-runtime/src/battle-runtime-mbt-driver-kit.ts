@@ -24,6 +24,8 @@ import {
   Hp,
   abilityModifier,
   attackBonus,
+  classLevel,
+  difficultyClass,
   movementFeet,
   proficiencyBonus,
 } from "@dnd/shared/types";
@@ -38,6 +40,7 @@ import {
 import magicMissileInput from "../../surface/content/magic_missile.json";
 import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
 import type {
+  DamageType,
   SpellRecord,
   StatBlockRecord,
   UnitRecord,
@@ -47,12 +50,15 @@ import {
   ATTACK_ROLL_REQUIRED_BEFORE_DAMAGE_MESSAGE,
   ATTACK_TARGET_REQUIRED_BEFORE_ROLL_OR_DAMAGE_MESSAGE,
 } from "./battle-reducer/attack-main.ts";
+import { battleMagicActionHealingPoolSupportForUnit } from "./unit-feature-support.ts";
 import {
   ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE,
   BATTLE_INVALID_REASON_CODES,
+  battleObjectId,
   battleUnitRefWithSupportProfiles,
   battleId,
   battleCombatantSide,
+  cantripSpellInvocationRef,
   characterBattleResourceUsage,
   characterId,
   combatantId,
@@ -609,6 +615,94 @@ type WeaponAttackOrderingError =
   | "targetChoiceRequired"
   | "attackRollRequired";
 type WeaponAttackOrderingHole = "targetChoice" | "attackRoll" | "rolledDice";
+type SaveGatedSpellOrderingStage =
+  | "actSelection"
+  | "targetListAndConditionChoice"
+  | "targetList"
+  | "conditionChoice"
+  | "damageSavingThrowOutcome"
+  | "conditionSavingThrowOutcome"
+  | "damageDice"
+  | "resolved";
+type SaveGatedSpellOrderingError =
+  | ""
+  | "targetOrAreaRequired"
+  | "savingThrowRequired";
+type SaveGatedSpellOrderingHole =
+  | "spellTargetList"
+  | "conditionChoice"
+  | "savingThrowOutcome"
+  | "rolledDice";
+type SpellAttackOrderingStage =
+  | "actSelection"
+  | "targetChoice"
+  | "typedTargetChoice"
+  | "targetList"
+  | "targetAllocation"
+  | "damageTypeAndTargetChoice"
+  | "damageTypeChoice"
+  | "attackRoll"
+  | "damageDice"
+  | "resolved";
+type SpellAttackOrderingError =
+  | ""
+  | "targetRequired"
+  | "damageTypeRequired"
+  | "targetOrDamageTypeRequired"
+  | "attackRollRequired";
+type SpellAttackOrderingHole =
+  | "targetChoice"
+  | "spellTargetList"
+  | "spellTargetAllocation"
+  | "damageTypeChoice"
+  | "attackRoll"
+  | "rolledDice";
+type HitPointRestorationOrderingStage =
+  | "actSelection"
+  | "spellHealingTargetChoice"
+  | "spellHealingTargetList"
+  | "spellHealingRoll"
+  | "featureHealingPoolDistribution"
+  | "resolved";
+type HitPointRestorationOrderingError =
+  | ""
+  | "healingTargetRequired"
+  | "healingAmountRequired"
+  | "healingDistributionRequired";
+type HitPointRestorationOrderingHole =
+  | "targetChoice"
+  | "spellTargetList"
+  | "rolledDice"
+  | "hitPointHealingDistribution";
+type CommandOrderingStage =
+  | "actSelection"
+  | "targetListAndOptionChoice"
+  | "targetList"
+  | "optionChoice"
+  | "savingThrowOutcome"
+  | "dropHeldObjectFacts"
+  | "approachMovement"
+  | "fleeMovement"
+  | "resolved";
+type CommandOrderingError =
+  | ""
+  | "commandTargetListRequired"
+  | "commandOptionChoiceRequired"
+  | "commandSavingThrowRequired"
+  | "commandHeldObjectFactsRequired"
+  | "commandMovementRequired";
+type CommandOrderingHole =
+  | "spellTargetList"
+  | "commandOptionChoice"
+  | "savingThrowOutcome"
+  | "movement";
+type CommandOrderingPendingOption =
+  | "none"
+  | "grovel"
+  | "drop"
+  | "halt"
+  | "approach"
+  | "flee";
 type MbtProjection = {
   readonly skeletonHp: number;
   readonly skeletonDead: boolean;
@@ -624,6 +718,42 @@ type WeaponAttackOrderingProjection = {
   readonly holes: readonly WeaponAttackOrderingHole[];
   readonly lastResult: MbtLastResult;
   readonly orderingError: WeaponAttackOrderingError;
+};
+type SaveGatedSpellOrderingProjection = {
+  readonly stage: SaveGatedSpellOrderingStage;
+  readonly holes: readonly SaveGatedSpellOrderingHole[];
+  readonly lastResult: MbtLastResult;
+  readonly orderingError: SaveGatedSpellOrderingError;
+};
+type SpellAttackOrderingProjection = {
+  readonly stage: SpellAttackOrderingStage;
+  readonly holes: readonly SpellAttackOrderingHole[];
+  readonly lastResult: MbtLastResult;
+  readonly orderingError: SpellAttackOrderingError;
+};
+type HitPointRestorationOrderingProjection = {
+  readonly stage: HitPointRestorationOrderingStage;
+  readonly holes: readonly HitPointRestorationOrderingHole[];
+  readonly lastResult: MbtLastResult;
+  readonly orderingError: HitPointRestorationOrderingError;
+  readonly spellTargetHp: number;
+  readonly spellTargetZeroHpLifecycleCleared: boolean;
+  readonly featureTargetHp: number;
+  readonly featureTargetZeroHpLifecycleCleared: boolean;
+};
+type CommandOrderingProjection = {
+  readonly stage: CommandOrderingStage;
+  readonly holes: readonly CommandOrderingHole[];
+  readonly tableFactFrontierOpen: boolean;
+  readonly lastResult: MbtLastResult;
+  readonly orderingError: CommandOrderingError;
+  readonly pendingCommandOption: CommandOrderingPendingOption;
+  readonly targetProne: boolean;
+  readonly droppedObjectCount: number;
+  readonly haltSuppressed: boolean;
+  readonly movementSpentFeet: number;
+  readonly currentActor: "Caster" | "Target";
+  readonly reactionWindowOpen: boolean;
 };
 
 export type ExtraAttackMbtProjection = {
@@ -723,6 +853,76 @@ const weaponAttackOrderingDriverSchema = {
   doFillAttackRollMiss: {},
   doFillAttackRollHit: {},
   doFillDamageDice: {},
+  step: {},
+} as const;
+
+const saveGatedSpellOrderingDriverSchema = {
+  init: {},
+  doDiscoverAreaSaveDamage: {},
+  doSubmitDamageBeforeSavingThrow: {},
+  doFillAreaSaveFailed: {},
+  doFillAreaDamageDice: {},
+  doDiscoverTargetListConditionChoice: {},
+  doFillTargetListBeforeConditionChoice: {},
+  doFillConditionChoiceAfterTargetList: {},
+  doFillConditionChoiceBeforeTargetList: {},
+  doFillTargetListAfterConditionChoice: {},
+  doFillConditionSavingThrow: {},
+  step: {},
+} as const;
+
+const spellAttackOrderingDriverSchema = {
+  init: {},
+  doDiscoverSingleTargetSpellAttack: {},
+  doSubmitAttackRollBeforeTargetChoice: {},
+  doFillTargetChoice: {},
+  doSubmitDamageBeforeAttackRoll: {},
+  doFillAttackRollMiss: {},
+  doFillAttackRollHit: {},
+  doFillDamageDice: {},
+  doDiscoverTypedSpellAttack: {},
+  doFillDamageTypeBeforeTargetChoice: {},
+  doFillTargetChoiceBeforeDamageType: {},
+  doFillDamageTypeAfterTargetChoice: {},
+  doFillTargetChoiceAfterDamageType: {},
+  step: {},
+} as const;
+
+const hitPointRestorationOrderingDriverSchema = {
+  init: {},
+  doDiscoverSingleTargetSpellHealing: {},
+  doSubmitHealingRollBeforeTargetChoice: {},
+  doFillSpellHealingTargetChoice: {},
+  doDiscoverTargetListSpellHealing: {},
+  doSubmitHealingRollBeforeTargetList: {},
+  doFillSpellHealingTargetList: {},
+  doFillSpellHealingRoll: {},
+  doDiscoverFeatureHealingPool: {},
+  doFillFeatureHealingDistribution: {},
+  step: {},
+} as const;
+
+const commandOrderingDriverSchema = {
+  init: {},
+  doDiscoverCommand: {},
+  doSubmitOptionBeforeTargetList: {},
+  doFillTargetList: {},
+  doSubmitSavingThrowBeforeOption: {},
+  doFillGrovelOption: {},
+  doFillFailedGrovelSavingThrow: {},
+  doFollowGrovel: {},
+  doDropNeedsHeldObjectFacts: {},
+  doFillDropHeldObjectFacts: {},
+  doHaltSuppresses: {},
+  doApproachMovementContinues: {},
+  doFillApproachMovementContinues: {},
+  doFillApproachMovementWithinFive: {},
+  doApproachNoMovement: {},
+  doFleeMovement: {},
+  doFillFleeMovement: {},
+  doRejectFleePartialMovement: {},
+  doFleeNoMovement: {},
+  doFleeOpportunityAttack: {},
   step: {},
 } as const;
 
@@ -1229,6 +1429,979 @@ export function createWeaponAttackOrderingDriver() {
   });
 }
 
+export function createSaveGatedSpellOrderingDriver() {
+  return defineDriver(saveGatedSpellOrderingDriverSchema, () => {
+    let state = saveGatedSpellOrderingBattle("lightning_bolt", 3);
+    let subject: Extract<BattleSubject, { readonly tag: "actionSpell" }> =
+      lightningBoltSubject();
+    let fills: readonly BattleFill[] = [];
+    let holes: readonly BattleHole[] = [];
+    let stage: SaveGatedSpellOrderingProjection["stage"] = "actSelection";
+    let lastResult: SaveGatedSpellOrderingProjection["lastResult"] = "init";
+    let orderingError: SaveGatedSpellOrderingProjection["orderingError"] = "";
+
+    function reset(): void {
+      state = saveGatedSpellOrderingBattle("lightning_bolt", 3);
+      subject = lightningBoltSubject();
+      fills = [];
+      holes = [];
+      stage = "actSelection";
+      lastResult = "init";
+      orderingError = "";
+    }
+
+    function discoverSpell(
+      spellId: "lightning_bolt" | "blindness_deafness",
+      slotLevel: 2 | 3,
+      procedure: "saveGatedDamage" | "saveGatedCondition",
+      nextStage: SaveGatedSpellOrderingProjection["stage"],
+    ): void {
+      state = saveGatedSpellOrderingBattle(spellId, slotLevel);
+      subject = saveGatedSpellSubject(spellId, slotLevel, procedure);
+      fills = [];
+      holes = discoverSaveGatedSpellHoles(state, subject, spellId);
+      stage = nextStage;
+      lastResult = "needsHoles";
+      orderingError = "";
+    }
+
+    function recordAccepted(
+      result: BattleResolutionResult,
+      nextStage: SaveGatedSpellOrderingProjection["stage"],
+    ): void {
+      lastResult = result.tag;
+      if (result.tag === "resolved") {
+        state = result.state;
+        holes = [];
+        stage = nextStage;
+        orderingError = "";
+        return;
+      }
+      if (result.tag === "needsHoles") {
+        state = result.state;
+        holes = result.holes;
+        stage = nextStage;
+        orderingError = "";
+        return;
+      }
+      throw new Error(
+        `Expected accepted save-gated spell ordering fill, got ${result.tag}: ${
+          "message" in result ? result.message : ""
+        }`,
+      );
+    }
+
+    function recordNeedsEarlierHole(
+      result: BattleResolutionResult,
+      expectedOrderingError: Exclude<
+        SaveGatedSpellOrderingProjection["orderingError"],
+        ""
+      >,
+      expectedStage: SaveGatedSpellOrderingProjection["stage"],
+    ): void {
+      if (result.tag !== "needsHoles") {
+        throw new Error("Expected save-gated spell fill to request earlier holes.");
+      }
+      lastResult = result.tag;
+      holes = result.holes;
+      stage = expectedStage;
+      orderingError = expectedOrderingError;
+    }
+
+    return {
+      init: reset,
+      doDiscoverAreaSaveDamage: () => {
+        discoverSpell(
+          "lightning_bolt",
+          3,
+          "saveGatedDamage",
+          "damageSavingThrowOutcome",
+        );
+      },
+      doSubmitDamageBeforeSavingThrow: () => {
+        const savingThrow = requireHole(holes, "savingThrowOutcome");
+        const damage = requireHole(
+          saveGatedSpellHolesAfterFills(state, subject, [
+            saveGatedSpellSavingThrowOutcomeFill(savingThrow, [
+              { targetId: skeletonId, succeeded: false },
+            ]),
+          ]),
+          "rolledDice",
+        );
+        recordNeedsEarlierHole(
+          resolveBattleSubject({
+            state,
+            subject,
+            fills: [
+              damageRollFillWithGroups(damage, [
+                [6, 6, 6, 6, 6, 6, 6, 6],
+              ]),
+            ],
+          }),
+          "savingThrowRequired",
+          "damageSavingThrowOutcome",
+        );
+      },
+      doFillAreaSaveFailed: () => {
+        const savingThrow = requireHole(holes, "savingThrowOutcome");
+        fills = [
+          saveGatedSpellSavingThrowOutcomeFill(savingThrow, [
+            { targetId: skeletonId, succeeded: false },
+          ]),
+        ];
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills }),
+          "damageDice",
+        );
+      },
+      doFillAreaDamageDice: () => {
+        const damage = requireHole(holes, "rolledDice");
+        fills = [
+          ...fills,
+          damageRollFillWithGroups(damage, [[6, 6, 6, 6, 6, 6, 6, 6]]),
+        ];
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills }),
+          "resolved",
+        );
+      },
+      doDiscoverTargetListConditionChoice: () => {
+        discoverSpell(
+          "blindness_deafness",
+          2,
+          "saveGatedCondition",
+          "targetListAndConditionChoice",
+        );
+      },
+      doFillTargetListBeforeConditionChoice: () => {
+        const targetList = requireHole(holes, "spellTargetList");
+        fills = [
+          spellTargetListFill(targetList, "blindness_deafness", [
+            skeletonId,
+          ]),
+        ];
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills }),
+          "conditionChoice",
+        );
+      },
+      doFillConditionChoiceAfterTargetList: () => {
+        const conditionChoice = requireHole(holes, "conditionChoice");
+        fills = [
+          ...fills,
+          saveGatedSpellConditionChoiceFill(conditionChoice, "blinded"),
+        ];
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills }),
+          "conditionSavingThrowOutcome",
+        );
+      },
+      doFillConditionChoiceBeforeTargetList: () => {
+        const conditionChoice = requireHole(holes, "conditionChoice");
+        fills = [saveGatedSpellConditionChoiceFill(conditionChoice, "blinded")];
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills }),
+          "targetList",
+        );
+      },
+      doFillTargetListAfterConditionChoice: () => {
+        const targetList = requireHole(holes, "spellTargetList");
+        fills = [
+          ...fills,
+          spellTargetListFill(targetList, "blindness_deafness", [
+            skeletonId,
+          ]),
+        ];
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills }),
+          "conditionSavingThrowOutcome",
+        );
+      },
+      doFillConditionSavingThrow: () => {
+        const savingThrow = requireHole(holes, "savingThrowOutcome");
+        fills = [
+          ...fills,
+          saveGatedSpellSavingThrowOutcomeFill(savingThrow, [
+            { targetId: skeletonId, succeeded: false },
+          ]),
+        ];
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills }),
+          "resolved",
+        );
+      },
+      step: () => {},
+      getState: () =>
+        projectSaveGatedSpellOrderingState({
+          holes,
+          stage,
+          lastResult,
+          orderingError,
+        }),
+    };
+  });
+}
+
+export function createSpellAttackOrderingDriver() {
+  return defineDriver(spellAttackOrderingDriverSchema, () => {
+    let state = spellAttackOrderingBattle("fire_bolt");
+    let subject: Extract<BattleSubject, { readonly tag: "actionSpell" }> =
+      spellAttackSubject("fire_bolt", "spellAttackDamage");
+    let fills: readonly BattleFill[] = [];
+    let holes: readonly BattleHole[] = [];
+    let stage: SpellAttackOrderingProjection["stage"] = "actSelection";
+    let lastResult: SpellAttackOrderingProjection["lastResult"] = "init";
+    let orderingError: SpellAttackOrderingProjection["orderingError"] = "";
+
+    function reset(): void {
+      state = spellAttackOrderingBattle("fire_bolt");
+      subject = spellAttackSubject("fire_bolt", "spellAttackDamage");
+      fills = [];
+      holes = [];
+      stage = "actSelection";
+      lastResult = "init";
+      orderingError = "";
+    }
+
+    function discoverSpellAttack(
+      spellId: "fire_bolt" | "sorcerous_burst",
+      nextStage: SpellAttackOrderingProjection["stage"],
+    ): void {
+      state = spellAttackOrderingBattle(spellId);
+      subject = spellAttackSubject(spellId, "spellAttackDamage");
+      fills = [];
+      holes = discoverSpellAttackHoles(state, subject, spellId);
+      stage = nextStage;
+      lastResult = "needsHoles";
+      orderingError = "";
+    }
+
+    function recordAccepted(
+      result: BattleResolutionResult,
+      nextStage: SpellAttackOrderingProjection["stage"],
+    ): void {
+      lastResult = result.tag;
+      if (result.tag === "resolved") {
+        state = result.state;
+        holes = [];
+        stage = nextStage;
+        orderingError = "";
+        return;
+      }
+      if (result.tag === "needsHoles") {
+        state = result.state;
+        holes = result.holes;
+        stage = nextStage;
+        orderingError = "";
+        return;
+      }
+      throw new Error(
+        `Expected accepted spell attack ordering fill, got ${result.tag}: ${
+          "message" in result ? result.message : ""
+        }`,
+      );
+    }
+
+    function recordNeedsEarlierHole(
+      result: BattleResolutionResult,
+      expectedOrderingError: Exclude<
+        SpellAttackOrderingProjection["orderingError"],
+        ""
+      >,
+      expectedStage: SpellAttackOrderingProjection["stage"],
+    ): void {
+      if (result.tag !== "needsHoles") {
+        throw new Error("Expected spell attack fill to request earlier holes.");
+      }
+      lastResult = result.tag;
+      holes = result.holes;
+      stage = expectedStage;
+      orderingError = expectedOrderingError;
+    }
+
+    return {
+      init: reset,
+      doDiscoverSingleTargetSpellAttack: () => {
+        discoverSpellAttack("fire_bolt", "targetChoice");
+      },
+      doSubmitAttackRollBeforeTargetChoice: () => {
+        const target = requireHole(holes, "targetChoice");
+        const attackRoll = requireHole(
+          spellAttackHolesAfterFills(state, subject, [
+            spellTargetChoiceFill(target, skeletonId, "fire_bolt"),
+          ]),
+          "attackRoll",
+        );
+        recordNeedsEarlierHole(
+          resolveBattleSubject({
+            state,
+            subject,
+            fills: [
+              attackRollFill(attackRoll, { total: 14, naturalD20: 10 }),
+            ],
+          }),
+          "targetRequired",
+          "targetChoice",
+        );
+      },
+      doFillTargetChoice: () => {
+        const target = requireHole(holes, "targetChoice");
+        fills = [spellTargetChoiceFill(target, skeletonId, "fire_bolt")];
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills }),
+          "attackRoll",
+        );
+      },
+      doSubmitDamageBeforeAttackRoll: () => {
+        const attackRoll = requireHole(holes, "attackRoll");
+        const damage = requireHole(
+          spellAttackHolesAfterFills(state, subject, [
+            ...fills,
+            attackRollFill(attackRoll, { total: 14, naturalD20: 10 }),
+          ]),
+          "rolledDice",
+        );
+        recordNeedsEarlierHole(
+          resolveBattleSubject({
+            state,
+            subject,
+            fills: [...fills, damageRollFill(damage, 3)],
+          }),
+          "attackRollRequired",
+          "attackRoll",
+        );
+      },
+      doFillAttackRollMiss: () => {
+        const attackRoll = requireHole(holes, "attackRoll");
+        fills = [
+          ...fills,
+          attackRollFill(attackRoll, { total: 1, naturalD20: 1 }),
+        ];
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills }),
+          "resolved",
+        );
+      },
+      doFillAttackRollHit: () => {
+        const attackRoll = requireHole(holes, "attackRoll");
+        fills = [
+          ...fills,
+          attackRollFill(attackRoll, { total: 14, naturalD20: 10 }),
+        ];
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills }),
+          "damageDice",
+        );
+      },
+      doFillDamageDice: () => {
+        const damage = requireHole(holes, "rolledDice");
+        fills = [...fills, damageRollFill(damage, 3)];
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills }),
+          "resolved",
+        );
+      },
+      doDiscoverTypedSpellAttack: () => {
+        discoverSpellAttack("sorcerous_burst", "damageTypeAndTargetChoice");
+      },
+      doFillDamageTypeBeforeTargetChoice: () => {
+        const damageType = requireHole(holes, "damageTypeChoice");
+        fills = [spellDamageTypeChoiceFill(damageType, "fire")];
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills }),
+          "typedTargetChoice",
+        );
+      },
+      doFillTargetChoiceBeforeDamageType: () => {
+        const target = requireHole(holes, "targetChoice");
+        fills = [spellTargetChoiceFill(target, skeletonId, "sorcerous_burst")];
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills }),
+          "damageTypeChoice",
+        );
+      },
+      doFillDamageTypeAfterTargetChoice: () => {
+        const damageType = requireHole(holes, "damageTypeChoice");
+        fills = [...fills, spellDamageTypeChoiceFill(damageType, "fire")];
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills }),
+          "attackRoll",
+        );
+      },
+      doFillTargetChoiceAfterDamageType: () => {
+        const target = requireHole(holes, "targetChoice");
+        fills = [
+          ...fills,
+          spellTargetChoiceFill(target, skeletonId, "sorcerous_burst"),
+        ];
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills }),
+          "attackRoll",
+        );
+      },
+      step: () => {},
+      getState: () =>
+        projectSpellAttackOrderingState({
+          holes,
+          stage,
+          lastResult,
+          orderingError,
+        }),
+    };
+  });
+}
+
+export function createHitPointRestorationOrderingDriver() {
+  return defineDriver(hitPointRestorationOrderingDriverSchema, () => {
+    let state = healingSpellOrderingBattle();
+    let subject: BattleSubject = healingWordSubject();
+    let fills: readonly BattleFill[] = [];
+    let holes: readonly BattleHole[] = [];
+    let stage: HitPointRestorationOrderingProjection["stage"] = "actSelection";
+    let lastResult: HitPointRestorationOrderingProjection["lastResult"] =
+      "init";
+    let orderingError: HitPointRestorationOrderingProjection["orderingError"] =
+      "";
+    let spellTargetHp = 0;
+    let spellTargetZeroHpLifecycleCleared = false;
+    let featureTargetHp = 0;
+    let featureTargetZeroHpLifecycleCleared = false;
+
+    function reset(): void {
+      state = healingSpellOrderingBattle();
+      subject = healingWordSubject();
+      fills = [];
+      holes = [];
+      stage = "actSelection";
+      lastResult = "init";
+      orderingError = "";
+      spellTargetHp = 0;
+      spellTargetZeroHpLifecycleCleared = false;
+      featureTargetHp = 0;
+      featureTargetZeroHpLifecycleCleared = false;
+    }
+
+    function recordAccepted(
+      result: BattleResolutionResult,
+      nextStage: HitPointRestorationOrderingProjection["stage"],
+    ): void {
+      lastResult = result.tag;
+      if (result.tag === "resolved") {
+        state = result.state;
+        holes = [];
+        stage = nextStage;
+        orderingError = "";
+        return;
+      }
+      if (result.tag === "needsHoles") {
+        state = result.state;
+        holes = result.holes;
+        stage = nextStage;
+        orderingError = "";
+        return;
+      }
+      throw new Error(
+        `Expected accepted Hit Point restoration ordering fill, got ${
+          result.tag
+        }: ${"message" in result ? result.message : ""}`,
+      );
+    }
+
+    function recordNeedsEarlierHole(
+      result: BattleResolutionResult,
+      expectedOrderingError: Exclude<
+        HitPointRestorationOrderingProjection["orderingError"],
+        ""
+      >,
+      expectedStage: HitPointRestorationOrderingProjection["stage"],
+    ): void {
+      if (result.tag !== "needsHoles") {
+        throw new Error(
+          "Expected Hit Point restoration fill to request earlier holes.",
+        );
+      }
+      lastResult = result.tag;
+      holes = result.holes;
+      stage = expectedStage;
+      orderingError = expectedOrderingError;
+    }
+
+    return {
+      init: reset,
+      doDiscoverSingleTargetSpellHealing: () => {
+        state = healingSpellOrderingBattle();
+        subject = healingWordSubject();
+        fills = [];
+        holes = healingOrderingHolesAfterFills(state, subject, []);
+        stage = "spellHealingTargetChoice";
+        lastResult = "needsHoles";
+        orderingError = "";
+        spellTargetHp = 0;
+        spellTargetZeroHpLifecycleCleared = false;
+      },
+      doSubmitHealingRollBeforeTargetChoice: () => {
+        const target = requireHole(holes, "targetChoice");
+        const healingRoll = requireHole(
+          healingOrderingHolesAfterFills(state, subject, [
+            spellTargetChoiceFill(target, skeletonId, "healing_word"),
+          ]),
+          "rolledDice",
+        );
+        recordNeedsEarlierHole(
+          resolveBattleSubject({
+            state,
+            subject,
+            fills: [damageRollFillWithGroups(healingRoll, [[1, 1]])],
+          }),
+          "healingTargetRequired",
+          "spellHealingTargetChoice",
+        );
+      },
+      doFillSpellHealingTargetChoice: () => {
+        const target = requireHole(holes, "targetChoice");
+        fills = [spellTargetChoiceFill(target, skeletonId, "healing_word")];
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills }),
+          "spellHealingRoll",
+        );
+      },
+      doDiscoverTargetListSpellHealing: () => {
+        state = healingTargetListSpellOrderingBattle();
+        subject = massHealingWordSubject();
+        fills = [];
+        holes = healingOrderingHolesAfterFills(state, subject, []);
+        stage = "spellHealingTargetList";
+        lastResult = "needsHoles";
+        orderingError = "";
+        spellTargetHp = 0;
+        spellTargetZeroHpLifecycleCleared = false;
+      },
+      doSubmitHealingRollBeforeTargetList: () => {
+        const targetList = requireHole(holes, "spellTargetList");
+        const healingRoll = requireHole(
+          healingOrderingHolesAfterFills(state, subject, [
+            spellTargetListFill(targetList, "mass_healing_word", [skeletonId]),
+          ]),
+          "rolledDice",
+        );
+        recordNeedsEarlierHole(
+          resolveBattleSubject({
+            state,
+            subject,
+            fills: [damageRollFillWithGroups(healingRoll, [[1, 1]])],
+          }),
+          "healingTargetRequired",
+          "spellHealingTargetList",
+        );
+      },
+      doFillSpellHealingTargetList: () => {
+        const targetList = requireHole(holes, "spellTargetList");
+        fills = [
+          spellTargetListFill(targetList, "mass_healing_word", [skeletonId]),
+        ];
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills }),
+          "spellHealingRoll",
+        );
+      },
+      doFillSpellHealingRoll: () => {
+        const healingRoll = requireHole(holes, "rolledDice");
+        fills = [...fills, damageRollFillWithGroups(healingRoll, [[1, 1]])];
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills }),
+          "resolved",
+        );
+        const healedTarget = snapshotCombatant(state, skeletonId);
+        spellTargetHp = healedTarget.hp;
+        spellTargetZeroHpLifecycleCleared =
+          zeroHpLifecycleClearedByHealing(healedTarget);
+      },
+      doDiscoverFeatureHealingPool: () => {
+        state = featureHealingPoolOrderingBattle();
+        subject = preserveLifeSubject();
+        fills = [];
+        holes = healingOrderingHolesAfterFills(state, subject, []);
+        stage = "featureHealingPoolDistribution";
+        lastResult = "needsHoles";
+        orderingError = "";
+        featureTargetHp = 0;
+        featureTargetZeroHpLifecycleCleared = false;
+      },
+      doFillFeatureHealingDistribution: () => {
+        const distribution = requireHole(
+          holes,
+          "hitPointHealingDistribution",
+        );
+        fills = [
+          preserveLifeDistributionFill(distribution, [
+            { targetId: skeletonId, hitPoints: 8 },
+          ]),
+        ];
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills }),
+          "resolved",
+        );
+        const healedTarget = snapshotCombatant(state, skeletonId);
+        featureTargetHp = healedTarget.hp;
+        featureTargetZeroHpLifecycleCleared =
+          zeroHpLifecycleClearedByHealing(healedTarget);
+      },
+      step: () => {},
+      getState: () =>
+        projectHitPointRestorationOrderingState({
+          holes,
+          stage,
+          lastResult,
+          orderingError,
+          spellTargetHp,
+          spellTargetZeroHpLifecycleCleared,
+          featureTargetHp,
+          featureTargetZeroHpLifecycleCleared,
+        }),
+    };
+  });
+}
+
+export function createCommandOrderingDriver() {
+  return defineDriver(commandOrderingDriverSchema, () => {
+    let state = commandOrderingBattle();
+    let subject: BattleSubject = commandOrderingCastSubject();
+    let fills: readonly BattleFill[] = [];
+    let holes: readonly BattleHole[] = [];
+    let stage: CommandOrderingProjection["stage"] = "actSelection";
+    let lastResult: CommandOrderingProjection["lastResult"] = "init";
+    let orderingError: CommandOrderingProjection["orderingError"] = "";
+    let pendingCommandOption: CommandOrderingPendingOption = "none";
+    let droppedObjectCount = 0;
+
+    function reset(): void {
+      state = commandOrderingBattle();
+      subject = commandOrderingCastSubject();
+      fills = [];
+      holes = [];
+      stage = "actSelection";
+      lastResult = "init";
+      orderingError = "";
+      pendingCommandOption = "none";
+      droppedObjectCount = 0;
+    }
+
+    function recordAccepted(
+      result: BattleResolutionResult,
+      nextStage: CommandOrderingProjection["stage"],
+    ): void {
+      lastResult = result.tag;
+      if (result.tag === "resolved") {
+        state = result.state;
+        holes = [];
+        stage = nextStage;
+        orderingError = "";
+        droppedObjectCount =
+          "droppedObjects" in result ? result.droppedObjects?.length ?? 0 : 0;
+        pendingCommandOption = commandPendingOption(state);
+        return;
+      }
+      if (result.tag === "needsHoles") {
+        state = result.state;
+        holes = result.holes;
+        stage = nextStage;
+        orderingError = "";
+        pendingCommandOption = commandPendingOption(state);
+        return;
+      }
+      throw new Error(
+        `Expected accepted Command ordering fill, got ${result.tag}: ${
+          "message" in result ? result.message : ""
+        }`,
+      );
+    }
+
+    function recordNeedsEarlierHole(
+      result: BattleResolutionResult,
+      expectedOrderingError: Exclude<CommandOrderingProjection["orderingError"], "">,
+      expectedStage: CommandOrderingProjection["stage"],
+    ): void {
+      if (result.tag !== "needsHoles") {
+        throw new Error("Expected Command fill to request an earlier hole.");
+      }
+      lastResult = result.tag;
+      holes = result.holes;
+      stage = expectedStage;
+      orderingError = expectedOrderingError;
+      pendingCommandOption = commandPendingOption(state);
+    }
+
+    function recordInvalid(
+      result: BattleResolutionResult,
+      expectedOrderingError: Exclude<CommandOrderingProjection["orderingError"], "">,
+    ): void {
+      if (result.tag !== "invalid" || result.reason !== "invalidFill") {
+        throw new Error("Expected Command ordering invalid fill.");
+      }
+      lastResult = result.tag;
+      orderingError = expectedOrderingError;
+      pendingCommandOption = commandPendingOption(state);
+    }
+
+    function discoverCommand(): void {
+      state = commandOrderingBattle();
+      const act = commandOrderingCastAct(state);
+      subject = act.subject;
+      fills = [];
+      holes = act.initialHoles;
+      stage = "targetListAndOptionChoice";
+      lastResult = "needsHoles";
+      orderingError = "";
+      pendingCommandOption = "none";
+      droppedObjectCount = 0;
+    }
+
+    function startRuntimeCommand(
+      option: Exclude<CommandOrderingPendingOption, "none">,
+      input: CommandTargetTurnInput = {},
+    ): void {
+      state = commandTargetTurn(option, input);
+      const act = commandRuntimeAct(state, option);
+      subject = act.subject;
+      fills = [];
+      holes = act.initialHoles;
+      lastResult = holes.length === 0 ? "resolved" : "needsHoles";
+      orderingError = "";
+      pendingCommandOption = commandPendingOption(state);
+      droppedObjectCount = 0;
+    }
+
+    return {
+      init: reset,
+      doDiscoverCommand: discoverCommand,
+      doSubmitOptionBeforeTargetList: () => {
+        const commandOption = requireHole(holes, "commandOptionChoice");
+        recordNeedsEarlierHole(
+          resolveBattleSubject({
+            state,
+            subject,
+            fills: [commandOptionFill(commandOption, "grovel")],
+          }),
+          "commandTargetListRequired",
+          "targetList",
+        );
+      },
+      doFillTargetList: () => {
+        const targetList = requireHole(holes, "spellTargetList");
+        fills = [spellTargetListFill(targetList, "command", [skeletonId])];
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills }),
+          "optionChoice",
+        );
+      },
+      doSubmitSavingThrowBeforeOption: () => {
+        const commandOption = requireHole(holes, "commandOptionChoice");
+        if (subject.tag !== "actionSpell") {
+          throw new Error("Expected Command cast subject.");
+        }
+        const savingThrow = requireHole(
+          commandHolesAfterFills(state, subject, [
+            ...fills,
+            commandOptionFill(commandOption, "grovel"),
+          ]),
+          "savingThrowOutcome",
+        );
+        recordNeedsEarlierHole(
+          resolveBattleSubject({
+            state,
+            subject,
+            fills: [
+              ...fills,
+              saveGatedSpellSavingThrowOutcomeFill(savingThrow, [
+                { targetId: skeletonId, succeeded: false },
+              ]),
+            ],
+          }),
+          "commandOptionChoiceRequired",
+          "optionChoice",
+        );
+      },
+      doFillGrovelOption: () => {
+        const commandOption = requireHole(holes, "commandOptionChoice");
+        fills = [...fills, commandOptionFill(commandOption, "grovel")];
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills }),
+          "savingThrowOutcome",
+        );
+      },
+      doFillFailedGrovelSavingThrow: () => {
+        const savingThrow = requireHole(holes, "savingThrowOutcome");
+        fills = [
+          ...fills,
+          saveGatedSpellSavingThrowOutcomeFill(savingThrow, [
+            { targetId: skeletonId, succeeded: false },
+          ]),
+        ];
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills }),
+          "resolved",
+        );
+      },
+      doFollowGrovel: () => {
+        const targetTurn = requireResolved(
+          resolveBattleSubject({
+            state,
+            subject: endTurnSubjectFor(fighterId),
+            fills: [],
+          }),
+        ).state;
+        const command = commandRuntimeAct(targetTurn, "grovel");
+        recordAccepted(
+          resolveBattleSubject({
+            state: targetTurn,
+            subject: command.subject,
+            fills: [],
+          }),
+          "resolved",
+        );
+      },
+      doDropNeedsHeldObjectFacts: () => {
+        startRuntimeCommand("drop");
+        stage = "dropHeldObjectFacts";
+        lastResult = "needsHoles";
+      },
+      doFillDropHeldObjectFacts: () => {
+        const heldObjectFacts = requireHole(holes, "heldObjectFacts");
+        fills = [
+          {
+            kind: "heldObjectFacts",
+            holeId: heldObjectFacts.holeId,
+            value: {
+              objectIds: [
+                battleObjectId("command-ordering:main-hand"),
+                battleObjectId("command-ordering:off-hand"),
+              ],
+            },
+          },
+        ];
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills }),
+          "resolved",
+        );
+      },
+      doHaltSuppresses: () => {
+        state = commandTargetTurn("halt");
+        subject = endTurnSubjectFor(skeletonId);
+        fills = [];
+        holes = [];
+        stage = "resolved";
+        lastResult = "resolved";
+        orderingError = "";
+        pendingCommandOption = commandPendingOption(state);
+        droppedObjectCount = 0;
+      },
+      doApproachMovementContinues: () => {
+        startRuntimeCommand("approach");
+        stage = "approachMovement";
+      },
+      doFillApproachMovementContinues: () => {
+        const movement = requireHole(holes, "movement");
+        fills = [
+          commandApproachMovementFill(movement, {
+            movementCostFeet: 10,
+            movedWithinFiveFeetOfCaster: false,
+          }),
+        ];
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills }),
+          "resolved",
+        );
+      },
+      doFillApproachMovementWithinFive: () => {
+        const movement = requireHole(holes, "movement");
+        fills = [
+          commandApproachMovementFill(movement, {
+            movementCostFeet: 10,
+            movedWithinFiveFeetOfCaster: true,
+          }),
+        ];
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills }),
+          "resolved",
+        );
+      },
+      doApproachNoMovement: () => {
+        startRuntimeCommand("approach", { grappledByCaster: true });
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills: [] }),
+          "resolved",
+        );
+      },
+      doFleeMovement: () => {
+        startRuntimeCommand("flee");
+        stage = "fleeMovement";
+      },
+      doFillFleeMovement: () => {
+        const movement = requireHole(holes, "movement");
+        fills = [
+          commandFleeMovementFill(movement, {
+            movementCostFeet: 30,
+            provokedOpportunityAttacks: [],
+          }),
+        ];
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills }),
+          "resolved",
+        );
+      },
+      doRejectFleePartialMovement: () => {
+        const movement = requireHole(holes, "movement");
+        recordInvalid(
+          resolveBattleSubject({
+            state,
+            subject,
+            fills: [
+              commandFleeMovementFill(movement, {
+                movementCostFeet: 10,
+                provokedOpportunityAttacks: [],
+              }),
+            ],
+          }),
+          "commandMovementRequired",
+        );
+      },
+      doFleeNoMovement: () => {
+        startRuntimeCommand("flee", { grappledByCaster: true });
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills: [] }),
+          "resolved",
+        );
+      },
+      doFleeOpportunityAttack: () => {
+        const movement = requireHole(holes, "movement");
+        fills = [
+          commandFleeMovementFill(movement, {
+            movementCostFeet: 30,
+            provokedOpportunityAttacks: [
+              { reactorId: fighterId, attackName: "Unarmed Strike" },
+            ],
+          }),
+        ];
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills }),
+          "resolved",
+        );
+      },
+      step: () => {},
+      getState: () =>
+        projectCommandOrderingState({
+          state,
+          holes,
+          stage,
+          lastResult,
+          orderingError,
+          pendingCommandOption,
+          droppedObjectCount,
+        }),
+    };
+  });
+}
+
 export function createExtraAttackDriver(
   unitId: ExtraAttackMbtUnitId = "fighter_extra_attack",
   schema: typeof extraAttackDriverSchema = extraAttackDriverSchema,
@@ -1695,6 +2868,95 @@ function normalizeWeaponAttackOrderingQuintState(
   };
 }
 
+function normalizeSaveGatedSpellOrderingQuintState(
+  raw: unknown,
+): SaveGatedSpellOrderingProjection {
+  const state = quintStateRecord(raw);
+
+  return {
+    stage: saveGatedSpellOrderingStage(state["qStage"]),
+    holes: quintSet(state["qHoles"], "qHoles")
+      .map(saveGatedSpellOrderingHole)
+      .sort(),
+    lastResult: mbtLastResult(state["qLastResult"]),
+    orderingError: saveGatedSpellOrderingError(state["qLastOrderingError"]),
+  };
+}
+
+function normalizeSpellAttackOrderingQuintState(
+  raw: unknown,
+): SpellAttackOrderingProjection {
+  const state = quintStateRecord(raw);
+
+  return {
+    stage: spellAttackOrderingStage(state["qStage"]),
+    holes: quintSet(state["qHoles"], "qHoles")
+      .map(spellAttackOrderingHole)
+      .sort(),
+    lastResult: mbtLastResult(state["qLastResult"]),
+    orderingError: spellAttackOrderingError(state["qLastOrderingError"]),
+  };
+}
+
+function normalizeHitPointRestorationOrderingQuintState(
+  raw: unknown,
+): HitPointRestorationOrderingProjection {
+  const state = quintStateRecord(raw);
+
+  return {
+    stage: hitPointRestorationOrderingStage(state["qStage"]),
+    holes: quintSet(state["qHoles"], "qHoles")
+      .map(hitPointRestorationOrderingHole)
+      .sort(),
+    lastResult: mbtLastResult(state["qLastResult"]),
+    orderingError: hitPointRestorationOrderingError(
+      state["qLastOrderingError"],
+    ),
+    spellTargetHp: numberFromQuintInt(state["qSpellTargetHp"], "qSpellTargetHp"),
+    spellTargetZeroHpLifecycleCleared: booleanField(
+      state,
+      "qSpellTargetZeroHpLifecycleCleared",
+    ),
+    featureTargetHp: numberFromQuintInt(
+      state["qFeatureTargetHp"],
+      "qFeatureTargetHp",
+    ),
+    featureTargetZeroHpLifecycleCleared: booleanField(
+      state,
+      "qFeatureTargetZeroHpLifecycleCleared",
+    ),
+  };
+}
+
+function normalizeCommandOrderingQuintState(
+  raw: unknown,
+): CommandOrderingProjection {
+  const state = quintStateRecord(raw);
+
+  return {
+    stage: commandOrderingStage(state["qStage"]),
+    holes: quintSet(state["qHoles"], "qHoles").map(commandOrderingHole).sort(),
+    tableFactFrontierOpen: booleanField(state, "qTableFactFrontierOpen"),
+    lastResult: mbtLastResult(state["qLastResult"]),
+    orderingError: commandOrderingError(state["qLastOrderingError"]),
+    pendingCommandOption: commandOrderingPendingOption(
+      state["qPendingCommandOption"],
+    ),
+    targetProne: booleanField(state, "qTargetProne"),
+    droppedObjectCount: numberFromQuintInt(
+      state["qDroppedObjectCount"],
+      "qDroppedObjectCount",
+    ),
+    haltSuppressed: booleanField(state, "qHaltSuppressed"),
+    movementSpentFeet: numberFromQuintInt(
+      state["qMovementSpentFeet"],
+      "qMovementSpentFeet",
+    ),
+    currentActor: commandOrderingActor(state["qCurrentActor"]),
+    reactionWindowOpen: booleanField(state, "qReactionWindowOpen"),
+  };
+}
+
 function normalizeExtraAttackQuintState(
   raw: unknown,
 ): ExtraAttackMbtProjection {
@@ -1863,6 +3125,43 @@ export const weaponAttackOrderingStateCheck = stateCheck(
     return true;
   },
 );
+export const saveGatedSpellOrderingStateCheck = stateCheck(
+  normalizeSaveGatedSpellOrderingQuintState,
+  (
+    spec: SaveGatedSpellOrderingProjection,
+    impl: SaveGatedSpellOrderingProjection,
+  ) => {
+    expect(impl).toEqual(spec);
+    return true;
+  },
+);
+export const spellAttackOrderingStateCheck = stateCheck(
+  normalizeSpellAttackOrderingQuintState,
+  (
+    spec: SpellAttackOrderingProjection,
+    impl: SpellAttackOrderingProjection,
+  ) => {
+    expect(impl).toEqual(spec);
+    return true;
+  },
+);
+export const hitPointRestorationOrderingStateCheck = stateCheck(
+  normalizeHitPointRestorationOrderingQuintState,
+  (
+    spec: HitPointRestorationOrderingProjection,
+    impl: HitPointRestorationOrderingProjection,
+  ) => {
+    expect(impl).toEqual(spec);
+    return true;
+  },
+);
+export const commandOrderingStateCheck = stateCheck(
+  normalizeCommandOrderingQuintState,
+  (spec: CommandOrderingProjection, impl: CommandOrderingProjection) => {
+    expect(impl).toEqual(spec);
+    return true;
+  },
+);
 export const extraAttackStateCheck = stateCheck(
   normalizeExtraAttackQuintState,
   (spec: ExtraAttackMbtProjection, impl: ExtraAttackMbtProjection) => {
@@ -1941,6 +3240,117 @@ function projectWeaponAttackOrderingState(input: {
     lastResult: input.lastResult,
     orderingError: input.orderingError,
   };
+}
+
+function projectSaveGatedSpellOrderingState(input: {
+  readonly holes: readonly BattleHole[];
+  readonly stage: SaveGatedSpellOrderingProjection["stage"];
+  readonly lastResult: SaveGatedSpellOrderingProjection["lastResult"];
+  readonly orderingError: SaveGatedSpellOrderingProjection["orderingError"];
+}): SaveGatedSpellOrderingProjection {
+  return {
+    stage: input.stage,
+    holes: input.holes.map(saveGatedSpellOrderingHoleFromRuntime).sort(),
+    lastResult: input.lastResult,
+    orderingError: input.orderingError,
+  };
+}
+
+function projectSpellAttackOrderingState(input: {
+  readonly holes: readonly BattleHole[];
+  readonly stage: SpellAttackOrderingProjection["stage"];
+  readonly lastResult: SpellAttackOrderingProjection["lastResult"];
+  readonly orderingError: SpellAttackOrderingProjection["orderingError"];
+}): SpellAttackOrderingProjection {
+  return {
+    stage: input.stage,
+    holes: input.holes.flatMap(spellAttackOrderingHoleFromRuntime).sort(),
+    lastResult: input.lastResult,
+    orderingError: input.orderingError,
+  };
+}
+
+function projectHitPointRestorationOrderingState(input: {
+  readonly holes: readonly BattleHole[];
+  readonly stage: HitPointRestorationOrderingProjection["stage"];
+  readonly lastResult: HitPointRestorationOrderingProjection["lastResult"];
+  readonly orderingError: HitPointRestorationOrderingProjection["orderingError"];
+  readonly spellTargetHp: number;
+  readonly spellTargetZeroHpLifecycleCleared: boolean;
+  readonly featureTargetHp: number;
+  readonly featureTargetZeroHpLifecycleCleared: boolean;
+}): HitPointRestorationOrderingProjection {
+  return {
+    stage: input.stage,
+    holes: input.holes.map(hitPointRestorationOrderingHoleFromRuntime).sort(),
+    lastResult: input.lastResult,
+    orderingError: input.orderingError,
+    spellTargetHp: input.spellTargetHp,
+    spellTargetZeroHpLifecycleCleared:
+      input.spellTargetZeroHpLifecycleCleared,
+    featureTargetHp: input.featureTargetHp,
+    featureTargetZeroHpLifecycleCleared:
+      input.featureTargetZeroHpLifecycleCleared,
+  };
+}
+
+function projectCommandOrderingState(input: {
+  readonly state: BattleState;
+  readonly holes: readonly BattleHole[];
+  readonly stage: CommandOrderingProjection["stage"];
+  readonly lastResult: CommandOrderingProjection["lastResult"];
+  readonly orderingError: CommandOrderingProjection["orderingError"];
+  readonly pendingCommandOption: CommandOrderingProjection["pendingCommandOption"];
+  readonly droppedObjectCount: number;
+}): CommandOrderingProjection {
+  const snapshot = snapshotBattle(input.state);
+  const targetSnapshot = snapshot.combatants.find(
+    (combatant) => combatant.combatantId === skeletonId,
+  );
+  return {
+    stage: input.stage,
+    holes: input.holes.flatMap(commandOrderingHoleFromRuntime).sort(),
+    tableFactFrontierOpen: input.holes.some(
+      (hole) => hole.kind === "heldObjectFacts",
+    ),
+    lastResult: input.lastResult,
+    orderingError: input.orderingError,
+    pendingCommandOption: input.pendingCommandOption,
+    targetProne: targetSnapshot?.conditions.includes("prone") ?? false,
+    droppedObjectCount: input.droppedObjectCount,
+    haltSuppressed: input.state.currentTurnResources.commandHalt !== null,
+    movementSpentFeet:
+      targetSnapshot === undefined ? 0 : Number(targetSnapshot.movement.spentFeet),
+    currentActor: commandOrderingActorId(snapshot.currentActorId),
+    reactionWindowOpen: input.state.interruptStack.length > 0,
+  };
+}
+
+function snapshotCombatant(
+  state: BattleState,
+  combatantId: CombatantId,
+): ReturnType<typeof snapshotBattle>["combatants"][number] {
+  const combatant = snapshotBattle(state).combatants.find(
+    (candidate) => candidate.combatantId === combatantId,
+  );
+  if (combatant === undefined) {
+    throw new Error("Expected combatant in battle snapshot.");
+  }
+  return combatant;
+}
+
+function zeroHpLifecycleClearedByHealing(
+  combatant: ReturnType<typeof snapshotCombatant>,
+): boolean {
+  return (
+    combatant.hp > 0 &&
+    !combatant.conditions.includes("unconscious") &&
+    combatant.zeroHpLifecycle.policy === "usesDeathSavingThrows" &&
+    !combatant.zeroHpLifecycle.dead &&
+    !combatant.zeroHpLifecycle.stable &&
+    combatant.zeroHpLifecycle.deathSaves.successes === 0 &&
+    combatant.zeroHpLifecycle.deathSaves.failures === 0
+  );
 }
 
 function projectExtraAttackMbtState(input: {
@@ -2135,6 +3545,42 @@ function discoverMagicMissileHoles(
   return act.initialHoles;
 }
 
+function discoverSaveGatedSpellHoles(
+  state: BattleState,
+  subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>,
+  spellId: string,
+): readonly BattleHole[] {
+  const act = discoverBattleActs(state).find(
+    (candidate) =>
+      candidate.subject.tag === "actionSpell" &&
+      candidate.subject.actorId === subject.actorId &&
+      candidate.subject.invocation.spellId === spellId,
+  );
+  if (act == null) {
+    throw new Error(`Expected ${spellId} save-gated spell act.`);
+  }
+
+  return act.initialHoles;
+}
+
+function discoverSpellAttackHoles(
+  state: BattleState,
+  subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>,
+  spellId: string,
+): readonly BattleHole[] {
+  const act = discoverBattleActs(state).find(
+    (candidate) =>
+      candidate.subject.tag === "actionSpell" &&
+      candidate.subject.actorId === subject.actorId &&
+      candidate.subject.invocation.spellId === spellId,
+  );
+  if (act == null) {
+    throw new Error(`Expected ${spellId} spell attack act.`);
+  }
+
+  return act.initialHoles;
+}
+
 function holesAfterFills(
   state: BattleState,
   subject: Extract<
@@ -2146,6 +3592,58 @@ function holesAfterFills(
   const result = resolveBattleSubject({ state, subject, fills });
   if (result.tag !== "needsHoles") {
     throw new Error("Expected attack fills to request more holes.");
+  }
+
+  return result.holes;
+}
+
+function saveGatedSpellHolesAfterFills(
+  state: BattleState,
+  subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>,
+  fills: readonly BattleFill[],
+): readonly BattleHole[] {
+  const result = resolveBattleSubject({ state, subject, fills });
+  if (result.tag !== "needsHoles") {
+    throw new Error("Expected save-gated spell fills to request more holes.");
+  }
+
+  return result.holes;
+}
+
+function commandHolesAfterFills(
+  state: BattleState,
+  subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>,
+  fills: readonly BattleFill[],
+): readonly BattleHole[] {
+  const result = resolveBattleSubject({ state, subject, fills });
+  if (result.tag !== "needsHoles") {
+    throw new Error("Expected Command fills to request more holes.");
+  }
+
+  return result.holes;
+}
+
+function spellAttackHolesAfterFills(
+  state: BattleState,
+  subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>,
+  fills: readonly BattleFill[],
+): readonly BattleHole[] {
+  const result = resolveBattleSubject({ state, subject, fills });
+  if (result.tag !== "needsHoles") {
+    throw new Error("Expected spell attack fills to request more holes.");
+  }
+
+  return result.holes;
+}
+
+function healingOrderingHolesAfterFills(
+  state: BattleState,
+  subject: BattleSubject,
+  fills: readonly BattleFill[],
+): readonly BattleHole[] {
+  const result = resolveBattleSubject({ state, subject, fills });
+  if (result.tag !== "needsHoles") {
+    throw new Error("Expected Hit Point restoration fills to request more holes.");
   }
 
   return result.holes;
@@ -2236,6 +3734,81 @@ function longstriderSubject(): Extract<
     actorId: fighterId,
     invocation: spellSlotInvocationRef("longstrider", 1, "scalarBuff"),
     mode: { tag: "cast" },
+  };
+}
+
+function lightningBoltSubject(): Extract<
+  BattleSubject,
+  { readonly tag: "actionSpell" }
+> {
+  return saveGatedSpellSubject("lightning_bolt", 3, "saveGatedDamage");
+}
+
+function saveGatedSpellSubject(
+  spellId: "lightning_bolt" | "blindness_deafness",
+  slotLevel: 2 | 3,
+  procedure: "saveGatedDamage" | "saveGatedCondition",
+): Extract<BattleSubject, { readonly tag: "actionSpell" }> {
+  return {
+    tag: "actionSpell",
+    actorId: fighterId,
+    invocation: spellSlotInvocationRef(spellId, slotLevel, procedure),
+    mode: { tag: "cast" },
+  };
+}
+
+function spellAttackSubject(
+  spellId: "fire_bolt" | "sorcerous_burst",
+  procedure: "spellAttackDamage",
+): Extract<BattleSubject, { readonly tag: "actionSpell" }> {
+  return {
+    tag: "actionSpell",
+    actorId: fighterId,
+    invocation: cantripSpellInvocationRef(spellId, procedure),
+    mode: { tag: "cast" },
+  };
+}
+
+function healingWordSubject(): Extract<
+  BattleSubject,
+  { readonly tag: "bonusActionSpell" }
+> {
+  return {
+    tag: "bonusActionSpell",
+    actorId: fighterId,
+    invocation: spellSlotInvocationRef(
+      "healing_word",
+      1,
+      "directHitPointRestoration",
+    ),
+    mode: { tag: "cast" },
+  };
+}
+
+function massHealingWordSubject(): Extract<
+  BattleSubject,
+  { readonly tag: "bonusActionSpell" }
+> {
+  return {
+    tag: "bonusActionSpell",
+    actorId: fighterId,
+    invocation: spellSlotInvocationRef(
+      "mass_healing_word",
+      3,
+      "directHitPointRestoration",
+    ),
+    mode: { tag: "cast" },
+  };
+}
+
+function preserveLifeSubject(): Extract<
+  BattleSubject,
+  { readonly tag: "unitFeature" }
+> {
+  return {
+    tag: "unitFeature",
+    actorId: fighterId,
+    unitId: "cleric_preserve_life",
   };
 }
 
@@ -2371,11 +3944,213 @@ function scalarBuffBattle(): BattleState {
   });
 }
 
+function saveGatedSpellOrderingBattle(
+  spellId: "lightning_bolt" | "blindness_deafness",
+  slotLevel: 2 | 3,
+): BattleState {
+  return startBattleRight({
+    battleId: battleId("battle-runtime-mbt-save-gated-spell-ordering"),
+    combatants: [
+      saveGatedSpellOrderingCasterCreatureInit({
+        initiative: 20,
+        spellId,
+        slotLevel,
+      }),
+      skeletonCreatureInit({ initiative: 10 }),
+    ],
+  });
+}
+
+function commandOrderingBattle(): BattleState {
+  return startBattleRight({
+    battleId: battleId("battle-runtime-mbt-command-ordering"),
+    combatants: [
+      commandOrderingCasterCreatureInit({ initiative: 20 }),
+      skeletonCreatureInit({ initiative: 10 }),
+    ],
+  });
+}
+
+function spellAttackOrderingBattle(
+  spellId: "fire_bolt" | "sorcerous_burst",
+): BattleState {
+  return startBattleRight({
+    battleId: battleId("battle-runtime-mbt-spell-attack-ordering"),
+    combatants: [
+      spellAttackOrderingCasterCreatureInit({
+        initiative: 20,
+        spellId,
+      }),
+      skeletonCreatureInit({ initiative: 10 }),
+    ],
+  });
+}
+
+function healingSpellOrderingBattle(): BattleState {
+  return startBattleRight({
+    battleId: battleId("battle-runtime-mbt-hit-point-restoration-spell-ordering"),
+    combatants: [
+      healingSpellOrderingCasterCreatureInit({
+        initiative: 20,
+        spellId: "healing_word",
+        slotLevel: 1,
+        characterLevel: 1,
+      }),
+      healingOrderingTargetCreatureInit({ initiative: 10, currentHp: 0 }),
+    ],
+  });
+}
+
+function healingTargetListSpellOrderingBattle(): BattleState {
+  return startBattleRight({
+    battleId: battleId(
+      "battle-runtime-mbt-hit-point-restoration-target-list-spell-ordering",
+    ),
+    combatants: [
+      healingSpellOrderingCasterCreatureInit({
+        initiative: 20,
+        spellId: "mass_healing_word",
+        slotLevel: 3,
+        characterLevel: 5,
+      }),
+      healingOrderingTargetCreatureInit({ initiative: 10, currentHp: 0 }),
+    ],
+  });
+}
+
+function featureHealingPoolOrderingBattle(): BattleState {
+  return startBattleRight({
+    battleId: battleId("battle-runtime-mbt-hit-point-restoration-feature-ordering"),
+    combatants: [
+      preserveLifeOrderingCreatureInit({ initiative: 20 }),
+      healingOrderingTargetCreatureInit({ initiative: 10, currentHp: 0 }),
+    ],
+  });
+}
+
 function endTurnSubject(): Extract<
   BattleSubject,
   { readonly tag: "runtimeCommand"; readonly command: "endTurn" }
 > {
   return endTurnSubjectFor(fighterId);
+}
+
+function commandOrderingCastSubject(): Extract<
+  BattleSubject,
+  { readonly tag: "actionSpell" }
+> {
+  return {
+    tag: "actionSpell",
+    actorId: fighterId,
+    invocation: spellSlotInvocationRef("command", 1, "command"),
+    mode: { tag: "cast" },
+  };
+}
+
+function commandOrderingCastAct(
+  state: BattleState,
+): ReturnType<typeof discoverBattleActs>[number] & {
+  readonly subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>;
+} {
+  const act = discoverBattleActs(state).find(
+    (
+      candidate,
+    ): candidate is ReturnType<typeof discoverBattleActs>[number] & {
+      readonly subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>;
+    } =>
+      candidate.subject.tag === "actionSpell" &&
+      candidate.subject.invocation.procedure === "command",
+  );
+  if (act === undefined) {
+    throw new Error("Expected Command cast act.");
+  }
+  return act;
+}
+
+type RuntimeCommandOption = Exclude<CommandOrderingPendingOption, "none">;
+type CommandRuntimeSubject = Extract<
+  BattleSubject,
+  { readonly tag: "runtimeCommand" }
+>;
+type CommandTargetTurnInput = {
+  readonly grappledByCaster?: boolean;
+};
+
+function commandRuntimeAct(
+  state: BattleState,
+  option: RuntimeCommandOption,
+): ReturnType<typeof discoverBattleActs>[number] & {
+  readonly subject: CommandRuntimeSubject;
+} {
+  const command = commandSubjectForOption(option);
+  const act = discoverBattleActs(state).find(
+    (
+      candidate,
+    ): candidate is ReturnType<typeof discoverBattleActs>[number] & {
+      readonly subject: CommandRuntimeSubject;
+    } =>
+      candidate.subject.tag === "runtimeCommand" &&
+      candidate.subject.command === command,
+  );
+  if (act === undefined) {
+    throw new Error(`Expected runtime Command act ${command}.`);
+  }
+  return act;
+}
+
+function commandSubjectForOption(
+  option: RuntimeCommandOption,
+): CommandRuntimeSubject["command"] {
+  if (option === "grovel") return "commandGrovel";
+  if (option === "drop") return "commandDrop";
+  if (option === "approach") return "commandApproach";
+  if (option === "flee") return "commandFlee";
+  throw new Error("Command Halt does not expose a runtime command act.");
+}
+
+function commandTargetTurn(
+  option: RuntimeCommandOption,
+  input: CommandTargetTurnInput = {},
+): BattleState {
+  const cast = castCommandForOrdering(option);
+  const targetTurn = requireResolved(
+    resolveBattleSubject({
+      state: cast.state,
+      subject: endTurnSubjectFor(fighterId),
+      fills: [],
+    }),
+  ).state;
+  return input.grappledByCaster === true
+    ? grappledByCaster(targetTurn)
+    : targetTurn;
+}
+
+function castCommandForOrdering(
+  option: RuntimeCommandOption,
+): Extract<BattleResolutionResult, { readonly tag: "resolved" }> {
+  const state = commandOrderingBattle();
+  const act = commandOrderingCastAct(state);
+  const target = requireHole(act.initialHoles, "spellTargetList");
+  const commandOption = requireHole(act.initialHoles, "commandOptionChoice");
+  const targetSelection = spellTargetListFill(target, "command", [skeletonId]);
+  const optionSelection = commandOptionFill(commandOption, option);
+  const savingThrow = requireHole(
+    commandHolesAfterFills(state, act.subject, [targetSelection, optionSelection]),
+    "savingThrowOutcome",
+  );
+  return requireResolved(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        targetSelection,
+        optionSelection,
+        saveGatedSpellSavingThrowOutcomeFill(savingThrow, [
+          { targetId: skeletonId, succeeded: false },
+        ]),
+      ],
+    }),
+  );
 }
 
 function endTurnSubjectFor(
@@ -2385,6 +4160,39 @@ function endTurnSubjectFor(
   { readonly tag: "runtimeCommand"; readonly command: "endTurn" }
 > {
   return { tag: "runtimeCommand", actorId, command: "endTurn" };
+}
+
+function commandPendingOption(state: BattleState): CommandOrderingPendingOption {
+  const target = state.combatants.get(skeletonId);
+  const effect = target?.activeEffects.find(
+    (candidate) => candidate.kind === "commandPending",
+  );
+  return effect?.kind === "commandPending" ? effect.option : "none";
+}
+
+function commandOrderingActorId(
+  actorId: CombatantId,
+): CommandOrderingProjection["currentActor"] {
+  if (actorId === fighterId) return "Caster";
+  if (actorId === skeletonId) return "Target";
+  throw new Error(`Unexpected Command ordering actor ${actorId}.`);
+}
+
+function grappledByCaster(state: BattleState): BattleState {
+  return {
+    ...state,
+    grapples: [
+      ...state.grapples,
+      {
+        grapplerId: fighterId,
+        targetId: skeletonId,
+        escapeDc: difficultyClass(12),
+        reachFeet: movementFeet(5),
+        hand: "left",
+        targetExemptFromDragCost: false,
+      },
+    ],
+  };
 }
 
 function rogueCreatureInit(input: {
@@ -2607,6 +4415,295 @@ function scalarBuffCasterCreatureInit(input: {
   };
 }
 
+function saveGatedSpellOrderingCasterCreatureInit(input: {
+  readonly initiative: number;
+  readonly spellId: "lightning_bolt" | "blindness_deafness";
+  readonly slotLevel: 2 | 3;
+}): BattleCreatureInit {
+  const unit = unitLibrary.requireUnit(input.spellId);
+  if (unit.kind !== "spell") {
+    throw new Error(`Expected ${input.spellId} spell Unit.`);
+  }
+  return {
+    combatantId: fighterId,
+    displayName: "Save-Gated Spell Caster",
+    initiative: initiativeScore(input.initiative),
+    side: partySide,
+    creatureInit: {
+      kind: "character",
+      characterId: characterId("save-gated-spell-ordering-caster-character"),
+      characterUnitRefs: [],
+      classLevels: [{ className: "wizard", level: 5 }],
+      knownLanguages: ["Common"],
+      d20Statistics: testCharacterD20Statistics({ str: 16 }),
+      armorClass: defaultArmorClassState(),
+      size: "medium",
+      speed: { walkFeet: movementFeet(30) },
+      currentHp: Hp(20),
+      maxHp: Hp(20),
+      tempHp: Hp(0),
+      selectedLoadout: {},
+      attack: null,
+      unarmedStrike: baseUnarmedStrike(),
+      spellcasting: {
+        sourceClassName: "wizard",
+        spellcastingAbilityModifier: 3,
+        proficiencyBonus: proficiencyBonus(2),
+        canCastSpells: true,
+        cantrips: [],
+        preparedSpells: [unit],
+        featurePreparedSpells: [],
+        spellbookRitualSpellAccesses: [],
+        invocationSpellAccesses: [],
+        spellSlots: [{ spellLevel: input.slotLevel, count: 1 }],
+      },
+    },
+  };
+}
+
+function commandOrderingCasterCreatureInit(input: {
+  readonly initiative: number;
+}): BattleCreatureInit {
+  const unit = unitLibrary.requireUnit("command");
+  if (unit.kind !== "spell") {
+    throw new Error("Expected Command spell Unit.");
+  }
+  return {
+    combatantId: fighterId,
+    displayName: "Command Ordering Caster",
+    initiative: initiativeScore(input.initiative),
+    side: partySide,
+    creatureInit: {
+      kind: "character",
+      characterId: characterId("command-ordering-caster-character"),
+      characterUnitRefs: [],
+      classLevels: [{ className: "wizard", level: 5 }],
+      knownLanguages: ["Common"],
+      d20Statistics: testCharacterD20Statistics({ str: 16 }),
+      armorClass: defaultArmorClassState(),
+      size: "medium",
+      speed: { walkFeet: movementFeet(30) },
+      currentHp: Hp(20),
+      maxHp: Hp(20),
+      tempHp: Hp(0),
+      selectedLoadout: {},
+      attack: null,
+      unarmedStrike: baseUnarmedStrike(),
+      spellcasting: {
+        sourceClassName: "wizard",
+        spellcastingAbilityModifier: 3,
+        proficiencyBonus: proficiencyBonus(2),
+        canCastSpells: true,
+        cantrips: [],
+        preparedSpells: [unit],
+        featurePreparedSpells: [],
+        spellbookRitualSpellAccesses: [],
+        invocationSpellAccesses: [],
+        spellSlots: [{ spellLevel: 1, count: 1 }],
+      },
+    },
+  };
+}
+
+function spellAttackOrderingCasterCreatureInit(input: {
+  readonly initiative: number;
+  readonly spellId: "fire_bolt" | "sorcerous_burst";
+}): BattleCreatureInit {
+  const unit = unitLibrary.requireUnit(input.spellId);
+  if (unit.kind !== "spell") {
+    throw new Error(`Expected ${input.spellId} spell Unit.`);
+  }
+  return {
+    combatantId: fighterId,
+    displayName: "Spell Attack Caster",
+    initiative: initiativeScore(input.initiative),
+    side: partySide,
+    creatureInit: {
+      kind: "character",
+      characterId: characterId("spell-attack-ordering-caster-character"),
+      characterUnitRefs: [],
+      classLevels: [{ className: "sorcerer", level: 1 }],
+      knownLanguages: ["Common"],
+      d20Statistics: testCharacterD20Statistics({ str: 16 }),
+      armorClass: defaultArmorClassState(),
+      size: "medium",
+      speed: { walkFeet: movementFeet(30) },
+      currentHp: Hp(20),
+      maxHp: Hp(20),
+      tempHp: Hp(0),
+      selectedLoadout: {},
+      attack: null,
+      unarmedStrike: baseUnarmedStrike(),
+      spellcasting: {
+        sourceClassName: "sorcerer",
+        spellcastingAbilityModifier: 3,
+        proficiencyBonus: proficiencyBonus(2),
+        canCastSpells: true,
+        cantrips: [unit],
+        preparedSpells: [],
+        featurePreparedSpells: [],
+        spellbookRitualSpellAccesses: [],
+        invocationSpellAccesses: [],
+        spellSlots: [],
+      },
+    },
+  };
+}
+
+function healingSpellOrderingCasterCreatureInit(input: {
+  readonly initiative: number;
+  readonly spellId: "healing_word" | "mass_healing_word";
+  readonly slotLevel: 1 | 3;
+  readonly characterLevel: number;
+}): BattleCreatureInit {
+  const unit = unitLibrary.requireUnit(input.spellId);
+  if (unit.kind !== "spell") {
+    throw new Error(`Expected ${input.spellId} spell Unit.`);
+  }
+  return {
+    combatantId: fighterId,
+    displayName: "Healing Spell Caster",
+    initiative: initiativeScore(input.initiative),
+    side: partySide,
+    creatureInit: {
+      kind: "character",
+      characterId: characterId("hit-point-restoration-spell-caster"),
+      characterUnitRefs: [],
+      classLevels: [{ className: "cleric", level: input.characterLevel }],
+      knownLanguages: ["Common"],
+      d20Statistics: testCharacterD20Statistics({ str: 10 }),
+      armorClass: defaultArmorClassState(),
+      size: "medium",
+      speed: { walkFeet: movementFeet(30) },
+      currentHp: Hp(20),
+      maxHp: Hp(20),
+      tempHp: Hp(0),
+      selectedLoadout: {},
+      attack: null,
+      unarmedStrike: baseUnarmedStrike(),
+      spellcasting: {
+        sourceClassName: "cleric",
+        spellcastingAbilityModifier: 3,
+        proficiencyBonus: proficiencyBonus(2),
+        canCastSpells: true,
+        cantrips: [],
+        preparedSpells: [unit],
+        featurePreparedSpells: [],
+        spellbookRitualSpellAccesses: [],
+        invocationSpellAccesses: [],
+        spellSlots: [{ spellLevel: input.slotLevel, count: 1 }],
+      },
+    },
+  };
+}
+
+function preserveLifeOrderingCreatureInit(input: {
+  readonly initiative: number;
+}): BattleCreatureInit {
+  const preserveLife = unitLibrary.requireUnit("cleric_preserve_life");
+  const channelDivinity = unitLibrary.requireUnit("cleric_channel_divinity");
+  const support = battleMagicActionHealingPoolSupportForUnit(preserveLife);
+  if (support === null || support === "unsupported") {
+    throw new Error("Expected Preserve Life healing-pool support.");
+  }
+  return {
+    combatantId: fighterId,
+    displayName: "Life Cleric",
+    initiative: initiativeScore(input.initiative),
+    side: partySide,
+    creatureInit: {
+      kind: "character",
+      characterId: characterId("hit-point-restoration-feature-caster"),
+      characterUnitRefs: [preserveLifeUnitRef(preserveLife, support)],
+      classLevels: [{ className: "cleric", level: classLevel(3) }],
+      knownLanguages: ["Common"],
+      d20Statistics: testCharacterD20Statistics({ str: 10 }),
+      armorClass: defaultArmorClassState(),
+      size: "medium",
+      speed: { walkFeet: movementFeet(30) },
+      currentHp: Hp(20),
+      maxHp: Hp(20),
+      tempHp: Hp(0),
+      selectedLoadout: {},
+      attack: null,
+      unarmedStrike: baseUnarmedStrike(),
+      resources: [{ unit: channelDivinity, usesRemaining: 2 }],
+      unitFeatures: [{ unit: preserveLife }],
+    },
+  };
+}
+
+function healingOrderingTargetCreatureInit(input: {
+  readonly initiative: number;
+  readonly currentHp: number;
+}): BattleCreatureInit {
+  return {
+    combatantId: skeletonId,
+    displayName: "Healing Target",
+    initiative: initiativeScore(input.initiative),
+    side: oppositionSide,
+    creatureInit: {
+      kind: "character",
+      characterId: characterId("hit-point-restoration-target"),
+      characterUnitRefs: [],
+      classLevels: [{ className: "fighter", level: 1 }],
+      knownLanguages: ["Common"],
+      d20Statistics: testCharacterD20Statistics({ str: 10 }),
+      armorClass: defaultArmorClassState(),
+      size: "medium",
+      speed: { walkFeet: movementFeet(30) },
+      currentHp: Hp(input.currentHp),
+      maxHp: Hp(20),
+      tempHp: Hp(0),
+      selectedLoadout: {},
+      attack: null,
+      unarmedStrike: baseUnarmedStrike(),
+      conditions: input.currentHp === 0 ? ["unconscious"] : [],
+      ...(input.currentHp === 0
+        ? {
+            zeroHpLifecycle: {
+              policy: "usesDeathSavingThrows" as const,
+              deathSaves: {
+                deathSaves: { successes: 2, failures: 1 },
+                stable: false,
+                dead: false,
+                hpRegained: false,
+              },
+            },
+          }
+        : {}),
+    },
+  };
+}
+
+function preserveLifeUnitRef(
+  unit: UnitRecord,
+  support: Exclude<
+    ReturnType<typeof battleMagicActionHealingPoolSupportForUnit>,
+    null | "unsupported"
+  >,
+): Extract<
+  BattleCreatureInit["creatureInit"],
+  { readonly kind: "character" }
+>["characterUnitRefs"][number] {
+  const unitRef = battleUnitRefWithSupportProfiles({
+    unitRef: { unitId: unit.id },
+    unit,
+    classLevels: [{ className: "cleric", level: classLevel(3) }],
+  });
+  if (Either.isLeft(unitRef)) {
+    throw new Error(unitRef.left.message);
+  }
+  if (
+    !unitRef.right.supportProfiles.some(
+      (candidate) => JSON.stringify(candidate) === JSON.stringify(support),
+    )
+  ) {
+    throw new Error("Expected Preserve Life healing-pool support profile.");
+  }
+  return unitRef.right;
+}
+
 function extraAttackUnitRef(
   unit: UnitRecord,
 ): Extract<
@@ -2758,6 +4855,19 @@ function requireHole(
   return hole;
 }
 
+function requireResolved(
+  result: BattleResolutionResult,
+): Extract<BattleResolutionResult, { readonly tag: "resolved" }> {
+  if (result.tag !== "resolved") {
+    throw new Error(
+      `Expected resolved battle result, got ${result.tag}: ${
+        "message" in result ? result.message : ""
+      }`,
+    );
+  }
+  return result;
+}
+
 function fillsWithMbtSpellCastReactionFacts(
   holes: readonly BattleHole[],
   fills: readonly BattleFill[],
@@ -2843,6 +4953,97 @@ function spellTargetChoiceFill(
   };
 }
 
+function spellTargetListFill(
+  hole: BattleHole,
+  spellId: string,
+  targetIds: readonly CombatantId[],
+): Extract<BattleFill, { readonly kind: "spellTargetList" }> {
+  if (hole.kind !== "spellTargetList") {
+    throw new Error("Expected spell target-list hole.");
+  }
+  return {
+    kind: "spellTargetList",
+    holeId: hole.holeId,
+    value: { targetIds },
+    spatialFacts: targetIds.map((targetId) => ({
+      kind: "spellTarget",
+      casterId: fighterId,
+      targetId,
+      spellId,
+    })),
+  };
+}
+
+function saveGatedSpellConditionChoiceFill(
+  hole: BattleHole,
+  value: "blinded" | "deafened",
+): Extract<BattleFill, { readonly kind: "conditionChoice" }> {
+  if (hole.kind !== "conditionChoice") {
+    throw new Error("Expected condition choice hole.");
+  }
+  return {
+    kind: "conditionChoice",
+    holeId: hole.holeId,
+    value,
+  };
+}
+
+function spellDamageTypeChoiceFill(
+  hole: BattleHole,
+  value: DamageType,
+): Extract<BattleFill, { readonly kind: "damageTypeChoice" }> {
+  if (hole.kind !== "damageTypeChoice") {
+    throw new Error("Expected damage type choice hole.");
+  }
+  return {
+    kind: "damageTypeChoice",
+    holeId: hole.holeId,
+    value,
+  };
+}
+
+function saveGatedSpellSavingThrowOutcomeFill(
+  hole: BattleHole,
+  outcomes: readonly {
+    readonly targetId: CombatantId;
+    readonly succeeded: boolean;
+  }[],
+): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {
+  if (hole.kind !== "savingThrowOutcome") {
+    throw new Error("Expected Saving Throw outcome hole.");
+  }
+  return {
+    kind: "savingThrowOutcome",
+    holeId: hole.holeId,
+    value:
+      "spell" in hole &&
+      hole.spell.targeting.kind !== "singleCombatant" &&
+      hole.spell.targeting.kind !== "targetList"
+        ? {
+            area: {
+              originAnchorId: fighterId,
+              affectedTargetIds: outcomes.map((outcome) => outcome.targetId),
+            },
+            outcomes,
+          }
+        : { outcomes },
+  };
+}
+
+function commandOptionFill(
+  hole: BattleHole,
+  value: Exclude<CommandOrderingPendingOption, "none">,
+): Extract<BattleFill, { readonly kind: "commandOptionChoice" }> {
+  if (hole.kind !== "commandOptionChoice") {
+    throw new Error("Expected Command option-choice hole.");
+  }
+  return {
+    kind: "commandOptionChoice",
+    holeId: hole.holeId,
+    value,
+  };
+}
+
 function movementFill(
   hole: BattleHole,
   value: { readonly movementCostFeet: number },
@@ -2858,6 +5059,58 @@ function movementFill(
       speedKind: "walk",
       movementCostFeet: movementFeet(value.movementCostFeet),
       provokedOpportunityAttacks: [],
+    },
+  };
+}
+
+function commandApproachMovementFill(
+  hole: BattleHole,
+  value: {
+    readonly movementCostFeet: number;
+    readonly movedWithinFiveFeetOfCaster: boolean;
+  },
+): Extract<BattleFill, { readonly kind: "movement" }> {
+  if (hole.kind !== "movement") {
+    throw new Error("Expected Command Approach movement hole.");
+  }
+  return {
+    kind: "movement",
+    holeId: hole.holeId,
+    value: {
+      speedKind: "walk",
+      movementCostFeet: movementFeet(value.movementCostFeet),
+      provokedOpportunityAttacks: [],
+      commandApproach: {
+        kind: "commandApproachShortestDirectRouteTowardCaster",
+        movedWithinFiveFeetOfCaster: value.movedWithinFiveFeetOfCaster,
+      },
+    },
+  };
+}
+
+function commandFleeMovementFill(
+  hole: BattleHole,
+  value: {
+    readonly movementCostFeet: number;
+    readonly provokedOpportunityAttacks: readonly {
+      readonly reactorId: CombatantId;
+      readonly attackName: string;
+    }[];
+  },
+): Extract<BattleFill, { readonly kind: "movement" }> {
+  if (hole.kind !== "movement") {
+    throw new Error("Expected Command Flee movement hole.");
+  }
+  return {
+    kind: "movement",
+    holeId: hole.holeId,
+    value: {
+      speedKind: "walk",
+      movementCostFeet: movementFeet(value.movementCostFeet),
+      provokedOpportunityAttacks: value.provokedOpportunityAttacks,
+      commandFlee: {
+        kind: "commandFleeFastestAvailableRouteAwayFromCaster",
+      },
     },
   };
 }
@@ -2928,6 +5181,37 @@ function damageRollFillWithGroups(
       ? {}
       : { selectedAttackDamageRiderUnitIds }),
     value: rolledDiceGroups(groups),
+  };
+}
+
+function preserveLifeDistributionFill(
+  hole: BattleHole,
+  allocations: readonly {
+    readonly targetId: CombatantId;
+    readonly hitPoints: number;
+  }[],
+): Extract<BattleFill, { readonly kind: "hitPointHealingDistribution" }> {
+  if (hole.kind !== "hitPointHealingDistribution") {
+    throw new Error("Expected Hit Point healing distribution hole.");
+  }
+  return {
+    kind: "hitPointHealingDistribution",
+    holeId: hole.holeId,
+    value: {
+      allocations: allocations.map((allocation) => ({
+        targetId: allocation.targetId,
+        hitPoints: Hp(allocation.hitPoints),
+      })),
+    },
+    spatialFacts: allocations
+      .filter((allocation) => allocation.targetId !== fighterId)
+      .map((allocation) => ({
+        kind: "magicActionHealingPoolTargetWithinRange" as const,
+        actorId: fighterId,
+        targetId: allocation.targetId,
+        unitId: "cleric_preserve_life",
+        rangeFeet: movementFeet(30),
+      })),
   };
 }
 
@@ -3232,6 +5516,268 @@ function weaponAttackOrderingError(raw: unknown): WeaponAttackOrderingError {
   }
 
   throw new Error(`Unknown weapon attack ordering error: ${String(raw)}.`);
+}
+
+function saveGatedSpellOrderingStage(
+  raw: unknown,
+): SaveGatedSpellOrderingStage {
+  const tag = quintVariantTag(raw);
+  if (tag === "SaveGatedSpellActSelectionStage") return "actSelection";
+  if (tag === "SaveGatedSpellTargetListAndConditionChoiceStage") {
+    return "targetListAndConditionChoice";
+  }
+  if (tag === "SaveGatedSpellTargetListStage") return "targetList";
+  if (tag === "SaveGatedSpellConditionChoiceStage") {
+    return "conditionChoice";
+  }
+  if (tag === "SaveGatedSpellDamageSavingThrowOutcomeStage") {
+    return "damageSavingThrowOutcome";
+  }
+  if (tag === "SaveGatedSpellConditionSavingThrowOutcomeStage") {
+    return "conditionSavingThrowOutcome";
+  }
+  if (tag === "SaveGatedSpellDamageDiceStage") return "damageDice";
+  if (tag === "SaveGatedSpellResolvedStage") return "resolved";
+
+  throw new Error(`Unknown save-gated spell ordering stage: ${tag}`);
+}
+
+function saveGatedSpellOrderingHole(
+  raw: unknown,
+): SaveGatedSpellOrderingHole {
+  const tag = quintVariantTag(raw);
+  if (tag === "SpellTargetListHoleKind") return "spellTargetList";
+  if (tag === "ConditionChoiceHoleKind") return "conditionChoice";
+  if (tag === "SavingThrowOutcomeHoleKind") return "savingThrowOutcome";
+  if (tag === "RolledDiceHoleKind") return "rolledDice";
+
+  throw new Error(`Unknown save-gated spell ordering hole: ${tag}`);
+}
+
+function saveGatedSpellOrderingHoleFromRuntime(
+  hole: Pick<BattleHole, "kind">,
+): SaveGatedSpellOrderingHole {
+  if (hole.kind === "spellTargetList") return "spellTargetList";
+  if (hole.kind === "conditionChoice") return "conditionChoice";
+  if (hole.kind === "savingThrowOutcome") return "savingThrowOutcome";
+  if (hole.kind === "rolledDice") return "rolledDice";
+
+  throw new Error(`Unexpected save-gated spell ordering hole: ${hole.kind}`);
+}
+
+function saveGatedSpellOrderingError(
+  raw: unknown,
+): SaveGatedSpellOrderingError {
+  if (
+    raw === "" ||
+    raw === "targetOrAreaRequired" ||
+    raw === "savingThrowRequired"
+  ) {
+    return raw;
+  }
+
+  throw new Error(`Unknown save-gated spell ordering error: ${String(raw)}.`);
+}
+
+function spellAttackOrderingStage(raw: unknown): SpellAttackOrderingStage {
+  const tag = quintVariantTag(raw);
+  if (tag === "SpellAttackActSelectionStage") return "actSelection";
+  if (tag === "SpellAttackTargetChoiceStage") return "targetChoice";
+  if (tag === "SpellAttackTypedTargetChoiceStage") return "typedTargetChoice";
+  if (tag === "SpellAttackTargetListStage") return "targetList";
+  if (tag === "SpellAttackTargetAllocationStage") return "targetAllocation";
+  if (tag === "SpellAttackDamageTypeAndTargetChoiceStage") {
+    return "damageTypeAndTargetChoice";
+  }
+  if (tag === "SpellAttackDamageTypeChoiceStage") return "damageTypeChoice";
+  if (tag === "SpellAttackAttackRollStage") return "attackRoll";
+  if (tag === "SpellAttackDamageDiceStage") return "damageDice";
+  if (tag === "SpellAttackResolvedStage") return "resolved";
+
+  throw new Error(`Unknown spell attack ordering stage: ${tag}`);
+}
+
+function spellAttackOrderingHole(raw: unknown): SpellAttackOrderingHole {
+  const tag = quintVariantTag(raw);
+  if (tag === "TargetChoiceHoleKind") return "targetChoice";
+  if (tag === "SpellTargetListHoleKind") return "spellTargetList";
+  if (tag === "SpellTargetAllocationHoleKind") return "spellTargetAllocation";
+  if (tag === "DamageTypeChoiceHoleKind") return "damageTypeChoice";
+  if (tag === "AttackRollHoleKind") return "attackRoll";
+  if (tag === "RolledDiceHoleKind") return "rolledDice";
+
+  throw new Error(`Unknown spell attack ordering hole: ${tag}`);
+}
+
+function spellAttackOrderingHoleFromRuntime(
+  hole: Pick<BattleHole, "kind">,
+): readonly SpellAttackOrderingHole[] {
+  if (hole.kind === "targetChoice") return ["targetChoice"];
+  if (hole.kind === "spellTargetList") return ["spellTargetList"];
+  if (hole.kind === "spellTargetAllocation") return ["spellTargetAllocation"];
+  if (hole.kind === "damageTypeChoice") return ["damageTypeChoice"];
+  if (hole.kind === "attackRoll") return ["attackRoll"];
+  if (hole.kind === "rolledDice") return ["rolledDice"];
+  if (hole.kind === "objectTargetChoice") return [];
+
+  throw new Error(`Unexpected spell attack ordering hole: ${hole.kind}`);
+}
+
+function spellAttackOrderingError(raw: unknown): SpellAttackOrderingError {
+  if (
+    raw === "" ||
+    raw === "targetRequired" ||
+    raw === "damageTypeRequired" ||
+    raw === "targetOrDamageTypeRequired" ||
+    raw === "attackRollRequired"
+  ) {
+    return raw;
+  }
+
+  throw new Error(`Unknown spell attack ordering error: ${String(raw)}.`);
+}
+
+function hitPointRestorationOrderingStage(
+  raw: unknown,
+): HitPointRestorationOrderingStage {
+  const tag = quintVariantTag(raw);
+  if (tag === "HitPointRestorationActSelectionStage") return "actSelection";
+  if (tag === "SpellHealingTargetChoiceStage") {
+    return "spellHealingTargetChoice";
+  }
+  if (tag === "SpellHealingTargetListStage") return "spellHealingTargetList";
+  if (tag === "SpellHealingRollStage") return "spellHealingRoll";
+  if (tag === "FeatureHealingPoolDistributionStage") {
+    return "featureHealingPoolDistribution";
+  }
+  if (tag === "HitPointRestorationResolvedStage") return "resolved";
+
+  throw new Error(`Unknown Hit Point restoration ordering stage: ${tag}`);
+}
+
+function hitPointRestorationOrderingHole(
+  raw: unknown,
+): HitPointRestorationOrderingHole {
+  const tag = quintVariantTag(raw);
+  if (tag === "TargetChoiceHoleKind") return "targetChoice";
+  if (tag === "SpellTargetListHoleKind") return "spellTargetList";
+  if (tag === "RolledDiceHoleKind") return "rolledDice";
+  if (tag === "HitPointHealingDistributionHoleKind") {
+    return "hitPointHealingDistribution";
+  }
+
+  throw new Error(`Unknown Hit Point restoration ordering hole: ${tag}`);
+}
+
+function hitPointRestorationOrderingHoleFromRuntime(
+  hole: Pick<BattleHole, "kind">,
+): HitPointRestorationOrderingHole {
+  if (hole.kind === "targetChoice") return "targetChoice";
+  if (hole.kind === "spellTargetList") return "spellTargetList";
+  if (hole.kind === "rolledDice") return "rolledDice";
+  if (hole.kind === "hitPointHealingDistribution") {
+    return "hitPointHealingDistribution";
+  }
+
+  throw new Error(
+    `Unexpected Hit Point restoration ordering hole: ${hole.kind}`,
+  );
+}
+
+function hitPointRestorationOrderingError(
+  raw: unknown,
+): HitPointRestorationOrderingError {
+  if (
+    raw === "" ||
+    raw === "healingTargetRequired" ||
+    raw === "healingAmountRequired" ||
+    raw === "healingDistributionRequired"
+  ) {
+    return raw;
+  }
+
+  throw new Error(
+    `Unknown Hit Point restoration ordering error: ${String(raw)}.`,
+  );
+}
+
+function commandOrderingStage(raw: unknown): CommandOrderingStage {
+  const tag = quintVariantTag(raw);
+  if (tag === "CommandActSelectionStage") return "actSelection";
+  if (tag === "CommandTargetListAndOptionChoiceStage") {
+    return "targetListAndOptionChoice";
+  }
+  if (tag === "CommandTargetListStage") return "targetList";
+  if (tag === "CommandOptionChoiceStage") return "optionChoice";
+  if (tag === "CommandSavingThrowOutcomeStage") return "savingThrowOutcome";
+  if (tag === "CommandDropHeldObjectFactsStage") {
+    return "dropHeldObjectFacts";
+  }
+  if (tag === "CommandApproachMovementStage") return "approachMovement";
+  if (tag === "CommandFleeMovementStage") return "fleeMovement";
+  if (tag === "CommandResolvedStage") return "resolved";
+
+  throw new Error(`Unknown Command ordering stage: ${tag}`);
+}
+
+function commandOrderingHole(raw: unknown): CommandOrderingHole {
+  const tag = quintVariantTag(raw);
+  if (tag === "SpellTargetListHoleKind") return "spellTargetList";
+  if (tag === "CommandOptionChoiceHoleKind") return "commandOptionChoice";
+  if (tag === "SavingThrowOutcomeHoleKind") return "savingThrowOutcome";
+  if (tag === "MovementHoleKind") return "movement";
+
+  throw new Error(`Unknown Command ordering hole: ${tag}`);
+}
+
+function commandOrderingHoleFromRuntime(
+  hole: Pick<BattleHole, "kind">,
+): readonly CommandOrderingHole[] {
+  if (hole.kind === "spellTargetList") return ["spellTargetList"];
+  if (hole.kind === "commandOptionChoice") return ["commandOptionChoice"];
+  if (hole.kind === "savingThrowOutcome") return ["savingThrowOutcome"];
+  if (hole.kind === "movement") return ["movement"];
+  if (hole.kind === "heldObjectFacts") return [];
+  if (hole.kind === "interruptDecision") return [];
+
+  throw new Error(`Unexpected Command ordering hole: ${hole.kind}`);
+}
+
+function commandOrderingError(raw: unknown): CommandOrderingError {
+  if (
+    raw === "" ||
+    raw === "commandTargetListRequired" ||
+    raw === "commandOptionChoiceRequired" ||
+    raw === "commandSavingThrowRequired" ||
+    raw === "commandHeldObjectFactsRequired" ||
+    raw === "commandMovementRequired"
+  ) {
+    return raw;
+  }
+
+  throw new Error(`Unknown Command ordering error: ${String(raw)}.`);
+}
+
+function commandOrderingPendingOption(
+  raw: unknown,
+): CommandOrderingPendingOption {
+  if (
+    raw === "none" ||
+    raw === "grovel" ||
+    raw === "drop" ||
+    raw === "halt" ||
+    raw === "approach" ||
+    raw === "flee"
+  ) {
+    return raw;
+  }
+
+  throw new Error(`Unknown Command pending option: ${String(raw)}.`);
+}
+
+function commandOrderingActor(raw: unknown): CommandOrderingProjection["currentActor"] {
+  if (raw === "Caster" || raw === "Target") return raw;
+  throw new Error(`Unknown Command ordering actor: ${String(raw)}.`);
 }
 
 function mbtLastResult(raw: unknown): MbtLastResult {

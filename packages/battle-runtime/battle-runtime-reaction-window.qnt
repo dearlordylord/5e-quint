@@ -1,10 +1,11 @@
 // -*- mode: Bluespec; -*-
-// KERNEL-COVERAGE: qnt-owner BATTLE.REACTION.OFFER_DECLINE_RESUME BATTLE.SPELL.REACTION_CASTING_TIME
+// KERNEL-COVERAGE: qnt-owner BATTLE.REACTION.OFFER_DECLINE_RESUME BATTLE.SPELL.REACTION_CASTING_TIME BATTLE.PROTOCOL.INTERRUPT_STACK_RESUME_REPLAY
 
 module battleRuntimeReactionWindow {
   import battleRuntimeInterruptBridge.* from "./battle-runtime-interrupt-bridge"
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeSpellInvocation.* from "./battle-runtime-spell-invocation"
+  import reactionsContinuationsConcentration.* from "../shared-algebras/proofs/rule-core/reactions-continuations-concentration"
 
   pure def counterspellFrameClaimsTriggeringSlot(frame: PendingReactionFrame): bool =
     match frame.procedure {
@@ -163,6 +164,76 @@ module battleRuntimeReactionWindow {
 
   pure def reactionDecisionClosedFrame(before: BattleState, after: BattleState): bool =
     after.interruptStack.length() < before.interruptStack.length()
+
+  pure def battleRuntimeInterruptFrameReactionWindow(
+    window: ReactionWindowState,
+    frame: InterruptFrame,
+  ): ReactionWindowState =
+    match frame {
+      | PendingReaction(pending) =>
+          offerReactionWindow(
+            window,
+            battleRuntimeReactionWindowKind(battleRuntimeReactionTrigger(pending.trigger)),
+          )
+      | _ => window
+    }
+
+  pure def battleRuntimeInterruptStackReactionWindow(
+    stack: List[InterruptFrame]
+  ): ReactionWindowState =
+    stack.foldl(NoReactionWindow, (window, frame) =>
+      battleRuntimeInterruptFrameReactionWindow(window, frame)
+    )
+
+  pure def battleRuntimePendingReactionFrameCount(
+    stack: List[InterruptFrame]
+  ): int =
+    stack.foldl(0, (count, frame) =>
+      match frame {
+        | PendingReaction(_) => count + 1
+        | _ => count
+      }
+    )
+
+  pure def battleRuntimeInterruptStackReactionDepth(state: BattleState): int =
+    battleRuntimePendingReactionFrameCount(state.interruptStack)
+
+  pure def battleRuntimeInterruptStackWithinReactionDepth(state: BattleState): bool =
+    battleRuntimeInterruptStackReactionDepth(state) <= maximumReactionWindowDepth
+
+  pure def battleRuntimeInterruptStackDepthMatchesRuleCore(state: BattleState): bool =
+    if (battleRuntimeInterruptStackWithinReactionDepth(state))
+      battleRuntimeInterruptStackReactionDepth(state) ==
+        reactionWindowDepth(battleRuntimeInterruptStackReactionWindow(state.interruptStack))
+    else
+      false
+
+  pure def battleRuntimeClosedReactionDecisionMatchesRuleCore(
+    before: BattleState,
+    after: BattleState,
+  ): bool = {
+    val beforeWindow = battleRuntimeInterruptStackReactionWindow(before.interruptStack)
+    val afterWindow = battleRuntimeInterruptStackReactionWindow(after.interruptStack)
+    if (reactionDecisionClosedFrame(before, after))
+      afterWindow == advanceContinuation(beforeWindow)
+    else
+      afterWindow == beforeWindow
+  }
+
+  pure def battleRuntimeActiveEffectsChangedBetween(
+    before: BattleState,
+    after: BattleState,
+  ): bool =
+    before.fighter.activeEffects != after.fighter.activeEffects or
+      before.goblin.activeEffects != after.goblin.activeEffects
+
+  pure def battleRuntimeReactionWindowStableAcrossActiveEffectChange(
+    before: BattleState,
+    after: BattleState,
+  ): bool =
+    not(battleRuntimeActiveEffectsChangedBetween(before, after)) or
+      battleRuntimeInterruptStackReactionWindow(before.interruptStack) ==
+        battleRuntimeInterruptStackReactionWindow(after.interruptStack)
 
   pure def openDissonantWhispersAfterDamageSequence(state: BattleState): BattleState =
     openReactionWindow(state, {

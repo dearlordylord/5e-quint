@@ -97,8 +97,9 @@ Checked source-of-truth artifacts:
 Active generator and Rust queues:
 
 - No active generator-readiness blocker queue. `generator-readiness.jsonl`
-  currently has 69 rows, all `generation-subset-clean`, with no `blockedBy` or
-  `followUpTaskIds` entries.
+  currently has no rows outside `generation-subset-clean` and no `blockedBy`
+  or `followUpTaskIds` entries; this includes the battle protocol kernel
+  vocabulary, frontier-ordering, and interrupt/resume/replay owners.
 - Generator implementation is not an active project concern in this plan. A
   golden generator-readiness state means the checked QNT inputs are classified,
   blocker-free, and boundary-mapped for a future consumer; it does not require

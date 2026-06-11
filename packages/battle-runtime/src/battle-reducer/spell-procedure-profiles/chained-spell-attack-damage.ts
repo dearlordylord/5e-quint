@@ -1,5 +1,5 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-chained-attack-damage
-// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING
 //
 // The chainedSpellAttackDamage Spell Procedure Profile: a Spell Slot action
 // spell that chooses one damage type, makes a Spell Attack, rolls spell

@@ -2,8 +2,8 @@
 
 Date: 2026-06-10
 
-Status: prepared, not launched. Lanes are written; no Ralph runner has been
-started for them.
+Status: in progress. Lane B's recursive audit extended the battle protocol
+kernel queue on 2026-06-11; the wave is not drained.
 
 This wave turns the 2026-06-10 architecture-review PRDs into three Ralph
 lanes. Source documents:
@@ -19,6 +19,25 @@ lanes. Source documents:
 Deferred, deliberately not a lane yet:
 `plans/RESEARCH_witness_literal_capture_gate.md` becomes a PRD only at
 `PDS-A17` (after the typed-witness shape exists).
+
+## Lane B Recursive Frontier Audit
+
+`BPK-B09` audited `plans/rules-kernel-coverage/battle-hole-frontier.jsonl`
+after the protocol-kernel closeout. The existing
+`BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING` owner covers weapon attacks and
+save-gated spells, but the frontier registry still exposes reusable procedure
+shapes without ordering coverage. Lane B therefore continues with:
+
+- `BPK-B10-SPELL-ATTACK-ORDERING` for attack-roll spell frontiers;
+- `BPK-B11-HEALING-ORDERING` for spell and feature Hit Point restoration;
+- `BPK-B12-COMMAND-ORDERING` for Command option, failed-save, and next-turn
+  consequence sequencing;
+- `BPK-B13-STAT-BLOCK-ACTION-ORDERING` for Stat Block actions, Multiattack,
+  limited-use, and recharge controls.
+
+Table-owned route, area, range, cover, sight, held-object inventory, and
+geometry facts remain boundary evidence; these follow-ups own only
+reducer-visible ordering over the protocol vocabulary.
 
 ## Why The PRDs Map To Lanes This Way
 
@@ -37,7 +56,7 @@ working-tree changes.
 | **Files** | battle-runtime `src/*.mbt.test.ts`, new kit module, new witness-protocol leaf, existing `*.mbt.qnt` | new QNT vocabulary leaves + protocol slices (new files), `scripts/rules-kernel-coverage-*.cjs`, new TS hole-family mapping, `plans/rules-kernel-coverage/*.jsonl`, new `*.mbt.qnt` witnesses (new files) | `packages/character-sheet-runtime/src/**` only |
 | **vs Lane A** | — | disjoint: B creates new files; B's witnesses are written post-`PDS-A03` shape and never touch A's migration set | disjoint packages |
 | **vs Lane B** | see left | — | disjoint packages |
-| **Start condition** | immediately | immediately (B01–B03); B04+ blocked on `PDS-A01` + `PDS-A03` | immediately (mcp-WIP gate cleared 2026-06-10) |
+| **Start condition** | immediately | immediately (B01–B03); B04+ blocked on `PDS-A01` + `PDS-A03`; B10+ follows B09's recursive frontier audit | immediately (mcp-WIP gate cleared 2026-06-10) |
 
 All three lanes may run concurrently subject to the gates below.
 
@@ -86,4 +105,4 @@ All three lanes may run concurrently subject to the gates below.
 2. Lane C may start immediately as well (its external gate cleared
    2026-06-10); remember the cross-lane MBT mutex.
 3. Single-runner fallback (one lane at a time): A01→A03, then B01→B03, then
-   alternate A batches with B04–B07, then C, then closeouts.
+   alternate A batches with B04–B07, then B08→B13, then C, then closeouts.
