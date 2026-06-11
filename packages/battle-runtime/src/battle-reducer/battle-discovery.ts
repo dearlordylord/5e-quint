@@ -664,6 +664,11 @@ function companionProtocolActs(
     return [];
   }
   const familiar = familiarEntry.companion;
+  if (familiar.status === "dismissedForever") {
+    // A permanently dismissed familiar is a settlement tombstone, not a live
+    // companion: it offers no lifecycle acts.
+    return [];
+  }
   const actor = state.combatants.get(actorId);
   const actorCanAct = combatantCanTakeActions(actor);
   if (familiar.status !== "present") {

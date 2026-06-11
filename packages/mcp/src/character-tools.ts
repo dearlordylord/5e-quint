@@ -456,6 +456,5 @@ function characterListRow(
     build: session.sheet.build,
     battleId: session.battleId,
     companion: characterSheetCompanion(session.sheet),
-    companionAdmission: session.companionAdmission,
   });
 }

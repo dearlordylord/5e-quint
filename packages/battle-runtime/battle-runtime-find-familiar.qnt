@@ -116,22 +116,39 @@ module battleRuntimeFindFamiliar {
         }
     }
 
+  // Permanent dismissal retains owner+identity as the DismissedForeverFindFamiliar
+  // tombstone (not NoFindFamiliar) so settlement can clear the owner's durable
+  // companion slot rather than conflating it with "never admitted".
   pure def permanentlyDismissFindFamiliarLifecycle(
     prior: FindFamiliarLifecycle
   ): FindFamiliarLifecycleResult =
     match prior {
-      | PresentFindFamiliar(_) => {
-          lifecycle: NoFindFamiliar,
+      | PresentFindFamiliar(present) => {
+          lifecycle: DismissedForeverFindFamiliar({
+            owner: present.owner,
+            identity: present.identity,
+          }),
           itemDropBoundaryEvents: Set(),
           magicActionSpent: false,
         }
-      | TemporarilyDismissedFindFamiliar(_) => {
-          lifecycle: NoFindFamiliar,
+      | TemporarilyDismissedFindFamiliar(absent) => {
+          lifecycle: DismissedForeverFindFamiliar({
+            owner: absent.owner,
+            identity: absent.identity,
+          }),
           itemDropBoundaryEvents: Set(),
           magicActionSpent: false,
         }
-      | DisappearedAtZeroHitPointsFindFamiliar(_) => {
-          lifecycle: NoFindFamiliar,
+      | DisappearedAtZeroHitPointsFindFamiliar(absent) => {
+          lifecycle: DismissedForeverFindFamiliar({
+            owner: absent.owner,
+            identity: absent.identity,
+          }),
+          itemDropBoundaryEvents: Set(),
+          magicActionSpent: false,
+        }
+      | DismissedForeverFindFamiliar(_) => {
+          lifecycle: prior,
           itemDropBoundaryEvents: Set(),
           magicActionSpent: false,
         }
@@ -220,6 +237,7 @@ module battleRuntimeFindFamiliar {
         if (absent.owner == owner and absent.expiration == FindFamiliarOwnerFinishedLongRestExpiration)
           NoFindFamiliar
         else prior
+      | DismissedForeverFindFamiliar(_) => prior
       | NoFindFamiliar => NoFindFamiliar
     }
 
@@ -239,6 +257,7 @@ module battleRuntimeFindFamiliar {
         if (absent.expiration == FindFamiliarOwnerFinishedLongRestExpiration)
           NoFindFamiliar
         else prior
+      | DismissedForeverFindFamiliar(_) => prior
       | NoFindFamiliar => NoFindFamiliar
     }
 

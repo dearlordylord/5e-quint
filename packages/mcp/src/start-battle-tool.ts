@@ -10,9 +10,7 @@ import {
 import {
   admitCharacterSheetCompanionToBattle,
   characterSheetBattleInit,
-  type CharacterSheetCompanionBattleAdmissionState,
 } from "@dnd/character-battle-runtime";
-import { characterSheetCompanion } from "@dnd/character-sheet-runtime";
 import { traverseValidation } from "@dnd/shared-algebras/validation-algebra";
 import { Either, Match, Option } from "effect";
 
@@ -101,10 +99,6 @@ export function handleStartBattleToolCall(
       tag: "inBattle",
       sheet: session,
       battleId: input.battleId,
-      companionAdmission: companionAdmissionStateForCharacter({
-        session,
-        admissions: input.companionAdmissions,
-      }),
     });
   }
 
@@ -342,26 +336,6 @@ function initialCombatantOrderForStartInput(
       ),
     ].map((combatantId, index) => [combatantId, index]),
   );
-}
-
-function companionAdmissionStateForCharacter(input: {
-  readonly session: AvailableCharacterSession;
-  readonly admissions: readonly CompanionAdmissionToolInput[];
-}): CharacterSheetCompanionBattleAdmissionState {
-  if (
-    !input.admissions.some(
-      (admission) => admission.ownerCharacterId === input.session.characterId,
-    )
-  ) {
-    return { tag: "notAdmitted" };
-  }
-  const companion = characterSheetCompanion(input.session);
-  return companion.tag === "none"
-    ? { tag: "notAdmitted" }
-    : {
-        tag: "retainedOneAtATime",
-        companionId: companion.companion.companionId,
-      };
 }
 
 function invalidBattleCombatantsContent(issues: readonly ToolError[]) {

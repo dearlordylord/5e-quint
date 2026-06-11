@@ -380,7 +380,9 @@ function findFamiliarCompanionProjection(
     familiarStatus: familiar?.status === "present" ? "present" : "none",
     familiarId: familiar?.status === "present" ? "primary" : "none",
     familiarForm:
-      familiar?.formSelection.tag === "normalNamedForm"
+      familiar !== null &&
+      familiar.status !== "dismissedForever" &&
+      familiar.formSelection.tag === "normalNamedForm"
         ? familiarForm(familiar.formSelection.formId)
         : "none",
     creatureTypeOverride: creatureTypeOverride(

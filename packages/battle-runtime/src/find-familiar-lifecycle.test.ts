@@ -1530,7 +1530,7 @@ describe("Find Familiar lifecycle", () => {
     );
   });
 
-  test("permanent dismissal removes the active familiar record", () => {
+  test("permanent dismissal tombstones the familiar and removes its combatant", () => {
     const cast = castCatFamiliar(startFixtureBattle());
     expect(cast.tag).toBe("resolved");
     if (cast.tag !== "resolved") return;
@@ -1542,8 +1542,14 @@ describe("Find Familiar lifecycle", () => {
 
     expect(dismissed.tag).toBe("resolved");
     if (dismissed.tag !== "resolved") return;
-    expect(findFamiliarCompanionForOwner(dismissed.state, casterId)).toBeNull();
+    // The record is retained as a dismissedForever tombstone (not deleted) so
+    // settlement can clear the owner's durable slot; the combatant is removed
+    // and the tombstone is excluded from the snapshot.
+    expect(
+      findFamiliarCompanionForOwner(dismissed.state, casterId),
+    ).toMatchObject({ status: "dismissedForever" });
     expect(dismissed.state.combatants.has(familiarId)).toBe(false);
+    expect(dismissed.snapshot.companions).toEqual([]);
     expect(dismissed.snapshot.turnOrder).toEqual([casterId]);
     expect(dismissed.droppedObjects).toBeUndefined();
   });
@@ -2215,7 +2221,7 @@ describe("Find Familiar lifecycle", () => {
     if (permanentlyDismissed.tag !== "resolved") return;
     expect(
       findFamiliarCompanionForOwner(permanentlyDismissed.state, casterId),
-    ).toBeNull();
+    ).toMatchObject({ status: "dismissedForever" });
     expect(permanentlyDismissed.state.combatants.has(familiarId)).toBe(false);
     expect(
       permanentlyDismissed.state.currentTurnResources.actionResources,

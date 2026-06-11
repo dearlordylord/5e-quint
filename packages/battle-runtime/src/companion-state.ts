@@ -103,9 +103,20 @@ export type BattleCompanionAbsentState =
   | BattleCompanionTemporarilyDismissedState
   | BattleCompanionDisappearedAtZeroHitPointsState;
 
+// Terminal tombstone after a permanent dismissal. It retains owner + identity
+// (and the rest of the protocol state) so settlement can clear the owner's
+// durable Character Sheet slot — distinct from a missing map entry, which means
+// the owner never had a battle companion. It carries no stored form because it
+// can never reappear, and it is not an absent (reappear-able) state.
+export type BattleCompanionDismissedForeverState =
+  BattleCompanionProtocolState & {
+    readonly status: "dismissedForever";
+  };
+
 export type BattleCompanionState =
   | BattleCompanionPresentState
-  | BattleCompanionAbsentState;
+  | BattleCompanionAbsentState
+  | BattleCompanionDismissedForeverState;
 
 export type BattleCompanionSnapshot =
   | (Omit<BattleCompanionPresentState, "combatantId"> & {

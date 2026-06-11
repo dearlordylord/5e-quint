@@ -116,6 +116,15 @@ module battleRuntimeModel {
         form: FindFamiliarForm,
         creatureTypeOverride: FindFamiliarCreatureTypeOverride,
       })
+    // Terminal state after a permanent dismissal. Unlike NoFindFamiliar ("the
+    // owner never had a familiar"), this retains the owner and identity so
+    // settlement can tell "dismissed forever" (clear the durable slot) apart
+    // from "never admitted" (leave the sheet untouched). It cannot reappear, so
+    // it carries no stored form.
+    | DismissedForeverFindFamiliar({
+        owner: Actor,
+        identity: FindFamiliarIdentity,
+      })
   type FindFamiliarItemDropBoundaryEvent = {
     owner: Actor,
     familiar: Actor,

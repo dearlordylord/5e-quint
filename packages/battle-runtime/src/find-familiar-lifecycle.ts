@@ -42,6 +42,7 @@ import {
   findCompanionEntryByOwner,
   setCompanion,
   type BattleCompanionAbsentState,
+  type BattleCompanionDismissedForeverState,
   type BattleCompanionDisappearedAtZeroHitPointsState,
   type BattleCompanionDurableId,
   type BattleCompanionExpiration,
@@ -711,7 +712,8 @@ function hitPointsForFindFamiliarCast(input: {
 }): FindFamiliarHitPoints | null | string {
   if (
     input.priorFamiliar === undefined ||
-    input.priorFamiliar.status === "disappearedAtZeroHitPoints"
+    input.priorFamiliar.status === "disappearedAtZeroHitPoints" ||
+    input.priorFamiliar.status === "dismissedForever"
   ) {
     return null;
   }
@@ -875,18 +877,25 @@ export function permanentlyDismissFindFamiliar(
   if (spent.tag === "invalid") {
     return spent;
   }
-  const companions = new Map(
-    [...spent.state.companions].filter(
-      ([, companion]) => companion.ownerId !== input.casterId,
-    ),
-  );
+  // Leave a dismissedForever tombstone (retaining owner + identity + protocol
+  // state) instead of deleting the entry, so settlement can clear the owner's
+  // durable Character Sheet slot rather than mistaking permanent dismissal for
+  // "never admitted". Mirrors permanentlyDismissFindFamiliarLifecycle in
+  // battle-runtime-find-familiar.qnt.
+  const tombstone: BattleCompanionDismissedForeverState = {
+    status: "dismissedForever",
+    ownerId: familiar.ownerId,
+    identity: familiar.identity,
+    expiration: familiar.expiration,
+    creatureTypeOverride: familiar.creatureTypeOverride,
+  };
+  const companions = setCompanion(spent.state.companions, tombstone);
   if (familiar.status !== "present") {
     return resolvedFindFamiliarResult({ ...spent.state, companions }, []);
   }
-  const familiarId = familiar.combatantId;
   const nextState = withoutPresentFindFamiliarCombatant(
     { ...spent.state, companions },
-    familiarId,
+    familiar.combatantId,
   );
   return nextState.tag === "invalid"
     ? nextState

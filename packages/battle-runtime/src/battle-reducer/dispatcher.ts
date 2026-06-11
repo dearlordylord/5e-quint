@@ -4509,24 +4509,33 @@ export function snapshotBattle(state: BattleState): BattleSnapshot {
       const combatant = state.combatants.get(id);
       return combatant == null ? [] : [combatantSnapshot(state, combatant)];
     }),
-    companions: battleCompanionEntries(state).map((entry) => {
-      if (entry.companion.status !== "present") {
-        return entry.companion;
-      }
-      const { combatantId, ...snapshotCompanion } = entry.companion;
-      return {
-        ...snapshotCompanion,
-        companionId: combatantId,
-        resolvedStatBlockId: requirePresentFamiliarCombatantStatBlockId(
-          state,
-          combatantId,
-        ),
-        initiative: requirePresentFamiliarCombatantInitiative(
-          state,
-          combatantId,
-        ),
-      };
-    }) satisfies readonly BattleCompanionSnapshot[],
+    companions: battleCompanionEntries(state).flatMap(
+      (entry): readonly BattleCompanionSnapshot[] => {
+        if (entry.companion.status === "dismissedForever") {
+          // The dismissedForever tombstone exists only for settlement; it is not
+          // a live companion, so it is not part of the read-model snapshot.
+          return [];
+        }
+        if (entry.companion.status !== "present") {
+          return [entry.companion];
+        }
+        const { combatantId, ...snapshotCompanion } = entry.companion;
+        return [
+          {
+            ...snapshotCompanion,
+            companionId: combatantId,
+            resolvedStatBlockId: requirePresentFamiliarCombatantStatBlockId(
+              state,
+              combatantId,
+            ),
+            initiative: requirePresentFamiliarCombatantInitiative(
+              state,
+              combatantId,
+            ),
+          },
+        ];
+      },
+    ),
     lightEmitters: battleLightEmitters(state),
     obscurementZones: battleObscurementZones(state),
     acts: discoverBattleActs(state),

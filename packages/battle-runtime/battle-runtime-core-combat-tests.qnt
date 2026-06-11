@@ -305,7 +305,10 @@ module battleRuntimeCoreCombatTests {
         placement: FindFamiliarUnoccupiedSpaceWithin30Feet,
       })),
       assert(reappeared.magicActionSpent),
-      assert(forever.lifecycle == NoFindFamiliar),
+      assert(forever.lifecycle == DismissedForeverFindFamiliar({
+        owner: Fighter,
+        identity: BattleOnlyFindFamiliarIdentity,
+      })),
       assert(not(forever.magicActionSpent)),
       assert(forever.itemDropBoundaryEvents == Set()),
     }

@@ -48,7 +48,6 @@ export function finalizeCharacterSessionsFromBattle(
       sheet: availableSession.right,
       state,
       ownerCombatantId: combatant.combatantId,
-      admission: session.companionAdmission,
     });
     if (Either.isLeft(withCompanion)) {
       return errorContent("Battle companion session handoff failed.", {

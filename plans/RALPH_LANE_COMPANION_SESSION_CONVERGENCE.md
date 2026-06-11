@@ -6,8 +6,8 @@
   "tasks": [
     { "number": 1, "id": "CSC-T01-OWNER-KEYED-COMPANIONS", "status": "done", "title": "Key battle companions by owner; delete the synthetic companion-state id space" },
     { "number": 2, "id": "CSC-T02-PROTOCOL-TAG-UNION", "status": "done", "title": "Reduce the durable companion protocol to a tag union with one derivation table" },
-    { "number": 3, "id": "CSC-T03-SETTLEMENT-OUTCOME", "status": "ready-for-implementation", "title": "Make battle state carry the full settle-able companion outcome; drop session companionAdmission" },
-    { "number": 4, "id": "CSC-T04-DEAD-BATTLE-LONG-REST-LANE", "status": "blocked", "title": "Delete the unreachable battle-state long-rest companion lane; decide castFindFamiliar wiring" },
+    { "number": 3, "id": "CSC-T03-SETTLEMENT-OUTCOME", "status": "done", "title": "Make battle state carry the full settle-able companion outcome; drop session companionAdmission" },
+    { "number": 4, "id": "CSC-T04-DEAD-BATTLE-LONG-REST-LANE", "status": "ready-for-implementation", "title": "Delete the unreachable battle-state long-rest companion lane; decide castFindFamiliar wiring" },
     { "number": 5, "id": "CSC-T05-COMPANION-REST-ASSUMPTION", "status": "blocked", "title": "Record the companion rest-participation assumption; align sheet long-rest THP/HP" },
     { "number": 6, "id": "CSC-T06-RECAST-SEMANTICS", "status": "blocked", "title": "Record recast assumptions; one recast semantic across sheet and battle layers" },
     { "number": 7, "id": "CSC-T07-FORM-VOCAB-HOIST-CREATION-MOVE", "status": "blocked", "title": "Hoist the familiar-form vocabulary; move out-of-battle creation into character-sheet-runtime" },
@@ -132,8 +132,8 @@ a task's change invalidates them):
 | ---: | --- | --- | --- | --- |
 | 1 | CSC-T01-OWNER-KEYED-COMPANIONS | done | none | Foundation: every later battle-side task reads/writes the companions map; do the key model first so nothing is built on the synthetic id space. |
 | 2 | CSC-T02-PROTOCOL-TAG-UNION | done | T01 | Shrinks the protocol vocabulary T03's settlement must write. |
-| 3 | CSC-T03-SETTLEMENT-OUTCOME | ready-for-implementation | T02 | The core domain rework; consumes T01's key model and T02's protocol shape. |
-| 4 | CSC-T04-DEAD-BATTLE-LONG-REST-LANE | blocked | T03 | Whether battle `expiration` survives depends on T03's settlement projection. |
+| 3 | CSC-T03-SETTLEMENT-OUTCOME | done | T02 | The core domain rework; consumes T01's key model and T02's protocol shape. |
+| 4 | CSC-T04-DEAD-BATTLE-LONG-REST-LANE | ready-for-implementation | T03 | Whether battle `expiration` survives depends on T03's settlement projection. |
 | 5 | CSC-T05-COMPANION-REST-ASSUMPTION | blocked | T04 | HITL; sheet-side counterpart of T04's deletion. |
 | 6 | CSC-T06-RECAST-SEMANTICS | blocked | T05 | HITL; depends on T03's outcome union for the battle half. |
 | 7 | CSC-T07-FORM-VOCAB-HOIST-CREATION-MOVE | blocked | T06 | Package move lands after semantics settle, so code moves once. |
@@ -285,7 +285,48 @@ unknown-tag rejection tests.
 
 ### Task 3 - CSC-T03-SETTLEMENT-OUTCOME
 
-Status: `blocked` · Mode: AFK implementation, HITL review point flagged below
+Status: `done` · Mode: AFK implementation, HITL review point flagged below
+
+**Outcome.** QNT-first: added the `DismissedForeverFindFamiliar({ owner, identity })`
+terminal state to the lifecycle union in `battle-runtime-model.qnt`;
+`permanentlyDismissFindFamiliarLifecycle` now maps present/dismissed/disappeared
+to it (retaining owner+identity), idempotent for the tombstone, and the
+`forever` proof in `battle-runtime-core-combat-tests.qnt` asserts the tombstone
+instead of `NoFindFamiliar`. TS mirror: `BattleCompanionDismissedForeverState`;
+`permanentlyDismissFindFamiliar` writes the tombstone via `setCompanion` instead
+of deleting the entry; discovery offers no acts for it and the snapshot filters
+it out (it is a settlement-only tombstone, not a live companion). Settlement
+(`applyBattleCompanionHandoffToCharacterSheet`) now reads battle state alone:
+no entry → Sheet kept; battle-only → deferred to L13COMP-03 (documented in the
+plan doc); `dismissedForever` (retained) → slot cleared; present/temporarily-
+dismissed/disappeared → manifestation written with the protocol **derived from
+battle facts** (`retainedCompanionProtocolFromBattle`, closing the F4 recast
+divergence). The session-level `companionAdmission` copy is gone: the
+`InBattleCharacterSession.companionAdmission` field, the
+`CharacterSheetCompanionBattleAdmissionState` type, `companionAdmissionStateForCharacter`,
+`battleCompanionHandoffIdentityIssue`, and the character-tool-output schema
+field are all deleted. The forward admission path
+(`companionAdmissionManifestation`, the `companionAdmissions` start_battle tool
+input) is retained — it is admission, not the redundant session copy F1/F2
+flagged.
+
+**HITL decisions (owner-resolved 2026-06-10):** (a) recast over a
+`dismissedForever` retained companion inherits the durable identity — recorded
+for A47/T06 and the out-of-battle recast path; in-battle casting is unwired and
+`castFindFamiliar` is deleted in T04, so the QNT cast-over-tombstone path stays
+the existing leaf behavior. (b) battle-created (battle-only) familiars do not
+settle as new durable companions yet — deferred to L13COMP-03, with the
+settlement outcome shaped to slot in (reads on `battleOnly` vs
+`retainedBetweenBattles`); recorded in the L13COMP-03 plan-doc section.
+
+Verification: four-package typecheck; battle-runtime find-familiar tests fixed
+(tombstone assertions); character-battle 77 / character-sheet 95 / mcp 94;
+`test:qnt-proofs` 42 modules green (core-combat-tests 117s); companion MBT 6
+green with witnesses unmodified (neither witness exercises permanent dismissal,
+so the tombstone never reaches their projections; driver glue made tombstone-
+type-safe). New distinct tests: dismissed-forever → slot cleared (mcp), never-
+admitted → slot untouched (mcp), ordinary protocol round-trip asserted at
+settlement.
 
 **Findings (review F1+F2+F4-battle-half).**
 

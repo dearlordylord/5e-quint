@@ -722,7 +722,6 @@ describe("Character Sheet battle handoff", () => {
         sheet,
         state: cast.state,
         ownerCombatantId: ownerId,
-        admission: { tag: "notAdmitted" },
       }),
     );
 

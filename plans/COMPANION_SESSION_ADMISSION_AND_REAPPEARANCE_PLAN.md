@@ -393,6 +393,18 @@ Required output:
   zero-HP helper can report dropped objects when supplied held-object facts, but
   ordinary damage resolution does not yet have a hole/outcome channel for that
   table fact.
+- Durable settlement of battle-created (battle-only) familiars. Deferred here
+  from the Companion Session Convergence lane (CSC-T03). That lane shipped the
+  `dismissedForever` battle tombstone and made `end_battle` settlement read the
+  battle companion outcome alone (`applyBattleCompanionHandoffToCharacterSheet`,
+  with the session-level `companionAdmission` copy removed). A battle-only
+  familiar (no durable Character Sheet identity) currently leaves the Sheet
+  untouched at settlement rather than evaporating; settling it as a new durable
+  companion belongs here, once in-battle Find Familiar casting is wired with the
+  Magic-action gates Pact-of-the-Chain/Wild-Companion RAW requires. The
+  settlement outcome reads on battle identity (`battleOnly` vs
+  `retainedBetweenBattles`), so this slots in without reworking the outcome
+  shape.
 - MCP tests proving `resolve_battle_act` / `fill_battle_hole` carry the
   runtime-returned subjects and fills, and proving public tools such as
   `cast_find_familiar` or `cast_wild_companion` do not exist.

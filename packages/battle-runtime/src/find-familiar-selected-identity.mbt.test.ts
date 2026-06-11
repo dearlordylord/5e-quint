@@ -395,7 +395,7 @@ function projectBattleCompanionState(
   return {
     familiarStatus: familiar?.status ?? "none",
     formId:
-      familiar === null
+      familiar === null || familiar.status === "dismissedForever"
         ? "none"
         : formSelectionProjection(familiar.formSelection),
     familiarCombatantPresent: state.combatants.has(familiarId),
@@ -415,7 +415,10 @@ function projectBattleCompanionState(
 }
 
 function formSelectionProjection(
-  selection: BattleCompanionState["formSelection"],
+  selection: Exclude<
+    BattleCompanionState,
+    { readonly status: "dismissedForever" }
+  >["formSelection"],
 ): string {
   if (selection.tag === "challengeRatingZeroBeast")
     return selection.statBlockId;

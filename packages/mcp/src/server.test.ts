@@ -2412,6 +2412,9 @@ describe("MCP server route", () => {
           companion: {
             tag: "retainedOneAtATime",
             companion: {
+              // Settlement derives the protocol from the battle facts; an
+              // ordinary familiar round-trips to the ordinary protocol.
+              protocol: { tag: "ordinaryFamiliarLikeOneAtATime" },
               manifestation: {
                 tag: "embodiedOutsideBattle",
                 resolvedStatBlockId: "stat_block_cat",
@@ -2881,6 +2884,49 @@ describe("MCP server route", () => {
         characterId: testCharacterId(draftId),
         session: {
           companion: { tag: "none" },
+        },
+      },
+    ]);
+  });
+
+  test("end_battle leaves a retained companion untouched when it was never admitted", () => {
+    const root = createMcpCompositionRoot();
+    const draftId = "draft:mcp-find-familiar-never-admitted-handoff";
+    createFinalizedWizardWithFindFamiliar(root, draftId);
+    setRetainedFamiliarCompanion(root, draftId, { formId: "owl" });
+
+    readPayload(
+      handleToolCall(root, "start_battle", {
+        battleId: "battle:mcp-find-familiar-never-admitted-handoff",
+        initialCombatants: [
+          {
+            kind: "characterSession",
+            characterId: testCharacterId(draftId),
+            combatantId: "wizard",
+            initiative: 18,
+            side: "party",
+          },
+        ],
+        // No companionAdmissions: the retained companion stays out of battle, so
+        // there is no battle companion entry to settle from. The Character Sheet
+        // remains the source of truth and the durable slot survives end_battle.
+      }),
+    );
+
+    const ended = readPayload(handleToolCall(root, "end_battle", {}));
+    expect(ended.characters).toMatchObject([
+      {
+        characterId: testCharacterId(draftId),
+        session: {
+          companion: {
+            tag: "retainedOneAtATime",
+            companion: {
+              companionId: "durable-wizard-familiar",
+              manifestation: {
+                selectedForm: { tag: "normalNamedForm", formId: "owl" },
+              },
+            },
+          },
         },
       },
     ]);

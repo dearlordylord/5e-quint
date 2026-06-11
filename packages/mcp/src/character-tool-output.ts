@@ -120,7 +120,6 @@ const CharacterSessionRowSchema = Schema.Union(
     build: JsonObjectSchema,
     battleId: Schema.String,
     companion: JsonObjectSchema,
-    companionAdmission: JsonObjectSchema,
   }),
 );
 const CreationFillResultSchema = Schema.Union(

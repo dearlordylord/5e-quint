@@ -185,13 +185,6 @@ export type CharacterSheetCompanionBattleAdmissionInput = {
   readonly statBlockCatalog: StatBlockCatalog;
 };
 
-export type CharacterSheetCompanionBattleAdmissionState =
-  | { readonly tag: "notAdmitted" }
-  | {
-      readonly tag: "retainedOneAtATime";
-      readonly companionId: CharacterSheetRetainedCompanionId;
-    };
-
 export type CharacterSheetRetainedCompanionCreationSource =
   | {
       readonly tag: "spellSlotSpellCast";
@@ -473,55 +466,57 @@ export function admitCharacterSheetCompanionToBattle(
     : Either.right(admitted.right);
 }
 
+// Settlement reads the battle companion outcome alone (no session-level
+// admission copy). Permanent dismissal now leaves a dismissedForever tombstone,
+// so the outcome is fully recoverable from BattleState.companions:
+//   - no entry            -> the owner never had a battle companion; Sheet kept.
+//   - battle-only entry   -> deferred to L13COMP-03; no Sheet slot to update.
+//   - dismissedForever    -> the owner ended the companion in battle; clear slot.
+//   - present/temporarily-dismissed/disappeared -> write the manifestation and
+//     the protocol derived from the battle facts (so a battle-side recast cannot
+//     diverge from the Sheet protocol).
 export function applyBattleCompanionHandoffToCharacterSheet(input: {
   readonly sheet: CharacterSheet;
   readonly state: BattleState;
   readonly ownerCombatantId: CombatantId;
-  readonly admission: CharacterSheetCompanionBattleAdmissionState;
 }): Either.Either<CharacterSheet, CharacterSheetBattleHandoffIssue> {
-  const sheetCompanion = characterSheetCompanion(input.sheet);
   const battleEntry = findFamiliarCompanionEntryForOwner(
     input.state,
     input.ownerCombatantId,
   );
   if (battleEntry === null) {
-    if (input.admission.tag === "notAdmitted") return Either.right(input.sheet);
-    if (
-      sheetCompanion.tag === "retainedOneAtATime" &&
-      sheetCompanion.companion.companionId !== input.admission.companionId
-    ) {
-      return characterSheetBattleHandoffIssue(
-        "Admitted companion identity does not match Character Sheet companion during removal handoff.",
-      );
-    }
+    return Either.right(input.sheet);
+  }
+  const battleCompanion = battleEntry.companion;
+  if (battleCompanion.identity.tag !== "retainedBetweenBattles") {
+    // Battle-created (battle-only) familiars have no durable Character Sheet
+    // identity and do not settle as durable companions yet; that is deferred to
+    // L13COMP-03. They own no Sheet slot, so the Sheet is unchanged.
+    return Either.right(input.sheet);
+  }
+  const sheetCompanion = characterSheetCompanion(input.sheet);
+  if (sheetCompanion.tag === "none") {
+    return characterSheetBattleHandoffIssue(
+      "Retained battle companion has no Character Sheet companion slot to settle into.",
+    );
+  }
+  if (
+    sheetCompanion.companion.companionId !==
+    battleCompanion.identity.durableCompanionId
+  ) {
+    return characterSheetBattleHandoffIssue(
+      "Battle companion durable identity does not match Character Sheet companion.",
+    );
+  }
+  if (battleCompanion.status === "dismissedForever") {
     return replaceCharacterSheetCompanion({
       sheet: input.sheet,
       companion: { tag: "none" },
     });
   }
-  if (battleEntry.companion.identity.tag === "battleOnly") {
-    return input.admission.tag === "notAdmitted"
-      ? Either.right(input.sheet)
-      : characterSheetBattleHandoffIssue(
-          "Admitted retained companion resolved to a battle-only companion during handoff.",
-        );
-  }
-  if (sheetCompanion.tag === "none") {
-    return characterSheetBattleHandoffIssue(
-      "Battle companion handoff requires a retained Character Sheet companion slot.",
-    );
-  }
-  const identityIssue = battleCompanionHandoffIdentityIssue({
-    sheetCompanion: sheetCompanion.companion,
-    battleCompanion: battleEntry.companion,
-    admission: input.admission,
-  });
-  if (identityIssue !== null) {
-    return characterSheetBattleHandoffIssue(identityIssue);
-  }
   const manifestation = companionManifestationFromBattle({
     state: input.state,
-    companion: battleEntry.companion,
+    companion: battleCompanion,
   });
   if (Either.isLeft(manifestation)) return Either.left(manifestation.left);
   return replaceCharacterSheetCompanion({
@@ -529,11 +524,31 @@ export function applyBattleCompanionHandoffToCharacterSheet(input: {
     companion: {
       tag: "retainedOneAtATime",
       companion: {
-        ...sheetCompanion.companion,
+        companionId: sheetCompanion.companion.companionId,
+        protocol: retainedCompanionProtocolFromBattle(battleCompanion),
         manifestation: manifestation.right,
       },
     },
   });
+}
+
+// Reconstruct the durable protocol from battle facts: Pact-of-the-Chain form
+// access is the attack-exception protocol; otherwise the Long Rest expiration
+// distinguishes the Wild Companion (owner-long-rest) protocol from the ordinary
+// familiar-like protocol. Round-trips the protocol admitted in
+// admitCharacterSheetCompanionToBattle.
+function retainedCompanionProtocolFromBattle(
+  companion: Exclude<
+    BattleCompanionState,
+    { readonly status: "dismissedForever" }
+  >,
+): CharacterSheetRetainedCompanionProtocol {
+  if (companion.formAccess === "pactOfTheChain") {
+    return pactFamiliarLikeProtocol();
+  }
+  return companion.expiration.tag === "ownerFinishedLongRest"
+    ? ownerLongRestExpiringFamiliarLikeProtocol()
+    : ordinaryFamiliarLikeProtocol();
 }
 
 function companionAdmissionManifestation(input: {
@@ -1265,37 +1280,6 @@ function battleFormSelectionForSheetForm(
   return Either.right(selectedForm);
 }
 
-function battleCompanionHandoffIdentityIssue(input: {
-  readonly sheetCompanion: Extract<
-    CharacterSheetCompanion,
-    { readonly tag: "retainedOneAtATime" }
-  >["companion"];
-  readonly battleCompanion: BattleCompanionState;
-  readonly admission: CharacterSheetCompanionBattleAdmissionState;
-}): string | null {
-  if (input.battleCompanion.identity.tag !== "retainedBetweenBattles") {
-    return input.admission.tag === "notAdmitted"
-      ? "Battle-only companion cannot settle into a retained Character Sheet companion."
-      : "Admitted retained companion lost its durable battle identity.";
-  }
-  if (input.admission.tag === "notAdmitted") {
-    return "Retained battle companion was not admitted for this session.";
-  }
-  if (
-    input.sheetCompanion.companionId !==
-    input.battleCompanion.identity.durableCompanionId
-  ) {
-    return "Battle companion durable identity does not match Character Sheet companion.";
-  }
-  if (
-    input.admission.companionId !==
-    input.battleCompanion.identity.durableCompanionId
-  ) {
-    return "Battle companion durable identity does not match the admitted companion.";
-  }
-  return null;
-}
-
 function battleFormAccessForSheetCompanion(input: {
   readonly protocol: CharacterSheetRetainedCompanionProtocol;
   readonly selectedForm: CharacterSheetCompanionFormSelection;
@@ -1325,7 +1309,10 @@ function isAttackExceptionFamiliarLikeProtocol(
 
 function companionManifestationFromBattle(input: {
   readonly state: BattleState;
-  readonly companion: BattleCompanionState;
+  readonly companion: Exclude<
+    BattleCompanionState,
+    { readonly status: "dismissedForever" }
+  >;
 }): Either.Either<
   CharacterSheetRetainedCompanionManifestation,
   CharacterSheetBattleHandoffIssue
