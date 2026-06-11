@@ -1,3 +1,5 @@
+// KERNEL-COVERAGE: runtime-owner BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING
+
 import { Match } from "effect";
 
 import type {

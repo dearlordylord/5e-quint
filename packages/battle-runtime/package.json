@@ -44,6 +44,7 @@
     "test:mbt:spike-growth-movement-hazard": "vitest run src/spike-growth-movement-hazard.mbt.test.ts",
     "test:mbt:warding-bond-damage-sharing": "vitest run src/warding-bond-damage-sharing.mbt.test.ts",
     "test:mbt:web-restraint-hazard": "vitest run src/web-restraint-hazard.mbt.test.ts",
+    "test:mbt:weapon-attack-ordering": "vitest run src/weapon-attack-ordering.mbt.test.ts",
     "test:mbt:rule-core-hit-point-damage": "vitest run src/rule-core-hit-point-damage.mbt.test.ts",
     "test:mbt:rule-core-features": "vitest run src/rule-core-features.mbt.test.ts",
     "test:mbt:rule-core-movement": "vitest run src/rule-core-movement.mbt.test.ts",

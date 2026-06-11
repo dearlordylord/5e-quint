@@ -36,11 +36,15 @@ const AGGREGATION_BARRELS = {
 };
 
 const BATTLE_RUNTIME_LEAF_MODULES = new Set([
+  "battle-runtime-fill-kinds.qnt",
+  "battle-runtime-hole-kinds.qnt",
   "battle-runtime-mirror-image-constants.qnt",
   "battle-runtime-reaction-kinds.qnt",
   "battle-runtime-see-invisibility-constants.qnt",
+  "battle-runtime-subject-kinds.qnt",
   "battle-runtime-sorcerous-burst-damage-choice.qnt",
   "battle-runtime-witness-protocol.qnt",
+  "battle-runtime-weapon-attack-ordering.qnt",
 ]);
 
 // Grandfathered heavy drivers (basename -> reason). These import a behavioural

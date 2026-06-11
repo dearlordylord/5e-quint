@@ -1,18 +1,18 @@
 {
   "summary": {
-    "total": 114,
-    "covered": 108,
+    "total": 116,
+    "covered": 110,
     "open": 0,
     "nonSemantic": 6,
     "byRuntime": {
       "shared-algebras": 1,
-      "battle": 84,
+      "battle": 86,
       "character-creation": 14,
       "character-sheet": 12,
       "character-battle": 3
     },
     "byStatus": {
-      "covered": 108,
+      "covered": 110,
       "needs-qnt-owner": 0,
       "needs-parity-witness": 0,
       "needs-surface-evidence": 0,
@@ -26,15 +26,16 @@
     "qntOwnerRoles[].profileScopes": "Report projection derived from profile-obligations.jsonl, obligations[].qntOwners, and plans/unit-profile-coverage/profiles.jsonl qntOwners for unit-feature profiles mapped to BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS."
   },
   "battleHoleFrontierSummary": {
-    "total": 115,
+    "total": 157,
     "bySubject": {
-      "battle-hole-family": 72,
-      "battle-fill-kind": 43
+      "battle-hole-family": 75,
+      "battle-fill-kind": 46,
+      "battle-subject-kind": 36
     },
     "byClassification": {
-      "semantic-frontier": 90,
+      "semantic-frontier": 128,
       "deterministic-boundary-projection": 0,
-      "table-owned-fact": 25,
+      "table-owned-fact": 29,
       "unsupported-dead-branch": 0
     }
   },
@@ -2823,14 +2824,83 @@
       "parityWitnesses": [],
       "profiles": [],
       "qntOwners": [],
-      "reason": "The checker validates plans/rules-kernel-coverage/battle-hole-frontier.jsonl against the current BattleHole and BattleFill unions. Semantic rows either point to an existing covered obligation or name the Ralph follow-up task that must add QNT/parity ownership.",
+      "reason": "Boundary registry-validation row. The checker validates plans/rules-kernel-coverage/battle-hole-frontier.jsonl against current BattleHole, BattleFill, and BattleSubject protocol unions; BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY is the covered QNT owner for the semantic vocabulary leaves and executable TS join. Semantic frontier rows either point to existing covered reducer obligations or name the Ralph follow-up task that must add ordering or runtime parity ownership.",
       "runtime": "battle",
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer.ts"
       ],
       "status": "boundary-only",
       "surfaceEvidence": [],
-      "title": "Executable BattleHole and BattleFill frontier inventory classifies current reducer hole families, fill kinds, and follow-up task splits"
+      "title": "Executable BattleHole, BattleFill, and BattleSubject frontier inventory classifies current reducer protocol families and follow-up task splits"
+    },
+    {
+      "id": "BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY",
+      "kind": "hole-frontier",
+      "parityWitnesses": [
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/battle-runtime/src/battle-hole-family-kind.test.ts"
+        }
+      ],
+      "profiles": [],
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime-hole-kinds.qnt",
+        "packages/battle-runtime/battle-runtime-fill-kinds.qnt",
+        "packages/battle-runtime/battle-runtime-subject-kinds.qnt"
+      ],
+      "reason": "This row covers vocabulary ownership only: the QNT leaves define procedure-family protocol vocabulary, the runtime owner mappings exhaustively project current TS holes/fills/subjects to that vocabulary, and the contract test ties those projections to battle-hole-frontier.jsonl. Frontier ordering, interrupt resume, replay, and table-owned fact boundaries remain in their own obligations.",
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer/hole-helpers.ts",
+        "packages/battle-runtime/src/battle-protocol-kinds.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Playing-the-Game.md#D20 Tests",
+        ".references/srd-5.2.1/Playing-the-Game.md#Actions",
+        ".references/srd-5.2.1/Playing-the-Game.md#Making an Attack",
+        ".references/srd-5.2.1/Playing-the-Game.md#Damage and Healing",
+        ".references/srd-5.2.1/Spells/Gaining-and-Casting.md#Casting Spells",
+        ".references/srd-5.2.1/Spells/Gaining-and-Casting.md#Effects",
+        "UBIQUITOUS_LANGUAGE.md#D20 Rolls",
+        "UBIQUITOUS_LANGUAGE.md#Action Lifecycle",
+        "UBIQUITOUS_LANGUAGE.md#Spellcasting",
+        "UBIQUITOUS_LANGUAGE.md#Combat",
+        "UBIQUITOUS_LANGUAGE.md#Movement"
+      ],
+      "title": "Battle protocol hole-family, fill-kind, and subject-kind vocabulary leaves are executable QNT semantic core joined to current TypeScript protocol unions"
+    },
+    {
+      "id": "BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING",
+      "kind": "hole-frontier",
+      "parityWitnesses": [
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/weapon-attack-ordering.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-weapon-attack-ordering.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profiles": [],
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime-weapon-attack-ordering.qnt"
+      ],
+      "reason": "Weapon-attack scope only. The SRD attack structure fixes Choose a Target before resolving the attack, and Resolve the Attack makes the Attack Roll before hit damage dice. The QNT owner records those frontier stages over the B01 hole/fill vocabulary and classifies the runtime-backed ordering rejections for attack-roll or damage fills before target choice and damage fills before attack roll; table-owned range, cover, sight, modifier facts, later damage-disposition validation, and stale-subject rejection remain boundary or reducer evidence outside this ordering-error relation.",
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer/attack-main.ts",
+        "packages/battle-runtime/src/battle-reducer/attack-resolution.ts",
+        "packages/battle-runtime/src/battle-trace-contract.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Playing-the-Game.md#Making an Attack",
+        ".references/srd-5.2.1/Playing-the-Game.md#Attack Rolls",
+        ".references/srd-5.2.1/Playing-the-Game.md#Damage Rolls",
+        "UBIQUITOUS_LANGUAGE.md#D20 Rolls",
+        "UBIQUITOUS_LANGUAGE.md#Combat"
+      ],
+      "title": "Battle protocol weapon-attack hole frontier orders target choice before Attack Roll and hit damage dice before resolution"
     },
     {
       "id": "BATTLE.SURFACE.EXECUTABLE_PROFILE_JOIN",
@@ -3546,7 +3616,7 @@
       "parityWitnesses": [
         {
           "kind": "runtime-test",
-          "ownerPath": "packages/character-sheet-runtime/src/index.test.ts"
+          "ownerPath": "packages/character-sheet-runtime/src/rests.test.ts"
         }
       ],
       "profiles": [
@@ -3925,6 +3995,40 @@
       "holeKind": "heldObjectFacts",
       "id": "BattleHeldObjectFactsHole",
       "reason": "Held-object inventory for Command Drop is supplied by the table/caller; the reducer-owned Drop consequence is covered by Command while object identity derivation remains boundary state.",
+      "subject": "battle-hole-family"
+    },
+    {
+      "classification": "table-owned-fact",
+      "coveredByObligationIds": [
+        "BATTLE.TABLE.HOLE_FACT_BOUNDARIES"
+      ],
+      "followUpTaskIds": [],
+      "holeKind": "findFamiliarConnection",
+      "id": "BattleFindFamiliarConnectionHole",
+      "reason": "Find Familiar connection holes carry caller/table spatial evidence that the present familiar is within 100 feet of its owner. The reducer consumes the fact for Find Familiar shared senses and touch spell delivery without deriving map geometry, pathfinding, or durable position state.",
+      "subject": "battle-hole-family"
+    },
+    {
+      "classification": "table-owned-fact",
+      "coveredByObligationIds": [
+        "BATTLE.SPELL.FIND_FAMILIAR_COMPANION_LIFECYCLE",
+        "BATTLE.TABLE.HOLE_FACT_BOUNDARIES"
+      ],
+      "followUpTaskIds": [],
+      "holeKind": "companionReappearancePlacement",
+      "id": "BattleCompanionReappearancePlacementHole",
+      "reason": "Companion reappearance placement holes carry the caller/table-selected unoccupied space within 30 feet for a temporarily dismissed companion. The reducer validates the retained owner and companion identity and consumes the placement without deriving map geometry, occupancy, or pathfinding.",
+      "subject": "battle-hole-family"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.SPELL.FIND_FAMILIAR_COMPANION_LIFECYCLE"
+      ],
+      "followUpTaskIds": [],
+      "holeKind": "companionReappearanceInitiative",
+      "id": "BattleCompanionReappearanceInitiativeHole",
+      "reason": "Companion reappearance Initiative holes carry the caller-supplied Initiative score used when the retained companion combatant is reconstructed; the companion lifecycle obligation owns restoring the combatant with its retained identity and HP facts.",
       "subject": "battle-hole-family"
     },
     {
@@ -5050,6 +5154,40 @@
       "subject": "battle-fill-kind"
     },
     {
+      "classification": "table-owned-fact",
+      "coveredByObligationIds": [
+        "BATTLE.TABLE.HOLE_FACT_BOUNDARIES"
+      ],
+      "fillKind": "findFamiliarConnection",
+      "followUpTaskIds": [],
+      "id": "findFamiliarConnection",
+      "reason": "Find Familiar connection fills supply the table-verified within-100-feet fact for a present familiar. The reducer validates owner and familiar identity, then consumes the fact for shared senses or touch spell delivery without owning spatial derivation.",
+      "subject": "battle-fill-kind"
+    },
+    {
+      "classification": "table-owned-fact",
+      "coveredByObligationIds": [
+        "BATTLE.SPELL.FIND_FAMILIAR_COMPANION_LIFECYCLE",
+        "BATTLE.TABLE.HOLE_FACT_BOUNDARIES"
+      ],
+      "fillKind": "companionReappearancePlacement",
+      "followUpTaskIds": [],
+      "id": "companionReappearancePlacement",
+      "reason": "Companion reappearance placement fills supply the table-selected unoccupied space within 30 feet for the retained companion. The reducer consumes the typed placement while map geometry and occupancy derivation remain outside battle runtime.",
+      "subject": "battle-fill-kind"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.SPELL.FIND_FAMILIAR_COMPANION_LIFECYCLE"
+      ],
+      "fillKind": "companionReappearanceInitiative",
+      "followUpTaskIds": [],
+      "id": "companionReappearanceInitiative",
+      "reason": "Companion reappearance Initiative fills supply the ordering fact used to reinsert the retained companion combatant into battle state; lifecycle validation and Magic Action spending stay in the companion reducer.",
+      "subject": "battle-fill-kind"
+    },
+    {
       "classification": "semantic-frontier",
       "coveredByObligationIds": [
         "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
@@ -5230,6 +5368,402 @@
       "id": "wildShapeEquipmentDisposition",
       "reason": "Wild Shape equipment disposition fills carry possibly empty selected-loadout disposition choices plus the current-form limb object-handling witness at an actor plus Beast-form-specific hole boundary. The reducer validates exact selected-loadout coverage, stores the limb witness on the active Wild Shape effect, stores merge choices as no-effect active Wild Shape equipment dispositions, stores practical worn armor/Shield and selected-loadout weapons as effective-loadout dispositions, emits droppedObjects for falls choices, and converts not-practical worn choices to the selected fall-or-merge fallback. Generic object/Utilize consumers must use the stored limb witness through a future generic object owner rather than derive form anatomy from authored identity or add Wild Shape-local object state.",
       "subject": "battle-fill-kind"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY"
+      ],
+      "followUpTaskIds": [],
+      "id": "actionAttack",
+      "reason": "BattleSubject kind vocabulary is covered by BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY: QNT subject-kind leaf vocabulary and the runtime projection contract test join this schema discriminant to the battle protocol registry. Procedure ordering, interrupt resume, replay, and reducer semantics remain covered by separate obligations.",
+      "subject": "battle-subject-kind",
+      "subjectKind": "actionAttack"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY"
+      ],
+      "followUpTaskIds": [],
+      "id": "actionMovement",
+      "reason": "BattleSubject kind vocabulary is covered by BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY: QNT subject-kind leaf vocabulary and the runtime projection contract test join this schema discriminant to the battle protocol registry. Procedure ordering, interrupt resume, replay, and reducer semantics remain covered by separate obligations.",
+      "subject": "battle-subject-kind",
+      "subjectKind": "actionMovement"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY"
+      ],
+      "followUpTaskIds": [],
+      "id": "actionAvoidance",
+      "reason": "BattleSubject kind vocabulary is covered by BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY: QNT subject-kind leaf vocabulary and the runtime projection contract test join this schema discriminant to the battle protocol registry. Procedure ordering, interrupt resume, replay, and reducer semantics remain covered by separate obligations.",
+      "subject": "battle-subject-kind",
+      "subjectKind": "actionAvoidance"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY"
+      ],
+      "followUpTaskIds": [],
+      "id": "actionSupport",
+      "reason": "BattleSubject kind vocabulary is covered by BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY: QNT subject-kind leaf vocabulary and the runtime projection contract test join this schema discriminant to the battle protocol registry. Procedure ordering, interrupt resume, replay, and reducer semantics remain covered by separate obligations.",
+      "subject": "battle-subject-kind",
+      "subjectKind": "actionSupport"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY"
+      ],
+      "followUpTaskIds": [],
+      "id": "actionExploration",
+      "reason": "BattleSubject kind vocabulary is covered by BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY: QNT subject-kind leaf vocabulary and the runtime projection contract test join this schema discriminant to the battle protocol registry. Procedure ordering, interrupt resume, replay, and reducer semantics remain covered by separate obligations.",
+      "subject": "battle-subject-kind",
+      "subjectKind": "actionExploration"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY"
+      ],
+      "followUpTaskIds": [],
+      "id": "actionReady",
+      "reason": "BattleSubject kind vocabulary is covered by BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY: QNT subject-kind leaf vocabulary and the runtime projection contract test join this schema discriminant to the battle protocol registry. Procedure ordering, interrupt resume, replay, and reducer semantics remain covered by separate obligations.",
+      "subject": "battle-subject-kind",
+      "subjectKind": "actionReady"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY"
+      ],
+      "followUpTaskIds": [],
+      "id": "actionContest",
+      "reason": "BattleSubject kind vocabulary is covered by BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY: QNT subject-kind leaf vocabulary and the runtime projection contract test join this schema discriminant to the battle protocol registry. Procedure ordering, interrupt resume, replay, and reducer semantics remain covered by separate obligations.",
+      "subject": "battle-subject-kind",
+      "subjectKind": "actionContest"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY"
+      ],
+      "followUpTaskIds": [],
+      "id": "actionConditionIntervention",
+      "reason": "BattleSubject kind vocabulary is covered by BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY: QNT subject-kind leaf vocabulary and the runtime projection contract test join this schema discriminant to the battle protocol registry. Procedure ordering, interrupt resume, replay, and reducer semantics remain covered by separate obligations.",
+      "subject": "battle-subject-kind",
+      "subjectKind": "actionConditionIntervention"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY"
+      ],
+      "followUpTaskIds": [],
+      "id": "companionAttack",
+      "reason": "BattleSubject kind vocabulary is covered by BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY: QNT subject-kind leaf vocabulary and the runtime projection contract test join this schema discriminant to the battle protocol registry. Procedure ordering, interrupt resume, replay, and reducer semantics remain covered by separate obligations.",
+      "subject": "battle-subject-kind",
+      "subjectKind": "companionAttack"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY"
+      ],
+      "followUpTaskIds": [],
+      "id": "bonusActionAttack",
+      "reason": "BattleSubject kind vocabulary is covered by BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY: QNT subject-kind leaf vocabulary and the runtime projection contract test join this schema discriminant to the battle protocol registry. Procedure ordering, interrupt resume, replay, and reducer semantics remain covered by separate obligations.",
+      "subject": "battle-subject-kind",
+      "subjectKind": "bonusActionAttack"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY"
+      ],
+      "followUpTaskIds": [],
+      "id": "bonusActionGrantedStandardAction",
+      "reason": "BattleSubject kind vocabulary is covered by BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY: QNT subject-kind leaf vocabulary and the runtime projection contract test join this schema discriminant to the battle protocol registry. Procedure ordering, interrupt resume, replay, and reducer semantics remain covered by separate obligations.",
+      "subject": "battle-subject-kind",
+      "subjectKind": "bonusActionGrantedStandardAction"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY"
+      ],
+      "followUpTaskIds": [],
+      "id": "featureOption",
+      "reason": "BattleSubject kind vocabulary is covered by BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY: QNT subject-kind leaf vocabulary and the runtime projection contract test join this schema discriminant to the battle protocol registry. Procedure ordering, interrupt resume, replay, and reducer semantics remain covered by separate obligations.",
+      "subject": "battle-subject-kind",
+      "subjectKind": "featureOption"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY"
+      ],
+      "followUpTaskIds": [],
+      "id": "featureAttack",
+      "reason": "BattleSubject kind vocabulary is covered by BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY: QNT subject-kind leaf vocabulary and the runtime projection contract test join this schema discriminant to the battle protocol registry. Procedure ordering, interrupt resume, replay, and reducer semantics remain covered by separate obligations.",
+      "subject": "battle-subject-kind",
+      "subjectKind": "featureAttack"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY"
+      ],
+      "followUpTaskIds": [],
+      "id": "actionMagic",
+      "reason": "BattleSubject kind vocabulary is covered by BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY: QNT subject-kind leaf vocabulary and the runtime projection contract test join this schema discriminant to the battle protocol registry. Procedure ordering, interrupt resume, replay, and reducer semantics remain covered by separate obligations.",
+      "subject": "battle-subject-kind",
+      "subjectKind": "actionMagic"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY"
+      ],
+      "followUpTaskIds": [],
+      "id": "bonusActionMagic",
+      "reason": "BattleSubject kind vocabulary is covered by BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY: QNT subject-kind leaf vocabulary and the runtime projection contract test join this schema discriminant to the battle protocol registry. Procedure ordering, interrupt resume, replay, and reducer semantics remain covered by separate obligations.",
+      "subject": "battle-subject-kind",
+      "subjectKind": "bonusActionMagic"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY"
+      ],
+      "followUpTaskIds": [],
+      "id": "spellGrantedMovement",
+      "reason": "BattleSubject kind vocabulary is covered by BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY: QNT subject-kind leaf vocabulary and the runtime projection contract test join this schema discriminant to the battle protocol registry. Procedure ordering, interrupt resume, replay, and reducer semantics remain covered by separate obligations.",
+      "subject": "battle-subject-kind",
+      "subjectKind": "spellGrantedMovement"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY"
+      ],
+      "followUpTaskIds": [],
+      "id": "featureActivation",
+      "reason": "BattleSubject kind vocabulary is covered by BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY: QNT subject-kind leaf vocabulary and the runtime projection contract test join this schema discriminant to the battle protocol registry. Procedure ordering, interrupt resume, replay, and reducer semantics remain covered by separate obligations.",
+      "subject": "battle-subject-kind",
+      "subjectKind": "featureActivation"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY"
+      ],
+      "followUpTaskIds": [],
+      "id": "featureWeaponActivation",
+      "reason": "BattleSubject kind vocabulary is covered by BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY: QNT subject-kind leaf vocabulary and the runtime projection contract test join this schema discriminant to the battle protocol registry. Procedure ordering, interrupt resume, replay, and reducer semantics remain covered by separate obligations.",
+      "subject": "battle-subject-kind",
+      "subjectKind": "featureWeaponActivation"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY"
+      ],
+      "followUpTaskIds": [],
+      "id": "formTransformation",
+      "reason": "BattleSubject kind vocabulary is covered by BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY: QNT subject-kind leaf vocabulary and the runtime projection contract test join this schema discriminant to the battle protocol registry. Procedure ordering, interrupt resume, replay, and reducer semantics remain covered by separate obligations.",
+      "subject": "battle-subject-kind",
+      "subjectKind": "formTransformation"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY"
+      ],
+      "followUpTaskIds": [],
+      "id": "companionLifecycle",
+      "reason": "BattleSubject kind vocabulary is covered by BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY: QNT subject-kind leaf vocabulary and the runtime projection contract test join this schema discriminant to the battle protocol registry. Procedure ordering, interrupt resume, replay, and reducer semantics remain covered by separate obligations.",
+      "subject": "battle-subject-kind",
+      "subjectKind": "companionLifecycle"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY"
+      ],
+      "followUpTaskIds": [],
+      "id": "companionSenses",
+      "reason": "BattleSubject kind vocabulary is covered by BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY: QNT subject-kind leaf vocabulary and the runtime projection contract test join this schema discriminant to the battle protocol registry. Procedure ordering, interrupt resume, replay, and reducer semantics remain covered by separate obligations.",
+      "subject": "battle-subject-kind",
+      "subjectKind": "companionSenses"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY"
+      ],
+      "followUpTaskIds": [],
+      "id": "companionDeliveredMagic",
+      "reason": "BattleSubject kind vocabulary is covered by BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY: QNT subject-kind leaf vocabulary and the runtime projection contract test join this schema discriminant to the battle protocol registry. Procedure ordering, interrupt resume, replay, and reducer semantics remain covered by separate obligations.",
+      "subject": "battle-subject-kind",
+      "subjectKind": "companionDeliveredMagic"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY"
+      ],
+      "followUpTaskIds": [],
+      "id": "runtimeTurnBoundary",
+      "reason": "BattleSubject kind vocabulary is covered by BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY: QNT subject-kind leaf vocabulary and the runtime projection contract test join this schema discriminant to the battle protocol registry. Procedure ordering, interrupt resume, replay, and reducer semantics remain covered by separate obligations.",
+      "subject": "battle-subject-kind",
+      "subjectKind": "runtimeTurnBoundary"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY"
+      ],
+      "followUpTaskIds": [],
+      "id": "runtimeMovement",
+      "reason": "BattleSubject kind vocabulary is covered by BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY: QNT subject-kind leaf vocabulary and the runtime projection contract test join this schema discriminant to the battle protocol registry. Procedure ordering, interrupt resume, replay, and reducer semantics remain covered by separate obligations.",
+      "subject": "battle-subject-kind",
+      "subjectKind": "runtimeMovement"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY"
+      ],
+      "followUpTaskIds": [],
+      "id": "runtimeReadiedResponse",
+      "reason": "BattleSubject kind vocabulary is covered by BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY: QNT subject-kind leaf vocabulary and the runtime projection contract test join this schema discriminant to the battle protocol registry. Procedure ordering, interrupt resume, replay, and reducer semantics remain covered by separate obligations.",
+      "subject": "battle-subject-kind",
+      "subjectKind": "runtimeReadiedResponse"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY"
+      ],
+      "followUpTaskIds": [],
+      "id": "runtimeReaction",
+      "reason": "BattleSubject kind vocabulary is covered by BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY: QNT subject-kind leaf vocabulary and the runtime projection contract test join this schema discriminant to the battle protocol registry. Procedure ordering, interrupt resume, replay, and reducer semantics remain covered by separate obligations.",
+      "subject": "battle-subject-kind",
+      "subjectKind": "runtimeReaction"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY"
+      ],
+      "followUpTaskIds": [],
+      "id": "runtimeLinkRelease",
+      "reason": "BattleSubject kind vocabulary is covered by BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY: QNT subject-kind leaf vocabulary and the runtime projection contract test join this schema discriminant to the battle protocol registry. Procedure ordering, interrupt resume, replay, and reducer semantics remain covered by separate obligations.",
+      "subject": "battle-subject-kind",
+      "subjectKind": "runtimeLinkRelease"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY"
+      ],
+      "followUpTaskIds": [],
+      "id": "runtimeSavingThrow",
+      "reason": "BattleSubject kind vocabulary is covered by BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY: QNT subject-kind leaf vocabulary and the runtime projection contract test join this schema discriminant to the battle protocol registry. Procedure ordering, interrupt resume, replay, and reducer semantics remain covered by separate obligations.",
+      "subject": "battle-subject-kind",
+      "subjectKind": "runtimeSavingThrow"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY"
+      ],
+      "followUpTaskIds": [],
+      "id": "runtimeEffectCleanup",
+      "reason": "BattleSubject kind vocabulary is covered by BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY: QNT subject-kind leaf vocabulary and the runtime projection contract test join this schema discriminant to the battle protocol registry. Procedure ordering, interrupt resume, replay, and reducer semantics remain covered by separate obligations.",
+      "subject": "battle-subject-kind",
+      "subjectKind": "runtimeEffectCleanup"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY"
+      ],
+      "followUpTaskIds": [],
+      "id": "runtimeEffectControl",
+      "reason": "BattleSubject kind vocabulary is covered by BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY: QNT subject-kind leaf vocabulary and the runtime projection contract test join this schema discriminant to the battle protocol registry. Procedure ordering, interrupt resume, replay, and reducer semantics remain covered by separate obligations.",
+      "subject": "battle-subject-kind",
+      "subjectKind": "runtimeEffectControl"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY"
+      ],
+      "followUpTaskIds": [],
+      "id": "runtimeHeldObjectRelease",
+      "reason": "BattleSubject kind vocabulary is covered by BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY: QNT subject-kind leaf vocabulary and the runtime projection contract test join this schema discriminant to the battle protocol registry. Procedure ordering, interrupt resume, replay, and reducer semantics remain covered by separate obligations.",
+      "subject": "battle-subject-kind",
+      "subjectKind": "runtimeHeldObjectRelease"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY"
+      ],
+      "followUpTaskIds": [],
+      "id": "runtimeProtectionSave",
+      "reason": "BattleSubject kind vocabulary is covered by BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY: QNT subject-kind leaf vocabulary and the runtime projection contract test join this schema discriminant to the battle protocol registry. Procedure ordering, interrupt resume, replay, and reducer semantics remain covered by separate obligations.",
+      "subject": "battle-subject-kind",
+      "subjectKind": "runtimeProtectionSave"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY"
+      ],
+      "followUpTaskIds": [],
+      "id": "runtimeTransformationMode",
+      "reason": "BattleSubject kind vocabulary is covered by BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY: QNT subject-kind leaf vocabulary and the runtime projection contract test join this schema discriminant to the battle protocol registry. Procedure ordering, interrupt resume, replay, and reducer semantics remain covered by separate obligations.",
+      "subject": "battle-subject-kind",
+      "subjectKind": "runtimeTransformationMode"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY"
+      ],
+      "followUpTaskIds": [],
+      "id": "runtimeCompelledAction",
+      "reason": "BattleSubject kind vocabulary is covered by BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY: QNT subject-kind leaf vocabulary and the runtime projection contract test join this schema discriminant to the battle protocol registry. Procedure ordering, interrupt resume, replay, and reducer semantics remain covered by separate obligations.",
+      "subject": "battle-subject-kind",
+      "subjectKind": "runtimeCompelledAction"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY"
+      ],
+      "followUpTaskIds": [],
+      "id": "runtimeAltitudeControl",
+      "reason": "BattleSubject kind vocabulary is covered by BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY: QNT subject-kind leaf vocabulary and the runtime projection contract test join this schema discriminant to the battle protocol registry. Procedure ordering, interrupt resume, replay, and reducer semantics remain covered by separate obligations.",
+      "subject": "battle-subject-kind",
+      "subjectKind": "runtimeAltitudeControl"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY"
+      ],
+      "followUpTaskIds": [],
+      "id": "runtimeAreaEffect",
+      "reason": "BattleSubject kind vocabulary is covered by BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY: QNT subject-kind leaf vocabulary and the runtime projection contract test join this schema discriminant to the battle protocol registry. Procedure ordering, interrupt resume, replay, and reducer semantics remain covered by separate obligations.",
+      "subject": "battle-subject-kind",
+      "subjectKind": "runtimeAreaEffect"
     }
   ],
   "profileObligations": [
@@ -7204,6 +7738,14 @@
       "role": "selected-identity-trace"
     },
     {
+      "evidence": "packages/battle-runtime/battle-runtime-weapon-attack-ordering.qnt carries the reusable weapon-attack hole-frontier order over protocol vocabulary variants: target choice, Attack Roll, hit damage dice, resolution, and the runtime-backed ordering rejection classification for attack-roll or damage fills before their prerequisite frontier.",
+      "obligationIds": [
+        "BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-weapon-attack-ordering.qnt",
+      "role": "semantic-core"
+    },
+    {
       "evidence": "packages/shared-algebras/proofs/death-saves-algebra-inductive.qnt is an inductive proof owner for covered algebra, not an implementation source.",
       "obligationIds": [
         "BATTLE.DAMAGE.DEATH_SAVING_THROW_LIFECYCLE"
@@ -7951,6 +8493,30 @@
       "obligationIds": [],
       "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-zero-hit-point-core-examples.qnt",
       "role": "proof-only"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-hole-kinds.qnt is the protocol vocabulary semantic core for BattleHole family kinds. It is a leaf module with no behavioral imports.",
+      "obligationIds": [
+        "BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-hole-kinds.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-fill-kinds.qnt is the protocol vocabulary semantic core for BattleFill kinds. It is a leaf module with no behavioral imports.",
+      "obligationIds": [
+        "BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-fill-kinds.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-subject-kinds.qnt is the protocol vocabulary semantic core for BattleSubject procedure-family kinds. It is a leaf module with no behavioral imports.",
+      "obligationIds": [
+        "BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-subject-kinds.qnt",
+      "role": "semantic-core"
     }
   ],
   "unitFeatureProfileOwnerRows": [
@@ -11212,6 +11778,39 @@
         "packages/battle-runtime/battle-runtime-metamagic.qnt"
       ],
       "status": "generation-subset-clean"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [
+        "variant"
+      ],
+      "obligationId": "BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY",
+      "proofOnly": [],
+      "semanticCore": [
+        "packages/battle-runtime/battle-runtime-hole-kinds.qnt",
+        "packages/battle-runtime/battle-runtime-fill-kinds.qnt",
+        "packages/battle-runtime/battle-runtime-subject-kinds.qnt"
+      ],
+      "status": "generation-subset-clean"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [
+        "import",
+        "variant",
+        "pure-def",
+        "bool",
+        "if-expression",
+        "comparison",
+        "pattern-match",
+        "set"
+      ],
+      "obligationId": "BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING",
+      "proofOnly": [],
+      "semanticCore": [
+        "packages/battle-runtime/battle-runtime-weapon-attack-ordering.qnt"
+      ],
+      "status": "generation-subset-clean"
     }
   ],
   "generatorReadinessBacklog": [],
@@ -11219,8 +11818,9 @@
   "kernelIrBoundaries": [
     {
       "boundary": "command",
-      "evidence": "Command is represented by BattleSubject plus BattleCommandOptionChoiceHole/BattleFill commandOptionChoice; the boundary enters reducer execution through supported procedure profiles and typed fills.",
+      "evidence": "Command is represented by BattleSubject plus BattleCommandOptionChoiceHole/BattleFill commandOptionChoice. BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY owns the QNT subject/fill vocabulary join; supported procedure profiles and typed fills own reducer execution.",
       "obligationIds": [
+        "BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY",
         "BATTLE.COMMAND.OPTION_AND_NEXT_TURN",
         "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS"
       ],
@@ -11232,8 +11832,9 @@
     },
     {
       "boundary": "fill",
-      "evidence": "BattleHole and BattleFill are already parsed by the frontier checker; future IR should reuse the hole/fill split instead of embedding table facts in command state.",
+      "evidence": "BattleHole and BattleFill are parsed by the frontier checker and joined to QNT hole/fill vocabulary leaves by BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY; future IR should reuse the hole/fill split instead of embedding table facts in command state.",
       "obligationIds": [
+        "BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY",
         "BATTLE.HOLE.SEMANTIC_FRONTIER_CLASSIFICATION",
         "BATTLE.TABLE.HOLE_FACT_BOUNDARIES",
         "BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES"

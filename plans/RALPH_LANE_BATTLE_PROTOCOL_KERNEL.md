@@ -4,15 +4,60 @@
 {
   "schema": "ralph-plan.v1",
   "tasks": [
-    { "number": 1, "id": "BPK-B01-HOLE-KIND-VOCABULARY", "status": "ready-for-implementation-after-light-research", "title": "QNT hole-kind vocabulary leaf with executable two-direction join" },
-    { "number": 2, "id": "BPK-B02-FILL-SUBJECT-VOCABULARY", "status": "blocked", "title": "QNT fill-kind and subject-kind vocabulary with the same join" },
-    { "number": 3, "id": "BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT", "status": "blocked", "title": "Obligation, roles, and generator-readiness rows for the vocabulary tier" },
-    { "number": 4, "id": "BPK-B04-WEAPON-ATTACK-ORDERING", "status": "blocked", "title": "Hole-frontier ordering slice and witness for the weapon-attack procedure shape" },
-    { "number": 5, "id": "BPK-B05-SAVE-SPELL-ORDERING", "status": "blocked", "title": "Hole-frontier ordering slice and witness for the save-gated-spell procedure shape" },
-    { "number": 6, "id": "BPK-B06-INTERRUPT-NESTING-RESUME", "status": "blocked", "title": "Interrupt nesting and resume-with-active-effect-mutation slice and witness" },
-    { "number": 7, "id": "BPK-B07-REPLAY-FROM-ROOT", "status": "blocked", "title": "Replay-from-root equivalence slice and witness" },
-    { "number": 8, "id": "BPK-B08-KERNEL-REGISTRY-CLOSEOUT", "status": "blocked", "title": "Protocol-kernel registry closeout, IR-boundary evidence, and oracle disambiguation convention" },
-    { "number": 9, "id": "BPK-B09-RECURSIVE-NEXT-SHAPES", "status": "blocked", "title": "Queue the next procedure shapes for ordering coverage if the lane drains" }
+    {
+      "number": 1,
+      "id": "BPK-B01-HOLE-KIND-VOCABULARY",
+      "status": "done",
+      "title": "QNT hole-kind vocabulary leaf with executable two-direction join"
+    },
+    {
+      "number": 2,
+      "id": "BPK-B02-FILL-SUBJECT-VOCABULARY",
+      "status": "done",
+      "title": "QNT fill-kind and subject-kind vocabulary with the same join"
+    },
+    {
+      "number": 3,
+      "id": "BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT",
+      "status": "done",
+      "title": "Obligation, roles, and generator-readiness rows for the vocabulary tier"
+    },
+    {
+      "number": 4,
+      "id": "BPK-B04-WEAPON-ATTACK-ORDERING",
+      "status": "done",
+      "title": "Hole-frontier ordering slice and witness for the weapon-attack procedure shape"
+    },
+    {
+      "number": 5,
+      "id": "BPK-B05-SAVE-SPELL-ORDERING",
+      "status": "ready-for-research",
+      "title": "Hole-frontier ordering slice and witness for the save-gated-spell procedure shape"
+    },
+    {
+      "number": 6,
+      "id": "BPK-B06-INTERRUPT-NESTING-RESUME",
+      "status": "ready-for-research",
+      "title": "Interrupt nesting and resume-with-active-effect-mutation slice and witness"
+    },
+    {
+      "number": 7,
+      "id": "BPK-B07-REPLAY-FROM-ROOT",
+      "status": "blocked",
+      "title": "Replay-from-root equivalence slice and witness"
+    },
+    {
+      "number": 8,
+      "id": "BPK-B08-KERNEL-REGISTRY-CLOSEOUT",
+      "status": "blocked",
+      "title": "Protocol-kernel registry closeout, IR-boundary evidence, and oracle disambiguation convention"
+    },
+    {
+      "number": 9,
+      "id": "BPK-B09-RECURSIVE-NEXT-SHAPES",
+      "status": "blocked",
+      "title": "Queue the next procedure shapes for ordering coverage if the lane drains"
+    }
   ]
 }
 -->
@@ -93,12 +138,12 @@ Every task must include:
 
 | # | Task | Status | Depends on | Notes |
 | ---: | --- | --- | --- | --- |
-| 1 | BPK-B01-HOLE-KIND-VOCABULARY | ready-for-implementation-after-light-research | none | Light research: UL naming pass over the 34 semantic-frontier holeKinds; leaf layout (one module vs split). |
-| 2 | BPK-B02-FILL-SUBJECT-VOCABULARY | blocked | BPK-B01-HOLE-KIND-VOCABULARY | Same treatment for 46 fill kinds + ~40 subjects. |
-| 3 | BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT | blocked | BPK-B02-FILL-SUBJECT-VOCABULARY | prd/02 M1 done after this. Unblocks the cleanroom-corpus value immediately. |
-| 4 | BPK-B04-WEAPON-ATTACK-ORDERING | blocked | BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT | Cross-lane gate: unblock manually when Lane A `PDS-A01-DRIVER-KIT-TRACER` and `PDS-A03-WITNESS-PROTOCOL-TRACER` are merged. |
-| 5 | BPK-B05-SAVE-SPELL-ORDERING | blocked | BPK-B04-WEAPON-ATTACK-ORDERING | Second procedure shape; reuses B04's slice skeleton. |
-| 6 | BPK-B06-INTERRUPT-NESTING-RESUME | blocked | BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT | Cross-lane gate: unblock manually when Lane A `PDS-A01-DRIVER-KIT-TRACER` and `PDS-A03-WITNESS-PROTOCOL-TRACER` are merged; may run before/parallel to B04 in queue order if the runner supports it; serial lane runs it after B05. |
+| 1 | BPK-B01-HOLE-KIND-VOCABULARY | done | none | Light research: UL naming pass over the 33 semantic-frontier holeKinds; leaf layout (one module vs split). |
+| 2 | BPK-B02-FILL-SUBJECT-VOCABULARY | done | BPK-B01-HOLE-KIND-VOCABULARY | Same treatment for 46 fill kinds + ~40 subjects. |
+| 3 | BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT | done | BPK-B02-FILL-SUBJECT-VOCABULARY | prd/02 M1 done after this. Unblocks the cleanroom-corpus value immediately. |
+| 4 | BPK-B04-WEAPON-ATTACK-ORDERING | done | BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT | Cross-lane gate: unblock manually when Lane A PDS-A01 and PDS-A03 are merged. |
+| 5 | BPK-B05-SAVE-SPELL-ORDERING | ready-for-research | BPK-B04-WEAPON-ATTACK-ORDERING | Second procedure shape; reuses B04's slice skeleton. |
+| 6 | BPK-B06-INTERRUPT-NESTING-RESUME | ready-for-research | BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT | Cross-lane gate: unblock manually when Lane A PDS-A01 and PDS-A03 are merged; may run before/parallel to B04 in queue order if the runner supports it. |
 | 7 | BPK-B07-REPLAY-FROM-ROOT | blocked | BPK-B06-INTERRUPT-NESTING-RESUME | |
 | 8 | BPK-B08-KERNEL-REGISTRY-CLOSEOUT | blocked | BPK-B04-WEAPON-ATTACK-ORDERING, BPK-B05-SAVE-SPELL-ORDERING, BPK-B06-INTERRUPT-NESTING-RESUME, BPK-B07-REPLAY-FROM-ROOT | Also produces the multi-owner outcome-oracle convention consumed by PDS-A17's PRD. |
 | 9 | BPK-B09-RECURSIVE-NEXT-SHAPES | blocked | BPK-B08-KERNEL-REGISTRY-CLOSEOUT | Ordering coverage for further procedure shapes (healing, command, attack-roll spell, …). |
@@ -107,7 +152,7 @@ Every task must include:
 
 ### Task 1 - BPK-B01-HOLE-KIND-VOCABULARY
 
-Status: `ready-for-implementation-after-light-research` · Mode: AFK
+Status: `done` · Mode: AFK
 
 Input: prd/02 Solution §1 and Implementation Decisions;
 `battle-hole-frontier.jsonl` (75 `battle-hole-family` rows, 48 distinct
@@ -133,7 +178,7 @@ KERNEL-COVERAGE headers present.
 
 ### Task 2 - BPK-B02-FILL-SUBJECT-VOCABULARY
 
-Status: `blocked` · Mode: AFK
+Status: `done` · Mode: AFK
 
 Input: 46 `battle-fill-kind` frontier rows; `src/battle-reducer.ts:5771`
 (BattleFill union); `src/battle-subjects.ts:898` (BattleSubject, ~40
@@ -147,7 +192,7 @@ gates still green.
 
 ### Task 3 - BPK-B03-VOCABULARY-REGISTRY-CLOSEOUT
 
-Status: `blocked` · Mode: AFK
+Status: `done` · Mode: AFK
 
 Output: obligation row(s) for the vocabulary tier (suggested
 `BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY`) with SRD/UL `surfaceEvidence`;
@@ -162,7 +207,7 @@ checked off in the task report.
 
 ### Task 4 - BPK-B04-WEAPON-ATTACK-ORDERING
 
-Status: `blocked` (cross-lane gate: PDS-A01 + PDS-A03 merged) · Mode: AFK
+Status: `done` (cross-lane gate: PDS-A01 + PDS-A03 merged) · Mode: AFK
 
 Input: prd/02 Solution §2; `battle-runtime-public-trace-contract.qnt` (the
 narrow precedent to generalize); the weapon-attack reducer path
@@ -181,7 +226,7 @@ witness-protocol leaf within budget); registry checks green.
 
 ### Task 5 - BPK-B05-SAVE-SPELL-ORDERING
 
-Status: `blocked` · Mode: AFK
+Status: `ready-for-research` · Mode: AFK
 
 Output: same slice/witness treatment for the save-gated-spell shape
 (targets/area → save outcome → damage/condition choice ordering), extending
@@ -191,7 +236,7 @@ Acceptance: as B04.
 
 ### Task 6 - BPK-B06-INTERRUPT-NESTING-RESUME
 
-Status: `blocked` (cross-lane gate: PDS-A01 + PDS-A03 merged) · Mode: AFK
+Status: `ready-for-research` (cross-lane gate: PDS-A01 + PDS-A03 merged) · Mode: AFK
 
 Input: prd/02 Solution §3; `battle-runtime-reaction-window.qnt`,
 `battle-runtime-interrupt-bridge.qnt`, rule-core

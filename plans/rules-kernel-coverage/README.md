@@ -54,15 +54,18 @@ duplicate their profile lists; generated reports derive those lists from
 `profile-obligations.jsonl`.
 
 `battle-hole-frontier.jsonl` is the single source of truth for the current
-BattleHole/BattleFill frontier inventory. The checker parses
+BattleHole/BattleFill/BattleSubject protocol inventory. The checker parses
 `packages/battle-runtime/src/battle-reducer.ts` and requires one
-`battle-hole-family` row for every `BattleHole` union member and one
-`battle-fill-kind` row for every `BattleFill` discriminant. Boundary/table-owned
-rows must point at a non-semantic rules-kernel obligation; semantic rows must
-point at a covered obligation or at the Ralph follow-up task that will add the
-missing QNT/parity ownership. A semantic row may also point at a non-semantic
-boundary obligation when the same hole or fill carries caller/table facts, but
-that boundary coverage never substitutes for reducer-semantic ownership.
+`battle-hole-family` row for every `BattleHole` union member, one
+`battle-fill-kind` row for every `BattleFill` discriminant, and one
+`battle-subject-kind` row for every procedure-family fold over the
+schema-derived `BattleSubject` protocol kinds. Boundary/table-owned rows must
+point at a non-semantic rules-kernel
+obligation; semantic rows must point at a covered obligation or at the Ralph
+follow-up task that will add the missing QNT/parity ownership. A semantic row
+may also point at a non-semantic boundary obligation when the same hole, fill,
+or subject carries caller/table facts, but that boundary coverage never
+substitutes for reducer-semantic ownership.
 
 `generator-readiness.jsonl` records the separate C-axis question defined in
 [Generator Readiness Source Of Truth](#generator-readiness-source-of-truth).
@@ -192,9 +195,10 @@ QNT owner roles are:
 - **Support profile:** the typed runtime procedure shape admitted from Surface.
   Multiple Surface records can map to one profile.
 - **Parity witness:** an executable TS test that runs production runtime code and
-  either compares a QNT-owned projection or, for a profile-specific lifecycle
-  already carrying profile-level QNT proof, exercises the deterministic runtime
-  reducer path named by that profile.
+  either compares a QNT-owned projection, exercises a deterministic runtime
+  reducer path named by a profile that already carries profile-level QNT proof,
+  or checks an executable registry/QNT/TS contract where the join itself is the
+  covered obligation.
 - **Boundary-only:** parser/client/session/protocol behavior that does not
   change legal table-observable game state.
 - **Battle hole frontier:** the current set of battle reducer holes and fills
@@ -258,9 +262,10 @@ New reducer semantics are QNT-first:
 ## Parity Witness Modes
 
 Rules-kernel parity witness rows use the checked witness-kind vocabulary
-`focused-mbt`, `deterministic-qnt-replay`, and `runtime-test`. MCP scenario
-evidence uses `mcp-scenario` in `plans/unit-profile-coverage/`; it is an
-ultra-golden user-flow layer, not a rules-kernel parity witness.
+`focused-mbt`, `deterministic-qnt-replay`, `runtime-test`, and
+`contract-test`. MCP scenario evidence uses `mcp-scenario` in
+`plans/unit-profile-coverage/`; it is an ultra-golden user-flow layer, not a
+rules-kernel parity witness.
 
 The default witness for reducer procedures is focused MBT with random traces.
 Use it for sequencing, holes, reactions, resources, active-effect lifecycle,
@@ -298,6 +303,12 @@ single Surface-backed lifecycle obligation when the corresponding profile row
 already records QNT proof ownership and deterministic runtime parity. They must
 not be used for reusable sequencing, interleaving, or shared reducer semantics
 where branch interaction is the risk.
+
+Contract-test witnesses are narrower still. They may close an obligation only
+when the executable semantic claim is a checked registry join, protocol
+vocabulary mapping, or boundary inventory contract rather than a reducer trace.
+They must not be used as a substitute for QNT replay or MBT when runtime state
+transition behavior is the obligation.
 
 ## Anti-Explosion Rule
 

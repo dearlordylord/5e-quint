@@ -44,6 +44,10 @@ import type {
 } from "@dnd/surface/surface/types";
 
 import {
+  ATTACK_ROLL_REQUIRED_BEFORE_DAMAGE_MESSAGE,
+  ATTACK_TARGET_REQUIRED_BEFORE_ROLL_OR_DAMAGE_MESSAGE,
+} from "./battle-reducer/attack-main.ts";
+import {
   ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE,
   BATTLE_INVALID_REASON_CODES,
   battleUnitRefWithSupportProfiles,
@@ -554,6 +558,17 @@ type MbtHole =
   | "LevitateInitialRise";
 type MbtLastResult = "init" | "needsHoles" | "resolved" | "invalid";
 type MbtLastInvalidReason = "" | "invalidFill" | "staleSubject" | "wrongActor";
+type WeaponAttackOrderingStage =
+  | "actSelection"
+  | "targetChoice"
+  | "attackRoll"
+  | "damageDice"
+  | "resolved";
+type WeaponAttackOrderingError =
+  | ""
+  | "targetChoiceRequired"
+  | "attackRollRequired";
+type WeaponAttackOrderingHole = "targetChoice" | "attackRoll" | "rolledDice";
 type MbtProjection = {
   readonly skeletonHp: number;
   readonly skeletonDead: boolean;
@@ -563,6 +578,12 @@ type MbtProjection = {
   readonly holes: readonly MbtHole[];
   readonly lastResult: MbtLastResult;
   readonly lastInvalidReason: MbtLastInvalidReason;
+};
+type WeaponAttackOrderingProjection = {
+  readonly stage: WeaponAttackOrderingStage;
+  readonly holes: readonly WeaponAttackOrderingHole[];
+  readonly lastResult: MbtLastResult;
+  readonly orderingError: WeaponAttackOrderingError;
 };
 
 export type ExtraAttackMbtProjection = {
@@ -648,6 +669,18 @@ const driverSchema = {
   doResolveSkeletonMultiattack: {},
   doRejectRecursiveSkeletonMultiattack: {},
   doSpendSkeletonMultiattackDispatch: {},
+  step: {},
+} as const;
+
+const weaponAttackOrderingDriverSchema = {
+  init: {},
+  doDiscoverAttack: {},
+  doRejectAttackRollBeforeTargetChoice: {},
+  doFillTargetChoice: {},
+  doRejectDamageBeforeAttackRoll: {},
+  doFillAttackRollMiss: {},
+  doFillAttackRollHit: {},
+  doFillDamageDice: {},
   step: {},
 } as const;
 
@@ -995,6 +1028,161 @@ export function createBattleRuntimeDriver() {
           holes,
           lastResult,
           lastInvalidReason,
+        }),
+    };
+  });
+}
+
+export function createWeaponAttackOrderingDriver() {
+  return defineDriver(weaponAttackOrderingDriverSchema, () => {
+    let state = fighterVsSkeletonBattle();
+    const subject = fighterAttackSubject();
+    let fills: readonly BattleFill[] = [];
+    let holes: readonly BattleHole[] = [];
+    let stage: WeaponAttackOrderingProjection["stage"] = "actSelection";
+    let lastResult: WeaponAttackOrderingProjection["lastResult"] = "init";
+    let orderingError: WeaponAttackOrderingProjection["orderingError"] = "";
+
+    function reset(): void {
+      state = fighterVsSkeletonBattle();
+      fills = [];
+      holes = [];
+      stage = "actSelection";
+      lastResult = "init";
+      orderingError = "";
+    }
+
+    function recordAccepted(
+      result: BattleResolutionResult,
+      nextStage: WeaponAttackOrderingProjection["stage"],
+    ): void {
+      lastResult = result.tag;
+      if (result.tag === "resolved") {
+        state = result.state;
+        holes = [];
+        stage = nextStage;
+        orderingError = "";
+        return;
+      }
+      if (result.tag === "needsHoles") {
+        state = result.state;
+        holes = result.holes;
+        stage = nextStage;
+        orderingError = "";
+        return;
+      }
+      throw new Error(`Expected accepted weapon attack ordering fill.`);
+    }
+
+    function recordOrderingRejection(
+      result: BattleResolutionResult,
+      expectedOrderingError: Exclude<
+        WeaponAttackOrderingProjection["orderingError"],
+        ""
+      >,
+      expectedMessage: string,
+    ): void {
+      if (
+        result.tag !== "invalid" ||
+        result.reason !== "invalidFill" ||
+        result.message !== expectedMessage
+      ) {
+        throw new Error(
+          `Expected weapon attack ordering fill rejection: ${expectedMessage}`,
+        );
+      }
+      lastResult = result.tag;
+      orderingError = expectedOrderingError;
+    }
+
+    return {
+      init: reset,
+      doDiscoverAttack: () => {
+        holes = discoverAttackHoles(state, subject);
+        stage = "targetChoice";
+        lastResult = "needsHoles";
+        orderingError = "";
+      },
+      doRejectAttackRollBeforeTargetChoice: () => {
+        const target = requireHole(holes, "targetChoice");
+        const attackRoll = requireHole(
+          holesAfterFills(state, subject, [targetFill(target, skeletonId)]),
+          "attackRoll",
+        );
+        recordOrderingRejection(
+          resolveBattleSubject({
+            state,
+            subject,
+            fills: [attackRollFill(attackRoll, { total: 14, naturalD20: 10 })],
+          }),
+          "targetChoiceRequired",
+          ATTACK_TARGET_REQUIRED_BEFORE_ROLL_OR_DAMAGE_MESSAGE,
+        );
+      },
+      doFillTargetChoice: () => {
+        const target = requireHole(holes, "targetChoice");
+        fills = [targetFill(target, skeletonId)];
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills }),
+          "attackRoll",
+        );
+      },
+      doRejectDamageBeforeAttackRoll: () => {
+        const attackRoll = requireHole(holes, "attackRoll");
+        const damage = requireHole(
+          holesAfterFills(state, subject, [
+            ...fills,
+            attackRollFill(attackRoll, { total: 14, naturalD20: 10 }),
+          ]),
+          "rolledDice",
+        );
+        recordOrderingRejection(
+          resolveBattleSubject({
+            state,
+            subject,
+            fills: [...fills, damageRollFill(damage, 3)],
+          }),
+          "attackRollRequired",
+          ATTACK_ROLL_REQUIRED_BEFORE_DAMAGE_MESSAGE,
+        );
+      },
+      doFillAttackRollMiss: () => {
+        const attackRoll = requireHole(holes, "attackRoll");
+        fills = [
+          ...fills,
+          attackRollFill(attackRoll, { total: 13, naturalD20: 9 }),
+        ];
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills }),
+          "resolved",
+        );
+      },
+      doFillAttackRollHit: () => {
+        const attackRoll = requireHole(holes, "attackRoll");
+        fills = [
+          ...fills,
+          attackRollFill(attackRoll, { total: 14, naturalD20: 10 }),
+        ];
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills }),
+          "damageDice",
+        );
+      },
+      doFillDamageDice: () => {
+        const damage = requireHole(holes, "rolledDice");
+        fills = [...fills, damageRollFill(damage, 3)];
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills }),
+          "resolved",
+        );
+      },
+      step: () => {},
+      getState: () =>
+        projectWeaponAttackOrderingState({
+          holes,
+          stage,
+          lastResult,
+          orderingError,
         }),
     };
   });
@@ -1429,6 +1617,21 @@ function normalizeQuintState(raw: unknown): MbtProjection {
   };
 }
 
+function normalizeWeaponAttackOrderingQuintState(
+  raw: unknown,
+): WeaponAttackOrderingProjection {
+  const state = quintStateRecord(raw);
+
+  return {
+    stage: weaponAttackOrderingStage(state["qStage"]),
+    holes: quintSet(state["qHoles"], "qHoles")
+      .map(weaponAttackOrderingHole)
+      .sort(),
+    lastResult: mbtLastResult(state["qLastResult"]),
+    orderingError: weaponAttackOrderingError(state["qLastOrderingError"]),
+  };
+}
+
 function normalizeExtraAttackQuintState(
   raw: unknown,
 ): ExtraAttackMbtProjection {
@@ -1534,6 +1737,16 @@ export const battleRuntimeStateCheck = stateCheck(
   normalizeQuintState,
   compareState,
 );
+export const weaponAttackOrderingStateCheck = stateCheck(
+  normalizeWeaponAttackOrderingQuintState,
+  (
+    spec: WeaponAttackOrderingProjection,
+    impl: WeaponAttackOrderingProjection,
+  ) => {
+    expect(impl).toEqual(spec);
+    return true;
+  },
+);
 export const extraAttackStateCheck = stateCheck(
   normalizeExtraAttackQuintState,
   (spec: ExtraAttackMbtProjection, impl: ExtraAttackMbtProjection) => {
@@ -1597,6 +1810,20 @@ function projectMbtState(input: {
     holes: projectHoles(input.holes),
     lastResult: input.lastResult,
     lastInvalidReason: input.lastInvalidReason,
+  };
+}
+
+function projectWeaponAttackOrderingState(input: {
+  readonly holes: readonly BattleHole[];
+  readonly stage: WeaponAttackOrderingProjection["stage"];
+  readonly lastResult: WeaponAttackOrderingProjection["lastResult"];
+  readonly orderingError: WeaponAttackOrderingProjection["orderingError"];
+}): WeaponAttackOrderingProjection {
+  return {
+    stage: input.stage,
+    holes: input.holes.map(weaponAttackOrderingHoleFromRuntime).sort(),
+    lastResult: input.lastResult,
+    orderingError: input.orderingError,
   };
 }
 
@@ -2849,6 +3076,47 @@ function holeName(raw: unknown): MbtHole {
   throw new Error(`Unknown Quint battle hole variant: ${tag}`);
 }
 
+function weaponAttackOrderingStage(raw: unknown): WeaponAttackOrderingStage {
+  const tag = quintVariantTag(raw);
+  if (tag === "WeaponAttackActSelectionStage") return "actSelection";
+  if (tag === "WeaponAttackTargetChoiceStage") return "targetChoice";
+  if (tag === "WeaponAttackAttackRollStage") return "attackRoll";
+  if (tag === "WeaponAttackDamageDiceStage") return "damageDice";
+  if (tag === "WeaponAttackResolvedStage") return "resolved";
+
+  throw new Error(`Unknown weapon attack ordering stage: ${tag}`);
+}
+
+function weaponAttackOrderingHole(raw: unknown): WeaponAttackOrderingHole {
+  const tag = quintVariantTag(raw);
+  if (tag === "TargetChoiceHoleKind") return "targetChoice";
+  if (tag === "AttackRollHoleKind") return "attackRoll";
+  if (tag === "RolledDiceHoleKind") return "rolledDice";
+
+  throw new Error(`Unknown weapon attack ordering hole: ${tag}`);
+}
+
+function weaponAttackOrderingHoleFromRuntime(
+  hole: Pick<BattleHole, "kind">,
+): WeaponAttackOrderingHole {
+  if (hole.kind === "targetChoice") return "targetChoice";
+  if (hole.kind === "attackRoll") return "attackRoll";
+  if (hole.kind === "rolledDice") return "rolledDice";
+
+  throw new Error(`Unexpected weapon attack ordering hole: ${hole.kind}`);
+}
+
+function weaponAttackOrderingError(raw: unknown): WeaponAttackOrderingError {
+  if (
+    raw === "" ||
+    raw === "targetChoiceRequired" ||
+    raw === "attackRollRequired"
+  ) {
+    return raw;
+  }
+
+  throw new Error(`Unknown weapon attack ordering error: ${String(raw)}.`);
+}
 
 function quintHoleSet(raw: unknown): readonly unknown[] {
   return quintSet(raw, "qHoles");
