@@ -49,7 +49,7 @@
     {
       "number": 8,
       "id": "CSC-T08-CREATION-HP-SURFACE",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Remove caller-minted companion HP/THP from the MCP creation operation"
     },
     {
@@ -242,7 +242,7 @@ a task's change invalidates them):
 | 12 | CSC-T12-R0-LONG-REST-COMPANION-RESTORE | done | none | Regression fix first: restores a direct-RAW rule the master merge dropped, plus the canary tests every later task (and the next master merge) needs. |
 | 13 | CSC-T13-R3LITE-ALIAS-FAMILY-DELETION | done | CSC-T12-R0-LONG-REST-COMPANION-RESTORE | Trivial battle-runtime-only cleanup; sequenced early to get the dual vocabulary out of files later tasks read. |
 | 14 | CSC-T14-R4A-FORMS-SHIM-DELETION | ready-for-research | CSC-T13-R3LITE-ALIAS-FAMILY-DELETION | Same-session-sized battle-runtime cleanup; touches imports in files T13 just edited. |
-| 8 | CSC-T08-CREATION-HP-SURFACE | blocked | CSC-T14-R4A-FORMS-SHIM-DELETION | Edits the creation op wherever T07 left it; runs after the cheap cleanups so the queue front stays unblocked. |
+| 8 | CSC-T08-CREATION-HP-SURFACE | ready-for-research | CSC-T14-R4A-FORMS-SHIM-DELETION | Edits the creation op wherever T07 left it; runs after the cheap cleanups so the queue front stays unblocked. |
 | 9 | CSC-T09-FORM-CATALOG-REFERENCE | blocked | CSC-T08-CREATION-HP-SURFACE | Touches admission eligibility helpers T07 may have relocated. |
 | 10 | CSC-T10-SMALL-FINDINGS-BATCH | blocked | CSC-T09-FORM-CATALOG-REFERENCE | Sweep of remaining small findings in now-stable files; now also owns the durable-id uniqueness decision (R4b). |
 | 15 | CSC-T15-R2-PROTOCOL-TAG-HOIST | blocked | CSC-T10-SMALL-FINDINGS-BATCH | Owner-approved refactor; reshapes protocol threading and deletes the settlement inverse mapping before T16 moves the code. |
@@ -742,7 +742,7 @@ four package suites green.
 
 ### Task 8 - CSC-T08-CREATION-HP-SURFACE
 
-Status: `blocked` · Mode: AFK
+Status: `ready-for-research` · Mode: AFK
 
 **Finding (review F9, absurdity check).** The MCP creation op accepts
 arbitrary `currentHp`/`tempHp`
