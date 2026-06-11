@@ -40,7 +40,7 @@ import {
   numberFromQuintInt,
   quintRecordField,
   quintStateRecord,
-  quintVariantTag,
+  quintVariantMappedValue,
   run,
   stateCheck,
 } from "./battle-runtime-mbt-driver-kit.ts";
@@ -1071,10 +1071,10 @@ function lastResultField(
   state: Record<string, unknown>,
   fieldName: string,
 ): LastResult {
-  const tag = quintVariantTag(state[fieldName], fieldName);
-  const result = LAST_RESULT_BY_SCENARIO_OUTCOME_TAG[tag];
-  if (result !== undefined) {
-    return result;
-  }
-  throw new Error(`Unknown ${fieldName} tag: ${tag}.`);
+  return quintVariantMappedValue(
+    state[fieldName],
+    fieldName,
+    LAST_RESULT_BY_SCENARIO_OUTCOME_TAG,
+    fieldName,
+  );
 }

@@ -12,7 +12,7 @@ import {
   mbtTraceCount,
   numberFromQuintInt,
   quintStateRecord,
-  quintVariantTag,
+  quintVariantMappedValue,
   run,
   stateCheck,
 } from "./battle-runtime-mbt-driver-kit.ts";
@@ -603,10 +603,10 @@ function webHole(raw: unknown): WebHole {
 }
 
 function webLastResult(raw: unknown): WebLastResult {
-  const tag = quintVariantTag(raw, "qScenarioOutcome");
-  const result = WEB_LAST_RESULT_BY_SCENARIO_OUTCOME_TAG[tag];
-  if (result !== undefined) {
-    return result;
-  }
-  throw new Error(`Unknown Web result tag: ${tag}.`);
+  return quintVariantMappedValue(
+    raw,
+    "qScenarioOutcome",
+    WEB_LAST_RESULT_BY_SCENARIO_OUTCOME_TAG,
+    "Web result",
+  );
 }

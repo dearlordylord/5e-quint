@@ -889,20 +889,20 @@ finding F1–F11 and arch-review item R0–R4 with its closing task/commit.
 
 ### Retry Guidance
 
-Before rerunning Task 11 closeout, repair or explicitly exempt the current
-unrelated MBT-driver baseline failures. `pnpm quality` currently stops in
-`check:authored-id-dispatch` on
-`packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts` dispatching on
-the authored identity `"fire_bolt"`; earlier package verification also observed
-`@dnd/battle-runtime typecheck` TS7053 index errors in unrelated MBT files
-(`quickened-spell-governor.mbt.test.ts`,
-`ray-of-enfeeblement-lifecycle.mbt.test.ts`,
-`reaction-casting-time.mbt.test.ts`, `roll-modifier-active-effects.mbt.test.ts`,
-`spike-growth-movement-hazard.mbt.test.ts`, and
-`web-restraint-hazard.mbt.test.ts`). Then rerun the full Task 11 gate set from a
-clean tree, including the companion MBT files under the mutex protocol, and
-update the closeout docs only if the final gate results or finding ledger
-changed.
+Before rerunning Task 11 closeout, research and repair or explicitly exempt the
+remaining unrelated broad-verification baselines. `pnpm quality` now reaches
+`pnpm unit-profile-coverage:check`, which reports selected-identity MBT replay
+metadata blockers for many `packages/battle-runtime/src/*selected-identity*.mbt.test.ts`
+and rule-core MBT files because the script finds no readable Quint MBT step
+action set. Broad battle-runtime tests also have unrelated failures/timeouts in
+`blur-attack-roll-defense-lifecycle.mbt.test.ts`,
+`starry-wisp-object.mbt.test.ts`,
+`unit-profile-admission-passive-defense-and-archery.test.ts`,
+`unit-profile-admission-spike-growth-movement-hazard.test.ts`, and
+`unit-profile-admission-spiritual-weapon.test.ts`. Then rerun the full Task 11
+gate set from a clean tree, including the companion MBT files under the mutex
+protocol, and update the closeout docs only if the final gate results or finding
+ledger changed.
 
 ### Task 12 - CSC-T12-R0-LONG-REST-COMPANION-RESTORE
 

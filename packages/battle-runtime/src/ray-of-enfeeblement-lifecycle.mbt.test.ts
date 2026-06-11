@@ -20,7 +20,7 @@ import {
   numberFromQuintInt,
   quintRecordField,
   quintStateRecord,
-  quintVariantTag,
+  quintVariantMappedValue,
   run,
   stateCheck,
 } from "./battle-runtime-mbt-driver-kit.ts";
@@ -606,10 +606,10 @@ function rayHole(raw: unknown): RayHole {
 }
 
 function rayLastResult(raw: unknown): RayLastResult {
-  const tag = quintVariantTag(raw, "qScenarioOutcome");
-  const result = RAY_LAST_RESULT_BY_SCENARIO_OUTCOME_TAG[tag];
-  if (result !== undefined) {
-    return result;
-  }
-  throw new Error(`Unknown Ray of Enfeeblement result tag: ${tag}.`);
+  return quintVariantMappedValue(
+    raw,
+    "qScenarioOutcome",
+    RAY_LAST_RESULT_BY_SCENARIO_OUTCOME_TAG,
+    "Ray of Enfeeblement result",
+  );
 }

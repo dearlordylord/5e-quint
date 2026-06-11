@@ -292,6 +292,22 @@ export function quintVariantTag(raw: unknown, field = "variant"): string {
   throw new Error(`Expected Quint variant tag field ${field}.`);
 }
 
+export function quintVariantMappedValue<
+  const Mapping extends Readonly<Record<string, string>>,
+>(
+  raw: unknown,
+  field: string,
+  mapping: Mapping,
+  label: string,
+): Mapping[keyof Mapping] {
+  const tag = quintVariantTag(raw, field);
+  if (hasOwnStringKey(mapping, tag)) {
+    return mapping[tag];
+  }
+
+  throw new Error(`Unknown ${label} tag: ${tag}.`);
+}
+
 export function quintVariantValue(
   raw: unknown,
   expectedTag: string,
@@ -434,7 +450,14 @@ function mbtWitnessLastResultFromVariant(
 function isMbtWitnessLastResultVariantTag(
   tag: string,
 ): tag is keyof typeof MBT_WITNESS_LAST_RESULT_BY_VARIANT_TAG {
-  return Object.hasOwn(MBT_WITNESS_LAST_RESULT_BY_VARIANT_TAG, tag);
+  return hasOwnStringKey(MBT_WITNESS_LAST_RESULT_BY_VARIANT_TAG, tag);
+}
+
+function hasOwnStringKey<const ObjectValue extends object>(
+  value: ObjectValue,
+  key: string,
+): key is Extract<keyof ObjectValue, string> {
+  return Object.hasOwn(value, key);
 }
 
 function mbtWitnessInvalidReasonFromVariant(
@@ -1644,6 +1667,7 @@ export function createSaveGatedSpellOrderingDriver() {
 
 export function createSpellAttackOrderingDriver() {
   return defineDriver(spellAttackOrderingDriverSchema, () => {
+    // authored-id-dispatch-allow: battle-runtime-mbt-fixture-boundary
     let state = spellAttackOrderingBattle("fire_bolt");
     let subject: Extract<BattleSubject, { readonly tag: "actionSpell" }> =
       spellAttackSubject("fire_bolt", "spellAttackDamage");

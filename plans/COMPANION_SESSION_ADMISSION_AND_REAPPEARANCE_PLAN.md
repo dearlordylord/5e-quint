@@ -327,30 +327,47 @@ identity, or Druid feature identity to decide whether admission is legal.
   architecture/connascence, and code-review passes until no reasonable findings
   remain. If a note is rejected, document the concrete reason next to the review
   result before stopping the loop.
-- Task 11 closeout verification status: blocked by unrelated baseline failures
-  outside the companion-session docs. Current `pnpm quality` verification stops
-  at `check:authored-id-dispatch`, which reports
-  `packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts` dispatching on
-  the authored identity `"fire_bolt"` in MBT driver glue. Package-local
-  verification also observed an `@dnd/battle-runtime typecheck` baseline
-  failure: TS7053 index errors in unrelated MBT files such as
+- Task 11 retry closeout repaired the previous unrelated baseline blockers:
+  `check:authored-id-dispatch` now accepts the `fire_bolt` MBT fixture boundary
+  via an inline allowlist annotation, and `@dnd/battle-runtime typecheck` no
+  longer reports the TS7053 Quint-tag-map errors in unrelated MBT files such as
   `quickened-spell-governor.mbt.test.ts`,
   `ray-of-enfeeblement-lifecycle.mbt.test.ts`,
   `reaction-casting-time.mbt.test.ts`,
   `roll-modifier-active-effects.mbt.test.ts`,
   `spike-growth-movement-hazard.mbt.test.ts`, and
   `web-restraint-hazard.mbt.test.ts`.
-- Task 11 closeout has verified: base check; dependency repair with
-  `CI=true pnpm install`; typechecks for `@dnd/shared-algebras`,
+- Task 11 closeout verification status: still blocked by unrelated baseline
+  failures outside the companion-session docs. Current `pnpm quality`
+  verification now reaches `pnpm unit-profile-coverage:check` and stops on a
+  broad selected-identity MBT replay metadata baseline: many
+  `packages/battle-runtime/src/*selected-identity*.mbt.test.ts` and rule-core
+  MBT files cite replay actions that the coverage script reports as
+  unreachable because it finds no readable Quint MBT step action set. Per the
+  repo broad-verification stop rule, this closeout did not expand into that
+  cross-lane coverage failure.
+- Task 11 retry closeout has verified: base check; typechecks for
+  `@dnd/shared-algebras`, `@dnd/battle-runtime`,
   `@dnd/character-sheet-runtime`, `@dnd/character-battle-runtime`, and
-  `@dnd/mcp`; `git diff --check`.
-- Task 11 did not run, per the repo broad-verification stop rule after the
+  `@dnd/mcp`; `check:authored-id-dispatch`;
+  `check:character-sheet-runtime-split`; `check:qa-generated-identity`;
+  `check:mbt-driver-closure`; `rules-kernel-coverage:check`; focused
+  `battle-runtime-mbt-driver-kit.test.ts`; and `git diff --check`.
+- Task 11 did not complete, per the repo broad-verification stop rule after the
   unrelated baseline failures: full package test suites, the two focused
-  companion MBT files, `character-battle-settlement.mbt.test.ts`,
-  `test:qnt-proofs`, `pnpm unit-profile-coverage:check`, and
-  `node scripts/audit-character-sheet-runtime-split.mjs`. These gates must be
-  rerun by a later Task 11 closeout run after the baseline failures are
-  repaired or otherwise explicitly exempted.
+  companion MBT files under the MBT mutex protocol,
+  `character-battle-settlement.mbt.test.ts`, `test:qnt-proofs`, and a green
+  `pnpm unit-profile-coverage:check`. An accidental broad
+  `@dnd/battle-runtime` test run did execute many battle MBTs and unit tests,
+  including the two companion MBT files and the driver-kit unit test, but the
+  command was not the required promoted companion-MBT protocol and failed on
+  unrelated tests/timeouts (`blur-attack-roll-defense-lifecycle.mbt.test.ts`,
+  `starry-wisp-object.mbt.test.ts`,
+  `unit-profile-admission-passive-defense-and-archery.test.ts`,
+  `unit-profile-admission-spike-growth-movement-hazard.test.ts`, and
+  `unit-profile-admission-spiritual-weapon.test.ts`). These gates must be
+  rerun by a later Task 11 closeout run after the coverage/test baseline
+  failures are repaired or otherwise explicitly exempted.
 - MBT runs are not part of pre-research. If implementation changes QNT/MBT-owned
   companion behavior, run only the focused companion MBT after code changes and
   follow the repo seed-reproduction protocol for failures.
@@ -448,17 +465,15 @@ Non-goals:
 ## Companion Session Convergence Closeout
 
 Ralph lane `csc-r2-post-t16` has a complete finding ledger for the companion
-session admission review, but Task 11 full verification is currently blocked by
-unrelated MBT-driver baseline failures described above: the current
-authored-identity dispatch quality gate stops on `battle-runtime-mbt-driver-kit`
-before the earlier observed `@dnd/battle-runtime typecheck` TS7053 errors can be
-reached by `pnpm quality`. Runtime behavior remains traced to SRD 5.2.1 Find
-Familiar, Druid Wild Companion, Pact of the Chain, Ritual, Long Rest, Temporary
-Hit Points, and the repo's controlled-companion vocabulary. A46 and A47 match
-the landed implementation: an owner's Long Rest leaves surviving non-Wild
-retained companions unchanged, Wild Companion disappears at owner Long Rest, and
-recast updates the retained companion in place with preserve-and-clamp HP
-semantics.
+session admission review. Task 11 retry closeout repaired the prior MBT-driver
+baseline blockers described above, but full verification is still blocked by an
+unrelated `unit-profile-coverage:check` selected-identity MBT replay metadata
+baseline. Runtime behavior remains traced to SRD 5.2.1 Find Familiar, Druid
+Wild Companion, Pact of the Chain, Ritual, Long Rest, Temporary Hit Points, and
+the repo's controlled-companion vocabulary. A46 and A47 match the landed
+implementation: an owner's Long Rest leaves surviving non-Wild retained
+companions unchanged, Wild Companion disappears at owner Long Rest, and recast
+updates the retained companion in place with preserve-and-clamp HP semantics.
 
 ### Review Finding Ledger
 
