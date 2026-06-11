@@ -14,11 +14,20 @@
 //   no one can teleport into or out of the aura or use planar travel there.
 // - UBIQUITOUS_LANGUAGE.md: Bonus Action, Spell Slot, Movement,
 //   Opportunity Attack, Teleportation, and Holding / Wielding.
-import * as path from "node:path";
-
 import { canSpendBonusAction } from "@dnd/shared-algebras/action-economy-algebra";
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
-import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
+import {
+  MBT_TEST_TIMEOUT_MS,
+  booleanField,
+  defineDriver,
+  focusedMbtMaxSteps,
+  mbtSpecPath,
+  mbtTraceCount,
+  numberFromQuintInt,
+  quintStateRecord,
+  run,
+  stateCheck,
+} from "./battle-runtime-mbt-driver-kit.ts";
 import { describe, expect, it } from "vitest";
 
 import type {
@@ -289,21 +298,25 @@ describe("Self-teleport lifecycle MBT parity", () => {
     });
   });
 
-  it("matches the focused self-teleport lifecycle against bounded random MBT traces", async () => {
-    await run({
-      spec: path.resolve(
-        import.meta.dirname,
-        "../battle-runtime-self-teleport-lifecycle.mbt.qnt",
-      ),
-      init: "init",
-      step: "step",
-      driver: createSelfTeleportLifecycleDriver(),
-      backend: "typescript",
-      nTraces: 10,
-      maxSteps: 4,
-      stateCheck: selfTeleportStateCheck,
-    });
-  }, 120_000);
+  it(
+    "matches the focused self-teleport lifecycle against bounded random MBT traces",
+    async () => {
+      await run({
+        spec: mbtSpecPath(
+          import.meta.dirname,
+          "battle-runtime-self-teleport-lifecycle.mbt.qnt",
+        ),
+        init: "init",
+        step: "step",
+        driver: createSelfTeleportLifecycleDriver(),
+        backend: "typescript",
+        nTraces: mbtTraceCount(),
+        maxSteps: focusedMbtMaxSteps(4),
+        stateCheck: selfTeleportStateCheck,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
 });
 
 function initialRuntimeState(): SelfTeleportRuntimeState {
@@ -586,9 +599,18 @@ function normalizeSelfTeleportQuintState(raw: unknown): SelfTeleportProjection {
       "qDestinationWitnessConsumed",
     ),
     teleportEmitted: booleanField(state, "qTeleportEmitted"),
-    movementSpentFeet: numberField(state, "qMovementSpentFeet"),
-    movementRemainingFeet: numberField(state, "qMovementRemainingFeet"),
-    spellSlotExpended: numberField(state, "qSpellSlotExpended"),
+    movementSpentFeet: numberFromQuintInt(
+      state["qMovementSpentFeet"],
+      "qMovementSpentFeet",
+    ),
+    movementRemainingFeet: numberFromQuintInt(
+      state["qMovementRemainingFeet"],
+      "qMovementRemainingFeet",
+    ),
+    spellSlotExpended: numberFromQuintInt(
+      state["qSpellSlotExpended"],
+      "qSpellSlotExpended",
+    ),
     spellSlotCommittedThisTurn: booleanField(
       state,
       "qSpellSlotCommittedThisTurn",
@@ -601,15 +623,15 @@ function normalizeSelfTeleportQuintState(raw: unknown): SelfTeleportProjection {
       state,
       "qEquipmentTransportProjected",
     ),
-    destinationDistanceFeet: numberField(state, "qDestinationDistanceFeet"),
+    destinationDistanceFeet: numberFromQuintInt(
+      state["qDestinationDistanceFeet"],
+      "qDestinationDistanceFeet",
+    ),
     destinationInsideAntimagicAuraWitness: booleanField(
       state,
       "qDestinationInsideAntimagicAuraWitness",
     ),
-    antimagicTransitBlocked: booleanField(
-      state,
-      "qAntimagicTransitBlocked",
-    ),
+    antimagicTransitBlocked: booleanField(state, "qAntimagicTransitBlocked"),
     lastResult: lastResult(state["qLastResult"]),
   };
 }
@@ -620,48 +642,6 @@ function compareSelfTeleportStates(
 ): boolean {
   expect(runtime).toStrictEqual(quint);
   return true;
-}
-
-function quintStateRecord(raw: unknown): Readonly<Record<string, unknown>> {
-  expect(raw).toBeTypeOf("object");
-  expect(raw).not.toBeNull();
-  if (!isReadonlyRecord(raw)) {
-    throw new Error("Expected Quint state record.");
-  }
-  return raw;
-}
-
-function isReadonlyRecord(
-  raw: unknown,
-): raw is Readonly<Record<string, unknown>> {
-  return typeof raw === "object" && raw !== null;
-}
-
-function booleanField(
-  state: Readonly<Record<string, unknown>>,
-  field: string,
-): boolean {
-  const value = state[field];
-  expect(value).toBeTypeOf("boolean");
-  if (typeof value !== "boolean") {
-    throw new Error(`Expected boolean Quint field ${field}.`);
-  }
-  return value;
-}
-
-function numberField(
-  state: Readonly<Record<string, unknown>>,
-  field: string,
-): number {
-  const value = state[field];
-  if (typeof value === "bigint") {
-    return Number(value);
-  }
-  expect(value).toBeTypeOf("number");
-  if (typeof value !== "number") {
-    throw new Error(`Expected number Quint field ${field}.`);
-  }
-  return value;
 }
 
 function lastResult(raw: unknown): LastResult {

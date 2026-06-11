@@ -1,10 +1,9 @@
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt B25-SHINING-SMITE-IDENTITY-WITNESS shining_smite
 // UNIT-IDENTITY-MBT-REPLAY: B25-SHINING-SMITE-IDENTITY-WITNESS shining_smite doDiscoverShiningSmiteAfterHitDamageIllumination
-import * as path from "node:path";
-
 import { expect } from "vitest";
 
 import { SHINING_SMITE_BRIGHT_LIGHT_RADIUS_FEET } from "./battle-reducer/spells-active-effects.ts";
+import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
 import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
 import {
   shiningSmiteUnitId,
@@ -35,9 +34,9 @@ import {
 defineSelectedIdentityWitness({
   describeLabel: "Shining Smite selected identity MBT",
   taskId: "B25-SHINING-SMITE-IDENTITY-WITNESS",
-  specFile: path.resolve(
+  specFile: mbtSpecPath(
     import.meta.dirname,
-    "../battle-runtime-shining-smite-selected-identity.mbt.qnt",
+    "battle-runtime-shining-smite-selected-identity.mbt.qnt",
   ),
   projectionSchema: { lastResult: "str" },
   initialProjection: { lastResult: "init" },
@@ -154,7 +153,9 @@ defineSelectedIdentityWitness({
             if (afterWeaponDamage.tag !== "resolved") {
               throw new Error("Expected Shining Smite host attack to resolve.");
             }
-            expect(snapshotBattle(afterWeaponDamage.state).lightEmitters).toEqual([
+            expect(
+              snapshotBattle(afterWeaponDamage.state).lightEmitters,
+            ).toEqual([
               {
                 kind: "spellLightEmitter",
                 sourceSpellId: shiningSmiteUnitId,

@@ -1,9 +1,20 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt stat-block.attack-control
 // KERNEL-COVERAGE: parity-witness BATTLE.STAT_BLOCK.ATTACK_CONTROL
-import * as path from "node:path";
 import { isDeepStrictEqual } from "node:util";
 
-import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
+import {
+  MBT_TEST_TIMEOUT_MS,
+  booleanField,
+  defineDriver,
+  focusedMbtMaxSteps,
+  mbtSpecPath,
+  mbtTraceCount,
+  numberFromQuintInt,
+  quintSet,
+  quintStateRecord,
+  run,
+  stateCheck,
+} from "./battle-runtime-mbt-driver-kit.ts";
 import { Either } from "effect";
 import { describe, it } from "vitest";
 
@@ -247,24 +258,26 @@ const statBlockControlStateCheck = stateCheck(
 const ruleCoreStatBlockControlDefaultMbtSteps = 6;
 
 describe("rule-core Stat Block control focused MBT", () => {
-  it("replays QCORE11 Multiattack dispatch parity through battle-runtime reducers", async () => {
-    await run({
-      spec: path.resolve(
-        import.meta.dirname,
-        "../rule-core-stat-block-controls.mbt.qnt",
-      ),
-      init: "init",
-      step: "step",
-      driver: createRuleCoreStatBlockControlDriver(),
-      backend: "typescript",
-      seed: process.env["QUINT_SEED"],
-      nTraces: Number(process.env["MBT_TRACES"] ?? 1),
-      maxSteps: Number(
-        process.env["MBT_STEPS"] ?? ruleCoreStatBlockControlDefaultMbtSteps,
-      ),
-      stateCheck: statBlockControlStateCheck,
-    });
-  }, 120_000);
+  it(
+    "replays QCORE11 Multiattack dispatch parity through battle-runtime reducers",
+    async () => {
+      await run({
+        spec: mbtSpecPath(
+          import.meta.dirname,
+          "rule-core-stat-block-controls.mbt.qnt",
+        ),
+        init: "init",
+        step: "step",
+        driver: createRuleCoreStatBlockControlDriver(),
+        backend: "typescript",
+        seed: process.env["QUINT_SEED"],
+        nTraces: mbtTraceCount(),
+        maxSteps: focusedMbtMaxSteps(ruleCoreStatBlockControlDefaultMbtSteps),
+        stateCheck: statBlockControlStateCheck,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
 });
 
 function statBlockControlBattle(): BattleState {
@@ -523,7 +536,9 @@ function normalizeRuleCoreStatBlockControlQuintState(
       state,
       "qMultiattackContinuationOpen",
     ),
-    holes: quintHoleSet(state["qHoles"]).map(statBlockControlHoleName).sort(),
+    holes: quintSet(state["qHoles"], "qHoles")
+      .map(statBlockControlHoleName)
+      .sort(),
     lastResult: statBlockControlResult(state["qLastResult"]),
     lastInvalidReason: statBlockControlInvalidReason(
       state["qLastInvalidReason"],
@@ -584,42 +599,11 @@ function isRuleCoreStatBlockControlInvalidReason(
   );
 }
 
-function booleanField(
-  state: Readonly<Record<string, unknown>>,
-  field: string,
-): boolean {
-  const value = state[field];
-  if (typeof value !== "boolean") {
-    throw new Error(`Expected boolean Quint field ${field}.`);
-  }
-  return value;
-}
-
-function numberFromQuintInt(raw: unknown, field: string): number {
-  if (typeof raw !== "bigint") {
-    throw new Error(`Expected bigint Quint field ${field}.`);
-  }
-  return Number(raw);
-}
-
-function quintHoleSet(raw: unknown): readonly unknown[] {
-  if (raw instanceof Set) return [...raw];
-  if (Array.isArray(raw)) return raw;
-  throw new Error("Expected Quint qHoles field to be a Set.");
-}
-
 function stringFieldValue(raw: unknown, field: string): string {
   if (typeof raw !== "string") {
     throw new Error(`Expected string Quint field ${field}.`);
   }
   return raw;
-}
-
-function quintStateRecord(raw: unknown): Readonly<Record<string, unknown>> {
-  if (raw === null || typeof raw !== "object" || Array.isArray(raw)) {
-    throw new Error("Expected Quint state record.");
-  }
-  return raw as Readonly<Record<string, unknown>>;
 }
 
 function multiattackStatBlock(): StatBlockRecord {

@@ -12,10 +12,21 @@
 // UNIT-IDENTITY-MBT-REPLAY: healing-stabilization cure_wounds doCureWoundsNeedsTarget doCureWoundsNeedsHealingRoll doCureWoundsWounded
 // UNIT-IDENTITY-MBT-REPLAY: L1H-MASS-CURE-WOUNDS mass_cure_wounds doMassCureWoundsNeedsTargetList doMassCureWoundsNeedsHealingRoll doMassCureWoundsWounded
 // UNIT-IDENTITY-MBT-REPLAY: L1H-MASS-HEALING-WORD mass_healing_word doMassHealingWordNeedsTargetList doMassHealingWordNeedsHealingRoll doMassHealingWordWounded
-import * as path from "node:path";
 import { isDeepStrictEqual } from "node:util";
 
-import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
+import {
+  MBT_TEST_TIMEOUT_MS,
+  booleanField,
+  defineDriver,
+  focusedMbtMaxSteps,
+  mbtSpecPath,
+  mbtTraceCount,
+  numberFromQuintInt,
+  quintSet,
+  quintStateRecord,
+  run,
+  stateCheck,
+} from "./battle-runtime-mbt-driver-kit.ts";
 import { Either } from "effect";
 import { describe, expect, it } from "vitest";
 
@@ -1466,21 +1477,23 @@ describe("rule-core Spell focused MBT", () => {
     }
   });
 
-  it("replays QCORE10 spell procedure parity through battle-runtime reducers", async () => {
-    await run({
-      spec: path.resolve(import.meta.dirname, "../rule-core-spells.mbt.qnt"),
-      init: "init",
-      step: "step",
-      driver: createRuleCoreSpellDriver(),
-      backend: "typescript",
-      seed: process.env["QUINT_SEED"],
-      nTraces: Number(process.env["MBT_TRACES"] ?? 1),
-      maxSteps: Number(
-        process.env["MBT_STEPS"] ?? ruleCoreSpellDefaultMbtSteps,
-      ),
-      stateCheck: spellStateCheck,
-    });
-  }, 120_000);
+  it(
+    "replays QCORE10 spell procedure parity through battle-runtime reducers",
+    async () => {
+      await run({
+        spec: mbtSpecPath(import.meta.dirname, "rule-core-spells.mbt.qnt"),
+        init: "init",
+        step: "step",
+        driver: createRuleCoreSpellDriver(),
+        backend: "typescript",
+        seed: process.env["QUINT_SEED"],
+        nTraces: mbtTraceCount(),
+        maxSteps: focusedMbtMaxSteps(ruleCoreSpellDefaultMbtSteps),
+        stateCheck: spellStateCheck,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
 });
 
 function spellBattle(
@@ -2076,7 +2089,10 @@ function normalizeRuleCoreSpellQuintState(
     readiedHeld: booleanField(state, "qReadiedHeld"),
     readiedReleased: booleanField(state, "qReadiedReleased"),
     concentrationActive: booleanField(state, "qConcentrationActive"),
-    holes: quintHoleSet(state["qHoles"]).map(spellHoleName),
+    holes: quintSet(state["qHoles"], "qHoles")
+      .map(spellHoleTag)
+      .sort()
+      .map(spellHoleName),
     lastResult: spellResult(state["qLastResult"]),
     lastInvalidReason: spellInvalidReason(state["qLastInvalidReason"]),
   };
@@ -2110,37 +2126,6 @@ function decodeSpellRecord(raw: unknown): SpellRecord {
     throw new Error("Expected spell Unit.");
   }
   return unit;
-}
-
-function quintStateRecord(raw: unknown): Record<string, unknown> {
-  if (typeof raw !== "object" || raw === null) {
-    throw new Error("Expected Quint state object.");
-  }
-  return raw as Record<string, unknown>;
-}
-
-function booleanField(state: Record<string, unknown>, field: string): boolean {
-  const value = state[field];
-  if (typeof value !== "boolean") {
-    throw new Error(`Expected boolean ${field}.`);
-  }
-  return value;
-}
-
-function numberFromQuintInt(value: unknown, field: string): number {
-  if (typeof value === "number") return value;
-  if (typeof value === "bigint") return Number(value);
-  throw new Error(`Expected Quint int ${field}.`);
-}
-
-function quintHoleSet(value: unknown): readonly string[] {
-  if (value instanceof Set) {
-    return [...value].map(spellHoleTag).sort();
-  }
-  if (Array.isArray(value)) {
-    return value.map(spellHoleTag).sort();
-  }
-  throw new Error("Expected qHoles set.");
 }
 
 function spellHoleTag(value: unknown): string {
