@@ -233,21 +233,21 @@ a task's change invalidates them):
 | # | Task | Status | Depends on | Why this order |
 | ---: | --- | --- | --- | --- |
 | 1 | CSC-T01-OWNER-KEYED-COMPANIONS | done | none | Foundation: every later battle-side task reads/writes the companions map; do the key model first so nothing is built on the synthetic id space. |
-| 2 | CSC-T02-PROTOCOL-TAG-UNION | done | T01 | Shrinks the protocol vocabulary T03's settlement must write. |
-| 3 | CSC-T03-SETTLEMENT-OUTCOME | done | T02 | The core domain rework; consumes T01's key model and T02's protocol shape. |
-| 4 | CSC-T04-DEAD-BATTLE-LONG-REST-LANE | done | T03 | Whether battle `expiration` survives depends on T03's settlement projection. |
-| 5 | CSC-T05-COMPANION-REST-ASSUMPTION | done | T04 | HITL; sheet-side counterpart of T04's deletion. |
-| 6 | CSC-T06-RECAST-SEMANTICS | done | T05 | HITL; depends on T03's outcome union for the battle half. |
-| 7 | CSC-T07-FORM-VOCAB-HOIST-CREATION-MOVE | done | T06 | Package move lands after semantics settle, so code moves once. |
-| 12 | CSC-T12-R0-LONG-REST-COMPANION-RESTORE | ready-for-implementation | none | Regression fix first: restores a direct-RAW rule the master merge dropped, plus the canary tests every later task (and the next master merge) needs. |
-| 13 | CSC-T13-R3LITE-ALIAS-FAMILY-DELETION | blocked | T12 | Trivial battle-runtime-only cleanup; sequenced early to get the dual vocabulary out of files later tasks read. |
-| 14 | CSC-T14-R4A-FORMS-SHIM-DELETION | blocked | T13 | Same-session-sized battle-runtime cleanup; touches imports in files T13 just edited. |
-| 8 | CSC-T08-CREATION-HP-SURFACE | blocked | T14 | Edits the creation op wherever T07 left it; runs after the cheap cleanups so the queue front stays unblocked. |
-| 9 | CSC-T09-FORM-CATALOG-REFERENCE | blocked | T08 | Touches admission eligibility helpers T07 may have relocated. |
-| 10 | CSC-T10-SMALL-FINDINGS-BATCH | blocked | T09 | Sweep of remaining small findings in now-stable files; now also owns the durable-id uniqueness decision (R4b). |
-| 15 | CSC-T15-R2-PROTOCOL-TAG-HOIST | blocked | T10 | Owner-approved refactor; reshapes protocol threading and deletes the settlement inverse mapping before T16 moves the code. |
-| 16 | CSC-T16-R1-SINGLE-SETTLEMENT-OPERATION | blocked | T15 | Code moves once, in its post-T15 final shape (the T07 rationale). |
-| 11 | CSC-T11-CONVERGENCE-CLOSEOUT | blocked | T16 | Full-gate run + plan-doc truth update over the whole lane, tasks 1–16. |
+| 2 | CSC-T02-PROTOCOL-TAG-UNION | done | CSC-T01-OWNER-KEYED-COMPANIONS | Shrinks the protocol vocabulary T03's settlement must write. |
+| 3 | CSC-T03-SETTLEMENT-OUTCOME | done | CSC-T02-PROTOCOL-TAG-UNION | The core domain rework; consumes T01's key model and T02's protocol shape. |
+| 4 | CSC-T04-DEAD-BATTLE-LONG-REST-LANE | done | CSC-T03-SETTLEMENT-OUTCOME | Whether battle `expiration` survives depends on T03's settlement projection. |
+| 5 | CSC-T05-COMPANION-REST-ASSUMPTION | done | CSC-T04-DEAD-BATTLE-LONG-REST-LANE | HITL; sheet-side counterpart of T04's deletion. |
+| 6 | CSC-T06-RECAST-SEMANTICS | done | CSC-T05-COMPANION-REST-ASSUMPTION | HITL; depends on T03's outcome union for the battle half. |
+| 7 | CSC-T07-FORM-VOCAB-HOIST-CREATION-MOVE | done | CSC-T06-RECAST-SEMANTICS | Package move lands after semantics settle, so code moves once. |
+| 12 | CSC-T12-R0-LONG-REST-COMPANION-RESTORE | done | none | Regression fix first: restores a direct-RAW rule the master merge dropped, plus the canary tests every later task (and the next master merge) needs. |
+| 13 | CSC-T13-R3LITE-ALIAS-FAMILY-DELETION | blocked | CSC-T12-R0-LONG-REST-COMPANION-RESTORE | Trivial battle-runtime-only cleanup; sequenced early to get the dual vocabulary out of files later tasks read. |
+| 14 | CSC-T14-R4A-FORMS-SHIM-DELETION | blocked | CSC-T13-R3LITE-ALIAS-FAMILY-DELETION | Same-session-sized battle-runtime cleanup; touches imports in files T13 just edited. |
+| 8 | CSC-T08-CREATION-HP-SURFACE | blocked | CSC-T14-R4A-FORMS-SHIM-DELETION | Edits the creation op wherever T07 left it; runs after the cheap cleanups so the queue front stays unblocked. |
+| 9 | CSC-T09-FORM-CATALOG-REFERENCE | blocked | CSC-T08-CREATION-HP-SURFACE | Touches admission eligibility helpers T07 may have relocated. |
+| 10 | CSC-T10-SMALL-FINDINGS-BATCH | blocked | CSC-T09-FORM-CATALOG-REFERENCE | Sweep of remaining small findings in now-stable files; now also owns the durable-id uniqueness decision (R4b). |
+| 15 | CSC-T15-R2-PROTOCOL-TAG-HOIST | blocked | CSC-T10-SMALL-FINDINGS-BATCH | Owner-approved refactor; reshapes protocol threading and deletes the settlement inverse mapping before T16 moves the code. |
+| 16 | CSC-T16-R1-SINGLE-SETTLEMENT-OPERATION | blocked | CSC-T15-R2-PROTOCOL-TAG-HOIST | Code moves once, in its post-T15 final shape (the T07 rationale). |
+| 11 | CSC-T11-CONVERGENCE-CLOSEOUT | blocked | CSC-T16-R1-SINGLE-SETTLEMENT-OPERATION | Full-gate run + plan-doc truth update over the whole lane, tasks 1–16. |
 
 ## Task Details
 
