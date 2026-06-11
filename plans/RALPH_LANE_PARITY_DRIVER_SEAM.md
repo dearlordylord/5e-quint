@@ -127,7 +127,7 @@
     {
       "number": 21,
       "id": "PDS-A21-SCENARIO-OUTCOME-BATCH-2",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Migrate the second qScenario outcome-projection batch"
     },
     {
@@ -599,7 +599,7 @@ line-delta and remaining discovery count reported.
 
 ### Task 21 - PDS-A21-SCENARIO-OUTCOME-BATCH-2
 
-Status: `ready-for-research` · Mode: AFK
+Status: `done` · Mode: AFK
 
 Input: the next ≤20 alphabetical files from the A19 discovery command after
 A20 lands.
