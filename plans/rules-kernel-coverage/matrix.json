@@ -2625,7 +2625,7 @@
       "kind": "hole-frontier",
       "parityWitnesses": [
         {
-          "deterministicReplayRationale": "Attack damage disposition replay is a two-case closed fixture: accepted melee Knock Out and rejected ranged Knock Out. Zero-Hit-Point replacement remains covered by the focused feature MBT witness because it is selected by supported feature state rather than a generic table choice.",
+          "deterministicReplayRationale": "DRP-T05 keeps attack damage disposition as a deterministic replay. The rule-core-attack-damage-disposition fixture is a closed two-case table over the attack-damage semantic core: accepted melee Knock Out and rejected ranged Knock Out. The replayed facts are computed in the QNT driver from resolveAttackProcedure and attackDamageDispositionIsLegal, while the TS witness supplies production reducer fills and compares to those QNT-owned q fields, so random branch interleavings are not the risk at this boundary. Zero-Hit-Point replacement stays on the sibling focused MBT witness in this parityWitnesses row because that path is selected by supported Unit feature state and unit-feature-zero-hit-point-core semantics rather than by the generic Knock Out table choice.",
           "kind": "deterministic-qnt-replay",
           "ownerPath": "packages/battle-runtime/src/rule-core-attack-damage-disposition.mbt.test.ts",
           "qntSpecPath": "packages/battle-runtime/rule-core-attack-damage-disposition.mbt.qnt",

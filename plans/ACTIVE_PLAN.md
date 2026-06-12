@@ -31,7 +31,7 @@
     {
       "number": 5,
       "id": "DRP-T05-DAMAGE-DISPOSITION-REPLAY",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Audit attack damage disposition and Knock Out replay portability"
     },
     {
@@ -277,7 +277,7 @@ another MBT run. Use the timing/background protocol from `CLAUDE.md`.
 | 2 | DRP-T02-SHOVE-OUTCOME-DECISION | ready-for-research | DRP-T01 | Portability audit of the recorded PPW-T11 closed-fixture decision; reopen only on new interleaving evidence. |
 | 3 | DRP-T03-SPELL-REST-BENEFIT-APPLICATION | ready-for-research | DRP-T01 | Sheet spell-rest benefit fixture and lockout replay. |
 | 4 | DRP-T04-ABILITY-SEARCH-REPLAY | done | DRP-T01 | Mixed focused-MBT plus deterministic replay row; do not duplicate existing focused coverage. |
-| 5 | DRP-T05-DAMAGE-DISPOSITION-REPLAY | ready-for-research | DRP-T01 | Knock Out accepted/rejected table facts beside existing feature MBT. |
+| 5 | DRP-T05-DAMAGE-DISPOSITION-REPLAY | done | DRP-T01 | Knock Out accepted/rejected table facts beside existing feature MBT. |
 | 6 | DRP-T06-ARMOR-CLASS-FORMULA | ready-for-research | DRP-T01 | Selected-identity formula projection. |
 | 7 | DRP-T07-CREATION-CLASS-FEATURE-PROJECTIONS | ready-for-research | DRP-T01 | Resource and source-fact projection rows share one driver. |
 | 8 | DRP-T08-CREATION-WIZARD-SPELLBOOK | ready-for-research | DRP-T01 | Selected Wizard spellbook learning replay. |
@@ -389,7 +389,7 @@ Acceptance:
 
 ### Task 5 - DRP-T05-DAMAGE-DISPOSITION-REPLAY
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 
