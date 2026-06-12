@@ -1,18 +1,18 @@
 {
   "summary": {
-    "total": 118,
-    "covered": 111,
+    "total": 119,
+    "covered": 112,
     "open": 1,
     "nonSemantic": 6,
     "byRuntime": {
       "shared-algebras": 1,
-      "battle": 88,
+      "battle": 89,
       "character-creation": 14,
       "character-sheet": 12,
       "character-battle": 3
     },
     "byStatus": {
-      "covered": 111,
+      "covered": 112,
       "needs-qnt-owner": 0,
       "needs-parity-witness": 1,
       "needs-surface-evidence": 0,
@@ -4118,6 +4118,39 @@
         "ASSUMPTIONS.md#a6-death-save-precedes-start-of-turn-effect-processing"
       ],
       "title": "Battle turn-boundary effect lifecycle ordering across end-turn cleanup, initiative advancement, start-turn effects, Death Saving Throw hooks, and weapon-hit turn effects"
+    },
+    {
+      "id": "BATTLE.PROTOCOL.CONCENTRATION_BREAK_TEARDOWN",
+      "kind": "composition",
+      "parityWitnesses": [
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/concentration-break-teardown.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-concentration-break-teardown.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profiles": [],
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime-concentration.qnt"
+      ],
+      "reason": "This bounded composition witness covers the reducer seam where damage to a concentrating combatant opens a Concentration Saving Throw continuation, a failed save breaks Concentration and tears down the active Spell Effect before any next command surface is inspected, voluntary Concentration end uses the same teardown owner, and casting another Concentration spell removes the prior Concentration Spell Effect before the replacement effect is active. Incapacitated and death-triggered breaks remain outside this slice; PPW-T14 owns the death path.",
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer/damage-apply.ts",
+        "packages/battle-runtime/src/battle-reducer/attack-main.ts",
+        "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-resources.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Rules-Glossary.md#Concentration",
+        "UBIQUITOUS_LANGUAGE.md#Concentration",
+        "UBIQUITOUS_LANGUAGE.md#Spell Effect",
+        "UBIQUITOUS_LANGUAGE.md#Saving Throw"
+      ],
+      "title": "Battle protocol Concentration break teardown removes the broken Spell Effect before the next command or replacement Concentration effect proceeds"
     }
   ],
   "battleHoleFrontier": [
@@ -7024,6 +7057,7 @@
     {
       "evidence": "packages/battle-runtime/battle-runtime-concentration.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
       "obligationIds": [
+        "BATTLE.PROTOCOL.CONCENTRATION_BREAK_TEARDOWN",
         "BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS",
         "BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS",
         "BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE",
@@ -9015,6 +9049,12 @@
       ],
       "ownerPath": "packages/shared-algebras/proofs/rule-core/zero-hit-point-lifecycle.qnt",
       "role": "proof-only"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-concentration-break-teardown.mbt.qnt is the focused Concentration-break teardown literal projection witness for damage-save failure, voluntary end, and replacement by a second Concentration spell. It is MBT-only parity evidence, not qnt-proof verification evidence.",
+      "obligationIds": [],
+      "ownerPath": "packages/battle-runtime/battle-runtime-concentration-break-teardown.mbt.qnt",
+      "role": "mbt-fixture"
     }
   ],
   "qntRegistry": [
@@ -13361,6 +13401,39 @@
         "packages/battle-runtime/battle-runtime-reaction-window.qnt",
         "packages/battle-runtime/battle-runtime-reaction-resolution.qnt",
         "packages/battle-runtime/battle-runtime-replay-equivalence.qnt"
+      ],
+      "status": "generation-subset-clean"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [
+        "import",
+        "variant",
+        "record",
+        "record-update",
+        "pure-def",
+        "constant-def",
+        "int",
+        "bool",
+        "if-expression",
+        "let-binding",
+        "arithmetic",
+        "comparison",
+        "boolean-connective",
+        "all-block",
+        "pattern-match",
+        "set",
+        "filter",
+        "exists",
+        "set-operators",
+        "membership"
+      ],
+      "obligationId": "BATTLE.PROTOCOL.CONCENTRATION_BREAK_TEARDOWN",
+      "proofOnly": [
+        "packages/battle-runtime/battle-runtime-concentration-break-teardown.mbt.qnt"
+      ],
+      "semanticCore": [
+        "packages/battle-runtime/battle-runtime-concentration.qnt"
       ],
       "status": "generation-subset-clean"
     }

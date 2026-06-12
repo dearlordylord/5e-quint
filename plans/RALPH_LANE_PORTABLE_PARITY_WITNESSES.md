@@ -73,7 +73,7 @@
     {
       "number": 12,
       "id": "PPW-T12-CONCENTRATION-BREAK-SEAM",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Witness the Concentration-break teardown composition seam"
     },
     {
@@ -85,7 +85,7 @@
     {
       "number": 14,
       "id": "PPW-T14-ZERO-HP-MID-RESOLUTION-SEAM",
-      "status": "blocked",
+      "status": "ready-for-implementation",
       "title": "Witness the zero-Hit-Point mid-resolution composition seam"
     },
     {
@@ -241,9 +241,9 @@ another MBT run. Run MBT with the repo timing/background protocol from
 | 9 | PPW-T09-COMMAND-OPTION-FOCUSED-MBT | done | PPW-T02-ACID-ARROW-TIMING-FOCUSED-MBT, PPW-T03-AFTER-HIT-RIDERS-FOCUSED-MBT, PPW-T04-WEAPON-HOSTED-ATTACK-FOCUSED-MBT, PPW-T05-SUBTLE-METAMAGIC-FOCUSED-MBT, PPW-T06-HOLE-VOCABULARY-WITNESS-POLICY, PPW-T07-WEAPON-MASTERY-ADVANCEMENT-FOCUSED-MBT, PPW-T08-WEAPON-MASTERY-RESELECTION-FOCUSED-MBT | Moved from QNTD-B08 / QCP-CS6; after runtime-test rows drain. |
 | 10 | PPW-T10-ABILITY-CHECK-SEARCH-FOCUSED-MBT | done | PPW-T02-ACID-ARROW-TIMING-FOCUSED-MBT, PPW-T03-AFTER-HIT-RIDERS-FOCUSED-MBT, PPW-T04-WEAPON-HOSTED-ATTACK-FOCUSED-MBT, PPW-T05-SUBTLE-METAMAGIC-FOCUSED-MBT, PPW-T06-HOLE-VOCABULARY-WITNESS-POLICY, PPW-T07-WEAPON-MASTERY-ADVANCEMENT-FOCUSED-MBT, PPW-T08-WEAPON-MASTERY-RESELECTION-FOCUSED-MBT | Moved from QNTD-B09 / QCP-CS7. |
 | 11 | PPW-T11-SHOVE-WITNESS-POLICY | done | PPW-T09-COMMAND-OPTION-FOCUSED-MBT, PPW-T10-ABILITY-CHECK-SEARCH-FOCUSED-MBT | Moved from QNTD-B10 / QCP-CS8; no-op policy recorded. |
-| 12 | PPW-T12-CONCENTRATION-BREAK-SEAM | ready-for-implementation | PPW-T01-QNT-REGISTRY-CLOSURE | Highest-value composition seam. |
+| 12 | PPW-T12-CONCENTRATION-BREAK-SEAM | done | PPW-T01-QNT-REGISTRY-CLOSURE | Highest-value composition seam. |
 | 13 | PPW-T13-TURN-BOUNDARY-LIFECYCLE-SEAM | ready-for-implementation | PPW-T01-QNT-REGISTRY-CLOSURE | Uses the modules T01 binds. |
-| 14 | PPW-T14-ZERO-HP-MID-RESOLUTION-SEAM | blocked | PPW-T01-QNT-REGISTRY-CLOSURE, PPW-T12-CONCENTRATION-BREAK-SEAM | Reuses T12 teardown facts. |
+| 14 | PPW-T14-ZERO-HP-MID-RESOLUTION-SEAM | ready-for-implementation | PPW-T01-QNT-REGISTRY-CLOSURE, PPW-T12-CONCENTRATION-BREAK-SEAM | Reuses T12 teardown facts. |
 | 15 | PPW-T15-LANE-CLOSEOUT | blocked | PPW-T01-QNT-REGISTRY-CLOSURE, PPW-T02-ACID-ARROW-TIMING-FOCUSED-MBT, PPW-T03-AFTER-HIT-RIDERS-FOCUSED-MBT, PPW-T04-WEAPON-HOSTED-ATTACK-FOCUSED-MBT, PPW-T05-SUBTLE-METAMAGIC-FOCUSED-MBT, PPW-T06-HOLE-VOCABULARY-WITNESS-POLICY, PPW-T07-WEAPON-MASTERY-ADVANCEMENT-FOCUSED-MBT, PPW-T08-WEAPON-MASTERY-RESELECTION-FOCUSED-MBT, PPW-T09-COMMAND-OPTION-FOCUSED-MBT, PPW-T10-ABILITY-CHECK-SEARCH-FOCUSED-MBT, PPW-T11-SHOVE-WITNESS-POLICY, PPW-T12-CONCENTRATION-BREAK-SEAM, PPW-T13-TURN-BOUNDARY-LIFECYCLE-SEAM, PPW-T14-ZERO-HP-MID-RESOLUTION-SEAM | Full gates, rollup, pointer verification. |
 | 16 | PPW-T16-RECURSIVE-NEXT-BATCH | blocked | PPW-T15-LANE-CLOSEOUT | Recursive tail. |
 
@@ -511,7 +511,7 @@ Acceptance: policy recorded or focused MBT green; checker write+check green;
 
 ### Task 12 - PPW-T12-CONCENTRATION-BREAK-SEAM - Concentration-break teardown seam
 
-Status: `ready-for-implementation`
+Status: `done`
 
 Input:
 
@@ -589,7 +589,7 @@ checker write+check green; `git diff --check`.
 
 ### Task 14 - PPW-T14-ZERO-HP-MID-RESOLUTION-SEAM - Zero-Hit-Point mid-resolution seam
 
-Status: `blocked` (after PPW-T01, PPW-T12)
+Status: `ready-for-implementation`
 
 Input:
 
