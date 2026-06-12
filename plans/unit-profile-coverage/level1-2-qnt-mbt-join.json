@@ -2197,6 +2197,12 @@
         {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-shining-smite.test.ts"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/after-hit-damage-riders.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt",
+          "stepAction": "step"
         }
       ],
       "profileId": "spell.invocation-after-hit-damage",
@@ -2301,6 +2307,12 @@
         {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-shining-smite.test.ts"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/after-hit-damage-riders.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt",
+          "stepAction": "step"
         }
       ],
       "profileId": "spell.invocation-after-hit-restraint-turn-start-damage",
@@ -5310,6 +5322,12 @@
         {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-shining-smite.test.ts"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/after-hit-damage-riders.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt",
+          "stepAction": "step"
         }
       ],
       "profileId": "spell.invocation-after-hit-damage",
@@ -7159,6 +7177,12 @@
         {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-shining-smite.test.ts"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/after-hit-damage-riders.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt",
+          "stepAction": "step"
         }
       ],
       "profileId": "spell.invocation-after-hit-timed-damage-save",

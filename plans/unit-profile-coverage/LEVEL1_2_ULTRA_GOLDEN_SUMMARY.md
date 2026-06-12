@@ -14,7 +14,7 @@ This summary is layer-by-layer. It deliberately does not publish a blended ultra
 | --- | --- | --- | --- |
 | Support completeness | pass | strict target closure 115/115 (100%); selected identity 104/104 (100%); SRD authored product readiness 76/76 (100%) | _none_ |
 | QNT/generator readiness | pass | QNT-covered obligations 49/49; generator-ready semantic-core obligations 40/40 | _none_ |
-| MBT/parity evidence | pass | parity-witnessed obligations 49/49; witness kinds deterministic-qnt-replay: 9, focused-mbt: 43, runtime-test: 16 | _none_ |
+| MBT/parity evidence | pass | parity-witnessed obligations 49/49; witness kinds deterministic-qnt-replay: 9, focused-mbt: 44, runtime-test: 16 | _none_ |
 | MCP scenario evidence | pass | scenario flows 4/4; check pnpm --filter @dnd/mcp test:mcp-scenario-evidence | _none_ |
 
 ## Support Claim

@@ -19,13 +19,13 @@
       "metrics": {
         "evidenceRows": {
           "denominator": 113,
-          "numerator": 107,
-          "percent": "94.7%"
+          "numerator": 110,
+          "percent": "97.3%"
         },
         "openGapRows": {
           "denominator": 113,
-          "numerator": 6,
-          "percent": "5.3%"
+          "numerator": 3,
+          "percent": "2.7%"
         },
         "spellProcedureProfiles": {
           "denominator": 31,
@@ -85,147 +85,6 @@
           "runtime": "battle",
           "tag": "obligation-evidence",
           "unitId": "divine_favor"
-        },
-        {
-          "evidenceStatus": "gap",
-          "gaps": [
-            {
-              "detail": "Rules-kernel obligation has parity witnesses, but none are focused-mbt or deterministic-qnt-replay evidence.",
-              "kind": "missing-qnt-mbt-witness"
-            }
-          ],
-          "joinStatus": "covered",
-          "obligationId": "BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS",
-          "obligationStatus": "covered",
-          "obligationTitle": "Battle after-hit Bonus Action spell riders for immediate damage, save-gated restraint, timed start-turn damage, illumination, Spell Slot or free-cast spend, and Concentration cleanup",
-          "parityWitnesses": [
-            {
-              "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-true-strike-and-divine-smite.test.ts"
-            },
-            {
-              "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-ensnaring-and-searing-smite.test.ts"
-            },
-            {
-              "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-shining-smite.test.ts"
-            }
-          ],
-          "profileId": "spell.invocation-after-hit-damage",
-          "profileKind": "spell-invocation",
-          "qntMbtWitnesses": [],
-          "qntOwners": [
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-weapon-hit-spell-riders.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-spell-invocation.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-concentration.qnt",
-              "role": "semantic-core"
-            }
-          ],
-          "runtime": "battle",
-          "tag": "obligation-evidence",
-          "unitId": "divine_smite"
-        },
-        {
-          "evidenceStatus": "gap",
-          "gaps": [
-            {
-              "detail": "Rules-kernel obligation has parity witnesses, but none are focused-mbt or deterministic-qnt-replay evidence.",
-              "kind": "missing-qnt-mbt-witness"
-            }
-          ],
-          "joinStatus": "covered",
-          "obligationId": "BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS",
-          "obligationStatus": "covered",
-          "obligationTitle": "Battle after-hit Bonus Action spell riders for immediate damage, save-gated restraint, timed start-turn damage, illumination, Spell Slot or free-cast spend, and Concentration cleanup",
-          "parityWitnesses": [
-            {
-              "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-true-strike-and-divine-smite.test.ts"
-            },
-            {
-              "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-ensnaring-and-searing-smite.test.ts"
-            },
-            {
-              "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-shining-smite.test.ts"
-            }
-          ],
-          "profileId": "spell.invocation-after-hit-restraint-turn-start-damage",
-          "profileKind": "spell-invocation",
-          "qntMbtWitnesses": [],
-          "qntOwners": [
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-weapon-hit-spell-riders.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-spell-invocation.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-concentration.qnt",
-              "role": "semantic-core"
-            }
-          ],
-          "runtime": "battle",
-          "tag": "obligation-evidence",
-          "unitId": "ensnaring_strike"
-        },
-        {
-          "evidenceStatus": "gap",
-          "gaps": [
-            {
-              "detail": "Rules-kernel obligation has parity witnesses, but none are focused-mbt or deterministic-qnt-replay evidence.",
-              "kind": "missing-qnt-mbt-witness"
-            }
-          ],
-          "joinStatus": "covered",
-          "obligationId": "BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS",
-          "obligationStatus": "covered",
-          "obligationTitle": "Battle after-hit Bonus Action spell riders for immediate damage, save-gated restraint, timed start-turn damage, illumination, Spell Slot or free-cast spend, and Concentration cleanup",
-          "parityWitnesses": [
-            {
-              "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-true-strike-and-divine-smite.test.ts"
-            },
-            {
-              "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-ensnaring-and-searing-smite.test.ts"
-            },
-            {
-              "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-shining-smite.test.ts"
-            }
-          ],
-          "profileId": "spell.invocation-after-hit-timed-damage-save",
-          "profileKind": "spell-invocation",
-          "qntMbtWitnesses": [],
-          "qntOwners": [
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-weapon-hit-spell-riders.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-spell-invocation.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-concentration.qnt",
-              "role": "semantic-core"
-            }
-          ],
-          "runtime": "battle",
-          "tag": "obligation-evidence",
-          "unitId": "searing_smite"
         },
         {
           "evidenceStatus": "gap",
@@ -2091,13 +1950,8 @@
           "unitId": "divine_favor"
         },
         {
-          "evidenceStatus": "gap",
-          "gaps": [
-            {
-              "detail": "Rules-kernel obligation has parity witnesses, but none are focused-mbt or deterministic-qnt-replay evidence.",
-              "kind": "missing-qnt-mbt-witness"
-            }
-          ],
+          "evidenceStatus": "evidence-present",
+          "gaps": [],
           "joinStatus": "covered",
           "obligationId": "BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS",
           "obligationStatus": "covered",
@@ -2114,11 +1968,24 @@
             {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/unit-profile-admission-shining-smite.test.ts"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/after-hit-damage-riders.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt",
+              "stepAction": "step"
             }
           ],
           "profileId": "spell.invocation-after-hit-damage",
           "profileKind": "spell-invocation",
-          "qntMbtWitnesses": [],
+          "qntMbtWitnesses": [
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/after-hit-damage-riders.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt",
+              "stepAction": "step"
+            }
+          ],
           "qntOwners": [
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-weapon-hit-spell-riders.qnt",
@@ -2185,13 +2052,8 @@
           "unitId": "eldritch_blast"
         },
         {
-          "evidenceStatus": "gap",
-          "gaps": [
-            {
-              "detail": "Rules-kernel obligation has parity witnesses, but none are focused-mbt or deterministic-qnt-replay evidence.",
-              "kind": "missing-qnt-mbt-witness"
-            }
-          ],
+          "evidenceStatus": "evidence-present",
+          "gaps": [],
           "joinStatus": "covered",
           "obligationId": "BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS",
           "obligationStatus": "covered",
@@ -2208,11 +2070,24 @@
             {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/unit-profile-admission-shining-smite.test.ts"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/after-hit-damage-riders.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt",
+              "stepAction": "step"
             }
           ],
           "profileId": "spell.invocation-after-hit-restraint-turn-start-damage",
           "profileKind": "spell-invocation",
-          "qntMbtWitnesses": [],
+          "qntMbtWitnesses": [
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/after-hit-damage-riders.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt",
+              "stepAction": "step"
+            }
+          ],
           "qntOwners": [
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-weapon-hit-spell-riders.qnt",
@@ -6465,13 +6340,8 @@
           "unitId": "sanctuary"
         },
         {
-          "evidenceStatus": "gap",
-          "gaps": [
-            {
-              "detail": "Rules-kernel obligation has parity witnesses, but none are focused-mbt or deterministic-qnt-replay evidence.",
-              "kind": "missing-qnt-mbt-witness"
-            }
-          ],
+          "evidenceStatus": "evidence-present",
+          "gaps": [],
           "joinStatus": "covered",
           "obligationId": "BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS",
           "obligationStatus": "covered",
@@ -6488,11 +6358,24 @@
             {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/unit-profile-admission-shining-smite.test.ts"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/after-hit-damage-riders.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt",
+              "stepAction": "step"
             }
           ],
           "profileId": "spell.invocation-after-hit-timed-damage-save",
           "profileKind": "spell-invocation",
-          "qntMbtWitnesses": [],
+          "qntMbtWitnesses": [
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/after-hit-damage-riders.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt",
+              "stepAction": "step"
+            }
+          ],
           "qntOwners": [
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-weapon-hit-spell-riders.qnt",
@@ -7898,13 +7781,13 @@
       "metrics": {
         "evidenceRows": {
           "denominator": 114,
-          "numerator": 107,
-          "percent": "93.9%"
+          "numerator": 111,
+          "percent": "97.4%"
         },
         "openGapRows": {
           "denominator": 114,
-          "numerator": 7,
-          "percent": "6.1%"
+          "numerator": 3,
+          "percent": "2.6%"
         },
         "spellProcedureProfiles": {
           "denominator": 31,
@@ -7964,194 +7847,6 @@
           "runtime": "battle",
           "tag": "obligation-evidence",
           "unitId": "divine_favor"
-        },
-        {
-          "evidenceStatus": "gap",
-          "gaps": [
-            {
-              "detail": "Rules-kernel obligation has parity witnesses, but none are focused-mbt or deterministic-qnt-replay evidence.",
-              "kind": "missing-qnt-mbt-witness"
-            }
-          ],
-          "joinStatus": "covered",
-          "obligationId": "BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS",
-          "obligationStatus": "covered",
-          "obligationTitle": "Battle after-hit Bonus Action spell riders for immediate damage, save-gated restraint, timed start-turn damage, illumination, Spell Slot or free-cast spend, and Concentration cleanup",
-          "parityWitnesses": [
-            {
-              "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-true-strike-and-divine-smite.test.ts"
-            },
-            {
-              "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-ensnaring-and-searing-smite.test.ts"
-            },
-            {
-              "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-shining-smite.test.ts"
-            }
-          ],
-          "profileId": "spell.invocation-after-hit-damage",
-          "profileKind": "spell-invocation",
-          "qntMbtWitnesses": [],
-          "qntOwners": [
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-weapon-hit-spell-riders.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-spell-invocation.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-concentration.qnt",
-              "role": "semantic-core"
-            }
-          ],
-          "runtime": "battle",
-          "tag": "obligation-evidence",
-          "unitId": "divine_smite"
-        },
-        {
-          "evidenceStatus": "gap",
-          "gaps": [
-            {
-              "detail": "Rules-kernel obligation has parity witnesses, but none are focused-mbt or deterministic-qnt-replay evidence.",
-              "kind": "missing-qnt-mbt-witness"
-            }
-          ],
-          "joinStatus": "covered",
-          "obligationId": "BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS",
-          "obligationStatus": "covered",
-          "obligationTitle": "Battle after-hit Bonus Action spell riders for immediate damage, save-gated restraint, timed start-turn damage, illumination, Spell Slot or free-cast spend, and Concentration cleanup",
-          "parityWitnesses": [
-            {
-              "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-true-strike-and-divine-smite.test.ts"
-            },
-            {
-              "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-ensnaring-and-searing-smite.test.ts"
-            },
-            {
-              "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-shining-smite.test.ts"
-            }
-          ],
-          "profileId": "spell.invocation-after-hit-restraint-turn-start-damage",
-          "profileKind": "spell-invocation",
-          "qntMbtWitnesses": [],
-          "qntOwners": [
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-weapon-hit-spell-riders.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-spell-invocation.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-concentration.qnt",
-              "role": "semantic-core"
-            }
-          ],
-          "runtime": "battle",
-          "tag": "obligation-evidence",
-          "unitId": "ensnaring_strike"
-        },
-        {
-          "evidenceStatus": "gap",
-          "gaps": [
-            {
-              "detail": "Rules-kernel obligation has parity witnesses, but none are focused-mbt or deterministic-qnt-replay evidence.",
-              "kind": "missing-qnt-mbt-witness"
-            }
-          ],
-          "joinStatus": "covered",
-          "obligationId": "BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS",
-          "obligationStatus": "covered",
-          "obligationTitle": "Battle after-hit Bonus Action spell riders for immediate damage, save-gated restraint, timed start-turn damage, illumination, Spell Slot or free-cast spend, and Concentration cleanup",
-          "parityWitnesses": [
-            {
-              "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-true-strike-and-divine-smite.test.ts"
-            },
-            {
-              "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-ensnaring-and-searing-smite.test.ts"
-            },
-            {
-              "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-shining-smite.test.ts"
-            }
-          ],
-          "profileId": "spell.invocation-after-hit-damage",
-          "profileKind": "spell-invocation",
-          "qntMbtWitnesses": [],
-          "qntOwners": [
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-weapon-hit-spell-riders.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-spell-invocation.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-concentration.qnt",
-              "role": "semantic-core"
-            }
-          ],
-          "runtime": "battle",
-          "tag": "obligation-evidence",
-          "unitId": "paladin_paladins_smite"
-        },
-        {
-          "evidenceStatus": "gap",
-          "gaps": [
-            {
-              "detail": "Rules-kernel obligation has parity witnesses, but none are focused-mbt or deterministic-qnt-replay evidence.",
-              "kind": "missing-qnt-mbt-witness"
-            }
-          ],
-          "joinStatus": "covered",
-          "obligationId": "BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS",
-          "obligationStatus": "covered",
-          "obligationTitle": "Battle after-hit Bonus Action spell riders for immediate damage, save-gated restraint, timed start-turn damage, illumination, Spell Slot or free-cast spend, and Concentration cleanup",
-          "parityWitnesses": [
-            {
-              "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-true-strike-and-divine-smite.test.ts"
-            },
-            {
-              "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-ensnaring-and-searing-smite.test.ts"
-            },
-            {
-              "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-shining-smite.test.ts"
-            }
-          ],
-          "profileId": "spell.invocation-after-hit-timed-damage-save",
-          "profileKind": "spell-invocation",
-          "qntMbtWitnesses": [],
-          "qntOwners": [
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-weapon-hit-spell-riders.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-spell-invocation.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-concentration.qnt",
-              "role": "semantic-core"
-            }
-          ],
-          "runtime": "battle",
-          "tag": "obligation-evidence",
-          "unitId": "searing_smite"
         },
         {
           "evidenceStatus": "gap",
@@ -10017,13 +9712,8 @@
           "unitId": "divine_favor"
         },
         {
-          "evidenceStatus": "gap",
-          "gaps": [
-            {
-              "detail": "Rules-kernel obligation has parity witnesses, but none are focused-mbt or deterministic-qnt-replay evidence.",
-              "kind": "missing-qnt-mbt-witness"
-            }
-          ],
+          "evidenceStatus": "evidence-present",
+          "gaps": [],
           "joinStatus": "covered",
           "obligationId": "BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS",
           "obligationStatus": "covered",
@@ -10040,11 +9730,24 @@
             {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/unit-profile-admission-shining-smite.test.ts"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/after-hit-damage-riders.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt",
+              "stepAction": "step"
             }
           ],
           "profileId": "spell.invocation-after-hit-damage",
           "profileKind": "spell-invocation",
-          "qntMbtWitnesses": [],
+          "qntMbtWitnesses": [
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/after-hit-damage-riders.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt",
+              "stepAction": "step"
+            }
+          ],
           "qntOwners": [
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-weapon-hit-spell-riders.qnt",
@@ -10111,13 +9814,8 @@
           "unitId": "eldritch_blast"
         },
         {
-          "evidenceStatus": "gap",
-          "gaps": [
-            {
-              "detail": "Rules-kernel obligation has parity witnesses, but none are focused-mbt or deterministic-qnt-replay evidence.",
-              "kind": "missing-qnt-mbt-witness"
-            }
-          ],
+          "evidenceStatus": "evidence-present",
+          "gaps": [],
           "joinStatus": "covered",
           "obligationId": "BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS",
           "obligationStatus": "covered",
@@ -10134,11 +9832,24 @@
             {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/unit-profile-admission-shining-smite.test.ts"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/after-hit-damage-riders.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt",
+              "stepAction": "step"
             }
           ],
           "profileId": "spell.invocation-after-hit-restraint-turn-start-damage",
           "profileKind": "spell-invocation",
-          "qntMbtWitnesses": [],
+          "qntMbtWitnesses": [
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/after-hit-damage-riders.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt",
+              "stepAction": "step"
+            }
+          ],
           "qntOwners": [
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-weapon-hit-spell-riders.qnt",
@@ -12757,13 +12468,8 @@
           "unitId": "magic_missile"
         },
         {
-          "evidenceStatus": "gap",
-          "gaps": [
-            {
-              "detail": "Rules-kernel obligation has parity witnesses, but none are focused-mbt or deterministic-qnt-replay evidence.",
-              "kind": "missing-qnt-mbt-witness"
-            }
-          ],
+          "evidenceStatus": "evidence-present",
+          "gaps": [],
           "joinStatus": "covered",
           "obligationId": "BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS",
           "obligationStatus": "covered",
@@ -12780,11 +12486,24 @@
             {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/unit-profile-admission-shining-smite.test.ts"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/after-hit-damage-riders.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt",
+              "stepAction": "step"
             }
           ],
           "profileId": "spell.invocation-after-hit-damage",
           "profileKind": "spell-invocation",
-          "qntMbtWitnesses": [],
+          "qntMbtWitnesses": [
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/after-hit-damage-riders.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt",
+              "stepAction": "step"
+            }
+          ],
           "qntOwners": [
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-weapon-hit-spell-riders.qnt",
@@ -14438,13 +14157,8 @@
           "unitId": "sanctuary"
         },
         {
-          "evidenceStatus": "gap",
-          "gaps": [
-            {
-              "detail": "Rules-kernel obligation has parity witnesses, but none are focused-mbt or deterministic-qnt-replay evidence.",
-              "kind": "missing-qnt-mbt-witness"
-            }
-          ],
+          "evidenceStatus": "evidence-present",
+          "gaps": [],
           "joinStatus": "covered",
           "obligationId": "BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS",
           "obligationStatus": "covered",
@@ -14461,11 +14175,24 @@
             {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/unit-profile-admission-shining-smite.test.ts"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/after-hit-damage-riders.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt",
+              "stepAction": "step"
             }
           ],
           "profileId": "spell.invocation-after-hit-timed-damage-save",
           "profileKind": "spell-invocation",
-          "qntMbtWitnesses": [],
+          "qntMbtWitnesses": [
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/after-hit-damage-riders.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt",
+              "stepAction": "step"
+            }
+          ],
           "qntOwners": [
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-weapon-hit-spell-riders.qnt",

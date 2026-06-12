@@ -6,7 +6,7 @@
   "tasks": [
     { "number": 1, "id": "PPW-T01-QNT-REGISTRY-CLOSURE", "status": "done", "title": "Close the QNT registry: bind unbound modules, checker-enforce classification" },
     { "number": 2, "id": "PPW-T02-ACID-ARROW-TIMING-FOCUSED-MBT", "status": "done", "title": "Add Acid Arrow attack-timing focused MBT" },
-    { "number": 3, "id": "PPW-T03-AFTER-HIT-RIDERS-FOCUSED-MBT", "status": "ready-for-implementation", "title": "Add after-hit damage riders focused MBT (moved from QNTD-B06)" },
+    { "number": 3, "id": "PPW-T03-AFTER-HIT-RIDERS-FOCUSED-MBT", "status": "done", "title": "Add after-hit damage riders focused MBT (moved from QNTD-B06)" },
     { "number": 4, "id": "PPW-T04-WEAPON-HOSTED-ATTACK-FOCUSED-MBT", "status": "ready-for-implementation", "title": "Add weapon-hosted attack and riders focused MBT (moved from QNTD-B07)" },
     { "number": 5, "id": "PPW-T05-SUBTLE-METAMAGIC-FOCUSED-MBT", "status": "ready-for-implementation", "title": "Add Subtle Spell component-suppression focused MBT" },
     { "number": 6, "id": "PPW-T06-HOLE-VOCABULARY-WITNESS-POLICY", "status": "ready-for-research", "title": "Decide the witness shape for the hole-family vocabulary obligation" },
@@ -152,7 +152,7 @@ another MBT run. Run MBT with the repo timing/background protocol from
 | ---: | --- | --- | --- | --- |
 | 1 | PPW-T01-QNT-REGISTRY-CLOSURE | done | none | Grounds the seam tasks; checker change. |
 | 2 | PPW-T02-ACID-ARROW-TIMING-FOCUSED-MBT | done | none | Independent witness promotion. |
-| 3 | PPW-T03-AFTER-HIT-RIDERS-FOCUSED-MBT | ready-for-implementation | none | Moved from QNTD-B06 / QCP-CS4. |
+| 3 | PPW-T03-AFTER-HIT-RIDERS-FOCUSED-MBT | done | none | Moved from QNTD-B06 / QCP-CS4. |
 | 4 | PPW-T04-WEAPON-HOSTED-ATTACK-FOCUSED-MBT | ready-for-implementation | none | Moved from QNTD-B07 / QCP-CS5. |
 | 5 | PPW-T05-SUBTLE-METAMAGIC-FOCUSED-MBT | ready-for-implementation | none | Independent witness promotion. |
 | 6 | PPW-T06-HOLE-VOCABULARY-WITNESS-POLICY | ready-for-research | none | Policy decision; may be a recorded no-op. |
@@ -233,7 +233,7 @@ Acceptance:
 
 ### Task 3 - PPW-T03-AFTER-HIT-RIDERS-FOCUSED-MBT - After-hit damage riders
 
-Status: `ready-for-implementation`
+Status: `done`
 
 Moved verbatim from `QNTD-B06-AFTER-HIT-RIDERS-FOCUSED-MBT`.
 
