@@ -61,7 +61,7 @@
     {
       "number": 10,
       "id": "DRP-T10-SHEET-ABILITY-CHECK-PROFICIENCY",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Audit Ability Check Proficiency Bonus replay portability"
     },
     {
@@ -282,7 +282,7 @@ another MBT run. Use the timing/background protocol from `CLAUDE.md`.
 | 7 | DRP-T07-CREATION-CLASS-FEATURE-PROJECTIONS | done | DRP-T01 | Resource and source-fact projection rows share one driver. |
 | 8 | DRP-T08-CREATION-WIZARD-SPELLBOOK | done | DRP-T01 | Selected Wizard spellbook learning replay kept as deterministic selected-identity evidence for spellbook Spell Access finalization. |
 | 9 | DRP-T09-SHEET-FEATURE-RESOURCES | done | DRP-T01 | Feature-resource transition replay kept as a deterministic closed fixture for typed resource and battle-bridge projection joins. |
-| 10 | DRP-T10-SHEET-ABILITY-CHECK-PROFICIENCY | ready-for-research | DRP-T01 | Jack of All Trades, proficiency, and Expertise scalar projection. |
+| 10 | DRP-T10-SHEET-ABILITY-CHECK-PROFICIENCY | done | DRP-T01 | Ability Check Proficiency Bonus stays a deterministic scalar projection replay with typed-fact precedence rationale in the obligation row. |
 | 11 | DRP-T11-BATTLE-HANDOFF-INIT | ready-for-research | DRP-T01 | Character Sheet to battle init projection. |
 | 12 | DRP-T12-BATTLE-HANDOFF-SETTLEMENT | blocked | DRP-T11 | Settlement and identity-conflict replays share handoff assumptions. |
 | 13 | DRP-T13-HIT-POINT-DAMAGE-RUST-PARITY | ready-for-research | DRP-T01 | Align replay decision with existing Hit Point damage Rust dry-run evidence. |
@@ -490,7 +490,7 @@ Acceptance:
 
 ### Task 10 - DRP-T10-SHEET-ABILITY-CHECK-PROFICIENCY
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 
