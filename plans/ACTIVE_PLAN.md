@@ -55,7 +55,7 @@
     {
       "number": 9,
       "id": "DRP-T09-SHEET-FEATURE-RESOURCES",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Audit Character Sheet feature-resource transition replay portability"
     },
     {
@@ -281,7 +281,7 @@ another MBT run. Use the timing/background protocol from `CLAUDE.md`.
 | 6 | DRP-T06-ARMOR-CLASS-FORMULA | done | DRP-T01 | Selected-identity formula projection kept as deterministic replay with checker-readable Armor Class state boundary rationale. |
 | 7 | DRP-T07-CREATION-CLASS-FEATURE-PROJECTIONS | done | DRP-T01 | Resource and source-fact projection rows share one driver. |
 | 8 | DRP-T08-CREATION-WIZARD-SPELLBOOK | done | DRP-T01 | Selected Wizard spellbook learning replay kept as deterministic selected-identity evidence for spellbook Spell Access finalization. |
-| 9 | DRP-T09-SHEET-FEATURE-RESOURCES | ready-for-research | DRP-T01 | Feature resources bridge and sheet transitions. |
+| 9 | DRP-T09-SHEET-FEATURE-RESOURCES | done | DRP-T01 | Feature-resource transition replay kept as a deterministic closed fixture for typed resource and battle-bridge projection joins. |
 | 10 | DRP-T10-SHEET-ABILITY-CHECK-PROFICIENCY | ready-for-research | DRP-T01 | Jack of All Trades, proficiency, and Expertise scalar projection. |
 | 11 | DRP-T11-BATTLE-HANDOFF-INIT | ready-for-research | DRP-T01 | Character Sheet to battle init projection. |
 | 12 | DRP-T12-BATTLE-HANDOFF-SETTLEMENT | blocked | DRP-T11 | Settlement and identity-conflict replays share handoff assumptions. |
@@ -470,7 +470,7 @@ Acceptance:
 
 ### Task 9 - DRP-T09-SHEET-FEATURE-RESOURCES
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 
