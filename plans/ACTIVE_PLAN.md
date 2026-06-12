@@ -237,7 +237,7 @@ another MBT run. Use the timing/background protocol from `CLAUDE.md`.
 | # | Task | Status | Depends on | Notes |
 | ---: | --- | --- | --- | --- |
 | 1 | DRP-T01-INVENTORY-GATE | ready-for-research | none | Refresh the deterministic replay inventory from checked artifacts and assign each replay to one lane task. |
-| 2 | DRP-T02-SHOVE-OUTCOME-DECISION | blocked | DRP-T01 | Closed battle fixture unless the task finds a missing interleaving risk. |
+| 2 | DRP-T02-SHOVE-OUTCOME-DECISION | blocked | DRP-T01 | Portability audit of the recorded PPW-T11 closed-fixture decision; reopen only on new interleaving evidence. |
 | 3 | DRP-T03-SPELL-REST-BENEFIT-APPLICATION | blocked | DRP-T01 | Sheet spell-rest benefit fixture and lockout replay. |
 | 4 | DRP-T04-ABILITY-SEARCH-REPLAY | blocked | DRP-T01 | Mixed focused-MBT plus deterministic replay row; do not duplicate existing focused coverage. |
 | 5 | DRP-T05-DAMAGE-DISPOSITION-REPLAY | blocked | DRP-T01 | Knock Out accepted/rejected table facts beside existing feature MBT. |
@@ -294,13 +294,20 @@ Input:
 
 Output:
 
-- Either keep the deterministic replay with a durable closed-fixture rationale,
-  or promote it to focused MBT if a real random interleaving risk exists.
+- Start from the PPW-T11 decision already recorded on
+  `BATTLE.SHOVE.OUTCOME_AND_PUSH_BOUNDARY` (the `deterministicReplayRationale`
+  in `obligations.jsonl`); do not re-decide the witness mode.
+- Audit the replay for portability: confirm the replayed facts come from the
+  QNT spec rather than TS-side constants, so a sibling-language harness can
+  replay the same closed outcome table.
+- Reopen the witness-mode decision only on new evidence of an interleaving
+  risk the recorded rationale does not cover.
 
 Acceptance:
 
-- `obligations.jsonl` records the final witness mode and rationale.
-- Relevant focused test runs if the witness changes.
+- Portability result recorded per the DRP-T01 inventory note.
+- The recorded rationale stands unless the audit cites new evidence; relevant
+  focused test runs if the witness changes.
 
 ### Task 3 - DRP-T03-SPELL-REST-BENEFIT-APPLICATION
 
