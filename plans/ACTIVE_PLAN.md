@@ -85,7 +85,7 @@
     {
       "number": 14,
       "id": "DRP-T14-HP-REST-HIT-DICE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Audit HP, rest, and Hit Dice transition replay portability"
     },
     {
