@@ -109,7 +109,7 @@
     {
       "number": 18,
       "id": "DRP-T18-SPELL-ACCESS-SELECTED-IDENTITY",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Audit spellbook Ritual and class-feature prepared Spell Access replays"
     },
     {
@@ -655,7 +655,7 @@ Acceptance:
 
 ### Task 18 - DRP-T18-SPELL-ACCESS-SELECTED-IDENTITY
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 
