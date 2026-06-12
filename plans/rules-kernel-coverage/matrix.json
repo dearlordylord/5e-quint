@@ -3542,7 +3542,7 @@
       "kind": "state-transition",
       "parityWitnesses": [
         {
-          "deterministicReplayRationale": "Positive Hit Point damage has four explicitly named finite fixture cases with no sequencing or interleaving claim; qReplayIndex makes the closed case table execute once per case.",
+          "deterministicReplayRationale": "DRP-T13 keeps positive Hit Point damage as a deterministic replay. The four explicitly named fixture cases cover Temporary Hit Points absorbing first, a monster dying at 0 Hit Points, a player character falling Unconscious at 0 Hit Points, and a player character dying from massive damage. The QNT driver computes every expected projection from applyResolvedDamageToPositiveHitPoints in the hit-point-damage semantic core, while the TS witness compares production applyBattleHitPointDamage and hpDamageProjection output to those QNT-owned q fields. qReplayIndex only orders the closed case table once per case; random branch interleavings are not the risk at this shared positive-HP damage boundary, and the manual Rust dry-run remains documentation-only generator-readiness evidence with no committed Rust source or ABI.",
           "kind": "deterministic-qnt-replay",
           "ownerPath": "packages/battle-runtime/src/rule-core-hit-point-damage.mbt.test.ts",
           "qntSpecPath": "packages/battle-runtime/rule-core-hit-point-damage.mbt.qnt",

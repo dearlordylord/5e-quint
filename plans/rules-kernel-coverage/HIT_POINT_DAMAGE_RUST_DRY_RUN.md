@@ -15,6 +15,29 @@ source, does not introduce a Rust ABI, and does not change reducer behavior.
 - Production runtime owner:
   `packages/battle-runtime/src/battle-reducer/damage-apply.ts`
 
+## DRP-T13 Replay Audit
+
+The deterministic replay for this obligation remains a four-case closed table,
+not focused random MBT coverage:
+
+- Temporary Hit Points absorb damage before Hit Points.
+- A monster that drops to 0 Hit Points is dead.
+- A player character that drops to 0 Hit Points without Instant Death is
+  Unconscious.
+- A player character dies when remaining damage at 0 Hit Points equals the Hit
+  Point Maximum.
+
+`packages/battle-runtime/rule-core-hit-point-damage.mbt.qnt` computes these
+expected projections by calling `applyResolvedDamageToPositiveHitPoints` from
+the semantic core. `packages/battle-runtime/src/rule-core-hit-point-damage.mbt.test.ts`
+then compares the production `applyBattleHitPointDamage` and
+`hpDamageProjection` result against those QNT-owned fields. The replay index is
+only the fixture ordering mechanism for those named cases; it does not stand in
+for sequencing, resource, or interleaving coverage.
+
+This dry run still matches the checked semantic core and remains documentation
+only. It does not add generated Rust source, a Rust runtime boundary, or an ABI.
+
 ## RAW And Language Anchors
 
 - `.references/srd-5.2.1/Playing-the-Game.md#Hit Points`: Hit Points range
