@@ -5,15 +5,15 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 ## Summary
 
 - Total obligations: 119
-- Covered obligations: 112
-- Open transitional obligations: 1
+- Covered obligations: 113
+- Open transitional obligations: 0
 - Boundary or unsupported obligations: 6
 
 | Status | Count |
 | --- | ---: |
-| covered | 112 |
+| covered | 113 |
 | needs-qnt-owner | 0 |
-| needs-parity-witness | 1 |
+| needs-parity-witness | 0 |
 | needs-surface-evidence | 0 |
 | boundary-only | 5 |
 | unsupported-by-admission | 1 |
@@ -147,7 +147,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `BATTLE.FEATURE.METAMAGIC_EMPOWERED_DAMAGE_DICE_REROLL` | battle | covered | `unit-feature.metamagic-damage-dice-reroll` |
 | `BATTLE.SPELL.ACID_ARROW_ATTACK_TIMING` | battle | covered | `spell.invocation-acid-arrow-attack-timing` |
 | `BATTLE.PROTOCOL.INTERRUPT_STACK_RESUME_REPLAY` | battle | covered | _direct reducer entrypoint_ |
-| `BATTLE.COMPOSITION.TURN_BOUNDARY_EFFECT_LIFECYCLE_ORDERING` | battle | needs-parity-witness | _profile mapping pending_ |
+| `BATTLE.COMPOSITION.TURN_BOUNDARY_EFFECT_LIFECYCLE_ORDERING` | battle | covered | _direct reducer entrypoint_ |
 | `BATTLE.PROTOCOL.CONCENTRATION_BREAK_TEARDOWN` | battle | covered | _direct reducer entrypoint_ |
 
 ## Battle Hole Frontier
@@ -350,7 +350,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `packages/battle-runtime/battle-runtime-direct-condition-removal.qnt` | semantic-core | `BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION` |
 | `packages/battle-runtime/battle-runtime-flaming-sphere-hazard-ram.qnt` | semantic-core | `BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE` |
 | `packages/battle-runtime/battle-runtime-feather-fall.qnt` | semantic-core | `BATTLE.SPELL.FEATHER_FALL_MITIGATION_LIFECYCLE` |
-| `packages/battle-runtime/battle-runtime-feature-turn-end-effects.qnt` | semantic-core | profile-scoped: `unit-feature.attack-action-attack-count-scaling` (`BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
+| `packages/battle-runtime/battle-runtime-feature-turn-end-effects.qnt` | semantic-core | `BATTLE.COMPOSITION.TURN_BOUNDARY_EFFECT_LIFECYCLE_ORDERING`<br>profile-scoped: `unit-feature.attack-action-attack-count-scaling` (`BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
 | `packages/battle-runtime/battle-runtime-ground-command-tests.qnt` | mbt-fixture | `BATTLE.SPELL.SPIKE_GROWTH_MOVEMENT_HAZARD` |
 | `packages/battle-runtime/battle-runtime-rogue-steady-aim.mbt.qnt` | mbt-fixture | profile-scoped: `unit-feature.rogue-steady-aim` (`BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
 | `packages/battle-runtime/battle-runtime-ground-command.qnt` | semantic-core | `BATTLE.COMMAND.OPTION_AND_NEXT_TURN`, `BATTLE.SPELL.FOG_CLOUD_OBSCUREMENT_LIFECYCLE`, `BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE`, `BATTLE.SPELL.MAGICAL_DARKNESS_POINT_ORIGIN_LIFECYCLE`, `BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE` |
@@ -537,7 +537,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `packages/battle-runtime/battle-runtime-combat-holes.qnt` | proof-only | `BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING` |
 | `packages/battle-runtime/battle-runtime-combatant-side.qnt` | proof-only | `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS` |
 | `packages/battle-runtime/battle-runtime-feature-bridge.qnt` | bridge | `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS` |
-| `packages/battle-runtime/battle-runtime-fighter-ongoing-features.qnt` | proof-only | `BATTLE.COMPOSITION.TURN_BOUNDARY_EFFECT_LIFECYCLE_ORDERING`, `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS` |
+| `packages/battle-runtime/battle-runtime-fighter-ongoing-features.qnt` | proof-only | `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS` |
 | `packages/battle-runtime/battle-runtime-hidden.qnt` | proof-only | `BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES` |
 | `packages/battle-runtime/battle-runtime-hide-search-fixture.qnt` | proof-only | `BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES` |
 | `packages/battle-runtime/battle-runtime-interrupt-bridge.qnt` | bridge | `BATTLE.PROTOCOL.INTERRUPT_STACK_RESUME_REPLAY` |
@@ -552,6 +552,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt` | proof-only | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` |
 | `packages/shared-algebras/proofs/rule-core/zero-hit-point-lifecycle.qnt` | proof-only | `BATTLE.DAMAGE.DEATH_SAVING_THROW_LIFECYCLE` |
 | `packages/battle-runtime/battle-runtime-concentration-break-teardown.mbt.qnt` | mbt-fixture | _none_ |
+| `packages/battle-runtime/battle-runtime-turn-boundary-effect-lifecycle.mbt.qnt` | mbt-fixture | _none_ |
 
 ## QNT Registry
 
@@ -899,6 +900,7 @@ Rows here are derived from `plans/unit-profile-coverage/profiles.jsonl` for prof
 | `BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING` | generation-subset-clean | `import`, `variant`, `record`, `pure-def`, `bool`, `if-expression`, `comparison`, `pattern-match`, `set` |  |  |
 | `BATTLE.PROTOCOL.INTERRUPT_STACK_RESUME_REPLAY` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `all-block`, `pattern-match`, `set`, `map`, `set-operators`, `membership`, `list` |  |  |
 | `BATTLE.PROTOCOL.CONCENTRATION_BREAK_TEARDOWN` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `all-block`, `pattern-match`, `set`, `filter`, `exists`, `set-operators`, `membership` |  |  |
+| `BATTLE.COMPOSITION.TURN_BOUNDARY_EFFECT_LIFECYCLE_ORDERING` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `all-block`, `pattern-match`, `set`, `filter`, `set-operators`, `membership` |  |  |
 
 ### Generator Readiness Backlog
 
@@ -927,7 +929,7 @@ No semantic-core QNT owners contain run blocks.
 
 ## Open Work
 
-- `BATTLE.COMPOSITION.TURN_BOUNDARY_EFFECT_LIFECYCLE_ORDERING` (needs-parity-witness; follow-up: `PPW-T13-TURN-BOUNDARY-LIFECYCLE-SEAM`): Battle turn-boundary effect lifecycle ordering across end-turn cleanup, initiative advancement, start-turn effects, Death Saving Throw hooks, and weapon-hit turn effects
+No open transitional obligations.
 
 ## Checker Issues
 

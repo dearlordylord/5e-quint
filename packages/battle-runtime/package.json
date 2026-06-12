@@ -43,6 +43,7 @@
     "test:mbt:ray-of-enfeeblement-lifecycle": "vitest run src/ray-of-enfeeblement-lifecycle.mbt.test.ts",
     "test:mbt:reaction-casting-time": "vitest run src/reaction-casting-time.mbt.test.ts",
     "test:mbt:roll-modifier-active-effects": "vitest run src/roll-modifier-active-effects.mbt.test.ts",
+    "test:mbt:turn-boundary-effect-lifecycle": "vitest run src/turn-boundary-effect-lifecycle.mbt.test.ts",
     "test:mbt:sanctuary-selected-identity": "vitest run src/sanctuary-selected-identity.mbt.test.ts",
     "test:mbt:see-invisibility-observer-sight": "vitest run src/see-invisibility-observer-sight.mbt.test.ts",
     "test:mbt:self-teleport-lifecycle": "vitest run src/self-teleport-lifecycle.mbt.test.ts",

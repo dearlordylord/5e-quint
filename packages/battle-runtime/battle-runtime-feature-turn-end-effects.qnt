@@ -1,5 +1,5 @@
 // -*- mode: Bluespec; -*-
-// KERNEL-COVERAGE: qnt-owner BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS
+// KERNEL-COVERAGE: qnt-owner BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS BATTLE.COMPOSITION.TURN_BOUNDARY_EFFECT_LIFECYCLE_ORDERING
 // UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.attack-action-attack-count-scaling
 
 module battleRuntimeFeatureTurnEndEffects {

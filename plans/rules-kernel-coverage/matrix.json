@@ -1,8 +1,8 @@
 {
   "summary": {
     "total": 119,
-    "covered": 112,
-    "open": 1,
+    "covered": 113,
+    "open": 0,
     "nonSemantic": 6,
     "byRuntime": {
       "shared-algebras": 1,
@@ -12,9 +12,9 @@
       "character-battle": 3
     },
     "byStatus": {
-      "covered": 112,
+      "covered": 113,
       "needs-qnt-owner": 0,
-      "needs-parity-witness": 1,
+      "needs-parity-witness": 0,
       "needs-surface-evidence": 0,
       "boundary-only": 5,
       "unsupported-by-admission": 1
@@ -4082,42 +4082,43 @@
       "title": "Battle protocol interrupt stack nesting, decline/resume discipline, active Spell Effect resume, and replay-from-root equivalence"
     },
     {
-      "followUpTaskIds": [
-        "PPW-T13-TURN-BOUNDARY-LIFECYCLE-SEAM"
-      ],
       "id": "BATTLE.COMPOSITION.TURN_BOUNDARY_EFFECT_LIFECYCLE_ORDERING",
       "kind": "composition",
+      "parityWitnesses": [
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/turn-boundary-effect-lifecycle.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-turn-boundary-effect-lifecycle.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
       "profiles": [],
       "qntOwners": [
         "packages/battle-runtime/battle-runtime-turn-advancement.qnt",
         "packages/battle-runtime/battle-runtime-weapon-hit-turn-effects.qnt",
-        "packages/battle-runtime/battle-runtime-fighter-ongoing-features.qnt"
+        "packages/battle-runtime/battle-runtime-feature-turn-end-effects.qnt"
       ],
-      "reason": "Task PPW-T01 binds the existing turn-boundary behavioral QNT modules to the PPW-T13 seam obligation; PPW-T13 owns the focused parity witness. RAW anchors cover combat round/turn advancement, Death Saving Throw start-turn hooks, simultaneous start-turn ordering, Concentration cleanup, weapon-hit turn effects, and weapon mastery hit riders. ASSUMPTIONS.md#A6 records the current fixed death-save-before-start-turn-effects ordering as a known RAW deviation for PPW-T13 to address explicitly.",
+      "reason": "Task PPW-T13 adds a bounded focused MBT witness for the existing reducer order: one source/target fixture carries target start-turn damage/save, target end-turn damage-and-expiry, source until-next-turn expiry, source start-turn ongoing-feature expiry, and target end-turn ongoing-feature expiry across two turn advancements. The witness asserts hole frontier order and state projection only for that fixture; it does not claim exhaustive same-timing ordering. Death Saving Throw ordering is excluded from this covered seam because ASSUMPTIONS.md#A6 records the current fixed death-save-before-start-turn-effects ordering as a RAW-violation owner-decision issue.",
       "runtime": "battle",
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts",
         "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts",
-        "packages/battle-runtime/src/battle-reducer/damage-apply.ts"
+        "packages/battle-runtime/src/battle-reducer/ongoing-feature-helpers.ts"
       ],
-      "status": "needs-parity-witness",
+      "status": "covered",
       "surfaceEvidence": [
         ".references/srd-5.2.1/Playing-the-Game.md#Combat",
-        ".references/srd-5.2.1/Rules-Glossary.md#Death Saving Throw",
         ".references/srd-5.2.1/Rules-Glossary.md#Simultaneous Effects",
-        ".references/srd-5.2.1/Rules-Glossary.md#Concentration",
         ".references/srd-5.2.1/Spells/Descriptions-E-L.md#Ensnaring Strike",
         ".references/srd-5.2.1/Spells/Descriptions-S-Z.md#Searing Smite",
         ".references/srd-5.2.1/Equipment.md#Sap",
         ".references/srd-5.2.1/Equipment.md#Slow",
         ".references/srd-5.2.1/Equipment.md#Vex",
         "UBIQUITOUS_LANGUAGE.md#Turn Structure",
-        "UBIQUITOUS_LANGUAGE.md#Hit Points and Death",
         "UBIQUITOUS_LANGUAGE.md#Spellcasting",
-        "UBIQUITOUS_LANGUAGE.md#Equipment",
-        "ASSUMPTIONS.md#a6-death-save-precedes-start-of-turn-effect-processing"
+        "UBIQUITOUS_LANGUAGE.md#Equipment"
       ],
-      "title": "Battle turn-boundary effect lifecycle ordering across end-turn cleanup, initiative advancement, start-turn effects, Death Saving Throw hooks, and weapon-hit turn effects"
+      "title": "Battle turn-boundary effect lifecycle ordering across end-turn cleanup, initiative advancement, start-turn spell effects, ongoing-feature expiration, and weapon-hit turn effects"
     },
     {
       "id": "BATTLE.PROTOCOL.CONCENTRATION_BREAK_TEARDOWN",
@@ -7167,6 +7168,7 @@
     {
       "evidence": "packages/battle-runtime/battle-runtime-feature-turn-end-effects.qnt is the focused QNT owner carrying Unit feature turn-end attack-slot cleanup semantics without geometry ownership.",
       "obligationIds": [
+        "BATTLE.COMPOSITION.TURN_BOUNDARY_EFFECT_LIFECYCLE_ORDERING",
         "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
       ],
       "ownerPath": "packages/battle-runtime/battle-runtime-feature-turn-end-effects.qnt",
@@ -8940,7 +8942,6 @@
     {
       "evidence": "packages/battle-runtime/battle-runtime-fighter-ongoing-features.qnt carries executable Fighter ongoing-effect support used by feature procedure owners and the PPW-T13 turn-boundary lifecycle seam.",
       "obligationIds": [
-        "BATTLE.COMPOSITION.TURN_BOUNDARY_EFFECT_LIFECYCLE_ORDERING",
         "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
       ],
       "ownerPath": "packages/battle-runtime/battle-runtime-fighter-ongoing-features.qnt",
@@ -9054,6 +9055,12 @@
       "evidence": "packages/battle-runtime/battle-runtime-concentration-break-teardown.mbt.qnt is the focused Concentration-break teardown literal projection witness for damage-save failure, voluntary end, and replacement by a second Concentration spell. It is MBT-only parity evidence, not qnt-proof verification evidence.",
       "obligationIds": [],
       "ownerPath": "packages/battle-runtime/battle-runtime-concentration-break-teardown.mbt.qnt",
+      "role": "mbt-fixture"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-turn-boundary-effect-lifecycle.mbt.qnt is the focused turn-boundary effect lifecycle literal projection witness for target start-turn damage/save, target end-turn damage-and-expiry, source until-next-turn expiry, source start-turn ongoing-feature expiry, and target end-turn ongoing-feature expiry across two turn advancements. It is MBT-only parity evidence, not qnt-proof verification evidence.",
+      "obligationIds": [],
+      "ownerPath": "packages/battle-runtime/battle-runtime-turn-boundary-effect-lifecycle.mbt.qnt",
       "role": "mbt-fixture"
     }
   ],
@@ -13434,6 +13441,40 @@
       ],
       "semanticCore": [
         "packages/battle-runtime/battle-runtime-concentration.qnt"
+      ],
+      "status": "generation-subset-clean"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [
+        "import",
+        "variant",
+        "record",
+        "record-update",
+        "pure-def",
+        "constant-def",
+        "int",
+        "bool",
+        "if-expression",
+        "let-binding",
+        "arithmetic",
+        "comparison",
+        "boolean-connective",
+        "all-block",
+        "pattern-match",
+        "set",
+        "filter",
+        "set-operators",
+        "membership"
+      ],
+      "obligationId": "BATTLE.COMPOSITION.TURN_BOUNDARY_EFFECT_LIFECYCLE_ORDERING",
+      "proofOnly": [
+        "packages/battle-runtime/battle-runtime-turn-boundary-effect-lifecycle.mbt.qnt"
+      ],
+      "semanticCore": [
+        "packages/battle-runtime/battle-runtime-turn-advancement.qnt",
+        "packages/battle-runtime/battle-runtime-weapon-hit-turn-effects.qnt",
+        "packages/battle-runtime/battle-runtime-feature-turn-end-effects.qnt"
       ],
       "status": "generation-subset-clean"
     }

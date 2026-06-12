@@ -3,6 +3,7 @@
 // J (unit_features) need these helpers; hoisting them here lets both clusters
 // import from a common leaf without forming a J↔T cycle. Mechanical
 // extraction — no behavior change.
+// KERNEL-COVERAGE: runtime-owner BATTLE.COMPOSITION.TURN_BOUNDARY_EFFECT_LIFECYCLE_ORDERING
 
 import { Round } from "@dnd/shared/types";
 import type { CombatantId } from "../identity.ts";
