@@ -19,7 +19,7 @@
     {
       "number": 3,
       "id": "DRP-T03-SPELL-REST-BENEFIT-APPLICATION",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Audit spell-rest benefit application replay portability"
     },
     {
@@ -348,7 +348,7 @@ Acceptance:
 
 ### Task 3 - DRP-T03-SPELL-REST-BENEFIT-APPLICATION
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 
