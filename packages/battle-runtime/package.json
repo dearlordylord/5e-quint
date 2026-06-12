@@ -16,6 +16,7 @@
     "test:mbt:after-hit-damage-riders": "vitest run src/after-hit-damage-riders.mbt.test.ts",
     "test:mbt:weapon-hosted-attack-and-riders": "vitest run src/weapon-hosted-attack-and-riders.mbt.test.ts",
     "test:mbt:command-option-next-turn": "vitest run src/command-option-next-turn.mbt.test.ts",
+    "test:mbt:ability-check-choice-search": "vitest run src/ability-check-choice-search.mbt.test.ts",
     "test:mbt:antimagic-field-ongoing-suppression": "vitest run src/antimagic-field-ongoing-suppression.mbt.test.ts",
     "test:mbt:blur-attack-roll-defense-lifecycle": "vitest run src/blur-attack-roll-defense-lifecycle.mbt.test.ts",
     "test:mbt:chained-attack-sequence": "vitest run src/chained-attack-sequence.mbt.test.ts",

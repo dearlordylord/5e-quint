@@ -61,13 +61,13 @@
     {
       "number": 10,
       "id": "PPW-T10-ABILITY-CHECK-SEARCH-FOCUSED-MBT",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Add Ability Check choice and Search holes focused MBT (moved from QNTD-B09)"
     },
     {
       "number": 11,
       "id": "PPW-T11-SHOVE-WITNESS-POLICY",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Decide whether Shove deterministic replay needs focused MBT (moved from QNTD-B10)"
     },
     {
@@ -239,8 +239,8 @@ another MBT run. Run MBT with the repo timing/background protocol from
 | 7 | PPW-T07-WEAPON-MASTERY-ADVANCEMENT-FOCUSED-MBT | done | none | Creation runtime; shares semantic core with T08. |
 | 8 | PPW-T08-WEAPON-MASTERY-RESELECTION-FOCUSED-MBT | done | PPW-T07-WEAPON-MASTERY-ADVANCEMENT-FOCUSED-MBT | Sheet runtime; reuses T07 driver patterns. |
 | 9 | PPW-T09-COMMAND-OPTION-FOCUSED-MBT | done | PPW-T02-ACID-ARROW-TIMING-FOCUSED-MBT, PPW-T03-AFTER-HIT-RIDERS-FOCUSED-MBT, PPW-T04-WEAPON-HOSTED-ATTACK-FOCUSED-MBT, PPW-T05-SUBTLE-METAMAGIC-FOCUSED-MBT, PPW-T06-HOLE-VOCABULARY-WITNESS-POLICY, PPW-T07-WEAPON-MASTERY-ADVANCEMENT-FOCUSED-MBT, PPW-T08-WEAPON-MASTERY-RESELECTION-FOCUSED-MBT | Moved from QNTD-B08 / QCP-CS6; after runtime-test rows drain. |
-| 10 | PPW-T10-ABILITY-CHECK-SEARCH-FOCUSED-MBT | ready-for-research | PPW-T02-ACID-ARROW-TIMING-FOCUSED-MBT, PPW-T03-AFTER-HIT-RIDERS-FOCUSED-MBT, PPW-T04-WEAPON-HOSTED-ATTACK-FOCUSED-MBT, PPW-T05-SUBTLE-METAMAGIC-FOCUSED-MBT, PPW-T06-HOLE-VOCABULARY-WITNESS-POLICY, PPW-T07-WEAPON-MASTERY-ADVANCEMENT-FOCUSED-MBT, PPW-T08-WEAPON-MASTERY-RESELECTION-FOCUSED-MBT | Moved from QNTD-B09 / QCP-CS7. |
-| 11 | PPW-T11-SHOVE-WITNESS-POLICY | blocked | PPW-T09-COMMAND-OPTION-FOCUSED-MBT, PPW-T10-ABILITY-CHECK-SEARCH-FOCUSED-MBT | Moved from QNTD-B10 / QCP-CS8. |
+| 10 | PPW-T10-ABILITY-CHECK-SEARCH-FOCUSED-MBT | done | PPW-T02-ACID-ARROW-TIMING-FOCUSED-MBT, PPW-T03-AFTER-HIT-RIDERS-FOCUSED-MBT, PPW-T04-WEAPON-HOSTED-ATTACK-FOCUSED-MBT, PPW-T05-SUBTLE-METAMAGIC-FOCUSED-MBT, PPW-T06-HOLE-VOCABULARY-WITNESS-POLICY, PPW-T07-WEAPON-MASTERY-ADVANCEMENT-FOCUSED-MBT, PPW-T08-WEAPON-MASTERY-RESELECTION-FOCUSED-MBT | Moved from QNTD-B09 / QCP-CS7. |
+| 11 | PPW-T11-SHOVE-WITNESS-POLICY | ready-for-research | PPW-T09-COMMAND-OPTION-FOCUSED-MBT, PPW-T10-ABILITY-CHECK-SEARCH-FOCUSED-MBT | Moved from QNTD-B10 / QCP-CS8. |
 | 12 | PPW-T12-CONCENTRATION-BREAK-SEAM | ready-for-implementation | PPW-T01-QNT-REGISTRY-CLOSURE | Highest-value composition seam. |
 | 13 | PPW-T13-TURN-BOUNDARY-LIFECYCLE-SEAM | ready-for-implementation | PPW-T01-QNT-REGISTRY-CLOSURE | Uses the modules T01 binds. |
 | 14 | PPW-T14-ZERO-HP-MID-RESOLUTION-SEAM | blocked | PPW-T01-QNT-REGISTRY-CLOSURE, PPW-T12-CONCENTRATION-BREAK-SEAM | Reuses T12 teardown facts. |
@@ -471,7 +471,7 @@ Acceptance: focused MBT green; checker write+check green; `git diff --check`.
 
 ### Task 10 - PPW-T10-ABILITY-CHECK-SEARCH-FOCUSED-MBT - Ability Check choice and Search holes
 
-Status: `ready-for-research` (after PPW-T02..T08 drain)
+Status: `done`
 
 Moved verbatim from `QNTD-B09-ABILITY-CHECK-SEARCH-FOCUSED-MBT`.
 
@@ -489,7 +489,7 @@ Acceptance: focused MBT green; checker write+check green; `git diff --check`.
 
 ### Task 11 - PPW-T11-SHOVE-WITNESS-POLICY - Shove witness policy
 
-Status: `blocked` (after PPW-T09, PPW-T10)
+Status: `ready-for-research`
 
 Moved verbatim from `QNTD-B10-SHOVE-WITNESS-POLICY`.
 

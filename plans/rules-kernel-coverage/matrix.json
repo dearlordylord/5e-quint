@@ -2440,6 +2440,12 @@
       "kind": "hole-frontier",
       "parityWitnesses": [
         {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/ability-check-choice-search.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-ability-check-choice-search.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
           "deterministicReplayRationale": "Ability, skill, and Search replay is a closed fixture advanced by a deterministic replay index: Search fails and succeeds against an admitted hidden target, Guidance stores the selected skill through the QNT roll-modifier owner, and Enhance Ability stores a selected ability for Ability Check Advantage. The same witness also includes Command so the Task 5 hole families are checked together without random branch exploration.",
           "kind": "deterministic-qnt-replay",
           "ownerPath": "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts",
