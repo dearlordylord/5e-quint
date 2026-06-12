@@ -17,7 +17,7 @@ Blockers: strict=0, selected-identity=0, SRD-authored-readiness=0.
 | Strict runtime/profile support | 96/115 (83.5%) |
 | Strict target closure | 115/115 (100%) |
 | Selected identity readiness | 104/104 (100%) |
-| Diagnostic product readiness | 398/400 (99.5%) |
+| Diagnostic product readiness | 393/400 (98.3%) |
 | SRD authored product readiness | 76/76 (100%) |
 | Rules-kernel profile join | 72/72 (100%) |
 | Rules-kernel covered profile join | 72/72 (100%) |
@@ -25,7 +25,7 @@ Blockers: strict=0, selected-identity=0, SRD-authored-readiness=0.
 
 These metrics are lower-layer accounting views. They are not, by themselves, a valid full-support claim.
 
-The full-support claim gate uses strict target closure, selected identity readiness, and SRD-authored product readiness. Diagnostic product readiness is a source-row accounting view, so it can report 398/400 (99.5%) while the claim gate reports **pass** when every non-green diagnostic row is outside those gate blockers or is represented by an explicit follow-up/accounting owner.
+The full-support claim gate uses strict target closure, selected identity readiness, and SRD-authored product readiness. Diagnostic product readiness is a source-row accounting view, so it can report 393/400 (98.3%) while the claim gate reports **pass** when every non-green diagnostic row is outside those gate blockers or is represented by an explicit follow-up/accounting owner.
 
 ### Diagnostic Product Readiness Accounting
 
@@ -34,9 +34,9 @@ Diagnostic product readiness keeps lower-layer planning pressure visible. Rows i
 | Status | Rows |
 | --- | ---: |
 | accepted | 294 |
-| accepted-no-battle-effect | 104 |
-| owner-evidence-required | 1 |
-| partial-battle-runtime | 1 |
+| accepted-no-battle-effect | 99 |
+| owner-evidence-required | 5 |
+| partial-battle-runtime | 2 |
 
 ### Selected Identity Replay Accounting
 

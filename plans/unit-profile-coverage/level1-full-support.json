@@ -961,8 +961,8 @@
       "numerator": 367,
       "percent": "100%",
       "rowsByStatus": {
-        "accepted": 277,
-        "accepted-no-battle-effect": 90
+        "accepted": 282,
+        "accepted-no-battle-effect": 85
       }
     },
     "rulesKernelCoveredProfileJoin": {

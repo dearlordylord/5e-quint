@@ -33,8 +33,8 @@ Diagnostic product readiness keeps lower-layer planning pressure visible. Rows i
 
 | Status | Rows |
 | --- | ---: |
-| accepted | 277 |
-| accepted-no-battle-effect | 90 |
+| accepted | 282 |
+| accepted-no-battle-effect | 85 |
 
 ### Selected Identity Replay Accounting
 

@@ -25,6 +25,7 @@
       }
     ],
     "witnessKinds": {
+      "contract-test": "Focused contract test evidence for checked registry joins, protocol vocabulary mappings, or boundary inventories where the executable obligation is the join itself rather than a reducer trace.",
       "deterministic-qnt-replay": "Closed-case QNT replay evidence for fixed projections, scalar checks, or tiny named fixtures; not random MBT coverage.",
       "focused-mbt": "Random-trace QNT/MBT parity evidence for reducer sequencing, holes, resources, active effects, reactions, or interleavings.",
       "mcp-scenario": "Package-local MCP acceptance scenario evidence for user-facing tool and workflow flows.",

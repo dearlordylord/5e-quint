@@ -67,7 +67,7 @@
     {
       "number": 11,
       "id": "CSC-T11-CONVERGENCE-CLOSEOUT",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Reviewer-loop convergence and L13COMP plan-doc closeout"
     },
     {
@@ -247,7 +247,7 @@ a task's change invalidates them):
 | 10 | CSC-T10-SMALL-FINDINGS-BATCH | done | CSC-T09-FORM-CATALOG-REFERENCE | Sweep of remaining small findings in now-stable files; now also owns the durable-id uniqueness decision (R4b). |
 | 15 | CSC-T15-R2-PROTOCOL-TAG-HOIST | done | CSC-T10-SMALL-FINDINGS-BATCH | Owner-approved refactor; reshapes protocol threading and deletes the settlement inverse mapping before T16 moves the code. |
 | 16 | CSC-T16-R1-SINGLE-SETTLEMENT-OPERATION | done | CSC-T15-R2-PROTOCOL-TAG-HOIST | Code moves once, in its post-T15 final shape (the T07 rationale). |
-| 11 | CSC-T11-CONVERGENCE-CLOSEOUT | ready-for-research | CSC-T16-R1-SINGLE-SETTLEMENT-OPERATION | Full-gate run + plan-doc truth update over the whole lane, tasks 1–16. |
+| 11 | CSC-T11-CONVERGENCE-CLOSEOUT | done | CSC-T16-R1-SINGLE-SETTLEMENT-OPERATION | Full-gate run + plan-doc truth update over the whole lane, tasks 1–16. |
 
 ## Task Details
 
@@ -857,7 +857,17 @@ already-dissolved; suites + typechecks green.
 
 ### Task 11 - CSC-T11-CONVERGENCE-CLOSEOUT
 
-Status: `ready-for-research` · Mode: AFK
+Status: `done` · Mode: AFK
+
+**Outcome.** Closeout documentation now matches the landed companion-session
+design: L13COMP-01 records settlement outcome ownership without session-level
+admission state, L13COMP-03 retains the explicit deferred battle-created
+familiar settlement and wired Magic-action casting work, A46/A47 cite the split
+runtime modules that implement them, and the F1-F11/R0-R4 ledgers name the
+closing tasks and commits. The unit-profile coverage checker now recognizes the
+repo-standard `mbtSpecPath(import.meta.dirname, "...qnt")` helper in direct MBT
+runs and selected-identity witnesses, and generated coverage artifacts were
+refreshed from that checker-readable evidence.
 
 Run the full gate set and make the documentation truthful:
 
@@ -885,24 +895,7 @@ Run the full gate set and make the documentation truthful:
 
 Acceptance: all gates green in one run from a clean tree; plan docs, ADR, and
 assumptions match the code; lane summary in the task output lists each review
-finding F1–F11 and arch-review item R0–R4 with its closing task/commit.
-
-### Retry Guidance
-
-Before rerunning Task 11 closeout, research and repair or explicitly exempt the
-remaining unrelated broad-verification baselines. `pnpm quality` now reaches
-`pnpm unit-profile-coverage:check`, which reports selected-identity MBT replay
-metadata blockers for many `packages/battle-runtime/src/*selected-identity*.mbt.test.ts`
-and rule-core MBT files because the script finds no readable Quint MBT step
-action set. Broad battle-runtime tests also have unrelated failures/timeouts in
-`blur-attack-roll-defense-lifecycle.mbt.test.ts`,
-`starry-wisp-object.mbt.test.ts`,
-`unit-profile-admission-passive-defense-and-archery.test.ts`,
-`unit-profile-admission-spike-growth-movement-hazard.test.ts`, and
-`unit-profile-admission-spiritual-weapon.test.ts`. Then rerun the full Task 11
-gate set from a clean tree, including the companion MBT files under the mutex
-protocol, and update the closeout docs only if the final gate results or finding
-ledger changed.
+finding F1-F11 and arch-review item R0-R4 with its closing task/commit.
 
 ### Task 12 - CSC-T12-R0-LONG-REST-COMPANION-RESTORE
 

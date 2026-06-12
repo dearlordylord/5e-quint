@@ -183,9 +183,7 @@ export function decodeStartBattleArgs(
         ...(admission.companionCombatantId === undefined
           ? {}
           : {
-              companionCombatantId: combatantId(
-                admission.companionCombatantId,
-              ),
+              companionCombatantId: combatantId(admission.companionCombatantId),
             }),
         ...(admission.initiative === undefined
           ? {}

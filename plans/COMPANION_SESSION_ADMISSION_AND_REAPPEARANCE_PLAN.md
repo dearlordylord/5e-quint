@@ -5,11 +5,11 @@ remaining companion-act coverage is deferred to L13COMP-03.
 
 ## Task Index
 
-| Task                                          | Status   | Summary                                                                                                                                                 |
-| --------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `L13COMP-01-COMPANION-SESSION-ADMISSION`      | done     | Character Sheet owns retained companion creation; start-battle admits durable sheet companions; settlement writes the battle outcome back without session-local admission state. |
-| `L13COMP-02-COMPANION-REAPPEARANCE-DISCOVERY` | done     | Normal battle act discovery and resolution can reappear a temporarily dismissed familiar without adding MCP-local companion procedures.                 |
-| `L13COMP-03-GENERIC-MCP-COMPANION-ACTS`       | deferred | Complete remaining MCP companion coverage through reducer-discovered battle acts and fills, without public authored-identity companion tools.           |
+| Task                                          | Status   | Summary                                                                                                                                                                                               |
+| --------------------------------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `L13COMP-01-COMPANION-SESSION-ADMISSION`      | done     | Character Sheet owns retained companion creation; start-battle admits durable sheet companions; settlement writes the battle outcome back without session-local admission state.                      |
+| `L13COMP-02-COMPANION-REAPPEARANCE-DISCOVERY` | done     | Normal battle act discovery and resolution can reappear a temporarily dismissed familiar without adding MCP-local companion procedures.                                                               |
+| `L13COMP-03-GENERIC-MCP-COMPANION-ACTS`       | deferred | Complete remaining MCP companion coverage through reducer-discovered battle acts and fills, including battle-created familiar durable settlement and wired Magic-action casting with admission gates. |
 
 ## L13COMP-01-COMPANION-SESSION-ADMISSION
 
@@ -337,37 +337,37 @@ identity, or Druid feature identity to decide whether admission is legal.
   `roll-modifier-active-effects.mbt.test.ts`,
   `spike-growth-movement-hazard.mbt.test.ts`, and
   `web-restraint-hazard.mbt.test.ts`.
-- Task 11 closeout verification status: still blocked by unrelated baseline
-  failures outside the companion-session docs. Current `pnpm quality`
-  verification now reaches `pnpm unit-profile-coverage:check` and stops on a
-  broad selected-identity MBT replay metadata baseline: many
-  `packages/battle-runtime/src/*selected-identity*.mbt.test.ts` and rule-core
-  MBT files cite replay actions that the coverage script reports as
-  unreachable because it finds no readable Quint MBT step action set. Per the
-  repo broad-verification stop rule, this closeout did not expand into that
-  cross-lane coverage failure.
+- Task 11 retry closeout repaired the selected-identity MBT replay metadata
+  baseline by teaching `unit-profile-coverage:check` to read the repo-standard
+  `mbtSpecPath(import.meta.dirname, "...qnt")` helper in both direct MBT runs
+  and shared selected-identity witnesses. The generated unit-profile artifacts
+  were refreshed after the checker could read the current owner paths and replay
+  actions.
 - Task 11 retry closeout has verified: base check; typechecks for
   `@dnd/shared-algebras`, `@dnd/battle-runtime`,
   `@dnd/character-sheet-runtime`, `@dnd/character-battle-runtime`, and
   `@dnd/mcp`; `check:authored-id-dispatch`;
   `check:character-sheet-runtime-split`; `check:qa-generated-identity`;
-  `check:mbt-driver-closure`; `rules-kernel-coverage:check`; focused
-  `battle-runtime-mbt-driver-kit.test.ts`; and `git diff --check`.
-- Task 11 did not complete, per the repo broad-verification stop rule after the
-  unrelated baseline failures: full package test suites, the two focused
-  companion MBT files under the MBT mutex protocol,
-  `character-battle-settlement.mbt.test.ts`, `test:qnt-proofs`, and a green
-  `pnpm unit-profile-coverage:check`. An accidental broad
-  `@dnd/battle-runtime` test run did execute many battle MBTs and unit tests,
-  including the two companion MBT files and the driver-kit unit test, but the
-  command was not the required promoted companion-MBT protocol and failed on
-  unrelated tests/timeouts (`blur-attack-roll-defense-lifecycle.mbt.test.ts`,
+  `check:mbt-driver-closure`; `rules-kernel-coverage:check`;
+  `unit-profile-coverage:check`; the two companion MBT files;
+  `character-battle-settlement.mbt.test.ts`; `test:qnt-proofs`; focused MCP
+  companion/session-operation tests; full `pnpm quality`; and
+  `git diff --check`.
+- Task 11 did not expand the previous unrelated broad `@dnd/battle-runtime`
+  test failures/timeouts into this closeout repair
+  (`blur-attack-roll-defense-lifecycle.mbt.test.ts`,
   `starry-wisp-object.mbt.test.ts`,
   `unit-profile-admission-passive-defense-and-archery.test.ts`,
   `unit-profile-admission-spike-growth-movement-hazard.test.ts`, and
-  `unit-profile-admission-spiritual-weapon.test.ts`). These gates must be
-  rerun by a later Task 11 closeout run after the coverage/test baseline
-  failures are repaired or otherwise explicitly exempted.
+  `unit-profile-admission-spiritual-weapon.test.ts`). The promoted companion MBT
+  and settlement MBT commands remain the required validation lane when a closeout
+  run executes the full Task 11 gate set.
+- A broad `@dnd/mcp` test-suite diagnostic still has unrelated action-label
+  baseline failures in Goblin/Fighter battle-act expectations (extra `Attack`
+  labels now appear before Dash/Disengage/Dodge/Ready/Move/End Turn). Companion
+  admission/session-operation tests passed in both the broad run and a focused
+  filtered run; this closeout did not expand into that non-companion battle-act
+  presentation baseline.
 - MBT runs are not part of pre-research. If implementation changes QNT/MBT-owned
   companion behavior, run only the focused companion MBT after code changes and
   follow the repo seed-reproduction protocol for failures.
@@ -466,9 +466,8 @@ Non-goals:
 
 Ralph lane `csc-r2-post-t16` has a complete finding ledger for the companion
 session admission review. Task 11 retry closeout repaired the prior MBT-driver
-baseline blockers described above, but full verification is still blocked by an
-unrelated `unit-profile-coverage:check` selected-identity MBT replay metadata
-baseline. Runtime behavior remains traced to SRD 5.2.1 Find Familiar, Druid
+baseline blockers and the selected-identity MBT replay metadata baseline
+described above. Runtime behavior remains traced to SRD 5.2.1 Find Familiar, Druid
 Wild Companion, Pact of the Chain, Ritual, Long Rest, Temporary Hit Points, and
 the repo's controlled-companion vocabulary. A46 and A47 match the landed
 implementation: an owner's Long Rest leaves surviving non-Wild retained
@@ -477,33 +476,33 @@ updates the retained companion in place with preserve-and-clamp HP semantics.
 
 ### Review Finding Ledger
 
-| Finding | Closed by | Commit | Closeout |
-| --- | --- | --- | --- |
-| F1 | CSC-T03-SETTLEMENT-OUTCOME | `4e3034374` | Battle state now carries settlement-ready companion outcome data. |
-| F2 | CSC-T03-SETTLEMENT-OUTCOME | `4e3034374` | Session-level `companionAdmission` state was removed. |
-| F3 battle half | CSC-T04-DEAD-BATTLE-LONG-REST-LANE | `fec8b52b9` | Dead battle long-rest companion expiration lane was deleted. |
-| F3 sheet half | CSC-T05-COMPANION-REST-ASSUMPTION | `c8702a9a2` | A46 records owner-rest semantics and sheet long-rest behavior preserves surviving retained companion HP/Temporary Hit Points. |
-| F4 battle half | CSC-T03-SETTLEMENT-OUTCOME | `4e3034374` | Battle settlement outcome became the single handoff source for companion result state. |
-| F4 cross-layer consistency | CSC-T06-RECAST-SEMANTICS | `1b0d227c5` | A47 records one recast semantic across sheet and battle layers. |
-| F5 | CSC-T01-OWNER-KEYED-COMPANIONS | `bcde5dd5f` | Battle companions are keyed by owner; synthetic companion-state ids were deleted. |
-| F6 | CSC-T02-PROTOCOL-TAG-UNION | `5ac0dd082` | Retained companion protocol is a tag union with one derivation table. |
-| F7 | CSC-T07-FORM-VOCAB-HOIST-CREATION-MOVE | `64bd4ec90` | Familiar-form vocabulary moved to the Surface/sheet boundary. |
-| F8 | CSC-T07-FORM-VOCAB-HOIST-CREATION-MOVE | `64bd4ec90` | Out-of-battle companion creation moved into `character-sheet-runtime`. |
-| F9 | CSC-T08-CREATION-HP-SURFACE | `064ac6e13` | MCP callers no longer mint companion HP/Temporary Hit Points for creation. |
-| F10 | CSC-T09-FORM-CATALOG-REFERENCE | `803337c6d` | Familiar-form catalog lookup has an executable uniqueness boundary instead of first-match order dependence. |
-| F11 | CSC-T10-SMALL-FINDINGS-BATCH | `53973e276` | Narrowing, dead exports, duplicated rules, id parsing, and durable-id uniqueness ownership were closed or recorded. |
+| Finding                    | Closed by                              | Commit      | Closeout                                                                                                                      |
+| -------------------------- | -------------------------------------- | ----------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| F1                         | CSC-T03-SETTLEMENT-OUTCOME             | `4e3034374` | Battle state now carries settlement-ready companion outcome data.                                                             |
+| F2                         | CSC-T03-SETTLEMENT-OUTCOME             | `4e3034374` | Session-level `companionAdmission` state was removed.                                                                         |
+| F3 battle half             | CSC-T04-DEAD-BATTLE-LONG-REST-LANE     | `fec8b52b9` | Dead battle long-rest companion expiration lane was deleted.                                                                  |
+| F3 sheet half              | CSC-T05-COMPANION-REST-ASSUMPTION      | `c8702a9a2` | A46 records owner-rest semantics and sheet long-rest behavior preserves surviving retained companion HP/Temporary Hit Points. |
+| F4 battle half             | CSC-T03-SETTLEMENT-OUTCOME             | `4e3034374` | Battle settlement outcome became the single handoff source for companion result state.                                        |
+| F4 cross-layer consistency | CSC-T06-RECAST-SEMANTICS               | `1b0d227c5` | A47 records one recast semantic across sheet and battle layers.                                                               |
+| F5                         | CSC-T01-OWNER-KEYED-COMPANIONS         | `bcde5dd5f` | Battle companions are keyed by owner; synthetic companion-state ids were deleted.                                             |
+| F6                         | CSC-T02-PROTOCOL-TAG-UNION             | `5ac0dd082` | Retained companion protocol is a tag union with one derivation table.                                                         |
+| F7                         | CSC-T07-FORM-VOCAB-HOIST-CREATION-MOVE | `64bd4ec90` | Familiar-form vocabulary moved to the Surface/sheet boundary.                                                                 |
+| F8                         | CSC-T07-FORM-VOCAB-HOIST-CREATION-MOVE | `64bd4ec90` | Out-of-battle companion creation moved into `character-sheet-runtime`.                                                        |
+| F9                         | CSC-T08-CREATION-HP-SURFACE            | `064ac6e13` | MCP callers no longer mint companion HP/Temporary Hit Points for creation.                                                    |
+| F10                        | CSC-T09-FORM-CATALOG-REFERENCE         | `803337c6d` | Familiar-form catalog lookup has an executable uniqueness boundary instead of first-match order dependence.                   |
+| F11                        | CSC-T10-SMALL-FINDINGS-BATCH           | `53973e276` | Narrowing, dead exports, duplicated rules, id parsing, and durable-id uniqueness ownership were closed or recorded.           |
 
 ### Architecture Review Ledger
 
-| Item | Closed by | Commit | Closeout |
-| --- | --- | --- | --- |
-| R0 | CSC-T12-R0-LONG-REST-COMPANION-RESTORE | `ac389e7fc` | Restored Wild Companion Long Rest disappearance and the sheet companion canary tests after the master merge dropped them. |
-| R1 | CSC-T16-R1-SINGLE-SETTLEMENT-OPERATION | `c7d17afdf` | `settleCharacterSheetFromBattle` is the single exported settlement operation; MCP reports one handoff error code. |
-| R2 | CSC-T15-R2-PROTOCOL-TAG-HOIST | `f67e03fbe` | Retained companion protocol tags/facts/constructors live in `shared-algebras`; battle carries the tag instead of a lossy projection. |
-| R3 | CSC-T13-R3LITE-ALIAS-FAMILY-DELETION | `5acda5047` | The `FindFamiliar* = BattleCompanion*` alias family was deleted; ADR 0005 records why rule-source module names stay. |
-| R4a | CSC-T14-R4A-FORMS-SHIM-DELETION | `9c0319fe5` | The battle-runtime `find-familiar-forms` compatibility shim was deleted. |
-| R4b | CSC-T10-SMALL-FINDINGS-BATCH | `53973e276` | Session-store companion-id uniqueness is the default durable-id owner. |
-| R4c | CSC-T15-R2-PROTOCOL-TAG-HOIST | `f67e03fbe` | Protocol-constructor duplication was superseded by the shared-algebras protocol leaf. |
+| Item | Closed by                              | Commit      | Closeout                                                                                                                             |
+| ---- | -------------------------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| R0   | CSC-T12-R0-LONG-REST-COMPANION-RESTORE | `ac389e7fc` | Restored Wild Companion Long Rest disappearance and the sheet companion canary tests after the master merge dropped them.            |
+| R1   | CSC-T16-R1-SINGLE-SETTLEMENT-OPERATION | `c7d17afdf` | `settleCharacterSheetFromBattle` is the single exported settlement operation; MCP reports one handoff error code.                    |
+| R2   | CSC-T15-R2-PROTOCOL-TAG-HOIST          | `f67e03fbe` | Retained companion protocol tags/facts/constructors live in `shared-algebras`; battle carries the tag instead of a lossy projection. |
+| R3   | CSC-T13-R3LITE-ALIAS-FAMILY-DELETION   | `5acda5047` | The `FindFamiliar* = BattleCompanion*` alias family was deleted; ADR 0005 records why rule-source module names stay.                 |
+| R4a  | CSC-T14-R4A-FORMS-SHIM-DELETION        | `9c0319fe5` | The battle-runtime `find-familiar-forms` compatibility shim was deleted.                                                             |
+| R4b  | CSC-T10-SMALL-FINDINGS-BATCH           | `53973e276` | Session-store companion-id uniqueness is the default durable-id owner.                                                               |
+| R4c  | CSC-T15-R2-PROTOCOL-TAG-HOIST          | `f67e03fbe` | Protocol-constructor duplication was superseded by the shared-algebras protocol leaf.                                                |
 
 Deferred work is intentionally limited to L13COMP-03: battle-created familiar
 durable settlement, wired in-battle Magic-action Find Familiar/Wild Companion

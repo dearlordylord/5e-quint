@@ -2889,13 +2889,13 @@
   "metrics": {
     "productReadiness": {
       "denominator": 607,
-      "numerator": 605,
-      "percent": "99.7%",
+      "numerator": 594,
+      "percent": "97.9%",
       "rowsByStatus": {
-        "accepted": 440,
-        "accepted-no-battle-effect": 165,
-        "owner-evidence-required": 1,
-        "partial-battle-runtime": 1
+        "accepted": 434,
+        "accepted-no-battle-effect": 160,
+        "owner-evidence-required": 11,
+        "partial-battle-runtime": 2
       }
     },
     "rulesKernelCoveredProfileJoin": {
