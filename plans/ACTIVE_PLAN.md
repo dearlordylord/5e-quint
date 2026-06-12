@@ -91,7 +91,7 @@
     {
       "number": 15,
       "id": "DRP-T15-HIT-POINT-MAXIMUM",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Audit Hit Point Maximum derivation replay portability"
     },
     {
@@ -287,7 +287,7 @@ another MBT run. Use the timing/background protocol from `CLAUDE.md`.
 | 12 | DRP-T12-BATTLE-HANDOFF-SETTLEMENT | blocked | DRP-T11 | Settlement and identity-conflict replays share handoff assumptions. |
 | 13 | DRP-T13-HIT-POINT-DAMAGE-RUST-PARITY | ready-for-research | DRP-T01 | Align replay decision with existing Hit Point damage Rust dry-run evidence. |
 | 14 | DRP-T14-HP-REST-HIT-DICE | blocked | DRP-T13 | HP recovery dry run reuses damage/vitals shapes. |
-| 15 | DRP-T15-HIT-POINT-MAXIMUM | ready-for-research | DRP-T01 | Hit Point Maximum formula replay. |
+| 15 | DRP-T15-HIT-POINT-MAXIMUM | done | DRP-T01 | Hit Point Maximum formula replay. |
 | 16 | DRP-T16-SPELL-SLOTS-AND-PACT-SLOTS | blocked | DRP-T14 | Slot transitions import rest outcome facts. |
 | 17 | DRP-T17-WEAPON-MASTERY-RESELECTION | ready-for-research | DRP-T01 | Selected-identity plus identity-free reselection semantics. |
 | 18 | DRP-T18-SPELL-ACCESS-SELECTED-IDENTITY | ready-for-research | DRP-T01 | Spellbook Ritual and class-feature prepared Spell Access selected-identity replays. |
@@ -596,7 +596,7 @@ Acceptance:
 
 ### Task 15 - DRP-T15-HIT-POINT-MAXIMUM
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 

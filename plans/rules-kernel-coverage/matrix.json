@@ -3601,7 +3601,7 @@
       "kind": "composition",
       "parityWitnesses": [
         {
-          "deterministicReplayRationale": "Character Sheet Hit Point Maximum replay is a closed formula fixture for level-1 maximum Hit Die, fixed higher-level gain, multiclass later-level gain, minimum 1 later-level gain, and effective maximum after a maximum reduction. The input space is scalar arithmetic over witnessed class Hit Dice and Constitution modifiers, so random branch interleavings are not the risk at this sheet projection boundary.",
+          "deterministicReplayRationale": "DRP-T15 keeps Character Sheet Hit Point Maximum derivation as a deterministic replay. The fixture covers level-1 maximum Hit Die, fixed higher-level gain, multiclass later-level gain, minimum 1 later-level gain, deterministic class-feature maximum bonus, and effective maximum after a maximum reduction. The TS witness derives normal maximum through characterBuildHitPoints from retained class Hit Dice, class level progression, Constitution modifier, and deterministic class-feature facts, then derives effective maximum through Character Sheet maximumHp minus hitPointMaximumReduction; it does not add or compare a second stored maximum state. The input space is scalar arithmetic over existing build and reduction facts with no draft-fill ordering, branch interleaving, or table-choice risk, so focused random MBT would not add coverage.",
           "kind": "deterministic-qnt-replay",
           "ownerPath": "packages/character-sheet-runtime/src/hit-point-maximum.mbt.test.ts",
           "qntSpecPath": "packages/character-sheet-runtime/character-sheet-hit-point-maximum.mbt.qnt",
