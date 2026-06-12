@@ -2153,6 +2153,12 @@
         {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-weapon-override-and-rider-spells.test.ts"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/weapon-hosted-attack-and-riders.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt",
+          "stepAction": "step"
         }
       ],
       "profiles": [

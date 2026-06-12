@@ -95,7 +95,7 @@
             },
             "witnessKinds": {
               "deterministic-qnt-replay": 6,
-              "focused-mbt": 44,
+              "focused-mbt": 45,
               "runtime-test": 16
             }
           },
@@ -358,7 +358,7 @@
             },
             "witnessKinds": {
               "deterministic-qnt-replay": 9,
-              "focused-mbt": 44,
+              "focused-mbt": 45,
               "runtime-test": 16
             }
           },
@@ -624,7 +624,7 @@
             },
             "witnessKinds": {
               "deterministic-qnt-replay": 12,
-              "focused-mbt": 63,
+              "focused-mbt": 64,
               "runtime-test": 24
             }
           },

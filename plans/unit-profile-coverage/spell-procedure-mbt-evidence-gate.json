@@ -1,8 +1,5 @@
 {
-  "blockedScopeIds": [
-    "level-1",
-    "level-1-2"
-  ],
+  "blockedScopeIds": [],
   "criteria": {
     "noRuntimeBehavior": "This gate is checker/report evidence only and does not change spell reducers, Surface admission, or QNT semantics.",
     "profileKind": "spell-invocation",
@@ -19,13 +16,13 @@
       "metrics": {
         "evidenceRows": {
           "denominator": 113,
-          "numerator": 110,
-          "percent": "97.3%"
+          "numerator": 113,
+          "percent": "100%"
         },
         "openGapRows": {
           "denominator": 113,
-          "numerator": 3,
-          "percent": "2.7%"
+          "numerator": 0,
+          "percent": "0%"
         },
         "spellProcedureProfiles": {
           "denominator": 31,
@@ -38,149 +35,7 @@
           "percent": "100%"
         }
       },
-      "openGapRows": [
-        {
-          "evidenceStatus": "gap",
-          "gaps": [
-            {
-              "detail": "Rules-kernel obligation has parity witnesses, but none are focused-mbt or deterministic-qnt-replay evidence.",
-              "kind": "missing-qnt-mbt-witness"
-            }
-          ],
-          "joinStatus": "covered",
-          "obligationId": "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS",
-          "obligationStatus": "covered",
-          "obligationTitle": "Battle weapon-hosted spell attack and weapon damage rider profiles for spellcasting ability replacement, damage-type choice, held-weapon override, timed cleanup, and weapon-hit damage riders",
-          "parityWitnesses": [
-            {
-              "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-true-strike-and-divine-smite.test.ts"
-            },
-            {
-              "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-weapon-override-and-rider-spells.test.ts"
-            }
-          ],
-          "profileId": "spell.invocation-weapon-damage-rider",
-          "profileKind": "spell-invocation",
-          "qntMbtWitnesses": [],
-          "qntOwners": [
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-weapon-hit-spell-riders.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-weapon-attacks.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-light.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-spell-invocation.qnt",
-              "role": "semantic-core"
-            }
-          ],
-          "runtime": "battle",
-          "tag": "obligation-evidence",
-          "unitId": "divine_favor"
-        },
-        {
-          "evidenceStatus": "gap",
-          "gaps": [
-            {
-              "detail": "Rules-kernel obligation has parity witnesses, but none are focused-mbt or deterministic-qnt-replay evidence.",
-              "kind": "missing-qnt-mbt-witness"
-            }
-          ],
-          "joinStatus": "covered",
-          "obligationId": "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS",
-          "obligationStatus": "covered",
-          "obligationTitle": "Battle weapon-hosted spell attack and weapon damage rider profiles for spellcasting ability replacement, damage-type choice, held-weapon override, timed cleanup, and weapon-hit damage riders",
-          "parityWitnesses": [
-            {
-              "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-true-strike-and-divine-smite.test.ts"
-            },
-            {
-              "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-weapon-override-and-rider-spells.test.ts"
-            }
-          ],
-          "profileId": "spell.invocation-weapon-attack-override",
-          "profileKind": "spell-invocation",
-          "qntMbtWitnesses": [],
-          "qntOwners": [
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-weapon-hit-spell-riders.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-weapon-attacks.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-light.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-spell-invocation.qnt",
-              "role": "semantic-core"
-            }
-          ],
-          "runtime": "battle",
-          "tag": "obligation-evidence",
-          "unitId": "shillelagh"
-        },
-        {
-          "evidenceStatus": "gap",
-          "gaps": [
-            {
-              "detail": "Rules-kernel obligation has parity witnesses, but none are focused-mbt or deterministic-qnt-replay evidence.",
-              "kind": "missing-qnt-mbt-witness"
-            }
-          ],
-          "joinStatus": "covered",
-          "obligationId": "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS",
-          "obligationStatus": "covered",
-          "obligationTitle": "Battle weapon-hosted spell attack and weapon damage rider profiles for spellcasting ability replacement, damage-type choice, held-weapon override, timed cleanup, and weapon-hit damage riders",
-          "parityWitnesses": [
-            {
-              "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-true-strike-and-divine-smite.test.ts"
-            },
-            {
-              "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-weapon-override-and-rider-spells.test.ts"
-            }
-          ],
-          "profileId": "spell.invocation-spell-hosted-weapon-attack",
-          "profileKind": "spell-invocation",
-          "qntMbtWitnesses": [],
-          "qntOwners": [
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-weapon-hit-spell-riders.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-weapon-attacks.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-light.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-spell-invocation.qnt",
-              "role": "semantic-core"
-            }
-          ],
-          "runtime": "battle",
-          "tag": "obligation-evidence",
-          "unitId": "true_strike"
-        }
-      ],
+      "openGapRows": [],
       "rows": [
         {
           "evidenceStatus": "evidence-present",
@@ -1903,13 +1758,8 @@
           "unitId": "dissonant_whispers"
         },
         {
-          "evidenceStatus": "gap",
-          "gaps": [
-            {
-              "detail": "Rules-kernel obligation has parity witnesses, but none are focused-mbt or deterministic-qnt-replay evidence.",
-              "kind": "missing-qnt-mbt-witness"
-            }
-          ],
+          "evidenceStatus": "evidence-present",
+          "gaps": [],
           "joinStatus": "covered",
           "obligationId": "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS",
           "obligationStatus": "covered",
@@ -1922,11 +1772,24 @@
             {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/unit-profile-admission-weapon-override-and-rider-spells.test.ts"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/weapon-hosted-attack-and-riders.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt",
+              "stepAction": "step"
             }
           ],
           "profileId": "spell.invocation-weapon-damage-rider",
           "profileKind": "spell-invocation",
-          "qntMbtWitnesses": [],
+          "qntMbtWitnesses": [
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/weapon-hosted-attack-and-riders.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt",
+              "stepAction": "step"
+            }
+          ],
           "qntOwners": [
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-weapon-hit-spell-riders.qnt",
@@ -6442,13 +6305,8 @@
           "unitId": "shield_of_faith"
         },
         {
-          "evidenceStatus": "gap",
-          "gaps": [
-            {
-              "detail": "Rules-kernel obligation has parity witnesses, but none are focused-mbt or deterministic-qnt-replay evidence.",
-              "kind": "missing-qnt-mbt-witness"
-            }
-          ],
+          "evidenceStatus": "evidence-present",
+          "gaps": [],
           "joinStatus": "covered",
           "obligationId": "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS",
           "obligationStatus": "covered",
@@ -6461,11 +6319,24 @@
             {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/unit-profile-admission-weapon-override-and-rider-spells.test.ts"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/weapon-hosted-attack-and-riders.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt",
+              "stepAction": "step"
             }
           ],
           "profileId": "spell.invocation-weapon-attack-override",
           "profileKind": "spell-invocation",
-          "qntMbtWitnesses": [],
+          "qntMbtWitnesses": [
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/weapon-hosted-attack-and-riders.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt",
+              "stepAction": "step"
+            }
+          ],
           "qntOwners": [
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-weapon-hit-spell-riders.qnt",
@@ -7397,13 +7268,8 @@
           "unitId": "thunderwave"
         },
         {
-          "evidenceStatus": "gap",
-          "gaps": [
-            {
-              "detail": "Rules-kernel obligation has parity witnesses, but none are focused-mbt or deterministic-qnt-replay evidence.",
-              "kind": "missing-qnt-mbt-witness"
-            }
-          ],
+          "evidenceStatus": "evidence-present",
+          "gaps": [],
           "joinStatus": "covered",
           "obligationId": "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS",
           "obligationStatus": "covered",
@@ -7416,11 +7282,24 @@
             {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/unit-profile-admission-weapon-override-and-rider-spells.test.ts"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/weapon-hosted-attack-and-riders.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt",
+              "stepAction": "step"
             }
           ],
           "profileId": "spell.invocation-spell-hosted-weapon-attack",
           "profileKind": "spell-invocation",
-          "qntMbtWitnesses": [],
+          "qntMbtWitnesses": [
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/weapon-hosted-attack-and-riders.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt",
+              "stepAction": "step"
+            }
+          ],
           "qntOwners": [
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-weapon-hit-spell-riders.qnt",
@@ -7773,7 +7652,7 @@
         }
       ],
       "scopeId": "level-1",
-      "status": "blocked",
+      "status": "pass",
       "title": "Character Level 1"
     },
     {
@@ -7781,13 +7660,13 @@
       "metrics": {
         "evidenceRows": {
           "denominator": 114,
-          "numerator": 111,
-          "percent": "97.4%"
+          "numerator": 114,
+          "percent": "100%"
         },
         "openGapRows": {
           "denominator": 114,
-          "numerator": 3,
-          "percent": "2.6%"
+          "numerator": 0,
+          "percent": "0%"
         },
         "spellProcedureProfiles": {
           "denominator": 31,
@@ -7800,149 +7679,7 @@
           "percent": "100%"
         }
       },
-      "openGapRows": [
-        {
-          "evidenceStatus": "gap",
-          "gaps": [
-            {
-              "detail": "Rules-kernel obligation has parity witnesses, but none are focused-mbt or deterministic-qnt-replay evidence.",
-              "kind": "missing-qnt-mbt-witness"
-            }
-          ],
-          "joinStatus": "covered",
-          "obligationId": "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS",
-          "obligationStatus": "covered",
-          "obligationTitle": "Battle weapon-hosted spell attack and weapon damage rider profiles for spellcasting ability replacement, damage-type choice, held-weapon override, timed cleanup, and weapon-hit damage riders",
-          "parityWitnesses": [
-            {
-              "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-true-strike-and-divine-smite.test.ts"
-            },
-            {
-              "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-weapon-override-and-rider-spells.test.ts"
-            }
-          ],
-          "profileId": "spell.invocation-weapon-damage-rider",
-          "profileKind": "spell-invocation",
-          "qntMbtWitnesses": [],
-          "qntOwners": [
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-weapon-hit-spell-riders.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-weapon-attacks.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-light.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-spell-invocation.qnt",
-              "role": "semantic-core"
-            }
-          ],
-          "runtime": "battle",
-          "tag": "obligation-evidence",
-          "unitId": "divine_favor"
-        },
-        {
-          "evidenceStatus": "gap",
-          "gaps": [
-            {
-              "detail": "Rules-kernel obligation has parity witnesses, but none are focused-mbt or deterministic-qnt-replay evidence.",
-              "kind": "missing-qnt-mbt-witness"
-            }
-          ],
-          "joinStatus": "covered",
-          "obligationId": "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS",
-          "obligationStatus": "covered",
-          "obligationTitle": "Battle weapon-hosted spell attack and weapon damage rider profiles for spellcasting ability replacement, damage-type choice, held-weapon override, timed cleanup, and weapon-hit damage riders",
-          "parityWitnesses": [
-            {
-              "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-true-strike-and-divine-smite.test.ts"
-            },
-            {
-              "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-weapon-override-and-rider-spells.test.ts"
-            }
-          ],
-          "profileId": "spell.invocation-weapon-attack-override",
-          "profileKind": "spell-invocation",
-          "qntMbtWitnesses": [],
-          "qntOwners": [
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-weapon-hit-spell-riders.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-weapon-attacks.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-light.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-spell-invocation.qnt",
-              "role": "semantic-core"
-            }
-          ],
-          "runtime": "battle",
-          "tag": "obligation-evidence",
-          "unitId": "shillelagh"
-        },
-        {
-          "evidenceStatus": "gap",
-          "gaps": [
-            {
-              "detail": "Rules-kernel obligation has parity witnesses, but none are focused-mbt or deterministic-qnt-replay evidence.",
-              "kind": "missing-qnt-mbt-witness"
-            }
-          ],
-          "joinStatus": "covered",
-          "obligationId": "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS",
-          "obligationStatus": "covered",
-          "obligationTitle": "Battle weapon-hosted spell attack and weapon damage rider profiles for spellcasting ability replacement, damage-type choice, held-weapon override, timed cleanup, and weapon-hit damage riders",
-          "parityWitnesses": [
-            {
-              "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-true-strike-and-divine-smite.test.ts"
-            },
-            {
-              "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-weapon-override-and-rider-spells.test.ts"
-            }
-          ],
-          "profileId": "spell.invocation-spell-hosted-weapon-attack",
-          "profileKind": "spell-invocation",
-          "qntMbtWitnesses": [],
-          "qntOwners": [
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-weapon-hit-spell-riders.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-weapon-attacks.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-light.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-spell-invocation.qnt",
-              "role": "semantic-core"
-            }
-          ],
-          "runtime": "battle",
-          "tag": "obligation-evidence",
-          "unitId": "true_strike"
-        }
-      ],
+      "openGapRows": [],
       "rows": [
         {
           "evidenceStatus": "evidence-present",
@@ -9665,13 +9402,8 @@
           "unitId": "dissonant_whispers"
         },
         {
-          "evidenceStatus": "gap",
-          "gaps": [
-            {
-              "detail": "Rules-kernel obligation has parity witnesses, but none are focused-mbt or deterministic-qnt-replay evidence.",
-              "kind": "missing-qnt-mbt-witness"
-            }
-          ],
+          "evidenceStatus": "evidence-present",
+          "gaps": [],
           "joinStatus": "covered",
           "obligationId": "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS",
           "obligationStatus": "covered",
@@ -9684,11 +9416,24 @@
             {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/unit-profile-admission-weapon-override-and-rider-spells.test.ts"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/weapon-hosted-attack-and-riders.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt",
+              "stepAction": "step"
             }
           ],
           "profileId": "spell.invocation-weapon-damage-rider",
           "profileKind": "spell-invocation",
-          "qntMbtWitnesses": [],
+          "qntMbtWitnesses": [
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/weapon-hosted-attack-and-riders.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt",
+              "stepAction": "step"
+            }
+          ],
           "qntOwners": [
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-weapon-hit-spell-riders.qnt",
@@ -14259,13 +14004,8 @@
           "unitId": "shield_of_faith"
         },
         {
-          "evidenceStatus": "gap",
-          "gaps": [
-            {
-              "detail": "Rules-kernel obligation has parity witnesses, but none are focused-mbt or deterministic-qnt-replay evidence.",
-              "kind": "missing-qnt-mbt-witness"
-            }
-          ],
+          "evidenceStatus": "evidence-present",
+          "gaps": [],
           "joinStatus": "covered",
           "obligationId": "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS",
           "obligationStatus": "covered",
@@ -14278,11 +14018,24 @@
             {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/unit-profile-admission-weapon-override-and-rider-spells.test.ts"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/weapon-hosted-attack-and-riders.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt",
+              "stepAction": "step"
             }
           ],
           "profileId": "spell.invocation-weapon-attack-override",
           "profileKind": "spell-invocation",
-          "qntMbtWitnesses": [],
+          "qntMbtWitnesses": [
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/weapon-hosted-attack-and-riders.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt",
+              "stepAction": "step"
+            }
+          ],
           "qntOwners": [
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-weapon-hit-spell-riders.qnt",
@@ -15214,13 +14967,8 @@
           "unitId": "thunderwave"
         },
         {
-          "evidenceStatus": "gap",
-          "gaps": [
-            {
-              "detail": "Rules-kernel obligation has parity witnesses, but none are focused-mbt or deterministic-qnt-replay evidence.",
-              "kind": "missing-qnt-mbt-witness"
-            }
-          ],
+          "evidenceStatus": "evidence-present",
+          "gaps": [],
           "joinStatus": "covered",
           "obligationId": "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS",
           "obligationStatus": "covered",
@@ -15233,11 +14981,24 @@
             {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/unit-profile-admission-weapon-override-and-rider-spells.test.ts"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/weapon-hosted-attack-and-riders.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt",
+              "stepAction": "step"
             }
           ],
           "profileId": "spell.invocation-spell-hosted-weapon-attack",
           "profileKind": "spell-invocation",
-          "qntMbtWitnesses": [],
+          "qntMbtWitnesses": [
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/weapon-hosted-attack-and-riders.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt",
+              "stepAction": "step"
+            }
+          ],
           "qntOwners": [
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-weapon-hit-spell-riders.qnt",
@@ -15590,7 +15351,7 @@
         }
       ],
       "scopeId": "level-1-2",
-      "status": "blocked",
+      "status": "pass",
       "title": "Character Levels 1-2"
     }
   ],
@@ -15600,5 +15361,5 @@
     "profileObligations": "plans/rules-kernel-coverage/profile-obligations.jsonl",
     "rulesKernelMatrix": "plans/rules-kernel-coverage/matrix.json"
   },
-  "status": "blocked"
+  "status": "pass"
 }

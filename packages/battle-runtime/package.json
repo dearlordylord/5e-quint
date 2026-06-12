@@ -14,6 +14,7 @@
     "test:qnt-proofs": "RUN_QNT_PROOFS=1 vitest run src/battle-runtime-qnt-proofs.test.ts",
     "test:mbt:acid-arrow-timing": "vitest run src/acid-arrow-timing.mbt.test.ts",
     "test:mbt:after-hit-damage-riders": "vitest run src/after-hit-damage-riders.mbt.test.ts",
+    "test:mbt:weapon-hosted-attack-and-riders": "vitest run src/weapon-hosted-attack-and-riders.mbt.test.ts",
     "test:mbt:antimagic-field-ongoing-suppression": "vitest run src/antimagic-field-ongoing-suppression.mbt.test.ts",
     "test:mbt:blur-attack-roll-defense-lifecycle": "vitest run src/blur-attack-roll-defense-lifecycle.mbt.test.ts",
     "test:mbt:chained-attack-sequence": "vitest run src/chained-attack-sequence.mbt.test.ts",
