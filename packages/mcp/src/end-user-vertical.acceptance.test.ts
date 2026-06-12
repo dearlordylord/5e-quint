@@ -242,6 +242,8 @@ describe("end-user MCP vertical", () => {
     expect(actionLabels(callTool(root, "discover_battle_acts", {}))).toEqual([
       "Attack",
       "Attack",
+      "Attack",
+      "Attack",
       ...GENERIC_COMBAT_ACTION_LABELS,
       "Nimble Escape",
       "Move",
