@@ -49,7 +49,7 @@
     {
       "number": 8,
       "id": "DRP-T08-CREATION-WIZARD-SPELLBOOK",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Audit Wizard spellbook learning selected-identity replay portability"
     },
     {
@@ -280,7 +280,7 @@ another MBT run. Use the timing/background protocol from `CLAUDE.md`.
 | 5 | DRP-T05-DAMAGE-DISPOSITION-REPLAY | done | DRP-T01 | Knock Out accepted/rejected table facts beside existing feature MBT. |
 | 6 | DRP-T06-ARMOR-CLASS-FORMULA | done | DRP-T01 | Selected-identity formula projection kept as deterministic replay with checker-readable Armor Class state boundary rationale. |
 | 7 | DRP-T07-CREATION-CLASS-FEATURE-PROJECTIONS | done | DRP-T01 | Resource and source-fact projection rows share one driver. |
-| 8 | DRP-T08-CREATION-WIZARD-SPELLBOOK | ready-for-research | DRP-T01 | Selected Wizard spellbook learning replay. |
+| 8 | DRP-T08-CREATION-WIZARD-SPELLBOOK | done | DRP-T01 | Selected Wizard spellbook learning replay kept as deterministic selected-identity evidence for spellbook Spell Access finalization. |
 | 9 | DRP-T09-SHEET-FEATURE-RESOURCES | ready-for-research | DRP-T01 | Feature resources bridge and sheet transitions. |
 | 10 | DRP-T10-SHEET-ABILITY-CHECK-PROFICIENCY | ready-for-research | DRP-T01 | Jack of All Trades, proficiency, and Expertise scalar projection. |
 | 11 | DRP-T11-BATTLE-HANDOFF-INIT | ready-for-research | DRP-T01 | Character Sheet to battle init projection. |
@@ -451,7 +451,7 @@ Acceptance:
 
 ### Task 8 - DRP-T08-CREATION-WIZARD-SPELLBOOK
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 

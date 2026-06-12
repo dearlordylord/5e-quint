@@ -3268,7 +3268,7 @@
       "kind": "state-transition",
       "parityWitnesses": [
         {
-          "deterministicReplayRationale": "Character Creation Wizard spellbook learning replay is a fixed selected-identity fixture for Evocation Savant acquisition-time choices. The runtime discovers eligible Wizard Evocation Spell Definitions from existing Wizard spellbook Spell Access facts and finalizes selected spells into the build's spellbook list; random draft-fill interleavings are not the risk at this projection boundary.",
+          "deterministicReplayRationale": "Character Creation Wizard spellbook learning replay stays a fixed selected-identity fixture for Evocation Savant acquisition-time choices. Authored spell ids in the replay are SRD fixture evidence for caller-selected Unit refs only; executable discovery admits options from the feature's spellbook-learning eligibility facts, the Wizard class spellbook Spell Access table, and each Spell Definition's level and School of Magic facts. Finalization carries the selected Unit refs into the build's existing Wizard spellbook Spell Access list without adding a separate sheet spellbook roster or dispatching runtime behavior on spell names, ids, or provenance sections, so random draft-fill interleavings are not the risk at this projection boundary.",
           "kind": "deterministic-qnt-replay",
           "ownerPath": "packages/character-creation-runtime/src/class-feature-selected-identity.mbt.test.ts",
           "qntSpecPath": "packages/character-creation-runtime/character-creation-class-feature-selected-identity.mbt.qnt",
