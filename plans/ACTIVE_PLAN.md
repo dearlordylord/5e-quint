@@ -79,7 +79,7 @@
     {
       "number": 13,
       "id": "DRP-T13-HIT-POINT-DAMAGE-RUST-PARITY",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Audit positive Hit Point damage replay and Rust dry-run parity"
     },
     {
@@ -551,7 +551,7 @@ Acceptance:
 
 ### Task 13 - DRP-T13-HIT-POINT-DAMAGE-RUST-PARITY
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 
