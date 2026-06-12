@@ -3204,7 +3204,7 @@
       "kind": "projection-scalar",
       "parityWitnesses": [
         {
-          "deterministicReplayRationale": "Character Creation class-feature resource projection replay is a fixed fixture for Monk's Focus use-count resource facts and Sorcerer Font of Magic point-pool facts. The risk is deterministic projection from retained Surface class-feature records and class level, not random draft-fill interleavings.",
+          "deterministicReplayRationale": "DRP-T07 keeps Character Creation class-feature resource projection as a deterministic replay. The fixture has two named projections: Monk's Focus use-count facts and Sorcerer Font of Magic point-pool facts. It compares the QNT resource Unit id, resource kind, maximum, and rest refill facts against production projections from retained Surface class-feature records and owner class level. These resource-capacity facts are intentionally separate from source facts such as recovery links, Martial Arts die source, and Metamagic option facts. The input is a fixed projection boundary with no draft-fill ordering, branch interleaving, or table-choice risk, so focused random MBT would not add coverage.",
           "kind": "deterministic-qnt-replay",
           "ownerPath": "packages/character-creation-runtime/src/class-feature-projections.mbt.test.ts",
           "qntSpecPath": "packages/character-creation-runtime/character-creation-class-feature-projections.mbt.qnt",
@@ -3237,7 +3237,7 @@
       "kind": "projection-scalar",
       "parityWitnesses": [
         {
-          "deterministicReplayRationale": "Character Creation class-feature source fact projection replay is a fixed fixture for Uncanny Metabolism linking to Monk's Focus plus Martial Arts-derived healing facts, and Metamagic known-option facts linking to the shared Font of Magic Sorcery Point resource. The risk is deterministic retained source-fact projection, not random draft-fill interleavings.",
+          "deterministicReplayRationale": "DRP-T07 keeps Character Creation class-feature source-fact projection as a deterministic replay. The fixture has two named projections: Uncanny Metabolism facts that link to Monk's Focus and Martial Arts die source, and Metamagic facts that link selected options to the shared Font of Magic Sorcery Point resource. It compares QNT source fact kind, linked resource Unit id, Martial Arts dice and level bonus, option count, option costs, stacking modes, effect kinds, and spell-use limit against production projections from retained Surface facts. These source facts describe how other mechanics reference or consume resources; they do not duplicate resource-capacity facts such as maximums and rest refills. The input is a fixed projection boundary with no draft-fill ordering, branch interleaving, or table-choice risk, so focused random MBT would not add coverage.",
           "kind": "deterministic-qnt-replay",
           "ownerPath": "packages/character-creation-runtime/src/class-feature-projections.mbt.test.ts",
           "qntSpecPath": "packages/character-creation-runtime/character-creation-class-feature-projections.mbt.qnt",

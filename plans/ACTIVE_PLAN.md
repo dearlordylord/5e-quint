@@ -43,7 +43,7 @@
     {
       "number": 7,
       "id": "DRP-T07-CREATION-CLASS-FEATURE-PROJECTIONS",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Audit class-feature resource and source-fact projection replays"
     },
     {
@@ -279,7 +279,7 @@ another MBT run. Use the timing/background protocol from `CLAUDE.md`.
 | 4 | DRP-T04-ABILITY-SEARCH-REPLAY | done | DRP-T01 | Mixed focused-MBT plus deterministic replay row; do not duplicate existing focused coverage. |
 | 5 | DRP-T05-DAMAGE-DISPOSITION-REPLAY | done | DRP-T01 | Knock Out accepted/rejected table facts beside existing feature MBT. |
 | 6 | DRP-T06-ARMOR-CLASS-FORMULA | done | DRP-T01 | Selected-identity formula projection kept as deterministic replay with checker-readable Armor Class state boundary rationale. |
-| 7 | DRP-T07-CREATION-CLASS-FEATURE-PROJECTIONS | ready-for-research | DRP-T01 | Resource and source-fact projection rows share one driver. |
+| 7 | DRP-T07-CREATION-CLASS-FEATURE-PROJECTIONS | done | DRP-T01 | Resource and source-fact projection rows share one driver. |
 | 8 | DRP-T08-CREATION-WIZARD-SPELLBOOK | ready-for-research | DRP-T01 | Selected Wizard spellbook learning replay. |
 | 9 | DRP-T09-SHEET-FEATURE-RESOURCES | ready-for-research | DRP-T01 | Feature resources bridge and sheet transitions. |
 | 10 | DRP-T10-SHEET-ABILITY-CHECK-PROFICIENCY | ready-for-research | DRP-T01 | Jack of All Trades, proficiency, and Expertise scalar projection. |
@@ -430,7 +430,7 @@ Acceptance:
 
 ### Task 7 - DRP-T07-CREATION-CLASS-FEATURE-PROJECTIONS
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 
