@@ -97,7 +97,7 @@
     {
       "number": 16,
       "id": "PPW-T16-RECURSIVE-NEXT-BATCH",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Plan the next portable-witness batch if this lane drains"
     }
   ]
@@ -247,7 +247,7 @@ another MBT run. Run MBT with the repo timing/background protocol from
 | 13 | PPW-T13-TURN-BOUNDARY-LIFECYCLE-SEAM | done | PPW-T01-QNT-REGISTRY-CLOSURE | Uses the modules T01 binds. |
 | 14 | PPW-T14-ZERO-HP-MID-RESOLUTION-SEAM | done | PPW-T01-QNT-REGISTRY-CLOSURE, PPW-T12-CONCENTRATION-BREAK-SEAM | Reuses T12 teardown facts. |
 | 15 | PPW-T15-LANE-CLOSEOUT | done | PPW-T01-QNT-REGISTRY-CLOSURE, PPW-T02-ACID-ARROW-TIMING-FOCUSED-MBT, PPW-T03-AFTER-HIT-RIDERS-FOCUSED-MBT, PPW-T04-WEAPON-HOSTED-ATTACK-FOCUSED-MBT, PPW-T05-SUBTLE-METAMAGIC-FOCUSED-MBT, PPW-T06-HOLE-VOCABULARY-WITNESS-POLICY, PPW-T07-WEAPON-MASTERY-ADVANCEMENT-FOCUSED-MBT, PPW-T08-WEAPON-MASTERY-RESELECTION-FOCUSED-MBT, PPW-T09-COMMAND-OPTION-FOCUSED-MBT, PPW-T10-ABILITY-CHECK-SEARCH-FOCUSED-MBT, PPW-T11-SHOVE-WITNESS-POLICY, PPW-T12-CONCENTRATION-BREAK-SEAM, PPW-T13-TURN-BOUNDARY-LIFECYCLE-SEAM, PPW-T14-ZERO-HP-MID-RESOLUTION-SEAM | Full gates, rollup, pointer verification. |
-| 16 | PPW-T16-RECURSIVE-NEXT-BATCH | ready-for-research | PPW-T15-LANE-CLOSEOUT | Recursive tail. |
+| 16 | PPW-T16-RECURSIVE-NEXT-BATCH | done | PPW-T15-LANE-CLOSEOUT | Created the default deterministic replay portability audit queue in `plans/ACTIVE_PLAN.md`. |
 
 ## Task Details
 
@@ -650,19 +650,15 @@ Acceptance:
 
 ### Task 16 - PPW-T16-RECURSIVE-NEXT-BATCH - Recursive tail
 
-Status: `ready-for-research` (after PPW-T15)
+Status: `done` (after PPW-T15)
 
 Input: generated reports and lane closeout.
 
 Output:
 
-- If this lane closes, create the next coherent portable-witness or Rust-lane
-  plan with 10–20 atomic tasks (candidates: the 21 deterministic-replay-only
-  obligations not upgraded here; cleanroom corpus pin/refresh; the Rust
-  quint-connect parity lane from `plans/QNT_GENERATOR_READINESS_BACKLOG.md`
-  O2).
-- If it does not close, append exact repair tasks here instead of ending the
-  run.
+- Created `plans/ACTIVE_PLAN.md` as the next default Ralph queue: a 19-task
+  deterministic replay portability audit over the checked
+  `deterministic-qnt-replay` witness entries.
 
 Acceptance: Ralph has a concrete next plan or concrete repair tasks, never an
 empty end state.
