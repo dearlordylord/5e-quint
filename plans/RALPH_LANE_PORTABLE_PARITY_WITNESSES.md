@@ -130,8 +130,10 @@ does not currently see QNT files that no obligation references.
 
 This lane closes those three gaps. It subsumes the remaining queue of
 `plans/RALPH_LANE_B_QNT_DEEPENING.md` (QNTD-B06–B10 moved here as PPW-T03,
-PPW-T04, PPW-T09, PPW-T10, PPW-T11; lane B's index marks them `deferred` with a
-redirect note). Owner scope decision 2026-06-11: three seam drivers plus the
+PPW-T04, PPW-T09, PPW-T10, PPW-T11; lane B's plan file is deleted at closeout
+— drained lane plans are deleted per repo precedent, B01–B05 outputs live in
+checker-owned artifacts and git history). Owner scope decision 2026-06-11:
+three seam drivers plus the
 registry fix; a heavy computed-oracle integration lane (importing the full
 reducer closure) is **deferred** unless the seam drivers prove insufficient.
 
@@ -630,9 +632,12 @@ Output:
   accounting moved: target is zero covered obligations with only TS-side
   witnesses (or each remaining one carries a recorded policy decision from T06
   or T11), and the three seam obligations covered with focused MBT.
-- Update `plans/QNT_COVERAGE_PROGRAM.md` rollup and verify
-  `plans/RALPH_LANE_B_QNT_DEEPENING.md` carries the redirect note and final
-  `deferred` statuses; no stale "next runnable lane" pointers anywhere.
+- Delete `plans/RALPH_LANE_B_QNT_DEEPENING.md` (drained-lane plans are
+  deleted; B01–B05 outputs live in checker-owned artifacts and git history;
+  B06–B10 were absorbed into this lane). Update the
+  `plans/QNT_COVERAGE_PROGRAM.md` rollup and remove the lane B references
+  from `plans/QNT_COVERAGE_PROGRAM.md` and `plans/ACTIVE_PLAN.md`; no stale
+  "next runnable lane" pointers anywhere.
 - Record the deferred heavy computed-oracle integration lane as a parked
   decision (deferred unless seam drivers prove insufficient), in the program
   rollup, not as a runnable queue.
