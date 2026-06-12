@@ -85,7 +85,7 @@
     {
       "number": 14,
       "id": "PPW-T14-ZERO-HP-MID-RESOLUTION-SEAM",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Witness the zero-Hit-Point mid-resolution composition seam"
     },
     {
@@ -591,7 +591,7 @@ checker write+check green; `git diff --check`.
 
 ### Task 14 - PPW-T14-ZERO-HP-MID-RESOLUTION-SEAM - Zero-Hit-Point mid-resolution seam
 
-Status: `ready-for-implementation`
+Status: `done`
 
 Input:
 
