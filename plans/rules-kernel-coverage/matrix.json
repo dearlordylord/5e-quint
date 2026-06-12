@@ -3414,7 +3414,7 @@
       "kind": "composition",
       "parityWitnesses": [
         {
-          "deterministicReplayRationale": "Character Battle settlement replay is a fixed handoff-boundary fixture for battle-owned HP, Temporary Hit Points, conditions, ordinary Spell Slot expenditure, source-ambiguous created-slot rejection, preserved sheet-owned Pact Slot state, preserved rest-owned sheet state, feature-resource expenditure, and unchanged CharacterBuild output. The risk is deterministic settlement and conflict projection across runtime boundaries, not random battle action interleavings.",
+          "deterministicReplayRationale": "DRP-T12 keeps Character Battle settlement as a deterministic replay. The fixture is a closed handoff-boundary projection over existing Character Sheet and battle owners for battle-owned HP, Temporary Hit Points, conditions, ordinary Spell Slot expenditure, source-ambiguous ordinary-vs-created Spell Slot rejection, preserved sheet-owned Pact Slot state, preserved rest-owned sheet state, feature-resource expenditure, and unchanged CharacterBuild output. The runtime entrypoint accepts one completed BattleState/combatant pair and writes or rejects one Character Sheet settlement; random battle turns and action interleavings have already happened upstream, so the portability risk is deterministic cross-runtime projection and conflict rejection, not generative branch ordering. DRP-T12 therefore does not promote this replay to focused MBT.",
           "kind": "deterministic-qnt-replay",
           "ownerPath": "packages/character-battle-runtime/src/character-battle-settlement.mbt.test.ts",
           "qntSpecPath": "packages/character-battle-runtime/character-battle-settlement.mbt.qnt",
@@ -3454,7 +3454,7 @@
           "stepAction": "step"
         },
         {
-          "deterministicReplayRationale": "Character Battle identity-conflict replay covers mismatched character identity, maximum-HP drift, assumption-backed active Wild Shape handoff rejection, accepted fresh Stable zero-HP lifecycle settlement, and assumption-backed rejection of in-progress Stable recovery timer handoff during settlement.",
+          "deterministicReplayRationale": "DRP-T12 keeps settlement-side Character Battle identity conflicts in the existing settlement deterministic replay rather than creating a second identity-conflict model. The same handoff entrypoint rejects mismatched character identity, maximum-HP drift, assumption-backed active Wild Shape handoff, and in-progress Stable recovery timer handoff, and accepts fresh Stable zero-HP lifecycle settlement. ASSUMPTIONS.md A26 and A27 own the two handoff-specific modeling choices, while SRD Hit Points, Stable, and Wild Shape text owns the underlying rules vocabulary. These conflicts are deterministic boundary guards over one sheet/combatant identity pair, not random branch interleavings, so focused MBT would add generator cost without covering a distinct risk.",
           "kind": "deterministic-qnt-replay",
           "ownerPath": "packages/character-battle-runtime/src/character-battle-settlement.mbt.test.ts",
           "qntSpecPath": "packages/character-battle-runtime/character-battle-settlement.mbt.qnt",
