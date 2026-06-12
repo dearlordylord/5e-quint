@@ -362,14 +362,18 @@ Input:
 
 Output:
 
-- Do this only if a future lane decides deterministic closed-case replay is
-  insufficient for direct reducer-entrypoint obligations.
-- Either keep the existing deterministic replay and document it as closed
-  enough, or add a focused MBT that randomizes save pass/fail, Prone versus
-  push choice, accepted push, blocked push, invalid push distance, and Attack
-  resource spending.
-- If a new MBT is added, add `test:mbt:shove-outcome` and update the
-  obligation witness list.
+- Decision 2026-06-12: keep the deterministic replay; no focused MBT is added.
+  `BATTLE.SHOVE.OUTCOME_AND_PUSH_BOUNDARY` is a direct reducer-entrypoint
+  boundary with a closed outcome table, not a state-space search obligation.
+  The existing replay covers save success, failed-save Prone, accepted 5-foot
+  push, blocked 5-foot push, no-legal-destination 5-foot push, invalid push
+  distance rejection, non-Opportunity-Attack push projection, and Attack
+  resource spending for accepted versus rejected table facts. The replay uses
+  the executable semantic core and the battle-runtime reducer entrypoint, so a
+  randomized focused MBT would resample the same closed table rather than add a
+  new witness dimension.
+- If this boundary grows beyond the closed Shove outcome table, reassess and
+  add `test:mbt:shove-outcome` with an updated obligation witness list.
 
 Acceptance:
 

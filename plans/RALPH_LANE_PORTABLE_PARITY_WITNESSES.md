@@ -67,7 +67,7 @@
     {
       "number": 11,
       "id": "PPW-T11-SHOVE-WITNESS-POLICY",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Decide whether Shove deterministic replay needs focused MBT (moved from QNTD-B10)"
     },
     {
@@ -240,7 +240,7 @@ another MBT run. Run MBT with the repo timing/background protocol from
 | 8 | PPW-T08-WEAPON-MASTERY-RESELECTION-FOCUSED-MBT | done | PPW-T07-WEAPON-MASTERY-ADVANCEMENT-FOCUSED-MBT | Sheet runtime; reuses T07 driver patterns. |
 | 9 | PPW-T09-COMMAND-OPTION-FOCUSED-MBT | done | PPW-T02-ACID-ARROW-TIMING-FOCUSED-MBT, PPW-T03-AFTER-HIT-RIDERS-FOCUSED-MBT, PPW-T04-WEAPON-HOSTED-ATTACK-FOCUSED-MBT, PPW-T05-SUBTLE-METAMAGIC-FOCUSED-MBT, PPW-T06-HOLE-VOCABULARY-WITNESS-POLICY, PPW-T07-WEAPON-MASTERY-ADVANCEMENT-FOCUSED-MBT, PPW-T08-WEAPON-MASTERY-RESELECTION-FOCUSED-MBT | Moved from QNTD-B08 / QCP-CS6; after runtime-test rows drain. |
 | 10 | PPW-T10-ABILITY-CHECK-SEARCH-FOCUSED-MBT | done | PPW-T02-ACID-ARROW-TIMING-FOCUSED-MBT, PPW-T03-AFTER-HIT-RIDERS-FOCUSED-MBT, PPW-T04-WEAPON-HOSTED-ATTACK-FOCUSED-MBT, PPW-T05-SUBTLE-METAMAGIC-FOCUSED-MBT, PPW-T06-HOLE-VOCABULARY-WITNESS-POLICY, PPW-T07-WEAPON-MASTERY-ADVANCEMENT-FOCUSED-MBT, PPW-T08-WEAPON-MASTERY-RESELECTION-FOCUSED-MBT | Moved from QNTD-B09 / QCP-CS7. |
-| 11 | PPW-T11-SHOVE-WITNESS-POLICY | ready-for-research | PPW-T09-COMMAND-OPTION-FOCUSED-MBT, PPW-T10-ABILITY-CHECK-SEARCH-FOCUSED-MBT | Moved from QNTD-B10 / QCP-CS8. |
+| 11 | PPW-T11-SHOVE-WITNESS-POLICY | done | PPW-T09-COMMAND-OPTION-FOCUSED-MBT, PPW-T10-ABILITY-CHECK-SEARCH-FOCUSED-MBT | Moved from QNTD-B10 / QCP-CS8; no-op policy recorded. |
 | 12 | PPW-T12-CONCENTRATION-BREAK-SEAM | ready-for-implementation | PPW-T01-QNT-REGISTRY-CLOSURE | Highest-value composition seam. |
 | 13 | PPW-T13-TURN-BOUNDARY-LIFECYCLE-SEAM | ready-for-implementation | PPW-T01-QNT-REGISTRY-CLOSURE | Uses the modules T01 binds. |
 | 14 | PPW-T14-ZERO-HP-MID-RESOLUTION-SEAM | blocked | PPW-T01-QNT-REGISTRY-CLOSURE, PPW-T12-CONCENTRATION-BREAK-SEAM | Reuses T12 teardown facts. |
@@ -489,7 +489,7 @@ Acceptance: focused MBT green; checker write+check green; `git diff --check`.
 
 ### Task 11 - PPW-T11-SHOVE-WITNESS-POLICY - Shove witness policy
 
-Status: `ready-for-research`
+Status: `done`
 
 Moved verbatim from `QNTD-B10-SHOVE-WITNESS-POLICY`.
 
@@ -498,11 +498,13 @@ Input: `QCP-CS8` from `COMPOSITE_SLICE_CANDIDATES.md`; obligation
 
 Output:
 
-- Decide whether the existing deterministic replay remains sufficient. If yes,
-  record the no-op policy decision with a concrete reason. If focused MBT is
-  required, add the MBT pair, package script, and obligation witness update
-  covering save pass/fail, Prone, accepted push, blocked push, invalid push
-  distance, and Attack resource spending.
+- Decision 2026-06-12: the existing deterministic replay remains sufficient.
+  No focused MBT, package script, or obligation witness update is required
+  because `BATTLE.SHOVE.OUTCOME_AND_PUSH_BOUNDARY` is a direct
+  reducer-entrypoint boundary with a closed Shove outcome table. The existing
+  replay covers save pass/fail, failed-save Prone, accepted 5-foot push,
+  blocked/no-legal-destination 5-foot push, invalid push distance rejection,
+  non-Opportunity-Attack push projection, and Attack resource spending.
 
 Acceptance: policy recorded or focused MBT green; checker write+check green;
 `git diff --check`.
