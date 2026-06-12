@@ -28,6 +28,28 @@ details. It was removed in:
 
 Do not reuse that work as cleanroom evidence.
 
+## Restart Decision (2026-06-12)
+
+Owner decision in principle: the current sibling repo at
+`/workspace/typescript/dnd-cleanroom-rust` (bootstrapped 2026-05-27) will be
+deleted and re-bootstrapped rather than extended. Its QNT input snapshot is
+stale — copied 2026-05-27 with no recorded source commit — and must not grow
+further. Do not start new task lanes in it.
+
+Requirements for the next bootstrap, in addition to the workflow below:
+
+- **SHA-pinned corpus.** `cleanroom-input/MANIFEST.md` must record the source
+  repo commit SHA, per-file inventory, and copy date. Refreshes are a one-way,
+  allowlist-enforced sync script run from the source repo, each recording the
+  new SHA. Cleanroom tasks declare which snapshot they implement against.
+- **Executed conformance lane.** The rerun's parity layer is
+  `O2-NONTS-PARITY-LANE` in `plans/QNT_GENERATOR_READINESS_BACKLOG.md`: a
+  native Rust quint-connect harness replaying the copied `.mbt.qnt` drivers
+  against the cleanroom engine, replacing hand-transcribed `// Source:`
+  citation parity. Admitting the quint CLI as a cleanroom verification
+  dependency is part of that lane. If the rerun keeps the phased design, the
+  first manual vertical may still precede the MBT lane.
+
 ## Cleanroom Boundary
 
 The experiment must run in a separate Git repo, not in this repo. The intended
