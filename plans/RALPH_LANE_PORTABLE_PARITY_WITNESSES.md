@@ -5,7 +5,7 @@
   "schema": "ralph-plan.v1",
   "tasks": [
     { "number": 1, "id": "PPW-T01-QNT-REGISTRY-CLOSURE", "status": "done", "title": "Close the QNT registry: bind unbound modules, checker-enforce classification" },
-    { "number": 2, "id": "PPW-T02-ACID-ARROW-TIMING-FOCUSED-MBT", "status": "ready-for-implementation", "title": "Add Acid Arrow attack-timing focused MBT" },
+    { "number": 2, "id": "PPW-T02-ACID-ARROW-TIMING-FOCUSED-MBT", "status": "done", "title": "Add Acid Arrow attack-timing focused MBT" },
     { "number": 3, "id": "PPW-T03-AFTER-HIT-RIDERS-FOCUSED-MBT", "status": "ready-for-implementation", "title": "Add after-hit damage riders focused MBT (moved from QNTD-B06)" },
     { "number": 4, "id": "PPW-T04-WEAPON-HOSTED-ATTACK-FOCUSED-MBT", "status": "ready-for-implementation", "title": "Add weapon-hosted attack and riders focused MBT (moved from QNTD-B07)" },
     { "number": 5, "id": "PPW-T05-SUBTLE-METAMAGIC-FOCUSED-MBT", "status": "ready-for-implementation", "title": "Add Subtle Spell component-suppression focused MBT" },
@@ -151,7 +151,7 @@ another MBT run. Run MBT with the repo timing/background protocol from
 | # | Task | Status | Depends on | Notes |
 | ---: | --- | --- | --- | --- |
 | 1 | PPW-T01-QNT-REGISTRY-CLOSURE | done | none | Grounds the seam tasks; checker change. |
-| 2 | PPW-T02-ACID-ARROW-TIMING-FOCUSED-MBT | ready-for-implementation | none | Independent witness promotion. |
+| 2 | PPW-T02-ACID-ARROW-TIMING-FOCUSED-MBT | done | none | Independent witness promotion. |
 | 3 | PPW-T03-AFTER-HIT-RIDERS-FOCUSED-MBT | ready-for-implementation | none | Moved from QNTD-B06 / QCP-CS4. |
 | 4 | PPW-T04-WEAPON-HOSTED-ATTACK-FOCUSED-MBT | ready-for-implementation | none | Moved from QNTD-B07 / QCP-CS5. |
 | 5 | PPW-T05-SUBTLE-METAMAGIC-FOCUSED-MBT | ready-for-implementation | none | Independent witness promotion. |
@@ -207,7 +207,7 @@ Acceptance:
 
 ### Task 2 - PPW-T02-ACID-ARROW-TIMING-FOCUSED-MBT - Acid Arrow attack timing
 
-Status: `ready-for-implementation`
+Status: `done`
 
 Input:
 

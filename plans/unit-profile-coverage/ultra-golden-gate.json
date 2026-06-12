@@ -624,7 +624,7 @@
             },
             "witnessKinds": {
               "deterministic-qnt-replay": 12,
-              "focused-mbt": 61,
+              "focused-mbt": 62,
               "runtime-test": 24
             }
           },

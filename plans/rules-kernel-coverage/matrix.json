@@ -3980,6 +3980,12 @@
         {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-damage-spells.test.ts"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/acid-arrow-timing.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-acid-arrow-timing.mbt.qnt",
+          "stepAction": "step"
         }
       ],
       "profiles": [
