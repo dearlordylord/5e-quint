@@ -1832,9 +1832,9 @@ function qntOwnerPaths(obligations) {
   return ownerPaths;
 }
 
-function qntRegistryExemptionMap() {
+function qntRegistryExemptionMap(registryExemptions) {
   return new Map(
-    qntRegistryExemptions.map((exemption) => [
+    registryExemptions.map((exemption) => [
       exemption.ownerPath,
       exemption,
     ]),
@@ -1869,12 +1869,17 @@ function validateQntRegistryExemption(exemption, index, rootPath) {
   return issues;
 }
 
-function validateQntRegistryClosure(rootPath, qntOwnerRolesByPath) {
+function validateQntRegistryClosure(
+  rootPath,
+  qntOwnerRolesByPath,
+  registryExemptions = qntRegistryExemptions,
+) {
   const issues = [];
   const qntPaths = packageQntRegistryPaths(rootPath);
-  const exemptionsByPath = qntRegistryExemptionMap();
+  const qntPathSet = new Set(qntPaths);
+  const exemptionsByPath = qntRegistryExemptionMap(registryExemptions);
   const seenExemptions = new Set();
-  for (const [index, exemption] of qntRegistryExemptions.entries()) {
+  for (const [index, exemption] of registryExemptions.entries()) {
     if (isRecord(exemption) && typeof exemption.ownerPath === "string") {
       if (seenExemptions.has(exemption.ownerPath)) {
         issues.push(
@@ -1885,6 +1890,14 @@ function validateQntRegistryClosure(rootPath, qntOwnerRolesByPath) {
       if (qntOwnerRolesByPath.has(exemption.ownerPath)) {
         issues.push(
           `qnt registry exemption ${index + 1}: ${exemption.ownerPath} is already classified by qnt-owner-roles.jsonl.`,
+        );
+      }
+      if (
+        isRegistryScopedQntPath(exemption.ownerPath) &&
+        !qntPathSet.has(exemption.ownerPath)
+      ) {
+        issues.push(
+          `qnt registry exemption ${index + 1}: ${exemption.ownerPath} does not exist; remove the stale exemption.`,
         );
       }
     }
@@ -1903,8 +1916,12 @@ function validateQntRegistryClosure(rootPath, qntOwnerRolesByPath) {
   return issues;
 }
 
-function buildQntRegistryInventory(rootPath, qntOwnerRolesByPath) {
-  const exemptionsByPath = qntRegistryExemptionMap();
+function buildQntRegistryInventory(
+  rootPath,
+  qntOwnerRolesByPath,
+  registryExemptions = qntRegistryExemptions,
+) {
+  const exemptionsByPath = qntRegistryExemptionMap(registryExemptions);
   return packageQntRegistryPaths(rootPath).map((ownerPath) => {
     const role = qntOwnerRolesByPath.get(ownerPath);
     const exemption = exemptionsByPath.get(ownerPath);
@@ -2397,7 +2414,7 @@ function buildSemanticCoreRunBlockFindings(
   });
 }
 
-function buildMatrix(rootPath) {
+function buildMatrix(rootPath, registryExemptions = qntRegistryExemptions) {
   const paths = coveragePaths(rootPath);
   const obligations = readJsonl(rootPath, paths.obligations);
   const battleHoleFrontier = readJsonl(rootPath, paths.battleHoleFrontier);
@@ -2479,7 +2496,11 @@ function buildMatrix(rootPath) {
         ...(profileScopes.length > 0 ? { profileScopes } : {}),
       });
     }),
-    qntRegistry: buildQntRegistryInventory(rootPath, qntOwnerRolesByPath),
+    qntRegistry: buildQntRegistryInventory(
+      rootPath,
+      qntOwnerRolesByPath,
+      registryExemptions,
+    ),
     unitFeatureProfileOwnerRows: unitFeatureProfileOwnerEvidence,
     generatorReadiness: generatorReadiness.map((readiness) =>
       stable(readiness),
@@ -2836,6 +2857,7 @@ function renderList(values) {
 function buildKernelCoverage({
   root: rootPath,
   generatorSubsetAuditObligationIds = generatorSubsetObservedConstructAuditObligationIds,
+  qntRegistryExemptions: registryExemptions = qntRegistryExemptions,
 }) {
   const paths = coveragePaths(rootPath);
   const obligations = readJsonl(rootPath, paths.obligations);
@@ -3007,7 +3029,13 @@ function buildKernelCoverage({
       issues.push(`qnt-owner-roles is missing QNT owner ${ownerPath}.`);
     }
   }
-  issues.push(...validateQntRegistryClosure(rootPath, qntOwnerRolesByPath));
+  issues.push(
+    ...validateQntRegistryClosure(
+      rootPath,
+      qntOwnerRolesByPath,
+      registryExemptions,
+    ),
+  );
   const semanticCoreRunBlocksByPath = scanSemanticCoreRunBlocks(
     rootPath,
     qntOwnerRoleRows,
@@ -3086,7 +3114,7 @@ function buildKernelCoverage({
     }
   }
 
-  const matrix = buildMatrix(rootPath);
+  const matrix = buildMatrix(rootPath, registryExemptions);
   return {
     issues,
     matrix,

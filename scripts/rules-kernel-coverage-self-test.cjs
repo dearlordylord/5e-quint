@@ -4,11 +4,22 @@ const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
 
-const { buildKernelCoverage } = require("./rules-kernel-coverage-check.cjs");
+const {
+  buildKernelCoverage: buildKernelCoverageWithRepoExemptions,
+} = require("./rules-kernel-coverage-check.cjs");
 const {
   generatorReadinessBlockerCatalogIssues,
   generatorReadinessScannerBlockers,
 } = require("./rules-kernel-coverage-config.cjs");
+
+// Self-test roots are synthetic: the checker-owned qntRegistryExemptions name
+// real repo paths that never exist under the temp root, so default the
+// exemption list to empty here and inject per-case exemptions explicitly.
+const buildKernelCoverage = (options) =>
+  buildKernelCoverageWithRepoExemptions({
+    qntRegistryExemptions: [],
+    ...options,
+  });
 
 const runBlockBlocker = generatorReadinessScannerBlockers.semanticCoreRunBlock;
 
@@ -333,6 +344,52 @@ function runSelfTest() {
     `Expected unregistered package QNT issue, got ${JSON.stringify(unregisteredPackageQntResult.issues)}`,
   );
   fs.rmSync(unregisteredPackageQntPath, { force: true });
+
+  const staleExemptionResult = buildKernelCoverage({
+    root,
+    qntRegistryExemptions: [
+      {
+        ownerPath: "packages/battle-runtime/deleted-exempt-leaf.qnt",
+        category: "leaf-type-vocabulary",
+        evidence: "Self-test stale exemption for a deleted file.",
+      },
+    ],
+  });
+  assert.ok(
+    staleExemptionResult.issues.includes(
+      "qnt registry exemption 1: packages/battle-runtime/deleted-exempt-leaf.qnt does not exist; remove the stale exemption.",
+    ),
+    `Expected stale exemption issue, got ${JSON.stringify(staleExemptionResult.issues)}`,
+  );
+
+  const exemptLeafPath = path.join(
+    root,
+    "packages",
+    "battle-runtime",
+    "exempt-leaf.qnt",
+  );
+  writeFile(exemptLeafPath, "module exemptLeaf {}\n");
+  const exemptLeafResult = buildKernelCoverage({
+    root,
+    qntRegistryExemptions: [
+      {
+        ownerPath: "packages/battle-runtime/exempt-leaf.qnt",
+        category: "leaf-type-vocabulary",
+        evidence: "Self-test exempt vocabulary leaf.",
+      },
+    ],
+  });
+  assert.deepEqual(exemptLeafResult.issues, []);
+  assert.ok(
+    exemptLeafResult.matrix.qntRegistry.some(
+      (entry) =>
+        entry.ownerPath === "packages/battle-runtime/exempt-leaf.qnt" &&
+        entry.classification === "exempt" &&
+        entry.category === "leaf-type-vocabulary",
+    ),
+    "Expected exempt-leaf.qnt to be classified exempt in the registry inventory.",
+  );
+  fs.rmSync(exemptLeafPath, { force: true });
 
   const witnessShapeObligationsPath = path.join(
     root,

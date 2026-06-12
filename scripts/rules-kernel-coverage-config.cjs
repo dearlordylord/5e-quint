@@ -158,7 +158,6 @@ const qntOwnerRoles = new Set([
   "mbt-fixture",
   "bridge",
   "selected-identity-trace",
-  "legacy-reference",
 ]);
 
 const qntRegistryExemptionCategoryDescriptions = {
