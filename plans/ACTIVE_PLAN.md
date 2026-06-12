@@ -12,10 +12,9 @@ Per-task history lives in git.
 No default runnable Ralph queue is active from this file. Launch future work
 with an explicit `--plan plans/<lane>.md`.
 
-The next optional QNT deepening lane is:
-
-- `plans/RALPH_LANE_B_QNT_DEEPENING.md` — focused QNT witness deepening plus the
-  next manual Rust dry-run vertical after generator readiness closure.
+No QNT deepening lane is currently runnable from this file. The former Lane B
+plan was drained and deleted; its durable outputs live in checked
+rules-kernel artifacts, git history, and the QNT coverage program rollup.
 
 The current durable planning entrypoints are:
 

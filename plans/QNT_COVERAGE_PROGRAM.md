@@ -10,7 +10,7 @@
     { "number": 3, "id": "QCP-COMPOSITE-SLICES", "status": "done", "title": "Author per-composite slice MBT" },
     { "number": 4, "id": "QCP-NON-SEMANTIC-AUDIT", "status": "done", "title": "Confirm boundary and unsupported obligations are non-transitional" },
     { "number": 5, "id": "QCP-UNIT-IDENTITY-GATE", "status": "done", "title": "Per-Unit selected-identity test as hard gate" },
-    { "number": 6, "id": "QCP-INTEGRATION-MBT-PATTERNS", "status": "todo", "title": "Maintain integration MBT for high-value cross-slice sequencing" },
+    { "number": 6, "id": "QCP-INTEGRATION-MBT-PATTERNS", "status": "done", "title": "Record bounded integration MBT seam pattern baseline" },
     { "number": 7, "id": "QCP-LANG-PARITY-MARKER", "status": "blocked", "title": "Language-target parity marker enforced per covered obligation" }
   ]
 }
@@ -25,20 +25,18 @@ This plan rolls up the bounded program of work to reach the achievable 100% QNT 
   task changes architecture.
 - `plans/rules-kernel-coverage/README.md` — obligation/profile/marker/witness vocabulary.
 - `plans/rules-kernel-coverage/obligations.jsonl` — the obligation registry
-  (97 today; 91 covered, 6 boundary/unsupported).
+  (closeout snapshot: 120 total; 114 covered, 6 boundary/unsupported).
 - `plans/rules-kernel-coverage/REPORT.md` — generated rollup of current
   rules-kernel coverage, generator readiness, semantic-core run-block findings,
   and checker issues.
 - `plans/rules-kernel-coverage/generator-readiness.jsonl` — semantic-core status per obligation.
 - `plans/unit-profile-coverage/` — per-Unit support and selected-identity tracking.
-- `plans/rules-kernel-coverage/COMPOSITE_SLICE_CANDIDATES.md` — optional
-  witness-shape deepening candidates after the current coverage and generator
-  readiness gates closed.
+- `plans/rules-kernel-coverage/COMPOSITE_SLICE_CANDIDATES.md` — historical
+  candidate list drained by the portable parity witness lane; use current
+  checker-owned artifacts for any future witness-shape planning.
 - `plans/rules-kernel-coverage/HIT_POINT_DAMAGE_RUST_DRY_RUN.md` and
   `plans/rules-kernel-coverage/HIT_POINT_RECOVERY_RUST_DRY_RUN.md` —
   current manual Rust dry-run evidence.
-- `plans/RALPH_LANE_B_QNT_DEEPENING.md` — next runnable QNT deepening lane,
-  combining the recovery dry run with focused composite-slice MBT promotion.
 - `plans/rules-kernel-coverage/PRD_B_C_COVERAGE_AND_GENERATOR_READINESS.md` —
   background rationale for B coverage closure versus C generator readiness. Do
   not read this by default for ordinary slice tasks.
@@ -84,10 +82,9 @@ Checked source-of-truth artifacts:
 - `plans/rules-kernel-coverage/HIT_POINT_RECOVERY_RUST_DRY_RUN.md` is the
   current Hit Point recovery manual Rust dry-run vertical, scoped to pure
   healing projection without adding parallel Character Sheet state.
-- `plans/rules-kernel-coverage/COMPOSITE_SLICE_CANDIDATES.md` records the next
-  optional battle composite-slice candidates. It also records that current
-  coverage and generator-readiness gates are closed enough for the next phase;
-  the remaining candidates are witness-shape deepening, not blocker cleanup.
+- `plans/rules-kernel-coverage/COMPOSITE_SLICE_CANDIDATES.md` is a drained
+  historical candidate list. It records the former candidate shapes only; it is
+  not a runnable queue or source of current blocker/deepening work.
 - `plans/unit-profile-coverage/ULTRA_GOLDEN_GATE.md` and
   `plans/unit-profile-coverage/LEVEL1_2_ULTRA_GOLDEN_SUMMARY.md` are the durable
   outputs of the closed ultra-golden metric lane.
@@ -106,16 +103,39 @@ Active generator and Rust queues:
   implementing an emitter or committing generated Rust.
 - The current scoped manual Rust recovery evidence is
   `plans/rules-kernel-coverage/HIT_POINT_RECOVERY_RUST_DRY_RUN.md`.
-- Optional battle composite-slice deepening candidates are listed in
-  `plans/rules-kernel-coverage/COMPOSITE_SLICE_CANDIDATES.md`; they are not
-  generator-readiness blockers.
-- The next runnable deepening batch is
-  `plans/RALPH_LANE_B_QNT_DEEPENING.md`. After the recovery dry-run review, its
-  remaining runnable work is `QCP-CS1` through `QCP-CS8` without reopening
-  generator-readiness blocker cleanup.
+- Optional battle composite-slice deepening candidates are historical planning
+  inputs only. `QCP-CS1` through `QCP-CS8` have either landed as focused MBT
+  witnesses or carry a recorded witness-shape policy decision in
+  `obligations.jsonl`; do not reopen them from
+  `plans/rules-kernel-coverage/COMPOSITE_SLICE_CANDIDATES.md`.
+- No runnable QNT deepening lane is active. The drained Lane B plan was deleted
+  after its durable outputs moved into checked artifacts, git history, and the
+  portable parity witness closeout below.
 - Parked non-runnable ideas remain in
   `plans/QNT_GENERATOR_READINESS_BACKLOG.md`. Reopen them only by carving a
   small coherent batch into a fresh lane plan with current checker-owned inputs.
+
+## Portable Parity Witness Closeout
+
+The portable-witness lane closed with the checked obligation registry as the
+source of truth:
+
+- Covered obligations with only TS-side witnesses: 1. The remaining row is
+  `BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY`, and its `contract-test` witness is
+  an explicit PPW-T06 policy decision for executable protocol-vocabulary joins,
+  not a reducer sequencing gap.
+- `BATTLE.SHOVE.OUTCOME_AND_PUSH_BOUNDARY` keeps its deterministic QNT replay
+  per PPW-T11 because the Shove outcome table is a closed fixture, not a random
+  reducer interleaving.
+- The three previously unwitnessed composition seams are covered by focused
+  MBT: `BATTLE.PROTOCOL.CONCENTRATION_BREAK_TEARDOWN`,
+  `BATTLE.COMPOSITION.TURN_BOUNDARY_EFFECT_LIFECYCLE_ORDERING`, and
+  `BATTLE.PROTOCOL.ZERO_HIT_POINT_MID_RESOLUTION`.
+- The heavy computed-oracle integration lane remains parked. Reopen it only if
+  bounded seam drivers prove insufficient; do not treat it as a runnable queue
+  or as a blocker for current rules-kernel coverage.
+
+No new Rust or generator follow-up task ids were created by this closeout.
 
 ## Working Discipline
 
@@ -211,9 +231,9 @@ Output: new atomic `.qnt` files in `packages/shared-algebras/proofs/rule-core/`,
 
 Acceptance: each new atomic referenced by at least one composite slice; checker green.
 
-Current source-of-truth check: `obligations.jsonl` has 91 covered obligations
+Current source-of-truth check: `obligations.jsonl` has 114 covered obligations
 and no open transitional rows; future missing atomics should enter through a new
-obligation or composite-slice task rather than this closed bootstrap task.
+obligation or fresh focused task rather than this closed bootstrap task.
 
 ### Task 3 - QCP-COMPOSITE-SLICES
 
@@ -226,9 +246,9 @@ Output: one composite slice per missing profile, following the pilot template. S
 Acceptance: new obligation row per slice; parity test green; checker green.
 
 Current source-of-truth check:
-`plans/rules-kernel-coverage/COMPOSITE_SLICE_CANDIDATES.md` records the
-remaining battle slice candidates as optional witness-shape deepening, not
-coverage or generator-readiness blocker cleanup.
+`plans/rules-kernel-coverage/COMPOSITE_SLICE_CANDIDATES.md` is drained
+historical input; future battle slice work should start from the checked
+obligation registry and generated report, not from that candidate list.
 
 ### Task 4 - QCP-NON-SEMANTIC-AUDIT
 
@@ -258,11 +278,17 @@ selected-identity join rows across the admitted scopes.
 
 ### Task 6 - QCP-INTEGRATION-MBT-PATTERNS
 
-Status: `todo`
+Status: `done`
 
 Input: cross-slice sequencing patterns where the production reducer composes multiple composites (concentration interactions, reaction interrupts, turn-end cleanup, ...).
 
 Output: bounded fixture-world integration MBTs that exercise the chosen patterns. Never claim exhaustiveness; document scope per file.
+
+Current source-of-truth check: the portable parity witness lane added focused
+MBT witnesses for Concentration-break teardown, turn-boundary effect lifecycle
+ordering, and zero-Hit-Point mid-resolution teardown. The heavier
+computed-oracle integration approach remains a parked decision, deferred unless
+these seam drivers prove insufficient.
 
 Acceptance: each integration MBT documents its scope; bounded execution time; checker green.
 

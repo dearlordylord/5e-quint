@@ -5,21 +5,26 @@ Prepared for `QNTGR-B12-COMPOSITE-SLICE-CANDIDATES`.
 This is a planning artifact only. It does not change reducer behavior, QNT
 semantics, or coverage status.
 
+Closeout note 2026-06-12: this candidate list is drained. `QCP-CS1` through
+`QCP-CS7` landed as focused MBT witnesses, and `QCP-CS8` carries a recorded
+deterministic-replay policy decision. Do not treat this file as a runnable
+queue; use current checker-owned artifacts for future planning.
+
 ## Current Gate Status
 
-The rules-kernel coverage gate is closed enough for the next generator phase:
+The rules-kernel coverage gate is closed for the checked closeout denominator:
 
-- `REPORT.md` shows 97 obligations, 91 covered obligations, 0 open
+- `REPORT.md` shows 120 obligations, 114 covered obligations, 0 open
   transitional obligations, and 6 boundary or unsupported obligations.
-- `profile-obligations.jsonl` has 132 rows and no open `followUpTaskIds` or
+- `profile-obligations.jsonl` has 154 rows and no open `followUpTaskIds` or
   `reason` rows.
-- `generator-readiness.jsonl` has 69 rows, all
+- `generator-readiness.jsonl` has 95 rows, all
   `generation-subset-clean`, with no `blockedBy` entries.
 
-The remaining useful composite-slice work is therefore not a B/C gate blocker.
-It is witness-shape deepening: promote high-value battle obligations that are
-covered by runtime tests or deterministic replay into focused slice MBT where
-that would improve future generator confidence.
+The former composite-slice work is therefore not a B/C gate blocker and is no
+longer a runnable batch. Future witness-shape deepening should start from
+current `obligations.jsonl`, `generator-readiness.jsonl`, and `REPORT.md`
+rather than these historical candidate descriptions.
 
 ## Selection Rule
 
@@ -396,12 +401,9 @@ composite-slice candidates:
 - Boundary-only and unsupported rows are intentionally outside reducer-semantic
   composite MBT.
 
-## Next Ralph Batch Recommendation
+## Closeout
 
-If the next lane wants runnable composite-slice work, start with `QCP-CS1`
-through `QCP-CS5` in separate worktrees. They are independent high-value battle
-obligations with runtime-test-only witnesses and clean semantic-core readiness.
-
-Use `QCP-CS6` and `QCP-CS7` only after the runtime-test-only battle rows drain,
-because those rows already have deterministic QNT replay. Leave `QCP-CS8`
-deferred unless the team changes the deterministic-replay policy.
+This file has no next Ralph batch recommendation. The former recommendations
+were consumed by the portable parity witness lane. Reopen future
+composite-slice work only by carving a fresh lane from current checker-owned
+inputs.

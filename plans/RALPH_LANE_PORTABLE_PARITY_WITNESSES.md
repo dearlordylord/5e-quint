@@ -91,13 +91,13 @@
     {
       "number": 15,
       "id": "PPW-T15-LANE-CLOSEOUT",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Close out witness-portability artifacts and program rollup"
     },
     {
       "number": 16,
       "id": "PPW-T16-RECURSIVE-NEXT-BATCH",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Plan the next portable-witness batch if this lane drains"
     }
   ]
@@ -128,9 +128,9 @@ binding at all (`battle-runtime-turn-advancement.qnt`,
 `battle-runtime-weapon-hit-turn-effects.qnt`): the "no slice forgotten" gate
 does not currently see QNT files that no obligation references.
 
-This lane closes those three gaps. It subsumes the remaining queue of
-`plans/RALPH_LANE_B_QNT_DEEPENING.md` (QNTD-B06–B10 moved here as PPW-T03,
-PPW-T04, PPW-T09, PPW-T10, PPW-T11; lane B's plan file is deleted at closeout
+This lane closes those three gaps. It subsumes the remaining queue of the
+drained Lane B QNT deepening plan (QNTD-B06–B10 moved here as PPW-T03,
+PPW-T04, PPW-T09, PPW-T10, PPW-T11; the Lane B plan file is deleted at closeout
 — drained lane plans are deleted per repo precedent, B01–B05 outputs live in
 checker-owned artifacts and git history). Owner scope decision 2026-06-11:
 three seam drivers plus the
@@ -235,7 +235,7 @@ another MBT run. Run MBT with the repo timing/background protocol from
 | 1 | PPW-T01-QNT-REGISTRY-CLOSURE | done | none | Grounds the seam tasks; checker change. |
 | 2 | PPW-T02-ACID-ARROW-TIMING-FOCUSED-MBT | done | none | Independent witness promotion. |
 | 3 | PPW-T03-AFTER-HIT-RIDERS-FOCUSED-MBT | done | none | Moved from QNTD-B06 / QCP-CS4. |
-| 4 | PPW-T04-WEAPON-HOSTED-ATTACK-FOCUSED-MBT | ready-for-implementation | none | Moved from QNTD-B07 / QCP-CS5. |
+| 4 | PPW-T04-WEAPON-HOSTED-ATTACK-FOCUSED-MBT | done | none | Moved from QNTD-B07 / QCP-CS5. |
 | 5 | PPW-T05-SUBTLE-METAMAGIC-FOCUSED-MBT | done | none | Independent witness promotion. |
 | 6 | PPW-T06-HOLE-VOCABULARY-WITNESS-POLICY | done | none | Policy decision; recorded no-op. |
 | 7 | PPW-T07-WEAPON-MASTERY-ADVANCEMENT-FOCUSED-MBT | done | none | Creation runtime; shares semantic core with T08. |
@@ -245,9 +245,9 @@ another MBT run. Run MBT with the repo timing/background protocol from
 | 11 | PPW-T11-SHOVE-WITNESS-POLICY | done | PPW-T09-COMMAND-OPTION-FOCUSED-MBT, PPW-T10-ABILITY-CHECK-SEARCH-FOCUSED-MBT | Moved from QNTD-B10 / QCP-CS8; no-op policy recorded. |
 | 12 | PPW-T12-CONCENTRATION-BREAK-SEAM | done | PPW-T01-QNT-REGISTRY-CLOSURE | Highest-value composition seam. |
 | 13 | PPW-T13-TURN-BOUNDARY-LIFECYCLE-SEAM | done | PPW-T01-QNT-REGISTRY-CLOSURE | Uses the modules T01 binds. |
-| 14 | PPW-T14-ZERO-HP-MID-RESOLUTION-SEAM | ready-for-implementation | PPW-T01-QNT-REGISTRY-CLOSURE, PPW-T12-CONCENTRATION-BREAK-SEAM | Reuses T12 teardown facts. |
-| 15 | PPW-T15-LANE-CLOSEOUT | ready-for-research | PPW-T01-QNT-REGISTRY-CLOSURE, PPW-T02-ACID-ARROW-TIMING-FOCUSED-MBT, PPW-T03-AFTER-HIT-RIDERS-FOCUSED-MBT, PPW-T04-WEAPON-HOSTED-ATTACK-FOCUSED-MBT, PPW-T05-SUBTLE-METAMAGIC-FOCUSED-MBT, PPW-T06-HOLE-VOCABULARY-WITNESS-POLICY, PPW-T07-WEAPON-MASTERY-ADVANCEMENT-FOCUSED-MBT, PPW-T08-WEAPON-MASTERY-RESELECTION-FOCUSED-MBT, PPW-T09-COMMAND-OPTION-FOCUSED-MBT, PPW-T10-ABILITY-CHECK-SEARCH-FOCUSED-MBT, PPW-T11-SHOVE-WITNESS-POLICY, PPW-T12-CONCENTRATION-BREAK-SEAM, PPW-T13-TURN-BOUNDARY-LIFECYCLE-SEAM, PPW-T14-ZERO-HP-MID-RESOLUTION-SEAM | Full gates, rollup, pointer verification. |
-| 16 | PPW-T16-RECURSIVE-NEXT-BATCH | blocked | PPW-T15-LANE-CLOSEOUT | Recursive tail. |
+| 14 | PPW-T14-ZERO-HP-MID-RESOLUTION-SEAM | done | PPW-T01-QNT-REGISTRY-CLOSURE, PPW-T12-CONCENTRATION-BREAK-SEAM | Reuses T12 teardown facts. |
+| 15 | PPW-T15-LANE-CLOSEOUT | done | PPW-T01-QNT-REGISTRY-CLOSURE, PPW-T02-ACID-ARROW-TIMING-FOCUSED-MBT, PPW-T03-AFTER-HIT-RIDERS-FOCUSED-MBT, PPW-T04-WEAPON-HOSTED-ATTACK-FOCUSED-MBT, PPW-T05-SUBTLE-METAMAGIC-FOCUSED-MBT, PPW-T06-HOLE-VOCABULARY-WITNESS-POLICY, PPW-T07-WEAPON-MASTERY-ADVANCEMENT-FOCUSED-MBT, PPW-T08-WEAPON-MASTERY-RESELECTION-FOCUSED-MBT, PPW-T09-COMMAND-OPTION-FOCUSED-MBT, PPW-T10-ABILITY-CHECK-SEARCH-FOCUSED-MBT, PPW-T11-SHOVE-WITNESS-POLICY, PPW-T12-CONCENTRATION-BREAK-SEAM, PPW-T13-TURN-BOUNDARY-LIFECYCLE-SEAM, PPW-T14-ZERO-HP-MID-RESOLUTION-SEAM | Full gates, rollup, pointer verification. |
+| 16 | PPW-T16-RECURSIVE-NEXT-BATCH | ready-for-research | PPW-T15-LANE-CLOSEOUT | Recursive tail. |
 
 ## Task Details
 
@@ -622,7 +622,7 @@ checker write+check green; `git diff --check`.
 
 ### Task 15 - PPW-T15-LANE-CLOSEOUT - Closeout
 
-Status: `ready-for-research` (after T01–T14)
+Status: `done` (after T01–T14)
 
 Input: results of all prior tasks.
 
@@ -632,7 +632,7 @@ Output:
   accounting moved: target is zero covered obligations with only TS-side
   witnesses (or each remaining one carries a recorded policy decision from T06
   or T11), and the three seam obligations covered with focused MBT.
-- Delete `plans/RALPH_LANE_B_QNT_DEEPENING.md` (drained-lane plans are
+- Delete the drained Lane B QNT deepening plan (drained-lane plans are
   deleted; B01–B05 outputs live in checker-owned artifacts and git history;
   B06–B10 were absorbed into this lane). Update the
   `plans/QNT_COVERAGE_PROGRAM.md` rollup and remove the lane B references
@@ -650,7 +650,7 @@ Acceptance:
 
 ### Task 16 - PPW-T16-RECURSIVE-NEXT-BATCH - Recursive tail
 
-Status: `blocked` (after PPW-T15)
+Status: `ready-for-research` (after PPW-T15)
 
 Input: generated reports and lane closeout.
 
