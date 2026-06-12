@@ -97,7 +97,7 @@
     {
       "number": 16,
       "id": "DRP-T16-SPELL-SLOTS-AND-PACT-SLOTS",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Audit Spell Slot and Pact Slot transition and table replays"
     },
     {
@@ -115,7 +115,7 @@
     {
       "number": 19,
       "id": "DRP-T19-LANE-CLOSEOUT",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Close out deterministic replay portability decisions and next queue"
     }
   ]
@@ -288,10 +288,10 @@ another MBT run. Use the timing/background protocol from `CLAUDE.md`.
 | 13 | DRP-T13-HIT-POINT-DAMAGE-RUST-PARITY | done | DRP-T01-INVENTORY-GATE | Align replay decision with existing Hit Point damage Rust dry-run evidence. |
 | 14 | DRP-T14-HP-REST-HIT-DICE | done | DRP-T13-HIT-POINT-DAMAGE-RUST-PARITY | HP recovery dry run reuses damage/vitals shapes. |
 | 15 | DRP-T15-HIT-POINT-MAXIMUM | done | DRP-T01-INVENTORY-GATE | Hit Point Maximum formula replay. |
-| 16 | DRP-T16-SPELL-SLOTS-AND-PACT-SLOTS | ready-for-research | DRP-T14-HP-REST-HIT-DICE | Slot transitions import rest outcome facts. |
+| 16 | DRP-T16-SPELL-SLOTS-AND-PACT-SLOTS | done | DRP-T14-HP-REST-HIT-DICE | Spell Slot/Pact Slot transition and table derivation replays stay deterministic with typed non-duplicated source facts. |
 | 17 | DRP-T17-WEAPON-MASTERY-RESELECTION | done | DRP-T01-INVENTORY-GATE | Selected-identity plus identity-free reselection semantics. |
 | 18 | DRP-T18-SPELL-ACCESS-SELECTED-IDENTITY | done | DRP-T01-INVENTORY-GATE | Spellbook Ritual and class-feature prepared Spell Access selected-identity replays. |
-| 19 | DRP-T19-LANE-CLOSEOUT | blocked | DRP-T02-SHOVE-OUTCOME-DECISION, DRP-T03-SPELL-REST-BENEFIT-APPLICATION, DRP-T04-ABILITY-SEARCH-REPLAY, DRP-T05-DAMAGE-DISPOSITION-REPLAY, DRP-T06-ARMOR-CLASS-FORMULA, DRP-T07-CREATION-CLASS-FEATURE-PROJECTIONS, DRP-T08-CREATION-WIZARD-SPELLBOOK, DRP-T09-SHEET-FEATURE-RESOURCES, DRP-T10-SHEET-ABILITY-CHECK-PROFICIENCY, DRP-T11-BATTLE-HANDOFF-INIT, DRP-T12-BATTLE-HANDOFF-SETTLEMENT, DRP-T13-HIT-POINT-DAMAGE-RUST-PARITY, DRP-T14-HP-REST-HIT-DICE, DRP-T15-HIT-POINT-MAXIMUM, DRP-T16-SPELL-SLOTS-AND-PACT-SLOTS, DRP-T17-WEAPON-MASTERY-RESELECTION, DRP-T18-SPELL-ACCESS-SELECTED-IDENTITY | Recompute reports, summarize kept/promoted replay decisions, and create the next coherent queue if needed. |
+| 19 | DRP-T19-LANE-CLOSEOUT | ready-for-research | DRP-T02-SHOVE-OUTCOME-DECISION, DRP-T03-SPELL-REST-BENEFIT-APPLICATION, DRP-T04-ABILITY-SEARCH-REPLAY, DRP-T05-DAMAGE-DISPOSITION-REPLAY, DRP-T06-ARMOR-CLASS-FORMULA, DRP-T07-CREATION-CLASS-FEATURE-PROJECTIONS, DRP-T08-CREATION-WIZARD-SPELLBOOK, DRP-T09-SHEET-FEATURE-RESOURCES, DRP-T10-SHEET-ABILITY-CHECK-PROFICIENCY, DRP-T11-BATTLE-HANDOFF-INIT, DRP-T12-BATTLE-HANDOFF-SETTLEMENT, DRP-T13-HIT-POINT-DAMAGE-RUST-PARITY, DRP-T14-HP-REST-HIT-DICE, DRP-T15-HIT-POINT-MAXIMUM, DRP-T16-SPELL-SLOTS-AND-PACT-SLOTS, DRP-T17-WEAPON-MASTERY-RESELECTION, DRP-T18-SPELL-ACCESS-SELECTED-IDENTITY | Recompute reports, summarize kept/promoted replay decisions, and create the next coherent queue if needed. |
 
 ## Task Details
 
@@ -616,7 +616,7 @@ Acceptance:
 
 ### Task 16 - DRP-T16-SPELL-SLOTS-AND-PACT-SLOTS
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 
@@ -678,7 +678,7 @@ Acceptance:
 
 ### Task 19 - DRP-T19-LANE-CLOSEOUT
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Input:
 
