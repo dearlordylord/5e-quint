@@ -1126,7 +1126,7 @@
       "kind": "state-transition",
       "parityWitnesses": [
         {
-          "deterministicReplayRationale": "Prayer of Healing spell-rest benefit replay is a closed two-case fixture: completed-cast application spends the level-2 Spell Slot, applies caller-supplied Short Rest benefits, heals from the provided rolls, and stores recipient Long Rest lockout; a second application to a locked recipient is rejected before spending another Spell Slot. The reusable semantic core owns typed spell-rest profile facts, recipient eligibility and Long Rest lockout gates, recipient-count and healing-roll gates, slot-scaled healing dice count, applied/rejected results, and the pre-spend rejection projection; selected spell identity remains fixture evidence.",
+          "deterministicReplayRationale": "DRP-T03 keeps this as a deterministic replay, not a generative sheet-runtime MBT. Prayer of Healing spell-rest benefit application is a completed-cast projection over caller-supplied recipient eligibility, Short Rest benefit inputs, healing rolls, and the existing recipient Long Rest lockout gate; random branch interleavings are not the risk at this boundary. The closed two-step fixture applies the level-2 Spell Slot spend, Short Rest benefits, slot-scaled healing, and existing restFeatureUses lockout, then proves a second application to a locked recipient is rejected before spending another Spell Slot. The reusable semantic core owns typed spell-rest profile facts, recipient eligibility and Long Rest lockout gates, recipient-count and healing-roll gates, slot-scaled healing dice count, applied/rejected results, and the pre-spend rejection projection; selected spell identity remains fixture evidence, and no parallel rest-lockout state is introduced.",
           "kind": "deterministic-qnt-replay",
           "ownerPath": "packages/character-sheet-runtime/src/spell-rest-benefit-application.mbt.test.ts",
           "qntSpecPath": "packages/character-sheet-runtime/character-sheet-spell-rest-benefit-application.mbt.qnt",
@@ -1147,7 +1147,8 @@
       "status": "covered",
       "surfaceEvidence": [
         ".references/srd-5.2.1/Spells/Descriptions-M-P.md#Prayer of Healing",
-        ".references/srd-5.2.1/Rules-Glossary.md#Short Rest"
+        ".references/srd-5.2.1/Rules-Glossary.md#Short Rest",
+        ".references/srd-5.2.1/Rules-Glossary.md#Long Rest"
       ],
       "title": "Character Sheet Prayer of Healing spends the completed Spell Slot, grants caller-supplied Short Rest benefits, applies slot-scaled healing, and stores recipient Long Rest lockout state"
     },
