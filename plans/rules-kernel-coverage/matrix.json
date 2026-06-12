@@ -3377,7 +3377,7 @@
       "kind": "composition",
       "parityWitnesses": [
         {
-          "deterministicReplayRationale": "Character Battle initialization replay is a fixed projection fixture for sheet HP, Temporary Hit Points, Armor Class, conditions, Spell Slot counts and expenditures, Metamagic facts, supported Unit profile refs, max-HP rejection, and assumption-backed rejection of in-progress Stable recovery during battle init. The risk is deterministic projection across runtime boundaries, not random action interleavings.",
+          "deterministicReplayRationale": "DRP-T11 keeps Character Battle initialization as a deterministic replay. The fixture is a fixed handoff projection over existing Character Sheet and Character Build owners into battle init: character identity, current and maximum Hit Points, Temporary Hit Points, Armor Class, conditions, Spell Slot counts and expenditures, Metamagic facts, supported Unit profile refs, build-derived max-HP rejection, and assumption-backed rejection of in-progress Stable recovery during battle entry. The TS witness derives its expected state from characterSheetBattleInit, battleCreatureInitFromCharacterBuild, startBattle, and shared projection readers; it does not introduce parallel battle-entry state. This boundary happens before random battle turns or action interleavings exist, so the portability risk is deterministic cross-runtime projection of facts into the battle combatant shape, not generative battle branch ordering.",
           "kind": "deterministic-qnt-replay",
           "ownerPath": "packages/character-battle-runtime/src/character-battle-init-projection.mbt.test.ts",
           "qntSpecPath": "packages/character-battle-runtime/character-battle-init-projection.mbt.qnt",

@@ -67,7 +67,7 @@
     {
       "number": 11,
       "id": "DRP-T11-BATTLE-HANDOFF-INIT",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Audit character-battle initialization projection replay portability"
     },
     {
@@ -283,7 +283,7 @@ another MBT run. Use the timing/background protocol from `CLAUDE.md`.
 | 8 | DRP-T08-CREATION-WIZARD-SPELLBOOK | done | DRP-T01 | Selected Wizard spellbook learning replay kept as deterministic selected-identity evidence for spellbook Spell Access finalization. |
 | 9 | DRP-T09-SHEET-FEATURE-RESOURCES | done | DRP-T01 | Feature-resource transition replay kept as a deterministic closed fixture for typed resource and battle-bridge projection joins. |
 | 10 | DRP-T10-SHEET-ABILITY-CHECK-PROFICIENCY | done | DRP-T01 | Ability Check Proficiency Bonus stays a deterministic scalar projection replay with typed-fact precedence rationale in the obligation row. |
-| 11 | DRP-T11-BATTLE-HANDOFF-INIT | ready-for-research | DRP-T01 | Character Sheet to battle init projection. |
+| 11 | DRP-T11-BATTLE-HANDOFF-INIT | done | DRP-T01 | Character Sheet to battle init projection stays a deterministic handoff fixture with projection-risk rationale in the obligation row. |
 | 12 | DRP-T12-BATTLE-HANDOFF-SETTLEMENT | blocked | DRP-T11 | Settlement and identity-conflict replays share handoff assumptions. |
 | 13 | DRP-T13-HIT-POINT-DAMAGE-RUST-PARITY | ready-for-research | DRP-T01 | Align replay decision with existing Hit Point damage Rust dry-run evidence. |
 | 14 | DRP-T14-HP-REST-HIT-DICE | blocked | DRP-T13 | HP recovery dry run reuses damage/vitals shapes. |
@@ -509,7 +509,7 @@ Acceptance:
 
 ### Task 11 - DRP-T11-BATTLE-HANDOFF-INIT
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 
