@@ -24,8 +24,8 @@ The current durable planning entrypoints are:
   generator readiness tasks from drained lanes.
 - `plans/LEVEL1_2_FULL_SUPPORT_BACKLOG.md` — character levels 1–2 full-support
   closure backlog.
-- `plans/RALPH_L3_MORNING_SPELL_BOUNDARY_BATCH.md` — closed spell-boundary lane;
-  use its Task 12 consolidation note for remaining spell-level-3 pressure.
+- `plans/unit-profile-coverage/L3MSPELL_12_SPELL_BOUNDARY_CONSOLIDATION.md` —
+  spell-boundary consolidation note for remaining spell-level-3 pressure.
 
 `scripts/ralph-run.sh` still defaults to this file. Pointing it at one of the
 future lane plans is the Ralph entrypoint; this file is intentionally kept so

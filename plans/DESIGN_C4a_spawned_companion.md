@@ -30,7 +30,8 @@ Pattern-A units (inline level-parameterized stat block):
 
 ## Active Follow-Up Links
 
-- `plans/COMPANION_SESSION_ADMISSION_AND_REAPPEARANCE_PLAN.md` records the
+- `plans/COMPANION_SESSION_ADMISSION_AND_REAPPEARANCE_PLAN.md` (landed and
+  deleted 2026-06-12; in git history) records the
   deferred out-of-battle companion session/admission workflow and the generic
   reducer-discovered reappearance path for temporarily dismissed companions.
 

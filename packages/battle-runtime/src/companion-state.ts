@@ -126,8 +126,7 @@ export type BattleCompanionSnapshot =
 // CombatantId. SRD Find Familiar grants the owner a single familiar at a time, so
 // one entry per owner is the structural invariant. Widening to multiple
 // companions per owner later means widening this map's value to a small per-owner
-// collection (see plans/COMPANION_SESSION_ADMISSION_AND_REAPPEARANCE_PLAN.md),
-// not reviving a synthetic per-companion key space.
+// collection, not reviving a synthetic per-companion key space.
 export type BattleCompanions = ReadonlyMap<CombatantId, BattleCompanionState>;
 
 export type BattleCompanionEntry = {

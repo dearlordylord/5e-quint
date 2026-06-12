@@ -66,6 +66,20 @@ rather than `creature-attack.qnt`); reopen them together, do not duplicate.
 | `O2-NONTS-PARITY-LANE` | Native Rust quint-connect witness in the cleanroom | — | native Rust quint-connect (the first-class lib the TS `@firfi/quint-connect` port copies); copied `cleanroom-input/qnt/**.mbt.qnt` driver specs; cleanroom AGENTS.md verification-lane admission | A native Rust quint-connect harness driving the cleanroom engine against the copied `.mbt.qnt` specs, replacing the cleanroom's hand-transcription parity (`// Source:` + literal asserts, 0 quint executions) with executed conformance. Validates the main-repo MBT approach (the cleanroom's sole purpose) and measures QNT-as-test-suite quality, surfacing the gaps O1-class work fixes. Lowest-priority code in this group. |
 | `O1-ATTACK-SHELL-DEFIXTURE` | De-fixture BattleState/Combatant/GrappleState | overlaps `B28`, `B29` | `battle-runtime-model.qnt` (`BattleState`, `Combatant`, `GrappleState`); `battle-runtime-weapon-attacks.qnt`; bridges + TS reducers + 72 MBT drivers | Staged behaviour-preserving migration of the fixture shape (rules already factored, so this removes fixture *state*, not duplication): (1) move `fighter*` capability/turn fields onto `Combatant`; (2) generalize the `fighter`/`goblin` slots to combatant addressing; (3) collapse `resolveGoblin*` and `GrappleState`. Each step gated by the existing TS battle MBT; reviewer-loop + RAW convergence. **Status 2026-05-30:** (1)+(2) delivered and proof-validated — capability/turn fields live on `Combatant`, and `weapon-attacks.qnt` addresses combatants through the `combatantForActor`/`stateWithActorCombatant` seam (no signature/TS/MBT changes). (3) reassessed and declined as premature: the families are now cleanly addressed and their shared logic is already factored into helpers, so merging the legitimately-asymmetric PC-vs-monster attack procedures would over-parameterize, not deepen. Remaining: the `GrappleState` (`FighterGrapplesGoblin`) de-fixture is a separate cross-layer item (QNT movement + 2 MBT drivers + 32 TS files), reopen on demand. |
 
+## Parked Rows From Lanes Drained 2026-06-12
+
+The drained lane plans named below were deleted (repo precedent: per-task
+history lives in git; durable outputs live in checker-owned artifacts). Their
+only non-`done` rows are parked here.
+
+| Original task | Source lane (deleted) | Output |
+| --- | --- | --- |
+| `PDS-A09-KIT-GATE-AND-CLOSEOUT` | `RALPH_LANE_PARITY_DRIVER_SEAM` | Deferred PRD/03 gate, docs, and line-footprint closeout for the parity-driver kit. |
+| `PDS-A24-CHARACTER-PACKAGE-MBT-CLEANUP-LANE` | `RALPH_LANE_PARITY_DRIVER_SEAM` | Open the character-package MBT cleanup lane; rationale in `plans/CHARACTER_PACKAGE_WITNESS_FEASIBILITY.md` (kit stays package-local). |
+| `BRQNT-SPLIT-14-COMPATIBILITY-WRAPPER-AUDIT` | `RALPH_BATTLE_RUNTIME_QNT_SHELL_SPLIT` | Audit remaining shell-split compatibility wrappers for deletion or adoption. |
+| `L3MSPEC-12-SPECIES-FEATURE-CONSOLIDATION` | `RALPH_L3_MORNING_SPECIES_FEATURE_BATCH` | Consolidation note for the species-feature morning batch. |
+| `L3MWILD-14-MORNING-WILD-SHAPE-CONSOLIDATION` | `RALPH_L3_MORNING_WILD_SHAPE_OBJECT_BATCH` | Consolidation note for the wild-shape/object morning batch. |
+
 ## Reopen Checklist
 
 - Start from `plans/QNT_COVERAGE_PROGRAM.md` and
