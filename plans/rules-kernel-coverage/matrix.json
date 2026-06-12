@@ -2478,10 +2478,9 @@
       "kind": "profile-procedure",
       "parityWitnesses": [
         {
-          "deterministicReplayRationale": "Command replay is a closed fixture tied to the QNT Command branch helper used by battleRuntimeGroundCommand: failed-save Grovel records a pending option, Grovel applies Prone and ends the turn, Drop emits one held-object drop without owning object inventory, Halt suppresses Action/Bonus Action/Movement until end turn, Approach covers continued movement, within-5-foot turn end, and no-movement cleanup, and Flee covers full-budget movement, partial-budget rejection, no-movement cleanup, and opportunity-attack continuation.",
-          "kind": "deterministic-qnt-replay",
-          "ownerPath": "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/command-option-next-turn.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-command-option-next-turn.mbt.qnt",
           "stepAction": "step"
         }
       ],
@@ -2504,7 +2503,13 @@
         "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts"
       ],
       "status": "covered",
-      "surfaceEvidence": [],
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Spells/Descriptions-A-D.md#Command",
+        "UBIQUITOUS_LANGUAGE.md#D20 Rolls",
+        "UBIQUITOUS_LANGUAGE.md#Action Lifecycle",
+        "UBIQUITOUS_LANGUAGE.md#Turn Structure",
+        "UBIQUITOUS_LANGUAGE.md#Table Decisions"
+      ],
       "title": "Battle Command option choice applies failed-save pending effects and RAW-fixed next-turn reducer consequences while route and object facts stay table-owned"
     },
     {

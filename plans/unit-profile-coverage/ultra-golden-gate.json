@@ -94,8 +94,8 @@
               "numerator": 46
             },
             "witnessKinds": {
-              "deterministic-qnt-replay": 6,
-              "focused-mbt": 47,
+              "deterministic-qnt-replay": 5,
+              "focused-mbt": 48,
               "runtime-test": 14
             }
           },
@@ -357,8 +357,8 @@
               "numerator": 49
             },
             "witnessKinds": {
-              "deterministic-qnt-replay": 9,
-              "focused-mbt": 47,
+              "deterministic-qnt-replay": 8,
+              "focused-mbt": 48,
               "runtime-test": 14
             }
           },
@@ -623,8 +623,8 @@
               "numerator": 70
             },
             "witnessKinds": {
-              "deterministic-qnt-replay": 12,
-              "focused-mbt": 66,
+              "deterministic-qnt-replay": 11,
+              "focused-mbt": 67,
               "runtime-test": 22
             }
           },
