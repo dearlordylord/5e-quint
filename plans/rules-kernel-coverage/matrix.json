@@ -3097,8 +3097,10 @@
       "kind": "state-transition",
       "parityWitnesses": [
         {
-          "kind": "runtime-test",
-          "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+          "kind": "focused-mbt",
+          "ownerPath": "packages/character-creation-runtime/src/weapon-mastery-level-gain.mbt.test.ts",
+          "qntSpecPath": "packages/character-creation-runtime/character-creation-weapon-mastery-level-gain.mbt.qnt",
+          "stepAction": "step"
         }
       ],
       "profiles": [
@@ -3107,7 +3109,7 @@
       "qntOwners": [
         "packages/shared-algebras/proofs/rule-core/weapon-mastery-reselection.qnt"
       ],
-      "reason": "The semantic core owns opaque selected-ref count, distinctness, eligibility, preservation, and table-delta gain constraints. Focused Character Creation runtime tests cover deriving the current and next choice counts from Fighter and Barbarian Surface class-level tables, requiring typed level-gain selections, preserving existing selected refs, enforcing class feature ownership, and composing with Fighter Fighting Style replacement without adding parallel draft state.",
+      "reason": "The semantic core owns opaque selected-ref count, distinctness, eligibility, preservation, and table-delta gain constraints. The focused Character Creation MBT covers deriving the current and next choice counts from Fighter and Barbarian Surface class-level tables, accepting exact table-delta selections, rejecting over-count and duplicate selections, and preserving the pre-advancement selected refs on rejection without adding parallel draft state.",
       "runtime": "character-creation",
       "runtimeOwners": [
         "packages/character-creation-runtime/src/character-build-advancement.ts"

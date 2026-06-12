@@ -95,8 +95,8 @@
             },
             "witnessKinds": {
               "deterministic-qnt-replay": 6,
-              "focused-mbt": 45,
-              "runtime-test": 16
+              "focused-mbt": 46,
+              "runtime-test": 15
             }
           },
           "id": "mbt-parity-evidence",
@@ -358,8 +358,8 @@
             },
             "witnessKinds": {
               "deterministic-qnt-replay": 9,
-              "focused-mbt": 45,
-              "runtime-test": 16
+              "focused-mbt": 46,
+              "runtime-test": 15
             }
           },
           "id": "mbt-parity-evidence",
@@ -624,8 +624,8 @@
             },
             "witnessKinds": {
               "deterministic-qnt-replay": 12,
-              "focused-mbt": 64,
-              "runtime-test": 24
+              "focused-mbt": 65,
+              "runtime-test": 23
             }
           },
           "id": "mbt-parity-evidence",

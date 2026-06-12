@@ -635,8 +635,10 @@
       "obligationTitle": "Character Creation Fighter and Barbarian class-level gains add Weapon Mastery selected weapon refs from the class-level count table",
       "parityWitnesses": [
         {
-          "kind": "runtime-test",
-          "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+          "kind": "focused-mbt",
+          "ownerPath": "packages/character-creation-runtime/src/weapon-mastery-level-gain.mbt.test.ts",
+          "qntSpecPath": "packages/character-creation-runtime/character-creation-weapon-mastery-level-gain.mbt.qnt",
+          "stepAction": "step"
         }
       ],
       "profileId": "character-creation.weapon-mastery-level-gain",
@@ -2831,8 +2833,10 @@
       "obligationTitle": "Character Creation Fighter and Barbarian class-level gains add Weapon Mastery selected weapon refs from the class-level count table",
       "parityWitnesses": [
         {
-          "kind": "runtime-test",
-          "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+          "kind": "focused-mbt",
+          "ownerPath": "packages/character-creation-runtime/src/weapon-mastery-level-gain.mbt.test.ts",
+          "qntSpecPath": "packages/character-creation-runtime/character-creation-weapon-mastery-level-gain.mbt.qnt",
+          "stepAction": "step"
         }
       ],
       "profileId": "character-creation.weapon-mastery-level-gain",
