@@ -2,6 +2,7 @@
 // UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.scalar-buff
 
 // KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS
+// KERNEL-COVERAGE: qnt-owner BATTLE.PROTOCOL.ZERO_HIT_POINT_MID_RESOLUTION
 module battleRuntimeRestorationAndBuffs {
   import battleRuntimeSpellBridge.* from "./battle-runtime-spell-bridge"
   import battleRuntimeModel.* from "./battle-runtime-model"

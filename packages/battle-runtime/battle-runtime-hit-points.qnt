@@ -2,6 +2,7 @@
 // UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-make-stable
 
 // KERNEL-COVERAGE: qnt-owner BATTLE.DAMAGE.DEATH_SAVING_THROW_LIFECYCLE BATTLE.SPELL.MAKE_STABLE_LIFECYCLE
+// KERNEL-COVERAGE: qnt-owner BATTLE.PROTOCOL.ZERO_HIT_POINT_MID_RESOLUTION
 
 module battleRuntimeHitPoints {
   import hitPointDamage.* from "../shared-algebras/proofs/rule-core/hit-point-damage"

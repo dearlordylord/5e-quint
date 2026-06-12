@@ -1,18 +1,18 @@
 {
   "summary": {
-    "total": 119,
-    "covered": 113,
+    "total": 120,
+    "covered": 114,
     "open": 0,
     "nonSemantic": 6,
     "byRuntime": {
       "shared-algebras": 1,
-      "battle": 89,
+      "battle": 90,
       "character-creation": 14,
       "character-sheet": 12,
       "character-battle": 3
     },
     "byStatus": {
-      "covered": 113,
+      "covered": 114,
       "needs-qnt-owner": 0,
       "needs-parity-witness": 0,
       "needs-surface-evidence": 0,
@@ -4152,6 +4152,45 @@
         "UBIQUITOUS_LANGUAGE.md#Saving Throw"
       ],
       "title": "Battle protocol Concentration break teardown removes the broken Spell Effect before the next command or replacement Concentration effect proceeds"
+    },
+    {
+      "id": "BATTLE.PROTOCOL.ZERO_HIT_POINT_MID_RESOLUTION",
+      "kind": "composition",
+      "parityWitnesses": [
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/zero-hit-point-mid-resolution.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-zero-hit-point-mid-resolution.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profiles": [],
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime-hit-points.qnt",
+        "packages/battle-runtime/battle-runtime-concentration.qnt",
+        "packages/battle-runtime/battle-runtime-restoration-and-buffs.qnt"
+      ],
+      "reason": "This bounded composition witness covers the existing reducer order for same-resolution multi-target spell attack sequencing: Eldritch Blast's first beam damages the concentrating Shield of Faith source, the source succeeds on the damage-triggered Concentration Saving Throw, then dropping to 0 Hit Points applies Unconscious and clears Concentration through the Incapacitated chain. The linked Shield of Faith Armor Class Spell Effect is removed before the second beam attack is evaluated, so an attack total that would miss the shielded target's AC hits the post-teardown target and deals damage. It is fixture-world ordering evidence, not exhaustive multi-target sequencing coverage.",
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer/damage-apply.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-attack-sequence.ts",
+        "packages/battle-runtime/src/battle-reducer/creature-state.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Playing-the-Game.md#Dropping to 0 Hit Points",
+        ".references/srd-5.2.1/Playing-the-Game.md#Falling Unconscious",
+        ".references/srd-5.2.1/Rules-Glossary.md#Concentration",
+        ".references/srd-5.2.1/Rules-Glossary.md#Incapacitated",
+        ".references/srd-5.2.1/Rules-Glossary.md#Unconscious",
+        ".references/srd-5.2.1/Spells/Descriptions-S-Z.md#Shield of Faith",
+        ".references/srd-5.2.1/Spells/Descriptions-E-L.md#Eldritch Blast",
+        "UBIQUITOUS_LANGUAGE.md#Hit Points and Death",
+        "UBIQUITOUS_LANGUAGE.md#Conditions",
+        "UBIQUITOUS_LANGUAGE.md#Spellcasting"
+      ],
+      "title": "Battle protocol zero-Hit-Point mid-resolution teardown applies Unconscious, Incapacitated-driven Concentration break, dependent Spell Effect cleanup, and remaining attack sequence resolution against the post-teardown state"
     }
   ],
   "battleHoleFrontier": [
@@ -7059,6 +7098,7 @@
       "evidence": "packages/battle-runtime/battle-runtime-concentration.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
       "obligationIds": [
         "BATTLE.PROTOCOL.CONCENTRATION_BREAK_TEARDOWN",
+        "BATTLE.PROTOCOL.ZERO_HIT_POINT_MID_RESOLUTION",
         "BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS",
         "BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS",
         "BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE",
@@ -7230,6 +7270,7 @@
       "evidence": "packages/battle-runtime/battle-runtime-hit-points.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
       "obligationIds": [
         "BATTLE.DAMAGE.DEATH_SAVING_THROW_LIFECYCLE",
+        "BATTLE.PROTOCOL.ZERO_HIT_POINT_MID_RESOLUTION",
         "BATTLE.SPELL.MAKE_STABLE_LIFECYCLE"
       ],
       "ownerPath": "packages/battle-runtime/battle-runtime-hit-points.qnt",
@@ -7507,6 +7548,7 @@
     {
       "evidence": "packages/battle-runtime/battle-runtime-restoration-and-buffs.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
       "obligationIds": [
+        "BATTLE.PROTOCOL.ZERO_HIT_POINT_MID_RESOLUTION",
         "BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS",
         "BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS"
       ],
@@ -9061,6 +9103,12 @@
       "evidence": "packages/battle-runtime/battle-runtime-turn-boundary-effect-lifecycle.mbt.qnt is the focused turn-boundary effect lifecycle literal projection witness for target start-turn damage/save, target end-turn damage-and-expiry, source until-next-turn expiry, source start-turn ongoing-feature expiry, and target end-turn ongoing-feature expiry across two turn advancements. It is MBT-only parity evidence, not qnt-proof verification evidence.",
       "obligationIds": [],
       "ownerPath": "packages/battle-runtime/battle-runtime-turn-boundary-effect-lifecycle.mbt.qnt",
+      "role": "mbt-fixture"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-zero-hit-point-mid-resolution.mbt.qnt is the focused zero-Hit-Point mid-resolution literal projection witness for a multi-target spell attack sequence where the first target drops to 0 HP, becomes Unconscious, ends Concentration despite a successful damage-triggered Concentration save, tears down a linked Shield of Faith Armor Class Spell Effect, and the later beam is evaluated against the post-teardown target. It is MBT-only parity evidence, not qnt-proof verification evidence.",
+      "obligationIds": [],
+      "ownerPath": "packages/battle-runtime/battle-runtime-zero-hit-point-mid-resolution.mbt.qnt",
       "role": "mbt-fixture"
     }
   ],
@@ -13475,6 +13523,35 @@
         "packages/battle-runtime/battle-runtime-turn-advancement.qnt",
         "packages/battle-runtime/battle-runtime-weapon-hit-turn-effects.qnt",
         "packages/battle-runtime/battle-runtime-feature-turn-end-effects.qnt"
+      ],
+      "status": "generation-subset-clean"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [
+        "import",
+        "variant",
+        "record",
+        "record-update",
+        "pure-def",
+        "constant-def",
+        "int",
+        "bool",
+        "if-expression",
+        "let-binding",
+        "arithmetic",
+        "comparison",
+        "boolean-connective",
+        "all-block"
+      ],
+      "obligationId": "BATTLE.PROTOCOL.ZERO_HIT_POINT_MID_RESOLUTION",
+      "proofOnly": [
+        "packages/battle-runtime/battle-runtime-zero-hit-point-mid-resolution.mbt.qnt"
+      ],
+      "semanticCore": [
+        "packages/battle-runtime/battle-runtime-hit-points.qnt",
+        "packages/battle-runtime/battle-runtime-concentration.qnt",
+        "packages/battle-runtime/battle-runtime-restoration-and-buffs.qnt"
       ],
       "status": "generation-subset-clean"
     }

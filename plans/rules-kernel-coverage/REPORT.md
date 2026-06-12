@@ -4,14 +4,14 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 
 ## Summary
 
-- Total obligations: 119
-- Covered obligations: 113
+- Total obligations: 120
+- Covered obligations: 114
 - Open transitional obligations: 0
 - Boundary or unsupported obligations: 6
 
 | Status | Count |
 | --- | ---: |
-| covered | 113 |
+| covered | 114 |
 | needs-qnt-owner | 0 |
 | needs-parity-witness | 0 |
 | needs-surface-evidence | 0 |
@@ -21,7 +21,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | Runtime | Count |
 | --- | ---: |
 | shared-algebras | 1 |
-| battle | 89 |
+| battle | 90 |
 | character-creation | 14 |
 | character-sheet | 12 |
 | character-battle | 3 |
@@ -149,6 +149,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `BATTLE.PROTOCOL.INTERRUPT_STACK_RESUME_REPLAY` | battle | covered | _direct reducer entrypoint_ |
 | `BATTLE.COMPOSITION.TURN_BOUNDARY_EFFECT_LIFECYCLE_ORDERING` | battle | covered | _direct reducer entrypoint_ |
 | `BATTLE.PROTOCOL.CONCENTRATION_BREAK_TEARDOWN` | battle | covered | _direct reducer entrypoint_ |
+| `BATTLE.PROTOCOL.ZERO_HIT_POINT_MID_RESOLUTION` | battle | covered | _direct reducer entrypoint_ |
 
 ## Battle Hole Frontier
 
@@ -339,7 +340,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `packages/battle-runtime/battle-runtime-bardic-inspiration.qnt` | proof-only | profile-scoped: `unit-feature.bardic-inspiration-failed-d20-test` (`BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`), `unit-feature.bardic-inspiration-grant` (`BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
 | `packages/battle-runtime/battle-runtime-blur-attack-roll-defense.qnt` | semantic-core | `BATTLE.SPELL.BLUR_ATTACK_ROLL_DEFENSE_LIFECYCLE` |
 | `packages/battle-runtime/battle-runtime-command-choice.qnt` | semantic-core | `BATTLE.COMMAND.OPTION_AND_NEXT_TURN` |
-| `packages/battle-runtime/battle-runtime-concentration.qnt` | semantic-core | `BATTLE.PROTOCOL.CONCENTRATION_BREAK_TEARDOWN`, `BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS`, `BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS`, `BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE`, `BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE`, `BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER`, `BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE` |
+| `packages/battle-runtime/battle-runtime-concentration.qnt` | semantic-core | `BATTLE.PROTOCOL.CONCENTRATION_BREAK_TEARDOWN`, `BATTLE.PROTOCOL.ZERO_HIT_POINT_MID_RESOLUTION`, `BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS`, `BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS`, `BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE`, `BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE`, `BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER`, `BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE` |
 | `packages/battle-runtime/battle-runtime-creature-size-change.qnt` | semantic-core | `BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE` |
 | `packages/battle-runtime/battle-runtime-dark-ones-blessing.mbt.qnt` | mbt-fixture | profile-scoped: `unit-feature.enemy-zero-hit-point-temporary-hit-points` (`BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
 | `packages/battle-runtime/battle-runtime-disciple-of-life.mbt.qnt` | mbt-fixture | profile-scoped: `unit-feature.spell-slot-healing-modifier` (`BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
@@ -355,7 +356,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `packages/battle-runtime/battle-runtime-rogue-steady-aim.mbt.qnt` | mbt-fixture | profile-scoped: `unit-feature.rogue-steady-aim` (`BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
 | `packages/battle-runtime/battle-runtime-ground-command.qnt` | semantic-core | `BATTLE.COMMAND.OPTION_AND_NEXT_TURN`, `BATTLE.SPELL.FOG_CLOUD_OBSCUREMENT_LIFECYCLE`, `BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE`, `BATTLE.SPELL.MAGICAL_DARKNESS_POINT_ORIGIN_LIFECYCLE`, `BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE` |
 | `packages/battle-runtime/battle-runtime-gust-of-wind.qnt` | semantic-core | `BATTLE.SPELL.GUST_OF_WIND_LINE_LIFECYCLE` |
-| `packages/battle-runtime/battle-runtime-hit-points.qnt` | semantic-core | `BATTLE.DAMAGE.DEATH_SAVING_THROW_LIFECYCLE`, `BATTLE.SPELL.MAKE_STABLE_LIFECYCLE` |
+| `packages/battle-runtime/battle-runtime-hit-points.qnt` | semantic-core | `BATTLE.DAMAGE.DEATH_SAVING_THROW_LIFECYCLE`, `BATTLE.PROTOCOL.ZERO_HIT_POINT_MID_RESOLUTION`, `BATTLE.SPELL.MAKE_STABLE_LIFECYCLE` |
 | `packages/battle-runtime/battle-runtime-jump-movement.qnt` | semantic-core | `BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE` |
 | `packages/battle-runtime/battle-runtime-light.qnt` | semantic-core | `BATTLE.SPELL.DANCING_LIGHTS_EMITTER_LIFECYCLE`, `BATTLE.SPELL.DISPEL_MAGIC_ONGOING_SPELL_ENDING`, `BATTLE.SPELL.HELD_LIGHT_EMITTER_LIFECYCLE`, `BATTLE.SPELL.OBJECT_LIGHT_EMITTER_LIFECYCLE`, `BATTLE.SPELL.SPELL_CREATED_HELD_OBJECT_LIFECYCLE`, `BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS` |
 | `packages/battle-runtime/battle-runtime-levitate-creature.qnt` | semantic-core | `BATTLE.SPELL.LEVITATED_CREATURE_LIFECYCLE` |
@@ -380,7 +381,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `packages/battle-runtime/battle-runtime-remarkable-athlete-critical-movement.qnt` | proof-only | profile-scoped: `unit-feature.remarkable-athlete` (`BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
 | `packages/battle-runtime/battle-runtime-remarkable-athlete-roll-modes.qnt` | proof-only | profile-scoped: `unit-feature.remarkable-athlete` (`BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
 | `packages/battle-runtime/battle-runtime-paladin-sacred-weapon-activation.qnt` | proof-only | profile-scoped: `unit-feature.paladin-sacred-weapon` (`BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
-| `packages/battle-runtime/battle-runtime-restoration-and-buffs.qnt` | semantic-core | `BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS`, `BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS` |
+| `packages/battle-runtime/battle-runtime-restoration-and-buffs.qnt` | semantic-core | `BATTLE.PROTOCOL.ZERO_HIT_POINT_MID_RESOLUTION`, `BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS`, `BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS` |
 | `packages/battle-runtime/battle-runtime-ability-check-search.qnt` | semantic-core | `BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES` |
 | `packages/battle-runtime/battle-runtime-roll-modifier-choice.qnt` | semantic-core | `BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES`, `BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS` |
 | `packages/battle-runtime/battle-runtime-sanctuary.qnt` | semantic-core | `BATTLE.SANCTUARY.TARGETING_INTERDICTION`, `BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE` |
@@ -553,6 +554,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `packages/shared-algebras/proofs/rule-core/zero-hit-point-lifecycle.qnt` | proof-only | `BATTLE.DAMAGE.DEATH_SAVING_THROW_LIFECYCLE` |
 | `packages/battle-runtime/battle-runtime-concentration-break-teardown.mbt.qnt` | mbt-fixture | _none_ |
 | `packages/battle-runtime/battle-runtime-turn-boundary-effect-lifecycle.mbt.qnt` | mbt-fixture | _none_ |
+| `packages/battle-runtime/battle-runtime-zero-hit-point-mid-resolution.mbt.qnt` | mbt-fixture | _none_ |
 
 ## QNT Registry
 
@@ -901,6 +903,7 @@ Rows here are derived from `plans/unit-profile-coverage/profiles.jsonl` for prof
 | `BATTLE.PROTOCOL.INTERRUPT_STACK_RESUME_REPLAY` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `all-block`, `pattern-match`, `set`, `map`, `set-operators`, `membership`, `list` |  |  |
 | `BATTLE.PROTOCOL.CONCENTRATION_BREAK_TEARDOWN` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `all-block`, `pattern-match`, `set`, `filter`, `exists`, `set-operators`, `membership` |  |  |
 | `BATTLE.COMPOSITION.TURN_BOUNDARY_EFFECT_LIFECYCLE_ORDERING` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `all-block`, `pattern-match`, `set`, `filter`, `set-operators`, `membership` |  |  |
+| `BATTLE.PROTOCOL.ZERO_HIT_POINT_MID_RESOLUTION` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `all-block` |  |  |
 
 ### Generator Readiness Backlog
 
