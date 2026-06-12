@@ -4,22 +4,102 @@
 {
   "schema": "ralph-plan.v1",
   "tasks": [
-    { "number": 1, "id": "PPW-T01-QNT-REGISTRY-CLOSURE", "status": "done", "title": "Close the QNT registry: bind unbound modules, checker-enforce classification" },
-    { "number": 2, "id": "PPW-T02-ACID-ARROW-TIMING-FOCUSED-MBT", "status": "done", "title": "Add Acid Arrow attack-timing focused MBT" },
-    { "number": 3, "id": "PPW-T03-AFTER-HIT-RIDERS-FOCUSED-MBT", "status": "done", "title": "Add after-hit damage riders focused MBT (moved from QNTD-B06)" },
-    { "number": 4, "id": "PPW-T04-WEAPON-HOSTED-ATTACK-FOCUSED-MBT", "status": "ready-for-implementation", "title": "Add weapon-hosted attack and riders focused MBT (moved from QNTD-B07)" },
-    { "number": 5, "id": "PPW-T05-SUBTLE-METAMAGIC-FOCUSED-MBT", "status": "ready-for-implementation", "title": "Add Subtle Spell component-suppression focused MBT" },
-    { "number": 6, "id": "PPW-T06-HOLE-VOCABULARY-WITNESS-POLICY", "status": "ready-for-research", "title": "Decide the witness shape for the hole-family vocabulary obligation" },
-    { "number": 7, "id": "PPW-T07-WEAPON-MASTERY-ADVANCEMENT-FOCUSED-MBT", "status": "ready-for-implementation", "title": "Add Weapon Mastery class-level advancement focused MBT (creation)" },
-    { "number": 8, "id": "PPW-T08-WEAPON-MASTERY-RESELECTION-FOCUSED-MBT", "status": "blocked", "title": "Add Weapon Mastery Long Rest reselection focused MBT (sheet)" },
-    { "number": 9, "id": "PPW-T09-COMMAND-OPTION-FOCUSED-MBT", "status": "blocked", "title": "Add Command option and next-turn focused MBT (moved from QNTD-B08)" },
-    { "number": 10, "id": "PPW-T10-ABILITY-CHECK-SEARCH-FOCUSED-MBT", "status": "blocked", "title": "Add Ability Check choice and Search holes focused MBT (moved from QNTD-B09)" },
-    { "number": 11, "id": "PPW-T11-SHOVE-WITNESS-POLICY", "status": "blocked", "title": "Decide whether Shove deterministic replay needs focused MBT (moved from QNTD-B10)" },
-    { "number": 12, "id": "PPW-T12-CONCENTRATION-BREAK-SEAM", "status": "ready-for-implementation", "title": "Witness the Concentration-break teardown composition seam" },
-    { "number": 13, "id": "PPW-T13-TURN-BOUNDARY-LIFECYCLE-SEAM", "status": "ready-for-implementation", "title": "Witness the turn-boundary effect-lifecycle ordering composition seam" },
-    { "number": 14, "id": "PPW-T14-ZERO-HP-MID-RESOLUTION-SEAM", "status": "blocked", "title": "Witness the zero-Hit-Point mid-resolution composition seam" },
-    { "number": 15, "id": "PPW-T15-LANE-CLOSEOUT", "status": "blocked", "title": "Close out witness-portability artifacts and program rollup" },
-    { "number": 16, "id": "PPW-T16-RECURSIVE-NEXT-BATCH", "status": "blocked", "title": "Plan the next portable-witness batch if this lane drains" }
+    {
+      "number": 1,
+      "id": "PPW-T01-QNT-REGISTRY-CLOSURE",
+      "status": "done",
+      "title": "Close the QNT registry: bind unbound modules, checker-enforce classification"
+    },
+    {
+      "number": 2,
+      "id": "PPW-T02-ACID-ARROW-TIMING-FOCUSED-MBT",
+      "status": "done",
+      "title": "Add Acid Arrow attack-timing focused MBT"
+    },
+    {
+      "number": 3,
+      "id": "PPW-T03-AFTER-HIT-RIDERS-FOCUSED-MBT",
+      "status": "done",
+      "title": "Add after-hit damage riders focused MBT (moved from QNTD-B06)"
+    },
+    {
+      "number": 4,
+      "id": "PPW-T04-WEAPON-HOSTED-ATTACK-FOCUSED-MBT",
+      "status": "done",
+      "title": "Add weapon-hosted attack and riders focused MBT (moved from QNTD-B07)"
+    },
+    {
+      "number": 5,
+      "id": "PPW-T05-SUBTLE-METAMAGIC-FOCUSED-MBT",
+      "status": "ready-for-implementation",
+      "title": "Add Subtle Spell component-suppression focused MBT"
+    },
+    {
+      "number": 6,
+      "id": "PPW-T06-HOLE-VOCABULARY-WITNESS-POLICY",
+      "status": "ready-for-research",
+      "title": "Decide the witness shape for the hole-family vocabulary obligation"
+    },
+    {
+      "number": 7,
+      "id": "PPW-T07-WEAPON-MASTERY-ADVANCEMENT-FOCUSED-MBT",
+      "status": "ready-for-implementation",
+      "title": "Add Weapon Mastery class-level advancement focused MBT (creation)"
+    },
+    {
+      "number": 8,
+      "id": "PPW-T08-WEAPON-MASTERY-RESELECTION-FOCUSED-MBT",
+      "status": "blocked",
+      "title": "Add Weapon Mastery Long Rest reselection focused MBT (sheet)"
+    },
+    {
+      "number": 9,
+      "id": "PPW-T09-COMMAND-OPTION-FOCUSED-MBT",
+      "status": "blocked",
+      "title": "Add Command option and next-turn focused MBT (moved from QNTD-B08)"
+    },
+    {
+      "number": 10,
+      "id": "PPW-T10-ABILITY-CHECK-SEARCH-FOCUSED-MBT",
+      "status": "blocked",
+      "title": "Add Ability Check choice and Search holes focused MBT (moved from QNTD-B09)"
+    },
+    {
+      "number": 11,
+      "id": "PPW-T11-SHOVE-WITNESS-POLICY",
+      "status": "blocked",
+      "title": "Decide whether Shove deterministic replay needs focused MBT (moved from QNTD-B10)"
+    },
+    {
+      "number": 12,
+      "id": "PPW-T12-CONCENTRATION-BREAK-SEAM",
+      "status": "ready-for-implementation",
+      "title": "Witness the Concentration-break teardown composition seam"
+    },
+    {
+      "number": 13,
+      "id": "PPW-T13-TURN-BOUNDARY-LIFECYCLE-SEAM",
+      "status": "ready-for-implementation",
+      "title": "Witness the turn-boundary effect-lifecycle ordering composition seam"
+    },
+    {
+      "number": 14,
+      "id": "PPW-T14-ZERO-HP-MID-RESOLUTION-SEAM",
+      "status": "blocked",
+      "title": "Witness the zero-Hit-Point mid-resolution composition seam"
+    },
+    {
+      "number": 15,
+      "id": "PPW-T15-LANE-CLOSEOUT",
+      "status": "blocked",
+      "title": "Close out witness-portability artifacts and program rollup"
+    },
+    {
+      "number": 16,
+      "id": "PPW-T16-RECURSIVE-NEXT-BATCH",
+      "status": "blocked",
+      "title": "Plan the next portable-witness batch if this lane drains"
+    }
   ]
 }
 -->
@@ -253,7 +333,7 @@ Acceptance: focused MBT green; checker write+check green; `git diff --check`.
 
 ### Task 4 - PPW-T04-WEAPON-HOSTED-ATTACK-FOCUSED-MBT - Weapon-hosted attack and riders
 
-Status: `ready-for-implementation`
+Status: `done`
 
 Moved verbatim from `QNTD-B07-WEAPON-HOSTED-ATTACK-FOCUSED-MBT`.
 
