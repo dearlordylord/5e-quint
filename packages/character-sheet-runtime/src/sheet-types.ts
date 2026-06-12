@@ -20,6 +20,7 @@ import {
   resourceCount,
   type Condition,
   type DifficultyClass,
+  type PositiveInteger,
   type ReadonlyNonEmptyArray,
   type ResourceCount,
   type SpellSlotLevel,
@@ -35,6 +36,15 @@ import type {
   DeathSaveCount,
   DeathSaves,
 } from "@dnd/shared-algebras/death-saves-algebra";
+import {
+  RETAINED_COMPANION_PROTOCOL_TAGS,
+  retainedCompanionProtocolFacts,
+} from "@dnd/shared-algebras/companion-protocol-algebra";
+import type {
+  RetainedCompanionProtocol,
+  RetainedCompanionProtocolFacts,
+  RetainedCompanionProtocolTag,
+} from "@dnd/shared-algebras/companion-protocol-algebra";
 import type {
   FilledHoleValue,
   RuntimeHole,
@@ -44,6 +54,11 @@ import type {
   StatBlockCatalog,
   StatBlockId,
 } from "@dnd/surface/surface/stat-block-catalog";
+import type {
+  FindFamiliarCreatureTypeOverride,
+  FindFamiliarCreatureTypeOverrideChoice,
+  PactOfTheChainFindFamiliarFormSelection,
+} from "@dnd/surface/surface/find-familiar-forms";
 import {
   type ChargePoolResource,
   type DruidCircleLandChoice,
@@ -164,6 +179,113 @@ export function characterSheetId(value: string): CharacterSheetId {
   return CharacterSheetId(value);
 }
 
+export type CharacterSheetRetainedCompanionId = string &
+  Brand.Brand<"CharacterSheetRetainedCompanionId">;
+const CharacterSheetRetainedCompanionId =
+  Brand.nominal<CharacterSheetRetainedCompanionId>();
+
+export function parseCharacterSheetRetainedCompanionId(
+  value: string,
+): Either.Either<CharacterSheetRetainedCompanionId, CharacterSheetIssue> {
+  return value.length === 0
+    ? characterSheetIssue("Retained companion requires companion id.")
+    : Either.right(CharacterSheetRetainedCompanionId(value));
+}
+
+export type CharacterSheetCompanionCreatureTypeOverride =
+  FindFamiliarCreatureTypeOverride;
+
+export type CharacterSheetCompanionFormSelection =
+  PactOfTheChainFindFamiliarFormSelection;
+
+export { RETAINED_COMPANION_PROTOCOL_TAGS, retainedCompanionProtocolFacts };
+
+export type CharacterSheetRetainedCompanionProtocolTag =
+  RetainedCompanionProtocolTag;
+
+export type CharacterSheetRetainedCompanionProtocol =
+  RetainedCompanionProtocol;
+
+export type CharacterSheetRetainedCompanionProtocolFacts =
+  RetainedCompanionProtocolFacts;
+
+export type CharacterSheetRetainedCompanionCurrentHitPoints = HpType &
+  PositiveInteger;
+
+export type CharacterSheetRetainedCompanionHitPoints = {
+  readonly currentHp: CharacterSheetRetainedCompanionCurrentHitPoints;
+  readonly tempHp: HpType;
+};
+
+export type CharacterSheetRetainedCompanionResolvedFormProof = {
+  readonly selectedForm: CharacterSheetCompanionFormSelection;
+  readonly creatureTypeOverride: CharacterSheetCompanionCreatureTypeOverride;
+  readonly resolvedStatBlockId: StatBlockId;
+};
+
+export type CharacterSheetRetainedCompanionManifestation =
+  | ({
+      readonly tag: "embodiedOutsideBattle";
+    } & CharacterSheetRetainedCompanionResolvedFormProof & {
+        readonly hitPoints: CharacterSheetRetainedCompanionHitPoints;
+      })
+  | ({
+      readonly tag: "temporarilyDismissed";
+    } & CharacterSheetRetainedCompanionResolvedFormProof & {
+        readonly hitPoints: CharacterSheetRetainedCompanionHitPoints;
+      })
+  | ({
+      readonly tag: "disappearedAtZeroHitPoints";
+    } & CharacterSheetRetainedCompanionResolvedFormProof);
+
+export type CharacterSheetRetainedCompanionState = {
+  readonly companionId: CharacterSheetRetainedCompanionId;
+  readonly protocol: CharacterSheetRetainedCompanionProtocol;
+  readonly manifestation: CharacterSheetRetainedCompanionManifestation;
+};
+
+export type CharacterSheetCompanion =
+  | { readonly tag: "none" }
+  | {
+      readonly tag: "retainedOneAtATime";
+      readonly companion: CharacterSheetRetainedCompanionState;
+    };
+
+export type CharacterSheetRetainedCompanionCreationSource =
+  | {
+      readonly tag: "spellSlotSpellCast";
+      readonly spellId: UnitRecord["id"];
+      readonly spellLevel: SpellSlotLevel;
+    }
+  | {
+      readonly tag: "ritualSpell";
+      readonly spellId: UnitRecord["id"];
+    }
+  | {
+      readonly tag: "invocationSpellAccess";
+      readonly spellId: UnitRecord["id"];
+    }
+  | {
+      readonly tag: "classFeatureSpellCast";
+      readonly featureUnitId: UnitRecord["id"];
+      readonly spend:
+        | { readonly tag: "spellSlot"; readonly spellLevel: SpellSlotLevel }
+        | {
+            readonly tag: "useCountResource";
+            readonly resourceUnitId: UnitRecord["id"];
+          };
+    };
+
+export type CharacterSheetRetainedCompanionCreationInput = {
+  readonly sheet: CharacterSheet;
+  readonly unitLibrary: UnitCatalog;
+  readonly statBlockCatalog: StatBlockCatalog;
+  readonly companionId: CharacterSheetRetainedCompanionId;
+  readonly source: CharacterSheetRetainedCompanionCreationSource;
+  readonly selectedForm: CharacterSheetCompanionFormSelection;
+  readonly creatureTypeOverrideChoiceId?: FindFamiliarCreatureTypeOverrideChoice["optionId"];
+};
+
 export type SpellcastingCharacterBuild = CharacterBuild & {
   readonly spellcasting: NonNullable<CharacterBuild["spellcasting"]>;
 };
@@ -190,6 +312,7 @@ export type CharacterSheet =
       readonly spentHitDice: readonly CharacterSheetSpentHitDiePool[];
       readonly restFeatureUses: readonly CharacterSheetRestFeatureUse[];
       readonly resourceExpenditures: readonly CharacterSheetResourceExpenditure[];
+      readonly companion: CharacterSheetCompanion;
       readonly bookOfShadowsPresence:
         | CharacterSheetBookOfShadowsPresence
         | undefined;
@@ -210,6 +333,7 @@ export type CharacterSheet =
       readonly spentHitDice: readonly CharacterSheetSpentHitDiePool[];
       readonly restFeatureUses: readonly CharacterSheetRestFeatureUse[];
       readonly resourceExpenditures: readonly CharacterSheetResourceExpenditure[];
+      readonly companion: CharacterSheetCompanion;
       readonly bookOfShadowsPresence?: never;
       readonly druidWildShapeKnownForms?: CharacterSheetDruidWildShapeKnownForms;
       readonly druidCircleLand?: CharacterSheetDruidCircleLand;
@@ -617,6 +741,7 @@ export type CharacterSheetInput = {
   readonly bookOfShadowsPresence?: CharacterSheetBookOfShadowsPresence;
   readonly restFeatureUses?: readonly CharacterSheetRestFeatureUse[];
   readonly resourceExpenditures?: readonly CharacterSheetResourceExpenditure[];
+  readonly companion?: CharacterSheetCompanion;
   readonly druidWildShapeKnownFormStatBlockIds?: readonly StatBlockId[];
   readonly druidCircleLand?: CharacterSheetDruidCircleLand;
   readonly statBlockCatalog?: StatBlockCatalog;

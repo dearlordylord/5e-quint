@@ -34,7 +34,7 @@ import {
   numberFromQuintInt,
   quintRecordField,
   quintStateRecord,
-  quintVariantTag,
+  quintVariantMappedValue,
   run,
   stateCheck,
 } from "./battle-runtime-mbt-driver-kit.ts";
@@ -1010,10 +1010,10 @@ function invalidKind(raw: unknown): InvalidKind {
 }
 
 function lastResult(raw: unknown): LastResult {
-  const tag = quintVariantTag(raw, "qScenarioOutcome");
-  const result = LAST_RESULT_BY_SCENARIO_OUTCOME_TAG[tag];
-  if (result !== undefined) {
-    return result;
-  }
-  throw new Error(`Unknown Quickened Spell result tag: ${tag}.`);
+  return quintVariantMappedValue(
+    raw,
+    "qScenarioOutcome",
+    LAST_RESULT_BY_SCENARIO_OUTCOME_TAG,
+    "Quickened Spell result",
+  );
 }

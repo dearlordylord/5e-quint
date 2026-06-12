@@ -1,5 +1,5 @@
 import type { BattleState } from "@dnd/battle-runtime";
-import { applyBattleHandoffToCharacterSheet } from "@dnd/character-battle-runtime";
+import { settleCharacterSheetFromBattle } from "@dnd/character-battle-runtime";
 import { Either } from "effect";
 
 import type { McpCompositionRoot } from "./composition-root.ts";
@@ -28,20 +28,21 @@ export function finalizeCharacterSessionsFromBattle(
         characterId,
       });
     }
-    const availableSession = applyBattleHandoffToCharacterSheet({
+    const settledSession = settleCharacterSheetFromBattle({
       combatant,
+      state,
       sheet: session.sheet,
       unitLibrary: root.unitLibrary,
       statBlockCatalog: root.statBlockCatalog,
     });
-    if (Either.isLeft(availableSession)) {
+    if (Either.isLeft(settledSession)) {
       return errorContent("Battle character session handoff failed.", {
         code: "CHARACTER_SESSION_HANDOFF_INVALID",
         characterId,
-        message: availableSession.left.message,
+        message: settledSession.left.message,
       });
     }
-    root.sessionStore.characters.set(availableSession.right);
+    root.sessionStore.characters.set(settledSession.right);
   }
 
   return null;

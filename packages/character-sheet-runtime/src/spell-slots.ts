@@ -415,12 +415,54 @@ export function characterBuildPactSlotCapacity(
   return build.spellcasting?.slotPools.pactMagic;
 }
 
+export function spendCharacterSheetSpellSlot(input: {
+  readonly sheet: CharacterSheet;
+  readonly spellLevel: SpellSlotLevel;
+  readonly spellSlotSource:
+    | CharacterSheetFontOfMagicSpellSlotSource
+    | undefined;
+}): Either.Either<CharacterSheet, CharacterSheetIssue> {
+  if (!isCharacterSheetWithSpellSlots(input.sheet)) {
+    return characterSheetIssue(
+      "Spell Slot spend requires ordinary Spell Slot state.",
+    );
+  }
+  const spellSlotSpend = spellSlotSpendSourceState({
+    sheet: input.sheet,
+    spellLevel: input.spellLevel,
+    spellSlotSource: input.spellSlotSource,
+    issueContext: "Spell Slot spend",
+  });
+  return Either.isLeft(spellSlotSpend)
+    ? Either.left(spellSlotSpend.left)
+    : Either.right({
+        ...input.sheet,
+        spellSlotExpenditures:
+          spellSlotSpend.right.ordinarySpellSlotExpenditures,
+        createdSpellSlots: spellSlotSpend.right.createdSpellSlots,
+      });
+}
+
 function fontOfMagicSpellSlotSpendForSorceryPoints(input: {
   readonly sheet: CharacterSheetWithSpellSlots;
   readonly spellLevel: SpellSlotLevel;
   readonly spellSlotSource:
     | CharacterSheetFontOfMagicSpellSlotSource
     | undefined;
+}): Either.Either<CharacterSheetSpellSlotSourceState, CharacterSheetIssue> {
+  return spellSlotSpendSourceState({
+    ...input,
+    issueContext: "Font of Magic conversion",
+  });
+}
+
+function spellSlotSpendSourceState(input: {
+  readonly sheet: CharacterSheetWithSpellSlots;
+  readonly spellLevel: SpellSlotLevel;
+  readonly spellSlotSource:
+    | CharacterSheetFontOfMagicSpellSlotSource
+    | undefined;
+  readonly issueContext: string;
 }): Either.Either<CharacterSheetSpellSlotSourceState, CharacterSheetIssue> {
   const ordinarySlot = ordinarySpellSlotStates(input.sheet).find(
     (slot) => slot.spellLevel === input.spellLevel,
@@ -438,6 +480,7 @@ function fontOfMagicSpellSlotSpendForSorceryPoints(input: {
     ordinaryAvailable,
     createdSlot,
     createdAvailable,
+    issueContext: input.issueContext,
   });
   if (Either.isLeft(source)) return Either.left(source.left);
 
@@ -469,6 +512,7 @@ function fontOfMagicSpellSlotSourceForSorceryPointConversion(input: {
   readonly ordinaryAvailable: number;
   readonly createdSlot: CharacterSheetCreatedSpellSlotState | undefined;
   readonly createdAvailable: number;
+  readonly issueContext: string;
 }): Either.Either<
   CharacterSheetFontOfMagicSpellSlotSource,
   CharacterSheetIssue
@@ -477,35 +521,35 @@ function fontOfMagicSpellSlotSourceForSorceryPointConversion(input: {
     return input.ordinaryAvailable > 0
       ? Either.right("ordinary")
       : characterSheetIssue(
-          "Font of Magic conversion requires an unexpended ordinary Spell Slot.",
+          `${input.issueContext} requires an unexpended ordinary Spell Slot.`,
         );
   }
   if (input.spellSlotSource === "created") {
     return input.createdAvailable > 0
       ? Either.right("created")
       : characterSheetIssue(
-          "Font of Magic conversion requires an unexpended created Spell Slot.",
+          `${input.issueContext} requires an unexpended created Spell Slot.`,
         );
   }
   if (input.ordinaryAvailable > 0 && input.createdAvailable > 0) {
     return characterSheetIssue(
-      "Font of Magic conversion requires a Spell Slot source when ordinary and created Spell Slots are both available.",
+      `${input.issueContext} requires a Spell Slot source when ordinary and created Spell Slots are both available.`,
     );
   }
   if (input.ordinaryAvailable > 0) return Either.right("ordinary");
   if (input.createdAvailable > 0) return Either.right("created");
   if (input.ordinarySlot !== undefined && input.createdSlot === undefined) {
     return characterSheetIssue(
-      "Font of Magic conversion requires an unexpended ordinary Spell Slot.",
+      `${input.issueContext} requires an unexpended ordinary Spell Slot.`,
     );
   }
   if (input.createdSlot !== undefined && input.ordinarySlot === undefined) {
     return characterSheetIssue(
-      "Font of Magic conversion requires an unexpended created Spell Slot.",
+      `${input.issueContext} requires an unexpended created Spell Slot.`,
     );
   }
   return characterSheetIssue(
-    "Font of Magic conversion requires an unexpended Spell Slot.",
+    `${input.issueContext} requires an unexpended Spell Slot.`,
   );
 }
 

@@ -644,7 +644,7 @@
       "parityWitnesses": [
         {
           "kind": "runtime-test",
-          "ownerPath": "packages/character-sheet-runtime/src/index.test.ts"
+          "ownerPath": "packages/character-sheet-runtime/src/rests.test.ts"
         }
       ],
       "profileId": "character-sheet.weapon-mastery-class-level-reselection",
@@ -2746,7 +2746,7 @@
       "parityWitnesses": [
         {
           "kind": "runtime-test",
-          "ownerPath": "packages/character-sheet-runtime/src/index.test.ts"
+          "ownerPath": "packages/character-sheet-runtime/src/rests.test.ts"
         }
       ],
       "profileId": "character-sheet.weapon-mastery-class-level-reselection",

@@ -1,5 +1,8 @@
 import type { CharacterId } from "@dnd/battle-runtime";
-import { characterSheetHitPointMaximum } from "@dnd/character-sheet-runtime";
+import {
+  characterSheetCompanion,
+  characterSheetHitPointMaximum,
+} from "@dnd/character-sheet-runtime";
 import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
 import { Either } from "effect";
 
@@ -42,6 +45,7 @@ function characterListRow(
         state: session.hitPoints,
       },
       ...(spellSlots === undefined ? {} : { spellSlots }),
+      companion: characterSheetCompanion(session),
     });
   }
 
@@ -51,5 +55,6 @@ function characterListRow(
     displayName: null,
     build: session.sheet.build,
     battleId: session.battleId,
+    companion: characterSheetCompanion(session.sheet),
   });
 }

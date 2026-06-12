@@ -17,10 +17,11 @@ The aggregate rule is conjunctive: every scope must pass every layer. The checke
 
 ## Witness Kind Vocabulary
 
-The metric distinguishes reducer parity witnesses from MCP scenario evidence by checked witness kind. Rules-kernel parity rows may use `focused-mbt`, `deterministic-qnt-replay`, or `runtime-test`; MCP scenario rows must use `mcp-scenario`.
+The metric distinguishes reducer parity witnesses from MCP scenario evidence by checked witness kind. Rules-kernel parity rows may use `focused-mbt`, `deterministic-qnt-replay`, `runtime-test`, or `contract-test`; MCP scenario rows must use `mcp-scenario`.
 
 | Witness kind | Meaning |
 | --- | --- |
+| contract-test | Focused contract test evidence for checked registry joins, protocol vocabulary mappings, or boundary inventories where the executable obligation is the join itself rather than a reducer trace. |
 | deterministic-qnt-replay | Closed-case QNT replay evidence for fixed projections, scalar checks, or tiny named fixtures; not random MBT coverage. |
 | focused-mbt | Random-trace QNT/MBT parity evidence for reducer sequencing, holes, resources, active effects, reactions, or interleavings. |
 | mcp-scenario | Package-local MCP acceptance scenario evidence for user-facing tool and workflow flows. |

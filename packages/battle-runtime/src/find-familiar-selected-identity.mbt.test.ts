@@ -6,6 +6,10 @@ import {
   abilityModifier,
   proficiencyBonus,
 } from "@dnd/shared/types";
+import {
+  findFamiliarFormEligibilityForSpell,
+  type FindFamiliarFormEligibility,
+} from "@dnd/surface/surface/find-familiar-forms";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import * as Either from "effect/Either";
 
@@ -31,13 +35,11 @@ import {
   deliverTouchSpellThroughFindFamiliar,
   discoverBattleActs,
   findFamiliarCompanionForOwner,
-  findFamiliarFormEligibilityForSpell,
   initiativeScore,
   reappearTemporarilyDismissedFindFamiliar,
   startBattle,
   temporarilyDismissFindFamiliar,
   type BattleState,
-  type FindFamiliarFormEligibility,
   type BattleCompanionState,
 } from "./index.ts";
 
@@ -208,7 +210,6 @@ function dismissAndReappearFindFamiliarProjection(): FindFamiliarSelectedIdentit
     state: withFreshMagicAction(dismissed.state),
     casterId,
     catalog: statBlockCatalog,
-    familiarId,
     initiative: initiativeScore(14),
     placement: { kind: "unoccupiedSpaceWithin30Feet" },
   });
@@ -414,7 +415,7 @@ function projectBattleCompanionState(
   return {
     familiarStatus: familiar?.status ?? "none",
     formId:
-      familiar === null
+      familiar === null || familiar.status === "dismissedForever"
         ? "none"
         : formSelectionProjection(familiar.formSelection),
     familiarCombatantPresent: state.combatants.has(familiarId),
@@ -434,7 +435,10 @@ function projectBattleCompanionState(
 }
 
 function formSelectionProjection(
-  selection: BattleCompanionState["formSelection"],
+  selection: Exclude<
+    BattleCompanionState,
+    { readonly status: "dismissedForever" }
+  >["formSelection"],
 ): string {
   if (selection.tag === "challengeRatingZeroBeast")
     return selection.statBlockId;

@@ -22,6 +22,7 @@ const expectedTools = [
   "list_stat_blocks",
   "list_catalog_units",
   "create_character_draft",
+  "apply_character_session_operation",
   "discover_creation_holes",
   "fill_creation_holes",
   "finalize_character",

@@ -44,7 +44,7 @@ import {
   numberFromQuintInt,
   quintRecordField,
   quintStateRecord,
-  quintVariantTag,
+  quintVariantMappedValue,
   run,
   stateCheck,
 } from "./battle-runtime-mbt-driver-kit.ts";
@@ -1054,10 +1054,10 @@ function reactionCastingTimeContinuationKind(
 function reactionCastingTimeLastResult(
   raw: unknown,
 ): ReactionCastingTimeLastResult {
-  const tag = quintVariantTag(raw, "qScenarioOutcome");
-  const result = REACTION_CASTING_TIME_LAST_RESULT_BY_SCENARIO_OUTCOME_TAG[tag];
-  if (result !== undefined) {
-    return result;
-  }
-  throw new Error(`Unexpected Reaction casting time result tag ${tag}.`);
+  return quintVariantMappedValue(
+    raw,
+    "qScenarioOutcome",
+    REACTION_CASTING_TIME_LAST_RESULT_BY_SCENARIO_OUTCOME_TAG,
+    "Reaction casting time result",
+  );
 }

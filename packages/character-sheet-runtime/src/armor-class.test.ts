@@ -1,6 +1,6 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.armor-class-base-formula
-// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV91B barbarian_unarmored_defense monk_unarmored_defense paladin_lay_on_hands wizard_arcane_recovery wizard_ritual_adept
-// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L13UG-A15 barbarian_primal_knowledge rogue_second_story_work sorcerer_draconic_resilience
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV91B barbarian_unarmored_defense monk_unarmored_defense
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L13UG-A15 sorcerer_draconic_resilience
 import { describe, expect, test } from "vitest";
 import {
   Either,

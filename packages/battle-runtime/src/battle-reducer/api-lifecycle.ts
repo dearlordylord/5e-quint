@@ -21,6 +21,7 @@ import * as Option from "effect/Option";
 import type { BattleCreatureInit } from "../battle-init.ts";
 
 import { BattleId, CombatantId } from "../identity.ts";
+import type { BattleCompanionState } from "../companion-state.ts";
 import { battleCompanionEntries } from "../find-familiar-state.ts";
 
 import {
@@ -520,9 +521,9 @@ function combatantIdsWithPresentFindFamiliarDependents(
   combatantIds: readonly CombatantId[],
 ): ReadonlySet<CombatantId> {
   const removeIds = new Set(combatantIds);
-  for (const { companionId, companion } of battleCompanionEntries(state)) {
+  for (const { companion } of battleCompanionEntries(state)) {
     if (companion.status === "present" && removeIds.has(companion.ownerId)) {
-      removeIds.add(companionId);
+      removeIds.add(companion.combatantId);
     }
   }
   return removeIds;
@@ -532,12 +533,19 @@ function companionsAfterCombatantRemoval(
   state: BattleState,
   removeIds: ReadonlySet<CombatantId>,
 ): BattleState["companions"] {
-  return new Map(
-    battleCompanionEntries(state)
-      .filter(
-        ({ companionId, companion }) =>
-          !removeIds.has(companion.ownerId) && !removeIds.has(companionId),
-      )
-      .map(({ companionId, companion }) => [companionId, companion]),
-  );
+  const retainedEntries: Array<readonly [CombatantId, BattleCompanionState]> =
+    [];
+  for (const { ownerId, companion } of battleCompanionEntries(state)) {
+    if (removeIds.has(companion.ownerId)) {
+      continue;
+    }
+    if (
+      companion.status === "present" &&
+      removeIds.has(companion.combatantId)
+    ) {
+      continue;
+    }
+    retainedEntries.push([ownerId, companion]);
+  }
+  return new Map(retainedEntries);
 }

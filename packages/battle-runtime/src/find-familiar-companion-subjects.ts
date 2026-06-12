@@ -64,30 +64,26 @@ export function companionHeldObjectFactsHole(input: {
 
 export function companionReappearancePlacementHole(input: {
   readonly ownerId: CombatantId;
-  readonly companionId: CombatantId;
 }): BattleCompanionReappearancePlacementHole {
-  const key = `battle:companion:reappearance-placement:${input.ownerId}:${input.companionId}`;
+  const key = `battle:companion:reappearance-placement:${input.ownerId}`;
   return {
     holeInstanceKey: holeInstanceKey(key),
     holeId: holeId(key),
     kind: "companionReappearancePlacement",
     label: "Companion reappearance space",
     ownerId: input.ownerId,
-    companionId: input.companionId,
   };
 }
 
 export function companionReappearanceInitiativeHole(input: {
   readonly ownerId: CombatantId;
-  readonly companionId: CombatantId;
 }): BattleCompanionReappearanceInitiativeHole {
-  const key = `battle:companion:reappearance-initiative:${input.ownerId}:${input.companionId}`;
+  const key = `battle:companion:reappearance-initiative:${input.ownerId}`;
   return {
     holeInstanceKey: holeInstanceKey(key),
     holeId: holeId(key),
     kind: "companionReappearanceInitiative",
     label: "Companion reappearance Initiative",
     ownerId: input.ownerId,
-    companionId: input.companionId,
   };
 }

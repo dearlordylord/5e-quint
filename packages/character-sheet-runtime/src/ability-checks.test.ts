@@ -3,6 +3,7 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.jump-distance-ability-substitution
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.linked-speed-grant-projection
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-CLASS-BARD-JACK-OF-ALL-TRADES bard_jack_of_all_trades
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L13UG-A15 barbarian_primal_knowledge rogue_second_story_work
 import { describe, expect, test } from "vitest";
 import {
   CHARACTER_SHEET_NO_OTHER_PROFICIENCY_BONUS,

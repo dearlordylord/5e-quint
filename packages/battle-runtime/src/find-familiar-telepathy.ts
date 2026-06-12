@@ -54,7 +54,7 @@ export function findFamiliarTelepathicConnection(
   const familiarEntry = findFamiliarCompanionEntryForOwner(state, fact.ownerId);
   if (
     familiarEntry?.companion.status !== "present" ||
-    familiarEntry.companionId !== fact.familiarId
+    familiarEntry.companion.combatantId !== fact.familiarId
   ) {
     return null;
   }

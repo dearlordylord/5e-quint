@@ -1180,10 +1180,7 @@ function resolveCompanionLifecycleSubject(
     input.state,
     input.subject.actorId,
   );
-  if (
-    familiarEntry === null ||
-    familiarEntry.companionId !== input.subject.companionId
-  ) {
+  if (familiarEntry === null) {
     return invalidResult(
       input.state,
       "staleSubject",
@@ -1235,7 +1232,6 @@ function resolveCompanionLifecycleSubject(
       state: input.state,
       casterId: input.subject.actorId,
       catalog: input.statBlockCatalog,
-      familiarId: input.subject.companionId,
       initiative: initiative.initiative,
       placement: placement.placement,
     });
@@ -1271,7 +1267,6 @@ function companionReappearancePlacement(
     > {
   const expectedHole = companionReappearancePlacementHole({
     ownerId: input.subject.actorId,
-    companionId: input.subject.companionId,
   });
   const fill = input.fills.find(
     (
@@ -1314,7 +1309,6 @@ function companionReappearanceInitiative(
     > {
   const expectedHole = companionReappearanceInitiativeHole({
     ownerId: input.subject.actorId,
-    companionId: input.subject.companionId,
   });
   const fill = input.fills.find(
     (
@@ -1405,9 +1399,19 @@ function companionHeldObjectIdsForDismissal(
       readonly objectIds: readonly BattleDroppedObjectOutcome["objectId"][];
     }
   | Extract<BattleResolutionResult, { readonly tag: "invalid" }> {
-  const expectedHole = companionHeldObjectFactsHole({
-    companionId: input.subject.companionId,
-  });
+  const companionEntry = findFamiliarCompanionEntryForOwner(
+    input.state,
+    input.subject.actorId,
+  );
+  if (companionEntry?.companion.status !== "present") {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Familiar dismissal held-object facts require a present familiar.",
+    );
+  }
+  const companionId = companionEntry.companion.combatantId;
+  const expectedHole = companionHeldObjectFactsHole({ companionId });
   const fill = input.fills.find(
     (
       candidate,
@@ -4617,26 +4621,33 @@ export function snapshotBattle(state: BattleState): BattleSnapshot {
       const combatant = state.combatants.get(id);
       return combatant == null ? [] : [combatantSnapshot(state, combatant)];
     }),
-    companions: battleCompanionEntries(state).map((entry) => {
-      if (entry.companion.status !== "present") {
-        return {
-          ...entry.companion,
-          companionId: entry.companionId,
-        };
-      }
-      return {
-        ...entry.companion,
-        companionId: entry.companionId,
-        resolvedStatBlockId: requirePresentFamiliarCombatantStatBlockId(
-          state,
-          entry.companionId,
-        ),
-        initiative: requirePresentFamiliarCombatantInitiative(
-          state,
-          entry.companionId,
-        ),
-      };
-    }),
+    companions: battleCompanionEntries(state).flatMap(
+      (entry): readonly BattleCompanionSnapshot[] => {
+        if (entry.companion.status === "dismissedForever") {
+          // The dismissedForever tombstone exists only for settlement; it is not
+          // a live companion, so it is not part of the read-model snapshot.
+          return [];
+        }
+        if (entry.companion.status !== "present") {
+          return [entry.companion];
+        }
+        const { combatantId, ...snapshotCompanion } = entry.companion;
+        return [
+          {
+            ...snapshotCompanion,
+            companionId: combatantId,
+            resolvedStatBlockId: requirePresentFamiliarCombatantStatBlockId(
+              state,
+              combatantId,
+            ),
+            initiative: requirePresentFamiliarCombatantInitiative(
+              state,
+              combatantId,
+            ),
+          },
+        ];
+      },
+    ),
     lightEmitters: battleLightEmitters(state),
     obscurementZones: battleObscurementZones(state),
     acts: discoverBattleActs(state),

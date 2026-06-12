@@ -1,4 +1,5 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.spellbook-ritual-invocation
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV91B wizard_ritual_adept
 import { describe, expect, test } from "vitest";
 import {
   characterSheetSpellInvocation,

@@ -12,7 +12,7 @@ import {
   mbtTraceCount,
   numberFromQuintInt,
   quintStateRecord,
-  quintVariantTag,
+  quintVariantMappedValue,
   run,
   stateCheck,
 } from "./battle-runtime-mbt-driver-kit.ts";
@@ -535,10 +535,10 @@ function spikeGrowthHole(raw: unknown): SpikeGrowthHole {
 }
 
 function spikeGrowthLastResult(raw: unknown): SpikeGrowthLastResult {
-  const tag = quintVariantTag(raw, "qScenarioOutcome");
-  const result = SPIKE_GROWTH_LAST_RESULT_BY_SCENARIO_OUTCOME_TAG[tag];
-  if (result !== undefined) {
-    return result;
-  }
-  throw new Error(`Unknown Spike Growth result tag: ${tag}.`);
+  return quintVariantMappedValue(
+    raw,
+    "qScenarioOutcome",
+    SPIKE_GROWTH_LAST_RESULT_BY_SCENARIO_OUTCOME_TAG,
+    "Spike Growth result",
+  );
 }

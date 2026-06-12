@@ -11,8 +11,10 @@ export {
   CHARACTER_SHEET_SHORT_REST_TICKS,
   characterSheetIssue,
   characterSheetId,
+  parseCharacterSheetRetainedCompanionId,
   isCharacterSheetPointPoolResourceUnitId,
   isCharacterSheetUseCountResourceUnitId,
+  retainedCompanionProtocolFacts,
 } from "./sheet-types.ts";
 export {
   characterSheetAbilityCheckAbility,
@@ -30,6 +32,11 @@ export {
   characterSheetDruidCircleLandPreparedSpellAccess,
   characterSheetDruidWildShapeKnownForms,
 } from "./druid-features.ts";
+export {
+  characterSheetCompanion,
+  createRetainedFamiliarLikeCompanion,
+  replaceCharacterSheetCompanion,
+} from "./companions.ts";
 export {
   applyCharacterSheetSpellRestBenefit,
   applyLayOnHands,
@@ -90,6 +97,9 @@ export type {
   CharacterSheetBookOfShadowsPresence,
   CharacterSheetBookOfShadowsRitualInvocation,
   CharacterSheetClassFeaturePreparedSpellAccess,
+  CharacterSheetCompanion,
+  CharacterSheetCompanionCreatureTypeOverride,
+  CharacterSheetCompanionFormSelection,
   CharacterSheetCondition,
   CharacterSheetCreatedSpellSlotState,
   CharacterSheetDeadDeathSaves,
@@ -132,6 +142,17 @@ export type {
   CharacterSheetPendingDeathSaves,
   CharacterSheetPointPoolResourceUnitId,
   CharacterSheetPositiveHpUnconscious,
+  CharacterSheetRetainedCompanionCreationInput,
+  CharacterSheetRetainedCompanionCreationSource,
+  CharacterSheetRetainedCompanionCurrentHitPoints,
+  CharacterSheetRetainedCompanionHitPoints,
+  CharacterSheetRetainedCompanionId,
+  CharacterSheetRetainedCompanionManifestation,
+  CharacterSheetRetainedCompanionProtocol,
+  CharacterSheetRetainedCompanionProtocolFacts,
+  CharacterSheetRetainedCompanionProtocolTag,
+  CharacterSheetRetainedCompanionResolvedFormProof,
+  CharacterSheetRetainedCompanionState,
   CharacterSheetResourceExpenditure,
   CharacterSheetResourceState,
   CharacterSheetRestActivityInterruption,

@@ -9,6 +9,7 @@ import {
   KNOCKED_OUT_UNCONSCIOUS,
   parseSupportedUnitFeatureProfile,
   type BattleCreatureState,
+  type BattleState,
   type CharacterZeroHpLifecycleInit,
 } from "@dnd/battle-runtime";
 import { characterBuildDruidWildShapeFacts } from "@dnd/character-creation-runtime";
@@ -27,7 +28,6 @@ import {
   replaceCharacterSheetSpellSlotSourceState,
   type CharacterSheet,
   type CharacterSheetBookOfShadowsPresence,
-  type CharacterSheetIssue,
   type CharacterSheetPositiveHpUnconscious,
   type CharacterSheetPointPoolResourceUnitId,
   type CharacterSheetResourceExpenditure,
@@ -61,6 +61,11 @@ import {
   battleCreatureInitIssue,
   type BattleCreatureInitIssue,
 } from "./battle-character-build-projection.ts";
+import {
+  characterSheetBattleHandoffIssue,
+  type CharacterSheetBattleHandoffIssue,
+} from "./battle-handoff-issue.ts";
+import { settleCompanionFromBattle } from "./companion-handoff.ts";
 
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.class-feature-use-count-resource
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.monk-uncanny-metabolism-initiative-recovery
@@ -92,6 +97,11 @@ export {
   characterUnitRefsWithBattleSupportProfiles,
   type BattleSupportProfileIssue,
 } from "./battle-support-profiles.ts";
+export type { CharacterSheetBattleHandoffIssue } from "./battle-handoff-issue.ts";
+export {
+  admitCharacterSheetCompanionToBattle,
+  type CharacterSheetCompanionBattleAdmissionInput,
+} from "./companion-handoff.ts";
 
 export type CharacterSheetBattleInitInput = Omit<
   CharacterBuildCreatureInput,
@@ -112,13 +122,6 @@ export type CharacterSheetBattleInitInput = Omit<
   readonly unitLibrary: UnitCatalog;
   readonly statBlockCatalog: StatBlockCatalog;
 };
-
-export type CharacterSheetBattleHandoffIssue =
-  | {
-      readonly tag: "characterSheetBattleHandoffIssue";
-      readonly message: string;
-    }
-  | CharacterSheetIssue;
 
 export function characterSheetBattleInit(input: CharacterSheetBattleInitInput) {
   const { sheet, unitLibrary, statBlockCatalog, ...battleInput } = input;
@@ -149,7 +152,23 @@ export function characterSheetBattleInit(input: CharacterSheetBattleInitInput) {
   });
 }
 
-export function applyBattleHandoffToCharacterSheet(input: {
+export function settleCharacterSheetFromBattle(input: {
+  readonly sheet: CharacterSheet;
+  readonly state: BattleState;
+  readonly combatant: BattleCreatureState;
+  readonly unitLibrary: UnitCatalog;
+  readonly statBlockCatalog?: StatBlockCatalog;
+}): Either.Either<CharacterSheet, CharacterSheetBattleHandoffIssue> {
+  const settledCharacter = settleBattleCombatantIntoCharacterSheet(input);
+  if (Either.isLeft(settledCharacter)) return settledCharacter;
+  return settleCompanionFromBattle({
+    sheet: settledCharacter.right,
+    state: input.state,
+    ownerCombatantId: input.combatant.combatantId,
+  });
+}
+
+function settleBattleCombatantIntoCharacterSheet(input: {
   readonly sheet: CharacterSheet;
   readonly combatant: BattleCreatureState;
   readonly unitLibrary: UnitCatalog;
@@ -238,6 +257,7 @@ export function applyBattleHandoffToCharacterSheet(input: {
     spentHitDice: input.sheet.spentHitDice,
     restFeatureUses: input.sheet.restFeatureUses,
     resourceExpenditures: resourceExpenditures.right,
+    companion: input.sheet.companion,
     ...(input.statBlockCatalog === undefined
       ? {}
       : { statBlockCatalog: input.statBlockCatalog }),
@@ -845,15 +865,6 @@ function characterZeroHpLifecycleFromBattle(input: {
     });
   }
   return Either.right({ tag: "unstable", deathSaves: lifecycle.deathSaves });
-}
-
-function characterSheetBattleHandoffIssue(
-  message: string,
-): Either.Either<never, CharacterSheetBattleHandoffIssue> {
-  return Either.left({
-    tag: "characterSheetBattleHandoffIssue",
-    message,
-  });
 }
 
 function unsupportedStableRecoveryBattleBoundary(

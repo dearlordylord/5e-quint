@@ -11,6 +11,7 @@ import {
   spendCharacterPointPoolResource,
   startBattle,
   type BattleCreatureState,
+  type BattleState,
 } from "@dnd/battle-runtime";
 import {
   abilityScoreAssignment,
@@ -61,8 +62,8 @@ import { Either } from "effect";
 import { describe, expect, it } from "vitest";
 
 import {
-  applyBattleHandoffToCharacterSheet,
   characterSheetBattleInit,
+  settleCharacterSheetFromBattle,
 } from "./index.ts";
 
 const featureResourceScenarios = [
@@ -817,8 +818,9 @@ function metamagicBridgeUsesSharedPointPoolProjection(): FeatureResourceProjecti
     },
   };
   const handoff = requireRight(
-    applyBattleHandoffToCharacterSheet({
+    settleCharacterSheetFromBattle({
       sheet,
+      state: battleStateWithCombatant(battle, spentSorcerer),
       unitLibrary,
       combatant: spentSorcerer,
     }),
@@ -843,6 +845,16 @@ function metamagicBridgeUsesSharedPointPoolProjection(): FeatureResourceProjecti
     metamagicSharedResourceExpended: expended,
     replayIndex: 14,
   });
+}
+
+function battleStateWithCombatant(
+  state: BattleState,
+  combatant: BattleCreatureState,
+): BattleState {
+  return {
+    ...state,
+    combatants: new Map(state.combatants).set(combatant.combatantId, combatant),
+  };
 }
 
 function fontOfMagicCreatedLevel3Sheet(): CharacterSheet {

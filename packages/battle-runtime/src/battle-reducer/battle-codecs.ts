@@ -14,6 +14,7 @@
 
 import { ATTACK_ROLL_MODES } from "@dnd/shared-algebras/runtime-hole-algebra";
 import type { ArmorClass as BattleArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
+import { RETAINED_COMPANION_PROTOCOL_TAGS } from "@dnd/shared-algebras/companion-protocol-algebra";
 import { STANDARD_ACTION_KINDS } from "@dnd/shared/game-facts";
 import {
   CONDITIONS as ALL_CONDITIONS,
@@ -72,13 +73,15 @@ import {
 } from "../identity.ts";
 import type {
   BattleCompanionSnapshot,
-  BattleCompanionPlacement as FindFamiliarPlacement,
+  BattleCompanionPlacement,
+  BattleCompanionDurableId,
+  BattleCompanionProtocol,
 } from "../companion-state.ts";
 import type {
   FindFamiliarFormSelection,
   PactOfTheChainFindFamiliarFormSelection,
-} from "../find-familiar-forms.ts";
-import { PACT_OF_THE_CHAIN_SPECIAL_FORM_REFS } from "../find-familiar-forms.ts";
+} from "@dnd/surface/surface/find-familiar-forms";
+import { PACT_OF_THE_CHAIN_SPECIAL_FORM_REFS } from "@dnd/surface/surface/find-familiar-forms";
 import {
   BATTLE_ANTIMAGIC_FIELD_ONGOING_SPELL_EFFECT_SOURCE_KINDS,
   BATTLE_ATTACK_RANGE_BANDS,
@@ -128,6 +131,18 @@ const BattleCompanionResolvedStatBlockIdSchema =
   Schema.NonEmptyTrimmedString as unknown as Schema.Schema<
     StatBlockRecord["id"]
   >;
+const BattleCompanionDurableIdSchema =
+  Schema.NonEmptyTrimmedString as unknown as Schema.Schema<BattleCompanionDurableId>;
+const BattleCompanionIdentitySchema = Schema.Union(
+  Schema.Struct({ tag: Schema.Literal("battleOnly") }),
+  Schema.Struct({
+    tag: Schema.Literal("retainedBetweenBattles"),
+    durableCompanionId: BattleCompanionDurableIdSchema,
+  }),
+);
+const BattleCompanionProtocolSchema = Schema.Struct({
+  tag: Schema.Literal(...RETAINED_COMPANION_PROTOCOL_TAGS),
+}) as unknown as Schema.Schema<BattleCompanionProtocol>;
 const PactOfTheChainSpecialFormIdSchema = pactOfTheChainSpecialFormIdSchema();
 const PactOfTheChainFindFamiliarFormSelectionSchema = Schema.Union(
   FindFamiliarFormSelectionSchema,
@@ -150,7 +165,7 @@ const FindFamiliarCreatureTypeOverrideSchema = Schema.Literal(
   "fey",
   "fiend",
 );
-const FindFamiliarPlacementSchema = Schema.Union(
+const BattleCompanionPlacementSchema = Schema.Union(
   Schema.Struct({
     kind: Schema.Literal("unoccupiedSpaceWithinSpellRange"),
     positionId: Schema.optionalWith(BattleTablePositionId, { exact: true }),
@@ -161,8 +176,8 @@ const FindFamiliarPlacementSchema = Schema.Union(
   }),
   // Cast evidence is local to this union: both placement variants and their
   // optional branded position ids are parsed here. Effect Schema keeps the
-  // structure but does not infer the imported discriminated-union alias.
-) as unknown as Schema.Schema<FindFamiliarPlacement>;
+  // structure but does not infer the imported discriminated union type.
+) as unknown as Schema.Schema<BattleCompanionPlacement>;
 // Hp is a branded non-negative integer number. Effect Schema validates the
 // runtime number shape here; the brand is erased at runtime, and Schema has no
 // helper that preserves this repo's nominal brand through numeric filters.
@@ -177,7 +192,7 @@ const PositiveHpSchema = Schema.Number.pipe(
 const InitiativeScoreSchema = Schema.Number.pipe(
   Schema.int(),
 ) as unknown as Schema.Schema<InitiativeScore, number, never>;
-const FindFamiliarHitPointsSchema = Schema.Struct({
+const BattleCompanionHitPointsSchema = Schema.Struct({
   currentHp: PositiveHpSchema,
   tempHp: HpSchema,
 });
@@ -1162,13 +1177,11 @@ export const BattleHoleSchema = Schema.Union(
     ...BattleHoleBaseSchema,
     kind: Schema.Literal("companionReappearancePlacement"),
     ownerId: CombatantId,
-    companionId: CombatantId,
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
     kind: Schema.Literal("companionReappearanceInitiative"),
     ownerId: CombatantId,
-    companionId: CombatantId,
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
@@ -2634,7 +2647,7 @@ type BattleFillEncoded =
   | {
       readonly kind: "companionReappearancePlacement";
       readonly holeId: string;
-      readonly value: FindFamiliarPlacement;
+      readonly value: BattleCompanionPlacement;
     }
   | {
       readonly kind: "companionReappearanceInitiative";
@@ -3433,7 +3446,7 @@ export const BattleFillSchema: Schema.Schema<
     Schema.Struct({
       kind: Schema.Literal("companionReappearancePlacement"),
       holeId: BattleHoleIdSchema,
-      value: FindFamiliarPlacementSchema,
+      value: BattleCompanionPlacementSchema,
     }),
     Schema.Struct({
       kind: Schema.Literal("companionReappearanceInitiative"),
@@ -4246,69 +4259,57 @@ const BattleCompanionSnapshotSchema = Schema.Union(
     status: Schema.Literal("present"),
     ownerId: CombatantId,
     companionId: CombatantId,
+    identity: BattleCompanionIdentitySchema,
+    protocol: BattleCompanionProtocolSchema,
     formAccess: Schema.Literal("findFamiliar"),
     formSelection: FindFamiliarFormSelectionSchema,
     resolvedStatBlockId: BattleCompanionResolvedStatBlockIdSchema,
     creatureTypeOverride: FindFamiliarCreatureTypeOverrideSchema,
     initiative: Schema.Number,
-    placement: FindFamiliarPlacementSchema,
+    placement: BattleCompanionPlacementSchema,
   }),
   Schema.Struct({
     status: Schema.Literal("present"),
     ownerId: CombatantId,
     companionId: CombatantId,
+    identity: BattleCompanionIdentitySchema,
+    protocol: BattleCompanionProtocolSchema,
     formAccess: Schema.Literal("pactOfTheChain"),
     formSelection: PactOfTheChainFindFamiliarFormSelectionSchema,
     resolvedStatBlockId: BattleCompanionResolvedStatBlockIdSchema,
     creatureTypeOverride: FindFamiliarCreatureTypeOverrideSchema,
     initiative: Schema.Number,
-    placement: FindFamiliarPlacementSchema,
-  }),
-  Schema.Struct({
-    status: Schema.Literal("present"),
-    ownerId: CombatantId,
-    companionId: CombatantId,
-    formAccess: Schema.Literal("druidWildCompanion"),
-    formSelection: FindFamiliarFormSelectionSchema,
-    resolvedStatBlockId: BattleCompanionResolvedStatBlockIdSchema,
-    creatureTypeOverride: FindFamiliarCreatureTypeOverrideSchema,
-    initiative: Schema.Number,
-    placement: FindFamiliarPlacementSchema,
+    placement: BattleCompanionPlacementSchema,
   }),
   Schema.Struct({
     status: Schema.Literal("temporarilyDismissed"),
     ownerId: CombatantId,
-    companionId: CombatantId,
+    identity: BattleCompanionIdentitySchema,
+    protocol: BattleCompanionProtocolSchema,
+    reappearanceCombatantId: CombatantId,
     formAccess: Schema.Literal("findFamiliar"),
     formSelection: FindFamiliarFormSelectionSchema,
     resolvedStatBlockId: BattleCompanionResolvedStatBlockIdSchema,
     creatureTypeOverride: FindFamiliarCreatureTypeOverrideSchema,
-    hitPoints: FindFamiliarHitPointsSchema,
+    hitPoints: BattleCompanionHitPointsSchema,
   }),
   Schema.Struct({
     status: Schema.Literal("temporarilyDismissed"),
     ownerId: CombatantId,
-    companionId: CombatantId,
+    identity: BattleCompanionIdentitySchema,
+    protocol: BattleCompanionProtocolSchema,
+    reappearanceCombatantId: CombatantId,
     formAccess: Schema.Literal("pactOfTheChain"),
     formSelection: PactOfTheChainFindFamiliarFormSelectionSchema,
     resolvedStatBlockId: BattleCompanionResolvedStatBlockIdSchema,
     creatureTypeOverride: FindFamiliarCreatureTypeOverrideSchema,
-    hitPoints: FindFamiliarHitPointsSchema,
-  }),
-  Schema.Struct({
-    status: Schema.Literal("temporarilyDismissed"),
-    ownerId: CombatantId,
-    companionId: CombatantId,
-    formAccess: Schema.Literal("druidWildCompanion"),
-    formSelection: FindFamiliarFormSelectionSchema,
-    resolvedStatBlockId: BattleCompanionResolvedStatBlockIdSchema,
-    creatureTypeOverride: FindFamiliarCreatureTypeOverrideSchema,
-    hitPoints: FindFamiliarHitPointsSchema,
+    hitPoints: BattleCompanionHitPointsSchema,
   }),
   Schema.Struct({
     status: Schema.Literal("disappearedAtZeroHitPoints"),
     ownerId: CombatantId,
-    companionId: CombatantId,
+    identity: BattleCompanionIdentitySchema,
+    protocol: BattleCompanionProtocolSchema,
     formAccess: Schema.Literal("findFamiliar"),
     formSelection: FindFamiliarFormSelectionSchema,
     resolvedStatBlockId: BattleCompanionResolvedStatBlockIdSchema,
@@ -4317,18 +4318,10 @@ const BattleCompanionSnapshotSchema = Schema.Union(
   Schema.Struct({
     status: Schema.Literal("disappearedAtZeroHitPoints"),
     ownerId: CombatantId,
-    companionId: CombatantId,
+    identity: BattleCompanionIdentitySchema,
+    protocol: BattleCompanionProtocolSchema,
     formAccess: Schema.Literal("pactOfTheChain"),
     formSelection: PactOfTheChainFindFamiliarFormSelectionSchema,
-    resolvedStatBlockId: BattleCompanionResolvedStatBlockIdSchema,
-    creatureTypeOverride: FindFamiliarCreatureTypeOverrideSchema,
-  }),
-  Schema.Struct({
-    status: Schema.Literal("disappearedAtZeroHitPoints"),
-    ownerId: CombatantId,
-    companionId: CombatantId,
-    formAccess: Schema.Literal("druidWildCompanion"),
-    formSelection: FindFamiliarFormSelectionSchema,
     resolvedStatBlockId: BattleCompanionResolvedStatBlockIdSchema,
     creatureTypeOverride: FindFamiliarCreatureTypeOverrideSchema,
   }),

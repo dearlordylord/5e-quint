@@ -18,6 +18,10 @@ import {
   DieRollResult,
   proficiencyBonus,
 } from "@dnd/shared/types";
+import {
+  findFamiliarFormEligibilityForSpell,
+  type FindFamiliarFormEligibility,
+} from "@dnd/surface/surface/find-familiar-forms";
 import * as Either from "effect/Either";
 import { describe, expect, it } from "vitest";
 
@@ -44,7 +48,6 @@ import {
   deliverTouchSpellThroughFindFamiliar,
   discoverBattleActs,
   findFamiliarCompanionEntryForOwner,
-  findFamiliarFormEligibilityForSpell,
   findFamiliarTelepathicConnection,
   initiativeScore,
   resolveBattleSubject,
@@ -56,7 +59,6 @@ import {
   type BattleState,
   type AvailableBattleAct,
   type BattleSubject,
-  type FindFamiliarFormEligibility,
   type PactOfTheChainFamiliarAttackSubject,
 } from "./index.ts";
 import {
@@ -385,7 +387,7 @@ function findFamiliarCompanionProjection(
   const familiar = familiarEntry?.companion ?? null;
   const familiarCombatant =
     familiarEntry !== null && familiarEntry.companion.status === "present"
-      ? state.battle.combatants.get(familiarEntry.companionId)
+      ? state.battle.combatants.get(familiarEntry.companion.combatantId)
       : undefined;
   const familiarReactionAvailable =
     familiarCombatant?.reactionAvailable === true;
@@ -403,7 +405,9 @@ function findFamiliarCompanionProjection(
     familiarStatus: familiar?.status === "present" ? "present" : "none",
     familiarId: familiar?.status === "present" ? "primary" : "none",
     familiarForm:
-      familiar?.formSelection.tag === "normalNamedForm"
+      familiar !== null &&
+      familiar.status !== "dismissedForever" &&
+      familiar.formSelection.tag === "normalNamedForm"
         ? familiarForm(familiar.formSelection.formId)
         : "none",
     creatureTypeOverride: creatureTypeOverride(

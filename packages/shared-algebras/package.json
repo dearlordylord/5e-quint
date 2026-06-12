@@ -23,7 +23,8 @@
     "./speed-algebra": "./src/speed-algebra.ts",
     "./movement-cost-algebra": "./src/movement-cost-algebra.ts",
     "./multiclass-prerequisite-algebra": "./src/multiclass-prerequisite-algebra.ts",
-    "./martial-arts-algebra": "./src/martial-arts-algebra.ts"
+    "./martial-arts-algebra": "./src/martial-arts-algebra.ts",
+    "./companion-protocol-algebra": "./src/companion-protocol-algebra.ts"
   },
   "imports": {
     "#/*": "./src/*"

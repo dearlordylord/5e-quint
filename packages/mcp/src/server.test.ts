@@ -63,6 +63,13 @@ import {
   characterIdFromDraftId,
 } from "./session-store.ts";
 import {
+  parseCharacterSheet,
+  parseCharacterSheetRetainedCompanionId,
+  replaceCharacterSheetCompanion,
+  type CharacterSheetCompanion,
+  type CharacterSheetRetainedCompanionCurrentHitPoints,
+} from "@dnd/character-sheet-runtime";
+import {
   GENERIC_COMBAT_ACTION_LABELS,
   GENERIC_COMBAT_ACTION_LABELS_WITH_SHOVE,
   GENERIC_READY_TRIGGERS,
@@ -219,6 +226,10 @@ function expectRight<T, E>(result: Either.Either<T, E>): T {
   }
 
   return result.right;
+}
+
+function retainedCompanionId(value: string) {
+  return expectRight(parseCharacterSheetRetainedCompanionId(value));
 }
 
 const fighterId = combatantId("fighter");
@@ -1016,8 +1027,34 @@ describe("MCP server route", () => {
       "discover_creation_holes",
       "fill_creation_holes",
       "finalize_character",
+      "apply_character_session_operation",
       "list_characters",
     ]);
+  });
+
+  test("does not expose retained companion creation HP inputs in the MCP schema", () => {
+    const applyOperationTool = characterToolDefinitions.find(
+      (tool) => tool.name === "apply_character_session_operation",
+    );
+    // Cast evidence: mcpObjectJsonSchema returns an object JSON schema for
+    // tool input schemas; this test inspects that generated object shape.
+    const inputSchema = applyOperationTool?.inputSchema as
+      | {
+          readonly properties?: {
+            readonly operation?: {
+              readonly properties?: Readonly<Record<string, unknown>>;
+            };
+          };
+        }
+      | undefined;
+    const operationSchema = inputSchema?.properties?.operation;
+
+    expect(operationSchema?.properties?.kind).toEqual({
+      type: "string",
+      enum: ["retainOneAtATimeCompanion"],
+    });
+    expect(operationSchema?.properties).not.toHaveProperty("currentHp");
+    expect(operationSchema?.properties).not.toHaveProperty("tempHp");
   });
 
   test("registers battle tool names", () => {
@@ -2334,10 +2371,15 @@ describe("MCP server route", () => {
     });
   });
 
-  test("start_battle admits a source-linked Find Familiar combatant", () => {
+  test("start_battle admits a retained companion from Character Sheet state", () => {
     const root = createMcpCompositionRoot();
     const draftId = "draft:mcp-find-familiar-admission";
     createFinalizedWizardWithFindFamiliar(root, draftId);
+    setStoredRetainedFamiliarCompanion(root, draftId, {
+      formId: "cat",
+      currentHp: Hp(1),
+      tempHp: Hp(3),
+    });
 
     const started = readPayload(
       handleToolCall(root, "start_battle", {
@@ -2350,21 +2392,12 @@ describe("MCP server route", () => {
             initiative: 12,
             side: "party",
           },
+        ],
+        companionAdmissions: [
           {
-            kind: "statBlock",
-            combatantId: "wizard-familiar",
+            ownerCharacterId: testCharacterId(draftId),
+            companionCombatantId: "wizard-familiar",
             initiative: 18,
-            currentHp: 1,
-            tempHp: 3,
-            admissionSource: {
-              kind: "sourceLinked",
-              sourceActorId: "wizard",
-              selection: {
-                kind: "findFamiliarForm",
-                form: { tag: "normalNamedForm", formId: "cat" },
-                creatureTypeOverrideChoiceId: "fey",
-              },
-            },
           },
         ],
       }),
@@ -2400,18 +2433,44 @@ describe("MCP server route", () => {
       tempHp: Hp(3),
     });
     expect(
-      root.sessionStore.battleState?.companions.get(
-        combatantId("wizard-familiar"),
-      ),
-    ).toMatchObject({
-      status: "present",
-    });
+      root.sessionStore.battleState === null
+        ? []
+        : snapshotBattle(root.sessionStore.battleState).companions,
+    ).toMatchObject([
+      {
+        companionId: combatantId("wizard-familiar"),
+        status: "present",
+      },
+    ]);
+
+    const ended = readPayload(handleToolCall(root, "end_battle", {}));
+    expect(ended.characters).toMatchObject([
+      {
+        characterId: testCharacterId(draftId),
+        session: {
+          companion: {
+            tag: "retainedOneAtATime",
+            companion: {
+              // Settlement derives the protocol from the battle facts; an
+              // ordinary familiar round-trips to the ordinary protocol.
+              protocol: { tag: "ordinaryFamiliarLikeOneAtATime" },
+              manifestation: {
+                tag: "embodiedOutsideBattle",
+                resolvedStatBlockId: "stat_block_cat",
+                hitPoints: { currentHp: 1, tempHp: 3 },
+              },
+            },
+          },
+        },
+      },
+    ]);
   });
 
   test("fills companion reappearance holes one at a time through MCP", () => {
     const root = createMcpCompositionRoot();
     const draftId = "draft:mcp-find-familiar-reappearance-fills";
     createFinalizedWizardWithFindFamiliar(root, draftId);
+    setRetainedFamiliarCompanion(root, draftId);
 
     readPayload(
       handleToolCall(root, "start_battle", {
@@ -2424,19 +2483,12 @@ describe("MCP server route", () => {
             initiative: 18,
             side: "party",
           },
+        ],
+        companionAdmissions: [
           {
-            kind: "statBlock",
-            combatantId: "wizard-familiar",
+            ownerCharacterId: testCharacterId(draftId),
+            companionCombatantId: "wizard-familiar",
             initiative: 12,
-            admissionSource: {
-              kind: "sourceLinked",
-              sourceActorId: "wizard",
-              selection: {
-                kind: "findFamiliarForm",
-                form: { tag: "normalNamedForm", formId: "cat" },
-                creatureTypeOverrideChoiceId: "fey",
-              },
-            },
           },
         ],
       }),
@@ -2471,7 +2523,14 @@ describe("MCP server route", () => {
     );
     expect(dismissed.result.tag).toBe("resolved");
     expect(dismissed.snapshot.companions).toMatchObject([
-      { companionId: "wizard-familiar", status: "temporarilyDismissed" },
+      {
+        ownerId: "wizard",
+        identity: {
+          tag: "retainedBetweenBattles",
+          durableCompanionId: "durable-wizard-familiar",
+        },
+        status: "temporarilyDismissed",
+      },
     ]);
 
     readPayload(handleToolCall(root, "end_turn", { actorId: "wizard" }));
@@ -2545,6 +2604,7 @@ describe("MCP server route", () => {
       preparedSpells: ["find_familiar", "cure_wounds"],
       spellcastingSafeLoadout: true,
     });
+    setRetainedFamiliarCompanion(root, draftId);
 
     readPayload(
       handleToolCall(root, "start_battle", {
@@ -2559,26 +2619,19 @@ describe("MCP server route", () => {
           },
           {
             kind: "statBlock",
-            combatantId: "wizard-familiar",
-            initiative: 12,
-            admissionSource: {
-              kind: "sourceLinked",
-              sourceActorId: "wizard",
-              selection: {
-                kind: "findFamiliarForm",
-                form: { tag: "normalNamedForm", formId: "cat" },
-                creatureTypeOverrideChoiceId: "fey",
-              },
-            },
-          },
-          {
-            kind: "statBlock",
             statBlockId: "stat_block_goblin_warrior",
             combatantId: "goblin",
             initiative: 7,
             currentHp: 1,
             side: "opposition",
             admissionSource: { kind: "encounterParticipant" },
+          },
+        ],
+        companionAdmissions: [
+          {
+            ownerCharacterId: testCharacterId(draftId),
+            companionCombatantId: "wizard-familiar",
+            initiative: 12,
           },
         ],
       }),
@@ -2690,11 +2743,14 @@ describe("MCP server route", () => {
     ).toMatchObject({ hp: 8 });
   });
 
-  test("documents current source-linked admission gap for spellbook Ritual Find Familiar", () => {
+  test("start_battle admits a retained companion without prepared Find Familiar", () => {
     const root = createMcpCompositionRoot();
     const draftId = "draft:mcp-find-familiar-spellbook-ritual-admission";
     createFinalizedWizardWithFindFamiliar(root, draftId, {
       preparedSpells: [],
+    });
+    setRetainedFamiliarCompanion(root, draftId, {
+      formId: "owl",
     });
 
     const started = readPayload(
@@ -2708,19 +2764,12 @@ describe("MCP server route", () => {
             initiative: 12,
             side: "party",
           },
+        ],
+        companionAdmissions: [
           {
-            kind: "statBlock",
-            combatantId: "wizard-familiar",
+            ownerCharacterId: testCharacterId(draftId),
+            companionCombatantId: "wizard-familiar",
             initiative: 18,
-            admissionSource: {
-              kind: "sourceLinked",
-              sourceActorId: "wizard",
-              selection: {
-                kind: "findFamiliarForm",
-                form: { tag: "normalNamedForm", formId: "owl" },
-                creatureTypeOverrideChoiceId: "fey",
-              },
-            },
           },
         ],
       }),
@@ -2739,29 +2788,129 @@ describe("MCP server route", () => {
     });
   });
 
-  test("start_battle preserves source-linked Find Familiar initiative tie order", () => {
+  test("apply_character_session_operation retains a companion from ordinary Spell Slot casting", () => {
+    const root = createMcpCompositionRoot();
+    const draftId = "draft:mcp-find-familiar-spell-slot-retain";
+    createFinalizedWizardWithFindFamiliar(root, draftId);
+
+    const retained = readPayload(
+      handleToolCall(root, "apply_character_session_operation", {
+        characterId: testCharacterId(draftId),
+        operation: {
+          kind: "retainOneAtATimeCompanion",
+          companionId: "durable-slot-familiar",
+          source: {
+            tag: "spellSlotSpellCast",
+            spellId: "find_familiar",
+            spellLevel: 1,
+          },
+          selectedForm: { tag: "normalNamedForm", formId: "cat" },
+          creatureTypeOverrideChoiceId: "fey",
+        },
+      }),
+    );
+
+    expect(retained.character).toMatchObject({
+      companion: {
+        tag: "retainedOneAtATime",
+        companion: {
+          companionId: "durable-slot-familiar",
+          manifestation: {
+            tag: "embodiedOutsideBattle",
+            resolvedStatBlockId: "stat_block_cat",
+            hitPoints: { currentHp: 2, tempHp: 0 },
+          },
+        },
+      },
+      spellSlotExpenditures: [{ spellLevel: 1, expended: 1 }],
+    });
+  });
+
+  test("apply_character_session_operation rejects a durable companion id used by another character", () => {
+    const root = createMcpCompositionRoot();
+    const firstDraftId = "draft:mcp-duplicate-durable-familiar-first";
+    const secondDraftId = "draft:mcp-duplicate-durable-familiar-second";
+    createFinalizedWizardWithFindFamiliar(root, firstDraftId);
+    createFinalizedWizardWithFindFamiliar(root, secondDraftId);
+
+    readPayload(
+      handleToolCall(root, "apply_character_session_operation", {
+        characterId: testCharacterId(firstDraftId),
+        operation: {
+          kind: "retainOneAtATimeCompanion",
+          companionId: "shared-durable-familiar",
+          source: { tag: "ritualSpell", spellId: "find_familiar" },
+          selectedForm: { tag: "normalNamedForm", formId: "cat" },
+          creatureTypeOverrideChoiceId: "fey",
+        },
+      }),
+    );
+
+    const rejected = readPayload(
+      handleToolCall(root, "apply_character_session_operation", {
+        characterId: testCharacterId(secondDraftId),
+        operation: {
+          kind: "retainOneAtATimeCompanion",
+          companionId: "shared-durable-familiar",
+          source: { tag: "ritualSpell", spellId: "find_familiar" },
+          selectedForm: { tag: "normalNamedForm", formId: "owl" },
+          creatureTypeOverrideChoiceId: "fey",
+        },
+      }),
+    );
+
+    expect(rejected).toMatchObject({
+      details: {
+        code: "CHARACTER_SESSION_OPERATION_INVALID",
+        message:
+          "Retained companion id is already used by another character session.",
+      },
+    });
+    expect(
+      root.sessionStore.characters.get(testCharacterId(secondDraftId)),
+    ).toMatchObject({ companion: { tag: "none" } });
+  });
+
+  test("apply_character_session_operation rejects caller-minted companion HP", () => {
+    const root = createMcpCompositionRoot();
+    const draftId = "draft:mcp-find-familiar-hp-input-rejected";
+    createFinalizedWizardWithFindFamiliar(root, draftId);
+
+    const rejected = readPayload(
+      handleToolCall(root, "apply_character_session_operation", {
+        characterId: testCharacterId(draftId),
+        operation: {
+          kind: "retainOneAtATimeCompanion",
+          companionId: "durable-hp-forged-familiar",
+          source: { tag: "ritualSpell", spellId: "find_familiar" },
+          selectedForm: { tag: "normalNamedForm", formId: "cat" },
+          creatureTypeOverrideChoiceId: "fey",
+          currentHp: 999999,
+          tempHp: 50,
+        },
+      }),
+    );
+
+    expect(rejected).toMatchObject({
+      details: { code: "INVALID_ARGUMENTS" },
+    });
+    expect(root.sessionStore.characters.get(testCharacterId(draftId))).toEqual(
+      expect.objectContaining({ companion: { tag: "none" } }),
+    );
+  });
+
+  test("start_battle orders retained companion ties after the initial owner roster", () => {
     const root = createMcpCompositionRoot();
     const draftId = "draft:mcp-find-familiar-tie-order";
     createFinalizedWizardWithFindFamiliar(root, draftId);
+    setRetainedFamiliarCompanion(root, draftId, {
+      formId: "owl",
+    });
 
     const started = readPayload(
       handleToolCall(root, "start_battle", {
         battleId: "battle:mcp-find-familiar-tie-order",
         initialCombatants: [
-          {
-            kind: "statBlock",
-            combatantId: "wizard-familiar",
-            initiative: 18,
-            admissionSource: {
-              kind: "sourceLinked",
-              sourceActorId: "wizard",
-              selection: {
-                kind: "findFamiliarForm",
-                form: { tag: "normalNamedForm", formId: "owl" },
-                creatureTypeOverrideChoiceId: "fey",
-              },
-            },
-          },
           {
             kind: "characterSession",
             characterId: testCharacterId(draftId),
@@ -2770,16 +2919,133 @@ describe("MCP server route", () => {
             side: "party",
           },
         ],
+        companionAdmissions: [
+          {
+            ownerCharacterId: testCharacterId(draftId),
+            companionCombatantId: "wizard-familiar",
+            initiative: 18,
+          },
+        ],
       }),
     );
 
     expect(started.snapshot).toMatchObject({
-      currentActorId: "wizard-familiar",
-      turnOrder: ["wizard-familiar", "wizard"],
+      currentActorId: "wizard",
+      turnOrder: ["wizard", "wizard-familiar"],
     });
   });
 
-  test("start_battle rejects a source-linked combatant with a missing source actor", () => {
+  test("end_battle clears a retained companion permanently dismissed in battle", () => {
+    const root = createMcpCompositionRoot();
+    const draftId = "draft:mcp-find-familiar-permanent-dismiss-handoff";
+    createFinalizedWizardWithFindFamiliar(root, draftId);
+    setRetainedFamiliarCompanion(root, draftId, {
+      formId: "owl",
+    });
+
+    readPayload(
+      handleToolCall(root, "start_battle", {
+        battleId: "battle:mcp-find-familiar-permanent-dismiss-handoff",
+        initialCombatants: [
+          {
+            kind: "characterSession",
+            characterId: testCharacterId(draftId),
+            combatantId: "wizard",
+            initiative: 18,
+            side: "party",
+          },
+        ],
+        companionAdmissions: [
+          {
+            ownerCharacterId: testCharacterId(draftId),
+            companionCombatantId: "wizard-familiar",
+            initiative: 12,
+          },
+        ],
+      }),
+    );
+
+    const permanentDismissAct = readPayload(
+      handleToolCall(root, "discover_battle_acts", {}),
+    ).snapshot.acts.find(
+      (act: {
+        readonly subject: { readonly tag: string; readonly action?: string };
+      }) =>
+        act.subject.tag === "companionLifecycle" &&
+        act.subject.action === "permanentlyDismiss",
+    );
+    expect(permanentDismissAct).toBeDefined();
+    if (permanentDismissAct === undefined) return;
+
+    const dismissed = readPayload(
+      handleToolCall(root, "resolve_battle_act", {
+        subject: permanentDismissAct.subject,
+      }),
+    );
+    expect(dismissed.result.tag).toBe("resolved");
+    expect(dismissed.snapshot.companions).toEqual([]);
+    expect(
+      dismissed.snapshot.combatants.some(
+        (combatant: { readonly combatantId: string }) =>
+          combatant.combatantId === "wizard-familiar",
+      ),
+    ).toBe(false);
+
+    const ended = readPayload(handleToolCall(root, "end_battle", {}));
+    expect(ended.characters).toMatchObject([
+      {
+        characterId: testCharacterId(draftId),
+        session: {
+          companion: { tag: "none" },
+        },
+      },
+    ]);
+  });
+
+  test("end_battle leaves a retained companion untouched when it was never admitted", () => {
+    const root = createMcpCompositionRoot();
+    const draftId = "draft:mcp-find-familiar-never-admitted-handoff";
+    createFinalizedWizardWithFindFamiliar(root, draftId);
+    setRetainedFamiliarCompanion(root, draftId, { formId: "owl" });
+
+    readPayload(
+      handleToolCall(root, "start_battle", {
+        battleId: "battle:mcp-find-familiar-never-admitted-handoff",
+        initialCombatants: [
+          {
+            kind: "characterSession",
+            characterId: testCharacterId(draftId),
+            combatantId: "wizard",
+            initiative: 18,
+            side: "party",
+          },
+        ],
+        // No companionAdmissions: the retained companion stays out of battle, so
+        // there is no battle companion entry to settle from. The Character Sheet
+        // remains the source of truth and the durable slot survives end_battle.
+      }),
+    );
+
+    const ended = readPayload(handleToolCall(root, "end_battle", {}));
+    expect(ended.characters).toMatchObject([
+      {
+        characterId: testCharacterId(draftId),
+        session: {
+          companion: {
+            tag: "retainedOneAtATime",
+            companion: {
+              companionId: "durable-wizard-familiar",
+              manifestation: {
+                selectedForm: { tag: "normalNamedForm", formId: "owl" },
+              },
+            },
+          },
+        },
+      },
+    ]);
+  });
+
+  test("start_battle rejects retained companion admission with a missing owner", () => {
     const root = createMcpCompositionRoot();
     const rejected = readPayload(
       handleToolCall(root, "start_battle", {
@@ -2787,17 +3053,18 @@ describe("MCP server route", () => {
         initialCombatants: [
           {
             kind: "statBlock",
-            combatantId: "orphan-familiar",
+            statBlockId: "stat_block_goblin_warrior",
+            combatantId: "goblin",
             initiative: 18,
-            admissionSource: {
-              kind: "sourceLinked",
-              sourceActorId: "missing-wizard",
-              selection: {
-                kind: "findFamiliarForm",
-                form: { tag: "normalNamedForm", formId: "owl" },
-                creatureTypeOverrideChoiceId: "fey",
-              },
-            },
+            side: "opposition",
+            admissionSource: { kind: "encounterParticipant" },
+          },
+        ],
+        companionAdmissions: [
+          {
+            ownerCharacterId: "missing-wizard",
+            companionCombatantId: "orphan-familiar",
+            initiative: 18,
           },
         ],
       }),
@@ -2805,62 +3072,37 @@ describe("MCP server route", () => {
 
     expect(rejected).toMatchObject({
       details: {
-        code: "INVALID_BATTLE_COMBATANTS",
-        issues: [
-          {
-            details: {
-              code: "SOURCE_LINKED_ACTOR_NOT_IN_ROSTER",
-              combatantId: "orphan-familiar",
-              sourceActorId: "missing-wizard",
-            },
-          },
-        ],
+        code: "COMPANION_OWNER_NOT_IN_ROSTER",
+        companionCombatantId: "orphan-familiar",
+        characterId: "missing-wizard",
       },
     });
     expect(root.sessionStore.battleState).toBeNull();
   });
 
-  test("start_battle rejects unsupported source-linked familiar forms", () => {
+  test("Character Sheet rejects invalid retained companion HP before MCP admission", () => {
     const root = createMcpCompositionRoot();
     const draftId = "draft:mcp-find-familiar-invalid-form";
     createFinalizedWizardWithFindFamiliar(root, draftId);
+    const session = root.sessionStore.characters.get(testCharacterId(draftId));
+    if (session?.tag !== "available") {
+      throw new Error("Expected test character session.");
+    }
 
-    const rejected = readPayload(
-      handleToolCall(root, "start_battle", {
-        battleId: "battle:mcp-find-familiar-invalid-form",
-        initialCombatants: [
-          {
-            kind: "characterSession",
-            characterId: testCharacterId(draftId),
-            combatantId: "wizard",
-            initiative: 12,
-            side: "party",
-          },
-          {
-            kind: "statBlock",
-            combatantId: "wizard-familiar",
-            initiative: 18,
-            admissionSource: {
-              kind: "sourceLinked",
-              sourceActorId: "wizard",
-              selection: {
-                kind: "findFamiliarForm",
-                form: { tag: "pactOfTheChainSpecialForm", formId: "imp" },
-                creatureTypeOverrideChoiceId: "fey",
-              },
-            },
-          },
-        ],
-      }),
+    const rejected = parseCharacterSheet(
+      {
+        ...session,
+        companion: retainedFamiliarCompanionInput({
+          currentHp: Hp(0),
+        }),
+      },
+      root.unitLibrary,
     );
 
     expect(rejected).toMatchObject({
-      details: {
-        code: "SOURCE_LINKED_COMBATANT_ADMISSION_FAILED",
-        combatantId: "wizard-familiar",
-        sourceActorId: "wizard",
-        message:
-          "Pact of the Chain familiar forms require Pact of the Chain Find Familiar access.",
+      _tag: "Left",
+      left: {
+        message: "Retained companion current HP must be positive.",
       },
     });
     expect(root.sessionStore.battleState).toBeNull();
@@ -3075,6 +3317,7 @@ describe("MCP server route", () => {
       spentHitDice: [],
       restFeatureUses: [],
       resourceExpenditures: [],
+      companion: { tag: "none" },
     });
     expect(finalized.session).toMatchObject({
       draftIds: [],
@@ -5746,6 +5989,92 @@ function createFinalizedWizardWithFindFamiliar(
     }),
   );
   return build;
+}
+
+function setRetainedFamiliarCompanion(
+  root: ReturnType<typeof createMcpCompositionRoot>,
+  draftId: string,
+  input: {
+    readonly formId?: string;
+  } = {},
+) {
+  const formId = input.formId ?? "cat";
+  const retained = readPayload(
+    handleToolCall(root, "apply_character_session_operation", {
+      characterId: testCharacterId(draftId),
+      operation: {
+        kind: "retainOneAtATimeCompanion",
+        companionId: "durable-wizard-familiar",
+        source: { tag: "ritualSpell", spellId: "find_familiar" },
+        selectedForm: { tag: "normalNamedForm", formId },
+        creatureTypeOverrideChoiceId: "fey",
+      },
+    }),
+  );
+  expect(retained.character).toMatchObject({
+    companion: {
+      tag: "retainedOneAtATime",
+      companion: {
+        companionId: "durable-wizard-familiar",
+        manifestation: {
+          selectedForm: { tag: "normalNamedForm", formId },
+        },
+      },
+    },
+  });
+}
+
+function setStoredRetainedFamiliarCompanion(
+  root: ReturnType<typeof createMcpCompositionRoot>,
+  draftId: string,
+  input: {
+    readonly formId?: string;
+    readonly currentHp?: Hp;
+    readonly tempHp?: Hp;
+  } = {},
+) {
+  const session = root.sessionStore.characters.get(testCharacterId(draftId));
+  if (session?.tag !== "available") {
+    throw new Error("Expected test character session.");
+  }
+  root.sessionStore.characters.set(
+    expectRight(
+      replaceCharacterSheetCompanion({
+        sheet: session,
+        companion: retainedFamiliarCompanionInput(input),
+      }),
+    ),
+  );
+}
+
+function retainedFamiliarCompanionInput(
+  input: {
+    readonly formId?: string;
+    readonly currentHp?: Hp;
+    readonly tempHp?: Hp;
+  } = {},
+): CharacterSheetCompanion {
+  const formId = input.formId ?? "cat";
+  return {
+    tag: "retainedOneAtATime",
+    companion: {
+      companionId: retainedCompanionId("durable-wizard-familiar"),
+      protocol: { tag: "ordinaryFamiliarLikeOneAtATime" },
+      manifestation: {
+        tag: "embodiedOutsideBattle",
+        selectedForm: { tag: "normalNamedForm", formId },
+        creatureTypeOverride: "fey",
+        resolvedStatBlockId: `stat_block_${formId}`,
+        hitPoints: {
+          // Cast evidence: retainedFamiliarCompanionInput is a test fixture
+          // helper; tests pass zero explicitly only when asserting rejection.
+          currentHp: (input.currentHp ??
+            Hp(1)) as CharacterSheetRetainedCompanionCurrentHitPoints,
+          tempHp: input.tempHp ?? Hp(0),
+        },
+      },
+    },
+  };
 }
 
 function createTestDraft(draftId: string): CharacterDraft {

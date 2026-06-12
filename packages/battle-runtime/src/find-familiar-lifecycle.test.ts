@@ -26,12 +26,15 @@ import {
   buildUnitCatalog,
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
+import {
+  findFamiliarFormEligibilityForSpell,
+  type FindFamiliarFormEligibility,
+} from "@dnd/surface/surface/find-familiar-forms";
 import type { StatBlockRecord } from "@dnd/surface/surface/types";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 
 import {
-  admitPresentFindFamiliarToBattle,
-  applyCompanionLongRestDisappearance,
+  admitCompanionToBattle,
   applyFindFamiliarZeroHitPointDisappearance,
   battleAvailableDruidWildShapeKnownForms,
   battleDruidWildShapeKnownFormSupportForUnit,
@@ -46,7 +49,6 @@ import {
   deliverTouchSpellThroughFindFamiliar,
   discoverBattleActs,
   DRUID_WILD_COMPANION_SPELL_CAST_SUPPORT_PROFILE,
-  findFamiliarFormEligibilityForSpell,
   findFamiliarCompanionEntryForOwner,
   findFamiliarCompanionForOwner,
   findFamiliarCreatureTypeOverrideForOwner,
@@ -65,7 +67,6 @@ import {
   type BattleHole,
   type BattleCreatureInit,
   type BattleState,
-  type FindFamiliarFormEligibility,
   type PactOfTheChainFamiliarAttackSubject,
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
@@ -549,7 +550,8 @@ function withFamiliarHitPoints(
   if (familiarEntry?.companion.status !== "present") {
     throw new Error("Expected present familiar.");
   }
-  const combatant = state.combatants.get(familiarEntry.companionId);
+  const familiarCombatantId = familiarEntry.companion.combatantId;
+  const combatant = state.combatants.get(familiarCombatantId);
   if (combatant === undefined) {
     throw new Error("Expected familiar combatant.");
   }
@@ -567,7 +569,7 @@ function withFamiliarHitPoints(
   return {
     ...state,
     combatants: new Map(state.combatants).set(
-      familiarEntry.companionId,
+      familiarCombatantId,
       nextCombatant,
     ),
   };
@@ -866,7 +868,6 @@ describe("Find Familiar lifecycle", () => {
 
     expect(result.tag).toBe("resolved");
     if (result.tag !== "resolved") return;
-    expect(result.state.companions.has(familiarId)).toBe(true);
     const familiar = findFamiliarCompanionForOwner(result.state, casterId);
     expect(familiar).toMatchObject({
       status: "present",
@@ -903,286 +904,249 @@ describe("Find Familiar lifecycle", () => {
     ]);
   });
 
-  test("admits a present familiar during battle start from caster spell access", () => {
+  test("generic companion admission rejects an absent durable companion id collision", () => {
+    const otherOwnerId = combatantId("other-owner");
     const initial = startBattle({
-      battleId: battleId("find-familiar-admission-test"),
+      battleId: battleId("companion-admission-absent-id-collision"),
       combatants: [
         characterCreature({
           combatantId: casterId,
           displayName: "Wizard",
           initiative: 12,
           side: partySide,
-          spellcasting: {
-            sourceClassName: "wizard",
-            spellcastingAbilityModifier: abilityModifier(3),
-            proficiencyBonus: proficiencyBonus(2),
-            canCastSpells: true,
-            cantrips: [],
-            preparedSpells: [findFamiliarSpell],
-            featurePreparedSpells: [],
-            spellbookRitualSpellAccesses: [],
-            invocationSpellAccesses: [],
-            spellSlots: [{ spellLevel: 1, count: 2 }],
-          },
+        }),
+        characterCreature({
+          combatantId: otherOwnerId,
+          displayName: "Other Wizard",
+          initiative: 11,
+          side: partySide,
         }),
       ],
     });
     expect(Either.isRight(initial)).toBe(true);
     if (Either.isLeft(initial)) return;
 
-    const admitted = admitPresentFindFamiliarToBattle({
+    const firstAdmission = admitCompanionToBattle({
       state: initial.right,
-      casterId,
-      catalog: statBlockCatalog,
-      selection: { tag: "normalNamedForm", formId: "owl" },
-      creatureTypeOverrideChoiceId: "fey",
-      familiarId,
-      initiative: initiativeScore(18),
-      initialCombatantOrder: initialCombatantOrder(casterId, familiarId),
-      placement: { kind: "unoccupiedSpaceWithinSpellRange" },
-    });
-
-    expect(Either.isRight(admitted)).toBe(true);
-    if (Either.isLeft(admitted)) return;
-    expect(admitted.right.companions.has(familiarId)).toBe(true);
-    expect(admitted.right.companions.get(familiarId)).toMatchObject({
-      status: "present",
       ownerId: casterId,
-      formAccess: "findFamiliar",
-      formSelection: { tag: "normalNamedForm", formId: "owl" },
-      creatureTypeOverride: "fey",
-    });
-    expect(admitted.right.combatants.get(familiarId)).toMatchObject({
-      displayName: "Owl",
-      initiative: initiativeScore(18),
-      side: partySide,
-    });
-  });
-
-  test("preserves battle-start familiar hit points supplied by caller", () => {
-    const initial = startBattle({
-      battleId: battleId("find-familiar-admission-hp-test"),
-      combatants: [
-        characterCreature({
-          combatantId: casterId,
-          displayName: "Wizard",
-          initiative: 12,
-          side: partySide,
-          spellcasting: {
-            sourceClassName: "wizard",
-            spellcastingAbilityModifier: abilityModifier(3),
-            proficiencyBonus: proficiencyBonus(2),
-            canCastSpells: true,
-            cantrips: [],
-            preparedSpells: [findFamiliarSpell],
-            featurePreparedSpells: [],
-            spellbookRitualSpellAccesses: [],
-            invocationSpellAccesses: [],
-            spellSlots: [{ spellLevel: 1, count: 2 }],
-          },
-        }),
-      ],
-    });
-    expect(Either.isRight(initial)).toBe(true);
-    if (Either.isLeft(initial)) return;
-
-    const admitted = admitPresentFindFamiliarToBattle({
-      state: initial.right,
-      casterId,
+      identity: {
+        tag: "retainedBetweenBattles",
+        durableCompanionId: "durable:first",
+      },
+      protocol: { tag: "ordinaryFamiliarLikeOneAtATime" },
       catalog: statBlockCatalog,
-      selection: { tag: "normalNamedForm", formId: "cat" },
-      creatureTypeOverrideChoiceId: "fey",
-      familiarId,
-      initiative: initiativeScore(18),
-      currentHp: Hp(1),
-      tempHp: Hp(3),
-      initialCombatantOrder: initialCombatantOrder(casterId, familiarId),
-      placement: { kind: "unoccupiedSpaceWithinSpellRange" },
+      formEligibility: {
+        formAccess: "findFamiliar",
+        eligibility: familiarEligibility,
+      },
+      manifestation: {
+        tag: "temporarilyDismissed",
+        storedForm: {
+          formAccess: "findFamiliar",
+          formSelection: { tag: "normalNamedForm", formId: "cat" },
+          resolvedStatBlockId: "stat_block_cat",
+        },
+        creatureTypeOverride: "fey",
+        reappearanceCombatantId: familiarId,
+        hitPoints: {
+          // Cast evidence: Hp(1) is a positive HP literal for this boundary
+          // test fixture.
+          currentHp: Hp(1) as Parameters<
+            typeof admitCompanionToBattle
+          >[0]["manifestation"] extends { readonly hitPoints: infer H }
+            ? H extends { readonly currentHp: infer C }
+              ? C
+              : never
+            : never,
+          tempHp: Hp(0),
+        },
+      },
+      initialCombatantOrder: initialCombatantOrder(casterId, otherOwnerId),
     });
+    expect(Either.isRight(firstAdmission)).toBe(true);
+    if (Either.isLeft(firstAdmission)) return;
 
-    expect(Either.isRight(admitted)).toBe(true);
-    if (Either.isLeft(admitted)) return;
-    expect(admitted.right.combatants.get(familiarId)).toMatchObject({
-      displayName: "Cat",
-      hp: Hp(1),
-      tempHp: Hp(3),
-    });
-  });
-
-  test("admits a present familiar during battle start from spellbook Ritual access", () => {
-    const initial = startBattle({
-      battleId: battleId("find-familiar-spellbook-ritual-admission-test"),
-      combatants: [
-        characterCreature({
-          combatantId: casterId,
-          displayName: "Wizard",
-          initiative: 12,
-          side: partySide,
-          spellcasting: {
-            sourceClassName: "wizard",
-            spellcastingAbilityModifier: abilityModifier(3),
-            proficiencyBonus: proficiencyBonus(2),
-            canCastSpells: true,
-            cantrips: [],
-            preparedSpells: [],
-            featurePreparedSpells: [],
-            spellbookRitualSpellAccesses: [
-              {
-                tag: "spellbookRitual",
-                spell: findFamiliarSpell,
-                featureUnitId: "wizard_ritual_adept",
-              },
-            ],
-            invocationSpellAccesses: [],
-            spellSlots: [{ spellLevel: 1, count: 2 }],
-          },
-          characterUnitRefs: [
-            { unitId: "wizard_ritual_adept", supportProfiles: [] },
-          ],
-        }),
-      ],
-    });
-    expect(Either.isRight(initial)).toBe(true);
-    if (Either.isLeft(initial)) return;
-
-    const admitted = admitPresentFindFamiliarToBattle({
-      state: initial.right,
-      casterId,
+    const collision = admitCompanionToBattle({
+      state: firstAdmission.right,
+      ownerId: otherOwnerId,
+      identity: {
+        tag: "retainedBetweenBattles",
+        durableCompanionId: "durable:first",
+      },
+      protocol: { tag: "ordinaryFamiliarLikeOneAtATime" },
       catalog: statBlockCatalog,
-      selection: { tag: "normalNamedForm", formId: "owl" },
-      creatureTypeOverrideChoiceId: "fey",
-      familiarId,
-      initiative: initiativeScore(18),
-      initialCombatantOrder: initialCombatantOrder(casterId, familiarId),
-      placement: { kind: "unoccupiedSpaceWithinSpellRange" },
+      formEligibility: {
+        formAccess: "findFamiliar",
+        eligibility: familiarEligibility,
+      },
+      manifestation: {
+        tag: "disappearedAtZeroHitPoints",
+        storedForm: {
+          formAccess: "findFamiliar",
+          formSelection: { tag: "normalNamedForm", formId: "owl" },
+          resolvedStatBlockId: "stat_block_owl",
+        },
+        creatureTypeOverride: "fey",
+      },
+      initialCombatantOrder: initialCombatantOrder(casterId, otherOwnerId),
     });
 
-    expect(Either.isRight(admitted)).toBe(true);
-    if (Either.isLeft(admitted)) return;
-    expect(admitted.right.companions.has(familiarId)).toBe(true);
-    expect(admitted.right.companions.get(familiarId)).toMatchObject({
-      status: "present",
+    expect(Either.isLeft(collision)).toBe(true);
+    if (Either.isRight(collision)) return;
+    expect(collision.left.message).toBe(
+      "Companion admission identity is already used by another companion.",
+    );
+    expect(firstAdmission.right.companions.get(casterId)).toMatchObject({
       ownerId: casterId,
-      formAccess: "findFamiliar",
-      formSelection: { tag: "normalNamedForm", formId: "owl" },
+      status: "temporarilyDismissed",
+      identity: {
+        tag: "retainedBetweenBattles",
+        durableCompanionId: "durable:first",
+      },
     });
   });
 
-  test("rejects forged spellbook Ritual admission when projected access is absent", () => {
+  test("generic companion admission rejects empty durable companion ids", () => {
     const initial = startBattle({
-      battleId: battleId("find-familiar-spellbook-ritual-proof-test"),
+      battleId: battleId("companion-admission-empty-durable-id"),
       combatants: [
         characterCreature({
           combatantId: casterId,
           displayName: "Wizard",
           initiative: 12,
           side: partySide,
-          spellcasting: {
-            sourceClassName: "wizard",
-            spellcastingAbilityModifier: abilityModifier(3),
-            proficiencyBonus: proficiencyBonus(2),
-            canCastSpells: true,
-            cantrips: [],
-            preparedSpells: [],
-            featurePreparedSpells: [],
-            spellbookRitualSpellAccesses: [],
-            invocationSpellAccesses: [],
-            spellSlots: [{ spellLevel: 1, count: 2 }],
-          },
         }),
       ],
     });
     expect(Either.isRight(initial)).toBe(true);
     if (Either.isLeft(initial)) return;
 
-    const admitted = admitPresentFindFamiliarToBattle({
+    const admitted = admitCompanionToBattle({
       state: initial.right,
-      casterId,
+      ownerId: casterId,
+      identity: {
+        tag: "retainedBetweenBattles",
+        durableCompanionId: "",
+      },
+      protocol: { tag: "ordinaryFamiliarLikeOneAtATime" },
       catalog: statBlockCatalog,
-      selection: { tag: "normalNamedForm", formId: "owl" },
-      creatureTypeOverrideChoiceId: "fey",
-      familiarId,
-      initiative: initiativeScore(18),
-      initialCombatantOrder: initialCombatantOrder(casterId, familiarId),
-      placement: { kind: "unoccupiedSpaceWithinSpellRange" },
+      formEligibility: {
+        formAccess: "findFamiliar",
+        eligibility: familiarEligibility,
+      },
+      manifestation: {
+        tag: "disappearedAtZeroHitPoints",
+        storedForm: {
+          formAccess: "findFamiliar",
+          formSelection: { tag: "normalNamedForm", formId: "cat" },
+          resolvedStatBlockId: "stat_block_cat",
+        },
+        creatureTypeOverride: "fey",
+      },
+      initialCombatantOrder: initialCombatantOrder(casterId),
     });
 
-    expect(admitted).toEqual(
-      Either.left({
-        tag: "battleStateInitIssue",
-        message:
-          "Find Familiar admission source actor does not have Find Familiar prepared, available through spellbook Ritual access, or selected through Pact of the Chain.",
-      }),
+    expect(Either.isLeft(admitted)).toBe(true);
+    if (Either.isRight(admitted)) return;
+    expect(admitted.left.message).toBe(
+      "Companion admission requires durable id.",
     );
   });
 
-  test("preserves caller initiative tie order for battle-start admission", () => {
+  test("generic companion admission rejects mismatched retained form proof", () => {
     const initial = startBattle({
-      battleId: battleId("find-familiar-admission-tie-order-test"),
+      battleId: battleId("companion-admission-form-proof-mismatch"),
       combatants: [
         characterCreature({
           combatantId: casterId,
           displayName: "Wizard",
-          initiative: 18,
+          initiative: 12,
           side: partySide,
-          spellcasting: {
-            sourceClassName: "wizard",
-            spellcastingAbilityModifier: abilityModifier(3),
-            proficiencyBonus: proficiencyBonus(2),
-            canCastSpells: true,
-            cantrips: [],
-            preparedSpells: [findFamiliarSpell],
-            featurePreparedSpells: [],
-            spellbookRitualSpellAccesses: [],
-            invocationSpellAccesses: [],
-            spellSlots: [{ spellLevel: 1, count: 2 }],
-          },
         }),
       ],
     });
     expect(Either.isRight(initial)).toBe(true);
     if (Either.isLeft(initial)) return;
 
-    const admitted = admitPresentFindFamiliarToBattle({
+    const admitted = admitCompanionToBattle({
       state: initial.right,
-      casterId,
+      ownerId: casterId,
+      identity: {
+        tag: "retainedBetweenBattles",
+        durableCompanionId: "durable:mismatched-proof",
+      },
+      protocol: { tag: "ordinaryFamiliarLikeOneAtATime" },
       catalog: statBlockCatalog,
-      selection: { tag: "normalNamedForm", formId: "owl" },
-      creatureTypeOverrideChoiceId: "fey",
-      familiarId,
-      initiative: initiativeScore(18),
-      initialCombatantOrder: initialCombatantOrder(familiarId, casterId),
-      placement: { kind: "unoccupiedSpaceWithinSpellRange" },
+      formEligibility: {
+        formAccess: "findFamiliar",
+        eligibility: familiarEligibility,
+      },
+      manifestation: {
+        tag: "disappearedAtZeroHitPoints",
+        storedForm: {
+          formAccess: "findFamiliar",
+          formSelection: { tag: "normalNamedForm", formId: "cat" },
+          resolvedStatBlockId: "stat_block_owl",
+        },
+        creatureTypeOverride: "fey",
+      },
+      initialCombatantOrder: initialCombatantOrder(casterId),
     });
 
-    expect(Either.isRight(admitted)).toBe(true);
-    if (Either.isLeft(admitted)) return;
-    expect(snapshotBattle(admitted.right).turnOrder).toEqual([
-      familiarId,
-      casterId,
-    ]);
+    expect(Either.isLeft(admitted)).toBe(true);
+    if (Either.isRight(admitted)) return;
+    expect(admitted.left.message).toBe(
+      "Retained familiar form proof resolved Stat Block mismatch: stat_block_owl.",
+    );
   });
 
-  test("rejects source-linked familiar admission without Find Familiar access", () => {
-    const initial = startFixtureBattle();
-    const admitted = admitPresentFindFamiliarToBattle({
-      state: initial,
-      casterId,
+  test("generic companion admission rejects forged Challenge Rating 0 Beast proof", () => {
+    const initial = startBattle({
+      battleId: battleId("companion-admission-forged-cr0-beast"),
+      combatants: [
+        characterCreature({
+          combatantId: casterId,
+          displayName: "Wizard",
+          initiative: 12,
+          side: partySide,
+        }),
+      ],
+    });
+    expect(Either.isRight(initial)).toBe(true);
+    if (Either.isLeft(initial)) return;
+
+    const admitted = admitCompanionToBattle({
+      state: initial.right,
+      ownerId: casterId,
+      identity: {
+        tag: "retainedBetweenBattles",
+        durableCompanionId: "durable:forged-cr0-beast",
+      },
+      protocol: { tag: "ordinaryFamiliarLikeOneAtATime" },
       catalog: statBlockCatalog,
-      selection: { tag: "normalNamedForm", formId: "owl" },
-      creatureTypeOverrideChoiceId: "fey",
-      familiarId,
-      initiative: initiativeScore(18),
-      initialCombatantOrder: initialCombatantOrder(casterId, familiarId),
-      placement: { kind: "unoccupiedSpaceWithinSpellRange" },
+      formEligibility: {
+        formAccess: "findFamiliar",
+        eligibility: familiarEligibility,
+      },
+      manifestation: {
+        tag: "disappearedAtZeroHitPoints",
+        storedForm: {
+          formAccess: "findFamiliar",
+          formSelection: {
+            tag: "challengeRatingZeroBeast",
+            statBlockId: "stat_block_goblin_warrior",
+          },
+          resolvedStatBlockId: "stat_block_goblin_warrior",
+        },
+        creatureTypeOverride: "fey",
+      },
+      initialCombatantOrder: initialCombatantOrder(casterId),
     });
 
-    expect(admitted).toEqual(
-      Either.left({
-        tag: "battleStateInitIssue",
-        message:
-          "Find Familiar admission source actor must be a character with Find Familiar access.",
-      }),
+    expect(Either.isLeft(admitted)).toBe(true);
+    if (Either.isRight(admitted)) return;
+    expect(admitted.left.message).toBe(
+      "Retained familiar Challenge Rating 0 Beast form must resolve to a CR 0 Beast Stat Block: stat_block_goblin_warrior.",
     );
   });
 
@@ -1203,10 +1167,10 @@ describe("Find Familiar lifecycle", () => {
 
     expect(cast.tag).toBe("resolved");
     if (cast.tag !== "resolved") return;
-    expect(cast.state.companions.get(familiarId)).toMatchObject({
+    expect(findFamiliarCompanionForOwner(cast.state, casterId)).toMatchObject({
       status: "present",
       ownerId: casterId,
-      formAccess: "druidWildCompanion",
+      formAccess: "findFamiliar",
       formSelection: { tag: "normalNamedForm", formId: "cat" },
       creatureTypeOverride: "fey",
     });
@@ -1249,8 +1213,8 @@ describe("Find Familiar lifecycle", () => {
           )
         : undefined,
     ).toMatchObject({ usesRemaining: 1 });
-    expect(cast.state.companions.get(familiarId)).toMatchObject({
-      formAccess: "druidWildCompanion",
+    expect(findFamiliarCompanionForOwner(cast.state, casterId)).toMatchObject({
+      formAccess: "findFamiliar",
       creatureTypeOverride: "fey",
     });
   });
@@ -1313,7 +1277,7 @@ describe("Find Familiar lifecycle", () => {
       findFamiliarCompanionForOwner(reappeared.state, casterId),
     ).toMatchObject({
       status: "present",
-      formAccess: "druidWildCompanion",
+      formAccess: "findFamiliar",
       creatureTypeOverride: "fey",
     });
     expect(reappeared.state.combatants.get(familiarId)?.initiative).toBe(
@@ -1342,246 +1306,6 @@ describe("Find Familiar lifecycle", () => {
       reason: "invalidFill",
       message: "Wild Companion requires the Druid Wild Companion feature.",
     });
-  });
-
-  test("removes Wild Companion familiars when their owner finishes a Long Rest", () => {
-    const cast = castWildCompanion({
-      state: startWildCompanionDruidFixtureBattle({
-        spellSlots: [{ spellLevel: 1, count: 1 }],
-      }),
-      casterId,
-      catalog: statBlockCatalog,
-      findFamiliarSpell,
-      selection: { tag: "normalNamedForm", formId: "cat" },
-      spend: { kind: "spellSlot", spellLevel: spellSlotLevel(1) },
-      familiarId,
-      initiative: initiativeScore(18),
-      placement: { kind: "unoccupiedSpaceWithinSpellRange" },
-    });
-    expect(cast.tag).toBe("resolved");
-    if (cast.tag !== "resolved") return;
-
-    const rested = applyCompanionLongRestDisappearance({
-      state: cast.state,
-      trigger: { tag: "ownerFinishedLongRest", ownerId: casterId },
-    });
-
-    expect(rested.tag).toBe("resolved");
-    if (rested.tag !== "resolved") return;
-    expect(rested.state.companions.has(familiarId)).toBe(false);
-    expect(rested.state.combatants.has(familiarId)).toBe(false);
-    expect(rested.snapshot.companions).toEqual([]);
-  });
-
-  test("rejects present familiar admission at 0 HP", () => {
-    const initial = startBattle({
-      battleId: battleId("find-familiar-zero-hp-admission-test"),
-      combatants: [
-        characterCreature({
-          combatantId: casterId,
-          displayName: "Wizard",
-          initiative: 12,
-          side: partySide,
-          spellcasting: {
-            sourceClassName: "wizard",
-            spellcastingAbilityModifier: abilityModifier(3),
-            proficiencyBonus: proficiencyBonus(2),
-            canCastSpells: true,
-            cantrips: [],
-            preparedSpells: [findFamiliarSpell],
-            featurePreparedSpells: [],
-            spellbookRitualSpellAccesses: [],
-            invocationSpellAccesses: [],
-            spellSlots: [{ spellLevel: 1, count: 2 }],
-          },
-        }),
-      ],
-    });
-    expect(Either.isRight(initial)).toBe(true);
-    if (Either.isLeft(initial)) return;
-
-    const admitted = admitPresentFindFamiliarToBattle({
-      state: initial.right,
-      casterId,
-      catalog: statBlockCatalog,
-      selection: { tag: "normalNamedForm", formId: "owl" },
-      creatureTypeOverrideChoiceId: "fey",
-      familiarId,
-      initiative: initiativeScore(18),
-      currentHp: Hp(0),
-      initialCombatantOrder: initialCombatantOrder(casterId, familiarId),
-      placement: { kind: "unoccupiedSpaceWithinSpellRange" },
-    });
-
-    expect(admitted).toEqual(
-      Either.left({
-        tag: "battleStateInitIssue",
-        message: "Present Find Familiar admission requires current HP above 0.",
-      }),
-    );
-  });
-
-  test("rejects present familiar admission above familiar maximum HP", () => {
-    const initial = startBattle({
-      battleId: battleId("find-familiar-overmax-hp-admission-test"),
-      combatants: [
-        characterCreature({
-          combatantId: casterId,
-          displayName: "Wizard",
-          initiative: 12,
-          side: partySide,
-          spellcasting: {
-            sourceClassName: "wizard",
-            spellcastingAbilityModifier: abilityModifier(3),
-            proficiencyBonus: proficiencyBonus(2),
-            canCastSpells: true,
-            cantrips: [],
-            preparedSpells: [findFamiliarSpell],
-            featurePreparedSpells: [],
-            spellbookRitualSpellAccesses: [],
-            invocationSpellAccesses: [],
-            spellSlots: [{ spellLevel: 1, count: 2 }],
-          },
-        }),
-      ],
-    });
-    expect(Either.isRight(initial)).toBe(true);
-    if (Either.isLeft(initial)) return;
-
-    const admitted = admitPresentFindFamiliarToBattle({
-      state: initial.right,
-      casterId,
-      catalog: statBlockCatalog,
-      selection: { tag: "normalNamedForm", formId: "owl" },
-      creatureTypeOverrideChoiceId: "fey",
-      familiarId,
-      initiative: initiativeScore(18),
-      currentHp: Hp(2),
-      initialCombatantOrder: initialCombatantOrder(casterId, familiarId),
-      placement: { kind: "unoccupiedSpaceWithinSpellRange" },
-    });
-
-    expect(admitted).toEqual(
-      Either.left({
-        tag: "battleStateInitIssue",
-        message:
-          "Present Find Familiar admission current HP must not exceed maximum HP.",
-      }),
-    );
-  });
-
-  test("rejects incomplete battle-start combatant order maps", () => {
-    const initial = startBattle({
-      battleId: battleId("find-familiar-incomplete-order-admission-test"),
-      combatants: [
-        characterCreature({
-          combatantId: casterId,
-          displayName: "Wizard",
-          initiative: 12,
-          side: partySide,
-          spellcasting: {
-            sourceClassName: "wizard",
-            spellcastingAbilityModifier: abilityModifier(3),
-            proficiencyBonus: proficiencyBonus(2),
-            canCastSpells: true,
-            cantrips: [],
-            preparedSpells: [findFamiliarSpell],
-            featurePreparedSpells: [],
-            spellbookRitualSpellAccesses: [],
-            invocationSpellAccesses: [],
-            spellSlots: [{ spellLevel: 1, count: 2 }],
-          },
-        }),
-      ],
-    });
-    expect(Either.isRight(initial)).toBe(true);
-    if (Either.isLeft(initial)) return;
-
-    const admitted = admitPresentFindFamiliarToBattle({
-      state: initial.right,
-      casterId,
-      catalog: statBlockCatalog,
-      selection: { tag: "normalNamedForm", formId: "owl" },
-      creatureTypeOverrideChoiceId: "fey",
-      familiarId,
-      initiative: initiativeScore(18),
-      initialCombatantOrder: new Map([[casterId, 0]]),
-      placement: { kind: "unoccupiedSpaceWithinSpellRange" },
-    });
-
-    expect(admitted).toEqual(
-      Either.left({
-        tag: "battleStateInitIssue",
-        message: "Initial combatant order must include every combatant.",
-      }),
-    );
-  });
-
-  test("rejects duplicate source-linked familiar admission for one caster", () => {
-    const initial = startBattle({
-      battleId: battleId("find-familiar-duplicate-admission-test"),
-      combatants: [
-        characterCreature({
-          combatantId: casterId,
-          displayName: "Wizard",
-          initiative: 12,
-          side: partySide,
-          spellcasting: {
-            sourceClassName: "wizard",
-            spellcastingAbilityModifier: abilityModifier(3),
-            proficiencyBonus: proficiencyBonus(2),
-            canCastSpells: true,
-            cantrips: [],
-            preparedSpells: [findFamiliarSpell],
-            featurePreparedSpells: [],
-            spellbookRitualSpellAccesses: [],
-            invocationSpellAccesses: [],
-            spellSlots: [{ spellLevel: 1, count: 2 }],
-          },
-        }),
-      ],
-    });
-    expect(Either.isRight(initial)).toBe(true);
-    if (Either.isLeft(initial)) return;
-
-    const first = admitPresentFindFamiliarToBattle({
-      state: initial.right,
-      casterId,
-      catalog: statBlockCatalog,
-      selection: { tag: "normalNamedForm", formId: "owl" },
-      creatureTypeOverrideChoiceId: "fey",
-      familiarId,
-      initiative: initiativeScore(18),
-      initialCombatantOrder: initialCombatantOrder(casterId, familiarId),
-      placement: { kind: "unoccupiedSpaceWithinSpellRange" },
-    });
-    expect(Either.isRight(first)).toBe(true);
-    if (Either.isLeft(first)) return;
-
-    const second = admitPresentFindFamiliarToBattle({
-      state: first.right,
-      casterId,
-      catalog: statBlockCatalog,
-      selection: { tag: "normalNamedForm", formId: "cat" },
-      creatureTypeOverrideChoiceId: "fey",
-      familiarId: replacementFamiliarId,
-      initiative: initiativeScore(17),
-      initialCombatantOrder: initialCombatantOrder(
-        casterId,
-        replacementFamiliarId,
-      ),
-      placement: { kind: "unoccupiedSpaceWithinSpellRange" },
-    });
-
-    expect(second).toEqual(
-      Either.left({
-        tag: "battleStateInitIssue",
-        message:
-          "Source-linked Find Familiar admission requires at most one familiar per source actor.",
-      }),
-    );
-    expect(first.right.combatants.has(familiarId)).toBe(true);
-    expect(first.right.combatants.has(replacementFamiliarId)).toBe(false);
   });
 
   test("keeps one familiar per caster and atomically replaces form on recast", () => {
@@ -1682,7 +1406,6 @@ describe("Find Familiar lifecycle", () => {
       state: dismissed.state,
       casterId,
       catalog: statBlockCatalog,
-      familiarId,
       initiative: initiativeScore(14),
       placement: { kind: "unoccupiedSpaceWithin30Feet" },
     });
@@ -1694,7 +1417,6 @@ describe("Find Familiar lifecycle", () => {
       state: withFreshMagicAction(dismissed.state),
       casterId,
       catalog: statBlockCatalog,
-      familiarId,
       initiative: initiativeScore(14),
       placement: { kind: "unoccupiedSpaceWithin30Feet" },
     });
@@ -1716,53 +1438,71 @@ describe("Find Familiar lifecycle", () => {
     });
   });
 
-  test("rejects reappearance with an ordinary combatant identity", () => {
-    const cast = castCatFamiliar(
-      startFixtureBattle({ extraCombatantId: otherCombatantId }),
-    );
-    expect(cast.tag).toBe("resolved");
-    if (cast.tag !== "resolved") return;
-    const dismissed = temporarilyDismissFindFamiliar({
-      state: cast.state,
-      casterId,
+  test("rejects retained temporary dismissal with an ordinary reappearance combatant identity", () => {
+    const initial = startBattle({
+      battleId: battleId("companion-admission-ordinary-reappearance-id"),
+      combatants: [
+        characterCreature({
+          combatantId: casterId,
+          displayName: "Wizard",
+          initiative: 12,
+          side: partySide,
+        }),
+        characterCreature({
+          combatantId: otherCombatantId,
+          displayName: "Other Combatant",
+          initiative: 10,
+          side: partySide,
+        }),
+      ],
     });
-    expect(dismissed.tag).toBe("resolved");
-    if (dismissed.tag !== "resolved") return;
-    const dismissedFamiliar = findFamiliarCompanionForOwner(
-      dismissed.state,
-      casterId,
-    );
-    if (dismissedFamiliar?.status !== "temporarilyDismissed") {
-      throw new Error("Expected temporarily dismissed familiar.");
-    }
+    expect(Either.isRight(initial)).toBe(true);
+    if (Either.isLeft(initial)) return;
 
-    const reappeared = reappearTemporarilyDismissedFindFamiliar({
-      state: withFreshMagicAction(dismissed.state),
-      casterId,
-      catalog: statBlockCatalog,
-      familiarId: otherCombatantId,
-      initiative: initiativeScore(14),
-      placement: { kind: "unoccupiedSpaceWithin30Feet" },
-    });
-
-    expect(reappeared.tag).toBe("invalid");
-    if (reappeared.tag !== "invalid") return;
-    expect(reappeared.reason).toBe("invalidFill");
-    expect(reappeared.snapshot.companions).toEqual([
-      {
-        status: "temporarilyDismissed",
-        ownerId: casterId,
-        companionId: familiarId,
-        formAccess: "findFamiliar",
-        formSelection: { tag: "normalNamedForm", formId: "cat" },
-        resolvedStatBlockId: "stat_block_cat",
-        creatureTypeOverride: firstTypeOverride.creatureType,
-        hitPoints: dismissedFamiliar.hitPoints,
+    const admitted = admitCompanionToBattle({
+      state: initial.right,
+      ownerId: casterId,
+      identity: {
+        tag: "retainedBetweenBattles",
+        durableCompanionId: "durable:ordinary-reappearance-id",
       },
-    ]);
+      protocol: { tag: "ordinaryFamiliarLikeOneAtATime" },
+      catalog: statBlockCatalog,
+      formEligibility: {
+        formAccess: "findFamiliar",
+        eligibility: familiarEligibility,
+      },
+      manifestation: {
+        tag: "temporarilyDismissed",
+        storedForm: {
+          formAccess: "findFamiliar",
+          formSelection: { tag: "normalNamedForm", formId: "cat" },
+          resolvedStatBlockId: "stat_block_cat",
+        },
+        creatureTypeOverride: firstTypeOverride.creatureType,
+        reappearanceCombatantId: otherCombatantId,
+        hitPoints: {
+          currentHp: Hp(1) as Parameters<
+            typeof admitCompanionToBattle
+          >[0]["manifestation"] extends { readonly hitPoints: infer H }
+            ? H extends { readonly currentHp: infer C }
+              ? C
+              : never
+            : never,
+          tempHp: Hp(0),
+        },
+      },
+      initialCombatantOrder: initialCombatantOrder(casterId, otherCombatantId),
+    });
+
+    expect(Either.isLeft(admitted)).toBe(true);
+    if (Either.isRight(admitted)) return;
+    expect(admitted.left.message).toBe(
+      "Find Familiar familiar identity must not identify an ordinary combatant.",
+    );
   });
 
-  test("permanent dismissal removes the active familiar record", () => {
+  test("permanent dismissal tombstones the familiar and removes its combatant", () => {
     const cast = castCatFamiliar(startFixtureBattle());
     expect(cast.tag).toBe("resolved");
     if (cast.tag !== "resolved") return;
@@ -1774,9 +1514,14 @@ describe("Find Familiar lifecycle", () => {
 
     expect(dismissed.tag).toBe("resolved");
     if (dismissed.tag !== "resolved") return;
-    expect(findFamiliarCompanionForOwner(dismissed.state, casterId)).toBeNull();
-    expect(dismissed.state.companions.has(familiarId)).toBe(false);
+    // The record is retained as a dismissedForever tombstone (not deleted) so
+    // settlement can clear the owner's durable slot; the combatant is removed
+    // and the tombstone is excluded from the snapshot.
+    expect(
+      findFamiliarCompanionForOwner(dismissed.state, casterId),
+    ).toMatchObject({ status: "dismissedForever" });
     expect(dismissed.state.combatants.has(familiarId)).toBe(false);
+    expect(dismissed.snapshot.companions).toEqual([]);
     expect(dismissed.snapshot.turnOrder).toEqual([casterId]);
     expect(dismissed.droppedObjects).toBeUndefined();
   });
@@ -1811,11 +1556,17 @@ describe("Find Familiar lifecycle", () => {
         status: "present",
       },
     );
+    const recastEntry = findFamiliarCompanionEntryForOwner(
+      recast.state,
+      casterId,
+    );
     expect(
-      findFamiliarCompanionEntryForOwner(recast.state, casterId)?.companionId,
-    ).toBe(familiarId);
-    expect(recast.state.combatants.has(familiarId)).toBe(true);
-    expect(recast.state.combatants.has(replacementFamiliarId)).toBe(false);
+      recastEntry?.companion.status === "present"
+        ? recastEntry.companion.combatantId
+        : undefined,
+    ).toBe(replacementFamiliarId);
+    expect(recast.state.combatants.has(familiarId)).toBe(false);
+    expect(recast.state.combatants.has(replacementFamiliarId)).toBe(true);
   });
 
   test("owns its turn and resources while rejecting ordinary attacks", () => {
@@ -2012,7 +1763,6 @@ describe("Find Familiar lifecycle", () => {
     if (Either.isLeft(ownerRemoved)) return;
     expect(ownerRemoved.right.combatants.has(casterId)).toBe(false);
     expect(ownerRemoved.right.combatants.has(familiarId)).toBe(false);
-    expect(ownerRemoved.right.companions.has(familiarId)).toBe(false);
     expect(
       findFamiliarCompanionForOwner(ownerRemoved.right, casterId),
     ).toBeNull();
@@ -2029,7 +1779,6 @@ describe("Find Familiar lifecycle", () => {
     if (Either.isLeft(familiarRemoved)) return;
     expect(familiarRemoved.right.combatants.has(casterId)).toBe(true);
     expect(familiarRemoved.right.combatants.has(familiarId)).toBe(false);
-    expect(familiarRemoved.right.companions.has(familiarId)).toBe(false);
     expect(
       findFamiliarCompanionForOwner(familiarRemoved.right, casterId),
     ).toBeNull();
@@ -2442,10 +2191,9 @@ describe("Find Familiar lifecycle", () => {
     });
     expect(permanentlyDismissed.tag).toBe("resolved");
     if (permanentlyDismissed.tag !== "resolved") return;
-    expect(permanentlyDismissed.state.companions.has(familiarId)).toBe(false);
     expect(
       findFamiliarCompanionForOwner(permanentlyDismissed.state, casterId),
-    ).toBeNull();
+    ).toMatchObject({ status: "dismissedForever" });
     expect(permanentlyDismissed.state.combatants.has(familiarId)).toBe(false);
     expect(
       permanentlyDismissed.state.currentTurnResources.actionResources,
@@ -2913,6 +2661,8 @@ describe("Find Familiar lifecycle", () => {
         status: "present",
         ownerId: casterId,
         companionId: familiarId,
+        identity: { tag: "battleOnly" },
+        protocol: { tag: "ordinaryFamiliarLikeOneAtATime" },
         formAccess: "findFamiliar",
         formSelection: { tag: "normalNamedForm", formId: "cat" },
         resolvedStatBlockId: "stat_block_cat",
@@ -2962,7 +2712,11 @@ describe("Find Familiar lifecycle", () => {
       companions: [
         {
           status: "temporarilyDismissed",
+          companionId: familiarId,
           ownerId: casterId,
+          identity: { tag: "battleOnly" },
+          protocol: { tag: "ordinaryFamiliarLikeOneAtATime" },
+          reappearanceCombatantId: familiarId,
           formAccess: "findFamiliar",
           formSelection: { tag: "normalNamedForm", formId: "cat" },
           creatureTypeOverride: firstTypeOverride.creatureType,
@@ -2983,9 +2737,12 @@ describe("Find Familiar lifecycle", () => {
     );
     expect(familiarEntry).not.toBeNull();
     if (familiarEntry === null) return;
+    if (familiarEntry.companion.status !== "present") {
+      throw new Error("Expected present familiar after cast.");
+    }
 
     expect(snapshotBattle(cast.state).companions).toMatchObject([
-      { ownerId: casterId, companionId: familiarEntry.companionId },
+      { ownerId: casterId, companionId: familiarEntry.companion.combatantId },
     ]);
   });
 });

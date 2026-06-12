@@ -9,7 +9,7 @@
 //   - breakBattleConcentration, breakBattleConcentrationAfterDamage,
 //     resolveBattleConcentrationDamage (from H, cycle #10)
 //   - applyTemporaryHitPoints (from H, cycle #13)
-// Spell-condition expiration helpers live in spell-condition-effects-helpers.ts
+// Spell-condition protocol helpers live in spell-condition-effects-helpers.ts
 // (cycle #19) so both M and P can import them without a cycle.
 // KERNEL-COVERAGE: runtime-owner SHARED.HIT_POINTS.POSITIVE_DAMAGE BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP BATTLE.DAMAGE.DEATH_SAVING_THROW_LIFECYCLE BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_DAMAGE_PENALTY
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.HEAT_METAL_OBJECT_CONTACT_LIFECYCLE
@@ -78,6 +78,7 @@ import {
   type CharacterBattleResourceState,
 } from "../character-battle-resources.ts";
 import type { CombatantId } from "../identity.ts";
+import { setCompanion } from "../companion-state.ts";
 import { findPresentFamiliarById } from "../find-familiar-state.ts";
 import { retainedStoredFormForPresentCompanion } from "../find-familiar-lifecycle.ts";
 import { parseSupportedUnitFeatureProfile } from "../unit-feature-support.ts";
@@ -781,12 +782,15 @@ function applyFindFamiliarZeroHitPointDisappearanceAfterDamage(input: {
     return removeInvalidPresentFindFamiliarAfterZeroHitPointDamage({
       state: input.state,
       companionId: entry.companionId,
+      ownerId: entry.ownerId,
     });
   }
   const disappearedFamiliar = {
     ...retainedForm,
     status: "disappearedAtZeroHitPoints" as const,
     ownerId: entry.ownerId,
+    identity: entry.familiar.identity,
+    protocol: entry.familiar.protocol,
     creatureTypeOverride: entry.familiar.creatureTypeOverride,
   };
   const removed = removeBattleCombatants({
@@ -798,8 +802,8 @@ function applyFindFamiliarZeroHitPointDisappearanceAfterDamage(input: {
     : removed.right;
   return {
     ...stateWithoutFamiliar,
-    companions: new Map(stateWithoutFamiliar.companions).set(
-      entry.companionId,
+    companions: setCompanion(
+      stateWithoutFamiliar.companions,
       disappearedFamiliar,
     ),
   };
@@ -808,6 +812,7 @@ function applyFindFamiliarZeroHitPointDisappearanceAfterDamage(input: {
 function removeInvalidPresentFindFamiliarAfterZeroHitPointDamage(input: {
   readonly state: BattleState;
   readonly companionId: CombatantId;
+  readonly ownerId: CombatantId;
 }): BattleState {
   const removed = removeBattleCombatants({
     state: input.state,
@@ -817,7 +822,7 @@ function removeInvalidPresentFindFamiliarAfterZeroHitPointDamage(input: {
     ? input.state
     : removed.right;
   const companions = new Map(stateWithoutCombatant.companions);
-  companions.delete(input.companionId);
+  companions.delete(input.ownerId);
   return { ...stateWithoutCombatant, companions };
 }
 

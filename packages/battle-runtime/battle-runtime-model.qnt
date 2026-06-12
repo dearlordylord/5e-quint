@@ -88,11 +88,18 @@ module battleRuntimeModel {
   type FindFamiliarForm = FindFamiliarCat | FindFamiliarRat | FindFamiliarBat
   type FindFamiliarCreatureTypeOverride = FindFamiliarCelestial | FindFamiliarFey | FindFamiliarFiend
   type FindFamiliarPlacement = FindFamiliarUnoccupiedSpaceWithinSpellRange | FindFamiliarUnoccupiedSpaceWithin30Feet
+  type FindFamiliarIdentity = BattleOnlyFindFamiliarIdentity | RetainedFindFamiliarIdentity({ durableCompanion: Actor })
+  type FindFamiliarProtocol =
+    | OrdinaryFamiliarLikeOneAtATime
+    | AttackExceptionFamiliarLikeOneAtATime
+    | OwnerLongRestFamiliarLikeOneAtATime
   type FindFamiliarLifecycle =
     | NoFindFamiliar
     | PresentFindFamiliar({
         owner: Actor,
         familiar: Actor,
+        identity: FindFamiliarIdentity,
+        protocol: FindFamiliarProtocol,
         form: FindFamiliarForm,
         creatureTypeOverride: FindFamiliarCreatureTypeOverride,
         initiative: int,
@@ -100,13 +107,27 @@ module battleRuntimeModel {
       })
     | TemporarilyDismissedFindFamiliar({
         owner: Actor,
+        identity: FindFamiliarIdentity,
+        protocol: FindFamiliarProtocol,
         form: FindFamiliarForm,
         creatureTypeOverride: FindFamiliarCreatureTypeOverride,
       })
     | DisappearedAtZeroHitPointsFindFamiliar({
         owner: Actor,
+        identity: FindFamiliarIdentity,
+        protocol: FindFamiliarProtocol,
         form: FindFamiliarForm,
         creatureTypeOverride: FindFamiliarCreatureTypeOverride,
+      })
+    // Terminal state after a permanent dismissal. Unlike NoFindFamiliar ("the
+    // owner never had a familiar"), this retains the owner and identity so
+    // settlement can tell "dismissed forever" (clear the durable slot) apart
+    // from "never admitted" (leave the sheet untouched). It cannot reappear, so
+    // it carries no stored form.
+    | DismissedForeverFindFamiliar({
+        owner: Actor,
+        identity: FindFamiliarIdentity,
+        protocol: FindFamiliarProtocol,
       })
   type FindFamiliarItemDropBoundaryEvent = {
     owner: Actor,

@@ -19,11 +19,12 @@ Owned boundary functions:
 - `battleCreatureInitFromCharacterBuild` projects selected Eldritch Mind
   invocation ownership into the `eldritchMind` battle invocation feature, which
   battle-runtime uses only for Concentration maintenance Saving Throws.
-- `applyBattleHandoffToCharacterSheet` settles battle-owned HP, Temporary Hit
+- `settleCharacterSheetFromBattle` settles battle-owned HP, Temporary Hit
   Points, non-Unconscious conditions, ordinary Spell Slot expenditure, and
   supported feature-resource expenditure back onto the same Character Sheet
-  identity. Pact Slot state is preserved from the sheet because promoted battle
-  state does not carry Pact Slot expenditure separately.
+  identity, then settles retained companion outcome from the same Battle State.
+  Pact Slot state is preserved from the sheet because promoted battle state does
+  not carry Pact Slot expenditure separately.
 
 Battle handoff settlement has a fixed order:
 
@@ -38,6 +39,8 @@ Battle handoff settlement has a fixed order:
    expenditures.
 5. Replace Spell Slot source state only after the fresh sheet parse succeeds, so
    ordinary and created Spell Slot accounting stays a Character Sheet concern.
+6. Settle retained companion state from `BattleState.companions`; battle-only
+   companions remain battle-local and leave the Character Sheet unchanged.
 
 Runtime encounter state such as combatant ids, initiative, turns, reactions,
 active effects, and battle-local resources is not written to `CharacterBuild`;

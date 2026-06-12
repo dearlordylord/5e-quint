@@ -11,6 +11,7 @@ import { Hp } from "@dnd/shared/types";
 import { Either, Match } from "effect";
 
 import { publishAdminProjectionBestEffort } from "./admin-mirror.ts";
+import { applyCharacterSessionOperation } from "./character-session-operation-tool.ts";
 import { characterListRows } from "./character-session-rows.ts";
 import type { McpCompositionRoot } from "./composition-root.ts";
 import {
@@ -25,10 +26,12 @@ import {
   emptyInputSchema,
   finalizeCharacterInputSchema,
   fillCreationHolesInputSchema,
+  applyCharacterSessionOperationInputSchema,
   type CharacterToolCall,
   type CharacterToolName,
 } from "./character-tool-input.ts";
 import {
+  CharacterSessionOperationOutputSchema,
   CreationDraftOutputSchema,
   FillCreationHolesOutputSchema,
   FinalizeCharacterOutputSchema,
@@ -66,6 +69,13 @@ export const characterToolDefinitions = [
       "Finalize a complete supported character draft. A ready finalization stores the resulting in-play record by characterId and removes the active draft. Druid Wild Shape drafts require selected known Beast Stat Block ids.",
     inputSchema: finalizeCharacterInputSchema,
     outputSchema: mcpOutputJsonSchema(FinalizeCharacterOutputSchema),
+  },
+  {
+    name: characterToolNames.applyCharacterSessionOperation,
+    description:
+      "Apply a supported durable character-session operation. Retained one-at-a-time companion creation delegates source, form, and cost validation to runtime support facts; MCP does not own companion eligibility.",
+    inputSchema: applyCharacterSessionOperationInputSchema,
+    outputSchema: mcpOutputJsonSchema(CharacterSessionOperationOutputSchema),
   },
   {
     name: characterToolNames.listCharacters,
@@ -205,6 +215,10 @@ export function handleCharacterToolCall(
         session: root.sessionStore.snapshot(),
       });
     }),
+    Match.when(
+      { name: characterToolNames.applyCharacterSessionOperation },
+      (matched) => applyCharacterSessionOperation(root, matched.args),
+    ),
     Match.when({ name: characterToolNames.listCharacters }, () => {
       const rows = characterListRows(root);
       if (Either.isLeft(rows)) {

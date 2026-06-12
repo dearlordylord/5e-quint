@@ -1,10 +1,10 @@
 import { Option } from "effect";
 
 import type { CreatureType } from "@dnd/shared/game-facts";
-import type { StatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog";
-import type { SpellRecord, StatBlockRecord } from "@dnd/surface/surface/types";
+import type { StatBlockCatalog } from "./stat-block-catalog.ts";
+import type { SpellRecord, StatBlockRecord } from "./types.ts";
 
-const FIND_FAMILIAR_CREATURE_TYPE_OVERRIDE_TYPES = [
+export const FIND_FAMILIAR_CREATURE_TYPE_OVERRIDE_TYPES = [
   "celestial",
   "fey",
   "fiend",
@@ -352,12 +352,14 @@ function resolveCreatureTypeOverrideChoice(input: {
       };
 }
 
-function isFindFamiliarCreatureTypeOverride(
-  creatureType: SpawnedCreatureModeOption["overrides"]["creatureType"],
+export function isFindFamiliarCreatureTypeOverride(
+  creatureType: unknown,
 ): creatureType is FindFamiliarCreatureTypeOverride {
   return (
-    creatureType !== undefined &&
-    FIND_FAMILIAR_CREATURE_TYPE_OVERRIDE_TYPE_SET.has(creatureType)
+    typeof creatureType === "string" &&
+    FIND_FAMILIAR_CREATURE_TYPE_OVERRIDE_TYPE_SET.has(
+      creatureType as CreatureType,
+    )
   );
 }
 

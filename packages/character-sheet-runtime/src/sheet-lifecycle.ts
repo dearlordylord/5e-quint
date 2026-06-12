@@ -29,6 +29,10 @@ import {
   storedBookOfShadowsDruidCircleLandSelectionIssue,
 } from "./druid-features.ts";
 import {
+  companionFromInput,
+  parseStoredCharacterSheetCompanion,
+} from "./companions.ts";
+import {
   ARCANE_RECOVERY_REST_FEATURE_TAG,
   CHARACTER_SHEET_CONDITIONS,
   MAGICAL_CUNNING_REST_FEATURE_TAG,
@@ -84,6 +88,10 @@ function createCharacterSheet(
   if (Either.isLeft(resourceExpenditures)) {
     return Either.left(resourceExpenditures.left);
   }
+  const companion = companionFromInput(input.companion);
+  if (Either.isLeft(companion)) {
+    return Either.left(companion.left);
+  }
   const bookOfShadowsPresence = bookOfShadowsPresenceFromInput(input);
   if (Either.isLeft(bookOfShadowsPresence)) {
     return Either.left(bookOfShadowsPresence.left);
@@ -130,6 +138,7 @@ function createCharacterSheet(
       spentHitDice: spentHitDice.right,
       restFeatureUses: restFeatureUses.right,
       resourceExpenditures: resourceExpenditures.right,
+      companion: companion.right,
       ...(druidWildShapeKnownForms.right === undefined
         ? {}
         : { druidWildShapeKnownForms: druidWildShapeKnownForms.right }),
@@ -179,6 +188,7 @@ function createCharacterSheet(
     spentHitDice: spentHitDice.right,
     restFeatureUses: restFeatureUses.right,
     resourceExpenditures: resourceExpenditures.right,
+    companion: companion.right,
     bookOfShadowsPresence: bookOfShadowsPresence.right,
     ...(druidWildShapeKnownForms.right === undefined
       ? {}
@@ -253,6 +263,8 @@ export function parseCharacterSheet(
   if (Either.isLeft(resourceExpenditures)) {
     return Either.left(resourceExpenditures.left);
   }
+  const companion = parseStoredCharacterSheetCompanion(value.companion);
+  if (Either.isLeft(companion)) return Either.left(companion.left);
   const spellSlots = parseStoredSpellSlots(build.right, unitLibrary, value);
   if (Either.isLeft(spellSlots)) return Either.left(spellSlots.left);
   const pactSlots = parseStoredPactSlots(build.right, value);
@@ -297,6 +309,7 @@ export function parseCharacterSheet(
       spentHitDice: spentHitDice.right,
       restFeatureUses: restFeatureUses.right,
       resourceExpenditures: resourceExpenditures.right,
+      companion: companion.right,
       ...(druidWildShapeKnownForms.right === undefined
         ? {}
         : {

@@ -32,9 +32,9 @@ Diagnostic product readiness remains a separate lower-layer accounting view, not
 | Diagnostic product-readiness status | Rows |
 | --- | ---: |
 | accepted | 294 |
-| accepted-no-battle-effect | 104 |
-| owner-evidence-required | 1 |
-| partial-battle-runtime | 1 |
+| accepted-no-battle-effect | 99 |
+| owner-evidence-required | 5 |
+| partial-battle-runtime | 2 |
 
 ## QNT, Generator, And Parity
 

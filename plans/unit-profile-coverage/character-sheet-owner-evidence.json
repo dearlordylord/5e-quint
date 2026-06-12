@@ -13,8 +13,8 @@
         "packages/character-sheet-runtime/src/armor-class.ts:armorClassBaseSourceForFormula"
       ],
       "tests": [
-        "packages/character-sheet-runtime/src/index.test.ts:armorClassBuild",
-        "packages/character-sheet-runtime/src/index.test.ts:expectRight"
+        "packages/character-sheet-runtime/src/armor-class.test.ts:armorClassBuild",
+        "packages/character-sheet-runtime/src/rests.test.ts:expectRight"
       ]
     },
     "srd521:classes/monk:level-1:class-feature-grant:monk_unarmored_defense": {
@@ -27,8 +27,8 @@
         "packages/character-sheet-runtime/src/armor-class.ts:armorClassBaseSourceForFormula"
       ],
       "tests": [
-        "packages/character-sheet-runtime/src/index.test.ts:armorClassBuild",
-        "packages/character-sheet-runtime/src/index.test.ts:expectRight"
+        "packages/character-sheet-runtime/src/armor-class.test.ts:armorClassBuild",
+        "packages/character-sheet-runtime/src/armor-class.test.ts:expectRight"
       ]
     },
     "srd521:classes/monk:level-2:class-feature-grant:monk_monks_focus": {
@@ -44,7 +44,7 @@
         "packages/character-sheet-runtime/src/resources.ts:characterSheetMonksFocusSaveDc"
       ],
       "tests": [
-        "packages/character-sheet-runtime/src/index.test.ts:monksFocusShortRestRecoveryTestName"
+        "packages/character-sheet-runtime/src/resources.test.ts:monksFocusShortRestRecoveryTestName"
       ]
     },
     "srd521:classes/sorcerer:level-2:class-feature-grant:sorcerer_font_of_magic": {
@@ -65,11 +65,11 @@
         "packages/character-sheet-runtime/src/resources.ts:replacePointPoolResourceExpenditure"
       ],
       "tests": [
-        "packages/character-sheet-runtime/src/index.test.ts:sorcererFontOfMagicLongRestRecoveryTestName",
-        "packages/character-sheet-runtime/src/index.test.ts:sorcererFontOfMagicSlotConversionTestName",
-        "packages/character-sheet-runtime/src/index.test.ts:sorcererFontOfMagicSlotConversionGateTestName",
-        "packages/character-sheet-runtime/src/index.test.ts:sorcererFontOfMagicSlotCreationTestName",
-        "packages/character-sheet-runtime/src/index.test.ts:sorcererFontOfMagicSlotCreationGateTestName"
+        "packages/character-sheet-runtime/src/resources.test.ts:sorcererFontOfMagicLongRestRecoveryTestName",
+        "packages/character-sheet-runtime/src/spell-slots.test.ts:sorcererFontOfMagicSlotConversionTestName",
+        "packages/character-sheet-runtime/src/spell-slots.test.ts:sorcererFontOfMagicSlotConversionGateTestName",
+        "packages/character-sheet-runtime/src/spell-slots.test.ts:sorcererFontOfMagicSlotCreationTestName",
+        "packages/character-sheet-runtime/src/spell-slots.test.ts:sorcererFontOfMagicSlotCreationGateTestName"
       ]
     },
     "srd521:classes/sorcerer:level-2:class-feature-grant:sorcerer_metamagic": {
@@ -83,8 +83,8 @@
         "packages/character-sheet-runtime/src/stored-sheet-parser.ts:parseStoredFeatures"
       ],
       "tests": [
-        "packages/character-sheet-runtime/src/index.test.ts:sorcererMetamagicKnownOptionsSheetParsingTestName",
-        "packages/character-sheet-runtime/src/index.test.ts:sorcererMetamagicKnownOptionsGateTestName"
+        "packages/character-sheet-runtime/src/sheet-lifecycle.test.ts:sorcererMetamagicKnownOptionsSheetParsingTestName",
+        "packages/character-sheet-runtime/src/sheet-lifecycle.test.ts:sorcererMetamagicKnownOptionsGateTestName"
       ]
     },
     "srd521:classes/monk:level-2:class-feature-grant:monk_uncanny_metabolism": {
@@ -100,10 +100,10 @@
         "packages/character-sheet-runtime/src/rests.ts:completeLongRest"
       ],
       "tests": [
-        "packages/character-sheet-runtime/src/index.test.ts:uncannyMetabolismLongRestUseStateTestName",
-        "packages/character-sheet-runtime/src/index.test.ts:uncannyMetabolismInitiativeRecoveryTestName",
-        "packages/character-sheet-runtime/src/index.test.ts:uncannyMetabolismInitiativeGatesTestName",
-        "packages/character-sheet-runtime/src/index.test.ts:uncannyMetabolismRejectsUnownedUseStateTestName"
+        "packages/character-sheet-runtime/src/resources.test.ts:uncannyMetabolismLongRestUseStateTestName",
+        "packages/character-sheet-runtime/src/resources.test.ts:uncannyMetabolismInitiativeRecoveryTestName",
+        "packages/character-sheet-runtime/src/resources.test.ts:uncannyMetabolismInitiativeGatesTestName",
+        "packages/character-sheet-runtime/src/resources.test.ts:uncannyMetabolismRejectsUnownedUseStateTestName"
       ]
     },
     "srd521:classes/paladin:level-1:class-feature-grant:paladin_lay_on_hands": {
@@ -119,9 +119,9 @@
         "packages/character-sheet-runtime/src/rests.ts:completeLongRest"
       ],
       "tests": [
-        "packages/character-sheet-runtime/src/index.test.ts:layOnHandsSpendsHealingPoolTestName",
-        "packages/character-sheet-runtime/src/index.test.ts:layOnHandsRejectsDivergentPoolsTestName",
-        "packages/character-sheet-runtime/src/index.test.ts:layOnHandsLongRestRecoveryTestName"
+        "packages/character-sheet-runtime/src/healing-rest-benefit.test.ts:layOnHandsSpendsHealingPoolTestName",
+        "packages/character-sheet-runtime/src/healing-rest-benefit.test.ts:layOnHandsRejectsDivergentPoolsTestName",
+        "packages/character-sheet-runtime/src/healing-rest-benefit.test.ts:layOnHandsLongRestRecoveryTestName"
       ]
     },
     "srd521:classes/druid:level-2:class-feature-grant:druid_wild_shape": {
@@ -139,7 +139,7 @@
         "packages/character-sheet-runtime/src/druid-features.ts:druidWildShapeKnownFormsAfterLongRest"
       ],
       "tests": [
-        "packages/character-sheet-runtime/src/index.test.ts:druidWildShapeShortRestRecoveryTestName"
+        "packages/character-sheet-runtime/src/druid-features.test.ts:druidWildShapeShortRestRecoveryTestName"
       ]
     },
     "srd521:classes/fighter:level-1:mastery-pressure:fighter_weapon_mastery": {
@@ -153,9 +153,9 @@
         "packages/character-sheet-runtime/src/rests.ts:characterBuildFeaturesWithWeaponMasteryReselections"
       ],
       "tests": [
-        "packages/character-sheet-runtime/src/index.test.ts:weaponMasteryLongRestReselectionTestName",
-        "packages/character-sheet-runtime/src/index.test.ts:weaponMasteryBuild",
-        "packages/character-sheet-runtime/src/index.test.ts:selectedClassChoiceUnitIds"
+        "packages/character-sheet-runtime/src/rests.test.ts:weaponMasteryLongRestReselectionTestName",
+        "packages/character-sheet-runtime/src/rests.test.ts:weaponMasteryBuild",
+        "packages/character-sheet-runtime/src/rests.test.ts:selectedClassChoiceUnitIds"
       ]
     },
     "srd521:classes/barbarian:level-1:mastery-pressure:barbarian_weapon_mastery": {
@@ -169,9 +169,9 @@
         "packages/character-sheet-runtime/src/rests.ts:characterBuildFeaturesWithWeaponMasteryReselections"
       ],
       "tests": [
-        "packages/character-sheet-runtime/src/index.test.ts:weaponMasteryLongRestReselectionTestName",
-        "packages/character-sheet-runtime/src/index.test.ts:weaponMasteryBuild",
-        "packages/character-sheet-runtime/src/index.test.ts:selectedClassChoiceUnitIds"
+        "packages/character-sheet-runtime/src/rests.test.ts:weaponMasteryLongRestReselectionTestName",
+        "packages/character-sheet-runtime/src/rests.test.ts:weaponMasteryBuild",
+        "packages/character-sheet-runtime/src/rests.test.ts:selectedClassChoiceUnitIds"
       ]
     },
     "srd521:classes/paladin:level-1:mastery-pressure:paladin_weapon_mastery": {
@@ -185,9 +185,9 @@
         "packages/character-sheet-runtime/src/rests.ts:characterBuildFeaturesWithWeaponMasteryReselections"
       ],
       "tests": [
-        "packages/character-sheet-runtime/src/index.test.ts:weaponMasteryLongRestReselectionTestName",
-        "packages/character-sheet-runtime/src/index.test.ts:weaponMasteryBuild",
-        "packages/character-sheet-runtime/src/index.test.ts:selectedClassChoiceUnitIds"
+        "packages/character-sheet-runtime/src/rests.test.ts:weaponMasteryLongRestReselectionTestName",
+        "packages/character-sheet-runtime/src/rests.test.ts:weaponMasteryBuild",
+        "packages/character-sheet-runtime/src/rests.test.ts:selectedClassChoiceUnitIds"
       ]
     },
     "srd521:classes/ranger:level-1:mastery-pressure:ranger_weapon_mastery": {
@@ -201,9 +201,9 @@
         "packages/character-sheet-runtime/src/rests.ts:characterBuildFeaturesWithWeaponMasteryReselections"
       ],
       "tests": [
-        "packages/character-sheet-runtime/src/index.test.ts:weaponMasteryLongRestReselectionTestName",
-        "packages/character-sheet-runtime/src/index.test.ts:weaponMasteryBuild",
-        "packages/character-sheet-runtime/src/index.test.ts:selectedClassChoiceUnitIds"
+        "packages/character-sheet-runtime/src/rests.test.ts:weaponMasteryLongRestReselectionTestName",
+        "packages/character-sheet-runtime/src/rests.test.ts:weaponMasteryBuild",
+        "packages/character-sheet-runtime/src/rests.test.ts:selectedClassChoiceUnitIds"
       ]
     },
     "srd521:classes/rogue:level-1:mastery-pressure:rogue_weapon_mastery": {
@@ -217,9 +217,9 @@
         "packages/character-sheet-runtime/src/rests.ts:characterBuildFeaturesWithWeaponMasteryReselections"
       ],
       "tests": [
-        "packages/character-sheet-runtime/src/index.test.ts:weaponMasteryLongRestReselectionTestName",
-        "packages/character-sheet-runtime/src/index.test.ts:weaponMasteryBuild",
-        "packages/character-sheet-runtime/src/index.test.ts:selectedClassChoiceUnitIds"
+        "packages/character-sheet-runtime/src/rests.test.ts:weaponMasteryLongRestReselectionTestName",
+        "packages/character-sheet-runtime/src/rests.test.ts:weaponMasteryBuild",
+        "packages/character-sheet-runtime/src/rests.test.ts:selectedClassChoiceUnitIds"
       ]
     },
     "srd521:classes/wizard:level-1:class-feature-grant:wizard_ritual_adept": {
@@ -233,10 +233,10 @@
         "packages/character-sheet-runtime/src/spell-invocation.ts:spellHasRitualTag"
       ],
       "tests": [
-        "packages/character-sheet-runtime/src/index.test.ts:ritualAdeptAdmitsSpellbookRitualTestName",
-        "packages/character-sheet-runtime/src/index.test.ts:ritualAdeptRejectsPreparedOnlySpellTestName",
-        "packages/character-sheet-runtime/src/index.test.ts:ritualAdeptRejectsNonRitualSpellTestName",
-        "packages/character-sheet-runtime/src/index.test.ts:ritualAdeptRejectsMissingFeatureTestName"
+        "packages/character-sheet-runtime/src/spell-invocation.test.ts:ritualAdeptAdmitsSpellbookRitualTestName",
+        "packages/character-sheet-runtime/src/spell-invocation.test.ts:ritualAdeptRejectsPreparedOnlySpellTestName",
+        "packages/character-sheet-runtime/src/spell-invocation.test.ts:ritualAdeptRejectsNonRitualSpellTestName",
+        "packages/character-sheet-runtime/src/spell-invocation.test.ts:ritualAdeptRejectsMissingFeatureTestName"
       ]
     },
     "srd521:classes/wizard:level-1:class-feature-grant:wizard_arcane_recovery": {
@@ -253,9 +253,9 @@
         "packages/character-sheet-runtime/src/rests.ts:completeLongRest"
       ],
       "tests": [
-        "packages/character-sheet-runtime/src/index.test.ts:wizardBuild",
-        "packages/character-sheet-runtime/src/index.test.ts:wizardWarlockBuild",
-        "packages/character-sheet-runtime/src/index.test.ts:expectRight"
+        "packages/character-sheet-runtime/src/rests.test.ts:wizardBuild",
+        "packages/character-sheet-runtime/src/rests.test.ts:wizardWarlockBuild",
+        "packages/character-sheet-runtime/src/armor-class.test.ts:expectRight"
       ]
     },
     "srd521:classes/bard:level-2:class-feature-grant:bard_jack_of_all_trades": {
@@ -268,10 +268,10 @@
         "packages/character-sheet-runtime/src/ability-checks.ts:characterSheetProficiencyBonusForCharacterLevel"
       ],
       "tests": [
-        "packages/character-sheet-runtime/src/index.test.ts:jackOfAllTradesAddsHalfProficiencyBonusTestName",
-        "packages/character-sheet-runtime/src/index.test.ts:skillProficiencyOverridesJackOfAllTradesTestName",
-        "packages/character-sheet-runtime/src/index.test.ts:jackOfAllTradesRequiresNoOtherProficiencyBonusTestName",
-        "packages/character-sheet-runtime/src/index.test.ts:jackOfAllTradesRequiresBardLevelTwoFeatureTestName"
+        "packages/character-sheet-runtime/src/ability-checks.test.ts:jackOfAllTradesAddsHalfProficiencyBonusTestName",
+        "packages/character-sheet-runtime/src/ability-checks.test.ts:skillProficiencyOverridesJackOfAllTradesTestName",
+        "packages/character-sheet-runtime/src/ability-checks.test.ts:jackOfAllTradesRequiresNoOtherProficiencyBonusTestName",
+        "packages/character-sheet-runtime/src/ability-checks.test.ts:jackOfAllTradesRequiresBardLevelTwoFeatureTestName"
       ]
     },
     "srd521:classes/cleric:spell-level-2:spell-unit-pressure:cleric_spell_list_prayer_of_healing": {
@@ -287,7 +287,7 @@
         "packages/character-sheet-runtime/src/rests.ts:completeLongRest"
       ],
       "tests": [
-        "packages/character-sheet-runtime/src/index.test.ts:prayerOfHealingRestBenefitApplicationTestName"
+        "packages/character-sheet-runtime/src/healing-rest-benefit.test.ts:prayerOfHealingRestBenefitApplicationTestName"
       ]
     },
     "srd521:classes/paladin:spell-level-2:spell-unit-pressure:paladin_spell_list_prayer_of_healing": {
@@ -303,7 +303,7 @@
         "packages/character-sheet-runtime/src/rests.ts:completeLongRest"
       ],
       "tests": [
-        "packages/character-sheet-runtime/src/index.test.ts:prayerOfHealingRestBenefitApplicationTestName"
+        "packages/character-sheet-runtime/src/healing-rest-benefit.test.ts:prayerOfHealingRestBenefitApplicationTestName"
       ]
     },
     "srd521:classes/druid:level-3:subclass-spell-access:druid_circle_of_the_land_spells": {
@@ -317,10 +317,10 @@
         "packages/character-sheet-runtime/src/druid-features.ts:storedBookOfShadowsDruidCircleLandSelectionIssue"
       ],
       "tests": [
-        "packages/character-sheet-runtime/src/index.test.ts:druidCircleLandSpellAccessProjectionTestName",
-        "packages/character-sheet-runtime/src/index.test.ts:druidCircleLandSpellAccessSelectedLandGateTestName",
-        "packages/character-sheet-runtime/src/index.test.ts:druidCircleLandSpellcastingSourceGateTestName",
-        "packages/character-sheet-runtime/src/index.test.ts:druidCircleLandSpellAccessBookOfShadowsDuplicateTestName"
+        "packages/character-sheet-runtime/src/druid-features.test.ts:druidCircleLandSpellAccessProjectionTestName",
+        "packages/character-sheet-runtime/src/druid-features.test.ts:druidCircleLandSpellAccessSelectedLandGateTestName",
+        "packages/character-sheet-runtime/src/druid-features.test.ts:druidCircleLandSpellcastingSourceGateTestName",
+        "packages/character-sheet-runtime/src/druid-features.test.ts:druidCircleLandSpellAccessBookOfShadowsDuplicateTestName"
       ]
     },
     "srd521:classes/cleric:level-3:subclass-spell-access:cleric_life_domain_spells": {
@@ -333,8 +333,8 @@
         "packages/character-sheet-runtime/src/stored-sheet-parser.ts:storedBookOfShadowsSelectionIssue"
       ],
       "tests": [
-        "packages/character-sheet-runtime/src/index.test.ts:subclassPreparedSpellAccessProgressionTestName",
-        "packages/character-sheet-runtime/src/index.test.ts:subclassPreparedSpellAccessBlocksBookOfShadowsDuplicateTestName"
+        "packages/character-sheet-runtime/src/class-feature-spells.test.ts:subclassPreparedSpellAccessProgressionTestName",
+        "packages/character-sheet-runtime/src/class-feature-spells.test.ts:subclassPreparedSpellAccessBlocksBookOfShadowsDuplicateTestName"
       ]
     },
     "srd521:classes/paladin:level-3:subclass-spell-access:paladin_oath_of_devotion_spells": {
@@ -347,8 +347,8 @@
         "packages/character-sheet-runtime/src/stored-sheet-parser.ts:storedBookOfShadowsSelectionIssue"
       ],
       "tests": [
-        "packages/character-sheet-runtime/src/index.test.ts:subclassPreparedSpellAccessProgressionTestName",
-        "packages/character-sheet-runtime/src/index.test.ts:subclassPreparedSpellAccessBlocksBookOfShadowsDuplicateTestName"
+        "packages/character-sheet-runtime/src/class-feature-spells.test.ts:subclassPreparedSpellAccessProgressionTestName",
+        "packages/character-sheet-runtime/src/class-feature-spells.test.ts:subclassPreparedSpellAccessBlocksBookOfShadowsDuplicateTestName"
       ]
     },
     "srd521:classes/sorcerer:level-3:subclass-spell-access:sorcerer_draconic_spells": {
@@ -361,8 +361,8 @@
         "packages/character-sheet-runtime/src/stored-sheet-parser.ts:storedBookOfShadowsSelectionIssue"
       ],
       "tests": [
-        "packages/character-sheet-runtime/src/index.test.ts:subclassPreparedSpellAccessProgressionTestName",
-        "packages/character-sheet-runtime/src/index.test.ts:subclassPreparedSpellAccessBlocksBookOfShadowsDuplicateTestName"
+        "packages/character-sheet-runtime/src/class-feature-spells.test.ts:subclassPreparedSpellAccessProgressionTestName",
+        "packages/character-sheet-runtime/src/class-feature-spells.test.ts:subclassPreparedSpellAccessBlocksBookOfShadowsDuplicateTestName"
       ]
     },
     "srd521:classes/warlock:level-3:subclass-spell-access:warlock_fiend_spells": {
@@ -375,8 +375,8 @@
         "packages/character-sheet-runtime/src/stored-sheet-parser.ts:storedBookOfShadowsSelectionIssue"
       ],
       "tests": [
-        "packages/character-sheet-runtime/src/index.test.ts:subclassPreparedSpellAccessProgressionTestName",
-        "packages/character-sheet-runtime/src/index.test.ts:subclassPreparedSpellAccessBlocksBookOfShadowsDuplicateTestName"
+        "packages/character-sheet-runtime/src/class-feature-spells.test.ts:subclassPreparedSpellAccessProgressionTestName",
+        "packages/character-sheet-runtime/src/class-feature-spells.test.ts:subclassPreparedSpellAccessBlocksBookOfShadowsDuplicateTestName"
       ]
     },
     "srd521:classes/warlock:level-2:class-feature-grant:warlock_magical_cunning": {
@@ -392,8 +392,8 @@
         "packages/character-sheet-runtime/src/rests.ts:completeLongRest"
       ],
       "tests": [
-        "packages/character-sheet-runtime/src/index.test.ts:warlockMagicalCunningBuild",
-        "packages/character-sheet-runtime/src/index.test.ts:requireRight"
+        "packages/character-sheet-runtime/src/rests.test.ts:warlockMagicalCunningBuild",
+        "packages/character-sheet-runtime/src/rests.test.ts:requireRight"
       ]
     },
     "srd521:classes/barbarian:level-3:class-feature-grant:barbarian_primal_knowledge": {
@@ -404,7 +404,7 @@
         "packages/character-sheet-runtime/src/ability-checks.ts:characterSheetAbilityCheckAbility"
       ],
       "tests": [
-        "packages/character-sheet-runtime/src/index.test.ts:primalKnowledgeAbilitySubstitutionProjectionTestName"
+        "packages/character-sheet-runtime/src/ability-checks.test.ts:primalKnowledgeAbilitySubstitutionProjectionTestName"
       ]
     },
     "srd521:classes/rogue:level-3:class-feature-grant:rogue_second_story_work": {
@@ -416,7 +416,7 @@
         "packages/character-sheet-runtime/src/ability-checks.ts:characterSheetJumpDistanceAbility"
       ],
       "tests": [
-        "packages/character-sheet-runtime/src/index.test.ts:secondStoryWorkProjectionTestName"
+        "packages/character-sheet-runtime/src/ability-checks.test.ts:secondStoryWorkProjectionTestName"
       ]
     },
     "srd521:classes/sorcerer:level-3:class-feature-grant:sorcerer_draconic_resilience": {
@@ -428,7 +428,7 @@
         "packages/character-sheet-runtime/src/armor-class.ts:armorClassBaseSourceForFormula"
       ],
       "tests": [
-        "packages/character-sheet-runtime/src/index.test.ts:draconicResilienceArmorClassProjectionTestName"
+        "packages/character-sheet-runtime/src/armor-class.test.ts:draconicResilienceArmorClassProjectionTestName"
       ]
     }
   }

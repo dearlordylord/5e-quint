@@ -2,7 +2,7 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.FIND_FAMILIAR_COMPANION_LIFECYCLE
 import type { BattleState } from "./battle-reducer.ts";
 import type { CombatantId } from "./identity.ts";
-import type { FindFamiliarCreatureTypeOverride } from "./find-familiar-forms.ts";
+import type { FindFamiliarCreatureTypeOverride } from "@dnd/surface/surface/find-familiar-forms";
 import type {
   BattleCompanionEntry,
   BattleCompanionPresentState,
@@ -53,9 +53,10 @@ export function findPresentFamiliarById(
   readonly companionId: CombatantId;
   readonly familiar: BattleCompanionPresentState;
 } | null {
-  const familiar = state.companions.get(familiarId);
-  if (familiar?.status === "present") {
-    return { ownerId: familiar.ownerId, companionId: familiarId, familiar };
+  for (const [ownerId, companion] of state.companions) {
+    if (companion.status === "present" && companion.combatantId === familiarId) {
+      return { ownerId, companionId: familiarId, familiar: companion };
+    }
   }
   return null;
 }

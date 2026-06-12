@@ -179,13 +179,24 @@ function extractMbtFixtureActionSet(root, text, filePath) {
     ...text.matchAll(
       /run\s*\(\s*\{[\s\S]*?spec:\s*path\.resolve\(\s*import\.meta\.dirname\s*,\s*"([^"]+\.qnt)"[\s\S]*?\)[\s\S]*?step:\s*"([A-Za-z_]\w*)"[\s\S]*?\}\s*\)/g,
     ),
+    ...[
+      ...text.matchAll(
+        /run\s*\(\s*\{[\s\S]*?spec:\s*mbtSpecPath\(\s*import\.meta\.dirname\s*,\s*"([^"]+\.qnt)"\s*,?\s*\)[\s\S]*?step:\s*"([A-Za-z_]\w*)"[\s\S]*?\}\s*\)/g,
+      ),
+    ].map((match) => [undefined, `../${match[1]}`, match[2]]),
   ];
   const selectedIdentityWitnessMatches = [
+    ...text.matchAll(
+      /defineSelectedIdentityWitness\s*\(\s*\{[\s\S]*?specFile:\s*mbtSpecPath\(\s*import\.meta\.dirname\s*,\s*"([^"]+\.qnt)"\s*,?\s*\)[\s\S]*?\}\s*\)/g,
+    ),
+  ].map((match) => [undefined, `../${match[1]}`, "step"]);
+  const legacySelectedIdentityWitnessMatches = [
     ...text.matchAll(
       /defineSelectedIdentityWitness\s*\(\s*\{[\s\S]*?specFile:\s*path\.resolve\(\s*import\.meta\.dirname\s*,\s*"([^"]+\.qnt)"[\s\S]*?\)[\s\S]*?\}\s*\)/g,
     ),
   ].map((match) => [undefined, match[1], "step"]);
   const allMatches = [...runMatches, ...selectedIdentityWitnessMatches];
+  allMatches.push(...legacySelectedIdentityWitnessMatches);
   if (allMatches.length === 0) {
     return {
       actionNames: new Set(),

@@ -620,7 +620,6 @@ export const BattleSubjectSchema = Schema.Union(
   Schema.Struct({
     tag: Schema.Literal("companionLifecycle"),
     actorId: CombatantId,
-    companionId: CombatantId,
     action: Schema.Literal(
       "temporarilyDismiss",
       "reappear",
@@ -1065,12 +1064,7 @@ function battleSubjectKey(subject: BattleSubject): string {
     ]);
   }
   if (subject.tag === "companionLifecycle") {
-    return JSON.stringify([
-      subject.tag,
-      subject.actorId,
-      subject.companionId,
-      subject.action,
-    ]);
+    return JSON.stringify([subject.tag, subject.actorId, subject.action]);
   }
   if (subject.tag === "findFamiliarSharedSenses") {
     return JSON.stringify([subject.tag, subject.actorId, subject.familiarId]);
