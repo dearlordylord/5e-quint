@@ -37,7 +37,7 @@
     {
       "number": 6,
       "id": "PPW-T06-HOLE-VOCABULARY-WITNESS-POLICY",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Decide the witness shape for the hole-family vocabulary obligation"
     },
     {
@@ -235,7 +235,7 @@ another MBT run. Run MBT with the repo timing/background protocol from
 | 3 | PPW-T03-AFTER-HIT-RIDERS-FOCUSED-MBT | done | none | Moved from QNTD-B06 / QCP-CS4. |
 | 4 | PPW-T04-WEAPON-HOSTED-ATTACK-FOCUSED-MBT | ready-for-implementation | none | Moved from QNTD-B07 / QCP-CS5. |
 | 5 | PPW-T05-SUBTLE-METAMAGIC-FOCUSED-MBT | done | none | Independent witness promotion. |
-| 6 | PPW-T06-HOLE-VOCABULARY-WITNESS-POLICY | ready-for-research | none | Policy decision; may be a recorded no-op. |
+| 6 | PPW-T06-HOLE-VOCABULARY-WITNESS-POLICY | done | none | Policy decision; recorded no-op. |
 | 7 | PPW-T07-WEAPON-MASTERY-ADVANCEMENT-FOCUSED-MBT | ready-for-implementation | none | Creation runtime; shares semantic core with T08. |
 | 8 | PPW-T08-WEAPON-MASTERY-RESELECTION-FOCUSED-MBT | blocked | PPW-T07-WEAPON-MASTERY-ADVANCEMENT-FOCUSED-MBT | Sheet runtime; reuses T07 driver patterns. |
 | 9 | PPW-T09-COMMAND-OPTION-FOCUSED-MBT | blocked | PPW-T02-ACID-ARROW-TIMING-FOCUSED-MBT, PPW-T03-AFTER-HIT-RIDERS-FOCUSED-MBT, PPW-T04-WEAPON-HOSTED-ATTACK-FOCUSED-MBT, PPW-T05-SUBTLE-METAMAGIC-FOCUSED-MBT, PPW-T06-HOLE-VOCABULARY-WITNESS-POLICY, PPW-T07-WEAPON-MASTERY-ADVANCEMENT-FOCUSED-MBT, PPW-T08-WEAPON-MASTERY-RESELECTION-FOCUSED-MBT | Moved from QNTD-B08 / QCP-CS6; after runtime-test rows drain. |
@@ -375,7 +375,7 @@ Acceptance: focused MBT green; checker write+check green; `git diff --check`.
 
 ### Task 6 - PPW-T06-HOLE-VOCABULARY-WITNESS-POLICY - Hole-family vocabulary witness shape
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 

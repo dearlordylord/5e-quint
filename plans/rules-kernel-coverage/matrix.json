@@ -2892,7 +2892,7 @@
         "packages/battle-runtime/battle-runtime-fill-kinds.qnt",
         "packages/battle-runtime/battle-runtime-subject-kinds.qnt"
       ],
-      "reason": "This row covers vocabulary ownership only: the QNT leaves define procedure-family protocol vocabulary, the runtime owner mappings exhaustively project current TS holes/fills/subjects to that vocabulary, and the contract test ties those projections to battle-hole-frontier.jsonl. Frontier ordering, interrupt resume, replay, and table-owned fact boundaries remain in their own obligations.",
+      "reason": "Policy decision: contract-test remains the correct witness shape for this vocabulary obligation. This row covers vocabulary ownership only: the QNT leaves define procedure-family protocol vocabulary, the runtime owner mappings exhaustively project current TS holes/fills/subjects to that vocabulary, and the contract test ties those projections to battle-hole-frontier.jsonl. No focused MBT is required because this obligation has no reducer sequencing, state transition, or interleaving semantics; frontier ordering, interrupt resume, replay, and table-owned fact boundaries remain in their own obligations.",
       "runtime": "battle",
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer/hole-helpers.ts",
