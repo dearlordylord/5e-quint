@@ -97,7 +97,7 @@
     {
       "number": 16,
       "id": "DRP-T16-SPELL-SLOTS-AND-PACT-SLOTS",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Audit Spell Slot and Pact Slot transition and table replays"
     },
     {
