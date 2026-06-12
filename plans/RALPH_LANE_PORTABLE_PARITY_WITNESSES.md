@@ -31,7 +31,7 @@
     {
       "number": 5,
       "id": "PPW-T05-SUBTLE-METAMAGIC-FOCUSED-MBT",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Add Subtle Spell component-suppression focused MBT"
     },
     {
@@ -234,7 +234,7 @@ another MBT run. Run MBT with the repo timing/background protocol from
 | 2 | PPW-T02-ACID-ARROW-TIMING-FOCUSED-MBT | done | none | Independent witness promotion. |
 | 3 | PPW-T03-AFTER-HIT-RIDERS-FOCUSED-MBT | done | none | Moved from QNTD-B06 / QCP-CS4. |
 | 4 | PPW-T04-WEAPON-HOSTED-ATTACK-FOCUSED-MBT | ready-for-implementation | none | Moved from QNTD-B07 / QCP-CS5. |
-| 5 | PPW-T05-SUBTLE-METAMAGIC-FOCUSED-MBT | ready-for-implementation | none | Independent witness promotion. |
+| 5 | PPW-T05-SUBTLE-METAMAGIC-FOCUSED-MBT | done | none | Independent witness promotion. |
 | 6 | PPW-T06-HOLE-VOCABULARY-WITNESS-POLICY | ready-for-research | none | Policy decision; may be a recorded no-op. |
 | 7 | PPW-T07-WEAPON-MASTERY-ADVANCEMENT-FOCUSED-MBT | ready-for-implementation | none | Creation runtime; shares semantic core with T08. |
 | 8 | PPW-T08-WEAPON-MASTERY-RESELECTION-FOCUSED-MBT | blocked | PPW-T07-WEAPON-MASTERY-ADVANCEMENT-FOCUSED-MBT | Sheet runtime; reuses T07 driver patterns. |
@@ -351,7 +351,7 @@ Acceptance: focused MBT green; checker write+check green; `git diff --check`.
 
 ### Task 5 - PPW-T05-SUBTLE-METAMAGIC-FOCUSED-MBT - Subtle Spell component suppression
 
-Status: `ready-for-implementation`
+Status: `done`
 
 Input:
 

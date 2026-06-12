@@ -36,6 +36,7 @@
     "test:mbt:mirror-image-hit-interception": "vitest run src/mirror-image-hit-interception.mbt.test.ts",
     "test:mbt:moonbeam-movable-zone": "vitest run src/moonbeam-movable-zone.mbt.test.ts",
     "test:mbt:quickened-spell-governor": "vitest run src/quickened-spell-governor.mbt.test.ts",
+    "test:mbt:sorcerer-metamagic-subtle-selected-identity": "vitest run src/sorcerer-metamagic-subtle-selected-identity.mbt.test.ts",
     "test:mbt:ray-of-enfeeblement-lifecycle": "vitest run src/ray-of-enfeeblement-lifecycle.mbt.test.ts",
     "test:mbt:reaction-casting-time": "vitest run src/reaction-casting-time.mbt.test.ts",
     "test:mbt:roll-modifier-active-effects": "vitest run src/roll-modifier-active-effects.mbt.test.ts",

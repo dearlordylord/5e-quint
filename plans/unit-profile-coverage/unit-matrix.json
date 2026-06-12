@@ -20464,6 +20464,11 @@
           "taskId": "L3MMETA-16-EXTENDED-CAST-DURATION-CONCENTRATION-SLICE"
         },
         {
+          "ownerPath": "packages/battle-runtime/src/sorcerer-metamagic-subtle-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "PPW-T05-SUBTLE-METAMAGIC-FOCUSED-MBT"
+        },
+        {
           "ownerPath": "packages/battle-runtime/src/sorcerer-metamagic-seeking-selected-identity.mbt.test.ts",
           "tag": "selected-identity-mbt",
           "taskId": "L3MMETA-18-SEEKING-SPELL-ATTACK-REROLL-SLICE"
