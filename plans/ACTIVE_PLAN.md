@@ -13,109 +13,109 @@
     {
       "number": 2,
       "id": "DRP-T02-SHOVE-OUTCOME-DECISION",
-      "status": "pending",
+      "status": "blocked",
       "title": "Audit Shove outcome deterministic replay portability"
     },
     {
       "number": 3,
       "id": "DRP-T03-SPELL-REST-BENEFIT-APPLICATION",
-      "status": "pending",
+      "status": "blocked",
       "title": "Audit spell-rest benefit application replay portability"
     },
     {
       "number": 4,
       "id": "DRP-T04-ABILITY-SEARCH-REPLAY",
-      "status": "pending",
+      "status": "blocked",
       "title": "Audit ability, skill, and Search deterministic replay portability"
     },
     {
       "number": 5,
       "id": "DRP-T05-DAMAGE-DISPOSITION-REPLAY",
-      "status": "pending",
+      "status": "blocked",
       "title": "Audit attack damage disposition and Knock Out replay portability"
     },
     {
       "number": 6,
       "id": "DRP-T06-ARMOR-CLASS-FORMULA",
-      "status": "pending",
+      "status": "blocked",
       "title": "Audit Armor Class base formula selected-identity replay portability"
     },
     {
       "number": 7,
       "id": "DRP-T07-CREATION-CLASS-FEATURE-PROJECTIONS",
-      "status": "pending",
+      "status": "blocked",
       "title": "Audit class-feature resource and source-fact projection replays"
     },
     {
       "number": 8,
       "id": "DRP-T08-CREATION-WIZARD-SPELLBOOK",
-      "status": "pending",
+      "status": "blocked",
       "title": "Audit Wizard spellbook learning selected-identity replay portability"
     },
     {
       "number": 9,
       "id": "DRP-T09-SHEET-FEATURE-RESOURCES",
-      "status": "pending",
+      "status": "blocked",
       "title": "Audit Character Sheet feature-resource transition replay portability"
     },
     {
       "number": 10,
       "id": "DRP-T10-SHEET-ABILITY-CHECK-PROFICIENCY",
-      "status": "pending",
+      "status": "blocked",
       "title": "Audit Ability Check Proficiency Bonus replay portability"
     },
     {
       "number": 11,
       "id": "DRP-T11-BATTLE-HANDOFF-INIT",
-      "status": "pending",
+      "status": "blocked",
       "title": "Audit character-battle initialization projection replay portability"
     },
     {
       "number": 12,
       "id": "DRP-T12-BATTLE-HANDOFF-SETTLEMENT",
-      "status": "pending",
+      "status": "blocked",
       "title": "Audit character-battle settlement and identity-conflict replay portability"
     },
     {
       "number": 13,
       "id": "DRP-T13-HIT-POINT-DAMAGE-RUST-PARITY",
-      "status": "pending",
+      "status": "blocked",
       "title": "Audit positive Hit Point damage replay and Rust dry-run parity"
     },
     {
       "number": 14,
       "id": "DRP-T14-HP-REST-HIT-DICE",
-      "status": "pending",
+      "status": "blocked",
       "title": "Audit HP, rest, and Hit Dice transition replay portability"
     },
     {
       "number": 15,
       "id": "DRP-T15-HIT-POINT-MAXIMUM",
-      "status": "pending",
+      "status": "blocked",
       "title": "Audit Hit Point Maximum derivation replay portability"
     },
     {
       "number": 16,
       "id": "DRP-T16-SPELL-SLOTS-AND-PACT-SLOTS",
-      "status": "pending",
+      "status": "blocked",
       "title": "Audit Spell Slot and Pact Slot transition and table replays"
     },
     {
       "number": 17,
       "id": "DRP-T17-WEAPON-MASTERY-RESELECTION",
-      "status": "pending",
+      "status": "blocked",
       "title": "Audit Weapon Mastery reselection replay portability"
     },
     {
       "number": 18,
       "id": "DRP-T18-SPELL-ACCESS-SELECTED-IDENTITY",
-      "status": "pending",
+      "status": "blocked",
       "title": "Audit spellbook Ritual and class-feature prepared Spell Access replays"
     },
     {
       "number": 19,
       "id": "DRP-T19-LANE-CLOSEOUT",
-      "status": "pending",
+      "status": "blocked",
       "title": "Close out deterministic replay portability decisions and next queue"
     }
   ]
@@ -237,24 +237,24 @@ another MBT run. Use the timing/background protocol from `CLAUDE.md`.
 | # | Task | Status | Depends on | Notes |
 | ---: | --- | --- | --- | --- |
 | 1 | DRP-T01-INVENTORY-GATE | ready-for-research | none | Refresh the deterministic replay inventory from checked artifacts and assign each replay to one lane task. |
-| 2 | DRP-T02-SHOVE-OUTCOME-DECISION | pending | DRP-T01 | Closed battle fixture unless the task finds a missing interleaving risk. |
-| 3 | DRP-T03-SPELL-REST-BENEFIT-APPLICATION | pending | DRP-T01 | Sheet spell-rest benefit fixture and lockout replay. |
-| 4 | DRP-T04-ABILITY-SEARCH-REPLAY | pending | DRP-T01 | Mixed focused-MBT plus deterministic replay row; do not duplicate existing focused coverage. |
-| 5 | DRP-T05-DAMAGE-DISPOSITION-REPLAY | pending | DRP-T01 | Knock Out accepted/rejected table facts beside existing feature MBT. |
-| 6 | DRP-T06-ARMOR-CLASS-FORMULA | pending | DRP-T01 | Selected-identity formula projection. |
-| 7 | DRP-T07-CREATION-CLASS-FEATURE-PROJECTIONS | pending | DRP-T01 | Resource and source-fact projection rows share one driver. |
-| 8 | DRP-T08-CREATION-WIZARD-SPELLBOOK | pending | DRP-T01 | Selected Wizard spellbook learning replay. |
-| 9 | DRP-T09-SHEET-FEATURE-RESOURCES | pending | DRP-T01 | Feature resources bridge and sheet transitions. |
-| 10 | DRP-T10-SHEET-ABILITY-CHECK-PROFICIENCY | pending | DRP-T01 | Jack of All Trades, proficiency, and Expertise scalar projection. |
-| 11 | DRP-T11-BATTLE-HANDOFF-INIT | pending | DRP-T01 | Character Sheet to battle init projection. |
-| 12 | DRP-T12-BATTLE-HANDOFF-SETTLEMENT | pending | DRP-T11 | Settlement and identity-conflict replays share handoff assumptions. |
-| 13 | DRP-T13-HIT-POINT-DAMAGE-RUST-PARITY | pending | DRP-T01 | Align replay decision with existing Hit Point damage Rust dry-run evidence. |
-| 14 | DRP-T14-HP-REST-HIT-DICE | pending | DRP-T13 | HP recovery dry run reuses damage/vitals shapes. |
-| 15 | DRP-T15-HIT-POINT-MAXIMUM | pending | DRP-T01 | Hit Point Maximum formula replay. |
-| 16 | DRP-T16-SPELL-SLOTS-AND-PACT-SLOTS | pending | DRP-T14 | Slot transitions import rest outcome facts. |
-| 17 | DRP-T17-WEAPON-MASTERY-RESELECTION | pending | DRP-T01 | Selected-identity plus identity-free reselection semantics. |
-| 18 | DRP-T18-SPELL-ACCESS-SELECTED-IDENTITY | pending | DRP-T01 | Spellbook Ritual and class-feature prepared Spell Access selected-identity replays. |
-| 19 | DRP-T19-LANE-CLOSEOUT | pending | DRP-T02, DRP-T03, DRP-T04, DRP-T05, DRP-T06, DRP-T07, DRP-T08, DRP-T09, DRP-T10, DRP-T11, DRP-T12, DRP-T13, DRP-T14, DRP-T15, DRP-T16, DRP-T17, DRP-T18 | Recompute reports, summarize kept/promoted replay decisions, and create the next coherent queue if needed. |
+| 2 | DRP-T02-SHOVE-OUTCOME-DECISION | blocked | DRP-T01 | Closed battle fixture unless the task finds a missing interleaving risk. |
+| 3 | DRP-T03-SPELL-REST-BENEFIT-APPLICATION | blocked | DRP-T01 | Sheet spell-rest benefit fixture and lockout replay. |
+| 4 | DRP-T04-ABILITY-SEARCH-REPLAY | blocked | DRP-T01 | Mixed focused-MBT plus deterministic replay row; do not duplicate existing focused coverage. |
+| 5 | DRP-T05-DAMAGE-DISPOSITION-REPLAY | blocked | DRP-T01 | Knock Out accepted/rejected table facts beside existing feature MBT. |
+| 6 | DRP-T06-ARMOR-CLASS-FORMULA | blocked | DRP-T01 | Selected-identity formula projection. |
+| 7 | DRP-T07-CREATION-CLASS-FEATURE-PROJECTIONS | blocked | DRP-T01 | Resource and source-fact projection rows share one driver. |
+| 8 | DRP-T08-CREATION-WIZARD-SPELLBOOK | blocked | DRP-T01 | Selected Wizard spellbook learning replay. |
+| 9 | DRP-T09-SHEET-FEATURE-RESOURCES | blocked | DRP-T01 | Feature resources bridge and sheet transitions. |
+| 10 | DRP-T10-SHEET-ABILITY-CHECK-PROFICIENCY | blocked | DRP-T01 | Jack of All Trades, proficiency, and Expertise scalar projection. |
+| 11 | DRP-T11-BATTLE-HANDOFF-INIT | blocked | DRP-T01 | Character Sheet to battle init projection. |
+| 12 | DRP-T12-BATTLE-HANDOFF-SETTLEMENT | blocked | DRP-T11 | Settlement and identity-conflict replays share handoff assumptions. |
+| 13 | DRP-T13-HIT-POINT-DAMAGE-RUST-PARITY | blocked | DRP-T01 | Align replay decision with existing Hit Point damage Rust dry-run evidence. |
+| 14 | DRP-T14-HP-REST-HIT-DICE | blocked | DRP-T13 | HP recovery dry run reuses damage/vitals shapes. |
+| 15 | DRP-T15-HIT-POINT-MAXIMUM | blocked | DRP-T01 | Hit Point Maximum formula replay. |
+| 16 | DRP-T16-SPELL-SLOTS-AND-PACT-SLOTS | blocked | DRP-T14 | Slot transitions import rest outcome facts. |
+| 17 | DRP-T17-WEAPON-MASTERY-RESELECTION | blocked | DRP-T01 | Selected-identity plus identity-free reselection semantics. |
+| 18 | DRP-T18-SPELL-ACCESS-SELECTED-IDENTITY | blocked | DRP-T01 | Spellbook Ritual and class-feature prepared Spell Access selected-identity replays. |
+| 19 | DRP-T19-LANE-CLOSEOUT | blocked | DRP-T02, DRP-T03, DRP-T04, DRP-T05, DRP-T06, DRP-T07, DRP-T08, DRP-T09, DRP-T10, DRP-T11, DRP-T12, DRP-T13, DRP-T14, DRP-T15, DRP-T16, DRP-T17, DRP-T18 | Recompute reports, summarize kept/promoted replay decisions, and create the next coherent queue if needed. |
 
 ## Task Details
 
@@ -283,7 +283,7 @@ Acceptance:
 
 ### Task 2 - DRP-T02-SHOVE-OUTCOME-DECISION
 
-Status: `pending`
+Status: `blocked`
 
 Input:
 
@@ -304,7 +304,7 @@ Acceptance:
 
 ### Task 3 - DRP-T03-SPELL-REST-BENEFIT-APPLICATION
 
-Status: `pending`
+Status: `blocked`
 
 Input:
 
@@ -324,7 +324,7 @@ Acceptance:
 
 ### Task 4 - DRP-T04-ABILITY-SEARCH-REPLAY
 
-Status: `pending`
+Status: `blocked`
 
 Input:
 
@@ -345,7 +345,7 @@ Acceptance:
 
 ### Task 5 - DRP-T05-DAMAGE-DISPOSITION-REPLAY
 
-Status: `pending`
+Status: `blocked`
 
 Input:
 
@@ -366,7 +366,7 @@ Acceptance:
 
 ### Task 6 - DRP-T06-ARMOR-CLASS-FORMULA
 
-Status: `pending`
+Status: `blocked`
 
 Input:
 
@@ -386,7 +386,7 @@ Acceptance:
 
 ### Task 7 - DRP-T07-CREATION-CLASS-FEATURE-PROJECTIONS
 
-Status: `pending`
+Status: `blocked`
 
 Input:
 
@@ -407,7 +407,7 @@ Acceptance:
 
 ### Task 8 - DRP-T08-CREATION-WIZARD-SPELLBOOK
 
-Status: `pending`
+Status: `blocked`
 
 Input:
 
@@ -426,7 +426,7 @@ Acceptance:
 
 ### Task 9 - DRP-T09-SHEET-FEATURE-RESOURCES
 
-Status: `pending`
+Status: `blocked`
 
 Input:
 
@@ -446,7 +446,7 @@ Acceptance:
 
 ### Task 10 - DRP-T10-SHEET-ABILITY-CHECK-PROFICIENCY
 
-Status: `pending`
+Status: `blocked`
 
 Input:
 
@@ -465,7 +465,7 @@ Acceptance:
 
 ### Task 11 - DRP-T11-BATTLE-HANDOFF-INIT
 
-Status: `pending`
+Status: `blocked`
 
 Input:
 
@@ -485,7 +485,7 @@ Acceptance:
 
 ### Task 12 - DRP-T12-BATTLE-HANDOFF-SETTLEMENT
 
-Status: `pending`
+Status: `blocked`
 
 Input:
 
@@ -507,7 +507,7 @@ Acceptance:
 
 ### Task 13 - DRP-T13-HIT-POINT-DAMAGE-RUST-PARITY
 
-Status: `pending`
+Status: `blocked`
 
 Input:
 
@@ -529,7 +529,7 @@ Acceptance:
 
 ### Task 14 - DRP-T14-HP-REST-HIT-DICE
 
-Status: `pending`
+Status: `blocked`
 
 Input:
 
@@ -552,7 +552,7 @@ Acceptance:
 
 ### Task 15 - DRP-T15-HIT-POINT-MAXIMUM
 
-Status: `pending`
+Status: `blocked`
 
 Input:
 
@@ -572,7 +572,7 @@ Acceptance:
 
 ### Task 16 - DRP-T16-SPELL-SLOTS-AND-PACT-SLOTS
 
-Status: `pending`
+Status: `blocked`
 
 Input:
 
@@ -592,7 +592,7 @@ Acceptance:
 
 ### Task 17 - DRP-T17-WEAPON-MASTERY-RESELECTION
 
-Status: `pending`
+Status: `blocked`
 
 Input:
 
@@ -611,7 +611,7 @@ Acceptance:
 
 ### Task 18 - DRP-T18-SPELL-ACCESS-SELECTED-IDENTITY
 
-Status: `pending`
+Status: `blocked`
 
 Input:
 
@@ -634,7 +634,7 @@ Acceptance:
 
 ### Task 19 - DRP-T19-LANE-CLOSEOUT
 
-Status: `pending`
+Status: `blocked`
 
 Input:
 
