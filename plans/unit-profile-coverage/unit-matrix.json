@@ -1271,8 +1271,8 @@
       "title": "Character Sheet applies Long Rest Weapon Mastery reselection using class-level choice counts",
       "verificationOwners": [
         {
-          "kind": "runtime-test",
-          "ownerPath": "packages/character-sheet-runtime/src/rests.test.ts"
+          "kind": "focused-mbt",
+          "ownerPath": "packages/character-sheet-runtime/src/weapon-mastery-class-level-reselection.mbt.test.ts"
         }
       ]
     },
@@ -13904,7 +13904,7 @@
     },
     {
       "claimKind": "completed-runtime-parity",
-      "note": "Focused Character Sheet Long Rest tests cover Weapon Mastery reselection for Fighter, Barbarian, Paladin, Ranger, and Rogue by replacing selected class-choice refs from Surface feature eligibility while leaving mastery-property execution to selected Mastery Property Unit profiles. The class-level reselection profile separates Fighter and Barbarian runtime-test evidence from the fixed two-choice selected-identity replay witness that advertises only Paladin, Ranger, and Rogue.",
+      "note": "Focused Character Sheet Long Rest tests cover Weapon Mastery reselection for Fighter, Barbarian, Paladin, Ranger, and Rogue by replacing selected class-choice refs from Surface feature eligibility while leaving mastery-property execution to selected Mastery Property Unit profiles. The class-level reselection profile now has focused MBT evidence for Fighter and Barbarian class-level choice counts, separate from the fixed two-choice selected-identity replay witness that advertises only Paladin, Ranger, and Rogue.",
       "profileIds": [
         "character-creation.weapon-mastery-choice",
         "character-sheet.weapon-mastery-reselection",
@@ -15524,7 +15524,7 @@
     },
     {
       "claimKind": "completed-runtime-parity",
-      "note": "Focused Character Sheet Long Rest tests cover Fighter and Barbarian Weapon Mastery reselection using the Surface class-level choice count tables and one-choice Long Rest change count. This profile intentionally relies on runtime-test evidence plus the shared semantic core, not the fixed two-choice selected-identity replay witness that advertises only Paladin, Ranger, and Rogue.",
+      "note": "Focused Character Sheet MBT covers Fighter and Barbarian Weapon Mastery reselection using the Surface class-level choice count tables and one-choice Long Rest change count. This profile intentionally uses the shared semantic core plus a focused class-level reselection witness, not the fixed two-choice selected-identity replay witness that advertises only Paladin, Ranger, and Rogue.",
       "profileIds": [
         "character-sheet.weapon-mastery-class-level-reselection"
       ],
@@ -16560,8 +16560,8 @@
           "title": "Character Sheet applies Long Rest Weapon Mastery reselection using class-level choice counts",
           "verificationOwners": [
             {
-              "kind": "runtime-test",
-              "ownerPath": "packages/character-sheet-runtime/src/rests.test.ts"
+              "kind": "focused-mbt",
+              "ownerPath": "packages/character-sheet-runtime/src/weapon-mastery-class-level-reselection.mbt.test.ts"
             }
           ]
         }
@@ -17467,8 +17467,8 @@
           "title": "Character Sheet applies Long Rest Weapon Mastery reselection using class-level choice counts",
           "verificationOwners": [
             {
-              "kind": "runtime-test",
-              "ownerPath": "packages/character-sheet-runtime/src/rests.test.ts"
+              "kind": "focused-mbt",
+              "ownerPath": "packages/character-sheet-runtime/src/weapon-mastery-class-level-reselection.mbt.test.ts"
             }
           ]
         }

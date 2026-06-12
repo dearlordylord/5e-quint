@@ -1,6 +1,5 @@
-// KERNEL-COVERAGE: parity-witness SHEET.WEAPON_MASTERY.CLASS_LEVEL_RESELECTION
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.short-rest-spell-slot-recovery
-// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.weapon-mastery-reselection character-sheet.weapon-mastery-class-level-reselection
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.weapon-mastery-reselection
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.pact-slot-recovery
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV91B wizard_arcane_recovery
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection AT-L1-04 fighter_weapon_mastery barbarian_weapon_mastery paladin_weapon_mastery ranger_weapon_mastery rogue_weapon_mastery

@@ -3729,8 +3729,10 @@
       "kind": "state-transition",
       "parityWitnesses": [
         {
-          "kind": "runtime-test",
-          "ownerPath": "packages/character-sheet-runtime/src/rests.test.ts"
+          "kind": "focused-mbt",
+          "ownerPath": "packages/character-sheet-runtime/src/weapon-mastery-class-level-reselection.mbt.test.ts",
+          "qntSpecPath": "packages/character-sheet-runtime/character-sheet-weapon-mastery-class-level-reselection.mbt.qnt",
+          "stepAction": "step"
         }
       ],
       "profiles": [
@@ -3739,7 +3741,7 @@
       "qntOwners": [
         "packages/shared-algebras/proofs/rule-core/weapon-mastery-reselection.qnt"
       ],
-      "reason": "Fighter and Barbarian Weapon Mastery use class-level choice count tables rather than the fixed two-choice selected-identity replay fixture. The reusable semantic core owns opaque-ref reselection semantics, while focused Character Sheet runtime tests cover deriving the active count from the current class level and applying the one-choice Long Rest replacement limit without adding sheet-local Weapon Mastery state.",
+      "reason": "Fighter and Barbarian Weapon Mastery use class-level choice count tables rather than the fixed two-choice selected-identity replay fixture. The reusable semantic core owns opaque-ref reselection semantics; the focused Character Sheet MBT covers deriving the active count from the current Fighter and Barbarian class level, accepting one changed Long Rest choice, preserving unchanged selections, and rejecting over-limit reselection without adding sheet-local Weapon Mastery state.",
       "runtime": "character-sheet",
       "runtimeOwners": [
         "packages/character-sheet-runtime/src/rests.ts"

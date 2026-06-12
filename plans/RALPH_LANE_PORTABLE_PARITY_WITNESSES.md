@@ -49,7 +49,7 @@
     {
       "number": 8,
       "id": "PPW-T08-WEAPON-MASTERY-RESELECTION-FOCUSED-MBT",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Add Weapon Mastery Long Rest reselection focused MBT (sheet)"
     },
     {
@@ -237,7 +237,7 @@ another MBT run. Run MBT with the repo timing/background protocol from
 | 5 | PPW-T05-SUBTLE-METAMAGIC-FOCUSED-MBT | done | none | Independent witness promotion. |
 | 6 | PPW-T06-HOLE-VOCABULARY-WITNESS-POLICY | done | none | Policy decision; recorded no-op. |
 | 7 | PPW-T07-WEAPON-MASTERY-ADVANCEMENT-FOCUSED-MBT | done | none | Creation runtime; shares semantic core with T08. |
-| 8 | PPW-T08-WEAPON-MASTERY-RESELECTION-FOCUSED-MBT | ready-for-implementation | PPW-T07-WEAPON-MASTERY-ADVANCEMENT-FOCUSED-MBT | Sheet runtime; reuses T07 driver patterns. |
+| 8 | PPW-T08-WEAPON-MASTERY-RESELECTION-FOCUSED-MBT | done | PPW-T07-WEAPON-MASTERY-ADVANCEMENT-FOCUSED-MBT | Sheet runtime; reuses T07 driver patterns. |
 | 9 | PPW-T09-COMMAND-OPTION-FOCUSED-MBT | blocked | PPW-T02-ACID-ARROW-TIMING-FOCUSED-MBT, PPW-T03-AFTER-HIT-RIDERS-FOCUSED-MBT, PPW-T04-WEAPON-HOSTED-ATTACK-FOCUSED-MBT, PPW-T05-SUBTLE-METAMAGIC-FOCUSED-MBT, PPW-T06-HOLE-VOCABULARY-WITNESS-POLICY, PPW-T07-WEAPON-MASTERY-ADVANCEMENT-FOCUSED-MBT, PPW-T08-WEAPON-MASTERY-RESELECTION-FOCUSED-MBT | Moved from QNTD-B08 / QCP-CS6; after runtime-test rows drain. |
 | 10 | PPW-T10-ABILITY-CHECK-SEARCH-FOCUSED-MBT | blocked | PPW-T02-ACID-ARROW-TIMING-FOCUSED-MBT, PPW-T03-AFTER-HIT-RIDERS-FOCUSED-MBT, PPW-T04-WEAPON-HOSTED-ATTACK-FOCUSED-MBT, PPW-T05-SUBTLE-METAMAGIC-FOCUSED-MBT, PPW-T06-HOLE-VOCABULARY-WITNESS-POLICY, PPW-T07-WEAPON-MASTERY-ADVANCEMENT-FOCUSED-MBT, PPW-T08-WEAPON-MASTERY-RESELECTION-FOCUSED-MBT | Moved from QNTD-B09 / QCP-CS7. |
 | 11 | PPW-T11-SHOVE-WITNESS-POLICY | blocked | PPW-T09-COMMAND-OPTION-FOCUSED-MBT, PPW-T10-ABILITY-CHECK-SEARCH-FOCUSED-MBT | Moved from QNTD-B10 / QCP-CS8. |
@@ -430,7 +430,7 @@ Acceptance: focused MBT green; checker write+check green; `git diff --check`.
 
 ### Task 8 - PPW-T08-WEAPON-MASTERY-RESELECTION-FOCUSED-MBT - Weapon Mastery reselection (sheet)
 
-Status: `ready-for-implementation`
+Status: `done`
 
 Input:
 

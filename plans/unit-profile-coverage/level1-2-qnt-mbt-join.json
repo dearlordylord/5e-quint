@@ -661,8 +661,10 @@
       "obligationTitle": "Character Sheet Long Rest Weapon Mastery reselection uses class-level choice counts for Fighter and Barbarian",
       "parityWitnesses": [
         {
-          "kind": "runtime-test",
-          "ownerPath": "packages/character-sheet-runtime/src/rests.test.ts"
+          "kind": "focused-mbt",
+          "ownerPath": "packages/character-sheet-runtime/src/weapon-mastery-class-level-reselection.mbt.test.ts",
+          "qntSpecPath": "packages/character-sheet-runtime/character-sheet-weapon-mastery-class-level-reselection.mbt.qnt",
+          "stepAction": "step"
         }
       ],
       "profileId": "character-sheet.weapon-mastery-class-level-reselection",
@@ -2859,8 +2861,10 @@
       "obligationTitle": "Character Sheet Long Rest Weapon Mastery reselection uses class-level choice counts for Fighter and Barbarian",
       "parityWitnesses": [
         {
-          "kind": "runtime-test",
-          "ownerPath": "packages/character-sheet-runtime/src/rests.test.ts"
+          "kind": "focused-mbt",
+          "ownerPath": "packages/character-sheet-runtime/src/weapon-mastery-class-level-reselection.mbt.test.ts",
+          "qntSpecPath": "packages/character-sheet-runtime/character-sheet-weapon-mastery-class-level-reselection.mbt.qnt",
+          "stepAction": "step"
         }
       ],
       "profileId": "character-sheet.weapon-mastery-class-level-reselection",
