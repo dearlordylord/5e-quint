@@ -578,7 +578,7 @@
       "obligationTitle": "Character Sheet Armor Class base formula selection from build, loadout, and class-feature facts",
       "parityWitnesses": [
         {
-          "deterministicReplayRationale": "Armor Class base formula replay is a closed projection fixture over default unarmored AC, Barbarian and Monk Unarmored Defense, light and medium armor Dexterity formulas, heavy fixed armor, and trained shield bonus. The input space is scalar formula selection over witnessed SRD loadout and selected-feature facts, so random branch interleavings are not the risk at this sheet projection boundary.",
+          "deterministicReplayRationale": "Armor Class base formula replay is a closed projection fixture over default unarmored AC, selected Barbarian and Monk Unarmored Defense Unit identity, light and medium armor Dexterity formulas, heavy fixed armor, and trained shield bonus. Selected formula identity is boundary evidence that a concrete class-feature or armor Unit chooses the right base formula; it is distinct from runtime Armor Class state, which remains the ArmorClassState/currentArmorClass projection owned by the shared armor-class semantic core and Character Sheet runtime. The input space is scalar formula selection over witnessed SRD loadout and selected-feature facts, so random branch interleavings are not the risk at this sheet projection boundary.",
           "kind": "deterministic-qnt-replay",
           "ownerPath": "packages/character-sheet-runtime/src/armor-class-base-selected-identity.mbt.test.ts",
           "qntSpecPath": "packages/character-sheet-runtime/character-sheet-armor-class-base-selected-identity.mbt.qnt",
@@ -5009,7 +5009,7 @@
       "obligationTitle": "Character Sheet Armor Class base formula selection from build, loadout, and class-feature facts",
       "parityWitnesses": [
         {
-          "deterministicReplayRationale": "Armor Class base formula replay is a closed projection fixture over default unarmored AC, Barbarian and Monk Unarmored Defense, light and medium armor Dexterity formulas, heavy fixed armor, and trained shield bonus. The input space is scalar formula selection over witnessed SRD loadout and selected-feature facts, so random branch interleavings are not the risk at this sheet projection boundary.",
+          "deterministicReplayRationale": "Armor Class base formula replay is a closed projection fixture over default unarmored AC, selected Barbarian and Monk Unarmored Defense Unit identity, light and medium armor Dexterity formulas, heavy fixed armor, and trained shield bonus. Selected formula identity is boundary evidence that a concrete class-feature or armor Unit chooses the right base formula; it is distinct from runtime Armor Class state, which remains the ArmorClassState/currentArmorClass projection owned by the shared armor-class semantic core and Character Sheet runtime. The input space is scalar formula selection over witnessed SRD loadout and selected-feature facts, so random branch interleavings are not the risk at this sheet projection boundary.",
           "kind": "deterministic-qnt-replay",
           "ownerPath": "packages/character-sheet-runtime/src/armor-class-base-selected-identity.mbt.test.ts",
           "qntSpecPath": "packages/character-sheet-runtime/character-sheet-armor-class-base-selected-identity.mbt.qnt",
