@@ -13,7 +13,7 @@
     {
       "number": 2,
       "id": "DRP-T02-SHOVE-OUTCOME-DECISION",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Audit Shove outcome deterministic replay portability"
     },
     {
@@ -320,7 +320,7 @@ Acceptance:
 
 ### Task 2 - DRP-T02-SHOVE-OUTCOME-DECISION
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 
