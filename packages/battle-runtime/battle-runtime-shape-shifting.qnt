@@ -1,5 +1,6 @@
 // -*- mode: Bluespec; -*-
 
+// KERNEL-COVERAGE: qnt-owner BATTLE.FEATURE.WILD_SHAPE_FORM_LIFECYCLE
 module battleRuntimeShapeShifting {
   // SRD 5.2.1 Rules Glossary "Shape-Shifting": an effect such as Wild Shape
   // or Polymorph specifies the replacement form, ongoing effects carry over

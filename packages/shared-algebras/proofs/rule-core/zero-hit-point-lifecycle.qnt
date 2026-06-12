@@ -1,5 +1,6 @@
 // -*- mode: Bluespec; -*-
 
+// KERNEL-COVERAGE: qnt-owner BATTLE.DAMAGE.DEATH_SAVING_THROW_LIFECYCLE
 module zeroHitPointLifecycle {
   import hitPointDamage.* from "./hit-point-damage"
 

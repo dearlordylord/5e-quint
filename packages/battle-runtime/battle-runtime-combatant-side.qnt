@@ -1,5 +1,6 @@
 // -*- mode: Bluespec; -*-
 
+// KERNEL-COVERAGE: qnt-owner BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS
 module battleRuntimeCombatantSide {
   import battleRuntimeModel.* from "./battle-runtime-model"
 

@@ -1,5 +1,6 @@
 // -*- mode: Bluespec; -*-
 
+// KERNEL-COVERAGE: qnt-owner BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING
 module battleRuntimeAttackFacts {
   import attackDamageComposition.* from "../shared-algebras/proofs/rule-core/attack-damage-composition"
   import attackActionAdditionalAttacks.* from "../shared-algebras/proofs/rule-core/attack-action-additional-attacks"

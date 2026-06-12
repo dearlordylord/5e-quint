@@ -1,4 +1,5 @@
 // -*- mode: Bluespec; -*-
+// KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING
 // UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-warding-bond-linked-effect
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-warding-bond-linked-effect
 module battleRuntimeWardingBond {

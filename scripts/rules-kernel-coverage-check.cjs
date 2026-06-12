@@ -20,8 +20,11 @@ const {
   obligationKinds,
   obligationStatuses,
   parityWitnessKinds,
+  qntRegistryExemptionCategories,
+  qntRegistryExemptions,
   qntOwnerRoles,
   runtimes,
+  skippedScanDirs,
 } = require("./rules-kernel-coverage-config.cjs");
 const { scanClaimFiles } = require("./rules-kernel-coverage-claim-scan.cjs");
 const {
@@ -98,6 +101,39 @@ function readJsonl(rootPath, filePath) {
 
 function readTextIfExists(filePath) {
   return fs.existsSync(filePath) ? fs.readFileSync(filePath, "utf8") : "";
+}
+
+function walkFiles(rootPath, acceptFile) {
+  const files = [];
+  if (!fs.existsSync(rootPath)) return files;
+  for (const entry of fs.readdirSync(rootPath, { withFileTypes: true })) {
+    if (skippedScanDirs.has(entry.name)) continue;
+    const entryPath = path.join(rootPath, entry.name);
+    if (entry.isDirectory()) {
+      files.push(...walkFiles(entryPath, acceptFile));
+    } else if (entry.isFile() && acceptFile(entryPath)) {
+      files.push(entryPath);
+    }
+  }
+  return files;
+}
+
+function isRegistryScopedQntPath(ownerPath) {
+  return (
+    ownerPath.startsWith("packages/") &&
+    ownerPath.endsWith(".qnt") &&
+    !ownerPath.endsWith(".mbt.qnt") &&
+    !ownerPath.endsWith("-tests.qnt")
+  );
+}
+
+function packageQntRegistryPaths(rootPath) {
+  return walkFiles(path.join(rootPath, "packages"), (filePath) =>
+    filePath.endsWith(".qnt"),
+  )
+    .map((filePath) => repoPath(rootPath, filePath))
+    .filter(isRegistryScopedQntPath)
+    .sort();
 }
 
 function stripCommentsPreserveLines(text) {
@@ -457,7 +493,8 @@ function validateRequiredStringArray(value, context) {
   return validateStringArray(value, context);
 }
 
-const ralphFollowUpTaskIdPattern = /^(?:[ABC][0-9]+|BPK-B[0-9]+)-[A-Z0-9-]+$/;
+const ralphFollowUpTaskIdPattern =
+  /^(?:[ABC][0-9]+|BPK-B[0-9]+|PPW-T[0-9]+)-[A-Z0-9-]+$/;
 
 function validFollowUpTaskId(taskId) {
   return (
@@ -468,7 +505,7 @@ function validFollowUpTaskId(taskId) {
 function readKnownRalphTaskIds(rootPath) {
   const taskIds = new Set();
   const taskHeadingPattern =
-    /^### Task [0-9]+ - ((?:[ABC][0-9]+|BPK-B[0-9]+)-[A-Z0-9-]+) - /gm;
+    /^### Task [0-9]+ - ((?:[ABC][0-9]+|BPK-B[0-9]+|PPW-T[0-9]+)-[A-Z0-9-]+) - /gm;
   const plansPath = path.join(rootPath, "plans");
   const planNames = fs.existsSync(plansPath)
     ? fs
@@ -1788,12 +1825,117 @@ function validateKernelIrBoundary(row, index, rootPath, obligationIds) {
 function qntOwnerPaths(obligations) {
   const ownerPaths = new Set();
   for (const obligation of obligations) {
-    if (!coveredStatuses.has(obligation.status)) continue;
     for (const ownerPath of obligation.qntOwners ?? []) {
       ownerPaths.add(ownerPath);
     }
   }
   return ownerPaths;
+}
+
+function qntRegistryExemptionMap(registryExemptions) {
+  return new Map(
+    registryExemptions.map((exemption) => [
+      exemption.ownerPath,
+      exemption,
+    ]),
+  );
+}
+
+function validateQntRegistryExemption(exemption, index, rootPath) {
+  const issues = [];
+  const context = `qnt registry exemption ${index + 1}`;
+  if (!isRecord(exemption)) return [`${context} must be an object.`];
+  if (
+    typeof exemption.ownerPath !== "string" ||
+    exemption.ownerPath.length === 0
+  ) {
+    issues.push(`${context}.ownerPath must be a non-empty string.`);
+  } else {
+    if (!isRegistryScopedQntPath(exemption.ownerPath)) {
+      issues.push(
+        `${context}.ownerPath ${exemption.ownerPath} must be a packages/**/*.qnt path excluding .mbt.qnt drivers and *-tests.qnt files.`,
+      );
+    }
+  }
+  if (!qntRegistryExemptionCategories.has(exemption.category)) {
+    issues.push(`${context}.category has unknown value ${exemption.category}.`);
+  }
+  if (
+    typeof exemption.evidence !== "string" ||
+    exemption.evidence.length === 0
+  ) {
+    issues.push(`${context}.evidence must be a non-empty string.`);
+  }
+  return issues;
+}
+
+function validateQntRegistryClosure(
+  rootPath,
+  qntOwnerRolesByPath,
+  registryExemptions = qntRegistryExemptions,
+) {
+  const issues = [];
+  const qntPaths = packageQntRegistryPaths(rootPath);
+  const qntPathSet = new Set(qntPaths);
+  const exemptionsByPath = qntRegistryExemptionMap(registryExemptions);
+  const seenExemptions = new Set();
+  for (const [index, exemption] of registryExemptions.entries()) {
+    if (isRecord(exemption) && typeof exemption.ownerPath === "string") {
+      if (seenExemptions.has(exemption.ownerPath)) {
+        issues.push(
+          `qnt registry exemption ${index + 1}: duplicate exemption for ${exemption.ownerPath}.`,
+        );
+      }
+      seenExemptions.add(exemption.ownerPath);
+      if (qntOwnerRolesByPath.has(exemption.ownerPath)) {
+        issues.push(
+          `qnt registry exemption ${index + 1}: ${exemption.ownerPath} is already classified by qnt-owner-roles.jsonl.`,
+        );
+      }
+      if (
+        isRegistryScopedQntPath(exemption.ownerPath) &&
+        !qntPathSet.has(exemption.ownerPath)
+      ) {
+        issues.push(
+          `qnt registry exemption ${index + 1}: ${exemption.ownerPath} does not exist; remove the stale exemption.`,
+        );
+      }
+    }
+    issues.push(...validateQntRegistryExemption(exemption, index, rootPath));
+  }
+  for (const ownerPath of qntPaths) {
+    if (
+      !qntOwnerRolesByPath.has(ownerPath) &&
+      !exemptionsByPath.has(ownerPath)
+    ) {
+      issues.push(
+        `qnt registry is missing ${ownerPath}; add a qnt-owner-roles row or a checker-owned exemption category.`,
+      );
+    }
+  }
+  return issues;
+}
+
+function buildQntRegistryInventory(
+  rootPath,
+  qntOwnerRolesByPath,
+  registryExemptions = qntRegistryExemptions,
+) {
+  const exemptionsByPath = qntRegistryExemptionMap(registryExemptions);
+  return packageQntRegistryPaths(rootPath).map((ownerPath) => {
+    const role = qntOwnerRolesByPath.get(ownerPath);
+    const exemption = exemptionsByPath.get(ownerPath);
+    return stable({
+      ownerPath,
+      ...(role !== undefined
+        ? { classification: "qnt-owner-role", role }
+        : {
+            classification: "exempt",
+            category: exemption?.category ?? "_missing_",
+            evidence: exemption?.evidence ?? "_missing_",
+          }),
+    });
+  });
 }
 
 function generatorReadinessOwnerPaths(generatorReadiness) {
@@ -1846,7 +1988,7 @@ function validateQntOwnerRole(row, index, rootPath, expectedQntOwnerPaths) {
   } else {
     if (!expectedQntOwnerPaths.has(row.ownerPath)) {
       issues.push(
-        `${context}.ownerPath ${row.ownerPath} is not a covered obligation or assessed generator-readiness QNT owner.`,
+        `${context}.ownerPath ${row.ownerPath} is not an obligation or assessed generator-readiness QNT owner.`,
       );
     }
     if (!fs.existsSync(path.join(rootPath, row.ownerPath))) {
@@ -2272,7 +2414,7 @@ function buildSemanticCoreRunBlockFindings(
   });
 }
 
-function buildMatrix(rootPath) {
+function buildMatrix(rootPath, registryExemptions = qntRegistryExemptions) {
   const paths = coveragePaths(rootPath);
   const obligations = readJsonl(rootPath, paths.obligations);
   const battleHoleFrontier = readJsonl(rootPath, paths.battleHoleFrontier);
@@ -2301,7 +2443,6 @@ function buildMatrix(rootPath) {
   );
   const obligationIdsByQntOwner = new Map();
   for (const obligation of obligations) {
-    if (!coveredStatuses.has(obligation.status)) continue;
     for (const ownerPath of obligation.qntOwners ?? []) {
       const current = obligationIdsByQntOwner.get(ownerPath) ?? [];
       current.push(obligation.id);
@@ -2324,9 +2465,11 @@ function buildMatrix(rootPath) {
       "obligations[].profiles":
         "Derived from profileObligations by obligation id, except BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS unit-feature profiles are reported under unitFeatureProfileOwnerRows so the broad obligation does not claim profile-scoped QNT ownership.",
       "qntOwnerRoles[].obligationIds":
-        "Derived from obligations[].qntOwners for covered obligations; qnt-owner-roles.jsonl rows classify ownerPath only, including assessed generator-readiness semanticCore/proofOnly paths.",
+        "Derived from obligations[].qntOwners; qnt-owner-roles.jsonl rows classify ownerPath only, including assessed generator-readiness semanticCore/proofOnly paths.",
       "qntOwnerRoles[].profileScopes":
         "Report projection derived from profile-obligations.jsonl, obligations[].qntOwners, and plans/unit-profile-coverage/profiles.jsonl qntOwners for unit-feature profiles mapped to BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS.",
+      "qntRegistry[]":
+        "Derived from packages/**/*.qnt excluding .mbt.qnt drivers and *-tests.qnt files, qnt-owner-roles.jsonl, and checker-owned qntRegistryExemptions.",
     },
     battleHoleFrontierSummary: buildBattleFrontierSummary(battleHoleFrontier),
     obligations: obligations.map((obligation) =>
@@ -2353,6 +2496,11 @@ function buildMatrix(rootPath) {
         ...(profileScopes.length > 0 ? { profileScopes } : {}),
       });
     }),
+    qntRegistry: buildQntRegistryInventory(
+      rootPath,
+      qntOwnerRolesByPath,
+      registryExemptions,
+    ),
     unitFeatureProfileOwnerRows: unitFeatureProfileOwnerEvidence,
     generatorReadiness: generatorReadiness.map((readiness) =>
       stable(readiness),
@@ -2470,6 +2618,28 @@ function renderReport(matrix, issues) {
     for (const row of matrix.qntOwnerRoles) {
       lines.push(
         `| \`${row.ownerPath}\` | ${row.role} | ${renderQntOwnerRoleScopes(row)} |`,
+      );
+    }
+  }
+  lines.push("");
+  lines.push("## QNT Registry");
+  lines.push("");
+  lines.push(
+    "Rows here inventory `packages/**/*.qnt` files excluding `.mbt.qnt` drivers and `*-tests.qnt` files. Each row must be role-rowed or checker-exempt.",
+  );
+  lines.push("");
+  if ((matrix.qntRegistry ?? []).length === 0) {
+    lines.push("No package QNT files found.");
+  } else {
+    lines.push("| Owner | Classification | Detail |");
+    lines.push("| --- | --- | --- |");
+    for (const row of matrix.qntRegistry) {
+      const detail =
+        row.classification === "qnt-owner-role"
+          ? row.role
+          : `${row.category}: ${row.evidence}`;
+      lines.push(
+        `| \`${row.ownerPath}\` | ${row.classification} | ${detail} |`,
       );
     }
   }
@@ -2687,6 +2857,7 @@ function renderList(values) {
 function buildKernelCoverage({
   root: rootPath,
   generatorSubsetAuditObligationIds = generatorSubsetObservedConstructAuditObligationIds,
+  qntRegistryExemptions: registryExemptions = qntRegistryExemptions,
 }) {
   const paths = coveragePaths(rootPath);
   const obligations = readJsonl(rootPath, paths.obligations);
@@ -2858,6 +3029,13 @@ function buildKernelCoverage({
       issues.push(`qnt-owner-roles is missing QNT owner ${ownerPath}.`);
     }
   }
+  issues.push(
+    ...validateQntRegistryClosure(
+      rootPath,
+      qntOwnerRolesByPath,
+      registryExemptions,
+    ),
+  );
   const semanticCoreRunBlocksByPath = scanSemanticCoreRunBlocks(
     rootPath,
     qntOwnerRoleRows,
@@ -2936,7 +3114,7 @@ function buildKernelCoverage({
     }
   }
 
-  const matrix = buildMatrix(rootPath);
+  const matrix = buildMatrix(rootPath, registryExemptions);
   return {
     issues,
     matrix,

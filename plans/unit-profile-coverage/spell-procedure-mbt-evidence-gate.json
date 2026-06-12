@@ -1,8 +1,5 @@
 {
-  "blockedScopeIds": [
-    "level-1",
-    "level-1-2"
-  ],
+  "blockedScopeIds": [],
   "criteria": {
     "noRuntimeBehavior": "This gate is checker/report evidence only and does not change spell reducers, Surface admission, or QNT semantics.",
     "profileKind": "spell-invocation",
@@ -19,13 +16,13 @@
       "metrics": {
         "evidenceRows": {
           "denominator": 113,
-          "numerator": 107,
-          "percent": "94.7%"
+          "numerator": 113,
+          "percent": "100%"
         },
         "openGapRows": {
           "denominator": 113,
-          "numerator": 6,
-          "percent": "5.3%"
+          "numerator": 0,
+          "percent": "0%"
         },
         "spellProcedureProfiles": {
           "denominator": 31,
@@ -38,290 +35,7 @@
           "percent": "100%"
         }
       },
-      "openGapRows": [
-        {
-          "evidenceStatus": "gap",
-          "gaps": [
-            {
-              "detail": "Rules-kernel obligation has parity witnesses, but none are focused-mbt or deterministic-qnt-replay evidence.",
-              "kind": "missing-qnt-mbt-witness"
-            }
-          ],
-          "joinStatus": "covered",
-          "obligationId": "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS",
-          "obligationStatus": "covered",
-          "obligationTitle": "Battle weapon-hosted spell attack and weapon damage rider profiles for spellcasting ability replacement, damage-type choice, held-weapon override, timed cleanup, and weapon-hit damage riders",
-          "parityWitnesses": [
-            {
-              "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-true-strike-and-divine-smite.test.ts"
-            },
-            {
-              "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-weapon-override-and-rider-spells.test.ts"
-            }
-          ],
-          "profileId": "spell.invocation-weapon-damage-rider",
-          "profileKind": "spell-invocation",
-          "qntMbtWitnesses": [],
-          "qntOwners": [
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-weapon-hit-spell-riders.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-weapon-attacks.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-light.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-spell-invocation.qnt",
-              "role": "semantic-core"
-            }
-          ],
-          "runtime": "battle",
-          "tag": "obligation-evidence",
-          "unitId": "divine_favor"
-        },
-        {
-          "evidenceStatus": "gap",
-          "gaps": [
-            {
-              "detail": "Rules-kernel obligation has parity witnesses, but none are focused-mbt or deterministic-qnt-replay evidence.",
-              "kind": "missing-qnt-mbt-witness"
-            }
-          ],
-          "joinStatus": "covered",
-          "obligationId": "BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS",
-          "obligationStatus": "covered",
-          "obligationTitle": "Battle after-hit Bonus Action spell riders for immediate damage, save-gated restraint, timed start-turn damage, illumination, Spell Slot or free-cast spend, and Concentration cleanup",
-          "parityWitnesses": [
-            {
-              "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-true-strike-and-divine-smite.test.ts"
-            },
-            {
-              "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-ensnaring-and-searing-smite.test.ts"
-            },
-            {
-              "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-shining-smite.test.ts"
-            }
-          ],
-          "profileId": "spell.invocation-after-hit-damage",
-          "profileKind": "spell-invocation",
-          "qntMbtWitnesses": [],
-          "qntOwners": [
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-weapon-hit-spell-riders.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-spell-invocation.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-concentration.qnt",
-              "role": "semantic-core"
-            }
-          ],
-          "runtime": "battle",
-          "tag": "obligation-evidence",
-          "unitId": "divine_smite"
-        },
-        {
-          "evidenceStatus": "gap",
-          "gaps": [
-            {
-              "detail": "Rules-kernel obligation has parity witnesses, but none are focused-mbt or deterministic-qnt-replay evidence.",
-              "kind": "missing-qnt-mbt-witness"
-            }
-          ],
-          "joinStatus": "covered",
-          "obligationId": "BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS",
-          "obligationStatus": "covered",
-          "obligationTitle": "Battle after-hit Bonus Action spell riders for immediate damage, save-gated restraint, timed start-turn damage, illumination, Spell Slot or free-cast spend, and Concentration cleanup",
-          "parityWitnesses": [
-            {
-              "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-true-strike-and-divine-smite.test.ts"
-            },
-            {
-              "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-ensnaring-and-searing-smite.test.ts"
-            },
-            {
-              "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-shining-smite.test.ts"
-            }
-          ],
-          "profileId": "spell.invocation-after-hit-restraint-turn-start-damage",
-          "profileKind": "spell-invocation",
-          "qntMbtWitnesses": [],
-          "qntOwners": [
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-weapon-hit-spell-riders.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-spell-invocation.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-concentration.qnt",
-              "role": "semantic-core"
-            }
-          ],
-          "runtime": "battle",
-          "tag": "obligation-evidence",
-          "unitId": "ensnaring_strike"
-        },
-        {
-          "evidenceStatus": "gap",
-          "gaps": [
-            {
-              "detail": "Rules-kernel obligation has parity witnesses, but none are focused-mbt or deterministic-qnt-replay evidence.",
-              "kind": "missing-qnt-mbt-witness"
-            }
-          ],
-          "joinStatus": "covered",
-          "obligationId": "BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS",
-          "obligationStatus": "covered",
-          "obligationTitle": "Battle after-hit Bonus Action spell riders for immediate damage, save-gated restraint, timed start-turn damage, illumination, Spell Slot or free-cast spend, and Concentration cleanup",
-          "parityWitnesses": [
-            {
-              "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-true-strike-and-divine-smite.test.ts"
-            },
-            {
-              "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-ensnaring-and-searing-smite.test.ts"
-            },
-            {
-              "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-shining-smite.test.ts"
-            }
-          ],
-          "profileId": "spell.invocation-after-hit-timed-damage-save",
-          "profileKind": "spell-invocation",
-          "qntMbtWitnesses": [],
-          "qntOwners": [
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-weapon-hit-spell-riders.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-spell-invocation.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-concentration.qnt",
-              "role": "semantic-core"
-            }
-          ],
-          "runtime": "battle",
-          "tag": "obligation-evidence",
-          "unitId": "searing_smite"
-        },
-        {
-          "evidenceStatus": "gap",
-          "gaps": [
-            {
-              "detail": "Rules-kernel obligation has parity witnesses, but none are focused-mbt or deterministic-qnt-replay evidence.",
-              "kind": "missing-qnt-mbt-witness"
-            }
-          ],
-          "joinStatus": "covered",
-          "obligationId": "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS",
-          "obligationStatus": "covered",
-          "obligationTitle": "Battle weapon-hosted spell attack and weapon damage rider profiles for spellcasting ability replacement, damage-type choice, held-weapon override, timed cleanup, and weapon-hit damage riders",
-          "parityWitnesses": [
-            {
-              "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-true-strike-and-divine-smite.test.ts"
-            },
-            {
-              "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-weapon-override-and-rider-spells.test.ts"
-            }
-          ],
-          "profileId": "spell.invocation-weapon-attack-override",
-          "profileKind": "spell-invocation",
-          "qntMbtWitnesses": [],
-          "qntOwners": [
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-weapon-hit-spell-riders.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-weapon-attacks.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-light.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-spell-invocation.qnt",
-              "role": "semantic-core"
-            }
-          ],
-          "runtime": "battle",
-          "tag": "obligation-evidence",
-          "unitId": "shillelagh"
-        },
-        {
-          "evidenceStatus": "gap",
-          "gaps": [
-            {
-              "detail": "Rules-kernel obligation has parity witnesses, but none are focused-mbt or deterministic-qnt-replay evidence.",
-              "kind": "missing-qnt-mbt-witness"
-            }
-          ],
-          "joinStatus": "covered",
-          "obligationId": "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS",
-          "obligationStatus": "covered",
-          "obligationTitle": "Battle weapon-hosted spell attack and weapon damage rider profiles for spellcasting ability replacement, damage-type choice, held-weapon override, timed cleanup, and weapon-hit damage riders",
-          "parityWitnesses": [
-            {
-              "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-true-strike-and-divine-smite.test.ts"
-            },
-            {
-              "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-weapon-override-and-rider-spells.test.ts"
-            }
-          ],
-          "profileId": "spell.invocation-spell-hosted-weapon-attack",
-          "profileKind": "spell-invocation",
-          "qntMbtWitnesses": [],
-          "qntOwners": [
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-weapon-hit-spell-riders.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-weapon-attacks.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-light.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-spell-invocation.qnt",
-              "role": "semantic-core"
-            }
-          ],
-          "runtime": "battle",
-          "tag": "obligation-evidence",
-          "unitId": "true_strike"
-        }
-      ],
+      "openGapRows": [],
       "rows": [
         {
           "evidenceStatus": "evidence-present",
@@ -479,6 +193,14 @@
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
               "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-spell-bridge.qnt",
+              "role": "bridge"
+            },
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+              "role": "proof-only"
             }
           ],
           "runtime": "battle",
@@ -629,6 +351,14 @@
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
               "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-spell-bridge.qnt",
+              "role": "bridge"
+            },
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+              "role": "proof-only"
             }
           ],
           "runtime": "battle",
@@ -920,6 +650,14 @@
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
               "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-spell-bridge.qnt",
+              "role": "bridge"
+            },
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+              "role": "proof-only"
             }
           ],
           "runtime": "battle",
@@ -1070,6 +808,14 @@
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
               "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-spell-bridge.qnt",
+              "role": "bridge"
+            },
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+              "role": "proof-only"
             }
           ],
           "runtime": "battle",
@@ -1232,6 +978,14 @@
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
               "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-spell-bridge.qnt",
+              "role": "bridge"
+            },
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+              "role": "proof-only"
             }
           ],
           "runtime": "battle",
@@ -1382,6 +1136,14 @@
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
               "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-spell-bridge.qnt",
+              "role": "bridge"
+            },
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+              "role": "proof-only"
             }
           ],
           "runtime": "battle",
@@ -1579,6 +1341,14 @@
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
               "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-spell-bridge.qnt",
+              "role": "bridge"
+            },
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+              "role": "proof-only"
             }
           ],
           "runtime": "battle",
@@ -1618,6 +1388,10 @@
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt",
               "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-prone-movement.qnt",
+              "role": "proof-only"
             }
           ],
           "runtime": "battle",
@@ -1633,10 +1407,9 @@
           "obligationTitle": "Battle Command option choice applies failed-save pending effects and RAW-fixed next-turn reducer consequences while route and object facts stay table-owned",
           "parityWitnesses": [
             {
-              "deterministicReplayRationale": "Command replay is a closed fixture tied to the QNT Command branch helper used by battleRuntimeGroundCommand: failed-save Grovel records a pending option, Grovel applies Prone and ends the turn, Drop emits one held-object drop without owning object inventory, Halt suppresses Action/Bonus Action/Movement until end turn, Approach covers continued movement, within-5-foot turn end, and no-movement cleanup, and Flee covers full-budget movement, partial-budget rejection, no-movement cleanup, and opportunity-attack continuation.",
-              "kind": "deterministic-qnt-replay",
-              "ownerPath": "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/command-option-next-turn.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-command-option-next-turn.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -1644,10 +1417,9 @@
           "profileKind": "spell-invocation",
           "qntMbtWitnesses": [
             {
-              "deterministicReplayRationale": "Command replay is a closed fixture tied to the QNT Command branch helper used by battleRuntimeGroundCommand: failed-save Grovel records a pending option, Grovel applies Prone and ends the turn, Drop emits one held-object drop without owning object inventory, Halt suppresses Action/Bonus Action/Movement until end turn, Approach covers continued movement, within-5-foot turn end, and no-movement cleanup, and Flee covers full-budget movement, partial-budget rejection, no-movement cleanup, and opportunity-attack continuation.",
-              "kind": "deterministic-qnt-replay",
-              "ownerPath": "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/command-option-next-turn.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-command-option-next-turn.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -1856,6 +1628,14 @@
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
               "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-spell-bridge.qnt",
+              "role": "bridge"
+            },
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+              "role": "proof-only"
             }
           ],
           "runtime": "battle",
@@ -1891,6 +1671,10 @@
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/movement-spatial-grapple.qnt",
               "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-movement-bridge.qnt",
+              "role": "bridge"
             }
           ],
           "runtime": "battle",
@@ -1972,13 +1756,8 @@
           "unitId": "dissonant_whispers"
         },
         {
-          "evidenceStatus": "gap",
-          "gaps": [
-            {
-              "detail": "Rules-kernel obligation has parity witnesses, but none are focused-mbt or deterministic-qnt-replay evidence.",
-              "kind": "missing-qnt-mbt-witness"
-            }
-          ],
+          "evidenceStatus": "evidence-present",
+          "gaps": [],
           "joinStatus": "covered",
           "obligationId": "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS",
           "obligationStatus": "covered",
@@ -1991,11 +1770,24 @@
             {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/unit-profile-admission-weapon-override-and-rider-spells.test.ts"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/weapon-hosted-attack-and-riders.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt",
+              "stepAction": "step"
             }
           ],
           "profileId": "spell.invocation-weapon-damage-rider",
           "profileKind": "spell-invocation",
-          "qntMbtWitnesses": [],
+          "qntMbtWitnesses": [
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/weapon-hosted-attack-and-riders.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt",
+              "stepAction": "step"
+            }
+          ],
           "qntOwners": [
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-weapon-hit-spell-riders.qnt",
@@ -2019,13 +1811,8 @@
           "unitId": "divine_favor"
         },
         {
-          "evidenceStatus": "gap",
-          "gaps": [
-            {
-              "detail": "Rules-kernel obligation has parity witnesses, but none are focused-mbt or deterministic-qnt-replay evidence.",
-              "kind": "missing-qnt-mbt-witness"
-            }
-          ],
+          "evidenceStatus": "evidence-present",
+          "gaps": [],
           "joinStatus": "covered",
           "obligationId": "BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS",
           "obligationStatus": "covered",
@@ -2042,11 +1829,24 @@
             {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/unit-profile-admission-shining-smite.test.ts"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/after-hit-damage-riders.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt",
+              "stepAction": "step"
             }
           ],
           "profileId": "spell.invocation-after-hit-damage",
           "profileKind": "spell-invocation",
-          "qntMbtWitnesses": [],
+          "qntMbtWitnesses": [
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/after-hit-damage-riders.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt",
+              "stepAction": "step"
+            }
+          ],
           "qntOwners": [
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-weapon-hit-spell-riders.qnt",
@@ -2113,13 +1913,8 @@
           "unitId": "eldritch_blast"
         },
         {
-          "evidenceStatus": "gap",
-          "gaps": [
-            {
-              "detail": "Rules-kernel obligation has parity witnesses, but none are focused-mbt or deterministic-qnt-replay evidence.",
-              "kind": "missing-qnt-mbt-witness"
-            }
-          ],
+          "evidenceStatus": "evidence-present",
+          "gaps": [],
           "joinStatus": "covered",
           "obligationId": "BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS",
           "obligationStatus": "covered",
@@ -2136,11 +1931,24 @@
             {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/unit-profile-admission-shining-smite.test.ts"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/after-hit-damage-riders.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt",
+              "stepAction": "step"
             }
           ],
           "profileId": "spell.invocation-after-hit-restraint-turn-start-damage",
           "profileKind": "spell-invocation",
-          "qntMbtWitnesses": [],
+          "qntMbtWitnesses": [
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/after-hit-damage-riders.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt",
+              "stepAction": "step"
+            }
+          ],
           "qntOwners": [
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-weapon-hit-spell-riders.qnt",
@@ -2192,6 +2000,10 @@
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt",
               "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-prone-movement.qnt",
+              "role": "proof-only"
             }
           ],
           "runtime": "battle",
@@ -2227,6 +2039,10 @@
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/movement-spatial-grapple.qnt",
               "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-movement-bridge.qnt",
+              "role": "bridge"
             }
           ],
           "runtime": "battle",
@@ -2262,6 +2078,10 @@
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-movement.qnt",
               "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-prone-movement.qnt",
+              "role": "proof-only"
             }
           ],
           "runtime": "battle",
@@ -2340,6 +2160,14 @@
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-restoration-and-buffs.qnt",
               "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-armor-class.qnt",
+              "role": "proof-only"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-armor-spell-resolution.qnt",
+              "role": "proof-only"
             }
           ],
           "runtime": "battle",
@@ -2576,6 +2404,14 @@
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
               "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-spell-bridge.qnt",
+              "role": "bridge"
+            },
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+              "role": "proof-only"
             }
           ],
           "runtime": "battle",
@@ -2611,6 +2447,10 @@
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/movement-spatial-grapple.qnt",
               "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-movement-bridge.qnt",
+              "role": "bridge"
             }
           ],
           "runtime": "battle",
@@ -2859,6 +2699,14 @@
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
               "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-spell-bridge.qnt",
+              "role": "bridge"
+            },
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+              "role": "proof-only"
             }
           ],
           "runtime": "battle",
@@ -3009,6 +2857,14 @@
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
               "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-spell-bridge.qnt",
+              "role": "bridge"
+            },
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+              "role": "proof-only"
             }
           ],
           "runtime": "battle",
@@ -3206,6 +3062,14 @@
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
               "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-spell-bridge.qnt",
+              "role": "bridge"
+            },
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+              "role": "proof-only"
             }
           ],
           "runtime": "battle",
@@ -3335,6 +3199,10 @@
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt",
               "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-prone-movement.qnt",
+              "role": "proof-only"
             }
           ],
           "runtime": "battle",
@@ -3544,6 +3412,14 @@
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
               "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-spell-bridge.qnt",
+              "role": "bridge"
+            },
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+              "role": "proof-only"
             }
           ],
           "runtime": "battle",
@@ -3706,6 +3582,14 @@
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
               "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-spell-bridge.qnt",
+              "role": "bridge"
+            },
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+              "role": "proof-only"
             }
           ],
           "runtime": "battle",
@@ -3856,6 +3740,14 @@
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
               "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-spell-bridge.qnt",
+              "role": "bridge"
+            },
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+              "role": "proof-only"
             }
           ],
           "runtime": "battle",
@@ -3891,6 +3783,10 @@
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/movement-spatial-grapple.qnt",
               "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-movement-bridge.qnt",
+              "role": "bridge"
             }
           ],
           "runtime": "battle",
@@ -4000,6 +3896,14 @@
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-restoration-and-buffs.qnt",
               "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-armor-class.qnt",
+              "role": "proof-only"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-armor-spell-resolution.qnt",
+              "role": "proof-only"
             }
           ],
           "runtime": "battle",
@@ -4162,6 +4066,14 @@
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
               "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-spell-bridge.qnt",
+              "role": "bridge"
+            },
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+              "role": "proof-only"
             }
           ],
           "runtime": "battle",
@@ -4312,6 +4224,14 @@
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
               "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-spell-bridge.qnt",
+              "role": "bridge"
+            },
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+              "role": "proof-only"
             }
           ],
           "runtime": "battle",
@@ -4474,6 +4394,14 @@
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
               "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-spell-bridge.qnt",
+              "role": "bridge"
+            },
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+              "role": "proof-only"
             }
           ],
           "runtime": "battle",
@@ -4624,6 +4552,14 @@
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
               "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-spell-bridge.qnt",
+              "role": "bridge"
+            },
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+              "role": "proof-only"
             }
           ],
           "runtime": "battle",
@@ -4786,6 +4722,14 @@
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
               "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-spell-bridge.qnt",
+              "role": "bridge"
+            },
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+              "role": "proof-only"
             }
           ],
           "runtime": "battle",
@@ -4936,6 +4880,14 @@
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
               "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-spell-bridge.qnt",
+              "role": "bridge"
+            },
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+              "role": "proof-only"
             }
           ],
           "runtime": "battle",
@@ -5098,6 +5050,14 @@
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
               "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-spell-bridge.qnt",
+              "role": "bridge"
+            },
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+              "role": "proof-only"
             }
           ],
           "runtime": "battle",
@@ -5330,6 +5290,14 @@
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
               "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-spell-bridge.qnt",
+              "role": "bridge"
+            },
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+              "role": "proof-only"
             }
           ],
           "runtime": "battle",
@@ -5480,6 +5448,14 @@
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
               "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-spell-bridge.qnt",
+              "role": "bridge"
+            },
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+              "role": "proof-only"
             }
           ],
           "runtime": "battle",
@@ -5642,6 +5618,14 @@
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
               "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-spell-bridge.qnt",
+              "role": "bridge"
+            },
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+              "role": "proof-only"
             }
           ],
           "runtime": "battle",
@@ -5792,6 +5776,14 @@
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
               "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-spell-bridge.qnt",
+              "role": "bridge"
+            },
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+              "role": "proof-only"
             }
           ],
           "runtime": "battle",
@@ -5993,6 +5985,14 @@
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
               "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-spell-bridge.qnt",
+              "role": "bridge"
+            },
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+              "role": "proof-only"
             }
           ],
           "runtime": "battle",
@@ -6143,6 +6143,14 @@
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
               "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-spell-bridge.qnt",
+              "role": "bridge"
+            },
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+              "role": "proof-only"
             }
           ],
           "runtime": "battle",
@@ -6178,6 +6186,14 @@
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-sanctuary.qnt",
               "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-condition-spell-resolution.qnt",
+              "role": "proof-only"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-actor-combatants.qnt",
+              "role": "proof-only"
             }
           ],
           "runtime": "battle",
@@ -6185,13 +6201,8 @@
           "unitId": "sanctuary"
         },
         {
-          "evidenceStatus": "gap",
-          "gaps": [
-            {
-              "detail": "Rules-kernel obligation has parity witnesses, but none are focused-mbt or deterministic-qnt-replay evidence.",
-              "kind": "missing-qnt-mbt-witness"
-            }
-          ],
+          "evidenceStatus": "evidence-present",
+          "gaps": [],
           "joinStatus": "covered",
           "obligationId": "BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS",
           "obligationStatus": "covered",
@@ -6208,11 +6219,24 @@
             {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/unit-profile-admission-shining-smite.test.ts"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/after-hit-damage-riders.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt",
+              "stepAction": "step"
             }
           ],
           "profileId": "spell.invocation-after-hit-timed-damage-save",
           "profileKind": "spell-invocation",
-          "qntMbtWitnesses": [],
+          "qntMbtWitnesses": [
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/after-hit-damage-riders.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt",
+              "stepAction": "step"
+            }
+          ],
           "qntOwners": [
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-weapon-hit-spell-riders.qnt",
@@ -6264,6 +6288,14 @@
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-restoration-and-buffs.qnt",
               "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-armor-class.qnt",
+              "role": "proof-only"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-armor-spell-resolution.qnt",
+              "role": "proof-only"
             }
           ],
           "runtime": "battle",
@@ -6271,13 +6303,8 @@
           "unitId": "shield_of_faith"
         },
         {
-          "evidenceStatus": "gap",
-          "gaps": [
-            {
-              "detail": "Rules-kernel obligation has parity witnesses, but none are focused-mbt or deterministic-qnt-replay evidence.",
-              "kind": "missing-qnt-mbt-witness"
-            }
-          ],
+          "evidenceStatus": "evidence-present",
+          "gaps": [],
           "joinStatus": "covered",
           "obligationId": "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS",
           "obligationStatus": "covered",
@@ -6290,11 +6317,24 @@
             {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/unit-profile-admission-weapon-override-and-rider-spells.test.ts"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/weapon-hosted-attack-and-riders.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt",
+              "stepAction": "step"
             }
           ],
           "profileId": "spell.invocation-weapon-attack-override",
           "profileKind": "spell-invocation",
-          "qntMbtWitnesses": [],
+          "qntMbtWitnesses": [
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/weapon-hosted-attack-and-riders.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt",
+              "stepAction": "step"
+            }
+          ],
           "qntOwners": [
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-weapon-hit-spell-riders.qnt",
@@ -6473,6 +6513,14 @@
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
               "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-spell-bridge.qnt",
+              "role": "bridge"
+            },
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+              "role": "proof-only"
             }
           ],
           "runtime": "battle",
@@ -6623,6 +6671,14 @@
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
               "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-spell-bridge.qnt",
+              "role": "bridge"
+            },
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+              "role": "proof-only"
             }
           ],
           "runtime": "battle",
@@ -6820,6 +6876,14 @@
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
               "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-spell-bridge.qnt",
+              "role": "bridge"
+            },
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+              "role": "proof-only"
             }
           ],
           "runtime": "battle",
@@ -7017,6 +7081,14 @@
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
               "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-spell-bridge.qnt",
+              "role": "bridge"
+            },
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+              "role": "proof-only"
             }
           ],
           "runtime": "battle",
@@ -7179,6 +7251,14 @@
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
               "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-spell-bridge.qnt",
+              "role": "bridge"
+            },
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+              "role": "proof-only"
             }
           ],
           "runtime": "battle",
@@ -7186,13 +7266,8 @@
           "unitId": "thunderwave"
         },
         {
-          "evidenceStatus": "gap",
-          "gaps": [
-            {
-              "detail": "Rules-kernel obligation has parity witnesses, but none are focused-mbt or deterministic-qnt-replay evidence.",
-              "kind": "missing-qnt-mbt-witness"
-            }
-          ],
+          "evidenceStatus": "evidence-present",
+          "gaps": [],
           "joinStatus": "covered",
           "obligationId": "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS",
           "obligationStatus": "covered",
@@ -7205,11 +7280,24 @@
             {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/unit-profile-admission-weapon-override-and-rider-spells.test.ts"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/weapon-hosted-attack-and-riders.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt",
+              "stepAction": "step"
             }
           ],
           "profileId": "spell.invocation-spell-hosted-weapon-attack",
           "profileKind": "spell-invocation",
-          "qntMbtWitnesses": [],
+          "qntMbtWitnesses": [
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/weapon-hosted-attack-and-riders.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt",
+              "stepAction": "step"
+            }
+          ],
           "qntOwners": [
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-weapon-hit-spell-riders.qnt",
@@ -7388,6 +7476,14 @@
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
               "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-spell-bridge.qnt",
+              "role": "bridge"
+            },
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+              "role": "proof-only"
             }
           ],
           "runtime": "battle",
@@ -7538,6 +7634,14 @@
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
               "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-spell-bridge.qnt",
+              "role": "bridge"
+            },
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+              "role": "proof-only"
             }
           ],
           "runtime": "battle",
@@ -7546,7 +7650,7 @@
         }
       ],
       "scopeId": "level-1",
-      "status": "blocked",
+      "status": "pass",
       "title": "Character Level 1"
     },
     {
@@ -7554,13 +7658,13 @@
       "metrics": {
         "evidenceRows": {
           "denominator": 114,
-          "numerator": 107,
-          "percent": "93.9%"
+          "numerator": 114,
+          "percent": "100%"
         },
         "openGapRows": {
           "denominator": 114,
-          "numerator": 7,
-          "percent": "6.1%"
+          "numerator": 0,
+          "percent": "0%"
         },
         "spellProcedureProfiles": {
           "denominator": 31,
@@ -7573,337 +7677,7 @@
           "percent": "100%"
         }
       },
-      "openGapRows": [
-        {
-          "evidenceStatus": "gap",
-          "gaps": [
-            {
-              "detail": "Rules-kernel obligation has parity witnesses, but none are focused-mbt or deterministic-qnt-replay evidence.",
-              "kind": "missing-qnt-mbt-witness"
-            }
-          ],
-          "joinStatus": "covered",
-          "obligationId": "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS",
-          "obligationStatus": "covered",
-          "obligationTitle": "Battle weapon-hosted spell attack and weapon damage rider profiles for spellcasting ability replacement, damage-type choice, held-weapon override, timed cleanup, and weapon-hit damage riders",
-          "parityWitnesses": [
-            {
-              "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-true-strike-and-divine-smite.test.ts"
-            },
-            {
-              "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-weapon-override-and-rider-spells.test.ts"
-            }
-          ],
-          "profileId": "spell.invocation-weapon-damage-rider",
-          "profileKind": "spell-invocation",
-          "qntMbtWitnesses": [],
-          "qntOwners": [
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-weapon-hit-spell-riders.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-weapon-attacks.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-light.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-spell-invocation.qnt",
-              "role": "semantic-core"
-            }
-          ],
-          "runtime": "battle",
-          "tag": "obligation-evidence",
-          "unitId": "divine_favor"
-        },
-        {
-          "evidenceStatus": "gap",
-          "gaps": [
-            {
-              "detail": "Rules-kernel obligation has parity witnesses, but none are focused-mbt or deterministic-qnt-replay evidence.",
-              "kind": "missing-qnt-mbt-witness"
-            }
-          ],
-          "joinStatus": "covered",
-          "obligationId": "BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS",
-          "obligationStatus": "covered",
-          "obligationTitle": "Battle after-hit Bonus Action spell riders for immediate damage, save-gated restraint, timed start-turn damage, illumination, Spell Slot or free-cast spend, and Concentration cleanup",
-          "parityWitnesses": [
-            {
-              "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-true-strike-and-divine-smite.test.ts"
-            },
-            {
-              "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-ensnaring-and-searing-smite.test.ts"
-            },
-            {
-              "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-shining-smite.test.ts"
-            }
-          ],
-          "profileId": "spell.invocation-after-hit-damage",
-          "profileKind": "spell-invocation",
-          "qntMbtWitnesses": [],
-          "qntOwners": [
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-weapon-hit-spell-riders.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-spell-invocation.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-concentration.qnt",
-              "role": "semantic-core"
-            }
-          ],
-          "runtime": "battle",
-          "tag": "obligation-evidence",
-          "unitId": "divine_smite"
-        },
-        {
-          "evidenceStatus": "gap",
-          "gaps": [
-            {
-              "detail": "Rules-kernel obligation has parity witnesses, but none are focused-mbt or deterministic-qnt-replay evidence.",
-              "kind": "missing-qnt-mbt-witness"
-            }
-          ],
-          "joinStatus": "covered",
-          "obligationId": "BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS",
-          "obligationStatus": "covered",
-          "obligationTitle": "Battle after-hit Bonus Action spell riders for immediate damage, save-gated restraint, timed start-turn damage, illumination, Spell Slot or free-cast spend, and Concentration cleanup",
-          "parityWitnesses": [
-            {
-              "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-true-strike-and-divine-smite.test.ts"
-            },
-            {
-              "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-ensnaring-and-searing-smite.test.ts"
-            },
-            {
-              "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-shining-smite.test.ts"
-            }
-          ],
-          "profileId": "spell.invocation-after-hit-restraint-turn-start-damage",
-          "profileKind": "spell-invocation",
-          "qntMbtWitnesses": [],
-          "qntOwners": [
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-weapon-hit-spell-riders.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-spell-invocation.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-concentration.qnt",
-              "role": "semantic-core"
-            }
-          ],
-          "runtime": "battle",
-          "tag": "obligation-evidence",
-          "unitId": "ensnaring_strike"
-        },
-        {
-          "evidenceStatus": "gap",
-          "gaps": [
-            {
-              "detail": "Rules-kernel obligation has parity witnesses, but none are focused-mbt or deterministic-qnt-replay evidence.",
-              "kind": "missing-qnt-mbt-witness"
-            }
-          ],
-          "joinStatus": "covered",
-          "obligationId": "BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS",
-          "obligationStatus": "covered",
-          "obligationTitle": "Battle after-hit Bonus Action spell riders for immediate damage, save-gated restraint, timed start-turn damage, illumination, Spell Slot or free-cast spend, and Concentration cleanup",
-          "parityWitnesses": [
-            {
-              "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-true-strike-and-divine-smite.test.ts"
-            },
-            {
-              "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-ensnaring-and-searing-smite.test.ts"
-            },
-            {
-              "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-shining-smite.test.ts"
-            }
-          ],
-          "profileId": "spell.invocation-after-hit-damage",
-          "profileKind": "spell-invocation",
-          "qntMbtWitnesses": [],
-          "qntOwners": [
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-weapon-hit-spell-riders.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-spell-invocation.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-concentration.qnt",
-              "role": "semantic-core"
-            }
-          ],
-          "runtime": "battle",
-          "tag": "obligation-evidence",
-          "unitId": "paladin_paladins_smite"
-        },
-        {
-          "evidenceStatus": "gap",
-          "gaps": [
-            {
-              "detail": "Rules-kernel obligation has parity witnesses, but none are focused-mbt or deterministic-qnt-replay evidence.",
-              "kind": "missing-qnt-mbt-witness"
-            }
-          ],
-          "joinStatus": "covered",
-          "obligationId": "BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS",
-          "obligationStatus": "covered",
-          "obligationTitle": "Battle after-hit Bonus Action spell riders for immediate damage, save-gated restraint, timed start-turn damage, illumination, Spell Slot or free-cast spend, and Concentration cleanup",
-          "parityWitnesses": [
-            {
-              "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-true-strike-and-divine-smite.test.ts"
-            },
-            {
-              "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-ensnaring-and-searing-smite.test.ts"
-            },
-            {
-              "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-shining-smite.test.ts"
-            }
-          ],
-          "profileId": "spell.invocation-after-hit-timed-damage-save",
-          "profileKind": "spell-invocation",
-          "qntMbtWitnesses": [],
-          "qntOwners": [
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-weapon-hit-spell-riders.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-spell-invocation.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-concentration.qnt",
-              "role": "semantic-core"
-            }
-          ],
-          "runtime": "battle",
-          "tag": "obligation-evidence",
-          "unitId": "searing_smite"
-        },
-        {
-          "evidenceStatus": "gap",
-          "gaps": [
-            {
-              "detail": "Rules-kernel obligation has parity witnesses, but none are focused-mbt or deterministic-qnt-replay evidence.",
-              "kind": "missing-qnt-mbt-witness"
-            }
-          ],
-          "joinStatus": "covered",
-          "obligationId": "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS",
-          "obligationStatus": "covered",
-          "obligationTitle": "Battle weapon-hosted spell attack and weapon damage rider profiles for spellcasting ability replacement, damage-type choice, held-weapon override, timed cleanup, and weapon-hit damage riders",
-          "parityWitnesses": [
-            {
-              "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-true-strike-and-divine-smite.test.ts"
-            },
-            {
-              "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-weapon-override-and-rider-spells.test.ts"
-            }
-          ],
-          "profileId": "spell.invocation-weapon-attack-override",
-          "profileKind": "spell-invocation",
-          "qntMbtWitnesses": [],
-          "qntOwners": [
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-weapon-hit-spell-riders.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-weapon-attacks.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-light.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-spell-invocation.qnt",
-              "role": "semantic-core"
-            }
-          ],
-          "runtime": "battle",
-          "tag": "obligation-evidence",
-          "unitId": "shillelagh"
-        },
-        {
-          "evidenceStatus": "gap",
-          "gaps": [
-            {
-              "detail": "Rules-kernel obligation has parity witnesses, but none are focused-mbt or deterministic-qnt-replay evidence.",
-              "kind": "missing-qnt-mbt-witness"
-            }
-          ],
-          "joinStatus": "covered",
-          "obligationId": "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS",
-          "obligationStatus": "covered",
-          "obligationTitle": "Battle weapon-hosted spell attack and weapon damage rider profiles for spellcasting ability replacement, damage-type choice, held-weapon override, timed cleanup, and weapon-hit damage riders",
-          "parityWitnesses": [
-            {
-              "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-true-strike-and-divine-smite.test.ts"
-            },
-            {
-              "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-weapon-override-and-rider-spells.test.ts"
-            }
-          ],
-          "profileId": "spell.invocation-spell-hosted-weapon-attack",
-          "profileKind": "spell-invocation",
-          "qntMbtWitnesses": [],
-          "qntOwners": [
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-weapon-hit-spell-riders.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-weapon-attacks.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-light.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-spell-invocation.qnt",
-              "role": "semantic-core"
-            }
-          ],
-          "runtime": "battle",
-          "tag": "obligation-evidence",
-          "unitId": "true_strike"
-        }
-      ],
+      "openGapRows": [],
       "rows": [
         {
           "evidenceStatus": "evidence-present",
@@ -8061,6 +7835,14 @@
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
               "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-spell-bridge.qnt",
+              "role": "bridge"
+            },
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+              "role": "proof-only"
             }
           ],
           "runtime": "battle",
@@ -8211,6 +7993,14 @@
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
               "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-spell-bridge.qnt",
+              "role": "bridge"
+            },
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+              "role": "proof-only"
             }
           ],
           "runtime": "battle",
@@ -8502,6 +8292,14 @@
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
               "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-spell-bridge.qnt",
+              "role": "bridge"
+            },
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+              "role": "proof-only"
             }
           ],
           "runtime": "battle",
@@ -8652,6 +8450,14 @@
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
               "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-spell-bridge.qnt",
+              "role": "bridge"
+            },
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+              "role": "proof-only"
             }
           ],
           "runtime": "battle",
@@ -8814,6 +8620,14 @@
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
               "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-spell-bridge.qnt",
+              "role": "bridge"
+            },
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+              "role": "proof-only"
             }
           ],
           "runtime": "battle",
@@ -8964,6 +8778,14 @@
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
               "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-spell-bridge.qnt",
+              "role": "bridge"
+            },
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+              "role": "proof-only"
             }
           ],
           "runtime": "battle",
@@ -9161,6 +8983,14 @@
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
               "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-spell-bridge.qnt",
+              "role": "bridge"
+            },
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+              "role": "proof-only"
             }
           ],
           "runtime": "battle",
@@ -9200,6 +9030,10 @@
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt",
               "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-prone-movement.qnt",
+              "role": "proof-only"
             }
           ],
           "runtime": "battle",
@@ -9215,10 +9049,9 @@
           "obligationTitle": "Battle Command option choice applies failed-save pending effects and RAW-fixed next-turn reducer consequences while route and object facts stay table-owned",
           "parityWitnesses": [
             {
-              "deterministicReplayRationale": "Command replay is a closed fixture tied to the QNT Command branch helper used by battleRuntimeGroundCommand: failed-save Grovel records a pending option, Grovel applies Prone and ends the turn, Drop emits one held-object drop without owning object inventory, Halt suppresses Action/Bonus Action/Movement until end turn, Approach covers continued movement, within-5-foot turn end, and no-movement cleanup, and Flee covers full-budget movement, partial-budget rejection, no-movement cleanup, and opportunity-attack continuation.",
-              "kind": "deterministic-qnt-replay",
-              "ownerPath": "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/command-option-next-turn.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-command-option-next-turn.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -9226,10 +9059,9 @@
           "profileKind": "spell-invocation",
           "qntMbtWitnesses": [
             {
-              "deterministicReplayRationale": "Command replay is a closed fixture tied to the QNT Command branch helper used by battleRuntimeGroundCommand: failed-save Grovel records a pending option, Grovel applies Prone and ends the turn, Drop emits one held-object drop without owning object inventory, Halt suppresses Action/Bonus Action/Movement until end turn, Approach covers continued movement, within-5-foot turn end, and no-movement cleanup, and Flee covers full-budget movement, partial-budget rejection, no-movement cleanup, and opportunity-attack continuation.",
-              "kind": "deterministic-qnt-replay",
-              "ownerPath": "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/command-option-next-turn.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-command-option-next-turn.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -9438,6 +9270,14 @@
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
               "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-spell-bridge.qnt",
+              "role": "bridge"
+            },
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+              "role": "proof-only"
             }
           ],
           "runtime": "battle",
@@ -9473,6 +9313,10 @@
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/movement-spatial-grapple.qnt",
               "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-movement-bridge.qnt",
+              "role": "bridge"
             }
           ],
           "runtime": "battle",
@@ -9554,13 +9398,8 @@
           "unitId": "dissonant_whispers"
         },
         {
-          "evidenceStatus": "gap",
-          "gaps": [
-            {
-              "detail": "Rules-kernel obligation has parity witnesses, but none are focused-mbt or deterministic-qnt-replay evidence.",
-              "kind": "missing-qnt-mbt-witness"
-            }
-          ],
+          "evidenceStatus": "evidence-present",
+          "gaps": [],
           "joinStatus": "covered",
           "obligationId": "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS",
           "obligationStatus": "covered",
@@ -9573,11 +9412,24 @@
             {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/unit-profile-admission-weapon-override-and-rider-spells.test.ts"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/weapon-hosted-attack-and-riders.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt",
+              "stepAction": "step"
             }
           ],
           "profileId": "spell.invocation-weapon-damage-rider",
           "profileKind": "spell-invocation",
-          "qntMbtWitnesses": [],
+          "qntMbtWitnesses": [
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/weapon-hosted-attack-and-riders.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt",
+              "stepAction": "step"
+            }
+          ],
           "qntOwners": [
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-weapon-hit-spell-riders.qnt",
@@ -9601,13 +9453,8 @@
           "unitId": "divine_favor"
         },
         {
-          "evidenceStatus": "gap",
-          "gaps": [
-            {
-              "detail": "Rules-kernel obligation has parity witnesses, but none are focused-mbt or deterministic-qnt-replay evidence.",
-              "kind": "missing-qnt-mbt-witness"
-            }
-          ],
+          "evidenceStatus": "evidence-present",
+          "gaps": [],
           "joinStatus": "covered",
           "obligationId": "BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS",
           "obligationStatus": "covered",
@@ -9624,11 +9471,24 @@
             {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/unit-profile-admission-shining-smite.test.ts"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/after-hit-damage-riders.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt",
+              "stepAction": "step"
             }
           ],
           "profileId": "spell.invocation-after-hit-damage",
           "profileKind": "spell-invocation",
-          "qntMbtWitnesses": [],
+          "qntMbtWitnesses": [
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/after-hit-damage-riders.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt",
+              "stepAction": "step"
+            }
+          ],
           "qntOwners": [
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-weapon-hit-spell-riders.qnt",
@@ -9695,13 +9555,8 @@
           "unitId": "eldritch_blast"
         },
         {
-          "evidenceStatus": "gap",
-          "gaps": [
-            {
-              "detail": "Rules-kernel obligation has parity witnesses, but none are focused-mbt or deterministic-qnt-replay evidence.",
-              "kind": "missing-qnt-mbt-witness"
-            }
-          ],
+          "evidenceStatus": "evidence-present",
+          "gaps": [],
           "joinStatus": "covered",
           "obligationId": "BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS",
           "obligationStatus": "covered",
@@ -9718,11 +9573,24 @@
             {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/unit-profile-admission-shining-smite.test.ts"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/after-hit-damage-riders.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt",
+              "stepAction": "step"
             }
           ],
           "profileId": "spell.invocation-after-hit-restraint-turn-start-damage",
           "profileKind": "spell-invocation",
-          "qntMbtWitnesses": [],
+          "qntMbtWitnesses": [
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/after-hit-damage-riders.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt",
+              "stepAction": "step"
+            }
+          ],
           "qntOwners": [
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-weapon-hit-spell-riders.qnt",
@@ -9774,6 +9642,10 @@
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt",
               "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-prone-movement.qnt",
+              "role": "proof-only"
             }
           ],
           "runtime": "battle",
@@ -9809,6 +9681,10 @@
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/movement-spatial-grapple.qnt",
               "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-movement-bridge.qnt",
+              "role": "bridge"
             }
           ],
           "runtime": "battle",
@@ -9844,6 +9720,10 @@
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-movement.qnt",
               "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-prone-movement.qnt",
+              "role": "proof-only"
             }
           ],
           "runtime": "battle",
@@ -9922,6 +9802,14 @@
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-restoration-and-buffs.qnt",
               "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-armor-class.qnt",
+              "role": "proof-only"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-armor-spell-resolution.qnt",
+              "role": "proof-only"
             }
           ],
           "runtime": "battle",
@@ -10158,6 +10046,14 @@
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
               "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-spell-bridge.qnt",
+              "role": "bridge"
+            },
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+              "role": "proof-only"
             }
           ],
           "runtime": "battle",
@@ -10193,6 +10089,10 @@
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/movement-spatial-grapple.qnt",
               "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-movement-bridge.qnt",
+              "role": "bridge"
             }
           ],
           "runtime": "battle",
@@ -10441,6 +10341,14 @@
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
               "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-spell-bridge.qnt",
+              "role": "bridge"
+            },
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+              "role": "proof-only"
             }
           ],
           "runtime": "battle",
@@ -10591,6 +10499,14 @@
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
               "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-spell-bridge.qnt",
+              "role": "bridge"
+            },
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+              "role": "proof-only"
             }
           ],
           "runtime": "battle",
@@ -10788,6 +10704,14 @@
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
               "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-spell-bridge.qnt",
+              "role": "bridge"
+            },
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+              "role": "proof-only"
             }
           ],
           "runtime": "battle",
@@ -10917,6 +10841,10 @@
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt",
               "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-prone-movement.qnt",
+              "role": "proof-only"
             }
           ],
           "runtime": "battle",
@@ -11126,6 +11054,14 @@
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
               "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-spell-bridge.qnt",
+              "role": "bridge"
+            },
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+              "role": "proof-only"
             }
           ],
           "runtime": "battle",
@@ -11288,6 +11224,14 @@
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
               "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-spell-bridge.qnt",
+              "role": "bridge"
+            },
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+              "role": "proof-only"
             }
           ],
           "runtime": "battle",
@@ -11438,6 +11382,14 @@
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
               "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-spell-bridge.qnt",
+              "role": "bridge"
+            },
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+              "role": "proof-only"
             }
           ],
           "runtime": "battle",
@@ -11473,6 +11425,10 @@
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/movement-spatial-grapple.qnt",
               "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-movement-bridge.qnt",
+              "role": "bridge"
             }
           ],
           "runtime": "battle",
@@ -11582,6 +11538,14 @@
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-restoration-and-buffs.qnt",
               "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-armor-class.qnt",
+              "role": "proof-only"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-armor-spell-resolution.qnt",
+              "role": "proof-only"
             }
           ],
           "runtime": "battle",
@@ -11744,6 +11708,14 @@
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
               "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-spell-bridge.qnt",
+              "role": "bridge"
+            },
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+              "role": "proof-only"
             }
           ],
           "runtime": "battle",
@@ -11894,6 +11866,14 @@
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
               "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-spell-bridge.qnt",
+              "role": "bridge"
+            },
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+              "role": "proof-only"
             }
           ],
           "runtime": "battle",
@@ -12056,6 +12036,14 @@
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
               "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-spell-bridge.qnt",
+              "role": "bridge"
+            },
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+              "role": "proof-only"
             }
           ],
           "runtime": "battle",
@@ -12206,6 +12194,14 @@
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
               "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-spell-bridge.qnt",
+              "role": "bridge"
+            },
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+              "role": "proof-only"
             }
           ],
           "runtime": "battle",
@@ -12213,13 +12209,8 @@
           "unitId": "magic_missile"
         },
         {
-          "evidenceStatus": "gap",
-          "gaps": [
-            {
-              "detail": "Rules-kernel obligation has parity witnesses, but none are focused-mbt or deterministic-qnt-replay evidence.",
-              "kind": "missing-qnt-mbt-witness"
-            }
-          ],
+          "evidenceStatus": "evidence-present",
+          "gaps": [],
           "joinStatus": "covered",
           "obligationId": "BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS",
           "obligationStatus": "covered",
@@ -12236,11 +12227,24 @@
             {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/unit-profile-admission-shining-smite.test.ts"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/after-hit-damage-riders.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt",
+              "stepAction": "step"
             }
           ],
           "profileId": "spell.invocation-after-hit-damage",
           "profileKind": "spell-invocation",
-          "qntMbtWitnesses": [],
+          "qntMbtWitnesses": [
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/after-hit-damage-riders.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt",
+              "stepAction": "step"
+            }
+          ],
           "qntOwners": [
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-weapon-hit-spell-riders.qnt",
@@ -12415,6 +12419,14 @@
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
               "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-spell-bridge.qnt",
+              "role": "bridge"
+            },
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+              "role": "proof-only"
             }
           ],
           "runtime": "battle",
@@ -12565,6 +12577,14 @@
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
               "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-spell-bridge.qnt",
+              "role": "bridge"
+            },
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+              "role": "proof-only"
             }
           ],
           "runtime": "battle",
@@ -12727,6 +12747,14 @@
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
               "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-spell-bridge.qnt",
+              "role": "bridge"
+            },
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+              "role": "proof-only"
             }
           ],
           "runtime": "battle",
@@ -12959,6 +12987,14 @@
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
               "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-spell-bridge.qnt",
+              "role": "bridge"
+            },
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+              "role": "proof-only"
             }
           ],
           "runtime": "battle",
@@ -13109,6 +13145,14 @@
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
               "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-spell-bridge.qnt",
+              "role": "bridge"
+            },
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+              "role": "proof-only"
             }
           ],
           "runtime": "battle",
@@ -13271,6 +13315,14 @@
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
               "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-spell-bridge.qnt",
+              "role": "bridge"
+            },
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+              "role": "proof-only"
             }
           ],
           "runtime": "battle",
@@ -13421,6 +13473,14 @@
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
               "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-spell-bridge.qnt",
+              "role": "bridge"
+            },
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+              "role": "proof-only"
             }
           ],
           "runtime": "battle",
@@ -13622,6 +13682,14 @@
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
               "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-spell-bridge.qnt",
+              "role": "bridge"
+            },
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+              "role": "proof-only"
             }
           ],
           "runtime": "battle",
@@ -13772,6 +13840,14 @@
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
               "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-spell-bridge.qnt",
+              "role": "bridge"
+            },
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+              "role": "proof-only"
             }
           ],
           "runtime": "battle",
@@ -13807,6 +13883,14 @@
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-sanctuary.qnt",
               "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-condition-spell-resolution.qnt",
+              "role": "proof-only"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-actor-combatants.qnt",
+              "role": "proof-only"
             }
           ],
           "runtime": "battle",
@@ -13814,13 +13898,8 @@
           "unitId": "sanctuary"
         },
         {
-          "evidenceStatus": "gap",
-          "gaps": [
-            {
-              "detail": "Rules-kernel obligation has parity witnesses, but none are focused-mbt or deterministic-qnt-replay evidence.",
-              "kind": "missing-qnt-mbt-witness"
-            }
-          ],
+          "evidenceStatus": "evidence-present",
+          "gaps": [],
           "joinStatus": "covered",
           "obligationId": "BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS",
           "obligationStatus": "covered",
@@ -13837,11 +13916,24 @@
             {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/unit-profile-admission-shining-smite.test.ts"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/after-hit-damage-riders.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt",
+              "stepAction": "step"
             }
           ],
           "profileId": "spell.invocation-after-hit-timed-damage-save",
           "profileKind": "spell-invocation",
-          "qntMbtWitnesses": [],
+          "qntMbtWitnesses": [
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/after-hit-damage-riders.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt",
+              "stepAction": "step"
+            }
+          ],
           "qntOwners": [
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-weapon-hit-spell-riders.qnt",
@@ -13893,6 +13985,14 @@
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-restoration-and-buffs.qnt",
               "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-armor-class.qnt",
+              "role": "proof-only"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-armor-spell-resolution.qnt",
+              "role": "proof-only"
             }
           ],
           "runtime": "battle",
@@ -13900,13 +14000,8 @@
           "unitId": "shield_of_faith"
         },
         {
-          "evidenceStatus": "gap",
-          "gaps": [
-            {
-              "detail": "Rules-kernel obligation has parity witnesses, but none are focused-mbt or deterministic-qnt-replay evidence.",
-              "kind": "missing-qnt-mbt-witness"
-            }
-          ],
+          "evidenceStatus": "evidence-present",
+          "gaps": [],
           "joinStatus": "covered",
           "obligationId": "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS",
           "obligationStatus": "covered",
@@ -13919,11 +14014,24 @@
             {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/unit-profile-admission-weapon-override-and-rider-spells.test.ts"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/weapon-hosted-attack-and-riders.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt",
+              "stepAction": "step"
             }
           ],
           "profileId": "spell.invocation-weapon-attack-override",
           "profileKind": "spell-invocation",
-          "qntMbtWitnesses": [],
+          "qntMbtWitnesses": [
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/weapon-hosted-attack-and-riders.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt",
+              "stepAction": "step"
+            }
+          ],
           "qntOwners": [
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-weapon-hit-spell-riders.qnt",
@@ -14102,6 +14210,14 @@
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
               "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-spell-bridge.qnt",
+              "role": "bridge"
+            },
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+              "role": "proof-only"
             }
           ],
           "runtime": "battle",
@@ -14252,6 +14368,14 @@
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
               "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-spell-bridge.qnt",
+              "role": "bridge"
+            },
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+              "role": "proof-only"
             }
           ],
           "runtime": "battle",
@@ -14449,6 +14573,14 @@
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
               "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-spell-bridge.qnt",
+              "role": "bridge"
+            },
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+              "role": "proof-only"
             }
           ],
           "runtime": "battle",
@@ -14646,6 +14778,14 @@
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
               "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-spell-bridge.qnt",
+              "role": "bridge"
+            },
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+              "role": "proof-only"
             }
           ],
           "runtime": "battle",
@@ -14808,6 +14948,14 @@
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
               "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-spell-bridge.qnt",
+              "role": "bridge"
+            },
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+              "role": "proof-only"
             }
           ],
           "runtime": "battle",
@@ -14815,13 +14963,8 @@
           "unitId": "thunderwave"
         },
         {
-          "evidenceStatus": "gap",
-          "gaps": [
-            {
-              "detail": "Rules-kernel obligation has parity witnesses, but none are focused-mbt or deterministic-qnt-replay evidence.",
-              "kind": "missing-qnt-mbt-witness"
-            }
-          ],
+          "evidenceStatus": "evidence-present",
+          "gaps": [],
           "joinStatus": "covered",
           "obligationId": "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS",
           "obligationStatus": "covered",
@@ -14834,11 +14977,24 @@
             {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/unit-profile-admission-weapon-override-and-rider-spells.test.ts"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/weapon-hosted-attack-and-riders.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt",
+              "stepAction": "step"
             }
           ],
           "profileId": "spell.invocation-spell-hosted-weapon-attack",
           "profileKind": "spell-invocation",
-          "qntMbtWitnesses": [],
+          "qntMbtWitnesses": [
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/weapon-hosted-attack-and-riders.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt",
+              "stepAction": "step"
+            }
+          ],
           "qntOwners": [
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-weapon-hit-spell-riders.qnt",
@@ -15017,6 +15173,14 @@
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
               "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-spell-bridge.qnt",
+              "role": "bridge"
+            },
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+              "role": "proof-only"
             }
           ],
           "runtime": "battle",
@@ -15167,6 +15331,14 @@
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
               "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-spell-bridge.qnt",
+              "role": "bridge"
+            },
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+              "role": "proof-only"
             }
           ],
           "runtime": "battle",
@@ -15175,7 +15347,7 @@
         }
       ],
       "scopeId": "level-1-2",
-      "status": "blocked",
+      "status": "pass",
       "title": "Character Levels 1-2"
     }
   ],
@@ -15185,5 +15357,5 @@
     "profileObligations": "plans/rules-kernel-coverage/profile-obligations.jsonl",
     "rulesKernelMatrix": "plans/rules-kernel-coverage/matrix.json"
   },
-  "status": "blocked"
+  "status": "pass"
 }

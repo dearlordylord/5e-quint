@@ -205,8 +205,6 @@ QNT owner roles are:
 - `selected-identity-trace`: the QNT owner proves a concrete selected Unit or
   authored catalog identity reaches a runtime entrypoint; it is content
   evidence, not reusable reducer semantics.
-- `legacy-reference`: the QNT owner is reference material for a non-active
-  proof lane and is not a generator input.
 
 ## Terms
 

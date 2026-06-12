@@ -155,7 +155,6 @@ import { soldierBackgroundFixtureOptionIds } from "./background-fixture.test-sup
 
 const SRD_SORCERY_POINTS_POOL_ID = "sorcery_points";
 
-// KERNEL-COVERAGE: parity-witness CREATION.WEAPON_MASTERY.CLASS_LEVEL_ADVANCEMENT
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-creation.class-feature-feat-choice
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-creation.weapon-mastery-choice
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-creation.weapon-mastery-level-gain

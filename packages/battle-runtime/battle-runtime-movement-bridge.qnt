@@ -1,5 +1,6 @@
 // -*- mode: Bluespec; -*-
 
+// KERNEL-COVERAGE: qnt-owner BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND
 module battleRuntimeMovementBridge {
   import attackDamageComposition.* from "../shared-algebras/proofs/rule-core/attack-damage-composition"
   import actionTurnProcedures.* from "../shared-algebras/proofs/rule-core/action-turn-procedures"

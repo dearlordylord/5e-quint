@@ -158,8 +158,144 @@ const qntOwnerRoles = new Set([
   "mbt-fixture",
   "bridge",
   "selected-identity-trace",
-  "legacy-reference",
 ]);
+
+const qntRegistryExemptionCategoryDescriptions = {
+  "leaf-type-vocabulary":
+    "A leaf QNT module that carries shared type/tag vocabulary or constants and is intentionally not an obligation owner.",
+  "proof-only-example":
+    "A proof, example, invariant, or inductive QNT companion that is not a direct rules-kernel owner row.",
+  "retired-test-companion":
+    "A retained QNT companion from an older proof/test lane that is not active owner evidence.",
+  "witness-protocol-leaf":
+    "A leaf QNT module that defines witness protocol vocabulary for MBT drivers without owning reducer semantics.",
+};
+
+const qntRegistryExemptionCategories = new Set(
+  Object.keys(qntRegistryExemptionCategoryDescriptions),
+);
+
+const qntRegistryExemptions = [
+  {
+    ownerPath:
+      "packages/battle-runtime/battle-runtime-feature-bridge-examples.qnt",
+    category: "proof-only-example",
+    evidence:
+      "Run-block examples for the feature bridge; registered rule-core and feature owners carry active coverage.",
+  },
+  {
+    ownerPath:
+      "packages/battle-runtime/battle-runtime-mirror-image-constants.qnt",
+    category: "leaf-type-vocabulary",
+    evidence:
+      "Mirror Image constants leaf imported by registered Mirror Image owners.",
+  },
+  {
+    ownerPath: "packages/battle-runtime/battle-runtime-model.qnt",
+    category: "leaf-type-vocabulary",
+    evidence:
+      "Battle runtime type vocabulary aggregate intentionally kept free of behavioral bridge imports.",
+  },
+  {
+    ownerPath:
+      "packages/battle-runtime/battle-runtime-movement-bridge-examples.qnt",
+    category: "proof-only-example",
+    evidence:
+      "Run-block examples for the movement bridge; registered movement owners carry active coverage.",
+  },
+  {
+    ownerPath:
+      "packages/battle-runtime/battle-runtime-public-trace-contract.qnt",
+    category: "witness-protocol-leaf",
+    evidence:
+      "Public trace protocol vocabulary leaf shared by witnesses.",
+  },
+  {
+    ownerPath: "packages/battle-runtime/battle-runtime-reaction-kinds.qnt",
+    category: "leaf-type-vocabulary",
+    evidence:
+      "Reaction kind vocabulary leaf shared by the model and interrupt bridge.",
+  },
+  {
+    ownerPath:
+      "packages/battle-runtime/battle-runtime-see-invisibility-constants.qnt",
+    category: "leaf-type-vocabulary",
+    evidence:
+      "See Invisibility constants and witness-plane vocabulary leaf.",
+  },
+  {
+    ownerPath:
+      "packages/battle-runtime/battle-runtime-sorcerous-burst-damage-choice.qnt",
+    category: "leaf-type-vocabulary",
+    evidence:
+      "Sorcerous Burst damage-choice vocabulary leaf shared by the model and spell bridge.",
+  },
+  {
+    ownerPath:
+      "packages/battle-runtime/battle-runtime-spell-bridge-examples.qnt",
+    category: "proof-only-example",
+    evidence:
+      "Run-block examples for the spell bridge; registered spell rule-core and battle owners carry active coverage.",
+  },
+  {
+    ownerPath:
+      "packages/battle-runtime/battle-runtime-stat-block-bridge-examples.qnt",
+    category: "proof-only-example",
+    evidence:
+      "Run-block examples for the stat-block bridge; registered stat-block owners carry active coverage.",
+  },
+  {
+    ownerPath: "packages/battle-runtime/battle-runtime-witness-protocol.qnt",
+    category: "witness-protocol-leaf",
+    evidence:
+      "Typed witness protocol vocabulary leaf for lightweight battle-runtime MBT witnesses.",
+  },
+  {
+    ownerPath: "packages/shared-algebras/proofs/action-economy-algebra-inductive.qnt",
+    category: "retired-test-companion",
+    evidence:
+      "Retained shared-algebra inductive proof companion outside the active rules-kernel owner rows.",
+  },
+  {
+    ownerPath: "packages/shared-algebras/proofs/conditions-algebra-inductive.qnt",
+    category: "retired-test-companion",
+    evidence:
+      "Retained shared-algebra inductive proof companion outside the active rules-kernel owner rows.",
+  },
+  {
+    ownerPath: "packages/shared-algebras/proofs/initiative-algebra-invariant.qnt",
+    category: "retired-test-companion",
+    evidence:
+      "Retained shared-algebra invariant companion outside the active rules-kernel owner rows.",
+  },
+  {
+    ownerPath: "packages/shared-algebras/proofs/multiclass-prerequisite-algebra.qnt",
+    category: "retired-test-companion",
+    evidence:
+      "Retained multiclass prerequisite proof companion outside the active rules-kernel owner rows.",
+  },
+  {
+    ownerPath:
+      "packages/shared-algebras/proofs/rule-core/action-turn-procedures-inductive.qnt",
+    category: "proof-only-example",
+    evidence:
+      "Inductive proof companion for registered action-turn procedure core owners.",
+  },
+  {
+    ownerPath:
+      "packages/shared-algebras/proofs/rule-core/spell-definition-profiles.qnt",
+    category: "leaf-type-vocabulary",
+    evidence:
+      "Spell definition profile vocabulary imported by registered spell procedure owners.",
+  },
+  {
+    ownerPath:
+      "packages/shared-algebras/proofs/rule-core/zero-hit-point-lifecycle-inductive.qnt",
+    category: "proof-only-example",
+    evidence:
+      "Inductive proof companion for registered zero-Hit-Point lifecycle owners.",
+  },
+];
 
 const kernelIrBoundaryKinds = new Set([
   "command",
@@ -230,6 +366,9 @@ module.exports = {
   obligationKinds,
   obligationStatuses,
   parityWitnessKinds,
+  qntRegistryExemptionCategories,
+  qntRegistryExemptionCategoryDescriptions,
+  qntRegistryExemptions,
   qntOwnerRoles,
   runtimes,
   skippedScanDirs,

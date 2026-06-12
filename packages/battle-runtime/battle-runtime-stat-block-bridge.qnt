@@ -1,5 +1,6 @@
 // -*- mode: Bluespec; -*-
 
+// KERNEL-COVERAGE: qnt-owner BATTLE.STAT_BLOCK.ATTACK_CONTROL
 module battleRuntimeStatBlockBridge {
   import statBlockControls.* from "../shared-algebras/proofs/rule-core/stat-block-controls"
 
