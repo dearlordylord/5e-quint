@@ -3570,7 +3570,7 @@
       "kind": "state-transition",
       "parityWitnesses": [
         {
-          "deterministicReplayRationale": "Character Sheet HP/rest/Hit Dice replay is a closed fixture covering the named gate and benefit cases: Short Rest and Long Rest start HP gates, 16-hour Long Rest calendar wait rejection, Short Rest and Long Rest duration-proof rejections at the benefit boundary, one-die and two-die sequential Short Rest Hit Point Dice spends, interrupted Short Rest no-benefit, Long Rest HP/Hit Point Dice/max-HP-reduction reset, interrupted Long Rest before/after the one-hour Short Rest benefit threshold, and Long Rest physical-exertion threshold rejection. Random interleavings are not the risk at this sheet boundary.",
+          "deterministicReplayRationale": "DRP-T14 keeps Character Sheet HP/rest/Hit Dice as a deterministic replay, not a generative sheet-runtime MBT. The closed fixture covers the named gate and benefit cases: Short Rest and Long Rest start HP gates, 16-hour Long Rest calendar wait rejection, Short Rest and Long Rest duration-proof rejections at the benefit boundary, one-die and two-die sequential Short Rest Hit Point Dice spends, interrupted Short Rest no-benefit, Long Rest HP/Hit Point Dice/max-HP-reduction reset, interrupted Long Rest before/after the one-hour Short Rest benefit threshold, Long Rest physical-exertion threshold rejection, and interruption-at-required-duration rejection. The fixture projects from existing Character Sheet facts into the shared hit-point-recovery semantic core for positive Hit Point healing only; Short Rest timing, Long Rest timing, Hit Point Dice spending, Stable calendar recovery, and positive-Hit-Point healing remain distinct rule facts and runtime owners. The manual Rust dry-run remains documentation-only generator-readiness evidence for the pure healing projection, with no generated Rust source, ABI, or parallel sheet recovery state. Random branch interleavings are not the risk at this sheet boundary.",
           "kind": "deterministic-qnt-replay",
           "ownerPath": "packages/character-sheet-runtime/src/hp-rest-hit-dice.mbt.test.ts",
           "qntSpecPath": "packages/character-sheet-runtime/character-sheet-hp-rest-hit-dice.mbt.qnt",
@@ -7956,7 +7956,7 @@
       "role": "selected-identity-trace"
     },
     {
-      "evidence": "packages/character-sheet-runtime/character-sheet-hp-rest-hit-dice.mbt.qnt is a bounded replay or run-test owner for covered parity evidence; treat it as fixture-bound unless later split.",
+      "evidence": "packages/character-sheet-runtime/character-sheet-hp-rest-hit-dice.mbt.qnt is the DRP-T14 bounded Character Sheet HP/rest/Hit Dice replay fixture for Short Rest and Long Rest gates, Hit Point Dice benefit cases, Long Rest reset, and interruption outcomes. It is parity evidence for package projection joins, not generator input for the pure hit-point-recovery semantic core.",
       "obligationIds": [
         "SHEET.HP_REST_HIT_DICE.TRANSITIONS"
       ],
