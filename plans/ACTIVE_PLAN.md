@@ -73,7 +73,7 @@
     {
       "number": 12,
       "id": "DRP-T12-BATTLE-HANDOFF-SETTLEMENT",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Audit character-battle settlement and identity-conflict replay portability"
     },
     {
@@ -85,7 +85,7 @@
     {
       "number": 14,
       "id": "DRP-T14-HP-REST-HIT-DICE",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Audit HP, rest, and Hit Dice transition replay portability"
     },
     {
@@ -284,9 +284,9 @@ another MBT run. Use the timing/background protocol from `CLAUDE.md`.
 | 9 | DRP-T09-SHEET-FEATURE-RESOURCES | done | DRP-T01-INVENTORY-GATE | Feature-resource transition replay kept as a deterministic closed fixture for typed resource and battle-bridge projection joins. |
 | 10 | DRP-T10-SHEET-ABILITY-CHECK-PROFICIENCY | done | DRP-T01-INVENTORY-GATE | Ability Check Proficiency Bonus stays a deterministic scalar projection replay with typed-fact precedence rationale in the obligation row. |
 | 11 | DRP-T11-BATTLE-HANDOFF-INIT | done | DRP-T01-INVENTORY-GATE | Character Sheet to battle init projection stays a deterministic handoff fixture with projection-risk rationale in the obligation row. |
-| 12 | DRP-T12-BATTLE-HANDOFF-SETTLEMENT | blocked | DRP-T11-BATTLE-HANDOFF-INIT | Settlement and identity-conflict replays share handoff assumptions. |
+| 12 | DRP-T12-BATTLE-HANDOFF-SETTLEMENT | ready-for-research | DRP-T11-BATTLE-HANDOFF-INIT | Settlement and identity-conflict replays share handoff assumptions. |
 | 13 | DRP-T13-HIT-POINT-DAMAGE-RUST-PARITY | done | DRP-T01-INVENTORY-GATE | Align replay decision with existing Hit Point damage Rust dry-run evidence. |
-| 14 | DRP-T14-HP-REST-HIT-DICE | blocked | DRP-T13-HIT-POINT-DAMAGE-RUST-PARITY | HP recovery dry run reuses damage/vitals shapes. |
+| 14 | DRP-T14-HP-REST-HIT-DICE | ready-for-research | DRP-T13-HIT-POINT-DAMAGE-RUST-PARITY | HP recovery dry run reuses damage/vitals shapes. |
 | 15 | DRP-T15-HIT-POINT-MAXIMUM | done | DRP-T01-INVENTORY-GATE | Hit Point Maximum formula replay. |
 | 16 | DRP-T16-SPELL-SLOTS-AND-PACT-SLOTS | blocked | DRP-T14-HP-REST-HIT-DICE | Slot transitions import rest outcome facts. |
 | 17 | DRP-T17-WEAPON-MASTERY-RESELECTION | done | DRP-T01-INVENTORY-GATE | Selected-identity plus identity-free reselection semantics. |
@@ -529,7 +529,7 @@ Acceptance:
 
 ### Task 12 - DRP-T12-BATTLE-HANDOFF-SETTLEMENT
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Input:
 
@@ -573,7 +573,7 @@ Acceptance:
 
 ### Task 14 - DRP-T14-HP-REST-HIT-DICE
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Input:
 
