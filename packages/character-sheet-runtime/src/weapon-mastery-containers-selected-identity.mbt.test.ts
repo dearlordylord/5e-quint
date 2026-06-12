@@ -11,6 +11,7 @@ import {
   classUnitId,
   weaponMasteryChoiceProfileForFeature,
   type CharacterBuild,
+  type WeaponMasteryChoiceProfile,
 } from "@dnd/character-creation-runtime";
 import { Hp } from "@dnd/shared/types";
 import {
@@ -213,6 +214,11 @@ const ROGUE_WEAPON_MASTERY_PROFILE = {
   selectedWeaponUnitIds: ["weapon_dagger", "weapon_shortbow"],
   reselectedWeaponUnitIds: ["weapon_spear", "weapon_shortsword"],
 } as const satisfies WeaponMasteryContainerProfile;
+const WEAPON_MASTERY_CONTAINER_PROFILES = [
+  PALADIN_WEAPON_MASTERY_PROFILE,
+  RANGER_WEAPON_MASTERY_PROFILE,
+  ROGUE_WEAPON_MASTERY_PROFILE,
+] as const satisfies ReadonlyArray<WeaponMasteryContainerProfile>;
 
 const unitCatalogResult = buildUnitCatalog({
   collections: [srdUnitCollection],
@@ -320,6 +326,56 @@ const semanticCoreReplayActions = [
 ] as const satisfies ReadonlyArray<WeaponMasteryContainerSelectedIdentityDriverAction>;
 
 describe("Character Sheet Weapon Mastery container selected identity MBT", () => {
+  it("audits Surface-derived eligibility and selected-ref sheet storage", () => {
+    for (const profile of WEAPON_MASTERY_CONTAINER_PROFILES) {
+      const sheet = weaponMasterySheet({
+        classUnitId: profile.classUnitId,
+        featureUnitId: profile.featureUnitId,
+        selectedWeaponUnitIds: profile.selectedWeaponUnitIds,
+      });
+      const surfaceProfile = requireWeaponMasteryChoiceProfile(
+        profile.featureUnitId,
+      );
+
+      expect(surfaceProfile.feature.id).toBe(profile.featureUnitId);
+      expect(surfaceProfile.classRecord.id).toBe(profile.classUnitId);
+      expect(surfaceProfile.choiceCount).toBe(2);
+      expect(surfaceProfile.longRestChangeCount).toBe(2);
+      expectProfileEligibleWeaponRefs(
+        surfaceProfile,
+        profile.selectedWeaponUnitIds,
+      );
+      expectNoSheetLocalWeaponMasteryState(sheet);
+      expectSelectedWeaponPair(
+        selectedClassChoiceUnitIds(sheet.build, profile.featureUnitId),
+        profile.selectedWeaponUnitIds,
+      );
+
+      const rested = requireRight(
+        completeLongRest({
+          sheet,
+          unitLibrary,
+          weaponMasteryReselections: [
+            {
+              featureUnitId: profile.featureUnitId,
+              selectedWeaponUnitIds: profile.reselectedWeaponUnitIds,
+            },
+          ],
+        }),
+      );
+
+      expectProfileEligibleWeaponRefs(
+        surfaceProfile,
+        profile.reselectedWeaponUnitIds,
+      );
+      expectNoSheetLocalWeaponMasteryState(rested);
+      expectSelectedWeaponPair(
+        selectedClassChoiceUnitIds(rested.build, profile.featureUnitId),
+        profile.reselectedWeaponUnitIds,
+      );
+    }
+  });
+
   it("replays selected Unit identities deterministically", async () => {
     for (const replay of selectedUnitIdentityReplays) {
       const replayedActions =
@@ -593,6 +649,18 @@ function tooManyChangesRejectedProjection(): WeaponMasteryContainerSelectedIdent
 function eligibleWeaponMasteryWeaponUnitIds(
   featureUnitId: WeaponMasteryContainerFeatureUnitId,
 ): ReadonlySet<UnitRecord["id"]> {
+  const profile = requireWeaponMasteryChoiceProfile(featureUnitId);
+  if (profile.choiceCount !== 2 || profile.longRestChangeCount !== 2) {
+    throw new Error(
+      `Expected ${featureUnitId} to choose and reselect two weapons.`,
+    );
+  }
+  return new Set(profile.eligibleWeapons.map((weapon) => weapon.id));
+}
+
+function requireWeaponMasteryChoiceProfile(
+  featureUnitId: WeaponMasteryContainerFeatureUnitId,
+): WeaponMasteryChoiceProfile {
   const profile = weaponMasteryChoiceProfileForFeature({
     featureUnitId,
     unitLibrary,
@@ -602,12 +670,30 @@ function eligibleWeaponMasteryWeaponUnitIds(
       `Expected ${featureUnitId} to be a Weapon Mastery choice feature.`,
     );
   }
-  if (profile.choiceCount !== 2 || profile.longRestChangeCount !== 2) {
-    throw new Error(
-      `Expected ${featureUnitId} to choose and reselect two weapons.`,
-    );
+  return profile;
+}
+
+function expectProfileEligibleWeaponRefs(
+  profile: WeaponMasteryChoiceProfile,
+  selectedWeaponUnitIds: WeaponMasteryWeaponPair,
+): void {
+  const eligibleWeaponUnitIds = new Set(
+    profile.eligibleWeapons.map((weapon) => weapon.id),
+  );
+  for (const unitId of selectedWeaponUnitIds) {
+    expect(
+      eligibleWeaponUnitIds.has(unitId),
+      `${unitId} must be admitted by the installed Surface Weapon Mastery profile ${profile.feature.id}.`,
+    ).toBe(true);
   }
-  return new Set(profile.eligibleWeapons.map((weapon) => weapon.id));
+}
+
+function expectNoSheetLocalWeaponMasteryState(sheet: CharacterSheet): void {
+  expect(
+    Object.keys(sheet).filter((key) =>
+      key.toLowerCase().includes("mastery"),
+    ),
+  ).toEqual([]);
 }
 
 function weaponMasterySheet(input: {

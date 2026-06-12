@@ -103,7 +103,7 @@
     {
       "number": 17,
       "id": "DRP-T17-WEAPON-MASTERY-RESELECTION",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Audit Weapon Mastery reselection replay portability"
     },
     {
@@ -289,7 +289,7 @@ another MBT run. Use the timing/background protocol from `CLAUDE.md`.
 | 14 | DRP-T14-HP-REST-HIT-DICE | blocked | DRP-T13 | HP recovery dry run reuses damage/vitals shapes. |
 | 15 | DRP-T15-HIT-POINT-MAXIMUM | done | DRP-T01 | Hit Point Maximum formula replay. |
 | 16 | DRP-T16-SPELL-SLOTS-AND-PACT-SLOTS | blocked | DRP-T14 | Slot transitions import rest outcome facts. |
-| 17 | DRP-T17-WEAPON-MASTERY-RESELECTION | ready-for-research | DRP-T01 | Selected-identity plus identity-free reselection semantics. |
+| 17 | DRP-T17-WEAPON-MASTERY-RESELECTION | done | DRP-T01 | Selected-identity plus identity-free reselection semantics. |
 | 18 | DRP-T18-SPELL-ACCESS-SELECTED-IDENTITY | ready-for-research | DRP-T01 | Spellbook Ritual and class-feature prepared Spell Access selected-identity replays. |
 | 19 | DRP-T19-LANE-CLOSEOUT | blocked | DRP-T02, DRP-T03, DRP-T04, DRP-T05, DRP-T06, DRP-T07, DRP-T08, DRP-T09, DRP-T10, DRP-T11, DRP-T12, DRP-T13, DRP-T14, DRP-T15, DRP-T16, DRP-T17, DRP-T18 | Recompute reports, summarize kept/promoted replay decisions, and create the next coherent queue if needed. |
 
@@ -636,7 +636,7 @@ Acceptance:
 
 ### Task 17 - DRP-T17-WEAPON-MASTERY-RESELECTION
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 
