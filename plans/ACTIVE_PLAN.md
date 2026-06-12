@@ -274,24 +274,24 @@ another MBT run. Use the timing/background protocol from `CLAUDE.md`.
 | # | Task | Status | Depends on | Notes |
 | ---: | --- | --- | --- | --- |
 | 1 | DRP-T01-INVENTORY-GATE | done | none | Refreshed the deterministic replay inventory from checked artifacts and assigned each replay to one lane task. |
-| 2 | DRP-T02-SHOVE-OUTCOME-DECISION | ready-for-research | DRP-T01 | Portability audit of the recorded PPW-T11 closed-fixture decision; reopen only on new interleaving evidence. |
-| 3 | DRP-T03-SPELL-REST-BENEFIT-APPLICATION | ready-for-research | DRP-T01 | Sheet spell-rest benefit fixture and lockout replay. |
-| 4 | DRP-T04-ABILITY-SEARCH-REPLAY | done | DRP-T01 | Mixed focused-MBT plus deterministic replay row; do not duplicate existing focused coverage. |
-| 5 | DRP-T05-DAMAGE-DISPOSITION-REPLAY | done | DRP-T01 | Knock Out accepted/rejected table facts beside existing feature MBT. |
-| 6 | DRP-T06-ARMOR-CLASS-FORMULA | done | DRP-T01 | Selected-identity formula projection kept as deterministic replay with checker-readable Armor Class state boundary rationale. |
-| 7 | DRP-T07-CREATION-CLASS-FEATURE-PROJECTIONS | done | DRP-T01 | Resource and source-fact projection rows share one driver. |
-| 8 | DRP-T08-CREATION-WIZARD-SPELLBOOK | done | DRP-T01 | Selected Wizard spellbook learning replay kept as deterministic selected-identity evidence for spellbook Spell Access finalization. |
-| 9 | DRP-T09-SHEET-FEATURE-RESOURCES | done | DRP-T01 | Feature-resource transition replay kept as a deterministic closed fixture for typed resource and battle-bridge projection joins. |
-| 10 | DRP-T10-SHEET-ABILITY-CHECK-PROFICIENCY | done | DRP-T01 | Ability Check Proficiency Bonus stays a deterministic scalar projection replay with typed-fact precedence rationale in the obligation row. |
-| 11 | DRP-T11-BATTLE-HANDOFF-INIT | done | DRP-T01 | Character Sheet to battle init projection stays a deterministic handoff fixture with projection-risk rationale in the obligation row. |
-| 12 | DRP-T12-BATTLE-HANDOFF-SETTLEMENT | blocked | DRP-T11 | Settlement and identity-conflict replays share handoff assumptions. |
-| 13 | DRP-T13-HIT-POINT-DAMAGE-RUST-PARITY | ready-for-research | DRP-T01 | Align replay decision with existing Hit Point damage Rust dry-run evidence. |
-| 14 | DRP-T14-HP-REST-HIT-DICE | blocked | DRP-T13 | HP recovery dry run reuses damage/vitals shapes. |
-| 15 | DRP-T15-HIT-POINT-MAXIMUM | done | DRP-T01 | Hit Point Maximum formula replay. |
-| 16 | DRP-T16-SPELL-SLOTS-AND-PACT-SLOTS | blocked | DRP-T14 | Slot transitions import rest outcome facts. |
-| 17 | DRP-T17-WEAPON-MASTERY-RESELECTION | done | DRP-T01 | Selected-identity plus identity-free reselection semantics. |
-| 18 | DRP-T18-SPELL-ACCESS-SELECTED-IDENTITY | ready-for-research | DRP-T01 | Spellbook Ritual and class-feature prepared Spell Access selected-identity replays. |
-| 19 | DRP-T19-LANE-CLOSEOUT | blocked | DRP-T02, DRP-T03, DRP-T04, DRP-T05, DRP-T06, DRP-T07, DRP-T08, DRP-T09, DRP-T10, DRP-T11, DRP-T12, DRP-T13, DRP-T14, DRP-T15, DRP-T16, DRP-T17, DRP-T18 | Recompute reports, summarize kept/promoted replay decisions, and create the next coherent queue if needed. |
+| 2 | DRP-T02-SHOVE-OUTCOME-DECISION | done | DRP-T01-INVENTORY-GATE | Portability audit of the recorded PPW-T11 closed-fixture decision; reopen only on new interleaving evidence. |
+| 3 | DRP-T03-SPELL-REST-BENEFIT-APPLICATION | done | DRP-T01-INVENTORY-GATE | Sheet spell-rest benefit fixture and lockout replay. |
+| 4 | DRP-T04-ABILITY-SEARCH-REPLAY | done | DRP-T01-INVENTORY-GATE | Mixed focused-MBT plus deterministic replay row; do not duplicate existing focused coverage. |
+| 5 | DRP-T05-DAMAGE-DISPOSITION-REPLAY | done | DRP-T01-INVENTORY-GATE | Knock Out accepted/rejected table facts beside existing feature MBT. |
+| 6 | DRP-T06-ARMOR-CLASS-FORMULA | done | DRP-T01-INVENTORY-GATE | Selected-identity formula projection kept as deterministic replay with checker-readable Armor Class state boundary rationale. |
+| 7 | DRP-T07-CREATION-CLASS-FEATURE-PROJECTIONS | done | DRP-T01-INVENTORY-GATE | Resource and source-fact projection rows share one driver. |
+| 8 | DRP-T08-CREATION-WIZARD-SPELLBOOK | done | DRP-T01-INVENTORY-GATE | Selected Wizard spellbook learning replay kept as deterministic selected-identity evidence for spellbook Spell Access finalization. |
+| 9 | DRP-T09-SHEET-FEATURE-RESOURCES | done | DRP-T01-INVENTORY-GATE | Feature-resource transition replay kept as a deterministic closed fixture for typed resource and battle-bridge projection joins. |
+| 10 | DRP-T10-SHEET-ABILITY-CHECK-PROFICIENCY | done | DRP-T01-INVENTORY-GATE | Ability Check Proficiency Bonus stays a deterministic scalar projection replay with typed-fact precedence rationale in the obligation row. |
+| 11 | DRP-T11-BATTLE-HANDOFF-INIT | done | DRP-T01-INVENTORY-GATE | Character Sheet to battle init projection stays a deterministic handoff fixture with projection-risk rationale in the obligation row. |
+| 12 | DRP-T12-BATTLE-HANDOFF-SETTLEMENT | blocked | DRP-T11-BATTLE-HANDOFF-INIT | Settlement and identity-conflict replays share handoff assumptions. |
+| 13 | DRP-T13-HIT-POINT-DAMAGE-RUST-PARITY | done | DRP-T01-INVENTORY-GATE | Align replay decision with existing Hit Point damage Rust dry-run evidence. |
+| 14 | DRP-T14-HP-REST-HIT-DICE | blocked | DRP-T13-HIT-POINT-DAMAGE-RUST-PARITY | HP recovery dry run reuses damage/vitals shapes. |
+| 15 | DRP-T15-HIT-POINT-MAXIMUM | done | DRP-T01-INVENTORY-GATE | Hit Point Maximum formula replay. |
+| 16 | DRP-T16-SPELL-SLOTS-AND-PACT-SLOTS | blocked | DRP-T14-HP-REST-HIT-DICE | Slot transitions import rest outcome facts. |
+| 17 | DRP-T17-WEAPON-MASTERY-RESELECTION | done | DRP-T01-INVENTORY-GATE | Selected-identity plus identity-free reselection semantics. |
+| 18 | DRP-T18-SPELL-ACCESS-SELECTED-IDENTITY | done | DRP-T01-INVENTORY-GATE | Spellbook Ritual and class-feature prepared Spell Access selected-identity replays. |
+| 19 | DRP-T19-LANE-CLOSEOUT | blocked | DRP-T02-SHOVE-OUTCOME-DECISION, DRP-T03-SPELL-REST-BENEFIT-APPLICATION, DRP-T04-ABILITY-SEARCH-REPLAY, DRP-T05-DAMAGE-DISPOSITION-REPLAY, DRP-T06-ARMOR-CLASS-FORMULA, DRP-T07-CREATION-CLASS-FEATURE-PROJECTIONS, DRP-T08-CREATION-WIZARD-SPELLBOOK, DRP-T09-SHEET-FEATURE-RESOURCES, DRP-T10-SHEET-ABILITY-CHECK-PROFICIENCY, DRP-T11-BATTLE-HANDOFF-INIT, DRP-T12-BATTLE-HANDOFF-SETTLEMENT, DRP-T13-HIT-POINT-DAMAGE-RUST-PARITY, DRP-T14-HP-REST-HIT-DICE, DRP-T15-HIT-POINT-MAXIMUM, DRP-T16-SPELL-SLOTS-AND-PACT-SLOTS, DRP-T17-WEAPON-MASTERY-RESELECTION, DRP-T18-SPELL-ACCESS-SELECTED-IDENTITY | Recompute reports, summarize kept/promoted replay decisions, and create the next coherent queue if needed. |
 
 ## Task Details
 
