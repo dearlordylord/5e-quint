@@ -25,7 +25,7 @@
     {
       "number": 4,
       "id": "DRP-T04-ABILITY-SEARCH-REPLAY",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Audit ability, skill, and Search deterministic replay portability"
     },
     {
@@ -276,7 +276,7 @@ another MBT run. Use the timing/background protocol from `CLAUDE.md`.
 | 1 | DRP-T01-INVENTORY-GATE | done | none | Refreshed the deterministic replay inventory from checked artifacts and assigned each replay to one lane task. |
 | 2 | DRP-T02-SHOVE-OUTCOME-DECISION | ready-for-research | DRP-T01 | Portability audit of the recorded PPW-T11 closed-fixture decision; reopen only on new interleaving evidence. |
 | 3 | DRP-T03-SPELL-REST-BENEFIT-APPLICATION | ready-for-research | DRP-T01 | Sheet spell-rest benefit fixture and lockout replay. |
-| 4 | DRP-T04-ABILITY-SEARCH-REPLAY | ready-for-research | DRP-T01 | Mixed focused-MBT plus deterministic replay row; do not duplicate existing focused coverage. |
+| 4 | DRP-T04-ABILITY-SEARCH-REPLAY | done | DRP-T01 | Mixed focused-MBT plus deterministic replay row; do not duplicate existing focused coverage. |
 | 5 | DRP-T05-DAMAGE-DISPOSITION-REPLAY | ready-for-research | DRP-T01 | Knock Out accepted/rejected table facts beside existing feature MBT. |
 | 6 | DRP-T06-ARMOR-CLASS-FORMULA | ready-for-research | DRP-T01 | Selected-identity formula projection. |
 | 7 | DRP-T07-CREATION-CLASS-FEATURE-PROJECTIONS | ready-for-research | DRP-T01 | Resource and source-fact projection rows share one driver. |
@@ -368,7 +368,7 @@ Acceptance:
 
 ### Task 4 - DRP-T04-ABILITY-SEARCH-REPLAY
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 

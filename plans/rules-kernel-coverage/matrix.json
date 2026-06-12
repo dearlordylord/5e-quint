@@ -2447,7 +2447,7 @@
           "stepAction": "step"
         },
         {
-          "deterministicReplayRationale": "Ability, skill, and Search replay is a closed fixture advanced by a deterministic replay index: Search fails and succeeds against an admitted hidden target, Guidance stores the selected skill through the QNT roll-modifier owner, and Enhance Ability stores a selected ability for Ability Check Advantage. The same witness also includes Command so the Task 5 hole families are checked together without random branch exploration.",
+          "deterministicReplayRationale": "The focused ability-check-choice-search MBT owns focused frontier coverage for Search target-choice and Ability Check holes, invalid wrong-kind fills, Search failure/success against an admitted hidden target, Guidance skill-choice opening with a representative stored skill, and Enhance Ability ability-choice opening with a representative Dexterity Ability Check Advantage projection. This deterministic replay remains selected-case fixture evidence: it enumerates every SRD skill accepted by Guidance, keeps one Enhance Ability selected-ability projection, and carries fixed Command cast/next-turn replay cases that are separately owned by BATTLE.COMMAND.OPTION_AND_NEXT_TURN. Those kept facts are closed finite choices or fixed projections advanced by replay index rather than random branch-interleaving risks, so no duplicate Ability/Search focused witness is added.",
           "kind": "deterministic-qnt-replay",
           "ownerPath": "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts",
           "qntSpecPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
