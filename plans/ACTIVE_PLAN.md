@@ -73,7 +73,7 @@
     {
       "number": 12,
       "id": "DRP-T12-BATTLE-HANDOFF-SETTLEMENT",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Audit character-battle settlement and identity-conflict replay portability"
     },
     {
