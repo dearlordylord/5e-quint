@@ -1,4 +1,5 @@
 // -*- mode: Bluespec; -*-
+// KERNEL-COVERAGE: qnt-owner BATTLE.COMPOSITION.TURN_BOUNDARY_EFFECT_LIFECYCLE_ORDERING
 
 module battleRuntimeTurnAdvancement {
   import battleRuntimeMovementBridge.* from "./battle-runtime-movement-bridge"

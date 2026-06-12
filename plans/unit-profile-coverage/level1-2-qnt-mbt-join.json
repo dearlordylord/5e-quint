@@ -166,6 +166,14 @@
         {
           "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
           "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-spell-bridge.qnt",
+          "role": "bridge"
+        },
+        {
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+          "role": "proof-only"
         }
       ],
       "runtime": "battle",
@@ -298,6 +306,14 @@
         {
           "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
           "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-spell-bridge.qnt",
+          "role": "bridge"
+        },
+        {
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+          "role": "proof-only"
         }
       ],
       "runtime": "battle",
@@ -1010,6 +1026,14 @@
         {
           "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
           "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-spell-bridge.qnt",
+          "role": "bridge"
+        },
+        {
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+          "role": "proof-only"
         }
       ],
       "runtime": "battle",
@@ -1142,6 +1166,14 @@
         {
           "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
           "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-spell-bridge.qnt",
+          "role": "bridge"
+        },
+        {
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+          "role": "proof-only"
         }
       ],
       "runtime": "battle",
@@ -1280,6 +1312,14 @@
         {
           "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
           "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-spell-bridge.qnt",
+          "role": "bridge"
+        },
+        {
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+          "role": "proof-only"
         }
       ],
       "runtime": "battle",
@@ -1412,6 +1452,14 @@
         {
           "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
           "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-spell-bridge.qnt",
+          "role": "bridge"
+        },
+        {
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+          "role": "proof-only"
         }
       ],
       "runtime": "battle",
@@ -1582,6 +1630,14 @@
         {
           "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
           "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-spell-bridge.qnt",
+          "role": "bridge"
+        },
+        {
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+          "role": "proof-only"
         }
       ],
       "runtime": "battle",
@@ -1665,6 +1721,10 @@
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt",
           "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-prone-movement.qnt",
+          "role": "proof-only"
         }
       ],
       "runtime": "battle",
@@ -1979,6 +2039,14 @@
         {
           "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
           "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-spell-bridge.qnt",
+          "role": "bridge"
+        },
+        {
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+          "role": "proof-only"
         }
       ],
       "runtime": "battle",
@@ -2005,6 +2073,10 @@
         {
           "ownerPath": "packages/shared-algebras/proofs/rule-core/movement-spatial-grapple.qnt",
           "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-movement-bridge.qnt",
+          "role": "bridge"
         }
       ],
       "runtime": "battle",
@@ -2275,6 +2347,10 @@
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt",
           "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-prone-movement.qnt",
+          "role": "proof-only"
         }
       ],
       "runtime": "battle",
@@ -2301,6 +2377,10 @@
         {
           "ownerPath": "packages/shared-algebras/proofs/rule-core/movement-spatial-grapple.qnt",
           "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-movement-bridge.qnt",
+          "role": "bridge"
         }
       ],
       "runtime": "battle",
@@ -2327,6 +2407,10 @@
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-movement.qnt",
           "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-prone-movement.qnt",
+          "role": "proof-only"
         }
       ],
       "runtime": "battle",
@@ -2387,6 +2471,14 @@
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-restoration-and-buffs.qnt",
           "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-armor-class.qnt",
+          "role": "proof-only"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-armor-spell-resolution.qnt",
+          "role": "proof-only"
         }
       ],
       "runtime": "battle",
@@ -2893,6 +2985,14 @@
         {
           "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
           "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-spell-bridge.qnt",
+          "role": "bridge"
+        },
+        {
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+          "role": "proof-only"
         }
       ],
       "runtime": "battle",
@@ -2945,6 +3045,10 @@
         {
           "ownerPath": "packages/shared-algebras/proofs/rule-core/movement-spatial-grapple.qnt",
           "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-movement-bridge.qnt",
+          "role": "bridge"
         }
       ],
       "runtime": "battle",
@@ -3151,6 +3255,14 @@
         {
           "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
           "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-spell-bridge.qnt",
+          "role": "bridge"
+        },
+        {
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+          "role": "proof-only"
         }
       ],
       "runtime": "battle",
@@ -3283,6 +3395,14 @@
         {
           "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
           "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-spell-bridge.qnt",
+          "role": "bridge"
+        },
+        {
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+          "role": "proof-only"
         }
       ],
       "runtime": "battle",
@@ -3447,6 +3567,14 @@
         {
           "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
           "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-spell-bridge.qnt",
+          "role": "bridge"
+        },
+        {
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+          "role": "proof-only"
         }
       ],
       "runtime": "battle",
@@ -3617,6 +3745,10 @@
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt",
           "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-prone-movement.qnt",
+          "role": "proof-only"
         }
       ],
       "runtime": "battle",
@@ -3793,6 +3925,14 @@
         {
           "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
           "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-spell-bridge.qnt",
+          "role": "bridge"
+        },
+        {
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+          "role": "proof-only"
         }
       ],
       "runtime": "battle",
@@ -3931,6 +4071,14 @@
         {
           "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
           "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-spell-bridge.qnt",
+          "role": "bridge"
+        },
+        {
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+          "role": "proof-only"
         }
       ],
       "runtime": "battle",
@@ -4063,6 +4211,14 @@
         {
           "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
           "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-spell-bridge.qnt",
+          "role": "bridge"
+        },
+        {
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+          "role": "proof-only"
         }
       ],
       "runtime": "battle",
@@ -4089,6 +4245,10 @@
         {
           "ownerPath": "packages/shared-algebras/proofs/rule-core/movement-spatial-grapple.qnt",
           "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-movement-bridge.qnt",
+          "role": "bridge"
         }
       ],
       "runtime": "battle",
@@ -4171,6 +4331,14 @@
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-restoration-and-buffs.qnt",
           "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-armor-class.qnt",
+          "role": "proof-only"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-armor-spell-resolution.qnt",
+          "role": "proof-only"
         }
       ],
       "runtime": "battle",
@@ -4309,6 +4477,14 @@
         {
           "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
           "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-spell-bridge.qnt",
+          "role": "bridge"
+        },
+        {
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+          "role": "proof-only"
         }
       ],
       "runtime": "battle",
@@ -4441,6 +4617,14 @@
         {
           "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
           "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-spell-bridge.qnt",
+          "role": "bridge"
+        },
+        {
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+          "role": "proof-only"
         }
       ],
       "runtime": "battle",
@@ -4579,6 +4763,14 @@
         {
           "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
           "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-spell-bridge.qnt",
+          "role": "bridge"
+        },
+        {
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+          "role": "proof-only"
         }
       ],
       "runtime": "battle",
@@ -4711,6 +4903,14 @@
         {
           "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
           "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-spell-bridge.qnt",
+          "role": "bridge"
+        },
+        {
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+          "role": "proof-only"
         }
       ],
       "runtime": "battle",
@@ -5321,6 +5521,14 @@
         {
           "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
           "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-spell-bridge.qnt",
+          "role": "bridge"
+        },
+        {
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+          "role": "proof-only"
         }
       ],
       "runtime": "battle",
@@ -5453,6 +5661,14 @@
         {
           "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
           "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-spell-bridge.qnt",
+          "role": "bridge"
+        },
+        {
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+          "role": "proof-only"
         }
       ],
       "runtime": "battle",
@@ -5591,6 +5807,14 @@
         {
           "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
           "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-spell-bridge.qnt",
+          "role": "bridge"
+        },
+        {
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+          "role": "proof-only"
         }
       ],
       "runtime": "battle",
@@ -5916,6 +6140,14 @@
         {
           "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
           "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-spell-bridge.qnt",
+          "role": "bridge"
+        },
+        {
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+          "role": "proof-only"
         }
       ],
       "runtime": "battle",
@@ -6048,6 +6280,14 @@
         {
           "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
           "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-spell-bridge.qnt",
+          "role": "bridge"
+        },
+        {
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+          "role": "proof-only"
         }
       ],
       "runtime": "battle",
@@ -6186,6 +6426,14 @@
         {
           "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
           "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-spell-bridge.qnt",
+          "role": "bridge"
+        },
+        {
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+          "role": "proof-only"
         }
       ],
       "runtime": "battle",
@@ -6318,6 +6566,14 @@
         {
           "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
           "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-spell-bridge.qnt",
+          "role": "bridge"
+        },
+        {
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+          "role": "proof-only"
         }
       ],
       "runtime": "battle",
@@ -6697,6 +6953,14 @@
         {
           "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
           "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-spell-bridge.qnt",
+          "role": "bridge"
+        },
+        {
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+          "role": "proof-only"
         }
       ],
       "runtime": "battle",
@@ -6829,6 +7093,14 @@
         {
           "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
           "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-spell-bridge.qnt",
+          "role": "bridge"
+        },
+        {
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+          "role": "proof-only"
         }
       ],
       "runtime": "battle",
@@ -6855,6 +7127,14 @@
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-sanctuary.qnt",
           "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-condition-spell-resolution.qnt",
+          "role": "proof-only"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-actor-combatants.qnt",
+          "role": "proof-only"
         }
       ],
       "runtime": "battle",
@@ -7027,6 +7307,14 @@
         {
           "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
           "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-spell-bridge.qnt",
+          "role": "bridge"
+        },
+        {
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+          "role": "proof-only"
         }
       ],
       "runtime": "battle",
@@ -7057,6 +7345,14 @@
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-restoration-and-buffs.qnt",
           "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-armor-class.qnt",
+          "role": "proof-only"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-armor-spell-resolution.qnt",
+          "role": "proof-only"
         }
       ],
       "runtime": "battle",
@@ -7235,6 +7531,14 @@
         {
           "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
           "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-spell-bridge.qnt",
+          "role": "bridge"
+        },
+        {
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+          "role": "proof-only"
         }
       ],
       "runtime": "battle",
@@ -7367,6 +7671,14 @@
         {
           "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
           "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-spell-bridge.qnt",
+          "role": "bridge"
+        },
+        {
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+          "role": "proof-only"
         }
       ],
       "runtime": "battle",
@@ -7619,6 +7931,14 @@
         {
           "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
           "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-spell-bridge.qnt",
+          "role": "bridge"
+        },
+        {
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+          "role": "proof-only"
         }
       ],
       "runtime": "battle",
@@ -7783,6 +8103,14 @@
         {
           "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
           "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-spell-bridge.qnt",
+          "role": "bridge"
+        },
+        {
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+          "role": "proof-only"
         }
       ],
       "runtime": "battle",
@@ -7921,6 +8249,14 @@
         {
           "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
           "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-spell-bridge.qnt",
+          "role": "bridge"
+        },
+        {
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+          "role": "proof-only"
         }
       ],
       "runtime": "battle",
@@ -8099,6 +8435,14 @@
         {
           "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
           "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-spell-bridge.qnt",
+          "role": "bridge"
+        },
+        {
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+          "role": "proof-only"
         }
       ],
       "runtime": "battle",
@@ -8231,6 +8575,14 @@
         {
           "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
           "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-spell-bridge.qnt",
+          "role": "bridge"
+        },
+        {
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+          "role": "proof-only"
         }
       ],
       "runtime": "battle",

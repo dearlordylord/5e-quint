@@ -4,16 +4,16 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 
 ## Summary
 
-- Total obligations: 117
+- Total obligations: 118
 - Covered obligations: 111
-- Open transitional obligations: 0
+- Open transitional obligations: 1
 - Boundary or unsupported obligations: 6
 
 | Status | Count |
 | --- | ---: |
 | covered | 111 |
 | needs-qnt-owner | 0 |
-| needs-parity-witness | 0 |
+| needs-parity-witness | 1 |
 | needs-surface-evidence | 0 |
 | boundary-only | 5 |
 | unsupported-by-admission | 1 |
@@ -21,7 +21,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | Runtime | Count |
 | --- | ---: |
 | shared-algebras | 1 |
-| battle | 87 |
+| battle | 88 |
 | character-creation | 14 |
 | character-sheet | 12 |
 | character-battle | 3 |
@@ -147,6 +147,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `BATTLE.FEATURE.METAMAGIC_EMPOWERED_DAMAGE_DICE_REROLL` | battle | covered | `unit-feature.metamagic-damage-dice-reroll` |
 | `BATTLE.SPELL.ACID_ARROW_ATTACK_TIMING` | battle | covered | `spell.invocation-acid-arrow-attack-timing` |
 | `BATTLE.PROTOCOL.INTERRUPT_STACK_RESUME_REPLAY` | battle | covered | _direct reducer entrypoint_ |
+| `BATTLE.COMPOSITION.TURN_BOUNDARY_EFFECT_LIFECYCLE_ORDERING` | battle | needs-parity-witness | _profile mapping pending_ |
 
 ## Battle Hole Frontier
 
@@ -522,6 +523,239 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `packages/battle-runtime/battle-runtime-hit-point-restoration-ordering.qnt` | semantic-core | `BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING` |
 | `packages/battle-runtime/battle-runtime-command-ordering.qnt` | semantic-core | `BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING` |
 | `packages/battle-runtime/battle-runtime-stat-block-action-ordering.qnt` | semantic-core | `BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING` |
+| `packages/battle-runtime/battle-runtime-condition-spell-resolution.qnt` | proof-only | `BATTLE.SANCTUARY.TARGETING_INTERDICTION`, `BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE` |
+| `packages/battle-runtime/battle-runtime-hunters-prey.qnt` | semantic-core | `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS` |
+| `packages/battle-runtime/battle-runtime-mirror-image-hit-interception.qnt` | semantic-core | `BATTLE.SPELL.MIRROR_IMAGE_HIT_INTERCEPTION` |
+| `packages/battle-runtime/battle-runtime-prone-movement.qnt` | proof-only | `BATTLE.SPELL.EXPEDITIOUS_RETREAT_DASH_LIFECYCLE`, `BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE` |
+| `packages/battle-runtime/battle-runtime-turn-advancement.qnt` | semantic-core | `BATTLE.COMPOSITION.TURN_BOUNDARY_EFFECT_LIFECYCLE_ORDERING` |
+| `packages/battle-runtime/battle-runtime-weapon-hit-turn-effects.qnt` | semantic-core | `BATTLE.COMPOSITION.TURN_BOUNDARY_EFFECT_LIFECYCLE_ORDERING` |
+| `packages/battle-runtime/battle-runtime-actor-combatants.qnt` | proof-only | `BATTLE.SANCTUARY.TARGETING_INTERDICTION`, `BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE` |
+| `packages/battle-runtime/battle-runtime-armor-class.qnt` | proof-only | `BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS` |
+| `packages/battle-runtime/battle-runtime-armor-spell-resolution.qnt` | proof-only | `BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS` |
+| `packages/battle-runtime/battle-runtime-attack-facts.qnt` | proof-only | `BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING` |
+| `packages/battle-runtime/battle-runtime-combat-holes.qnt` | proof-only | `BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING` |
+| `packages/battle-runtime/battle-runtime-combatant-side.qnt` | proof-only | `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS` |
+| `packages/battle-runtime/battle-runtime-feature-bridge.qnt` | bridge | `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS` |
+| `packages/battle-runtime/battle-runtime-fighter-ongoing-features.qnt` | proof-only | `BATTLE.COMPOSITION.TURN_BOUNDARY_EFFECT_LIFECYCLE_ORDERING`, `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS` |
+| `packages/battle-runtime/battle-runtime-hidden.qnt` | proof-only | `BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES` |
+| `packages/battle-runtime/battle-runtime-hide-search-fixture.qnt` | proof-only | `BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES` |
+| `packages/battle-runtime/battle-runtime-interrupt-bridge.qnt` | bridge | `BATTLE.PROTOCOL.INTERRUPT_STACK_RESUME_REPLAY` |
+| `packages/battle-runtime/battle-runtime-legendary-actions.qnt` | proof-only | `BATTLE.STAT_BLOCK.ATTACK_CONTROL` |
+| `packages/battle-runtime/battle-runtime-movement-bridge.qnt` | bridge | `BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND` |
+| `packages/battle-runtime/battle-runtime-shape-shifting.qnt` | proof-only | `BATTLE.FEATURE.WILD_SHAPE_FORM_LIFECYCLE` |
+| `packages/battle-runtime/battle-runtime-spell-bridge.qnt` | bridge | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` |
+| `packages/battle-runtime/battle-runtime-stat-block-bridge.qnt` | bridge | `BATTLE.STAT_BLOCK.ATTACK_CONTROL` |
+| `packages/battle-runtime/battle-runtime-warding-bond.qnt` | proof-only | `BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING` |
+| `packages/shared-algebras/proofs/rule-core/action-turn-procedures.qnt` | proof-only | `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS` |
+| `packages/shared-algebras/proofs/rule-core/attack-action-additional-attacks.qnt` | proof-only | `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS` |
+| `packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt` | proof-only | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` |
+| `packages/shared-algebras/proofs/rule-core/zero-hit-point-lifecycle.qnt` | proof-only | `BATTLE.DAMAGE.DEATH_SAVING_THROW_LIFECYCLE` |
+
+## QNT Registry
+
+Rows here inventory `packages/**/*.qnt` files excluding `.mbt.qnt` drivers and `*-tests.qnt` files. Each row must be role-rowed or checker-exempt.
+
+| Owner | Classification | Detail |
+| --- | --- | --- |
+| `packages/battle-runtime/battle-runtime-ability-check-search.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-acid-arrow.qnt` | qnt-owner-role | proof-only |
+| `packages/battle-runtime/battle-runtime-actor-combatants.qnt` | qnt-owner-role | proof-only |
+| `packages/battle-runtime/battle-runtime-antimagic-suppression.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-area-trigger-timing.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-armor-class.qnt` | qnt-owner-role | proof-only |
+| `packages/battle-runtime/battle-runtime-armor-spell-resolution.qnt` | qnt-owner-role | proof-only |
+| `packages/battle-runtime/battle-runtime-attack-facts.qnt` | qnt-owner-role | proof-only |
+| `packages/battle-runtime/battle-runtime-bardic-inspiration.qnt` | qnt-owner-role | proof-only |
+| `packages/battle-runtime/battle-runtime-blur-attack-roll-defense.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-chained-spell-attack.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-combat-holes.qnt` | qnt-owner-role | proof-only |
+| `packages/battle-runtime/battle-runtime-combatant-side.qnt` | qnt-owner-role | proof-only |
+| `packages/battle-runtime/battle-runtime-command-choice.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-command-ordering.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-concentration.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-condition-spell-resolution.qnt` | qnt-owner-role | proof-only |
+| `packages/battle-runtime/battle-runtime-creature-size-change.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-creature-type-protection.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-damage-adjustments.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-direct-condition-lifecycle.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-direct-condition-removal.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-dragons-breath.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-druid-wild-shape.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-feather-fall.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-feature-bridge-examples.qnt` | exempt | proof-only-example: Run-block examples for the feature bridge; registered rule-core and feature owners carry active coverage. |
+| `packages/battle-runtime/battle-runtime-feature-bridge.qnt` | qnt-owner-role | bridge |
+| `packages/battle-runtime/battle-runtime-feature-turn-end-effects.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-fighter-ongoing-features.qnt` | qnt-owner-role | proof-only |
+| `packages/battle-runtime/battle-runtime-fill-kinds.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-find-familiar.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-flaming-sphere-hazard-ram.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-ground-command.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-gust-of-wind.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-hidden.qnt` | qnt-owner-role | proof-only |
+| `packages/battle-runtime/battle-runtime-hide-search-fixture.qnt` | qnt-owner-role | proof-only |
+| `packages/battle-runtime/battle-runtime-hit-point-restoration-ordering.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-hit-points.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-hole-kinds.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-hunters-prey.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-interrupt-bridge.qnt` | qnt-owner-role | bridge |
+| `packages/battle-runtime/battle-runtime-jump-movement.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-legendary-actions.qnt` | qnt-owner-role | proof-only |
+| `packages/battle-runtime/battle-runtime-levitate-creature.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-light.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-marked-riders.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-marked-spells.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-metamagic.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-mirror-image-constants.qnt` | exempt | leaf-type-vocabulary: Mirror Image constants leaf imported by registered Mirror Image owners. |
+| `packages/battle-runtime/battle-runtime-mirror-image-hit-interception.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-mirror-image.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-model.qnt` | exempt | leaf-type-vocabulary: Battle runtime type vocabulary aggregate intentionally kept free of behavioral bridge imports. |
+| `packages/battle-runtime/battle-runtime-monk-focus.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-moonbeam-movable-zone.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-movement-bridge-examples.qnt` | exempt | proof-only-example: Run-block examples for the movement bridge; registered movement owners carry active coverage. |
+| `packages/battle-runtime/battle-runtime-movement-bridge.qnt` | qnt-owner-role | bridge |
+| `packages/battle-runtime/battle-runtime-movement.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-object-contact-damage.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-ongoing-spell-dispel.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-open-hand-technique.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-paladin-sacred-weapon-activation.qnt` | qnt-owner-role | proof-only |
+| `packages/battle-runtime/battle-runtime-prone-movement.qnt` | qnt-owner-role | proof-only |
+| `packages/battle-runtime/battle-runtime-protection-from-poison.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-public-trace-contract.qnt` | exempt | witness-protocol-leaf: Public trace protocol vocabulary leaf shared by witnesses. |
+| `packages/battle-runtime/battle-runtime-reaction-kinds.qnt` | exempt | leaf-type-vocabulary: Reaction kind vocabulary leaf shared by the model and interrupt bridge. |
+| `packages/battle-runtime/battle-runtime-reaction-resolution.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-reaction-window.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-remarkable-athlete-critical-movement.qnt` | qnt-owner-role | proof-only |
+| `packages/battle-runtime/battle-runtime-remarkable-athlete-roll-modes.qnt` | qnt-owner-role | proof-only |
+| `packages/battle-runtime/battle-runtime-replay-equivalence.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-restoration-and-buffs.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-roll-modifier-choice.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-sanctuary.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-save-gated-spell-ordering.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-save-gated-spell.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-see-invisibility-constants.qnt` | exempt | leaf-type-vocabulary: See Invisibility constants and witness-plane vocabulary leaf. |
+| `packages/battle-runtime/battle-runtime-see-invisibility.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-self-teleport.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-self-transformation.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-shape-shifting.qnt` | qnt-owner-role | proof-only |
+| `packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-sorcerous-burst-damage-choice.qnt` | exempt | leaf-type-vocabulary: Sorcerous Burst damage-choice vocabulary leaf shared by the model and spell bridge. |
+| `packages/battle-runtime/battle-runtime-spell-attack-ordering.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-spell-attack.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-spell-bridge-examples.qnt` | exempt | proof-only-example: Run-block examples for the spell bridge; registered spell rule-core and battle owners carry active coverage. |
+| `packages/battle-runtime/battle-runtime-spell-bridge.qnt` | qnt-owner-role | bridge |
+| `packages/battle-runtime/battle-runtime-spell-invocation.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-spiritual-weapon.qnt` | qnt-owner-role | proof-only |
+| `packages/battle-runtime/battle-runtime-stat-block-action-ordering.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-stat-block-bridge-examples.qnt` | exempt | proof-only-example: Run-block examples for the stat-block bridge; registered stat-block owners carry active coverage. |
+| `packages/battle-runtime/battle-runtime-stat-block-bridge.qnt` | qnt-owner-role | bridge |
+| `packages/battle-runtime/battle-runtime-subject-kinds.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-thaumaturgy.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-timed-effects.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-turn-advancement.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-turn-order.qnt` | qnt-owner-role | proof-only |
+| `packages/battle-runtime/battle-runtime-warding-bond-damage-sharing.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-warding-bond.qnt` | qnt-owner-role | proof-only |
+| `packages/battle-runtime/battle-runtime-weapon-attack-ordering.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-weapon-attacks.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-weapon-hit-spell-riders.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-weapon-hit-turn-effects.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-witness-protocol.qnt` | exempt | witness-protocol-leaf: Typed witness protocol vocabulary leaf for lightweight battle-runtime MBT witnesses. |
+| `packages/battle-runtime/creature-attack.qnt` | qnt-owner-role | semantic-core |
+| `packages/character-creation-runtime/character-creation-runtime-slice.qnt` | qnt-owner-role | semantic-core |
+| `packages/shared-algebras/proofs/action-economy-algebra-inductive.qnt` | exempt | retired-test-companion: Retained shared-algebra inductive proof companion outside the active rules-kernel owner rows. |
+| `packages/shared-algebras/proofs/conditions-algebra-inductive.qnt` | exempt | retired-test-companion: Retained shared-algebra inductive proof companion outside the active rules-kernel owner rows. |
+| `packages/shared-algebras/proofs/death-saves-algebra-inductive.qnt` | qnt-owner-role | proof-only |
+| `packages/shared-algebras/proofs/initiative-algebra-invariant.qnt` | exempt | retired-test-companion: Retained shared-algebra invariant companion outside the active rules-kernel owner rows. |
+| `packages/shared-algebras/proofs/multiclass-prerequisite-algebra.qnt` | exempt | retired-test-companion: Retained multiclass prerequisite proof companion outside the active rules-kernel owner rows. |
+| `packages/shared-algebras/proofs/rule-core/ability-check-proficiency-bonus.qnt` | qnt-owner-role | semantic-core |
+| `packages/shared-algebras/proofs/rule-core/action-turn-procedures-inductive.qnt` | exempt | proof-only-example: Inductive proof companion for registered action-turn procedure core owners. |
+| `packages/shared-algebras/proofs/rule-core/action-turn-procedures.qnt` | qnt-owner-role | proof-only |
+| `packages/shared-algebras/proofs/rule-core/armor-class-base.qnt` | qnt-owner-role | semantic-core |
+| `packages/shared-algebras/proofs/rule-core/attack-action-additional-attacks.qnt` | qnt-owner-role | proof-only |
+| `packages/shared-algebras/proofs/rule-core/attack-damage-composition-examples.qnt` | qnt-owner-role | proof-only |
+| `packages/shared-algebras/proofs/rule-core/attack-damage-composition-inductive.qnt` | qnt-owner-role | proof-only |
+| `packages/shared-algebras/proofs/rule-core/attack-damage-composition.qnt` | qnt-owner-role | semantic-core |
+| `packages/shared-algebras/proofs/rule-core/damage-component-adjustments-examples.qnt` | qnt-owner-role | proof-only |
+| `packages/shared-algebras/proofs/rule-core/damage-component-adjustments-inductive.qnt` | qnt-owner-role | proof-only |
+| `packages/shared-algebras/proofs/rule-core/damage-component-adjustments.qnt` | qnt-owner-role | semantic-core |
+| `packages/shared-algebras/proofs/rule-core/feature-resource-hit-point-healing.qnt` | qnt-owner-role | semantic-core |
+| `packages/shared-algebras/proofs/rule-core/feature-resource-pool.qnt` | qnt-owner-role | semantic-core |
+| `packages/shared-algebras/proofs/rule-core/font-of-magic-resource.qnt` | qnt-owner-role | semantic-core |
+| `packages/shared-algebras/proofs/rule-core/hit-point-damage-inductive.qnt` | qnt-owner-role | proof-only |
+| `packages/shared-algebras/proofs/rule-core/hit-point-damage.qnt` | qnt-owner-role | semantic-core |
+| `packages/shared-algebras/proofs/rule-core/hit-point-maximum.qnt` | qnt-owner-role | semantic-core |
+| `packages/shared-algebras/proofs/rule-core/hit-point-recovery-examples.qnt` | qnt-owner-role | proof-only |
+| `packages/shared-algebras/proofs/rule-core/hit-point-recovery-inductive.qnt` | qnt-owner-role | proof-only |
+| `packages/shared-algebras/proofs/rule-core/hit-point-recovery.qnt` | qnt-owner-role | semantic-core |
+| `packages/shared-algebras/proofs/rule-core/lay-on-hands-resource.qnt` | qnt-owner-role | semantic-core |
+| `packages/shared-algebras/proofs/rule-core/movement-spatial-grapple-inductive.qnt` | qnt-owner-role | proof-only |
+| `packages/shared-algebras/proofs/rule-core/movement-spatial-grapple.qnt` | qnt-owner-role | semantic-core |
+| `packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration-examples.qnt` | qnt-owner-role | proof-only |
+| `packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration-inductive.qnt` | qnt-owner-role | proof-only |
+| `packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt` | qnt-owner-role | semantic-core |
+| `packages/shared-algebras/proofs/rule-core/shove-outcome-examples.qnt` | qnt-owner-role | proof-only |
+| `packages/shared-algebras/proofs/rule-core/shove-outcome.qnt` | qnt-owner-role | semantic-core |
+| `packages/shared-algebras/proofs/rule-core/spell-attack-burst-save-damage-core.qnt` | qnt-owner-role | semantic-core |
+| `packages/shared-algebras/proofs/rule-core/spell-attack-damage-projection-core.qnt` | qnt-owner-role | semantic-core |
+| `packages/shared-algebras/proofs/rule-core/spell-chained-attack-damage-projection-core.qnt` | qnt-owner-role | semantic-core |
+| `packages/shared-algebras/proofs/rule-core/spell-damage-projection-core.qnt` | qnt-owner-role | semantic-core |
+| `packages/shared-algebras/proofs/rule-core/spell-damage-rider-projection-core.qnt` | qnt-owner-role | semantic-core |
+| `packages/shared-algebras/proofs/rule-core/spell-defensive-effect-core.qnt` | qnt-owner-role | semantic-core |
+| `packages/shared-algebras/proofs/rule-core/spell-definition-profiles.qnt` | exempt | leaf-type-vocabulary: Spell definition profile vocabulary imported by registered spell procedure owners. |
+| `packages/shared-algebras/proofs/rule-core/spell-direct-damage-projection-core.qnt` | qnt-owner-role | semantic-core |
+| `packages/shared-algebras/proofs/rule-core/spell-hit-point-restoration-core.qnt` | qnt-owner-role | semantic-core |
+| `packages/shared-algebras/proofs/rule-core/spell-independent-attack-sequence-core.qnt` | qnt-owner-role | semantic-core |
+| `packages/shared-algebras/proofs/rule-core/spell-invocation-action-slot-core.qnt` | qnt-owner-role | semantic-core |
+| `packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt` | qnt-owner-role | semantic-core |
+| `packages/shared-algebras/proofs/rule-core/spell-invocation-target-cardinality-core.qnt` | qnt-owner-role | semantic-core |
+| `packages/shared-algebras/proofs/rule-core/spell-object-hit-point-damage-core.qnt` | qnt-owner-role | semantic-core |
+| `packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-examples.qnt` | qnt-owner-role | proof-only |
+| `packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt` | qnt-owner-role | proof-only |
+| `packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt` | qnt-owner-role | proof-only |
+| `packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt` | qnt-owner-role | semantic-core |
+| `packages/shared-algebras/proofs/rule-core/spell-rest-benefit-application.qnt` | qnt-owner-role | semantic-core |
+| `packages/shared-algebras/proofs/rule-core/spell-save-condition-projection-core.qnt` | qnt-owner-role | semantic-core |
+| `packages/shared-algebras/proofs/rule-core/spell-save-damage-projection-core.qnt` | qnt-owner-role | semantic-core |
+| `packages/shared-algebras/proofs/rule-core/spell-save-gate.qnt` | qnt-owner-role | semantic-core |
+| `packages/shared-algebras/proofs/rule-core/spell-scalar-buff-projection-core.qnt` | qnt-owner-role | semantic-core |
+| `packages/shared-algebras/proofs/rule-core/spell-sleep-repeat-save-lifecycle-core.qnt` | qnt-owner-role | semantic-core |
+| `packages/shared-algebras/proofs/rule-core/spell-slot-expenditure.qnt` | qnt-owner-role | semantic-core |
+| `packages/shared-algebras/proofs/rule-core/spell-slot-table.qnt` | qnt-owner-role | semantic-core |
+| `packages/shared-algebras/proofs/rule-core/spell-slot-transitions.qnt` | qnt-owner-role | semantic-core |
+| `packages/shared-algebras/proofs/rule-core/spell-turn-hook-core.qnt` | qnt-owner-role | semantic-core |
+| `packages/shared-algebras/proofs/rule-core/spellbook-ritual-access.qnt` | qnt-owner-role | semantic-core |
+| `packages/shared-algebras/proofs/rule-core/stat-block-controls-examples.qnt` | qnt-owner-role | proof-only |
+| `packages/shared-algebras/proofs/rule-core/stat-block-controls-inductive.qnt` | qnt-owner-role | proof-only |
+| `packages/shared-algebras/proofs/rule-core/stat-block-controls.qnt` | qnt-owner-role | semantic-core |
+| `packages/shared-algebras/proofs/rule-core/uncanny-metabolism-resource.qnt` | qnt-owner-role | semantic-core |
+| `packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core-examples.qnt` | qnt-owner-role | proof-only |
+| `packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt` | qnt-owner-role | semantic-core |
+| `packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core-examples.qnt` | qnt-owner-role | proof-only |
+| `packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core.qnt` | qnt-owner-role | semantic-core |
+| `packages/shared-algebras/proofs/rule-core/unit-feature-martial-arts-core-examples.qnt` | qnt-owner-role | proof-only |
+| `packages/shared-algebras/proofs/rule-core/unit-feature-martial-arts-core.qnt` | qnt-owner-role | semantic-core |
+| `packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-option-fact-core-examples.qnt` | qnt-owner-role | proof-only |
+| `packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-option-fact-core.qnt` | qnt-owner-role | semantic-core |
+| `packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-spell-modification-admission-core-examples.qnt` | qnt-owner-role | proof-only |
+| `packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-spell-modification-admission-core.qnt` | qnt-owner-role | semantic-core |
+| `packages/shared-algebras/proofs/rule-core/unit-feature-passive-movement-defense-core-examples.qnt` | qnt-owner-role | proof-only |
+| `packages/shared-algebras/proofs/rule-core/unit-feature-passive-movement-defense-core.qnt` | qnt-owner-role | semantic-core |
+| `packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core-examples.qnt` | qnt-owner-role | proof-only |
+| `packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt` | qnt-owner-role | semantic-core |
+| `packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles-inductive.qnt` | qnt-owner-role | proof-only |
+| `packages/shared-algebras/proofs/rule-core/unit-feature-quickened-action-spell-procedure-support-core-examples.qnt` | qnt-owner-role | proof-only |
+| `packages/shared-algebras/proofs/rule-core/unit-feature-quickened-action-spell-procedure-support-core.qnt` | qnt-owner-role | semantic-core |
+| `packages/shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core-examples.qnt` | qnt-owner-role | proof-only |
+| `packages/shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core.qnt` | qnt-owner-role | semantic-core |
+| `packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core-examples.qnt` | qnt-owner-role | proof-only |
+| `packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core.qnt` | qnt-owner-role | semantic-core |
+| `packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core-examples.qnt` | qnt-owner-role | proof-only |
+| `packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt` | qnt-owner-role | semantic-core |
+| `packages/shared-algebras/proofs/rule-core/unit-feature-zero-hit-point-core-examples.qnt` | qnt-owner-role | proof-only |
+| `packages/shared-algebras/proofs/rule-core/unit-feature-zero-hit-point-core.qnt` | qnt-owner-role | semantic-core |
+| `packages/shared-algebras/proofs/rule-core/weapon-mastery-reselection.qnt` | qnt-owner-role | semantic-core |
+| `packages/shared-algebras/proofs/rule-core/zero-hit-point-lifecycle-inductive.qnt` | exempt | proof-only-example: Inductive proof companion for registered zero-Hit-Point lifecycle owners. |
+| `packages/shared-algebras/proofs/rule-core/zero-hit-point-lifecycle.qnt` | qnt-owner-role | proof-only |
 
 ## Unit Feature Profile QNT Owners
 
@@ -690,7 +924,7 @@ No semantic-core QNT owners contain run blocks.
 
 ## Open Work
 
-No open transitional obligations.
+- `BATTLE.COMPOSITION.TURN_BOUNDARY_EFFECT_LIFECYCLE_ORDERING` (needs-parity-witness; follow-up: `PPW-T13-TURN-BOUNDARY-LIFECYCLE-SEAM`): Battle turn-boundary effect lifecycle ordering across end-turn cleanup, initiative advancement, start-turn effects, Death Saving Throw hooks, and weapon-hit turn effects
 
 ## Checker Issues
 

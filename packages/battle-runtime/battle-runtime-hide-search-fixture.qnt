@@ -1,5 +1,6 @@
 // -*- mode: Bluespec; -*-
 
+// KERNEL-COVERAGE: qnt-owner BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES
 module battleRuntimeHideSearchFixture {
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeMovementBridge.* from "./battle-runtime-movement-bridge"

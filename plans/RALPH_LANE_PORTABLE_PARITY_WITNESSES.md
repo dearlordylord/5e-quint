@@ -4,7 +4,7 @@
 {
   "schema": "ralph-plan.v1",
   "tasks": [
-    { "number": 1, "id": "PPW-T01-QNT-REGISTRY-CLOSURE", "status": "ready-for-implementation", "title": "Close the QNT registry: bind unbound modules, checker-enforce classification" },
+    { "number": 1, "id": "PPW-T01-QNT-REGISTRY-CLOSURE", "status": "done", "title": "Close the QNT registry: bind unbound modules, checker-enforce classification" },
     { "number": 2, "id": "PPW-T02-ACID-ARROW-TIMING-FOCUSED-MBT", "status": "ready-for-implementation", "title": "Add Acid Arrow attack-timing focused MBT" },
     { "number": 3, "id": "PPW-T03-AFTER-HIT-RIDERS-FOCUSED-MBT", "status": "ready-for-implementation", "title": "Add after-hit damage riders focused MBT (moved from QNTD-B06)" },
     { "number": 4, "id": "PPW-T04-WEAPON-HOSTED-ATTACK-FOCUSED-MBT", "status": "ready-for-implementation", "title": "Add weapon-hosted attack and riders focused MBT (moved from QNTD-B07)" },
@@ -15,8 +15,8 @@
     { "number": 9, "id": "PPW-T09-COMMAND-OPTION-FOCUSED-MBT", "status": "blocked", "title": "Add Command option and next-turn focused MBT (moved from QNTD-B08)" },
     { "number": 10, "id": "PPW-T10-ABILITY-CHECK-SEARCH-FOCUSED-MBT", "status": "blocked", "title": "Add Ability Check choice and Search holes focused MBT (moved from QNTD-B09)" },
     { "number": 11, "id": "PPW-T11-SHOVE-WITNESS-POLICY", "status": "blocked", "title": "Decide whether Shove deterministic replay needs focused MBT (moved from QNTD-B10)" },
-    { "number": 12, "id": "PPW-T12-CONCENTRATION-BREAK-SEAM", "status": "blocked", "title": "Witness the Concentration-break teardown composition seam" },
-    { "number": 13, "id": "PPW-T13-TURN-BOUNDARY-LIFECYCLE-SEAM", "status": "blocked", "title": "Witness the turn-boundary effect-lifecycle ordering composition seam" },
+    { "number": 12, "id": "PPW-T12-CONCENTRATION-BREAK-SEAM", "status": "ready-for-implementation", "title": "Witness the Concentration-break teardown composition seam" },
+    { "number": 13, "id": "PPW-T13-TURN-BOUNDARY-LIFECYCLE-SEAM", "status": "ready-for-implementation", "title": "Witness the turn-boundary effect-lifecycle ordering composition seam" },
     { "number": 14, "id": "PPW-T14-ZERO-HP-MID-RESOLUTION-SEAM", "status": "blocked", "title": "Witness the zero-Hit-Point mid-resolution composition seam" },
     { "number": 15, "id": "PPW-T15-LANE-CLOSEOUT", "status": "blocked", "title": "Close out witness-portability artifacts and program rollup" },
     { "number": 16, "id": "PPW-T16-RECURSIVE-NEXT-BATCH", "status": "blocked", "title": "Plan the next portable-witness batch if this lane drains" }
@@ -150,7 +150,7 @@ another MBT run. Run MBT with the repo timing/background protocol from
 
 | # | Task | Status | Depends on | Notes |
 | ---: | --- | --- | --- | --- |
-| 1 | PPW-T01-QNT-REGISTRY-CLOSURE | ready-for-implementation | none | Grounds the seam tasks; checker change. |
+| 1 | PPW-T01-QNT-REGISTRY-CLOSURE | done | none | Grounds the seam tasks; checker change. |
 | 2 | PPW-T02-ACID-ARROW-TIMING-FOCUSED-MBT | ready-for-implementation | none | Independent witness promotion. |
 | 3 | PPW-T03-AFTER-HIT-RIDERS-FOCUSED-MBT | ready-for-implementation | none | Moved from QNTD-B06 / QCP-CS4. |
 | 4 | PPW-T04-WEAPON-HOSTED-ATTACK-FOCUSED-MBT | ready-for-implementation | none | Moved from QNTD-B07 / QCP-CS5. |
@@ -161,8 +161,8 @@ another MBT run. Run MBT with the repo timing/background protocol from
 | 9 | PPW-T09-COMMAND-OPTION-FOCUSED-MBT | blocked | PPW-T02-ACID-ARROW-TIMING-FOCUSED-MBT, PPW-T03-AFTER-HIT-RIDERS-FOCUSED-MBT, PPW-T04-WEAPON-HOSTED-ATTACK-FOCUSED-MBT, PPW-T05-SUBTLE-METAMAGIC-FOCUSED-MBT, PPW-T06-HOLE-VOCABULARY-WITNESS-POLICY, PPW-T07-WEAPON-MASTERY-ADVANCEMENT-FOCUSED-MBT, PPW-T08-WEAPON-MASTERY-RESELECTION-FOCUSED-MBT | Moved from QNTD-B08 / QCP-CS6; after runtime-test rows drain. |
 | 10 | PPW-T10-ABILITY-CHECK-SEARCH-FOCUSED-MBT | blocked | PPW-T02-ACID-ARROW-TIMING-FOCUSED-MBT, PPW-T03-AFTER-HIT-RIDERS-FOCUSED-MBT, PPW-T04-WEAPON-HOSTED-ATTACK-FOCUSED-MBT, PPW-T05-SUBTLE-METAMAGIC-FOCUSED-MBT, PPW-T06-HOLE-VOCABULARY-WITNESS-POLICY, PPW-T07-WEAPON-MASTERY-ADVANCEMENT-FOCUSED-MBT, PPW-T08-WEAPON-MASTERY-RESELECTION-FOCUSED-MBT | Moved from QNTD-B09 / QCP-CS7. |
 | 11 | PPW-T11-SHOVE-WITNESS-POLICY | blocked | PPW-T09-COMMAND-OPTION-FOCUSED-MBT, PPW-T10-ABILITY-CHECK-SEARCH-FOCUSED-MBT | Moved from QNTD-B10 / QCP-CS8. |
-| 12 | PPW-T12-CONCENTRATION-BREAK-SEAM | blocked | PPW-T01-QNT-REGISTRY-CLOSURE | Highest-value composition seam. |
-| 13 | PPW-T13-TURN-BOUNDARY-LIFECYCLE-SEAM | blocked | PPW-T01-QNT-REGISTRY-CLOSURE | Uses the modules T01 binds. |
+| 12 | PPW-T12-CONCENTRATION-BREAK-SEAM | ready-for-implementation | PPW-T01-QNT-REGISTRY-CLOSURE | Highest-value composition seam. |
+| 13 | PPW-T13-TURN-BOUNDARY-LIFECYCLE-SEAM | ready-for-implementation | PPW-T01-QNT-REGISTRY-CLOSURE | Uses the modules T01 binds. |
 | 14 | PPW-T14-ZERO-HP-MID-RESOLUTION-SEAM | blocked | PPW-T01-QNT-REGISTRY-CLOSURE, PPW-T12-CONCENTRATION-BREAK-SEAM | Reuses T12 teardown facts. |
 | 15 | PPW-T15-LANE-CLOSEOUT | blocked | PPW-T01-QNT-REGISTRY-CLOSURE, PPW-T02-ACID-ARROW-TIMING-FOCUSED-MBT, PPW-T03-AFTER-HIT-RIDERS-FOCUSED-MBT, PPW-T04-WEAPON-HOSTED-ATTACK-FOCUSED-MBT, PPW-T05-SUBTLE-METAMAGIC-FOCUSED-MBT, PPW-T06-HOLE-VOCABULARY-WITNESS-POLICY, PPW-T07-WEAPON-MASTERY-ADVANCEMENT-FOCUSED-MBT, PPW-T08-WEAPON-MASTERY-RESELECTION-FOCUSED-MBT, PPW-T09-COMMAND-OPTION-FOCUSED-MBT, PPW-T10-ABILITY-CHECK-SEARCH-FOCUSED-MBT, PPW-T11-SHOVE-WITNESS-POLICY, PPW-T12-CONCENTRATION-BREAK-SEAM, PPW-T13-TURN-BOUNDARY-LIFECYCLE-SEAM, PPW-T14-ZERO-HP-MID-RESOLUTION-SEAM | Full gates, rollup, pointer verification. |
 | 16 | PPW-T16-RECURSIVE-NEXT-BATCH | blocked | PPW-T15-LANE-CLOSEOUT | Recursive tail. |
@@ -171,7 +171,7 @@ another MBT run. Run MBT with the repo timing/background protocol from
 
 ### Task 1 - PPW-T01-QNT-REGISTRY-CLOSURE - Close the QNT registry
 
-Status: `blocked`
+Status: `done`
 
 Input:
 
@@ -429,7 +429,7 @@ Acceptance: policy recorded or focused MBT green; checker write+check green;
 
 ### Task 12 - PPW-T12-CONCENTRATION-BREAK-SEAM - Concentration-break teardown seam
 
-Status: `blocked` (after PPW-T01)
+Status: `ready-for-implementation`
 
 Input:
 
@@ -474,7 +474,7 @@ Acceptance:
 
 ### Task 13 - PPW-T13-TURN-BOUNDARY-LIFECYCLE-SEAM - Turn-boundary effect lifecycle ordering
 
-Status: `blocked` (after PPW-T01)
+Status: `ready-for-implementation`
 
 Input:
 

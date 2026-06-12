@@ -1,4 +1,5 @@
 // -*- mode: Bluespec; -*-
+// KERNEL-COVERAGE: qnt-owner BATTLE.COMPOSITION.TURN_BOUNDARY_EFFECT_LIFECYCLE_ORDERING
 // UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save
 
 module battleRuntimeWeaponHitTurnEffects {

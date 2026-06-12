@@ -46,6 +46,9 @@ function runSelfTest() {
           "sample.qnt",
           "sample-inductive.qnt",
           "sample-examples.qnt",
+          "packages/battle-runtime/battle-runtime-hole-kinds.qnt",
+          "packages/battle-runtime/battle-runtime-fill-kinds.qnt",
+          "packages/battle-runtime/battle-runtime-subject-kinds.qnt",
         ],
         runtimeOwners: ["sample.ts"],
         parityWitnesses: [
@@ -154,6 +157,22 @@ function runSelfTest() {
         ownerPath: "sample-examples.qnt",
         role: "proof-only",
         evidence: "sample-examples.qnt is example-only sample evidence.",
+      }),
+      JSON.stringify({
+        ownerPath: "packages/battle-runtime/battle-runtime-hole-kinds.qnt",
+        role: "semantic-core",
+        evidence: "battle-runtime-hole-kinds.qnt is sample protocol vocabulary.",
+      }),
+      JSON.stringify({
+        ownerPath: "packages/battle-runtime/battle-runtime-fill-kinds.qnt",
+        role: "semantic-core",
+        evidence: "battle-runtime-fill-kinds.qnt is sample protocol vocabulary.",
+      }),
+      JSON.stringify({
+        ownerPath: "packages/battle-runtime/battle-runtime-subject-kinds.qnt",
+        role: "semantic-core",
+        evidence:
+          "battle-runtime-subject-kinds.qnt is sample protocol vocabulary.",
       }),
     ].join("\n") + "\n",
   );
@@ -292,11 +311,28 @@ function runSelfTest() {
   assert.deepEqual(result.issues, []);
   assert.equal(result.matrix.summary.byStatus.covered, 1);
   assert.equal(result.matrix.summary.byStatus["boundary-only"], 1);
-  assert.equal(result.matrix.qntOwnerRoles.length, 3);
+  assert.equal(result.matrix.qntOwnerRoles.length, 6);
+  assert.equal(result.matrix.qntRegistry.length, 3);
   assert.equal(result.matrix.generatorReadiness.length, 1);
   assert.equal(result.matrix.generatorReadinessBacklog.length, 0);
   assert.equal(result.matrix.semanticCoreRunBlockFindings.length, 0);
   assert.equal(result.matrix.kernelIrBoundaries.length, 8);
+
+  const unregisteredPackageQntPath = path.join(
+    root,
+    "packages",
+    "battle-runtime",
+    "unregistered-helper.qnt",
+  );
+  writeFile(unregisteredPackageQntPath, "module unregisteredHelper {}\n");
+  const unregisteredPackageQntResult = buildKernelCoverage({ root });
+  assert.ok(
+    unregisteredPackageQntResult.issues.includes(
+      "qnt registry is missing packages/battle-runtime/unregistered-helper.qnt; add a qnt-owner-roles row or a checker-owned exemption category.",
+    ),
+    `Expected unregistered package QNT issue, got ${JSON.stringify(unregisteredPackageQntResult.issues)}`,
+  );
+  fs.rmSync(unregisteredPackageQntPath, { force: true });
 
   const witnessShapeObligationsPath = path.join(
     root,
@@ -618,6 +654,7 @@ function runSelfTest() {
   writeFile(unitFeatureObligationsPath, initialUnitFeatureObligationsText);
   writeFile(sampleQntOwnerRolesPath, initialQntOwnerRolesText);
   writeFile(sampleGeneratorReadinessPath, initialGeneratorReadinessText);
+  fs.rmSync(path.join(root, unitFeatureOwnerPath), { force: true });
 
   writeFile(
     sampleQntPath,
@@ -764,7 +801,7 @@ function runSelfTest() {
   const missingGeneratorReadinessResult = buildKernelCoverage({ root });
   assert.ok(
     missingGeneratorReadinessResult.issues.includes(
-      "generator-readiness is missing row for covered obligation BATTLE.SAMPLE with semantic-core QNT owner(s): sample.qnt.",
+      "generator-readiness is missing row for covered obligation BATTLE.SAMPLE with semantic-core QNT owner(s): sample.qnt, packages/battle-runtime/battle-runtime-hole-kinds.qnt, packages/battle-runtime/battle-runtime-fill-kinds.qnt, packages/battle-runtime/battle-runtime-subject-kinds.qnt.",
     ),
     `Expected missing generator-readiness issue, got ${JSON.stringify(missingGeneratorReadinessResult.issues)}`,
   );
@@ -773,14 +810,29 @@ function runSelfTest() {
     [
       {
         obligationId: "BATTLE.SAMPLE",
-        ownerRoles: [{ ownerPath: "sample.qnt", role: "semantic-core" }],
+        ownerRoles: [
+          { ownerPath: "sample.qnt", role: "semantic-core" },
+          {
+            ownerPath: "packages/battle-runtime/battle-runtime-hole-kinds.qnt",
+            role: "semantic-core",
+          },
+          {
+            ownerPath: "packages/battle-runtime/battle-runtime-fill-kinds.qnt",
+            role: "semantic-core",
+          },
+          {
+            ownerPath:
+              "packages/battle-runtime/battle-runtime-subject-kinds.qnt",
+            role: "semantic-core",
+          },
+        ],
         status: "missing",
       },
     ],
   );
   assert.match(
     missingGeneratorReadinessResult.report,
-    /\| `BATTLE\.SAMPLE` \| missing \| `sample\.qnt` \| `sample\.qnt`: semantic-core \|/,
+    /\| `BATTLE\.SAMPLE` \| missing \| `sample\.qnt`, `packages\/battle-runtime\/battle-runtime-hole-kinds\.qnt`, `packages\/battle-runtime\/battle-runtime-fill-kinds\.qnt`, `packages\/battle-runtime\/battle-runtime-subject-kinds\.qnt` \| `sample\.qnt`: semantic-core<br>`packages\/battle-runtime\/battle-runtime-hole-kinds\.qnt`: semantic-core<br>`packages\/battle-runtime\/battle-runtime-fill-kinds\.qnt`: semantic-core<br>`packages\/battle-runtime\/battle-runtime-subject-kinds\.qnt`: semantic-core \|/,
   );
   writeFile(
     sampleGeneratorReadinessPath,
@@ -796,7 +848,7 @@ function runSelfTest() {
   const notAssessedGeneratorReadinessResult = buildKernelCoverage({ root });
   assert.ok(
     notAssessedGeneratorReadinessResult.issues.includes(
-      "generator-readiness row for covered obligation BATTLE.SAMPLE with semantic-core QNT owner(s) cannot remain not-assessed: sample.qnt.",
+      "generator-readiness row for covered obligation BATTLE.SAMPLE with semantic-core QNT owner(s) cannot remain not-assessed: sample.qnt, packages/battle-runtime/battle-runtime-hole-kinds.qnt, packages/battle-runtime/battle-runtime-fill-kinds.qnt, packages/battle-runtime/battle-runtime-subject-kinds.qnt.",
     ),
     `Expected not-assessed generator-readiness issue, got ${JSON.stringify(notAssessedGeneratorReadinessResult.issues)}`,
   );
@@ -805,7 +857,22 @@ function runSelfTest() {
     [
       {
         obligationId: "BATTLE.SAMPLE",
-        ownerRoles: [{ ownerPath: "sample.qnt", role: "semantic-core" }],
+        ownerRoles: [
+          { ownerPath: "sample.qnt", role: "semantic-core" },
+          {
+            ownerPath: "packages/battle-runtime/battle-runtime-hole-kinds.qnt",
+            role: "semantic-core",
+          },
+          {
+            ownerPath: "packages/battle-runtime/battle-runtime-fill-kinds.qnt",
+            role: "semantic-core",
+          },
+          {
+            ownerPath:
+              "packages/battle-runtime/battle-runtime-subject-kinds.qnt",
+            role: "semantic-core",
+          },
+        ],
         status: "not-assessed",
       },
     ],

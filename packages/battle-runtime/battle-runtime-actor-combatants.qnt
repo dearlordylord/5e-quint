@@ -1,5 +1,6 @@
 // -*- mode: Bluespec; -*-
 
+// KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE BATTLE.SANCTUARY.TARGETING_INTERDICTION
 module battleRuntimeActorCombatants {
   import battleRuntimeModel.* from "./battle-runtime-model"
 
