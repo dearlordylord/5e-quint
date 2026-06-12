@@ -14,6 +14,7 @@ import {
 import { traverseValidation } from "@dnd/shared-algebras/validation-algebra";
 import { Either, Match, Option } from "effect";
 
+import { publishAdminProjectionBestEffort } from "./admin-mirror.ts";
 import { characterBuildDisplayName } from "./character-display.ts";
 import type { McpCompositionRoot } from "./composition-root.ts";
 import { type AvailableCharacterSession } from "./session-store.ts";
@@ -101,6 +102,7 @@ export function handleStartBattleToolCall(
       battleId: input.battleId,
     });
   }
+  publishAdminProjectionBestEffort(root);
 
   return schemaJsonContent(StartBattleOutputSchema, {
     snapshot: snapshotBattle(admittedState.right),

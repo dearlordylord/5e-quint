@@ -1,9 +1,11 @@
 import "#/index.css"
 
 import { Match } from "effect"
+import { NuqsAdapter } from "nuqs/adapters/react"
 import { StrictMode } from "react"
 import { createRoot } from "react-dom/client"
 
+import { AdminMirrorPage } from "#/admin-mirror/AdminMirrorPage.tsx"
 import { appRouteTarget } from "#/app-routes.ts"
 import { BattlePage } from "#/battle-scene/BattlePage.tsx"
 import { WIZARD_BATTLE_DEMO_META, WIZARD_BATTLE_DEMO_STEPS } from "#/battle-scene/wizard-battle-demo.ts"
@@ -21,6 +23,9 @@ export function HomePage() {
         </a>
         <a href="/battle" className="text-lg text-gray-300 hover:text-amber-400 transition-colors">
           Battle Visualizer
+        </a>
+        <a href="/admin" className="text-lg text-gray-300 hover:text-amber-400 transition-colors">
+          MCP Admin Mirror
         </a>
       </nav>
     </PageShell>
@@ -42,6 +47,7 @@ export function TracePlaceholder() {
 
 export function RootApp({ path = pathname }: { readonly path?: string }) {
   return Match.value(appRouteTarget(path)).pipe(
+    Match.when("admin", () => <AdminMirrorPage />),
     Match.when("battle", () => <BattlePage steps={WIZARD_BATTLE_DEMO_STEPS} meta={WIZARD_BATTLE_DEMO_META} />),
     Match.when("character", () => <CharacterCreationPage />),
     Match.when("home", () => <HomePage />),
@@ -54,6 +60,8 @@ const root = typeof document === "undefined" ? null : document.getElementById("r
 if (root)
   createRoot(root).render(
     <StrictMode>
-      <RootApp />
+      <NuqsAdapter>
+        <RootApp />
+      </NuqsAdapter>
     </StrictMode>
   )

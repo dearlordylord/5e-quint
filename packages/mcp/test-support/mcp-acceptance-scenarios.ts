@@ -478,6 +478,8 @@ export async function verifyBaselineVertical(client: Client) {
     [
       "Attack",
       "Attack",
+      "Attack",
+      "Attack",
       ...GENERIC_COMBAT_ACTION_LABELS,
       "Nimble Escape",
       "Move",

@@ -1405,7 +1405,7 @@ describe("MCP server route", () => {
     );
     expect(
       continuation.snapshot.acts.map((act: { label: string }) => act.label),
-    ).toEqual(["Attack", "Move", "End Turn"]);
+    ).toEqual(["Attack", "Attack", "Move", "End Turn"]);
     expect(
       continuation.snapshot.acts.map(
         (act: { subject: unknown }) => act.subject,
@@ -1416,6 +1416,13 @@ describe("MCP server route", () => {
         actorId: "goblin",
         action: "attack",
         attackName: "Shortbow",
+      },
+      {
+        tag: "action",
+        actorId: "goblin",
+        action: "attack",
+        attackName: "Shortbow",
+        statBlockDamageNotation: "static",
       },
       {
         tag: "runtimeCommand",
@@ -1835,6 +1842,8 @@ describe("MCP server route", () => {
     expect(
       goblinActs.snapshot.acts.map((act: { label: string }) => act.label),
     ).toEqual([
+      "Attack",
+      "Attack",
       "Attack",
       "Attack",
       ...GENERIC_COMBAT_ACTION_LABELS,
@@ -3521,6 +3530,8 @@ describe("MCP server route", () => {
     expect(
       goblinActs.snapshot.acts.map((act: { label: string }) => act.label),
     ).toEqual([
+      "Attack",
+      "Attack",
       "Attack",
       "Attack",
       ...GENERIC_COMBAT_ACTION_LABELS,
