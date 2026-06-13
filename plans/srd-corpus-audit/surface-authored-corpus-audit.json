@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-06T23:29:15.877Z",
+  "generatedAt": "2026-06-13T00:12:24.457Z",
   "scope": "SRD 5.2.1 authored Surface corpus provenance audit over generated packages/surface/content JSON records. Includes Unit records and StatBlock records with SRD provenance.",
   "metrics": {
     "authoredRecords": 528,
@@ -1165,11 +1165,11 @@
       "id": "class_wizard",
       "kind": "class",
       "name": "Wizard",
-      "section": "Classes/Wizard.md:3-25,31-38,56-82,94-114,134-190",
+      "section": "Classes/Wizard.md:3-25,31-39,56-82,94-114,134-190",
       "catalogBoundary": "srd-unit-collection",
-      "part": "Classes/Wizard.md:3-25,31-38,56-82,94-114,134-190",
+      "part": "Classes/Wizard.md:3-25,31-39,56-82,94-114,134-190",
       "status": "ok-line-range",
-      "canonical": "Classes/Wizard.md:3-25,31-38,56-82,94-114,134-190",
+      "canonical": "Classes/Wizard.md:3-25,31-39,56-82,94-114,134-190",
       "legacyBase": false,
       "invalidRanges": [],
       "severity": "ok"
