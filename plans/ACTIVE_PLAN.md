@@ -1,4 +1,4 @@
-# Active Plan: Deterministic Replay Portability Audit
+# Active Plan: Level 3 Ultra-Golden Residuals
 
 <!-- ralph-task-index
 {
@@ -6,670 +6,323 @@
   "tasks": [
     {
       "number": 1,
-      "id": "DRP-T01-INVENTORY-GATE",
-      "status": "ready-for-research",
-      "title": "Refresh deterministic replay witness inventory and classify replay roles"
+      "id": "L3UG-01-DIAGNOSTIC-ROW-TRANSPARENCY",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Make current level-3 diagnostic non-green rows scanner-visible"
     },
     {
       "number": 2,
-      "id": "DRP-T02-SHOVE-OUTCOME-DECISION",
-      "status": "blocked",
-      "title": "Audit Shove outcome deterministic replay portability"
+      "id": "L3UG-02-WILD-SHAPE-STAT-BLOCK-ACTION-INVENTORY",
+      "status": "ready-for-research",
+      "title": "Inventory remaining Wild Shape Stat Block action pressure"
     },
     {
       "number": 3,
-      "id": "DRP-T03-SPELL-REST-BENEFIT-APPLICATION",
-      "status": "blocked",
-      "title": "Audit spell-rest benefit application replay portability"
+      "id": "L3UG-03-WILD-SHAPE-SENSE-LANGUAGE-PROJECTION",
+      "status": "ready-for-research",
+      "title": "Close or promote Wild Shape sense and language projection"
     },
     {
       "number": 4,
-      "id": "DRP-T04-ABILITY-SEARCH-REPLAY",
-      "status": "blocked",
-      "title": "Audit ability, skill, and Search deterministic replay portability"
+      "id": "L3UG-04-METAMAGIC-QUICKENED-RESIDUAL-INVENTORY",
+      "status": "ready-for-research",
+      "title": "Inventory remaining Quickened action-spell procedure pressure"
     },
     {
       "number": 5,
-      "id": "DRP-T05-DAMAGE-DISPOSITION-REPLAY",
+      "id": "L3UG-05-METAMAGIC-NEXT-QUICKENED-SLICE",
       "status": "blocked",
-      "title": "Audit attack damage disposition and Knock Out replay portability"
+      "title": "Promote one next Quickened procedure tracer bullet"
     },
     {
       "number": 6,
-      "id": "DRP-T06-ARMOR-CLASS-FORMULA",
+      "id": "L3UG-06-ULTRA-GOLDEN-CONSOLIDATION",
       "status": "blocked",
-      "title": "Audit Armor Class base formula selected-identity replay portability"
-    },
-    {
-      "number": 7,
-      "id": "DRP-T07-CREATION-CLASS-FEATURE-PROJECTIONS",
-      "status": "blocked",
-      "title": "Audit class-feature resource and source-fact projection replays"
-    },
-    {
-      "number": 8,
-      "id": "DRP-T08-CREATION-WIZARD-SPELLBOOK",
-      "status": "blocked",
-      "title": "Audit Wizard spellbook learning selected-identity replay portability"
-    },
-    {
-      "number": 9,
-      "id": "DRP-T09-SHEET-FEATURE-RESOURCES",
-      "status": "blocked",
-      "title": "Audit Character Sheet feature-resource transition replay portability"
-    },
-    {
-      "number": 10,
-      "id": "DRP-T10-SHEET-ABILITY-CHECK-PROFICIENCY",
-      "status": "blocked",
-      "title": "Audit Ability Check Proficiency Bonus replay portability"
-    },
-    {
-      "number": 11,
-      "id": "DRP-T11-BATTLE-HANDOFF-INIT",
-      "status": "blocked",
-      "title": "Audit character-battle initialization projection replay portability"
-    },
-    {
-      "number": 12,
-      "id": "DRP-T12-BATTLE-HANDOFF-SETTLEMENT",
-      "status": "blocked",
-      "title": "Audit character-battle settlement and identity-conflict replay portability"
-    },
-    {
-      "number": 13,
-      "id": "DRP-T13-HIT-POINT-DAMAGE-RUST-PARITY",
-      "status": "blocked",
-      "title": "Audit positive Hit Point damage replay and Rust dry-run parity"
-    },
-    {
-      "number": 14,
-      "id": "DRP-T14-HP-REST-HIT-DICE",
-      "status": "blocked",
-      "title": "Audit HP, rest, and Hit Dice transition replay portability"
-    },
-    {
-      "number": 15,
-      "id": "DRP-T15-HIT-POINT-MAXIMUM",
-      "status": "blocked",
-      "title": "Audit Hit Point Maximum derivation replay portability"
-    },
-    {
-      "number": 16,
-      "id": "DRP-T16-SPELL-SLOTS-AND-PACT-SLOTS",
-      "status": "blocked",
-      "title": "Audit Spell Slot and Pact Slot transition and table replays"
-    },
-    {
-      "number": 17,
-      "id": "DRP-T17-WEAPON-MASTERY-RESELECTION",
-      "status": "blocked",
-      "title": "Audit Weapon Mastery reselection replay portability"
-    },
-    {
-      "number": 18,
-      "id": "DRP-T18-SPELL-ACCESS-SELECTED-IDENTITY",
-      "status": "blocked",
-      "title": "Audit spellbook Ritual and class-feature prepared Spell Access replays"
-    },
-    {
-      "number": 19,
-      "id": "DRP-T19-LANE-CLOSEOUT",
-      "status": "blocked",
-      "title": "Close out deterministic replay portability decisions and next queue"
+      "title": "Regenerate and summarize level-3 ultra-golden residuals"
     }
   ]
 }
 -->
 
-## Why This Lane
+## Default Queue
 
-The portable parity witness lane closed the open rules-kernel gaps: generated
-coverage reports show 120 obligations, 114 covered obligations, zero open
-transitional obligations, and only permanent boundary or unsupported rows
-outside the covered set. The same closeout recorded that the three named
-composition seams now have focused MBT witnesses and that the remaining TS-side
-protocol-vocabulary witness is an explicit policy decision, not an unwitnessed
-reducer gap.
+This file is the default `--plan` / `--source` for Ralph tooling
+(`scripts/ralph-run.sh` and `scripts/sync-active-plan-to-ralph.sh`). The
+deterministic replay portability lane drained in DRP-T19, so this file now
+carries the next runnable default queue instead of ending on an empty task
+index.
 
-The next useful portability question is narrower: which deterministic QNT
-replays should stay closed fixtures, and which should become generative focused
-MBT before a non-TS harness depends on them? The current checked obligation
-registry contains 22 `deterministic-qnt-replay` witness entries. Some are the
-only witness for an obligation; some are supplemental selected-identity or
-closed-case witnesses beside focused MBT. This lane audits those entries from
-the checked registry, not from stale pre-closeout counts.
+The queue is a narrow level-3 ultra-golden cleanup batch. It does not reopen the
+strict level-3 full-support claim: `plans/unit-profile-coverage/LEVEL1_3_FULL_SUPPORT.md`
+reports `Full-support claim: pass`, strict target closure `197/197`, selected
+identity readiness `168/168`, SRD-authored product readiness `79/79`, and
+rules-kernel supported Unit coverage `140/140`.
 
-The lane has two allowed outcomes per replay:
+Current generated source-of-truth metrics:
 
-- Keep deterministic replay, with a durable rationale in the obligation row
-  explaining why random branch interleavings are not the risk at that boundary.
-- Promote to focused MBT, but only when the task shows a real generative
-  interleaving, ordering, or table-choice risk that deterministic replay cannot
-  cover.
+- `plans/unit-profile-coverage/LEVEL1_3_FULL_SUPPORT.md`: diagnostic product
+  readiness `594/607 (97.9%)`, with `owner-evidence-required: 11` and
+  `partial-battle-runtime: 2`.
+- `plans/unit-profile-coverage/UNIT_REPORT.md`: supported Unit rules-kernel
+  chain coverage `168/168 (100%)`.
+- `plans/rules-kernel-coverage/REPORT.md`: 120 obligations, 114 covered,
+  zero open transitional obligations, and 6 permanent boundary or unsupported
+  rows.
 
-Do not add a parallel Rust or generated state model in this lane. Rust dry-run
-notes may be refreshed only where existing checked artifacts already own that
-manual evidence, such as Hit Point damage and recovery.
+## DRP-T19 Closeout
 
-## Context Budget
+The deterministic replay portability lane audited the checked replay inventory
+from `plans/rules-kernel-coverage/obligations.jsonl` and did not change the
+durable witness-mode mix.
 
-Read by default:
+Kept deterministic replays:
+
+- 22 `deterministic-qnt-replay` witness entries.
+- 21 obligation rows with at least one deterministic replay.
+- 19 replay-only obligation rows, carrying 20 replay entries because
+  `CHARACTER.BATTLE.HANDOFF.IDENTITY_CONFLICTS` has init-side and
+  settlement-side deterministic replay witnesses.
+- 2 supplemental deterministic replay rows beside existing focused MBT:
+  `BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES` and
+  `BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP`.
+
+Promoted focused MBT witnesses in the DRP lane: none. The mixed rows above kept
+their deterministic replay evidence beside already-existing focused MBT
+coverage, and the portable parity closeout in
+`plans/QNT_COVERAGE_PROGRAM.md#Portable-Parity-Witness-Closeout` already records
+the previously promoted focused MBT composition seams:
+
+- `BATTLE.PROTOCOL.CONCENTRATION_BREAK_TEARDOWN`
+- `BATTLE.COMPOSITION.TURN_BOUNDARY_EFFECT_LIFECYCLE_ORDERING`
+- `BATTLE.PROTOCOL.ZERO_HIT_POINT_MID_RESOLUTION`
+
+Deferred owner-decision blockers from DRP-T19: none. The heavy computed-oracle
+integration lane remains parked per `plans/QNT_COVERAGE_PROGRAM.md`, and
+`QCP-LANG-PARITY-MARKER` remains blocked until a first non-TS language target
+arrives.
+
+Because the DRP witness-mode mix did not change, `plans/QNT_COVERAGE_PROGRAM.md`
+does not need a portable-witness closeout update for this task.
+
+## Source Of Truth
+
+Read these before starting a task in this queue:
 
 - `CLAUDE.md`
-- `plans/QNT_COVERAGE_PROGRAM.md`
+- The current task details in this file.
+- `plans/unit-profile-coverage/README.md`
+- `plans/unit-profile-coverage/LEVEL1_3_FULL_SUPPORT.md`
+- `plans/unit-profile-coverage/level1-3-full-support.json`
+- `plans/unit-profile-coverage/UNIT_REPORT.md`
+- `plans/unit-profile-coverage/unit-matrix.json`
+- `plans/unit-profile-coverage/unit-claims.jsonl`
+- `plans/unit-profile-coverage/task-claims.jsonl`
+- `plans/unit-profile-coverage/unit-evidence.jsonl`
 - `plans/rules-kernel-coverage/README.md`
 - `plans/rules-kernel-coverage/REPORT.md`
-- The current deterministic replay rows in
-  `plans/rules-kernel-coverage/obligations.jsonl`
-- The relevant QNT owner roles in
-  `plans/rules-kernel-coverage/qnt-owner-roles.jsonl`
-- The relevant generator-readiness rows in
-  `plans/rules-kernel-coverage/generator-readiness.jsonl`
-- The exact QNT driver and TS witness file named by the current task
-- The SRD 5.2.1 and `UBIQUITOUS_LANGUAGE.md` anchors named by the current
-  obligation before changing any modeled rule or replay semantics
 
-Do not reread closed Ralph lanes, deleted historical plans, generated MBT
-traces, or production runtime files unrelated to the current replay. If a task
-only records a witness-shape decision and changes no rule behavior, it should
-still verify domain language against the obligation title and rationale.
+For rule-bearing work, read the relevant local SRD anchors under
+`.references/srd-5.2.1/` and check `UBIQUITOUS_LANGUAGE.md` before
+implementation. Do not browse external rules sources for SRD meaning.
 
 ## Lane Rules
 
 - Before starting each task, run the Ralph task-base check from `CLAUDE.md`:
-  log the declared base ref, log `HEAD`, and confirm the Base SHA is an
+  log the declared base ref, log `HEAD`, and confirm the task Base SHA is an
   ancestor of `HEAD`. Stop on mismatch.
 - Use pnpm only.
-- Treat battle MBT as scarce. Do not run battle MBT for inventory or planning
-  exploration. Run a focused MBT only after a task actually adds or changes a
-  battle MBT witness.
-- New or changed `.mbt.qnt` drivers must import only leaf modules and must pass
-  `scripts/check-mbt-driver-closure.cjs` through `pnpm quality`.
-- Use the typed witness protocol for new battle-runtime witnesses. Do not
-  reintroduce legacy mutable protocol fields.
-- Do not dispatch production runtime behavior on authored Unit or Spell
-  identity. SRD identity may appear in content, fixtures, and selected-identity
-  evidence only.
-- Do not duplicate state across QNT, runtime, bridge, or dry-run artifacts. If
-  a Rust dry-run note needs a projection, project from the existing runtime
-  owner recorded in `kernel-ir-boundaries.jsonl`.
-- If a deterministic replay is kept, the task must make the reason
-  checker-readable in `obligations.jsonl` rather than leaving it only in a plan
-  note.
-- If a deterministic replay is promoted, update the obligation row,
-  package-local script, owner-role rows if needed, and focused witness in the
-  same task.
-
-## Verification
-
-Every task must include:
-
-- RAW and ubiquitous-language check against the SRD and language anchors needed
-  for that replay. If the task changes no modeled rule, state that the check
-  was limited to obligation wording, domain terms, and existing rationale.
-- Reviewer-loop convergence: run RAW traceability, ubiquitous-language/domain,
-  architecture/connascence, and code-review passes after implementation. Fix
-  every reasonable finding, explicitly reject only findings with a concrete
-  reason, and repeat until no reasonable findings remain.
-- `pnpm rules-kernel-coverage:check -- --write`
-- `pnpm rules-kernel-coverage:check`
-- `git diff --check`
-
-Run `pnpm quality` for lane closeout and for any task that changes checker
-logic, package scripts, QNT drivers, or TypeScript code. For docs-only or
-obligation-rationale-only tasks, `pnpm quality` is optional unless the task file
-or reviewer asks for the broad gate.
-
-For any battle MBT run, first check:
-
-```sh
-ps aux | grep vitest | grep -v grep
-ps aux | grep quint_evaluator | grep -v grep
-```
-
-If a prior `quint_evaluator` is alive, stop it with
-`killall -9 quint_evaluator`. If a vitest/MBT process is alive, do not start
-another MBT run. Use the timing/background protocol from `CLAUDE.md`.
+- Do not treat diagnostic product readiness as a hidden full-support blocker.
+  If a diagnostic status should become a strict gate, add checker logic and
+  self-tests in the same task.
+- Do not dispatch production runtime behavior on authored Unit, Spell, class,
+  subclass, or Stat Block identity. SRD identity may appear only at
+  catalog/selection/fixture boundaries.
+- Do not duplicate state across Surface, Character Creation, Character Sheet,
+  Character Battle, battle runtime, QNT, or generated coverage artifacts.
+- Treat battle MBT as scarce. Do not run MBT for exploratory inventory or
+  accounting. If a completed task changes battle-runtime behavior, use the
+  repository MBT protocol from `CLAUDE.md`.
 
 ## DAG / Queue Order
 
 | # | Task | Status | Depends on | Notes |
 | ---: | --- | --- | --- | --- |
-| 1 | DRP-T01-INVENTORY-GATE | ready-for-research | none | Refresh the deterministic replay inventory from checked artifacts and assign each replay to one lane task. |
-| 2 | DRP-T02-SHOVE-OUTCOME-DECISION | blocked | DRP-T01 | Portability audit of the recorded PPW-T11 closed-fixture decision; reopen only on new interleaving evidence. |
-| 3 | DRP-T03-SPELL-REST-BENEFIT-APPLICATION | blocked | DRP-T01 | Sheet spell-rest benefit fixture and lockout replay. |
-| 4 | DRP-T04-ABILITY-SEARCH-REPLAY | blocked | DRP-T01 | Mixed focused-MBT plus deterministic replay row; do not duplicate existing focused coverage. |
-| 5 | DRP-T05-DAMAGE-DISPOSITION-REPLAY | blocked | DRP-T01 | Knock Out accepted/rejected table facts beside existing feature MBT. |
-| 6 | DRP-T06-ARMOR-CLASS-FORMULA | blocked | DRP-T01 | Selected-identity formula projection. |
-| 7 | DRP-T07-CREATION-CLASS-FEATURE-PROJECTIONS | blocked | DRP-T01 | Resource and source-fact projection rows share one driver. |
-| 8 | DRP-T08-CREATION-WIZARD-SPELLBOOK | blocked | DRP-T01 | Selected Wizard spellbook learning replay. |
-| 9 | DRP-T09-SHEET-FEATURE-RESOURCES | blocked | DRP-T01 | Feature resources bridge and sheet transitions. |
-| 10 | DRP-T10-SHEET-ABILITY-CHECK-PROFICIENCY | blocked | DRP-T01 | Jack of All Trades, proficiency, and Expertise scalar projection. |
-| 11 | DRP-T11-BATTLE-HANDOFF-INIT | blocked | DRP-T01 | Character Sheet to battle init projection. |
-| 12 | DRP-T12-BATTLE-HANDOFF-SETTLEMENT | blocked | DRP-T11 | Settlement and identity-conflict replays share handoff assumptions. |
-| 13 | DRP-T13-HIT-POINT-DAMAGE-RUST-PARITY | blocked | DRP-T01 | Align replay decision with existing Hit Point damage Rust dry-run evidence. |
-| 14 | DRP-T14-HP-REST-HIT-DICE | blocked | DRP-T13 | HP recovery dry run reuses damage/vitals shapes. |
-| 15 | DRP-T15-HIT-POINT-MAXIMUM | blocked | DRP-T01 | Hit Point Maximum formula replay. |
-| 16 | DRP-T16-SPELL-SLOTS-AND-PACT-SLOTS | blocked | DRP-T14 | Slot transitions import rest outcome facts. |
-| 17 | DRP-T17-WEAPON-MASTERY-RESELECTION | blocked | DRP-T01 | Selected-identity plus identity-free reselection semantics. |
-| 18 | DRP-T18-SPELL-ACCESS-SELECTED-IDENTITY | blocked | DRP-T01 | Spellbook Ritual and class-feature prepared Spell Access selected-identity replays. |
-| 19 | DRP-T19-LANE-CLOSEOUT | blocked | DRP-T02, DRP-T03, DRP-T04, DRP-T05, DRP-T06, DRP-T07, DRP-T08, DRP-T09, DRP-T10, DRP-T11, DRP-T12, DRP-T13, DRP-T14, DRP-T15, DRP-T16, DRP-T17, DRP-T18 | Recompute reports, summarize kept/promoted replay decisions, and create the next coherent queue if needed. |
+| 1 | L3UG-01-DIAGNOSTIC-ROW-TRANSPARENCY | ready-for-implementation-after-light-research | none | Make current level-3 diagnostic non-green rows discoverable from generated artifacts instead of stale audit prose. |
+| 2 | L3UG-02-WILD-SHAPE-STAT-BLOCK-ACTION-INVENTORY | ready-for-research | none | Inventory remaining level-3-reachable Wild Shape Stat Block action pressure. |
+| 3 | L3UG-03-WILD-SHAPE-SENSE-LANGUAGE-PROJECTION | ready-for-research | none | Decide whether active-form senses, retained languages, and speech blockers are already closed or need a small shared projection. |
+| 4 | L3UG-04-METAMAGIC-QUICKENED-RESIDUAL-INVENTORY | ready-for-research | none | Recompute remaining Quickened action-time Spell Invocation procedure pressure from current generated evidence. |
+| 5 | L3UG-05-METAMAGIC-NEXT-QUICKENED-SLICE | blocked | L3UG-04-METAMAGIC-QUICKENED-RESIDUAL-INVENTORY | Promote one procedure only after Task 4 identifies a concrete small slice. |
+| 6 | L3UG-06-ULTRA-GOLDEN-CONSOLIDATION | blocked | Tasks 1-4 and any unblocked implementation task | Regenerate reports and summarize remaining level-3 ultra-golden residuals. |
 
 ## Task Details
 
-### Task 1 - DRP-T01-INVENTORY-GATE
+### Task 1 - L3UG-01-DIAGNOSTIC-ROW-TRANSPARENCY
+
+Status: `ready-for-implementation-after-light-research`
+
+Input:
+
+- `plans/unit-profile-coverage/LEVEL1_3_FULL_SUPPORT.md`
+- `plans/unit-profile-coverage/level1-3-full-support.json`
+- `plans/unit-profile-coverage/UNIT_REPORT.md`
+- `plans/unit-profile-coverage/LEVEL1_3_DIAGNOSTIC_READINESS_AUDIT.md`
+- `scripts/unit-profile-coverage-check.cjs`
+- `scripts/level1-full-support-report.cjs`
+
+Output:
+
+- Make the current `owner-evidence-required` and `partial-battle-runtime`
+  diagnostic rows scanner-visible without relying on stale hand-written row
+  inventories.
+- Update or retire stale diagnostic audit prose that conflicts with generated
+  `594/607 (97.9%)` accounting.
+
+Acceptance:
+
+- Current diagnostic non-green rows can be found from generated/checker-owned
+  artifacts.
+- `pnpm unit-profile-coverage:check:self-test` and
+  `pnpm unit-profile-coverage:check` pass.
+
+### Task 2 - L3UG-02-WILD-SHAPE-STAT-BLOCK-ACTION-INVENTORY
 
 Status: `ready-for-research`
 
 Input:
 
-- `plans/rules-kernel-coverage/obligations.jsonl`
-- `plans/rules-kernel-coverage/REPORT.md`
-- `plans/QNT_COVERAGE_PROGRAM.md#Portable-Parity-Witness-Closeout`
+- `plans/unit-profile-coverage/LEVEL1_3_FULL_SUPPORT.md`
+- `plans/unit-profile-coverage/UNIT_REPORT.md`
+- Current Wild Shape Unit claim, task-claim, and evidence rows.
+- Relevant Wild Shape and Stat Block SRD anchors.
 
 Output:
 
-- Refresh the deterministic replay count from checked artifacts.
-- Add or update a short lane note if the count or task assignment differs from
-  this plan.
-- Confirm every deterministic replay row has a task assignment below.
+- Inventory remaining Wild Shape Stat Block action pressure for selected known
+  Beast forms reachable by level-3 Wild Shape.
+- Classify each branch as already promoted, battle-owned future work,
+  table/prose-only, generic object/Utilize boundary work, or later-level work.
 
 Acceptance:
 
-- No unassigned deterministic replay entries remain.
-- No task starts from stale "21 replay-only" language; use the current checked
-  registry count and distinguish replay-only from supplemental replays.
+- The inventory names concrete runtime shapes, not authored Beast identity as a
+  reducer dispatch key.
+- No runtime behavior, QNT, MBT, or owner evidence is widened by the inventory
+  itself.
+- Any follow-up implementation task is unblocked only for one small
+  battle-owned branch.
 
-### Task 2 - DRP-T02-SHOVE-OUTCOME-DECISION
+### Task 3 - L3UG-03-WILD-SHAPE-SENSE-LANGUAGE-PROJECTION
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Input:
 
-- Obligation `BATTLE.SHOVE.OUTCOME_AND_PUSH_BOUNDARY`
-- `packages/shared-algebras/proofs/rule-core/shove-outcome.qnt`
-- `packages/battle-runtime/rule-core-shove-outcome.mbt.qnt`
-- `packages/battle-runtime/src/rule-core-shove-outcome.mbt.test.ts`
+- Current Wild Shape Unit claim, task-claim, and evidence rows.
+- Current Character Sheet, Character Battle, battle runtime, app, and MCP
+  consumers of active-form sense, language, and speech facts.
+- Relevant SRD anchors for Wild Shape, Stat Blocks, senses, languages, and
+  condition/speech blockers.
 
 Output:
 
-- Start from the PPW-T11 decision already recorded on
-  `BATTLE.SHOVE.OUTCOME_AND_PUSH_BOUNDARY` (the `deterministicReplayRationale`
-  in `obligations.jsonl`); do not re-decide the witness mode.
-- Audit the replay for portability: confirm the replayed facts come from the
-  QNT spec rather than TS-side constants, so a sibling-language harness can
-  replay the same closed outcome table.
-- Reopen the witness-mode decision only on new evidence of an interleaving
-  risk the recorded rationale does not cover.
+- Decide whether prior work already closes the Wild Shape
+  sense/language/speech residual.
+- If not closed, carve the smallest shared projection tracer bullet needed for
+  active-form senses, retained languages, and speech blockers.
 
 Acceptance:
 
-- Portability result recorded per the DRP-T01 inventory note.
-- The recorded rationale stands unless the audit cites new evidence; relevant
-  focused test runs if the witness changes.
+- No duplicate language or sense state is added to battle state.
+- Any projection derives from selected active form facts, retained Character
+  Sheet language facts, and existing condition/speech blockers.
+- Follow-up implementation work is precise if the residual remains open.
 
-### Task 3 - DRP-T03-SPELL-REST-BENEFIT-APPLICATION
+### Task 4 - L3UG-04-METAMAGIC-QUICKENED-RESIDUAL-INVENTORY
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Input:
 
-- Obligation `SHEET.SPELL_REST_BENEFIT.APPLICATION`
-- `packages/character-sheet-runtime/character-sheet-spell-rest-benefit-application.mbt.qnt`
-- `packages/character-sheet-runtime/src/spell-rest-benefit-application.mbt.test.ts`
+- Current `sorcerer_metamagic` Unit claim, task-claim, and evidence rows.
+- Current rules-kernel obligations and profile joins for Metamagic and Spell
+  Invocation procedures.
+- Relevant SRD anchors for Metamagic, Quickened Spell, Magic Action, Bonus
+  Action, Spell Slot spending, and spellcasting turn limits.
 
 Output:
 
-- Decide whether the completed-cast and Long Rest lockout replay remains a
-  closed fixture or needs a generative sheet-runtime MBT.
+- Recompute which action-time Spell Invocation procedures remain outside the
+  promoted Quickened subset.
+- Identify whether one next procedure shape is small enough for a tracer bullet
+  without authored spell identity dispatch.
 
 Acceptance:
 
-- Final witness mode is checker-readable.
-- No duplicate rest lockout state is introduced.
+- Inventory is procedure-shape based, not spell-name based.
+- Remaining resource-threading, same-turn spell lock, and QNT parity needs are
+  explicit.
+- Task 5 is unblocked only if there is one concrete next procedure slice.
 
-### Task 4 - DRP-T04-ABILITY-SEARCH-REPLAY
+### Task 5 - L3UG-05-METAMAGIC-NEXT-QUICKENED-SLICE
 
 Status: `blocked`
 
-Input:
+Depends on:
 
-- Obligation `BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES`
-- Existing focused MBT and deterministic replay rows for ability, skill,
-  Search, Guidance, Enhance Ability, and Command replay facts.
+- L3UG-04-METAMAGIC-QUICKENED-RESIDUAL-INVENTORY
 
 Output:
 
-- Confirm which facts are already generatively covered and which remain
-  deterministic selected-case fixtures.
+- Promote one next Quickened procedure through typed runtime support, QNT
+  parity ownership, focused tests, and generated evidence.
 
 Acceptance:
 
-- No duplicate focused witness is added for coverage already owned by
-  `ability-check-choice-search`.
-- Any kept deterministic replay has a closed-case rationale.
+- Shared Font of Magic point-pool spending remains the resource source.
+- The same-turn level-1-plus spell lock is preserved for slot, free-cast, and
+  cantrip paths that need it.
+- No production behavior dispatches on authored spell or Metamagic option
+  identity.
 
-### Task 5 - DRP-T05-DAMAGE-DISPOSITION-REPLAY
+### Task 6 - L3UG-06-ULTRA-GOLDEN-CONSOLIDATION
 
 Status: `blocked`
 
-Input:
+Depends on:
 
-- Obligation `BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP`
-- `packages/battle-runtime/rule-core-attack-damage-disposition.mbt.qnt`
-- `packages/battle-runtime/src/rule-core-attack-damage-disposition.mbt.test.ts`
-- Existing zero-Hit-Point feature MBT witness.
-
-Output:
-
-- Decide whether accepted melee Knock Out and rejected ranged Knock Out should
-  remain deterministic table-fact fixtures.
-
-Acceptance:
-
-- The replay's relationship to zero-Hit-Point replacement focused MBT is
-  explicit and checker-readable.
-
-### Task 6 - DRP-T06-ARMOR-CLASS-FORMULA
-
-Status: `blocked`
-
-Input:
-
-- Obligation `SHEET.ARMOR_CLASS.BASE_FORMULA_CHOICE`
-- `packages/character-sheet-runtime/character-sheet-armor-class-base-selected-identity.mbt.qnt`
-- `packages/character-sheet-runtime/src/armor-class-base-selected-identity.mbt.test.ts`
+- L3UG-01-DIAGNOSTIC-ROW-TRANSPARENCY
+- L3UG-02-WILD-SHAPE-STAT-BLOCK-ACTION-INVENTORY
+- L3UG-03-WILD-SHAPE-SENSE-LANGUAGE-PROJECTION
+- L3UG-04-METAMAGIC-QUICKENED-RESIDUAL-INVENTORY
+- Any implementation task unblocked by those inventories.
 
 Output:
 
-- Audit selected-identity formula replay for portability and keep or promote
-  its witness mode.
+- Regenerate relevant Unit and rules-kernel reports.
+- Update this plan statuses and summarize remaining level-3 ultra-golden
+  pressure.
 
 Acceptance:
 
-- The rationale distinguishes formula selection identity from runtime Armor
-  Class state.
-
-### Task 7 - DRP-T07-CREATION-CLASS-FEATURE-PROJECTIONS
-
-Status: `blocked`
-
-Input:
-
-- Obligations `CREATION.CLASS_FEATURE_RESOURCE.PROJECTION` and
-  `CREATION.CLASS_FEATURE_SOURCE_FACT.PROJECTION`
-- `packages/character-creation-runtime/character-creation-class-feature-projections.mbt.qnt`
-- `packages/character-creation-runtime/src/class-feature-projections.mbt.test.ts`
-
-Output:
-
-- Decide whether the shared fixed projection replay remains deterministic for
-  class-feature resource and source-fact projections.
-
-Acceptance:
-
-- Resource facts and source facts remain distinct domain concepts in any
-  updated rationale or witness.
-
-### Task 8 - DRP-T08-CREATION-WIZARD-SPELLBOOK
-
-Status: `blocked`
-
-Input:
-
-- Obligation `CREATION.WIZARD_SPELLBOOK_LEARNING.CHOICE_FINALIZATION`
-- `packages/character-creation-runtime/character-creation-class-feature-selected-identity.mbt.qnt`
-- `packages/character-creation-runtime/src/class-feature-selected-identity.mbt.test.ts`
-
-Output:
-
-- Audit Wizard spellbook learning selected-identity replay for portability.
-
-Acceptance:
-
-- The task does not dispatch runtime behavior on authored spell identity beyond
-  the selected-identity evidence boundary.
-
-### Task 9 - DRP-T09-SHEET-FEATURE-RESOURCES
-
-Status: `blocked`
-
-Input:
-
-- Obligation `SHEET.FEATURE_RESOURCES.TRANSITIONS`
-- `packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt`
-- `packages/character-battle-runtime/src/character-sheet-feature-resources.mbt.test.ts`
-
-Output:
-
-- Decide whether the feature-resource replay remains a closed fixture or
-  should split into focused generative sheet-resource witnesses.
-
-Acceptance:
-
-- Any split keeps feature resource pools, use counts, and battle bridge facts
-  as typed facts rather than name-based special cases.
-
-### Task 10 - DRP-T10-SHEET-ABILITY-CHECK-PROFICIENCY
-
-Status: `blocked`
-
-Input:
-
-- Obligation `SHEET.ABILITY_CHECK.PROFICIENCY_BONUS`
-- `packages/character-sheet-runtime/character-sheet-ability-check-proficiency-bonus.mbt.qnt`
-- `packages/character-sheet-runtime/src/ability-check-proficiency-bonus.mbt.test.ts`
-
-Output:
-
-- Audit the scalar Ability Check Proficiency Bonus replay.
-
-Acceptance:
-
-- Jack of All Trades, proficiency, Expertise, and other-Proficiency-Bonus
-  exclusion precedence remain modeled by typed facts, not authored identity.
-
-### Task 11 - DRP-T11-BATTLE-HANDOFF-INIT
-
-Status: `blocked`
-
-Input:
-
-- Obligation `CHARACTER.BATTLE.HANDOFF.INIT_PROJECTION`
-- `packages/character-battle-runtime/character-battle-init-projection.mbt.qnt`
-- `packages/character-battle-runtime/src/character-battle-init-projection.mbt.test.ts`
-
-Output:
-
-- Audit Character Sheet to battle initialization projection replay.
-
-Acceptance:
-
-- No parallel battle-entry state is introduced.
-- Any kept deterministic replay explains why projection facts, not random
-  battle interleavings, are the risk.
-
-### Task 12 - DRP-T12-BATTLE-HANDOFF-SETTLEMENT
-
-Status: `blocked`
-
-Input:
-
-- Obligations `CHARACTER.BATTLE.HANDOFF.SETTLEMENT` and
-  `CHARACTER.BATTLE.HANDOFF.IDENTITY_CONFLICTS`
-- `packages/character-battle-runtime/character-battle-settlement.mbt.qnt`
-- `packages/character-battle-runtime/src/character-battle-settlement.mbt.test.ts`
-- Init-side identity-conflict replay from Task 11.
-
-Output:
-
-- Audit settlement and identity-conflict deterministic replays.
-
-Acceptance:
-
-- Handoff assumptions stay explicit in `ASSUMPTIONS.md` or the checked
-  obligation rationale where already owned; do not create a second identity
-  conflict model.
-
-### Task 13 - DRP-T13-HIT-POINT-DAMAGE-RUST-PARITY
-
-Status: `blocked`
-
-Input:
-
-- Obligation `SHARED.HIT_POINTS.POSITIVE_DAMAGE`
-- `packages/shared-algebras/proofs/rule-core/hit-point-damage.qnt`
-- `packages/battle-runtime/rule-core-hit-point-damage.mbt.qnt`
-- `packages/battle-runtime/src/rule-core-hit-point-damage.mbt.test.ts`
-- `plans/rules-kernel-coverage/HIT_POINT_DAMAGE_RUST_DRY_RUN.md`
-
-Output:
-
-- Audit the four-case deterministic replay and confirm the Rust dry-run note
-  still matches the checked semantic core.
-
-Acceptance:
-
-- Any dry-run note updates remain documentation only and do not add committed
-  Rust source or ABI.
-
-### Task 14 - DRP-T14-HP-REST-HIT-DICE
-
-Status: `blocked`
-
-Input:
-
-- Obligation `SHEET.HP_REST_HIT_DICE.TRANSITIONS`
-- `packages/shared-algebras/proofs/rule-core/hit-point-recovery.qnt`
-- `packages/character-sheet-runtime/character-sheet-hp-rest-hit-dice.mbt.qnt`
-- `packages/character-sheet-runtime/src/hp-rest-hit-dice.mbt.test.ts`
-- `plans/rules-kernel-coverage/HIT_POINT_RECOVERY_RUST_DRY_RUN.md`
-
-Output:
-
-- Audit HP/rest/Hit Dice deterministic replay and align with the recovery
-  manual Rust dry-run artifact.
-
-Acceptance:
-
-- Short Rest, Long Rest, Hit Point Dice, Stable recovery, and positive
-  Hit Point healing facts remain distinct. Do not store derived recovery facts
-  beside their Character Sheet sources.
-
-### Task 15 - DRP-T15-HIT-POINT-MAXIMUM
-
-Status: `blocked`
-
-Input:
-
-- Obligation `SHEET.HIT_POINTS.MAXIMUM_DERIVATION`
-- `packages/character-sheet-runtime/character-sheet-hit-point-maximum.mbt.qnt`
-- `packages/character-sheet-runtime/src/hit-point-maximum.mbt.test.ts`
-
-Output:
-
-- Audit Hit Point Maximum formula replay.
-
-Acceptance:
-
-- Maximum derivation remains a projection from existing class Hit Dice,
-  Constitution modifier, level, and reduction facts; no duplicate maximum state
-  is added.
-
-### Task 16 - DRP-T16-SPELL-SLOTS-AND-PACT-SLOTS
-
-Status: `blocked`
-
-Input:
-
-- Obligations `SHEET.SPELL_SLOTS_PACT_SLOTS.TRANSITIONS` and
-  `SHEET.SPELL_SLOTS.TABLE_DERIVATION`
-- `packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt`
-- `packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts`
-
-Output:
-
-- Audit Spell Slot/Pact Slot transition replay and table derivation replay.
-
-Acceptance:
-
-- Ordinary Spell Slots, Pact Slots, created slots, Arcane Recovery, Magical
-  Cunning, Short Rest, and Long Rest facts stay typed and non-duplicated.
-
-### Task 17 - DRP-T17-WEAPON-MASTERY-RESELECTION
-
-Status: `blocked`
-
-Input:
-
-- Obligation `SHEET.WEAPON_MASTERY.RESELECTION`
-- `packages/character-sheet-runtime/character-sheet-weapon-mastery-containers-selected-identity.mbt.qnt`
-- `packages/character-sheet-runtime/src/weapon-mastery-containers-selected-identity.mbt.test.ts`
-
-Output:
-
-- Audit Weapon Mastery selected-identity and identity-free reselection replay.
-
-Acceptance:
-
-- Eligible weapon facts project from installed Surface content and selected
-  refs; do not add durable sheet-local Weapon Mastery state.
-
-### Task 18 - DRP-T18-SPELL-ACCESS-SELECTED-IDENTITY
-
-Status: `blocked`
-
-Input:
-
-- Obligations `SHEET.SPELLBOOK_RITUAL.SPELL_ACCESS_PROJECTION` and
-  `SHEET.SPELL_ACCESS.CLASS_FEATURE_PREPARED_PROJECTION`
-- `packages/character-sheet-runtime/character-sheet-spellbook-ritual-selected-identity.mbt.qnt`
-- `packages/character-sheet-runtime/src/spellbook-ritual-selected-identity.mbt.test.ts`
-- `packages/character-sheet-runtime/character-sheet-class-feature-selected-identity.mbt.qnt`
-- `packages/character-sheet-runtime/src/class-feature-selected-identity.mbt.test.ts`
-
-Output:
-
-- Audit selected-identity replays for spellbook Ritual and class-feature
-  prepared Spell Access.
-
-Acceptance:
-
-- Spell Access remains projected from retained CharacterBuild and Surface facts
-  without a parallel prepared-spell roster or spellbook Ritual list.
-
-### Task 19 - DRP-T19-LANE-CLOSEOUT
-
-Status: `blocked`
-
-Input:
-
-- Completed DRP task outputs.
-- Refreshed `plans/rules-kernel-coverage/REPORT.md`.
-- `plans/QNT_COVERAGE_PROGRAM.md`.
-
-Output:
-
-- Summarize kept deterministic replays, promoted focused MBT witnesses, and any
-  deferred owner-decision blockers.
-- Update the QNT coverage program portable-witness closeout if the durable
-  witness-mode mix changes.
-- If the lane drains, create the next coherent active queue; if it does not,
-  append exact repair tasks instead of ending on an empty task index.
-
-Acceptance:
-
-- `plans/ACTIVE_PLAN.md` does not end with an empty task index unless the
-  closeout explicitly names the next plan file to run and records why no
-  default queue should be active.
-- Broad verification is green or any unrelated baseline failure is documented
-  without expanding the task scope.
-
-## Tooling
-
-`scripts/ralph-run.sh:2126` and `scripts/sync-active-plan-to-ralph.sh:21`
-reference this path as the default `--plan` / `--source`. This file now carries
-the next default runnable Ralph queue. If a future decider wants to park this
-lane, it must either move the queue to an explicit `plans/<lane>.md` entrypoint
-or replace this file with a new concrete queue.
+- Generated reports are green or unrelated baseline failures are documented
+  without broad cleanup.
+- Any remaining residual has a precise owner, non-runnable reason, or follow-up
+  task.
+
+## Verification
+
+Every implementation task in this plan must include:
+
+- RAW and ubiquitous-language check against local SRD anchors and
+  `UBIQUITOUS_LANGUAGE.md`.
+- Reviewer-loop convergence: RAW traceability, ubiquitous-language/domain,
+  architecture/connascence, and code-review passes until no reasonable findings
+  remain.
+- `pnpm unit-profile-coverage:check:self-test`
+- `pnpm unit-profile-coverage:check`
+- `pnpm rules-kernel-coverage:check:self-test`
+- `pnpm rules-kernel-coverage:check`
+- `git diff --check`
+
+Run `pnpm quality` for consolidation tasks, checker changes, package-script
+changes, QNT changes, or TypeScript runtime changes.

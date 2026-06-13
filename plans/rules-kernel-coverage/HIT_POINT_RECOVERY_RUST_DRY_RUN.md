@@ -21,6 +21,45 @@ source, does not introduce a Rust ABI, and does not change reducer behavior.
 - Production runtime owner:
   `packages/character-sheet-runtime/src/index.ts`
 
+## DRP-T14 Replay Audit
+
+The deterministic replay for `SHEET.HP_REST_HIT_DICE.TRANSITIONS` remains a
+closed Character Sheet fixture, not focused random MBT coverage. The replay
+covers the sheet boundary cases where a sibling-language harness needs concrete
+projection evidence:
+
+- Short Rest and Long Rest start gates requiring at least 1 Hit Point.
+- The 16-hour Long Rest calendar wait gate.
+- Short Rest and Long Rest completion-duration rejection at the benefit
+  boundary.
+- One-die and two-die sequential Short Rest Hit Point Dice spending through the
+  existing Character Sheet benefit path.
+- Interrupted Short Rest with no benefits.
+- Long Rest restoration of Hit Points, spent Hit Point Dice, Hit Point Maximum
+  reduction, and Temporary Hit Points through existing sheet state.
+- Interrupted Long Rest before and after the one-hour Short Rest benefit
+  threshold.
+- Long Rest physical-exertion interruption threshold rejection and
+  interruption-at-required-duration rejection.
+
+`packages/character-sheet-runtime/character-sheet-hp-rest-hit-dice.mbt.qnt`
+computes healing projections through `applyHitPointHealing` from the shared
+semantic core, while
+`packages/character-sheet-runtime/src/hp-rest-hit-dice.mbt.test.ts` compares
+those QNT-owned fields with production `startShortRest`, `finishShortRest`,
+`completeShortRest`, `interruptShortRest`, `startLongRest`, `finishLongRest`,
+`completeLongRest`, and `interruptLongRest` results. The replay index is only
+the closed case-table ordering mechanism; it does not stand in for sequencing,
+resource, or interleaving coverage.
+
+This dry run remains aligned with the replay by keeping the generator-facing
+scope to positive Hit Point healing projection. Short Rest timing, Long Rest
+timing, Hit Point Dice spending, Stable calendar recovery, and positive
+Hit Point healing are distinct rule facts with distinct Character Sheet source
+owners. The dry run does not add generated Rust source, a Rust runtime
+boundary, an ABI, stored recovery facts beside `CharacterSheet`, or a second
+Hit Point/Death Saving Throw/Stable model.
+
 ## RAW And Language Anchors
 
 - `.references/srd-5.2.1/Playing-the-Game.md#Healing`: healing restores Hit

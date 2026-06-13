@@ -28,6 +28,7 @@ const hitPointMaximumScenarios = [
   "fighter-level-two",
   "wizard-fighter-multiclass",
   "minimum-higher-level-gain",
+  "sorcerer-draconic-resilience",
   "reduced-effective-maximum",
 ] as const;
 type HitPointMaximumScenario = (typeof hitPointMaximumScenarios)[number];
@@ -56,6 +57,7 @@ const driverSchema = {
   doProjectFighterLevelTwo: {},
   doProjectWizardFighterMulticlass: {},
   doProjectMinimumHigherLevelGain: {},
+  doProjectSorcererDraconicResilience: {},
   doProjectReducedEffectiveMaximum: {},
   step: {},
 } as const;
@@ -113,6 +115,26 @@ function createHitPointMaximumDriver() {
           replayIndex: 4,
         });
       },
+      doProjectSorcererDraconicResilience: () => {
+        projection = projectHitPointMaximum({
+          lastResult: "sorcerer-draconic-resilience",
+          build: {
+            ...buildFixture({
+              startingClass: "class_sorcerer",
+              constitutionScore: 13,
+              advancements: ["class_sorcerer", "class_sorcerer"],
+            }),
+            features: [
+              {
+                kind: "selectedClassChoice",
+                selectedFromUnitId: "class_sorcerer",
+                unitId: "subclass_sorcerer_draconic_sorcery",
+              },
+            ],
+          },
+          replayIndex: 5,
+        });
+      },
       doProjectReducedEffectiveMaximum: () => {
         projection = projectHitPointMaximum({
           lastResult: "reduced-effective-maximum",
@@ -122,7 +144,7 @@ function createHitPointMaximumDriver() {
             advancements: ["class_fighter"],
           }),
           hitPointMaximumReduction: 3,
-          replayIndex: 5,
+          replayIndex: 6,
         });
       },
       step: () => {},

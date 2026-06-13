@@ -79,15 +79,26 @@ module characterSheetHitPointMaximumMbt {
     }, 2, 4),
   }
 
-  action doProjectReducedEffectiveMaximum = all {
+  action doProjectSorcererDraconicResilience = all {
     qReplayIndex == 4,
+    recordProjection("sorcerer-draconic-resilience", {
+      startingHitPointDie: 6,
+      constitutionModifier: 1,
+      fixedHigherLevelHitPointDice: [6, 6],
+      hitPointMaximumBonus: 3,
+      hitPointMaximumReduction: 0,
+    }, 3, 5),
+  }
+
+  action doProjectReducedEffectiveMaximum = all {
+    qReplayIndex == 5,
     recordProjection("reduced-effective-maximum", {
       startingHitPointDie: 10,
       constitutionModifier: 1,
       fixedHigherLevelHitPointDice: [10],
       hitPointMaximumBonus: 0,
       hitPointMaximumReduction: 3,
-    }, 2, 5),
+    }, 2, 6),
   }
 
   action step = any {
@@ -95,6 +106,7 @@ module characterSheetHitPointMaximumMbt {
     doProjectFighterLevelTwo,
     doProjectWizardFighterMulticlass,
     doProjectMinimumHigherLevelGain,
+    doProjectSorcererDraconicResilience,
     doProjectReducedEffectiveMaximum,
   }
 }
