@@ -50,6 +50,24 @@ Requirements for the next bootstrap, in addition to the workflow below:
   dependency is part of that lane. If the rerun keeps the phased design, the
   first manual vertical may still precede the MBT lane.
 
+## Rerun Bootstrap (2026-06-13)
+
+The 2026-05-27 repo was deleted and the rerun bootstrapped per the Restart
+Decision:
+
+- **Sync script:** `scripts/sync-cleanroom-input.cjs` (run from this repo's
+  root) is the only way to populate or refresh `cleanroom-input/`. It enforces
+  the Allowed Inputs allowlist, refuses to run while allowlisted sources have
+  uncommitted changes, and writes `cleanroom-input/MANIFEST.md` with the source
+  commit SHA, copy date, and per-file sha256 inventory.
+- **Curated assumptions:** `plans/CLEANROOM_ASSUMPTIONS.md` is the curated
+  cleanroom assumptions source (synced to
+  `cleanroom-input/domain/CLEANROOM_ASSUMPTIONS.md`). It carries each
+  assumption and rules basis only; implementation-change records are stripped.
+  Keep it in sync with owner curation of `ASSUMPTIONS.md`.
+- **Kickoff:** the cleanroom repo's `README.md` and `tasks/T001-FIRST-VERTICAL.md`
+  describe how to launch the first manual vertical with a fresh agent.
+
 ## Cleanroom Boundary
 
 The experiment must run in a separate Git repo, not in this repo. The intended
