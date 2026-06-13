@@ -286,6 +286,17 @@ describe("character-creation Surface records", () => {
                 { count: 3, spellLevel: 2 },
               ],
             },
+            {
+              atLevel: 5,
+              cantripCount: 4,
+              spellbookSpellCount: 14,
+              preparedSpellCount: 9,
+              spellSlots: [
+                { count: 4, spellLevel: 1 },
+                { count: 3, spellLevel: 2 },
+                { count: 2, spellLevel: 3 },
+              ],
+            },
           ],
           spellcastingFocuses: ["arcane_focus", "spellbook"],
         },
