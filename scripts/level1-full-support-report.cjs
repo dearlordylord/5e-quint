@@ -33,6 +33,7 @@ function characterLevelBands(maxCharacterLevel) {
 const strictLevelBands = characterLevelBands(1);
 const strictLevel12Bands = characterLevelBands(2);
 const strictLevel13Bands = characterLevelBands(3);
+const strictLevel14Bands = characterLevelBands(4);
 const companionWorktreeExcludedUnitIds = ["find_familiar"];
 const srdAuthoredCharacterCreationOptionGroups = [
   {
@@ -76,6 +77,15 @@ const level13Scope = {
   maxCharacterLevel: 3,
   productReadinessMetric: "levelOneThreeBattleReadiness",
 };
+const level14Scope = {
+  title: "Character Levels 1-4",
+  outputTitle: "Character Levels 1-4 Full Support",
+  description:
+    "This strict view tracks executable SRD character-level-1 through character-level-4 pressure, cantrips, and spell-level-1 plus spell-level-2 pressure separately from the broader product readiness closure metric. It adds level-4 class-feature pressure while deliberately excluding spell-level-3 pressure, which belongs to the character-level-5 frontier for full casters.",
+  levelBands: strictLevel14Bands,
+  maxCharacterLevel: 4,
+  productReadinessMetric: "levelOneFourBattleReadiness",
+};
 const adoptedNoMatrixSrdPressureDecisionUnitIds = new Set([
   "create_or_destroy_water",
   "disguise_self",
@@ -115,6 +125,12 @@ const strictStatusDefinitions = [
     strictTargetClosed: true,
     description:
       "Companion lifecycle and control residuals are closed at the companion control boundary.",
+  },
+  {
+    status: "closed-selection-grant-container",
+    strictTargetClosed: true,
+    description:
+      "The Unit claim records a selection-grant container whose selected downstream Unit or Character Sheet facts own executable behavior.",
   },
   {
     status: "closed-outside-battle-runtime-boundary",
@@ -166,6 +182,8 @@ const durableSocialKnowledgeClosureKind =
 const laterLevelOnlyClosureKind = battleReadinessClosureKind.laterLevelOnly;
 const outsideBattleRuntimeClosureKind =
   battleReadinessClosureKind.outsideBattleRuntime;
+const selectionGrantContainerClosureKind =
+  battleReadinessClosureKind.selectionGrantContainer;
 const tableSpatialDerivationClosureKind =
   battleReadinessClosureKind.tableSpatialDerivation;
 const companionControlBoundaryClosureKind =
@@ -693,6 +711,22 @@ function hasOnlyCompanionControlBoundaryResiduals(claim) {
   );
 }
 
+function hasOnlySelectionGrantContainerResiduals(claim) {
+  if (claim?.tag === "unsupported-profile") {
+    return (
+      claim.battleReadinessClosure?.kind === selectionGrantContainerClosureKind
+    );
+  }
+  return (
+    claim?.tag === "profile-subset-supported" &&
+    claim.deferredMechanics.length > 0 &&
+    claim.deferredMechanics.every(
+      (entry) =>
+        entry.battleReadinessClosure?.kind === selectionGrantContainerClosureKind,
+    )
+  );
+}
+
 function hasOnlyOutsideBattleRuntimeResiduals(claim) {
   if (claim?.tag === "profile-subset-supported") {
     return (
@@ -785,6 +819,14 @@ function strictStatusForUnit(unit, scope) {
       reason:
         closureReasonForClaim(claim) ||
         "The remaining profile subset residuals are closed at the companion control boundary.",
+    };
+  }
+  if (hasOnlySelectionGrantContainerResiduals(claim)) {
+    return {
+      status: "closed-selection-grant-container",
+      reason:
+        closureReasonForClaim(claim) ||
+        "The selected downstream Unit or Character Sheet facts own executable behavior.",
     };
   }
   if (hasOnlyOutsideBattleRuntimeResiduals(claim)) {
@@ -1235,6 +1277,15 @@ function buildLevel13FullSupport(matrix, srdUnitInventory, options = {}) {
   );
 }
 
+function buildLevel14FullSupport(matrix, srdUnitInventory, options = {}) {
+  return buildStrictFullSupport(
+    matrix,
+    srdUnitInventory,
+    level14Scope,
+    options,
+  );
+}
+
 function md(value) {
   return String(value ?? "")
     .replace(/\n/g, " ")
@@ -1564,11 +1615,16 @@ function renderLevel13FullSupport(report) {
   return renderStrictFullSupport(report, level13Scope);
 }
 
+function renderLevel14FullSupport(report) {
+  return renderStrictFullSupport(report, level14Scope);
+}
+
 module.exports = {
   characterLevelBands,
   buildLevel1FullSupport,
   buildLevel12FullSupport,
   buildLevel13FullSupport,
+  buildLevel14FullSupport,
   buildSrdAuthoredProductReadiness,
   buildSelectedIdentityReadiness,
   strictStatusForUnitForTest: (unit, maxCharacterLevel) =>
@@ -1579,4 +1635,5 @@ module.exports = {
   renderLevel1FullSupport,
   renderLevel12FullSupport,
   renderLevel13FullSupport,
+  renderLevel14FullSupport,
 };

@@ -1,7 +1,7 @@
 {
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "sourceCorpus": ".references/srd-5.2.1/Classes",
-  "scope": "SRD 5.2.1 class-derived Unit/catalog backlog rows, prioritized by character level. Character levels 1-2 include cantrips and spell-level-1 pressure; character level 3 adds class/subclass level-3 rows and spell-level-2 pressure. Spell-level-3 pressure is reported separately as a later character-level-5 frontier seed.",
+  "scope": "SRD 5.2.1 class-derived Unit/catalog backlog rows, prioritized by character level. Character levels 1-2 include cantrips and spell-level-1 pressure; character level 3 adds class/subclass level-3 rows and spell-level-2 pressure; character level 4 adds level-4 class-feature pressure while continuing to exclude spell-level-3 pressure. Spell-level-3 pressure is reported separately as a later character-level-5 frontier seed.",
   "evidenceArtifacts": {
     "characterCreationOwnerEvidence": {
       "schema": "dnd.srd-character-creation-owner-evidence.v1",
@@ -268,10 +268,11 @@
     }
   },
   "metrics": {
-    "totalRows": 735,
+    "totalRows": 760,
     "levelOneRows": 156,
     "levelTwoRows": 33,
     "levelThreeClassRows": 51,
+    "levelFourClassRows": 25,
     "spellPressureRows": 367,
     "levelThreeSpellPressureRows": 128,
     "levelThreeInstalledSpellPressureRows": 24,
@@ -306,6 +307,17 @@
         "partial-battle-runtime": 2
       }
     },
+    "levelOneFourBattleReadiness": {
+      "denominator": 632,
+      "numerator": 615,
+      "percent": "97.3%",
+      "rowsByStatus": {
+        "accepted": 434,
+        "accepted-no-battle-effect": 181,
+        "owner-evidence-required": 15,
+        "partial-battle-runtime": 2
+      }
+    },
     "levelThreeClassBattleReadiness": {
       "denominator": 51,
       "numerator": 45,
@@ -314,6 +326,15 @@
         "accepted": 31,
         "accepted-no-battle-effect": 14,
         "owner-evidence-required": 6
+      }
+    },
+    "levelFourClassBattleReadiness": {
+      "denominator": 25,
+      "numerator": 21,
+      "percent": "84%",
+      "rowsByStatus": {
+        "accepted-no-battle-effect": 21,
+        "owner-evidence-required": 4
       }
     },
     "levelThreeSpellBattleReadiness": {
@@ -350,13 +371,23 @@
       "subclass selection": 12,
       "spell access/list pressure": 5
     },
+    "levelFourClassRowsByDisposition": {
+      "catalog-only/dead-for-now": 9,
+      "non-runtime": 12,
+      "level-4-follow-up-required": 4
+    },
+    "levelFourClassRowsByCategory": {
+      "class feature": 13,
+      "character-creation or progression mechanic": 12
+    },
     "allRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 462,
-      "non-runtime": 36,
+      "non-runtime": 48,
+      "catalog-only/dead-for-now": 142,
       "catalog-installed-owner-evidence-required": 12,
-      "catalog-only/dead-for-now": 133,
       "missing-authored-record": 58,
       "catalog-authored-review-required": 33,
+      "level-4-follow-up-required": 4,
       "catalog-installed-needs-owner-evidence": 1
     },
     "spellPressureRowsByDisposition": {
@@ -4354,6 +4385,81 @@
       "battleReadinessStatus": "accepted"
     },
     {
+      "id": "srd521:classes/barbarian:level-4:class-feature-grant:barbarian_ability_score_improvement",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Barbarian.md",
+        "lineStart": 108,
+        "lineEnd": 111
+      },
+      "className": "Barbarian",
+      "levelBand": "level-4",
+      "rowKind": "class-feature-grant",
+      "category": "class feature",
+      "concept": "Barbarian Ability Score Improvement",
+      "detail": "Level 4 class feature.",
+      "candidateUnitId": "barbarian_ability_score_improvement_l4",
+      "surface": {
+        "state": "current-surface-can-express-source-facts"
+      },
+      "authoredContent": {
+        "state": "authored-record-present",
+        "unitId": "barbarian_ability_score_improvement_l4",
+        "sourceRecordPath": "packages/surface/content/barbarian_ability_score_improvement_l4.json"
+      },
+      "catalogAdmission": {
+        "state": "not-installed",
+        "unitId": "barbarian_ability_score_improvement_l4"
+      },
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-only/dead-for-now",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "selection-grant-container",
+        "owner": "character-creation-runtime ability-score projection and selected feat Unit profiles",
+        "reason": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim."
+      },
+      "ownerEvidence": [],
+      "nextAction": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
+    },
+    {
+      "id": "srd521:classes/barbarian:level-4:class-table-summary:barbarian_level_4_feature_table_row",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Barbarian.md",
+        "lineStart": 38,
+        "lineEnd": 38
+      },
+      "className": "Barbarian",
+      "levelBand": "level-4",
+      "rowKind": "class-table-summary",
+      "category": "character-creation or progression mechanic",
+      "concept": "Barbarian level 4 feature table row",
+      "detail": "4 | +2 | Ability Score Improvement | 3 | +2 | 3",
+      "candidateUnitId": "class_barbarian",
+      "surface": {
+        "state": "outside-surface-runtime-mechanics"
+      },
+      "authoredContent": {
+        "state": "authored-record-present",
+        "unitId": "class_barbarian",
+        "sourceRecordPath": "packages/surface/content/class_barbarian.json"
+      },
+      "catalogAdmission": {
+        "state": "installed",
+        "unitId": "class_barbarian"
+      },
+      "characterCreationOwnership": {
+        "state": "non-runtime-table-summary",
+        "owner": "not-applicable",
+        "evidenceBoundary": "The feature table summarizes level progression; narrower class trait, feature, spell-access, mastery, and equipment rows own executable evidence."
+      },
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "non-runtime",
+      "ownerEvidence": [],
+      "nextAction": "No runtime work; keep classification as explicit closure.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
+    },
+    {
       "id": "srd521:classes/bard:level-1:class-container:bard_class_container",
       "source": {
         "path": ".references/srd-5.2.1/Classes/Bard.md",
@@ -5249,6 +5355,81 @@
       ],
       "nextAction": "Owner-specific operational evidence is classified and present.",
       "battleReadinessStatus": "accepted"
+    },
+    {
+      "id": "srd521:classes/bard:level-4:class-feature-grant:bard_ability_score_improvement",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Bard.md",
+        "lineStart": 109,
+        "lineEnd": 112
+      },
+      "className": "Bard",
+      "levelBand": "level-4",
+      "rowKind": "class-feature-grant",
+      "category": "class feature",
+      "concept": "Bard Ability Score Improvement",
+      "detail": "Level 4 class feature.",
+      "candidateUnitId": "bard_ability_score_improvement_l4",
+      "surface": {
+        "state": "current-surface-can-express-source-facts"
+      },
+      "authoredContent": {
+        "state": "authored-record-present",
+        "unitId": "bard_ability_score_improvement_l4",
+        "sourceRecordPath": "packages/surface/content/bard_ability_score_improvement_l4.json"
+      },
+      "catalogAdmission": {
+        "state": "not-installed",
+        "unitId": "bard_ability_score_improvement_l4"
+      },
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-only/dead-for-now",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "selection-grant-container",
+        "owner": "character-creation-runtime ability-score projection and selected feat Unit profiles",
+        "reason": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim."
+      },
+      "ownerEvidence": [],
+      "nextAction": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
+    },
+    {
+      "id": "srd521:classes/bard:level-4:class-table-summary:bard_level_4_feature_table_row",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Bard.md",
+        "lineStart": 39,
+        "lineEnd": 39
+      },
+      "className": "Bard",
+      "levelBand": "level-4",
+      "rowKind": "class-table-summary",
+      "category": "character-creation or progression mechanic",
+      "concept": "Bard level 4 feature table row",
+      "detail": "4 | +2 | Ability Score Improvement | D6 | 3 | 7 | 4 | 3 | — | — | — | — | — | — | —",
+      "candidateUnitId": "class_bard",
+      "surface": {
+        "state": "outside-surface-runtime-mechanics"
+      },
+      "authoredContent": {
+        "state": "authored-record-present",
+        "unitId": "class_bard",
+        "sourceRecordPath": "packages/surface/content/class_bard.json"
+      },
+      "catalogAdmission": {
+        "state": "installed",
+        "unitId": "class_bard"
+      },
+      "characterCreationOwnership": {
+        "state": "non-runtime-table-summary",
+        "owner": "not-applicable",
+        "evidenceBoundary": "The feature table summarizes level progression; narrower class trait, feature, spell-access, mastery, and equipment rows own executable evidence."
+      },
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "non-runtime",
+      "ownerEvidence": [],
+      "nextAction": "No runtime work; keep classification as explicit closure.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
       "id": "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_dancing_lights",
@@ -9042,6 +9223,81 @@
       "battleReadinessStatus": "owner-evidence-required"
     },
     {
+      "id": "srd521:classes/cleric:level-4:class-feature-grant:cleric_ability_score_improvement",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Cleric.md",
+        "lineStart": 106,
+        "lineEnd": 109
+      },
+      "className": "Cleric",
+      "levelBand": "level-4",
+      "rowKind": "class-feature-grant",
+      "category": "class feature",
+      "concept": "Cleric Ability Score Improvement",
+      "detail": "Level 4 class feature.",
+      "candidateUnitId": "cleric_ability_score_improvement_l4",
+      "surface": {
+        "state": "current-surface-can-express-source-facts"
+      },
+      "authoredContent": {
+        "state": "authored-record-present",
+        "unitId": "cleric_ability_score_improvement_l4",
+        "sourceRecordPath": "packages/surface/content/cleric_ability_score_improvement_l4.json"
+      },
+      "catalogAdmission": {
+        "state": "not-installed",
+        "unitId": "cleric_ability_score_improvement_l4"
+      },
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-only/dead-for-now",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "selection-grant-container",
+        "owner": "character-creation-runtime ability-score projection and selected feat Unit profiles",
+        "reason": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim."
+      },
+      "ownerEvidence": [],
+      "nextAction": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
+    },
+    {
+      "id": "srd521:classes/cleric:level-4:class-table-summary:cleric_level_4_feature_table_row",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Cleric.md",
+        "lineStart": 38,
+        "lineEnd": 38
+      },
+      "className": "Cleric",
+      "levelBand": "level-4",
+      "rowKind": "class-table-summary",
+      "category": "character-creation or progression mechanic",
+      "concept": "Cleric level 4 feature table row",
+      "detail": "4 | +2 | Ability Score Improvement | 2 | 4 | 7 | 4 | 3 | — | — | — | — | — | — | —",
+      "candidateUnitId": "class_cleric",
+      "surface": {
+        "state": "outside-surface-runtime-mechanics"
+      },
+      "authoredContent": {
+        "state": "authored-record-present",
+        "unitId": "class_cleric",
+        "sourceRecordPath": "packages/surface/content/class_cleric.json"
+      },
+      "catalogAdmission": {
+        "state": "installed",
+        "unitId": "class_cleric"
+      },
+      "characterCreationOwnership": {
+        "state": "non-runtime-table-summary",
+        "owner": "not-applicable",
+        "evidenceBoundary": "The feature table summarizes level progression; narrower class trait, feature, spell-access, mastery, and equipment rows own executable evidence."
+      },
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "non-runtime",
+      "ownerEvidence": [],
+      "nextAction": "No runtime work; keep classification as explicit closure.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
+    },
+    {
       "id": "srd521:classes/cleric:spell-level-0:spell-unit-pressure:cleric_spell_list_guidance",
       "source": {
         "path": ".references/srd-5.2.1/Classes/Cleric.md",
@@ -12332,6 +12588,81 @@
       ],
       "nextAction": "character-sheet-runtime: Add checker-readable character-sheet owner evidence before treating this subclass Spell Access row as operationally supported.",
       "battleReadinessStatus": "owner-evidence-required"
+    },
+    {
+      "id": "srd521:classes/druid:level-4:class-feature-grant:druid_ability_score_improvement",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Druid.md",
+        "lineStart": 134,
+        "lineEnd": 137
+      },
+      "className": "Druid",
+      "levelBand": "level-4",
+      "rowKind": "class-feature-grant",
+      "category": "class feature",
+      "concept": "Druid Ability Score Improvement",
+      "detail": "Level 4 class feature.",
+      "candidateUnitId": "druid_ability_score_improvement_l4",
+      "surface": {
+        "state": "current-surface-can-express-source-facts"
+      },
+      "authoredContent": {
+        "state": "authored-record-present",
+        "unitId": "druid_ability_score_improvement_l4",
+        "sourceRecordPath": "packages/surface/content/druid_ability_score_improvement_l4.json"
+      },
+      "catalogAdmission": {
+        "state": "not-installed",
+        "unitId": "druid_ability_score_improvement_l4"
+      },
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-only/dead-for-now",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "selection-grant-container",
+        "owner": "character-creation-runtime ability-score projection and selected feat Unit profiles",
+        "reason": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim."
+      },
+      "ownerEvidence": [],
+      "nextAction": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
+    },
+    {
+      "id": "srd521:classes/druid:level-4:class-table-summary:druid_level_4_feature_table_row",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Druid.md",
+        "lineStart": 35,
+        "lineEnd": 35
+      },
+      "className": "Druid",
+      "levelBand": "level-4",
+      "rowKind": "class-table-summary",
+      "category": "character-creation or progression mechanic",
+      "concept": "Druid level 4 feature table row",
+      "detail": "4 | +2 | Ability Score Improvement | 2 | 3 | 7 | 4 | 3 | — | — | — | — | — | — | —",
+      "candidateUnitId": "class_druid",
+      "surface": {
+        "state": "outside-surface-runtime-mechanics"
+      },
+      "authoredContent": {
+        "state": "authored-record-present",
+        "unitId": "class_druid",
+        "sourceRecordPath": "packages/surface/content/class_druid.json"
+      },
+      "catalogAdmission": {
+        "state": "installed",
+        "unitId": "class_druid"
+      },
+      "characterCreationOwnership": {
+        "state": "non-runtime-table-summary",
+        "owner": "not-applicable",
+        "evidenceBoundary": "The feature table summarizes level progression; narrower class trait, feature, spell-access, mastery, and equipment rows own executable evidence."
+      },
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "non-runtime",
+      "ownerEvidence": [],
+      "nextAction": "No runtime work; keep classification as explicit closure.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
       "id": "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_druidcraft",
@@ -15817,6 +16148,72 @@
       "battleReadinessStatus": "accepted"
     },
     {
+      "id": "srd521:classes/fighter:level-4:class-feature-grant:fighter_ability_score_improvement",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Fighter.md",
+        "lineStart": 90,
+        "lineEnd": 93
+      },
+      "className": "Fighter",
+      "levelBand": "level-4",
+      "rowKind": "class-feature-grant",
+      "category": "class feature",
+      "concept": "Fighter Ability Score Improvement",
+      "detail": "Level 4 class feature.",
+      "candidateUnitId": "fighter_ability_score_improvement_l4",
+      "surface": {
+        "state": "current-surface-can-express-source-facts"
+      },
+      "authoredContent": {
+        "state": "missing-authored-record"
+      },
+      "catalogAdmission": {
+        "state": "not-installed",
+        "unitId": "fighter_ability_score_improvement_l4"
+      },
+      "finalDisposition": "level-4-follow-up-required",
+      "ownerEvidence": [],
+      "nextAction": "Promote or explicitly close this level-4 class feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this row as supported.",
+      "battleReadinessStatus": "owner-evidence-required"
+    },
+    {
+      "id": "srd521:classes/fighter:level-4:class-table-summary:fighter_level_4_feature_table_row",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Fighter.md",
+        "lineStart": 34,
+        "lineEnd": 34
+      },
+      "className": "Fighter",
+      "levelBand": "level-4",
+      "rowKind": "class-table-summary",
+      "category": "character-creation or progression mechanic",
+      "concept": "Fighter level 4 feature table row",
+      "detail": "4 | +2 | Ability Score Improvement | 3 | 4",
+      "candidateUnitId": "class_fighter",
+      "surface": {
+        "state": "outside-surface-runtime-mechanics"
+      },
+      "authoredContent": {
+        "state": "authored-record-present",
+        "unitId": "class_fighter",
+        "sourceRecordPath": "packages/surface/content/class_fighter.json"
+      },
+      "catalogAdmission": {
+        "state": "installed",
+        "unitId": "class_fighter"
+      },
+      "characterCreationOwnership": {
+        "state": "non-runtime-table-summary",
+        "owner": "not-applicable",
+        "evidenceBoundary": "The feature table summarizes level progression; narrower class trait, feature, spell-access, mastery, and equipment rows own executable evidence."
+      },
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "non-runtime",
+      "ownerEvidence": [],
+      "nextAction": "No runtime work; keep classification as explicit closure.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
+    },
+    {
       "id": "srd521:classes/monk:level-1:class-container:monk_class_container",
       "source": {
         "path": ".references/srd-5.2.1/Classes/Monk.md",
@@ -16766,6 +17163,110 @@
       ],
       "nextAction": "Owner-specific operational evidence is classified and present.",
       "battleReadinessStatus": "accepted"
+    },
+    {
+      "id": "srd521:classes/monk:level-4:class-feature-grant:monk_ability_score_improvement",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Monk.md",
+        "lineStart": 112,
+        "lineEnd": 115
+      },
+      "className": "Monk",
+      "levelBand": "level-4",
+      "rowKind": "class-feature-grant",
+      "category": "class feature",
+      "concept": "Monk Ability Score Improvement",
+      "detail": "Level 4 class feature.",
+      "candidateUnitId": "monk_ability_score_improvement_l4",
+      "surface": {
+        "state": "current-surface-can-express-source-facts"
+      },
+      "authoredContent": {
+        "state": "authored-record-present",
+        "unitId": "monk_ability_score_improvement_l4",
+        "sourceRecordPath": "packages/surface/content/monk_ability_score_improvement_l4.json"
+      },
+      "catalogAdmission": {
+        "state": "not-installed",
+        "unitId": "monk_ability_score_improvement_l4"
+      },
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-only/dead-for-now",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "selection-grant-container",
+        "owner": "character-creation-runtime ability-score projection and selected feat Unit profiles",
+        "reason": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim."
+      },
+      "ownerEvidence": [],
+      "nextAction": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
+    },
+    {
+      "id": "srd521:classes/monk:level-4:class-feature-grant:monk_slow_fall",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Monk.md",
+        "lineStart": 116,
+        "lineEnd": 119
+      },
+      "className": "Monk",
+      "levelBand": "level-4",
+      "rowKind": "class-feature-grant",
+      "category": "class feature",
+      "concept": "Monk Slow Fall",
+      "detail": "Level 4 class feature.",
+      "candidateUnitId": "monk_slow_fall",
+      "surface": {
+        "state": "current-surface-can-express-source-facts"
+      },
+      "authoredContent": {
+        "state": "missing-authored-record"
+      },
+      "catalogAdmission": {
+        "state": "not-installed",
+        "unitId": "monk_slow_fall"
+      },
+      "finalDisposition": "level-4-follow-up-required",
+      "ownerEvidence": [],
+      "nextAction": "Promote or explicitly close this level-4 class feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this row as supported.",
+      "battleReadinessStatus": "owner-evidence-required"
+    },
+    {
+      "id": "srd521:classes/monk:level-4:class-table-summary:monk_level_4_feature_table_row",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Monk.md",
+        "lineStart": 35,
+        "lineEnd": 35
+      },
+      "className": "Monk",
+      "levelBand": "level-4",
+      "rowKind": "class-table-summary",
+      "category": "character-creation or progression mechanic",
+      "concept": "Monk level 4 feature table row",
+      "detail": "4 | +2 | Ability Score Improvement, Slow Fall | 1d6 | 4 | +10 ft.",
+      "candidateUnitId": "class_monk",
+      "surface": {
+        "state": "outside-surface-runtime-mechanics"
+      },
+      "authoredContent": {
+        "state": "authored-record-present",
+        "unitId": "class_monk",
+        "sourceRecordPath": "packages/surface/content/class_monk.json"
+      },
+      "catalogAdmission": {
+        "state": "installed",
+        "unitId": "class_monk"
+      },
+      "characterCreationOwnership": {
+        "state": "non-runtime-table-summary",
+        "owner": "not-applicable",
+        "evidenceBoundary": "The feature table summarizes level progression; narrower class trait, feature, spell-access, mastery, and equipment rows own executable evidence."
+      },
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "non-runtime",
+      "ownerEvidence": [],
+      "nextAction": "No runtime work; keep classification as explicit closure.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
       "id": "srd521:classes/paladin:level-1:class-container:paladin_class_container",
@@ -17723,6 +18224,72 @@
       ],
       "nextAction": "character-sheet-runtime: Add checker-readable character-sheet owner evidence before treating this subclass Spell Access row as operationally supported.",
       "battleReadinessStatus": "owner-evidence-required"
+    },
+    {
+      "id": "srd521:classes/paladin:level-4:class-feature-grant:paladin_ability_score_improvement",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Paladin.md",
+        "lineStart": 122,
+        "lineEnd": 125
+      },
+      "className": "Paladin",
+      "levelBand": "level-4",
+      "rowKind": "class-feature-grant",
+      "category": "class feature",
+      "concept": "Paladin Ability Score Improvement",
+      "detail": "Level 4 class feature.",
+      "candidateUnitId": "paladin_ability_score_improvement_l4",
+      "surface": {
+        "state": "current-surface-can-express-source-facts"
+      },
+      "authoredContent": {
+        "state": "missing-authored-record"
+      },
+      "catalogAdmission": {
+        "state": "not-installed",
+        "unitId": "paladin_ability_score_improvement_l4"
+      },
+      "finalDisposition": "level-4-follow-up-required",
+      "ownerEvidence": [],
+      "nextAction": "Promote or explicitly close this level-4 class feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this row as supported.",
+      "battleReadinessStatus": "owner-evidence-required"
+    },
+    {
+      "id": "srd521:classes/paladin:level-4:class-table-summary:paladin_level_4_feature_table_row",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Paladin.md",
+        "lineStart": 38,
+        "lineEnd": 38
+      },
+      "className": "Paladin",
+      "levelBand": "level-4",
+      "rowKind": "class-table-summary",
+      "category": "character-creation or progression mechanic",
+      "concept": "Paladin level 4 feature table row",
+      "detail": "4 | +2 | Ability Score Improvement | 2 | 5 | 3 | — | — | — | —",
+      "candidateUnitId": "class_paladin",
+      "surface": {
+        "state": "outside-surface-runtime-mechanics"
+      },
+      "authoredContent": {
+        "state": "authored-record-present",
+        "unitId": "class_paladin",
+        "sourceRecordPath": "packages/surface/content/class_paladin.json"
+      },
+      "catalogAdmission": {
+        "state": "installed",
+        "unitId": "class_paladin"
+      },
+      "characterCreationOwnership": {
+        "state": "non-runtime-table-summary",
+        "owner": "not-applicable",
+        "evidenceBoundary": "The feature table summarizes level progression; narrower class trait, feature, spell-access, mastery, and equipment rows own executable evidence."
+      },
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "non-runtime",
+      "ownerEvidence": [],
+      "nextAction": "No runtime work; keep classification as explicit closure.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
       "id": "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_bless",
@@ -19877,6 +20444,81 @@
       ],
       "nextAction": "Owner-specific operational evidence is classified and present.",
       "battleReadinessStatus": "accepted"
+    },
+    {
+      "id": "srd521:classes/ranger:level-4:class-feature-grant:ranger_ability_score_improvement",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Ranger.md",
+        "lineStart": 106,
+        "lineEnd": 109
+      },
+      "className": "Ranger",
+      "levelBand": "level-4",
+      "rowKind": "class-feature-grant",
+      "category": "class feature",
+      "concept": "Ranger Ability Score Improvement",
+      "detail": "Level 4 class feature.",
+      "candidateUnitId": "ranger_ability_score_improvement_l4",
+      "surface": {
+        "state": "current-surface-can-express-source-facts"
+      },
+      "authoredContent": {
+        "state": "authored-record-present",
+        "unitId": "ranger_ability_score_improvement_l4",
+        "sourceRecordPath": "packages/surface/content/ranger_ability_score_improvement_l4.json"
+      },
+      "catalogAdmission": {
+        "state": "not-installed",
+        "unitId": "ranger_ability_score_improvement_l4"
+      },
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-only/dead-for-now",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "selection-grant-container",
+        "owner": "character-creation-runtime ability-score projection and selected feat Unit profiles",
+        "reason": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim."
+      },
+      "ownerEvidence": [],
+      "nextAction": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
+    },
+    {
+      "id": "srd521:classes/ranger:level-4:class-table-summary:ranger_level_4_feature_table_row",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Ranger.md",
+        "lineStart": 38,
+        "lineEnd": 38
+      },
+      "className": "Ranger",
+      "levelBand": "level-4",
+      "rowKind": "class-table-summary",
+      "category": "character-creation or progression mechanic",
+      "concept": "Ranger level 4 feature table row",
+      "detail": "4 | +2 | Ability Score Improvement | 2 | 5 | 3 | — | — | — | —",
+      "candidateUnitId": "class_ranger",
+      "surface": {
+        "state": "outside-surface-runtime-mechanics"
+      },
+      "authoredContent": {
+        "state": "authored-record-present",
+        "unitId": "class_ranger",
+        "sourceRecordPath": "packages/surface/content/class_ranger.json"
+      },
+      "catalogAdmission": {
+        "state": "installed",
+        "unitId": "class_ranger"
+      },
+      "characterCreationOwnership": {
+        "state": "non-runtime-table-summary",
+        "owner": "not-applicable",
+        "evidenceBoundary": "The feature table summarizes level progression; narrower class trait, feature, spell-access, mastery, and equipment rows own executable evidence."
+      },
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "non-runtime",
+      "ownerEvidence": [],
+      "nextAction": "No runtime work; keep classification as explicit closure.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
       "id": "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_alarm",
@@ -22520,6 +23162,81 @@
       "battleReadinessStatus": "accepted"
     },
     {
+      "id": "srd521:classes/rogue:level-4:class-feature-grant:rogue_ability_score_improvement",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Rogue.md",
+        "lineStart": 93,
+        "lineEnd": 96
+      },
+      "className": "Rogue",
+      "levelBand": "level-4",
+      "rowKind": "class-feature-grant",
+      "category": "class feature",
+      "concept": "Rogue Ability Score Improvement",
+      "detail": "Level 4 class feature.",
+      "candidateUnitId": "rogue_ability_score_improvement_l4",
+      "surface": {
+        "state": "current-surface-can-express-source-facts"
+      },
+      "authoredContent": {
+        "state": "authored-record-present",
+        "unitId": "rogue_ability_score_improvement_l4",
+        "sourceRecordPath": "packages/surface/content/rogue_ability_score_improvement_l4.json"
+      },
+      "catalogAdmission": {
+        "state": "not-installed",
+        "unitId": "rogue_ability_score_improvement_l4"
+      },
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-only/dead-for-now",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "selection-grant-container",
+        "owner": "character-creation-runtime ability-score projection and selected feat Unit profiles",
+        "reason": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim."
+      },
+      "ownerEvidence": [],
+      "nextAction": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
+    },
+    {
+      "id": "srd521:classes/rogue:level-4:class-table-summary:rogue_level_4_feature_table_row",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Rogue.md",
+        "lineStart": 39,
+        "lineEnd": 39
+      },
+      "className": "Rogue",
+      "levelBand": "level-4",
+      "rowKind": "class-table-summary",
+      "category": "character-creation or progression mechanic",
+      "concept": "Rogue level 4 feature table row",
+      "detail": "4 | +2 | Ability Score Improvement | 2d6",
+      "candidateUnitId": "class_rogue",
+      "surface": {
+        "state": "outside-surface-runtime-mechanics"
+      },
+      "authoredContent": {
+        "state": "authored-record-present",
+        "unitId": "class_rogue",
+        "sourceRecordPath": "packages/surface/content/class_rogue.json"
+      },
+      "catalogAdmission": {
+        "state": "installed",
+        "unitId": "class_rogue"
+      },
+      "characterCreationOwnership": {
+        "state": "non-runtime-table-summary",
+        "owner": "not-applicable",
+        "evidenceBoundary": "The feature table summarizes level progression; narrower class trait, feature, spell-access, mastery, and equipment rows own executable evidence."
+      },
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "non-runtime",
+      "ownerEvidence": [],
+      "nextAction": "No runtime work; keep classification as explicit closure.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
+    },
+    {
       "id": "srd521:classes/sorcerer:level-1:class-container:sorcerer_class_container",
       "source": {
         "path": ".references/srd-5.2.1/Classes/Sorcerer.md",
@@ -23378,6 +24095,81 @@
       ],
       "nextAction": "character-sheet-runtime: Add checker-readable character-sheet owner evidence before treating this subclass Spell Access row as operationally supported.",
       "battleReadinessStatus": "owner-evidence-required"
+    },
+    {
+      "id": "srd521:classes/sorcerer:level-4:class-feature-grant:sorcerer_ability_score_improvement",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Sorcerer.md",
+        "lineStart": 123,
+        "lineEnd": 126
+      },
+      "className": "Sorcerer",
+      "levelBand": "level-4",
+      "rowKind": "class-feature-grant",
+      "category": "class feature",
+      "concept": "Sorcerer Ability Score Improvement",
+      "detail": "Level 4 class feature.",
+      "candidateUnitId": "sorcerer_ability_score_improvement_l4",
+      "surface": {
+        "state": "current-surface-can-express-source-facts"
+      },
+      "authoredContent": {
+        "state": "authored-record-present",
+        "unitId": "sorcerer_ability_score_improvement_l4",
+        "sourceRecordPath": "packages/surface/content/sorcerer_ability_score_improvement_l4.json"
+      },
+      "catalogAdmission": {
+        "state": "not-installed",
+        "unitId": "sorcerer_ability_score_improvement_l4"
+      },
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-only/dead-for-now",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "selection-grant-container",
+        "owner": "character-creation-runtime ability-score projection and selected feat Unit profiles",
+        "reason": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim."
+      },
+      "ownerEvidence": [],
+      "nextAction": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
+    },
+    {
+      "id": "srd521:classes/sorcerer:level-4:class-table-summary:sorcerer_level_4_feature_table_row",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Sorcerer.md",
+        "lineStart": 38,
+        "lineEnd": 38
+      },
+      "className": "Sorcerer",
+      "levelBand": "level-4",
+      "rowKind": "class-table-summary",
+      "category": "character-creation or progression mechanic",
+      "concept": "Sorcerer level 4 feature table row",
+      "detail": "4 | +2 | Ability Score Improvement | 4 | 5 | 7 | 4 | 3 | — | — | — | — | — | — | —",
+      "candidateUnitId": "class_sorcerer",
+      "surface": {
+        "state": "outside-surface-runtime-mechanics"
+      },
+      "authoredContent": {
+        "state": "authored-record-present",
+        "unitId": "class_sorcerer",
+        "sourceRecordPath": "packages/surface/content/class_sorcerer.json"
+      },
+      "catalogAdmission": {
+        "state": "installed",
+        "unitId": "class_sorcerer"
+      },
+      "characterCreationOwnership": {
+        "state": "non-runtime-table-summary",
+        "owner": "not-applicable",
+        "evidenceBoundary": "The feature table summarizes level progression; narrower class trait, feature, spell-access, mastery, and equipment rows own executable evidence."
+      },
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "non-runtime",
+      "ownerEvidence": [],
+      "nextAction": "No runtime work; keep classification as explicit closure.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
       "id": "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_acid_splash",
@@ -27674,6 +28466,72 @@
       "battleReadinessStatus": "owner-evidence-required"
     },
     {
+      "id": "srd521:classes/warlock:level-4:class-feature-grant:warlock_ability_score_improvement",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Warlock.md",
+        "lineStart": 100,
+        "lineEnd": 103
+      },
+      "className": "Warlock",
+      "levelBand": "level-4",
+      "rowKind": "class-feature-grant",
+      "category": "class feature",
+      "concept": "Warlock Ability Score Improvement",
+      "detail": "Level 4 class feature.",
+      "candidateUnitId": "warlock_ability_score_improvement_l4",
+      "surface": {
+        "state": "current-surface-can-express-source-facts"
+      },
+      "authoredContent": {
+        "state": "missing-authored-record"
+      },
+      "catalogAdmission": {
+        "state": "not-installed",
+        "unitId": "warlock_ability_score_improvement_l4"
+      },
+      "finalDisposition": "level-4-follow-up-required",
+      "ownerEvidence": [],
+      "nextAction": "Promote or explicitly close this level-4 class feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this row as supported.",
+      "battleReadinessStatus": "owner-evidence-required"
+    },
+    {
+      "id": "srd521:classes/warlock:level-4:class-table-summary:warlock_level_4_feature_table_row",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Warlock.md",
+        "lineStart": 38,
+        "lineEnd": 38
+      },
+      "className": "Warlock",
+      "levelBand": "level-4",
+      "rowKind": "class-table-summary",
+      "category": "character-creation or progression mechanic",
+      "concept": "Warlock level 4 feature table row",
+      "detail": "4 | +2 | Ability Score Improvement | 3 | 3 | 5 | 2 | 2",
+      "candidateUnitId": "class_warlock",
+      "surface": {
+        "state": "outside-surface-runtime-mechanics"
+      },
+      "authoredContent": {
+        "state": "authored-record-present",
+        "unitId": "class_warlock",
+        "sourceRecordPath": "packages/surface/content/class_warlock.json"
+      },
+      "catalogAdmission": {
+        "state": "installed",
+        "unitId": "class_warlock"
+      },
+      "characterCreationOwnership": {
+        "state": "non-runtime-table-summary",
+        "owner": "not-applicable",
+        "evidenceBoundary": "The feature table summarizes level progression; narrower class trait, feature, spell-access, mastery, and equipment rows own executable evidence."
+      },
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "non-runtime",
+      "ownerEvidence": [],
+      "nextAction": "No runtime work; keep classification as explicit closure.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
+    },
+    {
       "id": "srd521:classes/warlock:spell-level-0:spell-unit-pressure:warlock_spell_list_chill_touch",
       "source": {
         "path": ".references/srd-5.2.1/Classes/Warlock.md",
@@ -30180,6 +31038,81 @@
       ],
       "nextAction": "Owner-specific operational evidence is classified and present.",
       "battleReadinessStatus": "accepted"
+    },
+    {
+      "id": "srd521:classes/wizard:level-4:class-feature-grant:wizard_ability_score_improvement",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Wizard.md",
+        "lineStart": 112,
+        "lineEnd": 115
+      },
+      "className": "Wizard",
+      "levelBand": "level-4",
+      "rowKind": "class-feature-grant",
+      "category": "class feature",
+      "concept": "Wizard Ability Score Improvement",
+      "detail": "Level 4 class feature.",
+      "candidateUnitId": "wizard_ability_score_improvement_l4",
+      "surface": {
+        "state": "current-surface-can-express-source-facts"
+      },
+      "authoredContent": {
+        "state": "authored-record-present",
+        "unitId": "wizard_ability_score_improvement_l4",
+        "sourceRecordPath": "packages/surface/content/wizard_ability_score_improvement_l4.json"
+      },
+      "catalogAdmission": {
+        "state": "not-installed",
+        "unitId": "wizard_ability_score_improvement_l4"
+      },
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-only/dead-for-now",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "selection-grant-container",
+        "owner": "character-creation-runtime ability-score projection and selected feat Unit profiles",
+        "reason": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim."
+      },
+      "ownerEvidence": [],
+      "nextAction": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
+    },
+    {
+      "id": "srd521:classes/wizard:level-4:class-table-summary:wizard_level_4_feature_table_row",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Wizard.md",
+        "lineStart": 38,
+        "lineEnd": 38
+      },
+      "className": "Wizard",
+      "levelBand": "level-4",
+      "rowKind": "class-table-summary",
+      "category": "character-creation or progression mechanic",
+      "concept": "Wizard level 4 feature table row",
+      "detail": "4 | +2 | Ability Score Improvement | 4 | 7 | 4 | 3 | — | — | — | — | — | — | —",
+      "candidateUnitId": "class_wizard",
+      "surface": {
+        "state": "outside-surface-runtime-mechanics"
+      },
+      "authoredContent": {
+        "state": "authored-record-present",
+        "unitId": "class_wizard",
+        "sourceRecordPath": "packages/surface/content/class_wizard.json"
+      },
+      "catalogAdmission": {
+        "state": "installed",
+        "unitId": "class_wizard"
+      },
+      "characterCreationOwnership": {
+        "state": "non-runtime-table-summary",
+        "owner": "not-applicable",
+        "evidenceBoundary": "The feature table summarizes level progression; narrower class trait, feature, spell-access, mastery, and equipment rows own executable evidence."
+      },
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "non-runtime",
+      "ownerEvidence": [],
+      "nextAction": "No runtime work; keep classification as explicit closure.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
       "id": "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_acid_splash",

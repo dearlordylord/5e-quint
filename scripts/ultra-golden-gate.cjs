@@ -15,6 +15,7 @@ const ultraGoldenScopeFields = Object.freeze([
   { scopeId: "level-1", reportField: "level1FullSupport" },
   { scopeId: "level-1-2", reportField: "level12FullSupport" },
   { scopeId: "level-1-3", reportField: "level13FullSupport" },
+  { scopeId: "level-1-4", reportField: "level14FullSupport" },
 ]);
 const ultraGoldenScopeIds = Object.freeze(
   ultraGoldenScopeFields.map((scope) => scope.scopeId),
@@ -1059,6 +1060,7 @@ function buildSelectedIdentityEvidenceAudit({
   level1FullSupport,
   level12FullSupport,
   level13FullSupport,
+  level14FullSupport,
   mcpScenarioEvidence,
   rulesKernelMatrix,
   selectedIdentityMbtEvidenceTag,
@@ -1069,6 +1071,7 @@ function buildSelectedIdentityEvidenceAudit({
     level1FullSupport,
     level12FullSupport,
     level13FullSupport,
+    level14FullSupport,
   };
   return stable({
     criteria: {
@@ -1125,6 +1128,7 @@ function buildUltraGoldenGate({
   level1FullSupport,
   level12FullSupport,
   level13FullSupport,
+  level14FullSupport,
   mcpScenarioEvidence,
   rulesKernelMatrix,
   selectedIdentityMbtEvidenceTag,
@@ -1134,6 +1138,7 @@ function buildUltraGoldenGate({
     level1FullSupport,
     level12FullSupport,
     level13FullSupport,
+    level14FullSupport,
   };
   const scopes = ultraGoldenScopeFields.map(({ reportField, scopeId }) =>
     buildScopeGate({
@@ -1148,6 +1153,7 @@ function buildUltraGoldenGate({
     level1FullSupport,
     level12FullSupport,
     level13FullSupport,
+    level14FullSupport,
     mcpScenarioEvidence,
     rulesKernelMatrix,
     selectedIdentityMbtEvidenceTag,
@@ -1161,6 +1167,8 @@ function buildUltraGoldenGate({
         "plans/unit-profile-coverage/level1-2-full-support.json",
       level13FullSupport:
         "plans/unit-profile-coverage/level1-3-full-support.json",
+      level14FullSupport:
+        "plans/unit-profile-coverage/level1-4-full-support.json",
       mcpScenarioEvidence: mcpScenarioEvidenceSourcePath,
       rulesKernelMatrix: "plans/rules-kernel-coverage/matrix.json",
       unitMatrix: "plans/unit-profile-coverage/unit-matrix.json",

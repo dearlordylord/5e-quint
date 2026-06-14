@@ -89,10 +89,11 @@ function mcpScenarioEvidenceFixture(kind) {
     requiredFlows: [
       {
         flowId: "mcp-workflow-discovery",
-        scopeIds: ["level-1", "level-1-3"],
+        scopeIds: ["level-1", "level-1-3", "level-1-4"],
         followUpTaskIdsByScope: {
           "level-1": "C3-MCP-LEVEL12-SCENARIO-GATE",
           "level-1-3": "L13UG-A04-MCP-LEVEL13-EVIDENCE-AUDIT",
+          "level-1-4": "L14G-MCP-LEVEL14-SCENARIO-GATE",
         },
         description: "sample MCP flow",
       },
@@ -119,6 +120,17 @@ function mcpScenarioEvidenceFixture(kind) {
         requiredEvidence: {
           scenarioGoal: "fixture scenario",
           inputs: ["fixture input"],
+        },
+      },
+      {
+        scopeId: "level-1-4",
+        auditTaskId: "L14G-MCP-LEVEL14-SCENARIO-GATE",
+        result: "new-scenario-required",
+        reason: "fixture missing level-4 scenario evidence",
+        reusedFlowIds: [],
+        requiredEvidence: {
+          scenarioGoal: "fixture level-4 scenario",
+          inputs: ["fixture level-4 input"],
         },
       },
     ],
@@ -153,6 +165,27 @@ function assertLaterLevelOnlyScopeAccounting() {
   if (level5Status.status === "closed-later-level-only") {
     fail(
       `Self-test failed: expected level-5 scope not to close level-5 residual as later-level-only, got ${JSON.stringify(level5Status)}`,
+    );
+  }
+}
+
+function assertSelectionGrantContainerScopeAccounting() {
+  const unit = {
+    unitId: "fixture_selection_grant_container",
+    claim: {
+      tag: "unsupported-profile",
+      battleReadinessClosure: {
+        kind: battleReadinessClosureKind.selectionGrantContainer,
+        owner: "fixture selected option owner",
+        reason:
+          "The feature grants a selection container; selected options own executable behavior.",
+      },
+    },
+  };
+  const status = strictStatusForUnitForTest(unit, 4);
+  if (status.status !== "closed-selection-grant-container") {
+    fail(
+      `Self-test failed: expected selection-grant container closure, got ${JSON.stringify(status)}`,
     );
   }
 }
@@ -444,7 +477,25 @@ function runSelfTest(root) {
       `Self-test failed: expected character level 3 bands to include spell-level-2 and exclude spell-level-3, got ${JSON.stringify(levelThreeBands)}`,
     );
   }
+  const levelFourBands = characterLevelBands(4);
+  if (
+    JSON.stringify(levelFourBands) !==
+    JSON.stringify([
+      "level-1",
+      "level-2",
+      "level-3",
+      "level-4",
+      "spell-level-0",
+      "spell-level-1",
+      "spell-level-2",
+    ])
+  ) {
+    fail(
+      `Self-test failed: expected character level 4 bands to include level-4 and spell-level-2 while excluding spell-level-3, got ${JSON.stringify(levelFourBands)}`,
+    );
+  }
   assertLaterLevelOnlyScopeAccounting();
+  assertSelectionGrantContainerScopeAccounting();
   assertMindSpikeDeferredSelectedIdentityGate();
 
   const tempDir = fs.mkdtempSync(
@@ -549,6 +600,7 @@ function runSelfTest(root) {
       level1FullSupport: incompleteLevelReport,
       level12FullSupport: completeLevelReport,
       level13FullSupport: completeLevelReport,
+      level14FullSupport: completeLevelReport,
       mcpScenarioEvidence: {
         check: {
           packageName: "@dnd/mcp",
@@ -618,6 +670,10 @@ function runSelfTest(root) {
       ultraGoldenGate,
       "level-1-3",
     );
+    const completeLevel14Scope = requireSelfTestScope(
+      ultraGoldenGate,
+      "level-1-4",
+    );
     if (
       ultraGoldenGate.status !== "blocked" ||
       !ultraGoldenGate.blockedScopeIds.includes("level-1") ||
@@ -625,6 +681,7 @@ function runSelfTest(root) {
       incompleteScope.status !== "blocked" ||
       completeScope.status !== "pass" ||
       completeLevel13Scope.status !== "blocked" ||
+      completeLevel14Scope.status !== "pass" ||
       incompleteScope.layerResult.completeLayers !== 0 ||
       incompleteScope.layerResult.totalLayers !== 4
     ) {
@@ -655,6 +712,7 @@ function runSelfTest(root) {
       "| level-1-2 | pass | 4/4 | 0 |",
       "| level-1-3 | blocked | 3/4 | 0 |",
       "| level-1-3 | mcp-scenario-evidence | blocked |",
+      "| level-1-4 | pass | 4/4 | 0 |",
     ]) {
       if (!renderedUltraGoldenGate.includes(expectedRow)) {
         fail(
@@ -698,6 +756,7 @@ function runSelfTest(root) {
       level1FullSupport: completeLevelReport,
       level12FullSupport: completeLevelReport,
       level13FullSupport: completeLevel13Report,
+      level14FullSupport: completeLevelReport,
       mcpScenarioEvidence: {
         check: {
           packageName: "@dnd/mcp",

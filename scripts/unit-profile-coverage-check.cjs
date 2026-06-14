@@ -24,9 +24,11 @@ const {
   buildLevel1FullSupport,
   buildLevel12FullSupport,
   buildLevel13FullSupport,
+  buildLevel14FullSupport,
   renderLevel1FullSupport,
   renderLevel12FullSupport,
   renderLevel13FullSupport,
+  renderLevel14FullSupport,
 } = require("./level1-full-support-report.cjs");
 const {
   buildSrdUnitInventory,
@@ -233,10 +235,14 @@ function main() {
   const level13FullSupport = buildLevel13FullSupport(matrix, srdUnitInventory, {
     root,
   });
+  const level14FullSupport = buildLevel14FullSupport(matrix, srdUnitInventory, {
+    root,
+  });
   const ultraGoldenGate = buildUltraGoldenGate({
     level1FullSupport,
     level12FullSupport,
     level13FullSupport,
+    level14FullSupport,
     mcpScenarioEvidence,
     rulesKernelMatrix: rulesKernelCoverage.matrix,
     selectedIdentityMbtEvidenceTag,
@@ -364,6 +370,16 @@ function main() {
     { root, write },
     paths.level13FullSupportReport,
     renderLevel13FullSupport(level13FullSupport),
+  );
+  writeOrCompare(
+    { root, write },
+    paths.level14FullSupport,
+    `${JSON.stringify(level14FullSupport, null, 2)}\n`,
+  );
+  writeOrCompare(
+    { root, write },
+    paths.level14FullSupportReport,
+    renderLevel14FullSupport(level14FullSupport),
   );
   writeOrCompare(
     { root, write },

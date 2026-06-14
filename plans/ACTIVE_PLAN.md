@@ -1,4 +1,4 @@
-# Active Plan: Level 3 Ultra-Golden Residuals
+# Active Plan: Level 1-4 Ultra-Golden Gate
 
 <!-- ralph-task-index
 {
@@ -6,308 +6,252 @@
   "tasks": [
     {
       "number": 1,
-      "id": "L3UG-01-DIAGNOSTIC-ROW-TRANSPARENCY",
-      "status": "ready-for-implementation-after-light-research",
-      "title": "Make current level-3 diagnostic non-green rows scanner-visible"
+      "id": "L14G-01-LEVEL4-ASI-CATALOG-SOURCE",
+      "status": "ready-for-implementation",
+      "title": "Close level-4 Ability Score Improvement catalog/source gaps"
     },
     {
       "number": 2,
-      "id": "L3UG-02-WILD-SHAPE-STAT-BLOCK-ACTION-INVENTORY",
+      "id": "L14G-02-LEVEL4-PROGRESSION-DELTA-AUDIT",
       "status": "ready-for-research",
-      "title": "Inventory remaining Wild Shape Stat Block action pressure"
+      "title": "Audit level-4 class-table progression deltas"
     },
     {
       "number": 3,
-      "id": "L3UG-03-WILD-SHAPE-SENSE-LANGUAGE-PROJECTION",
+      "id": "L14G-03-MONK-SLOW-FALL-TRIAGE",
       "status": "ready-for-research",
-      "title": "Close or promote Wild Shape sense and language projection"
+      "title": "Classify or promote Monk Slow Fall"
     },
     {
       "number": 4,
-      "id": "L3UG-04-METAMAGIC-QUICKENED-RESIDUAL-INVENTORY",
-      "status": "ready-for-research",
-      "title": "Inventory remaining Quickened action-spell procedure pressure"
+      "id": "L14G-04-MCP-LEVEL14-SCENARIO-GATE",
+      "status": "ready-for-implementation",
+      "title": "Add level-1-4 MCP scenario evidence"
     },
     {
       "number": 5,
-      "id": "L3UG-05-METAMAGIC-NEXT-QUICKENED-SLICE",
+      "id": "L14G-05-GATE-CONSOLIDATION",
       "status": "blocked",
-      "title": "Promote one next Quickened procedure tracer bullet"
-    },
-    {
-      "number": 6,
-      "id": "L3UG-06-ULTRA-GOLDEN-CONSOLIDATION",
-      "status": "blocked",
-      "title": "Regenerate and summarize level-3 ultra-golden residuals"
+      "title": "Regenerate and close the level 1-4 ultra-golden gate"
     }
   ]
 }
 -->
 
-## Default Queue
+## Current State
 
-This file is the default `--plan` / `--source` for Ralph tooling
-(`scripts/ralph-run.sh` and `scripts/sync-active-plan-to-ralph.sh`). The
-deterministic replay portability lane drained in DRP-T19, so this file now
-carries the next runnable default queue instead of ending on an empty task
-index.
+The level 1-3 ultra-golden gate remains complete. The checker now also models a
+level-1-4 scope:
 
-The queue is a narrow level-3 ultra-golden cleanup batch. It does not reopen the
-strict level-3 full-support claim: `plans/unit-profile-coverage/LEVEL1_3_FULL_SUPPORT.md`
-reports `Full-support claim: pass`, strict target closure `197/197`, selected
-identity readiness `168/168`, SRD-authored product readiness `79/79`, and
-rules-kernel supported Unit coverage `140/140`.
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md` reports 25 level-4
+  class-feature rows.
+- `plans/unit-profile-coverage/LEVEL1_4_FULL_SUPPORT.md` exists and reports
+  support completeness as pass: strict target closure `206/206`, selected
+  identity readiness `168/168`, and SRD-authored product readiness with zero
+  authored-readiness blockers.
+- `plans/unit-profile-coverage/ULTRA_GOLDEN_GATE.md` reports the aggregate gate
+  as blocked only for `level-1-4`; that scope is `3/4` layers complete.
+- The formal blocker is MCP scenario evidence: `level-1-4` has `0/4` required
+  MCP flows covered for `mcp-workflow-discovery`, `character-creation`,
+  `character-sheet`, and `battle`.
 
-Current generated source-of-truth metrics:
+The level-4 inventory also surfaces source/catalog work that should be split
+from the MCP scenario lane:
 
-- `plans/unit-profile-coverage/LEVEL1_3_FULL_SUPPORT.md`: diagnostic product
-  readiness `594/607 (97.9%)`, with `owner-evidence-required: 11` and
-  `partial-battle-runtime: 2`.
-- `plans/unit-profile-coverage/UNIT_REPORT.md`: supported Unit rules-kernel
-  chain coverage `168/168 (100%)`.
-- `plans/rules-kernel-coverage/REPORT.md`: 120 obligations, 114 covered,
-  zero open transitional obligations, and 6 permanent boundary or unsupported
-  rows.
+- Missing no-matrix level-4 class feature rows: `fighter_ability_score_improvement_l4`,
+  `paladin_ability_score_improvement_l4`, `warlock_ability_score_improvement_l4`,
+  and `monk_slow_fall`.
+- Existing installed ASI rows are closed as `closed-selection-grant-container`;
+  selected downstream feat Units or Character Sheet facts own executable
+  behavior.
+- Spell-level-3 remains outside level 1-4 and belongs to the character-level-5
+  frontier for full casters.
 
-## DRP-T19 Closeout
-
-The deterministic replay portability lane audited the checked replay inventory
-from `plans/rules-kernel-coverage/obligations.jsonl` and did not change the
-durable witness-mode mix.
-
-Kept deterministic replays:
-
-- 22 `deterministic-qnt-replay` witness entries.
-- 21 obligation rows with at least one deterministic replay.
-- 19 replay-only obligation rows, carrying 20 replay entries because
-  `CHARACTER.BATTLE.HANDOFF.IDENTITY_CONFLICTS` has init-side and
-  settlement-side deterministic replay witnesses.
-- 2 supplemental deterministic replay rows beside existing focused MBT:
-  `BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES` and
-  `BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP`.
-
-Promoted focused MBT witnesses in the DRP lane: none. The mixed rows above kept
-their deterministic replay evidence beside already-existing focused MBT
-coverage, and the portable parity closeout in
-`plans/QNT_COVERAGE_PROGRAM.md#Portable-Parity-Witness-Closeout` already records
-the previously promoted focused MBT composition seams:
-
-- `BATTLE.PROTOCOL.CONCENTRATION_BREAK_TEARDOWN`
-- `BATTLE.COMPOSITION.TURN_BOUNDARY_EFFECT_LIFECYCLE_ORDERING`
-- `BATTLE.PROTOCOL.ZERO_HIT_POINT_MID_RESOLUTION`
-
-Deferred owner-decision blockers from DRP-T19: none. The heavy computed-oracle
-integration lane remains parked per `plans/QNT_COVERAGE_PROGRAM.md`, and
-`QCP-LANG-PARITY-MARKER` remains blocked until a first non-TS language target
-arrives.
-
-Because the DRP witness-mode mix did not change, `plans/QNT_COVERAGE_PROGRAM.md`
-does not need a portable-witness closeout update for this task.
+Completed scope-construction tasks were intentionally removed from the Ralph
+task index. The live queue now starts at `L14G-01`; the deleted completed work
+was the level-4 inventory scope, the level-1-4 strict full-support report, and
+the level-1-4 ultra-golden aggregate scope.
 
 ## Source Of Truth
 
 Read these before starting a task in this queue:
 
 - `CLAUDE.md`
-- The current task details in this file.
 - `plans/unit-profile-coverage/README.md`
-- `plans/unit-profile-coverage/LEVEL1_3_FULL_SUPPORT.md`
-- `plans/unit-profile-coverage/level1-3-full-support.json`
-- `plans/unit-profile-coverage/UNIT_REPORT.md`
-- `plans/unit-profile-coverage/unit-matrix.json`
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`
+- `plans/unit-profile-coverage/LEVEL1_4_FULL_SUPPORT.md`
+- `plans/unit-profile-coverage/ULTRA_GOLDEN_GATE.md`
+- `plans/unit-profile-coverage/srd-unit-inventory.json`
+- `plans/unit-profile-coverage/level1-4-full-support.json`
+- `plans/unit-profile-coverage/ultra-golden-gate.json`
+- `plans/unit-profile-coverage/mcp-scenario-evidence.json`
 - `plans/unit-profile-coverage/unit-claims.jsonl`
-- `plans/unit-profile-coverage/task-claims.jsonl`
 - `plans/unit-profile-coverage/unit-evidence.jsonl`
-- `plans/rules-kernel-coverage/README.md`
 - `plans/rules-kernel-coverage/REPORT.md`
+- `.references/srd-5.2.1/Classes/`
+- `UBIQUITOUS_LANGUAGE.md`
 
 For rule-bearing work, read the relevant local SRD anchors under
 `.references/srd-5.2.1/` and check `UBIQUITOUS_LANGUAGE.md` before
 implementation. Do not browse external rules sources for SRD meaning.
 
-## Lane Rules
+## Gate Shape
 
-- Before starting each task, run the Ralph task-base check from `CLAUDE.md`:
-  log the declared base ref, log `HEAD`, and confirm the task Base SHA is an
-  ancestor of `HEAD`. Stop on mismatch.
-- Use pnpm only.
-- Do not treat diagnostic product readiness as a hidden full-support blocker.
-  If a diagnostic status should become a strict gate, add checker logic and
-  self-tests in the same task.
-- Do not dispatch production runtime behavior on authored Unit, Spell, class,
-  subclass, or Stat Block identity. SRD identity may appear only at
-  catalog/selection/fixture boundaries.
-- Do not duplicate state across Surface, Character Creation, Character Sheet,
-  Character Battle, battle runtime, QNT, or generated coverage artifacts.
-- Treat battle MBT as scarce. Do not run MBT for exploratory inventory or
-  accounting. If a completed task changes battle-runtime behavior, use the
-  repository MBT protocol from `CLAUDE.md`.
+The level 1-4 gate uses the same four-layer ultra-golden shape as level 1-3:
+
+| Layer | Current level-1-4 result | Meaning |
+| --- | --- | --- |
+| Support completeness | pass | The generated strict report has no open strict rows, selected-identity blockers, or SRD-authored product-readiness blockers. |
+| QNT/generator readiness | pass | Every scoped reducer-semantic obligation is covered, and scoped semantic-core QNT owners are generation-subset-clean with no run-block blocker. |
+| MBT/parity evidence | pass | Every scoped reducer-semantic obligation has at least one rules-kernel parity witness. |
+| MCP scenario evidence | blocked | The level-1-4 MCP scenario manifest needs checker-owned scenario evidence for discovery, character creation, Character Sheet, and battle flows. |
+
+## Parallel Ralph Lanes
+
+Use four parallel Ralph agents at most. The first four lanes are independent
+enough to launch together after normal branch-base checks; the fifth lane is
+serial consolidation after their outputs land.
+
+| Lane | Ralph source file | Task | Size | Status | Independence |
+| --- | --- | --- | ---: | --- | --- |
+| A | `plans/RALPH_L14G_01_ASI_CATALOG_SOURCE.md` | L14G-01-LEVEL4-ASI-CATALOG-SOURCE | ~1 day | ready-for-implementation | Source/catalog lane for Fighter, Paladin, and Warlock ASI records plus class feature-grant refs and ASI closure claims. Does not need MCP changes. |
+| B | `plans/RALPH_L14G_02_PROGRESSION_DELTA_AUDIT.md` | L14G-02-LEVEL4-PROGRESSION-DELTA-AUDIT | ~1 day | ready-for-research | Audit lane for level-4 class table deltas. Can run in parallel with ASI, Slow Fall, and MCP work. |
+| C | `plans/RALPH_L14G_03_MONK_SLOW_FALL_TRIAGE.md` | L14G-03-MONK-SLOW-FALL-TRIAGE | ~1 day | ready-for-research | RAW/domain decision lane for Slow Fall. It may close as a boundary or spawn later QNT/runtime/MBT implementation work. |
+| D | `plans/RALPH_L14G_04_MCP_LEVEL14_SCENARIO_GATE.md` | L14G-04-MCP-LEVEL14-SCENARIO-GATE | ~1.5-2 days | ready-for-implementation | Formal ultra-golden blocker. Designs and implements MCP scenario evidence for level-4 advancement, sheet durability, and battle handoff. |
+| E | `plans/RALPH_L14G_05_GATE_CONSOLIDATION.md` | L14G-05-GATE-CONSOLIDATION | ~0.5 day | blocked | Serial lane after A-D. Regenerates, reviews residuals, and updates this plan. |
+
+The per-lane files above are the Ralph launch sources for parallel runs. Each
+file has its own `ralph-task-index` block and matching `### Task 1` body. This
+`ACTIVE_PLAN.md` remains the coordination rollup and serial fallback, not the
+recommended source for launching all four parallel agents.
+
+## Work Shape
+
+The split is intentionally coarser than half-day tasks. ASI source records and
+claims stay together because splitting them would create checker churn without
+reducing risk. MCP stays one larger lane because scenario design and evidence
+updates need to converge in one artifact.
+
+| Task | Day 1 | Day 2 |
+| --- | --- | --- |
+| L14G-01-LEVEL4-ASI-CATALOG-SOURCE | Read existing ASI records/class records, author missing Fighter/Paladin/Warlock records, add class feature-grant refs, and add/update Unit claims. | Usually not needed; use spillover for regeneration, reviewer-loop fixes, and closing generated no-matrix rows. |
+| L14G-02-LEVEL4-PROGRESSION-DELTA-AUDIT | Extract level-3 to level-4 table deltas from all 12 local SRD class files and map each delta to an existing owner if one exists. | Usually not needed; use spillover to write the audit artifact and split uncovered deltas into concrete follow-up task rows. |
+| L14G-03-MONK-SLOW-FALL-TRIAGE | Read Slow Fall RAW, reaction terminology, damage-reduction owners, and existing fall/movement assumptions; write the boundary decision or implementation plan. | Usually not needed; use spillover only if the decision requires a detailed QNT/runtime/MBT follow-up plan. |
+| L14G-04-MCP-LEVEL14-SCENARIO-GATE | Trace the existing MCP level-3 scenario pattern and design the level-4 advancement/ASI/sheet/handoff scenario using returned holes. | Implement the scenario, update MCP evidence manifest rows, regenerate the ultra-golden gate, and verify level-1 through level-1-3 evidence remains valid. |
+| L14G-05-GATE-CONSOLIDATION | Re-run all generated reports after lanes 1-4, inspect remaining level-1-4 residuals, update this plan, and close or split residual blockers. | Not expected. |
 
 ## DAG / Queue Order
 
 | # | Task | Status | Depends on | Notes |
 | ---: | --- | --- | --- | --- |
-| 1 | L3UG-01-DIAGNOSTIC-ROW-TRANSPARENCY | ready-for-implementation-after-light-research | none | Make current level-3 diagnostic non-green rows discoverable from generated artifacts instead of stale audit prose. |
-| 2 | L3UG-02-WILD-SHAPE-STAT-BLOCK-ACTION-INVENTORY | ready-for-research | none | Inventory remaining level-3-reachable Wild Shape Stat Block action pressure. |
-| 3 | L3UG-03-WILD-SHAPE-SENSE-LANGUAGE-PROJECTION | ready-for-research | none | Decide whether active-form senses, retained languages, and speech blockers are already closed or need a small shared projection. |
-| 4 | L3UG-04-METAMAGIC-QUICKENED-RESIDUAL-INVENTORY | ready-for-research | none | Recompute remaining Quickened action-time Spell Invocation procedure pressure from current generated evidence. |
-| 5 | L3UG-05-METAMAGIC-NEXT-QUICKENED-SLICE | blocked | L3UG-04-METAMAGIC-QUICKENED-RESIDUAL-INVENTORY | Promote one procedure only after Task 4 identifies a concrete small slice. |
-| 6 | L3UG-06-ULTRA-GOLDEN-CONSOLIDATION | blocked | Tasks 1-4 and any unblocked implementation task | Regenerate reports and summarize remaining level-3 ultra-golden residuals. |
+| 1 | L14G-01-LEVEL4-ASI-CATALOG-SOURCE | ready-for-implementation | none | Close ASI source/catalog gaps without adding per-class runtime behavior. |
+| 2 | L14G-02-LEVEL4-PROGRESSION-DELTA-AUDIT | ready-for-research | none | Audit class-table deltas that are not feature-heading rows. |
+| 3 | L14G-03-MONK-SLOW-FALL-TRIAGE | ready-for-research | none | Decide boundary closure vs promoted falling/reaction runtime work. |
+| 4 | L14G-04-MCP-LEVEL14-SCENARIO-GATE | ready-for-implementation | none | Add checked MCP evidence for all four level-1-4 required flows. |
+| 5 | L14G-05-GATE-CONSOLIDATION | blocked | Tasks 1-4 | Regenerate, review, and close remaining level-1-4 residuals. |
 
 ## Task Details
 
-### Task 1 - L3UG-01-DIAGNOSTIC-ROW-TRANSPARENCY
+### Task 1 - L14G-01-LEVEL4-ASI-CATALOG-SOURCE
 
-Status: `ready-for-implementation-after-light-research`
-
-Input:
-
-- `plans/unit-profile-coverage/LEVEL1_3_FULL_SUPPORT.md`
-- `plans/unit-profile-coverage/level1-3-full-support.json`
-- `plans/unit-profile-coverage/UNIT_REPORT.md`
-- `plans/unit-profile-coverage/LEVEL1_3_DIAGNOSTIC_READINESS_AUDIT.md`
-- `scripts/unit-profile-coverage-check.cjs`
-- `scripts/level1-full-support-report.cjs`
+Status: `ready-for-implementation`
 
 Output:
 
-- Make the current `owner-evidence-required` and `partial-battle-runtime`
-  diagnostic rows scanner-visible without relying on stale hand-written row
-  inventories.
-- Update or retire stale diagnostic audit prose that conflicts with generated
-  `594/607 (97.9%)` accounting.
+- Author missing SRD Surface records for `fighter_ability_score_improvement_l4`,
+  `paladin_ability_score_improvement_l4`, and
+  `warlock_ability_score_improvement_l4`, or document a precise reason if a
+  record should remain absent.
+- Ensure SRD class records retain level-4 ASI feature grants through the same
+  source shape used for existing class feature grants.
+- Add or update Unit claim rows so ASI remains a `selection-grant-container`
+  closure rather than duplicated per-class runtime behavior.
 
 Acceptance:
 
-- Current diagnostic non-green rows can be found from generated/checker-owned
-  artifacts.
-- `pnpm unit-profile-coverage:check:self-test` and
-  `pnpm unit-profile-coverage:check` pass.
+- The level-4 ASI rows derive from one generic feat-choice/advancement owner.
+- The SRD inventory no longer reports those three ASI rows as no-matrix
+  level-4 class-feature pressure.
+- No runtime code dispatches on class-specific ASI authored identity.
 
-### Task 2 - L3UG-02-WILD-SHAPE-STAT-BLOCK-ACTION-INVENTORY
+### Task 2 - L14G-02-LEVEL4-PROGRESSION-DELTA-AUDIT
 
 Status: `ready-for-research`
 
-Input:
-
-- `plans/unit-profile-coverage/LEVEL1_3_FULL_SUPPORT.md`
-- `plans/unit-profile-coverage/UNIT_REPORT.md`
-- Current Wild Shape Unit claim, task-claim, and evidence rows.
-- Relevant Wild Shape and Stat Block SRD anchors.
-
 Output:
 
-- Inventory remaining Wild Shape Stat Block action pressure for selected known
-  Beast forms reachable by level-3 Wild Shape.
-- Classify each branch as already promoted, battle-owned future work,
-  table/prose-only, generic object/Utilize boundary work, or later-level work.
+- Compare every SRD class table's level-3 to level-4 progression facts:
+  prepared spell counts, cantrip counts, spell-slot counts, Pact Magic counts,
+  Weapon Mastery counts, class resources, and other table-owned deltas.
+- Decide which deltas are already covered by existing character-creation,
+  Character Sheet, or battle handoff owners and which need task rows.
 
 Acceptance:
 
-- The inventory names concrete runtime shapes, not authored Beast identity as a
-  reducer dispatch key.
-- No runtime behavior, QNT, MBT, or owner evidence is widened by the inventory
-  itself.
-- Any follow-up implementation task is unblocked only for one small
-  battle-owned branch.
+- The audit names source facts, not authored identity as runtime dispatch.
+- Existing generic progression owners are reused where possible.
+- Any new implementation task has a concrete owner and evidence target.
 
-### Task 3 - L3UG-03-WILD-SHAPE-SENSE-LANGUAGE-PROJECTION
+### Task 3 - L14G-03-MONK-SLOW-FALL-TRIAGE
 
 Status: `ready-for-research`
 
-Input:
-
-- Current Wild Shape Unit claim, task-claim, and evidence rows.
-- Current Character Sheet, Character Battle, battle runtime, app, and MCP
-  consumers of active-form sense, language, and speech facts.
-- Relevant SRD anchors for Wild Shape, Stat Blocks, senses, languages, and
-  condition/speech blockers.
-
 Output:
 
-- Decide whether prior work already closes the Wild Shape
-  sense/language/speech residual.
-- If not closed, carve the smallest shared projection tracer bullet needed for
-  active-form senses, retained languages, and speech blockers.
+- Read Monk Slow Fall RAW and the existing reaction/damage-reduction owners.
+- Decide whether Slow Fall is a promoted battle-runtime reaction and damage
+  reduction slice, a table movement/falling boundary closure, or a split.
 
 Acceptance:
 
-- No duplicate language or sense state is added to battle state.
-- Any projection derives from selected active form facts, retained Character
-  Sheet language facts, and existing condition/speech blockers.
-- Follow-up implementation work is precise if the residual remains open.
+- The decision cites local RAW and `UBIQUITOUS_LANGUAGE.md`.
+- If promoted, the plan identifies the QNT owner, runtime reducer owner, and
+  focused parity witness before implementation starts.
 
-### Task 4 - L3UG-04-METAMAGIC-QUICKENED-RESIDUAL-INVENTORY
+### Task 4 - L14G-04-MCP-LEVEL14-SCENARIO-GATE
 
-Status: `ready-for-research`
-
-Input:
-
-- Current `sorcerer_metamagic` Unit claim, task-claim, and evidence rows.
-- Current rules-kernel obligations and profile joins for Metamagic and Spell
-  Invocation procedures.
-- Relevant SRD anchors for Metamagic, Quickened Spell, Magic Action, Bonus
-  Action, Spell Slot spending, and spellcasting turn limits.
+Status: `ready-for-implementation`
 
 Output:
 
-- Recompute which action-time Spell Invocation procedures remain outside the
-  promoted Quickened subset.
-- Identify whether one next procedure shape is small enough for a tracer bullet
-  without authored spell identity dispatch.
+- Add MCP scenario evidence for a supported SRD level-4 character advancement
+  path.
+- Exercise returned level-4 choice/finalization holes, including ASI or another
+  qualifying feat choice.
+- Read back durable Character Sheet state after finalization.
+- Hand off to battle when level-4 facts affect battle state, and record checked
+  evidence in `plans/unit-profile-coverage/mcp-scenario-evidence.json`.
 
 Acceptance:
 
-- Inventory is procedure-shape based, not spell-name based.
-- Remaining resource-threading, same-turn spell lock, and QNT parity needs are
-  explicit.
-- Task 5 is unblocked only if there is one concrete next procedure slice.
+- `ULTRA_GOLDEN_GATE.md` shows level-1-4 MCP scenario evidence as `4/4`.
+- The scenario uses returned hole ids and option ids rather than hard-coded
+  authored identity in runtime behavior.
+- Existing level 1, 1-2, and 1-3 MCP evidence remains valid.
 
-### Task 5 - L3UG-05-METAMAGIC-NEXT-QUICKENED-SLICE
+### Task 5 - L14G-05-GATE-CONSOLIDATION
 
 Status: `blocked`
 
 Depends on:
 
-- L3UG-04-METAMAGIC-QUICKENED-RESIDUAL-INVENTORY
+- L14G-01-LEVEL4-ASI-CATALOG-SOURCE
+- L14G-02-LEVEL4-PROGRESSION-DELTA-AUDIT
+- L14G-03-MONK-SLOW-FALL-TRIAGE
+- L14G-04-MCP-LEVEL14-SCENARIO-GATE
 
 Output:
 
-- Promote one next Quickened procedure through typed runtime support, QNT
-  parity ownership, focused tests, and generated evidence.
+- Regenerate all generated coverage artifacts.
+- Update this plan statuses.
+- Summarize every remaining level-1-4 residual as pass, precise owner boundary,
+  later-level-only, or concrete follow-up task.
 
 Acceptance:
 
-- Shared Font of Magic point-pool spending remains the resource source.
-- The same-turn level-1-plus spell lock is preserved for slot, free-cast, and
-  cantrip paths that need it.
-- No production behavior dispatches on authored spell or Metamagic option
-  identity.
-
-### Task 6 - L3UG-06-ULTRA-GOLDEN-CONSOLIDATION
-
-Status: `blocked`
-
-Depends on:
-
-- L3UG-01-DIAGNOSTIC-ROW-TRANSPARENCY
-- L3UG-02-WILD-SHAPE-STAT-BLOCK-ACTION-INVENTORY
-- L3UG-03-WILD-SHAPE-SENSE-LANGUAGE-PROJECTION
-- L3UG-04-METAMAGIC-QUICKENED-RESIDUAL-INVENTORY
-- Any implementation task unblocked by those inventories.
-
-Output:
-
-- Regenerate relevant Unit and rules-kernel reports.
-- Update this plan statuses and summarize remaining level-3 ultra-golden
-  pressure.
-
-Acceptance:
-
-- Generated reports are green or unrelated baseline failures are documented
-  without broad cleanup.
-- Any remaining residual has a precise owner, non-runnable reason, or follow-up
-  task.
+- `ULTRA_GOLDEN_GATE.md` reports level-1-4 with no stale or hand-maintained
+  blocker text.
+- Any residual that prevents a pass is named by generated checker output.
 
 ## Verification
 
