@@ -65,8 +65,13 @@ Decision:
   `cleanroom-input/domain/CLEANROOM_ASSUMPTIONS.md`). It carries each
   assumption and rules basis only; implementation-change records are stripped.
   Keep it in sync with owner curation of `ASSUMPTIONS.md`.
-- **Kickoff:** the cleanroom repo's `README.md` and `tasks/T001-FIRST-VERTICAL.md`
-  describe how to launch the first manual vertical with a fresh agent.
+- **Instruction scaffolds:** `plans/cleanroom-scaffolds/` preserves the
+  cleanroom repo `AGENTS.md`, `README.md`, Work Loop, scope filter, validation
+  report, and blocker templates/snapshots. Use these scaffolds when
+  bootstrapping a new cleanroom repo; refresh manifest SHAs and cursors after
+  running the sync script.
+- **Kickoff:** the cleanroom repo's `README.md` and `tasks/WORK_LOOP.md`
+  describe how to launch a fresh agent on the next in-scope driver.
 
 ## Cleanroom Boundary
 
