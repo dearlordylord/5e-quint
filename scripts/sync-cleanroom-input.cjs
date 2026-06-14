@@ -22,6 +22,12 @@ const DEFAULT_TARGET = "/workspace/typescript/dnd-cleanroom-rust";
 // maps a source root to a destination root inside cleanroom-input/.
 // kind "flat" copies matching files directly under sourceRoot; kind "tree"
 // copies matching files recursively, preserving subdirectories.
+//
+// QNT entries set `packagesRelative: true` instead of a destRoot: the file is
+// copied to qnt/<path-relative-to-packages/>, preserving the source layout so
+// cross-package relative imports (e.g. `../shared-algebras/proofs/rule-core/`)
+// resolve identically in the cleanroom. Flattening these breaks imports; the
+// post-sync import check (verifyImportsResolve) is the executable guard.
 const ALLOWLIST = [
   {
     sourceRoot: ".references/srd-5.2.1",
@@ -41,35 +47,44 @@ const ALLOWLIST = [
   },
   {
     sourceRoot: "packages/battle-runtime",
-    destRoot: "qnt/battle-runtime",
+    packagesRelative: true,
     kind: "flat",
     extension: ".qnt",
   },
   {
     sourceRoot: "packages/character-creation-runtime",
-    destRoot: "qnt/character-creation-runtime",
+    packagesRelative: true,
     kind: "flat",
     extension: ".qnt",
   },
   {
     sourceRoot: "packages/character-sheet-runtime",
-    destRoot: "qnt/character-sheet-runtime",
+    packagesRelative: true,
     kind: "flat",
     extension: ".qnt",
   },
   {
     sourceRoot: "packages/character-battle-runtime",
-    destRoot: "qnt/character-battle-runtime",
+    packagesRelative: true,
     kind: "flat",
     extension: ".qnt",
   },
   {
     sourceRoot: "packages/shared-algebras/proofs/rule-core",
-    destRoot: "qnt/rule-core",
+    packagesRelative: true,
     kind: "tree",
     extension: ".qnt",
   },
 ];
+
+// Destination root for an allowlist rule. QNT rules derive it from the
+// source's path under packages/ so the cleanroom mirrors the source layout.
+function destRootFor(rule) {
+  if (rule.packagesRelative) {
+    return path.join("qnt", path.relative("packages", rule.sourceRoot));
+  }
+  return rule.destRoot;
+}
 
 function fail(message) {
   process.stderr.write(`sync-cleanroom-input: ${message}\n`);
@@ -127,27 +142,63 @@ function collectCopies(repoRoot) {
     if (!fs.existsSync(sourceAbs)) {
       fail(`allowlisted source missing: ${rule.sourceRoot}`);
     }
+    const destRoot = destRootFor(rule);
     if (rule.kind === "file") {
-      copies.push({ source: rule.sourceRoot, dest: rule.destRoot });
-    } else if (rule.kind === "flat") {
-      for (const file of listFlat(sourceAbs, rule.extension)) {
-        const rel = path.relative(sourceAbs, file);
-        copies.push({
-          source: path.join(rule.sourceRoot, rel),
-          dest: path.join(rule.destRoot, rel),
-        });
-      }
+      copies.push({ source: rule.sourceRoot, dest: destRoot });
     } else {
-      for (const file of listTree(sourceAbs, rule.extension)) {
+      const files =
+        rule.kind === "flat"
+          ? listFlat(sourceAbs, rule.extension)
+          : listTree(sourceAbs, rule.extension);
+      for (const file of files) {
         const rel = path.relative(sourceAbs, file);
         copies.push({
           source: path.join(rule.sourceRoot, rel),
-          dest: path.join(rule.destRoot, rel),
+          dest: path.join(destRoot, rel),
         });
       }
     }
   }
   return copies;
+}
+
+// Every `import ... from "<path>"` in a copied .qnt must resolve to another
+// copied .qnt. A broken relative import would otherwise surface only when a
+// cleanroom agent runs quint-connect and hits a Quint resolution error — far
+// from the layout decision that caused it. This makes the corpus self-consistent
+// at sync time.
+function verifyImportsResolve(inputRoot, inventory) {
+  const present = new Set(inventory.map((item) => item.dest));
+  // Only `import`/`export ... from "<path>"` statement lines carry a relative
+  // module path; a bare `from "..."` elsewhere is prose in a comment or string.
+  const importLine = /^\s*(?:import|export)\b.*?\bfrom\s+"([^"]+)"/;
+  const dangling = [];
+  let checked = 0;
+  for (const item of inventory) {
+    if (!item.dest.endsWith(".qnt")) continue;
+    const text = fs.readFileSync(path.join(inputRoot, item.dest), "utf8");
+    for (const line of text.split("\n")) {
+      const match = importLine.exec(line);
+      if (match === null) continue;
+      checked += 1;
+      const importPath = match[1];
+      // Quint resolves `from "X"` relative to the importing file; bare names
+      // (no leading . or /) are stdlib modules, not corpus files.
+      if (!importPath.startsWith(".") && !importPath.startsWith("/")) continue;
+      const resolvedDir = path.dirname(item.dest);
+      const target = `${path.join(resolvedDir, importPath)}.qnt`;
+      if (!present.has(target)) {
+        dangling.push(`${item.dest}: from "${importPath}" -> missing ${target}`);
+      }
+    }
+  }
+  if (dangling.length > 0) {
+    fail(
+      `QNT import resolution failed (${dangling.length} dangling); the copied ` +
+        `layout breaks relative imports:\n${dangling.join("\n")}`,
+    );
+  }
+  return checked;
 }
 
 function requireCleanSources(repoRoot) {
@@ -202,6 +253,8 @@ function main() {
       sha256: sha256(destAbs),
     });
   }
+
+  const importsChecked = verifyImportsResolve(inputRoot, inventory);
 
   const counts = new Map();
   for (const item of inventory) {
@@ -258,7 +311,8 @@ function main() {
 
   fs.writeFileSync(path.join(inputRoot, "MANIFEST.md"), manifest);
   process.stdout.write(
-    `synced ${inventory.length} files to ${inputRoot} at source SHA ${sourceSha}\n`,
+    `synced ${inventory.length} files to ${inputRoot} at source SHA ${sourceSha} ` +
+      `(${importsChecked} QNT imports resolved)\n`,
   );
 }
 
