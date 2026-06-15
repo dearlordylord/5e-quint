@@ -22,5 +22,7 @@ Required fields:
   - `driverGuidanceMarkdown`;
   - `reproductionMarkdown`.
 
+`rust.json` is the profile for the Rust cleanroom target.
+
 The synthetic profiles in this directory exist only to prove that templates do
 not hard-code one target. They are not implementation recommendations.

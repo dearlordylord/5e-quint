@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "targetProfileId": "rust",
+  "targetLabel": "Rust",
+  "implementationKind": "rules engine",
+  "enginePath": "src",
+  "packageManager": "Cargo",
+  "sourceFileExtensions": [
+    ".rs"
+  ],
+  "allowedTargetDocs": [
+    "Rust language documentation.",
+    "Rust standard library documentation.",
+    "Cargo documentation.",
+    "Rust quint-connect harness documentation."
+  ],
+  "verificationCommands": [
+    {
+      "label": "format",
+      "command": "cargo fmt --check"
+    },
+    {
+      "label": "test",
+      "command": "cargo test"
+    },
+    {
+      "label": "lint",
+      "command": "cargo clippy --all-targets -- -D warnings"
+    }
+  ],
+  "quintBinding": {
+    "name": "Rust quint-connect harness",
+    "driverGuidanceMarkdown": "- Implement a Rust replay harness for each executable QNT/MBT branch set.\n- Dispatch observed QNT action names inside quarantined harness adapter modules only.\n- Project Rust engine state into the exact comparison shape named by the QNT driver.",
+    "reproductionMarkdown": "Use the target harness seed or trace id recorded in `tasks/target-replay-evidence/*.json` to reproduce a failing Rust quint-connect run."
+  }
+}
