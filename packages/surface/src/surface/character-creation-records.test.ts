@@ -170,6 +170,7 @@ describe("character-creation Surface records", () => {
           { level: 1, unitId: "wizard_ritual_adept" },
           { level: 1, unitId: "wizard_arcane_recovery" },
           { level: 2, unitId: "wizard_scholar" },
+          { level: 4, unitId: "wizard_ability_score_improvement_l4" },
         ],
         startingEquipment: expect.arrayContaining([
           {

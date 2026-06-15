@@ -273,6 +273,7 @@ import weaponShortbowInput from "../../content/weapon_shortbow.json";
 import weaponShortswordInput from "../../content/weapon_shortsword.json";
 import weaponSpearInput from "../../content/weapon_spear.json";
 import wizardArcaneRecoveryInput from "../../content/wizard_arcane_recovery.json";
+import wizardAbilityScoreImprovementL4Input from "../../content/wizard_ability_score_improvement_l4.json";
 import wizardEvocationSavantInput from "../../content/wizard_evocation_savant.json";
 import wizardPotentCantripInput from "../../content/wizard_potent_cantrip.json";
 import wizardRitualAdeptInput from "../../content/wizard_ritual_adept.json";
@@ -487,6 +488,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     wizardRitualAdeptInput,
     wizardArcaneRecoveryInput,
     wizardScholarInput,
+    wizardAbilityScoreImprovementL4Input,
     wizardEvocationSavantInput,
     wizardPotentCantripInput,
     featAbilityScoreImprovementInput,

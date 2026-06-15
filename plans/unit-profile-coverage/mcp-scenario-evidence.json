@@ -64,6 +64,16 @@
     },
     {
       "kind": "mcp-scenario",
+      "flowId": "mcp-workflow-discovery",
+      "scopeIds": ["level-1-4"],
+      "scenarioId": "create-level-four-wizard-asi-and-battle-handoff",
+      "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
+      "testPath": "packages/mcp/src/mcp-protocol.test.ts",
+      "taskId": "L14G-04-MCP-LEVEL14-SCENARIO-GATE",
+      "summary": "The protocol acceptance scenario reads the MCP workflow guide and catalog units before selecting the returned level-4 Wizard progression, class feature, hole ids, option ids, and draft revisions."
+    },
+    {
+      "kind": "mcp-scenario",
       "flowId": "character-creation",
       "scopeIds": ["level-1-3"],
       "scenarioId": "create-level-three-wizard-and-cast-scorching-ray",
@@ -71,6 +81,16 @@
       "testPath": "packages/mcp/src/mcp-protocol.test.ts",
       "taskId": "L13UG-A05-MCP-LEVEL13-SCENARIO-IF-NEEDED",
       "summary": "The protocol acceptance scenario creates and finalizes a supported level-3 Elf Soldier Wizard through create, discover, fill, and finalize tools while selecting the SRD Evoker subclass plus returned Wizard spellbook, Evocation Savant spellbook, and prepared-spell holes."
+    },
+    {
+      "kind": "mcp-scenario",
+      "flowId": "character-creation",
+      "scopeIds": ["level-1-4"],
+      "scenarioId": "create-level-four-wizard-asi-and-battle-handoff",
+      "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
+      "testPath": "packages/mcp/src/mcp-protocol.test.ts",
+      "taskId": "L14G-04-MCP-LEVEL14-SCENARIO-GATE",
+      "summary": "The protocol acceptance scenario creates and finalizes a supported level-4 Elf Soldier Wizard while selecting the SRD Evoker subclass, the returned Ability Score Improvement feat choice, the returned Intelligence +2 ASI option, Wizard spell choices, equipment, and loadout holes."
     },
     {
       "kind": "mcp-scenario",
@@ -115,6 +135,16 @@
     {
       "kind": "mcp-scenario",
       "flowId": "character-sheet",
+      "scopeIds": ["level-1-4"],
+      "scenarioId": "create-level-four-wizard-asi-and-battle-handoff",
+      "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
+      "testPath": "packages/mcp/src/mcp-protocol.test.ts",
+      "taskId": "L14G-04-MCP-LEVEL14-SCENARIO-GATE",
+      "summary": "The protocol acceptance scenario reads list_characters after finalization and verifies the durable level-4 Wizard Character Sheet exposes Intelligence 17, 26 Hit Points, four level-1 Spell Slots, and three level-2 Spell Slots."
+    },
+    {
+      "kind": "mcp-scenario",
+      "flowId": "character-sheet",
       "scopeIds": ["level-1", "level-1-2"],
       "scenarioId": "create-baseline-character",
       "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
@@ -151,6 +181,16 @@
       "testPath": "packages/mcp/src/mcp-protocol.test.ts",
       "taskId": "L13UG-A05-MCP-LEVEL13-SCENARIO-IF-NEEDED",
       "summary": "The protocol acceptance scenario starts battle from the finalized level-3 Wizard and an SRD Sphinx of Wonder Stat Block, discovers the Scorching Ray act, fills returned target, attack-roll, and rolled-dice holes, and verifies one level-2 Spell Slot is expended."
+    },
+    {
+      "kind": "mcp-scenario",
+      "flowId": "battle",
+      "scopeIds": ["level-1-4"],
+      "scenarioId": "create-level-four-wizard-asi-and-battle-handoff",
+      "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
+      "testPath": "packages/mcp/src/mcp-protocol.test.ts",
+      "taskId": "L14G-04-MCP-LEVEL14-SCENARIO-GATE",
+      "summary": "The protocol acceptance scenario starts battle from the finalized level-4 Wizard and an SRD Sphinx of Wonder Stat Block, verifies the returned battle state carries four level-1 Spell Slots and three level-2 Spell Slots, and discovers the Scorching Ray battle act."
     },
     {
       "kind": "mcp-scenario",
@@ -239,18 +279,14 @@
     {
       "scopeId": "level-1-4",
       "auditTaskId": "L14G-04-MCP-LEVEL14-SCENARIO-GATE",
-      "result": "new-scenario-required",
-      "reason": "Level 1-4 adds character advancement through level-4 Ability Score Improvement and level-4 class-feature pressure; existing level-1-3 MCP scenarios do not prove that workflow.",
-      "reusedFlowIds": [],
-      "requiredEvidence": {
-        "scenarioGoal": "Create or advance a supported SRD character to level 4, exercise level-4 choice and finalization paths, inspect Character Sheet durability, and hand off to battle when the resulting character has battle-relevant level-4 facts.",
-        "inputs": [
-          "level-4 SRD character advancement path",
-          "Ability Score Improvement or other qualifying feat choice",
-          "Character Sheet readback after finalization",
-          "battle handoff if level-4 facts affect battle state"
-        ]
-      }
+      "result": "reuse-existing-evidence",
+      "reason": "Task 1 added the executable create-level-four-wizard-asi-and-battle-handoff MCP acceptance scenario. Together with the reusable workflow-discovery checks inside that scenario, level-1-4 now has scenario evidence for level-4 Wizard advancement, Ability Score Improvement selection, Character Sheet durability, and battle handoff.",
+      "reusedFlowIds": [
+        "mcp-workflow-discovery",
+        "character-creation",
+        "character-sheet",
+        "battle"
+      ]
     }
   ]
 }

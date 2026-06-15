@@ -187,6 +187,7 @@ const SUPPORTED_PROGRESSIONS = [
   supportedSameClassSecondLevelProgression(SRD_RANGER_CLASS_UNIT_ID),
   supportedSameClassSecondLevelProgression(SRD_SORCERER_CLASS_UNIT_ID),
   supportedSameClassSecondLevelProgression(WIDTH_CLASS_WIZARD_UNIT_ID),
+  supportedSameClassProgression(WIDTH_CLASS_WIZARD_UNIT_ID, 4),
   supportedSameClassProgression(SRD_ROGUE_CLASS_UNIT_ID, 6),
   ...SRD_LEVEL_ONE_CLASS_UNIT_IDS.filter(
     (classUnitId) => classUnitId !== PHASE1_CLASS_FIGHTER_UNIT_ID,
@@ -366,6 +367,7 @@ export const CHARACTER_CREATION_SUPPORT_PROFILE = {
       creationChoiceOptionId("light"),
       creationChoiceOptionId("fire_bolt"),
       creationChoiceOptionId("ray_of_frost"),
+      creationChoiceOptionId("minor_illusion"),
     ],
     [WIZARD_SPELLBOOK_CHOICE_KEY]: [
       creationChoiceOptionId("detect_magic"),

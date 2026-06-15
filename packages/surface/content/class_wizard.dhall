@@ -36,6 +36,7 @@ let wizard =
         [ { level = 1, unitId = "wizard_ritual_adept" }
         , { level = 1, unitId = "wizard_arcane_recovery" }
         , { level = 2, unitId = "wizard_scholar" }
+        , { level = 4, unitId = "wizard_ability_score_improvement_l4" }
         ]
       , hitPointDie = 6
       , id = "class_wizard"
@@ -67,7 +68,7 @@ let wizard =
           , cantripAccess =
               { kind = "known_cantrips"
               , choose = 3
-              , spellIds = [ "light", "fire_bolt", "ray_of_frost" ]
+              , spellIds = [ "light", "fire_bolt", "ray_of_frost", "minor_illusion" ]
               , changeOn = { kind = "long_rest", count = 1 }
               }
           , spellbookAccess =

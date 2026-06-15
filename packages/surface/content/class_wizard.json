@@ -16,6 +16,10 @@
     {
       "level": 2,
       "unitId": "wizard_scholar"
+    },
+    {
+      "level": 4,
+      "unitId": "wizard_ability_score_improvement_l4"
     }
   ],
   "hitPointDie": 6,

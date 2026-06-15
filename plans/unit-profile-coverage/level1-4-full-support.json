@@ -2851,12 +2851,7 @@
       "unitId": "thaumaturgy"
     },
     {
-      "catalogDisposition": {
-        "category": "unsupported-widening-pressure",
-        "planningLane": "QMBT18",
-        "reason": "Executable SRD authored data is absent from the catalog and needs an explicit unsupported profile or surface-widening slice."
-      },
-      "catalogStatus": "not-in-unit-catalog",
+      "catalogStatus": "installed",
       "claimTag": "unsupported-profile",
       "closureKinds": [
         "selection-grant-container"
@@ -10617,8 +10612,8 @@
         "group": "level-scoped-class-feature-grants",
         "label": "SRD class feature grants through level 4",
         "metrics": {
-          "denominator": 46,
-          "numerator": 46,
+          "denominator": 47,
+          "numerator": 47,
           "percent": "100%"
         },
         "rows": [
@@ -11035,10 +11030,19 @@
             "sourceRecordPath": "packages/surface/content/wizard_scholar.json",
             "status": "installed",
             "unitId": "wizard_scholar"
+          },
+          {
+            "kind": "class_feature",
+            "ownerUnitId": "class_wizard",
+            "ready": true,
+            "relation": "class.featureGrants.level-4",
+            "sourceRecordPath": "packages/surface/content/wizard_ability_score_improvement_l4.json",
+            "status": "installed",
+            "unitId": "wizard_ability_score_improvement_l4"
           }
         ],
         "rowsByStatus": {
-          "installed": 46
+          "installed": 47
         }
       },
       {
@@ -11115,8 +11119,8 @@
       }
     ],
     "metrics": {
-      "denominator": 79,
-      "numerator": 79,
+      "denominator": 80,
+      "numerator": 80,
       "percent": "100%"
     },
     "openBlockerCount": 0
