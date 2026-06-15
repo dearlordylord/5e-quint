@@ -53,10 +53,9 @@ only by the source repo's sync script, which rewrites the manifest.
 ## Operating Rules
 
 - Do not ask the project owner clarifying questions during a run.
-- Before implementation begins, write `tasks/START_GATE.json` with the Target
-  Base SHA supplied in the owner-pasted bootstrap query, current `HEAD`, and the
-  `git merge-base --is-ancestor <Base SHA> HEAD` result. Stop if the query did
-  not provide a full 40-character Git SHA or if the ancestor check fails.
+- Before implementation begins, write `tasks/START_GATE.json` with current
+  `HEAD`, `git status --short`, and selected drivers. Stop if the worktree is
+  not clean before task edits begin.
 - If RAW, QNT, the Ubiquitous Language, the curated assumptions, source branch
   inventory, and guidance pack together are insufficient to implement a
   behavior, record a blocker in `tasks/BLOCKERS.md` and move on. Do not guess,
@@ -106,8 +105,8 @@ Do not run source-repo commands. Use only the target-profile commands above.
 Every implementation task must update:
 
 - tests for the behavior implemented;
-- `tasks/START_GATE.json` — recorded Base SHA, `HEAD`, and ancestor check
-  result for the task;
+- `tasks/START_GATE.json` — recorded start `HEAD`, pre-implementation worktree
+  status, and selected drivers for the task;
 - `tasks/ENGINE_DEPTH_MANIFEST.json` — production modules extended, domain APIs
   introduced or reused, adapter modules touched, quarantined witness names,
   accumulator growth, and expected next reuse;

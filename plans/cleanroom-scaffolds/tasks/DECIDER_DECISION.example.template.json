@@ -4,7 +4,7 @@
   "decision": "accepted",
   "deterministicGates": [
     {
-      "gate": "base-ancestor",
+      "gate": "start-gate",
       "status": "pass",
       "evidence": "tasks/START_GATE.json"
     },

@@ -17,8 +17,8 @@ Use this file when the implementer hands work to a reviewer or decider.
 ```md
 ## <task id>
 
-- Base SHA: `<declared base SHA>`
-- HEAD: `<head SHA>`
+- Start HEAD: `<start HEAD SHA>`
+- Current HEAD: `<current HEAD SHA>`
 - Selected drivers:
   - `<cleanroom-input/qnt/.../*.mbt.qnt>`
 - Production modules extended:

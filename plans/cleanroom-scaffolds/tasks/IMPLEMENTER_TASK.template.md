@@ -7,16 +7,12 @@ Use this before changing `{{enginePath}}`.
 Write `tasks/START_GATE.json` before implementation begins. It must record:
 
 - `taskId`;
-- declared Target Base SHA from the owner-pasted bootstrap query;
-- current `HEAD`;
-- command `git merge-base --is-ancestor <Base SHA> HEAD`;
-- ancestor-check result;
+- current `HEAD` from `git rev-parse HEAD`;
+- clean pre-implementation worktree status from `git status --short`;
 - selected `.mbt.qnt` drivers for this task.
 
-If the owner-pasted bootstrap query does not provide a full 40-character Git
-SHA, stop before implementation and record a bootstrap blocker in
-`tasks/BLOCKERS.md`. If the ancestor check fails, stop. Do not rebase, repair
-the branch, or keep working around the mismatch.
+If the worktree is not clean before task edits begin, stop before implementation
+and record a bootstrap blocker in `tasks/BLOCKERS.md`.
 
 ## Implementation Contract
 

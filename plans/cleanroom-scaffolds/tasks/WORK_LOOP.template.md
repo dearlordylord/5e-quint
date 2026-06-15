@@ -73,10 +73,9 @@ To select work:
 For the selected branch set:
 
 1. Write `tasks/START_GATE.json` with the next task id from the Current Cursor,
-   the Target Base SHA supplied in the owner-pasted bootstrap query, current
-   `HEAD`, ancestor-check command, ancestor-check result, and selected drivers.
-   Stop before implementation if the query did not provide a full 40-character
-   Git SHA or if the ancestor check fails.
+   current `HEAD`, clean pre-implementation worktree status, and selected
+   drivers. Stop before implementation if the worktree is not clean before task
+   edits begin.
 2. Read the `.mbt.qnt` driver and its imported QNT files from
    `cleanroom-input/qnt/**`.
 3. Read the relevant RAW from `cleanroom-input/raw/srd-5.2.1/**`.

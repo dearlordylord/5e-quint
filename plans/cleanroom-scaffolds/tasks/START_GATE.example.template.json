@@ -1,11 +1,11 @@
 {
   "schemaVersion": 1,
   "taskId": "{{nextTaskId}}",
-  "declaredBaseSha": "<40 hex Target Base SHA from bootstrap query>",
-  "headSha": "<40 hex HEAD SHA>",
-  "ancestorCheck": {
-    "command": "git merge-base --is-ancestor <Base SHA> HEAD",
-    "result": "passed"
+  "startHeadSha": "<40 hex HEAD SHA before task edits>",
+  "preImplementationStatus": {
+    "command": "git status --short",
+    "result": "clean",
+    "output": ""
   },
   "taskScope": {
     "selectedDrivers": [

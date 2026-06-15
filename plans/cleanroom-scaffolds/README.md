@@ -81,9 +81,8 @@ first queued driver, and target profile SHA in rendered task files.
    cleanroom files into the cleanroom repo:
    `AGENTS.md`, `README.md`, `BOOTSTRAP_QUERY.md`, `target-profile.json`,
    `tasks/**`, and `cleanroom-input/**`.
-7. When pasting the query from `BOOTSTRAP_QUERY.md`, replace
-   `<TARGET_BASE_SHA>` with the 40-character Git SHA that the cleanroom task
-   branch must be based on. The file itself may remain a reusable template.
+7. Commit the generated cleanroom files in the target repo if they are not
+   already committed.
 8. Start the cleanroom session manually with the cleanroom repo as the only
    working root, and paste the query from `BOOTSTRAP_QUERY.md`. The minimal
    query is:

@@ -5,8 +5,8 @@ findings converge. Record the decision in `tasks/DECIDER_DECISION.json`.
 
 ## Required Gates
 
-- `base-ancestor` — `tasks/START_GATE.json` records declared Base SHA, `HEAD`,
-  and a passing `git merge-base --is-ancestor <Base SHA> HEAD` result.
+- `start-gate` — `tasks/START_GATE.json` records start `HEAD`, clean
+  pre-implementation worktree status, and selected drivers.
 - `branch-coverage` — selected in-scope branches have passing
   harness-generated target replay evidence.
 - `adapter-quarantine` — QNT witness protocol names are contained in adapter
@@ -24,7 +24,7 @@ findings converge. Record the decision in `tasks/DECIDER_DECISION.json`.
 
 ## Reject Immediately
 
-- Missing or failed Base SHA ancestor check.
+- Missing start gate or dirty pre-implementation worktree status.
 - Missing source branch inventory or stale target replay evidence.
 - Any selected in-scope branch without passing target QNT/MBT replay evidence.
 - Public production symbol derived from a QNT action or witness field name.

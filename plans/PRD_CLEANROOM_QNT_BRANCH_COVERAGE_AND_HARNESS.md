@@ -216,8 +216,8 @@ a cross-language conformance artifact.
 - Reviewers include at least RAW/QNT traceability, domain architecture,
   branch-coverage, and code-shape/depth perspectives. A single model may run
   multiple checklists only if the harness records each checklist separately.
-- Each Ralph task records declared Base SHA, `HEAD`, and
-  `git merge-base --is-ancestor <Base SHA> HEAD` before work. A mismatch stops
+- Each cleanroom task records start `HEAD`, clean pre-implementation worktree
+  status, and selected drivers before work. A dirty pre-start worktree stops
   the task; the runner or decider owns branch repair.
 - Reviewer findings are either fixed or explicitly rejected by the decider with
   rationale before acceptance. An unresolved reasonable finding blocks the
@@ -291,8 +291,8 @@ a cross-language conformance artifact.
 - The Ralph-style harness includes recorded reviewer loops and decider hard
   gates for branch coverage, adapter quarantine, engine depth,
   state-owner/derivability, authored-identity dispatch, and report honesty.
-- Each task records Ralph Base SHA, `HEAD`, and ancestor check result before
-  implementation begins.
+- Each task records start `HEAD`, clean pre-implementation worktree status, and
+  selected drivers before implementation begins.
 - A fresh cleanroom task cannot be accepted unless all in-scope branches for its
   selected drivers are exercised through the target-language QNT/MBT lane.
 - The current cleanroom implementation is not used as evidence for acceptance

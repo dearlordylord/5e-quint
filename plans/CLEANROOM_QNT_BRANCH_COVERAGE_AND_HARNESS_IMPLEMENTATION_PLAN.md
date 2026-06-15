@@ -136,8 +136,8 @@ reviewer-loop convergence.
 
 ### Tasks
 
-- [x] Add implementer task instructions that require declared Base SHA, `HEAD`,
-  and ancestor check before work starts.
+- [x] Add implementer task instructions that require start `HEAD`, clean
+  pre-implementation worktree status, and selected drivers before work starts.
 - [x] Add reviewer templates for RAW/QNT traceability, domain architecture,
   branch coverage, code shape, adapter quarantine, engine depth, state
   ownership, and authored-identity dispatch.
@@ -155,7 +155,8 @@ reviewer-loop convergence.
 ### Acceptance Criteria
 
 - [x] A task with uncovered in-scope MBT branches cannot be accepted.
-- [x] A task with stale or missing Base SHA ancestor check cannot start.
+- [x] A task with missing start gate or dirty pre-implementation worktree status
+  cannot start.
 - [x] A task with unresolved reasonable reviewer findings cannot be accepted.
 - [x] Public production symbols derived from witness protocol names are
   rejected or require a documented adapter boundary.
@@ -270,8 +271,8 @@ must not count as acceptance evidence for the real cleanroom repo.
   guidance pack, scaffold files, and at least one synthetic target profile.
 - [ ] Run source branch inventory checks against the copied QNT corpus.
 - [ ] Run scaffold rendering checks against two synthetic target profiles.
-- [ ] Verify the rendered bootstrap query requires an owner-supplied target
-  Base SHA before implementation can start.
+- [ ] Verify the rendered bootstrap query requires recording start `HEAD` and
+  clean pre-implementation worktree status before implementation can start.
 - [ ] Validate example target replay evidence for covered, uncovered, stale,
   wrong-action, diagnostic-only, and blocked branches.
 - [ ] Validate reviewer-loop and decider records in a synthetic cleanroom task.

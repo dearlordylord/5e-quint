@@ -31,7 +31,7 @@ const requiredReviewChecklists = [
 ];
 
 const requiredDeciderGates = [
-  "base-ancestor",
+  "start-gate",
   "branch-coverage",
   "adapter-quarantine",
   "engine-depth",
@@ -414,69 +414,59 @@ function validateStartGate(startGate, rootPath, issues) {
   }
   validateString(startGate.taskId, "tasks/START_GATE.json taskId", issues);
   validateString(
-    startGate.declaredBaseSha,
-    "tasks/START_GATE.json declaredBaseSha",
+    startGate.startHeadSha,
+    "tasks/START_GATE.json startHeadSha",
     issues,
   );
-  validateString(startGate.headSha, "tasks/START_GATE.json headSha", issues);
   if (
-    typeof startGate.declaredBaseSha === "string" &&
-    !/^[0-9a-f]{40}$/i.test(startGate.declaredBaseSha)
+    typeof startGate.startHeadSha === "string" &&
+    !/^[0-9a-f]{40}$/i.test(startGate.startHeadSha)
   ) {
-    issues.push("tasks/START_GATE.json declaredBaseSha must be a full Git SHA.");
+    issues.push("tasks/START_GATE.json startHeadSha must be a full Git SHA.");
   }
-  if (
-    typeof startGate.headSha === "string" &&
-    !/^[0-9a-f]{40}$/i.test(startGate.headSha)
-  ) {
-    issues.push("tasks/START_GATE.json headSha must be a full Git SHA.");
-  }
-  if (!isRecord(startGate.ancestorCheck)) {
-    issues.push("tasks/START_GATE.json ancestorCheck must be an object.");
+  if (!isRecord(startGate.preImplementationStatus)) {
+    issues.push("tasks/START_GATE.json preImplementationStatus must be an object.");
   } else {
     validateString(
-      startGate.ancestorCheck.command,
-      "tasks/START_GATE.json ancestorCheck.command",
+      startGate.preImplementationStatus.command,
+      "tasks/START_GATE.json preImplementationStatus.command",
       issues,
     );
-    if (startGate.ancestorCheck.result !== "passed") {
-      issues.push("tasks/START_GATE.json ancestor check must pass before work starts.");
+    if (startGate.preImplementationStatus.command !== "git status --short") {
+      issues.push(
+        "tasks/START_GATE.json preImplementationStatus.command must be git status --short.",
+      );
+    }
+    if (startGate.preImplementationStatus.result !== "clean") {
+      issues.push(
+        "tasks/START_GATE.json preImplementationStatus.result must be clean before work starts.",
+      );
     }
     if (
-      typeof startGate.ancestorCheck.command === "string" &&
-      typeof startGate.declaredBaseSha === "string" &&
-      !startGate.ancestorCheck.command.includes(startGate.declaredBaseSha)
+      typeof startGate.preImplementationStatus.output === "string" &&
+      startGate.preImplementationStatus.output.trim() !== ""
     ) {
-      issues.push(
-        "tasks/START_GATE.json ancestorCheck.command must include declaredBaseSha.",
-      );
+      issues.push("tasks/START_GATE.json preImplementationStatus.output must be empty.");
     }
   }
   const gitDir = path.join(rootPath, ".git");
   if (!fs.existsSync(gitDir)) {
-    issues.push("task root must be a git repository for deterministic Base SHA validation.");
+    issues.push("task root must be a git repository for start gate validation.");
   } else if (
-    typeof startGate.declaredBaseSha === "string" &&
-    /^[0-9a-f]{40}$/i.test(startGate.declaredBaseSha) &&
-    typeof startGate.headSha === "string" &&
-    /^[0-9a-f]{40}$/i.test(startGate.headSha)
+    typeof startGate.startHeadSha === "string" &&
+    /^[0-9a-f]{40}$/i.test(startGate.startHeadSha)
   ) {
     try {
       const actualHead = git(rootPath, ["rev-parse", "HEAD"]);
-      if (actualHead !== startGate.headSha) {
-        issues.push(
-          `tasks/START_GATE.json headSha ${startGate.headSha} does not match repository HEAD ${actualHead}.`,
-        );
-      }
       git(rootPath, [
         "merge-base",
         "--is-ancestor",
-        startGate.declaredBaseSha,
-        startGate.headSha,
+        startGate.startHeadSha,
+        actualHead,
       ]);
     } catch (error) {
       issues.push(
-        `tasks/START_GATE.json declaredBaseSha is not an ancestor of headSha: ${error.message}`,
+        `tasks/START_GATE.json startHeadSha is not in current HEAD history: ${error.message}`,
       );
     }
   }
@@ -1652,11 +1642,11 @@ function validFixture(rootPath) {
   writeJson(path.join(rootPath, "tasks/START_GATE.json"), {
     schemaVersion: 1,
     taskId: "T001",
-    declaredBaseSha: baseSha,
-    headSha: baseSha,
-    ancestorCheck: {
-      command: `git merge-base --is-ancestor ${baseSha} HEAD`,
-      result: "passed",
+    startHeadSha: baseSha,
+    preImplementationStatus: {
+      command: "git status --short",
+      result: "clean",
+      output: "",
     },
     taskScope: { selectedDrivers: [driverPath] },
   });
@@ -2020,14 +2010,15 @@ function runSelfTest() {
     expectFailure(
       validRoot,
       profile,
-      "base",
+      "dirty-start",
       (rootPath) => {
         const startGatePath = path.join(rootPath, "tasks/START_GATE.json");
         const startGate = readJson(startGatePath);
-        startGate.ancestorCheck.result = "failed";
+        startGate.preImplementationStatus.result = "dirty";
+        startGate.preImplementationStatus.output = " M README.md";
         writeJson(startGatePath, startGate);
       },
-      "ancestor check must pass",
+      "preImplementationStatus.result must be clean",
     );
 	    expectFailure(
 	      validRoot,
