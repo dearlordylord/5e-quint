@@ -2,12 +2,229 @@
   "schemaVersion": 1,
   "assignments": [
     {
-      "assignmentId": "tracer-bullet",
+      "assignmentId": "level-1-2-full",
+      "lanes": [
+        {
+          "laneId": "creation",
+          "queue": [
+            "cleanroom-input/qnt/character-creation-runtime/character-creation-class-feature-projections.mbt.qnt",
+            "cleanroom-input/qnt/character-creation-runtime/character-creation-cleric-druid-order-selected-identity.mbt.qnt",
+            "cleanroom-input/qnt/character-creation-runtime/character-creation-fighter-fighting-style-selected-identity.mbt.qnt",
+            "cleanroom-input/qnt/character-creation-runtime/character-creation-runtime.mbt.qnt",
+            "cleanroom-input/qnt/character-creation-runtime/character-creation-weapon-mastery-containers-selected-identity.mbt.qnt"
+          ]
+        },
+        {
+          "laneId": "sheet",
+          "queue": [
+            "cleanroom-input/qnt/character-sheet-runtime/character-sheet-ability-check-proficiency-bonus.mbt.qnt",
+            "cleanroom-input/qnt/character-sheet-runtime/character-sheet-armor-class-base-selected-identity.mbt.qnt",
+            "cleanroom-input/qnt/character-sheet-runtime/character-sheet-healing-resource-selected-identity.mbt.qnt",
+            "cleanroom-input/qnt/character-sheet-runtime/character-sheet-hit-point-maximum.mbt.qnt",
+            "cleanroom-input/qnt/character-sheet-runtime/character-sheet-hp-rest-hit-dice.mbt.qnt",
+            "cleanroom-input/qnt/character-sheet-runtime/character-sheet-spellbook-ritual-selected-identity.mbt.qnt",
+            "cleanroom-input/qnt/character-sheet-runtime/character-sheet-weapon-mastery-containers-selected-identity.mbt.qnt"
+          ]
+        },
+        {
+          "laneId": "handoff",
+          "queue": [
+            "cleanroom-input/qnt/character-battle-runtime/character-battle-origin-feat-selected-identity.mbt.qnt"
+          ]
+        },
+        {
+          "laneId": "battle",
+          "queue": [
+            "cleanroom-input/qnt/battle-runtime/battle-runtime-adrenaline-rush.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/battle-runtime-attack-spell-shape-selected-identity.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/battle-runtime-chained-attack-sequence.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/battle-runtime-command-option-next-turn.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/battle-runtime-command-ordering.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/battle-runtime-concentration-break-teardown.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/battle-runtime-creature-type-protection-and-charm-selected-identity.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/battle-runtime-danger-sense-selected-identity.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/battle-runtime-death-saving-throw.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/battle-runtime-dragonborn-breath-weapon.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/battle-runtime-druid-wild-shape-form-lifecycle.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/battle-runtime-eldritch-blast.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/battle-runtime-feature-selected-identity.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/battle-runtime-find-familiar-companion-lifecycle.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/battle-runtime-find-familiar-selected-identity.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/battle-runtime-healing-stabilization-selected-identity.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/battle-runtime-hit-point-restoration-ordering.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/battle-runtime-interrupt-stack-resume.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/battle-runtime-level1-buff-mark-smite-selected-identity.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/battle-runtime-level1-damage-spell-selected-identity.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/battle-runtime-level1-spatial-witness-selected-identity.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/battle-runtime-mage-armor-selected-identity.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/battle-runtime-magic-missile.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/battle-runtime-quickened-spell-governor.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/battle-runtime-roll-modifier-active-effects.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/battle-runtime-roll-modifier-buff-selected-identity.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/battle-runtime-sanctuary-selected-identity.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/battle-runtime-save-gated-spell-ordering.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/battle-runtime-scalar-buff-active-effects.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/battle-runtime-scalar-buff.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/battle-runtime-sleep-repeat-save.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/battle-runtime-sorcerer-metamagic-careful-selected-identity.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/battle-runtime-sorcerer-metamagic-distant-selected-identity.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/battle-runtime-sorcerer-metamagic-empowered-selected-identity.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/battle-runtime-sorcerer-metamagic-extended-selected-identity.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/battle-runtime-sorcerer-metamagic-heightened-selected-identity.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/battle-runtime-sorcerer-metamagic-seeking-selected-identity.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/battle-runtime-sorcerer-metamagic-selected-identity.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/battle-runtime-sorcerer-metamagic-spell-attack-selected-identity.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/battle-runtime-sorcerer-metamagic-spell-attack-sequence-selected-identity.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/battle-runtime-sorcerer-metamagic-subtle-selected-identity.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/battle-runtime-sorcerer-metamagic-transmuted-selected-identity.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/battle-runtime-sorcerer-metamagic-twinned-selected-identity.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/battle-runtime-species-passive-trait-selected-identity.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/battle-runtime-spell-attack-ordering.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/battle-runtime-starry-wisp-object.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/battle-runtime-stat-block-action-ordering.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/battle-runtime-thaumaturgy-selected-identity.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/battle-runtime-turn-boundary-effect-lifecycle.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/battle-runtime-weapon-attack-ordering.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/battle-runtime-weapon-attack-skeleton.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/battle-runtime-weapon-mastery-selected-identity.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/battle-runtime-zero-hit-point-mid-resolution.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/creature-attack.mbt.qnt"
+          ]
+        },
+        {
+          "laneId": "rules-core",
+          "queue": [
+            "cleanroom-input/qnt/battle-runtime/rule-core-attack-damage-disposition.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/rule-core-hit-point-damage.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/rule-core-movement.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/rule-core-reactions.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/rule-core-shove-outcome.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/rule-core-stat-block-controls.mbt.qnt"
+          ]
+        }
+      ]
+    },
+    {
+      "assignmentId": "level-1-2-creation",
+      "lanes": [
+        {
+          "laneId": "creation",
+          "queue": [
+            "cleanroom-input/qnt/character-creation-runtime/character-creation-class-feature-projections.mbt.qnt",
+            "cleanroom-input/qnt/character-creation-runtime/character-creation-cleric-druid-order-selected-identity.mbt.qnt",
+            "cleanroom-input/qnt/character-creation-runtime/character-creation-fighter-fighting-style-selected-identity.mbt.qnt",
+            "cleanroom-input/qnt/character-creation-runtime/character-creation-runtime.mbt.qnt",
+            "cleanroom-input/qnt/character-creation-runtime/character-creation-weapon-mastery-containers-selected-identity.mbt.qnt"
+          ]
+        }
+      ]
+    },
+    {
+      "assignmentId": "level-1-2-sheet",
+      "lanes": [
+        {
+          "laneId": "sheet",
+          "queue": [
+            "cleanroom-input/qnt/character-sheet-runtime/character-sheet-ability-check-proficiency-bonus.mbt.qnt",
+            "cleanroom-input/qnt/character-sheet-runtime/character-sheet-armor-class-base-selected-identity.mbt.qnt",
+            "cleanroom-input/qnt/character-sheet-runtime/character-sheet-healing-resource-selected-identity.mbt.qnt",
+            "cleanroom-input/qnt/character-sheet-runtime/character-sheet-hit-point-maximum.mbt.qnt",
+            "cleanroom-input/qnt/character-sheet-runtime/character-sheet-hp-rest-hit-dice.mbt.qnt",
+            "cleanroom-input/qnt/character-sheet-runtime/character-sheet-spellbook-ritual-selected-identity.mbt.qnt",
+            "cleanroom-input/qnt/character-sheet-runtime/character-sheet-weapon-mastery-containers-selected-identity.mbt.qnt"
+          ]
+        }
+      ]
+    },
+    {
+      "assignmentId": "level-1-2-handoff",
+      "lanes": [
+        {
+          "laneId": "handoff",
+          "queue": [
+            "cleanroom-input/qnt/character-battle-runtime/character-battle-origin-feat-selected-identity.mbt.qnt"
+          ]
+        }
+      ]
+    },
+    {
+      "assignmentId": "level-1-2-battle",
       "lanes": [
         {
           "laneId": "battle",
           "queue": [
-            "{{firstInScopeDriver}}"
+            "cleanroom-input/qnt/battle-runtime/battle-runtime-adrenaline-rush.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/battle-runtime-attack-spell-shape-selected-identity.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/battle-runtime-chained-attack-sequence.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/battle-runtime-command-option-next-turn.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/battle-runtime-command-ordering.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/battle-runtime-concentration-break-teardown.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/battle-runtime-creature-type-protection-and-charm-selected-identity.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/battle-runtime-danger-sense-selected-identity.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/battle-runtime-death-saving-throw.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/battle-runtime-dragonborn-breath-weapon.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/battle-runtime-druid-wild-shape-form-lifecycle.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/battle-runtime-eldritch-blast.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/battle-runtime-feature-selected-identity.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/battle-runtime-find-familiar-companion-lifecycle.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/battle-runtime-find-familiar-selected-identity.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/battle-runtime-healing-stabilization-selected-identity.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/battle-runtime-hit-point-restoration-ordering.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/battle-runtime-interrupt-stack-resume.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/battle-runtime-level1-buff-mark-smite-selected-identity.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/battle-runtime-level1-damage-spell-selected-identity.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/battle-runtime-level1-spatial-witness-selected-identity.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/battle-runtime-mage-armor-selected-identity.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/battle-runtime-magic-missile.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/battle-runtime-quickened-spell-governor.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/battle-runtime-roll-modifier-active-effects.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/battle-runtime-roll-modifier-buff-selected-identity.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/battle-runtime-sanctuary-selected-identity.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/battle-runtime-save-gated-spell-ordering.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/battle-runtime-scalar-buff-active-effects.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/battle-runtime-scalar-buff.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/battle-runtime-sleep-repeat-save.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/battle-runtime-sorcerer-metamagic-careful-selected-identity.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/battle-runtime-sorcerer-metamagic-distant-selected-identity.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/battle-runtime-sorcerer-metamagic-empowered-selected-identity.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/battle-runtime-sorcerer-metamagic-extended-selected-identity.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/battle-runtime-sorcerer-metamagic-heightened-selected-identity.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/battle-runtime-sorcerer-metamagic-seeking-selected-identity.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/battle-runtime-sorcerer-metamagic-selected-identity.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/battle-runtime-sorcerer-metamagic-spell-attack-selected-identity.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/battle-runtime-sorcerer-metamagic-spell-attack-sequence-selected-identity.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/battle-runtime-sorcerer-metamagic-subtle-selected-identity.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/battle-runtime-sorcerer-metamagic-transmuted-selected-identity.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/battle-runtime-sorcerer-metamagic-twinned-selected-identity.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/battle-runtime-species-passive-trait-selected-identity.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/battle-runtime-spell-attack-ordering.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/battle-runtime-starry-wisp-object.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/battle-runtime-stat-block-action-ordering.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/battle-runtime-thaumaturgy-selected-identity.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/battle-runtime-turn-boundary-effect-lifecycle.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/battle-runtime-weapon-attack-ordering.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/battle-runtime-weapon-attack-skeleton.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/battle-runtime-weapon-mastery-selected-identity.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/battle-runtime-zero-hit-point-mid-resolution.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/creature-attack.mbt.qnt"
+          ]
+        }
+      ]
+    },
+    {
+      "assignmentId": "level-1-2-rules-core",
+      "lanes": [
+        {
+          "laneId": "rules-core",
+          "queue": [
+            "cleanroom-input/qnt/battle-runtime/rule-core-attack-damage-disposition.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/rule-core-hit-point-damage.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/rule-core-movement.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/rule-core-reactions.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/rule-core-shove-outcome.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/rule-core-stat-block-controls.mbt.qnt"
           ]
         }
       ]

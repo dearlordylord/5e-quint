@@ -195,12 +195,41 @@ function readFirstInScopeDriver() {
   return "<first in-scope driver from tasks/LEVEL_1_2_SCOPE.md>";
 }
 
+function readActiveWorkDefaultCursor() {
+  const activeWorkPath = path.join(
+    scaffoldRoot,
+    "tasks/ACTIVE_WORK.template.json",
+  );
+  const activeWork = readJson(activeWorkPath);
+  const assignment = activeWork.assignments?.[0];
+  const lane = assignment?.lanes?.[0];
+  const driver = lane?.queue?.[0];
+  return {
+    defaultAssignmentId:
+      typeof assignment?.assignmentId === "string"
+        ? assignment.assignmentId
+        : "<active assignment id from tasks/ACTIVE_WORK.json>",
+    defaultLaneId:
+      typeof lane?.laneId === "string"
+        ? lane.laneId
+        : "<active lane id from tasks/ACTIVE_WORK.json>",
+    firstAssignedDriver:
+      typeof driver === "string"
+        ? driver
+        : "<first queued driver from tasks/ACTIVE_WORK.json>",
+  };
+}
+
 function renderValues(profile, targetDir) {
   const targetProfileSha256 = sha256Text(stableStringify(profile));
+  const activeWorkCursor = readActiveWorkDefaultCursor();
   return {
     allowedTargetDocsMarkdown: bulletList(profile.allowedTargetDocs),
     currentManifestSourceCommitSha: readManifestSourceSha(targetDir),
+    defaultAssignmentId: activeWorkCursor.defaultAssignmentId,
+    defaultLaneId: activeWorkCursor.defaultLaneId,
     enginePath: profile.enginePath,
+    firstAssignedDriver: activeWorkCursor.firstAssignedDriver,
     firstInScopeDriver: readFirstInScopeDriver(),
     implementationKind: profile.implementationKind,
     nextTaskId: "T001",

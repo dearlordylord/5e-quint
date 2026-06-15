@@ -21,6 +21,9 @@ source repo, prior cleanroom attempts, or external D&D rules sources.
 Read AGENTS.md and tasks/WORK_LOOP.md, then implement the next in-scope branch
 set from tasks/LEVEL_1_2_SCOPE.md following the Work Loop.
 
+Use assignmentId `{{defaultAssignmentId}}` from tasks/ACTIVE_WORK.json unless I
+explicitly name a different assignmentId.
+
 Use only cleanroom-input/**, tasks/**, target-profile.json, README.md,
 AGENTS.md, and target documentation allowed by AGENTS.md.
 

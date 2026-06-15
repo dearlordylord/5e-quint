@@ -8,10 +8,10 @@
     "output": ""
   },
   "taskScope": {
-    "assignmentId": "tracer-bullet",
-    "laneId": "battle",
+    "assignmentId": "{{defaultAssignmentId}}",
+    "laneId": "{{defaultLaneId}}",
     "selectedDrivers": [
-      "cleanroom-input/qnt/<package>/<driver>.mbt.qnt"
+      "{{firstAssignedDriver}}"
     ]
   }
 }

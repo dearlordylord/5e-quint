@@ -2024,7 +2024,7 @@ function runSelfTest() {
 	          fs
 	            .readFileSync(SOURCE_SCOPE_SNAPSHOT_PATH, "utf8")
 	            .replace(
-	              "1. `cleanroom-input/qnt/battle-runtime/battle-runtime-magic-missile.mbt.qnt`",
+	              "1. `cleanroom-input/qnt/character-creation-runtime/character-creation-class-feature-projections.mbt.qnt`",
 	              `1. \`${laterDriver}\``,
 	            ),
 	        );

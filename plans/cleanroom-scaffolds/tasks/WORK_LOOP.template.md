@@ -72,8 +72,8 @@ To select work:
 - Manifest source commit SHA: `{{currentManifestSourceCommitSha}}`
 - Source branch inventory SHA: `{{sourceBranchInventorySha}}`
 - Last completed current-snapshot queued branch set: `<none>`
-- Active assignment: `tracer-bullet`
-- Next queued driver: `{{firstInScopeDriver}}`
+- Active assignment: `{{defaultAssignmentId}}`
+- Next queued driver: `{{firstAssignedDriver}}`
 - Next task id: `{{nextTaskId}}`
 
 ## Implementation Rules
