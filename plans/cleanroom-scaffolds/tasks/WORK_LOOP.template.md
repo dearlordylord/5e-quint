@@ -12,8 +12,9 @@ Read these files, in this order:
 4. `cleanroom-input/branch-coverage/source-branch-inventory.json`
 5. `tasks/LEVEL_1_2_SCOPE.md`
 6. `tasks/IMPLEMENTER_TASK.md`
-7. `tasks/VALIDATION_REPORT.md`
-8. `tasks/BLOCKERS.md`
+7. `cleanroom-input/guidance/README.md`
+8. `tasks/VALIDATION_REPORT.md`
+9. `tasks/BLOCKERS.md`
 
 Do not read any file outside this repository. Do not read sibling repos.
 
@@ -82,7 +83,9 @@ For the selected branch set:
 3. Read the relevant RAW from `cleanroom-input/raw/srd-5.2.1/**`.
 4. Check `cleanroom-input/domain/UBIQUITOUS_LANGUAGE.md`.
 5. Check `cleanroom-input/domain/CLEANROOM_ASSUMPTIONS.md`.
-6. Check the relevant guidance files in `cleanroom-input/guidance/**`.
+6. Check `cleanroom-input/guidance/README.md`, including the harness
+   improvement boundary and adapter quarantine boundary, then read any other
+   relevant guidance files in `cleanroom-input/guidance/**`.
 7. Implement the smallest {{targetLabel}} slice in `{{enginePath}}` that makes
    the branch set conform.
 8. Record or update `tasks/ENGINE_DEPTH_MANIFEST.json` for the production

@@ -46,9 +46,22 @@ run multiple checklists, but each checklist result must be recorded separately.
 ### adapter-quarantine
 
 - Adapter modules are recorded in `tasks/ENGINE_DEPTH_MANIFEST.json`.
-- QNT action names, witness field names, trace ids, and `mbt::actionTaken`
-  stay inside adapter or harness files.
+- QNT action names, witness state names, witness field names, trace ids,
+  nondet pick names, projection hashes, and `mbt::actionTaken` stay inside
+  adapter modules, harness tests, target replay evidence, or task artifacts.
 - Production modules do not import from adapter modules.
+- Public production state and APIs are named for domain rules and executable
+  boundaries, not QNT witness protocol.
+
+### harness-improvement-boundary
+
+- Findings distinguish source QNT/corpus/process gaps from target
+  implementation defects.
+- The review does not expand the task into polishing unrelated target
+  implementation issues.
+- Any proposed source-side improvement names the source-owned artifact that
+  should change: QNT, copied guidance, scaffold template, target profile,
+  replay evidence contract, checker, or decider gate.
 
 ### engine-depth
 

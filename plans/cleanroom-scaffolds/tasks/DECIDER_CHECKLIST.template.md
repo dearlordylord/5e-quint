@@ -11,6 +11,9 @@ findings converge. Record the decision in `tasks/DECIDER_DECISION.json`.
   harness-generated target replay evidence.
 - `adapter-quarantine` — QNT witness protocol names are contained in adapter
   modules.
+- `harness-improvement-boundary` — findings distinguish source QNT/corpus/
+  process gaps from target implementation work and do not expand accepted task
+  scope.
 - `engine-depth` — production modules, domain APIs, adapter modules, and next
   reuse are recorded in `tasks/ENGINE_DEPTH_MANIFEST.json`.
 - `state-owner-derivability` — durable fields are recorded in
@@ -28,6 +31,8 @@ findings converge. Record the decision in `tasks/DECIDER_DECISION.json`.
 - Missing source branch inventory or stale target replay evidence.
 - Any selected in-scope branch without passing target QNT/MBT replay evidence.
 - Public production symbol derived from a QNT action or witness field name.
+- Review outcome treats unrelated target implementation cleanup as source
+  harness improvement or expands scope beyond the selected branch set.
 - Durable field without owner and derivability classification.
 - Unresolved reasonable reviewer finding.
 - Validation report row that marks diagnostic target-language tests as MBT

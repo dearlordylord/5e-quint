@@ -4,6 +4,14 @@ This directory preserves reusable cleanroom instruction scaffolds for future
 target-language cleanroom runs. They are source-repo planning assets, not
 active instructions for this repository.
 
+The purpose of a cleanroom run is to improve confidence in the source-owned QNT
+corpus, scaffold, harness, and process for future unsupervised runs. The target
+implementation is useful evidence, but it is not the source repo's artifact to
+polish. When a run exposes a problem, prefer source-side improvements to the
+QNT, copied guidance, scaffold templates, target profile, replay evidence
+contract, checker, or decider gate. Do not turn a harness shakedown into an
+unbounded target implementation review.
+
 Use these files when preparing or refreshing a separate cleanroom repo such as
 a sibling target-language experiment directory. This source repo prepares the
 transferable package; the project owner starts the cleanroom session manually in
@@ -93,7 +101,11 @@ first queued driver, and target profile SHA in rendered task files.
    driver from tasks/LEVEL_1_2_SCOPE.md following the Work Loop.
    ```
 
-## Transfer Archive
+## Optional Offline Transfer Archive
+
+The normal workflow is the direct manual-transfer bootstrap above. An archive
+is only a convenience for moving the same generated files through an offline or
+restricted channel; it is not a separate source of truth.
 
 To prepare a copyable archive without writing into the cleanroom repo, run:
 

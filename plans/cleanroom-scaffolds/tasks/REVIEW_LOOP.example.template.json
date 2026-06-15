@@ -30,6 +30,10 @@
           "status": "pass"
         },
         {
+          "checklist": "harness-improvement-boundary",
+          "status": "pass"
+        },
+        {
           "checklist": "engine-depth",
           "status": "pass"
         },
@@ -72,6 +76,10 @@
         },
         {
           "checklist": "adapter-quarantine",
+          "status": "pass"
+        },
+        {
+          "checklist": "harness-improvement-boundary",
           "status": "pass"
         },
         {
