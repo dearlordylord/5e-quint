@@ -93,6 +93,22 @@ first queued driver, and target profile SHA in rendered task files.
    driver from tasks/LEVEL_1_2_SCOPE.md following the Work Loop.
    ```
 
+## Transfer Archive
+
+To prepare a copyable archive without writing into the cleanroom repo, run:
+
+```bash
+pnpm cleanroom-refresh:package -- \
+  --profile plans/cleanroom-scaffolds/target-profiles/rust.json \
+  --output /workspace/typescript/dnd-cleanroom-rust-refresh-<source-sha>.tar.gz
+```
+
+The packager syncs the allowlisted corpus into a temporary directory, renders
+the scaffold with the target profile, writes a `.sha256` file next to the
+archive, validates required archive entries, and deletes the temporary
+directory. It refuses to run when scaffold packaging inputs have uncommitted
+changes, so the package is tied to a committed source snapshot.
+
 ## Disposable Harness Shakedown
 
 A source-side dry run may start a temporary cleanroom session only to shake down

@@ -16,6 +16,7 @@
     "cleanroom-branch-coverage:check:self-test": "node scripts/cleanroom-branch-coverage-check.cjs --self-test",
     "cleanroom-sync:check": "node scripts/sync-cleanroom-input.cjs --self-test",
     "cleanroom-scaffold:check": "node scripts/render-cleanroom-scaffold.cjs --self-test",
+    "cleanroom-refresh:package": "node scripts/package-cleanroom-refresh.cjs",
     "cleanroom-harness:check": "node scripts/check-cleanroom-harness.cjs --self-test",
     "unit-profile-coverage:check": "node scripts/unit-profile-coverage-check.cjs",
     "unit-profile-coverage:check:self-test": "node scripts/unit-profile-coverage-check.cjs --self-test",
