@@ -17,6 +17,7 @@ let monk =
         , { level = 2, unitId = "monk_monks_focus" }
         , { level = 2, unitId = "monk_unarmored_movement" }
         , { level = 2, unitId = "monk_uncanny_metabolism" }
+        , { level = 4, unitId = "monk_slow_fall" }
         ]
       , hitPointDie = 8
       , id = "class_monk"

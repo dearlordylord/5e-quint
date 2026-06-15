@@ -181,4 +181,34 @@ module unitFeatureReactionReductionCoreExamples {
       assert(blocked.redirectedDamage == 0),
     }
   }
+
+  run test_slow_fall_spends_reaction_and_reduces_fall_damage_by_monk_level = {
+    val result = resolveSlowFallReaction(
+      initialTurnProcedureState,
+      {
+        incomingFallDamage: 28,
+        monkLevel: 5,
+      }
+    )
+    all {
+      assert(not(result.turn.reactionAvailable)),
+      assert(result.reducedFallDamage == 3),
+      assert(not(result.fallingPronePrevented)),
+    }
+  }
+
+  run test_slow_fall_caps_fall_damage_at_zero_and_prevents_falling_prone = {
+    val result = resolveSlowFallReaction(
+      initialTurnProcedureState,
+      {
+        incomingFallDamage: 18,
+        monkLevel: 4,
+      }
+    )
+    all {
+      assert(not(result.turn.reactionAvailable)),
+      assert(result.reducedFallDamage == 0),
+      assert(result.fallingPronePrevented),
+    }
+  }
 }

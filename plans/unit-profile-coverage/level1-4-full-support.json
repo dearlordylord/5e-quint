@@ -2982,7 +2982,7 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "groups": [
     {
-      "count": 146,
+      "count": 147,
       "description": "Full support exists at the Unit profile boundary for this strict accounting scope.",
       "status": "supported-profile",
       "unitIds": [
@@ -3071,6 +3071,7 @@
         "monk_deflect_attacks",
         "monk_martial_arts",
         "monk_open_hand_technique",
+        "monk_slow_fall",
         "monk_unarmored_defense",
         "monk_unarmored_movement",
         "monk_uncanny_metabolism",
@@ -3247,12 +3248,12 @@
   "metrics": {
     "productReadiness": {
       "denominator": 632,
-      "numerator": 615,
-      "percent": "97.3%",
+      "numerator": 616,
+      "percent": "97.5%",
       "rowsByStatus": {
-        "accepted": 434,
+        "accepted": 435,
         "accepted-no-battle-effect": 181,
-        "owner-evidence-required": 15,
+        "owner-evidence-required": 14,
         "partial-battle-runtime": 2
       }
     },
@@ -3267,18 +3268,18 @@
       "percent": "100%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 140,
-      "numerator": 140,
+      "denominator": 141,
+      "numerator": 141,
       "percent": "100%"
     },
     "strictRuntimeProfileSupport": {
-      "denominator": 206,
-      "numerator": 146,
-      "percent": "70.9%"
+      "denominator": 207,
+      "numerator": 147,
+      "percent": "71%"
     },
     "strictTargetClosure": {
-      "denominator": 206,
-      "numerator": 206,
+      "denominator": 207,
+      "numerator": 207,
       "percent": "100%"
     }
   },
@@ -3728,24 +3729,6 @@
           }
         ],
         "unitId": "message"
-      },
-      {
-        "reason": "The SRD row has level-4 class-feature pressure, but no Unit matrix row exists yet.",
-        "sourceRows": [
-          {
-            "category": "class feature",
-            "concept": "Monk Slow Fall",
-            "id": "srd521:classes/monk:level-4:class-feature-grant:monk_slow_fall",
-            "levelBand": "level-4",
-            "rowKind": "class-feature-grant",
-            "source": {
-              "lineEnd": 119,
-              "lineStart": 116,
-              "path": ".references/srd-5.2.1/Classes/Monk.md"
-            }
-          }
-        ],
-        "unitId": "monk_slow_fall"
       },
       {
         "reason": "The SRD row has level-4 class-feature pressure, but no Unit matrix row exists yet.",
@@ -6206,8 +6189,8 @@
     "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
     "metrics": {
       "rulesKernelSupportedUnitCoverage": {
-        "denominator": 140,
-        "numerator": 140,
+        "denominator": 141,
+        "numerator": 141,
         "percent": "100%"
       }
     },
@@ -6620,6 +6603,7 @@
             "profileId": "unit-feature.reaction-roll-or-damage-reduction",
             "profileKind": "reaction",
             "qntOwners": [
+              "packages/battle-runtime/battle-runtime-slow-fall.qnt",
               "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
               "packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core.qnt"
             ]
@@ -8545,6 +8529,36 @@
             "joinStatus": "covered",
             "obligations": [
               {
+                "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+              },
+              {
+                "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
+              }
+            ],
+            "profileId": "unit-feature.reaction-roll-or-damage-reduction",
+            "profileKind": "reaction",
+            "qntOwners": [
+              "packages/battle-runtime/battle-runtime-slow-fall.qnt",
+              "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+              "packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core.qnt"
+            ]
+          }
+        ],
+        "unitId": "monk_slow_fall"
+      },
+      {
+        "joinStatus": "covered",
+        "profiles": [
+          {
+            "joinStatus": "covered",
+            "obligations": [
+              {
                 "obligationId": "SHEET.ARMOR_CLASS.BASE_FORMULA_CHOICE",
                 "runtime": "character-sheet",
                 "status": "covered",
@@ -10205,18 +10219,18 @@
     "blockingRows": [],
     "blockingRowsByStatus": {},
     "metrics": {
-      "denominator": 168,
-      "numerator": 168,
+      "denominator": 169,
+      "numerator": 169,
       "percent": "100%"
     },
     "readyRowsByStatus": {
       "not-applicable": 5,
-      "witness-present": 163
+      "witness-present": 164
     },
     "rowsByStatus": {
       "not-applicable": 5,
       "not-required": 38,
-      "witness-present": 163
+      "witness-present": 164
     }
   },
   "sourceArtifacts": {
@@ -10617,8 +10631,8 @@
         "group": "level-scoped-class-feature-grants",
         "label": "SRD class feature grants through level 4",
         "metrics": {
-          "denominator": 46,
-          "numerator": 46,
+          "denominator": 47,
+          "numerator": 47,
           "percent": "100%"
         },
         "rows": [
@@ -10831,6 +10845,15 @@
           },
           {
             "kind": "class_feature",
+            "ownerUnitId": "class_monk",
+            "ready": true,
+            "relation": "class.featureGrants.level-4",
+            "sourceRecordPath": "packages/surface/content/monk_slow_fall.json",
+            "status": "installed",
+            "unitId": "monk_slow_fall"
+          },
+          {
+            "kind": "class_feature",
             "ownerUnitId": "class_paladin",
             "ready": true,
             "relation": "class.featureGrants.level-1",
@@ -11038,7 +11061,7 @@
           }
         ],
         "rowsByStatus": {
-          "installed": 46
+          "installed": 47
         }
       },
       {
@@ -11115,8 +11138,8 @@
       }
     ],
     "metrics": {
-      "denominator": 79,
-      "numerator": 79,
+      "denominator": 80,
+      "numerator": 80,
       "percent": "100%"
     },
     "openBlockerCount": 0
@@ -11125,7 +11148,7 @@
     "candidateUnitIdsBeforeExclusions": 237,
     "groupsByClaimTag": {
       "profile-subset-supported": 22,
-      "supported-profile": 146,
+      "supported-profile": 147,
       "unsupported-profile": 38
     },
     "groupsByStatus": {
@@ -11136,9 +11159,9 @@
       "closed-outside-battle-runtime-boundary": 7,
       "closed-runtime-detached-table-adjudication": 35,
       "closed-selection-grant-container": 9,
-      "supported-profile": 146
+      "supported-profile": 147
     },
     "nonSupportedFrontier": 60,
-    "strictDenominator": 206
+    "strictDenominator": 207
   }
 }

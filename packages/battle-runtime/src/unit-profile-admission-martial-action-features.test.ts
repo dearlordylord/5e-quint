@@ -1,5 +1,6 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT8 fighter_action_surge fighter_improved_critical barbarian_rage rogue_cunning_action rogue_uncanny_dodge rogue_sneak_attack
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT59 monk_deflect_attacks
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L14G-03A-MONK-SLOW-FALL-RUNTIME monk_slow_fall
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-MONK-MONKS-FOCUS-BATTLE-OPTIONS monk_monks_focus
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3-FOLLOWUP-BARBARIAN-FRENZY barbarian_frenzy
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3MSPEC-02-DRAGONBORN-BREATH-WEAPON-SURFACE species_dragonborn_breath_weapon
@@ -21,6 +22,7 @@ import {
   monkDeflectAttacksUnitId,
   monkMartialArtsUnitId,
   monkMonksFocusUnitId,
+  monkSlowFallUnitId,
   rogueCunningActionUnitId,
   rogueSneakAttackUnitId,
   rogueUncannyDodgeUnitId,
@@ -1118,6 +1120,43 @@ describe("QMBT68 Monk Deflect Attacks deterministic Unit profile admission", () 
                 melee: "visibleWithin5Feet",
                 ranged: "visibleWithin60FeetWithoutTotalCover",
               },
+            },
+          },
+        ],
+      }),
+    );
+  });
+
+  test("monk_slow_fall projects fall-damage reduction executable facts", () => {
+    const unit = unitLibrary.requireUnit(monkSlowFallUnitId);
+    const supportProfile = REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE;
+
+    expect(
+      battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
+    ).toEqual(
+      Either.right({
+        unitId: monkSlowFallUnitId,
+        supportProfiles: [supportProfile],
+      }),
+    );
+    expect(battleReactionRollOrDamageReductionSupportForUnit(unit)).toBe(
+      supportProfile,
+    );
+    expect(
+      parseSupportedUnitFeatureProfile(unit, [
+        { className: "monk", level: classLevel(4) },
+      ]),
+    ).toEqual(
+      expect.objectContaining({
+        kind: "reactionRollOrDamageReduction",
+        unit,
+        classLevel: classLevel(4),
+        modifiers: [
+          {
+            kind: "fallDamageReduction",
+            reduction: {
+              kind: "classLevelMultiplier",
+              multiplier: 5,
             },
           },
         ],

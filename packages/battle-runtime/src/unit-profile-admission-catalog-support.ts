@@ -232,6 +232,8 @@ export const dissonantWhispersUnitId = "dissonant_whispers";
 
 export const monkDeflectAttacksUnitId = "monk_deflect_attacks";
 
+export const monkSlowFallUnitId = "monk_slow_fall";
+
 export const monkMonksFocusUnitId = "monk_monks_focus";
 
 export const defenseUnitId = "defense";

@@ -1473,6 +1473,13 @@ export type ReactionRollOrDamageReductionProfile =
           readonly ranged: "visibleWithin60FeetWithoutTotalCover";
         };
       };
+    }
+  | {
+      readonly kind: "fallDamageReduction";
+      readonly reduction: {
+        readonly kind: "classLevelMultiplier";
+        readonly multiplier: 5;
+      };
     };
 
 type AuthoredAttackDamageReductionZeroDamageRedirect = {
@@ -4527,6 +4534,22 @@ function reactionRollOrDamageReductionMechanicsProjection(
               ability: "dex",
             },
             zeroDamageRedirect,
+          },
+        ];
+      }
+      if (
+        modifier.kind === "fall_damage_reduction" &&
+        modifier.trigger.kind === "creature_falls" &&
+        modifier.reduction.kind === "class_level_multiplier" &&
+        modifier.reduction.multiplier === 5
+      ) {
+        return [
+          {
+            kind: "fallDamageReduction",
+            reduction: {
+              kind: "classLevelMultiplier",
+              multiplier: 5,
+            },
           },
         ];
       }

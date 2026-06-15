@@ -13,7 +13,7 @@
     {
       "number": 2,
       "id": "L14G-03A-MONK-SLOW-FALL-RUNTIME",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Promote Monk Slow Fall falling Reaction reduction"
     }
   ]
@@ -93,7 +93,7 @@ Plan Impact:
 
 ### Task 2 - L14G-03A-MONK-SLOW-FALL-RUNTIME
 
-Status: `ready-for-implementation`
+Status: `done`
 
 Expected size: about one focused day.
 
@@ -137,3 +137,8 @@ Verification:
 If a focused MBT driver is added, run only that file after checking for
 existing `vitest` and `quint_evaluator` processes, and use the background/timing
 protocol from `AGENTS.md`.
+
+Plan Impact:
+
+- Task accepted as implemented. No follow-up task split is required for the
+  Task 2 scope.

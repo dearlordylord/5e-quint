@@ -3103,7 +3103,8 @@ export function reactionModifierChoice(
   modifierKind:
     | "attackRollReduction"
     | "damageRollReduction"
-    | "attackDamageReduction",
+    | "attackDamageReduction"
+    | "fallDamageReduction",
 ) {
   const choice = choices.find(
     (candidate) =>

@@ -309,12 +309,12 @@
     },
     "levelOneFourBattleReadiness": {
       "denominator": 632,
-      "numerator": 615,
-      "percent": "97.3%",
+      "numerator": 616,
+      "percent": "97.5%",
       "rowsByStatus": {
-        "accepted": 434,
+        "accepted": 435,
         "accepted-no-battle-effect": 181,
-        "owner-evidence-required": 15,
+        "owner-evidence-required": 14,
         "partial-battle-runtime": 2
       }
     },
@@ -330,11 +330,12 @@
     },
     "levelFourClassBattleReadiness": {
       "denominator": 25,
-      "numerator": 21,
-      "percent": "84%",
+      "numerator": 22,
+      "percent": "88%",
       "rowsByStatus": {
         "accepted-no-battle-effect": 21,
-        "owner-evidence-required": 4
+        "owner-evidence-required": 3,
+        "accepted": 1
       }
     },
     "levelThreeSpellBattleReadiness": {
@@ -374,20 +375,21 @@
     "levelFourClassRowsByDisposition": {
       "catalog-only/dead-for-now": 9,
       "non-runtime": 12,
-      "level-4-follow-up-required": 4
+      "level-4-follow-up-required": 3,
+      "catalog-installed-owner-evidence-present": 1
     },
     "levelFourClassRowsByCategory": {
       "class feature": 13,
       "character-creation or progression mechanic": 12
     },
     "allRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 462,
+      "catalog-installed-owner-evidence-present": 463,
       "non-runtime": 48,
       "catalog-only/dead-for-now": 142,
       "catalog-installed-owner-evidence-required": 12,
       "missing-authored-record": 58,
       "catalog-authored-review-required": 33,
-      "level-4-follow-up-required": 4,
+      "level-4-follow-up-required": 3,
       "catalog-installed-needs-owner-evidence": 1
     },
     "spellPressureRowsByDisposition": {
@@ -17220,16 +17222,30 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "monk_slow_fall",
+        "sourceRecordPath": "packages/surface/content/monk_slow_fall.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "monk_slow_fall"
       },
-      "finalDisposition": "level-4-follow-up-required",
-      "ownerEvidence": [],
-      "nextAction": "Promote or explicitly close this level-4 class feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this row as supported.",
-      "battleReadinessStatus": "owner-evidence-required"
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit monk_slow_fall is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L14G-03A-MONK-SLOW-FALL-RUNTIME at packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/monk:level-4:class-table-summary:monk_level_4_feature_table_row",

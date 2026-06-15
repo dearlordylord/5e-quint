@@ -43,14 +43,14 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
-      "denominator": 422,
-      "numerator": 228,
-      "percent": "54%"
+      "denominator": 423,
+      "numerator": 229,
+      "percent": "54.1%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 507,
-      "numerator": 275,
-      "percent": "54.2%"
+      "denominator": 508,
+      "numerator": 276,
+      "percent": "54.3%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,16 +59,16 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 276
+      "value": 277
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 175,
-      "numerator": 171,
+      "denominator": 176,
+      "numerator": 172,
       "percent": "97.7%"
     },
     "profileClassificationCoverage": {
-      "denominator": 276,
-      "numerator": 276,
+      "denominator": 277,
+      "numerator": 277,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -92,8 +92,8 @@
       "percent": "100%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 168,
-      "numerator": 168,
+      "denominator": 169,
+      "numerator": 169,
       "percent": "100%"
     },
     "runtimeMappingCoverage": {
@@ -107,14 +107,14 @@
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 175,
-      "numerator": 171,
+      "denominator": 176,
+      "numerator": 172,
       "percent": "97.7%"
     },
     "supportedProfileCoverage": {
-      "denominator": 229,
-      "numerator": 175,
-      "percent": "76.4%"
+      "denominator": 230,
+      "numerator": 176,
+      "percent": "76.5%"
     }
   },
   "metricSemantics": [
@@ -1077,21 +1077,24 @@
       "profileKind": "reaction",
       "qntOwners": [
         "packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core.qnt",
-        "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt"
+        "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+        "packages/battle-runtime/battle-runtime-slow-fall.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/unit-feature-support.ts",
         "packages/battle-runtime/src/battle-interrupt-triggers.ts",
-        "packages/battle-runtime/src/battle-reducer.ts"
+        "packages/battle-runtime/src/battle-reducer.ts",
+        "packages/battle-runtime/src/battle-reducer/dispatcher.ts"
       ],
       "taskRefs": [
         "QCORE8",
         "QCORE9",
         "QMBT3",
         "QMBT4",
-        "QMBT65"
+        "QMBT65",
+        "L14G-03A-MONK-SLOW-FALL-RUNTIME"
       ],
-      "title": "Unit feature reacts to reduce an attack roll, ability check, or attack damage",
+      "title": "Unit feature reacts to reduce an attack roll, ability check, attack damage, or fall damage",
       "verificationOwners": [
         {
           "kind": "qnt-proof",
@@ -1106,12 +1109,20 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts"
         },
         {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/slow-fall-reaction.test.ts"
+        },
+        {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts"
         },
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts"
         }
       ]
     },
@@ -5497,6 +5508,7 @@
         "profileId": "unit-feature.reaction-roll-or-damage-reduction",
         "profileKind": "reaction",
         "qntOwners": [
+          "packages/battle-runtime/battle-runtime-slow-fall.qnt",
           "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
           "packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core.qnt"
         ]
@@ -7649,8 +7661,8 @@
       "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
       "metrics": {
         "rulesKernelSupportedUnitCoverage": {
-          "denominator": 168,
-          "numerator": 168,
+          "denominator": 169,
+          "numerator": 169,
           "percent": "100%"
         }
       },
@@ -8107,6 +8119,7 @@
               "profileId": "unit-feature.reaction-roll-or-damage-reduction",
               "profileKind": "reaction",
               "qntOwners": [
+                "packages/battle-runtime/battle-runtime-slow-fall.qnt",
                 "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
                 "packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core.qnt"
               ]
@@ -10399,6 +10412,36 @@
               "joinStatus": "covered",
               "obligations": [
                 {
+                  "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+                },
+                {
+                  "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
+                }
+              ],
+              "profileId": "unit-feature.reaction-roll-or-damage-reduction",
+              "profileKind": "reaction",
+              "qntOwners": [
+                "packages/battle-runtime/battle-runtime-slow-fall.qnt",
+                "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+                "packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core.qnt"
+              ]
+            }
+          ],
+          "unitId": "monk_slow_fall"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
                   "obligationId": "SHEET.ARMOR_CLASS.BASE_FORMULA_CHOICE",
                   "runtime": "character-sheet",
                   "status": "covered",
@@ -11334,6 +11377,7 @@
               "profileId": "unit-feature.reaction-roll-or-damage-reduction",
               "profileKind": "reaction",
               "qntOwners": [
+                "packages/battle-runtime/battle-runtime-slow-fall.qnt",
                 "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
                 "packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core.qnt"
               ]
@@ -15501,6 +15545,14 @@
       "taskId": "L3MSPEC-07-GOLIATH-POWERFUL-BUILD-GRAPPLE"
     },
     {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime tests, QNT witnesses, and selected-identity MBT cover Slow Fall admission from authored Surface mechanics, creature-falls Reaction discovery for the selected Monk, Reaction spending, class-level fall-damage reduction, zero-damage capping, and Falling-Prone prevention only when no fall damage remains.",
+      "profileIds": [
+        "unit-feature.reaction-roll-or-damage-reduction"
+      ],
+      "taskId": "L14G-03A-MONK-SLOW-FALL-RUNTIME"
+    },
+    {
       "claimKind": "accepted-runtime-closure",
       "note": "Reviewed SRD species Darkvision, the Darkvision spell, current Surface grant_sense records, and promoted light/obscurement projection. Species and spell Darkvision remain authored sense source facts rather than standalone Unit procedures: battle projection already consumes typed Darkvision observer range and distance facts supplied at the caller/table boundary, while Character Sheet species sense derivation, active spell-granted sense projection, item senses, automatic sight-line derivation, map geometry, and color-only darkness presentation require a future shared creature perception projection owner.",
       "profileIds": [],
@@ -15690,17 +15742,17 @@
         "unsupportedOrOtherUnits": 18
       },
       {
-        "executableUnitDenominator": 78,
-        "installedUnitDenominator": 78,
+        "executableUnitDenominator": 79,
+        "installedUnitDenominator": 79,
         "kind": "class_feature",
         "label": "Class-feature Units",
-        "profileFactDenominator": 116,
+        "profileFactDenominator": 117,
         "profileSubsetSupportedUnits": 8,
         "selectedIdentityDeferredNonApplicableUnits": 0,
-        "selectedIdentityReplayDenominator": 71,
+        "selectedIdentityReplayDenominator": 72,
         "selectedIdentityReplayGapUnits": 0,
-        "selectedIdentityReplayWitnessUnits": 71,
-        "supportedProfileUnits": 68,
+        "selectedIdentityReplayWitnessUnits": 72,
+        "supportedProfileUnits": 69,
         "unsupportedOrOtherUnits": 2
       }
     ]
@@ -17615,21 +17667,24 @@
           "profileKind": "reaction",
           "qntOwners": [
             "packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core.qnt",
-            "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt"
+            "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+            "packages/battle-runtime/battle-runtime-slow-fall.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/unit-feature-support.ts",
             "packages/battle-runtime/src/battle-interrupt-triggers.ts",
-            "packages/battle-runtime/src/battle-reducer.ts"
+            "packages/battle-runtime/src/battle-reducer.ts",
+            "packages/battle-runtime/src/battle-reducer/dispatcher.ts"
           ],
           "taskRefs": [
             "QCORE8",
             "QCORE9",
             "QMBT3",
             "QMBT4",
-            "QMBT65"
+            "QMBT65",
+            "L14G-03A-MONK-SLOW-FALL-RUNTIME"
           ],
-          "title": "Unit feature reacts to reduce an attack roll, ability check, or attack damage",
+          "title": "Unit feature reacts to reduce an attack roll, ability check, attack damage, or fall damage",
           "verificationOwners": [
             {
               "kind": "qnt-proof",
@@ -17644,12 +17699,20 @@
               "ownerPath": "packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts"
             },
             {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/slow-fall-reaction.test.ts"
+            },
+            {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts"
             },
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts"
             }
           ]
         }
@@ -19149,6 +19212,101 @@
       },
       "claim": {
         "profileIds": [
+          "unit-feature.reaction-roll-or-damage-reduction"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE9-UNIT-FEATURE-PROFILES-001",
+          "RAW-PTG-REACTIONS-002"
+        ],
+        "supportedMechanics": [
+          "when the selected Monk is the falling creature and has a Reaction available, the battle runtime offers Slow Fall from the authored Unit selection",
+          "resolving Slow Fall spends the Monk's Reaction and reduces caller-supplied fall damage by five times Monk level",
+          "fall damage is capped at zero, and Falling Prone is prevented only when no fall damage remains after the reduction"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L14G-03A-MONK-SLOW-FALL-RUNTIME"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "L14G-03A-MONK-SLOW-FALL-RUNTIME"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [
+        {
+          "id": "unit-feature.reaction-roll-or-damage-reduction",
+          "profileKind": "reaction",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core.qnt",
+            "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+            "packages/battle-runtime/battle-runtime-slow-fall.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/unit-feature-support.ts",
+            "packages/battle-runtime/src/battle-interrupt-triggers.ts",
+            "packages/battle-runtime/src/battle-reducer.ts",
+            "packages/battle-runtime/src/battle-reducer/dispatcher.ts"
+          ],
+          "taskRefs": [
+            "QCORE8",
+            "QCORE9",
+            "QMBT3",
+            "QMBT4",
+            "QMBT65",
+            "L14G-03A-MONK-SLOW-FALL-RUNTIME"
+          ],
+          "title": "Unit feature reacts to reduce an attack roll, ability check, attack damage, or fall damage",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles-inductive.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-class-roll-and-resource-features.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/slow-fall-reaction.test.ts"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/monk_slow_fall.json",
+      "unitId": "monk_slow_fall"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "profileIds": [
           "unit-feature.open-hand-technique"
         ],
         "rawRequirementIds": [
@@ -19631,21 +19789,24 @@
           "profileKind": "reaction",
           "qntOwners": [
             "packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core.qnt",
-            "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt"
+            "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+            "packages/battle-runtime/battle-runtime-slow-fall.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/unit-feature-support.ts",
             "packages/battle-runtime/src/battle-interrupt-triggers.ts",
-            "packages/battle-runtime/src/battle-reducer.ts"
+            "packages/battle-runtime/src/battle-reducer.ts",
+            "packages/battle-runtime/src/battle-reducer/dispatcher.ts"
           ],
           "taskRefs": [
             "QCORE8",
             "QCORE9",
             "QMBT3",
             "QMBT4",
-            "QMBT65"
+            "QMBT65",
+            "L14G-03A-MONK-SLOW-FALL-RUNTIME"
           ],
-          "title": "Unit feature reacts to reduce an attack roll, ability check, or attack damage",
+          "title": "Unit feature reacts to reduce an attack roll, ability check, attack damage, or fall damage",
           "verificationOwners": [
             {
               "kind": "qnt-proof",
@@ -19660,12 +19821,20 @@
               "ownerPath": "packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts"
             },
             {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/slow-fall-reaction.test.ts"
+            },
+            {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts"
             },
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts"
             }
           ]
         }

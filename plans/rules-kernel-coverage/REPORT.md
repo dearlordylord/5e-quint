@@ -338,6 +338,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `packages/battle-runtime/battle-runtime-antimagic-field-action-interdiction.mbt.qnt` | mbt-fixture | `BATTLE.SPELL.ANTIMAGIC_FIELD_ACTION_INTERDICTION` |
 | `packages/battle-runtime/battle-runtime-antimagic-field-magical-effect-interdiction.mbt.qnt` | mbt-fixture | `BATTLE.SPELL.ANTIMAGIC_FIELD_MAGICAL_EFFECT_INTERDICTION` |
 | `packages/battle-runtime/battle-runtime-bardic-inspiration.qnt` | proof-only | profile-scoped: `unit-feature.bardic-inspiration-failed-d20-test` (`BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`), `unit-feature.bardic-inspiration-grant` (`BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
+| `packages/battle-runtime/battle-runtime-slow-fall.qnt` | proof-only | profile-scoped: `unit-feature.reaction-roll-or-damage-reduction` (`BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
 | `packages/battle-runtime/battle-runtime-blur-attack-roll-defense.qnt` | semantic-core | `BATTLE.SPELL.BLUR_ATTACK_ROLL_DEFENSE_LIFECYCLE` |
 | `packages/battle-runtime/battle-runtime-command-choice.qnt` | semantic-core | `BATTLE.COMMAND.OPTION_AND_NEXT_TURN` |
 | `packages/battle-runtime/battle-runtime-concentration.qnt` | semantic-core | `BATTLE.PROTOCOL.CONCENTRATION_BREAK_TEARDOWN`, `BATTLE.PROTOCOL.ZERO_HIT_POINT_MID_RESOLUTION`, `BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS`, `BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS`, `BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE`, `BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE`, `BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER`, `BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE` |
@@ -643,6 +644,7 @@ Rows here inventory `packages/**/*.qnt` files excluding `.mbt.qnt` drivers and `
 | `packages/battle-runtime/battle-runtime-self-transformation.qnt` | qnt-owner-role | semantic-core |
 | `packages/battle-runtime/battle-runtime-shape-shifting.qnt` | qnt-owner-role | proof-only |
 | `packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-slow-fall.qnt` | qnt-owner-role | proof-only |
 | `packages/battle-runtime/battle-runtime-sorcerous-burst-damage-choice.qnt` | exempt | leaf-type-vocabulary: Sorcerous Burst damage-choice vocabulary leaf shared by the model and spell bridge. |
 | `packages/battle-runtime/battle-runtime-spell-attack-ordering.qnt` | qnt-owner-role | semantic-core |
 | `packages/battle-runtime/battle-runtime-spell-attack.qnt` | qnt-owner-role | semantic-core |
@@ -792,7 +794,7 @@ Rows here are derived from `plans/unit-profile-coverage/profiles.jsonl` for prof
 | `unit-feature.passive-saving-throw-roll-mode` | `packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt` (semantic-core; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
 | `unit-feature.passive-speed-bonus` | `packages/shared-algebras/proofs/rule-core/unit-feature-passive-movement-defense-core.qnt` (semantic-core; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
 | `unit-feature.passive-speed-kind-grants` | `packages/shared-algebras/proofs/rule-core/unit-feature-passive-movement-defense-core.qnt` (semantic-core; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
-| `unit-feature.reaction-roll-or-damage-reduction` | `packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core.qnt` (semantic-core; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`)<br>`packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt` (semantic-core; `BATTLE.REACTION.OFFER_DECLINE_RESUME`) |
+| `unit-feature.reaction-roll-or-damage-reduction` | `packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core.qnt` (semantic-core; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`)<br>`packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt` (semantic-core; `BATTLE.REACTION.OFFER_DECLINE_RESUME`)<br>`packages/battle-runtime/battle-runtime-slow-fall.qnt` (proof-only; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
 | `unit-feature.remarkable-athlete` | `packages/battle-runtime/battle-runtime-remarkable-athlete-roll-modes.qnt` (proof-only; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`)<br>`packages/battle-runtime/battle-runtime-remarkable-athlete-critical-movement.qnt` (proof-only; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
 | `unit-feature.rogue-steady-aim` | `packages/battle-runtime/battle-runtime-rogue-steady-aim.mbt.qnt` (mbt-fixture; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
 | `unit-feature.save-damage-replacement` | `packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt` (semantic-core; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
