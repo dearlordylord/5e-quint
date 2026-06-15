@@ -114,11 +114,25 @@ module characterCreationRuntimeSlice {
 
   type SupportedAbilityScoreMethod = StandardArray | PointBuy
 
+  type ProgressionClassUnit = FighterClassUnit | WizardClassUnit
+
+  type AdvancementHitPointRule = | FixedHigherLevelGain
+
+  type LevelOneProgressionShape = {
+    startingClass: ProgressionClassUnit,
+  }
+
+  type FighterLevelTwoProgressionShape = {
+    advancementHitPointRule: AdvancementHitPointRule,
+  }
+
+  type CharacterProgression =
+    | LevelOneProgression(LevelOneProgressionShape)
+    | FighterLevelTwoProgression(FighterLevelTwoProgressionShape)
+
   type ProgressionSelection =
     | NoProgression
-    | FighterLevel1
-    | FighterLevel2
-    | WizardLevel1
+    | SelectedProgression(CharacterProgression)
 
   type Fill =
     | FChoice({ hole: HoleId, options: List[ChoiceOptionId] })
@@ -195,18 +209,46 @@ module characterCreationRuntimeSlice {
     loadoutWeapon: false,
   }
 
-  pure def hasProgression(draft: Draft): bool =
-    draft.progression != NoProgression
+  pure val fighterLevel1Progression: CharacterProgression =
+    LevelOneProgression({ startingClass: FighterClassUnit })
 
-  pure def hasFighterProgression(draft: Draft): bool =
-    match draft.progression {
-      | FighterLevel1 => true
-      | FighterLevel2 => true
-      | _ => false
+  pure val fighterLevel2Progression: CharacterProgression =
+    FighterLevelTwoProgression({
+      advancementHitPointRule: FixedHigherLevelGain,
+    })
+
+  pure val wizardLevel1Progression: CharacterProgression =
+    LevelOneProgression({ startingClass: WizardClassUnit })
+
+  pure def characterProgressionTotalLevel(progression: CharacterProgression): int = match progression {
+    | LevelOneProgression(_) => 1
+    | FighterLevelTwoProgression(_) => 2
+  }
+
+  pure def characterProgressionClassLevel(progression: CharacterProgression, classUnit: ProgressionClassUnit): int =
+    match progression {
+      | LevelOneProgression(v) =>
+          if (v.startingClass == classUnit) 1 else 0
+      | FighterLevelTwoProgression(_) =>
+          if (classUnit == FighterClassUnit) 2 else 0
     }
 
+  pure def hasProgression(draft: Draft): bool = match draft.progression {
+    | NoProgression => false
+    | SelectedProgression(_) => true
+  }
+
+  pure def selectedProgressionClassLevel(selection: ProgressionSelection, classUnit: ProgressionClassUnit): int =
+    match selection {
+      | NoProgression => 0
+      | SelectedProgression(progression) => characterProgressionClassLevel(progression, classUnit)
+    }
+
+  pure def hasFighterProgression(draft: Draft): bool =
+    selectedProgressionClassLevel(draft.progression, FighterClassUnit) > 0
+
   pure def hasWizardProgression(draft: Draft): bool =
-    draft.progression == WizardLevel1
+    selectedProgressionClassLevel(draft.progression, WizardClassUnit) > 0
 
   pure val fighterStandardArray: AbilityScores = {
     strength: 15,
@@ -469,9 +511,9 @@ module characterCreationRuntimeSlice {
     options.foldl(false, (found, option) => found or option == target)
 
   pure def progressionSelection(options: List[ChoiceOptionId]): ProgressionSelection =
-    if (optionSelected(options, OClassFighterLevel1)) FighterLevel1
-    else if (optionSelected(options, OClassFighterLevel2)) FighterLevel2
-    else if (optionSelected(options, OClassWizardLevel1)) WizardLevel1
+    if (optionSelected(options, OClassFighterLevel1)) SelectedProgression(fighterLevel1Progression)
+    else if (optionSelected(options, OClassFighterLevel2)) SelectedProgression(fighterLevel2Progression)
+    else if (optionSelected(options, OClassWizardLevel1)) SelectedProgression(wizardLevel1Progression)
     else NoProgression
 
   pure def applyFill(draft: Draft, fill: Fill): Draft = match fill {

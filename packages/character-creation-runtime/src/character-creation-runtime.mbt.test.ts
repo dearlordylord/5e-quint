@@ -22,7 +22,6 @@ import {
   draftRevision,
   fillCreationHoles,
   finalizeCharacterDraft,
-  computeTotalLevel,
   loadoutEquipmentUnitId,
   loadoutSourceHoleIdText,
   startingClassUnitId,
@@ -99,19 +98,7 @@ type HoleVariant = keyof typeof holeIds;
 
 const quintDraftSchema = z.object({
   revision: z.bigint(),
-  progression: z.unknown().transform((value) => {
-    const progression = variantToString(value);
-    if (
-      progression === "NoProgression" ||
-      progression === "FighterLevel1" ||
-      progression === "FighterLevel2" ||
-      progression === "WizardLevel1"
-    ) {
-      return progression;
-    }
-
-    throw new Error(`Unknown Quint progression variant: ${progression}`);
-  }),
+  progression: z.unknown().transform(normalizeProgressionSelection),
   background: z.boolean(),
   species: z.boolean(),
   abilityScores: z.boolean(),
@@ -229,6 +216,98 @@ function variantToString(value: unknown): string {
   throw new Error(
     `Expected Quint variant or string, received ${String(value)}`,
   );
+}
+
+function nullaryVariantToString(value: unknown, context: string): string {
+  if (typeof value === "string") {
+    return value;
+  }
+
+  if (typeof value === "object" && value !== null && "tag" in value) {
+    if (Object.prototype.hasOwnProperty.call(value, "value")) {
+      const payload = (value as Record<string, unknown>)["value"];
+      if (!Array.isArray(payload) || payload.length !== 0) {
+        throw new Error(`Expected nullary Quint ${context} variant.`);
+      }
+    }
+    return String((value as { readonly tag: unknown }).tag);
+  }
+
+  throw new Error(
+    `Expected nullary Quint ${context} variant, received ${String(value)}`,
+  );
+}
+
+const quintLevelOneProgressionSchema = z
+  .object({
+    startingClass: z.unknown(),
+  })
+  .strict();
+
+const quintFighterLevelTwoProgressionSchema = z
+  .object({
+    advancementHitPointRule: z.unknown(),
+  })
+  .strict();
+
+function normalizeProgressionSelection(
+  raw: unknown,
+): ProgressionSelectionProjection {
+  const tag = variantToString(raw);
+  if (tag === "NoProgression") {
+    return "NoProgression";
+  }
+  if (tag !== "SelectedProgression") {
+    throw new Error(`Unknown Quint progression variant: ${tag}`);
+  }
+
+  const progressionShape = variantPayload(raw, tag);
+  const progressionTag = variantToString(progressionShape);
+
+  if (progressionTag === "LevelOneProgression") {
+    const progression = quintLevelOneProgressionSchema.parse(
+      variantPayload(progressionShape, progressionTag),
+    );
+    const startingClass = nullaryVariantToString(
+      progression.startingClass,
+      "progression class",
+    );
+    if (startingClass === "FighterClassUnit") {
+      return "FighterLevel1";
+    }
+    if (startingClass === "WizardClassUnit") {
+      return "WizardLevel1";
+    }
+    throw new Error(
+      `Unsupported Quint level-one progression class: ${startingClass}`,
+    );
+  }
+
+  if (progressionTag !== "FighterLevelTwoProgression") {
+    throw new Error(`Unsupported Quint progression shape: ${progressionTag}`);
+  }
+
+  const progression = quintFighterLevelTwoProgressionSchema.parse(
+    variantPayload(progressionShape, progressionTag),
+  );
+  if (
+    nullaryVariantToString(
+      progression.advancementHitPointRule,
+      "advancement hit-point rule",
+    ) === "FixedHigherLevelGain"
+  ) {
+    return "FighterLevel2";
+  }
+
+  throw new Error("Unsupported Quint Fighter level-two hit-point rule.");
+}
+
+function variantPayload(raw: unknown, tag: string): unknown {
+  if (typeof raw === "object" && raw !== null && "value" in raw) {
+    return (raw as { readonly value: unknown }).value;
+  }
+
+  throw new Error(`Expected Quint ${tag} variant payload.`);
 }
 
 function normalizeFinalization(raw: unknown): RuntimeMbtState["finalization"] {
@@ -365,6 +444,27 @@ function abilityScoresOnlyFills(
   return [standardArrayFill(holes, "HAbilityScores")];
 }
 
+function duplicateLanguageHoleFills(
+  holes: readonly CreationHole[],
+): readonly CreationFill[] {
+  return [
+    choiceFill(holes, "HLanguages", ["Dwarvish", "Goblin"]),
+    choiceFill(holes, "HLanguages", ["Dwarvish", "Goblin"]),
+  ];
+}
+
+function closedInitialProgressionHoleFills(): readonly CreationFill[] {
+  return [
+    {
+      kind: "choice",
+      holeId: creationHoleId(holeIds.HProgression),
+      optionIds: [
+        creationChoiceOptionId("13:class_fighter:level_1:maximum_hit_die"),
+      ],
+    },
+  ];
+}
+
 function manifestChoiceFills(
   holes: readonly CreationHole[],
 ): readonly CreationFill[] {
@@ -418,9 +518,11 @@ const driverSchema = {
   doRejectStaleInitialManifest: {},
   doRejectUnsupportedLanguage: {},
   doRejectDuplicateLanguage: {},
+  doRejectDuplicateFill: {},
   doRejectTooFewLanguages: {},
   doRejectTooManyLanguages: {},
   doRejectWrongKindPrimaryClass: {},
+  doRejectClosedInitialProgressionHole: {},
   doRejectUnknownLoadoutArmor: {},
   doRejectUnsupportedClassEquipment: {},
   step: {},
@@ -486,6 +588,8 @@ function createCharacterCreationDriver() {
         submit(draft.revision, [
           choiceFill(holes, "HLanguages", ["Dwarvish", "Dwarvish"]),
         ]),
+      doRejectDuplicateFill: () =>
+        submit(draft.revision, duplicateLanguageHoleFills(holes)),
       doRejectTooFewLanguages: () =>
         submit(draft.revision, [choiceFill(holes, "HLanguages", ["Dwarvish"])]),
       doRejectTooManyLanguages: () =>
@@ -494,6 +598,8 @@ function createCharacterCreationDriver() {
         ]),
       doRejectWrongKindPrimaryClass: () =>
         submit(draft.revision, [standardArrayFill(holes, "HProgression")]),
+      doRejectClosedInitialProgressionHole: () =>
+        submit(draft.revision, closedInitialProgressionHoleFills()),
       doRejectUnknownLoadoutArmor: () =>
         submit(draft.revision, [
           choiceFillForKnownProtocolHole("HLoadoutArmor", ["worn"]),
@@ -629,13 +735,34 @@ function projectProgression(
     return "NoProgression";
   }
 
-  if (startingClassUnitId(progression) === "class_wizard") {
+  const startingClass = startingClassUnitId(progression);
+  if (
+    startingClass === "class_wizard" &&
+    progression.advancements.length === 0
+  ) {
     return "WizardLevel1";
   }
 
-  return computeTotalLevel(progression) === 1
-    ? "FighterLevel1"
-    : "FighterLevel2";
+  if (startingClass !== "class_fighter") {
+    throw new Error(`Unsupported runtime progression class: ${startingClass}`);
+  }
+
+  if (progression.advancements.length === 0) {
+    return "FighterLevel1";
+  }
+
+  if (progression.advancements.length === 1) {
+    const [advancement] = progression.advancements;
+    if (
+      advancement != null &&
+      advancement.classUnitId === "class_fighter" &&
+      advancement.hitPointRule.tag === "fixedHigherLevelGain"
+    ) {
+      return "FighterLevel2";
+    }
+  }
+
+  throw new Error("Unsupported runtime progression advancement shape.");
 }
 
 function hasChoice(

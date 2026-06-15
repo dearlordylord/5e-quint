@@ -1,0 +1,114 @@
+{
+  "schemaVersion": 1,
+  "taskId": "T000",
+  "rounds": [
+    {
+      "round": 1,
+      "passes": [
+        {
+          "checklist": "raw-qnt-traceability",
+          "status": "pass"
+        },
+        {
+          "checklist": "ubiquitous-language-domain",
+          "status": "pass"
+        },
+        {
+          "checklist": "architecture-connascence",
+          "status": "pass"
+        },
+        {
+          "checklist": "branch-coverage",
+          "status": "pass"
+        },
+        {
+          "checklist": "code-shape-depth",
+          "status": "pass"
+        },
+        {
+          "checklist": "adapter-quarantine",
+          "status": "pass"
+        },
+        {
+          "checklist": "engine-depth",
+          "status": "pass"
+        },
+        {
+          "checklist": "state-owner-derivability",
+          "status": "pass"
+        },
+        {
+          "checklist": "authored-identity-dispatch",
+          "status": "pass"
+        },
+        {
+          "checklist": "report-honesty",
+          "status": "pass"
+        }
+      ]
+    },
+    {
+      "round": 2,
+      "passes": [
+        {
+          "checklist": "raw-qnt-traceability",
+          "status": "pass"
+        },
+        {
+          "checklist": "ubiquitous-language-domain",
+          "status": "pass"
+        },
+        {
+          "checklist": "architecture-connascence",
+          "status": "pass"
+        },
+        {
+          "checklist": "branch-coverage",
+          "status": "pass"
+        },
+        {
+          "checklist": "code-shape-depth",
+          "status": "pass"
+        },
+        {
+          "checklist": "adapter-quarantine",
+          "status": "pass"
+        },
+        {
+          "checklist": "engine-depth",
+          "status": "pass"
+        },
+        {
+          "checklist": "state-owner-derivability",
+          "status": "pass"
+        },
+        {
+          "checklist": "authored-identity-dispatch",
+          "status": "pass"
+        },
+        {
+          "checklist": "report-honesty",
+          "status": "pass"
+        }
+      ]
+    }
+  ],
+  "findings": [
+    {
+      "id": "R1",
+      "checklist": "code-shape-depth",
+      "reasonableness": "reasonable",
+      "status": "fixed",
+      "summary": "<finding summary>",
+      "resolution": "<change made>"
+    },
+    {
+      "id": "R2",
+      "checklist": "architecture-connascence",
+      "reasonableness": "reasonable",
+      "status": "rejected",
+      "summary": "<finding summary>",
+      "deciderRationale": "<concrete reason this finding is not applied>"
+    }
+  ]
+}

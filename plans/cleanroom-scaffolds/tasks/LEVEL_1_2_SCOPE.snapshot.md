@@ -1,9 +1,9 @@
 # Level 1-2 Driver Scope
 
-Manifest source commit SHA: `8460cff717f7b1e66c8a1f96a9db4a206366e2bc`
-
-This file is the Work Loop filter for the cleanroom Rust engine. It was
-produced from the allowed cleanroom corpus only:
+This file is the Work Loop filter for the cleanroom target engine. It was
+produced from the source cleanroom corpus shape only. The target task report,
+not this source-owned scope snapshot, records the concrete manifest source
+commit SHA from `cleanroom-input/MANIFEST.md`.
 
 - `cleanroom-input/MANIFEST.md`
 - `cleanroom-input/raw/srd-5.2.1/**`
@@ -34,7 +34,15 @@ than authored character features.
 Flagged drivers are not part of the ordered in-scope queue until the owner
 question is answered.
 
-## In-Scope Queue
+## Current Branch-Inventory-Ready Queue
+
+This queue is the only active Work Loop queue for this scaffold revision.
+Additional source branch inventory rows may exist for future drivers; they are
+not selectable implementation tasks until this source-owned queue is revised.
+
+1. `cleanroom-input/qnt/battle-runtime/battle-runtime-magic-missile.mbt.qnt`
+
+## Future Level 1-2 Queue
 
 Drivers are ordered by dependency lane, then lexically inside each lane unless
 the current cleanroom vertical already exercised an earlier dependency.

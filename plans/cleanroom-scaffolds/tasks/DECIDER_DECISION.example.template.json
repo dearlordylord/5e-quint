@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "taskId": "T000",
+  "decision": "accepted",
+  "deterministicGates": [
+    {
+      "gate": "base-ancestor",
+      "status": "pass",
+      "evidence": "tasks/START_GATE.json"
+    },
+    {
+      "gate": "branch-coverage",
+      "status": "pass",
+      "evidence": "tasks/target-replay-evidence/*.json"
+    },
+    {
+      "gate": "adapter-quarantine",
+      "status": "pass",
+      "evidence": "tasks/ENGINE_DEPTH_MANIFEST.json"
+    },
+    {
+      "gate": "engine-depth",
+      "status": "pass",
+      "evidence": "tasks/ENGINE_DEPTH_MANIFEST.json"
+    },
+    {
+      "gate": "state-owner-derivability",
+      "status": "pass",
+      "evidence": "tasks/STATE_OWNER_MANIFEST.json"
+    },
+    {
+      "gate": "authored-identity-dispatch",
+      "status": "pass",
+      "evidence": "production source scan"
+    },
+    {
+      "gate": "report-honesty",
+      "status": "pass",
+      "evidence": "tasks/VALIDATION_REPORT.md"
+    },
+    {
+      "gate": "reviewer-loop-convergence",
+      "status": "pass",
+      "evidence": "tasks/REVIEW_LOOP.json"
+    }
+  ],
+  "rejectedFindings": []
+}

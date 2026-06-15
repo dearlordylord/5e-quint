@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "targetProfileId": "synthetic-alpha",
+  "targetLabel": "Aster",
+  "implementationKind": "rules engine",
+  "enginePath": "engine",
+  "packageManager": "Aster package tool",
+  "sourceFileExtensions": [
+    ".aster",
+    ".astar"
+  ],
+  "allowedTargetDocs": [
+    "Generic Aster language documentation.",
+    "Aster package tool documentation.",
+    "Aster Quint Bridge documentation."
+  ],
+  "verificationCommands": [
+    {
+      "label": "format",
+      "command": "aster fmt --check"
+    },
+    {
+      "label": "test",
+      "command": "aster test --with-qnt"
+    },
+    {
+      "label": "lint",
+      "command": "aster lint --strict"
+    }
+  ],
+  "quintBinding": {
+    "name": "Aster Quint Bridge",
+    "driverGuidanceMarkdown": "- Implement an Aster replay driver for each executable QNT/MBT slice.\n- Map QNT action names to target implementation calls using the Aster bridge dispatcher.\n- Expose comparable implementation state through the Aster bridge state projection.",
+    "reproductionMarkdown": "Use `ASTER_QNT_SEED=<seed>` to reproduce a failing Aster Quint Bridge run and `ASTER_QNT_VERBOSE=1` when trace details are needed."
+  }
+}

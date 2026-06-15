@@ -6,8 +6,8 @@
 // Run from the source repo root. Wipes <target>/cleanroom-input/ and rebuilds
 // it from the allowlist below, then writes cleanroom-input/MANIFEST.md with
 // the source commit SHA, copy date, and a per-file sha256 inventory. Cleanroom
-// tasks declare which manifest SHA they implement against
-// (plans/CLEANROOM_RUST_EXPERIMENT.md, "Restart Decision").
+// tasks declare which source commit SHA from the manifest they implement
+// against.
 //
 // Usage: node scripts/sync-cleanroom-input.cjs [--target <path>] [--dry-run]
 
@@ -16,9 +16,9 @@ const fs = require("node:fs");
 const path = require("node:path");
 const { execFileSync } = require("node:child_process");
 
-const DEFAULT_TARGET = "/workspace/typescript/dnd-cleanroom-rust";
+const DEFAULT_TARGET = "/workspace/typescript/dnd-cleanroom-target";
 
-// Allowlist per plans/CLEANROOM_RUST_EXPERIMENT.md "Allowed Inputs". Each rule
+// Allowlist for the language-independent cleanroom input corpus. Each rule
 // maps a source root to a destination root inside cleanroom-input/.
 // kind "flat" copies matching files directly under sourceRoot; kind "tree"
 // copies matching files recursively, preserving subdirectories.
@@ -44,6 +44,18 @@ const ALLOWLIST = [
     sourceRoot: "plans/CLEANROOM_ASSUMPTIONS.md",
     destRoot: "domain/CLEANROOM_ASSUMPTIONS.md",
     kind: "file",
+  },
+  {
+    sourceRoot: "plans/cleanroom-branch-coverage/source-branch-inventory.json",
+    destRoot: "branch-coverage/source-branch-inventory.json",
+    kind: "file",
+    transform: "source-branch-inventory-cleanroom-paths",
+  },
+  {
+    sourceRoot: "plans/cleanroom-guidance",
+    destRoot: "guidance",
+    kind: "tree",
+    extension: ".md",
   },
   {
     sourceRoot: "packages/battle-runtime",
@@ -92,7 +104,7 @@ function fail(message) {
 }
 
 function parseArgs(argv) {
-  const args = { target: DEFAULT_TARGET, dryRun: false };
+  const args = { target: DEFAULT_TARGET, dryRun: false, selfTest: false };
   for (let i = 0; i < argv.length; i += 1) {
     if (argv[i] === "--target") {
       i += 1;
@@ -100,6 +112,8 @@ function parseArgs(argv) {
       args.target = argv[i];
     } else if (argv[i] === "--dry-run") {
       args.dryRun = true;
+    } else if (argv[i] === "--self-test") {
+      args.selfTest = true;
     } else {
       fail(`unknown argument ${argv[i]}`);
     }
@@ -144,7 +158,7 @@ function collectCopies(repoRoot) {
     }
     const destRoot = destRootFor(rule);
     if (rule.kind === "file") {
-      copies.push({ source: rule.sourceRoot, dest: destRoot });
+      copies.push({ source: rule.sourceRoot, dest: destRoot, transform: rule.transform });
     } else {
       const files =
         rule.kind === "flat"
@@ -155,6 +169,7 @@ function collectCopies(repoRoot) {
         copies.push({
           source: path.join(rule.sourceRoot, rel),
           dest: path.join(destRoot, rel),
+          transform: rule.transform,
         });
       }
     }
@@ -201,12 +216,52 @@ function verifyImportsResolve(inputRoot, inventory) {
   return checked;
 }
 
+function verifyBranchInventoryHashes(targetRoot, inputRoot) {
+  const inventoryPath = path.join(
+    inputRoot,
+    "branch-coverage/source-branch-inventory.json",
+  );
+  if (!fs.existsSync(inventoryPath)) {
+    fail("source branch inventory was not copied.");
+  }
+  const sourceInventory = JSON.parse(fs.readFileSync(inventoryPath, "utf8"));
+  const entries = [
+    ...(sourceInventory.branchObligations ?? []),
+    ...(sourceInventory.sampledInputs ?? []),
+  ];
+  const checked = new Set();
+  const issues = [];
+  for (const entry of entries) {
+    if (typeof entry.driverPath !== "string") {
+      issues.push("branch inventory entry is missing driverPath.");
+      continue;
+    }
+    if (checked.has(entry.driverPath)) continue;
+    checked.add(entry.driverPath);
+    const driverPath = path.join(targetRoot, entry.driverPath);
+    if (!fs.existsSync(driverPath)) {
+      issues.push(`${entry.driverPath}: copied QNT driver is missing.`);
+      continue;
+    }
+    const actual = sha256(driverPath);
+    if (actual !== entry.qntFileSha256) {
+      issues.push(
+        `${entry.driverPath}: qntFileSha256 ${entry.qntFileSha256} does not match copied file ${actual}.`,
+      );
+    }
+  }
+  if (issues.length > 0) {
+    fail(`source branch inventory hash check failed:\n${issues.join("\n")}`);
+  }
+  return checked.size;
+}
+
 function requireCleanSources(repoRoot) {
   const roots = ALLOWLIST.map((rule) => rule.sourceRoot);
   const status = git(repoRoot, "status", "--porcelain", "--", ...roots);
   if (status !== "") {
     fail(
-      `allowlisted sources have uncommitted changes; commit them first so the manifest SHA is truthful:\n${status}`,
+      `allowlisted sources have uncommitted changes; commit them first so the manifest source commit SHA is truthful:\n${status}`,
     );
   }
 }
@@ -218,10 +273,108 @@ function sha256(filePath) {
     .digest("hex");
 }
 
+function cleanroomQntPath(sourceDriverPath) {
+  if (!sourceDriverPath.startsWith("packages/")) return sourceDriverPath;
+  return path.join(
+    "cleanroom-input/qnt",
+    sourceDriverPath.slice("packages/".length),
+  );
+}
+
+function transformSourceBranchInventory(content) {
+  const inventory = JSON.parse(content);
+  const transformEntry = (entry) => {
+    const driverPath = cleanroomQntPath(entry.driverPath);
+    const transformed = {
+      ...entry,
+      driverPath,
+    };
+    if (typeof entry.obligationId === "string") {
+      transformed.obligationId = entry.obligationId.replace(
+        entry.driverPath,
+        driverPath,
+      );
+    }
+    return transformed;
+  };
+  return `${JSON.stringify(
+    {
+      ...inventory,
+      sourceArtifacts: {
+        ...inventory.sourceArtifacts,
+        branchScope: "materialized in branchObligations; source branch-scope rows are not copied to cleanroom input",
+        driverPathModel: "cleanroom-input/qnt paths",
+      },
+      branchObligations: (inventory.branchObligations ?? []).map(transformEntry),
+      sampledInputs: (inventory.sampledInputs ?? []).map(transformEntry),
+    },
+    null,
+    2,
+  )}\n`;
+}
+
+function runSelfTest() {
+  const copies = collectCopies(path.resolve(__dirname, ".."));
+  const inventoryCopy = copies.find(
+    (copy) => copy.dest === "branch-coverage/source-branch-inventory.json",
+  );
+  if (
+    inventoryCopy === undefined ||
+    inventoryCopy.transform !== "source-branch-inventory-cleanroom-paths"
+  ) {
+    fail("source branch inventory copy must preserve its cleanroom path transform.");
+  }
+  const transformed = JSON.parse(
+    transformSourceBranchInventory(
+      JSON.stringify({
+        sourceArtifacts: {
+          branchScope: "plans/cleanroom-branch-coverage/branch-scope.jsonl",
+        },
+        branchObligations: [
+          {
+            driverPath: "packages/example/example.mbt.qnt",
+            obligationId: "packages/example/example.mbt.qnt#step:doThing",
+          },
+        ],
+        sampledInputs: [
+          {
+            driverPath: "packages/example/example.mbt.qnt",
+            branchFamily: "step",
+            branchAction: "doThing",
+          },
+        ],
+      }),
+    ),
+  );
+  if (
+    transformed.branchObligations[0].driverPath !==
+      "cleanroom-input/qnt/example/example.mbt.qnt" ||
+    transformed.branchObligations[0].obligationId !==
+      "cleanroom-input/qnt/example/example.mbt.qnt#step:doThing" ||
+    transformed.sampledInputs[0].driverPath !==
+      "cleanroom-input/qnt/example/example.mbt.qnt" ||
+    transformed.sourceArtifacts.branchScope.includes("plans/")
+  ) {
+    fail("source branch inventory transform did not produce target-local paths.");
+  }
+  process.stdout.write("cleanroom input sync self-test OK.\n");
+}
+
+function transformedContent(copy, sourceAbs) {
+  const content = fs.readFileSync(sourceAbs, "utf8");
+  if (copy.transform === "source-branch-inventory-cleanroom-paths") {
+    return transformSourceBranchInventory(content);
+  }
+  return content;
+}
+
 function main() {
   const args = parseArgs(process.argv.slice(2));
   const repoRoot = path.resolve(__dirname, "..");
-  requireCleanSources(repoRoot);
+  if (args.selfTest) {
+    runSelfTest();
+    return;
+  }
   const sourceSha = git(repoRoot, "rev-parse", "HEAD");
   const copies = collectCopies(repoRoot);
 
@@ -235,6 +388,7 @@ function main() {
     return;
   }
 
+  requireCleanSources(repoRoot);
   if (!fs.existsSync(args.target)) {
     fail(`target repo does not exist: ${args.target}`);
   }
@@ -246,7 +400,11 @@ function main() {
     const sourceAbs = path.join(repoRoot, copy.source);
     const destAbs = path.join(inputRoot, copy.dest);
     fs.mkdirSync(path.dirname(destAbs), { recursive: true });
-    fs.copyFileSync(sourceAbs, destAbs);
+    if (copy.transform) {
+      fs.writeFileSync(destAbs, transformedContent(copy, sourceAbs));
+    } else {
+      fs.copyFileSync(sourceAbs, destAbs);
+    }
     inventory.push({
       dest: copy.dest,
       source: copy.source,
@@ -255,6 +413,10 @@ function main() {
   }
 
   const importsChecked = verifyImportsResolve(inputRoot, inventory);
+  const branchInventoryDriversChecked = verifyBranchInventoryHashes(
+    args.target,
+    inputRoot,
+  );
 
   const counts = new Map();
   for (const item of inventory) {
@@ -275,12 +437,14 @@ function main() {
     `- Files: ${inventory.length}`,
     "",
     "Cleanroom tasks must declare which source commit SHA they implement",
-    "against (this manifest's SHA at the time the task starts).",
+    "against (the `Source commit SHA` recorded here at task start).",
     "",
     "## Included",
     "",
     "- `raw/srd-5.2.1/**`: SRD 5.2.1 RAW markdown.",
     "- `qnt/**`: active QNT specs, MBT drivers, and rule-core slices.",
+    "- `branch-coverage/source-branch-inventory.json`: source branch obligations.",
+    "- `guidance/**`: curated source-side cleanroom guidance.",
     "- `domain/UBIQUITOUS_LANGUAGE.md`: domain language.",
     "- `domain/CLEANROOM_ASSUMPTIONS.md`: curated RAW-ambiguity decisions.",
     "",
@@ -312,7 +476,7 @@ function main() {
   fs.writeFileSync(path.join(inputRoot, "MANIFEST.md"), manifest);
   process.stdout.write(
     `synced ${inventory.length} files to ${inputRoot} at source SHA ${sourceSha} ` +
-      `(${importsChecked} QNT imports resolved)\n`,
+      `(${importsChecked} QNT imports resolved, ${branchInventoryDriversChecked} branch-inventory drivers checked)\n`,
   );
 }
 

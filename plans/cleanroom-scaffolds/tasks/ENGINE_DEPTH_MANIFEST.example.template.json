@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 1,
+  "taskId": "T000",
+  "productionModulesExtended": [
+    {
+      "path": "{{enginePath}}/rules/<domain-module>",
+      "role": "domain-engine",
+      "domainApis": [
+        "<domain-facing-api-name>"
+      ]
+    }
+  ],
+  "adapterModules": [
+    {
+      "path": "{{enginePath}}/qnt-adapters/<driver-adapter>",
+      "quarantinedWitnessNames": [
+        "<qnt branch action name>",
+        "mbt::actionTaken",
+        "mbt::nondetPicks",
+        "observedActionTaken",
+        "traceId",
+        "qntFileSha256",
+        "sourceBranchInventorySha256",
+        "cleanroomManifestSourceCommitSha",
+        "targetProfile",
+        "targetProfileSha256",
+        "stateCheck",
+        "comparator",
+        "expectedProjectionSha256",
+        "observedProjectionSha256",
+        "checkedTargetStateFields",
+        "harnessTestPath"
+      ],
+      "targetReplayEvidence": [
+        "tasks/target-replay-evidence/<file>.json"
+      ]
+    }
+  ],
+  "accumulatorGrowth": [],
+  "expectedNextReuse": [
+    {
+      "driver": "cleanroom-input/qnt/<package>/<next-related-driver>.mbt.qnt",
+      "module": "{{enginePath}}/rules/<domain-module>",
+      "api": "<domain-facing-api-name>"
+    }
+  ]
+}

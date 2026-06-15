@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "taskId": "T000",
+  "durableFields": [
+    {
+      "fieldPath": "<Type.field>",
+      "introducedIn": "{{enginePath}}/rules/<domain-module>",
+      "owner": "battle-state",
+      "derivability": {
+        "tag": "canonical-source"
+      }
+    },
+    {
+      "fieldPath": "<Projection.field>",
+      "introducedIn": "{{enginePath}}/rules/<projection-module>",
+      "owner": "executable-boundary-projection",
+      "derivability": {
+        "tag": "stored-executable-boundary-projection",
+        "sourceField": "<canonical source field>",
+        "boundary": "<boundary where the projection is executable>"
+      }
+    },
+    {
+      "fieldPath": "<HarnessWitness.field>",
+      "introducedIn": "{{enginePath}}/qnt-adapters/<driver-adapter>",
+      "owner": "harness-witness-protocol",
+      "derivability": {
+        "tag": "harness-witness-protocol",
+        "witnessName": "mbt::actionTaken"
+      }
+    }
+  ]
+}

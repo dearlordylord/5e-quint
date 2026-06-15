@@ -5,7 +5,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { describe, expect, test } from "vitest";
-import { Either, Option } from "effect";
+import { Either, Match, Option } from "effect";
 import fc from "fast-check";
 import {
   buildUnitCatalog,
@@ -9722,13 +9722,55 @@ function qntProgressionSelection(
     return "NoProgression";
   }
 
-  if (startingClassUnitId(progression) === "class_wizard") {
-    return "WizardLevel1";
+  return `SelectedProgression(${renderQntCharacterProgression(progression)})`;
+}
+
+function renderQntCharacterProgression(
+  progression: CharacterProgression,
+): string {
+  if (progression.advancements.length === 0) {
+    return `LevelOneProgression({ startingClass: ${qntProgressionClassUnit(progression.startingClass)} })`;
   }
 
-  return computeTotalLevel(progression) === 1
-    ? "FighterLevel1"
-    : "FighterLevel2";
+  if (progression.advancements.length === 1) {
+    const [advancement] = progression.advancements;
+    if (advancement != null) {
+      assertQntFighterProgressionClassUnit(progression.startingClass);
+      assertQntFighterProgressionClassUnit(advancement.classUnitId);
+      return `FighterLevelTwoProgression({ advancementHitPointRule: ${qntAdvancementHitPointRule(advancement.hitPointRule)} })`;
+    }
+  }
+
+  throw new Error("Unsupported QNT character progression shape.");
+}
+
+function qntProgressionClassUnit(classUnit: string): string {
+  if (classUnit === "class_fighter") return "FighterClassUnit";
+  if (classUnit === "class_wizard") return "WizardClassUnit";
+
+  throw new Error(
+    `Unsupported QNT character progression class Unit: ${classUnit}`,
+  );
+}
+
+function assertQntFighterProgressionClassUnit(classUnit: string): void {
+  if (classUnit === "class_fighter") return;
+
+  throw new Error(
+    `Unsupported QNT Fighter progression class Unit: ${classUnit}`,
+  );
+}
+
+function qntAdvancementHitPointRule(
+  hitPointRule: CharacterProgression["advancements"][number]["hitPointRule"],
+): string {
+  return Match.value(hitPointRule).pipe(
+    Match.when(
+      { tag: "fixedHigherLevelGain" },
+      () => "FixedHigherLevelGain" as const,
+    ),
+    Match.exhaustive,
+  );
 }
 
 function renderQntHoleSet(holes: readonly CreationHole[]): string {

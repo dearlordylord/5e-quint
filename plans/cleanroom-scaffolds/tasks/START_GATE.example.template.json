@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "taskId": "T000",
+  "declaredBaseSha": "<40 hex Base SHA from runner>",
+  "headSha": "<40 hex HEAD SHA>",
+  "ancestorCheck": {
+    "command": "git merge-base --is-ancestor <Base SHA> HEAD",
+    "result": "passed"
+  },
+  "taskScope": {
+    "selectedDrivers": [
+      "cleanroom-input/qnt/<package>/<driver>.mbt.qnt"
+    ]
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "targetProfileId": "synthetic-beta",
+  "targetLabel": "Beryl",
+  "implementationKind": "rule kernel",
+  "enginePath": "kernel",
+  "packageManager": "Beryl build tool",
+  "sourceFileExtensions": [
+    ".beryl",
+    ".brl"
+  ],
+  "allowedTargetDocs": [
+    "Beryl runtime manual.",
+    "Beryl build tool reference.",
+    "Beryl MBT adapter guide."
+  ],
+  "verificationCommands": [
+    {
+      "label": "normalize",
+      "command": "beryl normalize --verify"
+    },
+    {
+      "label": "conformance",
+      "command": "beryl check qnt-conformance"
+    }
+  ],
+  "quintBinding": {
+    "name": "Beryl MBT Adapter",
+    "driverGuidanceMarkdown": "- Implement a Beryl adapter for every replayable QNT/MBT branch set.\n- Dispatch by the observed QNT action name and fail on unknown action names.\n- Project Beryl state into the exact comparison shape named by the QNT driver.",
+    "reproductionMarkdown": "Use `BERYL_TRACE_SEED=<seed>` to reproduce a failing Beryl MBT Adapter run and `BERYL_TRACE_LOG=verbose` when trace details are needed."
+  }
+}

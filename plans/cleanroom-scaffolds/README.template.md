@@ -1,45 +1,62 @@
-# Cleanroom Rust Engine
+# Cleanroom {{targetLabel}} Engine
 
-Cleanroom experiment: implement a Rust D&D SRD 5.2.1 rules engine for
-character levels 1-2 from the copied formal/domain corpus only
-(`cleanroom-input/`), without reading the production implementation. Success
-means the corpus is sufficient implementation guidance; failures and blockers
-are research data.
+Cleanroom experiment: implement a {{targetLabel}} D&D SRD 5.2.1
+{{implementationKind}} for character levels 1-2 from the copied
+formal/domain corpus only (`cleanroom-input/`), without reading the production
+implementation. Success means the corpus is sufficient implementation
+guidance; failures and blockers are research data.
 
 All agent rules live in `AGENTS.md`. The corpus snapshot and its source commit
-SHA live in `cleanroom-input/MANIFEST.md`.
+SHA live in `cleanroom-input/MANIFEST.md`. The source branch inventory lives in
+`cleanroom-input/branch-coverage/source-branch-inventory.json`.
+
+Target profile: `{{targetProfileId}}`. Target package/tooling:
+{{packageManager}}. Target source extensions: {{sourceFileExtensionsMarkdown}}.
 
 ## Layout
 
-- `cleanroom-input/` — the only rules corpus (RAW, QNT, domain). Read-only;
-  populated by the source repo's sync script.
-- `engine/` — the Rust engine crate and its tests.
-- `tasks/` — task specs, `VALIDATION_REPORT.md`, `BLOCKERS.md`.
+- `cleanroom-input/` — the only rules corpus (RAW, QNT, domain, source branch
+  inventory, and guidance pack). Read-only; populated by the source repo's sync
+  script.
+- `{{enginePath}}` — target implementation and its tests.
+- `tasks/` — task specs, `VALIDATION_REPORT.md`, `BLOCKERS.md`, and generated
+  target replay evidence.
 
-## Owner kickoff
+## Owner Kickoff
 
 1. Launch a fresh agent with this directory as its only working root —
    ideally with file access restricted to this repo.
 2. Prompt: "Read `AGENTS.md` and `tasks/WORK_LOOP.md`, then implement the next
-   in-scope driver from `tasks/LEVEL_1_2_SCOPE.md` following the Work Loop."
+   in-scope branch set from `tasks/LEVEL_1_2_SCOPE.md` following the Work
+   Loop."
 3. After the run, have a second fresh agent review against the same corpus
-   (same prompt shape, reviewing instead of implementing).
-4. Audit the run for forbidden-path reads before trusting it as cleanroom
+   using `tasks/REVIEWER_CHECKLIST.md`.
+4. Have the decider evaluate `tasks/DECIDER_CHECKLIST.md` and the
+   machine-readable artifacts before accepting the task.
+5. Audit the run for forbidden-path reads before trusting it as cleanroom
    evidence.
 
 ## Verification
 
-The Rust test suite is also the conformance lane: tasks with applicable
-`.mbt.qnt` or executable QNT tests must wire them through `quint-connect`.
-Quint must be installed and available in `PATH` for those tests.
-Use `#[quint_test]` for named QNT tests and `#[quint_run]` for simulation
-traces.
+The target test suite is also the conformance lane: tasks with applicable
+`.mbt.qnt` drivers must wire them through {{quintBindingName}} and emit
+target replay evidence. Target-language tests may supplement diagnosis, but
+they do not close source branch coverage.
 
-```bash
-cargo fmt --check
-cargo test
-cargo clippy --all-targets -- -D warnings
-```
+{{verificationCommandsMarkdown}}
 
-Use `QUINT_SEED=<seed>` to reproduce a failing `quint-connect` run and
-`QUINT_VERBOSE=1` or `QUINT_VERBOSE=2` when trace details are needed.
+{{quintReproductionMarkdown}}
+
+## Harness Artifacts
+
+Every accepted task records:
+
+- `tasks/START_GATE.json`
+- `tasks/ENGINE_DEPTH_MANIFEST.json`
+- `tasks/STATE_OWNER_MANIFEST.json`
+- `tasks/REVIEW_LOOP.json`
+- `tasks/DECIDER_DECISION.json`
+- `tasks/target-replay-evidence/*.json`
+
+The validation report is a human-readable ledger. These JSON artifacts are the
+acceptance contract.

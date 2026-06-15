@@ -1,0 +1,364 @@
+{
+  "branchObligations": [
+    {
+      "branchAction": "doFillMagicMissileAllocation",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doFillMagicMissileAllocation"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/battle-runtime-magic-missile.mbt.qnt",
+      "obligationId": "packages/battle-runtime/battle-runtime-magic-missile.mbt.qnt#step:doFillMagicMissileAllocation",
+      "qntFileSha256": "17051290852258760a487ed74848c1c1c9c803e30e3ab1b48aa37a52f26948b9",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doFillMagicMissileDamage",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doFillMagicMissileDamage"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/battle-runtime-magic-missile.mbt.qnt",
+      "obligationId": "packages/battle-runtime/battle-runtime-magic-missile.mbt.qnt#step:doFillMagicMissileDamage",
+      "qntFileSha256": "17051290852258760a487ed74848c1c1c9c803e30e3ab1b48aa37a52f26948b9",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doFillAbilityScoresOnly",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doFillAbilityScoresOnly"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/character-creation-runtime/character-creation-runtime.mbt.qnt",
+      "obligationId": "packages/character-creation-runtime/character-creation-runtime.mbt.qnt#step:doFillAbilityScoresOnly",
+      "qntFileSha256": "43e5cb97b05c4962759c9a08ef1bdd15c86150f67f55d33bf23169b7f011ef31",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doFillInitialChoicesOnly",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doFillInitialChoicesOnly"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/character-creation-runtime/character-creation-runtime.mbt.qnt",
+      "obligationId": "packages/character-creation-runtime/character-creation-runtime.mbt.qnt#step:doFillInitialChoicesOnly",
+      "qntFileSha256": "43e5cb97b05c4962759c9a08ef1bdd15c86150f67f55d33bf23169b7f011ef31",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doFillInitialManifest",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doFillInitialManifest"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/character-creation-runtime/character-creation-runtime.mbt.qnt",
+      "obligationId": "packages/character-creation-runtime/character-creation-runtime.mbt.qnt#step:doFillInitialManifest",
+      "qntFileSha256": "43e5cb97b05c4962759c9a08ef1bdd15c86150f67f55d33bf23169b7f011ef31",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doFillManifestChoices",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doFillManifestChoices"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/character-creation-runtime/character-creation-runtime.mbt.qnt",
+      "obligationId": "packages/character-creation-runtime/character-creation-runtime.mbt.qnt#step:doFillManifestChoices",
+      "qntFileSha256": "43e5cb97b05c4962759c9a08ef1bdd15c86150f67f55d33bf23169b7f011ef31",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doFillManifestLoadout",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doFillManifestLoadout"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/character-creation-runtime/character-creation-runtime.mbt.qnt",
+      "obligationId": "packages/character-creation-runtime/character-creation-runtime.mbt.qnt#step:doFillManifestLoadout",
+      "qntFileSha256": "43e5cb97b05c4962759c9a08ef1bdd15c86150f67f55d33bf23169b7f011ef31",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doFillManifestPurchase",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doFillManifestPurchase"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/character-creation-runtime/character-creation-runtime.mbt.qnt",
+      "obligationId": "packages/character-creation-runtime/character-creation-runtime.mbt.qnt#step:doFillManifestPurchase",
+      "qntFileSha256": "43e5cb97b05c4962759c9a08ef1bdd15c86150f67f55d33bf23169b7f011ef31",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doRejectClosedInitialProgressionHole",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doRejectClosedInitialProgressionHole"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/character-creation-runtime/character-creation-runtime.mbt.qnt",
+      "obligationId": "packages/character-creation-runtime/character-creation-runtime.mbt.qnt#step:doRejectClosedInitialProgressionHole",
+      "qntFileSha256": "43e5cb97b05c4962759c9a08ef1bdd15c86150f67f55d33bf23169b7f011ef31",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doRejectDuplicateFill",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doRejectDuplicateFill"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/character-creation-runtime/character-creation-runtime.mbt.qnt",
+      "obligationId": "packages/character-creation-runtime/character-creation-runtime.mbt.qnt#step:doRejectDuplicateFill",
+      "qntFileSha256": "43e5cb97b05c4962759c9a08ef1bdd15c86150f67f55d33bf23169b7f011ef31",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doRejectDuplicateLanguage",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doRejectDuplicateLanguage"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/character-creation-runtime/character-creation-runtime.mbt.qnt",
+      "obligationId": "packages/character-creation-runtime/character-creation-runtime.mbt.qnt#step:doRejectDuplicateLanguage",
+      "qntFileSha256": "43e5cb97b05c4962759c9a08ef1bdd15c86150f67f55d33bf23169b7f011ef31",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doRejectStaleInitialManifest",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doRejectStaleInitialManifest"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/character-creation-runtime/character-creation-runtime.mbt.qnt",
+      "obligationId": "packages/character-creation-runtime/character-creation-runtime.mbt.qnt#step:doRejectStaleInitialManifest",
+      "qntFileSha256": "43e5cb97b05c4962759c9a08ef1bdd15c86150f67f55d33bf23169b7f011ef31",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doRejectTooFewLanguages",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doRejectTooFewLanguages"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/character-creation-runtime/character-creation-runtime.mbt.qnt",
+      "obligationId": "packages/character-creation-runtime/character-creation-runtime.mbt.qnt#step:doRejectTooFewLanguages",
+      "qntFileSha256": "43e5cb97b05c4962759c9a08ef1bdd15c86150f67f55d33bf23169b7f011ef31",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doRejectTooManyLanguages",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doRejectTooManyLanguages"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/character-creation-runtime/character-creation-runtime.mbt.qnt",
+      "obligationId": "packages/character-creation-runtime/character-creation-runtime.mbt.qnt#step:doRejectTooManyLanguages",
+      "qntFileSha256": "43e5cb97b05c4962759c9a08ef1bdd15c86150f67f55d33bf23169b7f011ef31",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doRejectUnknownLoadoutArmor",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doRejectUnknownLoadoutArmor"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/character-creation-runtime/character-creation-runtime.mbt.qnt",
+      "obligationId": "packages/character-creation-runtime/character-creation-runtime.mbt.qnt#step:doRejectUnknownLoadoutArmor",
+      "qntFileSha256": "43e5cb97b05c4962759c9a08ef1bdd15c86150f67f55d33bf23169b7f011ef31",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doRejectUnsupportedClassEquipment",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doRejectUnsupportedClassEquipment"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/character-creation-runtime/character-creation-runtime.mbt.qnt",
+      "obligationId": "packages/character-creation-runtime/character-creation-runtime.mbt.qnt#step:doRejectUnsupportedClassEquipment",
+      "qntFileSha256": "43e5cb97b05c4962759c9a08ef1bdd15c86150f67f55d33bf23169b7f011ef31",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doRejectUnsupportedLanguage",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doRejectUnsupportedLanguage"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/character-creation-runtime/character-creation-runtime.mbt.qnt",
+      "obligationId": "packages/character-creation-runtime/character-creation-runtime.mbt.qnt#step:doRejectUnsupportedLanguage",
+      "qntFileSha256": "43e5cb97b05c4962759c9a08ef1bdd15c86150f67f55d33bf23169b7f011ef31",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doRejectWrongKindPrimaryClass",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doRejectWrongKindPrimaryClass"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/character-creation-runtime/character-creation-runtime.mbt.qnt",
+      "obligationId": "packages/character-creation-runtime/character-creation-runtime.mbt.qnt#step:doRejectWrongKindPrimaryClass",
+      "qntFileSha256": "43e5cb97b05c4962759c9a08ef1bdd15c86150f67f55d33bf23169b7f011ef31",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    }
+  ],
+  "generatedBy": "scripts/cleanroom-branch-coverage-check.cjs",
+  "quintMetadataModel": {
+    "branchActionSource": "mbt::actionTaken",
+    "sampledInputSource": "mbt::nondetPicks"
+  },
+  "sampledInputs": [
+    {
+      "branchAction": "doFillMagicMissileDamage",
+      "branchFamily": "step",
+      "driverPath": "packages/battle-runtime/battle-runtime-magic-missile.mbt.qnt",
+      "pickName": "dartRollTotal",
+      "qntFileSha256": "17051290852258760a487ed74848c1c1c9c803e30e3ab1b48aa37a52f26948b9"
+    }
+  ],
+  "schemaVersion": 1,
+  "sourceArtifacts": {
+    "branchScope": "plans/cleanroom-branch-coverage/branch-scope.jsonl"
+  }
+}

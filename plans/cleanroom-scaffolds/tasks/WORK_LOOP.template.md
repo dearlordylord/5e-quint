@@ -8,73 +8,97 @@ Read these files, in this order:
 
 1. `AGENTS.md`
 2. `cleanroom-input/MANIFEST.md`
-3. `tasks/LEVEL_1_2_SCOPE.md`
-4. `tasks/VALIDATION_REPORT.md`
-5. `tasks/BLOCKERS.md`
+3. `cleanroom-input/branch-coverage/source-branch-inventory.json`
+4. `tasks/LEVEL_1_2_SCOPE.md`
+5. `tasks/IMPLEMENTER_TASK.md`
+6. `tasks/VALIDATION_REPORT.md`
+7. `tasks/BLOCKERS.md`
 
 Do not read any file outside this repository. Do not read sibling repos.
 
-## Pick The Next Driver
+## Pick The Next Branch Set
 
-`tasks/LEVEL_1_2_SCOPE.md` is the backlog and ordering source. Only drivers in
-its `In-Scope Queue` are eligible. Drivers marked `out` or `flagged` in the
-decision table are not Work Loop tasks until the scope file is explicitly
-revised.
+`tasks/LEVEL_1_2_SCOPE.md` is the driver backlog and ordering source. Only
+drivers in its `Current Branch-Inventory-Ready Queue` are eligible. Drivers in
+future queues, or drivers marked `out` or `flagged` in the decision table, are
+not Work Loop tasks until the scope file and source branch inventory are
+explicitly revised together.
 
-`tasks/VALIDATION_REPORT.md` is the completion ledger. A queued driver is
+Do not reorder or edit `tasks/LEVEL_1_2_SCOPE.md` in the target repo. It is a
+source-owned snapshot; if the queue is wrong, record a blocker and have the
+source repo update the scope snapshot and branch inventory together.
+
+`cleanroom-input/branch-coverage/source-branch-inventory.json` is the branch
+denominator. A queued driver is complete only when every in-scope replayable
+branch obligation for that driver has passing harness-generated target replay
+evidence.
+
+`tasks/VALIDATION_REPORT.md` is the completion ledger. A queued branch set is
 complete only when that report contains an entry that:
 
 - names the exact `.mbt.qnt` driver;
 - records the current manifest source commit SHA from
   `cleanroom-input/MANIFEST.md`;
+- records the source branch inventory SHA;
 - lists the allowed inputs used;
 - records the behavior implemented;
-- records MBT/QNT coverage, including seed when applicable;
+- renders the generated branch coverage table from target replay evidence;
 - records verification results for:
-  - `cargo fmt --check`
-  - `cargo test`
-  - `cargo clippy --all-targets -- -D warnings`
+{{verificationChecklistMarkdown}}
 
-If a report entry names an old manifest SHA, treat it as historical unless it
-also has a current-manifest revalidation note.
+If a report entry names an old manifest source commit SHA or source branch
+inventory SHA, treat it as historical unless it also has a current-snapshot
+revalidation note.
 
 To select work:
 
 1. Find the first queued driver in `tasks/LEVEL_1_2_SCOPE.md`.
-2. Skip it only if `tasks/VALIDATION_REPORT.md` proves it complete for the
-   current manifest SHA.
-3. Implement the first queued driver that is not proven complete.
+2. Read its in-scope branch obligations from source branch inventory.
+3. Skip it only if `tasks/VALIDATION_REPORT.md` proves every in-scope
+   replayable branch complete for the current manifest and source branch
+   inventory.
+4. Implement the first queued branch set that is not proven complete.
 
 ## Current Cursor
 
-- Manifest source commit SHA:
-  `8460cff717f7b1e66c8a1f96a9db4a206366e2bc`
-- Last completed current-manifest queued driver:
-  `cleanroom-input/qnt/character-creation-runtime/character-creation-runtime.mbt.qnt`
-- Next queued driver:
-  `cleanroom-input/qnt/character-creation-runtime/character-creation-class-feature-projections.mbt.qnt`
+- Manifest source commit SHA: `<current manifest source commit SHA>`
+- Source branch inventory SHA: `<current source branch inventory SHA>`
+- Last completed current-snapshot queued branch set: `<none>`
+- Next queued driver: `<first in-scope driver from tasks/LEVEL_1_2_SCOPE.md>`
 
 ## Implementation Rules
 
-For the selected driver:
+For the selected branch set:
 
-1. Read the `.mbt.qnt` driver and its imported QNT files from
+1. Write `tasks/START_GATE.json` with the declared Base SHA, current `HEAD`,
+   ancestor-check command, ancestor-check result, and selected drivers. Stop if
+   the ancestor check fails.
+2. Read the `.mbt.qnt` driver and its imported QNT files from
    `cleanroom-input/qnt/**`.
-2. Read the relevant RAW from `cleanroom-input/raw/srd-5.2.1/**`.
-3. Check `cleanroom-input/domain/UBIQUITOUS_LANGUAGE.md`.
-4. Check `cleanroom-input/domain/CLEANROOM_ASSUMPTIONS.md`.
-5. Implement the smallest Rust slice in `engine/` that makes the driver
-   conform.
-6. Wire applicable executable QNT/MBT coverage through `quint-connect`.
-7. Add focused Rust tests when they clarify RAW/QNT behavior or cover a
-   documented conformance gap.
-8. Run all required verification commands.
-9. Update `tasks/VALIDATION_REPORT.md`.
-10. Update `tasks/BLOCKERS.md` only if the allowed corpus is insufficient.
+3. Read the relevant RAW from `cleanroom-input/raw/srd-5.2.1/**`.
+4. Check `cleanroom-input/domain/UBIQUITOUS_LANGUAGE.md`.
+5. Check `cleanroom-input/domain/CLEANROOM_ASSUMPTIONS.md`.
+6. Check the relevant guidance files in `cleanroom-input/guidance/**`.
+7. Implement the smallest {{targetLabel}} slice in `{{enginePath}}` that makes
+   the branch set conform.
+8. Record or update `tasks/ENGINE_DEPTH_MANIFEST.json` for the production
+   modules, domain APIs, adapter modules, quarantined witness names, and next
+   reuse.
+9. Record or update `tasks/STATE_OWNER_MANIFEST.json` for every durable field
+   introduced or changed by the task.
+10. Wire applicable executable QNT/MBT coverage through {{quintBindingName}}.
+11. Add focused target-language tests only when they clarify RAW/QNT behavior or
+   diagnose a documented conformance gap; these tests do not close branch
+   coverage.
+12. Run all required verification commands.
+13. Write target replay evidence under `tasks/target-replay-evidence/`.
+14. Update `tasks/VALIDATION_REPORT.md`.
+15. Update `tasks/BLOCKERS.md` only if the allowed corpus or target
+    implementation remains insufficient.
 
-If the selected driver cannot be implemented from the allowed inputs, record a
-blocker with the exact missing fact and move to the next eligible queued driver.
-Do not guess, and do not ask the owner during the run.
+If the selected branch set cannot be implemented from the allowed inputs,
+record a blocker with the exact missing fact and move to the next eligible
+queued branch set. Do not guess, and do not ask the owner during the run.
 
 ## Required Report Shape
 
@@ -84,8 +108,11 @@ blocked implementation task. Use this shape:
 ```md
 ## TNNN: <driver basename or short behavior name>
 
-- Manifest source commit SHA: `<current manifest SHA>`
+- Manifest source commit SHA: `<current manifest source commit SHA>`
+- Source branch inventory SHA: `<current source branch inventory SHA>`
 - Driver: `<exact queued .mbt.qnt path>`
+- Branch obligations:
+  - `<branch family>:<branch action>`
 - Allowed inputs used:
   - `<path>`
 
@@ -93,10 +120,17 @@ Behavior implemented:
 
 - ...
 
-MBT/QNT coverage:
+Generated branch coverage:
 
-- Exercised `<exact .mbt.qnt path>` with `<quint-connect attribute>`.
-- Reproduction seed: `<seed>`.
+| Obligation | Target replay evidence | Diagnostic tests | Status |
+| --- | --- | --- | --- |
+| `<driver path>#<branch family>:<branch action>` | `tasks/target-replay-evidence/<file>.json#<trace id>#<branch family>:<branch action>` | `<diagnostic test path or none>` | `<covered|blocked>` |
+
+Target replay evidence:
+
+- Evidence file: `tasks/target-replay-evidence/<file>.json`
+- Target profile SHA-256: `<canonical target-profile.json sha256>`
+- Reproduction seed or trace id: `<seed or trace id>`
 
 Remaining gaps:
 
@@ -104,9 +138,7 @@ Remaining gaps:
 
 Verification results:
 
-- `cargo fmt --check` passed.
-- `cargo test` passed: `<summary>`.
-- `cargo clippy --all-targets -- -D warnings` passed.
+{{verificationResultsMarkdown}}
 ```
 
 When you finish, also update the `Work Loop Status` section near the top of

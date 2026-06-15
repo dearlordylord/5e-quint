@@ -32,6 +32,15 @@ module characterCreationRuntimeMbt {
     }),
   ]
 
+  pure val duplicateLanguageHoleFills: List[Fill] = [
+    FChoice({ hole: HLanguages, options: [OLanguageDwarvish, OLanguageGoblin] }),
+    FChoice({ hole: HLanguages, options: [OLanguageDwarvish, OLanguageGoblin] }),
+  ]
+
+  pure val closedInitialProgressionHoleFills: List[Fill] = [
+    FChoice({ hole: HProgression, options: [OClassFighterLevel1] }),
+  ]
+
   pure val staleExpectedRevision: int = 999
 
   pure def resultDraft(result: FillBatchResult): Draft = match result {
@@ -168,6 +177,12 @@ module characterCreationRuntimeMbt {
       ])),
     }
 
+  action doRejectDuplicateFill =
+    all {
+      qHoles.contains(HLanguages),
+      recordResult(fillCreationHoles(qDraft, qDraft.revision, duplicateLanguageHoleFills)),
+    }
+
   action doRejectTooFewLanguages =
     all {
       qHoles.contains(HLanguages),
@@ -196,9 +211,16 @@ module characterCreationRuntimeMbt {
       ])),
     }
 
+  action doRejectClosedInitialProgressionHole =
+    all {
+      not(qHoles.contains(HProgression)),
+      recordResult(fillCreationHoles(qDraft, qDraft.revision, closedInitialProgressionHoleFills)),
+    }
+
   action doRejectUnknownLoadoutArmor =
     all {
       not(qHoles.contains(HLoadoutArmor)),
+      not(qDraft.equipmentPurchase),
       recordResult(fillCreationHoles(qDraft, qDraft.revision, [
         FChoice({ hole: HLoadoutArmor, options: [OLoadoutWorn] }),
       ])),
@@ -222,9 +244,11 @@ module characterCreationRuntimeMbt {
     doRejectStaleInitialManifest,
     doRejectUnsupportedLanguage,
     doRejectDuplicateLanguage,
+    doRejectDuplicateFill,
     doRejectTooFewLanguages,
     doRejectTooManyLanguages,
     doRejectWrongKindPrimaryClass,
+    doRejectClosedInitialProgressionHole,
     doRejectUnknownLoadoutArmor,
     doRejectUnsupportedClassEquipment,
   }

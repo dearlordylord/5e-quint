@@ -20,6 +20,21 @@ module characterCreationRuntimeSliceTests {
     }
   }
 
+  run test_progression_fill_is_one_character_progression_selection = {
+    match fillCreationHoles(emptyDraft, 0, [
+      FChoice({ hole: HProgression, options: [OClassFighterLevel2] }),
+    ]) {
+      | Accepted(v) =>
+          all {
+            assert(v.draft.progression == SelectedProgression(fighterLevel2Progression)),
+            assert(characterProgressionTotalLevel(fighterLevel2Progression) == 2),
+            assert(selectedProgressionClassLevel(v.draft.progression, FighterClassUnit) == 2),
+            assert(selectedProgressionClassLevel(v.draft.progression, WizardClassUnit) == 0),
+          }
+      | Rejected(_) => assert(false)
+    }
+  }
+
   run test_complete_manifest_finalizes = {
     all {
       assert(completeManifestDraft.revision == 4),
@@ -94,6 +109,22 @@ module characterCreationRuntimeSliceTests {
     }
   }
 
+  run test_closed_initial_hole_rejected_as_unknown_hole = {
+    match fillCreationHoles(afterInitialManifest, 1, [
+      FChoice({ hole: HProgression, options: [OClassFighterLevel1] }),
+    ]) {
+      | Accepted(_) => assert(false)
+      | Rejected(v) =>
+          all {
+            assert(v.draft == afterInitialManifest),
+            assert(v.holes == afterInitialHoleIds),
+            assert(v.issues.batch == Set()),
+            assert(v.issues.fills == Set({ fillIndex: 0, hole: HProgression, code: UnknownHole })),
+            assert(v.finalization == Incomplete),
+          }
+    }
+  }
+
   run test_unsupported_language_fill_rejected_atomically = {
     match fillCreationHoles(emptyDraft, 0, [
       FChoice({ hole: HLanguages, options: [OLanguageDwarvish, OLanguageElvish] }),
@@ -116,6 +147,23 @@ module characterCreationRuntimeSliceTests {
           all {
             assert(v.draft == emptyDraft),
             assert(v.issues.fills == Set({ fillIndex: 0, hole: HLanguages, code: InvalidChoice })),
+          }
+    }
+  }
+
+  run test_duplicate_fill_rejected_atomically = {
+    match fillCreationHoles(emptyDraft, 0, [
+      FChoice({ hole: HLanguages, options: [OLanguageDwarvish, OLanguageGoblin] }),
+      FChoice({ hole: HLanguages, options: [OLanguageDwarvish, OLanguageGoblin] }),
+    ]) {
+      | Accepted(_) => assert(false)
+      | Rejected(v) =>
+          all {
+            assert(v.draft == emptyDraft),
+            assert(v.holes == initialHoleIds),
+            assert(v.issues.batch == Set()),
+            assert(v.issues.fills == Set({ fillIndex: 1, hole: HLanguages, code: DuplicateFill })),
+            assert(v.finalization == Incomplete),
           }
     }
   }
