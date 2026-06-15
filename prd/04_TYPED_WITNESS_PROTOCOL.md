@@ -70,9 +70,9 @@ witnesses:
 
 Consequences: witnesses cost ~150 lines where ~50 would do, which rate-limits
 growing QNT coverage toward "covers everything"; the spec↔driver contract is
-not machine-readable, so the future Rust harness
-(`plans/CLEANROOM_RUST_EXPERIMENT.md`, phase 2) would re-derive each mapping
-by reading TS — exactly what clean-room forbids.
+not machine-readable, so the future target harness described by
+`plans/PRD_CLEANROOM_QNT_BRANCH_COVERAGE_AND_HARNESS.md` would re-derive each
+mapping by reading TS — exactly what clean-room forbids.
 
 ## Solution
 

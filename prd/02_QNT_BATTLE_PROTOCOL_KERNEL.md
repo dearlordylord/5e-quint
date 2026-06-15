@@ -24,7 +24,9 @@ Read, in this order, before writing anything:
 3. `docs/adr/0001-forest-of-qnt-slices.md` (forest shape, import-closure cost)
    and `docs/adr/0004-light-obscurement-sight-source-facts-and-witnesses.md`
    (table-supplied facts stay table-owned).
-4. `plans/CLEANROOM_RUST_EXPERIMENT.md` — the experiment this PRD serves.
+4. `plans/PRD_CLEANROOM_QNT_BRANCH_COVERAGE_AND_HARNESS.md` and
+   `plans/CLEANROOM_QNT_BRANCH_COVERAGE_AND_HARNESS_IMPLEMENTATION_PLAN.md` —
+   the active cleanroom readiness program this PRD serves.
 5. `plans/rules-kernel-coverage/README.md`, `obligations.jsonl`,
    `battle-hole-frontier.jsonl`, and the checkers
    `scripts/rules-kernel-coverage-check.cjs` /
@@ -67,8 +69,9 @@ master (2026-06-10):
   `BATTLE.HOLE.SEMANTIC_FRONTIER_CLASSIFICATION` is `boundary-only` with empty
   `qntOwners`, and `battle-hole-frontier.jsonl` rows defer QNT ownership to
   named follow-up tasks.
-- Consequence for `plans/CLEANROOM_RUST_EXPERIMENT.md`: the copied QNT corpus
-  underdetermines the engine. A cleanroom Rust agent could satisfy every
+- Consequence for the active cleanroom readiness program
+  (`plans/PRD_CLEANROOM_QNT_BRANCH_COVERAGE_AND_HARNESS.md`): the copied QNT
+  corpus underdetermines the engine. A cleanroom Rust agent could satisfy every
   focused witness and still be unable to implement act discovery, hole
   frontiers, or interrupt resume without reading production TypeScript — the
   exact blocker class the experiment exists to detect. Closing it in QNT is
@@ -284,8 +287,10 @@ QNT owners as evidence.
   `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` away from boundary status.
 - Mass-renaming TS `BattleHole`/`BattleFill` variants.
 - Implementing a QNT-to-Rust generator or committing generated Rust.
-- The cleanroom experiment itself (`plans/CLEANROOM_RUST_EXPERIMENT.md` owns
-  it).
+- The cleanroom readiness program itself
+  (`plans/PRD_CLEANROOM_QNT_BRANCH_COVERAGE_AND_HARNESS.md` and
+  `plans/CLEANROOM_QNT_BRANCH_COVERAGE_AND_HARNESS_IMPLEMENTATION_PLAN.md`
+  own it).
 
 ## Further Notes
 

@@ -73,12 +73,13 @@ master (2026-06-10):
 
 Two costs follow. Locally: decode bugs and protocol-recording drift have 39
 homes; every new witness pays ~600 lines. Strategically: ADR-0001's model is
-one harness per language target against the same QNT sources. The Rust phase
-of `plans/CLEANROOM_RUST_EXPERIMENT.md` therefore inherits whatever shape this
-harness has. Today that price is "re-implement the union of 106 hand-rolled
-drivers"; after this PRD it is "implement one kit interface plus thin
-per-obligation mappings" — and the kit's interface doubles as the written
-specification of what any language's harness must provide.
+one harness per language target against the same QNT sources. The target
+acceptance phase of
+`plans/PRD_CLEANROOM_QNT_BRANCH_COVERAGE_AND_HARNESS.md` therefore inherits
+whatever shape this harness has. Today that price is "re-implement the union of
+106 hand-rolled drivers"; after this PRD it is "implement one kit interface
+plus thin per-obligation mappings" — and the kit's interface doubles as the
+written specification of what any language's harness must provide.
 
 ## Solution
 
