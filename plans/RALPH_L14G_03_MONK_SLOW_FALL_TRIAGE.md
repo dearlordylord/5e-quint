@@ -7,7 +7,7 @@
     {
       "number": 1,
       "id": "L14G-03-MONK-SLOW-FALL-TRIAGE",
-      "status": "completed",
+      "status": "done",
       "title": "Classify or promote Monk Slow Fall"
     },
     {
@@ -55,7 +55,7 @@ Reaction damage-reduction slice. Task 2 is the implementation follow-up.
 
 ### Task 1 - L14G-03-MONK-SLOW-FALL-TRIAGE
 
-Status: `completed`
+Status: `done`
 
 Expected size: about one focused day.
 

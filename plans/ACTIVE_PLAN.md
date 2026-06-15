@@ -19,7 +19,7 @@
     {
       "number": 3,
       "id": "L14G-03-MONK-SLOW-FALL-TRIAGE",
-      "status": "completed",
+      "status": "done",
       "title": "Classify or promote Monk Slow Fall"
     },
     {
@@ -128,7 +128,7 @@ checks; the consolidation lane is serial after their outputs land.
 | --- | --- | --- | ---: | --- | --- |
 | A | `plans/RALPH_L14G_01_ASI_CATALOG_SOURCE.md` | L14G-01-LEVEL4-ASI-CATALOG-SOURCE | ~1 day | ready-for-implementation | Source/catalog lane for Fighter, Paladin, and Warlock ASI records plus class feature-grant refs and ASI closure claims. Does not need MCP changes. |
 | B | `plans/RALPH_L14G_02_PROGRESSION_DELTA_AUDIT.md` | L14G-02-LEVEL4-PROGRESSION-DELTA-AUDIT | ~1 day | ready-for-research | Audit lane for level-4 class table deltas. Can run in parallel with ASI, Slow Fall, and MCP work. |
-| C | `plans/RALPH_L14G_03_MONK_SLOW_FALL_TRIAGE.md` | L14G-03-MONK-SLOW-FALL-TRIAGE | ~1 day | completed | RAW/domain decision lane for Slow Fall. It spawned the follow-up runtime slice below. |
+| C | `plans/RALPH_L14G_03_MONK_SLOW_FALL_TRIAGE.md` | L14G-03-MONK-SLOW-FALL-TRIAGE | ~1 day | done | RAW/domain decision lane for Slow Fall. It spawned the follow-up runtime slice below. |
 | C2 | `plans/RALPH_L14G_03_MONK_SLOW_FALL_TRIAGE.md` | L14G-03A-MONK-SLOW-FALL-RUNTIME | ~1 day | ready-for-implementation | Promote Slow Fall as a selected Monk falling Reaction damage-reduction slice without duplicating table/spatial falling state. |
 | D | `plans/RALPH_L14G_04_MCP_LEVEL14_SCENARIO_GATE.md` | L14G-04-MCP-LEVEL14-SCENARIO-GATE | ~1.5-2 days | ready-for-implementation | Formal ultra-golden blocker. Designs and implements MCP scenario evidence for level-4 advancement, sheet durability, and battle handoff. |
 | E | `plans/RALPH_L14G_05_GATE_CONSOLIDATION.md` | L14G-05-GATE-CONSOLIDATION | ~0.5 day | blocked | Serial lane after A-D. Regenerates, reviews residuals, and updates this plan. |
@@ -161,7 +161,7 @@ updates need to converge in one artifact.
 | ---: | --- | --- | --- | --- |
 | 1 | L14G-01-LEVEL4-ASI-CATALOG-SOURCE | ready-for-implementation | none | Close ASI source/catalog gaps without adding per-class runtime behavior. |
 | 2 | L14G-02-LEVEL4-PROGRESSION-DELTA-AUDIT | ready-for-research | none | Audit class-table deltas that are not feature-heading rows. |
-| 3 | L14G-03-MONK-SLOW-FALL-TRIAGE | completed | none | Boundary decided as split; see `plans/unit-profile-coverage/L14G_03_MONK_SLOW_FALL_TRIAGE.md`. |
+| 3 | L14G-03-MONK-SLOW-FALL-TRIAGE | done | none | Boundary decided as split; see `plans/unit-profile-coverage/L14G_03_MONK_SLOW_FALL_TRIAGE.md`. |
 | 4 | L14G-04-MCP-LEVEL14-SCENARIO-GATE | ready-for-implementation | none | Add checked MCP evidence for all four level-1-4 required flows. |
 | 6 | L14G-03A-MONK-SLOW-FALL-RUNTIME | ready-for-implementation | L14G-03 | Implement the selected Monk falling Reaction damage-reduction slice. |
 | 5 | L14G-05-GATE-CONSOLIDATION | blocked | Tasks 1-4 and L14G-03A unless deferred by decider | Regenerate, review, and close remaining level-1-4 residuals. |
@@ -210,7 +210,7 @@ Acceptance:
 
 ### Task 3 - L14G-03-MONK-SLOW-FALL-TRIAGE
 
-Status: `completed`
+Status: `done`
 
 Output:
 
