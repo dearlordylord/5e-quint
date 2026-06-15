@@ -7,7 +7,7 @@
     {
       "number": 1,
       "id": "L14G-02-LEVEL4-PROGRESSION-DELTA-AUDIT",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Audit level-4 class-table progression deltas"
     }
   ]
@@ -45,7 +45,7 @@ identity. Runtime behavior must not dispatch on class, feature, or spell names.
 
 ### Task 1 - L14G-02-LEVEL4-PROGRESSION-DELTA-AUDIT
 
-Status: `ready-for-research`
+Status: `done`
 
 Expected size: about one focused day.
 
@@ -82,3 +82,11 @@ Plan Impact:
   discovered.
 - If no implementation follow-up is needed, mark the task done and explain the
   closure in the audit artifact.
+
+Result:
+
+- Audit artifact: `plans/unit-profile-coverage/L14G_02_LEVEL4_PROGRESSION_DELTA_AUDIT.md`.
+- New follow-up tasks discovered: none.
+- Existing follow-up owners remain unchanged: `L14G-01` for missing Fighter,
+  Paladin, and Warlock ASI source/catalog records; `L14G-03` for Monk Slow
+  Fall triage.
