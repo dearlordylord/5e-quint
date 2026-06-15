@@ -2,6 +2,7 @@
 "use strict";
 
 const fs = require("node:fs");
+const crypto = require("node:crypto");
 const os = require("node:os");
 const path = require("node:path");
 
@@ -38,6 +39,10 @@ function stable(value) {
 
 function stableStringify(value) {
   return `${JSON.stringify(stable(value), null, 2)}\n`;
+}
+
+function sha256Text(text) {
+  return crypto.createHash("sha256").update(text).digest("hex");
 }
 
 function readJson(filePath) {
@@ -153,17 +158,60 @@ function bulletList(items) {
   return items.map((item) => `  - ${item}`).join("\n");
 }
 
-function renderValues(profile) {
+function readManifestSourceSha(targetDir) {
+  const manifestPath = path.join(targetDir, "cleanroom-input/MANIFEST.md");
+  if (!fs.existsSync(manifestPath)) return "<current manifest source commit SHA>";
+  const manifest = fs.readFileSync(manifestPath, "utf8");
+  return (
+    manifest.match(/^- Source commit SHA:\s*([0-9a-f]{40})\s*$/im)?.[1] ??
+    "<current manifest source commit SHA>"
+  );
+}
+
+function readSourceBranchInventorySha(targetDir) {
+  const inventoryPath = path.join(
+    targetDir,
+    "cleanroom-input/branch-coverage/source-branch-inventory.json",
+  );
+  if (!fs.existsSync(inventoryPath)) return "<current source branch inventory SHA>";
+  return sha256Text(stableStringify(readJson(inventoryPath)));
+}
+
+function readFirstInScopeDriver() {
+  const scopePath = path.join(
+    scaffoldRoot,
+    "tasks/LEVEL_1_2_SCOPE.snapshot.md",
+  );
+  const lines = fs.readFileSync(scopePath, "utf8").split("\n");
+  const start = lines.findIndex((line) =>
+    /^##\s+Current Branch-Inventory-Ready Queue\s*$/.test(line),
+  );
+  if (start === -1) return "<first in-scope driver from tasks/LEVEL_1_2_SCOPE.md>";
+  for (const line of lines.slice(start + 1)) {
+    if (/^##\s+/.test(line)) break;
+    const match = line.match(/^\s*\d+\.\s+`([^`]+)`/);
+    if (match !== null) return match[1];
+  }
+  return "<first in-scope driver from tasks/LEVEL_1_2_SCOPE.md>";
+}
+
+function renderValues(profile, targetDir) {
+  const targetProfileSha256 = sha256Text(stableStringify(profile));
   return {
     allowedTargetDocsMarkdown: bulletList(profile.allowedTargetDocs),
+    currentManifestSourceCommitSha: readManifestSourceSha(targetDir),
     enginePath: profile.enginePath,
+    firstInScopeDriver: readFirstInScopeDriver(),
     implementationKind: profile.implementationKind,
+    nextTaskId: "T001",
     packageManager: profile.packageManager,
     quintBindingName: profile.quintBinding.name,
     quintDriverGuidanceMarkdown: profile.quintBinding.driverGuidanceMarkdown,
     quintReproductionMarkdown: profile.quintBinding.reproductionMarkdown,
+    sourceBranchInventorySha: readSourceBranchInventorySha(targetDir),
     targetLabel: profile.targetLabel,
     targetProfileId: profile.targetProfileId,
+    targetProfileSha256,
     sourceFileExtensionsMarkdown: profile.sourceFileExtensions
       .map((extension) => `\`${extension}\``)
       .join(", "),
@@ -224,7 +272,7 @@ function renderScaffold({ profile, targetDir, shouldWrite }) {
   if (profileIssues.length > 0) {
     throw new Error(`invalid target profile:\n${profileIssues.join("\n")}`);
   }
-  const values = renderValues(profile);
+  const values = renderValues(profile, targetDir);
   const outputs = [];
   for (const templatePath of templateFiles) {
     const sourcePath = path.join(scaffoldRoot, templatePath);

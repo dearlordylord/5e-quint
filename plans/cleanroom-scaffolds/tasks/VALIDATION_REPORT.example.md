@@ -2,12 +2,13 @@
 
 ## Work Loop Status
 
-- Current manifest source commit SHA: `<current manifest source commit SHA>`
-- Source branch inventory SHA: `<current source branch inventory SHA>`
+- Current manifest source commit SHA: `{{currentManifestSourceCommitSha}}`
+- Source branch inventory SHA: `{{sourceBranchInventorySha}}`
 - Scope file: `tasks/LEVEL_1_2_SCOPE.md`
 - Work Loop instructions: `tasks/WORK_LOOP.md`
 - Last completed current-snapshot queued branch set: `<none>`
-- Next queued driver: `<first in-scope driver from tasks/LEVEL_1_2_SCOPE.md>`
+- Next queued driver: `{{firstInScopeDriver}}`
+- Next task id: `{{nextTaskId}}`
 
 Completion rule: a queued branch set is complete only when this report has an
 entry that names the exact `.mbt.qnt` driver, records the current manifest
@@ -17,10 +18,10 @@ replay evidence, and records verification results. Entries with older manifest
 source commit SHAs or inventory SHAs are historical unless they include a
 current-snapshot revalidation note.
 
-## T000: Report Shape Example
+## T000: Report Shape Example Only
 
-- Manifest source commit SHA: `<current manifest source commit SHA>`
-- Source branch inventory SHA: `<current source branch inventory SHA>`
+- Manifest source commit SHA: `{{currentManifestSourceCommitSha}}`
+- Source branch inventory SHA: `{{sourceBranchInventorySha}}`
 - Driver: `cleanroom-input/qnt/<package>/<driver>.mbt.qnt`
 - Branch obligations:
   - `step:<branch action>`
@@ -46,7 +47,7 @@ Target replay evidence:
 
 - Evidence file: `tasks/target-replay-evidence/<file>.json`
 - Target profile: `{{targetProfileId}}`
-- Target profile SHA-256: `<canonical target-profile.json sha256>`
+- Target profile SHA-256: `{{targetProfileSha256}}`
 - Quint binding: {{quintBindingName}}
 - Reproduction seed or trace id: `<seed or trace id>`
 - Accepted evidence refs use `tasks/target-replay-evidence/<file>.json#<trace id>#<branch family>:<branch action>`.

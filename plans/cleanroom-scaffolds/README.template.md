@@ -31,12 +31,15 @@ Target profile: `{{targetProfileId}}`. Target package/tooling:
    `cleanroom-input/**`.
 2. Start a cleanroom session manually with this directory as its only working
    root — ideally with file access restricted to this repo.
-3. Paste the query from `BOOTSTRAP_QUERY.md`.
-4. After the implementation run, review against the same copied corpus using
+3. When pasting the query from `BOOTSTRAP_QUERY.md`, replace
+   `<TARGET_BASE_SHA>` with the 40-character Git SHA that the cleanroom task
+   branch must be based on. The file itself may remain a reusable template.
+4. Paste the completed query.
+5. After the implementation run, review against the same copied corpus using
    `tasks/REVIEWER_CHECKLIST.md`.
-5. Have the decider evaluate `tasks/DECIDER_CHECKLIST.md` and the
+6. Have the decider evaluate `tasks/DECIDER_CHECKLIST.md` and the
    machine-readable artifacts before accepting the task.
-6. Audit the run for forbidden-path reads before trusting it as cleanroom
+7. Audit the run for forbidden-path reads before trusting it as cleanroom
    evidence.
 
 ## Verification

@@ -270,6 +270,8 @@ must not count as acceptance evidence for the real cleanroom repo.
   guidance pack, scaffold files, and at least one synthetic target profile.
 - [ ] Run source branch inventory checks against the copied QNT corpus.
 - [ ] Run scaffold rendering checks against two synthetic target profiles.
+- [ ] Verify the rendered bootstrap query requires an owner-supplied target
+  Base SHA before implementation can start.
 - [ ] Validate example target replay evidence for covered, uncovered, stale,
   wrong-action, diagnostic-only, and blocked branches.
 - [ ] Validate reviewer-loop and decider records in a synthetic cleanroom task.

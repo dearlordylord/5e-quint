@@ -53,9 +53,10 @@ only by the source repo's sync script, which rewrites the manifest.
 ## Operating Rules
 
 - Do not ask the project owner clarifying questions during a run.
-- Before implementation begins, write `tasks/START_GATE.json` with the declared
-  Base SHA, current `HEAD`, and the `git merge-base --is-ancestor <Base SHA>
-  HEAD` result. Stop if the ancestor check fails.
+- Before implementation begins, write `tasks/START_GATE.json` with the Target
+  Base SHA supplied in the owner-pasted bootstrap query, current `HEAD`, and the
+  `git merge-base --is-ancestor <Base SHA> HEAD` result. Stop if the query did
+  not provide a full 40-character Git SHA or if the ancestor check fails.
 - If RAW, QNT, the Ubiquitous Language, the curated assumptions, source branch
   inventory, and guidance pack together are insufficient to implement a
   behavior, record a blocker in `tasks/BLOCKERS.md` and move on. Do not guess,

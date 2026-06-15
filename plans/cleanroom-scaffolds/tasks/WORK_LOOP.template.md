@@ -7,12 +7,13 @@ Use this file when you are a fresh agent with no conversation context.
 Read these files, in this order:
 
 1. `AGENTS.md`
-2. `cleanroom-input/MANIFEST.md`
-3. `cleanroom-input/branch-coverage/source-branch-inventory.json`
-4. `tasks/LEVEL_1_2_SCOPE.md`
-5. `tasks/IMPLEMENTER_TASK.md`
-6. `tasks/VALIDATION_REPORT.md`
-7. `tasks/BLOCKERS.md`
+2. `BOOTSTRAP_QUERY.md`
+3. `cleanroom-input/MANIFEST.md`
+4. `cleanroom-input/branch-coverage/source-branch-inventory.json`
+5. `tasks/LEVEL_1_2_SCOPE.md`
+6. `tasks/IMPLEMENTER_TASK.md`
+7. `tasks/VALIDATION_REPORT.md`
+8. `tasks/BLOCKERS.md`
 
 Do not read any file outside this repository. Do not read sibling repos.
 
@@ -61,18 +62,21 @@ To select work:
 
 ## Current Cursor
 
-- Manifest source commit SHA: `<current manifest source commit SHA>`
-- Source branch inventory SHA: `<current source branch inventory SHA>`
+- Manifest source commit SHA: `{{currentManifestSourceCommitSha}}`
+- Source branch inventory SHA: `{{sourceBranchInventorySha}}`
 - Last completed current-snapshot queued branch set: `<none>`
-- Next queued driver: `<first in-scope driver from tasks/LEVEL_1_2_SCOPE.md>`
+- Next queued driver: `{{firstInScopeDriver}}`
+- Next task id: `{{nextTaskId}}`
 
 ## Implementation Rules
 
 For the selected branch set:
 
-1. Write `tasks/START_GATE.json` with the declared Base SHA, current `HEAD`,
-   ancestor-check command, ancestor-check result, and selected drivers. Stop if
-   the ancestor check fails.
+1. Write `tasks/START_GATE.json` with the next task id from the Current Cursor,
+   the Target Base SHA supplied in the owner-pasted bootstrap query, current
+   `HEAD`, ancestor-check command, ancestor-check result, and selected drivers.
+   Stop before implementation if the query did not provide a full 40-character
+   Git SHA or if the ancestor check fails.
 2. Read the `.mbt.qnt` driver and its imported QNT files from
    `cleanroom-input/qnt/**`.
 3. Read the relevant RAW from `cleanroom-input/raw/srd-5.2.1/**`.
@@ -108,8 +112,8 @@ blocked implementation task. Use this shape:
 ```md
 ## TNNN: <driver basename or short behavior name>
 
-- Manifest source commit SHA: `<current manifest source commit SHA>`
-- Source branch inventory SHA: `<current source branch inventory SHA>`
+- Manifest source commit SHA: `{{currentManifestSourceCommitSha}}`
+- Source branch inventory SHA: `{{sourceBranchInventorySha}}`
 - Driver: `<exact queued .mbt.qnt path>`
 - Branch obligations:
   - `<branch family>:<branch action>`
@@ -129,7 +133,7 @@ Generated branch coverage:
 Target replay evidence:
 
 - Evidence file: `tasks/target-replay-evidence/<file>.json`
-- Target profile SHA-256: `<canonical target-profile.json sha256>`
+- Target profile SHA-256: `{{targetProfileSha256}}`
 - Reproduction seed or trace id: `<seed or trace id>`
 
 Remaining gaps:

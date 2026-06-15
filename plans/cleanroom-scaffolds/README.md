@@ -58,6 +58,9 @@ variables and its self-test renders two synthetic profiles to guard against
 hard-coded target assumptions.
 It also writes `target-profile.json` into the cleanroom repo; the acceptance
 harness uses that machine-readable profile and its content hash.
+When `cleanroom-input/` is already synced in the target directory, the renderer
+also materializes the current manifest source SHA, source branch inventory SHA,
+first queued driver, and target profile SHA in rendered task files.
 
 ## Manual Transfer Bootstrap
 
@@ -71,15 +74,17 @@ harness uses that machine-readable profile and its content hash.
 4. Validate that rendered `tasks/LEVEL_1_2_SCOPE.md` still matches the synced
    corpus. If it needs changes, update this source snapshot and source branch
    inventory together, then rerender.
-5. Update manifest source commit SHAs, source branch inventory hashes, and
-   cursors in copied task files to match the newly synced
-   `cleanroom-input/MANIFEST.md` and
-   `cleanroom-input/branch-coverage/source-branch-inventory.json`.
+5. Confirm rendered task files contain the current manifest source SHA, source
+   branch inventory SHA, first queued driver, and target profile SHA. If the
+   synced corpus or target profile changes, rerender the scaffold.
 6. If a temporary transfer directory was used, move only the generated
    cleanroom files into the cleanroom repo:
    `AGENTS.md`, `README.md`, `BOOTSTRAP_QUERY.md`, `target-profile.json`,
    `tasks/**`, and `cleanroom-input/**`.
-7. Start the cleanroom session manually with the cleanroom repo as the only
+7. When pasting the query from `BOOTSTRAP_QUERY.md`, replace
+   `<TARGET_BASE_SHA>` with the 40-character Git SHA that the cleanroom task
+   branch must be based on. The file itself may remain a reusable template.
+8. Start the cleanroom session manually with the cleanroom repo as the only
    working root, and paste the query from `BOOTSTRAP_QUERY.md`. The minimal
    query is:
 

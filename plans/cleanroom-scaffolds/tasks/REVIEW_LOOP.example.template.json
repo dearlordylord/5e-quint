@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "taskId": "T000",
+  "taskId": "{{nextTaskId}}",
   "rounds": [
     {
       "round": 1,
