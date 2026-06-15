@@ -108,3 +108,69 @@ worker. Acceptance requires that the worker either:
 - completes T001 and passes `node scripts/check-cleanroom-harness.cjs`, then
   starts T002; or
 - records a precise blocker before claiming T001 accepted.
+
+## Rerun After Harness Fix
+
+- Source commit: `50ba3d89fae0c9dc550e874b7995903f3d6a9d17`
+- Cleanroom initial commit: `f363b80a732e7398622484184d0f35457cd63115`
+- Rendered additions present in cleanroom repo:
+  - `scripts/check-cleanroom-harness.cjs`
+  - `scripts/cleanroom-branch-coverage-check.cjs`
+  - `tasks/TARGET_REPLAY_EVIDENCE.example.json`
+  - Rust verification command: `node scripts/check-cleanroom-harness.cjs`
+
+The second cleanroom worker was told to stop only after T002 was accepted or
+blocked, so the acceptance signal included a real loop from T001 into T002.
+
+## Rerun Observations
+
+- T001 selected the first creation driver:
+  `cleanroom-input/qnt/character-creation-runtime/character-creation-class-feature-projections.mbt.qnt`.
+- T001 passed all target-profile commands, including
+  `node scripts/check-cleanroom-harness.cjs`.
+- The worker then started T002 rather than stopping after T001.
+- T002 selected:
+  `cleanroom-input/qnt/character-creation-runtime/character-creation-cleric-druid-order-selected-identity.mbt.qnt`.
+- T002 passed:
+  - `cargo fmt --check`
+  - `cargo test`
+  - `cargo clippy --all-targets -- -D warnings`
+  - `node scripts/check-cleanroom-harness.cjs`
+- The validation report cursor advanced to:
+  - last completed driver:
+    `cleanroom-input/qnt/character-creation-runtime/character-creation-cleric-druid-order-selected-identity.mbt.qnt`
+  - next queued driver:
+    `cleanroom-input/qnt/character-creation-runtime/character-creation-fighter-fighting-style-selected-identity.mbt.qnt`
+  - next task id: `T003`
+- The worker stopped after T002 only because the rerun prompt explicitly set
+  that stop point.
+
+## Independent Rerun Validation
+
+After the worker completed, the parent ran:
+
+```bash
+cd /workspace/typescript/dnd-cleanroom-rust-agent
+node scripts/check-cleanroom-harness.cjs
+```
+
+Result:
+
+```text
+cleanroom harness acceptance passed.
+```
+
+Review-loop and decider artifacts for T002 contained two review rounds, all
+required checklist passes, an accepted decider decision, and no findings.
+
+## Final Rerun Result
+
+The rerun satisfied the acceptance criteria for the harness process:
+
+- the cleanroom repo was respawned from source-owned sync/render scripts;
+- the harness files and copied corpus were present in the target repo;
+- a cleanroom worker used the rendered bootstrap/work-loop instructions;
+- the worker completed T001, ran the reviewer/decider loop, and passed the
+  copied harness validator;
+- the worker then continued to T002 and completed it under the same validator;
+- the outcome was logged source-side for later analysis.
