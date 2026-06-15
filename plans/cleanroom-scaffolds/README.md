@@ -4,15 +4,20 @@ This directory preserves reusable cleanroom instruction scaffolds for future
 target-language cleanroom runs. They are source-repo planning assets, not
 active instructions for this repository.
 
-Use these files when bootstrapping or refreshing a separate cleanroom repo such
-as a sibling target-language experiment directory.
+Use these files when preparing or refreshing a separate cleanroom repo such as
+a sibling target-language experiment directory. This source repo prepares the
+transferable package; the project owner starts the cleanroom session manually in
+the target repo.
 
 ## Files
 
 - `AGENTS.template.md` — cleanroom repo agent contract. Copy to the cleanroom
   repo root as `AGENTS.md`.
-- `README.template.md` — cleanroom repo README and owner kickoff prompt. Copy
-  to the cleanroom repo root as `README.md`.
+- `README.template.md` — cleanroom repo README and owner bootstrap
+  instructions. Copy to the cleanroom repo root as `README.md`.
+- `BOOTSTRAP_QUERY.template.md` — owner-facing query to paste into a cleanroom
+  session after the copied corpus and scaffold files are present. Copy to the
+  cleanroom repo root as `BOOTSTRAP_QUERY.md`.
 - `tasks/WORK_LOOP.template.md` — durable fresh-agent Work Loop instructions.
   Copy to `tasks/WORK_LOOP.md`.
 - `tasks/IMPLEMENTER_TASK.template.md` — implementer start gate and required
@@ -54,13 +59,15 @@ hard-coded target assumptions.
 It also writes `target-profile.json` into the cleanroom repo; the acceptance
 harness uses that machine-readable profile and its content hash.
 
-## Bootstrap Use
+## Manual Transfer Bootstrap
 
-1. Create or reset the sibling cleanroom repo.
+1. Create or reset the sibling cleanroom repo, or create a temporary transfer
+   directory if the owner wants to move files by hand.
 2. Run `scripts/sync-cleanroom-input.cjs` from this source repo to populate
-   `cleanroom-input/` and write `cleanroom-input/MANIFEST.md`.
-3. Render the scaffold files above into the cleanroom repo using a target
-   profile.
+   `<target>/cleanroom-input/` and write
+   `<target>/cleanroom-input/MANIFEST.md`.
+3. Render the scaffold files above into the same target directory using a
+   target profile.
 4. Validate that rendered `tasks/LEVEL_1_2_SCOPE.md` still matches the synced
    corpus. If it needs changes, update this source snapshot and source branch
    inventory together, then rerender.
@@ -68,12 +75,36 @@ harness uses that machine-readable profile and its content hash.
    cursors in copied task files to match the newly synced
    `cleanroom-input/MANIFEST.md` and
    `cleanroom-input/branch-coverage/source-branch-inventory.json`.
-6. Launch a fresh agent in the cleanroom repo with:
+6. If a temporary transfer directory was used, move only the generated
+   cleanroom files into the cleanroom repo:
+   `AGENTS.md`, `README.md`, `BOOTSTRAP_QUERY.md`, `target-profile.json`,
+   `tasks/**`, and `cleanroom-input/**`.
+7. Start the cleanroom session manually with the cleanroom repo as the only
+   working root, and paste the query from `BOOTSTRAP_QUERY.md`. The minimal
+   query is:
 
    ```text
    Read AGENTS.md and tasks/WORK_LOOP.md, then implement the next in-scope
    driver from tasks/LEVEL_1_2_SCOPE.md following the Work Loop.
    ```
+
+## Disposable Harness Shakedown
+
+A source-side dry run may start a temporary cleanroom session only to shake down
+the scaffold and harness mechanics before the real cleanroom repo is used. This
+is not the normal implementation workflow.
+
+For that shakedown:
+
+1. Sync and render into a temporary directory, not the durable cleanroom repo.
+2. Use the same `BOOTSTRAP_QUERY.md` query against that temporary directory.
+3. Record only source-side scaffold, corpus, harness, or blocker-shape defects
+   that need fixes here.
+4. Delete the temporary directory after the shakedown.
+
+Do not treat implementation code, target replay evidence, validation reports,
+or reviewer artifacts from a shakedown as acceptance evidence for the real
+cleanroom run.
 
 Do not copy `cleanroom-input/**` back into this directory. The corpus should be
 recreated by `scripts/sync-cleanroom-input.cjs`, not preserved by hand.

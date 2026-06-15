@@ -18,22 +18,25 @@ Target profile: `{{targetProfileId}}`. Target package/tooling:
 - `cleanroom-input/` — the only rules corpus (RAW, QNT, domain, source branch
   inventory, and guidance pack). Read-only; populated by the source repo's sync
   script.
+- `BOOTSTRAP_QUERY.md` — owner-facing query for starting a cleanroom session
+  after the corpus and scaffold files have been copied here.
 - `{{enginePath}}` — target implementation and its tests.
 - `tasks/` — task specs, `VALIDATION_REPORT.md`, `BLOCKERS.md`, and generated
   target replay evidence.
 
-## Owner Kickoff
+## Owner Bootstrap
 
-1. Launch a fresh agent with this directory as its only working root —
-   ideally with file access restricted to this repo.
-2. Prompt: "Read `AGENTS.md` and `tasks/WORK_LOOP.md`, then implement the next
-   in-scope branch set from `tasks/LEVEL_1_2_SCOPE.md` following the Work
-   Loop."
-3. After the run, have a second fresh agent review against the same corpus
-   using `tasks/REVIEWER_CHECKLIST.md`.
-4. Have the decider evaluate `tasks/DECIDER_CHECKLIST.md` and the
+1. Copy or render the cleanroom package into this repo: `AGENTS.md`,
+   `README.md`, `BOOTSTRAP_QUERY.md`, `target-profile.json`, `tasks/**`, and
+   `cleanroom-input/**`.
+2. Start a cleanroom session manually with this directory as its only working
+   root — ideally with file access restricted to this repo.
+3. Paste the query from `BOOTSTRAP_QUERY.md`.
+4. After the implementation run, review against the same copied corpus using
+   `tasks/REVIEWER_CHECKLIST.md`.
+5. Have the decider evaluate `tasks/DECIDER_CHECKLIST.md` and the
    machine-readable artifacts before accepting the task.
-5. Audit the run for forbidden-path reads before trusting it as cleanroom
+6. Audit the run for forbidden-path reads before trusting it as cleanroom
    evidence.
 
 ## Verification

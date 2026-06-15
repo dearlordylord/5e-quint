@@ -259,6 +259,9 @@ Run the full source-side readiness flow into a temporary cleanroom directory.
 The dry run should prove the manifest, allowed inputs, branch inventory,
 guidance pack, scaffold, target profile, validation report format, and harness
 gates are self-consistent before a new target-language implementation starts.
+It may start a disposable cleanroom session only to shake down the generated
+bootstrap query and harness mechanics; that output must be deleted afterward and
+must not count as acceptance evidence for the real cleanroom repo.
 
 ### Tasks
 
@@ -272,6 +275,8 @@ gates are self-consistent before a new target-language implementation starts.
 - [ ] Validate reviewer-loop and decider records in a synthetic cleanroom task.
 - [ ] Confirm prior cleanroom implementation output is denied and not accepted
   as evidence.
+- [ ] If a disposable cleanroom session is used for shakedown, delete its target
+  directory and record only source-side scaffold or harness defects.
 
 ### Acceptance Criteria
 
@@ -283,6 +288,8 @@ gates are self-consistent before a new target-language implementation starts.
   and diagnostic-only tests fail acceptance.
 - [ ] The current cleanroom implementation is not used as acceptance evidence
   for the next experiment.
+- [ ] Disposable shakedown outputs cannot be promoted into durable cleanroom
+  acceptance artifacts.
 
 ---
 

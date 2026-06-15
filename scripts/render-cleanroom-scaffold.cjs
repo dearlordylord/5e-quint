@@ -177,6 +177,7 @@ function renderValues(profile) {
 
 const templateFiles = [
   "README.template.md",
+  "BOOTSTRAP_QUERY.template.md",
   "AGENTS.template.md",
   "tasks/WORK_LOOP.template.md",
   "tasks/IMPLEMENTER_TASK.template.md",
