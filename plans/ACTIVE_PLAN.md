@@ -19,7 +19,7 @@
     {
       "number": 3,
       "id": "L14G-03-MONK-SLOW-FALL-TRIAGE",
-      "status": "ready-for-research",
+      "status": "completed",
       "title": "Classify or promote Monk Slow Fall"
     },
     {
@@ -33,6 +33,12 @@
       "id": "L14G-05-GATE-CONSOLIDATION",
       "status": "blocked",
       "title": "Regenerate and close the level 1-4 ultra-golden gate"
+    },
+    {
+      "number": 6,
+      "id": "L14G-03A-MONK-SLOW-FALL-RUNTIME",
+      "status": "ready-for-implementation",
+      "title": "Promote Monk Slow Fall falling Reaction reduction"
     }
   ]
 }
@@ -66,6 +72,12 @@ from the MCP scenario lane:
   behavior.
 - Spell-level-3 remains outside level 1-4 and belongs to the character-level-5
   frontier for full casters.
+- Slow Fall triage resolved the boundary as a split: table/spatial owns fall
+  distance, landing geometry, raw fall-damage derivation, and the
+  falling-into-liquid check as a separate Reaction procedure; battle runtime
+  should own selected `monk_slow_fall` Reaction spend, `5 * Monk level`
+  fall-damage reduction, and the coupled no-fall-damage/Falling-Prone
+  prevention result after a follow-up runtime slice.
 
 Completed scope-construction tasks were intentionally removed from the Ralph
 task index. The live queue now starts at `L14G-01`; the deleted completed work
@@ -108,22 +120,24 @@ The level 1-4 gate uses the same four-layer ultra-golden shape as level 1-3:
 
 ## Parallel Ralph Lanes
 
-Use four parallel Ralph agents at most. The first four lanes are independent
-enough to launch together after normal branch-base checks; the fifth lane is
-serial consolidation after their outputs land.
+Use four parallel Ralph agents at most. The active implementation/research
+lanes are independent enough to launch together after normal branch-base
+checks; the consolidation lane is serial after their outputs land.
 
 | Lane | Ralph source file | Task | Size | Status | Independence |
 | --- | --- | --- | ---: | --- | --- |
 | A | `plans/RALPH_L14G_01_ASI_CATALOG_SOURCE.md` | L14G-01-LEVEL4-ASI-CATALOG-SOURCE | ~1 day | ready-for-implementation | Source/catalog lane for Fighter, Paladin, and Warlock ASI records plus class feature-grant refs and ASI closure claims. Does not need MCP changes. |
 | B | `plans/RALPH_L14G_02_PROGRESSION_DELTA_AUDIT.md` | L14G-02-LEVEL4-PROGRESSION-DELTA-AUDIT | ~1 day | ready-for-research | Audit lane for level-4 class table deltas. Can run in parallel with ASI, Slow Fall, and MCP work. |
-| C | `plans/RALPH_L14G_03_MONK_SLOW_FALL_TRIAGE.md` | L14G-03-MONK-SLOW-FALL-TRIAGE | ~1 day | ready-for-research | RAW/domain decision lane for Slow Fall. It may close as a boundary or spawn later QNT/runtime/MBT implementation work. |
+| C | `plans/RALPH_L14G_03_MONK_SLOW_FALL_TRIAGE.md` | L14G-03-MONK-SLOW-FALL-TRIAGE | ~1 day | completed | RAW/domain decision lane for Slow Fall. It spawned the follow-up runtime slice below. |
+| C2 | `plans/RALPH_L14G_03_MONK_SLOW_FALL_TRIAGE.md` | L14G-03A-MONK-SLOW-FALL-RUNTIME | ~1 day | ready-for-implementation | Promote Slow Fall as a selected Monk falling Reaction damage-reduction slice without duplicating table/spatial falling state. |
 | D | `plans/RALPH_L14G_04_MCP_LEVEL14_SCENARIO_GATE.md` | L14G-04-MCP-LEVEL14-SCENARIO-GATE | ~1.5-2 days | ready-for-implementation | Formal ultra-golden blocker. Designs and implements MCP scenario evidence for level-4 advancement, sheet durability, and battle handoff. |
 | E | `plans/RALPH_L14G_05_GATE_CONSOLIDATION.md` | L14G-05-GATE-CONSOLIDATION | ~0.5 day | blocked | Serial lane after A-D. Regenerates, reviews residuals, and updates this plan. |
 
 The per-lane files above are the Ralph launch sources for parallel runs. Each
-file has its own `ralph-task-index` block and matching `### Task 1` body. This
-`ACTIVE_PLAN.md` remains the coordination rollup and serial fallback, not the
-recommended source for launching all four parallel agents.
+file has its own `ralph-task-index` block; completed research lanes may add
+their own implementation follow-ups. This `ACTIVE_PLAN.md` remains the
+coordination rollup and serial fallback, not the recommended source for
+launching parallel agents.
 
 ## Work Shape
 
@@ -136,7 +150,8 @@ updates need to converge in one artifact.
 | --- | --- | --- |
 | L14G-01-LEVEL4-ASI-CATALOG-SOURCE | Read existing ASI records/class records, author missing Fighter/Paladin/Warlock records, add class feature-grant refs, and add/update Unit claims. | Usually not needed; use spillover for regeneration, reviewer-loop fixes, and closing generated no-matrix rows. |
 | L14G-02-LEVEL4-PROGRESSION-DELTA-AUDIT | Extract level-3 to level-4 table deltas from all 12 local SRD class files and map each delta to an existing owner if one exists. | Usually not needed; use spillover to write the audit artifact and split uncovered deltas into concrete follow-up task rows. |
-| L14G-03-MONK-SLOW-FALL-TRIAGE | Read Slow Fall RAW, reaction terminology, damage-reduction owners, and existing fall/movement assumptions; write the boundary decision or implementation plan. | Usually not needed; use spillover only if the decision requires a detailed QNT/runtime/MBT follow-up plan. |
+| L14G-03-MONK-SLOW-FALL-TRIAGE | Completed: Slow Fall is a split between table-owned falling adjudication and promoted battle-runtime Reaction damage reduction. | Follow-up `L14G-03A-MONK-SLOW-FALL-RUNTIME` owns implementation. |
+| L14G-03A-MONK-SLOW-FALL-RUNTIME | Author the missing Slow Fall Surface record/class grant, widen the existing reaction roll/damage-reduction support family with a fall-specific modifier, and add QNT/runtime/identity evidence. Keep the falling-into-liquid Reaction check out of scope unless a generic fall owner coordinates the shared Reaction resource. | Usually not needed; use spillover only for reviewer-loop fixes or focused MBT reproduction. |
 | L14G-04-MCP-LEVEL14-SCENARIO-GATE | Trace the existing MCP level-3 scenario pattern and design the level-4 advancement/ASI/sheet/handoff scenario using returned holes. | Implement the scenario, update MCP evidence manifest rows, regenerate the ultra-golden gate, and verify level-1 through level-1-3 evidence remains valid. |
 | L14G-05-GATE-CONSOLIDATION | Re-run all generated reports after lanes 1-4, inspect remaining level-1-4 residuals, update this plan, and close or split residual blockers. | Not expected. |
 
@@ -146,9 +161,10 @@ updates need to converge in one artifact.
 | ---: | --- | --- | --- | --- |
 | 1 | L14G-01-LEVEL4-ASI-CATALOG-SOURCE | ready-for-implementation | none | Close ASI source/catalog gaps without adding per-class runtime behavior. |
 | 2 | L14G-02-LEVEL4-PROGRESSION-DELTA-AUDIT | ready-for-research | none | Audit class-table deltas that are not feature-heading rows. |
-| 3 | L14G-03-MONK-SLOW-FALL-TRIAGE | ready-for-research | none | Decide boundary closure vs promoted falling/reaction runtime work. |
+| 3 | L14G-03-MONK-SLOW-FALL-TRIAGE | completed | none | Boundary decided as split; see `plans/unit-profile-coverage/L14G_03_MONK_SLOW_FALL_TRIAGE.md`. |
 | 4 | L14G-04-MCP-LEVEL14-SCENARIO-GATE | ready-for-implementation | none | Add checked MCP evidence for all four level-1-4 required flows. |
-| 5 | L14G-05-GATE-CONSOLIDATION | blocked | Tasks 1-4 | Regenerate, review, and close remaining level-1-4 residuals. |
+| 6 | L14G-03A-MONK-SLOW-FALL-RUNTIME | ready-for-implementation | L14G-03 | Implement the selected Monk falling Reaction damage-reduction slice. |
+| 5 | L14G-05-GATE-CONSOLIDATION | blocked | Tasks 1-4 and L14G-03A unless deferred by decider | Regenerate, review, and close remaining level-1-4 residuals. |
 
 ## Task Details
 
@@ -194,19 +210,57 @@ Acceptance:
 
 ### Task 3 - L14G-03-MONK-SLOW-FALL-TRIAGE
 
-Status: `ready-for-research`
+Status: `completed`
 
 Output:
 
-- Read Monk Slow Fall RAW and the existing reaction/damage-reduction owners.
-- Decide whether Slow Fall is a promoted battle-runtime reaction and damage
-  reduction slice, a table movement/falling boundary closure, or a split.
+- Boundary decision recorded in
+  `plans/unit-profile-coverage/L14G_03_MONK_SLOW_FALL_TRIAGE.md`.
+- Decision: split. Table/spatial owns fall distance, landing geometry, raw
+  fall-damage derivation, and falling-into-liquid adjudication as a separate
+  Reaction procedure. Battle runtime should own selected Slow Fall Reaction
+  spend, fall-damage reduction by `5 * Monk level`, and coupled Falling-Prone
+  prevention when reduced damage is zero.
 
 Acceptance:
 
 - The decision cites local RAW and `UBIQUITOUS_LANGUAGE.md`.
-- If promoted, the plan identifies the QNT owner, runtime reducer owner, and
-  focused parity witness before implementation starts.
+- The follow-up identifies the QNT owner, runtime reducer owner, support
+  profile widening, selected-identity evidence shape, and focused parity
+  target before implementation starts.
+
+### Task 6 - L14G-03A-MONK-SLOW-FALL-RUNTIME
+
+Status: `ready-for-implementation`
+
+Output:
+
+- Author the missing SRD `monk_slow_fall` Surface Unit and Monk class grant.
+- Widen `unit-feature.reaction-roll-or-damage-reduction` with a fall-specific
+  modifier rather than reusing attack-damage reduction.
+- Extend the `creatureFalls` Reaction and landing/fall-damage reducer path to
+  spend the selected Monk's Reaction and reduce caller-supplied fall damage by
+  `5 * Monk level`.
+- Keep the Falling hazard's falling-into-liquid Reaction check out of scope
+  unless a generic fall owner coordinates the shared Reaction resource.
+- Add QNT, deterministic runtime tests, selected-identity evidence, and Unit
+  coverage claims.
+
+Acceptance:
+
+- Runtime support uses parsed Surface shape and selected Unit refs, not Monk or
+  Slow Fall authored-identity dispatch.
+- No duplicated fall distance, falling position, landing geometry, or raw fall
+  damage state is added to battle or Character Sheet state.
+- Reduced fall damage and Falling-Prone prevention are resolved at one landing
+  boundary.
+
+Verification:
+
+- `pnpm --filter @dnd/battle-runtime exec vitest run src/slow-fall-reaction.test.ts src/unit-profile-admission-martial-action-features.test.ts`
+- `pnpm unit-profile-coverage:check`
+- `pnpm rules-kernel-coverage:check`
+- `git diff --check`
 
 ### Task 4 - L14G-04-MCP-LEVEL14-SCENARIO-GATE
 
@@ -238,6 +292,7 @@ Depends on:
 - L14G-01-LEVEL4-ASI-CATALOG-SOURCE
 - L14G-02-LEVEL4-PROGRESSION-DELTA-AUDIT
 - L14G-03-MONK-SLOW-FALL-TRIAGE
+- L14G-03A-MONK-SLOW-FALL-RUNTIME, unless explicitly deferred by the decider
 - L14G-04-MCP-LEVEL14-SCENARIO-GATE
 
 Output:
