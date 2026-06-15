@@ -22,14 +22,9 @@ the branch, or keep working around the mismatch.
 
 - Implement only from `cleanroom-input/**`, `tasks/**`, allowed target docs,
   and existing `{{enginePath}}/**`.
-- Treat the task as one selected conformance slice. Do not turn incidental
-  target implementation issues into new scope unless they block the selected
-  branch set; record source QNT/corpus/process gaps separately from target
-  implementation blockers.
 - Extend or introduce a reusable production rules module for the selected
   branch set. Driver adapters may call that module, but production APIs must
-  not expose QNT action names, witness state names, witness field names, trace
-  ids, projection hash fields, nondet pick names, or `mbt::actionTaken`.
+  not expose QNT action names, witness field names, or `mbt::actionTaken`.
 - Keep QNT/MBT replay adapters quarantined and record them in
   `tasks/ENGINE_DEPTH_MANIFEST.json`.
 - If the task is adapter-only, `tasks/ENGINE_DEPTH_MANIFEST.json` must record

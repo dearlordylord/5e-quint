@@ -36,10 +36,4 @@ implementation and record a bootstrap blocker in tasks/BLOCKERS.md.
 
 If the allowed corpus is insufficient, record the blocker exactly as instructed
 instead of guessing or asking for source-repo context.
-
-Treat target implementation defects as work only when they block the selected
-branch set. Do not expand the task into broad target cleanup. When a finding
-shows that copied QNT, guidance, scaffold instructions, target profile, replay
-evidence, or decider gates are unclear, record that as a source
-QNT/corpus/process blocker.
 ```

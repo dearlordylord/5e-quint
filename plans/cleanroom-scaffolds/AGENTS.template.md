@@ -23,8 +23,7 @@ Target profile: `{{targetProfileId}}`. Target package/tooling:
 - `cleanroom-input/branch-coverage/source-branch-inventory.json` — the source
   branch obligations each target task must satisfy.
 - `cleanroom-input/guidance/**` — curated language-independent architecture
-  guidance, including the boundary between reusable source harness improvements
-  and target implementation polishing.
+  guidance.
 - `cleanroom-input/domain/UBIQUITOUS_LANGUAGE.md` — canonical terminology. Use
   these terms in code, tests, and reports.
 - `cleanroom-input/domain/CLEANROOM_ASSUMPTIONS.md` — curated RAW-ambiguity
@@ -54,10 +53,6 @@ only by the source repo's sync script, which rewrites the manifest.
 ## Operating Rules
 
 - Do not ask the project owner clarifying questions during a run.
-- Treat this cleanroom implementation as a probe of the copied source-owned
-  corpus, scaffold, and harness process. Improve target code only to complete
-  the selected task. Record source QNT/corpus/process gaps as blockers; do not
-  expand scope into polishing unrelated target implementation issues.
 - Before implementation begins, write `tasks/START_GATE.json` with the Target
   Base SHA supplied in the owner-pasted bootstrap query, current `HEAD`, and the
   `git merge-base --is-ancestor <Base SHA> HEAD` result. Stop if the query did
@@ -73,10 +68,6 @@ only by the source repo's sync script, which rewrites the manifest.
   implementation must be verified through {{quintBindingName}}. Focused
   target-language tests may supplement diagnosis, but must not replace target
   replay evidence.
-- QNT/MBT action names, witness state names, trace ids, nondet pick names,
-  projection hashes, and `mbt::actionTaken` are harness protocol. Keep them in
-  adapter modules, harness tests, target replay evidence, and task artifacts;
-  do not expose them as production rules-engine state or public domain APIs.
 - The Quint CLI is allowed only when invoked by {{quintBindingName}} during
   target conformance tests. Do not manually generate, import, or commit MBT
   traces or generated matrices.

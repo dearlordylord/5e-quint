@@ -19,11 +19,6 @@
       "evidence": "tasks/ENGINE_DEPTH_MANIFEST.json"
     },
     {
-      "gate": "harness-improvement-boundary",
-      "status": "pass",
-      "evidence": "tasks/REVIEW_LOOP.json"
-    },
-    {
       "gate": "engine-depth",
       "status": "pass",
       "evidence": "tasks/ENGINE_DEPTH_MANIFEST.json"
