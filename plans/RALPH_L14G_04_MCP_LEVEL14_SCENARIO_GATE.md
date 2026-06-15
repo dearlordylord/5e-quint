@@ -7,7 +7,7 @@
     {
       "number": 1,
       "id": "L14G-04-MCP-LEVEL14-SCENARIO-GATE",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Add level-1-4 MCP scenario evidence"
     }
   ]
@@ -51,7 +51,7 @@ valid.
 
 ### Task 1 - L14G-04-MCP-LEVEL14-SCENARIO-GATE
 
-Status: `ready-for-implementation`
+Status: `done`
 
 Expected size: about 1.5 to 2 focused days.
 
