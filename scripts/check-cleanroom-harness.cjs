@@ -399,6 +399,49 @@ function activeQueuedDrivers(rootPath, issues) {
   return queued;
 }
 
+function validateActiveWork(activeWork, issues) {
+  if (!isRecord(activeWork)) return new Map();
+  if (activeWork.schemaVersion !== 1) {
+    issues.push("tasks/ACTIVE_WORK.json schemaVersion must be 1.");
+  }
+  if (!Array.isArray(activeWork.assignments) || activeWork.assignments.length === 0) {
+    issues.push("tasks/ACTIVE_WORK.json assignments must be a non-empty array.");
+    return new Map();
+  }
+  const assignments = new Map();
+  for (const [assignmentIndex, assignment] of activeWork.assignments.entries()) {
+    const assignmentContext = `tasks/ACTIVE_WORK.json assignments[${assignmentIndex}]`;
+    if (!isRecord(assignment)) {
+      issues.push(`${assignmentContext} must be an object.`);
+      continue;
+    }
+    validateString(assignment.assignmentId, `${assignmentContext}.assignmentId`, issues);
+    if (assignments.has(assignment.assignmentId)) {
+      issues.push(`${assignmentContext}.assignmentId duplicates ${assignment.assignmentId}.`);
+    }
+    if (!Array.isArray(assignment.lanes) || assignment.lanes.length === 0) {
+      issues.push(`${assignmentContext}.lanes must be a non-empty array.`);
+      continue;
+    }
+    const lanes = new Map();
+    for (const [laneIndex, lane] of assignment.lanes.entries()) {
+      const laneContext = `${assignmentContext}.lanes[${laneIndex}]`;
+      if (!isRecord(lane)) {
+        issues.push(`${laneContext} must be an object.`);
+        continue;
+      }
+      validateString(lane.laneId, `${laneContext}.laneId`, issues);
+      if (lanes.has(lane.laneId)) {
+        issues.push(`${laneContext}.laneId duplicates ${lane.laneId}.`);
+      }
+      validateStringArray(lane.queue, `${laneContext}.queue`, issues);
+      lanes.set(lane.laneId, new Set(lane.queue ?? []));
+    }
+    assignments.set(assignment.assignmentId, lanes);
+  }
+  return assignments;
+}
+
 function git(repoRoot, args) {
   return execFileSync("git", args, {
     cwd: repoRoot,
@@ -473,6 +516,16 @@ function validateStartGate(startGate, rootPath, issues) {
   if (!isRecord(startGate.taskScope)) {
     issues.push("tasks/START_GATE.json taskScope must be an object.");
   } else {
+    validateString(
+      startGate.taskScope.assignmentId,
+      "tasks/START_GATE.json taskScope.assignmentId",
+      issues,
+    );
+    validateString(
+      startGate.taskScope.laneId,
+      "tasks/START_GATE.json taskScope.laneId",
+      issues,
+    );
     validateStringArray(
       startGate.taskScope.selectedDrivers,
       "tasks/START_GATE.json taskScope.selectedDrivers",
@@ -1387,6 +1440,7 @@ function validateTaskArtifacts({ taskRoot, profile }) {
     "cleanroom-input/branch-coverage/source-branch-inventory.json",
     issues,
   );
+  const activeWork = readRequiredArtifact(taskRoot, "tasks/ACTIVE_WORK.json", issues);
   const startGate = readRequiredArtifact(taskRoot, "tasks/START_GATE.json", issues);
   const engineDepth = readRequiredArtifact(
     taskRoot,
@@ -1416,26 +1470,33 @@ function validateTaskArtifacts({ taskRoot, profile }) {
     issues,
   });
   const selectedDrivers = startGate.taskScope?.selectedDrivers ?? [];
-  const queuedDrivers = activeQueuedDrivers(taskRoot, issues);
-  const queuedDriverSet = new Set(queuedDrivers);
+  activeQueuedDrivers(taskRoot, issues);
+  const activeAssignments = validateActiveWork(activeWork, issues);
   const selected = selectedInventory(inventory, selectedDrivers);
   const knownDrivers = new Set(
     (inventory.branchObligations ?? []).map((entry) => entry.driverPath),
   );
   if (selectedDrivers.length !== 1) {
-    issues.push("tasks/START_GATE.json taskScope.selectedDrivers must contain exactly the first queued driver.");
+    issues.push("tasks/START_GATE.json taskScope.selectedDrivers must contain exactly one queued driver.");
   }
-  if (queuedDrivers.length > 0 && selectedDrivers[0] !== queuedDrivers[0]) {
-    issues.push(
-      `selected driver must be the first driver in Current Branch-Inventory-Ready Queue: ${queuedDrivers[0]}.`,
-    );
+  const assignmentId = startGate.taskScope?.assignmentId;
+  const laneId = startGate.taskScope?.laneId;
+  const lanes = activeAssignments.get(assignmentId);
+  const laneQueue = lanes?.get(laneId);
+  if (typeof assignmentId === "string" && lanes === undefined) {
+    issues.push(`selected assignment is missing from tasks/ACTIVE_WORK.json: ${assignmentId}.`);
+  }
+  if (typeof laneId === "string" && lanes !== undefined && laneQueue === undefined) {
+    issues.push(`selected lane is missing from active assignment ${assignmentId}: ${laneId}.`);
   }
   for (const selectedDriver of selectedDrivers) {
     if (!knownDrivers.has(selectedDriver)) {
       issues.push(`selected driver is missing from source branch inventory: ${selectedDriver}.`);
     }
-    if (!queuedDriverSet.has(selectedDriver)) {
-      issues.push(`selected driver is not in Current Branch-Inventory-Ready Queue: ${selectedDriver}.`);
+    if (laneQueue !== undefined && !laneQueue.has(selectedDriver)) {
+      issues.push(
+        `selected driver is not in active assignment ${assignmentId} lane ${laneId}: ${selectedDriver}.`,
+      );
     }
   }
   const { adapterPaths, declaredEvidencePaths } = validateEngineDepth({
@@ -1648,7 +1709,25 @@ function validFixture(rootPath) {
       result: "clean",
       output: "",
     },
-    taskScope: { selectedDrivers: [driverPath] },
+    taskScope: {
+      assignmentId: "tracer-bullet",
+      laneId: "battle",
+      selectedDrivers: [driverPath],
+    },
+  });
+  writeJson(path.join(rootPath, "tasks/ACTIVE_WORK.json"), {
+    schemaVersion: 1,
+    assignments: [
+      {
+        assignmentId: "tracer-bullet",
+        lanes: [
+          {
+            laneId: "battle",
+            queue: [driverPath],
+          },
+        ],
+      },
+    ],
   });
   fs.writeFileSync(
     path.join(rootPath, "tasks/LEVEL_1_2_SCOPE.md"),

@@ -36,9 +36,11 @@ question is answered.
 
 ## Current Branch-Inventory-Ready Queue
 
-This queue is the only active Work Loop queue for this scaffold revision.
+This queue lists branch-inventory-ready drivers for this scaffold revision.
+`tasks/ACTIVE_WORK.json` selects which ready drivers are assigned to a run.
 Additional source branch inventory rows may exist for future drivers; they are
-not selectable implementation tasks until this source-owned queue is revised.
+not selectable implementation tasks until the source-owned active work file,
+scope snapshot, and source branch inventory are revised together.
 
 1. `cleanroom-input/qnt/battle-runtime/battle-runtime-magic-missile.mbt.qnt`
 

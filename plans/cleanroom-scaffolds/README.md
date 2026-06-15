@@ -20,6 +20,8 @@ the target repo.
   cleanroom repo root as `BOOTSTRAP_QUERY.md`.
 - `tasks/WORK_LOOP.template.md` — durable fresh-agent Work Loop instructions.
   Copy to `tasks/WORK_LOOP.md`.
+- `tasks/ACTIVE_WORK.template.json` — machine-readable active assignment and
+  lane queues. Render to `tasks/ACTIVE_WORK.json`.
 - `tasks/IMPLEMENTER_TASK.template.md` — implementer start gate and required
   task outputs. Render to `tasks/IMPLEMENTER_TASK.md`.
 - `tasks/REVIEWER_CHECKLIST.template.md` — reviewer loop checklists. Render to

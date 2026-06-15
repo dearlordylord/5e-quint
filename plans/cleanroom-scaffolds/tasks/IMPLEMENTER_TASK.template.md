@@ -9,6 +9,7 @@ Write `tasks/START_GATE.json` before implementation begins. It must record:
 - `taskId`;
 - current `HEAD` from `git rev-parse HEAD`;
 - clean pre-implementation worktree status from `git status --short`;
+- selected assignment and lane from `tasks/ACTIVE_WORK.json`;
 - selected `.mbt.qnt` drivers for this task.
 
 If the worktree is not clean before task edits begin, stop before implementation

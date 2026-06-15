@@ -21,8 +21,8 @@ Target profile: `{{targetProfileId}}`. Target package/tooling:
 - `BOOTSTRAP_QUERY.md` — owner-facing query for starting a cleanroom session
   after the corpus and scaffold files have been copied here.
 - `{{enginePath}}` — target implementation and its tests.
-- `tasks/` — task specs, `VALIDATION_REPORT.md`, `BLOCKERS.md`, and generated
-  target replay evidence.
+- `tasks/` — active work assignment, task specs, `VALIDATION_REPORT.md`,
+  `BLOCKERS.md`, and generated target replay evidence.
 
 ## Owner Bootstrap
 

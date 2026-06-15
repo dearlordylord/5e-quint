@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "assignments": [
+    {
+      "assignmentId": "tracer-bullet",
+      "lanes": [
+        {
+          "laneId": "battle",
+          "queue": [
+            "{{firstInScopeDriver}}"
+          ]
+        }
+      ]
+    }
+  ]
+}

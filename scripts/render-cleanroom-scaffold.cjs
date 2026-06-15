@@ -228,6 +228,7 @@ const templateFiles = [
   "BOOTSTRAP_QUERY.template.md",
   "AGENTS.template.md",
   "tasks/WORK_LOOP.template.md",
+  "tasks/ACTIVE_WORK.template.json",
   "tasks/IMPLEMENTER_TASK.template.md",
   "tasks/REVIEWER_CHECKLIST.template.md",
   "tasks/DECIDER_CHECKLIST.template.md",
