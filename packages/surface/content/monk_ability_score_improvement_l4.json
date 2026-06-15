@@ -9,7 +9,8 @@
     "grants": [
       {
         "category": "general",
-        "kind": "grant_feat"
+        "kind": "grant_feat",
+        "openFallback": "any_qualifying_feat"
       }
     ]
   },

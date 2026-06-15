@@ -59,13 +59,13 @@ This is the default `%` for character-level-1 through character-level-3 readines
 
 This is the default `%` for character-level-1 through character-level-4 readiness questions. It includes character-level-4 class-feature rows and spell-level-2 pressure. It deliberately excludes spell-level-3 pressure, which first enters the character-level-5 frontier for full casters.
 
-- Accepted: 615/632 (97.3%)
+- Accepted: 618/632 (97.8%)
 
 #### Character Levels 1-4 Battle Readiness by Status
 
 - accepted: 434
-- accepted-no-battle-effect: 181
-- owner-evidence-required: 15
+- accepted-no-battle-effect: 184
+- owner-evidence-required: 12
 - partial-battle-runtime: 2
 
 ### Level-3 Class/Subclass Battle Readiness
@@ -84,12 +84,12 @@ This metric is a separate seed for level-3 class feature, subclass selection, su
 
 This metric is a separate seed for level-4 class feature rows, including Ability Score Improvement feat-selection containers and any additional level-4 class features. It does not affect spell-level-3 readiness.
 
-- Accepted: 21/25 (84%)
+- Accepted: 24/25 (96%)
 
 #### Level-4 Class Feature Battle Readiness by Status
 
-- accepted-no-battle-effect: 21
-- owner-evidence-required: 4
+- accepted-no-battle-effect: 24
+- owner-evidence-required: 1
 
 ### Spell-Level-3 Battle Readiness
 
@@ -125,8 +125,8 @@ This metric is a separate seed for spell-level-3 pressure only. It belongs to th
 
 ### Level-4 Class Feature Rows by Disposition
 
-- catalog-only/dead-for-now: 9
-- level-4-follow-up-required: 4
+- catalog-only/dead-for-now: 12
+- level-4-follow-up-required: 1
 - non-runtime: 12
 
 ### Level-3 Class/Subclass Rows by Category
@@ -523,12 +523,12 @@ These batches are generated planning recommendations for a separate SRD inventor
 |Cleric level 4 feature table row|character-creation or progression mechanic|outside-surface-runtime-mechanics|authored-record-present|installed|unsupported-profile|non-runtime|accepted-no-battle-effect|||No runtime work; keep classification as explicit closure.|.references/srd-5.2.1/Classes/Cleric.md:38|
 |Druid Ability Score Improvement|class feature|current-surface-can-express-source-facts|authored-record-present|not-installed|unsupported-profile|catalog-only/dead-for-now|accepted-no-battle-effect|selection-grant-container: character-creation-runtime ability-score projection and selected feat Unit profiles||The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.|.references/srd-5.2.1/Classes/Druid.md:134|
 |Druid level 4 feature table row|character-creation or progression mechanic|outside-surface-runtime-mechanics|authored-record-present|installed|unsupported-profile|non-runtime|accepted-no-battle-effect|||No runtime work; keep classification as explicit closure.|.references/srd-5.2.1/Classes/Druid.md:35|
-|Fighter Ability Score Improvement|class feature|current-surface-can-express-source-facts|missing-authored-record|not-installed||level-4-follow-up-required|owner-evidence-required|||Promote or explicitly close this level-4 class feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this row as supported.|.references/srd-5.2.1/Classes/Fighter.md:90|
+|Fighter Ability Score Improvement|class feature|current-surface-can-express-source-facts|authored-record-present|installed|unsupported-profile|catalog-only/dead-for-now|accepted-no-battle-effect|selection-grant-container: character-creation-runtime ability-score projection and selected feat Unit profiles|Unit catalog/admission: catalog evidence; character-creation-runtime ability-score projection and selected feat Unit profiles: catalog-only/dead-for-now closure|The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.|.references/srd-5.2.1/Classes/Fighter.md:90|
 |Fighter level 4 feature table row|character-creation or progression mechanic|outside-surface-runtime-mechanics|authored-record-present|installed|unsupported-profile|non-runtime|accepted-no-battle-effect|||No runtime work; keep classification as explicit closure.|.references/srd-5.2.1/Classes/Fighter.md:34|
 |Monk Ability Score Improvement|class feature|current-surface-can-express-source-facts|authored-record-present|not-installed|unsupported-profile|catalog-only/dead-for-now|accepted-no-battle-effect|selection-grant-container: character-creation-runtime ability-score projection and selected feat Unit profiles||The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.|.references/srd-5.2.1/Classes/Monk.md:112|
 |Monk Slow Fall|class feature|current-surface-can-express-source-facts|missing-authored-record|not-installed||level-4-follow-up-required|owner-evidence-required|||Promote or explicitly close this level-4 class feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this row as supported.|.references/srd-5.2.1/Classes/Monk.md:116|
 |Monk level 4 feature table row|character-creation or progression mechanic|outside-surface-runtime-mechanics|authored-record-present|installed|unsupported-profile|non-runtime|accepted-no-battle-effect|||No runtime work; keep classification as explicit closure.|.references/srd-5.2.1/Classes/Monk.md:35|
-|Paladin Ability Score Improvement|class feature|current-surface-can-express-source-facts|missing-authored-record|not-installed||level-4-follow-up-required|owner-evidence-required|||Promote or explicitly close this level-4 class feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this row as supported.|.references/srd-5.2.1/Classes/Paladin.md:122|
+|Paladin Ability Score Improvement|class feature|current-surface-can-express-source-facts|authored-record-present|installed|unsupported-profile|catalog-only/dead-for-now|accepted-no-battle-effect|selection-grant-container: character-creation-runtime ability-score projection and selected feat Unit profiles|Unit catalog/admission: catalog evidence; character-creation-runtime ability-score projection and selected feat Unit profiles: catalog-only/dead-for-now closure|The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.|.references/srd-5.2.1/Classes/Paladin.md:122|
 |Paladin level 4 feature table row|character-creation or progression mechanic|outside-surface-runtime-mechanics|authored-record-present|installed|unsupported-profile|non-runtime|accepted-no-battle-effect|||No runtime work; keep classification as explicit closure.|.references/srd-5.2.1/Classes/Paladin.md:38|
 |Ranger Ability Score Improvement|class feature|current-surface-can-express-source-facts|authored-record-present|not-installed|unsupported-profile|catalog-only/dead-for-now|accepted-no-battle-effect|selection-grant-container: character-creation-runtime ability-score projection and selected feat Unit profiles||The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.|.references/srd-5.2.1/Classes/Ranger.md:106|
 |Ranger level 4 feature table row|character-creation or progression mechanic|outside-surface-runtime-mechanics|authored-record-present|installed|unsupported-profile|non-runtime|accepted-no-battle-effect|||No runtime work; keep classification as explicit closure.|.references/srd-5.2.1/Classes/Ranger.md:38|
@@ -536,7 +536,7 @@ These batches are generated planning recommendations for a separate SRD inventor
 |Rogue level 4 feature table row|character-creation or progression mechanic|outside-surface-runtime-mechanics|authored-record-present|installed|unsupported-profile|non-runtime|accepted-no-battle-effect|||No runtime work; keep classification as explicit closure.|.references/srd-5.2.1/Classes/Rogue.md:39|
 |Sorcerer Ability Score Improvement|class feature|current-surface-can-express-source-facts|authored-record-present|not-installed|unsupported-profile|catalog-only/dead-for-now|accepted-no-battle-effect|selection-grant-container: character-creation-runtime ability-score projection and selected feat Unit profiles||The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.|.references/srd-5.2.1/Classes/Sorcerer.md:123|
 |Sorcerer level 4 feature table row|character-creation or progression mechanic|outside-surface-runtime-mechanics|authored-record-present|installed|unsupported-profile|non-runtime|accepted-no-battle-effect|||No runtime work; keep classification as explicit closure.|.references/srd-5.2.1/Classes/Sorcerer.md:38|
-|Warlock Ability Score Improvement|class feature|current-surface-can-express-source-facts|missing-authored-record|not-installed||level-4-follow-up-required|owner-evidence-required|||Promote or explicitly close this level-4 class feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this row as supported.|.references/srd-5.2.1/Classes/Warlock.md:100|
+|Warlock Ability Score Improvement|class feature|current-surface-can-express-source-facts|authored-record-present|installed|unsupported-profile|catalog-only/dead-for-now|accepted-no-battle-effect|selection-grant-container: character-creation-runtime ability-score projection and selected feat Unit profiles|Unit catalog/admission: catalog evidence; character-creation-runtime ability-score projection and selected feat Unit profiles: catalog-only/dead-for-now closure|The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.|.references/srd-5.2.1/Classes/Warlock.md:100|
 |Warlock level 4 feature table row|character-creation or progression mechanic|outside-surface-runtime-mechanics|authored-record-present|installed|unsupported-profile|non-runtime|accepted-no-battle-effect|||No runtime work; keep classification as explicit closure.|.references/srd-5.2.1/Classes/Warlock.md:38|
 |Wizard Ability Score Improvement|class feature|current-surface-can-express-source-facts|authored-record-present|not-installed|unsupported-profile|catalog-only/dead-for-now|accepted-no-battle-effect|selection-grant-container: character-creation-runtime ability-score projection and selected feat Unit profiles||The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.|.references/srd-5.2.1/Classes/Wizard.md:112|
 |Wizard level 4 feature table row|character-creation or progression mechanic|outside-surface-runtime-mechanics|authored-record-present|installed|unsupported-profile|non-runtime|accepted-no-battle-effect|||No runtime work; keep classification as explicit closure.|.references/srd-5.2.1/Classes/Wizard.md:38|

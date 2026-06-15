@@ -14,18 +14,18 @@ Blockers: strict=0, selected-identity=0, SRD-authored-readiness=0.
 
 | Metric | Result |
 | --- | ---: |
-| Strict runtime/profile support | 146/206 (70.9%) |
-| Strict target closure | 206/206 (100%) |
+| Strict runtime/profile support | 146/209 (69.9%) |
+| Strict target closure | 209/209 (100%) |
 | Selected identity readiness | 168/168 (100%) |
-| Diagnostic product readiness | 615/632 (97.3%) |
-| SRD authored product readiness | 79/79 (100%) |
+| Diagnostic product readiness | 618/632 (97.8%) |
+| SRD authored product readiness | 82/82 (100%) |
 | Rules-kernel profile join | 103/103 (100%) |
 | Rules-kernel covered profile join | 103/103 (100%) |
 | Supported Unit rules-kernel chain | 140/140 (100%) |
 
 These metrics are lower-layer accounting views. They are not, by themselves, a valid full-support claim.
 
-The full-support claim gate uses strict target closure, selected identity readiness, and SRD-authored product readiness. Diagnostic product readiness is a source-row accounting view, so it can report 615/632 (97.3%) while the claim gate reports **pass** when every non-green diagnostic row is outside those gate blockers or is represented by an explicit follow-up/accounting owner.
+The full-support claim gate uses strict target closure, selected identity readiness, and SRD-authored product readiness. Diagnostic product readiness is a source-row accounting view, so it can report 618/632 (97.8%) while the claim gate reports **pass** when every non-green diagnostic row is outside those gate blockers or is represented by an explicit follow-up/accounting owner.
 
 ### Diagnostic Product Readiness Accounting
 
@@ -34,8 +34,8 @@ Diagnostic product readiness keeps lower-layer planning pressure visible. Rows i
 | Status | Rows |
 | --- | ---: |
 | accepted | 434 |
-| accepted-no-battle-effect | 181 |
-| owner-evidence-required | 15 |
+| accepted-no-battle-effect | 184 |
+| owner-evidence-required | 12 |
 | partial-battle-runtime | 2 |
 
 ### Selected Identity Replay Accounting
@@ -45,7 +45,7 @@ This is the selected-identity gate layer for the strict denominator. `witness-pr
 | Selected identity status | Rows |
 | --- | ---: |
 | not-applicable | 5 |
-| not-required | 38 |
+| not-required | 41 |
 | witness-present | 163 |
 
 ### Selected Identity Blockers
@@ -58,9 +58,9 @@ This is the selected-identity gate layer for the strict denominator. `witness-pr
 
 | Gate | Status | Result | Blocking issue |
 | --- | --- | ---: | --- |
-| Strict runtime/profile closure | pass | 206/206 (100%) | _none_ |
+| Strict runtime/profile closure | pass | 209/209 (100%) | _none_ |
 | Selected identity readiness | pass | 168/168 (100%) | _none_ |
-| SRD authored product readiness | pass | 79/79 (100%) | _none_ |
+| SRD authored product readiness | pass | 82/82 (100%) | _none_ |
 
 Every gate row must pass for a full level-support claim. A 100% result in one layer does not satisfy another layer, failed gates are not combined into a weighted completion percentage, and diagnostic product-readiness rows are intentionally absent from this gate unless they enter the SRD-authored blocker set.
 
@@ -75,7 +75,7 @@ This gate checks authored records and retained Unit references that must resolve
 | SRD background concrete equipment refs | complete | 4/4 (100%) | Every concrete Unit ref in SRD background starting equipment must resolve through the Unit catalog. |
 | SRD species records | complete | 6/6 (100%) | Every SRD species selectable at character creation must be installed. |
 | SRD species trait refs | complete | 11/11 (100%) | Every finalized species trait ref must resolve through the Unit catalog before character-to-battle admission can be claimed. |
-| SRD class feature grants through level 4 | complete | 46/46 (100%) | Every level-scoped class feature grant retained by finalization must resolve through the Unit catalog. |
+| SRD class feature grants through level 4 | complete | 49/49 (100%) | Every level-scoped class feature grant retained by finalization must resolve through the Unit catalog. |
 | SRD class concrete equipment refs | complete | 0/0 (n/a) | Every concrete Unit ref in SRD class starting equipment must resolve through the Unit catalog. |
 | Unique SRD concrete equipment refs | complete | 4/4 (100%) | Unique concrete weapon, armor, and shield Unit refs reachable from SRD starting equipment. |
 
@@ -97,10 +97,10 @@ This gate checks authored records and retained Unit references that must resolve
 | --- | ---: |
 | Candidate Unit ids before exclusions | 237 |
 | Companion-worktree exclusions | 1 |
-| SRD pressure with no Unit matrix row | 18 |
+| SRD pressure with no Unit matrix row | 15 |
 | Non-executable class containers | 12 |
-| Strict executable denominator | 206 |
-| Non-supported frontier | 60 |
+| Strict executable denominator | 209 |
+| Non-supported frontier | 63 |
 
 ## Status Groups
 
@@ -108,7 +108,7 @@ This gate checks authored records and retained Unit references that must resolve
 | --- | ---: | --- |
 | supported-profile | 146 | `acid_arrow`, `acid_splash`, `aid`, `alter_self`, `animal_friendship`, `bane`, `barbarian_danger_sense`, `barbarian_frenzy`, `barbarian_primal_knowledge`, `barbarian_rage`, `barbarian_reckless_attack`, `barbarian_unarmored_defense`, `barbarian_weapon_mastery`, `bard_bardic_inspiration`, `bard_cutting_words`, `bard_expertise`, `bard_jack_of_all_trades`, `barkskin`, `bless`, `blindness_deafness`, `blur`, `burning_hands`, `chill_touch`, `chromatic_orb`, `cleric_channel_divinity`, `cleric_disciple_of_life`, `cleric_divine_order`, `cleric_life_domain_spells`, `cleric_preserve_life`, `color_spray`, `command`, `cure_wounds`, `dancing_lights`, `dissonant_whispers`, `divine_favor`, `divine_smite`, `dragons_breath`, `druid_circle_of_the_land_spells`, `druid_lands_aid`, `druid_primal_order`, `eldritch_blast`, `enhance_ability`, `ensnaring_strike`, `entangle`, `expeditious_retreat`, `faerie_fire`, `false_life`, `feather_fall`, `fighter_action_surge`, `fighter_fighting_style`, `fighter_improved_critical`, `fighter_remarkable_athlete`, `fighter_second_wind`, `fighter_tactical_mind`, `fighter_weapon_mastery`, `fire_bolt`, `flame_blade`, `flaming_sphere`, `fog_cloud`, `grease`, `guidance`, `guiding_bolt`, `healing_word`, `heat_metal`, `hellish_rebuke`, `heroism`, `hex`, `hideous_laughter`, `hold_person`, `hunters_mark`, `ice_knife`, `inflict_wounds`, `invisibility`, `jump`, `lesser_restoration`, `light`, `longstrider`, `mage_armor`, `magic_missile`, `magic_weapon`, `mirror_image`, `misty_step`, `monk_deflect_attacks`, `monk_martial_arts`, `monk_open_hand_technique`, `monk_unarmored_defense`, `monk_unarmored_movement`, `monk_uncanny_metabolism`, `paladin_channel_divinity`, `paladin_fighting_style`, `paladin_lay_on_hands`, `paladin_oath_of_devotion_spells`, `paladin_paladins_smite`, `paladin_sacred_weapon`, `paladin_weapon_mastery`, `poison_spray`, `produce_flame`, `protection_from_evil_and_good`, `protection_from_poison`, `ranger_deft_explorer`, `ranger_fighting_style`, `ranger_hunters_prey`, `ranger_weapon_mastery`, `ray_of_enfeeblement`, `ray_of_frost`, `ray_of_sickness`, `resistance`, `rogue_cunning_action`, `rogue_expertise`, `rogue_second_story_work`, `rogue_sneak_attack`, `rogue_steady_aim`, `rogue_weapon_mastery`, `sacred_flame`, `sanctuary`, `scorching_ray`, `searing_smite`, `see_invisibility`, `shatter`, `shield`, `shield_of_faith`, `shillelagh`, `shining_smite`, `shocking_grasp`, `sleep`, `sorcerer_draconic_resilience`, `sorcerer_draconic_spells`, `sorcerer_innate_sorcery`, `sorcerous_burst`, `spare_the_dying`, `spider_climb`, `spiritual_weapon`, `starry_wisp`, `thunderwave`, `true_strike`, `vicious_mockery`, `warding_bond`, `warlock_dark_ones_blessing`, `warlock_eldritch_invocations`, `warlock_fiend_spells`, `warlock_magical_cunning`, `web`, `wizard_arcane_recovery`, `wizard_potent_cantrip`, `wizard_ritual_adept`, `wizard_scholar` |
 | closed-runtime-detached-table-adjudication | 35 | `alarm`, `animal_messenger`, `arcane_lock`, `arcanists_magic_aura`, `augury`, `calm_emotions`, `charm_person`, `comprehend_languages`, `darkness`, `darkvision`, `detect_evil_and_good`, `detect_magic`, `detect_poison_and_disease`, `detect_thoughts`, `enthrall`, `find_traps`, `gentle_repose`, `gust_of_wind`, `identify`, `knock`, `locate_animals_or_plants`, `locate_object`, `magic_mouth`, `mind_spike`, `minor_illusion`, `monk_monks_focus`, `pass_without_trace`, `rope_trick`, `silence`, `silent_image`, `speak_with_animals`, `spike_growth`, `suggestion`, `thaumaturgy`, `zone_of_truth` |
-| closed-selection-grant-container | 9 | `barbarian_ability_score_improvement_l4`, `bard_ability_score_improvement_l4`, `cleric_ability_score_improvement_l4`, `druid_ability_score_improvement_l4`, `monk_ability_score_improvement_l4`, `ranger_ability_score_improvement_l4`, `rogue_ability_score_improvement_l4`, `sorcerer_ability_score_improvement_l4`, `wizard_ability_score_improvement_l4` |
+| closed-selection-grant-container | 12 | `barbarian_ability_score_improvement_l4`, `bard_ability_score_improvement_l4`, `cleric_ability_score_improvement_l4`, `druid_ability_score_improvement_l4`, `fighter_ability_score_improvement_l4`, `monk_ability_score_improvement_l4`, `paladin_ability_score_improvement_l4`, `ranger_ability_score_improvement_l4`, `rogue_ability_score_improvement_l4`, `sorcerer_ability_score_improvement_l4`, `warlock_ability_score_improvement_l4`, `wizard_ability_score_improvement_l4` |
 | closed-outside-battle-runtime-boundary | 7 | `bard_bonus_proficiencies`, `continual_flame`, `enlarge_reduce`, `levitate`, `moonbeam`, `prayer_of_healing`, `rogue_fast_hands` |
 | closed-character-fact-and-runtime-detached-split | 3 | `druid_druidic`, `rogue_thieves_cant`, `sorcerer_font_of_magic` |
 | blocked-follow-up-split | 2 | `druid_wild_shape`, `sorcerer_metamagic` |
@@ -158,6 +158,7 @@ This gate checks authored records and retained Unit references that must resolve
 | `druid_wild_shape` | blocked-follow-up-split | profile-subset-supported | witness-present | installed | follow-up-split | L12G-FOLLOWUP-DRUID-WILD-SHAPE-SHAPE-SHIFTING-RUNTIME: Promote the remaining battle-owned Wild Shape execution after the current known-form subset: Beast Spells casting exceptions, unsupported Stat Block action sections, attack prose riders, multi-component damage, and Stat Block non-Attack actions. Remaining object-handling anatomy, senses, languages, and speech are owned by the narrower follow-ups below; non-battle active-form persistence is closed separately by the ASSUMPTIONS.md A27 owner-decision boundary. Owner: battle-runtime, Stat Block action runtime, Beast Spells owner, and focused QNT/MBT parity. Required output: Supported Unit profile or narrower profile-subset with focused runtime tests, generated owner evidence, and promoted Quint/MBT parity for each admitted battle executable branch; otherwise leave each branch unpromoted with a precise blocked disposition.; L12G-FOLLOWUP-DRUID-WILD-SHAPE-SENSE-LANGUAGE-PROJECTION: Project Beast Stat Block special Senses while retaining character languages and ability to speak under Wild Shape. The owner must derive facts from the selected active form, retained Character Sheet language facts, and existing condition/speech blockers rather than storing duplicate sense or language state. Owner: shared creature perception/communication projection owner, with battle-runtime consumers only after projection facts are typed. Required output: Typed shared projection APIs and focused tests for active Wild Shape sense/language/speech facts, plus any battle/app/MCP consumer tests that read those projections without dispatching on authored Wild Shape identity. |
 | `enlarge_reduce` | closed-outside-battle-runtime-boundary | profile-subset-supported | witness-present | installed | outside-battle-runtime | Promoted battle runtime has no canonical object Size state, carried/worn item Size state, dropped-item location state, or thrown weapon/ammunition occurrence lifecycle to mutate and clean up. The existing creature branch already models the battle-visible attack damage consequence without duplicating item state, so object and item Size normalization remain outside promoted battle runtime until a generic object/item lifecycle owner exists. |
 | `enthrall` | closed-runtime-detached-table-adjudication | profile-subset-supported | witness-present | installed | social-knowledge-effect | The SRD fight/attention clauses depend on table relationship and social attention facts outside promoted battle-runtime state; the runtime consumes caller-selected eligible targets and records battle-visible failed-save Perception effects. |
+| `fighter_ability_score_improvement_l4` | closed-selection-grant-container | unsupported-profile | not-required | installed | selection-grant-container | The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim. |
 | `find_steed` | closed-companion-control-boundary | unsupported-profile | not-required | not-in-unit-catalog | companion-control-boundary | Find Steed's Surface-represented runtime behavior is closed at the companion-control boundary: a future mount companion owner must model summoned mount lifecycle, rider/control state, stat-block projection and actions, disappearance, and item-drop boundaries without autonomous companion action selection or authored-identity dispatch in generic runtime code. |
 | `find_traps` | closed-runtime-detached-table-adjudication | unsupported-profile | not-required | installed | outside-runtime-presentation-exploration | Trap presence, line of sight, non-location warning, and general-danger disclosure are exploration/detection facts supplied by the table rather than promoted battle runtime state. |
 | `gentle_repose` | closed-runtime-detached-table-adjudication | unsupported-profile | not-required | not-in-unit-catalog | outside-runtime-presentation-exploration | Corpse/remains preservation, Undead prevention, and raise-dead deadline extension are corpse/remains lifecycle and resurrection/adjudication facts supplied by the table or a future character/rest owner rather than promoted battle runtime state. |
@@ -173,6 +174,7 @@ This gate checks authored records and retained Unit references that must resolve
 | `monk_ability_score_improvement_l4` | closed-selection-grant-container | unsupported-profile | not-required | not-in-unit-catalog | selection-grant-container | The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim. |
 | `monk_monks_focus` | closed-runtime-detached-table-adjudication | profile-subset-supported | witness-present | installed | outside-runtime-presentation-exploration | Task 9 promotes the paid Step of the Wind jump-distance multiplier where promoted runtime can consume it today: Jump spell movement replacement witnesses. Ordinary Long Jump and High Jump require separate Strength-derived distance, route, obstacle, destination, and landing witnesses that are not part of the promoted battle-runtime movement command surface in this lane. |
 | `moonbeam` | closed-outside-battle-runtime-boundary | profile-subset-supported | witness-present | installed | outside-battle-runtime | Promoting stat-block shapechanger reversion would require one canonical active-form owner for Shape-Shift choices, speed replacement, equipment non-transformation, and return-to-true-form state. The current SRD catalog exposes only prose specials and the battle runtime deliberately supports executable Stat Block attacks while rejecting specials, so adding Moonbeam-specific metadata would duplicate Stat Block true-form facts and create authored-identity coupling. |
+| `paladin_ability_score_improvement_l4` | closed-selection-grant-container | unsupported-profile | not-required | installed | selection-grant-container | The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim. |
 | `pass_without_trace` | closed-runtime-detached-table-adjudication | profile-subset-supported | witness-present | installed | outside-runtime-presentation-exploration | Pass without Trace's changing aura membership and non-caster chosen affected creatures depend on caller-supplied table/spatial facts at cast time, and leaving no tracks is pursuit/exploration state outside promoted battle runtime. |
 | `prayer_of_healing` | closed-outside-battle-runtime-boundary | profile-subset-supported | witness-present | installed | outside-battle-runtime | Prayer of Healing application consumes completed-cast recipient eligibility facts; map geometry, range over the entire casting, Magic-action sequencing for the 10-minute cast, and interruption detection are not stored as parallel Character Sheet state. |
 | `ranger_ability_score_improvement_l4` | closed-selection-grant-container | unsupported-profile | not-required | not-in-unit-catalog | selection-grant-container | The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim. |
@@ -190,6 +192,7 @@ This gate checks authored records and retained Unit references that must resolve
 | `spike_growth` | closed-runtime-detached-table-adjudication | profile-subset-supported | witness-present | installed | outside-runtime-presentation-exploration | The SRD recognition clause depends on table-owned visibility at cast time, the creature's declared Search Action before entering, skill applicability, and the resulting terrain-recognition witness. Promoted battle runtime already consumes movement-area facts for Spike Growth and does not store parallel per-observer terrain knowledge or perception state. |
 | `suggestion` | closed-runtime-detached-table-adjudication | unsupported-profile | not-required | installed | social-knowledge-effect | Suggestion's hearing/understanding gate, suggested course of activity, achievable and obvious-damage judgment, Charmed target pursuit, and activity-completion ending require table/player choice and social adjudication facts; promoted battle runtime must not infer or enforce commanded behavior from authored spell identity. |
 | `thaumaturgy` | closed-runtime-detached-table-adjudication | profile-subset-supported | witness-present | installed | outside-runtime-presentation-exploration | Thaumaturgy's non-Booming minor wonders alter appearance, flames, doors/windows, sounds, and tremors; promoted battle runtime owns only Booming Voice's check Advantage and consumes total active-effect count witnesses for the shared cap. |
+| `warlock_ability_score_improvement_l4` | closed-selection-grant-container | unsupported-profile | not-required | installed | selection-grant-container | The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim. |
 | `wizard_ability_score_improvement_l4` | closed-selection-grant-container | unsupported-profile | not-required | not-in-unit-catalog | selection-grant-container | The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim. |
 | `wizard_evocation_savant` | closed-later-level-only | profile-subset-supported | witness-present | installed | later-level-only | Wizard level 3 owns subclass acquisition and the two level-2-or-lower Evocation spellbook choices. The separate new-spell-slot-level grant does not fire during that same level-3 creation event; the next new Wizard Spell Slot level is level 3 spells at Wizard level 5. |
 | `zone_of_truth` | closed-runtime-detached-table-adjudication | unsupported-profile | not-required | installed | social-knowledge-effect | Zone of Truth's truthfulness constraint, conversation answers, deliberate-lie judgment, evasive response handling, and caster save-outcome knowledge require table/social adjudication facts; promoted battle runtime must not add conversation-state or lie-detection state without a clear executable battle owner. |
@@ -227,7 +230,6 @@ This gate checks authored records and retained Unit references that must resolve
 | `disguise_self` | 3 | The SRD row has spell-level-1 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | `plans/unit-profile-coverage/frontier-decisions/disguise_self.md` | Bard spell list Disguise Self; Sorcerer spell list Disguise Self; Wizard spell list Disguise Self |
 | `druidcraft` | 1 | The SRD row has spell-level-0 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | `plans/unit-profile-coverage/frontier-decisions/druidcraft.md` | Druid spell list Druidcraft |
 | `elementalism` | 3 | The SRD row has spell-level-0 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | `plans/unit-profile-coverage/frontier-decisions/elementalism.md` | Druid spell list Elementalism; Sorcerer spell list Elementalism; Wizard spell list Elementalism |
-| `fighter_ability_score_improvement_l4` | 1 | The SRD row has level-4 class-feature pressure, but no Unit matrix row exists yet. | _none_ | Fighter Ability Score Improvement |
 | `floating_disk` | 1 | The SRD row has spell-level-1 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | `plans/unit-profile-coverage/frontier-decisions/floating_disk.md` | Wizard spell list Floating Disk |
 | `goodberry` | 2 | The SRD row has spell-level-1 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | `plans/unit-profile-coverage/frontier-decisions/goodberry.md` | Druid spell list Goodberry; Ranger spell list Goodberry |
 | `illusory_script` | 3 | The SRD row has spell-level-1 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | `plans/unit-profile-coverage/frontier-decisions/illusory_script.md` | Bard spell list Illusory Script; Warlock spell list Illusory Script; Wizard spell list Illusory Script |
@@ -235,9 +237,7 @@ This gate checks authored records and retained Unit references that must resolve
 | `mending` | 5 | The SRD row has spell-level-0 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | `plans/unit-profile-coverage/frontier-decisions/mending.md` | Bard spell list Mending; Cleric spell list Mending; Druid spell list Mending; Sorcerer spell list Mending; Wizard spell list Mending |
 | `message` | 4 | The SRD row has spell-level-0 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | `plans/unit-profile-coverage/frontier-decisions/message.md` | Bard spell list Message; Druid spell list Message; Sorcerer spell list Message; Wizard spell list Message |
 | `monk_slow_fall` | 1 | The SRD row has level-4 class-feature pressure, but no Unit matrix row exists yet. | _none_ | Monk Slow Fall |
-| `paladin_ability_score_improvement_l4` | 1 | The SRD row has level-4 class-feature pressure, but no Unit matrix row exists yet. | _none_ | Paladin Ability Score Improvement |
 | `prestidigitation` | 4 | The SRD row has spell-level-0 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | `plans/unit-profile-coverage/frontier-decisions/prestidigitation.md` | Bard spell list Prestidigitation; Sorcerer spell list Prestidigitation; Warlock spell list Prestidigitation; Wizard spell list Prestidigitation |
 | `purify_food_and_drink` | 3 | The SRD row has spell-level-1 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | `plans/unit-profile-coverage/frontier-decisions/purify_food_and_drink.md` | Cleric spell list Purify Food and Drink; Druid spell list Purify Food and Drink; Paladin spell list Purify Food and Drink |
 | `ranger_hunters_lore` | 1 | The SRD row has level-3 class-feature pressure, but no Unit matrix row exists yet. | _none_ | Ranger Hunter's Lore |
 | `unseen_servant` | 3 | The SRD row has spell-level-1 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | `plans/unit-profile-coverage/frontier-decisions/unseen_servant.md` | Bard spell list Unseen Servant; Warlock spell list Unseen Servant; Wizard spell list Unseen Servant |
-| `warlock_ability_score_improvement_l4` | 1 | The SRD row has level-4 class-feature pressure, but no Unit matrix row exists yet. | _none_ | Warlock Ability Score Improvement |
