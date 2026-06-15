@@ -18,8 +18,9 @@ attempts, or external D&D rules sources.
 You are working in this cleanroom repo only. Do not read sibling repos, the dnd
 source repo, prior cleanroom attempts, or external D&D rules sources.
 
-Read AGENTS.md and tasks/WORK_LOOP.md, then implement the next in-scope branch
-set from tasks/LEVEL_1_2_SCOPE.md following the Work Loop.
+Read AGENTS.md and tasks/WORK_LOOP.md, then keep implementing queued in-scope
+branch sets from the selected tasks/ACTIVE_WORK.json assignment following the
+Work Loop.
 
 Use assignmentId `{{defaultAssignmentId}}` from tasks/ACTIVE_WORK.json unless I
 explicitly name a different assignmentId.
@@ -32,4 +33,10 @@ Before implementation, record the current `git rev-parse HEAD` and clean
 
 If the allowed corpus is insufficient, record the blocker exactly as instructed
 instead of guessing or asking for source-repo context.
+
+After each completed or blocked branch set, return to the Work Loop selection
+step and continue with the next eligible queued branch set. Stop only when the
+selected assignment has no eligible incomplete branch sets left, a repo-level
+blocker prevents further selection, target verification cannot be made green,
+or I explicitly stop you.
 ```

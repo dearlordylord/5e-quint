@@ -128,16 +128,17 @@ Every implementation task must update:
 
 The corpus is the backlog: each in-scope branch obligation from
 `cleanroom-input/branch-coverage/source-branch-inventory.json` is a unit of
-conformance work. `tasks/LEVEL_1_2_SCOPE.md` records which drivers are in scope
-for character levels 1-2, in dependency order.
+conformance work. `tasks/ACTIVE_WORK.json` selects the assignment and lane
+order for this run. `tasks/LEVEL_1_2_SCOPE.md` records which drivers are in
+scope for character levels 1-2.
 `tasks/LEVEL_1_2_SCOPE.md` is source-owned; do not reorder it in the target
 repo.
 
 Each iteration:
 
-1. Pick the next in-scope driver/branch set that is not yet conformant per
-   `tasks/LEVEL_1_2_SCOPE.md`, source branch inventory, and
-   `tasks/VALIDATION_REPORT.md`.
+1. Pick the next selected-assignment driver/branch set that is not yet
+   conformant per `tasks/ACTIVE_WORK.json`, `tasks/LEVEL_1_2_SCOPE.md`, source
+   branch inventory, and `tasks/VALIDATION_REPORT.md`.
 2. Implement it in `{{enginePath}}`, deriving the rule from the RAW/QNT/domain
    inputs and guidance pack.
 3. Make every in-scope branch conform through {{quintBindingName}} under the
@@ -145,6 +146,10 @@ Each iteration:
 4. Record harness-generated target replay evidence and update the validation
    report, or record a blocker if the allowed corpus or target implementation
    cannot satisfy the branch.
+
+After each iteration, return to step 1 and continue until the selected
+assignment has no eligible incomplete branch sets left or a repo-level blocker
+prevents further work.
 
 Conventions — module layout, test style, citation style, driver style, and
 target replay evidence style — are target-profile owned and recorded in

@@ -7,7 +7,7 @@
 - Scope file: `tasks/LEVEL_1_2_SCOPE.md`
 - Work Loop instructions: `tasks/WORK_LOOP.md`
 - Last completed current-snapshot queued branch set: `<none>`
-- Next queued driver: `{{firstInScopeDriver}}`
+- Next queued driver: `{{firstAssignedDriver}}`
 - Next task id: `{{nextTaskId}}`
 
 Completion rule: a queued branch set is complete only when this report has an

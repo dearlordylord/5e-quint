@@ -66,6 +66,10 @@ To select work:
    replayable branch complete for the current manifest and source branch
    inventory.
 5. Implement the first queued branch set that is not proven complete.
+6. After the branch set is complete or blocked, return to step 1 and select the
+   next eligible queued branch set. Do not stop after one branch set unless the
+   selected assignment has no eligible incomplete work left, a repo-level
+   blocker prevents further selection, or verification cannot be made green.
 
 ## Current Cursor
 
@@ -110,6 +114,9 @@ For the selected branch set:
 If the selected branch set cannot be implemented from the allowed inputs,
 record a blocker with the exact missing fact and move to the next eligible
 queued branch set. Do not guess, and do not ask the owner during the run.
+
+When a task is accepted, immediately start the next Work Loop iteration unless
+one of the stop conditions above applies.
 
 ## Required Report Shape
 
