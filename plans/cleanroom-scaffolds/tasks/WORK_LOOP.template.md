@@ -15,6 +15,7 @@ Read these files, in this order:
 7. `tasks/IMPLEMENTER_TASK.md`
 8. `tasks/VALIDATION_REPORT.md`
 9. `tasks/BLOCKERS.md`
+10. `tasks/TARGET_REPLAY_EVIDENCE.example.json`
 
 Do not read any file outside this repository. Do not read sibling repos.
 
@@ -106,7 +107,8 @@ For the selected branch set:
    diagnose a documented conformance gap; these tests do not close branch
    coverage.
 12. Run all required verification commands.
-13. Write target replay evidence under `tasks/target-replay-evidence/`.
+13. Write target replay evidence under `tasks/target-replay-evidence/`,
+    matching `tasks/TARGET_REPLAY_EVIDENCE.example.json`.
 14. Update `tasks/VALIDATION_REPORT.md`.
 15. Update `tasks/BLOCKERS.md` only if the allowed corpus or target
     implementation remains insufficient.

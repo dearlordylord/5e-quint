@@ -26,6 +26,10 @@
     {
       "label": "lint",
       "command": "cargo clippy --all-targets -- -D warnings"
+    },
+    {
+      "label": "harness acceptance",
+      "command": "node scripts/check-cleanroom-harness.cjs"
     }
   ],
   "quintBinding": {

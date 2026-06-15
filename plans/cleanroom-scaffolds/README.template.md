@@ -23,12 +23,14 @@ Target profile: `{{targetProfileId}}`. Target package/tooling:
 - `{{enginePath}}` — target implementation and its tests.
 - `tasks/` — active work assignment, task specs, `VALIDATION_REPORT.md`,
   `BLOCKERS.md`, and generated target replay evidence.
+- `scripts/` — copied harness validators; run these from inside the cleanroom
+  repo only.
 
 ## Owner Bootstrap
 
 1. Copy or render the cleanroom package into this repo: `AGENTS.md`,
    `README.md`, `BOOTSTRAP_QUERY.md`, `target-profile.json`, `tasks/**`, and
-   `cleanroom-input/**`.
+   `scripts/**`, and `cleanroom-input/**`.
 2. Start a cleanroom session manually with this directory as its only working
    root — ideally with file access restricted to this repo.
 3. Commit the generated cleanroom files if they are not already committed.

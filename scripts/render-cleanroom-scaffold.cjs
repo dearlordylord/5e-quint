@@ -259,6 +259,7 @@ const templateFiles = [
   "tasks/WORK_LOOP.template.md",
   "tasks/ACTIVE_WORK.template.json",
   "tasks/IMPLEMENTER_TASK.template.md",
+  "tasks/TARGET_REPLAY_EVIDENCE.example.template.json",
   "tasks/REVIEWER_CHECKLIST.template.md",
   "tasks/DECIDER_CHECKLIST.template.md",
   "tasks/HANDBACK.template.md",
@@ -270,6 +271,17 @@ const templateFiles = [
   "tasks/STATE_OWNER_MANIFEST.example.template.json",
   "tasks/REVIEW_LOOP.example.template.json",
   "tasks/DECIDER_DECISION.example.template.json",
+];
+
+const copiedSourceFiles = [
+  {
+    source: "scripts/check-cleanroom-harness.cjs",
+    destination: "scripts/check-cleanroom-harness.cjs",
+  },
+  {
+    source: "scripts/cleanroom-branch-coverage-check.cjs",
+    destination: "scripts/cleanroom-branch-coverage-check.cjs",
+  },
 ];
 
 function destinationFor(templatePath) {
@@ -315,6 +327,15 @@ function renderScaffold({ profile, targetDir, shouldWrite }) {
     outputs.push({ destination, rendered });
     if (shouldWrite) {
       const outputPath = path.join(targetDir, destination);
+      fs.mkdirSync(path.dirname(outputPath), { recursive: true });
+      fs.writeFileSync(outputPath, rendered);
+    }
+  }
+  for (const copiedFile of copiedSourceFiles) {
+    const rendered = fs.readFileSync(path.join(root, copiedFile.source), "utf8");
+    outputs.push({ destination: copiedFile.destination, rendered });
+    if (shouldWrite) {
+      const outputPath = path.join(targetDir, copiedFile.destination);
       fs.mkdirSync(path.dirname(outputPath), { recursive: true });
       fs.writeFileSync(outputPath, rendered);
     }

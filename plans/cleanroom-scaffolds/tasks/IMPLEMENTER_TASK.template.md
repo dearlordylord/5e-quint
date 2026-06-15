@@ -30,8 +30,8 @@ and record a bootstrap blocker in `tasks/BLOCKERS.md`.
 - Record every durable target field introduced or changed in
   `tasks/STATE_OWNER_MANIFEST.json`, including owner and derivability.
 - Generate target replay evidence under `tasks/target-replay-evidence/`.
-  Diagnostic target-language tests are allowed, but they do not close branch
-  coverage.
+  Match `tasks/TARGET_REPLAY_EVIDENCE.example.json` exactly. Diagnostic
+  target-language tests are allowed, but they do not close branch coverage.
 - Update `tasks/VALIDATION_REPORT.md` from target replay evidence, not from
   prose claims.
 

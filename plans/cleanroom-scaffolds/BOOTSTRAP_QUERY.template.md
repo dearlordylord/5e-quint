@@ -8,6 +8,7 @@ package into the target repo:
 - `BOOTSTRAP_QUERY.md`
 - `target-profile.json`
 - `tasks/**`
+- `scripts/**`
 - `cleanroom-input/**`
 
 The cleanroom session should have this target repo as its only working root. Do
@@ -25,7 +26,7 @@ Work Loop.
 Use assignmentId `{{defaultAssignmentId}}` from tasks/ACTIVE_WORK.json unless I
 explicitly name a different assignmentId.
 
-Use only cleanroom-input/**, tasks/**, target-profile.json, README.md,
+Use only cleanroom-input/**, tasks/**, scripts/**, target-profile.json, README.md,
 AGENTS.md, and target documentation allowed by AGENTS.md.
 
 Before implementation, record the current `git rev-parse HEAD` and clean

@@ -1,0 +1,41 @@
+{
+  "generatedBy": {
+    "tag": "target-harness",
+    "name": "<target harness or adapter name>"
+  },
+  "cleanroomManifestSourceCommitSha": "{{currentManifestSourceCommitSha}}",
+  "sourceBranchInventorySha256": "{{sourceBranchInventorySha}}",
+  "targetProfile": "{{targetProfileId}}",
+  "targetProfileSha256": "{{targetProfileSha256}}",
+  "runs": [
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "cleanroom-input/qnt/<package>/<driver>.mbt.qnt",
+      "qntFileSha256": "<sha256 from source branch inventory>",
+      "branchFamily": "<branch family from source branch inventory>",
+      "branchAction": "<branch action from source branch inventory>",
+      "observedActionTaken": "<same action observed from mbt::actionTaken>",
+      "harnessTestPath": "{{enginePath}}/qnt-adapters/<driver-adapter>",
+      "traceId": "<seed or deterministic replay id>",
+      "sampledInputs": [
+        {
+          "pickName": "<only when source branch inventory lists sampled input>",
+          "value": "<sampled target value>"
+        }
+      ],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "<projection name>",
+        "comparator": "<comparator id>",
+        "expectedProjectionSha256": "<sha256 hex>",
+        "observedProjectionSha256": "<same sha256 hex on pass>",
+        "checkedTargetStateFields": [
+          "<TargetState.field>"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    }
+  ]
+}

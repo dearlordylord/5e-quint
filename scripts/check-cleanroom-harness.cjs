@@ -362,17 +362,33 @@ function requiredSelectedObligations(inventory) {
   );
 }
 
+function readExpectedScopeSnapshot(rootPath, issues) {
+  if (fs.existsSync(SOURCE_SCOPE_SNAPSHOT_PATH)) {
+    return fs.readFileSync(SOURCE_SCOPE_SNAPSHOT_PATH, "utf8");
+  }
+  try {
+    return execFileSync(
+      "git",
+      ["-C", rootPath, "show", "HEAD:tasks/LEVEL_1_2_SCOPE.md"],
+      { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] },
+    );
+  } catch (_error) {
+    issues.push(
+      "source cleanroom LEVEL_1_2_SCOPE snapshot is missing and git HEAD does not contain tasks/LEVEL_1_2_SCOPE.md.",
+    );
+    return undefined;
+  }
+}
+
 function activeQueuedDrivers(rootPath, issues) {
   const scopePath = path.join(rootPath, "tasks/LEVEL_1_2_SCOPE.md");
   if (!fs.existsSync(scopePath)) {
     issues.push("tasks/LEVEL_1_2_SCOPE.md is missing.");
     return [];
   }
-  if (!fs.existsSync(SOURCE_SCOPE_SNAPSHOT_PATH)) {
-    issues.push("source cleanroom LEVEL_1_2_SCOPE snapshot is missing.");
-  } else {
+  const expectedScope = readExpectedScopeSnapshot(rootPath, issues);
+  if (expectedScope !== undefined) {
     const actualScope = fs.readFileSync(scopePath, "utf8");
-    const expectedScope = fs.readFileSync(SOURCE_SCOPE_SNAPSHOT_PATH, "utf8");
     if (actualScope !== expectedScope) {
       issues.push(
         "tasks/LEVEL_1_2_SCOPE.md must match the source-owned LEVEL_1_2_SCOPE snapshot; do not reorder the queue in target tasks.",

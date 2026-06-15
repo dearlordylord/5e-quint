@@ -82,6 +82,8 @@ any {{quintBindingName}} MBT/conformance tests in the target suite:
 {{verificationCommandsMarkdown}}
 
 Do not run source-repo commands. Use only the target-profile commands above.
+The copied harness acceptance command validates the machine-readable task
+artifacts and target replay evidence; a task is not accepted until it passes.
 
 ## MBT Conventions
 
@@ -89,6 +91,7 @@ Do not run source-repo commands. Use only the target-profile commands above.
 
 - Record harness-generated target replay evidence under
   `tasks/target-replay-evidence/`.
+- Match the exact JSON shape in `tasks/TARGET_REPLAY_EVIDENCE.example.json`.
 - Each replay evidence file must name `cleanroomManifestSourceCommitSha` from
   `cleanroom-input/MANIFEST.md`, `sourceBranchInventorySha256`, target profile
   id, and `targetProfileSha256` computed from canonical JSON with sorted keys.
