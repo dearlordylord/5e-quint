@@ -39,6 +39,12 @@
       "id": "L14G-03A-MONK-SLOW-FALL-RUNTIME",
       "status": "done",
       "title": "Promote Monk Slow Fall falling Reaction reduction"
+    },
+    {
+      "number": 7,
+      "id": "L14G-06-LEVEL4-REACHABLE-UNIT-FULL-AUDIT",
+      "status": "ready-for-implementation",
+      "title": "Audit every mechanically relevant level-4 reachable Unit"
     }
   ]
 }
@@ -82,10 +88,20 @@ The serial consolidation lane is also complete. Fresh checker write passes left
 the generated Unit-profile and rules-kernel coverage artifacts unchanged, and
 the generated gate outputs report no pass-blocking residuals for level 1-4.
 
+Post-consolidation breadth review reopened one planning question: a passing
+level-1-4 gate is not the same as proof that every SRD level-4-reachable
+mechanical Unit is authored, installed, supported, or correctly closed. The
+current generated report exposes a broader accounting surface: strict runtime
+support is `147/210`, strict target closure is `210/210`, candidate Unit ids
+before exclusions are `237`, SRD pressure with no Unit matrix row is `14`, and
+the non-supported frontier is `63`. `L14G-06` owns the full source-backed audit
+of those rows before any next golden-gate planning lanes are split.
+
 Completed scope-construction tasks were intentionally removed from the Ralph
-task index. The live queue now starts at `L14G-01`; the deleted completed work
-was the level-4 inventory scope, the level-1-4 strict full-support report, and
-the level-1-4 ultra-golden aggregate scope.
+task index. The live queue now starts at `L14G-01` plus the reopened `L14G-06`
+audit lane; the deleted completed work was the level-4 inventory scope, the
+level-1-4 strict full-support report, and the level-1-4 ultra-golden aggregate
+scope.
 
 ## Source Of Truth
 
@@ -102,8 +118,14 @@ Read these before starting a task in this queue:
 - `plans/unit-profile-coverage/mcp-scenario-evidence.json`
 - `plans/unit-profile-coverage/unit-claims.jsonl`
 - `plans/unit-profile-coverage/unit-evidence.jsonl`
+- `plans/unit-profile-coverage/unit-matrix.json`
+- `plans/unit-profile-coverage/UNIT_REPORT.md`
 - `plans/rules-kernel-coverage/REPORT.md`
+- `plans/LEVEL1_2_FULL_SUPPORT_BACKLOG.md`
 - `.references/srd-5.2.1/Classes/`
+- `.references/srd-5.2.1/Feats.md`
+- `.references/srd-5.2.1/Equipment.md`
+- `.references/srd-5.2.1/Character-Origins.md`
 - `UBIQUITOUS_LANGUAGE.md`
 
 For rule-bearing work, read the relevant local SRD anchors under
@@ -135,6 +157,7 @@ checks; the consolidation lane is serial after their outputs land.
 | C2 | `plans/RALPH_L14G_03_MONK_SLOW_FALL_TRIAGE.md` | L14G-03A-MONK-SLOW-FALL-RUNTIME | ~1 day | done | Promoted Slow Fall as a selected Monk falling Reaction damage-reduction slice without duplicating table/spatial falling state. |
 | D | `plans/RALPH_L14G_04_MCP_LEVEL14_SCENARIO_GATE.md` | L14G-04-MCP-LEVEL14-SCENARIO-GATE | ~1.5-2 days | done | Added MCP scenario evidence for level-4 advancement, sheet durability, and battle handoff. |
 | E | `plans/RALPH_L14G_05_GATE_CONSOLIDATION.md` | L14G-05-GATE-CONSOLIDATION | ~0.5 day | done | Serial lane after A-D regenerated coverage, reviewed residuals, and updated this plan. |
+| F | `plans/RALPH_L14G_06_LEVEL4_REACHABLE_UNIT_FULL_AUDIT.md` | L14G-06-LEVEL4-REACHABLE-UNIT-FULL-AUDIT | ~1-2 days | ready-for-implementation | Full audit lane reopened after gate consolidation. It must account for every level-4-reachable battle, character-state, game-mechanical, non-only-table-facing Unit or Unit-shaped fact before splitting next golden-gate lanes. |
 
 The per-lane files above are the Ralph launch sources for parallel runs. Each
 file has its own `ralph-task-index` block; completed research lanes may add
@@ -157,6 +180,7 @@ updates need to converge in one artifact.
 | L14G-03A-MONK-SLOW-FALL-RUNTIME | Author the missing Slow Fall Surface record/class grant, widen the existing reaction roll/damage-reduction support family with a fall-specific modifier, and add QNT/runtime/identity evidence. Keep the falling-into-liquid Reaction check out of scope unless a generic fall owner coordinates the shared Reaction resource. | Usually not needed; use spillover only for reviewer-loop fixes or focused MBT reproduction. |
 | L14G-04-MCP-LEVEL14-SCENARIO-GATE | Trace the existing MCP level-3 scenario pattern and design the level-4 advancement/ASI/sheet/handoff scenario using returned holes. | Implement the scenario, update MCP evidence manifest rows, regenerate the ultra-golden gate, and verify level-1 through level-1-3 evidence remains valid. |
 | L14G-05-GATE-CONSOLIDATION | Re-run all generated reports after lanes 1-4, inspect remaining level-1-4 residuals, update this plan, and close or split residual blockers. | Not expected. |
+| L14G-06-LEVEL4-REACHABLE-UNIT-FULL-AUDIT | Reconcile every level-4-reachable Unit or Unit-shaped mechanical fact against SRD anchors, Surface source, catalog admission, Unit matrix status, profile claims, selected-identity evidence, and owner boundaries. | Split concrete follow-up Ralph lanes for any authored-but-not-installed, no-matrix, unsupported-but-mechanical, diagnostic-readiness, feat-choice, spell-access, equipment, skill/proficiency, or character/battle-state residual. |
 
 ## DAG / Queue Order
 
@@ -168,6 +192,7 @@ updates need to converge in one artifact.
 | 4 | L14G-04-MCP-LEVEL14-SCENARIO-GATE | done | none | Checked MCP evidence added for all four level-1-4 required flows. |
 | 6 | L14G-03A-MONK-SLOW-FALL-RUNTIME | done | L14G-03 | Selected Monk falling Reaction damage-reduction slice implemented. |
 | 5 | L14G-05-GATE-CONSOLIDATION | done | Tasks 1-4 and L14G-03A | Generated coverage is fresh; level-1-4 ultra-golden remains pass with no pass-blocking residuals. |
+| 7 | L14G-06-LEVEL4-REACHABLE-UNIT-FULL-AUDIT | ready-for-implementation | L14G-05 | Full source-backed breadth audit before next golden-gate planning. |
 
 ## Task Details
 
@@ -332,6 +357,44 @@ Result:
   parity obligations; the remaining six rules-kernel rows are boundary or
   unsupported-by-admission rows, not open blockers.
 - No new Ralph follow-up lane was split from this consolidation pass.
+
+### Task 7 - L14G-06-LEVEL4-REACHABLE-UNIT-FULL-AUDIT
+
+Status: `ready-for-implementation`
+
+Depends on:
+
+- L14G-05-GATE-CONSOLIDATION
+
+Output:
+
+- Write
+  `plans/unit-profile-coverage/L14G_06_LEVEL4_REACHABLE_UNIT_FULL_AUDIT.md`.
+- Account for every Unit or Unit-shaped mechanical fact a character can carry,
+  select, prepare, equip, retain, project, or execute by character level 4.
+- Include all battle-related, character-state-related, game-mechanical, and
+  non-only-table-facing rows: class features, subclass features, feats, skills,
+  tools, languages, Weapon Mastery, Armor Training, spell-access facts,
+  reachable spell Units, equipment/loadout refs, species/background/origin feat
+  facts, companion exclusions, no-matrix pressure, and diagnostic readiness
+  rows.
+- Prove `none` for categories that level 4 does not actually advance, such as
+  new spell levels or new equipment identities, instead of omitting those
+  categories.
+- Split every real residual into concrete Ralph-formatted follow-up lanes.
+
+Acceptance:
+
+- The audit reconciles to the generated level-1-4 counts in
+  `level1-4-full-support.json` and `unit-matrix.json`.
+- Every row distinguishes Surface authoring, Unit catalog admission, Unit
+  matrix/profile classification, runtime support, selected-identity evidence,
+  and MCP/user-flow evidence.
+- Any pure table-facing exclusion names the table-owned fact and proves why no
+  character state, Character Sheet state, battle handoff state, battle runtime
+  state, or selected Unit identity evidence should own it.
+- The lane does not implement runtime/catalog work directly; it prepares
+  precise planning lanes for the next golden-gate pass.
 
 ## Verification
 
