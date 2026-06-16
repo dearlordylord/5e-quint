@@ -1819,6 +1819,27 @@ export const WeaponDamageDiceRerollMechanicsSchema = strictStruct({
   usageLimit: OncePerTurnUsageLimitSchema,
 });
 
+export const WeaponAttackDamageDieFloorTriggerSchema = strictStruct({
+  kind: Schema.Literal("attack_damage_roll"),
+  attackWeapon: strictStruct({
+    kind: Schema.Literal("melee_weapon_held_with_two_hands"),
+    propertyGate: Schema.Literal("two_handed_or_versatile"),
+  }),
+});
+
+export const WeaponAttackDamageDieFloorEffectSchema = strictStruct({
+  kind: Schema.Literal("floor_damage_die_results"),
+  dieScope: Schema.Literal("attack_damage_dice"),
+  minimumResult: Schema.Literal(3),
+});
+
+export const WeaponAttackDamageDieFloorMechanicsSchema = strictStruct({
+  family: Schema.Literal("damage_die_floor"),
+  optional: Schema.Literal(true),
+  trigger: WeaponAttackDamageDieFloorTriggerSchema,
+  effect: WeaponAttackDamageDieFloorEffectSchema,
+});
+
 export const MasteryOrWeaponDamageDiceRerollMechanicsSchema = Schema.Union(
   MasteryMechanicsSchema,
   WeaponDamageDiceRerollMechanicsSchema,
@@ -3411,6 +3432,7 @@ export const FeatMechanicsSchema = Schema.Union(
   PassiveMechanicsSchema,
   ActivatedAbilityMechanicsSchema,
   MasteryOrWeaponDamageDiceRerollMechanicsSchema,
+  WeaponAttackDamageDieFloorMechanicsSchema,
   TriggeredReplacementMechanicsSchema,
   strictStruct({
     family: Schema.Literal("grappler"),

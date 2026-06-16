@@ -25,7 +25,7 @@
     {
       "number": 4,
       "id": "L14G-B04-FEAT-GREAT-WEAPON-FIGHTING",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Research and plan Great Weapon Fighting feat ownership"
     },
     {
@@ -57,6 +57,12 @@
       "id": "L3-FOLLOWUP-GRAPPLER-RUNTIME",
       "status": "ready-for-research",
       "title": "Promote Grappler prerequisite and battle runtime support"
+    },
+    {
+      "number": 10,
+      "id": "L3-FOLLOWUP-GREAT-WEAPON-FIGHTING-RUNTIME",
+      "status": "ready-for-research",
+      "title": "Promote Great Weapon Fighting battle runtime support"
     }
   ]
 }
@@ -108,6 +114,7 @@ the Unit catalog, or the Unit matrix.
 | L14G-B07-SPECIES-HALFLING | L14G-06-LEVEL4-REACHABLE-UNIT-FULL-AUDIT | Missing level-4-reachable species identity. |
 | L14G-B08-SPECIES-HUMAN | L14G-06-LEVEL4-REACHABLE-UNIT-FULL-AUDIT, L14G-B01-FEAT-MAGIC-INITIATE-DRUID, L14G-B02-FEAT-SKILLED | Human Versatile references real Origin feat Units. |
 | L3-FOLLOWUP-GRAPPLER-RUNTIME | L14G-B03-FEAT-GRAPPLER | Runtime support consumes the typed Grappler Surface facts installed by Task 3. |
+| L3-FOLLOWUP-GREAT-WEAPON-FIGHTING-RUNTIME | L14G-B04-FEAT-GREAT-WEAPON-FIGHTING | Runtime support consumes the typed Great Weapon Fighting Surface facts installed by Task 4. |
 
 ## Verification Command Sets
 
@@ -245,7 +252,7 @@ Verification:
 
 ### Task 4 - L14G-B04-FEAT-GREAT-WEAPON-FIGHTING
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -257,21 +264,23 @@ SRD anchor: `.references/srd-5.2.1/Feats.md:103-107`
 
 Current state:
 
-- No Surface content row.
-- No Unit catalog row.
-- No Unit matrix row.
-- No per-die "1 or 2 becomes 3" damage profile is installed.
+- Surface content row installed as an SRD Fighting Style feat.
+- Unit catalog row installed.
+- Unit matrix row installed as `unsupported-profile`.
+- Typed per-die "1 or 2 becomes 3" attack damage floor facts installed.
+- No promoted battle runtime/QNT profile applies the floor to qualifying dice.
 
 Output:
 
-- Research the Fighting Style feat catalog identity and damage-die floor owner.
-- Identify QNT/runtime owners for qualifying two-handed/versatile melee attack
-  damage dice.
+- Installed the SRD Fighting Style feat with typed attack damage die floor
+  source facts.
+- Split qualifying weapon attack damage die floor runtime/QNT behavior into
+  `L3-FOLLOWUP-GREAT-WEAPON-FIGHTING-RUNTIME`.
 
 Acceptance:
 
-- The task either installs the SRD Fighting Style feat with a typed deferred
-  battle owner or splits a concrete runtime/QNT implementation task.
+- The Great Weapon Fighting Unit has a typed support boundary before runtime
+  behavior is claimed.
 - Damage dice are not flattened into stale derived damage state.
 
 Verification:
@@ -480,6 +489,57 @@ Verification:
 - RAW and ubiquitous-language check against the Grappler SRD anchor.
 - Character creation command set.
 - Focused battle tests/QNT/MBT only for implemented battle behavior.
+- `git diff --check`.
+
+### Task 10 - L3-FOLLOWUP-GREAT-WEAPON-FIGHTING-RUNTIME
+
+Status: `ready-for-research`
+
+Depends on:
+
+- L14G-B04-FEAT-GREAT-WEAPON-FIGHTING
+
+Unit: `feat_great_weapon_fighting`
+
+SRD anchor: `.references/srd-5.2.1/Feats.md:103-107`
+
+Current state:
+
+- Great Weapon Fighting is installed as an SRD Fighting Style feat with typed
+  per-die attack damage floor Surface facts.
+- The Unit matrix records `feat_great_weapon_fighting` as
+  `unsupported-profile`.
+- No promoted battle Unit profile or Quint parity owner applies the optional
+  floor to qualifying weapon damage dice.
+
+Output:
+
+- Research and implement the battle owner for Great Weapon Fighting's optional
+  per-die damage floor.
+- Consume existing attack weapon, held-with-two-hands, Melee weapon, and
+  Two-Handed-or-Versatile property facts.
+- Consume individual attack damage die results for the triggering attack and
+  apply the optional 1-or-2-to-3 floor before damage totals and target-side
+  damage adjustments.
+- Update focused QNT/rule-core slices only where runtime semantics change, then
+  promote the Unit claim to `supported-profile` or `profile-subset-supported`.
+
+Acceptance:
+
+- Qualifying and non-qualifying weapon attacks are covered by focused battle
+  tests.
+- Battle behavior uses individual attack damage dice and existing weapon facts
+  rather than storing a parallel derived damage total.
+- The Unit matrix claim names the admitted Great Weapon Fighting profile and
+  does not claim support for any unimplemented weapon/damage owner.
+
+Verification:
+
+- RAW and ubiquitous-language check against the Great Weapon Fighting SRD
+  anchor.
+- Focused battle tests/QNT/MBT only for implemented battle behavior, with at
+  most one focused MBT run after code changes are complete.
+- `pnpm --filter @dnd/battle-runtime typecheck`.
 - `git diff --check`.
 
 ## Verification

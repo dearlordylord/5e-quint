@@ -17,6 +17,7 @@ import type {
   SpeciesTraitRecord,
   TriggeredReactionAbilityMechanics,
   TriggeredReplacementMechanics,
+  WeaponAttackDamageDieFloorFeatMechanics,
 } from "../surface/types.ts";
 import type { Trace, TraceEdge, TraceNode } from "./tracer-model.ts";
 import { idGen } from "./tracer-rule-labels.ts";
@@ -199,16 +200,7 @@ export function traceFeatUnit(feat: FeatRecord): Trace {
     label: `feat_root\n${feat.name}\n(${feat.category})`,
   });
 
-  const procId =
-    feat.mechanics.family === "on_hit_trigger"
-      ? traceOnHitTriggerMechanics(feat.mechanics, nodes, edges, ids)
-      : feat.mechanics.family === "triggered_replacement"
-        ? traceTriggeredReplacementMechanics(feat.mechanics, nodes, edges, ids)
-        : feat.mechanics.family === "magic_initiate"
-          ? traceMagicInitiateMechanics(feat.mechanics, nodes, ids)
-          : feat.mechanics.family === "grappler"
-            ? traceGrapplerFeatMechanics(feat.mechanics, nodes, edges, ids)
-          : tracePassiveOrActivated(feat.mechanics, nodes, edges, ids);
+  const procId = traceFeatMechanics(feat.mechanics, nodes, edges, ids);
   edges.push({ from: rootId, to: procId, relation: "roots" });
 
   return {
@@ -218,6 +210,35 @@ export function traceFeatUnit(feat: FeatRecord): Trace {
     edges,
     atomKinds: [...new Set(nodes.map((n) => n.atomKind))].sort(),
   };
+}
+
+function traceFeatMechanics(
+  mechanics: FeatRecord["mechanics"],
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): string {
+  if (mechanics.family === "on_hit_trigger") {
+    return traceOnHitTriggerMechanics(mechanics, nodes, edges, ids);
+  }
+  if (mechanics.family === "triggered_replacement") {
+    return traceTriggeredReplacementMechanics(mechanics, nodes, edges, ids);
+  }
+  if (mechanics.family === "magic_initiate") {
+    return traceMagicInitiateMechanics(mechanics, nodes, ids);
+  }
+  if (mechanics.family === "grappler") {
+    return traceGrapplerFeatMechanics(mechanics, nodes, edges, ids);
+  }
+  if (mechanics.family === "damage_die_floor") {
+    return traceWeaponAttackDamageDieFloorMechanics(
+      mechanics,
+      nodes,
+      edges,
+      ids,
+    );
+  }
+  return tracePassiveOrActivated(mechanics, nodes, edges, ids);
 }
 
 function traceMagicInitiateMechanics(
@@ -285,6 +306,38 @@ function traceGrapplerFeatMechanics(
       mechanics.fastWrestler.targetSize,
   });
   edges.push({ from: procId, to: wrestlerId, relation: "includes" });
+
+  return procId;
+}
+
+function traceWeaponAttackDamageDieFloorMechanics(
+  mechanics: WeaponAttackDamageDieFloorFeatMechanics,
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): string {
+  const procId = ids("damage-floor");
+  nodes.push({
+    id: procId,
+    category: "procedure",
+    atomKind: "weapon_attack_damage_die_floor",
+    label:
+      `weapon_attack_damage_die_floor\n${mechanics.trigger.kind}\n` +
+      `${mechanics.trigger.attackWeapon.kind}\n` +
+      mechanics.trigger.attackWeapon.propertyGate,
+  });
+
+  const effectId = ids("die-floor");
+  nodes.push({
+    id: effectId,
+    category: "effect",
+    atomKind: mechanics.effect.kind,
+    label:
+      `${mechanics.effect.kind}\n${mechanics.effect.dieScope}\n` +
+      `minimum ${mechanics.effect.minimumResult}\n` +
+      (mechanics.optional ? "optional" : "required"),
+  });
+  edges.push({ from: procId, to: effectId, relation: "includes" });
 
   return procId;
 }

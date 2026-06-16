@@ -156,6 +156,7 @@ const requiredFirstVerticalUnitIds = [
   "feat_archery",
   "feat_boon_of_combat_prowess",
   "defense",
+  "feat_great_weapon_fighting",
   "feat_grappler",
   "feat_magic_initiate_cleric",
   "feat_magic_initiate_druid",
@@ -5965,6 +5966,44 @@ describe("SRD Unit catalog boundary", () => {
       provenance: {
         kind: "srd-5.2.1",
         section: "Feats.md:73-85",
+      },
+    });
+  });
+
+  test("authors Great Weapon Fighting as a Fighting Style feat with a typed damage die floor", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag !== "ok") return;
+
+    const greatWeaponFighting = result.catalog.requireUnit(
+      "feat_great_weapon_fighting",
+    );
+
+    expect(greatWeaponFighting).toMatchObject({
+      category: "fighting_style",
+      id: "feat_great_weapon_fighting",
+      kind: "feat",
+      mechanics: {
+        effect: {
+          dieScope: "attack_damage_dice",
+          kind: "floor_damage_die_results",
+          minimumResult: 3,
+        },
+        family: "damage_die_floor",
+        optional: true,
+        trigger: {
+          attackWeapon: {
+            kind: "melee_weapon_held_with_two_hands",
+            propertyGate: "two_handed_or_versatile",
+          },
+          kind: "attack_damage_roll",
+        },
+      },
+      name: "Great Weapon Fighting",
+      provenance: {
+        kind: "srd-5.2.1",
+        section: "Feats.md:103-107",
       },
     });
   });

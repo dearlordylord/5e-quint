@@ -674,6 +674,12 @@ export type AttackDamageRiderTrigger = Schema.Schema.Type<
 export type WeaponDamageDiceRerollTrigger = Schema.Schema.Type<
   typeof SurfaceSchema.WeaponDamageDiceRerollTriggerSchema
 >;
+export type WeaponAttackDamageDieFloorTrigger = Schema.Schema.Type<
+  typeof SurfaceSchema.WeaponAttackDamageDieFloorTriggerSchema
+>;
+export type WeaponAttackDamageDieFloorEffect = Schema.Schema.Type<
+  typeof SurfaceSchema.WeaponAttackDamageDieFloorEffectSchema
+>;
 export type SecondaryTargetSelection = Schema.Schema.Type<
   typeof SurfaceSchema.SecondaryTargetSelectionSchema
 >;
@@ -718,6 +724,9 @@ export type AttackDamageRiderMechanics = Schema.Schema.Type<
 >;
 export type WeaponDamageDiceRerollMechanics = Schema.Schema.Type<
   typeof SurfaceSchema.WeaponDamageDiceRerollMechanicsSchema
+>;
+export type WeaponAttackDamageDieFloorMechanics = Schema.Schema.Type<
+  typeof SurfaceSchema.WeaponAttackDamageDieFloorMechanicsSchema
 >;
 export type SapMasteryMechanics = Schema.Schema.Type<
   typeof SurfaceSchema.SapMasteryMechanicsSchema
@@ -879,6 +888,10 @@ export type MagicInitiateMechanics = Extract<
 export type GrapplerFeatMechanics = Extract<
   FeatMechanics,
   { readonly family: "grappler" }
+>;
+export type WeaponAttackDamageDieFloorFeatMechanics = Extract<
+  FeatMechanics,
+  { readonly family: "damage_die_floor" }
 >;
 export type FeatRecord = Schema.Schema.Type<
   typeof SurfaceSchema.FeatRecordSchema

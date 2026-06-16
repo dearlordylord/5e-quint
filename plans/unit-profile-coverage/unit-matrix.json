@@ -43,13 +43,13 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
-      "denominator": 429,
-      "numerator": 236,
-      "percent": "55%"
+      "denominator": 430,
+      "numerator": 237,
+      "percent": "55.1%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 514,
-      "numerator": 283,
+      "denominator": 515,
+      "numerator": 284,
       "percent": "55.1%"
     },
     "classicNonSrdExpressionGate": {
@@ -59,7 +59,7 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 284
+      "value": 285
     },
     "deterministicAdmissionProjectionCoverage": {
       "denominator": 177,
@@ -67,8 +67,8 @@
       "percent": "97.7%"
     },
     "profileClassificationCoverage": {
-      "denominator": 284,
-      "numerator": 284,
+      "denominator": 285,
+      "numerator": 285,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -112,9 +112,9 @@
       "percent": "100%"
     },
     "supportedProfileCoverage": {
-      "denominator": 237,
+      "denominator": 238,
       "numerator": 177,
-      "percent": "74.7%"
+      "percent": "74.4%"
     }
   },
   "metricSemantics": [
@@ -15744,8 +15744,8 @@
         "unsupportedOrOtherUnits": 4
       },
       {
-        "executableUnitDenominator": 11,
-        "installedUnitDenominator": 11,
+        "executableUnitDenominator": 12,
+        "installedUnitDenominator": 12,
         "kind": "feat",
         "label": "Feat Units",
         "profileFactDenominator": 6,
@@ -15755,7 +15755,7 @@
         "selectedIdentityReplayGapUnits": 0,
         "selectedIdentityReplayWitnessUnits": 5,
         "supportedProfileUnits": 6,
-        "unsupportedOrOtherUnits": 5
+        "unsupportedOrOtherUnits": 6
       },
       {
         "executableUnitDenominator": 128,
@@ -22189,6 +22189,33 @@
       ],
       "sourceRecordPath": "packages/surface/content/feat_defense.json",
       "unitId": "defense"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "followUpTasks": [
+          {
+            "id": "L3-FOLLOWUP-GREAT-WEAPON-FIGHTING-RUNTIME",
+            "mechanic": "Promote Great Weapon Fighting after the weapon attack damage pipeline carries individual attack damage die results for the triggering attack, consumes existing attack weapon and held-with-two-hands facts, gates the benefit to Melee weapons with the Two-Handed or Versatile property, and applies the optional 1-or-2-to-3 die floor before damage totals and target-side damage adjustments without storing a parallel derived damage total.",
+            "owner": "battle-runtime weapon attack damage-roll owner and focused Quint parity",
+            "requiredOutput": "Supported-profile or profile-subset-supported Great Weapon Fighting Unit claim with deterministic admission/projection tests, focused battle runtime tests for qualifying and non-qualifying damage dice, QNT/rule-core updates for the damage die floor semantics, and one focused MBT run only after battle behavior is implemented.",
+            "title": "Great Weapon Fighting Runtime"
+          }
+        ],
+        "reason": "Great Weapon Fighting is installed as a Fighting Style feat with typed per-die attack damage floor facts, but no promoted battle Unit profile or Quint parity owner applies the optional floor to qualifying weapon damage dice yet.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "feat",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/feat_great_weapon_fighting.json",
+      "unitId": "feat_great_weapon_fighting"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
