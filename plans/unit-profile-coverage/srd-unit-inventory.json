@@ -4406,7 +4406,7 @@
         "sourceRecordPath": "packages/surface/content/barbarian_ability_score_improvement_l4.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "barbarian_ability_score_improvement_l4"
       },
       "unitProfileDisposition": "unsupported-profile",
@@ -4417,7 +4417,18 @@
         "owner": "character-creation-runtime ability-score projection and selected feat Unit profiles",
         "reason": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim."
       },
-      "ownerEvidence": [],
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit barbarian_ability_score_improvement_l4 is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime ability-score projection and selected feat Unit profiles",
+          "evidence": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
+          "status": "catalog-only/dead-for-now closure"
+        }
+      ],
       "nextAction": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
       "battleReadinessStatus": "accepted-no-battle-effect"
     },

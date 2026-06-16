@@ -16,12 +16,14 @@ let barbarian =
       { armorTraining =
           { categories = [ "light", "medium", "shield" ], kind = "trained" }
       , className = "barbarian"
-      , description = "SRD Barbarian class creation facts for a level-1 character."
+      , description =
+          "SRD Barbarian class creation facts plus early progression through level 4."
       , featureGrants =
         [ { level = 1, unitId = "barbarian_rage" }
         , { level = 1, unitId = "barbarian_unarmored_defense" }
         , { level = 1, unitId = "barbarian_weapon_mastery" }
         , { level = 3, unitId = "barbarian_primal_knowledge" }
+        , { level = 4, unitId = "barbarian_ability_score_improvement_l4" }
         ]
       , hitPointDie = 12
       , id = "class_barbarian"
@@ -36,7 +38,9 @@ let barbarian =
       , name = "Barbarian"
       , primaryAbilities = { abilities = [ "str" ], kind = "all_of" }
       , provenance =
-        { kind = "srd-5.2.1", section = "Classes/Barbarian.md:3-25,35" }
+        { kind = "srd-5.2.1"
+        , section = "Classes/Barbarian.md:3-25,33-38,56-110"
+        }
       , savingThrowProficiencies = [ "str", "con" ]
       , skillProficiencyChoice =
         { choose = 2
