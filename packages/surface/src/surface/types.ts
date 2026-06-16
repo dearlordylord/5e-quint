@@ -893,6 +893,10 @@ export type WeaponAttackDamageDieFloorFeatMechanics = Extract<
   FeatMechanics,
   { readonly family: "damage_die_floor" }
 >;
+export type LightExtraAttackDamageAbilityModifierFeatMechanics = Extract<
+  FeatMechanics,
+  { readonly family: "light_extra_attack_damage_ability_modifier" }
+>;
 export type FeatRecord = Schema.Schema.Type<
   typeof SurfaceSchema.FeatRecordSchema
 >;

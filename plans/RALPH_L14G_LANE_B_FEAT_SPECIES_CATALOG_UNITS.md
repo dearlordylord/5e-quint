@@ -31,7 +31,7 @@
     {
       "number": 5,
       "id": "L14G-B05-FEAT-TWO-WEAPON-FIGHTING",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Research and plan Two-Weapon Fighting feat ownership"
     },
     {
@@ -63,6 +63,12 @@
       "id": "L3-FOLLOWUP-GREAT-WEAPON-FIGHTING-RUNTIME",
       "status": "ready-for-research",
       "title": "Promote Great Weapon Fighting battle runtime support"
+    },
+    {
+      "number": 11,
+      "id": "L3-FOLLOWUP-TWO-WEAPON-FIGHTING-RUNTIME",
+      "status": "ready-for-research",
+      "title": "Promote Two-Weapon Fighting battle runtime support"
     }
   ]
 }
@@ -115,6 +121,7 @@ the Unit catalog, or the Unit matrix.
 | L14G-B08-SPECIES-HUMAN | L14G-06-LEVEL4-REACHABLE-UNIT-FULL-AUDIT, L14G-B01-FEAT-MAGIC-INITIATE-DRUID, L14G-B02-FEAT-SKILLED | Human Versatile references real Origin feat Units. |
 | L3-FOLLOWUP-GRAPPLER-RUNTIME | L14G-B03-FEAT-GRAPPLER | Runtime support consumes the typed Grappler Surface facts installed by Task 3. |
 | L3-FOLLOWUP-GREAT-WEAPON-FIGHTING-RUNTIME | L14G-B04-FEAT-GREAT-WEAPON-FIGHTING | Runtime support consumes the typed Great Weapon Fighting Surface facts installed by Task 4. |
+| L3-FOLLOWUP-TWO-WEAPON-FIGHTING-RUNTIME | L14G-B05-FEAT-TWO-WEAPON-FIGHTING | Runtime support consumes the typed Two-Weapon Fighting Surface facts installed by Task 5. |
 
 ## Verification Command Sets
 
@@ -291,7 +298,7 @@ Verification:
 
 ### Task 5 - L14G-B05-FEAT-TWO-WEAPON-FIGHTING
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -303,17 +310,20 @@ SRD anchor: `.references/srd-5.2.1/Feats.md:109-113`
 
 Current state:
 
-- No Surface content row.
-- No Unit catalog row.
-- No Unit matrix row.
-- No Two-Weapon Fighting override profile is installed.
+- Surface content row installed as an SRD Fighting Style feat.
+- Unit catalog row installed.
+- Unit matrix row installed as `unsupported-profile`.
+- Typed Light-property extra attack damage ability modifier permission facts
+  installed.
+- No promoted battle runtime/QNT profile consumes selected feat support to
+  restore the ordinary positive ability modifier for that extra attack yet.
 
 Output:
 
-- Research the Fighting Style feat catalog identity and Light extra attack
-  damage owner.
-- Identify whether existing offhand/Light attack reducers can consume a typed
-  feat fact.
+- Installed the SRD Fighting Style feat with typed Light-property extra attack
+  damage ability modifier source facts.
+- Split selected Two-Weapon Fighting runtime/QNT behavior into
+  `L3-FOLLOWUP-TWO-WEAPON-FIGHTING-RUNTIME`.
 
 Acceptance:
 
@@ -537,6 +547,62 @@ Verification:
 
 - RAW and ubiquitous-language check against the Great Weapon Fighting SRD
   anchor.
+- Focused battle tests/QNT/MBT only for implemented battle behavior, with at
+  most one focused MBT run after code changes are complete.
+- `pnpm --filter @dnd/battle-runtime typecheck`.
+- `git diff --check`.
+
+### Task 11 - L3-FOLLOWUP-TWO-WEAPON-FIGHTING-RUNTIME
+
+Status: `ready-for-research`
+
+Depends on:
+
+- L14G-B05-FEAT-TWO-WEAPON-FIGHTING
+
+Unit: `feat_two_weapon_fighting`
+
+SRD anchor: `.references/srd-5.2.1/Feats.md:109-113`
+
+Current state:
+
+- Two-Weapon Fighting is installed as an SRD Fighting Style feat with typed
+  Light-property extra attack damage ability modifier permission Surface facts.
+- The Unit matrix records `feat_two_weapon_fighting` as
+  `unsupported-profile`.
+- The existing battle-runtime Light-property extra attack owner omits positive
+  ability modifiers and preserves negative modifiers by default.
+- No promoted battle Unit profile or Quint parity owner consumes selected
+  Two-Weapon Fighting support to restore the ordinary positive ability modifier
+  when the extra attack is not already adding it.
+
+Output:
+
+- Research and implement the battle owner for Two-Weapon Fighting's optional
+  Light-property extra attack damage ability modifier permission.
+- Consume selected feat support refs in the existing Light-property extra
+  attack owner.
+- Reuse existing attack ability and damage modifier facts; do not store
+  parallel feat-owned damage modifier state.
+- Preserve the default Light-property negative-modifier rule and only restore
+  the ordinary positive ability modifier when the extra attack is not already
+  adding it.
+- Update focused QNT/rule-core slices only where runtime semantics change, then
+  promote the Unit claim to `supported-profile` or `profile-subset-supported`.
+
+Acceptance:
+
+- Default Light-property extra attack damage, selected Two-Weapon Fighting
+  positive modifier restoration, already-adding, and negative-modifier cases are
+  covered by focused battle tests.
+- Battle behavior uses existing attack ability and damage modifier facts rather
+  than storing a parallel feat-owned damage modifier.
+- The Unit matrix claim names the admitted Two-Weapon Fighting profile and does
+  not claim support for any unimplemented selected-feat or damage owner.
+
+Verification:
+
+- RAW and ubiquitous-language check against the Two-Weapon Fighting SRD anchor.
 - Focused battle tests/QNT/MBT only for implemented battle behavior, with at
   most one focused MBT run after code changes are complete.
 - `pnpm --filter @dnd/battle-runtime typecheck`.

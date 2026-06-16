@@ -43,14 +43,14 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
-      "denominator": 430,
-      "numerator": 237,
-      "percent": "55.1%"
+      "denominator": 431,
+      "numerator": 238,
+      "percent": "55.2%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 515,
-      "numerator": 284,
-      "percent": "55.1%"
+      "denominator": 516,
+      "numerator": 285,
+      "percent": "55.2%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,7 +59,7 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 285
+      "value": 286
     },
     "deterministicAdmissionProjectionCoverage": {
       "denominator": 177,
@@ -67,8 +67,8 @@
       "percent": "97.7%"
     },
     "profileClassificationCoverage": {
-      "denominator": 285,
-      "numerator": 285,
+      "denominator": 286,
+      "numerator": 286,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -112,9 +112,9 @@
       "percent": "100%"
     },
     "supportedProfileCoverage": {
-      "denominator": 238,
+      "denominator": 239,
       "numerator": 177,
-      "percent": "74.4%"
+      "percent": "74.1%"
     }
   },
   "metricSemantics": [
@@ -15744,8 +15744,8 @@
         "unsupportedOrOtherUnits": 4
       },
       {
-        "executableUnitDenominator": 12,
-        "installedUnitDenominator": 12,
+        "executableUnitDenominator": 13,
+        "installedUnitDenominator": 13,
         "kind": "feat",
         "label": "Feat Units",
         "profileFactDenominator": 6,
@@ -15755,7 +15755,7 @@
         "selectedIdentityReplayGapUnits": 0,
         "selectedIdentityReplayWitnessUnits": 5,
         "supportedProfileUnits": 6,
-        "unsupportedOrOtherUnits": 6
+        "unsupportedOrOtherUnits": 7
       },
       {
         "executableUnitDenominator": 128,
@@ -22515,6 +22515,33 @@
       ],
       "sourceRecordPath": "packages/surface/content/feat_skilled.json",
       "unitId": "feat_skilled"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "followUpTasks": [
+          {
+            "id": "L3-FOLLOWUP-TWO-WEAPON-FIGHTING-RUNTIME",
+            "mechanic": "Promote Two-Weapon Fighting after the existing Light-property off-hand/extra attack owner consumes selected feat support refs and uses existing attack ability and damage modifier facts to allow the ordinary attack damage ability modifier only when the extra attack is not already adding it, while preserving the default negative-modifier rule and avoiding any parallel feat-owned damage modifier state.",
+            "owner": "battle-runtime Light-property extra attack damage owner and focused Quint parity",
+            "requiredOutput": "Supported-profile or profile-subset-supported Two-Weapon Fighting Unit claim with deterministic admission/projection tests, focused battle runtime tests for default Light extra attack damage, selected Two-Weapon Fighting positive modifier restoration, already-adding and negative-modifier cases, QNT/rule-core updates for the Light extra attack damage modifier semantics, and one focused MBT run only after battle behavior is implemented.",
+            "title": "Two-Weapon Fighting Runtime"
+          }
+        ],
+        "reason": "Two-Weapon Fighting is installed as a Fighting Style feat with a typed Light-property extra attack damage ability modifier permission fact, but no promoted battle Unit profile or Quint parity owner consumes selected feat support to restore the ordinary positive ability modifier for that extra attack yet.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "feat",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/feat_two_weapon_fighting.json",
+      "unitId": "feat_two_weapon_fighting"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

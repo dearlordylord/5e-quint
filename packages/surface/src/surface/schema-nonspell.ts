@@ -1840,6 +1840,27 @@ export const WeaponAttackDamageDieFloorMechanicsSchema = strictStruct({
   effect: WeaponAttackDamageDieFloorEffectSchema,
 });
 
+export const LightExtraAttackDamageAbilityModifierTriggerSchema = strictStruct({
+  kind: Schema.Literal("light_property_extra_attack_damage_roll"),
+  attackWeapon: strictStruct({
+    kind: Schema.Literal("weapon_with_light_property"),
+  }),
+});
+
+export const LightExtraAttackDamageAbilityModifierEffectSchema = strictStruct({
+  kind: Schema.Literal("permit_attack_damage_ability_modifier"),
+  modifierSource: Schema.Literal("attack_ability_modifier"),
+  appliesWhen: Schema.Literal("not_already_adding_ability_modifier"),
+});
+
+export const LightExtraAttackDamageAbilityModifierMechanicsSchema =
+  strictStruct({
+    family: Schema.Literal("light_extra_attack_damage_ability_modifier"),
+    optional: Schema.Literal(true),
+    trigger: LightExtraAttackDamageAbilityModifierTriggerSchema,
+    effect: LightExtraAttackDamageAbilityModifierEffectSchema,
+  });
+
 export const MasteryOrWeaponDamageDiceRerollMechanicsSchema = Schema.Union(
   MasteryMechanicsSchema,
   WeaponDamageDiceRerollMechanicsSchema,
@@ -3433,6 +3454,7 @@ export const FeatMechanicsSchema = Schema.Union(
   ActivatedAbilityMechanicsSchema,
   MasteryOrWeaponDamageDiceRerollMechanicsSchema,
   WeaponAttackDamageDieFloorMechanicsSchema,
+  LightExtraAttackDamageAbilityModifierMechanicsSchema,
   TriggeredReplacementMechanicsSchema,
   strictStruct({
     family: Schema.Literal("grappler"),

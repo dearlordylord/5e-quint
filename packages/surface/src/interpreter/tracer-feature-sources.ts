@@ -5,6 +5,7 @@ import type {
   FeatRecord,
   GrapplerFeatMechanics,
   ItemDestructionPolicy,
+  LightExtraAttackDamageAbilityModifierFeatMechanics,
   MagicItemAttunement,
   MagicItemAttunementRestriction,
   MagicItemMechanics,
@@ -238,6 +239,14 @@ function traceFeatMechanics(
       ids,
     );
   }
+  if (mechanics.family === "light_extra_attack_damage_ability_modifier") {
+    return traceLightExtraAttackDamageAbilityModifierMechanics(
+      mechanics,
+      nodes,
+      edges,
+      ids,
+    );
+  }
   return tracePassiveOrActivated(mechanics, nodes, edges, ids);
 }
 
@@ -335,6 +344,37 @@ function traceWeaponAttackDamageDieFloorMechanics(
     label:
       `${mechanics.effect.kind}\n${mechanics.effect.dieScope}\n` +
       `minimum ${mechanics.effect.minimumResult}\n` +
+      (mechanics.optional ? "optional" : "required"),
+  });
+  edges.push({ from: procId, to: effectId, relation: "includes" });
+
+  return procId;
+}
+
+function traceLightExtraAttackDamageAbilityModifierMechanics(
+  mechanics: LightExtraAttackDamageAbilityModifierFeatMechanics,
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): string {
+  const procId = ids("light-extra-attack-damage-modifier");
+  nodes.push({
+    id: procId,
+    category: "procedure",
+    atomKind: "light_extra_attack_damage_ability_modifier",
+    label:
+      `light_extra_attack_damage_ability_modifier\n${mechanics.trigger.kind}\n` +
+      mechanics.trigger.attackWeapon.kind,
+  });
+
+  const effectId = ids("damage-ability-modifier");
+  nodes.push({
+    id: effectId,
+    category: "effect",
+    atomKind: mechanics.effect.kind,
+    label:
+      `${mechanics.effect.kind}\n${mechanics.effect.modifierSource}\n` +
+      `${mechanics.effect.appliesWhen}\n` +
       (mechanics.optional ? "optional" : "required"),
   });
   edges.push({ from: procId, to: effectId, relation: "includes" });

@@ -163,6 +163,7 @@ const requiredFirstVerticalUnitIds = [
   "feat_magic_initiate_wizard",
   "feat_savage_attacker",
   "feat_skilled",
+  "feat_two_weapon_fighting",
   "mastery_cleave",
   "mastery_sap",
   "orc_adrenaline_rush",
@@ -6004,6 +6005,43 @@ describe("SRD Unit catalog boundary", () => {
       provenance: {
         kind: "srd-5.2.1",
         section: "Feats.md:103-107",
+      },
+    });
+  });
+
+  test("authors Two-Weapon Fighting as a Fighting Style feat with a typed Light extra attack damage modifier fact", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag !== "ok") return;
+
+    const twoWeaponFighting = result.catalog.requireUnit(
+      "feat_two_weapon_fighting",
+    );
+
+    expect(twoWeaponFighting).toMatchObject({
+      category: "fighting_style",
+      id: "feat_two_weapon_fighting",
+      kind: "feat",
+      mechanics: {
+        effect: {
+          appliesWhen: "not_already_adding_ability_modifier",
+          kind: "permit_attack_damage_ability_modifier",
+          modifierSource: "attack_ability_modifier",
+        },
+        family: "light_extra_attack_damage_ability_modifier",
+        optional: true,
+        trigger: {
+          attackWeapon: {
+            kind: "weapon_with_light_property",
+          },
+          kind: "light_property_extra_attack_damage_roll",
+        },
+      },
+      name: "Two-Weapon Fighting",
+      provenance: {
+        kind: "srd-5.2.1",
+        section: "Feats.md:109-113",
       },
     });
   });
