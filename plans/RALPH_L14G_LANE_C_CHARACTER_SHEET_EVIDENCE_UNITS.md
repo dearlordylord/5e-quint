@@ -49,7 +49,7 @@
     {
       "number": 8,
       "id": "L14G-C08-WARLOCK-MAGICAL-CUNNING-EVIDENCE",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Add checker-readable evidence for Warlock Magical Cunning"
     },
     {
@@ -363,7 +363,7 @@ Verification:
 
 ### Task 8 - L14G-C08-WARLOCK-MAGICAL-CUNNING-EVIDENCE
 
-Status: `ready-for-implementation`
+Status: `done`
 
 Depends on:
 
