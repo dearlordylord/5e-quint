@@ -7,43 +7,43 @@
     {
       "number": 1,
       "id": "L14G-C01-BARD-JACK-OF-ALL-TRADES-EVIDENCE",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Add checker-readable evidence for Bard Jack of All Trades"
     },
     {
       "number": 2,
       "id": "L14G-C02-CLERIC-LIFE-DOMAIN-SPELLS-EVIDENCE",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Add checker-readable evidence for Cleric Life Domain Spells"
     },
     {
       "number": 3,
       "id": "L14G-C03-DRUID-LAND-SPELLS-EVIDENCE",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Add checker-readable evidence for Druid Circle of the Land Spells"
     },
     {
       "number": 4,
       "id": "L14G-C04-MONK-UNCANNY-METABOLISM-EVIDENCE",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Add checker-readable evidence for Monk Uncanny Metabolism"
     },
     {
       "number": 5,
       "id": "L14G-C05-PALADIN-DEVOTION-SPELLS-EVIDENCE",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Add checker-readable evidence for Paladin Oath of Devotion Spells"
     },
     {
       "number": 6,
       "id": "L14G-C06-SORCERER-FONT-OF-MAGIC-EVIDENCE",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Add checker-readable evidence for Sorcerer Font of Magic"
     },
     {
       "number": 7,
       "id": "L14G-C07-SORCERER-DRACONIC-SPELLS-EVIDENCE",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Add checker-readable evidence for Sorcerer Draconic Spells"
     },
     {
@@ -55,7 +55,7 @@
     {
       "number": 9,
       "id": "L14G-C09-WARLOCK-FIEND-SPELLS-EVIDENCE",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Add checker-readable evidence for Warlock Fiend Spells"
     }
   ]
@@ -68,13 +68,20 @@ This lane is the per-Unit Character Sheet evidence lane for the level-4 Golden
 Gate tail.
 
 The pre-research found the runtime behavior is already present enough for these
-nine Units. The blocker is checker-readable evidence anchoring:
+nine Units. The initial blocker was checker-readable evidence anchoring:
 `plans/unit-profile-coverage/character-sheet-owner-evidence.json` already has
 rows, but several test references point at symbols imported from
-`packages/character-sheet-runtime/src/test-support.ts`. The inventory checker
-currently accepts only symbols declared directly in the referenced file, so the
-rows are filtered and the generated inventory still reports
+`packages/character-sheet-runtime/src/test-support.ts`. Before Task 1, the
+inventory checker accepted only symbols declared directly in the referenced
+file, so those rows were filtered and the generated inventory reported
 `owner-evidence-required`.
+
+Revision outcome: Task 1 repaired the shared Character Sheet evidence-reference
+checker so local imported test-name symbols resolve when the referenced test
+file uses them as `test()`/`it()` names. The regenerated inventory marks Tasks
+1-7 and 9 as `catalog-installed-owner-evidence-present` and `accepted`; Task 8
+remains open because its manifest `tests` references point at helper symbols
+rather than named test evidence.
 
 ## Source Artifacts
 
@@ -112,7 +119,7 @@ rows are filtered and the generated inventory still reports
 
 ### Task 1 - L14G-C01-BARD-JACK-OF-ALL-TRADES-EVIDENCE
 
-Status: `ready-for-implementation`
+Status: `done`
 
 Depends on:
 
@@ -147,7 +154,7 @@ Verification:
 
 ### Task 2 - L14G-C02-CLERIC-LIFE-DOMAIN-SPELLS-EVIDENCE
 
-Status: `ready-for-implementation`
+Status: `done`
 
 Depends on:
 
@@ -181,7 +188,7 @@ Verification:
 
 ### Task 3 - L14G-C03-DRUID-LAND-SPELLS-EVIDENCE
 
-Status: `ready-for-implementation`
+Status: `done`
 
 Depends on:
 
@@ -217,7 +224,7 @@ Verification:
 
 ### Task 4 - L14G-C04-MONK-UNCANNY-METABOLISM-EVIDENCE
 
-Status: `ready-for-implementation`
+Status: `done`
 
 Depends on:
 
@@ -252,7 +259,7 @@ Verification:
 
 ### Task 5 - L14G-C05-PALADIN-DEVOTION-SPELLS-EVIDENCE
 
-Status: `ready-for-implementation`
+Status: `done`
 
 Depends on:
 
@@ -286,7 +293,7 @@ Verification:
 
 ### Task 6 - L14G-C06-SORCERER-FONT-OF-MAGIC-EVIDENCE
 
-Status: `ready-for-implementation`
+Status: `done`
 
 Depends on:
 
@@ -322,7 +329,7 @@ Verification:
 
 ### Task 7 - L14G-C07-SORCERER-DRACONIC-SPELLS-EVIDENCE
 
-Status: `ready-for-implementation`
+Status: `done`
 
 Depends on:
 
@@ -392,7 +399,7 @@ Verification:
 
 ### Task 9 - L14G-C09-WARLOCK-FIEND-SPELLS-EVIDENCE
 
-Status: `ready-for-implementation`
+Status: `done`
 
 Depends on:
 

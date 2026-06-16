@@ -32,7 +32,10 @@ const {
   validateCoverageInputs,
   validateOwnerClaims,
 } = require("./unit-profile-coverage-validation.cjs");
-const { validateSrdUnitInventory } = require("./srd-unit-inventory.cjs");
+const {
+  characterSheetOwnerEvidenceReferenceIssues,
+  validateSrdUnitInventory,
+} = require("./srd-unit-inventory.cjs");
 const {
   buildUltraGoldenGate,
   renderUltraGoldenGate,
@@ -1818,6 +1821,64 @@ function runSelfTest(root) {
     if (!unreviewedLevelThreeSpellIssues.includes(levelThreeReviewExpected)) {
       fail(
         `Self-test failed: expected unreviewed level-3 spell issue ${JSON.stringify(levelThreeReviewExpected)}, got ${JSON.stringify(unreviewedLevelThreeSpellIssues)}`,
+      );
+    }
+    const characterSheetRuntimeFixtureDir = path.join(
+      tempDir,
+      "packages/character-sheet-runtime/src",
+    );
+    fs.mkdirSync(characterSheetRuntimeFixtureDir, { recursive: true });
+    fs.writeFileSync(
+      path.join(characterSheetRuntimeFixtureDir, "test-support.ts"),
+      [
+        'export const importedCharacterSheetOwnerTestName = "imported owner evidence test";',
+        "export function importedCharacterSheetOwnerHelper() { return true; }",
+        "",
+      ].join("\n"),
+    );
+    fs.writeFileSync(
+      path.join(characterSheetRuntimeFixtureDir, "imported-evidence.test.ts"),
+      [
+        'import { importedCharacterSheetOwnerHelper, importedCharacterSheetOwnerTestName } from "./test-support.ts";',
+        "",
+        "test(importedCharacterSheetOwnerTestName, () => {",
+        "  importedCharacterSheetOwnerHelper();",
+        "});",
+        "",
+      ].join("\n"),
+    );
+    const importedCharacterSheetEvidenceIssues =
+      characterSheetOwnerEvidenceReferenceIssues(
+        tempDir,
+        "fixture:character-sheet-imported-evidence",
+        {
+          tests: [
+            "packages/character-sheet-runtime/src/imported-evidence.test.ts:importedCharacterSheetOwnerTestName",
+          ],
+        },
+      );
+    if (importedCharacterSheetEvidenceIssues.length !== 0) {
+      fail(
+        `Self-test failed: expected imported Character Sheet owner evidence symbol to resolve, got ${JSON.stringify(importedCharacterSheetEvidenceIssues)}`,
+      );
+    }
+    const helperCharacterSheetEvidenceIssues =
+      characterSheetOwnerEvidenceReferenceIssues(
+        tempDir,
+        "fixture:character-sheet-helper-evidence",
+        {
+          tests: [
+            "packages/character-sheet-runtime/src/imported-evidence.test.ts:importedCharacterSheetOwnerHelper",
+          ],
+        },
+      );
+    if (
+      !helperCharacterSheetEvidenceIssues.includes(
+        "fixture:character-sheet-helper-evidence tests evidence reference must identify a test name symbol used by test()/it(): packages/character-sheet-runtime/src/imported-evidence.test.ts:importedCharacterSheetOwnerHelper",
+      )
+    ) {
+      fail(
+        `Self-test failed: expected imported Character Sheet helper not to count as test-name evidence, got ${JSON.stringify(helperCharacterSheetEvidenceIssues)}`,
       );
     }
     if (

@@ -2254,17 +2254,8 @@ function characterSheetOwnerEvidenceReferenceIssue(
   }
   const relativePath = reference.slice(0, separator);
   const symbolName = reference.slice(separator + 1);
-  const isCharacterSheetRuntimePath = relativePath.startsWith(
-    "packages/character-sheet-runtime/src/",
-  );
-  const isCharacterCreationRuntimePath = relativePath.startsWith(
-    "packages/character-creation-runtime/src/",
-  );
-  const isAllowedCharacterSheetEvidencePath =
-    isCharacterSheetRuntimePath ||
-    (kind === "runtimeProjection" && isCharacterCreationRuntimePath);
   if (
-    !isAllowedCharacterSheetEvidencePath ||
+    !isAllowedCharacterSheetEvidencePath(kind, relativePath) ||
     !relativePath.endsWith(".ts")
   ) {
     return [
@@ -2282,15 +2273,161 @@ function characterSheetOwnerEvidenceReferenceIssue(
       `${rowId} ${kind} evidence reference points to missing file: ${reference}`,
     ];
   }
+  if (
+    !characterSheetEvidenceSymbolExists(root, kind, relativePath, symbolName)
+  ) {
+    return [
+      `${rowId} ${kind} evidence reference points to missing symbol ${symbolName}: ${reference}`,
+    ];
+  }
+  if (
+    kind === "tests" &&
+    !characterSheetTestNameSymbolIsUsed(root, relativePath, symbolName)
+  ) {
+    return [
+      `${rowId} tests evidence reference must identify a test name symbol used by test()/it(): ${reference}`,
+    ];
+  }
+  return [];
+}
+
+function isAllowedCharacterSheetEvidencePath(kind, relativePath) {
+  const isCharacterSheetRuntimePath = relativePath.startsWith(
+    "packages/character-sheet-runtime/src/",
+  );
+  const isCharacterCreationRuntimePath = relativePath.startsWith(
+    "packages/character-creation-runtime/src/",
+  );
+  return (
+    isCharacterSheetRuntimePath ||
+    (kind === "runtimeProjection" && isCharacterCreationRuntimePath)
+  );
+}
+
+function characterSheetEvidenceSymbolExists(
+  root,
+  kind,
+  relativePath,
+  symbolName,
+  visited = new Set(),
+) {
+  const visitKey = `${relativePath}:${symbolName}`;
+  if (visited.has(visitKey)) return false;
+  visited.add(visitKey);
+
+  const absolutePath = path.join(root, relativePath);
+  if (!fs.existsSync(absolutePath)) return false;
   const content = fs.readFileSync(absolutePath, "utf8");
+  if (sourceDeclaresSymbol(content, symbolName)) return true;
+
+  for (const source of localNamedSymbolSources(content, symbolName)) {
+    const sourceRelativePath = resolveLocalEvidenceModule(
+      root,
+      relativePath,
+      source.moduleSpecifier,
+    );
+    if (
+      sourceRelativePath === undefined ||
+      !isAllowedCharacterSheetEvidencePath(kind, sourceRelativePath)
+    ) {
+      continue;
+    }
+    if (
+      characterSheetEvidenceSymbolExists(
+        root,
+        kind,
+        sourceRelativePath,
+        source.importedName,
+        visited,
+      )
+    ) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+function characterSheetTestNameSymbolIsUsed(root, relativePath, symbolName) {
+  const absolutePath = path.join(root, relativePath);
+  if (!fs.existsSync(absolutePath)) return false;
+  const content = fs.readFileSync(absolutePath, "utf8");
+  const testNamePattern = new RegExp(
+    `\\b(?:test|it)(?:\\s*\\.\\s*[A-Za-z_$][\\w$]*)*\\s*\\(\\s*${escapeRegExp(symbolName)}\\b`,
+  );
+  return testNamePattern.test(content);
+}
+
+function sourceDeclaresSymbol(content, symbolName) {
   const symbolPattern = new RegExp(
     `(?:^|\\n)\\s*(?:export\\s+)?(?:const|let|var|function|class|type|interface|enum)\\s+${escapeRegExp(symbolName)}\\b`,
   );
-  return symbolPattern.test(content)
-    ? []
-    : [
-        `${rowId} ${kind} evidence reference points to missing symbol ${symbolName}: ${reference}`,
-      ];
+  return symbolPattern.test(content);
+}
+
+function localNamedSymbolSources(content, symbolName) {
+  const sources = [];
+  for (const pattern of [
+    /\bimport\s*{([\s\S]*?)}\s*from\s*(["'])([^"']+)\2/g,
+    /\bexport\s*{([\s\S]*?)}\s*from\s*(["'])([^"']+)\2/g,
+  ]) {
+    let match = pattern.exec(content);
+    while (match !== null) {
+      const clause = match[1];
+      const moduleSpecifier = match[3];
+      for (const binding of namedSymbolBindings(clause)) {
+        if (binding.localName === symbolName) {
+          sources.push({
+            moduleSpecifier,
+            importedName: binding.importedName,
+          });
+        }
+      }
+      match = pattern.exec(content);
+    }
+  }
+  return sources;
+}
+
+function namedSymbolBindings(clause) {
+  return clause
+    .replace(/\/\*[\s\S]*?\*\//g, "")
+    .split(",")
+    .map((part) => part.trim())
+    .filter((part) => part.length > 0)
+    .map((part) => part.replace(/^type\s+/, "").trim())
+    .map((part) => {
+      const [importedName, localName] = part
+        .split(/\s+as\s+/)
+        .map((name) => name.trim());
+      return {
+        importedName,
+        localName: localName ?? importedName,
+      };
+    })
+    .filter(
+      (binding) =>
+        /^[A-Za-z_$][\w$]*$/.test(binding.importedName) &&
+        /^[A-Za-z_$][\w$]*$/.test(binding.localName),
+    );
+}
+
+function resolveLocalEvidenceModule(root, fromRelativePath, moduleSpecifier) {
+  if (!moduleSpecifier.startsWith(".")) return undefined;
+  const absoluteBase = path.resolve(
+    path.dirname(path.join(root, fromRelativePath)),
+    moduleSpecifier,
+  );
+  const candidates = path.extname(absoluteBase)
+    ? [absoluteBase]
+    : [`${absoluteBase}.ts`, path.join(absoluteBase, "index.ts")];
+  const absolutePath = candidates.find((candidate) => fs.existsSync(candidate));
+  if (absolutePath === undefined) return undefined;
+  const relativePath = path.relative(root, absolutePath);
+  if (relativePath.startsWith("..") || path.isAbsolute(relativePath)) {
+    return undefined;
+  }
+  return relativePath.split(path.sep).join("/");
 }
 
 function characterCreationOwnerEvidenceReferenceIssue(
@@ -4956,6 +5093,7 @@ function renderSrdUnitInventory(report) {
 
 module.exports = {
   buildSrdUnitInventory,
+  characterSheetOwnerEvidenceReferenceIssues,
   renderSrdUnitInventory,
   validateSrdUnitInventory,
 };
