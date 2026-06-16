@@ -184,9 +184,9 @@ Acceptance:
 Result:
 
 - Audit artifact: `plans/unit-profile-coverage/L14G_06_LEVEL4_REACHABLE_UNIT_FULL_AUDIT.md`.
-- Follow-up lanes split: L14G-07 through L14G-12.
-- `plans/ACTIVE_PLAN.md` now treats this lane as done and uses the new follow-up
-  lane files as the live queue.
+- Follow-up work split into four Ralph lane files with 29 per-Unit tasks.
+- `plans/ACTIVE_PLAN.md` now treats this lane as done and uses the four
+  per-Unit lane files as the live queue.
 
 Verification:
 

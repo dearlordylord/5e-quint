@@ -48,39 +48,27 @@
     },
     {
       "number": 8,
-      "id": "L14G-07-ASI-CATALOG-ADMISSION-RECONCILIATION",
+      "id": "L14G-LANE-A-ASI-CATALOG-ADMISSION-UNITS",
       "status": "ready-for-implementation",
-      "title": "Reconcile level-4 ASI catalog admission"
+      "title": "Run Lane A ASI catalog-admission Unit tasks"
     },
     {
       "number": 9,
-      "id": "L14G-08-LEVEL4-FEAT-CHOICE-CATALOG-DENOMINATOR",
+      "id": "L14G-LANE-B-FEAT-SPECIES-CATALOG-UNITS",
       "status": "ready-for-research",
-      "title": "Reconcile the level-4 feat-choice catalog denominator"
+      "title": "Run Lane B feat and species catalog Unit tasks"
     },
     {
       "number": 10,
-      "id": "L14G-09-CHARACTER-SHEET-OWNER-EVIDENCE-RECONCILIATION",
+      "id": "L14G-LANE-C-CHARACTER-SHEET-EVIDENCE-UNITS",
       "status": "ready-for-implementation",
-      "title": "Add checker-readable character-sheet owner evidence"
+      "title": "Run Lane C Character Sheet evidence Unit tasks"
     },
     {
       "number": 11,
-      "id": "L14G-10-PARTIAL-PROFILE-EVIDENCE-RECONCILIATION",
+      "id": "L14G-LANE-D-PARTIAL-PROFILE-PROJECTION-UNITS",
       "status": "ready-for-research",
-      "title": "Reconcile partial Unit profile evidence"
-    },
-    {
-      "number": 12,
-      "id": "L14G-11-ROGUE-SECOND-STORY-WORK-EVIDENCE",
-      "status": "ready-for-implementation",
-      "title": "Add Rogue Second-Story Work owner evidence"
-    },
-    {
-      "number": 13,
-      "id": "L14G-12-SRD-SPECIES-ORIGIN-FEAT-REACHABILITY",
-      "status": "ready-for-research",
-      "title": "Reconcile SRD species and origin feat reachability"
+      "title": "Run Lane D partial-profile and projection Unit tasks"
     }
   ]
 }
@@ -132,27 +120,21 @@ closure is `210/210`, candidate Unit ids before exclusions are `237`, SRD
 pressure with no Unit matrix row is `14`, and the non-supported frontier is
 `63`.
 
-The audit found no new pass-blocking generated gate failure, but it split six
-real follow-up lanes:
+The audit found no new pass-blocking generated gate failure. The follow-up work
+is now split into four Ralph launch files with one task per Unit, 29 tasks
+total:
 
-- `L14G-07`: reconcile the eight class-specific level-4 ASI records that are
-  authored pressure but not installed in the Unit catalog.
-- `L14G-08`: reconcile SRD feat-choice identities reachable or retained by
-  level 4 but missing from the current Surface/Unit denominator.
-- `L14G-09`: add checker-readable character-sheet owner evidence for nine
-  product-readiness diagnostic rows.
-- `L14G-10`: reconcile partial/profile-subset evidence for Wild Shape, Monk's
-  Focus, and Metamagic.
-- `L14G-11`: add owner evidence for Rogue Second-Story Work climb Speed and
-  jump substitution projections.
-- `L14G-12`: reconcile SRD species/origin feat reachability for the local SRD
-  species set and Human origin feat choice.
+- Lane A: 8 class-specific level-4 ASI catalog-admission Units, all
+  ready-for-implementation.
+- Lane B: 8 feat/species catalog Units, 1 ready-for-implementation and 7
+  ready-for-research.
+- Lane C: 9 Character Sheet evidence Units, all ready-for-implementation.
+- Lane D: 4 partial-profile/projection Units, 1 ready-for-implementation and 3
+  ready-for-research.
 
 Completed scope-construction tasks were intentionally removed from the Ralph
-task index. The live queue now starts at the follow-up lanes `L14G-07` through
-`L14G-12`; the deleted completed work was the level-4 inventory scope, the
-level-1-4 strict full-support report, and the level-1-4 ultra-golden aggregate
-scope.
+task index. The live queue is the four lane files listed below; this document
+is the coordination rollup, not the launch source for per-Unit agents.
 
 ## Source Of Truth
 
@@ -174,12 +156,10 @@ Read these before starting a task in this queue:
 - `plans/unit-profile-coverage/UNIT_REPORT.md`
 - `plans/rules-kernel-coverage/REPORT.md`
 - `plans/LEVEL1_2_FULL_SUPPORT_BACKLOG.md`
-- `plans/RALPH_L14G_07_ASI_CATALOG_ADMISSION_RECONCILIATION.md`
-- `plans/RALPH_L14G_08_LEVEL4_FEAT_CHOICE_CATALOG_DENOMINATOR.md`
-- `plans/RALPH_L14G_09_CHARACTER_SHEET_OWNER_EVIDENCE_RECONCILIATION.md`
-- `plans/RALPH_L14G_10_PARTIAL_PROFILE_EVIDENCE_RECONCILIATION.md`
-- `plans/RALPH_L14G_11_ROGUE_SECOND_STORY_WORK_EVIDENCE.md`
-- `plans/RALPH_L14G_12_SRD_SPECIES_ORIGIN_FEAT_REACHABILITY.md`
+- `plans/RALPH_L14G_LANE_A_ASI_CATALOG_ADMISSION_UNITS.md`
+- `plans/RALPH_L14G_LANE_B_FEAT_SPECIES_CATALOG_UNITS.md`
+- `plans/RALPH_L14G_LANE_C_CHARACTER_SHEET_EVIDENCE_UNITS.md`
+- `plans/RALPH_L14G_LANE_D_PARTIAL_PROFILE_PROJECTION_UNITS.md`
 - `.references/srd-5.2.1/Classes/`
 - `.references/srd-5.2.1/Feats.md`
 - `.references/srd-5.2.1/Equipment.md`
@@ -203,54 +183,36 @@ The level 1-4 gate uses the same four-layer ultra-golden shape as level 1-3:
 
 ## Parallel Ralph Lanes
 
-Use four parallel Ralph agents at most. The active implementation/research
-lanes are independent enough to launch together after normal branch-base
-checks; the consolidation lane is serial after their outputs land.
+Use four parallel Ralph agents at most. Each active lane file has its own
+`ralph-task-index` block and should be launched as a separate Ralph source.
+Agents should finish at least one task from their lane before taking the next
+task in that same lane.
 
 | Lane | Ralph source file | Task | Size | Status | Independence |
 | --- | --- | --- | ---: | --- | --- |
-| A | `plans/RALPH_L14G_01_ASI_CATALOG_SOURCE.md` | L14G-01-LEVEL4-ASI-CATALOG-SOURCE | ~1 day | done | Source/catalog lane added the missing Fighter, Paladin, and Warlock ASI records plus checker-readable closure evidence. |
-| B | `plans/RALPH_L14G_02_PROGRESSION_DELTA_AUDIT.md` | L14G-02-LEVEL4-PROGRESSION-DELTA-AUDIT | ~1 day | done | Audit lane found no new implementation follow-up; existing ASI and Slow Fall lanes remain the correct owners. |
-| C | `plans/RALPH_L14G_03_MONK_SLOW_FALL_TRIAGE.md` | L14G-03-MONK-SLOW-FALL-TRIAGE | ~1 day | done | RAW/domain decision lane for Slow Fall. It spawned the follow-up runtime slice below. |
-| C2 | `plans/RALPH_L14G_03_MONK_SLOW_FALL_TRIAGE.md` | L14G-03A-MONK-SLOW-FALL-RUNTIME | ~1 day | done | Promoted Slow Fall as a selected Monk falling Reaction damage-reduction slice without duplicating table/spatial falling state. |
-| D | `plans/RALPH_L14G_04_MCP_LEVEL14_SCENARIO_GATE.md` | L14G-04-MCP-LEVEL14-SCENARIO-GATE | ~1.5-2 days | done | Added MCP scenario evidence for level-4 advancement, sheet durability, and battle handoff. |
-| E | `plans/RALPH_L14G_05_GATE_CONSOLIDATION.md` | L14G-05-GATE-CONSOLIDATION | ~0.5 day | done | Serial lane after A-D regenerated coverage, reviewed residuals, and updated this plan. |
-| F | `plans/RALPH_L14G_06_LEVEL4_REACHABLE_UNIT_FULL_AUDIT.md` | L14G-06-LEVEL4-REACHABLE-UNIT-FULL-AUDIT | ~1-2 days | done | Full audit artifact added at `plans/unit-profile-coverage/L14G_06_LEVEL4_REACHABLE_UNIT_FULL_AUDIT.md`; it split concrete follow-up lanes G-L. |
-| G | `plans/RALPH_L14G_07_ASI_CATALOG_ADMISSION_RECONCILIATION.md` | L14G-07-ASI-CATALOG-ADMISSION-RECONCILIATION | ~0.5-1 day | ready-for-implementation | Catalog/admission lane for the eight class-specific level-4 ASI records that are authored pressure but not installed. |
-| H | `plans/RALPH_L14G_08_LEVEL4_FEAT_CHOICE_CATALOG_DENOMINATOR.md` | L14G-08-LEVEL4-FEAT-CHOICE-CATALOG-DENOMINATOR | ~1 day | ready-for-research | Feat denominator lane for missing SRD feat identities reachable or retained by level 4. Coordinates with G and L. |
-| I | `plans/RALPH_L14G_09_CHARACTER_SHEET_OWNER_EVIDENCE_RECONCILIATION.md` | L14G-09-CHARACTER-SHEET-OWNER-EVIDENCE-RECONCILIATION | ~1 day | ready-for-implementation | Character-sheet owner-evidence lane for nine product-readiness diagnostic rows. |
-| J | `plans/RALPH_L14G_10_PARTIAL_PROFILE_EVIDENCE_RECONCILIATION.md` | L14G-10-PARTIAL-PROFILE-EVIDENCE-RECONCILIATION | ~1 day | ready-for-research | Profile-subset reconciliation lane for Wild Shape, Monk's Focus, and Metamagic. |
-| K | `plans/RALPH_L14G_11_ROGUE_SECOND_STORY_WORK_EVIDENCE.md` | L14G-11-ROGUE-SECOND-STORY-WORK-EVIDENCE | ~0.5-1 day | ready-for-implementation | Character-sheet Speed/jump projection owner-evidence lane for Rogue Second-Story Work. |
-| L | `plans/RALPH_L14G_12_SRD_SPECIES_ORIGIN_FEAT_REACHABILITY.md` | L14G-12-SRD-SPECIES-ORIGIN-FEAT-REACHABILITY | ~1 day | ready-for-research | Species/origin feat denominator lane for missing SRD species reachability and Human origin feat choice. |
+| 1 | `plans/RALPH_L14G_LANE_A_ASI_CATALOG_ADMISSION_UNITS.md` | 8 ASI catalog-admission Unit tasks | ~1-2 days | ready-for-implementation | Strongly coupled by one selection-grant-container invariant; one generic fix may close multiple per-Unit tasks. |
+| 2 | `plans/RALPH_L14G_LANE_B_FEAT_SPECIES_CATALOG_UNITS.md` | 5 feat Units and 3 species Units | ~2 days | mixed | Catalog and character-creation research; Human depends conceptually on Magic Initiate Druid and Skilled. |
+| 3 | `plans/RALPH_L14G_LANE_C_CHARACTER_SHEET_EVIDENCE_UNITS.md` | 9 Character Sheet evidence Unit tasks | ~1-2 days | ready-for-implementation | Shared checker/evidence-reference fix may close multiple rows without adding runtime adapters. |
+| 4 | `plans/RALPH_L14G_LANE_D_PARTIAL_PROFILE_PROJECTION_UNITS.md` | 3 partial-profile Units and Rogue projection evidence | ~2 days | mixed | Profile-boundary research plus one implementation-ready projection evidence task. |
 
 The per-lane files above are the Ralph launch sources for parallel runs. Each
-file has its own `ralph-task-index` block; completed research lanes may add
-their own implementation follow-ups. This `ACTIVE_PLAN.md` remains the
+file has its own `ralph-task-index` block; research tasks may add their own
+smaller implementation follow-ups. This `ACTIVE_PLAN.md` remains the
 coordination rollup and serial fallback, not the recommended source for
 launching parallel agents.
 
 ## Work Shape
 
-The split is intentionally coarser than half-day tasks. ASI source records and
-claims stay together because splitting them would create checker churn without
-reducing risk. MCP stays one larger lane because scenario design and evidence
-updates need to converge in one artifact.
+Each lane is sized for about two days of forward work. Lanes run in parallel;
+tasks inside a lane are sequential only when a task depends on a shared
+research or checker fix from an earlier task in the same file.
 
-| Task | Day 1 | Day 2 |
+| Lane | Day 1 | Day 2 |
 | --- | --- | --- |
-| L14G-01-LEVEL4-ASI-CATALOG-SOURCE | Read existing ASI records/class records, author missing Fighter/Paladin/Warlock records, add class feature-grant refs, and add/update Unit claims. | Usually not needed; use spillover for regeneration, reviewer-loop fixes, and closing generated no-matrix rows. |
-| L14G-02-LEVEL4-PROGRESSION-DELTA-AUDIT | Extract level-3 to level-4 table deltas from all 12 local SRD class files and map each delta to an existing owner if one exists. | Usually not needed; use spillover to write the audit artifact and split uncovered deltas into concrete follow-up task rows. |
-| L14G-03-MONK-SLOW-FALL-TRIAGE | Completed: Slow Fall is a split between table-owned falling adjudication and promoted battle-runtime Reaction damage reduction. | Follow-up `L14G-03A-MONK-SLOW-FALL-RUNTIME` owns implementation. |
-| L14G-03A-MONK-SLOW-FALL-RUNTIME | Author the missing Slow Fall Surface record/class grant, widen the existing reaction roll/damage-reduction support family with a fall-specific modifier, and add QNT/runtime/identity evidence. Keep the falling-into-liquid Reaction check out of scope unless a generic fall owner coordinates the shared Reaction resource. | Usually not needed; use spillover only for reviewer-loop fixes or focused MBT reproduction. |
-| L14G-04-MCP-LEVEL14-SCENARIO-GATE | Trace the existing MCP level-3 scenario pattern and design the level-4 advancement/ASI/sheet/handoff scenario using returned holes. | Implement the scenario, update MCP evidence manifest rows, regenerate the ultra-golden gate, and verify level-1 through level-1-3 evidence remains valid. |
-| L14G-05-GATE-CONSOLIDATION | Re-run all generated reports after lanes 1-4, inspect remaining level-1-4 residuals, update this plan, and close or split residual blockers. | Not expected. |
-| L14G-06-LEVEL4-REACHABLE-UNIT-FULL-AUDIT | Completed: reconciled every generated level-1-4 candidate Unit id before exclusions and the retained level-4 character-fact surface. | Split L14G-07 through L14G-12. |
-| L14G-07-ASI-CATALOG-ADMISSION-RECONCILIATION | Reconcile eight not-installed class-specific level-4 ASI records against the Surface class records, Unit catalog, and checker admission model. | Regenerate unit-profile coverage and verify all twelve ASI rows are represented by one coherent selection-grant container shape. |
-| L14G-08-LEVEL4-FEAT-CHOICE-CATALOG-DENOMINATOR | Research the full SRD feat denominator reachable or retained by level 4, including origin, general, and Fighting Style feats. | Add implementation follow-ups or catalog work so generated coverage and character-creation feat choice agree. |
-| L14G-09-CHARACTER-SHEET-OWNER-EVIDENCE-RECONCILIATION | Add checker-readable owner evidence for character-sheet facts and spell-access projections named by the audit. | Regenerate unit-profile coverage and close owner-evidence-required product-readiness rows without adding battle reducers for sheet-only facts. |
-| L14G-10-PARTIAL-PROFILE-EVIDENCE-RECONCILIATION | Research the exact supported/profile-subset boundary for Wild Shape, Monk's Focus, and Metamagic. | Emit typed support splits or implementation lanes so the checker can represent supported subsets without prose exceptions. |
-| L14G-11-ROGUE-SECOND-STORY-WORK-EVIDENCE | Add checker-readable evidence for Climb Speed derived from Speed and Dexterity-based jump substitution. | Regenerate unit-profile coverage and verify no duplicated climb or jump-distance state is introduced. |
-| L14G-12-SRD-SPECIES-ORIGIN-FEAT-REACHABILITY | Research the local SRD species denominator and Human origin feat choice against current Surface/catalog coverage. | Add implementation follow-ups or catalog work so generated coverage can explain all included and excluded SRD species identities. |
+| Lane 1 - ASI catalog admission | Read the eight class anchors, inspect installed Fighter/Paladin/Warlock/Wizard ASI patterns, implement the shared class-grant/catalog admission fix, and close at least one per-Unit task explicitly. | Regenerate coverage, mark every closed sibling task in the lane file, and run the shared verifier. |
+| Lane 2 - feat/species catalog | Install Magic Initiate Druid if the existing Magic Initiate list model still fits, then research Skilled and Human together because Human's Versatile path needs real Origin feat identities. | Continue through Grappler, Fighting Style feats, Gnome, and Halfling; split any runtime-heavy battle behavior into smaller follow-up tasks instead of broad unsupported blobs. |
+| Lane 3 - Character Sheet evidence | Fix the shared checker/evidence-reference handling or direct evidence anchors, then close the first imported-symbol evidence row. | Apply the same evidence pattern across the remaining eight Unit rows, regenerate inventory, and avoid adding duplicate runtime adapters. |
+| Lane 4 - partial profile/projection | Research Wild Shape, Monk's Focus, and Metamagic support/deferred-owner boundaries, then implement Rogue Second-Story Work projection evidence if it is still isolated. | Emit checker-readable support splits or smaller implementation lanes for any partial-profile owner that cannot be safely closed in this lane. |
 
 ## DAG / Queue Order
 
@@ -262,13 +224,11 @@ updates need to converge in one artifact.
 | 4 | L14G-04-MCP-LEVEL14-SCENARIO-GATE | done | none | Checked MCP evidence added for all four level-1-4 required flows. |
 | 6 | L14G-03A-MONK-SLOW-FALL-RUNTIME | done | L14G-03 | Selected Monk falling Reaction damage-reduction slice implemented. |
 | 5 | L14G-05-GATE-CONSOLIDATION | done | Tasks 1-4 and L14G-03A | Generated coverage is fresh; level-1-4 ultra-golden remains pass with no pass-blocking residuals. |
-| 7 | L14G-06-LEVEL4-REACHABLE-UNIT-FULL-AUDIT | done | L14G-05 | Audit artifact added and concrete follow-up lanes split. |
-| 8 | L14G-07-ASI-CATALOG-ADMISSION-RECONCILIATION | ready-for-implementation | L14G-06 | Reconcile eight not-installed class-specific ASI records without per-class runtime behavior. |
-| 9 | L14G-08-LEVEL4-FEAT-CHOICE-CATALOG-DENOMINATOR | ready-for-research | L14G-06 | Reconcile missing SRD feat-choice identities; coordinate with L14G-07 and L14G-12. |
-| 10 | L14G-09-CHARACTER-SHEET-OWNER-EVIDENCE-RECONCILIATION | ready-for-implementation | L14G-06 | Add checker-readable evidence for nine character-sheet/spell-access diagnostic rows. |
-| 11 | L14G-10-PARTIAL-PROFILE-EVIDENCE-RECONCILIATION | ready-for-research | L14G-06 | Split partial support boundaries for Wild Shape, Monk's Focus, and Metamagic. |
-| 12 | L14G-11-ROGUE-SECOND-STORY-WORK-EVIDENCE | ready-for-implementation | L14G-06 | Add Speed/jump projection owner evidence. |
-| 13 | L14G-12-SRD-SPECIES-ORIGIN-FEAT-REACHABILITY | ready-for-research | L14G-06 | Reconcile missing SRD species and Human origin feat reachability; coordinate with L14G-08. |
+| 7 | L14G-06-LEVEL4-REACHABLE-UNIT-FULL-AUDIT | done | L14G-05 | Audit artifact added and 29 per-Unit follow-up tasks split into four lane files. |
+| 8 | L14G-LANE-A-ASI-CATALOG-ADMISSION-UNITS | ready-for-implementation | L14G-06 | Eight per-Unit ASI catalog-admission tasks. |
+| 9 | L14G-LANE-B-FEAT-SPECIES-CATALOG-UNITS | ready-for-research | L14G-06 | Eight per-Unit feat/species catalog tasks; Human depends conceptually on Magic Initiate Druid and Skilled. |
+| 10 | L14G-LANE-C-CHARACTER-SHEET-EVIDENCE-UNITS | ready-for-implementation | L14G-06 | Nine per-Unit Character Sheet evidence tasks. |
+| 11 | L14G-LANE-D-PARTIAL-PROFILE-PROJECTION-UNITS | ready-for-research | L14G-06 | Four per-Unit partial-profile/projection tasks. |
 
 ## Task Details
 
@@ -483,138 +443,23 @@ Result:
 - Closed `ranger_hunters_lore` as table/stat-block knowledge disclosure: do
   not duplicate creature Immunity, Resistance, or Vulnerability facts into
   Ranger feature state.
-- Split follow-up lanes L14G-07 through L14G-12 for every real residual found
-  by the audit.
+- Split every real residual found by the audit into 29 per-Unit Ralph tasks
+  across four lane files.
 
-### Task 8 - L14G-07-ASI-CATALOG-ADMISSION-RECONCILIATION
+### Active Lane Launch Files
 
-Status: `ready-for-implementation`
+These files are the launch sources for the remaining level-4 Golden Gate tail:
 
-Depends on:
+| Lane | File | Tasks | Status shape |
+| --- | --- | ---: | --- |
+| 1 | `plans/RALPH_L14G_LANE_A_ASI_CATALOG_ADMISSION_UNITS.md` | 8 | all ready-for-implementation |
+| 2 | `plans/RALPH_L14G_LANE_B_FEAT_SPECIES_CATALOG_UNITS.md` | 8 | 1 ready-for-implementation, 7 ready-for-research |
+| 3 | `plans/RALPH_L14G_LANE_C_CHARACTER_SHEET_EVIDENCE_UNITS.md` | 9 | all ready-for-implementation |
+| 4 | `plans/RALPH_L14G_LANE_D_PARTIAL_PROFILE_PROJECTION_UNITS.md` | 4 | 1 ready-for-implementation, 3 ready-for-research |
 
-- L14G-06-LEVEL4-REACHABLE-UNIT-FULL-AUDIT
-
-Output:
-
-- Reconcile Barbarian, Bard, Cleric, Druid, Monk, Ranger, Rogue, and Sorcerer
-  level-4 ASI records that are authored pressure but not installed in the Unit
-  catalog.
-- Either install all twelve class-specific ASI Unit identities as
-  selection-grant containers or remove duplicated class-specific identities in
-  favor of one canonical domain shape.
-
-Acceptance:
-
-- The catalog cannot expose an authored class-specific ASI row while omitting
-  its Unit admission without a typed reason.
-- Selected feats and Character Sheet projections own executable behavior; no
-  per-class ASI reducer is introduced.
-
-### Task 9 - L14G-08-LEVEL4-FEAT-CHOICE-CATALOG-DENOMINATOR
-
-Status: `ready-for-research`
-
-Depends on:
-
-- L14G-06-LEVEL4-REACHABLE-UNIT-FULL-AUDIT
-
-Output:
-
-- Reconcile SRD feat identities reachable or retained by level 4 that are not
-  currently detected in the Surface/Unit denominator: Magic Initiate (Druid),
-  Skilled, Grappler, Great Weapon Fighting, and Two-Weapon Fighting.
-- Keep Magic Initiate list choices as typed spell-access choices; do not
-  collapse Cleric, Druid, and Wizard list provenance into one authored id.
-
-Acceptance:
-
-- Generated coverage and character-creation feat choice agree on the SRD
-  level-4 feat denominator.
-- No PHB+ feat ids, names, examples, or page references are introduced.
-
-### Task 10 - L14G-09-CHARACTER-SHEET-OWNER-EVIDENCE-RECONCILIATION
-
-Status: `ready-for-implementation`
-
-Depends on:
-
-- L14G-06-LEVEL4-REACHABLE-UNIT-FULL-AUDIT
-
-Output:
-
-- Add checker-readable owner evidence for Bard Jack of All Trades, Cleric Life
-  Domain Spells, Druid Circle of the Land Spells, Monk Uncanny Metabolism,
-  Paladin Oath of Devotion Spells, Sorcerer Font of Magic, Sorcerer Draconic
-  Spells, Warlock Magical Cunning, and Warlock Fiend Spells.
-
-Acceptance:
-
-- Product-readiness diagnostics no longer report these rows as
-  `owner-evidence-required`.
-- No battle-runtime reducer is added for facts that are only Character Sheet or
-  selection facts.
-
-### Task 11 - L14G-10-PARTIAL-PROFILE-EVIDENCE-RECONCILIATION
-
-Status: `ready-for-research`
-
-Depends on:
-
-- L14G-06-LEVEL4-REACHABLE-UNIT-FULL-AUDIT
-
-Output:
-
-- Reconcile the supported subset and remaining owner boundary for Druid Wild
-  Shape, Monk Monk's Focus, and Sorcerer Metamagic.
-- Emit typed support splits or implementation follow-up lanes if the checker
-  cannot express the boundary from current evidence.
-
-Acceptance:
-
-- Product-readiness diagnostics no longer report ambiguous partial support.
-- Existing battle support remains parity-aligned with active QNT slices where
-  battle behavior exists.
-
-### Task 12 - L14G-11-ROGUE-SECOND-STORY-WORK-EVIDENCE
-
-Status: `ready-for-implementation`
-
-Depends on:
-
-- L14G-06-LEVEL4-REACHABLE-UNIT-FULL-AUDIT
-
-Output:
-
-- Add checker-readable evidence for Rogue Second-Story Work's Climb Speed equal
-  to Speed and Dexterity-based jump-distance substitution.
-
-Acceptance:
-
-- `rogue_second_story_work` no longer appears as owner-evidence-required.
-- Climb Speed and jump distance are derived projections, not duplicated stored
-  values beside base Speed and Ability Score facts.
-
-### Task 13 - L14G-12-SRD-SPECIES-ORIGIN-FEAT-REACHABILITY
-
-Status: `ready-for-research`
-
-Depends on:
-
-- L14G-06-LEVEL4-REACHABLE-UNIT-FULL-AUDIT
-
-Output:
-
-- Reconcile local SRD species reachability for Dragonborn, Dwarf, Elf, Gnome,
-  Goliath, Halfling, Human, Orc, and Tiefling against current Surface/catalog
-  coverage.
-- Coordinate Human Origin feat choice with the feat denominator owned by
-  L14G-08.
-
-Acceptance:
-
-- Generated coverage can explain included and excluded SRD species identities
-  without a prose-only omission list.
-- Missing species do not create silent gaps in retained level-4 character facts.
+Each lane file carries the unit ids, source anchors, acceptance criteria,
+verification commands, and Ralph task statuses. Launch agents from these four
+lane files only.
 
 ## Verification
 
