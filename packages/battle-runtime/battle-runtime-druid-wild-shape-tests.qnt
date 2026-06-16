@@ -37,6 +37,26 @@ module battleRuntimeDruidWildShapeTests {
     }
   }
 
+  run test_druid_wild_shape_beast_spells_admits_permitted_material_invocations = {
+    val state = assumeForm(initialProjection, largeFastFormFacts)
+    all {
+      assert(canCastSpells(state) == false),
+      assert(druidWildShapeAllowsSpellInvocation(state, 17, DruidWildShapeNoMaterialComponent) == false),
+      assert(druidWildShapeAllowsSpellInvocation(state, 18, DruidWildShapeNoMaterialComponent) == true),
+      assert(druidWildShapeAllowsSpellInvocation(state, 18, DruidWildShapeFocusReplaceableMaterialComponent) == true),
+      assert(druidWildShapeAllowsSpellInvocation(initialProjection, 2, DruidWildShapeConsumedPricedMaterialComponent) == true),
+    }
+  }
+
+  run test_druid_wild_shape_beast_spells_rejects_costed_or_consumed_material_invocations = {
+    val state = assumeForm(initialProjection, largeFastFormFacts)
+    all {
+      assert(druidWildShapeAllowsSpellInvocation(state, 18, DruidWildShapePricedMaterialComponent) == false),
+      assert(druidWildShapeAllowsSpellInvocation(state, 18, DruidWildShapeConsumedMaterialComponent) == false),
+      assert(druidWildShapeAllowsSpellInvocation(state, 18, DruidWildShapeConsumedPricedMaterialComponent) == false),
+    }
+  }
+
   run test_druid_wild_shape_worn_weapon_requires_form_object_handling = {
     val canHandle = assumeFormWithEquipmentAndObjectHandling(
       initialProjection,

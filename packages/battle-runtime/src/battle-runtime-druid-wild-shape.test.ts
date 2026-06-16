@@ -1,6 +1,7 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.druid-wild-shape-known-form
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.WILD_SHAPE_FORM_LIFECYCLE
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-DRUID-WILD-SHAPE-D20-STAT-PROJECTION druid_wild_shape
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-DRUID-WILD-SHAPE-BEAST-SPELLS-CASTING druid_wild_shape
 import {
   armorClassDelta,
   defaultArmorClassState,
@@ -8,7 +9,7 @@ import {
 } from "@dnd/shared-algebras/armor-class-algebra";
 import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
 import { abilityModifier, attackBonus, ClassLevel } from "@dnd/shared/types";
-import type { StatBlockRecord } from "@dnd/surface/surface/types";
+import type { SpellRecord, StatBlockRecord } from "@dnd/surface/surface/types";
 import { Schema } from "effect";
 import * as Either from "effect/Either";
 import { expect, test } from "vitest";
@@ -64,6 +65,7 @@ import {
   unitLibrary,
   wizardSpellcasting,
 } from "./battle-runtime-test-support.ts";
+import { DRUID_BEAST_SPELLS_CLASS_LEVEL } from "./unit-feature-support.ts";
 
 const druidId = combatantId("wild-shape-druid");
 const ratId = "stat_block_rat";
@@ -1565,27 +1567,79 @@ test("shape-shift reversion reports a missing combatant distinctly", () => {
   });
 });
 
-test("rejects level 18 Wild Shape until Beast Spells is modeled", () => {
-  const result = startBattle({
-    battleId: battleId("battle-druid-wild-shape-level-18"),
-    combatants: [
-      characterSeed({
-        combatantId: druidId,
-        displayName: "Druid",
-        initiative: 20,
-        classLevels: [{ className: "druid", level: 18 }],
-        resources: [{ unit: unitLibrary.requireUnit("druid_wild_shape") }],
-      }),
-      statBlockCreatureInit({ initiative: 10 }),
-    ],
+test("Wild Shape blocks spell invocation before Beast Spells", () => {
+  const initial = druidWildShapeBattle({
+    druidLevel: DRUID_BEAST_SPELLS_CLASS_LEVEL - 1,
+    preparedSpells: [spellRecord("cure_wounds")],
   });
+  const assumed = requireResolved(
+    resolveDruidWildShapeWithoutLoadoutEquipment(
+      initial,
+      wildShapeSubject(initial, {
+        action: "assumeForm",
+        formStatBlockId: catId,
+      }),
+    ),
+  );
 
-  expect(Either.isLeft(result)).toBe(true);
-  if (Either.isLeft(result)) {
-    expect(result.left.message).toBe(
-      "Druid Wild Shape level 18+ requires Beast Spells support before battle initialization.",
-    );
-  }
+  expect(hasActionSpell(assumed.state, "cure_wounds")).toBe(false);
+});
+
+test("Beast Spells admits no-Material spell invocation while Wild Shape is active", () => {
+  const initial = druidWildShapeBattle({
+    druidLevel: DRUID_BEAST_SPELLS_CLASS_LEVEL,
+    preparedSpells: [spellRecord("cure_wounds")],
+  });
+  const assumed = requireResolved(
+    resolveDruidWildShapeWithoutLoadoutEquipment(
+      initial,
+      wildShapeSubject(initial, {
+        action: "assumeForm",
+        formStatBlockId: catId,
+      }),
+    ),
+  );
+
+  expect(hasActionSpell(assumed.state, "cure_wounds")).toBe(true);
+});
+
+test("Beast Spells admits focus-replaceable Material spell invocation while Wild Shape is active", () => {
+  const initial = druidWildShapeBattle({
+    druidLevel: DRUID_BEAST_SPELLS_CLASS_LEVEL,
+    preparedSpells: [spellRecord("animal_friendship")],
+    targetStatBlock: statBlockCatalog.requireStatBlock(catId),
+  });
+  const assumed = requireResolved(
+    resolveDruidWildShapeWithoutLoadoutEquipment(
+      initial,
+      wildShapeSubject(initial, {
+        action: "assumeForm",
+        formStatBlockId: catId,
+      }),
+    ),
+  );
+
+  expect(hasActionSpell(assumed.state, "animal_friendship")).toBe(true);
+});
+
+test("Beast Spells rejects priced or consumed Material spells while Wild Shape is active", () => {
+  const initial = druidWildShapeBattle({
+    druidLevel: DRUID_BEAST_SPELLS_CLASS_LEVEL,
+    preparedSpells: [spellRecord("cure_wounds"), spellRecord("continual_flame")],
+    spellSlots: [{ spellLevel: 2, count: 2 }],
+  });
+  const assumed = requireResolved(
+    resolveDruidWildShapeWithoutLoadoutEquipment(
+      initial,
+      wildShapeSubject(initial, {
+        action: "assumeForm",
+        formStatBlockId: catId,
+      }),
+    ),
+  );
+
+  expect(hasActionSpell(assumed.state, "cure_wounds")).toBe(true);
+  expect(hasActionSpell(assumed.state, "continual_flame")).toBe(false);
 });
 
 test("rounds odd-level duration down through the general division rule", () => {
@@ -1612,13 +1666,24 @@ function druidWildShapeBattle(input?: {
   readonly offHandAttack?: CharacterBattleCreatureState["origin"]["offHandAttack"];
   readonly d20Statistics?: CharacterBattleD20Statistics;
   readonly knownForms?: readonly StatBlockRecord[];
+  readonly preparedSpells?: readonly SpellRecord[];
   readonly selectedLoadout?: CharacterBattleCreatureState["origin"]["selectedLoadout"];
+  readonly spellSlots?: readonly {
+    readonly spellLevel: 1 | 2 | 3 | 4 | 5;
+    readonly count: number;
+  }[];
+  readonly targetStatBlock?: StatBlockRecord;
 }): BattleState {
   return startBattleRight({
     battleId: battleId("battle-druid-wild-shape"),
     combatants: [
       druidWildShapeCreatureInit(input),
-      statBlockCreatureInit({ initiative: 10 }),
+      statBlockCreatureInit({
+        initiative: 10,
+        ...(input?.targetStatBlock === undefined
+          ? {}
+          : { statBlock: input.targetStatBlock }),
+      }),
     ],
   });
 }
@@ -1630,7 +1695,12 @@ function druidWildShapeCreatureInit(input?: {
   readonly offHandAttack?: CharacterBattleCreatureState["origin"]["offHandAttack"];
   readonly d20Statistics?: CharacterBattleD20Statistics;
   readonly knownForms?: readonly StatBlockRecord[];
+  readonly preparedSpells?: readonly SpellRecord[];
   readonly selectedLoadout?: CharacterBattleCreatureState["origin"]["selectedLoadout"];
+  readonly spellSlots?: readonly {
+    readonly spellLevel: 1 | 2 | 3 | 4 | 5;
+    readonly count: number;
+  }[];
 }) {
   return characterSeed({
     combatantId: druidId,
@@ -1654,11 +1724,22 @@ function druidWildShapeCreatureInit(input?: {
     spellcasting: {
       ...wizardSpellcasting({
         cantrips: [spellRecord("produce_flame")],
-        preparedSpells: [spellRecord("cure_wounds")],
+        preparedSpells: input?.preparedSpells ?? [spellRecord("cure_wounds")],
+        ...(input?.spellSlots === undefined
+          ? {}
+          : { spellSlots: input.spellSlots }),
       }),
       sourceClassName: "druid",
     },
   });
+}
+
+function hasActionSpell(state: BattleState, spellId: string): boolean {
+  return discoverBattleActs(state).some(
+    (act) =>
+      act.subject.tag === "actionSpell" &&
+      act.subject.invocation.spellId === spellId,
+  );
 }
 
 function weakTrueFormLongswordAttack(): NonNullable<

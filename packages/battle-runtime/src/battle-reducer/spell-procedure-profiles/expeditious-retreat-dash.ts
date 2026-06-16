@@ -19,7 +19,7 @@ import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
 import {
-  activeOngoingFeaturesPreventSpellcasting,
+  activeOngoingFeaturesPreventSpellInvocation,
   maybeOpenInterruptWindow,
   snapshotBattle,
   type AvailableBattleAct,
@@ -229,7 +229,7 @@ function resolveExpeditiousRetreatDash(
       "Expeditious Retreat Dash speed kind is not represented for this combatant.",
     );
   }
-  if (activeOngoingFeaturesPreventSpellcasting(actor)) {
+  if (activeOngoingFeaturesPreventSpellInvocation(actor, input.invocation)) {
     return invalidResult(
       input.input.state,
       "staleSubject",

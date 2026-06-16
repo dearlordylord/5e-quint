@@ -16,6 +16,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3PUTB-07-RANGER-HUNTERS-PREY-RUNTIME ranger_hunters_prey
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3MSPEC-06-DWARVEN-RESILIENCE-SAVE-MODE dwarf_dwarven_resilience
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-DRUID-WILD-SHAPE-SENSE-LANGUAGE-PROJECTION druid_wild_shape
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-DRUID-WILD-SHAPE-BEAST-SPELLS-CASTING druid_wild_shape
 import type {
   BattleFill,
   BattleCreatureState,
@@ -1258,7 +1259,7 @@ describe("Character Sheet battle handoff", () => {
     );
   });
 
-  test("does not project Wild Shape Unit-ref support at Beast Spells levels", () => {
+  test("projects Wild Shape Unit-ref support at Beast Spells levels", () => {
     const refs = expectRight(
       characterUnitRefsWithBattleSupportProfiles(
         druidWildShapeBuildAtLevel(18),
@@ -1271,13 +1272,12 @@ describe("Character Sheet battle handoff", () => {
       (candidate) => candidate.unitId === "druid_wild_shape",
     );
 
-    expect(
-      wildShapeRef?.supportProfiles.some(
-        (profile) =>
-          typeof profile === "object" &&
-          profile.kind === "druidWildShapeKnownForm",
-      ),
-    ).toBe(false);
+    expect(wildShapeRef?.supportProfiles).toContainEqual(
+      expect.objectContaining({
+        classLevel: 18,
+        kind: "druidWildShapeKnownForm",
+      }),
+    );
   });
 
   test("projects retained Hunter's Prey selected option into battle Unit refs", () => {

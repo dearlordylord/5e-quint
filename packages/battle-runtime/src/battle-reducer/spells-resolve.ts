@@ -54,7 +54,7 @@ import { Either } from "effect";
 import {
   ATTACK_ROLL_HOLE_ID,
   ATTACK_TARGET_HOLE_ID,
-  activeOngoingFeaturesPreventSpellcasting,
+  activeOngoingFeaturesPreventSpellInvocation,
   attackRollIsCriticalHit,
   maybeOpenInterruptWindow,
   snapshotBattle,
@@ -740,7 +740,7 @@ function resolveSpellActInternal(
   if (
     !spiritualWeaponCommitAlreadyApplied &&
     spellInvocationIsSpellcasting(invocation) &&
-    activeOngoingFeaturesPreventSpellcasting(actor)
+    activeOngoingFeaturesPreventSpellInvocation(actor, invocation)
   ) {
     return invalidResult(
       input.state,
@@ -3012,7 +3012,7 @@ export function resolveBonusActionSpellAct(
   if (
     !spiritualWeaponCommitAlreadyApplied &&
     spellInvocationIsSpellcasting(invocation) &&
-    activeOngoingFeaturesPreventSpellcasting(actor)
+    activeOngoingFeaturesPreventSpellInvocation(actor, invocation)
   ) {
     return invalidResult(
       input.state,

@@ -287,7 +287,7 @@ import type {
 import {
   INTERRUPT_DECISION_HOLE_ID,
   INTERRUPT_DECISION_HOLE_INSTANCE,
-  activeOngoingFeaturesPreventSpellcasting,
+  activeOngoingFeaturesPreventSpellInvocation,
   applyBattleMovement,
   commandPendingEffectsForActor,
   currentActorHasOpenStatBlockMultiattackDispatch,
@@ -2883,7 +2883,7 @@ export function resolveCastTriggeredReactionSpellCommand(
       "Triggered Reaction spell no longer has its required runtime spell resource.",
     );
   }
-  if (activeOngoingFeaturesPreventSpellcasting(reactor)) {
+  if (activeOngoingFeaturesPreventSpellInvocation(reactor, invocation)) {
     return invalidResult(
       input.state,
       "staleSubject",
@@ -3570,7 +3570,7 @@ export function resolveCastAttackHitBonusActionSpellCommand(
       "Attack-hit Bonus Action spell is not available for this hit.",
     );
   }
-  if (activeOngoingFeaturesPreventSpellcasting(actor)) {
+  if (activeOngoingFeaturesPreventSpellInvocation(actor, invocation)) {
     return invalidResult(
       input.state,
       "staleSubject",
@@ -5217,7 +5217,6 @@ export function attackHitBonusActionSpellReactionChoices(
     target === undefined ||
     !combatantCanTakeActions(actor) ||
     !state.currentTurnResources.currentHasBonusAction ||
-    activeOngoingFeaturesPreventSpellcasting(actor) ||
     combatantInsideActiveAntimagicFieldAura(state, frame.attackerId)
   ) {
     return [];

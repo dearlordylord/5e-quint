@@ -539,11 +539,12 @@ export {
   triggeredReactionSpellTurnResourceAvailable,
 } from "./battle-reducer/reaction-triggered-spells.ts";
 export {
-  activeOngoingFeaturesPreventSpellcasting,
+  activeOngoingFeaturesPreventSpellInvocation,
   damageSpellSource,
   isPreparedDamageSpellSource,
   isScalarBuffTargetListInvocation,
   isTargetListSpellInvocation,
+  spellDefinitionHasPricedOrConsumedMaterialComponent,
 } from "./battle-reducer/spells-invocation-guards.ts";
 export {
   activeFeatherFallDescentRateCapFeetPerRound,

@@ -1,5 +1,4 @@
 import {
-  activeOngoingFeaturesPreventSpellcasting,
   type BattleState,
   type SupportedSpellInvocation,
 } from "../battle-reducer.ts";
@@ -32,7 +31,6 @@ export function counterspellCapableReactors(
       if (
         combatant.origin.kind !== "character" ||
         !combatantCanTakeReactions(combatant) ||
-        activeOngoingFeaturesPreventSpellcasting(combatant) ||
         combatantHasSpellSlotUseThisTurn(
           state.currentTurnResources,
           combatant.combatantId,
