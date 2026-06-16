@@ -157,6 +157,7 @@ const requiredFirstVerticalUnitIds = [
   "feat_boon_of_combat_prowess",
   "defense",
   "feat_magic_initiate_cleric",
+  "feat_magic_initiate_druid",
   "feat_magic_initiate_wizard",
   "feat_savage_attacker",
   "mastery_cleave",
@@ -5849,6 +5850,19 @@ describe("SRD Unit catalog boundary", () => {
           spellList: "cleric",
         },
         name: "Magic Initiate (Cleric)",
+      }),
+    );
+
+    expect(result.catalog.requireUnit("feat_magic_initiate_druid")).toEqual(
+      expect.objectContaining({
+        category: "origin",
+        id: "feat_magic_initiate_druid",
+        kind: "feat",
+        mechanics: {
+          family: "magic_initiate",
+          spellList: "druid",
+        },
+        name: "Magic Initiate (Druid)",
       }),
     );
 

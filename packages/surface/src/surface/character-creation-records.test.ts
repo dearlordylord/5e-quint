@@ -17,6 +17,7 @@ import classSorcererInput from "../../content/class_sorcerer.json";
 import classWarlockInput from "../../content/class_warlock.json";
 import classWizardInput from "../../content/class_wizard.json";
 import featMagicInitiateClericInput from "../../content/feat_magic_initiate_cleric.json";
+import featMagicInitiateDruidInput from "../../content/feat_magic_initiate_druid.json";
 import featMagicInitiateWizardInput from "../../content/feat_magic_initiate_wizard.json";
 import fighterTacticalMindInput from "../../content/fighter_tactical_mind.json";
 import rogueCunningActionInput from "../../content/rogue_cunning_action.json";
@@ -1438,6 +1439,14 @@ describe("character-creation Surface records", () => {
         id: "feat_magic_initiate_cleric",
         name: "Magic Initiate (Cleric)",
         spellList: "cleric",
+      },
+    },
+    {
+      input: featMagicInitiateDruidInput,
+      expected: {
+        id: "feat_magic_initiate_druid",
+        name: "Magic Initiate (Druid)",
+        spellList: "druid",
       },
     },
     {

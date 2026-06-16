@@ -43,14 +43,14 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
-      "denominator": 426,
-      "numerator": 233,
-      "percent": "54.7%"
+      "denominator": 427,
+      "numerator": 234,
+      "percent": "54.8%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 511,
-      "numerator": 280,
-      "percent": "54.8%"
+      "denominator": 512,
+      "numerator": 281,
+      "percent": "54.9%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,7 +59,7 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 281
+      "value": 282
     },
     "deterministicAdmissionProjectionCoverage": {
       "denominator": 176,
@@ -67,8 +67,8 @@
       "percent": "97.7%"
     },
     "profileClassificationCoverage": {
-      "denominator": 281,
-      "numerator": 281,
+      "denominator": 282,
+      "numerator": 282,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -112,9 +112,9 @@
       "percent": "97.7%"
     },
     "supportedProfileCoverage": {
-      "denominator": 234,
+      "denominator": 235,
       "numerator": 176,
-      "percent": "75.2%"
+      "percent": "74.9%"
     }
   },
   "metricSemantics": [
@@ -15714,8 +15714,8 @@
         "unsupportedOrOtherUnits": 4
       },
       {
-        "executableUnitDenominator": 8,
-        "installedUnitDenominator": 8,
+        "executableUnitDenominator": 9,
+        "installedUnitDenominator": 9,
         "kind": "feat",
         "label": "Feat Units",
         "profileFactDenominator": 5,
@@ -15725,7 +15725,7 @@
         "selectedIdentityReplayGapUnits": 0,
         "selectedIdentityReplayWitnessUnits": 5,
         "supportedProfileUnits": 5,
-        "unsupportedOrOtherUnits": 3
+        "unsupportedOrOtherUnits": 4
       },
       {
         "executableUnitDenominator": 128,
@@ -22259,6 +22259,29 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/feat_magic_initiate_cleric.json",
       "unitId": "feat_magic_initiate_cleric"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "character-fact-and-runtime-detached-split",
+          "owner": "character-creation-runtime and future character-sheet spell-access owner",
+          "reason": "The feat Unit owns SRD authored identity and typed spell-list source facts. Character finalization retains the feat ref without storing duplicate spell-access state, while future character-sheet spell-access support should derive selected spells from the feat's typed Magic Initiate facts and each selected Spell Definition owns invocation runtime behavior."
+        },
+        "reason": "Magic Initiate (Druid) is an Origin feat spell-access selection source. Character creation retains the selected background and feat Unit refs; selected cantrips, level-1 spell access, and spellcasting ability choice belong to the character spell-access owner rather than promoted battle Unit execution.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "feat",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/feat_magic_initiate_druid.json",
+      "unitId": "feat_magic_initiate_druid"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
