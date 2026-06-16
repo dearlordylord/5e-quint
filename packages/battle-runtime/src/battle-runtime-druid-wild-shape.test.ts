@@ -3,6 +3,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-DRUID-WILD-SHAPE-D20-STAT-PROJECTION druid_wild_shape
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-DRUID-WILD-SHAPE-BEAST-SPELLS-CASTING druid_wild_shape
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-DRUID-WILD-SHAPE-STAT-BLOCK-MULTI-DAMAGE druid_wild_shape
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-DRUID-WILD-SHAPE-STAT-BLOCK-TRAIT-ADVANTAGE druid_wild_shape
 import {
   armorClassDelta,
   defaultArmorClassState,
@@ -51,6 +52,7 @@ import {
   discoverBattleActs,
   damageRollFill,
   goblinId,
+  attackInitialTargetHole,
   attackRollFill,
   attackTargetFill,
   findHole,
@@ -75,6 +77,11 @@ const lizardId = "stat_block_lizard";
 const catId = "stat_block_cat";
 const wolfId = "stat_block_wolf";
 const spiderId = "stat_block_spider";
+const syntheticCoordinatedShapeId = "synthetic_coordinated_shape";
+const packAllyId = combatantId("wild-shape-pack-ally");
+const incapacitatedPackAllyId = combatantId(
+  "wild-shape-incapacitated-pack-ally",
+);
 
 test("assumes, reuses, and dismisses a known Beast Wild Shape form", () => {
   const initial = druidWildShapeBattle();
@@ -1411,7 +1418,7 @@ test("admits selected Beast forms with multi-component attack damage and filters
   }
 });
 
-test("filters trait-derived attack-roll advantage from battle-available forms", () => {
+test("filters untyped trait-derived attack-roll advantage from battle-available forms", () => {
   const profile = parseSupportedUnitFeatureProfile(
     unitLibrary.requireUnit("druid_wild_shape"),
     [{ className: "druid", level: ClassLevel.make(2) }],
@@ -1422,12 +1429,12 @@ test("filters trait-derived attack-roll advantage from battle-available forms", 
   const baseForm = statBlockCatalog.requireStatBlock(ridingHorseId);
   const traitAdvantageForm = {
     ...baseForm,
-    id: "synthetic_pack_tactics_shape",
+    id: "synthetic_untyped_coordinated_shape",
     statBlock: {
       ...baseForm.statBlock,
       traits: [
         {
-          name: "Synthetic Tactics",
+          name: "Coordinated Strike",
           description:
             "The form has Advantage on attack rolls against a creature if an ally is next to the creature.",
         },
@@ -1444,6 +1451,115 @@ test("filters trait-derived attack-roll advantage from battle-available forms", 
   if (Either.isRight(result)) {
     expect(result.right.map((form) => form.id)).toEqual([ridingHorseId]);
   }
+});
+
+test("admits typed trait-derived attack-roll advantage from battle-available forms", () => {
+  const profile = parseSupportedUnitFeatureProfile(
+    unitLibrary.requireUnit("druid_wild_shape"),
+    [{ className: "druid", level: ClassLevel.make(2) }],
+  );
+  if (profile?.kind !== "druidWildShapeKnownForm") {
+    throw new Error("Expected Druid Wild Shape support profile.");
+  }
+  const baseForm = statBlockCatalog.requireStatBlock(ridingHorseId);
+  const traitAdvantageForm = syntheticCoordinatedShape();
+
+  const result = battleAvailableDruidWildShapeKnownForms({
+    profile,
+    forms: [baseForm, traitAdvantageForm],
+  });
+
+  expect(Either.isRight(result)).toBe(true);
+  if (Either.isRight(result)) {
+    expect(result.right.map((form) => form.id)).toEqual([
+      ridingHorseId,
+      syntheticCoordinatedShapeId,
+    ]);
+  }
+});
+
+test("threads typed trait-derived attack-roll advantage through caller spatial witnesses", () => {
+  const form = syntheticCoordinatedShape();
+  const initial = druidWildShapeBattle({
+    knownForms: druidWildShapeKnownFormsReplacingRidingHorse(form),
+    extraCombatants: [
+      characterSeed({
+        combatantId: packAllyId,
+        displayName: "Pack Ally",
+        initiative: 5,
+        attack: null,
+      }),
+      characterSeed({
+        combatantId: incapacitatedPackAllyId,
+        displayName: "Incapacitated Pack Ally",
+        initiative: 4,
+        attack: null,
+        conditions: ["incapacitated"],
+      }),
+    ],
+  });
+  const assumed = requireResolved(
+    resolveDruidWildShapeWithoutLoadoutEquipment(
+      initial,
+      wildShapeSubject(initial, {
+        action: "assumeForm",
+        formStatBlockId: syntheticCoordinatedShapeId,
+      }),
+    ),
+  );
+  const subject = statBlockAttackSubject(assumed.state, "Hooves");
+  const targetHole = attackInitialTargetHole(assumed.state, subject);
+  const rollWithoutWitness = requireHole(
+    resolveBattleSubject({
+      state: assumed.state,
+      subject,
+      fills: [
+        attackTargetFill(targetHole, druidId, goblinId, subject.attackName),
+      ],
+    }),
+    "attackRoll",
+  );
+  expect(rollWithoutWitness).not.toMatchObject({ rollMode: "advantage" });
+
+  const rollWithIncapacitatedWitness = requireHole(
+    resolveBattleSubject({
+      state: assumed.state,
+      subject,
+      fills: [
+        attackTargetFill(targetHole, druidId, goblinId, subject.attackName, [
+          {
+            kind: "attackerAllyWithin5FeetOfTarget",
+            attackerId: druidId,
+            targetId: goblinId,
+            allyId: incapacitatedPackAllyId,
+          },
+        ]),
+      ],
+    }),
+    "attackRoll",
+  );
+  expect(rollWithIncapacitatedWitness).not.toMatchObject({
+    rollMode: "advantage",
+  });
+
+  const rollWithWitness = requireHole(
+    resolveBattleSubject({
+      state: assumed.state,
+      subject,
+      fills: [
+        attackTargetFill(targetHole, druidId, goblinId, subject.attackName, [
+          {
+            kind: "attackerAllyWithin5FeetOfTarget",
+            attackerId: druidId,
+            targetId: goblinId,
+            allyId: packAllyId,
+          },
+        ]),
+      ],
+    }),
+    "attackRoll",
+  );
+  expect(rollWithWitness).toMatchObject({ rollMode: "advantage" });
 });
 
 test("classifies eligible Wild Shape Beast action surfaces without making ids the category owner", () => {
@@ -1627,7 +1743,10 @@ test("Beast Spells admits focus-replaceable Material spell invocation while Wild
 test("Beast Spells rejects priced or consumed Material spells while Wild Shape is active", () => {
   const initial = druidWildShapeBattle({
     druidLevel: DRUID_BEAST_SPELLS_CLASS_LEVEL,
-    preparedSpells: [spellRecord("cure_wounds"), spellRecord("continual_flame")],
+    preparedSpells: [
+      spellRecord("cure_wounds"),
+      spellRecord("continual_flame"),
+    ],
     spellSlots: [{ spellLevel: 2, count: 2 }],
   });
   const assumed = requireResolved(
@@ -1674,6 +1793,7 @@ function druidWildShapeBattle(input?: {
     readonly spellLevel: 1 | 2 | 3 | 4 | 5;
     readonly count: number;
   }[];
+  readonly extraCombatants?: readonly ReturnType<typeof characterSeed>[];
   readonly targetStatBlock?: StatBlockRecord;
 }): BattleState {
   return startBattleRight({
@@ -1686,6 +1806,7 @@ function druidWildShapeBattle(input?: {
           ? {}
           : { statBlock: input.targetStatBlock }),
       }),
+      ...(input?.extraCombatants ?? []),
     ],
   });
 }
@@ -1800,6 +1921,53 @@ function druidWildShapeKnownFormsReplacingRidingHorse(
     statBlockCatalog.requireStatBlock(lizardId),
     statBlockCatalog.requireStatBlock(catId),
   ];
+}
+
+function syntheticCoordinatedShape(): StatBlockRecord {
+  const baseForm = statBlockCatalog.requireStatBlock(ridingHorseId);
+  return {
+    ...baseForm,
+    id: syntheticCoordinatedShapeId,
+    name: "Synthetic Coordinated Shape",
+    statBlock: {
+      ...baseForm.statBlock,
+      displayName: "Synthetic Coordinated Shape",
+      traits: [
+        {
+          name: "Coordinated Strike",
+          description:
+            "The form has Advantage on attack rolls against a creature if a non-incapacitated ally is within 5 feet of the creature.",
+          effect: {
+            kind: "attack_roll_advantage_when_non_incapacitated_ally_within_5_feet_of_target",
+          },
+        },
+      ],
+    },
+  } satisfies StatBlockRecord;
+}
+
+function statBlockAttackSubject(
+  state: BattleState,
+  attackName: string,
+): Extract<
+  BattleSubject,
+  { readonly tag: "action"; readonly action: "attack" }
+> {
+  const subject = discoverBattleActs(state).find(
+    (act) =>
+      act.subject.tag === "action" &&
+      act.subject.action === "attack" &&
+      act.subject.actorId === druidId &&
+      act.subject.attackName === attackName,
+  )?.subject;
+  if (
+    subject?.tag !== "action" ||
+    subject.action !== "attack" ||
+    subject.actorId !== druidId
+  ) {
+    throw new Error("Expected Wild Shape Stat Block attack subject.");
+  }
+  return subject;
 }
 
 function wildShapeSubject(

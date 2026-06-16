@@ -1,9 +1,7 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.hunters-prey
 import { describe, expect, test } from "vitest";
 import { movementFeet } from "@dnd/shared/types";
-import {
-  ATTACK_ACTION_ATTACK_COUNT_SCALING_SUPPORT_PROFILE,
-} from "./unit-feature-support.ts";
+import { ATTACK_ACTION_ATTACK_COUNT_SCALING_SUPPORT_PROFILE } from "./unit-feature-support.ts";
 import {
   attackDamageHoleAfterHit,
   attackInitialTargetHole,
@@ -270,9 +268,11 @@ describe("battle runtime: Hunter's Prey", () => {
       fills: [
         targetFill(secondTarget, skeletonId),
         attackRollFill(secondRoll, { total: 15, naturalD20: 10 }),
-        damageRollFillWithGroups(secondDamage, [[1], [1]], [
-          "ranger_hunters_prey",
-        ]),
+        damageRollFillWithGroups(
+          secondDamage,
+          [[1], [1]],
+          ["ranger_hunters_prey"],
+        ),
       ],
     });
 
@@ -455,8 +455,7 @@ describe("battle runtime: Hunter's Prey", () => {
     ).state;
 
     expect(
-      nextRangerTurn.currentTurnResources
-        .huntersPreyHordeBreakerUsedThisTurn,
+      nextRangerTurn.currentTurnResources.huntersPreyHordeBreakerUsedThisTurn,
     ).toEqual([]);
     const secondUse = resolveHordeBreakerUse(nextRangerTurn, subject);
     expect(
@@ -672,7 +671,7 @@ describe("battle runtime: Hunter's Prey", () => {
         secondTargetId: skeletonId,
       },
       {
-        kind: "sneakAttackAllyWithin5FeetOfTarget",
+        kind: "attackerAllyWithin5FeetOfTarget",
         attackerId: fighterId,
         targetId: skeletonId,
         allyId,
@@ -723,9 +722,11 @@ describe("battle runtime: Hunter's Prey", () => {
           unitFeatureDecisionFill(decision, "use"),
           secondTargetFill,
           attackRollFill(hordeRoll, { total: 15, naturalD20: 10 }),
-          damageRollFillWithGroups(hordeDamage, [[1], [1]], [
-            "rogue_sneak_attack",
-          ]),
+          damageRollFillWithGroups(
+            hordeDamage,
+            [[1], [1]],
+            ["rogue_sneak_attack"],
+          ),
         ],
       }),
     );
@@ -866,7 +867,11 @@ describe("battle runtime: Hunter's Prey", () => {
       attackRollFill(primaryRoll, { total: 5, naturalD20: 2 }),
     ];
     const decision = requireHole(
-      resolveBattleSubject({ state: marked.state, subject, fills: primaryFills }),
+      resolveBattleSubject({
+        state: marked.state,
+        subject,
+        fills: primaryFills,
+      }),
       "unitFeatureDecision",
     );
     const target = requireHole(

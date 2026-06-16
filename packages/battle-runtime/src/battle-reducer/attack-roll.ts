@@ -79,6 +79,7 @@ import {
   attackActionOptionName,
   attackTargetConstraint,
   attackRollMissToHitReplacementHolePayloadForAttacker,
+  targetHasAdjacentNonIncapacitatedAlly,
 } from "./statblock-attacks.ts";
 import {
   activeRageSourceKeysForFrenzy,
@@ -239,6 +240,13 @@ function attackRollSourceFlags(
     state.helpAttacks.some(
       (help) => help.allyId === attackerId && help.targetEnemyId === targetId,
     ) ||
+    statBlockTraitGrantsAttackRollAdvantage(
+      state,
+      attackerId,
+      targetId,
+      attack,
+      targetSpatialFacts,
+    ) ||
     activeEffectGrantsAttackRollMode(state, attacker, target, "advantage", {
       attackerCanSeeTarget,
       attack,
@@ -263,6 +271,29 @@ function attackRollSourceFlags(
       attack,
     );
   return { hasAdvantage, hasDisadvantage };
+}
+
+function statBlockTraitGrantsAttackRollAdvantage(
+  state: BattleState,
+  attackerId: CombatantId,
+  targetId: CombatantId,
+  attack: SupportedAttackActionOption | undefined,
+  targetSpatialFacts: readonly BattleTargetSpatialFact[],
+): boolean {
+  if (attack?.kind !== "statBlockAttack") return false;
+  return (
+    attack.traitAttackRollModes?.some(
+      (mode) =>
+        mode.mode === "advantage" &&
+        mode.predicate === "nonIncapacitatedAllyWithin5FeetOfTarget" &&
+        targetHasAdjacentNonIncapacitatedAlly(
+          state,
+          attackerId,
+          targetId,
+          targetSpatialFacts,
+        ),
+    ) ?? false
+  );
 }
 
 type AttackSightSpatialFactKind =
@@ -1249,8 +1280,7 @@ function huntersPreyHordeBreakerSelection(
       candidate.selectedOption.optionId === "hordeBreaker" &&
       !state.currentTurnResources.huntersPreyHordeBreakerUsedThisTurn.some(
         (usage) =>
-          usage.attackerId === attackerId &&
-          usage.unitId === candidate.unitId,
+          usage.attackerId === attackerId && usage.unitId === candidate.unitId,
       ) &&
       candidate.supportProfiles.some(
         (profile) =>
@@ -1538,7 +1568,9 @@ export function recordAttackRollOngoingFeatures(
   const recklessAttackWhileRagingUses =
     isCharacterBattleCreatureState(attacker) &&
     activatedOngoingFeatureProfile !== null &&
-    ongoingFeatureProfileIsRecklessAttackForFrenzy(activatedOngoingFeatureProfile)
+    ongoingFeatureProfileIsRecklessAttackForFrenzy(
+      activatedOngoingFeatureProfile,
+    )
       ? activeRageSourceKeysForFrenzy(attacker).map((rageSourceKey) => ({
           attackerId,
           recklessAttackSourceKey: ongoingFeatureSourceKeyForUnit(

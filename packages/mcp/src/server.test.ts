@@ -6315,13 +6315,13 @@ function fillBattleHoleThroughTool(
                   attackName,
                 },
             {
-              kind: "sneakAttackAllyWithin5FeetOfTarget",
+              kind: "attackerAllyWithin5FeetOfTarget",
               attackerId: actorId,
               targetId: String(fill.value),
               allyId: "ally",
             },
             {
-              kind: "sneakAttackAllyWithin5FeetOfTarget",
+              kind: "attackerAllyWithin5FeetOfTarget",
               attackerId: actorId,
               targetId: String(fill.value),
               allyId: "sneak-attack-ally",

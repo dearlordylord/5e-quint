@@ -441,3 +441,4 @@
 {"unitId":"druid_wild_shape","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-FOLLOWUP-DRUID-WILD-SHAPE-BEAST-SPELLS-CASTING","ownerPath":"packages/battle-runtime/src/battle-runtime-druid-wild-shape.test.ts"}}
 {"unitId":"druid_wild_shape","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-FOLLOWUP-DRUID-WILD-SHAPE-STAT-BLOCK-MULTI-DAMAGE","ownerPath":"packages/battle-runtime/src/battle-runtime-druid-wild-shape.test.ts"}}
 {"unitId":"druid_wild_shape","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-FOLLOWUP-DRUID-WILD-SHAPE-BEAST-SPELLS-CASTING","ownerPath":"packages/character-battle-runtime/src/index.test.ts"}}
+{"unitId":"druid_wild_shape","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-FOLLOWUP-DRUID-WILD-SHAPE-STAT-BLOCK-TRAIT-ADVANTAGE","ownerPath":"packages/battle-runtime/src/battle-runtime-druid-wild-shape.test.ts"}}

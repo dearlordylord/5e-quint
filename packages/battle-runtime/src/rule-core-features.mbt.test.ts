@@ -2217,7 +2217,7 @@ function attackTargetFill(
             attackName,
           },
       {
-        kind: "sneakAttackAllyWithin5FeetOfTarget",
+        kind: "attackerAllyWithin5FeetOfTarget",
         attackerId,
         targetId: defenderId,
         allyId: combatantId("rule-core-feature-ally"),

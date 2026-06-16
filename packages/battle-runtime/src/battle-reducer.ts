@@ -1790,7 +1790,7 @@ export type BattleTargetSpatialFact =
       readonly targetId: CombatantId;
     }
   | {
-      readonly kind: "sneakAttackAllyWithin5FeetOfTarget";
+      readonly kind: "attackerAllyWithin5FeetOfTarget";
       readonly attackerId: CombatantId;
       readonly targetId: CombatantId;
       readonly allyId: CombatantId;

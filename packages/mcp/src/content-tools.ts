@@ -237,7 +237,7 @@ function workflowGuide() {
       abilityScoresFill:
         '{"kind":"abilityScores","holeId":"copy from holes[].holeId","method":"standardArray","value":{"str":15,"dex":14,"con":13,"int":8,"wis":10,"cha":12}}',
       targetChoiceFill:
-        '{"kind":"targetChoice","holeId":"copy from result.holes[] or initialHoles[]","value":"target combatantId","spatialFacts":[{"kind":"attackTargetInMeleeReach | attackTargetInRangedRange | spellTarget | helpAttackTargetWithin5Feet | grappleTargetWithinReach | sneakAttackAllyWithin5FeetOfTarget","actorId":"table/caller combatantId when required","targetId":"table/caller combatantId when required","attackName":"selected attack name when required","rangeBand":"normal | long when required"}]}',
+        '{"kind":"targetChoice","holeId":"copy from result.holes[] or initialHoles[]","value":"target combatantId","spatialFacts":[{"kind":"attackTargetInMeleeReach | attackTargetInRangedRange | spellTarget | helpAttackTargetWithin5Feet | grappleTargetWithinReach | attackerAllyWithin5FeetOfTarget","actorId":"table/caller combatantId when required","targetId":"table/caller combatantId when required","attackName":"selected attack name when required","rangeBand":"normal | long when required"}]}',
       spellTargetAllocationFill:
         '{"kind":"spellTargetAllocation","holeId":"copy from result.holes[] or initialHoles[]","value":{"allocations":[{"targetId":"target combatantId","count":3}]},"spatialFacts":[{"kind":"spellTarget","casterId":"caster combatantId","targetId":"same target combatantId","spellId":"selected spell id"}]}',
       attackRollFill:

@@ -49,7 +49,7 @@
     {
       "number": 8,
       "id": "L12G-FOLLOWUP-DRUID-WILD-SHAPE-STAT-BLOCK-TRAIT-ADVANTAGE",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Promote trait-derived Stat Block attack Advantage"
     },
     {
@@ -490,7 +490,7 @@ Verification:
 
 ### Task 8 - L12G-FOLLOWUP-DRUID-WILD-SHAPE-STAT-BLOCK-TRAIT-ADVANTAGE
 
-Status: `ready-for-implementation`
+Status: `done`
 
 Depends on:
 

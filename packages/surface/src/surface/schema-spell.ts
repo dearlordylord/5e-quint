@@ -4184,6 +4184,11 @@ export const CreatureLegendaryActionsSchema = Schema.Struct({
 
 export const CreatureTraitEffectSchema = Schema.Union(
   Schema.Struct({
+    kind: Schema.Literal(
+      "attack_roll_advantage_when_non_incapacitated_ally_within_5_feet_of_target",
+    ),
+  }),
+  Schema.Struct({
     kind: Schema.Literal("caster_shared_resistance"),
     chosenFrom: Schema.Literal("resistances_list"),
   }),

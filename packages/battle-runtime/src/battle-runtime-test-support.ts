@@ -1307,19 +1307,12 @@ export function targetFill(
             shoverId: fighterId,
             targetId,
           },
-          ...[
-            combatantId("ally"),
-            combatantId("sneak-ally"),
-            combatantId("sneak-cancel-ally"),
-            combatantId("second-rogue-ally"),
-          ].map((allyId) => ({
-            kind: "sneakAttackAllyWithin5FeetOfTarget" as const,
-            attackerId: targetId === goblinId ? fighterId : goblinId,
+          ...commonAdjacentAllySpatialFacts(
+            targetId === goblinId ? fighterId : goblinId,
             targetId,
-            allyId,
-          })),
+          ),
           {
-            kind: "sneakAttackAllyWithin5FeetOfTarget" as const,
+            kind: "attackerAllyWithin5FeetOfTarget" as const,
             attackerId: combatantId("second-rogue"),
             targetId,
             allyId: combatantId("second-rogue-ally"),
@@ -1416,7 +1409,7 @@ export function attackTargetFill(
 ): BattleFill {
   return targetFill(hole, targetId, [
     attackTargetSpatialFact(actorId, targetId, attackName),
-    ...commonSneakAttackSpatialFacts(actorId, targetId),
+    ...commonAdjacentAllySpatialFacts(actorId, targetId),
     ...(extraFacts ?? []),
   ]);
 }
@@ -1473,7 +1466,7 @@ function defaultAttackTargetSpatialFacts(
   ];
 }
 
-function commonSneakAttackSpatialFacts(
+function commonAdjacentAllySpatialFacts(
   attackerId: CombatantId,
   targetId: CombatantId,
 ): readonly NonNullable<
@@ -1485,7 +1478,7 @@ function commonSneakAttackSpatialFacts(
     combatantId("sneak-cancel-ally"),
     combatantId("second-rogue-ally"),
   ].map((allyId) => ({
-    kind: "sneakAttackAllyWithin5FeetOfTarget" as const,
+    kind: "attackerAllyWithin5FeetOfTarget" as const,
     attackerId,
     targetId,
     allyId,

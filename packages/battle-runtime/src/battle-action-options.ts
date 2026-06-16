@@ -181,6 +181,18 @@ export type SupportedStaticDamageCreatureNamedAttackRoll =
     readonly onHit: SupportedStaticStatBlockAttackEffectList;
   };
 
+export const STAT_BLOCK_ATTACK_ROLL_ADVANTAGE_PREDICATES = [
+  "nonIncapacitatedAllyWithin5FeetOfTarget",
+] as const;
+
+export type StatBlockAttackRollAdvantagePredicate =
+  (typeof STAT_BLOCK_ATTACK_ROLL_ADVANTAGE_PREDICATES)[number];
+
+export type StatBlockTraitAttackRollMode = {
+  readonly mode: "advantage";
+  readonly predicate: StatBlockAttackRollAdvantagePredicate;
+};
+
 export type StatBlockPartSection =
   | "actions"
   | "bonusActions"
@@ -201,6 +213,7 @@ export type RolledStatBlockAttackActionOption = {
   readonly attack: SupportedCreatureNamedAttackRoll;
   readonly part: StatBlockPartKey;
   readonly damageNotation: "rolled";
+  readonly traitAttackRollModes?: ReadonlyNonEmptyArray<StatBlockTraitAttackRollMode>;
 };
 
 export type StaticStatBlockAttackActionOption = {
@@ -208,6 +221,7 @@ export type StaticStatBlockAttackActionOption = {
   readonly attack: SupportedStaticDamageCreatureNamedAttackRoll;
   readonly part: StatBlockPartKey;
   readonly damageNotation: "static";
+  readonly traitAttackRollModes?: ReadonlyNonEmptyArray<StatBlockTraitAttackRollMode>;
 };
 
 export type StatBlockAttackActionOption =

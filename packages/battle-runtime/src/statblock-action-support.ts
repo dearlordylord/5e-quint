@@ -3,8 +3,11 @@
 import type {
   CreatureActions,
   CreatureNamedAttackRoll,
+  CreatureTrait,
   StatBlockRecord,
 } from "@dnd/surface/surface/types";
+import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
+import type { StatBlockTraitAttackRollMode } from "./battle-action-options.ts";
 import type { BattleDruidWildShapeKnownFormSupportProfile } from "./unit-feature-support.ts";
 import { statBlockIsWildShapeKnownFormEligible } from "./druid-wild-shape-form-eligibility.ts";
 import { supportedStatBlockAttackDamage } from "./statblock-attack-damage-support.ts";
@@ -134,7 +137,9 @@ function wildShapeFormActionSurfaceCategories(
   }
 
   for (const trait of form.statBlock.traits ?? []) {
-    if (trait.effect === undefined) {
+    if (statBlockTraitAttackRollMode(trait) !== null) {
+      categories.add("traitDerivedConditionalAttackRollAdvantage");
+    } else if (trait.effect === undefined) {
       categories.add(
         mentionsAttackRollAdvantage(trait.description)
           ? "traitDerivedConditionalAttackRollAdvantage"
@@ -148,9 +153,7 @@ function wildShapeFormActionSurfaceCategories(
   );
 }
 
-function hasNonAttackOrSpecialActionSection(
-  actions: CreatureActions,
-): boolean {
+function hasNonAttackOrSpecialActionSection(actions: CreatureActions): boolean {
   return (
     actions.multiattacks !== undefined ||
     actions.saves !== undefined ||
@@ -183,6 +186,33 @@ function creatureTraitsAreSupported(
 ): boolean {
   return (
     traits === undefined ||
-    traits.every((trait) => !mentionsAttackRollAdvantage(trait.description))
+    traits.every(
+      (trait) =>
+        statBlockTraitAttackRollMode(trait) !== null ||
+        !mentionsAttackRollAdvantage(trait.description),
+    )
   );
+}
+
+export function supportedStatBlockTraitAttackRollModes(
+  traits: StatBlockRecord["statBlock"]["traits"],
+): ReadonlyNonEmptyArray<StatBlockTraitAttackRollMode> | undefined {
+  const modes = (traits ?? []).flatMap((trait) => {
+    const mode = statBlockTraitAttackRollMode(trait);
+    return mode === null ? [] : [mode];
+  });
+  const [firstMode, ...restModes] = modes;
+  return firstMode === undefined ? undefined : [firstMode, ...restModes];
+}
+
+function statBlockTraitAttackRollMode(
+  trait: CreatureTrait,
+): StatBlockTraitAttackRollMode | null {
+  return trait.effect?.kind ===
+    "attack_roll_advantage_when_non_incapacitated_ally_within_5_feet_of_target"
+    ? {
+        mode: "advantage",
+        predicate: "nonIncapacitatedAllyWithin5FeetOfTarget",
+      }
+    : null;
 }

@@ -52,7 +52,10 @@ import {
   type SpellAttackDamageComponent,
   type WeaponDamageDiceRollChoiceFill,
 } from "../battle-reducer.ts";
-import { combatantsAreAllies, currentActorId } from "./creature-state-leaves.ts";
+import {
+  combatantsAreAllies,
+  currentActorId,
+} from "./creature-state-leaves.ts";
 import { isCharacterBattleCreatureState } from "./creature-state.ts";
 import {
   activeRageDamageBonusForFrenzy,
@@ -378,7 +381,9 @@ export function weaponAttackSupportsFinesseOrRanged(
 
 function attackUsesStrengthWeaponOrUnarmedStrike(
   attack: SupportedAttackActionOption,
-): attack is CharacterWeaponAttackActionOption | CharacterUnarmedStrikeActionOption {
+): attack is
+  | CharacterWeaponAttackActionOption
+  | CharacterUnarmedStrikeActionOption {
   return (
     (attack.kind === "weapon" && attack.ability === "str") ||
     (attack.kind === "unarmedStrike" && attack.attackAbility === "str")
@@ -386,7 +391,9 @@ function attackUsesStrengthWeaponOrUnarmedStrike(
 }
 
 function selectedAttackDamageType(
-  attack: CharacterWeaponAttackActionOption | CharacterUnarmedStrikeActionOption,
+  attack:
+    | CharacterWeaponAttackActionOption
+    | CharacterUnarmedStrikeActionOption,
 ): DamageType {
   return attack.kind === "weapon"
     ? selectedWeaponDamage(attack.weapon).damageType
@@ -401,7 +408,7 @@ export function targetHasAdjacentNonIncapacitatedAlly(
 ): boolean {
   return facts.some((fact) => {
     if (
-      fact.kind !== "sneakAttackAllyWithin5FeetOfTarget" ||
+      fact.kind !== "attackerAllyWithin5FeetOfTarget" ||
       fact.attackerId !== attackerId ||
       fact.targetId !== targetId
     ) {
@@ -430,42 +437,42 @@ export function eligibleAttackDamageRiders(
   if (!isCharacterBattleCreatureState(attacker)) {
     return [];
   }
-  const profileRiders = [...attacker.origin.attackDamageRiderProfiles.values()].flatMap(
-    (profile): readonly AttackDamageRider[] => {
-      if (
-        state.currentTurnResources.attackDamageRidersUsedThisTurn.some(
-          (usage) =>
-            usage.attackerId === attackerId && usage.unitId === profile.unit.id,
-        )
-      ) {
-        return [];
-      }
-      const damageType = selectedAttackDamageTypeForProfile({
-        state,
-        attacker,
-        attackerId,
-        attack,
-        attackRoll,
-        targetId,
-        targetSpatialFacts,
-        profile,
-      });
-      if (damageType === null) {
-        return [];
-      }
-      const rider = attackDamageRiderForProfile(
-        profile,
-        attackerId,
-        damageType,
-        profile.trigger ===
-          "rageActiveRecklessStrengthWeaponOrUnarmedStrikeFirstHit" &&
-          attackUsesStrengthWeaponOrUnarmedStrike(attack)
-          ? (activeRageDamageBonusForFrenzy(attacker, attack)?.damageBonus ?? 0)
-          : 0,
-      );
-      return rider === null ? [] : [rider];
-    },
-  );
+  const profileRiders = [
+    ...attacker.origin.attackDamageRiderProfiles.values(),
+  ].flatMap((profile): readonly AttackDamageRider[] => {
+    if (
+      state.currentTurnResources.attackDamageRidersUsedThisTurn.some(
+        (usage) =>
+          usage.attackerId === attackerId && usage.unitId === profile.unit.id,
+      )
+    ) {
+      return [];
+    }
+    const damageType = selectedAttackDamageTypeForProfile({
+      state,
+      attacker,
+      attackerId,
+      attack,
+      attackRoll,
+      targetId,
+      targetSpatialFacts,
+      profile,
+    });
+    if (damageType === null) {
+      return [];
+    }
+    const rider = attackDamageRiderForProfile(
+      profile,
+      attackerId,
+      damageType,
+      profile.trigger ===
+        "rageActiveRecklessStrengthWeaponOrUnarmedStrikeFirstHit" &&
+        attackUsesStrengthWeaponOrUnarmedStrike(attack)
+        ? (activeRageDamageBonusForFrenzy(attacker, attack)?.damageBonus ?? 0)
+        : 0,
+    );
+    return rider === null ? [] : [rider];
+  });
   return [
     ...profileRiders,
     ...huntersPreyColossusSlayerRiders({
@@ -595,25 +602,32 @@ function frenzyRecklessAttackWhileRagingUsedThisTurn(input: {
   readonly state: BattleState;
   readonly attacker: CharacterBattleCreatureState;
   readonly attackerId: CombatantId;
-  readonly attack: CharacterWeaponAttackActionOption | CharacterUnarmedStrikeActionOption;
+  readonly attack:
+    | CharacterWeaponAttackActionOption
+    | CharacterUnarmedStrikeActionOption;
 }): boolean {
-  const activeRage = activeRageDamageBonusForFrenzy(input.attacker, input.attack);
+  const activeRage = activeRageDamageBonusForFrenzy(
+    input.attacker,
+    input.attack,
+  );
   if (activeRage === null || activeRage.damageBonus <= 0) {
     return false;
   }
-  return [...input.attacker.activeOngoingFeatureOccurrences.keys()].some((key) => {
-    const profile = input.attacker.origin.ongoingFeatureProfiles.get(key);
-    return (
-      profile?.kind === "ongoingFeature" &&
-      ongoingFeatureProfileIsRecklessAttackForFrenzy(profile) &&
-      input.state.currentTurnResources.recklessAttackWhileRagingUsedThisTurn.some(
-        (usage) =>
-          usage.attackerId === input.attackerId &&
-          usage.recklessAttackSourceKey === key &&
-          usage.rageSourceKey === activeRage.sourceKey,
-      )
-    );
-  });
+  return [...input.attacker.activeOngoingFeatureOccurrences.keys()].some(
+    (key) => {
+      const profile = input.attacker.origin.ongoingFeatureProfiles.get(key);
+      return (
+        profile?.kind === "ongoingFeature" &&
+        ongoingFeatureProfileIsRecklessAttackForFrenzy(profile) &&
+        input.state.currentTurnResources.recklessAttackWhileRagingUsedThisTurn.some(
+          (usage) =>
+            usage.attackerId === input.attackerId &&
+            usage.recklessAttackSourceKey === key &&
+            usage.rageSourceKey === activeRage.sourceKey,
+        )
+      );
+    },
+  );
 }
 
 export function selectedAttackDamageRiders(
@@ -803,10 +817,7 @@ export function attackDamageModifier(
         Number(unarmedStrike.damageAbilityModifier) +
         (unarmedStrike.damageBonus ?? 0),
     ),
-    Match.when(
-      { kind: "statBlockAttack" },
-      () => 0,
-    ),
+    Match.when({ kind: "statBlockAttack" }, () => 0),
     Match.exhaustive,
   );
 }
