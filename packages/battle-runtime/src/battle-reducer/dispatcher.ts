@@ -31,6 +31,8 @@ import {
 
 import { initiativeOrder } from "@dnd/shared-algebras/initiative-algebra";
 
+import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
+
 import { type StandardActionKind } from "@dnd/shared/game-facts";
 
 import {
@@ -250,7 +252,10 @@ import type {
   BattleConcentrationSavingThrowHole,
   BattleDroppedObjectOutcome,
   BattleFill,
+  BattleCreatureState,
   BattleFeatherFallLandingResult,
+  BattleFallDamageLandingResult,
+  BattleRawFallDamage,
   BattleInterruptFrame,
   BattleInterruptedProcedure,
   BattleObjectDamageOutcome,
@@ -343,6 +348,7 @@ import {
   resolveUnitFeature,
   resolveUnitFeatureHeldWeaponActivation,
   subjectAllowedDuringStatBlockMultiattackDispatch,
+  KnockedOutConditionState,
 } from "../battle-reducer.ts";
 export function resolveBattleSubject(
   input: BattleResolutionInput,
@@ -411,6 +417,13 @@ export function resolveBattleSubjectInternal(
           input.state,
           "staleSubject",
           "Fly Speed end-fall witness must be resolved before other battle subjects.",
+        );
+      }
+      if (activeFrame.kind === "fallDamageLandingMitigation") {
+        return invalidResult(
+          input.state,
+          "staleSubject",
+          "Fall damage landing mitigation must be resolved before other battle subjects.",
         );
       }
       const activeInterrupt = activeFrame.frame.activeInterrupt;
@@ -2088,6 +2101,7 @@ export function openCreatureFallsInterruptWindow(input: {
       trigger: "creatureFalls",
       fallingCreatureId: input.fallingCreatureId,
       reactionSpellTargetFacts: input.reactionSpellTargetFacts,
+      landingMitigations: [],
       continuation: {
         kind: "resolved",
         subject: {
@@ -2318,6 +2332,127 @@ export function resolveFeatherFallLanding(input: {
   };
 }
 
+export function resolveFallDamageLanding(input: {
+  readonly state: BattleState;
+  readonly targetId: CombatantId;
+  readonly fallDamage: BattleRawFallDamage;
+}): BattleFallDamageLandingResult {
+  const target = input.state.combatants.get(input.targetId);
+  if (target === undefined) {
+    return {
+      tag: "invalid",
+      state: input.state,
+      snapshot: snapshotBattle(input.state),
+      reason: "missingCombatant",
+      message: "Fall damage landing target is not in this battle.",
+    };
+  }
+  const featherFall = resolveFeatherFallLanding({
+    state: input.state,
+    targetId: input.targetId,
+  });
+  if (featherFall.tag === "invalid") {
+    return {
+      tag: "invalid",
+      state: input.state,
+      snapshot: snapshotBattle(input.state),
+      reason: "missingCombatant",
+      message: featherFall.message,
+    };
+  }
+  const mitigationFrameIndex = fallDamageLandingMitigationFrameIndex(
+    featherFall.state,
+    input.targetId,
+  );
+  const mitigationFrame =
+    mitigationFrameIndex === null
+      ? null
+      : featherFall.state.interruptStack[mitigationFrameIndex];
+  const slowFallReductionAmount =
+    mitigationFrame?.kind === "fallDamageLandingMitigation"
+      ? Number(mitigationFrame.reductionAmount)
+      : 0;
+  const effectiveFallDamageNumber = featherFall.fallDamagePrevented
+    ? 0
+    : Math.max(0, Number(input.fallDamage.amount) - slowFallReductionAmount);
+  const withoutMitigationFrame =
+    mitigationFrameIndex === null
+      ? featherFall.state
+      : battleStateWithoutInterruptStackFrame(
+          featherFall.state,
+          mitigationFrameIndex,
+        );
+  const landedTarget = withoutMitigationFrame.combatants.get(input.targetId);
+  const afterFallingProne =
+    landedTarget === undefined || effectiveFallDamageNumber === 0
+      ? withoutMitigationFrame
+      : {
+          ...withoutMitigationFrame,
+          combatants: new Map(withoutMitigationFrame.combatants).set(
+            input.targetId,
+            battleCreatureAfterFallingProne(landedTarget),
+          ),
+        };
+  const effectiveFallDamage = toDamageAmount(effectiveFallDamageNumber);
+  return {
+    tag: "landed",
+    state: afterFallingProne,
+    snapshot: snapshotBattle(afterFallingProne),
+    targetId: input.targetId,
+    incomingFallDamage: input.fallDamage.amount,
+    effectiveFallDamage,
+    fallDamagePrevented: effectiveFallDamage === 0,
+    fallingPronePrevented: effectiveFallDamage === 0,
+    slowFallReductionAmount: toDamageAmount(slowFallReductionAmount),
+    featherFallMitigated: featherFall.tag === "mitigated",
+  };
+}
+
+function fallDamageLandingMitigationFrameIndex(
+  state: BattleState,
+  targetId: CombatantId,
+): number | null {
+  for (let index = state.interruptStack.length - 1; index >= 0; index -= 1) {
+    const frame = state.interruptStack[index];
+    if (
+      frame?.kind === "fallDamageLandingMitigation" &&
+      frame.targetId === targetId
+    ) {
+      return index;
+    }
+  }
+  return null;
+}
+
+function battleStateWithoutInterruptStackFrame(
+  state: BattleState,
+  frameIndex: number,
+): BattleState {
+  return {
+    ...state,
+    interruptStack: [
+      ...state.interruptStack.slice(0, frameIndex),
+      ...state.interruptStack.slice(frameIndex + 1),
+    ],
+  };
+}
+
+function battleCreatureAfterFallingProne(
+  combatant: BattleCreatureState,
+): BattleCreatureState {
+  return combatant.positiveHpUnconscious === null
+    ? {
+        ...combatant,
+        conditions: applyCondition(combatant.conditions, "prone"),
+      }
+    : {
+        ...combatant,
+        conditions: KnockedOutConditionState(
+          applyCondition(combatant.conditions, "prone"),
+        ),
+      };
+}
+
 export function resolveBattleInterrupt(input: {
   readonly state: BattleState;
   readonly fill: Extract<BattleFill, { readonly kind: "interruptDecision" }>;
@@ -2424,7 +2559,10 @@ export function resolveBattleInterrupt(input: {
     remainingResponders.length === 0
       ? {
           ...input.state,
-          interruptStack: stackWithoutCurrent,
+          interruptStack: interruptStackAfterInterruptCheckpointClosure(
+            stackWithoutCurrent,
+            updatedFrame,
+          ),
         }
       : {
           ...input.state,
@@ -2444,9 +2582,9 @@ export function resolveBattleInterrupt(input: {
   return remainingResponders.length === 0
     ? completeResolvedActiveInterruptIfPending(
         resumeInterruptedProcedure(
-          stateForContinuingInterruptCheckpoint(nextState, frame),
-          frame.continuation,
-          frame.trigger,
+          stateForContinuingInterruptCheckpoint(nextState, updatedFrame),
+          updatedFrame.continuation,
+          updatedFrame.trigger,
         ),
       )
     : {
@@ -2579,16 +2717,29 @@ export function resolveReactionRollOrDamageReduction(input: {
       "Damage-roll reductions require unresolved rolled attack damage.",
     );
   }
+  if (
+    input.choice.choice.kind === "fallDamageReduction" &&
+    input.frame.trigger !== "creatureFalls"
+  ) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Fall damage reductions must be chosen when the creature falls.",
+    );
+  }
   const spent = spendReactionModifierResource(
     spendReaction(input.state, input.choice.reactorId),
     input.choice.reactorId,
     input.choice.choice,
   );
-  const updatedFrame = interruptCheckpointAfterModifier(
-    input.frame,
-    input.choice.reactorId,
+  const updatedFrame = interruptCheckpointAfterReactionModifierCompletion(
+    interruptCheckpointAfterModifier(
+      input.frame,
+      input.choice.reactorId,
+      input.choice.choice,
+      reduction,
+    ),
     input.choice.choice,
-    reduction,
   );
   const completedFrame: BattleInterruptCheckpoint = {
     ...updatedFrame,
@@ -2601,7 +2752,13 @@ export function resolveReactionRollOrDamageReduction(input: {
   const stackWithoutCurrent = spent.interruptStack.slice(0, -1);
   const nextState =
     remainingResponders.length === 0
-      ? { ...spent, interruptStack: stackWithoutCurrent }
+      ? {
+          ...spent,
+          interruptStack: interruptStackAfterInterruptCheckpointClosure(
+            stackWithoutCurrent,
+            completedFrame,
+          ),
+        }
       : {
           ...spent,
           interruptStack: [
@@ -2623,6 +2780,42 @@ export function resolveReactionRollOrDamageReduction(input: {
         state: nextState,
         snapshot: snapshotBattle(nextState),
       };
+}
+
+function interruptCheckpointAfterReactionModifierCompletion(
+  frame: BattleInterruptCheckpoint,
+  choice: BattleReactionModifierChoice,
+): BattleInterruptCheckpoint {
+  if (
+    frame.trigger !== "creatureFalls" ||
+    choice.kind !== "fallDamageReduction"
+  ) {
+    return frame;
+  }
+  return {
+    ...frame,
+    landingMitigations: [
+      ...frame.landingMitigations,
+      {
+        kind: "fallDamageLandingMitigation",
+        targetId: frame.fallingCreatureId,
+        reductionAmount: choice.reduction.amount,
+      },
+    ],
+  };
+}
+
+function interruptStackAfterInterruptCheckpointClosure(
+  stackWithoutCurrent: readonly BattleInterruptFrame[],
+  frame: BattleInterruptCheckpoint,
+): readonly BattleInterruptFrame[] {
+  if (
+    frame.trigger !== "creatureFalls" ||
+    frame.landingMitigations.length === 0
+  ) {
+    return stackWithoutCurrent;
+  }
+  return [...stackWithoutCurrent, ...frame.landingMitigations];
 }
 
 export function resolveCastTriggeredReactionSpellCommand(
@@ -3783,7 +3976,13 @@ export function completeActiveInterruptProcedure(
   const stackWithoutCurrent = state.interruptStack.slice(0, -1);
   const closedState =
     remainingResponders.length === 0
-      ? { ...state, interruptStack: stackWithoutCurrent }
+      ? {
+          ...state,
+          interruptStack: interruptStackAfterInterruptCheckpointClosure(
+            stackWithoutCurrent,
+            completedFrame,
+          ),
+        }
       : {
           ...state,
           interruptStack: [
@@ -3802,9 +4001,9 @@ export function completeActiveInterruptProcedure(
   return remainingResponders.length === 0
     ? completeResolvedActiveInterruptIfPending(
         resumeInterruptedProcedure(
-          stateForContinuingInterruptCheckpoint(nextState, frame),
-          frame.continuation,
-          frame.trigger,
+          stateForContinuingInterruptCheckpoint(nextState, completedFrame),
+          completedFrame.continuation,
+          completedFrame.trigger,
         ),
       )
     : {
@@ -4174,9 +4373,7 @@ function replayContinuationSemanticFillEquals(
 function isReplayContinuationSemanticFill(
   fill: BattleFill,
 ): fill is ReplayContinuationSemanticFill {
-  return replayContinuationSemanticFillKinds.some(
-    (kind) => kind === fill.kind,
-  );
+  return replayContinuationSemanticFillKinds.some((kind) => kind === fill.kind);
 }
 
 function replayContinuationSameKindSemanticFillEquals(

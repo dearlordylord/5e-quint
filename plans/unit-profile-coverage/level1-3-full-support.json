@@ -6046,6 +6046,7 @@
             "profileId": "unit-feature.reaction-roll-or-damage-reduction",
             "profileKind": "reaction",
             "qntOwners": [
+              "packages/battle-runtime/battle-runtime-slow-fall.qnt",
               "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
               "packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core.qnt"
             ]

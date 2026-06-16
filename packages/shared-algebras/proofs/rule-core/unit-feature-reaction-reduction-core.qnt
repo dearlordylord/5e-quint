@@ -12,7 +12,9 @@ module unitFeatureReactionReductionCore {
   // - Classes/Bard.md: College of Lore Cutting Words.
   // - Classes/Rogue.md: Uncanny Dodge.
   // - Classes/Monk.md: Monk's Focus and Deflect Attacks.
+  // - Classes/Monk.md: Slow Fall.
   // - Playing-the-Game.md: Reactions and Damage Rolls.
+  // - Rules-Glossary.md: Falling.
   // - Rules-Glossary.md: Reaction.
   // - UBIQUITOUS_LANGUAGE.md: Reaction, Offer, Decline, Damage, and Spend.
 
@@ -69,6 +71,11 @@ module unitFeatureReactionReductionCore {
     dexterityModifier: int,
   }
 
+  type SlowFallFacts = {
+    incomingFallDamage: int,
+    monkLevel: int,
+  }
+
   type CuttingWordsReductionResult = {
     turn: TurnProcedureState,
     pool: FeatureUsePool,
@@ -88,6 +95,12 @@ module unitFeatureReactionReductionCore {
   type DeflectAttacksRedirectResult = {
     pool: FeatureUsePool,
     redirectedDamage: int,
+  }
+
+  type SlowFallReductionResult = {
+    turn: TurnProcedureState,
+    reducedFallDamage: int,
+    fallingPronePrevented: bool,
   }
 
   pure def cuttingWordsRollTotalAfterReduction(facts: CuttingWordsRollFacts): int =
@@ -112,6 +125,15 @@ module unitFeatureReactionReductionCore {
 
   pure def deflectAttacksDamageAfterReduction(facts: DeflectAttacksReductionFacts): int =
     nonnegative(facts.incomingDamage - (facts.deflectRoll + facts.dexterityModifier + facts.monkLevel))
+
+  pure def slowFallDamageReductionAmount(monkLevel: int): int =
+    5 * monkLevel
+
+  pure def slowFallDamageAfterReduction(facts: SlowFallFacts): int =
+    nonnegative(facts.incomingFallDamage - slowFallDamageReductionAmount(facts.monkLevel))
+
+  pure def slowFallPreventsFallingProne(reducedFallDamage: int): bool =
+    reducedFallDamage == 0
 
   pure def deflectAttacksRedirectTargetEligible(facts: DeflectAttacksRedirectTargetFacts): bool =
     all {
@@ -160,6 +182,24 @@ module unitFeatureReactionReductionCore {
     {
       pool: if (admitted) spendFeatureUsePool(pool) else pool,
       redirectedDamage: if (admitted) deflectAttacksRedirectDamage(facts) else 0,
+    }
+  }
+
+  pure def resolveSlowFallReaction(
+    turn: TurnProcedureState,
+    facts: SlowFallFacts
+  ): SlowFallReductionResult = {
+    val admitted = all {
+      turn.reactionAvailable,
+      facts.monkLevel >= 4,
+    }
+    val reducedFallDamage =
+      if (admitted) slowFallDamageAfterReduction(facts)
+      else nonnegative(facts.incomingFallDamage)
+    {
+      turn: if (admitted) spendReaction(turn) else turn,
+      reducedFallDamage: reducedFallDamage,
+      fallingPronePrevented: slowFallPreventsFallingProne(reducedFallDamage),
     }
   }
 

@@ -2785,7 +2785,8 @@ type BattleFillEncoded =
                     | "attackRollReduction"
                     | "abilityCheckReduction"
                     | "damageRollReduction"
-                    | "attackDamageReduction";
+                    | "attackDamageReduction"
+                    | "fallDamageReduction";
                   readonly fills: readonly BattleFillEncoded[];
                 };
           };
@@ -3575,6 +3576,7 @@ export const BattleFillSchema: Schema.Schema<
                 "abilityCheckReduction",
                 "damageRollReduction",
                 "attackDamageReduction",
+                "fallDamageReduction",
               ),
               fills: Schema.Array(BattleFillSchema),
             }),
@@ -4093,6 +4095,15 @@ const BattleReactionModifierChoiceSchema = Schema.Union(
       }),
       { exact: true },
     ),
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("fallDamageReduction"),
+    unitId: Schema.String,
+    label: Schema.String,
+    reduction: Schema.Struct({
+      kind: Schema.Literal("flat"),
+      amount: DamageAmount,
+    }),
   }),
 );
 

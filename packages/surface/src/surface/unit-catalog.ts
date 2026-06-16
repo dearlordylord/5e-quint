@@ -159,6 +159,7 @@ import monkDeflectAttacksInput from "../../content/monk_deflect_attacks.json";
 import monkMartialArtsInput from "../../content/monk_martial_arts.json";
 import monkMonksFocusInput from "../../content/monk_monks_focus.json";
 import monkOpenHandTechniqueInput from "../../content/monk_open_hand_technique.json";
+import monkSlowFallInput from "../../content/monk_slow_fall.json";
 import monkUnarmoredDefenseInput from "../../content/monk_unarmored_defense.json";
 import monkUnarmoredMovementInput from "../../content/monk_unarmored_movement.json";
 import monkUncannyMetabolismInput from "../../content/monk_uncanny_metabolism.json";
@@ -465,6 +466,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     monkUnarmoredMovementInput,
     monkUncannyMetabolismInput,
     monkDeflectAttacksInput,
+    monkSlowFallInput,
     monkOpenHandTechniqueInput,
     rangerDeftExplorerInput,
     rangerFavoredEnemyInput,

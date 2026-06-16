@@ -86,6 +86,12 @@
               "ownerPath": "packages/battle-runtime/src/open-hand-technique-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-open-hand-technique.mbt.qnt",
               "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-slow-fall-selected-identity.mbt.qnt",
+              "stepAction": "step"
             }
           ],
           "profileId": "unit-feature.bonus-action-ongoing-rage",
@@ -131,6 +137,12 @@
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/open-hand-technique-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-open-hand-technique.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-slow-fall-selected-identity.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -193,6 +205,12 @@
               "ownerPath": "packages/battle-runtime/src/open-hand-technique-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-open-hand-technique.mbt.qnt",
               "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-slow-fall-selected-identity.mbt.qnt",
+              "stepAction": "step"
             }
           ],
           "profileId": "unit-feature.bardic-inspiration-failed-d20-test",
@@ -238,6 +256,12 @@
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/open-hand-technique-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-open-hand-technique.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-slow-fall-selected-identity.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -299,6 +323,12 @@
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/open-hand-technique-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-open-hand-technique.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-slow-fall-selected-identity.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -346,6 +376,12 @@
               "ownerPath": "packages/battle-runtime/src/open-hand-technique-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-open-hand-technique.mbt.qnt",
               "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-slow-fall-selected-identity.mbt.qnt",
+              "stepAction": "step"
             }
           ],
           "qntOwners": [
@@ -407,6 +443,12 @@
               "ownerPath": "packages/battle-runtime/src/open-hand-technique-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-open-hand-technique.mbt.qnt",
               "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-slow-fall-selected-identity.mbt.qnt",
+              "stepAction": "step"
             }
           ],
           "profileId": "unit-feature.self-bonus-action-healing",
@@ -452,6 +494,12 @@
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/open-hand-technique-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-open-hand-technique.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-slow-fall-selected-identity.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -514,6 +562,12 @@
               "ownerPath": "packages/battle-runtime/src/open-hand-technique-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-open-hand-technique.mbt.qnt",
               "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-slow-fall-selected-identity.mbt.qnt",
+              "stepAction": "step"
             }
           ],
           "profileId": "unit-feature.martial-arts-attack-projection",
@@ -559,6 +613,12 @@
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/open-hand-technique-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-open-hand-technique.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-slow-fall-selected-identity.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -621,6 +681,12 @@
               "ownerPath": "packages/battle-runtime/src/open-hand-technique-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-open-hand-technique.mbt.qnt",
               "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-slow-fall-selected-identity.mbt.qnt",
+              "stepAction": "step"
             }
           ],
           "profileId": "unit-feature.attack-damage-rider",
@@ -666,6 +732,12 @@
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/open-hand-technique-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-open-hand-technique.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-slow-fall-selected-identity.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -732,6 +804,12 @@
               "ownerPath": "packages/battle-runtime/src/open-hand-technique-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-open-hand-technique.mbt.qnt",
               "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-slow-fall-selected-identity.mbt.qnt",
+              "stepAction": "step"
             }
           ],
           "profileId": "unit-feature.innate-sorcery-activation",
@@ -777,6 +855,12 @@
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/open-hand-technique-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-open-hand-technique.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-slow-fall-selected-identity.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -870,6 +954,12 @@
               "ownerPath": "packages/battle-runtime/src/open-hand-technique-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-open-hand-technique.mbt.qnt",
               "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-slow-fall-selected-identity.mbt.qnt",
+              "stepAction": "step"
             }
           ],
           "profileId": "unit-feature.passive-saving-throw-roll-mode",
@@ -915,6 +1005,12 @@
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/open-hand-technique-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-open-hand-technique.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-slow-fall-selected-identity.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -977,6 +1073,12 @@
               "ownerPath": "packages/battle-runtime/src/open-hand-technique-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-open-hand-technique.mbt.qnt",
               "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-slow-fall-selected-identity.mbt.qnt",
+              "stepAction": "step"
             }
           ],
           "profileId": "unit-feature.bonus-action-ongoing-rage",
@@ -1022,6 +1124,12 @@
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/open-hand-technique-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-open-hand-technique.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-slow-fall-selected-identity.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -1084,6 +1192,12 @@
               "ownerPath": "packages/battle-runtime/src/open-hand-technique-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-open-hand-technique.mbt.qnt",
               "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-slow-fall-selected-identity.mbt.qnt",
+              "stepAction": "step"
             }
           ],
           "profileId": "unit-feature.first-attack-roll-reckless-advantage",
@@ -1129,6 +1243,12 @@
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/open-hand-technique-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-open-hand-technique.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-slow-fall-selected-identity.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -1191,6 +1311,12 @@
               "ownerPath": "packages/battle-runtime/src/open-hand-technique-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-open-hand-technique.mbt.qnt",
               "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-slow-fall-selected-identity.mbt.qnt",
+              "stepAction": "step"
             }
           ],
           "profileId": "unit-feature.bardic-inspiration-failed-d20-test",
@@ -1236,6 +1362,12 @@
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/open-hand-technique-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-open-hand-technique.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-slow-fall-selected-identity.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -1297,6 +1429,12 @@
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/open-hand-technique-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-open-hand-technique.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-slow-fall-selected-identity.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -1344,6 +1482,12 @@
               "ownerPath": "packages/battle-runtime/src/open-hand-technique-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-open-hand-technique.mbt.qnt",
               "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-slow-fall-selected-identity.mbt.qnt",
+              "stepAction": "step"
             }
           ],
           "qntOwners": [
@@ -1405,6 +1549,12 @@
               "ownerPath": "packages/battle-runtime/src/open-hand-technique-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-open-hand-technique.mbt.qnt",
               "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-slow-fall-selected-identity.mbt.qnt",
+              "stepAction": "step"
             }
           ],
           "profileId": "unit-feature.action-surge-resource",
@@ -1450,6 +1600,12 @@
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/open-hand-technique-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-open-hand-technique.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-slow-fall-selected-identity.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -1512,6 +1668,12 @@
               "ownerPath": "packages/battle-runtime/src/open-hand-technique-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-open-hand-technique.mbt.qnt",
               "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-slow-fall-selected-identity.mbt.qnt",
+              "stepAction": "step"
             }
           ],
           "profileId": "unit-feature.self-bonus-action-healing",
@@ -1557,6 +1719,12 @@
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/open-hand-technique-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-open-hand-technique.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-slow-fall-selected-identity.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -1619,6 +1787,12 @@
               "ownerPath": "packages/battle-runtime/src/open-hand-technique-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-open-hand-technique.mbt.qnt",
               "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-slow-fall-selected-identity.mbt.qnt",
+              "stepAction": "step"
             }
           ],
           "profileId": "unit-feature.failed-ability-check-resource-boost",
@@ -1664,6 +1838,12 @@
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/open-hand-technique-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-open-hand-technique.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-slow-fall-selected-identity.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -1726,6 +1906,12 @@
               "ownerPath": "packages/battle-runtime/src/open-hand-technique-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-open-hand-technique.mbt.qnt",
               "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-slow-fall-selected-identity.mbt.qnt",
+              "stepAction": "step"
             }
           ],
           "profileId": "unit-feature.martial-arts-attack-projection",
@@ -1771,6 +1957,12 @@
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/open-hand-technique-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-open-hand-technique.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-slow-fall-selected-identity.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -1833,6 +2025,12 @@
               "ownerPath": "packages/battle-runtime/src/open-hand-technique-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-open-hand-technique.mbt.qnt",
               "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-slow-fall-selected-identity.mbt.qnt",
+              "stepAction": "step"
             }
           ],
           "profileId": "unit-feature.passive-speed-bonus",
@@ -1878,6 +2076,12 @@
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/open-hand-technique-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-open-hand-technique.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-slow-fall-selected-identity.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -1940,6 +2144,12 @@
               "ownerPath": "packages/battle-runtime/src/open-hand-technique-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-open-hand-technique.mbt.qnt",
               "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-slow-fall-selected-identity.mbt.qnt",
+              "stepAction": "step"
             }
           ],
           "profileId": "unit-feature.alternate-action-cost",
@@ -1985,6 +2195,12 @@
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/open-hand-technique-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-open-hand-technique.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-slow-fall-selected-identity.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -2047,6 +2263,12 @@
               "ownerPath": "packages/battle-runtime/src/open-hand-technique-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-open-hand-technique.mbt.qnt",
               "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-slow-fall-selected-identity.mbt.qnt",
+              "stepAction": "step"
             }
           ],
           "profileId": "unit-feature.attack-damage-rider",
@@ -2092,6 +2314,12 @@
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/open-hand-technique-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-open-hand-technique.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-slow-fall-selected-identity.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -2158,6 +2386,12 @@
               "ownerPath": "packages/battle-runtime/src/open-hand-technique-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-open-hand-technique.mbt.qnt",
               "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-slow-fall-selected-identity.mbt.qnt",
+              "stepAction": "step"
             }
           ],
           "profileId": "unit-feature.innate-sorcery-activation",
@@ -2203,6 +2437,12 @@
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/open-hand-technique-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-open-hand-technique.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-slow-fall-selected-identity.mbt.qnt",
               "stepAction": "step"
             }
           ],

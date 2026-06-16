@@ -172,6 +172,12 @@
           "ownerPath": "packages/battle-runtime/src/open-hand-technique-selected-identity.mbt.test.ts",
           "qntSpecPath": "packages/battle-runtime/battle-runtime-open-hand-technique.mbt.qnt",
           "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-slow-fall-selected-identity.mbt.qnt",
+          "stepAction": "step"
         }
       ],
       "profiles": [],
@@ -206,7 +212,8 @@
         "packages/battle-runtime/battle-runtime-feature-bridge.qnt",
         "packages/battle-runtime/battle-runtime-fighter-ongoing-features.qnt",
         "packages/shared-algebras/proofs/rule-core/action-turn-procedures.qnt",
-        "packages/shared-algebras/proofs/rule-core/attack-action-additional-attacks.qnt"
+        "packages/shared-algebras/proofs/rule-core/attack-action-additional-attacks.qnt",
+        "packages/battle-runtime/battle-runtime-slow-fall.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -7080,6 +7087,22 @@
       "role": "proof-only"
     },
     {
+      "evidence": "packages/battle-runtime/battle-runtime-slow-fall.qnt is current QNT proof evidence for Slow Fall's falling-trigger Reaction reduction profile; reusable reaction and fall-damage arithmetic semantics remain in shared rule-core owners.",
+      "obligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-slow-fall.qnt",
+      "profileScopes": [
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "profileId": "unit-feature.reaction-roll-or-damage-reduction"
+        }
+      ],
+      "role": "proof-only"
+    },
+    {
       "evidence": "packages/battle-runtime/battle-runtime-blur-attack-roll-defense.qnt is the focused QNT owner carrying Blur self Spell Effect, Blindsight/Truesight bypass, attack-roll mode projection, Concentration, and cleanup semantics.",
       "obligationIds": [
         "BATTLE.SPELL.BLUR_ATTACK_ROLL_DEFENSE_LIFECYCLE"
@@ -9527,6 +9550,11 @@
       "role": "semantic-core"
     },
     {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-slow-fall.qnt",
+      "role": "proof-only"
+    },
+    {
       "category": "leaf-type-vocabulary",
       "classification": "exempt",
       "evidence": "Sorcerous Burst damage-choice vocabulary leaf shared by the model and spell bridge.",
@@ -10454,6 +10482,13 @@
           ],
           "ownerPath": "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
           "role": "semantic-core"
+        },
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "ownerPath": "packages/battle-runtime/battle-runtime-slow-fall.qnt",
+          "role": "proof-only"
         }
       ]
     },
@@ -10812,7 +10847,8 @@
         "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles-inductive.qnt",
         "packages/battle-runtime/battle-runtime-monk-focus-tests.qnt",
         "packages/battle-runtime/battle-runtime-bardic-inspiration.qnt",
-        "packages/battle-runtime/battle-runtime-turn-order.qnt"
+        "packages/battle-runtime/battle-runtime-turn-order.qnt",
+        "packages/battle-runtime/battle-runtime-slow-fall.qnt"
       ],
       "semanticCore": [
         "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt",

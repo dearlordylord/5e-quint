@@ -470,6 +470,7 @@ export {
   resolveBattleSubject,
   resolveBattleSubjectInternal,
   resolveCastTriggeredReactionSpellCommand,
+  resolveFallDamageLanding,
   resolveFeatherFallLanding,
   resolveFlySpeedGrantEndFallCleanup,
   resolveReactionRollOrDamageReduction,
@@ -1126,6 +1127,15 @@ export type BattleReactionModifierChoice =
         readonly targetGate: AttackDamageReductionRedirectTargetGate;
         readonly originalDamageType: DamageType;
       };
+    }
+  | {
+      readonly kind: "fallDamageReduction";
+      readonly unitId: UnitRecord["id"];
+      readonly label: string;
+      readonly reduction: {
+        readonly kind: "flat";
+        readonly amount: DamageAmount;
+      };
     };
 type BattleReactionRolledResourceReduction = Omit<
   ReactionReductionResourceDie,
@@ -1250,6 +1260,7 @@ export type BattleInterruptCheckpoint =
       readonly trigger: "creatureFalls";
       readonly fallingCreatureId: CombatantId;
       readonly reactionSpellTargetFacts: readonly BattleTargetSpatialFact[];
+      readonly landingMitigations: readonly BattleFallDamageLandingMitigationFrame[];
     })
   | (BattleInterruptCheckpointWithContinuationBase & {
       readonly trigger: "opportunityAttack";
@@ -1265,12 +1276,18 @@ export type BattleFlySpeedGrantEndFallCleanupFrame = {
   readonly targetId: CombatantId;
   readonly endedEffect: EndedFlySpeedGrant;
 };
+export type BattleFallDamageLandingMitigationFrame = {
+  readonly kind: "fallDamageLandingMitigation";
+  readonly targetId: CombatantId;
+  readonly reductionAmount: DamageAmount;
+};
 export type BattleInterruptFrame =
   | {
       readonly kind: "interruptCheckpoint";
       readonly frame: BattleInterruptCheckpoint;
     }
   | BattleFlySpeedGrantEndFallCleanupFrame
+  | BattleFallDamageLandingMitigationFrame
   | BattleReplayContinuationFrame
   | BattleAttackDamageContinuationConcentrationFrame;
 export type BattleInterruptCheckpointFrame = Extract<
@@ -6257,6 +6274,30 @@ export type BattleFeatherFallLandingResult =
       readonly targetId: CombatantId;
       readonly fallDamagePrevented: false;
       readonly fallingPronePrevented: false;
+    }
+  | {
+      readonly tag: "invalid";
+      readonly state: BattleState;
+      readonly snapshot: BattleSnapshot;
+      readonly reason: "missingCombatant";
+      readonly message: string;
+    };
+export type BattleRawFallDamage = {
+  readonly kind: "rawFallDamage";
+  readonly amount: DamageAmount;
+};
+export type BattleFallDamageLandingResult =
+  | {
+      readonly tag: "landed";
+      readonly state: BattleState;
+      readonly snapshot: BattleSnapshot;
+      readonly targetId: CombatantId;
+      readonly incomingFallDamage: DamageAmount;
+      readonly effectiveFallDamage: DamageAmount;
+      readonly fallDamagePrevented: boolean;
+      readonly fallingPronePrevented: boolean;
+      readonly slowFallReductionAmount: DamageAmount;
+      readonly featherFallMitigated: boolean;
     }
   | {
       readonly tag: "invalid";

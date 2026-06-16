@@ -1605,6 +1605,15 @@ const ReactionAttackDamageReductionUnconditionalTriggerSchema = strictStruct({
   requiresVisibleAttacker: exactOptional(Schema.Boolean),
 });
 
+const ReactionFallDamageReductionTriggerSchema = strictStruct({
+  kind: Schema.Literal("creature_falls"),
+});
+
+const ClassLevelMultiplierReductionSchema = strictStruct({
+  kind: Schema.Literal("class_level_multiplier"),
+  multiplier: PositiveIntegerSchema,
+});
+
 const AttackDamageReductionZeroDamageRedirectSchema = strictStruct({
   spends: strictStruct({
     resourceUnitId: NonEmptyStringSchema,
@@ -1688,6 +1697,11 @@ const ReactionRollOrDamageReductionModifierSchema = Schema.Union(
       ability: Schema.Literal("dex"),
     }),
     zeroDamageRedirect: AttackDamageReductionZeroDamageRedirectSchema,
+  }),
+  strictStruct({
+    kind: Schema.Literal("fall_damage_reduction"),
+    trigger: ReactionFallDamageReductionTriggerSchema,
+    reduction: ClassLevelMultiplierReductionSchema,
   }),
 );
 

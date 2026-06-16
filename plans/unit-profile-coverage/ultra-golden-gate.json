@@ -97,7 +97,7 @@
             },
             "witnessKinds": {
               "deterministic-qnt-replay": 5,
-              "focused-mbt": 48,
+              "focused-mbt": 49,
               "runtime-test": 14
             }
           },
@@ -360,7 +360,7 @@
             },
             "witnessKinds": {
               "deterministic-qnt-replay": 8,
-              "focused-mbt": 48,
+              "focused-mbt": 49,
               "runtime-test": 14
             }
           },
@@ -626,7 +626,7 @@
             },
             "witnessKinds": {
               "deterministic-qnt-replay": 11,
-              "focused-mbt": 67,
+              "focused-mbt": 68,
               "runtime-test": 22
             }
           },
@@ -811,18 +811,18 @@
               "strictTargetOpenCount": 0
             },
             "selectedIdentityReadiness": {
-              "denominator": 168,
-              "numerator": 168,
+              "denominator": 169,
+              "numerator": 169,
               "percent": "100%"
             },
             "srdAuthoredProductReadiness": {
-              "denominator": 82,
-              "numerator": 82,
+              "denominator": 83,
+              "numerator": 83,
               "percent": "100%"
             },
             "strictTargetClosure": {
-              "denominator": 209,
-              "numerator": 209,
+              "denominator": 210,
+              "numerator": 210,
               "percent": "100%"
             }
           },
@@ -855,7 +855,7 @@
             },
             "witnessKinds": {
               "deterministic-qnt-replay": 11,
-              "focused-mbt": 67,
+              "focused-mbt": 68,
               "runtime-test": 22
             }
           },
@@ -1088,15 +1088,15 @@
       {
         "metrics": {
           "auditedEvidenceRows": {
-            "denominator": 147,
-            "numerator": 147
+            "denominator": 148,
+            "numerator": 148
           },
           "joinedEvidenceRows": {
-            "denominator": 147,
-            "numerator": 72
+            "denominator": 148,
+            "numerator": 73
           },
           "missingJoinRows": {
-            "denominator": 147,
+            "denominator": 148,
             "numerator": 75
           }
         },
@@ -1134,7 +1134,8 @@
                 "packages/battle-runtime/src/open-hand-technique-selected-identity.mbt.test.ts",
                 "packages/battle-runtime/src/preserve-life-selected-identity.mbt.test.ts",
                 "packages/battle-runtime/src/rogue-steady-aim.mbt.test.ts",
-                "packages/battle-runtime/src/rule-core-features.mbt.test.ts"
+                "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+                "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts"
               ]
             },
             "sourceRecordPath": "packages/surface/content/barbarian_danger_sense.json",
@@ -1173,7 +1174,8 @@
                 "packages/battle-runtime/src/open-hand-technique-selected-identity.mbt.test.ts",
                 "packages/battle-runtime/src/preserve-life-selected-identity.mbt.test.ts",
                 "packages/battle-runtime/src/rogue-steady-aim.mbt.test.ts",
-                "packages/battle-runtime/src/rule-core-features.mbt.test.ts"
+                "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+                "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts"
               ]
             },
             "sourceRecordPath": "packages/surface/content/bard_bardic_inspiration.json",
@@ -1307,7 +1309,8 @@
                 "packages/battle-runtime/src/open-hand-technique-selected-identity.mbt.test.ts",
                 "packages/battle-runtime/src/preserve-life-selected-identity.mbt.test.ts",
                 "packages/battle-runtime/src/rogue-steady-aim.mbt.test.ts",
-                "packages/battle-runtime/src/rule-core-features.mbt.test.ts"
+                "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+                "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts"
               ]
             },
             "sourceRecordPath": "packages/surface/content/fighter_remarkable_athlete.json",
@@ -1345,7 +1348,8 @@
                 "packages/battle-runtime/src/open-hand-technique-selected-identity.mbt.test.ts",
                 "packages/battle-runtime/src/preserve-life-selected-identity.mbt.test.ts",
                 "packages/battle-runtime/src/rogue-steady-aim.mbt.test.ts",
-                "packages/battle-runtime/src/rule-core-features.mbt.test.ts"
+                "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+                "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts"
               ]
             },
             "sourceRecordPath": "packages/surface/content/fighter_remarkable_athlete.json",
@@ -1383,7 +1387,8 @@
                 "packages/battle-runtime/src/open-hand-technique-selected-identity.mbt.test.ts",
                 "packages/battle-runtime/src/preserve-life-selected-identity.mbt.test.ts",
                 "packages/battle-runtime/src/rogue-steady-aim.mbt.test.ts",
-                "packages/battle-runtime/src/rule-core-features.mbt.test.ts"
+                "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+                "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts"
               ]
             },
             "sourceRecordPath": "packages/surface/content/monk_martial_arts.json",
@@ -1421,7 +1426,8 @@
                 "packages/battle-runtime/src/open-hand-technique-selected-identity.mbt.test.ts",
                 "packages/battle-runtime/src/preserve-life-selected-identity.mbt.test.ts",
                 "packages/battle-runtime/src/rogue-steady-aim.mbt.test.ts",
-                "packages/battle-runtime/src/rule-core-features.mbt.test.ts"
+                "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+                "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts"
               ]
             },
             "sourceRecordPath": "packages/surface/content/monk_unarmored_movement.json",
@@ -1598,7 +1604,8 @@
                 "packages/battle-runtime/src/open-hand-technique-selected-identity.mbt.test.ts",
                 "packages/battle-runtime/src/preserve-life-selected-identity.mbt.test.ts",
                 "packages/battle-runtime/src/rogue-steady-aim.mbt.test.ts",
-                "packages/battle-runtime/src/rule-core-features.mbt.test.ts"
+                "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+                "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts"
               ]
             },
             "sourceRecordPath": "packages/surface/content/paladin_sacred_weapon.json",
@@ -1636,7 +1643,8 @@
                 "packages/battle-runtime/src/open-hand-technique-selected-identity.mbt.test.ts",
                 "packages/battle-runtime/src/preserve-life-selected-identity.mbt.test.ts",
                 "packages/battle-runtime/src/rogue-steady-aim.mbt.test.ts",
-                "packages/battle-runtime/src/rule-core-features.mbt.test.ts"
+                "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+                "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts"
               ]
             },
             "sourceRecordPath": "packages/surface/content/paladin_sacred_weapon.json",
@@ -1741,7 +1749,8 @@
                 "packages/battle-runtime/src/open-hand-technique-selected-identity.mbt.test.ts",
                 "packages/battle-runtime/src/preserve-life-selected-identity.mbt.test.ts",
                 "packages/battle-runtime/src/rogue-steady-aim.mbt.test.ts",
-                "packages/battle-runtime/src/rule-core-features.mbt.test.ts"
+                "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+                "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts"
               ]
             },
             "sourceRecordPath": "packages/surface/content/sorcerer_innate_sorcery.json",

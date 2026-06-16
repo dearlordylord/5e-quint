@@ -7,6 +7,7 @@
 import {
   AbilityModifier,
   DifficultyClass,
+  damageAmount as toDamageAmount,
   difficultyClass,
   type DamageDieSize,
 } from "@dnd/shared/types";
@@ -112,10 +113,19 @@ export function reactionModifierReductionRoll(
       readonly tag: "invalid";
       readonly message: string;
     } {
-  if (choice.reduction.kind === "halfDamage") {
+  if (
+    choice.reduction.kind === "halfDamage" ||
+    choice.reduction.kind === "flat"
+  ) {
     const unexpectedRollFill = fills.find((fill) => fill.kind === "rolledDice");
     return unexpectedRollFill === undefined
-      ? { tag: "ok", value: 0 }
+      ? {
+          tag: "ok",
+          value:
+            choice.reduction.kind === "flat"
+              ? Number(choice.reduction.amount)
+              : 0,
+        }
       : {
           tag: "invalid",
           message: "This Reaction modifier does not accept a roll fill.",
@@ -226,7 +236,11 @@ export function reactionRollOrDamageReductionChoices(
   state: BattleState,
   frame: BattleInterruptCheckpointInput,
 ): readonly BattleInterruptProcedureChoice[] {
-  if (frame.trigger !== "attackHit" && frame.trigger !== "attackDamage") {
+  if (
+    frame.trigger !== "attackHit" &&
+    frame.trigger !== "attackDamage" &&
+    frame.trigger !== "creatureFalls"
+  ) {
     return [];
   }
   return [...state.combatants].flatMap(([reactorId, reactor]) => {
@@ -365,6 +379,14 @@ export function reactionRollOrDamageReductionChoiceForProfile(
     ];
   }
   if (frame.trigger !== "attackDamage") {
+    if (frame.trigger === "creatureFalls") {
+      return reactionRollOrDamageReductionFallChoiceForProfile(
+        frame,
+        reactorId,
+        profile,
+        modifier,
+      );
+    }
     return [];
   }
   if (
@@ -395,6 +417,44 @@ export function reactionRollOrDamageReductionChoiceForProfile(
     ];
   }
   return [];
+}
+
+function reactionRollOrDamageReductionFallChoiceForProfile(
+  frame: Extract<
+    BattleInterruptCheckpointInput,
+    { readonly trigger: "creatureFalls" }
+  >,
+  reactorId: CombatantId,
+  profile: Extract<
+    SupportedUnitFeatureProfile,
+    { readonly kind: "reactionRollOrDamageReduction" }
+  >,
+  modifier: ReactionRollOrDamageReductionProfile,
+): readonly BattleInterruptProcedureChoice[] {
+  if (
+    modifier.kind !== "fallDamageReduction" ||
+    reactorId !== frame.fallingCreatureId
+  ) {
+    return [];
+  }
+  return [
+    {
+      kind: "reactionRollOrDamageReduction",
+      reactorId,
+      choice: {
+        kind: "fallDamageReduction",
+        unitId: profile.unit.id,
+        label: profile.unit.name,
+        reduction: {
+          kind: "flat",
+          amount: toDamageAmount(
+            Number(profile.classLevel) * modifier.reduction.multiplier,
+          ),
+        },
+      },
+      initialHoles: [],
+    },
+  ];
 }
 
 export function reactionModifierRollHole(

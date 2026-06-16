@@ -1,0 +1,27 @@
+{
+  "acquiredAtLevel": 4,
+  "className": "monk",
+  "description": "When you fall, take a Reaction to reduce any damage you take from the fall by five times your Monk level.",
+  "id": "monk_slow_fall",
+  "kind": "class_feature",
+  "mechanics": {
+    "family": "reaction_roll_or_damage_reduction",
+    "modifiers": [
+      {
+        "kind": "fall_damage_reduction",
+        "reduction": {
+          "kind": "class_level_multiplier",
+          "multiplier": 5
+        },
+        "trigger": {
+          "kind": "creature_falls"
+        }
+      }
+    ]
+  },
+  "name": "Slow Fall",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Classes/Monk#Slow Fall"
+  }
+}
