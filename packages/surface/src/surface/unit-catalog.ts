@@ -73,6 +73,7 @@ import dispelMagicInput from "../../content/dispel_magic.json";
 import divineFavorInput from "../../content/divine_favor.json";
 import divineSmiteInput from "../../content/divine_smite.json";
 import dragonsBreathInput from "../../content/dragons_breath.json";
+import druidAbilityScoreImprovementL4Input from "../../content/druid_ability_score_improvement_l4.json";
 import druidCircleOfTheLandSpellsInput from "../../content/druid_circle_of_the_land_spells.json";
 import druidDruidicInput from "../../content/druid_druidic.json";
 import druidLandsAidInput from "../../content/druid_lands_aid.json";
@@ -461,6 +462,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     clericDivineOrderInput,
     clericLifeDomainSpellsInput,
     clericPreserveLifeInput,
+    druidAbilityScoreImprovementL4Input,
     druidCircleOfTheLandSpellsInput,
     druidDruidicInput,
     druidLandsAidInput,

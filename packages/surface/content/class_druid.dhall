@@ -15,12 +15,13 @@ let SpellcastingProgressionRow : Type =
 let druid =
       { armorTraining = { categories = [ "light", "shield" ], kind = "trained" }
       , className = "druid"
-      , description = "SRD Druid class creation and early progression facts for a level 1-2 character, including class-list prepared Spell Access, Spell Slots, spellcasting focus facts, and level 1-2 class feature grants."
+      , description = "SRD Druid class creation and early progression facts, including class-list prepared Spell Access, Spell Slots, spellcasting focus facts, level 1-2 class feature grants, level 3 subclass selection, and the level 4 Ability Score Improvement feature grant."
       , featureGrants =
         [ { level = 1, unitId = "druid_druidic" }
         , { level = 1, unitId = "druid_primal_order" }
         , { level = 2, unitId = "druid_wild_shape" }
         , { level = 2, unitId = "druid_wild_companion" }
+        , { level = 4, unitId = "druid_ability_score_improvement_l4" }
         ]
       , hitPointDie = 8
       , id = "class_druid"
@@ -34,7 +35,7 @@ let druid =
           }
       , name = "Druid"
       , primaryAbilities = { abilities = [ "wis" ], kind = "all_of" }
-      , provenance = { kind = "srd-5.2.1", section = "Classes/Druid.md:3-33,57-79" }
+      , provenance = { kind = "srd-5.2.1", section = "Classes/Druid.md:3-35,57-79,134-136" }
       , savingThrowProficiencies = [ "int", "wis" ]
       , skillProficiencyChoice =
         { choose = 2, options = [ "animal_handling", "arcana", "insight", "medicine", "nature", "perception", "religion", "survival" ] }
