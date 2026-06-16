@@ -44,13 +44,13 @@
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
       "denominator": 426,
-      "numerator": 232,
-      "percent": "54.5%"
+      "numerator": 233,
+      "percent": "54.7%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
       "denominator": 511,
-      "numerator": 279,
-      "percent": "54.6%"
+      "numerator": 280,
+      "percent": "54.8%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,7 +59,7 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 280
+      "value": 281
     },
     "deterministicAdmissionProjectionCoverage": {
       "denominator": 176,
@@ -67,8 +67,8 @@
       "percent": "97.7%"
     },
     "profileClassificationCoverage": {
-      "denominator": 280,
-      "numerator": 280,
+      "denominator": 281,
+      "numerator": 281,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -112,9 +112,9 @@
       "percent": "97.7%"
     },
     "supportedProfileCoverage": {
-      "denominator": 233,
+      "denominator": 234,
       "numerator": 176,
-      "percent": "75.5%"
+      "percent": "75.2%"
     }
   },
   "metricSemantics": [
@@ -15742,8 +15742,8 @@
         "unsupportedOrOtherUnits": 18
       },
       {
-        "executableUnitDenominator": 82,
-        "installedUnitDenominator": 82,
+        "executableUnitDenominator": 83,
+        "installedUnitDenominator": 83,
         "kind": "class_feature",
         "label": "Class-feature Units",
         "profileFactDenominator": 117,
@@ -15753,7 +15753,7 @@
         "selectedIdentityReplayGapUnits": 0,
         "selectedIdentityReplayWitnessUnits": 72,
         "supportedProfileUnits": 69,
-        "unsupportedOrOtherUnits": 5
+        "unsupportedOrOtherUnits": 6
       }
     ]
   },
@@ -21783,6 +21783,29 @@
       ],
       "sourceRecordPath": "packages/surface/content/wizard_scholar.json",
       "unitId": "wizard_scholar"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "selection-grant-container",
+          "owner": "character-creation-runtime ability-score projection and selected feat Unit profiles",
+          "reason": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim."
+        },
+        "reason": "Level 4 Ability Score Improvement is a character-advancement feat-selection container; no standalone promoted battle Unit profile is claimed for the authored class-feature record.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/wizard_ability_score_improvement_l4.json",
+      "unitId": "wizard_ability_score_improvement_l4"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
@@ -38646,34 +38669,6 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/wind_wall.json",
       "unitId": "wind_wall"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "unsupported-widening-pressure",
-          "planningLane": "QMBT18",
-          "reason": "Executable SRD authored data is absent from the catalog and needs an explicit unsupported profile or surface-widening slice."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "claim": {
-        "battleReadinessClosure": {
-          "kind": "selection-grant-container",
-          "owner": "character-creation-runtime ability-score projection and selected feat Unit profiles",
-          "reason": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim."
-        },
-        "reason": "Level 4 Ability Score Improvement is a character-advancement feat-selection container; no standalone promoted battle Unit profile is claimed for the authored class-feature record.",
-        "tag": "unsupported-profile"
-      },
-      "collectionId": "srd-5.2.1",
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "class_feature",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/wizard_ability_score_improvement_l4.json",
-      "unitId": "wizard_ability_score_improvement_l4"
     }
   ]
 }

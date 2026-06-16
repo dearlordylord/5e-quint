@@ -37,6 +37,9 @@ const expectedTools = [
   "end_battle",
 ] as const;
 
+const levelFourWizardProgressionOptionId =
+  "12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard:level_4:fixed_hp_gain";
+
 const agentConversationScenarios = [
   {
     id: "discover-mcp-surface",
@@ -99,6 +102,19 @@ const agentConversationScenarios = [
     executableCoverage: "verifyLevelThreeWizardVertical",
     insufficiency:
       "This is a known-good MCP scenario. It proves the level-3 path and level-2 Spell Slot handoff, while autonomous id selection remains delegated to catalog and hole discovery.",
+  },
+  {
+    id: "create-level-four-wizard-asi-and-battle-handoff",
+    name: "Create a level 4 Wizard with Ability Score Improvement",
+    userSays:
+      "Create an Elf Soldier Wizard 4 Evoker, take Ability Score Improvement, then show the sheet and start battle.",
+    agentReads:
+      "After the Wizard 4 progression fill, discovery returns the level-4 Ability Score Improvement feat choice, the ASI ability-score increase choice, Wizard cantrip, spellbook, prepared-spell, equipment, and loadout holes. The finalized Character Sheet exposes Intelligence 17 plus four level-1 Spell Slots and three level-2 Spell Slots.",
+    agentDecision:
+      "It selects the Ability Score Improvement feat and its returned Intelligence +2 option, finalizes only after MCP reports no remaining holes, reads list_characters for durable Character Sheet state, then starts battle from the finalized Character Sheet and inspects the returned battle spell-slot projection.",
+    executableCoverage: "verifyLevelFourWizardVertical",
+    insufficiency:
+      "This is a known-good MCP scenario for level 4. It still relies on MCP-returned holes and option ids for sequencing, while autonomous natural-language planning remains outside this acceptance runner.",
   },
   {
     id: "select-monsters",
@@ -935,6 +951,104 @@ export async function verifyLevelThreeWizardVertical(client: Client) {
   ]);
 }
 
+export async function verifyLevelFourWizardVertical(client: Client) {
+  const workflow = await callTool(client, "describe_mcp_workflow", {});
+  assert.equal(get(workflow, "resultPaths.creationHoles"), "holes");
+  assert.equal(
+    get(workflow, "resultPaths.draftRevision"),
+    "draft.revision or storedDraft.revision",
+  );
+
+  const units = await callTool(client, "list_catalog_units", {});
+  assert.ok(
+    unitSummaries(units, "class").some((unit) => unit.id === "class_wizard"),
+  );
+  assert.ok(
+    unitSummaries(units, "class_feature").some(
+      (unit) => unit.id === "wizard_ability_score_improvement_l4",
+    ),
+  );
+
+  const wizardDraftId = "draft:stdio-level-four-elf-soldier-wizard";
+  const finalizedWizard = await createAndFinalizeElfWizardFour(
+    client,
+    wizardDraftId,
+  );
+  assert.equal(get(finalizedWizard, "finalization.tag"), "ready");
+  assert.deepEqual(get(finalizedWizard, "finalization.build.abilityScores"), {
+    str: 10,
+    dex: 14,
+    con: 14,
+    int: 17,
+    wis: 10,
+    cha: 12,
+  });
+  assert.deepEqual(
+    get(
+      finalizedWizard,
+      "finalization.build.spellcasting.slotPools.spellcasting.slots",
+    ),
+    [
+      { count: 4, spellLevel: 1 },
+      { count: 3, spellLevel: 2 },
+    ],
+  );
+  assert.ok(
+    jsonObjectArrayAt(finalizedWizard, "finalization.build.features").some(
+      (feature) =>
+        feature.kind === "selectedClassChoice" &&
+        feature.selectedFromUnitId === "wizard_ability_score_improvement_l4" &&
+        feature.unitId === "feat_ability_score_improvement",
+    ),
+  );
+
+  const listedBeforeBattle = await callTool(client, "list_characters", {});
+  const wizard = characterRow(
+    listedBeforeBattle,
+    testCharacterId(wizardDraftId),
+  );
+  assert.equal(get(wizard, "displayName"), "Elf Soldier Wizard 4");
+  assert.equal(get(wizard, "hitPoints.current"), 26);
+  assert.equal(get(wizard, "hitPoints.maximum"), 26);
+  assert.deepEqual(get(wizard, "build.abilityScores"), {
+    str: 10,
+    dex: 14,
+    con: 14,
+    int: 17,
+    wis: 10,
+    cha: 12,
+  });
+  assert.deepEqual(get(wizard, "spellSlots"), [
+    { count: 4, expended: 0, spellLevel: 1 },
+    { count: 3, expended: 0, spellLevel: 2 },
+  ]);
+
+  const started = await callTool(client, "start_battle", {
+    battleId: "battle:stdio-level-four-wizard-asi",
+    initialCombatants: [
+      {
+        kind: "characterSession",
+        characterId: testCharacterId(wizardDraftId),
+        combatantId: "wizard-level-4",
+        initiative: 16,
+        side: "party",
+      },
+      statBlockCombatant("sphinx", "stat_block_sphinx_of_wonder", 8),
+    ],
+  });
+  assert.deepEqual(get(started, "snapshot.turnOrder"), [
+    "wizard-level-4",
+    "sphinx",
+  ]);
+  assert.deepEqual(wizardSpellSlotsFor(started, "wizard-level-4"), [
+    { count: 4, expended: 0, spellLevel: 1 },
+    { count: 3, expended: 0, spellLevel: 2 },
+  ]);
+
+  const wizardActs = await callTool(client, "discover_battle_acts", {});
+  assert.ok(battleActByLabel(wizardActs, "Scorching Ray"));
+}
+
 async function createAndFinalizeFighterTwo(client: Client, draftId: string) {
   await callTool(client, "create_character_draft", { draftId });
   await fillBaseOrcSoldier(
@@ -1268,6 +1382,230 @@ async function createAndFinalizeElfWizardThree(
   return callTool(client, "finalize_character", { draftId });
 }
 
+async function createAndFinalizeElfWizardFour(client: Client, draftId: string) {
+  const created = await callTool(client, "create_character_draft", { draftId });
+  await callTool(client, "fill_creation_holes", {
+    draftId,
+    expectedRevision: 0,
+    fills: [
+      choiceFillFromReturnedHole(
+        created,
+        "cc:draft:draft.progression.initial",
+        levelFourWizardProgressionOptionId,
+      ),
+      choiceFillFromReturnedHole(
+        created,
+        "cc:draft:draft.background",
+        "background_soldier",
+      ),
+      choiceFillFromReturnedHole(
+        created,
+        "cc:draft:draft.species",
+        "species_elf",
+      ),
+      {
+        kind: "abilityScores",
+        holeId: "cc:draft:draft.abilityScoreGeneration",
+        method: "standardArray",
+        value: {
+          str: 8,
+          dex: 14,
+          con: 13,
+          int: 15,
+          wis: 10,
+          cha: 12,
+        },
+      },
+      choiceFillFromReturnedHole(
+        created,
+        "cc:draft:draft.languages",
+        "Dwarvish",
+        "Goblin",
+      ),
+      choiceFillFromReturnedHole(
+        created,
+        "cc:draft:draft.alignment",
+        "lawful_good",
+      ),
+    ],
+  });
+
+  const classChoices = await callTool(client, "discover_creation_holes", {
+    draftId,
+  });
+  assert.deepEqual(holeIds(classChoices), [
+    unitHoleId("class_wizard", "class_skill_proficiency_choice"),
+    unitHoleId(
+      "wizard_ability_score_improvement_l4",
+      "class_feature_feat_choice",
+    ),
+    unitHoleId("class_wizard", "class_subclass_choice"),
+    unitHoleId("class_wizard", "class_equipment_choice"),
+    unitHoleId("class_wizard", "wizard_cantrip_choices"),
+    unitHoleId("class_wizard", "wizard_spellbook_choices"),
+    unitHoleId("class_wizard", "wizard_prepared_spell_choices"),
+    unitHoleId("background_soldier", "background_ability_score_increase"),
+    unitHoleId("background_soldier", "background_tool_choice"),
+    unitHoleId("background_soldier", "background_equipment_choice"),
+  ]);
+
+  await callTool(client, "fill_creation_holes", {
+    draftId,
+    expectedRevision: 1,
+    fills: [
+      choiceFillFromReturnedHole(
+        classChoices,
+        unitHoleId("class_wizard", "class_skill_proficiency_choice"),
+        "arcana",
+        "history",
+      ),
+      choiceFillFromReturnedHole(
+        classChoices,
+        unitHoleId(
+          "wizard_ability_score_improvement_l4",
+          "class_feature_feat_choice",
+        ),
+        "feat_ability_score_improvement",
+      ),
+      choiceFillFromReturnedHole(
+        classChoices,
+        unitHoleId("class_wizard", "class_subclass_choice"),
+        "subclass_wizard_evoker",
+      ),
+      choiceFillFromReturnedHole(
+        classChoices,
+        unitHoleId("class_wizard", "wizard_cantrip_choices"),
+        "light",
+        "fire_bolt",
+        "ray_of_frost",
+        "minor_illusion",
+      ),
+      choiceFillFromReturnedHole(
+        classChoices,
+        unitHoleId("class_wizard", "wizard_spellbook_choices"),
+        "detect_magic",
+        "mage_armor",
+        "magic_missile",
+        "shield",
+        "sleep",
+        "thunderwave",
+        "chromatic_orb",
+        "scorching_ray",
+        "mirror_image",
+        "misty_step",
+        "acid_arrow",
+        "shatter",
+      ),
+      choiceFillFromReturnedHole(
+        classChoices,
+        unitHoleId("class_wizard", "wizard_prepared_spell_choices"),
+        "mage_armor",
+        "magic_missile",
+        "shield",
+        "chromatic_orb",
+        "scorching_ray",
+        "misty_step",
+        "acid_arrow",
+      ),
+      choiceFillFromReturnedHole(
+        classChoices,
+        unitHoleId("background_soldier", "background_ability_score_increase"),
+        "two_and_one:str:con",
+      ),
+      choiceFillFromReturnedHole(
+        classChoices,
+        unitHoleId("background_soldier", "background_tool_choice"),
+        "tool_dice_set",
+      ),
+      choiceFillFromReturnedHole(
+        classChoices,
+        unitHoleId("class_wizard", "class_equipment_choice"),
+        "option_b",
+      ),
+      choiceFillFromReturnedHole(
+        classChoices,
+        unitHoleId("background_soldier", "background_equipment_choice"),
+        "option_b",
+      ),
+    ],
+  });
+
+  const featureChoices = await callTool(client, "discover_creation_holes", {
+    draftId,
+  });
+  assert.deepEqual(holeIds(featureChoices), [
+    unitHoleId("wizard_scholar", "class_feature_proficiency_choice"),
+    unitHoleId("wizard_evocation_savant", "wizard_spellbook_choices"),
+    unitHoleId(
+      "wizard_ability_score_improvement_l4",
+      "class_feature_ability_score_increase_choice",
+    ),
+    unitHoleId("class_wizard", "equipment_purchase"),
+  ]);
+  await callTool(client, "fill_creation_holes", {
+    draftId,
+    expectedRevision: 2,
+    fills: [
+      choiceFillFromReturnedHole(
+        featureChoices,
+        unitHoleId("wizard_scholar", "class_feature_proficiency_choice"),
+        "arcana",
+      ),
+      choiceFillFromReturnedHole(
+        featureChoices,
+        unitHoleId("wizard_evocation_savant", "wizard_spellbook_choices"),
+        "continual_flame",
+        "darkness",
+      ),
+      choiceFillFromReturnedHole(
+        featureChoices,
+        unitHoleId(
+          "wizard_ability_score_improvement_l4",
+          "class_feature_ability_score_increase_choice",
+        ),
+        "ability_score:int:+2:max20",
+      ),
+      choiceFillFromReturnedHole(
+        featureChoices,
+        unitHoleId("class_wizard", "equipment_purchase"),
+        "weapon_longsword",
+        "weapon_dagger",
+        "equipment_shield",
+      ),
+    ],
+  });
+
+  const loadoutChoices = await callTool(client, "discover_creation_holes", {
+    draftId,
+  });
+  assert.deepEqual(holeIds(loadoutChoices), [
+    loadoutHoleId("equipment_shield", "shield"),
+    loadoutHoleId("weapon_longsword", "weapon"),
+  ]);
+  await callTool(client, "fill_creation_holes", {
+    draftId,
+    expectedRevision: 3,
+    fills: [
+      choiceFillFromReturnedHole(
+        loadoutChoices,
+        loadoutHoleId("equipment_shield", "shield"),
+        "wielded",
+      ),
+      choiceFillFromReturnedHole(
+        loadoutChoices,
+        loadoutHoleId("weapon_longsword", "weapon"),
+        "wielded_one_handed",
+      ),
+    ],
+  });
+
+  const complete = await callTool(client, "discover_creation_holes", {
+    draftId,
+  });
+  assert.deepEqual(holeIds(complete), []);
+  return callTool(client, "finalize_character", { draftId });
+}
+
 async function fillBaseOrcSoldier(
   client: Client,
   draftId: string,
@@ -1348,6 +1686,41 @@ function parseToolPayload(result: unknown, name: string) {
     );
   }
   return textPayload;
+}
+
+function choiceFillFromReturnedHole(
+  payload: JsonObject,
+  holeId: string,
+  ...optionIds: readonly string[]
+) {
+  const hole = returnedChoiceHole(payload, holeId);
+  const returnedOptionIds = new Set(
+    hole.options.map((option) => option.optionId),
+  );
+  for (const optionId of optionIds) {
+    assert.ok(
+      returnedOptionIds.has(optionId),
+      `Expected returned hole ${holeId} to include option ${optionId}`,
+    );
+  }
+  return choiceFill(hole.holeId, ...optionIds);
+}
+
+function returnedChoiceHole(payload: JsonObject, holeId: string) {
+  const holes = jsonObjectArrayAt(payload, "holes");
+  const hole = holes.find((candidate) => candidate.holeId === holeId);
+  assert.ok(hole, `Expected returned creation hole ${holeId}`);
+  assert.equal(hole.kind, "choice");
+  const options = jsonObjectArrayAt(hole, "options");
+  return {
+    holeId: parseString(hole.holeId, `${holeId}.holeId`),
+    options: options.map((option, index) => ({
+      optionId: parseString(
+        get(option, "optionId"),
+        `${holeId}.options.${index}.optionId`,
+      ),
+    })),
+  };
 }
 
 function choiceFill(holeId: string, ...optionIds: readonly string[]) {
@@ -1662,6 +2035,21 @@ function stringArrayAt(payload: JsonObject, path: string) {
   return strings;
 }
 
+function jsonObjectArrayAt(payload: JsonObject, path: string) {
+  const value = get(payload, path);
+  assert.ok(Array.isArray(value), `${path} must be an array`);
+  const objects: JsonObject[] = [];
+  for (const [index, entry] of value.entries()) {
+    assert.ok(isJsonObject(entry), `${path}.${index} must be an object`);
+    objects.push(entry);
+  }
+  return objects;
+}
+
+function isJsonObject(value: unknown): value is JsonObject {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
 function parseString(value: unknown, context: string) {
   if (typeof value !== "string") {
     assert.fail(`${context} must be a string`);
@@ -1670,7 +2058,7 @@ function parseString(value: unknown, context: string) {
 }
 
 export function verifyAgentConversationScenarios() {
-  assert.equal(agentConversationScenarios.length, 14);
+  assert.equal(agentConversationScenarios.length, 15);
   const scenarioIds = new Set<string>();
   for (const scenario of agentConversationScenarios) {
     assert.match(scenario.id, /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/);

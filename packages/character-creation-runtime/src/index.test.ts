@@ -840,6 +840,7 @@ describe("character creation hole discovery", () => {
           "12:class_wizard:level_1:maximum_hit_die",
           "12:class_wizard|12:class_wizard|12:class_wizard:level_3:fixed_hp_gain",
           "12:class_wizard|12:class_wizard:level_2:fixed_hp_gain",
+          "12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard:level_4:fixed_hp_gain",
           "12:class_wizard|13:class_fighter:level_2:fixed_hp_gain",
         ],
       ],

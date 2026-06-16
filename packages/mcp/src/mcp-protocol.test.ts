@@ -5,6 +5,7 @@ import { describe, test } from "vitest";
 import {
   verifyAgentConversationScenarios,
   verifyBaselineVertical,
+  verifyLevelFourWizardVertical,
   verifyLevelThreeWizardVertical,
   verifyToolContract,
   verifyWidthVertical,
@@ -33,6 +34,7 @@ describe("MCP protocol server", () => {
       await verifyBaselineVertical(client);
       await verifyWidthVertical(client);
       await verifyLevelThreeWizardVertical(client);
+      await verifyLevelFourWizardVertical(client);
     } finally {
       await Promise.allSettled([client.close(), server.close()]);
     }

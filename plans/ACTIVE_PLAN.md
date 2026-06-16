@@ -25,13 +25,13 @@
     {
       "number": 4,
       "id": "L14G-04-MCP-LEVEL14-SCENARIO-GATE",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Add level-1-4 MCP scenario evidence"
     },
     {
       "number": 5,
       "id": "L14G-05-GATE-CONSOLIDATION",
-      "status": "blocked",
+      "status": "ready-for-implementation",
       "title": "Regenerate and close the level 1-4 ultra-golden gate"
     },
     {
@@ -46,27 +46,26 @@
 
 ## Current State
 
-The level 1-3 ultra-golden gate remains complete. The checker now also models a
-level-1-4 scope:
+The level 1-3 ultra-golden gate remains complete. The checker now also passes
+the level-1-4 scope:
 
-- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md` reports 25 level-4
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md` reports the level-4
   class-feature rows.
 - `plans/unit-profile-coverage/LEVEL1_4_FULL_SUPPORT.md` exists and reports
-  support completeness as pass: strict target closure `206/206`, selected
-  identity readiness `168/168`, and SRD-authored product readiness with zero
+  support completeness as pass: strict target closure `210/210`, selected
+  identity readiness `169/169`, and SRD-authored product readiness with zero
   authored-readiness blockers.
 - `plans/unit-profile-coverage/ULTRA_GOLDEN_GATE.md` reports the aggregate gate
-  as blocked only for `level-1-4`; that scope is `3/4` layers complete.
-- The formal blocker is MCP scenario evidence: `level-1-4` has `0/4` required
-  MCP flows covered for `mcp-workflow-discovery`, `character-creation`,
-  `character-sheet`, and `battle`.
+  as pass; `level-1-4` is `4/4` layers complete.
+- MCP scenario evidence for `level-1-4` covers `mcp-workflow-discovery`,
+  `character-creation`, `character-sheet`, and `battle` through
+  `create-level-four-wizard-asi-and-battle-handoff`.
 
-The level-4 inventory also surfaces source/catalog work that should be split
-from the MCP scenario lane:
+The level-4 inventory work that originally split from the MCP scenario lane is
+now landed:
 
-- Missing no-matrix level-4 class feature rows: `fighter_ability_score_improvement_l4`,
-  `paladin_ability_score_improvement_l4`, `warlock_ability_score_improvement_l4`,
-  and `monk_slow_fall`.
+- Missing no-matrix level-4 class feature rows for Fighter, Paladin, Warlock,
+  and Monk are closed.
 - Existing installed ASI rows are closed as `closed-selection-grant-container`;
   selected downstream feat Units or Character Sheet facts own executable
   behavior.
@@ -77,7 +76,7 @@ from the MCP scenario lane:
   falling-into-liquid check as a separate Reaction procedure; battle runtime
   should own selected `monk_slow_fall` Reaction spend, `5 * Monk level`
   fall-damage reduction, and the coupled no-fall-damage/Falling-Prone
-  prevention result after a follow-up runtime slice.
+  prevention result.
 
 Completed scope-construction tasks were intentionally removed from the Ralph
 task index. The live queue now starts at `L14G-01`; the deleted completed work
@@ -116,7 +115,7 @@ The level 1-4 gate uses the same four-layer ultra-golden shape as level 1-3:
 | Support completeness | pass | The generated strict report has no open strict rows, selected-identity blockers, or SRD-authored product-readiness blockers. |
 | QNT/generator readiness | pass | Every scoped reducer-semantic obligation is covered, and scoped semantic-core QNT owners are generation-subset-clean with no run-block blocker. |
 | MBT/parity evidence | pass | Every scoped reducer-semantic obligation has at least one rules-kernel parity witness. |
-| MCP scenario evidence | blocked | The level-1-4 MCP scenario manifest needs checker-owned scenario evidence for discovery, character creation, Character Sheet, and battle flows. |
+| MCP scenario evidence | pass | The level-1-4 MCP scenario manifest has checker-owned evidence for discovery, character creation, Character Sheet, and battle flows. |
 
 ## Parallel Ralph Lanes
 
@@ -130,8 +129,8 @@ checks; the consolidation lane is serial after their outputs land.
 | B | `plans/RALPH_L14G_02_PROGRESSION_DELTA_AUDIT.md` | L14G-02-LEVEL4-PROGRESSION-DELTA-AUDIT | ~1 day | done | Audit lane found no new implementation follow-up; existing ASI and Slow Fall lanes remain the correct owners. |
 | C | `plans/RALPH_L14G_03_MONK_SLOW_FALL_TRIAGE.md` | L14G-03-MONK-SLOW-FALL-TRIAGE | ~1 day | done | RAW/domain decision lane for Slow Fall. It spawned the follow-up runtime slice below. |
 | C2 | `plans/RALPH_L14G_03_MONK_SLOW_FALL_TRIAGE.md` | L14G-03A-MONK-SLOW-FALL-RUNTIME | ~1 day | done | Promoted Slow Fall as a selected Monk falling Reaction damage-reduction slice without duplicating table/spatial falling state. |
-| D | `plans/RALPH_L14G_04_MCP_LEVEL14_SCENARIO_GATE.md` | L14G-04-MCP-LEVEL14-SCENARIO-GATE | ~1.5-2 days | ready-for-implementation | Formal ultra-golden blocker. Designs and implements MCP scenario evidence for level-4 advancement, sheet durability, and battle handoff. |
-| E | `plans/RALPH_L14G_05_GATE_CONSOLIDATION.md` | L14G-05-GATE-CONSOLIDATION | ~0.5 day | blocked | Serial lane after A-D. Regenerates, reviews residuals, and updates this plan. |
+| D | `plans/RALPH_L14G_04_MCP_LEVEL14_SCENARIO_GATE.md` | L14G-04-MCP-LEVEL14-SCENARIO-GATE | ~1.5-2 days | done | Added MCP scenario evidence for level-4 advancement, sheet durability, and battle handoff. |
+| E | `plans/RALPH_L14G_05_GATE_CONSOLIDATION.md` | L14G-05-GATE-CONSOLIDATION | ~0.5 day | ready-for-implementation | Serial lane after A-D. Regenerates, reviews residuals, and updates this plan. |
 
 The per-lane files above are the Ralph launch sources for parallel runs. Each
 file has its own `ralph-task-index` block; completed research lanes may add
@@ -162,9 +161,9 @@ updates need to converge in one artifact.
 | 1 | L14G-01-LEVEL4-ASI-CATALOG-SOURCE | done | none | ASI source/catalog gaps closed without adding per-class runtime behavior. |
 | 2 | L14G-02-LEVEL4-PROGRESSION-DELTA-AUDIT | done | none | Audit artifact added at `plans/unit-profile-coverage/L14G_02_LEVEL4_PROGRESSION_DELTA_AUDIT.md`; no new follow-up tasks discovered. |
 | 3 | L14G-03-MONK-SLOW-FALL-TRIAGE | done | none | Boundary decided as split; see `plans/unit-profile-coverage/L14G_03_MONK_SLOW_FALL_TRIAGE.md`. |
-| 4 | L14G-04-MCP-LEVEL14-SCENARIO-GATE | ready-for-implementation | none | Add checked MCP evidence for all four level-1-4 required flows. |
+| 4 | L14G-04-MCP-LEVEL14-SCENARIO-GATE | done | none | Checked MCP evidence added for all four level-1-4 required flows. |
 | 6 | L14G-03A-MONK-SLOW-FALL-RUNTIME | done | L14G-03 | Selected Monk falling Reaction damage-reduction slice implemented. |
-| 5 | L14G-05-GATE-CONSOLIDATION | blocked | Tasks 1-4 and L14G-03A unless deferred by decider | Regenerate, review, and close remaining level-1-4 residuals. |
+| 5 | L14G-05-GATE-CONSOLIDATION | ready-for-implementation | Tasks 1-4 and L14G-03A | Regenerate, review, and close remaining level-1-4 residuals. |
 
 ## Task Details
 
@@ -271,7 +270,7 @@ Verification:
 
 ### Task 4 - L14G-04-MCP-LEVEL14-SCENARIO-GATE
 
-Status: `ready-for-implementation`
+Status: `done`
 
 Output:
 
@@ -292,7 +291,7 @@ Acceptance:
 
 ### Task 5 - L14G-05-GATE-CONSOLIDATION
 
-Status: `blocked`
+Status: `ready-for-implementation`
 
 Depends on:
 
