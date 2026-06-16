@@ -12,7 +12,12 @@ let monkAbilityScoreImprovementL4 =
           "You gain the Ability Score Improvement feat (see \"Feats\") or another feat of your choice for which you qualify. You gain this feature again at Monk levels 8, 12, and 16."
       , mechanics =
           { family = "passive"
-          , grants = [ { kind = "grant_feat", category = "general" } ]
+          , grants =
+              [ { kind = "grant_feat"
+                , category = "general"
+                , openFallback = Some "any_qualifying_feat"
+                }
+              ]
           }
       }
 

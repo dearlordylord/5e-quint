@@ -9,7 +9,7 @@
     "kind": "trained"
   },
   "className": "paladin",
-  "description": "SRD Paladin class creation and early progression facts through level 3, including class-list prepared Spell Access, Spell Slots, and spellcasting focus facts.",
+  "description": "SRD Paladin class creation, level-1 through level-3 Spellcasting facts, and the level-4 Ability Score Improvement feature grant.",
   "featureGrants": [
     {
       "level": 1,
@@ -30,6 +30,10 @@
     {
       "level": 3,
       "unitId": "paladin_channel_divinity"
+    },
+    {
+      "level": 4,
+      "unitId": "paladin_ability_score_improvement_l4"
     }
   ],
   "hitPointDie": 10,
@@ -66,7 +70,7 @@
   },
   "provenance": {
     "kind": "srd-5.2.1",
-    "section": "Classes/Paladin.md:3-24,33-37,66-120"
+    "section": "Classes/Paladin.md:3-24,33-38,66-124"
   },
   "savingThrowProficiencies": [
     "wis",

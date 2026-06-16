@@ -1,8 +1,8 @@
 {
   "acquiredAtLevel": 4,
-  "className": "sorcerer",
-  "description": "You gain the Ability Score Improvement feat (see \"Feats\") or another feat of your choice for which you qualify. You gain this feature again at Sorcerer levels 8, 12, and 16.",
-  "id": "sorcerer_ability_score_improvement_l4",
+  "className": "paladin",
+  "description": "You gain the Ability Score Improvement feat (see \"Feats\") or another feat of your choice for which you qualify. You gain this feature again at Paladin levels 8, 12, and 16.",
+  "id": "paladin_ability_score_improvement_l4",
   "kind": "class_feature",
   "mechanics": {
     "family": "passive",
@@ -17,6 +17,6 @@
   "name": "Ability Score Improvement",
   "provenance": {
     "kind": "srd-5.2.1",
-    "section": "Classes/Sorcerer#Ability Score Improvement"
+    "section": "Classes/Paladin#Ability Score Improvement"
   }
 }

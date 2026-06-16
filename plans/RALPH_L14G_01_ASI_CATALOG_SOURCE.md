@@ -7,7 +7,7 @@
     {
       "number": 1,
       "id": "L14G-01-LEVEL4-ASI-CATALOG-SOURCE",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Close level-4 Ability Score Improvement catalog/source gaps"
     }
   ]
@@ -52,7 +52,7 @@ Units and Character Sheet ability-score facts own executable behavior.
 
 ### Task 1 - L14G-01-LEVEL4-ASI-CATALOG-SOURCE
 
-Status: `ready-for-implementation`
+Status: `done`
 
 Expected size: about one focused day.
 

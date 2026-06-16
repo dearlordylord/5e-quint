@@ -94,6 +94,7 @@ import featMagicInitiateClericInput from "../../content/feat_magic_initiate_cler
 import featMagicInitiateWizardInput from "../../content/feat_magic_initiate_wizard.json";
 import featSavageAttackerInput from "../../content/feat_savage_attacker.json";
 import fighterActionSurgeInput from "../../content/fighter_action_surge.json";
+import fighterAbilityScoreImprovementL4Input from "../../content/fighter_ability_score_improvement_l4.json";
 import fighterExtraAttackInput from "../../content/fighter_extra_attack.json";
 import fighterFightingStyleInput from "../../content/fighter_fighting_style.json";
 import fighterImprovedCriticalInput from "../../content/fighter_improved_critical.json";
@@ -166,6 +167,7 @@ import orcDarkvisionInput from "../../content/species_orc_darkvision.json";
 import orcRelentlessEnduranceInput from "../../content/orc_relentless_endurance.json";
 import elfDarkvisionInput from "../../content/darkvision_elf.json";
 import paladinChannelDivinityInput from "../../content/paladin_channel_divinity.json";
+import paladinAbilityScoreImprovementL4Input from "../../content/paladin_ability_score_improvement_l4.json";
 import paladinExtraAttackInput from "../../content/paladin_extra_attack.json";
 import paladinFightingStyleInput from "../../content/paladin_fighting_style.json";
 import paladinLayOnHandsInput from "../../content/paladin_lay_on_hands.json";
@@ -255,6 +257,7 @@ import thaumaturgyInput from "../../content/thaumaturgy.json";
 import thunderwaveInput from "../../content/thunderwave.json";
 import trueStrikeInput from "../../content/true_strike.json";
 import warlockEldritchInvocationsInput from "../../content/warlock_eldritch_invocations.json";
+import warlockAbilityScoreImprovementL4Input from "../../content/warlock_ability_score_improvement_l4.json";
 import warlockDarkOnesBlessingInput from "../../content/warlock_dark_ones_blessing.json";
 import warlockFiendSpellsInput from "../../content/warlock_fiend_spells.json";
 import warlockMagicalCunningInput from "../../content/warlock_magical_cunning.json";
@@ -430,6 +433,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     fighterActionSurgeInput,
     fighterExtraAttackInput,
     fighterTacticalMindInput,
+    fighterAbilityScoreImprovementL4Input,
     fighterImprovedCriticalInput,
     fighterRemarkableAthleteInput,
     barbarianFrenzyInput,
@@ -483,6 +487,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     warlockDarkOnesBlessingInput,
     warlockPactMagicInput,
     warlockMagicalCunningInput,
+    warlockAbilityScoreImprovementL4Input,
     warlockFiendSpellsInput,
     wizardRitualAdeptInput,
     wizardArcaneRecoveryInput,
@@ -504,6 +509,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     paladinOathOfDevotionSpellsInput,
     paladinSacredWeaponInput,
     paladinExtraAttackInput,
+    paladinAbilityScoreImprovementL4Input,
     paladinWeaponMasteryInput,
     rangerExtraAttackInput,
     rangerHuntersPreyInput,

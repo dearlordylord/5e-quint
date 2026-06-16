@@ -10,13 +10,14 @@ let ClassSpellAccess : Type = { spellId : Text, spellLevel : Natural }
 let paladin =
       { armorTraining = { categories = [ "light", "medium", "heavy", "shield" ], kind = "trained" }
       , className = "paladin"
-      , description = "SRD Paladin class creation and early progression facts through level 3, including class-list prepared Spell Access, Spell Slots, and spellcasting focus facts."
+      , description = "SRD Paladin class creation, level-1 through level-3 Spellcasting facts, and the level-4 Ability Score Improvement feature grant."
       , featureGrants =
         [ { level = 1, unitId = "paladin_lay_on_hands" }
         , { level = 1, unitId = "paladin_weapon_mastery" }
         , { level = 2, unitId = "paladin_fighting_style" }
         , { level = 2, unitId = "paladin_paladins_smite" }
         , { level = 3, unitId = "paladin_channel_divinity" }
+        , { level = 4, unitId = "paladin_ability_score_improvement_l4" }
         ]
       , hitPointDie = 10
       , id = "class_paladin"
@@ -32,7 +33,7 @@ let paladin =
           }
       , name = "Paladin"
       , primaryAbilities = { abilities = [ "str", "cha" ], kind = "all_of" }
-      , provenance = { kind = "srd-5.2.1", section = "Classes/Paladin.md:3-24,33-37,66-120" }
+      , provenance = { kind = "srd-5.2.1", section = "Classes/Paladin.md:3-24,33-38,66-124" }
       , savingThrowProficiencies = [ "wis", "cha" ]
       , skillProficiencyChoice =
         { choose = 2, options = [ "athletics", "insight", "intimidation", "medicine", "persuasion", "religion" ] }

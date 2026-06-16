@@ -1317,6 +1317,39 @@
       "unitId": "enthrall"
     },
     {
+      "catalogStatus": "installed",
+      "claimTag": "unsupported-profile",
+      "closureKinds": [
+        "selection-grant-container"
+      ],
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "reason": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
+      "selectedIdentity": {
+        "reason": "Selected identity replay evidence is only required for supported profile claims.",
+        "status": "not-required"
+      },
+      "sourceRecordPath": "packages/surface/content/fighter_ability_score_improvement_l4.json",
+      "sourceRows": [
+        {
+          "category": "class feature",
+          "concept": "Fighter Ability Score Improvement",
+          "id": "srd521:classes/fighter:level-4:class-feature-grant:fighter_ability_score_improvement",
+          "levelBand": "level-4",
+          "rowKind": "class-feature-grant",
+          "source": {
+            "lineEnd": 93,
+            "lineStart": 90,
+            "path": ".references/srd-5.2.1/Classes/Fighter.md"
+          }
+        }
+      ],
+      "status": "closed-selection-grant-container",
+      "strictTargetClosed": true,
+      "unitId": "fighter_ability_score_improvement_l4"
+    },
+    {
       "catalogDisposition": {
         "category": "srd-candidate",
         "planningLane": "QMBT14-QMBT16",
@@ -2109,6 +2142,39 @@
     },
     {
       "catalogStatus": "installed",
+      "claimTag": "unsupported-profile",
+      "closureKinds": [
+        "selection-grant-container"
+      ],
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "reason": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
+      "selectedIdentity": {
+        "reason": "Selected identity replay evidence is only required for supported profile claims.",
+        "status": "not-required"
+      },
+      "sourceRecordPath": "packages/surface/content/paladin_ability_score_improvement_l4.json",
+      "sourceRows": [
+        {
+          "category": "class feature",
+          "concept": "Paladin Ability Score Improvement",
+          "id": "srd521:classes/paladin:level-4:class-feature-grant:paladin_ability_score_improvement",
+          "levelBand": "level-4",
+          "rowKind": "class-feature-grant",
+          "source": {
+            "lineEnd": 125,
+            "lineStart": 122,
+            "path": ".references/srd-5.2.1/Classes/Paladin.md"
+          }
+        }
+      ],
+      "status": "closed-selection-grant-container",
+      "strictTargetClosed": true,
+      "unitId": "paladin_ability_score_improvement_l4"
+    },
+    {
+      "catalogStatus": "installed",
       "claimTag": "profile-subset-supported",
       "closureKinds": [
         "outside-runtime-presentation-exploration"
@@ -2851,6 +2917,39 @@
       "unitId": "thaumaturgy"
     },
     {
+      "catalogStatus": "installed",
+      "claimTag": "unsupported-profile",
+      "closureKinds": [
+        "selection-grant-container"
+      ],
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "reason": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
+      "selectedIdentity": {
+        "reason": "Selected identity replay evidence is only required for supported profile claims.",
+        "status": "not-required"
+      },
+      "sourceRecordPath": "packages/surface/content/warlock_ability_score_improvement_l4.json",
+      "sourceRows": [
+        {
+          "category": "class feature",
+          "concept": "Warlock Ability Score Improvement",
+          "id": "srd521:classes/warlock:level-4:class-feature-grant:warlock_ability_score_improvement",
+          "levelBand": "level-4",
+          "rowKind": "class-feature-grant",
+          "source": {
+            "lineEnd": 103,
+            "lineStart": 100,
+            "path": ".references/srd-5.2.1/Classes/Warlock.md"
+          }
+        }
+      ],
+      "status": "closed-selection-grant-container",
+      "strictTargetClosed": true,
+      "unitId": "warlock_ability_score_improvement_l4"
+    },
+    {
       "catalogDisposition": {
         "category": "unsupported-widening-pressure",
         "planningLane": "QMBT18",
@@ -3177,7 +3276,7 @@
       ]
     },
     {
-      "count": 9,
+      "count": 12,
       "description": "The Unit claim records a selection-grant container whose selected downstream Unit or Character Sheet facts own executable behavior.",
       "status": "closed-selection-grant-container",
       "unitIds": [
@@ -3185,10 +3284,13 @@
         "bard_ability_score_improvement_l4",
         "cleric_ability_score_improvement_l4",
         "druid_ability_score_improvement_l4",
+        "fighter_ability_score_improvement_l4",
         "monk_ability_score_improvement_l4",
+        "paladin_ability_score_improvement_l4",
         "ranger_ability_score_improvement_l4",
         "rogue_ability_score_improvement_l4",
         "sorcerer_ability_score_improvement_l4",
+        "warlock_ability_score_improvement_l4",
         "wizard_ability_score_improvement_l4"
       ]
     },
@@ -3247,12 +3349,12 @@
   "metrics": {
     "productReadiness": {
       "denominator": 632,
-      "numerator": 615,
-      "percent": "97.3%",
+      "numerator": 618,
+      "percent": "97.8%",
       "rowsByStatus": {
         "accepted": 434,
-        "accepted-no-battle-effect": 181,
-        "owner-evidence-required": 15,
+        "accepted-no-battle-effect": 184,
+        "owner-evidence-required": 12,
         "partial-battle-runtime": 2
       }
     },
@@ -3272,13 +3374,13 @@
       "percent": "100%"
     },
     "strictRuntimeProfileSupport": {
-      "denominator": 206,
+      "denominator": 209,
       "numerator": 146,
-      "percent": "70.9%"
+      "percent": "69.9%"
     },
     "strictTargetClosure": {
-      "denominator": 206,
-      "numerator": 206,
+      "denominator": 209,
+      "numerator": 209,
       "percent": "100%"
     }
   },
@@ -3440,24 +3542,6 @@
           }
         ],
         "unitId": "elementalism"
-      },
-      {
-        "reason": "The SRD row has level-4 class-feature pressure, but no Unit matrix row exists yet.",
-        "sourceRows": [
-          {
-            "category": "class feature",
-            "concept": "Fighter Ability Score Improvement",
-            "id": "srd521:classes/fighter:level-4:class-feature-grant:fighter_ability_score_improvement",
-            "levelBand": "level-4",
-            "rowKind": "class-feature-grant",
-            "source": {
-              "lineEnd": 93,
-              "lineStart": 90,
-              "path": ".references/srd-5.2.1/Classes/Fighter.md"
-            }
-          }
-        ],
-        "unitId": "fighter_ability_score_improvement_l4"
       },
       {
         "decisionArtifact": "plans/unit-profile-coverage/frontier-decisions/floating_disk.md",
@@ -3748,24 +3832,6 @@
         "unitId": "monk_slow_fall"
       },
       {
-        "reason": "The SRD row has level-4 class-feature pressure, but no Unit matrix row exists yet.",
-        "sourceRows": [
-          {
-            "category": "class feature",
-            "concept": "Paladin Ability Score Improvement",
-            "id": "srd521:classes/paladin:level-4:class-feature-grant:paladin_ability_score_improvement",
-            "levelBand": "level-4",
-            "rowKind": "class-feature-grant",
-            "source": {
-              "lineEnd": 125,
-              "lineStart": 122,
-              "path": ".references/srd-5.2.1/Classes/Paladin.md"
-            }
-          }
-        ],
-        "unitId": "paladin_ability_score_improvement_l4"
-      },
-      {
         "decisionArtifact": "plans/unit-profile-coverage/frontier-decisions/prestidigitation.md",
         "reason": "The SRD row has spell-level-0 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
         "sourceRows": [
@@ -3923,24 +3989,6 @@
           }
         ],
         "unitId": "unseen_servant"
-      },
-      {
-        "reason": "The SRD row has level-4 class-feature pressure, but no Unit matrix row exists yet.",
-        "sourceRows": [
-          {
-            "category": "class feature",
-            "concept": "Warlock Ability Score Improvement",
-            "id": "srd521:classes/warlock:level-4:class-feature-grant:warlock_ability_score_improvement",
-            "levelBand": "level-4",
-            "rowKind": "class-feature-grant",
-            "source": {
-              "lineEnd": 103,
-              "lineStart": 100,
-              "path": ".references/srd-5.2.1/Classes/Warlock.md"
-            }
-          }
-        ],
-        "unitId": "warlock_ability_score_improvement_l4"
       }
     ],
     "nonExecutableClassContainers": [
@@ -10215,7 +10263,7 @@
     },
     "rowsByStatus": {
       "not-applicable": 5,
-      "not-required": 38,
+      "not-required": 41,
       "witness-present": 163
     }
   },
@@ -10617,8 +10665,8 @@
         "group": "level-scoped-class-feature-grants",
         "label": "SRD class feature grants through level 4",
         "metrics": {
-          "denominator": 46,
-          "numerator": 46,
+          "denominator": 49,
+          "numerator": 49,
           "percent": "100%"
         },
         "rows": [
@@ -10786,6 +10834,15 @@
           },
           {
             "kind": "class_feature",
+            "ownerUnitId": "class_fighter",
+            "ready": true,
+            "relation": "class.featureGrants.level-4",
+            "sourceRecordPath": "packages/surface/content/fighter_ability_score_improvement_l4.json",
+            "status": "installed",
+            "unitId": "fighter_ability_score_improvement_l4"
+          },
+          {
+            "kind": "class_feature",
             "ownerUnitId": "class_monk",
             "ready": true,
             "relation": "class.featureGrants.level-1",
@@ -10873,6 +10930,15 @@
             "sourceRecordPath": "packages/surface/content/paladin_channel_divinity.json",
             "status": "installed",
             "unitId": "paladin_channel_divinity"
+          },
+          {
+            "kind": "class_feature",
+            "ownerUnitId": "class_paladin",
+            "ready": true,
+            "relation": "class.featureGrants.level-4",
+            "sourceRecordPath": "packages/surface/content/paladin_ability_score_improvement_l4.json",
+            "status": "installed",
+            "unitId": "paladin_ability_score_improvement_l4"
           },
           {
             "kind": "class_feature",
@@ -11011,6 +11077,15 @@
           },
           {
             "kind": "class_feature",
+            "ownerUnitId": "class_warlock",
+            "ready": true,
+            "relation": "class.featureGrants.level-4",
+            "sourceRecordPath": "packages/surface/content/warlock_ability_score_improvement_l4.json",
+            "status": "installed",
+            "unitId": "warlock_ability_score_improvement_l4"
+          },
+          {
+            "kind": "class_feature",
             "ownerUnitId": "class_wizard",
             "ready": true,
             "relation": "class.featureGrants.level-1",
@@ -11038,7 +11113,7 @@
           }
         ],
         "rowsByStatus": {
-          "installed": 46
+          "installed": 49
         }
       },
       {
@@ -11115,8 +11190,8 @@
       }
     ],
     "metrics": {
-      "denominator": 79,
-      "numerator": 79,
+      "denominator": 82,
+      "numerator": 82,
       "percent": "100%"
     },
     "openBlockerCount": 0
@@ -11126,7 +11201,7 @@
     "groupsByClaimTag": {
       "profile-subset-supported": 22,
       "supported-profile": 146,
-      "unsupported-profile": 38
+      "unsupported-profile": 41
     },
     "groupsByStatus": {
       "blocked-follow-up-split": 2,
@@ -11135,10 +11210,10 @@
       "closed-later-level-only": 2,
       "closed-outside-battle-runtime-boundary": 7,
       "closed-runtime-detached-table-adjudication": 35,
-      "closed-selection-grant-container": 9,
+      "closed-selection-grant-container": 12,
       "supported-profile": 146
     },
-    "nonSupportedFrontier": 60,
-    "strictDenominator": 206
+    "nonSupportedFrontier": 63,
+    "strictDenominator": 209
   }
 }

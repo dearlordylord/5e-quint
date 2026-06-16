@@ -43,14 +43,14 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
-      "denominator": 422,
-      "numerator": 228,
-      "percent": "54%"
+      "denominator": 425,
+      "numerator": 231,
+      "percent": "54.4%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 507,
-      "numerator": 275,
-      "percent": "54.2%"
+      "denominator": 510,
+      "numerator": 278,
+      "percent": "54.5%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,7 +59,7 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 276
+      "value": 279
     },
     "deterministicAdmissionProjectionCoverage": {
       "denominator": 175,
@@ -67,8 +67,8 @@
       "percent": "97.7%"
     },
     "profileClassificationCoverage": {
-      "denominator": 276,
-      "numerator": 276,
+      "denominator": 279,
+      "numerator": 279,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -112,9 +112,9 @@
       "percent": "97.7%"
     },
     "supportedProfileCoverage": {
-      "denominator": 229,
+      "denominator": 232,
       "numerator": 175,
-      "percent": "76.4%"
+      "percent": "75.4%"
     }
   },
   "metricSemantics": [
@@ -15690,8 +15690,8 @@
         "unsupportedOrOtherUnits": 18
       },
       {
-        "executableUnitDenominator": 78,
-        "installedUnitDenominator": 78,
+        "executableUnitDenominator": 81,
+        "installedUnitDenominator": 81,
         "kind": "class_feature",
         "label": "Class-feature Units",
         "profileFactDenominator": 116,
@@ -15701,7 +15701,7 @@
         "selectedIdentityReplayGapUnits": 0,
         "selectedIdentityReplayWitnessUnits": 71,
         "supportedProfileUnits": 68,
-        "unsupportedOrOtherUnits": 2
+        "unsupportedOrOtherUnits": 5
       }
     ]
   },
@@ -16751,6 +16751,29 @@
       ],
       "sourceRecordPath": "packages/surface/content/fighter_tactical_mind.json",
       "unitId": "fighter_tactical_mind"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "selection-grant-container",
+          "owner": "character-creation-runtime ability-score projection and selected feat Unit profiles",
+          "reason": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim."
+        },
+        "reason": "Level 4 Ability Score Improvement is a character-advancement feat-selection container; no standalone promoted battle Unit profile is claimed for the authored class-feature record.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/fighter_ability_score_improvement_l4.json",
+      "unitId": "fighter_ability_score_improvement_l4"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
@@ -21352,6 +21375,29 @@
       },
       "claim": {
         "battleReadinessClosure": {
+          "kind": "selection-grant-container",
+          "owner": "character-creation-runtime ability-score projection and selected feat Unit profiles",
+          "reason": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim."
+        },
+        "reason": "Level 4 Ability Score Improvement is a character-advancement feat-selection container; no standalone promoted battle Unit profile is claimed for the authored class-feature record.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/warlock_ability_score_improvement_l4.json",
+      "unitId": "warlock_ability_score_improvement_l4"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
           "kind": "character-fact-and-runtime-detached-split",
           "owner": "character-sheet-runtime plus spell invocation profiles",
           "reason": "The subclass feature owns Character Sheet prepared spell access; individual spell invocation behavior remains owned by each Spell Definition profile."
@@ -22611,6 +22657,29 @@
       ],
       "sourceRecordPath": "packages/surface/content/paladin_extra_attack.json",
       "unitId": "paladin_extra_attack"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "selection-grant-container",
+          "owner": "character-creation-runtime ability-score projection and selected feat Unit profiles",
+          "reason": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim."
+        },
+        "reason": "Level 4 Ability Score Improvement is a character-advancement feat-selection container; no standalone promoted battle Unit profile is claimed for the authored class-feature record.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/paladin_ability_score_improvement_l4.json",
+      "unitId": "paladin_ability_score_improvement_l4"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
