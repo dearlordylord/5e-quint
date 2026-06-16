@@ -17,7 +17,7 @@ Blockers: strict=0, selected-identity=0, SRD-authored-readiness=0.
 | Strict runtime/profile support | 96/115 (83.5%) |
 | Strict target closure | 115/115 (100%) |
 | Selected identity readiness | 104/104 (100%) |
-| Diagnostic product readiness | 393/400 (98.3%) |
+| Diagnostic product readiness | 394/400 (98.5%) |
 | SRD authored product readiness | 76/76 (100%) |
 | Rules-kernel profile join | 72/72 (100%) |
 | Rules-kernel covered profile join | 72/72 (100%) |
@@ -25,7 +25,7 @@ Blockers: strict=0, selected-identity=0, SRD-authored-readiness=0.
 
 These metrics are lower-layer accounting views. They are not, by themselves, a valid full-support claim.
 
-The full-support claim gate uses strict target closure, selected identity readiness, and SRD-authored product readiness. Diagnostic product readiness is a source-row accounting view, so it can report 393/400 (98.3%) while the claim gate reports **pass** when every non-green diagnostic row is outside those gate blockers or is represented by an explicit follow-up/accounting owner.
+The full-support claim gate uses strict target closure, selected identity readiness, and SRD-authored product readiness. Diagnostic product readiness is a source-row accounting view, so it can report 394/400 (98.5%) while the claim gate reports **pass** when every non-green diagnostic row is outside those gate blockers or is represented by an explicit follow-up/accounting owner.
 
 ### Diagnostic Product Readiness Accounting
 
@@ -33,10 +33,10 @@ Diagnostic product readiness keeps lower-layer planning pressure visible. Rows i
 
 | Status | Rows |
 | --- | ---: |
-| accepted | 294 |
+| accepted | 295 |
 | accepted-no-battle-effect | 99 |
 | owner-evidence-required | 5 |
-| partial-battle-runtime | 2 |
+| partial-battle-runtime | 1 |
 
 ### Selected Identity Replay Accounting
 
@@ -141,7 +141,7 @@ This gate checks authored records and retained Unit references that must resolve
 | `druid_wild_shape` | blocked-follow-up-split | profile-subset-supported | witness-present | installed | follow-up-split | L12G-FOLLOWUP-DRUID-WILD-SHAPE-SHAPE-SHIFTING-RUNTIME: Promote the remaining battle-owned Wild Shape execution after the current known-form subset: Beast Spells casting exceptions, unsupported Stat Block action sections, attack prose riders, multi-component damage, and Stat Block non-Attack actions. Generic object handling and non-battle active-form persistence are closed separately by their explicit owner boundaries. Owner: battle-runtime, Stat Block action runtime, Beast Spells owner, and focused QNT/MBT parity. Required output: Supported Unit profile or narrower profile-subset with focused runtime tests, generated owner evidence, and promoted Quint/MBT parity for each admitted battle executable branch; otherwise leave each branch unpromoted with a precise blocked disposition. |
 | `identify` | closed-runtime-detached-table-adjudication | unsupported-profile | not-required | not-in-unit-catalog | outside-runtime-presentation-exploration | Identification facts are supplied by the table or item/knowledge owner; promoted battle runtime does not model discovery of hidden item or spell facts. |
 | `minor_illusion` | closed-runtime-detached-table-adjudication | unsupported-profile | not-required | installed | outside-runtime-presentation-exploration | Sound/image illusion creation, Study adjudication, faint rendering, physical-interaction reveal, and recast expiry are illusion/exploration state outside promoted battle runtime. |
-| `monk_monks_focus` | closed-runtime-detached-table-adjudication | profile-subset-supported | witness-present | installed | outside-runtime-presentation-exploration | Task 9 promotes the paid Step of the Wind jump-distance multiplier where promoted runtime can consume it today: Jump spell movement replacement witnesses. Ordinary Long Jump and High Jump require separate Strength-derived distance, route, obstacle, destination, and landing witnesses that are not part of the promoted battle-runtime movement command surface in this lane. |
+| `monk_monks_focus` | closed-runtime-detached-table-adjudication | profile-subset-supported | witness-present | installed | outside-runtime-presentation-exploration | The promoted battle-runtime subset consumes the paid Step of the Wind jump-distance multiplier where the runtime has typed movement-replacement witnesses: Jump spell movement replacement. Ordinary Long Jump and High Jump require separate Strength-derived distance, route, obstacle, destination, and landing witnesses that are not part of the promoted battle-runtime movement command surface in this lane. |
 | `ranger_favored_enemy` | closed-later-level-only | profile-subset-supported | witness-present | installed | later-level-only | The remaining Favored Enemy free-cast count changes first occur at Ranger level 5, outside the character-level-1-through-3 support claim. |
 | `rogue_thieves_cant` | closed-character-fact-and-runtime-detached-split | unsupported-profile | not-required | installed | character-fact-and-runtime-detached-split | Thieves' Cant communication adjudication is runtime-detached table adjudication outside promoted battle runtime; Thieves' Cant and the additional Character Creation language choice remain character-owned CharacterBuild facts derived from authored Surface content. |
 | `silent_image` | closed-runtime-detached-table-adjudication | unsupported-profile | not-required | not-in-unit-catalog | outside-runtime-presentation-exploration | Silent Image creates table-adjudicated illusion and presentation state; promoted battle runtime does not own image rendering or discovery adjudication. |

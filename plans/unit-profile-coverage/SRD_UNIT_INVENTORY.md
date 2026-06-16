@@ -33,40 +33,40 @@ This is the default `%` for level-1 readiness questions. A row counts only when 
 
 This is the default `%` for character-level-1 plus character-level-2 readiness questions. It uses the same acceptance rules as the level-1 metric, but includes character-level-2 class-feature rows. It deliberately excludes spell-level-2 pressure.
 
-- Accepted: 393/400 (98.3%)
+- Accepted: 394/400 (98.5%)
 
 #### Character Levels 1-2 Battle Readiness by Status
 
-- accepted: 294
+- accepted: 295
 - accepted-no-battle-effect: 99
 - owner-evidence-required: 5
-- partial-battle-runtime: 2
+- partial-battle-runtime: 1
 
 ### Expanded Progress Metric: Character Levels 1-3 Battle Readiness
 
 This is the default `%` for character-level-1 through character-level-3 readiness questions. It includes character-level-3 class/subclass rows and spell-level-2 pressure. It deliberately excludes spell-level-3 pressure.
 
-- Accepted: 594/607 (97.9%)
+- Accepted: 595/607 (98%)
 
 #### Character Levels 1-3 Battle Readiness by Status
 
-- accepted: 434
+- accepted: 435
 - accepted-no-battle-effect: 160
 - owner-evidence-required: 11
-- partial-battle-runtime: 2
+- partial-battle-runtime: 1
 
 ### Expanded Progress Metric: Character Levels 1-4 Battle Readiness
 
 This is the default `%` for character-level-1 through character-level-4 readiness questions. It includes character-level-4 class-feature rows and spell-level-2 pressure. It deliberately excludes spell-level-3 pressure, which first enters the character-level-5 frontier for full casters.
 
-- Accepted: 619/632 (97.9%)
+- Accepted: 620/632 (98.1%)
 
 #### Character Levels 1-4 Battle Readiness by Status
 
-- accepted: 435
+- accepted: 436
 - accepted-no-battle-effect: 184
 - owner-evidence-required: 11
-- partial-battle-runtime: 2
+- partial-battle-runtime: 1
 
 ### Level-3 Class/Subclass Battle Readiness
 
@@ -112,8 +112,8 @@ This metric is a separate seed for spell-level-3 pressure only. It belongs to th
 ### Level-2 Rows by Disposition
 
 - catalog-installed-needs-owner-evidence: 1
-- catalog-installed-owner-evidence-present: 14
-- catalog-installed-owner-evidence-required: 6
+- catalog-installed-owner-evidence-present: 15
+- catalog-installed-owner-evidence-required: 5
 - non-runtime: 12
 
 ### Level-3 Class/Subclass Rows by Disposition
@@ -435,7 +435,7 @@ These batches are generated planning recommendations for a separate SRD inventor
 |Fighter Action Surge|class feature||current-surface-can-express-source-facts|authored-record-present|installed|supported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; battle-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Fighter.md:76|
 |Fighter Tactical Mind|class feature||current-surface-can-express-source-facts|authored-record-present|installed|supported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; battle-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Fighter.md:82|
 |Fighter level 2 feature table row|character-creation or progression mechanic|non-runtime-table-summary|outside-surface-runtime-mechanics|authored-record-present|installed|unsupported-profile|non-runtime|accepted-no-battle-effect|||No runtime work; keep classification as explicit closure.|.references/srd-5.2.1/Classes/Fighter.md:32|
-|Monk Monk's Focus|class feature||current-surface-can-express-source-facts|authored-record-present|installed|profile-subset-supported|catalog-installed-owner-evidence-required|partial-battle-runtime|profile-subset-remaining-mechanics-closed: table movement adjudication and any future ordinary jump movement witness owner|Unit catalog/admission: catalog evidence; character-sheet-runtime: owner evidence required|character-sheet-runtime: Add checker-readable character-sheet owner evidence before treating this level-2 class feature as operationally supported.|.references/srd-5.2.1/Classes/Monk.md:76|
+|Monk Monk's Focus|class feature||current-surface-can-express-source-facts|authored-record-present|installed|profile-subset-supported|catalog-installed-owner-evidence-present|accepted|profile-subset-remaining-mechanics-closed: table movement adjudication and any future ordinary jump movement witness owner|Unit catalog/admission: catalog evidence; character-creation-runtime: owner evidence present; character-sheet-runtime: owner evidence present; battle-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Monk.md:76|
 |Monk Unarmored Movement|class feature||current-surface-can-express-source-facts|authored-record-present|installed|supported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; battle-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Monk.md:92|
 |Monk Uncanny Metabolism|class feature||current-surface-can-express-source-facts|authored-record-present|installed|supported-profile|catalog-installed-owner-evidence-required|owner-evidence-required||Unit catalog/admission: catalog evidence; character-sheet-runtime: owner evidence required|character-sheet-runtime: Add checker-readable character-sheet owner evidence before treating this level-2 class feature as operationally supported.|.references/srd-5.2.1/Classes/Monk.md:96|
 |Monk level 2 feature table row|character-creation or progression mechanic|non-runtime-table-summary|outside-surface-runtime-mechanics|authored-record-present|installed|unsupported-profile|non-runtime|accepted-no-battle-effect|||No runtime work; keep classification as explicit closure.|.references/srd-5.2.1/Classes/Monk.md:33|

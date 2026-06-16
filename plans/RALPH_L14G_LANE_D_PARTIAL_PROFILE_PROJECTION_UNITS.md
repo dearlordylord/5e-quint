@@ -13,7 +13,7 @@
     {
       "number": 2,
       "id": "L14G-D02-MONK-MONKS-FOCUS-PARTIAL-PROFILE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Reconcile Monk Focus partial profile ownership"
     },
     {
@@ -45,11 +45,13 @@ Gate tail.
 
 Task 1 closed the Wild Shape sense/language/speech projection evidence gap. The
 remaining Wild Shape Stat Block action and Beast Spells runtime split is tracked
-as Task 5 so it remains executable work instead of deferred prose. Monk Focus and
-Sorcerer Metamagic remain research tasks because their current profiles mix
-supported runtime behavior with deferred owner boundaries. `rogue_second_story_work`
-is implementation-ready because pre-research found the desired projection shape
-already exists and the remaining work is checker-readable evidence.
+as Task 5 so it remains executable work instead of deferred prose. Task 2 closed
+the Monk Focus generated-readiness ambiguity while preserving the ordinary jump
+movement/table owner boundary. Sorcerer Metamagic remains a research task
+because its current profile mixes supported runtime behavior with deferred owner
+boundaries. `rogue_second_story_work` is implementation-ready because
+pre-research found the desired projection shape already exists and the remaining
+work is checker-readable evidence.
 
 ## Source Artifacts
 
@@ -152,7 +154,7 @@ Verification:
 
 ### Task 2 - L14G-D02-MONK-MONKS-FOCUS-PARTIAL-PROFILE
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 

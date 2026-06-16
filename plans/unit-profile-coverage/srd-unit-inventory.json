@@ -197,7 +197,6 @@
         "srd521:classes/barbarian:level-1:class-feature-grant:barbarian_unarmored_defense tests evidence reference points to missing symbol expectRight: packages/character-sheet-runtime/src/rests.test.ts:expectRight",
         "srd521:classes/monk:level-1:class-feature-grant:monk_unarmored_defense tests evidence reference points to missing symbol armorClassBuild: packages/character-sheet-runtime/src/armor-class.test.ts:armorClassBuild",
         "srd521:classes/monk:level-1:class-feature-grant:monk_unarmored_defense tests evidence reference points to missing symbol expectRight: packages/character-sheet-runtime/src/armor-class.test.ts:expectRight",
-        "srd521:classes/monk:level-2:class-feature-grant:monk_monks_focus tests evidence reference points to missing symbol monksFocusShortRestRecoveryTestName: packages/character-sheet-runtime/src/resources.test.ts:monksFocusShortRestRecoveryTestName",
         "srd521:classes/sorcerer:level-2:class-feature-grant:sorcerer_font_of_magic tests evidence reference points to missing symbol sorcererFontOfMagicLongRestRecoveryTestName: packages/character-sheet-runtime/src/resources.test.ts:sorcererFontOfMagicLongRestRecoveryTestName",
         "srd521:classes/sorcerer:level-2:class-feature-grant:sorcerer_font_of_magic tests evidence reference points to missing symbol sorcererFontOfMagicSlotConversionTestName: packages/character-sheet-runtime/src/spell-slots.test.ts:sorcererFontOfMagicSlotConversionTestName",
         "srd521:classes/sorcerer:level-2:class-feature-grant:sorcerer_font_of_magic tests evidence reference points to missing symbol sorcererFontOfMagicSlotConversionGateTestName: packages/character-sheet-runtime/src/spell-slots.test.ts:sorcererFontOfMagicSlotConversionGateTestName",
@@ -287,35 +286,35 @@
     },
     "levelOneTwoBattleReadiness": {
       "denominator": 400,
-      "numerator": 393,
-      "percent": "98.3%",
+      "numerator": 394,
+      "percent": "98.5%",
       "rowsByStatus": {
-        "accepted": 294,
+        "accepted": 295,
         "accepted-no-battle-effect": 99,
         "owner-evidence-required": 5,
-        "partial-battle-runtime": 2
+        "partial-battle-runtime": 1
       }
     },
     "levelOneThreeBattleReadiness": {
       "denominator": 607,
-      "numerator": 594,
-      "percent": "97.9%",
+      "numerator": 595,
+      "percent": "98%",
       "rowsByStatus": {
-        "accepted": 434,
+        "accepted": 435,
         "accepted-no-battle-effect": 160,
         "owner-evidence-required": 11,
-        "partial-battle-runtime": 2
+        "partial-battle-runtime": 1
       }
     },
     "levelOneFourBattleReadiness": {
       "denominator": 632,
-      "numerator": 619,
-      "percent": "97.9%",
+      "numerator": 620,
+      "percent": "98.1%",
       "rowsByStatus": {
-        "accepted": 435,
+        "accepted": 436,
         "accepted-no-battle-effect": 184,
         "owner-evidence-required": 11,
-        "partial-battle-runtime": 2
+        "partial-battle-runtime": 1
       }
     },
     "levelThreeClassBattleReadiness": {
@@ -354,9 +353,9 @@
       "non-runtime": 12
     },
     "levelTwoRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 14,
+      "catalog-installed-owner-evidence-present": 15,
       "non-runtime": 12,
-      "catalog-installed-owner-evidence-required": 6,
+      "catalog-installed-owner-evidence-required": 5,
       "catalog-installed-needs-owner-evidence": 1
     },
     "levelThreeClassRowsByDisposition": {
@@ -381,10 +380,10 @@
       "character-creation or progression mechanic": 12
     },
     "allRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 463,
+      "catalog-installed-owner-evidence-present": 464,
       "non-runtime": 48,
       "catalog-only/dead-for-now": 145,
-      "catalog-installed-owner-evidence-required": 12,
+      "catalog-installed-owner-evidence-required": 11,
       "missing-authored-record": 58,
       "catalog-authored-review-required": 33,
       "catalog-installed-needs-owner-evidence": 1
@@ -16866,12 +16865,12 @@
         "unitId": "monk_monks_focus"
       },
       "unitProfileDisposition": "profile-subset-supported",
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "battleReadinessClosure": {
         "source": "deferred-mechanics",
         "kind": "profile-subset-remaining-mechanics-closed",
         "owner": "table movement adjudication and any future ordinary jump movement witness owner",
-        "reason": "Task 9 promotes the paid Step of the Wind jump-distance multiplier where promoted runtime can consume it today: Jump spell movement replacement witnesses. Ordinary Long Jump and High Jump require separate Strength-derived distance, route, obstacle, destination, and landing witnesses that are not part of the promoted battle-runtime movement command surface in this lane."
+        "reason": "The promoted battle-runtime subset consumes the paid Step of the Wind jump-distance multiplier where the runtime has typed movement-replacement witnesses: Jump spell movement replacement. Ordinary Long Jump and High Jump require separate Strength-derived distance, route, obstacle, destination, and landing witnesses that are not part of the promoted battle-runtime movement command surface in this lane."
       },
       "ownerEvidence": [
         {
@@ -16880,13 +16879,23 @@
           "status": "catalog evidence"
         },
         {
+          "owner": "character-creation-runtime",
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS character-creation.class-feature-resource-projection support profile; Monk's Focus is retained from the level-2 Monk class feature grant and projected into CharacterBuild Focus Point resource and character facts from the authored Surface resource container. The projection derives Focus Point maximum, Short or Long Rest full reset, initial Focus option names, and the Wisdom-based Focus save DC source from the retained feature, Monk class level, ability-score source, and Proficiency Bonus formula without duplicating class progression or option execution state.",
+          "status": "owner evidence present"
+        },
+        {
           "owner": "character-sheet-runtime",
-          "evidence": "character-sheet-runtime: Add checker-readable character-sheet owner evidence before treating this level-2 class feature as operationally supported.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/character-sheet-owner-evidence.json records row-level runtime projection evidence; L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS Character Sheet class-feature use-count resource runtime; Monk's Focus is read from CharacterBuild resources and the installed Surface feature record, then projected as Character Sheet Focus Point use-count state. The runtime derives capacity from Monk class level, stores only expended Focus Point uses, restores all expended uses on Short or Long Rest, and derives the Focus save DC from the authored Wisdom source, current ability scores, and Proficiency Bonus without storing duplicate DC state.",
+          "status": "owner evidence present"
+        },
+        {
+          "owner": "battle-runtime",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L12G-FOLLOWUP-MONK-MONKS-FOCUS-BATTLE-OPTIONS at packages/battle-runtime/src/battle-runtime-monk-focus.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "character-sheet-runtime: Add checker-readable character-sheet owner evidence before treating this level-2 class feature as operationally supported.",
-      "battleReadinessStatus": "partial-battle-runtime"
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/monk:level-2:class-feature-grant:monk_unarmored_movement",

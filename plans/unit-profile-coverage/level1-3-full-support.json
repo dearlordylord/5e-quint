@@ -1860,7 +1860,7 @@
       "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "class_feature",
-      "reason": "Task 9 promotes the paid Step of the Wind jump-distance multiplier where promoted runtime can consume it today: Jump spell movement replacement witnesses. Ordinary Long Jump and High Jump require separate Strength-derived distance, route, obstacle, destination, and landing witnesses that are not part of the promoted battle-runtime movement command surface in this lane.",
+      "reason": "The promoted battle-runtime subset consumes the paid Step of the Wind jump-distance multiplier where the runtime has typed movement-replacement witnesses: Jump spell movement replacement. Ordinary Long Jump and High Jump require separate Strength-derived distance, route, obstacle, destination, and landing witnesses that are not part of the promoted battle-runtime movement command surface in this lane.",
       "selectedIdentity": {
         "reason": "The Unit has selected-identity-mbt evidence.",
         "status": "witness-present"
@@ -2889,13 +2889,13 @@
   "metrics": {
     "productReadiness": {
       "denominator": 607,
-      "numerator": 594,
-      "percent": "97.9%",
+      "numerator": 595,
+      "percent": "98%",
       "rowsByStatus": {
-        "accepted": 434,
+        "accepted": 435,
         "accepted-no-battle-effect": 160,
         "owner-evidence-required": 11,
-        "partial-battle-runtime": 2
+        "partial-battle-runtime": 1
       }
     },
     "rulesKernelCoveredProfileJoin": {

@@ -18780,7 +18780,7 @@
             "battleReadinessClosure": {
               "kind": "outside-runtime-presentation-exploration",
               "owner": "table movement adjudication and any future ordinary jump movement witness owner",
-              "reason": "Task 9 promotes the paid Step of the Wind jump-distance multiplier where promoted runtime can consume it today: Jump spell movement replacement witnesses. Ordinary Long Jump and High Jump require separate Strength-derived distance, route, obstacle, destination, and landing witnesses that are not part of the promoted battle-runtime movement command surface in this lane."
+              "reason": "The promoted battle-runtime subset consumes the paid Step of the Wind jump-distance multiplier where the runtime has typed movement-replacement witnesses: Jump spell movement replacement. Ordinary Long Jump and High Jump require separate Strength-derived distance, route, obstacle, destination, and landing witnesses that are not part of the promoted battle-runtime movement command surface in this lane."
             },
             "mechanic": "Ordinary Long Jump and High Jump movement witnesses are not promoted as standalone runtime commands; their distance derivation, route, obstacle, destination, and landing adjudication remain table-owned movement facts outside this Monk Focus battle profile."
           }
