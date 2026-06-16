@@ -43,7 +43,7 @@
     {
       "number": 7,
       "id": "L14G-A07-ROGUE-ASI-CATALOG-ADMISSION",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Install Rogue level-4 ASI catalog admission"
     },
     {
@@ -309,7 +309,7 @@ Verification:
 
 ### Task 7 - L14G-A07-ROGUE-ASI-CATALOG-ADMISSION
 
-Status: `ready-for-implementation`
+Status: `done`
 
 Depends on:
 
