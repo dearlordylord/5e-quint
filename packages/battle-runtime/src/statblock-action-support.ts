@@ -1,30 +1,104 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.druid-wild-shape-known-form
 // KERNEL-COVERAGE: runtime-owner BATTLE.STAT_BLOCK.ATTACK_CONTROL
 import type {
+  Condition,
   CreatureActions,
   CreatureNamedAttackRoll,
   CreatureTrait,
   StatBlockRecord,
 } from "@dnd/surface/surface/types";
+import { CONDITIONS } from "@dnd/surface/surface/types";
 import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
 import type { StatBlockTraitAttackRollMode } from "./battle-action-options.ts";
 import type { BattleDruidWildShapeKnownFormSupportProfile } from "./unit-feature-support.ts";
 import { statBlockIsWildShapeKnownFormEligible } from "./druid-wild-shape-form-eligibility.ts";
 import { supportedStatBlockAttackDamage } from "./statblock-attack-damage-support.ts";
 
-export const WILD_SHAPE_FORM_ACTION_SURFACE_CATEGORIES = [
+const WILD_SHAPE_FORM_EXECUTABLE_ACTION_SURFACE_CATEGORIES = [
   "simpleLiteralAttackSingleDamage",
   "multiDamageComponentsOnHit",
-  "attackHitRider",
   "traitDerivedConditionalAttackRollAdvantage",
+] as const;
+
+const WILD_SHAPE_FORM_ATTACK_HIT_RIDER_CATEGORIES = [
+  "attackHitConditionRider",
+  "attackHitForcedMovementRider",
+  "attackHitOtherRider",
+] as const;
+
+const WILD_SHAPE_FORM_CLOSED_ACTION_SURFACE_CATEGORIES = [
+  ...WILD_SHAPE_FORM_ATTACK_HIT_RIDER_CATEGORIES,
   "nonAttackOrSpecialActionSection",
   "tableOrProseOnlyTrait",
 ] as const;
 
+export const WILD_SHAPE_FORM_ACTION_SURFACE_CATEGORIES = [
+  ...WILD_SHAPE_FORM_EXECUTABLE_ACTION_SURFACE_CATEGORIES,
+  ...WILD_SHAPE_FORM_CLOSED_ACTION_SURFACE_CATEGORIES,
+] as const;
+
+type WildShapeFormExecutableActionSurfaceCategory =
+  (typeof WILD_SHAPE_FORM_EXECUTABLE_ACTION_SURFACE_CATEGORIES)[number];
+type WildShapeFormAttackHitRiderCategory =
+  (typeof WILD_SHAPE_FORM_ATTACK_HIT_RIDER_CATEGORIES)[number];
+type WildShapeFormClosedActionSurfaceCategory =
+  (typeof WILD_SHAPE_FORM_CLOSED_ACTION_SURFACE_CATEGORIES)[number];
 export type WildShapeFormActionSurfaceCategory =
   (typeof WILD_SHAPE_FORM_ACTION_SURFACE_CATEGORIES)[number];
 
-export type WildShapeFormActionSurfaceInventoryEntry = {
+type WildShapeFormClosedSurfaceBoundary = {
+  readonly owner: string;
+  readonly reason: string;
+};
+
+export type WildShapeFormActionSurfaceInventoryEntry =
+  | {
+      readonly category: WildShapeFormExecutableActionSurfaceCategory;
+      readonly exampleStatBlockIds: readonly StatBlockRecord["id"][];
+    }
+  | {
+      readonly category: WildShapeFormClosedActionSurfaceCategory;
+      readonly exampleStatBlockIds: readonly StatBlockRecord["id"][];
+      readonly closedBoundary: WildShapeFormClosedSurfaceBoundary;
+    };
+
+const WILD_SHAPE_FORM_CLOSED_ACTION_SURFACE_CATEGORY_SET: ReadonlySet<WildShapeFormActionSurfaceCategory> =
+  new Set(WILD_SHAPE_FORM_CLOSED_ACTION_SURFACE_CATEGORIES);
+
+const WILD_SHAPE_FORM_CLOSED_ACTION_SURFACE_BOUNDARIES = {
+  attackHitConditionRider: {
+    owner:
+      "battle-runtime generic Stat Block attack-hit condition rider owner",
+    reason:
+      "The condition destination is typed, but Stat Block attack-hit admission still needs typed target Size predicate payloads before admitting size-gated condition riders; admitting the host attack before that would drop or over-apply the rider.",
+  },
+  attackHitForcedMovementRider: {
+    owner:
+      "battle-runtime generic Stat Block attack-hit forced-movement rider owner",
+    reason:
+      "Attack-hit forced movement must carry a typed movement payload and target-position owner before Wild Shape admits the host attack.",
+  },
+  attackHitOtherRider: {
+    owner: "battle-runtime generic Stat Block attack-hit rider owner",
+    reason:
+      "Attack-hit prose with no parsed destination needs a typed payload or table owner before Wild Shape admits the host attack.",
+  },
+  nonAttackOrSpecialActionSection: {
+    owner: "battle-runtime generic Stat Block action procedure owners",
+    reason:
+      "Non-Attack Stat Block action sections require their own generic procedure owners before Wild Shape admits them.",
+  },
+  tableOrProseOnlyTrait: {
+    owner: "battle-runtime table/caller witness owners",
+    reason:
+      "Traits with table, spatial, exploration, or non-attack effects remain closed until a generic owner consumes their facts.",
+  },
+} as const satisfies Record<
+  WildShapeFormClosedActionSurfaceCategory,
+  WildShapeFormClosedSurfaceBoundary
+>;
+
+type WildShapeFormActionSurfaceInventoryEntryInput = {
   readonly category: WildShapeFormActionSurfaceCategory;
   readonly exampleStatBlockIds: readonly StatBlockRecord["id"][];
 };
@@ -96,7 +170,33 @@ export function wildShapeFormActionSurfaceInventory(input: {
         ? [form.id]
         : [],
     ),
-  })).filter((entry) => entry.exampleStatBlockIds.length > 0);
+  }))
+    .filter((entry) => entry.exampleStatBlockIds.length > 0)
+    .map(wildShapeFormActionSurfaceInventoryEntry);
+}
+
+function wildShapeFormActionSurfaceInventoryEntry(
+  entry: WildShapeFormActionSurfaceInventoryEntryInput,
+): WildShapeFormActionSurfaceInventoryEntry {
+  const { category, exampleStatBlockIds } = entry;
+  if (wildShapeFormActionSurfaceCategoryIsClosed(category)) {
+    return {
+      category,
+      exampleStatBlockIds,
+      closedBoundary:
+        WILD_SHAPE_FORM_CLOSED_ACTION_SURFACE_BOUNDARIES[category],
+    };
+  }
+  return {
+    category,
+    exampleStatBlockIds,
+  };
+}
+
+function wildShapeFormActionSurfaceCategoryIsClosed(
+  category: WildShapeFormActionSurfaceCategory,
+): category is WildShapeFormClosedActionSurfaceCategory {
+  return WILD_SHAPE_FORM_CLOSED_ACTION_SURFACE_CATEGORY_SET.has(category);
 }
 
 function wildShapeFormActionSurfaceCategories(
@@ -130,8 +230,8 @@ function wildShapeFormActionSurfaceCategories(
       if (fixedDamage.length > 1) {
         categories.add("multiDamageComponentsOnHit");
       }
-      if (attack.description !== undefined || nonDamageEffects(attack) > 0) {
-        categories.add("attackHitRider");
+      for (const category of attackHitRiderCategories(attack)) {
+        categories.add(category);
       }
     }
   }
@@ -169,8 +269,91 @@ function fixedDamageEffects(attack: CreatureNamedAttackRoll) {
   );
 }
 
-function nonDamageEffects(attack: CreatureNamedAttackRoll): number {
-  return attack.onHit.filter((effect) => effect.kind !== "damage").length;
+function attackHitRiderCategories(
+  attack: CreatureNamedAttackRoll,
+): readonly WildShapeFormAttackHitRiderCategory[] {
+  const categories = new Set<WildShapeFormAttackHitRiderCategory>();
+  for (const effect of attack.onHit) {
+    const category = attackHitEffectRiderCategory(effect);
+    if (category !== null) {
+      categories.add(category);
+    }
+  }
+  if (attack.description !== undefined) {
+    for (const category of attackHitDescriptionRiderCategories(
+      attack.description,
+    )) {
+      categories.add(category);
+    }
+  }
+  return WILD_SHAPE_FORM_ATTACK_HIT_RIDER_CATEGORIES.filter((category) =>
+    categories.has(category),
+  );
+}
+
+function attackHitEffectRiderCategory(
+  effect: CreatureNamedAttackRoll["onHit"][number],
+): WildShapeFormAttackHitRiderCategory | null {
+  if (effect.kind === "damage" || effect.kind === "conditional_bonus_damage") {
+    return null;
+  }
+  if (
+    effect.kind === "apply_condition" ||
+    effect.kind === "apply_condition_while_in_area_or_until_escape" ||
+    effect.kind === "suppress_condition_self_end"
+  ) {
+    return "attackHitConditionRider";
+  }
+  if (
+    effect.kind === "force_move" ||
+    effect.kind === "forced_reaction_movement" ||
+    effect.kind === "jump_movement_replacement"
+  ) {
+    return "attackHitForcedMovementRider";
+  }
+  return "attackHitOtherRider";
+}
+
+function attackHitDescriptionRiderCategories(
+  description: string,
+): readonly WildShapeFormAttackHitRiderCategory[] {
+  const categories = new Set<WildShapeFormAttackHitRiderCategory>();
+  const lowerDescription = description.toLowerCase();
+  if (
+    CONDITIONS.some((condition) =>
+      mentionsCondition(lowerDescription, condition),
+    )
+  ) {
+    categories.add("attackHitConditionRider");
+  }
+  if (mentionsForcedMovement(lowerDescription)) {
+    categories.add("attackHitForcedMovementRider");
+  }
+  if (categories.size === 0) {
+    categories.add("attackHitOtherRider");
+  }
+  return WILD_SHAPE_FORM_ATTACK_HIT_RIDER_CATEGORIES.filter((category) =>
+    categories.has(category),
+  );
+}
+
+function mentionsCondition(
+  lowerDescription: string,
+  condition: Condition,
+): boolean {
+  return lowerDescription.includes(`${condition} condition`);
+}
+
+function mentionsForcedMovement(lowerDescription: string): boolean {
+  const mentionsDistance =
+    lowerDescription.includes(" feet") || lowerDescription.includes(" ft.");
+  return (
+    mentionsDistance &&
+    (lowerDescription.includes("push") ||
+      lowerDescription.includes("pull") ||
+      lowerDescription.includes("move") ||
+      lowerDescription.includes("moved"))
+  );
 }
 
 function mentionsAttackRollAdvantage(description: string): boolean {

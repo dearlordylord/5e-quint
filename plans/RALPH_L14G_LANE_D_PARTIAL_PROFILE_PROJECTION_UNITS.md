@@ -55,7 +55,7 @@
     {
       "number": 9,
       "id": "L12G-FOLLOWUP-DRUID-WILD-SHAPE-STAT-BLOCK-ATTACK-HIT-RIDERS",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Split Stat Block attack-hit rider execution"
     },
     {
@@ -63,6 +63,12 @@
       "id": "L12G-FOLLOWUP-DRUID-WILD-SHAPE-STAT-BLOCK-NON-ATTACK-ACTIONS",
       "status": "ready-for-research",
       "title": "Split non-Attack Stat Block action execution"
+    },
+    {
+      "number": 11,
+      "id": "L12G-FOLLOWUP-DRUID-WILD-SHAPE-STAT-BLOCK-SIZE-GATED-CONDITION-RIDERS",
+      "status": "ready-for-research",
+      "title": "Promote size-gated Stat Block attack-hit condition riders"
     }
   ]
 }
@@ -130,8 +136,9 @@ linked-Speed and jump-distance projection evidence checker-readable.
 | L12G-FOLLOWUP-DRUID-WILD-SHAPE-BEAST-SPELLS-CASTING | L14G-D05-DRUID-WILD-SHAPE-REMAINING-BATTLE-RUNTIME-SPLIT | - |
 | L12G-FOLLOWUP-DRUID-WILD-SHAPE-STAT-BLOCK-MULTI-DAMAGE | L14G-D05-DRUID-WILD-SHAPE-REMAINING-BATTLE-RUNTIME-SPLIT | - |
 | L12G-FOLLOWUP-DRUID-WILD-SHAPE-STAT-BLOCK-TRAIT-ADVANTAGE | L14G-D05-DRUID-WILD-SHAPE-REMAINING-BATTLE-RUNTIME-SPLIT | - |
-| L12G-FOLLOWUP-DRUID-WILD-SHAPE-STAT-BLOCK-ATTACK-HIT-RIDERS | L14G-D05-DRUID-WILD-SHAPE-REMAINING-BATTLE-RUNTIME-SPLIT | - |
+| L12G-FOLLOWUP-DRUID-WILD-SHAPE-STAT-BLOCK-ATTACK-HIT-RIDERS | L14G-D05-DRUID-WILD-SHAPE-REMAINING-BATTLE-RUNTIME-SPLIT | L12G-FOLLOWUP-DRUID-WILD-SHAPE-STAT-BLOCK-SIZE-GATED-CONDITION-RIDERS |
 | L12G-FOLLOWUP-DRUID-WILD-SHAPE-STAT-BLOCK-NON-ATTACK-ACTIONS | L14G-D05-DRUID-WILD-SHAPE-REMAINING-BATTLE-RUNTIME-SPLIT | - |
+| L12G-FOLLOWUP-DRUID-WILD-SHAPE-STAT-BLOCK-SIZE-GATED-CONDITION-RIDERS | L12G-FOLLOWUP-DRUID-WILD-SHAPE-STAT-BLOCK-ATTACK-HIT-RIDERS | - |
 
 ### Task 1 - L14G-D01-DRUID-WILD-SHAPE-PARTIAL-PROFILE
 
@@ -539,7 +546,7 @@ Verification:
 
 ### Task 9 - L12G-FOLLOWUP-DRUID-WILD-SHAPE-STAT-BLOCK-ATTACK-HIT-RIDERS
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -551,11 +558,14 @@ SRD anchor: `.references/srd-5.2.1/Rules-Glossary.md:966-976`
 
 Current state:
 
-- Attack prose riders on supported-form Stat Block attacks are currently a
-  blocked Surface shape.
-- Existing battle runtime has typed owners for some rider destinations, such as
-  conditions and movement facts, but no generic Stat Block attack-hit rider
-  admission boundary for Wild Shape form attacks.
+- Attack-hit rider inventory is split by parsed destination into condition,
+  forced-movement, and other rider buckets.
+- The eligible level-2 SRD Wild Shape Beast form corpus has a size-gated
+  condition rider example, Wolf Bite applying Prone to a Medium or smaller
+  target, and no eligible forced-movement rider examples.
+- Runtime inventory attaches explicit closed-boundary owner/reason metadata for
+  each rider bucket, so host attacks with unsupported riders remain unadmitted
+  rather than dropping rider prose.
 
 Output:
 
@@ -628,6 +638,60 @@ Verification:
   Reactions, and action lifecycle terms.
 - Focused inventory and procedure tests for any selected action shape.
 - Focused QNT/MBT only for promoted reducer behavior.
+- `pnpm unit-profile-coverage:check:self-test`
+- `pnpm unit-profile-coverage:check`
+- `pnpm rules-kernel-coverage:check`
+- `git diff --check`
+
+### Task 11 - L12G-FOLLOWUP-DRUID-WILD-SHAPE-STAT-BLOCK-SIZE-GATED-CONDITION-RIDERS
+
+Status: `ready-for-research`
+
+Depends on:
+
+- L12G-FOLLOWUP-DRUID-WILD-SHAPE-STAT-BLOCK-ATTACK-HIT-RIDERS
+
+Unit: `druid_wild_shape`
+
+SRD anchor: `.references/srd-5.2.1/Animals.md:2587-2611`;
+`.references/srd-5.2.1/Rules-Glossary.md:802-808`;
+`.references/srd-5.2.1/Rules-Glossary.md:896-898`;
+`.references/srd-5.2.1/Rules-Glossary.md:966-976`
+
+Current state:
+
+- Task 9 narrowed the reachable attack-hit rider work for eligible Wild Shape
+  Beast forms to size-gated condition riders, starting with Wolf Bite applying
+  Prone to a Medium or smaller target.
+- The condition destination is typed, but generic Stat Block attack-hit
+  admission does not yet carry a typed target Size predicate payload.
+- Host attacks with those riders remain closed so the condition rider cannot be
+  silently dropped or over-applied.
+
+Output:
+
+- Add a generic Stat Block attack-hit condition rider payload with typed target
+  Size predicate facts.
+- Admit the Wild Shape form attack only from parsed attack-hit payload and typed
+  target Size facts, not Beast or Druid authored identity.
+- Add focused runtime evidence for the size-gated condition rider path.
+
+Acceptance:
+
+- Wolf Bite-style Prone rider admission is driven by parsed Surface attack-hit
+  shape and a typed target Size predicate.
+- Targets outside the size gate do not receive the condition.
+- Unsupported attack-hit condition rider shapes remain rejected or closed with an
+  explicit owner/reason rather than being silently dropped.
+- Reducer behavior, if promoted, has matching focused parity evidence.
+
+Verification:
+
+- RAW and ubiquitous-language check against Wolf Bite, Prone, Size, Stat Block
+  Attack Notation, and `UBIQUITOUS_LANGUAGE.md` condition/size terms.
+- Focused battle-runtime admission/reducer tests for size-gated condition rider
+  application and rejection.
+- Focused QNT/MBT only if reducer behavior changes.
 - `pnpm unit-profile-coverage:check:self-test`
 - `pnpm unit-profile-coverage:check`
 - `pnpm rules-kernel-coverage:check`

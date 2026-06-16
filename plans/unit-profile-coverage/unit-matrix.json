@@ -14387,6 +14387,12 @@
       "taskId": "L12G-FOLLOWUP-DRUID-WILD-SHAPE-SHAPE-SHIFTING-RUNTIME"
     },
     {
+      "claimKind": "accepted-follow-up-split",
+      "note": "Task 9 inventories eligible Wild Shape Beast form attack-hit riders by parsed destination. The available SRD corpus has a size-gated condition rider and no eligible forced-movement rider examples. The condition rider remains unpromoted because generic Stat Block attack-hit condition admission needs a typed target Size predicate before the host attack can be admitted without dropping or over-applying the rider. Follow-up L12G-FOLLOWUP-DRUID-WILD-SHAPE-STAT-BLOCK-SIZE-GATED-CONDITION-RIDERS owns that slice; no reducer behavior is promoted here.",
+      "profileIds": [],
+      "taskId": "L12G-FOLLOWUP-DRUID-WILD-SHAPE-STAT-BLOCK-ATTACK-HIT-RIDERS"
+    },
+    {
       "claimKind": "qnt-proof",
       "note": "Promoted battle-runtime Quint facts cover Lesser Restoration's Bonus Action and level-2-or-higher Spell Slot spend, one touched target, and exact SRD choice removal for Blinded, Deafened, Paralyzed, or Poisoned while preserving unchosen condition effects.",
       "profileIds": [
@@ -18457,8 +18463,8 @@
       "claim": {
         "deferredMechanics": [
           {
-            "followUpTaskId": "L12G-FOLLOWUP-DRUID-WILD-SHAPE-STAT-BLOCK-ATTACK-HIT-RIDERS",
-            "mechanic": "Attack-hit prose riders on Stat Block attacks used by Wild Shape forms, starting with condition or forced-movement riders that require typed hit-outcome payloads before action admission."
+            "followUpTaskId": "L12G-FOLLOWUP-DRUID-WILD-SHAPE-STAT-BLOCK-SIZE-GATED-CONDITION-RIDERS",
+            "mechanic": "Attack-hit condition riders on Stat Block attacks used by Wild Shape forms that require typed target Size gates before action admission; available SRD corpus example: Wolf Bite applies Prone on hit to a Medium or smaller target."
           },
           {
             "followUpTaskId": "L12G-FOLLOWUP-DRUID-WILD-SHAPE-STAT-BLOCK-NON-ATTACK-ACTIONS",
@@ -18483,11 +18489,11 @@
         ],
         "followUpTasks": [
           {
-            "id": "L12G-FOLLOWUP-DRUID-WILD-SHAPE-STAT-BLOCK-ATTACK-HIT-RIDERS",
-            "mechanic": "Inventory and split attack-hit prose riders on Stat Block attacks into typed rider-destination slices before admitting host attacks for Wild Shape forms.",
-            "owner": "battle-runtime Stat Block attack-hit rider owner, condition/movement owners, and focused QNT/runtime parity",
-            "requiredOutput": "One or more narrower executable rider tasks with focused runtime evidence, or promoted rider slices with generated owner evidence and parity where reducer behavior changes.",
-            "title": "Druid Wild Shape Stat Block Attack-Hit Riders"
+            "id": "L12G-FOLLOWUP-DRUID-WILD-SHAPE-STAT-BLOCK-SIZE-GATED-CONDITION-RIDERS",
+            "mechanic": "Promote typed attack-hit condition riders whose application is gated by target creature Size, starting from the SRD Wolf Bite Prone rider, through a generic Stat Block attack-hit rider payload and target-size support gate.",
+            "owner": "battle-runtime generic Stat Block attack-hit condition rider owner and focused runtime evidence",
+            "requiredOutput": "Focused runtime evidence that condition rider admission is driven by parsed attack-hit payload and typed target Size facts, not Beast authored identity; QNT or MBT evidence only if reducer behavior changes.",
+            "title": "Druid Wild Shape Stat Block Size-Gated Condition Riders"
           },
           {
             "id": "L12G-FOLLOWUP-DRUID-WILD-SHAPE-STAT-BLOCK-NON-ATTACK-ACTIONS",
@@ -18569,6 +18575,11 @@
           "ownerPath": "packages/battle-runtime/src/battle-runtime-druid-wild-shape.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "L12G-FOLLOWUP-DRUID-WILD-SHAPE-STAT-BLOCK-TRAIT-ADVANTAGE"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-druid-wild-shape.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L12G-FOLLOWUP-DRUID-WILD-SHAPE-STAT-BLOCK-ATTACK-HIT-RIDERS"
         }
       ],
       "executableMechanics": true,

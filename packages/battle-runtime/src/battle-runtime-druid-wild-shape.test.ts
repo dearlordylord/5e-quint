@@ -4,6 +4,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-DRUID-WILD-SHAPE-BEAST-SPELLS-CASTING druid_wild_shape
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-DRUID-WILD-SHAPE-STAT-BLOCK-MULTI-DAMAGE druid_wild_shape
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-DRUID-WILD-SHAPE-STAT-BLOCK-TRAIT-ADVANTAGE druid_wild_shape
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-DRUID-WILD-SHAPE-STAT-BLOCK-ATTACK-HIT-RIDERS druid_wild_shape
 import {
   armorClassDelta,
   defaultArmorClassState,
@@ -78,6 +79,7 @@ const catId = "stat_block_cat";
 const wolfId = "stat_block_wolf";
 const spiderId = "stat_block_spider";
 const syntheticCoordinatedShapeId = "synthetic_coordinated_shape";
+const syntheticSizeGatedProneFormId = "synthetic_size_gated_prone_form";
 const packAllyId = combatantId("wild-shape-pack-ally");
 const incapacitatedPackAllyId = combatantId(
   "wild-shape-incapacitated-pack-ally",
@@ -1574,35 +1576,75 @@ test("classifies eligible Wild Shape Beast action surfaces without making ids th
     forms: [
       ...statBlockCatalog.listStatBlocks(),
       statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+      syntheticSizeGatedProneForm(),
     ],
     profile,
   });
 
   expect(inventory).toEqual(
     expect.arrayContaining([
-      {
+      expect.objectContaining({
         category: "simpleLiteralAttackSingleDamage",
         exampleStatBlockIds: expect.arrayContaining([ratId, ridingHorseId]),
-      },
-      {
+      }),
+      expect.objectContaining({
         category: "multiDamageComponentsOnHit",
         exampleStatBlockIds: expect.arrayContaining([spiderId]),
-      },
-      {
-        category: "attackHitRider",
-        exampleStatBlockIds: expect.arrayContaining([wolfId]),
-      },
-      {
+      }),
+      expect.objectContaining({
+        category: "attackHitConditionRider",
+        exampleStatBlockIds: expect.arrayContaining([
+          wolfId,
+          syntheticSizeGatedProneFormId,
+        ]),
+        closedBoundary: expect.objectContaining({
+          owner: expect.stringContaining("condition rider owner"),
+          reason: expect.stringContaining("target Size predicate"),
+        }),
+      }),
+      expect.objectContaining({
         category: "traitDerivedConditionalAttackRollAdvantage",
         exampleStatBlockIds: expect.arrayContaining([wolfId]),
-      },
-      {
+      }),
+      expect.objectContaining({
         category: "tableOrProseOnlyTrait",
         exampleStatBlockIds: expect.arrayContaining([ratId]),
-      },
+      }),
     ]),
   );
+  expect(
+    inventory.some(
+      (entry) => entry.category === "attackHitForcedMovementRider",
+    ),
+  ).toBe(false);
 });
+
+function syntheticSizeGatedProneForm(): StatBlockRecord {
+  const base = statBlockCatalog.requireStatBlock(ridingHorseId);
+  const hooves = base.statBlock.actions?.attacks?.[0];
+  if (hooves === undefined) {
+    throw new Error("Expected Riding Horse Hooves fixture.");
+  }
+  return {
+    ...base,
+    id: syntheticSizeGatedProneFormId,
+    name: "Synthetic Size-Gated Prone Form",
+    statBlock: {
+      ...base.statBlock,
+      displayName: "Synthetic Size-Gated Prone Form",
+      actions: {
+        attacks: [
+          {
+            ...hooves,
+            description:
+              "If the target is a Medium or smaller creature, it has the Prone condition.",
+            name: "Synthetic Bite",
+          },
+        ],
+      },
+    },
+  };
+}
 
 test("projects automatic reversion when Wild Shape ends from Incapacitated", () => {
   const initial = druidWildShapeBattle();
