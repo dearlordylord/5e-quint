@@ -1158,12 +1158,12 @@
   "metrics": {
     "productReadiness": {
       "denominator": 400,
-      "numerator": 394,
-      "percent": "98.5%",
+      "numerator": 395,
+      "percent": "98.8%",
       "rowsByStatus": {
-        "accepted": 295,
+        "accepted": 296,
         "accepted-no-battle-effect": 99,
-        "owner-evidence-required": 5,
+        "owner-evidence-required": 4,
         "partial-battle-runtime": 1
       }
     },

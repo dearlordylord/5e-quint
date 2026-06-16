@@ -20535,6 +20535,11 @@
       "claim": {
         "deferredMechanics": [
           {
+            "battleReadinessClosure": {
+              "kind": "outside-battle-runtime",
+              "owner": "future procedure-specific Quickened Spell Invocation owners",
+              "reason": "The promoted Quickened Spell subset is closed to the named action-time Spell Invocation profiles that already consume typed Metamagic effectKind, shared Sorcery Point spending, Bonus Action rewriting, and the level-1-plus same-turn spell lock. Standalone damage, control, ongoing-effect, and other action-casting procedures must each add their own typed resource-threading and Quint/runtime parity witness before they can admit Quickened Spell; unsupported procedures remain rejected before Sorcery Point spending instead of using authored spell identity dispatch."
+            },
             "followUpTaskId": "L12G-FOLLOWUP-SORCERER-METAMAGIC-QUICKENED-ALL-ACTION-SPELLS",
             "mechanic": "Quickened Spell for standalone damage, control, ongoing-effect, and other action-casting Spell Invocation procedures beyond the currently promoted direct Hit Point restoration, scalar buff, save-gated damage, save-gated condition/immunity, direct condition, roll modifier, and direct spell-attack damage subset: apply the Bonus Action rewrite and level-1-plus spell turn lock only after each procedure owner has a typed resource-threading and parity witness."
           },
@@ -20623,6 +20628,21 @@
           "ownerPath": "packages/character-sheet-runtime/src/sheet-lifecycle.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "L12G-FOLLOWUP-SORCERER-METAMAGIC-CHARACTER-FACTS"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-object-light-spells.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L14G-D03-SORCERER-METAMAGIC-PARTIAL-PROFILE"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-enlarge-reduce.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L14G-D03-SORCERER-METAMAGIC-PARTIAL-PROFILE"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-metamagic-resource.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L14G-D03-SORCERER-METAMAGIC-PARTIAL-PROFILE"
         },
         {
           "ownerPath": "packages/battle-runtime/src/sorcerer-metamagic-selected-identity.mbt.test.ts",

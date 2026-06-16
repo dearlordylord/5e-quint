@@ -3345,12 +3345,12 @@
   "metrics": {
     "productReadiness": {
       "denominator": 632,
-      "numerator": 620,
-      "percent": "98.1%",
+      "numerator": 621,
+      "percent": "98.3%",
       "rowsByStatus": {
-        "accepted": 436,
+        "accepted": 437,
         "accepted-no-battle-effect": 184,
-        "owner-evidence-required": 11,
+        "owner-evidence-required": 10,
         "partial-battle-runtime": 1
       }
     },

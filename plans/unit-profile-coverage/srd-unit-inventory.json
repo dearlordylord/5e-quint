@@ -202,8 +202,6 @@
         "srd521:classes/sorcerer:level-2:class-feature-grant:sorcerer_font_of_magic tests evidence reference points to missing symbol sorcererFontOfMagicSlotConversionGateTestName: packages/character-sheet-runtime/src/spell-slots.test.ts:sorcererFontOfMagicSlotConversionGateTestName",
         "srd521:classes/sorcerer:level-2:class-feature-grant:sorcerer_font_of_magic tests evidence reference points to missing symbol sorcererFontOfMagicSlotCreationTestName: packages/character-sheet-runtime/src/spell-slots.test.ts:sorcererFontOfMagicSlotCreationTestName",
         "srd521:classes/sorcerer:level-2:class-feature-grant:sorcerer_font_of_magic tests evidence reference points to missing symbol sorcererFontOfMagicSlotCreationGateTestName: packages/character-sheet-runtime/src/spell-slots.test.ts:sorcererFontOfMagicSlotCreationGateTestName",
-        "srd521:classes/sorcerer:level-2:class-feature-grant:sorcerer_metamagic tests evidence reference points to missing symbol sorcererMetamagicKnownOptionsSheetParsingTestName: packages/character-sheet-runtime/src/sheet-lifecycle.test.ts:sorcererMetamagicKnownOptionsSheetParsingTestName",
-        "srd521:classes/sorcerer:level-2:class-feature-grant:sorcerer_metamagic tests evidence reference points to missing symbol sorcererMetamagicKnownOptionsGateTestName: packages/character-sheet-runtime/src/sheet-lifecycle.test.ts:sorcererMetamagicKnownOptionsGateTestName",
         "srd521:classes/monk:level-2:class-feature-grant:monk_uncanny_metabolism tests evidence reference points to missing symbol uncannyMetabolismLongRestUseStateTestName: packages/character-sheet-runtime/src/resources.test.ts:uncannyMetabolismLongRestUseStateTestName",
         "srd521:classes/monk:level-2:class-feature-grant:monk_uncanny_metabolism tests evidence reference points to missing symbol uncannyMetabolismInitiativeRecoveryTestName: packages/character-sheet-runtime/src/resources.test.ts:uncannyMetabolismInitiativeRecoveryTestName",
         "srd521:classes/monk:level-2:class-feature-grant:monk_uncanny_metabolism tests evidence reference points to missing symbol uncannyMetabolismInitiativeGatesTestName: packages/character-sheet-runtime/src/resources.test.ts:uncannyMetabolismInitiativeGatesTestName",
@@ -286,34 +284,34 @@
     },
     "levelOneTwoBattleReadiness": {
       "denominator": 400,
-      "numerator": 394,
-      "percent": "98.5%",
+      "numerator": 395,
+      "percent": "98.8%",
       "rowsByStatus": {
-        "accepted": 295,
+        "accepted": 296,
         "accepted-no-battle-effect": 99,
-        "owner-evidence-required": 5,
+        "owner-evidence-required": 4,
         "partial-battle-runtime": 1
       }
     },
     "levelOneThreeBattleReadiness": {
       "denominator": 607,
-      "numerator": 595,
-      "percent": "98%",
+      "numerator": 596,
+      "percent": "98.2%",
       "rowsByStatus": {
-        "accepted": 435,
+        "accepted": 436,
         "accepted-no-battle-effect": 160,
-        "owner-evidence-required": 11,
+        "owner-evidence-required": 10,
         "partial-battle-runtime": 1
       }
     },
     "levelOneFourBattleReadiness": {
       "denominator": 632,
-      "numerator": 620,
-      "percent": "98.1%",
+      "numerator": 621,
+      "percent": "98.3%",
       "rowsByStatus": {
-        "accepted": 436,
+        "accepted": 437,
         "accepted-no-battle-effect": 184,
-        "owner-evidence-required": 11,
+        "owner-evidence-required": 10,
         "partial-battle-runtime": 1
       }
     },
@@ -353,10 +351,9 @@
       "non-runtime": 12
     },
     "levelTwoRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 15,
+      "catalog-installed-owner-evidence-present": 16,
       "non-runtime": 12,
-      "catalog-installed-owner-evidence-required": 5,
-      "catalog-installed-needs-owner-evidence": 1
+      "catalog-installed-owner-evidence-required": 5
     },
     "levelThreeClassRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 31,
@@ -380,13 +377,12 @@
       "character-creation or progression mechanic": 12
     },
     "allRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 464,
+      "catalog-installed-owner-evidence-present": 465,
       "non-runtime": 48,
       "catalog-only/dead-for-now": 145,
       "catalog-installed-owner-evidence-required": 11,
       "missing-authored-record": 58,
-      "catalog-authored-review-required": 33,
-      "catalog-installed-needs-owner-evidence": 1
+      "catalog-authored-review-required": 33
     },
     "spellPressureRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 249,
@@ -23932,16 +23928,37 @@
         "unitId": "sorcerer_metamagic"
       },
       "unitProfileDisposition": "profile-subset-supported",
-      "finalDisposition": "catalog-installed-needs-owner-evidence",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "deferred-mechanics",
+        "kind": "profile-subset-remaining-mechanics-closed",
+        "owner": "future procedure-specific Quickened Spell Invocation owners; future procedure-specific range and duration consumers; future procedure-specific spell damage reroll owners; future repeated spell attack sequence reroll owner",
+        "reason": "The promoted Quickened Spell subset is closed to the named action-time Spell Invocation profiles that already consume typed Metamagic effectKind, shared Sorcery Point spending, Bonus Action rewriting, and the level-1-plus same-turn spell lock. Standalone damage, control, ongoing-effect, and other action-casting procedures must each add their own typed resource-threading and Quint/runtime parity witness before they can admit Quickened Spell; unsupported procedures remain rejected before Sorcery Point spending instead of using authored spell identity dispatch.; Distant Spell now has a promoted object-light Touch-range slice, but additional target or origin procedures must each consume a typed cast-local range fact before range can be rewritten without trusting authored spell identity; Extended Spell now has a promoted Enlarge/Reduce duration slice, but additional duration-bearing procedures must each consume a typed cast-local duration fact before duration can be rewritten. Subtle Spell now has a promoted cast-local component projection slice, but future consumers such as stealth, audibility, visibility, Counterspell, hidden-caster, free-hand, Silence, and procedure-specific component requirements remain outside this profile. Unsupported cast-property options remain rejected before Sorcery Point spending rather than charging inert Metamagic.; The promoted Empowered Spell slice is owned by the pending single spellAttackDamage rolledDice continuation for Ray of Frost. Repeated spell attacks need invocation-local one-use accounting, allocation spells need allocation-aware dice ownership, and save/ongoing/object damage owners must each consume the typed reroll facts before they can admit Empowered without charging inert Metamagic or storing a parallel reroll opportunity state.; The promoted Seeking Spell slice is owned by the pending single spellAttackDamage Attack Roll continuation. Repeated spell attack sequences need a procedure-local accounting fact that allows at most one Seeking reroll for the whole spell casting across multiple attack rolls before Scorching Ray or similar procedures can consume the same post-miss boundary."
+      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
           "evidence": "candidate Unit sorcerer_metamagic is installed in srdUnitCollection",
-          "status": "catalog-only evidence; operational owner evidence still required"
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; L12G-FOLLOWUP-SORCERER-METAMAGIC-CHARACTER-FACTS character-creation.class-feature-option-projection, character-creation.class-feature-source-fact-projection, and character-creation.class-feature-advancement-replacement support profiles; Metamagic is discovered from the level-2 Sorcerer class feature grant, filled from the installed SRD Metamagic option roster, finalized as selected CharacterBuild Metamagic option facts, projected with Sorcerer-level known-option counts, option costs, stacking modes, spell-use limit, and the shared Font of Magic Sorcery Point resource link, and advanced through Sorcerer level gains that replace one known option with one unknown option or add level-10 and level-17 options from the Surface choice-count thresholds.",
+          "status": "owner evidence present"
+        },
+        {
+          "owner": "character-sheet-runtime",
+          "evidence": "plans/unit-profile-coverage/character-sheet-owner-evidence.json records row-level runtime projection evidence; L12G-FOLLOWUP-SORCERER-METAMAGIC-BATTLE-RESOURCE-BRIDGE Character Sheet Metamagic battle resource bridge runtime; Metamagic selected option facts are preserved through Character Sheet parsing only when they match the retained Sorcerer Metamagic feature and Sorcerer-level known-option count. Those parsed CharacterBuild facts provide the Character Battle bridge source for typed Metamagic effectKind, stackingMode, and cost facts while the shared Font of Magic Sorcery Point point-pool remains owned by the existing Character Sheet resource expenditure state.",
+          "status": "owner evidence present"
+        },
+        {
+          "owner": "battle-runtime",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L14G-D03-SORCERER-METAMAGIC-PARTIAL-PROFILE at packages/battle-runtime/src/battle-runtime-metamagic-resource.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only.",
-      "battleReadinessStatus": "owner-evidence-required"
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/sorcerer:level-2:class-table-summary:sorcerer_level_2_feature_table_row",

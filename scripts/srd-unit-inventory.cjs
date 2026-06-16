@@ -306,6 +306,7 @@ const battleRuntimeRelevantFeatureUnitIds = new Set([
   "rogue_steady_aim",
   "rogue_weapon_mastery",
   "sorcerer_innate_sorcery",
+  "sorcerer_metamagic",
   "warlock_eldritch_invocations",
 ]);
 
@@ -319,6 +320,7 @@ const levelTwoBattleRuntimeOwnerEvidenceUnitIds = new Set([
   "monk_unarmored_movement",
   "paladin_paladins_smite",
   "rogue_cunning_action",
+  "sorcerer_metamagic",
 ]);
 
 const classContainerSurfaceBlockers = new Map();

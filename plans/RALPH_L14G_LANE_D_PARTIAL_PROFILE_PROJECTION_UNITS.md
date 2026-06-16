@@ -19,7 +19,7 @@
     {
       "number": 3,
       "id": "L14G-D03-SORCERER-METAMAGIC-PARTIAL-PROFILE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Reconcile Sorcerer Metamagic partial profile ownership"
     },
     {
@@ -47,11 +47,11 @@ Task 1 closed the Wild Shape sense/language/speech projection evidence gap. The
 remaining Wild Shape Stat Block action and Beast Spells runtime split is tracked
 as Task 5 so it remains executable work instead of deferred prose. Task 2 closed
 the Monk Focus generated-readiness ambiguity while preserving the ordinary jump
-movement/table owner boundary. Sorcerer Metamagic remains a research task
-because its current profile mixes supported runtime behavior with deferred owner
-boundaries. `rogue_second_story_work` is implementation-ready because
-pre-research found the desired projection shape already exists and the remaining
-work is checker-readable evidence.
+movement/table owner boundary. Task 3 closed the Sorcerer Metamagic
+generated-readiness ambiguity by making the promoted runtime subsets and
+procedure-specific deferred owner closures checker-readable. `rogue_second_story_work`
+is implementation-ready because pre-research found the desired projection shape
+already exists and the remaining work is checker-readable evidence.
 
 ## Source Artifacts
 
@@ -199,7 +199,7 @@ Verification:
 
 ### Task 3 - L14G-D03-SORCERER-METAMAGIC-PARTIAL-PROFILE
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -214,8 +214,12 @@ Current state:
 
 - Surface installed.
 - Unit matrix reports `profile-subset-supported`.
-- Evidence exists for character creation/sheet bridge and several focused MBTs.
-- Remaining work is per-procedure owner promotion, not one broad Metamagic patch.
+- Generated inventory reports owner evidence present and accepted for the
+  current promoted subset.
+- Evidence exists for character creation/sheet bridge, deterministic battle
+  runtime admission/projection tests for the promoted subset, and focused MBTs.
+- Remaining non-promoted procedures are closed to future procedure-specific
+  owners rather than one broad Metamagic patch.
 
 Output:
 
