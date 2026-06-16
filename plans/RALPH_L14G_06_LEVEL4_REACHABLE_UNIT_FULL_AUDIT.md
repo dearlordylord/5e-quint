@@ -7,7 +7,7 @@
     {
       "number": 1,
       "id": "L14G-06-LEVEL4-REACHABLE-UNIT-FULL-AUDIT",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Audit every mechanically relevant level-4 reachable Unit"
     }
   ]
@@ -94,7 +94,7 @@ generated artifacts instead of preserving stale numbers.
 
 ### Task 1 - L14G-06-LEVEL4-REACHABLE-UNIT-FULL-AUDIT
 
-Status: `ready-for-implementation`
+Status: `done`
 
 Expected size: one focused audit lane. If the audit discovers large
 implementation work, split that work into new Ralph lane files instead of
@@ -180,6 +180,13 @@ Acceptance:
   non-only-table-facing is either already supported/closed by durable evidence
   or split into a concrete follow-up lane.
 - No generated coverage artifact is hand-edited.
+
+Result:
+
+- Audit artifact: `plans/unit-profile-coverage/L14G_06_LEVEL4_REACHABLE_UNIT_FULL_AUDIT.md`.
+- Follow-up lanes split: L14G-07 through L14G-12.
+- `plans/ACTIVE_PLAN.md` now treats this lane as done and uses the new follow-up
+  lane files as the live queue.
 
 Verification:
 
