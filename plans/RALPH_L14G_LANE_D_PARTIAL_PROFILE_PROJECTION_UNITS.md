@@ -37,7 +37,7 @@
     {
       "number": 6,
       "id": "L12G-FOLLOWUP-DRUID-WILD-SHAPE-BEAST-SPELLS-CASTING",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Promote Wild Shape Beast Spells casting exceptions"
     },
     {
@@ -389,7 +389,7 @@ Completion notes:
 
 ### Task 6 - L12G-FOLLOWUP-DRUID-WILD-SHAPE-BEAST-SPELLS-CASTING
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
