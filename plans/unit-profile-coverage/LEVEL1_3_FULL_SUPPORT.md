@@ -18,7 +18,7 @@ Blockers: strict=0, selected-identity=0, SRD-authored-readiness=0.
 | Strict target closure | 197/197 (100%) |
 | Selected identity readiness | 168/168 (100%) |
 | Diagnostic product readiness | 594/607 (97.9%) |
-| SRD authored product readiness | 79/79 (100%) |
+| SRD authored product readiness | 83/83 (100%) |
 | Rules-kernel profile join | 103/103 (100%) |
 | Rules-kernel covered profile join | 103/103 (100%) |
 | Supported Unit rules-kernel chain | 140/140 (100%) |
@@ -60,7 +60,7 @@ This is the selected-identity gate layer for the strict denominator. `witness-pr
 | --- | --- | ---: | --- |
 | Strict runtime/profile closure | pass | 197/197 (100%) | _none_ |
 | Selected identity readiness | pass | 168/168 (100%) | _none_ |
-| SRD authored product readiness | pass | 79/79 (100%) | _none_ |
+| SRD authored product readiness | pass | 83/83 (100%) | _none_ |
 
 Every gate row must pass for a full level-support claim. A 100% result in one layer does not satisfy another layer, failed gates are not combined into a weighted completion percentage, and diagnostic product-readiness rows are intentionally absent from this gate unless they enter the SRD-authored blocker set.
 
@@ -73,8 +73,8 @@ This gate checks authored records and retained Unit references that must resolve
 | SRD background records | complete | 4/4 (100%) | Every SRD background selectable at character creation must be installed. |
 | SRD background origin feat refs | complete | 4/4 (100%) | Every finalized background origin feat ref must resolve through the Unit catalog before character-to-battle admission can be claimed. |
 | SRD background concrete equipment refs | complete | 4/4 (100%) | Every concrete Unit ref in SRD background starting equipment must resolve through the Unit catalog. |
-| SRD species records | complete | 6/6 (100%) | Every SRD species selectable at character creation must be installed. |
-| SRD species trait refs | complete | 11/11 (100%) | Every finalized species trait ref must resolve through the Unit catalog before character-to-battle admission can be claimed. |
+| SRD species records | complete | 7/7 (100%) | Every SRD species selectable at character creation must be installed. |
+| SRD species trait refs | complete | 14/14 (100%) | Every finalized species trait ref must resolve through the Unit catalog before character-to-battle admission can be claimed. |
 | SRD class feature grants through level 3 | complete | 46/46 (100%) | Every level-scoped class feature grant retained by finalization must resolve through the Unit catalog. |
 | SRD class concrete equipment refs | complete | 0/0 (n/a) | Every concrete Unit ref in SRD class starting equipment must resolve through the Unit catalog. |
 | Unique SRD concrete equipment refs | complete | 4/4 (100%) | Unique concrete weapon, armor, and shield Unit refs reachable from SRD starting equipment. |

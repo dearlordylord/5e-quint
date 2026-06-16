@@ -205,6 +205,10 @@ import speciesDwarfInput from "../../content/species_dwarf.json";
 import speciesDwarfDarkvisionInput from "../../content/species_dwarf_darkvision.json";
 import speciesDwarfDwarvenResilienceInput from "../../content/species_dwarf_dwarven_resilience.json";
 import speciesElfInput from "../../content/species_elf.json";
+import speciesGnomeInput from "../../content/species_gnome.json";
+import speciesGnomeDarkvisionInput from "../../content/species_gnome_darkvision.json";
+import speciesGnomeGnomishCunningInput from "../../content/species_gnome_gnomish_cunning.json";
+import speciesGnomeGnomishLineageInput from "../../content/species_gnome_gnomish_lineage.json";
 import speciesGoliathInput from "../../content/species_goliath.json";
 import speciesGoliathPowerfulBuildInput from "../../content/species_goliath_powerful_build.json";
 import speciesOrcInput from "../../content/species_orc.json";
@@ -419,6 +423,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     speciesDragonbornInput,
     speciesDwarfInput,
     speciesElfInput,
+    speciesGnomeInput,
     speciesGoliathInput,
     speciesOrcInput,
     speciesTieflingInput,
@@ -542,6 +547,9 @@ export const srdUnitCollection = defineSrdUnitCollection({
     speciesDragonbornDarkvisionInput,
     speciesDwarfDarkvisionInput,
     speciesDwarfDwarvenResilienceInput,
+    speciesGnomeDarkvisionInput,
+    speciesGnomeGnomishCunningInput,
+    speciesGnomeGnomishLineageInput,
     speciesGoliathPowerfulBuildInput,
     speciesTieflingDarkvisionInput,
     acidSplashInput,

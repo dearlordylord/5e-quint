@@ -3537,10 +3537,120 @@ export const FeatRecordSchema = Schema.Struct({
   mechanics: FeatMechanicsSchema,
 });
 
+const GnomishLineageForestMechanicsSchema = strictStruct({
+  family: Schema.Literal("passive"),
+  grants: Schema.Tuple(
+    strictStruct({
+      kind: Schema.Literal("grant_spell_access"),
+      spellId: Schema.Literal("minor_illusion"),
+      mode: Schema.Literal("known"),
+    }),
+    strictStruct({
+      kind: Schema.Literal("grant_spell_access"),
+      spellId: Schema.Literal("speak_with_animals"),
+      mode: Schema.Literal("prepared"),
+    }),
+    strictStruct({
+      kind: Schema.Literal("grant_spell_free_casts"),
+      spellId: Schema.Literal("speak_with_animals"),
+      count: strictStruct({
+        kind: Schema.Literal("proficiency_bonus"),
+      }),
+      resetCadence: Schema.Literal("long_rest"),
+    }),
+  ),
+});
+
+const GnomishLineageRockMechanicsSchema = strictStruct({
+  family: Schema.Literal("passive"),
+  grants: Schema.Tuple(
+    strictStruct({
+      kind: Schema.Literal("grant_spell_access"),
+      spellId: Schema.Literal("mending"),
+      mode: Schema.Literal("known"),
+    }),
+    strictStruct({
+      kind: Schema.Literal("grant_spell_access"),
+      spellId: Schema.Literal("prestidigitation"),
+      mode: Schema.Literal("known"),
+    }),
+  ),
+});
+
+const GnomishLineageRockClockworkDeviceSchema = strictStruct({
+  creation: strictStruct({
+    trigger: strictStruct({
+      kind: Schema.Literal("prestidigitation_cast"),
+      spellId: Schema.Literal("prestidigitation"),
+      castingTime: strictStruct({
+        amount: Schema.Literal(10),
+        unit: Schema.Literal("minute"),
+      }),
+    }),
+    object: strictStruct({
+      kind: Schema.Literal("clockwork_device"),
+      size: Schema.Literal("tiny"),
+      armorClass: Schema.Literal(5),
+      hitPoints: Schema.Literal(1),
+    }),
+    storedEffect: strictStruct({
+      kind: Schema.Literal("one_prestidigitation_effect_chosen_at_creation"),
+      optionChoicesLockedAtCreation: Schema.Literal(true),
+    }),
+  }),
+  activation: strictStruct({
+    action: Schema.Literal("bonus_action"),
+    activator: Schema.Literal("self_or_another_creature"),
+    contact: Schema.Literal("touch"),
+  }),
+  concurrentLimit: Schema.Literal(3),
+  duration: strictStruct({
+    amount: Schema.Literal(8),
+    unit: Schema.Literal("hour"),
+  }),
+  dismantle: strictStruct({
+    actor: Schema.Literal("creator"),
+    action: Schema.Literal("utilize"),
+    contact: Schema.Literal("touch"),
+  }),
+});
+
+const GnomishLineageForestOptionSchema = strictStruct({
+  id: Schema.Literal("forest_gnome"),
+  displayName: Schema.Literal("Forest Gnome"),
+  mechanics: GnomishLineageForestMechanicsSchema,
+});
+
+const GnomishLineageRockOptionSchema = strictStruct({
+  id: Schema.Literal("rock_gnome"),
+  displayName: Schema.Literal("Rock Gnome"),
+  mechanics: GnomishLineageRockMechanicsSchema,
+  clockworkDevice: GnomishLineageRockClockworkDeviceSchema,
+});
+
+export const GnomishLineageMechanicsSchema = strictStruct({
+  family: Schema.Literal("species_lineage_choice"),
+  choiceKey: Schema.Literal("gnome_lineage"),
+  timing: Schema.Literal("species_selection"),
+  spellcastingAbilityChoice: strictStruct({
+    kind: Schema.Literal("spellcasting_ability_choice"),
+    abilities: Schema.Tuple(
+      Schema.Literal("int"),
+      Schema.Literal("wis"),
+      Schema.Literal("cha"),
+    ),
+  }),
+  options: Schema.Tuple(
+    GnomishLineageForestOptionSchema,
+    GnomishLineageRockOptionSchema,
+  ),
+});
+
 export const SpeciesTraitMechanicsSchema = Schema.Union(
   PassiveMechanicsSchema,
   ActivatedAbilityMechanicsSchema,
   TriggeredReplacementMechanicsSchema,
+  GnomishLineageMechanicsSchema,
 );
 
 export const SpeciesTraitRecordSchema = Schema.Struct({
@@ -3704,6 +3814,25 @@ export const ElfSpeciesRecordSchema = Schema.Struct({
   traits: ElfSpeciesTraitsSchema,
 });
 
+export const GnomeSpeciesTraitsSchema = Schema.Struct({
+  darkvision: Schema.Literal("species_gnome_darkvision"),
+  gnomishCunning: Schema.Literal("species_gnome_gnomish_cunning"),
+  gnomishLineage: Schema.Literal("species_gnome_gnomish_lineage"),
+});
+
+const FixedSmallSpeciesSizeSchema = Schema.Struct({
+  kind: Schema.Literal("fixed"),
+  size: Schema.Literal("small"),
+});
+
+export const GnomeSpeciesRecordSchema = Schema.Struct({
+  ...SpeciesRecordBaseSchema.fields,
+  species: Schema.Literal("gnome"),
+  size: FixedSmallSpeciesSizeSchema,
+  speed: SpeciesSpeed30Schema,
+  traits: GnomeSpeciesTraitsSchema,
+});
+
 export const GoliathSpeciesTraitsSchema = Schema.Struct({
   powerfulBuild: Schema.Literal("species_goliath_powerful_build"),
 });
@@ -3740,6 +3869,7 @@ export const SpeciesRecordSchema = Schema.Union(
   DragonbornSpeciesRecordSchema,
   DwarfSpeciesRecordSchema,
   ElfSpeciesRecordSchema,
+  GnomeSpeciesRecordSchema,
   GoliathSpeciesRecordSchema,
   OrcSpeciesRecordSchema,
   TieflingSpeciesRecordSchema,

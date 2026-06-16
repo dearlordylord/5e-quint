@@ -4,6 +4,7 @@ import type {
   CompositeMagicItemMechanics,
   FeatRecord,
   GrapplerFeatMechanics,
+  GnomishLineageMechanics,
   ItemDestructionPolicy,
   LightExtraAttackDamageAbilityModifierFeatMechanics,
   MagicItemAttunement,
@@ -402,7 +403,9 @@ export function traceSpeciesTraitUnit(trait: SpeciesTraitRecord): Trace {
   const procId =
     trait.mechanics.family === "triggered_replacement"
       ? traceTriggeredReplacementMechanics(trait.mechanics, nodes, edges, ids)
-      : tracePassiveOrActivated(trait.mechanics, nodes, edges, ids);
+      : trait.mechanics.family === "species_lineage_choice"
+        ? traceGnomishLineageMechanics(trait.mechanics, nodes, edges, ids)
+        : tracePassiveOrActivated(trait.mechanics, nodes, edges, ids);
   edges.push({ from: rootId, to: procId, relation: "roots" });
 
   return {
@@ -412,6 +415,54 @@ export function traceSpeciesTraitUnit(trait: SpeciesTraitRecord): Trace {
     edges,
     atomKinds: [...new Set(nodes.map((n) => n.atomKind))].sort(),
   };
+}
+
+function traceGnomishLineageMechanics(
+  mechanics: GnomishLineageMechanics,
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): string {
+  const choiceId = ids("lineage");
+  nodes.push({
+    id: choiceId,
+    category: "procedure",
+    atomKind: "species_lineage_choice",
+    label:
+      `species_lineage_choice\n${mechanics.choiceKey}\n${mechanics.timing}\n` +
+      `spellcasting ability: ${mechanics.spellcastingAbilityChoice.abilities.join(", ")}`,
+  });
+
+  for (const option of mechanics.options) {
+    const optionId = ids(option.id);
+    nodes.push({
+      id: optionId,
+      category: "procedure",
+      atomKind: "species_lineage_option",
+      label: `species_lineage_option\n${option.displayName}`,
+    });
+    edges.push({ from: choiceId, to: optionId, relation: "offers" });
+
+    const grantId = tracePassiveMechanics(option.mechanics, nodes, edges, ids);
+    edges.push({ from: optionId, to: grantId, relation: "selects" });
+
+    if ("clockworkDevice" in option) {
+      const device = option.clockworkDevice;
+      const deviceId = ids("clockwork-device");
+      nodes.push({
+        id: deviceId,
+        category: "effect",
+        atomKind: "rock_gnome_clockwork_device",
+        label:
+          `rock_gnome_clockwork_device\n${device.creation.object.size} object AC ${device.creation.object.armorClass} HP ${device.creation.object.hitPoints}\n` +
+          `${device.creation.trigger.castingTime.amount} ${device.creation.trigger.castingTime.unit} ${device.creation.trigger.spellId}\n` +
+          `limit ${device.concurrentLimit}; duration ${device.duration.amount} ${device.duration.unit}`,
+      });
+      edges.push({ from: optionId, to: deviceId, relation: "creates" });
+    }
+  }
+
+  return choiceId;
 }
 
 // ============================================================

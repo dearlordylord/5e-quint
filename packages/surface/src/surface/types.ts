@@ -921,6 +921,15 @@ export type ElfSpeciesTraits = Schema.Schema.Type<
 export type ElfSpeciesRecord = Schema.Schema.Type<
   typeof SurfaceSchema.ElfSpeciesRecordSchema
 >;
+export type GnomishLineageMechanics = Schema.Schema.Type<
+  typeof SurfaceSchema.GnomishLineageMechanicsSchema
+>;
+export type GnomeSpeciesTraits = Schema.Schema.Type<
+  typeof SurfaceSchema.GnomeSpeciesTraitsSchema
+>;
+export type GnomeSpeciesRecord = Schema.Schema.Type<
+  typeof SurfaceSchema.GnomeSpeciesRecordSchema
+>;
 export type GoliathSpeciesTraits = Schema.Schema.Type<
   typeof SurfaceSchema.GoliathSpeciesTraitsSchema
 >;
@@ -1007,6 +1016,9 @@ export type SpellFreeCastGrant = Extract<
   EffectAtom,
   { readonly kind: "grant_spell_free_casts" }
 >;
+export type NumericSpellFreeCastGrant = SpellFreeCastGrant & {
+  readonly count: number;
+};
 export type PreparedSpellAccessGrant = Extract<
   EffectAtom,
   { readonly kind: "grant_spell_access"; readonly mode: "prepared" }
@@ -1102,7 +1114,7 @@ export function supportedClassFeatureSpellFreeCastGrantsForUnit(
 ): {
   readonly profile: SupportedClassFeatureSpellFreeCastProfile;
   readonly preparedSpellGrant: PreparedSpellAccessGrant;
-  readonly freeCastGrant: SpellFreeCastGrant;
+  readonly freeCastGrant: NumericSpellFreeCastGrant;
 } | null {
   if (!isPassiveClassFeatureUnitRecord(unit)) {
     return null;
@@ -1118,9 +1130,10 @@ export function supportedClassFeatureSpellFreeCastGrantsForUnit(
       grant.spellId === profile.spellId,
   );
   const freeCastGrant = unit.mechanics.grants.find(
-    (grant): grant is SpellFreeCastGrant =>
+    (grant): grant is NumericSpellFreeCastGrant =>
       grant.kind === "grant_spell_free_casts" &&
       grant.spellId === profile.spellId &&
+      typeof grant.count === "number" &&
       grant.count === profile.count &&
       grant.resetCadence === profile.resetCadence,
   );
@@ -1133,7 +1146,7 @@ export function favoredEnemyHuntersMarkFreeCastGrantsForUnit(
   unit: UnitRecord,
 ): {
   readonly preparedSpellGrant: PreparedSpellAccessGrant;
-  readonly freeCastGrant: SpellFreeCastGrant;
+  readonly freeCastGrant: NumericSpellFreeCastGrant;
 } | null {
   const grants = supportedClassFeatureSpellFreeCastGrantsForUnit(unit);
   return grants?.profile.resourceTag === "favoredEnemyHuntersMarkFreeCasts"

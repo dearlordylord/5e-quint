@@ -24,6 +24,7 @@ import rogueCunningActionInput from "../../content/rogue_cunning_action.json";
 import speciesDragonbornInput from "../../content/species_dragonborn.json";
 import speciesDwarfInput from "../../content/species_dwarf.json";
 import speciesElfInput from "../../content/species_elf.json";
+import speciesGnomeInput from "../../content/species_gnome.json";
 import speciesGoliathInput from "../../content/species_goliath.json";
 import speciesOrcInput from "../../content/species_orc.json";
 import speciesTieflingInput from "../../content/species_tiefling.json";
@@ -1641,7 +1642,7 @@ describe("character-creation Surface records", () => {
     });
   });
 
-  test("decodes non-Orc admission species records with retained trait refs", () => {
+  test("decodes non-Orc species records with retained trait refs", () => {
     const cases = [
       {
         input: speciesDragonbornInput,
@@ -1681,6 +1682,21 @@ describe("character-creation Surface records", () => {
           size: { kind: "fixed", size: "medium" },
           speed: { walkFeet: 30 },
           traits: { darkvision: "elf_darkvision" },
+        },
+      },
+      {
+        input: speciesGnomeInput,
+        expected: {
+          recordId: "species_gnome",
+          species: "gnome",
+          creatureType: "humanoid",
+          size: { kind: "fixed", size: "small" },
+          speed: { walkFeet: 30 },
+          traits: {
+            darkvision: "species_gnome_darkvision",
+            gnomishCunning: "species_gnome_gnomish_cunning",
+            gnomishLineage: "species_gnome_gnomish_lineage",
+          },
         },
       },
       {
@@ -2262,6 +2278,18 @@ describe("character-creation Surface records", () => {
           traits: {
             ...speciesDwarfInput.traits,
             darkvision: "species_tiefling_darkvision",
+          },
+        }),
+      ),
+    ).toBe(true);
+
+    expect(
+      Either.isLeft(
+        decodeUnitRecordEither({
+          ...speciesGnomeInput,
+          traits: {
+            ...speciesGnomeInput.traits,
+            gnomishLineage: "species_tiefling_darkvision",
           },
         }),
       ),

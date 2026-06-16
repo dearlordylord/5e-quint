@@ -1,0 +1,109 @@
+{
+  "description": "Choose either Forest Gnome or Rock Gnome, and choose Intelligence, Wisdom, or Charisma as the spellcasting ability for spells from this trait.",
+  "id": "species_gnome_gnomish_lineage",
+  "kind": "species_trait",
+  "mechanics": {
+    "choiceKey": "gnome_lineage",
+    "family": "species_lineage_choice",
+    "options": [
+      {
+        "displayName": "Forest Gnome",
+        "id": "forest_gnome",
+        "mechanics": {
+          "family": "passive",
+          "grants": [
+            {
+              "kind": "grant_spell_access",
+              "mode": "known",
+              "spellId": "minor_illusion"
+            },
+            {
+              "kind": "grant_spell_access",
+              "mode": "prepared",
+              "spellId": "speak_with_animals"
+            },
+            {
+              "count": {
+                "kind": "proficiency_bonus"
+              },
+              "kind": "grant_spell_free_casts",
+              "resetCadence": "long_rest",
+              "spellId": "speak_with_animals"
+            }
+          ]
+        }
+      },
+      {
+        "clockworkDevice": {
+          "activation": {
+            "action": "bonus_action",
+            "activator": "self_or_another_creature",
+            "contact": "touch"
+          },
+          "concurrentLimit": 3,
+          "creation": {
+            "object": {
+              "armorClass": 5,
+              "hitPoints": 1,
+              "kind": "clockwork_device",
+              "size": "tiny"
+            },
+            "storedEffect": {
+              "kind": "one_prestidigitation_effect_chosen_at_creation",
+              "optionChoicesLockedAtCreation": true
+            },
+            "trigger": {
+              "castingTime": {
+                "amount": 10,
+                "unit": "minute"
+              },
+              "kind": "prestidigitation_cast",
+              "spellId": "prestidigitation"
+            }
+          },
+          "dismantle": {
+            "action": "utilize",
+            "actor": "creator",
+            "contact": "touch"
+          },
+          "duration": {
+            "amount": 8,
+            "unit": "hour"
+          }
+        },
+        "displayName": "Rock Gnome",
+        "id": "rock_gnome",
+        "mechanics": {
+          "family": "passive",
+          "grants": [
+            {
+              "kind": "grant_spell_access",
+              "mode": "known",
+              "spellId": "mending"
+            },
+            {
+              "kind": "grant_spell_access",
+              "mode": "known",
+              "spellId": "prestidigitation"
+            }
+          ]
+        }
+      }
+    ],
+    "spellcastingAbilityChoice": {
+      "abilities": [
+        "int",
+        "wis",
+        "cha"
+      ],
+      "kind": "spellcasting_ability_choice"
+    },
+    "timing": "species_selection"
+  },
+  "name": "Gnomish Lineage",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Character-Origins/Gnome#Gnomish Lineage"
+  },
+  "species": "gnome"
+}

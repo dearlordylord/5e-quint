@@ -127,6 +127,7 @@ const requiredFirstVerticalUnitIds = [
   "species_dragonborn",
   "species_dwarf",
   "species_elf",
+  "species_gnome",
   "species_goliath",
   "species_orc",
   "species_tiefling",
@@ -175,6 +176,9 @@ const requiredFirstVerticalUnitIds = [
   "species_dragonborn_darkvision",
   "dwarf_darkvision",
   "dwarf_dwarven_resilience",
+  "species_gnome_darkvision",
+  "species_gnome_gnomish_cunning",
+  "species_gnome_gnomish_lineage",
   "species_goliath_powerful_build",
   "species_tiefling_darkvision",
   "fire_bolt",
@@ -6343,6 +6347,120 @@ describe("SRD Unit catalog boundary", () => {
           optional: true,
           resetCadence: { kind: "long_rest" },
           trigger: { kind: "reduced_to_0_hp_not_killed_outright" },
+        },
+      });
+    }
+  });
+
+  test("authors Gnome species and trait source facts", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag === "ok") {
+      expect(result.catalog.requireUnit("species_gnome")).toMatchObject({
+        kind: "species",
+        species: "gnome",
+        size: { kind: "fixed", size: "small" },
+        speed: { walkFeet: 30 },
+        traits: {
+          darkvision: "species_gnome_darkvision",
+          gnomishCunning: "species_gnome_gnomish_cunning",
+          gnomishLineage: "species_gnome_gnomish_lineage",
+        },
+      });
+      expect(
+        result.catalog.requireUnit("species_gnome_darkvision"),
+      ).toMatchObject({
+        kind: "species_trait",
+        species: "gnome",
+        mechanics: {
+          family: "passive",
+          grants: [{ kind: "grant_sense", rangeFeet: 60, sense: "darkvision" }],
+        },
+      });
+      expect(
+        result.catalog.requireUnit("species_gnome_gnomish_cunning"),
+      ).toMatchObject({
+        kind: "species_trait",
+        species: "gnome",
+        mechanics: {
+          family: "passive",
+          grants: [
+            {
+              kind: "modify_roll_advantage",
+              mode: "advantage",
+              on: ["saving_throw"],
+              saveAbilityFilter: ["int", "wis", "cha"],
+            },
+          ],
+        },
+      });
+      expect(
+        result.catalog.requireUnit("species_gnome_gnomish_lineage"),
+      ).toMatchObject({
+        kind: "species_trait",
+        species: "gnome",
+        mechanics: {
+          choiceKey: "gnome_lineage",
+          family: "species_lineage_choice",
+          options: [
+            {
+              id: "forest_gnome",
+              mechanics: {
+                grants: [
+                  {
+                    kind: "grant_spell_access",
+                    mode: "known",
+                    spellId: "minor_illusion",
+                  },
+                  {
+                    kind: "grant_spell_access",
+                    mode: "prepared",
+                    spellId: "speak_with_animals",
+                  },
+                  {
+                    count: { kind: "proficiency_bonus" },
+                    kind: "grant_spell_free_casts",
+                    resetCadence: "long_rest",
+                    spellId: "speak_with_animals",
+                  },
+                ],
+              },
+            },
+            {
+              clockworkDevice: {
+                concurrentLimit: 3,
+                creation: {
+                  object: {
+                    armorClass: 5,
+                    hitPoints: 1,
+                    kind: "clockwork_device",
+                    size: "tiny",
+                  },
+                },
+              },
+              id: "rock_gnome",
+              mechanics: {
+                grants: [
+                  {
+                    kind: "grant_spell_access",
+                    mode: "known",
+                    spellId: "mending",
+                  },
+                  {
+                    kind: "grant_spell_access",
+                    mode: "known",
+                    spellId: "prestidigitation",
+                  },
+                ],
+              },
+            },
+          ],
+          spellcastingAbilityChoice: {
+            abilities: ["int", "wis", "cha"],
+            kind: "spellcasting_ability_choice",
+          },
+          timing: "species_selection",
         },
       });
     }

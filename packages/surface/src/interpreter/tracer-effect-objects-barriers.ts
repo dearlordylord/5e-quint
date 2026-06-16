@@ -70,6 +70,15 @@ export type ObjectAndBarrierEffectAtom = Extract<
   }
 >;
 
+function describeSpellFreeCastCount(
+  count: Extract<
+    ObjectAndBarrierEffectAtom,
+    { readonly kind: "grant_spell_free_casts" }
+  >["count"],
+): string {
+  return typeof count === "number" ? String(count) : "Proficiency Bonus";
+}
+
 export function traceObjectAndBarrierEffectAtom(
   e: ObjectAndBarrierEffectAtom,
   nodes: TraceNode[],
@@ -388,8 +397,7 @@ export function traceObjectAndBarrierEffectAtom(
       const id = ids("eff");
       const tiers = e.tiers
         .map(
-          (tier) =>
-            `L${tier.minimumClassLevel}: ${tier.spellIds.join(", ")}`,
+          (tier) => `L${tier.minimumClassLevel}: ${tier.spellIds.join(", ")}`,
         )
         .join("; ");
       nodes.push({
@@ -405,8 +413,7 @@ export function traceObjectAndBarrierEffectAtom(
       const describeLand = (land: keyof typeof e.spellsByLand): string =>
         e.spellsByLand[land]
           .map(
-            (tier) =>
-              `L${tier.minimumClassLevel}: ${tier.spellIds.join(", ")}`,
+            (tier) => `L${tier.minimumClassLevel}: ${tier.spellIds.join(", ")}`,
           )
           .join("; ");
       nodes.push({
@@ -434,7 +441,7 @@ export function traceObjectAndBarrierEffectAtom(
         id,
         category: "effect",
         atomKind: "grant_spell_free_casts",
-        label: `grant_spell_free_casts\n${e.spellId} x${e.count}\nreset ${e.resetCadence}${scaling}`,
+        label: `grant_spell_free_casts\n${e.spellId} x${describeSpellFreeCastCount(e.count)}\nreset ${e.resetCadence}${scaling}`,
       });
       return id;
     }

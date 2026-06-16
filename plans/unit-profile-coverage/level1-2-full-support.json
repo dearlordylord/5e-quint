@@ -6761,8 +6761,8 @@
         "group": "species-records",
         "label": "SRD species records",
         "metrics": {
-          "denominator": 6,
-          "numerator": 6,
+          "denominator": 7,
+          "numerator": 7,
           "percent": "100%"
         },
         "rows": [
@@ -6790,6 +6790,13 @@
           {
             "kind": "species",
             "ready": true,
+            "sourceRecordPath": "packages/surface/content/species_gnome.json",
+            "status": "installed",
+            "unitId": "species_gnome"
+          },
+          {
+            "kind": "species",
+            "ready": true,
             "sourceRecordPath": "packages/surface/content/species_goliath.json",
             "status": "installed",
             "unitId": "species_goliath"
@@ -6810,7 +6817,7 @@
           }
         ],
         "rowsByStatus": {
-          "installed": 6
+          "installed": 7
         }
       },
       {
@@ -6820,8 +6827,8 @@
         "group": "species-trait-refs",
         "label": "SRD species trait refs",
         "metrics": {
-          "denominator": 11,
-          "numerator": 11,
+          "denominator": 14,
+          "numerator": 14,
           "percent": "100%"
         },
         "rows": [
@@ -6881,6 +6888,33 @@
           },
           {
             "kind": "species_trait",
+            "ownerUnitId": "species_gnome",
+            "ready": true,
+            "relation": "species.traits.darkvision",
+            "sourceRecordPath": "packages/surface/content/species_gnome_darkvision.json",
+            "status": "installed",
+            "unitId": "species_gnome_darkvision"
+          },
+          {
+            "kind": "species_trait",
+            "ownerUnitId": "species_gnome",
+            "ready": true,
+            "relation": "species.traits.gnomishCunning",
+            "sourceRecordPath": "packages/surface/content/species_gnome_gnomish_cunning.json",
+            "status": "installed",
+            "unitId": "species_gnome_gnomish_cunning"
+          },
+          {
+            "kind": "species_trait",
+            "ownerUnitId": "species_gnome",
+            "ready": true,
+            "relation": "species.traits.gnomishLineage",
+            "sourceRecordPath": "packages/surface/content/species_gnome_gnomish_lineage.json",
+            "status": "installed",
+            "unitId": "species_gnome_gnomish_lineage"
+          },
+          {
+            "kind": "species_trait",
             "ownerUnitId": "species_goliath",
             "ready": true,
             "relation": "species.traits.powerfulBuild",
@@ -6926,7 +6960,7 @@
           }
         ],
         "rowsByStatus": {
-          "installed": 11
+          "installed": 14
         }
       },
       {
@@ -7407,8 +7441,8 @@
       }
     ],
     "metrics": {
-      "denominator": 76,
-      "numerator": 76,
+      "denominator": 80,
+      "numerator": 80,
       "percent": "100%"
     },
     "openBlockerCount": 0

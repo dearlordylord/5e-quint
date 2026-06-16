@@ -43,14 +43,14 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
-      "denominator": 431,
-      "numerator": 238,
-      "percent": "55.2%"
+      "denominator": 434,
+      "numerator": 241,
+      "percent": "55.5%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 516,
-      "numerator": 285,
-      "percent": "55.2%"
+      "denominator": 520,
+      "numerator": 289,
+      "percent": "55.6%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,7 +59,7 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 286
+      "value": 290
     },
     "deterministicAdmissionProjectionCoverage": {
       "denominator": 177,
@@ -67,8 +67,8 @@
       "percent": "97.7%"
     },
     "profileClassificationCoverage": {
-      "denominator": 286,
-      "numerator": 286,
+      "denominator": 290,
+      "numerator": 290,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -112,9 +112,9 @@
       "percent": "100%"
     },
     "supportedProfileCoverage": {
-      "denominator": 239,
+      "denominator": 242,
       "numerator": 177,
-      "percent": "74.1%"
+      "percent": "73.1%"
     }
   },
   "metricSemantics": [
@@ -16137,6 +16137,29 @@
         "status": "installed"
       },
       "claim": {
+        "battleReadinessClosure": {
+          "kind": "selection-grant-container",
+          "owner": "future character-creation Gnomish Lineage selection owner plus selected trait projection owners",
+          "reason": "The aggregate species record names Darkvision, Gnomish Cunning, and Gnomish Lineage. Admitting it as a character-creation species without lineage and spellcasting ability selections would finalize an under-specified CharacterBuild."
+        },
+        "reason": "Species admission container record; Surface retains Gnome source facts and authored trait Unit refs, but character creation must not admit Gnome until the Gnomish Lineage species-selection choice and spellcasting ability choice have a runtime owner.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "species",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/species_gnome.json",
+      "unitId": "species_gnome"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
         "reason": "Species admission container record; character creation retains the selected species source fact and authored trait Unit refs, while executable battle pressure lives on species trait Units.",
         "tag": "unsupported-profile"
       },
@@ -24229,6 +24252,75 @@
       ],
       "sourceRecordPath": "packages/surface/content/species_dwarf_dwarven_resilience.json",
       "unitId": "dwarf_dwarven_resilience"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "sight/illumination projection owner",
+          "reason": "Darkvision sense grants provide observer sense and range facts; promoted battle execution consumes derived sight and illumination projections plus table-supplied distance and visibility facts rather than executing species trait Units directly."
+        },
+        "reason": "Darkvision is an authored species sense fact with no standalone promoted Unit profile.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "species_trait",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/species_gnome_darkvision.json",
+      "unitId": "species_gnome_darkvision"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-battle-runtime",
+          "owner": "future passive saving-throw ability-filter roll-mode owner",
+          "reason": "The Surface shape carries the exact saveAbilityFilter source fact. Battle admission must promote that typed fact through a narrowed support profile before reducers consume it."
+        },
+        "reason": "Gnomish Cunning is authored as passive Advantage on Intelligence, Wisdom, and Charisma Saving Throws, but the promoted passive-saving-throw roll-mode profile currently admits condition-scoped Poisoned saves rather than an arbitrary save ability filter.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "species_trait",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/species_gnome_gnomish_cunning.json",
+      "unitId": "species_gnome_gnomish_cunning"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "selection-grant-container",
+          "owner": "future character-creation lineage selection, character-sheet species spell access/free-cast projection, and Rock clockwork-device table/object owner",
+          "reason": "The trait combines character-selection state, spell access projection, free-cast resource projection, and table/object device behavior. Those facts must be split into their execution owners rather than admitted as one battle Unit."
+        },
+        "reason": "Gnomish Lineage is authored as a species-selection lineage choice with a spellcasting ability choice, Forest Gnome spell access and Proficiency Bonus free casts, and Rock Gnome spell access plus clockwork-device source facts. No promoted profile owns that cross-boundary selection and projection yet.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "species_trait",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/species_gnome_gnomish_lineage.json",
+      "unitId": "species_gnome_gnomish_lineage"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
