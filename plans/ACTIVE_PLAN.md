@@ -13,7 +13,7 @@
     {
       "number": 2,
       "id": "L14G-02-LEVEL4-PROGRESSION-DELTA-AUDIT",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Audit level-4 class-table progression deltas"
     },
     {
@@ -115,7 +115,7 @@ serial consolidation after their outputs land.
 | Lane | Ralph source file | Task | Size | Status | Independence |
 | --- | --- | --- | ---: | --- | --- |
 | A | `plans/RALPH_L14G_01_ASI_CATALOG_SOURCE.md` | L14G-01-LEVEL4-ASI-CATALOG-SOURCE | ~1 day | ready-for-implementation | Source/catalog lane for Fighter, Paladin, and Warlock ASI records plus class feature-grant refs and ASI closure claims. Does not need MCP changes. |
-| B | `plans/RALPH_L14G_02_PROGRESSION_DELTA_AUDIT.md` | L14G-02-LEVEL4-PROGRESSION-DELTA-AUDIT | ~1 day | ready-for-research | Audit lane for level-4 class table deltas. Can run in parallel with ASI, Slow Fall, and MCP work. |
+| B | `plans/RALPH_L14G_02_PROGRESSION_DELTA_AUDIT.md` | L14G-02-LEVEL4-PROGRESSION-DELTA-AUDIT | ~1 day | done | Audit lane found no new implementation follow-up; existing ASI and Slow Fall lanes remain the correct owners. |
 | C | `plans/RALPH_L14G_03_MONK_SLOW_FALL_TRIAGE.md` | L14G-03-MONK-SLOW-FALL-TRIAGE | ~1 day | ready-for-research | RAW/domain decision lane for Slow Fall. It may close as a boundary or spawn later QNT/runtime/MBT implementation work. |
 | D | `plans/RALPH_L14G_04_MCP_LEVEL14_SCENARIO_GATE.md` | L14G-04-MCP-LEVEL14-SCENARIO-GATE | ~1.5-2 days | ready-for-implementation | Formal ultra-golden blocker. Designs and implements MCP scenario evidence for level-4 advancement, sheet durability, and battle handoff. |
 | E | `plans/RALPH_L14G_05_GATE_CONSOLIDATION.md` | L14G-05-GATE-CONSOLIDATION | ~0.5 day | blocked | Serial lane after A-D. Regenerates, reviews residuals, and updates this plan. |
@@ -145,7 +145,7 @@ updates need to converge in one artifact.
 | # | Task | Status | Depends on | Notes |
 | ---: | --- | --- | --- | --- |
 | 1 | L14G-01-LEVEL4-ASI-CATALOG-SOURCE | ready-for-implementation | none | Close ASI source/catalog gaps without adding per-class runtime behavior. |
-| 2 | L14G-02-LEVEL4-PROGRESSION-DELTA-AUDIT | ready-for-research | none | Audit class-table deltas that are not feature-heading rows. |
+| 2 | L14G-02-LEVEL4-PROGRESSION-DELTA-AUDIT | done | none | Audit artifact added at `plans/unit-profile-coverage/L14G_02_LEVEL4_PROGRESSION_DELTA_AUDIT.md`; no new follow-up tasks discovered. |
 | 3 | L14G-03-MONK-SLOW-FALL-TRIAGE | ready-for-research | none | Decide boundary closure vs promoted falling/reaction runtime work. |
 | 4 | L14G-04-MCP-LEVEL14-SCENARIO-GATE | ready-for-implementation | none | Add checked MCP evidence for all four level-1-4 required flows. |
 | 5 | L14G-05-GATE-CONSOLIDATION | blocked | Tasks 1-4 | Regenerate, review, and close remaining level-1-4 residuals. |
@@ -176,7 +176,7 @@ Acceptance:
 
 ### Task 2 - L14G-02-LEVEL4-PROGRESSION-DELTA-AUDIT
 
-Status: `ready-for-research`
+Status: `done`
 
 Output:
 
@@ -191,6 +191,13 @@ Acceptance:
 - The audit names source facts, not authored identity as runtime dispatch.
 - Existing generic progression owners are reused where possible.
 - Any new implementation task has a concrete owner and evidence target.
+
+Result:
+
+- Audit artifact: `plans/unit-profile-coverage/L14G_02_LEVEL4_PROGRESSION_DELTA_AUDIT.md`.
+- No new implementation follow-up task was discovered. Existing `L14G-01`
+  remains the owner for missing Fighter, Paladin, and Warlock ASI source/catalog
+  records; existing `L14G-03` remains the owner for Monk Slow Fall triage.
 
 ### Task 3 - L14G-03-MONK-SLOW-FALL-TRIAGE
 
