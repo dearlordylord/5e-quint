@@ -43,6 +43,10 @@ the target repo.
   `tasks/BLOCKERS.md`.
 - `target-profiles/*.json` — target profile examples for scaffold rendering.
   Synthetic profiles are renderer fixtures, not implementation recommendations.
+- `QNT_DOMAIN_CONCEPTS_HARNESS_PLAN.md` — source-side plan for turning
+  domain concepts such as holes/fills, support-profile admission, character
+  layer ownership, authored-identity separation, and Encounter Side into
+  future QNT/task/harness pressure.
 
 ## Rendering
 
