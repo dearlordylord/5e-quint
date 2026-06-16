@@ -116,6 +116,133 @@ const listPreparedSpellcasting = (input: {
 });
 
 describe("character-creation Surface records", () => {
+  test("decodes and reads Bard level 4 Ability Score Improvement grant", () => {
+    const classRecord = decodeClassRecordSync(classBardInput);
+    const unit = decodeUnitRecordSync(classBardInput);
+    const result = readClassCreationFacts(unit);
+
+    expect(classRecord.kind).toBe("class");
+    expect(result).toMatchObject({
+      tag: "readable",
+      value: {
+        recordId: "class_bard",
+        className: "bard",
+        featureGrants: expect.arrayContaining([
+          { level: 4, unitId: "bard_ability_score_improvement_l4" },
+        ]),
+      },
+    });
+  });
+
+  test("decodes and reads Cleric level 4 Ability Score Improvement grant", () => {
+    const classRecord = decodeClassRecordSync(classClericInput);
+    const unit = decodeUnitRecordSync(classClericInput);
+    const result = readClassCreationFacts(unit);
+
+    expect(classRecord.kind).toBe("class");
+    expect(result).toMatchObject({
+      tag: "readable",
+      value: {
+        recordId: "class_cleric",
+        className: "cleric",
+        featureGrants: expect.arrayContaining([
+          { level: 4, unitId: "cleric_ability_score_improvement_l4" },
+        ]),
+      },
+    });
+  });
+
+  test("decodes and reads Druid level 4 Ability Score Improvement grant", () => {
+    const classRecord = decodeClassRecordSync(classDruidInput);
+    const unit = decodeUnitRecordSync(classDruidInput);
+    const result = readClassCreationFacts(unit);
+
+    expect(classRecord.kind).toBe("class");
+    expect(result).toMatchObject({
+      tag: "readable",
+      value: {
+        recordId: "class_druid",
+        className: "druid",
+        featureGrants: expect.arrayContaining([
+          { level: 4, unitId: "druid_ability_score_improvement_l4" },
+        ]),
+      },
+    });
+  });
+
+  test("decodes and reads Monk level 4 feature grants", () => {
+    const classRecord = decodeClassRecordSync(classMonkInput);
+    const unit = decodeUnitRecordSync(classMonkInput);
+    const result = readClassCreationFacts(unit);
+
+    expect(classRecord.kind).toBe("class");
+    expect(result).toMatchObject({
+      tag: "readable",
+      value: {
+        recordId: "class_monk",
+        className: "monk",
+        featureGrants: expect.arrayContaining([
+          { level: 4, unitId: "monk_ability_score_improvement_l4" },
+          { level: 4, unitId: "monk_slow_fall" },
+        ]),
+      },
+    });
+  });
+
+  test("decodes and reads Ranger level 4 Ability Score Improvement grant", () => {
+    const classRecord = decodeClassRecordSync(classRangerInput);
+    const unit = decodeUnitRecordSync(classRangerInput);
+    const result = readClassCreationFacts(unit);
+
+    expect(classRecord.kind).toBe("class");
+    expect(result).toMatchObject({
+      tag: "readable",
+      value: {
+        recordId: "class_ranger",
+        className: "ranger",
+        featureGrants: expect.arrayContaining([
+          { level: 4, unitId: "ranger_ability_score_improvement_l4" },
+        ]),
+      },
+    });
+  });
+
+  test("decodes and reads Rogue level 4 Ability Score Improvement grant", () => {
+    const classRecord = decodeClassRecordSync(classRogueInput);
+    const unit = decodeUnitRecordSync(classRogueInput);
+    const result = readClassCreationFacts(unit);
+
+    expect(classRecord.kind).toBe("class");
+    expect(result).toMatchObject({
+      tag: "readable",
+      value: {
+        recordId: "class_rogue",
+        className: "rogue",
+        featureGrants: expect.arrayContaining([
+          { level: 4, unitId: "rogue_ability_score_improvement_l4" },
+        ]),
+      },
+    });
+  });
+
+  test("decodes and reads Sorcerer level 4 Ability Score Improvement grant", () => {
+    const classRecord = decodeClassRecordSync(classSorcererInput);
+    const unit = decodeUnitRecordSync(classSorcererInput);
+    const result = readClassCreationFacts(unit);
+
+    expect(classRecord.kind).toBe("class");
+    expect(result).toMatchObject({
+      tag: "readable",
+      value: {
+        recordId: "class_sorcerer",
+        className: "sorcerer",
+        featureGrants: expect.arrayContaining([
+          { level: 4, unitId: "sorcerer_ability_score_improvement_l4" },
+        ]),
+      },
+    });
+  });
+
   test("decodes and reads Fighter class creation facts", () => {
     const classRecord = decodeClassRecordSync(classFighterInput);
     const unit = decodeUnitRecordSync(classFighterInput);

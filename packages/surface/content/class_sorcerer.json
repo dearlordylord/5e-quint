@@ -3,7 +3,7 @@
     "kind": "none"
   },
   "className": "sorcerer",
-  "description": "SRD Sorcerer class creation and early progression facts through level 3, including class-list prepared Spell Access, Spell Slots, spellcasting focus facts, level-1 and level-2 class-feature grants, and level-3 subclass selection.",
+  "description": "SRD Sorcerer class creation and early progression facts, including class-list prepared Spell Access, Spell Slots, spellcasting focus facts, level-1 and level-2 class-feature grants, level-3 subclass selection, and the level-4 Ability Score Improvement feature grant.",
   "featureGrants": [
     {
       "level": 1,
@@ -16,6 +16,10 @@
     {
       "level": 2,
       "unitId": "sorcerer_metamagic"
+    },
+    {
+      "level": 4,
+      "unitId": "sorcerer_ability_score_improvement_l4"
     }
   ],
   "hitPointDie": 6,
@@ -33,7 +37,7 @@
   },
   "provenance": {
     "kind": "srd-5.2.1",
-    "section": "Classes/Sorcerer.md:3-24,33-76"
+    "section": "Classes/Sorcerer.md:3-24,33-76,123-126"
   },
   "savingThrowProficiencies": [
     "con",

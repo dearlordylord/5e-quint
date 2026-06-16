@@ -23,6 +23,8 @@ import bardBardicInspirationInput from "../../content/bard_bardic_inspiration.js
 import bardCuttingWordsInput from "../../content/bard_cutting_words.json";
 import bardExpertiseInput from "../../content/bard_expertise.json";
 import bardJackOfAllTradesInput from "../../content/bard_jack_of_all_trades.json";
+import bardAbilityScoreImprovementL4Input from "../../content/bard_ability_score_improvement_l4.json";
+import barbarianAbilityScoreImprovementL4Input from "../../content/barbarian_ability_score_improvement_l4.json";
 import barbarianFrenzyInput from "../../content/barbarian_frenzy.json";
 import barbarianPrimalKnowledgeInput from "../../content/barbarian_primal_knowledge.json";
 import barbarianRageInput from "../../content/barbarian_rage.json";
@@ -53,6 +55,7 @@ import calmEmotionsInput from "../../content/calm_emotions.json";
 import charmPersonInput from "../../content/charm_person.json";
 import chillTouchInput from "../../content/chill_touch.json";
 import chromaticOrbInput from "../../content/chromatic_orb.json";
+import clericAbilityScoreImprovementL4Input from "../../content/cleric_ability_score_improvement_l4.json";
 import clericChannelDivinityInput from "../../content/cleric_channel_divinity.json";
 import clericDiscipleOfLifeInput from "../../content/cleric_disciple_of_life.json";
 import clericDivineOrderInput from "../../content/cleric_divine_order.json";
@@ -70,6 +73,7 @@ import dispelMagicInput from "../../content/dispel_magic.json";
 import divineFavorInput from "../../content/divine_favor.json";
 import divineSmiteInput from "../../content/divine_smite.json";
 import dragonsBreathInput from "../../content/dragons_breath.json";
+import druidAbilityScoreImprovementL4Input from "../../content/druid_ability_score_improvement_l4.json";
 import druidCircleOfTheLandSpellsInput from "../../content/druid_circle_of_the_land_spells.json";
 import druidDruidicInput from "../../content/druid_druidic.json";
 import druidLandsAidInput from "../../content/druid_lands_aid.json";
@@ -159,6 +163,7 @@ import monkDeflectAttacksInput from "../../content/monk_deflect_attacks.json";
 import monkMartialArtsInput from "../../content/monk_martial_arts.json";
 import monkMonksFocusInput from "../../content/monk_monks_focus.json";
 import monkOpenHandTechniqueInput from "../../content/monk_open_hand_technique.json";
+import monkAbilityScoreImprovementL4Input from "../../content/monk_ability_score_improvement_l4.json";
 import monkSlowFallInput from "../../content/monk_slow_fall.json";
 import monkUnarmoredDefenseInput from "../../content/monk_unarmored_defense.json";
 import monkUnarmoredMovementInput from "../../content/monk_unarmored_movement.json";
@@ -183,6 +188,7 @@ import protectionFromEvilAndGoodInput from "../../content/protection_from_evil_a
 import protectionFromPoisonInput from "../../content/protection_from_poison.json";
 import produceFlameInput from "../../content/produce_flame.json";
 import rayOfEnfeeblementInput from "../../content/ray_of_enfeeblement.json";
+import rangerAbilityScoreImprovementL4Input from "../../content/ranger_ability_score_improvement_l4.json";
 import rangerDeftExplorerInput from "../../content/ranger_deft_explorer.json";
 import rangerExtraAttackInput from "../../content/ranger_extra_attack.json";
 import rangerFavoredEnemyInput from "../../content/ranger_favored_enemy.json";
@@ -219,6 +225,7 @@ import subclassWarlockFiendPatronInput from "../../content/subclass_warlock_fien
 import subclassWizardEvokerInput from "../../content/subclass_wizard_evoker.json";
 import rayOfFrostInput from "../../content/ray_of_frost.json";
 import rayOfSicknessInput from "../../content/ray_of_sickness.json";
+import rogueAbilityScoreImprovementL4Input from "../../content/rogue_ability_score_improvement_l4.json";
 import rogueCunningActionInput from "../../content/rogue_cunning_action.json";
 import rogueEvasionInput from "../../content/rogue_evasion.json";
 import rogueExpertiseInput from "../../content/rogue_expertise.json";
@@ -246,6 +253,7 @@ import scorchingRayInput from "../../content/scorching_ray.json";
 import seeInvisibilityInput from "../../content/see_invisibility.json";
 import searingSmiteInput from "../../content/searing_smite.json";
 import suggestionInput from "../../content/suggestion.json";
+import sorcererAbilityScoreImprovementL4Input from "../../content/sorcerer_ability_score_improvement_l4.json";
 import sorcererDraconicSpellsInput from "../../content/sorcerer_draconic_spells.json";
 import sorcererDraconicResilienceInput from "../../content/sorcerer_draconic_resilience.json";
 import sorcererFontOfMagicInput from "../../content/sorcerer_font_of_magic.json";
@@ -438,6 +446,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     fighterAbilityScoreImprovementL4Input,
     fighterImprovedCriticalInput,
     fighterRemarkableAthleteInput,
+    barbarianAbilityScoreImprovementL4Input,
     barbarianFrenzyInput,
     barbarianRageInput,
     barbarianUnarmoredDefenseInput,
@@ -450,11 +459,14 @@ export const srdUnitCollection = defineSrdUnitCollection({
     bardCuttingWordsInput,
     bardExpertiseInput,
     bardJackOfAllTradesInput,
+    bardAbilityScoreImprovementL4Input,
+    clericAbilityScoreImprovementL4Input,
     clericChannelDivinityInput,
     clericDiscipleOfLifeInput,
     clericDivineOrderInput,
     clericLifeDomainSpellsInput,
     clericPreserveLifeInput,
+    druidAbilityScoreImprovementL4Input,
     druidCircleOfTheLandSpellsInput,
     druidDruidicInput,
     druidLandsAidInput,
@@ -467,11 +479,14 @@ export const srdUnitCollection = defineSrdUnitCollection({
     monkUnarmoredMovementInput,
     monkUncannyMetabolismInput,
     monkDeflectAttacksInput,
+    monkAbilityScoreImprovementL4Input,
     monkSlowFallInput,
     monkOpenHandTechniqueInput,
+    rangerAbilityScoreImprovementL4Input,
     rangerDeftExplorerInput,
     rangerFavoredEnemyInput,
     rangerFightingStyleInput,
+    rogueAbilityScoreImprovementL4Input,
     rogueCunningActionInput,
     rogueEvasionInput,
     rogueUncannyDodgeInput,
@@ -484,6 +499,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     sorcererInnateSorceryInput,
     sorcererFontOfMagicInput,
     sorcererMetamagicInput,
+    sorcererAbilityScoreImprovementL4Input,
     sorcererDraconicResilienceInput,
     sorcererDraconicSpellsInput,
     warlockEldritchInvocationsInput,

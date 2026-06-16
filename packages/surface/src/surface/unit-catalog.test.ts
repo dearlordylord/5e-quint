@@ -5655,6 +5655,162 @@ describe("SRD Unit catalog boundary", () => {
     }
   });
 
+  test("installs Bard level 4 Ability Score Improvement as a feat-selection grant", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag !== "ok") return;
+
+    expect(result.catalog.requireUnit("class_bard")).toMatchObject({
+      featureGrants: expect.arrayContaining([
+        { level: 4, unitId: "bard_ability_score_improvement_l4" },
+      ]),
+      kind: "class",
+    });
+    expect(
+      result.catalog.requireUnit("bard_ability_score_improvement_l4"),
+    ).toMatchObject({
+      acquiredAtLevel: 4,
+      className: "bard",
+      kind: "class_feature",
+      mechanics: {
+        family: "passive",
+        grants: [
+          {
+            category: "general",
+            kind: "grant_feat",
+            openFallback: "any_qualifying_feat",
+          },
+        ],
+      },
+    });
+  });
+
+  test("installs Druid level 4 Ability Score Improvement as a feat-selection grant", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag !== "ok") return;
+
+    expect(result.catalog.requireUnit("class_druid")).toMatchObject({
+      featureGrants: expect.arrayContaining([
+        { level: 4, unitId: "druid_ability_score_improvement_l4" },
+      ]),
+      kind: "class",
+    });
+    expect(
+      result.catalog.requireUnit("druid_ability_score_improvement_l4"),
+    ).toMatchObject({
+      acquiredAtLevel: 4,
+      className: "druid",
+      kind: "class_feature",
+      mechanics: {
+        family: "passive",
+        grants: [
+          {
+            category: "general",
+            kind: "grant_feat",
+            openFallback: "any_qualifying_feat",
+          },
+        ],
+      },
+    });
+  });
+
+  test("installs Monk level 4 Ability Score Improvement beside Slow Fall", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag !== "ok") return;
+
+    expect(result.catalog.requireUnit("class_monk")).toMatchObject({
+      featureGrants: expect.arrayContaining([
+        { level: 4, unitId: "monk_ability_score_improvement_l4" },
+        { level: 4, unitId: "monk_slow_fall" },
+      ]),
+      kind: "class",
+    });
+    expect(
+      result.catalog.requireUnit("monk_ability_score_improvement_l4"),
+    ).toMatchObject({
+      acquiredAtLevel: 4,
+      className: "monk",
+      kind: "class_feature",
+      mechanics: {
+        family: "passive",
+        grants: [
+          {
+            category: "general",
+            kind: "grant_feat",
+            openFallback: "any_qualifying_feat",
+          },
+        ],
+      },
+    });
+  });
+
+  test("installs Ranger level 4 Ability Score Improvement as a feat-selection grant", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag !== "ok") return;
+
+    expect(result.catalog.requireUnit("class_ranger")).toMatchObject({
+      featureGrants: expect.arrayContaining([
+        { level: 4, unitId: "ranger_ability_score_improvement_l4" },
+      ]),
+      kind: "class",
+    });
+    expect(
+      result.catalog.requireUnit("ranger_ability_score_improvement_l4"),
+    ).toMatchObject({
+      acquiredAtLevel: 4,
+      className: "ranger",
+      kind: "class_feature",
+      mechanics: {
+        family: "passive",
+        grants: [
+          {
+            category: "general",
+            kind: "grant_feat",
+            openFallback: "any_qualifying_feat",
+          },
+        ],
+      },
+    });
+  });
+
+  test("installs Sorcerer level 4 Ability Score Improvement as a feat-selection grant", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag !== "ok") return;
+
+    expect(result.catalog.requireUnit("class_sorcerer")).toMatchObject({
+      featureGrants: expect.arrayContaining([
+        { level: 4, unitId: "sorcerer_ability_score_improvement_l4" },
+      ]),
+      kind: "class",
+    });
+    expect(
+      result.catalog.requireUnit("sorcerer_ability_score_improvement_l4"),
+    ).toMatchObject({
+      acquiredAtLevel: 4,
+      className: "sorcerer",
+      kind: "class_feature",
+      mechanics: {
+        family: "passive",
+        grants: [
+          {
+            category: "general",
+            kind: "grant_feat",
+            openFallback: "any_qualifying_feat",
+          },
+        ],
+      },
+    });
+  });
+
   test("authors Fighter Champion feature grants through canonical Unit ids", () => {
     const result = buildUnitCatalog({ collections: [srdUnitCollection] });
 

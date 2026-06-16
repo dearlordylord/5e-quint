@@ -8,7 +8,7 @@
     "kind": "trained"
   },
   "className": "barbarian",
-  "description": "SRD Barbarian class creation facts for a level-1 character.",
+  "description": "SRD Barbarian class creation facts plus early progression through level 4.",
   "featureGrants": [
     {
       "level": 1,
@@ -25,6 +25,10 @@
     {
       "level": 3,
       "unitId": "barbarian_primal_knowledge"
+    },
+    {
+      "level": 4,
+      "unitId": "barbarian_ability_score_improvement_l4"
     }
   ],
   "hitPointDie": 12,
@@ -52,7 +56,7 @@
   },
   "provenance": {
     "kind": "srd-5.2.1",
-    "section": "Classes/Barbarian.md:3-25,35"
+    "section": "Classes/Barbarian.md:3-25,33-38,56-110"
   },
   "savingThrowProficiencies": [
     "str",

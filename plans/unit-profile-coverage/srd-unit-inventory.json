@@ -4354,7 +4354,7 @@
         "sourceRecordPath": "packages/surface/content/barbarian_ability_score_improvement_l4.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "barbarian_ability_score_improvement_l4"
       },
       "unitProfileDisposition": "unsupported-profile",
@@ -4365,7 +4365,18 @@
         "owner": "character-creation-runtime ability-score projection and selected feat Unit profiles",
         "reason": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim."
       },
-      "ownerEvidence": [],
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit barbarian_ability_score_improvement_l4 is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime ability-score projection and selected feat Unit profiles",
+          "evidence": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
+          "status": "catalog-only/dead-for-now closure"
+        }
+      ],
       "nextAction": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
       "battleReadinessStatus": "accepted-no-battle-effect"
     },
@@ -5326,7 +5337,7 @@
         "sourceRecordPath": "packages/surface/content/bard_ability_score_improvement_l4.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "bard_ability_score_improvement_l4"
       },
       "unitProfileDisposition": "unsupported-profile",
@@ -5337,7 +5348,18 @@
         "owner": "character-creation-runtime ability-score projection and selected feat Unit profiles",
         "reason": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim."
       },
-      "ownerEvidence": [],
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit bard_ability_score_improvement_l4 is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime ability-score projection and selected feat Unit profiles",
+          "evidence": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
+          "status": "catalog-only/dead-for-now closure"
+        }
+      ],
       "nextAction": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
       "battleReadinessStatus": "accepted-no-battle-effect"
     },
@@ -9192,7 +9214,7 @@
         "sourceRecordPath": "packages/surface/content/cleric_ability_score_improvement_l4.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "cleric_ability_score_improvement_l4"
       },
       "unitProfileDisposition": "unsupported-profile",
@@ -9203,7 +9225,18 @@
         "owner": "character-creation-runtime ability-score projection and selected feat Unit profiles",
         "reason": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim."
       },
-      "ownerEvidence": [],
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit cleric_ability_score_improvement_l4 is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime ability-score projection and selected feat Unit profiles",
+          "evidence": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
+          "status": "catalog-only/dead-for-now closure"
+        }
+      ],
       "nextAction": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
       "battleReadinessStatus": "accepted-no-battle-effect"
     },
@@ -12569,7 +12602,7 @@
         "sourceRecordPath": "packages/surface/content/druid_ability_score_improvement_l4.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "druid_ability_score_improvement_l4"
       },
       "unitProfileDisposition": "unsupported-profile",
@@ -12580,7 +12613,18 @@
         "owner": "character-creation-runtime ability-score projection and selected feat Unit profiles",
         "reason": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim."
       },
-      "ownerEvidence": [],
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit druid_ability_score_improvement_l4 is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime ability-score projection and selected feat Unit profiles",
+          "evidence": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
+          "status": "catalog-only/dead-for-now closure"
+        }
+      ],
       "nextAction": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
       "battleReadinessStatus": "accepted-no-battle-effect"
     },
@@ -17179,7 +17223,7 @@
         "sourceRecordPath": "packages/surface/content/monk_ability_score_improvement_l4.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "monk_ability_score_improvement_l4"
       },
       "unitProfileDisposition": "unsupported-profile",
@@ -17190,7 +17234,18 @@
         "owner": "character-creation-runtime ability-score projection and selected feat Unit profiles",
         "reason": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim."
       },
-      "ownerEvidence": [],
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit monk_ability_score_improvement_l4 is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime ability-score projection and selected feat Unit profiles",
+          "evidence": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
+          "status": "catalog-only/dead-for-now closure"
+        }
+      ],
       "nextAction": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
       "battleReadinessStatus": "accepted-no-battle-effect"
     },
@@ -20494,7 +20549,7 @@
         "sourceRecordPath": "packages/surface/content/ranger_ability_score_improvement_l4.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "ranger_ability_score_improvement_l4"
       },
       "unitProfileDisposition": "unsupported-profile",
@@ -20505,7 +20560,18 @@
         "owner": "character-creation-runtime ability-score projection and selected feat Unit profiles",
         "reason": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim."
       },
-      "ownerEvidence": [],
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit ranger_ability_score_improvement_l4 is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime ability-score projection and selected feat Unit profiles",
+          "evidence": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
+          "status": "catalog-only/dead-for-now closure"
+        }
+      ],
       "nextAction": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
       "battleReadinessStatus": "accepted-no-battle-effect"
     },
@@ -23210,7 +23276,7 @@
         "sourceRecordPath": "packages/surface/content/rogue_ability_score_improvement_l4.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "rogue_ability_score_improvement_l4"
       },
       "unitProfileDisposition": "unsupported-profile",
@@ -23221,7 +23287,18 @@
         "owner": "character-creation-runtime ability-score projection and selected feat Unit profiles",
         "reason": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim."
       },
-      "ownerEvidence": [],
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit rogue_ability_score_improvement_l4 is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime ability-score projection and selected feat Unit profiles",
+          "evidence": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
+          "status": "catalog-only/dead-for-now closure"
+        }
+      ],
       "nextAction": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
       "battleReadinessStatus": "accepted-no-battle-effect"
     },
@@ -24150,7 +24227,7 @@
         "sourceRecordPath": "packages/surface/content/sorcerer_ability_score_improvement_l4.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "sorcerer_ability_score_improvement_l4"
       },
       "unitProfileDisposition": "unsupported-profile",
@@ -24161,7 +24238,18 @@
         "owner": "character-creation-runtime ability-score projection and selected feat Unit profiles",
         "reason": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim."
       },
-      "ownerEvidence": [],
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit sorcerer_ability_score_improvement_l4 is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime ability-score projection and selected feat Unit profiles",
+          "evidence": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
+          "status": "catalog-only/dead-for-now closure"
+        }
+      ],
       "nextAction": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
       "battleReadinessStatus": "accepted-no-battle-effect"
     },

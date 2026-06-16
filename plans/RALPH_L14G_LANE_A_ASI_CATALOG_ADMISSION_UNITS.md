@@ -7,49 +7,49 @@
     {
       "number": 1,
       "id": "L14G-A01-BARBARIAN-ASI-CATALOG-ADMISSION",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Install Barbarian level-4 ASI catalog admission"
     },
     {
       "number": 2,
       "id": "L14G-A02-BARD-ASI-CATALOG-ADMISSION",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Install Bard level-4 ASI catalog admission"
     },
     {
       "number": 3,
       "id": "L14G-A03-CLERIC-ASI-CATALOG-ADMISSION",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Install Cleric level-4 ASI catalog admission"
     },
     {
       "number": 4,
       "id": "L14G-A04-DRUID-ASI-CATALOG-ADMISSION",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Install Druid level-4 ASI catalog admission"
     },
     {
       "number": 5,
       "id": "L14G-A05-MONK-ASI-CATALOG-ADMISSION",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Install Monk level-4 ASI catalog admission"
     },
     {
       "number": 6,
       "id": "L14G-A06-RANGER-ASI-CATALOG-ADMISSION",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Install Ranger level-4 ASI catalog admission"
     },
     {
       "number": 7,
       "id": "L14G-A07-ROGUE-ASI-CATALOG-ADMISSION",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Install Rogue level-4 ASI catalog admission"
     },
     {
       "number": 8,
       "id": "L14G-A08-SORCERER-ASI-CATALOG-ADMISSION",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Install Sorcerer level-4 ASI catalog admission"
     }
   ]
@@ -105,7 +105,7 @@ explicit rather than accidental.
 
 ### Task 1 - L14G-A01-BARBARIAN-ASI-CATALOG-ADMISSION
 
-Status: `ready-for-implementation`
+Status: `done`
 
 Depends on:
 
@@ -140,7 +140,7 @@ Verification:
 
 ### Task 2 - L14G-A02-BARD-ASI-CATALOG-ADMISSION
 
-Status: `ready-for-implementation`
+Status: `done`
 
 Depends on:
 
@@ -175,7 +175,7 @@ Verification:
 
 ### Task 3 - L14G-A03-CLERIC-ASI-CATALOG-ADMISSION
 
-Status: `ready-for-implementation`
+Status: `done`
 
 Depends on:
 
@@ -208,7 +208,7 @@ Verification:
 
 ### Task 4 - L14G-A04-DRUID-ASI-CATALOG-ADMISSION
 
-Status: `ready-for-implementation`
+Status: `done`
 
 Depends on:
 
@@ -241,7 +241,7 @@ Verification:
 
 ### Task 5 - L14G-A05-MONK-ASI-CATALOG-ADMISSION
 
-Status: `ready-for-implementation`
+Status: `done`
 
 Depends on:
 
@@ -276,7 +276,7 @@ Verification:
 
 ### Task 6 - L14G-A06-RANGER-ASI-CATALOG-ADMISSION
 
-Status: `ready-for-implementation`
+Status: `done`
 
 Depends on:
 
@@ -309,7 +309,7 @@ Verification:
 
 ### Task 7 - L14G-A07-ROGUE-ASI-CATALOG-ADMISSION
 
-Status: `ready-for-implementation`
+Status: `done`
 
 Depends on:
 
@@ -342,7 +342,7 @@ Verification:
 
 ### Task 8 - L14G-A08-SORCERER-ASI-CATALOG-ADMISSION
 
-Status: `ready-for-implementation`
+Status: `done`
 
 Depends on:
 

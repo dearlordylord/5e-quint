@@ -18,12 +18,13 @@ let rangerSkills =
 let ranger =
       { armorTraining = { categories = [ "light", "medium", "shield" ], kind = "trained" }
       , className = "ranger"
-      , description = "SRD Ranger class creation and early progression facts through level 3, including class-list prepared Spell Access, Spell Slots, spellcasting focus facts, level-2 class-feature grants, and level-3 subclass selection."
+      , description = "SRD Ranger class creation and early progression facts through level 4, including class-list prepared Spell Access, Spell Slots, spellcasting focus facts, level-2 class-feature grants, level-3 subclass selection, and the level-4 Ability Score Improvement feature grant."
       , featureGrants =
         [ { level = 1, unitId = "ranger_favored_enemy" }
         , { level = 1, unitId = "ranger_weapon_mastery" }
         , { level = 2, unitId = "ranger_deft_explorer" }
         , { level = 2, unitId = "ranger_fighting_style" }
+        , { level = 4, unitId = "ranger_ability_score_improvement_l4" }
         ]
       , hitPointDie = 10
       , id = "class_ranger"
@@ -53,7 +54,7 @@ let ranger =
           }
       , name = "Ranger"
       , primaryAbilities = { abilities = [ "dex", "wis" ], kind = "all_of" }
-      , provenance = { kind = "srd-5.2.1", section = "Classes/Ranger.md:3-24,33-36,58-99,156-177" }
+      , provenance = { kind = "srd-5.2.1", section = "Classes/Ranger.md:3-24,33-36,58-99,106-109,156-177" }
       , savingThrowProficiencies = [ "str", "dex" ]
       , skillProficiencyChoice = { choose = 3, options = rangerSkills }
       , spellcasting =
