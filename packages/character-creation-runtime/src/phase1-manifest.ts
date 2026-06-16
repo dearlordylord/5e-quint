@@ -225,6 +225,8 @@ export const CLASS_FEATURE_ABILITY_SCORE_INCREASE_CHOICE_KEY =
   "class_feature_ability_score_increase_choice" satisfies UnitChoiceKey;
 export const CLASS_FEATURE_PROFICIENCY_CHOICE_KEY =
   "class_feature_proficiency_choice" satisfies UnitChoiceKey;
+export const ORIGIN_FEAT_PROFICIENCY_CHOICE_KEY =
+  "origin_feat_proficiency_choice" satisfies UnitChoiceKey;
 export const CLASS_FEATURE_LANGUAGE_CHOICE_KEY =
   "class_feature_language_choice" satisfies UnitChoiceKey;
 export const DIVINE_ORDER_CHOICE_KEY = "divine_order" satisfies UnitChoiceKey;

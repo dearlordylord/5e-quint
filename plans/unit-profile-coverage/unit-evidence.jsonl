@@ -433,3 +433,4 @@
 {"unitId":"sorcerer_metamagic","evidence":{"tag":"selected-identity-mbt","taskId":"L3MMETA-19-EMPOWERED-SPELL-DAMAGE-REROLL-SLICE","ownerPath":"packages/battle-runtime/src/sorcerer-metamagic-empowered-selected-identity.mbt.test.ts"}}
 {"unitId":"sorcerer_metamagic","evidence":{"tag":"selected-identity-mbt","taskId":"L3MMETA-22-HEIGHTENED-SAVE-GATED-CONDITION-MULTITARGET-REPEAT-SAVE-SLICE","ownerPath":"packages/battle-runtime/src/sorcerer-metamagic-heightened-selected-identity.mbt.test.ts"}}
 {"unitId":"acid_arrow","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-FOLLOWUP-ACID-ARROW-DELAYED-RUNTIME-SUPPORT","ownerPath":"packages/battle-runtime/src/unit-profile-admission-damage-spells.test.ts"}}
+{"unitId":"feat_skilled","evidence":{"tag":"deterministic-admission-projection","taskId":"L14G-B02-FEAT-SKILLED","ownerPath":"packages/character-creation-runtime/src/index.test.ts"}}

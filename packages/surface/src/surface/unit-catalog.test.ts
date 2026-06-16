@@ -160,6 +160,7 @@ const requiredFirstVerticalUnitIds = [
   "feat_magic_initiate_druid",
   "feat_magic_initiate_wizard",
   "feat_savage_attacker",
+  "feat_skilled",
   "mastery_cleave",
   "mastery_sap",
   "orc_adrenaline_rush",
@@ -5882,6 +5883,44 @@ describe("SRD Unit catalog boundary", () => {
         name: "Magic Initiate (Wizard)",
       }),
     );
+  });
+
+  test("authors Skilled as an Origin feat with three skill-or-tool proficiency choices", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag !== "ok") return;
+
+    const skilled = result.catalog.requireUnit("feat_skilled");
+
+    expect(skilled).toMatchObject({
+      category: "origin",
+      id: "feat_skilled",
+      kind: "feat",
+      mechanics: {
+        family: "passive",
+        grants: [
+          {
+            kind: "grant_proficiency",
+            proficiency: {
+              count: 3,
+              kind: "choice",
+              options: expect.arrayContaining([
+                { kind: "skill", skill: "perception" },
+                { kind: "tool", toolId: "alchemists_supplies" },
+                { kind: "tool", toolId: "thieves_tools" },
+                { kind: "tool", toolId: "tool_lute" },
+              ]),
+            },
+          },
+        ],
+      },
+      name: "Skilled",
+      provenance: {
+        kind: "srd-5.2.1",
+        section: "Feats.md:53-59",
+      },
+    });
   });
 
   test("authors Criminal's SRD Alert origin feat as one catalog identity", () => {

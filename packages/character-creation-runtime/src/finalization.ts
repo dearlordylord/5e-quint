@@ -4,7 +4,7 @@
 // KERNEL-COVERAGE: runtime-owner CREATION.CLASS_FEATURE_RESOURCE.PROJECTION
 // KERNEL-COVERAGE: runtime-owner SHEET.HIT_POINTS.MAXIMUM_DERIVATION
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.class-feature-prepared-spell-access
-// UNIT-PROFILE-COVERAGE: runtime-owner character-creation.wizard-spellbook-learning-choice
+// UNIT-PROFILE-COVERAGE: runtime-owner character-creation.wizard-spellbook-learning-choice character-creation.origin-feat-proficiency-choice
 // UNIT-PROFILE-COVERAGE: runtime-owner character-creation.hit-point-maximum-projection unit-feature.hunters-prey
 import { Either, Match, Option } from "effect";
 import { isValidAbilityScoreAssignment } from "@dnd/shared-algebras/ability-score-algebra";
@@ -37,6 +37,7 @@ import type {
 } from "@dnd/surface/surface/types";
 import {
   discoverCreationHoles,
+  originFeatGrantChoiceHoles,
   selectedClassFeatureAcquisitionGrantChoiceHoles,
 } from "./discovery.ts";
 import { type CharacterProgression } from "./character-progression-algebra.ts";
@@ -68,6 +69,9 @@ import {
   parseToolProficiencyId,
   proficiencyGrantSubjectOptionId,
   proficiencyGrantSubjectOptions,
+  toolProficiencyIdsFromDirectToolOptionIds,
+  toolProficiencyIdsFromProficiencyChoiceOptionIds,
+  toolProficiencyIdsFromSubjects,
   type AbilityScoreIncreaseDeltaWithCap,
   type ChoiceOptionCodecIssue,
   type ParsedProficiencyGrantSubject,
@@ -93,6 +97,7 @@ import {
   CLASS_TOOL_PROFICIENCY_CHOICE_KEY,
   EXACTLY_ONE_CHOICE,
   MULTICLASS_PROFICIENCY_CHOICE_KEYS,
+  ORIGIN_FEAT_PROFICIENCY_CHOICE_KEY,
   WIZARD_CANTRIP_CHOICE_KEY,
   WIZARD_PREPARED_SPELL_CHOICE_KEY,
   WIZARD_SPELLBOOK_CHOICE_KEY,
@@ -1805,6 +1810,26 @@ function supportedFinalizationChoiceHoles(input: {
     input.selections,
     input.unitLibrary,
   );
+  const originFeatProficiencyHoles = originFeatGrantChoiceHoles(
+    input.backgroundFacts.originFeatId,
+    input.unitLibrary,
+    {
+      ownedSkillProficiencies: selectedSkillProficiencies(
+        input.selections,
+        input.unitLibrary,
+        (selection) =>
+          selection.kind === "unitChoice" &&
+          selection.source.unitId === input.backgroundFacts.originFeatId &&
+          selection.source.choiceKey === ORIGIN_FEAT_PROFICIENCY_CHOICE_KEY,
+      ),
+      ownedToolProficiencies: originFeatOwnedToolProficiencies({
+        selections: input.selections,
+        classFacts: input.classFacts,
+        classFactsByUnitId: input.classFactsByUnitId,
+        originFeatUnitId: input.backgroundFacts.originFeatId,
+      }),
+    },
+  ).flatMap((hole) => compact([requireUnitChoiceCreationHole(hole)]));
   const spellcastingHoles = classSpellcastingChoiceHoles(
     startingClassUnitId(input.selections.progression),
     input.classFacts,
@@ -1837,6 +1862,7 @@ function supportedFinalizationChoiceHoles(input: {
     ...subclassFeatureHoles,
     ...multiclassProficiencyHoles,
     ...selectedFeatAbilityScoreHoles,
+    ...originFeatProficiencyHoles,
     ...spellcastingHoles,
     ...selectedClassFeatureAcquisitionGrantHoles,
     ...(backgroundToolHole == null
@@ -3061,12 +3087,12 @@ function selectedBuildProficiencyChoiceSubjects(
   readonly CharacterBuildProficiencyChoiceSubject[],
   FinalizationIssues
 > {
-  const classFeatureSubjects = decodedClassFeatureProficiencySubjects(
+  const unitProficiencySubjects = decodedUnitProficiencySubjects(
     selections,
     unitLibrary,
   );
-  if (Either.isLeft(classFeatureSubjects)) {
-    return Either.left(classFeatureSubjects.left);
+  if (Either.isLeft(unitProficiencySubjects)) {
+    return Either.left(unitProficiencySubjects.left);
   }
 
   const toolProficiencies = finalizedBuildToolProficiencies(selections);
@@ -3093,7 +3119,7 @@ function selectedBuildProficiencyChoiceSubjects(
       toolId,
     })),
     ...decodedClassToolProficiencySubjects(selections),
-    ...classFeatureSubjects.right,
+    ...unitProficiencySubjects.right,
   ]);
 }
 
@@ -3180,7 +3206,7 @@ function finalizedBuildSurfaceToolProficiencyIds(
   return Either.right(toolIds);
 }
 
-function decodedClassFeatureProficiencySubjects(
+function decodedUnitProficiencySubjects(
   selections: FinalizedCharacterSelections,
   unitLibrary: UnitCatalog,
 ): Either.Either<
@@ -3194,8 +3220,14 @@ function decodedClassFeatureProficiencySubjects(
       continue;
     }
 
-    if (selection.source.choiceKey === CLASS_FEATURE_PROFICIENCY_CHOICE_KEY) {
-      if (isGrantExpertiseSelection(selection, unitLibrary)) {
+    if (
+      selection.source.choiceKey === CLASS_FEATURE_PROFICIENCY_CHOICE_KEY ||
+      selection.source.choiceKey === ORIGIN_FEAT_PROFICIENCY_CHOICE_KEY
+    ) {
+      if (
+        selection.source.choiceKey === CLASS_FEATURE_PROFICIENCY_CHOICE_KEY &&
+        isGrantExpertiseSelection(selection, unitLibrary)
+      ) {
         subjects.push(
           ...expertiseSubjectsForSelection(selection, selections, unitLibrary),
         );
@@ -3301,6 +3333,92 @@ function selectedSkillProficiencies(
   );
 
   return uniqueValues([...backgroundSkills, ...selectedSkills]);
+}
+
+function originFeatOwnedToolProficiencies(input: {
+  readonly selections: FinalizedCharacterSelections;
+  readonly classFacts: ClassCreationFacts;
+  readonly classFactsByUnitId: ClassFactsByUnitId;
+  readonly originFeatUnitId: UnitRecord["id"];
+}): readonly ToolProficiencyId[] {
+  return uniqueValues([
+    ...selectedToolProficiencies(input.selections, (selection) =>
+      selection.kind === "unitChoice" &&
+      selection.source.unitId === input.originFeatUnitId &&
+      selection.source.choiceKey === ORIGIN_FEAT_PROFICIENCY_CHOICE_KEY,
+    ),
+    ...toolProficiencyIdsFromSubjects(
+      fixedToolProficiencySubjects(input.classFacts.toolProficiencies),
+    ),
+    ...toolProficiencyIdsFromSubjects(
+      fixedMulticlassProficiencySubjects(
+        { progression: input.selections.progression },
+        input.classFactsByUnitId,
+      ),
+    ),
+  ]);
+}
+
+function selectedToolProficiencies(
+  selections: FinalizedCharacterSelections,
+  shouldIgnoreSelection: (
+    selection: CharacterChoiceSelection,
+  ) => boolean = () => false,
+): readonly ToolProficiencyId[] {
+  return uniqueValues([
+    ...selectedBackgroundToolProficiencies(selections),
+    ...toolProficienciesFromChoiceSelections(
+      selections.choices,
+      shouldIgnoreSelection,
+    ),
+  ]);
+}
+
+function selectedBackgroundToolProficiencies(
+  selections: FinalizedCharacterSelections,
+): readonly ToolProficiencyId[] {
+  const selection = selections.choices.find(
+    (candidate) =>
+      candidate.kind === "unitChoice" &&
+      candidate.source.unitId === selections.background &&
+      candidate.source.choiceKey === BACKGROUND_TOOL_CHOICE_KEY,
+  );
+  if (selection === undefined) {
+    return [];
+  }
+
+  return uniqueValues(
+    toolProficiencyIdsFromDirectToolOptionIds(
+      choiceSelectionOptionIds(selection),
+    ),
+  );
+}
+
+function toolProficienciesFromChoiceSelections(
+  choices: readonly CharacterChoiceSelection[],
+  shouldIgnoreSelection: (
+    selection: CharacterChoiceSelection,
+  ) => boolean = () => false,
+): readonly ToolProficiencyId[] {
+  return uniqueValues(
+    choices.flatMap((selection) =>
+      shouldIgnoreSelection(selection)
+        ? []
+        : toolProficienciesFromChoiceSelection(selection),
+    ),
+  );
+}
+
+function toolProficienciesFromChoiceSelection(
+  selection: CharacterChoiceSelection,
+): readonly ToolProficiencyId[] {
+  if (selection.kind !== "unitChoice") {
+    return [];
+  }
+
+  return toolProficiencyIdsFromProficiencyChoiceOptionIds(
+    selection.options.map((option) => option.optionId),
+  );
 }
 
 function isGrantExpertiseSelection(

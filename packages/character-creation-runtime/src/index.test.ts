@@ -130,6 +130,7 @@ import {
   CLASS_FEATURE_FEAT_CHOICE_KEY,
   CLASS_FEATURE_LANGUAGE_CHOICE_KEY,
   CLASS_FEATURE_PROFICIENCY_CHOICE_KEY,
+  ORIGIN_FEAT_PROFICIENCY_CHOICE_KEY,
   CLASS_PREPARED_SPELL_CHOICE_KEY,
   CLASS_SKILL_PROFICIENCY_CHOICE_KEY,
   PALADIN_FIGHTING_STYLE_CHOICE_KEY,
@@ -167,6 +168,7 @@ const SRD_SORCERY_POINTS_POOL_ID = "sorcery_points";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-creation.class-feature-resource-projection
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-creation.class-feature-source-fact-projection
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-creation.hit-point-maximum-projection
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-creation.origin-feat-proficiency-choice
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.hunters-prey
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L13UG-A15 barbarian_primal_knowledge sorcerer_draconic_resilience
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection AT-L1-03 fighter_fighting_style
@@ -184,6 +186,7 @@ const SRD_SORCERY_POINTS_POOL_ID = "sorcery_points";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS sorcerer_font_of_magic
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-SORCERER-METAMAGIC-CHARACTER-FACTS sorcerer_metamagic
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3PUTB-07-RANGER-HUNTERS-PREY-RUNTIME ranger_hunters_prey
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L14G-B02-FEAT-SKILLED feat_skilled
 
 const unitCatalogResult = buildUnitCatalog({
   collections: [srdUnitCollection],
@@ -8073,6 +8076,230 @@ describe("character creation finalization", () => {
       profile.unitOptionIdsByChoiceKey.class_feature_proficiency_choice =
         originalProficiencyOptions;
     }
+  });
+
+  test("discovers and projects Skilled origin feat skill/tool choices", () => {
+    const soldier = unitLibrary.requireUnit("background_soldier");
+    expect(soldier.kind).toBe("background");
+    if (soldier.kind !== "background") return;
+
+    const skilledSoldier = {
+      ...soldier,
+      originFeatId: "feat_skilled",
+    } satisfies UnitRecord;
+    const skilledOriginUnitLibrary = unitLibraryReplacingUnits([
+      skilledSoldier,
+    ]);
+    const draft = createTestDraft("draft:skilled-origin-feat");
+    const afterInitial = requireAcceptedBatch(
+      fillCreationHoles({
+        draft,
+        unitLibrary: skilledOriginUnitLibrary,
+        expectedRevision: draft.revision,
+        fills: initialManifestFills(),
+      }),
+    );
+    const skilledHole = discoverCreationHoles({
+      draft: afterInitial,
+      unitLibrary: skilledOriginUnitLibrary,
+    }).find(
+      (hole) =>
+        hole.kind === "choice" &&
+        hole.source.tag === "unitChoice" &&
+        hole.source.unitId === "feat_skilled" &&
+        hole.source.choiceKey === ORIGIN_FEAT_PROFICIENCY_CHOICE_KEY,
+    );
+
+    expect(skilledHole).toMatchObject({
+      kind: "choice",
+      cardinality: { tag: "exactly", count: 3 },
+    });
+    if (skilledHole?.kind !== "choice") return;
+    const skilledOptionIds = skilledHole.options.map((option) =>
+      String(option.optionId),
+    );
+    expect(skilledOptionIds).toEqual(
+      expect.arrayContaining([
+        "arcana",
+        "tool:alchemists_supplies",
+        "tool:thieves_tools",
+        "tool:tool_lute",
+      ]),
+    );
+    expect(skilledOptionIds).not.toContain("athletics");
+    expect(skilledOptionIds).not.toContain("intimidation");
+
+    const afterBackgroundTool = requireAcceptedBatch(
+      fillCreationHoles({
+        draft: afterInitial,
+        unitLibrary: skilledOriginUnitLibrary,
+        expectedRevision: afterInitial.revision,
+        fills: [
+          choiceFill(
+            testUnitHoleId("background_soldier", "background_tool_choice"),
+            "tool_dice_set",
+          ),
+        ],
+      }),
+    );
+    const skilledHoleAfterBackgroundTool = discoverCreationHoles({
+      draft: afterBackgroundTool,
+      unitLibrary: skilledOriginUnitLibrary,
+    }).find(
+      (hole) =>
+        hole.kind === "choice" &&
+        hole.source.tag === "unitChoice" &&
+        hole.source.unitId === "feat_skilled" &&
+        hole.source.choiceKey === ORIGIN_FEAT_PROFICIENCY_CHOICE_KEY,
+    );
+    expect(optionIds(skilledHoleAfterBackgroundTool)).not.toContain(
+      "tool:tool_dice_set",
+    );
+
+    const afterChoices = requireAcceptedBatch(
+      fillCreationHoles({
+        draft: afterBackgroundTool,
+        unitLibrary: skilledOriginUnitLibrary,
+        expectedRevision: afterBackgroundTool.revision,
+        fills: [
+          choiceFill(
+            testUnitHoleId("class_fighter", "class_skill_proficiency_choice"),
+            "perception",
+            "survival",
+          ),
+          choiceFill(
+            testUnitHoleId(
+              "fighter_fighting_style",
+              "class_feature_feat_choice",
+            ),
+            "defense",
+          ),
+          choiceFill(
+            testUnitHoleId("fighter_weapon_mastery", "weapon_mastery_options"),
+            "weapon_longsword",
+            "weapon_spear",
+            "weapon_flail",
+          ),
+          choiceFill(
+            testUnitHoleId(
+              "background_soldier",
+              "background_ability_score_increase",
+            ),
+            "two_and_one:str:con",
+          ),
+          choiceFill(
+            testUnitHoleId(
+              "feat_skilled",
+              ORIGIN_FEAT_PROFICIENCY_CHOICE_KEY,
+            ),
+            "arcana",
+            "tool:alchemists_supplies",
+            "tool:thieves_tools",
+          ),
+          choiceFill(
+            testUnitHoleId("class_fighter", "class_equipment_choice"),
+            "option_c",
+          ),
+          choiceFill(
+            testUnitHoleId("background_soldier", "background_equipment_choice"),
+            "option_b",
+          ),
+        ],
+      }),
+    );
+    const afterPurchase = requireAcceptedBatch(
+      fillCreationHoles({
+        draft: afterChoices,
+        unitLibrary: skilledOriginUnitLibrary,
+        expectedRevision: afterChoices.revision,
+        fills: [
+          choiceFill(
+            testUnitHoleId("class_fighter", "equipment_purchase"),
+            "armor_chain_mail",
+            "weapon_longsword",
+            "equipment_shield",
+          ),
+        ],
+      }),
+    );
+    const complete = requireAcceptedBatch(
+      fillCreationHoles({
+        draft: afterPurchase,
+        unitLibrary: skilledOriginUnitLibrary,
+        expectedRevision: afterPurchase.revision,
+        fills: [
+          choiceFill(testLoadoutHoleId("armor_chain_mail", "armor"), "worn"),
+          choiceFill(
+            testLoadoutHoleId("equipment_shield", "shield"),
+            "wielded",
+          ),
+          choiceFill(
+            testLoadoutHoleId("weapon_longsword", "weapon"),
+            "wielded_one_handed",
+          ),
+        ],
+      }),
+    );
+
+    const finalization = finalizeCharacterDraft({
+      draft: complete,
+      unitLibrary: skilledOriginUnitLibrary,
+    });
+
+    expect(finalization.tag).toBe("ready");
+    if (finalization.tag !== "ready") return;
+    expect(
+      characterBuildUnitRefs(finalization.build, skilledOriginUnitLibrary),
+    ).toContainEqual({ unitId: "feat_skilled" });
+    expect(finalization.build.proficiencyChoices).toEqual(
+      expect.arrayContaining([
+        { kind: "skill", skill: "arcana" },
+        { kind: "tool", toolId: "alchemists_supplies" },
+        { kind: "tool", toolId: "thieves_tools" },
+      ]),
+    );
+    const proficiencies = expectRight(
+      characterBuildProficiencies(
+        finalization.build,
+        skilledOriginUnitLibrary,
+      ),
+    );
+    expect(proficiencies.skills).toEqual(
+      expect.arrayContaining(["arcana", "perception", "survival"]),
+    );
+    expect(proficiencies.tools).toEqual(
+      expect.arrayContaining([
+        "alchemists_supplies",
+        "thieves_tools",
+        "tool_dice_set",
+      ]),
+    );
+
+    const duplicateToolDraft: CharacterDraft = {
+      ...complete,
+      selections: {
+        ...complete.selections,
+        choices: complete.selections.choices.map((selection) =>
+          selection.kind === "unitChoice" &&
+          selection.source.unitId === "feat_skilled" &&
+          selection.source.choiceKey === ORIGIN_FEAT_PROFICIENCY_CHOICE_KEY
+            ? selectedChoice(
+                "feat_skilled",
+                ORIGIN_FEAT_PROFICIENCY_CHOICE_KEY,
+                "arcana",
+                "tool:alchemists_supplies",
+                "tool:tool_dice_set",
+              )
+            : selection,
+        ),
+      },
+    };
+    expect(
+      finalizeCharacterDraft({
+        draft: duplicateToolDraft,
+        unitLibrary: skilledOriginUnitLibrary,
+      }).tag,
+    ).toBe("invalid");
   });
 
   test("round-trips every class-feature proficiency subject option shape", () => {

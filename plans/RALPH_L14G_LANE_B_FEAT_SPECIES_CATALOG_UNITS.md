@@ -13,7 +13,7 @@
     {
       "number": 2,
       "id": "L14G-B02-FEAT-SKILLED",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Research and plan Skilled feat ownership"
     },
     {
@@ -146,7 +146,7 @@ Verification:
 
 ### Task 2 - L14G-B02-FEAT-SKILLED
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 

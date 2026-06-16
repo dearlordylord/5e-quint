@@ -1,0 +1,245 @@
+{
+  "category": "origin",
+  "description": "You gain proficiency in any combination of three skills or tools of your choice.",
+  "id": "feat_skilled",
+  "kind": "feat",
+  "mechanics": {
+    "family": "passive",
+    "grants": [
+      {
+        "kind": "grant_proficiency",
+        "proficiency": {
+          "count": 3,
+          "kind": "choice",
+          "options": [
+            {
+              "kind": "skill",
+              "skill": "acrobatics"
+            },
+            {
+              "kind": "skill",
+              "skill": "animal_handling"
+            },
+            {
+              "kind": "skill",
+              "skill": "arcana"
+            },
+            {
+              "kind": "skill",
+              "skill": "athletics"
+            },
+            {
+              "kind": "skill",
+              "skill": "deception"
+            },
+            {
+              "kind": "skill",
+              "skill": "history"
+            },
+            {
+              "kind": "skill",
+              "skill": "insight"
+            },
+            {
+              "kind": "skill",
+              "skill": "intimidation"
+            },
+            {
+              "kind": "skill",
+              "skill": "investigation"
+            },
+            {
+              "kind": "skill",
+              "skill": "medicine"
+            },
+            {
+              "kind": "skill",
+              "skill": "nature"
+            },
+            {
+              "kind": "skill",
+              "skill": "perception"
+            },
+            {
+              "kind": "skill",
+              "skill": "performance"
+            },
+            {
+              "kind": "skill",
+              "skill": "persuasion"
+            },
+            {
+              "kind": "skill",
+              "skill": "religion"
+            },
+            {
+              "kind": "skill",
+              "skill": "sleight_of_hand"
+            },
+            {
+              "kind": "skill",
+              "skill": "stealth"
+            },
+            {
+              "kind": "skill",
+              "skill": "survival"
+            },
+            {
+              "kind": "tool",
+              "toolId": "alchemists_supplies"
+            },
+            {
+              "kind": "tool",
+              "toolId": "brewers_supplies"
+            },
+            {
+              "kind": "tool",
+              "toolId": "calligraphers_supplies"
+            },
+            {
+              "kind": "tool",
+              "toolId": "carpenters_tools"
+            },
+            {
+              "kind": "tool",
+              "toolId": "cartographers_tools"
+            },
+            {
+              "kind": "tool",
+              "toolId": "cobblers_tools"
+            },
+            {
+              "kind": "tool",
+              "toolId": "cooks_utensils"
+            },
+            {
+              "kind": "tool",
+              "toolId": "glassblowers_tools"
+            },
+            {
+              "kind": "tool",
+              "toolId": "jewelers_tools"
+            },
+            {
+              "kind": "tool",
+              "toolId": "leatherworkers_tools"
+            },
+            {
+              "kind": "tool",
+              "toolId": "masons_tools"
+            },
+            {
+              "kind": "tool",
+              "toolId": "painters_supplies"
+            },
+            {
+              "kind": "tool",
+              "toolId": "potters_tools"
+            },
+            {
+              "kind": "tool",
+              "toolId": "smiths_tools"
+            },
+            {
+              "kind": "tool",
+              "toolId": "tinkers_tools"
+            },
+            {
+              "kind": "tool",
+              "toolId": "weavers_tools"
+            },
+            {
+              "kind": "tool",
+              "toolId": "woodcarvers_tools"
+            },
+            {
+              "kind": "tool",
+              "toolId": "disguise_kit"
+            },
+            {
+              "kind": "tool",
+              "toolId": "forgery_kit"
+            },
+            {
+              "kind": "tool",
+              "toolId": "tool_dice_set"
+            },
+            {
+              "kind": "tool",
+              "toolId": "tool_dragonchess_set"
+            },
+            {
+              "kind": "tool",
+              "toolId": "tool_playing_card_set"
+            },
+            {
+              "kind": "tool",
+              "toolId": "tool_three_dragon_ante_set"
+            },
+            {
+              "kind": "tool",
+              "toolId": "herbalism_kit"
+            },
+            {
+              "kind": "tool",
+              "toolId": "tool_bagpipes"
+            },
+            {
+              "kind": "tool",
+              "toolId": "tool_drum"
+            },
+            {
+              "kind": "tool",
+              "toolId": "tool_dulcimer"
+            },
+            {
+              "kind": "tool",
+              "toolId": "tool_flute"
+            },
+            {
+              "kind": "tool",
+              "toolId": "tool_horn"
+            },
+            {
+              "kind": "tool",
+              "toolId": "tool_lute"
+            },
+            {
+              "kind": "tool",
+              "toolId": "tool_lyre"
+            },
+            {
+              "kind": "tool",
+              "toolId": "tool_pan_flute"
+            },
+            {
+              "kind": "tool",
+              "toolId": "tool_shawm"
+            },
+            {
+              "kind": "tool",
+              "toolId": "tool_viol"
+            },
+            {
+              "kind": "tool",
+              "toolId": "navigators_tools"
+            },
+            {
+              "kind": "tool",
+              "toolId": "poisoners_kit"
+            },
+            {
+              "kind": "tool",
+              "toolId": "thieves_tools"
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "name": "Skilled",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Feats.md:53-59"
+  }
+}

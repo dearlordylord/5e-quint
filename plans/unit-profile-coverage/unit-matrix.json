@@ -43,14 +43,14 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
-      "denominator": 427,
-      "numerator": 234,
-      "percent": "54.8%"
+      "denominator": 428,
+      "numerator": 235,
+      "percent": "54.9%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 512,
-      "numerator": 281,
-      "percent": "54.9%"
+      "denominator": 513,
+      "numerator": 282,
+      "percent": "55%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,16 +59,16 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 282
+      "value": 283
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 176,
-      "numerator": 172,
+      "denominator": 177,
+      "numerator": 173,
       "percent": "97.7%"
     },
     "profileClassificationCoverage": {
-      "denominator": 282,
-      "numerator": 282,
+      "denominator": 283,
+      "numerator": 283,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -107,14 +107,14 @@
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 176,
+      "denominator": 172,
       "numerator": 172,
-      "percent": "97.7%"
+      "percent": "100%"
     },
     "supportedProfileCoverage": {
-      "denominator": 235,
-      "numerator": 176,
-      "percent": "74.9%"
+      "denominator": 236,
+      "numerator": 177,
+      "percent": "75%"
     }
   },
   "metricSemantics": [
@@ -223,11 +223,11 @@
       "planningQuestion": "Which supported Unit identities have deterministic production catalog/support/projection evidence?"
     },
     {
-      "denominator": "installed Units with supported-profile claims",
+      "denominator": "installed Units with supported-profile claims, excluding whole-claim selected-identity not-applicable dispositions",
       "key": "selectedIdentityMbtCoverage",
       "kind": "coverage",
       "label": "Selected identity replay coverage",
-      "numerator": "supported Unit ids with selected-identity-mbt evidence",
+      "numerator": "supported Unit ids in the replay denominator with selected-identity-mbt evidence",
       "planningQuestion": "Which supported Unit identities have intentionally selected concrete identity replay evidence?"
     },
     {
@@ -4834,6 +4834,28 @@
         {
           "kind": "runtime-test",
           "ownerPath": "packages/character-battle-runtime/src/index.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "character-creation.origin-feat-proficiency-choice",
+      "profileKind": "character-creation",
+      "qntOwners": [],
+      "runtimeOwners": [
+        "packages/character-creation-runtime/src/discovery.ts",
+        "packages/character-creation-runtime/src/finalization.ts",
+        "packages/character-creation-runtime/src/choice-option-codecs.ts",
+        "packages/character-creation-runtime/src/support-gates.ts"
+      ],
+      "sourceBoundary": "Character Creation consumes a selected Background originFeatId, the Origin feat's passive grant_proficiency choice shape, and the existing CharacterBuild proficiency projection. It discovers one Origin feat proficiency choice hole, expands SRD skill and tool subject options through the same Surface proficiency subject codecs used by class features, filters already-owned skill proficiencies, admits supported skill/tool subject option ids through a dedicated origin_feat_proficiency_choice key, and finalizes the selected subjects into CharacterBuild.proficiencyChoices without storing duplicate proficiency state. Battle execution remains detached; downstream sheets and battle init consume the derived character proficiency facts.",
+      "taskRefs": [
+        "L14G-B02-FEAT-SKILLED"
+      ],
+      "title": "Character Creation finalizes Origin feat skill and tool proficiency choices into build proficiency facts",
+      "verificationOwners": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
         }
       ]
     },
@@ -15674,6 +15696,14 @@
       "note": "MCP companion execution must stay behind battle-runtime-discovered generic subjects and fills. Remaining future work must complete companion admission/cast and later protocol coverage through resolve_battle_act/fill_battle_hole so MCP carries runtime-returned act/fill data instead of defining companion commands or invoking authored-identity tools. Temporary dismissal, reappearance, permanent dismissal, shared senses, and Touch spell delivery are already reducer-discovered battle subjects/fills. See plans/COMPANION_SESSION_ADMISSION_AND_REAPPEARANCE_PLAN.md#L13COMP-03-GENERIC-MCP-COMPANION-ACTS.",
       "profileIds": [],
       "taskId": "L3COMP-FOLLOWUP-REDUCER-DISCOVERED-COMPANION-ACTS"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused Surface catalog and Character Creation runtime tests cover Skilled Origin feat authoring, background-origin feat proficiency choice discovery, supported skill/tool option admission, and CharacterBuild proficiency projection without battle-runtime execution.",
+      "profileIds": [
+        "character-creation.origin-feat-proficiency-choice"
+      ],
+      "taskId": "L14G-B02-FEAT-SKILLED"
     }
   ],
   "unitGroupDenominatorAudit": {
@@ -15714,17 +15744,17 @@
         "unsupportedOrOtherUnits": 4
       },
       {
-        "executableUnitDenominator": 9,
-        "installedUnitDenominator": 9,
+        "executableUnitDenominator": 10,
+        "installedUnitDenominator": 10,
         "kind": "feat",
         "label": "Feat Units",
-        "profileFactDenominator": 5,
+        "profileFactDenominator": 6,
         "profileSubsetSupportedUnits": 0,
         "selectedIdentityDeferredNonApplicableUnits": 0,
         "selectedIdentityReplayDenominator": 5,
         "selectedIdentityReplayGapUnits": 0,
         "selectedIdentityReplayWitnessUnits": 5,
-        "supportedProfileUnits": 5,
+        "supportedProfileUnits": 6,
         "unsupportedOrOtherUnits": 4
       },
       {
@@ -22366,6 +22396,71 @@
       ],
       "sourceRecordPath": "packages/surface/content/feat_savage_attacker.json",
       "unitId": "feat_savage_attacker"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "character-fact-and-runtime-detached-split",
+          "owner": "character-creation-runtime plus character-sheet proficiency projection",
+          "reason": "Skilled mutates durable character proficiency facts during character creation; battle runtime consumes derived skill/tool proficiency facts where relevant rather than executing the feat as a battle Unit."
+        },
+        "profileIds": [
+          "character-creation.origin-feat-proficiency-choice"
+        ],
+        "selectedIdentityEvidenceDisposition": {
+          "owner": "character-creation deterministic proficiency projection owner",
+          "reason": "Skilled support is a durable CharacterBuild proficiency projection from a selected Background originFeatId. It has no battle-runtime selected Unit identity replay boundary; deterministic character-creation tests bind the authored feat Unit identity to the executable Surface proficiency facts.",
+          "tag": "not-applicable"
+        },
+        "supportedMechanics": [
+          "Surface authors Skilled as an SRD Origin feat with a passive grant_proficiency choice of exactly three skill or tool subjects",
+          "Character Creation discovers the Origin feat proficiency hole from the selected Background originFeatId and the feat's typed passive proficiency grant shape",
+          "Character Creation admits supported skill and tool subject option ids through origin_feat_proficiency_choice and filters already-owned skill proficiencies",
+          "Character Creation finalizes selected Skilled subjects into CharacterBuild.proficiencyChoices and the existing derived skill/tool proficiency projection without storing duplicate proficiency state"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/character-creation-runtime/src/index.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L14G-B02-FEAT-SKILLED"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "feat",
+      "profiles": [
+        {
+          "id": "character-creation.origin-feat-proficiency-choice",
+          "profileKind": "character-creation",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/character-creation-runtime/src/discovery.ts",
+            "packages/character-creation-runtime/src/finalization.ts",
+            "packages/character-creation-runtime/src/choice-option-codecs.ts",
+            "packages/character-creation-runtime/src/support-gates.ts"
+          ],
+          "sourceBoundary": "Character Creation consumes a selected Background originFeatId, the Origin feat's passive grant_proficiency choice shape, and the existing CharacterBuild proficiency projection. It discovers one Origin feat proficiency choice hole, expands SRD skill and tool subject options through the same Surface proficiency subject codecs used by class features, filters already-owned skill proficiencies, admits supported skill/tool subject option ids through a dedicated origin_feat_proficiency_choice key, and finalizes the selected subjects into CharacterBuild.proficiencyChoices without storing duplicate proficiency state. Battle execution remains detached; downstream sheets and battle init consume the derived character proficiency facts.",
+          "taskRefs": [
+            "L14G-B02-FEAT-SKILLED"
+          ],
+          "title": "Character Creation finalizes Origin feat skill and tool proficiency choices into build proficiency facts",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/feat_skilled.json",
+      "unitId": "feat_skilled"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

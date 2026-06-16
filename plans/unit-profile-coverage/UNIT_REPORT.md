@@ -8,16 +8,16 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 
 | Metric | Value |
 | --- | ---: |
-| Installed collection inventory count | 282 Units |
+| Installed collection inventory count | 283 Units |
 
 ## Coverage Metrics
 
 | Metric | Covered | Percent |
 | --- | ---: | ---: |
-| Authored Surface Unit catalog admission | 281/512 | 54.9% |
-| Authored Surface executable catalog admission | 234/427 | 54.8% |
-| Installed Unit profile classification coverage | 282/282 | 100% |
-| Supported executable Unit coverage | 176/235 | 74.9% |
+| Authored Surface Unit catalog admission | 282/513 | 55% |
+| Authored Surface executable catalog admission | 235/428 | 54.9% |
+| Installed Unit profile classification coverage | 283/283 | 100% |
+| Supported executable Unit coverage | 177/236 | 75% |
 | QNT profile modeling coverage | 116/116 | 100% |
 | QNT proof coverage | 113/116 | 97.4% |
 | Runtime mapping coverage | 116/116 | 100% |
@@ -25,8 +25,8 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | Rules-kernel profile join coverage | 154/154 | 100% |
 | Rules-kernel covered profile coverage | 154/154 | 100% |
 | Supported Unit rules-kernel chain coverage | 169/169 | 100% |
-| Deterministic admission/projection coverage | 172/176 | 97.7% |
-| Selected identity replay coverage | 172/176 | 97.7% |
+| Deterministic admission/projection coverage | 173/177 | 97.7% |
+| Selected identity replay coverage | 172/172 | 100% |
 | Classic non-SRD expression gate | 1/1 | 100% |
 
 ## Metric Semantics
@@ -48,7 +48,7 @@ Coverage rows are denominator-specific gates, not weighted completion scores. Un
 | Rules-kernel covered profile coverage | Do rules-kernel-admitted mechanics profiles point to covered rules-kernel obligations? | rules-kernel-applicable profile records whose mapped obligations are all covered | profile records with rules-kernel profile kinds and either QNT owners or explicit profile-obligation mappings |
 | Supported Unit rules-kernel chain coverage | Do supported Unit identities have every rules-kernel-admitted profile connected to covered rules-kernel obligations? | supported Unit ids whose rules-kernel-applicable profiles all map to covered obligations | installed Units with supported-profile claims and at least one rules-kernel-applicable profile |
 | Deterministic admission/projection coverage | Which supported Unit identities have deterministic production catalog/support/projection evidence? | supported Unit ids with deterministic-admission-projection evidence | installed Units with supported-profile claims |
-| Selected identity replay coverage | Which supported Unit identities have intentionally selected concrete identity replay evidence? | supported Unit ids with selected-identity-mbt evidence | installed Units with supported-profile claims |
+| Selected identity replay coverage | Which supported Unit identities have intentionally selected concrete identity replay evidence? | supported Unit ids in the replay denominator with selected-identity-mbt evidence | installed Units with supported-profile claims, excluding whole-claim selected-identity not-applicable dispositions |
 | Classic non-SRD expression gate | Did every installed Classic non-SRD mechanics-only Unit pass the public-expression gate? | installed Classic non-SRD records passing validation | installed Classic non-SRD records |
 
 ## Unit Group Denominator Audit
@@ -58,7 +58,7 @@ Background, feat, spell, and class-feature groups are counted from installed Uni
 | Group | Installed Unit denominator | Executable Unit denominator | Supported-profile Units | Profile-subset Units | Unsupported/other Units | Profile fact denominator | Selected-identity replay witnesses/denominator | Selected-identity replay gaps | Deferred selected-identity non-applicable |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
 | Background Units | 4 | 0 | 0 | 0 | 4 | 0 | 0/0 | 0 | 0 |
-| Feat Units | 9 | 9 | 5 | 0 | 4 | 5 | 5/5 | 0 | 0 |
+| Feat Units | 10 | 10 | 6 | 0 | 4 | 6 | 5/5 | 0 | 0 |
 | Spell Units | 128 | 128 | 92 | 18 | 18 | 136 | 110/110 | 0 | 0 |
 | Class-feature Units | 83 | 83 | 69 | 8 | 6 | 117 | 72/72 | 0 | 0 |
 
@@ -160,6 +160,7 @@ The Unit matrix owns authored-content breadth. `plans/rules-kernel-coverage/prof
 | `defense` | srd-5.2.1 | `unit-feature.passive-armor-class-bonus` |
 | `alert` | srd-5.2.1 | `unit-feature.initiative-proficiency-and-swap` |
 | `feat_savage_attacker` | srd-5.2.1 | `unit-feature.weapon-damage-dice-roll-choice` |
+| `feat_skilled` | srd-5.2.1 | `character-creation.origin-feat-proficiency-choice` |
 | `paladin_channel_divinity` | srd-5.2.1 | `character-creation.class-feature-resource-projection` |
 | `paladin_lay_on_hands` | srd-5.2.1 | `character-sheet.healing-resource-action` |
 | `paladin_fighting_style` | srd-5.2.1 | `character-creation.class-feature-feat-choice`, `character-creation.class-feature-option-projection`, `character-creation.fighting-style-cantrip-advancement-replacement` |
@@ -872,6 +873,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `alert` | `unit-feature.initiative-proficiency-and-swap` | L12G-FOLLOWUP-ALERT-INITIATIVE-RUNTIME | `packages/battle-runtime/src/unit-profile-admission-alert-initiative.test.ts` |
 | `alert` | `unit-feature.initiative-proficiency-and-swap` | L12G-FOLLOWUP-ALERT-INITIATIVE-RUNTIME | `packages/character-battle-runtime/src/index.test.ts` |
 | `feat_savage_attacker` | `unit-feature.weapon-damage-dice-roll-choice` | QMBT31 | `packages/battle-runtime/src/unit-profile-admission-savage-attacker-and-mycelium-step.test.ts` |
+| `feat_skilled` | `character-creation.origin-feat-proficiency-choice` | L14G-B02-FEAT-SKILLED | `packages/character-creation-runtime/src/index.test.ts` |
 | `paladin_channel_divinity` | `character-creation.class-feature-resource-projection` | L13UG-A17 | `packages/character-creation-runtime/src/index.test.ts` |
 | `paladin_lay_on_hands` | `character-sheet.healing-resource-action` | SRDINV91B | `packages/character-sheet-runtime/src/healing-rest-benefit.test.ts` |
 | `paladin_fighting_style` | `character-creation.class-feature-feat-choice`, `character-creation.class-feature-option-projection`, `character-creation.fighting-style-cantrip-advancement-replacement` | L12G-CLASS-PALADIN-FIGHTING-STYLE | `packages/character-creation-runtime/src/index.test.ts` |
@@ -1800,6 +1802,7 @@ These profile-subset rows have no selected-identity replay witness, but the decl
 | L3MMETA-22-HEIGHTENED-SAVE-GATED-CONDITION-MULTITARGET-REPEAT-SAVE-SLICE | completed-runtime-parity | `spell.invocation-condition-save`, `unit-feature.metamagic-heightened-save-disadvantage` |
 | L3COMP-FOLLOWUP-COMPANION-SESSION-PERSISTENCE | accepted-session-boundary-follow-up | _none_ |
 | L3COMP-FOLLOWUP-REDUCER-DISCOVERED-COMPANION-ACTS | accepted-runtime-discovery-mcp-surface-follow-up | _none_ |
+| L14G-B02-FEAT-SKILLED | completed-runtime-parity | `character-creation.origin-feat-proficiency-choice` |
 
 ## Supported Profiles Lacking Runtime Parity
 
