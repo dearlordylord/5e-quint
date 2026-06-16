@@ -37,7 +37,7 @@
     {
       "number": 6,
       "id": "L14G-B06-SPECIES-GNOME",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Research and plan Gnome species ownership"
     },
     {
@@ -339,7 +339,7 @@ Verification:
 
 ### Task 6 - L14G-B06-SPECIES-GNOME
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
