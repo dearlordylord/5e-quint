@@ -156,6 +156,7 @@ const requiredFirstVerticalUnitIds = [
   "feat_archery",
   "feat_boon_of_combat_prowess",
   "defense",
+  "feat_grappler",
   "feat_magic_initiate_cleric",
   "feat_magic_initiate_druid",
   "feat_magic_initiate_wizard",
@@ -5919,6 +5920,51 @@ describe("SRD Unit catalog boundary", () => {
       provenance: {
         kind: "srd-5.2.1",
         section: "Feats.md:53-59",
+      },
+    });
+  });
+
+  test("authors Grappler as a General feat with typed grapple benefit boundaries", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag !== "ok") return;
+
+    const grappler = result.catalog.requireUnit("feat_grappler");
+
+    expect(grappler).toMatchObject({
+      abilityScoreIncreaseChoice: {
+        abilityScope: {
+          abilities: ["str", "dex"],
+          kind: "specific_abilities",
+        },
+        maxScore: 20,
+        methods: [{ kind: "one_score", increase: 1 }],
+      },
+      category: "general",
+      id: "feat_grappler",
+      kind: "feat",
+      mechanics: {
+        attackAdvantage: {
+          mode: "advantage",
+          on: ["attack_roll"],
+          target: "creature_grappled_by_you",
+        },
+        family: "grappler",
+        fastWrestler: {
+          movementCost: "no_extra_grapple_drag_cost",
+          targetSize: "your_size_or_smaller",
+        },
+        punchAndGrab: {
+          options: ["damage", "grapple"],
+          trigger: "attack_action_unarmed_strike_hit_on_turn",
+          usageLimit: { kind: "once_per_turn" },
+        },
+      },
+      name: "Grappler",
+      provenance: {
+        kind: "srd-5.2.1",
+        section: "Feats.md:73-85",
       },
     });
   });

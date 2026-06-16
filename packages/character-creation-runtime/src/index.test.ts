@@ -5975,6 +5975,7 @@ describe("character creation finalization", () => {
 
   test("represents two-score Ability Score Improvement choices as unordered pairs", () => {
     const optionIds = abilityScoreIncreaseChoiceOptions({
+      abilityScope: { kind: "all_abilities" },
       maxScore: 20,
       methods: [
         { kind: "two_scores", primaryIncrease: 1, secondaryIncrease: 1 },
@@ -5988,6 +5989,7 @@ describe("character creation finalization", () => {
 
   test("decodes every generated Ability Score Improvement option", () => {
     const options = abilityScoreIncreaseChoiceOptions({
+      abilityScope: { kind: "all_abilities" },
       maxScore: 20,
       methods: [
         { kind: "one_score", increase: 2 },
@@ -6014,6 +6016,19 @@ describe("character creation finalization", () => {
         ),
       ),
     ).toBe(true);
+  });
+
+  test("uses authored ability restrictions for feat ability score increase choices", () => {
+    const optionIds = abilityScoreIncreaseChoiceOptions({
+      abilityScope: { kind: "specific_abilities", abilities: ["str", "dex"] },
+      maxScore: 20,
+      methods: [{ kind: "one_score", increase: 1 }],
+    }).map((option) => option.optionId);
+
+    expect(optionIds).toEqual([
+      "ability_score:str:+1:max20",
+      "ability_score:dex:+1:max20",
+    ]);
   });
 
   test("applies two-score Ability Score Improvement feat choices", () => {

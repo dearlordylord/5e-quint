@@ -3,6 +3,7 @@ import type {
   ClassFeatureRecord,
   CompositeMagicItemMechanics,
   FeatRecord,
+  GrapplerFeatMechanics,
   ItemDestructionPolicy,
   MagicItemAttunement,
   MagicItemAttunementRestriction,
@@ -205,6 +206,8 @@ export function traceFeatUnit(feat: FeatRecord): Trace {
         ? traceTriggeredReplacementMechanics(feat.mechanics, nodes, edges, ids)
         : feat.mechanics.family === "magic_initiate"
           ? traceMagicInitiateMechanics(feat.mechanics, nodes, ids)
+          : feat.mechanics.family === "grappler"
+            ? traceGrapplerFeatMechanics(feat.mechanics, nodes, edges, ids)
           : tracePassiveOrActivated(feat.mechanics, nodes, edges, ids);
   edges.push({ from: rootId, to: procId, relation: "roots" });
 
@@ -231,6 +234,58 @@ function traceMagicInitiateMechanics(
       `magic_initiate\n${mechanics.spellList} spell list\n` +
       "2 cantrips + 1 level 1 spell\nspellcasting ability choice",
   });
+  return procId;
+}
+
+function traceGrapplerFeatMechanics(
+  mechanics: GrapplerFeatMechanics,
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): string {
+  const procId = ids("grappler");
+  nodes.push({
+    id: procId,
+    category: "procedure",
+    atomKind: "grappler",
+    label: "grappler\nGeneral feat battle benefits",
+  });
+
+  const punchId = ids("punch-grab");
+  nodes.push({
+    id: punchId,
+    category: "effect",
+    atomKind: "grappler_punch_and_grab",
+    label:
+      `grappler_punch_and_grab\n${mechanics.punchAndGrab.trigger}\n` +
+      `${mechanics.punchAndGrab.options.join(" + ")}\n` +
+      mechanics.punchAndGrab.usageLimit.kind,
+  });
+  edges.push({ from: procId, to: punchId, relation: "includes" });
+
+  const advantageId = ids("advantage");
+  nodes.push({
+    id: advantageId,
+    category: "effect",
+    atomKind: "grappler_attack_advantage",
+    label:
+      `grappler_attack_advantage\n${mechanics.attackAdvantage.mode}\n` +
+      `${mechanics.attackAdvantage.on.join(", ")}\n` +
+      mechanics.attackAdvantage.target,
+  });
+  edges.push({ from: procId, to: advantageId, relation: "includes" });
+
+  const wrestlerId = ids("fast-wrestler");
+  nodes.push({
+    id: wrestlerId,
+    category: "effect",
+    atomKind: "grappler_fast_wrestler",
+    label:
+      `grappler_fast_wrestler\n${mechanics.fastWrestler.movementCost}\n` +
+      mechanics.fastWrestler.targetSize,
+  });
+  edges.push({ from: procId, to: wrestlerId, relation: "includes" });
+
   return procId;
 }
 

@@ -1,10 +1,13 @@
 {
   "abilityScoreIncreaseChoice": {
+    "abilityScope": {
+      "kind": "all_abilities"
+    },
     "maxScore": 20,
     "methods": [
       {
-        "kind": "one_score",
-        "increase": 2
+        "increase": 2,
+        "kind": "one_score"
       },
       {
         "kind": "two_scores",

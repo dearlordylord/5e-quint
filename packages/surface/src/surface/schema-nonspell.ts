@@ -3413,9 +3413,74 @@ export const FeatMechanicsSchema = Schema.Union(
   MasteryOrWeaponDamageDiceRerollMechanicsSchema,
   TriggeredReplacementMechanicsSchema,
   strictStruct({
+    family: Schema.Literal("grappler"),
+    punchAndGrab: strictStruct({
+      trigger: Schema.Literal("attack_action_unarmed_strike_hit_on_turn"),
+      options: Schema.Tuple(
+        Schema.Literal("damage"),
+        Schema.Literal("grapple"),
+      ),
+      usageLimit: strictStruct({ kind: Schema.Literal("once_per_turn") }),
+    }),
+    attackAdvantage: strictStruct({
+      mode: Schema.Literal("advantage"),
+      on: Schema.Tuple(Schema.Literal("attack_roll")),
+      target: Schema.Literal("creature_grappled_by_you"),
+    }),
+    fastWrestler: strictStruct({
+      movementCost: Schema.Literal("no_extra_grapple_drag_cost"),
+      targetSize: Schema.Literal("your_size_or_smaller"),
+    }),
+  }),
+  strictStruct({
     family: Schema.Literal("magic_initiate"),
     spellList: Schema.Literal(...MAGIC_INITIATE_SPELL_LISTS),
   }),
+);
+
+const FeatAbilityScoreIncreaseAbilityScopeSchema = Schema.Union(
+  strictStruct({ kind: Schema.Literal("all_abilities") }),
+  strictStruct({
+    kind: Schema.Literal("specific_abilities"),
+    abilities: Schema.NonEmptyArray(AbilitySchema).pipe(
+      Schema.filter(distinctAbilities, {
+        message: () =>
+          "Feat ability score increase ability list must contain distinct abilities.",
+      }),
+    ),
+  }),
+);
+
+const FeatAbilityScoreIncreaseChoiceSchema = Schema.Struct({
+  abilityScope: FeatAbilityScoreIncreaseAbilityScopeSchema,
+  maxScore: PositiveIntegerSchema,
+  methods: Schema.NonEmptyArray(
+    Schema.Union(
+      Schema.Struct({
+        kind: Schema.Literal("one_score"),
+        increase: PositiveIntegerSchema,
+      }),
+      Schema.Struct({
+        kind: Schema.Literal("two_scores"),
+        primaryIncrease: PositiveIntegerSchema,
+        secondaryIncrease: PositiveIntegerSchema,
+      }),
+    ),
+  ),
+}).pipe(
+  Schema.filter(
+    (choice) =>
+      choice.methods.every(
+        (method) =>
+          method.kind !== "two_scores" ||
+          choice.abilityScope.kind === "all_abilities" ||
+          choice.abilityScope.abilities.length > 1,
+      ),
+    {
+      message: () =>
+        "Feat two-score ability score increases require at least two legal abilities.",
+    },
+  ),
 );
 
 export const FeatRecordSchema = Schema.Struct({
@@ -3423,22 +3488,7 @@ export const FeatRecordSchema = Schema.Struct({
   kind: Schema.Literal("feat"),
   category: FeatCategorySchema,
   abilityScoreIncreaseChoice: exactOptional(
-    Schema.Struct({
-      maxScore: PositiveIntegerSchema,
-      methods: Schema.NonEmptyArray(
-        Schema.Union(
-          Schema.Struct({
-            kind: Schema.Literal("one_score"),
-            increase: PositiveIntegerSchema,
-          }),
-          Schema.Struct({
-            kind: Schema.Literal("two_scores"),
-            primaryIncrease: PositiveIntegerSchema,
-            secondaryIncrease: PositiveIntegerSchema,
-          }),
-        ),
-      ),
-    }),
+    FeatAbilityScoreIncreaseChoiceSchema,
   ),
   mechanics: FeatMechanicsSchema,
 });

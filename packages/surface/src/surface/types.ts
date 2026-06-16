@@ -876,6 +876,10 @@ export type MagicInitiateMechanics = Extract<
   FeatMechanics,
   { readonly family: "magic_initiate" }
 >;
+export type GrapplerFeatMechanics = Extract<
+  FeatMechanics,
+  { readonly family: "grappler" }
+>;
 export type FeatRecord = Schema.Schema.Type<
   typeof SurfaceSchema.FeatRecordSchema
 >;

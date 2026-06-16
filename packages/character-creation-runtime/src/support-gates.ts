@@ -731,6 +731,7 @@ export function unitRefsForSupportedClassChoice(
 function supportedAbilityScoreIncreaseOptionIds(): readonly CreationChoiceOptionId[] {
   return [
     ...abilityScoreIncreaseChoiceOptionIds({
+      abilityScope: { kind: "all_abilities" },
       maxScore: 20,
       methods: [
         { kind: "one_score", increase: 2 },
@@ -738,6 +739,7 @@ function supportedAbilityScoreIncreaseOptionIds(): readonly CreationChoiceOption
       ],
     }),
     ...abilityScoreIncreaseChoiceOptionIds({
+      abilityScope: { kind: "all_abilities" },
       maxScore: 30,
       methods: [{ kind: "one_score", increase: 1 }],
     }),

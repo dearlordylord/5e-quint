@@ -22,7 +22,9 @@ import {
   startingClassUnitId,
 } from "./character-progression-types.ts";
 import type { CharacterProgression } from "./character-progression-types.ts";
+import { Match } from "effect";
 import { SURFACE_ABILITIES } from "@dnd/shared/game-facts";
+import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
 import type { UnitRecord } from "@dnd/surface/surface/types";
 import { SORCERER_METAMAGIC_OPTIONS_CHOICE_KEY as SURFACE_SORCERER_METAMAGIC_OPTIONS_CHOICE_KEY } from "@dnd/surface/surface/schema";
 
@@ -275,28 +277,41 @@ export const EXACTLY_ONE_CHOICE = {
 } as const satisfies ChoiceCardinality;
 
 type SurfaceAbility = (typeof SURFACE_ABILITIES)[number];
+const byKind = Match.discriminator("kind");
+
+type AbilityScoreIncreaseChoiceMethod =
+  | {
+      readonly kind: "one_score";
+      readonly increase: number;
+    }
+  | {
+      readonly kind: "two_scores";
+      readonly primaryIncrease: number;
+      readonly secondaryIncrease: number;
+    };
+
+type AbilityScoreIncreaseAbilityScope =
+  | {
+      readonly kind: "all_abilities";
+    }
+  | {
+      readonly kind: "specific_abilities";
+      readonly abilities: ReadonlyNonEmptyArray<SurfaceAbility>;
+    };
 
 export type AbilityScoreIncreaseChoiceSpec = {
+  readonly abilityScope: AbilityScoreIncreaseAbilityScope;
   readonly maxScore: number;
-  readonly methods: readonly (
-    | {
-        readonly kind: "one_score";
-        readonly increase: number;
-      }
-    | {
-        readonly kind: "two_scores";
-        readonly primaryIncrease: number;
-        readonly secondaryIncrease: number;
-      }
-  )[];
+  readonly methods: ReadonlyNonEmptyArray<AbilityScoreIncreaseChoiceMethod>;
 };
 
 export function abilityScoreIncreaseChoiceOptions(
   choice: AbilityScoreIncreaseChoiceSpec,
 ): readonly CreationChoiceOption[] {
+  const abilities = abilityScoreIncreaseAbilities(choice.abilityScope);
   return choice.methods.flatMap((method) => {
     if (method.kind === "one_score") {
-      return SURFACE_ABILITIES.map((ability) => ({
+      return abilities.map((ability) => ({
         optionId: abilityScoreIncreaseOneScoreOptionId({
           ability,
           increase: method.increase,
@@ -306,16 +321,18 @@ export function abilityScoreIncreaseChoiceOptions(
       }));
     }
 
-    return unorderedSurfaceAbilityPairs().map(([primary, secondary]) => ({
-      optionId: requireAbilityScoreIncreaseTwoScoresOptionId({
-        primary,
-        primaryIncrease: method.primaryIncrease,
-        secondary,
-        secondaryIncrease: method.secondaryIncrease,
-        maxScore: choice.maxScore,
+    return unorderedSurfaceAbilityPairs(abilities).map(
+      ([primary, secondary]) => ({
+        optionId: requireAbilityScoreIncreaseTwoScoresOptionId({
+          primary,
+          primaryIncrease: method.primaryIncrease,
+          secondary,
+          secondaryIncrease: method.secondaryIncrease,
+          maxScore: choice.maxScore,
+        }),
+        label: `${primary.toUpperCase()} +${method.primaryIncrease}, ${secondary.toUpperCase()} +${method.secondaryIncrease}`,
       }),
-      label: `${primary.toUpperCase()} +${method.primaryIncrease}, ${secondary.toUpperCase()} +${method.secondaryIncrease}`,
-    }));
+    );
   });
 }
 
@@ -327,12 +344,24 @@ export function abilityScoreIncreaseChoiceOptionIds(
   );
 }
 
-function unorderedSurfaceAbilityPairs(): readonly (readonly [
+function abilityScoreIncreaseAbilities(
+  abilityScope: AbilityScoreIncreaseAbilityScope,
+): ReadonlyNonEmptyArray<SurfaceAbility> {
+  return Match.value(abilityScope).pipe(
+    byKind("all_abilities", () => SURFACE_ABILITIES),
+    byKind("specific_abilities", (specific) => specific.abilities),
+    Match.exhaustive,
+  );
+}
+
+function unorderedSurfaceAbilityPairs(
+  abilities: ReadonlyNonEmptyArray<SurfaceAbility>,
+): readonly (readonly [
   SurfaceAbility,
   SurfaceAbility,
 ])[] {
-  return SURFACE_ABILITIES.flatMap((primary, primaryIndex) =>
-    SURFACE_ABILITIES.slice(primaryIndex + 1).map(
+  return abilities.flatMap((primary, primaryIndex) =>
+    abilities.slice(primaryIndex + 1).map(
       (secondary) => [primary, secondary] as const,
     ),
   );

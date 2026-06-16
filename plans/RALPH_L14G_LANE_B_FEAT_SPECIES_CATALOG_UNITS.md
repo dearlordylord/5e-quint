@@ -19,7 +19,7 @@
     {
       "number": 3,
       "id": "L14G-B03-FEAT-GRAPPLER",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Research and plan Grappler feat ownership"
     },
     {
@@ -51,6 +51,12 @@
       "id": "L14G-B08-SPECIES-HUMAN",
       "status": "ready-for-research",
       "title": "Research and plan Human species and origin feat ownership"
+    },
+    {
+      "number": 9,
+      "id": "L3-FOLLOWUP-GRAPPLER-RUNTIME",
+      "status": "ready-for-research",
+      "title": "Promote Grappler prerequisite and battle runtime support"
     }
   ]
 }
@@ -88,6 +94,20 @@ the Unit catalog, or the Unit matrix.
   runtime facts need a typed owner first.
 - Human depends conceptually on `feat_skilled` and
   `feat_magic_initiate_druid` because Versatile grants an Origin feat choice.
+
+## Task DAG
+
+| Task | Depends on | Dependency reason |
+| --- | --- | --- |
+| L14G-B01-FEAT-MAGIC-INITIATE-DRUID | L14G-06-LEVEL4-REACHABLE-UNIT-FULL-AUDIT | Missing level-4-reachable feat identity. |
+| L14G-B02-FEAT-SKILLED | L14G-06-LEVEL4-REACHABLE-UNIT-FULL-AUDIT | Missing level-4-reachable feat identity and Human Versatile input. |
+| L14G-B03-FEAT-GRAPPLER | L14G-06-LEVEL4-REACHABLE-UNIT-FULL-AUDIT | Missing level-4-reachable feat identity. |
+| L14G-B04-FEAT-GREAT-WEAPON-FIGHTING | L14G-06-LEVEL4-REACHABLE-UNIT-FULL-AUDIT | Missing level-4-reachable feat identity. |
+| L14G-B05-FEAT-TWO-WEAPON-FIGHTING | L14G-06-LEVEL4-REACHABLE-UNIT-FULL-AUDIT | Missing level-4-reachable feat identity. |
+| L14G-B06-SPECIES-GNOME | L14G-06-LEVEL4-REACHABLE-UNIT-FULL-AUDIT | Missing level-4-reachable species identity. |
+| L14G-B07-SPECIES-HALFLING | L14G-06-LEVEL4-REACHABLE-UNIT-FULL-AUDIT | Missing level-4-reachable species identity. |
+| L14G-B08-SPECIES-HUMAN | L14G-06-LEVEL4-REACHABLE-UNIT-FULL-AUDIT, L14G-B01-FEAT-MAGIC-INITIATE-DRUID, L14G-B02-FEAT-SKILLED | Human Versatile references real Origin feat Units. |
+| L3-FOLLOWUP-GRAPPLER-RUNTIME | L14G-B03-FEAT-GRAPPLER | Runtime support consumes the typed Grappler Surface facts installed by Task 3. |
 
 ## Verification Command Sets
 
@@ -186,7 +206,7 @@ Verification:
 
 ### Task 3 - L14G-B03-FEAT-GRAPPLER
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -198,17 +218,18 @@ SRD anchor: `.references/srd-5.2.1/Feats.md:73-85`
 
 Current state:
 
-- No Surface content row.
-- No Unit catalog row.
-- No Unit matrix row.
-- Grapple runtime exists, but no Grappler feat profile exists.
+- Surface content row installed as an SRD General feat.
+- Unit catalog row installed.
+- Unit matrix row installed as `unsupported-profile`.
+- Grapple runtime exists, but no promoted Grappler feat profile exists.
 
 Output:
 
-- Research the prerequisite/ASI selection path and battle owner for Punch and
-  Grab, attack Advantage against a target grappled by you, and Fast Wrestler
+- Installed typed Surface facts for the Strength-or-Dexterity ASI, Punch and
+  Grab, attack Advantage against a target Grappled by you, and Fast Wrestler
   drag-cost exception.
-- Split runtime/QNT implementation if needed.
+- Split prerequisite enforcement, selected ASI projection, and battle/QNT
+  behavior into `L3-FOLLOWUP-GRAPPLER-RUNTIME`.
 
 Acceptance:
 
@@ -412,6 +433,53 @@ Verification:
 - Surface catalog command set.
 - Character creation command set.
 - Origin feat handoff command set if selected identity changes.
+- `git diff --check`.
+
+### Task 9 - L3-FOLLOWUP-GRAPPLER-RUNTIME
+
+Status: `ready-for-research`
+
+Depends on:
+
+- L14G-B03-FEAT-GRAPPLER
+
+Unit: `feat_grappler`
+
+SRD anchor: `.references/srd-5.2.1/Feats.md:73-85`
+
+Current state:
+
+- Grappler is installed as an SRD General feat with typed Surface facts.
+- The Unit matrix records `feat_grappler` as `unsupported-profile`.
+- No character-creation prerequisite owner enforces Level 4+ and Strength or
+  Dexterity 13+ for General feat selection.
+- No promoted battle Unit profile consumes Grappler's Punch and Grab, Attack
+  Advantage, or Fast Wrestler facts.
+
+Output:
+
+- Research and implement the character-creation owner for Grappler General feat
+  prerequisites and the selected +1 Strength-or-Dexterity ASI projection.
+- Research and implement the battle owner for Punch and Grab, attack Advantage
+  against a creature Grappled by you, and Fast Wrestler's drag-cost exception.
+- Consume existing battle grapple state; do not store feat-owned grapple state.
+- Update focused QNT/rule-core slices only where runtime semantics change, then
+  promote the Unit claim to `supported-profile` or `profile-subset-supported`.
+
+Acceptance:
+
+- Grappler prerequisite rejection and legal Strength/Dexterity ASI choices are
+  covered by character-creation tests.
+- Battle behavior uses the existing grapple link/movement facts rather than
+  duplicating generic grapple state.
+- The Unit matrix claim names the admitted Grappler profile and does not claim
+  support for any unimplemented prerequisite or battle benefit.
+
+Verification:
+
+- RAW and ubiquitous-language check against the Grappler SRD anchor.
+- Character creation command set.
+- Focused battle tests/QNT/MBT only for implemented battle behavior.
 - `git diff --check`.
 
 ## Verification

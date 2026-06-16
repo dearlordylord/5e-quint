@@ -43,14 +43,14 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
-      "denominator": 428,
-      "numerator": 235,
-      "percent": "54.9%"
+      "denominator": 429,
+      "numerator": 236,
+      "percent": "55%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 513,
-      "numerator": 282,
-      "percent": "55%"
+      "denominator": 514,
+      "numerator": 283,
+      "percent": "55.1%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,7 +59,7 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 283
+      "value": 284
     },
     "deterministicAdmissionProjectionCoverage": {
       "denominator": 177,
@@ -67,8 +67,8 @@
       "percent": "97.7%"
     },
     "profileClassificationCoverage": {
-      "denominator": 283,
-      "numerator": 283,
+      "denominator": 284,
+      "numerator": 284,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -112,9 +112,9 @@
       "percent": "100%"
     },
     "supportedProfileCoverage": {
-      "denominator": 236,
+      "denominator": 237,
       "numerator": 177,
-      "percent": "75%"
+      "percent": "74.7%"
     }
   },
   "metricSemantics": [
@@ -15744,8 +15744,8 @@
         "unsupportedOrOtherUnits": 4
       },
       {
-        "executableUnitDenominator": 10,
-        "installedUnitDenominator": 10,
+        "executableUnitDenominator": 11,
+        "installedUnitDenominator": 11,
         "kind": "feat",
         "label": "Feat Units",
         "profileFactDenominator": 6,
@@ -15755,7 +15755,7 @@
         "selectedIdentityReplayGapUnits": 0,
         "selectedIdentityReplayWitnessUnits": 5,
         "supportedProfileUnits": 6,
-        "unsupportedOrOtherUnits": 4
+        "unsupportedOrOtherUnits": 5
       },
       {
         "executableUnitDenominator": 128,
@@ -22189,6 +22189,33 @@
       ],
       "sourceRecordPath": "packages/surface/content/feat_defense.json",
       "unitId": "defense"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "followUpTasks": [
+          {
+            "id": "L3-FOLLOWUP-GRAPPLER-RUNTIME",
+            "mechanic": "Promote Grappler after the owner can enforce Level 4+ and Strength-or-Dexterity 13+ feat selection, project the selected +1 Strength-or-Dexterity ASI through existing CharacterBuild ability-score facts, and consume existing battle grapple state for Punch and Grab, attack Advantage against a creature Grappled by you, and the Fast Wrestler drag-cost exception without storing feat-owned grapple state.",
+            "owner": "character-creation general feat prerequisite/ASI owner plus battle-runtime Grappler feature owner and focused Quint parity",
+            "requiredOutput": "Supported-profile or profile-subset-supported Grappler Unit claim with character-creation tests for prerequisite and ASI choices, focused battle runtime tests for the admitted Grappler mechanics, QNT updates where rule-core semantics change, and focused MBT only after battle behavior is implemented.",
+            "title": "Grappler General Feat Runtime"
+          }
+        ],
+        "reason": "Grappler is installed as a General feat with typed Strength-or-Dexterity ASI and authored Grappler battle benefit facts, but no promoted character-creation prerequisite/feat-selection profile or battle Unit profile is claimed yet.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "feat",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/feat_grappler.json",
+      "unitId": "feat_grappler"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
