@@ -7,7 +7,7 @@
     {
       "number": 1,
       "id": "L14G-05-GATE-CONSOLIDATION",
-      "status": "blocked",
+      "status": "ready-for-implementation",
       "title": "Regenerate and close the level 1-4 ultra-golden gate"
     }
   ]
@@ -45,15 +45,16 @@ landed or recorded explicit owner-decision/dependency blockers:
 
 ### Task 1 - L14G-05-GATE-CONSOLIDATION
 
-Status: `blocked`
+Status: `ready-for-implementation`
 
-Blocker Type: dependency
+Blocker Type: cleared
 
-Blocked on:
+Dependencies landed:
 
 - `L14G-01-LEVEL4-ASI-CATALOG-SOURCE`
 - `L14G-02-LEVEL4-PROGRESSION-DELTA-AUDIT`
 - `L14G-03-MONK-SLOW-FALL-TRIAGE`
+- `L14G-03A-MONK-SLOW-FALL-RUNTIME`
 - `L14G-04-MCP-LEVEL14-SCENARIO-GATE`
 
 Expected size: about half a focused day after dependencies land.
