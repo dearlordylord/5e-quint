@@ -4,7 +4,7 @@
     "kind": "trained"
   },
   "className": "rogue",
-  "description": "SRD Rogue class creation facts for a level-1 character.",
+  "description": "SRD Rogue class creation facts, subclass selection, Steady Aim, and the level-4 Ability Score Improvement feature grant.",
   "featureGrants": [
     {
       "level": 1,
@@ -25,6 +25,10 @@
     {
       "level": 3,
       "unitId": "rogue_steady_aim"
+    },
+    {
+      "level": 4,
+      "unitId": "rogue_ability_score_improvement_l4"
     }
   ],
   "hitPointDie": 8,
@@ -96,7 +100,7 @@
   },
   "provenance": {
     "kind": "srd-5.2.1",
-    "section": "Classes/Rogue.md:3-25,33-36"
+    "section": "Classes/Rogue.md:3-25,33-36,38-39,57-79,85-95"
   },
   "savingThrowProficiencies": ["dex", "int"],
   "skillProficiencyChoice": {

@@ -20,13 +20,14 @@ let rogueSkills =
 let rogue =
       { armorTraining = { categories = [ "light" ], kind = "trained" }
       , className = "rogue"
-      , description = "SRD Rogue class creation facts for a level-1 character."
+      , description = "SRD Rogue class creation facts, subclass selection, Steady Aim, and the level-4 Ability Score Improvement feature grant."
       , featureGrants =
         [ { level = 1, unitId = "rogue_expertise" }
         , { level = 1, unitId = "rogue_sneak_attack" }
         , { level = 1, unitId = "rogue_thieves_cant" }
         , { level = 1, unitId = "rogue_weapon_mastery" }
         , { level = 3, unitId = "rogue_steady_aim" }
+        , { level = 4, unitId = "rogue_ability_score_improvement_l4" }
         ]
       , hitPointDie = 8
       , id = "class_rogue"
@@ -56,7 +57,7 @@ let rogue =
           }
       , name = "Rogue"
       , primaryAbilities = { abilities = [ "dex" ], kind = "all_of" }
-      , provenance = { kind = "srd-5.2.1", section = "Classes/Rogue.md:3-25,33-36" }
+      , provenance = { kind = "srd-5.2.1", section = "Classes/Rogue.md:3-25,33-36,38-39,57-79,85-95" }
       , savingThrowProficiencies = [ "dex", "int" ]
       , skillProficiencyChoice = { choose = 4, options = rogueSkills }
       , subclassChoices =

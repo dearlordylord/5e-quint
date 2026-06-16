@@ -225,6 +225,7 @@ import subclassWarlockFiendPatronInput from "../../content/subclass_warlock_fien
 import subclassWizardEvokerInput from "../../content/subclass_wizard_evoker.json";
 import rayOfFrostInput from "../../content/ray_of_frost.json";
 import rayOfSicknessInput from "../../content/ray_of_sickness.json";
+import rogueAbilityScoreImprovementL4Input from "../../content/rogue_ability_score_improvement_l4.json";
 import rogueCunningActionInput from "../../content/rogue_cunning_action.json";
 import rogueEvasionInput from "../../content/rogue_evasion.json";
 import rogueExpertiseInput from "../../content/rogue_expertise.json";
@@ -484,6 +485,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     rangerDeftExplorerInput,
     rangerFavoredEnemyInput,
     rangerFightingStyleInput,
+    rogueAbilityScoreImprovementL4Input,
     rogueCunningActionInput,
     rogueEvasionInput,
     rogueUncannyDodgeInput,

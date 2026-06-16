@@ -2305,12 +2305,7 @@
       "unitId": "ranger_favored_enemy"
     },
     {
-      "catalogDisposition": {
-        "category": "unsupported-widening-pressure",
-        "planningLane": "QMBT18",
-        "reason": "Executable SRD authored data is absent from the catalog and needs an explicit unsupported profile or surface-widening slice."
-      },
-      "catalogStatus": "not-in-unit-catalog",
+      "catalogStatus": "installed",
       "claimTag": "unsupported-profile",
       "closureKinds": [
         "selection-grant-container"
@@ -10644,8 +10639,8 @@
         "group": "level-scoped-class-feature-grants",
         "label": "SRD class feature grants through level 4",
         "metrics": {
-          "denominator": 57,
-          "numerator": 57,
+          "denominator": 58,
+          "numerator": 58,
           "percent": "100%"
         },
         "rows": [
@@ -11065,6 +11060,15 @@
           },
           {
             "kind": "class_feature",
+            "ownerUnitId": "class_rogue",
+            "ready": true,
+            "relation": "class.featureGrants.level-4",
+            "sourceRecordPath": "packages/surface/content/rogue_ability_score_improvement_l4.json",
+            "status": "installed",
+            "unitId": "rogue_ability_score_improvement_l4"
+          },
+          {
+            "kind": "class_feature",
             "ownerUnitId": "class_sorcerer",
             "ready": true,
             "relation": "class.featureGrants.level-1",
@@ -11164,7 +11168,7 @@
           }
         ],
         "rowsByStatus": {
-          "installed": 57
+          "installed": 58
         }
       },
       {
@@ -11241,8 +11245,8 @@
       }
     ],
     "metrics": {
-      "denominator": 90,
-      "numerator": 90,
+      "denominator": 91,
+      "numerator": 91,
       "percent": "100%"
     },
     "openBlockerCount": 0

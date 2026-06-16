@@ -814,8 +814,8 @@
               "percent": "100%"
             },
             "srdAuthoredProductReadiness": {
-              "denominator": 90,
-              "numerator": 90,
+              "denominator": 91,
+              "numerator": 91,
               "percent": "100%"
             },
             "strictTargetClosure": {
