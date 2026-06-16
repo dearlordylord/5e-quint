@@ -2889,12 +2889,12 @@
   "metrics": {
     "productReadiness": {
       "denominator": 607,
-      "numerator": 596,
-      "percent": "98.2%",
+      "numerator": 597,
+      "percent": "98.4%",
       "rowsByStatus": {
-        "accepted": 436,
+        "accepted": 437,
         "accepted-no-battle-effect": 160,
-        "owner-evidence-required": 10,
+        "owner-evidence-required": 9,
         "partial-battle-runtime": 1
       }
     },

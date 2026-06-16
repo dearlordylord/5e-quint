@@ -46,39 +46,39 @@ This is the default `%` for character-level-1 plus character-level-2 readiness q
 
 This is the default `%` for character-level-1 through character-level-3 readiness questions. It includes character-level-3 class/subclass rows and spell-level-2 pressure. It deliberately excludes spell-level-3 pressure.
 
-- Accepted: 596/607 (98.2%)
+- Accepted: 597/607 (98.4%)
 
 #### Character Levels 1-3 Battle Readiness by Status
 
-- accepted: 436
+- accepted: 437
 - accepted-no-battle-effect: 160
-- owner-evidence-required: 10
+- owner-evidence-required: 9
 - partial-battle-runtime: 1
 
 ### Expanded Progress Metric: Character Levels 1-4 Battle Readiness
 
 This is the default `%` for character-level-1 through character-level-4 readiness questions. It includes character-level-4 class-feature rows and spell-level-2 pressure. It deliberately excludes spell-level-3 pressure, which first enters the character-level-5 frontier for full casters.
 
-- Accepted: 621/632 (98.3%)
+- Accepted: 622/632 (98.4%)
 
 #### Character Levels 1-4 Battle Readiness by Status
 
-- accepted: 437
+- accepted: 438
 - accepted-no-battle-effect: 184
-- owner-evidence-required: 10
+- owner-evidence-required: 9
 - partial-battle-runtime: 1
 
 ### Level-3 Class/Subclass Battle Readiness
 
 This metric is a separate seed for level-3 class feature, subclass selection, subclass feature, and subclass Spell Access rows. It covers both always-prepared subclass grants and choice-derived prepared grants without affecting the Level 1-2 readiness denominator or level-3 spell-list pressure.
 
-- Accepted: 45/51 (88.2%)
+- Accepted: 46/51 (90.2%)
 
 #### Level-3 Class/Subclass Battle Readiness by Status
 
-- accepted: 31
+- accepted: 32
 - accepted-no-battle-effect: 14
-- owner-evidence-required: 6
+- owner-evidence-required: 5
 
 ### Level-4 Class Feature Battle Readiness
 
@@ -117,8 +117,8 @@ This metric is a separate seed for spell-level-3 pressure only. It belongs to th
 
 ### Level-3 Class/Subclass Rows by Disposition
 
-- catalog-installed-owner-evidence-present: 31
-- catalog-installed-owner-evidence-required: 6
+- catalog-installed-owner-evidence-present: 32
+- catalog-installed-owner-evidence-required: 5
 - catalog-only/dead-for-now: 2
 - non-runtime: 12
 
@@ -493,7 +493,7 @@ These batches are generated planning recommendations for a separate SRD inventor
 |Ranger level 3 feature table row|character-creation or progression mechanic|outside-surface-runtime-mechanics|authored-record-present|installed|unsupported-profile|non-runtime|accepted-no-battle-effect|||No runtime work; keep classification as explicit closure.|.references/srd-5.2.1/Classes/Ranger.md:37|
 |Ranger Subclass|subclass selection|current-surface-can-express-source-facts|authored-record-present|installed|unsupported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; character-creation-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Ranger.md:102|
 |Rogue Fast Hands|class feature|current-surface-can-express-source-facts|authored-record-present|installed|profile-subset-supported|catalog-installed-owner-evidence-present|accepted|profile-subset-remaining-mechanics-closed: table/tool-check owner; Utilize action owner; magic-item activation owner|Unit catalog/admission: catalog evidence; battle-runtime admission plus closed delegated owners: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Rogue.md:159|
-|Rogue Second-Story Work|class feature|current-surface-can-express-source-facts|authored-record-present|installed|supported-profile|catalog-installed-owner-evidence-required|owner-evidence-required||Unit catalog/admission: catalog evidence; character-sheet Speed projection plus movement/jump owner: owner evidence required|Promote Second-Story Work by projecting Climb Speed equal to Speed and by adding a jump-distance ability substitution that uses Dexterity rather than Strength, without storing duplicated climb or jump values beside the base Speed and Ability Score facts.|.references/srd-5.2.1/Classes/Rogue.md:167|
+|Rogue Second-Story Work|class feature|current-surface-can-express-source-facts|authored-record-present|installed|supported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; character-sheet-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Rogue.md:167|
 |Rogue Steady Aim|class feature|current-surface-can-express-source-facts|authored-record-present|installed|supported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; battle-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Rogue.md:89|
 |Rogue level 3 feature table row|character-creation or progression mechanic|outside-surface-runtime-mechanics|authored-record-present|installed|unsupported-profile|non-runtime|accepted-no-battle-effect|||No runtime work; keep classification as explicit closure.|.references/srd-5.2.1/Classes/Rogue.md:38|
 |Rogue Subclass|subclass selection|current-surface-can-express-source-facts|authored-record-present|installed|unsupported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; character-creation-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Rogue.md:85|

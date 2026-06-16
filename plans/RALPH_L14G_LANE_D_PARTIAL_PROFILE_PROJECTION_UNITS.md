@@ -25,7 +25,7 @@
     {
       "number": 4,
       "id": "L14G-D04-ROGUE-SECOND-STORY-WORK-EVIDENCE",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Add Rogue Second-Story Work projection evidence"
     },
     {
@@ -49,9 +49,9 @@ as Task 5 so it remains executable work instead of deferred prose. Task 2 closed
 the Monk Focus generated-readiness ambiguity while preserving the ordinary jump
 movement/table owner boundary. Task 3 closed the Sorcerer Metamagic
 generated-readiness ambiguity by making the promoted runtime subsets and
-procedure-specific deferred owner closures checker-readable. `rogue_second_story_work`
-is implementation-ready because pre-research found the desired projection shape
-already exists and the remaining work is checker-readable evidence.
+procedure-specific deferred owner closures checker-readable. Task 4 closed the
+Rogue Second-Story Work evidence gap by making the existing linked-Speed and
+jump-distance projection evidence checker-readable.
 
 ## Source Artifacts
 
@@ -243,7 +243,7 @@ Verification:
 
 ### Task 4 - L14G-D04-ROGUE-SECOND-STORY-WORK-EVIDENCE
 
-Status: `ready-for-implementation`
+Status: `done`
 
 Depends on:
 
