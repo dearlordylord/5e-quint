@@ -49,7 +49,7 @@
     {
       "number": 8,
       "id": "L14G-A08-SORCERER-ASI-CATALOG-ADMISSION",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Install Sorcerer level-4 ASI catalog admission"
     }
   ]
@@ -342,7 +342,7 @@ Verification:
 
 ### Task 8 - L14G-A08-SORCERER-ASI-CATALOG-ADMISSION
 
-Status: `ready-for-implementation`
+Status: `done`
 
 Depends on:
 
