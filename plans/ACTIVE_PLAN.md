@@ -31,7 +31,7 @@
     {
       "number": 5,
       "id": "L14G-05-GATE-CONSOLIDATION",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Regenerate and close the level 1-4 ultra-golden gate"
     },
     {
@@ -77,6 +77,10 @@ now landed:
   should own selected `monk_slow_fall` Reaction spend, `5 * Monk level`
   fall-damage reduction, and the coupled no-fall-damage/Falling-Prone
   prevention result.
+
+The serial consolidation lane is also complete. Fresh checker write passes left
+the generated Unit-profile and rules-kernel coverage artifacts unchanged, and
+the generated gate outputs report no pass-blocking residuals for level 1-4.
 
 Completed scope-construction tasks were intentionally removed from the Ralph
 task index. The live queue now starts at `L14G-01`; the deleted completed work
@@ -130,7 +134,7 @@ checks; the consolidation lane is serial after their outputs land.
 | C | `plans/RALPH_L14G_03_MONK_SLOW_FALL_TRIAGE.md` | L14G-03-MONK-SLOW-FALL-TRIAGE | ~1 day | done | RAW/domain decision lane for Slow Fall. It spawned the follow-up runtime slice below. |
 | C2 | `plans/RALPH_L14G_03_MONK_SLOW_FALL_TRIAGE.md` | L14G-03A-MONK-SLOW-FALL-RUNTIME | ~1 day | done | Promoted Slow Fall as a selected Monk falling Reaction damage-reduction slice without duplicating table/spatial falling state. |
 | D | `plans/RALPH_L14G_04_MCP_LEVEL14_SCENARIO_GATE.md` | L14G-04-MCP-LEVEL14-SCENARIO-GATE | ~1.5-2 days | done | Added MCP scenario evidence for level-4 advancement, sheet durability, and battle handoff. |
-| E | `plans/RALPH_L14G_05_GATE_CONSOLIDATION.md` | L14G-05-GATE-CONSOLIDATION | ~0.5 day | ready-for-implementation | Serial lane after A-D. Regenerates, reviews residuals, and updates this plan. |
+| E | `plans/RALPH_L14G_05_GATE_CONSOLIDATION.md` | L14G-05-GATE-CONSOLIDATION | ~0.5 day | done | Serial lane after A-D regenerated coverage, reviewed residuals, and updated this plan. |
 
 The per-lane files above are the Ralph launch sources for parallel runs. Each
 file has its own `ralph-task-index` block; completed research lanes may add
@@ -163,7 +167,7 @@ updates need to converge in one artifact.
 | 3 | L14G-03-MONK-SLOW-FALL-TRIAGE | done | none | Boundary decided as split; see `plans/unit-profile-coverage/L14G_03_MONK_SLOW_FALL_TRIAGE.md`. |
 | 4 | L14G-04-MCP-LEVEL14-SCENARIO-GATE | done | none | Checked MCP evidence added for all four level-1-4 required flows. |
 | 6 | L14G-03A-MONK-SLOW-FALL-RUNTIME | done | L14G-03 | Selected Monk falling Reaction damage-reduction slice implemented. |
-| 5 | L14G-05-GATE-CONSOLIDATION | ready-for-implementation | Tasks 1-4 and L14G-03A | Regenerate, review, and close remaining level-1-4 residuals. |
+| 5 | L14G-05-GATE-CONSOLIDATION | done | Tasks 1-4 and L14G-03A | Generated coverage is fresh; level-1-4 ultra-golden remains pass with no pass-blocking residuals. |
 
 ## Task Details
 
@@ -291,7 +295,7 @@ Acceptance:
 
 ### Task 5 - L14G-05-GATE-CONSOLIDATION
 
-Status: `ready-for-implementation`
+Status: `done`
 
 Depends on:
 
@@ -313,6 +317,21 @@ Acceptance:
 - `ULTRA_GOLDEN_GATE.md` reports level-1-4 with no stale or hand-maintained
   blocker text.
 - Any residual that prevents a pass is named by generated checker output.
+
+Result:
+
+- `pnpm unit-profile-coverage:check --write` and
+  `pnpm rules-kernel-coverage:check -- --write` completed without generated
+  artifact diffs.
+- `plans/unit-profile-coverage/ULTRA_GOLDEN_GATE.md` reports level 1, level
+  1-2, level 1-3, and level 1-4 as pass across all four layers.
+- `plans/unit-profile-coverage/LEVEL1_4_FULL_SUPPORT.md` reports strict target
+  closure `210/210`, selected identity readiness `169/169`, and SRD-authored
+  product readiness `84/84`, with zero gate blockers.
+- `plans/rules-kernel-coverage/REPORT.md` reports zero open QNT/generator or
+  parity obligations; the remaining six rules-kernel rows are boundary or
+  unsupported-by-admission rows, not open blockers.
+- No new Ralph follow-up lane was split from this consolidation pass.
 
 ## Verification
 
