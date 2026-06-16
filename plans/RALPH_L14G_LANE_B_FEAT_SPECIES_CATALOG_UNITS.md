@@ -49,7 +49,7 @@
     {
       "number": 8,
       "id": "L14G-B08-SPECIES-HUMAN",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Research and plan Human species and origin feat ownership"
     },
     {
