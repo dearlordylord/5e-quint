@@ -47,6 +47,12 @@ the target repo.
   domain concepts such as holes/fills, support-profile admission, character
   layer ownership, authored-identity separation, and Encounter Side into
   future QNT/task/harness pressure.
+- `QNT_DOMAIN_CONCEPTS_COVERAGE_AUDIT.md` — unreviewed draft audit of which
+  planned domain concepts are already source-owned QNT, source TS/MBT tied,
+  copied into cleanroom input, branch-selected, partial, or non-QNT remainder.
+- `QNT_DOMAIN_CONCEPTS_IMPLEMENTATION_RESEARCH.md` — unreviewed task-local
+  research for this harness-shaping task only. Do not use it as cleanroom
+  bootstrap input, reviewed harness guidance, or implementation authority.
 
 ## Rendering
 
