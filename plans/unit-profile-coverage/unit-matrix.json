@@ -14373,6 +14373,12 @@
       "taskId": "L12G-FOLLOWUP-DRUID-WILD-SHAPE-SHAPE-SHIFTING-RUNTIME"
     },
     {
+      "claimKind": "accepted-follow-up-split",
+      "note": "Task L14G-D05 closes the monolithic remaining Wild Shape battle-runtime follow-up by synchronizing the druid_wild_shape Unit claim and Lane D plan around five executable follow-up tasks: L12G-FOLLOWUP-DRUID-WILD-SHAPE-BEAST-SPELLS-CASTING, L12G-FOLLOWUP-DRUID-WILD-SHAPE-STAT-BLOCK-MULTI-DAMAGE, L12G-FOLLOWUP-DRUID-WILD-SHAPE-STAT-BLOCK-TRAIT-ADVANTAGE, L12G-FOLLOWUP-DRUID-WILD-SHAPE-STAT-BLOCK-ATTACK-HIT-RIDERS, and L12G-FOLLOWUP-DRUID-WILD-SHAPE-STAT-BLOCK-NON-ATTACK-ACTIONS. No new runtime profile is claimed by this closure task; the Unit remains profile-subset-supported and blocked by the executable split.",
+      "profileIds": [],
+      "taskId": "L12G-FOLLOWUP-DRUID-WILD-SHAPE-SHAPE-SHIFTING-RUNTIME"
+    },
+    {
       "claimKind": "qnt-proof",
       "note": "Promoted battle-runtime Quint facts cover Lesser Restoration's Bonus Action and level-2-or-higher Spell Slot spend, one touched target, and exact SRD choice removal for Blinded, Deafened, Paralyzed, or Poisoned while preserving unchosen condition effects.",
       "profileIds": [
@@ -18427,8 +18433,24 @@
       "claim": {
         "deferredMechanics": [
           {
-            "followUpTaskId": "L12G-FOLLOWUP-DRUID-WILD-SHAPE-SHAPE-SHIFTING-RUNTIME",
-            "mechanic": "Remaining Wild Shape battle execution beyond the promoted merged-equipment, fallen-equipment dropped-object, practical worn armor/Shield, D20 statistic, and perception/communication projection subsets: Beast Spells casting exceptions, unsupported Stat Block action sections, attack prose riders, multi-component damage, and Stat Block non-Attack actions."
+            "followUpTaskId": "L12G-FOLLOWUP-DRUID-WILD-SHAPE-BEAST-SPELLS-CASTING",
+            "mechanic": "Beast Spells casting while Wild Shape is active: level-18 exception to the pre-Beast-Spells no-spellcasting projection, excluding spells whose Material component has a specified cost or is consumed."
+          },
+          {
+            "followUpTaskId": "L12G-FOLLOWUP-DRUID-WILD-SHAPE-STAT-BLOCK-MULTI-DAMAGE",
+            "mechanic": "Stat Block attack damage with multiple damage components on one hit for selected Wild Shape Beast forms; runtime must preserve component order, type, and amount through existing damage resolution instead of flattening or dispatching on form identity."
+          },
+          {
+            "followUpTaskId": "L12G-FOLLOWUP-DRUID-WILD-SHAPE-STAT-BLOCK-TRAIT-ADVANTAGE",
+            "mechanic": "Trait-derived conditional attack-roll Advantage for Stat Block attacks used by Wild Shape forms; the action admission owner must parse and consume typed trait facts rather than Beast authored identity."
+          },
+          {
+            "followUpTaskId": "L12G-FOLLOWUP-DRUID-WILD-SHAPE-STAT-BLOCK-ATTACK-HIT-RIDERS",
+            "mechanic": "Attack-hit prose riders on Stat Block attacks used by Wild Shape forms, starting with condition or forced-movement riders that require typed hit-outcome payloads before action admission."
+          },
+          {
+            "followUpTaskId": "L12G-FOLLOWUP-DRUID-WILD-SHAPE-STAT-BLOCK-NON-ATTACK-ACTIONS",
+            "mechanic": "Stat Block action sections outside the currently admitted executable Attack shape for Wild Shape forms, including non-Attack actions and special action sections whose effect owners are not yet promoted."
           },
           {
             "battleReadinessClosure": {
@@ -18449,11 +18471,39 @@
         ],
         "followUpTasks": [
           {
-            "id": "L12G-FOLLOWUP-DRUID-WILD-SHAPE-SHAPE-SHIFTING-RUNTIME",
-            "mechanic": "Promote the remaining battle-owned Wild Shape execution after the current known-form subset: Beast Spells casting exceptions, unsupported Stat Block action sections, attack prose riders, multi-component damage, and Stat Block non-Attack actions. Generic object handling and non-battle active-form persistence are closed separately by their explicit owner boundaries.",
-            "owner": "battle-runtime, Stat Block action runtime, Beast Spells owner, and focused QNT/MBT parity",
-            "requiredOutput": "Supported Unit profile or narrower profile-subset with focused runtime tests, generated owner evidence, and promoted Quint/MBT parity for each admitted battle executable branch; otherwise leave each branch unpromoted with a precise blocked disposition.",
-            "title": "Druid Wild Shape Remaining Battle Shape-Shifting Runtime"
+            "id": "L12G-FOLLOWUP-DRUID-WILD-SHAPE-BEAST-SPELLS-CASTING",
+            "mechanic": "Allow spell invocation while active Wild Shape is present only for characters with Beast Spells and only for spells without priced or consumed Material components; keep pre-Beast-Spells no-spellcasting as the default shaped path.",
+            "owner": "battle-runtime spell invocation cast governor, Surface Spell Component reader, Wild Shape active-form gate, and focused QNT/runtime parity",
+            "requiredOutput": "Supported Unit profile or narrower profile-subset evidence with focused shaped-casting admission/rejection tests and parity if reducer spell-cast behavior changes.",
+            "title": "Druid Wild Shape Beast Spells Casting Exceptions"
+          },
+          {
+            "id": "L12G-FOLLOWUP-DRUID-WILD-SHAPE-STAT-BLOCK-MULTI-DAMAGE",
+            "mechanic": "Promote one-hit Stat Block attacks with multiple damage components for selected Wild Shape forms by preserving each component's type and amount through existing damage resolution.",
+            "owner": "battle-runtime Stat Block attack damage owner, rule-core damage model, and focused QNT/MBT parity",
+            "requiredOutput": "Focused Stat Block attack damage tests, generated owner evidence, and promoted Quint/MBT parity if damage reducer behavior changes.",
+            "title": "Druid Wild Shape Stat Block Multi-Component Attack Damage"
+          },
+          {
+            "id": "L12G-FOLLOWUP-DRUID-WILD-SHAPE-STAT-BLOCK-TRAIT-ADVANTAGE",
+            "mechanic": "Promote typed trait-derived conditional attack-roll Advantage for supported Stat Block attacks used by Wild Shape forms, with caller witnesses for table-owned predicates.",
+            "owner": "battle-runtime Stat Block trait/admission owner and attack-roll mode owner",
+            "requiredOutput": "Focused admission/reducer tests proving typed trait facts are consumed without Beast authored-identity dispatch; parity if attack-roll reducer behavior changes.",
+            "title": "Druid Wild Shape Stat Block Trait-Derived Attack Advantage"
+          },
+          {
+            "id": "L12G-FOLLOWUP-DRUID-WILD-SHAPE-STAT-BLOCK-ATTACK-HIT-RIDERS",
+            "mechanic": "Inventory and split attack-hit prose riders on Stat Block attacks into typed rider-destination slices before admitting host attacks for Wild Shape forms.",
+            "owner": "battle-runtime Stat Block attack-hit rider owner, condition/movement owners, and focused QNT/runtime parity",
+            "requiredOutput": "One or more narrower executable rider tasks with focused runtime evidence, or promoted rider slices with generated owner evidence and parity where reducer behavior changes.",
+            "title": "Druid Wild Shape Stat Block Attack-Hit Riders"
+          },
+          {
+            "id": "L12G-FOLLOWUP-DRUID-WILD-SHAPE-STAT-BLOCK-NON-ATTACK-ACTIONS",
+            "mechanic": "Inventory non-Attack and special Stat Block action sections reachable through Wild Shape forms and split each executable effect shape to its generic action procedure owner.",
+            "owner": "battle-runtime Stat Block action runtime and per-effect procedure owners",
+            "requiredOutput": "Concrete per-action-shape follow-up tasks or promoted focused slices; prose-only and table-owned actions remain unpromoted with explicit closure reasons.",
+            "title": "Druid Wild Shape Stat Block Non-Attack Actions"
           }
         ],
         "profileIds": [
