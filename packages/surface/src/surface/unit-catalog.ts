@@ -55,6 +55,7 @@ import calmEmotionsInput from "../../content/calm_emotions.json";
 import charmPersonInput from "../../content/charm_person.json";
 import chillTouchInput from "../../content/chill_touch.json";
 import chromaticOrbInput from "../../content/chromatic_orb.json";
+import clericAbilityScoreImprovementL4Input from "../../content/cleric_ability_score_improvement_l4.json";
 import clericChannelDivinityInput from "../../content/cleric_channel_divinity.json";
 import clericDiscipleOfLifeInput from "../../content/cleric_disciple_of_life.json";
 import clericDivineOrderInput from "../../content/cleric_divine_order.json";
@@ -454,6 +455,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     bardExpertiseInput,
     bardJackOfAllTradesInput,
     bardAbilityScoreImprovementL4Input,
+    clericAbilityScoreImprovementL4Input,
     clericChannelDivinityInput,
     clericDiscipleOfLifeInput,
     clericDivineOrderInput,

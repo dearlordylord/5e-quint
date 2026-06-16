@@ -134,6 +134,24 @@ describe("character-creation Surface records", () => {
     });
   });
 
+  test("decodes and reads Cleric level 4 Ability Score Improvement grant", () => {
+    const classRecord = decodeClassRecordSync(classClericInput);
+    const unit = decodeUnitRecordSync(classClericInput);
+    const result = readClassCreationFacts(unit);
+
+    expect(classRecord.kind).toBe("class");
+    expect(result).toMatchObject({
+      tag: "readable",
+      value: {
+        recordId: "class_cleric",
+        className: "cleric",
+        featureGrants: expect.arrayContaining([
+          { level: 4, unitId: "cleric_ability_score_improvement_l4" },
+        ]),
+      },
+    });
+  });
+
   test("decodes and reads Fighter class creation facts", () => {
     const classRecord = decodeClassRecordSync(classFighterInput);
     const unit = decodeUnitRecordSync(classFighterInput);

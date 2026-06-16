@@ -18,7 +18,7 @@ Blockers: strict=0, selected-identity=0, SRD-authored-readiness=0.
 | Strict target closure | 210/210 (100%) |
 | Selected identity readiness | 169/169 (100%) |
 | Diagnostic product readiness | 619/632 (97.9%) |
-| SRD authored product readiness | 86/86 (100%) |
+| SRD authored product readiness | 87/87 (100%) |
 | Rules-kernel profile join | 103/103 (100%) |
 | Rules-kernel covered profile join | 103/103 (100%) |
 | Supported Unit rules-kernel chain | 141/141 (100%) |
@@ -60,7 +60,7 @@ This is the selected-identity gate layer for the strict denominator. `witness-pr
 | --- | --- | ---: | --- |
 | Strict runtime/profile closure | pass | 210/210 (100%) | _none_ |
 | Selected identity readiness | pass | 169/169 (100%) | _none_ |
-| SRD authored product readiness | pass | 86/86 (100%) | _none_ |
+| SRD authored product readiness | pass | 87/87 (100%) | _none_ |
 
 Every gate row must pass for a full level-support claim. A 100% result in one layer does not satisfy another layer, failed gates are not combined into a weighted completion percentage, and diagnostic product-readiness rows are intentionally absent from this gate unless they enter the SRD-authored blocker set.
 
@@ -75,7 +75,7 @@ This gate checks authored records and retained Unit references that must resolve
 | SRD background concrete equipment refs | complete | 4/4 (100%) | Every concrete Unit ref in SRD background starting equipment must resolve through the Unit catalog. |
 | SRD species records | complete | 6/6 (100%) | Every SRD species selectable at character creation must be installed. |
 | SRD species trait refs | complete | 11/11 (100%) | Every finalized species trait ref must resolve through the Unit catalog before character-to-battle admission can be claimed. |
-| SRD class feature grants through level 4 | complete | 53/53 (100%) | Every level-scoped class feature grant retained by finalization must resolve through the Unit catalog. |
+| SRD class feature grants through level 4 | complete | 54/54 (100%) | Every level-scoped class feature grant retained by finalization must resolve through the Unit catalog. |
 | SRD class concrete equipment refs | complete | 0/0 (n/a) | Every concrete Unit ref in SRD class starting equipment must resolve through the Unit catalog. |
 | Unique SRD concrete equipment refs | complete | 4/4 (100%) | Unique concrete weapon, armor, and shield Unit refs reachable from SRD starting equipment. |
 
@@ -143,7 +143,7 @@ This gate checks authored records and retained Unit references that must resolve
 | `bard_bonus_proficiencies` | closed-outside-battle-runtime-boundary | unsupported-profile | not-required | not-in-unit-catalog | outside-battle-runtime | The feature grants durable skill proficiency choices on the Character Sheet. Character creation already owns generic class-feature proficiency-choice discovery and finalization, while this absent subclass feature is not a promoted battle-runtime Unit profile. |
 | `calm_emotions` | closed-runtime-detached-table-adjudication | profile-subset-supported | witness-present | installed | social-knowledge-effect | Attitude is social monster disposition rather than battle-owned condition state; the runtime has no per-creature attitude relationship model. |
 | `charm_person` | closed-runtime-detached-table-adjudication | profile-subset-supported | witness-present | installed | social-knowledge-effect | Friendly disposition, the Charmed condition's Social Advantage, social interaction adjudication, and target knowledge when the spell ends are social/knowledge facts outside promoted battle runtime state. |
-| `cleric_ability_score_improvement_l4` | closed-selection-grant-container | unsupported-profile | not-required | not-in-unit-catalog | selection-grant-container | The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim. |
+| `cleric_ability_score_improvement_l4` | closed-selection-grant-container | unsupported-profile | not-required | installed | selection-grant-container | The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim. |
 | `comprehend_languages` | closed-runtime-detached-table-adjudication | unsupported-profile | not-required | not-in-unit-catalog | outside-runtime-presentation-exploration | Language comprehension and secret-message adjudication are table-owned communication facts outside promoted battle runtime. |
 | `continual_flame` | closed-outside-battle-runtime-boundary | profile-subset-supported | witness-present | installed | outside-battle-runtime, outside-runtime-presentation-exploration | SRD component rules require the costly consumed Material component for Continual Flame. Promoted battle runtime spends the Magic Action and Spell Slot and records battle-visible spell effects; inventory, hand access, focus/component substitution eligibility, and costly consumed Material component consumption belong to the character equipment/component legality boundary. No battle-runtime component stock, component-spend ledger, or copied inventory field should be added for this residual.; Promoted battle runtime consumes object light and opaque-cover facts; it does not render flame appearance, object covering/hiding, heat, fuel, smothering, or quenching presentation facts. |
 | `darkness` | closed-runtime-detached-table-adjudication | profile-subset-supported | witness-present | installed | table-spatial-derivation | Darkness's object-origin branch requires selecting an unworn/un-carried object, deriving a 15-foot Emanation from that object, moving the Emanation with the object, and deciding opaque-cover blocking. The existing runtime can consume caller-supplied point-area and light-emitter projection witnesses, but it does not own object position, object movement, cover, area membership, sight-line, or map-illumination state. Adding those facts only for Darkness would duplicate table/map object lifecycle state. |

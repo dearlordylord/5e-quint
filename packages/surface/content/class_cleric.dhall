@@ -23,10 +23,11 @@ let cleric =
         { categories = [ "light", "medium", "shield" ], kind = "trained" }
       , className = "cleric"
       , description =
-          "SRD Cleric class creation and early progression facts for a level 1-2 character, including class-list prepared Spell Access, Spell Slots, spellcasting focus facts, and level 1-2 class feature grants."
+          "SRD Cleric class creation and early progression facts, including class-list prepared Spell Access, Spell Slots, spellcasting focus facts, level 1-2 class feature grants, and the level 4 Ability Score Improvement feature grant."
       , featureGrants =
         [ { level = 1, unitId = "cleric_divine_order" }
         , { level = 2, unitId = "cleric_channel_divinity" }
+        , { level = 4, unitId = "cleric_ability_score_improvement_l4" }
         ]
       , hitPointDie = 8
       , id = "class_cleric"
@@ -42,7 +43,7 @@ let cleric =
       , name = "Cleric"
       , primaryAbilities = { abilities = [ "wis" ], kind = "all_of" }
       , provenance =
-        { kind = "srd-5.2.1", section = "Classes/Cleric.md:3-24,33-98,142-179" }
+        { kind = "srd-5.2.1", section = "Classes/Cleric.md:3-24,33-109,142-179" }
       , savingThrowProficiencies = [ "wis", "cha" ]
       , skillProficiencyChoice =
         { choose = 2
