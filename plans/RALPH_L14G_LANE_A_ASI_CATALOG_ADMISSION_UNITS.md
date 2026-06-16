@@ -19,7 +19,7 @@
     {
       "number": 3,
       "id": "L14G-A03-CLERIC-ASI-CATALOG-ADMISSION",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Install Cleric level-4 ASI catalog admission"
     },
     {
@@ -175,7 +175,7 @@ Verification:
 
 ### Task 3 - L14G-A03-CLERIC-ASI-CATALOG-ADMISSION
 
-Status: `ready-for-implementation`
+Status: `done`
 
 Depends on:
 
