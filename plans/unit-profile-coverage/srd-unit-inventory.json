@@ -210,9 +210,7 @@
         "srd521:classes/wizard:level-1:class-feature-grant:wizard_ritual_adept runtimeProjection evidence reference points to missing symbol spellbookRitualAccessFeatureForBuild: packages/character-sheet-runtime/src/index.ts:spellbookRitualAccessFeatureForBuild",
         "srd521:classes/wizard:level-1:class-feature-grant:wizard_arcane_recovery tests evidence reference must identify a test name symbol used by test()/it(): packages/character-sheet-runtime/src/rests.test.ts:wizardBuild",
         "srd521:classes/wizard:level-1:class-feature-grant:wizard_arcane_recovery tests evidence reference must identify a test name symbol used by test()/it(): packages/character-sheet-runtime/src/rests.test.ts:wizardWarlockBuild",
-        "srd521:classes/wizard:level-1:class-feature-grant:wizard_arcane_recovery tests evidence reference must identify a test name symbol used by test()/it(): packages/character-sheet-runtime/src/armor-class.test.ts:expectRight",
-        "srd521:classes/warlock:level-2:class-feature-grant:warlock_magical_cunning tests evidence reference must identify a test name symbol used by test()/it(): packages/character-sheet-runtime/src/rests.test.ts:warlockMagicalCunningBuild",
-        "srd521:classes/warlock:level-2:class-feature-grant:warlock_magical_cunning tests evidence reference must identify a test name symbol used by test()/it(): packages/character-sheet-runtime/src/rests.test.ts:requireRight"
+        "srd521:classes/wizard:level-1:class-feature-grant:wizard_arcane_recovery tests evidence reference must identify a test name symbol used by test()/it(): packages/character-sheet-runtime/src/armor-class.test.ts:expectRight"
       ]
     },
     "sharedAlgebraOwnerEvidence": {
@@ -241,35 +239,35 @@
     },
     "levelOneTwoBattleReadiness": {
       "denominator": 400,
-      "numerator": 397,
-      "percent": "99.3%",
+      "numerator": 398,
+      "percent": "99.5%",
       "rowsByStatus": {
-        "accepted": 298,
+        "accepted": 299,
         "accepted-no-battle-effect": 99,
         "partial-battle-runtime": 1,
-        "owner-evidence-required": 2
+        "owner-evidence-required": 1
       }
     },
     "levelOneThreeBattleReadiness": {
       "denominator": 607,
-      "numerator": 604,
-      "percent": "99.5%",
+      "numerator": 605,
+      "percent": "99.7%",
       "rowsByStatus": {
-        "accepted": 444,
+        "accepted": 445,
         "accepted-no-battle-effect": 160,
         "partial-battle-runtime": 1,
-        "owner-evidence-required": 2
+        "owner-evidence-required": 1
       }
     },
     "levelOneFourBattleReadiness": {
       "denominator": 632,
-      "numerator": 629,
-      "percent": "99.5%",
+      "numerator": 630,
+      "percent": "99.7%",
       "rowsByStatus": {
-        "accepted": 445,
+        "accepted": 446,
         "accepted-no-battle-effect": 184,
         "partial-battle-runtime": 1,
-        "owner-evidence-required": 2
+        "owner-evidence-required": 1
       }
     },
     "levelThreeClassBattleReadiness": {
@@ -307,10 +305,9 @@
       "non-runtime": 12
     },
     "levelTwoRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 19,
+      "catalog-installed-owner-evidence-present": 20,
       "non-runtime": 12,
-      "catalog-installed-needs-owner-evidence": 1,
-      "catalog-installed-owner-evidence-required": 1
+      "catalog-installed-needs-owner-evidence": 1
     },
     "levelThreeClassRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 37,
@@ -333,13 +330,12 @@
       "character-creation or progression mechanic": 12
     },
     "allRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 474,
+      "catalog-installed-owner-evidence-present": 475,
       "non-runtime": 48,
       "catalog-only/dead-for-now": 145,
       "missing-authored-record": 58,
       "catalog-authored-review-required": 33,
-      "catalog-installed-needs-owner-evidence": 1,
-      "catalog-installed-owner-evidence-required": 1
+      "catalog-installed-needs-owner-evidence": 1
     },
     "spellPressureRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 249,
@@ -28269,7 +28265,7 @@
         "unitId": "warlock_magical_cunning"
       },
       "unitProfileDisposition": "supported-profile",
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -28278,12 +28274,12 @@
         },
         {
           "owner": "character-sheet-runtime",
-          "evidence": "character-sheet-runtime: Add checker-readable character-sheet owner evidence before treating this level-2 class feature as operationally supported.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/character-sheet-owner-evidence.json records row-level runtime projection evidence; L12G-AUTHOR-WARLOCK-MAGICAL-CUNNING Character Sheet Pact Slot recovery runtime; Warlock Magical Cunning is read from the installed Surface class-feature record and applied by the Character Sheet runtime as a completed 1-minute rite that recovers expended Pact Slots from the existing Pact Magic slot pool. The runtime enforces Warlock level 2 feature ownership, requires expended Pact Slots, recovers no more than half the Pact Slot maximum rounded up, records once-per-Long-Rest use state, and clears that use state on Long Rest while the existing Pact Slot rest path restores the pool.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "character-sheet-runtime: Add checker-readable character-sheet owner evidence before treating this level-2 class feature as operationally supported.",
-      "battleReadinessStatus": "owner-evidence-required"
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/warlock:level-2:class-table-summary:warlock_level_2_feature_table_row",

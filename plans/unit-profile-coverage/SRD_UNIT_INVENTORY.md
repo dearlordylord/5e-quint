@@ -33,39 +33,39 @@ This is the default `%` for level-1 readiness questions. A row counts only when 
 
 This is the default `%` for character-level-1 plus character-level-2 readiness questions. It uses the same acceptance rules as the level-1 metric, but includes character-level-2 class-feature rows. It deliberately excludes spell-level-2 pressure.
 
-- Accepted: 397/400 (99.3%)
+- Accepted: 398/400 (99.5%)
 
 #### Character Levels 1-2 Battle Readiness by Status
 
-- accepted: 298
+- accepted: 299
 - accepted-no-battle-effect: 99
-- owner-evidence-required: 2
+- owner-evidence-required: 1
 - partial-battle-runtime: 1
 
 ### Expanded Progress Metric: Character Levels 1-3 Battle Readiness
 
 This is the default `%` for character-level-1 through character-level-3 readiness questions. It includes character-level-3 class/subclass rows and spell-level-2 pressure. It deliberately excludes spell-level-3 pressure.
 
-- Accepted: 604/607 (99.5%)
+- Accepted: 605/607 (99.7%)
 
 #### Character Levels 1-3 Battle Readiness by Status
 
-- accepted: 444
+- accepted: 445
 - accepted-no-battle-effect: 160
-- owner-evidence-required: 2
+- owner-evidence-required: 1
 - partial-battle-runtime: 1
 
 ### Expanded Progress Metric: Character Levels 1-4 Battle Readiness
 
 This is the default `%` for character-level-1 through character-level-4 readiness questions. It includes character-level-4 class-feature rows and spell-level-2 pressure. It deliberately excludes spell-level-3 pressure, which first enters the character-level-5 frontier for full casters.
 
-- Accepted: 629/632 (99.5%)
+- Accepted: 630/632 (99.7%)
 
 #### Character Levels 1-4 Battle Readiness by Status
 
-- accepted: 445
+- accepted: 446
 - accepted-no-battle-effect: 184
-- owner-evidence-required: 2
+- owner-evidence-required: 1
 - partial-battle-runtime: 1
 
 ### Level-3 Class/Subclass Battle Readiness
@@ -111,8 +111,7 @@ This metric is a separate seed for spell-level-3 pressure only. It belongs to th
 ### Level-2 Rows by Disposition
 
 - catalog-installed-needs-owner-evidence: 1
-- catalog-installed-owner-evidence-present: 19
-- catalog-installed-owner-evidence-required: 1
+- catalog-installed-owner-evidence-present: 20
 - non-runtime: 12
 
 ### Level-3 Class/Subclass Rows by Disposition
@@ -448,7 +447,7 @@ These batches are generated planning recommendations for a separate SRD inventor
 |Sorcerer Font of Magic|class feature||current-surface-can-express-source-facts|authored-record-present|installed|profile-subset-supported|catalog-installed-owner-evidence-present|accepted|profile-subset-remaining-mechanics-closed: Character Sheet Font of Magic conversion state plus Character Battle aggregate Spell Slot handoff|Unit catalog/admission: catalog evidence; character-creation-runtime: owner evidence present; character-sheet-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Sorcerer.md:87|
 |Sorcerer Metamagic|class feature||current-surface-can-express-source-facts|authored-record-present|installed|profile-subset-supported|catalog-installed-needs-owner-evidence|owner-evidence-required||Unit catalog/admission: catalog-only evidence; operational owner evidence still required|Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only.|.references/srd-5.2.1/Classes/Sorcerer.md:111|
 |Sorcerer level 2 feature table row|character-creation or progression mechanic|non-runtime-table-summary|outside-surface-runtime-mechanics|authored-record-present|installed|unsupported-profile|non-runtime|accepted-no-battle-effect|||No runtime work; keep classification as explicit closure.|.references/srd-5.2.1/Classes/Sorcerer.md:36|
-|Warlock Magical Cunning|class feature||current-surface-can-express-source-facts|authored-record-present|installed|supported-profile|catalog-installed-owner-evidence-required|owner-evidence-required||Unit catalog/admission: catalog evidence; character-sheet-runtime: owner evidence required|character-sheet-runtime: Add checker-readable character-sheet owner evidence before treating this level-2 class feature as operationally supported.|.references/srd-5.2.1/Classes/Warlock.md:92|
+|Warlock Magical Cunning|class feature||current-surface-can-express-source-facts|authored-record-present|installed|supported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; character-sheet-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Warlock.md:92|
 |Warlock level 2 feature table row|character-creation or progression mechanic|non-runtime-table-summary|outside-surface-runtime-mechanics|authored-record-present|installed|unsupported-profile|non-runtime|accepted-no-battle-effect|||No runtime work; keep classification as explicit closure.|.references/srd-5.2.1/Classes/Warlock.md:36|
 |Wizard Scholar|class feature||current-surface-can-express-source-facts|authored-record-present|installed|supported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; character-creation-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Wizard.md:104|
 |Wizard level 2 feature table row|character-creation or progression mechanic|non-runtime-table-summary|outside-surface-runtime-mechanics|authored-record-present|installed|unsupported-profile|non-runtime|accepted-no-battle-effect|||No runtime work; keep classification as explicit closure.|.references/srd-5.2.1/Classes/Wizard.md:36|

@@ -49,6 +49,13 @@ import type {
   CharacterSheetWeaponMasteryReselection
 } from "./test-support.ts";
 
+const magicalCunningPactSlotRecoveryTestName =
+  "Magical Cunning completed 1-minute rite recovers half rounded up expended Pact Slots once per Long Rest and resets on Long Rest";
+const magicalCunningRoundUpTestName =
+  "Magical Cunning rounds a three-slot Pact Magic maximum up";
+const magicalCunningFeatureOwnershipTestName =
+  "Magical Cunning requires Warlock level 2 feature ownership";
+
 describe("Character Sheet runtime / rests", () => {
   test("rest start gates keep calendar wait separate from rest benefits", () => {
     const sheet = requireRight(
@@ -834,7 +841,7 @@ describe("Character Sheet runtime / rests", () => {
     });
   });
 
-  test("Magical Cunning recovers half rounded up expended Pact Slots once per Long Rest", () => {
+  test(magicalCunningPactSlotRecoveryTestName, () => {
     const sheet = requireRight(
       createFreshCharacterSheet({
         characterId: characterSheetId("character:magical-cunning"),
@@ -884,7 +891,7 @@ describe("Character Sheet runtime / rests", () => {
     expect(rested.restFeatureUses).toEqual([]);
   });
 
-  test("Magical Cunning rounds a three-slot Pact Magic maximum up", () => {
+  test(magicalCunningRoundUpTestName, () => {
     const sheet = requireRight(
       createFreshCharacterSheet({
         characterId: characterSheetId("character:magical-cunning-round-up"),
@@ -912,7 +919,7 @@ describe("Character Sheet runtime / rests", () => {
     });
   });
 
-  test("Magical Cunning requires Warlock level 2 feature ownership", () => {
+  test(magicalCunningFeatureOwnershipTestName, () => {
     const sheet = requireRight(
       createFreshCharacterSheet({
         characterId: characterSheetId("character:magical-cunning-level-one"),

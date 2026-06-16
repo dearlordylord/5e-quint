@@ -392,8 +392,9 @@
         "packages/character-sheet-runtime/src/rests.ts:completeLongRest"
       ],
       "tests": [
-        "packages/character-sheet-runtime/src/rests.test.ts:warlockMagicalCunningBuild",
-        "packages/character-sheet-runtime/src/rests.test.ts:requireRight"
+        "packages/character-sheet-runtime/src/rests.test.ts:magicalCunningPactSlotRecoveryTestName",
+        "packages/character-sheet-runtime/src/rests.test.ts:magicalCunningRoundUpTestName",
+        "packages/character-sheet-runtime/src/rests.test.ts:magicalCunningFeatureOwnershipTestName"
       ]
     },
     "srd521:classes/barbarian:level-3:class-feature-grant:barbarian_primal_knowledge": {
