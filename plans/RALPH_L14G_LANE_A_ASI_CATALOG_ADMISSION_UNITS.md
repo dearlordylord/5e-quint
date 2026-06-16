@@ -7,7 +7,7 @@
     {
       "number": 1,
       "id": "L14G-A01-BARBARIAN-ASI-CATALOG-ADMISSION",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Install Barbarian level-4 ASI catalog admission"
     },
     {
@@ -105,7 +105,7 @@ explicit rather than accidental.
 
 ### Task 1 - L14G-A01-BARBARIAN-ASI-CATALOG-ADMISSION
 
-Status: `ready-for-implementation`
+Status: `done`
 
 Depends on:
 
