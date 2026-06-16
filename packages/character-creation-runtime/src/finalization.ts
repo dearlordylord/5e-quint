@@ -3,6 +3,7 @@
 // KERNEL-COVERAGE: runtime-owner CREATION.CLASS_FEATURE_OPTION.PROJECTION CREATION.SKILL_EXPERTISE.CHOICE_FINALIZATION
 // KERNEL-COVERAGE: runtime-owner CREATION.CLASS_FEATURE_RESOURCE.PROJECTION
 // KERNEL-COVERAGE: runtime-owner SHEET.HIT_POINTS.MAXIMUM_DERIVATION
+// KERNEL-COVERAGE: runtime-owner CHARACTER.LIFECYCLE.LAYER_PROJECTION
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.class-feature-prepared-spell-access
 // UNIT-PROFILE-COVERAGE: runtime-owner character-creation.wizard-spellbook-learning-choice
 // UNIT-PROFILE-COVERAGE: runtime-owner character-creation.hit-point-maximum-projection unit-feature.hunters-prey

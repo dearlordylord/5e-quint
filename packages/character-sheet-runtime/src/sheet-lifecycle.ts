@@ -1,3 +1,4 @@
+// KERNEL-COVERAGE: runtime-owner CHARACTER.LIFECYCLE.LAYER_PROJECTION
 import {
   characterBuildMonkUncannyMetabolismFacts,
   type CharacterBuild,

@@ -1,7 +1,7 @@
 {
   "summary": {
-    "total": 120,
-    "covered": 114,
+    "total": 121,
+    "covered": 115,
     "open": 0,
     "nonSemantic": 6,
     "byRuntime": {
@@ -9,10 +9,10 @@
       "battle": 90,
       "character-creation": 14,
       "character-sheet": 12,
-      "character-battle": 3
+      "character-battle": 4
     },
     "byStatus": {
-      "covered": 114,
+      "covered": 115,
       "needs-qnt-owner": 0,
       "needs-parity-witness": 0,
       "needs-surface-evidence": 0,
@@ -3489,6 +3489,43 @@
         "ASSUMPTIONS.md#a27-active-wild-shape-does-not-cross-the-character-sheet-handoff-boundary"
       ],
       "title": "Character battle handoff identity, max-HP drift, active Wild Shape, and zero-HP lifecycle conflict handling"
+    },
+    {
+      "id": "CHARACTER.LIFECYCLE.LAYER_PROJECTION",
+      "kind": "composition",
+      "parityWitnesses": [
+        {
+          "deterministicReplayRationale": "The lifecycle witness is a closed composition replay over existing owners rather than a new rules reducer: one legal Draft is filled and finalized into a CharacterBuild, projected into a fresh Character Sheet, projected through characterSheetBattleInit/startBattle, mutated by one public Skeleton Shortsword attack resolution, and settled back to the sheet. The QNT stores only typed lifecycle layer variants and high-signal projections, while detailed creation, sheet HP/resource, battle-init, reducer, and settlement semantics stay with their focused owners. Random traces would duplicate those owners; the portability risk here is that the source-visible layer sequence remains explicit and the public API handoffs continue to compose.",
+          "kind": "deterministic-qnt-replay",
+          "ownerPath": "packages/character-battle-runtime/src/character-layer-projection-lifecycle.mbt.test.ts",
+          "qntSpecPath": "packages/character-battle-runtime/character-layer-projection-lifecycle.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profiles": [],
+      "qntOwners": [
+        "packages/character-battle-runtime/character-layer-projection-lifecycle.mbt.qnt"
+      ],
+      "runtime": "character-battle",
+      "runtimeOwners": [
+        "packages/character-creation-runtime/src/fill-reducer.ts",
+        "packages/character-creation-runtime/src/finalization.ts",
+        "packages/character-sheet-runtime/src/sheet-lifecycle.ts",
+        "packages/character-battle-runtime/src/index.ts",
+        "packages/battle-runtime/src/battle-reducer/api-lifecycle.ts",
+        "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
+        "packages/battle-runtime/src/battle-reducer/dispatcher.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Character-Creation.md#Create Your Character",
+        ".references/srd-5.2.1/Character-Creation.md#Step 5: Fill in Details",
+        ".references/srd-5.2.1/Rules-Glossary.md#Character Sheet",
+        ".references/srd-5.2.1/Playing-the-Game.md#The Order of Combat",
+        ".references/srd-5.2.1/Playing-the-Game.md#Hit Points",
+        ".references/srd-5.2.1/Spells/Gaining-and-Casting.md#Spell Slots"
+      ],
+      "title": "Character lifecycle projection from Draft to Build to Character Sheet to battle initialization, battle runtime, and settlement"
     },
     {
       "id": "BATTLE.PROTOCOL.MALFORMED_PAYLOAD_REJECTION",
@@ -7811,6 +7848,14 @@
         "CHARACTER.BATTLE.HANDOFF.INIT_PROJECTION"
       ],
       "ownerPath": "packages/character-battle-runtime/character-battle-init-projection.mbt.qnt",
+      "role": "mbt-fixture"
+    },
+    {
+      "evidence": "packages/character-battle-runtime/character-layer-projection-lifecycle.mbt.qnt is a bounded lifecycle composition replay fixture; detailed Draft, Build, Sheet, battle init, battle reducer, and settlement semantics remain owned by their focused QNT and runtime slices.",
+      "obligationIds": [
+        "CHARACTER.LIFECYCLE.LAYER_PROJECTION"
+      ],
+      "ownerPath": "packages/character-battle-runtime/character-layer-projection-lifecycle.mbt.qnt",
       "role": "mbt-fixture"
     },
     {
