@@ -2557,12 +2557,7 @@
       "unitId": "silent_image"
     },
     {
-      "catalogDisposition": {
-        "category": "unsupported-widening-pressure",
-        "planningLane": "QMBT18",
-        "reason": "Executable SRD authored data is absent from the catalog and needs an explicit unsupported profile or surface-widening slice."
-      },
-      "catalogStatus": "not-in-unit-catalog",
+      "catalogStatus": "installed",
       "claimTag": "unsupported-profile",
       "closureKinds": [
         "selection-grant-container"
@@ -10639,8 +10634,8 @@
         "group": "level-scoped-class-feature-grants",
         "label": "SRD class feature grants through level 4",
         "metrics": {
-          "denominator": 58,
-          "numerator": 58,
+          "denominator": 59,
+          "numerator": 59,
           "percent": "100%"
         },
         "rows": [
@@ -11096,6 +11091,15 @@
           },
           {
             "kind": "class_feature",
+            "ownerUnitId": "class_sorcerer",
+            "ready": true,
+            "relation": "class.featureGrants.level-4",
+            "sourceRecordPath": "packages/surface/content/sorcerer_ability_score_improvement_l4.json",
+            "status": "installed",
+            "unitId": "sorcerer_ability_score_improvement_l4"
+          },
+          {
+            "kind": "class_feature",
             "ownerUnitId": "class_warlock",
             "ready": true,
             "relation": "class.featureGrants.level-1",
@@ -11168,7 +11172,7 @@
           }
         ],
         "rowsByStatus": {
-          "installed": 58
+          "installed": 59
         }
       },
       {
@@ -11245,8 +11249,8 @@
       }
     ],
     "metrics": {
-      "denominator": 91,
-      "numerator": 91,
+      "denominator": 92,
+      "numerator": 92,
       "percent": "100%"
     },
     "openBlockerCount": 0

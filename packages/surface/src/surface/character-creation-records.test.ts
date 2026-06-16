@@ -225,6 +225,24 @@ describe("character-creation Surface records", () => {
     });
   });
 
+  test("decodes and reads Sorcerer level 4 Ability Score Improvement grant", () => {
+    const classRecord = decodeClassRecordSync(classSorcererInput);
+    const unit = decodeUnitRecordSync(classSorcererInput);
+    const result = readClassCreationFacts(unit);
+
+    expect(classRecord.kind).toBe("class");
+    expect(result).toMatchObject({
+      tag: "readable",
+      value: {
+        recordId: "class_sorcerer",
+        className: "sorcerer",
+        featureGrants: expect.arrayContaining([
+          { level: 4, unitId: "sorcerer_ability_score_improvement_l4" },
+        ]),
+      },
+    });
+  });
+
   test("decodes and reads Fighter class creation facts", () => {
     const classRecord = decodeClassRecordSync(classFighterInput);
     const unit = decodeUnitRecordSync(classFighterInput);

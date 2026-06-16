@@ -253,6 +253,7 @@ import scorchingRayInput from "../../content/scorching_ray.json";
 import seeInvisibilityInput from "../../content/see_invisibility.json";
 import searingSmiteInput from "../../content/searing_smite.json";
 import suggestionInput from "../../content/suggestion.json";
+import sorcererAbilityScoreImprovementL4Input from "../../content/sorcerer_ability_score_improvement_l4.json";
 import sorcererDraconicSpellsInput from "../../content/sorcerer_draconic_spells.json";
 import sorcererDraconicResilienceInput from "../../content/sorcerer_draconic_resilience.json";
 import sorcererFontOfMagicInput from "../../content/sorcerer_font_of_magic.json";
@@ -498,6 +499,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     sorcererInnateSorceryInput,
     sorcererFontOfMagicInput,
     sorcererMetamagicInput,
+    sorcererAbilityScoreImprovementL4Input,
     sorcererDraconicResilienceInput,
     sorcererDraconicSpellsInput,
     warlockEldritchInvocationsInput,

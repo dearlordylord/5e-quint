@@ -18,7 +18,7 @@ Blockers: strict=0, selected-identity=0, SRD-authored-readiness=0.
 | Strict target closure | 210/210 (100%) |
 | Selected identity readiness | 169/169 (100%) |
 | Diagnostic product readiness | 619/632 (97.9%) |
-| SRD authored product readiness | 91/91 (100%) |
+| SRD authored product readiness | 92/92 (100%) |
 | Rules-kernel profile join | 103/103 (100%) |
 | Rules-kernel covered profile join | 103/103 (100%) |
 | Supported Unit rules-kernel chain | 141/141 (100%) |
@@ -60,7 +60,7 @@ This is the selected-identity gate layer for the strict denominator. `witness-pr
 | --- | --- | ---: | --- |
 | Strict runtime/profile closure | pass | 210/210 (100%) | _none_ |
 | Selected identity readiness | pass | 169/169 (100%) | _none_ |
-| SRD authored product readiness | pass | 91/91 (100%) | _none_ |
+| SRD authored product readiness | pass | 92/92 (100%) | _none_ |
 
 Every gate row must pass for a full level-support claim. A 100% result in one layer does not satisfy another layer, failed gates are not combined into a weighted completion percentage, and diagnostic product-readiness rows are intentionally absent from this gate unless they enter the SRD-authored blocker set.
 
@@ -75,7 +75,7 @@ This gate checks authored records and retained Unit references that must resolve
 | SRD background concrete equipment refs | complete | 4/4 (100%) | Every concrete Unit ref in SRD background starting equipment must resolve through the Unit catalog. |
 | SRD species records | complete | 6/6 (100%) | Every SRD species selectable at character creation must be installed. |
 | SRD species trait refs | complete | 11/11 (100%) | Every finalized species trait ref must resolve through the Unit catalog before character-to-battle admission can be claimed. |
-| SRD class feature grants through level 4 | complete | 58/58 (100%) | Every level-scoped class feature grant retained by finalization must resolve through the Unit catalog. |
+| SRD class feature grants through level 4 | complete | 59/59 (100%) | Every level-scoped class feature grant retained by finalization must resolve through the Unit catalog. |
 | SRD class concrete equipment refs | complete | 0/0 (n/a) | Every concrete Unit ref in SRD class starting equipment must resolve through the Unit catalog. |
 | Unique SRD concrete equipment refs | complete | 4/4 (100%) | Unique concrete weapon, armor, and shield Unit refs reachable from SRD starting equipment. |
 
@@ -185,7 +185,7 @@ This gate checks authored records and retained Unit references that must resolve
 | `rope_trick` | closed-runtime-detached-table-adjudication | unsupported-profile | not-required | installed | outside-runtime-presentation-exploration | Rope object attachment, extradimensional-space occupancy, entry/exit climbing, line of sight through the portal, attack/spell/effect boundary blocking, and drop-out placement are table/spatial/object presentation facts outside promoted battle runtime. |
 | `silence` | closed-runtime-detached-table-adjudication | unsupported-profile | not-required | installed | outside-runtime-presentation-exploration | Silence's audio boundary, entirely-inside area membership, Thunder-immunity projection, Deafened projection, and Verbal-component casting block require table-supplied area/membership facts; promoted battle runtime must not infer audio geometry automatically. |
 | `silent_image` | closed-runtime-detached-table-adjudication | unsupported-profile | not-required | not-in-unit-catalog | outside-runtime-presentation-exploration | Silent Image creates table-adjudicated illusion and presentation state; promoted battle runtime does not own image rendering or discovery adjudication. |
-| `sorcerer_ability_score_improvement_l4` | closed-selection-grant-container | unsupported-profile | not-required | not-in-unit-catalog | selection-grant-container | The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim. |
+| `sorcerer_ability_score_improvement_l4` | closed-selection-grant-container | unsupported-profile | not-required | installed | selection-grant-container | The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim. |
 | `sorcerer_font_of_magic` | closed-character-fact-and-runtime-detached-split | profile-subset-supported | witness-present | installed | character-fact-and-runtime-detached-split | RAW distinguishes the Bonus Action resource conversion from spell execution, and the existing Character Sheet boundary is the canonical owner of ordinary-vs-created Spell Slot source state. Character Battle intentionally carries only aggregate Spell Slot capacity and the shared Sorcery Point pool, rejects source-ambiguous handoff when both ordinary and created slots of the same level could have been spent, and does not introduce a second battle-local Spell Slot source pool or source ledger. |
 | `sorcerer_metamagic` | blocked-follow-up-split | profile-subset-supported | witness-present | installed | follow-up-split | L12G-FOLLOWUP-SORCERER-METAMAGIC-QUICKENED-ALL-ACTION-SPELLS: Promote Quickened Spell beyond the current direct restoration, scalar buff, save-gated damage, save-gated condition/immunity, direct condition, roll modifier, and direct spell-attack damage subset only for standalone damage, control, ongoing-effect, and other action-casting Spell Invocation procedures whose owners add typed resource-threading and parity witnesses, using typed procedure support gates and the level-1-plus spell cast turn lock for slot, free-cast, and cantrip resource paths. Owner: battle-runtime Spell Invocation discovery and resolution profiles plus Quint parity. Required output: Supported-profile or profile-subset-supported Unit claim with focused runtime tests and promoted Quint/runtime parity for any additional Quickened action-to-Bonus-Action rewrite procedure owner without option authored identity dispatch. |
 | `speak_with_animals` | closed-runtime-detached-table-adjudication | unsupported-profile | not-required | not-in-unit-catalog | outside-runtime-presentation-exploration | Speak with Animals produces table-owned communication facts; promoted battle runtime does not model conversation content or social outcomes. |

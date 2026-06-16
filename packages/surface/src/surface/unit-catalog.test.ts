@@ -5780,6 +5780,37 @@ describe("SRD Unit catalog boundary", () => {
     });
   });
 
+  test("installs Sorcerer level 4 Ability Score Improvement as a feat-selection grant", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag !== "ok") return;
+
+    expect(result.catalog.requireUnit("class_sorcerer")).toMatchObject({
+      featureGrants: expect.arrayContaining([
+        { level: 4, unitId: "sorcerer_ability_score_improvement_l4" },
+      ]),
+      kind: "class",
+    });
+    expect(
+      result.catalog.requireUnit("sorcerer_ability_score_improvement_l4"),
+    ).toMatchObject({
+      acquiredAtLevel: 4,
+      className: "sorcerer",
+      kind: "class_feature",
+      mechanics: {
+        family: "passive",
+        grants: [
+          {
+            category: "general",
+            kind: "grant_feat",
+            openFallback: "any_qualifying_feat",
+          },
+        ],
+      },
+    });
+  });
+
   test("authors Fighter Champion feature grants through canonical Unit ids", () => {
     const result = buildUnitCatalog({ collections: [srdUnitCollection] });
 
