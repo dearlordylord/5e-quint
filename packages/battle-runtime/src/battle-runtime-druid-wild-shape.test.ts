@@ -2,6 +2,7 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.WILD_SHAPE_FORM_LIFECYCLE
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-DRUID-WILD-SHAPE-D20-STAT-PROJECTION druid_wild_shape
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-DRUID-WILD-SHAPE-BEAST-SPELLS-CASTING druid_wild_shape
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-DRUID-WILD-SHAPE-STAT-BLOCK-MULTI-DAMAGE druid_wild_shape
 import {
   armorClassDelta,
   defaultArmorClassState,
@@ -1382,7 +1383,7 @@ test("rejects known Beast forms without promoted movement facts", () => {
   }
 });
 
-test("filters unsupported selected Beast form action shapes from battle-available forms", () => {
+test("admits selected Beast forms with multi-component attack damage and filters unsupported riders", () => {
   const profile = parseSupportedUnitFeatureProfile(
     unitLibrary.requireUnit("druid_wild_shape"),
     [{ className: "druid", level: ClassLevel.make(2) }],
@@ -1405,6 +1406,7 @@ test("filters unsupported selected Beast form action shapes from battle-availabl
     expect(result.right.map((form) => form.id)).toEqual([
       ratId,
       ridingHorseId,
+      spiderId,
     ]);
   }
 });

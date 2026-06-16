@@ -10,6 +10,7 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_DAMAGE_PENALTY
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING
+// KERNEL-COVERAGE: runtime-owner BATTLE.STAT_BLOCK.ATTACK_CONTROL
 // Cluster N (damage_helpers). Mechanical extraction — no behavior change.
 // Consumes only G (creature_state) and W (statblock_attacks).
 
@@ -110,8 +111,15 @@ export function fixedAttackDamageByTypeEntries(
       if (statBlockAttack.damageNotation !== "static") {
         return null;
       }
-      const baseStaticDamage = damage.static;
-      if (baseStaticDamage === undefined) return null;
+      const baseStaticDamage = statBlockStaticDamageEntries(
+        damage.baseComponents,
+      );
+      if (baseStaticDamage === null) return null;
+      const baseStaticDamageWithModifier =
+        addDamageModifierToFirstEntry(
+          baseStaticDamage,
+          ongoingFeatureDamageModifier(attacker, statBlockAttack),
+        );
       const advantageBonus =
         damage.advantageBonus !== undefined &&
         attackRoll?.rollMode === "advantage"
@@ -124,19 +132,52 @@ export function fixedAttackDamageByTypeEntries(
         return null;
       }
       return [
-        {
-          damageType: damage.damageType,
-          amount: Math.max(
-            0,
-            baseStaticDamage +
-              (advantageBonus?.static ?? 0) +
-              ongoingFeatureDamageModifier(attacker, statBlockAttack),
-          ),
-        },
+        ...baseStaticDamageWithModifier,
+        ...(advantageBonus === undefined
+          ? []
+          : [
+              {
+                damageType: advantageBonus.damageType,
+                amount: Math.max(0, advantageBonus.static ?? 0),
+              },
+            ]),
       ];
     }),
     Match.exhaustive,
   );
+}
+
+function statBlockStaticDamageEntries(
+  components: ReturnType<typeof statBlockAttackDamage>["baseComponents"],
+): readonly DamageAmountByTypeEntry[] | null {
+  const entries: DamageAmountByTypeEntry[] = [];
+  for (const component of components) {
+    if (component.static === undefined) {
+      return null;
+    }
+    entries.push({
+      damageType: component.damageType,
+      amount: Math.max(0, component.static),
+    });
+  }
+  return entries;
+}
+
+function addDamageModifierToFirstEntry(
+  entries: readonly DamageAmountByTypeEntry[],
+  modifier: number,
+): readonly DamageAmountByTypeEntry[] {
+  const [first, ...rest] = entries;
+  if (first === undefined || modifier === 0) {
+    return entries;
+  }
+  return [
+    {
+      ...first,
+      amount: Math.max(0, first.amount + modifier),
+    },
+    ...rest,
+  ];
 }
 
 export function attackDamageByTypeEntries(
@@ -204,7 +245,7 @@ export function attackDamageByType(
       if (component.operation === "subtract") {
         return totals;
       }
-      const unadjusted = diceTotal + modifier;
+      const unadjusted = diceTotal + (component.expr.flat ?? 0) + modifier;
       return addDamageAmountForType(totals, component.damageType, unadjusted);
     },
     damageAmountByTypeEntriesToMap(fixedBaseDamageEntries ?? []),

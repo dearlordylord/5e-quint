@@ -1,3 +1,5 @@
+// KERNEL-COVERAGE: parity-witness BATTLE.STAT_BLOCK.ATTACK_CONTROL
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test stat-block.attack-control
 import {
   startBattleRight,
   requireResolved,
@@ -31,6 +33,7 @@ import {
   monsterResourceStatBlockWithUnsupportedAttackSections,
   monsterMultiattackStatBlock,
   monsterResourceStatBlockWithTwoRechargeActions,
+  statBlockRecord,
   skeletonCreatureInit,
   resistantSkeletonCreatureInit,
   fighterId,
@@ -48,10 +51,71 @@ import {
   snapshotBattle,
 } from "./battle-runtime-test-support.ts";
 import type {
+  BattleHole,
   BattleState,
   BattleSubject,
 } from "./battle-runtime-test-support.ts";
+import type { StatBlockRecord } from "@dnd/surface/surface/types";
 import { describe, expect, test } from "vitest";
+
+function monsterMultiDamageStatBlock(): StatBlockRecord {
+  const base = statBlockRecord();
+  const shortbow = base.statBlock.actions?.attacks?.find(
+    (attack) => attack.name === "Shortbow",
+  );
+  if (shortbow === undefined) {
+    throw new Error("Expected Goblin Warrior Shortbow fixture.");
+  }
+  return {
+    ...base,
+    id: "stat_block_multi_damage_test_monster",
+    name: "Multi Damage Test Monster",
+    statBlock: {
+      ...base.statBlock,
+      displayName: "Multi Damage Test Monster",
+      actions: {
+        attacks: [
+          {
+            ...shortbow,
+            name: "Venom Dart",
+            onHit: [
+              {
+                kind: "damage",
+                damageType: "piercing",
+                amount: {
+                  kind: "fixed",
+                  expr: { dice: 1, dieSize: 4, flat: 1 },
+                  static: 3,
+                },
+              },
+              {
+                kind: "damage",
+                damageType: "poison",
+                amount: {
+                  kind: "fixed",
+                  expr: { dice: 1, dieSize: 6 },
+                  static: 3,
+                },
+              },
+            ],
+          },
+        ],
+      },
+    },
+  };
+}
+
+function venomDartTargetFill(hole: BattleHole) {
+  return targetFill(hole, fighterId, [
+    {
+      kind: "attackTargetInRangedRange",
+      actorId: goblinId,
+      targetId: fighterId,
+      attackName: "Venom Dart",
+      rangeBand: "normal",
+    },
+  ]);
+}
 
 describe("battle runtime: Stat Block actions", () => {
   test("Goblin Warrior discovers authored Scimitar and Shortbow attacks", () => {
@@ -83,6 +147,142 @@ describe("battle runtime: Stat Block actions", () => {
         { tag: "runtimeCommand", actorId: goblinId, command: "endTurn" },
       ]),
     );
+  });
+
+  test("Stat Block attacks preserve multiple rolled hit damage components by type", () => {
+    const monsterTurn = requireResolved(
+      endTurn({
+        state: startBattleRight({
+          battleId: battleId("battle-monster-multi-component-damage"),
+          combatants: [
+            characterSeed({ initiative: 20 }),
+            statBlockCreatureInit({
+              initiative: 10,
+              statBlock: monsterMultiDamageStatBlock(),
+            }),
+          ],
+        }),
+        actorId: fighterId,
+      }),
+    ).state;
+    const subject: BattleSubject = {
+      tag: "action",
+      actorId: goblinId,
+      action: "attack",
+      attackName: "Venom Dart",
+    };
+
+    expect(discoverBattleActs(monsterTurn).map((act) => act.subject)).toEqual(
+      expect.arrayContaining([
+        subject,
+        {
+          ...subject,
+          statBlockDamageNotation: "static",
+        },
+      ]),
+    );
+
+    const targetHole = attackInitialTargetHole(monsterTurn, subject);
+    const targetChoice = venomDartTargetFill(targetHole);
+    const rollHole = requireHole(
+      resolveBattleSubject({
+        state: monsterTurn,
+        subject,
+        fills: [targetChoice],
+      }),
+      "attackRoll",
+    );
+    const damageHole = requireHole(
+      resolveBattleSubject({
+        state: monsterTurn,
+        subject,
+        fills: [
+          targetChoice,
+          attackRollFill(rollHole, { total: 20, naturalD20: 12 }),
+        ],
+      }),
+      "rolledDice",
+    );
+
+    expect(damageHole).toMatchObject({
+      label: "Venom Dart damage (1d4+1-piercing+1d6-poison)",
+    });
+
+    const result = resolveBattleSubject({
+      state: monsterTurn,
+      subject,
+      fills: [
+        targetChoice,
+        attackRollFill(rollHole, { total: 20, naturalD20: 12 }),
+        damageRollFillWithGroups(damageHole, [[1], [2]]),
+      ],
+    });
+    if (result.tag !== "resolved") {
+      throw new Error(
+        `Expected resolved, got ${result.tag}${
+          result.tag === "invalid" ? `: ${result.message}` : ""
+        }.`,
+      );
+    }
+    expect(result.tag).toBe("resolved");
+    const resolved = result.state;
+
+    expect(resolved.combatants.get(fighterId)?.hp).toBe(8);
+  });
+
+  test("Stat Block static notation applies multiple hit damage components by type", () => {
+    const monsterTurn = requireResolved(
+      endTurn({
+        state: startBattleRight({
+          battleId: battleId("battle-monster-multi-component-static-damage"),
+          combatants: [
+            characterSeed({ initiative: 20 }),
+            statBlockCreatureInit({
+              initiative: 10,
+              statBlock: monsterMultiDamageStatBlock(),
+            }),
+          ],
+        }),
+        actorId: fighterId,
+      }),
+    ).state;
+    const subject: BattleSubject = {
+      tag: "action",
+      actorId: goblinId,
+      action: "attack",
+      attackName: "Venom Dart",
+      statBlockDamageNotation: "static",
+    };
+    const targetHole = attackInitialTargetHole(monsterTurn, subject);
+    const targetChoice = venomDartTargetFill(targetHole);
+    const rollHole = requireHole(
+      resolveBattleSubject({
+        state: monsterTurn,
+        subject,
+        fills: [targetChoice],
+      }),
+      "attackRoll",
+    );
+
+    const result = resolveBattleSubject({
+      state: monsterTurn,
+      subject,
+      fills: [
+        targetChoice,
+        attackRollFill(rollHole, { total: 20, naturalD20: 12 }),
+      ],
+    });
+    if (result.tag !== "resolved") {
+      throw new Error(
+        `Expected resolved, got ${result.tag}${
+          result.tag === "invalid" ? `: ${result.message}` : ""
+        }.`,
+      );
+    }
+    expect(result.tag).toBe("resolved");
+    const resolved = result.state;
+
+    expect(resolved.combatants.get(fighterId)?.hp).toBe(6);
   });
 
   test("Goblin Warrior discovers Nimble Escape as Stat Block Bonus Action options", () => {

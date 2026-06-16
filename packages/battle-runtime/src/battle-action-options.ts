@@ -109,15 +109,18 @@ type SupportedStatBlockAdvantageBonusDamageEffect = Extract<
   readonly damageType: DamageType;
 };
 
+type SupportedStatBlockBaseDamageEffectList =
+  ReadonlyNonEmptyArray<SupportedStatBlockBaseDamageEffect>;
+
 type SupportedStatBlockAttackEffectList =
-  | readonly [SupportedStatBlockBaseDamageEffect]
+  | SupportedStatBlockBaseDamageEffectList
   | readonly [
-      SupportedStatBlockBaseDamageEffect,
       SupportedStatBlockAdvantageBonusDamageEffect,
+      ...SupportedStatBlockBaseDamageEffectList,
     ]
   | readonly [
+      ...SupportedStatBlockBaseDamageEffectList,
       SupportedStatBlockAdvantageBonusDamageEffect,
-      SupportedStatBlockBaseDamageEffect,
     ];
 
 type SupportedStaticStatBlockBaseDamageEffect =
@@ -134,15 +137,18 @@ type SupportedStaticStatBlockAdvantageBonusDamageEffect =
     };
   };
 
+type SupportedStaticStatBlockBaseDamageEffectList =
+  ReadonlyNonEmptyArray<SupportedStaticStatBlockBaseDamageEffect>;
+
 type SupportedStaticStatBlockAttackEffectList =
-  | readonly [SupportedStaticStatBlockBaseDamageEffect]
+  | SupportedStaticStatBlockBaseDamageEffectList
   | readonly [
-      SupportedStaticStatBlockBaseDamageEffect,
       SupportedStaticStatBlockAdvantageBonusDamageEffect,
+      ...SupportedStaticStatBlockBaseDamageEffectList,
     ]
   | readonly [
+      ...SupportedStaticStatBlockBaseDamageEffectList,
       SupportedStaticStatBlockAdvantageBonusDamageEffect,
-      SupportedStaticStatBlockBaseDamageEffect,
     ];
 
 export type SupportedCreatureNamedAttackRoll = Omit<
@@ -253,13 +259,13 @@ export type StatBlockMutableResourceState = {
   readonly unavailableRestRechargeParts: readonly StatBlockPartKey[];
 };
 
-export type StatBlockAttackDamage = {
+export type StatBlockAttackDamageComponent = {
   readonly expr: DiceExpr;
   readonly static?: number;
   readonly damageType: DamageType;
-  readonly advantageBonus?: {
-    readonly expr: DiceExpr;
-    readonly static?: number;
-    readonly damageType: DamageType;
-  };
+};
+
+export type StatBlockAttackDamage = {
+  readonly baseComponents: ReadonlyNonEmptyArray<StatBlockAttackDamageComponent>;
+  readonly advantageBonus?: StatBlockAttackDamageComponent;
 };

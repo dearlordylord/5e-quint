@@ -1,4 +1,5 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.druid-wild-shape-known-form
+// KERNEL-COVERAGE: runtime-owner BATTLE.STAT_BLOCK.ATTACK_CONTROL
 import type {
   CreatureActions,
   CreatureNamedAttackRoll,
@@ -6,6 +7,7 @@ import type {
 } from "@dnd/surface/surface/types";
 import type { BattleDruidWildShapeKnownFormSupportProfile } from "./unit-feature-support.ts";
 import { statBlockIsWildShapeKnownFormEligible } from "./druid-wild-shape-form-eligibility.ts";
+import { supportedStatBlockAttackDamage } from "./statblock-attack-damage-support.ts";
 
 export const WILD_SHAPE_FORM_ACTION_SURFACE_CATEGORIES = [
   "simpleLiteralAttackSingleDamage",
@@ -65,34 +67,7 @@ export function creatureNamedAttackRollIsSupported(
 function creatureNamedAttackDamageIsSupported(
   attack: CreatureNamedAttackRoll,
 ): boolean {
-  const baseDamage = attack.onHit.flatMap((effect) =>
-    effect.kind === "damage" &&
-    effect.amount.kind === "fixed" &&
-    typeof effect.damageType === "string"
-      ? [{ damageType: effect.damageType }]
-      : [],
-  );
-  const advantageBonus = attack.onHit.flatMap((effect) =>
-    effect.kind === "conditional_bonus_damage" &&
-    effect.when.kind === "attack_roll_had_advantage" &&
-    effect.amount.kind === "fixed" &&
-    typeof effect.damageType === "string"
-      ? [{ damageType: effect.damageType }]
-      : [],
-  );
-  if (
-    baseDamage.length !== 1 ||
-    baseDamage.length + advantageBonus.length !== attack.onHit.length ||
-    advantageBonus.length > 1
-  ) {
-    return false;
-  }
-  const [base] = baseDamage;
-  const [bonus] = advantageBonus;
-  return (
-    base !== undefined &&
-    (bonus === undefined || bonus.damageType === base.damageType)
-  );
+  return supportedStatBlockAttackDamage(attack) !== null;
 }
 
 function creatureNamedAttackTargetIsSupported(

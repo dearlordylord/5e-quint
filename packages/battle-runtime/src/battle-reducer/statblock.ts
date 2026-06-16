@@ -1,5 +1,6 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.druid-wild-shape-known-form
 // KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.WILD_SHAPE_FORM_LIFECYCLE
+// KERNEL-COVERAGE: runtime-owner BATTLE.STAT_BLOCK.ATTACK_CONTROL
 // StatBlock action-option and resource helpers extracted from battle-reducer.ts.
 // Cluster V (statblock). Mechanical extraction — no behavior change.
 // V depends on W (statblock-attacks.ts) for supportedStatBlockAttack* and
@@ -33,13 +34,13 @@ import {
 import type { CombatantId } from "../identity.ts";
 import { creatureNamedAttackRollIsSupported } from "../statblock-action-support.ts";
 import {
+  statBlockAttackDamageSupportsStaticNotation,
+  supportedStatBlockAttackDamage,
+} from "../statblock-attack-damage-support.ts";
+import {
   activeDruidWildShape,
   updateActiveDruidWildShapeResources,
 } from "./druid-wild-shape.ts";
-import {
-  statBlockAttackDamageSupportsStaticNotation,
-  supportedStatBlockAttackDamage,
-} from "./statblock-attacks.ts";
 
 export function supportedStatBlockAttackActionOption(
   attack: CreatureNamedAttackRoll,
