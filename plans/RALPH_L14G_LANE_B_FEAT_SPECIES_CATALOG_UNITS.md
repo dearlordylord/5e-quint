@@ -7,7 +7,7 @@
     {
       "number": 1,
       "id": "L14G-B01-FEAT-MAGIC-INITIATE-DRUID",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Install Magic Initiate Druid feat identity"
     },
     {
@@ -107,7 +107,7 @@ the Unit catalog, or the Unit matrix.
 
 ### Task 1 - L14G-B01-FEAT-MAGIC-INITIATE-DRUID
 
-Status: `ready-for-implementation`
+Status: `done`
 
 Depends on:
 
