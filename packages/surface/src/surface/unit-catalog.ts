@@ -23,6 +23,7 @@ import bardBardicInspirationInput from "../../content/bard_bardic_inspiration.js
 import bardCuttingWordsInput from "../../content/bard_cutting_words.json";
 import bardExpertiseInput from "../../content/bard_expertise.json";
 import bardJackOfAllTradesInput from "../../content/bard_jack_of_all_trades.json";
+import bardAbilityScoreImprovementL4Input from "../../content/bard_ability_score_improvement_l4.json";
 import barbarianAbilityScoreImprovementL4Input from "../../content/barbarian_ability_score_improvement_l4.json";
 import barbarianFrenzyInput from "../../content/barbarian_frenzy.json";
 import barbarianPrimalKnowledgeInput from "../../content/barbarian_primal_knowledge.json";
@@ -452,6 +453,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     bardCuttingWordsInput,
     bardExpertiseInput,
     bardJackOfAllTradesInput,
+    bardAbilityScoreImprovementL4Input,
     clericChannelDivinityInput,
     clericDiscipleOfLifeInput,
     clericDivineOrderInput,

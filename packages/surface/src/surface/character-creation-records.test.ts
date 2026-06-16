@@ -116,6 +116,24 @@ const listPreparedSpellcasting = (input: {
 });
 
 describe("character-creation Surface records", () => {
+  test("decodes and reads Bard level 4 Ability Score Improvement grant", () => {
+    const classRecord = decodeClassRecordSync(classBardInput);
+    const unit = decodeUnitRecordSync(classBardInput);
+    const result = readClassCreationFacts(unit);
+
+    expect(classRecord.kind).toBe("class");
+    expect(result).toMatchObject({
+      tag: "readable",
+      value: {
+        recordId: "class_bard",
+        className: "bard",
+        featureGrants: expect.arrayContaining([
+          { level: 4, unitId: "bard_ability_score_improvement_l4" },
+        ]),
+      },
+    });
+  });
+
   test("decodes and reads Fighter class creation facts", () => {
     const classRecord = decodeClassRecordSync(classFighterInput);
     const unit = decodeUnitRecordSync(classFighterInput);

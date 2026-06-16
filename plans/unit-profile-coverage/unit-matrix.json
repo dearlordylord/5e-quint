@@ -44,13 +44,13 @@
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
       "denominator": 426,
-      "numerator": 234,
-      "percent": "54.9%"
+      "numerator": 235,
+      "percent": "55.2%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
       "denominator": 511,
-      "numerator": 281,
-      "percent": "55%"
+      "numerator": 282,
+      "percent": "55.2%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,7 +59,7 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 282
+      "value": 283
     },
     "deterministicAdmissionProjectionCoverage": {
       "denominator": 176,
@@ -67,8 +67,8 @@
       "percent": "97.7%"
     },
     "profileClassificationCoverage": {
-      "denominator": 282,
-      "numerator": 282,
+      "denominator": 283,
+      "numerator": 283,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -112,9 +112,9 @@
       "percent": "97.7%"
     },
     "supportedProfileCoverage": {
-      "denominator": 235,
+      "denominator": 236,
       "numerator": 176,
-      "percent": "74.9%"
+      "percent": "74.6%"
     }
   },
   "metricSemantics": [
@@ -15742,8 +15742,8 @@
         "unsupportedOrOtherUnits": 18
       },
       {
-        "executableUnitDenominator": 84,
-        "installedUnitDenominator": 84,
+        "executableUnitDenominator": 85,
+        "installedUnitDenominator": 85,
         "kind": "class_feature",
         "label": "Class-feature Units",
         "profileFactDenominator": 117,
@@ -15753,7 +15753,7 @@
         "selectedIdentityReplayGapUnits": 0,
         "selectedIdentityReplayWitnessUnits": 72,
         "supportedProfileUnits": 69,
-        "unsupportedOrOtherUnits": 7
+        "unsupportedOrOtherUnits": 8
       }
     ]
   },
@@ -17888,6 +17888,29 @@
       ],
       "sourceRecordPath": "packages/surface/content/bard_jack_of_all_trades.json",
       "unitId": "bard_jack_of_all_trades"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "selection-grant-container",
+          "owner": "character-creation-runtime ability-score projection and selected feat Unit profiles",
+          "reason": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim."
+        },
+        "reason": "Level 4 Ability Score Improvement is a character-advancement feat-selection container; no standalone promoted battle Unit profile is claimed for the authored class-feature record.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/bard_ability_score_improvement_l4.json",
+      "unitId": "bard_ability_score_improvement_l4"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
@@ -34588,34 +34611,6 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/barbarian_primal_champion.json",
       "unitId": "barbarian_primal_champion"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "unsupported-widening-pressure",
-          "planningLane": "QMBT18",
-          "reason": "Executable SRD authored data is absent from the catalog and needs an explicit unsupported profile or surface-widening slice."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "claim": {
-        "battleReadinessClosure": {
-          "kind": "selection-grant-container",
-          "owner": "character-creation-runtime ability-score projection and selected feat Unit profiles",
-          "reason": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim."
-        },
-        "reason": "Level 4 Ability Score Improvement is a character-advancement feat-selection container; no standalone promoted battle Unit profile is claimed for the authored class-feature record.",
-        "tag": "unsupported-profile"
-      },
-      "collectionId": "srd-5.2.1",
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "class_feature",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/bard_ability_score_improvement_l4.json",
-      "unitId": "bard_ability_score_improvement_l4"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

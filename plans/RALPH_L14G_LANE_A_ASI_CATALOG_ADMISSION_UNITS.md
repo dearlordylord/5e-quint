@@ -13,7 +13,7 @@
     {
       "number": 2,
       "id": "L14G-A02-BARD-ASI-CATALOG-ADMISSION",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Install Bard level-4 ASI catalog admission"
     },
     {
@@ -140,7 +140,7 @@ Verification:
 
 ### Task 2 - L14G-A02-BARD-ASI-CATALOG-ADMISSION
 
-Status: `ready-for-implementation`
+Status: `done`
 
 Depends on:
 

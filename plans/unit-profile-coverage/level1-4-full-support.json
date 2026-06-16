@@ -275,12 +275,7 @@
       "unitId": "barbarian_ability_score_improvement_l4"
     },
     {
-      "catalogDisposition": {
-        "category": "unsupported-widening-pressure",
-        "planningLane": "QMBT18",
-        "reason": "Executable SRD authored data is absent from the catalog and needs an explicit unsupported profile or surface-widening slice."
-      },
-      "catalogStatus": "not-in-unit-catalog",
+      "catalogStatus": "installed",
       "claimTag": "unsupported-profile",
       "closureKinds": [
         "selection-grant-container"
@@ -10669,8 +10664,8 @@
         "group": "level-scoped-class-feature-grants",
         "label": "SRD class feature grants through level 4",
         "metrics": {
-          "denominator": 52,
-          "numerator": 52,
+          "denominator": 53,
+          "numerator": 53,
           "percent": "100%"
         },
         "rows": [
@@ -10745,6 +10740,15 @@
             "sourceRecordPath": "packages/surface/content/bard_jack_of_all_trades.json",
             "status": "installed",
             "unitId": "bard_jack_of_all_trades"
+          },
+          {
+            "kind": "class_feature",
+            "ownerUnitId": "class_bard",
+            "ready": true,
+            "relation": "class.featureGrants.level-4",
+            "sourceRecordPath": "packages/surface/content/bard_ability_score_improvement_l4.json",
+            "status": "installed",
+            "unitId": "bard_ability_score_improvement_l4"
           },
           {
             "kind": "class_feature",
@@ -11144,7 +11148,7 @@
           }
         ],
         "rowsByStatus": {
-          "installed": 52
+          "installed": 53
         }
       },
       {
@@ -11221,8 +11225,8 @@
       }
     ],
     "metrics": {
-      "denominator": 85,
-      "numerator": 85,
+      "denominator": 86,
+      "numerator": 86,
       "percent": "100%"
     },
     "openBlockerCount": 0
