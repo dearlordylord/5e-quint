@@ -189,6 +189,24 @@ describe("character-creation Surface records", () => {
     });
   });
 
+  test("decodes and reads Ranger level 4 Ability Score Improvement grant", () => {
+    const classRecord = decodeClassRecordSync(classRangerInput);
+    const unit = decodeUnitRecordSync(classRangerInput);
+    const result = readClassCreationFacts(unit);
+
+    expect(classRecord.kind).toBe("class");
+    expect(result).toMatchObject({
+      tag: "readable",
+      value: {
+        recordId: "class_ranger",
+        className: "ranger",
+        featureGrants: expect.arrayContaining([
+          { level: 4, unitId: "ranger_ability_score_improvement_l4" },
+        ]),
+      },
+    });
+  });
+
   test("decodes and reads Fighter class creation facts", () => {
     const classRecord = decodeClassRecordSync(classFighterInput);
     const unit = decodeUnitRecordSync(classFighterInput);

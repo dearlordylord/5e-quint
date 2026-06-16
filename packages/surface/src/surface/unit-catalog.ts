@@ -188,6 +188,7 @@ import protectionFromEvilAndGoodInput from "../../content/protection_from_evil_a
 import protectionFromPoisonInput from "../../content/protection_from_poison.json";
 import produceFlameInput from "../../content/produce_flame.json";
 import rayOfEnfeeblementInput from "../../content/ray_of_enfeeblement.json";
+import rangerAbilityScoreImprovementL4Input from "../../content/ranger_ability_score_improvement_l4.json";
 import rangerDeftExplorerInput from "../../content/ranger_deft_explorer.json";
 import rangerExtraAttackInput from "../../content/ranger_extra_attack.json";
 import rangerFavoredEnemyInput from "../../content/ranger_favored_enemy.json";
@@ -479,6 +480,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     monkAbilityScoreImprovementL4Input,
     monkSlowFallInput,
     monkOpenHandTechniqueInput,
+    rangerAbilityScoreImprovementL4Input,
     rangerDeftExplorerInput,
     rangerFavoredEnemyInput,
     rangerFightingStyleInput,

@@ -2239,12 +2239,7 @@
       "unitId": "prayer_of_healing"
     },
     {
-      "catalogDisposition": {
-        "category": "unsupported-widening-pressure",
-        "planningLane": "QMBT18",
-        "reason": "Executable SRD authored data is absent from the catalog and needs an explicit unsupported profile or surface-widening slice."
-      },
-      "catalogStatus": "not-in-unit-catalog",
+      "catalogStatus": "installed",
       "claimTag": "unsupported-profile",
       "closureKinds": [
         "selection-grant-container"
@@ -10649,8 +10644,8 @@
         "group": "level-scoped-class-feature-grants",
         "label": "SRD class feature grants through level 4",
         "metrics": {
-          "denominator": 56,
-          "numerator": 56,
+          "denominator": 57,
+          "numerator": 57,
           "percent": "100%"
         },
         "rows": [
@@ -11016,6 +11011,15 @@
           },
           {
             "kind": "class_feature",
+            "ownerUnitId": "class_ranger",
+            "ready": true,
+            "relation": "class.featureGrants.level-4",
+            "sourceRecordPath": "packages/surface/content/ranger_ability_score_improvement_l4.json",
+            "status": "installed",
+            "unitId": "ranger_ability_score_improvement_l4"
+          },
+          {
+            "kind": "class_feature",
             "ownerUnitId": "class_rogue",
             "ready": true,
             "relation": "class.featureGrants.level-1",
@@ -11160,7 +11164,7 @@
           }
         ],
         "rowsByStatus": {
-          "installed": 56
+          "installed": 57
         }
       },
       {
@@ -11237,8 +11241,8 @@
       }
     ],
     "metrics": {
-      "denominator": 89,
-      "numerator": 89,
+      "denominator": 90,
+      "numerator": 90,
       "percent": "100%"
     },
     "openBlockerCount": 0

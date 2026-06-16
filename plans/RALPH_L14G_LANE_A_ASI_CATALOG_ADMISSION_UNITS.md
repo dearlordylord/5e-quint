@@ -37,7 +37,7 @@
     {
       "number": 6,
       "id": "L14G-A06-RANGER-ASI-CATALOG-ADMISSION",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Install Ranger level-4 ASI catalog admission"
     },
     {
@@ -276,7 +276,7 @@ Verification:
 
 ### Task 6 - L14G-A06-RANGER-ASI-CATALOG-ADMISSION
 
-Status: `ready-for-implementation`
+Status: `done`
 
 Depends on:
 
