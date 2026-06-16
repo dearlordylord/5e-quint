@@ -43,7 +43,7 @@
     {
       "number": 7,
       "id": "L12G-FOLLOWUP-DRUID-WILD-SHAPE-STAT-BLOCK-MULTI-DAMAGE",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Promote multi-component Stat Block attack damage"
     },
     {
@@ -442,7 +442,7 @@ Verification:
 
 ### Task 7 - L12G-FOLLOWUP-DRUID-WILD-SHAPE-STAT-BLOCK-MULTI-DAMAGE
 
-Status: `ready-for-implementation`
+Status: `done`
 
 Depends on:
 
