@@ -1,4 +1,4 @@
-// UNIT-PROFILE-COVERAGE: runtime-owner character-creation.origin-feat-proficiency-choice
+// UNIT-PROFILE-COVERAGE: runtime-owner character-creation.origin-feat-proficiency-choice character-creation.species-trait-proficiency-choice character-creation.species-origin-feat-proficiency-choice
 import { Match } from "effect";
 import * as Either from "effect/Either";
 import { SURFACE_ABILITIES } from "@dnd/shared/game-facts";

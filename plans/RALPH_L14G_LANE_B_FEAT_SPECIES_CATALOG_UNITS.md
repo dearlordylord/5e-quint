@@ -93,6 +93,12 @@
       "id": "L3-FOLLOWUP-HALFLING-NATURALLY-STEALTHY-RUNTIME",
       "status": "ready-for-research",
       "title": "Promote Halfling Naturally Stealthy Hide support"
+    },
+    {
+      "number": 16,
+      "id": "L3-FOLLOWUP-HUMAN-RESOURCEFUL-RUNTIME",
+      "status": "ready-for-research",
+      "title": "Promote Human Resourceful Heroic Inspiration support"
     }
   ]
 }
@@ -150,6 +156,7 @@ the Unit catalog, or the Unit matrix.
 | L3-FOLLOWUP-HALFLING-NIMBLENESS-RUNTIME | L14G-B07-SPECIES-HALFLING | Runtime support consumes Halfling Nimbleness's typed creature-space movement permission facts. |
 | L3-FOLLOWUP-HALFLING-LUCK-RUNTIME | L14G-B07-SPECIES-HALFLING | Runtime support consumes Halfling Luck's typed natural-1 D20 Test reroll facts. |
 | L3-FOLLOWUP-HALFLING-NATURALLY-STEALTHY-RUNTIME | L14G-B07-SPECIES-HALFLING | Runtime support consumes Naturally Stealthy's typed Hide-obscurement permission facts. |
+| L3-FOLLOWUP-HUMAN-RESOURCEFUL-RUNTIME | L14G-B08-SPECIES-HUMAN | Runtime support consumes Human Resourceful's typed Long Rest Heroic Inspiration facts. |
 
 ## Verification Command Sets
 
@@ -450,7 +457,7 @@ Verification:
 
 ### Task 8 - L14G-B08-SPECIES-HUMAN
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -464,20 +471,29 @@ SRD anchor: `.references/srd-5.2.1/Character-Origins.md:231-243`
 
 Current state:
 
-- No Surface species content row.
-- No Unit catalog row.
-- No Unit matrix row.
-- No species-granted Origin feat choice owner is installed.
+- Human is installed as an SRD species with Medium/Small size choice, Humanoid
+  creature type, 30-foot Speed, and explicit Resourceful, Skillful, and
+  Versatile trait refs.
+- Skillful is installed as a typed species-trait skill proficiency choice.
+- Versatile is installed as a typed species-trait Origin feat choice that
+  references real SRD Origin feat Units.
+- Resourceful is installed as typed Long Rest Heroic Inspiration Surface facts
+  and remains runtime-unsupported until
+  `L3-FOLLOWUP-HUMAN-RESOURCEFUL-RUNTIME`.
 
 Output:
 
-- Research Human size choice, Skillful skill choice, Resourceful Heroic
-  Inspiration on Long Rest, and Versatile Origin feat choice by Unit id.
-- Coordinate with missing Origin feat identities before claiming Human complete.
+- Installed Human species identity and split Resourceful, Skillful, and
+  Versatile into typed Surface trait facts.
+- Installed character-creation discovery/finalization owners for Human
+  Skillful and Versatile choices without duplicating Character Sheet
+  proficiency state.
+- Split Resourceful's Long Rest Heroic Inspiration runtime owner into
+  `L3-FOLLOWUP-HUMAN-RESOURCEFUL-RUNTIME`.
 
 Acceptance:
 
-- Human identity cannot be silently absent from the SRD species set.
+- Human identity is installed in the SRD species set.
 - Versatile references real SRD Origin feat Units.
 - Human choice facts flow through character creation without duplicating
   Character Sheet state.
@@ -826,6 +842,54 @@ Verification:
 - Focused Hide/obscurement tests/QNT/MBT only for implemented battle behavior,
   with at most one focused MBT run after code changes are complete.
 - `pnpm --filter @dnd/battle-runtime typecheck`.
+- `git diff --check`.
+
+### Task 16 - L3-FOLLOWUP-HUMAN-RESOURCEFUL-RUNTIME
+
+Status: `ready-for-research`
+
+Depends on:
+
+- L14G-B08-SPECIES-HUMAN
+
+Unit: `species_human_resourceful`
+
+SRD anchor: `.references/srd-5.2.1/Character-Origins.md:237`
+
+Current state:
+
+- Resourceful is installed as typed Long Rest Heroic Inspiration Surface facts.
+- The Unit matrix records `species_human_resourceful` as `unsupported-profile`.
+- No promoted character-sheet or battle Unit profile grants Heroic Inspiration
+  when a Human finishes a Long Rest.
+
+Output:
+
+- Research and implement the runtime owner for gaining Heroic Inspiration when
+  the character finishes a Long Rest.
+- Consume existing Long Rest completion and Heroic Inspiration state facts; do
+  not store species-owned rest or inspiration state.
+- Update focused QNT/rule-core slices only where runtime semantics change, then
+  promote the Unit claim to `supported-profile` or `profile-subset-supported`.
+
+Acceptance:
+
+- Long Rest completion grants Heroic Inspiration for a character with the
+  Resourceful trait, while non-Human or no-trait cases remain unchanged.
+- The implementation is keyed by typed rest-trigger and grant facts, not Human
+  or Resourceful authored identity.
+- The Unit matrix claim names the admitted Resourceful profile and does not
+  claim support for unrelated rest-triggered grants.
+
+Verification:
+
+- RAW and ubiquitous-language check against the Resourceful SRD anchor.
+- Focused character-sheet or character-battle tests/QNT/MBT only for
+  implemented runtime behavior, with at most one focused MBT run after code
+  changes are complete.
+- `pnpm --filter @dnd/character-sheet-runtime typecheck`.
+- `pnpm --filter @dnd/character-battle-runtime typecheck` if the battle bridge
+  changes.
 - `git diff --check`.
 
 ## Verification

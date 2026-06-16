@@ -10499,8 +10499,8 @@
         "group": "species-records",
         "label": "SRD species records",
         "metrics": {
-          "denominator": 8,
-          "numerator": 8,
+          "denominator": 9,
+          "numerator": 9,
           "percent": "100%"
         },
         "rows": [
@@ -10549,6 +10549,13 @@
           {
             "kind": "species",
             "ready": true,
+            "sourceRecordPath": "packages/surface/content/species_human.json",
+            "status": "installed",
+            "unitId": "species_human"
+          },
+          {
+            "kind": "species",
+            "ready": true,
             "sourceRecordPath": "packages/surface/content/species_orc.json",
             "status": "installed",
             "unitId": "species_orc"
@@ -10562,7 +10569,7 @@
           }
         ],
         "rowsByStatus": {
-          "installed": 8
+          "installed": 9
         }
       },
       {
@@ -10572,8 +10579,8 @@
         "group": "species-trait-refs",
         "label": "SRD species trait refs",
         "metrics": {
-          "denominator": 18,
-          "numerator": 18,
+          "denominator": 21,
+          "numerator": 21,
           "percent": "100%"
         },
         "rows": [
@@ -10705,6 +10712,33 @@
           },
           {
             "kind": "species_trait",
+            "ownerUnitId": "species_human",
+            "ready": true,
+            "relation": "species.traits.resourceful",
+            "sourceRecordPath": "packages/surface/content/species_human_resourceful.json",
+            "status": "installed",
+            "unitId": "species_human_resourceful"
+          },
+          {
+            "kind": "species_trait",
+            "ownerUnitId": "species_human",
+            "ready": true,
+            "relation": "species.traits.skillful",
+            "sourceRecordPath": "packages/surface/content/species_human_skillful.json",
+            "status": "installed",
+            "unitId": "species_human_skillful"
+          },
+          {
+            "kind": "species_trait",
+            "ownerUnitId": "species_human",
+            "ready": true,
+            "relation": "species.traits.versatile",
+            "sourceRecordPath": "packages/surface/content/species_human_versatile.json",
+            "status": "installed",
+            "unitId": "species_human_versatile"
+          },
+          {
+            "kind": "species_trait",
             "ownerUnitId": "species_orc",
             "ready": true,
             "relation": "species.traits.adrenalineRush",
@@ -10741,7 +10775,7 @@
           }
         ],
         "rowsByStatus": {
-          "installed": 18
+          "installed": 21
         }
       },
       {
@@ -11294,8 +11328,8 @@
       }
     ],
     "metrics": {
-      "denominator": 93,
-      "numerator": 93,
+      "denominator": 97,
+      "numerator": 97,
       "percent": "100%"
     },
     "openBlockerCount": 0

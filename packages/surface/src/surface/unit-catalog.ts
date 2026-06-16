@@ -214,6 +214,10 @@ import speciesHalflingBraveInput from "../../content/species_halfling_brave.json
 import speciesHalflingNimblenessInput from "../../content/species_halfling_nimbleness.json";
 import speciesHalflingLuckInput from "../../content/species_halfling_luck.json";
 import speciesHalflingNaturallyStealthyInput from "../../content/species_halfling_naturally_stealthy.json";
+import speciesHumanInput from "../../content/species_human.json";
+import speciesHumanResourcefulInput from "../../content/species_human_resourceful.json";
+import speciesHumanSkillfulInput from "../../content/species_human_skillful.json";
+import speciesHumanVersatileInput from "../../content/species_human_versatile.json";
 import speciesGoliathInput from "../../content/species_goliath.json";
 import speciesGoliathPowerfulBuildInput from "../../content/species_goliath_powerful_build.json";
 import speciesOrcInput from "../../content/species_orc.json";
@@ -430,6 +434,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     speciesElfInput,
     speciesGnomeInput,
     speciesHalflingInput,
+    speciesHumanInput,
     speciesGoliathInput,
     speciesOrcInput,
     speciesTieflingInput,
@@ -560,6 +565,9 @@ export const srdUnitCollection = defineSrdUnitCollection({
     speciesHalflingNimblenessInput,
     speciesHalflingLuckInput,
     speciesHalflingNaturallyStealthyInput,
+    speciesHumanResourcefulInput,
+    speciesHumanSkillfulInput,
+    speciesHumanVersatileInput,
     speciesGoliathPowerfulBuildInput,
     speciesTieflingDarkvisionInput,
     acidSplashInput,

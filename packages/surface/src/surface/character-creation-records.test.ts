@@ -26,6 +26,7 @@ import speciesDwarfInput from "../../content/species_dwarf.json";
 import speciesElfInput from "../../content/species_elf.json";
 import speciesGnomeInput from "../../content/species_gnome.json";
 import speciesHalflingInput from "../../content/species_halfling.json";
+import speciesHumanInput from "../../content/species_human.json";
 import speciesGoliathInput from "../../content/species_goliath.json";
 import speciesOrcInput from "../../content/species_orc.json";
 import speciesTieflingInput from "../../content/species_tiefling.json";
@@ -1713,6 +1714,21 @@ describe("character-creation Surface records", () => {
             halflingNimbleness: "species_halfling_nimbleness",
             luck: "species_halfling_luck",
             naturallyStealthy: "species_halfling_naturally_stealthy",
+          },
+        },
+      },
+      {
+        input: speciesHumanInput,
+        expected: {
+          recordId: "species_human",
+          species: "human",
+          creatureType: "humanoid",
+          size: { kind: "choice", options: ["medium", "small"] },
+          speed: { walkFeet: 30 },
+          traits: {
+            resourceful: "species_human_resourceful",
+            skillful: "species_human_skillful",
+            versatile: "species_human_versatile",
           },
         },
       },

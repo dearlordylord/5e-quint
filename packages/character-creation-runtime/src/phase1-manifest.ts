@@ -98,6 +98,7 @@ export const SRD_CHARACTER_ADMISSION_SPECIES_UNIT_IDS = [
   "species_dwarf",
   "species_elf",
   "species_halfling",
+  "species_human",
   "species_goliath",
   PHASE1_SPECIES_ORC_UNIT_ID,
   "species_tiefling",
@@ -230,6 +231,12 @@ export const CLASS_FEATURE_PROFICIENCY_CHOICE_KEY =
   "class_feature_proficiency_choice" satisfies UnitChoiceKey;
 export const ORIGIN_FEAT_PROFICIENCY_CHOICE_KEY =
   "origin_feat_proficiency_choice" satisfies UnitChoiceKey;
+export const SPECIES_TRAIT_PROFICIENCY_CHOICE_KEY =
+  "species_trait_proficiency_choice" satisfies UnitChoiceKey;
+export const SPECIES_ORIGIN_FEAT_CHOICE_KEY =
+  "species_origin_feat_choice" satisfies UnitChoiceKey;
+export const SPECIES_ORIGIN_FEAT_PROFICIENCY_CHOICE_KEY =
+  "species_origin_feat_proficiency_choice" satisfies UnitChoiceKey;
 export const CLASS_FEATURE_LANGUAGE_CHOICE_KEY =
   "class_feature_language_choice" satisfies UnitChoiceKey;
 export const DIVINE_ORDER_CHOICE_KEY = "divine_order" satisfies UnitChoiceKey;
@@ -357,14 +364,11 @@ function abilityScoreIncreaseAbilities(
 
 function unorderedSurfaceAbilityPairs(
   abilities: ReadonlyNonEmptyArray<SurfaceAbility>,
-): readonly (readonly [
-  SurfaceAbility,
-  SurfaceAbility,
-])[] {
+): readonly (readonly [SurfaceAbility, SurfaceAbility])[] {
   return abilities.flatMap((primary, primaryIndex) =>
-    abilities.slice(primaryIndex + 1).map(
-      (secondary) => [primary, secondary] as const,
-    ),
+    abilities
+      .slice(primaryIndex + 1)
+      .map((secondary) => [primary, secondary] as const),
   );
 }
 

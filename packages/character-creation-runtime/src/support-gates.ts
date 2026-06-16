@@ -1,5 +1,5 @@
 // KERNEL-COVERAGE: runtime-owner CREATION.CHOICE_DISCOVERY_CARDINALITY
-// UNIT-PROFILE-COVERAGE: runtime-owner character-creation.origin-feat-proficiency-choice
+// UNIT-PROFILE-COVERAGE: runtime-owner character-creation.origin-feat-proficiency-choice character-creation.species-trait-proficiency-choice character-creation.species-origin-feat-choice character-creation.species-origin-feat-proficiency-choice
 import { Either } from "effect";
 import {
   BACKGROUND_ABILITY_SCORE_INCREASE_CHOICE_KEY,
@@ -40,6 +40,9 @@ import {
   PHASE1_LOADOUT_SHIELD_OPTION_ID,
   PHASE1_LOADOUT_WEAPON_OPTION_ID,
   ORIGIN_FEAT_PROFICIENCY_CHOICE_KEY,
+  SPECIES_ORIGIN_FEAT_CHOICE_KEY,
+  SPECIES_ORIGIN_FEAT_PROFICIENCY_CHOICE_KEY,
+  SPECIES_TRAIT_PROFICIENCY_CHOICE_KEY,
   SRD_ROGUE_CLASS_UNIT_ID,
   PHASE1_SHIELD_UNIT_ID,
   PHASE1_WEAPON_FLAIL_UNIT_ID,
@@ -312,6 +315,14 @@ const SUPPORTED_ORIGIN_FEAT_PROFICIENCY_GRANT_OPTION_IDS = [
     proficiencyGrantSubjectOptionId({ kind: "tool", toolId }),
   ),
 ] as const satisfies ReadonlyArray<CreationChoiceOptionId>;
+const SUPPORTED_HUMAN_ORIGIN_FEAT_OPTION_IDS = [
+  creationChoiceOptionId("alert"),
+  creationChoiceOptionId("feat_magic_initiate_cleric"),
+  creationChoiceOptionId("feat_magic_initiate_druid"),
+  creationChoiceOptionId("feat_magic_initiate_wizard"),
+  creationChoiceOptionId("feat_savage_attacker"),
+  creationChoiceOptionId("feat_skilled"),
+] as const satisfies ReadonlyArray<CreationChoiceOptionId>;
 const SUPPORTED_MUSICAL_INSTRUMENT_PROFICIENCY_OPTION_IDS =
   MUSICAL_INSTRUMENT_TOOL_PROFICIENCY_IDS.map((toolId) =>
     proficiencyGrantSubjectOptionId({ kind: "tool", toolId }),
@@ -348,6 +359,11 @@ export const CHARACTER_CREATION_SUPPORT_PROFILE = {
     [CLASS_FEATURE_PROFICIENCY_CHOICE_KEY]:
       SUPPORTED_CLASS_BACKGROUND_PROFICIENCY_GRANT_OPTION_IDS,
     [ORIGIN_FEAT_PROFICIENCY_CHOICE_KEY]:
+      SUPPORTED_ORIGIN_FEAT_PROFICIENCY_GRANT_OPTION_IDS,
+    [SPECIES_TRAIT_PROFICIENCY_CHOICE_KEY]:
+      SUPPORTED_SKILL_PROFICIENCY_OPTION_IDS,
+    [SPECIES_ORIGIN_FEAT_CHOICE_KEY]: SUPPORTED_HUMAN_ORIGIN_FEAT_OPTION_IDS,
+    [SPECIES_ORIGIN_FEAT_PROFICIENCY_CHOICE_KEY]:
       SUPPORTED_ORIGIN_FEAT_PROFICIENCY_GRANT_OPTION_IDS,
     [CLASS_FEATURE_LANGUAGE_CHOICE_KEY]: LANGUAGES.map(creationChoiceOptionId),
     [DIVINE_ORDER_CHOICE_KEY]: [
@@ -706,12 +722,13 @@ export function supportedLoadoutChoiceForSource(
   );
 }
 
-export function unitRefsForSupportedClassChoice(
+export function unitRefsForSupportedSelectedUnitChoice(
   source: UnitChoiceSource,
   options: readonly { readonly unitRef?: UnitRef }[],
 ): readonly UnitRecord["id"][] {
   if (
     source.choiceKey !== CLASS_FEATURE_FEAT_CHOICE_KEY &&
+    source.choiceKey !== SPECIES_ORIGIN_FEAT_CHOICE_KEY &&
     source.choiceKey !== CLASS_SUBCLASS_CHOICE_KEY &&
     source.choiceKey !== WEAPON_MASTERY_OPTIONS_CHOICE_KEY &&
     source.choiceKey !== HUNTERS_PREY_CHOICE_KEY

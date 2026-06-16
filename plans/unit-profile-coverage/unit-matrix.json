@@ -43,14 +43,14 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
-      "denominator": 438,
-      "numerator": 245,
-      "percent": "55.9%"
+      "denominator": 441,
+      "numerator": 248,
+      "percent": "56.2%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 525,
-      "numerator": 294,
-      "percent": "56%"
+      "denominator": 529,
+      "numerator": 298,
+      "percent": "56.3%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,16 +59,16 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 295
+      "value": 299
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 177,
+      "denominator": 179,
       "numerator": 173,
-      "percent": "97.7%"
+      "percent": "96.6%"
     },
     "profileClassificationCoverage": {
-      "denominator": 295,
-      "numerator": 295,
+      "denominator": 299,
+      "numerator": 299,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -112,9 +112,9 @@
       "percent": "100%"
     },
     "supportedProfileCoverage": {
-      "denominator": 246,
-      "numerator": 177,
-      "percent": "72%"
+      "denominator": 249,
+      "numerator": 179,
+      "percent": "71.9%"
     }
   },
   "metricSemantics": [
@@ -4852,6 +4852,71 @@
         "L14G-B02-FEAT-SKILLED"
       ],
       "title": "Character Creation finalizes Origin feat skill and tool proficiency choices into build proficiency facts",
+      "verificationOwners": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "character-creation.species-trait-proficiency-choice",
+      "profileKind": "character-creation",
+      "qntOwners": [],
+      "runtimeOwners": [
+        "packages/character-creation-runtime/src/discovery.ts",
+        "packages/character-creation-runtime/src/finalization.ts",
+        "packages/character-creation-runtime/src/choice-option-codecs.ts",
+        "packages/character-creation-runtime/src/support-gates.ts"
+      ],
+      "sourceBoundary": "Character Creation consumes selected Species authored trait Unit refs, the trait's passive grant_proficiency choice shape, and the existing CharacterBuild proficiency projection. It discovers species-trait proficiency choice holes from selected species trait Units, filters already-owned skill proficiencies, admits supported skill option ids through species_trait_proficiency_choice, and finalizes the selected subjects into CharacterBuild.proficiencyChoices without storing duplicate proficiency state. Battle execution remains detached; downstream sheets and battle init consume the derived character proficiency facts.",
+      "taskRefs": [
+        "L14G-B08-SPECIES-HUMAN"
+      ],
+      "title": "Character Creation finalizes species trait proficiency choices into build proficiency facts",
+      "verificationOwners": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "character-creation.species-origin-feat-choice",
+      "profileKind": "character-creation",
+      "qntOwners": [],
+      "runtimeOwners": [
+        "packages/character-creation-runtime/src/discovery.ts",
+        "packages/character-creation-runtime/src/finalization.ts",
+        "packages/character-creation-runtime/src/support-gates.ts"
+      ],
+      "sourceBoundary": "Character Creation consumes selected Species authored trait Unit refs and passive grant_feat Origin feat source facts. It discovers a species-origin feat choice hole from the granting trait Unit, admits supported SRD Origin feat Unit options through species_origin_feat_choice, and finalizes the selected Origin feat as a selected CharacterBuild feature ref with selectedFromUnitId pointing at the species trait. Selected feat execution and any nested selected-feat grant choices remain owned by the selected feat Unit profile.",
+      "taskRefs": [
+        "L14G-B08-SPECIES-HUMAN"
+      ],
+      "title": "Character Creation finalizes species-granted Origin feat choices as selected build feature refs",
+      "verificationOwners": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "character-creation.species-origin-feat-proficiency-choice",
+      "profileKind": "character-creation",
+      "qntOwners": [],
+      "runtimeOwners": [
+        "packages/character-creation-runtime/src/discovery.ts",
+        "packages/character-creation-runtime/src/finalization.ts",
+        "packages/character-creation-runtime/src/choice-option-codecs.ts",
+        "packages/character-creation-runtime/src/support-gates.ts"
+      ],
+      "sourceBoundary": "Character Creation consumes selected Origin feat Unit refs produced by species_origin_feat_choice, then reads the selected feat's passive grant_proficiency shape. It discovers the nested proficiency choice with a species-specific choice key, expands SRD skill and tool subject options through the shared Surface proficiency subject codecs, filters already-owned skill and tool proficiencies, and finalizes the selected subjects into CharacterBuild.proficiencyChoices without colliding with Background-granted Origin feat choices for the same feat Unit.",
+      "taskRefs": [
+        "L14G-B08-SPECIES-HUMAN"
+      ],
+      "title": "Character Creation finalizes proficiency choices from species-selected Origin feats into build proficiency facts",
       "verificationOwners": [
         {
           "kind": "runtime-test",
@@ -15704,6 +15769,16 @@
         "character-creation.origin-feat-proficiency-choice"
       ],
       "taskId": "L14G-B02-FEAT-SKILLED"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused Surface catalog and Character Creation runtime tests cover Human species and trait authoring, Human Medium/Small size selection, Skillful skill proficiency choice discovery/projection, Versatile Origin feat Unit selection, and Skilled follow-up proficiency choices selected through the species-granted feat path without battle-runtime execution.",
+      "profileIds": [
+        "character-creation.species-trait-proficiency-choice",
+        "character-creation.species-origin-feat-choice",
+        "character-creation.species-origin-feat-proficiency-choice"
+      ],
+      "taskId": "L14G-B08-SPECIES-HUMAN"
     }
   ],
   "unitGroupDenominatorAudit": {
@@ -15748,7 +15823,7 @@
         "installedUnitDenominator": 13,
         "kind": "feat",
         "label": "Feat Units",
-        "profileFactDenominator": 6,
+        "profileFactDenominator": 7,
         "profileSubsetSupportedUnits": 0,
         "selectedIdentityDeferredNonApplicableUnits": 0,
         "selectedIdentityReplayDenominator": 5,
@@ -16170,6 +16245,29 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/species_halfling.json",
       "unitId": "species_halfling"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "selection-grant-container",
+          "owner": "species_human_skillful, species_human_versatile, and future Resourceful owner profiles",
+          "reason": "The aggregate species record names Resourceful, Skillful, and Versatile. Character creation consumes the retained trait refs to discover the supported Skillful and Versatile choices; Resourceful Long Rest Heroic Inspiration remains a future character-state owner."
+        },
+        "reason": "Species admission container record; character creation can retain Human as a selected Medium-or-Small species and preserve authored trait Unit refs, while executable and choice pressure lives on the individual trait Units.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "species",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/species_human.json",
+      "unitId": "species_human"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
@@ -22505,17 +22603,19 @@
           "reason": "Skilled mutates durable character proficiency facts during character creation; battle runtime consumes derived skill/tool proficiency facts where relevant rather than executing the feat as a battle Unit."
         },
         "profileIds": [
-          "character-creation.origin-feat-proficiency-choice"
+          "character-creation.origin-feat-proficiency-choice",
+          "character-creation.species-origin-feat-proficiency-choice"
         ],
         "selectedIdentityEvidenceDisposition": {
           "owner": "character-creation deterministic proficiency projection owner",
-          "reason": "Skilled support is a durable CharacterBuild proficiency projection from a selected Background originFeatId. It has no battle-runtime selected Unit identity replay boundary; deterministic character-creation tests bind the authored feat Unit identity to the executable Surface proficiency facts.",
+          "reason": "Skilled support is a durable CharacterBuild proficiency projection from a selected Background originFeatId or species-granted Origin feat choice. It has no battle-runtime selected Unit identity replay boundary; deterministic character-creation tests bind the authored feat Unit identity to the executable Surface proficiency facts.",
           "tag": "not-applicable"
         },
         "supportedMechanics": [
           "Surface authors Skilled as an SRD Origin feat with a passive grant_proficiency choice of exactly three skill or tool subjects",
           "Character Creation discovers the Origin feat proficiency hole from the selected Background originFeatId and the feat's typed passive proficiency grant shape",
-          "Character Creation admits supported skill and tool subject option ids through origin_feat_proficiency_choice and filters already-owned skill proficiencies",
+          "Character Creation discovers the same Skilled proficiency grant from a species-selected Origin feat Unit ref using a species-specific choice key, so Background-granted and species-granted Skilled choices cannot collide",
+          "Character Creation admits supported skill and tool subject option ids through origin_feat_proficiency_choice or species_origin_feat_proficiency_choice and filters already-owned skill proficiencies",
           "Character Creation finalizes selected Skilled subjects into CharacterBuild.proficiencyChoices and the existing derived skill/tool proficiency projection without storing duplicate proficiency state"
         ],
         "tag": "supported-profile"
@@ -22546,6 +22646,28 @@
             "L14G-B02-FEAT-SKILLED"
           ],
           "title": "Character Creation finalizes Origin feat skill and tool proficiency choices into build proficiency facts",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+            }
+          ]
+        },
+        {
+          "id": "character-creation.species-origin-feat-proficiency-choice",
+          "profileKind": "character-creation",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/character-creation-runtime/src/discovery.ts",
+            "packages/character-creation-runtime/src/finalization.ts",
+            "packages/character-creation-runtime/src/choice-option-codecs.ts",
+            "packages/character-creation-runtime/src/support-gates.ts"
+          ],
+          "sourceBoundary": "Character Creation consumes selected Origin feat Unit refs produced by species_origin_feat_choice, then reads the selected feat's passive grant_proficiency shape. It discovers the nested proficiency choice with a species-specific choice key, expands SRD skill and tool subject options through the shared Surface proficiency subject codecs, filters already-owned skill and tool proficiencies, and finalizes the selected subjects into CharacterBuild.proficiencyChoices without colliding with Background-granted Origin feat choices for the same feat Unit.",
+          "taskRefs": [
+            "L14G-B08-SPECIES-HUMAN"
+          ],
+          "title": "Character Creation finalizes proficiency choices from species-selected Origin feats into build proficiency facts",
           "verificationOwners": [
             {
               "kind": "runtime-test",
@@ -24431,6 +24553,146 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/species_halfling_naturally_stealthy.json",
       "unitId": "species_halfling_naturally_stealthy"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "character-fact-and-runtime-detached-split",
+          "owner": "future character-sheet Heroic Inspiration Long Rest grant owner",
+          "reason": "The Surface trait carries the exact rest-triggered Heroic Inspiration source fact, but execution requires durable Heroic Inspiration state and Long Rest lifecycle ownership outside the current character-creation projection."
+        },
+        "reason": "Resourceful is authored as gaining Heroic Inspiration whenever the character finishes a Long Rest. No promoted character-sheet or runtime owner currently models Heroic Inspiration state or Long Rest grant timing.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "species_trait",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/species_human_resourceful.json",
+      "unitId": "species_human_resourceful"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "character-fact-and-runtime-detached-split",
+          "owner": "character-creation-runtime plus character-sheet proficiency projection",
+          "reason": "Skillful mutates durable character proficiency facts during character creation; battle runtime consumes derived skill proficiency facts where relevant rather than executing the trait as a battle Unit."
+        },
+        "profileIds": [
+          "character-creation.species-trait-proficiency-choice"
+        ],
+        "selectedIdentityEvidenceDisposition": {
+          "owner": "character-creation deterministic proficiency projection owner",
+          "reason": "Skillful support is a durable CharacterBuild proficiency projection from a selected Human species trait. It has no battle-runtime selected Unit identity replay boundary; deterministic character-creation tests bind the authored trait Unit identity to the executable Surface proficiency facts.",
+          "tag": "not-applicable"
+        },
+        "supportedMechanics": [
+          "Surface authors Skillful as an SRD Human species trait with a passive grant_proficiency choice of exactly one skill subject",
+          "Character Creation discovers the species trait proficiency hole from the selected Human species trait refs and the trait's typed passive proficiency grant shape",
+          "Character Creation admits supported skill option ids through species_trait_proficiency_choice and filters already-owned skill proficiencies",
+          "Character Creation finalizes the selected Skillful subject into CharacterBuild.proficiencyChoices and the existing derived skill proficiency projection without storing duplicate proficiency state"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "species_trait",
+      "profiles": [
+        {
+          "id": "character-creation.species-trait-proficiency-choice",
+          "profileKind": "character-creation",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/character-creation-runtime/src/discovery.ts",
+            "packages/character-creation-runtime/src/finalization.ts",
+            "packages/character-creation-runtime/src/choice-option-codecs.ts",
+            "packages/character-creation-runtime/src/support-gates.ts"
+          ],
+          "sourceBoundary": "Character Creation consumes selected Species authored trait Unit refs, the trait's passive grant_proficiency choice shape, and the existing CharacterBuild proficiency projection. It discovers species-trait proficiency choice holes from selected species trait Units, filters already-owned skill proficiencies, admits supported skill option ids through species_trait_proficiency_choice, and finalizes the selected subjects into CharacterBuild.proficiencyChoices without storing duplicate proficiency state. Battle execution remains detached; downstream sheets and battle init consume the derived character proficiency facts.",
+          "taskRefs": [
+            "L14G-B08-SPECIES-HUMAN"
+          ],
+          "title": "Character Creation finalizes species trait proficiency choices into build proficiency facts",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/species_human_skillful.json",
+      "unitId": "species_human_skillful"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "selection-grant-container",
+          "owner": "character-creation-runtime plus selected Origin feat Unit profiles",
+          "reason": "Versatile owns the Human species-origin feat selection boundary; the selected Origin feat Unit owns its executable projection, such as Skilled's proficiency choices."
+        },
+        "profileIds": [
+          "character-creation.species-origin-feat-choice"
+        ],
+        "selectedIdentityEvidenceDisposition": {
+          "owner": "character-creation deterministic selected Origin feat projection owner",
+          "reason": "Versatile support is a durable CharacterBuild selected feat ref from a selected Human species trait. It has no battle-runtime selected Unit identity replay boundary; deterministic character-creation tests bind the authored trait Unit identity to the selected Origin feat Unit ref.",
+          "tag": "not-applicable"
+        },
+        "supportedMechanics": [
+          "Surface authors Versatile as an SRD Human species trait with a passive grant_feat Origin feat choice",
+          "Character Creation discovers the species Origin feat choice hole from the selected Human species trait refs and the trait's typed passive grant_feat shape",
+          "Character Creation admits supported SRD Origin feat Unit options through species_origin_feat_choice",
+          "Character Creation finalizes the selected Origin feat as a selected CharacterBuild feature ref with selectedFromUnitId species_human_versatile and leaves selected feat execution or nested grant choices to the selected feat Unit profile"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "species_trait",
+      "profiles": [
+        {
+          "id": "character-creation.species-origin-feat-choice",
+          "profileKind": "character-creation",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/character-creation-runtime/src/discovery.ts",
+            "packages/character-creation-runtime/src/finalization.ts",
+            "packages/character-creation-runtime/src/support-gates.ts"
+          ],
+          "sourceBoundary": "Character Creation consumes selected Species authored trait Unit refs and passive grant_feat Origin feat source facts. It discovers a species-origin feat choice hole from the granting trait Unit, admits supported SRD Origin feat Unit options through species_origin_feat_choice, and finalizes the selected Origin feat as a selected CharacterBuild feature ref with selectedFromUnitId pointing at the species trait. Selected feat execution and any nested selected-feat grant choices remain owned by the selected feat Unit profile.",
+          "taskRefs": [
+            "L14G-B08-SPECIES-HUMAN"
+          ],
+          "title": "Character Creation finalizes species-granted Origin feat choices as selected build feature refs",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/species_human_versatile.json",
+      "unitId": "species_human_versatile"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

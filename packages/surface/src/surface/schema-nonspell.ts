@@ -3677,6 +3677,15 @@ export const HideActionObscurementPermissionMechanicsSchema = strictStruct({
   }),
 });
 
+export const RestTriggeredHeroicInspirationMechanicsSchema = strictStruct({
+  family: Schema.Literal("rest_triggered_heroic_inspiration"),
+  trigger: strictStruct({
+    kind: Schema.Literal("finish_rest"),
+    rest: Schema.Literal("long"),
+  }),
+  grant: strictStruct({ kind: Schema.Literal("heroic_inspiration") }),
+});
+
 export const SpeciesTraitMechanicsSchema = Schema.Union(
   PassiveMechanicsSchema,
   ActivatedAbilityMechanicsSchema,
@@ -3685,6 +3694,7 @@ export const SpeciesTraitMechanicsSchema = Schema.Union(
   D20TestNaturalOneRerollMechanicsSchema,
   CreatureSpaceMovementPermissionMechanicsSchema,
   HideActionObscurementPermissionMechanicsSchema,
+  RestTriggeredHeroicInspirationMechanicsSchema,
 );
 
 export const SpeciesTraitRecordSchema = Schema.Struct({
@@ -3882,6 +3892,20 @@ export const HalflingSpeciesRecordSchema = Schema.Struct({
   traits: HalflingSpeciesTraitsSchema,
 });
 
+export const HumanSpeciesTraitsSchema = Schema.Struct({
+  resourceful: Schema.Literal("species_human_resourceful"),
+  skillful: Schema.Literal("species_human_skillful"),
+  versatile: Schema.Literal("species_human_versatile"),
+});
+
+export const HumanSpeciesRecordSchema = Schema.Struct({
+  ...SpeciesRecordBaseSchema.fields,
+  species: Schema.Literal("human"),
+  size: SmallMediumSpeciesSizeChoiceSchema,
+  speed: SpeciesSpeed30Schema,
+  traits: HumanSpeciesTraitsSchema,
+});
+
 export const GoliathSpeciesTraitsSchema = Schema.Struct({
   powerfulBuild: Schema.Literal("species_goliath_powerful_build"),
 });
@@ -3920,6 +3944,7 @@ export const SpeciesRecordSchema = Schema.Union(
   ElfSpeciesRecordSchema,
   GnomeSpeciesRecordSchema,
   HalflingSpeciesRecordSchema,
+  HumanSpeciesRecordSchema,
   GoliathSpeciesRecordSchema,
   OrcSpeciesRecordSchema,
   TieflingSpeciesRecordSchema,

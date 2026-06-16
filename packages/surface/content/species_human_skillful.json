@@ -1,0 +1,97 @@
+{
+  "description": "You gain proficiency in one skill of your choice.",
+  "id": "species_human_skillful",
+  "kind": "species_trait",
+  "mechanics": {
+    "family": "passive",
+    "grants": [
+      {
+        "kind": "grant_proficiency",
+        "proficiency": {
+          "count": 1,
+          "kind": "choice",
+          "options": [
+            {
+              "kind": "skill",
+              "skill": "acrobatics"
+            },
+            {
+              "kind": "skill",
+              "skill": "animal_handling"
+            },
+            {
+              "kind": "skill",
+              "skill": "arcana"
+            },
+            {
+              "kind": "skill",
+              "skill": "athletics"
+            },
+            {
+              "kind": "skill",
+              "skill": "deception"
+            },
+            {
+              "kind": "skill",
+              "skill": "history"
+            },
+            {
+              "kind": "skill",
+              "skill": "insight"
+            },
+            {
+              "kind": "skill",
+              "skill": "intimidation"
+            },
+            {
+              "kind": "skill",
+              "skill": "investigation"
+            },
+            {
+              "kind": "skill",
+              "skill": "medicine"
+            },
+            {
+              "kind": "skill",
+              "skill": "nature"
+            },
+            {
+              "kind": "skill",
+              "skill": "perception"
+            },
+            {
+              "kind": "skill",
+              "skill": "performance"
+            },
+            {
+              "kind": "skill",
+              "skill": "persuasion"
+            },
+            {
+              "kind": "skill",
+              "skill": "religion"
+            },
+            {
+              "kind": "skill",
+              "skill": "sleight_of_hand"
+            },
+            {
+              "kind": "skill",
+              "skill": "stealth"
+            },
+            {
+              "kind": "skill",
+              "skill": "survival"
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "name": "Skillful",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Character-Origins/Human#Skillful"
+  },
+  "species": "human"
+}

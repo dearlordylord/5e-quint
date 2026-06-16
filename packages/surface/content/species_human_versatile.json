@@ -1,0 +1,20 @@
+{
+  "description": "You gain an Origin feat of your choice. Skilled is recommended.",
+  "id": "species_human_versatile",
+  "kind": "species_trait",
+  "mechanics": {
+    "family": "passive",
+    "grants": [
+      {
+        "category": "origin",
+        "kind": "grant_feat"
+      }
+    ]
+  },
+  "name": "Versatile",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Character-Origins/Human#Versatile"
+  },
+  "species": "human"
+}

@@ -19,6 +19,7 @@ import type {
   MagicInitiateMechanics,
   OnHitTriggerMechanics,
   PassiveMechanics,
+  RestTriggeredHeroicInspirationMechanics,
   SpeciesTraitRecord,
   TriggeredReactionAbilityMechanics,
   TriggeredReplacementMechanics,
@@ -409,11 +410,7 @@ export function traceSpeciesTraitUnit(trait: SpeciesTraitRecord): Trace {
       : trait.mechanics.family === "species_lineage_choice"
         ? traceGnomishLineageMechanics(trait.mechanics, nodes, edges, ids)
         : trait.mechanics.family === "d20_test_natural_one_reroll"
-          ? traceD20TestNaturalOneRerollMechanics(
-              trait.mechanics,
-              nodes,
-              ids,
-            )
+          ? traceD20TestNaturalOneRerollMechanics(trait.mechanics, nodes, ids)
           : trait.mechanics.family === "creature_space_movement_permission"
             ? traceCreatureSpaceMovementPermissionMechanics(
                 trait.mechanics,
@@ -426,7 +423,13 @@ export function traceSpeciesTraitUnit(trait: SpeciesTraitRecord): Trace {
                   nodes,
                   ids,
                 )
-              : tracePassiveOrActivated(trait.mechanics, nodes, edges, ids);
+              : trait.mechanics.family === "rest_triggered_heroic_inspiration"
+                ? traceRestTriggeredHeroicInspirationMechanics(
+                    trait.mechanics,
+                    nodes,
+                    ids,
+                  )
+                : tracePassiveOrActivated(trait.mechanics, nodes, edges, ids);
   edges.push({ from: rootId, to: procId, relation: "roots" });
 
   return {
@@ -535,6 +538,23 @@ function traceHideActionObscurementPermissionMechanics(
       `${mechanics.family}\n${mechanics.action}\n` +
       `${mechanics.allowedObscurement.kind}\n` +
       mechanics.allowedObscurement.creatureSizeRelationToSelf,
+  });
+  return procId;
+}
+
+function traceRestTriggeredHeroicInspirationMechanics(
+  mechanics: RestTriggeredHeroicInspirationMechanics,
+  nodes: TraceNode[],
+  ids: IdGen,
+): string {
+  const procId = ids("rest-triggered-heroic-inspiration");
+  nodes.push({
+    id: procId,
+    category: "procedure",
+    atomKind: mechanics.family,
+    label:
+      `${mechanics.family}\n${mechanics.trigger.kind}: ${mechanics.trigger.rest}\n` +
+      mechanics.grant.kind,
   });
   return procId;
 }

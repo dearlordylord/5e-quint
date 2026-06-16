@@ -912,6 +912,9 @@ export type CreatureSpaceMovementPermissionMechanics = Schema.Schema.Type<
 export type HideActionObscurementPermissionMechanics = Schema.Schema.Type<
   typeof SurfaceSchema.HideActionObscurementPermissionMechanicsSchema
 >;
+export type RestTriggeredHeroicInspirationMechanics = Schema.Schema.Type<
+  typeof SurfaceSchema.RestTriggeredHeroicInspirationMechanicsSchema
+>;
 export type DragonbornSpeciesTraits = Schema.Schema.Type<
   typeof SurfaceSchema.DragonbornSpeciesTraitsSchema
 >;
@@ -944,6 +947,12 @@ export type HalflingSpeciesTraits = Schema.Schema.Type<
 >;
 export type HalflingSpeciesRecord = Schema.Schema.Type<
   typeof SurfaceSchema.HalflingSpeciesRecordSchema
+>;
+export type HumanSpeciesTraits = Schema.Schema.Type<
+  typeof SurfaceSchema.HumanSpeciesTraitsSchema
+>;
+export type HumanSpeciesRecord = Schema.Schema.Type<
+  typeof SurfaceSchema.HumanSpeciesRecordSchema
 >;
 export type GoliathSpeciesTraits = Schema.Schema.Type<
   typeof SurfaceSchema.GoliathSpeciesTraitsSchema

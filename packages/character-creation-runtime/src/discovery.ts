@@ -1,5 +1,5 @@
 // KERNEL-COVERAGE: runtime-owner CREATION.CHOICE_DISCOVERY_CARDINALITY CREATION.SPELL_ACCESS.PACT_MAGIC_PROGRESSION CREATION.ELDRITCH_INVOCATION.CHOICE_LIFECYCLE CREATION.WIZARD_SPELLBOOK_LEARNING.CHOICE_FINALIZATION
-// UNIT-PROFILE-COVERAGE: runtime-owner character-creation.wizard-spellbook-learning-choice unit-feature.hunters-prey character-creation.origin-feat-proficiency-choice
+// UNIT-PROFILE-COVERAGE: runtime-owner character-creation.wizard-spellbook-learning-choice unit-feature.hunters-prey character-creation.origin-feat-proficiency-choice character-creation.species-trait-proficiency-choice character-creation.species-origin-feat-choice character-creation.species-origin-feat-proficiency-choice
 import { Either, Match, Option } from "effect";
 import {
   ALIGNMENT_CHOICES,
@@ -59,6 +59,9 @@ import {
   WEAPON_MASTERY_OPTIONS_CHOICE_KEY,
   HUNTERS_PREY_CHOICE_KEY,
   ORIGIN_FEAT_PROFICIENCY_CHOICE_KEY,
+  SPECIES_ORIGIN_FEAT_CHOICE_KEY,
+  SPECIES_ORIGIN_FEAT_PROFICIENCY_CHOICE_KEY,
+  SPECIES_TRAIT_PROFICIENCY_CHOICE_KEY,
   INITIAL_CHARACTER_DRAFT_PATHS,
   abilityScoreIncreaseChoiceOptions,
   progressionOptionId,
@@ -118,6 +121,7 @@ import {
   supportedLoadoutChoices,
   supportedProgressionsForClass,
   supportedPurchasableEquipmentUnitIdsForClass,
+  supportedSpeciesUnitIds,
   unsupportedHoleSelectionOptionId,
 } from "./support-gates.ts";
 import {
@@ -183,6 +187,7 @@ export function discoverCreationHoles(input: {
     ...discoverClassGrantedHoles(input),
     ...discoverBackgroundGrantedHoles(input),
     ...discoverBackgroundOriginFeatGrantHoles(input),
+    ...discoverSpeciesGrantedHoles(input),
     ...discoverEquipmentHoles(input),
   ];
 }
@@ -820,24 +825,145 @@ function discoverBackgroundOriginFeatGrantHoles(input: {
     return [];
   }
 
-  return originFeatGrantChoiceHoles(facts.value.originFeatId, input.unitLibrary, {
-    ownedSkillProficiencies: draftOwnedSkillProficiencies(
-      input.draft,
-      input.unitLibrary,
-      (selection) =>
-        selection.kind === "unitChoice" &&
-        selection.source.unitId === facts.value.originFeatId &&
-        selection.source.choiceKey === ORIGIN_FEAT_PROFICIENCY_CHOICE_KEY,
+  return originFeatGrantChoiceHoles(
+    facts.value.originFeatId,
+    input.unitLibrary,
+    {
+      ownedSkillProficiencies: draftOwnedSkillProficiencies(
+        input.draft,
+        input.unitLibrary,
+        (selection) =>
+          selection.kind === "unitChoice" &&
+          selection.source.unitId === facts.value.originFeatId &&
+          selection.source.choiceKey === ORIGIN_FEAT_PROFICIENCY_CHOICE_KEY,
+      ),
+      ownedToolProficiencies: draftOwnedToolProficiencies(
+        input.draft,
+        input.unitLibrary,
+        (selection) =>
+          selection.kind === "unitChoice" &&
+          selection.source.unitId === facts.value.originFeatId &&
+          selection.source.choiceKey === ORIGIN_FEAT_PROFICIENCY_CHOICE_KEY,
+      ),
+    },
+  ).flatMap((hole) => unselectedUnitChoiceHole(input.draft, hole));
+}
+
+function discoverSpeciesGrantedHoles(input: {
+  readonly draft: CharacterDraft;
+  readonly unitLibrary: UnitCatalog;
+}): readonly CreationHole[] {
+  return [
+    ...speciesTraitGrantChoiceHoles(input).flatMap((hole) =>
+      unselectedUnitChoiceHole(input.draft, hole),
     ),
-    ownedToolProficiencies: draftOwnedToolProficiencies(
-      input.draft,
-      input.unitLibrary,
-      (selection) =>
-        selection.kind === "unitChoice" &&
-        selection.source.unitId === facts.value.originFeatId &&
-        selection.source.choiceKey === ORIGIN_FEAT_PROFICIENCY_CHOICE_KEY,
+    ...speciesSelectedOriginFeatGrantChoiceHoles(input).flatMap((hole) =>
+      unselectedUnitChoiceHole(input.draft, hole),
     ),
-  }).flatMap((hole) => unselectedUnitChoiceHole(input.draft, hole));
+  ];
+}
+
+function speciesTraitGrantChoiceHoles(input: {
+  readonly draft: CharacterDraft;
+  readonly unitLibrary: UnitCatalog;
+}): readonly ChoiceCreationHole[] {
+  return selectedSpeciesTraitUnits(input).flatMap((trait) => {
+    if (trait.mechanics.family !== "passive") {
+      return [];
+    }
+
+    return trait.mechanics.grants.flatMap((grant) =>
+      passiveGrantChoiceHoles(trait.id, grant, input.unitLibrary, {
+        ownedSkillProficiencies: draftOwnedSkillProficiencies(
+          input.draft,
+          input.unitLibrary,
+          (selection) =>
+            selection.kind === "unitChoice" &&
+            selection.source.unitId === trait.id &&
+            selection.source.choiceKey === SPECIES_TRAIT_PROFICIENCY_CHOICE_KEY,
+        ),
+        ownedToolProficiencies: draftOwnedToolProficiencies(
+          input.draft,
+          input.unitLibrary,
+        ),
+        proficiencyChoiceKey: SPECIES_TRAIT_PROFICIENCY_CHOICE_KEY,
+        featChoiceKey: SPECIES_ORIGIN_FEAT_CHOICE_KEY,
+      }),
+    );
+  });
+}
+
+function speciesSelectedOriginFeatGrantChoiceHoles(input: {
+  readonly draft: CharacterDraft;
+  readonly unitLibrary: UnitCatalog;
+}): readonly ChoiceCreationHole[] {
+  return selectedSpeciesOriginFeatUnitIds(input.draft).flatMap((featUnitId) =>
+    originFeatGrantChoiceHoles(featUnitId, input.unitLibrary, {
+      ownedSkillProficiencies: draftOwnedSkillProficiencies(
+        input.draft,
+        input.unitLibrary,
+        (selection) =>
+          selection.kind === "unitChoice" &&
+          selection.source.unitId === featUnitId &&
+          selection.source.choiceKey ===
+            SPECIES_ORIGIN_FEAT_PROFICIENCY_CHOICE_KEY,
+      ),
+      ownedToolProficiencies: draftOwnedToolProficiencies(
+        input.draft,
+        input.unitLibrary,
+        (selection) =>
+          selection.kind === "unitChoice" &&
+          selection.source.unitId === featUnitId &&
+          selection.source.choiceKey ===
+            SPECIES_ORIGIN_FEAT_PROFICIENCY_CHOICE_KEY,
+      ),
+      proficiencyChoiceKey: SPECIES_ORIGIN_FEAT_PROFICIENCY_CHOICE_KEY,
+    }),
+  );
+}
+
+function selectedSpeciesTraitUnits(input: {
+  readonly draft: CharacterDraft;
+  readonly unitLibrary: UnitCatalog;
+}): readonly Extract<UnitRecord, { readonly kind: "species_trait" }>[] {
+  const speciesUnitId = input.draft.selections.species;
+  if (
+    speciesUnitId == null ||
+    !isSupported(speciesUnitId, supportedSpeciesUnitIds())
+  ) {
+    return [];
+  }
+
+  const speciesUnit = input.unitLibrary.getUnit(speciesUnitId);
+  if (Option.isNone(speciesUnit)) {
+    return [];
+  }
+  const facts = readSpeciesCreationFacts(speciesUnit.value);
+  if (facts.tag !== "readable") {
+    return [];
+  }
+
+  return Object.values(facts.value.traits).flatMap((traitUnitId) => {
+    const traitUnit = input.unitLibrary.getUnit(traitUnitId);
+    return Option.isSome(traitUnit) && traitUnit.value.kind === "species_trait"
+      ? [traitUnit.value]
+      : [];
+  });
+}
+
+function selectedSpeciesOriginFeatUnitIds(
+  draft: CharacterDraft,
+): readonly UnitRecord["id"][] {
+  return uniqueUnitIds(
+    draft.selections.choices.flatMap((selection) =>
+      selection.kind === "unitChoice" &&
+      selection.source.choiceKey === SPECIES_ORIGIN_FEAT_CHOICE_KEY
+        ? selection.options.flatMap((option) =>
+            option.unitRef == null ? [] : [option.unitRef.unitId],
+          )
+        : [],
+    ),
+  );
 }
 
 export function backgroundToolChoiceHole(
@@ -1474,6 +1600,7 @@ export function originFeatGrantChoiceHoles(
   input: {
     readonly ownedSkillProficiencies?: readonly Skill[];
     readonly ownedToolProficiencies?: readonly ToolProficiencyId[];
+    readonly proficiencyChoiceKey?: UnitChoiceKey;
   } = {},
 ): readonly ChoiceCreationHole[] {
   const feat = requireOriginFeat(unitLibrary, featUnitId);
@@ -1485,7 +1612,8 @@ export function originFeatGrantChoiceHoles(
     passiveGrantChoiceHoles(featUnitId, grant, unitLibrary, {
       ownedSkillProficiencies: input.ownedSkillProficiencies ?? [],
       ownedToolProficiencies: input.ownedToolProficiencies ?? [],
-      proficiencyChoiceKey: ORIGIN_FEAT_PROFICIENCY_CHOICE_KEY,
+      proficiencyChoiceKey:
+        input.proficiencyChoiceKey ?? ORIGIN_FEAT_PROFICIENCY_CHOICE_KEY,
     }),
   );
 }
@@ -1647,7 +1775,7 @@ function eldritchInvocationChoiceHoles(
   return hole === undefined ? [] : [hole];
 }
 
-function passiveGrantChoiceHoles(
+export function passiveGrantChoiceHoles(
   featureUnitId: UnitRecord["id"],
   grant: EffectAtom,
   unitLibrary: UnitCatalog,
@@ -1658,10 +1786,16 @@ function passiveGrantChoiceHoles(
     readonly ownedToolProficiencies?: readonly ToolProficiencyId[];
     readonly knownLanguages?: readonly Language[];
     readonly proficiencyChoiceKey?: UnitChoiceKey;
+    readonly featChoiceKey?: UnitChoiceKey;
   },
 ): readonly ChoiceCreationHole[] {
   if (grant.kind === "grant_feat") {
-    const hole = featGrantFeatureHoleSource(featureUnitId, grant, unitLibrary);
+    const hole = featGrantFeatureHoleSource(
+      featureUnitId,
+      grant,
+      unitLibrary,
+      input.featChoiceKey,
+    );
     return hole === undefined ? [] : [hole];
   }
   if (grant.kind === "grant_proficiency") {
@@ -2141,6 +2275,12 @@ function uniqueToolProficiencies(
   );
 }
 
+function uniqueUnitIds(
+  unitIds: readonly UnitRecord["id"][],
+): readonly UnitRecord["id"][] {
+  return unitIds.filter((unitId, index) => unitIds.indexOf(unitId) === index);
+}
+
 function uniqueLanguages(languages: readonly Language[]): readonly Language[] {
   return [...new Set(languages)];
 }
@@ -2198,6 +2338,7 @@ function featGrantFeatureHoleSource(
   featureUnitId: UnitRecord["id"],
   grant: Extract<EffectAtom, { readonly kind: "grant_feat" }>,
   unitLibrary: UnitCatalog,
+  choiceKey: UnitChoiceKey = CLASS_FEATURE_FEAT_CHOICE_KEY,
 ): ChoiceCreationHole | undefined {
   const categories = "category" in grant ? [grant.category] : grant.categories;
   const options = unitLibrary
@@ -2210,7 +2351,7 @@ function featGrantFeatureHoleSource(
 
   return requireChoiceCreationHole(
     choiceHole({
-      source: unitSource(featureUnitId, CLASS_FEATURE_FEAT_CHOICE_KEY),
+      source: unitSource(featureUnitId, choiceKey),
       cardinality: EXACTLY_ONE_CHOICE,
       options,
     }),
@@ -2280,9 +2421,8 @@ function proficiencyGrantChoiceHole(
     subject.kind === "skill" && ownedSkills.includes(subject.skill)
       ? []
       : proficiencyGrantSubjectOptions(subject).filter((option) => {
-          const optionToolIds = toolProficiencyIdsFromProficiencyChoiceOptionIds(
-            [option.optionId],
-          );
+          const optionToolIds =
+            toolProficiencyIdsFromProficiencyChoiceOptionIds([option.optionId]);
           return !optionToolIds.some((toolId) =>
             ownedTools.has(String(toolId)),
           );

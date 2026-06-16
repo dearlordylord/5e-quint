@@ -129,6 +129,7 @@ const requiredFirstVerticalUnitIds = [
   "species_elf",
   "species_gnome",
   "species_halfling",
+  "species_human",
   "species_goliath",
   "species_orc",
   "species_tiefling",
@@ -184,6 +185,9 @@ const requiredFirstVerticalUnitIds = [
   "species_halfling_nimbleness",
   "species_halfling_luck",
   "species_halfling_naturally_stealthy",
+  "species_human_resourceful",
+  "species_human_skillful",
+  "species_human_versatile",
   "species_goliath_powerful_build",
   "species_tiefling_darkvision",
   "fire_bolt",
@@ -6549,6 +6553,69 @@ describe("SRD Unit catalog boundary", () => {
             kind: "obscured_only_by_creature",
           },
           family: "hide_action_obscurement_permission",
+        },
+      });
+    }
+  });
+
+  test("authors Human species and trait source facts", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag === "ok") {
+      expect(result.catalog.requireUnit("species_human")).toMatchObject({
+        kind: "species",
+        species: "human",
+        size: { kind: "choice", options: ["medium", "small"] },
+        speed: { walkFeet: 30 },
+        traits: {
+          resourceful: "species_human_resourceful",
+          skillful: "species_human_skillful",
+          versatile: "species_human_versatile",
+        },
+      });
+      expect(
+        result.catalog.requireUnit("species_human_resourceful"),
+      ).toMatchObject({
+        kind: "species_trait",
+        species: "human",
+        mechanics: {
+          family: "rest_triggered_heroic_inspiration",
+          grant: { kind: "heroic_inspiration" },
+          trigger: { kind: "finish_rest", rest: "long" },
+        },
+      });
+      expect(
+        result.catalog.requireUnit("species_human_skillful"),
+      ).toMatchObject({
+        kind: "species_trait",
+        species: "human",
+        mechanics: {
+          family: "passive",
+          grants: [
+            {
+              kind: "grant_proficiency",
+              proficiency: {
+                count: 1,
+                kind: "choice",
+                options: expect.arrayContaining([
+                  { kind: "skill", skill: "perception" },
+                  { kind: "skill", skill: "stealth" },
+                  { kind: "skill", skill: "survival" },
+                ]),
+              },
+            },
+          ],
+        },
+      });
+      expect(
+        result.catalog.requireUnit("species_human_versatile"),
+      ).toMatchObject({
+        kind: "species_trait",
+        species: "human",
+        mechanics: {
+          family: "passive",
+          grants: [{ category: "origin", kind: "grant_feat" }],
         },
       });
     }
