@@ -864,6 +864,8 @@ describe("character creation hole discovery", () => {
           "species_dragonborn",
           "species_dwarf",
           "species_elf",
+          "species_gnome",
+          "species_halfling",
           "species_goliath",
           "species_orc",
           "species_tiefling",
@@ -3324,6 +3326,15 @@ describe("character creation finalization", () => {
       {
         speciesUnitId: "species_elf",
         expectedTraitUnitIds: ["elf_darkvision"],
+      },
+      {
+        speciesUnitId: "species_halfling",
+        expectedTraitUnitIds: [
+          "species_halfling_brave",
+          "species_halfling_nimbleness",
+          "species_halfling_luck",
+          "species_halfling_naturally_stealthy",
+        ],
       },
       {
         speciesUnitId: "species_goliath",

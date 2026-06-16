@@ -12,7 +12,7 @@ This summary is layer-by-layer. It deliberately does not publish a blended ultra
 
 | Layer | Status | Evidence | Blocking issue |
 | --- | --- | --- | --- |
-| Support completeness | pass | strict target closure 115/115 (100%); selected identity 104/104 (100%); SRD authored product readiness 80/80 (100%) | _none_ |
+| Support completeness | pass | strict target closure 115/115 (100%); selected identity 104/104 (100%); SRD authored product readiness 85/85 (100%) | _none_ |
 | QNT/generator readiness | pass | QNT-covered obligations 49/49; generator-ready semantic-core obligations 40/40 | _none_ |
 | MBT/parity evidence | pass | parity-witnessed obligations 49/49; witness kinds deterministic-qnt-replay: 8, focused-mbt: 49, runtime-test: 14 | _none_ |
 | MCP scenario evidence | pass | scenario flows 4/4; check pnpm --filter @dnd/mcp test:mcp-scenario-evidence | _none_ |
@@ -25,7 +25,7 @@ Full-support claim gate: **pass**.
 | --- | ---: | ---: |
 | Strict target closure | 115/115 (100%) | 0 |
 | Selected identity readiness | 104/104 (100%) | 0 |
-| SRD authored product readiness | 80/80 (100%) | 0 |
+| SRD authored product readiness | 85/85 (100%) | 0 |
 
 Diagnostic product readiness remains a separate lower-layer accounting view, not a substitute for the support claim gate. It can be below 100% while support completeness passes when the strict, selected-identity, and SRD-authored blocker counts are all zero.
 

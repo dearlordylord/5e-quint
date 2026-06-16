@@ -128,6 +128,7 @@ const requiredFirstVerticalUnitIds = [
   "species_dwarf",
   "species_elf",
   "species_gnome",
+  "species_halfling",
   "species_goliath",
   "species_orc",
   "species_tiefling",
@@ -179,6 +180,10 @@ const requiredFirstVerticalUnitIds = [
   "species_gnome_darkvision",
   "species_gnome_gnomish_cunning",
   "species_gnome_gnomish_lineage",
+  "species_halfling_brave",
+  "species_halfling_nimbleness",
+  "species_halfling_luck",
+  "species_halfling_naturally_stealthy",
   "species_goliath_powerful_build",
   "species_tiefling_darkvision",
   "fire_bolt",
@@ -6461,6 +6466,89 @@ describe("SRD Unit catalog boundary", () => {
             kind: "spellcasting_ability_choice",
           },
           timing: "species_selection",
+        },
+      });
+    }
+  });
+
+  test("authors Halfling species and trait source facts", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag === "ok") {
+      expect(result.catalog.requireUnit("species_halfling")).toMatchObject({
+        kind: "species",
+        species: "halfling",
+        size: { kind: "fixed", size: "small" },
+        speed: { walkFeet: 30 },
+        traits: {
+          brave: "species_halfling_brave",
+          halflingNimbleness: "species_halfling_nimbleness",
+          luck: "species_halfling_luck",
+          naturallyStealthy: "species_halfling_naturally_stealthy",
+        },
+      });
+      expect(
+        result.catalog.requireUnit("species_halfling_brave"),
+      ).toMatchObject({
+        kind: "species_trait",
+        species: "halfling",
+        mechanics: {
+          family: "passive",
+          grants: [
+            {
+              conditionFilter: ["frightened"],
+              kind: "modify_roll_advantage",
+              mode: "advantage",
+              on: ["saving_throw"],
+            },
+          ],
+        },
+      });
+      expect(
+        result.catalog.requireUnit("species_halfling_nimbleness"),
+      ).toMatchObject({
+        kind: "species_trait",
+        species: "halfling",
+        mechanics: {
+          canStopInOccupiedSpace: false,
+          family: "creature_space_movement_permission",
+          moveThrough: {
+            creatureSizeRelationToSelf: "larger",
+            kind: "occupied_creature_space",
+          },
+        },
+      });
+      expect(result.catalog.requireUnit("species_halfling_luck")).toMatchObject(
+        {
+          kind: "species_trait",
+          species: "halfling",
+          mechanics: {
+            family: "d20_test_natural_one_reroll",
+            optional: true,
+            reroll: {
+              kind: "reroll_triggering_d20",
+              use: "new_roll",
+            },
+            trigger: {
+              dieFace: 1,
+              kind: "d20_test_roll_is",
+            },
+          },
+        },
+      );
+      expect(
+        result.catalog.requireUnit("species_halfling_naturally_stealthy"),
+      ).toMatchObject({
+        kind: "species_trait",
+        species: "halfling",
+        mechanics: {
+          action: "hide",
+          allowedObscurement: {
+            creatureSizeRelationToSelf: "at_least_one_size_larger",
+            kind: "obscured_only_by_creature",
+          },
+          family: "hide_action_obscurement_permission",
         },
       });
     }

@@ -903,6 +903,15 @@ export type FeatRecord = Schema.Schema.Type<
 export type SpeciesTraitMechanics = Schema.Schema.Type<
   typeof SurfaceSchema.SpeciesTraitMechanicsSchema
 >;
+export type D20TestNaturalOneRerollMechanics = Schema.Schema.Type<
+  typeof SurfaceSchema.D20TestNaturalOneRerollMechanicsSchema
+>;
+export type CreatureSpaceMovementPermissionMechanics = Schema.Schema.Type<
+  typeof SurfaceSchema.CreatureSpaceMovementPermissionMechanicsSchema
+>;
+export type HideActionObscurementPermissionMechanics = Schema.Schema.Type<
+  typeof SurfaceSchema.HideActionObscurementPermissionMechanicsSchema
+>;
 export type DragonbornSpeciesTraits = Schema.Schema.Type<
   typeof SurfaceSchema.DragonbornSpeciesTraitsSchema
 >;
@@ -929,6 +938,12 @@ export type GnomeSpeciesTraits = Schema.Schema.Type<
 >;
 export type GnomeSpeciesRecord = Schema.Schema.Type<
   typeof SurfaceSchema.GnomeSpeciesRecordSchema
+>;
+export type HalflingSpeciesTraits = Schema.Schema.Type<
+  typeof SurfaceSchema.HalflingSpeciesTraitsSchema
+>;
+export type HalflingSpeciesRecord = Schema.Schema.Type<
+  typeof SurfaceSchema.HalflingSpeciesRecordSchema
 >;
 export type GoliathSpeciesTraits = Schema.Schema.Type<
   typeof SurfaceSchema.GoliathSpeciesTraitsSchema

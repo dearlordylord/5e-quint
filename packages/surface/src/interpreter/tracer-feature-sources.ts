@@ -2,9 +2,12 @@ import type {
   ActivatedAbilityMechanics,
   ClassFeatureRecord,
   CompositeMagicItemMechanics,
+  CreatureSpaceMovementPermissionMechanics,
+  D20TestNaturalOneRerollMechanics,
   FeatRecord,
   GrapplerFeatMechanics,
   GnomishLineageMechanics,
+  HideActionObscurementPermissionMechanics,
   ItemDestructionPolicy,
   LightExtraAttackDamageAbilityModifierFeatMechanics,
   MagicItemAttunement,
@@ -405,7 +408,25 @@ export function traceSpeciesTraitUnit(trait: SpeciesTraitRecord): Trace {
       ? traceTriggeredReplacementMechanics(trait.mechanics, nodes, edges, ids)
       : trait.mechanics.family === "species_lineage_choice"
         ? traceGnomishLineageMechanics(trait.mechanics, nodes, edges, ids)
-        : tracePassiveOrActivated(trait.mechanics, nodes, edges, ids);
+        : trait.mechanics.family === "d20_test_natural_one_reroll"
+          ? traceD20TestNaturalOneRerollMechanics(
+              trait.mechanics,
+              nodes,
+              ids,
+            )
+          : trait.mechanics.family === "creature_space_movement_permission"
+            ? traceCreatureSpaceMovementPermissionMechanics(
+                trait.mechanics,
+                nodes,
+                ids,
+              )
+            : trait.mechanics.family === "hide_action_obscurement_permission"
+              ? traceHideActionObscurementPermissionMechanics(
+                  trait.mechanics,
+                  nodes,
+                  ids,
+                )
+              : tracePassiveOrActivated(trait.mechanics, nodes, edges, ids);
   edges.push({ from: rootId, to: procId, relation: "roots" });
 
   return {
@@ -463,6 +484,59 @@ function traceGnomishLineageMechanics(
   }
 
   return choiceId;
+}
+
+function traceD20TestNaturalOneRerollMechanics(
+  mechanics: D20TestNaturalOneRerollMechanics,
+  nodes: TraceNode[],
+  ids: IdGen,
+): string {
+  const procId = ids("d20-test-natural-one-reroll");
+  nodes.push({
+    id: procId,
+    category: "procedure",
+    atomKind: mechanics.family,
+    label:
+      `${mechanics.family}\n${mechanics.trigger.kind}: ${mechanics.trigger.dieFace}\n` +
+      `${mechanics.reroll.kind}: ${mechanics.reroll.use}\noptional`,
+  });
+  return procId;
+}
+
+function traceCreatureSpaceMovementPermissionMechanics(
+  mechanics: CreatureSpaceMovementPermissionMechanics,
+  nodes: TraceNode[],
+  ids: IdGen,
+): string {
+  const procId = ids("creature-space-movement-permission");
+  nodes.push({
+    id: procId,
+    category: "procedure",
+    atomKind: mechanics.family,
+    label:
+      `${mechanics.family}\n${mechanics.moveThrough.kind}\n` +
+      `${mechanics.moveThrough.creatureSizeRelationToSelf}\n` +
+      `can stop: ${mechanics.canStopInOccupiedSpace}`,
+  });
+  return procId;
+}
+
+function traceHideActionObscurementPermissionMechanics(
+  mechanics: HideActionObscurementPermissionMechanics,
+  nodes: TraceNode[],
+  ids: IdGen,
+): string {
+  const procId = ids("hide-action-obscurement-permission");
+  nodes.push({
+    id: procId,
+    category: "procedure",
+    atomKind: mechanics.family,
+    label:
+      `${mechanics.family}\n${mechanics.action}\n` +
+      `${mechanics.allowedObscurement.kind}\n` +
+      mechanics.allowedObscurement.creatureSizeRelationToSelf,
+  });
+  return procId;
 }
 
 // ============================================================

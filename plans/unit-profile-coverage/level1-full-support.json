@@ -6015,8 +6015,8 @@
         "group": "species-records",
         "label": "SRD species records",
         "metrics": {
-          "denominator": 7,
-          "numerator": 7,
+          "denominator": 8,
+          "numerator": 8,
           "percent": "100%"
         },
         "rows": [
@@ -6058,6 +6058,13 @@
           {
             "kind": "species",
             "ready": true,
+            "sourceRecordPath": "packages/surface/content/species_halfling.json",
+            "status": "installed",
+            "unitId": "species_halfling"
+          },
+          {
+            "kind": "species",
+            "ready": true,
             "sourceRecordPath": "packages/surface/content/species_orc.json",
             "status": "installed",
             "unitId": "species_orc"
@@ -6071,7 +6078,7 @@
           }
         ],
         "rowsByStatus": {
-          "installed": 7
+          "installed": 8
         }
       },
       {
@@ -6081,8 +6088,8 @@
         "group": "species-trait-refs",
         "label": "SRD species trait refs",
         "metrics": {
-          "denominator": 14,
-          "numerator": 14,
+          "denominator": 18,
+          "numerator": 18,
           "percent": "100%"
         },
         "rows": [
@@ -6178,6 +6185,42 @@
           },
           {
             "kind": "species_trait",
+            "ownerUnitId": "species_halfling",
+            "ready": true,
+            "relation": "species.traits.brave",
+            "sourceRecordPath": "packages/surface/content/species_halfling_brave.json",
+            "status": "installed",
+            "unitId": "species_halfling_brave"
+          },
+          {
+            "kind": "species_trait",
+            "ownerUnitId": "species_halfling",
+            "ready": true,
+            "relation": "species.traits.halflingNimbleness",
+            "sourceRecordPath": "packages/surface/content/species_halfling_nimbleness.json",
+            "status": "installed",
+            "unitId": "species_halfling_nimbleness"
+          },
+          {
+            "kind": "species_trait",
+            "ownerUnitId": "species_halfling",
+            "ready": true,
+            "relation": "species.traits.luck",
+            "sourceRecordPath": "packages/surface/content/species_halfling_luck.json",
+            "status": "installed",
+            "unitId": "species_halfling_luck"
+          },
+          {
+            "kind": "species_trait",
+            "ownerUnitId": "species_halfling",
+            "ready": true,
+            "relation": "species.traits.naturallyStealthy",
+            "sourceRecordPath": "packages/surface/content/species_halfling_naturally_stealthy.json",
+            "status": "installed",
+            "unitId": "species_halfling_naturally_stealthy"
+          },
+          {
+            "kind": "species_trait",
             "ownerUnitId": "species_orc",
             "ready": true,
             "relation": "species.traits.adrenalineRush",
@@ -6214,7 +6257,7 @@
           }
         ],
         "rowsByStatus": {
-          "installed": 14
+          "installed": 18
         }
       },
       {
@@ -6533,8 +6576,8 @@
       }
     ],
     "metrics": {
-      "denominator": 62,
-      "numerator": 62,
+      "denominator": 67,
+      "numerator": 67,
       "percent": "100%"
     },
     "openBlockerCount": 0

@@ -43,14 +43,14 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
-      "denominator": 434,
-      "numerator": 241,
-      "percent": "55.5%"
+      "denominator": 438,
+      "numerator": 245,
+      "percent": "55.9%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 520,
-      "numerator": 289,
-      "percent": "55.6%"
+      "denominator": 525,
+      "numerator": 294,
+      "percent": "56%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,7 +59,7 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 290
+      "value": 295
     },
     "deterministicAdmissionProjectionCoverage": {
       "denominator": 177,
@@ -67,8 +67,8 @@
       "percent": "97.7%"
     },
     "profileClassificationCoverage": {
-      "denominator": 290,
-      "numerator": 290,
+      "denominator": 295,
+      "numerator": 295,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -112,9 +112,9 @@
       "percent": "100%"
     },
     "supportedProfileCoverage": {
-      "denominator": 242,
+      "denominator": 246,
       "numerator": 177,
-      "percent": "73.1%"
+      "percent": "72%"
     }
   },
   "metricSemantics": [
@@ -16160,6 +16160,24 @@
         "status": "installed"
       },
       "claim": {
+        "reason": "Species admission container record; character creation can retain Halfling as a selected fixed-Small species and preserve authored trait Unit refs, while executable battle pressure lives on the individual trait Units.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "species",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/species_halfling.json",
+      "unitId": "species_halfling"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
         "reason": "Species admission container record; character creation retains the selected species source fact and authored trait Unit refs, while executable battle pressure lives on species trait Units.",
         "tag": "unsupported-profile"
       },
@@ -24321,6 +24339,98 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/species_gnome_gnomish_lineage.json",
       "unitId": "species_gnome_gnomish_lineage"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-battle-runtime",
+          "owner": "future condition-scoped saving-throw roll-mode owner",
+          "reason": "Battle admission must widen the typed condition-scoped Saving Throw Advantage profile and corresponding rule-core/runtime evidence before reducers can consume the Frightened condition filter."
+        },
+        "reason": "Brave is authored as passive Advantage on Saving Throws with a Frightened condition filter, but the promoted passive-saving-throw roll-mode profile admits Poisoned condition-scoped species saves, not Frightened saves. No promoted profile owns this Frightened save condition yet.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "species_trait",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/species_halfling_brave.json",
+      "unitId": "species_halfling_brave"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "table-spatial-derivation",
+          "owner": "future movement and spatial-occupancy owner",
+          "reason": "Automatic occupied-space traversal, creature size relation along a path, and ending-space legality require table/spatial movement facts outside the promoted battle Unit profiles."
+        },
+        "reason": "Halfling Nimbleness is authored as a movement permission through occupied creature spaces larger than the Halfling with an explicit cannot-stop-there boundary. No promoted movement profile owns creature-space path traversal or occupied-space stopping legality yet.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "species_trait",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/species_halfling_nimbleness.json",
+      "unitId": "species_halfling_nimbleness"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-battle-runtime",
+          "owner": "future D20 Test natural-1 reroll replacement owner",
+          "reason": "A runtime owner must model post-roll choice timing, reroll consumption, and new-roll replacement across all D20 Test surfaces before reducers can consume this typed source fact."
+        },
+        "reason": "Luck is authored as an optional natural-1 D20 Test reroll that must use the new roll. No promoted Unit profile owns post-roll optional reroll replacement across Attack Rolls, Ability Checks, and Saving Throws yet.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "species_trait",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/species_halfling_luck.json",
+      "unitId": "species_halfling_luck"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "future Hide and obscurement eligibility owner",
+          "reason": "Creature-caused obscurement, size relation to the obscuring creature, and Hide action availability are table/perception facts outside promoted battle Unit execution."
+        },
+        "reason": "Naturally Stealthy is authored as a Hide-action eligibility permission when the Halfling is obscured only by a creature at least one size larger. No promoted profile owns creature-caused obscurement or Hide eligibility override facts yet.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "species_trait",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/species_halfling_naturally_stealthy.json",
+      "unitId": "species_halfling_naturally_stealthy"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

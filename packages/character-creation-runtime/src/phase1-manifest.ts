@@ -97,6 +97,7 @@ export const SRD_CHARACTER_ADMISSION_SPECIES_UNIT_IDS = [
   "species_dragonborn",
   "species_dwarf",
   "species_elf",
+  "species_halfling",
   "species_goliath",
   PHASE1_SPECIES_ORC_UNIT_ID,
   "species_tiefling",

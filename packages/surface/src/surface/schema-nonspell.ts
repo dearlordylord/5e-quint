@@ -3646,11 +3646,45 @@ export const GnomishLineageMechanicsSchema = strictStruct({
   ),
 });
 
+export const D20TestNaturalOneRerollMechanicsSchema = strictStruct({
+  family: Schema.Literal("d20_test_natural_one_reroll"),
+  trigger: strictStruct({
+    kind: Schema.Literal("d20_test_roll_is"),
+    dieFace: Schema.Literal(1),
+  }),
+  reroll: strictStruct({
+    kind: Schema.Literal("reroll_triggering_d20"),
+    use: Schema.Literal("new_roll"),
+  }),
+  optional: Schema.Literal(true),
+});
+
+export const CreatureSpaceMovementPermissionMechanicsSchema = strictStruct({
+  family: Schema.Literal("creature_space_movement_permission"),
+  moveThrough: strictStruct({
+    kind: Schema.Literal("occupied_creature_space"),
+    creatureSizeRelationToSelf: Schema.Literal("larger"),
+  }),
+  canStopInOccupiedSpace: Schema.Literal(false),
+});
+
+export const HideActionObscurementPermissionMechanicsSchema = strictStruct({
+  family: Schema.Literal("hide_action_obscurement_permission"),
+  action: Schema.Literal("hide"),
+  allowedObscurement: strictStruct({
+    kind: Schema.Literal("obscured_only_by_creature"),
+    creatureSizeRelationToSelf: Schema.Literal("at_least_one_size_larger"),
+  }),
+});
+
 export const SpeciesTraitMechanicsSchema = Schema.Union(
   PassiveMechanicsSchema,
   ActivatedAbilityMechanicsSchema,
   TriggeredReplacementMechanicsSchema,
   GnomishLineageMechanicsSchema,
+  D20TestNaturalOneRerollMechanicsSchema,
+  CreatureSpaceMovementPermissionMechanicsSchema,
+  HideActionObscurementPermissionMechanicsSchema,
 );
 
 export const SpeciesTraitRecordSchema = Schema.Struct({
@@ -3833,6 +3867,21 @@ export const GnomeSpeciesRecordSchema = Schema.Struct({
   traits: GnomeSpeciesTraitsSchema,
 });
 
+export const HalflingSpeciesTraitsSchema = Schema.Struct({
+  brave: Schema.Literal("species_halfling_brave"),
+  halflingNimbleness: Schema.Literal("species_halfling_nimbleness"),
+  luck: Schema.Literal("species_halfling_luck"),
+  naturallyStealthy: Schema.Literal("species_halfling_naturally_stealthy"),
+});
+
+export const HalflingSpeciesRecordSchema = Schema.Struct({
+  ...SpeciesRecordBaseSchema.fields,
+  species: Schema.Literal("halfling"),
+  size: FixedSmallSpeciesSizeSchema,
+  speed: SpeciesSpeed30Schema,
+  traits: HalflingSpeciesTraitsSchema,
+});
+
 export const GoliathSpeciesTraitsSchema = Schema.Struct({
   powerfulBuild: Schema.Literal("species_goliath_powerful_build"),
 });
@@ -3870,6 +3919,7 @@ export const SpeciesRecordSchema = Schema.Union(
   DwarfSpeciesRecordSchema,
   ElfSpeciesRecordSchema,
   GnomeSpeciesRecordSchema,
+  HalflingSpeciesRecordSchema,
   GoliathSpeciesRecordSchema,
   OrcSpeciesRecordSchema,
   TieflingSpeciesRecordSchema,

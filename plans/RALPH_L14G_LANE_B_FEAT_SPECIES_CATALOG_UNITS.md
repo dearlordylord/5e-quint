@@ -43,7 +43,7 @@
     {
       "number": 7,
       "id": "L14G-B07-SPECIES-HALFLING",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Research and plan Halfling species ownership"
     },
     {
@@ -69,6 +69,30 @@
       "id": "L3-FOLLOWUP-TWO-WEAPON-FIGHTING-RUNTIME",
       "status": "ready-for-research",
       "title": "Promote Two-Weapon Fighting battle runtime support"
+    },
+    {
+      "number": 12,
+      "id": "L3-FOLLOWUP-HALFLING-BRAVE-RUNTIME",
+      "status": "ready-for-research",
+      "title": "Promote Halfling Brave saving throw support"
+    },
+    {
+      "number": 13,
+      "id": "L3-FOLLOWUP-HALFLING-NIMBLENESS-RUNTIME",
+      "status": "ready-for-research",
+      "title": "Promote Halfling Nimbleness movement support"
+    },
+    {
+      "number": 14,
+      "id": "L3-FOLLOWUP-HALFLING-LUCK-RUNTIME",
+      "status": "ready-for-research",
+      "title": "Promote Halfling Luck D20 Test reroll support"
+    },
+    {
+      "number": 15,
+      "id": "L3-FOLLOWUP-HALFLING-NATURALLY-STEALTHY-RUNTIME",
+      "status": "ready-for-research",
+      "title": "Promote Halfling Naturally Stealthy Hide support"
     }
   ]
 }
@@ -122,6 +146,10 @@ the Unit catalog, or the Unit matrix.
 | L3-FOLLOWUP-GRAPPLER-RUNTIME | L14G-B03-FEAT-GRAPPLER | Runtime support consumes the typed Grappler Surface facts installed by Task 3. |
 | L3-FOLLOWUP-GREAT-WEAPON-FIGHTING-RUNTIME | L14G-B04-FEAT-GREAT-WEAPON-FIGHTING | Runtime support consumes the typed Great Weapon Fighting Surface facts installed by Task 4. |
 | L3-FOLLOWUP-TWO-WEAPON-FIGHTING-RUNTIME | L14G-B05-FEAT-TWO-WEAPON-FIGHTING | Runtime support consumes the typed Two-Weapon Fighting Surface facts installed by Task 5. |
+| L3-FOLLOWUP-HALFLING-BRAVE-RUNTIME | L14G-B07-SPECIES-HALFLING | Runtime support consumes Halfling Brave's typed Frightened-condition Saving Throw Advantage facts. |
+| L3-FOLLOWUP-HALFLING-NIMBLENESS-RUNTIME | L14G-B07-SPECIES-HALFLING | Runtime support consumes Halfling Nimbleness's typed creature-space movement permission facts. |
+| L3-FOLLOWUP-HALFLING-LUCK-RUNTIME | L14G-B07-SPECIES-HALFLING | Runtime support consumes Halfling Luck's typed natural-1 D20 Test reroll facts. |
+| L3-FOLLOWUP-HALFLING-NATURALLY-STEALTHY-RUNTIME | L14G-B07-SPECIES-HALFLING | Runtime support consumes Naturally Stealthy's typed Hide-obscurement permission facts. |
 
 ## Verification Command Sets
 
@@ -376,7 +404,7 @@ Verification:
 
 ### Task 7 - L14G-B07-SPECIES-HALFLING
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -388,23 +416,30 @@ SRD anchor: `.references/srd-5.2.1/Character-Origins.md:215-229`
 
 Current state:
 
-- No Surface species content row.
-- No Unit catalog row.
-- No Unit matrix row.
-- Species schema excludes Halfling.
+- Surface content row installed as an SRD species.
+- Unit catalog row installed.
+- Unit matrix row installed as `unsupported-profile`.
+- Species schema includes Halfling with fixed Small size, 30-foot Speed, and
+  four authored trait refs.
+- Character creation admits Halfling as a fixed-size species and retains its
+  trait Unit refs.
 
 Output:
 
-- Research species schema widening and the trait split for Brave, Halfling
-  Nimbleness, Luck, and Naturally Stealthy.
-- Decide which traits can reuse existing support and which need battle/runtime
-  follow-up.
+- Installed Halfling species identity and split Brave, Halfling Nimbleness,
+  Luck, and Naturally Stealthy into typed Surface trait facts.
+- Kept all four trait Units unsupported until their runtime owners are promoted.
+- Split follow-up owner work into
+  `L3-FOLLOWUP-HALFLING-BRAVE-RUNTIME`,
+  `L3-FOLLOWUP-HALFLING-NIMBLENESS-RUNTIME`,
+  `L3-FOLLOWUP-HALFLING-LUCK-RUNTIME`, and
+  `L3-FOLLOWUP-HALFLING-NATURALLY-STEALTHY-RUNTIME`.
 
 Acceptance:
 
-- Halfling identity cannot be silently absent from the SRD species set.
+- Halfling identity is installed in the SRD species set.
 - Trait support is typed; Halfling traits are not represented by one broad
-  unsupported blob.
+  unsupported blob or by authored-identity runtime dispatch.
 
 Verification:
 
@@ -605,6 +640,191 @@ Verification:
 - RAW and ubiquitous-language check against the Two-Weapon Fighting SRD anchor.
 - Focused battle tests/QNT/MBT only for implemented battle behavior, with at
   most one focused MBT run after code changes are complete.
+- `pnpm --filter @dnd/battle-runtime typecheck`.
+- `git diff --check`.
+
+### Task 12 - L3-FOLLOWUP-HALFLING-BRAVE-RUNTIME
+
+Status: `ready-for-research`
+
+Depends on:
+
+- L14G-B07-SPECIES-HALFLING
+
+Unit: `species_halfling_brave`
+
+SRD anchor: `.references/srd-5.2.1/Character-Origins.md:220-221`
+
+Current state:
+
+- Brave is installed as a typed passive species trait with Advantage on Saving
+  Throws to avoid or end the Frightened condition.
+- The Unit matrix records `species_halfling_brave` as `unsupported-profile`.
+- The promoted passive-saving-throw roll-mode profile admits Poisoned
+  condition-scoped species saves, not Frightened saves.
+
+Output:
+
+- Research and implement a condition-scoped Saving Throw Advantage owner for
+  Frightened saves.
+- Consume the existing typed condition filter and Saving Throw roll-mode facts;
+  do not dispatch on Halfling or Brave identity.
+- Update focused QNT/rule-core slices only where runtime semantics change, then
+  promote the Unit claim to `supported-profile` or `profile-subset-supported`.
+
+Acceptance:
+
+- Avoiding and ending Frightened Saving Throws are covered by focused tests.
+- The promoted profile is keyed by typed roll and condition facts, not species
+  trait identity.
+- The Unit matrix claim names the admitted Brave profile and does not claim
+  support for unrelated saving-throw Advantage shapes.
+
+Verification:
+
+- RAW and ubiquitous-language check against the Brave SRD anchor.
+- Focused battle tests/QNT/MBT only for implemented battle behavior, with at
+  most one focused MBT run after code changes are complete.
+- `pnpm --filter @dnd/battle-runtime typecheck`.
+- `git diff --check`.
+
+### Task 13 - L3-FOLLOWUP-HALFLING-NIMBLENESS-RUNTIME
+
+Status: `ready-for-research`
+
+Depends on:
+
+- L14G-B07-SPECIES-HALFLING
+
+Unit: `species_halfling_nimbleness`
+
+SRD anchor: `.references/srd-5.2.1/Character-Origins.md:222-223`
+
+Current state:
+
+- Halfling Nimbleness is installed as typed creature-space movement permission
+  facts with a larger-creature traversal relation and an explicit cannot-stop
+  boundary.
+- The Unit matrix records `species_halfling_nimbleness` as
+  `unsupported-profile`.
+- No promoted movement/spatial profile owns creature-space path traversal or
+  occupied-space ending legality.
+
+Output:
+
+- Research and implement a movement owner for passing through larger creature
+  spaces while rejecting stops in the same occupied space.
+- Consume existing movement budget, creature size, position, and occupancy facts
+  where available; do not store species-owned movement state.
+- Update focused QNT/rule-core slices only where runtime semantics change, then
+  promote the Unit claim to `supported-profile` or `profile-subset-supported`.
+
+Acceptance:
+
+- Traversal through larger creature spaces and illegal ending-space cases are
+  covered by focused tests.
+- The movement model consumes typed size-relation and occupancy facts rather
+  than authored Halfling identity.
+- The Unit matrix claim names the admitted Nimbleness profile and does not claim
+  support for broader spatial movement behavior.
+
+Verification:
+
+- RAW and ubiquitous-language check against the Halfling Nimbleness SRD anchor.
+- Focused movement tests/QNT/MBT only for implemented battle behavior, with at
+  most one focused MBT run after code changes are complete.
+- `pnpm --filter @dnd/battle-runtime typecheck`.
+- `git diff --check`.
+
+### Task 14 - L3-FOLLOWUP-HALFLING-LUCK-RUNTIME
+
+Status: `ready-for-research`
+
+Depends on:
+
+- L14G-B07-SPECIES-HALFLING
+
+Unit: `species_halfling_luck`
+
+SRD anchor: `.references/srd-5.2.1/Character-Origins.md:224-225`
+
+Current state:
+
+- Luck is installed as typed natural-1 D20 Test reroll facts: optional reroll of
+  the triggering d20 and mandatory use of the new roll.
+- The Unit matrix records `species_halfling_luck` as `unsupported-profile`.
+- No promoted runtime owner models post-roll optional reroll timing across
+  Attack Rolls, Ability Checks, and Saving Throws.
+
+Output:
+
+- Research and implement a D20 Test natural-1 reroll replacement owner.
+- Consume existing roll procedure facts for Attack Rolls, Ability Checks, and
+  Saving Throws; do not store a parallel luck-owned roll result.
+- Update focused QNT/rule-core slices only where runtime semantics change, then
+  promote the Unit claim to `supported-profile` or `profile-subset-supported`.
+
+Acceptance:
+
+- Natural-1 trigger, non-1 rejection, optional choice timing, and mandatory new
+  roll usage are covered by focused tests.
+- The implementation is keyed by D20 Test and die-face facts, not Luck or
+  Halfling identity.
+- The Unit matrix claim names the admitted Luck profile and does not claim
+  support for unrelated reroll mechanics.
+
+Verification:
+
+- RAW and ubiquitous-language check against the Luck SRD anchor.
+- Focused roll tests/QNT/MBT only for implemented battle behavior, with at most
+  one focused MBT run after code changes are complete.
+- `pnpm --filter @dnd/battle-runtime typecheck`.
+- `git diff --check`.
+
+### Task 15 - L3-FOLLOWUP-HALFLING-NATURALLY-STEALTHY-RUNTIME
+
+Status: `ready-for-research`
+
+Depends on:
+
+- L14G-B07-SPECIES-HALFLING
+
+Unit: `species_halfling_naturally_stealthy`
+
+SRD anchor: `.references/srd-5.2.1/Character-Origins.md:226-227`
+
+Current state:
+
+- Naturally Stealthy is installed as typed Hide action obscurement permission
+  facts for being obscured only by a creature at least one size larger.
+- The Unit matrix records `species_halfling_naturally_stealthy` as
+  `unsupported-profile`.
+- No promoted Hide/obscurement profile owns creature-caused obscurement or
+  size-relation eligibility facts.
+
+Output:
+
+- Research and implement a Hide eligibility owner for creature-caused
+  obscurement with the at-least-one-size-larger relation.
+- Consume existing Hide action, creature size, observer, and obscurement facts
+  where available; do not store species-owned stealth state.
+- Update focused QNT/rule-core slices only where runtime semantics change, then
+  promote the Unit claim to `supported-profile` or `profile-subset-supported`.
+
+Acceptance:
+
+- Legal creature-obscured Hide attempts and illegal size/obscurement cases are
+  covered by focused tests.
+- The implementation is keyed by Hide, obscurement, and size-relation facts, not
+  Naturally Stealthy or Halfling identity.
+- The Unit matrix claim names the admitted Naturally Stealthy profile and does
+  not claim support for broader stealth behavior.
+
+Verification:
+
+- RAW and ubiquitous-language check against the Naturally Stealthy SRD anchor.
+- Focused Hide/obscurement tests/QNT/MBT only for implemented battle behavior,
+  with at most one focused MBT run after code changes are complete.
 - `pnpm --filter @dnd/battle-runtime typecheck`.
 - `git diff --check`.
 

@@ -25,6 +25,7 @@ import speciesDragonbornInput from "../../content/species_dragonborn.json";
 import speciesDwarfInput from "../../content/species_dwarf.json";
 import speciesElfInput from "../../content/species_elf.json";
 import speciesGnomeInput from "../../content/species_gnome.json";
+import speciesHalflingInput from "../../content/species_halfling.json";
 import speciesGoliathInput from "../../content/species_goliath.json";
 import speciesOrcInput from "../../content/species_orc.json";
 import speciesTieflingInput from "../../content/species_tiefling.json";
@@ -1696,6 +1697,22 @@ describe("character-creation Surface records", () => {
             darkvision: "species_gnome_darkvision",
             gnomishCunning: "species_gnome_gnomish_cunning",
             gnomishLineage: "species_gnome_gnomish_lineage",
+          },
+        },
+      },
+      {
+        input: speciesHalflingInput,
+        expected: {
+          recordId: "species_halfling",
+          species: "halfling",
+          creatureType: "humanoid",
+          size: { kind: "fixed", size: "small" },
+          speed: { walkFeet: 30 },
+          traits: {
+            brave: "species_halfling_brave",
+            halflingNimbleness: "species_halfling_nimbleness",
+            luck: "species_halfling_luck",
+            naturallyStealthy: "species_halfling_naturally_stealthy",
           },
         },
       },

@@ -209,6 +209,11 @@ import speciesGnomeInput from "../../content/species_gnome.json";
 import speciesGnomeDarkvisionInput from "../../content/species_gnome_darkvision.json";
 import speciesGnomeGnomishCunningInput from "../../content/species_gnome_gnomish_cunning.json";
 import speciesGnomeGnomishLineageInput from "../../content/species_gnome_gnomish_lineage.json";
+import speciesHalflingInput from "../../content/species_halfling.json";
+import speciesHalflingBraveInput from "../../content/species_halfling_brave.json";
+import speciesHalflingNimblenessInput from "../../content/species_halfling_nimbleness.json";
+import speciesHalflingLuckInput from "../../content/species_halfling_luck.json";
+import speciesHalflingNaturallyStealthyInput from "../../content/species_halfling_naturally_stealthy.json";
 import speciesGoliathInput from "../../content/species_goliath.json";
 import speciesGoliathPowerfulBuildInput from "../../content/species_goliath_powerful_build.json";
 import speciesOrcInput from "../../content/species_orc.json";
@@ -424,6 +429,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     speciesDwarfInput,
     speciesElfInput,
     speciesGnomeInput,
+    speciesHalflingInput,
     speciesGoliathInput,
     speciesOrcInput,
     speciesTieflingInput,
@@ -550,6 +556,10 @@ export const srdUnitCollection = defineSrdUnitCollection({
     speciesGnomeDarkvisionInput,
     speciesGnomeGnomishCunningInput,
     speciesGnomeGnomishLineageInput,
+    speciesHalflingBraveInput,
+    speciesHalflingNimblenessInput,
+    speciesHalflingLuckInput,
+    speciesHalflingNaturallyStealthyInput,
     speciesGoliathPowerfulBuildInput,
     speciesTieflingDarkvisionInput,
     acidSplashInput,
