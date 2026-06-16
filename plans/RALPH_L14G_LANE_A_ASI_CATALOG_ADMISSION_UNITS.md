@@ -31,7 +31,7 @@
     {
       "number": 5,
       "id": "L14G-A05-MONK-ASI-CATALOG-ADMISSION",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Install Monk level-4 ASI catalog admission"
     },
     {
@@ -241,7 +241,7 @@ Verification:
 
 ### Task 5 - L14G-A05-MONK-ASI-CATALOG-ADMISSION
 
-Status: `ready-for-implementation`
+Status: `done`
 
 Depends on:
 

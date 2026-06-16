@@ -2017,12 +2017,7 @@
       "unitId": "minor_illusion"
     },
     {
-      "catalogDisposition": {
-        "category": "unsupported-widening-pressure",
-        "planningLane": "QMBT18",
-        "reason": "Executable SRD authored data is absent from the catalog and needs an explicit unsupported profile or surface-widening slice."
-      },
-      "catalogStatus": "not-in-unit-catalog",
+      "catalogStatus": "installed",
       "claimTag": "unsupported-profile",
       "closureKinds": [
         "selection-grant-container"
@@ -10654,8 +10649,8 @@
         "group": "level-scoped-class-feature-grants",
         "label": "SRD class feature grants through level 4",
         "metrics": {
-          "denominator": 55,
-          "numerator": 55,
+          "denominator": 56,
+          "numerator": 56,
           "percent": "100%"
         },
         "rows": [
@@ -10916,6 +10911,15 @@
             "ownerUnitId": "class_monk",
             "ready": true,
             "relation": "class.featureGrants.level-4",
+            "sourceRecordPath": "packages/surface/content/monk_ability_score_improvement_l4.json",
+            "status": "installed",
+            "unitId": "monk_ability_score_improvement_l4"
+          },
+          {
+            "kind": "class_feature",
+            "ownerUnitId": "class_monk",
+            "ready": true,
+            "relation": "class.featureGrants.level-4",
             "sourceRecordPath": "packages/surface/content/monk_slow_fall.json",
             "status": "installed",
             "unitId": "monk_slow_fall"
@@ -11156,7 +11160,7 @@
           }
         ],
         "rowsByStatus": {
-          "installed": 55
+          "installed": 56
         }
       },
       {
@@ -11233,8 +11237,8 @@
       }
     ],
     "metrics": {
-      "denominator": 88,
-      "numerator": 88,
+      "denominator": 89,
+      "numerator": 89,
       "percent": "100%"
     },
     "openBlockerCount": 0

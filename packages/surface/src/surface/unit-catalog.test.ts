@@ -5717,6 +5717,38 @@ describe("SRD Unit catalog boundary", () => {
     });
   });
 
+  test("installs Monk level 4 Ability Score Improvement beside Slow Fall", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag !== "ok") return;
+
+    expect(result.catalog.requireUnit("class_monk")).toMatchObject({
+      featureGrants: expect.arrayContaining([
+        { level: 4, unitId: "monk_ability_score_improvement_l4" },
+        { level: 4, unitId: "monk_slow_fall" },
+      ]),
+      kind: "class",
+    });
+    expect(
+      result.catalog.requireUnit("monk_ability_score_improvement_l4"),
+    ).toMatchObject({
+      acquiredAtLevel: 4,
+      className: "monk",
+      kind: "class_feature",
+      mechanics: {
+        family: "passive",
+        grants: [
+          {
+            category: "general",
+            kind: "grant_feat",
+            openFallback: "any_qualifying_feat",
+          },
+        ],
+      },
+    });
+  });
+
   test("authors Fighter Champion feature grants through canonical Unit ids", () => {
     const result = buildUnitCatalog({ collections: [srdUnitCollection] });
 

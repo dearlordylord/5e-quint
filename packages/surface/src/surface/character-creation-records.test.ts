@@ -170,6 +170,25 @@ describe("character-creation Surface records", () => {
     });
   });
 
+  test("decodes and reads Monk level 4 feature grants", () => {
+    const classRecord = decodeClassRecordSync(classMonkInput);
+    const unit = decodeUnitRecordSync(classMonkInput);
+    const result = readClassCreationFacts(unit);
+
+    expect(classRecord.kind).toBe("class");
+    expect(result).toMatchObject({
+      tag: "readable",
+      value: {
+        recordId: "class_monk",
+        className: "monk",
+        featureGrants: expect.arrayContaining([
+          { level: 4, unitId: "monk_ability_score_improvement_l4" },
+          { level: 4, unitId: "monk_slow_fall" },
+        ]),
+      },
+    });
+  });
+
   test("decodes and reads Fighter class creation facts", () => {
     const classRecord = decodeClassRecordSync(classFighterInput);
     const unit = decodeUnitRecordSync(classFighterInput);
