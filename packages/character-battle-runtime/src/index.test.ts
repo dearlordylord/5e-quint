@@ -15,6 +15,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3MCHAR-07-FONT-OF-MAGIC-BATTLE-SLOT-SOURCE sorcerer_font_of_magic
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3PUTB-07-RANGER-HUNTERS-PREY-RUNTIME ranger_hunters_prey
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3MSPEC-06-DWARVEN-RESILIENCE-SAVE-MODE dwarf_dwarven_resilience
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-DRUID-WILD-SHAPE-SENSE-LANGUAGE-PROJECTION druid_wild_shape
 import type {
   BattleFill,
   BattleCreatureState,

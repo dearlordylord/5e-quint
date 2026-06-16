@@ -3441,6 +3441,7 @@
         "packages/battle-runtime/src/battle-reducer.ts",
         "packages/battle-runtime/src/battle-reducer/unit-features.ts",
         "packages/battle-runtime/src/battle-reducer/druid-wild-shape.ts",
+        "packages/battle-runtime/src/creature-perception-communication.ts",
         "packages/battle-runtime/src/battle-reducer/statblock.ts",
         "packages/battle-runtime/src/battle-reducer/movement-speed.ts",
         "packages/battle-runtime/src/battle-reducer/creature-state.ts",
@@ -3449,10 +3450,11 @@
         "packages/battle-runtime/src/battle-reducer/spells-invocation-guards.ts",
         "packages/battle-runtime/src/battle-subjects.ts"
       ],
-      "sourceBoundary": "The runtime consumes caller-supplied known Beast Stat Block identities from the Character Sheet and a shape-admitted Druid Wild Shape Unit support profile. This promoted slice supports the RAW merged-equipment choice, explicit fallen-equipment dropped-object outcomes at the existing object/table boundary, not-practical-to-wear fallback to fall or merge, practical worn armor/Shield effective-loadout projection, practical worn weapon and held-weapon object-use projection gated by an explicit caller/GM form-limb object-handling witness, and active-effect storage of that witness, including forms with no selected loadout equipment candidates; generic non-weapon held-object execution, concrete generic object interaction/Utilize consumers, non-resizing/non-reshaping loose-object lifecycle beyond preserving selected-loadout object refs, and downstream table placement/use of dropped objects are closed outside this profile to the generic object/Utilize/table-placement owner; Beast Spells, unsupported stat-block action sections, attack prose riders, multi-component damage, stat-block non-Attack actions, non-D20 sense/language/speech projection, and non-battle active-form persistence remain outside this profile. It owns Bonus Action and Wild Shape use spending, Druid-level Temporary Hit Points, active form Stat Block projection of Armor Class, Size, Speed, practical worn armor/Shield Armor Class and hand-use projection, practical worn selected-loadout weapon attacks plus held-weapon spell/feature consumers gated by the active form-limb witness, fallen-equipment object-drop outcomes sourced to the Wild Shape feature and selected form, Beast Dexterity for Mage Armor AC while shaped, supported form attacks with executable attack-roll damage only, Wild Shape D20 statistic projection for Beast Strength, Dexterity, and Constitution plus retained character Intelligence, Wisdom, and Charisma, retained Skill and Saving Throw proficiencies using the character Proficiency Bonus, gained Beast proficiencies and higher Beast stat-block modifiers where present, Beast Strength Shove save DC while shaped, true-form Unarmed Strike ability modifier preservation, no-spellcasting projection for levels before Beast Spells, half-Druid-level duration in hours while inside battle state, active-form Character Sheet handoff blocking, and reversion on dismiss, reuse, Incapacitated, Unconscious, terminal zero Hit Points, or duration expiry.",
+      "sourceBoundary": "The runtime consumes caller-supplied known Beast Stat Block identities from the Character Sheet and a shape-admitted Druid Wild Shape Unit support profile. This promoted slice supports the RAW merged-equipment choice, explicit fallen-equipment dropped-object outcomes at the existing object/table boundary, not-practical-to-wear fallback to fall or merge, practical worn armor/Shield effective-loadout projection, practical worn weapon and held-weapon object-use projection gated by an explicit caller/GM form-limb object-handling witness, and active-effect storage of that witness, including forms with no selected loadout equipment candidates; generic non-weapon held-object execution, concrete generic object interaction/Utilize consumers, non-resizing/non-reshaping loose-object lifecycle beyond preserving selected-loadout object refs, and downstream table placement/use of dropped objects are closed outside this profile to the generic object/Utilize/table-placement owner; Beast Spells, unsupported stat-block action sections, attack prose riders, multi-component damage, stat-block non-Attack actions, and non-battle active-form persistence remain outside this profile. It owns Bonus Action and Wild Shape use spending, Druid-level Temporary Hit Points, active form Stat Block projection of Armor Class, Size, Speed, practical worn armor/Shield Armor Class and hand-use projection, practical worn selected-loadout weapon attacks plus held-weapon spell/feature consumers gated by the active form-limb witness, fallen-equipment object-drop outcomes sourced to the Wild Shape feature and selected form, Beast Dexterity for Mage Armor AC while shaped, supported form attacks with executable attack-roll damage only, Wild Shape D20 statistic projection for Beast Strength, Dexterity, and Constitution plus retained character Intelligence, Wisdom, and Charisma, retained Skill and Saving Throw proficiencies using the character Proficiency Bonus, gained Beast proficiencies and higher Beast stat-block modifiers where present, Beast Strength Shove save DC while shaped, true-form Unarmed Strike ability modifier preservation, active Wild Shape non-D20 perception and communication projection deriving Beast form special Senses and passive Perception while retaining character known languages and condition-blocked speech without parsing form language prose, no-spellcasting projection for levels before Beast Spells, half-Druid-level duration in hours while inside battle state, active-form Character Sheet handoff blocking, and reversion on dismiss, reuse, Incapacitated, Unconscious, terminal zero Hit Points, or duration expiry.",
       "taskRefs": [
         "L12G-FOLLOWUP-DRUID-WILD-SHAPE-SHAPE-SHIFTING-RUNTIME",
-        "L12G-FOLLOWUP-DRUID-WILD-SHAPE-D20-STAT-PROJECTION"
+        "L12G-FOLLOWUP-DRUID-WILD-SHAPE-D20-STAT-PROJECTION",
+        "L12G-FOLLOWUP-DRUID-WILD-SHAPE-SENSE-LANGUAGE-PROJECTION"
       ],
       "title": "Unit feature spends a Bonus Action and Wild Shape use to assume a known Beast Stat Block form",
       "verificationOwners": [
@@ -3467,6 +3469,10 @@
         {
           "kind": "runtime-test",
           "ownerPath": "packages/character-battle-runtime/src/index.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/creature-perception-communication.test.ts"
         }
       ]
     },
@@ -14919,12 +14925,6 @@
       "taskId": "L12G-FOLLOWUP-DRAGONS-BREATH-GRANTED-ACTION"
     },
     {
-      "claimKind": "accepted-follow-up-split",
-      "note": "Task 7 rechecked SRD Wild Shape retained/replaced statistics plus Shape-Shifting RAW and found no narrow executable owner for non-D20 sense/language/speech projection without a shared creature perception/communication projection. Future work must derive Beast special Senses and retained character languages/speech from existing active-form, Stat Block, Character Sheet, and condition facts rather than adding Wild Shape-local duplicates.",
-      "profileIds": [],
-      "taskId": "L12G-FOLLOWUP-DRUID-WILD-SHAPE-SENSE-LANGUAGE-PROJECTION"
-    },
-    {
       "claimKind": "closed-outside-battle-runtime-boundary",
       "note": "Task 13 closes the remaining Wild Shape object/Utilize remainder to the generic object/Utilize and table-placement owner. Promoted Wild Shape runtime already owns selected-loadout equipment disposition, fallen-equipment droppedObjects, practical worn armor/Shield and weapon consumers, and active form-limb witness storage. Generic non-weapon held objects, downstream dropped-object table use, generic object interaction/Utilize procedures, and durable non-resizing/non-reshaping loose-object lifecycle require canonical table/object state outside the current battle runtime.",
       "profileIds": [],
@@ -14991,6 +14991,14 @@
         "spell.invocation-moonbeam-movable-zone"
       ],
       "taskId": "L12G-FOLLOWUP-MOONBEAM-SHAPESHIFT-AREA-SUPPRESSION"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime and character-battle-runtime tests cover the deterministic creature perception/communication projection: active Wild Shape uses the selected Beast form special Senses and passive Perception while retaining character known languages and speech, with speech blocked by Incapacitated-derived condition state; Stat Block communication remains authored text and absent languages remain distinct.",
+      "profileIds": [
+        "unit-feature.druid-wild-shape-known-form"
+      ],
+      "taskId": "L12G-FOLLOWUP-DRUID-WILD-SHAPE-SENSE-LANGUAGE-PROJECTION"
     },
     {
       "claimKind": "qnt-proof",
@@ -18420,11 +18428,7 @@
         "deferredMechanics": [
           {
             "followUpTaskId": "L12G-FOLLOWUP-DRUID-WILD-SHAPE-SHAPE-SHIFTING-RUNTIME",
-            "mechanic": "Remaining Wild Shape battle execution beyond the promoted merged-equipment, fallen-equipment dropped-object, practical worn armor/Shield, and D20 statistic subset: Beast Spells casting exceptions, unsupported Stat Block action sections, attack prose riders, multi-component damage, and Stat Block non-Attack actions."
-          },
-          {
-            "followUpTaskId": "L12G-FOLLOWUP-DRUID-WILD-SHAPE-SENSE-LANGUAGE-PROJECTION",
-            "mechanic": "Wild Shape non-D20 creature perception and communication projection: Beast-form special Senses and retained character languages/speech need a shared projection owner before battle, app, or MCP views claim them."
+            "mechanic": "Remaining Wild Shape battle execution beyond the promoted merged-equipment, fallen-equipment dropped-object, practical worn armor/Shield, D20 statistic, and perception/communication projection subsets: Beast Spells casting exceptions, unsupported Stat Block action sections, attack prose riders, multi-component damage, and Stat Block non-Attack actions."
           },
           {
             "battleReadinessClosure": {
@@ -18446,17 +18450,10 @@
         "followUpTasks": [
           {
             "id": "L12G-FOLLOWUP-DRUID-WILD-SHAPE-SHAPE-SHIFTING-RUNTIME",
-            "mechanic": "Promote the remaining battle-owned Wild Shape execution after the current known-form subset: Beast Spells casting exceptions, unsupported Stat Block action sections, attack prose riders, multi-component damage, and Stat Block non-Attack actions. Remaining object-handling anatomy, senses, languages, and speech are owned by the narrower follow-ups below; non-battle active-form persistence is closed separately by the ASSUMPTIONS.md A27 owner-decision boundary.",
+            "mechanic": "Promote the remaining battle-owned Wild Shape execution after the current known-form subset: Beast Spells casting exceptions, unsupported Stat Block action sections, attack prose riders, multi-component damage, and Stat Block non-Attack actions. Generic object handling and non-battle active-form persistence are closed separately by their explicit owner boundaries.",
             "owner": "battle-runtime, Stat Block action runtime, Beast Spells owner, and focused QNT/MBT parity",
             "requiredOutput": "Supported Unit profile or narrower profile-subset with focused runtime tests, generated owner evidence, and promoted Quint/MBT parity for each admitted battle executable branch; otherwise leave each branch unpromoted with a precise blocked disposition.",
             "title": "Druid Wild Shape Remaining Battle Shape-Shifting Runtime"
-          },
-          {
-            "id": "L12G-FOLLOWUP-DRUID-WILD-SHAPE-SENSE-LANGUAGE-PROJECTION",
-            "mechanic": "Project Beast Stat Block special Senses while retaining character languages and ability to speak under Wild Shape. The owner must derive facts from the selected active form, retained Character Sheet language facts, and existing condition/speech blockers rather than storing duplicate sense or language state.",
-            "owner": "shared creature perception/communication projection owner, with battle-runtime consumers only after projection facts are typed",
-            "requiredOutput": "Typed shared projection APIs and focused tests for active Wild Shape sense/language/speech facts, plus any battle/app/MCP consumer tests that read those projections without dispatching on authored Wild Shape identity.",
-            "title": "Druid Wild Shape Sense Language And Speech Projection"
           }
         ],
         "profileIds": [
@@ -18469,7 +18466,8 @@
           "Character Creation projects Wild Shape character facts from the retained Surface feature, Druid class level, and SRD Stat Block catalog: use-count thresholds, one use regained on Short Rest, all uses regained on Long Rest, rounded-down hour duration, known-form count thresholds, Beast-form eligibility, maximum Challenge Rating thresholds, Fly Speed eligibility, and one eligible known-form replacement on Long Rest; the RAW recommended Stat Blocks remain Surface recommendations rather than default known-form state",
           "Character Sheet requires explicit selected known Beast form Stat Block identities for Wild Shape builds, validates and stores them as current known-form state, tracks expended Wild Shape uses, derives capacity and reset cadence from CharacterBuild resources and Surface feature facts, regains one expended use on Short Rest, clears expended uses on Long Rest, and applies one eligible known-form replacement on Long Rest",
           "App and MCP sheet-creation boundaries accept explicit Wild Shape known-form Stat Block ids or return a typed missing-known-forms workflow issue, and Character Sheet battle handoff preserves current Wild Shape known-form identities when rebuilding a sheet from battle state",
-          "Battle runtime promotes a merged-equipment, fallen-equipment dropped-object, not-practical-to-wear fallback, practical worn armor/Shield, practical worn weapon and held-weapon object-use projection, and form-limb object-handling witness, pre-Beast-Spells Wild Shape subset: Bonus Action and Wild Shape use spending, caller-selected known Beast form, Druid-level Temporary Hit Points, form Armor Class, Size, Speed, practical worn armor/Shield Armor Class and hand-use projection, practical worn selected-loadout weapon attacks plus held-weapon spell/feature consumers when the active form-limb witness allows object handling, fallen-equipment object-drop outcomes at the shared droppedObjects boundary, active-effect storage of the explicit caller/GM form-limb object-handling witness for object-use consumers, Beast Dexterity Mage Armor AC, supported Stat Block attacks with executable attack-roll damage only, form resources, Wild Shape D20 statistic projection for Beast Strength, Dexterity, and Constitution plus retained character Intelligence, Wisdom, and Charisma, retained Skill and Saving Throw proficiencies using the character Proficiency Bonus, gained Beast proficiencies and higher Beast stat-block modifiers where present, Beast Strength Shove DC while shaped, true-form Unarmed Strike ability modifier preservation, pre-Beast-Spells no-spellcasting projection, reversion on dismiss, reuse, Incapacitated, terminal zero Hit Points, or duration expiry, and active-form Character Sheet handoff block"
+          "Battle runtime promotes a merged-equipment, fallen-equipment dropped-object, not-practical-to-wear fallback, practical worn armor/Shield, practical worn weapon and held-weapon object-use projection, and form-limb object-handling witness, pre-Beast-Spells Wild Shape subset: Bonus Action and Wild Shape use spending, caller-selected known Beast form, Druid-level Temporary Hit Points, form Armor Class, Size, Speed, practical worn armor/Shield Armor Class and hand-use projection, practical worn selected-loadout weapon attacks plus held-weapon spell/feature consumers when the active form-limb witness allows object handling, fallen-equipment object-drop outcomes at the shared droppedObjects boundary, active-effect storage of the explicit caller/GM form-limb object-handling witness for object-use consumers, Beast Dexterity Mage Armor AC, supported Stat Block attacks with executable attack-roll damage only, form resources, Wild Shape D20 statistic projection for Beast Strength, Dexterity, and Constitution plus retained character Intelligence, Wisdom, and Charisma, retained Skill and Saving Throw proficiencies using the character Proficiency Bonus, gained Beast proficiencies and higher Beast stat-block modifiers where present, Beast Strength Shove DC while shaped, true-form Unarmed Strike ability modifier preservation, pre-Beast-Spells no-spellcasting projection, reversion on dismiss, reuse, Incapacitated, terminal zero Hit Points, or duration expiry, and active-form Character Sheet handoff block",
+          "Battle runtime projects active Wild Shape non-D20 creature perception and communication from existing state: Beast-form special Senses and passive Perception come from the selected active form and D20 projection, retained known languages come from CharacterBuild origin and class-feature language facts threaded through character-battle initialization, and retained speech is blocked from condition state without parsing Beast Stat Block language prose or storing duplicate Wild Shape sense/language/speech fields"
         ],
         "tag": "profile-subset-supported"
       },
@@ -18499,6 +18497,16 @@
           "ownerPath": "packages/character-creation-runtime/src/class-feature-selected-identity.mbt.test.ts",
           "tag": "selected-identity-mbt",
           "taskId": "B4-CLASS-FEATURE-IDENTITY-BATCH-1"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/creature-perception-communication.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L12G-FOLLOWUP-DRUID-WILD-SHAPE-SENSE-LANGUAGE-PROJECTION"
+        },
+        {
+          "ownerPath": "packages/character-battle-runtime/src/index.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L12G-FOLLOWUP-DRUID-WILD-SHAPE-SENSE-LANGUAGE-PROJECTION"
         }
       ],
       "executableMechanics": true,
@@ -18577,6 +18585,7 @@
             "packages/battle-runtime/src/battle-reducer.ts",
             "packages/battle-runtime/src/battle-reducer/unit-features.ts",
             "packages/battle-runtime/src/battle-reducer/druid-wild-shape.ts",
+            "packages/battle-runtime/src/creature-perception-communication.ts",
             "packages/battle-runtime/src/battle-reducer/statblock.ts",
             "packages/battle-runtime/src/battle-reducer/movement-speed.ts",
             "packages/battle-runtime/src/battle-reducer/creature-state.ts",
@@ -18585,10 +18594,11 @@
             "packages/battle-runtime/src/battle-reducer/spells-invocation-guards.ts",
             "packages/battle-runtime/src/battle-subjects.ts"
           ],
-          "sourceBoundary": "The runtime consumes caller-supplied known Beast Stat Block identities from the Character Sheet and a shape-admitted Druid Wild Shape Unit support profile. This promoted slice supports the RAW merged-equipment choice, explicit fallen-equipment dropped-object outcomes at the existing object/table boundary, not-practical-to-wear fallback to fall or merge, practical worn armor/Shield effective-loadout projection, practical worn weapon and held-weapon object-use projection gated by an explicit caller/GM form-limb object-handling witness, and active-effect storage of that witness, including forms with no selected loadout equipment candidates; generic non-weapon held-object execution, concrete generic object interaction/Utilize consumers, non-resizing/non-reshaping loose-object lifecycle beyond preserving selected-loadout object refs, and downstream table placement/use of dropped objects are closed outside this profile to the generic object/Utilize/table-placement owner; Beast Spells, unsupported stat-block action sections, attack prose riders, multi-component damage, stat-block non-Attack actions, non-D20 sense/language/speech projection, and non-battle active-form persistence remain outside this profile. It owns Bonus Action and Wild Shape use spending, Druid-level Temporary Hit Points, active form Stat Block projection of Armor Class, Size, Speed, practical worn armor/Shield Armor Class and hand-use projection, practical worn selected-loadout weapon attacks plus held-weapon spell/feature consumers gated by the active form-limb witness, fallen-equipment object-drop outcomes sourced to the Wild Shape feature and selected form, Beast Dexterity for Mage Armor AC while shaped, supported form attacks with executable attack-roll damage only, Wild Shape D20 statistic projection for Beast Strength, Dexterity, and Constitution plus retained character Intelligence, Wisdom, and Charisma, retained Skill and Saving Throw proficiencies using the character Proficiency Bonus, gained Beast proficiencies and higher Beast stat-block modifiers where present, Beast Strength Shove save DC while shaped, true-form Unarmed Strike ability modifier preservation, no-spellcasting projection for levels before Beast Spells, half-Druid-level duration in hours while inside battle state, active-form Character Sheet handoff blocking, and reversion on dismiss, reuse, Incapacitated, Unconscious, terminal zero Hit Points, or duration expiry.",
+          "sourceBoundary": "The runtime consumes caller-supplied known Beast Stat Block identities from the Character Sheet and a shape-admitted Druid Wild Shape Unit support profile. This promoted slice supports the RAW merged-equipment choice, explicit fallen-equipment dropped-object outcomes at the existing object/table boundary, not-practical-to-wear fallback to fall or merge, practical worn armor/Shield effective-loadout projection, practical worn weapon and held-weapon object-use projection gated by an explicit caller/GM form-limb object-handling witness, and active-effect storage of that witness, including forms with no selected loadout equipment candidates; generic non-weapon held-object execution, concrete generic object interaction/Utilize consumers, non-resizing/non-reshaping loose-object lifecycle beyond preserving selected-loadout object refs, and downstream table placement/use of dropped objects are closed outside this profile to the generic object/Utilize/table-placement owner; Beast Spells, unsupported stat-block action sections, attack prose riders, multi-component damage, stat-block non-Attack actions, and non-battle active-form persistence remain outside this profile. It owns Bonus Action and Wild Shape use spending, Druid-level Temporary Hit Points, active form Stat Block projection of Armor Class, Size, Speed, practical worn armor/Shield Armor Class and hand-use projection, practical worn selected-loadout weapon attacks plus held-weapon spell/feature consumers gated by the active form-limb witness, fallen-equipment object-drop outcomes sourced to the Wild Shape feature and selected form, Beast Dexterity for Mage Armor AC while shaped, supported form attacks with executable attack-roll damage only, Wild Shape D20 statistic projection for Beast Strength, Dexterity, and Constitution plus retained character Intelligence, Wisdom, and Charisma, retained Skill and Saving Throw proficiencies using the character Proficiency Bonus, gained Beast proficiencies and higher Beast stat-block modifiers where present, Beast Strength Shove save DC while shaped, true-form Unarmed Strike ability modifier preservation, active Wild Shape non-D20 perception and communication projection deriving Beast form special Senses and passive Perception while retaining character known languages and condition-blocked speech without parsing form language prose, no-spellcasting projection for levels before Beast Spells, half-Druid-level duration in hours while inside battle state, active-form Character Sheet handoff blocking, and reversion on dismiss, reuse, Incapacitated, Unconscious, terminal zero Hit Points, or duration expiry.",
           "taskRefs": [
             "L12G-FOLLOWUP-DRUID-WILD-SHAPE-SHAPE-SHIFTING-RUNTIME",
-            "L12G-FOLLOWUP-DRUID-WILD-SHAPE-D20-STAT-PROJECTION"
+            "L12G-FOLLOWUP-DRUID-WILD-SHAPE-D20-STAT-PROJECTION",
+            "L12G-FOLLOWUP-DRUID-WILD-SHAPE-SENSE-LANGUAGE-PROJECTION"
           ],
           "title": "Unit feature spends a Bonus Action and Wild Shape use to assume a known Beast Stat Block form",
           "verificationOwners": [
@@ -18603,6 +18613,10 @@
             {
               "kind": "runtime-test",
               "ownerPath": "packages/character-battle-runtime/src/index.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/creature-perception-communication.test.ts"
             }
           ]
         }
