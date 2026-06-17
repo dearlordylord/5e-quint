@@ -553,6 +553,8 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `packages/shared-algebras/proofs/rule-core/attack-action-additional-attacks.qnt` | proof-only | `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS` |
 | `packages/shared-algebras/proofs/rule-core/unit-feature-d20-test-natural-one-reroll-core.qnt` | semantic-core | profile-scoped: `unit-feature.d20-test-natural-one-reroll` (`BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
 | `packages/shared-algebras/proofs/rule-core/unit-feature-d20-test-natural-one-reroll-core-examples.qnt` | proof-only | _none_ |
+| `packages/shared-algebras/proofs/rule-core/unit-feature-hide-obscurement-permission-core.qnt` | semantic-core | profile-scoped: `unit-feature.hide-action-obscurement-permission` (`BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
+| `packages/shared-algebras/proofs/rule-core/unit-feature-hide-obscurement-permission-core-examples.qnt` | proof-only | _none_ |
 | `packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt` | proof-only | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` |
 | `packages/shared-algebras/proofs/rule-core/zero-hit-point-lifecycle.qnt` | proof-only | `BATTLE.DAMAGE.DEATH_SAVING_THROW_LIFECYCLE` |
 | `packages/battle-runtime/battle-runtime-concentration-break-teardown.mbt.qnt` | mbt-fixture | _none_ |
@@ -684,6 +686,7 @@ Rows here inventory `packages/**/*.qnt` files excluding `.mbt.qnt` drivers and `
 | `packages/shared-algebras/proofs/rule-core/attack-damage-composition-examples.qnt` | qnt-owner-role | proof-only |
 | `packages/shared-algebras/proofs/rule-core/attack-damage-composition-inductive.qnt` | qnt-owner-role | proof-only |
 | `packages/shared-algebras/proofs/rule-core/attack-damage-composition.qnt` | qnt-owner-role | semantic-core |
+| `packages/shared-algebras/proofs/rule-core/creature-size-order.qnt` | exempt | leaf-type-vocabulary: Shared creature size order leaf imported by registered movement and Unit feature procedure owners. |
 | `packages/shared-algebras/proofs/rule-core/damage-component-adjustments-examples.qnt` | qnt-owner-role | proof-only |
 | `packages/shared-algebras/proofs/rule-core/damage-component-adjustments-inductive.qnt` | qnt-owner-role | proof-only |
 | `packages/shared-algebras/proofs/rule-core/damage-component-adjustments.qnt` | qnt-owner-role | semantic-core |
@@ -743,6 +746,8 @@ Rows here inventory `packages/**/*.qnt` files excluding `.mbt.qnt` drivers and `
 | `packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core.qnt` | qnt-owner-role | semantic-core |
 | `packages/shared-algebras/proofs/rule-core/unit-feature-d20-test-natural-one-reroll-core-examples.qnt` | qnt-owner-role | proof-only |
 | `packages/shared-algebras/proofs/rule-core/unit-feature-d20-test-natural-one-reroll-core.qnt` | qnt-owner-role | semantic-core |
+| `packages/shared-algebras/proofs/rule-core/unit-feature-hide-obscurement-permission-core-examples.qnt` | qnt-owner-role | proof-only |
+| `packages/shared-algebras/proofs/rule-core/unit-feature-hide-obscurement-permission-core.qnt` | qnt-owner-role | semantic-core |
 | `packages/shared-algebras/proofs/rule-core/unit-feature-martial-arts-core-examples.qnt` | qnt-owner-role | proof-only |
 | `packages/shared-algebras/proofs/rule-core/unit-feature-martial-arts-core.qnt` | qnt-owner-role | semantic-core |
 | `packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-option-fact-core-examples.qnt` | qnt-owner-role | proof-only |
@@ -790,6 +795,7 @@ Rows here are derived from `plans/unit-profile-coverage/profiles.jsonl` for prof
 | `unit-feature.enemy-zero-hit-point-temporary-hit-points` | `packages/battle-runtime/battle-runtime-dark-ones-blessing.mbt.qnt` (mbt-fixture; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
 | `unit-feature.failed-ability-check-resource-boost` | `packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt` (semantic-core; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
 | `unit-feature.first-attack-roll-reckless-advantage` | `packages/shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core.qnt` (semantic-core; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
+| `unit-feature.hide-action-obscurement-permission` | `packages/shared-algebras/proofs/rule-core/unit-feature-hide-obscurement-permission-core.qnt` (semantic-core; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
 | `unit-feature.initiative-proficiency-and-swap` | `packages/battle-runtime/battle-runtime-turn-order.qnt` (proof-only; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
 | `unit-feature.innate-sorcery-activation` | `packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt` (semantic-core; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
 | `unit-feature.martial-arts-attack-projection` | `packages/shared-algebras/proofs/rule-core/unit-feature-martial-arts-core.qnt` (semantic-core; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |

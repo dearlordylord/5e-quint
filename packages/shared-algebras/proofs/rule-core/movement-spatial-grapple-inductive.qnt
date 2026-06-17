@@ -5,6 +5,7 @@
 module movementSpatialGrappleInductive {
   import attackDamageComposition.* from "./attack-damage-composition"
   import actionTurnProcedures.* from "./action-turn-procedures"
+  import creatureSizeOrder.* from "./creature-size-order"
   import movementSpatialGrapple.* from "./movement-spatial-grapple"
 
   var qActionQuota: ActionQuota

@@ -72,23 +72,23 @@
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 120,
-      "numerator": 120,
+      "denominator": 121,
+      "numerator": 121,
       "percent": "100%"
     },
     "qntProofCoverage": {
-      "denominator": 120,
-      "numerator": 117,
+      "denominator": 121,
+      "numerator": 118,
       "percent": "97.5%"
     },
     "rulesKernelCoveredProfileCoverage": {
-      "denominator": 158,
-      "numerator": 158,
+      "denominator": 159,
+      "numerator": 159,
       "percent": "100%"
     },
     "rulesKernelProfileJoinCoverage": {
-      "denominator": 158,
-      "numerator": 158,
+      "denominator": 159,
+      "numerator": 159,
       "percent": "100%"
     },
     "rulesKernelSupportedUnitCoverage": {
@@ -97,13 +97,13 @@
       "percent": "100%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 120,
-      "numerator": 120,
+      "denominator": 121,
+      "numerator": 121,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 120,
-      "numerator": 120,
+      "denominator": 121,
+      "numerator": 121,
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
@@ -5276,19 +5276,46 @@
           "ownerPath": "packages/battle-runtime/src/grappler-selected-identity.mbt.test.ts"
         }
       ]
+    },
+    {
+      "id": "unit-feature.hide-action-obscurement-permission",
+      "profileKind": "passive",
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/unit-feature-hide-obscurement-permission-core.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/unit-feature-support.ts",
+        "packages/battle-runtime/src/battle-reducer.ts",
+        "packages/battle-runtime/src/battle-reducer/hole-helpers.ts"
+      ],
+      "sourceBoundary": "Battle Unit admission consumes the authored Surface hide_action_obscurement_permission shape and projects a typed Hide obscurement permission. Battle runtime consumes retained selected character Unit support refs, current effective hider and obscuring-creature sizes, and caller/table-supplied Hide prerequisite witnesses for creature-only obscurement plus out-of-enemy-line-of-sight facts. The runtime validates the referenced obscuring creature and larger-size relation before discovering or resolving Hide, without authored-identity dispatch, species-owned stealth state, durable perception state, or map-derived line-of-sight storage.",
+      "taskRefs": [
+        "L3-FOLLOWUP-HALFLING-NATURALLY-STEALTHY-RUNTIME"
+      ],
+      "title": "Unit feature permits Hide when obscured only by a larger creature",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-hide-obscurement-permission-core-examples.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-halfling-naturally-stealthy.test.ts"
+        }
+      ]
     }
   ],
   "rulesKernelProfileJoin": {
     "denominatorRule": "profile records with rules-kernel profile kinds and either QNT owners or explicit profile-obligation mappings",
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
-        "denominator": 158,
-        "numerator": 158,
+        "denominator": 159,
+        "numerator": 159,
         "percent": "100%"
       },
       "rulesKernelProfileJoinCoverage": {
-        "denominator": 158,
-        "numerator": 158,
+        "denominator": 159,
+        "numerator": 159,
         "percent": "100%"
       }
     },
@@ -7997,6 +8024,22 @@
         "profileKind": "spell-invocation",
         "qntOwners": [
           "packages/battle-runtime/battle-runtime-acid-arrow.qnt"
+        ]
+      },
+      {
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+          }
+        ],
+        "profileId": "unit-feature.hide-action-obscurement-permission",
+        "profileKind": "passive",
+        "qntOwners": [
+          "packages/shared-algebras/proofs/rule-core/unit-feature-hide-obscurement-permission-core.qnt"
         ]
       }
     ],
@@ -12713,7 +12756,7 @@
       "evidenceTag": "selected-identity-mbt"
     },
     "deferredNonApplicableRows": [],
-    "rowCount": 3,
+    "rowCount": 4,
     "rows": [
       {
         "catalogAdmissionStatus": "installed",
@@ -12765,6 +12808,23 @@
           "tag": "profile-subset-supported"
         },
         "unitId": "species_halfling_luck"
+      },
+      {
+        "catalogAdmissionStatus": "installed",
+        "collectionId": "srd-5.2.1",
+        "kind": "species_trait",
+        "selectedIdentity": {
+          "reason": "The Unit has no selected-identity-mbt evidence.",
+          "status": "missing-witness"
+        },
+        "sourceRecordPath": "packages/surface/content/species_halfling_naturally_stealthy.json",
+        "support": {
+          "profileIds": [
+            "unit-feature.hide-action-obscurement-permission"
+          ],
+          "tag": "profile-subset-supported"
+        },
+        "unitId": "species_halfling_naturally_stealthy"
       }
     ]
   },
@@ -16202,6 +16262,22 @@
         "unit-feature.light-extra-attack-damage-ability-modifier"
       ],
       "taskId": "L3-FOLLOWUP-TWO-WEAPON-FIGHTING-RUNTIME"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Rule-core witness covers the selected Hide obscurement permission predicate: the hider must be obscured only by a creature, out of enemy line of sight, and the obscuring creature must be at least one size larger than the hider.",
+      "profileIds": [
+        "unit-feature.hide-action-obscurement-permission"
+      ],
+      "taskId": "L3-FOLLOWUP-HALFLING-NATURALLY-STEALTHY-RUNTIME"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime tests cover Halfling Naturally Stealthy admission from Surface hide_action_obscurement_permission facts, identity-independent support profile projection, selected Unit ref gating, caller-supplied creature-obscurement Hide prerequisites, larger effective creature-size validation, unknown and self-obscuring prerequisite rejection, and reuse of existing Hide check, Hidden state, and Invisible projection without species-owned stealth state.",
+      "profileIds": [
+        "unit-feature.hide-action-obscurement-permission"
+      ],
+      "taskId": "L3-FOLLOWUP-HALFLING-NATURALLY-STEALTHY-RUNTIME"
     }
   ],
   "unitGroupDenominatorAudit": {
@@ -25332,19 +25408,68 @@
         "status": "installed"
       },
       "claim": {
-        "battleReadinessClosure": {
-          "kind": "outside-runtime-presentation-exploration",
-          "owner": "future Hide and obscurement eligibility owner",
-          "reason": "Creature-caused obscurement, size relation to the obscuring creature, and Hide action availability are table/perception facts outside promoted battle Unit execution."
-        },
-        "reason": "Naturally Stealthy is authored as a Hide-action eligibility permission when the Halfling is obscured only by a creature at least one size larger. No promoted profile owns creature-caused obscurement or Hide eligibility override facts yet.",
-        "tag": "unsupported-profile"
+        "deferredMechanics": [
+          {
+            "battleReadinessClosure": {
+              "kind": "outside-runtime-presentation-exploration",
+              "owner": "future table/perception derivation owner",
+              "reason": "The promoted battle reducer validates typed Hide prerequisite witnesses supplied at the Hide boundary. Deriving those witnesses from map geometry, observer sight, token positions, and creature body coverage remains table/perception work outside this Unit profile."
+            },
+            "mechanic": "automatic line-of-sight, creature-obscurement, and observer-specific perception derivation"
+          }
+        ],
+        "profileIds": [
+          "unit-feature.hide-action-obscurement-permission"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE9-UNIT-FEATURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "Battle Unit admission derives the Hide action obscurement permission from Surface hide_action_obscurement_permission facts with action hide, obscured_only_by_creature allowed obscurement, and at_least_one_size_larger creature-size relation, without dispatching on Halfling or Naturally Stealthy identity.",
+          "Battle runtime validates caller-supplied Hide prerequisites by requiring a selected Hide obscurement permission profile, an existing obscuring creature combatant distinct from the hider, current effective hider and obscuring-creature sizes, and an obscuring creature at least one size larger before discovering or resolving Hide.",
+          "The profile consumes existing Hide action/check/Hidden state, selected Unit support profiles, current combatant effective size, and table-supplied line-of-sight/creature-obscurement witnesses without storing species-owned stealth state or durable map/perception state."
+        ],
+        "tag": "profile-subset-supported"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-halfling-naturally-stealthy.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L3-FOLLOWUP-HALFLING-NATURALLY-STEALTHY-RUNTIME"
+        }
+      ],
       "executableMechanics": true,
       "kind": "species_trait",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "unit-feature.hide-action-obscurement-permission",
+          "profileKind": "passive",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/unit-feature-hide-obscurement-permission-core.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/unit-feature-support.ts",
+            "packages/battle-runtime/src/battle-reducer.ts",
+            "packages/battle-runtime/src/battle-reducer/hole-helpers.ts"
+          ],
+          "sourceBoundary": "Battle Unit admission consumes the authored Surface hide_action_obscurement_permission shape and projects a typed Hide obscurement permission. Battle runtime consumes retained selected character Unit support refs, current effective hider and obscuring-creature sizes, and caller/table-supplied Hide prerequisite witnesses for creature-only obscurement plus out-of-enemy-line-of-sight facts. The runtime validates the referenced obscuring creature and larger-size relation before discovering or resolving Hide, without authored-identity dispatch, species-owned stealth state, durable perception state, or map-derived line-of-sight storage.",
+          "taskRefs": [
+            "L3-FOLLOWUP-HALFLING-NATURALLY-STEALTHY-RUNTIME"
+          ],
+          "title": "Unit feature permits Hide when obscured only by a larger creature",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-hide-obscurement-permission-core-examples.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-halfling-naturally-stealthy.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/species_halfling_naturally_stealthy.json",
       "unitId": "species_halfling_naturally_stealthy"
     },

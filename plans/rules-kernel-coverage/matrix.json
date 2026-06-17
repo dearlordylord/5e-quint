@@ -188,6 +188,7 @@
         "packages/shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-d20-test-natural-one-reroll-core.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-hide-obscurement-permission-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-passive-movement-defense-core.qnt",
@@ -6132,6 +6133,12 @@
       "obligationIds": [
         "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
       ],
+      "profileId": "unit-feature.hide-action-obscurement-permission"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+      ],
       "profileId": "unit-feature.bardic-inspiration-failed-d20-test"
     },
     {
@@ -9167,6 +9174,28 @@
       "role": "proof-only"
     },
     {
+      "evidence": "packages/shared-algebras/proofs/rule-core/unit-feature-hide-obscurement-permission-core.qnt carries selected Hide action creature-obscurement permission semantics without importing authored Unit catalog rows.",
+      "obligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-hide-obscurement-permission-core.qnt",
+      "profileScopes": [
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "profileId": "unit-feature.hide-action-obscurement-permission"
+        }
+      ],
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/shared-algebras/proofs/rule-core/unit-feature-hide-obscurement-permission-core-examples.qnt is assessed generator-readiness proofOnly example evidence for Hide action creature-obscurement permission facts.",
+      "obligationIds": [],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-hide-obscurement-permission-core-examples.qnt",
+      "role": "proof-only"
+    },
+    {
       "evidence": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt carries executable spell procedure profile support used by registered spell procedure obligations.",
       "obligationIds": [
         "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS"
@@ -9814,6 +9843,12 @@
       "role": "semantic-core"
     },
     {
+      "category": "leaf-type-vocabulary",
+      "classification": "exempt",
+      "evidence": "Shared creature size order leaf imported by registered movement and Unit feature procedure owners.",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/creature-size-order.qnt"
+    },
+    {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/shared-algebras/proofs/rule-core/damage-component-adjustments-examples.qnt",
       "role": "proof-only"
@@ -10107,6 +10142,16 @@
     {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-d20-test-natural-one-reroll-core.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-hide-obscurement-permission-core-examples.qnt",
+      "role": "proof-only"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-hide-obscurement-permission-core.qnt",
       "role": "semantic-core"
     },
     {
@@ -10441,6 +10486,18 @@
             "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
           ],
           "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core.qnt",
+          "role": "semantic-core"
+        }
+      ]
+    },
+    {
+      "profileId": "unit-feature.hide-action-obscurement-permission",
+      "qntOwners": [
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-hide-obscurement-permission-core.qnt",
           "role": "semantic-core"
         }
       ]
@@ -10951,6 +11008,7 @@
         "packages/shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core-examples.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core-examples.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-d20-test-natural-one-reroll-core-examples.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-hide-obscurement-permission-core-examples.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core-examples.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core-examples.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-passive-movement-defense-core-examples.qnt",
@@ -10968,6 +11026,7 @@
         "packages/shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-d20-test-natural-one-reroll-core.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-hide-obscurement-permission-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-passive-movement-defense-core.qnt",
@@ -13984,6 +14043,7 @@
     "unit-feature.failed-ability-check-resource-boost",
     "unit-feature.first-attack-roll-reckless-advantage",
     "unit-feature.grappler",
+    "unit-feature.hide-action-obscurement-permission",
     "unit-feature.hunters-prey",
     "unit-feature.initiative-proficiency-and-swap",
     "unit-feature.innate-sorcery-activation",

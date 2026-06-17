@@ -1,5 +1,5 @@
 // RAW-COVERAGE: runtime-owner RAW-QCORE9-UNIT-FEATURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-action-area-save-damage-replacement unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-damage-die-floor unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bardic-inspiration-grant unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-delegated-standard-actions unit-feature.bonus-action-ongoing-rage unit-feature.creature-space-movement-permission unit-feature.druid-wild-shape-known-form unit-feature.enemy-zero-hit-point-temporary-hit-points unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.grappler unit-feature.hunters-prey unit-feature.initiative-proficiency-and-swap unit-feature.innate-sorcery-activation unit-feature.light-extra-attack-damage-ability-modifier unit-feature.magic-action-area-save-damage-healing unit-feature.magic-action-healing-pool unit-feature.martial-arts-attack-projection unit-feature.monk-focus-battle-options unit-feature.open-hand-technique unit-feature.paladin-sacred-weapon unit-feature.passive-ability-check-roll-mode unit-feature.passive-armor-class-bonus unit-feature.passive-damage-resistance unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-saving-throw-roll-mode unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.potent-cantrip unit-feature.reaction-roll-or-damage-reduction unit-feature.remarkable-athlete unit-feature.rogue-steady-aim unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.spell-slot-healing-modifier unit-feature.weapon-critical-range-19 unit-feature.weapon-damage-dice-roll-choice unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave unit-feature.zero-hit-point-replacement
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-action-area-save-damage-replacement unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-damage-die-floor unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bardic-inspiration-grant unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-delegated-standard-actions unit-feature.bonus-action-ongoing-rage unit-feature.creature-space-movement-permission unit-feature.druid-wild-shape-known-form unit-feature.enemy-zero-hit-point-temporary-hit-points unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.grappler unit-feature.hide-action-obscurement-permission unit-feature.hunters-prey unit-feature.initiative-proficiency-and-swap unit-feature.innate-sorcery-activation unit-feature.light-extra-attack-damage-ability-modifier unit-feature.magic-action-area-save-damage-healing unit-feature.magic-action-healing-pool unit-feature.martial-arts-attack-projection unit-feature.monk-focus-battle-options unit-feature.open-hand-technique unit-feature.paladin-sacred-weapon unit-feature.passive-ability-check-roll-mode unit-feature.passive-armor-class-bonus unit-feature.passive-damage-resistance unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-saving-throw-roll-mode unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.potent-cantrip unit-feature.reaction-roll-or-damage-reduction unit-feature.remarkable-athlete unit-feature.rogue-steady-aim unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.spell-slot-healing-modifier unit-feature.weapon-critical-range-19 unit-feature.weapon-damage-dice-roll-choice unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave unit-feature.zero-hit-point-replacement
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.d20-test-natural-one-reroll
 import { Match } from "effect";
 import * as Either from "effect/Either";
@@ -91,6 +91,8 @@ export const PASSIVE_SPEED_KIND_GRANTS_SUPPORT_PROFILE =
   "passiveSpeedKindGrants";
 export const CREATURE_SPACE_MOVEMENT_PERMISSION_SUPPORT_PROFILE =
   "creatureSpaceMovementPermission";
+export const HIDE_ACTION_OBSCUREMENT_PERMISSION_SUPPORT_PROFILE =
+  "hideActionObscurementPermission";
 export const WEAPON_DAMAGE_DICE_ROLL_CHOICE_SUPPORT_PROFILE =
   "weaponDamageDiceRollChoice";
 export const ATTACK_DAMAGE_DIE_FLOOR_SUPPORT_PROFILE = "attackDamageDieFloor";
@@ -205,6 +207,7 @@ export const BATTLE_UNIT_SUPPORT_PROFILES = [
   PASSIVE_SPEED_BONUS_SUPPORT_PROFILE,
   PASSIVE_SPEED_KIND_GRANTS_SUPPORT_PROFILE,
   CREATURE_SPACE_MOVEMENT_PERMISSION_SUPPORT_PROFILE,
+  HIDE_ACTION_OBSCUREMENT_PERMISSION_SUPPORT_PROFILE,
   WEAPON_DAMAGE_DICE_ROLL_CHOICE_SUPPORT_PROFILE,
   ATTACK_DAMAGE_DIE_FLOOR_SUPPORT_PROFILE,
   LIGHT_EXTRA_ATTACK_DAMAGE_ABILITY_MODIFIER_SUPPORT_PROFILE,
@@ -567,6 +570,16 @@ export type BattleCreatureSpaceMovementPermissionSupportProfile = {
   readonly kind: typeof CREATURE_SPACE_MOVEMENT_PERMISSION_SUPPORT_PROFILE;
   readonly permission: CreatureSpaceMovementPermissionProfile;
 };
+export type HideActionObscurementPermissionProfile = {
+  readonly allowedObscurement: {
+    readonly kind: "obscuredOnlyByCreature";
+    readonly creatureSizeRelationToSelf: "atLeastOneSizeLarger";
+  };
+};
+export type BattleHideActionObscurementPermissionSupportProfile = {
+  readonly kind: typeof HIDE_ACTION_OBSCUREMENT_PERMISSION_SUPPORT_PROFILE;
+  readonly permission: HideActionObscurementPermissionProfile;
+};
 export type BattleAlternateActionCostSupportProfile = {
   readonly kind: "alternateActionCost";
   readonly from: {
@@ -840,6 +853,7 @@ export type BattleUnitSupportProfile =
   | BattlePassiveSpeedBonusSupportProfile
   | BattlePassiveSpeedKindGrantsSupportProfile
   | BattleCreatureSpaceMovementPermissionSupportProfile
+  | BattleHideActionObscurementPermissionSupportProfile
   | BattleAttackActionAttackCountScalingSupportProfile
   | BattleBonusActionDashTemporaryHitPointsSupportProfile
   | BattleFailedAbilityCheckResourceBoostSupportProfile
@@ -872,6 +886,7 @@ export type BattleUnitSupportProfile =
       | "passiveSpeedBonus"
       | "passiveSpeedKindGrants"
       | "creatureSpaceMovementPermission"
+      | "hideActionObscurementPermission"
       | "attackActionAttackCountScaling"
       | "bonusActionDashTemporaryHitPoints"
       | "failedAbilityCheckResourceBoost"
@@ -1146,6 +1161,17 @@ export function battleUnitSupportProfilesForUnit(input: {
   }
   if (creatureSpaceMovementPermissionSupport !== null) {
     supportProfiles.push(creatureSpaceMovementPermissionSupport);
+  }
+
+  const hideActionObscurementPermissionSupport =
+    battleHideActionObscurementPermissionSupportForUnit(input.unit);
+  if (hideActionObscurementPermissionSupport === "unsupported") {
+    return battleUnitSupportProfileIssue(
+      `Unsupported battle Hide action obscurement permission Unit hook: ${input.unit.id}.`,
+    );
+  }
+  if (hideActionObscurementPermissionSupport !== null) {
+    supportProfiles.push(hideActionObscurementPermissionSupport);
   }
 
   const weaponDamageDiceRollChoiceSupport =
@@ -1972,6 +1998,11 @@ export type SupportedUnitFeatureProfile =
       readonly permission: CreatureSpaceMovementPermissionProfile;
     }
   | {
+      readonly kind: "hideActionObscurementPermission";
+      readonly unit: UnitRecord;
+      readonly permission: HideActionObscurementPermissionProfile;
+    }
+  | {
       readonly kind: "weaponDamageDiceRollChoice";
       readonly unit: UnitRecord;
       readonly damageDiceChoice: WeaponDamageDiceRollChoiceProfile;
@@ -2743,6 +2774,11 @@ export type BattleCreatureSpaceMovementPermissionSupport =
   | "unsupported"
   | null;
 
+export type BattleHideActionObscurementPermissionSupport =
+  | BattleHideActionObscurementPermissionSupportProfile
+  | "unsupported"
+  | null;
+
 export type BattleWeaponDamageDiceRollChoiceSupport =
   | "weaponDamageDiceRollChoice"
   | "unsupported"
@@ -2977,6 +3013,21 @@ export function battleCreatureSpaceMovementPermissionSupportForUnit(
     ? "unsupported"
     : {
         kind: CREATURE_SPACE_MOVEMENT_PERMISSION_SUPPORT_PROFILE,
+        permission,
+      };
+}
+
+export function battleHideActionObscurementPermissionSupportForUnit(
+  unit: UnitRecord,
+): BattleHideActionObscurementPermissionSupport {
+  if (!hasHideActionObscurementPermissionMechanics(unit)) {
+    return null;
+  }
+  const permission = hideActionObscurementPermissionProfileForUnit(unit);
+  return permission === null
+    ? "unsupported"
+    : {
+        kind: HIDE_ACTION_OBSCUREMENT_PERMISSION_SUPPORT_PROFILE,
         permission,
       };
 }
@@ -3402,6 +3453,15 @@ function hasCreatureSpaceMovementPermissionMechanics(
   return (
     unit.kind === "species_trait" &&
     unit.mechanics.family === "creature_space_movement_permission"
+  );
+}
+
+function hasHideActionObscurementPermissionMechanics(
+  unit: UnitRecord,
+): boolean {
+  return (
+    unit.kind === "species_trait" &&
+    unit.mechanics.family === "hide_action_obscurement_permission"
   );
 }
 
@@ -4517,6 +4577,32 @@ export function creatureSpaceMovementPermissionProfileForUnit(
   };
 }
 
+export function hideActionObscurementPermissionProfileForUnit(
+  unit: UnitRecord,
+): HideActionObscurementPermissionProfile | null {
+  if (
+    unit.kind !== "species_trait" ||
+    unit.mechanics.family !== "hide_action_obscurement_permission" ||
+    unit.mechanics.action !== "hide"
+  ) {
+    return null;
+  }
+  const mechanics = unit.mechanics;
+  if (
+    mechanics.allowedObscurement.kind !== "obscured_only_by_creature" ||
+    mechanics.allowedObscurement.creatureSizeRelationToSelf !==
+      "at_least_one_size_larger"
+  ) {
+    return null;
+  }
+  return {
+    allowedObscurement: {
+      kind: "obscuredOnlyByCreature",
+      creatureSizeRelationToSelf: "atLeastOneSizeLarger",
+    },
+  };
+}
+
 function passiveSpeedBonusProfileForPassiveMechanics(
   mechanics: Extract<
     Extract<UnitRecord, { readonly kind: "class_feature" }>["mechanics"],
@@ -5051,6 +5137,7 @@ export function parseSupportedUnitFeatureProfile(
     parsePassiveSpeedBonusUnitFeatureProfile(unit) ??
     parsePassiveSpeedKindGrantsUnitFeatureProfile(unit) ??
     parseCreatureSpaceMovementPermissionUnitFeatureProfile(unit) ??
+    parseHideActionObscurementPermissionUnitFeatureProfile(unit) ??
     parseWeaponDamageDiceRollChoiceUnitFeatureProfile(unit) ??
     parseAttackDamageDieFloorUnitFeatureProfile(unit) ??
     parseLightExtraAttackDamageAbilityModifierUnitFeatureProfile(unit) ??
@@ -6333,6 +6420,22 @@ function parseCreatureSpaceMovementPermissionUnitFeatureProfile(
     ? null
     : {
         kind: "creatureSpaceMovementPermission",
+        unit,
+        permission,
+      };
+}
+
+function parseHideActionObscurementPermissionUnitFeatureProfile(
+  unit: UnitRecord,
+): Extract<
+  SupportedUnitFeatureProfile,
+  { readonly kind: "hideActionObscurementPermission" }
+> | null {
+  const permission = hideActionObscurementPermissionProfileForUnit(unit);
+  return permission === null
+    ? null
+    : {
+        kind: "hideActionObscurementPermission",
         unit,
         permission,
       };

@@ -868,7 +868,7 @@ export function resolveHide(
     return invalidResult(
       input.state,
       "unsupportedActOption",
-      "Hide requires Heavily Obscured or sufficient cover and being out of enemy line of sight.",
+      "Hide requires Heavily Obscured, sufficient cover, or an admitted creature-obscurement permission while out of enemy line of sight.",
     );
   }
   const check = abilityCheckFill(
@@ -1262,7 +1262,7 @@ export function resolveStatBlockBonusActionHide(
     return invalidResult(
       input.state,
       "unsupportedActOption",
-      "Hide requires Heavily Obscured or sufficient cover and being out of enemy line of sight.",
+      "Hide requires Heavily Obscured, sufficient cover, or an admitted creature-obscurement permission while out of enemy line of sight.",
     );
   }
   const check = abilityCheckFill(

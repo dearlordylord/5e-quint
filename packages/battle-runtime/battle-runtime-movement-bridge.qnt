@@ -4,6 +4,7 @@
 module battleRuntimeMovementBridge {
   import attackDamageComposition.* from "../shared-algebras/proofs/rule-core/attack-damage-composition"
   import actionTurnProcedures.* from "../shared-algebras/proofs/rule-core/action-turn-procedures"
+  import creatureSizeOrder.* from "../shared-algebras/proofs/rule-core/creature-size-order"
   import movementSpatialGrapple.* from "../shared-algebras/proofs/rule-core/movement-spatial-grapple"
 
   type BattleRuntimeMovementProjection = {

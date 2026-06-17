@@ -6,8 +6,7 @@
 module movementSpatialGrapple {
   import attackDamageComposition.* from "./attack-damage-composition"
   import actionTurnProcedures.* from "./action-turn-procedures"
-
-  type RuleSize = TinySize | SmallSize | MediumSize | LargeSize | HugeSize | GargantuanSize
+  import creatureSizeOrder.* from "./creature-size-order"
 
   type MovementResource =
     | OwnMovementActionBonusReactionOrSpeed
@@ -69,14 +68,6 @@ module movementSpatialGrapple {
     grapple: NoGrapple,
   }
 
-  pure def sizeRank(creatureSize: RuleSize): int =
-    if (creatureSize == TinySize) 0
-    else if (creatureSize == SmallSize) 1
-    else if (creatureSize == MediumSize) 2
-    else if (creatureSize == LargeSize) 3
-    else if (creatureSize == HugeSize) 4
-    else 5
-
   pure def legalMovementSpendFacts(facts: MovementSpendFacts): bool = all {
     facts.distanceFeet >= 0,
     facts.distanceFeet <= 80,
@@ -92,7 +83,7 @@ module movementSpatialGrapple {
     facts: CreatureSpaceTraversalFacts,
   ): bool = all {
     facts.permission == LargerCreatureSpaceTraversalCannotStop,
-    sizeRank(facts.occupiedCreatureSize) > sizeRank(moverSize),
+    creatureSizeIsLargerThanSelf(moverSize, facts.occupiedCreatureSize),
     not(facts.endsInOccupiedCreatureSpace),
   }
 
