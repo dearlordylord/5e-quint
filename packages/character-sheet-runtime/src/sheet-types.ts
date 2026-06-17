@@ -149,6 +149,15 @@ export const CHARACTER_SHEET_LONG_REST_BASE_TICKS = elapsedTimeTicks(
 export const CHARACTER_SHEET_LONG_REST_WAIT_TICKS = elapsedTimeTicks(
   ELAPSED_TIME_TICKS_PER_HOUR * 16,
 );
+export type CharacterSheetHeroicInspiration =
+  | { readonly tag: "none" }
+  | { readonly tag: "available" };
+export const CHARACTER_SHEET_NO_HEROIC_INSPIRATION = {
+  tag: "none",
+} as const satisfies CharacterSheetHeroicInspiration;
+export const CHARACTER_SHEET_HEROIC_INSPIRATION_AVAILABLE = {
+  tag: "available",
+} as const satisfies CharacterSheetHeroicInspiration;
 export type StoredClassFeatureLanguageFact =
   CharacterBuild["classFeatureLanguages"][number];
 export type StoredClassFeatureLanguage =
@@ -312,6 +321,7 @@ export type CharacterSheet =
       readonly spentHitDice: readonly CharacterSheetSpentHitDiePool[];
       readonly restFeatureUses: readonly CharacterSheetRestFeatureUse[];
       readonly resourceExpenditures: readonly CharacterSheetResourceExpenditure[];
+      readonly heroicInspiration: CharacterSheetHeroicInspiration;
       readonly companion: CharacterSheetCompanion;
       readonly bookOfShadowsPresence:
         | CharacterSheetBookOfShadowsPresence
@@ -333,6 +343,7 @@ export type CharacterSheet =
       readonly spentHitDice: readonly CharacterSheetSpentHitDiePool[];
       readonly restFeatureUses: readonly CharacterSheetRestFeatureUse[];
       readonly resourceExpenditures: readonly CharacterSheetResourceExpenditure[];
+      readonly heroicInspiration: CharacterSheetHeroicInspiration;
       readonly companion: CharacterSheetCompanion;
       readonly bookOfShadowsPresence?: never;
       readonly druidWildShapeKnownForms?: CharacterSheetDruidWildShapeKnownForms;
@@ -741,6 +752,7 @@ export type CharacterSheetInput = {
   readonly bookOfShadowsPresence?: CharacterSheetBookOfShadowsPresence;
   readonly restFeatureUses?: readonly CharacterSheetRestFeatureUse[];
   readonly resourceExpenditures?: readonly CharacterSheetResourceExpenditure[];
+  readonly heroicInspiration?: CharacterSheetHeroicInspiration;
   readonly companion?: CharacterSheetCompanion;
   readonly druidWildShapeKnownFormStatBlockIds?: readonly StatBlockId[];
   readonly druidCircleLand?: CharacterSheetDruidCircleLand;

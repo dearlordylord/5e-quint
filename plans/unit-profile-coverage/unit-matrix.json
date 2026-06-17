@@ -3366,6 +3366,25 @@
       ]
     },
     {
+      "id": "character-sheet.rest-triggered-heroic-inspiration",
+      "profileKind": "character-sheet",
+      "qntOwners": [],
+      "runtimeOwners": [
+        "packages/character-sheet-runtime/src/rests.ts"
+      ],
+      "sourceBoundary": "Character Sheet consumes selected species trait Unit refs, installed Surface rest_triggered_heroic_inspiration mechanics with finish_rest/long and heroic_inspiration grant facts, Long Rest completion, and current Heroic Inspiration state. It sets the sheet state to available after a qualifying Long Rest, preserves existing state for non-qualifying builds, treats duplicate gains as the same single available state because the Character Sheet owns no transfer recipient path, and does not store species-owned rest or inspiration state.",
+      "taskRefs": [
+        "L3-FOLLOWUP-HUMAN-RESOURCEFUL-RUNTIME"
+      ],
+      "title": "Character Sheet grants Heroic Inspiration from Long Rest triggered feature facts",
+      "verificationOwners": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-sheet-runtime/src/rests.test.ts"
+        }
+      ]
+    },
+    {
       "id": "character-sheet.monk-uncanny-metabolism-initiative-recovery",
       "profileKind": "character-sheet",
       "qntOwners": [
@@ -16328,6 +16347,14 @@
         "unit-feature.hide-action-obscurement-permission"
       ],
       "taskId": "L3-FOLLOWUP-HALFLING-NATURALLY-STEALTHY-RUNTIME"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused Character Sheet runtime tests cover Resourceful Long Rest Heroic Inspiration grants from retained typed rest-trigger and heroic-inspiration Surface facts, duplicate grants remaining one available Heroic Inspiration state, and non-qualifying builds preserving current Heroic Inspiration state without species-owned rest or inspiration state.",
+      "profileIds": [
+        "character-sheet.rest-triggered-heroic-inspiration"
+      ],
+      "taskId": "L3-FOLLOWUP-HUMAN-RESOURCEFUL-RUNTIME"
     }
   ],
   "unitGroupDenominatorAudit": {
@@ -16804,8 +16831,8 @@
       "claim": {
         "battleReadinessClosure": {
           "kind": "selection-grant-container",
-          "owner": "species_human_skillful, species_human_versatile, and future Resourceful owner profiles",
-          "reason": "The aggregate species record names Resourceful, Skillful, and Versatile. Character creation consumes the retained trait refs to discover the supported Skillful and Versatile choices; Resourceful Long Rest Heroic Inspiration remains a future character-state owner."
+          "owner": "species_human_resourceful, species_human_skillful, and species_human_versatile owner profiles",
+          "reason": "The aggregate species record names Resourceful, Skillful, and Versatile. Character creation consumes the retained trait refs to discover the supported Skillful and Versatile choices, while Character Sheet Long Rest completion consumes the retained Resourceful trait ref and its typed Heroic Inspiration grant facts."
         },
         "reason": "Species admission container record; character creation can retain Human as a selected Medium-or-Small species and preserve authored trait Unit refs, while executable and choice pressure lives on the individual trait Units.",
         "tag": "unsupported-profile"
@@ -25783,17 +25810,68 @@
       "claim": {
         "battleReadinessClosure": {
           "kind": "character-fact-and-runtime-detached-split",
-          "owner": "future character-sheet Heroic Inspiration Long Rest grant owner",
-          "reason": "The Surface trait carries the exact rest-triggered Heroic Inspiration source fact, but execution requires durable Heroic Inspiration state and Long Rest lifecycle ownership outside the current character-creation projection."
+          "owner": "character-sheet-runtime Long Rest grant owner",
+          "reason": "Resourceful executes as durable Character Sheet state on Long Rest completion. Battle runtime does not yet consume Heroic Inspiration rerolls; any future D20 reroll owner should consume this sheet state rather than re-reading Human or Resourceful authored identity."
         },
-        "reason": "Resourceful is authored as gaining Heroic Inspiration whenever the character finishes a Long Rest. No promoted character-sheet or runtime owner currently models Heroic Inspiration state or Long Rest grant timing.",
-        "tag": "unsupported-profile"
+        "deferredMechanics": [
+          {
+            "battleReadinessClosure": {
+              "kind": "character-fact-and-runtime-detached-split",
+              "owner": "future Heroic Inspiration D20 reroll owner",
+              "reason": "This task promotes only the Character Sheet Long Rest grant state. Reroll execution must consume the existing sheet state at the D20 Test or die-roll boundary that owns the original roll and replacement result."
+            },
+            "mechanic": "Spend Heroic Inspiration to reroll a die and clear the available state after the replacement result is used."
+          },
+          {
+            "battleReadinessClosure": {
+              "kind": "outside-battle-runtime",
+              "owner": "future party/session Heroic Inspiration transfer owner",
+              "reason": "Duplicate-gain transfer requires a party/session boundary with another Character Sheet recipient and player choice. The single-sheet Long Rest owner keeps at-most-one local state and does not invent cross-character transfer state."
+            },
+            "mechanic": "Route a duplicate Heroic Inspiration gain to another player character in the group who lacks Heroic Inspiration."
+          }
+        ],
+        "profileIds": [
+          "character-sheet.rest-triggered-heroic-inspiration"
+        ],
+        "selectedIdentityEvidenceDisposition": {
+          "owner": "character-sheet-runtime deterministic Long Rest projection owner",
+          "reason": "Resourceful support is a Character Sheet rest-completion state projection from selected species trait Unit refs and typed Surface mechanics. It has no battle-runtime selected Unit identity replay boundary; focused Character Sheet tests bind the retained Human species trait Unit to the executable rest-trigger and grant facts.",
+          "tag": "not-applicable"
+        },
+        "supportedMechanics": [
+          "Surface authors Resourceful as an SRD Human species trait with rest_triggered_heroic_inspiration mechanics, finish_rest/long trigger facts, and a heroic_inspiration grant fact",
+          "Character Sheet owns explicit at-most-one Heroic Inspiration state as none or available, defaulting fresh sheets to none and requiring stored sheets to carry the state",
+          "Long Rest completion scans selected species trait Unit refs and admits only species-trait Units with the exact typed rest-triggered Heroic Inspiration shape, without branching on Human or Resourceful authored identity",
+          "A qualifying Long Rest sets Heroic Inspiration to available, duplicate gains remain the same single available state, and non-qualifying builds preserve their current Heroic Inspiration state"
+        ],
+        "tag": "profile-subset-supported"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "species_trait",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "character-sheet.rest-triggered-heroic-inspiration",
+          "profileKind": "character-sheet",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/character-sheet-runtime/src/rests.ts"
+          ],
+          "sourceBoundary": "Character Sheet consumes selected species trait Unit refs, installed Surface rest_triggered_heroic_inspiration mechanics with finish_rest/long and heroic_inspiration grant facts, Long Rest completion, and current Heroic Inspiration state. It sets the sheet state to available after a qualifying Long Rest, preserves existing state for non-qualifying builds, treats duplicate gains as the same single available state because the Character Sheet owns no transfer recipient path, and does not store species-owned rest or inspiration state.",
+          "taskRefs": [
+            "L3-FOLLOWUP-HUMAN-RESOURCEFUL-RUNTIME"
+          ],
+          "title": "Character Sheet grants Heroic Inspiration from Long Rest triggered feature facts",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-sheet-runtime/src/rests.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/species_human_resourceful.json",
       "unitId": "species_human_resourceful"
     },

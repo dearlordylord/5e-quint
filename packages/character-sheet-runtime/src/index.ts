@@ -3,9 +3,11 @@ export {
   parseCharacterSheet,
 } from "./sheet-lifecycle.ts";
 export {
+  CHARACTER_SHEET_HEROIC_INSPIRATION_AVAILABLE,
   CHARACTER_SHEET_KNOCKED_OUT_UNCONSCIOUS,
   CHARACTER_SHEET_LONG_REST_BASE_TICKS,
   CHARACTER_SHEET_LONG_REST_WAIT_TICKS,
+  CHARACTER_SHEET_NO_HEROIC_INSPIRATION,
   CHARACTER_SHEET_NO_OTHER_PROFICIENCY_BONUS,
   CHARACTER_SHEET_OTHER_PROFICIENCY_BONUS_APPLIES,
   CHARACTER_SHEET_SHORT_REST_TICKS,
@@ -115,6 +117,7 @@ export type {
   CharacterSheetHitDieState,
   CharacterSheetHitPoints,
   CharacterSheetHitPointsInput,
+  CharacterSheetHeroicInspiration,
   CharacterSheetId,
   CharacterSheetInput,
   CharacterSheetIssue,

@@ -97,7 +97,7 @@
     {
       "number": 16,
       "id": "L3-FOLLOWUP-HUMAN-RESOURCEFUL-RUNTIME",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Promote Human Resourceful Heroic Inspiration support"
     },
     {
@@ -1040,7 +1040,7 @@ Verification:
 
 ### Task 16 - L3-FOLLOWUP-HUMAN-RESOURCEFUL-RUNTIME
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 

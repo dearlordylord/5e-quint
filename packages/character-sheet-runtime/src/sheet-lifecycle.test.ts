@@ -1,6 +1,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-SORCERER-METAMAGIC-CHARACTER-FACTS sorcerer_metamagic
 import { describe, expect, test } from "vitest";
 import {
+  CHARACTER_SHEET_NO_HEROIC_INSPIRATION,
   Either,
   Hp,
   SORCERER_FONT_OF_MAGIC_UNIT_ID,
@@ -21,7 +22,7 @@ import {
   sorcererMetamagicKnownOptionsSheetParsingTestName,
   storedAvailableSheetInput,
   unitLibrary,
-  warlockSpellcastingWithCantrips
+  warlockSpellcastingWithCantrips,
 } from "./test-support.ts";
 
 export const sorcererMetamagicKnownOptionsSheetParsingRuntimeTestName =
@@ -720,6 +721,7 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
         conditions: [],
         spentHitDice: [],
         resourceExpenditures: [],
+        heroicInspiration: CHARACTER_SHEET_NO_HEROIC_INSPIRATION,
         spellSlotExpenditures: [],
         pactSlotExpenditure: { expended: 0 },
       },
