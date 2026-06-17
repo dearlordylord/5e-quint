@@ -55,67 +55,70 @@ scope snapshot, and source branch inventory are revised together.
 11. `cleanroom-input/qnt/character-sheet-runtime/character-sheet-spellbook-ritual-selected-identity.mbt.qnt`
 12. `cleanroom-input/qnt/character-sheet-runtime/character-sheet-weapon-mastery-containers-selected-identity.mbt.qnt`
 13. `cleanroom-input/qnt/character-battle-runtime/character-battle-origin-feat-selected-identity.mbt.qnt`
-14. `cleanroom-input/qnt/battle-runtime/battle-runtime-adrenaline-rush.mbt.qnt`
-15. `cleanroom-input/qnt/battle-runtime/battle-runtime-attack-spell-shape-selected-identity.mbt.qnt`
-16. `cleanroom-input/qnt/battle-runtime/battle-runtime-chained-attack-sequence.mbt.qnt`
-17. `cleanroom-input/qnt/battle-runtime/battle-runtime-command-option-next-turn.mbt.qnt`
-18. `cleanroom-input/qnt/battle-runtime/battle-runtime-command-ordering.mbt.qnt`
-19. `cleanroom-input/qnt/battle-runtime/battle-runtime-concentration-break-teardown.mbt.qnt`
-20. `cleanroom-input/qnt/battle-runtime/battle-runtime-creature-type-protection-and-charm-selected-identity.mbt.qnt`
-21. `cleanroom-input/qnt/battle-runtime/battle-runtime-danger-sense-selected-identity.mbt.qnt`
-22. `cleanroom-input/qnt/battle-runtime/battle-runtime-death-saving-throw.mbt.qnt`
-23. `cleanroom-input/qnt/battle-runtime/battle-runtime-dragonborn-breath-weapon.mbt.qnt`
-24. `cleanroom-input/qnt/battle-runtime/battle-runtime-druid-wild-shape-form-lifecycle.mbt.qnt`
-25. `cleanroom-input/qnt/battle-runtime/battle-runtime-eldritch-blast.mbt.qnt`
-26. `cleanroom-input/qnt/battle-runtime/battle-runtime-feature-selected-identity.mbt.qnt`
-27. `cleanroom-input/qnt/battle-runtime/battle-runtime-find-familiar-companion-lifecycle.mbt.qnt`
-28. `cleanroom-input/qnt/battle-runtime/battle-runtime-find-familiar-selected-identity.mbt.qnt`
-29. `cleanroom-input/qnt/battle-runtime/battle-runtime-healing-stabilization-selected-identity.mbt.qnt`
-30. `cleanroom-input/qnt/battle-runtime/battle-runtime-hit-point-restoration-ordering.mbt.qnt`
-31. `cleanroom-input/qnt/battle-runtime/battle-runtime-interrupt-stack-resume.mbt.qnt`
-32. `cleanroom-input/qnt/battle-runtime/battle-runtime-level1-buff-mark-smite-selected-identity.mbt.qnt`
-33. `cleanroom-input/qnt/battle-runtime/battle-runtime-level1-damage-spell-selected-identity.mbt.qnt`
-34. `cleanroom-input/qnt/battle-runtime/battle-runtime-level1-spatial-witness-selected-identity.mbt.qnt`
-35. `cleanroom-input/qnt/battle-runtime/battle-runtime-mage-armor-selected-identity.mbt.qnt`
-36. `cleanroom-input/qnt/battle-runtime/battle-runtime-magic-missile.mbt.qnt`
-37. `cleanroom-input/qnt/battle-runtime/battle-runtime-quickened-spell-governor.mbt.qnt`
-38. `cleanroom-input/qnt/battle-runtime/battle-runtime-roll-modifier-active-effects.mbt.qnt`
-39. `cleanroom-input/qnt/battle-runtime/battle-runtime-roll-modifier-buff-selected-identity.mbt.qnt`
-40. `cleanroom-input/qnt/battle-runtime/battle-runtime-sanctuary-selected-identity.mbt.qnt`
-41. `cleanroom-input/qnt/battle-runtime/battle-runtime-save-gated-spell-ordering.mbt.qnt`
-42. `cleanroom-input/qnt/battle-runtime/battle-runtime-scalar-buff-active-effects.mbt.qnt`
-43. `cleanroom-input/qnt/battle-runtime/battle-runtime-scalar-buff.mbt.qnt`
-44. `cleanroom-input/qnt/battle-runtime/battle-runtime-sleep-repeat-save.mbt.qnt`
-45. `cleanroom-input/qnt/battle-runtime/battle-runtime-sorcerer-metamagic-careful-selected-identity.mbt.qnt`
-46. `cleanroom-input/qnt/battle-runtime/battle-runtime-sorcerer-metamagic-distant-selected-identity.mbt.qnt`
-47. `cleanroom-input/qnt/battle-runtime/battle-runtime-sorcerer-metamagic-empowered-selected-identity.mbt.qnt`
-48. `cleanroom-input/qnt/battle-runtime/battle-runtime-sorcerer-metamagic-extended-selected-identity.mbt.qnt`
-49. `cleanroom-input/qnt/battle-runtime/battle-runtime-sorcerer-metamagic-heightened-selected-identity.mbt.qnt`
-50. `cleanroom-input/qnt/battle-runtime/battle-runtime-sorcerer-metamagic-seeking-selected-identity.mbt.qnt`
-51. `cleanroom-input/qnt/battle-runtime/battle-runtime-sorcerer-metamagic-selected-identity.mbt.qnt`
-52. `cleanroom-input/qnt/battle-runtime/battle-runtime-sorcerer-metamagic-spell-attack-selected-identity.mbt.qnt`
-53. `cleanroom-input/qnt/battle-runtime/battle-runtime-sorcerer-metamagic-spell-attack-sequence-selected-identity.mbt.qnt`
-54. `cleanroom-input/qnt/battle-runtime/battle-runtime-sorcerer-metamagic-subtle-selected-identity.mbt.qnt`
-55. `cleanroom-input/qnt/battle-runtime/battle-runtime-sorcerer-metamagic-transmuted-selected-identity.mbt.qnt`
-56. `cleanroom-input/qnt/battle-runtime/battle-runtime-sorcerer-metamagic-twinned-selected-identity.mbt.qnt`
-57. `cleanroom-input/qnt/battle-runtime/battle-runtime-species-passive-trait-selected-identity.mbt.qnt`
-58. `cleanroom-input/qnt/battle-runtime/battle-runtime-spell-attack-ordering.mbt.qnt`
-59. `cleanroom-input/qnt/battle-runtime/battle-runtime-starry-wisp-object.mbt.qnt`
-60. `cleanroom-input/qnt/battle-runtime/battle-runtime-stat-block-action-ordering.mbt.qnt`
-61. `cleanroom-input/qnt/battle-runtime/battle-runtime-thaumaturgy-selected-identity.mbt.qnt`
-62. `cleanroom-input/qnt/battle-runtime/battle-runtime-turn-boundary-effect-lifecycle.mbt.qnt`
-63. `cleanroom-input/qnt/battle-runtime/battle-runtime-weapon-attack-ordering.mbt.qnt`
-64. `cleanroom-input/qnt/battle-runtime/battle-runtime-weapon-attack-skeleton.mbt.qnt`
-65. `cleanroom-input/qnt/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt`
-66. `cleanroom-input/qnt/battle-runtime/battle-runtime-weapon-mastery-selected-identity.mbt.qnt`
-67. `cleanroom-input/qnt/battle-runtime/battle-runtime-zero-hit-point-mid-resolution.mbt.qnt`
-68. `cleanroom-input/qnt/battle-runtime/creature-attack.mbt.qnt`
-69. `cleanroom-input/qnt/battle-runtime/rule-core-attack-damage-disposition.mbt.qnt`
-70. `cleanroom-input/qnt/battle-runtime/rule-core-hit-point-damage.mbt.qnt`
-71. `cleanroom-input/qnt/battle-runtime/rule-core-movement.mbt.qnt`
-72. `cleanroom-input/qnt/battle-runtime/rule-core-reactions.mbt.qnt`
-73. `cleanroom-input/qnt/battle-runtime/rule-core-shove-outcome.mbt.qnt`
-74. `cleanroom-input/qnt/battle-runtime/rule-core-stat-block-controls.mbt.qnt`
+14. `cleanroom-input/qnt/character-battle-runtime/character-layer-projection-lifecycle.mbt.qnt`
+15. `cleanroom-input/qnt/battle-runtime/battle-runtime-adrenaline-rush.mbt.qnt`
+16. `cleanroom-input/qnt/battle-runtime/battle-runtime-attack-spell-shape-selected-identity.mbt.qnt`
+17. `cleanroom-input/qnt/battle-runtime/battle-runtime-chained-attack-sequence.mbt.qnt`
+18. `cleanroom-input/qnt/battle-runtime/battle-runtime-command-option-next-turn.mbt.qnt`
+19. `cleanroom-input/qnt/battle-runtime/battle-runtime-command-ordering.mbt.qnt`
+20. `cleanroom-input/qnt/battle-runtime/battle-runtime-concentration-break-teardown.mbt.qnt`
+21. `cleanroom-input/qnt/battle-runtime/battle-runtime-creature-type-protection-and-charm-selected-identity.mbt.qnt`
+22. `cleanroom-input/qnt/battle-runtime/battle-runtime-danger-sense-selected-identity.mbt.qnt`
+23. `cleanroom-input/qnt/battle-runtime/battle-runtime-death-saving-throw.mbt.qnt`
+24. `cleanroom-input/qnt/battle-runtime/battle-runtime-dragonborn-breath-weapon.mbt.qnt`
+25. `cleanroom-input/qnt/battle-runtime/battle-runtime-druid-wild-shape-form-lifecycle.mbt.qnt`
+26. `cleanroom-input/qnt/battle-runtime/battle-runtime-eldritch-blast.mbt.qnt`
+27. `cleanroom-input/qnt/battle-runtime/battle-runtime-feature-selected-identity.mbt.qnt`
+28. `cleanroom-input/qnt/battle-runtime/battle-runtime-find-familiar-companion-lifecycle.mbt.qnt`
+29. `cleanroom-input/qnt/battle-runtime/battle-runtime-find-familiar-selected-identity.mbt.qnt`
+30. `cleanroom-input/qnt/battle-runtime/battle-runtime-healing-stabilization-selected-identity.mbt.qnt`
+31. `cleanroom-input/qnt/battle-runtime/battle-runtime-hit-point-restoration-ordering.mbt.qnt`
+32. `cleanroom-input/qnt/battle-runtime/battle-runtime-interrupt-stack-resume.mbt.qnt`
+33. `cleanroom-input/qnt/battle-runtime/battle-runtime-level1-buff-mark-smite-selected-identity.mbt.qnt`
+34. `cleanroom-input/qnt/battle-runtime/battle-runtime-level1-damage-spell-selected-identity.mbt.qnt`
+35. `cleanroom-input/qnt/battle-runtime/battle-runtime-level1-spatial-witness-selected-identity.mbt.qnt`
+36. `cleanroom-input/qnt/battle-runtime/battle-runtime-mage-armor-selected-identity.mbt.qnt`
+37. `cleanroom-input/qnt/battle-runtime/battle-runtime-magic-missile.mbt.qnt`
+38. `cleanroom-input/qnt/battle-runtime/battle-runtime-quickened-spell-governor.mbt.qnt`
+39. `cleanroom-input/qnt/battle-runtime/battle-runtime-roll-modifier-active-effects.mbt.qnt`
+40. `cleanroom-input/qnt/battle-runtime/battle-runtime-roll-modifier-buff-selected-identity.mbt.qnt`
+41. `cleanroom-input/qnt/battle-runtime/battle-runtime-sanctuary-selected-identity.mbt.qnt`
+42. `cleanroom-input/qnt/battle-runtime/battle-runtime-save-gated-spell-ordering.mbt.qnt`
+43. `cleanroom-input/qnt/battle-runtime/battle-runtime-scalar-buff-active-effects.mbt.qnt`
+44. `cleanroom-input/qnt/battle-runtime/battle-runtime-scalar-buff.mbt.qnt`
+45. `cleanroom-input/qnt/battle-runtime/battle-runtime-sleep-repeat-save.mbt.qnt`
+46. `cleanroom-input/qnt/battle-runtime/battle-runtime-sorcerer-metamagic-careful-selected-identity.mbt.qnt`
+47. `cleanroom-input/qnt/battle-runtime/battle-runtime-sorcerer-metamagic-distant-selected-identity.mbt.qnt`
+48. `cleanroom-input/qnt/battle-runtime/battle-runtime-sorcerer-metamagic-empowered-selected-identity.mbt.qnt`
+49. `cleanroom-input/qnt/battle-runtime/battle-runtime-sorcerer-metamagic-extended-selected-identity.mbt.qnt`
+50. `cleanroom-input/qnt/battle-runtime/battle-runtime-sorcerer-metamagic-heightened-selected-identity.mbt.qnt`
+51. `cleanroom-input/qnt/battle-runtime/battle-runtime-sorcerer-metamagic-seeking-selected-identity.mbt.qnt`
+52. `cleanroom-input/qnt/battle-runtime/battle-runtime-sorcerer-metamagic-selected-identity.mbt.qnt`
+53. `cleanroom-input/qnt/battle-runtime/battle-runtime-sorcerer-metamagic-spell-attack-selected-identity.mbt.qnt`
+54. `cleanroom-input/qnt/battle-runtime/battle-runtime-sorcerer-metamagic-spell-attack-sequence-selected-identity.mbt.qnt`
+55. `cleanroom-input/qnt/battle-runtime/battle-runtime-sorcerer-metamagic-subtle-selected-identity.mbt.qnt`
+56. `cleanroom-input/qnt/battle-runtime/battle-runtime-sorcerer-metamagic-transmuted-selected-identity.mbt.qnt`
+57. `cleanroom-input/qnt/battle-runtime/battle-runtime-sorcerer-metamagic-twinned-selected-identity.mbt.qnt`
+58. `cleanroom-input/qnt/battle-runtime/battle-runtime-species-passive-trait-selected-identity.mbt.qnt`
+59. `cleanroom-input/qnt/battle-runtime/battle-runtime-spell-attack-ordering.mbt.qnt`
+60. `cleanroom-input/qnt/battle-runtime/battle-runtime-starry-wisp-object.mbt.qnt`
+61. `cleanroom-input/qnt/battle-runtime/battle-runtime-stat-block-action-ordering.mbt.qnt`
+62. `cleanroom-input/qnt/battle-runtime/battle-runtime-stat-block-multi-damage.mbt.qnt`
+63. `cleanroom-input/qnt/battle-runtime/battle-runtime-stat-block-size-gated-condition-rider.mbt.qnt`
+64. `cleanroom-input/qnt/battle-runtime/battle-runtime-thaumaturgy-selected-identity.mbt.qnt`
+65. `cleanroom-input/qnt/battle-runtime/battle-runtime-turn-boundary-effect-lifecycle.mbt.qnt`
+66. `cleanroom-input/qnt/battle-runtime/battle-runtime-weapon-attack-ordering.mbt.qnt`
+67. `cleanroom-input/qnt/battle-runtime/battle-runtime-weapon-attack-skeleton.mbt.qnt`
+68. `cleanroom-input/qnt/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt`
+69. `cleanroom-input/qnt/battle-runtime/battle-runtime-weapon-mastery-selected-identity.mbt.qnt`
+70. `cleanroom-input/qnt/battle-runtime/battle-runtime-zero-hit-point-mid-resolution.mbt.qnt`
+71. `cleanroom-input/qnt/battle-runtime/creature-attack.mbt.qnt`
+72. `cleanroom-input/qnt/battle-runtime/rule-core-attack-damage-disposition.mbt.qnt`
+73. `cleanroom-input/qnt/battle-runtime/rule-core-hit-point-damage.mbt.qnt`
+74. `cleanroom-input/qnt/battle-runtime/rule-core-movement.mbt.qnt`
+75. `cleanroom-input/qnt/battle-runtime/rule-core-reactions.mbt.qnt`
+76. `cleanroom-input/qnt/battle-runtime/rule-core-shove-outcome.mbt.qnt`
+77. `cleanroom-input/qnt/battle-runtime/rule-core-stat-block-controls.mbt.qnt`
 
 ## Future Level 1-2 Queue
 
@@ -143,6 +146,7 @@ the current cleanroom vertical already exercised an earlier dependency.
 ### Handoff
 
 1. `cleanroom-input/qnt/character-battle-runtime/character-battle-origin-feat-selected-identity.mbt.qnt`
+2. `cleanroom-input/qnt/character-battle-runtime/character-layer-projection-lifecycle.mbt.qnt`
 
 ### Battle
 
@@ -193,20 +197,22 @@ the current cleanroom vertical already exercised an earlier dependency.
 45. `cleanroom-input/qnt/battle-runtime/battle-runtime-spell-attack-ordering.mbt.qnt`
 46. `cleanroom-input/qnt/battle-runtime/battle-runtime-starry-wisp-object.mbt.qnt`
 47. `cleanroom-input/qnt/battle-runtime/battle-runtime-stat-block-action-ordering.mbt.qnt`
-48. `cleanroom-input/qnt/battle-runtime/battle-runtime-thaumaturgy-selected-identity.mbt.qnt`
-49. `cleanroom-input/qnt/battle-runtime/battle-runtime-turn-boundary-effect-lifecycle.mbt.qnt`
-50. `cleanroom-input/qnt/battle-runtime/battle-runtime-weapon-attack-ordering.mbt.qnt`
-51. `cleanroom-input/qnt/battle-runtime/battle-runtime-weapon-attack-skeleton.mbt.qnt`
-52. `cleanroom-input/qnt/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt`
-53. `cleanroom-input/qnt/battle-runtime/battle-runtime-weapon-mastery-selected-identity.mbt.qnt`
-54. `cleanroom-input/qnt/battle-runtime/battle-runtime-zero-hit-point-mid-resolution.mbt.qnt`
-55. `cleanroom-input/qnt/battle-runtime/creature-attack.mbt.qnt`
-56. `cleanroom-input/qnt/battle-runtime/rule-core-attack-damage-disposition.mbt.qnt`
-57. `cleanroom-input/qnt/battle-runtime/rule-core-hit-point-damage.mbt.qnt`
-58. `cleanroom-input/qnt/battle-runtime/rule-core-movement.mbt.qnt`
-59. `cleanroom-input/qnt/battle-runtime/rule-core-reactions.mbt.qnt`
-60. `cleanroom-input/qnt/battle-runtime/rule-core-shove-outcome.mbt.qnt`
-61. `cleanroom-input/qnt/battle-runtime/rule-core-stat-block-controls.mbt.qnt`
+48. `cleanroom-input/qnt/battle-runtime/battle-runtime-stat-block-multi-damage.mbt.qnt`
+49. `cleanroom-input/qnt/battle-runtime/battle-runtime-stat-block-size-gated-condition-rider.mbt.qnt`
+50. `cleanroom-input/qnt/battle-runtime/battle-runtime-thaumaturgy-selected-identity.mbt.qnt`
+51. `cleanroom-input/qnt/battle-runtime/battle-runtime-turn-boundary-effect-lifecycle.mbt.qnt`
+52. `cleanroom-input/qnt/battle-runtime/battle-runtime-weapon-attack-ordering.mbt.qnt`
+53. `cleanroom-input/qnt/battle-runtime/battle-runtime-weapon-attack-skeleton.mbt.qnt`
+54. `cleanroom-input/qnt/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt`
+55. `cleanroom-input/qnt/battle-runtime/battle-runtime-weapon-mastery-selected-identity.mbt.qnt`
+56. `cleanroom-input/qnt/battle-runtime/battle-runtime-zero-hit-point-mid-resolution.mbt.qnt`
+57. `cleanroom-input/qnt/battle-runtime/creature-attack.mbt.qnt`
+58. `cleanroom-input/qnt/battle-runtime/rule-core-attack-damage-disposition.mbt.qnt`
+59. `cleanroom-input/qnt/battle-runtime/rule-core-hit-point-damage.mbt.qnt`
+60. `cleanroom-input/qnt/battle-runtime/rule-core-movement.mbt.qnt`
+61. `cleanroom-input/qnt/battle-runtime/rule-core-reactions.mbt.qnt`
+62. `cleanroom-input/qnt/battle-runtime/rule-core-shove-outcome.mbt.qnt`
+63. `cleanroom-input/qnt/battle-runtime/rule-core-stat-block-controls.mbt.qnt`
 
 ## Full Driver Decisions
 
@@ -248,6 +254,7 @@ the current cleanroom vertical already exercised an earlier dependency.
 | --- | --- | --- | --- |
 | flagged | `cleanroom-input/qnt/character-battle-runtime/character-battle-init-projection.mbt.qnt` | `Classes/Sorcerer.md` "Level 2: Metamagic"; driver projects spell levels 1, 2, and 3 | Mixed level-1/2 handoff facts with spell-level-2 and spell-level-3 capacity facts. |
 | in | `cleanroom-input/qnt/character-battle-runtime/character-battle-origin-feat-selected-identity.mbt.qnt` | `Character-Origins.md` Criminal background feat; `Feats.md` "Alert" | Alert is an Origin feat reachable during level-1 character creation. |
+| in | `cleanroom-input/qnt/character-battle-runtime/character-layer-projection-lifecycle.mbt.qnt` | `Character-Creation.md` "Create Your Character"; `Rules-Glossary.md` "Character Sheet"; `Playing-the-Game.md` "The Order of Combat" and "Hit Points" | Lifecycle composition witness uses a level-1 character, battle entry, one Skeleton attack, and settlement. |
 | flagged | `cleanroom-input/qnt/character-battle-runtime/character-battle-settlement.mbt.qnt` | `Playing-the-Game.md` "Hit Points"; `Classes/Druid.md` "Level 2: Wild Shape"; driver has created level-3 slot ambiguity | Mixed basic battle settlement with later/ambiguous created spell-slot and active-Wild-Shape handoff questions. |
 | flagged | `cleanroom-input/qnt/character-battle-runtime/character-sheet-feature-resources.mbt.qnt` | `Classes/Paladin.md` "Level 1: Lay On Hands"; `Classes/Sorcerer.md` "Level 2: Font of Magic"; driver creates a level-3 slot | Mixed level-1/2 resources with out-of-scope created level-3 slot behavior. |
 
@@ -337,6 +344,7 @@ the current cleanroom vertical already exercised an earlier dependency.
 | out | `cleanroom-input/qnt/battle-runtime/battle-runtime-self-transformation-mode-lifecycle.mbt.qnt` | `Classes/Sorcerer.md`, `Classes/Warlock.md`, and `Classes/Wizard.md` level-2 spell lists; `Spells/Descriptions-A-D.md` "Alter Self" | Alter Self is spell level 2. |
 | out | `cleanroom-input/qnt/battle-runtime/battle-runtime-shining-smite-selected-identity.mbt.qnt` | `Classes/Paladin.md` level-2 spell list; `Spells/Descriptions-S-Z.md` "Shining Smite" | Shining Smite is spell level 2. |
 | in | `cleanroom-input/qnt/battle-runtime/battle-runtime-sleep-repeat-save.mbt.qnt` | `Classes/Bard.md`, `Classes/Sorcerer.md`, and `Classes/Wizard.md` level-1 spell lists; `Spells/Descriptions-S-Z.md` "Sleep"; `Spells/Descriptions-E-L.md` "Hideous Laughter" | Sleep and Hideous Laughter are level-1 spells. |
+| out | `cleanroom-input/qnt/battle-runtime/battle-runtime-slow-fall-selected-identity.mbt.qnt` | `Classes/Monk.md` "Level 4: Slow Fall" | Slow Fall is a level-4 Monk feature. |
 | in | `cleanroom-input/qnt/battle-runtime/battle-runtime-sorcerer-metamagic-careful-selected-identity.mbt.qnt` | `Classes/Sorcerer.md` "Level 2: Metamagic" | Metamagic options are gained at Sorcerer level 2. |
 | in | `cleanroom-input/qnt/battle-runtime/battle-runtime-sorcerer-metamagic-distant-selected-identity.mbt.qnt` | `Classes/Sorcerer.md` "Level 2: Metamagic" | Metamagic options are gained at Sorcerer level 2. |
 | in | `cleanroom-input/qnt/battle-runtime/battle-runtime-sorcerer-metamagic-empowered-selected-identity.mbt.qnt` | `Classes/Sorcerer.md` "Level 2: Metamagic" | Metamagic options are gained at Sorcerer level 2. |
@@ -357,6 +365,8 @@ the current cleanroom vertical already exercised an earlier dependency.
 | out | `cleanroom-input/qnt/battle-runtime/battle-runtime-spiritual-weapon.mbt.qnt` | `Classes/Cleric.md` level-2 spell list; `Spells/Descriptions-S-Z.md` "Spiritual Weapon" | Spiritual Weapon is spell level 2. |
 | in | `cleanroom-input/qnt/battle-runtime/battle-runtime-starry-wisp-object.mbt.qnt` | `Classes/Druid.md` and `Classes/Ranger.md` cantrip lists; `Spells/Gaining-and-Casting.md` "Spell Level" | Starry Wisp is a cantrip. |
 | in | `cleanroom-input/qnt/battle-runtime/battle-runtime-stat-block-action-ordering.mbt.qnt` | `Monsters/Overview.md` "Stat Blocks"; `Playing-the-Game.md` "Attack Rolls" and "Actions" | Stat-block action ordering is a battle rule a level-1/2 character can encounter. |
+| in | `cleanroom-input/qnt/battle-runtime/battle-runtime-stat-block-multi-damage.mbt.qnt` | `Monsters/Overview.md` "Stat Blocks"; `Playing-the-Game.md` "Damage Rolls" and "Hit Points" | Stat-block multi-damage attacks are battle rules a level-1/2 character can encounter. |
+| in | `cleanroom-input/qnt/battle-runtime/battle-runtime-stat-block-size-gated-condition-rider.mbt.qnt` | `Monsters/Overview.md` "Stat Blocks"; `Playing-the-Game.md` "Creature Size"; `Rules-Glossary.md` "Prone" | Stat-block size-gated condition riders are battle rules a level-1/2 character can encounter. |
 | in | `cleanroom-input/qnt/battle-runtime/battle-runtime-thaumaturgy-selected-identity.mbt.qnt` | `Classes/Cleric.md` cantrip list; `Spells/Gaining-and-Casting.md` "Spell Level" | Thaumaturgy is a cantrip. |
 | in | `cleanroom-input/qnt/battle-runtime/battle-runtime-turn-boundary-effect-lifecycle.mbt.qnt` | `Playing-the-Game.md` "Combat" and "Actions"; `Rules-Glossary.md` condition durations | Turn-boundary effect lifecycle is a base battle rule. |
 | out | `cleanroom-input/qnt/battle-runtime/battle-runtime-warding-bond-damage-sharing.mbt.qnt` | `Classes/Cleric.md` and `Classes/Paladin.md` level-2 spell lists; `Spells/Descriptions-S-Z.md` "Warding Bond" | Warding Bond is spell level 2. |

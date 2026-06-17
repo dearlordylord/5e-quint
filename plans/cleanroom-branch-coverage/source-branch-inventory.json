@@ -5169,6 +5169,120 @@
       }
     },
     {
+      "branchAction": "doFillHitAttackRoll",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doFillHitAttackRoll"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/battle-runtime-stat-block-multi-damage.mbt.qnt",
+      "obligationId": "packages/battle-runtime/battle-runtime-stat-block-multi-damage.mbt.qnt#step:doFillHitAttackRoll",
+      "qntFileSha256": "424f8fd9c296b14da092181ea4ffac59c00ef0dffc16516a9adadbbc0f9f0d0b",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doFillTargetChoice",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doFillTargetChoice"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/battle-runtime-stat-block-multi-damage.mbt.qnt",
+      "obligationId": "packages/battle-runtime/battle-runtime-stat-block-multi-damage.mbt.qnt#step:doFillTargetChoice",
+      "qntFileSha256": "424f8fd9c296b14da092181ea4ffac59c00ef0dffc16516a9adadbbc0f9f0d0b",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doResolveRolledDamage",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doResolveRolledDamage"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/battle-runtime-stat-block-multi-damage.mbt.qnt",
+      "obligationId": "packages/battle-runtime/battle-runtime-stat-block-multi-damage.mbt.qnt#step:doResolveRolledDamage",
+      "qntFileSha256": "424f8fd9c296b14da092181ea4ffac59c00ef0dffc16516a9adadbbc0f9f0d0b",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doFillHitAttackRoll",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doFillHitAttackRoll"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/battle-runtime-stat-block-size-gated-condition-rider.mbt.qnt",
+      "obligationId": "packages/battle-runtime/battle-runtime-stat-block-size-gated-condition-rider.mbt.qnt#step:doFillHitAttackRoll",
+      "qntFileSha256": "2a25a972e1ad121a6464b8bb44edffb194d0605ccb240c909df2f03c7ccae971",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doFillTargetChoice",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doFillTargetChoice"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/battle-runtime-stat-block-size-gated-condition-rider.mbt.qnt",
+      "obligationId": "packages/battle-runtime/battle-runtime-stat-block-size-gated-condition-rider.mbt.qnt#step:doFillTargetChoice",
+      "qntFileSha256": "2a25a972e1ad121a6464b8bb44edffb194d0605ccb240c909df2f03c7ccae971",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doResolveDamage",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doResolveDamage"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/battle-runtime-stat-block-size-gated-condition-rider.mbt.qnt",
+      "obligationId": "packages/battle-runtime/battle-runtime-stat-block-size-gated-condition-rider.mbt.qnt#step:doResolveDamage",
+      "qntFileSha256": "2a25a972e1ad121a6464b8bb44edffb194d0605ccb240c909df2f03c7ccae971",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
       "branchAction": "doResolveThaumaturgyBoomingVoice",
       "branchFamily": "step",
       "branchPath": [
@@ -7174,6 +7288,101 @@
       "driverPath": "packages/character-battle-runtime/character-battle-origin-feat-selected-identity.mbt.qnt",
       "obligationId": "packages/character-battle-runtime/character-battle-origin-feat-selected-identity.mbt.qnt#step:doProjectAlertInitiativeHandoff",
       "qntFileSha256": "bdf8076e5624156d748e70260ca804ea4b0f980c9b3278b040948e42a52ec494",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doCreateSheetFromBuild",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doCreateSheetFromBuild"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/character-battle-runtime/character-layer-projection-lifecycle.mbt.qnt",
+      "obligationId": "packages/character-battle-runtime/character-layer-projection-lifecycle.mbt.qnt#step:doCreateSheetFromBuild",
+      "qntFileSha256": "a2db8e8512717dff0f0a3c5aa97e72328adb8820a2449249ddae447f5957f905",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doFinalizeDraftToBuild",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doFinalizeDraftToBuild"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/character-battle-runtime/character-layer-projection-lifecycle.mbt.qnt",
+      "obligationId": "packages/character-battle-runtime/character-layer-projection-lifecycle.mbt.qnt#step:doFinalizeDraftToBuild",
+      "qntFileSha256": "a2db8e8512717dff0f0a3c5aa97e72328adb8820a2449249ddae447f5957f905",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doProjectSheetToBattleInit",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doProjectSheetToBattleInit"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/character-battle-runtime/character-layer-projection-lifecycle.mbt.qnt",
+      "obligationId": "packages/character-battle-runtime/character-layer-projection-lifecycle.mbt.qnt#step:doProjectSheetToBattleInit",
+      "qntFileSha256": "a2db8e8512717dff0f0a3c5aa97e72328adb8820a2449249ddae447f5957f905",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doResolveSkeletonShortswordAttack",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doResolveSkeletonShortswordAttack"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/character-battle-runtime/character-layer-projection-lifecycle.mbt.qnt",
+      "obligationId": "packages/character-battle-runtime/character-layer-projection-lifecycle.mbt.qnt#step:doResolveSkeletonShortswordAttack",
+      "qntFileSha256": "a2db8e8512717dff0f0a3c5aa97e72328adb8820a2449249ddae447f5957f905",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doSettleBattleToSheet",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doSettleBattleToSheet"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/character-battle-runtime/character-layer-projection-lifecycle.mbt.qnt",
+      "obligationId": "packages/character-battle-runtime/character-layer-projection-lifecycle.mbt.qnt#step:doSettleBattleToSheet",
+      "qntFileSha256": "a2db8e8512717dff0f0a3c5aa97e72328adb8820a2449249ddae447f5957f905",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
