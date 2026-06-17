@@ -1,0 +1,330 @@
+{
+  "schema": "level-lt4-choice-closure.v1",
+  "mode": "non-strict",
+  "summary": {
+    "blockerCount": 3,
+    "cataloged": 19,
+    "selectable": 16,
+    "targetCount": 19
+  },
+  "notes": [
+    "This gate is RAW-backed for level <4 choice targets and non-strict by default.",
+    "It expands category grants that the older level reports could miss.",
+    "Run with --strict only after the Ralph closure lanes land."
+  ],
+  "selectableSources": {
+    "fightingStyleSelectableIds": [
+      "defense",
+      "feat_archery"
+    ],
+    "humanOriginFeatSelectableIds": [
+      "alert",
+      "feat_magic_initiate_cleric",
+      "feat_magic_initiate_druid",
+      "feat_magic_initiate_wizard",
+      "feat_savage_attacker",
+      "feat_skilled"
+    ],
+    "speciesSelectableIds": [
+      "species_dragonborn",
+      "species_dwarf",
+      "species_elf",
+      "species_goliath",
+      "species_halfling",
+      "species_human",
+      "species_orc",
+      "species_tiefling"
+    ]
+  },
+  "blockers": [
+    {
+      "admissionScope": "Fighter 1, Paladin 2, Ranger 2 Fighting Style",
+      "blockers": [
+        "missing-character-creation-admission"
+      ],
+      "cataloged": true,
+      "category": "fighting-style-feat-target",
+      "claimTag": "profile-subset-supported",
+      "closureKind": "outside-battle-runtime",
+      "name": "Great Weapon Fighting",
+      "rawAnchor": ".references/srd-5.2.1/Feats.md:105-109",
+      "selectable": false,
+      "sourceRecordPath": "packages/surface/content/feat_great_weapon_fighting.json",
+      "unitId": "feat_great_weapon_fighting"
+    },
+    {
+      "admissionScope": "Fighter 1, Paladin 2, Ranger 2 Fighting Style",
+      "blockers": [
+        "missing-character-creation-admission"
+      ],
+      "cataloged": true,
+      "category": "fighting-style-feat-target",
+      "claimTag": "profile-subset-supported",
+      "closureKind": "outside-battle-runtime",
+      "name": "Two-Weapon Fighting",
+      "rawAnchor": ".references/srd-5.2.1/Feats.md:111-115",
+      "selectable": false,
+      "sourceRecordPath": "packages/surface/content/feat_two_weapon_fighting.json",
+      "unitId": "feat_two_weapon_fighting"
+    },
+    {
+      "admissionScope": "Character creation species choice",
+      "blockers": [
+        "missing-character-creation-admission"
+      ],
+      "cataloged": true,
+      "category": "srd-species-target",
+      "claimTag": "unsupported-profile",
+      "closureKind": "selection-grant-container",
+      "name": "Gnome",
+      "rawAnchor": ".references/srd-5.2.1/Character-Origins.md:177-193",
+      "selectable": false,
+      "sourceRecordPath": "packages/surface/content/species_gnome.json",
+      "unitId": "species_gnome"
+    }
+  ],
+  "rows": [
+    {
+      "admissionScope": "Fighter 1, Paladin 2, Ranger 2 Fighting Style",
+      "blockers": [],
+      "cataloged": true,
+      "category": "fighting-style-feat-target",
+      "claimTag": "supported-profile",
+      "name": "Archery",
+      "rawAnchor": ".references/srd-5.2.1/Feats.md:91-97",
+      "selectable": true,
+      "sourceRecordPath": "packages/surface/content/feat_archery.json",
+      "unitId": "feat_archery"
+    },
+    {
+      "admissionScope": "Fighter 1, Paladin 2, Ranger 2 Fighting Style",
+      "blockers": [],
+      "cataloged": true,
+      "category": "fighting-style-feat-target",
+      "claimTag": "supported-profile",
+      "name": "Defense",
+      "rawAnchor": ".references/srd-5.2.1/Feats.md:99-103",
+      "selectable": true,
+      "sourceRecordPath": "packages/surface/content/feat_defense.json",
+      "unitId": "defense"
+    },
+    {
+      "admissionScope": "Fighter 1, Paladin 2, Ranger 2 Fighting Style",
+      "blockers": [
+        "missing-character-creation-admission"
+      ],
+      "cataloged": true,
+      "category": "fighting-style-feat-target",
+      "claimTag": "profile-subset-supported",
+      "closureKind": "outside-battle-runtime",
+      "name": "Great Weapon Fighting",
+      "rawAnchor": ".references/srd-5.2.1/Feats.md:105-109",
+      "selectable": false,
+      "sourceRecordPath": "packages/surface/content/feat_great_weapon_fighting.json",
+      "unitId": "feat_great_weapon_fighting"
+    },
+    {
+      "admissionScope": "Fighter 1, Paladin 2, Ranger 2 Fighting Style",
+      "blockers": [
+        "missing-character-creation-admission"
+      ],
+      "cataloged": true,
+      "category": "fighting-style-feat-target",
+      "claimTag": "profile-subset-supported",
+      "closureKind": "outside-battle-runtime",
+      "name": "Two-Weapon Fighting",
+      "rawAnchor": ".references/srd-5.2.1/Feats.md:111-115",
+      "selectable": false,
+      "sourceRecordPath": "packages/surface/content/feat_two_weapon_fighting.json",
+      "unitId": "feat_two_weapon_fighting"
+    },
+    {
+      "admissionScope": "Human Versatile Origin feat choice",
+      "blockers": [],
+      "cataloged": true,
+      "category": "human-origin-feat-target",
+      "claimTag": "supported-profile",
+      "name": "Alert",
+      "rawAnchor": ".references/srd-5.2.1/Feats.md:23-31",
+      "selectable": true,
+      "sourceRecordPath": "packages/surface/content/alert.json",
+      "unitId": "alert"
+    },
+    {
+      "admissionScope": "Human Versatile Origin feat choice",
+      "blockers": [],
+      "cataloged": true,
+      "category": "human-origin-feat-target",
+      "claimTag": "unsupported-profile",
+      "closureKind": "character-fact-and-runtime-detached-split",
+      "name": "Magic Initiate (Cleric)",
+      "rawAnchor": ".references/srd-5.2.1/Feats.md:33-45",
+      "selectable": true,
+      "sourceRecordPath": "packages/surface/content/feat_magic_initiate_cleric.json",
+      "unitId": "feat_magic_initiate_cleric"
+    },
+    {
+      "admissionScope": "Human Versatile Origin feat choice",
+      "blockers": [],
+      "cataloged": true,
+      "category": "human-origin-feat-target",
+      "claimTag": "unsupported-profile",
+      "closureKind": "character-fact-and-runtime-detached-split",
+      "name": "Magic Initiate (Druid)",
+      "rawAnchor": ".references/srd-5.2.1/Feats.md:33-45",
+      "selectable": true,
+      "sourceRecordPath": "packages/surface/content/feat_magic_initiate_druid.json",
+      "unitId": "feat_magic_initiate_druid"
+    },
+    {
+      "admissionScope": "Human Versatile Origin feat choice",
+      "blockers": [],
+      "cataloged": true,
+      "category": "human-origin-feat-target",
+      "claimTag": "unsupported-profile",
+      "closureKind": "character-fact-and-runtime-detached-split",
+      "name": "Magic Initiate (Wizard)",
+      "rawAnchor": ".references/srd-5.2.1/Feats.md:33-45",
+      "selectable": true,
+      "sourceRecordPath": "packages/surface/content/feat_magic_initiate_wizard.json",
+      "unitId": "feat_magic_initiate_wizard"
+    },
+    {
+      "admissionScope": "Human Versatile Origin feat choice",
+      "blockers": [],
+      "cataloged": true,
+      "category": "human-origin-feat-target",
+      "claimTag": "supported-profile",
+      "name": "Savage Attacker",
+      "rawAnchor": ".references/srd-5.2.1/Feats.md:47-51",
+      "selectable": true,
+      "sourceRecordPath": "packages/surface/content/feat_savage_attacker.json",
+      "unitId": "feat_savage_attacker"
+    },
+    {
+      "admissionScope": "Human Versatile Origin feat choice",
+      "blockers": [],
+      "cataloged": true,
+      "category": "human-origin-feat-target",
+      "claimTag": "supported-profile",
+      "closureKind": "character-fact-and-runtime-detached-split",
+      "name": "Skilled",
+      "rawAnchor": ".references/srd-5.2.1/Feats.md:53-59",
+      "selectable": true,
+      "sourceRecordPath": "packages/surface/content/feat_skilled.json",
+      "unitId": "feat_skilled"
+    },
+    {
+      "admissionScope": "Character creation species choice",
+      "blockers": [],
+      "cataloged": true,
+      "category": "srd-species-target",
+      "claimTag": "unsupported-profile",
+      "name": "Dragonborn",
+      "rawAnchor": ".references/srd-5.2.1/Character-Origins.md:99-127",
+      "selectable": true,
+      "sourceRecordPath": "packages/surface/content/species_dragonborn.json",
+      "unitId": "species_dragonborn"
+    },
+    {
+      "admissionScope": "Character creation species choice",
+      "blockers": [],
+      "cataloged": true,
+      "category": "srd-species-target",
+      "claimTag": "unsupported-profile",
+      "name": "Dwarf",
+      "rawAnchor": ".references/srd-5.2.1/Character-Origins.md:129-145",
+      "selectable": true,
+      "sourceRecordPath": "packages/surface/content/species_dwarf.json",
+      "unitId": "species_dwarf"
+    },
+    {
+      "admissionScope": "Character creation species choice",
+      "blockers": [],
+      "cataloged": true,
+      "category": "srd-species-target",
+      "claimTag": "unsupported-profile",
+      "name": "Elf",
+      "rawAnchor": ".references/srd-5.2.1/Character-Origins.md:147-175",
+      "selectable": true,
+      "sourceRecordPath": "packages/surface/content/species_elf.json",
+      "unitId": "species_elf"
+    },
+    {
+      "admissionScope": "Character creation species choice",
+      "blockers": [
+        "missing-character-creation-admission"
+      ],
+      "cataloged": true,
+      "category": "srd-species-target",
+      "claimTag": "unsupported-profile",
+      "closureKind": "selection-grant-container",
+      "name": "Gnome",
+      "rawAnchor": ".references/srd-5.2.1/Character-Origins.md:177-193",
+      "selectable": false,
+      "sourceRecordPath": "packages/surface/content/species_gnome.json",
+      "unitId": "species_gnome"
+    },
+    {
+      "admissionScope": "Character creation species choice",
+      "blockers": [],
+      "cataloged": true,
+      "category": "srd-species-target",
+      "claimTag": "unsupported-profile",
+      "name": "Goliath",
+      "rawAnchor": ".references/srd-5.2.1/Character-Origins.md:194-213",
+      "selectable": true,
+      "sourceRecordPath": "packages/surface/content/species_goliath.json",
+      "unitId": "species_goliath"
+    },
+    {
+      "admissionScope": "Character creation species choice",
+      "blockers": [],
+      "cataloged": true,
+      "category": "srd-species-target",
+      "claimTag": "unsupported-profile",
+      "name": "Halfling",
+      "rawAnchor": ".references/srd-5.2.1/Character-Origins.md:215-229",
+      "selectable": true,
+      "sourceRecordPath": "packages/surface/content/species_halfling.json",
+      "unitId": "species_halfling"
+    },
+    {
+      "admissionScope": "Character creation species choice",
+      "blockers": [],
+      "cataloged": true,
+      "category": "srd-species-target",
+      "claimTag": "unsupported-profile",
+      "closureKind": "selection-grant-container",
+      "name": "Human",
+      "rawAnchor": ".references/srd-5.2.1/Character-Origins.md:231-243",
+      "selectable": true,
+      "sourceRecordPath": "packages/surface/content/species_human.json",
+      "unitId": "species_human"
+    },
+    {
+      "admissionScope": "Character creation species choice",
+      "blockers": [],
+      "cataloged": true,
+      "category": "srd-species-target",
+      "claimTag": "unsupported-profile",
+      "name": "Orc",
+      "rawAnchor": ".references/srd-5.2.1/Character-Origins.md:245-259",
+      "selectable": true,
+      "sourceRecordPath": "packages/surface/content/species_orc.json",
+      "unitId": "species_orc"
+    },
+    {
+      "admissionScope": "Character creation species choice",
+      "blockers": [],
+      "cataloged": true,
+      "category": "srd-species-target",
+      "claimTag": "unsupported-profile",
+      "name": "Tiefling",
+      "rawAnchor": ".references/srd-5.2.1/Character-Origins.md:261-274",
+      "selectable": true,
+      "sourceRecordPath": "packages/surface/content/species_tiefling.json",
+      "unitId": "species_tiefling"
+    }
+  ]
+}

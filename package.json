@@ -18,6 +18,7 @@
     "cleanroom-scaffold:check": "node scripts/render-cleanroom-scaffold.cjs --self-test",
     "cleanroom-refresh:package": "node scripts/package-cleanroom-refresh.cjs",
     "cleanroom-harness:check": "node scripts/check-cleanroom-harness.cjs --self-test",
+    "level-lt4-choice-closure:check": "node scripts/level-lt4-choice-closure-check.cjs",
     "unit-profile-coverage:check": "node scripts/unit-profile-coverage-check.cjs",
     "unit-profile-coverage:check:self-test": "node scripts/unit-profile-coverage-check.cjs --self-test",
     "lint": "pnpm --filter @dnd/mcp lint && pnpm --filter @dnd/app lint",
