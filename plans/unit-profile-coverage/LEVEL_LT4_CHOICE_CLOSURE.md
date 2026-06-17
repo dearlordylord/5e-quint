@@ -23,8 +23,8 @@ Status: generated, non-strict until the Ralph closure lanes land.
 | --- | --- | --- | --- | --- | --- | --- |
 | `feat_archery` | fighting-style-feat-target | yes | yes | supported-profile |  | .references/srd-5.2.1/Feats.md:91-97 |
 | `defense` | fighting-style-feat-target | yes | yes | supported-profile |  | .references/srd-5.2.1/Feats.md:99-103 |
-| `feat_great_weapon_fighting` | fighting-style-feat-target | yes | no | profile-subset-supported | outside-battle-runtime | .references/srd-5.2.1/Feats.md:105-109 |
-| `feat_two_weapon_fighting` | fighting-style-feat-target | yes | no | profile-subset-supported | outside-battle-runtime | .references/srd-5.2.1/Feats.md:111-115 |
+| `feat_great_weapon_fighting` | fighting-style-feat-target | yes | no | supported-profile |  | .references/srd-5.2.1/Feats.md:105-109 |
+| `feat_two_weapon_fighting` | fighting-style-feat-target | yes | no | supported-profile |  | .references/srd-5.2.1/Feats.md:111-115 |
 | `alert` | human-origin-feat-target | yes | yes | supported-profile |  | .references/srd-5.2.1/Feats.md:23-31 |
 | `feat_magic_initiate_cleric` | human-origin-feat-target | yes | yes | unsupported-profile | character-fact-and-runtime-detached-split | .references/srd-5.2.1/Feats.md:33-45 |
 | `feat_magic_initiate_druid` | human-origin-feat-target | yes | yes | unsupported-profile | character-fact-and-runtime-detached-split | .references/srd-5.2.1/Feats.md:33-45 |
