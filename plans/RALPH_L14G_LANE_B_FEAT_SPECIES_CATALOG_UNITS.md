@@ -91,7 +91,7 @@
     {
       "number": 15,
       "id": "L3-FOLLOWUP-HALFLING-NATURALLY-STEALTHY-RUNTIME",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Promote Halfling Naturally Stealthy Hide support"
     },
     {
@@ -993,7 +993,7 @@ Verification:
 
 ### Task 15 - L3-FOLLOWUP-HALFLING-NATURALLY-STEALTHY-RUNTIME
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
