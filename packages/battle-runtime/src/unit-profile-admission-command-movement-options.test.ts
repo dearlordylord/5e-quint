@@ -263,7 +263,6 @@ describe("QMBT14 deterministic Command movement option admission", () => {
           escapeDc: difficultyClass(12),
           reachFeet: movementFeet(5),
           hand: "left",
-          targetExemptFromDragCost: false,
         },
       ],
     };
@@ -532,7 +531,6 @@ describe("QMBT14 deterministic Command movement option admission", () => {
           escapeDc: difficultyClass(12),
           reachFeet: movementFeet(5),
           hand: "left",
-          targetExemptFromDragCost: false,
         },
       ],
     };

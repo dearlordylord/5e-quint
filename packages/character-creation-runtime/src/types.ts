@@ -121,6 +121,10 @@ export const UNIT_CHOICE_KEYS = [
   "class_feature_ability_score_increase_choice",
   "class_feature_proficiency_choice",
   "class_feature_language_choice",
+  "origin_feat_proficiency_choice",
+  "species_trait_proficiency_choice",
+  "species_origin_feat_choice",
+  "species_origin_feat_proficiency_choice",
   "divine_order",
   "primal_order",
   "paladin_fighting_style",
@@ -646,6 +650,31 @@ export function characterEquipmentItemUnitIdFromLoadoutEquipmentUnitId(
 
 export type ToolProficiencyId = string & Brand.Brand<"ToolProficiencyId">;
 const ToolProficiencyId = Brand.nominal<ToolProficiencyId>();
+export const ARTISAN_TOOL_PROFICIENCY_IDS = [
+  "alchemists_supplies",
+  "brewers_supplies",
+  "calligraphers_supplies",
+  "carpenters_tools",
+  "cartographers_tools",
+  "cobblers_tools",
+  "cooks_utensils",
+  "glassblowers_tools",
+  "jewelers_tools",
+  "leatherworkers_tools",
+  "masons_tools",
+  "painters_supplies",
+  "potters_tools",
+  "smiths_tools",
+  "tinkers_tools",
+  "weavers_tools",
+  "woodcarvers_tools",
+] as const;
+export const GAMING_SET_TOOL_PROFICIENCY_IDS = [
+  "tool_dice_set",
+  "tool_dragonchess_set",
+  "tool_playing_card_set",
+  "tool_three_dragon_ante_set",
+] as const;
 export const MUSICAL_INSTRUMENT_TOOL_PROFICIENCY_IDS = [
   "tool_bagpipes",
   "tool_drum",
@@ -658,12 +687,19 @@ export const MUSICAL_INSTRUMENT_TOOL_PROFICIENCY_IDS = [
   "tool_shawm",
   "tool_viol",
 ] as const;
-export const CHARACTER_BUILD_TOOL_PROFICIENCY_IDS = [
-  "tool_dice_set",
-  "calligraphers_supplies",
+export const OTHER_TOOL_PROFICIENCY_IDS = [
+  "disguise_kit",
+  "forgery_kit",
   "herbalism_kit",
+  "navigators_tools",
+  "poisoners_kit",
   "thieves_tools",
+] as const;
+export const CHARACTER_BUILD_TOOL_PROFICIENCY_IDS = [
+  ...ARTISAN_TOOL_PROFICIENCY_IDS,
+  ...GAMING_SET_TOOL_PROFICIENCY_IDS,
   ...MUSICAL_INSTRUMENT_TOOL_PROFICIENCY_IDS,
+  ...OTHER_TOOL_PROFICIENCY_IDS,
 ] as const;
 export type ToolProficiencyIdText =
   (typeof CHARACTER_BUILD_TOOL_PROFICIENCY_IDS)[number];

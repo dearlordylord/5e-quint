@@ -12,6 +12,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-creature-size-change
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.passive-ability-check-roll-mode
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.remarkable-athlete
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.hide-action-obscurement-permission
 import { Match } from "effect";
 import { hasCondition } from "@dnd/shared-algebras/conditions-algebra";
 import type { AttackRollMode } from "@dnd/shared-algebras/runtime-hole-algebra";
@@ -37,9 +38,12 @@ import {
 } from "./creature-size-change-effects.ts";
 import {
   BONUS_ACTION_DASH_TEMPORARY_HIT_POINTS_SUPPORT_PROFILE,
+  HIDE_ACTION_OBSCUREMENT_PERMISSION_SUPPORT_PROFILE,
   type AlternateActionCostAction,
   type BattleBonusActionDashTemporaryHitPointsSupportProfile,
+  type BattleHideActionObscurementPermissionSupportProfile,
   type BattleUnitSupportProfile,
+  type HideActionObscurementPermissionProfile,
 } from "../unit-feature-support.ts";
 import {
   ATTACK_TARGET_HOLE_ID,
@@ -82,10 +86,12 @@ import {
   type BattleTargetChoiceHole,
 } from "../battle-reducer.ts";
 import {
+  creatureSizeIsLargerThanSelf,
   grappleLinkForTarget,
   representedMovementSpeedKinds,
   shoveForTarget,
 } from "./movement-speed.ts";
+import { combatantEffectiveSize } from "./druid-wild-shape.ts";
 import {
   THAUMATURGY_BOOMING_VOICE_INFLUENCE_ABILITY_CHECK_HOLE_ID,
   THAUMATURGY_BOOMING_VOICE_INFLUENCE_ABILITY_CHECK_HOLE_INSTANCE,
@@ -1008,6 +1014,80 @@ export function canHideInCurrentCircumstances(
   return Match.value(prerequisite).pipe(
     Match.when({ kind: "heavilyObscuredOutOfEnemyLineOfSight" }, () => true),
     Match.when({ kind: "coverOutOfEnemyLineOfSight" }, () => true),
+    Match.when(
+      { kind: "obscuredOnlyByCreatureOutOfEnemyLineOfSight" },
+      (creatureObscurement) =>
+        canHideWhenObscuredOnlyByCreature(
+          state,
+          combatantId,
+          creatureObscurement.obscuringCreatureId,
+        ),
+    ),
+    Match.exhaustive,
+  );
+}
+
+function canHideWhenObscuredOnlyByCreature(
+  state: BattleState,
+  combatantId: CombatantId,
+  obscuringCreatureId: CombatantId,
+): boolean {
+  const combatant = state.combatants.get(combatantId);
+  const obscuringCreature = state.combatants.get(obscuringCreatureId);
+  return (
+    combatant !== undefined &&
+    obscuringCreature !== undefined &&
+    obscuredOnlyByLargerCreatureHidePermissionForCombatant(combatant) !==
+      null &&
+    creatureSizeIsLargerThanSelf(
+      combatantEffectiveSize(combatant),
+      combatantEffectiveSize(obscuringCreature),
+    )
+  );
+}
+
+function obscuredOnlyByLargerCreatureHidePermissionForCombatant(
+  combatant: BattleCreatureState,
+): BattleHideActionObscurementPermissionSupportProfile | null {
+  if (combatant.origin.kind !== "character") {
+    return null;
+  }
+  for (const unitRef of combatant.origin.characterUnitRefs) {
+    const profile = unitRef.supportProfiles.find(
+      isBattleHideActionObscurementPermissionSupportProfile,
+    );
+    if (
+      profile !== undefined &&
+      hideActionObscurementPermissionAllowsLargerCreatureObscurement(
+        profile.permission,
+      )
+    ) {
+      return profile;
+    }
+  }
+  return null;
+}
+
+function isBattleHideActionObscurementPermissionSupportProfile(
+  profile: BattleUnitSupportProfile,
+): profile is BattleHideActionObscurementPermissionSupportProfile {
+  return (
+    typeof profile === "object" &&
+    profile.kind === HIDE_ACTION_OBSCUREMENT_PERMISSION_SUPPORT_PROFILE
+  );
+}
+
+function hideActionObscurementPermissionAllowsLargerCreatureObscurement(
+  permission: HideActionObscurementPermissionProfile,
+): boolean {
+  return Match.value(permission.allowedObscurement).pipe(
+    Match.when(
+      {
+        kind: "obscuredOnlyByCreature",
+        creatureSizeRelationToSelf: "atLeastOneSizeLarger",
+      },
+      () => true,
+    ),
     Match.exhaustive,
   );
 }

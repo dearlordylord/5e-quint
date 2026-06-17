@@ -1,0 +1,19 @@
+{
+  "description": "You can take the Hide action even when you are obscured only by a creature that is at least one size larger than you.",
+  "id": "species_halfling_naturally_stealthy",
+  "kind": "species_trait",
+  "mechanics": {
+    "action": "hide",
+    "allowedObscurement": {
+      "creatureSizeRelationToSelf": "at_least_one_size_larger",
+      "kind": "obscured_only_by_creature"
+    },
+    "family": "hide_action_obscurement_permission"
+  },
+  "name": "Naturally Stealthy",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Character-Origins/Halfling#Naturally Stealthy"
+  },
+  "species": "halfling"
+}

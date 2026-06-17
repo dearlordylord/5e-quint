@@ -37,6 +37,7 @@ import {
   characterResourceInitIssue,
   characterSpellcastingInitIssue,
   hidePrerequisitesReferenceCombatantsIssue,
+  hidePrerequisiteReferencedCombatantIds,
   positiveHpUnconsciousInitIssue,
 } from "./creature-state.ts";
 
@@ -488,7 +489,12 @@ export function removeBattleCombatants(input: {
         ? resetBattleTurnResources(input.state.currentTurnResources)
         : input.state.currentTurnResources,
       hidePrerequisites: new Map(
-        [...input.state.hidePrerequisites].filter(([id]) => !removeIds.has(id)),
+        [...input.state.hidePrerequisites].filter(
+          ([id, prerequisite]) =>
+            hidePrerequisiteReferencedCombatantIds(id, prerequisite).every(
+              (referencedId) => !removeIds.has(referencedId),
+            ),
+        ),
       ),
       readiedSpells: new Map(
         [...input.state.readiedSpells].filter(([id]) => !removeIds.has(id)),

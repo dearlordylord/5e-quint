@@ -1313,7 +1313,11 @@ type EffectAtom =
   | {
       readonly kind: "grant_spell_free_casts";
       readonly spellId: string;
-      readonly count: number;
+      readonly count:
+        | number
+        | {
+            readonly kind: "proficiency_bonus";
+          };
       readonly resetCadence: "long_rest" | "short_or_long_rest";
       readonly scaling?: {
         readonly axis: "class";
@@ -3218,7 +3222,12 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
       Schema.Struct({
         kind: Schema.Literal("grant_spell_free_casts"),
         spellId: Schema.NonEmptyTrimmedString,
-        count: PositiveIntegerSchema,
+        count: Schema.Union(
+          PositiveIntegerSchema,
+          strictStruct({
+            kind: Schema.Literal("proficiency_bonus"),
+          }),
+        ),
         resetCadence: Schema.Literal("long_rest", "short_or_long_rest"),
         scaling: optionalExact(
           Schema.Struct({
@@ -3231,7 +3240,16 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
             ),
           }),
         ),
-      }),
+      }).pipe(
+        Schema.filter(
+          (grant) =>
+            typeof grant.count === "number" || grant.scaling === undefined,
+          {
+            message: () =>
+              "Proficiency Bonus spell free-cast counts must not also carry class-level scaling.",
+          },
+        ),
+      ),
       Schema.Struct({
         kind: Schema.Literal("grant_die_token"),
         die: DiceAmountSchema,

@@ -7,50 +7,122 @@
     {
       "number": 1,
       "id": "L14G-B01-FEAT-MAGIC-INITIATE-DRUID",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Install Magic Initiate Druid feat identity"
     },
     {
       "number": 2,
       "id": "L14G-B02-FEAT-SKILLED",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Research and plan Skilled feat ownership"
     },
     {
       "number": 3,
       "id": "L14G-B03-FEAT-GRAPPLER",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Research and plan Grappler feat ownership"
     },
     {
       "number": 4,
       "id": "L14G-B04-FEAT-GREAT-WEAPON-FIGHTING",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Research and plan Great Weapon Fighting feat ownership"
     },
     {
       "number": 5,
       "id": "L14G-B05-FEAT-TWO-WEAPON-FIGHTING",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Research and plan Two-Weapon Fighting feat ownership"
     },
     {
       "number": 6,
       "id": "L14G-B06-SPECIES-GNOME",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Research and plan Gnome species ownership"
     },
     {
       "number": 7,
       "id": "L14G-B07-SPECIES-HALFLING",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Research and plan Halfling species ownership"
     },
     {
       "number": 8,
       "id": "L14G-B08-SPECIES-HUMAN",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Research and plan Human species and origin feat ownership"
+    },
+    {
+      "number": 9,
+      "id": "L3-FOLLOWUP-GRAPPLER-RUNTIME",
+      "status": "done",
+      "title": "Promote Grappler prerequisite and battle runtime support"
+    },
+    {
+      "number": 10,
+      "id": "L3-FOLLOWUP-GREAT-WEAPON-FIGHTING-RUNTIME",
+      "status": "done",
+      "title": "Promote Great Weapon Fighting battle runtime support"
+    },
+    {
+      "number": 11,
+      "id": "L3-FOLLOWUP-TWO-WEAPON-FIGHTING-RUNTIME",
+      "status": "done",
+      "title": "Promote Two-Weapon Fighting battle runtime support"
+    },
+    {
+      "number": 12,
+      "id": "L3-FOLLOWUP-HALFLING-BRAVE-RUNTIME",
+      "status": "done",
+      "title": "Promote Halfling Brave saving throw support"
+    },
+    {
+      "number": 13,
+      "id": "L3-FOLLOWUP-HALFLING-NIMBLENESS-RUNTIME",
+      "status": "done",
+      "title": "Promote Halfling Nimbleness movement support"
+    },
+    {
+      "number": 14,
+      "id": "L3-FOLLOWUP-HALFLING-LUCK-RUNTIME",
+      "status": "done",
+      "title": "Promote Halfling Luck D20 Test reroll support"
+    },
+    {
+      "number": 15,
+      "id": "L3-FOLLOWUP-HALFLING-NATURALLY-STEALTHY-RUNTIME",
+      "status": "done",
+      "title": "Promote Halfling Naturally Stealthy Hide support"
+    },
+    {
+      "number": 16,
+      "id": "L3-FOLLOWUP-HUMAN-RESOURCEFUL-RUNTIME",
+      "status": "ready-for-research",
+      "title": "Promote Human Resourceful Heroic Inspiration support"
+    },
+    {
+      "number": 17,
+      "id": "L3-FOLLOWUP-GREAT-WEAPON-FIGHTING-DECLINE-RUNTIME",
+      "status": "ready-for-research",
+      "title": "Promote Great Weapon Fighting optional decline support"
+    },
+    {
+      "number": 18,
+      "id": "L3-FOLLOWUP-TWO-WEAPON-FIGHTING-DECLINE-RUNTIME",
+      "status": "ready-for-research",
+      "title": "Promote Two-Weapon Fighting optional decline support"
+    },
+    {
+      "number": 19,
+      "id": "L3-FOLLOWUP-CREATURE-SPACE-TABLE-SPATIAL-DERIVATION",
+      "status": "ready-for-research",
+      "title": "Derive creature-space traversal witnesses from table routes"
+    },
+    {
+      "number": 20,
+      "id": "L3-FOLLOWUP-D20-TEST-ROLLED-DIE-REROLL-CHOICE",
+      "status": "ready-for-research",
+      "title": "Promote D20 Test rolled-die reroll choice support"
     }
   ]
 }
@@ -89,6 +161,31 @@ the Unit catalog, or the Unit matrix.
 - Human depends conceptually on `feat_skilled` and
   `feat_magic_initiate_druid` because Versatile grants an Origin feat choice.
 
+## Task DAG
+
+| Task | Depends on | Dependency reason |
+| --- | --- | --- |
+| L14G-B01-FEAT-MAGIC-INITIATE-DRUID | L14G-06-LEVEL4-REACHABLE-UNIT-FULL-AUDIT | Missing level-4-reachable feat identity. |
+| L14G-B02-FEAT-SKILLED | L14G-06-LEVEL4-REACHABLE-UNIT-FULL-AUDIT | Missing level-4-reachable feat identity and Human Versatile input. |
+| L14G-B03-FEAT-GRAPPLER | L14G-06-LEVEL4-REACHABLE-UNIT-FULL-AUDIT | Missing level-4-reachable feat identity. |
+| L14G-B04-FEAT-GREAT-WEAPON-FIGHTING | L14G-06-LEVEL4-REACHABLE-UNIT-FULL-AUDIT | Missing level-4-reachable feat identity. |
+| L14G-B05-FEAT-TWO-WEAPON-FIGHTING | L14G-06-LEVEL4-REACHABLE-UNIT-FULL-AUDIT | Missing level-4-reachable feat identity. |
+| L14G-B06-SPECIES-GNOME | L14G-06-LEVEL4-REACHABLE-UNIT-FULL-AUDIT | Missing level-4-reachable species identity. |
+| L14G-B07-SPECIES-HALFLING | L14G-06-LEVEL4-REACHABLE-UNIT-FULL-AUDIT | Missing level-4-reachable species identity. |
+| L14G-B08-SPECIES-HUMAN | L14G-06-LEVEL4-REACHABLE-UNIT-FULL-AUDIT, L14G-B01-FEAT-MAGIC-INITIATE-DRUID, L14G-B02-FEAT-SKILLED | Human Versatile references real Origin feat Units. |
+| L3-FOLLOWUP-GRAPPLER-RUNTIME | L14G-B03-FEAT-GRAPPLER | Runtime support consumes the typed Grappler Surface facts installed by Task 3. |
+| L3-FOLLOWUP-GREAT-WEAPON-FIGHTING-RUNTIME | L14G-B04-FEAT-GREAT-WEAPON-FIGHTING | Runtime support consumes the typed Great Weapon Fighting Surface facts installed by Task 4. |
+| L3-FOLLOWUP-GREAT-WEAPON-FIGHTING-DECLINE-RUNTIME | L3-FOLLOWUP-GREAT-WEAPON-FIGHTING-RUNTIME | The promoted Great Weapon Fighting subset applies the beneficial floor when qualifying; explicit player decline needs the shared rolled-dice optional-choice owner. |
+| L3-FOLLOWUP-TWO-WEAPON-FIGHTING-RUNTIME | L14G-B05-FEAT-TWO-WEAPON-FIGHTING | Runtime support consumes the typed Two-Weapon Fighting Surface facts installed by Task 5. |
+| L3-FOLLOWUP-TWO-WEAPON-FIGHTING-DECLINE-RUNTIME | L3-FOLLOWUP-TWO-WEAPON-FIGHTING-RUNTIME | The promoted Two-Weapon Fighting subset applies the beneficial damage ability modifier when qualifying; explicit player decline needs the shared attack damage ability-modifier optional-choice owner. |
+| L3-FOLLOWUP-HALFLING-BRAVE-RUNTIME | L14G-B07-SPECIES-HALFLING | Runtime support consumes Halfling Brave's typed Frightened-condition Saving Throw Advantage facts. |
+| L3-FOLLOWUP-HALFLING-NIMBLENESS-RUNTIME | L14G-B07-SPECIES-HALFLING | Runtime support consumes Halfling Nimbleness's typed creature-space movement permission facts. |
+| L3-FOLLOWUP-CREATURE-SPACE-TABLE-SPATIAL-DERIVATION | L3-FOLLOWUP-HALFLING-NIMBLENESS-RUNTIME | The promoted Nimbleness subset consumes caller/table-supplied occupied-space witnesses; automatic pathfinding, route extraction, and coordinate occupancy derivation need a separate table/spatial owner. |
+| L3-FOLLOWUP-HALFLING-LUCK-RUNTIME | L14G-B07-SPECIES-HALFLING | Runtime support consumes Halfling Luck's typed natural-1 D20 Test reroll facts. |
+| L3-FOLLOWUP-D20-TEST-ROLLED-DIE-REROLL-CHOICE | L3-FOLLOWUP-HALFLING-LUCK-RUNTIME | The promoted Luck subset consumes selected/effective d20 facts; full Advantage/Disadvantage one-die reroll choice needs raw rolled-die vector and die-selection replacement facts. |
+| L3-FOLLOWUP-HALFLING-NATURALLY-STEALTHY-RUNTIME | L14G-B07-SPECIES-HALFLING | Runtime support consumes Naturally Stealthy's typed Hide-obscurement permission facts. |
+| L3-FOLLOWUP-HUMAN-RESOURCEFUL-RUNTIME | L14G-B08-SPECIES-HUMAN | Runtime support consumes Human Resourceful's typed Long Rest Heroic Inspiration facts. |
+
 ## Verification Command Sets
 
 - RAW and ubiquitous-language check against the task's local SRD feat/species
@@ -107,7 +204,7 @@ the Unit catalog, or the Unit matrix.
 
 ### Task 1 - L14G-B01-FEAT-MAGIC-INITIATE-DRUID
 
-Status: `ready-for-implementation`
+Status: `done`
 
 Depends on:
 
@@ -146,7 +243,7 @@ Verification:
 
 ### Task 2 - L14G-B02-FEAT-SKILLED
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -186,7 +283,7 @@ Verification:
 
 ### Task 3 - L14G-B03-FEAT-GRAPPLER
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -198,17 +295,18 @@ SRD anchor: `.references/srd-5.2.1/Feats.md:73-85`
 
 Current state:
 
-- No Surface content row.
-- No Unit catalog row.
-- No Unit matrix row.
-- Grapple runtime exists, but no Grappler feat profile exists.
+- Surface content row installed as an SRD General feat.
+- Unit catalog row installed.
+- Unit matrix row installed as `unsupported-profile`.
+- Grapple runtime exists, but no promoted Grappler feat profile exists.
 
 Output:
 
-- Research the prerequisite/ASI selection path and battle owner for Punch and
-  Grab, attack Advantage against a target grappled by you, and Fast Wrestler
+- Installed typed Surface facts for the Strength-or-Dexterity ASI, Punch and
+  Grab, attack Advantage against a target Grappled by you, and Fast Wrestler
   drag-cost exception.
-- Split runtime/QNT implementation if needed.
+- Split prerequisite enforcement, selected ASI projection, and battle/QNT
+  behavior into `L3-FOLLOWUP-GRAPPLER-RUNTIME`.
 
 Acceptance:
 
@@ -224,7 +322,7 @@ Verification:
 
 ### Task 4 - L14G-B04-FEAT-GREAT-WEAPON-FIGHTING
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -236,21 +334,23 @@ SRD anchor: `.references/srd-5.2.1/Feats.md:103-107`
 
 Current state:
 
-- No Surface content row.
-- No Unit catalog row.
-- No Unit matrix row.
-- No per-die "1 or 2 becomes 3" damage profile is installed.
+- Surface content row installed as an SRD Fighting Style feat.
+- Unit catalog row installed.
+- Unit matrix row installed as `unsupported-profile`.
+- Typed per-die "1 or 2 becomes 3" attack damage floor facts installed.
+- No promoted battle runtime/QNT profile applies the floor to qualifying dice.
 
 Output:
 
-- Research the Fighting Style feat catalog identity and damage-die floor owner.
-- Identify QNT/runtime owners for qualifying two-handed/versatile melee attack
-  damage dice.
+- Installed the SRD Fighting Style feat with typed attack damage die floor
+  source facts.
+- Split qualifying weapon attack damage die floor runtime/QNT behavior into
+  `L3-FOLLOWUP-GREAT-WEAPON-FIGHTING-RUNTIME`.
 
 Acceptance:
 
-- The task either installs the SRD Fighting Style feat with a typed deferred
-  battle owner or splits a concrete runtime/QNT implementation task.
+- The Great Weapon Fighting Unit has a typed support boundary before runtime
+  behavior is claimed.
 - Damage dice are not flattened into stale derived damage state.
 
 Verification:
@@ -261,7 +361,7 @@ Verification:
 
 ### Task 5 - L14G-B05-FEAT-TWO-WEAPON-FIGHTING
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -273,17 +373,20 @@ SRD anchor: `.references/srd-5.2.1/Feats.md:109-113`
 
 Current state:
 
-- No Surface content row.
-- No Unit catalog row.
-- No Unit matrix row.
-- No Two-Weapon Fighting override profile is installed.
+- Surface content row installed as an SRD Fighting Style feat.
+- Unit catalog row installed.
+- Unit matrix row installed as `unsupported-profile`.
+- Typed Light-property extra attack damage ability modifier permission facts
+  installed.
+- No promoted battle runtime/QNT profile consumes selected feat support to
+  restore the ordinary positive ability modifier for that extra attack yet.
 
 Output:
 
-- Research the Fighting Style feat catalog identity and Light extra attack
-  damage owner.
-- Identify whether existing offhand/Light attack reducers can consume a typed
-  feat fact.
+- Installed the SRD Fighting Style feat with typed Light-property extra attack
+  damage ability modifier source facts.
+- Split selected Two-Weapon Fighting runtime/QNT behavior into
+  `L3-FOLLOWUP-TWO-WEAPON-FIGHTING-RUNTIME`.
 
 Acceptance:
 
@@ -299,7 +402,7 @@ Verification:
 
 ### Task 6 - L14G-B06-SPECIES-GNOME
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -336,7 +439,7 @@ Verification:
 
 ### Task 7 - L14G-B07-SPECIES-HALFLING
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -348,23 +451,30 @@ SRD anchor: `.references/srd-5.2.1/Character-Origins.md:215-229`
 
 Current state:
 
-- No Surface species content row.
-- No Unit catalog row.
-- No Unit matrix row.
-- Species schema excludes Halfling.
+- Surface content row installed as an SRD species.
+- Unit catalog row installed.
+- Unit matrix row installed as `unsupported-profile`.
+- Species schema includes Halfling with fixed Small size, 30-foot Speed, and
+  four authored trait refs.
+- Character creation admits Halfling as a fixed-size species and retains its
+  trait Unit refs.
 
 Output:
 
-- Research species schema widening and the trait split for Brave, Halfling
-  Nimbleness, Luck, and Naturally Stealthy.
-- Decide which traits can reuse existing support and which need battle/runtime
-  follow-up.
+- Installed Halfling species identity and split Brave, Halfling Nimbleness,
+  Luck, and Naturally Stealthy into typed Surface trait facts.
+- Kept all four trait Units unsupported until their runtime owners are promoted.
+- Split follow-up owner work into
+  `L3-FOLLOWUP-HALFLING-BRAVE-RUNTIME`,
+  `L3-FOLLOWUP-HALFLING-NIMBLENESS-RUNTIME`,
+  `L3-FOLLOWUP-HALFLING-LUCK-RUNTIME`, and
+  `L3-FOLLOWUP-HALFLING-NATURALLY-STEALTHY-RUNTIME`.
 
 Acceptance:
 
-- Halfling identity cannot be silently absent from the SRD species set.
+- Halfling identity is installed in the SRD species set.
 - Trait support is typed; Halfling traits are not represented by one broad
-  unsupported blob.
+  unsupported blob or by authored-identity runtime dispatch.
 
 Verification:
 
@@ -375,7 +485,7 @@ Verification:
 
 ### Task 8 - L14G-B08-SPECIES-HUMAN
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -389,20 +499,29 @@ SRD anchor: `.references/srd-5.2.1/Character-Origins.md:231-243`
 
 Current state:
 
-- No Surface species content row.
-- No Unit catalog row.
-- No Unit matrix row.
-- No species-granted Origin feat choice owner is installed.
+- Human is installed as an SRD species with Medium/Small size choice, Humanoid
+  creature type, 30-foot Speed, and explicit Resourceful, Skillful, and
+  Versatile trait refs.
+- Skillful is installed as a typed species-trait skill proficiency choice.
+- Versatile is installed as a typed species-trait Origin feat choice that
+  references real SRD Origin feat Units.
+- Resourceful is installed as typed Long Rest Heroic Inspiration Surface facts
+  and remains runtime-unsupported until
+  `L3-FOLLOWUP-HUMAN-RESOURCEFUL-RUNTIME`.
 
 Output:
 
-- Research Human size choice, Skillful skill choice, Resourceful Heroic
-  Inspiration on Long Rest, and Versatile Origin feat choice by Unit id.
-- Coordinate with missing Origin feat identities before claiming Human complete.
+- Installed Human species identity and split Resourceful, Skillful, and
+  Versatile into typed Surface trait facts.
+- Installed character-creation discovery/finalization owners for Human
+  Skillful and Versatile choices without duplicating Character Sheet
+  proficiency state.
+- Split Resourceful's Long Rest Heroic Inspiration runtime owner into
+  `L3-FOLLOWUP-HUMAN-RESOURCEFUL-RUNTIME`.
 
 Acceptance:
 
-- Human identity cannot be silently absent from the SRD species set.
+- Human identity is installed in the SRD species set.
 - Versatile references real SRD Origin feat Units.
 - Human choice facts flow through character creation without duplicating
   Character Sheet state.
@@ -412,6 +531,610 @@ Verification:
 - Surface catalog command set.
 - Character creation command set.
 - Origin feat handoff command set if selected identity changes.
+- `git diff --check`.
+
+### Task 9 - L3-FOLLOWUP-GRAPPLER-RUNTIME
+
+Status: `done`
+
+Depends on:
+
+- L14G-B03-FEAT-GRAPPLER
+
+Unit: `feat_grappler`
+
+SRD anchor: `.references/srd-5.2.1/Feats.md:73-85`
+
+Current state:
+
+- Grappler is installed as an SRD General feat with typed Surface facts.
+- The Unit matrix records `feat_grappler` as `unsupported-profile`.
+- No character-creation prerequisite owner enforces Level 4+ and Strength or
+  Dexterity 13+ for General feat selection.
+- No promoted battle Unit profile consumes Grappler's Punch and Grab, Attack
+  Advantage, or Fast Wrestler facts.
+
+Output:
+
+- Research and implement the character-creation owner for Grappler General feat
+  prerequisites and the selected +1 Strength-or-Dexterity ASI projection.
+- Research and implement the battle owner for Punch and Grab, attack Advantage
+  against a creature Grappled by you, and Fast Wrestler's drag-cost exception.
+- Consume existing battle grapple state; do not store feat-owned grapple state.
+- Update focused QNT/rule-core slices only where runtime semantics change, then
+  promote the Unit claim to `supported-profile` or `profile-subset-supported`.
+
+Acceptance:
+
+- Grappler prerequisite rejection and legal Strength/Dexterity ASI choices are
+  covered by character-creation tests.
+- Battle behavior uses the existing grapple link/movement facts rather than
+  duplicating generic grapple state.
+- The Unit matrix claim names the admitted Grappler profile and does not claim
+  support for any unimplemented prerequisite or battle benefit.
+
+Verification:
+
+- RAW and ubiquitous-language check against the Grappler SRD anchor.
+- Character creation command set.
+- Focused battle tests/QNT/MBT only for implemented battle behavior.
+- `git diff --check`.
+
+### Task 10 - L3-FOLLOWUP-GREAT-WEAPON-FIGHTING-RUNTIME
+
+Status: `done`
+
+Depends on:
+
+- L14G-B04-FEAT-GREAT-WEAPON-FIGHTING
+
+Unit: `feat_great_weapon_fighting`
+
+SRD anchor: `.references/srd-5.2.1/Feats.md:103-107`
+
+Current state:
+
+- Great Weapon Fighting is installed as an SRD Fighting Style feat with typed
+  per-die attack damage floor Surface facts.
+- The Unit matrix records `feat_great_weapon_fighting` as
+  `unsupported-profile`.
+- No promoted battle Unit profile or Quint parity owner applies the optional
+  floor to qualifying weapon damage dice.
+
+Output:
+
+- Research and implement the battle owner for Great Weapon Fighting's optional
+  per-die damage floor.
+- Consume existing attack weapon, held-with-two-hands, Melee weapon, and
+  Two-Handed-or-Versatile property facts.
+- Consume individual attack damage die results for the triggering attack and
+  apply the optional 1-or-2-to-3 floor before damage totals and target-side
+  damage adjustments.
+- Update focused QNT/rule-core slices only where runtime semantics change, then
+  promote the Unit claim to `supported-profile` or `profile-subset-supported`.
+
+Acceptance:
+
+- Qualifying and non-qualifying weapon attacks are covered by focused battle
+  tests.
+- Battle behavior uses individual attack damage dice and existing weapon facts
+  rather than storing a parallel derived damage total.
+- The Unit matrix claim names the admitted Great Weapon Fighting profile and
+  does not claim support for any unimplemented weapon/damage owner.
+
+Verification:
+
+- RAW and ubiquitous-language check against the Great Weapon Fighting SRD
+  anchor.
+- Focused battle tests/QNT/MBT only for implemented battle behavior, with at
+  most one focused MBT run after code changes are complete.
+- `pnpm --filter @dnd/battle-runtime typecheck`.
+- `git diff --check`.
+
+### Task 17 - L3-FOLLOWUP-GREAT-WEAPON-FIGHTING-DECLINE-RUNTIME
+
+Status: `ready-for-research`
+
+Depends on:
+
+- L3-FOLLOWUP-GREAT-WEAPON-FIGHTING-RUNTIME
+
+Unit: `feat_great_weapon_fighting`
+
+SRD anchor: `.references/srd-5.2.1/Feats.md:103-107`
+
+Current state:
+
+- Great Weapon Fighting is promoted as `profile-subset-supported` for the
+  selected-benefit path: qualifying attack damage dice of 1 or 2 are treated as
+  3 before damage totals and target-side adjustments.
+- The current battle runtime has no explicit player decline fill for the
+  optional floor on a qualifying attack damage roll.
+
+Output:
+
+- Research and implement the attack damage rolled-dice optional-choice owner
+  needed to represent declining Great Weapon Fighting on a qualifying attack.
+- Reuse the existing attack damage die results, qualifying weapon/loadout facts,
+  and `unit-feature.attack-damage-die-floor` support profile; do not add
+  authored-identity dispatch or a parallel damage total.
+- Update focused QNT/rule-core slices only where optional-choice semantics
+  change, then revise the Unit matrix claim so the decline path is no longer a
+  deferred mechanic.
+
+Acceptance:
+
+- Focused battle tests cover both selecting and declining the floor on a
+  qualifying attack, plus unchanged non-qualifying behavior.
+- The decline choice is represented in the rolled-dice hole/fill protocol or an
+  equally typed attack-damage choice boundary, not as metadata on durable
+  character or Unit state.
+- The Unit matrix claim names the admitted Great Weapon Fighting profile and
+  does not retain a deferred explicit-decline mechanic once implemented.
+
+Verification:
+
+- RAW and ubiquitous-language check against the Great Weapon Fighting SRD
+  anchor.
+- Focused battle tests/QNT/MBT only for implemented optional-choice behavior,
+  with at most one focused MBT run after code changes are complete.
+- `pnpm --filter @dnd/battle-runtime typecheck`.
+- `git diff --check`.
+
+### Task 11 - L3-FOLLOWUP-TWO-WEAPON-FIGHTING-RUNTIME
+
+Status: `done`
+
+Depends on:
+
+- L14G-B05-FEAT-TWO-WEAPON-FIGHTING
+
+Unit: `feat_two_weapon_fighting`
+
+SRD anchor: `.references/srd-5.2.1/Feats.md:109-113`
+
+Current state:
+
+- Two-Weapon Fighting is installed as an SRD Fighting Style feat with typed
+  Light-property extra attack damage ability modifier permission Surface facts.
+- The Unit matrix records `feat_two_weapon_fighting` as
+  `unsupported-profile`.
+- The existing battle-runtime Light-property extra attack owner omits positive
+  ability modifiers and preserves negative modifiers by default.
+- No promoted battle Unit profile or Quint parity owner consumes selected
+  Two-Weapon Fighting support to restore the ordinary positive ability modifier
+  when the extra attack is not already adding it.
+
+Output:
+
+- Research and implement the battle owner for Two-Weapon Fighting's optional
+  Light-property extra attack damage ability modifier permission.
+- Consume selected feat support refs in the existing Light-property extra
+  attack owner.
+- Reuse existing attack ability and damage modifier facts; do not store
+  parallel feat-owned damage modifier state.
+- Preserve the default Light-property negative-modifier rule and only restore
+  the ordinary positive ability modifier when the extra attack is not already
+  adding it.
+- Update focused QNT/rule-core slices only where runtime semantics change, then
+  promote the Unit claim to `supported-profile` or `profile-subset-supported`.
+
+Acceptance:
+
+- Default Light-property extra attack damage, selected Two-Weapon Fighting
+  positive modifier restoration, already-adding, and negative-modifier cases are
+  covered by focused battle tests.
+- Battle behavior uses existing attack ability and damage modifier facts rather
+  than storing a parallel feat-owned damage modifier.
+- The Unit matrix claim names the admitted Two-Weapon Fighting profile and does
+  not claim support for any unimplemented selected-feat or damage owner.
+
+Verification:
+
+- RAW and ubiquitous-language check against the Two-Weapon Fighting SRD anchor.
+- Focused battle tests/QNT/MBT only for implemented battle behavior, with at
+  most one focused MBT run after code changes are complete.
+- `pnpm --filter @dnd/battle-runtime typecheck`.
+- `git diff --check`.
+
+### Task 18 - L3-FOLLOWUP-TWO-WEAPON-FIGHTING-DECLINE-RUNTIME
+
+Status: `ready-for-research`
+
+Depends on:
+
+- L3-FOLLOWUP-TWO-WEAPON-FIGHTING-RUNTIME
+
+Unit: `feat_two_weapon_fighting`
+
+SRD anchor: `.references/srd-5.2.1/Feats.md:109-113`
+
+Current state:
+
+- Two-Weapon Fighting is promoted as `profile-subset-supported` for the
+  selected-benefit path: a retained support profile restores the Light-property
+  extra attack's ordinary positive attack ability modifier when the attack is
+  not already adding a damage ability modifier.
+- The current battle runtime has no explicit player decline fill for the
+  optional damage ability modifier permission on a qualifying Light-property
+  extra attack damage roll.
+
+Output:
+
+- Research and implement the attack damage ability-modifier optional-choice
+  owner needed to represent declining Two-Weapon Fighting on a qualifying Light
+  extra attack.
+- Reuse existing attack ability modifier, attack damageAbilityModifier, and
+  selected Unit support profile facts; do not add authored-identity dispatch or
+  a parallel feat-owned damage modifier.
+- Update focused QNT/rule-core slices only where optional-choice semantics
+  change, then revise the Unit matrix claim so the decline path is no longer a
+  deferred mechanic.
+
+Acceptance:
+
+- Focused battle tests cover both selecting and declining the damage ability
+  modifier on a qualifying Light extra attack, plus unchanged default,
+  already-adding, and negative-modifier behavior.
+- The decline choice is represented in the attack damage hole/fill protocol or
+  an equally typed attack-damage choice boundary, not as metadata on durable
+  character or Unit state.
+- The Unit matrix claim names the admitted Two-Weapon Fighting profile and does
+  not retain a deferred explicit-decline mechanic once implemented.
+
+Verification:
+
+- RAW and ubiquitous-language check against the Two-Weapon Fighting SRD anchor.
+- Focused battle tests/QNT/MBT only for implemented optional-choice behavior,
+  with at most one focused MBT run after code changes are complete.
+- `pnpm --filter @dnd/battle-runtime typecheck`.
+- `git diff --check`.
+
+### Task 12 - L3-FOLLOWUP-HALFLING-BRAVE-RUNTIME
+
+Status: `done`
+
+Depends on:
+
+- L14G-B07-SPECIES-HALFLING
+
+Unit: `species_halfling_brave`
+
+SRD anchor: `.references/srd-5.2.1/Character-Origins.md:223`
+
+Current state:
+
+- Brave is installed as a typed passive species trait with Advantage on Saving
+  Throws to avoid or end the Frightened condition.
+- The Unit matrix records `species_halfling_brave` as `supported-profile`
+  through `unit-feature.passive-saving-throw-roll-mode`.
+- The promoted passive-saving-throw roll-mode profile admits typed
+  condition-scoped Poisoned and Frightened saves; Brave consumes the
+  Frightened condition facts without authored-identity dispatch.
+
+Output:
+
+- Research and implement a condition-scoped Saving Throw Advantage owner for
+  Frightened saves.
+- Consume the existing typed condition filter and Saving Throw roll-mode facts;
+  do not dispatch on Halfling or Brave identity.
+- Update focused QNT/rule-core slices only where runtime semantics change, then
+  promote the Unit claim to `supported-profile` or `profile-subset-supported`.
+
+Acceptance:
+
+- Avoiding and ending Frightened Saving Throws are covered by focused tests.
+- The promoted profile is keyed by typed roll and condition facts, not species
+  trait identity.
+- The Unit matrix claim names the admitted Brave profile and does not claim
+  support for unrelated saving-throw Advantage shapes.
+
+Verification:
+
+- RAW and ubiquitous-language check against the Brave SRD anchor.
+- Focused battle tests/QNT/MBT only for implemented battle behavior, with at
+  most one focused MBT run after code changes are complete.
+- `pnpm --filter @dnd/battle-runtime typecheck`.
+- `git diff --check`.
+
+### Task 13 - L3-FOLLOWUP-HALFLING-NIMBLENESS-RUNTIME
+
+Status: `done`
+
+Depends on:
+
+- L14G-B07-SPECIES-HALFLING
+
+Unit: `species_halfling_nimbleness`
+
+SRD anchor: `.references/srd-5.2.1/Character-Origins.md:222-223`
+
+Current state:
+
+- Halfling Nimbleness is installed as typed creature-space movement permission
+  facts with a larger-creature traversal relation and an explicit cannot-stop
+  boundary.
+- The Unit matrix records `species_halfling_nimbleness` as
+  `profile-subset-supported` through
+  `unit-feature.creature-space-movement-permission`.
+- The promoted movement subset validates caller/table-supplied occupied-space
+  witnesses for selected support, larger effective creature size, and
+  unoccupied destination before spending Movement.
+- Automatic pathfinding, coordinate occupancy derivation, and route extraction
+  remain concrete follow-up work in
+  `L3-FOLLOWUP-CREATURE-SPACE-TABLE-SPATIAL-DERIVATION`.
+
+Output:
+
+- Research and implement a movement owner for passing through larger creature
+  spaces while rejecting stops in the same occupied space.
+- Consume existing movement budget, creature size, position, and occupancy facts
+  where available; do not store species-owned movement state.
+- Update focused QNT/rule-core slices only where runtime semantics change, then
+  promote the Unit claim to `supported-profile` or `profile-subset-supported`.
+
+Acceptance:
+
+- Traversal through larger creature spaces and illegal ending-space cases are
+  covered by focused tests.
+- The movement model consumes typed size-relation and occupancy facts rather
+  than authored Halfling identity.
+- The Unit matrix claim names the admitted Nimbleness profile and does not claim
+  support for broader spatial movement behavior.
+
+Verification:
+
+- RAW and ubiquitous-language check against the Halfling Nimbleness SRD anchor.
+- Focused movement tests/QNT/MBT only for implemented battle behavior, with at
+  most one focused MBT run after code changes are complete.
+- `pnpm --filter @dnd/battle-runtime typecheck`.
+- `git diff --check`.
+
+### Task 14 - L3-FOLLOWUP-HALFLING-LUCK-RUNTIME
+
+Status: `done`
+
+Depends on:
+
+- L14G-B07-SPECIES-HALFLING
+
+Unit: `species_halfling_luck`
+
+SRD anchor: `.references/srd-5.2.1/Character-Origins.md:224-225`
+
+Current state:
+
+- Luck is installed as typed natural-1 D20 Test reroll facts: optional reroll of
+  the triggering d20 and mandatory use of the new roll.
+- The Unit matrix records `species_halfling_luck` as `unsupported-profile`.
+- No promoted runtime owner models post-roll optional reroll timing across
+  Attack Rolls, Ability Checks, and Saving Throws.
+
+Output:
+
+- Research and implement a D20 Test natural-1 reroll replacement owner.
+- Consume existing roll procedure facts for Attack Rolls, Ability Checks, and
+  Saving Throws; do not store a parallel luck-owned roll result.
+- Update focused QNT/rule-core slices only where runtime semantics change, then
+  promote the Unit claim to `supported-profile` or `profile-subset-supported`.
+
+Acceptance:
+
+- Natural-1 trigger, non-1 rejection, optional choice timing, and mandatory new
+  roll usage are covered by focused tests.
+- The implementation is keyed by D20 Test and die-face facts, not Luck or
+  Halfling identity.
+- The Unit matrix claim names the admitted Luck profile and does not claim
+  support for unrelated reroll mechanics.
+
+Verification:
+
+- RAW and ubiquitous-language check against the Luck SRD anchor.
+- Focused roll tests/QNT/MBT only for implemented battle behavior, with at most
+  one focused MBT run after code changes are complete.
+- `pnpm --filter @dnd/battle-runtime typecheck`.
+- `git diff --check`.
+
+### Task 20 - L3-FOLLOWUP-D20-TEST-ROLLED-DIE-REROLL-CHOICE
+
+Status: `ready-for-research`
+
+Depends on:
+
+- L3-FOLLOWUP-HALFLING-LUCK-RUNTIME
+
+Unit: `species_halfling_luck`
+
+SRD anchor: `.references/srd-5.2.1/Character-Origins.md:227`;
+`.references/srd-5.2.1/Playing-the-Game.md:201-205`
+
+Current state:
+
+- Halfling Luck is promoted as `profile-subset-supported` for the
+  selected/effective-d20 subset: a supported actor who rolls a selected or
+  effective natural 1 on a rolled D20 Test must explicitly reroll or decline,
+  and selected rerolls replace the downstream Attack Roll, Ability Check,
+  Saving Throw outcome, Concentration Saving Throw, or Death Saving Throw fact.
+- Current promoted battle D20 Test fills expose selected/effective `naturalD20`
+  facts, not both raw d20 dice rolled under Advantage or Disadvantage.
+- The Unit matrix leaves Advantage/Disadvantage one-die reroll choice outside
+  the promoted Luck subset.
+
+Output:
+
+- Research and implement a D20 Test rolled-die vector and die-selection
+  replacement owner for Advantage and Disadvantage rerolls.
+- Reuse the existing selected/effective D20 Test owner from
+  `L3-FOLLOWUP-HALFLING-LUCK-RUNTIME`; do not add Luck-owned parallel roll
+  state.
+- Permit a supported natural-1 reroll choice for either raw d20 when Advantage
+  or Disadvantage rolled two dice, then project one executable selected or
+  effective result for downstream D20 Test reducers.
+- Update focused QNT/rule-core slices only where rolled-die choice semantics
+  change, then revise the Unit matrix claim so the Advantage/Disadvantage
+  deferral is removed or narrowed.
+
+Acceptance:
+
+- Focused tests cover Advantage and Disadvantage rolls where the selected die,
+  unselected die, both dice, or neither die is a natural 1.
+- The replacement is keyed by D20 Test raw die facts and explicit die-selection
+  facts, not by Luck or Halfling authored identity.
+- Downstream Attack Roll, Ability Check, and Saving Throw reducers consume one
+  projected D20 Test result without storing a second Luck-owned result.
+
+Verification:
+
+- RAW and ubiquitous-language check against Luck and Interactions with Rerolls.
+- Focused roll tests/QNT/MBT only for implemented rolled-die choice behavior,
+  with at most one focused MBT run after code changes are complete.
+- `pnpm --filter @dnd/battle-runtime typecheck`.
+- `git diff --check`.
+
+### Task 15 - L3-FOLLOWUP-HALFLING-NATURALLY-STEALTHY-RUNTIME
+
+Status: `done`
+
+Depends on:
+
+- L14G-B07-SPECIES-HALFLING
+
+Unit: `species_halfling_naturally_stealthy`
+
+SRD anchor: `.references/srd-5.2.1/Character-Origins.md:226-227`
+
+Current state:
+
+- Naturally Stealthy is installed as typed Hide action obscurement permission
+  facts for being obscured only by a creature at least one size larger.
+- The Unit matrix records `species_halfling_naturally_stealthy` as
+  `unsupported-profile`.
+- No promoted Hide/obscurement profile owns creature-caused obscurement or
+  size-relation eligibility facts.
+
+Output:
+
+- Research and implement a Hide eligibility owner for creature-caused
+  obscurement with the at-least-one-size-larger relation.
+- Consume existing Hide action, creature size, observer, and obscurement facts
+  where available; do not store species-owned stealth state.
+- Update focused QNT/rule-core slices only where runtime semantics change, then
+  promote the Unit claim to `supported-profile` or `profile-subset-supported`.
+
+Acceptance:
+
+- Legal creature-obscured Hide attempts and illegal size/obscurement cases are
+  covered by focused tests.
+- The implementation is keyed by Hide, obscurement, and size-relation facts, not
+  Naturally Stealthy or Halfling identity.
+- The Unit matrix claim names the admitted Naturally Stealthy profile and does
+  not claim support for broader stealth behavior.
+
+Verification:
+
+- RAW and ubiquitous-language check against the Naturally Stealthy SRD anchor.
+- Focused Hide/obscurement tests/QNT/MBT only for implemented battle behavior,
+  with at most one focused MBT run after code changes are complete.
+- `pnpm --filter @dnd/battle-runtime typecheck`.
+- `git diff --check`.
+
+### Task 16 - L3-FOLLOWUP-HUMAN-RESOURCEFUL-RUNTIME
+
+Status: `ready-for-research`
+
+Depends on:
+
+- L14G-B08-SPECIES-HUMAN
+
+Unit: `species_human_resourceful`
+
+SRD anchor: `.references/srd-5.2.1/Character-Origins.md:237`
+
+Current state:
+
+- Resourceful is installed as typed Long Rest Heroic Inspiration Surface facts.
+- The Unit matrix records `species_human_resourceful` as `unsupported-profile`.
+- No promoted character-sheet or battle Unit profile grants Heroic Inspiration
+  when a Human finishes a Long Rest.
+
+Output:
+
+- Research and implement the runtime owner for gaining Heroic Inspiration when
+  the character finishes a Long Rest.
+- Consume existing Long Rest completion and Heroic Inspiration state facts; do
+  not store species-owned rest or inspiration state.
+- Update focused QNT/rule-core slices only where runtime semantics change, then
+  promote the Unit claim to `supported-profile` or `profile-subset-supported`.
+
+Acceptance:
+
+- Long Rest completion grants Heroic Inspiration for a character with the
+  Resourceful trait, while non-Human or no-trait cases remain unchanged.
+- The implementation is keyed by typed rest-trigger and grant facts, not Human
+  or Resourceful authored identity.
+- The Unit matrix claim names the admitted Resourceful profile and does not
+  claim support for unrelated rest-triggered grants.
+
+Verification:
+
+- RAW and ubiquitous-language check against the Resourceful SRD anchor.
+- Focused character-sheet or character-battle tests/QNT/MBT only for
+  implemented runtime behavior, with at most one focused MBT run after code
+  changes are complete.
+- `pnpm --filter @dnd/character-sheet-runtime typecheck`.
+- `pnpm --filter @dnd/character-battle-runtime typecheck` if the battle bridge
+  changes.
+- `git diff --check`.
+
+### Task 19 - L3-FOLLOWUP-CREATURE-SPACE-TABLE-SPATIAL-DERIVATION
+
+Status: `ready-for-research`
+
+Depends on:
+
+- L3-FOLLOWUP-HALFLING-NIMBLENESS-RUNTIME
+
+Unit: `species_halfling_nimbleness`
+
+SRD anchor: `.references/srd-5.2.1/Character-Origins.md:222-223`
+
+Current state:
+
+- Halfling Nimbleness support admits the typed
+  `unit-feature.creature-space-movement-permission` profile.
+- The battle reducer validates caller/table-supplied occupied creature-space
+  Movement witnesses for selected support, larger effective creature size, and
+  unoccupied destination before spending Movement.
+- The Unit matrix leaves automatic pathfinding, coordinate occupancy derivation,
+  and route extraction for occupied creature spaces outside the promoted subset.
+
+Output:
+
+- Research and implement a table/spatial owner that derives occupied
+  creature-space traversal witnesses from route, position, occupancy, and
+  creature footprint facts.
+- Feed the derived witness into the existing Movement boundary rather than
+  storing species-owned movement state or adding Halfling-specific route logic.
+- Update focused QNT/rule-core slices only where route-derived table/spatial
+  semantics change, then revise the Unit claim without overclaiming broader
+  pathfinding behavior.
+
+Acceptance:
+
+- Route-derived traversal through larger occupied creature spaces and illegal
+  occupied ending-space cases are covered by focused tests.
+- The derivation is keyed by table route, occupancy, creature footprint, and
+  size-relation facts, not Halfling or Nimbleness authored identity.
+- The Unit matrix either removes the table-spatial derivation deferral for the
+  admitted subset or replaces it with a narrower executable follow-up.
+
+Verification:
+
+- RAW and ubiquitous-language check against the Halfling Nimbleness SRD anchor
+  plus Movement, Size, and creature-space terms.
+- Focused table/spatial movement tests/QNT/MBT only for implemented battle
+  behavior, with at most one focused MBT run after code changes are complete.
+- `pnpm --filter @dnd/battle-runtime typecheck`.
 - `git diff --check`.
 
 ## Verification

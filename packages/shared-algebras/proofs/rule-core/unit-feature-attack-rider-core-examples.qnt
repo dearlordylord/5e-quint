@@ -1,4 +1,5 @@
 // -*- mode: Bluespec; -*-
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.attack-damage-die-floor
 
 module unitFeatureAttackRiderCoreExamples {
   import attackDamageComposition.* from "./attack-damage-composition"
@@ -168,6 +169,50 @@ module unitFeatureAttackRiderCoreExamples {
       assert(critical.weaponDamageDiceRolledPerCandidate == 2),
       assert(critical.selectedWeaponDamageDiceTotal == 4),
       assert(critical.effectiveDamage == 7),
+    }
+  }
+
+  run test_great_weapon_fighting_floors_each_qualifying_attack_damage_die = {
+    val qualifying = resolveAttackDamageDieFloor({
+      hitWithQualifyingAttack: true,
+      choosesFeature: true,
+      attackDamageDice: 2,
+      firstDamageDieResult: 1,
+      secondDamageDieResult: 2,
+      thirdDamageDieResult: 0,
+      fourthDamageDieResult: 0,
+      damageModifier: 3,
+    })
+    val declined = resolveAttackDamageDieFloor({
+      hitWithQualifyingAttack: true,
+      choosesFeature: false,
+      attackDamageDice: 2,
+      firstDamageDieResult: 1,
+      secondDamageDieResult: 2,
+      thirdDamageDieResult: 0,
+      fourthDamageDieResult: 0,
+      damageModifier: 3,
+    })
+    val notQualifying = resolveAttackDamageDieFloor({
+      hitWithQualifyingAttack: false,
+      choosesFeature: true,
+      attackDamageDice: 2,
+      firstDamageDieResult: 1,
+      secondDamageDieResult: 2,
+      thirdDamageDieResult: 0,
+      fourthDamageDieResult: 0,
+      damageModifier: 3,
+    })
+    all {
+      assert(qualifying.admitted),
+      assert(qualifying.selectedAttackDamageDiceTotal == 6),
+      assert(qualifying.effectiveDamage == 9),
+      assert(not(declined.admitted)),
+      assert(declined.selectedAttackDamageDiceTotal == 3),
+      assert(declined.effectiveDamage == 6),
+      assert(not(notQualifying.admitted)),
+      assert(notQualifying.selectedAttackDamageDiceTotal == 3),
+      assert(notQualifying.effectiveDamage == 6),
     }
   }
 

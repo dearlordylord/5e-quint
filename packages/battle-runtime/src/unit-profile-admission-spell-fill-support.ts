@@ -1,5 +1,9 @@
 import { armorClass } from "@dnd/shared-algebras/armor-class-algebra";
-import { movementFeet, type DamageType } from "@dnd/shared/types";
+import {
+  DieRollResult,
+  movementFeet,
+  type DamageType,
+} from "@dnd/shared/types";
 import type { Ability, Size } from "@dnd/surface/surface/types";
 import { expect } from "vitest";
 import type { SupportedDamageSpellInvocation } from "./battle-reducer.ts";
@@ -734,8 +738,15 @@ export function savingThrowOutcomeFill(
   outcomes: readonly {
     readonly targetId: CombatantId;
     readonly succeeded: boolean;
+    readonly naturalD20?: number;
+    readonly withoutRoll?: true;
+    readonly d20TestNaturalOneReroll?: Extract<
+      BattleFill,
+      { readonly kind: "savingThrowOutcome" }
+    >["value"]["outcomes"][number]["d20TestNaturalOneReroll"];
   }[],
 ): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {
+  const projectedOutcomes = outcomes.map(d20TestSavingThrowOutcomeValue);
   return {
     kind: "savingThrowOutcome",
     holeId: hole.holeId,
@@ -749,9 +760,43 @@ export function savingThrowOutcomeFill(
               originAnchorId: spellCasterId,
               affectedTargetIds: outcomes.map((outcome) => outcome.targetId),
             },
-            outcomes,
+            outcomes: projectedOutcomes,
           }
-        : { outcomes },
+        : { outcomes: projectedOutcomes },
+  };
+}
+
+function d20TestSavingThrowOutcomeValue(
+  outcome: {
+    readonly targetId: CombatantId;
+    readonly succeeded: boolean;
+    readonly naturalD20?: number;
+    readonly withoutRoll?: true;
+    readonly d20TestNaturalOneReroll?: Extract<
+      BattleFill,
+      { readonly kind: "savingThrowOutcome" }
+    >["value"]["outcomes"][number]["d20TestNaturalOneReroll"];
+  },
+): Extract<
+  BattleFill,
+  { readonly kind: "savingThrowOutcome" }
+>["value"]["outcomes"][number] {
+  if (outcome.withoutRoll === true) {
+    return {
+      targetId: outcome.targetId,
+      succeeded: outcome.succeeded,
+      withoutRoll: true,
+    };
+  }
+  return {
+    targetId: outcome.targetId,
+    succeeded: outcome.succeeded,
+    ...(outcome.naturalD20 === undefined
+      ? {}
+      : { naturalD20: DieRollResult(outcome.naturalD20) }),
+    ...(outcome.d20TestNaturalOneReroll === undefined
+      ? {}
+      : { d20TestNaturalOneReroll: outcome.d20TestNaturalOneReroll }),
   };
 }
 

@@ -13,6 +13,8 @@ module battleRuntimeSpeciesPassiveTraitSelectedIdentityMbt {
   // - .references/srd-5.2.1/Character-Origins.md:139 defines Dwarven
   //   Resilience's Poison Resistance and Advantage on Saving Throws made to
   //   avoid or end Poisoned.
+  // - .references/srd-5.2.1/Character-Origins.md:223 defines Brave's
+  //   Advantage on Saving Throws made to avoid or end Frightened.
   // - .references/srd-5.2.1/Character-Origins.md:213 defines Powerful Build's
   //   Advantage on Ability Checks made to end Grappled.
   // - .references/srd-5.2.1/Rules-Glossary.md:514 and 828-830 define Grapple
@@ -26,6 +28,9 @@ module battleRuntimeSpeciesPassiveTraitSelectedIdentityMbt {
     dwarfFireDamageAfter: int,
     dwarfPoisonedSaveAdvantage: bool,
     dwarfCharmedSaveAdvantage: bool,
+    halflingFrightenedAvoidSaveAdvantage: bool,
+    halflingFrightenedEndSaveAdvantage: bool,
+    halflingPoisonedSaveAdvantage: bool,
     goliathEscapeRollMode: str,
     goliathPoisonedEscapeRollMode: str,
     scenarioResult: str,
@@ -41,6 +46,9 @@ module battleRuntimeSpeciesPassiveTraitSelectedIdentityMbt {
     dwarfFireDamageAfter: int,
     dwarfPoisonedSaveAdvantage: bool,
     dwarfCharmedSaveAdvantage: bool,
+    halflingFrightenedAvoidSaveAdvantage: bool,
+    halflingFrightenedEndSaveAdvantage: bool,
+    halflingPoisonedSaveAdvantage: bool,
     goliathEscapeRollMode: str,
     goliathPoisonedEscapeRollMode: str,
     scenarioResult: str,
@@ -53,6 +61,9 @@ module battleRuntimeSpeciesPassiveTraitSelectedIdentityMbt {
       dwarfFireDamageAfter: dwarfFireDamageAfter,
       dwarfPoisonedSaveAdvantage: dwarfPoisonedSaveAdvantage,
       dwarfCharmedSaveAdvantage: dwarfCharmedSaveAdvantage,
+      halflingFrightenedAvoidSaveAdvantage: halflingFrightenedAvoidSaveAdvantage,
+      halflingFrightenedEndSaveAdvantage: halflingFrightenedEndSaveAdvantage,
+      halflingPoisonedSaveAdvantage: halflingPoisonedSaveAdvantage,
       goliathEscapeRollMode: goliathEscapeRollMode,
       goliathPoisonedEscapeRollMode: goliathPoisonedEscapeRollMode,
       scenarioResult: scenarioResult,
@@ -61,14 +72,14 @@ module battleRuntimeSpeciesPassiveTraitSelectedIdentityMbt {
   }
 
   action init = recordProjection(
-    9, 9, 9, 9, false, false, "normal", "normal", "init",
+    9, 9, 9, 9, false, false, false, false, false, "normal", "normal", "init",
     witnessInit(NoHole),
   )
 
   action doDragonbornDamageResistance = all {
     qState.protocol.result == WInit,
     recordProjection(
-      4, 9, 9, 9, false, false, "normal", "normal",
+      4, 9, 9, 9, false, false, false, false, false, "normal", "normal",
       "dragonbornDamageResistance",
       witnessResolved(NoHole),
     ),
@@ -77,8 +88,17 @@ module battleRuntimeSpeciesPassiveTraitSelectedIdentityMbt {
   action doDwarvenResilience = all {
     qState.protocol.result == WInit,
     recordProjection(
-      9, 9, 4, 9, true, false, "normal", "normal",
+      9, 9, 4, 9, true, false, false, false, false, "normal", "normal",
       "dwarvenResilience",
+      witnessResolved(NoHole),
+    ),
+  }
+
+  action doHalflingBrave = all {
+    qState.protocol.result == WInit,
+    recordProjection(
+      9, 9, 9, 9, false, false, true, true, false, "normal", "normal",
+      "halflingBrave",
       witnessResolved(NoHole),
     ),
   }
@@ -86,7 +106,7 @@ module battleRuntimeSpeciesPassiveTraitSelectedIdentityMbt {
   action doGoliathPowerfulBuild = all {
     qState.protocol.result == WInit,
     recordProjection(
-      9, 9, 9, 9, false, false, "advantage", "normal",
+      9, 9, 9, 9, false, false, false, false, false, "advantage", "normal",
       "goliathPowerfulBuild",
       witnessResolved(NoHole),
     ),
@@ -95,6 +115,7 @@ module battleRuntimeSpeciesPassiveTraitSelectedIdentityMbt {
   action step = any {
     doDragonbornDamageResistance,
     doDwarvenResilience,
+    doHalflingBrave,
     doGoliathPowerfulBuild,
   }
 }

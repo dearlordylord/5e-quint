@@ -1,3 +1,4 @@
+// UNIT-PROFILE-COVERAGE: runtime-owner character-creation.origin-feat-proficiency-choice character-creation.species-trait-proficiency-choice character-creation.species-origin-feat-proficiency-choice
 import { Match } from "effect";
 import * as Either from "effect/Either";
 import { SURFACE_ABILITIES } from "@dnd/shared/game-facts";
@@ -272,6 +273,39 @@ export function decodeProficiencyGrantSubjectOptionId(
     optionIdText,
     "Proficiency choice option does not encode a proficiency grant subject.",
   );
+}
+
+export function toolProficiencyIdsFromProficiencyChoiceOptionIds(
+  optionIds: readonly (CreationChoiceOptionId | string)[],
+): readonly ToolProficiencyId[] {
+  return optionIds.flatMap((optionId) => {
+    const decoded = decodeProficiencyGrantSubjectOptionId(optionId);
+    return Either.isRight(decoded) && decoded.right.kind === "tool"
+      ? [decoded.right.toolId]
+      : [];
+  });
+}
+
+export function toolProficiencyIdsFromDirectToolOptionIds(
+  optionIds: readonly (CreationChoiceOptionId | string)[],
+): readonly ToolProficiencyId[] {
+  return optionIds.flatMap((optionId) => {
+    const parsed = parseToolProficiencyId(String(optionId));
+    return Either.isRight(parsed) ? [parsed.right] : [];
+  });
+}
+
+export function toolProficiencyIdsFromSubjects(
+  subjects: readonly ProficiencyGrantSubject[],
+): readonly ToolProficiencyId[] {
+  return subjects.flatMap((subject) => {
+    if (subject.kind !== "tool") {
+      return [];
+    }
+
+    const parsed = parseToolProficiencyId(subject.toolId);
+    return Either.isRight(parsed) ? [parsed.right] : [];
+  });
 }
 
 export function parseToolProficiencyId(

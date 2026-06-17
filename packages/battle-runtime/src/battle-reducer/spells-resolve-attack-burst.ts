@@ -2,6 +2,7 @@
 // Extracted from spells-resolve.ts as a procedure-local resolver slice.
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.remarkable-athlete
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.d20-test-natural-one-reroll
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.MIRROR_IMAGE_HIT_INTERCEPTION
 
@@ -57,6 +58,12 @@ import {
   sourceDamageRollPenaltyRollForDamageRoll,
   unexpectedSourceDamageRollPenaltyRoll,
 } from "./damage-helpers.ts";
+import {
+  attackRollHoleWithD20TestNaturalOneRerollOption,
+  d20TestNaturalOneRerollRollDecisionRequired,
+  d20TestNaturalOneRerollRollIssue,
+  effectiveD20TestNaturalOneRerollAttackRoll,
+} from "./d20-test-natural-one-reroll.ts";
 import { needsHolesResult } from "./hole-helpers.ts";
 import { mirrorImageHitInterceptionCheck } from "./mirror-image-hit-interception.ts";
 import { invalidResult } from "./result-helpers.ts";
@@ -300,9 +307,46 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
       "Spell attack roll mode does not match the current attack-roll rule.",
     );
   }
+  const actorBeforeSpellAttack = input.input.state.combatants.get(
+    input.actorId,
+  );
+  if (
+    d20TestNaturalOneRerollRollDecisionRequired({
+      actor: actorBeforeSpellAttack,
+      originalNaturalD20: Number(input.fillSet.attackRoll.naturalD20),
+      decision: input.fillSet.attackRoll.d20TestNaturalOneReroll,
+    })
+  ) {
+    return needsHolesResult(input.input.state, input.input.subject, [
+      attackRollHoleWithD20TestNaturalOneRerollOption(
+        spellAttackRollHole(
+          input.input.state,
+          input.actorId,
+          input.invocation,
+          requiredRollMode,
+        ),
+      ),
+    ]);
+  }
+  const d20TestNaturalOneRerollIssue = d20TestNaturalOneRerollRollIssue({
+    actor: actorBeforeSpellAttack,
+    originalNaturalD20: Number(input.fillSet.attackRoll.naturalD20),
+    decision: input.fillSet.attackRoll.d20TestNaturalOneReroll,
+    requiredRollMode,
+  });
+  if (d20TestNaturalOneRerollIssue !== null) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      d20TestNaturalOneRerollIssue,
+    );
+  }
+  const effectiveAttackRoll = effectiveD20TestNaturalOneRerollAttackRoll(
+    input.fillSet.attackRoll,
+  );
 
   const ordinaryHit = attackRollHits(
-    input.fillSet.attackRoll,
+    effectiveAttackRoll,
     currentArmorClass(activeEffectArmorClass(target)),
   );
   const missToHitReplacement = selectedAttackRollMissToHitReplacement({
@@ -310,7 +354,7 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
     subject: input.input.subject,
     attackerId: input.actorId,
     targetId: target.combatantId,
-    attackRoll: input.fillSet.attackRoll,
+    attackRoll: effectiveAttackRoll,
     ordinaryHit,
   });
   if (
@@ -326,7 +370,7 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
     );
   }
   const hit = ordinaryHit || missToHitReplacement !== null;
-  const critical = attackRollIsCriticalHit(input.fillSet.attackRoll);
+  const critical = attackRollIsCriticalHit(effectiveAttackRoll);
   const attackRolledState = recordAttackRollMissToHitReplacementUsed(
     consumeHelpAttackForAttackRoll(
       recordAttackRollOngoingFeatures(
@@ -343,7 +387,7 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
     {
       subject: input.input.subject,
       targetId: target.combatantId,
-      attackRoll: input.fillSet.attackRoll,
+      attackRoll: effectiveAttackRoll,
     },
   );
 
@@ -406,7 +450,7 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
         trigger: "attackHit",
         attackerId: input.actorId,
         targetId: target.combatantId,
-        attackRoll: input.fillSet.attackRoll,
+        attackRoll: effectiveAttackRoll,
         attackKind: spellAttackKindForRedirect(input.invocation.attackKind),
         attackHitTriggerKind: "otherAttack",
         damageTypes: [

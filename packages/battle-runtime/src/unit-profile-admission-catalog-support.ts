@@ -81,6 +81,13 @@ export const speciesDragonbornDamageResistanceUnitId =
 
 export const dwarfDwarvenResilienceUnitId = "dwarf_dwarven_resilience";
 
+export const speciesHalflingBraveUnitId = "species_halfling_brave";
+
+export const speciesHalflingLuckUnitId = "species_halfling_luck";
+
+export const speciesHalflingNaturallyStealthyUnitId =
+  "species_halfling_naturally_stealthy";
+
 export const rogueCunningActionUnitId = "rogue_cunning_action";
 
 export const rogueEvasionUnitId = "rogue_evasion";
@@ -247,6 +254,10 @@ export const divineFavorDurationTicks = elapsedTimeTicks(10);
 export const archeryUnitId = "feat_archery";
 
 export const boonOfCombatProwessUnitId = "feat_boon_of_combat_prowess";
+
+export const greatWeaponFightingUnitId = "feat_great_weapon_fighting";
+
+export const twoWeaponFightingUnitId = "feat_two_weapon_fighting";
 
 export const savageAttackerUnitId = "feat_savage_attacker";
 

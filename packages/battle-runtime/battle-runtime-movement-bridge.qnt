@@ -4,6 +4,7 @@
 module battleRuntimeMovementBridge {
   import attackDamageComposition.* from "../shared-algebras/proofs/rule-core/attack-damage-composition"
   import actionTurnProcedures.* from "../shared-algebras/proofs/rule-core/action-turn-procedures"
+  import creatureSizeOrder.* from "../shared-algebras/proofs/rule-core/creature-size-order"
   import movementSpatialGrapple.* from "../shared-algebras/proofs/rule-core/movement-spatial-grapple"
 
   type BattleRuntimeMovementProjection = {
@@ -203,9 +204,16 @@ module battleRuntimeMovementBridge {
 
   pure def battleRuntimeLightPropertyExtraAttackDamageAmount(
     rolledDamage: int,
-    abilityModifier: int
+    abilityModifier: int,
+    damageAbilityModifier: LightExtraAttackDamageAbilityModifierFact,
+    twoWeaponFightingSelected: bool
   ): int =
-    lightPropertyExtraAttackDamageAmount(rolledDamage, abilityModifier)
+    lightPropertyExtraAttackDamageAmount(
+      rolledDamage,
+      abilityModifier,
+      damageAbilityModifier,
+      twoWeaponFightingSelected
+    )
 
   pure def battleRuntimeDisengage(projection: BattleRuntimeMovementProjection): BattleRuntimeMovementStep =
     battleRuntimeStepFromTurn(

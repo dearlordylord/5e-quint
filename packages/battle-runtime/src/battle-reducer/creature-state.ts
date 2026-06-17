@@ -1,4 +1,5 @@
 // Creature state init/snapshot/lifecycle helpers extracted from
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.d20-test-natural-one-reroll
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.druid-wild-shape-known-form unit-feature.enemy-zero-hit-point-temporary-hit-points unit-feature.magic-action-area-save-damage-healing unit-feature.magic-action-healing-pool unit-feature.paladin-sacred-weapon unit-feature.potent-cantrip unit-feature.remarkable-athlete unit-feature.spell-slot-healing-modifier spell.invocation-warding-bond-linked-effect character-sheet.metamagic-battle-resource-bridge
 // KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.WILD_SHAPE_FORM_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.PROTOCOL.ZERO_HIT_POINT_MID_RESOLUTION
@@ -69,6 +70,7 @@ import type { CharacterBattleClassLevel } from "../character-class-level.ts";
 import {
   ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE,
   ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_SUPPORT_PROFILE,
+  D20_TEST_NATURAL_ONE_REROLL_SUPPORT_PROFILE,
   ENEMY_ZERO_HIT_POINT_TEMPORARY_HIT_POINTS_SUPPORT_PROFILE,
   FAILED_ABILITY_CHECK_RESOURCE_BOOST_SUPPORT_PROFILE,
   MAGIC_ACTION_AREA_SAVE_DAMAGE_HEALING_SUPPORT_PROFILE,
@@ -261,6 +263,13 @@ export function battleCreatureStateFromInit(
           creatureInit.characterUnitRefs,
           classLevels,
         ),
+        d20TestNaturalOneRerollProfiles:
+          characterD20TestNaturalOneRerollProfiles(
+            creatureInit.resources ?? [],
+            creatureInit.unitFeatures ?? [],
+            creatureInit.characterUnitRefs,
+            classLevels,
+          ),
         passiveSavingThrowRollModeProfiles:
           characterPassiveSavingThrowRollModeProfiles(
             creatureInit.resources ?? [],
@@ -376,14 +385,36 @@ export function hidePrerequisitesReferenceCombatantsIssue(
   hidePrerequisites: ReadonlyMap<CombatantId, BattleHidePrerequisite>,
   combatants: ReadonlyMap<CombatantId, BattleCreatureState>,
 ): Either.Either<never, BattleStateInitIssue> | null {
-  for (const combatantId of hidePrerequisites.keys()) {
-    if (!combatants.has(combatantId)) {
+  for (const [combatantId, prerequisite] of hidePrerequisites) {
+    for (const referencedId of hidePrerequisiteReferencedCombatantIds(
+      combatantId,
+      prerequisite,
+    )) {
+      if (!combatants.has(referencedId)) {
+        return battleStateInitIssue(
+          "Hide prerequisite references unknown combatant.",
+        );
+      }
+    }
+    if (
+      prerequisite.kind === "obscuredOnlyByCreatureOutOfEnemyLineOfSight" &&
+      prerequisite.obscuringCreatureId === combatantId
+    ) {
       return battleStateInitIssue(
-        "Hide prerequisite references unknown combatant.",
+        "Creature-obscurement Hide prerequisite cannot name the hiding combatant as the obscuring creature.",
       );
     }
   }
   return null;
+}
+
+export function hidePrerequisiteReferencedCombatantIds(
+  combatantId: CombatantId,
+  prerequisite: BattleHidePrerequisite,
+): readonly CombatantId[] {
+  return prerequisite.kind === "obscuredOnlyByCreatureOutOfEnemyLineOfSight"
+    ? [combatantId, prerequisite.obscuringCreatureId]
+    : [combatantId];
 }
 
 export function assertCharacterBattleResourcesHaveUniqueUnits(
@@ -1212,6 +1243,37 @@ export function characterSaveDamageReplacementProfiles(
           unitRefs,
           unit.id,
           SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE,
+        )
+        ? [[unit.id, profile] as const]
+        : [];
+    }),
+  );
+}
+
+export function characterD20TestNaturalOneRerollProfiles(
+  resources: readonly CharacterBattleResourceInit[],
+  features: readonly CharacterBattleFeatureInit[],
+  unitRefs: readonly BattleUnitRef[],
+  classLevels: readonly CharacterBattleClassLevel[],
+): ReadonlyMap<
+  UnitRecord["id"],
+  Extract<
+    SupportedUnitFeatureProfile,
+    { readonly kind: "d20TestNaturalOneReroll" }
+  >
+> {
+  const units = [
+    ...resources.map((resource) => resource.unit),
+    ...features.map((feature) => feature.unit),
+  ];
+  return new Map(
+    units.flatMap((unit) => {
+      const profile = parseSupportedUnitFeatureProfile(unit, classLevels);
+      return profile?.kind === "d20TestNaturalOneReroll" &&
+        unitRefSupportsProfileKind(
+          unitRefs,
+          unit.id,
+          D20_TEST_NATURAL_ONE_REROLL_SUPPORT_PROFILE,
         )
         ? [[unit.id, profile] as const]
         : [];

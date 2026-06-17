@@ -595,7 +595,6 @@ describe("SRDINV52 deterministic Dissonant Whispers Spell Unit admission", () =>
           escapeDc: difficultyClass(12),
           reachFeet: movementFeet(5),
           hand: "left",
-          targetExemptFromDragCost: false,
         },
       ],
     };

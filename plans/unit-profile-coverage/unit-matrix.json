@@ -43,14 +43,14 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
-      "denominator": 426,
-      "numerator": 241,
-      "percent": "56.6%"
+      "denominator": 441,
+      "numerator": 256,
+      "percent": "58%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 511,
-      "numerator": 288,
-      "percent": "56.4%"
+      "denominator": 529,
+      "numerator": 306,
+      "percent": "57.8%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,62 +59,62 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 289
+      "value": 307
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 176,
-      "numerator": 172,
-      "percent": "97.7%"
+      "denominator": 181,
+      "numerator": 175,
+      "percent": "96.7%"
     },
     "profileClassificationCoverage": {
-      "denominator": 289,
-      "numerator": 289,
+      "denominator": 307,
+      "numerator": 307,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 116,
-      "numerator": 116,
+      "denominator": 121,
+      "numerator": 121,
       "percent": "100%"
     },
     "qntProofCoverage": {
-      "denominator": 116,
-      "numerator": 113,
-      "percent": "97.4%"
+      "denominator": 121,
+      "numerator": 118,
+      "percent": "97.5%"
     },
     "rulesKernelCoveredProfileCoverage": {
-      "denominator": 154,
-      "numerator": 154,
+      "denominator": 159,
+      "numerator": 159,
       "percent": "100%"
     },
     "rulesKernelProfileJoinCoverage": {
-      "denominator": 154,
-      "numerator": 154,
+      "denominator": 159,
+      "numerator": 159,
       "percent": "100%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 169,
-      "numerator": 169,
+      "denominator": 170,
+      "numerator": 170,
       "percent": "100%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 116,
-      "numerator": 116,
+      "denominator": 121,
+      "numerator": 121,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 116,
-      "numerator": 116,
+      "denominator": 121,
+      "numerator": 121,
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 176,
-      "numerator": 172,
-      "percent": "97.7%"
+      "denominator": 174,
+      "numerator": 174,
+      "percent": "100%"
     },
     "supportedProfileCoverage": {
-      "denominator": 242,
-      "numerator": 176,
-      "percent": "72.7%"
+      "denominator": 257,
+      "numerator": 181,
+      "percent": "70.4%"
     }
   },
   "metricSemantics": [
@@ -223,11 +223,11 @@
       "planningQuestion": "Which supported Unit identities have deterministic production catalog/support/projection evidence?"
     },
     {
-      "denominator": "installed Units with supported-profile claims",
+      "denominator": "installed Units with supported-profile claims, excluding whole-claim selected-identity not-applicable dispositions",
       "key": "selectedIdentityMbtCoverage",
       "kind": "coverage",
       "label": "Selected identity replay coverage",
-      "numerator": "supported Unit ids with selected-identity-mbt evidence",
+      "numerator": "supported Unit ids in the replay denominator with selected-identity-mbt evidence",
       "planningQuestion": "Which supported Unit identities have intentionally selected concrete identity replay evidence?"
     },
     {
@@ -422,6 +422,62 @@
         {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "unit-feature.attack-damage-die-floor",
+      "profileKind": "persistent-effect",
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/unit-feature-support.ts",
+        "packages/battle-runtime/src/battle-reducer/damage-helpers.ts"
+      ],
+      "sourceBoundary": "Battle Unit admission consumes the authored Surface damage_die_floor shape and projects an optional attack-damage-roll profile. Battle runtime consumes existing selected character Unit support refs, selected loadout weapon grip, attack weapon usage, and weapon Two-Handed or Versatile properties to floor each qualifying attack damage die result of 1 or 2 to 3 before damage totals and target-side adjustments, without authored-identity dispatch or parallel derived damage totals.",
+      "taskRefs": [
+        "L3-FOLLOWUP-GREAT-WEAPON-FIGHTING-RUNTIME"
+      ],
+      "title": "Unit feature floors low attack damage die results for qualifying held weapon attacks",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core-examples.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-great-weapon-fighting.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "unit-feature.light-extra-attack-damage-ability-modifier",
+      "profileKind": "persistent-effect",
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/attack-damage-composition.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/unit-feature-support.ts",
+        "packages/battle-runtime/src/battle-reducer/attack-damage-apply.ts"
+      ],
+      "sourceBoundary": "Battle Unit admission consumes the authored Surface light_extra_attack_damage_ability_modifier shape and projects a Light-property extra attack damage permission profile. Battle runtime consumes existing selected character Unit support refs, attack ability modifier facts, and optional attack damageAbilityModifier facts: an existing damageAbilityModifier is treated as the already-adding boundary, selected support restores the ordinary attack ability modifier only when that field is absent, and the default Light-property path still suppresses positive modifiers while preserving negative ones. No feat-owned damage modifier state or authored-identity dispatch is introduced.",
+      "taskRefs": [
+        "L3-FOLLOWUP-TWO-WEAPON-FIGHTING-RUNTIME"
+      ],
+      "title": "Unit feature permits the Light-property extra attack to use its ordinary damage ability modifier",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/attack-damage-composition-examples.qnt"
+        },
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-core-combat-tests.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-two-weapon-fighting.test.ts"
         }
       ]
     },
@@ -741,7 +797,8 @@
       "taskRefs": [
         "QCORE9",
         "L12G-CLASS-BARBARIAN-DANGER-SENSE",
-        "L3MSPEC-06-DWARVEN-RESILIENCE-SAVE-MODE"
+        "L3MSPEC-06-DWARVEN-RESILIENCE-SAVE-MODE",
+        "L3-FOLLOWUP-HALFLING-BRAVE-RUNTIME"
       ],
       "title": "Unit feature passively grants Saving Throw roll mode by ability or condition scope",
       "verificationOwners": [
@@ -849,6 +906,52 @@
       ]
     },
     {
+      "id": "unit-feature.d20-test-natural-one-reroll",
+      "profileKind": "persistent-effect",
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/unit-feature-d20-test-natural-one-reroll-core.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/unit-feature-support.ts",
+        "packages/battle-runtime/src/battle-reducer.ts",
+        "packages/battle-runtime/src/battle-reducer/battle-codecs.ts",
+        "packages/battle-runtime/src/battle-reducer/creature-state.ts",
+        "packages/battle-runtime/src/battle-reducer/d20-test-natural-one-reroll.ts",
+        "packages/battle-runtime/src/battle-reducer/attack-main.ts",
+        "packages/battle-runtime/src/battle-reducer/attack-offhand.ts",
+        "packages/battle-runtime/src/battle-reducer/attack-resolution.ts",
+        "packages/battle-runtime/src/battle-reducer/damage-apply.ts",
+        "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
+        "packages/battle-runtime/src/battle-reducer/opportunity-attacks.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-attack-burst.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-attack-sequence.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-chained.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-fill-set.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-release.ts",
+        "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts"
+      ],
+      "sourceBoundary": "Battle Unit admission consumes the Surface d20_test_natural_one_reroll species-trait shape and projects an optional natural-1 D20 Test reroll profile. The current battle-runtime owner consumes selected character Unit refs and existing selected/effective roll, outcome, Death Saving Throw, and Concentration Saving Throw fill facts for Attack Rolls, Ability Checks, and Saving Throws; requires the natural d20 face for supported rolled D20 Tests; treats no-roll Saving Throw failures without a natural d20 as non-triggering outcomes; requires an explicit reroll or decline decision after supported selected/effective natural-1 rolls; validates the natural die trigger and support profile; rejects unsupported actors, non-1 selected rerolls, and d20 reroll stacking; and replaces the executable d20 result before downstream reducers consume the D20 Test without storing a parallel Luck-owned roll result or dispatching on authored identity. Full Advantage/Disadvantage one-die choice awaits a rolled-die vector and die-selection replacement owner.",
+      "taskRefs": [
+        "L3-FOLLOWUP-HALFLING-LUCK-RUNTIME"
+      ],
+      "title": "Unit feature can reroll a natural 1 on any D20 Test and must use the new roll",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-d20-test-natural-one-reroll-core-examples.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-halfling-luck.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/find-familiar-lifecycle.test.ts"
+        }
+      ]
+    },
+    {
       "id": "unit-feature.attack-action-area-save-damage-replacement",
       "profileKind": "battle-admission",
       "qntOwners": [
@@ -930,6 +1033,36 @@
         {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-extra-attack-and-speed-features.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "unit-feature.creature-space-movement-permission",
+      "profileKind": "passive",
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/movement-spatial-grapple.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/unit-feature-support.ts",
+        "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts"
+      ],
+      "sourceBoundary": "Battle Unit admission consumes the authored Surface creature_space_movement_permission shape and projects a typed occupied creature-space traversal permission. Battle runtime consumes retained selected character Unit support refs, existing Movement budget, effective combatant sizes, and caller/table-supplied occupied-space and destination witnesses to validate traversal through larger occupied creature spaces and reject occupied destinations without storing species-owned movement state, durable map-position state, or authored-identity dispatch.",
+      "taskRefs": [
+        "L3-FOLLOWUP-HALFLING-NIMBLENESS-RUNTIME"
+      ],
+      "title": "Unit feature permits Movement through larger occupied creature spaces without stopping there",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/movement-spatial-grapple-inductive.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-movement-grapple-hide.test.ts"
         }
       ]
     },
@@ -4852,6 +4985,93 @@
       ]
     },
     {
+      "id": "character-creation.origin-feat-proficiency-choice",
+      "profileKind": "character-creation",
+      "qntOwners": [],
+      "runtimeOwners": [
+        "packages/character-creation-runtime/src/discovery.ts",
+        "packages/character-creation-runtime/src/finalization.ts",
+        "packages/character-creation-runtime/src/choice-option-codecs.ts",
+        "packages/character-creation-runtime/src/support-gates.ts"
+      ],
+      "sourceBoundary": "Character Creation consumes a selected Background originFeatId, the Origin feat's passive grant_proficiency choice shape, and the existing CharacterBuild proficiency projection. It discovers one Origin feat proficiency choice hole, expands SRD skill and tool subject options through the same Surface proficiency subject codecs used by class features, filters already-owned skill proficiencies, admits supported skill/tool subject option ids through a dedicated origin_feat_proficiency_choice key, and finalizes the selected subjects into CharacterBuild.proficiencyChoices without storing duplicate proficiency state. Battle execution remains detached; downstream sheets and battle init consume the derived character proficiency facts.",
+      "taskRefs": [
+        "L14G-B02-FEAT-SKILLED"
+      ],
+      "title": "Character Creation finalizes Origin feat skill and tool proficiency choices into build proficiency facts",
+      "verificationOwners": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "character-creation.species-trait-proficiency-choice",
+      "profileKind": "character-creation",
+      "qntOwners": [],
+      "runtimeOwners": [
+        "packages/character-creation-runtime/src/discovery.ts",
+        "packages/character-creation-runtime/src/finalization.ts",
+        "packages/character-creation-runtime/src/choice-option-codecs.ts",
+        "packages/character-creation-runtime/src/support-gates.ts"
+      ],
+      "sourceBoundary": "Character Creation consumes selected Species authored trait Unit refs, the trait's passive grant_proficiency choice shape, and the existing CharacterBuild proficiency projection. It discovers species-trait proficiency choice holes from selected species trait Units, filters already-owned skill proficiencies, admits supported skill option ids through species_trait_proficiency_choice, and finalizes the selected subjects into CharacterBuild.proficiencyChoices without storing duplicate proficiency state. Battle execution remains detached; downstream sheets and battle init consume the derived character proficiency facts.",
+      "taskRefs": [
+        "L14G-B08-SPECIES-HUMAN"
+      ],
+      "title": "Character Creation finalizes species trait proficiency choices into build proficiency facts",
+      "verificationOwners": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "character-creation.species-origin-feat-choice",
+      "profileKind": "character-creation",
+      "qntOwners": [],
+      "runtimeOwners": [
+        "packages/character-creation-runtime/src/discovery.ts",
+        "packages/character-creation-runtime/src/finalization.ts",
+        "packages/character-creation-runtime/src/support-gates.ts"
+      ],
+      "sourceBoundary": "Character Creation consumes selected Species authored trait Unit refs and passive grant_feat Origin feat source facts. It discovers a species-origin feat choice hole from the granting trait Unit, admits supported SRD Origin feat Unit options through species_origin_feat_choice, and finalizes the selected Origin feat as a selected CharacterBuild feature ref with selectedFromUnitId pointing at the species trait. Selected feat execution and any nested selected-feat grant choices remain owned by the selected feat Unit profile.",
+      "taskRefs": [
+        "L14G-B08-SPECIES-HUMAN"
+      ],
+      "title": "Character Creation finalizes species-granted Origin feat choices as selected build feature refs",
+      "verificationOwners": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "character-creation.species-origin-feat-proficiency-choice",
+      "profileKind": "character-creation",
+      "qntOwners": [],
+      "runtimeOwners": [
+        "packages/character-creation-runtime/src/discovery.ts",
+        "packages/character-creation-runtime/src/finalization.ts",
+        "packages/character-creation-runtime/src/choice-option-codecs.ts",
+        "packages/character-creation-runtime/src/support-gates.ts"
+      ],
+      "sourceBoundary": "Character Creation consumes selected Origin feat Unit refs produced by species_origin_feat_choice, then reads the selected feat's passive grant_proficiency shape. It discovers the nested proficiency choice with a species-specific choice key, expands SRD skill and tool subject options through the shared Surface proficiency subject codecs, filters already-owned skill and tool proficiencies, and finalizes the selected subjects into CharacterBuild.proficiencyChoices without colliding with Background-granted Origin feat choices for the same feat Unit.",
+      "taskRefs": [
+        "L14G-B08-SPECIES-HUMAN"
+      ],
+      "title": "Character Creation finalizes proficiency choices from species-selected Origin feats into build proficiency facts",
+      "verificationOwners": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+        }
+      ]
+    },
+    {
       "id": "unit-feature.rogue-steady-aim",
       "profileKind": "bonus-action",
       "qntOwners": [
@@ -5013,19 +5233,103 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-damage-spells.test.ts"
         }
       ]
+    },
+    {
+      "id": "character-creation.grappler-general-feat",
+      "profileKind": "character-creation",
+      "qntOwners": [],
+      "runtimeOwners": [
+        "packages/character-creation-runtime/src/finalization.ts",
+        "packages/character-creation-runtime/src/support-gates.ts"
+      ],
+      "sourceBoundary": "Character Creation consumes the installed Surface Grappler General feat shape, same-class level-4 feat selection, current class progression, assigned Ability Scores, selected Background Ability Score Increase, and the selected Grappler +1 Strength-or-Dexterity ASI option. It rejects selected Grappler before Level 4+ or before Strength or Dexterity 13 after Background ASI, admits only the feat's authored Strength-or-Dexterity +1 max-20 ASI options, and projects the chosen increase through the existing CharacterBuild ability-score facts without storing duplicate prerequisite or ability-score state.",
+      "taskRefs": [
+        "L3-FOLLOWUP-GRAPPLER-RUNTIME"
+      ],
+      "title": "Character Creation admits Grappler General feat prerequisites and Strength-or-Dexterity ASI choices",
+      "verificationOwners": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "unit-feature.grappler",
+      "profileKind": "battle-admission",
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/movement-spatial-grapple.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/unit-feature-support.ts",
+        "packages/battle-runtime/src/battle-reducer/attack-main.ts",
+        "packages/battle-runtime/src/battle-reducer/attack-roll.ts",
+        "packages/battle-runtime/src/battle-reducer/grappler-support-profile.ts",
+        "packages/battle-runtime/src/battle-reducer/movement-speed.ts"
+      ],
+      "sourceBoundary": "Battle Unit admission consumes the authored Surface Grappler shape and projects typed Punch and Grab, Attack Advantage, and Fast Wrestler support facts. Battle runtime consumes retained Grappler support through existing Attack action Unarmed Strike hit resolution, existing Grapple outcome fills, existing grapple links, existing attack-roll mode combination, and existing movement drag-cost links; it records only the once-per-turn Punch and Grab use marker in turn resources and does not store feat-owned grapple state or dispatch on feat authored identity.",
+      "taskRefs": [
+        "L3-FOLLOWUP-GRAPPLER-RUNTIME"
+      ],
+      "title": "Unit feature admits Grappler Punch and Grab, Attack Advantage, and Fast Wrestler facts",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/movement-spatial-grapple-inductive.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-movement-grapple-hide.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-test-support.ts"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/grappler-selected-identity.mbt.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "unit-feature.hide-action-obscurement-permission",
+      "profileKind": "passive",
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/unit-feature-hide-obscurement-permission-core.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/unit-feature-support.ts",
+        "packages/battle-runtime/src/battle-reducer.ts",
+        "packages/battle-runtime/src/battle-reducer/hole-helpers.ts"
+      ],
+      "sourceBoundary": "Battle Unit admission consumes the authored Surface hide_action_obscurement_permission shape and projects a typed Hide obscurement permission. Battle runtime consumes retained selected character Unit support refs, current effective hider and obscuring-creature sizes, and caller/table-supplied Hide prerequisite witnesses for creature-only obscurement plus out-of-enemy-line-of-sight facts. The runtime validates the referenced obscuring creature and larger-size relation before discovering or resolving Hide, without authored-identity dispatch, species-owned stealth state, durable perception state, or map-derived line-of-sight storage.",
+      "taskRefs": [
+        "L3-FOLLOWUP-HALFLING-NATURALLY-STEALTHY-RUNTIME"
+      ],
+      "title": "Unit feature permits Hide when obscured only by a larger creature",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-hide-obscurement-permission-core-examples.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-halfling-naturally-stealthy.test.ts"
+        }
+      ]
     }
   ],
   "rulesKernelProfileJoin": {
     "denominatorRule": "profile records with rules-kernel profile kinds and either QNT owners or explicit profile-obligation mappings",
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
-        "denominator": 154,
-        "numerator": 154,
+        "denominator": 159,
+        "numerator": 159,
         "percent": "100%"
       },
       "rulesKernelProfileJoinCoverage": {
-        "denominator": 154,
-        "numerator": 154,
+        "denominator": 159,
+        "numerator": 159,
         "percent": "100%"
       }
     },
@@ -5145,6 +5449,38 @@
         "profileKind": "reaction",
         "qntOwners": [
           "packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core.qnt"
+        ]
+      },
+      {
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+          }
+        ],
+        "profileId": "unit-feature.attack-damage-die-floor",
+        "profileKind": "persistent-effect",
+        "qntOwners": [
+          "packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core.qnt"
+        ]
+      },
+      {
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.DAMAGE.ATTACK_BRANCHES",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle attack target legality, Attack Roll hit/miss/Critical Hit, damage dice, and Attack action resource-spend branches"
+          }
+        ],
+        "profileId": "unit-feature.light-extra-attack-damage-ability-modifier",
+        "profileKind": "persistent-effect",
+        "qntOwners": [
+          "packages/shared-algebras/proofs/rule-core/attack-damage-composition.qnt"
         ]
       },
       {
@@ -5400,6 +5736,22 @@
             "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
           }
         ],
+        "profileId": "unit-feature.d20-test-natural-one-reroll",
+        "profileKind": "persistent-effect",
+        "qntOwners": [
+          "packages/shared-algebras/proofs/rule-core/unit-feature-d20-test-natural-one-reroll-core.qnt"
+        ]
+      },
+      {
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+          }
+        ],
         "profileId": "unit-feature.passive-speed-bonus",
         "profileKind": "passive",
         "qntOwners": [
@@ -5420,6 +5772,28 @@
         "profileKind": "passive",
         "qntOwners": [
           "packages/shared-algebras/proofs/rule-core/unit-feature-passive-movement-defense-core.qnt"
+        ]
+      },
+      {
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+          },
+          {
+            "obligationId": "BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle movement, Stand/Drop Prone, Grapple/Escape/Release, and caller-supplied Opportunity Attack frontier facts"
+          }
+        ],
+        "profileId": "unit-feature.creature-space-movement-permission",
+        "profileKind": "passive",
+        "qntOwners": [
+          "packages/shared-algebras/proofs/rule-core/movement-spatial-grapple.qnt"
         ]
       },
       {
@@ -7665,6 +8039,22 @@
         "qntOwners": [
           "packages/battle-runtime/battle-runtime-acid-arrow.qnt"
         ]
+      },
+      {
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+          }
+        ],
+        "profileId": "unit-feature.hide-action-obscurement-permission",
+        "profileKind": "passive",
+        "qntOwners": [
+          "packages/shared-algebras/proofs/rule-core/unit-feature-hide-obscurement-permission-core.qnt"
+        ]
       }
     ],
     "sourceArtifacts": {
@@ -7675,8 +8065,8 @@
       "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
       "metrics": {
         "rulesKernelSupportedUnitCoverage": {
-          "denominator": 169,
-          "numerator": 169,
+          "denominator": 170,
+          "numerator": 170,
           "percent": "100%"
         }
       },
@@ -11957,6 +12347,28 @@
               "joinStatus": "covered",
               "obligations": [
                 {
+                  "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+                }
+              ],
+              "profileId": "unit-feature.passive-saving-throw-roll-mode",
+              "profileKind": "passive",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt"
+              ]
+            }
+          ],
+          "unitId": "species_halfling_brave"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
                   "obligationId": "BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS",
                   "runtime": "battle",
                   "status": "covered",
@@ -12358,8 +12770,77 @@
       "evidenceTag": "selected-identity-mbt"
     },
     "deferredNonApplicableRows": [],
-    "rowCount": 0,
-    "rows": []
+    "rowCount": 4,
+    "rows": [
+      {
+        "catalogAdmissionStatus": "installed",
+        "collectionId": "srd-5.2.1",
+        "kind": "feat",
+        "selectedIdentity": {
+          "reason": "The Unit has no selected-identity-mbt evidence.",
+          "status": "missing-witness"
+        },
+        "sourceRecordPath": "packages/surface/content/feat_great_weapon_fighting.json",
+        "support": {
+          "profileIds": [
+            "unit-feature.attack-damage-die-floor"
+          ],
+          "tag": "profile-subset-supported"
+        },
+        "unitId": "feat_great_weapon_fighting"
+      },
+      {
+        "catalogAdmissionStatus": "installed",
+        "collectionId": "srd-5.2.1",
+        "kind": "feat",
+        "selectedIdentity": {
+          "reason": "The Unit has no selected-identity-mbt evidence.",
+          "status": "missing-witness"
+        },
+        "sourceRecordPath": "packages/surface/content/feat_two_weapon_fighting.json",
+        "support": {
+          "profileIds": [
+            "unit-feature.light-extra-attack-damage-ability-modifier"
+          ],
+          "tag": "profile-subset-supported"
+        },
+        "unitId": "feat_two_weapon_fighting"
+      },
+      {
+        "catalogAdmissionStatus": "installed",
+        "collectionId": "srd-5.2.1",
+        "kind": "species_trait",
+        "selectedIdentity": {
+          "reason": "The Unit has no selected-identity-mbt evidence.",
+          "status": "missing-witness"
+        },
+        "sourceRecordPath": "packages/surface/content/species_halfling_luck.json",
+        "support": {
+          "profileIds": [
+            "unit-feature.d20-test-natural-one-reroll"
+          ],
+          "tag": "profile-subset-supported"
+        },
+        "unitId": "species_halfling_luck"
+      },
+      {
+        "catalogAdmissionStatus": "installed",
+        "collectionId": "srd-5.2.1",
+        "kind": "species_trait",
+        "selectedIdentity": {
+          "reason": "The Unit has no selected-identity-mbt evidence.",
+          "status": "missing-witness"
+        },
+        "sourceRecordPath": "packages/surface/content/species_halfling_naturally_stealthy.json",
+        "support": {
+          "profileIds": [
+            "unit-feature.hide-action-obscurement-permission"
+          ],
+          "tag": "profile-subset-supported"
+        },
+        "unitId": "species_halfling_naturally_stealthy"
+      }
+    ]
   },
   "taskClaims": [
     {
@@ -15718,6 +16199,135 @@
         "unit-feature.druid-wild-shape-known-form"
       ],
       "taskId": "L12G-FOLLOWUP-DRUID-WILD-SHAPE-STAT-BLOCK-TRAIT-ADVANTAGE"
+    },
+    {
+      "claimKind": "accepted-follow-up-split",
+      "note": "Task 7 rechecked SRD Wild Shape retained/replaced statistics plus Shape-Shifting RAW and found no narrow executable owner for non-D20 sense/language/speech projection without a shared creature perception/communication projection. Future work must derive Beast special Senses and retained character languages/speech from existing active-form, Stat Block, Character Sheet, and condition facts rather than adding Wild Shape-local duplicates.",
+      "profileIds": [],
+      "taskId": "L12G-FOLLOWUP-DRUID-WILD-SHAPE-SENSE-LANGUAGE-PROJECTION"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime, character-battle, and selected-identity MBT coverage admit Halfling Brave from its passive modify_roll_advantage Surface shape with Saving Throw roll kind and Frightened condition filter, project the support profile through selected character Unit refs, and grant Advantage for typed Frightened avoiding and ending Saving Throw contexts without authored-identity dispatch or support for unrelated condition scopes.",
+      "profileIds": [
+        "unit-feature.passive-saving-throw-roll-mode"
+      ],
+      "taskId": "L3-FOLLOWUP-HALFLING-BRAVE-RUNTIME"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "The shared movement/grapple rule-core slice carries the creature-space traversal predicate for a selected permission profile: the occupied creature must be larger than the mover and the movement cannot end in an occupied creature space.",
+      "profileIds": [
+        "unit-feature.creature-space-movement-permission"
+      ],
+      "taskId": "L3-FOLLOWUP-HALFLING-NIMBLENESS-RUNTIME"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime admission and reducer tests cover Halfling Nimbleness admission from Surface creature_space_movement_permission facts, identity-independent support profile projection, selected Unit ref gating, caller-supplied occupied-space Movement witnesses, larger effective creature-size validation, rejection of occupied destinations, and use of existing movement budget without species-owned movement state.",
+      "profileIds": [
+        "unit-feature.creature-space-movement-permission"
+      ],
+      "taskId": "L3-FOLLOWUP-HALFLING-NIMBLENESS-RUNTIME"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused Surface catalog and Character Creation runtime tests cover Skilled Origin feat authoring, background-origin feat proficiency choice discovery, supported skill/tool option admission, and CharacterBuild proficiency projection without battle-runtime execution.",
+      "profileIds": [
+        "character-creation.origin-feat-proficiency-choice"
+      ],
+      "taskId": "L14G-B02-FEAT-SKILLED"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused Surface catalog and Character Creation runtime tests cover Human species and trait authoring, Human Medium/Small size selection, Skillful skill proficiency choice discovery/projection, Versatile Origin feat Unit selection, and Skilled follow-up proficiency choices selected through the species-granted feat path without battle-runtime execution.",
+      "profileIds": [
+        "character-creation.species-trait-proficiency-choice",
+        "character-creation.species-origin-feat-choice",
+        "character-creation.species-origin-feat-proficiency-choice"
+      ],
+      "taskId": "L14G-B08-SPECIES-HUMAN"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "The shared movement/grapple rule-core slice carries the Grappler Fast Wrestler size predicate alongside the generic Grappled drag-cost predicate, with the existing movement-spatial-grapple inductive proof owner marking the QNT proof boundary.",
+      "profileIds": [
+        "unit-feature.grappler"
+      ],
+      "taskId": "L3-FOLLOWUP-GRAPPLER-RUNTIME"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused Character Creation runtime tests cover Grappler Level 4+ and Strength-or-Dexterity prerequisite rejection plus legal Strength/Dexterity ASI choice projection. Focused battle-runtime reducer tests and selected-identity MBT cover Grappler Fast Wrestler drag-cost exemption, Attack Advantage from existing grapple links, and Punch and Grab using an Unarmed Strike hit plus the existing Grapple outcome fill and grapple-link state.",
+      "profileIds": [
+        "character-creation.grappler-general-feat",
+        "unit-feature.grappler"
+      ],
+      "taskId": "L3-FOLLOWUP-GRAPPLER-RUNTIME"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Rule-core witness covers optional per-die attack damage floor semantics for qualifying attacks, declined use, and non-qualifying attacks.",
+      "profileIds": [
+        "unit-feature.attack-damage-die-floor"
+      ],
+      "taskId": "L3-FOLLOWUP-GREAT-WEAPON-FIGHTING-RUNTIME"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime tests cover profile admission, qualifying two-handed Melee Two-Handed/Versatile weapon attacks, per-die multi-die floor behavior, target resistance ordering, and one-handed, Ranged, or missing-property non-qualifying attacks.",
+      "profileIds": [
+        "unit-feature.attack-damage-die-floor"
+      ],
+      "taskId": "L3-FOLLOWUP-GREAT-WEAPON-FIGHTING-RUNTIME"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Rule-core witness covers optional selected/effective natural-1 D20 Test reroll semantics, declined use, selected non-natural-1 invalidity, and the replacement roll becoming the required effective roll even when the replacement is another natural 1.",
+      "profileIds": [
+        "unit-feature.d20-test-natural-one-reroll"
+      ],
+      "taskId": "L3-FOLLOWUP-HALFLING-LUCK-RUNTIME"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime tests cover the selected/effective-d20 subset: identity-independent Halfling Luck profile admission, selected Unit ref gating, supported-actor natural d20 face requirement for rolled D20 Tests, post-roll natural-1 decision requirement, explicit decline, Attack Roll, Opportunity Attack reactor ownership, Pact familiar non-inheritance from a Luck-bearing owner, Ability Check, ordinary Saving Throw outcome, no-roll ordinary and Concentration Saving Throw outcomes, Concentration Saving Throw, and Death Saving Throw natural-1 replacement, replacement natural-1 miss behavior, unsupported actor rejection, and non-natural-1 trigger rejection. Full RAW Advantage/Disadvantage one-die choice is deferred to a future rolled-die facts owner.",
+      "profileIds": [
+        "unit-feature.d20-test-natural-one-reroll"
+      ],
+      "taskId": "L3-FOLLOWUP-HALFLING-LUCK-RUNTIME"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Rule-core and battle-runtime QNT witnesses cover default Light-property extra attack damage modifier suppression, negative modifier preservation, selected Two-Weapon Fighting positive modifier restoration, and already-adding no-double-add semantics.",
+      "profileIds": [
+        "unit-feature.light-extra-attack-damage-ability-modifier"
+      ],
+      "taskId": "L3-FOLLOWUP-TWO-WEAPON-FIGHTING-RUNTIME"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime tests cover profile admission, default Light extra attack damage, selected Two-Weapon Fighting positive modifier restoration, already-adding damageAbilityModifier preservation, negative modifier preservation, and adjacent Surface shape rejection.",
+      "profileIds": [
+        "unit-feature.light-extra-attack-damage-ability-modifier"
+      ],
+      "taskId": "L3-FOLLOWUP-TWO-WEAPON-FIGHTING-RUNTIME"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Rule-core witness covers the selected Hide obscurement permission predicate: the hider must be obscured only by a creature, out of enemy line of sight, and the obscuring creature must be at least one size larger than the hider.",
+      "profileIds": [
+        "unit-feature.hide-action-obscurement-permission"
+      ],
+      "taskId": "L3-FOLLOWUP-HALFLING-NATURALLY-STEALTHY-RUNTIME"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime tests cover Halfling Naturally Stealthy admission from Surface hide_action_obscurement_permission facts, identity-independent support profile projection, selected Unit ref gating, caller-supplied creature-obscurement Hide prerequisites, larger effective creature-size validation, unknown and self-obscuring prerequisite rejection, and reuse of existing Hide check, Hidden state, and Invisible projection without species-owned stealth state.",
+      "profileIds": [
+        "unit-feature.hide-action-obscurement-permission"
+      ],
+      "taskId": "L3-FOLLOWUP-HALFLING-NATURALLY-STEALTHY-RUNTIME"
     }
   ],
   "unitGroupDenominatorAudit": {
@@ -15758,18 +16368,18 @@
         "unsupportedOrOtherUnits": 4
       },
       {
-        "executableUnitDenominator": 8,
-        "installedUnitDenominator": 8,
+        "executableUnitDenominator": 13,
+        "installedUnitDenominator": 13,
         "kind": "feat",
         "label": "Feat Units",
-        "profileFactDenominator": 5,
-        "profileSubsetSupportedUnits": 0,
+        "profileFactDenominator": 11,
+        "profileSubsetSupportedUnits": 2,
         "selectedIdentityDeferredNonApplicableUnits": 0,
-        "selectedIdentityReplayDenominator": 5,
-        "selectedIdentityReplayGapUnits": 0,
-        "selectedIdentityReplayWitnessUnits": 5,
-        "supportedProfileUnits": 5,
-        "unsupportedOrOtherUnits": 3
+        "selectedIdentityReplayDenominator": 8,
+        "selectedIdentityReplayGapUnits": 2,
+        "selectedIdentityReplayWitnessUnits": 6,
+        "supportedProfileUnits": 7,
+        "unsupportedOrOtherUnits": 4
       },
       {
         "executableUnitDenominator": 128,
@@ -16143,6 +16753,70 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/species_elf.json",
       "unitId": "species_elf"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "selection-grant-container",
+          "owner": "future character-creation Gnomish Lineage selection owner plus selected trait projection owners",
+          "reason": "The aggregate species record names Darkvision, Gnomish Cunning, and Gnomish Lineage. Admitting it as a character-creation species without lineage and spellcasting ability selections would finalize an under-specified CharacterBuild."
+        },
+        "reason": "Species admission container record; Surface retains Gnome source facts and authored trait Unit refs, but character creation must not admit Gnome until the Gnomish Lineage species-selection choice and spellcasting ability choice have a runtime owner.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "species",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/species_gnome.json",
+      "unitId": "species_gnome"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "reason": "Species admission container record; character creation can retain Halfling as a selected fixed-Small species and preserve authored trait Unit refs, while executable battle pressure lives on the individual trait Units.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "species",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/species_halfling.json",
+      "unitId": "species_halfling"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "selection-grant-container",
+          "owner": "species_human_skillful, species_human_versatile, and future Resourceful owner profiles",
+          "reason": "The aggregate species record names Resourceful, Skillful, and Versatile. Character creation consumes the retained trait refs to discover the supported Skillful and Versatile choices; Resourceful Long Rest Heroic Inspiration remains a future character-state owner."
+        },
+        "reason": "Species admission container record; character creation can retain Human as a selected Medium-or-Small species and preserve authored trait Unit refs, while executable and choice pressure lives on the individual trait Units.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "species",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/species_human.json",
+      "unitId": "species_human"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
@@ -17337,7 +18011,8 @@
           "taskRefs": [
             "QCORE9",
             "L12G-CLASS-BARBARIAN-DANGER-SENSE",
-            "L3MSPEC-06-DWARVEN-RESILIENCE-SAVE-MODE"
+            "L3MSPEC-06-DWARVEN-RESILIENCE-SAVE-MODE",
+            "L3-FOLLOWUP-HALFLING-BRAVE-RUNTIME"
           ],
           "title": "Unit feature passively grants Saving Throw roll mode by ability or condition scope",
           "verificationOwners": [
@@ -22462,6 +23137,186 @@
         "status": "installed"
       },
       "claim": {
+        "deferredMechanics": [
+          {
+            "battleReadinessClosure": {
+              "kind": "outside-battle-runtime",
+              "owner": "future attack damage rolled-dice optional-choice owner",
+              "reason": "The current promoted subset treats the beneficial floor as selected when the retained profile and qualifying weapon facts are present. A literal decline path requires extending the shared rolled-dice hole/fill protocol for attack damage dice choices without duplicating damage totals or adding authored-identity dispatch."
+            },
+            "mechanic": "An explicit player decline path for Great Weapon Fighting's optional floor on a qualifying attack damage roll."
+          }
+        ],
+        "profileIds": [
+          "unit-feature.attack-damage-die-floor"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE9-UNIT-FEATURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "Battle Unit support admits the Surface damage_die_floor mechanics only for the optional attack damage roll shape that floors attack damage dice to 3 for Melee weapons held with two hands and gated by the Two-Handed or Versatile property.",
+          "Battle initialization retains the admitted attackDamageDieFloor support profile on selected character combatants without dispatching on the feat's authored identity.",
+          "Battle runtime applies the floor to each qualifying positive attack damage die result of 1 or 2 before damage totals and target-side damage adjustments.",
+          "The qualifying gate consumes existing attack weapon usage/properties and selected loadout grip facts, so one-handed Versatile attacks, Ranged Two-Handed attacks, and Melee weapons without Two-Handed or Versatile do not receive the floor.",
+          "Subtractive source-side damage penalty dice remain ordinary penalty dice and are not increased by the attack damage die floor."
+        ],
+        "tag": "profile-subset-supported"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-great-weapon-fighting.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L3-FOLLOWUP-GREAT-WEAPON-FIGHTING-RUNTIME"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "feat",
+      "profiles": [
+        {
+          "id": "unit-feature.attack-damage-die-floor",
+          "profileKind": "persistent-effect",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/unit-feature-support.ts",
+            "packages/battle-runtime/src/battle-reducer/damage-helpers.ts"
+          ],
+          "sourceBoundary": "Battle Unit admission consumes the authored Surface damage_die_floor shape and projects an optional attack-damage-roll profile. Battle runtime consumes existing selected character Unit support refs, selected loadout weapon grip, attack weapon usage, and weapon Two-Handed or Versatile properties to floor each qualifying attack damage die result of 1 or 2 to 3 before damage totals and target-side adjustments, without authored-identity dispatch or parallel derived damage totals.",
+          "taskRefs": [
+            "L3-FOLLOWUP-GREAT-WEAPON-FIGHTING-RUNTIME"
+          ],
+          "title": "Unit feature floors low attack damage die results for qualifying held weapon attacks",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core-examples.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-great-weapon-fighting.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/feat_great_weapon_fighting.json",
+      "unitId": "feat_great_weapon_fighting"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "profileIds": [
+          "character-creation.grappler-general-feat",
+          "unit-feature.grappler"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE7-MOVEMENT-GRAPPLE-001",
+          "RAW-QCORE9-UNIT-FEATURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "Character Creation admits Grappler as a General feat selected through Level 4 class-feature feat choices only when total character level is 4+ and Strength or Dexterity is at least 13 after selected Background Ability Score Increase and before applying Grappler's own ASI.",
+          "Character Creation projects the selected Grappler +1 Strength or Dexterity max-20 Ability Score Increase through the existing selected-feat ASI choice workflow without storing duplicate Ability Score or prerequisite state.",
+          "Battle Unit support admits the Surface Grappler mechanics family only when Punch and Grab, Attack Advantage, and Fast Wrestler facts match the SRD-authored shape.",
+          "Battle runtime applies Attack Advantage against targets in the existing grapple link set where the attacker is the grappler, without adding feat-owned Grappled state.",
+          "Battle runtime applies Fast Wrestler by marking an existing grapple drag-cost link exempt when the Grappled target is the Grappler's size or smaller, preserving the generic Tiny/two-sizes-smaller exemption.",
+          "Battle runtime resolves optional Punch and Grab after an eligible Attack action Unarmed Strike hit using the existing Grapple outcome fill and normal grapple-link construction, records one per-turn use marker, and stores no parallel Grappler grapple state."
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/character-creation-runtime/src/index.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L3-FOLLOWUP-GRAPPLER-RUNTIME"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-movement-grapple-hide.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L3-FOLLOWUP-GRAPPLER-RUNTIME"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/grappler-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "L3-FOLLOWUP-GRAPPLER-RUNTIME"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "feat",
+      "profiles": [
+        {
+          "id": "character-creation.grappler-general-feat",
+          "profileKind": "character-creation",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/character-creation-runtime/src/finalization.ts",
+            "packages/character-creation-runtime/src/support-gates.ts"
+          ],
+          "sourceBoundary": "Character Creation consumes the installed Surface Grappler General feat shape, same-class level-4 feat selection, current class progression, assigned Ability Scores, selected Background Ability Score Increase, and the selected Grappler +1 Strength-or-Dexterity ASI option. It rejects selected Grappler before Level 4+ or before Strength or Dexterity 13 after Background ASI, admits only the feat's authored Strength-or-Dexterity +1 max-20 ASI options, and projects the chosen increase through the existing CharacterBuild ability-score facts without storing duplicate prerequisite or ability-score state.",
+          "taskRefs": [
+            "L3-FOLLOWUP-GRAPPLER-RUNTIME"
+          ],
+          "title": "Character Creation admits Grappler General feat prerequisites and Strength-or-Dexterity ASI choices",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+            }
+          ]
+        },
+        {
+          "id": "unit-feature.grappler",
+          "profileKind": "battle-admission",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/movement-spatial-grapple.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/unit-feature-support.ts",
+            "packages/battle-runtime/src/battle-reducer/attack-main.ts",
+            "packages/battle-runtime/src/battle-reducer/attack-roll.ts",
+            "packages/battle-runtime/src/battle-reducer/grappler-support-profile.ts",
+            "packages/battle-runtime/src/battle-reducer/movement-speed.ts"
+          ],
+          "sourceBoundary": "Battle Unit admission consumes the authored Surface Grappler shape and projects typed Punch and Grab, Attack Advantage, and Fast Wrestler support facts. Battle runtime consumes retained Grappler support through existing Attack action Unarmed Strike hit resolution, existing Grapple outcome fills, existing grapple links, existing attack-roll mode combination, and existing movement drag-cost links; it records only the once-per-turn Punch and Grab use marker in turn resources and does not store feat-owned grapple state or dispatch on feat authored identity.",
+          "taskRefs": [
+            "L3-FOLLOWUP-GRAPPLER-RUNTIME"
+          ],
+          "title": "Unit feature admits Grappler Punch and Grab, Attack Advantage, and Fast Wrestler facts",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/movement-spatial-grapple-inductive.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-movement-grapple-hide.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-test-support.ts"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/grappler-selected-identity.mbt.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/feat_grappler.json",
+      "unitId": "feat_grappler"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
         "profileIds": [
           "unit-feature.initiative-proficiency-and-swap"
         ],
@@ -22567,6 +23422,29 @@
           "owner": "character-creation-runtime and future character-sheet spell-access owner",
           "reason": "The feat Unit owns SRD authored identity and typed spell-list source facts. Character finalization retains the feat ref without storing duplicate spell-access state, while future character-sheet spell-access support should derive selected spells from the feat's typed Magic Initiate facts and each selected Spell Definition owns invocation runtime behavior."
         },
+        "reason": "Magic Initiate (Druid) is an Origin feat spell-access selection source. Character creation retains the selected background and feat Unit refs; selected cantrips, level-1 spell access, and spellcasting ability choice belong to the character spell-access owner rather than promoted battle Unit execution.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "feat",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/feat_magic_initiate_druid.json",
+      "unitId": "feat_magic_initiate_druid"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "character-fact-and-runtime-detached-split",
+          "owner": "character-creation-runtime and future character-sheet spell-access owner",
+          "reason": "The feat Unit owns SRD authored identity and typed spell-list source facts. Character finalization retains the feat ref without storing duplicate spell-access state, while future character-sheet spell-access support should derive selected spells from the feat's typed Magic Initiate facts and each selected Spell Definition owns invocation runtime behavior."
+        },
         "reason": "Magic Initiate (Wizard) is an Origin feat spell-access selection source. Character creation retains the selected background and feat Unit refs; selected cantrips, level-1 spell access, and spellcasting ability choice belong to the character spell-access owner rather than promoted battle Unit execution.",
         "tag": "unsupported-profile"
       },
@@ -22638,6 +23516,172 @@
       ],
       "sourceRecordPath": "packages/surface/content/feat_savage_attacker.json",
       "unitId": "feat_savage_attacker"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "character-fact-and-runtime-detached-split",
+          "owner": "character-creation-runtime plus character-sheet proficiency projection",
+          "reason": "Skilled mutates durable character proficiency facts during character creation; battle runtime consumes derived skill/tool proficiency facts where relevant rather than executing the feat as a battle Unit."
+        },
+        "profileIds": [
+          "character-creation.origin-feat-proficiency-choice",
+          "character-creation.species-origin-feat-proficiency-choice"
+        ],
+        "selectedIdentityEvidenceDisposition": {
+          "owner": "character-creation deterministic proficiency projection owner",
+          "reason": "Skilled support is a durable CharacterBuild proficiency projection from a selected Background originFeatId or species-granted Origin feat choice. It has no battle-runtime selected Unit identity replay boundary; deterministic character-creation tests bind the authored feat Unit identity to the executable Surface proficiency facts.",
+          "tag": "not-applicable"
+        },
+        "supportedMechanics": [
+          "Surface authors Skilled as an SRD Origin feat with a passive grant_proficiency choice of exactly three skill or tool subjects",
+          "Character Creation discovers the Origin feat proficiency hole from the selected Background originFeatId and the feat's typed passive proficiency grant shape",
+          "Character Creation discovers the same Skilled proficiency grant from a species-selected Origin feat Unit ref using a species-specific choice key, so Background-granted and species-granted Skilled choices cannot collide",
+          "Character Creation admits supported skill and tool subject option ids through origin_feat_proficiency_choice or species_origin_feat_proficiency_choice and filters already-owned skill proficiencies",
+          "Character Creation finalizes selected Skilled subjects into CharacterBuild.proficiencyChoices and the existing derived skill/tool proficiency projection without storing duplicate proficiency state"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/character-creation-runtime/src/index.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L14G-B02-FEAT-SKILLED"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "feat",
+      "profiles": [
+        {
+          "id": "character-creation.origin-feat-proficiency-choice",
+          "profileKind": "character-creation",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/character-creation-runtime/src/discovery.ts",
+            "packages/character-creation-runtime/src/finalization.ts",
+            "packages/character-creation-runtime/src/choice-option-codecs.ts",
+            "packages/character-creation-runtime/src/support-gates.ts"
+          ],
+          "sourceBoundary": "Character Creation consumes a selected Background originFeatId, the Origin feat's passive grant_proficiency choice shape, and the existing CharacterBuild proficiency projection. It discovers one Origin feat proficiency choice hole, expands SRD skill and tool subject options through the same Surface proficiency subject codecs used by class features, filters already-owned skill proficiencies, admits supported skill/tool subject option ids through a dedicated origin_feat_proficiency_choice key, and finalizes the selected subjects into CharacterBuild.proficiencyChoices without storing duplicate proficiency state. Battle execution remains detached; downstream sheets and battle init consume the derived character proficiency facts.",
+          "taskRefs": [
+            "L14G-B02-FEAT-SKILLED"
+          ],
+          "title": "Character Creation finalizes Origin feat skill and tool proficiency choices into build proficiency facts",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+            }
+          ]
+        },
+        {
+          "id": "character-creation.species-origin-feat-proficiency-choice",
+          "profileKind": "character-creation",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/character-creation-runtime/src/discovery.ts",
+            "packages/character-creation-runtime/src/finalization.ts",
+            "packages/character-creation-runtime/src/choice-option-codecs.ts",
+            "packages/character-creation-runtime/src/support-gates.ts"
+          ],
+          "sourceBoundary": "Character Creation consumes selected Origin feat Unit refs produced by species_origin_feat_choice, then reads the selected feat's passive grant_proficiency shape. It discovers the nested proficiency choice with a species-specific choice key, expands SRD skill and tool subject options through the shared Surface proficiency subject codecs, filters already-owned skill and tool proficiencies, and finalizes the selected subjects into CharacterBuild.proficiencyChoices without colliding with Background-granted Origin feat choices for the same feat Unit.",
+          "taskRefs": [
+            "L14G-B08-SPECIES-HUMAN"
+          ],
+          "title": "Character Creation finalizes proficiency choices from species-selected Origin feats into build proficiency facts",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/feat_skilled.json",
+      "unitId": "feat_skilled"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "deferredMechanics": [
+          {
+            "battleReadinessClosure": {
+              "kind": "outside-battle-runtime",
+              "owner": "future attack damage ability-modifier optional-choice owner",
+              "reason": "The current promoted subset treats the beneficial permission as selected when the retained profile and qualifying Light attack facts are present. A literal decline path requires extending the shared attack damage hole/fill protocol for optional damage ability modifier choices without duplicating damage modifier state or adding authored-identity dispatch."
+            },
+            "mechanic": "An explicit player decline path for Two-Weapon Fighting's optional damage ability modifier permission on a qualifying Light-property extra attack damage roll."
+          }
+        ],
+        "profileIds": [
+          "unit-feature.light-extra-attack-damage-ability-modifier"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE9-UNIT-FEATURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "Battle Unit support admits the Surface light_extra_attack_damage_ability_modifier mechanics only for the optional Light-property extra attack damage roll shape that permits the attack ability modifier when the attack is not already adding it.",
+          "Battle initialization retains the admitted lightExtraAttackDamageAbilityModifier support profile on selected character combatants without dispatching on the feat's authored identity.",
+          "The existing Light-property off-hand/extra attack owner consumes selected character Unit support refs and restores the ordinary positive attack ability modifier only when the projected attack has no existing damageAbilityModifier fact.",
+          "The already-adding boundary is represented by the existing attack damageAbilityModifier field; when present, runtime keeps that value rather than adding a second modifier or storing feat-owned damage state.",
+          "Without selected support, Light-property extra attack damage still suppresses positive ability modifiers and preserves negative ability modifiers by default."
+        ],
+        "tag": "profile-subset-supported"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-two-weapon-fighting.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L3-FOLLOWUP-TWO-WEAPON-FIGHTING-RUNTIME"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "feat",
+      "profiles": [
+        {
+          "id": "unit-feature.light-extra-attack-damage-ability-modifier",
+          "profileKind": "persistent-effect",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/attack-damage-composition.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/unit-feature-support.ts",
+            "packages/battle-runtime/src/battle-reducer/attack-damage-apply.ts"
+          ],
+          "sourceBoundary": "Battle Unit admission consumes the authored Surface light_extra_attack_damage_ability_modifier shape and projects a Light-property extra attack damage permission profile. Battle runtime consumes existing selected character Unit support refs, attack ability modifier facts, and optional attack damageAbilityModifier facts: an existing damageAbilityModifier is treated as the already-adding boundary, selected support restores the ordinary attack ability modifier only when that field is absent, and the default Light-property path still suppresses positive modifiers while preserving negative ones. No feat-owned damage modifier state or authored-identity dispatch is introduced.",
+          "taskRefs": [
+            "L3-FOLLOWUP-TWO-WEAPON-FIGHTING-RUNTIME"
+          ],
+          "title": "Unit feature permits the Light-property extra attack to use its ordinary damage ability modifier",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/attack-damage-composition-examples.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-core-combat-tests.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-two-weapon-fighting.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/feat_two_weapon_fighting.json",
+      "unitId": "feat_two_weapon_fighting"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
@@ -24296,7 +25340,8 @@
           "taskRefs": [
             "QCORE9",
             "L12G-CLASS-BARBARIAN-DANGER-SENSE",
-            "L3MSPEC-06-DWARVEN-RESILIENCE-SAVE-MODE"
+            "L3MSPEC-06-DWARVEN-RESILIENCE-SAVE-MODE",
+            "L3-FOLLOWUP-HALFLING-BRAVE-RUNTIME"
           ],
           "title": "Unit feature passively grants Saving Throw roll mode by ability or condition scope",
           "verificationOwners": [
@@ -24325,6 +25370,549 @@
       ],
       "sourceRecordPath": "packages/surface/content/species_dwarf_dwarven_resilience.json",
       "unitId": "dwarf_dwarven_resilience"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "sight/illumination projection owner",
+          "reason": "Darkvision sense grants provide observer sense and range facts; promoted battle execution consumes derived sight and illumination projections plus table-supplied distance and visibility facts rather than executing species trait Units directly."
+        },
+        "reason": "Darkvision is an authored species sense fact with no standalone promoted Unit profile.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "species_trait",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/species_gnome_darkvision.json",
+      "unitId": "species_gnome_darkvision"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-battle-runtime",
+          "owner": "future passive saving-throw ability-filter roll-mode owner",
+          "reason": "The Surface shape carries the exact saveAbilityFilter source fact. Battle admission must promote that typed fact through a narrowed support profile before reducers consume it."
+        },
+        "reason": "Gnomish Cunning is authored as passive Advantage on Intelligence, Wisdom, and Charisma Saving Throws, but the promoted passive-saving-throw roll-mode profile currently admits condition-scoped Poisoned saves rather than an arbitrary save ability filter.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "species_trait",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/species_gnome_gnomish_cunning.json",
+      "unitId": "species_gnome_gnomish_cunning"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "selection-grant-container",
+          "owner": "future character-creation lineage selection, character-sheet species spell access/free-cast projection, and Rock clockwork-device table/object owner",
+          "reason": "The trait combines character-selection state, spell access projection, free-cast resource projection, and table/object device behavior. Those facts must be split into their execution owners rather than admitted as one battle Unit."
+        },
+        "reason": "Gnomish Lineage is authored as a species-selection lineage choice with a spellcasting ability choice, Forest Gnome spell access and Proficiency Bonus free casts, and Rock Gnome spell access plus clockwork-device source facts. No promoted profile owns that cross-boundary selection and projection yet.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "species_trait",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/species_gnome_gnomish_lineage.json",
+      "unitId": "species_gnome_gnomish_lineage"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "profileIds": [
+          "unit-feature.passive-saving-throw-roll-mode"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE9-UNIT-FEATURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "Battle Unit admission derives the passive Saving Throw Advantage fact from the Surface modify_roll_advantage shape with saving_throw target and Frightened condition filter, without dispatching on Halfling or Brave identity.",
+          "Battle runtime projects Advantage whenever a Saving Throw context is typed with condition frightened, covering both avoiding and ending the Frightened condition, and does not project for unrelated condition contexts."
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L3-FOLLOWUP-HALFLING-BRAVE-RUNTIME"
+        },
+        {
+          "ownerPath": "packages/character-battle-runtime/src/index.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L3-FOLLOWUP-HALFLING-BRAVE-RUNTIME"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/species-passive-trait-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "L3-FOLLOWUP-HALFLING-BRAVE-RUNTIME"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "species_trait",
+      "profiles": [
+        {
+          "id": "unit-feature.passive-saving-throw-roll-mode",
+          "profileKind": "passive",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/unit-feature-support.ts",
+            "packages/battle-runtime/src/battle-reducer.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-damage-fills.ts"
+          ],
+          "taskRefs": [
+            "QCORE9",
+            "L12G-CLASS-BARBARIAN-DANGER-SENSE",
+            "L3MSPEC-06-DWARVEN-RESILIENCE-SAVE-MODE",
+            "L3-FOLLOWUP-HALFLING-BRAVE-RUNTIME"
+          ],
+          "title": "Unit feature passively grants Saving Throw roll mode by ability or condition scope",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles-inductive.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-feature-bridge.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-danger-sense.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-battle-runtime/src/index.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/species_halfling_brave.json",
+      "unitId": "species_halfling_brave"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "deferredMechanics": [
+          {
+            "battleReadinessClosure": {
+              "kind": "table-spatial-derivation",
+              "owner": "future table/spatial path owner",
+              "reason": "The promoted battle reducer validates typed occupancy witnesses supplied at the Movement boundary. Inferring those witnesses from a map, token footprint, and route remains table/spatial work outside this Unit profile."
+            },
+            "mechanic": "automatic pathfinding, coordinate occupancy derivation, and route extraction for occupied creature spaces"
+          }
+        ],
+        "profileIds": [
+          "unit-feature.creature-space-movement-permission"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE9-UNIT-FEATURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "Battle Unit admission derives the occupied creature-space traversal permission from Surface creature_space_movement_permission facts with occupied_creature_space traversal, a larger-creature relation, and canStopInOccupiedSpace false, without dispatching on Halfling or Nimbleness identity.",
+          "Battle runtime validates caller-supplied Movement facts for occupied creature-space traversal by requiring a selected creature-space movement permission profile, existing occupied creature ids, larger effective creature size for every occupied space traversed, and an unoccupied destination before spending Movement.",
+          "The profile consumes existing movement budget, combatant effective size, selected Unit support profiles, and table-supplied position/occupancy witnesses without storing species-owned movement state or durable map-position state."
+        ],
+        "tag": "profile-subset-supported"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L3-FOLLOWUP-HALFLING-NIMBLENESS-RUNTIME"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-movement-grapple-hide.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L3-FOLLOWUP-HALFLING-NIMBLENESS-RUNTIME"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/halfling-nimbleness-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "L3-FOLLOWUP-HALFLING-NIMBLENESS-RUNTIME"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "species_trait",
+      "profiles": [
+        {
+          "id": "unit-feature.creature-space-movement-permission",
+          "profileKind": "passive",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/movement-spatial-grapple.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/unit-feature-support.ts",
+            "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts"
+          ],
+          "sourceBoundary": "Battle Unit admission consumes the authored Surface creature_space_movement_permission shape and projects a typed occupied creature-space traversal permission. Battle runtime consumes retained selected character Unit support refs, existing Movement budget, effective combatant sizes, and caller/table-supplied occupied-space and destination witnesses to validate traversal through larger occupied creature spaces and reject occupied destinations without storing species-owned movement state, durable map-position state, or authored-identity dispatch.",
+          "taskRefs": [
+            "L3-FOLLOWUP-HALFLING-NIMBLENESS-RUNTIME"
+          ],
+          "title": "Unit feature permits Movement through larger occupied creature spaces without stopping there",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/movement-spatial-grapple-inductive.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-movement-grapple-hide.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/species_halfling_nimbleness.json",
+      "unitId": "species_halfling_nimbleness"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "deferredMechanics": [
+          {
+            "battleReadinessClosure": {
+              "kind": "outside-battle-runtime",
+              "owner": "future D20 Test rolled-die facts and die-selection replacement owner",
+              "reason": "Current promoted battle D20 Test fills expose a selected/effective naturalD20 rather than both raw d20 dice. Full RAW Luck with Advantage or Disadvantage needs an explicit rolled-die vector and player-selected die replacement boundary so a natural 1 on either die can be chosen without inventing parallel Luck-owned roll state."
+            },
+            "mechanic": "Advantage/Disadvantage one-die reroll choice when the player can choose either of two rolled d20s, including a natural 1 on the unselected die"
+          }
+        ],
+        "profileIds": [
+          "unit-feature.d20-test-natural-one-reroll"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE9-UNIT-FEATURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "Battle Unit admission derives the optional natural-1 D20 Test reroll profile from the Surface d20_test_natural_one_reroll mechanics shape without dispatching on Halfling or Luck identity.",
+          "Battle runtime's selected/effective-d20 subset requires executable natural d20 face facts for supported rolled D20 Tests, permits no-roll ordinary and Concentration Saving Throw outcomes without a reroll decision as non-triggering outcomes, requires an explicit reroll or decline decision after a selected/effective natural 1, validates selected reroll decisions against the actual D20 Test actor's selected support profile and the triggering natural d20 face, rejects non-1 selected rerolls and unsupported actors, and prevents stacking this reroll with another d20 reroll on the same selected/effective d20.",
+          "Attack Roll and Ability Check fills replace the selected/effective d20 result with the new roll result before downstream hit, critical, damage, and committed Ability Check total logic consumes the D20 Test.",
+          "Saving Throw outcome, Concentration Saving Throw, and Death Saving Throw fills replace the selected/effective d20 outcome or die with the new reroll result before downstream save-gated spell, concentration, or death-save lifecycle logic consumes the D20 Test."
+        ],
+        "tag": "profile-subset-supported"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-halfling-luck.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L3-FOLLOWUP-HALFLING-LUCK-RUNTIME"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "species_trait",
+      "profiles": [
+        {
+          "id": "unit-feature.d20-test-natural-one-reroll",
+          "profileKind": "persistent-effect",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/unit-feature-d20-test-natural-one-reroll-core.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/unit-feature-support.ts",
+            "packages/battle-runtime/src/battle-reducer.ts",
+            "packages/battle-runtime/src/battle-reducer/battle-codecs.ts",
+            "packages/battle-runtime/src/battle-reducer/creature-state.ts",
+            "packages/battle-runtime/src/battle-reducer/d20-test-natural-one-reroll.ts",
+            "packages/battle-runtime/src/battle-reducer/attack-main.ts",
+            "packages/battle-runtime/src/battle-reducer/attack-offhand.ts",
+            "packages/battle-runtime/src/battle-reducer/attack-resolution.ts",
+            "packages/battle-runtime/src/battle-reducer/damage-apply.ts",
+            "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
+            "packages/battle-runtime/src/battle-reducer/opportunity-attacks.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-resolve.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-resolve-attack-burst.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-resolve-attack-sequence.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-resolve-chained.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-resolve-fill-set.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-resolve-release.ts",
+            "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts"
+          ],
+          "sourceBoundary": "Battle Unit admission consumes the Surface d20_test_natural_one_reroll species-trait shape and projects an optional natural-1 D20 Test reroll profile. The current battle-runtime owner consumes selected character Unit refs and existing selected/effective roll, outcome, Death Saving Throw, and Concentration Saving Throw fill facts for Attack Rolls, Ability Checks, and Saving Throws; requires the natural d20 face for supported rolled D20 Tests; treats no-roll Saving Throw failures without a natural d20 as non-triggering outcomes; requires an explicit reroll or decline decision after supported selected/effective natural-1 rolls; validates the natural die trigger and support profile; rejects unsupported actors, non-1 selected rerolls, and d20 reroll stacking; and replaces the executable d20 result before downstream reducers consume the D20 Test without storing a parallel Luck-owned roll result or dispatching on authored identity. Full Advantage/Disadvantage one-die choice awaits a rolled-die vector and die-selection replacement owner.",
+          "taskRefs": [
+            "L3-FOLLOWUP-HALFLING-LUCK-RUNTIME"
+          ],
+          "title": "Unit feature can reroll a natural 1 on any D20 Test and must use the new roll",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-d20-test-natural-one-reroll-core-examples.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-halfling-luck.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/find-familiar-lifecycle.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/species_halfling_luck.json",
+      "unitId": "species_halfling_luck"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "deferredMechanics": [
+          {
+            "battleReadinessClosure": {
+              "kind": "outside-runtime-presentation-exploration",
+              "owner": "future table/perception derivation owner",
+              "reason": "The promoted battle reducer validates typed Hide prerequisite witnesses supplied at the Hide boundary. Deriving those witnesses from map geometry, observer sight, token positions, and creature body coverage remains table/perception work outside this Unit profile."
+            },
+            "mechanic": "automatic line-of-sight, creature-obscurement, and observer-specific perception derivation"
+          }
+        ],
+        "profileIds": [
+          "unit-feature.hide-action-obscurement-permission"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE9-UNIT-FEATURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "Battle Unit admission derives the Hide action obscurement permission from Surface hide_action_obscurement_permission facts with action hide, obscured_only_by_creature allowed obscurement, and at_least_one_size_larger creature-size relation, without dispatching on Halfling or Naturally Stealthy identity.",
+          "Battle runtime validates caller-supplied Hide prerequisites by requiring a selected Hide obscurement permission profile, an existing obscuring creature combatant distinct from the hider, current effective hider and obscuring-creature sizes, and an obscuring creature at least one size larger before discovering or resolving Hide.",
+          "The profile consumes existing Hide action/check/Hidden state, selected Unit support profiles, current combatant effective size, and table-supplied line-of-sight/creature-obscurement witnesses without storing species-owned stealth state or durable map/perception state."
+        ],
+        "tag": "profile-subset-supported"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-halfling-naturally-stealthy.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L3-FOLLOWUP-HALFLING-NATURALLY-STEALTHY-RUNTIME"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "species_trait",
+      "profiles": [
+        {
+          "id": "unit-feature.hide-action-obscurement-permission",
+          "profileKind": "passive",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/unit-feature-hide-obscurement-permission-core.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/unit-feature-support.ts",
+            "packages/battle-runtime/src/battle-reducer.ts",
+            "packages/battle-runtime/src/battle-reducer/hole-helpers.ts"
+          ],
+          "sourceBoundary": "Battle Unit admission consumes the authored Surface hide_action_obscurement_permission shape and projects a typed Hide obscurement permission. Battle runtime consumes retained selected character Unit support refs, current effective hider and obscuring-creature sizes, and caller/table-supplied Hide prerequisite witnesses for creature-only obscurement plus out-of-enemy-line-of-sight facts. The runtime validates the referenced obscuring creature and larger-size relation before discovering or resolving Hide, without authored-identity dispatch, species-owned stealth state, durable perception state, or map-derived line-of-sight storage.",
+          "taskRefs": [
+            "L3-FOLLOWUP-HALFLING-NATURALLY-STEALTHY-RUNTIME"
+          ],
+          "title": "Unit feature permits Hide when obscured only by a larger creature",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-hide-obscurement-permission-core-examples.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-halfling-naturally-stealthy.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/species_halfling_naturally_stealthy.json",
+      "unitId": "species_halfling_naturally_stealthy"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "character-fact-and-runtime-detached-split",
+          "owner": "future character-sheet Heroic Inspiration Long Rest grant owner",
+          "reason": "The Surface trait carries the exact rest-triggered Heroic Inspiration source fact, but execution requires durable Heroic Inspiration state and Long Rest lifecycle ownership outside the current character-creation projection."
+        },
+        "reason": "Resourceful is authored as gaining Heroic Inspiration whenever the character finishes a Long Rest. No promoted character-sheet or runtime owner currently models Heroic Inspiration state or Long Rest grant timing.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "species_trait",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/species_human_resourceful.json",
+      "unitId": "species_human_resourceful"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "character-fact-and-runtime-detached-split",
+          "owner": "character-creation-runtime plus character-sheet proficiency projection",
+          "reason": "Skillful mutates durable character proficiency facts during character creation; battle runtime consumes derived skill proficiency facts where relevant rather than executing the trait as a battle Unit."
+        },
+        "profileIds": [
+          "character-creation.species-trait-proficiency-choice"
+        ],
+        "selectedIdentityEvidenceDisposition": {
+          "owner": "character-creation deterministic proficiency projection owner",
+          "reason": "Skillful support is a durable CharacterBuild proficiency projection from a selected Human species trait. It has no battle-runtime selected Unit identity replay boundary; deterministic character-creation tests bind the authored trait Unit identity to the executable Surface proficiency facts.",
+          "tag": "not-applicable"
+        },
+        "supportedMechanics": [
+          "Surface authors Skillful as an SRD Human species trait with a passive grant_proficiency choice of exactly one skill subject",
+          "Character Creation discovers the species trait proficiency hole from the selected Human species trait refs and the trait's typed passive proficiency grant shape",
+          "Character Creation admits supported skill option ids through species_trait_proficiency_choice and filters already-owned skill proficiencies",
+          "Character Creation finalizes the selected Skillful subject into CharacterBuild.proficiencyChoices and the existing derived skill proficiency projection without storing duplicate proficiency state"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "species_trait",
+      "profiles": [
+        {
+          "id": "character-creation.species-trait-proficiency-choice",
+          "profileKind": "character-creation",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/character-creation-runtime/src/discovery.ts",
+            "packages/character-creation-runtime/src/finalization.ts",
+            "packages/character-creation-runtime/src/choice-option-codecs.ts",
+            "packages/character-creation-runtime/src/support-gates.ts"
+          ],
+          "sourceBoundary": "Character Creation consumes selected Species authored trait Unit refs, the trait's passive grant_proficiency choice shape, and the existing CharacterBuild proficiency projection. It discovers species-trait proficiency choice holes from selected species trait Units, filters already-owned skill proficiencies, admits supported skill option ids through species_trait_proficiency_choice, and finalizes the selected subjects into CharacterBuild.proficiencyChoices without storing duplicate proficiency state. Battle execution remains detached; downstream sheets and battle init consume the derived character proficiency facts.",
+          "taskRefs": [
+            "L14G-B08-SPECIES-HUMAN"
+          ],
+          "title": "Character Creation finalizes species trait proficiency choices into build proficiency facts",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/species_human_skillful.json",
+      "unitId": "species_human_skillful"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "selection-grant-container",
+          "owner": "character-creation-runtime plus selected Origin feat Unit profiles",
+          "reason": "Versatile owns the Human species-origin feat selection boundary; the selected Origin feat Unit owns its executable projection, such as Skilled's proficiency choices."
+        },
+        "profileIds": [
+          "character-creation.species-origin-feat-choice"
+        ],
+        "selectedIdentityEvidenceDisposition": {
+          "owner": "character-creation deterministic selected Origin feat projection owner",
+          "reason": "Versatile support is a durable CharacterBuild selected feat ref from a selected Human species trait. It has no battle-runtime selected Unit identity replay boundary; deterministic character-creation tests bind the authored trait Unit identity to the selected Origin feat Unit ref.",
+          "tag": "not-applicable"
+        },
+        "supportedMechanics": [
+          "Surface authors Versatile as an SRD Human species trait with a passive grant_feat Origin feat choice",
+          "Character Creation discovers the species Origin feat choice hole from the selected Human species trait refs and the trait's typed passive grant_feat shape",
+          "Character Creation admits supported SRD Origin feat Unit options through species_origin_feat_choice",
+          "Character Creation finalizes the selected Origin feat as a selected CharacterBuild feature ref with selectedFromUnitId species_human_versatile and leaves selected feat execution or nested grant choices to the selected feat Unit profile"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "species_trait",
+      "profiles": [
+        {
+          "id": "character-creation.species-origin-feat-choice",
+          "profileKind": "character-creation",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/character-creation-runtime/src/discovery.ts",
+            "packages/character-creation-runtime/src/finalization.ts",
+            "packages/character-creation-runtime/src/support-gates.ts"
+          ],
+          "sourceBoundary": "Character Creation consumes selected Species authored trait Unit refs and passive grant_feat Origin feat source facts. It discovers a species-origin feat choice hole from the granting trait Unit, admits supported SRD Origin feat Unit options through species_origin_feat_choice, and finalizes the selected Origin feat as a selected CharacterBuild feature ref with selectedFromUnitId pointing at the species trait. Selected feat execution and any nested selected-feat grant choices remain owned by the selected feat Unit profile.",
+          "taskRefs": [
+            "L14G-B08-SPECIES-HUMAN"
+          ],
+          "title": "Character Creation finalizes species-granted Origin feat choices as selected build feature refs",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/species_human_versatile.json",
+      "unitId": "species_human_versatile"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

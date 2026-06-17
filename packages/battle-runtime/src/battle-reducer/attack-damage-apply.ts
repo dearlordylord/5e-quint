@@ -1,12 +1,13 @@
 // Attack damage hole/disposition helpers extracted from battle-reducer.ts.
 // Cluster U (attack_damage_apply). Mechanical extraction — no behavior change.
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.druid-wild-shape-known-form unit-feature.martial-arts-attack-projection unit-feature.paladin-sacred-weapon spell.invocation-weapon-attack-override spell.invocation-magic-weapon-enhancement spell.invocation-self-transformation-mode
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.druid-wild-shape-known-form unit-feature.light-extra-attack-damage-ability-modifier unit-feature.martial-arts-attack-projection unit-feature.paladin-sacred-weapon spell.invocation-weapon-attack-override spell.invocation-magic-weapon-enhancement spell.invocation-self-transformation-mode
 // KERNEL-COVERAGE: runtime-owner BATTLE.DAMAGE.ATTACK_BRANCHES BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SELF_TRANSFORMATION_MODE BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS
 
 import {
   abilityModifier,
   attackBonus,
+  type AbilityModifier,
   type ReadonlyNonEmptyArray,
 } from "@dnd/shared/types";
 import {
@@ -26,7 +27,10 @@ import type {
   CharacterWeaponAttackActionOption,
   SupportedAttackActionOption,
 } from "../battle-action-options.ts";
-import { MARTIAL_ARTS_ATTACK_PROJECTION_SUPPORT_PROFILE } from "../unit-feature-support.ts";
+import {
+  LIGHT_EXTRA_ATTACK_DAMAGE_ABILITY_MODIFIER_SUPPORT_PROFILE,
+  MARTIAL_ARTS_ATTACK_PROJECTION_SUPPORT_PROFILE,
+} from "../unit-feature-support.ts";
 import {
   ATTACK_DAMAGE_DISPOSITION_HOLE_ID,
   ATTACK_DAMAGE_DISPOSITION_HOLE_INSTANCE,
@@ -468,17 +472,20 @@ export function offHandAttackActionOptionsForActor(
     offHandAttack,
     offHandWeaponItemIdForAttack(actor, offHand),
   );
+  const hasTwoWeaponFightingSupport =
+    characterHasLightExtraAttackDamageAbilityModifierSupport(actor);
   const lightPropertyOffHand = {
     ...projectedOffHand,
-    damageAbilityModifier:
-      projectedOffHand.abilityModifier < 0
-        ? projectedOffHand.abilityModifier
-        : abilityModifier(0),
+    damageAbilityModifier: lightPropertyDamageAbilityModifierForAttack(
+      projectedOffHand,
+      hasTwoWeaponFightingSupport,
+    ),
     ...(projectedOffHand.alternateAbilityChoices === undefined
       ? {}
       : {
           alternateAbilityChoices: lightPropertyAlternateAbilityChoices(
             projectedOffHand.alternateAbilityChoices,
+            hasTwoWeaponFightingSupport,
           ),
         }),
   };
@@ -965,22 +972,65 @@ function offHandWeaponItemIdForAttack(
 
 function lightPropertyAlternateAbilityChoices(
   choices: ReadonlyNonEmptyArray<CharacterWeaponAttackAbilityChoice>,
+  hasTwoWeaponFightingSupport: boolean,
 ): ReadonlyNonEmptyArray<CharacterWeaponAttackAbilityChoice> {
   const [first, ...rest] = choices;
   return [
-    lightPropertyAbilityChoice(first),
-    ...rest.map(lightPropertyAbilityChoice),
+    lightPropertyAbilityChoice(first, hasTwoWeaponFightingSupport),
+    ...rest.map((choice) =>
+      lightPropertyAbilityChoice(choice, hasTwoWeaponFightingSupport),
+    ),
   ];
 }
 
 function lightPropertyAbilityChoice(
   choice: CharacterWeaponAttackAbilityChoice,
+  hasTwoWeaponFightingSupport: boolean,
 ): CharacterWeaponAttackAbilityChoice {
   return {
     ...choice,
-    damageAbilityModifier:
-      choice.abilityModifier < 0 ? choice.abilityModifier : abilityModifier(0),
+    damageAbilityModifier: lightPropertyDamageAbilityModifier({
+      abilityModifier: choice.abilityModifier,
+      damageAbilityModifier: choice.damageAbilityModifier,
+      hasTwoWeaponFightingSupport,
+    }),
   };
+}
+
+function lightPropertyDamageAbilityModifierForAttack(
+  attack: CharacterWeaponAttackActionOption,
+  hasTwoWeaponFightingSupport: boolean,
+): AbilityModifier {
+  return lightPropertyDamageAbilityModifier({
+    abilityModifier: attack.abilityModifier,
+    damageAbilityModifier: attack.damageAbilityModifier,
+    hasTwoWeaponFightingSupport,
+  });
+}
+
+function lightPropertyDamageAbilityModifier(input: {
+  readonly abilityModifier: AbilityModifier;
+  readonly damageAbilityModifier: AbilityModifier | undefined;
+  readonly hasTwoWeaponFightingSupport: boolean;
+}): AbilityModifier {
+  const damageAbilityModifier =
+    input.damageAbilityModifier ?? input.abilityModifier;
+  return input.hasTwoWeaponFightingSupport || damageAbilityModifier < 0
+    ? damageAbilityModifier
+    : abilityModifier(0);
+}
+
+function characterHasLightExtraAttackDamageAbilityModifierSupport(
+  actor: CharacterBattleCreatureState,
+): boolean {
+  return actor.origin.characterUnitRefs.some((unitRef) =>
+    unitRef.supportProfiles.some(
+      (profile) =>
+        typeof profile === "object" &&
+        profile.kind ===
+          LIGHT_EXTRA_ATTACK_DAMAGE_ABILITY_MODIFIER_SUPPORT_PROFILE,
+    ),
+  );
 }
 
 export function martialArtsBonusUnarmedStrikeActionOptionForActor(

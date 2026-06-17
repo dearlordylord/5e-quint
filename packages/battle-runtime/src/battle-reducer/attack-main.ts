@@ -6,8 +6,9 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.PROTOCOL.CONCENTRATION_BREAK_TEARDOWN
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.MIRROR_IMAGE_HIT_INTERCEPTION
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.hunters-prey unit-feature.open-hand-technique unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.remarkable-athlete unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.grappler unit-feature.hunters-prey unit-feature.open-hand-technique unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.remarkable-athlete unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.d20-test-natural-one-reroll
 
 import { currentArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
 
@@ -21,6 +22,12 @@ import {
   attackDamageHole,
   damageDispositionFillValidation,
 } from "./attack-damage-apply.ts";
+import {
+  attackRollHoleWithD20TestNaturalOneRerollOption,
+  d20TestNaturalOneRerollRollDecisionRequired,
+  d20TestNaturalOneRerollRollIssue,
+  effectiveD20TestNaturalOneRerollAttackRoll,
+} from "./d20-test-natural-one-reroll.ts";
 
 import {
   attackRollHole,
@@ -90,6 +97,7 @@ import {
 
 import {
   attackTargetHole,
+  grappleOutcomeHole,
   needsHolesResult,
   revealHidden,
 } from "./hole-helpers.ts";
@@ -99,10 +107,13 @@ import {
   attackHitTriggerKind,
   attackKindForDeflectRedirect,
   attackTargetIsLegal,
+  grappleLinkForTarget,
 } from "./movement-speed.ts";
 
 import { attackFillSet } from "./attack-fill-set.ts";
 import {
+  GRAPPLER_PUNCH_AND_GRAB_DECISION_HOLE_ID,
+  GRAPPLER_PUNCH_AND_GRAB_DECISION_HOLE_INSTANCE,
   WEAPON_MASTERY_CLEAVE_DECISION_HOLE_ID,
   WEAPON_MASTERY_CLEAVE_DAMAGE_DISPOSITION_HOLE_ID,
   WEAPON_MASTERY_CLEAVE_DAMAGE_DISPOSITION_HOLE_INSTANCE,
@@ -121,9 +132,11 @@ import { resolveOpenHandTechniqueAfterHit } from "./open-hand-technique.ts";
 import { resolveRemarkableAthleteCriticalHitMovement } from "./remarkable-athlete-critical-movement.ts";
 import { applyStatBlockAttackHitConditionRiders } from "./statblock-attack-hit-condition-riders.ts";
 import { HUNTERS_PREY_SUPPORT_PROFILE } from "../unit-feature-support.ts";
+import { grapplerSupportProfileRefForCombatant } from "./grappler-support-profile.ts";
 
 import {
   attackCanCarryKnockOutChoice,
+  attackActionOptionName,
   attackPotentialDamageTypes,
   eligibleAttackDamageRiders,
   eligibleWeaponDamageDiceRollChoiceUnitIds,
@@ -132,6 +145,7 @@ import {
   selectedAttackRollMissToHitReplacement,
   selectedWeaponDamageDiceRollChoice,
 } from "./statblock-attacks.ts";
+import { currentActorId } from "./creature-state-leaves.ts";
 
 import {
   ATTACK_ROLL_HOLE_ID,
@@ -147,10 +161,13 @@ import type {
   BattleAttackDamagePrefixFill,
   BattleCreatureState,
   BattleFill,
+  BattleGrappleLink,
   BattleInterruptedProcedure,
   BattleResolutionResult,
   BattleShovePushOutcome,
   BattleState,
+  BattleTargetSpatialFact,
+  BattleUnitFeatureDecisionHole,
   AttackFillSet,
 } from "../battle-reducer.ts";
 import type { SupportedAttackActionOption } from "../battle-action-options.ts";
@@ -158,6 +175,7 @@ import type { CombatantId } from "../identity.ts";
 import {
   attackRollHitsWithCriticalThreshold,
   attackRollIsCriticalHit,
+  applyGrappleSavingThrowOutcome,
   criticalThresholdForAttack,
   needsAttackDamageConcentrationResult,
   spendAttackAction,
@@ -203,6 +221,220 @@ function attackProcedureAttackerId(
   return subject.tag === "pactOfTheChainFamiliarAttack"
     ? subject.familiarId
     : subject.actorId;
+}
+
+type GrapplerPunchAndGrabEligibility = {
+  readonly link: BattleGrappleLink;
+  readonly unitFeature: BattleUnitFeatureDecisionHole["unitFeature"];
+};
+
+function grapplerPunchAndGrabEligibilityForHit(input: {
+  readonly state: BattleState;
+  readonly subject: BattleAttackHostSubject;
+  readonly attackerId: CombatantId;
+  readonly targetId: CombatantId;
+  readonly attack: SupportedAttackActionOption;
+  readonly targetSpatialFacts: readonly BattleTargetSpatialFact[];
+}): GrapplerPunchAndGrabEligibility | null {
+  const attacker = input.state.combatants.get(input.attackerId);
+  const unitFeature = grapplerPunchAndGrabUnitFeature(attacker);
+  if (
+    input.subject.tag !== "action" ||
+    input.subject.action !== "attack" ||
+    currentActorId(input.state) !== input.attackerId ||
+    input.attack.kind !== "unarmedStrike" ||
+    unitFeature === null ||
+    input.state.currentTurnResources.grapplerPunchAndGrabUsedThisTurn.includes(
+      input.attackerId,
+    )
+  ) {
+    return null;
+  }
+  const link = grappleLinkForTarget(
+    input.state,
+    input.attackerId,
+    input.targetId,
+    grappleFactsForUnarmedStrikeHit(input),
+  );
+  return link.tag === "ok" ? { link: link.link, unitFeature } : null;
+}
+
+function grapplerPunchAndGrabUnitFeature(
+  attacker: BattleCreatureState | undefined,
+): BattleUnitFeatureDecisionHole["unitFeature"] | null {
+  const support = grapplerSupportProfileRefForCombatant(attacker);
+  return support === null
+    ? null
+    : {
+        unitId: support.unitRef.unitId,
+        label: "Punch and Grab",
+      };
+}
+
+function grapplerPunchAndGrabDecisionHole(
+  eligibility: GrapplerPunchAndGrabEligibility,
+): BattleUnitFeatureDecisionHole {
+  return {
+    kind: "unitFeatureDecision",
+    holeId: GRAPPLER_PUNCH_AND_GRAB_DECISION_HOLE_ID,
+    holeInstanceKey: GRAPPLER_PUNCH_AND_GRAB_DECISION_HOLE_INSTANCE,
+    label: "Use Punch and Grab",
+    unitFeature: eligibility.unitFeature,
+    choices: ["use", "decline"],
+  };
+}
+
+function grappleFactsForUnarmedStrikeHit(input: {
+  readonly attackerId: CombatantId;
+  readonly targetId: CombatantId;
+  readonly attack: SupportedAttackActionOption;
+  readonly targetSpatialFacts: readonly BattleTargetSpatialFact[];
+}): readonly BattleTargetSpatialFact[] {
+  if (
+    input.targetSpatialFacts.some(
+      (fact) =>
+        fact.kind === "grappleTargetWithinReach" &&
+        fact.grapplerId === input.attackerId &&
+        fact.targetId === input.targetId,
+    )
+  ) {
+    return input.targetSpatialFacts;
+  }
+  const attackName = attackActionOptionName(input.attack);
+  return input.targetSpatialFacts.some(
+    (fact) =>
+      fact.kind === "attackTargetInMeleeReach" &&
+      fact.actorId === input.attackerId &&
+      fact.targetId === input.targetId &&
+      fact.attackName === attackName,
+  )
+    ? [
+        ...input.targetSpatialFacts,
+        {
+          kind: "grappleTargetWithinReach" as const,
+          grapplerId: input.attackerId,
+          targetId: input.targetId,
+        },
+      ]
+    : input.targetSpatialFacts;
+}
+
+function resolveGrapplerPunchAndGrabAfterHit(input: {
+  readonly state: BattleState;
+  readonly subject: BattleAttackHostSubject;
+  readonly attackerId: CombatantId;
+  readonly targetId: CombatantId;
+  readonly attack: SupportedAttackActionOption;
+  readonly fillSet: Extract<AttackFillSet, { readonly tag: "ok" }>;
+}):
+  | { readonly tag: "ok"; readonly state: BattleState }
+  | { readonly tag: "result"; readonly result: BattleResolutionResult } {
+  const eligibility = grapplerPunchAndGrabEligibilityForHit({
+    state: input.state,
+    subject: input.subject,
+    attackerId: input.attackerId,
+    targetId: input.targetId,
+    attack: input.attack,
+    targetSpatialFacts: input.fillSet.targetSpatialFacts,
+  });
+  if (eligibility === null) {
+    return grapplerPunchAndGrabFillIsAbsent(input.fillSet)
+      ? { tag: "ok", state: input.state }
+      : {
+          tag: "result",
+          result: invalidResult(
+            input.state,
+            "invalidFill",
+            "Grappler Punch and Grab is only valid after an eligible Unarmed Strike hit.",
+          ),
+        };
+  }
+  const decisionHole = grapplerPunchAndGrabDecisionHole(eligibility);
+  if (input.fillSet.grapplerPunchAndGrabDecision === undefined) {
+    if (input.fillSet.grapplerPunchAndGrabOutcome !== undefined) {
+      return {
+        tag: "result",
+        result: invalidResult(
+          input.state,
+          "invalidFill",
+          "Grappler Punch and Grab outcome requires choosing to use Punch and Grab.",
+        ),
+      };
+    }
+    return {
+      tag: "result",
+      result: needsHolesResult(input.state, input.subject, [decisionHole]),
+    };
+  }
+  if (
+    input.fillSet.grapplerPunchAndGrabDecision.holeId !== decisionHole.holeId
+  ) {
+    return {
+      tag: "result",
+      result: invalidResult(
+        input.state,
+        "invalidFill",
+        "Grappler Punch and Grab decision uses the wrong hole.",
+      ),
+    };
+  }
+  if (input.fillSet.grapplerPunchAndGrabDecision.value === "decline") {
+    return input.fillSet.grapplerPunchAndGrabOutcome === undefined
+      ? { tag: "ok", state: input.state }
+      : {
+          tag: "result",
+          result: invalidResult(
+            input.state,
+            "invalidFill",
+            "Grappler Punch and Grab outcome requires using Punch and Grab.",
+          ),
+        };
+  }
+  if (input.fillSet.grapplerPunchAndGrabDecision.value !== "use") {
+    return {
+      tag: "result",
+      result: invalidResult(
+        input.state,
+        "invalidFill",
+        "Grappler Punch and Grab decision must be use or decline.",
+      ),
+    };
+  }
+  if (input.fillSet.grapplerPunchAndGrabOutcome === undefined) {
+    return {
+      tag: "result",
+      result: needsHolesResult(input.state, input.subject, [
+        grappleOutcomeHole(eligibility.link),
+      ]),
+    };
+  }
+  const usedState = {
+    ...input.state,
+    currentTurnResources: {
+      ...input.state.currentTurnResources,
+      grapplerPunchAndGrabUsedThisTurn: [
+        ...input.state.currentTurnResources.grapplerPunchAndGrabUsedThisTurn,
+        input.attackerId,
+      ],
+    },
+  };
+  return {
+    tag: "ok",
+    state: applyGrappleSavingThrowOutcome({
+      state: usedState,
+      link: eligibility.link,
+      outcome: input.fillSet.grapplerPunchAndGrabOutcome.value,
+    }),
+  };
+}
+
+function grapplerPunchAndGrabFillIsAbsent(
+  fillSet: Extract<AttackFillSet, { readonly tag: "ok" }>,
+): boolean {
+  return (
+    fillSet.grapplerPunchAndGrabDecision === undefined &&
+    fillSet.grapplerPunchAndGrabOutcome === undefined
+  );
 }
 
 export function resolveSelectedAttackProcedure(
@@ -438,11 +670,46 @@ export function resolveSelectedAttackProcedure(
       "Attack roll mode does not match the current attack-roll rule.",
     );
   }
-
   const attacker = input.state.combatants.get(attackerId);
+  if (
+    d20TestNaturalOneRerollRollDecisionRequired({
+      actor: attacker,
+      originalNaturalD20: Number(fillSet.attackRoll.naturalD20),
+      decision: fillSet.attackRoll.d20TestNaturalOneReroll,
+    })
+  ) {
+    return needsHolesResult(input.state, input.subject, [
+      attackRollHoleWithD20TestNaturalOneRerollOption(
+        attackRollHole(
+          attacker,
+          attack,
+          requiredRollMode,
+          attackRollOngoingFeatureActivations(input.state, attackerId, attack),
+        ),
+      ),
+    ]);
+  }
+  const d20TestNaturalOneRerollIssue = d20TestNaturalOneRerollRollIssue({
+    actor: attacker,
+    originalNaturalD20: Number(fillSet.attackRoll.naturalD20),
+    decision: fillSet.attackRoll.d20TestNaturalOneReroll,
+    requiredRollMode,
+    otherD20RerollPresent: fillSet.attackRoll.spellAttackReroll !== undefined,
+  });
+  if (d20TestNaturalOneRerollIssue !== null) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      d20TestNaturalOneRerollIssue,
+    );
+  }
+  const effectiveAttackRoll = effectiveD20TestNaturalOneRerollAttackRoll(
+    fillSet.attackRoll,
+  );
+
   const criticalThreshold = criticalThresholdForAttack(attacker, attack);
   const ordinaryHit = attackRollHitsWithCriticalThreshold(
-    fillSet.attackRoll,
+    effectiveAttackRoll,
     currentArmorClass(activeEffectArmorClass(target)),
     criticalThreshold,
   );
@@ -451,7 +718,7 @@ export function resolveSelectedAttackProcedure(
     subject: input.subject,
     attackerId: attackerId,
     targetId: target.combatantId,
-    attackRoll: fillSet.attackRoll,
+    attackRoll: effectiveAttackRoll,
     ordinaryHit,
   });
   if (
@@ -467,6 +734,13 @@ export function resolveSelectedAttackProcedure(
     );
   }
   const hit = ordinaryHit || missToHitReplacement !== null;
+  if (!hit && !grapplerPunchAndGrabFillIsAbsent(fillSet)) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Grappler Punch and Grab is only valid after an eligible Unarmed Strike hit.",
+    );
+  }
   const attackRollState = battleStateAfterTargetActionEarlyEndForActor(
     input.state,
     attackerId,
@@ -487,11 +761,11 @@ export function resolveSelectedAttackProcedure(
     {
       subject: input.subject,
       targetId: target.combatantId,
-      attackRoll: fillSet.attackRoll,
+      attackRoll: effectiveAttackRoll,
     },
   );
   const critical = attackRollIsCriticalHit(
-    fillSet.attackRoll,
+    effectiveAttackRoll,
     criticalThreshold,
   );
   if (!hit && fillSet.mirrorImageDuplicateRoll !== undefined) {
@@ -547,7 +821,7 @@ export function resolveSelectedAttackProcedure(
         attackerId,
         target.combatantId,
         attack,
-        fillSet.attackRoll,
+        effectiveAttackRoll,
         fillSet.targetSpatialFacts,
       )
     : [];
@@ -588,7 +862,7 @@ export function resolveSelectedAttackProcedure(
       : fixedAttackDamageByTypeEntries(
           attackRolledState.combatants.get(attackerId),
           attack,
-          fillSet.attackRoll,
+          effectiveAttackRoll,
         )
     : null;
   const fixedDamageAmount =
@@ -607,13 +881,13 @@ export function resolveSelectedAttackProcedure(
         trigger: "attackHit",
         attackerId: attackerId,
         targetId: target.combatantId,
-        attackRoll: fillSet.attackRoll,
+        attackRoll: effectiveAttackRoll,
         attackKind: attackKindForDeflectRedirect(attack),
         attackHitTriggerKind: attackHitTriggerKind(attack),
         damageTypes: attackPotentialDamageTypes(
           attack,
           critical,
-          fillSet.attackRoll,
+          effectiveAttackRoll,
           eligibleDamageRiders,
           spellWeaponDamageRiders,
           spellMarkedDamageRiders,
@@ -832,10 +1106,22 @@ export function resolveSelectedAttackProcedure(
         ]);
       }
     }
+    const grapplerPunchAndGrab =
+      resolveGrapplerPunchAndGrabAfterHit({
+        state: sapRedirectState,
+        subject: input.subject,
+        attackerId,
+        targetId: target.combatantId,
+        attack,
+        fillSet,
+      });
+    if (grapplerPunchAndGrab.tag === "result") {
+      return grapplerPunchAndGrab.result;
+    }
     const primaryConcentrationSavingThrows =
       primaryAttackConcentrationSavingThrows(input.fills);
     const attackDamageReactionWindow = maybeOpenInterruptWindow(
-      sapRedirectState,
+      grapplerPunchAndGrab.state,
       {
         trigger: "attackDamage",
         continuation: {
@@ -880,7 +1166,7 @@ export function resolveSelectedAttackProcedure(
           );
     const concentrationSaveCheck =
       damageLifecycleConcentrationSavingThrowFillCheck({
-        state: sapRedirectState,
+        state: grapplerPunchAndGrab.state,
         target: spellReduction.target,
         damageAmount: reducedFixedDamageAmount,
         fills: primaryConcentrationSavingThrows,
@@ -889,7 +1175,7 @@ export function resolveSelectedAttackProcedure(
       const pendingConcentrationSave = concentrationSaveCheck.holes[0];
       if (pendingConcentrationSave !== undefined) {
         return needsAttackDamageConcentrationResult({
-          state: sapRedirectState,
+          state: grapplerPunchAndGrab.state,
           subject: input.subject,
           attack,
           continuation: {
@@ -917,13 +1203,13 @@ export function resolveSelectedAttackProcedure(
     }
     const hideousLaughterSaveCheck =
       damageLifecycleHideousLaughterDamageRepeatSaveFillCheck({
-        state: sapRedirectState,
+        state: grapplerPunchAndGrab.state,
         target: spellReduction.target,
         damageAmount: reducedFixedDamageAmount,
         fills: fillSet.hideousLaughterDamageRepeatSaves,
       });
     if (hideousLaughterSaveCheck.tag === "needsHoles") {
-      return needsHolesResult(sapRedirectState, input.subject, [
+      return needsHolesResult(grapplerPunchAndGrab.state, input.subject, [
         ...hideousLaughterSaveCheck.holes,
       ]);
     }
@@ -936,7 +1222,7 @@ export function resolveSelectedAttackProcedure(
     }
     const spent = spendAttackProcedure(
       applyAttackDamageAmount(
-        sapRedirectState,
+        grapplerPunchAndGrab.state,
         attackerId,
         target.combatantId,
         toDamageAmount(reducedFixedDamageAmount),
@@ -1009,7 +1295,7 @@ export function resolveSelectedAttackProcedure(
       attackDamageHole(
         attack,
         critical,
-        fillSet.attackRoll,
+        effectiveAttackRoll,
         eligibleDamageRiders,
         spellWeaponDamageRiders,
         spellMarkedDamageRiders,
@@ -1042,7 +1328,7 @@ export function resolveSelectedAttackProcedure(
       fillSet.damageRoll,
       attack,
       critical,
-      fillSet.attackRoll,
+      effectiveAttackRoll,
       eligibleDamageRiders,
       spellWeaponDamageRiders,
       spellMarkedDamageRiders,
@@ -1061,7 +1347,7 @@ export function resolveSelectedAttackProcedure(
       attack,
       fillSet.damageRoll,
       critical,
-      fillSet.attackRoll,
+      effectiveAttackRoll,
       selectedDamageRiders,
       spellWeaponDamageRiders,
       spellMarkedDamageRiders,
@@ -1198,10 +1484,22 @@ export function resolveSelectedAttackProcedure(
         ]);
       }
     }
+    const grapplerPunchAndGrab =
+      resolveGrapplerPunchAndGrabAfterHit({
+        state: sapRedirectState,
+        subject: input.subject,
+        attackerId,
+        targetId: target.combatantId,
+        attack,
+        fillSet,
+      });
+    if (grapplerPunchAndGrab.tag === "result") {
+      return grapplerPunchAndGrab.result;
+    }
     const primaryConcentrationSavingThrows =
       primaryAttackConcentrationSavingThrows(input.fills);
     const attackDamageReactionWindow = maybeOpenInterruptWindow(
-      sapRedirectState,
+      grapplerPunchAndGrab.state,
       {
         trigger: "attackDamage",
         continuation: {
@@ -1249,7 +1547,7 @@ export function resolveSelectedAttackProcedure(
           );
     const concentrationSaveCheck =
       damageLifecycleConcentrationSavingThrowFillCheck({
-        state: sapRedirectState,
+        state: grapplerPunchAndGrab.state,
         target: spellReduction.target,
         damageAmount: reducedDamageAmount,
         fills: primaryConcentrationSavingThrows,
@@ -1258,7 +1556,7 @@ export function resolveSelectedAttackProcedure(
       const pendingConcentrationSave = concentrationSaveCheck.holes[0];
       if (pendingConcentrationSave !== undefined) {
         return needsAttackDamageConcentrationResult({
-          state: sapRedirectState,
+          state: grapplerPunchAndGrab.state,
           subject: input.subject,
           attack,
           continuation: {
@@ -1289,13 +1587,13 @@ export function resolveSelectedAttackProcedure(
     }
     const hideousLaughterSaveCheck =
       damageLifecycleHideousLaughterDamageRepeatSaveFillCheck({
-        state: sapRedirectState,
+        state: grapplerPunchAndGrab.state,
         target: spellReduction.target,
         damageAmount: reducedDamageAmount,
         fills: fillSet.hideousLaughterDamageRepeatSaves,
       });
     if (hideousLaughterSaveCheck.tag === "needsHoles") {
-      return needsHolesResult(sapRedirectState, input.subject, [
+      return needsHolesResult(grapplerPunchAndGrab.state, input.subject, [
         ...hideousLaughterSaveCheck.holes,
       ]);
     }
@@ -1308,7 +1606,7 @@ export function resolveSelectedAttackProcedure(
     }
     const spent = spendAttackProcedure(
       applyAttackDamageAmount(
-        sapRedirectState,
+        grapplerPunchAndGrab.state,
         attackerId,
         target.combatantId,
         toDamageAmount(reducedDamageAmount),
@@ -1429,7 +1727,9 @@ function attackPostMirrorImageFillsArePresent(
     fillSet.huntersPreyHordeBreakerTarget !== undefined ||
     fillSet.huntersPreyHordeBreakerAttackRoll !== undefined ||
     fillSet.huntersPreyHordeBreakerDamageRoll !== undefined ||
-    fillSet.huntersPreyHordeBreakerDamageDispositionFilled
+    fillSet.huntersPreyHordeBreakerDamageDispositionFilled ||
+    fillSet.grapplerPunchAndGrabDecision !== undefined ||
+    fillSet.grapplerPunchAndGrabOutcome !== undefined
   );
 }
 
@@ -1686,6 +1986,58 @@ function resolveWeaponMasteryCleaveAfterPrimaryDamage(input: {
       ),
     };
   }
+  const attacker = input.state.combatants.get(input.subject.actorId);
+  if (
+    d20TestNaturalOneRerollRollDecisionRequired({
+      actor: attacker,
+      originalNaturalD20: Number(
+        input.fillSet.weaponMasteryCleaveAttackRoll.value.naturalD20,
+      ),
+      decision:
+        input.fillSet.weaponMasteryCleaveAttackRoll.value
+          .d20TestNaturalOneReroll,
+    })
+  ) {
+    return {
+      tag: "result",
+      result: needsHolesResult(input.state, input.subject, [
+        attackRollHoleWithD20TestNaturalOneRerollOption(
+          weaponMasteryCleaveAttackRollHole(
+            input.state,
+            input.subject.actorId,
+            secondTargetId,
+            cleaveAttack,
+            cleaveTargetFacts,
+          ),
+        ),
+      ]),
+    };
+  }
+  const cleaveD20TestNaturalOneRerollIssue =
+    d20TestNaturalOneRerollRollIssue({
+      actor: attacker,
+      originalNaturalD20: Number(
+        input.fillSet.weaponMasteryCleaveAttackRoll.value.naturalD20,
+      ),
+      decision:
+        input.fillSet.weaponMasteryCleaveAttackRoll.value
+          .d20TestNaturalOneReroll,
+      requiredRollMode,
+    });
+  if (cleaveD20TestNaturalOneRerollIssue !== null) {
+    return {
+      tag: "result",
+      result: invalidResult(
+        input.state,
+        "invalidFill",
+        cleaveD20TestNaturalOneRerollIssue,
+      ),
+    };
+  }
+  const effectiveCleaveAttackRoll =
+    effectiveD20TestNaturalOneRerollAttackRoll(
+      input.fillSet.weaponMasteryCleaveAttackRoll.value,
+    );
   const secondTarget = input.state.combatants.get(secondTargetId);
   if (secondTarget === undefined) {
     return {
@@ -1702,7 +2054,7 @@ function resolveWeaponMasteryCleaveAfterPrimaryDamage(input: {
     cleaveAttack,
   );
   const ordinaryCleaveHit = attackRollHitsWithCriticalThreshold(
-    input.fillSet.weaponMasteryCleaveAttackRoll.value,
+    effectiveCleaveAttackRoll,
     currentArmorClass(activeEffectArmorClass(secondTarget)),
     cleaveCriticalThreshold,
   );
@@ -1711,7 +2063,7 @@ function resolveWeaponMasteryCleaveAfterPrimaryDamage(input: {
     subject: input.subject,
     attackerId: input.subject.actorId,
     targetId: secondTargetId,
-    attackRoll: input.fillSet.weaponMasteryCleaveAttackRoll.value,
+    attackRoll: effectiveCleaveAttackRoll,
     ordinaryHit: ordinaryCleaveHit,
   });
   if (
@@ -1747,11 +2099,11 @@ function resolveWeaponMasteryCleaveAfterPrimaryDamage(input: {
     {
       subject: input.subject,
       targetId: secondTargetId,
-      attackRoll: input.fillSet.weaponMasteryCleaveAttackRoll.value,
+      attackRoll: effectiveCleaveAttackRoll,
     },
   );
   const cleaveCritical = attackRollIsCriticalHit(
-    input.fillSet.weaponMasteryCleaveAttackRoll.value,
+    effectiveCleaveAttackRoll,
     cleaveCriticalThreshold,
   );
   if (cleaveHit && input.handledInterruptTrigger !== "attackHit") {
@@ -1761,13 +2113,13 @@ function resolveWeaponMasteryCleaveAfterPrimaryDamage(input: {
         trigger: "attackHit",
         attackerId: input.subject.actorId,
         targetId: secondTargetId,
-        attackRoll: input.fillSet.weaponMasteryCleaveAttackRoll.value,
+        attackRoll: effectiveCleaveAttackRoll,
         attackKind: attackKindForDeflectRedirect(cleaveAttack),
         attackHitTriggerKind: attackHitTriggerKind(cleaveAttack),
         damageTypes: attackPotentialDamageTypes(
           cleaveAttack,
           cleaveCritical,
-          input.fillSet.weaponMasteryCleaveAttackRoll.value,
+          effectiveCleaveAttackRoll,
           [],
           [],
           [],
@@ -1830,7 +2182,7 @@ function resolveWeaponMasteryCleaveAfterPrimaryDamage(input: {
         weaponMasteryCleaveDamageHole(
           cleaveAttack,
           cleaveCritical,
-          input.fillSet.weaponMasteryCleaveAttackRoll.value,
+          effectiveCleaveAttackRoll,
         ),
       ]),
     };
@@ -1848,7 +2200,7 @@ function resolveWeaponMasteryCleaveAfterPrimaryDamage(input: {
     input.fillSet.weaponMasteryCleaveDamageRoll.value,
     cleaveAttack,
     cleaveCritical,
-    input.fillSet.weaponMasteryCleaveAttackRoll.value,
+    effectiveCleaveAttackRoll,
     [],
     [],
     [],
@@ -1864,7 +2216,7 @@ function resolveWeaponMasteryCleaveAfterPrimaryDamage(input: {
     cleaveAttack,
     input.fillSet.weaponMasteryCleaveDamageRoll,
     cleaveCritical,
-    input.fillSet.weaponMasteryCleaveAttackRoll.value,
+    effectiveCleaveAttackRoll,
   );
   const cleaveDamageSource = cleaveAttackRolledState.combatants.get(
     input.subject.actorId,
@@ -2049,13 +2401,16 @@ function attackFollowUpFillsAfterPrimaryDamage(
 ): readonly BattleFill[] {
   const primaryConcentrationSavingThrows =
     primaryAttackConcentrationSavingThrows(fills);
-  return primaryConcentrationSavingThrows.length === 0
-    ? fills
-    : fills.filter(
-        (fill) =>
-          fill.kind !== "concentrationSavingThrow" ||
-          !primaryConcentrationSavingThrows.includes(fill),
-      );
+  return fills.filter(
+    (fill) =>
+      !(
+        fill.kind === "unitFeatureDecision" &&
+        fill.holeId === GRAPPLER_PUNCH_AND_GRAB_DECISION_HOLE_ID
+      ) &&
+      fill.kind !== "grappleOutcome" &&
+      (fill.kind !== "concentrationSavingThrow" ||
+        !primaryConcentrationSavingThrows.includes(fill)),
+  );
 }
 
 function primaryAttackConcentrationSavingThrows(
@@ -2317,6 +2672,58 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
       ),
     };
   }
+  const attacker = input.state.combatants.get(input.subject.actorId);
+  if (
+    d20TestNaturalOneRerollRollDecisionRequired({
+      actor: attacker,
+      originalNaturalD20: Number(
+        input.fillSet.huntersPreyHordeBreakerAttackRoll.value.naturalD20,
+      ),
+      decision:
+        input.fillSet.huntersPreyHordeBreakerAttackRoll.value
+          .d20TestNaturalOneReroll,
+    })
+  ) {
+    return {
+      tag: "result",
+      result: needsHolesResult(input.state, input.subject, [
+        attackRollHoleWithD20TestNaturalOneRerollOption(
+          huntersPreyHordeBreakerAttackRollHole(
+            input.state,
+            input.subject.actorId,
+            secondTargetId,
+            input.attack,
+            targetFacts,
+          ),
+        ),
+      ]),
+    };
+  }
+  const hordeBreakerD20TestNaturalOneRerollIssue =
+    d20TestNaturalOneRerollRollIssue({
+      actor: attacker,
+      originalNaturalD20: Number(
+        input.fillSet.huntersPreyHordeBreakerAttackRoll.value.naturalD20,
+      ),
+      decision:
+        input.fillSet.huntersPreyHordeBreakerAttackRoll.value
+          .d20TestNaturalOneReroll,
+      requiredRollMode,
+    });
+  if (hordeBreakerD20TestNaturalOneRerollIssue !== null) {
+    return {
+      tag: "result",
+      result: invalidResult(
+        input.state,
+        "invalidFill",
+        hordeBreakerD20TestNaturalOneRerollIssue,
+      ),
+    };
+  }
+  const effectiveHordeBreakerAttackRoll =
+    effectiveD20TestNaturalOneRerollAttackRoll(
+      input.fillSet.huntersPreyHordeBreakerAttackRoll.value,
+    );
   const secondTarget = input.state.combatants.get(secondTargetId);
   if (secondTarget === undefined) {
     return {
@@ -2333,7 +2740,7 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
     input.attack,
   );
   const hit = attackRollHitsWithCriticalThreshold(
-    input.fillSet.huntersPreyHordeBreakerAttackRoll.value,
+    effectiveHordeBreakerAttackRoll,
     currentArmorClass(activeEffectArmorClass(secondTarget)),
     criticalThreshold,
   );
@@ -2348,7 +2755,7 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
     secondTargetId,
   );
   const critical = attackRollIsCriticalHit(
-    input.fillSet.huntersPreyHordeBreakerAttackRoll.value,
+    effectiveHordeBreakerAttackRoll,
     criticalThreshold,
   );
   const hordeBreakerSpellWeaponDamageRiders = hit
@@ -2369,7 +2776,7 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
         input.subject.actorId,
         secondTargetId,
         input.attack,
-        input.fillSet.huntersPreyHordeBreakerAttackRoll.value,
+        effectiveHordeBreakerAttackRoll,
         targetFacts,
       )
     : [];
@@ -2384,13 +2791,13 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
         trigger: "attackHit",
         attackerId: input.subject.actorId,
         targetId: secondTargetId,
-        attackRoll: input.fillSet.huntersPreyHordeBreakerAttackRoll.value,
+        attackRoll: effectiveHordeBreakerAttackRoll,
         attackKind: attackKindForDeflectRedirect(input.attack),
         attackHitTriggerKind: attackHitTriggerKind(input.attack),
         damageTypes: attackPotentialDamageTypes(
           input.attack,
           critical,
-          input.fillSet.huntersPreyHordeBreakerAttackRoll.value,
+          effectiveHordeBreakerAttackRoll,
           hordeBreakerEligibleDamageRiders,
           hordeBreakerSpellWeaponDamageRiders,
           hordeBreakerSpellMarkedDamageRiders,
@@ -2435,7 +2842,7 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
         huntersPreyHordeBreakerDamageHole(
           input.attack,
           critical,
-          input.fillSet.huntersPreyHordeBreakerAttackRoll.value,
+          effectiveHordeBreakerAttackRoll,
           hordeBreakerEligibleDamageRiders,
           hordeBreakerSpellWeaponDamageRiders,
           hordeBreakerSpellMarkedDamageRiders,
@@ -2472,7 +2879,7 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
     input.fillSet.huntersPreyHordeBreakerDamageRoll.value,
     input.attack,
     critical,
-    input.fillSet.huntersPreyHordeBreakerAttackRoll.value,
+    effectiveHordeBreakerAttackRoll,
     hordeBreakerSelectedDamageRiders,
     hordeBreakerSpellWeaponDamageRiders,
     hordeBreakerSpellMarkedDamageRiders,
@@ -2488,7 +2895,7 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
     input.attack,
     input.fillSet.huntersPreyHordeBreakerDamageRoll,
     critical,
-    input.fillSet.huntersPreyHordeBreakerAttackRoll.value,
+    effectiveHordeBreakerAttackRoll,
     hordeBreakerSelectedDamageRiders,
     hordeBreakerSpellWeaponDamageRiders,
     hordeBreakerSpellMarkedDamageRiders,

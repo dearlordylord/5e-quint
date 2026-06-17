@@ -127,6 +127,9 @@ const requiredFirstVerticalUnitIds = [
   "species_dragonborn",
   "species_dwarf",
   "species_elf",
+  "species_gnome",
+  "species_halfling",
+  "species_human",
   "species_goliath",
   "species_orc",
   "species_tiefling",
@@ -156,9 +159,14 @@ const requiredFirstVerticalUnitIds = [
   "feat_archery",
   "feat_boon_of_combat_prowess",
   "defense",
+  "feat_great_weapon_fighting",
+  "feat_grappler",
   "feat_magic_initiate_cleric",
+  "feat_magic_initiate_druid",
   "feat_magic_initiate_wizard",
   "feat_savage_attacker",
+  "feat_skilled",
+  "feat_two_weapon_fighting",
   "mastery_cleave",
   "mastery_sap",
   "orc_adrenaline_rush",
@@ -170,6 +178,16 @@ const requiredFirstVerticalUnitIds = [
   "species_dragonborn_darkvision",
   "dwarf_darkvision",
   "dwarf_dwarven_resilience",
+  "species_gnome_darkvision",
+  "species_gnome_gnomish_cunning",
+  "species_gnome_gnomish_lineage",
+  "species_halfling_brave",
+  "species_halfling_nimbleness",
+  "species_halfling_luck",
+  "species_halfling_naturally_stealthy",
+  "species_human_resourceful",
+  "species_human_skillful",
+  "species_human_versatile",
   "species_goliath_powerful_build",
   "species_tiefling_darkvision",
   "fire_bolt",
@@ -6008,6 +6026,19 @@ describe("SRD Unit catalog boundary", () => {
       }),
     );
 
+    expect(result.catalog.requireUnit("feat_magic_initiate_druid")).toEqual(
+      expect.objectContaining({
+        category: "origin",
+        id: "feat_magic_initiate_druid",
+        kind: "feat",
+        mechanics: {
+          family: "magic_initiate",
+          spellList: "druid",
+        },
+        name: "Magic Initiate (Druid)",
+      }),
+    );
+
     expect(result.catalog.requireUnit("background_sage")).toMatchObject({
       kind: "background",
       originFeatId: "feat_magic_initiate_wizard",
@@ -6024,6 +6055,164 @@ describe("SRD Unit catalog boundary", () => {
         name: "Magic Initiate (Wizard)",
       }),
     );
+  });
+
+  test("authors Skilled as an Origin feat with three skill-or-tool proficiency choices", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag !== "ok") return;
+
+    const skilled = result.catalog.requireUnit("feat_skilled");
+
+    expect(skilled).toMatchObject({
+      category: "origin",
+      id: "feat_skilled",
+      kind: "feat",
+      mechanics: {
+        family: "passive",
+        grants: [
+          {
+            kind: "grant_proficiency",
+            proficiency: {
+              count: 3,
+              kind: "choice",
+              options: expect.arrayContaining([
+                { kind: "skill", skill: "perception" },
+                { kind: "tool", toolId: "alchemists_supplies" },
+                { kind: "tool", toolId: "thieves_tools" },
+                { kind: "tool", toolId: "tool_lute" },
+              ]),
+            },
+          },
+        ],
+      },
+      name: "Skilled",
+      provenance: {
+        kind: "srd-5.2.1",
+        section: "Feats.md:53-59",
+      },
+    });
+  });
+
+  test("authors Grappler as a General feat with typed grapple benefit boundaries", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag !== "ok") return;
+
+    const grappler = result.catalog.requireUnit("feat_grappler");
+
+    expect(grappler).toMatchObject({
+      abilityScoreIncreaseChoice: {
+        abilityScope: {
+          abilities: ["str", "dex"],
+          kind: "specific_abilities",
+        },
+        maxScore: 20,
+        methods: [{ kind: "one_score", increase: 1 }],
+      },
+      category: "general",
+      id: "feat_grappler",
+      kind: "feat",
+      mechanics: {
+        attackAdvantage: {
+          mode: "advantage",
+          on: ["attack_roll"],
+          target: "creature_grappled_by_you",
+        },
+        family: "grappler",
+        fastWrestler: {
+          movementCost: "no_extra_grapple_drag_cost",
+          targetSize: "your_size_or_smaller",
+        },
+        punchAndGrab: {
+          options: ["damage", "grapple"],
+          trigger: "attack_action_unarmed_strike_hit_on_turn",
+          usageLimit: { kind: "once_per_turn" },
+        },
+      },
+      name: "Grappler",
+      provenance: {
+        kind: "srd-5.2.1",
+        section: "Feats.md:73-85",
+      },
+    });
+  });
+
+  test("authors Great Weapon Fighting as a Fighting Style feat with a typed damage die floor", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag !== "ok") return;
+
+    const greatWeaponFighting = result.catalog.requireUnit(
+      "feat_great_weapon_fighting",
+    );
+
+    expect(greatWeaponFighting).toMatchObject({
+      category: "fighting_style",
+      id: "feat_great_weapon_fighting",
+      kind: "feat",
+      mechanics: {
+        effect: {
+          dieScope: "attack_damage_dice",
+          kind: "floor_damage_die_results",
+          minimumResult: 3,
+        },
+        family: "damage_die_floor",
+        optional: true,
+        trigger: {
+          attackWeapon: {
+            kind: "melee_weapon_held_with_two_hands",
+            propertyGate: "two_handed_or_versatile",
+          },
+          kind: "attack_damage_roll",
+        },
+      },
+      name: "Great Weapon Fighting",
+      provenance: {
+        kind: "srd-5.2.1",
+        section: "Feats.md:103-107",
+      },
+    });
+  });
+
+  test("authors Two-Weapon Fighting as a Fighting Style feat with a typed Light extra attack damage modifier fact", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag !== "ok") return;
+
+    const twoWeaponFighting = result.catalog.requireUnit(
+      "feat_two_weapon_fighting",
+    );
+
+    expect(twoWeaponFighting).toMatchObject({
+      category: "fighting_style",
+      id: "feat_two_weapon_fighting",
+      kind: "feat",
+      mechanics: {
+        effect: {
+          appliesWhen: "not_already_adding_ability_modifier",
+          kind: "permit_attack_damage_ability_modifier",
+          modifierSource: "attack_ability_modifier",
+        },
+        family: "light_extra_attack_damage_ability_modifier",
+        optional: true,
+        trigger: {
+          attackWeapon: {
+            kind: "weapon_with_light_property",
+          },
+          kind: "light_property_extra_attack_damage_roll",
+        },
+      },
+      name: "Two-Weapon Fighting",
+      provenance: {
+        kind: "srd-5.2.1",
+        section: "Feats.md:109-113",
+      },
+    });
   });
 
   test("authors Criminal's SRD Alert origin feat as one catalog identity", () => {
@@ -6323,6 +6512,266 @@ describe("SRD Unit catalog boundary", () => {
           optional: true,
           resetCadence: { kind: "long_rest" },
           trigger: { kind: "reduced_to_0_hp_not_killed_outright" },
+        },
+      });
+    }
+  });
+
+  test("authors Gnome species and trait source facts", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag === "ok") {
+      expect(result.catalog.requireUnit("species_gnome")).toMatchObject({
+        kind: "species",
+        species: "gnome",
+        size: { kind: "fixed", size: "small" },
+        speed: { walkFeet: 30 },
+        traits: {
+          darkvision: "species_gnome_darkvision",
+          gnomishCunning: "species_gnome_gnomish_cunning",
+          gnomishLineage: "species_gnome_gnomish_lineage",
+        },
+      });
+      expect(
+        result.catalog.requireUnit("species_gnome_darkvision"),
+      ).toMatchObject({
+        kind: "species_trait",
+        species: "gnome",
+        mechanics: {
+          family: "passive",
+          grants: [{ kind: "grant_sense", rangeFeet: 60, sense: "darkvision" }],
+        },
+      });
+      expect(
+        result.catalog.requireUnit("species_gnome_gnomish_cunning"),
+      ).toMatchObject({
+        kind: "species_trait",
+        species: "gnome",
+        mechanics: {
+          family: "passive",
+          grants: [
+            {
+              kind: "modify_roll_advantage",
+              mode: "advantage",
+              on: ["saving_throw"],
+              saveAbilityFilter: ["int", "wis", "cha"],
+            },
+          ],
+        },
+      });
+      expect(
+        result.catalog.requireUnit("species_gnome_gnomish_lineage"),
+      ).toMatchObject({
+        kind: "species_trait",
+        species: "gnome",
+        mechanics: {
+          choiceKey: "gnome_lineage",
+          family: "species_lineage_choice",
+          options: [
+            {
+              id: "forest_gnome",
+              mechanics: {
+                grants: [
+                  {
+                    kind: "grant_spell_access",
+                    mode: "known",
+                    spellId: "minor_illusion",
+                  },
+                  {
+                    kind: "grant_spell_access",
+                    mode: "prepared",
+                    spellId: "speak_with_animals",
+                  },
+                  {
+                    count: { kind: "proficiency_bonus" },
+                    kind: "grant_spell_free_casts",
+                    resetCadence: "long_rest",
+                    spellId: "speak_with_animals",
+                  },
+                ],
+              },
+            },
+            {
+              clockworkDevice: {
+                concurrentLimit: 3,
+                creation: {
+                  object: {
+                    armorClass: 5,
+                    hitPoints: 1,
+                    kind: "clockwork_device",
+                    size: "tiny",
+                  },
+                },
+              },
+              id: "rock_gnome",
+              mechanics: {
+                grants: [
+                  {
+                    kind: "grant_spell_access",
+                    mode: "known",
+                    spellId: "mending",
+                  },
+                  {
+                    kind: "grant_spell_access",
+                    mode: "known",
+                    spellId: "prestidigitation",
+                  },
+                ],
+              },
+            },
+          ],
+          spellcastingAbilityChoice: {
+            abilities: ["int", "wis", "cha"],
+            kind: "spellcasting_ability_choice",
+          },
+          timing: "species_selection",
+        },
+      });
+    }
+  });
+
+  test("authors Halfling species and trait source facts", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag === "ok") {
+      expect(result.catalog.requireUnit("species_halfling")).toMatchObject({
+        kind: "species",
+        species: "halfling",
+        size: { kind: "fixed", size: "small" },
+        speed: { walkFeet: 30 },
+        traits: {
+          brave: "species_halfling_brave",
+          halflingNimbleness: "species_halfling_nimbleness",
+          luck: "species_halfling_luck",
+          naturallyStealthy: "species_halfling_naturally_stealthy",
+        },
+      });
+      expect(
+        result.catalog.requireUnit("species_halfling_brave"),
+      ).toMatchObject({
+        kind: "species_trait",
+        species: "halfling",
+        mechanics: {
+          family: "passive",
+          grants: [
+            {
+              conditionFilter: ["frightened"],
+              kind: "modify_roll_advantage",
+              mode: "advantage",
+              on: ["saving_throw"],
+            },
+          ],
+        },
+      });
+      expect(
+        result.catalog.requireUnit("species_halfling_nimbleness"),
+      ).toMatchObject({
+        kind: "species_trait",
+        species: "halfling",
+        mechanics: {
+          canStopInOccupiedSpace: false,
+          family: "creature_space_movement_permission",
+          moveThrough: {
+            creatureSizeRelationToSelf: "larger",
+            kind: "occupied_creature_space",
+          },
+        },
+      });
+      expect(result.catalog.requireUnit("species_halfling_luck")).toMatchObject(
+        {
+          kind: "species_trait",
+          species: "halfling",
+          mechanics: {
+            family: "d20_test_natural_one_reroll",
+            optional: true,
+            reroll: {
+              kind: "reroll_triggering_d20",
+              use: "new_roll",
+            },
+            trigger: {
+              dieFace: 1,
+              kind: "d20_test_roll_is",
+            },
+          },
+        },
+      );
+      expect(
+        result.catalog.requireUnit("species_halfling_naturally_stealthy"),
+      ).toMatchObject({
+        kind: "species_trait",
+        species: "halfling",
+        mechanics: {
+          action: "hide",
+          allowedObscurement: {
+            creatureSizeRelationToSelf: "at_least_one_size_larger",
+            kind: "obscured_only_by_creature",
+          },
+          family: "hide_action_obscurement_permission",
+        },
+      });
+    }
+  });
+
+  test("authors Human species and trait source facts", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag === "ok") {
+      expect(result.catalog.requireUnit("species_human")).toMatchObject({
+        kind: "species",
+        species: "human",
+        size: { kind: "choice", options: ["medium", "small"] },
+        speed: { walkFeet: 30 },
+        traits: {
+          resourceful: "species_human_resourceful",
+          skillful: "species_human_skillful",
+          versatile: "species_human_versatile",
+        },
+      });
+      expect(
+        result.catalog.requireUnit("species_human_resourceful"),
+      ).toMatchObject({
+        kind: "species_trait",
+        species: "human",
+        mechanics: {
+          family: "rest_triggered_heroic_inspiration",
+          grant: { kind: "heroic_inspiration" },
+          trigger: { kind: "finish_rest", rest: "long" },
+        },
+      });
+      expect(
+        result.catalog.requireUnit("species_human_skillful"),
+      ).toMatchObject({
+        kind: "species_trait",
+        species: "human",
+        mechanics: {
+          family: "passive",
+          grants: [
+            {
+              kind: "grant_proficiency",
+              proficiency: {
+                count: 1,
+                kind: "choice",
+                options: expect.arrayContaining([
+                  { kind: "skill", skill: "perception" },
+                  { kind: "skill", skill: "stealth" },
+                  { kind: "skill", skill: "survival" },
+                ]),
+              },
+            },
+          ],
+        },
+      });
+      expect(
+        result.catalog.requireUnit("species_human_versatile"),
+      ).toMatchObject({
+        kind: "species_trait",
+        species: "human",
+        mechanics: {
+          family: "passive",
+          grants: [{ category: "origin", kind: "grant_feat" }],
         },
       });
     }

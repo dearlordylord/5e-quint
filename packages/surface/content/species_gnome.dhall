@@ -1,0 +1,21 @@
+let gnome =
+      { creatureType = "humanoid"
+      , description = "Gnome species source facts for Surface catalog admission."
+      , id = "species_gnome"
+      , kind = "species"
+      , name = "Gnome"
+      , provenance =
+        { kind = "srd-5.2.1"
+        , section = "Character-Creation.md:87-91; Character-Origins.md:177-203"
+        }
+      , size = { kind = "fixed", size = "small" }
+      , species = "gnome"
+      , speed.walkFeet = 30
+      , traits =
+        { darkvision = "species_gnome_darkvision"
+        , gnomishCunning = "species_gnome_gnomish_cunning"
+        , gnomishLineage = "species_gnome_gnomish_lineage"
+        }
+      }
+
+in  gnome

@@ -2,9 +2,11 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.passive-ability-check-roll-mode unit-feature.passive-damage-resistance unit-feature.passive-saving-throw-roll-mode
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L3MSPEC-11-SPECIES-SELECTED-IDENTITY-AUDIT species_dragonborn_damage_resistance dwarf_dwarven_resilience species_goliath_powerful_build
+// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L3-FOLLOWUP-HALFLING-BRAVE-RUNTIME species_halfling_brave
 // UNIT-IDENTITY-MBT-REPLAY: L3MSPEC-11-SPECIES-SELECTED-IDENTITY-AUDIT species_dragonborn_damage_resistance doDragonbornDamageResistance
 // UNIT-IDENTITY-MBT-REPLAY: L3MSPEC-11-SPECIES-SELECTED-IDENTITY-AUDIT dwarf_dwarven_resilience doDwarvenResilience
 // UNIT-IDENTITY-MBT-REPLAY: L3MSPEC-11-SPECIES-SELECTED-IDENTITY-AUDIT species_goliath_powerful_build doGoliathPowerfulBuild
+// UNIT-IDENTITY-MBT-REPLAY: L3-FOLLOWUP-HALFLING-BRAVE-RUNTIME species_halfling_brave doHalflingBrave
 import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
 import { decodeSpeciesRecordSync } from "@dnd/surface/surface/schema";
 import * as Either from "effect/Either";
@@ -25,6 +27,7 @@ import {
   dwarfDwarvenResilienceUnitId,
   oppositionSide,
   partySide,
+  speciesHalflingBraveUnitId,
   speciesDragonbornDamageResistanceUnitId,
   unitLibrary,
 } from "./unit-profile-admission-catalog-support.ts";
@@ -57,6 +60,7 @@ type SpeciesPassiveTraitLastResult =
   | "init"
   | "dragonbornDamageResistance"
   | "dwarvenResilience"
+  | "halflingBrave"
   | "goliathPowerfulBuild";
 type ProjectedRollMode = "advantage" | "disadvantage" | "normal";
 type SpeciesPassiveTraitProjection = {
@@ -66,6 +70,9 @@ type SpeciesPassiveTraitProjection = {
   readonly dwarfFireDamageAfter: number;
   readonly dwarfPoisonedSaveAdvantage: boolean;
   readonly dwarfCharmedSaveAdvantage: boolean;
+  readonly halflingFrightenedAvoidSaveAdvantage: boolean;
+  readonly halflingFrightenedEndSaveAdvantage: boolean;
+  readonly halflingPoisonedSaveAdvantage: boolean;
   readonly goliathEscapeRollMode: ProjectedRollMode;
   readonly goliathPoisonedEscapeRollMode: ProjectedRollMode;
   readonly lastResult: SpeciesPassiveTraitLastResult;
@@ -88,6 +95,9 @@ defineSelectedIdentityWitness({
     dwarfFireDamageAfter: "int",
     dwarfPoisonedSaveAdvantage: "bool",
     dwarfCharmedSaveAdvantage: "bool",
+    halflingFrightenedAvoidSaveAdvantage: "bool",
+    halflingFrightenedEndSaveAdvantage: "bool",
+    halflingPoisonedSaveAdvantage: "bool",
     goliathEscapeRollMode: "str",
     goliathPoisonedEscapeRollMode: "str",
     lastResult: "str",
@@ -121,6 +131,20 @@ defineSelectedIdentityWitness({
             lastResult: "dwarvenResilience",
           }),
           discover: () => projectDwarvenResilience(dwarvenResilienceBattle()),
+        },
+      ],
+    },
+    {
+      unitId: speciesHalflingBraveUnitId,
+      procedures: [
+        {
+          actionName: "doHalflingBrave",
+          projectionAfter: expectedProjection({
+            halflingFrightenedAvoidSaveAdvantage: true,
+            halflingFrightenedEndSaveAdvantage: true,
+            lastResult: "halflingBrave",
+          }),
+          discover: () => projectHalflingBrave(halflingBraveBattle()),
         },
       ],
     },
@@ -161,6 +185,9 @@ function expectedProjection(
     dwarfFireDamageAfter: 9,
     dwarfPoisonedSaveAdvantage: false,
     dwarfCharmedSaveAdvantage: false,
+    halflingFrightenedAvoidSaveAdvantage: false,
+    halflingFrightenedEndSaveAdvantage: false,
+    halflingPoisonedSaveAdvantage: false,
     goliathEscapeRollMode: "normal",
     goliathPoisonedEscapeRollMode: "normal",
     lastResult: "init",
@@ -286,6 +313,70 @@ function projectDwarvenResilience(
     dwarfPoisonedSaveAdvantage: poisonedSaveTargets.includes(targetId),
     dwarfCharmedSaveAdvantage: charmedSaveTargets.includes(targetId),
     lastResult: "dwarvenResilience",
+  });
+}
+
+function halflingBraveBattle(): BattleState {
+  const unit = unitLibrary.requireUnit(speciesHalflingBraveUnitId);
+  const unitRef = battleUnitRefWithSupportProfiles({
+    unitRef: { unitId: unit.id },
+    unit,
+  });
+  if (Either.isLeft(unitRef)) {
+    throw new Error(unitRef.left.message);
+  }
+  const targetId = combatantId("species-passive-halfling-target");
+  const result = startBattle({
+    battleId: battleId("species-passive-halfling-brave"),
+    combatants: [
+      characterCreature({
+        combatantId: targetId,
+        displayName: "Halfling Target",
+        initiative: 10,
+        side: partySide,
+        unitFeatures: [{ unit }],
+        characterUnitRefs: [unitRef.right],
+      }),
+      characterCreature({
+        combatantId: combatantId("species-passive-halfling-attacker"),
+        displayName: "Attacker",
+        initiative: 5,
+        side: oppositionSide,
+      }),
+    ],
+  });
+  if (Either.isLeft(result)) {
+    throw new Error(result.left.message);
+  }
+  return result.right;
+}
+
+function projectHalflingBrave(state: BattleState): SpeciesPassiveTraitProjection {
+  const targetId = combatantId("species-passive-halfling-target");
+  const target = state.combatants.get(targetId);
+  if (target === undefined) {
+    throw new Error("Expected Halfling Brave target combatant.");
+  }
+  const frightenedAvoidSaveTargets = savingThrowRollModeProjections(
+    state,
+    "wis",
+    { condition: "frightened" },
+  ).map((projection) => projection.targetId);
+  const frightenedEndSaveTargets = savingThrowRollModeProjections(
+    state,
+    "con",
+    { condition: "frightened" },
+  ).map((projection) => projection.targetId);
+  const poisonedSaveTargets = savingThrowRollModeProjections(state, "con", {
+    condition: "poisoned",
+  }).map((projection) => projection.targetId);
+  return expectedProjection({
+    halflingFrightenedAvoidSaveAdvantage:
+      frightenedAvoidSaveTargets.includes(targetId),
+    halflingFrightenedEndSaveAdvantage:
+      frightenedEndSaveTargets.includes(targetId),
+    halflingPoisonedSaveAdvantage: poisonedSaveTargets.includes(targetId),
+    lastResult: "halflingBrave",
   });
 }
 

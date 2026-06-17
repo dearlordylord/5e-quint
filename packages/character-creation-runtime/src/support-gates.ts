@@ -1,4 +1,5 @@
 // KERNEL-COVERAGE: runtime-owner CREATION.CHOICE_DISCOVERY_CARDINALITY
+// UNIT-PROFILE-COVERAGE: runtime-owner character-creation.grappler-general-feat character-creation.origin-feat-proficiency-choice character-creation.species-trait-proficiency-choice character-creation.species-origin-feat-choice character-creation.species-origin-feat-proficiency-choice
 import { Either } from "effect";
 import {
   BACKGROUND_ABILITY_SCORE_INCREASE_CHOICE_KEY,
@@ -38,6 +39,10 @@ import {
   PHASE1_LOADOUT_ARMOR_OPTION_ID,
   PHASE1_LOADOUT_SHIELD_OPTION_ID,
   PHASE1_LOADOUT_WEAPON_OPTION_ID,
+  ORIGIN_FEAT_PROFICIENCY_CHOICE_KEY,
+  SPECIES_ORIGIN_FEAT_CHOICE_KEY,
+  SPECIES_ORIGIN_FEAT_PROFICIENCY_CHOICE_KEY,
+  SPECIES_TRAIT_PROFICIENCY_CHOICE_KEY,
   SRD_ROGUE_CLASS_UNIT_ID,
   PHASE1_SHIELD_UNIT_ID,
   PHASE1_WEAPON_FLAIL_UNIT_ID,
@@ -89,7 +94,7 @@ import {
   CHARACTER_BUILD_TOOL_PROFICIENCY_IDS,
   MUSICAL_INSTRUMENT_TOOL_PROFICIENCY_IDS,
   creationChoiceOptionId,
-  isCharacterBuildToolProficiencyId,
+  type ToolProficiencyIdText,
 } from "./types.ts";
 import {
   classUnitId,
@@ -280,7 +285,16 @@ const SUPPORTED_DRAFT_OPTION_IDS_BY_PATH = {
 const SUPPORTED_SKILL_PROFICIENCY_OPTION_IDS = SURFACE_SKILLS.map((skill) =>
   proficiencyGrantSubjectOptionId({ kind: "skill", skill }),
 );
-const SUPPORTED_PROFICIENCY_GRANT_OPTION_IDS = [
+const SUPPORTED_CLASS_BACKGROUND_TOOL_PROFICIENCY_IDS = [
+  "tool_dice_set",
+  "calligraphers_supplies",
+  "herbalism_kit",
+  "thieves_tools",
+  ...MUSICAL_INSTRUMENT_TOOL_PROFICIENCY_IDS,
+] as const satisfies ReadonlyArray<ToolProficiencyIdText>;
+const SUPPORTED_CLASS_BACKGROUND_TOOL_OPTION_IDS =
+  SUPPORTED_CLASS_BACKGROUND_TOOL_PROFICIENCY_IDS.map(creationChoiceOptionId);
+const SUPPORTED_NON_TOOL_PROFICIENCY_GRANT_OPTION_IDS = [
   ...SUPPORTED_SKILL_PROFICIENCY_OPTION_IDS,
   ...WEAPON_PROFICIENCY_CATEGORIES.map((category) =>
     proficiencyGrantSubjectOptionId({ kind: "weapon_category", category }),
@@ -288,9 +302,26 @@ const SUPPORTED_PROFICIENCY_GRANT_OPTION_IDS = [
   ...ARMOR_TRAINING_CATEGORIES.map((category) =>
     proficiencyGrantSubjectOptionId({ kind: "armor_category", category }),
   ),
+] as const satisfies ReadonlyArray<CreationChoiceOptionId>;
+const SUPPORTED_CLASS_BACKGROUND_PROFICIENCY_GRANT_OPTION_IDS = [
+  ...SUPPORTED_NON_TOOL_PROFICIENCY_GRANT_OPTION_IDS,
+  ...SUPPORTED_CLASS_BACKGROUND_TOOL_PROFICIENCY_IDS.map((toolId) =>
+    proficiencyGrantSubjectOptionId({ kind: "tool", toolId }),
+  ),
+] as const satisfies ReadonlyArray<CreationChoiceOptionId>;
+const SUPPORTED_ORIGIN_FEAT_PROFICIENCY_GRANT_OPTION_IDS = [
+  ...SUPPORTED_NON_TOOL_PROFICIENCY_GRANT_OPTION_IDS,
   ...CHARACTER_BUILD_TOOL_PROFICIENCY_IDS.map((toolId) =>
     proficiencyGrantSubjectOptionId({ kind: "tool", toolId }),
   ),
+] as const satisfies ReadonlyArray<CreationChoiceOptionId>;
+const SUPPORTED_HUMAN_ORIGIN_FEAT_OPTION_IDS = [
+  creationChoiceOptionId("alert"),
+  creationChoiceOptionId("feat_magic_initiate_cleric"),
+  creationChoiceOptionId("feat_magic_initiate_druid"),
+  creationChoiceOptionId("feat_magic_initiate_wizard"),
+  creationChoiceOptionId("feat_savage_attacker"),
+  creationChoiceOptionId("feat_skilled"),
 ] as const satisfies ReadonlyArray<CreationChoiceOptionId>;
 const SUPPORTED_MUSICAL_INSTRUMENT_PROFICIENCY_OPTION_IDS =
   MUSICAL_INSTRUMENT_TOOL_PROFICIENCY_IDS.map((toolId) =>
@@ -319,6 +350,7 @@ export const CHARACTER_CREATION_SUPPORT_PROFILE = {
       ...SUPPORTED_FIGHTING_STYLE_OPTION_IDS,
       creationChoiceOptionId("feat_ability_score_improvement"),
       creationChoiceOptionId("feat_boon_of_combat_prowess"),
+      creationChoiceOptionId("feat_grappler"),
     ],
     [CLASS_SUBCLASS_CHOICE_KEY]: SRD_LEVEL_THREE_SUBCLASS_UNIT_IDS.map(
       creationChoiceOptionId,
@@ -326,7 +358,14 @@ export const CHARACTER_CREATION_SUPPORT_PROFILE = {
     [CLASS_FEATURE_ABILITY_SCORE_INCREASE_CHOICE_KEY]:
       SUPPORTED_ABILITY_SCORE_INCREASE_OPTION_IDS,
     [CLASS_FEATURE_PROFICIENCY_CHOICE_KEY]:
-      SUPPORTED_PROFICIENCY_GRANT_OPTION_IDS,
+      SUPPORTED_CLASS_BACKGROUND_PROFICIENCY_GRANT_OPTION_IDS,
+    [ORIGIN_FEAT_PROFICIENCY_CHOICE_KEY]:
+      SUPPORTED_ORIGIN_FEAT_PROFICIENCY_GRANT_OPTION_IDS,
+    [SPECIES_TRAIT_PROFICIENCY_CHOICE_KEY]:
+      SUPPORTED_SKILL_PROFICIENCY_OPTION_IDS,
+    [SPECIES_ORIGIN_FEAT_CHOICE_KEY]: SUPPORTED_HUMAN_ORIGIN_FEAT_OPTION_IDS,
+    [SPECIES_ORIGIN_FEAT_PROFICIENCY_CHOICE_KEY]:
+      SUPPORTED_ORIGIN_FEAT_PROFICIENCY_GRANT_OPTION_IDS,
     [CLASS_FEATURE_LANGUAGE_CHOICE_KEY]: LANGUAGES.map(creationChoiceOptionId),
     [DIVINE_ORDER_CHOICE_KEY]: [
       creationChoiceOptionId("protector"),
@@ -348,7 +387,8 @@ export const CHARACTER_CREATION_SUPPORT_PROFILE = {
       creationChoiceOptionId("colossus_slayer"),
       creationChoiceOptionId("horde_breaker"),
     ],
-    [CLASS_TOOL_PROFICIENCY_CHOICE_KEY]: SUPPORTED_PROFICIENCY_GRANT_OPTION_IDS,
+    [CLASS_TOOL_PROFICIENCY_CHOICE_KEY]:
+      SUPPORTED_CLASS_BACKGROUND_PROFICIENCY_GRANT_OPTION_IDS,
     [BARD_MULTICLASS_SKILL_PROFICIENCY_CHOICE_KEY]:
       SUPPORTED_SKILL_PROFICIENCY_OPTION_IDS,
     [BARD_MULTICLASS_MUSICAL_INSTRUMENT_PROFICIENCY_CHOICE_KEY]:
@@ -512,7 +552,9 @@ export function supportedHoleOptionIds(
     return hole.options
       .map((option) => option.optionId)
       .filter((optionId) =>
-        isCharacterBuildToolProficiencyId(String(optionId)),
+        SUPPORTED_CLASS_BACKGROUND_TOOL_OPTION_IDS.some(
+          (supportedOptionId) => supportedOptionId === optionId,
+        ),
       );
   }
 
@@ -681,12 +723,13 @@ export function supportedLoadoutChoiceForSource(
   );
 }
 
-export function unitRefsForSupportedClassChoice(
+export function unitRefsForSupportedSelectedUnitChoice(
   source: UnitChoiceSource,
   options: readonly { readonly unitRef?: UnitRef }[],
 ): readonly UnitRecord["id"][] {
   if (
     source.choiceKey !== CLASS_FEATURE_FEAT_CHOICE_KEY &&
+    source.choiceKey !== SPECIES_ORIGIN_FEAT_CHOICE_KEY &&
     source.choiceKey !== CLASS_SUBCLASS_CHOICE_KEY &&
     source.choiceKey !== WEAPON_MASTERY_OPTIONS_CHOICE_KEY &&
     source.choiceKey !== HUNTERS_PREY_CHOICE_KEY
@@ -706,6 +749,7 @@ export function unitRefsForSupportedClassChoice(
 function supportedAbilityScoreIncreaseOptionIds(): readonly CreationChoiceOptionId[] {
   return [
     ...abilityScoreIncreaseChoiceOptionIds({
+      abilityScope: { kind: "all_abilities" },
       maxScore: 20,
       methods: [
         { kind: "one_score", increase: 2 },
@@ -713,7 +757,16 @@ function supportedAbilityScoreIncreaseOptionIds(): readonly CreationChoiceOption
       ],
     }),
     ...abilityScoreIncreaseChoiceOptionIds({
+      abilityScope: { kind: "all_abilities" },
       maxScore: 30,
+      methods: [{ kind: "one_score", increase: 1 }],
+    }),
+    ...abilityScoreIncreaseChoiceOptionIds({
+      abilityScope: {
+        kind: "specific_abilities",
+        abilities: ["str", "dex"],
+      },
+      maxScore: 20,
       methods: [{ kind: "one_score", increase: 1 }],
     }),
   ];

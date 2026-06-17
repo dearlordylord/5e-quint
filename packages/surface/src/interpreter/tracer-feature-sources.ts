@@ -2,8 +2,14 @@ import type {
   ActivatedAbilityMechanics,
   ClassFeatureRecord,
   CompositeMagicItemMechanics,
+  CreatureSpaceMovementPermissionMechanics,
+  D20TestNaturalOneRerollMechanics,
   FeatRecord,
+  GrapplerFeatMechanics,
+  GnomishLineageMechanics,
+  HideActionObscurementPermissionMechanics,
   ItemDestructionPolicy,
+  LightExtraAttackDamageAbilityModifierFeatMechanics,
   MagicItemAttunement,
   MagicItemAttunementRestriction,
   MagicItemMechanics,
@@ -13,9 +19,11 @@ import type {
   MagicInitiateMechanics,
   OnHitTriggerMechanics,
   PassiveMechanics,
+  RestTriggeredHeroicInspirationMechanics,
   SpeciesTraitRecord,
   TriggeredReactionAbilityMechanics,
   TriggeredReplacementMechanics,
+  WeaponAttackDamageDieFloorFeatMechanics,
 } from "../surface/types.ts";
 import type { Trace, TraceEdge, TraceNode } from "./tracer-model.ts";
 import { idGen } from "./tracer-rule-labels.ts";
@@ -198,14 +206,7 @@ export function traceFeatUnit(feat: FeatRecord): Trace {
     label: `feat_root\n${feat.name}\n(${feat.category})`,
   });
 
-  const procId =
-    feat.mechanics.family === "on_hit_trigger"
-      ? traceOnHitTriggerMechanics(feat.mechanics, nodes, edges, ids)
-      : feat.mechanics.family === "triggered_replacement"
-        ? traceTriggeredReplacementMechanics(feat.mechanics, nodes, edges, ids)
-        : feat.mechanics.family === "magic_initiate"
-          ? traceMagicInitiateMechanics(feat.mechanics, nodes, ids)
-          : tracePassiveOrActivated(feat.mechanics, nodes, edges, ids);
+  const procId = traceFeatMechanics(feat.mechanics, nodes, edges, ids);
   edges.push({ from: rootId, to: procId, relation: "roots" });
 
   return {
@@ -215,6 +216,43 @@ export function traceFeatUnit(feat: FeatRecord): Trace {
     edges,
     atomKinds: [...new Set(nodes.map((n) => n.atomKind))].sort(),
   };
+}
+
+function traceFeatMechanics(
+  mechanics: FeatRecord["mechanics"],
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): string {
+  if (mechanics.family === "on_hit_trigger") {
+    return traceOnHitTriggerMechanics(mechanics, nodes, edges, ids);
+  }
+  if (mechanics.family === "triggered_replacement") {
+    return traceTriggeredReplacementMechanics(mechanics, nodes, edges, ids);
+  }
+  if (mechanics.family === "magic_initiate") {
+    return traceMagicInitiateMechanics(mechanics, nodes, ids);
+  }
+  if (mechanics.family === "grappler") {
+    return traceGrapplerFeatMechanics(mechanics, nodes, edges, ids);
+  }
+  if (mechanics.family === "damage_die_floor") {
+    return traceWeaponAttackDamageDieFloorMechanics(
+      mechanics,
+      nodes,
+      edges,
+      ids,
+    );
+  }
+  if (mechanics.family === "light_extra_attack_damage_ability_modifier") {
+    return traceLightExtraAttackDamageAbilityModifierMechanics(
+      mechanics,
+      nodes,
+      edges,
+      ids,
+    );
+  }
+  return tracePassiveOrActivated(mechanics, nodes, edges, ids);
 }
 
 function traceMagicInitiateMechanics(
@@ -231,6 +269,121 @@ function traceMagicInitiateMechanics(
       `magic_initiate\n${mechanics.spellList} spell list\n` +
       "2 cantrips + 1 level 1 spell\nspellcasting ability choice",
   });
+  return procId;
+}
+
+function traceGrapplerFeatMechanics(
+  mechanics: GrapplerFeatMechanics,
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): string {
+  const procId = ids("grappler");
+  nodes.push({
+    id: procId,
+    category: "procedure",
+    atomKind: "grappler",
+    label: "grappler\nGeneral feat battle benefits",
+  });
+
+  const punchId = ids("punch-grab");
+  nodes.push({
+    id: punchId,
+    category: "effect",
+    atomKind: "grappler_punch_and_grab",
+    label:
+      `grappler_punch_and_grab\n${mechanics.punchAndGrab.trigger}\n` +
+      `${mechanics.punchAndGrab.options.join(" + ")}\n` +
+      mechanics.punchAndGrab.usageLimit.kind,
+  });
+  edges.push({ from: procId, to: punchId, relation: "includes" });
+
+  const advantageId = ids("advantage");
+  nodes.push({
+    id: advantageId,
+    category: "effect",
+    atomKind: "grappler_attack_advantage",
+    label:
+      `grappler_attack_advantage\n${mechanics.attackAdvantage.mode}\n` +
+      `${mechanics.attackAdvantage.on.join(", ")}\n` +
+      mechanics.attackAdvantage.target,
+  });
+  edges.push({ from: procId, to: advantageId, relation: "includes" });
+
+  const wrestlerId = ids("fast-wrestler");
+  nodes.push({
+    id: wrestlerId,
+    category: "effect",
+    atomKind: "grappler_fast_wrestler",
+    label:
+      `grappler_fast_wrestler\n${mechanics.fastWrestler.movementCost}\n` +
+      mechanics.fastWrestler.targetSize,
+  });
+  edges.push({ from: procId, to: wrestlerId, relation: "includes" });
+
+  return procId;
+}
+
+function traceWeaponAttackDamageDieFloorMechanics(
+  mechanics: WeaponAttackDamageDieFloorFeatMechanics,
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): string {
+  const procId = ids("damage-floor");
+  nodes.push({
+    id: procId,
+    category: "procedure",
+    atomKind: "weapon_attack_damage_die_floor",
+    label:
+      `weapon_attack_damage_die_floor\n${mechanics.trigger.kind}\n` +
+      `${mechanics.trigger.attackWeapon.kind}\n` +
+      mechanics.trigger.attackWeapon.propertyGate,
+  });
+
+  const effectId = ids("die-floor");
+  nodes.push({
+    id: effectId,
+    category: "effect",
+    atomKind: mechanics.effect.kind,
+    label:
+      `${mechanics.effect.kind}\n${mechanics.effect.dieScope}\n` +
+      `minimum ${mechanics.effect.minimumResult}\n` +
+      (mechanics.optional ? "optional" : "required"),
+  });
+  edges.push({ from: procId, to: effectId, relation: "includes" });
+
+  return procId;
+}
+
+function traceLightExtraAttackDamageAbilityModifierMechanics(
+  mechanics: LightExtraAttackDamageAbilityModifierFeatMechanics,
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): string {
+  const procId = ids("light-extra-attack-damage-modifier");
+  nodes.push({
+    id: procId,
+    category: "procedure",
+    atomKind: "light_extra_attack_damage_ability_modifier",
+    label:
+      `light_extra_attack_damage_ability_modifier\n${mechanics.trigger.kind}\n` +
+      mechanics.trigger.attackWeapon.kind,
+  });
+
+  const effectId = ids("damage-ability-modifier");
+  nodes.push({
+    id: effectId,
+    category: "effect",
+    atomKind: mechanics.effect.kind,
+    label:
+      `${mechanics.effect.kind}\n${mechanics.effect.modifierSource}\n` +
+      `${mechanics.effect.appliesWhen}\n` +
+      (mechanics.optional ? "optional" : "required"),
+  });
+  edges.push({ from: procId, to: effectId, relation: "includes" });
+
   return procId;
 }
 
@@ -254,7 +407,29 @@ export function traceSpeciesTraitUnit(trait: SpeciesTraitRecord): Trace {
   const procId =
     trait.mechanics.family === "triggered_replacement"
       ? traceTriggeredReplacementMechanics(trait.mechanics, nodes, edges, ids)
-      : tracePassiveOrActivated(trait.mechanics, nodes, edges, ids);
+      : trait.mechanics.family === "species_lineage_choice"
+        ? traceGnomishLineageMechanics(trait.mechanics, nodes, edges, ids)
+        : trait.mechanics.family === "d20_test_natural_one_reroll"
+          ? traceD20TestNaturalOneRerollMechanics(trait.mechanics, nodes, ids)
+          : trait.mechanics.family === "creature_space_movement_permission"
+            ? traceCreatureSpaceMovementPermissionMechanics(
+                trait.mechanics,
+                nodes,
+                ids,
+              )
+            : trait.mechanics.family === "hide_action_obscurement_permission"
+              ? traceHideActionObscurementPermissionMechanics(
+                  trait.mechanics,
+                  nodes,
+                  ids,
+                )
+              : trait.mechanics.family === "rest_triggered_heroic_inspiration"
+                ? traceRestTriggeredHeroicInspirationMechanics(
+                    trait.mechanics,
+                    nodes,
+                    ids,
+                  )
+                : tracePassiveOrActivated(trait.mechanics, nodes, edges, ids);
   edges.push({ from: rootId, to: procId, relation: "roots" });
 
   return {
@@ -264,6 +439,124 @@ export function traceSpeciesTraitUnit(trait: SpeciesTraitRecord): Trace {
     edges,
     atomKinds: [...new Set(nodes.map((n) => n.atomKind))].sort(),
   };
+}
+
+function traceGnomishLineageMechanics(
+  mechanics: GnomishLineageMechanics,
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): string {
+  const choiceId = ids("lineage");
+  nodes.push({
+    id: choiceId,
+    category: "procedure",
+    atomKind: "species_lineage_choice",
+    label:
+      `species_lineage_choice\n${mechanics.choiceKey}\n${mechanics.timing}\n` +
+      `spellcasting ability: ${mechanics.spellcastingAbilityChoice.abilities.join(", ")}`,
+  });
+
+  for (const option of mechanics.options) {
+    const optionId = ids(option.id);
+    nodes.push({
+      id: optionId,
+      category: "procedure",
+      atomKind: "species_lineage_option",
+      label: `species_lineage_option\n${option.displayName}`,
+    });
+    edges.push({ from: choiceId, to: optionId, relation: "offers" });
+
+    const grantId = tracePassiveMechanics(option.mechanics, nodes, edges, ids);
+    edges.push({ from: optionId, to: grantId, relation: "selects" });
+
+    if ("clockworkDevice" in option) {
+      const device = option.clockworkDevice;
+      const deviceId = ids("clockwork-device");
+      nodes.push({
+        id: deviceId,
+        category: "effect",
+        atomKind: "rock_gnome_clockwork_device",
+        label:
+          `rock_gnome_clockwork_device\n${device.creation.object.size} object AC ${device.creation.object.armorClass} HP ${device.creation.object.hitPoints}\n` +
+          `${device.creation.trigger.castingTime.amount} ${device.creation.trigger.castingTime.unit} ${device.creation.trigger.spellId}\n` +
+          `limit ${device.concurrentLimit}; duration ${device.duration.amount} ${device.duration.unit}`,
+      });
+      edges.push({ from: optionId, to: deviceId, relation: "creates" });
+    }
+  }
+
+  return choiceId;
+}
+
+function traceD20TestNaturalOneRerollMechanics(
+  mechanics: D20TestNaturalOneRerollMechanics,
+  nodes: TraceNode[],
+  ids: IdGen,
+): string {
+  const procId = ids("d20-test-natural-one-reroll");
+  nodes.push({
+    id: procId,
+    category: "procedure",
+    atomKind: mechanics.family,
+    label:
+      `${mechanics.family}\n${mechanics.trigger.kind}: ${mechanics.trigger.dieFace}\n` +
+      `${mechanics.reroll.kind}: ${mechanics.reroll.use}\noptional`,
+  });
+  return procId;
+}
+
+function traceCreatureSpaceMovementPermissionMechanics(
+  mechanics: CreatureSpaceMovementPermissionMechanics,
+  nodes: TraceNode[],
+  ids: IdGen,
+): string {
+  const procId = ids("creature-space-movement-permission");
+  nodes.push({
+    id: procId,
+    category: "procedure",
+    atomKind: mechanics.family,
+    label:
+      `${mechanics.family}\n${mechanics.moveThrough.kind}\n` +
+      `${mechanics.moveThrough.creatureSizeRelationToSelf}\n` +
+      `can stop: ${mechanics.canStopInOccupiedSpace}`,
+  });
+  return procId;
+}
+
+function traceHideActionObscurementPermissionMechanics(
+  mechanics: HideActionObscurementPermissionMechanics,
+  nodes: TraceNode[],
+  ids: IdGen,
+): string {
+  const procId = ids("hide-action-obscurement-permission");
+  nodes.push({
+    id: procId,
+    category: "procedure",
+    atomKind: mechanics.family,
+    label:
+      `${mechanics.family}\n${mechanics.action}\n` +
+      `${mechanics.allowedObscurement.kind}\n` +
+      mechanics.allowedObscurement.creatureSizeRelationToSelf,
+  });
+  return procId;
+}
+
+function traceRestTriggeredHeroicInspirationMechanics(
+  mechanics: RestTriggeredHeroicInspirationMechanics,
+  nodes: TraceNode[],
+  ids: IdGen,
+): string {
+  const procId = ids("rest-triggered-heroic-inspiration");
+  nodes.push({
+    id: procId,
+    category: "procedure",
+    atomKind: mechanics.family,
+    label:
+      `${mechanics.family}\n${mechanics.trigger.kind}: ${mechanics.trigger.rest}\n` +
+      mechanics.grant.kind,
+  });
+  return procId;
 }
 
 // ============================================================

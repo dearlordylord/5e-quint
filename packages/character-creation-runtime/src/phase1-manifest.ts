@@ -22,7 +22,9 @@ import {
   startingClassUnitId,
 } from "./character-progression-types.ts";
 import type { CharacterProgression } from "./character-progression-types.ts";
+import { Match } from "effect";
 import { SURFACE_ABILITIES } from "@dnd/shared/game-facts";
+import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
 import type { UnitRecord } from "@dnd/surface/surface/types";
 import { SORCERER_METAMAGIC_OPTIONS_CHOICE_KEY as SURFACE_SORCERER_METAMAGIC_OPTIONS_CHOICE_KEY } from "@dnd/surface/surface/schema";
 
@@ -95,6 +97,8 @@ export const SRD_CHARACTER_ADMISSION_SPECIES_UNIT_IDS = [
   "species_dragonborn",
   "species_dwarf",
   "species_elf",
+  "species_halfling",
+  "species_human",
   "species_goliath",
   PHASE1_SPECIES_ORC_UNIT_ID,
   "species_tiefling",
@@ -225,6 +229,14 @@ export const CLASS_FEATURE_ABILITY_SCORE_INCREASE_CHOICE_KEY =
   "class_feature_ability_score_increase_choice" satisfies UnitChoiceKey;
 export const CLASS_FEATURE_PROFICIENCY_CHOICE_KEY =
   "class_feature_proficiency_choice" satisfies UnitChoiceKey;
+export const ORIGIN_FEAT_PROFICIENCY_CHOICE_KEY =
+  "origin_feat_proficiency_choice" satisfies UnitChoiceKey;
+export const SPECIES_TRAIT_PROFICIENCY_CHOICE_KEY =
+  "species_trait_proficiency_choice" satisfies UnitChoiceKey;
+export const SPECIES_ORIGIN_FEAT_CHOICE_KEY =
+  "species_origin_feat_choice" satisfies UnitChoiceKey;
+export const SPECIES_ORIGIN_FEAT_PROFICIENCY_CHOICE_KEY =
+  "species_origin_feat_proficiency_choice" satisfies UnitChoiceKey;
 export const CLASS_FEATURE_LANGUAGE_CHOICE_KEY =
   "class_feature_language_choice" satisfies UnitChoiceKey;
 export const DIVINE_ORDER_CHOICE_KEY = "divine_order" satisfies UnitChoiceKey;
@@ -273,28 +285,41 @@ export const EXACTLY_ONE_CHOICE = {
 } as const satisfies ChoiceCardinality;
 
 type SurfaceAbility = (typeof SURFACE_ABILITIES)[number];
+const byKind = Match.discriminator("kind");
+
+type AbilityScoreIncreaseChoiceMethod =
+  | {
+      readonly kind: "one_score";
+      readonly increase: number;
+    }
+  | {
+      readonly kind: "two_scores";
+      readonly primaryIncrease: number;
+      readonly secondaryIncrease: number;
+    };
+
+type AbilityScoreIncreaseAbilityScope =
+  | {
+      readonly kind: "all_abilities";
+    }
+  | {
+      readonly kind: "specific_abilities";
+      readonly abilities: ReadonlyNonEmptyArray<SurfaceAbility>;
+    };
 
 export type AbilityScoreIncreaseChoiceSpec = {
+  readonly abilityScope: AbilityScoreIncreaseAbilityScope;
   readonly maxScore: number;
-  readonly methods: readonly (
-    | {
-        readonly kind: "one_score";
-        readonly increase: number;
-      }
-    | {
-        readonly kind: "two_scores";
-        readonly primaryIncrease: number;
-        readonly secondaryIncrease: number;
-      }
-  )[];
+  readonly methods: ReadonlyNonEmptyArray<AbilityScoreIncreaseChoiceMethod>;
 };
 
 export function abilityScoreIncreaseChoiceOptions(
   choice: AbilityScoreIncreaseChoiceSpec,
 ): readonly CreationChoiceOption[] {
+  const abilities = abilityScoreIncreaseAbilities(choice.abilityScope);
   return choice.methods.flatMap((method) => {
     if (method.kind === "one_score") {
-      return SURFACE_ABILITIES.map((ability) => ({
+      return abilities.map((ability) => ({
         optionId: abilityScoreIncreaseOneScoreOptionId({
           ability,
           increase: method.increase,
@@ -304,16 +329,18 @@ export function abilityScoreIncreaseChoiceOptions(
       }));
     }
 
-    return unorderedSurfaceAbilityPairs().map(([primary, secondary]) => ({
-      optionId: requireAbilityScoreIncreaseTwoScoresOptionId({
-        primary,
-        primaryIncrease: method.primaryIncrease,
-        secondary,
-        secondaryIncrease: method.secondaryIncrease,
-        maxScore: choice.maxScore,
+    return unorderedSurfaceAbilityPairs(abilities).map(
+      ([primary, secondary]) => ({
+        optionId: requireAbilityScoreIncreaseTwoScoresOptionId({
+          primary,
+          primaryIncrease: method.primaryIncrease,
+          secondary,
+          secondaryIncrease: method.secondaryIncrease,
+          maxScore: choice.maxScore,
+        }),
+        label: `${primary.toUpperCase()} +${method.primaryIncrease}, ${secondary.toUpperCase()} +${method.secondaryIncrease}`,
       }),
-      label: `${primary.toUpperCase()} +${method.primaryIncrease}, ${secondary.toUpperCase()} +${method.secondaryIncrease}`,
-    }));
+    );
   });
 }
 
@@ -325,14 +352,23 @@ export function abilityScoreIncreaseChoiceOptionIds(
   );
 }
 
-function unorderedSurfaceAbilityPairs(): readonly (readonly [
-  SurfaceAbility,
-  SurfaceAbility,
-])[] {
-  return SURFACE_ABILITIES.flatMap((primary, primaryIndex) =>
-    SURFACE_ABILITIES.slice(primaryIndex + 1).map(
-      (secondary) => [primary, secondary] as const,
-    ),
+function abilityScoreIncreaseAbilities(
+  abilityScope: AbilityScoreIncreaseAbilityScope,
+): ReadonlyNonEmptyArray<SurfaceAbility> {
+  return Match.value(abilityScope).pipe(
+    byKind("all_abilities", () => SURFACE_ABILITIES),
+    byKind("specific_abilities", (specific) => specific.abilities),
+    Match.exhaustive,
+  );
+}
+
+function unorderedSurfaceAbilityPairs(
+  abilities: ReadonlyNonEmptyArray<SurfaceAbility>,
+): readonly (readonly [SurfaceAbility, SurfaceAbility])[] {
+  return abilities.flatMap((primary, primaryIndex) =>
+    abilities
+      .slice(primaryIndex + 1)
+      .map((secondary) => [primary, secondary] as const),
   );
 }
 

@@ -1,6 +1,6 @@
 // Damage application + HP lifecycle + concentration helpers extracted from
 // RAW-COVERAGE: runtime-owner RAW-RULES-GLOSSARY-CONCENTRATION-DAMAGE-001
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.enemy-zero-hit-point-temporary-hit-points
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.d20-test-natural-one-reroll unit-feature.enemy-zero-hit-point-temporary-hit-points
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-cast-duration-and-concentration
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-warding-bond-linked-effect
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-object-contact-damage
@@ -130,6 +130,10 @@ import {
   sameStatBlockPartKey,
   statBlockLimitedUseForPart,
 } from "./statblock.ts";
+import {
+  d20TestNaturalOneRerollOutcomeIssue,
+  effectiveD20TestNaturalOneRerollConcentrationSavingThrow,
+} from "./d20-test-natural-one-reroll.ts";
 import {
   battleStateAfterWardingBondCasterZeroHitPoints,
   isWardingBondEffect,
@@ -430,9 +434,15 @@ export function applyBattleHitPointDamage(input: {
     input.target.hp,
     damaged.hp,
   );
+  const effectiveConcentrationSavingThrow =
+    input.concentrationSavingThrow === undefined
+      ? undefined
+      : effectiveD20TestNaturalOneRerollConcentrationSavingThrow(
+          input.concentrationSavingThrow,
+        );
   const afterConcentration =
     input.damageAmount > 0 &&
-    (input.concentrationSavingThrow?.value.succeeded === false ||
+    (effectiveConcentrationSavingThrow?.value.succeeded === false ||
       (input.target.concentration !== null && damaged.concentration === null))
       ? breakBattleConcentrationAfterDamage({
           state: afterMarkDrop,
@@ -586,7 +596,14 @@ export function damageLifecycleConcentrationSavingThrowFillCheck(input: {
     (fill) => !holes.some((hole) => hole.holeId === fill.holeId),
   );
   if (invalidFill === undefined) {
-    return { tag: "ok", holes };
+    const d20TestNaturalOneRerollIssue = concentrationD20TestNaturalOneRerollIssue(
+      input.state,
+      input.fills,
+      holes,
+    );
+    return d20TestNaturalOneRerollIssue === null
+      ? { tag: "ok", holes }
+      : { tag: "invalid", message: d20TestNaturalOneRerollIssue };
   }
   return {
     tag: "invalid",
@@ -595,6 +612,34 @@ export function damageLifecycleConcentrationSavingThrowFillCheck(input: {
         ? "Concentration Saving Throw fill is only valid for a concentrating damaged target."
         : "Concentration Saving Throw fill does not match the damaged target or linked Warding Bond caster.",
   };
+}
+
+function concentrationD20TestNaturalOneRerollIssue(
+  state: BattleState,
+  fills: readonly ConcentrationSavingThrowFill[],
+  holes: readonly BattleConcentrationSavingThrowHole[],
+): string | null {
+  for (const fill of fills) {
+    const hole = holes.find((candidate) => candidate.holeId === fill.holeId);
+    if (hole === undefined) {
+      continue;
+    }
+    const actor = state.combatants.get(hole.combatantId);
+    const issue = d20TestNaturalOneRerollOutcomeIssue({
+      actor,
+      originalNaturalD20:
+        fill.value.naturalD20 === undefined
+          ? undefined
+          : Number(fill.value.naturalD20),
+      decision: fill.value.d20TestNaturalOneReroll,
+      withoutRoll: fill.value.withoutRoll,
+      succeeded: fill.value.succeeded,
+    });
+    if (issue !== null) {
+      return issue;
+    }
+  }
+  return null;
 }
 
 export function wardingBondSharedDamageConcentrationSavingThrowHoles(input: {

@@ -802,7 +802,6 @@ function grappledByCaster(state: BattleState): BattleState {
         escapeDc: difficultyClass(12),
         reachFeet: movementFeet(5),
         hand: "left",
-        targetExemptFromDragCost: false,
       },
     ],
   };

@@ -1,4 +1,4 @@
-// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.bardic-inspiration-failed-d20-test unit-feature.innate-sorcery-activation unit-feature.martial-arts-attack-projection unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave spell.invocation-independent-attack-sequence spell.invocation-condition-save spell.invocation-damage-save-or-attack spell.invocation-fog-cloud-obscurement spell.invocation-grease-ground-hazard spell.invocation-make-stable spell.invocation-marked-damage-rider spell.invocation-sleep-repeat-save-lifecycle spell.invocation-sleep-target-admission spell.invocation-weapon-damage-rider
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.bardic-inspiration-failed-d20-test unit-feature.grappler unit-feature.innate-sorcery-activation unit-feature.martial-arts-attack-projection unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave spell.invocation-independent-attack-sequence spell.invocation-condition-save spell.invocation-damage-save-or-attack spell.invocation-fog-cloud-obscurement spell.invocation-grease-ground-hazard spell.invocation-make-stable spell.invocation-marked-damage-rider spell.invocation-sleep-repeat-save-lifecycle spell.invocation-sleep-target-admission spell.invocation-weapon-damage-rider
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV72B bard_bardic_inspiration
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV75B sorcerer_innate_sorcery
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV84C spare_the_dying
@@ -36,6 +36,7 @@ import {
   BATTLE_READIED_SPELL_TRIGGERS,
   addBattleCombatant,
   battleAreaId,
+  battleTablePositionId,
   battleObscurementZones,
   battleAvailableDruidWildShapeKnownForms,
   battleReactionRollOrDamageReductionSupportForUnit,
@@ -179,6 +180,7 @@ import type {
   EffectAtom,
   SpellRecord,
   StatBlockRecord,
+  Size,
   UnitRecord,
   WeaponRecord,
 } from "@dnd/surface/surface/types";
@@ -573,6 +575,44 @@ export function masteryCleaveUnitRefs(): Extract<
     {
       unitId: "mastery_cleave",
       supportProfiles: [WEAPON_MASTERY_CLEAVE_SUPPORT_PROFILE],
+    },
+  ];
+}
+
+export function grapplerUnitRefs(): Extract<
+  BattleCreatureInit["creatureInit"],
+  { readonly kind: "character" }
+>["characterUnitRefs"] {
+  const grapplerUnit = unitLibrary.requireUnit("feat_grappler");
+  const supportProfiles = battleUnitSupportProfilesForUnit({
+    unit: grapplerUnit,
+  });
+  if (Either.isLeft(supportProfiles)) {
+    throw new Error(supportProfiles.left.message);
+  }
+  return [
+    {
+      unitId: "feat_grappler",
+      supportProfiles: supportProfiles.right,
+    },
+  ];
+}
+
+export function halflingNimblenessUnitRefs(): Extract<
+  BattleCreatureInit["creatureInit"],
+  { readonly kind: "character" }
+>["characterUnitRefs"] {
+  const unit = unitLibrary.requireUnit("species_halfling_nimbleness");
+  const supportProfiles = battleUnitSupportProfilesForUnit({
+    unit,
+  });
+  if (Either.isLeft(supportProfiles)) {
+    throw new Error(supportProfiles.left.message);
+  }
+  return [
+    {
+      unitId: "species_halfling_nimbleness",
+      supportProfiles: supportProfiles.right,
     },
   ];
 }
@@ -1504,14 +1544,38 @@ function spellIdFromTargetHoleLabel(label: string | undefined): string {
   return "";
 }
 
-export function abilityCheckFill(hole: BattleHole, total: number): BattleFill {
-  if (hole.kind !== "abilityCheck") {
+export function abilityCheckFill(
+  hole: BattleHole,
+  value:
+    | number
+    | {
+        readonly total: number;
+        readonly naturalD20?: number;
+        readonly d20TestNaturalOneReroll?: Extract<
+          BattleFill,
+          { readonly kind: "abilityCheck" }
+        >["value"]["d20TestNaturalOneReroll"];
+      },
+): BattleFill {
+  if (
+    hole.kind !== "abilityCheck" &&
+    hole.kind !== "spellcastingAbilityCheck"
+  ) {
     throw new Error("Expected abilityCheck hole.");
   }
+  const checkValue = typeof value === "number" ? { total: value } : value;
   return {
     kind: "abilityCheck",
     holeId: hole.holeId,
-    value: { total },
+    value: {
+      total: checkValue.total,
+      ...(checkValue.naturalD20 === undefined
+        ? {}
+        : { naturalD20: DieRollResult(checkValue.naturalD20) }),
+      ...(checkValue.d20TestNaturalOneReroll === undefined
+        ? {}
+        : { d20TestNaturalOneReroll: checkValue.d20TestNaturalOneReroll }),
+    },
   };
 }
 
@@ -1526,6 +1590,10 @@ export function attackRollFill(
       BattleFill,
       { readonly kind: "attackRoll" }
     >["value"]["spellAttackReroll"];
+    readonly d20TestNaturalOneReroll?: Extract<
+      BattleFill,
+      { readonly kind: "attackRoll" }
+    >["value"]["d20TestNaturalOneReroll"];
   },
 ): BattleFill {
   if (hole.kind !== "attackRoll") {
@@ -1546,6 +1614,9 @@ export function attackRollFill(
       ...(value.spellAttackReroll === undefined
         ? {}
         : { spellAttackReroll: value.spellAttackReroll }),
+      ...(value.d20TestNaturalOneReroll === undefined
+        ? {}
+        : { d20TestNaturalOneReroll: value.d20TestNaturalOneReroll }),
     },
   };
 }
@@ -1566,29 +1637,82 @@ export function unitFeatureDecisionFill(
 
 export function deathSavingThrowFill(
   hole: BattleHole,
-  roll: number,
+  roll:
+    | number
+    | {
+        readonly roll: number;
+        readonly d20TestNaturalOneReroll?: Extract<
+          BattleFill,
+          { readonly kind: "deathSavingThrow" }
+        >["d20TestNaturalOneReroll"];
+      },
 ): BattleFill {
   if (hole.kind !== "deathSavingThrow") {
     throw new Error("Expected deathSavingThrow hole.");
   }
+  const value = typeof roll === "number" ? { roll } : roll;
   return {
     kind: "deathSavingThrow",
     holeId: hole.holeId,
-    value: DieRollResult(roll),
+    value: DieRollResult(value.roll),
+    ...(value.d20TestNaturalOneReroll === undefined
+      ? {}
+      : { d20TestNaturalOneReroll: value.d20TestNaturalOneReroll }),
   };
 }
 
 export function concentrationSavingThrowFill(
   hole: BattleHole,
-  succeeded: boolean,
+  succeeded:
+    | boolean
+    | (
+        | {
+            readonly succeeded: boolean;
+            readonly naturalD20?: number;
+            readonly withoutRoll?: never;
+            readonly d20TestNaturalOneReroll?: Extract<
+              BattleFill,
+              { readonly kind: "concentrationSavingThrow" }
+            >["value"]["d20TestNaturalOneReroll"];
+          }
+        | {
+            readonly succeeded: boolean;
+            readonly withoutRoll: true;
+            readonly naturalD20?: never;
+            readonly d20TestNaturalOneReroll?: never;
+          }
+      ),
 ): BattleFill {
   if (hole.kind !== "concentrationSavingThrow") {
     throw new Error("Expected concentrationSavingThrow hole.");
   }
+  const value =
+    typeof succeeded === "boolean" ? { succeeded } : succeeded;
+  if ("withoutRoll" in value && value.withoutRoll === true) {
+    return {
+      kind: "concentrationSavingThrow",
+      holeId: hole.holeId,
+      value: {
+        succeeded: value.succeeded,
+        withoutRoll: true,
+      },
+    };
+  }
   return {
     kind: "concentrationSavingThrow",
     holeId: hole.holeId,
-    value: { succeeded },
+    value: {
+      succeeded: value.succeeded,
+      ...(!("naturalD20" in value) || value.naturalD20 === undefined
+        ? {}
+        : { naturalD20: DieRollResult(value.naturalD20) }),
+      ...(
+        !("d20TestNaturalOneReroll" in value) ||
+        value.d20TestNaturalOneReroll === undefined
+          ? {}
+          : { d20TestNaturalOneReroll: value.d20TestNaturalOneReroll }
+      ),
+    },
   };
 }
 
@@ -1622,6 +1746,14 @@ export function movementFill(
       BattleFill,
       { readonly kind: "movement" }
     >["value"]["areaDifficultTerrain"];
+    readonly grappleDrag?: Extract<
+      BattleFill,
+      { readonly kind: "movement" }
+    >["value"]["grappleDrag"];
+    readonly creatureSpaceTraversal?: Extract<
+      BattleFill,
+      { readonly kind: "movement" }
+    >["value"]["creatureSpaceTraversal"];
   },
 ): Extract<BattleFill, { readonly kind: "movement" }> {
   if (hole.kind !== "movement") {
@@ -1637,6 +1769,12 @@ export function movementFill(
       ...(value.areaDifficultTerrain === undefined
         ? {}
         : { areaDifficultTerrain: value.areaDifficultTerrain }),
+      ...(value.grappleDrag === undefined
+        ? {}
+        : { grappleDrag: value.grappleDrag }),
+      ...(value.creatureSpaceTraversal === undefined
+        ? {}
+        : { creatureSpaceTraversal: value.creatureSpaceTraversal }),
     },
   };
 }
@@ -1784,6 +1922,12 @@ export function savingThrowOutcomeFill(
   outcomes: readonly {
     readonly targetId: CombatantId;
     readonly succeeded: boolean;
+    readonly naturalD20?: number;
+    readonly withoutRoll?: true;
+    readonly d20TestNaturalOneReroll?: Extract<
+      BattleFill,
+      { readonly kind: "savingThrowOutcome" }
+    >["value"]["outcomes"][number]["d20TestNaturalOneReroll"];
   }[],
 ): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {
   if (hole.kind !== "savingThrowOutcome") {
@@ -1799,9 +1943,43 @@ export function savingThrowOutcomeFill(
               originAnchorId: wizardId,
               affectedTargetIds: outcomes.map((outcome) => outcome.targetId),
             },
-            outcomes,
+            outcomes: outcomes.map(d20TestSavingThrowOutcomeValue),
           }
-        : { outcomes },
+        : { outcomes: outcomes.map(d20TestSavingThrowOutcomeValue) },
+  };
+}
+
+function d20TestSavingThrowOutcomeValue(
+  outcome: {
+    readonly targetId: CombatantId;
+    readonly succeeded: boolean;
+    readonly naturalD20?: number;
+    readonly withoutRoll?: true;
+    readonly d20TestNaturalOneReroll?: Extract<
+      BattleFill,
+      { readonly kind: "savingThrowOutcome" }
+    >["value"]["outcomes"][number]["d20TestNaturalOneReroll"];
+  },
+): Extract<
+  BattleFill,
+  { readonly kind: "savingThrowOutcome" }
+>["value"]["outcomes"][number] {
+  if (outcome.withoutRoll === true) {
+    return {
+      targetId: outcome.targetId,
+      succeeded: outcome.succeeded,
+      withoutRoll: true,
+    };
+  }
+  return {
+    targetId: outcome.targetId,
+    succeeded: outcome.succeeded,
+    ...(outcome.naturalD20 === undefined
+      ? {}
+      : { naturalD20: DieRollResult(outcome.naturalD20) }),
+    ...(outcome.d20TestNaturalOneReroll === undefined
+      ? {}
+      : { d20TestNaturalOneReroll: outcome.d20TestNaturalOneReroll }),
   };
 }
 
@@ -1981,6 +2159,7 @@ export function characterSeed(input: {
     BattleCreatureInit["creatureInit"],
     { readonly kind: "character" }
   >["spellcasting"];
+  readonly size?: Size;
 }): BattleCreatureInit {
   const attack =
     input.attack === undefined ? testLongswordAttack() : input.attack;
@@ -2052,7 +2231,7 @@ export function characterSeed(input: {
         input.d20Statistics ?? testCharacterD20Statistics({ str: 16 }),
       armorClass:
         input.armorClass ?? armorClassStateForLoadout(selectedLoadout),
-      size: "medium",
+      size: input.size ?? "medium",
       speed: { walkFeet: movementFeet(30) },
       currentHp: Hp(input.currentHp ?? 12),
       maxHp: Hp(input.maxHp ?? 12),
@@ -4014,6 +4193,7 @@ export {
   battleId,
   battleObjectId,
   battleObscurementZones,
+  battleTablePositionId,
   battleReactionRollOrDamageReductionSupportForUnit,
   BattleSnapshotSchema,
   BattleSubjectSchema,

@@ -1819,6 +1819,48 @@ export const WeaponDamageDiceRerollMechanicsSchema = strictStruct({
   usageLimit: OncePerTurnUsageLimitSchema,
 });
 
+export const WeaponAttackDamageDieFloorTriggerSchema = strictStruct({
+  kind: Schema.Literal("attack_damage_roll"),
+  attackWeapon: strictStruct({
+    kind: Schema.Literal("melee_weapon_held_with_two_hands"),
+    propertyGate: Schema.Literal("two_handed_or_versatile"),
+  }),
+});
+
+export const WeaponAttackDamageDieFloorEffectSchema = strictStruct({
+  kind: Schema.Literal("floor_damage_die_results"),
+  dieScope: Schema.Literal("attack_damage_dice"),
+  minimumResult: Schema.Literal(3),
+});
+
+export const WeaponAttackDamageDieFloorMechanicsSchema = strictStruct({
+  family: Schema.Literal("damage_die_floor"),
+  optional: Schema.Literal(true),
+  trigger: WeaponAttackDamageDieFloorTriggerSchema,
+  effect: WeaponAttackDamageDieFloorEffectSchema,
+});
+
+export const LightExtraAttackDamageAbilityModifierTriggerSchema = strictStruct({
+  kind: Schema.Literal("light_property_extra_attack_damage_roll"),
+  attackWeapon: strictStruct({
+    kind: Schema.Literal("weapon_with_light_property"),
+  }),
+});
+
+export const LightExtraAttackDamageAbilityModifierEffectSchema = strictStruct({
+  kind: Schema.Literal("permit_attack_damage_ability_modifier"),
+  modifierSource: Schema.Literal("attack_ability_modifier"),
+  appliesWhen: Schema.Literal("not_already_adding_ability_modifier"),
+});
+
+export const LightExtraAttackDamageAbilityModifierMechanicsSchema =
+  strictStruct({
+    family: Schema.Literal("light_extra_attack_damage_ability_modifier"),
+    optional: Schema.Literal(true),
+    trigger: LightExtraAttackDamageAbilityModifierTriggerSchema,
+    effect: LightExtraAttackDamageAbilityModifierEffectSchema,
+  });
+
 export const MasteryOrWeaponDamageDiceRerollMechanicsSchema = Schema.Union(
   MasteryMechanicsSchema,
   WeaponDamageDiceRerollMechanicsSchema,
@@ -3411,11 +3453,78 @@ export const FeatMechanicsSchema = Schema.Union(
   PassiveMechanicsSchema,
   ActivatedAbilityMechanicsSchema,
   MasteryOrWeaponDamageDiceRerollMechanicsSchema,
+  WeaponAttackDamageDieFloorMechanicsSchema,
+  LightExtraAttackDamageAbilityModifierMechanicsSchema,
   TriggeredReplacementMechanicsSchema,
+  strictStruct({
+    family: Schema.Literal("grappler"),
+    punchAndGrab: strictStruct({
+      trigger: Schema.Literal("attack_action_unarmed_strike_hit_on_turn"),
+      options: Schema.Tuple(
+        Schema.Literal("damage"),
+        Schema.Literal("grapple"),
+      ),
+      usageLimit: strictStruct({ kind: Schema.Literal("once_per_turn") }),
+    }),
+    attackAdvantage: strictStruct({
+      mode: Schema.Literal("advantage"),
+      on: Schema.Tuple(Schema.Literal("attack_roll")),
+      target: Schema.Literal("creature_grappled_by_you"),
+    }),
+    fastWrestler: strictStruct({
+      movementCost: Schema.Literal("no_extra_grapple_drag_cost"),
+      targetSize: Schema.Literal("your_size_or_smaller"),
+    }),
+  }),
   strictStruct({
     family: Schema.Literal("magic_initiate"),
     spellList: Schema.Literal(...MAGIC_INITIATE_SPELL_LISTS),
   }),
+);
+
+const FeatAbilityScoreIncreaseAbilityScopeSchema = Schema.Union(
+  strictStruct({ kind: Schema.Literal("all_abilities") }),
+  strictStruct({
+    kind: Schema.Literal("specific_abilities"),
+    abilities: Schema.NonEmptyArray(AbilitySchema).pipe(
+      Schema.filter(distinctAbilities, {
+        message: () =>
+          "Feat ability score increase ability list must contain distinct abilities.",
+      }),
+    ),
+  }),
+);
+
+const FeatAbilityScoreIncreaseChoiceSchema = Schema.Struct({
+  abilityScope: FeatAbilityScoreIncreaseAbilityScopeSchema,
+  maxScore: PositiveIntegerSchema,
+  methods: Schema.NonEmptyArray(
+    Schema.Union(
+      Schema.Struct({
+        kind: Schema.Literal("one_score"),
+        increase: PositiveIntegerSchema,
+      }),
+      Schema.Struct({
+        kind: Schema.Literal("two_scores"),
+        primaryIncrease: PositiveIntegerSchema,
+        secondaryIncrease: PositiveIntegerSchema,
+      }),
+    ),
+  ),
+}).pipe(
+  Schema.filter(
+    (choice) =>
+      choice.methods.every(
+        (method) =>
+          method.kind !== "two_scores" ||
+          choice.abilityScope.kind === "all_abilities" ||
+          choice.abilityScope.abilities.length > 1,
+      ),
+    {
+      message: () =>
+        "Feat two-score ability score increases require at least two legal abilities.",
+    },
+  ),
 );
 
 export const FeatRecordSchema = Schema.Struct({
@@ -3423,30 +3532,169 @@ export const FeatRecordSchema = Schema.Struct({
   kind: Schema.Literal("feat"),
   category: FeatCategorySchema,
   abilityScoreIncreaseChoice: exactOptional(
-    Schema.Struct({
-      maxScore: PositiveIntegerSchema,
-      methods: Schema.NonEmptyArray(
-        Schema.Union(
-          Schema.Struct({
-            kind: Schema.Literal("one_score"),
-            increase: PositiveIntegerSchema,
-          }),
-          Schema.Struct({
-            kind: Schema.Literal("two_scores"),
-            primaryIncrease: PositiveIntegerSchema,
-            secondaryIncrease: PositiveIntegerSchema,
-          }),
-        ),
-      ),
-    }),
+    FeatAbilityScoreIncreaseChoiceSchema,
   ),
   mechanics: FeatMechanicsSchema,
+});
+
+const GnomishLineageForestMechanicsSchema = strictStruct({
+  family: Schema.Literal("passive"),
+  grants: Schema.Tuple(
+    strictStruct({
+      kind: Schema.Literal("grant_spell_access"),
+      spellId: Schema.Literal("minor_illusion"),
+      mode: Schema.Literal("known"),
+    }),
+    strictStruct({
+      kind: Schema.Literal("grant_spell_access"),
+      spellId: Schema.Literal("speak_with_animals"),
+      mode: Schema.Literal("prepared"),
+    }),
+    strictStruct({
+      kind: Schema.Literal("grant_spell_free_casts"),
+      spellId: Schema.Literal("speak_with_animals"),
+      count: strictStruct({
+        kind: Schema.Literal("proficiency_bonus"),
+      }),
+      resetCadence: Schema.Literal("long_rest"),
+    }),
+  ),
+});
+
+const GnomishLineageRockMechanicsSchema = strictStruct({
+  family: Schema.Literal("passive"),
+  grants: Schema.Tuple(
+    strictStruct({
+      kind: Schema.Literal("grant_spell_access"),
+      spellId: Schema.Literal("mending"),
+      mode: Schema.Literal("known"),
+    }),
+    strictStruct({
+      kind: Schema.Literal("grant_spell_access"),
+      spellId: Schema.Literal("prestidigitation"),
+      mode: Schema.Literal("known"),
+    }),
+  ),
+});
+
+const GnomishLineageRockClockworkDeviceSchema = strictStruct({
+  creation: strictStruct({
+    trigger: strictStruct({
+      kind: Schema.Literal("prestidigitation_cast"),
+      spellId: Schema.Literal("prestidigitation"),
+      castingTime: strictStruct({
+        amount: Schema.Literal(10),
+        unit: Schema.Literal("minute"),
+      }),
+    }),
+    object: strictStruct({
+      kind: Schema.Literal("clockwork_device"),
+      size: Schema.Literal("tiny"),
+      armorClass: Schema.Literal(5),
+      hitPoints: Schema.Literal(1),
+    }),
+    storedEffect: strictStruct({
+      kind: Schema.Literal("one_prestidigitation_effect_chosen_at_creation"),
+      optionChoicesLockedAtCreation: Schema.Literal(true),
+    }),
+  }),
+  activation: strictStruct({
+    action: Schema.Literal("bonus_action"),
+    activator: Schema.Literal("self_or_another_creature"),
+    contact: Schema.Literal("touch"),
+  }),
+  concurrentLimit: Schema.Literal(3),
+  duration: strictStruct({
+    amount: Schema.Literal(8),
+    unit: Schema.Literal("hour"),
+  }),
+  dismantle: strictStruct({
+    actor: Schema.Literal("creator"),
+    action: Schema.Literal("utilize"),
+    contact: Schema.Literal("touch"),
+  }),
+});
+
+const GnomishLineageForestOptionSchema = strictStruct({
+  id: Schema.Literal("forest_gnome"),
+  displayName: Schema.Literal("Forest Gnome"),
+  mechanics: GnomishLineageForestMechanicsSchema,
+});
+
+const GnomishLineageRockOptionSchema = strictStruct({
+  id: Schema.Literal("rock_gnome"),
+  displayName: Schema.Literal("Rock Gnome"),
+  mechanics: GnomishLineageRockMechanicsSchema,
+  clockworkDevice: GnomishLineageRockClockworkDeviceSchema,
+});
+
+export const GnomishLineageMechanicsSchema = strictStruct({
+  family: Schema.Literal("species_lineage_choice"),
+  choiceKey: Schema.Literal("gnome_lineage"),
+  timing: Schema.Literal("species_selection"),
+  spellcastingAbilityChoice: strictStruct({
+    kind: Schema.Literal("spellcasting_ability_choice"),
+    abilities: Schema.Tuple(
+      Schema.Literal("int"),
+      Schema.Literal("wis"),
+      Schema.Literal("cha"),
+    ),
+  }),
+  options: Schema.Tuple(
+    GnomishLineageForestOptionSchema,
+    GnomishLineageRockOptionSchema,
+  ),
+});
+
+export const D20TestNaturalOneRerollMechanicsSchema = strictStruct({
+  family: Schema.Literal("d20_test_natural_one_reroll"),
+  trigger: strictStruct({
+    kind: Schema.Literal("d20_test_roll_is"),
+    dieFace: Schema.Literal(1),
+  }),
+  reroll: strictStruct({
+    kind: Schema.Literal("reroll_triggering_d20"),
+    use: Schema.Literal("new_roll"),
+  }),
+  optional: Schema.Literal(true),
+});
+
+export const CreatureSpaceMovementPermissionMechanicsSchema = strictStruct({
+  family: Schema.Literal("creature_space_movement_permission"),
+  moveThrough: strictStruct({
+    kind: Schema.Literal("occupied_creature_space"),
+    creatureSizeRelationToSelf: Schema.Literal("larger"),
+  }),
+  canStopInOccupiedSpace: Schema.Literal(false),
+});
+
+export const HideActionObscurementPermissionMechanicsSchema = strictStruct({
+  family: Schema.Literal("hide_action_obscurement_permission"),
+  action: Schema.Literal("hide"),
+  allowedObscurement: strictStruct({
+    kind: Schema.Literal("obscured_only_by_creature"),
+    creatureSizeRelationToSelf: Schema.Literal("at_least_one_size_larger"),
+  }),
+});
+
+export const RestTriggeredHeroicInspirationMechanicsSchema = strictStruct({
+  family: Schema.Literal("rest_triggered_heroic_inspiration"),
+  trigger: strictStruct({
+    kind: Schema.Literal("finish_rest"),
+    rest: Schema.Literal("long"),
+  }),
+  grant: strictStruct({ kind: Schema.Literal("heroic_inspiration") }),
 });
 
 export const SpeciesTraitMechanicsSchema = Schema.Union(
   PassiveMechanicsSchema,
   ActivatedAbilityMechanicsSchema,
   TriggeredReplacementMechanicsSchema,
+  GnomishLineageMechanicsSchema,
+  D20TestNaturalOneRerollMechanicsSchema,
+  CreatureSpaceMovementPermissionMechanicsSchema,
+  HideActionObscurementPermissionMechanicsSchema,
+  RestTriggeredHeroicInspirationMechanicsSchema,
 );
 
 export const SpeciesTraitRecordSchema = Schema.Struct({
@@ -3610,6 +3858,54 @@ export const ElfSpeciesRecordSchema = Schema.Struct({
   traits: ElfSpeciesTraitsSchema,
 });
 
+export const GnomeSpeciesTraitsSchema = Schema.Struct({
+  darkvision: Schema.Literal("species_gnome_darkvision"),
+  gnomishCunning: Schema.Literal("species_gnome_gnomish_cunning"),
+  gnomishLineage: Schema.Literal("species_gnome_gnomish_lineage"),
+});
+
+const FixedSmallSpeciesSizeSchema = Schema.Struct({
+  kind: Schema.Literal("fixed"),
+  size: Schema.Literal("small"),
+});
+
+export const GnomeSpeciesRecordSchema = Schema.Struct({
+  ...SpeciesRecordBaseSchema.fields,
+  species: Schema.Literal("gnome"),
+  size: FixedSmallSpeciesSizeSchema,
+  speed: SpeciesSpeed30Schema,
+  traits: GnomeSpeciesTraitsSchema,
+});
+
+export const HalflingSpeciesTraitsSchema = Schema.Struct({
+  brave: Schema.Literal("species_halfling_brave"),
+  halflingNimbleness: Schema.Literal("species_halfling_nimbleness"),
+  luck: Schema.Literal("species_halfling_luck"),
+  naturallyStealthy: Schema.Literal("species_halfling_naturally_stealthy"),
+});
+
+export const HalflingSpeciesRecordSchema = Schema.Struct({
+  ...SpeciesRecordBaseSchema.fields,
+  species: Schema.Literal("halfling"),
+  size: FixedSmallSpeciesSizeSchema,
+  speed: SpeciesSpeed30Schema,
+  traits: HalflingSpeciesTraitsSchema,
+});
+
+export const HumanSpeciesTraitsSchema = Schema.Struct({
+  resourceful: Schema.Literal("species_human_resourceful"),
+  skillful: Schema.Literal("species_human_skillful"),
+  versatile: Schema.Literal("species_human_versatile"),
+});
+
+export const HumanSpeciesRecordSchema = Schema.Struct({
+  ...SpeciesRecordBaseSchema.fields,
+  species: Schema.Literal("human"),
+  size: SmallMediumSpeciesSizeChoiceSchema,
+  speed: SpeciesSpeed30Schema,
+  traits: HumanSpeciesTraitsSchema,
+});
+
 export const GoliathSpeciesTraitsSchema = Schema.Struct({
   powerfulBuild: Schema.Literal("species_goliath_powerful_build"),
 });
@@ -3646,6 +3942,9 @@ export const SpeciesRecordSchema = Schema.Union(
   DragonbornSpeciesRecordSchema,
   DwarfSpeciesRecordSchema,
   ElfSpeciesRecordSchema,
+  GnomeSpeciesRecordSchema,
+  HalflingSpeciesRecordSchema,
+  HumanSpeciesRecordSchema,
   GoliathSpeciesRecordSchema,
   OrcSpeciesRecordSchema,
   TieflingSpeciesRecordSchema,

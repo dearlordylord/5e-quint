@@ -1,5 +1,5 @@
 // -*- mode: Bluespec; -*-
-// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.find-familiar-lifecycle spell.reaction-counterspell
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.light-extra-attack-damage-ability-modifier spell.find-familiar-lifecycle spell.reaction-counterspell
 
 module battleRuntimeCoreCombatTests {
   import attackDamageComposition.* from "../shared-algebras/proofs/rule-core/attack-damage-composition"
@@ -708,9 +708,29 @@ module battleRuntimeCoreCombatTests {
     val afterAttack = { ...initialState, lightWeaponAttackMade: true }
     val positive = offHandAttackFighterWithAbilityModifier(afterAttack, 15, 10, 4, 3)
     val negative = offHandAttackFighterWithAbilityModifier(afterAttack, 15, 10, 4, -1)
+    val twoWeaponFighting = offHandAttackFighterWithDamageAbilityModifierFacts(
+      afterAttack,
+      15,
+      10,
+      4,
+      3,
+      LightExtraAttackNoExistingDamageAbilityModifier,
+      true
+    )
+    val alreadyAdding = offHandAttackFighterWithDamageAbilityModifierFacts(
+      afterAttack,
+      15,
+      10,
+      4,
+      3,
+      LightExtraAttackExistingDamageAbilityModifier(2),
+      true
+    )
     all {
       assert(positive.goblin.hp == 6),
       assert(negative.goblin.hp == 7),
+      assert(twoWeaponFighting.goblin.hp == 3),
+      assert(alreadyAdding.goblin.hp == 4),
       assert(not(negative.bonusActionAvailable)),
     }
   }

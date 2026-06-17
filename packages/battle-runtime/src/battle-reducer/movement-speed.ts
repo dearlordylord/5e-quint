@@ -1,4 +1,4 @@
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.druid-wild-shape-known-form unit-feature.martial-arts-attack-projection
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.druid-wild-shape-known-form unit-feature.grappler unit-feature.martial-arts-attack-projection
 // KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.WILD_SHAPE_FORM_LIFECYCLE
 // Movement-budget and speed helpers extracted from battle-reducer.ts.
 // Cluster S (movement_speed). Mechanical extraction — no behavior change.
@@ -60,6 +60,7 @@ import {
   attackTargetConstraint,
 } from "./statblock-attacks.ts";
 import { attackActionOptionsForActor } from "./attack-damage-apply.ts";
+import { combatantHasGrapplerSupportProfile } from "./grappler-support-profile.ts";
 import { selfTransformationModeSpecialSpeedKind } from "./spells-active-effects.ts";
 import {
   combatantCanSee,
@@ -643,7 +644,6 @@ export function grappleLinkForTarget(
       escapeDc: unarmedStrikeSaveDc(grappler),
       reachFeet: movementFeet(5),
       hand,
-      targetExemptFromDragCost: grappleDragCostExempt(grapplerSize, targetSize),
     },
   };
 }
@@ -751,6 +751,33 @@ export function targetIsNoMoreThanOneSizeLarger(
   return SIZE_RANKS[target] - SIZE_RANKS[grappler] <= 1;
 }
 
+export function creatureSizeIsLargerThanSelf(
+  self: Size,
+  other: Size,
+): boolean {
+  return SIZE_RANKS[other] > SIZE_RANKS[self];
+}
+
 export function grappleDragCostExempt(grappler: Size, target: Size): boolean {
   return target === "tiny" || SIZE_RANKS[grappler] - SIZE_RANKS[target] >= 2;
+}
+
+export function grapplerFastWrestlerDragCostExempt(
+  grappler: Size,
+  target: Size,
+): boolean {
+  return SIZE_RANKS[target] <= SIZE_RANKS[grappler];
+}
+
+export function grappleTargetExemptFromDragCost(
+  grappler: BattleCreatureState,
+  target: BattleCreatureState,
+): boolean {
+  const grapplerSize = combatantEffectiveSize(grappler);
+  const targetSize = combatantEffectiveSize(target);
+  return (
+    grappleDragCostExempt(grapplerSize, targetSize) ||
+    (combatantHasGrapplerSupportProfile(grappler) &&
+      grapplerFastWrestlerDragCostExempt(grapplerSize, targetSize))
+  );
 }

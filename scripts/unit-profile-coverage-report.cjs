@@ -188,8 +188,10 @@ const metricDefinitions = [
     kind: "coverage",
     planningQuestion:
       "Which supported Unit identities have intentionally selected concrete identity replay evidence?",
-    numerator: "supported Unit ids with selected-identity-mbt evidence",
-    denominator: "installed Units with supported-profile claims",
+    numerator:
+      "supported Unit ids in the replay denominator with selected-identity-mbt evidence",
+    denominator:
+      "installed Units with supported-profile claims, excluding whole-claim selected-identity not-applicable dispositions",
   },
   {
     key: "classicNonSrdExpressionGate",
@@ -271,6 +273,42 @@ function isSelectedIdentityDeferredNonApplicable(selectedIdentity) {
   );
 }
 
+function selectedIdentityReplayCoverageMetric({
+  selectedIdentityMbtEvidenceTag,
+  supportedUnitClaims,
+  unitEvidence,
+}) {
+  const evidenceByUnit = groupUnitEvidence(unitEvidence);
+  const replayScopedUnits = supportedUnitClaims
+    .map((claim) => ({
+      claim: claim.claim,
+      evidence: (evidenceByUnit.get(claim.unitId) ?? []).map(
+        (row) => row.evidence,
+      ),
+      unitId: claim.unitId,
+    }))
+    .map((unit) => ({
+      selectedIdentity: selectedIdentityEvidenceStatus(
+        unit,
+        selectedIdentityMbtEvidenceTag,
+      ),
+      unit,
+    }))
+    .filter(
+      ({ selectedIdentity }) =>
+        selectedIdentity.status !== selectedIdentityStatus.notApplicable,
+    );
+  const witnessCount = replayScopedUnits.filter(
+    ({ selectedIdentity }) =>
+      selectedIdentity.status === selectedIdentityStatus.witnessPresent,
+  ).length;
+  return {
+    numerator: witnessCount,
+    denominator: replayScopedUnits.length,
+    percent: percent(witnessCount, replayScopedUnits.length),
+  };
+}
+
 function assertMetricDefinitionCoverage(matrixMetrics) {
   const metricKeys = new Set(Object.keys(matrixMetrics));
   const definitionKeys = new Set(
@@ -327,15 +365,6 @@ function metrics({
       .filter(
         (row) =>
           row.evidence.tag === deterministicAdmissionProjectionEvidenceTag &&
-          supportedUnitIds.has(row.unitId),
-      )
-      .map((row) => row.unitId),
-  );
-  const selectedIdentityMbt = new Set(
-    unitEvidence
-      .filter(
-        (row) =>
-          row.evidence.tag === selectedIdentityMbtEvidenceTag &&
           supportedUnitIds.has(row.unitId),
       )
       .map((row) => row.unitId),
@@ -441,11 +470,11 @@ function metrics({
         supportedUnitClaims.length,
       ),
     },
-    selectedIdentityMbtCoverage: {
-      numerator: selectedIdentityMbt.size,
-      denominator: supportedUnitClaims.length,
-      percent: percent(selectedIdentityMbt.size, supportedUnitClaims.length),
-    },
+    selectedIdentityMbtCoverage: selectedIdentityReplayCoverageMetric({
+      selectedIdentityMbtEvidenceTag,
+      supportedUnitClaims,
+      unitEvidence,
+    }),
     classicNonSrdExpressionGate: {
       numerator: classicUnits.length,
       denominator: classicUnits.length,

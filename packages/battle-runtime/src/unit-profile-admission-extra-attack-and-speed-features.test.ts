@@ -334,7 +334,6 @@ describe("QMBT37 deterministic Extra Attack admission", () => {
           escapeDc: difficultyClass(12),
           reachFeet: movementFeet(5),
           hand: "left",
-          targetExemptFromDragCost: false,
         },
       ],
     };

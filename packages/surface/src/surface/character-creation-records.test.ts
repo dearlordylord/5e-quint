@@ -17,12 +17,16 @@ import classSorcererInput from "../../content/class_sorcerer.json";
 import classWarlockInput from "../../content/class_warlock.json";
 import classWizardInput from "../../content/class_wizard.json";
 import featMagicInitiateClericInput from "../../content/feat_magic_initiate_cleric.json";
+import featMagicInitiateDruidInput from "../../content/feat_magic_initiate_druid.json";
 import featMagicInitiateWizardInput from "../../content/feat_magic_initiate_wizard.json";
 import fighterTacticalMindInput from "../../content/fighter_tactical_mind.json";
 import rogueCunningActionInput from "../../content/rogue_cunning_action.json";
 import speciesDragonbornInput from "../../content/species_dragonborn.json";
 import speciesDwarfInput from "../../content/species_dwarf.json";
 import speciesElfInput from "../../content/species_elf.json";
+import speciesGnomeInput from "../../content/species_gnome.json";
+import speciesHalflingInput from "../../content/species_halfling.json";
+import speciesHumanInput from "../../content/species_human.json";
 import speciesGoliathInput from "../../content/species_goliath.json";
 import speciesOrcInput from "../../content/species_orc.json";
 import speciesTieflingInput from "../../content/species_tiefling.json";
@@ -1568,6 +1572,14 @@ describe("character-creation Surface records", () => {
       },
     },
     {
+      input: featMagicInitiateDruidInput,
+      expected: {
+        id: "feat_magic_initiate_druid",
+        name: "Magic Initiate (Druid)",
+        spellList: "druid",
+      },
+    },
+    {
       input: featMagicInitiateWizardInput,
       expected: {
         id: "feat_magic_initiate_wizard",
@@ -1759,7 +1771,7 @@ describe("character-creation Surface records", () => {
     });
   });
 
-  test("decodes non-Orc admission species records with retained trait refs", () => {
+  test("decodes non-Orc species records with retained trait refs", () => {
     const cases = [
       {
         input: speciesDragonbornInput,
@@ -1799,6 +1811,52 @@ describe("character-creation Surface records", () => {
           size: { kind: "fixed", size: "medium" },
           speed: { walkFeet: 30 },
           traits: { darkvision: "elf_darkvision" },
+        },
+      },
+      {
+        input: speciesGnomeInput,
+        expected: {
+          recordId: "species_gnome",
+          species: "gnome",
+          creatureType: "humanoid",
+          size: { kind: "fixed", size: "small" },
+          speed: { walkFeet: 30 },
+          traits: {
+            darkvision: "species_gnome_darkvision",
+            gnomishCunning: "species_gnome_gnomish_cunning",
+            gnomishLineage: "species_gnome_gnomish_lineage",
+          },
+        },
+      },
+      {
+        input: speciesHalflingInput,
+        expected: {
+          recordId: "species_halfling",
+          species: "halfling",
+          creatureType: "humanoid",
+          size: { kind: "fixed", size: "small" },
+          speed: { walkFeet: 30 },
+          traits: {
+            brave: "species_halfling_brave",
+            halflingNimbleness: "species_halfling_nimbleness",
+            luck: "species_halfling_luck",
+            naturallyStealthy: "species_halfling_naturally_stealthy",
+          },
+        },
+      },
+      {
+        input: speciesHumanInput,
+        expected: {
+          recordId: "species_human",
+          species: "human",
+          creatureType: "humanoid",
+          size: { kind: "choice", options: ["medium", "small"] },
+          speed: { walkFeet: 30 },
+          traits: {
+            resourceful: "species_human_resourceful",
+            skillful: "species_human_skillful",
+            versatile: "species_human_versatile",
+          },
         },
       },
       {
@@ -2380,6 +2438,18 @@ describe("character-creation Surface records", () => {
           traits: {
             ...speciesDwarfInput.traits,
             darkvision: "species_tiefling_darkvision",
+          },
+        }),
+      ),
+    ).toBe(true);
+
+    expect(
+      Either.isLeft(
+        decodeUnitRecordEither({
+          ...speciesGnomeInput,
+          traits: {
+            ...speciesGnomeInput.traits,
+            gnomishLineage: "species_tiefling_darkvision",
           },
         }),
       ),

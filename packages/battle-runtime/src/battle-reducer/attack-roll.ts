@@ -3,7 +3,7 @@
 // battle-reducer.ts. Cluster T (attack_roll). Mechanical extraction — no
 // behavior change. Cycle #20 resolved by importing the shared ongoing-feature
 // helpers from ./ongoing-feature-helpers.ts instead of cycling through J.
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.hunters-prey unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave spell.invocation-object-contact-damage
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.grappler unit-feature.hunters-prey unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave spell.invocation-object-contact-damage
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION
 
@@ -74,6 +74,7 @@ import {
   ongoingFeatureSourceKeyForUnit,
   unitRefSupportsProfile,
 } from "./creature-state.ts";
+import { combatantHasGrapplerSupportProfile } from "./grappler-support-profile.ts";
 import {
   attackActionBonusWithPassiveFeatureBonus,
   attackActionOptionName,
@@ -232,8 +233,14 @@ function attackRollSourceFlags(
     target !== undefined &&
     !sightDisadvantage &&
     combatantCanSee(state, attacker.combatantId, target.combatantId);
+  const grapplerAttackAdvantage =
+    combatantHasGrapplerSupportProfile(attacker) &&
+    state.grapples.some(
+      (link) => link.grapplerId === attackerId && link.targetId === targetId,
+    );
   const hasAdvantage =
     sightAdvantage ||
+    grapplerAttackAdvantage ||
     (attacker?.hidden !== null &&
       attacker?.hidden !== undefined &&
       !combatantInvisibleBenefitDenied(attacker)) ||

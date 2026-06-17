@@ -12,6 +12,7 @@ import type { SpellRecord, UnitRecord } from "@dnd/surface/surface/types";
 import * as Either from "effect/Either";
 import { expect } from "vitest";
 import {
+  ATTACK_DAMAGE_DIE_FLOOR_SUPPORT_PROFILE,
   ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE,
   battleId,
   battleUnitRefWithSupportProfiles,
@@ -41,6 +42,7 @@ import {
   combatProwessSupportProfile,
   extraAttackSupportProfile,
   fighterExtraAttackUnitId,
+  greatWeaponFightingUnitId,
   monkUnarmoredMovementUnitId,
   oppositionSide,
   orcAdrenalineRushUnitId,
@@ -147,6 +149,43 @@ export function savageAttackerBattle(input: {
         ...(input.unitFeatures === undefined
           ? {}
           : { unitFeatures: input.unitFeatures }),
+      }),
+      characterCreature({
+        combatantId: spellTargetId,
+        displayName: "Target",
+        initiative: 10,
+        side: oppositionSide,
+      }),
+    ],
+  });
+  expect(Either.isRight(result)).toBe(true);
+  if (Either.isLeft(result)) {
+    throw new Error(result.left.message);
+  }
+  return result.right;
+}
+
+export function greatWeaponFightingBattle(input: {
+  readonly attack: Extract<
+    BattleCreatureInit["creatureInit"],
+    { readonly kind: "character" }
+  >["attack"];
+  readonly selectedLoadout: Extract<
+    BattleCreatureInit["creatureInit"],
+    { readonly kind: "character" }
+  >["selectedLoadout"];
+}): BattleState {
+  const result = startBattle({
+    battleId: battleId("unit-profile-great-weapon-fighting-admission"),
+    combatants: [
+      characterCreature({
+        combatantId: spellCasterId,
+        displayName: "Great Weapon Fighter",
+        initiative: 20,
+        side: partySide,
+        attack: input.attack,
+        characterUnitRefs: [greatWeaponFightingBattleUnitRef()],
+        selectedLoadout: input.selectedLoadout,
       }),
       characterCreature({
         combatantId: spellTargetId,
@@ -660,6 +699,27 @@ export function savageAttackerBattleUnitRef(): Extract<
     Either.right({
       unitId: savageAttackerUnitId,
       supportProfiles: [WEAPON_DAMAGE_DICE_ROLL_CHOICE_SUPPORT_PROFILE],
+    }),
+  );
+  if (Either.isLeft(unitRef)) {
+    throw new Error(unitRef.left.message);
+  }
+  return unitRef.right;
+}
+
+export function greatWeaponFightingBattleUnitRef(): Extract<
+  BattleCreatureInit["creatureInit"],
+  { readonly kind: "character" }
+>["characterUnitRefs"][number] {
+  const unit = unitLibrary.requireUnit(greatWeaponFightingUnitId);
+  const unitRef = battleUnitRefWithSupportProfiles({
+    unitRef: { unitId: unit.id },
+    unit,
+  });
+  expect(unitRef).toEqual(
+    Either.right({
+      unitId: greatWeaponFightingUnitId,
+      supportProfiles: [ATTACK_DAMAGE_DIE_FLOOR_SUPPORT_PROFILE],
     }),
   );
   if (Either.isLeft(unitRef)) {

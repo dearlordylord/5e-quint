@@ -283,6 +283,13 @@ const qntRegistryExemptions = [
   },
   {
     ownerPath:
+      "packages/shared-algebras/proofs/rule-core/creature-size-order.qnt",
+    category: "leaf-type-vocabulary",
+    evidence:
+      "Shared creature size order leaf imported by registered movement and Unit feature procedure owners.",
+  },
+  {
+    ownerPath:
       "packages/shared-algebras/proofs/rule-core/spell-definition-profiles.qnt",
     category: "leaf-type-vocabulary",
     evidence:

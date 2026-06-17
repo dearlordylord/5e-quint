@@ -4,11 +4,11 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spiritual-weapon-attack-proxy
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.remarkable-athlete
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-cast-range-increase
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.d20-test-natural-one-reroll
 // Spell replay fill parser extracted from spells-resolve.ts.
 // Owns classification and validation of supplied fills against spell replay holes.
 
 // KERNEL-COVERAGE: runtime-owner BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES BATTLE.COMMAND.OPTION_AND_NEXT_TURN BATTLE.FEATURE.METAMAGIC_DISTANT_CAST_RANGE_INCREASE BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING
-import { type AttackRollResult } from "@dnd/shared-algebras/runtime-hole-algebra";
 import type { Condition, MovementFeet } from "@dnd/shared/types";
 import type { Ability, Skill } from "@dnd/surface/surface/types";
 import {
@@ -80,6 +80,7 @@ import {
   spiritualWeaponForcePositionInvalidReason,
 } from "./spells-targeting.ts";
 import { levitateInitialRiseHole } from "./levitate-creature.ts";
+import { effectiveD20TestNaturalOneRerollSavingThrowOutcomes } from "./d20-test-natural-one-reroll.ts";
 import {
   REMARKABLE_ATHLETE_CRITICAL_HIT_MOVEMENT_DECISION_HOLE_ID,
   REMARKABLE_ATHLETE_CRITICAL_HIT_MOVEMENT_HOLE_ID,
@@ -328,7 +329,7 @@ export function spellFillSet(
         readonly spatialFacts: readonly BattleSpellTargetListSpatialFact[];
       }
     | undefined;
-  let attackRoll: AttackRollResult | undefined;
+  let attackRoll: BattleAttackRollResult | undefined;
   const attackSequencePartFills: SpellAttackSequencePartFillSet[] =
     invocation.procedure === "spellAttackSequence"
       ? Array.from({ length: invocation.targeting.attackCount }, () => ({
@@ -972,6 +973,10 @@ export function spellFillSet(
     }
 
     if (fill.kind === "savingThrowOutcome") {
+      const effectiveSavingThrowOutcomeFill = {
+        ...fill,
+        value: effectiveD20TestNaturalOneRerollSavingThrowOutcomes(fill.value),
+      };
       if (isHideousLaughterDamageRepeatSaveFill(fill)) {
         if (
           hideousLaughterDamageRepeatSaves.some(
@@ -983,7 +988,7 @@ export function spellFillSet(
             message: "Hideous Laughter repeat save was filled twice.",
           };
         }
-        hideousLaughterDamageRepeatSaves.push(fill);
+        hideousLaughterDamageRepeatSaves.push(effectiveSavingThrowOutcomeFill);
         continue;
       }
       if (
@@ -996,7 +1001,7 @@ export function spellFillSet(
             message: "Object-contact saving throw outcome was filled twice.",
           };
         }
-        objectContactSavingThrowOutcome = fill;
+        objectContactSavingThrowOutcome = effectiveSavingThrowOutcomeFill;
         continue;
       }
       if (fill.holeId !== spellSavingThrowOutcomeHoleId(invocation)) {
@@ -1034,7 +1039,7 @@ export function spellFillSet(
             "Single-target save-gate spell outcomes must not include area facts.",
         };
       }
-      savingThrowOutcomes = fill.value;
+      savingThrowOutcomes = effectiveSavingThrowOutcomeFill.value;
       continue;
     }
 

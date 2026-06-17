@@ -2,6 +2,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-warding-bond-linked-effect
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-creature-size-change
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.attack-damage-die-floor
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.passive-damage-resistance
 // KERNEL-COVERAGE: runtime-owner BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER
@@ -30,6 +31,8 @@ import type {
   SupportedAttackActionOption,
 } from "../battle-action-options.ts";
 import {
+  ATTACK_DAMAGE_DIE_FLOOR_MINIMUM_RESULT,
+  ATTACK_DAMAGE_DIE_FLOOR_SUPPORT_PROFILE,
   PASSIVE_DAMAGE_RESISTANCE_SUPPORT_PROFILE,
   type OngoingFeatureDamageModifier,
 } from "../unit-feature-support.ts";
@@ -227,6 +230,7 @@ export function attackDamageByType(
     attack,
     attackRoll,
   );
+  const damageDieFloorMinimum = attackDamageDieFloorMinimum(attacker, attack);
   const damageByType = damageRoll.value.reduce<ReadonlyMap<DamageType, number>>(
     (totals, group, index) => {
       const component = components[index];
@@ -234,7 +238,9 @@ export function attackDamageByType(
         return totals;
       }
       const diceTotal = group.results.reduce(
-        (groupTotal, dieResult) => groupTotal + Number(dieResult),
+        (groupTotal, dieResult) =>
+          groupTotal +
+          attackDamageDieResult(dieResult, damageDieFloorMinimum),
         0,
       );
       const modifier =
@@ -268,6 +274,49 @@ export function attackDamageByType(
     });
   }, damageByType);
   return clampMinimumDamageTotal(reducedDamageByType, components);
+}
+
+function attackDamageDieFloorMinimum(
+  attacker: BattleCreatureState | undefined,
+  attack: SupportedAttackActionOption,
+): typeof ATTACK_DAMAGE_DIE_FLOOR_MINIMUM_RESULT | null {
+  if (
+    attacker?.origin.kind !== "character" ||
+    attack.kind !== "weapon" ||
+    attack.weapon.usage !== "melee" ||
+    !weaponHasTwoHandedOrVersatileProperty(attack.weapon)
+  ) {
+    return null;
+  }
+  const mainWeapon = attacker.origin.selectedLoadout.weapon;
+  if (
+    mainWeapon?.unitId !== attack.weapon.id ||
+    mainWeapon.grip !== "two_handed"
+  ) {
+    return null;
+  }
+  return attacker.origin.characterUnitRefs.some((unitRef) =>
+    unitRef.supportProfiles.includes(ATTACK_DAMAGE_DIE_FLOOR_SUPPORT_PROFILE),
+  )
+    ? ATTACK_DAMAGE_DIE_FLOOR_MINIMUM_RESULT
+    : null;
+}
+
+function weaponHasTwoHandedOrVersatileProperty(
+  weapon: CharacterWeaponAttackActionOption["weapon"],
+): boolean {
+  return (weapon.properties ?? []).some(
+    (property) =>
+      property.kind === "two_handed" || property.kind === "versatile",
+  );
+}
+
+function attackDamageDieResult(
+  dieResult: DieRollResult,
+  floorMinimum: typeof ATTACK_DAMAGE_DIE_FLOOR_MINIMUM_RESULT | null,
+): number {
+  const result = Number(dieResult);
+  return floorMinimum === null ? result : Math.max(result, floorMinimum);
 }
 
 export function damageAmountByTypeEntriesToMap(

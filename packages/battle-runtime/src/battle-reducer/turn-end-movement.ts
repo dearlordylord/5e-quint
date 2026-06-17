@@ -27,7 +27,7 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.ACID_ARROW_ATTACK_TIMING
 // KERNEL-COVERAGE: runtime-owner BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING
 // KERNEL-COVERAGE: runtime-owner BATTLE.COMPOSITION.TURN_BOUNDARY_EFFECT_LIFECYCLE_ORDERING
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.invocation-grease-ground-hazard spell.invocation-jump-movement-replacement spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.creature-space-movement-permission unit-feature.d20-test-natural-one-reroll unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.invocation-grease-ground-hazard spell.invocation-jump-movement-replacement spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
 
 import { Either, Match } from "effect";
 
@@ -111,6 +111,12 @@ import {
   startTurnDeathSavingThrowRequired,
   statBlockRechargeRollHole,
 } from "./damage-apply.ts";
+import {
+  d20TestNaturalOneRerollDieDecisionRequired,
+  d20TestNaturalOneRerollDieIssue,
+  d20TestNaturalOneRerollHoleWithOption,
+  effectiveD20TestNaturalOneRerollDeathSavingThrow,
+} from "./d20-test-natural-one-reroll.ts";
 
 import { maybeOpenInterruptWindow, snapshotBattle } from "./dispatcher.ts";
 import {
@@ -141,8 +147,10 @@ import {
   battleMovementBudgetForActor,
   combatantCanMoveInState,
   combatantCanMoveWithBudget,
+  creatureSizeIsLargerThanSelf,
   effectiveMovementSpeed,
   effectiveWalkSpeed,
+  grappleTargetExemptFromDragCost,
   opportunityAttackThreatsForMovement,
   representedMovementSpeedKinds,
 } from "./movement-speed.ts";
@@ -172,8 +180,14 @@ import {
 import { wardingBondSavingThrowFlatBonusProjectionsForTarget } from "./warding-bond.ts";
 import {
   activeDruidWildShape,
+  combatantEffectiveSize,
   updateActiveDruidWildShapeResources,
 } from "./druid-wild-shape.ts";
+import {
+  CREATURE_SPACE_MOVEMENT_PERMISSION_SUPPORT_PROFILE,
+  type BattleCreatureSpaceMovementPermissionSupportProfile,
+  type BattleUnitSupportProfile,
+} from "../unit-feature-support.ts";
 import {
   battleStateWithFlySpeedGrantEndFallCleanupFrames,
   flySpeedGrantEndFallCleanupFramesForExpiredEffects,
@@ -214,6 +228,7 @@ import type {
   BattleCommandApproachMovementFact,
   BattleCommandFleeMovementFact,
   BattleCommandHaltTurnSuppression,
+  BattleCreatureSpaceTraversalMovementFact,
   BattleCreatureState,
   BattleFlySpeedGrantEndFallCleanupFrame,
   BattleDroppedObjectOutcome,
@@ -233,6 +248,7 @@ import type {
   BattleMoonbeamSavingThrowOutcomeHole,
   BattleMovableZoneRepositionMovementHole,
   BattleGrappleLink,
+  BattleGrappleDragMovementFact,
   BattleGreaseGroundHazardSavingThrowOutcomeHole,
   BattleSpikeGrowthMovementDamageRollHole,
   BattleWebRestraintSavingThrowOutcomeHole,
@@ -5035,6 +5051,7 @@ export function resetBattleTurnResources(
     huntersPreyHordeBreakerUsedThisTurn: [],
     recklessAttackWhileRagingUsedThisTurn: [],
     weaponDamageDiceRollChoicesUsedThisTurn: [],
+    grapplerPunchAndGrabUsedThisTurn: [],
     dashMovementBonusFeet: movementFeet(0),
     disengaged: false,
   };
@@ -5822,6 +5839,33 @@ export function resolveEndTurnCommand(
       "Death Saving Throw fill does not match the requested hole.",
     );
   }
+  if (deathSavingThrowFill?.kind === "deathSavingThrow") {
+    if (
+      d20TestNaturalOneRerollDieDecisionRequired({
+        actor: nextActor,
+        originalNaturalD20: Number(deathSavingThrowFill.value),
+        decision: deathSavingThrowFill.d20TestNaturalOneReroll,
+      })
+    ) {
+      return needsHolesResult(input.state, input.subject, [
+        d20TestNaturalOneRerollHoleWithOption(
+          deathSavingThrowHole(nextActorId),
+        ),
+      ]);
+    }
+    const d20TestNaturalOneRerollIssue = d20TestNaturalOneRerollDieIssue({
+      actor: nextActor,
+      originalNaturalD20: Number(deathSavingThrowFill.value),
+      decision: deathSavingThrowFill.d20TestNaturalOneReroll,
+    });
+    if (d20TestNaturalOneRerollIssue !== null) {
+      return invalidResult(
+        input.state,
+        "invalidFill",
+        d20TestNaturalOneRerollIssue,
+      );
+    }
+  }
   if (
     rechargeRollFill?.kind === "statBlockRechargeRoll" &&
     rechargeRollFill.holeId !== STAT_BLOCK_RECHARGE_ROLL_HOLE_ID
@@ -5842,12 +5886,14 @@ export function resolveEndTurnCommand(
       "Stat Block Recharge roll fill must provide one d6 result for each requested target.",
     );
   }
+  const effectiveDeathSavingThrowFill =
+    deathSavingThrowFill?.kind === "deathSavingThrow"
+      ? effectiveD20TestNaturalOneRerollDeathSavingThrow(deathSavingThrowFill)
+      : undefined;
 
   return resolveEndTurn(
     input.state,
-    deathSavingThrowFill?.kind === "deathSavingThrow"
-      ? deathSavingThrowFill.value
-      : undefined,
+    effectiveDeathSavingThrowFill?.value,
     rechargeRollFill?.kind === "statBlockRechargeRoll"
       ? rechargeRollFill.value
       : undefined,
@@ -6314,14 +6360,27 @@ export function parseBattleMovement(
       message: "Movement cost must be a positive integer.",
     };
   }
-  const areaMovementCostValidation = validateAreaMovementCostFacts(
+  const movementCostFactValidation = validateMovementCostFacts(
     state,
+    moverId,
     fill.value,
   );
-  if (areaMovementCostValidation !== null) {
+  if (movementCostFactValidation !== null) {
     return {
       tag: "invalid",
-      message: areaMovementCostValidation,
+      message: movementCostFactValidation,
+    };
+  }
+  const creatureSpaceTraversalValidation =
+    validateCreatureSpaceTraversalMovementFact(
+      state,
+      moverId,
+      fill.value.creatureSpaceTraversal,
+    );
+  if (creatureSpaceTraversalValidation !== null) {
+    return {
+      tag: "invalid",
+      message: creatureSpaceTraversalValidation,
     };
   }
   const areaExtraCostFeet = areaMovementExtraCostFeet(state, fill.value);
@@ -6438,6 +6497,12 @@ export function parseBattleMovement(
       ...(fill.value.areaDifficultTerrain === undefined
         ? {}
         : { areaDifficultTerrain: fill.value.areaDifficultTerrain }),
+      ...(fill.value.grappleDrag === undefined
+        ? {}
+        : { grappleDrag: fill.value.grappleDrag }),
+      ...(fill.value.creatureSpaceTraversal === undefined
+        ? {}
+        : { creatureSpaceTraversal: fill.value.creatureSpaceTraversal }),
       ...(fill.value.jumpMovementReplacement === undefined
         ? {}
         : { jumpMovementReplacement: fill.value.jumpMovementReplacement }),
@@ -7062,8 +7127,93 @@ type AreaMovementCostFactResult =
       readonly extraCostFeet: MovementFeet;
     };
 
-function validateAreaMovementCostFacts(
+function validateCreatureSpaceTraversalMovementFact(
   state: BattleState,
+  moverId: CombatantId,
+  fact: BattleCreatureSpaceTraversalMovementFact | undefined,
+): string | null {
+  if (fact === undefined) {
+    return null;
+  }
+  if (fact.kind !== "occupiedCreatureSpaceTraversal") {
+    return "Creature-space traversal movement fact has the wrong kind.";
+  }
+  if (fact.occupiedSpaces.length === 0) {
+    return "Creature-space traversal movement fact requires an occupied creature space.";
+  }
+  const mover = state.combatants.get(moverId);
+  if (mover === undefined) {
+    return "Creature-space traversal requires a known mover.";
+  }
+  if (creatureSpaceMovementPermissionProfileForCombatant(mover) === null) {
+    return "Creature-space traversal requires a selected occupied-creature-space movement permission profile.";
+  }
+  const seenOccupants = new Set<CombatantId>();
+  for (const occupiedSpace of fact.occupiedSpaces) {
+    if (occupiedSpace.occupantId === moverId) {
+      return "Creature-space traversal cannot name the mover as the occupied creature.";
+    }
+    if (seenOccupants.has(occupiedSpace.occupantId)) {
+      return "Creature-space traversal movement fact repeats an occupied creature.";
+    }
+    seenOccupants.add(occupiedSpace.occupantId);
+    const occupant = state.combatants.get(occupiedSpace.occupantId);
+    if (occupant === undefined) {
+      return "Creature-space traversal references an unknown occupied creature.";
+    }
+    if (
+      !creatureSizeIsLargerThanSelf(
+        combatantEffectiveSize(mover),
+        combatantEffectiveSize(occupant),
+      )
+    ) {
+      return "Creature-space traversal requires each occupied creature to be larger than the mover.";
+    }
+  }
+  if (
+    fact.destination.kind === "unoccupiedSpace" &&
+    fact.occupiedSpaces.some(
+      (occupiedSpace) =>
+        occupiedSpace.positionId === fact.destination.positionId,
+    )
+  ) {
+    return "Creature-space traversal cannot end in an occupied creature space.";
+  }
+  if (fact.destination.kind === "occupiedCreatureSpace") {
+    return "Creature-space traversal cannot end in an occupied creature space.";
+  }
+  return null;
+}
+
+function creatureSpaceMovementPermissionProfileForCombatant(
+  combatant: BattleCreatureState,
+): BattleCreatureSpaceMovementPermissionSupportProfile | null {
+  if (combatant.origin.kind !== "character") {
+    return null;
+  }
+  for (const unitRef of combatant.origin.characterUnitRefs) {
+    const profile = unitRef.supportProfiles.find(
+      isBattleCreatureSpaceMovementPermissionSupportProfile,
+    );
+    if (profile !== undefined) {
+      return profile;
+    }
+  }
+  return null;
+}
+
+function isBattleCreatureSpaceMovementPermissionSupportProfile(
+  profile: BattleUnitSupportProfile,
+): profile is BattleCreatureSpaceMovementPermissionSupportProfile {
+  return (
+    typeof profile === "object" &&
+    profile.kind === CREATURE_SPACE_MOVEMENT_PERMISSION_SUPPORT_PROFILE
+  );
+}
+
+function validateMovementCostFacts(
+  state: BattleState,
+  moverId: CombatantId,
   value: BattleMovementFillValue,
 ): string | null {
   const difficultTerrain = validateAreaDifficultTerrainMovementFact(
@@ -7080,6 +7230,14 @@ function validateAreaMovementCostFacts(
   if (gust.tag === "invalid") {
     return gust.message;
   }
+  const grappleDrag = validateGrappleDragMovementFact(
+    state,
+    moverId,
+    value.grappleDrag,
+  );
+  if (grappleDrag.tag === "invalid") {
+    return grappleDrag.message;
+  }
   const areaCosts = [difficultTerrain, gust].filter(
     (
       result,
@@ -7087,14 +7245,29 @@ function validateAreaMovementCostFacts(
       result.tag === "ok",
   );
   if (areaCosts.length === 0) {
-    return null;
+    if (grappleDrag.tag !== "ok") {
+      return null;
+    }
+  }
+  if (grappleDrag.tag === "ok" && value.jumpMovementReplacement !== undefined) {
+    return "Grapple drag movement facts cannot be combined with Jump movement replacement.";
+  }
+  if (
+    grappleDrag.tag === "ok" &&
+    value.levitatedMovement?.altitudeChange !== undefined
+  ) {
+    return "Grapple drag movement facts cannot be combined with Levitate altitude-change movement.";
   }
   const firstAreaCost = areaCosts[0];
-  if (firstAreaCost === undefined) {
+  const allCosts =
+    grappleDrag.tag === "ok" ? [...areaCosts, grappleDrag] : areaCosts;
+  const firstCost = allCosts[0];
+  if (firstCost === undefined) {
     return null;
   }
   const remainingAreaCosts = areaCosts.slice(1);
   if (
+    firstAreaCost !== undefined &&
     remainingAreaCosts.some(
       (areaCost) =>
         Number(areaCost.totalDistanceFeet) !==
@@ -7104,20 +7277,34 @@ function validateAreaMovementCostFacts(
     return "Area movement-cost facts must agree on total Movement distance.";
   }
   if (
+    allCosts.slice(1).some(
+      (cost) =>
+        Number(cost.totalDistanceFeet) !== Number(firstCost.totalDistanceFeet),
+    )
+  ) {
+    return "Movement-cost facts must agree on total Movement distance.";
+  }
+  if (
     value.jumpMovementReplacement !== undefined ||
     value.levitatedMovement?.altitudeChange !== undefined
   ) {
     return null;
   }
   const expectedCostFeet = movementFeet(
-    Number(firstAreaCost.totalDistanceFeet) +
-      areaCosts.reduce(
-        (total, areaCost) => total + Number(areaCost.extraCostFeet),
+    Number(firstCost.totalDistanceFeet) +
+      allCosts.reduce(
+        (total, cost) => total + Number(cost.extraCostFeet),
         0,
       ),
   );
   if (Number(value.movementCostFeet) === Number(expectedCostFeet)) {
     return null;
+  }
+  if (grappleDrag.tag === "ok" && areaCosts.length > 0) {
+    return "Combined movement-cost facts must spend total distance plus all area and non-exempt grapple drag extra movement costs.";
+  }
+  if (grappleDrag.tag === "ok") {
+    return "Grapple drag movement must spend total distance plus 1 extra foot for every foot a non-exempt Grappled target is dragged.";
   }
   if (difficultTerrain.tag === "ok" && gust.tag === "ok") {
     return "Combined area Difficult Terrain and Gust of Wind movement must spend total distance plus 1 extra foot for every foot moved through Difficult Terrain and 1 extra foot for every foot moved closer to the caster through the Line.";
@@ -7125,6 +7312,102 @@ function validateAreaMovementCostFacts(
   return difficultTerrain.tag === "ok"
     ? "Area Difficult Terrain movement must spend total distance plus 1 extra foot for every foot moved through Difficult Terrain."
     : "Gust of Wind Line movement must spend total distance plus 1 extra foot for every foot moved closer to the caster through the Line.";
+}
+
+type GrappleDragMovementCostFactResult =
+  | { readonly tag: "notApplicable" }
+  | { readonly tag: "invalid"; readonly message: string }
+  | {
+      readonly tag: "ok";
+      readonly totalDistanceFeet: MovementFeet;
+      readonly extraCostFeet: MovementFeet;
+    };
+
+function validateGrappleDragMovementFact(
+  state: BattleState,
+  moverId: CombatantId,
+  fact: BattleGrappleDragMovementFact | undefined,
+): GrappleDragMovementCostFactResult {
+  if (fact === undefined) {
+    return { tag: "notApplicable" };
+  }
+  if (fact.kind !== "grappleDrag") {
+    return {
+      tag: "invalid",
+      message: "Grapple drag movement fact has the wrong kind.",
+    };
+  }
+  if (
+    !Number.isInteger(fact.totalDistanceFeet) ||
+    fact.totalDistanceFeet <= 0
+  ) {
+    return {
+      tag: "invalid",
+      message: "Grapple drag total distance must be a positive integer.",
+    };
+  }
+  if (fact.targets.length === 0) {
+    return {
+      tag: "invalid",
+      message: "Grapple drag movement fact requires a target.",
+    };
+  }
+  const seenTargets = new Set<CombatantId>();
+  let extraCostFeet = 0;
+  for (const target of fact.targets) {
+    if (
+      !Number.isInteger(target.distanceFeet) ||
+      target.distanceFeet <= 0
+    ) {
+      return {
+        tag: "invalid",
+        message: "Grapple drag target distance must be a positive integer.",
+      };
+    }
+    if (Number(target.distanceFeet) > Number(fact.totalDistanceFeet)) {
+      return {
+        tag: "invalid",
+        message:
+          "Grapple drag target distance cannot exceed total Movement distance.",
+      };
+    }
+    if (seenTargets.has(target.targetId)) {
+      return {
+        tag: "invalid",
+        message: "Grapple drag movement fact repeats a target.",
+      };
+    }
+    seenTargets.add(target.targetId);
+    const link = state.grapples.find(
+      (candidate) =>
+        candidate.grapplerId === moverId &&
+        candidate.targetId === target.targetId,
+    );
+    if (link === undefined) {
+      return {
+        tag: "invalid",
+        message:
+          "Grapple drag movement fact must reference a creature Grappled by the mover.",
+      };
+    }
+    const grappler = state.combatants.get(link.grapplerId);
+    const draggedTarget = state.combatants.get(link.targetId);
+    if (grappler === undefined || draggedTarget === undefined) {
+      return {
+        tag: "invalid",
+        message:
+          "Grapple drag movement fact references a stale Grapple link.",
+      };
+    }
+    if (!grappleTargetExemptFromDragCost(grappler, draggedTarget)) {
+      extraCostFeet += Number(target.distanceFeet);
+    }
+  }
+  return {
+    tag: "ok",
+    totalDistanceFeet: fact.totalDistanceFeet,
+    extraCostFeet: movementFeet(extraCostFeet),
+  };
 }
 
 function areaMovementExtraCostFeet(

@@ -1,6 +1,7 @@
 // -*- mode: Bluespec; -*-
 
 // KERNEL-COVERAGE: qnt-owner BATTLE.DAMAGE.ATTACK_BRANCHES BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP
+// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.light-extra-attack-damage-ability-modifier
 
 module attackDamageComposition {
   import hitPointDamage.* from "./hit-point-damage"
@@ -90,11 +91,40 @@ module attackDamageComposition {
   ): bool =
     filledDiceCount == criticalDamageDiceCount(baseDice, critical)
 
-  pure def lightPropertyExtraAttackDamageModifier(abilityModifier: int): int =
-    if (abilityModifier < 0) abilityModifier else 0
+  type LightExtraAttackDamageAbilityModifierFact =
+    | LightExtraAttackNoExistingDamageAbilityModifier
+    | LightExtraAttackExistingDamageAbilityModifier(int)
 
-  pure def lightPropertyExtraAttackDamageAmount(rolledDamage: int, abilityModifier: int): int =
-    adjustedDamageRollAmount(rolledDamage, lightPropertyExtraAttackDamageModifier(abilityModifier))
+  pure def lightPropertyExtraAttackDamageModifier(
+    abilityModifier: int,
+    damageAbilityModifier: LightExtraAttackDamageAbilityModifierFact,
+    twoWeaponFightingSelected: bool
+  ): int = {
+    val appliedDamageAbilityModifier =
+      match damageAbilityModifier {
+        | LightExtraAttackNoExistingDamageAbilityModifier => abilityModifier
+        | LightExtraAttackExistingDamageAbilityModifier(modifier) => modifier
+      }
+    if (twoWeaponFightingSelected or appliedDamageAbilityModifier < 0)
+      appliedDamageAbilityModifier
+    else
+      0
+  }
+
+  pure def lightPropertyExtraAttackDamageAmount(
+    rolledDamage: int,
+    abilityModifier: int,
+    damageAbilityModifier: LightExtraAttackDamageAbilityModifierFact,
+    twoWeaponFightingSelected: bool
+  ): int =
+    adjustedDamageRollAmount(
+      rolledDamage,
+      lightPropertyExtraAttackDamageModifier(
+        abilityModifier,
+        damageAbilityModifier,
+        twoWeaponFightingSelected
+      )
+    )
 
   pure def spendActionQuota(quota: ActionQuota): ActionQuota =
     ActionSpent

@@ -1,5 +1,6 @@
 // Opportunity attack resolution extracted from turn-end-movement.ts.
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.d20-test-natural-one-reroll
 
 import { currentArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
 import { attackRollResultIsValid } from "@dnd/shared-algebras/attack-roll-algebra";
@@ -25,6 +26,12 @@ import {
   requiredAttackRollMode,
 } from "./attack-roll.ts";
 import { activeEffectArmorClass } from "./creature-state.ts";
+import {
+  attackRollHoleWithD20TestNaturalOneRerollOption,
+  d20TestNaturalOneRerollRollDecisionRequired,
+  d20TestNaturalOneRerollRollIssue,
+  effectiveD20TestNaturalOneRerollAttackRoll,
+} from "./d20-test-natural-one-reroll.ts";
 import {
   applyAttackDamageAmount,
   concentrationSavingThrowHole,
@@ -173,6 +180,36 @@ export function resolveOpportunityAttackCommand(
       "Opportunity Attack roll mode does not match the current attack-roll rule.",
     );
   }
+  const reactor = input.state.combatants.get(subject.reactorId);
+  if (
+    d20TestNaturalOneRerollRollDecisionRequired({
+      actor: reactor,
+      originalNaturalD20: Number(fillSet.attackRoll.naturalD20),
+      decision: fillSet.attackRoll.d20TestNaturalOneReroll,
+    })
+  ) {
+    return needsHolesResult(input.state, input.subject, [
+      attackRollHoleWithD20TestNaturalOneRerollOption(
+        attackRollHole(reactor, attack, requiredRollMode),
+      ),
+    ]);
+  }
+  const d20TestNaturalOneRerollIssue = d20TestNaturalOneRerollRollIssue({
+    actor: reactor,
+    originalNaturalD20: Number(fillSet.attackRoll.naturalD20),
+    decision: fillSet.attackRoll.d20TestNaturalOneReroll,
+    requiredRollMode,
+  });
+  if (d20TestNaturalOneRerollIssue !== null) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      d20TestNaturalOneRerollIssue,
+    );
+  }
+  const effectiveAttackRoll = effectiveD20TestNaturalOneRerollAttackRoll(
+    fillSet.attackRoll,
+  );
   let attackRolledState = consumeHelpAttackForAttackRoll(
     recordAttackRollOngoingFeatures(
       revealHidden(input.state, subject.reactorId),
@@ -188,12 +225,12 @@ export function resolveOpportunityAttackCommand(
     attack,
   );
   const hit = attackRollHitsWithCriticalThreshold(
-    fillSet.attackRoll,
+    effectiveAttackRoll,
     currentArmorClass(activeEffectArmorClass(target)),
     criticalThreshold,
   );
   const critical = attackRollIsCriticalHit(
-    fillSet.attackRoll,
+    effectiveAttackRoll,
     criticalThreshold,
   );
   const eligibleDamageRiders = hit
@@ -202,7 +239,7 @@ export function resolveOpportunityAttackCommand(
         subject.reactorId,
         subject.targetId,
         attack,
-        fillSet.attackRoll,
+        effectiveAttackRoll,
         [],
       )
     : [];
@@ -239,13 +276,13 @@ export function resolveOpportunityAttackCommand(
         trigger: "attackHit",
         attackerId: subject.reactorId,
         targetId: subject.targetId,
-        attackRoll: fillSet.attackRoll,
+        attackRoll: effectiveAttackRoll,
         attackKind: attackKindForDeflectRedirect(attack),
         attackHitTriggerKind: attackHitTriggerKind(attack),
         damageTypes: attackPotentialDamageTypes(
           attack,
           critical,
-          fillSet.attackRoll,
+          effectiveAttackRoll,
           eligibleDamageRiders,
           spellWeaponDamageRiders,
           spellMarkedDamageRiders,
@@ -301,7 +338,7 @@ export function resolveOpportunityAttackCommand(
           attackRolledState.combatants.get(subject.reactorId),
           target,
           attack,
-          fillSet.attackRoll,
+          effectiveAttackRoll,
         );
   if (fixedDamageAmount !== null) {
     if (fillSet.damageRoll != null) {
@@ -315,7 +352,7 @@ export function resolveOpportunityAttackCommand(
       fixedAttackDamageByTypeEntries(
         attackRolledState.combatants.get(subject.reactorId),
         attack,
-        fillSet.attackRoll,
+        effectiveAttackRoll,
       );
     if (fixedDamageByTypeBeforeTargetAdjustments === null) {
       return invalidResult(
@@ -517,7 +554,7 @@ export function resolveOpportunityAttackCommand(
       attackDamageHole(
         attack,
         critical,
-        fillSet.attackRoll,
+        effectiveAttackRoll,
         eligibleDamageRiders,
         spellWeaponDamageRiders,
         spellMarkedDamageRiders,
@@ -537,7 +574,7 @@ export function resolveOpportunityAttackCommand(
     fillSet.damageRoll,
     attack,
     critical,
-    fillSet.attackRoll,
+    effectiveAttackRoll,
     eligibleDamageRiders,
     spellWeaponDamageRiders,
     spellMarkedDamageRiders,
@@ -556,7 +593,7 @@ export function resolveOpportunityAttackCommand(
     attack,
     fillSet.damageRoll,
     critical,
-    fillSet.attackRoll,
+    effectiveAttackRoll,
     selectedDamageRiders,
     spellWeaponDamageRiders,
     spellMarkedDamageRiders,

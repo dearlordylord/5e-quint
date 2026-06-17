@@ -1,10 +1,35 @@
+let AbilityScoreIncreaseMethod : Type =
+      { kind : Text
+      , increase : Optional Natural
+      , primaryIncrease : Optional Natural
+      , secondaryIncrease : Optional Natural
+      }
+
+let oneScore =
+      \(increase : Natural) ->
+        { kind = "one_score"
+        , increase = Some increase
+        , primaryIncrease = None Natural
+        , secondaryIncrease = None Natural
+        }
+
+let twoScores =
+      \(primaryIncrease : Natural) ->
+      \(secondaryIncrease : Natural) ->
+        { kind = "two_scores"
+        , increase = None Natural
+        , primaryIncrease = Some primaryIncrease
+        , secondaryIncrease = Some secondaryIncrease
+        }
+
 let abilityScoreImprovement =
       { abilityScoreIncreaseChoice =
-          { maxScore = 20
+          { abilityScope = { kind = "all_abilities" }
+          , maxScore = 20
           , methods =
-            [ { kind = "one_score", increase = 2 }
-            , { kind = "two_scores", primaryIncrease = 1, secondaryIncrease = 1 }
-            ]
+              [ oneScore 2
+              , twoScores 1 1
+              ] : List AbilityScoreIncreaseMethod
           }
       , category = "general"
       , description =

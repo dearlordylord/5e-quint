@@ -4,6 +4,7 @@ const path = require("node:path");
 const {
   battleReadinessClosureKind,
   deterministicAdmissionProjectionEvidenceTag,
+  executableProfileKinds,
   mcpScenarioWitnessKind,
   selectedIdentityMbtEvidenceTag,
 } = require("./unit-profile-coverage-config.cjs");
@@ -48,6 +49,7 @@ const {
   buildFeatureProcedureMbtEvidenceGate,
 } = require("./feature-procedure-mbt-evidence-gate.cjs");
 const {
+  buildMatrix,
   selectedIdentityEvidenceStatus,
   selectedIdentityStatus,
 } = require("./unit-profile-coverage-report.cjs");
@@ -454,6 +456,92 @@ function assertMindSpikeDeferredSelectedIdentityGate() {
   }
 }
 
+function assertSelectedIdentityMetricExcludesWholeClaimNotApplicable() {
+  const profile = {
+    id: "fixture.selected-identity-profile",
+    profileKind: "action",
+    qntOwners: [],
+    runtimeOwners: [],
+    verificationOwners: [],
+  };
+  const matrix = buildMatrix(
+    {
+      collections: {
+        collections: [{ id: "srd-5.2.1", policy: { tag: "srd" } }],
+        derivedViews: [],
+      },
+      inventory: [
+        {
+          unitId: "fixture_identity_replay",
+          collectionId: "srd-5.2.1",
+          sourceRecordPath: "fixture/identity-replay.json",
+          executableMechanics: true,
+        },
+        {
+          unitId: "fixture_identity_not_applicable",
+          collectionId: "srd-5.2.1",
+          sourceRecordPath: "fixture/identity-not-applicable.json",
+          executableMechanics: true,
+        },
+      ],
+      authoredSurfaceUnits: [],
+      profiles: [profile],
+      unitClaims: [
+        {
+          unitId: "fixture_identity_replay",
+          collectionId: "srd-5.2.1",
+          claim: {
+            tag: "supported-profile",
+            profileIds: [profile.id],
+          },
+        },
+        {
+          unitId: "fixture_identity_not_applicable",
+          collectionId: "srd-5.2.1",
+          claim: {
+            tag: "supported-profile",
+            profileIds: [profile.id],
+            selectedIdentityEvidenceDisposition: {
+              tag: "not-applicable",
+              owner: "fixture character-creation projection owner",
+              reason:
+                "The fixture has no selected battle-runtime identity replay boundary.",
+            },
+          },
+        },
+      ],
+      unitEvidence: [
+        {
+          unitId: "fixture_identity_replay",
+          evidence: {
+            tag: selectedIdentityMbtEvidenceTag,
+            taskId: "FIXTURE-SELECTED-IDENTITY",
+            ownerPath: "fixture/identity-replay.mbt.test.ts",
+          },
+        },
+      ],
+      taskClaims: [],
+      rulesKernelObligations: [],
+      rulesKernelProfileObligations: [],
+    },
+    {
+      executableProfileKinds,
+      deterministicAdmissionProjectionEvidenceTag,
+      selectedIdentityMbtEvidenceTag,
+    },
+  );
+  const metric = matrix.metrics.selectedIdentityMbtCoverage;
+  if (
+    metric.numerator !== 1 ||
+    metric.denominator !== 1 ||
+    metric.percent !== "100%"
+  ) {
+    fail(
+      `Self-test failed: expected selected identity global metric to exclude whole-claim not-applicable rows, got ${JSON.stringify(metric)}`,
+    );
+  }
+}
+
 function runSelfTest(root) {
   const levelTwoBands = characterLevelBands(2);
   if (
@@ -500,6 +588,7 @@ function runSelfTest(root) {
   assertLaterLevelOnlyScopeAccounting();
   assertSelectionGrantContainerScopeAccounting();
   assertMindSpikeDeferredSelectedIdentityGate();
+  assertSelectedIdentityMetricExcludesWholeClaimNotApplicable();
 
   const tempDir = fs.mkdtempSync(
     path.join(os.tmpdir(), "unit-profile-coverage-self-test-"),

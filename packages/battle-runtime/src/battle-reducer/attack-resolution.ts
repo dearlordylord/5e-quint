@@ -7,6 +7,7 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.SHOVE.OUTCOME_AND_PUSH_BOUNDARY BATTLE.DAMAGE.ATTACK_BRANCHES BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES
 // KERNEL-COVERAGE: runtime-owner BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.d20-test-natural-one-reroll
 import type {
   ActionEconomyState,
   RuntimeActionResource,
@@ -98,6 +99,7 @@ import {
   applyTemporaryHitPoints,
   breakBattleConcentration,
 } from "./damage-apply.ts";
+import { effectiveD20TestNaturalOneRerollAbilityCheckValue } from "./d20-test-natural-one-reroll.ts";
 
 import {
   attackDamageContinuationConcentrationFrame,
@@ -164,6 +166,7 @@ import type {
   BattleConcentrationSavingThrowHole,
   BattleCreatureState,
   BattleFill,
+  BattleGrappleLink,
   BattleHoleId,
   BattleResolutionInput,
   BattleResolutionInputForSubject,
@@ -865,7 +868,7 @@ export function resolveHide(
     return invalidResult(
       input.state,
       "unsupportedActOption",
-      "Hide requires Heavily Obscured or sufficient cover and being out of enemy line of sight.",
+      "Hide requires Heavily Obscured, sufficient cover, or an admitted creature-obscurement permission while out of enemy line of sight.",
     );
   }
   const check = abilityCheckFill(
@@ -1259,7 +1262,7 @@ export function resolveStatBlockBonusActionHide(
     return invalidResult(
       input.state,
       "unsupportedActOption",
-      "Hide requires Heavily Obscured or sufficient cover and being out of enemy line of sight.",
+      "Hide requires Heavily Obscured, sufficient cover, or an admitted creature-obscurement permission while out of enemy line of sight.",
     );
   }
   const check = abilityCheckFill(
@@ -1371,23 +1374,40 @@ export function resolveGrapple(
       "Grapple is no longer available for the current actor.",
     );
   }
-  const savingThrowExtendedState = extendSavingThrowOngoingFeatures(
-    input.state,
-    input.subject.actorId,
-    [fillSet.targetId],
-  );
-  const nextState = normalizeBattleGrapples({
-    ...savingThrowExtendedState,
-    currentTurnResources: spent.right,
-    grapples: fillSet.outcome.value.succeeded
-      ? savingThrowExtendedState.grapples
-      : [...savingThrowExtendedState.grapples, link.link],
+  const nextState = applyGrappleSavingThrowOutcome({
+    state: {
+      ...input.state,
+      currentTurnResources: spent.right,
+    },
+    link: link.link,
+    outcome: fillSet.outcome.value,
   });
   return {
     tag: "resolved",
     state: nextState,
     snapshot: snapshotBattle(nextState),
   };
+}
+
+export function applyGrappleSavingThrowOutcome(input: {
+  readonly state: BattleState;
+  readonly link: BattleGrappleLink;
+  readonly outcome: Extract<
+    BattleFill,
+    { readonly kind: "grappleOutcome" }
+  >["value"];
+}): BattleState {
+  const savingThrowExtendedState = extendSavingThrowOngoingFeatures(
+    input.state,
+    input.link.grapplerId,
+    [input.link.targetId],
+  );
+  return normalizeBattleGrapples({
+    ...savingThrowExtendedState,
+    grapples: input.outcome.succeeded
+      ? savingThrowExtendedState.grapples
+      : [...savingThrowExtendedState.grapples, input.link],
+  });
 }
 
 export function resolveShove(
@@ -1785,7 +1805,10 @@ export function abilityCheckFill(
       if (check !== undefined) {
         return { tag: "invalid", message: `${label} check was filled twice.` };
       }
-      check = fill;
+      check = {
+        ...fill,
+        value: effectiveD20TestNaturalOneRerollAbilityCheckValue(fill.value),
+      };
       continue;
     }
     return {

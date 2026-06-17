@@ -94,9 +94,14 @@ import featAbilityScoreImprovementInput from "../../content/feat_ability_score_i
 import featArcheryInput from "../../content/feat_archery.json";
 import featBoonOfCombatProwessInput from "../../content/feat_boon_of_combat_prowess.json";
 import featDefenseInput from "../../content/feat_defense.json";
+import featGreatWeaponFightingInput from "../../content/feat_great_weapon_fighting.json";
+import featGrapplerInput from "../../content/feat_grappler.json";
 import featMagicInitiateClericInput from "../../content/feat_magic_initiate_cleric.json";
+import featMagicInitiateDruidInput from "../../content/feat_magic_initiate_druid.json";
 import featMagicInitiateWizardInput from "../../content/feat_magic_initiate_wizard.json";
 import featSavageAttackerInput from "../../content/feat_savage_attacker.json";
+import featSkilledInput from "../../content/feat_skilled.json";
+import featTwoWeaponFightingInput from "../../content/feat_two_weapon_fighting.json";
 import fighterActionSurgeInput from "../../content/fighter_action_surge.json";
 import fighterAbilityScoreImprovementL4Input from "../../content/fighter_ability_score_improvement_l4.json";
 import fighterExtraAttackInput from "../../content/fighter_extra_attack.json";
@@ -206,6 +211,19 @@ import speciesDwarfInput from "../../content/species_dwarf.json";
 import speciesDwarfDarkvisionInput from "../../content/species_dwarf_darkvision.json";
 import speciesDwarfDwarvenResilienceInput from "../../content/species_dwarf_dwarven_resilience.json";
 import speciesElfInput from "../../content/species_elf.json";
+import speciesGnomeInput from "../../content/species_gnome.json";
+import speciesGnomeDarkvisionInput from "../../content/species_gnome_darkvision.json";
+import speciesGnomeGnomishCunningInput from "../../content/species_gnome_gnomish_cunning.json";
+import speciesGnomeGnomishLineageInput from "../../content/species_gnome_gnomish_lineage.json";
+import speciesHalflingInput from "../../content/species_halfling.json";
+import speciesHalflingBraveInput from "../../content/species_halfling_brave.json";
+import speciesHalflingNimblenessInput from "../../content/species_halfling_nimbleness.json";
+import speciesHalflingLuckInput from "../../content/species_halfling_luck.json";
+import speciesHalflingNaturallyStealthyInput from "../../content/species_halfling_naturally_stealthy.json";
+import speciesHumanInput from "../../content/species_human.json";
+import speciesHumanResourcefulInput from "../../content/species_human_resourceful.json";
+import speciesHumanSkillfulInput from "../../content/species_human_skillful.json";
+import speciesHumanVersatileInput from "../../content/species_human_versatile.json";
 import speciesGoliathInput from "../../content/species_goliath.json";
 import speciesGoliathPowerfulBuildInput from "../../content/species_goliath_powerful_build.json";
 import speciesOrcInput from "../../content/species_orc.json";
@@ -422,6 +440,9 @@ export const srdUnitCollection = defineSrdUnitCollection({
     speciesDragonbornInput,
     speciesDwarfInput,
     speciesElfInput,
+    speciesGnomeInput,
+    speciesHalflingInput,
+    speciesHumanInput,
     speciesGoliathInput,
     speciesOrcInput,
     speciesTieflingInput,
@@ -518,10 +539,15 @@ export const srdUnitCollection = defineSrdUnitCollection({
     featArcheryInput,
     featBoonOfCombatProwessInput,
     featDefenseInput,
+    featGreatWeaponFightingInput,
+    featGrapplerInput,
     alertInput,
     featMagicInitiateClericInput,
+    featMagicInitiateDruidInput,
     featMagicInitiateWizardInput,
     featSavageAttackerInput,
+    featSkilledInput,
+    featTwoWeaponFightingInput,
     paladinChannelDivinityInput,
     paladinLayOnHandsInput,
     paladinFightingStyleInput,
@@ -548,6 +574,16 @@ export const srdUnitCollection = defineSrdUnitCollection({
     speciesDragonbornDarkvisionInput,
     speciesDwarfDarkvisionInput,
     speciesDwarfDwarvenResilienceInput,
+    speciesGnomeDarkvisionInput,
+    speciesGnomeGnomishCunningInput,
+    speciesGnomeGnomishLineageInput,
+    speciesHalflingBraveInput,
+    speciesHalflingNimblenessInput,
+    speciesHalflingLuckInput,
+    speciesHalflingNaturallyStealthyInput,
+    speciesHumanResourcefulInput,
+    speciesHumanSkillfulInput,
+    speciesHumanVersatileInput,
     speciesGoliathPowerfulBuildInput,
     speciesTieflingDarkvisionInput,
     acidSplashInput,

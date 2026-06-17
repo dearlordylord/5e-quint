@@ -56,7 +56,8 @@
         "spell.invocation-expeditious-retreat-dash",
         "spell.invocation-forced-reaction-movement",
         "spell.invocation-grease-ground-hazard",
-        "spell.invocation-jump-movement-replacement"
+        "spell.invocation-jump-movement-replacement",
+        "unit-feature.creature-space-movement-permission"
       ],
       "qntOwners": [
         "packages/shared-algebras/proofs/rule-core/movement-spatial-grapple.qnt",
@@ -186,6 +187,8 @@
         "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-d20-test-natural-one-reroll-core.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-hide-obscurement-permission-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-passive-movement-defense-core.qnt",
@@ -2580,7 +2583,9 @@
           "stepAction": "step"
         }
       ],
-      "profiles": [],
+      "profiles": [
+        "unit-feature.light-extra-attack-damage-ability-modifier"
+      ],
       "qntOwners": [
         "packages/shared-algebras/proofs/rule-core/attack-damage-composition.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt",
@@ -6172,6 +6177,18 @@
       "obligationIds": [
         "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
       ],
+      "profileId": "unit-feature.attack-damage-die-floor"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.DAMAGE.ATTACK_BRANCHES"
+      ],
+      "profileId": "unit-feature.light-extra-attack-damage-ability-modifier"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+      ],
       "profileId": "unit-feature.attack-damage-rider"
     },
     {
@@ -6179,6 +6196,18 @@
         "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
       ],
       "profileId": "unit-feature.attack-roll-miss-to-hit-replacement"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "profileId": "unit-feature.d20-test-natural-one-reroll"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "profileId": "unit-feature.hide-action-obscurement-permission"
     },
     {
       "obligationIds": [
@@ -6299,6 +6328,13 @@
         "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
       ],
       "profileId": "unit-feature.passive-speed-kind-grants"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+        "BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND"
+      ],
+      "profileId": "unit-feature.creature-space-movement-permission"
     },
     {
       "obligationIds": [
@@ -8230,6 +8266,14 @@
         "BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND"
       ],
       "ownerPath": "packages/shared-algebras/proofs/rule-core/movement-spatial-grapple.qnt",
+      "profileScopes": [
+        {
+          "obligationIds": [
+            "BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND"
+          ],
+          "profileId": "unit-feature.creature-space-movement-permission"
+        }
+      ],
       "role": "semantic-core"
     },
     {
@@ -8541,6 +8585,12 @@
       ],
       "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core.qnt",
       "profileScopes": [
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "profileId": "unit-feature.attack-damage-die-floor"
+        },
         {
           "obligationIds": [
             "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
@@ -9181,6 +9231,50 @@
         "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
       ],
       "ownerPath": "packages/shared-algebras/proofs/rule-core/attack-action-additional-attacks.qnt",
+      "role": "proof-only"
+    },
+    {
+      "evidence": "packages/shared-algebras/proofs/rule-core/unit-feature-d20-test-natural-one-reroll-core.qnt carries optional natural-1 D20 Test replacement-roll semantics without importing authored Unit catalog rows.",
+      "obligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-d20-test-natural-one-reroll-core.qnt",
+      "profileScopes": [
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "profileId": "unit-feature.d20-test-natural-one-reroll"
+        }
+      ],
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/shared-algebras/proofs/rule-core/unit-feature-d20-test-natural-one-reroll-core-examples.qnt is assessed generator-readiness proofOnly example evidence for natural-1 D20 Test reroll facts.",
+      "obligationIds": [],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-d20-test-natural-one-reroll-core-examples.qnt",
+      "role": "proof-only"
+    },
+    {
+      "evidence": "packages/shared-algebras/proofs/rule-core/unit-feature-hide-obscurement-permission-core.qnt carries selected Hide action creature-obscurement permission semantics without importing authored Unit catalog rows.",
+      "obligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-hide-obscurement-permission-core.qnt",
+      "profileScopes": [
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "profileId": "unit-feature.hide-action-obscurement-permission"
+        }
+      ],
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/shared-algebras/proofs/rule-core/unit-feature-hide-obscurement-permission-core-examples.qnt is assessed generator-readiness proofOnly example evidence for Hide action creature-obscurement permission facts.",
+      "obligationIds": [],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-hide-obscurement-permission-core-examples.qnt",
       "role": "proof-only"
     },
     {
@@ -9831,6 +9925,12 @@
       "role": "semantic-core"
     },
     {
+      "category": "leaf-type-vocabulary",
+      "classification": "exempt",
+      "evidence": "Shared creature size order leaf imported by registered movement and Unit feature procedure owners.",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/creature-size-order.qnt"
+    },
+    {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/shared-algebras/proofs/rule-core/damage-component-adjustments-examples.qnt",
       "role": "proof-only"
@@ -10118,6 +10218,26 @@
     },
     {
       "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-d20-test-natural-one-reroll-core-examples.qnt",
+      "role": "proof-only"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-d20-test-natural-one-reroll-core.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-hide-obscurement-permission-core-examples.qnt",
+      "role": "proof-only"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-hide-obscurement-permission-core.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
       "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-martial-arts-core-examples.qnt",
       "role": "proof-only"
     },
@@ -10283,6 +10403,18 @@
       ]
     },
     {
+      "profileId": "unit-feature.attack-damage-die-floor",
+      "qntOwners": [
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core.qnt",
+          "role": "semantic-core"
+        }
+      ]
+    },
+    {
       "profileId": "unit-feature.attack-damage-reduction-zero-damage-redirect",
       "qntOwners": [
         {
@@ -10381,6 +10513,30 @@
       ]
     },
     {
+      "profileId": "unit-feature.creature-space-movement-permission",
+      "qntOwners": [
+        {
+          "obligationIds": [
+            "BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND"
+          ],
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/movement-spatial-grapple.qnt",
+          "role": "semantic-core"
+        }
+      ]
+    },
+    {
+      "profileId": "unit-feature.d20-test-natural-one-reroll",
+      "qntOwners": [
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-d20-test-natural-one-reroll-core.qnt",
+          "role": "semantic-core"
+        }
+      ]
+    },
+    {
       "profileId": "unit-feature.enemy-zero-hit-point-temporary-hit-points",
       "qntOwners": [
         {
@@ -10412,6 +10568,18 @@
             "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
           ],
           "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core.qnt",
+          "role": "semantic-core"
+        }
+      ]
+    },
+    {
+      "profileId": "unit-feature.hide-action-obscurement-permission",
+      "qntOwners": [
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-hide-obscurement-permission-core.qnt",
           "role": "semantic-core"
         }
       ]
@@ -10921,6 +11089,8 @@
         "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core-examples.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core-examples.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core-examples.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-d20-test-natural-one-reroll-core-examples.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-hide-obscurement-permission-core-examples.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core-examples.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core-examples.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-passive-movement-defense-core-examples.qnt",
@@ -10937,6 +11107,8 @@
         "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-d20-test-natural-one-reroll-core.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-hide-obscurement-permission-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-passive-movement-defense-core.qnt",
@@ -12921,7 +13093,8 @@
         "arithmetic",
         "comparison",
         "boolean-connective",
-        "all-block"
+        "all-block",
+        "pattern-match"
       ],
       "obligationId": "BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP",
       "proofOnly": [
@@ -13824,8 +13997,13 @@
     "character-creation.eldritch-invocation-choice",
     "character-creation.fighter-fighting-style-advancement-replacement",
     "character-creation.fighting-style-cantrip-advancement-replacement",
+    "character-creation.grappler-general-feat",
     "character-creation.hit-point-maximum-projection",
+    "character-creation.origin-feat-proficiency-choice",
     "character-creation.skill-expertise-choice",
+    "character-creation.species-origin-feat-choice",
+    "character-creation.species-origin-feat-proficiency-choice",
+    "character-creation.species-trait-proficiency-choice",
     "character-creation.warlock-pact-magic-advancement",
     "character-creation.weapon-mastery-choice",
     "character-creation.weapon-mastery-level-gain",
@@ -13931,6 +14109,7 @@
     "unit-feature.alternate-action-cost",
     "unit-feature.attack-action-area-save-damage-replacement",
     "unit-feature.attack-action-attack-count-scaling",
+    "unit-feature.attack-damage-die-floor",
     "unit-feature.attack-damage-reduction-zero-damage-redirect",
     "unit-feature.attack-damage-rider",
     "unit-feature.attack-roll-miss-to-hit-replacement",
@@ -13939,13 +14118,18 @@
     "unit-feature.bonus-action-dash-temporary-hit-points",
     "unit-feature.bonus-action-delegated-standard-actions",
     "unit-feature.bonus-action-ongoing-rage",
+    "unit-feature.creature-space-movement-permission",
+    "unit-feature.d20-test-natural-one-reroll",
     "unit-feature.druid-wild-shape-known-form",
     "unit-feature.enemy-zero-hit-point-temporary-hit-points",
     "unit-feature.failed-ability-check-resource-boost",
     "unit-feature.first-attack-roll-reckless-advantage",
+    "unit-feature.grappler",
+    "unit-feature.hide-action-obscurement-permission",
     "unit-feature.hunters-prey",
     "unit-feature.initiative-proficiency-and-swap",
     "unit-feature.innate-sorcery-activation",
+    "unit-feature.light-extra-attack-damage-ability-modifier",
     "unit-feature.magic-action-area-save-damage-healing",
     "unit-feature.magic-action-healing-pool",
     "unit-feature.martial-arts-attack-projection",

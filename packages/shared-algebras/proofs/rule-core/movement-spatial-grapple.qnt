@@ -1,12 +1,12 @@
 // -*- mode: Bluespec; -*-
 // RAW-COVERAGE: qnt-owner RAW-PTG-REACTIONS-003 RAW-QCORE7-MOVEMENT-GRAPPLE-001
 // KERNEL-COVERAGE: qnt-owner BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND
+// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.creature-space-movement-permission unit-feature.grappler
 
 module movementSpatialGrapple {
   import attackDamageComposition.* from "./attack-damage-composition"
   import actionTurnProcedures.* from "./action-turn-procedures"
-
-  type RuleSize = TinySize | SmallSize | MediumSize | LargeSize | HugeSize | GargantuanSize
+  import creatureSizeOrder.* from "./creature-size-order"
 
   type MovementResource =
     | OwnMovementActionBonusReactionOrSpeed
@@ -23,6 +23,16 @@ module movementSpatialGrapple {
   type MovementSpendFacts = {
     distanceFeet: int,
     extraCostFeet: int,
+  }
+
+  type CreatureSpaceMovementPermission =
+    | NoCreatureSpaceMovementPermission
+    | LargerCreatureSpaceTraversalCannotStop
+
+  type CreatureSpaceTraversalFacts = {
+    occupiedCreatureSize: RuleSize,
+    endsInOccupiedCreatureSpace: bool,
+    permission: CreatureSpaceMovementPermission,
   }
 
   type GrappleState =
@@ -58,14 +68,6 @@ module movementSpatialGrapple {
     grapple: NoGrapple,
   }
 
-  pure def sizeRank(creatureSize: RuleSize): int =
-    if (creatureSize == TinySize) 0
-    else if (creatureSize == SmallSize) 1
-    else if (creatureSize == MediumSize) 2
-    else if (creatureSize == LargeSize) 3
-    else if (creatureSize == HugeSize) 4
-    else 5
-
   pure def legalMovementSpendFacts(facts: MovementSpendFacts): bool = all {
     facts.distanceFeet >= 0,
     facts.distanceFeet <= 80,
@@ -75,6 +77,15 @@ module movementSpatialGrapple {
 
   pure def movementCostFeet(facts: MovementSpendFacts): int =
     facts.distanceFeet + facts.extraCostFeet
+
+  pure def creatureSpaceTraversalLegal(
+    moverSize: RuleSize,
+    facts: CreatureSpaceTraversalFacts,
+  ): bool = all {
+    facts.permission == LargerCreatureSpaceTraversalCannotStop,
+    creatureSizeIsLargerThanSelf(moverSize, facts.occupiedCreatureSize),
+    not(facts.endsInOccupiedCreatureSpace),
+  }
 
   pure def activeGrapple(grapple: GrappleState): bool =
     grapple != NoGrapple
@@ -186,6 +197,9 @@ module movementSpatialGrapple {
 
   pure def targetExemptFromGrappleDragCost(grapplerSize: RuleSize, targetSize: RuleSize): bool =
     targetSize == TinySize or sizeRank(targetSize) <= sizeRank(grapplerSize) - 2
+
+  pure def grapplerFastWrestlerTargetExemptFromDragCost(grapplerSize: RuleSize, targetSize: RuleSize): bool =
+    sizeRank(targetSize) <= sizeRank(grapplerSize)
 
   pure def grappleDragExtraCostPerFoot(grapplerSize: RuleSize, targetSize: RuleSize): int =
     if (targetExemptFromGrappleDragCost(grapplerSize, targetSize)) 0 else 1

@@ -674,6 +674,12 @@ export type AttackDamageRiderTrigger = Schema.Schema.Type<
 export type WeaponDamageDiceRerollTrigger = Schema.Schema.Type<
   typeof SurfaceSchema.WeaponDamageDiceRerollTriggerSchema
 >;
+export type WeaponAttackDamageDieFloorTrigger = Schema.Schema.Type<
+  typeof SurfaceSchema.WeaponAttackDamageDieFloorTriggerSchema
+>;
+export type WeaponAttackDamageDieFloorEffect = Schema.Schema.Type<
+  typeof SurfaceSchema.WeaponAttackDamageDieFloorEffectSchema
+>;
 export type SecondaryTargetSelection = Schema.Schema.Type<
   typeof SurfaceSchema.SecondaryTargetSelectionSchema
 >;
@@ -718,6 +724,9 @@ export type AttackDamageRiderMechanics = Schema.Schema.Type<
 >;
 export type WeaponDamageDiceRerollMechanics = Schema.Schema.Type<
   typeof SurfaceSchema.WeaponDamageDiceRerollMechanicsSchema
+>;
+export type WeaponAttackDamageDieFloorMechanics = Schema.Schema.Type<
+  typeof SurfaceSchema.WeaponAttackDamageDieFloorMechanicsSchema
 >;
 export type SapMasteryMechanics = Schema.Schema.Type<
   typeof SurfaceSchema.SapMasteryMechanicsSchema
@@ -876,11 +885,35 @@ export type MagicInitiateMechanics = Extract<
   FeatMechanics,
   { readonly family: "magic_initiate" }
 >;
+export type GrapplerFeatMechanics = Extract<
+  FeatMechanics,
+  { readonly family: "grappler" }
+>;
+export type WeaponAttackDamageDieFloorFeatMechanics = Extract<
+  FeatMechanics,
+  { readonly family: "damage_die_floor" }
+>;
+export type LightExtraAttackDamageAbilityModifierFeatMechanics = Extract<
+  FeatMechanics,
+  { readonly family: "light_extra_attack_damage_ability_modifier" }
+>;
 export type FeatRecord = Schema.Schema.Type<
   typeof SurfaceSchema.FeatRecordSchema
 >;
 export type SpeciesTraitMechanics = Schema.Schema.Type<
   typeof SurfaceSchema.SpeciesTraitMechanicsSchema
+>;
+export type D20TestNaturalOneRerollMechanics = Schema.Schema.Type<
+  typeof SurfaceSchema.D20TestNaturalOneRerollMechanicsSchema
+>;
+export type CreatureSpaceMovementPermissionMechanics = Schema.Schema.Type<
+  typeof SurfaceSchema.CreatureSpaceMovementPermissionMechanicsSchema
+>;
+export type HideActionObscurementPermissionMechanics = Schema.Schema.Type<
+  typeof SurfaceSchema.HideActionObscurementPermissionMechanicsSchema
+>;
+export type RestTriggeredHeroicInspirationMechanics = Schema.Schema.Type<
+  typeof SurfaceSchema.RestTriggeredHeroicInspirationMechanicsSchema
 >;
 export type DragonbornSpeciesTraits = Schema.Schema.Type<
   typeof SurfaceSchema.DragonbornSpeciesTraitsSchema
@@ -899,6 +932,27 @@ export type ElfSpeciesTraits = Schema.Schema.Type<
 >;
 export type ElfSpeciesRecord = Schema.Schema.Type<
   typeof SurfaceSchema.ElfSpeciesRecordSchema
+>;
+export type GnomishLineageMechanics = Schema.Schema.Type<
+  typeof SurfaceSchema.GnomishLineageMechanicsSchema
+>;
+export type GnomeSpeciesTraits = Schema.Schema.Type<
+  typeof SurfaceSchema.GnomeSpeciesTraitsSchema
+>;
+export type GnomeSpeciesRecord = Schema.Schema.Type<
+  typeof SurfaceSchema.GnomeSpeciesRecordSchema
+>;
+export type HalflingSpeciesTraits = Schema.Schema.Type<
+  typeof SurfaceSchema.HalflingSpeciesTraitsSchema
+>;
+export type HalflingSpeciesRecord = Schema.Schema.Type<
+  typeof SurfaceSchema.HalflingSpeciesRecordSchema
+>;
+export type HumanSpeciesTraits = Schema.Schema.Type<
+  typeof SurfaceSchema.HumanSpeciesTraitsSchema
+>;
+export type HumanSpeciesRecord = Schema.Schema.Type<
+  typeof SurfaceSchema.HumanSpeciesRecordSchema
 >;
 export type GoliathSpeciesTraits = Schema.Schema.Type<
   typeof SurfaceSchema.GoliathSpeciesTraitsSchema
@@ -986,6 +1040,9 @@ export type SpellFreeCastGrant = Extract<
   EffectAtom,
   { readonly kind: "grant_spell_free_casts" }
 >;
+export type NumericSpellFreeCastGrant = SpellFreeCastGrant & {
+  readonly count: number;
+};
 export type PreparedSpellAccessGrant = Extract<
   EffectAtom,
   { readonly kind: "grant_spell_access"; readonly mode: "prepared" }
@@ -1081,7 +1138,7 @@ export function supportedClassFeatureSpellFreeCastGrantsForUnit(
 ): {
   readonly profile: SupportedClassFeatureSpellFreeCastProfile;
   readonly preparedSpellGrant: PreparedSpellAccessGrant;
-  readonly freeCastGrant: SpellFreeCastGrant;
+  readonly freeCastGrant: NumericSpellFreeCastGrant;
 } | null {
   if (!isPassiveClassFeatureUnitRecord(unit)) {
     return null;
@@ -1097,9 +1154,10 @@ export function supportedClassFeatureSpellFreeCastGrantsForUnit(
       grant.spellId === profile.spellId,
   );
   const freeCastGrant = unit.mechanics.grants.find(
-    (grant): grant is SpellFreeCastGrant =>
+    (grant): grant is NumericSpellFreeCastGrant =>
       grant.kind === "grant_spell_free_casts" &&
       grant.spellId === profile.spellId &&
+      typeof grant.count === "number" &&
       grant.count === profile.count &&
       grant.resetCadence === profile.resetCadence,
   );
@@ -1112,7 +1170,7 @@ export function favoredEnemyHuntersMarkFreeCastGrantsForUnit(
   unit: UnitRecord,
 ): {
   readonly preparedSpellGrant: PreparedSpellAccessGrant;
-  readonly freeCastGrant: SpellFreeCastGrant;
+  readonly freeCastGrant: NumericSpellFreeCastGrant;
 } | null {
   const grants = supportedClassFeatureSpellFreeCastGrantsForUnit(unit);
   return grants?.profile.resourceTag === "favoredEnemyHuntersMarkFreeCasts"

@@ -6,6 +6,7 @@ import {
   ATTACK_DAMAGE_DISPOSITION_HOLE_ID,
   ATTACK_ROLL_HOLE_ID,
   ATTACK_TARGET_HOLE_ID,
+  GRAPPLE_OUTCOME_HOLE_ID,
   type AttackFillSet,
   type BattleAttackDamageDisposition,
   type BattleAttackRollResult,
@@ -35,6 +36,7 @@ import {
   HUNTERS_PREY_HORDE_BREAKER_DAMAGE_HOLE_ID,
   HUNTERS_PREY_HORDE_BREAKER_DECISION_HOLE_ID,
   HUNTERS_PREY_HORDE_BREAKER_TARGET_HOLE_ID,
+  GRAPPLER_PUNCH_AND_GRAB_DECISION_HOLE_ID,
   OPEN_HAND_TECHNIQUE_DECISION_HOLE_ID,
   OPEN_HAND_TECHNIQUE_SAVE_HOLE_ID,
 } from "./domain-constants.ts";
@@ -121,6 +123,12 @@ export function attackFillSet(fills: readonly BattleFill[]): AttackFillSet {
     | Extract<BattleFill, { readonly kind: "attackRoll" }>
     | undefined;
   let huntersPreyHordeBreakerDamageRoll: BattleRolledDiceFill | undefined;
+  let grapplerPunchAndGrabDecision:
+    | Extract<BattleFill, { readonly kind: "unitFeatureDecision" }>
+    | undefined;
+  let grapplerPunchAndGrabOutcome:
+    | Extract<BattleFill, { readonly kind: "grappleOutcome" }>
+    | undefined;
   for (const fill of fills) {
     if (fill.kind === "sanctuaryInterdictionOutcome") {
       continue;
@@ -200,6 +208,20 @@ export function attackFillSet(fills: readonly BattleFill[]): AttackFillSet {
 
     if (
       fill.kind === "unitFeatureDecision" &&
+      fill.holeId === GRAPPLER_PUNCH_AND_GRAB_DECISION_HOLE_ID
+    ) {
+      if (grapplerPunchAndGrabDecision !== undefined) {
+        return {
+          tag: "invalid",
+          message: "Grappler Punch and Grab decision was filled twice.",
+        };
+      }
+      grapplerPunchAndGrabDecision = fill;
+      continue;
+    }
+
+    if (
+      fill.kind === "unitFeatureDecision" &&
       fill.holeId === WEAPON_MASTERY_CLEAVE_DECISION_HOLE_ID
     ) {
       if (weaponMasteryCleaveDecision !== undefined) {
@@ -209,6 +231,20 @@ export function attackFillSet(fills: readonly BattleFill[]): AttackFillSet {
         };
       }
       weaponMasteryCleaveDecision = fill;
+      continue;
+    }
+
+    if (
+      fill.kind === "grappleOutcome" &&
+      fill.holeId === GRAPPLE_OUTCOME_HOLE_ID
+    ) {
+      if (grapplerPunchAndGrabOutcome !== undefined) {
+        return {
+          tag: "invalid",
+          message: "Grappler Punch and Grab outcome was filled twice.",
+        };
+      }
+      grapplerPunchAndGrabOutcome = fill;
       continue;
     }
 
@@ -613,6 +649,8 @@ export function attackFillSet(fills: readonly BattleFill[]): AttackFillSet {
     huntersPreyHordeBreakerDamageRoll,
     huntersPreyHordeBreakerDamageDisposition,
     huntersPreyHordeBreakerDamageDispositionFilled,
+    grapplerPunchAndGrabDecision,
+    grapplerPunchAndGrabOutcome,
   };
 }
 

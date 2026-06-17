@@ -2,8 +2,12 @@
 {"profileId":"unit-feature.action-surge-resource","obligationIds":["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"]}
 {"profileId":"unit-feature.attack-action-attack-count-scaling","obligationIds":["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"]}
 {"profileId":"unit-feature.attack-damage-reduction-zero-damage-redirect","obligationIds":["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS","BATTLE.REACTION.OFFER_DECLINE_RESUME"]}
+{"profileId":"unit-feature.attack-damage-die-floor","obligationIds":["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"]}
+{"profileId":"unit-feature.light-extra-attack-damage-ability-modifier","obligationIds":["BATTLE.DAMAGE.ATTACK_BRANCHES"]}
 {"profileId":"unit-feature.attack-damage-rider","obligationIds":["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"]}
 {"profileId":"unit-feature.attack-roll-miss-to-hit-replacement","obligationIds":["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"]}
+{"profileId":"unit-feature.d20-test-natural-one-reroll","obligationIds":["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"]}
+{"profileId":"unit-feature.hide-action-obscurement-permission","obligationIds":["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"]}
 {"profileId":"unit-feature.bardic-inspiration-failed-d20-test","obligationIds":["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"]}
 {"profileId":"unit-feature.bardic-inspiration-grant","obligationIds":["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"]}
 {"profileId":"unit-feature.bonus-action-dash-temporary-hit-points","obligationIds":["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"]}
@@ -24,6 +28,7 @@
 {"profileId":"unit-feature.passive-damage-resistance","obligationIds":["BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION"]}
 {"profileId":"unit-feature.passive-speed-bonus","obligationIds":["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"]}
 {"profileId":"unit-feature.passive-speed-kind-grants","obligationIds":["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"]}
+{"profileId":"unit-feature.creature-space-movement-permission","obligationIds":["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS","BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND"]}
 {"profileId":"unit-feature.remarkable-athlete","obligationIds":["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"]}
 {"profileId":"unit-feature.reaction-roll-or-damage-reduction","obligationIds":["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS","BATTLE.REACTION.OFFER_DECLINE_RESUME"]}
 {"profileId":"unit-feature.rogue-steady-aim","obligationIds":["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"]}

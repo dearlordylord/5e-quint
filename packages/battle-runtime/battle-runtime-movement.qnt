@@ -4,6 +4,7 @@
 // UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.bonus-action-dash-temporary-hit-points
 
 module battleRuntimeMovement {
+  import attackDamageComposition.* from "../shared-algebras/proofs/rule-core/attack-damage-composition"
   import battleRuntimeMovementBridge.* from "./battle-runtime-movement-bridge"
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeTurnOrder.* from "./battle-runtime-turn-order"
@@ -484,11 +485,42 @@ module battleRuntimeMovement {
     damageRoll: int,
     abilityModifier: int
   ): BattleState =
+    offHandAttackFighterWithDamageAbilityModifierFacts(
+      state,
+      attackTotal,
+      naturalD20,
+      damageRoll,
+      abilityModifier,
+      LightExtraAttackNoExistingDamageAbilityModifier,
+      false
+    )
+
+  pure def offHandAttackFighterWithDamageAbilityModifierFacts(
+    state: BattleState,
+    attackTotal: int,
+    naturalD20: int,
+    damageRoll: int,
+    abilityModifier: int,
+    damageAbilityModifier: LightExtraAttackDamageAbilityModifierFact,
+    twoWeaponFightingSelected: bool
+  ): BattleState =
     if (fighterCanLightPropertyExtraAttack(state))
       if (attackHits(attackTotal, naturalD20, combatantArmorClass(state.goblin), fighterCriticalThreshold(state)))
         {
           ...spendFighterLightPropertyExtraAttackBonusAction(state),
-          goblin: applyDamageFromSource(state.goblin, battleRuntimeLightPropertyExtraAttackDamageAmount(damageRoll, abilityModifier), if (attackIsCritical(naturalD20, fighterCriticalThreshold(state))) 2 else 1, false, OrdinaryDamage, Fighter),
+          goblin: applyDamageFromSource(
+            state.goblin,
+            battleRuntimeLightPropertyExtraAttackDamageAmount(
+              damageRoll,
+              abilityModifier,
+              damageAbilityModifier,
+              twoWeaponFightingSelected
+            ),
+            if (attackIsCritical(naturalD20, fighterCriticalThreshold(state))) 2 else 1,
+            false,
+            OrdinaryDamage,
+            Fighter
+          ),
         }
       else
         spendFighterLightPropertyExtraAttackBonusAction(state)
@@ -508,7 +540,12 @@ module battleRuntimeMovement {
   ): BattleState =
     if (fighterCanLightPropertyExtraAttack(state))
       if (attackHits(attackTotal, naturalD20, combatantArmorClass(state.goblin), fighterCriticalThreshold(state))) {
-        val baseDamage = battleRuntimeLightPropertyExtraAttackDamageAmount(damageRoll, abilityModifier)
+        val baseDamage = battleRuntimeLightPropertyExtraAttackDamageAmount(
+          damageRoll,
+          abilityModifier,
+          LightExtraAttackNoExistingDamageAbilityModifier,
+          false
+        )
         val reducedDamage = if (baseDamage - reduction < 0) 0 else baseDamage - reduction
         {
           ...spendFighterLightPropertyExtraAttackBonusAction(state),

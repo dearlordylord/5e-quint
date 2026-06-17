@@ -6760,8 +6760,8 @@
         "group": "species-records",
         "label": "SRD species records",
         "metrics": {
-          "denominator": 6,
-          "numerator": 6,
+          "denominator": 9,
+          "numerator": 9,
           "percent": "100%"
         },
         "rows": [
@@ -6789,9 +6789,30 @@
           {
             "kind": "species",
             "ready": true,
+            "sourceRecordPath": "packages/surface/content/species_gnome.json",
+            "status": "installed",
+            "unitId": "species_gnome"
+          },
+          {
+            "kind": "species",
+            "ready": true,
             "sourceRecordPath": "packages/surface/content/species_goliath.json",
             "status": "installed",
             "unitId": "species_goliath"
+          },
+          {
+            "kind": "species",
+            "ready": true,
+            "sourceRecordPath": "packages/surface/content/species_halfling.json",
+            "status": "installed",
+            "unitId": "species_halfling"
+          },
+          {
+            "kind": "species",
+            "ready": true,
+            "sourceRecordPath": "packages/surface/content/species_human.json",
+            "status": "installed",
+            "unitId": "species_human"
           },
           {
             "kind": "species",
@@ -6809,7 +6830,7 @@
           }
         ],
         "rowsByStatus": {
-          "installed": 6
+          "installed": 9
         }
       },
       {
@@ -6819,8 +6840,8 @@
         "group": "species-trait-refs",
         "label": "SRD species trait refs",
         "metrics": {
-          "denominator": 11,
-          "numerator": 11,
+          "denominator": 21,
+          "numerator": 21,
           "percent": "100%"
         },
         "rows": [
@@ -6880,12 +6901,102 @@
           },
           {
             "kind": "species_trait",
+            "ownerUnitId": "species_gnome",
+            "ready": true,
+            "relation": "species.traits.darkvision",
+            "sourceRecordPath": "packages/surface/content/species_gnome_darkvision.json",
+            "status": "installed",
+            "unitId": "species_gnome_darkvision"
+          },
+          {
+            "kind": "species_trait",
+            "ownerUnitId": "species_gnome",
+            "ready": true,
+            "relation": "species.traits.gnomishCunning",
+            "sourceRecordPath": "packages/surface/content/species_gnome_gnomish_cunning.json",
+            "status": "installed",
+            "unitId": "species_gnome_gnomish_cunning"
+          },
+          {
+            "kind": "species_trait",
+            "ownerUnitId": "species_gnome",
+            "ready": true,
+            "relation": "species.traits.gnomishLineage",
+            "sourceRecordPath": "packages/surface/content/species_gnome_gnomish_lineage.json",
+            "status": "installed",
+            "unitId": "species_gnome_gnomish_lineage"
+          },
+          {
+            "kind": "species_trait",
             "ownerUnitId": "species_goliath",
             "ready": true,
             "relation": "species.traits.powerfulBuild",
             "sourceRecordPath": "packages/surface/content/species_goliath_powerful_build.json",
             "status": "installed",
             "unitId": "species_goliath_powerful_build"
+          },
+          {
+            "kind": "species_trait",
+            "ownerUnitId": "species_halfling",
+            "ready": true,
+            "relation": "species.traits.brave",
+            "sourceRecordPath": "packages/surface/content/species_halfling_brave.json",
+            "status": "installed",
+            "unitId": "species_halfling_brave"
+          },
+          {
+            "kind": "species_trait",
+            "ownerUnitId": "species_halfling",
+            "ready": true,
+            "relation": "species.traits.halflingNimbleness",
+            "sourceRecordPath": "packages/surface/content/species_halfling_nimbleness.json",
+            "status": "installed",
+            "unitId": "species_halfling_nimbleness"
+          },
+          {
+            "kind": "species_trait",
+            "ownerUnitId": "species_halfling",
+            "ready": true,
+            "relation": "species.traits.luck",
+            "sourceRecordPath": "packages/surface/content/species_halfling_luck.json",
+            "status": "installed",
+            "unitId": "species_halfling_luck"
+          },
+          {
+            "kind": "species_trait",
+            "ownerUnitId": "species_halfling",
+            "ready": true,
+            "relation": "species.traits.naturallyStealthy",
+            "sourceRecordPath": "packages/surface/content/species_halfling_naturally_stealthy.json",
+            "status": "installed",
+            "unitId": "species_halfling_naturally_stealthy"
+          },
+          {
+            "kind": "species_trait",
+            "ownerUnitId": "species_human",
+            "ready": true,
+            "relation": "species.traits.resourceful",
+            "sourceRecordPath": "packages/surface/content/species_human_resourceful.json",
+            "status": "installed",
+            "unitId": "species_human_resourceful"
+          },
+          {
+            "kind": "species_trait",
+            "ownerUnitId": "species_human",
+            "ready": true,
+            "relation": "species.traits.skillful",
+            "sourceRecordPath": "packages/surface/content/species_human_skillful.json",
+            "status": "installed",
+            "unitId": "species_human_skillful"
+          },
+          {
+            "kind": "species_trait",
+            "ownerUnitId": "species_human",
+            "ready": true,
+            "relation": "species.traits.versatile",
+            "sourceRecordPath": "packages/surface/content/species_human_versatile.json",
+            "status": "installed",
+            "unitId": "species_human_versatile"
           },
           {
             "kind": "species_trait",
@@ -6925,7 +7036,7 @@
           }
         ],
         "rowsByStatus": {
-          "installed": 11
+          "installed": 21
         }
       },
       {
@@ -7406,8 +7517,8 @@
       }
     ],
     "metrics": {
-      "denominator": 76,
-      "numerator": 76,
+      "denominator": 89,
+      "numerator": 89,
       "percent": "100%"
     },
     "openBlockerCount": 0

@@ -1,6 +1,7 @@
 let boonOfCombatProwess =
       { abilityScoreIncreaseChoice =
-          { maxScore = 30
+          { abilityScope = { kind = "all_abilities" }
+          , maxScore = 30
           , methods = [ { kind = "one_score", increase = 1 } ]
           }
       , category = "epic_boon"

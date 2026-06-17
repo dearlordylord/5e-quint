@@ -23,6 +23,7 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS
 // KERNEL-COVERAGE: runtime-owner BATTLE.PROTOCOL.CONCENTRATION_BREAK_TEARDOWN
 // KERNEL-COVERAGE: runtime-owner CHARACTER.LIFECYCLE.LAYER_PROJECTION
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.d20-test-natural-one-reroll
 
 import {
   canSpendAction,
@@ -133,6 +134,14 @@ import {
   protectionRelevantEffectSavingThrowOutcomeHole,
   validateProtectionRelevantEffectSavingThrowOutcome,
 } from "./spell-condition-effects-helpers.ts";
+import {
+  D20_TEST_NATURAL_ONE_REROLL_DECISION_REQUIRED_MESSAGE,
+  d20TestNaturalOneRerollHoleWithOption,
+  d20TestNaturalOneRerollOutcomeDecisionRequired,
+  d20TestNaturalOneRerollOutcomeIssue,
+  d20TestNaturalOneRerollRollDecisionRequired,
+  d20TestNaturalOneRerollRollIssue,
+} from "./d20-test-natural-one-reroll.ts";
 import {
   reactionModifierReductionRoll,
   reactionRollOrDamageReductionChoices,
@@ -246,6 +255,7 @@ import { attackActionOptionName } from "./statblock-attacks.ts";
 
 import type {
   BattleAfterDamageEvent,
+  BattleAttackRollResult,
   BattleAttackDamageContinuationConcentrationFrame,
   BattleAttackDamageContinuationWithoutConcentration,
   BattleAttackDamageEvent,
@@ -259,6 +269,7 @@ import type {
   BattleRawFallDamage,
   BattleInterruptFrame,
   BattleInterruptedProcedure,
+  BattleHole,
   BattleObjectDamageOutcome,
   BattleObjectIgnitionOutcome,
   BattleOpportunityAttackThreat,
@@ -351,20 +362,266 @@ import {
   subjectAllowedDuringStatBlockMultiattackDispatch,
   KnockedOutConditionState,
 } from "../battle-reducer.ts";
+
+type ResolveBattleSubjectInternalOptions = {
+  readonly replayingInterruptedProcedure?: boolean;
+  readonly handledInterruptTrigger?: BattleInterruptTrigger;
+  readonly pendingAttackDamageReductions?: readonly BattlePendingAttackDamageReduction[];
+  readonly pendingAttackDamageAdditions?: readonly AttackSpellDamageAddition[];
+  readonly skipD20TestNaturalOneRerollValidation?: boolean;
+};
+
 export function resolveBattleSubject(
   input: BattleResolutionInput,
 ): BattleResolutionResult {
   return resolveBattleSubjectInternal(input, {});
 }
 
+function validateD20TestNaturalOneRerollFills(
+  input: BattleResolutionInput,
+  options: ResolveBattleSubjectInternalOptions,
+): D20TestNaturalOneRerollFillValidation {
+  const actor = input.state.combatants.get(battleSubjectActorId(input.subject));
+  for (let fillIndex = 0; fillIndex < input.fills.length; fillIndex += 1) {
+    const fill = input.fills[fillIndex];
+    if (fill === undefined) {
+      continue;
+    }
+    if (fill.kind === "abilityCheck") {
+      const originalNaturalD20 =
+        fill.value.naturalD20 === undefined
+          ? undefined
+          : Number(fill.value.naturalD20);
+      if (
+        d20TestNaturalOneRerollRollDecisionRequired({
+          actor,
+          originalNaturalD20,
+          decision: fill.value.d20TestNaturalOneReroll,
+        })
+      ) {
+        const holeKind = abilityCheckHoleKindForFill({
+          resolutionInput: input,
+          options,
+          fillIndex,
+          fill,
+        });
+        return {
+          tag: "decisionRequired",
+          fillIndex,
+          holeId: fill.holeId,
+          holeKind,
+        };
+      }
+      const issue = d20TestNaturalOneRerollRollIssue({
+        actor,
+        originalNaturalD20,
+        decision: fill.value.d20TestNaturalOneReroll,
+      });
+      if (issue !== null) {
+        return { tag: "invalid", message: issue };
+      }
+      continue;
+    }
+    if (fill.kind === "savingThrowOutcome") {
+      for (const outcome of fill.value.outcomes) {
+        const target = input.state.combatants.get(outcome.targetId);
+        const originalNaturalD20 =
+          outcome.naturalD20 === undefined
+            ? undefined
+            : Number(outcome.naturalD20);
+        if (
+          d20TestNaturalOneRerollOutcomeDecisionRequired({
+            actor: target,
+            originalNaturalD20,
+            decision: outcome.d20TestNaturalOneReroll,
+            withoutRoll: outcome.withoutRoll,
+          })
+        ) {
+          return {
+            tag: "decisionRequired",
+            fillIndex,
+            holeId: fill.holeId,
+            holeKind: "savingThrowOutcome",
+          };
+        }
+        const issue = d20TestNaturalOneRerollOutcomeIssue({
+          actor: target,
+          originalNaturalD20,
+          decision: outcome.d20TestNaturalOneReroll,
+          withoutRoll: outcome.withoutRoll,
+          succeeded: outcome.succeeded,
+        });
+        if (issue !== null) {
+          return { tag: "invalid", message: issue };
+        }
+      }
+      continue;
+    }
+    if (fill.kind === "concentrationSavingThrow") {
+      const concentrationHole = concentrationSavingThrowHoleForFill({
+        resolutionInput: input,
+        options,
+        fillIndex,
+        fill,
+      });
+      const concentrationActor =
+        concentrationHole === undefined
+          ? undefined
+          : input.state.combatants.get(concentrationHole.combatantId);
+      const originalNaturalD20 =
+        fill.value.naturalD20 === undefined
+          ? undefined
+          : Number(fill.value.naturalD20);
+      if (
+        d20TestNaturalOneRerollOutcomeDecisionRequired({
+          actor: concentrationActor,
+          originalNaturalD20,
+          decision: fill.value.d20TestNaturalOneReroll,
+          withoutRoll: fill.value.withoutRoll,
+        })
+      ) {
+        return {
+          tag: "decisionRequired",
+          fillIndex,
+          holeId: fill.holeId,
+          holeKind: "concentrationSavingThrow",
+        };
+      }
+      const issue = d20TestNaturalOneRerollOutcomeIssue({
+        actor: concentrationActor,
+        originalNaturalD20,
+        decision: fill.value.d20TestNaturalOneReroll,
+        withoutRoll: fill.value.withoutRoll,
+        succeeded: fill.value.succeeded,
+      });
+      if (issue !== null) {
+        return { tag: "invalid", message: issue };
+      }
+    }
+  }
+  return { tag: "ok" };
+}
+
+type D20TestNaturalOneRerollDecisionHoleKind =
+  | "abilityCheck"
+  | "concentrationSavingThrow"
+  | "savingThrowOutcome"
+  | "spellcastingAbilityCheck";
+
+type D20TestNaturalOneRerollFillValidation =
+  | { readonly tag: "ok" }
+  | { readonly tag: "invalid"; readonly message: string }
+  | {
+      readonly tag: "decisionRequired";
+      readonly fillIndex: number;
+      readonly holeId: BattleFill["holeId"];
+      readonly holeKind: D20TestNaturalOneRerollDecisionHoleKind;
+    };
+
+function resolveD20TestNaturalOneRerollDecisionHole(input: {
+  readonly resolutionInput: BattleResolutionInput;
+  readonly options: Parameters<typeof resolveBattleSubjectInternal>[1];
+  readonly decision: Extract<
+    D20TestNaturalOneRerollFillValidation,
+    { readonly tag: "decisionRequired" }
+  >;
+}): BattleResolutionResult {
+  const pending = resolveBattleSubjectInternal(
+    {
+      ...input.resolutionInput,
+      fills: input.resolutionInput.fills.slice(0, input.decision.fillIndex),
+    },
+    input.options,
+  );
+  if (pending.tag !== "needsHoles") {
+    return invalidResult(
+      input.resolutionInput.state,
+      "invalidFill",
+      D20_TEST_NATURAL_ONE_REROLL_DECISION_REQUIRED_MESSAGE,
+    );
+  }
+  let matched = false;
+  const holes = pending.holes.map((hole): BattleHole => {
+    if (
+      hole.kind === input.decision.holeKind &&
+      hole.holeId === input.decision.holeId
+    ) {
+      matched = true;
+      return d20TestNaturalOneRerollHoleWithOption(hole);
+    }
+    return hole;
+  });
+  if (!matched) {
+    return invalidResult(
+      input.resolutionInput.state,
+      "invalidFill",
+      D20_TEST_NATURAL_ONE_REROLL_DECISION_REQUIRED_MESSAGE,
+    );
+  }
+  return { ...pending, holes };
+}
+
+type D20TestNaturalOneRerollAbilityCheckHole = Extract<
+  BattleHole,
+  { readonly kind: "abilityCheck" | "spellcastingAbilityCheck" }
+>;
+
+function abilityCheckHoleKindForFill(input: {
+  readonly resolutionInput: BattleResolutionInput;
+  readonly options: ResolveBattleSubjectInternalOptions;
+  readonly fillIndex: number;
+  readonly fill: Extract<BattleFill, { readonly kind: "abilityCheck" }>;
+}): D20TestNaturalOneRerollAbilityCheckHole["kind"] {
+  return (
+    pendingHolesBeforeFill(input).find(
+      (hole): hole is D20TestNaturalOneRerollAbilityCheckHole =>
+        (hole.kind === "abilityCheck" ||
+          hole.kind === "spellcastingAbilityCheck") &&
+        hole.holeId === input.fill.holeId,
+    )?.kind ?? "abilityCheck"
+  );
+}
+
+function concentrationSavingThrowHoleForFill(input: {
+  readonly resolutionInput: BattleResolutionInput;
+  readonly options: ResolveBattleSubjectInternalOptions;
+  readonly fillIndex: number;
+  readonly fill: Extract<
+    BattleFill,
+    { readonly kind: "concentrationSavingThrow" }
+  >;
+}): BattleConcentrationSavingThrowHole | undefined {
+  return pendingHolesBeforeFill(input).find(
+    (hole): hole is BattleConcentrationSavingThrowHole =>
+      hole.kind === "concentrationSavingThrow" &&
+      hole.holeId === input.fill.holeId,
+  );
+}
+
+function pendingHolesBeforeFill(input: {
+  readonly resolutionInput: BattleResolutionInput;
+  readonly options: ResolveBattleSubjectInternalOptions;
+  readonly fillIndex: number;
+}): readonly BattleHole[] {
+  const pending = resolveBattleSubjectInternal(
+    {
+      ...input.resolutionInput,
+      fills: input.resolutionInput.fills.slice(0, input.fillIndex),
+    },
+    {
+      ...input.options,
+      skipD20TestNaturalOneRerollValidation: true,
+    },
+  );
+  if (pending.tag !== "needsHoles") {
+    return [];
+  }
+  return pending.holes;
+}
+
 export function resolveBattleSubjectInternal(
   input: BattleResolutionInput,
-  options: {
-    readonly replayingInterruptedProcedure?: boolean;
-    readonly handledInterruptTrigger?: BattleInterruptTrigger;
-    readonly pendingAttackDamageReductions?: readonly BattlePendingAttackDamageReduction[];
-    readonly pendingAttackDamageAdditions?: readonly AttackSpellDamageAddition[];
-  },
+  options: ResolveBattleSubjectInternalOptions,
 ): BattleResolutionResult {
   const normalizedInputState = normalizeEarlyEndedOngoingFeatures(input.state);
   if (normalizedInputState !== input.state) {
@@ -372,6 +629,24 @@ export function resolveBattleSubjectInternal(
       { ...input, state: normalizedInputState },
       options,
     );
+  }
+  if (options.skipD20TestNaturalOneRerollValidation !== true) {
+    const d20TestNaturalOneRerollValidation =
+      validateD20TestNaturalOneRerollFills(input, options);
+    if (d20TestNaturalOneRerollValidation.tag === "invalid") {
+      return invalidResult(
+        input.state,
+        "invalidFill",
+        d20TestNaturalOneRerollValidation.message,
+      );
+    }
+    if (d20TestNaturalOneRerollValidation.tag === "decisionRequired") {
+      return resolveD20TestNaturalOneRerollDecisionHole({
+        resolutionInput: input,
+        options,
+        decision: d20TestNaturalOneRerollValidation,
+      });
+    }
   }
   if (
     input.state.interruptStack.length > 0 &&
@@ -4644,6 +4919,23 @@ export function resolveAttackDamageContinuationConcentration(input: {
       "Concentration Saving Throw fill does not match the damaged target.",
     );
   }
+  const d20TestNaturalOneRerollIssue = d20TestNaturalOneRerollOutcomeIssue({
+    actor: input.state.combatants.get(concentrationSave.combatantId),
+    originalNaturalD20:
+      concentrationFill.value.value.naturalD20 === undefined
+        ? undefined
+        : Number(concentrationFill.value.value.naturalD20),
+    decision: concentrationFill.value.value.d20TestNaturalOneReroll,
+    withoutRoll: concentrationFill.value.value.withoutRoll,
+    succeeded: concentrationFill.value.value.succeeded,
+  });
+  if (d20TestNaturalOneRerollIssue !== null) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      d20TestNaturalOneRerollIssue,
+    );
+  }
   const stateWithoutFrame = {
     ...input.state,
     interruptStack: input.state.interruptStack.slice(0, -1),
@@ -4702,13 +4994,7 @@ export function battleFillEquals(a: BattleFill, b: BattleFill): boolean {
     return a.value === b.value;
   }
   if (a.kind === "attackRoll" && b.kind === "attackRoll") {
-    return (
-      a.value.total === b.value.total &&
-      a.value.naturalD20 === b.value.naturalD20 &&
-      a.value.rollMode === b.value.rollMode &&
-      a.value.activatedOngoingFeatureUnitId ===
-        b.value.activatedOngoingFeatureUnitId
-    );
+    return attackRollResultsEqual(a.value, b.value);
   }
   if (a.kind === "rolledDice" && b.kind === "rolledDice") {
     return (
@@ -4730,9 +5016,131 @@ export function battleFillEquals(a: BattleFill, b: BattleFill): boolean {
     a.kind === "concentrationSavingThrow" &&
     b.kind === "concentrationSavingThrow"
   ) {
-    return a.value.succeeded === b.value.succeeded;
+    return (
+      a.value.succeeded === b.value.succeeded &&
+      a.value.naturalD20 === b.value.naturalD20 &&
+      a.value.withoutRoll === b.value.withoutRoll &&
+      d20TestNaturalOneRerollOutcomeDecisionsEqual(
+        a.value.d20TestNaturalOneReroll,
+        b.value.d20TestNaturalOneReroll,
+      )
+    );
+  }
+  if (a.kind === "deathSavingThrow" && b.kind === "deathSavingThrow") {
+    return (
+      a.value === b.value &&
+      d20TestNaturalOneRerollDieDecisionsEqual(
+        a.d20TestNaturalOneReroll,
+        b.d20TestNaturalOneReroll,
+      )
+    );
   }
   return false;
+}
+
+type ComparableAttackRollResult = Pick<
+  BattleAttackRollResult,
+  "total" | "naturalD20" | "rollMode"
+> &
+  Partial<
+    Pick<
+      BattleAttackRollResult,
+      | "activatedOngoingFeatureUnitId"
+      | "missToHitReplacementUnitId"
+      | "spellAttackReroll"
+      | "d20TestNaturalOneReroll"
+    >
+  >;
+
+function attackRollResultsEqual(
+  a: ComparableAttackRollResult,
+  b: ComparableAttackRollResult,
+): boolean {
+  return (
+    a.total === b.total &&
+    a.naturalD20 === b.naturalD20 &&
+    a.rollMode === b.rollMode &&
+    a.activatedOngoingFeatureUnitId === b.activatedOngoingFeatureUnitId &&
+    a.missToHitReplacementUnitId === b.missToHitReplacementUnitId &&
+    spellAttackRerollDecisionsEqual(a.spellAttackReroll, b.spellAttackReroll) &&
+    d20TestNaturalOneRerollDecisionsEqual(
+      a.d20TestNaturalOneReroll,
+      b.d20TestNaturalOneReroll,
+    )
+  );
+}
+
+function spellAttackRerollDecisionsEqual(
+  a: BattleAttackRollResult["spellAttackReroll"],
+  b: BattleAttackRollResult["spellAttackReroll"],
+): boolean {
+  if (a === undefined || b === undefined) {
+    return a === b;
+  }
+  if (a.kind !== b.kind || a.effectKind !== b.effectKind) {
+    return false;
+  }
+  return a.kind === "decline" || b.kind === "decline"
+    ? a.kind === b.kind
+    : attackRollResultsEqual(a.replacement, b.replacement);
+}
+
+function d20TestNaturalOneRerollDecisionsEqual(
+  a: BattleAttackRollResult["d20TestNaturalOneReroll"],
+  b: BattleAttackRollResult["d20TestNaturalOneReroll"],
+): boolean {
+  if (a === undefined || b === undefined) {
+    return a === b;
+  }
+  if (a.kind !== b.kind || a.effectKind !== b.effectKind) {
+    return false;
+  }
+  return a.kind === "decline" || b.kind === "decline"
+    ? a.kind === b.kind
+    : attackRollResultsEqual(a.replacement, b.replacement);
+}
+
+function d20TestNaturalOneRerollOutcomeDecisionsEqual(
+  a: Extract<
+    BattleFill,
+    { readonly kind: "concentrationSavingThrow" }
+  >["value"]["d20TestNaturalOneReroll"],
+  b: Extract<
+    BattleFill,
+    { readonly kind: "concentrationSavingThrow" }
+  >["value"]["d20TestNaturalOneReroll"],
+): boolean {
+  if (a === undefined || b === undefined) {
+    return a === b;
+  }
+  if (a.kind !== b.kind || a.effectKind !== b.effectKind) {
+    return false;
+  }
+  return a.kind === "decline" || b.kind === "decline"
+    ? a.kind === b.kind
+    : a.replacement.succeeded === b.replacement.succeeded &&
+        a.replacement.naturalD20 === b.replacement.naturalD20;
+}
+
+function d20TestNaturalOneRerollDieDecisionsEqual(
+  a: Extract<
+    BattleFill,
+    { readonly kind: "deathSavingThrow" }
+  >["d20TestNaturalOneReroll"],
+  b: Extract<
+    BattleFill,
+    { readonly kind: "deathSavingThrow" }
+  >["d20TestNaturalOneReroll"],
+): boolean {
+  if (a === undefined || b === undefined) {
+    return a === b;
+  }
+  if (a.kind !== b.kind || a.effectKind !== b.effectKind) {
+    return false;
+  }
+  return a.kind === "decline" || b.kind === "decline"
+    ? a.kind === b.kind
+    : a.replacement === b.replacement;
 }
 
 export function rolledDiceGroupsEqual(
@@ -4888,6 +5296,8 @@ export function battleTurnSnapshot(state: BattleState): BattleTurnSnapshot {
       resources.weaponMasteryCleaveAttackersUsedThisTurn,
     huntersPreyHordeBreakerUsedThisTurn:
       resources.huntersPreyHordeBreakerUsedThisTurn,
+    grapplerPunchAndGrabUsedThisTurn:
+      resources.grapplerPunchAndGrabUsedThisTurn,
     ...(resources.lightWeaponAttackMade === undefined
       ? {}
       : { lightWeaponAttackMade: resources.lightWeaponAttackMade }),
