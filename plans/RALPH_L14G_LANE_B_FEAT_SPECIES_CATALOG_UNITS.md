@@ -127,7 +127,7 @@
     {
       "number": 21,
       "id": "L3-FOLLOWUP-CREATURE-SPACE-PATHFINDING-MAP-STATE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Research creature-space pathfinding and durable map-state ownership"
     }
   ]
@@ -1145,7 +1145,7 @@ Verification:
 
 ### Task 21 - L3-FOLLOWUP-CREATURE-SPACE-PATHFINDING-MAP-STATE
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -1167,6 +1167,11 @@ Current state:
 - The Unit matrix now narrows the remaining table/spatial deferral to automatic
   pathfinding, route-choice policy, and durable coordinate occupancy map-state
   derivation.
+- RAW and owner review closes that remaining deferral outside promoted battle
+  Unit runtime: route-choice policy, automatic pathfinding, durable coordinate
+  map-state, and token occupancy persistence belong to a runtime-detached
+  table/spatial map and route-choice owner that feeds the Task 19 Movement
+  witness boundary.
 
 Output:
 

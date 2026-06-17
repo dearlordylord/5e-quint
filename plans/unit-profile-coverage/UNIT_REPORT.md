@@ -1846,6 +1846,7 @@ These profile-subset rows have no selected-identity replay witness, but the decl
 | L3-FOLLOWUP-HALFLING-NIMBLENESS-RUNTIME | qnt-proof | `unit-feature.creature-space-movement-permission` |
 | L3-FOLLOWUP-HALFLING-NIMBLENESS-RUNTIME | completed-runtime-parity | `unit-feature.creature-space-movement-permission` |
 | L3-FOLLOWUP-CREATURE-SPACE-TABLE-SPATIAL-DERIVATION | completed-runtime-parity | `unit-feature.creature-space-movement-permission` |
+| L3-FOLLOWUP-CREATURE-SPACE-PATHFINDING-MAP-STATE | accepted-table-spatial-boundary-closure | _none_ |
 | L14G-B02-FEAT-SKILLED | completed-runtime-parity | `character-creation.origin-feat-proficiency-choice` |
 | L14G-B08-SPECIES-HUMAN | completed-runtime-parity | `character-creation.species-trait-proficiency-choice`, `character-creation.species-origin-feat-choice`, `character-creation.species-origin-feat-proficiency-choice` |
 | L3-FOLLOWUP-GRAPPLER-RUNTIME | qnt-proof | `unit-feature.grappler` |

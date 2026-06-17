@@ -16310,6 +16310,12 @@
       "taskId": "L3-FOLLOWUP-CREATURE-SPACE-TABLE-SPATIAL-DERIVATION"
     },
     {
+      "claimKind": "accepted-table-spatial-boundary-closure",
+      "note": "RAW review of Halfling Nimbleness, Creature Size and Space, Moving around Other Creatures, Occupied Space, and Unoccupied Space found no promoted battle rule for route-choice policy, automatic pathfinding, durable coordinate map-state, or token occupancy persistence. Those facts remain owned by a runtime-detached table/spatial map and route-choice owner that supplies selected routes, footprint occupancy, occupancy-map witnesses, and size/space facts to the existing route-derived Movement boundary without Halfling/Nimbleness authored-identity dispatch or duplicate durable position, route, or creature-size state.",
+      "profileIds": [],
+      "taskId": "L3-FOLLOWUP-CREATURE-SPACE-PATHFINDING-MAP-STATE"
+    },
+    {
       "claimKind": "completed-runtime-parity",
       "note": "Focused Surface catalog and Character Creation runtime tests cover Skilled Origin feat authoring, background-origin feat proficiency choice discovery, supported skill/tool option admission, and CharacterBuild proficiency projection without battle-runtime execution.",
       "profileIds": [
@@ -25655,12 +25661,17 @@
           {
             "battleReadinessClosure": {
               "kind": "table-spatial-derivation",
-              "owner": "future table/spatial pathfinding and map-state owner",
-              "reason": "The promoted derivation consumes an already selected route plus explicit footprint and size-relation facts. Choosing routes from coordinates, maintaining durable token positions, and deriving occupied spaces from a persistent map remain table/spatial work outside this Unit profile."
+              "owner": "runtime-detached table/spatial map and route-choice owner",
+              "reason": "The SRD supplies creature Size/space, occupied-space, unoccupied-space, and pass-through predicates, but not a route-choice algorithm or durable coordinate/token state model. The table/spatial owner supplies selected routes, footprint occupancy, and map-state witnesses to the route-derived Movement boundary instead of duplicating those facts inside this Unit profile."
             },
             "mechanic": "automatic pathfinding, route-choice policy, and durable coordinate occupancy map-state derivation for occupied creature spaces"
           }
         ],
+        "deferredMechanicsSelectedIdentityDisposition": {
+          "owner": "runtime-detached table/spatial map and route-choice owner",
+          "reason": "Automatic pathfinding, route-choice policy, and durable coordinate/token occupancy map-state derivation are table/spatial ownership without a promoted battle Unit entrypoint; selected Unit identity is already replayed at the supported Movement witness boundary.",
+          "tag": "not-applicable"
+        },
         "profileIds": [
           "unit-feature.creature-space-movement-permission"
         ],
