@@ -55,7 +55,7 @@
     {
       "number": 9,
       "id": "L3-FOLLOWUP-GRAPPLER-RUNTIME",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Promote Grappler prerequisite and battle runtime support"
     },
     {
@@ -507,7 +507,7 @@ Verification:
 
 ### Task 9 - L3-FOLLOWUP-GRAPPLER-RUNTIME
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
