@@ -67,7 +67,7 @@
     {
       "number": 11,
       "id": "L12G-FOLLOWUP-DRUID-WILD-SHAPE-STAT-BLOCK-SIZE-GATED-CONDITION-RIDERS",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Promote size-gated Stat Block attack-hit condition riders"
     }
   ]
@@ -91,6 +91,9 @@ Sorcerer Metamagic generated-readiness ambiguity by making the promoted runtime
 subsets and procedure-specific deferred owner closures checker-readable. Task 4
 closed the Rogue Second-Story Work evidence gap by making the existing
 linked-Speed and jump-distance projection evidence checker-readable.
+Task 11 closed the size-gated Stat Block attack-hit condition rider slice by
+promoting the Wolf-style typed target Size Prone rider path with focused runtime
+and parity evidence.
 
 ## Source Artifacts
 
@@ -655,7 +658,7 @@ Verification:
 
 ### Task 11 - L12G-FOLLOWUP-DRUID-WILD-SHAPE-STAT-BLOCK-SIZE-GATED-CONDITION-RIDERS
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 

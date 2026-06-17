@@ -6479,7 +6479,7 @@
             "obligationId": "BATTLE.STAT_BLOCK.ATTACK_CONTROL",
             "runtime": "battle",
             "status": "covered",
-            "title": "Battle Stat Block action, Multiattack, limited-use, recharge, reaction, and legendary action controls"
+            "title": "Battle Stat Block action, Multiattack, limited-use, recharge, reaction, legendary action, attack damage, and target Size Prone-rider controls"
           }
         ],
         "profileId": "stat-block.attack-control",
@@ -18463,10 +18463,6 @@
       "claim": {
         "deferredMechanics": [
           {
-            "followUpTaskId": "L12G-FOLLOWUP-DRUID-WILD-SHAPE-STAT-BLOCK-SIZE-GATED-CONDITION-RIDERS",
-            "mechanic": "Attack-hit condition riders on Stat Block attacks used by Wild Shape forms that require typed target Size gates before action admission; available SRD corpus example: Wolf Bite applies Prone on hit to a Medium or smaller target."
-          },
-          {
             "battleReadinessClosure": {
               "kind": "outside-battle-runtime",
               "owner": "generic Stat Block action procedure owners by Surface action shape",
@@ -18491,15 +18487,6 @@
             "mechanic": "Wild Shape active-form duration across non-battle time remains closed at the Character Sheet handoff boundary by ASSUMPTIONS.md A27 until a session active-effect persistence owner exists."
           }
         ],
-        "followUpTasks": [
-          {
-            "id": "L12G-FOLLOWUP-DRUID-WILD-SHAPE-STAT-BLOCK-SIZE-GATED-CONDITION-RIDERS",
-            "mechanic": "Promote typed attack-hit condition riders whose application is gated by target creature Size, starting from the SRD Wolf Bite Prone rider, through a generic Stat Block attack-hit rider payload and target-size support gate.",
-            "owner": "battle-runtime generic Stat Block attack-hit condition rider owner and focused runtime evidence",
-            "requiredOutput": "Focused runtime evidence that condition rider admission is driven by parsed attack-hit payload and typed target Size facts, not Beast authored identity; QNT or MBT evidence only if reducer behavior changes.",
-            "title": "Druid Wild Shape Stat Block Size-Gated Condition Riders"
-          }
-        ],
         "profileIds": [
           "character-creation.class-feature-resource-projection",
           "character-sheet.class-feature-use-count-resource",
@@ -18512,7 +18499,8 @@
           "App and MCP sheet-creation boundaries accept explicit Wild Shape known-form Stat Block ids or return a typed missing-known-forms workflow issue, and Character Sheet battle handoff preserves current Wild Shape known-form identities when rebuilding a sheet from battle state",
           "Battle runtime promotes a merged-equipment, fallen-equipment dropped-object, not-practical-to-wear fallback, practical worn armor/Shield, practical worn weapon and held-weapon object-use projection, and form-limb object-handling witness, Wild Shape subset: Bonus Action and Wild Shape use spending, caller-selected known Beast form, Druid-level Temporary Hit Points, form Armor Class, Size, Speed, practical worn armor/Shield Armor Class and hand-use projection, practical worn selected-loadout weapon attacks plus held-weapon spell/feature consumers when the active form-limb witness allows object handling, fallen-equipment object-drop outcomes at the shared droppedObjects boundary, active-effect storage of the explicit caller/GM form-limb object-handling witness for object-use consumers, Beast Dexterity Mage Armor AC, supported Stat Block attacks with executable attack-roll damage, including multiple on-hit damage components that preserve component order, damage type, and amount through generic Stat Block damage resolution, form resources, Wild Shape D20 statistic projection for Beast Strength, Dexterity, and Constitution plus retained character Intelligence, Wisdom, and Charisma, retained Skill and Saving Throw proficiencies using the character Proficiency Bonus, gained Beast proficiencies and higher Beast stat-block modifiers where present, Beast Strength Shove DC while shaped, true-form Unarmed Strike ability modifier preservation, no-spellcasting projection before Beast Spells, Beast Spells level-18 spell invocation admission for existing Spell Invocation owners when the canonical Surface Spell Definition lacks priced or consumed Material components, reversion on dismiss, reuse, Incapacitated, terminal zero Hit Points, or duration expiry, and active-form Character Sheet handoff block",
           "Battle runtime projects active Wild Shape non-D20 creature perception and communication from existing state: Beast-form special Senses and passive Perception come from the selected active form and D20 projection, retained known languages come from CharacterBuild origin and class-feature language facts threaded through character-battle initialization, and retained speech is blocked from condition state without parsing Beast Stat Block language prose or storing duplicate Wild Shape sense/language/speech fields",
-          "Battle runtime consumes typed Stat Block trait-derived attack-roll Advantage facts for supported Wild Shape form attacks and applies the Advantage roll mode only from explicit caller spatial/relationship witnesses for the represented non-incapacitated ally within 5 feet of target predicate, without branching on Beast, trait, or Druid authored identity"
+          "Battle runtime consumes typed Stat Block trait-derived attack-roll Advantage facts for supported Wild Shape form attacks and applies the Advantage roll mode only from explicit caller spatial/relationship witnesses for the represented non-incapacitated ally within 5 feet of target predicate, without branching on Beast, trait, or Druid authored identity",
+          "Battle runtime consumes typed Stat Block attack-hit target Size Prone riders for supported Wild Shape form attacks from parsed Surface on-hit payloads, applies Prone only when the target effective Size is Medium or smaller and not immune to Prone, and keeps non-Prone or otherwise unsupported condition rider shapes closed instead of branching on Beast, attack, or Druid authored identity"
         ],
         "tag": "profile-subset-supported"
       },
@@ -18582,6 +18570,16 @@
           "ownerPath": "packages/battle-runtime/src/battle-runtime-druid-wild-shape.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "L12G-FOLLOWUP-DRUID-WILD-SHAPE-STAT-BLOCK-NON-ATTACK-ACTIONS"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-stat-block-actions.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L12G-FOLLOWUP-DRUID-WILD-SHAPE-STAT-BLOCK-SIZE-GATED-CONDITION-RIDERS"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-druid-wild-shape.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L12G-FOLLOWUP-DRUID-WILD-SHAPE-STAT-BLOCK-SIZE-GATED-CONDITION-RIDERS"
         }
       ],
       "executableMechanics": true,

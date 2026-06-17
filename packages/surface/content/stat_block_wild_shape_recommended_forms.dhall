@@ -99,9 +99,7 @@ in  [ { challengeRating = 0.25
       { attacks =
         [ { attackBonus = { kind = "literal", value = 4 }
           , attackType = "melee"
-          , description =
-              Some
-                "If the target is a Medium or smaller creature, it has the Prone condition."
+          , description = None Text
           , name = "Bite"
           , onHit =
             [ { amount =
@@ -111,6 +109,10 @@ in  [ { challengeRating = 0.25
                 }
               , damageType = "piercing"
               , kind = "damage"
+              }
+            , { condition = "prone"
+              , kind = "apply_condition_if_target_size_at_most"
+              , maxCreatureSize = "medium"
               }
             ]
           , rangeFeet = None { long : Natural, normal : Natural }

@@ -101,7 +101,6 @@
               "value": 4
             },
             "attackType": "melee",
-            "description": "If the target is a Medium or smaller creature, it has the Prone condition.",
             "name": "Bite",
             "onHit": [
               {
@@ -116,6 +115,11 @@
                 },
                 "damageType": "piercing",
                 "kind": "damage"
+              },
+              {
+                "condition": "prone",
+                "kind": "apply_condition_if_target_size_at_most",
+                "maxCreatureSize": "medium"
               }
             ],
             "reachFeet": 5

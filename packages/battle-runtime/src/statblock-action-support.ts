@@ -13,17 +13,27 @@ import type { StatBlockTraitAttackRollMode } from "./battle-action-options.ts";
 import type { BattleDruidWildShapeKnownFormSupportProfile } from "./unit-feature-support.ts";
 import { statBlockIsWildShapeKnownFormEligible } from "./druid-wild-shape-form-eligibility.ts";
 import { supportedStatBlockAttackDamage } from "./statblock-attack-damage-support.ts";
+import {
+  supportedStatBlockAttackHitConditionRiderEffect,
+  supportedStatBlockAttackHitConditionRiders,
+} from "./statblock-attack-hit-condition-support.ts";
 
 const WILD_SHAPE_FORM_EXECUTABLE_ACTION_SURFACE_CATEGORIES = [
   "simpleLiteralAttackSingleDamage",
   "multiDamageComponentsOnHit",
   "traitDerivedConditionalAttackRollAdvantage",
+  "attackHitTargetSizeConditionRider",
 ] as const;
 
-const WILD_SHAPE_FORM_ATTACK_HIT_RIDER_CATEGORIES = [
+const WILD_SHAPE_FORM_CLOSED_ATTACK_HIT_RIDER_CATEGORIES = [
   "attackHitConditionRider",
   "attackHitForcedMovementRider",
   "attackHitOtherRider",
+] as const;
+
+const WILD_SHAPE_FORM_ATTACK_HIT_RIDER_CATEGORIES = [
+  "attackHitTargetSizeConditionRider",
+  ...WILD_SHAPE_FORM_CLOSED_ATTACK_HIT_RIDER_CATEGORIES,
 ] as const;
 
 const WILD_SHAPE_FORM_ACTION_SECTION_CATEGORIES = [
@@ -38,7 +48,7 @@ const WILD_SHAPE_FORM_ACTION_SECTION_CATEGORIES = [
 ] as const;
 
 const WILD_SHAPE_FORM_CLOSED_ACTION_SURFACE_CATEGORIES = [
-  ...WILD_SHAPE_FORM_ATTACK_HIT_RIDER_CATEGORIES,
+  ...WILD_SHAPE_FORM_CLOSED_ATTACK_HIT_RIDER_CATEGORIES,
   ...WILD_SHAPE_FORM_ACTION_SECTION_CATEGORIES,
   "tableOrProseOnlyTrait",
 ] as const;
@@ -83,7 +93,7 @@ const WILD_SHAPE_FORM_CLOSED_ACTION_SURFACE_BOUNDARIES = {
     owner:
       "battle-runtime generic Stat Block attack-hit condition rider owner",
     reason:
-      "The condition destination is typed, but Stat Block attack-hit admission still needs typed target Size predicate payloads before admitting size-gated condition riders; admitting the host attack before that would drop or over-apply the rider.",
+      "Attack-hit condition rider shapes outside the typed target Size Prone payload remain closed so the host attack cannot drop required condition-specific facts or over-apply the condition.",
   },
   attackHitForcedMovementRider: {
     owner:
@@ -186,6 +196,7 @@ export function creatureNamedAttackRollIsSupported(
     attack.description === undefined &&
     attack.attackBonus.kind === "literal" &&
     creatureNamedAttackDamageIsSupported(attack) &&
+    creatureNamedAttackHitConditionRidersAreSupported(attack) &&
     creatureNamedAttackTargetIsSupported(attack)
   );
 }
@@ -194,6 +205,12 @@ function creatureNamedAttackDamageIsSupported(
   attack: CreatureNamedAttackRoll,
 ): boolean {
   return supportedStatBlockAttackDamage(attack) !== null;
+}
+
+function creatureNamedAttackHitConditionRidersAreSupported(
+  attack: CreatureNamedAttackRoll,
+): boolean {
+  return supportedStatBlockAttackHitConditionRiders(attack) !== null;
 }
 
 function creatureNamedAttackTargetIsSupported(
@@ -365,6 +382,12 @@ function attackHitEffectRiderCategory(
     return null;
   }
   if (
+    supportedStatBlockAttackHitConditionRiderEffect(effect) !== null
+  ) {
+    return "attackHitTargetSizeConditionRider";
+  }
+  if (
+    effect.kind === "apply_condition_if_target_size_at_most" ||
     effect.kind === "apply_condition" ||
     effect.kind === "apply_condition_while_in_area_or_until_escape" ||
     effect.kind === "suppress_condition_self_end"

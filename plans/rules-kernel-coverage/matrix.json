@@ -2433,6 +2433,12 @@
           "stepAction": "step"
         },
         {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/stat-block-size-gated-condition-rider.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-stat-block-size-gated-condition-rider.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/battle-runtime-stat-block-actions.test.ts"
         }
@@ -2445,7 +2451,7 @@
         "packages/battle-runtime/battle-runtime-legendary-actions.qnt",
         "packages/battle-runtime/battle-runtime-stat-block-bridge.qnt"
       ],
-      "reason": "Stat Block scope includes authored action controls and named attacks. Multi-component attack damage is admitted by structured on-hit damage shape at the generic Stat Block support boundary and resolved component-by-component through the shared attack damage pipeline; monster authored identity remains selection/catalog identity rather than runtime dispatch.",
+      "reason": "Stat Block scope includes authored action controls and named attacks. Multi-component attack damage is admitted by structured on-hit damage shape at the generic Stat Block support boundary and resolved component-by-component through the shared attack damage pipeline. Attack-hit target Size Prone riders are admitted only from typed Surface on-hit payloads that trail a supported base damage payload, applied through target effective Size facts, and withheld when the target is larger than the parsed Size gate or immune to Prone. Non-Prone size-gated condition riders such as Grappled/Restrained payloads stay closed until their condition-specific required facts are modeled. Monster authored identity remains selection/catalog identity rather than runtime dispatch.",
       "runtime": "battle",
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer.ts",
@@ -2453,17 +2459,26 @@
         "packages/battle-runtime/src/statblock-attack-damage-support.ts",
         "packages/battle-runtime/src/battle-reducer/statblock.ts",
         "packages/battle-runtime/src/battle-reducer/statblock-attacks.ts",
-        "packages/battle-runtime/src/battle-reducer/damage-helpers.ts"
+        "packages/battle-runtime/src/battle-reducer/damage-helpers.ts",
+        "packages/battle-runtime/src/statblock-attack-hit-condition-support.ts",
+        "packages/battle-runtime/src/battle-reducer/statblock-attack-hit-condition-riders.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [
+        ".references/srd-5.2.1/Animals.md:425",
+        ".references/srd-5.2.1/Animals.md:2587-2611",
+        ".references/srd-5.2.1/Rules-Glossary.md:802-808",
+        ".references/srd-5.2.1/Rules-Glossary.md:896-898",
+        ".references/srd-5.2.1/Rules-Glossary.md:966-976",
         ".references/srd-5.2.1/Rules-Glossary.md#Stat Block",
         ".references/srd-5.2.1/Playing-the-Game.md#Damage Rolls",
         ".references/srd-5.2.1/Playing-the-Game.md#Damage Types",
+        "UBIQUITOUS_LANGUAGE.md#Conditions",
+        "UBIQUITOUS_LANGUAGE.md#Movement",
         "UBIQUITOUS_LANGUAGE.md#Damage",
         "UBIQUITOUS_LANGUAGE.md#Creatures and Stat Blocks"
       ],
-      "title": "Battle Stat Block action, Multiattack, limited-use, recharge, reaction, and legendary action controls"
+      "title": "Battle Stat Block action, Multiattack, limited-use, recharge, reaction, legendary action, attack damage, and target Size Prone-rider controls"
     },
     {
       "id": "BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES",

@@ -10,6 +10,7 @@ import type {
   StatBlockAttackDamageComponent,
   SupportedCreatureNamedAttackRoll,
 } from "./battle-action-options.ts";
+import { supportedStatBlockAttackHitConditionRiderEffect } from "./statblock-attack-hit-condition-support.ts";
 
 type SupportedStatBlockAttackDamageEffect =
   | {
@@ -34,6 +35,9 @@ export function supportedStatBlockAttackDamage(
   for (const effect of attack.onHit) {
     const parsed = supportedStatBlockAttackDamageEffect(effect);
     if (parsed === null) {
+      if (supportedStatBlockAttackHitConditionRiderEffect(effect) !== null) {
+        continue;
+      }
       return null;
     }
     effects.push(parsed);

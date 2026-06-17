@@ -4080,6 +4080,11 @@ const CreatureAttackEffectAtomSchema = Schema.Union(
     damageType: DamageTypeRefSchema,
     amount: StatBlockDamageNotationAmountSchema,
   }),
+  Schema.Struct({
+    kind: Schema.Literal("apply_condition_if_target_size_at_most"),
+    condition: ConditionSchema,
+    maxCreatureSize: SizeSchema,
+  }),
   EffectAtomSchema,
 );
 

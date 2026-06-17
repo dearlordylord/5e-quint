@@ -22,7 +22,8 @@ import type { SpellCtx } from "./tracer-spell-context.ts";
 
 import { traceEffectAtom } from "./tracer-effect-atom.ts";
 
-import { traceAttackWindow, traceSaveBranch } from "./tracer-activation.ts";
+import { traceSaveBranch } from "./tracer-activation.ts";
+import { traceEffectAtomScaling } from "./tracer-effect-scaling.ts";
 
 export type CreatureActionsKind = "action" | "bonus_action" | "reaction";
 
@@ -160,7 +161,7 @@ export function traceCreatureAttack(
   });
   ctx.edges.push({ from: ctx.procId, to: resId, relation: "grants" });
   ctx.edges.push({ from: resId, to: ctx.compId, relation: "attaches_to" });
-  traceAttackWindow(
+  traceCreatureAttackWindow(
     ar.onHit,
     "on_hit_window",
     resId,
@@ -170,6 +171,56 @@ export function traceCreatureAttack(
     ctx.edges,
     ctx.ids,
   );
+}
+
+function traceCreatureAttackWindow(
+  effects: CreatureNamedAttackRoll["onHit"],
+  windowAtom: "on_hit_window",
+  attackRollId: string,
+  attId: string,
+  slotId: string | null,
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): void {
+  const effectEntries: {
+    readonly effect: CreatureNamedAttackRoll["onHit"][number];
+    readonly effectId: string;
+  }[] = [];
+  for (const effect of effects) {
+    if (effect.kind === "apply_condition_if_target_size_at_most") {
+      const effectId = ids("eff");
+      nodes.push({
+        id: effectId,
+        category: "effect",
+        atomKind: "apply_condition_if_target_size_at_most",
+        label: `apply_condition_if_target_size_at_most\n${effect.condition}\ntarget size <= ${effect.maxCreatureSize}`,
+      });
+      effectEntries.push({ effect, effectId });
+      continue;
+    }
+    const effectId = traceEffectAtom(effect, nodes, ids, edges);
+    if (effectId !== null) {
+      effectEntries.push({ effect, effectId });
+    }
+  }
+  if (effectEntries.length === 0) return;
+
+  const windowId = ids("win");
+  nodes.push({
+    id: windowId,
+    category: "window",
+    atomKind: windowAtom,
+    label: windowAtom,
+  });
+  edges.push({ from: attackRollId, to: windowId, relation: "opens_window" });
+  for (const { effect, effectId } of effectEntries) {
+    edges.push({ from: windowId, to: effectId, relation: "grants" });
+    edges.push({ from: effectId, to: attId, relation: "attaches_to" });
+    if (effect.kind !== "apply_condition_if_target_size_at_most") {
+      traceEffectAtomScaling(effect, effectId, slotId, nodes, edges, ids);
+    }
+  }
 }
 
 export function traceCreatureSaveGate(

@@ -12352,6 +12352,12 @@
       },
       "unitProfileDisposition": "profile-subset-supported",
       "finalDisposition": "catalog-installed-owner-evidence-required",
+      "battleReadinessClosure": {
+        "source": "deferred-mechanics",
+        "kind": "profile-subset-remaining-mechanics-closed",
+        "owner": "generic Stat Block action procedure owners by Surface action shape; generic object/Utilize and table-placement owner; ASSUMPTIONS.md A27 owner-decision plus character-battle-runtime handoff boundary",
+        "reason": "Wild Shape action admission is keyed by Surface section/action shape, not Beast or Druid identity. Multiattack, save-gated, support, action-option, special, Bonus Action, Reaction, and Legendary Action sections remain closed unless their generic procedure owner consumes the typed facts; this task does not promote generic Utilize/object-use execution.; Current battle runtime owns selected-loadout Wild Shape disposition, practical worn equipment and weapon consumers, explicit fallen-equipment drop outcomes, and active form-limb witness storage. It does not own generic carried-object inventory, map placement, object retrieval, or generic Utilize object procedures; adding Wild Shape-local state for those facts would duplicate table/object state.; ASSUMPTIONS.md A27 explicitly rejects active Wild Shape at Character Sheet handoff. Cross-session active-form persistence requires a future owner-decision to revise that assumption and introduce a session active-effect persistence owner for selected form identity and remaining half-Druid-level duration without duplicating Character Sheet or Stat Block facts."
+      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",

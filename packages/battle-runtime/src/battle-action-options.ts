@@ -109,10 +109,17 @@ type SupportedStatBlockAdvantageBonusDamageEffect = Extract<
   readonly damageType: DamageType;
 };
 
+type SupportedStatBlockAttackHitTargetSizeConditionEffect = Extract<
+  CreatureNamedAttackRoll["onHit"][number],
+  { readonly kind: "apply_condition_if_target_size_at_most" }
+> & {
+  readonly condition: "prone";
+};
+
 type SupportedStatBlockBaseDamageEffectList =
   ReadonlyNonEmptyArray<SupportedStatBlockBaseDamageEffect>;
 
-type SupportedStatBlockAttackEffectList =
+type SupportedStatBlockAttackDamageEffectList =
   | SupportedStatBlockBaseDamageEffectList
   | readonly [
       SupportedStatBlockAdvantageBonusDamageEffect,
@@ -121,6 +128,13 @@ type SupportedStatBlockAttackEffectList =
   | readonly [
       ...SupportedStatBlockBaseDamageEffectList,
       SupportedStatBlockAdvantageBonusDamageEffect,
+    ];
+
+type SupportedStatBlockAttackEffectList =
+  | SupportedStatBlockAttackDamageEffectList
+  | readonly [
+      ...SupportedStatBlockAttackDamageEffectList,
+      SupportedStatBlockAttackHitTargetSizeConditionEffect,
     ];
 
 type SupportedStaticStatBlockBaseDamageEffect =
@@ -140,7 +154,7 @@ type SupportedStaticStatBlockAdvantageBonusDamageEffect =
 type SupportedStaticStatBlockBaseDamageEffectList =
   ReadonlyNonEmptyArray<SupportedStaticStatBlockBaseDamageEffect>;
 
-type SupportedStaticStatBlockAttackEffectList =
+type SupportedStaticStatBlockAttackDamageEffectList =
   | SupportedStaticStatBlockBaseDamageEffectList
   | readonly [
       SupportedStaticStatBlockAdvantageBonusDamageEffect,
@@ -149,6 +163,13 @@ type SupportedStaticStatBlockAttackEffectList =
   | readonly [
       ...SupportedStaticStatBlockBaseDamageEffectList,
       SupportedStaticStatBlockAdvantageBonusDamageEffect,
+    ];
+
+type SupportedStaticStatBlockAttackEffectList =
+  | SupportedStaticStatBlockAttackDamageEffectList
+  | readonly [
+      ...SupportedStaticStatBlockAttackDamageEffectList,
+      SupportedStatBlockAttackHitTargetSizeConditionEffect,
     ];
 
 export type SupportedCreatureNamedAttackRoll = Omit<

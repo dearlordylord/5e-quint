@@ -5,6 +5,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-DRUID-WILD-SHAPE-STAT-BLOCK-MULTI-DAMAGE druid_wild_shape
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-DRUID-WILD-SHAPE-STAT-BLOCK-TRAIT-ADVANTAGE druid_wild_shape
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-DRUID-WILD-SHAPE-STAT-BLOCK-ATTACK-HIT-RIDERS druid_wild_shape
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-DRUID-WILD-SHAPE-STAT-BLOCK-SIZE-GATED-CONDITION-RIDERS druid_wild_shape
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-DRUID-WILD-SHAPE-STAT-BLOCK-NON-ATTACK-ACTIONS druid_wild_shape
 import {
   armorClassDelta,
@@ -80,7 +81,7 @@ const catId = "stat_block_cat";
 const wolfId = "stat_block_wolf";
 const spiderId = "stat_block_spider";
 const syntheticCoordinatedShapeId = "synthetic_coordinated_shape";
-const syntheticSizeGatedProneFormId = "synthetic_size_gated_prone_form";
+const syntheticProseProneFormId = "synthetic_prose_prone_form";
 const syntheticActionSectionFormId = "synthetic_action_section_form";
 const packAllyId = combatantId("wild-shape-pack-ally");
 const incapacitatedPackAllyId = combatantId(
@@ -1394,7 +1395,7 @@ test("rejects known Beast forms without promoted movement facts", () => {
   }
 });
 
-test("admits selected Beast forms with multi-component attack damage and filters unsupported riders", () => {
+test("admits selected Beast forms with multi-component attack damage and typed hit riders", () => {
   const profile = parseSupportedUnitFeatureProfile(
     unitLibrary.requireUnit("druid_wild_shape"),
     [{ className: "druid", level: ClassLevel.make(2) }],
@@ -1418,6 +1419,7 @@ test("admits selected Beast forms with multi-component attack damage and filters
       ratId,
       ridingHorseId,
       spiderId,
+      wolfId,
     ]);
   }
 });
@@ -1578,7 +1580,7 @@ test("classifies eligible Wild Shape Beast action surfaces without making ids th
     forms: [
       ...statBlockCatalog.listStatBlocks(),
       statBlockCatalog.requireStatBlock("stat_block_skeleton"),
-      syntheticSizeGatedProneForm(),
+      syntheticProseProneForm(),
       syntheticActionSectionForm(),
     ],
     profile,
@@ -1595,19 +1597,22 @@ test("classifies eligible Wild Shape Beast action surfaces without making ids th
         exampleStatBlockIds: expect.arrayContaining([spiderId]),
       }),
       expect.objectContaining({
-        category: "attackHitConditionRider",
-        exampleStatBlockIds: expect.arrayContaining([
-          wolfId,
-          syntheticSizeGatedProneFormId,
-        ]),
-        closedBoundary: expect.objectContaining({
-          owner: expect.stringContaining("condition rider owner"),
-          reason: expect.stringContaining("target Size predicate"),
-        }),
+        category: "attackHitTargetSizeConditionRider",
+        exampleStatBlockIds: expect.arrayContaining([wolfId]),
       }),
       expect.objectContaining({
         category: "traitDerivedConditionalAttackRollAdvantage",
         exampleStatBlockIds: expect.arrayContaining([wolfId]),
+      }),
+      expect.objectContaining({
+        category: "attackHitConditionRider",
+        exampleStatBlockIds: expect.arrayContaining([syntheticProseProneFormId]),
+        closedBoundary: expect.objectContaining({
+          owner: expect.stringContaining("condition rider owner"),
+          reason: expect.stringContaining(
+            "outside the typed target Size Prone payload",
+          ),
+        }),
       }),
       expect.objectContaining({
         category: "tableOrProseOnlyTrait",
@@ -1718,7 +1723,7 @@ test("classifies eligible Wild Shape Beast action surfaces without making ids th
   ).toBe(false);
 });
 
-function syntheticSizeGatedProneForm(): StatBlockRecord {
+function syntheticProseProneForm(): StatBlockRecord {
   const base = statBlockCatalog.requireStatBlock(ridingHorseId);
   const hooves = base.statBlock.actions?.attacks?.[0];
   if (hooves === undefined) {
@@ -1726,11 +1731,11 @@ function syntheticSizeGatedProneForm(): StatBlockRecord {
   }
   return {
     ...base,
-    id: syntheticSizeGatedProneFormId,
-    name: "Synthetic Size-Gated Prone Form",
+    id: syntheticProseProneFormId,
+    name: "Synthetic Prose Prone Form",
     statBlock: {
       ...base.statBlock,
-      displayName: "Synthetic Size-Gated Prone Form",
+      displayName: "Synthetic Prose Prone Form",
       actions: {
         attacks: [
           {
@@ -1777,7 +1782,10 @@ function syntheticActionSectionForm(): StatBlockRecord {
             onFail: {
               kind: "damage",
               damageType: "bludgeoning",
-              amount: { dice: 0, dieSize: 1, flat: 1 },
+              amount: {
+                kind: "fixed",
+                expr: { dice: 0, dieSize: 1, flat: 1 },
+              },
             },
             onSuccess: { kind: "half_damage" },
           },
@@ -1788,7 +1796,10 @@ function syntheticActionSectionForm(): StatBlockRecord {
             target: "self",
             effect: {
               kind: "heal_hp",
-              amount: { flat: 1 },
+              amount: {
+                kind: "fixed",
+                expr: { dice: 0, dieSize: 1, flat: 1 },
+              },
               target: "self",
             },
           },
