@@ -79,7 +79,7 @@
     {
       "number": 13,
       "id": "L3-FOLLOWUP-HALFLING-NIMBLENESS-RUNTIME",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Promote Halfling Nimbleness movement support"
     },
     {
@@ -111,6 +111,12 @@
       "id": "L3-FOLLOWUP-TWO-WEAPON-FIGHTING-DECLINE-RUNTIME",
       "status": "ready-for-research",
       "title": "Promote Two-Weapon Fighting optional decline support"
+    },
+    {
+      "number": 19,
+      "id": "L3-FOLLOWUP-CREATURE-SPACE-TABLE-SPATIAL-DERIVATION",
+      "status": "ready-for-research",
+      "title": "Derive creature-space traversal witnesses from table routes"
     }
   ]
 }
@@ -168,6 +174,7 @@ the Unit catalog, or the Unit matrix.
 | L3-FOLLOWUP-TWO-WEAPON-FIGHTING-DECLINE-RUNTIME | L3-FOLLOWUP-TWO-WEAPON-FIGHTING-RUNTIME | The promoted Two-Weapon Fighting subset applies the beneficial damage ability modifier when qualifying; explicit player decline needs the shared attack damage ability-modifier optional-choice owner. |
 | L3-FOLLOWUP-HALFLING-BRAVE-RUNTIME | L14G-B07-SPECIES-HALFLING | Runtime support consumes Halfling Brave's typed Frightened-condition Saving Throw Advantage facts. |
 | L3-FOLLOWUP-HALFLING-NIMBLENESS-RUNTIME | L14G-B07-SPECIES-HALFLING | Runtime support consumes Halfling Nimbleness's typed creature-space movement permission facts. |
+| L3-FOLLOWUP-CREATURE-SPACE-TABLE-SPATIAL-DERIVATION | L3-FOLLOWUP-HALFLING-NIMBLENESS-RUNTIME | The promoted Nimbleness subset consumes caller/table-supplied occupied-space witnesses; automatic pathfinding, route extraction, and coordinate occupancy derivation need a separate table/spatial owner. |
 | L3-FOLLOWUP-HALFLING-LUCK-RUNTIME | L14G-B07-SPECIES-HALFLING | Runtime support consumes Halfling Luck's typed natural-1 D20 Test reroll facts. |
 | L3-FOLLOWUP-HALFLING-NATURALLY-STEALTHY-RUNTIME | L14G-B07-SPECIES-HALFLING | Runtime support consumes Naturally Stealthy's typed Hide-obscurement permission facts. |
 | L3-FOLLOWUP-HUMAN-RESOURCEFUL-RUNTIME | L14G-B08-SPECIES-HUMAN | Runtime support consumes Human Resourceful's typed Long Rest Heroic Inspiration facts. |
@@ -825,7 +832,7 @@ Verification:
 
 ### Task 13 - L3-FOLLOWUP-HALFLING-NIMBLENESS-RUNTIME
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -841,9 +848,14 @@ Current state:
   facts with a larger-creature traversal relation and an explicit cannot-stop
   boundary.
 - The Unit matrix records `species_halfling_nimbleness` as
-  `unsupported-profile`.
-- No promoted movement/spatial profile owns creature-space path traversal or
-  occupied-space ending legality.
+  `profile-subset-supported` through
+  `unit-feature.creature-space-movement-permission`.
+- The promoted movement subset validates caller/table-supplied occupied-space
+  witnesses for selected support, larger effective creature size, and
+  unoccupied destination before spending Movement.
+- Automatic pathfinding, coordinate occupancy derivation, and route extraction
+  remain concrete follow-up work in
+  `L3-FOLLOWUP-CREATURE-SPACE-TABLE-SPATIAL-DERIVATION`.
 
 Output:
 
@@ -1009,6 +1021,57 @@ Verification:
 - `pnpm --filter @dnd/character-sheet-runtime typecheck`.
 - `pnpm --filter @dnd/character-battle-runtime typecheck` if the battle bridge
   changes.
+- `git diff --check`.
+
+### Task 19 - L3-FOLLOWUP-CREATURE-SPACE-TABLE-SPATIAL-DERIVATION
+
+Status: `ready-for-research`
+
+Depends on:
+
+- L3-FOLLOWUP-HALFLING-NIMBLENESS-RUNTIME
+
+Unit: `species_halfling_nimbleness`
+
+SRD anchor: `.references/srd-5.2.1/Character-Origins.md:222-223`
+
+Current state:
+
+- Halfling Nimbleness support admits the typed
+  `unit-feature.creature-space-movement-permission` profile.
+- The battle reducer validates caller/table-supplied occupied creature-space
+  Movement witnesses for selected support, larger effective creature size, and
+  unoccupied destination before spending Movement.
+- The Unit matrix leaves automatic pathfinding, coordinate occupancy derivation,
+  and route extraction for occupied creature spaces outside the promoted subset.
+
+Output:
+
+- Research and implement a table/spatial owner that derives occupied
+  creature-space traversal witnesses from route, position, occupancy, and
+  creature footprint facts.
+- Feed the derived witness into the existing Movement boundary rather than
+  storing species-owned movement state or adding Halfling-specific route logic.
+- Update focused QNT/rule-core slices only where route-derived table/spatial
+  semantics change, then revise the Unit claim without overclaiming broader
+  pathfinding behavior.
+
+Acceptance:
+
+- Route-derived traversal through larger occupied creature spaces and illegal
+  occupied ending-space cases are covered by focused tests.
+- The derivation is keyed by table route, occupancy, creature footprint, and
+  size-relation facts, not Halfling or Nimbleness authored identity.
+- The Unit matrix either removes the table-spatial derivation deferral for the
+  admitted subset or replaces it with a narrower executable follow-up.
+
+Verification:
+
+- RAW and ubiquitous-language check against the Halfling Nimbleness SRD anchor
+  plus Movement, Size, and creature-space terms.
+- Focused table/spatial movement tests/QNT/MBT only for implemented battle
+  behavior, with at most one focused MBT run after code changes are complete.
+- `pnpm --filter @dnd/battle-runtime typecheck`.
 - `git diff --check`.
 
 ## Verification

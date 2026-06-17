@@ -1376,6 +1376,7 @@ export type BattleMovementFillValue = {
   readonly areaDifficultTerrain?: BattleAreaDifficultTerrainMovementFact;
   readonly gustOfWindLineMovement?: BattleGustOfWindLineMovementFact;
   readonly grappleDrag?: BattleGrappleDragMovementFact;
+  readonly creatureSpaceTraversal?: BattleCreatureSpaceTraversalMovementFact;
   readonly jumpMovementReplacement?: BattleJumpMovementReplacementFact;
   readonly levitatedMovement?: BattleLevitatedMovementFact;
   readonly commandApproach?: BattleCommandApproachMovementFact;
@@ -1423,6 +1424,23 @@ export type BattleGrappleDragMovementFact = {
     readonly targetId: CombatantId;
     readonly distanceFeet: MovementFeet;
   }[];
+};
+export type BattleCreatureSpaceTraversalMovementFact = {
+  readonly kind: "occupiedCreatureSpaceTraversal";
+  readonly occupiedSpaces: readonly {
+    readonly occupantId: CombatantId;
+    readonly positionId: BattleTablePositionId;
+  }[];
+  readonly destination:
+    | {
+        readonly kind: "unoccupiedSpace";
+        readonly positionId: BattleTablePositionId;
+      }
+    | {
+        readonly kind: "occupiedCreatureSpace";
+        readonly occupantId: CombatantId;
+        readonly positionId: BattleTablePositionId;
+      };
 };
 export type BattleCommandApproachMovementFact = {
   readonly kind: "commandApproachShortestDirectRouteTowardCaster";
@@ -1893,6 +1911,7 @@ export type BattleResolvedMovement = {
   readonly spendsTurnMovement: boolean;
   readonly areaDifficultTerrain?: BattleAreaDifficultTerrainMovementFact;
   readonly grappleDrag?: BattleGrappleDragMovementFact;
+  readonly creatureSpaceTraversal?: BattleCreatureSpaceTraversalMovementFact;
   readonly jumpMovementReplacement?: BattleJumpMovementReplacementFact;
   readonly levitatedMovement?: BattleLevitatedMovementFact;
 };

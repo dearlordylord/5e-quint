@@ -56,7 +56,8 @@
         "spell.invocation-expeditious-retreat-dash",
         "spell.invocation-forced-reaction-movement",
         "spell.invocation-grease-ground-hazard",
-        "spell.invocation-jump-movement-replacement"
+        "spell.invocation-jump-movement-replacement",
+        "unit-feature.creature-space-movement-permission"
       ],
       "qntOwners": [
         "packages/shared-algebras/proofs/rule-core/movement-spatial-grapple.qnt",
@@ -6242,6 +6243,13 @@
     },
     {
       "obligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+        "BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND"
+      ],
+      "profileId": "unit-feature.creature-space-movement-permission"
+    },
+    {
+      "obligationIds": [
         "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
       ],
       "profileId": "unit-feature.remarkable-athlete"
@@ -8162,6 +8170,14 @@
         "BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND"
       ],
       "ownerPath": "packages/shared-algebras/proofs/rule-core/movement-spatial-grapple.qnt",
+      "profileScopes": [
+        {
+          "obligationIds": [
+            "BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND"
+          ],
+          "profileId": "unit-feature.creature-space-movement-permission"
+        }
+      ],
       "role": "semantic-core"
     },
     {
@@ -10326,6 +10342,18 @@
             "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
           ],
           "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core.qnt",
+          "role": "semantic-core"
+        }
+      ]
+    },
+    {
+      "profileId": "unit-feature.creature-space-movement-permission",
+      "qntOwners": [
+        {
+          "obligationIds": [
+            "BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND"
+          ],
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/movement-spatial-grapple.qnt",
           "role": "semantic-core"
         }
       ]
@@ -13896,6 +13924,7 @@
     "unit-feature.bonus-action-dash-temporary-hit-points",
     "unit-feature.bonus-action-delegated-standard-actions",
     "unit-feature.bonus-action-ongoing-rage",
+    "unit-feature.creature-space-movement-permission",
     "unit-feature.druid-wild-shape-known-form",
     "unit-feature.enemy-zero-hit-point-temporary-hit-points",
     "unit-feature.failed-ability-check-resource-boost",

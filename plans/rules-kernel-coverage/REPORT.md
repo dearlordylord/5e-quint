@@ -30,7 +30,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 
 | Obligation | Runtime | Status | Profiles |
 | --- | --- | --- | --- |
-| `BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND` | battle | covered | `spell.invocation-expeditious-retreat-dash`, `spell.invocation-forced-reaction-movement`, `spell.invocation-grease-ground-hazard`, `spell.invocation-jump-movement-replacement` |
+| `BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND` | battle | covered | `spell.invocation-expeditious-retreat-dash`, `spell.invocation-forced-reaction-movement`, `spell.invocation-grease-ground-hazard`, `spell.invocation-jump-movement-replacement`, `unit-feature.creature-space-movement-permission` |
 | `BATTLE.SHOVE.OUTCOME_AND_PUSH_BOUNDARY` | battle | covered | _direct reducer entrypoint_ |
 | `BATTLE.REACTION.OFFER_DECLINE_RESUME` | battle | covered | `spell.invocation-feather-fall-mitigation`, `spell.invocation-forced-reaction-movement`, `spell.reaction-counterspell`, `spell.reaction-hellish-rebuke`, `spell.reaction-shield`, `spell.readied-action-time-spell`, `unit-feature.attack-damage-reduction-zero-damage-redirect`, `unit-feature.reaction-roll-or-damage-reduction` |
 | `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS` | battle | covered | _unit-feature profile-scoped owner rows below_ |
@@ -445,7 +445,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `packages/shared-algebras/proofs/rule-core/damage-component-adjustments.qnt` | semantic-core | `BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION` |
 | `packages/shared-algebras/proofs/rule-core/hit-point-damage.qnt` | semantic-core | `SHARED.HIT_POINTS.POSITIVE_DAMAGE` |
 | `packages/shared-algebras/proofs/rule-core/hit-point-recovery.qnt` | semantic-core | `SHEET.HP_REST_HIT_DICE.TRANSITIONS` |
-| `packages/shared-algebras/proofs/rule-core/movement-spatial-grapple.qnt` | semantic-core | `BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND` |
+| `packages/shared-algebras/proofs/rule-core/movement-spatial-grapple.qnt` | semantic-core | `BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND`<br>profile-scoped: `unit-feature.creature-space-movement-permission` (`BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND`) |
 | `packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt` | semantic-core | `BATTLE.REACTION.OFFER_DECLINE_RESUME`<br>profile-scoped: `unit-feature.reaction-roll-or-damage-reduction` (`BATTLE.REACTION.OFFER_DECLINE_RESUME`) |
 | `packages/shared-algebras/proofs/rule-core/shove-outcome.qnt` | semantic-core | `BATTLE.SHOVE.OUTCOME_AND_PUSH_BOUNDARY` |
 | `packages/shared-algebras/proofs/rule-core/spell-attack-burst-save-damage-core.qnt` | semantic-core | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` |
@@ -781,6 +781,7 @@ Rows here are derived from `plans/unit-profile-coverage/profiles.jsonl` for prof
 | `unit-feature.bardic-inspiration-grant` | `packages/battle-runtime/battle-runtime-bardic-inspiration.qnt` (proof-only; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
 | `unit-feature.bonus-action-dash-temporary-hit-points` | `packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt` (semantic-core; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`)<br>`packages/battle-runtime/battle-runtime-movement.qnt` (semantic-core; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
 | `unit-feature.bonus-action-ongoing-rage` | `packages/shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core.qnt` (semantic-core; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
+| `unit-feature.creature-space-movement-permission` | `packages/shared-algebras/proofs/rule-core/movement-spatial-grapple.qnt` (semantic-core; `BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND`) |
 | `unit-feature.enemy-zero-hit-point-temporary-hit-points` | `packages/battle-runtime/battle-runtime-dark-ones-blessing.mbt.qnt` (mbt-fixture; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
 | `unit-feature.failed-ability-check-resource-boost` | `packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt` (semantic-core; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
 | `unit-feature.first-attack-roll-reckless-advantage` | `packages/shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core.qnt` (semantic-core; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |

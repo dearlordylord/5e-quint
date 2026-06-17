@@ -1,7 +1,7 @@
 // -*- mode: Bluespec; -*-
 // RAW-COVERAGE: qnt-owner RAW-PTG-REACTIONS-003 RAW-QCORE7-MOVEMENT-GRAPPLE-001
 // KERNEL-COVERAGE: qnt-owner BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND
-// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.grappler
+// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.creature-space-movement-permission unit-feature.grappler
 
 module movementSpatialGrapple {
   import attackDamageComposition.* from "./attack-damage-composition"
@@ -24,6 +24,16 @@ module movementSpatialGrapple {
   type MovementSpendFacts = {
     distanceFeet: int,
     extraCostFeet: int,
+  }
+
+  type CreatureSpaceMovementPermission =
+    | NoCreatureSpaceMovementPermission
+    | LargerCreatureSpaceTraversalCannotStop
+
+  type CreatureSpaceTraversalFacts = {
+    occupiedCreatureSize: RuleSize,
+    endsInOccupiedCreatureSpace: bool,
+    permission: CreatureSpaceMovementPermission,
   }
 
   type GrappleState =
@@ -76,6 +86,15 @@ module movementSpatialGrapple {
 
   pure def movementCostFeet(facts: MovementSpendFacts): int =
     facts.distanceFeet + facts.extraCostFeet
+
+  pure def creatureSpaceTraversalLegal(
+    moverSize: RuleSize,
+    facts: CreatureSpaceTraversalFacts,
+  ): bool = all {
+    facts.permission == LargerCreatureSpaceTraversalCannotStop,
+    sizeRank(facts.occupiedCreatureSize) > sizeRank(moverSize),
+    not(facts.endsInOccupiedCreatureSpace),
+  }
 
   pure def activeGrapple(grapple: GrappleState): bool =
     grapple != NoGrapple

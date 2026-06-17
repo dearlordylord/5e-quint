@@ -27,7 +27,7 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.ACID_ARROW_ATTACK_TIMING
 // KERNEL-COVERAGE: runtime-owner BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING
 // KERNEL-COVERAGE: runtime-owner BATTLE.COMPOSITION.TURN_BOUNDARY_EFFECT_LIFECYCLE_ORDERING
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.invocation-grease-ground-hazard spell.invocation-jump-movement-replacement spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.creature-space-movement-permission unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.invocation-grease-ground-hazard spell.invocation-jump-movement-replacement spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
 
 import { Either, Match } from "effect";
 
@@ -141,6 +141,7 @@ import {
   battleMovementBudgetForActor,
   combatantCanMoveInState,
   combatantCanMoveWithBudget,
+  creatureSizeIsLargerThanSelf,
   effectiveMovementSpeed,
   effectiveWalkSpeed,
   grappleTargetExemptFromDragCost,
@@ -173,8 +174,14 @@ import {
 import { wardingBondSavingThrowFlatBonusProjectionsForTarget } from "./warding-bond.ts";
 import {
   activeDruidWildShape,
+  combatantEffectiveSize,
   updateActiveDruidWildShapeResources,
 } from "./druid-wild-shape.ts";
+import {
+  CREATURE_SPACE_MOVEMENT_PERMISSION_SUPPORT_PROFILE,
+  type BattleCreatureSpaceMovementPermissionSupportProfile,
+  type BattleUnitSupportProfile,
+} from "../unit-feature-support.ts";
 import {
   battleStateWithFlySpeedGrantEndFallCleanupFrames,
   flySpeedGrantEndFallCleanupFramesForExpiredEffects,
@@ -215,6 +222,7 @@ import type {
   BattleCommandApproachMovementFact,
   BattleCommandFleeMovementFact,
   BattleCommandHaltTurnSuppression,
+  BattleCreatureSpaceTraversalMovementFact,
   BattleCreatureState,
   BattleFlySpeedGrantEndFallCleanupFrame,
   BattleDroppedObjectOutcome,
@@ -6328,6 +6336,18 @@ export function parseBattleMovement(
       message: movementCostFactValidation,
     };
   }
+  const creatureSpaceTraversalValidation =
+    validateCreatureSpaceTraversalMovementFact(
+      state,
+      moverId,
+      fill.value.creatureSpaceTraversal,
+    );
+  if (creatureSpaceTraversalValidation !== null) {
+    return {
+      tag: "invalid",
+      message: creatureSpaceTraversalValidation,
+    };
+  }
   const areaExtraCostFeet = areaMovementExtraCostFeet(state, fill.value);
   const jumpMovementValidation = validateJumpMovementReplacementFact(
     state,
@@ -6445,6 +6465,9 @@ export function parseBattleMovement(
       ...(fill.value.grappleDrag === undefined
         ? {}
         : { grappleDrag: fill.value.grappleDrag }),
+      ...(fill.value.creatureSpaceTraversal === undefined
+        ? {}
+        : { creatureSpaceTraversal: fill.value.creatureSpaceTraversal }),
       ...(fill.value.jumpMovementReplacement === undefined
         ? {}
         : { jumpMovementReplacement: fill.value.jumpMovementReplacement }),
@@ -7068,6 +7091,90 @@ type AreaMovementCostFactResult =
       readonly totalDistanceFeet: MovementFeet;
       readonly extraCostFeet: MovementFeet;
     };
+
+function validateCreatureSpaceTraversalMovementFact(
+  state: BattleState,
+  moverId: CombatantId,
+  fact: BattleCreatureSpaceTraversalMovementFact | undefined,
+): string | null {
+  if (fact === undefined) {
+    return null;
+  }
+  if (fact.kind !== "occupiedCreatureSpaceTraversal") {
+    return "Creature-space traversal movement fact has the wrong kind.";
+  }
+  if (fact.occupiedSpaces.length === 0) {
+    return "Creature-space traversal movement fact requires an occupied creature space.";
+  }
+  const mover = state.combatants.get(moverId);
+  if (mover === undefined) {
+    return "Creature-space traversal requires a known mover.";
+  }
+  if (creatureSpaceMovementPermissionProfileForCombatant(mover) === null) {
+    return "Creature-space traversal requires a selected occupied-creature-space movement permission profile.";
+  }
+  const seenOccupants = new Set<CombatantId>();
+  for (const occupiedSpace of fact.occupiedSpaces) {
+    if (occupiedSpace.occupantId === moverId) {
+      return "Creature-space traversal cannot name the mover as the occupied creature.";
+    }
+    if (seenOccupants.has(occupiedSpace.occupantId)) {
+      return "Creature-space traversal movement fact repeats an occupied creature.";
+    }
+    seenOccupants.add(occupiedSpace.occupantId);
+    const occupant = state.combatants.get(occupiedSpace.occupantId);
+    if (occupant === undefined) {
+      return "Creature-space traversal references an unknown occupied creature.";
+    }
+    if (
+      !creatureSizeIsLargerThanSelf(
+        combatantEffectiveSize(mover),
+        combatantEffectiveSize(occupant),
+      )
+    ) {
+      return "Creature-space traversal requires each occupied creature to be larger than the mover.";
+    }
+  }
+  if (
+    fact.destination.kind === "unoccupiedSpace" &&
+    fact.occupiedSpaces.some(
+      (occupiedSpace) =>
+        occupiedSpace.positionId === fact.destination.positionId,
+    )
+  ) {
+    return "Creature-space traversal cannot end in an occupied creature space.";
+  }
+  if (fact.destination.kind === "occupiedCreatureSpace") {
+    return "Creature-space traversal cannot end in an occupied creature space.";
+  }
+  return null;
+}
+
+function creatureSpaceMovementPermissionProfileForCombatant(
+  combatant: BattleCreatureState,
+): BattleCreatureSpaceMovementPermissionSupportProfile | null {
+  if (combatant.origin.kind !== "character") {
+    return null;
+  }
+  for (const unitRef of combatant.origin.characterUnitRefs) {
+    const profile = unitRef.supportProfiles.find(
+      isBattleCreatureSpaceMovementPermissionSupportProfile,
+    );
+    if (profile !== undefined) {
+      return profile;
+    }
+  }
+  return null;
+}
+
+function isBattleCreatureSpaceMovementPermissionSupportProfile(
+  profile: BattleUnitSupportProfile,
+): profile is BattleCreatureSpaceMovementPermissionSupportProfile {
+  return (
+    typeof profile === "object" &&
+    profile.kind === CREATURE_SPACE_MOVEMENT_PERMISSION_SUPPORT_PROFILE
+  );
+}
 
 function validateMovementCostFacts(
   state: BattleState,

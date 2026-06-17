@@ -2844,6 +2844,23 @@ type BattleFillEncoded =
             readonly distanceFeet: number;
           }[];
         };
+        readonly creatureSpaceTraversal?: {
+          readonly kind: "occupiedCreatureSpaceTraversal";
+          readonly occupiedSpaces: readonly {
+            readonly occupantId: string;
+            readonly positionId: string;
+          }[];
+          readonly destination:
+            | {
+                readonly kind: "unoccupiedSpace";
+                readonly positionId: string;
+              }
+            | {
+                readonly kind: "occupiedCreatureSpace";
+                readonly occupantId: string;
+                readonly positionId: string;
+              };
+        };
         readonly commandApproach?: {
           readonly kind: "commandApproachShortestDirectRouteTowardCaster";
           readonly movedWithinFiveFeetOfCaster: boolean;
@@ -3655,6 +3672,29 @@ export const BattleFillSchema: Schema.Schema<
               Schema.Struct({
                 targetId: CombatantId,
                 distanceFeet: MovementFeet,
+              }),
+            ),
+          }),
+          { exact: true },
+        ),
+        creatureSpaceTraversal: Schema.optionalWith(
+          Schema.Struct({
+            kind: Schema.Literal("occupiedCreatureSpaceTraversal"),
+            occupiedSpaces: Schema.Array(
+              Schema.Struct({
+                occupantId: CombatantId,
+                positionId: BattleTablePositionId,
+              }),
+            ),
+            destination: Schema.Union(
+              Schema.Struct({
+                kind: Schema.Literal("unoccupiedSpace"),
+                positionId: BattleTablePositionId,
+              }),
+              Schema.Struct({
+                kind: Schema.Literal("occupiedCreatureSpace"),
+                occupantId: CombatantId,
+                positionId: BattleTablePositionId,
               }),
             ),
           }),

@@ -751,6 +751,13 @@ export function targetIsNoMoreThanOneSizeLarger(
   return SIZE_RANKS[target] - SIZE_RANKS[grappler] <= 1;
 }
 
+export function creatureSizeIsLargerThanSelf(
+  self: Size,
+  other: Size,
+): boolean {
+  return SIZE_RANKS[other] > SIZE_RANKS[self];
+}
+
 export function grappleDragCostExempt(grappler: Size, target: Size): boolean {
   return target === "tiny" || SIZE_RANKS[grappler] - SIZE_RANKS[target] >= 2;
 }

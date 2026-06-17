@@ -36,6 +36,7 @@ import {
   BATTLE_READIED_SPELL_TRIGGERS,
   addBattleCombatant,
   battleAreaId,
+  battleTablePositionId,
   battleObscurementZones,
   battleAvailableDruidWildShapeKnownForms,
   battleReactionRollOrDamageReductionSupportForUnit,
@@ -179,6 +180,7 @@ import type {
   EffectAtom,
   SpellRecord,
   StatBlockRecord,
+  Size,
   UnitRecord,
   WeaponRecord,
 } from "@dnd/surface/surface/types";
@@ -591,6 +593,25 @@ export function grapplerUnitRefs(): Extract<
   return [
     {
       unitId: "feat_grappler",
+      supportProfiles: supportProfiles.right,
+    },
+  ];
+}
+
+export function halflingNimblenessUnitRefs(): Extract<
+  BattleCreatureInit["creatureInit"],
+  { readonly kind: "character" }
+>["characterUnitRefs"] {
+  const unit = unitLibrary.requireUnit("species_halfling_nimbleness");
+  const supportProfiles = battleUnitSupportProfilesForUnit({
+    unit,
+  });
+  if (Either.isLeft(supportProfiles)) {
+    throw new Error(supportProfiles.left.message);
+  }
+  return [
+    {
+      unitId: "species_halfling_nimbleness",
       supportProfiles: supportProfiles.right,
     },
   ];
@@ -1652,6 +1673,10 @@ export function movementFill(
       BattleFill,
       { readonly kind: "movement" }
     >["value"]["grappleDrag"];
+    readonly creatureSpaceTraversal?: Extract<
+      BattleFill,
+      { readonly kind: "movement" }
+    >["value"]["creatureSpaceTraversal"];
   },
 ): Extract<BattleFill, { readonly kind: "movement" }> {
   if (hole.kind !== "movement") {
@@ -1670,6 +1695,9 @@ export function movementFill(
       ...(value.grappleDrag === undefined
         ? {}
         : { grappleDrag: value.grappleDrag }),
+      ...(value.creatureSpaceTraversal === undefined
+        ? {}
+        : { creatureSpaceTraversal: value.creatureSpaceTraversal }),
     },
   };
 }
@@ -2014,6 +2042,7 @@ export function characterSeed(input: {
     BattleCreatureInit["creatureInit"],
     { readonly kind: "character" }
   >["spellcasting"];
+  readonly size?: Size;
 }): BattleCreatureInit {
   const attack =
     input.attack === undefined ? testLongswordAttack() : input.attack;
@@ -2085,7 +2114,7 @@ export function characterSeed(input: {
         input.d20Statistics ?? testCharacterD20Statistics({ str: 16 }),
       armorClass:
         input.armorClass ?? armorClassStateForLoadout(selectedLoadout),
-      size: "medium",
+      size: input.size ?? "medium",
       speed: { walkFeet: movementFeet(30) },
       currentHp: Hp(input.currentHp ?? 12),
       maxHp: Hp(input.maxHp ?? 12),
@@ -4047,6 +4076,7 @@ export {
   battleId,
   battleObjectId,
   battleObscurementZones,
+  battleTablePositionId,
   battleReactionRollOrDamageReductionSupportForUnit,
   BattleSnapshotSchema,
   BattleSubjectSchema,

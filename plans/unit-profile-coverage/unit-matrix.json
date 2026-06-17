@@ -72,23 +72,23 @@
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 118,
-      "numerator": 118,
+      "denominator": 119,
+      "numerator": 119,
       "percent": "100%"
     },
     "qntProofCoverage": {
-      "denominator": 118,
-      "numerator": 115,
+      "denominator": 119,
+      "numerator": 116,
       "percent": "97.5%"
     },
     "rulesKernelCoveredProfileCoverage": {
-      "denominator": 156,
-      "numerator": 156,
+      "denominator": 157,
+      "numerator": 157,
       "percent": "100%"
     },
     "rulesKernelProfileJoinCoverage": {
-      "denominator": 156,
-      "numerator": 156,
+      "denominator": 157,
+      "numerator": 157,
       "percent": "100%"
     },
     "rulesKernelSupportedUnitCoverage": {
@@ -97,13 +97,13 @@
       "percent": "100%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 118,
-      "numerator": 118,
+      "denominator": 119,
+      "numerator": 119,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 118,
-      "numerator": 118,
+      "denominator": 119,
+      "numerator": 119,
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
@@ -987,6 +987,36 @@
         {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-extra-attack-and-speed-features.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "unit-feature.creature-space-movement-permission",
+      "profileKind": "passive",
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/movement-spatial-grapple.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/unit-feature-support.ts",
+        "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts"
+      ],
+      "sourceBoundary": "Battle Unit admission consumes the authored Surface creature_space_movement_permission shape and projects a typed occupied creature-space traversal permission. Battle runtime consumes retained selected character Unit support refs, existing Movement budget, effective combatant sizes, and caller/table-supplied occupied-space and destination witnesses to validate traversal through larger occupied creature spaces and reject occupied destinations without storing species-owned movement state, durable map-position state, or authored-identity dispatch.",
+      "taskRefs": [
+        "L3-FOLLOWUP-HALFLING-NIMBLENESS-RUNTIME"
+      ],
+      "title": "Unit feature permits Movement through larger occupied creature spaces without stopping there",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/movement-spatial-grapple-inductive.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-movement-grapple-hide.test.ts"
         }
       ]
     },
@@ -5206,13 +5236,13 @@
     "denominatorRule": "profile records with rules-kernel profile kinds and either QNT owners or explicit profile-obligation mappings",
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
-        "denominator": 156,
-        "numerator": 156,
+        "denominator": 157,
+        "numerator": 157,
         "percent": "100%"
       },
       "rulesKernelProfileJoinCoverage": {
-        "denominator": 156,
-        "numerator": 156,
+        "denominator": 157,
+        "numerator": 157,
         "percent": "100%"
       }
     },
@@ -5639,6 +5669,28 @@
         "profileKind": "passive",
         "qntOwners": [
           "packages/shared-algebras/proofs/rule-core/unit-feature-passive-movement-defense-core.qnt"
+        ]
+      },
+      {
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+          },
+          {
+            "obligationId": "BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle movement, Stand/Drop Prone, Grapple/Escape/Release, and caller-supplied Opportunity Attack frontier facts"
+          }
+        ],
+        "profileId": "unit-feature.creature-space-movement-permission",
+        "profileKind": "passive",
+        "qntOwners": [
+          "packages/shared-algebras/proofs/rule-core/movement-spatial-grapple.qnt"
         ]
       },
       {
@@ -15828,6 +15880,22 @@
     },
     {
       "claimKind": "qnt-proof",
+      "note": "The shared movement/grapple rule-core slice carries the creature-space traversal predicate for a selected permission profile: the occupied creature must be larger than the mover and the movement cannot end in an occupied creature space.",
+      "profileIds": [
+        "unit-feature.creature-space-movement-permission"
+      ],
+      "taskId": "L3-FOLLOWUP-HALFLING-NIMBLENESS-RUNTIME"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime admission and reducer tests cover Halfling Nimbleness admission from Surface creature_space_movement_permission facts, identity-independent support profile projection, selected Unit ref gating, caller-supplied occupied-space Movement witnesses, larger effective creature-size validation, rejection of occupied destinations, and use of existing movement budget without species-owned movement state.",
+      "profileIds": [
+        "unit-feature.creature-space-movement-permission"
+      ],
+      "taskId": "L3-FOLLOWUP-HALFLING-NIMBLENESS-RUNTIME"
+    },
+    {
+      "claimKind": "qnt-proof",
       "note": "Shared rule-core and battle-runtime bridge QNT facts model a passive Ability Check roll-mode profile whose Advantage applies only when the Ability Check is made to end Grappled, leaving unrelated Ability Checks normal.",
       "profileIds": [
         "unit-feature.passive-ability-check-roll-mode"
@@ -24992,19 +25060,81 @@
         "status": "installed"
       },
       "claim": {
-        "battleReadinessClosure": {
-          "kind": "table-spatial-derivation",
-          "owner": "future movement and spatial-occupancy owner",
-          "reason": "Automatic occupied-space traversal, creature size relation along a path, and ending-space legality require table/spatial movement facts outside the promoted battle Unit profiles."
-        },
-        "reason": "Halfling Nimbleness is authored as a movement permission through occupied creature spaces larger than the Halfling with an explicit cannot-stop-there boundary. No promoted movement profile owns creature-space path traversal or occupied-space stopping legality yet.",
-        "tag": "unsupported-profile"
+        "deferredMechanics": [
+          {
+            "battleReadinessClosure": {
+              "kind": "table-spatial-derivation",
+              "owner": "future table/spatial path owner",
+              "reason": "The promoted battle reducer validates typed occupancy witnesses supplied at the Movement boundary. Inferring those witnesses from a map, token footprint, and route remains table/spatial work outside this Unit profile."
+            },
+            "mechanic": "automatic pathfinding, coordinate occupancy derivation, and route extraction for occupied creature spaces"
+          }
+        ],
+        "profileIds": [
+          "unit-feature.creature-space-movement-permission"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE9-UNIT-FEATURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "Battle Unit admission derives the occupied creature-space traversal permission from Surface creature_space_movement_permission facts with occupied_creature_space traversal, a larger-creature relation, and canStopInOccupiedSpace false, without dispatching on Halfling or Nimbleness identity.",
+          "Battle runtime validates caller-supplied Movement facts for occupied creature-space traversal by requiring a selected creature-space movement permission profile, existing occupied creature ids, larger effective creature size for every occupied space traversed, and an unoccupied destination before spending Movement.",
+          "The profile consumes existing movement budget, combatant effective size, selected Unit support profiles, and table-supplied position/occupancy witnesses without storing species-owned movement state or durable map-position state."
+        ],
+        "tag": "profile-subset-supported"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L3-FOLLOWUP-HALFLING-NIMBLENESS-RUNTIME"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-movement-grapple-hide.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L3-FOLLOWUP-HALFLING-NIMBLENESS-RUNTIME"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/halfling-nimbleness-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "L3-FOLLOWUP-HALFLING-NIMBLENESS-RUNTIME"
+        }
+      ],
       "executableMechanics": true,
       "kind": "species_trait",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "unit-feature.creature-space-movement-permission",
+          "profileKind": "passive",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/movement-spatial-grapple.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/unit-feature-support.ts",
+            "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts"
+          ],
+          "sourceBoundary": "Battle Unit admission consumes the authored Surface creature_space_movement_permission shape and projects a typed occupied creature-space traversal permission. Battle runtime consumes retained selected character Unit support refs, existing Movement budget, effective combatant sizes, and caller/table-supplied occupied-space and destination witnesses to validate traversal through larger occupied creature spaces and reject occupied destinations without storing species-owned movement state, durable map-position state, or authored-identity dispatch.",
+          "taskRefs": [
+            "L3-FOLLOWUP-HALFLING-NIMBLENESS-RUNTIME"
+          ],
+          "title": "Unit feature permits Movement through larger occupied creature spaces without stopping there",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/movement-spatial-grapple-inductive.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-movement-grapple-hide.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/species_halfling_nimbleness.json",
       "unitId": "species_halfling_nimbleness"
     },

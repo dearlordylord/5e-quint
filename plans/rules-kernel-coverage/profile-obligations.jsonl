@@ -26,6 +26,7 @@
 {"profileId":"unit-feature.passive-damage-resistance","obligationIds":["BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION"]}
 {"profileId":"unit-feature.passive-speed-bonus","obligationIds":["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"]}
 {"profileId":"unit-feature.passive-speed-kind-grants","obligationIds":["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"]}
+{"profileId":"unit-feature.creature-space-movement-permission","obligationIds":["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS","BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND"]}
 {"profileId":"unit-feature.remarkable-athlete","obligationIds":["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"]}
 {"profileId":"unit-feature.reaction-roll-or-damage-reduction","obligationIds":["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS","BATTLE.REACTION.OFFER_DECLINE_RESUME"]}
 {"profileId":"unit-feature.rogue-steady-aim","obligationIds":["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"]}

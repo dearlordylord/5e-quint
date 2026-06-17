@@ -1,6 +1,6 @@
 // -*- mode: Bluespec; -*-
 // RAW-COVERAGE: verification-owner:qnt-proof RAW-QCORE7-MOVEMENT-GRAPPLE-001
-// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.grappler
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.creature-space-movement-permission unit-feature.grappler
 
 module movementSpatialGrappleInductive {
   import attackDamageComposition.* from "./attack-damage-composition"
@@ -268,5 +268,28 @@ module movementSpatialGrappleInductive {
     assert(grapplerFastWrestlerTargetExemptFromDragCost(MediumSize, MediumSize)),
     assert(not(grapplerFastWrestlerTargetExemptFromDragCost(MediumSize, LargeSize))),
     assert(targetExemptFromGrappleDragCost(MediumSize, MediumSize) != grapplerFastWrestlerTargetExemptFromDragCost(MediumSize, MediumSize)),
+  }
+
+  run creature_space_traversal_permission_parity = all {
+    assert(creatureSpaceTraversalLegal(SmallSize, {
+      occupiedCreatureSize: MediumSize,
+      endsInOccupiedCreatureSpace: false,
+      permission: LargerCreatureSpaceTraversalCannotStop,
+    })),
+    assert(not(creatureSpaceTraversalLegal(SmallSize, {
+      occupiedCreatureSize: SmallSize,
+      endsInOccupiedCreatureSpace: false,
+      permission: LargerCreatureSpaceTraversalCannotStop,
+    }))),
+    assert(not(creatureSpaceTraversalLegal(SmallSize, {
+      occupiedCreatureSize: MediumSize,
+      endsInOccupiedCreatureSpace: true,
+      permission: LargerCreatureSpaceTraversalCannotStop,
+    }))),
+    assert(not(creatureSpaceTraversalLegal(SmallSize, {
+      occupiedCreatureSize: MediumSize,
+      endsInOccupiedCreatureSpace: false,
+      permission: NoCreatureSpaceMovementPermission,
+    }))),
   }
 }
