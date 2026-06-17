@@ -625,7 +625,9 @@ function spellDamageHoleWithEmpoweredOption(
     actor,
     castApplications,
   });
-  return empowered === null ? hole : { ...hole, spellDamageRerolls: [empowered] };
+  return empowered === null
+    ? hole
+    : { ...hole, spellDamageRerolls: [empowered] };
 }
 
 export function resolveSpellAct(
@@ -1273,6 +1275,8 @@ function resolveSpellActInternal(
       d20TestNaturalOneRerollRollDecisionRequired({
         actor: actorBeforeSpellAttack,
         originalNaturalD20: Number(fillSet.attackRoll.naturalD20),
+        rollMode: fillSet.attackRoll.rollMode,
+        rolledD20s: fillSet.attackRoll.rolledD20s,
         decision: fillSet.attackRoll.d20TestNaturalOneReroll,
       })
     ) {
@@ -1289,7 +1293,10 @@ function resolveSpellActInternal(
     }
     const d20TestNaturalOneRerollIssue = d20TestNaturalOneRerollRollIssue({
       actor: actorBeforeSpellAttack,
+      total: fillSet.attackRoll.total,
       originalNaturalD20: Number(fillSet.attackRoll.naturalD20),
+      rollMode: fillSet.attackRoll.rollMode,
+      rolledD20s: fillSet.attackRoll.rolledD20s,
       decision: fillSet.attackRoll.d20TestNaturalOneReroll,
       requiredRollMode,
       otherD20RerollPresent: fillSet.attackRoll.spellAttackReroll !== undefined,
@@ -2592,6 +2599,8 @@ function resolveSpellAttackDamageObjectTarget(input: {
     d20TestNaturalOneRerollRollDecisionRequired({
       actor: input.input.state.combatants.get(input.actorId),
       originalNaturalD20: Number(input.fillSet.attackRoll.naturalD20),
+      rollMode: input.fillSet.attackRoll.rollMode,
+      rolledD20s: input.fillSet.attackRoll.rolledD20s,
       decision: input.fillSet.attackRoll.d20TestNaturalOneReroll,
     })
   ) {
@@ -2603,7 +2612,10 @@ function resolveSpellAttackDamageObjectTarget(input: {
   }
   const d20TestNaturalOneRerollIssue = d20TestNaturalOneRerollRollIssue({
     actor: input.input.state.combatants.get(input.actorId),
+    total: input.fillSet.attackRoll.total,
     originalNaturalD20: Number(input.fillSet.attackRoll.naturalD20),
+    rollMode: input.fillSet.attackRoll.rollMode,
+    rolledD20s: input.fillSet.attackRoll.rolledD20s,
     decision: input.fillSet.attackRoll.d20TestNaturalOneReroll,
     requiredRollMode,
     otherD20RerollPresent:

@@ -1,13 +1,17 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.short-rest-spell-slot-recovery
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.weapon-mastery-reselection
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.pact-slot-recovery
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.rest-triggered-heroic-inspiration
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV91B wizard_arcane_recovery
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection AT-L1-04 fighter_weapon_mastery barbarian_weapon_mastery paladin_weapon_mastery ranger_weapon_mastery rogue_weapon_mastery
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-AUTHOR-WARLOCK-MAGICAL-CUNNING warlock_magical_cunning
+import { Option } from "effect";
 import { describe, expect, test } from "vitest";
 import {
+  CHARACTER_SHEET_HEROIC_INSPIRATION_AVAILABLE,
   CHARACTER_SHEET_LONG_REST_BASE_TICKS,
   CHARACTER_SHEET_LONG_REST_WAIT_TICKS,
+  CHARACTER_SHEET_NO_HEROIC_INSPIRATION,
   CHARACTER_SHEET_SHORT_REST_TICKS,
   DieRollResult,
   Hp,
@@ -42,11 +46,11 @@ import {
   weaponMasteryBuild,
   weaponMasteryLongRestReselectionTestName,
   wizardBuild,
-  wizardWarlockBuild
+  wizardWarlockBuild,
 } from "./test-support.ts";
 import type {
   CharacterBuild,
-  CharacterSheetWeaponMasteryReselection
+  CharacterSheetWeaponMasteryReselection,
 } from "./test-support.ts";
 
 const magicalCunningPactSlotRecoveryTestName =
@@ -237,6 +241,105 @@ describe("Character Sheet runtime / rests", () => {
       expended: 0,
     });
     expect(rested.restFeatureUses).toEqual([]);
+  });
+
+  test("Long Rest grants Heroic Inspiration from retained rest-triggered feature facts", () => {
+    const humanBuild: CharacterBuild = {
+      ...armorClassBuild({ startingClass: "class_fighter" }),
+      species: "species_human",
+      speciesSize: "medium",
+    };
+
+    for (const initialHeroicInspiration of [
+      CHARACTER_SHEET_NO_HEROIC_INSPIRATION,
+      CHARACTER_SHEET_HEROIC_INSPIRATION_AVAILABLE,
+    ] as const) {
+      const sheet = requireRight(
+        createFreshCharacterSheet({
+          characterId: characterSheetId(
+            `character:resourceful:${initialHeroicInspiration.tag}`,
+          ),
+          build: humanBuild,
+          maximumHp: Hp(12),
+          currentHp: Hp(6),
+          tempHp: Hp(0),
+          unitLibrary,
+          heroicInspiration: initialHeroicInspiration,
+        }),
+      );
+
+      const rested = requireRight(completeLongRest({ sheet, unitLibrary }));
+
+      expect(rested.heroicInspiration).toEqual(
+        CHARACTER_SHEET_HEROIC_INSPIRATION_AVAILABLE,
+      );
+    }
+  });
+
+  test("Long Rest preserves Heroic Inspiration state without retained rest-triggered feature facts", () => {
+    for (const initialHeroicInspiration of [
+      CHARACTER_SHEET_NO_HEROIC_INSPIRATION,
+      CHARACTER_SHEET_HEROIC_INSPIRATION_AVAILABLE,
+    ] as const) {
+      const sheet = requireRight(
+        createFreshCharacterSheet({
+          characterId: characterSheetId(
+            `character:no-resourceful:${initialHeroicInspiration.tag}`,
+          ),
+          build,
+          maximumHp: Hp(12),
+          currentHp: Hp(6),
+          tempHp: Hp(0),
+          unitLibrary,
+          heroicInspiration: initialHeroicInspiration,
+        }),
+      );
+
+      const rested = requireRight(completeLongRest({ sheet, unitLibrary }));
+
+      expect(rested.heroicInspiration).toEqual(initialHeroicInspiration);
+    }
+  });
+
+  test("Long Rest reports unknown retained Heroic Inspiration Unit refs", () => {
+    const humanBuild: CharacterBuild = {
+      ...armorClassBuild({ startingClass: "class_fighter" }),
+      species: "species_human",
+      speciesSize: "medium",
+    };
+    const sheet = requireRight(
+      createFreshCharacterSheet({
+        characterId: characterSheetId("character:resourceful-missing-unit"),
+        build: humanBuild,
+        maximumHp: Hp(12),
+        currentHp: Hp(6),
+        tempHp: Hp(0),
+        unitLibrary,
+      }),
+    );
+    const missingResourcefulUnitLibrary = {
+      getUnit: (id: Parameters<typeof unitLibrary.getUnit>[0]) =>
+        id === "species_human_resourceful"
+          ? Option.none()
+          : unitLibrary.getUnit(id),
+      requireUnit: (id: Parameters<typeof unitLibrary.requireUnit>[0]) => {
+        if (id === "species_human_resourceful") {
+          throw new Error("Resourceful fixture Unit is intentionally missing.");
+        }
+        return unitLibrary.requireUnit(id);
+      },
+      listUnits: () =>
+        unitLibrary
+          .listUnits()
+          .filter((unit) => unit.id !== "species_human_resourceful"),
+    };
+
+    expect(
+      completeLongRest({ sheet, unitLibrary: missingResourcefulUnitLibrary }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: { message: "Unknown Unit id: species_human_resourceful" },
+    });
   });
 
   test(weaponMasteryLongRestReselectionTestName, () => {

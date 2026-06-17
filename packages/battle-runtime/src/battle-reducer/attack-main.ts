@@ -139,6 +139,7 @@ import {
   attackActionOptionName,
   attackPotentialDamageTypes,
   eligibleAttackDamageRiders,
+  eligibleAttackDamageDieFloorUnitIds,
   eligibleWeaponDamageDiceRollChoiceUnitIds,
   recordAttackRollMissToHitReplacementUsed,
   selectedAttackDamageRiders,
@@ -179,6 +180,7 @@ import {
   criticalThresholdForAttack,
   needsAttackDamageConcentrationResult,
   spendAttackAction,
+  validateAttackDamageDieFloorChoice,
   validateRolledDiceForWeaponAttack,
   validateAttackDamageFill,
 } from "./attack-resolution.ts";
@@ -675,6 +677,8 @@ export function resolveSelectedAttackProcedure(
     d20TestNaturalOneRerollRollDecisionRequired({
       actor: attacker,
       originalNaturalD20: Number(fillSet.attackRoll.naturalD20),
+      rollMode: fillSet.attackRoll.rollMode,
+      rolledD20s: fillSet.attackRoll.rolledD20s,
       decision: fillSet.attackRoll.d20TestNaturalOneReroll,
     })
   ) {
@@ -691,7 +695,10 @@ export function resolveSelectedAttackProcedure(
   }
   const d20TestNaturalOneRerollIssue = d20TestNaturalOneRerollRollIssue({
     actor: attacker,
+    total: fillSet.attackRoll.total,
     originalNaturalD20: Number(fillSet.attackRoll.naturalD20),
+    rollMode: fillSet.attackRoll.rollMode,
+    rolledD20s: fillSet.attackRoll.rolledD20s,
     decision: fillSet.attackRoll.d20TestNaturalOneReroll,
     requiredRollMode,
     otherD20RerollPresent: fillSet.attackRoll.spellAttackReroll !== undefined,
@@ -831,6 +838,9 @@ export function resolveSelectedAttackProcedure(
         attackerId,
         attack,
       )
+    : [];
+  const eligibleDamageDieFloorChoiceUnitIds = hit
+    ? eligibleAttackDamageDieFloorUnitIds(attackRolledState, attackerId, attack)
     : [];
   const spellWeaponDamageRiders = hit
     ? [
@@ -1106,15 +1116,14 @@ export function resolveSelectedAttackProcedure(
         ]);
       }
     }
-    const grapplerPunchAndGrab =
-      resolveGrapplerPunchAndGrabAfterHit({
-        state: sapRedirectState,
-        subject: input.subject,
-        attackerId,
-        targetId: target.combatantId,
-        attack,
-        fillSet,
-      });
+    const grapplerPunchAndGrab = resolveGrapplerPunchAndGrabAfterHit({
+      state: sapRedirectState,
+      subject: input.subject,
+      attackerId,
+      targetId: target.combatantId,
+      attack,
+      fillSet,
+    });
     if (grapplerPunchAndGrab.tag === "result") {
       return grapplerPunchAndGrab.result;
     }
@@ -1304,6 +1313,7 @@ export function resolveSelectedAttackProcedure(
           attack,
         ),
         eligibleDamageDiceChoiceUnitIds,
+        eligibleDamageDieFloorChoiceUnitIds,
       ),
     ]);
   }
@@ -1337,6 +1347,7 @@ export function resolveSelectedAttackProcedure(
         attack,
       ),
       eligibleDamageDiceChoiceUnitIds,
+      eligibleDamageDieFloorChoiceUnitIds,
     );
     if (damageValidation !== null) {
       return invalidResult(input.state, "invalidFill", damageValidation);
@@ -1484,15 +1495,14 @@ export function resolveSelectedAttackProcedure(
         ]);
       }
     }
-    const grapplerPunchAndGrab =
-      resolveGrapplerPunchAndGrabAfterHit({
-        state: sapRedirectState,
-        subject: input.subject,
-        attackerId,
-        targetId: target.combatantId,
-        attack,
-        fillSet,
-      });
+    const grapplerPunchAndGrab = resolveGrapplerPunchAndGrabAfterHit({
+      state: sapRedirectState,
+      subject: input.subject,
+      attackerId,
+      targetId: target.combatantId,
+      attack,
+      fillSet,
+    });
     if (grapplerPunchAndGrab.tag === "result") {
       return grapplerPunchAndGrab.result;
     }
@@ -1993,6 +2003,8 @@ function resolveWeaponMasteryCleaveAfterPrimaryDamage(input: {
       originalNaturalD20: Number(
         input.fillSet.weaponMasteryCleaveAttackRoll.value.naturalD20,
       ),
+      rollMode: input.fillSet.weaponMasteryCleaveAttackRoll.value.rollMode,
+      rolledD20s: input.fillSet.weaponMasteryCleaveAttackRoll.value.rolledD20s,
       decision:
         input.fillSet.weaponMasteryCleaveAttackRoll.value
           .d20TestNaturalOneReroll,
@@ -2013,17 +2025,18 @@ function resolveWeaponMasteryCleaveAfterPrimaryDamage(input: {
       ]),
     };
   }
-  const cleaveD20TestNaturalOneRerollIssue =
-    d20TestNaturalOneRerollRollIssue({
-      actor: attacker,
-      originalNaturalD20: Number(
-        input.fillSet.weaponMasteryCleaveAttackRoll.value.naturalD20,
-      ),
-      decision:
-        input.fillSet.weaponMasteryCleaveAttackRoll.value
-          .d20TestNaturalOneReroll,
-      requiredRollMode,
-    });
+  const cleaveD20TestNaturalOneRerollIssue = d20TestNaturalOneRerollRollIssue({
+    actor: attacker,
+    total: input.fillSet.weaponMasteryCleaveAttackRoll.value.total,
+    originalNaturalD20: Number(
+      input.fillSet.weaponMasteryCleaveAttackRoll.value.naturalD20,
+    ),
+    rollMode: input.fillSet.weaponMasteryCleaveAttackRoll.value.rollMode,
+    rolledD20s: input.fillSet.weaponMasteryCleaveAttackRoll.value.rolledD20s,
+    decision:
+      input.fillSet.weaponMasteryCleaveAttackRoll.value.d20TestNaturalOneReroll,
+    requiredRollMode,
+  });
   if (cleaveD20TestNaturalOneRerollIssue !== null) {
     return {
       tag: "result",
@@ -2034,10 +2047,9 @@ function resolveWeaponMasteryCleaveAfterPrimaryDamage(input: {
       ),
     };
   }
-  const effectiveCleaveAttackRoll =
-    effectiveD20TestNaturalOneRerollAttackRoll(
-      input.fillSet.weaponMasteryCleaveAttackRoll.value,
-    );
+  const effectiveCleaveAttackRoll = effectiveD20TestNaturalOneRerollAttackRoll(
+    input.fillSet.weaponMasteryCleaveAttackRoll.value,
+  );
   const secondTarget = input.state.combatants.get(secondTargetId);
   if (secondTarget === undefined) {
     return {
@@ -2157,6 +2169,11 @@ function resolveWeaponMasteryCleaveAfterPrimaryDamage(input: {
     return { tag: "result", result: remarkableAthleteMovement.result };
   }
   cleaveAttackRolledState = remarkableAthleteMovement.state;
+  const cleaveDamageDieFloorChoiceUnitIds = eligibleAttackDamageDieFloorUnitIds(
+    cleaveAttackRolledState,
+    input.subject.actorId,
+    cleaveAttack,
+  );
   if (!cleaveHit) {
     return input.fillSet.weaponMasteryCleaveDamageRoll === undefined
       ? {
@@ -2183,8 +2200,23 @@ function resolveWeaponMasteryCleaveAfterPrimaryDamage(input: {
           cleaveAttack,
           cleaveCritical,
           effectiveCleaveAttackRoll,
+          cleaveDamageDieFloorChoiceUnitIds,
         ),
       ]),
+    };
+  }
+  const attackDamageDieFloorChoiceIssue = validateAttackDamageDieFloorChoice(
+    input.fillSet.weaponMasteryCleaveDamageRoll,
+    cleaveDamageDieFloorChoiceUnitIds,
+  );
+  if (attackDamageDieFloorChoiceIssue !== null) {
+    return {
+      tag: "result",
+      result: invalidResult(
+        input.state,
+        "invalidFill",
+        attackDamageDieFloorChoiceIssue,
+      ),
     };
   }
   const spellDamageRerollIssue = spellDamageRerollUnsupportedIssue(
@@ -2679,6 +2711,9 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
       originalNaturalD20: Number(
         input.fillSet.huntersPreyHordeBreakerAttackRoll.value.naturalD20,
       ),
+      rollMode: input.fillSet.huntersPreyHordeBreakerAttackRoll.value.rollMode,
+      rolledD20s:
+        input.fillSet.huntersPreyHordeBreakerAttackRoll.value.rolledD20s,
       decision:
         input.fillSet.huntersPreyHordeBreakerAttackRoll.value
           .d20TestNaturalOneReroll,
@@ -2702,9 +2737,13 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
   const hordeBreakerD20TestNaturalOneRerollIssue =
     d20TestNaturalOneRerollRollIssue({
       actor: attacker,
+      total: input.fillSet.huntersPreyHordeBreakerAttackRoll.value.total,
       originalNaturalD20: Number(
         input.fillSet.huntersPreyHordeBreakerAttackRoll.value.naturalD20,
       ),
+      rollMode: input.fillSet.huntersPreyHordeBreakerAttackRoll.value.rollMode,
+      rolledD20s:
+        input.fillSet.huntersPreyHordeBreakerAttackRoll.value.rolledD20s,
       decision:
         input.fillSet.huntersPreyHordeBreakerAttackRoll.value
           .d20TestNaturalOneReroll,
@@ -2835,6 +2874,12 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
           ),
         };
   }
+  const hordeBreakerDamageDieFloorChoiceUnitIds =
+    eligibleAttackDamageDieFloorUnitIds(
+      rolledState,
+      input.subject.actorId,
+      input.attack,
+    );
   if (input.fillSet.huntersPreyHordeBreakerDamageRoll === undefined) {
     return {
       tag: "result",
@@ -2847,8 +2892,23 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
           hordeBreakerSpellWeaponDamageRiders,
           hordeBreakerSpellMarkedDamageRiders,
           hordeBreakerOngoingDamageModifier,
+          hordeBreakerDamageDieFloorChoiceUnitIds,
         ),
       ]),
+    };
+  }
+  const attackDamageDieFloorChoiceIssue = validateAttackDamageDieFloorChoice(
+    input.fillSet.huntersPreyHordeBreakerDamageRoll,
+    hordeBreakerDamageDieFloorChoiceUnitIds,
+  );
+  if (attackDamageDieFloorChoiceIssue !== null) {
+    return {
+      tag: "result",
+      result: invalidResult(
+        input.state,
+        "invalidFill",
+        attackDamageDieFloorChoiceIssue,
+      ),
     };
   }
   const hordeBreakerSelectedDamageRiders = selectedAttackDamageRiders(

@@ -5,6 +5,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.pact-slot-recovery
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.short-rest-spell-slot-recovery
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.class-feature-long-rest-use-state
+// UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.rest-triggered-heroic-inspiration
 import {
   characterBuildFeatureUnitIds,
   classLevelForUnit,
@@ -25,8 +26,14 @@ import {
   elapsedTimeTicks,
   type ElapsedTimeTicks,
 } from "@dnd/shared/elapsed-time";
-import type { UnitRecord } from "@dnd/surface/surface/types";
-import { readClassCreationFacts } from "@dnd/surface/surface/character-creation-readers";
+import type {
+  RestTriggeredHeroicInspirationMechanics,
+  UnitRecord,
+} from "@dnd/surface/surface/types";
+import {
+  readClassCreationFacts,
+  readSpeciesCreationFacts,
+} from "@dnd/surface/surface/character-creation-readers";
 import { Either, Match, Option } from "effect";
 
 import { companionAfterLongRest } from "./companions.ts";
@@ -43,6 +50,7 @@ import {
   CHARACTER_SHEET_LONG_REST_BASE_TICKS,
   CHARACTER_SHEET_LONG_REST_WAIT_TICKS,
   CHARACTER_SHEET_SHORT_REST_TICKS,
+  CHARACTER_SHEET_HEROIC_INSPIRATION_AVAILABLE,
   MAGICAL_CUNNING_REST_FEATURE_TAG,
   characterSheetIssue,
   characterSheetLongRestCompletionBrand,
@@ -51,6 +59,7 @@ import {
   characterSheetShortRestStartBrand,
   getRequiredUnit,
   type CharacterSheet,
+  type CharacterSheetHeroicInspiration,
   type CharacterSheetIssue,
   type CharacterSheetLongRestCalendarGate,
   type CharacterSheetLongRestCompletion,
@@ -93,6 +102,12 @@ type CharacterSheetPactSlotRecoveryFeature =
 type CharacterSheetPactSlotRecoveryProfile = {
   readonly feature: CharacterSheetPactSlotRecoveryFeature;
   readonly classUnitId: UnitRecord["id"];
+};
+type CharacterSheetRestTriggeredHeroicInspirationFeature = Extract<
+  UnitRecord,
+  { readonly kind: "species_trait" }
+> & {
+  readonly mechanics: RestTriggeredHeroicInspirationMechanics;
 };
 
 export function startShortRest(
@@ -227,6 +242,13 @@ export function completeLongRest(
   });
   if (Either.isLeft(hitPoints)) return Either.left(hitPoints.left);
   const companion = companionAfterLongRest(sheet.companion);
+  const heroicInspiration = heroicInspirationAfterLongRest({
+    sheet,
+    unitLibrary: input.unitLibrary,
+  });
+  if (Either.isLeft(heroicInspiration)) {
+    return Either.left(heroicInspiration.left);
+  }
   if (isCharacterSheetWithSpellSlots(sheet)) {
     const build = characterSheetLongRestBuild(input, sheet.build);
     if (Either.isLeft(build)) return Either.left(build.left);
@@ -253,6 +275,7 @@ export function completeLongRest(
       spentHitDice: [],
       restFeatureUses: [],
       resourceExpenditures: [],
+      heroicInspiration: heroicInspiration.right,
       companion,
       ...(druidWildShapeKnownForms.right === undefined
         ? {}
@@ -296,6 +319,7 @@ export function completeLongRest(
     spentHitDice: [],
     restFeatureUses: [],
     resourceExpenditures: [],
+    heroicInspiration: heroicInspiration.right,
     companion,
     ...(druidWildShapeKnownForms.right === undefined
       ? {}
@@ -304,6 +328,58 @@ export function completeLongRest(
       ? {}
       : { druidCircleLand: druidCircleLand.right }),
   });
+}
+
+function heroicInspirationAfterLongRest(input: {
+  readonly sheet: CharacterSheet;
+  readonly unitLibrary: UnitCatalog;
+}): Either.Either<CharacterSheetHeroicInspiration, CharacterSheetIssue> {
+  const grantsHeroicInspiration =
+    characterSheetHasLongRestHeroicInspirationGrant(input);
+  if (Either.isLeft(grantsHeroicInspiration)) {
+    return Either.left(grantsHeroicInspiration.left);
+  }
+  return Either.right(
+    grantsHeroicInspiration.right
+      ? CHARACTER_SHEET_HEROIC_INSPIRATION_AVAILABLE
+      : input.sheet.heroicInspiration,
+  );
+}
+
+function characterSheetHasLongRestHeroicInspirationGrant(input: {
+  readonly sheet: CharacterSheet;
+  readonly unitLibrary: UnitCatalog;
+}): Either.Either<boolean, CharacterSheetIssue> {
+  const species = getRequiredUnit(input.unitLibrary, input.sheet.build.species);
+  if (Either.isLeft(species)) {
+    return Either.left(species.left);
+  }
+  const speciesFacts = readSpeciesCreationFacts(species.right);
+  if (speciesFacts.tag !== "readable") {
+    return Either.right(false);
+  }
+  for (const traitUnitId of Object.values(speciesFacts.value.traits)) {
+    const trait = getRequiredUnit(input.unitLibrary, traitUnitId);
+    if (Either.isLeft(trait)) {
+      return Either.left(trait.left);
+    }
+    if (isLongRestHeroicInspirationFeature(trait.right)) {
+      return Either.right(true);
+    }
+  }
+  return Either.right(false);
+}
+
+function isLongRestHeroicInspirationFeature(
+  unit: UnitRecord,
+): unit is CharacterSheetRestTriggeredHeroicInspirationFeature {
+  return (
+    unit.kind === "species_trait" &&
+    unit.mechanics.family === "rest_triggered_heroic_inspiration" &&
+    unit.mechanics.trigger.kind === "finish_rest" &&
+    unit.mechanics.trigger.rest === "long" &&
+    unit.mechanics.grant.kind === "heroic_inspiration"
+  );
 }
 
 export function interruptLongRest(

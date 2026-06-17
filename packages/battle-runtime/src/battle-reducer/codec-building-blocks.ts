@@ -141,6 +141,12 @@ export const SpellPostDamageRiderSchema = Schema.Union(
   }),
 );
 
+const AttackDamageAbilityModifierChoiceSchema = Schema.Struct({
+  unitIds: Schema.NonEmptyArray(Schema.String),
+  appliedDamageAbilityModifier: AbilityModifier,
+  declinedDamageAbilityModifier: AbilityModifier,
+});
+
 export const CharacterWeaponAttackActionOptionSchema = Schema.Struct({
   kind: Schema.Literal("weapon"),
   weapon: BattleRuntimeObjectSchema,
@@ -152,6 +158,10 @@ export const CharacterWeaponAttackActionOptionSchema = Schema.Struct({
   damageAbilityModifier: Schema.optionalWith(AbilityModifier, {
     exact: true,
   }),
+  attackDamageAbilityModifierChoice: Schema.optionalWith(
+    AttackDamageAbilityModifierChoiceSchema,
+    { exact: true },
+  ),
   damageBonus: Schema.optionalWith(Schema.Number, { exact: true }),
   damageTypeChoices: Schema.optionalWith(
     Schema.NonEmptyArray(DamageTypeSchema).pipe(
@@ -171,6 +181,10 @@ export const CharacterWeaponAttackActionOptionSchema = Schema.Struct({
         abilityModifier: AbilityModifier,
         attackBonus: AttackBonus,
         damageAbilityModifier: AbilityModifier,
+        attackDamageAbilityModifierChoice: Schema.optionalWith(
+          AttackDamageAbilityModifierChoiceSchema,
+          { exact: true },
+        ),
       }),
     ),
     {

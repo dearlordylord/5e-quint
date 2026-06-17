@@ -95,17 +95,42 @@ module attackDamageComposition {
     | LightExtraAttackNoExistingDamageAbilityModifier
     | LightExtraAttackExistingDamageAbilityModifier(int)
 
-  pure def lightPropertyExtraAttackDamageModifier(
+  type LightExtraAttackDamageAbilityModifierChoice =
+    | ApplyLightExtraAttackDamageAbilityModifier
+    | DeclineLightExtraAttackDamageAbilityModifier
+
+  pure def lightPropertyExtraAttackDamageAbilityModifierChoiceRequired(
     abilityModifier: int,
     damageAbilityModifier: LightExtraAttackDamageAbilityModifierFact,
     twoWeaponFightingSelected: bool
+  ): bool =
+    match damageAbilityModifier {
+      | LightExtraAttackNoExistingDamageAbilityModifier =>
+          twoWeaponFightingSelected and abilityModifier > 0
+      | LightExtraAttackExistingDamageAbilityModifier(_) => false
+    }
+
+  pure def lightPropertyExtraAttackDamageModifier(
+    abilityModifier: int,
+    damageAbilityModifier: LightExtraAttackDamageAbilityModifierFact,
+    twoWeaponFightingSelected: bool,
+    choice: LightExtraAttackDamageAbilityModifierChoice
   ): int = {
     val appliedDamageAbilityModifier =
       match damageAbilityModifier {
         | LightExtraAttackNoExistingDamageAbilityModifier => abilityModifier
         | LightExtraAttackExistingDamageAbilityModifier(modifier) => modifier
       }
-    if (twoWeaponFightingSelected or appliedDamageAbilityModifier < 0)
+    if (lightPropertyExtraAttackDamageAbilityModifierChoiceRequired(
+      abilityModifier,
+      damageAbilityModifier,
+      twoWeaponFightingSelected
+    ))
+      if (choice == ApplyLightExtraAttackDamageAbilityModifier)
+        appliedDamageAbilityModifier
+      else
+        0
+    else if (twoWeaponFightingSelected or appliedDamageAbilityModifier < 0)
       appliedDamageAbilityModifier
     else
       0
@@ -115,14 +140,16 @@ module attackDamageComposition {
     rolledDamage: int,
     abilityModifier: int,
     damageAbilityModifier: LightExtraAttackDamageAbilityModifierFact,
-    twoWeaponFightingSelected: bool
+    twoWeaponFightingSelected: bool,
+    choice: LightExtraAttackDamageAbilityModifierChoice
   ): int =
     adjustedDamageRollAmount(
       rolledDamage,
       lightPropertyExtraAttackDamageModifier(
         abilityModifier,
         damageAbilityModifier,
-        twoWeaponFightingSelected
+        twoWeaponFightingSelected,
+        choice
       )
     )
 

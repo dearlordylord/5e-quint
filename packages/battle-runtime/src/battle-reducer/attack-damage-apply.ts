@@ -27,6 +27,7 @@ import type {
   CharacterWeaponAttackActionOption,
   SupportedAttackActionOption,
 } from "../battle-action-options.ts";
+import { attackDamageAbilityModifierChoiceUnitIds } from "./attack-damage-ability-modifier-choice.ts";
 import {
   LIGHT_EXTRA_ATTACK_DAMAGE_ABILITY_MODIFIER_SUPPORT_PROFILE,
   MARTIAL_ARTS_ATTACK_PROJECTION_SUPPORT_PROFILE,
@@ -50,6 +51,7 @@ import {
   type SpellAttackDamageComponent,
   type StatBlockMultiattackActionResource,
 } from "../battle-reducer.ts";
+import { attackDamageDieFloorChoiceUnitIds } from "./attack-damage-die-floor-choice.ts";
 import {
   damageAllowsKnockOut,
   hpDamageProjection,
@@ -88,6 +90,7 @@ export function attackDamageHole(
   spellMarkedDamageRiders: readonly SpellMarkedDamageRider[] = [],
   ongoingDamageModifier = 0,
   weaponDamageDiceRollChoiceUnitIds: readonly UnitRecord["id"][] = [],
+  eligibleAttackDamageDieFloorChoiceUnitIds: readonly UnitRecord["id"][] = [],
 ): BattleDamageRollHole {
   const expression = weaponAttackDamageExpression(
     attack,
@@ -99,6 +102,9 @@ export function attackDamageHole(
     ongoingDamageModifier,
   );
   const name = attackActionOptionName(attack);
+  const damageDieFloorChoiceUnitIds = attackDamageDieFloorChoiceUnitIds(
+    eligibleAttackDamageDieFloorChoiceUnitIds,
+  );
   return {
     kind: "rolledDice",
     holeId: attackDamageHoleId(
@@ -125,6 +131,16 @@ export function attackDamageHole(
     ...(weaponDamageDiceRollChoiceUnitIds.length === 0
       ? {}
       : { weaponDamageDiceRollChoiceUnitIds }),
+    ...(damageDieFloorChoiceUnitIds === null
+      ? {}
+      : { attackDamageDieFloorChoiceUnitIds: damageDieFloorChoiceUnitIds }),
+    ...(attack.kind !== "weapon" ||
+    attack.attackDamageAbilityModifierChoice === undefined
+      ? {}
+      : {
+          attackDamageAbilityModifierChoice:
+            attack.attackDamageAbilityModifierChoice,
+        }),
   };
 }
 
@@ -472,20 +488,28 @@ export function offHandAttackActionOptionsForActor(
     offHandAttack,
     offHandWeaponItemIdForAttack(actor, offHand),
   );
-  const hasTwoWeaponFightingSupport =
-    characterHasLightExtraAttackDamageAbilityModifierSupport(actor);
+  const {
+    attackDamageAbilityModifierChoice: _projectedOffHandDamageAbilityModifierChoice,
+    ...projectedOffHandWithoutDamageAbilityModifierChoice
+  } = projectedOffHand;
+  const twoWeaponFightingSupportUnitIds =
+    characterLightExtraAttackDamageAbilityModifierSupportUnitIds(actor);
   const lightPropertyOffHand = {
-    ...projectedOffHand,
+    ...projectedOffHandWithoutDamageAbilityModifierChoice,
     damageAbilityModifier: lightPropertyDamageAbilityModifierForAttack(
       projectedOffHand,
-      hasTwoWeaponFightingSupport,
+      twoWeaponFightingSupportUnitIds.length > 0,
+    ),
+    ...lightPropertyAttackDamageAbilityModifierChoice(
+      projectedOffHand,
+      twoWeaponFightingSupportUnitIds,
     ),
     ...(projectedOffHand.alternateAbilityChoices === undefined
       ? {}
       : {
           alternateAbilityChoices: lightPropertyAlternateAbilityChoices(
             projectedOffHand.alternateAbilityChoices,
-            hasTwoWeaponFightingSupport,
+            twoWeaponFightingSupportUnitIds,
           ),
         }),
   };
@@ -972,29 +996,43 @@ function offHandWeaponItemIdForAttack(
 
 function lightPropertyAlternateAbilityChoices(
   choices: ReadonlyNonEmptyArray<CharacterWeaponAttackAbilityChoice>,
-  hasTwoWeaponFightingSupport: boolean,
+  twoWeaponFightingSupportUnitIds: readonly UnitRecord["id"][],
 ): ReadonlyNonEmptyArray<CharacterWeaponAttackAbilityChoice> {
   const [first, ...rest] = choices;
   return [
-    lightPropertyAbilityChoice(first, hasTwoWeaponFightingSupport),
+    lightPropertyAbilityChoice(first, twoWeaponFightingSupportUnitIds),
     ...rest.map((choice) =>
-      lightPropertyAbilityChoice(choice, hasTwoWeaponFightingSupport),
+      lightPropertyAbilityChoice(choice, twoWeaponFightingSupportUnitIds),
     ),
   ];
 }
 
 function lightPropertyAbilityChoice(
   choice: CharacterWeaponAttackAbilityChoice,
-  hasTwoWeaponFightingSupport: boolean,
+  twoWeaponFightingSupportUnitIds: readonly UnitRecord["id"][],
 ): CharacterWeaponAttackAbilityChoice {
+  const {
+    attackDamageAbilityModifierChoice: _choiceDamageAbilityModifierChoice,
+    ...choiceWithoutDamageAbilityModifierChoice
+  } = choice;
   return {
-    ...choice,
-    damageAbilityModifier: lightPropertyDamageAbilityModifier({
-      abilityModifier: choice.abilityModifier,
-      damageAbilityModifier: choice.damageAbilityModifier,
-      hasTwoWeaponFightingSupport,
-    }),
+    ...choiceWithoutDamageAbilityModifierChoice,
+    damageAbilityModifier: lightPropertyDamageAbilityModifierForAbilityChoice(
+      choice,
+    ),
+    ...lightPropertyAttackDamageAbilityModifierChoiceForAbilityChoice(
+      choice,
+      twoWeaponFightingSupportUnitIds,
+    ),
   };
+}
+
+function lightPropertyDamageAbilityModifierForAbilityChoice(
+  choice: CharacterWeaponAttackAbilityChoice,
+): AbilityModifier {
+  return choice.damageAbilityModifier < 0
+    ? choice.damageAbilityModifier
+    : abilityModifier(0);
 }
 
 function lightPropertyDamageAbilityModifierForAttack(
@@ -1013,23 +1051,73 @@ function lightPropertyDamageAbilityModifier(input: {
   readonly damageAbilityModifier: AbilityModifier | undefined;
   readonly hasTwoWeaponFightingSupport: boolean;
 }): AbilityModifier {
+  if (
+    input.hasTwoWeaponFightingSupport &&
+    input.damageAbilityModifier !== undefined
+  ) {
+    return input.damageAbilityModifier;
+  }
   const damageAbilityModifier =
     input.damageAbilityModifier ?? input.abilityModifier;
-  return input.hasTwoWeaponFightingSupport || damageAbilityModifier < 0
-    ? damageAbilityModifier
-    : abilityModifier(0);
+  return damageAbilityModifier < 0 ? damageAbilityModifier : abilityModifier(0);
 }
 
-function characterHasLightExtraAttackDamageAbilityModifierSupport(
+function lightPropertyAttackDamageAbilityModifierChoice(
+  attack: CharacterWeaponAttackActionOption,
+  unitIds: readonly UnitRecord["id"][],
+): Pick<
+  CharacterWeaponAttackActionOption,
+  "attackDamageAbilityModifierChoice"
+> {
+  const nonEmptyUnitIds = attackDamageAbilityModifierChoiceUnitIds(unitIds);
+  if (
+    nonEmptyUnitIds === null ||
+    attack.damageAbilityModifier !== undefined ||
+    attack.abilityModifier <= 0
+  ) {
+    return {};
+  }
+  return {
+    attackDamageAbilityModifierChoice: {
+      unitIds: nonEmptyUnitIds,
+      appliedDamageAbilityModifier: attack.abilityModifier,
+      declinedDamageAbilityModifier: abilityModifier(0),
+    },
+  };
+}
+
+function lightPropertyAttackDamageAbilityModifierChoiceForAbilityChoice(
+  choice: CharacterWeaponAttackAbilityChoice,
+  unitIds: readonly UnitRecord["id"][],
+): Pick<
+  CharacterWeaponAttackAbilityChoice,
+  "attackDamageAbilityModifierChoice"
+> {
+  const nonEmptyUnitIds = attackDamageAbilityModifierChoiceUnitIds(unitIds);
+  if (nonEmptyUnitIds === null || choice.damageAbilityModifier <= 0) {
+    return {};
+  }
+  return {
+    attackDamageAbilityModifierChoice: {
+      unitIds: nonEmptyUnitIds,
+      appliedDamageAbilityModifier: choice.damageAbilityModifier,
+      declinedDamageAbilityModifier: abilityModifier(0),
+    },
+  };
+}
+
+function characterLightExtraAttackDamageAbilityModifierSupportUnitIds(
   actor: CharacterBattleCreatureState,
-): boolean {
-  return actor.origin.characterUnitRefs.some((unitRef) =>
+): readonly UnitRecord["id"][] {
+  return actor.origin.characterUnitRefs.flatMap((unitRef) =>
     unitRef.supportProfiles.some(
       (profile) =>
         typeof profile === "object" &&
         profile.kind ===
           LIGHT_EXTRA_ATTACK_DAMAGE_ABILITY_MODIFIER_SUPPORT_PROFILE,
-    ),
+    )
+      ? [unitRef.unitId]
+      : [],
   );
 }
 

@@ -484,6 +484,8 @@ function resolveSpellAttackSequenceCreaturePart(input: {
     d20TestNaturalOneRerollRollDecisionRequired({
       actor: actorBeforeSpellAttack,
       originalNaturalD20: Number(input.partFill.attackRoll.naturalD20),
+      rollMode: input.partFill.attackRoll.rollMode,
+      rolledD20s: input.partFill.attackRoll.rolledD20s,
       decision: input.partFill.attackRoll.d20TestNaturalOneReroll,
     })
   ) {
@@ -499,7 +501,10 @@ function resolveSpellAttackSequenceCreaturePart(input: {
   }
   const d20TestNaturalOneRerollIssue = d20TestNaturalOneRerollRollIssue({
     actor: actorBeforeSpellAttack,
+    total: input.partFill.attackRoll.total,
     originalNaturalD20: Number(input.partFill.attackRoll.naturalD20),
+    rollMode: input.partFill.attackRoll.rollMode,
+    rolledD20s: input.partFill.attackRoll.rolledD20s,
     decision: input.partFill.attackRoll.d20TestNaturalOneReroll,
     requiredRollMode,
   });
@@ -807,6 +812,8 @@ function resolveSpellAttackSequenceCreaturePart(input: {
   if (concentrationFill !== undefined) {
     const d20TestNaturalOneRerollIssue = d20TestNaturalOneRerollOutcomeIssue({
       actor: spellReduction.target,
+      rollMode: concentrationSave?.rollMode,
+      rolledD20s: concentrationFill.value.rolledD20s,
       originalNaturalD20:
         concentrationFill.value.naturalD20 === undefined
           ? undefined
@@ -1075,6 +1082,8 @@ function resolveSpellAttackSequenceObjectPart(input: {
     d20TestNaturalOneRerollRollDecisionRequired({
       actor: actorBeforeSpellAttack,
       originalNaturalD20: Number(input.partFill.attackRoll.naturalD20),
+      rollMode: input.partFill.attackRoll.rollMode,
+      rolledD20s: input.partFill.attackRoll.rolledD20s,
       decision: input.partFill.attackRoll.d20TestNaturalOneReroll,
     })
   ) {
@@ -1090,7 +1099,10 @@ function resolveSpellAttackSequenceObjectPart(input: {
   }
   const d20TestNaturalOneRerollIssue = d20TestNaturalOneRerollRollIssue({
     actor: actorBeforeSpellAttack,
+    total: input.partFill.attackRoll.total,
     originalNaturalD20: Number(input.partFill.attackRoll.naturalD20),
+    rollMode: input.partFill.attackRoll.rollMode,
+    rolledD20s: input.partFill.attackRoll.rolledD20s,
     decision: input.partFill.attackRoll.d20TestNaturalOneReroll,
     requiredRollMode,
   });

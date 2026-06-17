@@ -62,8 +62,8 @@
       "value": 307
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 181,
-      "numerator": 175,
+      "denominator": 183,
+      "numerator": 177,
       "percent": "96.7%"
     },
     "profileClassificationCoverage": {
@@ -92,8 +92,8 @@
       "percent": "100%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 170,
-      "numerator": 170,
+      "denominator": 172,
+      "numerator": 172,
       "percent": "100%"
     },
     "runtimeMappingCoverage": {
@@ -107,14 +107,14 @@
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 174,
+      "denominator": 176,
       "numerator": 174,
-      "percent": "100%"
+      "percent": "98.9%"
     },
     "supportedProfileCoverage": {
       "denominator": 257,
-      "numerator": 181,
-      "percent": "70.4%"
+      "numerator": 183,
+      "percent": "71.2%"
     }
   },
   "metricSemantics": [
@@ -435,9 +435,10 @@
         "packages/battle-runtime/src/unit-feature-support.ts",
         "packages/battle-runtime/src/battle-reducer/damage-helpers.ts"
       ],
-      "sourceBoundary": "Battle Unit admission consumes the authored Surface damage_die_floor shape and projects an optional attack-damage-roll profile. Battle runtime consumes existing selected character Unit support refs, selected loadout weapon grip, attack weapon usage, and weapon Two-Handed or Versatile properties to floor each qualifying attack damage die result of 1 or 2 to 3 before damage totals and target-side adjustments, without authored-identity dispatch or parallel derived damage totals.",
+      "sourceBoundary": "Battle Unit admission consumes the authored Surface damage_die_floor shape and projects an optional attack-damage-roll profile. Battle runtime consumes existing selected character Unit support refs, selected loadout weapon grip, attack weapon usage, and weapon Two-Handed or Versatile properties to advertise an attack damage rolled-dice apply/decline choice for qualifying attacks, then floors each selected qualifying attack damage die result of 1 or 2 to 3 before damage totals and target-side adjustments, without authored-identity dispatch or parallel derived damage totals.",
       "taskRefs": [
-        "L3-FOLLOWUP-GREAT-WEAPON-FIGHTING-RUNTIME"
+        "L3-FOLLOWUP-GREAT-WEAPON-FIGHTING-RUNTIME",
+        "L3-FOLLOWUP-GREAT-WEAPON-FIGHTING-DECLINE-RUNTIME"
       ],
       "title": "Unit feature floors low attack damage die results for qualifying held weapon attacks",
       "verificationOwners": [
@@ -459,11 +460,15 @@
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/unit-feature-support.ts",
-        "packages/battle-runtime/src/battle-reducer/attack-damage-apply.ts"
+        "packages/battle-runtime/src/battle-reducer/attack-damage-apply.ts",
+        "packages/battle-runtime/src/battle-reducer/attack-damage-ability-modifier-choice.ts",
+        "packages/battle-runtime/src/battle-reducer/attack-resolution.ts",
+        "packages/battle-runtime/src/battle-reducer/damage-helpers.ts"
       ],
-      "sourceBoundary": "Battle Unit admission consumes the authored Surface light_extra_attack_damage_ability_modifier shape and projects a Light-property extra attack damage permission profile. Battle runtime consumes existing selected character Unit support refs, attack ability modifier facts, and optional attack damageAbilityModifier facts: an existing damageAbilityModifier is treated as the already-adding boundary, selected support restores the ordinary attack ability modifier only when that field is absent, and the default Light-property path still suppresses positive modifiers while preserving negative ones. No feat-owned damage modifier state or authored-identity dispatch is introduced.",
+      "sourceBoundary": "Battle Unit admission consumes the authored Surface light_extra_attack_damage_ability_modifier shape and projects a Light-property extra attack damage permission profile. Battle runtime consumes existing selected character Unit support refs, attack ability modifier facts, and optional attack damageAbilityModifier facts: an existing damageAbilityModifier is treated as the already-adding boundary, qualifying selected support advertises an attack damage ability-modifier apply/decline choice on the rolled-dice hole when the Light-property extra attack is not already adding a positive damage ability modifier, selected apply adds the ordinary attack ability modifier, selected decline leaves the default suppressed positive modifier, and the default Light-property path still suppresses positive modifiers while preserving negative ones. No feat-owned damage modifier state or authored-identity dispatch is introduced.",
       "taskRefs": [
-        "L3-FOLLOWUP-TWO-WEAPON-FIGHTING-RUNTIME"
+        "L3-FOLLOWUP-TWO-WEAPON-FIGHTING-RUNTIME",
+        "L3-FOLLOWUP-TWO-WEAPON-FIGHTING-DECLINE-RUNTIME"
       ],
       "title": "Unit feature permits the Light-property extra attack to use its ordinary damage ability modifier",
       "verificationOwners": [
@@ -931,9 +936,10 @@
         "packages/battle-runtime/src/battle-reducer/spells-resolve-release.ts",
         "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts"
       ],
-      "sourceBoundary": "Battle Unit admission consumes the Surface d20_test_natural_one_reroll species-trait shape and projects an optional natural-1 D20 Test reroll profile. The current battle-runtime owner consumes selected character Unit refs and existing selected/effective roll, outcome, Death Saving Throw, and Concentration Saving Throw fill facts for Attack Rolls, Ability Checks, and Saving Throws; requires the natural d20 face for supported rolled D20 Tests; treats no-roll Saving Throw failures without a natural d20 as non-triggering outcomes; requires an explicit reroll or decline decision after supported selected/effective natural-1 rolls; validates the natural die trigger and support profile; rejects unsupported actors, non-1 selected rerolls, and d20 reroll stacking; and replaces the executable d20 result before downstream reducers consume the D20 Test without storing a parallel Luck-owned roll result or dispatching on authored identity. Full Advantage/Disadvantage one-die choice awaits a rolled-die vector and die-selection replacement owner.",
+      "sourceBoundary": "Battle Unit admission consumes the Surface d20_test_natural_one_reroll species-trait shape and projects an optional natural-1 D20 Test reroll profile. The battle-runtime owner consumes selected character Unit refs and selected/effective roll, outcome, Death Saving Throw, and Concentration Saving Throw fill facts for Attack Rolls, Ability Checks, and Saving Throws; consumes optional raw two-d20 vectors on Advantage and Disadvantage fills with explicit roll mode and selected die facts; requires natural d20 face facts for supported rolled D20 Tests; treats no-roll Saving Throw failures without a natural d20 as non-triggering outcomes; requires an explicit reroll or decline decision after supported selected/effective natural-1 rolls or raw two-d20 rolls where either die is a natural 1; validates the natural die trigger, raw-dice legality, roll-mode-consistent selected die, explicit replacement die choice, and support profile; rejects unsupported actors, non-1 selected or raw-die rerolls, and d20 reroll stacking; and projects one executable d20 result before downstream reducers consume the D20 Test without storing a parallel Luck-owned roll result or dispatching on authored identity.",
       "taskRefs": [
-        "L3-FOLLOWUP-HALFLING-LUCK-RUNTIME"
+        "L3-FOLLOWUP-HALFLING-LUCK-RUNTIME",
+        "L3-FOLLOWUP-D20-TEST-ROLLED-DIE-REROLL-CHOICE"
       ],
       "title": "Unit feature can reroll a natural 1 on any D20 Test and must use the new roll",
       "verificationOwners": [
@@ -1044,11 +1050,13 @@
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/unit-feature-support.ts",
-        "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts"
+        "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts",
+        "packages/battle-runtime/src/battle-reducer/creature-space-table-route.ts"
       ],
-      "sourceBoundary": "Battle Unit admission consumes the authored Surface creature_space_movement_permission shape and projects a typed occupied creature-space traversal permission. Battle runtime consumes retained selected character Unit support refs, existing Movement budget, effective combatant sizes, and caller/table-supplied occupied-space and destination witnesses to validate traversal through larger occupied creature spaces and reject occupied destinations without storing species-owned movement state, durable map-position state, or authored-identity dispatch.",
+      "sourceBoundary": "Battle Unit admission consumes the authored Surface creature_space_movement_permission shape and projects a typed occupied creature-space traversal permission. Battle runtime consumes retained selected character Unit support refs, existing Movement budget, effective combatant sizes, and caller/table-supplied occupied-space and destination witnesses to validate traversal through larger occupied creature spaces and reject occupied destinations. The table-route derivation owner can derive that Movement witness from an already selected route plus explicit creature footprint, occupancy, and larger-than-mover size-relation facts without storing species-owned movement state, durable map-position state, or authored-identity dispatch.",
       "taskRefs": [
-        "L3-FOLLOWUP-HALFLING-NIMBLENESS-RUNTIME"
+        "L3-FOLLOWUP-HALFLING-NIMBLENESS-RUNTIME",
+        "L3-FOLLOWUP-CREATURE-SPACE-TABLE-SPATIAL-DERIVATION"
       ],
       "title": "Unit feature permits Movement through larger occupied creature spaces without stopping there",
       "verificationOwners": [
@@ -3362,6 +3370,25 @@
         {
           "kind": "runtime-test",
           "ownerPath": "packages/character-sheet-runtime/src/resources.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "character-sheet.rest-triggered-heroic-inspiration",
+      "profileKind": "character-sheet",
+      "qntOwners": [],
+      "runtimeOwners": [
+        "packages/character-sheet-runtime/src/rests.ts"
+      ],
+      "sourceBoundary": "Character Sheet consumes selected species trait Unit refs, installed Surface rest_triggered_heroic_inspiration mechanics with finish_rest/long and heroic_inspiration grant facts, Long Rest completion, and current Heroic Inspiration state. It sets the sheet state to available after a qualifying Long Rest, preserves existing state for non-qualifying builds, treats duplicate gains as the same single available state because the Character Sheet owns no transfer recipient path, and does not store species-owned rest or inspiration state.",
+      "taskRefs": [
+        "L3-FOLLOWUP-HUMAN-RESOURCEFUL-RUNTIME"
+      ],
+      "title": "Character Sheet grants Heroic Inspiration from Long Rest triggered feature facts",
+      "verificationOwners": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-sheet-runtime/src/rests.test.ts"
         }
       ]
     },
@@ -8065,8 +8092,8 @@
       "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
       "metrics": {
         "rulesKernelSupportedUnitCoverage": {
-          "denominator": 170,
-          "numerator": 170,
+          "denominator": 172,
+          "numerator": 172,
           "percent": "100%"
         }
       },
@@ -9508,6 +9535,28 @@
                   "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
                 }
               ],
+              "profileId": "unit-feature.attack-damage-die-floor",
+              "profileKind": "persistent-effect",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core.qnt"
+              ]
+            }
+          ],
+          "unitId": "feat_great_weapon_fighting"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+                }
+              ],
               "profileId": "unit-feature.weapon-damage-dice-roll-choice",
               "profileKind": "persistent-effect",
               "qntOwners": [
@@ -9516,6 +9565,28 @@
             }
           ],
           "unitId": "feat_savage_attacker"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.DAMAGE.ATTACK_BRANCHES",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle attack target legality, Attack Roll hit/miss/Critical Hit, damage dice, and Attack action resource-spend branches"
+                }
+              ],
+              "profileId": "unit-feature.light-extra-attack-damage-ability-modifier",
+              "profileKind": "persistent-effect",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/attack-damage-composition.qnt"
+              ]
+            }
+          ],
+          "unitId": "feat_two_weapon_fighting"
         },
         {
           "joinStatus": "covered",
@@ -12785,7 +12856,7 @@
           "profileIds": [
             "unit-feature.attack-damage-die-floor"
           ],
-          "tag": "profile-subset-supported"
+          "tag": "supported-profile"
         },
         "unitId": "feat_great_weapon_fighting"
       },
@@ -12802,7 +12873,7 @@
           "profileIds": [
             "unit-feature.light-extra-attack-damage-ability-modifier"
           ],
-          "tag": "profile-subset-supported"
+          "tag": "supported-profile"
         },
         "unitId": "feat_two_weapon_fighting"
       },
@@ -16232,6 +16303,20 @@
     },
     {
       "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime tests cover table-route derivation of occupiedCreatureSpaceTraversal Movement witnesses from already selected route positions, explicit creature footprint/occupancy facts, and larger-than-mover size-relation facts; derived witnesses feed the existing Movement boundary for larger occupied-space traversal and occupied-destination rejection without storing species-owned movement state, durable map positions, or Halfling/Nimbleness authored-identity dispatch.",
+      "profileIds": [
+        "unit-feature.creature-space-movement-permission"
+      ],
+      "taskId": "L3-FOLLOWUP-CREATURE-SPACE-TABLE-SPATIAL-DERIVATION"
+    },
+    {
+      "claimKind": "accepted-table-spatial-boundary-closure",
+      "note": "RAW review of Halfling Nimbleness, Creature Size and Space, Moving around Other Creatures, Occupied Space, and Unoccupied Space found no promoted battle rule for route-choice policy, automatic pathfinding, durable coordinate map-state, or token occupancy persistence. Those facts remain owned by a runtime-detached table/spatial map and route-choice owner that supplies selected routes, footprint occupancy, occupancy-map witnesses, and size/space facts to the existing route-derived Movement boundary without Halfling/Nimbleness authored-identity dispatch or duplicate durable position, route, or creature-size state.",
+      "profileIds": [],
+      "taskId": "L3-FOLLOWUP-CREATURE-SPACE-PATHFINDING-MAP-STATE"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
       "note": "Focused Surface catalog and Character Creation runtime tests cover Skilled Origin feat authoring, background-origin feat proficiency choice discovery, supported skill/tool option admission, and CharacterBuild proficiency projection without battle-runtime execution.",
       "profileIds": [
         "character-creation.origin-feat-proficiency-choice"
@@ -16275,11 +16360,19 @@
     },
     {
       "claimKind": "completed-runtime-parity",
-      "note": "Focused battle-runtime tests cover profile admission, qualifying two-handed Melee Two-Handed/Versatile weapon attacks, per-die multi-die floor behavior, target resistance ordering, and one-handed, Ranged, or missing-property non-qualifying attacks.",
+      "note": "Focused battle-runtime tests cover profile admission, qualifying two-handed Melee Two-Handed/Versatile weapon attacks, selected per-die multi-die floor behavior, target resistance ordering, and one-handed, Ranged, or missing-property non-qualifying attacks.",
       "profileIds": [
         "unit-feature.attack-damage-die-floor"
       ],
       "taskId": "L3-FOLLOWUP-GREAT-WEAPON-FIGHTING-RUNTIME"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime tests cover the attack damage rolled-dice choice boundary for Great Weapon Fighting: qualifying attack damage holes advertise the selected Unit profile, qualifying fills must explicitly apply or decline the floor, declining preserves the original damage die results, and non-qualifying attacks do not accept or require the choice.",
+      "profileIds": [
+        "unit-feature.attack-damage-die-floor"
+      ],
+      "taskId": "L3-FOLLOWUP-GREAT-WEAPON-FIGHTING-DECLINE-RUNTIME"
     },
     {
       "claimKind": "qnt-proof",
@@ -16291,11 +16384,27 @@
     },
     {
       "claimKind": "completed-runtime-parity",
-      "note": "Focused battle-runtime tests cover the selected/effective-d20 subset: identity-independent Halfling Luck profile admission, selected Unit ref gating, supported-actor natural d20 face requirement for rolled D20 Tests, post-roll natural-1 decision requirement, explicit decline, Attack Roll, Opportunity Attack reactor ownership, Pact familiar non-inheritance from a Luck-bearing owner, Ability Check, ordinary Saving Throw outcome, no-roll ordinary and Concentration Saving Throw outcomes, Concentration Saving Throw, and Death Saving Throw natural-1 replacement, replacement natural-1 miss behavior, unsupported actor rejection, and non-natural-1 trigger rejection. Full RAW Advantage/Disadvantage one-die choice is deferred to a future rolled-die facts owner.",
+      "note": "Focused battle-runtime tests cover the selected/effective-d20 subset: identity-independent Halfling Luck profile admission, selected Unit ref gating, supported-actor natural d20 face requirement for rolled D20 Tests, post-roll natural-1 decision requirement, explicit decline, Attack Roll, Opportunity Attack reactor ownership, Pact familiar non-inheritance from a Luck-bearing owner, Ability Check, ordinary Saving Throw outcome, no-roll ordinary and Concentration Saving Throw outcomes, Concentration Saving Throw, and Death Saving Throw natural-1 replacement, replacement natural-1 miss behavior, unsupported actor rejection, and non-natural-1 trigger rejection. Task L3-FOLLOWUP-D20-TEST-ROLLED-DIE-REROLL-CHOICE extends the same owner to raw Advantage and Disadvantage die-selection replacement.",
       "profileIds": [
         "unit-feature.d20-test-natural-one-reroll"
       ],
       "taskId": "L3-FOLLOWUP-HALFLING-LUCK-RUNTIME"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Rule-core witness covers raw two-d20 Advantage and Disadvantage reroll semantics: replacing a selected or unselected natural-1 die, both-dice natural-1 choice, invalid non-natural-1 die choice, and projection back to one effective D20 Test result.",
+      "profileIds": [
+        "unit-feature.d20-test-natural-one-reroll"
+      ],
+      "taskId": "L3-FOLLOWUP-D20-TEST-ROLLED-DIE-REROLL-CHOICE"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime tests cover raw Advantage and Disadvantage D20 Test fills where the selected die, unselected die, both dice, or neither die is a natural 1; require explicit selected-die replacement when raw dice expose a natural 1; validate replacement against the chosen raw die rather than Halfling or Luck identity; and project one downstream Attack Roll, Ability Check, or Saving Throw result.",
+      "profileIds": [
+        "unit-feature.d20-test-natural-one-reroll"
+      ],
+      "taskId": "L3-FOLLOWUP-D20-TEST-ROLLED-DIE-REROLL-CHOICE"
     },
     {
       "claimKind": "qnt-proof",
@@ -16315,6 +16424,22 @@
     },
     {
       "claimKind": "qnt-proof",
+      "note": "Rule-core and battle-runtime QNT witnesses distinguish selected Two-Weapon Fighting support from the attack damage ability-modifier apply/decline choice, including selected apply, selected decline, already-adding no-choice, default suppression, and negative modifier preservation.",
+      "profileIds": [
+        "unit-feature.light-extra-attack-damage-ability-modifier"
+      ],
+      "taskId": "L3-FOLLOWUP-TWO-WEAPON-FIGHTING-DECLINE-RUNTIME"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime tests cover profile admission, default Light extra attack damage, selected apply and decline fills on the qualifying rolled-damage hole, required-choice validation, already-adding damageAbilityModifier preservation, negative modifier preservation, and adjacent Surface shape rejection.",
+      "profileIds": [
+        "unit-feature.light-extra-attack-damage-ability-modifier"
+      ],
+      "taskId": "L3-FOLLOWUP-TWO-WEAPON-FIGHTING-DECLINE-RUNTIME"
+    },
+    {
+      "claimKind": "qnt-proof",
       "note": "Rule-core witness covers the selected Hide obscurement permission predicate: the hider must be obscured only by a creature, out of enemy line of sight, and the obscuring creature must be at least one size larger than the hider.",
       "profileIds": [
         "unit-feature.hide-action-obscurement-permission"
@@ -16328,6 +16453,14 @@
         "unit-feature.hide-action-obscurement-permission"
       ],
       "taskId": "L3-FOLLOWUP-HALFLING-NATURALLY-STEALTHY-RUNTIME"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused Character Sheet runtime tests cover Resourceful Long Rest Heroic Inspiration grants from retained typed rest-trigger and heroic-inspiration Surface facts, duplicate grants remaining one available Heroic Inspiration state, and non-qualifying builds preserving current Heroic Inspiration state without species-owned rest or inspiration state.",
+      "profileIds": [
+        "character-sheet.rest-triggered-heroic-inspiration"
+      ],
+      "taskId": "L3-FOLLOWUP-HUMAN-RESOURCEFUL-RUNTIME"
     }
   ],
   "unitGroupDenominatorAudit": {
@@ -16373,12 +16506,12 @@
         "kind": "feat",
         "label": "Feat Units",
         "profileFactDenominator": 11,
-        "profileSubsetSupportedUnits": 2,
+        "profileSubsetSupportedUnits": 0,
         "selectedIdentityDeferredNonApplicableUnits": 0,
         "selectedIdentityReplayDenominator": 8,
         "selectedIdentityReplayGapUnits": 2,
         "selectedIdentityReplayWitnessUnits": 6,
-        "supportedProfileUnits": 7,
+        "supportedProfileUnits": 9,
         "unsupportedOrOtherUnits": 4
       },
       {
@@ -16804,8 +16937,8 @@
       "claim": {
         "battleReadinessClosure": {
           "kind": "selection-grant-container",
-          "owner": "species_human_skillful, species_human_versatile, and future Resourceful owner profiles",
-          "reason": "The aggregate species record names Resourceful, Skillful, and Versatile. Character creation consumes the retained trait refs to discover the supported Skillful and Versatile choices; Resourceful Long Rest Heroic Inspiration remains a future character-state owner."
+          "owner": "species_human_resourceful, species_human_skillful, and species_human_versatile owner profiles",
+          "reason": "The aggregate species record names Resourceful, Skillful, and Versatile. Character creation consumes the retained trait refs to discover the supported Skillful and Versatile choices, while Character Sheet Long Rest completion consumes the retained Resourceful trait ref and its typed Heroic Inspiration grant facts."
         },
         "reason": "Species admission container record; character creation can retain Human as a selected Medium-or-Small species and preserve authored trait Unit refs, while executable and choice pressure lives on the individual trait Units.",
         "tag": "unsupported-profile"
@@ -23137,16 +23270,6 @@
         "status": "installed"
       },
       "claim": {
-        "deferredMechanics": [
-          {
-            "battleReadinessClosure": {
-              "kind": "outside-battle-runtime",
-              "owner": "future attack damage rolled-dice optional-choice owner",
-              "reason": "The current promoted subset treats the beneficial floor as selected when the retained profile and qualifying weapon facts are present. A literal decline path requires extending the shared rolled-dice hole/fill protocol for attack damage dice choices without duplicating damage totals or adding authored-identity dispatch."
-            },
-            "mechanic": "An explicit player decline path for Great Weapon Fighting's optional floor on a qualifying attack damage roll."
-          }
-        ],
         "profileIds": [
           "unit-feature.attack-damage-die-floor"
         ],
@@ -23156,11 +23279,12 @@
         "supportedMechanics": [
           "Battle Unit support admits the Surface damage_die_floor mechanics only for the optional attack damage roll shape that floors attack damage dice to 3 for Melee weapons held with two hands and gated by the Two-Handed or Versatile property.",
           "Battle initialization retains the admitted attackDamageDieFloor support profile on selected character combatants without dispatching on the feat's authored identity.",
-          "Battle runtime applies the floor to each qualifying positive attack damage die result of 1 or 2 before damage totals and target-side damage adjustments.",
+          "Battle runtime represents the optional floor as an attack damage rolled-dice choice, requiring qualifying fills to select apply or decline and rejecting the choice for non-qualifying attacks.",
+          "Battle runtime applies the selected floor to each qualifying positive attack damage die result of 1 or 2 before damage totals and target-side damage adjustments.",
           "The qualifying gate consumes existing attack weapon usage/properties and selected loadout grip facts, so one-handed Versatile attacks, Ranged Two-Handed attacks, and Melee weapons without Two-Handed or Versatile do not receive the floor.",
           "Subtractive source-side damage penalty dice remain ordinary penalty dice and are not increased by the attack damage die floor."
         ],
-        "tag": "profile-subset-supported"
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
@@ -23183,9 +23307,10 @@
             "packages/battle-runtime/src/unit-feature-support.ts",
             "packages/battle-runtime/src/battle-reducer/damage-helpers.ts"
           ],
-          "sourceBoundary": "Battle Unit admission consumes the authored Surface damage_die_floor shape and projects an optional attack-damage-roll profile. Battle runtime consumes existing selected character Unit support refs, selected loadout weapon grip, attack weapon usage, and weapon Two-Handed or Versatile properties to floor each qualifying attack damage die result of 1 or 2 to 3 before damage totals and target-side adjustments, without authored-identity dispatch or parallel derived damage totals.",
+          "sourceBoundary": "Battle Unit admission consumes the authored Surface damage_die_floor shape and projects an optional attack-damage-roll profile. Battle runtime consumes existing selected character Unit support refs, selected loadout weapon grip, attack weapon usage, and weapon Two-Handed or Versatile properties to advertise an attack damage rolled-dice apply/decline choice for qualifying attacks, then floors each selected qualifying attack damage die result of 1 or 2 to 3 before damage totals and target-side adjustments, without authored-identity dispatch or parallel derived damage totals.",
           "taskRefs": [
-            "L3-FOLLOWUP-GREAT-WEAPON-FIGHTING-RUNTIME"
+            "L3-FOLLOWUP-GREAT-WEAPON-FIGHTING-RUNTIME",
+            "L3-FOLLOWUP-GREAT-WEAPON-FIGHTING-DECLINE-RUNTIME"
           ],
           "title": "Unit feature floors low attack damage die results for qualifying held weapon attacks",
           "verificationOwners": [
@@ -23613,16 +23738,6 @@
         "status": "installed"
       },
       "claim": {
-        "deferredMechanics": [
-          {
-            "battleReadinessClosure": {
-              "kind": "outside-battle-runtime",
-              "owner": "future attack damage ability-modifier optional-choice owner",
-              "reason": "The current promoted subset treats the beneficial permission as selected when the retained profile and qualifying Light attack facts are present. A literal decline path requires extending the shared attack damage hole/fill protocol for optional damage ability modifier choices without duplicating damage modifier state or adding authored-identity dispatch."
-            },
-            "mechanic": "An explicit player decline path for Two-Weapon Fighting's optional damage ability modifier permission on a qualifying Light-property extra attack damage roll."
-          }
-        ],
         "profileIds": [
           "unit-feature.light-extra-attack-damage-ability-modifier"
         ],
@@ -23632,11 +23747,12 @@
         "supportedMechanics": [
           "Battle Unit support admits the Surface light_extra_attack_damage_ability_modifier mechanics only for the optional Light-property extra attack damage roll shape that permits the attack ability modifier when the attack is not already adding it.",
           "Battle initialization retains the admitted lightExtraAttackDamageAbilityModifier support profile on selected character combatants without dispatching on the feat's authored identity.",
-          "The existing Light-property off-hand/extra attack owner consumes selected character Unit support refs and restores the ordinary positive attack ability modifier only when the projected attack has no existing damageAbilityModifier fact.",
-          "The already-adding boundary is represented by the existing attack damageAbilityModifier field; when present, runtime keeps that value rather than adding a second modifier or storing feat-owned damage state.",
+          "The Light-property off-hand/extra attack owner consumes selected character Unit support refs and advertises an attack damage ability-modifier apply/decline choice on the rolled-dice hole only when the projected attack has no existing damageAbilityModifier fact and the ordinary attack ability modifier is positive.",
+          "Selecting apply adds the ordinary attack ability modifier to the qualifying Light-property extra attack damage roll; selecting decline leaves the default suppressed positive modifier, without storing feat-owned damage modifier state.",
+          "The already-adding boundary is represented by the existing attack damageAbilityModifier field; when present, runtime keeps that value rather than adding a second modifier or offering an optional choice.",
           "Without selected support, Light-property extra attack damage still suppresses positive ability modifiers and preserves negative ability modifiers by default."
         ],
-        "tag": "profile-subset-supported"
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
@@ -23644,6 +23760,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-two-weapon-fighting.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "L3-FOLLOWUP-TWO-WEAPON-FIGHTING-RUNTIME"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-two-weapon-fighting.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L3-FOLLOWUP-TWO-WEAPON-FIGHTING-DECLINE-RUNTIME"
         }
       ],
       "executableMechanics": true,
@@ -23657,11 +23778,15 @@
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/unit-feature-support.ts",
-            "packages/battle-runtime/src/battle-reducer/attack-damage-apply.ts"
+            "packages/battle-runtime/src/battle-reducer/attack-damage-apply.ts",
+            "packages/battle-runtime/src/battle-reducer/attack-damage-ability-modifier-choice.ts",
+            "packages/battle-runtime/src/battle-reducer/attack-resolution.ts",
+            "packages/battle-runtime/src/battle-reducer/damage-helpers.ts"
           ],
-          "sourceBoundary": "Battle Unit admission consumes the authored Surface light_extra_attack_damage_ability_modifier shape and projects a Light-property extra attack damage permission profile. Battle runtime consumes existing selected character Unit support refs, attack ability modifier facts, and optional attack damageAbilityModifier facts: an existing damageAbilityModifier is treated as the already-adding boundary, selected support restores the ordinary attack ability modifier only when that field is absent, and the default Light-property path still suppresses positive modifiers while preserving negative ones. No feat-owned damage modifier state or authored-identity dispatch is introduced.",
+          "sourceBoundary": "Battle Unit admission consumes the authored Surface light_extra_attack_damage_ability_modifier shape and projects a Light-property extra attack damage permission profile. Battle runtime consumes existing selected character Unit support refs, attack ability modifier facts, and optional attack damageAbilityModifier facts: an existing damageAbilityModifier is treated as the already-adding boundary, qualifying selected support advertises an attack damage ability-modifier apply/decline choice on the rolled-dice hole when the Light-property extra attack is not already adding a positive damage ability modifier, selected apply adds the ordinary attack ability modifier, selected decline leaves the default suppressed positive modifier, and the default Light-property path still suppresses positive modifiers while preserving negative ones. No feat-owned damage modifier state or authored-identity dispatch is introduced.",
           "taskRefs": [
-            "L3-FOLLOWUP-TWO-WEAPON-FIGHTING-RUNTIME"
+            "L3-FOLLOWUP-TWO-WEAPON-FIGHTING-RUNTIME",
+            "L3-FOLLOWUP-TWO-WEAPON-FIGHTING-DECLINE-RUNTIME"
           ],
           "title": "Unit feature permits the Light-property extra attack to use its ordinary damage ability modifier",
           "verificationOwners": [
@@ -25536,12 +25661,17 @@
           {
             "battleReadinessClosure": {
               "kind": "table-spatial-derivation",
-              "owner": "future table/spatial path owner",
-              "reason": "The promoted battle reducer validates typed occupancy witnesses supplied at the Movement boundary. Inferring those witnesses from a map, token footprint, and route remains table/spatial work outside this Unit profile."
+              "owner": "runtime-detached table/spatial map and route-choice owner",
+              "reason": "The SRD supplies creature Size/space, occupied-space, unoccupied-space, and pass-through predicates, but not a route-choice algorithm or durable coordinate/token state model. The table/spatial owner supplies selected routes, footprint occupancy, and map-state witnesses to the route-derived Movement boundary instead of duplicating those facts inside this Unit profile."
             },
-            "mechanic": "automatic pathfinding, coordinate occupancy derivation, and route extraction for occupied creature spaces"
+            "mechanic": "automatic pathfinding, route-choice policy, and durable coordinate occupancy map-state derivation for occupied creature spaces"
           }
         ],
+        "deferredMechanicsSelectedIdentityDisposition": {
+          "owner": "runtime-detached table/spatial map and route-choice owner",
+          "reason": "Automatic pathfinding, route-choice policy, and durable coordinate/token occupancy map-state derivation are table/spatial ownership without a promoted battle Unit entrypoint; selected Unit identity is already replayed at the supported Movement witness boundary.",
+          "tag": "not-applicable"
+        },
         "profileIds": [
           "unit-feature.creature-space-movement-permission"
         ],
@@ -25551,7 +25681,8 @@
         "supportedMechanics": [
           "Battle Unit admission derives the occupied creature-space traversal permission from Surface creature_space_movement_permission facts with occupied_creature_space traversal, a larger-creature relation, and canStopInOccupiedSpace false, without dispatching on Halfling or Nimbleness identity.",
           "Battle runtime validates caller-supplied Movement facts for occupied creature-space traversal by requiring a selected creature-space movement permission profile, existing occupied creature ids, larger effective creature size for every occupied space traversed, and an unoccupied destination before spending Movement.",
-          "The profile consumes existing movement budget, combatant effective size, selected Unit support profiles, and table-supplied position/occupancy witnesses without storing species-owned movement state or durable map-position state."
+          "A table-route derivation owner derives the existing occupiedCreatureSpaceTraversal Movement fact from an already selected table route, explicit creature footprint/position occupancy facts, and larger-than-mover size-relation facts; multi-position footprints collapse to one witness per occupied creature, and occupied destinations are marked for the Movement reducer to reject.",
+          "The profile consumes existing movement budget, combatant effective size, selected Unit support profiles, and table-supplied route, footprint, occupancy, size-relation, and destination witnesses without storing species-owned movement state or durable map-position state."
         ],
         "tag": "profile-subset-supported"
       },
@@ -25566,6 +25697,11 @@
           "ownerPath": "packages/battle-runtime/src/battle-runtime-movement-grapple-hide.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "L3-FOLLOWUP-HALFLING-NIMBLENESS-RUNTIME"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-movement-grapple-hide.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L3-FOLLOWUP-CREATURE-SPACE-TABLE-SPATIAL-DERIVATION"
         },
         {
           "ownerPath": "packages/battle-runtime/src/halfling-nimbleness-selected-identity.mbt.test.ts",
@@ -25584,11 +25720,13 @@
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/unit-feature-support.ts",
-            "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts"
+            "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts",
+            "packages/battle-runtime/src/battle-reducer/creature-space-table-route.ts"
           ],
-          "sourceBoundary": "Battle Unit admission consumes the authored Surface creature_space_movement_permission shape and projects a typed occupied creature-space traversal permission. Battle runtime consumes retained selected character Unit support refs, existing Movement budget, effective combatant sizes, and caller/table-supplied occupied-space and destination witnesses to validate traversal through larger occupied creature spaces and reject occupied destinations without storing species-owned movement state, durable map-position state, or authored-identity dispatch.",
+          "sourceBoundary": "Battle Unit admission consumes the authored Surface creature_space_movement_permission shape and projects a typed occupied creature-space traversal permission. Battle runtime consumes retained selected character Unit support refs, existing Movement budget, effective combatant sizes, and caller/table-supplied occupied-space and destination witnesses to validate traversal through larger occupied creature spaces and reject occupied destinations. The table-route derivation owner can derive that Movement witness from an already selected route plus explicit creature footprint, occupancy, and larger-than-mover size-relation facts without storing species-owned movement state, durable map-position state, or authored-identity dispatch.",
           "taskRefs": [
-            "L3-FOLLOWUP-HALFLING-NIMBLENESS-RUNTIME"
+            "L3-FOLLOWUP-HALFLING-NIMBLENESS-RUNTIME",
+            "L3-FOLLOWUP-CREATURE-SPACE-TABLE-SPATIAL-DERIVATION"
           ],
           "title": "Unit feature permits Movement through larger occupied creature spaces without stopping there",
           "verificationOwners": [
@@ -25621,10 +25759,10 @@
           {
             "battleReadinessClosure": {
               "kind": "outside-battle-runtime",
-              "owner": "future D20 Test rolled-die facts and die-selection replacement owner",
-              "reason": "Current promoted battle D20 Test fills expose a selected/effective naturalD20 rather than both raw d20 dice. Full RAW Luck with Advantage or Disadvantage needs an explicit rolled-die vector and player-selected die replacement boundary so a natural 1 on either die can be chosen without inventing parallel Luck-owned roll state."
+              "owner": "future non-battle D20 Test procedure owners",
+              "reason": "The promoted Luck profile executes battle Attack Roll, Ability Check, Saving Throw, Concentration Saving Throw, and Death Saving Throw D20 Tests. Social, exploration, tool, or other non-battle D20 Test procedures must consume the same Unit profile at their own execution boundaries rather than adding battle-owned state."
             },
-            "mechanic": "Advantage/Disadvantage one-die reroll choice when the player can choose either of two rolled d20s, including a natural 1 on the unselected die"
+            "mechanic": "natural-1 D20 Test rerolls for D20 Tests outside promoted battle runtime procedures"
           }
         ],
         "profileIds": [
@@ -25635,9 +25773,10 @@
         ],
         "supportedMechanics": [
           "Battle Unit admission derives the optional natural-1 D20 Test reroll profile from the Surface d20_test_natural_one_reroll mechanics shape without dispatching on Halfling or Luck identity.",
-          "Battle runtime's selected/effective-d20 subset requires executable natural d20 face facts for supported rolled D20 Tests, permits no-roll ordinary and Concentration Saving Throw outcomes without a reroll decision as non-triggering outcomes, requires an explicit reroll or decline decision after a selected/effective natural 1, validates selected reroll decisions against the actual D20 Test actor's selected support profile and the triggering natural d20 face, rejects non-1 selected rerolls and unsupported actors, and prevents stacking this reroll with another d20 reroll on the same selected/effective d20.",
-          "Attack Roll and Ability Check fills replace the selected/effective d20 result with the new roll result before downstream hit, critical, damage, and committed Ability Check total logic consumes the D20 Test.",
-          "Saving Throw outcome, Concentration Saving Throw, and Death Saving Throw fills replace the selected/effective d20 outcome or die with the new reroll result before downstream save-gated spell, concentration, or death-save lifecycle logic consumes the D20 Test."
+          "Battle runtime requires executable natural d20 face facts for supported rolled D20 Tests, permits no-roll ordinary and Concentration Saving Throw outcomes without a reroll decision as non-triggering outcomes, requires an explicit reroll or decline decision after a supported selected/effective natural 1, validates selected reroll decisions against the actual D20 Test actor's selected support profile and the triggering natural d20 face, rejects non-1 selected rerolls and unsupported actors, and prevents stacking this reroll with another d20 reroll on the same selected/effective d20.",
+          "For Advantage and Disadvantage fills that expose raw rolled d20 facts, battle runtime consumes the existing selected/effective result plus a two-d20 vector, roll mode, explicit selected die, and explicit replacement die choice; it validates legal raw dice, roll-mode-consistent selection, support profile, chosen natural-1 die, and replacement die face before projecting one executable D20 Test result.",
+          "Attack Roll and Ability Check fills replace the selected/effective or raw two-d20 projected result with the new roll result before downstream hit, critical, damage, and committed Ability Check total logic consumes the D20 Test.",
+          "Saving Throw outcome, Concentration Saving Throw, and Death Saving Throw fills replace the selected/effective or raw two-d20 projected outcome or die with the new reroll result before downstream save-gated spell, concentration, or death-save lifecycle logic consumes the D20 Test."
         ],
         "tag": "profile-subset-supported"
       },
@@ -25647,6 +25786,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-halfling-luck.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "L3-FOLLOWUP-HALFLING-LUCK-RUNTIME"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-halfling-luck.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L3-FOLLOWUP-D20-TEST-ROLLED-DIE-REROLL-CHOICE"
         }
       ],
       "executableMechanics": true,
@@ -25678,9 +25822,10 @@
             "packages/battle-runtime/src/battle-reducer/spells-resolve-release.ts",
             "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts"
           ],
-          "sourceBoundary": "Battle Unit admission consumes the Surface d20_test_natural_one_reroll species-trait shape and projects an optional natural-1 D20 Test reroll profile. The current battle-runtime owner consumes selected character Unit refs and existing selected/effective roll, outcome, Death Saving Throw, and Concentration Saving Throw fill facts for Attack Rolls, Ability Checks, and Saving Throws; requires the natural d20 face for supported rolled D20 Tests; treats no-roll Saving Throw failures without a natural d20 as non-triggering outcomes; requires an explicit reroll or decline decision after supported selected/effective natural-1 rolls; validates the natural die trigger and support profile; rejects unsupported actors, non-1 selected rerolls, and d20 reroll stacking; and replaces the executable d20 result before downstream reducers consume the D20 Test without storing a parallel Luck-owned roll result or dispatching on authored identity. Full Advantage/Disadvantage one-die choice awaits a rolled-die vector and die-selection replacement owner.",
+          "sourceBoundary": "Battle Unit admission consumes the Surface d20_test_natural_one_reroll species-trait shape and projects an optional natural-1 D20 Test reroll profile. The battle-runtime owner consumes selected character Unit refs and selected/effective roll, outcome, Death Saving Throw, and Concentration Saving Throw fill facts for Attack Rolls, Ability Checks, and Saving Throws; consumes optional raw two-d20 vectors on Advantage and Disadvantage fills with explicit roll mode and selected die facts; requires natural d20 face facts for supported rolled D20 Tests; treats no-roll Saving Throw failures without a natural d20 as non-triggering outcomes; requires an explicit reroll or decline decision after supported selected/effective natural-1 rolls or raw two-d20 rolls where either die is a natural 1; validates the natural die trigger, raw-dice legality, roll-mode-consistent selected die, explicit replacement die choice, and support profile; rejects unsupported actors, non-1 selected or raw-die rerolls, and d20 reroll stacking; and projects one executable d20 result before downstream reducers consume the D20 Test without storing a parallel Luck-owned roll result or dispatching on authored identity.",
           "taskRefs": [
-            "L3-FOLLOWUP-HALFLING-LUCK-RUNTIME"
+            "L3-FOLLOWUP-HALFLING-LUCK-RUNTIME",
+            "L3-FOLLOWUP-D20-TEST-ROLLED-DIE-REROLL-CHOICE"
           ],
           "title": "Unit feature can reroll a natural 1 on any D20 Test and must use the new roll",
           "verificationOwners": [
@@ -25783,17 +25928,68 @@
       "claim": {
         "battleReadinessClosure": {
           "kind": "character-fact-and-runtime-detached-split",
-          "owner": "future character-sheet Heroic Inspiration Long Rest grant owner",
-          "reason": "The Surface trait carries the exact rest-triggered Heroic Inspiration source fact, but execution requires durable Heroic Inspiration state and Long Rest lifecycle ownership outside the current character-creation projection."
+          "owner": "character-sheet-runtime Long Rest grant owner",
+          "reason": "Resourceful executes as durable Character Sheet state on Long Rest completion. Battle runtime does not yet consume Heroic Inspiration rerolls; any future D20 reroll owner should consume this sheet state rather than re-reading Human or Resourceful authored identity."
         },
-        "reason": "Resourceful is authored as gaining Heroic Inspiration whenever the character finishes a Long Rest. No promoted character-sheet or runtime owner currently models Heroic Inspiration state or Long Rest grant timing.",
-        "tag": "unsupported-profile"
+        "deferredMechanics": [
+          {
+            "battleReadinessClosure": {
+              "kind": "character-fact-and-runtime-detached-split",
+              "owner": "future Heroic Inspiration D20 reroll owner",
+              "reason": "This task promotes only the Character Sheet Long Rest grant state. Reroll execution must consume the existing sheet state at the D20 Test or die-roll boundary that owns the original roll and replacement result."
+            },
+            "mechanic": "Spend Heroic Inspiration to reroll a die and clear the available state after the replacement result is used."
+          },
+          {
+            "battleReadinessClosure": {
+              "kind": "outside-battle-runtime",
+              "owner": "future party/session Heroic Inspiration transfer owner",
+              "reason": "Duplicate-gain transfer requires a party/session boundary with another Character Sheet recipient and player choice. The single-sheet Long Rest owner keeps at-most-one local state and does not invent cross-character transfer state."
+            },
+            "mechanic": "Route a duplicate Heroic Inspiration gain to another player character in the group who lacks Heroic Inspiration."
+          }
+        ],
+        "profileIds": [
+          "character-sheet.rest-triggered-heroic-inspiration"
+        ],
+        "selectedIdentityEvidenceDisposition": {
+          "owner": "character-sheet-runtime deterministic Long Rest projection owner",
+          "reason": "Resourceful support is a Character Sheet rest-completion state projection from selected species trait Unit refs and typed Surface mechanics. It has no battle-runtime selected Unit identity replay boundary; focused Character Sheet tests bind the retained Human species trait Unit to the executable rest-trigger and grant facts.",
+          "tag": "not-applicable"
+        },
+        "supportedMechanics": [
+          "Surface authors Resourceful as an SRD Human species trait with rest_triggered_heroic_inspiration mechanics, finish_rest/long trigger facts, and a heroic_inspiration grant fact",
+          "Character Sheet owns explicit at-most-one Heroic Inspiration state as none or available, defaulting fresh sheets to none and requiring stored sheets to carry the state",
+          "Long Rest completion scans selected species trait Unit refs and admits only species-trait Units with the exact typed rest-triggered Heroic Inspiration shape, without branching on Human or Resourceful authored identity",
+          "A qualifying Long Rest sets Heroic Inspiration to available, duplicate gains remain the same single available state, and non-qualifying builds preserve their current Heroic Inspiration state"
+        ],
+        "tag": "profile-subset-supported"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "species_trait",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "character-sheet.rest-triggered-heroic-inspiration",
+          "profileKind": "character-sheet",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/character-sheet-runtime/src/rests.ts"
+          ],
+          "sourceBoundary": "Character Sheet consumes selected species trait Unit refs, installed Surface rest_triggered_heroic_inspiration mechanics with finish_rest/long and heroic_inspiration grant facts, Long Rest completion, and current Heroic Inspiration state. It sets the sheet state to available after a qualifying Long Rest, preserves existing state for non-qualifying builds, treats duplicate gains as the same single available state because the Character Sheet owns no transfer recipient path, and does not store species-owned rest or inspiration state.",
+          "taskRefs": [
+            "L3-FOLLOWUP-HUMAN-RESOURCEFUL-RUNTIME"
+          ],
+          "title": "Character Sheet grants Heroic Inspiration from Long Rest triggered feature facts",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-sheet-runtime/src/rests.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/species_human_resourceful.json",
       "unitId": "species_human_resourceful"
     },

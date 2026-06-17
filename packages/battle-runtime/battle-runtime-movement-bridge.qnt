@@ -206,13 +206,15 @@ module battleRuntimeMovementBridge {
     rolledDamage: int,
     abilityModifier: int,
     damageAbilityModifier: LightExtraAttackDamageAbilityModifierFact,
-    twoWeaponFightingSelected: bool
+    twoWeaponFightingSelected: bool,
+    choice: LightExtraAttackDamageAbilityModifierChoice
   ): int =
     lightPropertyExtraAttackDamageAmount(
       rolledDamage,
       abilityModifier,
       damageAbilityModifier,
-      twoWeaponFightingSelected
+      twoWeaponFightingSelected,
+      choice
     )
 
   pure def battleRuntimeDisengage(projection: BattleRuntimeMovementProjection): BattleRuntimeMovementStep =

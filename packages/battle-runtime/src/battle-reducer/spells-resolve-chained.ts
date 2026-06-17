@@ -437,6 +437,8 @@ export function resolveChainedSpellAttackDamageAct(input: {
       d20TestNaturalOneRerollRollDecisionRequired({
         actor: actorBeforeSpellAttack,
         originalNaturalD20: Number(step.attackRoll.value.naturalD20),
+        rollMode: step.attackRoll.value.rollMode,
+        rolledD20s: step.attackRoll.value.rolledD20s,
         decision: step.attackRoll.value.d20TestNaturalOneReroll,
       })
     ) {
@@ -454,7 +456,10 @@ export function resolveChainedSpellAttackDamageAct(input: {
     }
     const d20TestNaturalOneRerollIssue = d20TestNaturalOneRerollRollIssue({
       actor: actorBeforeSpellAttack,
+      total: step.attackRoll.value.total,
       originalNaturalD20: Number(step.attackRoll.value.naturalD20),
+      rollMode: step.attackRoll.value.rollMode,
+      rolledD20s: step.attackRoll.value.rolledD20s,
       decision: step.attackRoll.value.d20TestNaturalOneReroll,
       requiredRollMode,
     });

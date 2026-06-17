@@ -96,6 +96,7 @@ import {
   attackActionOptionName,
   attackPotentialDamageTypes,
   eligibleAttackDamageRiders,
+  eligibleAttackDamageDieFloorUnitIds,
   eligibleWeaponDamageDiceRollChoiceUnitIds,
   selectedAttackDamageRiders,
   selectedWeaponDamageDiceRollChoice,
@@ -317,6 +318,8 @@ function resolveBonusActionAttack(
     d20TestNaturalOneRerollRollDecisionRequired({
       actor: attacker,
       originalNaturalD20: Number(fillSet.attackRoll.naturalD20),
+      rollMode: fillSet.attackRoll.rollMode,
+      rolledD20s: fillSet.attackRoll.rolledD20s,
       decision: fillSet.attackRoll.d20TestNaturalOneReroll,
     })
   ) {
@@ -337,7 +340,10 @@ function resolveBonusActionAttack(
   }
   const d20TestNaturalOneRerollIssue = d20TestNaturalOneRerollRollIssue({
     actor: attacker,
+    total: fillSet.attackRoll.total,
     originalNaturalD20: Number(fillSet.attackRoll.naturalD20),
+    rollMode: fillSet.attackRoll.rollMode,
+    rolledD20s: fillSet.attackRoll.rolledD20s,
     decision: fillSet.attackRoll.d20TestNaturalOneReroll,
     requiredRollMode,
   });
@@ -386,6 +392,13 @@ function resolveBonusActionAttack(
     : [];
   const eligibleDamageDiceChoiceUnitIds = hit
     ? eligibleWeaponDamageDiceRollChoiceUnitIds(
+        attackRolledState,
+        input.subject.actorId,
+        attack,
+      )
+    : [];
+  const eligibleDamageDieFloorChoiceUnitIds = hit
+    ? eligibleAttackDamageDieFloorUnitIds(
         attackRolledState,
         input.subject.actorId,
         attack,
@@ -477,6 +490,7 @@ function resolveBonusActionAttack(
           attack,
         ),
         eligibleDamageDiceChoiceUnitIds,
+        eligibleDamageDieFloorChoiceUnitIds,
       ),
     ]);
   }
@@ -513,6 +527,7 @@ function resolveBonusActionAttack(
         attack,
       ),
       eligibleDamageDiceChoiceUnitIds,
+      eligibleDamageDieFloorChoiceUnitIds,
     );
     if (damageValidation !== null) {
       return invalidResult(input.state, "invalidFill", damageValidation);

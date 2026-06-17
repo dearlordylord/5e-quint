@@ -17,6 +17,7 @@ import type {
 } from "@dnd/surface/surface/types";
 import type { AttackRollResult } from "@dnd/shared-algebras/runtime-hole-algebra";
 import {
+  ATTACK_DAMAGE_DIE_FLOOR_SUPPORT_PROFILE,
   ATTACK_ROLL_MISS_TO_HIT_REPLACEMENT_SUPPORT_PROFILE,
   HUNTERS_PREY_SUPPORT_PROFILE,
   PASSIVE_RANGED_ATTACK_ROLL_BONUS_SUPPORT_PROFILE,
@@ -50,6 +51,7 @@ import {
   type PendingAttackRollMissToHitReplacementContext,
   type SpellMarkedDamageRider,
   type SpellAttackDamageComponent,
+  type AttackDamageDieFloorChoiceFill,
   type WeaponDamageDiceRollChoiceFill,
 } from "../battle-reducer.ts";
 import {
@@ -197,10 +199,14 @@ function characterWeaponAttackAbilityOptions(
   }
   const { alternateAbilityChoices: _alternateAbilityChoices, ...baseAttack } =
     attack;
+  const {
+    attackDamageAbilityModifierChoice: _baseAttackDamageAbilityModifierChoice,
+    ...baseAttackWithoutAbilityModifierChoice
+  } = baseAttack;
   return [
     baseAttack,
     ...attack.alternateAbilityChoices.map((choice) => ({
-      ...baseAttack,
+      ...baseAttackWithoutAbilityModifierChoice,
       ...choice,
       weapon: {
         ...baseAttack.weapon,
@@ -900,6 +906,52 @@ export function eligibleWeaponDamageDiceRollChoiceUnitIds(
   );
 }
 
+export function eligibleAttackDamageDieFloorUnitIds(
+  state: BattleState,
+  attackerId: CombatantId,
+  attack: SupportedAttackActionOption,
+): readonly UnitRecord["id"][] {
+  return eligibleAttackDamageDieFloorUnitIdsForAttacker(
+    state.combatants.get(attackerId),
+    attack,
+  );
+}
+
+export function eligibleAttackDamageDieFloorUnitIdsForAttacker(
+  attacker: BattleCreatureState | undefined,
+  attack: SupportedAttackActionOption,
+): readonly UnitRecord["id"][] {
+  if (
+    attacker?.origin.kind !== "character" ||
+    attack.kind !== "weapon" ||
+    attack.weapon.usage !== "melee" ||
+    !weaponHasTwoHandedOrVersatileProperty(attack.weapon)
+  ) {
+    return [];
+  }
+  const mainWeapon = attacker.origin.selectedLoadout.weapon;
+  if (
+    mainWeapon?.unitId !== attack.weapon.id ||
+    mainWeapon.grip !== "two_handed"
+  ) {
+    return [];
+  }
+  return attacker.origin.characterUnitRefs.flatMap((unitRef) =>
+    unitRef.supportProfiles.includes(ATTACK_DAMAGE_DIE_FLOOR_SUPPORT_PROFILE)
+      ? [unitRef.unitId]
+      : [],
+  );
+}
+
+function weaponHasTwoHandedOrVersatileProperty(
+  weapon: CharacterWeaponAttackActionOption["weapon"],
+): boolean {
+  return (weapon.properties ?? []).some(
+    (property) =>
+      property.kind === "two_handed" || property.kind === "versatile",
+  );
+}
+
 export function attackRollMissToHitReplacementHolePayload(
   state: BattleState,
   attackerId: CombatantId,
@@ -1084,6 +1136,16 @@ export function selectedWeaponDamageDiceRollChoice(
   eligibleUnitIds: readonly UnitRecord["id"][],
   choice: WeaponDamageDiceRollChoiceFill | undefined,
 ): WeaponDamageDiceRollChoiceFill | null {
+  if (choice === undefined) {
+    return null;
+  }
+  return eligibleUnitIds.includes(choice.unitId) ? choice : null;
+}
+
+export function selectedAttackDamageDieFloorChoice(
+  eligibleUnitIds: readonly UnitRecord["id"][],
+  choice: AttackDamageDieFloorChoiceFill | undefined,
+): AttackDamageDieFloorChoiceFill | null {
   if (choice === undefined) {
     return null;
   }

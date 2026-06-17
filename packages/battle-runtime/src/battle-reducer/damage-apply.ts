@@ -596,11 +596,12 @@ export function damageLifecycleConcentrationSavingThrowFillCheck(input: {
     (fill) => !holes.some((hole) => hole.holeId === fill.holeId),
   );
   if (invalidFill === undefined) {
-    const d20TestNaturalOneRerollIssue = concentrationD20TestNaturalOneRerollIssue(
-      input.state,
-      input.fills,
-      holes,
-    );
+    const d20TestNaturalOneRerollIssue =
+      concentrationD20TestNaturalOneRerollIssue(
+        input.state,
+        input.fills,
+        holes,
+      );
     return d20TestNaturalOneRerollIssue === null
       ? { tag: "ok", holes }
       : { tag: "invalid", message: d20TestNaturalOneRerollIssue };
@@ -627,6 +628,8 @@ function concentrationD20TestNaturalOneRerollIssue(
     const actor = state.combatants.get(hole.combatantId);
     const issue = d20TestNaturalOneRerollOutcomeIssue({
       actor,
+      rollMode: hole.rollMode,
+      rolledD20s: fill.value.rolledD20s,
       originalNaturalD20:
         fill.value.naturalD20 === undefined
           ? undefined

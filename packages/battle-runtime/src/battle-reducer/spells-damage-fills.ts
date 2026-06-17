@@ -72,6 +72,8 @@ import { uniqueSavingThrowRollModeProjections } from "./saving-throw-roll-mode-p
 import {
   ATTACK_ROLL_HOLE_ID,
   ATTACK_ROLL_HOLE_INSTANCE,
+  attackDamageAbilityModifierChoiceUnsupportedIssue,
+  attackDamageDieFloorChoiceUnsupportedIssue,
   spellDamageRerollUnsupportedIssue,
   type BattleActiveEffect,
   type BattleAttackDamageDisposition,
@@ -1333,6 +1335,10 @@ export function validateSpellDamageFill(
   critical: boolean,
   spellMarkedDamageRiders: readonly SpellMarkedDamageRider[] = [],
 ): string | null {
+  const attackDamageChoiceIssue = attackDamageChoiceUnsupportedIssue(fill);
+  if (attackDamageChoiceIssue !== null) {
+    return attackDamageChoiceIssue;
+  }
   if (invocation.procedure !== "spellAttackDamage") {
     const spellDamageRerollIssue = spellDamageRerollUnsupportedIssue(fill);
     if (spellDamageRerollIssue !== null) {
@@ -1493,6 +1499,10 @@ export function validateSpellAttackSequencePartDamageFill(
   critical: boolean,
   spellMarkedDamageRiders: readonly SpellMarkedDamageRider[] = [],
 ): string | null {
+  const attackDamageChoiceIssue = attackDamageChoiceUnsupportedIssue(fill);
+  if (attackDamageChoiceIssue !== null) {
+    return attackDamageChoiceIssue;
+  }
   const spellDamageRerollIssue = spellDamageRerollUnsupportedIssue(fill);
   if (spellDamageRerollIssue !== null) {
     return spellDamageRerollIssue;
@@ -1593,6 +1603,10 @@ export function validatePreparedSlotSpellDamageGroups(
   fill: Extract<BattleFill, { readonly kind: "rolledDice" }>,
   allocations: readonly BattleSpellTargetAllocation[],
 ): string | null {
+  const attackDamageChoiceIssue = attackDamageChoiceUnsupportedIssue(fill);
+  if (attackDamageChoiceIssue !== null) {
+    return attackDamageChoiceIssue;
+  }
   const spellDamageRerollIssue = spellDamageRerollUnsupportedIssue(fill);
   if (spellDamageRerollIssue !== null) {
     return spellDamageRerollIssue;
@@ -1607,6 +1621,17 @@ export function validatePreparedSlotSpellDamageGroups(
   return mismatched === undefined
     ? null
     : "Each repeated spell damage dice group must match that target's allocated effect count.";
+}
+
+function attackDamageChoiceUnsupportedIssue(
+  fill: Extract<BattleFill, { readonly kind: "rolledDice" }>,
+): string | null {
+  const attackDamageDieFloorChoiceIssue =
+    attackDamageDieFloorChoiceUnsupportedIssue(fill);
+  if (attackDamageDieFloorChoiceIssue !== null) {
+    return attackDamageDieFloorChoiceIssue;
+  }
+  return attackDamageAbilityModifierChoiceUnsupportedIssue(fill);
 }
 
 type SpellDamageContext = {

@@ -1,9 +1,12 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3-FOLLOWUP-TWO-WEAPON-FIGHTING-RUNTIME feat_two_weapon_fighting
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3-FOLLOWUP-TWO-WEAPON-FIGHTING-DECLINE-RUNTIME feat_two_weapon_fighting
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.light-extra-attack-damage-ability-modifier
 import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
+import { attackBonus } from "@dnd/shared/types";
 import type { UnitRecord } from "@dnd/surface/surface/types";
 import {
+  attackTargetFill,
   attackRollFill,
   battleAbilityModifier,
   battleId,
@@ -27,6 +30,7 @@ import {
   battleUnitRefWithSupportProfiles,
   LIGHT_EXTRA_ATTACK_DAMAGE_ABILITY_MODIFIER_SUPPORT_PROFILE,
   parseSupportedUnitFeatureProfile,
+  type BattleFill,
   type BattleUnitRef,
 } from "./index.ts";
 import {
@@ -112,10 +116,16 @@ describe("L3-FOLLOWUP-TWO-WEAPON-FIGHTING-RUNTIME deterministic profile slice", 
         }),
       ),
       damageRoll: 4,
+      attackDamageAbilityModifierSelection: "apply",
     });
 
     expect(result.damage).toMatchObject({
-      label: "Dagger damage (1d4+3-piercing)",
+      label: "Dagger damage (1d4-piercing)",
+      attackDamageAbilityModifierChoice: {
+        unitIds: [twoWeaponFightingUnitId],
+        appliedDamageAbilityModifier: battleAbilityModifier(3),
+        declinedDamageAbilityModifier: battleAbilityModifier(0),
+      },
     });
     expect(result.resolved).toMatchObject({
       tag: "resolved",
@@ -124,6 +134,114 @@ describe("L3-FOLLOWUP-TWO-WEAPON-FIGHTING-RUNTIME deterministic profile slice", 
           expect.objectContaining({ combatantId: goblinId, hp: 3 }),
         ]),
       },
+    });
+  });
+
+  test("selected Two-Weapon Fighting can decline the optional damage ability modifier", () => {
+    const result = resolveOffHandHit({
+      state: afterQualifyingLightAttack(
+        lightAttackBattle({
+          characterUnitRefs: [twoWeaponFightingBattleUnitRef()],
+        }),
+      ),
+      damageRoll: 4,
+      attackDamageAbilityModifierSelection: "decline",
+    });
+
+    expect(result.damage).toMatchObject({
+      label: "Dagger damage (1d4-piercing)",
+      attackDamageAbilityModifierChoice: {
+        unitIds: [twoWeaponFightingUnitId],
+      },
+    });
+    expect(result.resolved).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        combatants: expect.arrayContaining([
+          expect.objectContaining({ combatantId: goblinId, hp: 6 }),
+        ]),
+      },
+    });
+  });
+
+  test("selected Two-Weapon Fighting applies an alternate ability damage modifier through an explicit choice", () => {
+    const result = resolveOffHandHit({
+      state: afterQualifyingLightAttack(
+        lightAttackBattle({
+          characterUnitRefs: [twoWeaponFightingBattleUnitRef()],
+          offHandAttack: testDaggerAttackWithAlternateDexterity(),
+        }),
+      ),
+      attackName: "Dagger (Dexterity)",
+      damageRoll: 4,
+      attackDamageAbilityModifierSelection: "apply",
+    });
+
+    expect(result.damage).toMatchObject({
+      label: "Dagger (Dexterity) damage (1d4-piercing)",
+      attackDamageAbilityModifierChoice: {
+        unitIds: [twoWeaponFightingUnitId],
+        appliedDamageAbilityModifier: battleAbilityModifier(4),
+        declinedDamageAbilityModifier: battleAbilityModifier(0),
+      },
+    });
+    expect(result.resolved).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        combatants: expect.arrayContaining([
+          expect.objectContaining({ combatantId: goblinId, hp: 2 }),
+        ]),
+      },
+    });
+  });
+
+  test("selected Two-Weapon Fighting can decline an alternate ability damage modifier", () => {
+    const result = resolveOffHandHit({
+      state: afterQualifyingLightAttack(
+        lightAttackBattle({
+          characterUnitRefs: [twoWeaponFightingBattleUnitRef()],
+          offHandAttack: testDaggerAttackWithAlternateDexterity(),
+        }),
+      ),
+      attackName: "Dagger (Dexterity)",
+      damageRoll: 4,
+      attackDamageAbilityModifierSelection: "decline",
+    });
+
+    expect(result.damage).toMatchObject({
+      label: "Dagger (Dexterity) damage (1d4-piercing)",
+      attackDamageAbilityModifierChoice: {
+        unitIds: [twoWeaponFightingUnitId],
+        appliedDamageAbilityModifier: battleAbilityModifier(4),
+        declinedDamageAbilityModifier: battleAbilityModifier(0),
+      },
+    });
+    expect(result.resolved).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        combatants: expect.arrayContaining([
+          expect.objectContaining({ combatantId: goblinId, hp: 6 }),
+        ]),
+      },
+    });
+  });
+
+  test("selected Two-Weapon Fighting requires an explicit damage ability modifier choice", () => {
+    const result = resolveOffHandHit({
+      state: afterQualifyingLightAttack(
+        lightAttackBattle({
+          characterUnitRefs: [twoWeaponFightingBattleUnitRef()],
+        }),
+      ),
+      damageRoll: 4,
+      expectsAttackDamageAbilityModifierChoice: true,
+    });
+
+    expect(result.resolved).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+      message:
+        "Attack damage ability modifier choice is required for this attack.",
     });
   });
 
@@ -144,6 +262,9 @@ describe("L3-FOLLOWUP-TWO-WEAPON-FIGHTING-RUNTIME deterministic profile slice", 
     expect(result.damage).toMatchObject({
       label: "Dagger damage (1d4+2-piercing)",
     });
+    expect(result.damage).not.toHaveProperty(
+      "attackDamageAbilityModifierChoice",
+    );
     expect(result.resolved).toMatchObject({
       tag: "resolved",
       snapshot: {
@@ -171,6 +292,9 @@ describe("L3-FOLLOWUP-TWO-WEAPON-FIGHTING-RUNTIME deterministic profile slice", 
     expect(result.damage).toMatchObject({
       label: "Dagger damage (1d4-1-piercing)",
     });
+    expect(result.damage).not.toHaveProperty(
+      "attackDamageAbilityModifierChoice",
+    );
     expect(result.resolved).toMatchObject({
       tag: "resolved",
       snapshot: {
@@ -304,22 +428,36 @@ function afterQualifyingLightAttack(state: BattleState): BattleState {
 function resolveOffHandHit(input: {
   readonly state: BattleState;
   readonly damageRoll: number;
+  readonly attackName?: string;
+  readonly expectsAttackDamageAbilityModifierChoice?: true;
+  readonly attackDamageAbilityModifierSelection?: NonNullable<
+    Extract<
+      BattleFill,
+      { readonly kind: "rolledDice" }
+    >["attackDamageAbilityModifierChoice"]
+  >["selection"];
 }) {
   const subject: BattleSubject = {
     tag: "bonusAction",
     actorId: fighterId,
     action: "offHandAttack",
-    attackName: "Dagger",
+    attackName: input.attackName ?? "Dagger",
   };
   const target = requireHole(
     resolveBattleSubject({ state: input.state, subject, fills: [] }),
     "targetChoice",
   );
+  const targetChoice = attackTargetFill(
+    target,
+    fighterId,
+    goblinId,
+    subject.attackName,
+  );
   const roll = requireHole(
     resolveBattleSubject({
       state: input.state,
       subject,
-      fills: [targetFill(target, goblinId)],
+      fills: [targetChoice],
     }),
     "attackRoll",
   );
@@ -328,23 +466,60 @@ function resolveOffHandHit(input: {
       state: input.state,
       subject,
       fills: [
-        targetFill(target, goblinId),
+        targetChoice,
         attackRollFill(roll, { total: 15, naturalD20: 10 }),
       ],
     }),
     "rolledDice",
   );
+  if (
+    input.expectsAttackDamageAbilityModifierChoice === true ||
+    input.attackDamageAbilityModifierSelection !== undefined
+  ) {
+    expect(damage).toMatchObject({
+      attackDamageAbilityModifierChoice: {
+        unitIds: [twoWeaponFightingUnitId],
+      },
+    });
+  } else {
+    expect(damage).not.toHaveProperty("attackDamageAbilityModifierChoice");
+  }
   return {
     damage,
     resolved: resolveBattleSubject({
       state: input.state,
       subject,
       fills: [
-        targetFill(target, goblinId),
+        targetChoice,
         attackRollFill(roll, { total: 15, naturalD20: 10 }),
-        damageRollFill(damage, input.damageRoll),
+        damageRollFill(
+          damage,
+          input.damageRoll,
+          input.attackDamageAbilityModifierSelection === undefined
+            ? undefined
+            : {
+                unitId: twoWeaponFightingUnitId,
+                selection: input.attackDamageAbilityModifierSelection,
+              },
+        ),
       ],
     }),
+  };
+}
+
+function testDaggerAttackWithAlternateDexterity(): ReturnType<
+  typeof testDaggerAttack
+> {
+  return {
+    ...testDaggerAttack(),
+    alternateAbilityChoices: [
+      {
+        ability: "dex",
+        abilityModifier: battleAbilityModifier(4),
+        attackBonus: attackBonus(6),
+        damageAbilityModifier: battleAbilityModifier(4),
+      },
+    ],
   };
 }
 

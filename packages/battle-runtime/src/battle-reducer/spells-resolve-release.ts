@@ -731,6 +731,8 @@ export function resolveSpellRelease(
       d20TestNaturalOneRerollRollDecisionRequired({
         actor: actorBeforeSpellAttack,
         originalNaturalD20: Number(fillSet.attackRoll.naturalD20),
+        rollMode: fillSet.attackRoll.rollMode,
+        rolledD20s: fillSet.attackRoll.rolledD20s,
         decision: fillSet.attackRoll.d20TestNaturalOneReroll,
       })
     ) {
@@ -747,7 +749,10 @@ export function resolveSpellRelease(
     }
     const d20TestNaturalOneRerollIssue = d20TestNaturalOneRerollRollIssue({
       actor: actorBeforeSpellAttack,
+      total: fillSet.attackRoll.total,
       originalNaturalD20: Number(fillSet.attackRoll.naturalD20),
+      rollMode: fillSet.attackRoll.rollMode,
+      rolledD20s: fillSet.attackRoll.rolledD20s,
       decision: fillSet.attackRoll.d20TestNaturalOneReroll,
       requiredRollMode,
     });
@@ -881,8 +886,7 @@ export function resolveSpellRelease(
   const releaseDamageBaseState =
     releaseResolutionStateAfterCriticalMovement ?? input.state;
   const effectiveReleaseAttackRoll =
-    invocation.procedure === "spellAttackDamage" &&
-    fillSet.attackRoll != null
+    invocation.procedure === "spellAttackDamage" && fillSet.attackRoll != null
       ? effectiveD20TestNaturalOneRerollAttackRoll(fillSet.attackRoll)
       : undefined;
   const critical =

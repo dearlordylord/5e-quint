@@ -1,6 +1,7 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.creature-space-movement-permission unit-feature.grappler
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3-FOLLOWUP-GRAPPLER-RUNTIME feat_grappler
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3-FOLLOWUP-HALFLING-NIMBLENESS-RUNTIME species_halfling_nimbleness
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3-FOLLOWUP-CREATURE-SPACE-TABLE-SPATIAL-DERIVATION species_halfling_nimbleness
 
 import {
   startBattleRight,
@@ -77,6 +78,7 @@ import {
   grappleDragCostExempt,
   targetIsNoMoreThanOneSizeLarger,
 } from "./battle-reducer/movement-speed.ts";
+import { deriveCreatureSpaceTraversalMovementFactFromTableRoute } from "./battle-reducer/creature-space-table-route.ts";
 import { ongoingFeatureSourceKeyForUnit } from "./battle-reducer/creature-state.ts";
 
 describe("battle runtime: movement, Grapple, and Hide", () => {
@@ -533,6 +535,102 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
     });
   });
 
+  test("table route facts derive Nimbleness traversal through a larger creature footprint", () => {
+    const firstBlockerPositionId = battleTablePositionId(
+      "large-blocker-front-space",
+    );
+    const secondBlockerPositionId = battleTablePositionId(
+      "large-blocker-back-space",
+    );
+    const destinationPositionId = battleTablePositionId(
+      "beyond-large-blocker",
+    );
+    const state = startBattleRight({
+      battleId: battleId("battle-halfling-nimbleness-route-derived-movement"),
+      combatants: [
+        characterSeed({
+          combatantId: fighterId,
+          displayName: "Nimble Mover",
+          initiative: 20,
+          size: "small",
+          characterUnitRefs: halflingNimblenessUnitRefs(),
+        }),
+        characterSeed({
+          combatantId: goblinId,
+          displayName: "Large Blocker",
+          initiative: 10,
+          side: oppositionSide,
+          size: "large",
+        }),
+      ],
+    });
+    const subject: BattleSubject = {
+      tag: "runtimeCommand",
+      actorId: fighterId,
+      command: "move",
+    };
+    const hole = requireHole(
+      resolveBattleSubject({ state, subject, fills: [] }),
+      "movement",
+    );
+    const derivation = deriveCreatureSpaceTraversalMovementFactFromTableRoute({
+      moverId: fighterId,
+      route: {
+        positionsEnteredBeforeDestination: [
+          firstBlockerPositionId,
+          secondBlockerPositionId,
+        ],
+        destination: { positionId: destinationPositionId },
+      },
+      occupiedCreatureFootprints: [
+        {
+          occupantId: goblinId,
+          creatureSizeRelationToMover: "larger",
+          occupiedPositions: [firstBlockerPositionId, secondBlockerPositionId],
+        },
+      ],
+    });
+
+    expect(derivation).toMatchObject({
+      tag: "movementFact",
+      creatureSpaceTraversal: {
+        occupiedSpaces: [
+          {
+            occupantId: goblinId,
+            positionId: firstBlockerPositionId,
+          },
+        ],
+        destination: {
+          kind: "unoccupiedSpace",
+          positionId: destinationPositionId,
+        },
+      },
+    });
+    if (derivation.tag !== "movementFact") {
+      throw new Error(
+        `Expected route-derived Movement fact, got ${derivation.tag}.`,
+      );
+    }
+
+    const moved = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          movementFill(hole, {
+            movementCostFeet: 10,
+            provokedOpportunityAttacks: [],
+            creatureSpaceTraversal: derivation.creatureSpaceTraversal,
+          }),
+        ],
+      }),
+    ).state;
+
+    expect(moved.combatants.get(fighterId)).toMatchObject({
+      movementSpentFeet: movementFeet(10),
+    });
+  });
+
   test("Halfling Nimbleness Movement facts reject stopping in an occupied creature space", () => {
     const state = startBattleRight({
       battleId: battleId("battle-halfling-nimbleness-occupied-stop"),
@@ -585,6 +683,86 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
                 positionId: battleTablePositionId("medium-blocker-space"),
               },
             },
+          }),
+        ],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      message:
+        "Creature-space traversal cannot end in an occupied creature space.",
+    });
+  });
+
+  test("table route facts derive an occupied destination witness for Movement rejection", () => {
+    const occupiedPositionId = battleTablePositionId("medium-blocker-space");
+    const state = startBattleRight({
+      battleId: battleId("battle-halfling-nimbleness-route-derived-stop"),
+      combatants: [
+        characterSeed({
+          combatantId: fighterId,
+          displayName: "Nimble Mover",
+          initiative: 20,
+          size: "small",
+          characterUnitRefs: halflingNimblenessUnitRefs(),
+        }),
+        characterSeed({
+          combatantId: goblinId,
+          displayName: "Medium Blocker",
+          initiative: 10,
+          side: oppositionSide,
+          size: "medium",
+        }),
+      ],
+    });
+    const subject: BattleSubject = {
+      tag: "runtimeCommand",
+      actorId: fighterId,
+      command: "move",
+    };
+    const hole = requireHole(
+      resolveBattleSubject({ state, subject, fills: [] }),
+      "movement",
+    );
+    const derivation = deriveCreatureSpaceTraversalMovementFactFromTableRoute({
+      moverId: fighterId,
+      route: {
+        positionsEnteredBeforeDestination: [],
+        destination: { positionId: occupiedPositionId },
+      },
+      occupiedCreatureFootprints: [
+        {
+          occupantId: goblinId,
+          creatureSizeRelationToMover: "larger",
+          occupiedPositions: [occupiedPositionId],
+        },
+      ],
+    });
+
+    expect(derivation).toMatchObject({
+      tag: "movementFact",
+      creatureSpaceTraversal: {
+        destination: {
+          kind: "occupiedCreatureSpace",
+          occupantId: goblinId,
+          positionId: occupiedPositionId,
+        },
+      },
+    });
+    if (derivation.tag !== "movementFact") {
+      throw new Error(
+        `Expected route-derived Movement fact, got ${derivation.tag}.`,
+      );
+    }
+
+    expect(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          movementFill(hole, {
+            movementCostFeet: 5,
+            provokedOpportunityAttacks: [],
+            creatureSpaceTraversal: derivation.creatureSpaceTraversal,
           }),
         ],
       }),
@@ -654,6 +832,34 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
       tag: "invalid",
       message:
         "Creature-space traversal cannot end in an occupied creature space.",
+    });
+  });
+
+  test("table route creature-space derivation requires larger occupied creatures", () => {
+    const occupiedPositionId = battleTablePositionId("small-blocker-space");
+
+    expect(
+      deriveCreatureSpaceTraversalMovementFactFromTableRoute({
+        moverId: fighterId,
+        route: {
+          positionsEnteredBeforeDestination: [occupiedPositionId],
+          destination: {
+            positionId: battleTablePositionId("beyond-small-blocker"),
+          },
+        },
+        occupiedCreatureFootprints: [
+          {
+            occupantId: goblinId,
+            creatureSizeRelationToMover: "notLarger",
+            occupiedPositions: [occupiedPositionId],
+          },
+        ],
+      }),
+    ).toEqual({
+      tag: "invalid",
+      reason: "occupiedRouteCreatureIsNotLarger",
+      message:
+        "Creature-space route derivation requires occupied route creatures to be larger than the mover.",
     });
   });
 

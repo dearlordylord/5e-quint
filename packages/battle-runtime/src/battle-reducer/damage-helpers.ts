@@ -3,6 +3,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-creature-size-change
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.attack-damage-die-floor
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.light-extra-attack-damage-ability-modifier
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.passive-damage-resistance
 // KERNEL-COVERAGE: runtime-owner BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER
@@ -32,7 +33,6 @@ import type {
 } from "../battle-action-options.ts";
 import {
   ATTACK_DAMAGE_DIE_FLOOR_MINIMUM_RESULT,
-  ATTACK_DAMAGE_DIE_FLOOR_SUPPORT_PROFILE,
   PASSIVE_DAMAGE_RESISTANCE_SUPPORT_PROFILE,
   type OngoingFeatureDamageModifier,
 } from "../unit-feature-support.ts";
@@ -60,8 +60,11 @@ import { combatantHasWardingBondResistance } from "./warding-bond.ts";
 import {
   attackDamageComponents,
   attackDamageModifier,
+  eligibleAttackDamageDieFloorUnitIdsForAttacker,
+  selectedAttackDamageDieFloorChoice,
   statBlockAttackDamage,
 } from "./statblock-attacks.ts";
+import { selectedAttackDamageAbilityModifierChoice } from "./attack-damage-ability-modifier-choice.ts";
 import {
   activeCreatureSizeChangeEffect,
   creatureSizeChangeAttackDamageComponent,
@@ -230,7 +233,11 @@ export function attackDamageByType(
     attack,
     attackRoll,
   );
-  const damageDieFloorMinimum = attackDamageDieFloorMinimum(attacker, attack);
+  const damageDieFloorMinimum = attackDamageDieFloorMinimum(
+    attacker,
+    attack,
+    damageRoll.attackDamageDieFloorChoice,
+  );
   const damageByType = damageRoll.value.reduce<ReadonlyMap<DamageType, number>>(
     (totals, group, index) => {
       const component = components[index];
@@ -246,6 +253,7 @@ export function attackDamageByType(
       const modifier =
         fixedBaseDamageEntries === null && index === 0
           ? attackDamageModifier(attack) +
+            selectedAttackDamageAbilityModifier(attack, damageRoll) +
             ongoingFeatureDamageModifier(attacker, attack)
           : 0;
       if (component.operation === "subtract") {
@@ -276,39 +284,44 @@ export function attackDamageByType(
   return clampMinimumDamageTotal(reducedDamageByType, components);
 }
 
+function selectedAttackDamageAbilityModifier(
+  attack: SupportedAttackActionOption,
+  damageRoll: BattleRolledDiceFill,
+): number {
+  const offeredChoice =
+    attack.kind === "weapon"
+      ? attack.attackDamageAbilityModifierChoice
+      : undefined;
+  const selectedChoice = selectedAttackDamageAbilityModifierChoice(
+    offeredChoice,
+    damageRoll.attackDamageAbilityModifierChoice,
+  );
+  if (
+    offeredChoice === undefined ||
+    selectedChoice === null ||
+    selectedChoice.selection !== "apply"
+  ) {
+    return 0;
+  }
+  return (
+    Number(offeredChoice.appliedDamageAbilityModifier) -
+    Number(offeredChoice.declinedDamageAbilityModifier)
+  );
+}
+
 function attackDamageDieFloorMinimum(
   attacker: BattleCreatureState | undefined,
   attack: SupportedAttackActionOption,
+  choice: BattleRolledDiceFill["attackDamageDieFloorChoice"],
 ): typeof ATTACK_DAMAGE_DIE_FLOOR_MINIMUM_RESULT | null {
-  if (
-    attacker?.origin.kind !== "character" ||
-    attack.kind !== "weapon" ||
-    attack.weapon.usage !== "melee" ||
-    !weaponHasTwoHandedOrVersatileProperty(attack.weapon)
-  ) {
-    return null;
-  }
-  const mainWeapon = attacker.origin.selectedLoadout.weapon;
-  if (
-    mainWeapon?.unitId !== attack.weapon.id ||
-    mainWeapon.grip !== "two_handed"
-  ) {
-    return null;
-  }
-  return attacker.origin.characterUnitRefs.some((unitRef) =>
-    unitRef.supportProfiles.includes(ATTACK_DAMAGE_DIE_FLOOR_SUPPORT_PROFILE),
-  )
-    ? ATTACK_DAMAGE_DIE_FLOOR_MINIMUM_RESULT
-    : null;
-}
-
-function weaponHasTwoHandedOrVersatileProperty(
-  weapon: CharacterWeaponAttackActionOption["weapon"],
-): boolean {
-  return (weapon.properties ?? []).some(
-    (property) =>
-      property.kind === "two_handed" || property.kind === "versatile",
+  const selectedChoice = selectedAttackDamageDieFloorChoice(
+    eligibleAttackDamageDieFloorUnitIdsForAttacker(attacker, attack),
+    choice,
   );
+  if (selectedChoice?.selection !== "apply") {
+    return null;
+  }
+  return ATTACK_DAMAGE_DIE_FLOOR_MINIMUM_RESULT;
 }
 
 function attackDamageDieResult(

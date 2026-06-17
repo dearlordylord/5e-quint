@@ -655,6 +655,14 @@ export function damageRollFillWithGroups(
     BattleFill,
     { readonly kind: "rolledDice" }
   >["weaponDamageDiceRollChoice"],
+  attackDamageDieFloorChoice?: Extract<
+    BattleFill,
+    { readonly kind: "rolledDice" }
+  >["attackDamageDieFloorChoice"],
+  attackDamageAbilityModifierChoice?: Extract<
+    BattleFill,
+    { readonly kind: "rolledDice" }
+  >["attackDamageAbilityModifierChoice"],
 ): Extract<BattleFill, { readonly kind: "rolledDice" }> {
   const [firstGroup, ...restGroups] = groups;
   if (firstGroup === undefined) {
@@ -669,6 +677,12 @@ export function damageRollFillWithGroups(
     ...(weaponDamageDiceRollChoice === undefined
       ? {}
       : { weaponDamageDiceRollChoice }),
+    ...(attackDamageDieFloorChoice === undefined
+      ? {}
+      : { attackDamageDieFloorChoice }),
+    ...(attackDamageAbilityModifierChoice === undefined
+      ? {}
+      : { attackDamageAbilityModifierChoice }),
     value: [
       rolledDiceGroup(firstGroup),
       ...restGroups.map((group) => rolledDiceGroup(group)),

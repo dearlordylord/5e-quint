@@ -30,6 +30,7 @@ import {
   canSpendUnarmedStrikeActionResource,
   spendAction,
 } from "@dnd/shared-algebras/action-economy-algebra";
+import type { AttackRollMode } from "@dnd/shared-algebras/runtime-hole-algebra";
 
 import { initiativeOrder } from "@dnd/shared-algebras/initiative-algebra";
 
@@ -288,6 +289,8 @@ import type {
   BattleResolutionInputForSubject,
   BattleResolutionResult,
   BattleRolledDiceFill,
+  BattleD20TestRolledD20s,
+  BattleSavingThrowOutcome,
   BattleSnapshot,
   BattleState,
   BattleTargetSpatialFact,
@@ -388,6 +391,16 @@ function validateD20TestNaturalOneRerollFills(
       continue;
     }
     if (fill.kind === "abilityCheck") {
+      const abilityCheckHole = abilityCheckHoleForFill({
+        resolutionInput: input,
+        options,
+        fillIndex,
+        fill,
+      });
+      const abilityCheckRollMode =
+        abilityCheckHole?.kind === "abilityCheck"
+          ? abilityCheckHole.rollMode
+          : undefined;
       const originalNaturalD20 =
         fill.value.naturalD20 === undefined
           ? undefined
@@ -395,27 +408,27 @@ function validateD20TestNaturalOneRerollFills(
       if (
         d20TestNaturalOneRerollRollDecisionRequired({
           actor,
+          rollMode: abilityCheckRollMode,
+          rolledD20s: fill.value.rolledD20s,
           originalNaturalD20,
           decision: fill.value.d20TestNaturalOneReroll,
         })
       ) {
-        const holeKind = abilityCheckHoleKindForFill({
-          resolutionInput: input,
-          options,
-          fillIndex,
-          fill,
-        });
         return {
           tag: "decisionRequired",
           fillIndex,
           holeId: fill.holeId,
-          holeKind,
+          holeKind: abilityCheckHole?.kind ?? "abilityCheck",
         };
       }
       const issue = d20TestNaturalOneRerollRollIssue({
         actor,
+        total: fill.value.total,
+        rollMode: abilityCheckRollMode,
+        rolledD20s: fill.value.rolledD20s,
         originalNaturalD20,
         decision: fill.value.d20TestNaturalOneReroll,
+        requiredRollMode: abilityCheckRollMode,
       });
       if (issue !== null) {
         return { tag: "invalid", message: issue };
@@ -423,8 +436,18 @@ function validateD20TestNaturalOneRerollFills(
       continue;
     }
     if (fill.kind === "savingThrowOutcome") {
+      const savingThrowHole = savingThrowOutcomeHoleForFill({
+        resolutionInput: input,
+        options,
+        fillIndex,
+        fill,
+      });
       for (const outcome of fill.value.outcomes) {
         const target = input.state.combatants.get(outcome.targetId);
+        const rollMode = savingThrowOutcomeRollModeForTarget(
+          savingThrowHole,
+          outcome.targetId,
+        );
         const originalNaturalD20 =
           outcome.naturalD20 === undefined
             ? undefined
@@ -432,6 +455,8 @@ function validateD20TestNaturalOneRerollFills(
         if (
           d20TestNaturalOneRerollOutcomeDecisionRequired({
             actor: target,
+            rollMode,
+            rolledD20s: outcome.rolledD20s,
             originalNaturalD20,
             decision: outcome.d20TestNaturalOneReroll,
             withoutRoll: outcome.withoutRoll,
@@ -446,6 +471,8 @@ function validateD20TestNaturalOneRerollFills(
         }
         const issue = d20TestNaturalOneRerollOutcomeIssue({
           actor: target,
+          rollMode,
+          rolledD20s: outcome.rolledD20s,
           originalNaturalD20,
           decision: outcome.d20TestNaturalOneReroll,
           withoutRoll: outcome.withoutRoll,
@@ -475,6 +502,8 @@ function validateD20TestNaturalOneRerollFills(
       if (
         d20TestNaturalOneRerollOutcomeDecisionRequired({
           actor: concentrationActor,
+          rollMode: concentrationHole?.rollMode,
+          rolledD20s: fill.value.rolledD20s,
           originalNaturalD20,
           decision: fill.value.d20TestNaturalOneReroll,
           withoutRoll: fill.value.withoutRoll,
@@ -489,6 +518,8 @@ function validateD20TestNaturalOneRerollFills(
       }
       const issue = d20TestNaturalOneRerollOutcomeIssue({
         actor: concentrationActor,
+        rollMode: concentrationHole?.rollMode,
+        rolledD20s: fill.value.rolledD20s,
         originalNaturalD20,
         decision: fill.value.d20TestNaturalOneReroll,
         withoutRoll: fill.value.withoutRoll,
@@ -566,20 +597,44 @@ type D20TestNaturalOneRerollAbilityCheckHole = Extract<
   { readonly kind: "abilityCheck" | "spellcastingAbilityCheck" }
 >;
 
-function abilityCheckHoleKindForFill(input: {
+function abilityCheckHoleForFill(input: {
   readonly resolutionInput: BattleResolutionInput;
   readonly options: ResolveBattleSubjectInternalOptions;
   readonly fillIndex: number;
   readonly fill: Extract<BattleFill, { readonly kind: "abilityCheck" }>;
-}): D20TestNaturalOneRerollAbilityCheckHole["kind"] {
-  return (
-    pendingHolesBeforeFill(input).find(
-      (hole): hole is D20TestNaturalOneRerollAbilityCheckHole =>
-        (hole.kind === "abilityCheck" ||
-          hole.kind === "spellcastingAbilityCheck") &&
-        hole.holeId === input.fill.holeId,
-    )?.kind ?? "abilityCheck"
+}): D20TestNaturalOneRerollAbilityCheckHole | undefined {
+  return pendingHolesBeforeFill(input).find(
+    (hole): hole is D20TestNaturalOneRerollAbilityCheckHole =>
+      (hole.kind === "abilityCheck" ||
+        hole.kind === "spellcastingAbilityCheck") &&
+      hole.holeId === input.fill.holeId,
   );
+}
+
+type D20TestNaturalOneRerollSavingThrowOutcomeHole = Extract<
+  BattleHole,
+  { readonly kind: "savingThrowOutcome" }
+>;
+
+function savingThrowOutcomeHoleForFill(input: {
+  readonly resolutionInput: BattleResolutionInput;
+  readonly options: ResolveBattleSubjectInternalOptions;
+  readonly fillIndex: number;
+  readonly fill: Extract<BattleFill, { readonly kind: "savingThrowOutcome" }>;
+}): D20TestNaturalOneRerollSavingThrowOutcomeHole | undefined {
+  return pendingHolesBeforeFill(input).find(
+    (hole): hole is D20TestNaturalOneRerollSavingThrowOutcomeHole =>
+      hole.kind === "savingThrowOutcome" && hole.holeId === input.fill.holeId,
+  );
+}
+
+function savingThrowOutcomeRollModeForTarget(
+  hole: D20TestNaturalOneRerollSavingThrowOutcomeHole | undefined,
+  targetId: BattleSavingThrowOutcome["targetId"],
+): AttackRollMode | undefined {
+  return hole?.targetRollModes.find(
+    (projection) => projection.targetId === targetId,
+  )?.rollMode;
 }
 
 function concentrationSavingThrowHoleForFill(input: {
@@ -4921,6 +4976,8 @@ export function resolveAttackDamageContinuationConcentration(input: {
   }
   const d20TestNaturalOneRerollIssue = d20TestNaturalOneRerollOutcomeIssue({
     actor: input.state.combatants.get(concentrationSave.combatantId),
+    rollMode: concentrationSave.rollMode,
+    rolledD20s: concentrationFill.value.value.rolledD20s,
     originalNaturalD20:
       concentrationFill.value.value.naturalD20 === undefined
         ? undefined
@@ -5019,6 +5076,7 @@ export function battleFillEquals(a: BattleFill, b: BattleFill): boolean {
     return (
       a.value.succeeded === b.value.succeeded &&
       a.value.naturalD20 === b.value.naturalD20 &&
+      rolledD20sEqual(a.value.rolledD20s, b.value.rolledD20s) &&
       a.value.withoutRoll === b.value.withoutRoll &&
       d20TestNaturalOneRerollOutcomeDecisionsEqual(
         a.value.d20TestNaturalOneReroll,
@@ -5040,7 +5098,7 @@ export function battleFillEquals(a: BattleFill, b: BattleFill): boolean {
 
 type ComparableAttackRollResult = Pick<
   BattleAttackRollResult,
-  "total" | "naturalD20" | "rollMode"
+  "total" | "naturalD20" | "rollMode" | "rolledD20s"
 > &
   Partial<
     Pick<
@@ -5060,6 +5118,7 @@ function attackRollResultsEqual(
     a.total === b.total &&
     a.naturalD20 === b.naturalD20 &&
     a.rollMode === b.rollMode &&
+    rolledD20sEqual(a.rolledD20s, b.rolledD20s) &&
     a.activatedOngoingFeatureUnitId === b.activatedOngoingFeatureUnitId &&
     a.missToHitReplacementUnitId === b.missToHitReplacementUnitId &&
     spellAttackRerollDecisionsEqual(a.spellAttackReroll, b.spellAttackReroll) &&
@@ -5080,9 +5139,10 @@ function spellAttackRerollDecisionsEqual(
   if (a.kind !== b.kind || a.effectKind !== b.effectKind) {
     return false;
   }
-  return a.kind === "decline" || b.kind === "decline"
-    ? a.kind === b.kind
-    : attackRollResultsEqual(a.replacement, b.replacement);
+  if (a.kind === "decline" || b.kind === "decline") {
+    return a.kind === b.kind;
+  }
+  return attackRollResultsEqual(a.replacement, b.replacement);
 }
 
 function d20TestNaturalOneRerollDecisionsEqual(
@@ -5095,9 +5155,19 @@ function d20TestNaturalOneRerollDecisionsEqual(
   if (a.kind !== b.kind || a.effectKind !== b.effectKind) {
     return false;
   }
-  return a.kind === "decline" || b.kind === "decline"
-    ? a.kind === b.kind
-    : attackRollResultsEqual(a.replacement, b.replacement);
+  if (a.kind === "decline" || b.kind === "decline") {
+    return a.kind === b.kind;
+  }
+  if (a.kind === "rerollRolledDie" || b.kind === "rerollRolledDie") {
+    return (
+      a.kind === "rerollRolledDie" &&
+      b.kind === "rerollRolledDie" &&
+      a.replacement.die === b.replacement.die &&
+      a.replacement.naturalD20 === b.replacement.naturalD20 &&
+      attackRollResultsEqual(a.replacement.result, b.replacement.result)
+    );
+  }
+  return attackRollResultsEqual(a.replacement, b.replacement);
 }
 
 function d20TestNaturalOneRerollOutcomeDecisionsEqual(
@@ -5116,10 +5186,23 @@ function d20TestNaturalOneRerollOutcomeDecisionsEqual(
   if (a.kind !== b.kind || a.effectKind !== b.effectKind) {
     return false;
   }
-  return a.kind === "decline" || b.kind === "decline"
-    ? a.kind === b.kind
-    : a.replacement.succeeded === b.replacement.succeeded &&
-        a.replacement.naturalD20 === b.replacement.naturalD20;
+  if (a.kind === "decline" || b.kind === "decline") {
+    return a.kind === b.kind;
+  }
+  if (a.kind === "rerollRolledDie" || b.kind === "rerollRolledDie") {
+    return (
+      a.kind === "rerollRolledDie" &&
+      b.kind === "rerollRolledDie" &&
+      a.replacement.die === b.replacement.die &&
+      a.replacement.naturalD20 === b.replacement.naturalD20 &&
+      a.replacement.result.succeeded === b.replacement.result.succeeded &&
+      a.replacement.result.naturalD20 === b.replacement.result.naturalD20
+    );
+  }
+  return (
+    a.replacement.succeeded === b.replacement.succeeded &&
+    a.replacement.naturalD20 === b.replacement.naturalD20
+  );
 }
 
 function d20TestNaturalOneRerollDieDecisionsEqual(
@@ -5141,6 +5224,18 @@ function d20TestNaturalOneRerollDieDecisionsEqual(
   return a.kind === "decline" || b.kind === "decline"
     ? a.kind === b.kind
     : a.replacement === b.replacement;
+}
+
+function rolledD20sEqual(
+  a: BattleD20TestRolledD20s | undefined,
+  b: BattleD20TestRolledD20s | undefined,
+): boolean {
+  if (a === undefined || b === undefined) {
+    return a === b;
+  }
+  return (
+    a.first === b.first && a.second === b.second && a.selected === b.selected
+  );
 }
 
 export function rolledDiceGroupsEqual(

@@ -1544,6 +1544,26 @@ function spellIdFromTargetHoleLabel(label: string | undefined): string {
   return "";
 }
 
+type TestD20RolledD20s = {
+  readonly first: number;
+  readonly second: number;
+  readonly selected: NonNullable<
+    Extract<BattleFill, { readonly kind: "attackRoll" }>["value"]["rolledD20s"]
+  >["selected"];
+};
+
+function testD20RolledD20s(
+  value: TestD20RolledD20s,
+): NonNullable<
+  Extract<BattleFill, { readonly kind: "attackRoll" }>["value"]["rolledD20s"]
+> {
+  return {
+    first: DieRollResult(value.first),
+    second: DieRollResult(value.second),
+    selected: value.selected,
+  };
+}
+
 export function abilityCheckFill(
   hole: BattleHole,
   value:
@@ -1551,6 +1571,7 @@ export function abilityCheckFill(
     | {
         readonly total: number;
         readonly naturalD20?: number;
+        readonly rolledD20s?: TestD20RolledD20s;
         readonly d20TestNaturalOneReroll?: Extract<
           BattleFill,
           { readonly kind: "abilityCheck" }
@@ -1572,6 +1593,9 @@ export function abilityCheckFill(
       ...(checkValue.naturalD20 === undefined
         ? {}
         : { naturalD20: DieRollResult(checkValue.naturalD20) }),
+      ...(checkValue.rolledD20s === undefined
+        ? {}
+        : { rolledD20s: testD20RolledD20s(checkValue.rolledD20s) }),
       ...(checkValue.d20TestNaturalOneReroll === undefined
         ? {}
         : { d20TestNaturalOneReroll: checkValue.d20TestNaturalOneReroll }),
@@ -1585,6 +1609,7 @@ export function attackRollFill(
     readonly total: number;
     readonly naturalD20: number;
     readonly rollMode?: AttackRollMode;
+    readonly rolledD20s?: TestD20RolledD20s;
     readonly activatedOngoingFeatureUnitId?: string;
     readonly spellAttackReroll?: Extract<
       BattleFill,
@@ -1606,6 +1631,9 @@ export function attackRollFill(
       total: value.total,
       naturalD20: DieRollResult(value.naturalD20),
       ...(value.rollMode === undefined ? {} : { rollMode: value.rollMode }),
+      ...(value.rolledD20s === undefined
+        ? {}
+        : { rolledD20s: testD20RolledD20s(value.rolledD20s) }),
       ...(value.activatedOngoingFeatureUnitId === undefined
         ? {}
         : {
@@ -1669,6 +1697,7 @@ export function concentrationSavingThrowFill(
         | {
             readonly succeeded: boolean;
             readonly naturalD20?: number;
+            readonly rolledD20s?: TestD20RolledD20s;
             readonly withoutRoll?: never;
             readonly d20TestNaturalOneReroll?: Extract<
               BattleFill,
@@ -1686,8 +1715,7 @@ export function concentrationSavingThrowFill(
   if (hole.kind !== "concentrationSavingThrow") {
     throw new Error("Expected concentrationSavingThrow hole.");
   }
-  const value =
-    typeof succeeded === "boolean" ? { succeeded } : succeeded;
+  const value = typeof succeeded === "boolean" ? { succeeded } : succeeded;
   if ("withoutRoll" in value && value.withoutRoll === true) {
     return {
       kind: "concentrationSavingThrow",
@@ -1706,12 +1734,13 @@ export function concentrationSavingThrowFill(
       ...(!("naturalD20" in value) || value.naturalD20 === undefined
         ? {}
         : { naturalD20: DieRollResult(value.naturalD20) }),
-      ...(
-        !("d20TestNaturalOneReroll" in value) ||
-        value.d20TestNaturalOneReroll === undefined
-          ? {}
-          : { d20TestNaturalOneReroll: value.d20TestNaturalOneReroll }
-      ),
+      ...(!("rolledD20s" in value) || value.rolledD20s === undefined
+        ? {}
+        : { rolledD20s: testD20RolledD20s(value.rolledD20s) }),
+      ...(!("d20TestNaturalOneReroll" in value) ||
+      value.d20TestNaturalOneReroll === undefined
+        ? {}
+        : { d20TestNaturalOneReroll: value.d20TestNaturalOneReroll }),
     },
   };
 }
@@ -1923,6 +1952,7 @@ export function savingThrowOutcomeFill(
     readonly targetId: CombatantId;
     readonly succeeded: boolean;
     readonly naturalD20?: number;
+    readonly rolledD20s?: TestD20RolledD20s;
     readonly withoutRoll?: true;
     readonly d20TestNaturalOneReroll?: Extract<
       BattleFill,
@@ -1949,18 +1979,17 @@ export function savingThrowOutcomeFill(
   };
 }
 
-function d20TestSavingThrowOutcomeValue(
-  outcome: {
-    readonly targetId: CombatantId;
-    readonly succeeded: boolean;
-    readonly naturalD20?: number;
-    readonly withoutRoll?: true;
-    readonly d20TestNaturalOneReroll?: Extract<
-      BattleFill,
-      { readonly kind: "savingThrowOutcome" }
-    >["value"]["outcomes"][number]["d20TestNaturalOneReroll"];
-  },
-): Extract<
+function d20TestSavingThrowOutcomeValue(outcome: {
+  readonly targetId: CombatantId;
+  readonly succeeded: boolean;
+  readonly naturalD20?: number;
+  readonly rolledD20s?: TestD20RolledD20s;
+  readonly withoutRoll?: true;
+  readonly d20TestNaturalOneReroll?: Extract<
+    BattleFill,
+    { readonly kind: "savingThrowOutcome" }
+  >["value"]["outcomes"][number]["d20TestNaturalOneReroll"];
+}): Extract<
   BattleFill,
   { readonly kind: "savingThrowOutcome" }
 >["value"]["outcomes"][number] {
@@ -1977,6 +2006,9 @@ function d20TestSavingThrowOutcomeValue(
     ...(outcome.naturalD20 === undefined
       ? {}
       : { naturalD20: DieRollResult(outcome.naturalD20) }),
+    ...(outcome.rolledD20s === undefined
+      ? {}
+      : { rolledD20s: testD20RolledD20s(outcome.rolledD20s) }),
     ...(outcome.d20TestNaturalOneReroll === undefined
       ? {}
       : { d20TestNaturalOneReroll: outcome.d20TestNaturalOneReroll }),
@@ -1986,14 +2018,27 @@ function d20TestSavingThrowOutcomeValue(
 export function damageRollFill(
   hole: BattleFillableHole,
   dieResult: number,
+  attackDamageAbilityModifierChoice?: Extract<
+    BattleFill,
+    { readonly kind: "rolledDice" }
+  >["attackDamageAbilityModifierChoice"],
 ): BattleFill {
-  return damageRollFillWithGroups(hole, [[dieResult]]);
+  return damageRollFillWithGroups(
+    hole,
+    [[dieResult]],
+    undefined,
+    attackDamageAbilityModifierChoice,
+  );
 }
 
 export function damageRollFillWithGroups(
   hole: BattleFillableHole,
   groups: readonly (readonly number[])[],
   selectedAttackDamageRiderUnitIds?: readonly string[],
+  attackDamageAbilityModifierChoice?: Extract<
+    BattleFill,
+    { readonly kind: "rolledDice" }
+  >["attackDamageAbilityModifierChoice"],
 ): BattleFill {
   if (hole.kind !== "rolledDice") {
     throw new Error("Expected rolledDice hole.");
@@ -2004,6 +2049,9 @@ export function damageRollFillWithGroups(
     ...(selectedAttackDamageRiderUnitIds === undefined
       ? {}
       : { selectedAttackDamageRiderUnitIds }),
+    ...(attackDamageAbilityModifierChoice === undefined
+      ? {}
+      : { attackDamageAbilityModifierChoice }),
     value: rolledDiceGroups(groups),
   };
 }

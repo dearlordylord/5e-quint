@@ -278,9 +278,10 @@ function validateMirrorImageDuplicateRoll(
   }
   if (
     fill.selectedAttackDamageRiderUnitIds !== undefined ||
-    fill.weaponDamageDiceRollChoice !== undefined
+    fill.weaponDamageDiceRollChoice !== undefined ||
+    fill.attackDamageDieFloorChoice !== undefined
   ) {
-    return "Mirror Image duplicate roll cannot select attack damage riders or weapon damage dice choices.";
+    return "Mirror Image duplicate roll cannot select attack damage riders, weapon damage dice choices, or attack damage die floor choices.";
   }
   const validation = validateRolledDiceFillForDiceExpr(fill, {
     dice: hole.mirrorImageDuplicateRoll.remainingDuplicates,

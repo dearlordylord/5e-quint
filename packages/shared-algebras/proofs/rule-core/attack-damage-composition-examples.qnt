@@ -62,49 +62,78 @@ module attackDamageCompositionExamples {
         lightPropertyExtraAttackDamageModifier(
           3,
           LightExtraAttackNoExistingDamageAbilityModifier,
-          false
+          false,
+          DeclineLightExtraAttackDamageAbilityModifier
         ) == 0
       ),
       assert(
         lightPropertyExtraAttackDamageModifier(
           0,
           LightExtraAttackNoExistingDamageAbilityModifier,
-          false
+          false,
+          DeclineLightExtraAttackDamageAbilityModifier
         ) == 0
       ),
       assert(
         lightPropertyExtraAttackDamageModifier(
           -1,
           LightExtraAttackNoExistingDamageAbilityModifier,
-          false
+          false,
+          DeclineLightExtraAttackDamageAbilityModifier
         ) == -1
       ),
       assert(
         lightPropertyExtraAttackDamageModifier(
           3,
           LightExtraAttackExistingDamageAbilityModifier(2),
-          false
+          false,
+          DeclineLightExtraAttackDamageAbilityModifier
         ) == 0
       ),
       assert(
         lightPropertyExtraAttackDamageModifier(
           3,
           LightExtraAttackExistingDamageAbilityModifier(-2),
-          false
+          false,
+          DeclineLightExtraAttackDamageAbilityModifier
         ) == -2
       ),
+      assert(
+        lightPropertyExtraAttackDamageAbilityModifierChoiceRequired(
+          3,
+          LightExtraAttackNoExistingDamageAbilityModifier,
+          true
+        )
+      ),
+      assert(not(
+        lightPropertyExtraAttackDamageAbilityModifierChoiceRequired(
+          3,
+          LightExtraAttackExistingDamageAbilityModifier(2),
+          true
+        )
+      )),
       assert(
         lightPropertyExtraAttackDamageModifier(
           3,
           LightExtraAttackNoExistingDamageAbilityModifier,
-          true
+          true,
+          ApplyLightExtraAttackDamageAbilityModifier
         ) == 3
       ),
       assert(
         lightPropertyExtraAttackDamageModifier(
           3,
+          LightExtraAttackNoExistingDamageAbilityModifier,
+          true,
+          DeclineLightExtraAttackDamageAbilityModifier
+        ) == 0
+      ),
+      assert(
+        lightPropertyExtraAttackDamageModifier(
+          3,
           LightExtraAttackExistingDamageAbilityModifier(2),
-          true
+          true,
+          DeclineLightExtraAttackDamageAbilityModifier
         ) == 2
       ),
       assert(
@@ -112,7 +141,8 @@ module attackDamageCompositionExamples {
           4,
           3,
           LightExtraAttackNoExistingDamageAbilityModifier,
-          false
+          false,
+          DeclineLightExtraAttackDamageAbilityModifier
         ) == 4
       ),
       assert(
@@ -120,7 +150,8 @@ module attackDamageCompositionExamples {
           4,
           -1,
           LightExtraAttackNoExistingDamageAbilityModifier,
-          false
+          false,
+          DeclineLightExtraAttackDamageAbilityModifier
         ) == 3
       ),
       assert(
@@ -128,7 +159,8 @@ module attackDamageCompositionExamples {
           4,
           3,
           LightExtraAttackExistingDamageAbilityModifier(2),
-          false
+          false,
+          DeclineLightExtraAttackDamageAbilityModifier
         ) == 4
       ),
       assert(
@@ -136,7 +168,8 @@ module attackDamageCompositionExamples {
           4,
           3,
           LightExtraAttackExistingDamageAbilityModifier(-2),
-          false
+          false,
+          DeclineLightExtraAttackDamageAbilityModifier
         ) == 2
       ),
       assert(
@@ -144,15 +177,26 @@ module attackDamageCompositionExamples {
           4,
           3,
           LightExtraAttackNoExistingDamageAbilityModifier,
-          true
+          true,
+          ApplyLightExtraAttackDamageAbilityModifier
         ) == 7
       ),
       assert(
         lightPropertyExtraAttackDamageAmount(
           4,
           3,
+          LightExtraAttackNoExistingDamageAbilityModifier,
+          true,
+          DeclineLightExtraAttackDamageAbilityModifier
+        ) == 4
+      ),
+      assert(
+        lightPropertyExtraAttackDamageAmount(
+          4,
+          3,
           LightExtraAttackExistingDamageAbilityModifier(2),
-          true
+          true,
+          DeclineLightExtraAttackDamageAbilityModifier
         ) == 6
       ),
     }

@@ -119,6 +119,25 @@ import type {
   SupportedAttackActionOption,
 } from "./battle-action-options.ts";
 import type {
+  AttackDamageDieFloorChoiceFill,
+  AttackDamageDieFloorChoiceUnitIds,
+} from "./battle-reducer/attack-damage-die-floor-choice.ts";
+export type {
+  AttackDamageDieFloorChoiceFill,
+  AttackDamageDieFloorChoiceSelection,
+  AttackDamageDieFloorChoiceUnitIds,
+} from "./battle-reducer/attack-damage-die-floor-choice.ts";
+import type {
+  AttackDamageAbilityModifierChoice,
+  AttackDamageAbilityModifierChoiceFill,
+} from "./battle-reducer/attack-damage-ability-modifier-choice.ts";
+export type {
+  AttackDamageAbilityModifierChoice,
+  AttackDamageAbilityModifierChoiceFill,
+  AttackDamageAbilityModifierChoiceSelection,
+  AttackDamageAbilityModifierChoiceUnitIds,
+} from "./battle-reducer/attack-damage-ability-modifier-choice.ts";
+import type {
   BattleDruidWildShapeKnownForm,
   BattlePositiveHpUnconscious,
   CharacterBattleD20Statistics,
@@ -4684,7 +4703,20 @@ export type BattleD20TestNaturalOneRerollOption = {
   readonly effectKind: typeof D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND;
   readonly label: string;
 };
+export const BATTLE_D20_TEST_ROLLED_DIE_KEYS = ["first", "second"] as const;
+export type BattleD20TestRolledDieKey =
+  (typeof BATTLE_D20_TEST_ROLLED_DIE_KEYS)[number];
+export type BattleD20TestRolledD20s = {
+  readonly first: DieRollResult;
+  readonly second: DieRollResult;
+  readonly selected: BattleD20TestRolledDieKey;
+};
 export type BattleD20TestRollReplacement = AttackRollResult;
+export type BattleD20TestRolledDieRollReplacement = {
+  readonly die: BattleD20TestRolledDieKey;
+  readonly naturalD20: DieRollResult;
+  readonly result: BattleD20TestRollReplacement;
+};
 export type BattleD20TestNaturalOneRerollDecision =
   | {
       readonly kind: "decline";
@@ -4694,10 +4726,20 @@ export type BattleD20TestNaturalOneRerollDecision =
       readonly kind: "reroll";
       readonly effectKind: typeof D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND;
       readonly replacement: BattleD20TestRollReplacement;
+    }
+  | {
+      readonly kind: "rerollRolledDie";
+      readonly effectKind: typeof D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND;
+      readonly replacement: BattleD20TestRolledDieRollReplacement;
     };
 export type BattleD20TestOutcomeReplacement = {
   readonly succeeded: boolean;
   readonly naturalD20: DieRollResult;
+};
+export type BattleD20TestRolledDieOutcomeReplacement = {
+  readonly die: BattleD20TestRolledDieKey;
+  readonly naturalD20: DieRollResult;
+  readonly result: BattleD20TestOutcomeReplacement;
 };
 export type BattleD20TestDieReplacement = DieRollResult;
 export type BattleD20TestNaturalOneRerollOutcomeDecision =
@@ -4709,6 +4751,11 @@ export type BattleD20TestNaturalOneRerollOutcomeDecision =
       readonly kind: "reroll";
       readonly effectKind: typeof D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND;
       readonly replacement: BattleD20TestOutcomeReplacement;
+    }
+  | {
+      readonly kind: "rerollRolledDie";
+      readonly effectKind: typeof D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND;
+      readonly replacement: BattleD20TestRolledDieOutcomeReplacement;
     };
 export type BattleD20TestNaturalOneRerollDieDecision =
   | {
@@ -4761,6 +4808,8 @@ export type BattleDamageRollHole = Extract<
   readonly spellWeaponDamageRiders?: readonly SpellAttackDamageComponent[];
   readonly spellMarkedDamageRiders?: readonly SpellMarkedDamageRider[];
   readonly weaponDamageDiceRollChoiceUnitIds?: readonly UnitRecord["id"][];
+  readonly attackDamageDieFloorChoiceUnitIds?: AttackDamageDieFloorChoiceUnitIds;
+  readonly attackDamageAbilityModifierChoice?: AttackDamageAbilityModifierChoice;
 };
 export type BattleSpellDamageRollHole = Extract<
   RuntimeHole,
@@ -5328,6 +5377,7 @@ export type BattleDancingLightsPlacementHole = {
 export type BattleD20TestRolledOutcome = {
   readonly succeeded: boolean;
   readonly naturalD20?: DieRollResult;
+  readonly rolledD20s?: BattleD20TestRolledD20s;
   readonly withoutRoll?: never;
   readonly d20TestNaturalOneReroll?: BattleD20TestNaturalOneRerollOutcomeDecision;
 };
@@ -5335,6 +5385,7 @@ export type BattleD20TestWithoutRollOutcome = {
   readonly succeeded: boolean;
   readonly withoutRoll: true;
   readonly naturalD20?: never;
+  readonly rolledD20s?: never;
   readonly d20TestNaturalOneReroll?: never;
 };
 export type BattleD20TestOutcome =
@@ -5826,6 +5877,7 @@ export type BattleHole =
   | BattleWildShapeEquipmentDispositionHole;
 
 export type BattleAttackRollResult = AttackRollResult & {
+  readonly rolledD20s?: BattleD20TestRolledD20s;
   readonly activatedOngoingFeatureUnitId?: UnitRecord["id"];
   readonly missToHitReplacementUnitId?: UnitRecord["id"];
   readonly spellAttackReroll?: BattleSpellAttackRerollDecision;
@@ -5846,6 +5898,8 @@ export type BattleRolledDiceFill = {
   readonly value: readonly [RolledDiceGroup, ...RolledDiceGroup[]];
   readonly selectedAttackDamageRiderUnitIds?: readonly UnitRecord["id"][];
   readonly weaponDamageDiceRollChoice?: WeaponDamageDiceRollChoiceFill;
+  readonly attackDamageDieFloorChoice?: AttackDamageDieFloorChoiceFill;
+  readonly attackDamageAbilityModifierChoice?: AttackDamageAbilityModifierChoiceFill;
   readonly spellDamageReroll?: BattleSpellDamageRerollDecision;
 };
 export const EMPOWERED_SPELL_REROLL_UNSUPPORTED_DAMAGE_ROLL_OWNER_MESSAGE =
@@ -5857,6 +5911,24 @@ export function spellDamageRerollUnsupportedIssue(
     ? null
     : EMPOWERED_SPELL_REROLL_UNSUPPORTED_DAMAGE_ROLL_OWNER_MESSAGE;
 }
+export const ATTACK_DAMAGE_DIE_FLOOR_CHOICE_UNSUPPORTED_DAMAGE_ROLL_OWNER_MESSAGE =
+  "Attack damage die floor choices are not available for this damage-roll owner.";
+export function attackDamageDieFloorChoiceUnsupportedIssue(
+  damageRoll: BattleRolledDiceFill,
+): string | null {
+  return damageRoll.attackDamageDieFloorChoice === undefined
+    ? null
+    : ATTACK_DAMAGE_DIE_FLOOR_CHOICE_UNSUPPORTED_DAMAGE_ROLL_OWNER_MESSAGE;
+}
+export const ATTACK_DAMAGE_ABILITY_MODIFIER_CHOICE_UNSUPPORTED_DAMAGE_ROLL_OWNER_MESSAGE =
+  "Attack damage ability modifier choices are not available for this damage-roll owner.";
+export function attackDamageAbilityModifierChoiceUnsupportedIssue(
+  damageRoll: BattleRolledDiceFill,
+): string | null {
+  return damageRoll.attackDamageAbilityModifierChoice === undefined
+    ? null
+    : ATTACK_DAMAGE_ABILITY_MODIFIER_CHOICE_UNSUPPORTED_DAMAGE_ROLL_OWNER_MESSAGE;
+}
 export function validateRolledDiceFillForDiceExpr(
   fill: BattleRolledDiceFill,
   expr: DiceExpr,
@@ -5864,6 +5936,16 @@ export function validateRolledDiceFillForDiceExpr(
   const spellDamageRerollIssue = spellDamageRerollUnsupportedIssue(fill);
   if (spellDamageRerollIssue !== null) {
     return spellDamageRerollIssue;
+  }
+  const attackDamageDieFloorChoiceIssue =
+    attackDamageDieFloorChoiceUnsupportedIssue(fill);
+  if (attackDamageDieFloorChoiceIssue !== null) {
+    return attackDamageDieFloorChoiceIssue;
+  }
+  const attackDamageAbilityModifierChoiceIssue =
+    attackDamageAbilityModifierChoiceUnsupportedIssue(fill);
+  if (attackDamageAbilityModifierChoiceIssue !== null) {
+    return attackDamageAbilityModifierChoiceIssue;
   }
   const validation = validateRolledDiceForDiceExpr(fill.value, expr);
   return validation === null ? null : validation.reason;
@@ -6173,6 +6255,7 @@ export type BattleFill =
       readonly value: {
         readonly total: number;
         readonly naturalD20?: DieRollResult;
+        readonly rolledD20s?: BattleD20TestRolledD20s;
         readonly d20TestNaturalOneReroll?: BattleD20TestNaturalOneRerollDecision;
       };
       readonly spatialFacts?: readonly BattleAbilityCheckSpatialFact[];

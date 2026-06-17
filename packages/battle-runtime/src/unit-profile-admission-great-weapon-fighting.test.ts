@@ -27,6 +27,7 @@ import {
 import type {
   BattleActiveEffect,
   BattleCreatureInit,
+  BattleFill,
   BattleState,
   BattleSubject,
   UnitRecord,
@@ -66,7 +67,7 @@ describe("L3-FOLLOWUP-GREAT-WEAPON-FIGHTING-RUNTIME deterministic profile slice"
     );
   });
 
-  test("two-handed Melee weapon attacks floor 1s and 2s before target resistance", () => {
+  test("two-handed Melee weapon attacks apply the selected floor before target resistance", () => {
     const attack = zeroAbilityWeaponAttack("weapon_greataxe");
     const state = withTargetSlashingResistance(
       greatWeaponFightingBattle({
@@ -79,6 +80,7 @@ describe("L3-FOLLOWUP-GREAT-WEAPON-FIGHTING-RUNTIME deterministic profile slice"
       state,
       attackName: "Greataxe",
       damageGroups: [[1]],
+      attackDamageDieFloorSelection: "apply",
     });
 
     expect(resolved).toMatchObject({
@@ -104,6 +106,7 @@ describe("L3-FOLLOWUP-GREAT-WEAPON-FIGHTING-RUNTIME deterministic profile slice"
         state,
         attackName: "Greatsword",
         damageGroups: [[1, 2]],
+        attackDamageDieFloorSelection: "apply",
       }),
     ).toMatchObject({
       tag: "resolved",
@@ -111,6 +114,31 @@ describe("L3-FOLLOWUP-GREAT-WEAPON-FIGHTING-RUNTIME deterministic profile slice"
         combatants: [
           { combatantId: spellCasterId },
           { combatantId: spellTargetId, hp: 6 },
+        ],
+      },
+    });
+  });
+
+  test("qualifying weapon attacks can decline the attack damage die floor", () => {
+    const attack = zeroAbilityWeaponAttack("weapon_greatsword");
+    const state = greatWeaponFightingBattle({
+      attack,
+      selectedLoadout: mainWeaponLoadout("weapon_greatsword", "two_handed"),
+    });
+
+    expect(
+      resolveWeaponHit({
+        state,
+        attackName: "Greatsword",
+        damageGroups: [[1, 2]],
+        attackDamageDieFloorSelection: "decline",
+      }),
+    ).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        combatants: [
+          { combatantId: spellCasterId },
+          { combatantId: spellTargetId, hp: 9 },
         ],
       },
     });
@@ -124,7 +152,12 @@ describe("L3-FOLLOWUP-GREAT-WEAPON-FIGHTING-RUNTIME deterministic profile slice"
     });
 
     expect(
-      resolveWeaponHit({ state, attackName: "Longsword", damageGroups: [[1]] }),
+      resolveWeaponHit({
+        state,
+        attackName: "Longsword",
+        damageGroups: [[1]],
+        attackDamageDieFloorSelection: "apply",
+      }),
     ).toMatchObject({
       tag: "resolved",
       snapshot: {
@@ -133,6 +166,27 @@ describe("L3-FOLLOWUP-GREAT-WEAPON-FIGHTING-RUNTIME deterministic profile slice"
           { combatantId: spellTargetId, hp: 9 },
         ],
       },
+    });
+  });
+
+  test("qualifying attacks require an explicit attack damage die floor choice", () => {
+    const attack = zeroAbilityWeaponAttack("weapon_greataxe");
+    const state = greatWeaponFightingBattle({
+      attack,
+      selectedLoadout: mainWeaponLoadout("weapon_greataxe", "two_handed"),
+    });
+
+    expect(
+      resolveWeaponHit({
+        state,
+        attackName: "Greataxe",
+        damageGroups: [[1]],
+        expectsAttackDamageDieFloorChoice: true,
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+      message: "Attack damage die floor choice is required for this attack.",
     });
   });
 
@@ -270,6 +324,13 @@ function resolveWeaponHit(input: {
   readonly state: BattleState;
   readonly attackName: string;
   readonly damageGroups: readonly (readonly number[])[];
+  readonly expectsAttackDamageDieFloorChoice?: true;
+  readonly attackDamageDieFloorSelection?: NonNullable<
+    Extract<
+      BattleFill,
+      { readonly kind: "rolledDice" }
+    >["attackDamageDieFloorChoice"]
+  >["selection"];
 }) {
   const subject = weaponAttackSubject(input.attackName);
   const target = requireResultHole(
@@ -297,13 +358,34 @@ function resolveWeaponHit(input: {
     }),
     "rolledDice",
   );
+  if (
+    input.expectsAttackDamageDieFloorChoice === true ||
+    input.attackDamageDieFloorSelection !== undefined
+  ) {
+    expect(damage).toMatchObject({
+      attackDamageDieFloorChoiceUnitIds: [greatWeaponFightingUnitId],
+    });
+  } else {
+    expect(damage).not.toHaveProperty("attackDamageDieFloorChoiceUnitIds");
+  }
   return resolveBattleSubject({
     state: input.state,
     subject,
     fills: [
       attackTargetFill(target, spellCasterId, spellTargetId, input.attackName),
       attackRollFill(roll, { total: 15, naturalD20: 10 }),
-      damageRollFillWithGroups(damage, input.damageGroups),
+      damageRollFillWithGroups(
+        damage,
+        input.damageGroups,
+        undefined,
+        undefined,
+        input.attackDamageDieFloorSelection === undefined
+          ? undefined
+          : {
+              unitId: greatWeaponFightingUnitId,
+              selection: input.attackDamageDieFloorSelection,
+            },
+      ),
     ],
   });
 }

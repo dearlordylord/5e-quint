@@ -76,6 +76,7 @@ import {
   attackActionOptionName,
   attackPotentialDamageTypes,
   eligibleAttackDamageRiders,
+  eligibleAttackDamageDieFloorUnitIds,
   eligibleWeaponDamageDiceRollChoiceUnitIds,
   selectedAttackDamageRiders,
   selectedWeaponDamageDiceRollChoice,
@@ -185,6 +186,8 @@ export function resolveOpportunityAttackCommand(
     d20TestNaturalOneRerollRollDecisionRequired({
       actor: reactor,
       originalNaturalD20: Number(fillSet.attackRoll.naturalD20),
+      rollMode: fillSet.attackRoll.rollMode,
+      rolledD20s: fillSet.attackRoll.rolledD20s,
       decision: fillSet.attackRoll.d20TestNaturalOneReroll,
     })
   ) {
@@ -196,7 +199,10 @@ export function resolveOpportunityAttackCommand(
   }
   const d20TestNaturalOneRerollIssue = d20TestNaturalOneRerollRollIssue({
     actor: reactor,
+    total: fillSet.attackRoll.total,
     originalNaturalD20: Number(fillSet.attackRoll.naturalD20),
+    rollMode: fillSet.attackRoll.rollMode,
+    rolledD20s: fillSet.attackRoll.rolledD20s,
     decision: fillSet.attackRoll.d20TestNaturalOneReroll,
     requiredRollMode,
   });
@@ -245,6 +251,13 @@ export function resolveOpportunityAttackCommand(
     : [];
   const eligibleDamageDiceChoiceUnitIds = hit
     ? eligibleWeaponDamageDiceRollChoiceUnitIds(
+        attackRolledState,
+        subject.reactorId,
+        attack,
+      )
+    : [];
+  const eligibleDamageDieFloorChoiceUnitIds = hit
+    ? eligibleAttackDamageDieFloorUnitIds(
         attackRolledState,
         subject.reactorId,
         attack,
@@ -563,6 +576,7 @@ export function resolveOpportunityAttackCommand(
           attack,
         ),
         eligibleDamageDiceChoiceUnitIds,
+        eligibleDamageDieFloorChoiceUnitIds,
       ),
     ]);
   }
@@ -583,6 +597,7 @@ export function resolveOpportunityAttackCommand(
       attack,
     ),
     eligibleDamageDiceChoiceUnitIds,
+    eligibleDamageDieFloorChoiceUnitIds,
   );
   if (damageValidation !== null) {
     return invalidResult(input.state, "invalidFill", damageValidation);

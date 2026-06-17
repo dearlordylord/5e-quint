@@ -39,11 +39,14 @@ import {
   MAGICAL_CUNNING_REST_FEATURE_TAG,
   SPELL_RECIPIENT_REST_LOCKOUT_TAG,
   UNCANNY_METABOLISM_REST_FEATURE_TAG,
+  CHARACTER_SHEET_HEROIC_INSPIRATION_AVAILABLE,
+  CHARACTER_SHEET_NO_HEROIC_INSPIRATION,
   characterSheetId,
   characterSheetIssue,
   type CharacterSheet,
   type CharacterSheetBookOfShadowsPresence,
   type CharacterSheetCondition,
+  type CharacterSheetHeroicInspiration,
   type CharacterSheetInput,
   type CharacterSheetIssue,
   type CharacterSheetRestFeatureUse,
@@ -88,6 +91,10 @@ function createCharacterSheet(
   const resourceExpenditures = resourceExpendituresFromInput(input);
   if (Either.isLeft(resourceExpenditures)) {
     return Either.left(resourceExpenditures.left);
+  }
+  const heroicInspiration = heroicInspirationFromInput(input);
+  if (Either.isLeft(heroicInspiration)) {
+    return Either.left(heroicInspiration.left);
   }
   const companion = companionFromInput(input.companion);
   if (Either.isLeft(companion)) {
@@ -139,6 +146,7 @@ function createCharacterSheet(
       spentHitDice: spentHitDice.right,
       restFeatureUses: restFeatureUses.right,
       resourceExpenditures: resourceExpenditures.right,
+      heroicInspiration: heroicInspiration.right,
       companion: companion.right,
       ...(druidWildShapeKnownForms.right === undefined
         ? {}
@@ -189,6 +197,7 @@ function createCharacterSheet(
     spentHitDice: spentHitDice.right,
     restFeatureUses: restFeatureUses.right,
     resourceExpenditures: resourceExpenditures.right,
+    heroicInspiration: heroicInspiration.right,
     companion: companion.right,
     bookOfShadowsPresence: bookOfShadowsPresence.right,
     ...(druidWildShapeKnownForms.right === undefined
@@ -264,6 +273,12 @@ export function parseCharacterSheet(
   if (Either.isLeft(resourceExpenditures)) {
     return Either.left(resourceExpenditures.left);
   }
+  const heroicInspiration = parseStoredHeroicInspiration(
+    value.heroicInspiration,
+  );
+  if (Either.isLeft(heroicInspiration)) {
+    return Either.left(heroicInspiration.left);
+  }
   const companion = parseStoredCharacterSheetCompanion(value.companion);
   if (Either.isLeft(companion)) return Either.left(companion.left);
   const spellSlots = parseStoredSpellSlots(build.right, unitLibrary, value);
@@ -310,6 +325,7 @@ export function parseCharacterSheet(
       spentHitDice: spentHitDice.right,
       restFeatureUses: restFeatureUses.right,
       resourceExpenditures: resourceExpenditures.right,
+      heroicInspiration: heroicInspiration.right,
       companion: companion.right,
       ...(druidWildShapeKnownForms.right === undefined
         ? {}
@@ -322,6 +338,35 @@ export function parseCharacterSheet(
         : { druidCircleLand: druidCircleLand.right }),
     },
     spellSlots.right,
+  );
+}
+
+function heroicInspirationFromInput(
+  input: Pick<CharacterSheetInput, "heroicInspiration">,
+): Either.Either<CharacterSheetHeroicInspiration, CharacterSheetIssue> {
+  const state = input.heroicInspiration ?? CHARACTER_SHEET_NO_HEROIC_INSPIRATION;
+  return state.tag === CHARACTER_SHEET_NO_HEROIC_INSPIRATION.tag ||
+    state.tag === CHARACTER_SHEET_HEROIC_INSPIRATION_AVAILABLE.tag
+    ? Either.right(state)
+    : characterSheetIssue("Expected Character Sheet Heroic Inspiration state.");
+}
+
+function parseStoredHeroicInspiration(
+  value: unknown,
+): Either.Either<CharacterSheetHeroicInspiration, CharacterSheetIssue> {
+  if (!isRecord(value)) {
+    return characterSheetIssue(
+      "Character Sheet requires Heroic Inspiration state.",
+    );
+  }
+  if (value.tag === CHARACTER_SHEET_NO_HEROIC_INSPIRATION.tag) {
+    return Either.right(CHARACTER_SHEET_NO_HEROIC_INSPIRATION);
+  }
+  if (value.tag === CHARACTER_SHEET_HEROIC_INSPIRATION_AVAILABLE.tag) {
+    return Either.right(CHARACTER_SHEET_HEROIC_INSPIRATION_AVAILABLE);
+  }
+  return characterSheetIssue(
+    "Expected Character Sheet Heroic Inspiration state.",
   );
 }
 
