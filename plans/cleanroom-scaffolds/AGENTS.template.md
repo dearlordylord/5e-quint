@@ -119,10 +119,15 @@ Every implementation task must update:
   evidence for every in-scope branch exercised by the task;
 - `tasks/REVIEW_LOOP.json` and `tasks/DECIDER_DECISION.json` — reviewer-loop
   convergence and deterministic gate decision when a task is accepted;
+- `tasks/history/<taskId>/*.json` — immutable copies of the accepted task's
+  start, engine-depth, state-owner, review-loop, and decider artifacts;
+- `tasks/RUN_LEDGER.json` — machine-readable append-only run ledger with task
+  ids, selected drivers, artifact hashes, target replay evidence refs, command
+  results, manifest source commit SHA, and source branch inventory SHA;
 - `tasks/VALIDATION_REPORT.md` — manifest source commit SHA, source branch
-  inventory hash, allowed inputs used, behavior implemented, generated branch
-  coverage table, verification results, seeds or relevant reproduction data for
-  failures, and remaining gaps;
+  inventory hash, run-ledger citation, allowed inputs used, behavior
+  implemented, generated branch coverage table, verification results, seeds or
+  relevant reproduction data for failures, and remaining gaps;
 - `tasks/BLOCKERS.md` — only when an allowed input is insufficient or a target
   implementation blocker remains; classify each blocker as source QNT/corpus or
   target implementation.
@@ -141,14 +146,15 @@ Each iteration:
 
 1. Pick the next selected-assignment driver/branch set that is not yet
    conformant per `tasks/ACTIVE_WORK.json`, `tasks/LEVEL_1_2_SCOPE.md`, source
-   branch inventory, and `tasks/VALIDATION_REPORT.md`.
+   branch inventory, and `tasks/RUN_LEDGER.json`.
 2. Implement it in `{{enginePath}}`, deriving the rule from the RAW/QNT/domain
    inputs and guidance pack.
 3. Make every in-scope branch conform through {{quintBindingName}} under the
    target test command.
-4. Record harness-generated target replay evidence and update the validation
-   report, or record a blocker if the allowed corpus or target implementation
-   cannot satisfy the branch.
+4. Record harness-generated target replay evidence, copy accepted rolling
+   artifacts into `tasks/history/<taskId>/`, append `tasks/RUN_LEDGER.json`,
+   and update the validation report from the ledger; or record a blocker if
+   the allowed corpus or target implementation cannot satisfy the branch.
 
 After each iteration, return to step 1 and continue until the selected
 assignment has no eligible incomplete branch sets left or a repo-level blocker

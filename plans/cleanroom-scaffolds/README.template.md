@@ -22,7 +22,7 @@ Target profile: `{{targetProfileId}}`. Target package/tooling:
   after the corpus and scaffold files have been copied here.
 - `{{enginePath}}` — target implementation and its tests.
 - `tasks/` — active work assignment, task specs, `VALIDATION_REPORT.md`,
-  `BLOCKERS.md`, and generated target replay evidence.
+  `RUN_LEDGER.json`, `BLOCKERS.md`, and generated target replay evidence.
 - `scripts/` — copied harness validators; run these from inside the cleanroom
   repo only.
 
@@ -63,6 +63,9 @@ Every accepted task records:
 - `tasks/REVIEW_LOOP.json`
 - `tasks/DECIDER_DECISION.json`
 - `tasks/target-replay-evidence/*.json`
+- `tasks/history/<taskId>/*.json`
+- `tasks/RUN_LEDGER.json`
 
-The validation report is a human-readable ledger. These JSON artifacts are the
-acceptance contract.
+`tasks/RUN_LEDGER.json` is the machine-readable run ledger. The validation
+report is the human-readable view generated from it. These JSON artifacts are
+the acceptance contract.

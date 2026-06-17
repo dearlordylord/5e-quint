@@ -76,6 +76,19 @@ const harnessWitnessProtocolNames = [
   "harnessTestPath",
 ];
 
+const validatorFiles = [
+  "scripts/check-cleanroom-harness.cjs",
+  "scripts/cleanroom-branch-coverage-check.cjs",
+];
+
+const historicalArtifacts = {
+  startGate: "START_GATE.json",
+  engineDepth: "ENGINE_DEPTH_MANIFEST.json",
+  stateOwnerManifest: "STATE_OWNER_MANIFEST.json",
+  reviewLoop: "REVIEW_LOOP.json",
+  deciderDecision: "DECIDER_DECISION.json",
+};
+
 const skippedSourceDirs = new Set([
   ".git",
   "node_modules",
@@ -120,6 +133,22 @@ function repoPath(rootPath, filePath) {
 
 function toPosix(filePath) {
   return filePath.split(path.sep).join("/");
+}
+
+function sourceRepoRoot() {
+  try {
+    return git(path.resolve(__dirname, ".."), ["rev-parse", "--show-toplevel"]);
+  } catch (_error) {
+    return undefined;
+  }
+}
+
+function gitTextAtCommit(repoRoot, commitSha, relativePath) {
+  return execFileSync(
+    "git",
+    ["-C", repoRoot, "show", `${commitSha}:${relativePath}`],
+    { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] },
+  );
 }
 
 function listFiles(rootPath, acceptFile) {
@@ -251,7 +280,15 @@ function readCleanroomManifest(rootPath, issues) {
     issues.push("cleanroom-input/MANIFEST.md must record a full Source commit SHA.");
   }
   const fileHashes = new Map();
+  const validatorHashes = new Map();
   for (const [lineIndex, line] of manifest.split("\n").entries()) {
+    const validatorRow = line.match(
+      /^\|\s*`(scripts\/[^`]+)`\s*\|\s*`([0-9a-f]{64})`\s*\|$/i,
+    );
+    if (validatorRow !== null) {
+      validatorHashes.set(validatorRow[1], validatorRow[2].toLowerCase());
+      continue;
+    }
     const row = line.match(
       /^\|\s*`([^`]+)`\s*\|\s*`([0-9a-f]{64})`\s*\|\s*`([^`]*)`\s*\|/i,
     );
@@ -285,6 +322,7 @@ function readCleanroomManifest(rootPath, issues) {
   return {
     sourceCommitSha: match?.[1],
     fileHashes,
+    validatorHashes,
   };
 }
 
@@ -340,6 +378,135 @@ function validateCleanroomInputIntegrity({
       );
     }
   }
+}
+
+function readValidatorPatch(rootPath) {
+  return readJsonIfExists(path.join(rootPath, "tasks/VALIDATOR_PATCH.json"));
+}
+
+function validatorPatchEntry(patch, relativePath) {
+  if (!isRecord(patch) || !Array.isArray(patch.files)) return undefined;
+  return patch.files.find(
+    (entry) => isRecord(entry) && entry.path === relativePath,
+  );
+}
+
+function validateValidatorPatchEntry({
+  patch,
+  relativePath,
+  sourceCommitSha,
+  baseSha,
+  targetSha,
+  issues,
+}) {
+  const entry = validatorPatchEntry(patch, relativePath);
+  if (entry === undefined) {
+    issues.push(
+      `${relativePath} differs from the manifest source checker but tasks/VALIDATOR_PATCH.json has no patch record for it.`,
+    );
+    return false;
+  }
+  const context = `tasks/VALIDATOR_PATCH.json files[path=${relativePath}]`;
+  if (patch.schemaVersion !== 1) {
+    issues.push("tasks/VALIDATOR_PATCH.json schemaVersion must be 1.");
+  }
+  if (patch.sourceCommitSha !== sourceCommitSha) {
+    issues.push("tasks/VALIDATOR_PATCH.json sourceCommitSha must match cleanroom-input/MANIFEST.md.");
+  }
+  validateString(patch.patchId, "tasks/VALIDATOR_PATCH.json patchId", issues);
+  validateString(patch.rationale, "tasks/VALIDATOR_PATCH.json rationale", issues);
+  if (entry.baseSha256 !== baseSha) {
+    issues.push(`${context}.baseSha256 must match the source commit checker hash ${baseSha}.`);
+  }
+  if (entry.patchedSha256 !== targetSha) {
+    issues.push(`${context}.patchedSha256 must match target-local ${relativePath} hash ${targetSha}.`);
+  }
+  return (
+    patch.schemaVersion === 1 &&
+    patch.sourceCommitSha === sourceCommitSha &&
+    typeof patch.patchId === "string" &&
+    patch.patchId.trim() !== "" &&
+    typeof patch.rationale === "string" &&
+    patch.rationale.trim() !== "" &&
+    entry.baseSha256 === baseSha &&
+    entry.patchedSha256 === targetSha
+  );
+}
+
+function validatorProvenance({ taskRoot, cleanroomManifest, issues }) {
+  const sourceCommitSha = cleanroomManifest?.sourceCommitSha;
+  if (typeof sourceCommitSha !== "string") {
+    return { shouldUseCurrentChecker: true };
+  }
+  const repoRoot = sourceRepoRoot();
+  const patch = readValidatorPatch(taskRoot);
+  const sourceHashes = new Map();
+  const targetHashes = new Map();
+  let canResolveSource = repoRoot !== undefined;
+  for (const relativePath of validatorFiles) {
+    const targetPath = path.join(taskRoot, relativePath);
+    if (!fs.existsSync(targetPath)) {
+      issues.push(`${relativePath} is missing from the cleanroom target.`);
+      continue;
+    }
+    const targetSha = sha256File(targetPath);
+    targetHashes.set(relativePath, targetSha);
+    const manifestSha = cleanroomManifest.validatorHashes.get(relativePath);
+    if (manifestSha !== undefined && manifestSha !== targetSha) {
+      issues.push(
+        `cleanroom-input/MANIFEST.md validator hash for ${relativePath} is stale: expected ${manifestSha}, got ${targetSha}.`,
+      );
+    }
+    if (manifestSha === undefined) {
+      issues.push(
+        `cleanroom-input/MANIFEST.md must record validator hash for ${relativePath}.`,
+      );
+    }
+    if (repoRoot === undefined) continue;
+    try {
+      const sourceText = gitTextAtCommit(repoRoot, sourceCommitSha, relativePath);
+      const sourceSha = sha256Text(sourceText);
+      sourceHashes.set(relativePath, sourceSha);
+      if (manifestSha !== undefined && manifestSha !== sourceSha) {
+        const approved = validateValidatorPatchEntry({
+          patch,
+          relativePath,
+          sourceCommitSha,
+          baseSha: sourceSha,
+          targetSha,
+          issues,
+        });
+        if (!approved) {
+          issues.push(
+            `cleanroom-input/MANIFEST.md validator hash for ${relativePath} must match source commit ${sourceCommitSha} unless tasks/VALIDATOR_PATCH.json approves the patch.`,
+          );
+        }
+      }
+      if (targetSha !== sourceSha) {
+        validateValidatorPatchEntry({
+          patch,
+          relativePath,
+          sourceCommitSha,
+          baseSha: sourceSha,
+          targetSha,
+          issues,
+        });
+      }
+    } catch (_error) {
+      canResolveSource = false;
+    }
+  }
+  return {
+    shouldUseCurrentChecker:
+      !canResolveSource ||
+      sourceHashes.get("scripts/check-cleanroom-harness.cjs") ===
+        sha256File(__filename) ||
+      validatorPatchEntry(patch, "scripts/check-cleanroom-harness.cjs") !==
+        undefined,
+    sourceHashes,
+    targetHashes,
+    sourceRepoRoot: repoRoot,
+  };
 }
 
 function selectedInventory(inventory, selectedDrivers) {
@@ -557,6 +724,8 @@ function validateEvidenceDocs({
   selected,
   declaredEvidencePaths,
   expectedCleanroomManifestSourceCommitSha,
+  evidencePaths,
+  enforceNoExtraEvidence = true,
   issues,
 }) {
   const expectedTargetProfileSha256 = targetProfileSha256(profile);
@@ -566,7 +735,10 @@ function validateEvidenceDocs({
   );
   const declared = declaredEvidencePaths ?? new Set();
   const actualEvidencePaths = new Set(
-    evidenceFiles.map((filePath) => repoPath(rootPath, filePath)),
+    (evidencePaths === undefined
+      ? evidenceFiles.map((filePath) => repoPath(rootPath, filePath))
+      : evidencePaths
+    ),
   );
   const inventorySha = sha256Text(stableStringify(inventory));
   const selectedObligations = requiredSelectedObligations(selected);
@@ -577,9 +749,11 @@ function validateEvidenceDocs({
     issues.push("tasks/target-replay-evidence has no harness-generated evidence files.");
   }
 
-  for (const evidencePath of actualEvidencePaths) {
-    if (!declared.has(evidencePath)) {
-      issues.push(`${evidencePath} is not declared by tasks/ENGINE_DEPTH_MANIFEST.json.`);
+  if (enforceNoExtraEvidence) {
+    for (const evidencePath of actualEvidencePaths) {
+      if (!declared.has(evidencePath)) {
+        issues.push(`${evidencePath} is not declared by tasks/ENGINE_DEPTH_MANIFEST.json.`);
+      }
     }
   }
   for (const evidencePath of declared) {
@@ -591,6 +765,7 @@ function validateEvidenceDocs({
   const runs = [];
   for (const filePath of evidenceFiles) {
     const context = repoPath(rootPath, filePath);
+    if (!actualEvidencePaths.has(context)) continue;
     if (!declared.has(context)) continue;
     const evidence = readJson(filePath);
     if (!isRecord(evidence)) {
@@ -661,6 +836,7 @@ function validateEvidenceDocs({
   const checkedTargetStateFields = new Set();
   for (const filePath of evidenceFiles) {
     const context = repoPath(rootPath, filePath);
+    if (!actualEvidencePaths.has(context)) continue;
     if (!declared.has(context)) continue;
     const evidence = readJson(filePath);
     if (!Array.isArray(evidence.runs)) continue;
@@ -704,6 +880,350 @@ function validateEvidenceDocs({
 
 function targetReplayEvidenceRef(context, run) {
   return `${context}#${run.traceId}#${run.branchFamily}:${run.branchAction}`;
+}
+
+function artifactPathForTask(taskId, fileName) {
+  return `tasks/history/${taskId}/${fileName}`;
+}
+
+function validateArtifactRef({ rootPath, artifact, context, issues }) {
+  if (!isRecord(artifact)) {
+    issues.push(`${context} must be an object.`);
+    return undefined;
+  }
+  validateString(artifact.path, `${context}.path`, issues);
+  validateString(artifact.sha256, `${context}.sha256`, issues);
+  if (
+    typeof artifact.sha256 === "string" &&
+    !/^[0-9a-f]{64}$/i.test(artifact.sha256)
+  ) {
+    issues.push(`${context}.sha256 must be a sha256 hex digest.`);
+  }
+  if (typeof artifact.path !== "string" || !isSafeRelativePath(artifact.path)) {
+    issues.push(`${context}.path must be relative without parent segments.`);
+    return undefined;
+  }
+  const filePath = path.join(rootPath, artifact.path);
+  if (!fs.existsSync(filePath)) {
+    issues.push(`${context}.path references missing ${artifact.path}.`);
+    return undefined;
+  }
+  const actualSha = sha256File(filePath);
+  if (artifact.sha256 !== actualSha) {
+    issues.push(`${context}.sha256 is stale for ${artifact.path}: expected ${artifact.sha256}, got ${actualSha}.`);
+  }
+  return filePath;
+}
+
+function evidenceRefsFromSummary(summary) {
+  return new Set(
+    Array.from(summary.coveredEvidenceRefsByObligation.values()).flatMap((refs) =>
+      Array.from(refs),
+    ),
+  );
+}
+
+function validateLedgerEntry({
+  rootPath,
+  entry,
+  entryIndex,
+  inventory,
+  inventorySha,
+  cleanroomManifest,
+  activeAssignments,
+  profile,
+  issues,
+}) {
+  const context = `tasks/RUN_LEDGER.json entries[${entryIndex}]`;
+  if (!isRecord(entry)) {
+    issues.push(`${context} must be an object.`);
+    return undefined;
+  }
+  validateString(entry.taskId, `${context}.taskId`, issues);
+  validateString(entry.assignmentId, `${context}.assignmentId`, issues);
+  validateString(entry.laneId, `${context}.laneId`, issues);
+  validateStringArray(entry.selectedDrivers, `${context}.selectedDrivers`, issues);
+  if (entry.manifestSourceCommitSha !== cleanroomManifest?.sourceCommitSha) {
+    issues.push(`${context}.manifestSourceCommitSha must match cleanroom-input/MANIFEST.md.`);
+  }
+  if (entry.sourceBranchInventorySha256 !== inventorySha) {
+    issues.push(`${context}.sourceBranchInventorySha256 must match cleanroom-input branch inventory hash ${inventorySha}.`);
+  }
+  if (!Array.isArray(entry.commandResults) || entry.commandResults.length === 0) {
+    issues.push(`${context}.commandResults must be a non-empty array.`);
+  } else {
+    for (const [commandIndex, commandResult] of entry.commandResults.entries()) {
+      const commandContext = `${context}.commandResults[${commandIndex}]`;
+      if (!isRecord(commandResult)) {
+        issues.push(`${commandContext} must be an object.`);
+        continue;
+      }
+      validateString(commandResult.command, `${commandContext}.command`, issues);
+      if (commandResult.status !== "pass") {
+        issues.push(`${commandContext}.status must be pass.`);
+      }
+    }
+  }
+  if (!isRecord(entry.artifacts)) {
+    issues.push(`${context}.artifacts must be an object.`);
+    return undefined;
+  }
+
+  const artifactPaths = {};
+  for (const [artifactKey, fileName] of Object.entries(historicalArtifacts)) {
+    const artifactContext = `${context}.artifacts.${artifactKey}`;
+    const artifact = entry.artifacts[artifactKey];
+    const expectedPath =
+      typeof entry.taskId === "string"
+        ? artifactPathForTask(entry.taskId, fileName)
+        : undefined;
+    if (isRecord(artifact) && expectedPath !== undefined && artifact.path !== expectedPath) {
+      issues.push(`${artifactContext}.path must be ${expectedPath}.`);
+    }
+    const filePath = validateArtifactRef({
+      rootPath,
+      artifact,
+      context: artifactContext,
+      issues,
+    });
+    if (filePath !== undefined) artifactPaths[artifactKey] = filePath;
+  }
+  if (Object.keys(artifactPaths).length !== Object.keys(historicalArtifacts).length) {
+    return undefined;
+  }
+
+  const lanes = activeAssignments.get(entry.assignmentId);
+  const laneQueue = lanes?.get(entry.laneId);
+  if (typeof entry.assignmentId === "string" && lanes === undefined) {
+    issues.push(`${context}.assignmentId is missing from tasks/ACTIVE_WORK.json.`);
+  }
+  if (typeof entry.laneId === "string" && lanes !== undefined && laneQueue === undefined) {
+    issues.push(`${context}.laneId is missing from active assignment ${entry.assignmentId}.`);
+  }
+  for (const selectedDriver of entry.selectedDrivers ?? []) {
+    if (laneQueue !== undefined && !laneQueue.has(selectedDriver)) {
+      issues.push(`${context}.selectedDrivers includes driver not in active assignment lane: ${selectedDriver}.`);
+    }
+  }
+  if ((entry.selectedDrivers ?? []).length !== 1) {
+    issues.push(`${context}.selectedDrivers must contain exactly one queued driver.`);
+  }
+
+  const startGate = readJson(artifactPaths.startGate);
+  const engineDepth = readJson(artifactPaths.engineDepth);
+  const stateOwnerManifest = readJson(artifactPaths.stateOwnerManifest);
+  const reviewLoop = readJson(artifactPaths.reviewLoop);
+  const deciderDecision = readJson(artifactPaths.deciderDecision);
+  for (const [artifactKey, artifact] of Object.entries({
+    startGate,
+    engineDepth,
+    stateOwnerManifest,
+    reviewLoop,
+    deciderDecision,
+  })) {
+    if (artifact.taskId !== entry.taskId) {
+      issues.push(`${context}.artifacts.${artifactKey} taskId must match ${entry.taskId}.`);
+    }
+  }
+  if (
+    JSON.stringify(startGate.taskScope?.selectedDrivers ?? []) !==
+    JSON.stringify(entry.selectedDrivers ?? [])
+  ) {
+    issues.push(`${context}.selectedDrivers must match START_GATE taskScope.selectedDrivers.`);
+  }
+
+  const selected = selectedInventory(inventory, entry.selectedDrivers ?? []);
+  const knownDrivers = new Set(
+    (inventory.branchObligations ?? []).map((obligation) => obligation.driverPath),
+  );
+  for (const selectedDriver of entry.selectedDrivers ?? []) {
+    if (!knownDrivers.has(selectedDriver)) {
+      issues.push(`${context}.selectedDrivers includes unknown source branch inventory driver ${selectedDriver}.`);
+    }
+  }
+
+  validateStartGate(startGate, rootPath, issues);
+  const { adapterPaths, declaredEvidencePaths } = validateEngineDepth({
+    engineDepth,
+    selected,
+    profile,
+    rootPath,
+    issues,
+  });
+  if (!Array.isArray(entry.targetReplayEvidence) || entry.targetReplayEvidence.length === 0) {
+    issues.push(`${context}.targetReplayEvidence must be a non-empty array.`);
+  }
+  const ledgerEvidencePaths = new Set();
+  const ledgerEvidenceRefs = new Set();
+  for (const [evidenceIndex, evidenceRecord] of (entry.targetReplayEvidence ?? []).entries()) {
+    const evidenceContext = `${context}.targetReplayEvidence[${evidenceIndex}]`;
+    const filePath = validateArtifactRef({
+      rootPath,
+      artifact: evidenceRecord,
+      context: evidenceContext,
+      issues,
+    });
+    if (isRecord(evidenceRecord) && typeof evidenceRecord.path === "string") {
+      if (!evidenceRecord.path.startsWith("tasks/target-replay-evidence/")) {
+        issues.push(`${evidenceContext}.path must be under tasks/target-replay-evidence/.`);
+      }
+      ledgerEvidencePaths.add(evidenceRecord.path);
+    }
+    if (!Array.isArray(evidenceRecord?.evidenceRefs) || evidenceRecord.evidenceRefs.length === 0) {
+      issues.push(`${evidenceContext}.evidenceRefs must be a non-empty array.`);
+    } else {
+      for (const ref of evidenceRecord.evidenceRefs) {
+        if (typeof ref !== "string" || !ref.startsWith(`${evidenceRecord.path}#`)) {
+          issues.push(`${evidenceContext}.evidenceRefs entry ${ref} must start with ${evidenceRecord.path}#.`);
+        } else {
+          ledgerEvidenceRefs.add(ref);
+        }
+      }
+    }
+    if (filePath !== undefined && !declaredEvidencePaths.has(evidenceRecord.path)) {
+      issues.push(`${evidenceContext}.path is not declared by ${artifactPathForTask(entry.taskId, "ENGINE_DEPTH_MANIFEST.json")}.`);
+    }
+  }
+  for (const declaredPath of declaredEvidencePaths) {
+    if (!ledgerEvidencePaths.has(declaredPath)) {
+      issues.push(`${context}.targetReplayEvidence must include declared evidence ${declaredPath}.`);
+    }
+  }
+
+  const evidenceSummary = validateEvidenceDocs({
+    rootPath,
+    profile,
+    inventory,
+    selected,
+    declaredEvidencePaths,
+    evidencePaths: ledgerEvidencePaths,
+    enforceNoExtraEvidence: false,
+    expectedCleanroomManifestSourceCommitSha: cleanroomManifest?.sourceCommitSha,
+    issues,
+  });
+  const acceptedEvidenceRefs = evidenceRefsFromSummary(evidenceSummary);
+  for (const ref of ledgerEvidenceRefs) {
+    if (!acceptedEvidenceRefs.has(ref)) {
+      issues.push(`${context}.targetReplayEvidence cites non-accepted evidence ref ${ref}.`);
+    }
+  }
+  for (const ref of acceptedEvidenceRefs) {
+    if (!ledgerEvidenceRefs.has(ref)) {
+      issues.push(`${context}.targetReplayEvidence is missing accepted evidence ref ${ref}.`);
+    }
+  }
+
+  validateStateOwnerManifest({
+    stateOwnerManifest,
+    engineDepth,
+    profile,
+    rootPath,
+    requiredStateFieldPaths: evidenceSummary.checkedTargetStateFields,
+    issues,
+  });
+  validateReviewLoop(reviewLoop, issues);
+  validateDeciderDecision(deciderDecision, issues);
+  validateProductionSourceScan({
+    rootPath,
+    profile,
+    engineDepth: isRecord(engineDepth) ? engineDepth : { adapterModules: [] },
+    selected,
+    issues,
+  });
+  if (adapterPaths.size === 0 && requiredSelectedObligations(selected).length > 0) {
+    issues.push(`${context} adapter quarantine must record adapter modules for selected QNT branches.`);
+  }
+  return {
+    entry,
+    selected,
+    evidenceSummary,
+    evidencePaths: ledgerEvidencePaths,
+    evidenceRefs: acceptedEvidenceRefs,
+  };
+}
+
+function validateRollingLatestMatchesLedger({ rootPath, latestEntry, issues }) {
+  if (!isRecord(latestEntry)) return;
+  for (const [artifactKey, fileName] of Object.entries(historicalArtifacts)) {
+    const latestPath = path.join(rootPath, "tasks", fileName);
+    if (!fs.existsSync(latestPath)) {
+      issues.push(`tasks/${fileName} latest view is missing.`);
+      continue;
+    }
+    const latestSha = sha256File(latestPath);
+    const historySha = latestEntry.artifacts?.[artifactKey]?.sha256;
+    if (latestSha !== historySha) {
+      issues.push(`tasks/${fileName} latest view must match newest RUN_LEDGER entry ${latestEntry.taskId}.`);
+    }
+  }
+}
+
+function validateRunLedger({
+  rootPath,
+  ledger,
+  inventory,
+  activeAssignments,
+  profile,
+  cleanroomManifest,
+  issues,
+}) {
+  if (!isRecord(ledger)) return [];
+  if (ledger.schemaVersion !== 1) {
+    issues.push("tasks/RUN_LEDGER.json schemaVersion must be 1.");
+  }
+  if (ledger.manifestSourceCommitSha !== cleanroomManifest?.sourceCommitSha) {
+    issues.push("tasks/RUN_LEDGER.json manifestSourceCommitSha must match cleanroom-input/MANIFEST.md.");
+  }
+  const inventorySha = sha256Text(stableStringify(inventory));
+  if (ledger.sourceBranchInventorySha256 !== inventorySha) {
+    issues.push(`tasks/RUN_LEDGER.json sourceBranchInventorySha256 must match ${inventorySha}.`);
+  }
+  if (!Array.isArray(ledger.entries) || ledger.entries.length === 0) {
+    issues.push("tasks/RUN_LEDGER.json entries must be a non-empty array.");
+    return [];
+  }
+  const taskIds = new Set();
+  const summaries = [];
+  const ledgerEvidencePaths = new Set();
+  for (const [entryIndex, entry] of ledger.entries.entries()) {
+    if (isRecord(entry) && typeof entry.taskId === "string") {
+      if (taskIds.has(entry.taskId)) {
+        issues.push(`tasks/RUN_LEDGER.json entries[${entryIndex}].taskId duplicates ${entry.taskId}.`);
+      }
+      taskIds.add(entry.taskId);
+    }
+    const summary = validateLedgerEntry({
+      rootPath,
+      entry,
+      entryIndex,
+      inventory,
+      inventorySha,
+      cleanroomManifest,
+      activeAssignments,
+      profile,
+      issues,
+    });
+    if (summary !== undefined) {
+      summaries.push(summary);
+      for (const evidencePath of summary.evidencePaths) ledgerEvidencePaths.add(evidencePath);
+    }
+  }
+  const actualEvidencePaths = new Set(
+    listFiles(path.join(rootPath, "tasks/target-replay-evidence"), (filePath) =>
+      filePath.endsWith(".json"),
+    ).map((filePath) => repoPath(rootPath, filePath)),
+  );
+  for (const evidencePath of actualEvidencePaths) {
+    if (!ledgerEvidencePaths.has(evidencePath)) {
+      issues.push(`tasks/RUN_LEDGER.json does not account for target replay evidence ${evidencePath}.`);
+    }
+  }
+  validateRollingLatestMatchesLedger({
+    rootPath,
+    latestEntry: ledger.entries.at(-1),
+    issues,
+  });
+  return summaries;
 }
 
 function protocolNamesForObligations(selected) {
@@ -1276,6 +1796,127 @@ function validateReportHonesty({
   }
 }
 
+function validateLedgerReportHonesty({
+  rootPath,
+  ledgerSummaries,
+  cleanroomManifest,
+  sourceBranchInventorySha256,
+  issues,
+}) {
+  const reportPath = path.join(rootPath, "tasks/VALIDATION_REPORT.md");
+  if (!fs.existsSync(reportPath)) {
+    issues.push("tasks/VALIDATION_REPORT.md is missing.");
+    return;
+  }
+  const report = fs.readFileSync(reportPath, "utf8");
+  if (!report.includes("tasks/RUN_LEDGER.json")) {
+    issues.push("tasks/VALIDATION_REPORT.md must cite tasks/RUN_LEDGER.json as the machine-readable run ledger.");
+  }
+  if (
+    typeof cleanroomManifest?.sourceCommitSha !== "string" ||
+    !report.includes(cleanroomManifest.sourceCommitSha)
+  ) {
+    issues.push(
+      "tasks/VALIDATION_REPORT.md must include current manifest source commit SHA.",
+    );
+  }
+  if (!report.includes(sourceBranchInventorySha256)) {
+    issues.push(
+      "tasks/VALIDATION_REPORT.md must include source branch inventory SHA.",
+    );
+  }
+  for (const requiredText of [
+    "Allowed inputs used:",
+    "Behavior implemented:",
+    "Generated branch coverage:",
+    "Target replay evidence:",
+    "Harness artifacts:",
+    "Remaining gaps:",
+    "Verification results:",
+  ]) {
+    if (!report.includes(requiredText)) {
+      issues.push(`tasks/VALIDATION_REPORT.md must include ${requiredText}`);
+    }
+  }
+  if (
+    /(?:diagnostic|unit)[^\n.]{0,80}(?:close|satisfy|cover)[^\n.]{0,80}(?:branch|mbt)/i.test(
+      report,
+    )
+  ) {
+    issues.push(
+      "validation report claims diagnostic target-language tests close MBT branch coverage.",
+    );
+  }
+
+  const selectedObligationIds = new Set();
+  const validEvidenceRefsByObligation = new Map();
+  for (const summary of ledgerSummaries) {
+    const taskId = summary.entry.taskId;
+    if (!report.includes(taskId)) {
+      issues.push(`tasks/VALIDATION_REPORT.md must include ledger task ${taskId}.`);
+    }
+    for (const driverPath of summary.entry.selectedDrivers ?? []) {
+      if (!report.includes(driverPath)) {
+        issues.push(`tasks/VALIDATION_REPORT.md must include selected driver ${driverPath}.`);
+      }
+    }
+    for (const obligation of requiredSelectedObligations(summary.selected)) {
+      selectedObligationIds.add(obligation.obligationId);
+      validEvidenceRefsByObligation.set(
+        obligation.obligationId,
+        summary.evidenceSummary.coveredEvidenceRefsByObligation.get(
+          obligation.obligationId,
+        ) ?? new Set(),
+      );
+    }
+  }
+
+  const seenCoveredObligations = new Set();
+  for (const [lineIndex, line] of report.split("\n").entries()) {
+    const cells = parseMarkdownTableLine(line);
+    if (cells === undefined) continue;
+    const status = plainCell(cells.at(-1)).toLowerCase();
+    if (status !== "covered") continue;
+    const obligationId = plainCell(cells[0]);
+    const evidenceCell = plainCell(cells[1]);
+    if (
+      evidenceCell === "_none_" ||
+      !evidenceCell.includes("tasks/target-replay-evidence/")
+    ) {
+      issues.push(
+        `tasks/VALIDATION_REPORT.md:${lineIndex + 1} marks branch covered without target replay evidence.`,
+      );
+    }
+    if (/(?:diagnostic|\bunit\b)/i.test(evidenceCell)) {
+      issues.push(
+        `tasks/VALIDATION_REPORT.md:${lineIndex + 1} uses diagnostic evidence as target replay evidence.`,
+      );
+    }
+    if (!selectedObligationIds.has(obligationId)) {
+      issues.push(
+        `tasks/VALIDATION_REPORT.md:${lineIndex + 1} marks unknown or unselected obligation ${obligationId} covered.`,
+      );
+      continue;
+    }
+    const validEvidenceRefs =
+      validEvidenceRefsByObligation.get(obligationId) ?? new Set();
+    if (!validEvidenceRefs.has(evidenceCell)) {
+      issues.push(
+        `tasks/VALIDATION_REPORT.md:${lineIndex + 1} cites ${evidenceCell}, but RUN_LEDGER accepted evidence for ${obligationId} is ${Array.from(validEvidenceRefs).join(", ")}.`,
+      );
+    } else {
+      seenCoveredObligations.add(obligationId);
+    }
+  }
+  for (const obligationId of selectedObligationIds) {
+    if (!seenCoveredObligations.has(obligationId)) {
+      issues.push(
+        `tasks/VALIDATION_REPORT.md is missing covered row for ledger obligation ${obligationId}.`,
+      );
+    }
+  }
+}
+
 function isProductionSource(relativePath, adapterPaths) {
   if (adapterPaths.has(relativePath)) return false;
   return !/(^|\/)(?:test|tests|fixture|fixtures|catalog|selection)(?:\/|$)/i.test(
@@ -1457,6 +2098,7 @@ function validateTaskArtifacts({ taskRoot, profile }) {
     issues,
   );
   const activeWork = readRequiredArtifact(taskRoot, "tasks/ACTIVE_WORK.json", issues);
+  const runLedger = readRequiredArtifact(taskRoot, "tasks/RUN_LEDGER.json", issues);
   const startGate = readRequiredArtifact(taskRoot, "tasks/START_GATE.json", issues);
   const engineDepth = readRequiredArtifact(
     taskRoot,
@@ -1485,9 +2127,28 @@ function validateTaskArtifacts({ taskRoot, profile }) {
     cleanroomManifest,
     issues,
   });
-  const selectedDrivers = startGate.taskScope?.selectedDrivers ?? [];
   activeQueuedDrivers(taskRoot, issues);
   const activeAssignments = validateActiveWork(activeWork, issues);
+  if (isRecord(runLedger)) {
+    const ledgerSummaries = validateRunLedger({
+      rootPath: taskRoot,
+      ledger: runLedger,
+      inventory,
+      activeAssignments,
+      profile,
+      cleanroomManifest,
+      issues,
+    });
+    validateLedgerReportHonesty({
+      rootPath: taskRoot,
+      ledgerSummaries,
+      cleanroomManifest,
+      sourceBranchInventorySha256: sha256Text(stableStringify(inventory)),
+      issues,
+    });
+    return issues;
+  }
+  const selectedDrivers = startGate.taskScope?.selectedDrivers ?? [];
   const selected = selectedInventory(inventory, selectedDrivers);
   const knownDrivers = new Set(
     (inventory.branchObligations ?? []).map((entry) => entry.driverPath),
@@ -1610,6 +2271,8 @@ function fixtureValidationReport(inventory, rows) {
     "- State ownership: `tasks/STATE_OWNER_MANIFEST.json`",
     "- Reviewer loop: `tasks/REVIEW_LOOP.json`",
     "- Decider decision: `tasks/DECIDER_DECISION.json`",
+    "- Immutable history: `tasks/history/T001/`",
+    "- Run ledger: `tasks/RUN_LEDGER.json`",
     "",
     "Remaining gaps:",
     "",
@@ -1620,6 +2283,83 @@ function fixtureValidationReport(inventory, rows) {
     "- `fixture test` passed.",
     "",
   ].join("\n");
+}
+
+function writeFixtureHistoryAndLedger({
+  rootPath,
+  taskId,
+  inventory,
+  selectedDrivers,
+  evidencePath,
+  evidenceRefs,
+}) {
+  const historyDir = path.join(rootPath, "tasks/history", taskId);
+  fs.mkdirSync(historyDir, { recursive: true });
+  const artifacts = {};
+  for (const [artifactKey, fileName] of Object.entries(historicalArtifacts)) {
+    const sourcePath = path.join(rootPath, "tasks", fileName);
+    const destRelative = artifactPathForTask(taskId, fileName);
+    const destPath = path.join(rootPath, destRelative);
+    fs.copyFileSync(sourcePath, destPath);
+    artifacts[artifactKey] = {
+      path: destRelative,
+      sha256: sha256File(destPath),
+    };
+  }
+  writeJson(path.join(rootPath, "tasks/RUN_LEDGER.json"), {
+    schemaVersion: 1,
+    manifestSourceCommitSha: fixtureSha("3"),
+    sourceBranchInventorySha256: sha256Text(stableStringify(inventory)),
+    entries: [
+      {
+        taskId,
+        assignmentId: "tracer-bullet",
+        laneId: "battle",
+        selectedDrivers,
+        manifestSourceCommitSha: fixtureSha("3"),
+        sourceBranchInventorySha256: sha256Text(stableStringify(inventory)),
+        artifacts,
+        targetReplayEvidence: [
+          {
+            path: evidencePath,
+            sha256: sha256File(path.join(rootPath, evidencePath)),
+            evidenceRefs,
+          },
+        ],
+        commandResults: [
+          {
+            command: "node scripts/check-cleanroom-harness.cjs",
+            status: "pass",
+          },
+        ],
+      },
+    ],
+  });
+}
+
+function updateFixtureLedgerArtifact(rootPath, artifactKey, mutate) {
+  const fileName = historicalArtifacts[artifactKey];
+  const historyPath = path.join(rootPath, artifactPathForTask("T001", fileName));
+  const latestPath = path.join(rootPath, "tasks", fileName);
+  const artifact = readJson(historyPath);
+  mutate(artifact);
+  writeJson(historyPath, artifact);
+  writeJson(latestPath, artifact);
+  const ledgerPath = path.join(rootPath, "tasks/RUN_LEDGER.json");
+  const ledger = readJson(ledgerPath);
+  ledger.entries[0].artifacts[artifactKey].sha256 = sha256File(historyPath);
+  writeJson(ledgerPath, ledger);
+}
+
+function updateFixtureLedgerEvidence(rootPath, mutate) {
+  const evidencePath = path.join(rootPath, "tasks/target-replay-evidence/mm.json");
+  const evidence = readJson(evidencePath);
+  mutate(evidence);
+  writeJson(evidencePath, evidence);
+  const ledgerPath = path.join(rootPath, "tasks/RUN_LEDGER.json");
+  const ledger = readJson(ledgerPath);
+  ledger.entries[0].targetReplayEvidence[0].sha256 = sha256File(evidencePath);
+  writeJson(ledgerPath, ledger);
 }
 
 function validFixture(rootPath) {
@@ -1866,6 +2606,17 @@ function validFixture(rootPath) {
       `| \`${inventory.branchObligations[1].obligationId}\` | \`tasks/target-replay-evidence/mm.json#seed=1 action=${inventory.branchObligations[1].branchAction}#step:${inventory.branchObligations[1].branchAction}\` | \`_none_\` | \`covered\` |`,
     ]),
   );
+  writeFixtureHistoryAndLedger({
+    rootPath,
+    taskId: "T001",
+    inventory,
+    selectedDrivers: [driverPath],
+    evidencePath: "tasks/target-replay-evidence/mm.json",
+    evidenceRefs: inventory.branchObligations.map(
+      (obligation) =>
+        `tasks/target-replay-evidence/mm.json#seed=1 action=${obligation.branchAction}#${obligation.branchFamily}:${obligation.branchAction}`,
+    ),
+  });
   fs.mkdirSync(path.join(rootPath, "engine/rules"), { recursive: true });
   fs.writeFileSync(
     path.join(rootPath, "engine/rules/force_projectiles.aster"),
@@ -1958,10 +2709,9 @@ function runSelfTest() {
       profile,
 	      "wrong-manifest-sha",
 	      (rootPath) => {
-	        const evidencePath = path.join(rootPath, "tasks/target-replay-evidence/mm.json");
-	        const evidence = readJson(evidencePath);
+	        updateFixtureLedgerEvidence(rootPath, (evidence) => {
 	        evidence.cleanroomManifestSourceCommitSha = fixtureSha("4");
-	        writeJson(evidencePath, evidence);
+	        });
 	      },
 	      "cleanroomManifestSourceCommitSha",
 	    );
@@ -1970,10 +2720,9 @@ function runSelfTest() {
       profile,
       "missing-evidence-profile",
       (rootPath) => {
-        const evidencePath = path.join(rootPath, "tasks/target-replay-evidence/mm.json");
-        const evidence = readJson(evidencePath);
+        updateFixtureLedgerEvidence(rootPath, (evidence) => {
         delete evidence.targetProfile;
-        writeJson(evidencePath, evidence);
+        });
       },
       "target replay evidence requires targetProfile",
     );
@@ -1991,8 +2740,53 @@ function runSelfTest() {
 	          runs: [],
 	        });
 	      },
-	      "is not declared by tasks/ENGINE_DEPTH_MANIFEST.json",
+	      "tasks/RUN_LEDGER.json does not account for target replay evidence tasks/target-replay-evidence/stray.json",
 	    );
+    expectFailure(
+      validRoot,
+      profile,
+      "missing-history-artifact",
+      (rootPath) => {
+        fs.rmSync(path.join(rootPath, "tasks/history/T001/START_GATE.json"));
+      },
+      "tasks/RUN_LEDGER.json entries[0].artifacts.startGate.path references missing tasks/history/T001/START_GATE.json",
+    );
+    expectFailure(
+      validRoot,
+      profile,
+      "duplicate-ledger-task",
+      (rootPath) => {
+        const ledgerPath = path.join(rootPath, "tasks/RUN_LEDGER.json");
+        const ledger = readJson(ledgerPath);
+        ledger.entries.push({ ...ledger.entries[0] });
+        writeJson(ledgerPath, ledger);
+      },
+      "taskId duplicates T001",
+    );
+    expectFailure(
+      validRoot,
+      profile,
+      "stale-ledger-hash",
+      (rootPath) => {
+        const ledgerPath = path.join(rootPath, "tasks/RUN_LEDGER.json");
+        const ledger = readJson(ledgerPath);
+        ledger.entries[0].artifacts.engineDepth.sha256 = fixtureSha("9").padEnd(64, "9");
+        writeJson(ledgerPath, ledger);
+      },
+      "artifacts.engineDepth.sha256 is stale",
+    );
+    expectFailure(
+      validRoot,
+      profile,
+      "rolling-latest-mismatch",
+      (rootPath) => {
+        const latestPath = path.join(rootPath, "tasks/REVIEW_LOOP.json");
+        const latest = readJson(latestPath);
+        latest.rounds[0].round = 2;
+        writeJson(latestPath, latest);
+      },
+      "tasks/REVIEW_LOOP.json latest view must match newest RUN_LEDGER entry T001",
+    );
 	    expectFailure(
 	      validRoot,
 	      profile,
@@ -2056,10 +2850,9 @@ function runSelfTest() {
       profile,
       "wrong-profile-sha",
       (rootPath) => {
-        const evidencePath = path.join(rootPath, "tasks/target-replay-evidence/mm.json");
-        const evidence = readJson(evidencePath);
+        updateFixtureLedgerEvidence(rootPath, (evidence) => {
         evidence.targetProfileSha256 = fixtureSha("5");
-        writeJson(evidencePath, evidence);
+        });
       },
       "targetProfileSha256",
     );
@@ -2068,13 +2861,12 @@ function runSelfTest() {
       profile,
       "missing-sampled-input",
       (rootPath) => {
-        const evidencePath = path.join(rootPath, "tasks/target-replay-evidence/mm.json");
-        const evidence = readJson(evidencePath);
+        updateFixtureLedgerEvidence(rootPath, (evidence) => {
         const damageRun = evidence.runs.find(
           (run) => run.branchAction === "doFillMagicMissileDamage",
         );
         delete damageRun.sampledInputs;
-        writeJson(evidencePath, evidence);
+        });
       },
       "sampledInputs array is required",
     );
@@ -2083,10 +2875,9 @@ function runSelfTest() {
       profile,
       "uncovered",
       (rootPath) => {
-        const evidencePath = path.join(rootPath, "tasks/target-replay-evidence/mm.json");
-        const evidence = readJson(evidencePath);
+        updateFixtureLedgerEvidence(rootPath, (evidence) => {
         evidence.runs.pop();
-        writeJson(evidencePath, evidence);
+        });
       },
       "missing passing target replay evidence",
     );
@@ -2107,11 +2898,10 @@ function runSelfTest() {
       profile,
       "dirty-start",
       (rootPath) => {
-        const startGatePath = path.join(rootPath, "tasks/START_GATE.json");
-        const startGate = readJson(startGatePath);
+        updateFixtureLedgerArtifact(rootPath, "startGate", (startGate) => {
         startGate.preImplementationStatus.result = "dirty";
         startGate.preImplementationStatus.output = " M README.md";
-        writeJson(startGatePath, startGate);
+        });
       },
       "preImplementationStatus.result must be clean",
     );
@@ -2144,8 +2934,7 @@ function runSelfTest() {
       profile,
       "review",
       (rootPath) => {
-        const reviewPath = path.join(rootPath, "tasks/REVIEW_LOOP.json");
-        const review = readJson(reviewPath);
+        updateFixtureLedgerArtifact(rootPath, "reviewLoop", (review) => {
         review.findings = [
           {
             id: "R1",
@@ -2155,7 +2944,7 @@ function runSelfTest() {
             summary: "production API is witness-shaped",
           },
         ];
-        writeJson(reviewPath, review);
+        });
       },
       "unresolved reasonable reviewer finding",
     );
@@ -2224,12 +3013,11 @@ function runSelfTest() {
       profile,
       "public-witness",
       (rootPath) => {
-        const manifestPath = path.join(rootPath, "tasks/ENGINE_DEPTH_MANIFEST.json");
-        const manifest = readJson(manifestPath);
+        updateFixtureLedgerArtifact(rootPath, "engineDepth", (manifest) => {
         manifest.productionModulesExtended[0].domainApis = [
           "doFillMagicMissileDamage",
         ];
-        writeJson(manifestPath, manifest);
+        });
       },
       "public domain API from witness protocol name doFillMagicMissileDamage",
     );
@@ -2241,10 +3029,9 @@ function runSelfTest() {
         const testPath = path.join(rootPath, "engine/tests/fake_depth.aster");
         fs.mkdirSync(path.dirname(testPath), { recursive: true });
         fs.writeFileSync(testPath, "fn fakeDepth() = 1\n");
-        const manifestPath = path.join(rootPath, "tasks/ENGINE_DEPTH_MANIFEST.json");
-        const manifest = readJson(manifestPath);
+        updateFixtureLedgerArtifact(rootPath, "engineDepth", (manifest) => {
         manifest.productionModulesExtended[0].path = "engine/tests/fake_depth.aster";
-        writeJson(manifestPath, manifest);
+        });
       },
       "must be production source",
     );
@@ -2253,8 +3040,7 @@ function runSelfTest() {
       profile,
       "accumulator",
       (rootPath) => {
-        const manifestPath = path.join(rootPath, "tasks/ENGINE_DEPTH_MANIFEST.json");
-        const manifest = readJson(manifestPath);
+        updateFixtureLedgerArtifact(rootPath, "engineDepth", (manifest) => {
         manifest.accumulatorGrowth = [
           {
             path: "engine/rules/force_projectiles.aster",
@@ -2264,7 +3050,7 @@ function runSelfTest() {
             reason: "driver-witness-table",
           },
         ];
-        writeJson(manifestPath, manifest);
+        });
       },
       "large production accumulator growth",
     );
@@ -2273,11 +3059,10 @@ function runSelfTest() {
       profile,
       "depth-missing",
       (rootPath) => {
-        const manifestPath = path.join(rootPath, "tasks/ENGINE_DEPTH_MANIFEST.json");
-        const manifest = readJson(manifestPath);
+        updateFixtureLedgerArtifact(rootPath, "engineDepth", (manifest) => {
         manifest.productionModulesExtended = [];
         delete manifest.completion;
-        writeJson(manifestPath, manifest);
+        });
       },
       "engine depth manifest must record production modules",
     );
@@ -2286,13 +3071,12 @@ function runSelfTest() {
       profile,
       "redundant-state",
       (rootPath) => {
-        const manifestPath = path.join(rootPath, "tasks/STATE_OWNER_MANIFEST.json");
-        const manifest = readJson(manifestPath);
+        updateFixtureLedgerArtifact(rootPath, "stateOwnerManifest", (manifest) => {
         manifest.durableFields[0].derivability = {
           tag: "stored-derived-copy",
           sourceField: "CharacterBuild.spellFacts",
         };
-        writeJson(manifestPath, manifest);
+        });
       },
       "redundant durable state derivability tag stored-derived-copy",
     );
@@ -2414,22 +3198,21 @@ function runSelfTest() {
 	          ]),
 	        );
 	      },
-	      "accepted target replay evidence",
+	      "RUN_LEDGER accepted evidence",
     );
     expectFailure(
       validRoot,
       profile,
       "report-failing-trace-ref",
       (rootPath) => {
-        const evidencePath = path.join(rootPath, "tasks/target-replay-evidence/mm.json");
-        const evidence = readJson(evidencePath);
+        updateFixtureLedgerEvidence(rootPath, (evidence) => {
         const failedRun = {
           ...evidence.runs[0],
           traceId: "failed-trace",
           result: { tag: "fail", reason: "fixture failure" },
         };
         evidence.runs.push(failedRun);
-        writeJson(evidencePath, evidence);
+        });
         const inventory = readJson(
           path.join(
             rootPath,
@@ -2444,17 +3227,16 @@ function runSelfTest() {
 	          ]),
 	        );
 	      },
-	      "accepted target replay evidence",
+	      "RUN_LEDGER accepted evidence",
 	    );
 	    expectFailure(
 	      validRoot,
 	      profile,
 	      "state-owner-missing-checked-field",
 	      (rootPath) => {
-	        const manifestPath = path.join(rootPath, "tasks/STATE_OWNER_MANIFEST.json");
-	        const manifest = readJson(manifestPath);
+	        updateFixtureLedgerArtifact(rootPath, "stateOwnerManifest", (manifest) => {
 	        manifest.durableFields[0].fieldPath = "BattleState.otherField";
-	        writeJson(manifestPath, manifest);
+	        });
 	      },
 	      "must record checked replay state field BattleState.pendingForceProjectiles",
 	    );
@@ -2463,8 +3245,7 @@ function runSelfTest() {
 	      profile,
 	      "state-owner-checked-field-as-witness",
 	      (rootPath) => {
-	        const manifestPath = path.join(rootPath, "tasks/STATE_OWNER_MANIFEST.json");
-	        const manifest = readJson(manifestPath);
+	        updateFixtureLedgerArtifact(rootPath, "stateOwnerManifest", (manifest) => {
 	        manifest.durableFields[0] = {
 	          fieldPath: "BattleState.pendingForceProjectiles",
 	          introducedIn: "engine/qnt-adapters/magic_missile_adapter.aster",
@@ -2474,7 +3255,7 @@ function runSelfTest() {
 	            witnessName: "stateCheck",
 	          },
 	        };
-	        writeJson(manifestPath, manifest);
+	        });
 	      },
 	      "checked replay state field must not use owner harness-witness-protocol",
 	    );
@@ -2483,10 +3264,9 @@ function runSelfTest() {
       profile,
       "state-owner-missing",
       (rootPath) => {
-        const manifestPath = path.join(rootPath, "tasks/STATE_OWNER_MANIFEST.json");
-        const manifest = readJson(manifestPath);
+        updateFixtureLedgerArtifact(rootPath, "stateOwnerManifest", (manifest) => {
         delete manifest.durableFields[0].owner;
-        writeJson(manifestPath, manifest);
+        });
       },
       "durableFields[0].owner",
     );
@@ -2495,11 +3275,10 @@ function runSelfTest() {
       profile,
       "canonical-projection-state",
       (rootPath) => {
-        const manifestPath = path.join(rootPath, "tasks/STATE_OWNER_MANIFEST.json");
-        const manifest = readJson(manifestPath);
+        updateFixtureLedgerArtifact(rootPath, "stateOwnerManifest", (manifest) => {
         manifest.durableFields[0].owner = "executable-boundary-projection";
         manifest.durableFields[0].derivability = { tag: "canonical-source" };
-        writeJson(manifestPath, manifest);
+        });
       },
       "canonical-source derivability cannot be used with owner executable-boundary-projection",
     );
@@ -2508,8 +3287,7 @@ function runSelfTest() {
       profile,
       "fixed-finding-no-followup",
       (rootPath) => {
-        const reviewPath = path.join(rootPath, "tasks/REVIEW_LOOP.json");
-        const review = readJson(reviewPath);
+        updateFixtureLedgerArtifact(rootPath, "reviewLoop", (review) => {
         review.findings = [
           {
             id: "R1",
@@ -2519,7 +3297,7 @@ function runSelfTest() {
             summary: "production API is witness-shaped",
           },
         ];
-        writeJson(reviewPath, review);
+        });
       },
       "requires a follow-up review round",
     );
@@ -2543,12 +3321,69 @@ function readProfile(taskRoot) {
   return undefined;
 }
 
+function runManifestPinnedCheckerIfNeeded(taskRoot) {
+  if (process.env.CLEANROOM_CHECKER_SOURCE_RESOLVED === "1") return false;
+  const manifestIssues = [];
+  const cleanroomManifest = readCleanroomManifest(taskRoot, manifestIssues);
+  if (manifestIssues.length > 0 || cleanroomManifest === undefined) {
+    return false;
+  }
+  const provenanceIssues = [];
+  const provenance = validatorProvenance({
+    taskRoot,
+    cleanroomManifest,
+    issues: provenanceIssues,
+  });
+  if (provenanceIssues.length > 0) {
+    console.error("cleanroom harness acceptance FAILED:");
+    for (const issue of provenanceIssues) console.error(`  - ${issue}`);
+    process.exit(1);
+  }
+  if (provenance.shouldUseCurrentChecker) return false;
+  const repoRoot = provenance.sourceRepoRoot;
+  const sourceCommitSha = cleanroomManifest.sourceCommitSha;
+  const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "cleanroom-source-checker-"));
+  try {
+    for (const relativePath of validatorFiles) {
+      const outputPath = path.join(tempRoot, relativePath);
+      fs.mkdirSync(path.dirname(outputPath), { recursive: true });
+      fs.writeFileSync(
+        outputPath,
+        gitTextAtCommit(repoRoot, sourceCommitSha, relativePath),
+      );
+    }
+    const args = [
+      path.join(tempRoot, "scripts/check-cleanroom-harness.cjs"),
+      "--task-root",
+      taskRoot,
+    ];
+    const profileArg = argValue("--profile");
+    if (profileArg !== undefined) args.push("--profile", path.resolve(profileArg));
+    try {
+      execFileSync(process.execPath, args, {
+        cwd: repoRoot,
+        stdio: "inherit",
+        env: {
+          ...process.env,
+          CLEANROOM_CHECKER_SOURCE_RESOLVED: "1",
+        },
+      });
+      process.exit(0);
+    } catch (error) {
+      process.exit(typeof error.status === "number" ? error.status : 1);
+    }
+  } finally {
+    fs.rmSync(tempRoot, { recursive: true, force: true });
+  }
+}
+
 function main() {
   if (selfTest) {
     runSelfTest();
     return;
   }
   const taskRoot = path.resolve(argValue("--task-root") ?? process.cwd());
+  runManifestPinnedCheckerIfNeeded(taskRoot);
   const profile = readProfile(taskRoot);
   const issues = validateTaskArtifacts({ taskRoot, profile });
   if (issues.length > 0) {

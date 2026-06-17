@@ -32,8 +32,13 @@ and record a bootstrap blocker in `tasks/BLOCKERS.md`.
 - Generate target replay evidence under `tasks/target-replay-evidence/`.
   Match `tasks/TARGET_REPLAY_EVIDENCE.example.json` exactly. Diagnostic
   target-language tests are allowed, but they do not close branch coverage.
+- Copy the accepted task's rolling artifacts into
+  `tasks/history/<taskId>/`, then append `tasks/RUN_LEDGER.json` with the
+  history artifact hashes, target replay evidence refs, command results,
+  manifest source commit SHA, and source branch inventory SHA.
 - Update `tasks/VALIDATION_REPORT.md` from target replay evidence, not from
-  prose claims.
+  prose claims. The report is the readable view; `tasks/RUN_LEDGER.json` is
+  the machine-readable run ledger.
 
 ## Required Outputs
 
@@ -41,6 +46,8 @@ and record a bootstrap blocker in `tasks/BLOCKERS.md`.
 - `tasks/ENGINE_DEPTH_MANIFEST.json`
 - `tasks/STATE_OWNER_MANIFEST.json`
 - `tasks/target-replay-evidence/*.json`
+- `tasks/history/<taskId>/*.json`
+- `tasks/RUN_LEDGER.json`
 - `tasks/VALIDATION_REPORT.md`
 - `tasks/BLOCKERS.md` when a source or target blocker remains
 

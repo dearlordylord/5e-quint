@@ -33,12 +33,16 @@ the target repo.
 - `tasks/LEVEL_1_2_SCOPE.snapshot.md` — source-owned level-1-2 driver scope
   filter snapshot. The renderer writes it to `tasks/LEVEL_1_2_SCOPE.md`; target
   runs must not reorder it by hand.
-- `tasks/VALIDATION_REPORT.example.md` — example completion ledger and cursor.
-  Use as a starting format; reset or revalidate task entries for the cleanroom
-  repo's current manifest source commit SHA.
+- `tasks/VALIDATION_REPORT.example.md` — example readable validation report
+  and cursor. Use as a starting format; reset or revalidate task entries for
+  the cleanroom repo's current manifest source commit SHA.
+- `tasks/RUN_LEDGER.example.template.json` — machine-readable append-only run
+  ledger example. The accepted task history in `tasks/history/<taskId>/` and
+  this ledger are the durable audit source; `VALIDATION_REPORT.md` is the
+  readable view.
 - `tasks/*example.template.json` — machine-readable artifact examples for the
   implementer start gate, engine-depth manifest, state-owner manifest, reviewer
-  loop, and decider decision.
+  loop, run ledger, and decider decision.
 - `tasks/BLOCKERS.template.md` — blocker ledger template. Copy to
   `tasks/BLOCKERS.md`.
 - `target-profiles/*.json` — target profile examples for scaffold rendering.

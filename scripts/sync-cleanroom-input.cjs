@@ -273,6 +273,11 @@ function sha256(filePath) {
     .digest("hex");
 }
 
+const VALIDATOR_FILES = [
+  "scripts/check-cleanroom-harness.cjs",
+  "scripts/cleanroom-branch-coverage-check.cjs",
+];
+
 function cleanroomQntPath(sourceDriverPath) {
   if (!sourceDriverPath.startsWith("packages/")) return sourceDriverPath;
   return path.join(
@@ -423,6 +428,10 @@ function main() {
     const top = item.dest.split("/").slice(0, 2).join("/");
     counts.set(top, (counts.get(top) ?? 0) + 1);
   }
+  const validatorInventory = VALIDATOR_FILES.map((relativePath) => ({
+    path: relativePath,
+    sha256: sha256(path.join(repoRoot, relativePath)),
+  }));
 
   const manifest = [
     "# Cleanroom Input Manifest",
@@ -438,6 +447,8 @@ function main() {
     "",
     "Cleanroom tasks must declare which source commit SHA they implement",
     "against (the `Source commit SHA` recorded here at task start).",
+    "Source-side rechecks must resolve validators from this source commit and",
+    "compare target-local copied validators against the hashes below.",
     "",
     "## Included",
     "",
@@ -469,6 +480,14 @@ function main() {
     "| --- | --- | --- |",
     ...inventory.map(
       (item) => `| \`${item.dest}\` | \`${item.sha256}\` | \`${item.source}\` |`,
+    ),
+    "",
+    "## Validator Snapshot",
+    "",
+    "| File | sha256 |",
+    "| --- | --- |",
+    ...validatorInventory.map(
+      (item) => `| \`${item.path}\` | \`${item.sha256}\` |`,
     ),
     "",
   ].join("\n");

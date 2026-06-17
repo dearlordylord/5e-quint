@@ -1,0 +1,54 @@
+{
+  "schemaVersion": 1,
+  "manifestSourceCommitSha": "{{currentManifestSourceCommitSha}}",
+  "sourceBranchInventorySha256": "{{sourceBranchInventorySha}}",
+  "entries": [
+    {
+      "taskId": "T001",
+      "assignmentId": "{{defaultAssignmentId}}",
+      "laneId": "{{defaultLaneId}}",
+      "selectedDrivers": [
+        "{{firstAssignedDriver}}"
+      ],
+      "manifestSourceCommitSha": "{{currentManifestSourceCommitSha}}",
+      "sourceBranchInventorySha256": "{{sourceBranchInventorySha}}",
+      "artifacts": {
+        "startGate": {
+          "path": "tasks/history/T001/START_GATE.json",
+          "sha256": "<sha256>"
+        },
+        "engineDepth": {
+          "path": "tasks/history/T001/ENGINE_DEPTH_MANIFEST.json",
+          "sha256": "<sha256>"
+        },
+        "stateOwnerManifest": {
+          "path": "tasks/history/T001/STATE_OWNER_MANIFEST.json",
+          "sha256": "<sha256>"
+        },
+        "reviewLoop": {
+          "path": "tasks/history/T001/REVIEW_LOOP.json",
+          "sha256": "<sha256>"
+        },
+        "deciderDecision": {
+          "path": "tasks/history/T001/DECIDER_DECISION.json",
+          "sha256": "<sha256>"
+        }
+      },
+      "targetReplayEvidence": [
+        {
+          "path": "tasks/target-replay-evidence/T001-<driver>.json",
+          "sha256": "<sha256>",
+          "evidenceRefs": [
+            "tasks/target-replay-evidence/T001-<driver>.json#<trace id>#<branch family>:<branch action>"
+          ]
+        }
+      ],
+      "commandResults": [
+        {
+          "command": "node scripts/check-cleanroom-harness.cjs",
+          "status": "pass"
+        }
+      ]
+    }
+  ]
+}

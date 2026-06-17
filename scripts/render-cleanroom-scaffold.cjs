@@ -266,6 +266,7 @@ const templateFiles = [
   "tasks/BLOCKERS.template.md",
   "tasks/LEVEL_1_2_SCOPE.snapshot.md",
   "tasks/VALIDATION_REPORT.example.md",
+  "tasks/RUN_LEDGER.example.template.json",
   "tasks/START_GATE.example.template.json",
   "tasks/ENGINE_DEPTH_MANIFEST.example.template.json",
   "tasks/STATE_OWNER_MANIFEST.example.template.json",

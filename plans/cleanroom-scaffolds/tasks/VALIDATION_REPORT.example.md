@@ -6,6 +6,7 @@
 - Source branch inventory SHA: `{{sourceBranchInventorySha}}`
 - Scope file: `tasks/LEVEL_1_2_SCOPE.md`
 - Work Loop instructions: `tasks/WORK_LOOP.md`
+- Machine-readable run ledger: `tasks/RUN_LEDGER.json`
 - Last completed current-snapshot queued branch set: `<none>`
 - Next queued driver: `{{firstAssignedDriver}}`
 - Next task id: `{{nextTaskId}}`
@@ -59,6 +60,8 @@ Harness artifacts:
 - State ownership: `tasks/STATE_OWNER_MANIFEST.json`
 - Reviewer loop: `tasks/REVIEW_LOOP.json`
 - Decider decision: `tasks/DECIDER_DECISION.json`
+- Immutable history: `tasks/history/<taskId>/`
+- Run ledger: `tasks/RUN_LEDGER.json`
 
 Diagnostic tests:
 
