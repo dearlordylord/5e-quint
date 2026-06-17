@@ -61,7 +61,7 @@
     {
       "number": 10,
       "id": "L12G-FOLLOWUP-DRUID-WILD-SHAPE-STAT-BLOCK-NON-ATTACK-ACTIONS",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Split non-Attack Stat Block action execution"
     },
     {
@@ -82,7 +82,10 @@ Gate tail.
 Task 1 closed the Wild Shape sense/language/speech projection evidence gap. Task
 5 closed the remaining broad Wild Shape runtime split by separating Beast Spells
 from Stat Block action-shape owners and by naming executable Stat Block follow-up
-slices. Task 2 closed the Monk Focus generated-readiness ambiguity while
+slices. Task 10 closed the non-Attack Stat Block action split by making the
+closed boundaries executable by Surface section/action shape and confirming that
+the current eligible SRD Beast form catalog has no reachable non-Attack action
+sections. Task 2 closed the Monk Focus generated-readiness ambiguity while
 preserving the ordinary jump movement/table owner boundary. Task 3 closed the
 Sorcerer Metamagic generated-readiness ambiguity by making the promoted runtime
 subsets and procedure-specific deferred owner closures checker-readable. Task 4
@@ -598,7 +601,7 @@ Verification:
 
 ### Task 10 - L12G-FOLLOWUP-DRUID-WILD-SHAPE-STAT-BLOCK-NON-ATTACK-ACTIONS
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -614,6 +617,13 @@ Current state:
   the currently admitted executable Attack shape.
 - Existing Stat Block control owners cover action-section ordering and resources,
   but concrete non-Attack action effects require per-effect procedure owners.
+- Non-Attack Stat Block action sections are now split by Surface section/action
+  shape: `actions.multiattacks`, `actions.saves`, `actions.supports`,
+  `actionOptions`, `specials`, `bonusActions`, `reactions`, and
+  `legendaryActions`.
+- The current SRD 5.2.1 eligible Wild Shape Beast form catalog has no reachable
+  non-Attack action sections; future records remain closed until the matching
+  generic Stat Block procedure owner has focused evidence.
 
 Output:
 

@@ -5,6 +5,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-DRUID-WILD-SHAPE-STAT-BLOCK-MULTI-DAMAGE druid_wild_shape
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-DRUID-WILD-SHAPE-STAT-BLOCK-TRAIT-ADVANTAGE druid_wild_shape
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-DRUID-WILD-SHAPE-STAT-BLOCK-ATTACK-HIT-RIDERS druid_wild_shape
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-DRUID-WILD-SHAPE-STAT-BLOCK-NON-ATTACK-ACTIONS druid_wild_shape
 import {
   armorClassDelta,
   defaultArmorClassState,
@@ -80,6 +81,7 @@ const wolfId = "stat_block_wolf";
 const spiderId = "stat_block_spider";
 const syntheticCoordinatedShapeId = "synthetic_coordinated_shape";
 const syntheticSizeGatedProneFormId = "synthetic_size_gated_prone_form";
+const syntheticActionSectionFormId = "synthetic_action_section_form";
 const packAllyId = combatantId("wild-shape-pack-ally");
 const incapacitatedPackAllyId = combatantId(
   "wild-shape-incapacitated-pack-ally",
@@ -1577,6 +1579,7 @@ test("classifies eligible Wild Shape Beast action surfaces without making ids th
       ...statBlockCatalog.listStatBlocks(),
       statBlockCatalog.requireStatBlock("stat_block_skeleton"),
       syntheticSizeGatedProneForm(),
+      syntheticActionSectionForm(),
     ],
     profile,
   });
@@ -1610,6 +1613,102 @@ test("classifies eligible Wild Shape Beast action surfaces without making ids th
         category: "tableOrProseOnlyTrait",
         exampleStatBlockIds: expect.arrayContaining([ratId]),
       }),
+      expect.objectContaining({
+        category: "statBlockActionMultiattack",
+        exampleStatBlockIds: expect.arrayContaining([
+          syntheticActionSectionFormId,
+        ]),
+        closedBoundary: expect.objectContaining({
+          owner: expect.stringContaining("Multiattack control owner"),
+          reason: expect.stringContaining("actions.multiattacks"),
+        }),
+      }),
+      expect.objectContaining({
+        category: "statBlockActionSaveGate",
+        exampleStatBlockIds: expect.arrayContaining([
+          syntheticActionSectionFormId,
+        ]),
+        closedBoundary: expect.objectContaining({
+          owner: expect.stringContaining("save-gated action procedure owner"),
+          reason: expect.stringContaining("actions.saves"),
+        }),
+      }),
+      expect.objectContaining({
+        category: "statBlockActionSupport",
+        exampleStatBlockIds: expect.arrayContaining([
+          syntheticActionSectionFormId,
+        ]),
+        closedBoundary: expect.objectContaining({
+          owner: expect.stringContaining("support-action procedure owner"),
+          reason: expect.stringContaining("actions.supports"),
+        }),
+      }),
+      expect.objectContaining({
+        category: "statBlockActionOption",
+        exampleStatBlockIds: expect.arrayContaining([
+          syntheticActionSectionFormId,
+        ]),
+        closedBoundary: expect.objectContaining({
+          owner: expect.stringContaining("action-option procedure owner"),
+          reason: expect.stringContaining("generic Utilize"),
+        }),
+      }),
+      expect.objectContaining({
+        category: "statBlockSpecialAction",
+        exampleStatBlockIds: expect.arrayContaining([
+          syntheticActionSectionFormId,
+        ]),
+        closedBoundary: expect.objectContaining({
+          owner: expect.stringContaining("special-action payload"),
+          reason: expect.stringContaining("Surface specials"),
+        }),
+      }),
+      expect.objectContaining({
+        category: "statBlockBonusActionSection",
+        exampleStatBlockIds: expect.arrayContaining([
+          syntheticActionSectionFormId,
+        ]),
+        closedBoundary: expect.objectContaining({
+          owner: expect.stringContaining("Bonus Action lifecycle"),
+          reason: expect.stringContaining("bonusActions"),
+        }),
+      }),
+      expect.objectContaining({
+        category: "statBlockReactionSection",
+        exampleStatBlockIds: expect.arrayContaining([
+          syntheticActionSectionFormId,
+        ]),
+        closedBoundary: expect.objectContaining({
+          owner: expect.stringContaining("Reaction trigger"),
+          reason: expect.stringContaining("Surface reactions"),
+        }),
+      }),
+      expect.objectContaining({
+        category: "statBlockLegendaryActionSection",
+        exampleStatBlockIds: expect.arrayContaining([
+          syntheticActionSectionFormId,
+        ]),
+        closedBoundary: expect.objectContaining({
+          owner: expect.stringContaining("Legendary Action lifecycle"),
+          reason: expect.stringContaining("legendaryActions"),
+        }),
+      }),
+    ]),
+  );
+  const srdEligibleInventory = wildShapeFormActionSurfaceInventory({
+    forms: statBlockCatalog.listStatBlocks(),
+    profile,
+  });
+  expect(srdEligibleInventory.map((entry) => entry.category)).not.toEqual(
+    expect.arrayContaining([
+      "statBlockActionMultiattack",
+      "statBlockActionSaveGate",
+      "statBlockActionSupport",
+      "statBlockActionOption",
+      "statBlockSpecialAction",
+      "statBlockBonusActionSection",
+      "statBlockReactionSection",
+      "statBlockLegendaryActionSection",
     ]),
   );
   expect(
@@ -1641,6 +1740,100 @@ function syntheticSizeGatedProneForm(): StatBlockRecord {
             name: "Synthetic Bite",
           },
         ],
+      },
+    },
+  };
+}
+
+function syntheticActionSectionForm(): StatBlockRecord {
+  const base = statBlockCatalog.requireStatBlock(ridingHorseId);
+  const hooves = base.statBlock.actions?.attacks?.[0];
+  if (hooves === undefined) {
+    throw new Error("Expected Riding Horse Hooves fixture.");
+  }
+  return {
+    ...base,
+    id: syntheticActionSectionFormId,
+    name: "Synthetic Action Section Form",
+    statBlock: {
+      ...base.statBlock,
+      displayName: "Synthetic Action Section Form",
+      actions: {
+        attacks: [hooves],
+        multiattacks: [
+          {
+            name: "Synthetic Multiattack",
+            dispatches: [
+              { name: hooves.name, count: { kind: "literal", value: 1 } },
+            ],
+          },
+        ],
+        saves: [
+          {
+            name: "Synthetic Save Pulse",
+            ability: "dex",
+            dc: { kind: "fixed", dc: 12 },
+            target: { kind: "one_creature_in_range", rangeFeet: 5 },
+            onFail: {
+              kind: "damage",
+              damageType: "bludgeoning",
+              amount: { dice: 0, dieSize: 1, flat: 1 },
+            },
+            onSuccess: { kind: "half_damage" },
+          },
+        ],
+        supports: [
+          {
+            name: "Synthetic Self Aid",
+            target: "self",
+            effect: {
+              kind: "heal_hp",
+              amount: { flat: 1 },
+              target: "self",
+            },
+          },
+        ],
+        actionOptions: [
+          {
+            name: "Synthetic Action Option",
+            options: ["disengage", "utilize"],
+          },
+        ],
+        specials: [
+          {
+            name: "Synthetic Special",
+            description:
+              "The form attempts a table-adjudicated special action.",
+          },
+        ],
+      },
+      bonusActions: {
+        actionOptions: [
+          {
+            name: "Synthetic Quick Option",
+            options: ["disengage", "hide"],
+          },
+        ],
+      },
+      reactions: {
+        specials: [
+          {
+            name: "Synthetic Response",
+            description: "The form responds to a table-supplied trigger.",
+          },
+        ],
+      },
+      legendaryActions: {
+        uses: 1,
+        actions: {
+          specials: [
+            {
+              name: "Synthetic Legendary Move",
+              description:
+                "The form uses a table-adjudicated legendary action.",
+            },
+          ],
+        },
       },
     },
   };

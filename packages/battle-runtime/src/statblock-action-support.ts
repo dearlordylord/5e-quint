@@ -26,9 +26,20 @@ const WILD_SHAPE_FORM_ATTACK_HIT_RIDER_CATEGORIES = [
   "attackHitOtherRider",
 ] as const;
 
+const WILD_SHAPE_FORM_ACTION_SECTION_CATEGORIES = [
+  "statBlockActionMultiattack",
+  "statBlockActionSaveGate",
+  "statBlockActionSupport",
+  "statBlockActionOption",
+  "statBlockSpecialAction",
+  "statBlockBonusActionSection",
+  "statBlockReactionSection",
+  "statBlockLegendaryActionSection",
+] as const;
+
 const WILD_SHAPE_FORM_CLOSED_ACTION_SURFACE_CATEGORIES = [
   ...WILD_SHAPE_FORM_ATTACK_HIT_RIDER_CATEGORIES,
-  "nonAttackOrSpecialActionSection",
+  ...WILD_SHAPE_FORM_ACTION_SECTION_CATEGORIES,
   "tableOrProseOnlyTrait",
 ] as const;
 
@@ -41,6 +52,8 @@ type WildShapeFormExecutableActionSurfaceCategory =
   (typeof WILD_SHAPE_FORM_EXECUTABLE_ACTION_SURFACE_CATEGORIES)[number];
 type WildShapeFormAttackHitRiderCategory =
   (typeof WILD_SHAPE_FORM_ATTACK_HIT_RIDER_CATEGORIES)[number];
+type WildShapeFormActionSectionCategory =
+  (typeof WILD_SHAPE_FORM_ACTION_SECTION_CATEGORIES)[number];
 type WildShapeFormClosedActionSurfaceCategory =
   (typeof WILD_SHAPE_FORM_CLOSED_ACTION_SURFACE_CATEGORIES)[number];
 export type WildShapeFormActionSurfaceCategory =
@@ -83,10 +96,46 @@ const WILD_SHAPE_FORM_CLOSED_ACTION_SURFACE_BOUNDARIES = {
     reason:
       "Attack-hit prose with no parsed destination needs a typed payload or table owner before Wild Shape admits the host attack.",
   },
-  nonAttackOrSpecialActionSection: {
-    owner: "battle-runtime generic Stat Block action procedure owners",
+  statBlockActionMultiattack: {
+    owner: "battle-runtime generic Stat Block Multiattack control owner",
     reason:
-      "Non-Attack Stat Block action sections require their own generic procedure owners before Wild Shape admits them.",
+      "Surface actions.multiattacks entries need a Wild Shape selected-form admission witness that consumes the generic Multiattack control owner before the form admits them.",
+  },
+  statBlockActionSaveGate: {
+    owner: "battle-runtime generic Stat Block save-gated action procedure owner",
+    reason:
+      "Surface actions.saves entries carry saving throw, recipient, and effect facts that need a generic save-gated Stat Block procedure owner before Wild Shape admits them.",
+  },
+  statBlockActionSupport: {
+    owner: "battle-runtime generic Stat Block support-action procedure owner",
+    reason:
+      "Surface actions.supports entries carry self or ally effect facts that need a generic support-action procedure owner before Wild Shape admits them.",
+  },
+  statBlockActionOption: {
+    owner: "battle-runtime generic Stat Block action-option procedure owner",
+    reason:
+      "Surface actionOptions delegate to Standard Action procedures; Wild Shape admission needs focused evidence for each delegated action kind, and this task does not promote generic Utilize or object-use execution.",
+  },
+  statBlockSpecialAction: {
+    owner: "battle-runtime typed Stat Block special-action payload or table owner",
+    reason:
+      "Surface specials carry prose descriptions and need typed effect payloads or an explicit table owner before Wild Shape admits them.",
+  },
+  statBlockBonusActionSection: {
+    owner:
+      "battle-runtime Stat Block Bonus Action lifecycle and delegated procedure owners",
+    reason:
+      "Surface bonusActions spend a separate Bonus Action resource, and each contained action shape still needs its generic procedure owner before Wild Shape admits it.",
+  },
+  statBlockReactionSection: {
+    owner: "battle-runtime Stat Block Reaction trigger and procedure owners",
+    reason:
+      "Surface reactions require trigger facts plus Reaction resource handling before Wild Shape admits the section or its contained procedure.",
+  },
+  statBlockLegendaryActionSection: {
+    owner: "battle-runtime Stat Block Legendary Action lifecycle owner",
+    reason:
+      "Surface legendaryActions use Stat Block-only round resources and need a generic lifecycle owner before any Wild Shape form admits them.",
   },
   tableOrProseOnlyTrait: {
     owner: "battle-runtime table/caller witness owners",
@@ -203,12 +252,14 @@ function wildShapeFormActionSurfaceCategories(
   form: StatBlockRecord,
 ): readonly WildShapeFormActionSurfaceCategory[] {
   const categories = new Set<WildShapeFormActionSurfaceCategory>();
-  if (
-    form.statBlock.bonusActions !== undefined ||
-    form.statBlock.reactions !== undefined ||
-    form.statBlock.legendaryActions !== undefined
-  ) {
-    categories.add("nonAttackOrSpecialActionSection");
+  if (form.statBlock.bonusActions !== undefined) {
+    categories.add("statBlockBonusActionSection");
+  }
+  if (form.statBlock.reactions !== undefined) {
+    categories.add("statBlockReactionSection");
+  }
+  if (form.statBlock.legendaryActions !== undefined) {
+    categories.add("statBlockLegendaryActionSection");
   }
   const actions = [
     form.statBlock.actions,
@@ -219,8 +270,10 @@ function wildShapeFormActionSurfaceCategories(
 
   for (const actionSection of actions) {
     if (actionSection === undefined) continue;
-    if (hasNonAttackOrSpecialActionSection(actionSection)) {
-      categories.add("nonAttackOrSpecialActionSection");
+    for (const category of creatureActionSectionSurfaceCategories(
+      actionSection,
+    )) {
+      categories.add(category);
     }
     for (const attack of actionSection.attacks ?? []) {
       const fixedDamage = fixedDamageEffects(attack);
@@ -253,13 +306,27 @@ function wildShapeFormActionSurfaceCategories(
   );
 }
 
-function hasNonAttackOrSpecialActionSection(actions: CreatureActions): boolean {
-  return (
-    actions.multiattacks !== undefined ||
-    actions.saves !== undefined ||
-    actions.supports !== undefined ||
-    actions.actionOptions !== undefined ||
-    actions.specials !== undefined
+function creatureActionSectionSurfaceCategories(
+  actions: CreatureActions,
+): readonly WildShapeFormActionSectionCategory[] {
+  const categories = new Set<WildShapeFormActionSectionCategory>();
+  if (actions.multiattacks !== undefined) {
+    categories.add("statBlockActionMultiattack");
+  }
+  if (actions.saves !== undefined) {
+    categories.add("statBlockActionSaveGate");
+  }
+  if (actions.supports !== undefined) {
+    categories.add("statBlockActionSupport");
+  }
+  if (actions.actionOptions !== undefined) {
+    categories.add("statBlockActionOption");
+  }
+  if (actions.specials !== undefined) {
+    categories.add("statBlockSpecialAction");
+  }
+  return WILD_SHAPE_FORM_ACTION_SECTION_CATEGORIES.filter((category) =>
+    categories.has(category),
   );
 }
 
