@@ -1,3 +1,4 @@
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.druid-wild-shape-known-form
 import { isIncapacitated } from "@dnd/shared-algebras/conditions-algebra";
 import type { Language } from "@dnd/shared/game-facts";
 import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";

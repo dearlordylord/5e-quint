@@ -33,7 +33,6 @@ import type {
   BattleTargetSpatialFact,
   SupportedSpellInvocation,
 } from "../battle-reducer.ts";
-import { activeOngoingFeaturesPreventSpellcasting } from "../battle-reducer.ts";
 
 export { shieldReactionSpellMatchesTrigger } from "./shield-reaction-trigger.ts";
 
@@ -69,7 +68,6 @@ export function triggeredReactionSpellChoices(
       if (
         reactor?.origin.kind !== "character" ||
         !combatantCanTakeReactions(reactor) ||
-        activeOngoingFeaturesPreventSpellcasting(reactor) ||
         combatantInsideActiveAntimagicFieldAura(state, reactorId)
       ) {
         return [];

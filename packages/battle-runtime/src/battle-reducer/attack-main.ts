@@ -119,6 +119,7 @@ import {
 import { mirrorImageHitInterceptionCheck } from "./mirror-image-hit-interception.ts";
 import { resolveOpenHandTechniqueAfterHit } from "./open-hand-technique.ts";
 import { resolveRemarkableAthleteCriticalHitMovement } from "./remarkable-athlete-critical-movement.ts";
+import { applyStatBlockAttackHitConditionRiders } from "./statblock-attack-hit-condition-riders.ts";
 import { HUNTERS_PREY_SUPPORT_PROFILE } from "../unit-feature-support.ts";
 
 import {
@@ -711,7 +712,7 @@ export function resolveSelectedAttackProcedure(
   if (toppleApplied.tag === "invalid") {
     return invalidResult(input.state, "invalidFill", toppleApplied.message);
   }
-  const hitAppliedState = hit
+  const weaponHitAppliedState = hit
     ? applyWeaponMasterySapOnHit(
         toppleApplied.state,
         attackerId,
@@ -719,6 +720,13 @@ export function resolveSelectedAttackProcedure(
         attack,
       )
     : toppleApplied.state;
+  const hitAppliedState = hit
+    ? applyStatBlockAttackHitConditionRiders({
+        state: weaponHitAppliedState,
+        targetId: target.combatantId,
+        attack,
+      })
+    : weaponHitAppliedState;
   const damageTarget =
     hitAppliedState.combatants.get(target.combatantId) ?? target;
   if (

@@ -129,8 +129,9 @@ total:
 - Lane B: 8 feat/species catalog Units, 1 ready-for-implementation and 7
   ready-for-research.
 - Lane C: 9 Character Sheet evidence Units, all ready-for-implementation.
-- Lane D: 4 partial-profile/projection Units, 1 ready-for-implementation and 3
-  ready-for-research.
+- Lane D: the original partial-profile/projection Unit tasks are complete;
+  Druid Wild Shape's remaining battle-runtime follow-up is split into five
+  concrete Beast Spells and Stat Block action-shape tasks in the lane file.
 
 Completed scope-construction tasks were intentionally removed from the Ralph
 task index. The live queue is the four lane files listed below; this document
@@ -193,7 +194,7 @@ task in that same lane.
 | 1 | `plans/RALPH_L14G_LANE_A_ASI_CATALOG_ADMISSION_UNITS.md` | 8 ASI catalog-admission Unit tasks | ~1-2 days | ready-for-implementation | Strongly coupled by one selection-grant-container invariant; one generic fix may close multiple per-Unit tasks. |
 | 2 | `plans/RALPH_L14G_LANE_B_FEAT_SPECIES_CATALOG_UNITS.md` | 5 feat Units and 3 species Units | ~2 days | mixed | Catalog and character-creation research; Human depends conceptually on Magic Initiate Druid and Skilled. |
 | 3 | `plans/RALPH_L14G_LANE_C_CHARACTER_SHEET_EVIDENCE_UNITS.md` | 9 Character Sheet evidence Unit tasks | ~1-2 days | ready-for-implementation | Shared checker/evidence-reference fix may close multiple rows without adding runtime adapters. |
-| 4 | `plans/RALPH_L14G_LANE_D_PARTIAL_PROFILE_PROJECTION_UNITS.md` | 3 partial-profile Units and Rogue projection evidence | ~2 days | mixed | Profile-boundary research plus one implementation-ready projection evidence task. |
+| 4 | `plans/RALPH_L14G_LANE_D_PARTIAL_PROFILE_PROJECTION_UNITS.md` | Completed partial-profile closure plus 5 Wild Shape runtime follow-ups | ~2 days | mixed | Beast Spells is separate from Stat Block action-shape work; multi-damage and trait-Advantage slices are implementation-ready, while rider and non-Attack action slices need focused research. |
 
 The per-lane files above are the Ralph launch sources for parallel runs. Each
 file has its own `ralph-task-index` block; research tasks may add their own
@@ -212,7 +213,7 @@ research or checker fix from an earlier task in the same file.
 | Lane 1 - ASI catalog admission | Read the eight class anchors, inspect installed Fighter/Paladin/Warlock/Wizard ASI patterns, implement the shared class-grant/catalog admission fix, and close at least one per-Unit task explicitly. | Regenerate coverage, mark every closed sibling task in the lane file, and run the shared verifier. |
 | Lane 2 - feat/species catalog | Install Magic Initiate Druid if the existing Magic Initiate list model still fits, then research Skilled and Human together because Human's Versatile path needs real Origin feat identities. | Continue through Grappler, Fighting Style feats, Gnome, and Halfling; split any runtime-heavy battle behavior into smaller follow-up tasks instead of broad unsupported blobs. |
 | Lane 3 - Character Sheet evidence | Fix the shared checker/evidence-reference handling or direct evidence anchors, then close the first imported-symbol evidence row. | Apply the same evidence pattern across the remaining eight Unit rows, regenerate inventory, and avoid adding duplicate runtime adapters. |
-| Lane 4 - partial profile/projection | Research Wild Shape, Monk's Focus, and Metamagic support/deferred-owner boundaries, then implement Rogue Second-Story Work projection evidence if it is still isolated. | Emit checker-readable support splits or smaller implementation lanes for any partial-profile owner that cannot be safely closed in this lane. |
+| Lane 4 - partial profile/projection | Completed the original Wild Shape, Monk's Focus, Metamagic, and Rogue closure work. | Execute the new Wild Shape Beast Spells and Stat Block action-shape follow-ups from the lane file; keep generic object use and non-battle persistence outside this lane unless their owners are promoted. |
 
 ## DAG / Queue Order
 

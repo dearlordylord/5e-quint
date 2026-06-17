@@ -445,7 +445,7 @@ describe("battle runtime: Sneak Attack", () => {
             subject.attackName,
             [
               {
-                kind: "sneakAttackAllyWithin5FeetOfTarget",
+                kind: "attackerAllyWithin5FeetOfTarget",
                 attackerId: subject.actorId,
                 targetId: goblinId,
                 allyId,
@@ -588,7 +588,7 @@ describe("battle runtime: Sneak Attack", () => {
           targetId: goblinId,
         },
         {
-          kind: "sneakAttackAllyWithin5FeetOfTarget",
+          kind: "attackerAllyWithin5FeetOfTarget",
           attackerId: fighterId,
           targetId: goblinId,
           allyId,

@@ -4080,6 +4080,11 @@ const CreatureAttackEffectAtomSchema = Schema.Union(
     damageType: DamageTypeRefSchema,
     amount: StatBlockDamageNotationAmountSchema,
   }),
+  Schema.Struct({
+    kind: Schema.Literal("apply_condition_if_target_size_at_most"),
+    condition: ConditionSchema,
+    maxCreatureSize: SizeSchema,
+  }),
   EffectAtomSchema,
 );
 
@@ -4183,6 +4188,11 @@ export const CreatureLegendaryActionsSchema = Schema.Struct({
 });
 
 export const CreatureTraitEffectSchema = Schema.Union(
+  Schema.Struct({
+    kind: Schema.Literal(
+      "attack_roll_advantage_when_non_incapacitated_ally_within_5_feet_of_target",
+    ),
+  }),
   Schema.Struct({
     kind: Schema.Literal("caster_shared_resistance"),
     chosenFrom: Schema.Literal("resistances_list"),

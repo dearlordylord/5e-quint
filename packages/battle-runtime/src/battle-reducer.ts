@@ -539,11 +539,12 @@ export {
   triggeredReactionSpellTurnResourceAvailable,
 } from "./battle-reducer/reaction-triggered-spells.ts";
 export {
-  activeOngoingFeaturesPreventSpellcasting,
+  activeOngoingFeaturesPreventSpellInvocation,
   damageSpellSource,
   isPreparedDamageSpellSource,
   isScalarBuffTargetListInvocation,
   isTargetListSpellInvocation,
+  spellDefinitionHasPricedOrConsumedMaterialComponent,
 } from "./battle-reducer/spells-invocation-guards.ts";
 export {
   activeFeatherFallDescentRateCapFeetPerRound,
@@ -1789,7 +1790,7 @@ export type BattleTargetSpatialFact =
       readonly targetId: CombatantId;
     }
   | {
-      readonly kind: "sneakAttackAllyWithin5FeetOfTarget";
+      readonly kind: "attackerAllyWithin5FeetOfTarget";
       readonly attackerId: CombatantId;
       readonly targetId: CombatantId;
       readonly allyId: CombatantId;

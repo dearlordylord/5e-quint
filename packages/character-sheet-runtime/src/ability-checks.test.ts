@@ -24,57 +24,59 @@ import {
   unitLibrary
 } from "./test-support.ts";
 
-describe("Character Sheet runtime / ability checks", () => {
-  test(secondStoryWorkProjectionTestName, () => {
-    const baseRogueBuild = armorClassBuild({
-      startingClass: "class_rogue",
-      advancements: ["class_rogue", "class_rogue"],
-    });
-    const rogueBuild = {
-      ...baseRogueBuild,
-      features: [
-        {
-          kind: "selectedClassChoice",
-          selectedFromUnitId: "class_rogue",
-          unitId: "subclass_rogue_thief",
-        },
-      ],
-    } as const;
-
-    expect(
-      requireRight(
-        characterSheetLinkedSpeedGrants(baseRogueBuild, unitLibrary),
-      ),
-    ).toEqual([]);
-
-    expect(
-      requireRight(characterSheetLinkedSpeedGrants(rogueBuild, unitLibrary)),
-    ).toEqual([
-      {
-        sourceUnitId: "rogue_second_story_work",
-        speedKind: "climb",
-        feet: { kind: "walk_speed" },
-      },
-    ]);
-    expect(
-      requireRight(
-        characterSheetJumpDistanceAbility({
-          build: rogueBuild,
-          unitLibrary,
-          defaultAbility: "str",
-        }),
-      ),
-    ).toEqual({
-      defaultAbility: "str",
-      optionalSubstitutions: [
-        {
-          ability: "dex",
-          replaces: "str",
-          sourceUnitId: "rogue_second_story_work",
-        },
-      ],
-    });
+function expectSecondStoryWorkProjection() {
+  const baseRogueBuild = armorClassBuild({
+    startingClass: "class_rogue",
+    advancements: ["class_rogue", "class_rogue"],
   });
+  const rogueBuild = {
+    ...baseRogueBuild,
+    features: [
+      {
+        kind: "selectedClassChoice",
+        selectedFromUnitId: "class_rogue",
+        unitId: "subclass_rogue_thief",
+      },
+    ],
+  } as const;
+
+  expect(
+    requireRight(
+      characterSheetLinkedSpeedGrants(baseRogueBuild, unitLibrary),
+    ),
+  ).toEqual([]);
+
+  expect(
+    requireRight(characterSheetLinkedSpeedGrants(rogueBuild, unitLibrary)),
+  ).toEqual([
+    {
+      sourceUnitId: "rogue_second_story_work",
+      speedKind: "climb",
+      feet: { kind: "walk_speed" },
+    },
+  ]);
+  expect(
+    requireRight(
+      characterSheetJumpDistanceAbility({
+        build: rogueBuild,
+        unitLibrary,
+        defaultAbility: "str",
+      }),
+    ),
+  ).toEqual({
+    defaultAbility: "str",
+    optionalSubstitutions: [
+      {
+        ability: "dex",
+        replaces: "str",
+        sourceUnitId: "rogue_second_story_work",
+      },
+    ],
+  });
+}
+
+describe("Character Sheet runtime / ability checks", () => {
+  test(secondStoryWorkProjectionTestName, expectSecondStoryWorkProjection);
 
   test(jackOfAllTradesAddsHalfProficiencyBonusTestName, () => {
     const result = requireRight(

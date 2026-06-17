@@ -121,6 +121,7 @@ import { weaponDamageRiderProfile } from "./spell-procedure-profiles/weapon-dama
 import { afterHitDamageAndIlluminationProfile } from "./spell-procedure-profiles/after-hit-damage-and-illumination.ts";
 import { afterHitTimedDamageAndSaveProfile } from "./spell-procedure-profiles/after-hit-timed-damage-and-save.ts";
 import { spellAdmissionContextFor } from "./spell-procedure-profiles/profile.ts";
+import { activeOngoingFeaturesPreventSpellInvocation } from "./spells-invocation-guards.ts";
 export * from "./spells-profiles-support.ts";
 export {
   animalFriendshipSaveGateConditionSpell,
@@ -424,7 +425,10 @@ export function supportedSpellActs(
     ...cantrips.flatMap((spell) =>
       makeStableProfile.admit(spell, admissionContext),
     ),
-  ];
+  ].filter(
+    (invocation) =>
+      !activeOngoingFeaturesPreventSpellInvocation(actor, invocation),
+  );
 }
 
 export function supportedPreparedHellishRebukeReactionSpellProfile(

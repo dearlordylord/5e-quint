@@ -507,7 +507,7 @@ function battleDruidWildShapeAvailableFormsFromInput(
   }
   if (profile === undefined) {
     return battleCreatureInitIssue(
-      "Druid Wild Shape level 18+ requires Beast Spells support before battle initialization.",
+      "Druid Wild Shape available forms require a supported Wild Shape battle profile.",
     );
   }
   if (forms === undefined) {

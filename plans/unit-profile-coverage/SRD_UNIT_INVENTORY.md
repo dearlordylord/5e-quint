@@ -33,51 +33,48 @@ This is the default `%` for level-1 readiness questions. A row counts only when 
 
 This is the default `%` for character-level-1 plus character-level-2 readiness questions. It uses the same acceptance rules as the level-1 metric, but includes character-level-2 class-feature rows. It deliberately excludes spell-level-2 pressure.
 
-- Accepted: 398/400 (99.5%)
+- Accepted: 400/400 (100%)
 
 #### Character Levels 1-2 Battle Readiness by Status
 
-- accepted: 299
+- accepted: 301
 - accepted-no-battle-effect: 99
-- owner-evidence-required: 1
-- partial-battle-runtime: 1
 
 ### Expanded Progress Metric: Character Levels 1-3 Battle Readiness
 
 This is the default `%` for character-level-1 through character-level-3 readiness questions. It includes character-level-3 class/subclass rows and spell-level-2 pressure. It deliberately excludes spell-level-3 pressure.
 
-- Accepted: 605/607 (99.7%)
+- Accepted: 606/607 (99.8%)
 
 #### Character Levels 1-3 Battle Readiness by Status
 
-- accepted: 445
+- accepted: 446
 - accepted-no-battle-effect: 160
 - owner-evidence-required: 1
-- partial-battle-runtime: 1
 
 ### Expanded Progress Metric: Character Levels 1-4 Battle Readiness
 
 This is the default `%` for character-level-1 through character-level-4 readiness questions. It includes character-level-4 class-feature rows and spell-level-2 pressure. It deliberately excludes spell-level-3 pressure, which first enters the character-level-5 frontier for full casters.
 
-- Accepted: 630/632 (99.7%)
+- Accepted: 631/632 (99.8%)
 
 #### Character Levels 1-4 Battle Readiness by Status
 
-- accepted: 446
+- accepted: 447
 - accepted-no-battle-effect: 184
 - owner-evidence-required: 1
-- partial-battle-runtime: 1
 
 ### Level-3 Class/Subclass Battle Readiness
 
 This metric is a separate seed for level-3 class feature, subclass selection, subclass feature, and subclass Spell Access rows. It covers both always-prepared subclass grants and choice-derived prepared grants without affecting the Level 1-2 readiness denominator or level-3 spell-list pressure.
 
-- Accepted: 51/51 (100%)
+- Accepted: 50/51 (98%)
 
 #### Level-3 Class/Subclass Battle Readiness by Status
 
-- accepted: 37
+- accepted: 36
 - accepted-no-battle-effect: 14
+- owner-evidence-required: 1
 
 ### Level-4 Class Feature Battle Readiness
 
@@ -110,13 +107,13 @@ This metric is a separate seed for spell-level-3 pressure only. It belongs to th
 
 ### Level-2 Rows by Disposition
 
-- catalog-installed-needs-owner-evidence: 1
-- catalog-installed-owner-evidence-present: 20
+- catalog-installed-owner-evidence-present: 21
 - non-runtime: 12
 
 ### Level-3 Class/Subclass Rows by Disposition
 
-- catalog-installed-owner-evidence-present: 37
+- catalog-installed-owner-evidence-present: 36
+- catalog-installed-owner-evidence-required: 1
 - catalog-only/dead-for-now: 2
 - non-runtime: 12
 
@@ -427,7 +424,7 @@ These batches are generated planning recommendations for a separate SRD inventor
 |Cleric Channel Divinity|class feature||current-surface-can-express-source-facts|authored-record-present|installed|supported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; character-creation-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Cleric.md:88|
 |Cleric level 2 feature table row|character-creation or progression mechanic|non-runtime-table-summary|outside-surface-runtime-mechanics|authored-record-present|installed|unsupported-profile|non-runtime|accepted-no-battle-effect|||No runtime work; keep classification as explicit closure.|.references/srd-5.2.1/Classes/Cleric.md:36|
 |Druid Wild Companion|class feature||current-surface-can-express-source-facts|authored-record-present|installed|profile-subset-supported|catalog-installed-owner-evidence-present|accepted|profile-subset-remaining-mechanics-closed: SRDINV86 companion review boundary|Unit catalog/admission: catalog evidence; character-creation-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Druid.md:124|
-|Druid Wild Shape|class feature||current-surface-can-express-source-facts|authored-record-present|installed|profile-subset-supported|catalog-installed-owner-evidence-present|partial-battle-runtime||Unit catalog/admission: catalog evidence; character-creation-runtime: owner evidence present; character-sheet-runtime: owner evidence present; battle-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Druid.md:95|
+|Druid Wild Shape|class feature||current-surface-can-express-source-facts|authored-record-present|installed|profile-subset-supported|catalog-installed-owner-evidence-present|accepted|profile-subset-remaining-mechanics-closed: generic Stat Block action procedure owners by Surface action shape; generic object/Utilize and table-placement owner; ASSUMPTIONS.md A27 owner-decision plus character-battle-runtime handoff boundary|Unit catalog/admission: catalog evidence; character-creation-runtime: owner evidence present; character-sheet-runtime: owner evidence present; battle-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Druid.md:95|
 |Druid level 2 feature table row|character-creation or progression mechanic|non-runtime-table-summary|outside-surface-runtime-mechanics|authored-record-present|installed|unsupported-profile|non-runtime|accepted-no-battle-effect|||No runtime work; keep classification as explicit closure.|.references/srd-5.2.1/Classes/Druid.md:33|
 |Fighter Action Surge|class feature||current-surface-can-express-source-facts|authored-record-present|installed|supported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; battle-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Fighter.md:76|
 |Fighter Tactical Mind|class feature||current-surface-can-express-source-facts|authored-record-present|installed|supported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; battle-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Fighter.md:82|
@@ -445,7 +442,7 @@ These batches are generated planning recommendations for a separate SRD inventor
 |Rogue Cunning Action|class feature||current-surface-can-express-source-facts|authored-record-present|installed|supported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; battle-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Rogue.md:81|
 |Rogue level 2 feature table row|character-creation or progression mechanic|non-runtime-table-summary|outside-surface-runtime-mechanics|authored-record-present|installed|unsupported-profile|non-runtime|accepted-no-battle-effect|||No runtime work; keep classification as explicit closure.|.references/srd-5.2.1/Classes/Rogue.md:37|
 |Sorcerer Font of Magic|class feature||current-surface-can-express-source-facts|authored-record-present|installed|profile-subset-supported|catalog-installed-owner-evidence-present|accepted|profile-subset-remaining-mechanics-closed: Character Sheet Font of Magic conversion state plus Character Battle aggregate Spell Slot handoff|Unit catalog/admission: catalog evidence; character-creation-runtime: owner evidence present; character-sheet-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Sorcerer.md:87|
-|Sorcerer Metamagic|class feature||current-surface-can-express-source-facts|authored-record-present|installed|profile-subset-supported|catalog-installed-needs-owner-evidence|owner-evidence-required||Unit catalog/admission: catalog-only evidence; operational owner evidence still required|Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only.|.references/srd-5.2.1/Classes/Sorcerer.md:111|
+|Sorcerer Metamagic|class feature||current-surface-can-express-source-facts|authored-record-present|installed|profile-subset-supported|catalog-installed-owner-evidence-present|accepted|profile-subset-remaining-mechanics-closed: future procedure-specific Quickened Spell Invocation owners; future procedure-specific range and duration consumers; future procedure-specific spell damage reroll owners; future repeated spell attack sequence reroll owner|Unit catalog/admission: catalog evidence; character-creation-runtime: owner evidence present; character-sheet-runtime: owner evidence present; battle-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Sorcerer.md:111|
 |Sorcerer level 2 feature table row|character-creation or progression mechanic|non-runtime-table-summary|outside-surface-runtime-mechanics|authored-record-present|installed|unsupported-profile|non-runtime|accepted-no-battle-effect|||No runtime work; keep classification as explicit closure.|.references/srd-5.2.1/Classes/Sorcerer.md:36|
 |Warlock Magical Cunning|class feature||current-surface-can-express-source-facts|authored-record-present|installed|supported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; character-sheet-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Warlock.md:92|
 |Warlock level 2 feature table row|character-creation or progression mechanic|non-runtime-table-summary|outside-surface-runtime-mechanics|authored-record-present|installed|unsupported-profile|non-runtime|accepted-no-battle-effect|||No runtime work; keep classification as explicit closure.|.references/srd-5.2.1/Classes/Warlock.md:36|
@@ -491,7 +488,7 @@ These batches are generated planning recommendations for a separate SRD inventor
 |Ranger level 3 feature table row|character-creation or progression mechanic|outside-surface-runtime-mechanics|authored-record-present|installed|unsupported-profile|non-runtime|accepted-no-battle-effect|||No runtime work; keep classification as explicit closure.|.references/srd-5.2.1/Classes/Ranger.md:37|
 |Ranger Subclass|subclass selection|current-surface-can-express-source-facts|authored-record-present|installed|unsupported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; character-creation-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Ranger.md:102|
 |Rogue Fast Hands|class feature|current-surface-can-express-source-facts|authored-record-present|installed|profile-subset-supported|catalog-installed-owner-evidence-present|accepted|profile-subset-remaining-mechanics-closed: table/tool-check owner; Utilize action owner; magic-item activation owner|Unit catalog/admission: catalog evidence; battle-runtime admission plus closed delegated owners: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Rogue.md:159|
-|Rogue Second-Story Work|class feature|current-surface-can-express-source-facts|authored-record-present|installed|supported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; character-sheet-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Rogue.md:167|
+|Rogue Second-Story Work|class feature|current-surface-can-express-source-facts|authored-record-present|installed|supported-profile|catalog-installed-owner-evidence-required|owner-evidence-required||Unit catalog/admission: catalog evidence; character-sheet Speed projection plus movement/jump owner: owner evidence required|Promote Second-Story Work by projecting Climb Speed equal to Speed and by adding a jump-distance ability substitution that uses Dexterity rather than Strength, without storing duplicated climb or jump values beside the base Speed and Ability Score facts.|.references/srd-5.2.1/Classes/Rogue.md:167|
 |Rogue Steady Aim|class feature|current-surface-can-express-source-facts|authored-record-present|installed|supported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; battle-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Rogue.md:89|
 |Rogue level 3 feature table row|character-creation or progression mechanic|outside-surface-runtime-mechanics|authored-record-present|installed|unsupported-profile|non-runtime|accepted-no-battle-effect|||No runtime work; keep classification as explicit closure.|.references/srd-5.2.1/Classes/Rogue.md:38|
 |Rogue Subclass|subclass selection|current-surface-can-express-source-facts|authored-record-present|installed|unsupported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; character-creation-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Rogue.md:85|

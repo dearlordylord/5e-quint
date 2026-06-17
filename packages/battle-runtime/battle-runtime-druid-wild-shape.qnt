@@ -12,10 +12,14 @@
 //   Beast stat-block projection, retained mental statistics/proficiencies, and
 //   no spellcasting while shape-shifted; chosen equipment can merge, fall, or
 //   be worn when practical, and worn equipment functions normally.
+// - .references/srd-5.2.1/Classes/Druid.md lines 160-162: Beast Spells
+//   permits level 18 Druids to cast spells while using Wild Shape, except for
+//   spells with costed or consumed Material components.
 // - .references/srd-5.2.1/Rules-Glossary.md lines 871-874: shape-shifting
 //   effects specify their own form rules and revert to true form on death.
 // - UBIQUITOUS_LANGUAGE.md: Temporary Hit Points, Stat Block, Action
-//   Lifecycle, and Creatures and Stat Blocks.
+//   Lifecycle, Spell Definition, Spell Invocation, Spell Component, and
+//   Creatures and Stat Blocks.
 
 module battleRuntimeDruidWildShape {
   import battleRuntimeShapeShifting.* from "./battle-runtime-shape-shifting"
@@ -53,6 +57,12 @@ module battleRuntimeDruidWildShape {
     projection: DruidWildShapeProjection,
     droppedEquipmentCount: int,
   }
+  type DruidWildShapeSpellMaterialComponent =
+    DruidWildShapeNoMaterialComponent
+    | DruidWildShapeFocusReplaceableMaterialComponent
+    | DruidWildShapePricedMaterialComponent
+    | DruidWildShapeConsumedMaterialComponent
+    | DruidWildShapeConsumedPricedMaterialComponent
 
   pure def allMergedEquipmentDisposition: DruidWildShapeEquipmentDisposition = {
     wornArmor: false,
@@ -106,6 +116,7 @@ module battleRuntimeDruidWildShape {
   }
 
   pure def proficiencyBonus: int = 2
+  pure def druidWildShapeBeastSpellsClassLevel: int = 18
   pure def characterStrengthModifier: int = -1
   pure def characterDexterityModifier: int = 0
   pure def characterConstitutionModifier: int = 0
@@ -236,6 +247,29 @@ module battleRuntimeDruidWildShape {
     match state.activeForm {
       | DruidWildShapeTrueForm => true
       | DruidWildShapeShifted(_) => false
+    }
+
+  pure def druidWildShapeBeastSpellsAllowsMaterialComponent(
+    materialComponent: DruidWildShapeSpellMaterialComponent,
+  ): bool =
+    match materialComponent {
+      | DruidWildShapeNoMaterialComponent => true
+      | DruidWildShapeFocusReplaceableMaterialComponent => true
+      | DruidWildShapePricedMaterialComponent => false
+      | DruidWildShapeConsumedMaterialComponent => false
+      | DruidWildShapeConsumedPricedMaterialComponent => false
+    }
+
+  pure def druidWildShapeAllowsSpellInvocation(
+    state: DruidWildShapeProjection,
+    druidLevel: int,
+    materialComponent: DruidWildShapeSpellMaterialComponent,
+  ): bool =
+    match state.activeForm {
+      | DruidWildShapeTrueForm => true
+      | DruidWildShapeShifted(_) =>
+        druidLevel >= druidWildShapeBeastSpellsClassLevel
+          and druidWildShapeBeastSpellsAllowsMaterialComponent(materialComponent)
     }
 
   pure def canUseWornMainWeapon(state: DruidWildShapeProjection): bool =

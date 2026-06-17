@@ -1,5 +1,6 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.druid-wild-shape-known-form
 // KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.WILD_SHAPE_FORM_LIFECYCLE
+// KERNEL-COVERAGE: runtime-owner BATTLE.STAT_BLOCK.ATTACK_CONTROL
 // StatBlock action-option and resource helpers extracted from battle-reducer.ts.
 // Cluster V (statblock). Mechanical extraction — no behavior change.
 // V depends on W (statblock-attacks.ts) for supportedStatBlockAttack* and
@@ -31,15 +32,18 @@ import {
   type StatBlockBattleCreatureState,
 } from "../battle-reducer.ts";
 import type { CombatantId } from "../identity.ts";
-import { creatureNamedAttackRollIsSupported } from "../statblock-action-support.ts";
+import {
+  creatureNamedAttackRollIsSupported,
+  supportedStatBlockTraitAttackRollModes,
+} from "../statblock-action-support.ts";
+import {
+  statBlockAttackDamageSupportsStaticNotation,
+  supportedStatBlockAttackDamage,
+} from "../statblock-attack-damage-support.ts";
 import {
   activeDruidWildShape,
   updateActiveDruidWildShapeResources,
 } from "./druid-wild-shape.ts";
-import {
-  statBlockAttackDamageSupportsStaticNotation,
-  supportedStatBlockAttackDamage,
-} from "./statblock-attacks.ts";
 
 export function supportedStatBlockAttackActionOption(
   attack: CreatureNamedAttackRoll,
@@ -52,6 +56,7 @@ export function supportedStatBlockAttackActionOption(
   attack: CreatureNamedAttackRoll,
   part: StatBlockPartKey,
   damageNotation: "rolled",
+  traits?: StatBlockRecord["statBlock"]["traits"],
 ): Extract<
   StatBlockAttackActionOption,
   { readonly damageNotation: "rolled" }
@@ -60,6 +65,7 @@ export function supportedStatBlockAttackActionOption(
   attack: CreatureNamedAttackRoll,
   part: StatBlockPartKey,
   damageNotation: "static",
+  traits?: StatBlockRecord["statBlock"]["traits"],
 ): Extract<
   StatBlockAttackActionOption,
   { readonly damageNotation: "static" }
@@ -68,10 +74,12 @@ export function supportedStatBlockAttackActionOption(
   attack: CreatureNamedAttackRoll,
   part: StatBlockPartKey,
   damageNotation: StatBlockAttackActionOption["damageNotation"] = "rolled",
+  traits?: StatBlockRecord["statBlock"]["traits"],
 ): StatBlockAttackActionOption | null {
   if (!isSupportedCreatureNamedAttackRoll(attack)) {
     return null;
   }
+  const traitAttackRollModes = supportedStatBlockTraitAttackRollModes(traits);
 
   if (damageNotation === "static") {
     return statBlockAttackSupportsStaticDamageNotation(attack)
@@ -80,6 +88,9 @@ export function supportedStatBlockAttackActionOption(
           attack,
           part,
           damageNotation,
+          ...(traitAttackRollModes === undefined
+            ? {}
+            : { traitAttackRollModes }),
         }
       : null;
   }
@@ -89,6 +100,7 @@ export function supportedStatBlockAttackActionOption(
     attack,
     part,
     damageNotation: "rolled",
+    ...(traitAttackRollModes === undefined ? {} : { traitAttackRollModes }),
   };
 }
 
@@ -98,10 +110,12 @@ export function statBlockAttackActionOptions(
   const actionAttacks = statBlockActionSectionAttackOptions(
     "actions",
     statBlock.statBlock.actions,
+    statBlock.statBlock.traits,
   );
   const legendaryAttacks = statBlockActionSectionAttackOptions(
     "legendaryActions",
     statBlock.statBlock.legendaryActions?.actions,
+    statBlock.statBlock.traits,
   );
 
   return [...actionAttacks, ...legendaryAttacks];
@@ -116,6 +130,7 @@ export function attackActionOptionIsOrdinaryAttackAction(
 export function statBlockActionSectionAttackOptions(
   section: StatBlockPartSection,
   actions: CreatureActions | undefined,
+  traits?: StatBlockRecord["statBlock"]["traits"],
 ): readonly StatBlockAttackActionOption[] {
   return (
     actions?.attacks?.flatMap((attack) => {
@@ -123,12 +138,18 @@ export function statBlockActionSectionAttackOptions(
         section,
         name: attack.name,
       };
-      const option = supportedStatBlockAttackActionOption(attack, part);
+      const option = supportedStatBlockAttackActionOption(
+        attack,
+        part,
+        "rolled",
+        traits,
+      );
       if (option == null) return [];
       const staticOption = supportedStatBlockAttackActionOption(
         attack,
         part,
         "static",
+        traits,
       );
       return staticOption === null ? [option] : [option, staticOption];
     }) ?? []

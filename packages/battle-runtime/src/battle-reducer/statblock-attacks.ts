@@ -3,6 +3,7 @@
 // no behavior change. Mutual import cycle with statblock.ts (V) is tolerated
 // because all imported bindings are function values used only at call time.
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.hunters-prey
+// KERNEL-COVERAGE: runtime-owner BATTLE.STAT_BLOCK.ATTACK_CONTROL
 
 import { Match } from "effect";
 import { attackBonus, movementFeet, type AttackBonus } from "@dnd/shared/types";
@@ -28,6 +29,7 @@ import type {
   CharacterWeaponAttackActionOption,
   StatBlockAttackActionOption,
   StatBlockAttackDamage,
+  StatBlockAttackDamageComponent,
   SupportedAttackActionOption,
   SupportedCreatureNamedAttackRoll,
 } from "../battle-action-options.ts";
@@ -50,116 +52,16 @@ import {
   type SpellAttackDamageComponent,
   type WeaponDamageDiceRollChoiceFill,
 } from "../battle-reducer.ts";
-import { combatantsAreAllies, currentActorId } from "./creature-state-leaves.ts";
+import {
+  combatantsAreAllies,
+  currentActorId,
+} from "./creature-state-leaves.ts";
 import { isCharacterBattleCreatureState } from "./creature-state.ts";
 import {
   activeRageDamageBonusForFrenzy,
   ongoingFeatureProfileIsRecklessAttackForFrenzy,
 } from "./barbarian-frenzy.ts";
-
-export function supportedStatBlockAttackDamage(
-  attack: SupportedCreatureNamedAttackRoll,
-): StatBlockAttackDamage;
-export function supportedStatBlockAttackDamage(
-  attack: CreatureNamedAttackRoll,
-): StatBlockAttackDamage | null;
-export function supportedStatBlockAttackDamage(
-  attack: CreatureNamedAttackRoll,
-): StatBlockAttackDamage | null {
-  const baseDamage = attack.onHit.flatMap((effect) =>
-    supportedStatBlockBaseDamageEffect(effect),
-  );
-  const advantageBonus = attack.onHit.flatMap((effect) =>
-    supportedStatBlockAdvantageBonusDamageEffect(effect),
-  );
-  if (
-    baseDamage.length !== 1 ||
-    baseDamage.length + advantageBonus.length !== attack.onHit.length
-  ) {
-    return null;
-  }
-
-  const damage = baseDamage[0];
-  if (damage === undefined) {
-    return null;
-  }
-  const bonus = advantageBonus[0];
-  if (advantageBonus.length > 1) {
-    return null;
-  }
-  if (bonus !== undefined && bonus.damageType !== damage.damageType) {
-    return null;
-  }
-
-  return {
-    expr: damage.expr,
-    ...(damage.static === undefined ? {} : { static: damage.static }),
-    damageType: damage.damageType,
-    ...(bonus === undefined ? {} : { advantageBonus: bonus }),
-  };
-}
-
-export function supportedStatBlockBaseDamageEffect(
-  effect: CreatureNamedAttackRoll["onHit"][number],
-): readonly StatBlockAttackDamage[] {
-  if (
-    effect.kind !== "damage" ||
-    effect.amount.kind !== "fixed" ||
-    typeof effect.damageType !== "string"
-  ) {
-    return [];
-  }
-
-  const staticDamage = statBlockDamageNotationStaticAmount(effect.amount);
-  return [
-    {
-      expr: effect.amount.expr,
-      ...(staticDamage === undefined ? {} : { static: staticDamage }),
-      damageType: effect.damageType,
-    },
-  ];
-}
-
-export function supportedStatBlockAdvantageBonusDamageEffect(
-  effect: CreatureNamedAttackRoll["onHit"][number],
-): readonly Required<StatBlockAttackDamage>["advantageBonus"][] {
-  if (
-    effect.kind !== "conditional_bonus_damage" ||
-    effect.when.kind !== "attack_roll_had_advantage" ||
-    effect.amount.kind !== "fixed" ||
-    typeof effect.damageType !== "string"
-  ) {
-    return [];
-  }
-
-  const staticDamage = statBlockDamageNotationStaticAmount(effect.amount);
-  return [
-    {
-      expr: effect.amount.expr,
-      ...(staticDamage === undefined ? {} : { static: staticDamage }),
-      damageType: effect.damageType,
-    },
-  ];
-}
-
-function statBlockDamageNotationStaticAmount(amount: {
-  readonly kind: "fixed";
-  readonly expr: DiceExpr;
-}): number | undefined {
-  return "static" in amount && typeof amount.static === "number"
-    ? amount.static
-    : undefined;
-}
-
-export function statBlockAttackDamageSupportsStaticNotation(
-  damage: StatBlockAttackDamage,
-): boolean {
-  return (
-    damage.static !== undefined &&
-    (damage.advantageBonus === undefined ||
-      damage.advantageBonus.static !== undefined)
-  );
-}
+import { supportedStatBlockAttackDamage } from "../statblock-attack-damage-support.ts";
 
 export function supportedStatBlockAttackTargetConstraint(
   attack: SupportedCreatureNamedAttackRoll,
@@ -365,7 +267,7 @@ export function attackDamage(attack: SupportedAttackActionOption): {
       unarmedStrikeAttackDamage(unarmedStrike),
     ),
     Match.when({ kind: "statBlockAttack" }, (statBlockAttack) => {
-      const damage = statBlockAttackDamage(statBlockAttack);
+      const [damage] = statBlockAttackDamage(statBlockAttack).baseComponents;
       return {
         dice: damage.expr.dice,
         dieSize: damage.expr.dieSize,
@@ -479,7 +381,9 @@ export function weaponAttackSupportsFinesseOrRanged(
 
 function attackUsesStrengthWeaponOrUnarmedStrike(
   attack: SupportedAttackActionOption,
-): attack is CharacterWeaponAttackActionOption | CharacterUnarmedStrikeActionOption {
+): attack is
+  | CharacterWeaponAttackActionOption
+  | CharacterUnarmedStrikeActionOption {
   return (
     (attack.kind === "weapon" && attack.ability === "str") ||
     (attack.kind === "unarmedStrike" && attack.attackAbility === "str")
@@ -487,7 +391,9 @@ function attackUsesStrengthWeaponOrUnarmedStrike(
 }
 
 function selectedAttackDamageType(
-  attack: CharacterWeaponAttackActionOption | CharacterUnarmedStrikeActionOption,
+  attack:
+    | CharacterWeaponAttackActionOption
+    | CharacterUnarmedStrikeActionOption,
 ): DamageType {
   return attack.kind === "weapon"
     ? selectedWeaponDamage(attack.weapon).damageType
@@ -502,7 +408,7 @@ export function targetHasAdjacentNonIncapacitatedAlly(
 ): boolean {
   return facts.some((fact) => {
     if (
-      fact.kind !== "sneakAttackAllyWithin5FeetOfTarget" ||
+      fact.kind !== "attackerAllyWithin5FeetOfTarget" ||
       fact.attackerId !== attackerId ||
       fact.targetId !== targetId
     ) {
@@ -531,42 +437,42 @@ export function eligibleAttackDamageRiders(
   if (!isCharacterBattleCreatureState(attacker)) {
     return [];
   }
-  const profileRiders = [...attacker.origin.attackDamageRiderProfiles.values()].flatMap(
-    (profile): readonly AttackDamageRider[] => {
-      if (
-        state.currentTurnResources.attackDamageRidersUsedThisTurn.some(
-          (usage) =>
-            usage.attackerId === attackerId && usage.unitId === profile.unit.id,
-        )
-      ) {
-        return [];
-      }
-      const damageType = selectedAttackDamageTypeForProfile({
-        state,
-        attacker,
-        attackerId,
-        attack,
-        attackRoll,
-        targetId,
-        targetSpatialFacts,
-        profile,
-      });
-      if (damageType === null) {
-        return [];
-      }
-      const rider = attackDamageRiderForProfile(
-        profile,
-        attackerId,
-        damageType,
-        profile.trigger ===
-          "rageActiveRecklessStrengthWeaponOrUnarmedStrikeFirstHit" &&
-          attackUsesStrengthWeaponOrUnarmedStrike(attack)
-          ? (activeRageDamageBonusForFrenzy(attacker, attack)?.damageBonus ?? 0)
-          : 0,
-      );
-      return rider === null ? [] : [rider];
-    },
-  );
+  const profileRiders = [
+    ...attacker.origin.attackDamageRiderProfiles.values(),
+  ].flatMap((profile): readonly AttackDamageRider[] => {
+    if (
+      state.currentTurnResources.attackDamageRidersUsedThisTurn.some(
+        (usage) =>
+          usage.attackerId === attackerId && usage.unitId === profile.unit.id,
+      )
+    ) {
+      return [];
+    }
+    const damageType = selectedAttackDamageTypeForProfile({
+      state,
+      attacker,
+      attackerId,
+      attack,
+      attackRoll,
+      targetId,
+      targetSpatialFacts,
+      profile,
+    });
+    if (damageType === null) {
+      return [];
+    }
+    const rider = attackDamageRiderForProfile(
+      profile,
+      attackerId,
+      damageType,
+      profile.trigger ===
+        "rageActiveRecklessStrengthWeaponOrUnarmedStrikeFirstHit" &&
+        attackUsesStrengthWeaponOrUnarmedStrike(attack)
+        ? (activeRageDamageBonusForFrenzy(attacker, attack)?.damageBonus ?? 0)
+        : 0,
+    );
+    return rider === null ? [] : [rider];
+  });
   return [
     ...profileRiders,
     ...huntersPreyColossusSlayerRiders({
@@ -696,25 +602,32 @@ function frenzyRecklessAttackWhileRagingUsedThisTurn(input: {
   readonly state: BattleState;
   readonly attacker: CharacterBattleCreatureState;
   readonly attackerId: CombatantId;
-  readonly attack: CharacterWeaponAttackActionOption | CharacterUnarmedStrikeActionOption;
+  readonly attack:
+    | CharacterWeaponAttackActionOption
+    | CharacterUnarmedStrikeActionOption;
 }): boolean {
-  const activeRage = activeRageDamageBonusForFrenzy(input.attacker, input.attack);
+  const activeRage = activeRageDamageBonusForFrenzy(
+    input.attacker,
+    input.attack,
+  );
   if (activeRage === null || activeRage.damageBonus <= 0) {
     return false;
   }
-  return [...input.attacker.activeOngoingFeatureOccurrences.keys()].some((key) => {
-    const profile = input.attacker.origin.ongoingFeatureProfiles.get(key);
-    return (
-      profile?.kind === "ongoingFeature" &&
-      ongoingFeatureProfileIsRecklessAttackForFrenzy(profile) &&
-      input.state.currentTurnResources.recklessAttackWhileRagingUsedThisTurn.some(
-        (usage) =>
-          usage.attackerId === input.attackerId &&
-          usage.recklessAttackSourceKey === key &&
-          usage.rageSourceKey === activeRage.sourceKey,
-      )
-    );
-  });
+  return [...input.attacker.activeOngoingFeatureOccurrences.keys()].some(
+    (key) => {
+      const profile = input.attacker.origin.ongoingFeatureProfiles.get(key);
+      return (
+        profile?.kind === "ongoingFeature" &&
+        ongoingFeatureProfileIsRecklessAttackForFrenzy(profile) &&
+        input.state.currentTurnResources.recklessAttackWhileRagingUsedThisTurn.some(
+          (usage) =>
+            usage.attackerId === input.attackerId &&
+            usage.recklessAttackSourceKey === key &&
+            usage.rageSourceKey === activeRage.sourceKey,
+        )
+      );
+    },
+  );
 }
 
 export function selectedAttackDamageRiders(
@@ -800,20 +713,12 @@ export function attackDamageComponents(
     }),
     Match.when({ kind: "statBlockAttack" }, (statBlockAttack) => {
       const damage = statBlockAttackDamage(statBlockAttack);
-      const base = damage.expr;
-      const baseComponents =
+      const baseComponents = damage.baseComponents.flatMap((component) =>
         statBlockAttack.damageNotation === "static" &&
-        damage.static !== undefined
+        component.static !== undefined
           ? []
-          : [
-              {
-                expr: {
-                  dice: critical ? base.dice * 2 : base.dice,
-                  dieSize: base.dieSize,
-                },
-                damageType: damage.damageType,
-              },
-            ];
+          : [statBlockRolledDamageComponent(component, critical)],
+      );
       const advantageBonus = damage.advantageBonus;
       if (
         attackRoll?.rollMode !== "advantage" ||
@@ -822,20 +727,13 @@ export function attackDamageComponents(
         return baseComponents;
       }
 
-      const advantageBonusComponent = {
-        expr: {
-          dice: critical
-            ? advantageBonus.expr.dice * 2
-            : advantageBonus.expr.dice,
-          dieSize: advantageBonus.expr.dieSize,
-        },
-        damageType: advantageBonus.damageType,
-      };
-
       return statBlockAttack.damageNotation === "static" &&
         advantageBonus.static !== undefined
         ? baseComponents
-        : [...baseComponents, advantageBonusComponent];
+        : [
+            ...baseComponents,
+            statBlockRolledDamageComponent(advantageBonus, critical),
+          ];
     }),
     Match.exhaustive,
   );
@@ -845,6 +743,19 @@ export function attackDamageComponents(
     ...spellRiderComponents,
     ...markedRiderComponents,
   ];
+}
+
+function statBlockRolledDamageComponent(
+  damage: StatBlockAttackDamageComponent,
+  critical: boolean,
+): AttackDamageComponent {
+  return {
+    expr: {
+      ...damage.expr,
+      dice: critical ? damage.expr.dice * 2 : damage.expr.dice,
+    },
+    damageType: damage.damageType,
+  };
 }
 
 export function weaponDamageComponent(
@@ -906,11 +817,7 @@ export function attackDamageModifier(
         Number(unarmedStrike.damageAbilityModifier) +
         (unarmedStrike.damageBonus ?? 0),
     ),
-    Match.when(
-      { kind: "statBlockAttack" },
-      (statBlockAttack) =>
-        statBlockAttackDamage(statBlockAttack).expr.flat ?? 0,
-    ),
+    Match.when({ kind: "statBlockAttack" }, () => 0),
     Match.exhaustive,
   );
 }
@@ -1201,8 +1108,26 @@ export function weaponAttackDamageExpression(
     spellWeaponDamageRiders,
     spellMarkedDamageRiders,
   );
+  const attackLevelDamageModifier =
+    attackDamageModifier(attack) + ongoingDamageModifier;
+
+  if (
+    attack.kind === "statBlockAttack" &&
+    damageComponentTypes(components) > 1
+  ) {
+    return components
+      .map((component, index) =>
+        statBlockTypedDamageComponentExpression(
+          component,
+          index,
+          index === 0 ? attackLevelDamageModifier : 0,
+        ),
+      )
+      .join("");
+  }
+
   const modifier = signedModifier(
-    attackDamageModifier(attack) + ongoingDamageModifier,
+    attackLevelDamageModifier + damageComponentFlatModifier(components),
   );
 
   return `${components
@@ -1212,6 +1137,37 @@ export function weaponAttackDamageExpression(
       return index === 0 && sign === "+" ? dice : `${sign}${dice}`;
     })
     .join("")}${modifier}-${damage.damageType}`;
+}
+
+function damageComponentFlatModifier(
+  components: readonly AttackDamageComponent[],
+): number {
+  return components.reduce(
+    (total, component) =>
+      total +
+      (component.operation === "subtract" ? -1 : 1) *
+        (component.expr.flat ?? 0),
+    0,
+  );
+}
+
+function damageComponentTypes(
+  components: readonly AttackDamageComponent[],
+): number {
+  return new Set(components.map((component) => component.damageType)).size;
+}
+
+function statBlockTypedDamageComponentExpression(
+  component: AttackDamageComponent,
+  index: number,
+  attackLevelDamageModifier: number,
+): string {
+  const sign = component.operation === "subtract" ? "-" : "+";
+  const dice = `${component.expr.dice}d${component.expr.dieSize}`;
+  const prefix = index === 0 && sign === "+" ? "" : sign;
+  return `${prefix}${dice}${signedModifier(
+    (component.expr.flat ?? 0) + attackLevelDamageModifier,
+  )}-${component.damageType}`;
 }
 
 export function signedModifier(modifier: number): string {

@@ -249,10 +249,27 @@ function battleSupportedMasteryUnitIdsForSelectedWeapons(
 function uniqueBattleUnitRefs(
   refs: readonly BattleUnitRef[],
 ): readonly BattleUnitRef[] {
-  return refs.filter(
-    (ref, index) =>
-      refs.findIndex((candidate) => candidate.unitId === ref.unitId) === index,
-  );
+  return refs.reduce<BattleUnitRef[]>((uniqueRefs, ref) => {
+    const existingIndex = uniqueRefs.findIndex(
+      (candidate) => candidate.unitId === ref.unitId,
+    );
+    if (existingIndex === -1) {
+      uniqueRefs.push(ref);
+      return uniqueRefs;
+    }
+
+    const existing = uniqueRefs[existingIndex];
+    const selectedOption = mergedBattleUnitRefSelectedOption(existing, ref);
+    uniqueRefs[existingIndex] = {
+      unitId: existing.unitId,
+      supportProfiles: uniqueBattleSupportProfiles([
+        ...existing.supportProfiles,
+        ...ref.supportProfiles,
+      ]),
+      ...(selectedOption === undefined ? {} : { selectedOption }),
+    };
+    return uniqueRefs;
+  }, []);
 }
 
 function uniqueWeaponMasterySelections(
@@ -264,4 +281,28 @@ function uniqueWeaponMasterySelections(
         (candidate) => candidate.weaponUnitId === selection.weaponUnitId,
       ) === index,
   );
+}
+
+function uniqueBattleSupportProfiles(
+  profiles: readonly BattleUnitRef["supportProfiles"][number][],
+): readonly BattleUnitRef["supportProfiles"][number][] {
+  return profiles.filter(
+    (profile, index) =>
+      profiles.findIndex((candidate) =>
+        battleSupportProfileKey(candidate) === battleSupportProfileKey(profile),
+      ) === index,
+  );
+}
+
+function mergedBattleUnitRefSelectedOption(
+  existing: BattleUnitRef,
+  ref: BattleUnitRef,
+): BattleUnitRef["selectedOption"] {
+  return existing.selectedOption ?? ref.selectedOption;
+}
+
+function battleSupportProfileKey(
+  profile: BattleUnitRef["supportProfiles"][number],
+): string {
+  return typeof profile === "object" ? profile.kind : profile;
 }

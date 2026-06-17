@@ -1523,7 +1523,9 @@ export function createSaveGatedSpellOrderingDriver() {
       expectedStage: SaveGatedSpellOrderingProjection["stage"],
     ): void {
       if (result.tag !== "needsHoles") {
-        throw new Error("Expected save-gated spell fill to request earlier holes.");
+        throw new Error(
+          "Expected save-gated spell fill to request earlier holes.",
+        );
       }
       lastResult = result.tag;
       holes = result.holes;
@@ -1556,9 +1558,7 @@ export function createSaveGatedSpellOrderingDriver() {
             state,
             subject,
             fills: [
-              damageRollFillWithGroups(damage, [
-                [6, 6, 6, 6, 6, 6, 6, 6],
-              ]),
+              damageRollFillWithGroups(damage, [[6, 6, 6, 6, 6, 6, 6, 6]]),
             ],
           }),
           "savingThrowRequired",
@@ -1599,9 +1599,7 @@ export function createSaveGatedSpellOrderingDriver() {
       doFillTargetListBeforeConditionChoice: () => {
         const targetList = requireHole(holes, "spellTargetList");
         fills = [
-          spellTargetListFill(targetList, "blindness_deafness", [
-            skeletonId,
-          ]),
+          spellTargetListFill(targetList, "blindness_deafness", [skeletonId]),
         ];
         recordAccepted(
           resolveBattleSubject({ state, subject, fills }),
@@ -1631,9 +1629,7 @@ export function createSaveGatedSpellOrderingDriver() {
         const targetList = requireHole(holes, "spellTargetList");
         fills = [
           ...fills,
-          spellTargetListFill(targetList, "blindness_deafness", [
-            skeletonId,
-          ]),
+          spellTargetListFill(targetList, "blindness_deafness", [skeletonId]),
         ];
         recordAccepted(
           resolveBattleSubject({ state, subject, fills }),
@@ -1760,9 +1756,7 @@ export function createSpellAttackOrderingDriver() {
           resolveBattleSubject({
             state,
             subject,
-            fills: [
-              attackRollFill(attackRoll, { total: 14, naturalD20: 10 }),
-            ],
+            fills: [attackRollFill(attackRoll, { total: 14, naturalD20: 10 })],
           }),
           "targetRequired",
           "targetChoice",
@@ -2052,10 +2046,7 @@ export function createHitPointRestorationOrderingDriver() {
         featureTargetZeroHpLifecycleCleared = false;
       },
       doFillFeatureHealingDistribution: () => {
-        const distribution = requireHole(
-          holes,
-          "hitPointHealingDistribution",
-        );
+        const distribution = requireHole(holes, "hitPointHealingDistribution");
         fills = [
           preserveLifeDistributionFill(distribution, [
             { targetId: skeletonId, hitPoints: 8 },
@@ -2121,7 +2112,7 @@ export function createCommandOrderingDriver() {
         stage = nextStage;
         orderingError = "";
         droppedObjectCount =
-          "droppedObjects" in result ? result.droppedObjects?.length ?? 0 : 0;
+          "droppedObjects" in result ? (result.droppedObjects?.length ?? 0) : 0;
         pendingCommandOption = commandPendingOption(state);
         return;
       }
@@ -2142,7 +2133,10 @@ export function createCommandOrderingDriver() {
 
     function recordNeedsEarlierHole(
       result: BattleResolutionResult,
-      expectedOrderingError: Exclude<CommandOrderingProjection["orderingError"], "">,
+      expectedOrderingError: Exclude<
+        CommandOrderingProjection["orderingError"],
+        ""
+      >,
       expectedStage: CommandOrderingProjection["stage"],
     ): void {
       if (result.tag !== "needsHoles") {
@@ -2157,7 +2151,10 @@ export function createCommandOrderingDriver() {
 
     function recordInvalid(
       result: BattleResolutionResult,
-      expectedOrderingError: Exclude<CommandOrderingProjection["orderingError"], "">,
+      expectedOrderingError: Exclude<
+        CommandOrderingProjection["orderingError"],
+        ""
+      >,
     ): void {
       if (result.tag !== "invalid" || result.reason !== "invalidFill") {
         throw new Error("Expected Command ordering invalid fill.");
@@ -2961,7 +2958,10 @@ function normalizeHitPointRestorationOrderingQuintState(
     orderingError: hitPointRestorationOrderingError(
       state["qLastOrderingError"],
     ),
-    spellTargetHp: numberFromQuintInt(state["qSpellTargetHp"], "qSpellTargetHp"),
+    spellTargetHp: numberFromQuintInt(
+      state["qSpellTargetHp"],
+      "qSpellTargetHp",
+    ),
     spellTargetZeroHpLifecycleCleared: booleanField(
       state,
       "qSpellTargetZeroHpLifecycleCleared",
@@ -3342,8 +3342,7 @@ function projectHitPointRestorationOrderingState(input: {
     lastResult: input.lastResult,
     orderingError: input.orderingError,
     spellTargetHp: input.spellTargetHp,
-    spellTargetZeroHpLifecycleCleared:
-      input.spellTargetZeroHpLifecycleCleared,
+    spellTargetZeroHpLifecycleCleared: input.spellTargetZeroHpLifecycleCleared,
     featureTargetHp: input.featureTargetHp,
     featureTargetZeroHpLifecycleCleared:
       input.featureTargetZeroHpLifecycleCleared,
@@ -3376,7 +3375,9 @@ function projectCommandOrderingState(input: {
     droppedObjectCount: input.droppedObjectCount,
     haltSuppressed: input.state.currentTurnResources.commandHalt !== null,
     movementSpentFeet:
-      targetSnapshot === undefined ? 0 : Number(targetSnapshot.movement.spentFeet),
+      targetSnapshot === undefined
+        ? 0
+        : Number(targetSnapshot.movement.spentFeet),
     currentActor: commandOrderingActorId(snapshot.currentActorId),
     reactionWindowOpen: input.state.interruptStack.length > 0,
   };
@@ -3699,7 +3700,9 @@ function healingOrderingHolesAfterFills(
 ): readonly BattleHole[] {
   const result = resolveBattleSubject({ state, subject, fills });
   if (result.tag !== "needsHoles") {
-    throw new Error("Expected Hit Point restoration fills to request more holes.");
+    throw new Error(
+      "Expected Hit Point restoration fills to request more holes.",
+    );
   }
 
   return result.holes;
@@ -4044,7 +4047,9 @@ function spellAttackOrderingBattle(
 
 function healingSpellOrderingBattle(): BattleState {
   return startBattleRight({
-    battleId: battleId("battle-runtime-mbt-hit-point-restoration-spell-ordering"),
+    battleId: battleId(
+      "battle-runtime-mbt-hit-point-restoration-spell-ordering",
+    ),
     combatants: [
       healingSpellOrderingCasterCreatureInit({
         initiative: 20,
@@ -4076,7 +4081,9 @@ function healingTargetListSpellOrderingBattle(): BattleState {
 
 function featureHealingPoolOrderingBattle(): BattleState {
   return startBattleRight({
-    battleId: battleId("battle-runtime-mbt-hit-point-restoration-feature-ordering"),
+    battleId: battleId(
+      "battle-runtime-mbt-hit-point-restoration-feature-ordering",
+    ),
     combatants: [
       preserveLifeOrderingCreatureInit({ initiative: 20 }),
       healingOrderingTargetCreatureInit({ initiative: 10, currentHp: 0 }),
@@ -4103,9 +4110,9 @@ function commandOrderingCastSubject(): Extract<
   };
 }
 
-function commandOrderingCastAct(
-  state: BattleState,
-): ReturnType<typeof discoverBattleActs>[number] & {
+function commandOrderingCastAct(state: BattleState): ReturnType<
+  typeof discoverBattleActs
+>[number] & {
   readonly subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>;
 } {
   const act = discoverBattleActs(state).find(
@@ -4191,7 +4198,10 @@ function castCommandForOrdering(
   const targetSelection = spellTargetListFill(target, "command", [skeletonId]);
   const optionSelection = commandOptionFill(commandOption, option);
   const savingThrow = requireHole(
-    commandHolesAfterFills(state, act.subject, [targetSelection, optionSelection]),
+    commandHolesAfterFills(state, act.subject, [
+      targetSelection,
+      optionSelection,
+    ]),
     "savingThrowOutcome",
   );
   return requireResolved(
@@ -4218,7 +4228,9 @@ function endTurnSubjectFor(
   return { tag: "runtimeCommand", actorId, command: "endTurn" };
 }
 
-function commandPendingOption(state: BattleState): CommandOrderingPendingOption {
+function commandPendingOption(
+  state: BattleState,
+): CommandOrderingPendingOption {
   const target = state.combatants.get(skeletonId);
   const effect = target?.activeEffects.find(
     (candidate) => candidate.kind === "commandPending",
@@ -4977,7 +4989,7 @@ function targetFill(
         attackName: "Shortsword",
       },
       {
-        kind: "sneakAttackAllyWithin5FeetOfTarget",
+        kind: "attackerAllyWithin5FeetOfTarget",
         attackerId: fighterId,
         targetId,
         allyId: combatantId("ally"),
@@ -5598,9 +5610,7 @@ function saveGatedSpellOrderingStage(
   throw new Error(`Unknown save-gated spell ordering stage: ${tag}`);
 }
 
-function saveGatedSpellOrderingHole(
-  raw: unknown,
-): SaveGatedSpellOrderingHole {
+function saveGatedSpellOrderingHole(raw: unknown): SaveGatedSpellOrderingHole {
   const tag = quintVariantTag(raw);
   if (tag === "SpellTargetListHoleKind") return "spellTargetList";
   if (tag === "ConditionChoiceHoleKind") return "conditionChoice";
@@ -5831,7 +5841,9 @@ function commandOrderingPendingOption(
   throw new Error(`Unknown Command pending option: ${String(raw)}.`);
 }
 
-function commandOrderingActor(raw: unknown): CommandOrderingProjection["currentActor"] {
+function commandOrderingActor(
+  raw: unknown,
+): CommandOrderingProjection["currentActor"] {
   if (raw === "Caster" || raw === "Target") return raw;
   throw new Error(`Unknown Command ordering actor: ${String(raw)}.`);
 }

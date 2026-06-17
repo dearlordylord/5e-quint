@@ -1,3 +1,7 @@
+// KERNEL-COVERAGE: parity-witness BATTLE.STAT_BLOCK.ATTACK_CONTROL
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test stat-block.attack-control
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-DRUID-WILD-SHAPE-STAT-BLOCK-SIZE-GATED-CONDITION-RIDERS druid_wild_shape
+import { hasCondition } from "@dnd/shared-algebras/conditions-algebra";
 import {
   startBattleRight,
   requireResolved,
@@ -31,6 +35,7 @@ import {
   monsterResourceStatBlockWithUnsupportedAttackSections,
   monsterMultiattackStatBlock,
   monsterResourceStatBlockWithTwoRechargeActions,
+  statBlockRecord,
   skeletonCreatureInit,
   resistantSkeletonCreatureInit,
   fighterId,
@@ -48,10 +53,345 @@ import {
   snapshotBattle,
 } from "./battle-runtime-test-support.ts";
 import type {
+  BattleHole,
   BattleState,
   BattleSubject,
 } from "./battle-runtime-test-support.ts";
+import { spellId, type CombatantId } from "./identity.ts";
+import type { StatBlockRecord } from "@dnd/surface/surface/types";
+import { creatureNamedAttackRollIsSupported } from "./statblock-action-support.ts";
+import { supportedStatBlockAttackHitConditionRiders } from "./statblock-attack-hit-condition-support.ts";
 import { describe, expect, test } from "vitest";
+
+function sizeGatedConditionRiderStatBlock(): StatBlockRecord {
+  const base = statBlockRecord();
+  return {
+    ...base,
+    id: "stat_block_size_gated_condition_test_monster",
+    name: "Size-Gated Condition Test Monster",
+    statBlock: {
+      ...base.statBlock,
+      displayName: "Size-Gated Condition Test Monster",
+      actions: {
+        attacks: [
+          {
+            attackBonus: { kind: "literal", value: 4 },
+            attackType: "melee",
+            name: "Bite",
+            onHit: [
+              {
+                amount: {
+                  kind: "fixed",
+                  expr: { dice: 1, dieSize: 6, flat: 2 },
+                  static: 5,
+                },
+                damageType: "piercing",
+                kind: "damage",
+              },
+              {
+                condition: "prone",
+                kind: "apply_condition_if_target_size_at_most",
+                maxCreatureSize: "medium",
+              },
+            ],
+            reachFeet: 5,
+          },
+        ],
+      },
+    },
+  };
+}
+
+function untypedConditionRiderStatBlock(): StatBlockRecord {
+  const base = sizeGatedConditionRiderStatBlock();
+  const bite = base.statBlock.actions?.attacks?.[0];
+  if (bite === undefined) {
+    throw new Error("Expected synthetic Bite attack.");
+  }
+  const damage = bite.onHit[0];
+  if (damage === undefined) {
+    throw new Error("Expected synthetic Bite damage.");
+  }
+  return {
+    ...base,
+    id: "stat_block_untyped_condition_rider_test_monster",
+    name: "Untyped Condition Rider Test Monster",
+    statBlock: {
+      ...base.statBlock,
+      displayName: "Untyped Condition Rider Test Monster",
+      actions: {
+        attacks: [
+          {
+            ...bite,
+            onHit: [
+              damage,
+              { kind: "apply_condition", condition: "prone" },
+            ],
+          },
+        ],
+      },
+    },
+  };
+}
+
+function conditionOnlyRiderStatBlock(): StatBlockRecord {
+  const base = sizeGatedConditionRiderStatBlock();
+  const bite = base.statBlock.actions?.attacks?.[0];
+  if (bite === undefined) {
+    throw new Error("Expected synthetic Bite attack.");
+  }
+  return {
+    ...base,
+    id: "stat_block_condition_only_rider_test_monster",
+    name: "Condition-Only Rider Test Monster",
+    statBlock: {
+      ...base.statBlock,
+      displayName: "Condition-Only Rider Test Monster",
+      actions: {
+        attacks: [
+          {
+            ...bite,
+            onHit: [
+              {
+                condition: "prone",
+                kind: "apply_condition_if_target_size_at_most",
+                maxCreatureSize: "medium",
+              },
+            ],
+          },
+        ],
+      },
+    },
+  };
+}
+
+function nonProneSizeGatedConditionRiderStatBlock(): StatBlockRecord {
+  const base = sizeGatedConditionRiderStatBlock();
+  const bite = base.statBlock.actions?.attacks?.[0];
+  if (bite === undefined) {
+    throw new Error("Expected synthetic Bite attack.");
+  }
+  const damage = bite.onHit[0];
+  if (damage === undefined) {
+    throw new Error("Expected synthetic Bite damage.");
+  }
+  return {
+    ...base,
+    id: "stat_block_non_prone_size_gated_condition_test_monster",
+    name: "Non-Prone Size-Gated Condition Test Monster",
+    statBlock: {
+      ...base.statBlock,
+      displayName: "Non-Prone Size-Gated Condition Test Monster",
+      actions: {
+        attacks: [
+          {
+            ...bite,
+            onHit: [
+              damage,
+              {
+                condition: "grappled",
+                kind: "apply_condition_if_target_size_at_most",
+                maxCreatureSize: "medium",
+              },
+            ],
+          },
+        ],
+      },
+    },
+  };
+}
+
+function largeTargetStatBlock(): StatBlockRecord {
+  const base = statBlockRecord();
+  return {
+    ...base,
+    id: "stat_block_large_condition_rider_target",
+    name: "Large Condition Rider Target",
+    statBlock: {
+      ...base.statBlock,
+      displayName: "Large Condition Rider Target",
+      hp: { kind: "literal", value: 20 },
+      size: "large",
+    },
+  };
+}
+
+function proneImmuneTargetStatBlock(): StatBlockRecord {
+  const base = statBlockRecord();
+  return {
+    ...base,
+    id: "stat_block_prone_immune_condition_rider_target",
+    name: "Prone-Immune Condition Rider Target",
+    statBlock: {
+      ...base.statBlock,
+      displayName: "Prone-Immune Condition Rider Target",
+      hp: { kind: "literal", value: 20 },
+      immunities: {
+        ...(base.statBlock.immunities ?? {}),
+        conditions: ["prone"],
+      },
+      size: "medium",
+    },
+  };
+}
+
+function biteMeleeReachFact(targetId: CombatantId) {
+  return [
+    {
+      kind: "attackTargetInMeleeReach" as const,
+      actorId: goblinId,
+      targetId,
+      attackName: "Bite",
+    },
+  ];
+}
+
+function withProneConditionImmunity(
+  state: BattleState,
+  targetId: CombatantId,
+): BattleState {
+  const target = state.combatants.get(targetId);
+  if (target === undefined) {
+    throw new Error("Expected Prone-immunity test target.");
+  }
+  return {
+    ...state,
+    combatants: new Map(state.combatants).set(targetId, {
+      ...target,
+      activeEffects: [
+        ...target.activeEffects,
+        {
+          kind: "conditionImmunity",
+          condition: "prone",
+          conditionHadNonSpellSource: false,
+          expiresAt: { kind: "untilDispelled" },
+          sourceCombatantId: targetId,
+          sourceSpellId: spellId("synthetic_prone_immunity"),
+        },
+      ],
+    }),
+  };
+}
+
+function monsterMultiDamageStatBlock(): StatBlockRecord {
+  const base = statBlockRecord();
+  const shortbow = base.statBlock.actions?.attacks?.find(
+    (attack) => attack.name === "Shortbow",
+  );
+  if (shortbow === undefined) {
+    throw new Error("Expected Goblin Warrior Shortbow fixture.");
+  }
+  return {
+    ...base,
+    id: "stat_block_multi_damage_test_monster",
+    name: "Multi Damage Test Monster",
+    statBlock: {
+      ...base.statBlock,
+      displayName: "Multi Damage Test Monster",
+      actions: {
+        attacks: [
+          {
+            ...shortbow,
+            name: "Venom Dart",
+            onHit: [
+              {
+                kind: "damage",
+                damageType: "piercing",
+                amount: {
+                  kind: "fixed",
+                  expr: { dice: 1, dieSize: 4, flat: 1 },
+                  static: 3,
+                },
+              },
+              {
+                kind: "damage",
+                damageType: "poison",
+                amount: {
+                  kind: "fixed",
+                  expr: { dice: 1, dieSize: 6 },
+                  static: 3,
+                },
+              },
+            ],
+          },
+        ],
+      },
+    },
+  };
+}
+
+function venomDartTargetFill(hole: BattleHole) {
+  return targetFill(hole, fighterId, [
+    {
+      kind: "attackTargetInRangedRange",
+      actorId: goblinId,
+      targetId: fighterId,
+      attackName: "Venom Dart",
+      rangeBand: "normal",
+    },
+  ]);
+}
+
+function resolveBiteAgainst(input: {
+  readonly battleIdValue: string;
+  readonly targetId: CombatantId;
+  readonly target: Parameters<typeof startBattleRight>[0]["combatants"][number];
+  readonly stateTransform?: (state: BattleState) => BattleState;
+}): BattleState {
+  const initialState = startBattleRight({
+    battleId: battleId(input.battleIdValue),
+    combatants: [
+      statBlockCreatureInit({
+        initiative: 20,
+        statBlock: sizeGatedConditionRiderStatBlock(),
+      }),
+      input.target,
+    ],
+  });
+  const state = input.stateTransform?.(initialState) ?? initialState;
+  const subject: BattleSubject = {
+    tag: "action",
+    actorId: goblinId,
+    action: "attack",
+    attackName: "Bite",
+  };
+  const targetHole = attackInitialTargetHole(state, subject);
+  const targetChoice = targetFill(
+    targetHole,
+    input.targetId,
+    biteMeleeReachFact(input.targetId),
+  );
+  const rollHole = requireHole(
+    resolveBattleSubject({
+      state,
+      subject,
+      fills: [targetChoice],
+    }),
+    "attackRoll",
+  );
+  const damageHole = requireHole(
+    resolveBattleSubject({
+      state,
+      subject,
+      fills: [
+        targetChoice,
+        attackRollFill(rollHole, { total: 20, naturalD20: 12 }),
+      ],
+    }),
+    "rolledDice",
+  );
+  return requireResolved(
+    resolveBattleSubject({
+      state,
+      subject,
+      fills: [
+        targetChoice,
+        attackRollFill(rollHole, { total: 20, naturalD20: 12 }),
+        damageRollFill(damageHole, 1),
+      ],
+    }),
+  ).state;
+}
 
 describe("battle runtime: Stat Block actions", () => {
   test("Goblin Warrior discovers authored Scimitar and Shortbow attacks", () => {
@@ -81,6 +421,347 @@ describe("battle runtime: Stat Block actions", () => {
         },
         { tag: "runtimeCommand", actorId: goblinId, command: "move" },
         { tag: "runtimeCommand", actorId: goblinId, command: "endTurn" },
+      ]),
+    );
+  });
+
+  test("Stat Block attacks preserve multiple rolled hit damage components by type", () => {
+    const monsterTurn = requireResolved(
+      endTurn({
+        state: startBattleRight({
+          battleId: battleId("battle-monster-multi-component-damage"),
+          combatants: [
+            characterSeed({ initiative: 20 }),
+            statBlockCreatureInit({
+              initiative: 10,
+              statBlock: monsterMultiDamageStatBlock(),
+            }),
+          ],
+        }),
+        actorId: fighterId,
+      }),
+    ).state;
+    const subject: BattleSubject = {
+      tag: "action",
+      actorId: goblinId,
+      action: "attack",
+      attackName: "Venom Dart",
+    };
+
+    expect(discoverBattleActs(monsterTurn).map((act) => act.subject)).toEqual(
+      expect.arrayContaining([
+        subject,
+        {
+          ...subject,
+          statBlockDamageNotation: "static",
+        },
+      ]),
+    );
+
+    const targetHole = attackInitialTargetHole(monsterTurn, subject);
+    const targetChoice = venomDartTargetFill(targetHole);
+    const rollHole = requireHole(
+      resolveBattleSubject({
+        state: monsterTurn,
+        subject,
+        fills: [targetChoice],
+      }),
+      "attackRoll",
+    );
+    const damageHole = requireHole(
+      resolveBattleSubject({
+        state: monsterTurn,
+        subject,
+        fills: [
+          targetChoice,
+          attackRollFill(rollHole, { total: 20, naturalD20: 12 }),
+        ],
+      }),
+      "rolledDice",
+    );
+
+    expect(damageHole).toMatchObject({
+      label: "Venom Dart damage (1d4+1-piercing+1d6-poison)",
+    });
+
+    const result = resolveBattleSubject({
+      state: monsterTurn,
+      subject,
+      fills: [
+        targetChoice,
+        attackRollFill(rollHole, { total: 20, naturalD20: 12 }),
+        damageRollFillWithGroups(damageHole, [[1], [2]]),
+      ],
+    });
+    if (result.tag !== "resolved") {
+      throw new Error(
+        `Expected resolved, got ${result.tag}${
+          result.tag === "invalid" ? `: ${result.message}` : ""
+        }.`,
+      );
+    }
+    expect(result.tag).toBe("resolved");
+    const resolved = result.state;
+
+    expect(resolved.combatants.get(fighterId)?.hp).toBe(8);
+  });
+
+  test("Stat Block static notation applies multiple hit damage components by type", () => {
+    const monsterTurn = requireResolved(
+      endTurn({
+        state: startBattleRight({
+          battleId: battleId("battle-monster-multi-component-static-damage"),
+          combatants: [
+            characterSeed({ initiative: 20 }),
+            statBlockCreatureInit({
+              initiative: 10,
+              statBlock: monsterMultiDamageStatBlock(),
+            }),
+          ],
+        }),
+        actorId: fighterId,
+      }),
+    ).state;
+    const subject: BattleSubject = {
+      tag: "action",
+      actorId: goblinId,
+      action: "attack",
+      attackName: "Venom Dart",
+      statBlockDamageNotation: "static",
+    };
+    const targetHole = attackInitialTargetHole(monsterTurn, subject);
+    const targetChoice = venomDartTargetFill(targetHole);
+    const rollHole = requireHole(
+      resolveBattleSubject({
+        state: monsterTurn,
+        subject,
+        fills: [targetChoice],
+      }),
+      "attackRoll",
+    );
+
+    const result = resolveBattleSubject({
+      state: monsterTurn,
+      subject,
+      fills: [
+        targetChoice,
+        attackRollFill(rollHole, { total: 20, naturalD20: 12 }),
+      ],
+    });
+    if (result.tag !== "resolved") {
+      throw new Error(
+        `Expected resolved, got ${result.tag}${
+          result.tag === "invalid" ? `: ${result.message}` : ""
+        }.`,
+      );
+    }
+    expect(result.tag).toBe("resolved");
+    const resolved = result.state;
+
+    expect(resolved.combatants.get(fighterId)?.hp).toBe(6);
+  });
+
+  test("Stat Block attacks admit target-size-gated condition riders from structured on-hit payload", () => {
+    const statBlock = sizeGatedConditionRiderStatBlock();
+    const attack = statBlock.statBlock.actions?.attacks?.[0];
+    if (attack === undefined) {
+      throw new Error("Expected synthetic Bite attack.");
+    }
+
+    expect(creatureNamedAttackRollIsSupported(attack)).toBe(true);
+    expect(supportedStatBlockAttackHitConditionRiders(attack)).toEqual([
+      {
+        condition: "prone",
+        targetSizePredicate: {
+          kind: "targetCreatureSizeAtMost",
+          maxCreatureSize: "medium",
+        },
+      },
+    ]);
+
+    const state = startBattleRight({
+      battleId: battleId("battle-monster-size-gated-condition-admission"),
+      combatants: [
+        statBlockCreatureInit({ initiative: 20, statBlock }),
+        characterSeed({ initiative: 10 }),
+      ],
+    });
+
+    expect(discoverBattleActs(state).map((act) => act.subject)).toEqual(
+      expect.arrayContaining([
+        {
+          tag: "action",
+          actorId: goblinId,
+          action: "attack",
+          attackName: "Bite",
+        },
+        {
+          tag: "action",
+          actorId: goblinId,
+          action: "attack",
+          attackName: "Bite",
+          statBlockDamageNotation: "static",
+        },
+      ]),
+    );
+  });
+
+  test("Stat Block attack-hit target-size condition rider applies inside the size gate", () => {
+    const resolved = resolveBiteAgainst({
+      battleIdValue: "battle-monster-size-gated-condition-medium-target",
+      targetId: fighterId,
+      target: characterSeed({ initiative: 10 }),
+    });
+    const target = resolved.combatants.get(fighterId);
+    if (target === undefined) {
+      throw new Error("Expected Bite target.");
+    }
+
+    expect(target.hp).toBe(9);
+    expect(hasCondition(target.conditions, "prone")).toBe(true);
+  });
+
+  test("Stat Block attack-hit target-size condition rider does not apply outside the size gate", () => {
+    const resolved = resolveBiteAgainst({
+      battleIdValue: "battle-monster-size-gated-condition-large-target",
+      targetId: distantFighterId,
+      target: statBlockCreatureInit({
+        combatantId: distantFighterId,
+        displayName: "Large Target",
+        initiative: 10,
+        statBlock: largeTargetStatBlock(),
+      }),
+    });
+    const target = resolved.combatants.get(distantFighterId);
+    if (target === undefined) {
+      throw new Error("Expected Bite target.");
+    }
+
+    expect(target.hp).toBe(17);
+    expect(hasCondition(target.conditions, "prone")).toBe(false);
+  });
+
+  test("Stat Block attack-hit target-size condition rider respects Prone immunity inside the size gate", () => {
+    const resolved = resolveBiteAgainst({
+      battleIdValue: "battle-monster-size-gated-condition-prone-immune-target",
+      targetId: distantFighterId,
+      target: statBlockCreatureInit({
+        combatantId: distantFighterId,
+        displayName: "Prone-Immune Target",
+        initiative: 10,
+        statBlock: proneImmuneTargetStatBlock(),
+      }),
+    });
+    const target = resolved.combatants.get(distantFighterId);
+    if (target === undefined) {
+      throw new Error("Expected Bite target.");
+    }
+
+    expect(target.hp).toBe(17);
+    expect(hasCondition(target.conditions, "prone")).toBe(false);
+  });
+
+  test("Stat Block attack-hit target-size condition rider respects active Prone immunity inside the size gate", () => {
+    const resolved = resolveBiteAgainst({
+      battleIdValue:
+        "battle-monster-size-gated-condition-active-prone-immune-target",
+      targetId: fighterId,
+      target: characterSeed({ initiative: 10 }),
+      stateTransform: (state) =>
+        withProneConditionImmunity(state, fighterId),
+    });
+    const target = resolved.combatants.get(fighterId);
+    if (target === undefined) {
+      throw new Error("Expected Bite target.");
+    }
+
+    expect(target.hp).toBe(9);
+    expect(hasCondition(target.conditions, "prone")).toBe(false);
+  });
+
+  test("Stat Block attacks with untyped condition riders remain unsupported", () => {
+    const statBlock = untypedConditionRiderStatBlock();
+    const attack = statBlock.statBlock.actions?.attacks?.[0];
+    if (attack === undefined) {
+      throw new Error("Expected synthetic Bite attack.");
+    }
+    expect(creatureNamedAttackRollIsSupported(attack)).toBe(false);
+
+    const state = startBattleRight({
+      battleId: battleId("battle-monster-untyped-condition-rider-rejected"),
+      combatants: [
+        statBlockCreatureInit({ initiative: 20, statBlock }),
+        characterSeed({ initiative: 10 }),
+      ],
+    });
+
+    expect(discoverBattleActs(state).map((act) => act.subject)).not.toEqual(
+      expect.arrayContaining([
+        {
+          tag: "action",
+          actorId: goblinId,
+          action: "attack",
+          attackName: "Bite",
+        },
+      ]),
+    );
+  });
+
+  test("Stat Block attacks with non-Prone target-size condition riders remain unsupported", () => {
+    const statBlock = nonProneSizeGatedConditionRiderStatBlock();
+    const attack = statBlock.statBlock.actions?.attacks?.[0];
+    if (attack === undefined) {
+      throw new Error("Expected synthetic Bite attack.");
+    }
+    expect(creatureNamedAttackRollIsSupported(attack)).toBe(false);
+    expect(supportedStatBlockAttackHitConditionRiders(attack)).toBeNull();
+
+    const state = startBattleRight({
+      battleId: battleId(
+        "battle-monster-non-prone-size-gated-condition-rider-rejected",
+      ),
+      combatants: [
+        statBlockCreatureInit({ initiative: 20, statBlock }),
+        characterSeed({ initiative: 10 }),
+      ],
+    });
+
+    expect(discoverBattleActs(state).map((act) => act.subject)).not.toEqual(
+      expect.arrayContaining([
+        {
+          tag: "action",
+          actorId: goblinId,
+          action: "attack",
+          attackName: "Bite",
+        },
+      ]),
+    );
+  });
+
+  test("Stat Block attacks with only condition riders remain unsupported", () => {
+    const statBlock = conditionOnlyRiderStatBlock();
+    const attack = statBlock.statBlock.actions?.attacks?.[0];
+    if (attack === undefined) {
+      throw new Error("Expected synthetic Bite attack.");
+    }
+    expect(creatureNamedAttackRollIsSupported(attack)).toBe(false);
+
+    const state = startBattleRight({
+      battleId: battleId("battle-monster-condition-only-rider-rejected"),
+      combatants: [
+        statBlockCreatureInit({ initiative: 20, statBlock }),
+        characterSeed({ initiative: 10 }),
+      ],
+    });
+
+    expect(discoverBattleActs(state).map((act) => act.subject)).not.toEqual(
+      expect.arrayContaining([
+        {
+          tag: "action",
+          actorId: goblinId,
+          action: "attack",
+          attackName: "Bite",
+        },
       ]),
     );
   });

@@ -83,8 +83,8 @@
         "packages/character-sheet-runtime/src/stored-sheet-parser.ts:parseStoredFeatures"
       ],
       "tests": [
-        "packages/character-sheet-runtime/src/sheet-lifecycle.test.ts:sorcererMetamagicKnownOptionsSheetParsingTestName",
-        "packages/character-sheet-runtime/src/sheet-lifecycle.test.ts:sorcererMetamagicKnownOptionsGateTestName"
+        "packages/character-sheet-runtime/src/sheet-lifecycle.test.ts:sorcererMetamagicKnownOptionsSheetParsingRuntimeTestName",
+        "packages/character-sheet-runtime/src/sheet-lifecycle.test.ts:sorcererMetamagicKnownOptionsGateRuntimeTestName"
       ]
     },
     "srd521:classes/monk:level-2:class-feature-grant:monk_uncanny_metabolism": {
@@ -417,7 +417,7 @@
         "packages/character-sheet-runtime/src/ability-checks.ts:characterSheetJumpDistanceAbility"
       ],
       "tests": [
-        "packages/character-sheet-runtime/src/ability-checks.test.ts:secondStoryWorkProjectionTestName"
+        "packages/character-sheet-runtime/src/ability-checks.test.ts:expectSecondStoryWorkProjection"
       ]
     },
     "srd521:classes/sorcerer:level-3:class-feature-grant:sorcerer_draconic_resilience": {

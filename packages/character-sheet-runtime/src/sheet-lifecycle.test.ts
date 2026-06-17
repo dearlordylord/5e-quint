@@ -24,6 +24,11 @@ import {
   warlockSpellcastingWithCantrips
 } from "./test-support.ts";
 
+export const sorcererMetamagicKnownOptionsSheetParsingRuntimeTestName =
+  sorcererMetamagicKnownOptionsSheetParsingTestName;
+export const sorcererMetamagicKnownOptionsGateRuntimeTestName =
+  sorcererMetamagicKnownOptionsGateTestName;
+
 describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
   test("creates a fresh non-spellcasting Character Sheet at current HP", () => {
     const sheet = createFreshCharacterSheet({
@@ -453,7 +458,7 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
     );
   });
 
-  test(sorcererMetamagicKnownOptionsSheetParsingTestName, () => {
+  test(sorcererMetamagicKnownOptionsSheetParsingRuntimeTestName, () => {
     const sheet = parseCharacterSheet(
       {
         ...storedAvailableSheetInput({
@@ -495,7 +500,7 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
     });
   });
 
-  test(sorcererMetamagicKnownOptionsGateTestName, () => {
+  test(sorcererMetamagicKnownOptionsGateRuntimeTestName, () => {
     const build = sorcererFontOfMagicBuild();
     const sheet = parseCharacterSheet(
       storedAvailableSheetInput({

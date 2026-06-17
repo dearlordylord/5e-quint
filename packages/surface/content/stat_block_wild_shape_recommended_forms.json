@@ -101,7 +101,6 @@
               "value": 4
             },
             "attackType": "melee",
-            "description": "If the target is a Medium or smaller creature, it has the Prone condition.",
             "name": "Bite",
             "onHit": [
               {
@@ -116,6 +115,11 @@
                 },
                 "damageType": "piercing",
                 "kind": "damage"
+              },
+              {
+                "condition": "prone",
+                "kind": "apply_condition_if_target_size_at_most",
+                "maxCreatureSize": "medium"
               }
             ],
             "reachFeet": 5
@@ -161,6 +165,9 @@
       "traits": [
         {
           "description": "The wolf has Advantage on attack rolls against a creature if at least one of the wolf's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition.",
+          "effect": {
+            "kind": "attack_roll_advantage_when_non_incapacitated_ally_within_5_feet_of_target"
+          },
           "name": "Pack Tactics"
         }
       ]

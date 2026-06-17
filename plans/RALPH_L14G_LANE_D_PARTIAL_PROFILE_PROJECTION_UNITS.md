@@ -7,26 +7,68 @@
     {
       "number": 1,
       "id": "L14G-D01-DRUID-WILD-SHAPE-PARTIAL-PROFILE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Reconcile Druid Wild Shape partial profile ownership"
     },
     {
       "number": 2,
       "id": "L14G-D02-MONK-MONKS-FOCUS-PARTIAL-PROFILE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Reconcile Monk Focus partial profile ownership"
     },
     {
       "number": 3,
       "id": "L14G-D03-SORCERER-METAMAGIC-PARTIAL-PROFILE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Reconcile Sorcerer Metamagic partial profile ownership"
     },
     {
       "number": 4,
       "id": "L14G-D04-ROGUE-SECOND-STORY-WORK-EVIDENCE",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Add Rogue Second-Story Work projection evidence"
+    },
+    {
+      "number": 5,
+      "id": "L14G-D05-DRUID-WILD-SHAPE-REMAINING-BATTLE-RUNTIME-SPLIT",
+      "status": "done",
+      "title": "Split remaining Druid Wild Shape battle runtime owners"
+    },
+    {
+      "number": 6,
+      "id": "L12G-FOLLOWUP-DRUID-WILD-SHAPE-BEAST-SPELLS-CASTING",
+      "status": "done",
+      "title": "Promote Wild Shape Beast Spells casting exceptions"
+    },
+    {
+      "number": 7,
+      "id": "L12G-FOLLOWUP-DRUID-WILD-SHAPE-STAT-BLOCK-MULTI-DAMAGE",
+      "status": "done",
+      "title": "Promote multi-component Stat Block attack damage"
+    },
+    {
+      "number": 8,
+      "id": "L12G-FOLLOWUP-DRUID-WILD-SHAPE-STAT-BLOCK-TRAIT-ADVANTAGE",
+      "status": "done",
+      "title": "Promote trait-derived Stat Block attack Advantage"
+    },
+    {
+      "number": 9,
+      "id": "L12G-FOLLOWUP-DRUID-WILD-SHAPE-STAT-BLOCK-ATTACK-HIT-RIDERS",
+      "status": "done",
+      "title": "Split Stat Block attack-hit rider execution"
+    },
+    {
+      "number": 10,
+      "id": "L12G-FOLLOWUP-DRUID-WILD-SHAPE-STAT-BLOCK-NON-ATTACK-ACTIONS",
+      "status": "done",
+      "title": "Split non-Attack Stat Block action execution"
+    },
+    {
+      "number": 11,
+      "id": "L12G-FOLLOWUP-DRUID-WILD-SHAPE-STAT-BLOCK-SIZE-GATED-CONDITION-RIDERS",
+      "status": "done",
+      "title": "Promote size-gated Stat Block attack-hit condition riders"
     }
   ]
 }
@@ -37,10 +79,21 @@
 This lane is the per-Unit partial-profile/projection lane for the level-4 Golden
 Gate tail.
 
-The first three Units are research tasks because their current profiles mix
-supported runtime behavior with deferred owner boundaries. `rogue_second_story_work`
-is implementation-ready because pre-research found the desired projection shape
-already exists and the remaining work is checker-readable evidence.
+Task 1 closed the Wild Shape sense/language/speech projection evidence gap. Task
+5 closed the remaining broad Wild Shape runtime split by separating Beast Spells
+from Stat Block action-shape owners and by naming executable Stat Block follow-up
+slices. Task 10 closed the non-Attack Stat Block action split by making the
+closed boundaries executable by Surface section/action shape and confirming that
+the current eligible SRD Beast form catalog has no reachable non-Attack action
+sections. Task 2 closed the Monk Focus generated-readiness ambiguity while
+preserving the ordinary jump movement/table owner boundary. Task 3 closed the
+Sorcerer Metamagic generated-readiness ambiguity by making the promoted runtime
+subsets and procedure-specific deferred owner closures checker-readable. Task 4
+closed the Rogue Second-Story Work evidence gap by making the existing
+linked-Speed and jump-distance projection evidence checker-readable.
+Task 11 closed the size-gated Stat Block attack-hit condition rider slice by
+promoting the Wolf-style typed target Size Prone rider path with focused runtime
+and parity evidence.
 
 ## Source Artifacts
 
@@ -77,9 +130,25 @@ already exists and the remaining work is checker-readable evidence.
   architecture/connascence, and code-review passes until no reasonable findings
   remain.
 
+## Task DAG
+
+| Task | Depends on | Unlocks |
+| --- | --- | --- |
+| L14G-D01-DRUID-WILD-SHAPE-PARTIAL-PROFILE | L14G-06-LEVEL4-REACHABLE-UNIT-FULL-AUDIT | L14G-D05-DRUID-WILD-SHAPE-REMAINING-BATTLE-RUNTIME-SPLIT |
+| L14G-D02-MONK-MONKS-FOCUS-PARTIAL-PROFILE | L14G-06-LEVEL4-REACHABLE-UNIT-FULL-AUDIT | - |
+| L14G-D03-SORCERER-METAMAGIC-PARTIAL-PROFILE | L14G-06-LEVEL4-REACHABLE-UNIT-FULL-AUDIT | - |
+| L14G-D04-ROGUE-SECOND-STORY-WORK-EVIDENCE | L14G-06-LEVEL4-REACHABLE-UNIT-FULL-AUDIT | - |
+| L14G-D05-DRUID-WILD-SHAPE-REMAINING-BATTLE-RUNTIME-SPLIT | L14G-06-LEVEL4-REACHABLE-UNIT-FULL-AUDIT; L14G-D01-DRUID-WILD-SHAPE-PARTIAL-PROFILE | L12G-FOLLOWUP-DRUID-WILD-SHAPE-BEAST-SPELLS-CASTING; L12G-FOLLOWUP-DRUID-WILD-SHAPE-STAT-BLOCK-MULTI-DAMAGE; L12G-FOLLOWUP-DRUID-WILD-SHAPE-STAT-BLOCK-TRAIT-ADVANTAGE; L12G-FOLLOWUP-DRUID-WILD-SHAPE-STAT-BLOCK-ATTACK-HIT-RIDERS; L12G-FOLLOWUP-DRUID-WILD-SHAPE-STAT-BLOCK-NON-ATTACK-ACTIONS |
+| L12G-FOLLOWUP-DRUID-WILD-SHAPE-BEAST-SPELLS-CASTING | L14G-D05-DRUID-WILD-SHAPE-REMAINING-BATTLE-RUNTIME-SPLIT | - |
+| L12G-FOLLOWUP-DRUID-WILD-SHAPE-STAT-BLOCK-MULTI-DAMAGE | L14G-D05-DRUID-WILD-SHAPE-REMAINING-BATTLE-RUNTIME-SPLIT | - |
+| L12G-FOLLOWUP-DRUID-WILD-SHAPE-STAT-BLOCK-TRAIT-ADVANTAGE | L14G-D05-DRUID-WILD-SHAPE-REMAINING-BATTLE-RUNTIME-SPLIT | - |
+| L12G-FOLLOWUP-DRUID-WILD-SHAPE-STAT-BLOCK-ATTACK-HIT-RIDERS | L14G-D05-DRUID-WILD-SHAPE-REMAINING-BATTLE-RUNTIME-SPLIT | L12G-FOLLOWUP-DRUID-WILD-SHAPE-STAT-BLOCK-SIZE-GATED-CONDITION-RIDERS |
+| L12G-FOLLOWUP-DRUID-WILD-SHAPE-STAT-BLOCK-NON-ATTACK-ACTIONS | L14G-D05-DRUID-WILD-SHAPE-REMAINING-BATTLE-RUNTIME-SPLIT | - |
+| L12G-FOLLOWUP-DRUID-WILD-SHAPE-STAT-BLOCK-SIZE-GATED-CONDITION-RIDERS | L12G-FOLLOWUP-DRUID-WILD-SHAPE-STAT-BLOCK-ATTACK-HIT-RIDERS | - |
+
 ### Task 1 - L14G-D01-DRUID-WILD-SHAPE-PARTIAL-PROFILE
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -97,8 +166,12 @@ Current state:
 - Unit matrix reports `profile-subset-supported`.
 - Evidence exists for character creation, known forms, battle D20/form
   lifecycle, and selected identity.
-- Remaining splits include Stat Block action shape, Beast Spells,
-  sense/language/speech projection, and non-battle persistence boundaries.
+- Sense/language/speech projection is checker-readable evidence: Beast-form
+  special Senses and passive Perception derive from the active form, retained
+  languages derive from character facts threaded through battle initialization,
+  and retained speech is blocked from Incapacitated-derived condition state.
+- Remaining splits include Stat Block action shape, Beast Spells, generic
+  object-use execution, and non-battle persistence boundaries.
 
 Output:
 
@@ -129,7 +202,7 @@ Verification:
 
 ### Task 2 - L14G-D02-MONK-MONKS-FOCUS-PARTIAL-PROFILE
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -174,7 +247,7 @@ Verification:
 
 ### Task 3 - L14G-D03-SORCERER-METAMAGIC-PARTIAL-PROFILE
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -189,8 +262,12 @@ Current state:
 
 - Surface installed.
 - Unit matrix reports `profile-subset-supported`.
-- Evidence exists for character creation/sheet bridge and several focused MBTs.
-- Remaining work is per-procedure owner promotion, not one broad Metamagic patch.
+- Generated inventory reports owner evidence present and accepted for the
+  current promoted subset.
+- Evidence exists for character creation/sheet bridge, deterministic battle
+  runtime admission/projection tests for the promoted subset, and focused MBTs.
+- Remaining non-promoted procedures are closed to future procedure-specific
+  owners rather than one broad Metamagic patch.
 
 Output:
 
@@ -214,7 +291,7 @@ Verification:
 
 ### Task 4 - L14G-D04-ROGUE-SECOND-STORY-WORK-EVIDENCE
 
-Status: `ready-for-implementation`
+Status: `done`
 
 Depends on:
 
@@ -253,6 +330,384 @@ Verification:
 - `pnpm --filter @dnd/character-sheet-runtime exec vitest run src/ability-checks.test.ts`
 - `pnpm unit-profile-coverage:check:self-test`
 - `pnpm unit-profile-coverage:check`
+- `git diff --check`
+
+### Task 5 - L14G-D05-DRUID-WILD-SHAPE-REMAINING-BATTLE-RUNTIME-SPLIT
+
+Status: `done`
+
+Depends on:
+
+- L14G-06-LEVEL4-REACHABLE-UNIT-FULL-AUDIT
+- L14G-D01-DRUID-WILD-SHAPE-PARTIAL-PROFILE
+
+Unit: `druid_wild_shape`
+
+SRD anchor: `.references/srd-5.2.1/Classes/Druid.md:117-122`;
+`.references/srd-5.2.1/Classes/Druid.md:160-162`;
+`.references/srd-5.2.1/Rules-Glossary.md:966-976`
+
+Current state:
+
+- Wild Shape known-form battle support covers the promoted subset named in
+  `unit-feature.druid-wild-shape-known-form`.
+- Sense/language/speech projection is no longer an open split after Task 1.
+- Before this split, the remaining generated follow-up was
+  `L12G-FOLLOWUP-DRUID-WILD-SHAPE-SHAPE-SHIFTING-RUNTIME`: Beast Spells casting
+  exceptions, unsupported Stat Block action sections, attack prose riders,
+  multi-component damage, and Stat Block non-Attack actions.
+- Generic object-use execution and non-battle active-form persistence remain
+  separate closed owner boundaries unless their owners are explicitly promoted.
+
+Output:
+
+- Split the remaining Wild Shape battle runtime follow-up into concrete
+  executable tasks or prove a single narrow slice is implementation-ready.
+- Preserve Beast Spells and Stat Block action ownership as rule-shaped work; do
+  not merge them into generic Wild Shape support metadata.
+- Do not implement generic object-use execution or non-battle persistence in
+  this task unless their owners are explicitly promoted first.
+
+Acceptance:
+
+- Stat Block action shape and Beast Spells no longer share one ambiguous broad
+  follow-up when they require different owners or verification.
+- Any new task IDs are reflected in the Ralph task index, DAG, and task detail
+  entries with dependencies and verification.
+- No runtime path dispatches on Beast or Druid authored identity.
+
+Verification:
+
+- RAW and ubiquitous-language check against the SRD anchors above.
+- `pnpm unit-profile-coverage:check:self-test`
+- `pnpm unit-profile-coverage:check`
+- `pnpm rules-kernel-coverage:check`
+- Focused runtime tests only for a promoted executable slice.
+- Focused MBT only if reducer behavior changes, following the repo MBT protocol.
+- `git diff --check`
+
+Completion notes:
+
+- Beast Spells is split to
+  `L12G-FOLLOWUP-DRUID-WILD-SHAPE-BEAST-SPELLS-CASTING`, a spell-casting gate
+  task that owns the level-18 exception to Wild Shape's pre-Beast-Spells
+  no-spellcasting projection and the priced/consumed Material component
+  exclusion.
+- Stat Block action work is split by Surface action shape, not by Beast id:
+  multi-component attack damage, trait-derived attack-roll Advantage,
+  attack-hit riders, and non-Attack action sections now have separate follow-up
+  owners and verification lanes.
+- Generic object-use execution and non-battle active-form persistence stay
+  closed to their existing owner boundaries; this task did not promote them.
+
+### Task 6 - L12G-FOLLOWUP-DRUID-WILD-SHAPE-BEAST-SPELLS-CASTING
+
+Status: `done`
+
+Depends on:
+
+- L14G-D05-DRUID-WILD-SHAPE-REMAINING-BATTLE-RUNTIME-SPLIT
+
+Unit: `druid_wild_shape`
+
+SRD anchor: `.references/srd-5.2.1/Classes/Druid.md:117-122`;
+`.references/srd-5.2.1/Classes/Druid.md:160-162`
+
+Current state:
+
+- Battle runtime rejects Druid level 18+ Wild Shape initialization until Beast
+  Spells is modeled.
+- The promoted Wild Shape subset correctly projects no spellcasting before Beast
+  Spells.
+- Spell Definition component facts already distinguish priced and consumed
+  Material components from focus-replaceable components in spell procedure
+  owners.
+
+Output:
+
+- Promote a spell-casting gate that allows spell invocation while an active Wild
+  Shape form is present only when the character has the Beast Spells feature and
+  the chosen Spell Definition lacks a priced or consumed Material component.
+- Preserve existing spell procedure ownership; Beast Spells should admit or
+  reject the cast attempt, not reimplement spell effects.
+- Keep the pre-Beast-Spells no-spellcasting projection as the default path for
+  lower-level Druids.
+
+Acceptance:
+
+- The gate consumes active shape state, selected character feature facts, and
+  structured Spell Component facts without dispatching on Druid or spell authored
+  identity.
+- Priced or consumed Material component spells remain rejected while shaped.
+- Existing spell invocation owners still own targets, resources, effects,
+  Concentration, and damage.
+
+Verification:
+
+- RAW and ubiquitous-language check against the SRD anchors above and
+  `UBIQUITOUS_LANGUAGE.md` Spellcasting terms.
+- Focused battle-runtime tests for level-18 shaped casting admission/rejection.
+- QNT proof or focused MBT only if reducer spell-cast behavior changes.
+- `pnpm unit-profile-coverage:check:self-test`
+- `pnpm unit-profile-coverage:check`
+- `pnpm rules-kernel-coverage:check`
+- `git diff --check`
+
+### Task 7 - L12G-FOLLOWUP-DRUID-WILD-SHAPE-STAT-BLOCK-MULTI-DAMAGE
+
+Status: `done`
+
+Depends on:
+
+- L14G-D05-DRUID-WILD-SHAPE-REMAINING-BATTLE-RUNTIME-SPLIT
+
+Unit: `druid_wild_shape`
+
+SRD anchor: `.references/srd-5.2.1/Rules-Glossary.md:966-976`
+
+Current state:
+
+- Supported Wild Shape form attacks are admitted only for executable Stat Block
+  Attack shapes already understood by battle runtime.
+- The Phase 2 Wild Shape action-surface inventory identified one-hit attacks
+  with multiple damage components as a distinct blocked Surface shape.
+
+Output:
+
+- Promote multi-component Stat Block attack damage through the generic Stat
+  Block attack damage owner.
+- Preserve each damage component's type and amount through existing damage
+  resolution instead of flattening components into one copied value.
+- Update Wild Shape form admission to accept this Surface shape once the generic
+  Stat Block attack owner is covered.
+
+Acceptance:
+
+- Runtime admission is keyed by parsed Stat Block attack damage shape, not Beast
+  authored identity.
+- Existing single-component attack support remains unchanged.
+- Unit-profile and rules-kernel evidence point to focused tests and parity for
+  the generic Stat Block attack shape.
+
+Verification:
+
+- RAW and ubiquitous-language check against Stat Block Attack Notation and Damage
+  Notation plus `UBIQUITOUS_LANGUAGE.md` Damage terms.
+- Focused battle-runtime reducer/admission tests for a synthetic or SRD Stat
+  Block attack with multiple hit damage components.
+- Focused QNT/MBT if damage reducer behavior changes.
+- `pnpm unit-profile-coverage:check:self-test`
+- `pnpm unit-profile-coverage:check`
+- `pnpm rules-kernel-coverage:check`
+- `git diff --check`
+
+### Task 8 - L12G-FOLLOWUP-DRUID-WILD-SHAPE-STAT-BLOCK-TRAIT-ADVANTAGE
+
+Status: `done`
+
+Depends on:
+
+- L14G-D05-DRUID-WILD-SHAPE-REMAINING-BATTLE-RUNTIME-SPLIT
+
+Unit: `druid_wild_shape`
+
+SRD anchor: `.references/srd-5.2.1/Rules-Glossary.md:962-976`
+
+Current state:
+
+- Trait-derived attack-roll Advantage is filtered out of Wild Shape battle
+  availability instead of silently admitting the attack without the trait.
+- The current supported subset owns ordinary Attack Roll resolution but not
+  Stat Block trait predicates.
+
+Output:
+
+- Promote a typed Stat Block trait-to-attack-roll-mode reader for conditional
+  Advantage predicates that can be represented without table-only facts.
+- Thread the trait-derived roll mode into the existing attack-roll owner for
+  supported Stat Block attacks.
+- Keep traits whose predicates need table-only spatial or relationship facts
+  behind explicit caller witnesses.
+
+Acceptance:
+
+- The runtime consumes typed trait facts and caller witnesses; it does not branch
+  on a Beast, trait, or Druid authored id.
+- Unsupported trait predicates remain rejected or witness-required rather than
+  ignored.
+- Wild Shape form admission accepts the attack only when its trait-derived
+  Advantage facts are represented by the new owner.
+
+Verification:
+
+- RAW and ubiquitous-language check against Stat Block Traits and Attack Notation
+  plus `UBIQUITOUS_LANGUAGE.md` Advantage and Attack Roll terms.
+- Focused battle-runtime admission/reducer tests for trait-derived Advantage and
+  unsupported predicate rejection.
+- Focused QNT/MBT if attack-roll reducer behavior changes.
+- `pnpm unit-profile-coverage:check:self-test`
+- `pnpm unit-profile-coverage:check`
+- `pnpm rules-kernel-coverage:check`
+- `git diff --check`
+
+### Task 9 - L12G-FOLLOWUP-DRUID-WILD-SHAPE-STAT-BLOCK-ATTACK-HIT-RIDERS
+
+Status: `done`
+
+Depends on:
+
+- L14G-D05-DRUID-WILD-SHAPE-REMAINING-BATTLE-RUNTIME-SPLIT
+
+Unit: `druid_wild_shape`
+
+SRD anchor: `.references/srd-5.2.1/Rules-Glossary.md:966-976`
+
+Current state:
+
+- Attack-hit rider inventory is split by parsed destination into condition,
+  forced-movement, and other rider buckets.
+- The eligible level-2 SRD Wild Shape Beast form corpus has a size-gated
+  condition rider example, Wolf Bite applying Prone to a Medium or smaller
+  target, and no eligible forced-movement rider examples.
+- Runtime inventory attaches explicit closed-boundary owner/reason metadata for
+  each rider bucket, so host attacks with unsupported riders remain unadmitted
+  rather than dropping rider prose.
+
+Output:
+
+- Inventory attack-hit rider shapes reachable from eligible Wild Shape Beast
+  forms and split typed vertical slices by rider destination before execution.
+- Promote only riders whose target owner is already typed or is promoted in the
+  same tracer bullet.
+- Keep prose-only or table-adjudicated riders unpromoted with explicit closure
+  reasons.
+
+Acceptance:
+
+- Attack-hit rider admission is by parsed rider shape and target owner, not Beast
+  authored identity.
+- Unsupported rider prose cannot be silently dropped while the host attack is
+  admitted.
+- Each promoted rider slice has focused runtime evidence and, where reducer
+  behavior changes, parity evidence.
+
+Verification:
+
+- RAW and ubiquitous-language check against Stat Block Attack Notation and the
+  rider-specific SRD destination terms.
+- Focused inventory/test work for the selected rider slice.
+- Focused QNT/MBT only for promoted reducer behavior.
+- `pnpm unit-profile-coverage:check:self-test`
+- `pnpm unit-profile-coverage:check`
+- `pnpm rules-kernel-coverage:check`
+- `git diff --check`
+
+### Task 10 - L12G-FOLLOWUP-DRUID-WILD-SHAPE-STAT-BLOCK-NON-ATTACK-ACTIONS
+
+Status: `done`
+
+Depends on:
+
+- L14G-D05-DRUID-WILD-SHAPE-REMAINING-BATTLE-RUNTIME-SPLIT
+
+Unit: `druid_wild_shape`
+
+SRD anchor: `.references/srd-5.2.1/Rules-Glossary.md:962-976`
+
+Current state:
+
+- Wild Shape battle availability filters out Stat Block action sections outside
+  the currently admitted executable Attack shape.
+- Existing Stat Block control owners cover action-section ordering and resources,
+  but concrete non-Attack action effects require per-effect procedure owners.
+- Non-Attack Stat Block action sections are now split by Surface section/action
+  shape: `actions.multiattacks`, `actions.saves`, `actions.supports`,
+  `actionOptions`, `specials`, `bonusActions`, `reactions`, and
+  `legendaryActions`.
+- The current SRD 5.2.1 eligible Wild Shape Beast form catalog has no reachable
+  non-Attack action sections; future records remain closed until the matching
+  generic Stat Block procedure owner has focused evidence.
+
+Output:
+
+- Inventory non-Attack Stat Block action sections reachable from eligible Wild
+  Shape Beast forms.
+- Split each executable effect shape to its generic Stat Block action procedure
+  owner instead of adding Wild Shape-local execution.
+- Preserve table-owned or prose-only actions as precise unpromoted closures.
+
+Acceptance:
+
+- Non-Attack action admission is keyed by Surface action shape and procedure
+  owner, not by Beast or Druid authored identity.
+- Wild Shape form admission can include a non-Attack action only after the
+  action's generic procedure owner has focused evidence.
+- No generic object-use execution is promoted through this task unless the
+  generic object/Utilize owner is explicitly promoted.
+
+Verification:
+
+- RAW and ubiquitous-language check against Stat Block Actions, Bonus Actions,
+  Reactions, and action lifecycle terms.
+- Focused inventory and procedure tests for any selected action shape.
+- Focused QNT/MBT only for promoted reducer behavior.
+- `pnpm unit-profile-coverage:check:self-test`
+- `pnpm unit-profile-coverage:check`
+- `pnpm rules-kernel-coverage:check`
+- `git diff --check`
+
+### Task 11 - L12G-FOLLOWUP-DRUID-WILD-SHAPE-STAT-BLOCK-SIZE-GATED-CONDITION-RIDERS
+
+Status: `done`
+
+Depends on:
+
+- L12G-FOLLOWUP-DRUID-WILD-SHAPE-STAT-BLOCK-ATTACK-HIT-RIDERS
+
+Unit: `druid_wild_shape`
+
+SRD anchor: `.references/srd-5.2.1/Animals.md:2587-2611`;
+`.references/srd-5.2.1/Rules-Glossary.md:802-808`;
+`.references/srd-5.2.1/Rules-Glossary.md:896-898`;
+`.references/srd-5.2.1/Rules-Glossary.md:966-976`
+
+Current state:
+
+- Task 9 narrowed the reachable attack-hit rider work for eligible Wild Shape
+  Beast forms to size-gated condition riders, starting with Wolf Bite applying
+  Prone to a Medium or smaller target.
+- The condition destination is typed, but generic Stat Block attack-hit
+  admission does not yet carry a typed target Size predicate payload.
+- Host attacks with those riders remain closed so the condition rider cannot be
+  silently dropped or over-applied.
+
+Output:
+
+- Add a generic Stat Block attack-hit condition rider payload with typed target
+  Size predicate facts.
+- Admit the Wild Shape form attack only from parsed attack-hit payload and typed
+  target Size facts, not Beast or Druid authored identity.
+- Add focused runtime evidence for the size-gated condition rider path.
+
+Acceptance:
+
+- Wolf Bite-style Prone rider admission is driven by parsed Surface attack-hit
+  shape and a typed target Size predicate.
+- Targets outside the size gate do not receive the condition.
+- Unsupported attack-hit condition rider shapes remain rejected or closed with an
+  explicit owner/reason rather than being silently dropped.
+- Reducer behavior, if promoted, has matching focused parity evidence.
+
+Verification:
+
+- RAW and ubiquitous-language check against Wolf Bite, Prone, Size, Stat Block
+  Attack Notation, and `UBIQUITOUS_LANGUAGE.md` condition/size terms.
+- Focused battle-runtime admission/reducer tests for size-gated condition rider
+  application and rejection.
+- Focused QNT/MBT only if reducer behavior changes.
+- `pnpm unit-profile-coverage:check:self-test`
+- `pnpm unit-profile-coverage:check`
+- `pnpm rules-kernel-coverage:check`
 - `git diff --check`
 
 ## Verification

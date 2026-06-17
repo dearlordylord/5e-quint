@@ -99,7 +99,7 @@ Discovers what acts a subject can take. Anchor:
 ### Cluster K — `spells_discovery` (14900..15423, 10 funcs, 524 LOC)
 - 14900 `discoverSupportedSpellInvocations` (323)
 - 15223 `spellInvocationCastSummary` (57)
-- `spellActivationInvocationCastSummary`, `spellSubjectTagForInvocation`, `activeOngoingFeaturesPreventSpellcasting`, `spellInvocationIsSpellcasting`, `spellInvocationCasterPrerequisiteIsMet`, `spellRequiresVerbal`, `isReadiedSpellInvocation`, `readiedSpellAct`
+- `spellActivationInvocationCastSummary`, `spellSubjectTagForInvocation`, `activeOngoingFeaturesPreventSpellInvocation`, `spellInvocationIsSpellcasting`, `spellInvocationCasterPrerequisiteIsMet`, `spellRequiresVerbal`, `isReadiedSpellInvocation`, `readiedSpellAct`
 
 ### Cluster L — `spells_resolve` (15424..21001, 45 funcs, 5,578 LOC)
 - 15424 `resolveSpellAct` (672)
@@ -417,7 +417,7 @@ Type-reference edges align mostly with call edges. The dense type-reference fano
 | 22 | `statblock_attacks ↔ turn` | `interruptTriggerLabel/maybeOpenInterruptWindow/reactionRollOrDamageReductionChoices*/opportunityAttackReactionChoices → attackDamage/attackActionOptionName`. Reverse: one stray `invalidResult → snapshotBattle`. | One-way after `invalidResult` is moved (cycle 21). Then F→W only. |
 | 23 | `statblock_attacks ↔ attack_roll` | `attackRollHole → attackActionOptionName/attackActionBonusWithPassiveFeatureBonus/attackRollMissToHitReplacementHolePayloadForAttacker`. Reverse: `targetHasAdjacentNonIncapacitatedAlly → combatantsAreAllies`. | Move `combatantsAreAllies/combatantsAreEnemies` (28679/28691) into G or `creature_state_leaves`. T→W one-way after. |
 | 24 | `turn ↔ turn_end_movement` | `readiedSpellReactionChoices/readiedMovementReactionChoices → readiedSpellInitialHoles/readiedMovementInitialHoles`. Reverse: `resolveOpportunityAttackCommand/resolveEndTurn*/resolveMoveCommand → maybeOpenInterruptWindow/snapshotBattle`. | Pull `readiedSpellInitialHoles`/`readiedMovementInitialHoles` (13748/13767, 21 LOC) into F. |
-| 25 | `turn ↔ spells_discovery` | `triggeredReactionSpellChoices → activeOngoingFeaturesPreventSpellcasting`; `readiedSpellAct → interruptTriggerLabel`. | Move `activeOngoingFeaturesPreventSpellcasting` (15327, 12 LOC) into F; move `interruptTriggerLabel` (7442) into a shared `reaction_metadata` helper read by F and K. |
+| 25 | `turn ↔ spells_discovery` | `triggeredReactionSpellChoices → activeOngoingFeaturesPreventSpellInvocation`; `readiedSpellAct → interruptTriggerLabel`. | Move `activeOngoingFeaturesPreventSpellInvocation` into F; move `interruptTriggerLabel` (7442) into a shared `reaction_metadata` helper read by F and K. |
 | 26 | `turn ↔ movement_speed` | `abilityProficiencyDifficultyClass → combatantProficiencyBonus`; `opportunityAttackReactionChoices → opportunityAttackOptionForReactor`. Reverse: `opportunityAttackThreatsForMovement → combatantCanSee`. | Move `combatantCanSee` (7913, 16 LOC) into S or shared. |
 
 After applying these moves, the cluster graph approaches a DAG with the following remaining (necessary) edges:

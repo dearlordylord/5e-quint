@@ -6,6 +6,11 @@ let SpecialAction =
       , name : Text
       }
 
+let CreatureTraitEffect = { kind : Text }
+
+let CreatureTrait =
+      { description : Text, effect : Optional CreatureTraitEffect, name : Text }
+
 let SaveAction =
       { ability : Text
       , dc : { dc : Natural, kind : Text }
@@ -78,7 +83,7 @@ in  [ { challengeRating = 0.25
     , senses = None (List { kind : Text, rangeFeet : Natural })
     , size = "large"
     , speeds = [ { feet = { kind = "literal", value = 60 }, kind = "walk" } ]
-    , traits = None (List { description : Text, name : Text })
+    , traits = None (List CreatureTrait)
     }
   }
 , { challengeRating = 0.25
@@ -94,9 +99,7 @@ in  [ { challengeRating = 0.25
       { attacks =
         [ { attackBonus = { kind = "literal", value = 4 }
           , attackType = "melee"
-          , description =
-              Some
-                "If the target is a Medium or smaller creature, it has the Prone condition."
+          , description = None Text
           , name = "Bite"
           , onHit =
             [ { amount =
@@ -106,6 +109,10 @@ in  [ { challengeRating = 0.25
                 }
               , damageType = "piercing"
               , kind = "damage"
+              }
+            , { condition = "prone"
+              , kind = "apply_condition_if_target_size_at_most"
+              , maxCreatureSize = "medium"
               }
             ]
           , rangeFeet = None { long : Natural, normal : Natural }
@@ -141,6 +148,11 @@ in  [ { challengeRating = 0.25
     , traits = Some
       [ { description =
             "The wolf has Advantage on attack rolls against a creature if at least one of the wolf's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition."
+        , effect =
+            Some
+              { kind =
+                  "attack_roll_advantage_when_non_incapacitated_ally_within_5_feet_of_target"
+              }
         , name = "Pack Tactics"
         }
       ]

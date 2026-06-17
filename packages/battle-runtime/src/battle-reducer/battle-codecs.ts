@@ -869,7 +869,7 @@ const BattleTargetSpatialFactSchema = Schema.Union(
     targetId: CombatantId,
   }),
   Schema.Struct({
-    kind: Schema.Literal("sneakAttackAllyWithin5FeetOfTarget"),
+    kind: Schema.Literal("attackerAllyWithin5FeetOfTarget"),
     attackerId: CombatantId,
     targetId: CombatantId,
     allyId: CombatantId,

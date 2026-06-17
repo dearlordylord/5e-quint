@@ -109,15 +109,32 @@ type SupportedStatBlockAdvantageBonusDamageEffect = Extract<
   readonly damageType: DamageType;
 };
 
-type SupportedStatBlockAttackEffectList =
-  | readonly [SupportedStatBlockBaseDamageEffect]
+type SupportedStatBlockAttackHitTargetSizeConditionEffect = Extract<
+  CreatureNamedAttackRoll["onHit"][number],
+  { readonly kind: "apply_condition_if_target_size_at_most" }
+> & {
+  readonly condition: "prone";
+};
+
+type SupportedStatBlockBaseDamageEffectList =
+  ReadonlyNonEmptyArray<SupportedStatBlockBaseDamageEffect>;
+
+type SupportedStatBlockAttackDamageEffectList =
+  | SupportedStatBlockBaseDamageEffectList
   | readonly [
-      SupportedStatBlockBaseDamageEffect,
       SupportedStatBlockAdvantageBonusDamageEffect,
+      ...SupportedStatBlockBaseDamageEffectList,
     ]
   | readonly [
+      ...SupportedStatBlockBaseDamageEffectList,
       SupportedStatBlockAdvantageBonusDamageEffect,
-      SupportedStatBlockBaseDamageEffect,
+    ];
+
+type SupportedStatBlockAttackEffectList =
+  | SupportedStatBlockAttackDamageEffectList
+  | readonly [
+      ...SupportedStatBlockAttackDamageEffectList,
+      SupportedStatBlockAttackHitTargetSizeConditionEffect,
     ];
 
 type SupportedStaticStatBlockBaseDamageEffect =
@@ -134,15 +151,25 @@ type SupportedStaticStatBlockAdvantageBonusDamageEffect =
     };
   };
 
-type SupportedStaticStatBlockAttackEffectList =
-  | readonly [SupportedStaticStatBlockBaseDamageEffect]
+type SupportedStaticStatBlockBaseDamageEffectList =
+  ReadonlyNonEmptyArray<SupportedStaticStatBlockBaseDamageEffect>;
+
+type SupportedStaticStatBlockAttackDamageEffectList =
+  | SupportedStaticStatBlockBaseDamageEffectList
   | readonly [
-      SupportedStaticStatBlockBaseDamageEffect,
       SupportedStaticStatBlockAdvantageBonusDamageEffect,
+      ...SupportedStaticStatBlockBaseDamageEffectList,
     ]
   | readonly [
+      ...SupportedStaticStatBlockBaseDamageEffectList,
       SupportedStaticStatBlockAdvantageBonusDamageEffect,
-      SupportedStaticStatBlockBaseDamageEffect,
+    ];
+
+type SupportedStaticStatBlockAttackEffectList =
+  | SupportedStaticStatBlockAttackDamageEffectList
+  | readonly [
+      ...SupportedStaticStatBlockAttackDamageEffectList,
+      SupportedStatBlockAttackHitTargetSizeConditionEffect,
     ];
 
 export type SupportedCreatureNamedAttackRoll = Omit<
@@ -175,6 +202,18 @@ export type SupportedStaticDamageCreatureNamedAttackRoll =
     readonly onHit: SupportedStaticStatBlockAttackEffectList;
   };
 
+export const STAT_BLOCK_ATTACK_ROLL_ADVANTAGE_PREDICATES = [
+  "nonIncapacitatedAllyWithin5FeetOfTarget",
+] as const;
+
+export type StatBlockAttackRollAdvantagePredicate =
+  (typeof STAT_BLOCK_ATTACK_ROLL_ADVANTAGE_PREDICATES)[number];
+
+export type StatBlockTraitAttackRollMode = {
+  readonly mode: "advantage";
+  readonly predicate: StatBlockAttackRollAdvantagePredicate;
+};
+
 export type StatBlockPartSection =
   | "actions"
   | "bonusActions"
@@ -195,6 +234,7 @@ export type RolledStatBlockAttackActionOption = {
   readonly attack: SupportedCreatureNamedAttackRoll;
   readonly part: StatBlockPartKey;
   readonly damageNotation: "rolled";
+  readonly traitAttackRollModes?: ReadonlyNonEmptyArray<StatBlockTraitAttackRollMode>;
 };
 
 export type StaticStatBlockAttackActionOption = {
@@ -202,6 +242,7 @@ export type StaticStatBlockAttackActionOption = {
   readonly attack: SupportedStaticDamageCreatureNamedAttackRoll;
   readonly part: StatBlockPartKey;
   readonly damageNotation: "static";
+  readonly traitAttackRollModes?: ReadonlyNonEmptyArray<StatBlockTraitAttackRollMode>;
 };
 
 export type StatBlockAttackActionOption =
@@ -253,13 +294,13 @@ export type StatBlockMutableResourceState = {
   readonly unavailableRestRechargeParts: readonly StatBlockPartKey[];
 };
 
-export type StatBlockAttackDamage = {
+export type StatBlockAttackDamageComponent = {
   readonly expr: DiceExpr;
   readonly static?: number;
   readonly damageType: DamageType;
-  readonly advantageBonus?: {
-    readonly expr: DiceExpr;
-    readonly static?: number;
-    readonly damageType: DamageType;
-  };
+};
+
+export type StatBlockAttackDamage = {
+  readonly baseComponents: ReadonlyNonEmptyArray<StatBlockAttackDamageComponent>;
+  readonly advantageBonus?: StatBlockAttackDamageComponent;
 };

@@ -207,8 +207,6 @@ export const jackOfAllTradesRequiresBardLevelTwoFeatureTestName =
   "Jack of All Trades requires the Bard level 2 feature grant";
 export const druidWildShapeShortRestRecoveryTestName =
   "Short Rest partially restores the Druid Wild Shape use pool";
-export const monksFocusShortRestRecoveryTestName =
-  "Short Rest restores the Monk Focus Point use pool";
 export const sorcererFontOfMagicLongRestRecoveryTestName =
   "Long Rest restores the Sorcerer Font of Magic Sorcery Point pool";
 export const sorcererFontOfMagicSlotConversionTestName =

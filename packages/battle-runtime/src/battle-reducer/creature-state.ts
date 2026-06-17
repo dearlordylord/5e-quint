@@ -82,7 +82,6 @@ import {
   ROGUE_STEADY_AIM_SUPPORT_PROFILE,
   SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE,
   SPELL_SLOT_HEALING_MODIFIER_SUPPORT_PROFILE,
-  battleDruidWildShapeKnownFormSupportForUnit,
   parseSupportedUnitFeatureProfile,
   type BattleUnitSupportProfile,
   type SupportedUnitFeatureProfile,
@@ -887,24 +886,6 @@ export function characterDruidWildShapeAvailableFormsInitIssue(
   }
   const wildShapeProfile = wildShapeProfiles[0] ?? null;
   if (wildShapeProfile === null) {
-    if (
-      creatureInit.resources?.some((resource) => {
-        const resourceUnit = resource.unit;
-        return (
-          battleDruidWildShapeKnownFormSupportForUnit(resourceUnit) !== null &&
-          resourceUnit.kind === "class_feature" &&
-          classLevels.some(
-            (classLevel) =>
-              classLevel.className === resourceUnit.className &&
-              Number(classLevel.level) >= 18,
-          )
-        );
-      }) === true
-    ) {
-      return battleStateInitIssue(
-        "Druid Wild Shape level 18+ requires Beast Spells support before battle initialization.",
-      );
-    }
     return creatureInit.druidWildShapeAvailableForms === undefined
       ? null
       : battleStateInitIssue(

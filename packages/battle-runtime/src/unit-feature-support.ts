@@ -98,6 +98,7 @@ export const MONK_FOCUS_BATTLE_OPTIONS_SUPPORT_PROFILE =
   "monkFocusBattleOptions";
 export const DRUID_WILD_SHAPE_KNOWN_FORM_SUPPORT_PROFILE =
   "druidWildShapeKnownForm";
+export const DRUID_BEAST_SPELLS_CLASS_LEVEL = 18;
 export const DRUID_WILD_COMPANION_SPELL_CAST_SUPPORT_PROFILE =
   "druidWildCompanionSpellCast";
 export const SPELL_SLOT_HEALING_MODIFIER_SUPPORT_PROFILE =
@@ -5098,8 +5099,7 @@ function battleDruidWildShapeKnownFormSupportForUnitAtClassLevels(
   if (
     isDruidWildShapeFeatureRecord(unit) &&
     (actualClassLevel === undefined ||
-      actualClassLevel < unit.acquiredAtLevel ||
-      Number(actualClassLevel) >= 18)
+      actualClassLevel < unit.acquiredAtLevel)
   ) {
     return null;
   }
@@ -5124,9 +5124,6 @@ function parseDruidWildShapeKnownFormUnitFeatureProfile(
   }
   const classLevel = findCharacterClassLevel(classLevels, unit.className);
   if (classLevel === undefined || classLevel < unit.acquiredAtLevel) {
-    return null;
-  }
-  if (Number(classLevel) >= 18) {
     return null;
   }
   const phase = unit.mechanics.phases[0];

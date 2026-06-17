@@ -16,16 +16,14 @@
 //
 // Dependencies on profile predicates (cluster O) and hole/fill helpers
 // (cluster P) currently round-trip through `../battle-reducer.ts`; they will
-// be retargeted after Pass 11/12 land. Likewise `interruptTriggerLabel` and
-// `activeOngoingFeaturesPreventSpellcasting` stay in `../battle-reducer.ts`
-// pending the dispatcher merge (Pass 19, cycle #25).
+// be retargeted after Pass 11/12 land. Likewise `interruptTriggerLabel` stays
+// in `../battle-reducer.ts` pending the dispatcher merge (Pass 19, cycle #25).
 
 // KERNEL-COVERAGE: runtime-owner BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES BATTLE.COMMAND.OPTION_AND_NEXT_TURN
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import type { CombatantId } from "../identity.ts";
 import { BATTLE_READIED_SPELL_TRIGGERS } from "../battle-interrupt-triggers.ts";
 import {
-  activeOngoingFeaturesPreventSpellcasting,
   interruptTriggerLabel,
   type BattleHole,
   type AvailableBattleAct,
@@ -111,7 +109,6 @@ export function discoverSupportedSpellInvocations(
   if (actor?.origin.kind !== "character") {
     return [];
   }
-  const spellcastingPrevented = activeOngoingFeaturesPreventSpellcasting(actor);
   const spellcastingPreventedByAntimagicField =
     combatantInsideActiveAntimagicFieldAura(state, actorId);
   const invocations = supportedSpellActs(actor, state);
@@ -122,12 +119,6 @@ export function discoverSupportedSpellInvocations(
         return [];
       }
       if (invocation.spell.mechanics.family === "triggered_reaction") {
-        return [];
-      }
-      if (
-        spellcastingPrevented &&
-        spellInvocationIsSpellcasting(invocation)
-      ) {
         return [];
       }
       if (
@@ -585,6 +576,6 @@ export function targetListSpellUsesTargetListHole(
   return invocation.targeting.maxTargets > 1;
 }
 
-// activeOngoingFeaturesPreventSpellcasting also belongs to cluster K but
-// remains in `../battle-reducer.ts` until the dispatcher merge resolves
+// Spell invocation active-feature gates belong to cluster K but remain behind
+// the shared spell act admission boundary until the dispatcher merge resolves
 // cycle #25 (turn ↔ spells_discovery).

@@ -985,6 +985,7 @@ function pactOfTheChainFamiliarAttackActs(
   return statBlockActionSectionAttackOptions(
     "actions",
     familiarCombatant.origin.statBlock.statBlock.actions,
+    familiarCombatant.origin.statBlock.statBlock.traits,
   ).flatMap((attack) => {
     const targetHole = attackTargetHole(state, familiarId, attack);
     return targetHole.choices.length === 0
@@ -1819,6 +1820,7 @@ export function supportedStatBlockMultiattacks(
   const actionAttacks = statBlockActionSectionAttackOptions(
     "actions",
     statBlock.statBlock.actions,
+    statBlock.statBlock.traits,
   );
   return (
     statBlock.statBlock.actions?.multiattacks?.flatMap((multiattack) => {

@@ -26,7 +26,6 @@ import {
   completeLongRest,
   completeShortRest,
   createFreshCharacterSheet,
-  monksFocusShortRestRecoveryTestName,
   requireRight,
   resourceCount,
   sorcererFontOfMagicBuild,
@@ -38,6 +37,9 @@ import {
   unitLibrary,
   useMonkUncannyMetabolismWhenRollingInitiative
 } from "./test-support.ts";
+
+const monksFocusShortRestRecoveryTestName =
+  "Short Rest restores the Monk Focus Point use pool";
 
 describe("Character Sheet runtime / resources", () => {
   test("Long Rest restores the Favored Enemy Hunter's Mark free-cast pool", () => {
