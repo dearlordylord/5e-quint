@@ -1,5 +1,7 @@
 // -*- mode: Bluespec; -*-
 
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.light-extra-attack-damage-ability-modifier
+
 module attackDamageCompositionExamples {
   import hitPointDamage.* from "./hit-point-damage"
   import zeroHitPointLifecycle.* from "./zero-hit-point-lifecycle"
@@ -54,13 +56,105 @@ module attackDamageCompositionExamples {
     }
   }
 
-  run test_light_property_extra_attack_damage_modifier_omits_positive_modifier = {
+  run test_light_property_extra_attack_damage_modifier_respects_two_weapon_fighting = {
     all {
-      assert(lightPropertyExtraAttackDamageModifier(3) == 0),
-      assert(lightPropertyExtraAttackDamageModifier(0) == 0),
-      assert(lightPropertyExtraAttackDamageModifier(-1) == -1),
-      assert(lightPropertyExtraAttackDamageAmount(4, 3) == 4),
-      assert(lightPropertyExtraAttackDamageAmount(4, -1) == 3),
+      assert(
+        lightPropertyExtraAttackDamageModifier(
+          3,
+          LightExtraAttackNoExistingDamageAbilityModifier,
+          false
+        ) == 0
+      ),
+      assert(
+        lightPropertyExtraAttackDamageModifier(
+          0,
+          LightExtraAttackNoExistingDamageAbilityModifier,
+          false
+        ) == 0
+      ),
+      assert(
+        lightPropertyExtraAttackDamageModifier(
+          -1,
+          LightExtraAttackNoExistingDamageAbilityModifier,
+          false
+        ) == -1
+      ),
+      assert(
+        lightPropertyExtraAttackDamageModifier(
+          3,
+          LightExtraAttackExistingDamageAbilityModifier(2),
+          false
+        ) == 0
+      ),
+      assert(
+        lightPropertyExtraAttackDamageModifier(
+          3,
+          LightExtraAttackExistingDamageAbilityModifier(-2),
+          false
+        ) == -2
+      ),
+      assert(
+        lightPropertyExtraAttackDamageModifier(
+          3,
+          LightExtraAttackNoExistingDamageAbilityModifier,
+          true
+        ) == 3
+      ),
+      assert(
+        lightPropertyExtraAttackDamageModifier(
+          3,
+          LightExtraAttackExistingDamageAbilityModifier(2),
+          true
+        ) == 2
+      ),
+      assert(
+        lightPropertyExtraAttackDamageAmount(
+          4,
+          3,
+          LightExtraAttackNoExistingDamageAbilityModifier,
+          false
+        ) == 4
+      ),
+      assert(
+        lightPropertyExtraAttackDamageAmount(
+          4,
+          -1,
+          LightExtraAttackNoExistingDamageAbilityModifier,
+          false
+        ) == 3
+      ),
+      assert(
+        lightPropertyExtraAttackDamageAmount(
+          4,
+          3,
+          LightExtraAttackExistingDamageAbilityModifier(2),
+          false
+        ) == 4
+      ),
+      assert(
+        lightPropertyExtraAttackDamageAmount(
+          4,
+          3,
+          LightExtraAttackExistingDamageAbilityModifier(-2),
+          false
+        ) == 2
+      ),
+      assert(
+        lightPropertyExtraAttackDamageAmount(
+          4,
+          3,
+          LightExtraAttackNoExistingDamageAbilityModifier,
+          true
+        ) == 7
+      ),
+      assert(
+        lightPropertyExtraAttackDamageAmount(
+          4,
+          3,
+          LightExtraAttackExistingDamageAbilityModifier(2),
+          true
+        ) == 6
+      ),
     }
   }
 

@@ -1,5 +1,5 @@
 // RAW-COVERAGE: runtime-owner RAW-QCORE9-UNIT-FEATURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-action-area-save-damage-replacement unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-damage-die-floor unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bardic-inspiration-grant unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-delegated-standard-actions unit-feature.bonus-action-ongoing-rage unit-feature.druid-wild-shape-known-form unit-feature.enemy-zero-hit-point-temporary-hit-points unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.grappler unit-feature.hunters-prey unit-feature.initiative-proficiency-and-swap unit-feature.innate-sorcery-activation unit-feature.magic-action-area-save-damage-healing unit-feature.magic-action-healing-pool unit-feature.martial-arts-attack-projection unit-feature.monk-focus-battle-options unit-feature.open-hand-technique unit-feature.paladin-sacred-weapon unit-feature.passive-ability-check-roll-mode unit-feature.passive-armor-class-bonus unit-feature.passive-damage-resistance unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-saving-throw-roll-mode unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.potent-cantrip unit-feature.reaction-roll-or-damage-reduction unit-feature.remarkable-athlete unit-feature.rogue-steady-aim unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.spell-slot-healing-modifier unit-feature.weapon-critical-range-19 unit-feature.weapon-damage-dice-roll-choice unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave unit-feature.zero-hit-point-replacement
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-action-area-save-damage-replacement unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-damage-die-floor unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bardic-inspiration-grant unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-delegated-standard-actions unit-feature.bonus-action-ongoing-rage unit-feature.druid-wild-shape-known-form unit-feature.enemy-zero-hit-point-temporary-hit-points unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.grappler unit-feature.hunters-prey unit-feature.initiative-proficiency-and-swap unit-feature.innate-sorcery-activation unit-feature.light-extra-attack-damage-ability-modifier unit-feature.magic-action-area-save-damage-healing unit-feature.magic-action-healing-pool unit-feature.martial-arts-attack-projection unit-feature.monk-focus-battle-options unit-feature.open-hand-technique unit-feature.paladin-sacred-weapon unit-feature.passive-ability-check-roll-mode unit-feature.passive-armor-class-bonus unit-feature.passive-damage-resistance unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-saving-throw-roll-mode unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.potent-cantrip unit-feature.reaction-roll-or-damage-reduction unit-feature.remarkable-athlete unit-feature.rogue-steady-aim unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.spell-slot-healing-modifier unit-feature.weapon-critical-range-19 unit-feature.weapon-damage-dice-roll-choice unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave unit-feature.zero-hit-point-replacement
 import { Match } from "effect";
 import * as Either from "effect/Either";
 import {
@@ -84,6 +84,8 @@ export const WEAPON_DAMAGE_DICE_ROLL_CHOICE_SUPPORT_PROFILE =
   "weaponDamageDiceRollChoice";
 export const ATTACK_DAMAGE_DIE_FLOOR_SUPPORT_PROFILE = "attackDamageDieFloor";
 export const ATTACK_DAMAGE_DIE_FLOOR_MINIMUM_RESULT = 3;
+export const LIGHT_EXTRA_ATTACK_DAMAGE_ABILITY_MODIFIER_SUPPORT_PROFILE =
+  "lightExtraAttackDamageAbilityModifier";
 export const MARTIAL_ARTS_ATTACK_PROJECTION_SUPPORT_PROFILE =
   "martialArtsAttackProjection";
 export const ATTACK_ACTION_ATTACK_COUNT_SCALING_SUPPORT_PROFILE =
@@ -192,6 +194,7 @@ export const BATTLE_UNIT_SUPPORT_PROFILES = [
   PASSIVE_SPEED_KIND_GRANTS_SUPPORT_PROFILE,
   WEAPON_DAMAGE_DICE_ROLL_CHOICE_SUPPORT_PROFILE,
   ATTACK_DAMAGE_DIE_FLOOR_SUPPORT_PROFILE,
+  LIGHT_EXTRA_ATTACK_DAMAGE_ABILITY_MODIFIER_SUPPORT_PROFILE,
   MARTIAL_ARTS_ATTACK_PROJECTION_SUPPORT_PROFILE,
   ATTACK_ACTION_ATTACK_COUNT_SCALING_SUPPORT_PROFILE,
   BARDIC_INSPIRATION_GRANT_SUPPORT_PROFILE,
@@ -811,6 +814,7 @@ export type BattleUnitSupportProfile =
   | BattleRogueSteadyAimSupportProfile
   | BattlePotentCantripSupportProfile
   | BattleGrapplerSupportProfile
+  | BattleLightExtraAttackDamageAbilityModifierSupportProfile
   | Exclude<
       (typeof BATTLE_UNIT_SUPPORT_PROFILES)[number],
       | "alternateActionCost"
@@ -840,6 +844,7 @@ export type BattleUnitSupportProfile =
       | "rogueSteadyAim"
       | "potentCantrip"
       | "grappler"
+      | "lightExtraAttackDamageAbilityModifier"
     >;
 
 export type BattleUnitSupportProfileIssue = {
@@ -1098,6 +1103,17 @@ export function battleUnitSupportProfilesForUnit(input: {
   }
   if (attackDamageDieFloorSupport === "attackDamageDieFloor") {
     supportProfiles.push(ATTACK_DAMAGE_DIE_FLOOR_SUPPORT_PROFILE);
+  }
+
+  const lightExtraAttackDamageAbilityModifierSupport =
+    battleLightExtraAttackDamageAbilityModifierSupportForUnit(input.unit);
+  if (lightExtraAttackDamageAbilityModifierSupport === "unsupported") {
+    return battleUnitSupportProfileIssue(
+      `Unsupported battle Light extra attack damage ability modifier Unit hook: ${input.unit.id}.`,
+    );
+  }
+  if (lightExtraAttackDamageAbilityModifierSupport !== null) {
+    supportProfiles.push(lightExtraAttackDamageAbilityModifierSupport);
   }
 
   const martialArtsAttackProjectionSupport =
@@ -1728,6 +1744,19 @@ export type AttackDamageDieFloorProfile = {
   readonly dieScope: "attackDamageDice";
   readonly minimumResult: typeof ATTACK_DAMAGE_DIE_FLOOR_MINIMUM_RESULT;
 };
+export type LightExtraAttackDamageAbilityModifierProfile = {
+  readonly optional: true;
+  readonly trigger: "lightPropertyExtraAttackDamageRoll";
+  readonly attackWeapon: {
+    readonly kind: "weaponWithLightProperty";
+  };
+  readonly modifierSource: "attackAbilityModifier";
+  readonly appliesWhen: "notAlreadyAddingAbilityModifier";
+};
+export type BattleLightExtraAttackDamageAbilityModifierSupportProfile = {
+  readonly kind: typeof LIGHT_EXTRA_ATTACK_DAMAGE_ABILITY_MODIFIER_SUPPORT_PROFILE;
+  readonly damageAbilityModifier: LightExtraAttackDamageAbilityModifierProfile;
+};
 export type MartialArtsAttackProjectionProfile = {
   readonly condition: {
     readonly kind: "unarmoredUnshieldedOnlyMonkWeapons";
@@ -1876,6 +1905,11 @@ export type SupportedUnitFeatureProfile =
       readonly kind: "attackDamageDieFloor";
       readonly unit: UnitRecord;
       readonly damageDieFloor: AttackDamageDieFloorProfile;
+    }
+  | {
+      readonly kind: "lightExtraAttackDamageAbilityModifier";
+      readonly unit: UnitRecord;
+      readonly damageAbilityModifier: LightExtraAttackDamageAbilityModifierProfile;
     }
   | {
       readonly kind: "martialArtsAttackProjection";
@@ -2634,6 +2668,11 @@ export type BattleAttackDamageDieFloorSupport =
   | "unsupported"
   | null;
 
+export type BattleLightExtraAttackDamageAbilityModifierSupport =
+  | BattleLightExtraAttackDamageAbilityModifierSupportProfile
+  | "unsupported"
+  | null;
+
 export type BattleMartialArtsAttackProjectionSupport =
   | "martialArtsAttackProjection"
   | "unsupported"
@@ -2847,6 +2886,22 @@ export function battleAttackDamageDieFloorSupportForUnit(
   return attackDamageDieFloorProfileForUnit(unit) === null
     ? "unsupported"
     : "attackDamageDieFloor";
+}
+
+export function battleLightExtraAttackDamageAbilityModifierSupportForUnit(
+  unit: UnitRecord,
+): BattleLightExtraAttackDamageAbilityModifierSupport {
+  if (!hasLightExtraAttackDamageAbilityModifierMechanics(unit)) {
+    return null;
+  }
+  const damageAbilityModifier =
+    lightExtraAttackDamageAbilityModifierProfileForUnit(unit);
+  return damageAbilityModifier === null
+    ? "unsupported"
+    : {
+        kind: LIGHT_EXTRA_ATTACK_DAMAGE_ABILITY_MODIFIER_SUPPORT_PROFILE,
+        damageAbilityModifier,
+      };
 }
 
 export function battleMartialArtsAttackProjectionSupportForUnit(
@@ -3199,6 +3254,15 @@ function hasWeaponDamageDiceRollChoiceMechanics(unit: UnitRecord): boolean {
 
 function hasAttackDamageDieFloorMechanics(unit: UnitRecord): boolean {
   return unit.kind === "feat" && unit.mechanics.family === "damage_die_floor";
+}
+
+function hasLightExtraAttackDamageAbilityModifierMechanics(
+  unit: UnitRecord,
+): boolean {
+  return (
+    unit.kind === "feat" &&
+    unit.mechanics.family === "light_extra_attack_damage_ability_modifier"
+  );
 }
 
 function hasMartialArtsAttackProjectionMechanics(unit: UnitRecord): boolean {
@@ -4398,6 +4462,35 @@ export function attackDamageDieFloorProfileForUnit(
   };
 }
 
+export function lightExtraAttackDamageAbilityModifierProfileForUnit(
+  unit: UnitRecord,
+): LightExtraAttackDamageAbilityModifierProfile | null {
+  if (
+    unit.kind !== "feat" ||
+    unit.mechanics.family !== "light_extra_attack_damage_ability_modifier"
+  ) {
+    return null;
+  }
+  const mechanics = unit.mechanics;
+  if (
+    mechanics.optional !== true ||
+    mechanics.trigger.kind !== "light_property_extra_attack_damage_roll" ||
+    mechanics.trigger.attackWeapon.kind !== "weapon_with_light_property" ||
+    mechanics.effect.kind !== "permit_attack_damage_ability_modifier" ||
+    mechanics.effect.modifierSource !== "attack_ability_modifier" ||
+    mechanics.effect.appliesWhen !== "not_already_adding_ability_modifier"
+  ) {
+    return null;
+  }
+  return {
+    optional: true,
+    trigger: "lightPropertyExtraAttackDamageRoll",
+    attackWeapon: { kind: "weaponWithLightProperty" },
+    modifierSource: "attackAbilityModifier",
+    appliesWhen: "notAlreadyAddingAbilityModifier",
+  };
+}
+
 export function martialArtsAttackProjectionProfileForUnit(
   unit: UnitRecord,
   classLevels: readonly CharacterBattleClassLevel[],
@@ -4745,6 +4838,7 @@ export function parseSupportedUnitFeatureProfile(
     parsePassiveSpeedKindGrantsUnitFeatureProfile(unit) ??
     parseWeaponDamageDiceRollChoiceUnitFeatureProfile(unit) ??
     parseAttackDamageDieFloorUnitFeatureProfile(unit) ??
+    parseLightExtraAttackDamageAbilityModifierUnitFeatureProfile(unit) ??
     parseMartialArtsAttackProjectionUnitFeatureProfile(unit, classLevels) ??
     parseBardicInspirationGrantUnitFeatureProfile(unit, classLevels) ??
     parseDruidWildShapeKnownFormUnitFeatureProfile(unit, classLevels) ??
@@ -6042,6 +6136,23 @@ function parseAttackDamageDieFloorUnitFeatureProfile(
         kind: "attackDamageDieFloor",
         unit,
         damageDieFloor,
+      };
+}
+
+function parseLightExtraAttackDamageAbilityModifierUnitFeatureProfile(
+  unit: UnitRecord,
+): Extract<
+  SupportedUnitFeatureProfile,
+  { readonly kind: "lightExtraAttackDamageAbilityModifier" }
+> | null {
+  const damageAbilityModifier =
+    lightExtraAttackDamageAbilityModifierProfileForUnit(unit);
+  return damageAbilityModifier === null
+    ? null
+    : {
+        kind: "lightExtraAttackDamageAbilityModifier",
+        unit,
+        damageAbilityModifier,
       };
 }
 

@@ -67,7 +67,7 @@
     {
       "number": 11,
       "id": "L3-FOLLOWUP-TWO-WEAPON-FIGHTING-RUNTIME",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Promote Two-Weapon Fighting battle runtime support"
     },
     {
@@ -105,6 +105,12 @@
       "id": "L3-FOLLOWUP-GREAT-WEAPON-FIGHTING-DECLINE-RUNTIME",
       "status": "ready-for-research",
       "title": "Promote Great Weapon Fighting optional decline support"
+    },
+    {
+      "number": 18,
+      "id": "L3-FOLLOWUP-TWO-WEAPON-FIGHTING-DECLINE-RUNTIME",
+      "status": "ready-for-research",
+      "title": "Promote Two-Weapon Fighting optional decline support"
     }
   ]
 }
@@ -159,6 +165,7 @@ the Unit catalog, or the Unit matrix.
 | L3-FOLLOWUP-GREAT-WEAPON-FIGHTING-RUNTIME | L14G-B04-FEAT-GREAT-WEAPON-FIGHTING | Runtime support consumes the typed Great Weapon Fighting Surface facts installed by Task 4. |
 | L3-FOLLOWUP-GREAT-WEAPON-FIGHTING-DECLINE-RUNTIME | L3-FOLLOWUP-GREAT-WEAPON-FIGHTING-RUNTIME | The promoted Great Weapon Fighting subset applies the beneficial floor when qualifying; explicit player decline needs the shared rolled-dice optional-choice owner. |
 | L3-FOLLOWUP-TWO-WEAPON-FIGHTING-RUNTIME | L14G-B05-FEAT-TWO-WEAPON-FIGHTING | Runtime support consumes the typed Two-Weapon Fighting Surface facts installed by Task 5. |
+| L3-FOLLOWUP-TWO-WEAPON-FIGHTING-DECLINE-RUNTIME | L3-FOLLOWUP-TWO-WEAPON-FIGHTING-RUNTIME | The promoted Two-Weapon Fighting subset applies the beneficial damage ability modifier when qualifying; explicit player decline needs the shared attack damage ability-modifier optional-choice owner. |
 | L3-FOLLOWUP-HALFLING-BRAVE-RUNTIME | L14G-B07-SPECIES-HALFLING | Runtime support consumes Halfling Brave's typed Frightened-condition Saving Throw Advantage facts. |
 | L3-FOLLOWUP-HALFLING-NIMBLENESS-RUNTIME | L14G-B07-SPECIES-HALFLING | Runtime support consumes Halfling Nimbleness's typed creature-space movement permission facts. |
 | L3-FOLLOWUP-HALFLING-LUCK-RUNTIME | L14G-B07-SPECIES-HALFLING | Runtime support consumes Halfling Luck's typed natural-1 D20 Test reroll facts. |
@@ -662,7 +669,7 @@ Verification:
 
 ### Task 11 - L3-FOLLOWUP-TWO-WEAPON-FIGHTING-RUNTIME
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -713,6 +720,59 @@ Verification:
 - RAW and ubiquitous-language check against the Two-Weapon Fighting SRD anchor.
 - Focused battle tests/QNT/MBT only for implemented battle behavior, with at
   most one focused MBT run after code changes are complete.
+- `pnpm --filter @dnd/battle-runtime typecheck`.
+- `git diff --check`.
+
+### Task 18 - L3-FOLLOWUP-TWO-WEAPON-FIGHTING-DECLINE-RUNTIME
+
+Status: `ready-for-research`
+
+Depends on:
+
+- L3-FOLLOWUP-TWO-WEAPON-FIGHTING-RUNTIME
+
+Unit: `feat_two_weapon_fighting`
+
+SRD anchor: `.references/srd-5.2.1/Feats.md:109-113`
+
+Current state:
+
+- Two-Weapon Fighting is promoted as `profile-subset-supported` for the
+  selected-benefit path: a retained support profile restores the Light-property
+  extra attack's ordinary positive attack ability modifier when the attack is
+  not already adding a damage ability modifier.
+- The current battle runtime has no explicit player decline fill for the
+  optional damage ability modifier permission on a qualifying Light-property
+  extra attack damage roll.
+
+Output:
+
+- Research and implement the attack damage ability-modifier optional-choice
+  owner needed to represent declining Two-Weapon Fighting on a qualifying Light
+  extra attack.
+- Reuse existing attack ability modifier, attack damageAbilityModifier, and
+  selected Unit support profile facts; do not add authored-identity dispatch or
+  a parallel feat-owned damage modifier.
+- Update focused QNT/rule-core slices only where optional-choice semantics
+  change, then revise the Unit matrix claim so the decline path is no longer a
+  deferred mechanic.
+
+Acceptance:
+
+- Focused battle tests cover both selecting and declining the damage ability
+  modifier on a qualifying Light extra attack, plus unchanged default,
+  already-adding, and negative-modifier behavior.
+- The decline choice is represented in the attack damage hole/fill protocol or
+  an equally typed attack-damage choice boundary, not as metadata on durable
+  character or Unit state.
+- The Unit matrix claim names the admitted Two-Weapon Fighting profile and does
+  not retain a deferred explicit-decline mechanic once implemented.
+
+Verification:
+
+- RAW and ubiquitous-language check against the Two-Weapon Fighting SRD anchor.
+- Focused battle tests/QNT/MBT only for implemented optional-choice behavior,
+  with at most one focused MBT run after code changes are complete.
 - `pnpm --filter @dnd/battle-runtime typecheck`.
 - `git diff --check`.
 

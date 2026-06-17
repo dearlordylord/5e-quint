@@ -2543,7 +2543,9 @@
           "stepAction": "step"
         }
       ],
-      "profiles": [],
+      "profiles": [
+        "unit-feature.light-extra-attack-damage-ability-modifier"
+      ],
       "qntOwners": [
         "packages/shared-algebras/proofs/rule-core/attack-damage-composition.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt",
@@ -6099,6 +6101,12 @@
         "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
       ],
       "profileId": "unit-feature.attack-damage-die-floor"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.DAMAGE.ATTACK_BRANCHES"
+      ],
+      "profileId": "unit-feature.light-extra-attack-damage-ability-modifier"
     },
     {
       "obligationIds": [
@@ -12863,7 +12871,8 @@
         "arithmetic",
         "comparison",
         "boolean-connective",
-        "all-block"
+        "all-block",
+        "pattern-match"
       ],
       "obligationId": "BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP",
       "proofOnly": [
@@ -13895,6 +13904,7 @@
     "unit-feature.hunters-prey",
     "unit-feature.initiative-proficiency-and-swap",
     "unit-feature.innate-sorcery-activation",
+    "unit-feature.light-extra-attack-damage-ability-modifier",
     "unit-feature.magic-action-area-save-damage-healing",
     "unit-feature.magic-action-healing-pool",
     "unit-feature.martial-arts-attack-projection",
