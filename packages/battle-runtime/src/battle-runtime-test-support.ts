@@ -1551,14 +1551,38 @@ function spellIdFromTargetHoleLabel(label: string | undefined): string {
   return "";
 }
 
-export function abilityCheckFill(hole: BattleHole, total: number): BattleFill {
-  if (hole.kind !== "abilityCheck") {
+export function abilityCheckFill(
+  hole: BattleHole,
+  value:
+    | number
+    | {
+        readonly total: number;
+        readonly naturalD20?: number;
+        readonly d20TestNaturalOneReroll?: Extract<
+          BattleFill,
+          { readonly kind: "abilityCheck" }
+        >["value"]["d20TestNaturalOneReroll"];
+      },
+): BattleFill {
+  if (
+    hole.kind !== "abilityCheck" &&
+    hole.kind !== "spellcastingAbilityCheck"
+  ) {
     throw new Error("Expected abilityCheck hole.");
   }
+  const checkValue = typeof value === "number" ? { total: value } : value;
   return {
     kind: "abilityCheck",
     holeId: hole.holeId,
-    value: { total },
+    value: {
+      total: checkValue.total,
+      ...(checkValue.naturalD20 === undefined
+        ? {}
+        : { naturalD20: DieRollResult(checkValue.naturalD20) }),
+      ...(checkValue.d20TestNaturalOneReroll === undefined
+        ? {}
+        : { d20TestNaturalOneReroll: checkValue.d20TestNaturalOneReroll }),
+    },
   };
 }
 
@@ -1573,6 +1597,10 @@ export function attackRollFill(
       BattleFill,
       { readonly kind: "attackRoll" }
     >["value"]["spellAttackReroll"];
+    readonly d20TestNaturalOneReroll?: Extract<
+      BattleFill,
+      { readonly kind: "attackRoll" }
+    >["value"]["d20TestNaturalOneReroll"];
   },
 ): BattleFill {
   if (hole.kind !== "attackRoll") {
@@ -1593,6 +1621,9 @@ export function attackRollFill(
       ...(value.spellAttackReroll === undefined
         ? {}
         : { spellAttackReroll: value.spellAttackReroll }),
+      ...(value.d20TestNaturalOneReroll === undefined
+        ? {}
+        : { d20TestNaturalOneReroll: value.d20TestNaturalOneReroll }),
     },
   };
 }
@@ -1613,29 +1644,82 @@ export function unitFeatureDecisionFill(
 
 export function deathSavingThrowFill(
   hole: BattleHole,
-  roll: number,
+  roll:
+    | number
+    | {
+        readonly roll: number;
+        readonly d20TestNaturalOneReroll?: Extract<
+          BattleFill,
+          { readonly kind: "deathSavingThrow" }
+        >["d20TestNaturalOneReroll"];
+      },
 ): BattleFill {
   if (hole.kind !== "deathSavingThrow") {
     throw new Error("Expected deathSavingThrow hole.");
   }
+  const value = typeof roll === "number" ? { roll } : roll;
   return {
     kind: "deathSavingThrow",
     holeId: hole.holeId,
-    value: DieRollResult(roll),
+    value: DieRollResult(value.roll),
+    ...(value.d20TestNaturalOneReroll === undefined
+      ? {}
+      : { d20TestNaturalOneReroll: value.d20TestNaturalOneReroll }),
   };
 }
 
 export function concentrationSavingThrowFill(
   hole: BattleHole,
-  succeeded: boolean,
+  succeeded:
+    | boolean
+    | (
+        | {
+            readonly succeeded: boolean;
+            readonly naturalD20?: number;
+            readonly withoutRoll?: never;
+            readonly d20TestNaturalOneReroll?: Extract<
+              BattleFill,
+              { readonly kind: "concentrationSavingThrow" }
+            >["value"]["d20TestNaturalOneReroll"];
+          }
+        | {
+            readonly succeeded: boolean;
+            readonly withoutRoll: true;
+            readonly naturalD20?: never;
+            readonly d20TestNaturalOneReroll?: never;
+          }
+      ),
 ): BattleFill {
   if (hole.kind !== "concentrationSavingThrow") {
     throw new Error("Expected concentrationSavingThrow hole.");
   }
+  const value =
+    typeof succeeded === "boolean" ? { succeeded } : succeeded;
+  if ("withoutRoll" in value && value.withoutRoll === true) {
+    return {
+      kind: "concentrationSavingThrow",
+      holeId: hole.holeId,
+      value: {
+        succeeded: value.succeeded,
+        withoutRoll: true,
+      },
+    };
+  }
   return {
     kind: "concentrationSavingThrow",
     holeId: hole.holeId,
-    value: { succeeded },
+    value: {
+      succeeded: value.succeeded,
+      ...(!("naturalD20" in value) || value.naturalD20 === undefined
+        ? {}
+        : { naturalD20: DieRollResult(value.naturalD20) }),
+      ...(
+        !("d20TestNaturalOneReroll" in value) ||
+        value.d20TestNaturalOneReroll === undefined
+          ? {}
+          : { d20TestNaturalOneReroll: value.d20TestNaturalOneReroll }
+      ),
+    },
   };
 }
 
@@ -1845,6 +1929,12 @@ export function savingThrowOutcomeFill(
   outcomes: readonly {
     readonly targetId: CombatantId;
     readonly succeeded: boolean;
+    readonly naturalD20?: number;
+    readonly withoutRoll?: true;
+    readonly d20TestNaturalOneReroll?: Extract<
+      BattleFill,
+      { readonly kind: "savingThrowOutcome" }
+    >["value"]["outcomes"][number]["d20TestNaturalOneReroll"];
   }[],
 ): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {
   if (hole.kind !== "savingThrowOutcome") {
@@ -1860,9 +1950,43 @@ export function savingThrowOutcomeFill(
               originAnchorId: wizardId,
               affectedTargetIds: outcomes.map((outcome) => outcome.targetId),
             },
-            outcomes,
+            outcomes: outcomes.map(d20TestSavingThrowOutcomeValue),
           }
-        : { outcomes },
+        : { outcomes: outcomes.map(d20TestSavingThrowOutcomeValue) },
+  };
+}
+
+function d20TestSavingThrowOutcomeValue(
+  outcome: {
+    readonly targetId: CombatantId;
+    readonly succeeded: boolean;
+    readonly naturalD20?: number;
+    readonly withoutRoll?: true;
+    readonly d20TestNaturalOneReroll?: Extract<
+      BattleFill,
+      { readonly kind: "savingThrowOutcome" }
+    >["value"]["outcomes"][number]["d20TestNaturalOneReroll"];
+  },
+): Extract<
+  BattleFill,
+  { readonly kind: "savingThrowOutcome" }
+>["value"]["outcomes"][number] {
+  if (outcome.withoutRoll === true) {
+    return {
+      targetId: outcome.targetId,
+      succeeded: outcome.succeeded,
+      withoutRoll: true,
+    };
+  }
+  return {
+    targetId: outcome.targetId,
+    succeeded: outcome.succeeded,
+    ...(outcome.naturalD20 === undefined
+      ? {}
+      : { naturalD20: DieRollResult(outcome.naturalD20) }),
+    ...(outcome.d20TestNaturalOneReroll === undefined
+      ? {}
+      : { d20TestNaturalOneReroll: outcome.d20TestNaturalOneReroll }),
   };
 }
 

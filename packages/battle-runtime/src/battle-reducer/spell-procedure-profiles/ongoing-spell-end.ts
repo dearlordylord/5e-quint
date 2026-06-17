@@ -60,6 +60,7 @@ import { sameStringSet } from "../spells-profile-shared.ts";
 import type { BattleSpellEffectLevel } from "../spells-effective-level.ts";
 import type { SpellFillSet } from "../spells-resolve-fill-set.ts";
 import { spendSpellCastResources } from "../spells-resolve-resources.ts";
+import { effectiveD20TestNaturalOneRerollAbilityCheckValue } from "../d20-test-natural-one-reroll.ts";
 import type {
   SpellAdmissionContext,
   SpellProcedureProfile,
@@ -442,7 +443,13 @@ function resolveOngoingSpellEndSpellAct(input: {
     ),
   );
   const abilityCheckByHoleId = new Map(
-    input.fillSet.ongoingSpellAbilityChecks.map((fill) => [fill.holeId, fill]),
+    input.fillSet.ongoingSpellAbilityChecks.map((fill) => [
+      fill.holeId,
+      {
+        ...fill,
+        value: effectiveD20TestNaturalOneRerollAbilityCheckValue(fill.value),
+      },
+    ]),
   );
   const unknownAbilityCheck = input.fillSet.ongoingSpellAbilityChecks.find(
     (fill) => !gatedHoles.some((hole) => hole.holeId === fill.holeId),

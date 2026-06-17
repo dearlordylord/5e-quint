@@ -71,6 +71,10 @@ export function spellBattle(input: {
     BattleCreatureInit["creatureInit"],
     { readonly kind: "character" }
   >["characterUnitRefs"];
+  readonly targetUnitFeatures?: Extract<
+    BattleCreatureInit["creatureInit"],
+    { readonly kind: "character" }
+  >["unitFeatures"];
   readonly targetSpellcasting?: Extract<
     BattleCreatureInit["creatureInit"],
     { readonly kind: "character" }
@@ -167,6 +171,9 @@ export function spellBattle(input: {
         ...(input.targetUnitRefs === undefined
           ? {}
           : { characterUnitRefs: input.targetUnitRefs }),
+        ...(input.targetUnitFeatures === undefined
+          ? {}
+          : { unitFeatures: input.targetUnitFeatures }),
         ...(input.targetSpellcasting === undefined &&
         input.targetPreparedSpells === undefined
           ? {}

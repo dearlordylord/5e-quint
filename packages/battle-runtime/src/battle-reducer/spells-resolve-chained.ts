@@ -2,6 +2,7 @@
 // Extracted from spells-resolve.ts as a procedure-local resolver slice.
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.d20-test-natural-one-reroll
 
 import { currentArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
 import {
@@ -64,6 +65,12 @@ import {
   isSourceDamageRollPenaltyRollFill,
   sourceDamageRollPenaltyRollForDamageRoll,
 } from "./damage-helpers.ts";
+import {
+  attackRollHoleWithD20TestNaturalOneRerollOption,
+  d20TestNaturalOneRerollRollDecisionRequired,
+  d20TestNaturalOneRerollRollIssue,
+  effectiveD20TestNaturalOneRerollAttackRoll,
+} from "./d20-test-natural-one-reroll.ts";
 import {
   REMARKABLE_ATHLETE_CRITICAL_HIT_MOVEMENT_DECISION_HOLE_ID,
   REMARKABLE_ATHLETE_CRITICAL_HIT_MOVEMENT_HOLE_ID,
@@ -425,9 +432,45 @@ export function resolveChainedSpellAttackDamageAct(input: {
         "Spell attack roll mode does not match the current attack-roll rule.",
       );
     }
+    const actorBeforeSpellAttack = replayState.combatants.get(input.actorId);
+    if (
+      d20TestNaturalOneRerollRollDecisionRequired({
+        actor: actorBeforeSpellAttack,
+        originalNaturalD20: Number(step.attackRoll.value.naturalD20),
+        decision: step.attackRoll.value.d20TestNaturalOneReroll,
+      })
+    ) {
+      return needsHolesResult(input.input.state, input.input.subject, [
+        attackRollHoleWithD20TestNaturalOneRerollOption(
+          chainedSpellAttackRollHole(
+            replayState,
+            input.actorId,
+            input.invocation,
+            stepIndex,
+            requiredRollMode,
+          ),
+        ),
+      ]);
+    }
+    const d20TestNaturalOneRerollIssue = d20TestNaturalOneRerollRollIssue({
+      actor: actorBeforeSpellAttack,
+      originalNaturalD20: Number(step.attackRoll.value.naturalD20),
+      decision: step.attackRoll.value.d20TestNaturalOneReroll,
+      requiredRollMode,
+    });
+    if (d20TestNaturalOneRerollIssue !== null) {
+      return invalidResult(
+        input.input.state,
+        "invalidFill",
+        d20TestNaturalOneRerollIssue,
+      );
+    }
+    const effectiveAttackRoll = effectiveD20TestNaturalOneRerollAttackRoll(
+      step.attackRoll.value,
+    );
 
     const ordinaryHit = attackRollHits(
-      step.attackRoll.value,
+      effectiveAttackRoll,
       currentArmorClass(activeEffectArmorClass(target)),
     );
     const missToHitReplacement = selectedAttackRollMissToHitReplacement({
@@ -435,7 +478,7 @@ export function resolveChainedSpellAttackDamageAct(input: {
       subject: input.input.subject,
       attackerId: input.actorId,
       targetId: target.combatantId,
-      attackRoll: step.attackRoll.value,
+      attackRoll: effectiveAttackRoll,
       ordinaryHit,
     });
     if (
@@ -466,12 +509,12 @@ export function resolveChainedSpellAttackDamageAct(input: {
       {
         subject: input.input.subject,
         targetId: target.combatantId,
-        attackRoll: step.attackRoll.value,
+        attackRoll: effectiveAttackRoll,
       },
     );
     replayState = attackRolledState;
     const hit = ordinaryHit || missToHitReplacement !== null;
-    const critical = attackRollIsCriticalHit(step.attackRoll.value);
+    const critical = attackRollIsCriticalHit(effectiveAttackRoll);
     if (!hit) {
       const remarkableAthleteMovement =
         resolveRemarkableAthleteCriticalHitMovement({
@@ -521,7 +564,7 @@ export function resolveChainedSpellAttackDamageAct(input: {
         trigger: "attackHit",
         attackerId: input.actorId,
         targetId: target.combatantId,
-        attackRoll: step.attackRoll.value,
+        attackRoll: effectiveAttackRoll,
         attackKind: spellAttackKindForRedirect(input.invocation.attackKind),
         attackHitTriggerKind: "otherAttack",
         damageTypes: [selectedDamageType],

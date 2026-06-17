@@ -1,4 +1,5 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.d20-test-natural-one-reroll
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.remarkable-athlete
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-damage-type-substitution
 // KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_TRANSMUTED_DAMAGE_TYPE_SUBSTITUTION BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING
@@ -65,6 +66,13 @@ import {
   hideousLaughterDamageRepeatSaveFillsForTarget,
 } from "./hideous-laughter-repeat-save.ts";
 import { reactionSpellTargetFactsForAfterDamage } from "./reaction-triggered-spells.ts";
+import {
+  attackRollHoleWithD20TestNaturalOneRerollOption,
+  d20TestNaturalOneRerollOutcomeIssue,
+  d20TestNaturalOneRerollRollDecisionRequired,
+  d20TestNaturalOneRerollRollIssue,
+  effectiveD20TestNaturalOneRerollAttackRoll,
+} from "./d20-test-natural-one-reroll.ts";
 import { concentrationSavingThrowFillFor } from "./spells-resolve-fill-helpers.ts";
 import { spellCastInterruptFrame } from "./spell-cast-interrupt-frame.ts";
 import {
@@ -471,8 +479,42 @@ function resolveSpellAttackSequenceCreaturePart(input: {
   if (attackRollError !== null) {
     return invalidResult(input.input.state, "invalidFill", attackRollError);
   }
-  const ordinaryHit = attackRollHits(
+  const actorBeforeSpellAttack = input.state.combatants.get(input.actorId);
+  if (
+    d20TestNaturalOneRerollRollDecisionRequired({
+      actor: actorBeforeSpellAttack,
+      originalNaturalD20: Number(input.partFill.attackRoll.naturalD20),
+      decision: input.partFill.attackRoll.d20TestNaturalOneReroll,
+    })
+  ) {
+    return needsHolesResult(input.state, input.input.subject, [
+      attackRollHoleWithD20TestNaturalOneRerollOption(
+        spellAttackSequencePartAttackRollHole(
+          input.invocation,
+          input.partIndex,
+          requiredRollMode,
+        ),
+      ),
+    ]);
+  }
+  const d20TestNaturalOneRerollIssue = d20TestNaturalOneRerollRollIssue({
+    actor: actorBeforeSpellAttack,
+    originalNaturalD20: Number(input.partFill.attackRoll.naturalD20),
+    decision: input.partFill.attackRoll.d20TestNaturalOneReroll,
+    requiredRollMode,
+  });
+  if (d20TestNaturalOneRerollIssue !== null) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      d20TestNaturalOneRerollIssue,
+    );
+  }
+  const effectiveAttackRoll = effectiveD20TestNaturalOneRerollAttackRoll(
     input.partFill.attackRoll,
+  );
+  const ordinaryHit = attackRollHits(
+    effectiveAttackRoll,
     currentArmorClass(activeEffectArmorClass(target)),
   );
   const missToHitReplacement = selectedAttackRollMissToHitReplacement({
@@ -480,7 +522,7 @@ function resolveSpellAttackSequenceCreaturePart(input: {
     subject: input.input.subject,
     attackerId: input.actorId,
     targetId: target.combatantId,
-    attackRoll: input.partFill.attackRoll,
+    attackRoll: effectiveAttackRoll,
     ordinaryHit,
   });
   if (
@@ -496,7 +538,7 @@ function resolveSpellAttackSequenceCreaturePart(input: {
     );
   }
   const hit = ordinaryHit || missToHitReplacement !== null;
-  const critical = attackRollIsCriticalHit(input.partFill.attackRoll);
+  const critical = attackRollIsCriticalHit(effectiveAttackRoll);
   const attackRolledState = recordAttackRollMissToHitReplacementUsed(
     consumeHelpAttackForAttackRoll(
       recordAttackRollOngoingFeatures(
@@ -513,7 +555,7 @@ function resolveSpellAttackSequenceCreaturePart(input: {
     {
       subject: input.input.subject,
       targetId: target.combatantId,
-      attackRoll: input.partFill.attackRoll,
+      attackRoll: effectiveAttackRoll,
     },
   );
   if (!hit && input.partFill.mirrorImageDuplicateRoll !== undefined) {
@@ -586,7 +628,7 @@ function resolveSpellAttackSequenceCreaturePart(input: {
         trigger: "attackHit",
         attackerId: input.actorId,
         targetId: target.combatantId,
-        attackRoll: input.partFill.attackRoll,
+        attackRoll: effectiveAttackRoll,
         attackKind: spellAttackKindForRedirect(input.invocation.attackKind),
         attackHitTriggerKind: "otherAttack",
         damageTypes: [
@@ -761,6 +803,25 @@ function resolveSpellAttackSequenceCreaturePart(input: {
       input.input.subject,
       [concentrationSave],
     );
+  }
+  if (concentrationFill !== undefined) {
+    const d20TestNaturalOneRerollIssue = d20TestNaturalOneRerollOutcomeIssue({
+      actor: spellReduction.target,
+      originalNaturalD20:
+        concentrationFill.value.naturalD20 === undefined
+          ? undefined
+          : Number(concentrationFill.value.naturalD20),
+      decision: concentrationFill.value.d20TestNaturalOneReroll,
+      withoutRoll: concentrationFill.value.withoutRoll,
+      succeeded: concentrationFill.value.succeeded,
+    });
+    if (d20TestNaturalOneRerollIssue !== null) {
+      return invalidResult(
+        input.input.state,
+        "invalidFill",
+        d20TestNaturalOneRerollIssue,
+      );
+    }
   }
   const damageEventKey = String(
     spellAttackSequencePartDamageDispositionHoleKey(
@@ -1009,6 +1070,37 @@ function resolveSpellAttackSequenceObjectPart(input: {
   if (attackRollError !== null) {
     return invalidResult(input.input.state, "invalidFill", attackRollError);
   }
+  const actorBeforeSpellAttack = input.state.combatants.get(input.actorId);
+  if (
+    d20TestNaturalOneRerollRollDecisionRequired({
+      actor: actorBeforeSpellAttack,
+      originalNaturalD20: Number(input.partFill.attackRoll.naturalD20),
+      decision: input.partFill.attackRoll.d20TestNaturalOneReroll,
+    })
+  ) {
+    return needsHolesResult(input.state, input.input.subject, [
+      attackRollHoleWithD20TestNaturalOneRerollOption(
+        spellAttackSequencePartAttackRollHole(
+          input.invocation,
+          input.partIndex,
+          requiredRollMode,
+        ),
+      ),
+    ]);
+  }
+  const d20TestNaturalOneRerollIssue = d20TestNaturalOneRerollRollIssue({
+    actor: actorBeforeSpellAttack,
+    originalNaturalD20: Number(input.partFill.attackRoll.naturalD20),
+    decision: input.partFill.attackRoll.d20TestNaturalOneReroll,
+    requiredRollMode,
+  });
+  if (d20TestNaturalOneRerollIssue !== null) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      d20TestNaturalOneRerollIssue,
+    );
+  }
   if (
     input.partFill.attackRoll.activatedOngoingFeatureUnitId !== undefined ||
     input.partFill.attackRoll.missToHitReplacementUnitId !== undefined
@@ -1019,8 +1111,11 @@ function resolveSpellAttackSequenceObjectPart(input: {
       "Object-target spell attacks do not use combatant attack-roll feature selections.",
     );
   }
-  const hit = attackRollHits(input.partFill.attackRoll, objectFact.armorClass);
-  const critical = attackRollIsCriticalHit(input.partFill.attackRoll);
+  const effectiveAttackRoll = effectiveD20TestNaturalOneRerollAttackRoll(
+    input.partFill.attackRoll,
+  );
+  const hit = attackRollHits(effectiveAttackRoll, objectFact.armorClass);
+  const critical = attackRollIsCriticalHit(effectiveAttackRoll);
   const attackRolledState = consumeSelfAttackRollEffects(
     {
       ...input.state,

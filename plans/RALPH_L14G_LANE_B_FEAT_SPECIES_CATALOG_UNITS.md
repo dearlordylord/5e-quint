@@ -85,7 +85,7 @@
     {
       "number": 14,
       "id": "L3-FOLLOWUP-HALFLING-LUCK-RUNTIME",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Promote Halfling Luck D20 Test reroll support"
     },
     {
@@ -117,6 +117,12 @@
       "id": "L3-FOLLOWUP-CREATURE-SPACE-TABLE-SPATIAL-DERIVATION",
       "status": "ready-for-research",
       "title": "Derive creature-space traversal witnesses from table routes"
+    },
+    {
+      "number": 20,
+      "id": "L3-FOLLOWUP-D20-TEST-ROLLED-DIE-REROLL-CHOICE",
+      "status": "ready-for-research",
+      "title": "Promote D20 Test rolled-die reroll choice support"
     }
   ]
 }
@@ -176,6 +182,7 @@ the Unit catalog, or the Unit matrix.
 | L3-FOLLOWUP-HALFLING-NIMBLENESS-RUNTIME | L14G-B07-SPECIES-HALFLING | Runtime support consumes Halfling Nimbleness's typed creature-space movement permission facts. |
 | L3-FOLLOWUP-CREATURE-SPACE-TABLE-SPATIAL-DERIVATION | L3-FOLLOWUP-HALFLING-NIMBLENESS-RUNTIME | The promoted Nimbleness subset consumes caller/table-supplied occupied-space witnesses; automatic pathfinding, route extraction, and coordinate occupancy derivation need a separate table/spatial owner. |
 | L3-FOLLOWUP-HALFLING-LUCK-RUNTIME | L14G-B07-SPECIES-HALFLING | Runtime support consumes Halfling Luck's typed natural-1 D20 Test reroll facts. |
+| L3-FOLLOWUP-D20-TEST-ROLLED-DIE-REROLL-CHOICE | L3-FOLLOWUP-HALFLING-LUCK-RUNTIME | The promoted Luck subset consumes selected/effective d20 facts; full Advantage/Disadvantage one-die reroll choice needs raw rolled-die vector and die-selection replacement facts. |
 | L3-FOLLOWUP-HALFLING-NATURALLY-STEALTHY-RUNTIME | L14G-B07-SPECIES-HALFLING | Runtime support consumes Naturally Stealthy's typed Hide-obscurement permission facts. |
 | L3-FOLLOWUP-HUMAN-RESOURCEFUL-RUNTIME | L14G-B08-SPECIES-HUMAN | Runtime support consumes Human Resourceful's typed Long Rest Heroic Inspiration facts. |
 
@@ -885,7 +892,7 @@ Verification:
 
 ### Task 14 - L3-FOLLOWUP-HALFLING-LUCK-RUNTIME
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -925,6 +932,62 @@ Verification:
 - RAW and ubiquitous-language check against the Luck SRD anchor.
 - Focused roll tests/QNT/MBT only for implemented battle behavior, with at most
   one focused MBT run after code changes are complete.
+- `pnpm --filter @dnd/battle-runtime typecheck`.
+- `git diff --check`.
+
+### Task 20 - L3-FOLLOWUP-D20-TEST-ROLLED-DIE-REROLL-CHOICE
+
+Status: `ready-for-research`
+
+Depends on:
+
+- L3-FOLLOWUP-HALFLING-LUCK-RUNTIME
+
+Unit: `species_halfling_luck`
+
+SRD anchor: `.references/srd-5.2.1/Character-Origins.md:227`;
+`.references/srd-5.2.1/Playing-the-Game.md:201-205`
+
+Current state:
+
+- Halfling Luck is promoted as `profile-subset-supported` for the
+  selected/effective-d20 subset: a supported actor who rolls a selected or
+  effective natural 1 on a rolled D20 Test must explicitly reroll or decline,
+  and selected rerolls replace the downstream Attack Roll, Ability Check,
+  Saving Throw outcome, Concentration Saving Throw, or Death Saving Throw fact.
+- Current promoted battle D20 Test fills expose selected/effective `naturalD20`
+  facts, not both raw d20 dice rolled under Advantage or Disadvantage.
+- The Unit matrix leaves Advantage/Disadvantage one-die reroll choice outside
+  the promoted Luck subset.
+
+Output:
+
+- Research and implement a D20 Test rolled-die vector and die-selection
+  replacement owner for Advantage and Disadvantage rerolls.
+- Reuse the existing selected/effective D20 Test owner from
+  `L3-FOLLOWUP-HALFLING-LUCK-RUNTIME`; do not add Luck-owned parallel roll
+  state.
+- Permit a supported natural-1 reroll choice for either raw d20 when Advantage
+  or Disadvantage rolled two dice, then project one executable selected or
+  effective result for downstream D20 Test reducers.
+- Update focused QNT/rule-core slices only where rolled-die choice semantics
+  change, then revise the Unit matrix claim so the Advantage/Disadvantage
+  deferral is removed or narrowed.
+
+Acceptance:
+
+- Focused tests cover Advantage and Disadvantage rolls where the selected die,
+  unselected die, both dice, or neither die is a natural 1.
+- The replacement is keyed by D20 Test raw die facts and explicit die-selection
+  facts, not by Luck or Halfling authored identity.
+- Downstream Attack Roll, Ability Check, and Saving Throw reducers consume one
+  projected D20 Test result without storing a second Luck-owned result.
+
+Verification:
+
+- RAW and ubiquitous-language check against Luck and Interactions with Rerolls.
+- Focused roll tests/QNT/MBT only for implemented rolled-die choice behavior,
+  with at most one focused MBT run after code changes are complete.
 - `pnpm --filter @dnd/battle-runtime typecheck`.
 - `git diff --check`.
 

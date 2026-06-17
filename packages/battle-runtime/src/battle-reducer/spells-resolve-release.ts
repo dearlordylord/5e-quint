@@ -2,6 +2,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spell-created-held-object
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.remarkable-athlete
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.d20-test-natural-one-reroll
 
 import {
   spendAction,
@@ -60,6 +61,12 @@ import {
   sourceDamageRollPenaltyRollForDamageRoll,
   unexpectedSourceDamageRollPenaltyRoll,
 } from "./damage-helpers.ts";
+import {
+  attackRollHoleWithD20TestNaturalOneRerollOption,
+  d20TestNaturalOneRerollRollDecisionRequired,
+  d20TestNaturalOneRerollRollIssue,
+  effectiveD20TestNaturalOneRerollAttackRoll,
+} from "./d20-test-natural-one-reroll.ts";
 import { needsHolesResult, revealHidden } from "./hole-helpers.ts";
 import { invalidResult } from "./result-helpers.ts";
 import { resolveRemarkableAthleteCriticalHitMovement } from "./remarkable-athlete-critical-movement.ts";
@@ -717,8 +724,45 @@ export function resolveSpellRelease(
         "Readied spell attack roll mode does not match the current attack-roll rule.",
       );
     }
-    const ordinaryHit = attackRollHits(
+    const actorBeforeSpellAttack = input.state.combatants.get(
+      input.subject.actorId,
+    );
+    if (
+      d20TestNaturalOneRerollRollDecisionRequired({
+        actor: actorBeforeSpellAttack,
+        originalNaturalD20: Number(fillSet.attackRoll.naturalD20),
+        decision: fillSet.attackRoll.d20TestNaturalOneReroll,
+      })
+    ) {
+      return needsHolesResult(input.state, input.subject, [
+        attackRollHoleWithD20TestNaturalOneRerollOption(
+          spellAttackRollHole(
+            input.state,
+            input.subject.actorId,
+            invocation,
+            requiredRollMode,
+          ),
+        ),
+      ]);
+    }
+    const d20TestNaturalOneRerollIssue = d20TestNaturalOneRerollRollIssue({
+      actor: actorBeforeSpellAttack,
+      originalNaturalD20: Number(fillSet.attackRoll.naturalD20),
+      decision: fillSet.attackRoll.d20TestNaturalOneReroll,
+      requiredRollMode,
+    });
+    if (d20TestNaturalOneRerollIssue !== null) {
+      return invalidResult(
+        input.state,
+        "invalidFill",
+        d20TestNaturalOneRerollIssue,
+      );
+    }
+    const effectiveAttackRoll = effectiveD20TestNaturalOneRerollAttackRoll(
       fillSet.attackRoll,
+    );
+    const ordinaryHit = attackRollHits(
+      effectiveAttackRoll,
       currentArmorClass(activeEffectArmorClass(target)),
     );
     const missToHitReplacement = selectedAttackRollMissToHitReplacement({
@@ -726,7 +770,7 @@ export function resolveSpellRelease(
       subject: input.subject,
       attackerId: input.subject.actorId,
       targetId: target.combatantId,
-      attackRoll: fillSet.attackRoll,
+      attackRoll: effectiveAttackRoll,
       ordinaryHit,
     });
     if (
@@ -757,11 +801,11 @@ export function resolveSpellRelease(
       {
         subject: input.subject,
         targetId: target.combatantId,
-        attackRoll: fillSet.attackRoll,
+        attackRoll: effectiveAttackRoll,
       },
     );
     const hit = ordinaryHit || missToHitReplacement !== null;
-    const critical = attackRollIsCriticalHit(fillSet.attackRoll);
+    const critical = attackRollIsCriticalHit(effectiveAttackRoll);
     spellMarkedDamageRiders = hit
       ? activeMarkedDamageRiders(
           releaseAttackRolledState.combatants.get(input.subject.actorId),
@@ -836,10 +880,14 @@ export function resolveSpellRelease(
   }
   const releaseDamageBaseState =
     releaseResolutionStateAfterCriticalMovement ?? input.state;
-  const critical =
+  const effectiveReleaseAttackRoll =
     invocation.procedure === "spellAttackDamage" &&
-    fillSet.attackRoll != null &&
-    attackRollIsCriticalHit(fillSet.attackRoll);
+    fillSet.attackRoll != null
+      ? effectiveD20TestNaturalOneRerollAttackRoll(fillSet.attackRoll)
+      : undefined;
+  const critical =
+    effectiveReleaseAttackRoll !== undefined &&
+    attackRollIsCriticalHit(effectiveReleaseAttackRoll);
   const damageValidation = validateSpellDamageFill(
     fillSet.damageRoll,
     invocation,
@@ -997,7 +1045,7 @@ export function resolveSpellRelease(
     hideousLaughterSaveCheck.holes,
   );
   const releaseResolutionState =
-    invocation.procedure === "spellAttackDamage" && fillSet.attackRoll != null
+    effectiveReleaseAttackRoll !== undefined
       ? (releaseResolutionStateAfterCriticalMovement ??
         recordAttackRollMissToHitReplacementUsed(
           consumeHelpAttackForAttackRoll(
@@ -1016,16 +1064,16 @@ export function resolveSpellRelease(
             subject: input.subject,
             attackerId: input.subject.actorId,
             targetId: target.combatantId,
-            attackRoll: fillSet.attackRoll,
+            attackRoll: effectiveReleaseAttackRoll,
             ordinaryHit: attackRollHits(
-              fillSet.attackRoll,
+              effectiveReleaseAttackRoll,
               currentArmorClass(activeEffectArmorClass(target)),
             ),
           }),
           {
             subject: input.subject,
             targetId: target.combatantId,
-            attackRoll: fillSet.attackRoll,
+            attackRoll: effectiveReleaseAttackRoll,
           },
         ))
       : input.state;

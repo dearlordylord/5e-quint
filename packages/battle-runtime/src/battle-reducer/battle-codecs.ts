@@ -8,6 +8,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-missed-spell-attack-reroll
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-damage-dice-reroll
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-acid-arrow-attack-timing
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.d20-test-natural-one-reroll
 // KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_SEEKING_SPELL_ATTACK_REROLL BATTLE.FEATURE.METAMAGIC_EMPOWERED_DAMAGE_DICE_REROLL
 // Extracted from ../battle-reducer.ts; this module owns Effect Schema values,
 // while domain types remain exported by the reducer facade.
@@ -269,6 +270,18 @@ const BattleHoleBaseSchema = {
   holeInstanceKey: Schema.NonEmptyTrimmedString,
   holeId: BattleHoleIdSchema,
   label: Schema.optionalWith(Schema.String, { exact: true }),
+} as const;
+
+const D20TestNaturalOneRerollHoleOptionsSchema = {
+  d20TestNaturalOneRerolls: Schema.optionalWith(
+    Schema.Array(
+      Schema.Struct({
+        effectKind: Schema.Literal("d20_test_natural_one_reroll"),
+        label: Schema.String,
+      }),
+    ),
+    { exact: true },
+  ),
 } as const;
 
 // Effect Schema infers branded ids as their encoded string representation;
@@ -1239,6 +1252,15 @@ export const BattleHoleSchema = Schema.Union(
       ),
       { exact: true },
     ),
+    d20TestNaturalOneRerolls: Schema.optionalWith(
+      Schema.Array(
+        Schema.Struct({
+          effectKind: Schema.Literal("d20_test_natural_one_reroll"),
+          label: Schema.String,
+        }),
+      ),
+      { exact: true },
+    ),
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
@@ -1263,6 +1285,15 @@ export const BattleHoleSchema = Schema.Union(
           effectKind: Schema.Literal("missed_spell_attack_reroll"),
           label: Schema.String,
           sorceryPointCost: ResourceCount,
+        }),
+      ),
+      { exact: true },
+    ),
+    d20TestNaturalOneRerolls: Schema.optionalWith(
+      Schema.Array(
+        Schema.Struct({
+          effectKind: Schema.Literal("d20_test_natural_one_reroll"),
+          label: Schema.String,
         }),
       ),
       { exact: true },
@@ -1693,6 +1724,7 @@ export const BattleHoleSchema = Schema.Union(
     areaChoices: Schema.Array(BattleSpellAreaChoiceSchema),
     targetRollModes: Schema.Array(BattleSavingThrowRollModeProjectionSchema),
     targetFlatBonuses: Schema.Array(BattleSavingThrowFlatBonusProjectionSchema),
+    ...D20TestNaturalOneRerollHoleOptionsSchema,
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
@@ -1704,6 +1736,7 @@ export const BattleHoleSchema = Schema.Union(
     areaChoices: Schema.Array(BattleSpellAreaChoiceSchema),
     targetRollModes: Schema.Array(BattleSavingThrowRollModeProjectionSchema),
     targetFlatBonuses: Schema.Array(BattleSavingThrowFlatBonusProjectionSchema),
+    ...D20TestNaturalOneRerollHoleOptionsSchema,
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
@@ -1715,6 +1748,7 @@ export const BattleHoleSchema = Schema.Union(
     targetIds: Schema.Array(CombatantId),
     targetRollModes: Schema.Array(BattleSavingThrowRollModeProjectionSchema),
     targetFlatBonuses: Schema.Array(BattleSavingThrowFlatBonusProjectionSchema),
+    ...D20TestNaturalOneRerollHoleOptionsSchema,
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
@@ -1741,6 +1775,7 @@ export const BattleHoleSchema = Schema.Union(
     kind: Schema.Literal("deathSavingThrow"),
     label: Schema.String,
     combatantId: CombatantId,
+    ...D20TestNaturalOneRerollHoleOptionsSchema,
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
@@ -1760,6 +1795,7 @@ export const BattleHoleSchema = Schema.Union(
     rollMode: Schema.optionalWith(Schema.Literal(...ATTACK_ROLL_MODES), {
       exact: true,
     }),
+    ...D20TestNaturalOneRerollHoleOptionsSchema,
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
@@ -1809,6 +1845,7 @@ export const BattleHoleSchema = Schema.Union(
     rollMode: Schema.optionalWith(Schema.Literal(...ATTACK_ROLL_MODES), {
       exact: true,
     }),
+    ...D20TestNaturalOneRerollHoleOptionsSchema,
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
@@ -1822,6 +1859,7 @@ export const BattleHoleSchema = Schema.Union(
       effect: BattleOngoingSpellEffectRefSchema,
       contestedSpellLevel: BattleSpellEffectLevel,
     }),
+    ...D20TestNaturalOneRerollHoleOptionsSchema,
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
@@ -1889,6 +1927,82 @@ const BattleD20DieRollResultSchema = Schema.Number.pipe(
   Schema.brand("DieRollResult"),
 );
 
+const BattleD20TestRollReplacementSchema = Schema.Struct({
+  total: Schema.Number.pipe(Schema.int()),
+  naturalD20: BattleD20DieRollResultSchema,
+  rollMode: Schema.optionalWith(Schema.Literal(...ATTACK_ROLL_MODES), {
+    exact: true,
+  }),
+});
+
+const BattleD20TestNaturalOneRerollDecisionSchema = Schema.Union(
+  Schema.Struct({
+    kind: Schema.Literal("decline"),
+    effectKind: Schema.Literal("d20_test_natural_one_reroll"),
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("reroll"),
+    effectKind: Schema.Literal("d20_test_natural_one_reroll"),
+    replacement: BattleD20TestRollReplacementSchema,
+  }),
+);
+
+const BattleD20TestNaturalOneRerollOutcomeDecisionSchema = Schema.Union(
+  Schema.Struct({
+    kind: Schema.Literal("decline"),
+    effectKind: Schema.Literal("d20_test_natural_one_reroll"),
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("reroll"),
+    effectKind: Schema.Literal("d20_test_natural_one_reroll"),
+    replacement: Schema.Struct({
+      succeeded: Schema.Boolean,
+      naturalD20: BattleD20DieRollResultSchema,
+    }),
+  }),
+);
+
+const BattleD20TestNaturalOneRerollDieDecisionSchema = Schema.Union(
+  Schema.Struct({
+    kind: Schema.Literal("decline"),
+    effectKind: Schema.Literal("d20_test_natural_one_reroll"),
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("reroll"),
+    effectKind: Schema.Literal("d20_test_natural_one_reroll"),
+    replacement: BattleD20DieRollResultSchema,
+  }),
+);
+
+const BattleD20TestRolledOutcomeFields = {
+  succeeded: Schema.Boolean,
+  naturalD20: Schema.optionalWith(BattleD20DieRollResultSchema, {
+    exact: true,
+  }),
+  d20TestNaturalOneReroll: Schema.optionalWith(
+    BattleD20TestNaturalOneRerollOutcomeDecisionSchema,
+    { exact: true },
+  ),
+} as const;
+const BattleD20TestWithoutRollOutcomeFields = {
+  succeeded: Schema.Boolean,
+  withoutRoll: Schema.Literal(true),
+} as const;
+const BattleConcentrationSavingThrowValueSchema = Schema.Union(
+  Schema.Struct(BattleD20TestRolledOutcomeFields),
+  Schema.Struct(BattleD20TestWithoutRollOutcomeFields),
+);
+const BattleSavingThrowOutcomeSchema = Schema.Union(
+  Schema.Struct({
+    targetId: CombatantId,
+    ...BattleD20TestRolledOutcomeFields,
+  }),
+  Schema.Struct({
+    targetId: CombatantId,
+    ...BattleD20TestWithoutRollOutcomeFields,
+  }),
+);
+
 const BattleAttackRollResultSchema = Schema.Struct({
   total: Schema.Number.pipe(Schema.int()),
   naturalD20: BattleD20DieRollResultSchema,
@@ -1919,6 +2033,10 @@ const BattleAttackRollResultSchema = Schema.Struct({
         }),
       }),
     ),
+    { exact: true },
+  ),
+  d20TestNaturalOneReroll: Schema.optionalWith(
+    BattleD20TestNaturalOneRerollDecisionSchema,
     { exact: true },
   ),
 });
@@ -2511,6 +2629,21 @@ type BattleFillEncoded =
         readonly naturalD20: number;
         readonly rollMode?: (typeof ATTACK_ROLL_MODES)[number];
         readonly activatedOngoingFeatureUnitId?: string;
+        readonly missToHitReplacementUnitId?: string;
+        readonly d20TestNaturalOneReroll?:
+          | {
+              readonly kind: "decline";
+              readonly effectKind: "d20_test_natural_one_reroll";
+            }
+          | {
+              readonly kind: "reroll";
+              readonly effectKind: "d20_test_natural_one_reroll";
+              readonly replacement: {
+                readonly total: number;
+                readonly naturalD20: number;
+                readonly rollMode?: (typeof ATTACK_ROLL_MODES)[number];
+              };
+            };
       };
     }
   | {
@@ -2522,6 +2655,21 @@ type BattleFillEncoded =
             readonly outcomes: readonly {
               readonly targetId: string;
               readonly succeeded: boolean;
+              readonly naturalD20?: number;
+              readonly withoutRoll?: true;
+              readonly d20TestNaturalOneReroll?:
+                | {
+                    readonly kind: "decline";
+                    readonly effectKind: "d20_test_natural_one_reroll";
+                  }
+                | {
+                    readonly kind: "reroll";
+                    readonly effectKind: "d20_test_natural_one_reroll";
+                    readonly replacement: {
+                      readonly succeeded: boolean;
+                      readonly naturalD20: number;
+                    };
+                  };
             }[];
           }
         | {
@@ -2529,6 +2677,21 @@ type BattleFillEncoded =
             readonly outcomes: readonly {
               readonly targetId: string;
               readonly succeeded: boolean;
+              readonly naturalD20?: number;
+              readonly withoutRoll?: true;
+              readonly d20TestNaturalOneReroll?:
+                | {
+                    readonly kind: "decline";
+                    readonly effectKind: "d20_test_natural_one_reroll";
+                  }
+                | {
+                    readonly kind: "reroll";
+                    readonly effectKind: "d20_test_natural_one_reroll";
+                    readonly replacement: {
+                      readonly succeeded: boolean;
+                      readonly naturalD20: number;
+                    };
+                  };
             }[];
           };
     }
@@ -2695,6 +2858,16 @@ type BattleFillEncoded =
       readonly kind: "deathSavingThrow";
       readonly holeId: string;
       readonly value: number;
+      readonly d20TestNaturalOneReroll?:
+        | {
+            readonly kind: "decline";
+            readonly effectKind: "d20_test_natural_one_reroll";
+          }
+        | {
+            readonly kind: "reroll";
+            readonly effectKind: "d20_test_natural_one_reroll";
+            readonly replacement: number;
+          };
     }
   | {
       readonly kind: "statBlockRechargeRoll";
@@ -2712,6 +2885,21 @@ type BattleFillEncoded =
       readonly holeId: string;
       readonly value: {
         readonly succeeded: boolean;
+        readonly naturalD20?: number;
+        readonly withoutRoll?: true;
+        readonly d20TestNaturalOneReroll?:
+          | {
+              readonly kind: "decline";
+              readonly effectKind: "d20_test_natural_one_reroll";
+            }
+          | {
+              readonly kind: "reroll";
+              readonly effectKind: "d20_test_natural_one_reroll";
+              readonly replacement: {
+                readonly succeeded: boolean;
+                readonly naturalD20: number;
+              };
+            };
       };
     }
   | {
@@ -3378,21 +3566,11 @@ export const BattleFillSchema: Schema.Schema<
       value: Schema.Union(
         Schema.Struct({
           area: BattleSpellAreaChoiceSchema,
-          outcomes: Schema.Array(
-            Schema.Struct({
-              targetId: CombatantId,
-              succeeded: Schema.Boolean,
-            }),
-          ),
+          outcomes: Schema.Array(BattleSavingThrowOutcomeSchema),
         }),
         Schema.Struct({
           area: Schema.optionalWith(Schema.Never, { exact: true }),
-          outcomes: Schema.Array(
-            Schema.Struct({
-              targetId: CombatantId,
-              succeeded: Schema.Boolean,
-            }),
-          ),
+          outcomes: Schema.Array(BattleSavingThrowOutcomeSchema),
           openHandTechniquePush: Schema.optionalWith(
             BattleShovePushOutcomeSchema,
             { exact: true },
@@ -3518,6 +3696,10 @@ export const BattleFillSchema: Schema.Schema<
       kind: Schema.Literal("deathSavingThrow"),
       holeId: BattleHoleIdSchema,
       value: BattleD20DieRollResultSchema,
+      d20TestNaturalOneReroll: Schema.optionalWith(
+        BattleD20TestNaturalOneRerollDieDecisionSchema,
+        { exact: true },
+      ),
     }),
     Schema.Struct({
       kind: Schema.Literal("statBlockRechargeRoll"),
@@ -3540,9 +3722,7 @@ export const BattleFillSchema: Schema.Schema<
     Schema.Struct({
       kind: Schema.Literal("concentrationSavingThrow"),
       holeId: BattleHoleIdSchema,
-      value: Schema.Struct({
-        succeeded: Schema.Boolean,
-      }),
+      value: BattleConcentrationSavingThrowValueSchema,
     }),
     Schema.Struct({
       kind: Schema.Literal("attackDamageDisposition"),
@@ -3777,6 +3957,13 @@ export const BattleFillSchema: Schema.Schema<
       holeId: BattleHoleIdSchema,
       value: Schema.Struct({
         total: Schema.Number.pipe(Schema.int()),
+        naturalD20: Schema.optionalWith(BattleD20DieRollResultSchema, {
+          exact: true,
+        }),
+        d20TestNaturalOneReroll: Schema.optionalWith(
+          BattleD20TestNaturalOneRerollDecisionSchema,
+          { exact: true },
+        ),
       }),
       spatialFacts: Schema.optionalWith(
         Schema.Array(

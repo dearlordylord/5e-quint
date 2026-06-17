@@ -1,4 +1,4 @@
-// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.find-familiar-lifecycle
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.find-familiar-lifecycle unit-feature.d20-test-natural-one-reroll
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.FIND_FAMILIAR_COMPANION_LIFECYCLE
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV84I5 find_familiar
 import * as Either from "effect/Either";
@@ -41,6 +41,7 @@ import {
   battleCombatantSide,
   battleId,
   battleObjectId,
+  battleUnitSupportProfilesForUnit,
   BattleSnapshotSchema,
   castFindFamiliar,
   castWildCompanion,
@@ -70,9 +71,13 @@ import {
   type PactOfTheChainFamiliarAttackSubject,
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
-import { ATTACK_TARGET_HOLE_ID } from "./battle-reducer.ts";
+import {
+  ATTACK_TARGET_HOLE_ID,
+  D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND,
+} from "./battle-reducer.ts";
 import { battleCreatureStateWithoutKnockOut } from "./battle-reducer/creature-state.ts";
 import { applyBattleHitPointDamage } from "./battle-reducer/damage-apply.ts";
+import { D20_TEST_NATURAL_ONE_REROLL_UNAVAILABLE_MESSAGE } from "./battle-reducer/d20-test-natural-one-reroll.ts";
 
 const partySide = battleCombatantSide("party");
 const enemySide = battleCombatantSide("enemy");
@@ -124,6 +129,35 @@ function requireSpellRecord(unitId: string): SpellRecord {
   }
   return unit;
 }
+
+function halflingLuckUnitRef(): Extract<
+  BattleCreatureInit["creatureInit"],
+  { readonly kind: "character" }
+>["characterUnitRefs"][number] {
+  const unit = halflingLuckUnit();
+  const supportProfiles = battleUnitSupportProfilesForUnit({ unit });
+  if (Either.isLeft(supportProfiles)) {
+    throw new Error(supportProfiles.left.message);
+  }
+  return {
+    unitId: unit.id,
+    supportProfiles: supportProfiles.right,
+  };
+}
+
+function halflingLuckUnitFeature(): NonNullable<
+  Extract<
+    BattleCreatureInit["creatureInit"],
+    { readonly kind: "character" }
+  >["unitFeatures"]
+>[number] {
+  return { unit: halflingLuckUnit() };
+}
+
+function halflingLuckUnit() {
+  return unitCatalog.requireUnit("species_halfling_luck");
+}
+
 const firstTypeOverride = familiarEligibility.creatureTypeOverrideChoices[0];
 if (firstTypeOverride === undefined) {
   throw new Error("Expected Find Familiar creature type override choices.");
@@ -255,7 +289,17 @@ function startSpellcasterFixtureBattle(): BattleState {
 }
 
 function startPactWarlockFixtureBattle(
-  input: { readonly targetHasShield?: boolean } = {},
+  input: {
+    readonly targetHasShield?: boolean;
+    readonly ownerCharacterUnitRefs?: Extract<
+      BattleCreatureInit["creatureInit"],
+      { readonly kind: "character" }
+    >["characterUnitRefs"];
+    readonly ownerCharacterUnitFeatures?: Extract<
+      BattleCreatureInit["creatureInit"],
+      { readonly kind: "character" }
+    >["unitFeatures"];
+  } = {},
 ): BattleState {
   const result = startBattle({
     battleId: battleId("find-familiar-pact-chain-test"),
@@ -266,6 +310,12 @@ function startPactWarlockFixtureBattle(
         initiative: 12,
         side: partySide,
         className: "warlock",
+        ...(input.ownerCharacterUnitRefs === undefined
+          ? {}
+          : { characterUnitRefs: input.ownerCharacterUnitRefs }),
+        ...(input.ownerCharacterUnitFeatures === undefined
+          ? {}
+          : { unitFeatures: input.ownerCharacterUnitFeatures }),
         spellcasting: {
           sourceClassName: "warlock",
           spellcastingAbilityModifier: abilityModifier(3),
@@ -2349,6 +2399,75 @@ describe("Find Familiar lifecycle", () => {
       false,
     );
     expect(Number(resolved.state.combatants.get(enemyId)?.hp)).toBe(11);
+  });
+
+  test("Pact of the Chain familiar attack does not inherit owner natural-1 reroll support", () => {
+    const cast = castCatFamiliarAfterCasterTurn(
+      startPactWarlockFixtureBattle({
+        ownerCharacterUnitRefs: [halflingLuckUnitRef()],
+        ownerCharacterUnitFeatures: [halflingLuckUnitFeature()],
+      }),
+    );
+    expect(cast.tag).toBe("resolved");
+    if (cast.tag !== "resolved") return;
+
+    const subject = pactScratchSubject();
+    const awaitingTarget = resolveBattleSubject({
+      state: cast.state,
+      subject,
+      fills: [],
+    });
+    expect(awaitingTarget.tag).toBe("needsHoles");
+    if (awaitingTarget.tag !== "needsHoles") return;
+    const target = familiarAttackTargetFill(
+      requireHole(awaitingTarget.holes, "targetChoice"),
+    );
+    const awaitingAttackRoll = resolveBattleSubject({
+      state: cast.state,
+      subject,
+      fills: [target],
+    });
+    expect(awaitingAttackRoll.tag).toBe("needsHoles");
+    if (awaitingAttackRoll.tag !== "needsHoles") return;
+    const attackRoll = requireHole(awaitingAttackRoll.holes, "attackRoll");
+
+    const naturalOneWithoutDecision = resolveBattleSubject({
+      state: cast.state,
+      subject,
+      fills: [
+        target,
+        attackRollFill(attackRoll, { total: 5, naturalD20: 1 }),
+      ],
+    });
+    expect(naturalOneWithoutDecision).toMatchObject({ tag: "resolved" });
+
+    const attemptedOwnerReroll = resolveBattleSubject({
+      state: cast.state,
+      subject,
+      fills: [
+        target,
+        {
+          kind: "attackRoll",
+          holeId: attackRoll.holeId,
+          value: {
+            total: 5,
+            naturalD20: DieRollResult(1),
+            d20TestNaturalOneReroll: {
+              kind: "reroll",
+              effectKind: D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND,
+              replacement: {
+                total: 18,
+                naturalD20: DieRollResult(15),
+              },
+            },
+          },
+        },
+      ],
+    });
+    expect(attemptedOwnerReroll).toMatchObject({
+      tag: "invalid",
+      message: D20_TEST_NATURAL_ONE_REROLL_UNAVAILABLE_MESSAGE,
+    });
   });
 
   test("Pact of the Chain familiar attack resumes through attack-hit reactions with Pact spending", () => {

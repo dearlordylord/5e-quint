@@ -7,6 +7,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-effective-level-extra-target
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-missed-spell-attack-reroll
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-damage-dice-reroll
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.d20-test-natural-one-reroll
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.potent-cantrip
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spiritual-weapon-attack-proxy
@@ -104,6 +105,12 @@ import {
   sourceDamageRollPenaltyRollForDamageRoll,
   unexpectedSourceDamageRollPenaltyRoll,
 } from "./damage-helpers.ts";
+import {
+  attackRollHoleWithD20TestNaturalOneRerollOption,
+  d20TestNaturalOneRerollRollDecisionRequired,
+  d20TestNaturalOneRerollRollIssue,
+  effectiveD20TestNaturalOneRerollAttackRoll,
+} from "./d20-test-natural-one-reroll.ts";
 import { needsHolesResult, revealHidden } from "./hole-helpers.ts";
 import { invalidResult } from "./result-helpers.ts";
 import { mirrorImageHitInterceptionCheck } from "./mirror-image-hit-interception.ts";
@@ -493,22 +500,25 @@ function spellAttackPostMirrorImageFillsArePresent(
 function effectiveSpellAttackRoll(
   attackRoll: BattleAttackRollResult,
 ): BattleAttackRollResult {
-  return attackRoll.spellAttackReroll?.kind === "reroll"
+  const naturalOneEffectiveRoll =
+    effectiveD20TestNaturalOneRerollAttackRoll(attackRoll);
+  return naturalOneEffectiveRoll.spellAttackReroll?.kind === "reroll"
     ? {
-        ...attackRoll.spellAttackReroll.replacement,
-        ...(attackRoll.activatedOngoingFeatureUnitId === undefined
+        ...naturalOneEffectiveRoll.spellAttackReroll.replacement,
+        ...(naturalOneEffectiveRoll.activatedOngoingFeatureUnitId === undefined
           ? {}
           : {
               activatedOngoingFeatureUnitId:
-                attackRoll.activatedOngoingFeatureUnitId,
+                naturalOneEffectiveRoll.activatedOngoingFeatureUnitId,
             }),
-        ...(attackRoll.missToHitReplacementUnitId === undefined
+        ...(naturalOneEffectiveRoll.missToHitReplacementUnitId === undefined
           ? {}
           : {
-              missToHitReplacementUnitId: attackRoll.missToHitReplacementUnitId,
+              missToHitReplacementUnitId:
+                naturalOneEffectiveRoll.missToHitReplacementUnitId,
             }),
       }
-    : attackRoll;
+    : naturalOneEffectiveRoll;
 }
 
 function spellAttackRerollValidationIssue(input: {
@@ -1259,14 +1269,48 @@ function resolveSpellActInternal(
       );
     }
     const actorBeforeSpellAttack = castingState.combatants.get(subject.actorId);
+    if (
+      d20TestNaturalOneRerollRollDecisionRequired({
+        actor: actorBeforeSpellAttack,
+        originalNaturalD20: Number(fillSet.attackRoll.naturalD20),
+        decision: fillSet.attackRoll.d20TestNaturalOneReroll,
+      })
+    ) {
+      return needsHolesResult(castingState, input.subject, [
+        attackRollHoleWithD20TestNaturalOneRerollOption(
+          spellAttackRollHole(
+            castingState,
+            subject.actorId,
+            invocationForResolution,
+            requiredRollMode,
+          ),
+        ),
+      ]);
+    }
+    const d20TestNaturalOneRerollIssue = d20TestNaturalOneRerollRollIssue({
+      actor: actorBeforeSpellAttack,
+      originalNaturalD20: Number(fillSet.attackRoll.naturalD20),
+      decision: fillSet.attackRoll.d20TestNaturalOneReroll,
+      requiredRollMode,
+      otherD20RerollPresent: fillSet.attackRoll.spellAttackReroll !== undefined,
+    });
+    if (d20TestNaturalOneRerollIssue !== null) {
+      return invalidResult(
+        input.state,
+        "invalidFill",
+        d20TestNaturalOneRerollIssue,
+      );
+    }
+    const naturalOneEffectiveAttackRoll =
+      effectiveD20TestNaturalOneRerollAttackRoll(fillSet.attackRoll);
     const originalHit = attackRollHits(
-      fillSet.attackRoll,
+      naturalOneEffectiveAttackRoll,
       currentArmorClass(activeEffectArmorClass(target)),
     );
     const spellAttackRerollIssue = spellAttackRerollValidationIssue({
       actor: actorBeforeSpellAttack,
       invocation: invocationForResolution,
-      originalAttackRoll: fillSet.attackRoll,
+      originalAttackRoll: naturalOneEffectiveAttackRoll,
       originalHit,
       requiredRollMode,
       castMetamagicApplications: metamagicApplicationsForResolution ?? [],
@@ -1278,7 +1322,7 @@ function resolveSpellActInternal(
       spellAttackNeedsSeekingRerollDecision({
         actor: actorBeforeSpellAttack,
         invocation: invocationForResolution,
-        attackRoll: fillSet.attackRoll,
+        attackRoll: naturalOneEffectiveAttackRoll,
         originalHit,
         castMetamagicApplications: metamagicApplicationsForResolution ?? [],
       })
@@ -2545,6 +2589,34 @@ function resolveSpellAttackDamageObjectTarget(input: {
     );
   }
   if (
+    d20TestNaturalOneRerollRollDecisionRequired({
+      actor: input.input.state.combatants.get(input.actorId),
+      originalNaturalD20: Number(input.fillSet.attackRoll.naturalD20),
+      decision: input.fillSet.attackRoll.d20TestNaturalOneReroll,
+    })
+  ) {
+    return needsHolesResult(input.input.state, input.input.subject, [
+      attackRollHoleWithD20TestNaturalOneRerollOption(
+        spellObjectAttackRollHole(input.invocation, requiredRollMode),
+      ),
+    ]);
+  }
+  const d20TestNaturalOneRerollIssue = d20TestNaturalOneRerollRollIssue({
+    actor: input.input.state.combatants.get(input.actorId),
+    originalNaturalD20: Number(input.fillSet.attackRoll.naturalD20),
+    decision: input.fillSet.attackRoll.d20TestNaturalOneReroll,
+    requiredRollMode,
+    otherD20RerollPresent:
+      input.fillSet.attackRoll.spellAttackReroll !== undefined,
+  });
+  if (d20TestNaturalOneRerollIssue !== null) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      d20TestNaturalOneRerollIssue,
+    );
+  }
+  if (
     input.fillSet.attackRoll.activatedOngoingFeatureUnitId !== undefined ||
     input.fillSet.attackRoll.missToHitReplacementUnitId !== undefined
   ) {
@@ -2555,8 +2627,11 @@ function resolveSpellAttackDamageObjectTarget(input: {
     );
   }
 
-  const hit = attackRollHits(input.fillSet.attackRoll, objectFact.armorClass);
-  const critical = attackRollIsCriticalHit(input.fillSet.attackRoll);
+  const effectiveAttackRoll = effectiveD20TestNaturalOneRerollAttackRoll(
+    input.fillSet.attackRoll,
+  );
+  const hit = attackRollHits(effectiveAttackRoll, objectFact.armorClass);
+  const critical = attackRollIsCriticalHit(effectiveAttackRoll);
   const attackRolledState = consumeSelfAttackRollEffects(
     {
       ...input.input.state,

@@ -6,6 +6,7 @@
 {"profileId":"unit-feature.light-extra-attack-damage-ability-modifier","obligationIds":["BATTLE.DAMAGE.ATTACK_BRANCHES"]}
 {"profileId":"unit-feature.attack-damage-rider","obligationIds":["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"]}
 {"profileId":"unit-feature.attack-roll-miss-to-hit-replacement","obligationIds":["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"]}
+{"profileId":"unit-feature.d20-test-natural-one-reroll","obligationIds":["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"]}
 {"profileId":"unit-feature.bardic-inspiration-failed-d20-test","obligationIds":["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"]}
 {"profileId":"unit-feature.bardic-inspiration-grant","obligationIds":["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"]}
 {"profileId":"unit-feature.bonus-action-dash-temporary-hit-points","obligationIds":["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"]}

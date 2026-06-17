@@ -27,7 +27,7 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.ACID_ARROW_ATTACK_TIMING
 // KERNEL-COVERAGE: runtime-owner BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING
 // KERNEL-COVERAGE: runtime-owner BATTLE.COMPOSITION.TURN_BOUNDARY_EFFECT_LIFECYCLE_ORDERING
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.creature-space-movement-permission unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.invocation-grease-ground-hazard spell.invocation-jump-movement-replacement spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.creature-space-movement-permission unit-feature.d20-test-natural-one-reroll unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.invocation-grease-ground-hazard spell.invocation-jump-movement-replacement spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
 
 import { Either, Match } from "effect";
 
@@ -111,6 +111,12 @@ import {
   startTurnDeathSavingThrowRequired,
   statBlockRechargeRollHole,
 } from "./damage-apply.ts";
+import {
+  d20TestNaturalOneRerollDieDecisionRequired,
+  d20TestNaturalOneRerollDieIssue,
+  d20TestNaturalOneRerollHoleWithOption,
+  effectiveD20TestNaturalOneRerollDeathSavingThrow,
+} from "./d20-test-natural-one-reroll.ts";
 
 import { maybeOpenInterruptWindow, snapshotBattle } from "./dispatcher.ts";
 import {
@@ -5833,6 +5839,33 @@ export function resolveEndTurnCommand(
       "Death Saving Throw fill does not match the requested hole.",
     );
   }
+  if (deathSavingThrowFill?.kind === "deathSavingThrow") {
+    if (
+      d20TestNaturalOneRerollDieDecisionRequired({
+        actor: nextActor,
+        originalNaturalD20: Number(deathSavingThrowFill.value),
+        decision: deathSavingThrowFill.d20TestNaturalOneReroll,
+      })
+    ) {
+      return needsHolesResult(input.state, input.subject, [
+        d20TestNaturalOneRerollHoleWithOption(
+          deathSavingThrowHole(nextActorId),
+        ),
+      ]);
+    }
+    const d20TestNaturalOneRerollIssue = d20TestNaturalOneRerollDieIssue({
+      actor: nextActor,
+      originalNaturalD20: Number(deathSavingThrowFill.value),
+      decision: deathSavingThrowFill.d20TestNaturalOneReroll,
+    });
+    if (d20TestNaturalOneRerollIssue !== null) {
+      return invalidResult(
+        input.state,
+        "invalidFill",
+        d20TestNaturalOneRerollIssue,
+      );
+    }
+  }
   if (
     rechargeRollFill?.kind === "statBlockRechargeRoll" &&
     rechargeRollFill.holeId !== STAT_BLOCK_RECHARGE_ROLL_HOLE_ID
@@ -5853,12 +5886,14 @@ export function resolveEndTurnCommand(
       "Stat Block Recharge roll fill must provide one d6 result for each requested target.",
     );
   }
+  const effectiveDeathSavingThrowFill =
+    deathSavingThrowFill?.kind === "deathSavingThrow"
+      ? effectiveD20TestNaturalOneRerollDeathSavingThrow(deathSavingThrowFill)
+      : undefined;
 
   return resolveEndTurn(
     input.state,
-    deathSavingThrowFill?.kind === "deathSavingThrow"
-      ? deathSavingThrowFill.value
-      : undefined,
+    effectiveDeathSavingThrowFill?.value,
     rechargeRollFill?.kind === "statBlockRechargeRoll"
       ? rechargeRollFill.value
       : undefined,

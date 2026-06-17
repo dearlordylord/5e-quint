@@ -3,6 +3,7 @@
 // RAW-COVERAGE: runtime-owner RAW-QCORE7-MOVEMENT-GRAPPLE-001 RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-QCORE9-UNIT-FEATURE-PROFILES-001 RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.martial-arts-attack-projection unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.d20-test-natural-one-reroll
 
 import { spendActivationResource } from "@dnd/shared-algebras/action-economy-algebra";
 
@@ -35,6 +36,12 @@ import {
 import { normalizeBattleGrapples } from "./creature-state-leaves.ts";
 
 import { activeEffectArmorClass } from "./creature-state.ts";
+import {
+  attackRollHoleWithD20TestNaturalOneRerollOption,
+  d20TestNaturalOneRerollRollDecisionRequired,
+  d20TestNaturalOneRerollRollIssue,
+  effectiveD20TestNaturalOneRerollAttackRoll,
+} from "./d20-test-natural-one-reroll.ts";
 
 import {
   applyAttackDamageAmount,
@@ -305,12 +312,51 @@ function resolveBonusActionAttack(
       `${label} roll mode does not match the current attack-roll rule.`,
     );
   }
+  const attacker = input.state.combatants.get(input.subject.actorId);
+  if (
+    d20TestNaturalOneRerollRollDecisionRequired({
+      actor: attacker,
+      originalNaturalD20: Number(fillSet.attackRoll.naturalD20),
+      decision: fillSet.attackRoll.d20TestNaturalOneReroll,
+    })
+  ) {
+    return needsHolesResult(input.state, input.subject, [
+      attackRollHoleWithD20TestNaturalOneRerollOption(
+        attackRollHole(
+          attacker,
+          attack,
+          requiredRollMode,
+          attackRollOngoingFeatureActivations(
+            input.state,
+            input.subject.actorId,
+            attack,
+          ),
+        ),
+      ),
+    ]);
+  }
+  const d20TestNaturalOneRerollIssue = d20TestNaturalOneRerollRollIssue({
+    actor: attacker,
+    originalNaturalD20: Number(fillSet.attackRoll.naturalD20),
+    decision: fillSet.attackRoll.d20TestNaturalOneReroll,
+    requiredRollMode,
+  });
+  if (d20TestNaturalOneRerollIssue !== null) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      d20TestNaturalOneRerollIssue,
+    );
+  }
+  const effectiveAttackRoll = effectiveD20TestNaturalOneRerollAttackRoll(
+    fillSet.attackRoll,
+  );
   const criticalThreshold = criticalThresholdForAttack(
     input.state.combatants.get(input.subject.actorId),
     attack,
   );
   const hit = attackRollHitsWithCriticalThreshold(
-    fillSet.attackRoll,
+    effectiveAttackRoll,
     currentArmorClass(activeEffectArmorClass(target)),
     criticalThreshold,
   );
@@ -325,7 +371,7 @@ function resolveBonusActionAttack(
     target.combatantId,
   );
   const critical = attackRollIsCriticalHit(
-    fillSet.attackRoll,
+    effectiveAttackRoll,
     criticalThreshold,
   );
   const eligibleDamageRiders = hit
@@ -334,7 +380,7 @@ function resolveBonusActionAttack(
         input.subject.actorId,
         target.combatantId,
         attack,
-        fillSet.attackRoll,
+        effectiveAttackRoll,
         fillSet.targetSpatialFacts,
       )
     : [];
@@ -374,13 +420,13 @@ function resolveBonusActionAttack(
         trigger: "attackHit",
         attackerId: input.subject.actorId,
         targetId: target.combatantId,
-        attackRoll: fillSet.attackRoll,
+        attackRoll: effectiveAttackRoll,
         attackKind: attackKindForDeflectRedirect(attack),
         attackHitTriggerKind: attackHitTriggerKind(attack),
         damageTypes: attackPotentialDamageTypes(
           attack,
           critical,
-          fillSet.attackRoll,
+          effectiveAttackRoll,
           eligibleDamageRiders,
           spellWeaponDamageRiders,
           spellMarkedDamageRiders,
@@ -422,7 +468,7 @@ function resolveBonusActionAttack(
       attackDamageHole(
         attack,
         critical,
-        fillSet.attackRoll,
+        effectiveAttackRoll,
         eligibleDamageRiders,
         spellWeaponDamageRiders,
         spellMarkedDamageRiders,
@@ -458,7 +504,7 @@ function resolveBonusActionAttack(
       fillSet.damageRoll,
       attack,
       critical,
-      fillSet.attackRoll,
+      effectiveAttackRoll,
       eligibleDamageRiders,
       spellWeaponDamageRiders,
       spellMarkedDamageRiders,
@@ -479,7 +525,7 @@ function resolveBonusActionAttack(
       attack,
       fillSet.damageRoll,
       critical,
-      fillSet.attackRoll,
+      effectiveAttackRoll,
       selectedDamageRiders,
       spellWeaponDamageRiders,
       spellMarkedDamageRiders,

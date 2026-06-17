@@ -551,6 +551,8 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `packages/battle-runtime/battle-runtime-warding-bond.qnt` | proof-only | `BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING` |
 | `packages/shared-algebras/proofs/rule-core/action-turn-procedures.qnt` | proof-only | `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS` |
 | `packages/shared-algebras/proofs/rule-core/attack-action-additional-attacks.qnt` | proof-only | `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS` |
+| `packages/shared-algebras/proofs/rule-core/unit-feature-d20-test-natural-one-reroll-core.qnt` | semantic-core | profile-scoped: `unit-feature.d20-test-natural-one-reroll` (`BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
+| `packages/shared-algebras/proofs/rule-core/unit-feature-d20-test-natural-one-reroll-core-examples.qnt` | proof-only | _none_ |
 | `packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt` | proof-only | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` |
 | `packages/shared-algebras/proofs/rule-core/zero-hit-point-lifecycle.qnt` | proof-only | `BATTLE.DAMAGE.DEATH_SAVING_THROW_LIFECYCLE` |
 | `packages/battle-runtime/battle-runtime-concentration-break-teardown.mbt.qnt` | mbt-fixture | _none_ |
@@ -739,6 +741,8 @@ Rows here inventory `packages/**/*.qnt` files excluding `.mbt.qnt` drivers and `
 | `packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt` | qnt-owner-role | semantic-core |
 | `packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core-examples.qnt` | qnt-owner-role | proof-only |
 | `packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core.qnt` | qnt-owner-role | semantic-core |
+| `packages/shared-algebras/proofs/rule-core/unit-feature-d20-test-natural-one-reroll-core-examples.qnt` | qnt-owner-role | proof-only |
+| `packages/shared-algebras/proofs/rule-core/unit-feature-d20-test-natural-one-reroll-core.qnt` | qnt-owner-role | semantic-core |
 | `packages/shared-algebras/proofs/rule-core/unit-feature-martial-arts-core-examples.qnt` | qnt-owner-role | proof-only |
 | `packages/shared-algebras/proofs/rule-core/unit-feature-martial-arts-core.qnt` | qnt-owner-role | semantic-core |
 | `packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-option-fact-core-examples.qnt` | qnt-owner-role | proof-only |
@@ -782,6 +786,7 @@ Rows here are derived from `plans/unit-profile-coverage/profiles.jsonl` for prof
 | `unit-feature.bonus-action-dash-temporary-hit-points` | `packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt` (semantic-core; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`)<br>`packages/battle-runtime/battle-runtime-movement.qnt` (semantic-core; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
 | `unit-feature.bonus-action-ongoing-rage` | `packages/shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core.qnt` (semantic-core; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
 | `unit-feature.creature-space-movement-permission` | `packages/shared-algebras/proofs/rule-core/movement-spatial-grapple.qnt` (semantic-core; `BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND`) |
+| `unit-feature.d20-test-natural-one-reroll` | `packages/shared-algebras/proofs/rule-core/unit-feature-d20-test-natural-one-reroll-core.qnt` (semantic-core; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
 | `unit-feature.enemy-zero-hit-point-temporary-hit-points` | `packages/battle-runtime/battle-runtime-dark-ones-blessing.mbt.qnt` (mbt-fixture; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
 | `unit-feature.failed-ability-check-resource-boost` | `packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt` (semantic-core; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
 | `unit-feature.first-attack-roll-reckless-advantage` | `packages/shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core.qnt` (semantic-core; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |

@@ -8,6 +8,7 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.MIRROR_IMAGE_HIT_INTERCEPTION
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.grappler unit-feature.hunters-prey unit-feature.open-hand-technique unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.remarkable-athlete unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.d20-test-natural-one-reroll
 
 import { currentArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
 
@@ -21,6 +22,12 @@ import {
   attackDamageHole,
   damageDispositionFillValidation,
 } from "./attack-damage-apply.ts";
+import {
+  attackRollHoleWithD20TestNaturalOneRerollOption,
+  d20TestNaturalOneRerollRollDecisionRequired,
+  d20TestNaturalOneRerollRollIssue,
+  effectiveD20TestNaturalOneRerollAttackRoll,
+} from "./d20-test-natural-one-reroll.ts";
 
 import {
   attackRollHole,
@@ -662,11 +669,46 @@ export function resolveSelectedAttackProcedure(
       "Attack roll mode does not match the current attack-roll rule.",
     );
   }
-
   const attacker = input.state.combatants.get(attackerId);
+  if (
+    d20TestNaturalOneRerollRollDecisionRequired({
+      actor: attacker,
+      originalNaturalD20: Number(fillSet.attackRoll.naturalD20),
+      decision: fillSet.attackRoll.d20TestNaturalOneReroll,
+    })
+  ) {
+    return needsHolesResult(input.state, input.subject, [
+      attackRollHoleWithD20TestNaturalOneRerollOption(
+        attackRollHole(
+          attacker,
+          attack,
+          requiredRollMode,
+          attackRollOngoingFeatureActivations(input.state, attackerId, attack),
+        ),
+      ),
+    ]);
+  }
+  const d20TestNaturalOneRerollIssue = d20TestNaturalOneRerollRollIssue({
+    actor: attacker,
+    originalNaturalD20: Number(fillSet.attackRoll.naturalD20),
+    decision: fillSet.attackRoll.d20TestNaturalOneReroll,
+    requiredRollMode,
+    otherD20RerollPresent: fillSet.attackRoll.spellAttackReroll !== undefined,
+  });
+  if (d20TestNaturalOneRerollIssue !== null) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      d20TestNaturalOneRerollIssue,
+    );
+  }
+  const effectiveAttackRoll = effectiveD20TestNaturalOneRerollAttackRoll(
+    fillSet.attackRoll,
+  );
+
   const criticalThreshold = criticalThresholdForAttack(attacker, attack);
   const ordinaryHit = attackRollHitsWithCriticalThreshold(
-    fillSet.attackRoll,
+    effectiveAttackRoll,
     currentArmorClass(activeEffectArmorClass(target)),
     criticalThreshold,
   );
@@ -675,7 +717,7 @@ export function resolveSelectedAttackProcedure(
     subject: input.subject,
     attackerId: attackerId,
     targetId: target.combatantId,
-    attackRoll: fillSet.attackRoll,
+    attackRoll: effectiveAttackRoll,
     ordinaryHit,
   });
   if (
@@ -718,11 +760,11 @@ export function resolveSelectedAttackProcedure(
     {
       subject: input.subject,
       targetId: target.combatantId,
-      attackRoll: fillSet.attackRoll,
+      attackRoll: effectiveAttackRoll,
     },
   );
   const critical = attackRollIsCriticalHit(
-    fillSet.attackRoll,
+    effectiveAttackRoll,
     criticalThreshold,
   );
   if (!hit && fillSet.mirrorImageDuplicateRoll !== undefined) {
@@ -778,7 +820,7 @@ export function resolveSelectedAttackProcedure(
         attackerId,
         target.combatantId,
         attack,
-        fillSet.attackRoll,
+        effectiveAttackRoll,
         fillSet.targetSpatialFacts,
       )
     : [];
@@ -819,7 +861,7 @@ export function resolveSelectedAttackProcedure(
       : fixedAttackDamageByTypeEntries(
           attackRolledState.combatants.get(attackerId),
           attack,
-          fillSet.attackRoll,
+          effectiveAttackRoll,
         )
     : null;
   const fixedDamageAmount =
@@ -838,13 +880,13 @@ export function resolveSelectedAttackProcedure(
         trigger: "attackHit",
         attackerId: attackerId,
         targetId: target.combatantId,
-        attackRoll: fillSet.attackRoll,
+        attackRoll: effectiveAttackRoll,
         attackKind: attackKindForDeflectRedirect(attack),
         attackHitTriggerKind: attackHitTriggerKind(attack),
         damageTypes: attackPotentialDamageTypes(
           attack,
           critical,
-          fillSet.attackRoll,
+          effectiveAttackRoll,
           eligibleDamageRiders,
           spellWeaponDamageRiders,
           spellMarkedDamageRiders,
@@ -1245,7 +1287,7 @@ export function resolveSelectedAttackProcedure(
       attackDamageHole(
         attack,
         critical,
-        fillSet.attackRoll,
+        effectiveAttackRoll,
         eligibleDamageRiders,
         spellWeaponDamageRiders,
         spellMarkedDamageRiders,
@@ -1278,7 +1320,7 @@ export function resolveSelectedAttackProcedure(
       fillSet.damageRoll,
       attack,
       critical,
-      fillSet.attackRoll,
+      effectiveAttackRoll,
       eligibleDamageRiders,
       spellWeaponDamageRiders,
       spellMarkedDamageRiders,
@@ -1297,7 +1339,7 @@ export function resolveSelectedAttackProcedure(
       attack,
       fillSet.damageRoll,
       critical,
-      fillSet.attackRoll,
+      effectiveAttackRoll,
       selectedDamageRiders,
       spellWeaponDamageRiders,
       spellMarkedDamageRiders,
@@ -1936,6 +1978,58 @@ function resolveWeaponMasteryCleaveAfterPrimaryDamage(input: {
       ),
     };
   }
+  const attacker = input.state.combatants.get(input.subject.actorId);
+  if (
+    d20TestNaturalOneRerollRollDecisionRequired({
+      actor: attacker,
+      originalNaturalD20: Number(
+        input.fillSet.weaponMasteryCleaveAttackRoll.value.naturalD20,
+      ),
+      decision:
+        input.fillSet.weaponMasteryCleaveAttackRoll.value
+          .d20TestNaturalOneReroll,
+    })
+  ) {
+    return {
+      tag: "result",
+      result: needsHolesResult(input.state, input.subject, [
+        attackRollHoleWithD20TestNaturalOneRerollOption(
+          weaponMasteryCleaveAttackRollHole(
+            input.state,
+            input.subject.actorId,
+            secondTargetId,
+            cleaveAttack,
+            cleaveTargetFacts,
+          ),
+        ),
+      ]),
+    };
+  }
+  const cleaveD20TestNaturalOneRerollIssue =
+    d20TestNaturalOneRerollRollIssue({
+      actor: attacker,
+      originalNaturalD20: Number(
+        input.fillSet.weaponMasteryCleaveAttackRoll.value.naturalD20,
+      ),
+      decision:
+        input.fillSet.weaponMasteryCleaveAttackRoll.value
+          .d20TestNaturalOneReroll,
+      requiredRollMode,
+    });
+  if (cleaveD20TestNaturalOneRerollIssue !== null) {
+    return {
+      tag: "result",
+      result: invalidResult(
+        input.state,
+        "invalidFill",
+        cleaveD20TestNaturalOneRerollIssue,
+      ),
+    };
+  }
+  const effectiveCleaveAttackRoll =
+    effectiveD20TestNaturalOneRerollAttackRoll(
+      input.fillSet.weaponMasteryCleaveAttackRoll.value,
+    );
   const secondTarget = input.state.combatants.get(secondTargetId);
   if (secondTarget === undefined) {
     return {
@@ -1952,7 +2046,7 @@ function resolveWeaponMasteryCleaveAfterPrimaryDamage(input: {
     cleaveAttack,
   );
   const ordinaryCleaveHit = attackRollHitsWithCriticalThreshold(
-    input.fillSet.weaponMasteryCleaveAttackRoll.value,
+    effectiveCleaveAttackRoll,
     currentArmorClass(activeEffectArmorClass(secondTarget)),
     cleaveCriticalThreshold,
   );
@@ -1961,7 +2055,7 @@ function resolveWeaponMasteryCleaveAfterPrimaryDamage(input: {
     subject: input.subject,
     attackerId: input.subject.actorId,
     targetId: secondTargetId,
-    attackRoll: input.fillSet.weaponMasteryCleaveAttackRoll.value,
+    attackRoll: effectiveCleaveAttackRoll,
     ordinaryHit: ordinaryCleaveHit,
   });
   if (
@@ -1997,11 +2091,11 @@ function resolveWeaponMasteryCleaveAfterPrimaryDamage(input: {
     {
       subject: input.subject,
       targetId: secondTargetId,
-      attackRoll: input.fillSet.weaponMasteryCleaveAttackRoll.value,
+      attackRoll: effectiveCleaveAttackRoll,
     },
   );
   const cleaveCritical = attackRollIsCriticalHit(
-    input.fillSet.weaponMasteryCleaveAttackRoll.value,
+    effectiveCleaveAttackRoll,
     cleaveCriticalThreshold,
   );
   if (cleaveHit && input.handledInterruptTrigger !== "attackHit") {
@@ -2011,13 +2105,13 @@ function resolveWeaponMasteryCleaveAfterPrimaryDamage(input: {
         trigger: "attackHit",
         attackerId: input.subject.actorId,
         targetId: secondTargetId,
-        attackRoll: input.fillSet.weaponMasteryCleaveAttackRoll.value,
+        attackRoll: effectiveCleaveAttackRoll,
         attackKind: attackKindForDeflectRedirect(cleaveAttack),
         attackHitTriggerKind: attackHitTriggerKind(cleaveAttack),
         damageTypes: attackPotentialDamageTypes(
           cleaveAttack,
           cleaveCritical,
-          input.fillSet.weaponMasteryCleaveAttackRoll.value,
+          effectiveCleaveAttackRoll,
           [],
           [],
           [],
@@ -2080,7 +2174,7 @@ function resolveWeaponMasteryCleaveAfterPrimaryDamage(input: {
         weaponMasteryCleaveDamageHole(
           cleaveAttack,
           cleaveCritical,
-          input.fillSet.weaponMasteryCleaveAttackRoll.value,
+          effectiveCleaveAttackRoll,
         ),
       ]),
     };
@@ -2098,7 +2192,7 @@ function resolveWeaponMasteryCleaveAfterPrimaryDamage(input: {
     input.fillSet.weaponMasteryCleaveDamageRoll.value,
     cleaveAttack,
     cleaveCritical,
-    input.fillSet.weaponMasteryCleaveAttackRoll.value,
+    effectiveCleaveAttackRoll,
     [],
     [],
     [],
@@ -2114,7 +2208,7 @@ function resolveWeaponMasteryCleaveAfterPrimaryDamage(input: {
     cleaveAttack,
     input.fillSet.weaponMasteryCleaveDamageRoll,
     cleaveCritical,
-    input.fillSet.weaponMasteryCleaveAttackRoll.value,
+    effectiveCleaveAttackRoll,
   );
   const cleaveDamageSource = cleaveAttackRolledState.combatants.get(
     input.subject.actorId,
@@ -2570,6 +2664,58 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
       ),
     };
   }
+  const attacker = input.state.combatants.get(input.subject.actorId);
+  if (
+    d20TestNaturalOneRerollRollDecisionRequired({
+      actor: attacker,
+      originalNaturalD20: Number(
+        input.fillSet.huntersPreyHordeBreakerAttackRoll.value.naturalD20,
+      ),
+      decision:
+        input.fillSet.huntersPreyHordeBreakerAttackRoll.value
+          .d20TestNaturalOneReroll,
+    })
+  ) {
+    return {
+      tag: "result",
+      result: needsHolesResult(input.state, input.subject, [
+        attackRollHoleWithD20TestNaturalOneRerollOption(
+          huntersPreyHordeBreakerAttackRollHole(
+            input.state,
+            input.subject.actorId,
+            secondTargetId,
+            input.attack,
+            targetFacts,
+          ),
+        ),
+      ]),
+    };
+  }
+  const hordeBreakerD20TestNaturalOneRerollIssue =
+    d20TestNaturalOneRerollRollIssue({
+      actor: attacker,
+      originalNaturalD20: Number(
+        input.fillSet.huntersPreyHordeBreakerAttackRoll.value.naturalD20,
+      ),
+      decision:
+        input.fillSet.huntersPreyHordeBreakerAttackRoll.value
+          .d20TestNaturalOneReroll,
+      requiredRollMode,
+    });
+  if (hordeBreakerD20TestNaturalOneRerollIssue !== null) {
+    return {
+      tag: "result",
+      result: invalidResult(
+        input.state,
+        "invalidFill",
+        hordeBreakerD20TestNaturalOneRerollIssue,
+      ),
+    };
+  }
+  const effectiveHordeBreakerAttackRoll =
+    effectiveD20TestNaturalOneRerollAttackRoll(
+      input.fillSet.huntersPreyHordeBreakerAttackRoll.value,
+    );
   const secondTarget = input.state.combatants.get(secondTargetId);
   if (secondTarget === undefined) {
     return {
@@ -2586,7 +2732,7 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
     input.attack,
   );
   const hit = attackRollHitsWithCriticalThreshold(
-    input.fillSet.huntersPreyHordeBreakerAttackRoll.value,
+    effectiveHordeBreakerAttackRoll,
     currentArmorClass(activeEffectArmorClass(secondTarget)),
     criticalThreshold,
   );
@@ -2601,7 +2747,7 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
     secondTargetId,
   );
   const critical = attackRollIsCriticalHit(
-    input.fillSet.huntersPreyHordeBreakerAttackRoll.value,
+    effectiveHordeBreakerAttackRoll,
     criticalThreshold,
   );
   const hordeBreakerSpellWeaponDamageRiders = hit
@@ -2622,7 +2768,7 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
         input.subject.actorId,
         secondTargetId,
         input.attack,
-        input.fillSet.huntersPreyHordeBreakerAttackRoll.value,
+        effectiveHordeBreakerAttackRoll,
         targetFacts,
       )
     : [];
@@ -2637,13 +2783,13 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
         trigger: "attackHit",
         attackerId: input.subject.actorId,
         targetId: secondTargetId,
-        attackRoll: input.fillSet.huntersPreyHordeBreakerAttackRoll.value,
+        attackRoll: effectiveHordeBreakerAttackRoll,
         attackKind: attackKindForDeflectRedirect(input.attack),
         attackHitTriggerKind: attackHitTriggerKind(input.attack),
         damageTypes: attackPotentialDamageTypes(
           input.attack,
           critical,
-          input.fillSet.huntersPreyHordeBreakerAttackRoll.value,
+          effectiveHordeBreakerAttackRoll,
           hordeBreakerEligibleDamageRiders,
           hordeBreakerSpellWeaponDamageRiders,
           hordeBreakerSpellMarkedDamageRiders,
@@ -2688,7 +2834,7 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
         huntersPreyHordeBreakerDamageHole(
           input.attack,
           critical,
-          input.fillSet.huntersPreyHordeBreakerAttackRoll.value,
+          effectiveHordeBreakerAttackRoll,
           hordeBreakerEligibleDamageRiders,
           hordeBreakerSpellWeaponDamageRiders,
           hordeBreakerSpellMarkedDamageRiders,
@@ -2725,7 +2871,7 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
     input.fillSet.huntersPreyHordeBreakerDamageRoll.value,
     input.attack,
     critical,
-    input.fillSet.huntersPreyHordeBreakerAttackRoll.value,
+    effectiveHordeBreakerAttackRoll,
     hordeBreakerSelectedDamageRiders,
     hordeBreakerSpellWeaponDamageRiders,
     hordeBreakerSpellMarkedDamageRiders,
@@ -2741,7 +2887,7 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
     input.attack,
     input.fillSet.huntersPreyHordeBreakerDamageRoll,
     critical,
-    input.fillSet.huntersPreyHordeBreakerAttackRoll.value,
+    effectiveHordeBreakerAttackRoll,
     hordeBreakerSelectedDamageRiders,
     hordeBreakerSpellWeaponDamageRiders,
     hordeBreakerSpellMarkedDamageRiders,

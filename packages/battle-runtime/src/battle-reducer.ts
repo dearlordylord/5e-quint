@@ -34,6 +34,7 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.DRAGONS_BREATH_GRANTED_ACTION
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-direct-condition-removal
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-d20-lifecycle
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.d20-test-natural-one-reroll
 // KERNEL-COVERAGE: runtime-owner BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND BATTLE.REACTION.OFFER_DECLINE_RESUME BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS BATTLE.STAT_BLOCK.ATTACK_CONTROL
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE BATTLE.SPELL.FOG_CLOUD_OBSCUREMENT_LIFECYCLE BATTLE.SPELL.OBJECT_LIGHT_EMITTER_LIFECYCLE BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE BATTLE.SPELL.HELD_LIGHT_EMITTER_LIFECYCLE BATTLE.SPELL.SPELL_CREATED_HELD_OBJECT_LIFECYCLE BATTLE.SPELL.DANCING_LIGHTS_EMITTER_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.FEATHER_FALL_MITIGATION_LIFECYCLE BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE BATTLE.SPELL.FORCED_REACTION_MOVEMENT_LIFECYCLE BATTLE.SPELL.SELF_TELEPORT_LIFECYCLE BATTLE.SPELL.BLUR_ATTACK_ROLL_DEFENSE_LIFECYCLE BATTLE.SPELL.DRAGONS_BREATH_INITIAL_EFFECT_STATE
@@ -4027,6 +4028,13 @@ type BattleCreatureStateCommon = {
             { readonly kind: "saveDamageReplacement" }
           >
         >;
+        readonly d20TestNaturalOneRerollProfiles: ReadonlyMap<
+          UnitRecord["id"],
+          Extract<
+            SupportedUnitFeatureProfile,
+            { readonly kind: "d20TestNaturalOneReroll" }
+          >
+        >;
         readonly passiveSavingThrowRollModeProfiles: ReadonlyMap<
           UnitRecord["id"],
           Extract<
@@ -4638,6 +4646,7 @@ export type BattleAttackRollHole = Extract<
   readonly rollMode?: AttackRollMode;
   readonly ongoingFeatureActivations?: readonly AttackRollFeatureActivation[];
   readonly missToHitReplacements?: readonly AttackRollMissToHitReplacement[];
+  readonly d20TestNaturalOneRerolls?: readonly BattleD20TestNaturalOneRerollOption[];
 };
 export type AttackRollFeatureActivation = {
   readonly unitId: UnitRecord["id"];
@@ -4662,6 +4671,48 @@ export type BattleSpellAttackRerollDecision =
       readonly kind: "reroll";
       readonly effectKind: "missed_spell_attack_reroll";
       readonly replacement: AttackRollResult;
+    };
+export const D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND =
+  "d20_test_natural_one_reroll";
+export type BattleD20TestNaturalOneRerollOption = {
+  readonly effectKind: typeof D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND;
+  readonly label: string;
+};
+export type BattleD20TestRollReplacement = AttackRollResult;
+export type BattleD20TestNaturalOneRerollDecision =
+  | {
+      readonly kind: "decline";
+      readonly effectKind: typeof D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND;
+    }
+  | {
+      readonly kind: "reroll";
+      readonly effectKind: typeof D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND;
+      readonly replacement: BattleD20TestRollReplacement;
+    };
+export type BattleD20TestOutcomeReplacement = {
+  readonly succeeded: boolean;
+  readonly naturalD20: DieRollResult;
+};
+export type BattleD20TestDieReplacement = DieRollResult;
+export type BattleD20TestNaturalOneRerollOutcomeDecision =
+  | {
+      readonly kind: "decline";
+      readonly effectKind: typeof D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND;
+    }
+  | {
+      readonly kind: "reroll";
+      readonly effectKind: typeof D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND;
+      readonly replacement: BattleD20TestOutcomeReplacement;
+    };
+export type BattleD20TestNaturalOneRerollDieDecision =
+  | {
+      readonly kind: "decline";
+      readonly effectKind: typeof D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND;
+    }
+  | {
+      readonly kind: "reroll";
+      readonly effectKind: typeof D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND;
+      readonly replacement: BattleD20TestDieReplacement;
     };
 export type BattleSpellDamageRerollOption = {
   readonly effectKind: "damage_dice_reroll";
@@ -4692,6 +4743,7 @@ export type BattleSpellAttackRollHole = Extract<
   readonly rollMode?: AttackRollMode;
   readonly missToHitReplacements?: readonly AttackRollMissToHitReplacement[];
   readonly spellAttackRerolls?: readonly BattleSpellAttackRerollOption[];
+  readonly d20TestNaturalOneRerolls?: readonly BattleD20TestNaturalOneRerollOption[];
 };
 export type BattleDamageRollHole = Extract<
   RuntimeHole,
@@ -5267,10 +5319,32 @@ export type BattleDancingLightsPlacementHole = {
   readonly spacingFeet: MovementFeet;
   readonly requiresTableSpatialFact: true;
 };
-export type BattleSavingThrowOutcome = {
-  readonly targetId: CombatantId;
+export type BattleD20TestRolledOutcome = {
   readonly succeeded: boolean;
+  readonly naturalD20?: DieRollResult;
+  readonly withoutRoll?: never;
+  readonly d20TestNaturalOneReroll?: BattleD20TestNaturalOneRerollOutcomeDecision;
 };
+export type BattleD20TestWithoutRollOutcome = {
+  readonly succeeded: boolean;
+  readonly withoutRoll: true;
+  readonly naturalD20?: never;
+  readonly d20TestNaturalOneReroll?: never;
+};
+export type BattleD20TestOutcome =
+  | BattleD20TestRolledOutcome
+  | BattleD20TestWithoutRollOutcome;
+export type BattleRolledSavingThrowOutcome = BattleD20TestRolledOutcome & {
+  readonly targetId: CombatantId;
+};
+export type BattleSavingThrowWithoutRollOutcome =
+  BattleD20TestWithoutRollOutcome & {
+    readonly targetId: CombatantId;
+  };
+export type BattleSavingThrowOutcome =
+  | BattleRolledSavingThrowOutcome
+  | BattleSavingThrowWithoutRollOutcome;
+export type BattleConcentrationSavingThrowValue = BattleD20TestOutcome;
 export type BattleSpellAreaSavingThrowOutcomeValue = {
   readonly area: BattleSpellAreaChoice;
   readonly outcomes: readonly BattleSavingThrowOutcome[];
@@ -5388,6 +5462,7 @@ export type BattleSpellSavingThrowOutcomeHole = {
   readonly areaChoices: readonly BattleSpellAreaChoice[];
   readonly targetRollModes: readonly BattleSavingThrowRollModeProjection[];
   readonly targetFlatBonuses: readonly BattleSavingThrowFlatBonusProjection[];
+  readonly d20TestNaturalOneRerolls?: readonly BattleD20TestNaturalOneRerollOption[];
 };
 export type BattleDragonsBreathSavingThrowOutcomeHole = {
   readonly holeInstanceKey: HoleInstanceKey;
@@ -5404,6 +5479,7 @@ export type BattleDragonsBreathSavingThrowOutcomeHole = {
   readonly areaChoices: readonly BattleSpellAreaChoice[];
   readonly targetRollModes: readonly BattleSavingThrowRollModeProjection[];
   readonly targetFlatBonuses: readonly BattleSavingThrowFlatBonusProjection[];
+  readonly d20TestNaturalOneRerolls?: readonly BattleD20TestNaturalOneRerollOption[];
 };
 export type BattleUnitFeatureSavingThrowOutcomeHole = {
   readonly holeInstanceKey: HoleInstanceKey;
@@ -5419,6 +5495,7 @@ export type BattleUnitFeatureSavingThrowOutcomeHole = {
   readonly targetIds: readonly CombatantId[];
   readonly targetRollModes: readonly BattleSavingThrowRollModeProjection[];
   readonly targetFlatBonuses: readonly BattleSavingThrowFlatBonusProjection[];
+  readonly d20TestNaturalOneRerolls?: readonly BattleD20TestNaturalOneRerollOption[];
 };
 export type BattleUnitFeatureRollHole = Extract<
   RuntimeHole,
@@ -5481,6 +5558,7 @@ export type BattleDeathSavingThrowHole = {
   readonly kind: "deathSavingThrow";
   readonly label: string;
   readonly combatantId: CombatantId;
+  readonly d20TestNaturalOneRerolls?: readonly BattleD20TestNaturalOneRerollOption[];
 };
 export type BattleStatBlockRechargeRollHole = {
   readonly holeInstanceKey: HoleInstanceKey;
@@ -5504,6 +5582,7 @@ export type BattleConcentrationSavingThrowHole = {
   readonly damageAmount: DamageAmount;
   readonly targetFlatBonuses: readonly BattleSavingThrowFlatBonusProjection[];
   readonly rollMode?: AttackRollMode;
+  readonly d20TestNaturalOneRerolls?: readonly BattleD20TestNaturalOneRerollOption[];
 };
 export type BattleInterruptDecisionHole = {
   readonly holeInstanceKey: HoleInstanceKey;
@@ -5555,6 +5634,7 @@ export type BattleAbilityCheckHole = {
   readonly dc: DifficultyClass;
   readonly rollMode?: AttackRollMode;
   readonly requiresTableSpatialFact?: boolean;
+  readonly d20TestNaturalOneRerolls?: readonly BattleD20TestNaturalOneRerollOption[];
 };
 export type BattleSpellcastingAbilityCheckHole = {
   readonly holeInstanceKey: HoleInstanceKey;
@@ -5570,6 +5650,7 @@ export type BattleSpellcastingAbilityCheckHole = {
     readonly contestedSpellLevel: BattleSpellEffectLevel;
   };
   readonly requiresTableSpatialFact?: boolean;
+  readonly d20TestNaturalOneRerolls?: readonly BattleD20TestNaturalOneRerollOption[];
 };
 export type BattleGrappleOutcomeHole = {
   readonly holeInstanceKey: HoleInstanceKey;
@@ -5742,6 +5823,7 @@ export type BattleAttackRollResult = AttackRollResult & {
   readonly activatedOngoingFeatureUnitId?: UnitRecord["id"];
   readonly missToHitReplacementUnitId?: UnitRecord["id"];
   readonly spellAttackReroll?: BattleSpellAttackRerollDecision;
+  readonly d20TestNaturalOneReroll?: BattleD20TestNaturalOneRerollDecision;
 };
 export const SEEKING_SPELL_REROLL_UNSUPPORTED_ATTACK_ROLL_OWNER_MESSAGE =
   "Seeking Spell rerolls are not available for this attack-roll owner.";
@@ -6031,6 +6113,7 @@ export type BattleFill =
       readonly kind: "deathSavingThrow";
       readonly holeId: BattleHoleId;
       readonly value: DieRollResult;
+      readonly d20TestNaturalOneReroll?: BattleD20TestNaturalOneRerollDieDecision;
     }
   | {
       readonly kind: "statBlockRechargeRoll";
@@ -6040,9 +6123,7 @@ export type BattleFill =
   | {
       readonly kind: "concentrationSavingThrow";
       readonly holeId: BattleHoleId;
-      readonly value: {
-        readonly succeeded: boolean;
-      };
+      readonly value: BattleConcentrationSavingThrowValue;
     }
   | {
       readonly kind: "attackDamageDisposition";
@@ -6085,6 +6166,8 @@ export type BattleFill =
       readonly holeId: BattleHoleId;
       readonly value: {
         readonly total: number;
+        readonly naturalD20?: DieRollResult;
+        readonly d20TestNaturalOneReroll?: BattleD20TestNaturalOneRerollDecision;
       };
       readonly spatialFacts?: readonly BattleAbilityCheckSpatialFact[];
     }

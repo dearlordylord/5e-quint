@@ -187,6 +187,7 @@
         "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-d20-test-natural-one-reroll-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-passive-movement-defense-core.qnt",
@@ -6125,6 +6126,12 @@
       "obligationIds": [
         "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
       ],
+      "profileId": "unit-feature.d20-test-natural-one-reroll"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+      ],
       "profileId": "unit-feature.bardic-inspiration-failed-d20-test"
     },
     {
@@ -9138,6 +9145,28 @@
       "role": "proof-only"
     },
     {
+      "evidence": "packages/shared-algebras/proofs/rule-core/unit-feature-d20-test-natural-one-reroll-core.qnt carries optional natural-1 D20 Test replacement-roll semantics without importing authored Unit catalog rows.",
+      "obligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-d20-test-natural-one-reroll-core.qnt",
+      "profileScopes": [
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "profileId": "unit-feature.d20-test-natural-one-reroll"
+        }
+      ],
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/shared-algebras/proofs/rule-core/unit-feature-d20-test-natural-one-reroll-core-examples.qnt is assessed generator-readiness proofOnly example evidence for natural-1 D20 Test reroll facts.",
+      "obligationIds": [],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-d20-test-natural-one-reroll-core-examples.qnt",
+      "role": "proof-only"
+    },
+    {
       "evidence": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt carries executable spell procedure profile support used by registered spell procedure obligations.",
       "obligationIds": [
         "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS"
@@ -10072,6 +10101,16 @@
     },
     {
       "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-d20-test-natural-one-reroll-core-examples.qnt",
+      "role": "proof-only"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-d20-test-natural-one-reroll-core.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
       "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-martial-arts-core-examples.qnt",
       "role": "proof-only"
     },
@@ -10354,6 +10393,18 @@
             "BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND"
           ],
           "ownerPath": "packages/shared-algebras/proofs/rule-core/movement-spatial-grapple.qnt",
+          "role": "semantic-core"
+        }
+      ]
+    },
+    {
+      "profileId": "unit-feature.d20-test-natural-one-reroll",
+      "qntOwners": [
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-d20-test-natural-one-reroll-core.qnt",
           "role": "semantic-core"
         }
       ]
@@ -10899,6 +10950,7 @@
         "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core-examples.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core-examples.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core-examples.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-d20-test-natural-one-reroll-core-examples.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core-examples.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core-examples.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-passive-movement-defense-core-examples.qnt",
@@ -10915,6 +10967,7 @@
         "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-d20-test-natural-one-reroll-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-passive-movement-defense-core.qnt",
@@ -13925,6 +13978,7 @@
     "unit-feature.bonus-action-delegated-standard-actions",
     "unit-feature.bonus-action-ongoing-rage",
     "unit-feature.creature-space-movement-permission",
+    "unit-feature.d20-test-natural-one-reroll",
     "unit-feature.druid-wild-shape-known-form",
     "unit-feature.enemy-zero-hit-point-temporary-hit-points",
     "unit-feature.failed-ability-check-resource-boost",

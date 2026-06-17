@@ -420,16 +420,34 @@ export function interruptDecisionFill(
 
 export function abilityCheckFill(
   hole: Extract<BattleHole, { readonly kind: "abilityCheck" }>,
-  total: number,
+  value:
+    | number
+    | {
+        readonly total: number;
+        readonly naturalD20?: number;
+        readonly d20TestNaturalOneReroll?: Extract<
+          BattleFill,
+          { readonly kind: "abilityCheck" }
+        >["value"]["d20TestNaturalOneReroll"];
+      },
   spatialFacts?: Extract<
     BattleFill,
     { readonly kind: "abilityCheck" }
   >["spatialFacts"],
 ): Extract<BattleFill, { readonly kind: "abilityCheck" }> {
+  const checkValue = typeof value === "number" ? { total: value } : value;
   return {
     kind: "abilityCheck",
     holeId: hole.holeId,
-    value: { total },
+    value: {
+      total: checkValue.total,
+      ...(checkValue.naturalD20 === undefined
+        ? {}
+        : { naturalD20: DieRollResult(checkValue.naturalD20) }),
+      ...(checkValue.d20TestNaturalOneReroll === undefined
+        ? {}
+        : { d20TestNaturalOneReroll: checkValue.d20TestNaturalOneReroll }),
+    },
     ...(spatialFacts === undefined ? {} : { spatialFacts }),
   };
 }
@@ -553,6 +571,10 @@ export function attackRollFill(
     readonly naturalD20: number;
     readonly rollMode?: "advantage" | "disadvantage" | "normal";
     readonly missToHitReplacementUnitId?: string;
+    readonly d20TestNaturalOneReroll?: Extract<
+      BattleFill,
+      { readonly kind: "attackRoll" }
+    >["value"]["d20TestNaturalOneReroll"];
   },
 ): Extract<BattleFill, { readonly kind: "attackRoll" }> {
   return {
@@ -565,6 +587,9 @@ export function attackRollFill(
       ...(value.missToHitReplacementUnitId === undefined
         ? {}
         : { missToHitReplacementUnitId: value.missToHitReplacementUnitId }),
+      ...(value.d20TestNaturalOneReroll === undefined
+        ? {}
+        : { d20TestNaturalOneReroll: value.d20TestNaturalOneReroll }),
     },
   };
 }

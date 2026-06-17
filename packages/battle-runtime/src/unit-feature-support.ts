@@ -1,5 +1,6 @@
 // RAW-COVERAGE: runtime-owner RAW-QCORE9-UNIT-FEATURE-PROFILES-001
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-action-area-save-damage-replacement unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-damage-die-floor unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bardic-inspiration-grant unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-delegated-standard-actions unit-feature.bonus-action-ongoing-rage unit-feature.creature-space-movement-permission unit-feature.druid-wild-shape-known-form unit-feature.enemy-zero-hit-point-temporary-hit-points unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.grappler unit-feature.hunters-prey unit-feature.initiative-proficiency-and-swap unit-feature.innate-sorcery-activation unit-feature.light-extra-attack-damage-ability-modifier unit-feature.magic-action-area-save-damage-healing unit-feature.magic-action-healing-pool unit-feature.martial-arts-attack-projection unit-feature.monk-focus-battle-options unit-feature.open-hand-technique unit-feature.paladin-sacred-weapon unit-feature.passive-ability-check-roll-mode unit-feature.passive-armor-class-bonus unit-feature.passive-damage-resistance unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-saving-throw-roll-mode unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.potent-cantrip unit-feature.reaction-roll-or-damage-reduction unit-feature.remarkable-athlete unit-feature.rogue-steady-aim unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.spell-slot-healing-modifier unit-feature.weapon-critical-range-19 unit-feature.weapon-damage-dice-roll-choice unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave unit-feature.zero-hit-point-replacement
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.d20-test-natural-one-reroll
 import { Match } from "effect";
 import * as Either from "effect/Either";
 import {
@@ -71,6 +72,8 @@ export const ATTACK_ROLL_MISS_TO_HIT_REPLACEMENT_SUPPORT_PROFILE =
   "attackRollMissToHitReplacement";
 export const ATTACK_ACTION_AREA_SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE =
   "attackActionAreaSaveDamageReplacement";
+export const D20_TEST_NATURAL_ONE_REROLL_SUPPORT_PROFILE =
+  "d20TestNaturalOneReroll";
 export const PASSIVE_SAVING_THROW_ROLL_MODE_SUPPORT_PROFILE =
   "passiveSavingThrowRollMode";
 const PASSIVE_CONDITION_SAVING_THROW_ROLL_MODE_CONDITIONS = [
@@ -195,6 +198,7 @@ export const BATTLE_UNIT_SUPPORT_PROFILES = [
   INITIATIVE_PROFICIENCY_AND_SWAP_SUPPORT_PROFILE,
   ATTACK_ROLL_MISS_TO_HIT_REPLACEMENT_SUPPORT_PROFILE,
   ATTACK_ACTION_AREA_SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE,
+  D20_TEST_NATURAL_ONE_REROLL_SUPPORT_PROFILE,
   PASSIVE_SAVING_THROW_ROLL_MODE_SUPPORT_PROFILE,
   PASSIVE_ABILITY_CHECK_ROLL_MODE_SUPPORT_PROFILE,
   PASSIVE_DAMAGE_RESISTANCE_SUPPORT_PROFILE,
@@ -315,6 +319,21 @@ export type AttackActionAreaSaveDamageReplacementProfile = {
 export type BattleAttackActionAreaSaveDamageReplacementSupportProfile = {
   readonly kind: typeof ATTACK_ACTION_AREA_SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE;
   readonly breath: AttackActionAreaSaveDamageReplacementProfile;
+};
+export type D20TestNaturalOneRerollProfile = {
+  readonly optional: true;
+  readonly trigger: {
+    readonly kind: "d20TestRollIs";
+    readonly dieFace: 1;
+  };
+  readonly reroll: {
+    readonly kind: "triggeringD20";
+    readonly use: "newRoll";
+  };
+};
+export type BattleD20TestNaturalOneRerollSupportProfile = {
+  readonly kind: typeof D20_TEST_NATURAL_ONE_REROLL_SUPPORT_PROFILE;
+  readonly reroll: D20TestNaturalOneRerollProfile;
 };
 export type PassiveSavingThrowRollModeProfile =
   | {
@@ -814,6 +833,7 @@ export type BattleUnitSupportProfile =
   | BattleInitiativeProficiencyAndSwapSupportProfile
   | BattleAttackRollMissToHitReplacementSupportProfile
   | BattleAttackActionAreaSaveDamageReplacementSupportProfile
+  | BattleD20TestNaturalOneRerollSupportProfile
   | BattlePassiveSavingThrowRollModeSupportProfile
   | BattlePassiveAbilityCheckRollModeSupportProfile
   | BattlePassiveDamageResistanceSupportProfile
@@ -845,6 +865,7 @@ export type BattleUnitSupportProfile =
       | "initiativeProficiencyAndSwap"
       | "attackRollMissToHitReplacement"
       | "attackActionAreaSaveDamageReplacement"
+      | "d20TestNaturalOneReroll"
       | "passiveSavingThrowRollMode"
       | "passiveAbilityCheckRollMode"
       | "passiveDamageResistance"
@@ -1044,6 +1065,17 @@ export function battleUnitSupportProfilesForUnit(input: {
   }
   if (attackActionAreaSaveDamageReplacementSupport !== null) {
     supportProfiles.push(attackActionAreaSaveDamageReplacementSupport);
+  }
+
+  const d20TestNaturalOneRerollSupport =
+    battleD20TestNaturalOneRerollSupportForUnit(input.unit);
+  if (d20TestNaturalOneRerollSupport === "unsupported") {
+    return battleUnitSupportProfileIssue(
+      `Unsupported battle D20 Test natural-1 reroll Unit hook: ${input.unit.id}.`,
+    );
+  }
+  if (d20TestNaturalOneRerollSupport !== null) {
+    supportProfiles.push(d20TestNaturalOneRerollSupport);
   }
 
   const passiveSavingThrowRollModeSupport =
@@ -1910,6 +1942,11 @@ export type SupportedUnitFeatureProfile =
       readonly breath: AttackActionAreaSaveDamageReplacementProfile;
     }
   | {
+      readonly kind: "d20TestNaturalOneReroll";
+      readonly unit: UnitRecord;
+      readonly reroll: D20TestNaturalOneRerollProfile;
+    }
+  | {
       readonly kind: "passiveSavingThrowRollMode";
       readonly unit: UnitRecord;
       readonly savingThrow: PassiveSavingThrowRollModeProfile;
@@ -2671,6 +2708,11 @@ export type BattleAttackActionAreaSaveDamageReplacementSupport =
   | "unsupported"
   | null;
 
+export type BattleD20TestNaturalOneRerollSupport =
+  | BattleD20TestNaturalOneRerollSupportProfile
+  | "unsupported"
+  | null;
+
 export type BattlePassiveSavingThrowRollModeSupport =
   | BattlePassiveSavingThrowRollModeSupportProfile
   | "unsupported"
@@ -2830,6 +2872,21 @@ export function battleAttackActionAreaSaveDamageReplacementSupportForUnit(input:
     : {
         kind: ATTACK_ACTION_AREA_SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE,
         breath: profile.breath,
+      };
+}
+
+export function battleD20TestNaturalOneRerollSupportForUnit(
+  unit: UnitRecord,
+): BattleD20TestNaturalOneRerollSupport {
+  if (!hasD20TestNaturalOneRerollMechanics(unit)) {
+    return null;
+  }
+  const reroll = d20TestNaturalOneRerollProfileForUnit(unit);
+  return reroll === null
+    ? "unsupported"
+    : {
+        kind: D20_TEST_NATURAL_ONE_REROLL_SUPPORT_PROFILE,
+        reroll,
       };
 }
 
@@ -3188,6 +3245,43 @@ function hasClassFeatureMechanicsFamily(
   family: string,
 ): boolean {
   return unit.kind === "class_feature" && unit.mechanics.family === family;
+}
+
+type D20TestNaturalOneRerollUnit = Extract<
+  UnitRecord,
+  { readonly kind: "species_trait" }
+> & {
+  readonly mechanics: {
+    readonly family: "d20_test_natural_one_reroll";
+  };
+};
+
+function hasD20TestNaturalOneRerollMechanics(
+  unit: UnitRecord,
+): unit is D20TestNaturalOneRerollUnit {
+  return (
+    unit.kind === "species_trait" &&
+    unit.mechanics.family === "d20_test_natural_one_reroll"
+  );
+}
+
+function d20TestNaturalOneRerollProfileForUnit(
+  unit: UnitRecord,
+): D20TestNaturalOneRerollProfile | null {
+  if (!hasD20TestNaturalOneRerollMechanics(unit)) {
+    return null;
+  }
+  return unit.mechanics.optional === true &&
+    unit.mechanics.trigger.kind === "d20_test_roll_is" &&
+    unit.mechanics.trigger.dieFace === 1 &&
+    unit.mechanics.reroll.kind === "reroll_triggering_d20" &&
+    unit.mechanics.reroll.use === "new_roll"
+    ? {
+        optional: true,
+        trigger: { kind: "d20TestRollIs", dieFace: 1 },
+        reroll: { kind: "triggeringD20", use: "newRoll" },
+      }
+    : null;
 }
 
 function hasPassiveArmorClassBonusMechanics(unit: UnitRecord): boolean {
@@ -4951,6 +5045,7 @@ export function parseSupportedUnitFeatureProfile(
           unit,
           draconicAncestryDamageType: sourceFacts.draconicAncestryDamageType,
         })) ??
+    d20TestNaturalOneRerollUnitFeatureProfile(unit) ??
     parsePassiveSavingThrowRollModeUnitFeatureProfile(unit) ??
     parsePassiveAbilityCheckRollModeUnitFeatureProfile(unit) ??
     parsePassiveSpeedBonusUnitFeatureProfile(unit) ??
@@ -4979,6 +5074,22 @@ export function parseSupportedUnitFeatureProfile(
     potentCantripProfileForUnit(unit) ??
     grapplerProfileForUnit(unit)
   );
+}
+
+function d20TestNaturalOneRerollUnitFeatureProfile(
+  unit: UnitRecord,
+): Extract<
+  SupportedUnitFeatureProfile,
+  { readonly kind: "d20TestNaturalOneReroll" }
+> | null {
+  const support = battleD20TestNaturalOneRerollSupportForUnit(unit);
+  return support === null || support === "unsupported"
+    ? null
+    : {
+        kind: D20_TEST_NATURAL_ONE_REROLL_SUPPORT_PROFILE,
+        unit,
+        reroll: support.reroll,
+      };
 }
 
 function bonusActionDelegatedStandardActionsProfileForUnit(
