@@ -7,6 +7,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3MSPEC-04-DRAGONBORN-DAMAGE-RESISTANCE species_dragonborn_damage_resistance
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3MSPEC-06-DWARVEN-RESILIENCE-SAVE-MODE dwarf_dwarven_resilience
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3MSPEC-07-GOLIATH-POWERFUL-BUILD-GRAPPLE species_goliath_powerful_build
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3-FOLLOWUP-HALFLING-BRAVE-RUNTIME species_halfling_brave
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV73A monk_martial_arts
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.attack-action-area-save-damage-replacement unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.martial-arts-attack-projection unit-feature.monk-focus-battle-options unit-feature.passive-ability-check-roll-mode unit-feature.passive-damage-resistance unit-feature.passive-saving-throw-roll-mode unit-feature.reaction-roll-or-damage-reduction
 import { decodeSpeciesRecordSync } from "@dnd/surface/surface/schema";
@@ -28,6 +29,7 @@ import {
   rogueUncannyDodgeUnitId,
   speciesDragonbornBreathWeaponUnitId,
   speciesDragonbornDamageResistanceUnitId,
+  speciesHalflingBraveUnitId,
   unitLibrary,
   unitMechanicsVariant,
 } from "./unit-profile-admission-catalog-support.ts";
@@ -173,6 +175,16 @@ describe("L3MSPEC species battle support", () => {
       scope: {
         kind: "condition",
         condition: "poisoned",
+      },
+    },
+  } as const;
+  const expectedFrightenedSaveAdvantageSupport = {
+    kind: PASSIVE_SAVING_THROW_ROLL_MODE_SUPPORT_PROFILE,
+    savingThrow: {
+      mode: "advantage",
+      scope: {
+        kind: "condition",
+        condition: "frightened",
       },
     },
   } as const;
@@ -587,6 +599,70 @@ describe("L3MSPEC species battle support", () => {
     ).toEqual([{ targetId, rollMode: "advantage" }]);
   });
 
+  test("species_halfling_brave admits Frightened save Advantage facts", () => {
+    const unit = unitLibrary.requireUnit(speciesHalflingBraveUnitId);
+
+    expect(
+      battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
+    ).toEqual(
+      Either.right({
+        unitId: speciesHalflingBraveUnitId,
+        supportProfiles: [expectedFrightenedSaveAdvantageSupport],
+      }),
+    );
+    expect(battlePassiveSavingThrowRollModeSupportForUnit(unit)).toEqual(
+      expectedFrightenedSaveAdvantageSupport,
+    );
+    expect(parseSupportedUnitFeatureProfile(unit, [])).toEqual(
+      expect.objectContaining({
+        kind: "passiveSavingThrowRollMode",
+        unit,
+        savingThrow: expectedFrightenedSaveAdvantageSupport.savingThrow,
+      }),
+    );
+  });
+
+  test("Brave Frightened save Advantage admission follows mechanics shape rather than Unit identity", () => {
+    const unit = unitLibrary.requireUnit(speciesHalflingBraveUnitId);
+    if (unit.kind !== "species_trait" || unit.mechanics.family !== "passive") {
+      throw new Error("Expected Brave passive trait.");
+    }
+    const syntheticUnit = unitMechanicsVariant(unit, {
+      id: "synthetic_frightened_save_advantage_fixture",
+      mechanics: unit.mechanics,
+    });
+
+    expect(
+      battlePassiveSavingThrowRollModeSupportForUnit(syntheticUnit),
+    ).toEqual(expectedFrightenedSaveAdvantageSupport);
+  });
+
+  test("Brave projects Advantage for Frightened avoiding Saving Throws", () => {
+    const state = halflingBraveBattle();
+    const targetId = combatantId("halfling-brave-target");
+
+    expect(
+      savingThrowRollModeProjections(state, "wis", {
+        condition: "frightened",
+      }),
+    ).toEqual([{ targetId, rollMode: "advantage" }]);
+    expect(savingThrowRollModeProjections(state, "wis")).toEqual([]);
+  });
+
+  test("Brave projects Advantage for Frightened ending Saving Throws without broadening to unrelated conditions", () => {
+    const state = halflingBraveBattle();
+    const targetId = combatantId("halfling-brave-target");
+
+    expect(
+      savingThrowRollModeProjections(state, "con", {
+        condition: "frightened",
+      }),
+    ).toEqual([{ targetId, rollMode: "advantage" }]);
+    expect(
+      savingThrowRollModeProjections(state, "con", { condition: "poisoned" }),
+    ).toEqual([]);
+  });
+
   test("Dwarven Resilience halves only Poison damage on the target", () => {
     const result = dwarvenResilienceBattle();
     const target = result.combatants.get(
@@ -795,6 +871,43 @@ function dwarvenResilienceBattle() {
       }),
       characterCreature({
         combatantId: combatantId("dwarven-resilience-attacker"),
+        displayName: "Attacker",
+        initiative: 5,
+        side: oppositionSide,
+      }),
+    ],
+  });
+  expect(Either.isRight(result)).toBe(true);
+  if (Either.isLeft(result)) {
+    throw new Error(result.left.message);
+  }
+  return result.right;
+}
+
+function halflingBraveBattle() {
+  const unit = unitLibrary.requireUnit(speciesHalflingBraveUnitId);
+  const unitRef = battleUnitRefWithSupportProfiles({
+    unitRef: { unitId: unit.id },
+    unit,
+  });
+  expect(Either.isRight(unitRef)).toBe(true);
+  if (Either.isLeft(unitRef)) {
+    throw new Error(unitRef.left.message);
+  }
+  const targetId = combatantId("halfling-brave-target");
+  const result = startBattle({
+    battleId: battleId("species-halfling-brave"),
+    combatants: [
+      characterCreature({
+        combatantId: targetId,
+        displayName: "Halfling Target",
+        initiative: 10,
+        side: partySide,
+        unitFeatures: [{ unit }],
+        characterUnitRefs: [unitRef.right],
+      }),
+      characterCreature({
+        combatantId: combatantId("halfling-brave-attacker"),
         displayName: "Attacker",
         initiative: 5,
         side: oppositionSide,

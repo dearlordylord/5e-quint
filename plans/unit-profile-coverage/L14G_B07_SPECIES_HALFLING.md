@@ -18,7 +18,7 @@ Halfling is admitted to character creation in this task. Unlike Gnome, it has no
 
 ## Trait Ownership
 
-Brave is authored as passive Advantage on Saving Throws with `conditionFilter = ["frightened"]`. It remains unsupported in this task: the promoted passive-saving-throw roll-mode profile admits Poisoned condition-scoped species saves, not Frightened saves. A future condition-scoped Saving Throw Advantage owner should widen the typed profile and add rule-core/runtime evidence without dispatching on Halfling or Brave identity.
+Brave is authored as passive Advantage on Saving Throws with `conditionFilter = ["frightened"]`. Follow-up task `L3-FOLLOWUP-HALFLING-BRAVE-RUNTIME` promotes Brave through the existing passive-saving-throw roll-mode profile by widening the typed condition-scoped support set to include Frightened, with deterministic runtime evidence and selected-identity MBT coverage. The runtime support is derived from Saving Throw roll kind and Frightened condition facts, not Halfling or Brave authored identity.
 
 Halfling Nimbleness is authored as `creature_space_movement_permission`, with a larger-creature occupied-space traversal permission and an explicit `canStopInOccupiedSpace = false` boundary. It remains unsupported until a movement/spatial-occupancy owner promotes creature-space path traversal and ending-space legality.
 
@@ -36,4 +36,6 @@ Round 1 code-review check found no need for a new adapter or parallel character-
 
 Round 2 RAW/vocabulary, architecture/connascence, and code-review checks found no remaining reasonable findings. Battle MBT was not run because this task adds Surface source facts and character-creation admission only; no battle runtime reducer behavior changed.
 
-Round 3 reviewer-feedback check found that Brave had been over-claimed as supported. The implementation now classifies Brave as unsupported with a future condition-scoped Saving Throw Advantage owner, which removes the generated selected-identity witness gap for Halfling.
+Round 3 reviewer-feedback check found that Brave had been over-claimed as supported. At that point, the implementation classified Brave as unsupported with a future condition-scoped Saving Throw Advantage owner, which removed the generated selected-identity witness gap for Halfling.
+
+Task 12 follow-up reviewer loop promoted Brave from `unsupported-profile` to `supported-profile` after confirming the SRD Brave anchor and ubiquitous-language terms. The implementation reuses the passive Saving Throw roll-mode owner for Frightened condition scopes and does not broaden support to unrelated Saving Throw Advantage shapes.

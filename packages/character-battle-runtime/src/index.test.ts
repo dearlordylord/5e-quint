@@ -15,6 +15,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3MCHAR-07-FONT-OF-MAGIC-BATTLE-SLOT-SOURCE sorcerer_font_of_magic
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3PUTB-07-RANGER-HUNTERS-PREY-RUNTIME ranger_hunters_prey
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3MSPEC-06-DWARVEN-RESILIENCE-SAVE-MODE dwarf_dwarven_resilience
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3-FOLLOWUP-HALFLING-BRAVE-RUNTIME species_halfling_brave
 import type {
   BattleFill,
   BattleCreatureState,
@@ -1486,6 +1487,37 @@ describe("Character Sheet battle handoff", () => {
                 damageType: {
                   kind: "fixed",
                   value: "poison",
+                },
+              },
+            },
+          ],
+        }),
+      ]),
+    );
+  });
+
+  test("projects Halfling Brave Frightened save Advantage support into battle Unit refs", () => {
+    const refs = expectRight(
+      characterUnitRefsWithBattleSupportProfiles(
+        halflingFighterBuild(),
+        unitLibrary,
+        undefined,
+        [{ className: "fighter", level: 1 }],
+      ),
+    );
+
+    expect(refs).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          unitId: "species_halfling_brave",
+          supportProfiles: [
+            {
+              kind: PASSIVE_SAVING_THROW_ROLL_MODE_SUPPORT_PROFILE,
+              savingThrow: {
+                mode: "advantage",
+                scope: {
+                  kind: "condition",
+                  condition: "frightened",
                 },
               },
             },
@@ -4279,6 +4311,19 @@ function dwarfFighterBuild(): CharacterBuild {
     ...defenseBuild({ wearingArmor: false }),
     species: "species_dwarf",
     originLanguages: ["Common", "Dwarvish", "Draconic"],
+    features: [],
+    equipment: {
+      owned: [],
+      loadout: {},
+    },
+  };
+}
+
+function halflingFighterBuild(): CharacterBuild {
+  return {
+    ...defenseBuild({ wearingArmor: false }),
+    species: "species_halfling",
+    originLanguages: ["Common", "Halfling", "Dwarvish"],
     features: [],
     equipment: {
       owned: [],

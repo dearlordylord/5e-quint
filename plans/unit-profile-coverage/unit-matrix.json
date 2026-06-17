@@ -62,8 +62,8 @@
       "value": 299
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 180,
-      "numerator": 174,
+      "denominator": 181,
+      "numerator": 175,
       "percent": "96.7%"
     },
     "profileClassificationCoverage": {
@@ -92,8 +92,8 @@
       "percent": "100%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 169,
-      "numerator": 169,
+      "denominator": 170,
+      "numerator": 170,
       "percent": "100%"
     },
     "runtimeMappingCoverage": {
@@ -107,14 +107,14 @@
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 173,
-      "numerator": 173,
+      "denominator": 174,
+      "numerator": 174,
       "percent": "100%"
     },
     "supportedProfileCoverage": {
       "denominator": 249,
-      "numerator": 180,
-      "percent": "72.3%"
+      "numerator": 181,
+      "percent": "72.7%"
     }
   },
   "metricSemantics": [
@@ -797,7 +797,8 @@
       "taskRefs": [
         "QCORE9",
         "L12G-CLASS-BARBARIAN-DANGER-SENSE",
-        "L3MSPEC-06-DWARVEN-RESILIENCE-SAVE-MODE"
+        "L3MSPEC-06-DWARVEN-RESILIENCE-SAVE-MODE",
+        "L3-FOLLOWUP-HALFLING-BRAVE-RUNTIME"
       ],
       "title": "Unit feature passively grants Saving Throw roll mode by ability or condition scope",
       "verificationOwners": [
@@ -7893,8 +7894,8 @@
       "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
       "metrics": {
         "rulesKernelSupportedUnitCoverage": {
-          "denominator": 169,
-          "numerator": 169,
+          "denominator": 170,
+          "numerator": 170,
           "percent": "100%"
         }
       },
@@ -12175,6 +12176,28 @@
               "joinStatus": "covered",
               "obligations": [
                 {
+                  "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+                }
+              ],
+              "profileId": "unit-feature.passive-saving-throw-roll-mode",
+              "profileKind": "passive",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt"
+              ]
+            }
+          ],
+          "unitId": "species_halfling_brave"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
                   "obligationId": "BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS",
                   "runtime": "battle",
                   "status": "covered",
@@ -15796,6 +15819,14 @@
       "taskId": "L3MSPEC-06-DWARVEN-RESILIENCE-SAVE-MODE"
     },
     {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime, character-battle, and selected-identity MBT coverage admit Halfling Brave from its passive modify_roll_advantage Surface shape with Saving Throw roll kind and Frightened condition filter, project the support profile through selected character Unit refs, and grant Advantage for typed Frightened avoiding and ending Saving Throw contexts without authored-identity dispatch or support for unrelated condition scopes.",
+      "profileIds": [
+        "unit-feature.passive-saving-throw-roll-mode"
+      ],
+      "taskId": "L3-FOLLOWUP-HALFLING-BRAVE-RUNTIME"
+    },
+    {
       "claimKind": "qnt-proof",
       "note": "Shared rule-core and battle-runtime bridge QNT facts model a passive Ability Check roll-mode profile whose Advantage applies only when the Ability Check is made to end Grappled, leaving unrelated Ability Checks normal.",
       "profileIds": [
@@ -17668,7 +17699,8 @@
           "taskRefs": [
             "QCORE9",
             "L12G-CLASS-BARBARIAN-DANGER-SENSE",
-            "L3MSPEC-06-DWARVEN-RESILIENCE-SAVE-MODE"
+            "L3MSPEC-06-DWARVEN-RESILIENCE-SAVE-MODE",
+            "L3-FOLLOWUP-HALFLING-BRAVE-RUNTIME"
           ],
           "title": "Unit feature passively grants Saving Throw roll mode by ability or condition scope",
           "verificationOwners": [
@@ -24768,7 +24800,8 @@
           "taskRefs": [
             "QCORE9",
             "L12G-CLASS-BARBARIAN-DANGER-SENSE",
-            "L3MSPEC-06-DWARVEN-RESILIENCE-SAVE-MODE"
+            "L3MSPEC-06-DWARVEN-RESILIENCE-SAVE-MODE",
+            "L3-FOLLOWUP-HALFLING-BRAVE-RUNTIME"
           ],
           "title": "Unit feature passively grants Saving Throw roll mode by ability or condition scope",
           "verificationOwners": [
@@ -24874,19 +24907,81 @@
         "status": "installed"
       },
       "claim": {
-        "battleReadinessClosure": {
-          "kind": "outside-battle-runtime",
-          "owner": "future condition-scoped saving-throw roll-mode owner",
-          "reason": "Battle admission must widen the typed condition-scoped Saving Throw Advantage profile and corresponding rule-core/runtime evidence before reducers can consume the Frightened condition filter."
-        },
-        "reason": "Brave is authored as passive Advantage on Saving Throws with a Frightened condition filter, but the promoted passive-saving-throw roll-mode profile admits Poisoned condition-scoped species saves, not Frightened saves. No promoted profile owns this Frightened save condition yet.",
-        "tag": "unsupported-profile"
+        "profileIds": [
+          "unit-feature.passive-saving-throw-roll-mode"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE9-UNIT-FEATURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "Battle Unit admission derives the passive Saving Throw Advantage fact from the Surface modify_roll_advantage shape with saving_throw target and Frightened condition filter, without dispatching on Halfling or Brave identity.",
+          "Battle runtime projects Advantage whenever a Saving Throw context is typed with condition frightened, covering both avoiding and ending the Frightened condition, and does not project for unrelated condition contexts."
+        ],
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L3-FOLLOWUP-HALFLING-BRAVE-RUNTIME"
+        },
+        {
+          "ownerPath": "packages/character-battle-runtime/src/index.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L3-FOLLOWUP-HALFLING-BRAVE-RUNTIME"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/species-passive-trait-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "L3-FOLLOWUP-HALFLING-BRAVE-RUNTIME"
+        }
+      ],
       "executableMechanics": true,
       "kind": "species_trait",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "unit-feature.passive-saving-throw-roll-mode",
+          "profileKind": "passive",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/unit-feature-support.ts",
+            "packages/battle-runtime/src/battle-reducer.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-damage-fills.ts"
+          ],
+          "taskRefs": [
+            "QCORE9",
+            "L12G-CLASS-BARBARIAN-DANGER-SENSE",
+            "L3MSPEC-06-DWARVEN-RESILIENCE-SAVE-MODE",
+            "L3-FOLLOWUP-HALFLING-BRAVE-RUNTIME"
+          ],
+          "title": "Unit feature passively grants Saving Throw roll mode by ability or condition scope",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles-inductive.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-feature-bridge.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-danger-sense.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-battle-runtime/src/index.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/species_halfling_brave.json",
       "unitId": "species_halfling_brave"
     },

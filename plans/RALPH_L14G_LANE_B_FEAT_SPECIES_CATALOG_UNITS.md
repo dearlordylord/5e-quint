@@ -73,7 +73,7 @@
     {
       "number": 12,
       "id": "L3-FOLLOWUP-HALFLING-BRAVE-RUNTIME",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Promote Halfling Brave saving throw support"
     },
     {
@@ -778,7 +778,7 @@ Verification:
 
 ### Task 12 - L3-FOLLOWUP-HALFLING-BRAVE-RUNTIME
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -786,15 +786,17 @@ Depends on:
 
 Unit: `species_halfling_brave`
 
-SRD anchor: `.references/srd-5.2.1/Character-Origins.md:220-221`
+SRD anchor: `.references/srd-5.2.1/Character-Origins.md:223`
 
 Current state:
 
 - Brave is installed as a typed passive species trait with Advantage on Saving
   Throws to avoid or end the Frightened condition.
-- The Unit matrix records `species_halfling_brave` as `unsupported-profile`.
-- The promoted passive-saving-throw roll-mode profile admits Poisoned
-  condition-scoped species saves, not Frightened saves.
+- The Unit matrix records `species_halfling_brave` as `supported-profile`
+  through `unit-feature.passive-saving-throw-roll-mode`.
+- The promoted passive-saving-throw roll-mode profile admits typed
+  condition-scoped Poisoned and Frightened saves; Brave consumes the
+  Frightened condition facts without authored-identity dispatch.
 
 Output:
 

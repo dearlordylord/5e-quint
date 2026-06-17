@@ -73,6 +73,12 @@ export const ATTACK_ACTION_AREA_SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE =
   "attackActionAreaSaveDamageReplacement";
 export const PASSIVE_SAVING_THROW_ROLL_MODE_SUPPORT_PROFILE =
   "passiveSavingThrowRollMode";
+const PASSIVE_CONDITION_SAVING_THROW_ROLL_MODE_CONDITIONS = [
+  "poisoned",
+  "frightened",
+] as const satisfies ReadonlyArray<Condition>;
+type PassiveConditionSavingThrowRollModeCondition =
+  (typeof PASSIVE_CONDITION_SAVING_THROW_ROLL_MODE_CONDITIONS)[number];
 export const PASSIVE_ABILITY_CHECK_ROLL_MODE_SUPPORT_PROFILE =
   "passiveAbilityCheckRollMode";
 export const PASSIVE_DAMAGE_RESISTANCE_SUPPORT_PROFILE =
@@ -320,7 +326,7 @@ export type PassiveSavingThrowRollModeProfile =
       readonly mode: "advantage";
       readonly scope: {
         readonly kind: "condition";
-        readonly condition: "poisoned";
+        readonly condition: PassiveConditionSavingThrowRollModeCondition;
       };
     };
 export type BattlePassiveSavingThrowRollModeSupportProfile = {
@@ -4214,19 +4220,45 @@ export function passiveSavingThrowRollModeProfileForUnit(
   if (
     unit.kind === "species_trait" &&
     sameStringSet(effect.saveAbilityFilter ?? [], []) &&
-    sameStringSet(effect.conditionFilter ?? [], ["poisoned"]) &&
     suppressor === undefined &&
     extraSuppressors.length === 0
   ) {
-    return {
-      mode: "advantage",
-      scope: {
-        kind: "condition",
-        condition: "poisoned",
-      },
-    };
+    const condition = passiveConditionSavingThrowRollModeCondition(
+      effect.conditionFilter,
+    );
+    return condition === null
+      ? null
+      : {
+          mode: "advantage",
+          scope: {
+            kind: "condition",
+            condition,
+          },
+        };
   }
   return null;
+}
+
+function passiveConditionSavingThrowRollModeCondition(
+  conditionFilter: readonly string[] | undefined,
+): PassiveConditionSavingThrowRollModeCondition | null {
+  const [condition, ...extraConditions] = conditionFilter ?? [];
+  if (
+    condition === undefined ||
+    extraConditions.length !== 0 ||
+    !isPassiveConditionSavingThrowRollModeCondition(condition)
+  ) {
+    return null;
+  }
+  return condition;
+}
+
+function isPassiveConditionSavingThrowRollModeCondition(
+  condition: string,
+): condition is PassiveConditionSavingThrowRollModeCondition {
+  return PASSIVE_CONDITION_SAVING_THROW_ROLL_MODE_CONDITIONS.some(
+    (supportedCondition) => supportedCondition === condition,
+  );
 }
 
 export function passiveAbilityCheckRollModeProfileForUnit(
