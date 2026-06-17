@@ -4887,6 +4887,8 @@ export function battleTurnSnapshot(state: BattleState): BattleTurnSnapshot {
       resources.weaponMasteryCleaveAttackersUsedThisTurn,
     huntersPreyHordeBreakerUsedThisTurn:
       resources.huntersPreyHordeBreakerUsedThisTurn,
+    grapplerPunchAndGrabUsedThisTurn:
+      resources.grapplerPunchAndGrabUsedThisTurn,
     ...(resources.lightWeaponAttackMade === undefined
       ? {}
       : { lightWeaponAttackMade: resources.lightWeaponAttackMade }),

@@ -1,5 +1,6 @@
 // -*- mode: Bluespec; -*-
 // RAW-COVERAGE: verification-owner:qnt-proof RAW-QCORE7-MOVEMENT-GRAPPLE-001
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.grappler
 
 module movementSpatialGrappleInductive {
   import attackDamageComposition.* from "./attack-damage-composition"
@@ -259,5 +260,13 @@ module movementSpatialGrappleInductive {
     legalMovementGrappleState(qMovementGrappleState),
     activeGrapple(qGrapple) implies effectiveSpeedFeet(qMovementGrappleState) == 0,
     qOpportunityAttackTriggered == opportunityAttackTriggered(qTurnProcedureState, qOpportunityAttackTriggerFacts),
+  }
+
+  run fast_wrestler_target_exemption_parity = all {
+    assert(grapplerFastWrestlerTargetExemptFromDragCost(MediumSize, TinySize)),
+    assert(grapplerFastWrestlerTargetExemptFromDragCost(MediumSize, SmallSize)),
+    assert(grapplerFastWrestlerTargetExemptFromDragCost(MediumSize, MediumSize)),
+    assert(not(grapplerFastWrestlerTargetExemptFromDragCost(MediumSize, LargeSize))),
+    assert(targetExemptFromGrappleDragCost(MediumSize, MediumSize) != grapplerFastWrestlerTargetExemptFromDragCost(MediumSize, MediumSize)),
   }
 }

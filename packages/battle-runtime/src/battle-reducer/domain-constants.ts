@@ -185,6 +185,12 @@ export const WEAPON_MASTERY_TOPPLE_SAVE_HOLE_ID = holeId(
 export const WEAPON_MASTERY_TOPPLE_SAVE_HOLE_INSTANCE = holeInstanceKey(
   "battle:weapon-mastery-topple:save",
 );
+export const GRAPPLER_PUNCH_AND_GRAB_DECISION_HOLE_ID = holeId(
+  "battle:grappler:punch-and-grab:decision",
+);
+export const GRAPPLER_PUNCH_AND_GRAB_DECISION_HOLE_INSTANCE = holeInstanceKey(
+  "battle:grappler:punch-and-grab:decision",
+);
 export const WEAPON_MASTERY_CLEAVE_DECISION_HOLE_ID = holeId(
   "battle:weapon-mastery-cleave:decision",
 );

@@ -51,6 +51,7 @@ export const INITIAL_TURN_RESOURCES = resetTurnActionEconomy({
   weaponDamageDiceRollChoicesUsedThisTurn: [],
   weaponMasteryCleaveAttackersUsedThisTurn: [],
   huntersPreyHordeBreakerUsedThisTurn: [],
+  grapplerPunchAndGrabUsedThisTurn: [],
   dashMovementBonusFeet: movementFeet(0),
   disengaged: false,
 });
@@ -295,6 +296,12 @@ export type AttackFillSet =
         | undefined;
       readonly huntersPreyHordeBreakerDamageDisposition: BattleAttackDamageDisposition;
       readonly huntersPreyHordeBreakerDamageDispositionFilled: boolean;
+      readonly grapplerPunchAndGrabDecision:
+        | Extract<BattleFill, { readonly kind: "unitFeatureDecision" }>
+        | undefined;
+      readonly grapplerPunchAndGrabOutcome:
+        | Extract<BattleFill, { readonly kind: "grappleOutcome" }>
+        | undefined;
     }
   | { readonly tag: "invalid"; readonly message: string };
 export type GrappleFillSet =

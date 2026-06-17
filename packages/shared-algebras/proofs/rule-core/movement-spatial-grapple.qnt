@@ -1,6 +1,7 @@
 // -*- mode: Bluespec; -*-
 // RAW-COVERAGE: qnt-owner RAW-PTG-REACTIONS-003 RAW-QCORE7-MOVEMENT-GRAPPLE-001
 // KERNEL-COVERAGE: qnt-owner BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND
+// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.grappler
 
 module movementSpatialGrapple {
   import attackDamageComposition.* from "./attack-damage-composition"
@@ -186,6 +187,9 @@ module movementSpatialGrapple {
 
   pure def targetExemptFromGrappleDragCost(grapplerSize: RuleSize, targetSize: RuleSize): bool =
     targetSize == TinySize or sizeRank(targetSize) <= sizeRank(grapplerSize) - 2
+
+  pure def grapplerFastWrestlerTargetExemptFromDragCost(grapplerSize: RuleSize, targetSize: RuleSize): bool =
+    sizeRank(targetSize) <= sizeRank(grapplerSize)
 
   pure def grappleDragExtraCostPerFoot(grapplerSize: RuleSize, targetSize: RuleSize): int =
     if (targetExemptFromGrappleDragCost(grapplerSize, targetSize)) 0 else 1

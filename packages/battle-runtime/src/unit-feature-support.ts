@@ -1,5 +1,5 @@
 // RAW-COVERAGE: runtime-owner RAW-QCORE9-UNIT-FEATURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-action-area-save-damage-replacement unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bardic-inspiration-grant unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-delegated-standard-actions unit-feature.bonus-action-ongoing-rage unit-feature.druid-wild-shape-known-form unit-feature.enemy-zero-hit-point-temporary-hit-points unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.hunters-prey unit-feature.initiative-proficiency-and-swap unit-feature.innate-sorcery-activation unit-feature.magic-action-area-save-damage-healing unit-feature.magic-action-healing-pool unit-feature.martial-arts-attack-projection unit-feature.monk-focus-battle-options unit-feature.open-hand-technique unit-feature.paladin-sacred-weapon unit-feature.passive-ability-check-roll-mode unit-feature.passive-armor-class-bonus unit-feature.passive-damage-resistance unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-saving-throw-roll-mode unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.potent-cantrip unit-feature.reaction-roll-or-damage-reduction unit-feature.remarkable-athlete unit-feature.rogue-steady-aim unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.spell-slot-healing-modifier unit-feature.weapon-critical-range-19 unit-feature.weapon-damage-dice-roll-choice unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave unit-feature.zero-hit-point-replacement
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-action-area-save-damage-replacement unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bardic-inspiration-grant unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-delegated-standard-actions unit-feature.bonus-action-ongoing-rage unit-feature.druid-wild-shape-known-form unit-feature.enemy-zero-hit-point-temporary-hit-points unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.grappler unit-feature.hunters-prey unit-feature.initiative-proficiency-and-swap unit-feature.innate-sorcery-activation unit-feature.magic-action-area-save-damage-healing unit-feature.magic-action-healing-pool unit-feature.martial-arts-attack-projection unit-feature.monk-focus-battle-options unit-feature.open-hand-technique unit-feature.paladin-sacred-weapon unit-feature.passive-ability-check-roll-mode unit-feature.passive-armor-class-bonus unit-feature.passive-damage-resistance unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-saving-throw-roll-mode unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.potent-cantrip unit-feature.reaction-roll-or-damage-reduction unit-feature.remarkable-athlete unit-feature.rogue-steady-aim unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.spell-slot-healing-modifier unit-feature.weapon-critical-range-19 unit-feature.weapon-damage-dice-roll-choice unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave unit-feature.zero-hit-point-replacement
 import { Match } from "effect";
 import * as Either from "effect/Either";
 import {
@@ -116,6 +116,7 @@ export const PALADIN_SACRED_WEAPON_SUPPORT_PROFILE = "paladinSacredWeapon";
 export const HUNTERS_PREY_SUPPORT_PROFILE = "huntersPrey";
 export const ROGUE_STEADY_AIM_SUPPORT_PROFILE = "rogueSteadyAim";
 export const POTENT_CANTRIP_SUPPORT_PROFILE = "potentCantrip";
+export const GRAPPLER_SUPPORT_PROFILE = "grappler";
 export const WEAPON_MASTERY_SAP_SUPPORT_PROFILE = "weaponMasterySap";
 export const WEAPON_MASTERY_TOPPLE_SUPPORT_PROFILE = "weaponMasteryTopple";
 export const WEAPON_MASTERY_CLEAVE_SUPPORT_PROFILE = "weaponMasteryCleave";
@@ -207,6 +208,7 @@ export const BATTLE_UNIT_SUPPORT_PROFILES = [
   HUNTERS_PREY_SUPPORT_PROFILE,
   ROGUE_STEADY_AIM_SUPPORT_PROFILE,
   POTENT_CANTRIP_SUPPORT_PROFILE,
+  GRAPPLER_SUPPORT_PROFILE,
   WEAPON_MASTERY_SAP_SUPPORT_PROFILE,
   WEAPON_MASTERY_TOPPLE_SUPPORT_PROFILE,
   WEAPON_MASTERY_CLEAVE_SUPPORT_PROFILE,
@@ -721,6 +723,25 @@ export type BattlePotentCantripSupportProfile = {
   readonly kind: typeof POTENT_CANTRIP_SUPPORT_PROFILE;
   readonly potentCantrip: PotentCantripProfile;
 };
+export type GrapplerProfile = {
+  readonly punchAndGrab: {
+    readonly trigger: "attackActionUnarmedStrikeHitOnTurn";
+    readonly options: readonly ["damage", "grapple"];
+    readonly usageLimit: "oncePerTurn";
+  };
+  readonly attackAdvantage: {
+    readonly mode: "advantage";
+    readonly target: "creatureGrappledByYou";
+  };
+  readonly fastWrestler: {
+    readonly movementCost: "noExtraGrappleDragCost";
+    readonly targetSize: "yourSizeOrSmaller";
+  };
+};
+export type BattleGrapplerSupportProfile = {
+  readonly kind: typeof GRAPPLER_SUPPORT_PROFILE;
+  readonly grappler: GrapplerProfile;
+};
 export type BattleMonkFocusBattleOptionsSupportProfile = {
   readonly kind: typeof MONK_FOCUS_BATTLE_OPTIONS_SUPPORT_PROFILE;
   readonly flurryOfBlows: {
@@ -786,6 +807,7 @@ export type BattleUnitSupportProfile =
   | BattleHuntersPreySupportProfile
   | BattleRogueSteadyAimSupportProfile
   | BattlePotentCantripSupportProfile
+  | BattleGrapplerSupportProfile
   | Exclude<
       (typeof BATTLE_UNIT_SUPPORT_PROFILES)[number],
       | "alternateActionCost"
@@ -814,6 +836,7 @@ export type BattleUnitSupportProfile =
       | "huntersPrey"
       | "rogueSteadyAim"
       | "potentCantrip"
+      | "grappler"
     >;
 
 export type BattleUnitSupportProfileIssue = {
@@ -1240,6 +1263,16 @@ export function battleUnitSupportProfilesForUnit(input: {
   }
   if (potentCantripSupport !== null) {
     supportProfiles.push(potentCantripSupport);
+  }
+
+  const grapplerSupport = battleGrapplerSupportForUnit(input.unit);
+  if (grapplerSupport === "unsupported") {
+    return battleUnitSupportProfileIssue(
+      `Unsupported battle Grappler Unit hook: ${input.unit.id}.`,
+    );
+  }
+  if (grapplerSupport !== null) {
+    supportProfiles.push(grapplerSupport);
   }
 
   const bardicInspirationGrantSupport =
@@ -1910,6 +1943,11 @@ export type SupportedUnitFeatureProfile =
       readonly kind: "potentCantrip";
       readonly unit: UnitRecord;
       readonly potentCantrip: PotentCantripProfile;
+    }
+  | {
+      readonly kind: "grappler";
+      readonly unit: UnitRecord;
+      readonly grappler: GrapplerProfile;
     };
 
 export type BattleAttackDamageRiderSupport =
@@ -4642,7 +4680,8 @@ export function parseSupportedUnitFeatureProfile(
     paladinSacredWeaponProfileForUnit(unit) ??
     huntersPreyProfileForUnit(unit) ??
     rogueSteadyAimProfileForUnit(unit) ??
-    potentCantripProfileForUnit(unit)
+    potentCantripProfileForUnit(unit) ??
+    grapplerProfileForUnit(unit)
   );
 }
 
@@ -5000,6 +5039,59 @@ function potentCantripProfileForUnit(
       additionalEffect: "none",
     },
   };
+}
+
+function grapplerProfileForUnit(
+  unit: UnitRecord,
+): Extract<SupportedUnitFeatureProfile, { readonly kind: "grappler" }> | null {
+  if (unit.kind !== "feat" || unit.mechanics.family !== "grappler") {
+    return null;
+  }
+  const mechanics = unit.mechanics;
+  if (
+    mechanics.punchAndGrab.trigger !==
+      "attack_action_unarmed_strike_hit_on_turn" ||
+    !sameStringSet(mechanics.punchAndGrab.options, ["damage", "grapple"]) ||
+    mechanics.punchAndGrab.usageLimit.kind !== "once_per_turn" ||
+    mechanics.attackAdvantage.mode !== "advantage" ||
+    !sameStringSet(mechanics.attackAdvantage.on, ["attack_roll"]) ||
+    mechanics.attackAdvantage.target !== "creature_grappled_by_you" ||
+    mechanics.fastWrestler.movementCost !== "no_extra_grapple_drag_cost" ||
+    mechanics.fastWrestler.targetSize !== "your_size_or_smaller"
+  ) {
+    return null;
+  }
+  return {
+    kind: GRAPPLER_SUPPORT_PROFILE,
+    unit,
+    grappler: {
+      punchAndGrab: {
+        trigger: "attackActionUnarmedStrikeHitOnTurn",
+        options: ["damage", "grapple"],
+        usageLimit: "oncePerTurn",
+      },
+      attackAdvantage: {
+        mode: "advantage",
+        target: "creatureGrappledByYou",
+      },
+      fastWrestler: {
+        movementCost: "noExtraGrappleDragCost",
+        targetSize: "yourSizeOrSmaller",
+      },
+    },
+  };
+}
+
+export function battleGrapplerSupportForUnit(
+  unit: UnitRecord,
+): BattleGrapplerSupportProfile | "unsupported" | null {
+  const profile = grapplerProfileForUnit(unit);
+  if (profile !== null) {
+    return { kind: GRAPPLER_SUPPORT_PROFILE, grappler: profile.grappler };
+  }
+  return unit.kind === "feat" && unit.mechanics.family === "grappler"
+    ? "unsupported"
+    : null;
 }
 
 export function battleBardicInspirationGrantSupportForUnit(

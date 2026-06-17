@@ -1,3 +1,6 @@
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.grappler
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3-FOLLOWUP-GRAPPLER-RUNTIME feat_grappler
+
 import {
   startBattleRight,
   testBattleCreatureStateWithConditions,
@@ -19,6 +22,9 @@ import {
   movementFill,
   castGroundHazardForMovementTest,
   grappleOutcomeFill,
+  unitFeatureDecisionFill,
+  grapplerUnitRefs,
+  rageResource,
   shoveOutcomeFill,
   damageRollFillWithGroups,
   characterSeed,
@@ -48,6 +54,7 @@ import {
   difficultyClass,
   discoverBattleActs,
   Either,
+  elapsedTimeTicks,
   endTurn,
   movementFeet,
   resolveBattleInterrupt,
@@ -65,6 +72,7 @@ import {
   grappleDragCostExempt,
   targetIsNoMoreThanOneSizeLarger,
 } from "./battle-reducer/movement-speed.ts";
+import { ongoingFeatureSourceKeyForUnit } from "./battle-reducer/creature-state.ts";
 
 describe("battle runtime: movement, Grapple, and Hide", () => {
   test("generic combat actions spend the Action and expose typed battle state", () => {
@@ -116,6 +124,226 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
       expect.objectContaining({
         actorId: fighterId,
         trigger: "attackHit",
+      }),
+    ]);
+  });
+
+  test("Grappler Attack Advantage uses the existing grapple link", () => {
+    const state = {
+      ...fighterVsGoblinBattle({
+        characterUnitRefs: grapplerUnitRefs(),
+      }),
+      grapples: [
+        {
+          grapplerId: fighterId,
+          targetId: goblinId,
+          escapeDc: difficultyClass(13),
+          reachFeet: movementFeet(5),
+          hand: "left" as const,
+        },
+      ],
+    };
+    const subject = fighterAttackSubject();
+    const target = attackInitialTargetHole(state, subject);
+    const attackRoll = attackRollHoleAfterTarget(
+      state,
+      target,
+      subject,
+      goblinId,
+    );
+
+    expect(attackRoll).toMatchObject({
+      kind: "attackRoll",
+      rollMode: "advantage",
+    });
+  });
+
+  test("Grappler Punch and Grab can add a grapple on an Attack action Unarmed Strike hit", () => {
+    const state = fighterVsGoblinBattle({
+      characterUnitRefs: grapplerUnitRefs(),
+    });
+    const subject = fighterAttackSubject("Unarmed Strike");
+    const target = attackInitialTargetHole(state, subject);
+    const attackRoll = attackRollHoleAfterTarget(
+      state,
+      target,
+      subject,
+      goblinId,
+    );
+    const decision = requireHole(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          targetFill(target, goblinId),
+          attackRollFill(attackRoll, { naturalD20: 12, total: 17 }),
+        ],
+      }),
+      "unitFeatureDecision",
+    );
+    expect(decision).toMatchObject({
+      label: "Use Punch and Grab",
+      unitFeature: {
+        unitId: "feat_grappler",
+        label: "Punch and Grab",
+      },
+      choices: ["use", "decline"],
+    });
+    const declined = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          targetFill(target, goblinId),
+          attackRollFill(attackRoll, { naturalD20: 12, total: 17 }),
+          unitFeatureDecisionFill(decision, "decline"),
+        ],
+      }),
+    );
+    expect(declined.state.grapples).toEqual([]);
+    expect(
+      declined.state.currentTurnResources.grapplerPunchAndGrabUsedThisTurn,
+    ).toEqual([]);
+    const outcome = requireHole(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          targetFill(target, goblinId),
+          attackRollFill(attackRoll, { naturalD20: 12, total: 17 }),
+          unitFeatureDecisionFill(decision, "use"),
+        ],
+      }),
+      "grappleOutcome",
+    );
+    expect(outcome).toMatchObject({
+      actorId: fighterId,
+      targetId: goblinId,
+      dc: difficultyClass(13),
+      mode: "grappleSave",
+    });
+
+    const result = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          targetFill(target, goblinId),
+          attackRollFill(attackRoll, { naturalD20: 12, total: 17 }),
+          unitFeatureDecisionFill(decision, "use"),
+          grappleOutcomeFill(outcome, false),
+        ],
+      }),
+    );
+
+    expect(result.state.grapples).toEqual([
+      expect.objectContaining({
+        grapplerId: fighterId,
+        targetId: goblinId,
+      }),
+    ]);
+    expect(
+      result.state.currentTurnResources.grapplerPunchAndGrabUsedThisTurn,
+    ).toEqual([fighterId]);
+    expect(result.snapshot.turn.actionResources).toEqual([]);
+  });
+
+  test("Grappler Punch and Grab extends enemy-saving-throw ongoing features through the Grapple lifecycle", () => {
+    const rageFeatureKey = ongoingFeatureSourceKeyForUnit("barbarian_rage");
+    const state = startBattleRight({
+      battleId: battleId("battle-grappler-punch-and-grab-save-lifecycle"),
+      combatants: [
+        characterSeed({
+          initiative: 20,
+          classLevels: [{ className: "barbarian", level: 1 }],
+          resources: [rageResource()],
+          characterUnitRefs: grapplerUnitRefs(),
+        }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const raging = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject: {
+          tag: "unitFeature",
+          actorId: fighterId,
+          unitId: "barbarian_rage",
+        },
+        fills: [],
+      }),
+    ).state;
+    const goblinTurn = requireResolved(
+      endTurn({ state: raging, actorId: fighterId }),
+    ).state;
+    const fighterRoundTwo = requireResolved(
+      endTurn({ state: goblinTurn, actorId: goblinId }),
+    ).state;
+    const beforePunch =
+      fighterRoundTwo.combatants
+        .get(fighterId)
+        ?.activeOngoingFeatureOccurrences.get(rageFeatureKey);
+    if (beforePunch?.kind !== "roundExtended") {
+      throw new Error("Expected Rage to be active before Punch and Grab.");
+    }
+    expect(Number(beforePunch.expiresAt.round)).toBe(2);
+
+    const subject = fighterAttackSubject("Unarmed Strike");
+    const target = attackInitialTargetHole(fighterRoundTwo, subject);
+    const attackRoll = attackRollHoleAfterTarget(
+      fighterRoundTwo,
+      target,
+      subject,
+      goblinId,
+    );
+    const decision = requireHole(
+      resolveBattleSubject({
+        state: fighterRoundTwo,
+        subject,
+        fills: [
+          targetFill(target, goblinId),
+          attackRollFill(attackRoll, { naturalD20: 12, total: 17 }),
+        ],
+      }),
+      "unitFeatureDecision",
+    );
+    const outcome = requireHole(
+      resolveBattleSubject({
+        state: fighterRoundTwo,
+        subject,
+        fills: [
+          targetFill(target, goblinId),
+          attackRollFill(attackRoll, { naturalD20: 12, total: 17 }),
+          unitFeatureDecisionFill(decision, "use"),
+        ],
+      }),
+      "grappleOutcome",
+    );
+    const result = requireResolved(
+      resolveBattleSubject({
+        state: fighterRoundTwo,
+        subject,
+        fills: [
+          targetFill(target, goblinId),
+          attackRollFill(attackRoll, { naturalD20: 12, total: 17 }),
+          unitFeatureDecisionFill(decision, "use"),
+          grappleOutcomeFill(outcome, false),
+        ],
+      }),
+    );
+
+    const afterPunch =
+      result.state.combatants
+        .get(fighterId)
+        ?.activeOngoingFeatureOccurrences.get(rageFeatureKey);
+    if (afterPunch?.kind !== "roundExtended") {
+      throw new Error("Expected Rage to remain active after Punch and Grab.");
+    }
+    expect(Number(afterPunch.expiresAt.round)).toBe(3);
+    expect(result.state.grapples).toEqual([
+      expect.objectContaining({
+        grapplerId: fighterId,
+        targetId: goblinId,
       }),
     ]);
   });
@@ -884,7 +1112,6 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
       expect.objectContaining({
         grapplerId: fighterId,
         targetId: goblinId,
-        targetExemptFromDragCost: false,
       }),
     ]);
   });
@@ -1199,69 +1426,213 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
     expect(escaped.state.grapples).toEqual([]);
   });
 
-  test("grapple drag movement accepts table-supplied Movement cost", () => {
-    const grappled = fighterGrapplesGoblin(fighterVsGoblinBattle());
+  test("grapple drag movement enforces extra cost unless Fast Wrestler exempts the target", () => {
     const subject: BattleSubject = {
       tag: "runtimeCommand",
       actorId: fighterId,
       command: "move",
     };
-    const hole = requireHole(
-      resolveBattleSubject({ state: grappled.state, subject, fills: [] }),
+    const grappleDrag = {
+      kind: "grappleDrag" as const,
+      totalDistanceFeet: movementFeet(10),
+      targets: [
+        {
+          targetId: goblinId,
+          distanceFeet: movementFeet(10),
+        },
+      ],
+    };
+    const grappled = fighterGrapplesGoblin(fighterVsGoblinBattle()).state;
+    const normalHole = requireHole(
+      resolveBattleSubject({ state: grappled, subject, fills: [] }),
       "movement",
     );
 
     expect(
       resolveBattleSubject({
-        state: grappled.state,
+        state: grappled,
         subject,
         fills: [
-          movementFill(hole, {
-            movementCostFeet: 1,
-            provokedOpportunityAttacks: [],
-          }),
-        ],
-      }),
-    ).toMatchObject({ tag: "resolved" });
-
-    expect(
-      resolveBattleSubject({
-        state: grappled.state,
-        subject,
-        fills: [
-          movementFill(hole, {
-            movementCostFeet: 2,
-            provokedOpportunityAttacks: [],
-          }),
-        ],
-      }),
-    ).toMatchObject({ tag: "resolved" });
-
-    expect(
-      resolveBattleSubject({
-        state: grappled.state,
-        subject,
-        fills: [
-          movementFill(hole, {
-            movementCostFeet: 5,
-            provokedOpportunityAttacks: [],
-          }),
-        ],
-      }),
-    ).toMatchObject({ tag: "resolved" });
-
-    expect(
-      resolveBattleSubject({
-        state: grappled.state,
-        subject,
-        fills: [
-          movementFill(hole, {
+          movementFill(normalHole, {
             movementCostFeet: 10,
             provokedOpportunityAttacks: [],
+            grappleDrag,
           }),
         ],
       }),
-    ).toMatchObject({ tag: "resolved" });
+    ).toMatchObject({
+      tag: "invalid",
+      message:
+        "Grapple drag movement must spend total distance plus 1 extra foot for every foot a non-exempt Grappled target is dragged.",
+    });
+
+    const normalMoved = requireResolved(
+      resolveBattleSubject({
+        state: grappled,
+        subject,
+        fills: [
+          movementFill(normalHole, {
+            movementCostFeet: 20,
+            provokedOpportunityAttacks: [],
+            grappleDrag,
+          }),
+        ],
+      }),
+    ).state;
+
+    expect(normalMoved.combatants.get(fighterId)).toMatchObject({
+      movementSpentFeet: movementFeet(20),
+    });
+
+    const grapplerGrappled = fighterGrapplesGoblin(
+      fighterVsGoblinBattle({
+        characterUnitRefs: grapplerUnitRefs(),
+      }),
+    ).state;
+    const grapplerHole = requireHole(
+      resolveBattleSubject({
+        state: grapplerGrappled,
+        subject,
+        fills: [],
+      }),
+      "movement",
+    );
+    const grapplerMoved = requireResolved(
+      resolveBattleSubject({
+        state: grapplerGrappled,
+        subject,
+        fills: [
+          movementFill(grapplerHole, {
+            movementCostFeet: 10,
+            provokedOpportunityAttacks: [],
+            grappleDrag,
+          }),
+        ],
+      }),
+    ).state;
+
+    expect(grapplerMoved.combatants.get(fighterId)).toMatchObject({
+      movementSpentFeet: movementFeet(10),
+    });
+  });
+
+  test("Fast Wrestler drag cost uses current target size after size changes", () => {
+    const state = startBattleRight({
+      battleId: battleId("battle-grappler-fast-wrestler-current-size"),
+      combatants: [
+        characterSeed({
+          initiative: 20,
+          characterUnitRefs: grapplerUnitRefs(),
+        }),
+        skeletonCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const grappleSubject: BattleSubject = {
+      tag: "action",
+      actorId: fighterId,
+      action: "grapple",
+    };
+    const target = requireHole(
+      resolveBattleSubject({ state, subject: grappleSubject, fills: [] }),
+      "targetChoice",
+    );
+    const outcome = requireHole(
+      resolveBattleSubject({
+        state,
+        subject: grappleSubject,
+        fills: [targetFill(target, skeletonId)],
+      }),
+      "grappleOutcome",
+    );
+    const grappled = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject: grappleSubject,
+        fills: [
+          targetFill(target, skeletonId),
+          grappleOutcomeFill(outcome, false),
+        ],
+      }),
+    ).state;
+    const skeleton = grappled.combatants.get(skeletonId);
+    if (skeleton === undefined) {
+      throw new Error("Expected skeleton target.");
+    }
+    const enlarged = {
+      ...grappled,
+      combatants: new Map(grappled.combatants).set(skeletonId, {
+        ...skeleton,
+        activeEffects: [
+          ...skeleton.activeEffects,
+          {
+            kind: "spellCreatureSizeChange" as const,
+            sourceSpellId: spellRecord("enlarge_reduce").id,
+            sourceCombatantId: fighterId,
+            direction: "increase" as const,
+            expiresAt: {
+              kind: "concentration" as const,
+              combatantId: fighterId,
+              durationTicks: elapsedTimeTicks(60),
+            },
+          },
+        ],
+      }),
+    };
+    const moveSubject: BattleSubject = {
+      tag: "runtimeCommand",
+      actorId: fighterId,
+      command: "move",
+    };
+    const moveHole = requireHole(
+      resolveBattleSubject({ state: enlarged, subject: moveSubject, fills: [] }),
+      "movement",
+    );
+    const grappleDrag = {
+      kind: "grappleDrag" as const,
+      totalDistanceFeet: movementFeet(10),
+      targets: [
+        {
+          targetId: skeletonId,
+          distanceFeet: movementFeet(10),
+        },
+      ],
+    };
+
+    expect(
+      resolveBattleSubject({
+        state: enlarged,
+        subject: moveSubject,
+        fills: [
+          movementFill(moveHole, {
+            movementCostFeet: 10,
+            provokedOpportunityAttacks: [],
+            grappleDrag,
+          }),
+        ],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      message:
+        "Grapple drag movement must spend total distance plus 1 extra foot for every foot a non-exempt Grappled target is dragged.",
+    });
+
+    const moved = requireResolved(
+      resolveBattleSubject({
+        state: enlarged,
+        subject: moveSubject,
+        fills: [
+          movementFill(moveHole, {
+            movementCostFeet: 20,
+            provokedOpportunityAttacks: [],
+            grappleDrag,
+          }),
+        ],
+      }),
+    ).state;
+
+    expect(moved.combatants.get(fighterId)).toMatchObject({
+      movementSpentFeet: movementFeet(20),
+    });
   });
 
   test("Grappled attack rolls have disadvantage against targets other than the grappler", () => {

@@ -4,7 +4,7 @@
 // KERNEL-COVERAGE: runtime-owner CREATION.CLASS_FEATURE_RESOURCE.PROJECTION
 // KERNEL-COVERAGE: runtime-owner SHEET.HIT_POINTS.MAXIMUM_DERIVATION
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.class-feature-prepared-spell-access
-// UNIT-PROFILE-COVERAGE: runtime-owner character-creation.wizard-spellbook-learning-choice character-creation.origin-feat-proficiency-choice character-creation.species-trait-proficiency-choice character-creation.species-origin-feat-choice character-creation.species-origin-feat-proficiency-choice
+// UNIT-PROFILE-COVERAGE: runtime-owner character-creation.grappler-general-feat character-creation.wizard-spellbook-learning-choice character-creation.origin-feat-proficiency-choice character-creation.species-trait-proficiency-choice character-creation.species-origin-feat-choice character-creation.species-origin-feat-proficiency-choice
 // UNIT-PROFILE-COVERAGE: runtime-owner character-creation.hit-point-maximum-projection unit-feature.hunters-prey
 import { Either, Match, Option } from "effect";
 import { isValidAbilityScoreAssignment } from "@dnd/shared-algebras/ability-score-algebra";
@@ -45,6 +45,7 @@ import { type CharacterProgression } from "./character-progression-algebra.ts";
 import {
   classUnitId,
   classLevelForUnit,
+  computeTotalLevel,
   progressionClassUnitIds,
   progressionClassLevels,
   startingClassUnitId,
@@ -408,6 +409,10 @@ export function executableSupportIssues(
       "Finalized build must carry exactly the supported choices for the selected progression.",
     ),
     ...expectedValueIssue(
+      selectedFeatPrerequisitesSupported(selections, unitLibrary),
+      "Selected Grappler feat requires Level 4+ and Strength or Dexterity 13 before applying its feat Ability Score Increase.",
+    ),
+    ...expectedValueIssue(
       spellcastingFactsAuthoredForSelectedClassLevels(selections, unitLibrary),
       "Finalized build must have authored spellcasting facts for the selected class levels.",
     ),
@@ -424,6 +429,44 @@ export function executableSupportIssues(
       "Finalized build must own supported purchased equipment.",
     ),
   ];
+}
+
+function selectedFeatPrerequisitesSupported(
+  selections: FinalizedCharacterSelections,
+  unitLibrary: UnitCatalog,
+): boolean {
+  const backgroundUnit = unitLibrary.getUnit(selections.background);
+  if (Option.isNone(backgroundUnit)) return false;
+  const backgroundFacts = readBackgroundCreationFacts(backgroundUnit.value);
+  if (backgroundFacts.tag !== "readable") return false;
+  const scoresAfterBackground = applyBackgroundAbilityScoreIncrease(
+    selections.abilityScoreGeneration.assignedScores,
+    selections.backgroundAbilityScoreIncrease,
+    backgroundFacts.value.abilityScoreIncrease.abilities,
+  );
+  if (Either.isLeft(scoresAfterBackground)) return false;
+  return unitChoiceSelections(selections).every((selection) => {
+    if (selection.source.choiceKey !== CLASS_FEATURE_FEAT_CHOICE_KEY) {
+      return true;
+    }
+    return selection.options.every((option) => {
+      const featUnitId = option.unitRef?.unitId;
+      if (featUnitId === undefined) return true;
+      const featUnit = unitLibrary.getUnit(featUnitId);
+      if (Option.isNone(featUnit)) return false;
+      if (
+        featUnit.value.kind !== "feat" ||
+        featUnit.value.mechanics.family !== "grappler"
+      ) {
+        return true;
+      }
+      return (
+        computeTotalLevel(selections.progression) >= 4 &&
+        (Number(scoresAfterBackground.right.str) >= 13 ||
+          Number(scoresAfterBackground.right.dex) >= 13)
+      );
+    });
+  });
 }
 
 function spellcastingFactsAuthoredForSelectedClassLevels(

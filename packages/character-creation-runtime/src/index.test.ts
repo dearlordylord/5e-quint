@@ -127,6 +127,7 @@ import {
 } from "./support-gates.ts";
 import {
   CLASS_CANTRIP_CHOICE_KEY,
+  CLASS_FEATURE_ABILITY_SCORE_INCREASE_CHOICE_KEY,
   CLASS_FEATURE_FEAT_CHOICE_KEY,
   CLASS_FEATURE_LANGUAGE_CHOICE_KEY,
   CLASS_FEATURE_PROFICIENCY_CHOICE_KEY,
@@ -172,8 +173,10 @@ const SRD_SORCERY_POINTS_POOL_ID = "sorcery_points";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-creation.class-feature-source-fact-projection
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-creation.hit-point-maximum-projection
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-creation.origin-feat-proficiency-choice
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-creation.grappler-general-feat
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-creation.species-trait-proficiency-choice character-creation.species-origin-feat-choice character-creation.species-origin-feat-proficiency-choice
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.hunters-prey
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3-FOLLOWUP-GRAPPLER-RUNTIME feat_grappler
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L13UG-A15 barbarian_primal_knowledge sorcerer_draconic_resilience
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection AT-L1-03 fighter_fighting_style
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE warlock_eldritch_invocations
@@ -4441,6 +4444,8 @@ describe("character creation finalization", () => {
       "thunderwave",
       "chromatic_orb",
       "acid_arrow",
+      "continual_flame",
+      "darkness",
       "misty_step",
     ] as const;
     const preparedSpellIds = [
@@ -6217,6 +6222,204 @@ describe("character creation finalization", () => {
     } finally {
       profile.supportedProgressions = originalProgressions;
     }
+  });
+
+  const grapplerWizardAsiUnitId = "wizard_ability_score_improvement_l4";
+  const grapplerWizardSpellbookSpellIds = [
+    "detect_magic",
+    "feather_fall",
+    "mage_armor",
+    "magic_missile",
+    "shield",
+    "sleep",
+    "thunderwave",
+    "chromatic_orb",
+    "acid_arrow",
+    "continual_flame",
+    "darkness",
+    "misty_step",
+  ] as const;
+  const grapplerWizardLevel3PreparedSpellIds = [
+    "detect_magic",
+    "feather_fall",
+    "mage_armor",
+    "magic_missile",
+    "shield",
+    "acid_arrow",
+  ] as const;
+  const grapplerWizardPreparedSpellIds = [
+    ...grapplerWizardLevel3PreparedSpellIds,
+    "sleep",
+  ] as const;
+
+  test("projects selected Grappler feat choices with its Strength or Dexterity ASI", () => {
+    const draft = completeSupportedProgressionDraft({
+      draftId: "draft:wizard-grappler",
+      progression: testProgression("class_wizard", 4),
+      preferredOptionIdsBySource: {
+        [testUnitChoiceSourceKey("class_wizard", WIZARD_SPELLBOOK_CHOICE_KEY)]:
+          grapplerWizardSpellbookSpellIds.map(creationChoiceOptionId),
+        [testUnitChoiceSourceKey(
+          "class_wizard",
+          WIZARD_PREPARED_SPELL_CHOICE_KEY,
+        )]: grapplerWizardPreparedSpellIds.map(creationChoiceOptionId),
+        [testUnitChoiceSourceKey(
+          grapplerWizardAsiUnitId,
+          CLASS_FEATURE_FEAT_CHOICE_KEY,
+        )]: [creationChoiceOptionId("feat_grappler")],
+        [testUnitChoiceSourceKey(
+          grapplerWizardAsiUnitId,
+          CLASS_FEATURE_ABILITY_SCORE_INCREASE_CHOICE_KEY,
+        )]: [creationChoiceOptionId("ability_score:dex:+1:max20")],
+      },
+    });
+
+    const result = finalizeCharacterDraft({ draft, unitLibrary });
+
+    expect(result).toMatchObject({
+      tag: "ready",
+      build: {
+        abilityScores: {
+          dex: 15,
+        },
+        features: expect.arrayContaining([
+          {
+            kind: "selectedClassChoice",
+            selectedFromUnitId: grapplerWizardAsiUnitId,
+            unitId: "feat_grappler",
+          },
+        ]),
+      },
+    });
+
+    const draftWithoutGrapplerAsi: CharacterDraft = {
+      ...draft,
+      selections: {
+        ...draft.selections,
+        choices: withoutUnitChoiceSelection(
+          draft.selections.choices,
+          grapplerWizardAsiUnitId,
+          CLASS_FEATURE_ABILITY_SCORE_INCREASE_CHOICE_KEY,
+        ),
+      },
+    };
+    expect(
+      optionIds(
+        holeById(
+          discoverCreationHoles({
+            draft: draftWithoutGrapplerAsi,
+            unitLibrary,
+          }),
+          testUnitHoleId(
+            grapplerWizardAsiUnitId,
+            CLASS_FEATURE_ABILITY_SCORE_INCREASE_CHOICE_KEY,
+          ),
+        ),
+      ),
+    ).toEqual([
+      "ability_score:str:+1:max20",
+      "ability_score:dex:+1:max20",
+    ]);
+  });
+
+  test("rejects selected Grappler below Level 4", () => {
+    const levelThreeDraft = completeSupportedProgressionDraft({
+      draftId: "draft:wizard-grappler-low-level",
+      progression: testProgression("class_wizard", 3),
+      preferredOptionIdsBySource: {
+        [testUnitChoiceSourceKey("class_wizard", WIZARD_SPELLBOOK_CHOICE_KEY)]:
+          grapplerWizardSpellbookSpellIds.map(creationChoiceOptionId),
+        [testUnitChoiceSourceKey(
+          "class_wizard",
+          WIZARD_PREPARED_SPELL_CHOICE_KEY,
+        )]: grapplerWizardLevel3PreparedSpellIds.map(creationChoiceOptionId),
+      },
+    });
+    const draft: CharacterDraft = {
+      ...levelThreeDraft,
+      selections: {
+        ...levelThreeDraft.selections,
+        choices: [
+          ...levelThreeDraft.selections.choices,
+          selectedUnitChoice(
+            grapplerWizardAsiUnitId,
+            CLASS_FEATURE_FEAT_CHOICE_KEY,
+            "feat_grappler",
+          ),
+          selectedChoice(
+            grapplerWizardAsiUnitId,
+            CLASS_FEATURE_ABILITY_SCORE_INCREASE_CHOICE_KEY,
+            "ability_score:dex:+1:max20",
+          ),
+        ],
+      },
+    };
+
+    const result = finalizeCharacterDraft({ draft, unitLibrary });
+
+    expect(result).toMatchObject({
+      tag: "invalid",
+      issues: expect.arrayContaining([
+        expect.objectContaining({
+          tag: "unsupportedFinalization",
+          message:
+            "Selected Grappler feat requires Level 4+ and Strength or Dexterity 13 before applying its feat Ability Score Increase.",
+        }),
+      ]),
+    });
+  });
+
+  test("rejects selected Grappler when Strength and Dexterity prerequisites are not met", () => {
+    const legalDraft = completeSupportedProgressionDraft({
+      draftId: "draft:wizard-grappler-low-ability",
+      progression: testProgression("class_wizard", 4),
+      preferredOptionIdsBySource: {
+        [testUnitChoiceSourceKey("class_wizard", WIZARD_SPELLBOOK_CHOICE_KEY)]:
+          grapplerWizardSpellbookSpellIds.map(creationChoiceOptionId),
+        [testUnitChoiceSourceKey(
+          "class_wizard",
+          WIZARD_PREPARED_SPELL_CHOICE_KEY,
+        )]: grapplerWizardPreparedSpellIds.map(creationChoiceOptionId),
+        [testUnitChoiceSourceKey(
+          grapplerWizardAsiUnitId,
+          CLASS_FEATURE_FEAT_CHOICE_KEY,
+        )]: [creationChoiceOptionId("feat_grappler")],
+        [testUnitChoiceSourceKey(
+          grapplerWizardAsiUnitId,
+          CLASS_FEATURE_ABILITY_SCORE_INCREASE_CHOICE_KEY,
+        )]: [creationChoiceOptionId("ability_score:dex:+1:max20")],
+      },
+    });
+    const draft: CharacterDraft = {
+      ...legalDraft,
+      selections: {
+        ...legalDraft.selections,
+        abilityScoreGeneration: {
+          method: "standardArray",
+          assignedScores: testAbilityScoreAssignment({
+            str: 8,
+            dex: 10,
+            con: 13,
+            int: 15,
+            wis: 14,
+            cha: 12,
+          }),
+        },
+      },
+    };
+
+    const result = finalizeCharacterDraft({ draft, unitLibrary });
+
+    expect(result).toMatchObject({
+      tag: "invalid",
+      issues: expect.arrayContaining([
+        expect.objectContaining({
+          tag: "unsupportedFinalization",
+          message:
+            "Selected Grappler feat requires Level 4+ and Strength or Dexterity 13 before applying its feat Ability Score Increase.",
+        }),
+      ]),
+    });
   });
 
   test("represents two-score Ability Score Improvement choices as unordered pairs", () => {

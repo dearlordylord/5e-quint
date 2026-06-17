@@ -143,6 +143,7 @@ import {
   combatantCanMoveWithBudget,
   effectiveMovementSpeed,
   effectiveWalkSpeed,
+  grappleTargetExemptFromDragCost,
   opportunityAttackThreatsForMovement,
   representedMovementSpeedKinds,
 } from "./movement-speed.ts";
@@ -233,6 +234,7 @@ import type {
   BattleMoonbeamSavingThrowOutcomeHole,
   BattleMovableZoneRepositionMovementHole,
   BattleGrappleLink,
+  BattleGrappleDragMovementFact,
   BattleGreaseGroundHazardSavingThrowOutcomeHole,
   BattleSpikeGrowthMovementDamageRollHole,
   BattleWebRestraintSavingThrowOutcomeHole,
@@ -5035,6 +5037,7 @@ export function resetBattleTurnResources(
     huntersPreyHordeBreakerUsedThisTurn: [],
     recklessAttackWhileRagingUsedThisTurn: [],
     weaponDamageDiceRollChoicesUsedThisTurn: [],
+    grapplerPunchAndGrabUsedThisTurn: [],
     dashMovementBonusFeet: movementFeet(0),
     disengaged: false,
   };
@@ -6314,14 +6317,15 @@ export function parseBattleMovement(
       message: "Movement cost must be a positive integer.",
     };
   }
-  const areaMovementCostValidation = validateAreaMovementCostFacts(
+  const movementCostFactValidation = validateMovementCostFacts(
     state,
+    moverId,
     fill.value,
   );
-  if (areaMovementCostValidation !== null) {
+  if (movementCostFactValidation !== null) {
     return {
       tag: "invalid",
-      message: areaMovementCostValidation,
+      message: movementCostFactValidation,
     };
   }
   const areaExtraCostFeet = areaMovementExtraCostFeet(state, fill.value);
@@ -6438,6 +6442,9 @@ export function parseBattleMovement(
       ...(fill.value.areaDifficultTerrain === undefined
         ? {}
         : { areaDifficultTerrain: fill.value.areaDifficultTerrain }),
+      ...(fill.value.grappleDrag === undefined
+        ? {}
+        : { grappleDrag: fill.value.grappleDrag }),
       ...(fill.value.jumpMovementReplacement === undefined
         ? {}
         : { jumpMovementReplacement: fill.value.jumpMovementReplacement }),
@@ -7062,8 +7069,9 @@ type AreaMovementCostFactResult =
       readonly extraCostFeet: MovementFeet;
     };
 
-function validateAreaMovementCostFacts(
+function validateMovementCostFacts(
   state: BattleState,
+  moverId: CombatantId,
   value: BattleMovementFillValue,
 ): string | null {
   const difficultTerrain = validateAreaDifficultTerrainMovementFact(
@@ -7080,6 +7088,14 @@ function validateAreaMovementCostFacts(
   if (gust.tag === "invalid") {
     return gust.message;
   }
+  const grappleDrag = validateGrappleDragMovementFact(
+    state,
+    moverId,
+    value.grappleDrag,
+  );
+  if (grappleDrag.tag === "invalid") {
+    return grappleDrag.message;
+  }
   const areaCosts = [difficultTerrain, gust].filter(
     (
       result,
@@ -7087,14 +7103,29 @@ function validateAreaMovementCostFacts(
       result.tag === "ok",
   );
   if (areaCosts.length === 0) {
-    return null;
+    if (grappleDrag.tag !== "ok") {
+      return null;
+    }
+  }
+  if (grappleDrag.tag === "ok" && value.jumpMovementReplacement !== undefined) {
+    return "Grapple drag movement facts cannot be combined with Jump movement replacement.";
+  }
+  if (
+    grappleDrag.tag === "ok" &&
+    value.levitatedMovement?.altitudeChange !== undefined
+  ) {
+    return "Grapple drag movement facts cannot be combined with Levitate altitude-change movement.";
   }
   const firstAreaCost = areaCosts[0];
-  if (firstAreaCost === undefined) {
+  const allCosts =
+    grappleDrag.tag === "ok" ? [...areaCosts, grappleDrag] : areaCosts;
+  const firstCost = allCosts[0];
+  if (firstCost === undefined) {
     return null;
   }
   const remainingAreaCosts = areaCosts.slice(1);
   if (
+    firstAreaCost !== undefined &&
     remainingAreaCosts.some(
       (areaCost) =>
         Number(areaCost.totalDistanceFeet) !==
@@ -7104,20 +7135,34 @@ function validateAreaMovementCostFacts(
     return "Area movement-cost facts must agree on total Movement distance.";
   }
   if (
+    allCosts.slice(1).some(
+      (cost) =>
+        Number(cost.totalDistanceFeet) !== Number(firstCost.totalDistanceFeet),
+    )
+  ) {
+    return "Movement-cost facts must agree on total Movement distance.";
+  }
+  if (
     value.jumpMovementReplacement !== undefined ||
     value.levitatedMovement?.altitudeChange !== undefined
   ) {
     return null;
   }
   const expectedCostFeet = movementFeet(
-    Number(firstAreaCost.totalDistanceFeet) +
-      areaCosts.reduce(
-        (total, areaCost) => total + Number(areaCost.extraCostFeet),
+    Number(firstCost.totalDistanceFeet) +
+      allCosts.reduce(
+        (total, cost) => total + Number(cost.extraCostFeet),
         0,
       ),
   );
   if (Number(value.movementCostFeet) === Number(expectedCostFeet)) {
     return null;
+  }
+  if (grappleDrag.tag === "ok" && areaCosts.length > 0) {
+    return "Combined movement-cost facts must spend total distance plus all area and non-exempt grapple drag extra movement costs.";
+  }
+  if (grappleDrag.tag === "ok") {
+    return "Grapple drag movement must spend total distance plus 1 extra foot for every foot a non-exempt Grappled target is dragged.";
   }
   if (difficultTerrain.tag === "ok" && gust.tag === "ok") {
     return "Combined area Difficult Terrain and Gust of Wind movement must spend total distance plus 1 extra foot for every foot moved through Difficult Terrain and 1 extra foot for every foot moved closer to the caster through the Line.";
@@ -7125,6 +7170,102 @@ function validateAreaMovementCostFacts(
   return difficultTerrain.tag === "ok"
     ? "Area Difficult Terrain movement must spend total distance plus 1 extra foot for every foot moved through Difficult Terrain."
     : "Gust of Wind Line movement must spend total distance plus 1 extra foot for every foot moved closer to the caster through the Line.";
+}
+
+type GrappleDragMovementCostFactResult =
+  | { readonly tag: "notApplicable" }
+  | { readonly tag: "invalid"; readonly message: string }
+  | {
+      readonly tag: "ok";
+      readonly totalDistanceFeet: MovementFeet;
+      readonly extraCostFeet: MovementFeet;
+    };
+
+function validateGrappleDragMovementFact(
+  state: BattleState,
+  moverId: CombatantId,
+  fact: BattleGrappleDragMovementFact | undefined,
+): GrappleDragMovementCostFactResult {
+  if (fact === undefined) {
+    return { tag: "notApplicable" };
+  }
+  if (fact.kind !== "grappleDrag") {
+    return {
+      tag: "invalid",
+      message: "Grapple drag movement fact has the wrong kind.",
+    };
+  }
+  if (
+    !Number.isInteger(fact.totalDistanceFeet) ||
+    fact.totalDistanceFeet <= 0
+  ) {
+    return {
+      tag: "invalid",
+      message: "Grapple drag total distance must be a positive integer.",
+    };
+  }
+  if (fact.targets.length === 0) {
+    return {
+      tag: "invalid",
+      message: "Grapple drag movement fact requires a target.",
+    };
+  }
+  const seenTargets = new Set<CombatantId>();
+  let extraCostFeet = 0;
+  for (const target of fact.targets) {
+    if (
+      !Number.isInteger(target.distanceFeet) ||
+      target.distanceFeet <= 0
+    ) {
+      return {
+        tag: "invalid",
+        message: "Grapple drag target distance must be a positive integer.",
+      };
+    }
+    if (Number(target.distanceFeet) > Number(fact.totalDistanceFeet)) {
+      return {
+        tag: "invalid",
+        message:
+          "Grapple drag target distance cannot exceed total Movement distance.",
+      };
+    }
+    if (seenTargets.has(target.targetId)) {
+      return {
+        tag: "invalid",
+        message: "Grapple drag movement fact repeats a target.",
+      };
+    }
+    seenTargets.add(target.targetId);
+    const link = state.grapples.find(
+      (candidate) =>
+        candidate.grapplerId === moverId &&
+        candidate.targetId === target.targetId,
+    );
+    if (link === undefined) {
+      return {
+        tag: "invalid",
+        message:
+          "Grapple drag movement fact must reference a creature Grappled by the mover.",
+      };
+    }
+    const grappler = state.combatants.get(link.grapplerId);
+    const draggedTarget = state.combatants.get(link.targetId);
+    if (grappler === undefined || draggedTarget === undefined) {
+      return {
+        tag: "invalid",
+        message:
+          "Grapple drag movement fact references a stale Grapple link.",
+      };
+    }
+    if (!grappleTargetExemptFromDragCost(grappler, draggedTarget)) {
+      extraCostFeet += Number(target.distanceFeet);
+    }
+  }
+  return {
+    tag: "ok",
+    totalDistanceFeet: fact.totalDistanceFeet,
+    extraCostFeet: movementFeet(extraCostFeet),
+  };
 }
 
 function areaMovementExtraCostFeet(

@@ -6,7 +6,7 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.PROTOCOL.CONCENTRATION_BREAK_TEARDOWN
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.MIRROR_IMAGE_HIT_INTERCEPTION
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.hunters-prey unit-feature.open-hand-technique unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.remarkable-athlete unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.grappler unit-feature.hunters-prey unit-feature.open-hand-technique unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.remarkable-athlete unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
 
 import { currentArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
@@ -90,6 +90,7 @@ import {
 
 import {
   attackTargetHole,
+  grappleOutcomeHole,
   needsHolesResult,
   revealHidden,
 } from "./hole-helpers.ts";
@@ -99,10 +100,13 @@ import {
   attackHitTriggerKind,
   attackKindForDeflectRedirect,
   attackTargetIsLegal,
+  grappleLinkForTarget,
 } from "./movement-speed.ts";
 
 import { attackFillSet } from "./attack-fill-set.ts";
 import {
+  GRAPPLER_PUNCH_AND_GRAB_DECISION_HOLE_ID,
+  GRAPPLER_PUNCH_AND_GRAB_DECISION_HOLE_INSTANCE,
   WEAPON_MASTERY_CLEAVE_DECISION_HOLE_ID,
   WEAPON_MASTERY_CLEAVE_DAMAGE_DISPOSITION_HOLE_ID,
   WEAPON_MASTERY_CLEAVE_DAMAGE_DISPOSITION_HOLE_INSTANCE,
@@ -120,9 +124,11 @@ import { mirrorImageHitInterceptionCheck } from "./mirror-image-hit-interception
 import { resolveOpenHandTechniqueAfterHit } from "./open-hand-technique.ts";
 import { resolveRemarkableAthleteCriticalHitMovement } from "./remarkable-athlete-critical-movement.ts";
 import { HUNTERS_PREY_SUPPORT_PROFILE } from "../unit-feature-support.ts";
+import { grapplerSupportProfileRefForCombatant } from "./grappler-support-profile.ts";
 
 import {
   attackCanCarryKnockOutChoice,
+  attackActionOptionName,
   attackPotentialDamageTypes,
   eligibleAttackDamageRiders,
   eligibleWeaponDamageDiceRollChoiceUnitIds,
@@ -131,6 +137,7 @@ import {
   selectedAttackRollMissToHitReplacement,
   selectedWeaponDamageDiceRollChoice,
 } from "./statblock-attacks.ts";
+import { currentActorId } from "./creature-state-leaves.ts";
 
 import {
   ATTACK_ROLL_HOLE_ID,
@@ -146,10 +153,13 @@ import type {
   BattleAttackDamagePrefixFill,
   BattleCreatureState,
   BattleFill,
+  BattleGrappleLink,
   BattleInterruptedProcedure,
   BattleResolutionResult,
   BattleShovePushOutcome,
   BattleState,
+  BattleTargetSpatialFact,
+  BattleUnitFeatureDecisionHole,
   AttackFillSet,
 } from "../battle-reducer.ts";
 import type { SupportedAttackActionOption } from "../battle-action-options.ts";
@@ -157,6 +167,7 @@ import type { CombatantId } from "../identity.ts";
 import {
   attackRollHitsWithCriticalThreshold,
   attackRollIsCriticalHit,
+  applyGrappleSavingThrowOutcome,
   criticalThresholdForAttack,
   needsAttackDamageConcentrationResult,
   spendAttackAction,
@@ -202,6 +213,220 @@ function attackProcedureAttackerId(
   return subject.tag === "pactOfTheChainFamiliarAttack"
     ? subject.familiarId
     : subject.actorId;
+}
+
+type GrapplerPunchAndGrabEligibility = {
+  readonly link: BattleGrappleLink;
+  readonly unitFeature: BattleUnitFeatureDecisionHole["unitFeature"];
+};
+
+function grapplerPunchAndGrabEligibilityForHit(input: {
+  readonly state: BattleState;
+  readonly subject: BattleAttackHostSubject;
+  readonly attackerId: CombatantId;
+  readonly targetId: CombatantId;
+  readonly attack: SupportedAttackActionOption;
+  readonly targetSpatialFacts: readonly BattleTargetSpatialFact[];
+}): GrapplerPunchAndGrabEligibility | null {
+  const attacker = input.state.combatants.get(input.attackerId);
+  const unitFeature = grapplerPunchAndGrabUnitFeature(attacker);
+  if (
+    input.subject.tag !== "action" ||
+    input.subject.action !== "attack" ||
+    currentActorId(input.state) !== input.attackerId ||
+    input.attack.kind !== "unarmedStrike" ||
+    unitFeature === null ||
+    input.state.currentTurnResources.grapplerPunchAndGrabUsedThisTurn.includes(
+      input.attackerId,
+    )
+  ) {
+    return null;
+  }
+  const link = grappleLinkForTarget(
+    input.state,
+    input.attackerId,
+    input.targetId,
+    grappleFactsForUnarmedStrikeHit(input),
+  );
+  return link.tag === "ok" ? { link: link.link, unitFeature } : null;
+}
+
+function grapplerPunchAndGrabUnitFeature(
+  attacker: BattleCreatureState | undefined,
+): BattleUnitFeatureDecisionHole["unitFeature"] | null {
+  const support = grapplerSupportProfileRefForCombatant(attacker);
+  return support === null
+    ? null
+    : {
+        unitId: support.unitRef.unitId,
+        label: "Punch and Grab",
+      };
+}
+
+function grapplerPunchAndGrabDecisionHole(
+  eligibility: GrapplerPunchAndGrabEligibility,
+): BattleUnitFeatureDecisionHole {
+  return {
+    kind: "unitFeatureDecision",
+    holeId: GRAPPLER_PUNCH_AND_GRAB_DECISION_HOLE_ID,
+    holeInstanceKey: GRAPPLER_PUNCH_AND_GRAB_DECISION_HOLE_INSTANCE,
+    label: "Use Punch and Grab",
+    unitFeature: eligibility.unitFeature,
+    choices: ["use", "decline"],
+  };
+}
+
+function grappleFactsForUnarmedStrikeHit(input: {
+  readonly attackerId: CombatantId;
+  readonly targetId: CombatantId;
+  readonly attack: SupportedAttackActionOption;
+  readonly targetSpatialFacts: readonly BattleTargetSpatialFact[];
+}): readonly BattleTargetSpatialFact[] {
+  if (
+    input.targetSpatialFacts.some(
+      (fact) =>
+        fact.kind === "grappleTargetWithinReach" &&
+        fact.grapplerId === input.attackerId &&
+        fact.targetId === input.targetId,
+    )
+  ) {
+    return input.targetSpatialFacts;
+  }
+  const attackName = attackActionOptionName(input.attack);
+  return input.targetSpatialFacts.some(
+    (fact) =>
+      fact.kind === "attackTargetInMeleeReach" &&
+      fact.actorId === input.attackerId &&
+      fact.targetId === input.targetId &&
+      fact.attackName === attackName,
+  )
+    ? [
+        ...input.targetSpatialFacts,
+        {
+          kind: "grappleTargetWithinReach" as const,
+          grapplerId: input.attackerId,
+          targetId: input.targetId,
+        },
+      ]
+    : input.targetSpatialFacts;
+}
+
+function resolveGrapplerPunchAndGrabAfterHit(input: {
+  readonly state: BattleState;
+  readonly subject: BattleAttackHostSubject;
+  readonly attackerId: CombatantId;
+  readonly targetId: CombatantId;
+  readonly attack: SupportedAttackActionOption;
+  readonly fillSet: Extract<AttackFillSet, { readonly tag: "ok" }>;
+}):
+  | { readonly tag: "ok"; readonly state: BattleState }
+  | { readonly tag: "result"; readonly result: BattleResolutionResult } {
+  const eligibility = grapplerPunchAndGrabEligibilityForHit({
+    state: input.state,
+    subject: input.subject,
+    attackerId: input.attackerId,
+    targetId: input.targetId,
+    attack: input.attack,
+    targetSpatialFacts: input.fillSet.targetSpatialFacts,
+  });
+  if (eligibility === null) {
+    return grapplerPunchAndGrabFillIsAbsent(input.fillSet)
+      ? { tag: "ok", state: input.state }
+      : {
+          tag: "result",
+          result: invalidResult(
+            input.state,
+            "invalidFill",
+            "Grappler Punch and Grab is only valid after an eligible Unarmed Strike hit.",
+          ),
+        };
+  }
+  const decisionHole = grapplerPunchAndGrabDecisionHole(eligibility);
+  if (input.fillSet.grapplerPunchAndGrabDecision === undefined) {
+    if (input.fillSet.grapplerPunchAndGrabOutcome !== undefined) {
+      return {
+        tag: "result",
+        result: invalidResult(
+          input.state,
+          "invalidFill",
+          "Grappler Punch and Grab outcome requires choosing to use Punch and Grab.",
+        ),
+      };
+    }
+    return {
+      tag: "result",
+      result: needsHolesResult(input.state, input.subject, [decisionHole]),
+    };
+  }
+  if (
+    input.fillSet.grapplerPunchAndGrabDecision.holeId !== decisionHole.holeId
+  ) {
+    return {
+      tag: "result",
+      result: invalidResult(
+        input.state,
+        "invalidFill",
+        "Grappler Punch and Grab decision uses the wrong hole.",
+      ),
+    };
+  }
+  if (input.fillSet.grapplerPunchAndGrabDecision.value === "decline") {
+    return input.fillSet.grapplerPunchAndGrabOutcome === undefined
+      ? { tag: "ok", state: input.state }
+      : {
+          tag: "result",
+          result: invalidResult(
+            input.state,
+            "invalidFill",
+            "Grappler Punch and Grab outcome requires using Punch and Grab.",
+          ),
+        };
+  }
+  if (input.fillSet.grapplerPunchAndGrabDecision.value !== "use") {
+    return {
+      tag: "result",
+      result: invalidResult(
+        input.state,
+        "invalidFill",
+        "Grappler Punch and Grab decision must be use or decline.",
+      ),
+    };
+  }
+  if (input.fillSet.grapplerPunchAndGrabOutcome === undefined) {
+    return {
+      tag: "result",
+      result: needsHolesResult(input.state, input.subject, [
+        grappleOutcomeHole(eligibility.link),
+      ]),
+    };
+  }
+  const usedState = {
+    ...input.state,
+    currentTurnResources: {
+      ...input.state.currentTurnResources,
+      grapplerPunchAndGrabUsedThisTurn: [
+        ...input.state.currentTurnResources.grapplerPunchAndGrabUsedThisTurn,
+        input.attackerId,
+      ],
+    },
+  };
+  return {
+    tag: "ok",
+    state: applyGrappleSavingThrowOutcome({
+      state: usedState,
+      link: eligibility.link,
+      outcome: input.fillSet.grapplerPunchAndGrabOutcome.value,
+    }),
+  };
+}
+
+function grapplerPunchAndGrabFillIsAbsent(
+  fillSet: Extract<AttackFillSet, { readonly tag: "ok" }>,
+): boolean {
+  return (
+    fillSet.grapplerPunchAndGrabDecision === undefined &&
+    fillSet.grapplerPunchAndGrabOutcome === undefined
+  );
 }
 
 export function resolveSelectedAttackProcedure(
@@ -466,6 +691,13 @@ export function resolveSelectedAttackProcedure(
     );
   }
   const hit = ordinaryHit || missToHitReplacement !== null;
+  if (!hit && !grapplerPunchAndGrabFillIsAbsent(fillSet)) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Grappler Punch and Grab is only valid after an eligible Unarmed Strike hit.",
+    );
+  }
   const attackRollState = battleStateAfterTargetActionEarlyEndForActor(
     input.state,
     attackerId,
@@ -824,10 +1056,22 @@ export function resolveSelectedAttackProcedure(
         ]);
       }
     }
+    const grapplerPunchAndGrab =
+      resolveGrapplerPunchAndGrabAfterHit({
+        state: sapRedirectState,
+        subject: input.subject,
+        attackerId,
+        targetId: target.combatantId,
+        attack,
+        fillSet,
+      });
+    if (grapplerPunchAndGrab.tag === "result") {
+      return grapplerPunchAndGrab.result;
+    }
     const primaryConcentrationSavingThrows =
       primaryAttackConcentrationSavingThrows(input.fills);
     const attackDamageReactionWindow = maybeOpenInterruptWindow(
-      sapRedirectState,
+      grapplerPunchAndGrab.state,
       {
         trigger: "attackDamage",
         continuation: {
@@ -872,7 +1116,7 @@ export function resolveSelectedAttackProcedure(
           );
     const concentrationSaveCheck =
       damageLifecycleConcentrationSavingThrowFillCheck({
-        state: sapRedirectState,
+        state: grapplerPunchAndGrab.state,
         target: spellReduction.target,
         damageAmount: reducedFixedDamageAmount,
         fills: primaryConcentrationSavingThrows,
@@ -881,7 +1125,7 @@ export function resolveSelectedAttackProcedure(
       const pendingConcentrationSave = concentrationSaveCheck.holes[0];
       if (pendingConcentrationSave !== undefined) {
         return needsAttackDamageConcentrationResult({
-          state: sapRedirectState,
+          state: grapplerPunchAndGrab.state,
           subject: input.subject,
           attack,
           continuation: {
@@ -909,13 +1153,13 @@ export function resolveSelectedAttackProcedure(
     }
     const hideousLaughterSaveCheck =
       damageLifecycleHideousLaughterDamageRepeatSaveFillCheck({
-        state: sapRedirectState,
+        state: grapplerPunchAndGrab.state,
         target: spellReduction.target,
         damageAmount: reducedFixedDamageAmount,
         fills: fillSet.hideousLaughterDamageRepeatSaves,
       });
     if (hideousLaughterSaveCheck.tag === "needsHoles") {
-      return needsHolesResult(sapRedirectState, input.subject, [
+      return needsHolesResult(grapplerPunchAndGrab.state, input.subject, [
         ...hideousLaughterSaveCheck.holes,
       ]);
     }
@@ -928,7 +1172,7 @@ export function resolveSelectedAttackProcedure(
     }
     const spent = spendAttackProcedure(
       applyAttackDamageAmount(
-        sapRedirectState,
+        grapplerPunchAndGrab.state,
         attackerId,
         target.combatantId,
         toDamageAmount(reducedFixedDamageAmount),
@@ -1190,10 +1434,22 @@ export function resolveSelectedAttackProcedure(
         ]);
       }
     }
+    const grapplerPunchAndGrab =
+      resolveGrapplerPunchAndGrabAfterHit({
+        state: sapRedirectState,
+        subject: input.subject,
+        attackerId,
+        targetId: target.combatantId,
+        attack,
+        fillSet,
+      });
+    if (grapplerPunchAndGrab.tag === "result") {
+      return grapplerPunchAndGrab.result;
+    }
     const primaryConcentrationSavingThrows =
       primaryAttackConcentrationSavingThrows(input.fills);
     const attackDamageReactionWindow = maybeOpenInterruptWindow(
-      sapRedirectState,
+      grapplerPunchAndGrab.state,
       {
         trigger: "attackDamage",
         continuation: {
@@ -1241,7 +1497,7 @@ export function resolveSelectedAttackProcedure(
           );
     const concentrationSaveCheck =
       damageLifecycleConcentrationSavingThrowFillCheck({
-        state: sapRedirectState,
+        state: grapplerPunchAndGrab.state,
         target: spellReduction.target,
         damageAmount: reducedDamageAmount,
         fills: primaryConcentrationSavingThrows,
@@ -1250,7 +1506,7 @@ export function resolveSelectedAttackProcedure(
       const pendingConcentrationSave = concentrationSaveCheck.holes[0];
       if (pendingConcentrationSave !== undefined) {
         return needsAttackDamageConcentrationResult({
-          state: sapRedirectState,
+          state: grapplerPunchAndGrab.state,
           subject: input.subject,
           attack,
           continuation: {
@@ -1281,13 +1537,13 @@ export function resolveSelectedAttackProcedure(
     }
     const hideousLaughterSaveCheck =
       damageLifecycleHideousLaughterDamageRepeatSaveFillCheck({
-        state: sapRedirectState,
+        state: grapplerPunchAndGrab.state,
         target: spellReduction.target,
         damageAmount: reducedDamageAmount,
         fills: fillSet.hideousLaughterDamageRepeatSaves,
       });
     if (hideousLaughterSaveCheck.tag === "needsHoles") {
-      return needsHolesResult(sapRedirectState, input.subject, [
+      return needsHolesResult(grapplerPunchAndGrab.state, input.subject, [
         ...hideousLaughterSaveCheck.holes,
       ]);
     }
@@ -1300,7 +1556,7 @@ export function resolveSelectedAttackProcedure(
     }
     const spent = spendAttackProcedure(
       applyAttackDamageAmount(
-        sapRedirectState,
+        grapplerPunchAndGrab.state,
         attackerId,
         target.combatantId,
         toDamageAmount(reducedDamageAmount),
@@ -1421,7 +1677,9 @@ function attackPostMirrorImageFillsArePresent(
     fillSet.huntersPreyHordeBreakerTarget !== undefined ||
     fillSet.huntersPreyHordeBreakerAttackRoll !== undefined ||
     fillSet.huntersPreyHordeBreakerDamageRoll !== undefined ||
-    fillSet.huntersPreyHordeBreakerDamageDispositionFilled
+    fillSet.huntersPreyHordeBreakerDamageDispositionFilled ||
+    fillSet.grapplerPunchAndGrabDecision !== undefined ||
+    fillSet.grapplerPunchAndGrabOutcome !== undefined
   );
 }
 
@@ -2041,13 +2299,16 @@ function attackFollowUpFillsAfterPrimaryDamage(
 ): readonly BattleFill[] {
   const primaryConcentrationSavingThrows =
     primaryAttackConcentrationSavingThrows(fills);
-  return primaryConcentrationSavingThrows.length === 0
-    ? fills
-    : fills.filter(
-        (fill) =>
-          fill.kind !== "concentrationSavingThrow" ||
-          !primaryConcentrationSavingThrows.includes(fill),
-      );
+  return fills.filter(
+    (fill) =>
+      !(
+        fill.kind === "unitFeatureDecision" &&
+        fill.holeId === GRAPPLER_PUNCH_AND_GRAB_DECISION_HOLE_ID
+      ) &&
+      fill.kind !== "grappleOutcome" &&
+      (fill.kind !== "concentrationSavingThrow" ||
+        !primaryConcentrationSavingThrows.includes(fill)),
+  );
 }
 
 function primaryAttackConcentrationSavingThrows(

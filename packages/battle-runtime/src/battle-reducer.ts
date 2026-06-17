@@ -1357,7 +1357,6 @@ export type BattleGrappleLink = {
   readonly escapeDc: DifficultyClass;
   readonly reachFeet: MovementFeet;
   readonly hand: BattleHand;
-  readonly targetExemptFromDragCost: boolean;
 };
 export type BattleHiddenState = {
   readonly discoveryDc: DifficultyClass;
@@ -1376,6 +1375,7 @@ export type BattleMovementFillValue = {
   readonly provokedOpportunityAttacks: readonly BattleOpportunityAttackThreat[];
   readonly areaDifficultTerrain?: BattleAreaDifficultTerrainMovementFact;
   readonly gustOfWindLineMovement?: BattleGustOfWindLineMovementFact;
+  readonly grappleDrag?: BattleGrappleDragMovementFact;
   readonly jumpMovementReplacement?: BattleJumpMovementReplacementFact;
   readonly levitatedMovement?: BattleLevitatedMovementFact;
   readonly commandApproach?: BattleCommandApproachMovementFact;
@@ -1415,6 +1415,14 @@ export type BattleGustOfWindLineMovementFact = {
   readonly directionId: BattleLineDirectionId;
   readonly totalDistanceFeet: MovementFeet;
   readonly closerDistanceFeet: MovementFeet;
+};
+export type BattleGrappleDragMovementFact = {
+  readonly kind: "grappleDrag";
+  readonly totalDistanceFeet: MovementFeet;
+  readonly targets: readonly {
+    readonly targetId: CombatantId;
+    readonly distanceFeet: MovementFeet;
+  }[];
 };
 export type BattleCommandApproachMovementFact = {
   readonly kind: "commandApproachShortestDirectRouteTowardCaster";
@@ -1884,6 +1892,7 @@ export type BattleResolvedMovement = {
   readonly provokedOpportunityAttacks: readonly BattleOpportunityAttackThreat[];
   readonly spendsTurnMovement: boolean;
   readonly areaDifficultTerrain?: BattleAreaDifficultTerrainMovementFact;
+  readonly grappleDrag?: BattleGrappleDragMovementFact;
   readonly jumpMovementReplacement?: BattleJumpMovementReplacementFact;
   readonly levitatedMovement?: BattleLevitatedMovementFact;
 };
@@ -3758,6 +3767,7 @@ export type BattleTurnResources = ActionEconomyState & {
   readonly weaponDamageDiceRollChoicesUsedThisTurn: readonly WeaponDamageDiceRollChoiceUsage[];
   readonly weaponMasteryCleaveAttackersUsedThisTurn: readonly CombatantId[];
   readonly huntersPreyHordeBreakerUsedThisTurn: readonly AttackDamageRiderUsage[];
+  readonly grapplerPunchAndGrabUsedThisTurn: readonly CombatantId[];
   readonly pendingAttackRollMissToHitReplacementSelection?: PendingAttackRollMissToHitReplacementSelection;
   readonly lightWeaponAttackMade?: {
     readonly weaponItemId: string;
@@ -6372,6 +6382,7 @@ export type BattleTurnSnapshot = {
   readonly weaponDamageDiceRollChoicesUsedThisTurn: readonly WeaponDamageDiceRollChoiceUsage[];
   readonly weaponMasteryCleaveAttackersUsedThisTurn: readonly CombatantId[];
   readonly huntersPreyHordeBreakerUsedThisTurn: readonly AttackDamageRiderUsage[];
+  readonly grapplerPunchAndGrabUsedThisTurn: readonly CombatantId[];
   readonly lightWeaponAttackMade?: {
     readonly weaponItemId: string;
   };

@@ -434,3 +434,6 @@
 {"unitId":"sorcerer_metamagic","evidence":{"tag":"selected-identity-mbt","taskId":"L3MMETA-22-HEIGHTENED-SAVE-GATED-CONDITION-MULTITARGET-REPEAT-SAVE-SLICE","ownerPath":"packages/battle-runtime/src/sorcerer-metamagic-heightened-selected-identity.mbt.test.ts"}}
 {"unitId":"acid_arrow","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-FOLLOWUP-ACID-ARROW-DELAYED-RUNTIME-SUPPORT","ownerPath":"packages/battle-runtime/src/unit-profile-admission-damage-spells.test.ts"}}
 {"unitId":"feat_skilled","evidence":{"tag":"deterministic-admission-projection","taskId":"L14G-B02-FEAT-SKILLED","ownerPath":"packages/character-creation-runtime/src/index.test.ts"}}
+{"unitId":"feat_grappler","evidence":{"tag":"deterministic-admission-projection","taskId":"L3-FOLLOWUP-GRAPPLER-RUNTIME","ownerPath":"packages/character-creation-runtime/src/index.test.ts"}}
+{"unitId":"feat_grappler","evidence":{"tag":"deterministic-admission-projection","taskId":"L3-FOLLOWUP-GRAPPLER-RUNTIME","ownerPath":"packages/battle-runtime/src/battle-runtime-movement-grapple-hide.test.ts"}}
+{"unitId":"feat_grappler","evidence":{"tag":"selected-identity-mbt","taskId":"L3-FOLLOWUP-GRAPPLER-RUNTIME","ownerPath":"packages/battle-runtime/src/grappler-selected-identity.mbt.test.ts"}}

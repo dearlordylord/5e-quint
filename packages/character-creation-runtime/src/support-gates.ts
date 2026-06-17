@@ -1,5 +1,5 @@
 // KERNEL-COVERAGE: runtime-owner CREATION.CHOICE_DISCOVERY_CARDINALITY
-// UNIT-PROFILE-COVERAGE: runtime-owner character-creation.origin-feat-proficiency-choice character-creation.species-trait-proficiency-choice character-creation.species-origin-feat-choice character-creation.species-origin-feat-proficiency-choice
+// UNIT-PROFILE-COVERAGE: runtime-owner character-creation.grappler-general-feat character-creation.origin-feat-proficiency-choice character-creation.species-trait-proficiency-choice character-creation.species-origin-feat-choice character-creation.species-origin-feat-proficiency-choice
 import { Either } from "effect";
 import {
   BACKGROUND_ABILITY_SCORE_INCREASE_CHOICE_KEY,
@@ -350,6 +350,7 @@ export const CHARACTER_CREATION_SUPPORT_PROFILE = {
       ...SUPPORTED_FIGHTING_STYLE_OPTION_IDS,
       creationChoiceOptionId("feat_ability_score_improvement"),
       creationChoiceOptionId("feat_boon_of_combat_prowess"),
+      creationChoiceOptionId("feat_grappler"),
     ],
     [CLASS_SUBCLASS_CHOICE_KEY]: SRD_LEVEL_THREE_SUBCLASS_UNIT_IDS.map(
       creationChoiceOptionId,
@@ -758,6 +759,14 @@ function supportedAbilityScoreIncreaseOptionIds(): readonly CreationChoiceOption
     ...abilityScoreIncreaseChoiceOptionIds({
       abilityScope: { kind: "all_abilities" },
       maxScore: 30,
+      methods: [{ kind: "one_score", increase: 1 }],
+    }),
+    ...abilityScoreIncreaseChoiceOptionIds({
+      abilityScope: {
+        kind: "specific_abilities",
+        abilities: ["str", "dex"],
+      },
+      maxScore: 20,
       methods: [{ kind: "one_score", increase: 1 }],
     }),
   ];

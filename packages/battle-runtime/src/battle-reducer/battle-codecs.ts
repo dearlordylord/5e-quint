@@ -2836,6 +2836,14 @@ type BattleFillEncoded =
           readonly totalDistanceFeet: number;
           readonly closerDistanceFeet: number;
         };
+        readonly grappleDrag?: {
+          readonly kind: "grappleDrag";
+          readonly totalDistanceFeet: number;
+          readonly targets: readonly {
+            readonly targetId: string;
+            readonly distanceFeet: number;
+          }[];
+        };
         readonly commandApproach?: {
           readonly kind: "commandApproachShortestDirectRouteTowardCaster";
           readonly movedWithinFiveFeetOfCaster: boolean;
@@ -3639,6 +3647,19 @@ export const BattleFillSchema: Schema.Schema<
           }),
           { exact: true },
         ),
+        grappleDrag: Schema.optionalWith(
+          Schema.Struct({
+            kind: Schema.Literal("grappleDrag"),
+            totalDistanceFeet: MovementFeet,
+            targets: Schema.Array(
+              Schema.Struct({
+                targetId: CombatantId,
+                distanceFeet: MovementFeet,
+              }),
+            ),
+          }),
+          { exact: true },
+        ),
         commandApproach: Schema.optionalWith(
           Schema.Struct({
             kind: Schema.Literal(
@@ -3886,6 +3907,7 @@ const BattleTurnSnapshotSchema = Schema.Struct({
       unitId: Schema.String,
     }),
   ),
+  grapplerPunchAndGrabUsedThisTurn: Schema.Array(CombatantId),
   lightWeaponAttackMade: Schema.optionalWith(
     Schema.Struct({ weaponItemId: Schema.String }),
     { exact: true },

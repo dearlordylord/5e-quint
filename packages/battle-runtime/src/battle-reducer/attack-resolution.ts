@@ -164,6 +164,7 @@ import type {
   BattleConcentrationSavingThrowHole,
   BattleCreatureState,
   BattleFill,
+  BattleGrappleLink,
   BattleHoleId,
   BattleResolutionInput,
   BattleResolutionInputForSubject,
@@ -1371,23 +1372,40 @@ export function resolveGrapple(
       "Grapple is no longer available for the current actor.",
     );
   }
-  const savingThrowExtendedState = extendSavingThrowOngoingFeatures(
-    input.state,
-    input.subject.actorId,
-    [fillSet.targetId],
-  );
-  const nextState = normalizeBattleGrapples({
-    ...savingThrowExtendedState,
-    currentTurnResources: spent.right,
-    grapples: fillSet.outcome.value.succeeded
-      ? savingThrowExtendedState.grapples
-      : [...savingThrowExtendedState.grapples, link.link],
+  const nextState = applyGrappleSavingThrowOutcome({
+    state: {
+      ...input.state,
+      currentTurnResources: spent.right,
+    },
+    link: link.link,
+    outcome: fillSet.outcome.value,
   });
   return {
     tag: "resolved",
     state: nextState,
     snapshot: snapshotBattle(nextState),
   };
+}
+
+export function applyGrappleSavingThrowOutcome(input: {
+  readonly state: BattleState;
+  readonly link: BattleGrappleLink;
+  readonly outcome: Extract<
+    BattleFill,
+    { readonly kind: "grappleOutcome" }
+  >["value"];
+}): BattleState {
+  const savingThrowExtendedState = extendSavingThrowOngoingFeatures(
+    input.state,
+    input.link.grapplerId,
+    [input.link.targetId],
+  );
+  return normalizeBattleGrapples({
+    ...savingThrowExtendedState,
+    grapples: input.outcome.succeeded
+      ? savingThrowExtendedState.grapples
+      : [...savingThrowExtendedState.grapples, input.link],
+  });
 }
 
 export function resolveShove(

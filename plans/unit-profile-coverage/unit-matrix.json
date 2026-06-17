@@ -62,9 +62,9 @@
       "value": 299
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 179,
-      "numerator": 173,
-      "percent": "96.6%"
+      "denominator": 180,
+      "numerator": 174,
+      "percent": "96.7%"
     },
     "profileClassificationCoverage": {
       "denominator": 299,
@@ -107,14 +107,14 @@
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 172,
-      "numerator": 172,
+      "denominator": 173,
+      "numerator": 173,
       "percent": "100%"
     },
     "supportedProfileCoverage": {
       "denominator": 249,
-      "numerator": 179,
-      "percent": "71.9%"
+      "numerator": 180,
+      "percent": "72.3%"
     }
   },
   "metricSemantics": [
@@ -5084,6 +5084,63 @@
         {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-damage-spells.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "character-creation.grappler-general-feat",
+      "profileKind": "character-creation",
+      "qntOwners": [],
+      "runtimeOwners": [
+        "packages/character-creation-runtime/src/finalization.ts",
+        "packages/character-creation-runtime/src/support-gates.ts"
+      ],
+      "sourceBoundary": "Character Creation consumes the installed Surface Grappler General feat shape, same-class level-4 feat selection, current class progression, assigned Ability Scores, selected Background Ability Score Increase, and the selected Grappler +1 Strength-or-Dexterity ASI option. It rejects selected Grappler before Level 4+ or before Strength or Dexterity 13 after Background ASI, admits only the feat's authored Strength-or-Dexterity +1 max-20 ASI options, and projects the chosen increase through the existing CharacterBuild ability-score facts without storing duplicate prerequisite or ability-score state.",
+      "taskRefs": [
+        "L3-FOLLOWUP-GRAPPLER-RUNTIME"
+      ],
+      "title": "Character Creation admits Grappler General feat prerequisites and Strength-or-Dexterity ASI choices",
+      "verificationOwners": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "unit-feature.grappler",
+      "profileKind": "battle-admission",
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/movement-spatial-grapple.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/unit-feature-support.ts",
+        "packages/battle-runtime/src/battle-reducer/attack-main.ts",
+        "packages/battle-runtime/src/battle-reducer/attack-roll.ts",
+        "packages/battle-runtime/src/battle-reducer/grappler-support-profile.ts",
+        "packages/battle-runtime/src/battle-reducer/movement-speed.ts"
+      ],
+      "sourceBoundary": "Battle Unit admission consumes the authored Surface Grappler shape and projects typed Punch and Grab, Attack Advantage, and Fast Wrestler support facts. Battle runtime consumes retained Grappler support through existing Attack action Unarmed Strike hit resolution, existing Grapple outcome fills, existing grapple links, existing attack-roll mode combination, and existing movement drag-cost links; it records only the once-per-turn Punch and Grab use marker in turn resources and does not store feat-owned grapple state or dispatch on feat authored identity.",
+      "taskRefs": [
+        "L3-FOLLOWUP-GRAPPLER-RUNTIME"
+      ],
+      "title": "Unit feature admits Grappler Punch and Grab, Attack Advantage, and Fast Wrestler facts",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/movement-spatial-grapple-inductive.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-movement-grapple-hide.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-test-support.ts"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/grappler-selected-identity.mbt.test.ts"
         }
       ]
     }
@@ -15779,6 +15836,23 @@
         "character-creation.species-origin-feat-proficiency-choice"
       ],
       "taskId": "L14G-B08-SPECIES-HUMAN"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "The shared movement/grapple rule-core slice carries the Grappler Fast Wrestler size predicate alongside the generic Grappled drag-cost predicate, with the existing movement-spatial-grapple inductive proof owner marking the QNT proof boundary.",
+      "profileIds": [
+        "unit-feature.grappler"
+      ],
+      "taskId": "L3-FOLLOWUP-GRAPPLER-RUNTIME"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused Character Creation runtime tests cover Grappler Level 4+ and Strength-or-Dexterity prerequisite rejection plus legal Strength/Dexterity ASI choice projection. Focused battle-runtime reducer tests and selected-identity MBT cover Grappler Fast Wrestler drag-cost exemption, Attack Advantage from existing grapple links, and Punch and Grab using an Unarmed Strike hit plus the existing Grapple outcome fill and grapple-link state.",
+      "profileIds": [
+        "character-creation.grappler-general-feat",
+        "unit-feature.grappler"
+      ],
+      "taskId": "L3-FOLLOWUP-GRAPPLER-RUNTIME"
     }
   ],
   "unitGroupDenominatorAudit": {
@@ -15823,14 +15897,14 @@
         "installedUnitDenominator": 13,
         "kind": "feat",
         "label": "Feat Units",
-        "profileFactDenominator": 7,
+        "profileFactDenominator": 9,
         "profileSubsetSupportedUnits": 0,
         "selectedIdentityDeferredNonApplicableUnits": 0,
-        "selectedIdentityReplayDenominator": 5,
+        "selectedIdentityReplayDenominator": 6,
         "selectedIdentityReplayGapUnits": 0,
-        "selectedIdentityReplayWitnessUnits": 5,
-        "supportedProfileUnits": 6,
-        "unsupportedOrOtherUnits": 7
+        "selectedIdentityReplayWitnessUnits": 6,
+        "supportedProfileUnits": 7,
+        "unsupportedOrOtherUnits": 6
       },
       {
         "executableUnitDenominator": 128,
@@ -22363,23 +22437,103 @@
         "status": "installed"
       },
       "claim": {
-        "followUpTasks": [
-          {
-            "id": "L3-FOLLOWUP-GRAPPLER-RUNTIME",
-            "mechanic": "Promote Grappler after the owner can enforce Level 4+ and Strength-or-Dexterity 13+ feat selection, project the selected +1 Strength-or-Dexterity ASI through existing CharacterBuild ability-score facts, and consume existing battle grapple state for Punch and Grab, attack Advantage against a creature Grappled by you, and the Fast Wrestler drag-cost exception without storing feat-owned grapple state.",
-            "owner": "character-creation general feat prerequisite/ASI owner plus battle-runtime Grappler feature owner and focused Quint parity",
-            "requiredOutput": "Supported-profile or profile-subset-supported Grappler Unit claim with character-creation tests for prerequisite and ASI choices, focused battle runtime tests for the admitted Grappler mechanics, QNT updates where rule-core semantics change, and focused MBT only after battle behavior is implemented.",
-            "title": "Grappler General Feat Runtime"
-          }
+        "profileIds": [
+          "character-creation.grappler-general-feat",
+          "unit-feature.grappler"
         ],
-        "reason": "Grappler is installed as a General feat with typed Strength-or-Dexterity ASI and authored Grappler battle benefit facts, but no promoted character-creation prerequisite/feat-selection profile or battle Unit profile is claimed yet.",
-        "tag": "unsupported-profile"
+        "rawRequirementIds": [
+          "RAW-QCORE7-MOVEMENT-GRAPPLE-001",
+          "RAW-QCORE9-UNIT-FEATURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "Character Creation admits Grappler as a General feat selected through Level 4 class-feature feat choices only when total character level is 4+ and Strength or Dexterity is at least 13 after selected Background Ability Score Increase and before applying Grappler's own ASI.",
+          "Character Creation projects the selected Grappler +1 Strength or Dexterity max-20 Ability Score Increase through the existing selected-feat ASI choice workflow without storing duplicate Ability Score or prerequisite state.",
+          "Battle Unit support admits the Surface Grappler mechanics family only when Punch and Grab, Attack Advantage, and Fast Wrestler facts match the SRD-authored shape.",
+          "Battle runtime applies Attack Advantage against targets in the existing grapple link set where the attacker is the grappler, without adding feat-owned Grappled state.",
+          "Battle runtime applies Fast Wrestler by marking an existing grapple drag-cost link exempt when the Grappled target is the Grappler's size or smaller, preserving the generic Tiny/two-sizes-smaller exemption.",
+          "Battle runtime resolves optional Punch and Grab after an eligible Attack action Unarmed Strike hit using the existing Grapple outcome fill and normal grapple-link construction, records one per-turn use marker, and stores no parallel Grappler grapple state."
+        ],
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/character-creation-runtime/src/index.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L3-FOLLOWUP-GRAPPLER-RUNTIME"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-movement-grapple-hide.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L3-FOLLOWUP-GRAPPLER-RUNTIME"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/grappler-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "L3-FOLLOWUP-GRAPPLER-RUNTIME"
+        }
+      ],
       "executableMechanics": true,
       "kind": "feat",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "character-creation.grappler-general-feat",
+          "profileKind": "character-creation",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/character-creation-runtime/src/finalization.ts",
+            "packages/character-creation-runtime/src/support-gates.ts"
+          ],
+          "sourceBoundary": "Character Creation consumes the installed Surface Grappler General feat shape, same-class level-4 feat selection, current class progression, assigned Ability Scores, selected Background Ability Score Increase, and the selected Grappler +1 Strength-or-Dexterity ASI option. It rejects selected Grappler before Level 4+ or before Strength or Dexterity 13 after Background ASI, admits only the feat's authored Strength-or-Dexterity +1 max-20 ASI options, and projects the chosen increase through the existing CharacterBuild ability-score facts without storing duplicate prerequisite or ability-score state.",
+          "taskRefs": [
+            "L3-FOLLOWUP-GRAPPLER-RUNTIME"
+          ],
+          "title": "Character Creation admits Grappler General feat prerequisites and Strength-or-Dexterity ASI choices",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+            }
+          ]
+        },
+        {
+          "id": "unit-feature.grappler",
+          "profileKind": "battle-admission",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/movement-spatial-grapple.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/unit-feature-support.ts",
+            "packages/battle-runtime/src/battle-reducer/attack-main.ts",
+            "packages/battle-runtime/src/battle-reducer/attack-roll.ts",
+            "packages/battle-runtime/src/battle-reducer/grappler-support-profile.ts",
+            "packages/battle-runtime/src/battle-reducer/movement-speed.ts"
+          ],
+          "sourceBoundary": "Battle Unit admission consumes the authored Surface Grappler shape and projects typed Punch and Grab, Attack Advantage, and Fast Wrestler support facts. Battle runtime consumes retained Grappler support through existing Attack action Unarmed Strike hit resolution, existing Grapple outcome fills, existing grapple links, existing attack-roll mode combination, and existing movement drag-cost links; it records only the once-per-turn Punch and Grab use marker in turn resources and does not store feat-owned grapple state or dispatch on feat authored identity.",
+          "taskRefs": [
+            "L3-FOLLOWUP-GRAPPLER-RUNTIME"
+          ],
+          "title": "Unit feature admits Grappler Punch and Grab, Attack Advantage, and Fast Wrestler facts",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/movement-spatial-grapple-inductive.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-movement-grapple-hide.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-test-support.ts"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/grappler-selected-identity.mbt.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/feat_grappler.json",
       "unitId": "feat_grappler"
     },
