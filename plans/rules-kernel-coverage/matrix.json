@@ -6098,6 +6098,12 @@
       "obligationIds": [
         "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
       ],
+      "profileId": "unit-feature.attack-damage-die-floor"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+      ],
       "profileId": "unit-feature.attack-damage-rider"
     },
     {
@@ -8463,6 +8469,12 @@
           "obligationIds": [
             "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
           ],
+          "profileId": "unit-feature.attack-damage-die-floor"
+        },
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
           "profileId": "unit-feature.attack-damage-rider"
         },
         {
@@ -10196,6 +10208,18 @@
             "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
           ],
           "ownerPath": "packages/battle-runtime/battle-runtime-feature-turn-end-effects.qnt",
+          "role": "semantic-core"
+        }
+      ]
+    },
+    {
+      "profileId": "unit-feature.attack-damage-die-floor",
+      "qntOwners": [
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core.qnt",
           "role": "semantic-core"
         }
       ]
@@ -13742,8 +13766,13 @@
     "character-creation.eldritch-invocation-choice",
     "character-creation.fighter-fighting-style-advancement-replacement",
     "character-creation.fighting-style-cantrip-advancement-replacement",
+    "character-creation.grappler-general-feat",
     "character-creation.hit-point-maximum-projection",
+    "character-creation.origin-feat-proficiency-choice",
     "character-creation.skill-expertise-choice",
+    "character-creation.species-origin-feat-choice",
+    "character-creation.species-origin-feat-proficiency-choice",
+    "character-creation.species-trait-proficiency-choice",
     "character-creation.warlock-pact-magic-advancement",
     "character-creation.weapon-mastery-choice",
     "character-creation.weapon-mastery-level-gain",
@@ -13849,6 +13878,7 @@
     "unit-feature.alternate-action-cost",
     "unit-feature.attack-action-area-save-damage-replacement",
     "unit-feature.attack-action-attack-count-scaling",
+    "unit-feature.attack-damage-die-floor",
     "unit-feature.attack-damage-reduction-zero-damage-redirect",
     "unit-feature.attack-damage-rider",
     "unit-feature.attack-roll-miss-to-hit-replacement",
@@ -13861,6 +13891,7 @@
     "unit-feature.enemy-zero-hit-point-temporary-hit-points",
     "unit-feature.failed-ability-check-resource-boost",
     "unit-feature.first-attack-roll-reckless-advantage",
+    "unit-feature.grappler",
     "unit-feature.hunters-prey",
     "unit-feature.initiative-proficiency-and-swap",
     "unit-feature.innate-sorcery-activation",

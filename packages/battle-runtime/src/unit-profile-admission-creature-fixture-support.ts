@@ -16,6 +16,7 @@ import type {
 } from "@dnd/surface/surface/types";
 import { expect } from "vitest";
 import weaponClubInput from "../../surface/content/weapon_club.json";
+import weaponGreatswordInput from "../../surface/content/weapon_greatsword.json";
 import {
   characterId,
   discoverBattleActs,
@@ -41,6 +42,7 @@ import {
 
 const testUnitRecords = [
   decodeUnitRecordSync(weaponClubInput),
+  decodeUnitRecordSync(weaponGreatswordInput),
 ] satisfies ReadonlyArray<UnitRecord>;
 
 const testUnitRecordsById: ReadonlyMap<UnitRecord["id"], UnitRecord> = new Map(

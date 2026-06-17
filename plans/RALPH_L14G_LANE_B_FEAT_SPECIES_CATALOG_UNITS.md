@@ -61,7 +61,7 @@
     {
       "number": 10,
       "id": "L3-FOLLOWUP-GREAT-WEAPON-FIGHTING-RUNTIME",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Promote Great Weapon Fighting battle runtime support"
     },
     {
@@ -99,6 +99,12 @@
       "id": "L3-FOLLOWUP-HUMAN-RESOURCEFUL-RUNTIME",
       "status": "ready-for-research",
       "title": "Promote Human Resourceful Heroic Inspiration support"
+    },
+    {
+      "number": 17,
+      "id": "L3-FOLLOWUP-GREAT-WEAPON-FIGHTING-DECLINE-RUNTIME",
+      "status": "ready-for-research",
+      "title": "Promote Great Weapon Fighting optional decline support"
     }
   ]
 }
@@ -151,6 +157,7 @@ the Unit catalog, or the Unit matrix.
 | L14G-B08-SPECIES-HUMAN | L14G-06-LEVEL4-REACHABLE-UNIT-FULL-AUDIT, L14G-B01-FEAT-MAGIC-INITIATE-DRUID, L14G-B02-FEAT-SKILLED | Human Versatile references real Origin feat Units. |
 | L3-FOLLOWUP-GRAPPLER-RUNTIME | L14G-B03-FEAT-GRAPPLER | Runtime support consumes the typed Grappler Surface facts installed by Task 3. |
 | L3-FOLLOWUP-GREAT-WEAPON-FIGHTING-RUNTIME | L14G-B04-FEAT-GREAT-WEAPON-FIGHTING | Runtime support consumes the typed Great Weapon Fighting Surface facts installed by Task 4. |
+| L3-FOLLOWUP-GREAT-WEAPON-FIGHTING-DECLINE-RUNTIME | L3-FOLLOWUP-GREAT-WEAPON-FIGHTING-RUNTIME | The promoted Great Weapon Fighting subset applies the beneficial floor when qualifying; explicit player decline needs the shared rolled-dice optional-choice owner. |
 | L3-FOLLOWUP-TWO-WEAPON-FIGHTING-RUNTIME | L14G-B05-FEAT-TWO-WEAPON-FIGHTING | Runtime support consumes the typed Two-Weapon Fighting Surface facts installed by Task 5. |
 | L3-FOLLOWUP-HALFLING-BRAVE-RUNTIME | L14G-B07-SPECIES-HALFLING | Runtime support consumes Halfling Brave's typed Frightened-condition Saving Throw Advantage facts. |
 | L3-FOLLOWUP-HALFLING-NIMBLENESS-RUNTIME | L14G-B07-SPECIES-HALFLING | Runtime support consumes Halfling Nimbleness's typed creature-space movement permission facts. |
@@ -554,7 +561,7 @@ Verification:
 
 ### Task 10 - L3-FOLLOWUP-GREAT-WEAPON-FIGHTING-RUNTIME
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -600,6 +607,56 @@ Verification:
   anchor.
 - Focused battle tests/QNT/MBT only for implemented battle behavior, with at
   most one focused MBT run after code changes are complete.
+- `pnpm --filter @dnd/battle-runtime typecheck`.
+- `git diff --check`.
+
+### Task 17 - L3-FOLLOWUP-GREAT-WEAPON-FIGHTING-DECLINE-RUNTIME
+
+Status: `ready-for-research`
+
+Depends on:
+
+- L3-FOLLOWUP-GREAT-WEAPON-FIGHTING-RUNTIME
+
+Unit: `feat_great_weapon_fighting`
+
+SRD anchor: `.references/srd-5.2.1/Feats.md:103-107`
+
+Current state:
+
+- Great Weapon Fighting is promoted as `profile-subset-supported` for the
+  selected-benefit path: qualifying attack damage dice of 1 or 2 are treated as
+  3 before damage totals and target-side adjustments.
+- The current battle runtime has no explicit player decline fill for the
+  optional floor on a qualifying attack damage roll.
+
+Output:
+
+- Research and implement the attack damage rolled-dice optional-choice owner
+  needed to represent declining Great Weapon Fighting on a qualifying attack.
+- Reuse the existing attack damage die results, qualifying weapon/loadout facts,
+  and `unit-feature.attack-damage-die-floor` support profile; do not add
+  authored-identity dispatch or a parallel damage total.
+- Update focused QNT/rule-core slices only where optional-choice semantics
+  change, then revise the Unit matrix claim so the decline path is no longer a
+  deferred mechanic.
+
+Acceptance:
+
+- Focused battle tests cover both selecting and declining the floor on a
+  qualifying attack, plus unchanged non-qualifying behavior.
+- The decline choice is represented in the rolled-dice hole/fill protocol or an
+  equally typed attack-damage choice boundary, not as metadata on durable
+  character or Unit state.
+- The Unit matrix claim names the admitted Great Weapon Fighting profile and
+  does not retain a deferred explicit-decline mechanic once implemented.
+
+Verification:
+
+- RAW and ubiquitous-language check against the Great Weapon Fighting SRD
+  anchor.
+- Focused battle tests/QNT/MBT only for implemented optional-choice behavior,
+  with at most one focused MBT run after code changes are complete.
 - `pnpm --filter @dnd/battle-runtime typecheck`.
 - `git diff --check`.
 

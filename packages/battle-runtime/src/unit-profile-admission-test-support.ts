@@ -85,6 +85,7 @@ import {
 } from "./classic-non-srd-mechanics-test-fixtures.ts";
 import {
   ATTACK_ACTION_ATTACK_COUNT_SCALING_SUPPORT_PROFILE,
+  ATTACK_DAMAGE_DIE_FLOOR_SUPPORT_PROFILE,
   ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_SUPPORT_PROFILE,
   ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE,
   ATTACK_ROLL_MISS_TO_HIT_REPLACEMENT_SUPPORT_PROFILE,
@@ -93,6 +94,7 @@ import {
   finishInitialInitiativeSetup,
   battleBardicInspirationGrantSupportForUnit,
   battleAreaId,
+  battleAttackDamageDieFloorSupportForUnit,
   battleCombatantSide,
   battleCreatureCanBreatheUnderwater,
   battleInitiativeProficiencyAndSwapSupportForUnit,
@@ -220,6 +222,7 @@ export {
   selectFailedSaveConditionEffect,
   applyPreparedSlotSpellDamage,
   armorClass,
+  ATTACK_DAMAGE_DIE_FLOOR_SUPPORT_PROFILE,
   ATTACK_ACTION_ATTACK_COUNT_SCALING_SUPPORT_PROFILE,
   ATTACK_ACTION_AREA_SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE,
   ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_SUPPORT_PROFILE,
@@ -228,6 +231,7 @@ export {
   attackBonus,
   applyInitiativeSwap,
   battleAttackActionAreaSaveDamageReplacementSupportForUnit,
+  battleAttackDamageDieFloorSupportForUnit,
   finishInitialInitiativeSetup,
   BARDIC_INSPIRATION_GRANT_SUPPORT_PROFILE,
   battleAreaId,

@@ -248,6 +248,8 @@ export const archeryUnitId = "feat_archery";
 
 export const boonOfCombatProwessUnitId = "feat_boon_of_combat_prowess";
 
+export const greatWeaponFightingUnitId = "feat_great_weapon_fighting";
+
 export const savageAttackerUnitId = "feat_savage_attacker";
 
 export const acidSplashUnitId = "acid_splash";

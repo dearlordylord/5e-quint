@@ -1,6 +1,6 @@
 // -*- mode: Bluespec; -*-
 // RAW-COVERAGE: qnt-owner RAW-QCORE9-UNIT-FEATURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.passive-ranged-attack-roll-bonus unit-feature.weapon-critical-range-19 unit-feature.weapon-damage-dice-roll-choice
+// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.attack-damage-die-floor unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.passive-ranged-attack-roll-bonus unit-feature.weapon-critical-range-19 unit-feature.weapon-damage-dice-roll-choice
 // KERNEL-COVERAGE: qnt-owner BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS BATTLE.DAMAGE.ATTACK_BRANCHES
 
 module unitFeatureAttackRiderCore {
@@ -11,7 +11,7 @@ module unitFeatureAttackRiderCore {
   // RAW anchors:
   // - Classes/Rogue.md: Sneak Attack.
   // - Classes/Fighter.md: Champion Improved Critical.
-  // - Feats.md: Archery, Savage Attacker, and Boon of Combat Prowess.
+  // - Feats.md: Archery, Great Weapon Fighting, Savage Attacker, and Boon of Combat Prowess.
   // - Playing-the-Game.md: Attack Rolls, Damage Rolls, and Critical Hits.
   // - UBIQUITOUS_LANGUAGE.md: Attack Roll, Critical Hit, Advantage, and
   //   Disadvantage.
@@ -81,6 +81,23 @@ module unitFeatureAttackRiderCore {
     usedThisTurn: bool,
     weaponDamageDiceRolledPerCandidate: int,
     selectedWeaponDamageDiceTotal: int,
+    effectiveDamage: int,
+  }
+
+  type AttackDamageDieFloorFacts = {
+    hitWithQualifyingAttack: bool,
+    choosesFeature: bool,
+    attackDamageDice: int,
+    firstDamageDieResult: int,
+    secondDamageDieResult: int,
+    thirdDamageDieResult: int,
+    fourthDamageDieResult: int,
+    damageModifier: int,
+  }
+
+  type AttackDamageDieFloorResult = {
+    admitted: bool,
+    selectedAttackDamageDiceTotal: int,
     effectiveDamage: int,
   }
 
@@ -157,6 +174,59 @@ module unitFeatureAttackRiderCore {
       usedThisTurn: facts.usedThisTurn or admitted,
       weaponDamageDiceRolledPerCandidate: savageAttackerCandidateDiceCount(facts),
       selectedWeaponDamageDiceTotal: selectedTotal,
+      effectiveDamage: nonnegative(selectedTotal + facts.damageModifier),
+    }
+  }
+
+  pure def attackDamageDieFloorMinimum: int = 3
+
+  pure def attackDamageDieResultWithFloor(dieResult: int): int =
+    if (dieResult == 1 or dieResult == 2)
+      attackDamageDieFloorMinimum
+    else dieResult
+
+  pure def legalAttackDamageDieFloorFacts(facts: AttackDamageDieFloorFacts): bool = all {
+    facts.attackDamageDice >= 1,
+    facts.attackDamageDice <= 4,
+    facts.firstDamageDieResult >= 1,
+    facts.firstDamageDieResult <= 12,
+    if (facts.attackDamageDice >= 2)
+      facts.secondDamageDieResult >= 1 and facts.secondDamageDieResult <= 12
+    else facts.secondDamageDieResult == 0,
+    if (facts.attackDamageDice >= 3)
+      facts.thirdDamageDieResult >= 1 and facts.thirdDamageDieResult <= 12
+    else facts.thirdDamageDieResult == 0,
+    if (facts.attackDamageDice >= 4)
+      facts.fourthDamageDieResult >= 1 and facts.fourthDamageDieResult <= 12
+    else facts.fourthDamageDieResult == 0,
+  }
+
+  pure def attackDamageDiceTotal(facts: AttackDamageDieFloorFacts): int =
+    facts.firstDamageDieResult +
+    (if (facts.attackDamageDice >= 2) facts.secondDamageDieResult else 0) +
+    (if (facts.attackDamageDice >= 3) facts.thirdDamageDieResult else 0) +
+    (if (facts.attackDamageDice >= 4) facts.fourthDamageDieResult else 0)
+
+  pure def attackDamageDiceTotalWithFloor(facts: AttackDamageDieFloorFacts): int =
+    attackDamageDieResultWithFloor(facts.firstDamageDieResult) +
+    (if (facts.attackDamageDice >= 2) attackDamageDieResultWithFloor(facts.secondDamageDieResult) else 0) +
+    (if (facts.attackDamageDice >= 3) attackDamageDieResultWithFloor(facts.thirdDamageDieResult) else 0) +
+    (if (facts.attackDamageDice >= 4) attackDamageDieResultWithFloor(facts.fourthDamageDieResult) else 0)
+
+  pure def resolveAttackDamageDieFloor(
+    facts: AttackDamageDieFloorFacts
+  ): AttackDamageDieFloorResult = {
+    val admitted = all {
+      legalAttackDamageDieFloorFacts(facts),
+      facts.hitWithQualifyingAttack,
+      facts.choosesFeature,
+    }
+    val selectedTotal =
+      if (admitted) attackDamageDiceTotalWithFloor(facts)
+      else attackDamageDiceTotal(facts)
+    {
+      admitted: admitted,
+      selectedAttackDamageDiceTotal: selectedTotal,
       effectiveDamage: nonnegative(selectedTotal + facts.damageModifier),
     }
   }

@@ -72,23 +72,23 @@
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 116,
-      "numerator": 116,
+      "denominator": 117,
+      "numerator": 117,
       "percent": "100%"
     },
     "qntProofCoverage": {
-      "denominator": 116,
-      "numerator": 113,
+      "denominator": 117,
+      "numerator": 114,
       "percent": "97.4%"
     },
     "rulesKernelCoveredProfileCoverage": {
-      "denominator": 154,
-      "numerator": 154,
+      "denominator": 155,
+      "numerator": 155,
       "percent": "100%"
     },
     "rulesKernelProfileJoinCoverage": {
-      "denominator": 154,
-      "numerator": 154,
+      "denominator": 155,
+      "numerator": 155,
       "percent": "100%"
     },
     "rulesKernelSupportedUnitCoverage": {
@@ -97,13 +97,13 @@
       "percent": "100%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 116,
-      "numerator": 116,
+      "denominator": 117,
+      "numerator": 117,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 116,
-      "numerator": 116,
+      "denominator": 117,
+      "numerator": 117,
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
@@ -422,6 +422,32 @@
         {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "unit-feature.attack-damage-die-floor",
+      "profileKind": "persistent-effect",
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/unit-feature-support.ts",
+        "packages/battle-runtime/src/battle-reducer/damage-helpers.ts"
+      ],
+      "sourceBoundary": "Battle Unit admission consumes the authored Surface damage_die_floor shape and projects an optional attack-damage-roll profile. Battle runtime consumes existing selected character Unit support refs, selected loadout weapon grip, attack weapon usage, and weapon Two-Handed or Versatile properties to floor each qualifying attack damage die result of 1 or 2 to 3 before damage totals and target-side adjustments, without authored-identity dispatch or parallel derived damage totals.",
+      "taskRefs": [
+        "L3-FOLLOWUP-GREAT-WEAPON-FIGHTING-RUNTIME"
+      ],
+      "title": "Unit feature floors low attack damage die results for qualifying held weapon attacks",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core-examples.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-great-weapon-fighting.test.ts"
         }
       ]
     },
@@ -5149,13 +5175,13 @@
     "denominatorRule": "profile records with rules-kernel profile kinds and either QNT owners or explicit profile-obligation mappings",
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
-        "denominator": 154,
-        "numerator": 154,
+        "denominator": 155,
+        "numerator": 155,
         "percent": "100%"
       },
       "rulesKernelProfileJoinCoverage": {
-        "denominator": 154,
-        "numerator": 154,
+        "denominator": 155,
+        "numerator": 155,
         "percent": "100%"
       }
     },
@@ -5275,6 +5301,22 @@
         "profileKind": "reaction",
         "qntOwners": [
           "packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core.qnt"
+        ]
+      },
+      {
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+          }
+        ],
+        "profileId": "unit-feature.attack-damage-die-floor",
+        "profileKind": "persistent-effect",
+        "qntOwners": [
+          "packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core.qnt"
         ]
       },
       {
@@ -12488,8 +12530,26 @@
       "evidenceTag": "selected-identity-mbt"
     },
     "deferredNonApplicableRows": [],
-    "rowCount": 0,
-    "rows": []
+    "rowCount": 1,
+    "rows": [
+      {
+        "catalogAdmissionStatus": "installed",
+        "collectionId": "srd-5.2.1",
+        "kind": "feat",
+        "selectedIdentity": {
+          "reason": "The Unit has no selected-identity-mbt evidence.",
+          "status": "missing-witness"
+        },
+        "sourceRecordPath": "packages/surface/content/feat_great_weapon_fighting.json",
+        "support": {
+          "profileIds": [
+            "unit-feature.attack-damage-die-floor"
+          ],
+          "tag": "profile-subset-supported"
+        },
+        "unitId": "feat_great_weapon_fighting"
+      }
+    ]
   },
   "taskClaims": [
     {
@@ -15853,6 +15913,22 @@
         "unit-feature.grappler"
       ],
       "taskId": "L3-FOLLOWUP-GRAPPLER-RUNTIME"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Rule-core witness covers optional per-die attack damage floor semantics for qualifying attacks, declined use, and non-qualifying attacks.",
+      "profileIds": [
+        "unit-feature.attack-damage-die-floor"
+      ],
+      "taskId": "L3-FOLLOWUP-GREAT-WEAPON-FIGHTING-RUNTIME"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime tests cover profile admission, qualifying two-handed Melee Two-Handed/Versatile weapon attacks, per-die multi-die floor behavior, target resistance ordering, and one-handed, Ranged, or missing-property non-qualifying attacks.",
+      "profileIds": [
+        "unit-feature.attack-damage-die-floor"
+      ],
+      "taskId": "L3-FOLLOWUP-GREAT-WEAPON-FIGHTING-RUNTIME"
     }
   ],
   "unitGroupDenominatorAudit": {
@@ -15897,14 +15973,14 @@
         "installedUnitDenominator": 13,
         "kind": "feat",
         "label": "Feat Units",
-        "profileFactDenominator": 9,
-        "profileSubsetSupportedUnits": 0,
+        "profileFactDenominator": 10,
+        "profileSubsetSupportedUnits": 1,
         "selectedIdentityDeferredNonApplicableUnits": 0,
-        "selectedIdentityReplayDenominator": 6,
-        "selectedIdentityReplayGapUnits": 0,
+        "selectedIdentityReplayDenominator": 7,
+        "selectedIdentityReplayGapUnits": 1,
         "selectedIdentityReplayWitnessUnits": 6,
         "supportedProfileUnits": 7,
-        "unsupportedOrOtherUnits": 6
+        "unsupportedOrOtherUnits": 5
       },
       {
         "executableUnitDenominator": 128,
@@ -22410,23 +22486,69 @@
         "status": "installed"
       },
       "claim": {
-        "followUpTasks": [
+        "deferredMechanics": [
           {
-            "id": "L3-FOLLOWUP-GREAT-WEAPON-FIGHTING-RUNTIME",
-            "mechanic": "Promote Great Weapon Fighting after the weapon attack damage pipeline carries individual attack damage die results for the triggering attack, consumes existing attack weapon and held-with-two-hands facts, gates the benefit to Melee weapons with the Two-Handed or Versatile property, and applies the optional 1-or-2-to-3 die floor before damage totals and target-side damage adjustments without storing a parallel derived damage total.",
-            "owner": "battle-runtime weapon attack damage-roll owner and focused Quint parity",
-            "requiredOutput": "Supported-profile or profile-subset-supported Great Weapon Fighting Unit claim with deterministic admission/projection tests, focused battle runtime tests for qualifying and non-qualifying damage dice, QNT/rule-core updates for the damage die floor semantics, and one focused MBT run only after battle behavior is implemented.",
-            "title": "Great Weapon Fighting Runtime"
+            "battleReadinessClosure": {
+              "kind": "outside-battle-runtime",
+              "owner": "future attack damage rolled-dice optional-choice owner",
+              "reason": "The current promoted subset treats the beneficial floor as selected when the retained profile and qualifying weapon facts are present. A literal decline path requires extending the shared rolled-dice hole/fill protocol for attack damage dice choices without duplicating damage totals or adding authored-identity dispatch."
+            },
+            "mechanic": "An explicit player decline path for Great Weapon Fighting's optional floor on a qualifying attack damage roll."
           }
         ],
-        "reason": "Great Weapon Fighting is installed as a Fighting Style feat with typed per-die attack damage floor facts, but no promoted battle Unit profile or Quint parity owner applies the optional floor to qualifying weapon damage dice yet.",
-        "tag": "unsupported-profile"
+        "profileIds": [
+          "unit-feature.attack-damage-die-floor"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE9-UNIT-FEATURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "Battle Unit support admits the Surface damage_die_floor mechanics only for the optional attack damage roll shape that floors attack damage dice to 3 for Melee weapons held with two hands and gated by the Two-Handed or Versatile property.",
+          "Battle initialization retains the admitted attackDamageDieFloor support profile on selected character combatants without dispatching on the feat's authored identity.",
+          "Battle runtime applies the floor to each qualifying positive attack damage die result of 1 or 2 before damage totals and target-side damage adjustments.",
+          "The qualifying gate consumes existing attack weapon usage/properties and selected loadout grip facts, so one-handed Versatile attacks, Ranged Two-Handed attacks, and Melee weapons without Two-Handed or Versatile do not receive the floor.",
+          "Subtractive source-side damage penalty dice remain ordinary penalty dice and are not increased by the attack damage die floor."
+        ],
+        "tag": "profile-subset-supported"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-great-weapon-fighting.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L3-FOLLOWUP-GREAT-WEAPON-FIGHTING-RUNTIME"
+        }
+      ],
       "executableMechanics": true,
       "kind": "feat",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "unit-feature.attack-damage-die-floor",
+          "profileKind": "persistent-effect",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/unit-feature-support.ts",
+            "packages/battle-runtime/src/battle-reducer/damage-helpers.ts"
+          ],
+          "sourceBoundary": "Battle Unit admission consumes the authored Surface damage_die_floor shape and projects an optional attack-damage-roll profile. Battle runtime consumes existing selected character Unit support refs, selected loadout weapon grip, attack weapon usage, and weapon Two-Handed or Versatile properties to floor each qualifying attack damage die result of 1 or 2 to 3 before damage totals and target-side adjustments, without authored-identity dispatch or parallel derived damage totals.",
+          "taskRefs": [
+            "L3-FOLLOWUP-GREAT-WEAPON-FIGHTING-RUNTIME"
+          ],
+          "title": "Unit feature floors low attack damage die results for qualifying held weapon attacks",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core-examples.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-great-weapon-fighting.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/feat_great_weapon_fighting.json",
       "unitId": "feat_great_weapon_fighting"
     },
