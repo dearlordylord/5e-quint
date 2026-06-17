@@ -314,6 +314,8 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
     d20TestNaturalOneRerollRollDecisionRequired({
       actor: actorBeforeSpellAttack,
       originalNaturalD20: Number(input.fillSet.attackRoll.naturalD20),
+      rollMode: input.fillSet.attackRoll.rollMode,
+      rolledD20s: input.fillSet.attackRoll.rolledD20s,
       decision: input.fillSet.attackRoll.d20TestNaturalOneReroll,
     })
   ) {
@@ -330,7 +332,10 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
   }
   const d20TestNaturalOneRerollIssue = d20TestNaturalOneRerollRollIssue({
     actor: actorBeforeSpellAttack,
+    total: input.fillSet.attackRoll.total,
     originalNaturalD20: Number(input.fillSet.attackRoll.naturalD20),
+    rollMode: input.fillSet.attackRoll.rollMode,
+    rolledD20s: input.fillSet.attackRoll.rolledD20s,
     decision: input.fillSet.attackRoll.d20TestNaturalOneReroll,
     requiredRollMode,
   });

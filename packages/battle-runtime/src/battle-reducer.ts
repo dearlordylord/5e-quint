@@ -4703,7 +4703,20 @@ export type BattleD20TestNaturalOneRerollOption = {
   readonly effectKind: typeof D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND;
   readonly label: string;
 };
+export const BATTLE_D20_TEST_ROLLED_DIE_KEYS = ["first", "second"] as const;
+export type BattleD20TestRolledDieKey =
+  (typeof BATTLE_D20_TEST_ROLLED_DIE_KEYS)[number];
+export type BattleD20TestRolledD20s = {
+  readonly first: DieRollResult;
+  readonly second: DieRollResult;
+  readonly selected: BattleD20TestRolledDieKey;
+};
 export type BattleD20TestRollReplacement = AttackRollResult;
+export type BattleD20TestRolledDieRollReplacement = {
+  readonly die: BattleD20TestRolledDieKey;
+  readonly naturalD20: DieRollResult;
+  readonly result: BattleD20TestRollReplacement;
+};
 export type BattleD20TestNaturalOneRerollDecision =
   | {
       readonly kind: "decline";
@@ -4713,10 +4726,20 @@ export type BattleD20TestNaturalOneRerollDecision =
       readonly kind: "reroll";
       readonly effectKind: typeof D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND;
       readonly replacement: BattleD20TestRollReplacement;
+    }
+  | {
+      readonly kind: "rerollRolledDie";
+      readonly effectKind: typeof D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND;
+      readonly replacement: BattleD20TestRolledDieRollReplacement;
     };
 export type BattleD20TestOutcomeReplacement = {
   readonly succeeded: boolean;
   readonly naturalD20: DieRollResult;
+};
+export type BattleD20TestRolledDieOutcomeReplacement = {
+  readonly die: BattleD20TestRolledDieKey;
+  readonly naturalD20: DieRollResult;
+  readonly result: BattleD20TestOutcomeReplacement;
 };
 export type BattleD20TestDieReplacement = DieRollResult;
 export type BattleD20TestNaturalOneRerollOutcomeDecision =
@@ -4728,6 +4751,11 @@ export type BattleD20TestNaturalOneRerollOutcomeDecision =
       readonly kind: "reroll";
       readonly effectKind: typeof D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND;
       readonly replacement: BattleD20TestOutcomeReplacement;
+    }
+  | {
+      readonly kind: "rerollRolledDie";
+      readonly effectKind: typeof D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND;
+      readonly replacement: BattleD20TestRolledDieOutcomeReplacement;
     };
 export type BattleD20TestNaturalOneRerollDieDecision =
   | {
@@ -5349,6 +5377,7 @@ export type BattleDancingLightsPlacementHole = {
 export type BattleD20TestRolledOutcome = {
   readonly succeeded: boolean;
   readonly naturalD20?: DieRollResult;
+  readonly rolledD20s?: BattleD20TestRolledD20s;
   readonly withoutRoll?: never;
   readonly d20TestNaturalOneReroll?: BattleD20TestNaturalOneRerollOutcomeDecision;
 };
@@ -5356,6 +5385,7 @@ export type BattleD20TestWithoutRollOutcome = {
   readonly succeeded: boolean;
   readonly withoutRoll: true;
   readonly naturalD20?: never;
+  readonly rolledD20s?: never;
   readonly d20TestNaturalOneReroll?: never;
 };
 export type BattleD20TestOutcome =
@@ -5847,6 +5877,7 @@ export type BattleHole =
   | BattleWildShapeEquipmentDispositionHole;
 
 export type BattleAttackRollResult = AttackRollResult & {
+  readonly rolledD20s?: BattleD20TestRolledD20s;
   readonly activatedOngoingFeatureUnitId?: UnitRecord["id"];
   readonly missToHitReplacementUnitId?: UnitRecord["id"];
   readonly spellAttackReroll?: BattleSpellAttackRerollDecision;
@@ -6224,6 +6255,7 @@ export type BattleFill =
       readonly value: {
         readonly total: number;
         readonly naturalD20?: DieRollResult;
+        readonly rolledD20s?: BattleD20TestRolledD20s;
         readonly d20TestNaturalOneReroll?: BattleD20TestNaturalOneRerollDecision;
       };
       readonly spatialFacts?: readonly BattleAbilityCheckSpatialFact[];

@@ -121,7 +121,7 @@
     {
       "number": 20,
       "id": "L3-FOLLOWUP-D20-TEST-ROLLED-DIE-REROLL-CHOICE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Promote D20 Test rolled-die reroll choice support"
     },
     {
@@ -189,7 +189,7 @@ the Unit catalog, or the Unit matrix.
 | L3-FOLLOWUP-CREATURE-SPACE-TABLE-SPATIAL-DERIVATION | L3-FOLLOWUP-HALFLING-NIMBLENESS-RUNTIME | The promoted Nimbleness subset consumes caller/table-supplied occupied-space witnesses; automatic pathfinding, route extraction, and coordinate occupancy derivation need a separate table/spatial owner. |
 | L3-FOLLOWUP-CREATURE-SPACE-PATHFINDING-MAP-STATE | L3-FOLLOWUP-CREATURE-SPACE-TABLE-SPATIAL-DERIVATION | Task 19 derives Movement witnesses from an already selected route and explicit footprint facts; route-choice policy, automatic pathfinding, and durable coordinate map-state ownership remain separate table/spatial work. |
 | L3-FOLLOWUP-HALFLING-LUCK-RUNTIME | L14G-B07-SPECIES-HALFLING | Runtime support consumes Halfling Luck's typed natural-1 D20 Test reroll facts. |
-| L3-FOLLOWUP-D20-TEST-ROLLED-DIE-REROLL-CHOICE | L3-FOLLOWUP-HALFLING-LUCK-RUNTIME | The promoted Luck subset consumes selected/effective d20 facts; full Advantage/Disadvantage one-die reroll choice needs raw rolled-die vector and die-selection replacement facts. |
+| L3-FOLLOWUP-D20-TEST-ROLLED-DIE-REROLL-CHOICE | L3-FOLLOWUP-HALFLING-LUCK-RUNTIME | Extends the promoted Luck subset from selected/effective d20 facts to raw Advantage/Disadvantage two-d20 vectors with explicit die-selection replacement facts. |
 | L3-FOLLOWUP-HALFLING-NATURALLY-STEALTHY-RUNTIME | L14G-B07-SPECIES-HALFLING | Runtime support consumes Naturally Stealthy's typed Hide-obscurement permission facts. |
 | L3-FOLLOWUP-HUMAN-RESOURCEFUL-RUNTIME | L14G-B08-SPECIES-HUMAN | Runtime support consumes Human Resourceful's typed Long Rest Heroic Inspiration facts. |
 
@@ -944,7 +944,7 @@ Verification:
 
 ### Task 20 - L3-FOLLOWUP-D20-TEST-ROLLED-DIE-REROLL-CHOICE
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -957,15 +957,14 @@ SRD anchor: `.references/srd-5.2.1/Character-Origins.md:227`;
 
 Current state:
 
-- Halfling Luck is promoted as `profile-subset-supported` for the
-  selected/effective-d20 subset: a supported actor who rolls a selected or
-  effective natural 1 on a rolled D20 Test must explicitly reroll or decline,
-  and selected rerolls replace the downstream Attack Roll, Ability Check,
-  Saving Throw outcome, Concentration Saving Throw, or Death Saving Throw fact.
-- Current promoted battle D20 Test fills expose selected/effective `naturalD20`
-  facts, not both raw d20 dice rolled under Advantage or Disadvantage.
-- The Unit matrix leaves Advantage/Disadvantage one-die reroll choice outside
-  the promoted Luck subset.
+- Halfling Luck is promoted as `profile-subset-supported` for selected/effective
+  D20 Test fills and for Advantage/Disadvantage battle fills that expose raw
+  two-d20 facts.
+- Supported actors who roll a selected/effective natural 1, or either raw d20
+  as a natural 1 under Advantage or Disadvantage, must explicitly reroll or
+  decline.
+- The Unit matrix narrows the remaining Luck deferral to D20 Tests outside
+  promoted battle runtime procedures.
 
 Output:
 

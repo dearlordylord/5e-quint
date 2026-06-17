@@ -318,6 +318,8 @@ function resolveBonusActionAttack(
     d20TestNaturalOneRerollRollDecisionRequired({
       actor: attacker,
       originalNaturalD20: Number(fillSet.attackRoll.naturalD20),
+      rollMode: fillSet.attackRoll.rollMode,
+      rolledD20s: fillSet.attackRoll.rolledD20s,
       decision: fillSet.attackRoll.d20TestNaturalOneReroll,
     })
   ) {
@@ -338,7 +340,10 @@ function resolveBonusActionAttack(
   }
   const d20TestNaturalOneRerollIssue = d20TestNaturalOneRerollRollIssue({
     actor: attacker,
+    total: fillSet.attackRoll.total,
     originalNaturalD20: Number(fillSet.attackRoll.naturalD20),
+    rollMode: fillSet.attackRoll.rollMode,
+    rolledD20s: fillSet.attackRoll.rolledD20s,
     decision: fillSet.attackRoll.d20TestNaturalOneReroll,
     requiredRollMode,
   });

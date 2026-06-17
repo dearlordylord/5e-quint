@@ -1955,12 +1955,24 @@ const BattleD20DieRollResultSchema = Schema.Number.pipe(
   Schema.brand("DieRollResult"),
 );
 
+const BattleD20TestRolledD20sSchema = Schema.Struct({
+  first: BattleD20DieRollResultSchema,
+  second: BattleD20DieRollResultSchema,
+  selected: Schema.Literal("first", "second"),
+});
+
 const BattleD20TestRollReplacementSchema = Schema.Struct({
   total: Schema.Number.pipe(Schema.int()),
   naturalD20: BattleD20DieRollResultSchema,
   rollMode: Schema.optionalWith(Schema.Literal(...ATTACK_ROLL_MODES), {
     exact: true,
   }),
+});
+
+const BattleD20TestRolledDieRollReplacementSchema = Schema.Struct({
+  die: Schema.Literal("first", "second"),
+  naturalD20: BattleD20DieRollResultSchema,
+  result: BattleD20TestRollReplacementSchema,
 });
 
 const BattleD20TestNaturalOneRerollDecisionSchema = Schema.Union(
@@ -1973,7 +1985,21 @@ const BattleD20TestNaturalOneRerollDecisionSchema = Schema.Union(
     effectKind: Schema.Literal("d20_test_natural_one_reroll"),
     replacement: BattleD20TestRollReplacementSchema,
   }),
+  Schema.Struct({
+    kind: Schema.Literal("rerollRolledDie"),
+    effectKind: Schema.Literal("d20_test_natural_one_reroll"),
+    replacement: BattleD20TestRolledDieRollReplacementSchema,
+  }),
 );
+
+const BattleD20TestRolledDieOutcomeReplacementSchema = Schema.Struct({
+  die: Schema.Literal("first", "second"),
+  naturalD20: BattleD20DieRollResultSchema,
+  result: Schema.Struct({
+    succeeded: Schema.Boolean,
+    naturalD20: BattleD20DieRollResultSchema,
+  }),
+});
 
 const BattleD20TestNaturalOneRerollOutcomeDecisionSchema = Schema.Union(
   Schema.Struct({
@@ -1987,6 +2013,11 @@ const BattleD20TestNaturalOneRerollOutcomeDecisionSchema = Schema.Union(
       succeeded: Schema.Boolean,
       naturalD20: BattleD20DieRollResultSchema,
     }),
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("rerollRolledDie"),
+    effectKind: Schema.Literal("d20_test_natural_one_reroll"),
+    replacement: BattleD20TestRolledDieOutcomeReplacementSchema,
   }),
 );
 
@@ -2005,6 +2036,9 @@ const BattleD20TestNaturalOneRerollDieDecisionSchema = Schema.Union(
 const BattleD20TestRolledOutcomeFields = {
   succeeded: Schema.Boolean,
   naturalD20: Schema.optionalWith(BattleD20DieRollResultSchema, {
+    exact: true,
+  }),
+  rolledD20s: Schema.optionalWith(BattleD20TestRolledD20sSchema, {
     exact: true,
   }),
   d20TestNaturalOneReroll: Schema.optionalWith(
@@ -2035,6 +2069,9 @@ const BattleAttackRollResultSchema = Schema.Struct({
   total: Schema.Number.pipe(Schema.int()),
   naturalD20: BattleD20DieRollResultSchema,
   rollMode: Schema.optionalWith(Schema.Literal(...ATTACK_ROLL_MODES), {
+    exact: true,
+  }),
+  rolledD20s: Schema.optionalWith(BattleD20TestRolledD20sSchema, {
     exact: true,
   }),
   activatedOngoingFeatureUnitId: Schema.optionalWith(Schema.String, {
@@ -2210,6 +2247,66 @@ type BattleSpellAreaChoiceEncoded = {
       readonly sleepNonSleeperFacts?: never;
     }
 );
+
+type BattleD20TestRolledD20sEncoded = {
+  readonly first: number;
+  readonly second: number;
+  readonly selected: "first" | "second";
+};
+
+type BattleD20TestNaturalOneRerollDecisionEncoded =
+  | {
+      readonly kind: "decline";
+      readonly effectKind: "d20_test_natural_one_reroll";
+    }
+  | {
+      readonly kind: "reroll";
+      readonly effectKind: "d20_test_natural_one_reroll";
+      readonly replacement: {
+        readonly total: number;
+        readonly naturalD20: number;
+        readonly rollMode?: (typeof ATTACK_ROLL_MODES)[number];
+      };
+    }
+  | {
+      readonly kind: "rerollRolledDie";
+      readonly effectKind: "d20_test_natural_one_reroll";
+      readonly replacement: {
+        readonly die: "first" | "second";
+        readonly naturalD20: number;
+        readonly result: {
+          readonly total: number;
+          readonly naturalD20: number;
+          readonly rollMode?: (typeof ATTACK_ROLL_MODES)[number];
+        };
+      };
+    };
+
+type BattleD20TestNaturalOneRerollOutcomeDecisionEncoded =
+  | {
+      readonly kind: "decline";
+      readonly effectKind: "d20_test_natural_one_reroll";
+    }
+  | {
+      readonly kind: "reroll";
+      readonly effectKind: "d20_test_natural_one_reroll";
+      readonly replacement: {
+        readonly succeeded: boolean;
+        readonly naturalD20: number;
+      };
+    }
+  | {
+      readonly kind: "rerollRolledDie";
+      readonly effectKind: "d20_test_natural_one_reroll";
+      readonly replacement: {
+        readonly die: "first" | "second";
+        readonly naturalD20: number;
+        readonly result: {
+          readonly succeeded: boolean;
+          readonly naturalD20: number;
+        };
+      };
+    };
 
 type BattleFillEncoded =
   | {
@@ -2656,22 +2753,10 @@ type BattleFillEncoded =
         readonly total: number;
         readonly naturalD20: number;
         readonly rollMode?: (typeof ATTACK_ROLL_MODES)[number];
+        readonly rolledD20s?: BattleD20TestRolledD20sEncoded;
         readonly activatedOngoingFeatureUnitId?: string;
         readonly missToHitReplacementUnitId?: string;
-        readonly d20TestNaturalOneReroll?:
-          | {
-              readonly kind: "decline";
-              readonly effectKind: "d20_test_natural_one_reroll";
-            }
-          | {
-              readonly kind: "reroll";
-              readonly effectKind: "d20_test_natural_one_reroll";
-              readonly replacement: {
-                readonly total: number;
-                readonly naturalD20: number;
-                readonly rollMode?: (typeof ATTACK_ROLL_MODES)[number];
-              };
-            };
+        readonly d20TestNaturalOneReroll?: BattleD20TestNaturalOneRerollDecisionEncoded;
       };
     }
   | {
@@ -2684,20 +2769,9 @@ type BattleFillEncoded =
               readonly targetId: string;
               readonly succeeded: boolean;
               readonly naturalD20?: number;
+              readonly rolledD20s?: BattleD20TestRolledD20sEncoded;
               readonly withoutRoll?: true;
-              readonly d20TestNaturalOneReroll?:
-                | {
-                    readonly kind: "decline";
-                    readonly effectKind: "d20_test_natural_one_reroll";
-                  }
-                | {
-                    readonly kind: "reroll";
-                    readonly effectKind: "d20_test_natural_one_reroll";
-                    readonly replacement: {
-                      readonly succeeded: boolean;
-                      readonly naturalD20: number;
-                    };
-                  };
+              readonly d20TestNaturalOneReroll?: BattleD20TestNaturalOneRerollOutcomeDecisionEncoded;
             }[];
           }
         | {
@@ -2706,20 +2780,9 @@ type BattleFillEncoded =
               readonly targetId: string;
               readonly succeeded: boolean;
               readonly naturalD20?: number;
+              readonly rolledD20s?: BattleD20TestRolledD20sEncoded;
               readonly withoutRoll?: true;
-              readonly d20TestNaturalOneReroll?:
-                | {
-                    readonly kind: "decline";
-                    readonly effectKind: "d20_test_natural_one_reroll";
-                  }
-                | {
-                    readonly kind: "reroll";
-                    readonly effectKind: "d20_test_natural_one_reroll";
-                    readonly replacement: {
-                      readonly succeeded: boolean;
-                      readonly naturalD20: number;
-                    };
-                  };
+              readonly d20TestNaturalOneReroll?: BattleD20TestNaturalOneRerollOutcomeDecisionEncoded;
             }[];
           };
     }
@@ -2916,20 +2979,9 @@ type BattleFillEncoded =
       readonly value: {
         readonly succeeded: boolean;
         readonly naturalD20?: number;
+        readonly rolledD20s?: BattleD20TestRolledD20sEncoded;
         readonly withoutRoll?: true;
-        readonly d20TestNaturalOneReroll?:
-          | {
-              readonly kind: "decline";
-              readonly effectKind: "d20_test_natural_one_reroll";
-            }
-          | {
-              readonly kind: "reroll";
-              readonly effectKind: "d20_test_natural_one_reroll";
-              readonly replacement: {
-                readonly succeeded: boolean;
-                readonly naturalD20: number;
-              };
-            };
+        readonly d20TestNaturalOneReroll?: BattleD20TestNaturalOneRerollOutcomeDecisionEncoded;
       };
     }
   | {
@@ -3136,6 +3188,9 @@ type BattleFillEncoded =
       readonly holeId: string;
       readonly value: {
         readonly total: number;
+        readonly naturalD20?: number;
+        readonly rolledD20s?: BattleD20TestRolledD20sEncoded;
+        readonly d20TestNaturalOneReroll?: BattleD20TestNaturalOneRerollDecisionEncoded;
       };
       readonly spatialFacts?: readonly {
         readonly kind: "spellRestraintEscapeActorWithinTargetReach";
@@ -4002,6 +4057,9 @@ export const BattleFillSchema: Schema.Schema<
       value: Schema.Struct({
         total: Schema.Number.pipe(Schema.int()),
         naturalD20: Schema.optionalWith(BattleD20DieRollResultSchema, {
+          exact: true,
+        }),
+        rolledD20s: Schema.optionalWith(BattleD20TestRolledD20sSchema, {
           exact: true,
         }),
         d20TestNaturalOneReroll: Schema.optionalWith(

@@ -186,6 +186,8 @@ export function resolveOpportunityAttackCommand(
     d20TestNaturalOneRerollRollDecisionRequired({
       actor: reactor,
       originalNaturalD20: Number(fillSet.attackRoll.naturalD20),
+      rollMode: fillSet.attackRoll.rollMode,
+      rolledD20s: fillSet.attackRoll.rolledD20s,
       decision: fillSet.attackRoll.d20TestNaturalOneReroll,
     })
   ) {
@@ -197,7 +199,10 @@ export function resolveOpportunityAttackCommand(
   }
   const d20TestNaturalOneRerollIssue = d20TestNaturalOneRerollRollIssue({
     actor: reactor,
+    total: fillSet.attackRoll.total,
     originalNaturalD20: Number(fillSet.attackRoll.naturalD20),
+    rollMode: fillSet.attackRoll.rollMode,
+    rolledD20s: fillSet.attackRoll.rolledD20s,
     decision: fillSet.attackRoll.d20TestNaturalOneReroll,
     requiredRollMode,
   });

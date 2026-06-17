@@ -27,6 +27,7 @@ import { validateRolledDiceForDiceExpr } from "@dnd/shared-algebras/runtime-dice
 
 import {
   type AttackRollResult,
+  type AttackRollMode,
   type RolledDiceGroup,
 } from "@dnd/shared-algebras/runtime-hole-algebra";
 
@@ -874,18 +875,20 @@ export function resolveHide(
       "Hide requires Heavily Obscured, sufficient cover, or an admitted creature-obscurement permission while out of enemy line of sight.",
     );
   }
+  const checkHole = hideAbilityCheckHole(input.state, input.subject.actorId);
   const check = abilityCheckFill(
     input.fills,
     HIDE_ABILITY_CHECK_HOLE_ID,
     "Hide",
+    {
+      rollMode: checkHole.rollMode,
+    },
   );
   if (check.tag === "invalid") {
     return invalidResult(input.state, "invalidFill", check.message);
   }
   if (check.value === undefined) {
-    return needsHolesResult(input.state, input.subject, [
-      hideAbilityCheckHole(input.state, input.subject.actorId),
-    ]);
+    return needsHolesResult(input.state, input.subject, [checkHole]);
   }
 
   const spent =
@@ -1039,23 +1042,23 @@ export function resolveSearch(
       "Search target must be a hidden combatant in this battle.",
     );
   }
+  const checkHole = searchAbilityCheckHole(
+    target.hidden.discoveryDc,
+    input.state,
+    input.subject.actorId,
+    target.combatantId,
+  );
   const check = abilityCheckFill(
     input.fills.filter((fill) => fill.kind !== "targetChoice"),
     SEARCH_ABILITY_CHECK_HOLE_ID,
     "Search",
+    { rollMode: checkHole.rollMode },
   );
   if (check.tag === "invalid") {
     return invalidResult(input.state, "invalidFill", check.message);
   }
   if (check.value === undefined) {
-    return needsHolesResult(input.state, input.subject, [
-      searchAbilityCheckHole(
-        target.hidden.discoveryDc,
-        input.state,
-        input.subject.actorId,
-        target.combatantId,
-      ),
-    ]);
+    return needsHolesResult(input.state, input.subject, [checkHole]);
   }
   const spent = spendAction(input.state.currentTurnResources, "search");
   if (Either.isLeft(spent)) {
@@ -1268,18 +1271,20 @@ export function resolveStatBlockBonusActionHide(
       "Hide requires Heavily Obscured, sufficient cover, or an admitted creature-obscurement permission while out of enemy line of sight.",
     );
   }
+  const checkHole = hideAbilityCheckHole(input.state, input.subject.actorId);
   const check = abilityCheckFill(
     input.fills,
     HIDE_ABILITY_CHECK_HOLE_ID,
     "Hide",
+    {
+      rollMode: checkHole.rollMode,
+    },
   );
   if (check.tag === "invalid") {
     return invalidResult(input.state, "invalidFill", check.message);
   }
   if (check.value === undefined) {
-    return needsHolesResult(input.state, input.subject, [
-      hideAbilityCheckHole(input.state, input.subject.actorId),
-    ]);
+    return needsHolesResult(input.state, input.subject, [checkHole]);
   }
   const spent = spendActivationResource(input.state.currentTurnResources, {
     kind: "bonusAction",
@@ -1640,21 +1645,21 @@ export function resolveEscapeSpellRestraint(
       "Spell-imposed Restraint escape DC is no longer available.",
     );
   }
+  const checkHole = escapeSpellRestraintAbilityCheckHole(input.state, effect, {
+    actorId: input.subject.actorId,
+    targetId: input.subject.targetId,
+  });
   const check = abilityCheckFill(
     input.fills,
     ESCAPE_SPELL_RESTRAINT_ABILITY_CHECK_HOLE_ID,
     "Escape spell Restraint",
+    { rollMode: checkHole.rollMode },
   );
   if (check.tag === "invalid") {
     return invalidResult(input.state, "invalidFill", check.message);
   }
   if (check.value === undefined) {
-    return needsHolesResult(input.state, input.subject, [
-      escapeSpellRestraintAbilityCheckHole(input.state, effect, {
-        actorId: input.subject.actorId,
-        targetId: input.subject.targetId,
-      }),
-    ]);
+    return needsHolesResult(input.state, input.subject, [checkHole]);
   }
   if (
     input.subject.actorId !== input.subject.targetId &&
@@ -1794,6 +1799,7 @@ export function abilityCheckFill(
   fills: readonly BattleFill[],
   holeId: BattleHoleId,
   label: string,
+  context?: { readonly rollMode?: AttackRollMode | undefined },
 ):
   | {
       readonly tag: "ok";
@@ -1810,7 +1816,10 @@ export function abilityCheckFill(
       }
       check = {
         ...fill,
-        value: effectiveD20TestNaturalOneRerollAbilityCheckValue(fill.value),
+        value: effectiveD20TestNaturalOneRerollAbilityCheckValue(
+          fill.value,
+          context,
+        ),
       };
       continue;
     }
@@ -2284,12 +2293,10 @@ export function classFeatureExtraAttackForActor(
   readonly additionalAttacks: BattleAttackActionAdditionalAttacks;
 } | null {
   if (actor?.origin.kind !== "character") return null;
-  let strongest:
-    | {
-        readonly unitId: UnitRecord["id"];
-        readonly additionalAttacks: BattleAttackActionAdditionalAttacks;
-      }
-    | null = null;
+  let strongest: {
+    readonly unitId: UnitRecord["id"];
+    readonly additionalAttacks: BattleAttackActionAdditionalAttacks;
+  } | null = null;
   for (const unitRef of actor.origin.characterUnitRefs) {
     for (const profile of unitRef.supportProfiles) {
       if (
