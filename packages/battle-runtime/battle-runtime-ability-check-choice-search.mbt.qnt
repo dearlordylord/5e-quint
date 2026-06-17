@@ -256,28 +256,17 @@ module battleRuntimeAbilityCheckChoiceSearchMbt {
   }
 
   action step = any {
-    if (qScenario == AbilityCheckChoiceSearchInit) doSearchTargetChoiceOpen
-    else if (qScenario == SearchTargetChoiceOpen) doSearchAbilityCheckOpen
-    else if (qScenario == SearchAbilityCheckOpen) doSearchInvalidTargetRejected
-    else if (qScenario == SearchInvalidTargetRejected) doSearchInvalidAbilityFillRejected
-    else if (qScenario == SearchInvalidAbilityFillRejected) doSearchFails
-    else if (qScenario == SearchFails) doSearchSucceeds
-    else if (qScenario == SearchSucceeds) doGuidanceSkillChoiceOpen
-    else if (qScenario == GuidanceSkillChoiceOpen) doGuidanceInvalidAbilityFillRejected
-    else if (qScenario == GuidanceInvalidAbilityFillRejected) doGuidanceSkillAthletics
-    else if (qScenario == GuidanceSkillAthletics) doEnhanceAbilityChoiceOpen
-    else if (qScenario == EnhanceAbilityChoiceOpen) doEnhanceAbilityInvalidSkillFillRejected
-    else if (qScenario == EnhanceAbilityInvalidSkillFillRejected) doEnhanceAbilityDex
-    else recordProjection(
-      qScenario,
-      qProtocol,
-      qTargetHidden,
-      qActionAvailable,
-      qTargetEffectCount,
-      qCasterEffectCount,
-      qD20ModifierSkill,
-      qAbilityCheckModeAbility,
-      qTargetDexRollMode,
-    ),
+    doSearchTargetChoiceOpen,
+    doSearchAbilityCheckOpen,
+    doSearchInvalidTargetRejected,
+    doSearchInvalidAbilityFillRejected,
+    doSearchFails,
+    doSearchSucceeds,
+    doGuidanceSkillChoiceOpen,
+    doGuidanceInvalidAbilityFillRejected,
+    doGuidanceSkillAthletics,
+    doEnhanceAbilityChoiceOpen,
+    doEnhanceAbilityInvalidSkillFillRejected,
+    doEnhanceAbilityDex,
   }
 }

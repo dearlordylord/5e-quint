@@ -270,43 +270,37 @@ module ruleCoreAbilitySkillCommandMbt {
   }
 
   action step = any {
-    if (qReplayIndex == 0) doSearchFails
-    else if (qReplayIndex == 1) doSearchSucceeds
-    else if (qReplayIndex == 2) doGuidanceSkillAcrobatics
-    else if (qReplayIndex == 3) doGuidanceSkillAnimalHandling
-    else if (qReplayIndex == 4) doGuidanceSkillArcana
-    else if (qReplayIndex == 5) doGuidanceSkillAthletics
-    else if (qReplayIndex == 6) doGuidanceSkillDeception
-    else if (qReplayIndex == 7) doGuidanceSkillHistory
-    else if (qReplayIndex == 8) doGuidanceSkillInsight
-    else if (qReplayIndex == 9) doGuidanceSkillIntimidation
-    else if (qReplayIndex == 10) doGuidanceSkillInvestigation
-    else if (qReplayIndex == 11) doGuidanceSkillMedicine
-    else if (qReplayIndex == 12) doGuidanceSkillNature
-    else if (qReplayIndex == 13) doGuidanceSkillPerception
-    else if (qReplayIndex == 14) doGuidanceSkillPerformance
-    else if (qReplayIndex == 15) doGuidanceSkillPersuasion
-    else if (qReplayIndex == 16) doGuidanceSkillReligion
-    else if (qReplayIndex == 17) doGuidanceSkillSleightOfHand
-    else if (qReplayIndex == 18) doGuidanceSkillStealth
-    else if (qReplayIndex == 19) doGuidanceSkillSurvival
-    else if (qReplayIndex == 20) doEnhanceAbilityChoice
-    else if (qReplayIndex == 21) doCommandCastGrovel
-    else if (qReplayIndex == 22) doCommandFollowGrovel
-    else if (qReplayIndex == 23) doCommandFollowDrop
-    else if (qReplayIndex == 24) doCommandHaltSuppresses
-    else if (qReplayIndex == 25) doCommandFollowApproachContinues
-    else if (qReplayIndex == 26) doCommandFollowApproachWithinFive
-    else if (qReplayIndex == 27) doCommandFollowApproachNoMovement
-    else if (qReplayIndex == 28) doCommandFollowFlee
-    else if (qReplayIndex == 29) doCommandFollowFleePartialRejected
-    else if (qReplayIndex == 30) doCommandFollowFleeNoMovement
-    else if (qReplayIndex == 31) doCommandFollowFleeOpportunityAttack
-    else recordProjection(
-      qLastScenario, qTargetHidden, qTargetProne, qTargetEffectCount, qCasterEffectCount,
-      qActionAvailable, qBonusActionAvailable, qMovementSpentFeet, qCurrentActor,
-      qPendingCommandOption, qDroppedObjectCount, qReactionWindowOpen, qHaltSuppressed,
-      qD20ModifierSkill, qAbilityCheckModeAbility, qReplayIndex,
-    ),
+    doSearchFails,
+    doSearchSucceeds,
+    doGuidanceSkillAcrobatics,
+    doGuidanceSkillAnimalHandling,
+    doGuidanceSkillArcana,
+    doGuidanceSkillAthletics,
+    doGuidanceSkillDeception,
+    doGuidanceSkillHistory,
+    doGuidanceSkillInsight,
+    doGuidanceSkillIntimidation,
+    doGuidanceSkillInvestigation,
+    doGuidanceSkillMedicine,
+    doGuidanceSkillNature,
+    doGuidanceSkillPerception,
+    doGuidanceSkillPerformance,
+    doGuidanceSkillPersuasion,
+    doGuidanceSkillReligion,
+    doGuidanceSkillSleightOfHand,
+    doGuidanceSkillStealth,
+    doGuidanceSkillSurvival,
+    doEnhanceAbilityChoice,
+    doCommandCastGrovel,
+    doCommandFollowGrovel,
+    doCommandFollowDrop,
+    doCommandHaltSuppresses,
+    doCommandFollowApproachContinues,
+    doCommandFollowApproachWithinFive,
+    doCommandFollowApproachNoMovement,
+    doCommandFollowFlee,
+    doCommandFollowFleePartialRejected,
+    doCommandFollowFleeNoMovement,
+    doCommandFollowFleeOpportunityAttack,
   }
 }

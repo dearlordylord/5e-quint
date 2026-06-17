@@ -1,6 +1,240 @@
 {
   "branchObligations": [
     {
+      "branchAction": "doEnhanceAbilityChoiceOpen",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doEnhanceAbilityChoiceOpen"
+      ],
+      "decisionSource": "branch-decision",
+      "driverPath": "packages/battle-runtime/battle-runtime-ability-check-choice-search.mbt.qnt",
+      "obligationId": "packages/battle-runtime/battle-runtime-ability-check-choice-search.mbt.qnt#step:doEnhanceAbilityChoiceOpen",
+      "qntFileSha256": "03939fa327861bfe490825a4a15b3875e34ff266b14b896c68a01afdb0f215ac",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "reason": "Enhance Ability is a level-2 spell.",
+        "reviewedBy": "codex-2026-06-17",
+        "tag": "out-of-scope"
+      }
+    },
+    {
+      "branchAction": "doEnhanceAbilityDex",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doEnhanceAbilityDex"
+      ],
+      "decisionSource": "branch-decision",
+      "driverPath": "packages/battle-runtime/battle-runtime-ability-check-choice-search.mbt.qnt",
+      "obligationId": "packages/battle-runtime/battle-runtime-ability-check-choice-search.mbt.qnt#step:doEnhanceAbilityDex",
+      "qntFileSha256": "03939fa327861bfe490825a4a15b3875e34ff266b14b896c68a01afdb0f215ac",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "reason": "Enhance Ability is a level-2 spell.",
+        "reviewedBy": "codex-2026-06-17",
+        "tag": "out-of-scope"
+      }
+    },
+    {
+      "branchAction": "doEnhanceAbilityInvalidSkillFillRejected",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doEnhanceAbilityInvalidSkillFillRejected"
+      ],
+      "decisionSource": "branch-decision",
+      "driverPath": "packages/battle-runtime/battle-runtime-ability-check-choice-search.mbt.qnt",
+      "obligationId": "packages/battle-runtime/battle-runtime-ability-check-choice-search.mbt.qnt#step:doEnhanceAbilityInvalidSkillFillRejected",
+      "qntFileSha256": "03939fa327861bfe490825a4a15b3875e34ff266b14b896c68a01afdb0f215ac",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "reason": "Enhance Ability is a level-2 spell.",
+        "reviewedBy": "codex-2026-06-17",
+        "tag": "out-of-scope"
+      }
+    },
+    {
+      "branchAction": "doGuidanceInvalidAbilityFillRejected",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doGuidanceInvalidAbilityFillRejected"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/battle-runtime-ability-check-choice-search.mbt.qnt",
+      "obligationId": "packages/battle-runtime/battle-runtime-ability-check-choice-search.mbt.qnt#step:doGuidanceInvalidAbilityFillRejected",
+      "qntFileSha256": "03939fa327861bfe490825a4a15b3875e34ff266b14b896c68a01afdb0f215ac",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doGuidanceSkillAthletics",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doGuidanceSkillAthletics"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/battle-runtime-ability-check-choice-search.mbt.qnt",
+      "obligationId": "packages/battle-runtime/battle-runtime-ability-check-choice-search.mbt.qnt#step:doGuidanceSkillAthletics",
+      "qntFileSha256": "03939fa327861bfe490825a4a15b3875e34ff266b14b896c68a01afdb0f215ac",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doGuidanceSkillChoiceOpen",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doGuidanceSkillChoiceOpen"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/battle-runtime-ability-check-choice-search.mbt.qnt",
+      "obligationId": "packages/battle-runtime/battle-runtime-ability-check-choice-search.mbt.qnt#step:doGuidanceSkillChoiceOpen",
+      "qntFileSha256": "03939fa327861bfe490825a4a15b3875e34ff266b14b896c68a01afdb0f215ac",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doSearchAbilityCheckOpen",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doSearchAbilityCheckOpen"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/battle-runtime-ability-check-choice-search.mbt.qnt",
+      "obligationId": "packages/battle-runtime/battle-runtime-ability-check-choice-search.mbt.qnt#step:doSearchAbilityCheckOpen",
+      "qntFileSha256": "03939fa327861bfe490825a4a15b3875e34ff266b14b896c68a01afdb0f215ac",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doSearchFails",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doSearchFails"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/battle-runtime-ability-check-choice-search.mbt.qnt",
+      "obligationId": "packages/battle-runtime/battle-runtime-ability-check-choice-search.mbt.qnt#step:doSearchFails",
+      "qntFileSha256": "03939fa327861bfe490825a4a15b3875e34ff266b14b896c68a01afdb0f215ac",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doSearchInvalidAbilityFillRejected",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doSearchInvalidAbilityFillRejected"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/battle-runtime-ability-check-choice-search.mbt.qnt",
+      "obligationId": "packages/battle-runtime/battle-runtime-ability-check-choice-search.mbt.qnt#step:doSearchInvalidAbilityFillRejected",
+      "qntFileSha256": "03939fa327861bfe490825a4a15b3875e34ff266b14b896c68a01afdb0f215ac",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doSearchInvalidTargetRejected",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doSearchInvalidTargetRejected"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/battle-runtime-ability-check-choice-search.mbt.qnt",
+      "obligationId": "packages/battle-runtime/battle-runtime-ability-check-choice-search.mbt.qnt#step:doSearchInvalidTargetRejected",
+      "qntFileSha256": "03939fa327861bfe490825a4a15b3875e34ff266b14b896c68a01afdb0f215ac",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doSearchSucceeds",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doSearchSucceeds"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/battle-runtime-ability-check-choice-search.mbt.qnt",
+      "obligationId": "packages/battle-runtime/battle-runtime-ability-check-choice-search.mbt.qnt#step:doSearchSucceeds",
+      "qntFileSha256": "03939fa327861bfe490825a4a15b3875e34ff266b14b896c68a01afdb0f215ac",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doSearchTargetChoiceOpen",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doSearchTargetChoiceOpen"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/battle-runtime-ability-check-choice-search.mbt.qnt",
+      "obligationId": "packages/battle-runtime/battle-runtime-ability-check-choice-search.mbt.qnt#step:doSearchTargetChoiceOpen",
+      "qntFileSha256": "03939fa327861bfe490825a4a15b3875e34ff266b14b896c68a01afdb0f215ac",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
       "branchAction": "doAdrenalineRushDash",
       "branchFamily": "step",
       "branchPath": [
@@ -36,6 +270,508 @@
       },
       "scope": {
         "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doBreakShiningConcentration",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doBreakShiningConcentration"
+      ],
+      "decisionSource": "branch-decision",
+      "driverPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt",
+      "obligationId": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt#step:doBreakShiningConcentration",
+      "qntFileSha256": "3561bd1381527a492de03e0805102fc0721b399b162fb697b8dee1c7f1c17276",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "reason": "Shining Smite is a level-2 spell.",
+        "reviewedBy": "codex-2026-06-17",
+        "tag": "out-of-scope"
+      }
+    },
+    {
+      "branchAction": "doChooseDivineSmiteFreeCast",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doChooseDivineSmiteFreeCast"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt",
+      "obligationId": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt#step:doChooseDivineSmiteFreeCast",
+      "qntFileSha256": "3561bd1381527a492de03e0805102fc0721b399b162fb697b8dee1c7f1c17276",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doChooseDivineSmiteSlot",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doChooseDivineSmiteSlot"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt",
+      "obligationId": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt#step:doChooseDivineSmiteSlot",
+      "qntFileSha256": "3561bd1381527a492de03e0805102fc0721b399b162fb697b8dee1c7f1c17276",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doChooseEnsnaringStrike",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doChooseEnsnaringStrike"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt",
+      "obligationId": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt#step:doChooseEnsnaringStrike",
+      "qntFileSha256": "3561bd1381527a492de03e0805102fc0721b399b162fb697b8dee1c7f1c17276",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doChooseSearingSmite",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doChooseSearingSmite"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt",
+      "obligationId": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt#step:doChooseSearingSmite",
+      "qntFileSha256": "3561bd1381527a492de03e0805102fc0721b399b162fb697b8dee1c7f1c17276",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doChooseShiningSmite",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doChooseShiningSmite"
+      ],
+      "decisionSource": "branch-decision",
+      "driverPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt",
+      "obligationId": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt#step:doChooseShiningSmite",
+      "qntFileSha256": "3561bd1381527a492de03e0805102fc0721b399b162fb697b8dee1c7f1c17276",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "reason": "Shining Smite is a level-2 spell.",
+        "reviewedBy": "codex-2026-06-17",
+        "tag": "out-of-scope"
+      }
+    },
+    {
+      "branchAction": "doDiscoverEnsnaringStartTurnDamage",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doDiscoverEnsnaringStartTurnDamage"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt",
+      "obligationId": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt#step:doDiscoverEnsnaringStartTurnDamage",
+      "qntFileSha256": "3561bd1381527a492de03e0805102fc0721b399b162fb697b8dee1c7f1c17276",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doDiscoverSearingStartTurnDamageAndSave",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doDiscoverSearingStartTurnDamageAndSave"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt",
+      "obligationId": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt#step:doDiscoverSearingStartTurnDamageAndSave",
+      "qntFileSha256": "3561bd1381527a492de03e0805102fc0721b399b162fb697b8dee1c7f1c17276",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doDiscoverWeaponHit",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doDiscoverWeaponHit"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt",
+      "obligationId": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt#step:doDiscoverWeaponHit",
+      "qntFileSha256": "3561bd1381527a492de03e0805102fc0721b399b162fb697b8dee1c7f1c17276",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doFillDivineSmiteDamage",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doFillDivineSmiteDamage"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt",
+      "obligationId": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt#step:doFillDivineSmiteDamage",
+      "qntFileSha256": "3561bd1381527a492de03e0805102fc0721b399b162fb697b8dee1c7f1c17276",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doFillEnsnaringEscapeCheck",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doFillEnsnaringEscapeCheck"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt",
+      "obligationId": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt#step:doFillEnsnaringEscapeCheck",
+      "qntFileSha256": "3561bd1381527a492de03e0805102fc0721b399b162fb697b8dee1c7f1c17276",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doFillEnsnaringFailedSave",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doFillEnsnaringFailedSave"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt",
+      "obligationId": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt#step:doFillEnsnaringFailedSave",
+      "qntFileSha256": "3561bd1381527a492de03e0805102fc0721b399b162fb697b8dee1c7f1c17276",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doFillEnsnaringStartTurnDamage",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doFillEnsnaringStartTurnDamage"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt",
+      "obligationId": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt#step:doFillEnsnaringStartTurnDamage",
+      "qntFileSha256": "3561bd1381527a492de03e0805102fc0721b399b162fb697b8dee1c7f1c17276",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doFillEnsnaringSuccessfulSave",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doFillEnsnaringSuccessfulSave"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt",
+      "obligationId": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt#step:doFillEnsnaringSuccessfulSave",
+      "qntFileSha256": "3561bd1381527a492de03e0805102fc0721b399b162fb697b8dee1c7f1c17276",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doFillEnsnaringWeaponDamage",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doFillEnsnaringWeaponDamage"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt",
+      "obligationId": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt#step:doFillEnsnaringWeaponDamage",
+      "qntFileSha256": "3561bd1381527a492de03e0805102fc0721b399b162fb697b8dee1c7f1c17276",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doFillHitAttackRoll",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doFillHitAttackRoll"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt",
+      "obligationId": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt#step:doFillHitAttackRoll",
+      "qntFileSha256": "3561bd1381527a492de03e0805102fc0721b399b162fb697b8dee1c7f1c17276",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doFillSearingSmiteDamage",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doFillSearingSmiteDamage"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt",
+      "obligationId": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt#step:doFillSearingSmiteDamage",
+      "qntFileSha256": "3561bd1381527a492de03e0805102fc0721b399b162fb697b8dee1c7f1c17276",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doFillSearingStartTurnDamageAndSave",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doFillSearingStartTurnDamageAndSave"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt",
+      "obligationId": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt#step:doFillSearingStartTurnDamageAndSave",
+      "qntFileSha256": "3561bd1381527a492de03e0805102fc0721b399b162fb697b8dee1c7f1c17276",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doFillShiningSmiteDamage",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doFillShiningSmiteDamage"
+      ],
+      "decisionSource": "branch-decision",
+      "driverPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt",
+      "obligationId": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt#step:doFillShiningSmiteDamage",
+      "qntFileSha256": "3561bd1381527a492de03e0805102fc0721b399b162fb697b8dee1c7f1c17276",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "reason": "Shining Smite is a level-2 spell.",
+        "reviewedBy": "codex-2026-06-17",
+        "tag": "out-of-scope"
+      }
+    },
+    {
+      "branchAction": "doFillTargetChoice",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doFillTargetChoice"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt",
+      "obligationId": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt#step:doFillTargetChoice",
+      "qntFileSha256": "3561bd1381527a492de03e0805102fc0721b399b162fb697b8dee1c7f1c17276",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doFinish",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doFinish"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt",
+      "obligationId": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt#step:doFinish",
+      "qntFileSha256": "3561bd1381527a492de03e0805102fc0721b399b162fb697b8dee1c7f1c17276",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doStartDivineSmiteFreeCast",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doStartDivineSmiteFreeCast"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt",
+      "obligationId": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt#step:doStartDivineSmiteFreeCast",
+      "qntFileSha256": "3561bd1381527a492de03e0805102fc0721b399b162fb697b8dee1c7f1c17276",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doStartEnsnaringFailedSave",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doStartEnsnaringFailedSave"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt",
+      "obligationId": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt#step:doStartEnsnaringFailedSave",
+      "qntFileSha256": "3561bd1381527a492de03e0805102fc0721b399b162fb697b8dee1c7f1c17276",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doStartEnsnaringSuccessfulSave",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doStartEnsnaringSuccessfulSave"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt",
+      "obligationId": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt#step:doStartEnsnaringSuccessfulSave",
+      "qntFileSha256": "3561bd1381527a492de03e0805102fc0721b399b162fb697b8dee1c7f1c17276",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doStartSearingSmite",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doStartSearingSmite"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt",
+      "obligationId": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt#step:doStartSearingSmite",
+      "qntFileSha256": "3561bd1381527a492de03e0805102fc0721b399b162fb697b8dee1c7f1c17276",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doStartShiningSmite",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doStartShiningSmite"
+      ],
+      "decisionSource": "branch-decision",
+      "driverPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt",
+      "obligationId": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt#step:doStartShiningSmite",
+      "qntFileSha256": "3561bd1381527a492de03e0805102fc0721b399b162fb697b8dee1c7f1c17276",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "reason": "Shining Smite is a level-2 spell.",
+        "reviewedBy": "codex-2026-06-17",
+        "tag": "out-of-scope"
       }
     },
     {
@@ -1084,6 +1820,187 @@
       }
     },
     {
+      "branchAction": "doResolveBlindnessDeafnessBlindedSavingThrow",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doResolveBlindnessDeafnessBlindedSavingThrow"
+      ],
+      "decisionSource": "branch-decision",
+      "driverPath": "packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt",
+      "obligationId": "packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt#step:doResolveBlindnessDeafnessBlindedSavingThrow",
+      "qntFileSha256": "eaffed9f09ee7c80f7e15bc5caffdca80cc9d2062a5a8fa82493bd97cc43fad7",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "reason": "Blindness/Deafness is a level-2 spell.",
+        "reviewedBy": "codex-2026-06-17",
+        "tag": "out-of-scope"
+      }
+    },
+    {
+      "branchAction": "doResolveBlindnessDeafnessDeafenedSavingThrow",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doResolveBlindnessDeafnessDeafenedSavingThrow"
+      ],
+      "decisionSource": "branch-decision",
+      "driverPath": "packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt",
+      "obligationId": "packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt#step:doResolveBlindnessDeafnessDeafenedSavingThrow",
+      "qntFileSha256": "eaffed9f09ee7c80f7e15bc5caffdca80cc9d2062a5a8fa82493bd97cc43fad7",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "reason": "Blindness/Deafness is a level-2 spell.",
+        "reviewedBy": "codex-2026-06-17",
+        "tag": "out-of-scope"
+      }
+    },
+    {
+      "branchAction": "doResolveColorSprayFailedSavingThrow",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doResolveColorSprayFailedSavingThrow"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt",
+      "obligationId": "packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt#step:doResolveColorSprayFailedSavingThrow",
+      "qntFileSha256": "eaffed9f09ee7c80f7e15bc5caffdca80cc9d2062a5a8fa82493bd97cc43fad7",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doResolveEntangleFailedSavingThrow",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doResolveEntangleFailedSavingThrow"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt",
+      "obligationId": "packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt#step:doResolveEntangleFailedSavingThrow",
+      "qntFileSha256": "eaffed9f09ee7c80f7e15bc5caffdca80cc9d2062a5a8fa82493bd97cc43fad7",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doResolveHideousLaughterRepeatSavingThrowSuccess",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doResolveHideousLaughterRepeatSavingThrowSuccess"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt",
+      "obligationId": "packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt#step:doResolveHideousLaughterRepeatSavingThrowSuccess",
+      "qntFileSha256": "eaffed9f09ee7c80f7e15bc5caffdca80cc9d2062a5a8fa82493bd97cc43fad7",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doResolveHoldPersonFailedSavingThrow",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doResolveHoldPersonFailedSavingThrow"
+      ],
+      "decisionSource": "branch-decision",
+      "driverPath": "packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt",
+      "obligationId": "packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt#step:doResolveHoldPersonFailedSavingThrow",
+      "qntFileSha256": "eaffed9f09ee7c80f7e15bc5caffdca80cc9d2062a5a8fa82493bd97cc43fad7",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "reason": "Hold Person is a level-2 spell.",
+        "reviewedBy": "codex-2026-06-17",
+        "tag": "out-of-scope"
+      }
+    },
+    {
+      "branchAction": "doResolveHoldPersonRepeatSavingThrowSuccess",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doResolveHoldPersonRepeatSavingThrowSuccess"
+      ],
+      "decisionSource": "branch-decision",
+      "driverPath": "packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt",
+      "obligationId": "packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt#step:doResolveHoldPersonRepeatSavingThrowSuccess",
+      "qntFileSha256": "eaffed9f09ee7c80f7e15bc5caffdca80cc9d2062a5a8fa82493bd97cc43fad7",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "reason": "Hold Person is a level-2 spell.",
+        "reviewedBy": "codex-2026-06-17",
+        "tag": "out-of-scope"
+      }
+    },
+    {
+      "branchAction": "doResolveHypnoticPatternFailedSavingThrow",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doResolveHypnoticPatternFailedSavingThrow"
+      ],
+      "decisionSource": "branch-decision",
+      "driverPath": "packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt",
+      "obligationId": "packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt#step:doResolveHypnoticPatternFailedSavingThrow",
+      "qntFileSha256": "eaffed9f09ee7c80f7e15bc5caffdca80cc9d2062a5a8fa82493bd97cc43fad7",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "reason": "Hypnotic Pattern is a level-3 spell.",
+        "reviewedBy": "codex-2026-06-17",
+        "tag": "out-of-scope"
+      }
+    },
+    {
+      "branchAction": "doResolveSleepRepeatSavingThrowFailure",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doResolveSleepRepeatSavingThrowFailure"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt",
+      "obligationId": "packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt#step:doResolveSleepRepeatSavingThrowFailure",
+      "qntFileSha256": "eaffed9f09ee7c80f7e15bc5caffdca80cc9d2062a5a8fa82493bd97cc43fad7",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
       "branchAction": "doDiscoverAnimalFriendshipBeastTargetAdmission",
       "branchFamily": "step",
       "branchPath": [
@@ -1911,6 +2828,82 @@
       "driverPath": "packages/battle-runtime/battle-runtime-find-familiar-selected-identity.mbt.qnt",
       "obligationId": "packages/battle-runtime/battle-runtime-find-familiar-selected-identity.mbt.qnt#step:doRecastFindFamiliarReplacement",
       "qntFileSha256": "f304cb2a0dfaacdd94624ac2d32ae459683e432e9702a1557ac1ada1410f0f71",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doMoveThroughLargerCreatureSpace",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doMoveThroughLargerCreatureSpace"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/battle-runtime-halfling-nimbleness-selected-identity.mbt.qnt",
+      "obligationId": "packages/battle-runtime/battle-runtime-halfling-nimbleness-selected-identity.mbt.qnt#step:doMoveThroughLargerCreatureSpace",
+      "qntFileSha256": "b4bd4fba541023b243878758d2d91b0b701b3fbfebbce6b52a7ae99bd929c86e",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doRejectMissingProfile",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doRejectMissingProfile"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/battle-runtime-halfling-nimbleness-selected-identity.mbt.qnt",
+      "obligationId": "packages/battle-runtime/battle-runtime-halfling-nimbleness-selected-identity.mbt.qnt#step:doRejectMissingProfile",
+      "qntFileSha256": "b4bd4fba541023b243878758d2d91b0b701b3fbfebbce6b52a7ae99bd929c86e",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doRejectOccupiedStop",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doRejectOccupiedStop"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/battle-runtime-halfling-nimbleness-selected-identity.mbt.qnt",
+      "obligationId": "packages/battle-runtime/battle-runtime-halfling-nimbleness-selected-identity.mbt.qnt#step:doRejectOccupiedStop",
+      "qntFileSha256": "b4bd4fba541023b243878758d2d91b0b701b3fbfebbce6b52a7ae99bd929c86e",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doRejectSameSizeTraversal",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doRejectSameSizeTraversal"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/battle-runtime-halfling-nimbleness-selected-identity.mbt.qnt",
+      "obligationId": "packages/battle-runtime/battle-runtime-halfling-nimbleness-selected-identity.mbt.qnt#step:doRejectSameSizeTraversal",
+      "qntFileSha256": "b4bd4fba541023b243878758d2d91b0b701b3fbfebbce6b52a7ae99bd929c86e",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -2889,6 +3882,124 @@
       }
     },
     {
+      "branchAction": "doBarbarianFastMovementDash",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doBarbarianFastMovementDash"
+      ],
+      "decisionSource": "branch-decision",
+      "driverPath": "packages/battle-runtime/battle-runtime-movement-forced-movement-selected-identity.mbt.qnt",
+      "obligationId": "packages/battle-runtime/battle-runtime-movement-forced-movement-selected-identity.mbt.qnt#step:doBarbarianFastMovementDash",
+      "qntFileSha256": "a607bfc96909cfdd19fbe41767280b4c1d427882e4f7a5a2aa486582de417e87",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "reason": "Barbarian Fast Movement is a level-5 feature.",
+        "reviewedBy": "codex-2026-06-17",
+        "tag": "out-of-scope"
+      }
+    },
+    {
+      "branchAction": "doCommandFleeTargetTurn",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doCommandFleeTargetTurn"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/battle-runtime-movement-forced-movement-selected-identity.mbt.qnt",
+      "obligationId": "packages/battle-runtime/battle-runtime-movement-forced-movement-selected-identity.mbt.qnt#step:doCommandFleeTargetTurn",
+      "qntFileSha256": "a607bfc96909cfdd19fbe41767280b4c1d427882e4f7a5a2aa486582de417e87",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doDissonantWhispersForcedReactionMovement",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doDissonantWhispersForcedReactionMovement"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/battle-runtime-movement-forced-movement-selected-identity.mbt.qnt",
+      "obligationId": "packages/battle-runtime/battle-runtime-movement-forced-movement-selected-identity.mbt.qnt#step:doDissonantWhispersForcedReactionMovement",
+      "qntFileSha256": "a607bfc96909cfdd19fbe41767280b4c1d427882e4f7a5a2aa486582de417e87",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doExpeditiousRetreatImmediateDash",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doExpeditiousRetreatImmediateDash"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/battle-runtime-movement-forced-movement-selected-identity.mbt.qnt",
+      "obligationId": "packages/battle-runtime/battle-runtime-movement-forced-movement-selected-identity.mbt.qnt#step:doExpeditiousRetreatImmediateDash",
+      "qntFileSha256": "a607bfc96909cfdd19fbe41767280b4c1d427882e4f7a5a2aa486582de417e87",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doMonkUnarmoredMovementDash",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doMonkUnarmoredMovementDash"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/battle-runtime-movement-forced-movement-selected-identity.mbt.qnt",
+      "obligationId": "packages/battle-runtime/battle-runtime-movement-forced-movement-selected-identity.mbt.qnt#step:doMonkUnarmoredMovementDash",
+      "qntFileSha256": "a607bfc96909cfdd19fbe41767280b4c1d427882e4f7a5a2aa486582de417e87",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doRangerRovingClimbSwimMovement",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doRangerRovingClimbSwimMovement"
+      ],
+      "decisionSource": "branch-decision",
+      "driverPath": "packages/battle-runtime/battle-runtime-movement-forced-movement-selected-identity.mbt.qnt",
+      "obligationId": "packages/battle-runtime/battle-runtime-movement-forced-movement-selected-identity.mbt.qnt#step:doRangerRovingClimbSwimMovement",
+      "qntFileSha256": "a607bfc96909cfdd19fbe41767280b4c1d427882e4f7a5a2aa486582de417e87",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "reason": "Ranger Roving is a level-6 feature.",
+        "reviewedBy": "codex-2026-06-17",
+        "tag": "out-of-scope"
+      }
+    },
+    {
       "branchAction": "doRejectOnePerSpell",
       "branchFamily": "step",
       "branchPath": [
@@ -3089,6 +4200,126 @@
       "driverPath": "packages/battle-runtime/battle-runtime-quickened-spell-governor.mbt.qnt",
       "obligationId": "packages/battle-runtime/battle-runtime-quickened-spell-governor.mbt.qnt#step:doResolveQuickenedSaveGatedConditionImmunity",
       "qntFileSha256": "fc1be2e2e69b7e71dff48fa75626b6fae88fa6cd1c5c9c982e251cf9d025a334",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doCounterspellAllowsSpellCastResume",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doCounterspellAllowsSpellCastResume"
+      ],
+      "decisionSource": "branch-decision",
+      "driverPath": "packages/battle-runtime/battle-runtime-reaction-casting-time.mbt.qnt",
+      "obligationId": "packages/battle-runtime/battle-runtime-reaction-casting-time.mbt.qnt#step:doCounterspellAllowsSpellCastResume",
+      "qntFileSha256": "d2f808011be9e3e4d19b11a11feeb87b33d940edfabb10e8de25090608622849",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "reason": "Counterspell is a level-3 spell.",
+        "reviewedBy": "codex-2026-06-17",
+        "tag": "out-of-scope"
+      }
+    },
+    {
+      "branchAction": "doCounterspellEndsSpellCast",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doCounterspellEndsSpellCast"
+      ],
+      "decisionSource": "branch-decision",
+      "driverPath": "packages/battle-runtime/battle-runtime-reaction-casting-time.mbt.qnt",
+      "obligationId": "packages/battle-runtime/battle-runtime-reaction-casting-time.mbt.qnt#step:doCounterspellEndsSpellCast",
+      "qntFileSha256": "d2f808011be9e3e4d19b11a11feeb87b33d940edfabb10e8de25090608622849",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "reason": "Counterspell is a level-3 spell.",
+        "reviewedBy": "codex-2026-06-17",
+        "tag": "out-of-scope"
+      }
+    },
+    {
+      "branchAction": "doHellishRebukeAfterDamage",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doHellishRebukeAfterDamage"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/battle-runtime-reaction-casting-time.mbt.qnt",
+      "obligationId": "packages/battle-runtime/battle-runtime-reaction-casting-time.mbt.qnt#step:doHellishRebukeAfterDamage",
+      "qntFileSha256": "d2f808011be9e3e4d19b11a11feeb87b33d940edfabb10e8de25090608622849",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doResolveCounterspellMagicMissileCast",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doResolveCounterspellMagicMissileCast"
+      ],
+      "decisionSource": "branch-decision",
+      "driverPath": "packages/battle-runtime/battle-runtime-reaction-spell-selected-identity.mbt.qnt",
+      "obligationId": "packages/battle-runtime/battle-runtime-reaction-spell-selected-identity.mbt.qnt#step:doResolveCounterspellMagicMissileCast",
+      "qntFileSha256": "5a8cbb07d27648b97bb7e94baec51fcbdba1f97ceeb02b6780bb4f7407815959",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "reason": "Counterspell is a level-3 spell.",
+        "reviewedBy": "codex-2026-06-17",
+        "tag": "out-of-scope"
+      }
+    },
+    {
+      "branchAction": "doResolveHellishRebukeFailedSavingThrow",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doResolveHellishRebukeFailedSavingThrow"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/battle-runtime-reaction-spell-selected-identity.mbt.qnt",
+      "obligationId": "packages/battle-runtime/battle-runtime-reaction-spell-selected-identity.mbt.qnt#step:doResolveHellishRebukeFailedSavingThrow",
+      "qntFileSha256": "5a8cbb07d27648b97bb7e94baec51fcbdba1f97ceeb02b6780bb4f7407815959",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doResolveShieldReactionSpellHit",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doResolveShieldReactionSpellHit"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/battle-runtime-reaction-spell-selected-identity.mbt.qnt",
+      "obligationId": "packages/battle-runtime/battle-runtime-reaction-spell-selected-identity.mbt.qnt#step:doResolveShieldReactionSpellHit",
+      "qntFileSha256": "5a8cbb07d27648b97bb7e94baec51fcbdba1f97ceeb02b6780bb4f7407815959",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -4532,7 +5763,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/battle-runtime-species-passive-trait-selected-identity.mbt.qnt",
       "obligationId": "packages/battle-runtime/battle-runtime-species-passive-trait-selected-identity.mbt.qnt#step:doDragonbornDamageResistance",
-      "qntFileSha256": "4157e719db75f7ce204fc5d8568ca0f45ef30a4947c714a1e894a53e70229ac0",
+      "qntFileSha256": "da0b947fcae7b69923aa4e468b2a4d5bad4e2e35c0c31fd5d8a5aa3415a2fa51",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -4551,7 +5782,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/battle-runtime-species-passive-trait-selected-identity.mbt.qnt",
       "obligationId": "packages/battle-runtime/battle-runtime-species-passive-trait-selected-identity.mbt.qnt#step:doDwarvenResilience",
-      "qntFileSha256": "4157e719db75f7ce204fc5d8568ca0f45ef30a4947c714a1e894a53e70229ac0",
+      "qntFileSha256": "da0b947fcae7b69923aa4e468b2a4d5bad4e2e35c0c31fd5d8a5aa3415a2fa51",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -4570,7 +5801,26 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/battle-runtime-species-passive-trait-selected-identity.mbt.qnt",
       "obligationId": "packages/battle-runtime/battle-runtime-species-passive-trait-selected-identity.mbt.qnt#step:doGoliathPowerfulBuild",
-      "qntFileSha256": "4157e719db75f7ce204fc5d8568ca0f45ef30a4947c714a1e894a53e70229ac0",
+      "qntFileSha256": "da0b947fcae7b69923aa4e468b2a4d5bad4e2e35c0c31fd5d8a5aa3415a2fa51",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doHalflingBrave",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doHalflingBrave"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/battle-runtime-species-passive-trait-selected-identity.mbt.qnt",
+      "obligationId": "packages/battle-runtime/battle-runtime-species-passive-trait-selected-identity.mbt.qnt#step:doHalflingBrave",
+      "qntFileSha256": "da0b947fcae7b69923aa4e468b2a4d5bad4e2e35c0c31fd5d8a5aa3415a2fa51",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -6290,6 +7540,617 @@
       }
     },
     {
+      "branchAction": "doCommandCastGrovel",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doCommandCastGrovel"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doCommandCastGrovel",
+      "qntFileSha256": "cc44aa6908280105e5fc03e9ca3c8312a025525c9d2bceab4f09b93060f5d0ff",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doCommandFollowApproachContinues",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doCommandFollowApproachContinues"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doCommandFollowApproachContinues",
+      "qntFileSha256": "cc44aa6908280105e5fc03e9ca3c8312a025525c9d2bceab4f09b93060f5d0ff",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doCommandFollowApproachNoMovement",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doCommandFollowApproachNoMovement"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doCommandFollowApproachNoMovement",
+      "qntFileSha256": "cc44aa6908280105e5fc03e9ca3c8312a025525c9d2bceab4f09b93060f5d0ff",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doCommandFollowApproachWithinFive",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doCommandFollowApproachWithinFive"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doCommandFollowApproachWithinFive",
+      "qntFileSha256": "cc44aa6908280105e5fc03e9ca3c8312a025525c9d2bceab4f09b93060f5d0ff",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doCommandFollowDrop",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doCommandFollowDrop"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doCommandFollowDrop",
+      "qntFileSha256": "cc44aa6908280105e5fc03e9ca3c8312a025525c9d2bceab4f09b93060f5d0ff",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doCommandFollowFlee",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doCommandFollowFlee"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doCommandFollowFlee",
+      "qntFileSha256": "cc44aa6908280105e5fc03e9ca3c8312a025525c9d2bceab4f09b93060f5d0ff",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doCommandFollowFleeNoMovement",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doCommandFollowFleeNoMovement"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doCommandFollowFleeNoMovement",
+      "qntFileSha256": "cc44aa6908280105e5fc03e9ca3c8312a025525c9d2bceab4f09b93060f5d0ff",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doCommandFollowFleeOpportunityAttack",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doCommandFollowFleeOpportunityAttack"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doCommandFollowFleeOpportunityAttack",
+      "qntFileSha256": "cc44aa6908280105e5fc03e9ca3c8312a025525c9d2bceab4f09b93060f5d0ff",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doCommandFollowFleePartialRejected",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doCommandFollowFleePartialRejected"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doCommandFollowFleePartialRejected",
+      "qntFileSha256": "cc44aa6908280105e5fc03e9ca3c8312a025525c9d2bceab4f09b93060f5d0ff",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doCommandFollowGrovel",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doCommandFollowGrovel"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doCommandFollowGrovel",
+      "qntFileSha256": "cc44aa6908280105e5fc03e9ca3c8312a025525c9d2bceab4f09b93060f5d0ff",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doCommandHaltSuppresses",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doCommandHaltSuppresses"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doCommandHaltSuppresses",
+      "qntFileSha256": "cc44aa6908280105e5fc03e9ca3c8312a025525c9d2bceab4f09b93060f5d0ff",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doEnhanceAbilityChoice",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doEnhanceAbilityChoice"
+      ],
+      "decisionSource": "branch-decision",
+      "driverPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doEnhanceAbilityChoice",
+      "qntFileSha256": "cc44aa6908280105e5fc03e9ca3c8312a025525c9d2bceab4f09b93060f5d0ff",
+      "replay": {
+        "reason": "The sequential driver traverses this level-2 spell branch to reach later level-1 Command branches.",
+        "reviewedBy": "codex-2026-06-17",
+        "tag": "transit-only"
+      },
+      "scope": {
+        "reason": "Enhance Ability is a level-2 spell and is outside the current level-1/2 branch harness scope.",
+        "reviewedBy": "codex-2026-06-17",
+        "tag": "out-of-scope"
+      }
+    },
+    {
+      "branchAction": "doGuidanceSkillAcrobatics",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doGuidanceSkillAcrobatics"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillAcrobatics",
+      "qntFileSha256": "cc44aa6908280105e5fc03e9ca3c8312a025525c9d2bceab4f09b93060f5d0ff",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doGuidanceSkillAnimalHandling",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doGuidanceSkillAnimalHandling"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillAnimalHandling",
+      "qntFileSha256": "cc44aa6908280105e5fc03e9ca3c8312a025525c9d2bceab4f09b93060f5d0ff",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doGuidanceSkillArcana",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doGuidanceSkillArcana"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillArcana",
+      "qntFileSha256": "cc44aa6908280105e5fc03e9ca3c8312a025525c9d2bceab4f09b93060f5d0ff",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doGuidanceSkillAthletics",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doGuidanceSkillAthletics"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillAthletics",
+      "qntFileSha256": "cc44aa6908280105e5fc03e9ca3c8312a025525c9d2bceab4f09b93060f5d0ff",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doGuidanceSkillDeception",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doGuidanceSkillDeception"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillDeception",
+      "qntFileSha256": "cc44aa6908280105e5fc03e9ca3c8312a025525c9d2bceab4f09b93060f5d0ff",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doGuidanceSkillHistory",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doGuidanceSkillHistory"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillHistory",
+      "qntFileSha256": "cc44aa6908280105e5fc03e9ca3c8312a025525c9d2bceab4f09b93060f5d0ff",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doGuidanceSkillInsight",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doGuidanceSkillInsight"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillInsight",
+      "qntFileSha256": "cc44aa6908280105e5fc03e9ca3c8312a025525c9d2bceab4f09b93060f5d0ff",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doGuidanceSkillIntimidation",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doGuidanceSkillIntimidation"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillIntimidation",
+      "qntFileSha256": "cc44aa6908280105e5fc03e9ca3c8312a025525c9d2bceab4f09b93060f5d0ff",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doGuidanceSkillInvestigation",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doGuidanceSkillInvestigation"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillInvestigation",
+      "qntFileSha256": "cc44aa6908280105e5fc03e9ca3c8312a025525c9d2bceab4f09b93060f5d0ff",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doGuidanceSkillMedicine",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doGuidanceSkillMedicine"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillMedicine",
+      "qntFileSha256": "cc44aa6908280105e5fc03e9ca3c8312a025525c9d2bceab4f09b93060f5d0ff",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doGuidanceSkillNature",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doGuidanceSkillNature"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillNature",
+      "qntFileSha256": "cc44aa6908280105e5fc03e9ca3c8312a025525c9d2bceab4f09b93060f5d0ff",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doGuidanceSkillPerception",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doGuidanceSkillPerception"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillPerception",
+      "qntFileSha256": "cc44aa6908280105e5fc03e9ca3c8312a025525c9d2bceab4f09b93060f5d0ff",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doGuidanceSkillPerformance",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doGuidanceSkillPerformance"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillPerformance",
+      "qntFileSha256": "cc44aa6908280105e5fc03e9ca3c8312a025525c9d2bceab4f09b93060f5d0ff",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doGuidanceSkillPersuasion",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doGuidanceSkillPersuasion"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillPersuasion",
+      "qntFileSha256": "cc44aa6908280105e5fc03e9ca3c8312a025525c9d2bceab4f09b93060f5d0ff",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doGuidanceSkillReligion",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doGuidanceSkillReligion"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillReligion",
+      "qntFileSha256": "cc44aa6908280105e5fc03e9ca3c8312a025525c9d2bceab4f09b93060f5d0ff",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doGuidanceSkillSleightOfHand",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doGuidanceSkillSleightOfHand"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillSleightOfHand",
+      "qntFileSha256": "cc44aa6908280105e5fc03e9ca3c8312a025525c9d2bceab4f09b93060f5d0ff",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doGuidanceSkillStealth",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doGuidanceSkillStealth"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillStealth",
+      "qntFileSha256": "cc44aa6908280105e5fc03e9ca3c8312a025525c9d2bceab4f09b93060f5d0ff",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doGuidanceSkillSurvival",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doGuidanceSkillSurvival"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillSurvival",
+      "qntFileSha256": "cc44aa6908280105e5fc03e9ca3c8312a025525c9d2bceab4f09b93060f5d0ff",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doSearchFails",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doSearchFails"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doSearchFails",
+      "qntFileSha256": "cc44aa6908280105e5fc03e9ca3c8312a025525c9d2bceab4f09b93060f5d0ff",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doSearchSucceeds",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doSearchSucceeds"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doSearchSucceeds",
+      "qntFileSha256": "cc44aa6908280105e5fc03e9ca3c8312a025525c9d2bceab4f09b93060f5d0ff",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
       "branchAction": "doMeleeKnockOut",
       "branchFamily": "step",
       "branchPath": [
@@ -6319,6 +8180,539 @@
       "driverPath": "packages/battle-runtime/rule-core-attack-damage-disposition.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-attack-damage-disposition.mbt.qnt#step:doRejectRangedKnockOut",
       "qntFileSha256": "6662c39d0b1316223964d57de7bc90178c623c073c03500e1833940d54c08451",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doActionSurgeActivate",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doActionSurgeActivate"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-features.mbt.qnt#step:doActionSurgeActivate",
+      "qntFileSha256": "2f0bfa94e320b203e0173a88fa3461b58b9e16c6f95bc89784a74abf77537f28",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doActionSurgeRejectTwice",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doActionSurgeRejectTwice"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-features.mbt.qnt#step:doActionSurgeRejectTwice",
+      "qntFileSha256": "2f0bfa94e320b203e0173a88fa3461b58b9e16c6f95bc89784a74abf77537f28",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doActionSurgeSpendAttack",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doActionSurgeSpendAttack"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-features.mbt.qnt#step:doActionSurgeSpendAttack",
+      "qntFileSha256": "2f0bfa94e320b203e0173a88fa3461b58b9e16c6f95bc89784a74abf77537f28",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doArcheryAttackRollBonus",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doArcheryAttackRollBonus"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-features.mbt.qnt#step:doArcheryAttackRollBonus",
+      "qntFileSha256": "2f0bfa94e320b203e0173a88fa3461b58b9e16c6f95bc89784a74abf77537f28",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doCombatProwessMissToHit",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doCombatProwessMissToHit"
+      ],
+      "decisionSource": "branch-decision",
+      "driverPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-features.mbt.qnt#step:doCombatProwessMissToHit",
+      "qntFileSha256": "2f0bfa94e320b203e0173a88fa3461b58b9e16c6f95bc89784a74abf77537f28",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "reason": "Boon of Combat Prowess is an Epic Boon with level 19+ prerequisite.",
+        "reviewedBy": "codex-2026-06-17",
+        "tag": "out-of-scope"
+      }
+    },
+    {
+      "branchAction": "doCunningDash",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doCunningDash"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-features.mbt.qnt#step:doCunningDash",
+      "qntFileSha256": "2f0bfa94e320b203e0173a88fa3461b58b9e16c6f95bc89784a74abf77537f28",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doCunningDisengage",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doCunningDisengage"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-features.mbt.qnt#step:doCunningDisengage",
+      "qntFileSha256": "2f0bfa94e320b203e0173a88fa3461b58b9e16c6f95bc89784a74abf77537f28",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doCunningHide",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doCunningHide"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-features.mbt.qnt#step:doCunningHide",
+      "qntFileSha256": "2f0bfa94e320b203e0173a88fa3461b58b9e16c6f95bc89784a74abf77537f28",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doCuttingWordsDamage",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doCuttingWordsDamage"
+      ],
+      "decisionSource": "branch-decision",
+      "driverPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-features.mbt.qnt#step:doCuttingWordsDamage",
+      "qntFileSha256": "2f0bfa94e320b203e0173a88fa3461b58b9e16c6f95bc89784a74abf77537f28",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "reason": "Bard Cutting Words is a level-3 subclass feature.",
+        "reviewedBy": "codex-2026-06-17",
+        "tag": "out-of-scope"
+      }
+    },
+    {
+      "branchAction": "doDefenseArmorClass",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doDefenseArmorClass"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-features.mbt.qnt#step:doDefenseArmorClass",
+      "qntFileSha256": "2f0bfa94e320b203e0173a88fa3461b58b9e16c6f95bc89784a74abf77537f28",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doDeflectAttacksDamageReduction",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doDeflectAttacksDamageReduction"
+      ],
+      "decisionSource": "branch-decision",
+      "driverPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-features.mbt.qnt#step:doDeflectAttacksDamageReduction",
+      "qntFileSha256": "2f0bfa94e320b203e0173a88fa3461b58b9e16c6f95bc89784a74abf77537f28",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "reason": "Monk Deflect Attacks is a level-3 feature.",
+        "reviewedBy": "codex-2026-06-17",
+        "tag": "out-of-scope"
+      }
+    },
+    {
+      "branchAction": "doDiscoverSecondWind",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doDiscoverSecondWind"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-features.mbt.qnt#step:doDiscoverSecondWind",
+      "qntFileSha256": "2f0bfa94e320b203e0173a88fa3461b58b9e16c6f95bc89784a74abf77537f28",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doEvasionFailure",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doEvasionFailure"
+      ],
+      "decisionSource": "branch-decision",
+      "driverPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-features.mbt.qnt#step:doEvasionFailure",
+      "qntFileSha256": "2f0bfa94e320b203e0173a88fa3461b58b9e16c6f95bc89784a74abf77537f28",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "reason": "Evasion is a level-7 Rogue or Monk feature.",
+        "reviewedBy": "codex-2026-06-17",
+        "tag": "out-of-scope"
+      }
+    },
+    {
+      "branchAction": "doEvasionSuccess",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doEvasionSuccess"
+      ],
+      "decisionSource": "branch-decision",
+      "driverPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-features.mbt.qnt#step:doEvasionSuccess",
+      "qntFileSha256": "2f0bfa94e320b203e0173a88fa3461b58b9e16c6f95bc89784a74abf77537f28",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "reason": "Evasion is a level-7 Rogue or Monk feature.",
+        "reviewedBy": "codex-2026-06-17",
+        "tag": "out-of-scope"
+      }
+    },
+    {
+      "branchAction": "doFrenzy",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doFrenzy"
+      ],
+      "decisionSource": "branch-decision",
+      "driverPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-features.mbt.qnt#step:doFrenzy",
+      "qntFileSha256": "2f0bfa94e320b203e0173a88fa3461b58b9e16c6f95bc89784a74abf77537f28",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "reason": "Barbarian Frenzy is a level-3 subclass feature.",
+        "reviewedBy": "codex-2026-06-17",
+        "tag": "out-of-scope"
+      }
+    },
+    {
+      "branchAction": "doImprovedCritical",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doImprovedCritical"
+      ],
+      "decisionSource": "branch-decision",
+      "driverPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-features.mbt.qnt#step:doImprovedCritical",
+      "qntFileSha256": "2f0bfa94e320b203e0173a88fa3461b58b9e16c6f95bc89784a74abf77537f28",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "reason": "Fighter Improved Critical is a level-3 subclass feature.",
+        "reviewedBy": "codex-2026-06-17",
+        "tag": "out-of-scope"
+      }
+    },
+    {
+      "branchAction": "doMyceliumStepDash",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doMyceliumStepDash"
+      ],
+      "decisionSource": "branch-decision",
+      "driverPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-features.mbt.qnt#step:doMyceliumStepDash",
+      "qntFileSha256": "2f0bfa94e320b203e0173a88fa3461b58b9e16c6f95bc89784a74abf77537f28",
+      "replay": {
+        "blockerId": "MYCELIUM_STEP_NO_SRD_SOURCE",
+        "reason": "No copied SRD 5.2.1 passage establishes Mycelium Step or its acquisition level.",
+        "reviewedBy": "codex-2026-06-17",
+        "tag": "source-blocker"
+      },
+      "scope": {
+        "reason": "No copied SRD 5.2.1 passage establishes Mycelium Step or its acquisition level.",
+        "reviewedBy": "codex-2026-06-17",
+        "tag": "out-of-scope"
+      }
+    },
+    {
+      "branchAction": "doRageActivateAndDamage",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doRageActivateAndDamage"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-features.mbt.qnt#step:doRageActivateAndDamage",
+      "qntFileSha256": "2f0bfa94e320b203e0173a88fa3461b58b9e16c6f95bc89784a74abf77537f28",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doRecklessAttack",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doRecklessAttack"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-features.mbt.qnt#step:doRecklessAttack",
+      "qntFileSha256": "2f0bfa94e320b203e0173a88fa3461b58b9e16c6f95bc89784a74abf77537f28",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doResolveSecondWindHigh",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doResolveSecondWindHigh"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-features.mbt.qnt#step:doResolveSecondWindHigh",
+      "qntFileSha256": "2f0bfa94e320b203e0173a88fa3461b58b9e16c6f95bc89784a74abf77537f28",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doResolveSecondWindLow",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doResolveSecondWindLow"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-features.mbt.qnt#step:doResolveSecondWindLow",
+      "qntFileSha256": "2f0bfa94e320b203e0173a88fa3461b58b9e16c6f95bc89784a74abf77537f28",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doSavageAttackerDamage",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doSavageAttackerDamage"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-features.mbt.qnt#step:doSavageAttackerDamage",
+      "qntFileSha256": "2f0bfa94e320b203e0173a88fa3461b58b9e16c6f95bc89784a74abf77537f28",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doSneakAttack",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doSneakAttack"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-features.mbt.qnt#step:doSneakAttack",
+      "qntFileSha256": "2f0bfa94e320b203e0173a88fa3461b58b9e16c6f95bc89784a74abf77537f28",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doTacticalMindConvertedSuccess",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doTacticalMindConvertedSuccess"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-features.mbt.qnt#step:doTacticalMindConvertedSuccess",
+      "qntFileSha256": "2f0bfa94e320b203e0173a88fa3461b58b9e16c6f95bc89784a74abf77537f28",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doTacticalMindStillFailed",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doTacticalMindStillFailed"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-features.mbt.qnt#step:doTacticalMindStillFailed",
+      "qntFileSha256": "2f0bfa94e320b203e0173a88fa3461b58b9e16c6f95bc89784a74abf77537f28",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doUncannyDodge",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doUncannyDodge"
+      ],
+      "decisionSource": "branch-decision",
+      "driverPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-features.mbt.qnt#step:doUncannyDodge",
+      "qntFileSha256": "2f0bfa94e320b203e0173a88fa3461b58b9e16c6f95bc89784a74abf77537f28",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "reason": "Rogue Uncanny Dodge is a level-5 feature.",
+        "reviewedBy": "codex-2026-06-17",
+        "tag": "out-of-scope"
+      }
+    },
+    {
+      "branchAction": "doZeroHitPointReplacement",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doZeroHitPointReplacement"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-features.mbt.qnt#step:doZeroHitPointReplacement",
+      "qntFileSha256": "2f0bfa94e320b203e0173a88fa3461b58b9e16c6f95bc89784a74abf77537f28",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -7126,6 +9520,588 @@
       }
     },
     {
+      "branchAction": "doAcidSplashAllSuccess",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doAcidSplashAllSuccess"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-spells.mbt.qnt#step:doAcidSplashAllSuccess",
+      "qntFileSha256": "8f4e05d1ad88c08788ce2f1daf2258f720f03b6e7688ec4a6d2feecb11ff1a91",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doAcidSplashNeedsDamageRoll",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doAcidSplashNeedsDamageRoll"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-spells.mbt.qnt#step:doAcidSplashNeedsDamageRoll",
+      "qntFileSha256": "8f4e05d1ad88c08788ce2f1daf2258f720f03b6e7688ec4a6d2feecb11ff1a91",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doAcidSplashNeedsSavingThrow",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doAcidSplashNeedsSavingThrow"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-spells.mbt.qnt#step:doAcidSplashNeedsSavingThrow",
+      "qntFileSha256": "8f4e05d1ad88c08788ce2f1daf2258f720f03b6e7688ec4a6d2feecb11ff1a91",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doAcidSplashOneFail",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doAcidSplashOneFail"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-spells.mbt.qnt#step:doAcidSplashOneFail",
+      "qntFileSha256": "8f4e05d1ad88c08788ce2f1daf2258f720f03b6e7688ec4a6d2feecb11ff1a91",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doCureWoundsNeedsHealingRoll",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doCureWoundsNeedsHealingRoll"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-spells.mbt.qnt#step:doCureWoundsNeedsHealingRoll",
+      "qntFileSha256": "8f4e05d1ad88c08788ce2f1daf2258f720f03b6e7688ec4a6d2feecb11ff1a91",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doCureWoundsNeedsTarget",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doCureWoundsNeedsTarget"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-spells.mbt.qnt#step:doCureWoundsNeedsTarget",
+      "qntFileSha256": "8f4e05d1ad88c08788ce2f1daf2258f720f03b6e7688ec4a6d2feecb11ff1a91",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doCureWoundsWounded",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doCureWoundsWounded"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-spells.mbt.qnt#step:doCureWoundsWounded",
+      "qntFileSha256": "8f4e05d1ad88c08788ce2f1daf2258f720f03b6e7688ec4a6d2feecb11ff1a91",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doHealingWordNeedsHealingRoll",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doHealingWordNeedsHealingRoll"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-spells.mbt.qnt#step:doHealingWordNeedsHealingRoll",
+      "qntFileSha256": "8f4e05d1ad88c08788ce2f1daf2258f720f03b6e7688ec4a6d2feecb11ff1a91",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doHealingWordNeedsTarget",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doHealingWordNeedsTarget"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-spells.mbt.qnt#step:doHealingWordNeedsTarget",
+      "qntFileSha256": "8f4e05d1ad88c08788ce2f1daf2258f720f03b6e7688ec4a6d2feecb11ff1a91",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doHealingWordWounded",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doHealingWordWounded"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-spells.mbt.qnt#step:doHealingWordWounded",
+      "qntFileSha256": "8f4e05d1ad88c08788ce2f1daf2258f720f03b6e7688ec4a6d2feecb11ff1a91",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doHealingWordZeroHp",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doHealingWordZeroHp"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-spells.mbt.qnt#step:doHealingWordZeroHp",
+      "qntFileSha256": "8f4e05d1ad88c08788ce2f1daf2258f720f03b6e7688ec4a6d2feecb11ff1a91",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doMageArmor",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doMageArmor"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-spells.mbt.qnt#step:doMageArmor",
+      "qntFileSha256": "8f4e05d1ad88c08788ce2f1daf2258f720f03b6e7688ec4a6d2feecb11ff1a91",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doMageArmorNeedsTarget",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doMageArmorNeedsTarget"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-spells.mbt.qnt#step:doMageArmorNeedsTarget",
+      "qntFileSha256": "8f4e05d1ad88c08788ce2f1daf2258f720f03b6e7688ec4a6d2feecb11ff1a91",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doMagicMissileLow",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doMagicMissileLow"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-spells.mbt.qnt#step:doMagicMissileLow",
+      "qntFileSha256": "8f4e05d1ad88c08788ce2f1daf2258f720f03b6e7688ec4a6d2feecb11ff1a91",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doMagicMissileNeedsAllocation",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doMagicMissileNeedsAllocation"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-spells.mbt.qnt#step:doMagicMissileNeedsAllocation",
+      "qntFileSha256": "8f4e05d1ad88c08788ce2f1daf2258f720f03b6e7688ec4a6d2feecb11ff1a91",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doMassCureWoundsNeedsHealingRoll",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doMassCureWoundsNeedsHealingRoll"
+      ],
+      "decisionSource": "branch-decision",
+      "driverPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-spells.mbt.qnt#step:doMassCureWoundsNeedsHealingRoll",
+      "qntFileSha256": "8f4e05d1ad88c08788ce2f1daf2258f720f03b6e7688ec4a6d2feecb11ff1a91",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "reason": "Mass Cure Wounds is a level-5 spell.",
+        "reviewedBy": "codex-2026-06-17",
+        "tag": "out-of-scope"
+      }
+    },
+    {
+      "branchAction": "doMassCureWoundsNeedsTargetList",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doMassCureWoundsNeedsTargetList"
+      ],
+      "decisionSource": "branch-decision",
+      "driverPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-spells.mbt.qnt#step:doMassCureWoundsNeedsTargetList",
+      "qntFileSha256": "8f4e05d1ad88c08788ce2f1daf2258f720f03b6e7688ec4a6d2feecb11ff1a91",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "reason": "Mass Cure Wounds is a level-5 spell.",
+        "reviewedBy": "codex-2026-06-17",
+        "tag": "out-of-scope"
+      }
+    },
+    {
+      "branchAction": "doMassCureWoundsWounded",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doMassCureWoundsWounded"
+      ],
+      "decisionSource": "branch-decision",
+      "driverPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-spells.mbt.qnt#step:doMassCureWoundsWounded",
+      "qntFileSha256": "8f4e05d1ad88c08788ce2f1daf2258f720f03b6e7688ec4a6d2feecb11ff1a91",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "reason": "Mass Cure Wounds is a level-5 spell.",
+        "reviewedBy": "codex-2026-06-17",
+        "tag": "out-of-scope"
+      }
+    },
+    {
+      "branchAction": "doMassHealingWordNeedsHealingRoll",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doMassHealingWordNeedsHealingRoll"
+      ],
+      "decisionSource": "branch-decision",
+      "driverPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-spells.mbt.qnt#step:doMassHealingWordNeedsHealingRoll",
+      "qntFileSha256": "8f4e05d1ad88c08788ce2f1daf2258f720f03b6e7688ec4a6d2feecb11ff1a91",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "reason": "Mass Healing Word is a level-3 spell.",
+        "reviewedBy": "codex-2026-06-17",
+        "tag": "out-of-scope"
+      }
+    },
+    {
+      "branchAction": "doMassHealingWordNeedsTargetList",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doMassHealingWordNeedsTargetList"
+      ],
+      "decisionSource": "branch-decision",
+      "driverPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-spells.mbt.qnt#step:doMassHealingWordNeedsTargetList",
+      "qntFileSha256": "8f4e05d1ad88c08788ce2f1daf2258f720f03b6e7688ec4a6d2feecb11ff1a91",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "reason": "Mass Healing Word is a level-3 spell.",
+        "reviewedBy": "codex-2026-06-17",
+        "tag": "out-of-scope"
+      }
+    },
+    {
+      "branchAction": "doMassHealingWordWounded",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doMassHealingWordWounded"
+      ],
+      "decisionSource": "branch-decision",
+      "driverPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-spells.mbt.qnt#step:doMassHealingWordWounded",
+      "qntFileSha256": "8f4e05d1ad88c08788ce2f1daf2258f720f03b6e7688ec4a6d2feecb11ff1a91",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "reason": "Mass Healing Word is a level-3 spell.",
+        "reviewedBy": "codex-2026-06-17",
+        "tag": "out-of-scope"
+      }
+    },
+    {
+      "branchAction": "doRayOfFrostCritical",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doRayOfFrostCritical"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-spells.mbt.qnt#step:doRayOfFrostCritical",
+      "qntFileSha256": "8f4e05d1ad88c08788ce2f1daf2258f720f03b6e7688ec4a6d2feecb11ff1a91",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doRayOfFrostHit",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doRayOfFrostHit"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-spells.mbt.qnt#step:doRayOfFrostHit",
+      "qntFileSha256": "8f4e05d1ad88c08788ce2f1daf2258f720f03b6e7688ec4a6d2feecb11ff1a91",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doRayOfFrostMiss",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doRayOfFrostMiss"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-spells.mbt.qnt#step:doRayOfFrostMiss",
+      "qntFileSha256": "8f4e05d1ad88c08788ce2f1daf2258f720f03b6e7688ec4a6d2feecb11ff1a91",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doRayOfFrostNeedsAttackRoll",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doRayOfFrostNeedsAttackRoll"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-spells.mbt.qnt#step:doRayOfFrostNeedsAttackRoll",
+      "qntFileSha256": "8f4e05d1ad88c08788ce2f1daf2258f720f03b6e7688ec4a6d2feecb11ff1a91",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doRayOfFrostNeedsDamageRoll",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doRayOfFrostNeedsDamageRoll"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-spells.mbt.qnt#step:doRayOfFrostNeedsDamageRoll",
+      "qntFileSha256": "8f4e05d1ad88c08788ce2f1daf2258f720f03b6e7688ec4a6d2feecb11ff1a91",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doRayOfFrostNeedsTarget",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doRayOfFrostNeedsTarget"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-spells.mbt.qnt#step:doRayOfFrostNeedsTarget",
+      "qntFileSha256": "8f4e05d1ad88c08788ce2f1daf2258f720f03b6e7688ec4a6d2feecb11ff1a91",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doReadySpellHold",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doReadySpellHold"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-spells.mbt.qnt#step:doReadySpellHold",
+      "qntFileSha256": "8f4e05d1ad88c08788ce2f1daf2258f720f03b6e7688ec4a6d2feecb11ff1a91",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doRejectSecondSlotSpell",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doRejectSecondSlotSpell"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-spells.mbt.qnt#step:doRejectSecondSlotSpell",
+      "qntFileSha256": "8f4e05d1ad88c08788ce2f1daf2258f720f03b6e7688ec4a6d2feecb11ff1a91",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doReleaseReadiedSpell",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doReleaseReadiedSpell"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-spells.mbt.qnt#step:doReleaseReadiedSpell",
+      "qntFileSha256": "8f4e05d1ad88c08788ce2f1daf2258f720f03b6e7688ec4a6d2feecb11ff1a91",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
       "branchAction": "doEndTurnClosesDispatches",
       "branchFamily": "step",
       "branchPath": [
@@ -7259,6 +10235,85 @@
       }
     },
     {
+      "branchAction": "doProjectSheetHitPointsArmorClassConditionsAndProfiles",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doProjectSheetHitPointsArmorClassConditionsAndProfiles"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/character-battle-runtime/character-battle-init-projection.mbt.qnt",
+      "obligationId": "packages/character-battle-runtime/character-battle-init-projection.mbt.qnt#step:doProjectSheetHitPointsArmorClassConditionsAndProfiles",
+      "qntFileSha256": "9d151305d14189a8ac25c47743760c476422a54c9ab718a72e682142f8c08dec",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doProjectSheetSpellcastingAndMetamagic",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doProjectSheetSpellcastingAndMetamagic"
+      ],
+      "decisionSource": "branch-decision",
+      "driverPath": "packages/character-battle-runtime/character-battle-init-projection.mbt.qnt",
+      "obligationId": "packages/character-battle-runtime/character-battle-init-projection.mbt.qnt#step:doProjectSheetSpellcastingAndMetamagic",
+      "qntFileSha256": "9d151305d14189a8ac25c47743760c476422a54c9ab718a72e682142f8c08dec",
+      "replay": {
+        "reason": "The sequential driver traverses this higher-capacity projection to reach later level-1/2 init rejection branches.",
+        "reviewedBy": "codex-2026-06-17",
+        "tag": "transit-only"
+      },
+      "scope": {
+        "reason": "This projection fixture includes spell level 2/3 capacity facts beyond the current level-1/2 scope.",
+        "reviewedBy": "codex-2026-06-17",
+        "tag": "out-of-scope"
+      }
+    },
+    {
+      "branchAction": "doRejectBuildMaximumAboveBuildMaximum",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doRejectBuildMaximumAboveBuildMaximum"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/character-battle-runtime/character-battle-init-projection.mbt.qnt",
+      "obligationId": "packages/character-battle-runtime/character-battle-init-projection.mbt.qnt#step:doRejectBuildMaximumAboveBuildMaximum",
+      "qntFileSha256": "9d151305d14189a8ac25c47743760c476422a54c9ab718a72e682142f8c08dec",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doRejectStableRecoveryProgressDuringInit",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doRejectStableRecoveryProgressDuringInit"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/character-battle-runtime/character-battle-init-projection.mbt.qnt",
+      "obligationId": "packages/character-battle-runtime/character-battle-init-projection.mbt.qnt#step:doRejectStableRecoveryProgressDuringInit",
+      "qntFileSha256": "9d151305d14189a8ac25c47743760c476422a54c9ab718a72e682142f8c08dec",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
       "branchAction": "doFinalizeCriminalAlertOriginFeat",
       "branchFamily": "step",
       "branchPath": [
@@ -7288,6 +10343,161 @@
       "driverPath": "packages/character-battle-runtime/character-battle-origin-feat-selected-identity.mbt.qnt",
       "obligationId": "packages/character-battle-runtime/character-battle-origin-feat-selected-identity.mbt.qnt#step:doProjectAlertInitiativeHandoff",
       "qntFileSha256": "bdf8076e5624156d748e70260ca804ea4b0f980c9b3278b040948e42a52ec494",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doRejectActiveWildShapeHandoff",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doRejectActiveWildShapeHandoff"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/character-battle-runtime/character-battle-settlement.mbt.qnt",
+      "obligationId": "packages/character-battle-runtime/character-battle-settlement.mbt.qnt#step:doRejectActiveWildShapeHandoff",
+      "qntFileSha256": "18feaf2412ff3cef5cc7a162b98331ddaa42c62cc906528368cea302c43b9619",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doRejectAmbiguousCreatedSpellSlotSource",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doRejectAmbiguousCreatedSpellSlotSource"
+      ],
+      "decisionSource": "branch-decision",
+      "driverPath": "packages/character-battle-runtime/character-battle-settlement.mbt.qnt",
+      "obligationId": "packages/character-battle-runtime/character-battle-settlement.mbt.qnt#step:doRejectAmbiguousCreatedSpellSlotSource",
+      "qntFileSha256": "18feaf2412ff3cef5cc7a162b98331ddaa42c62cc906528368cea302c43b9619",
+      "replay": {
+        "reason": "The sequential driver traverses this higher-slot rejection to reach later level-1/2 settlement branches.",
+        "reviewedBy": "codex-2026-06-17",
+        "tag": "transit-only"
+      },
+      "scope": {
+        "reason": "This settlement rejection fixture uses a created level-3 spell slot beyond the current level-1/2 scope.",
+        "reviewedBy": "codex-2026-06-17",
+        "tag": "out-of-scope"
+      }
+    },
+    {
+      "branchAction": "doRejectMaximumHpDrift",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doRejectMaximumHpDrift"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/character-battle-runtime/character-battle-settlement.mbt.qnt",
+      "obligationId": "packages/character-battle-runtime/character-battle-settlement.mbt.qnt#step:doRejectMaximumHpDrift",
+      "qntFileSha256": "18feaf2412ff3cef5cc7a162b98331ddaa42c62cc906528368cea302c43b9619",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doRejectMismatchedCharacterIdentity",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doRejectMismatchedCharacterIdentity"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/character-battle-runtime/character-battle-settlement.mbt.qnt",
+      "obligationId": "packages/character-battle-runtime/character-battle-settlement.mbt.qnt#step:doRejectMismatchedCharacterIdentity",
+      "qntFileSha256": "18feaf2412ff3cef5cc7a162b98331ddaa42c62cc906528368cea302c43b9619",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doRejectStableRecoveryProgressHandoff",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doRejectStableRecoveryProgressHandoff"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/character-battle-runtime/character-battle-settlement.mbt.qnt",
+      "obligationId": "packages/character-battle-runtime/character-battle-settlement.mbt.qnt#step:doRejectStableRecoveryProgressHandoff",
+      "qntFileSha256": "18feaf2412ff3cef5cc7a162b98331ddaa42c62cc906528368cea302c43b9619",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doSettleFeatureResourceExpenditure",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doSettleFeatureResourceExpenditure"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/character-battle-runtime/character-battle-settlement.mbt.qnt",
+      "obligationId": "packages/character-battle-runtime/character-battle-settlement.mbt.qnt#step:doSettleFeatureResourceExpenditure",
+      "qntFileSha256": "18feaf2412ff3cef5cc7a162b98331ddaa42c62cc906528368cea302c43b9619",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doSettleHitPointsConditionsSlotsAndPreservedSheetState",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doSettleHitPointsConditionsSlotsAndPreservedSheetState"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/character-battle-runtime/character-battle-settlement.mbt.qnt",
+      "obligationId": "packages/character-battle-runtime/character-battle-settlement.mbt.qnt#step:doSettleHitPointsConditionsSlotsAndPreservedSheetState",
+      "qntFileSha256": "18feaf2412ff3cef5cc7a162b98331ddaa42c62cc906528368cea302c43b9619",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doSettleZeroHpStableLifecycle",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doSettleZeroHpStableLifecycle"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/character-battle-runtime/character-battle-settlement.mbt.qnt",
+      "obligationId": "packages/character-battle-runtime/character-battle-settlement.mbt.qnt#step:doSettleZeroHpStableLifecycle",
+      "qntFileSha256": "18feaf2412ff3cef5cc7a162b98331ddaa42c62cc906528368cea302c43b9619",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -7392,6 +10602,286 @@
       }
     },
     {
+      "branchAction": "doFontOfMagicPointsToSlot",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doFontOfMagicPointsToSlot"
+      ],
+      "decisionSource": "branch-decision",
+      "driverPath": "packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt",
+      "obligationId": "packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt#step:doFontOfMagicPointsToSlot",
+      "qntFileSha256": "ce9de0b0a69687a88b0d46bb37b9cbd7062c32b14145da37518758eea40d4b10",
+      "replay": {
+        "reason": "The sequential driver traverses this higher-slot creation to reach later level-1/2 feature-resource branches.",
+        "reviewedBy": "codex-2026-06-17",
+        "tag": "transit-only"
+      },
+      "scope": {
+        "reason": "This Font of Magic branch creates a level-3 spell slot beyond the current level-1/2 scope.",
+        "reviewedBy": "codex-2026-06-17",
+        "tag": "out-of-scope"
+      }
+    },
+    {
+      "branchAction": "doFontOfMagicSlotToPoints",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doFontOfMagicSlotToPoints"
+      ],
+      "decisionSource": "branch-decision",
+      "driverPath": "packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt",
+      "obligationId": "packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt#step:doFontOfMagicSlotToPoints",
+      "qntFileSha256": "ce9de0b0a69687a88b0d46bb37b9cbd7062c32b14145da37518758eea40d4b10",
+      "replay": {
+        "reason": "The sequential driver traverses this Font of Magic branch to reach later level-1/2 feature-resource branches.",
+        "reviewedBy": "codex-2026-06-17",
+        "tag": "transit-only"
+      },
+      "scope": {
+        "reason": "Font of Magic slot conversion requires Sorcerer level 2 and uses slot facts outside the current level-1/2 active harness scope.",
+        "reviewedBy": "codex-2026-06-17",
+        "tag": "out-of-scope"
+      }
+    },
+    {
+      "branchAction": "doLayOnHandsRestoresHpAndRemovesPoisoned",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doLayOnHandsRestoresHpAndRemovesPoisoned"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt",
+      "obligationId": "packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt#step:doLayOnHandsRestoresHpAndRemovesPoisoned",
+      "qntFileSha256": "ce9de0b0a69687a88b0d46bb37b9cbd7062c32b14145da37518758eea40d4b10",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doLongRestClearsLayOnHandsPool",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doLongRestClearsLayOnHandsPool"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt",
+      "obligationId": "packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt#step:doLongRestClearsLayOnHandsPool",
+      "qntFileSha256": "ce9de0b0a69687a88b0d46bb37b9cbd7062c32b14145da37518758eea40d4b10",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doLongRestClearsPointPoolAndUseState",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doLongRestClearsPointPoolAndUseState"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt",
+      "obligationId": "packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt#step:doLongRestClearsPointPoolAndUseState",
+      "qntFileSha256": "ce9de0b0a69687a88b0d46bb37b9cbd7062c32b14145da37518758eea40d4b10",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doLongRestClearsUncannyUseState",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doLongRestClearsUncannyUseState"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt",
+      "obligationId": "packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt#step:doLongRestClearsUncannyUseState",
+      "qntFileSha256": "ce9de0b0a69687a88b0d46bb37b9cbd7062c32b14145da37518758eea40d4b10",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doMetamagicBridgeUsesSharedPointPool",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doMetamagicBridgeUsesSharedPointPool"
+      ],
+      "decisionSource": "branch-decision",
+      "driverPath": "packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt",
+      "obligationId": "packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt#step:doMetamagicBridgeUsesSharedPointPool",
+      "qntFileSha256": "ce9de0b0a69687a88b0d46bb37b9cbd7062c32b14145da37518758eea40d4b10",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "reason": "This metamagic bridge fixture uses a five-point Sorcery Point pool beyond the current level-1/2 scope.",
+        "reviewedBy": "codex-2026-06-17",
+        "tag": "out-of-scope"
+      }
+    },
+    {
+      "branchAction": "doRejectFontOfMagicAmbiguousSlotSource",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doRejectFontOfMagicAmbiguousSlotSource"
+      ],
+      "decisionSource": "branch-decision",
+      "driverPath": "packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt",
+      "obligationId": "packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt#step:doRejectFontOfMagicAmbiguousSlotSource",
+      "qntFileSha256": "ce9de0b0a69687a88b0d46bb37b9cbd7062c32b14145da37518758eea40d4b10",
+      "replay": {
+        "reason": "The sequential driver traverses this higher-slot rejection to reach later level-1/2 feature-resource branches.",
+        "reviewedBy": "codex-2026-06-17",
+        "tag": "transit-only"
+      },
+      "scope": {
+        "reason": "This rejection branch uses created level-3 slot ambiguity facts beyond the current level-1/2 scope.",
+        "reviewedBy": "codex-2026-06-17",
+        "tag": "out-of-scope"
+      }
+    },
+    {
+      "branchAction": "doRejectFontOfMagicInsufficientPoints",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doRejectFontOfMagicInsufficientPoints"
+      ],
+      "decisionSource": "branch-decision",
+      "driverPath": "packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt",
+      "obligationId": "packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt#step:doRejectFontOfMagicInsufficientPoints",
+      "qntFileSha256": "ce9de0b0a69687a88b0d46bb37b9cbd7062c32b14145da37518758eea40d4b10",
+      "replay": {
+        "reason": "The sequential driver traverses this higher-slot rejection to reach later level-1/2 feature-resource branches.",
+        "reviewedBy": "codex-2026-06-17",
+        "tag": "transit-only"
+      },
+      "scope": {
+        "reason": "This rejection branch uses higher-slot Font of Magic creation facts beyond the current level-1/2 scope.",
+        "reviewedBy": "codex-2026-06-17",
+        "tag": "out-of-scope"
+      }
+    },
+    {
+      "branchAction": "doRejectLayOnHandsOverspend",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doRejectLayOnHandsOverspend"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt",
+      "obligationId": "packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt#step:doRejectLayOnHandsOverspend",
+      "qntFileSha256": "ce9de0b0a69687a88b0d46bb37b9cbd7062c32b14145da37518758eea40d4b10",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doRejectUncannyMetabolismRepeatUse",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doRejectUncannyMetabolismRepeatUse"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt",
+      "obligationId": "packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt#step:doRejectUncannyMetabolismRepeatUse",
+      "qntFileSha256": "ce9de0b0a69687a88b0d46bb37b9cbd7062c32b14145da37518758eea40d4b10",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doShortRestPreservesUncannyUseState",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doShortRestPreservesUncannyUseState"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt",
+      "obligationId": "packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt#step:doShortRestPreservesUncannyUseState",
+      "qntFileSha256": "ce9de0b0a69687a88b0d46bb37b9cbd7062c32b14145da37518758eea40d4b10",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doShortRestRecoversUseCountPools",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doShortRestRecoversUseCountPools"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt",
+      "obligationId": "packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt#step:doShortRestRecoversUseCountPools",
+      "qntFileSha256": "ce9de0b0a69687a88b0d46bb37b9cbd7062c32b14145da37518758eea40d4b10",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doUncannyMetabolismRecoversFocusAndHeals",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doUncannyMetabolismRecoversFocusAndHeals"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt",
+      "obligationId": "packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt#step:doUncannyMetabolismRecoversFocusAndHeals",
+      "qntFileSha256": "ce9de0b0a69687a88b0d46bb37b9cbd7062c32b14145da37518758eea40d4b10",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
       "branchAction": "doProjectMonkFocusAndUncannyMetabolism",
       "branchFamily": "step",
       "branchPath": [
@@ -7421,6 +10911,236 @@
       "driverPath": "packages/character-creation-runtime/character-creation-class-feature-projections.mbt.qnt",
       "obligationId": "packages/character-creation-runtime/character-creation-class-feature-projections.mbt.qnt#step:doProjectSorcererFontAndMetamagic",
       "qntFileSha256": "62ed08830ecf7b7847fff40c677f3a040f04fe974b5d931c2c21be7167b7f961",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doProjectClericChannelDivinity",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doProjectClericChannelDivinity"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/character-creation-runtime/character-creation-class-feature-selected-identity.mbt.qnt",
+      "obligationId": "packages/character-creation-runtime/character-creation-class-feature-selected-identity.mbt.qnt#step:doProjectClericChannelDivinity",
+      "qntFileSha256": "3cc7db2fee7df77e5565cbc92fd6a692fa434431aeafc1263f190d79ba71ddb4",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doProjectDruidWildCompanion",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doProjectDruidWildCompanion"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/character-creation-runtime/character-creation-class-feature-selected-identity.mbt.qnt",
+      "obligationId": "packages/character-creation-runtime/character-creation-class-feature-selected-identity.mbt.qnt#step:doProjectDruidWildCompanion",
+      "qntFileSha256": "3cc7db2fee7df77e5565cbc92fd6a692fa434431aeafc1263f190d79ba71ddb4",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doProjectDruidWildShape",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doProjectDruidWildShape"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/character-creation-runtime/character-creation-class-feature-selected-identity.mbt.qnt",
+      "obligationId": "packages/character-creation-runtime/character-creation-class-feature-selected-identity.mbt.qnt#step:doProjectDruidWildShape",
+      "qntFileSha256": "3cc7db2fee7df77e5565cbc92fd6a692fa434431aeafc1263f190d79ba71ddb4",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doProjectMonksFocus",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doProjectMonksFocus"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/character-creation-runtime/character-creation-class-feature-selected-identity.mbt.qnt",
+      "obligationId": "packages/character-creation-runtime/character-creation-class-feature-selected-identity.mbt.qnt#step:doProjectMonksFocus",
+      "qntFileSha256": "3cc7db2fee7df77e5565cbc92fd6a692fa434431aeafc1263f190d79ba71ddb4",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doProjectMonkUncannyMetabolism",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doProjectMonkUncannyMetabolism"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/character-creation-runtime/character-creation-class-feature-selected-identity.mbt.qnt",
+      "obligationId": "packages/character-creation-runtime/character-creation-class-feature-selected-identity.mbt.qnt#step:doProjectMonkUncannyMetabolism",
+      "qntFileSha256": "3cc7db2fee7df77e5565cbc92fd6a692fa434431aeafc1263f190d79ba71ddb4",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doProjectWarlockPactMagic",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doProjectWarlockPactMagic"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/character-creation-runtime/character-creation-class-feature-selected-identity.mbt.qnt",
+      "obligationId": "packages/character-creation-runtime/character-creation-class-feature-selected-identity.mbt.qnt#step:doProjectWarlockPactMagic",
+      "qntFileSha256": "3cc7db2fee7df77e5565cbc92fd6a692fa434431aeafc1263f190d79ba71ddb4",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doSelectBardExpertise",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doSelectBardExpertise"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/character-creation-runtime/character-creation-class-feature-selected-identity.mbt.qnt",
+      "obligationId": "packages/character-creation-runtime/character-creation-class-feature-selected-identity.mbt.qnt#step:doSelectBardExpertise",
+      "qntFileSha256": "3cc7db2fee7df77e5565cbc92fd6a692fa434431aeafc1263f190d79ba71ddb4",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doSelectPaladinFightingStyle",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doSelectPaladinFightingStyle"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/character-creation-runtime/character-creation-class-feature-selected-identity.mbt.qnt",
+      "obligationId": "packages/character-creation-runtime/character-creation-class-feature-selected-identity.mbt.qnt#step:doSelectPaladinFightingStyle",
+      "qntFileSha256": "3cc7db2fee7df77e5565cbc92fd6a692fa434431aeafc1263f190d79ba71ddb4",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doSelectRangerDeftExplorer",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doSelectRangerDeftExplorer"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/character-creation-runtime/character-creation-class-feature-selected-identity.mbt.qnt",
+      "obligationId": "packages/character-creation-runtime/character-creation-class-feature-selected-identity.mbt.qnt#step:doSelectRangerDeftExplorer",
+      "qntFileSha256": "3cc7db2fee7df77e5565cbc92fd6a692fa434431aeafc1263f190d79ba71ddb4",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doSelectRangerFightingStyle",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doSelectRangerFightingStyle"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/character-creation-runtime/character-creation-class-feature-selected-identity.mbt.qnt",
+      "obligationId": "packages/character-creation-runtime/character-creation-class-feature-selected-identity.mbt.qnt#step:doSelectRangerFightingStyle",
+      "qntFileSha256": "3cc7db2fee7df77e5565cbc92fd6a692fa434431aeafc1263f190d79ba71ddb4",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doSelectWizardEvocationSavant",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doSelectWizardEvocationSavant"
+      ],
+      "decisionSource": "branch-decision",
+      "driverPath": "packages/character-creation-runtime/character-creation-class-feature-selected-identity.mbt.qnt",
+      "obligationId": "packages/character-creation-runtime/character-creation-class-feature-selected-identity.mbt.qnt#step:doSelectWizardEvocationSavant",
+      "qntFileSha256": "3cc7db2fee7df77e5565cbc92fd6a692fa434431aeafc1263f190d79ba71ddb4",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "reason": "Wizard Evocation Savant is a level-3 subclass feature.",
+        "reviewedBy": "codex-2026-06-17",
+        "tag": "out-of-scope"
+      }
+    },
+    {
+      "branchAction": "doSelectWizardScholar",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doSelectWizardScholar"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/character-creation-runtime/character-creation-class-feature-selected-identity.mbt.qnt",
+      "obligationId": "packages/character-creation-runtime/character-creation-class-feature-selected-identity.mbt.qnt#step:doSelectWizardScholar",
+      "qntFileSha256": "3cc7db2fee7df77e5565cbc92fd6a692fa434431aeafc1263f190d79ba71ddb4",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -7541,6 +11261,46 @@
       },
       "scope": {
         "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doSelectLevelOneOwnedSkillExpertise",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doSelectLevelOneOwnedSkillExpertise"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/character-creation-runtime/character-creation-rogue-expertise-selected-identity.mbt.qnt",
+      "obligationId": "packages/character-creation-runtime/character-creation-rogue-expertise-selected-identity.mbt.qnt#step:doSelectLevelOneOwnedSkillExpertise",
+      "qntFileSha256": "c67dc1d9dca85764f7ca5756c74d6e494c4521741054349df557b2fdc9e9d23b",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doSelectLevelSixAdditionalOwnedSkillExpertise",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doSelectLevelSixAdditionalOwnedSkillExpertise"
+      ],
+      "decisionSource": "branch-decision",
+      "driverPath": "packages/character-creation-runtime/character-creation-rogue-expertise-selected-identity.mbt.qnt",
+      "obligationId": "packages/character-creation-runtime/character-creation-rogue-expertise-selected-identity.mbt.qnt#step:doSelectLevelSixAdditionalOwnedSkillExpertise",
+      "qntFileSha256": "c67dc1d9dca85764f7ca5756c74d6e494c4521741054349df557b2fdc9e9d23b",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "reason": "Rogue gains this additional Expertise projection at level 6.",
+        "reviewedBy": "codex-2026-06-17",
+        "tag": "out-of-scope"
       }
     },
     {
@@ -7848,6 +11608,126 @@
       }
     },
     {
+      "branchAction": "doGainLevelTwoInvocations",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doGainLevelTwoInvocations"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/character-creation-runtime/character-creation-warlock-eldritch-invocations-selected-identity.mbt.qnt",
+      "obligationId": "packages/character-creation-runtime/character-creation-warlock-eldritch-invocations-selected-identity.mbt.qnt#step:doGainLevelTwoInvocations",
+      "qntFileSha256": "f9f3a358ba72296b1d9a9a89c0b104ae251063c205ad4e9318b559b733725c0c",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doRejectDuplicateInvocationSelections",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doRejectDuplicateInvocationSelections"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/character-creation-runtime/character-creation-warlock-eldritch-invocations-selected-identity.mbt.qnt",
+      "obligationId": "packages/character-creation-runtime/character-creation-warlock-eldritch-invocations-selected-identity.mbt.qnt#step:doRejectDuplicateInvocationSelections",
+      "qntFileSha256": "f9f3a358ba72296b1d9a9a89c0b104ae251063c205ad4e9318b559b733725c0c",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doRejectPrerequisiteRetainedInvocationReplacement",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doRejectPrerequisiteRetainedInvocationReplacement"
+      ],
+      "decisionSource": "branch-decision",
+      "driverPath": "packages/character-creation-runtime/character-creation-warlock-eldritch-invocations-selected-identity.mbt.qnt",
+      "obligationId": "packages/character-creation-runtime/character-creation-warlock-eldritch-invocations-selected-identity.mbt.qnt#step:doRejectPrerequisiteRetainedInvocationReplacement",
+      "qntFileSha256": "f9f3a358ba72296b1d9a9a89c0b104ae251063c205ad4e9318b559b733725c0c",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "reason": "This prerequisite-retained invocation replacement rejection uses Warlock level 5 facts.",
+        "reviewedBy": "codex-2026-06-17",
+        "tag": "out-of-scope"
+      }
+    },
+    {
+      "branchAction": "doReplaceArmorWithEldritchMindOnWarlockLevelGain",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doReplaceArmorWithEldritchMindOnWarlockLevelGain"
+      ],
+      "decisionSource": "branch-decision",
+      "driverPath": "packages/character-creation-runtime/character-creation-warlock-eldritch-invocations-selected-identity.mbt.qnt",
+      "obligationId": "packages/character-creation-runtime/character-creation-warlock-eldritch-invocations-selected-identity.mbt.qnt#step:doReplaceArmorWithEldritchMindOnWarlockLevelGain",
+      "qntFileSha256": "f9f3a358ba72296b1d9a9a89c0b104ae251063c205ad4e9318b559b733725c0c",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "reason": "This invocation replacement projection uses Warlock level 3 facts.",
+        "reviewedBy": "codex-2026-06-17",
+        "tag": "out-of-scope"
+      }
+    },
+    {
+      "branchAction": "doReplaceRepeatableInvocationByChoice",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doReplaceRepeatableInvocationByChoice"
+      ],
+      "decisionSource": "branch-decision",
+      "driverPath": "packages/character-creation-runtime/character-creation-warlock-eldritch-invocations-selected-identity.mbt.qnt",
+      "obligationId": "packages/character-creation-runtime/character-creation-warlock-eldritch-invocations-selected-identity.mbt.qnt#step:doReplaceRepeatableInvocationByChoice",
+      "qntFileSha256": "f9f3a358ba72296b1d9a9a89c0b104ae251063c205ad4e9318b559b733725c0c",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "reason": "This repeatable invocation replacement projection uses Warlock level 3 facts.",
+        "reviewedBy": "codex-2026-06-17",
+        "tag": "out-of-scope"
+      }
+    },
+    {
+      "branchAction": "doSelectLevelOneArmorOfShadows",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doSelectLevelOneArmorOfShadows"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/character-creation-runtime/character-creation-warlock-eldritch-invocations-selected-identity.mbt.qnt",
+      "obligationId": "packages/character-creation-runtime/character-creation-warlock-eldritch-invocations-selected-identity.mbt.qnt#step:doSelectLevelOneArmorOfShadows",
+      "qntFileSha256": "f9f3a358ba72296b1d9a9a89c0b104ae251063c205ad4e9318b559b733725c0c",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
       "branchAction": "doFinalizeBarbarianWeaponMastery",
       "branchFamily": "step",
       "branchPath": [
@@ -8057,6 +11937,65 @@
       }
     },
     {
+      "branchAction": "doRecoverSecondLevelSpellSlot",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doRecoverSecondLevelSpellSlot"
+      ],
+      "decisionSource": "branch-decision",
+      "driverPath": "packages/character-sheet-runtime/character-sheet-arcane-recovery-selected-identity.mbt.qnt",
+      "obligationId": "packages/character-sheet-runtime/character-sheet-arcane-recovery-selected-identity.mbt.qnt#step:doRecoverSecondLevelSpellSlot",
+      "qntFileSha256": "33584ea429e7b3809a96c21dbc7b576738f0fdbb9929047af15c668acdc2ce6c",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "reason": "Second-level Arcane Recovery is unavailable to ordinary level-1/2 Wizards.",
+        "reviewedBy": "codex-2026-06-17",
+        "tag": "out-of-scope"
+      }
+    },
+    {
+      "branchAction": "doRejectPactSlotArcaneRecovery",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doRejectPactSlotArcaneRecovery"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/character-sheet-runtime/character-sheet-arcane-recovery-selected-identity.mbt.qnt",
+      "obligationId": "packages/character-sheet-runtime/character-sheet-arcane-recovery-selected-identity.mbt.qnt#step:doRejectPactSlotArcaneRecovery",
+      "qntFileSha256": "33584ea429e7b3809a96c21dbc7b576738f0fdbb9929047af15c668acdc2ce6c",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doResetArcaneRecoveryOnLongRest",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doResetArcaneRecoveryOnLongRest"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/character-sheet-runtime/character-sheet-arcane-recovery-selected-identity.mbt.qnt",
+      "obligationId": "packages/character-sheet-runtime/character-sheet-arcane-recovery-selected-identity.mbt.qnt#step:doResetArcaneRecoveryOnLongRest",
+      "qntFileSha256": "33584ea429e7b3809a96c21dbc7b576738f0fdbb9929047af15c668acdc2ce6c",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
       "branchAction": "doProjectHeavyArmorWithShield",
       "branchFamily": "step",
       "branchPath": [
@@ -8168,6 +12107,168 @@
       },
       "scope": {
         "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doProjectBardJackOfAllTrades",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doProjectBardJackOfAllTrades"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/character-sheet-runtime/character-sheet-class-feature-selected-identity.mbt.qnt",
+      "obligationId": "packages/character-sheet-runtime/character-sheet-class-feature-selected-identity.mbt.qnt#step:doProjectBardJackOfAllTrades",
+      "qntFileSha256": "a2c79921515a6c302e7919379c329fc081bd17a9f47f93d9839c8f45552ff361",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doProjectClericLifeDomainSpells",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doProjectClericLifeDomainSpells"
+      ],
+      "decisionSource": "branch-decision",
+      "driverPath": "packages/character-sheet-runtime/character-sheet-class-feature-selected-identity.mbt.qnt",
+      "obligationId": "packages/character-sheet-runtime/character-sheet-class-feature-selected-identity.mbt.qnt#step:doProjectClericLifeDomainSpells",
+      "qntFileSha256": "a2c79921515a6c302e7919379c329fc081bd17a9f47f93d9839c8f45552ff361",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "reason": "Cleric Life Domain Spells are a level-3 subclass spell feature.",
+        "reviewedBy": "codex-2026-06-17",
+        "tag": "out-of-scope"
+      }
+    },
+    {
+      "branchAction": "doProjectDruidCircleLandSpells",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doProjectDruidCircleLandSpells"
+      ],
+      "decisionSource": "branch-decision",
+      "driverPath": "packages/character-sheet-runtime/character-sheet-class-feature-selected-identity.mbt.qnt",
+      "obligationId": "packages/character-sheet-runtime/character-sheet-class-feature-selected-identity.mbt.qnt#step:doProjectDruidCircleLandSpells",
+      "qntFileSha256": "a2c79921515a6c302e7919379c329fc081bd17a9f47f93d9839c8f45552ff361",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "reason": "Druid Circle of the Land Spells are a level-3 subclass spell feature.",
+        "reviewedBy": "codex-2026-06-17",
+        "tag": "out-of-scope"
+      }
+    },
+    {
+      "branchAction": "doProjectPaladinOathDevotionSpells",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doProjectPaladinOathDevotionSpells"
+      ],
+      "decisionSource": "branch-decision",
+      "driverPath": "packages/character-sheet-runtime/character-sheet-class-feature-selected-identity.mbt.qnt",
+      "obligationId": "packages/character-sheet-runtime/character-sheet-class-feature-selected-identity.mbt.qnt#step:doProjectPaladinOathDevotionSpells",
+      "qntFileSha256": "a2c79921515a6c302e7919379c329fc081bd17a9f47f93d9839c8f45552ff361",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "reason": "Paladin Oath of Devotion Spells are a level-3 subclass spell feature.",
+        "reviewedBy": "codex-2026-06-17",
+        "tag": "out-of-scope"
+      }
+    },
+    {
+      "branchAction": "doProjectPaladinsSmite",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doProjectPaladinsSmite"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/character-sheet-runtime/character-sheet-class-feature-selected-identity.mbt.qnt",
+      "obligationId": "packages/character-sheet-runtime/character-sheet-class-feature-selected-identity.mbt.qnt#step:doProjectPaladinsSmite",
+      "qntFileSha256": "a2c79921515a6c302e7919379c329fc081bd17a9f47f93d9839c8f45552ff361",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doProjectRangerFavoredEnemy",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doProjectRangerFavoredEnemy"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/character-sheet-runtime/character-sheet-class-feature-selected-identity.mbt.qnt",
+      "obligationId": "packages/character-sheet-runtime/character-sheet-class-feature-selected-identity.mbt.qnt#step:doProjectRangerFavoredEnemy",
+      "qntFileSha256": "a2c79921515a6c302e7919379c329fc081bd17a9f47f93d9839c8f45552ff361",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doProjectSorcererDraconicSpells",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doProjectSorcererDraconicSpells"
+      ],
+      "decisionSource": "branch-decision",
+      "driverPath": "packages/character-sheet-runtime/character-sheet-class-feature-selected-identity.mbt.qnt",
+      "obligationId": "packages/character-sheet-runtime/character-sheet-class-feature-selected-identity.mbt.qnt#step:doProjectSorcererDraconicSpells",
+      "qntFileSha256": "a2c79921515a6c302e7919379c329fc081bd17a9f47f93d9839c8f45552ff361",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "reason": "Sorcerer Draconic Spells are a level-3 subclass spell feature.",
+        "reviewedBy": "codex-2026-06-17",
+        "tag": "out-of-scope"
+      }
+    },
+    {
+      "branchAction": "doProjectWarlockFiendSpells",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doProjectWarlockFiendSpells"
+      ],
+      "decisionSource": "branch-decision",
+      "driverPath": "packages/character-sheet-runtime/character-sheet-class-feature-selected-identity.mbt.qnt",
+      "obligationId": "packages/character-sheet-runtime/character-sheet-class-feature-selected-identity.mbt.qnt#step:doProjectWarlockFiendSpells",
+      "qntFileSha256": "a2c79921515a6c302e7919379c329fc081bd17a9f47f93d9839c8f45552ff361",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "reason": "Warlock Fiend Spells are a level-3 subclass spell feature.",
+        "reviewedBy": "codex-2026-06-17",
+        "tag": "out-of-scope"
       }
     },
     {
@@ -8551,6 +12652,220 @@
       }
     },
     {
+      "branchAction": "doCompleteLongRestRestoresOrdinaryPactAndClearsCreatedSlots",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doCompleteLongRestRestoresOrdinaryPactAndClearsCreatedSlots"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt",
+      "obligationId": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt#step:doCompleteLongRestRestoresOrdinaryPactAndClearsCreatedSlots",
+      "qntFileSha256": "4d8b278539b10cbd26e854913a1dd04dc6d562c2796735473e62df83e91e3bcf",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doInterruptLongRestBeforeOneHourNoSlotBenefit",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doInterruptLongRestBeforeOneHourNoSlotBenefit"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt",
+      "obligationId": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt#step:doInterruptLongRestBeforeOneHourNoSlotBenefit",
+      "qntFileSha256": "4d8b278539b10cbd26e854913a1dd04dc6d562c2796735473e62df83e91e3bcf",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doInterruptLongRestWithShortRestSlotBenefits",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doInterruptLongRestWithShortRestSlotBenefits"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt",
+      "obligationId": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt#step:doInterruptLongRestWithShortRestSlotBenefits",
+      "qntFileSha256": "4d8b278539b10cbd26e854913a1dd04dc6d562c2796735473e62df83e91e3bcf",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doInterruptShortRestNoSlotBenefit",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doInterruptShortRestNoSlotBenefit"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt",
+      "obligationId": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt#step:doInterruptShortRestNoSlotBenefit",
+      "qntFileSha256": "4d8b278539b10cbd26e854913a1dd04dc6d562c2796735473e62df83e91e3bcf",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doMagicalCunningRecoversPactSlots",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doMagicalCunningRecoversPactSlots"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt",
+      "obligationId": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt#step:doMagicalCunningRecoversPactSlots",
+      "qntFileSha256": "4d8b278539b10cbd26e854913a1dd04dc6d562c2796735473e62df83e91e3bcf",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doRejectArcaneRecoveryPactSlotRefund",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doRejectArcaneRecoveryPactSlotRefund"
+      ],
+      "decisionSource": "branch-decision",
+      "driverPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt",
+      "obligationId": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt#step:doRejectArcaneRecoveryPactSlotRefund",
+      "qntFileSha256": "4d8b278539b10cbd26e854913a1dd04dc6d562c2796735473e62df83e91e3bcf",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "reason": "This rejection branch depends on the same later-slot Arcane Recovery fixture and needs a level-1/2 legal fixture before it becomes active scope.",
+        "reviewedBy": "codex-2026-06-17",
+        "tag": "out-of-scope"
+      }
+    },
+    {
+      "branchAction": "doRejectMagicalCunningWithoutExpendedPactSlots",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doRejectMagicalCunningWithoutExpendedPactSlots"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt",
+      "obligationId": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt#step:doRejectMagicalCunningWithoutExpendedPactSlots",
+      "qntFileSha256": "4d8b278539b10cbd26e854913a1dd04dc6d562c2796735473e62df83e91e3bcf",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doRejectMismatchedOrdinarySpellSlotCapacity",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doRejectMismatchedOrdinarySpellSlotCapacity"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt",
+      "obligationId": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt#step:doRejectMismatchedOrdinarySpellSlotCapacity",
+      "qntFileSha256": "4d8b278539b10cbd26e854913a1dd04dc6d562c2796735473e62df83e91e3bcf",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doRejectPactSlotExpenditureOverCapacity",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doRejectPactSlotExpenditureOverCapacity"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt",
+      "obligationId": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt#step:doRejectPactSlotExpenditureOverCapacity",
+      "qntFileSha256": "4d8b278539b10cbd26e854913a1dd04dc6d562c2796735473e62df83e91e3bcf",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doShortRestArcaneRecoveryRefundsOrdinarySpellSlot",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doShortRestArcaneRecoveryRefundsOrdinarySpellSlot"
+      ],
+      "decisionSource": "branch-decision",
+      "driverPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt",
+      "obligationId": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt#step:doShortRestArcaneRecoveryRefundsOrdinarySpellSlot",
+      "qntFileSha256": "4d8b278539b10cbd26e854913a1dd04dc6d562c2796735473e62df83e91e3bcf",
+      "replay": {
+        "reason": "The sequential driver traverses this later-slot branch to reach later level-1/2 slot lifecycle branches.",
+        "reviewedBy": "codex-2026-06-17",
+        "tag": "transit-only"
+      },
+      "scope": {
+        "reason": "This Arcane Recovery fixture restores a second-level ordinary spell slot, outside the current level-1/2 scope.",
+        "reviewedBy": "codex-2026-06-17",
+        "tag": "out-of-scope"
+      }
+    },
+    {
+      "branchAction": "doShortRestRestoresPactSlotsOnly",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doShortRestRestoresPactSlotsOnly"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt",
+      "obligationId": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt#step:doShortRestRestoresPactSlotsOnly",
+      "qntFileSha256": "4d8b278539b10cbd26e854913a1dd04dc6d562c2796735473e62df83e91e3bcf",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
       "branchAction": "doInvokeSpellbookRitual",
       "branchFamily": "step",
       "branchPath": [
@@ -8804,6 +13119,69 @@
     "sampledInputSource": "mbt::nondetPicks"
   },
   "sampledInputs": [
+    {
+      "branchAction": "doFillDivineSmiteDamage",
+      "branchFamily": "step",
+      "driverPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt",
+      "pickName": "smiteDiePip",
+      "qntFileSha256": "3561bd1381527a492de03e0805102fc0721b399b162fb697b8dee1c7f1c17276"
+    },
+    {
+      "branchAction": "doFillDivineSmiteDamage",
+      "branchFamily": "step",
+      "driverPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt",
+      "pickName": "weaponDiePip",
+      "qntFileSha256": "3561bd1381527a492de03e0805102fc0721b399b162fb697b8dee1c7f1c17276"
+    },
+    {
+      "branchAction": "doFillEnsnaringStartTurnDamage",
+      "branchFamily": "step",
+      "driverPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt",
+      "pickName": "damageDiePip",
+      "qntFileSha256": "3561bd1381527a492de03e0805102fc0721b399b162fb697b8dee1c7f1c17276"
+    },
+    {
+      "branchAction": "doFillEnsnaringWeaponDamage",
+      "branchFamily": "step",
+      "driverPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt",
+      "pickName": "weaponDiePip",
+      "qntFileSha256": "3561bd1381527a492de03e0805102fc0721b399b162fb697b8dee1c7f1c17276"
+    },
+    {
+      "branchAction": "doFillSearingSmiteDamage",
+      "branchFamily": "step",
+      "driverPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt",
+      "pickName": "smiteDiePip",
+      "qntFileSha256": "3561bd1381527a492de03e0805102fc0721b399b162fb697b8dee1c7f1c17276"
+    },
+    {
+      "branchAction": "doFillSearingSmiteDamage",
+      "branchFamily": "step",
+      "driverPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt",
+      "pickName": "weaponDiePip",
+      "qntFileSha256": "3561bd1381527a492de03e0805102fc0721b399b162fb697b8dee1c7f1c17276"
+    },
+    {
+      "branchAction": "doFillSearingStartTurnDamageAndSave",
+      "branchFamily": "step",
+      "driverPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt",
+      "pickName": "damageDiePip",
+      "qntFileSha256": "3561bd1381527a492de03e0805102fc0721b399b162fb697b8dee1c7f1c17276"
+    },
+    {
+      "branchAction": "doFillShiningSmiteDamage",
+      "branchFamily": "step",
+      "driverPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt",
+      "pickName": "smiteDiePip",
+      "qntFileSha256": "3561bd1381527a492de03e0805102fc0721b399b162fb697b8dee1c7f1c17276"
+    },
+    {
+      "branchAction": "doFillShiningSmiteDamage",
+      "branchFamily": "step",
+      "driverPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt",
+      "pickName": "weaponDiePip",
+      "qntFileSha256": "3561bd1381527a492de03e0805102fc0721b399b162fb697b8dee1c7f1c17276"
+    },
     {
       "branchAction": "doChooseDamageType",
       "branchFamily": "step",

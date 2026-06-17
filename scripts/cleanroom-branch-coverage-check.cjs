@@ -500,6 +500,14 @@ function validateReplay(replay, context) {
     }
     return issues;
   }
+  if (replay.tag === "transit-only") {
+    for (const field of ["reason", "reviewedBy"]) {
+      if (typeof replay[field] !== "string" || replay[field].trim() === "") {
+        issues.push(`${context}: transit-only replay requires ${field}.`);
+      }
+    }
+    return issues;
+  }
   if (replay.tag === "source-blocker") {
     for (const field of ["blockerId", "reason", "reviewedBy"]) {
       if (typeof replay[field] !== "string" || replay[field].trim() === "") {
@@ -530,6 +538,12 @@ function validateScopeRow(entry, rootPath, scopePath) {
   }
   issues.push(...validateScope(row.defaultScope, `${context}: defaultScope`));
   issues.push(...validateReplay(row.defaultReplay, `${context}: defaultReplay`));
+  if (
+    row.defaultReplay?.tag === "transit-only" &&
+    row.defaultScope?.tag !== "out-of-scope"
+  ) {
+    issues.push(`${context}: transit-only defaultReplay requires out-of-scope defaultScope.`);
+  }
   if (!Array.isArray(row.branchDecisions)) {
     issues.push(`${context}: branchDecisions must be an array.`);
   } else {
@@ -549,6 +563,12 @@ function validateScopeRow(entry, rootPath, scopePath) {
       issues.push(
         ...validateReplay(decision.replay, `${decisionContext}: replay`),
       );
+      if (
+        decision.replay?.tag === "transit-only" &&
+        decision.scope?.tag !== "out-of-scope"
+      ) {
+        issues.push(`${decisionContext}: transit-only replay requires out-of-scope scope.`);
+      }
     }
   }
   return { row, issues };
@@ -915,6 +935,9 @@ function renderReport({ inventory, targetEvidenceSummary }) {
   const sourceBlocked = inventory.branchObligations.filter(
     (obligation) => obligation.replay.tag === "source-blocker",
   );
+  const transitOnly = inventory.branchObligations.filter(
+    (obligation) => obligation.replay.tag === "transit-only",
+  );
   const targetStatus =
     targetEvidenceSummary === undefined
       ? "not supplied"
@@ -934,6 +957,7 @@ function renderReport({ inventory, targetEvidenceSummary }) {
     `- Branch obligations: ${inventory.branchObligations.length}`,
     `- In-scope obligations: ${inScope.length}`,
     `- Out-of-scope obligations: ${outOfScope.length}`,
+    `- Transit-only obligations: ${transitOnly.length}`,
     `- Source-blocked obligations: ${sourceBlocked.length}`,
     `- Sampled inputs: ${inventory.sampledInputs.length}`,
     "",
@@ -1222,6 +1246,93 @@ function runSelfTest() {
         `expected unexpected sampled input evidence to fail, got ${JSON.stringify(unexpectedSampledInputResult.issues)}`,
       );
     }
+    fs.writeFileSync(
+      scopePath,
+      `${JSON.stringify({
+        driverPath: "packages/fixture/fixture.mbt.qnt",
+        branchFamilies: ["step"],
+        defaultScope: { tag: "in-scope" },
+        defaultReplay: { tag: "observable-from-step", stepAction: "step" },
+        branchDecisions: [
+          {
+            branchAction: "doSample",
+            scope: { tag: "in-scope" },
+            replay: {
+              tag: "transit-only",
+              reason: "self-test transit branch",
+              reviewedBy: "self-test",
+            },
+          },
+        ],
+      })}\n`,
+    );
+    const badTransitResult = buildInventory({
+      rootPath: fixtureRoot,
+      scopePath,
+    });
+    if (
+      !badTransitResult.issues.some((issue) =>
+        issue.includes("transit-only replay requires out-of-scope scope"),
+      )
+    ) {
+      throw new Error(
+        `expected in-scope transit-only branch to fail, got ${JSON.stringify(badTransitResult.issues)}`,
+      );
+    }
+    fs.writeFileSync(
+      scopePath,
+      `${JSON.stringify({
+        driverPath: "packages/fixture/fixture.mbt.qnt",
+        branchFamilies: ["step"],
+        defaultScope: { tag: "in-scope" },
+        defaultReplay: { tag: "observable-from-step", stepAction: "step" },
+        branchDecisions: [
+          {
+            branchAction: "doSample",
+            scope: {
+              tag: "out-of-scope",
+              reason: "self-test out branch",
+              reviewedBy: "self-test",
+            },
+            replay: {
+              tag: "transit-only",
+              reason: "self-test transit branch",
+              reviewedBy: "self-test",
+            },
+          },
+        ],
+      })}\n`,
+    );
+    const transitResult = buildInventory({
+      rootPath: fixtureRoot,
+      scopePath,
+    });
+    if (transitResult.issues.length > 0 || transitResult.inventory === undefined) {
+      throw new Error(
+        `expected out-of-scope transit-only branch to pass, got ${JSON.stringify(transitResult.issues)}`,
+      );
+    }
+    const requiredTransitIds = requiredTargetObligations(
+      transitResult.inventory,
+    ).map((obligation) => obligation.obligationId);
+    if (
+      JSON.stringify(requiredTransitIds) !==
+      JSON.stringify(["packages/fixture/fixture.mbt.qnt#step:doOne"])
+    ) {
+      throw new Error(
+        `expected transit-only branch to be omitted from required target obligations, got ${JSON.stringify(requiredTransitIds)}`,
+      );
+    }
+    fs.writeFileSync(
+      scopePath,
+      `${JSON.stringify({
+        driverPath: "packages/fixture/fixture.mbt.qnt",
+        branchFamilies: ["step"],
+        defaultScope: { tag: "in-scope" },
+        defaultReplay: { tag: "observable-from-step", stepAction: "step" },
+        branchDecisions: [],
+      })}\n`,
+    );
     fs.writeFileSync(
       qntPath,
       [
