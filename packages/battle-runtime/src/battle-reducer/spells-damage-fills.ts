@@ -72,6 +72,7 @@ import { uniqueSavingThrowRollModeProjections } from "./saving-throw-roll-mode-p
 import {
   ATTACK_ROLL_HOLE_ID,
   ATTACK_ROLL_HOLE_INSTANCE,
+  attackDamageDieFloorChoiceUnsupportedIssue,
   spellDamageRerollUnsupportedIssue,
   type BattleActiveEffect,
   type BattleAttackDamageDisposition,
@@ -1333,6 +1334,11 @@ export function validateSpellDamageFill(
   critical: boolean,
   spellMarkedDamageRiders: readonly SpellMarkedDamageRider[] = [],
 ): string | null {
+  const attackDamageDieFloorChoiceIssue =
+    attackDamageDieFloorChoiceUnsupportedIssue(fill);
+  if (attackDamageDieFloorChoiceIssue !== null) {
+    return attackDamageDieFloorChoiceIssue;
+  }
   if (invocation.procedure !== "spellAttackDamage") {
     const spellDamageRerollIssue = spellDamageRerollUnsupportedIssue(fill);
     if (spellDamageRerollIssue !== null) {
@@ -1493,6 +1499,11 @@ export function validateSpellAttackSequencePartDamageFill(
   critical: boolean,
   spellMarkedDamageRiders: readonly SpellMarkedDamageRider[] = [],
 ): string | null {
+  const attackDamageDieFloorChoiceIssue =
+    attackDamageDieFloorChoiceUnsupportedIssue(fill);
+  if (attackDamageDieFloorChoiceIssue !== null) {
+    return attackDamageDieFloorChoiceIssue;
+  }
   const spellDamageRerollIssue = spellDamageRerollUnsupportedIssue(fill);
   if (spellDamageRerollIssue !== null) {
     return spellDamageRerollIssue;
@@ -1593,6 +1604,11 @@ export function validatePreparedSlotSpellDamageGroups(
   fill: Extract<BattleFill, { readonly kind: "rolledDice" }>,
   allocations: readonly BattleSpellTargetAllocation[],
 ): string | null {
+  const attackDamageDieFloorChoiceIssue =
+    attackDamageDieFloorChoiceUnsupportedIssue(fill);
+  if (attackDamageDieFloorChoiceIssue !== null) {
+    return attackDamageDieFloorChoiceIssue;
+  }
   const spellDamageRerollIssue = spellDamageRerollUnsupportedIssue(fill);
   if (spellDamageRerollIssue !== null) {
     return spellDamageRerollIssue;

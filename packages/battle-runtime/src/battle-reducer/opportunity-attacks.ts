@@ -76,6 +76,7 @@ import {
   attackActionOptionName,
   attackPotentialDamageTypes,
   eligibleAttackDamageRiders,
+  eligibleAttackDamageDieFloorUnitIds,
   eligibleWeaponDamageDiceRollChoiceUnitIds,
   selectedAttackDamageRiders,
   selectedWeaponDamageDiceRollChoice,
@@ -245,6 +246,13 @@ export function resolveOpportunityAttackCommand(
     : [];
   const eligibleDamageDiceChoiceUnitIds = hit
     ? eligibleWeaponDamageDiceRollChoiceUnitIds(
+        attackRolledState,
+        subject.reactorId,
+        attack,
+      )
+    : [];
+  const eligibleDamageDieFloorChoiceUnitIds = hit
+    ? eligibleAttackDamageDieFloorUnitIds(
         attackRolledState,
         subject.reactorId,
         attack,
@@ -563,6 +571,7 @@ export function resolveOpportunityAttackCommand(
           attack,
         ),
         eligibleDamageDiceChoiceUnitIds,
+        eligibleDamageDieFloorChoiceUnitIds,
       ),
     ]);
   }
@@ -583,6 +592,7 @@ export function resolveOpportunityAttackCommand(
       attack,
     ),
     eligibleDamageDiceChoiceUnitIds,
+    eligibleDamageDieFloorChoiceUnitIds,
   );
   if (damageValidation !== null) {
     return invalidResult(input.state, "invalidFill", damageValidation);

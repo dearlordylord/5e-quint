@@ -139,6 +139,7 @@ import {
   attackActionOptionName,
   attackPotentialDamageTypes,
   eligibleAttackDamageRiders,
+  eligibleAttackDamageDieFloorUnitIds,
   eligibleWeaponDamageDiceRollChoiceUnitIds,
   recordAttackRollMissToHitReplacementUsed,
   selectedAttackDamageRiders,
@@ -179,6 +180,7 @@ import {
   criticalThresholdForAttack,
   needsAttackDamageConcentrationResult,
   spendAttackAction,
+  validateAttackDamageDieFloorChoice,
   validateRolledDiceForWeaponAttack,
   validateAttackDamageFill,
 } from "./attack-resolution.ts";
@@ -832,6 +834,9 @@ export function resolveSelectedAttackProcedure(
         attack,
       )
     : [];
+  const eligibleDamageDieFloorChoiceUnitIds = hit
+    ? eligibleAttackDamageDieFloorUnitIds(attackRolledState, attackerId, attack)
+    : [];
   const spellWeaponDamageRiders = hit
     ? [
         ...activeSpellWeaponDamageRiders(
@@ -1304,6 +1309,7 @@ export function resolveSelectedAttackProcedure(
           attack,
         ),
         eligibleDamageDiceChoiceUnitIds,
+        eligibleDamageDieFloorChoiceUnitIds,
       ),
     ]);
   }
@@ -1337,6 +1343,7 @@ export function resolveSelectedAttackProcedure(
         attack,
       ),
       eligibleDamageDiceChoiceUnitIds,
+      eligibleDamageDieFloorChoiceUnitIds,
     );
     if (damageValidation !== null) {
       return invalidResult(input.state, "invalidFill", damageValidation);
@@ -2157,6 +2164,11 @@ function resolveWeaponMasteryCleaveAfterPrimaryDamage(input: {
     return { tag: "result", result: remarkableAthleteMovement.result };
   }
   cleaveAttackRolledState = remarkableAthleteMovement.state;
+  const cleaveDamageDieFloorChoiceUnitIds = eligibleAttackDamageDieFloorUnitIds(
+    cleaveAttackRolledState,
+    input.subject.actorId,
+    cleaveAttack,
+  );
   if (!cleaveHit) {
     return input.fillSet.weaponMasteryCleaveDamageRoll === undefined
       ? {
@@ -2183,8 +2195,23 @@ function resolveWeaponMasteryCleaveAfterPrimaryDamage(input: {
           cleaveAttack,
           cleaveCritical,
           effectiveCleaveAttackRoll,
+          cleaveDamageDieFloorChoiceUnitIds,
         ),
       ]),
+    };
+  }
+  const attackDamageDieFloorChoiceIssue = validateAttackDamageDieFloorChoice(
+    input.fillSet.weaponMasteryCleaveDamageRoll,
+    cleaveDamageDieFloorChoiceUnitIds,
+  );
+  if (attackDamageDieFloorChoiceIssue !== null) {
+    return {
+      tag: "result",
+      result: invalidResult(
+        input.state,
+        "invalidFill",
+        attackDamageDieFloorChoiceIssue,
+      ),
     };
   }
   const spellDamageRerollIssue = spellDamageRerollUnsupportedIssue(
@@ -2835,6 +2862,12 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
           ),
         };
   }
+  const hordeBreakerDamageDieFloorChoiceUnitIds =
+    eligibleAttackDamageDieFloorUnitIds(
+      rolledState,
+      input.subject.actorId,
+      input.attack,
+    );
   if (input.fillSet.huntersPreyHordeBreakerDamageRoll === undefined) {
     return {
       tag: "result",
@@ -2847,8 +2880,23 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
           hordeBreakerSpellWeaponDamageRiders,
           hordeBreakerSpellMarkedDamageRiders,
           hordeBreakerOngoingDamageModifier,
+          hordeBreakerDamageDieFloorChoiceUnitIds,
         ),
       ]),
+    };
+  }
+  const attackDamageDieFloorChoiceIssue = validateAttackDamageDieFloorChoice(
+    input.fillSet.huntersPreyHordeBreakerDamageRoll,
+    hordeBreakerDamageDieFloorChoiceUnitIds,
+  );
+  if (attackDamageDieFloorChoiceIssue !== null) {
+    return {
+      tag: "result",
+      result: invalidResult(
+        input.state,
+        "invalidFill",
+        attackDamageDieFloorChoiceIssue,
+      ),
     };
   }
   const hordeBreakerSelectedDamageRiders = selectedAttackDamageRiders(

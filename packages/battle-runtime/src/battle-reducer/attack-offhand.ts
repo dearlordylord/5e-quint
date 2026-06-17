@@ -96,6 +96,7 @@ import {
   attackActionOptionName,
   attackPotentialDamageTypes,
   eligibleAttackDamageRiders,
+  eligibleAttackDamageDieFloorUnitIds,
   eligibleWeaponDamageDiceRollChoiceUnitIds,
   selectedAttackDamageRiders,
   selectedWeaponDamageDiceRollChoice,
@@ -391,6 +392,13 @@ function resolveBonusActionAttack(
         attack,
       )
     : [];
+  const eligibleDamageDieFloorChoiceUnitIds = hit
+    ? eligibleAttackDamageDieFloorUnitIds(
+        attackRolledState,
+        input.subject.actorId,
+        attack,
+      )
+    : [];
   const spellWeaponDamageRiders = hit
     ? [
         ...activeSpellWeaponDamageRiders(
@@ -477,6 +485,7 @@ function resolveBonusActionAttack(
           attack,
         ),
         eligibleDamageDiceChoiceUnitIds,
+        eligibleDamageDieFloorChoiceUnitIds,
       ),
     ]);
   }
@@ -513,6 +522,7 @@ function resolveBonusActionAttack(
         attack,
       ),
       eligibleDamageDiceChoiceUnitIds,
+      eligibleDamageDieFloorChoiceUnitIds,
     );
     if (damageValidation !== null) {
       return invalidResult(input.state, "invalidFill", damageValidation);

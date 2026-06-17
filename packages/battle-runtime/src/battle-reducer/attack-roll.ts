@@ -82,6 +82,7 @@ import {
   attackRollMissToHitReplacementHolePayloadForAttacker,
   targetHasAdjacentNonIncapacitatedAlly,
 } from "./statblock-attacks.ts";
+import { attackDamageDieFloorChoiceUnitIds } from "./attack-damage-die-floor-choice.ts";
 import {
   activeRageSourceKeysForFrenzy,
   ongoingFeatureProfileIsRecklessAttackForFrenzy,
@@ -1076,8 +1077,12 @@ export function weaponMasteryCleaveDamageHole(
   attack: CharacterWeaponAttackActionOption,
   critical: boolean,
   attackRoll: BattleAttackRollResult,
+  eligibleAttackDamageDieFloorChoiceUnitIds: readonly UnitRecord["id"][] = [],
 ): BattleDamageRollHole {
   const expression = weaponAttackDamageExpression(attack, critical, attackRoll);
+  const damageDieFloorChoiceUnitIds = attackDamageDieFloorChoiceUnitIds(
+    eligibleAttackDamageDieFloorChoiceUnitIds,
+  );
   return {
     kind: "rolledDice",
     holeId: WEAPON_MASTERY_CLEAVE_DAMAGE_HOLE_ID,
@@ -1085,6 +1090,9 @@ export function weaponMasteryCleaveDamageHole(
     label: `Cleave damage (${expression})`,
     attack,
     critical,
+    ...(damageDieFloorChoiceUnitIds === null
+      ? {}
+      : { attackDamageDieFloorChoiceUnitIds: damageDieFloorChoiceUnitIds }),
   };
 }
 
@@ -1187,6 +1195,7 @@ export function huntersPreyHordeBreakerDamageHole(
   spellWeaponDamageRiders: readonly SpellAttackDamageComponent[] = [],
   spellMarkedDamageRiders: readonly SpellMarkedDamageRider[] = [],
   ongoingDamageModifier = 0,
+  eligibleAttackDamageDieFloorChoiceUnitIds: readonly UnitRecord["id"][] = [],
 ): BattleDamageRollHole {
   const expression = weaponAttackDamageExpression(
     attack,
@@ -1196,6 +1205,9 @@ export function huntersPreyHordeBreakerDamageHole(
     spellWeaponDamageRiders,
     spellMarkedDamageRiders,
     ongoingDamageModifier,
+  );
+  const damageDieFloorChoiceUnitIds = attackDamageDieFloorChoiceUnitIds(
+    eligibleAttackDamageDieFloorChoiceUnitIds,
   );
   return {
     kind: "rolledDice",
@@ -1211,6 +1223,9 @@ export function huntersPreyHordeBreakerDamageHole(
     ...(spellMarkedDamageRiders.length === 0
       ? {}
       : { spellMarkedDamageRiders }),
+    ...(damageDieFloorChoiceUnitIds === null
+      ? {}
+      : { attackDamageDieFloorChoiceUnitIds: damageDieFloorChoiceUnitIds }),
   };
 }
 

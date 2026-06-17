@@ -103,7 +103,7 @@
     {
       "number": 17,
       "id": "L3-FOLLOWUP-GREAT-WEAPON-FIGHTING-DECLINE-RUNTIME",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Promote Great Weapon Fighting optional decline support"
     },
     {
@@ -633,7 +633,7 @@ Verification:
 
 ### Task 17 - L3-FOLLOWUP-GREAT-WEAPON-FIGHTING-DECLINE-RUNTIME
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 

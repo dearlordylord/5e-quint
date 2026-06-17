@@ -32,7 +32,6 @@ import type {
 } from "../battle-action-options.ts";
 import {
   ATTACK_DAMAGE_DIE_FLOOR_MINIMUM_RESULT,
-  ATTACK_DAMAGE_DIE_FLOOR_SUPPORT_PROFILE,
   PASSIVE_DAMAGE_RESISTANCE_SUPPORT_PROFILE,
   type OngoingFeatureDamageModifier,
 } from "../unit-feature-support.ts";
@@ -60,6 +59,8 @@ import { combatantHasWardingBondResistance } from "./warding-bond.ts";
 import {
   attackDamageComponents,
   attackDamageModifier,
+  eligibleAttackDamageDieFloorUnitIdsForAttacker,
+  selectedAttackDamageDieFloorChoice,
   statBlockAttackDamage,
 } from "./statblock-attacks.ts";
 import {
@@ -230,7 +231,11 @@ export function attackDamageByType(
     attack,
     attackRoll,
   );
-  const damageDieFloorMinimum = attackDamageDieFloorMinimum(attacker, attack);
+  const damageDieFloorMinimum = attackDamageDieFloorMinimum(
+    attacker,
+    attack,
+    damageRoll.attackDamageDieFloorChoice,
+  );
   const damageByType = damageRoll.value.reduce<ReadonlyMap<DamageType, number>>(
     (totals, group, index) => {
       const component = components[index];
@@ -279,36 +284,16 @@ export function attackDamageByType(
 function attackDamageDieFloorMinimum(
   attacker: BattleCreatureState | undefined,
   attack: SupportedAttackActionOption,
+  choice: BattleRolledDiceFill["attackDamageDieFloorChoice"],
 ): typeof ATTACK_DAMAGE_DIE_FLOOR_MINIMUM_RESULT | null {
-  if (
-    attacker?.origin.kind !== "character" ||
-    attack.kind !== "weapon" ||
-    attack.weapon.usage !== "melee" ||
-    !weaponHasTwoHandedOrVersatileProperty(attack.weapon)
-  ) {
-    return null;
-  }
-  const mainWeapon = attacker.origin.selectedLoadout.weapon;
-  if (
-    mainWeapon?.unitId !== attack.weapon.id ||
-    mainWeapon.grip !== "two_handed"
-  ) {
-    return null;
-  }
-  return attacker.origin.characterUnitRefs.some((unitRef) =>
-    unitRef.supportProfiles.includes(ATTACK_DAMAGE_DIE_FLOOR_SUPPORT_PROFILE),
-  )
-    ? ATTACK_DAMAGE_DIE_FLOOR_MINIMUM_RESULT
-    : null;
-}
-
-function weaponHasTwoHandedOrVersatileProperty(
-  weapon: CharacterWeaponAttackActionOption["weapon"],
-): boolean {
-  return (weapon.properties ?? []).some(
-    (property) =>
-      property.kind === "two_handed" || property.kind === "versatile",
+  const selectedChoice = selectedAttackDamageDieFloorChoice(
+    eligibleAttackDamageDieFloorUnitIdsForAttacker(attacker, attack),
+    choice,
   );
+  if (selectedChoice?.selection !== "apply") {
+    return null;
+  }
+  return ATTACK_DAMAGE_DIE_FLOOR_MINIMUM_RESULT;
 }
 
 function attackDamageDieResult(

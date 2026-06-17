@@ -50,6 +50,7 @@ import {
   type SpellAttackDamageComponent,
   type StatBlockMultiattackActionResource,
 } from "../battle-reducer.ts";
+import { attackDamageDieFloorChoiceUnitIds } from "./attack-damage-die-floor-choice.ts";
 import {
   damageAllowsKnockOut,
   hpDamageProjection,
@@ -88,6 +89,7 @@ export function attackDamageHole(
   spellMarkedDamageRiders: readonly SpellMarkedDamageRider[] = [],
   ongoingDamageModifier = 0,
   weaponDamageDiceRollChoiceUnitIds: readonly UnitRecord["id"][] = [],
+  eligibleAttackDamageDieFloorChoiceUnitIds: readonly UnitRecord["id"][] = [],
 ): BattleDamageRollHole {
   const expression = weaponAttackDamageExpression(
     attack,
@@ -99,6 +101,9 @@ export function attackDamageHole(
     ongoingDamageModifier,
   );
   const name = attackActionOptionName(attack);
+  const damageDieFloorChoiceUnitIds = attackDamageDieFloorChoiceUnitIds(
+    eligibleAttackDamageDieFloorChoiceUnitIds,
+  );
   return {
     kind: "rolledDice",
     holeId: attackDamageHoleId(
@@ -125,6 +130,9 @@ export function attackDamageHole(
     ...(weaponDamageDiceRollChoiceUnitIds.length === 0
       ? {}
       : { weaponDamageDiceRollChoiceUnitIds }),
+    ...(damageDieFloorChoiceUnitIds === null
+      ? {}
+      : { attackDamageDieFloorChoiceUnitIds: damageDieFloorChoiceUnitIds }),
   };
 }
 

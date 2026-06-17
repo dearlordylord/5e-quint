@@ -78,6 +78,7 @@ import type {
   BattleCompanionDurableId,
   BattleCompanionProtocol,
 } from "../companion-state.ts";
+import { ATTACK_DAMAGE_DIE_FLOOR_CHOICE_SELECTIONS } from "./attack-damage-die-floor-choice.ts";
 import type {
   FindFamiliarFormSelection,
   PactOfTheChainFindFamiliarFormSelection,
@@ -216,6 +217,13 @@ type WeaponDamageDiceRollChoiceFillEncoded = {
     { readonly results: readonly [number, ...number[]] },
   ];
 };
+type AttackDamageDieFloorChoiceFillEncoded = {
+  readonly unitId: string;
+  readonly selection: (typeof ATTACK_DAMAGE_DIE_FLOOR_CHOICE_SELECTIONS)[number];
+};
+const AttackDamageDieFloorChoiceSelectionSchema = Schema.Literal(
+  ...ATTACK_DAMAGE_DIE_FLOOR_CHOICE_SELECTIONS,
+);
 
 const OngoingFeatureExpirationSchema = Schema.Union(
   Schema.Struct({
@@ -1330,6 +1338,10 @@ export const BattleHoleSchema = Schema.Union(
     ),
     weaponDamageDiceRollChoiceUnitIds: Schema.optionalWith(
       Schema.Array(Schema.String),
+      { exact: true },
+    ),
+    attackDamageDieFloorChoiceUnitIds: Schema.optionalWith(
+      Schema.NonEmptyArray(Schema.String),
       { exact: true },
     ),
   }),
@@ -2822,6 +2834,7 @@ type BattleFillEncoded =
       readonly holeId: string;
       readonly selectedAttackDamageRiderUnitIds?: readonly string[];
       readonly weaponDamageDiceRollChoice?: WeaponDamageDiceRollChoiceFillEncoded;
+      readonly attackDamageDieFloorChoice?: AttackDamageDieFloorChoiceFillEncoded;
       readonly value: readonly [
         {
           readonly results: readonly [number, ...number[]];
@@ -3672,6 +3685,13 @@ export const BattleFillSchema: Schema.Schema<
             BattleRolledDiceGroupSchema,
             BattleRolledDiceGroupSchema,
           ),
+        }),
+        { exact: true },
+      ),
+      attackDamageDieFloorChoice: Schema.optionalWith(
+        Schema.Struct({
+          unitId: Schema.String,
+          selection: AttackDamageDieFloorChoiceSelectionSchema,
         }),
         { exact: true },
       ),

@@ -147,6 +147,7 @@ import {
   attackDamageComponents,
   clearPendingAttackRollMissToHitReplacementSelection,
   selectedAttackDamageRiders,
+  selectedAttackDamageDieFloorChoice,
   selectedWeaponDamageDiceRollChoice,
   weaponDamageComponent,
 } from "./statblock-attacks.ts";
@@ -2004,6 +2005,7 @@ export function validateAttackDamageFill(
   spellMarkedDamageRiders: readonly SpellMarkedDamageRider[] = [],
   ongoingDamageModifier = 0,
   eligibleWeaponDamageDiceRollChoiceUnitIds: readonly UnitRecord["id"][] = [],
+  eligibleAttackDamageDieFloorChoiceUnitIds: readonly UnitRecord["id"][] = [],
 ): string | null {
   const selectedRiders = selectedAttackDamageRiders(
     eligibleAttackDamageRiders,
@@ -2042,6 +2044,13 @@ export function validateAttackDamageFill(
   ) {
     return "Weapon damage dice roll choice is not eligible for this attack.";
   }
+  const attackDamageDieFloorChoiceIssue = validateAttackDamageDieFloorChoice(
+    fill,
+    eligibleAttackDamageDieFloorChoiceUnitIds,
+  );
+  if (attackDamageDieFloorChoiceIssue !== null) {
+    return attackDamageDieFloorChoiceIssue;
+  }
 
   return validateRolledDiceForWeaponAttack(
     fill.value,
@@ -2053,6 +2062,29 @@ export function validateAttackDamageFill(
     spellMarkedDamageRiders,
     weaponDamageDiceRollChoice ?? undefined,
   );
+}
+
+export function validateAttackDamageDieFloorChoice(
+  fill: BattleRolledDiceFill,
+  eligibleUnitIds: readonly UnitRecord["id"][],
+): string | null {
+  const selectedChoice = selectedAttackDamageDieFloorChoice(
+    eligibleUnitIds,
+    fill.attackDamageDieFloorChoice,
+  );
+  if (
+    fill.attackDamageDieFloorChoice !== undefined &&
+    selectedChoice === null
+  ) {
+    return "Attack damage die floor choice is not eligible for this attack.";
+  }
+  if (
+    eligibleUnitIds.length > 0 &&
+    fill.attackDamageDieFloorChoice === undefined
+  ) {
+    return "Attack damage die floor choice is required for this attack.";
+  }
+  return null;
 }
 
 export function validateRolledDiceForWeaponAttack(
