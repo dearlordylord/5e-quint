@@ -36,11 +36,8 @@ question is answered.
 
 ## Current Branch-Inventory-Ready Queue
 
-This queue lists branch-inventory-ready drivers for this scaffold revision.
+This queue is generated from `plans/cleanroom-branch-coverage/branch-scope.jsonl`.
 `tasks/ACTIVE_WORK.json` selects which ready drivers are assigned to a run.
-Additional source branch inventory rows may exist for future drivers; they are
-not selectable implementation tasks until the source-owned active work file,
-scope snapshot, and source branch inventory are revised together.
 
 1. `cleanroom-input/qnt/character-creation-runtime/character-creation-class-feature-projections.mbt.qnt`
 2. `cleanroom-input/qnt/character-creation-runtime/character-creation-cleric-druid-order-selected-identity.mbt.qnt`
@@ -122,15 +119,15 @@ scope snapshot, and source branch inventory are revised together.
 
 ## Future Level 1-2 Queue
 
-Drivers are ordered by dependency lane, then lexically inside each lane unless
-the current cleanroom vertical already exercised an earlier dependency.
+This queue is generated from `plans/cleanroom-branch-coverage/branch-scope.jsonl`.
+Drivers are ordered by dependency lane, then by branch-scope row order.
 
 ### Creation
 
-1. `cleanroom-input/qnt/character-creation-runtime/character-creation-runtime.mbt.qnt`
-2. `cleanroom-input/qnt/character-creation-runtime/character-creation-class-feature-projections.mbt.qnt`
-3. `cleanroom-input/qnt/character-creation-runtime/character-creation-cleric-druid-order-selected-identity.mbt.qnt`
-4. `cleanroom-input/qnt/character-creation-runtime/character-creation-fighter-fighting-style-selected-identity.mbt.qnt`
+1. `cleanroom-input/qnt/character-creation-runtime/character-creation-class-feature-projections.mbt.qnt`
+2. `cleanroom-input/qnt/character-creation-runtime/character-creation-cleric-druid-order-selected-identity.mbt.qnt`
+3. `cleanroom-input/qnt/character-creation-runtime/character-creation-fighter-fighting-style-selected-identity.mbt.qnt`
+4. `cleanroom-input/qnt/character-creation-runtime/character-creation-runtime.mbt.qnt`
 5. `cleanroom-input/qnt/character-creation-runtime/character-creation-weapon-mastery-containers-selected-identity.mbt.qnt`
 
 ### Sheet
@@ -207,12 +204,15 @@ the current cleanroom vertical already exercised an earlier dependency.
 55. `cleanroom-input/qnt/battle-runtime/battle-runtime-weapon-mastery-selected-identity.mbt.qnt`
 56. `cleanroom-input/qnt/battle-runtime/battle-runtime-zero-hit-point-mid-resolution.mbt.qnt`
 57. `cleanroom-input/qnt/battle-runtime/creature-attack.mbt.qnt`
-58. `cleanroom-input/qnt/battle-runtime/rule-core-attack-damage-disposition.mbt.qnt`
-59. `cleanroom-input/qnt/battle-runtime/rule-core-hit-point-damage.mbt.qnt`
-60. `cleanroom-input/qnt/battle-runtime/rule-core-movement.mbt.qnt`
-61. `cleanroom-input/qnt/battle-runtime/rule-core-reactions.mbt.qnt`
-62. `cleanroom-input/qnt/battle-runtime/rule-core-shove-outcome.mbt.qnt`
-63. `cleanroom-input/qnt/battle-runtime/rule-core-stat-block-controls.mbt.qnt`
+
+### Rules Core
+
+1. `cleanroom-input/qnt/battle-runtime/rule-core-attack-damage-disposition.mbt.qnt`
+2. `cleanroom-input/qnt/battle-runtime/rule-core-hit-point-damage.mbt.qnt`
+3. `cleanroom-input/qnt/battle-runtime/rule-core-movement.mbt.qnt`
+4. `cleanroom-input/qnt/battle-runtime/rule-core-reactions.mbt.qnt`
+5. `cleanroom-input/qnt/battle-runtime/rule-core-shove-outcome.mbt.qnt`
+6. `cleanroom-input/qnt/battle-runtime/rule-core-stat-block-controls.mbt.qnt`
 
 ## Full Driver Decisions
 

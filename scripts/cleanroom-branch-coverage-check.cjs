@@ -28,9 +28,48 @@ const coverageRoot =
 const branchScopePath = path.join(coverageRoot, "branch-scope.jsonl");
 const inventoryPath = path.join(coverageRoot, "source-branch-inventory.json");
 const reportPath = path.join(coverageRoot, "REPORT.md");
+const scaffoldTasksRoot = path.join(
+  root,
+  "plans/cleanroom-scaffolds/tasks",
+);
+const activeWorkTemplatePath = path.join(
+  scaffoldTasksRoot,
+  "ACTIVE_WORK.template.json",
+);
+const levelScopeSnapshotPath = path.join(
+  scaffoldTasksRoot,
+  "LEVEL_1_2_SCOPE.snapshot.md",
+);
 const targetReplayEvidencePath = argValue("--target-replay-evidence");
 const passingStateCheckTags = new Set(["state-match", "projection-match"]);
 const sha256Pattern = /^[0-9a-f]{64}$/i;
+const scaffoldLaneOrder = ["creation", "sheet", "handoff", "battle", "rules-core"];
+const scaffoldAssignments = [
+  {
+    assignmentId: "level-1-2-full",
+    lanes: scaffoldLaneOrder,
+  },
+  {
+    assignmentId: "level-1-2-creation",
+    lanes: ["creation"],
+  },
+  {
+    assignmentId: "level-1-2-sheet",
+    lanes: ["sheet"],
+  },
+  {
+    assignmentId: "level-1-2-handoff",
+    lanes: ["handoff"],
+  },
+  {
+    assignmentId: "level-1-2-battle",
+    lanes: ["battle"],
+  },
+  {
+    assignmentId: "level-1-2-rules-core",
+    lanes: ["rules-core"],
+  },
+];
 
 function validatePassingStateCheck(stateCheck, context, issues) {
   if (!isRecord(stateCheck) || typeof stateCheck.tag !== "string") {
@@ -156,6 +195,138 @@ function writeOrCompare(filePath, content, shouldWrite) {
     return [`${repoPath(root, filePath)} is stale; run with --write.`];
   }
   return [];
+}
+
+function cleanroomDriverPath(driverPath) {
+  const parts = driverPath.split("/");
+  if (parts[0] !== "packages" || parts.length < 3) {
+    throw new Error(`${driverPath}: branch-scope driverPath must start with packages/<package>/`);
+  }
+  return path.posix.join("cleanroom-input/qnt", parts[1], ...parts.slice(2));
+}
+
+function scaffoldLaneForDriver(driverPath) {
+  if (driverPath.startsWith("packages/character-creation-runtime/")) {
+    return "creation";
+  }
+  if (driverPath.startsWith("packages/character-sheet-runtime/")) {
+    return "sheet";
+  }
+  if (driverPath.startsWith("packages/character-battle-runtime/")) {
+    return "handoff";
+  }
+  if (driverPath.startsWith("packages/battle-runtime/rule-core-")) {
+    return "rules-core";
+  }
+  if (driverPath.startsWith("packages/battle-runtime/")) {
+    return "battle";
+  }
+  throw new Error(`${driverPath}: no cleanroom scaffold lane is defined.`);
+}
+
+function cleanroomQueueByLane(scopeRows) {
+  const queues = new Map(scaffoldLaneOrder.map((lane) => [lane, []]));
+  for (const row of scopeRows) {
+    const lane = scaffoldLaneForDriver(row.driverPath);
+    queues.get(lane).push(cleanroomDriverPath(row.driverPath));
+  }
+  return queues;
+}
+
+function renderActiveWorkTemplate(scopeRows) {
+  const queues = cleanroomQueueByLane(scopeRows);
+  const activeWork = {
+    schemaVersion: 1,
+    assignments: scaffoldAssignments.map((assignment) => ({
+      assignmentId: assignment.assignmentId,
+      lanes: assignment.lanes.map((laneId) => ({
+        laneId,
+        queue: queues.get(laneId) ?? [],
+      })),
+    })),
+  };
+  return `${JSON.stringify(activeWork, null, 2)}\n`;
+}
+
+function numberedList(items) {
+  return items.map((item, index) => `${index + 1}. \`${item}\``).join("\n");
+}
+
+function renderFutureQueueSection(scopeRows) {
+  const queues = cleanroomQueueByLane(scopeRows);
+  const laneHeadings = new Map([
+    ["creation", "Creation"],
+    ["sheet", "Sheet"],
+    ["handoff", "Handoff"],
+    ["battle", "Battle"],
+    ["rules-core", "Rules Core"],
+  ]);
+  return [
+    "## Future Level 1-2 Queue",
+    "",
+    "This queue is generated from `plans/cleanroom-branch-coverage/branch-scope.jsonl`.",
+    "Drivers are ordered by dependency lane, then by branch-scope row order.",
+    "",
+    ...scaffoldLaneOrder.flatMap((laneId) => [
+      `### ${laneHeadings.get(laneId)}`,
+      "",
+      numberedList(queues.get(laneId) ?? []),
+      "",
+    ]),
+  ].join("\n").replace(/\n+$/, "\n\n");
+}
+
+function renderCurrentQueueSection(scopeRows) {
+  return [
+    "## Current Branch-Inventory-Ready Queue",
+    "",
+    "This queue is generated from `plans/cleanroom-branch-coverage/branch-scope.jsonl`.",
+    "`tasks/ACTIVE_WORK.json` selects which ready drivers are assigned to a run.",
+    "",
+    numberedList(scopeRows.map((row) => cleanroomDriverPath(row.driverPath))),
+    "",
+    "",
+  ].join("\n");
+}
+
+function replaceTopLevelSection(markdown, heading, replacement) {
+  const start = markdown.indexOf(`## ${heading}\n`);
+  if (start === -1) {
+    throw new Error(`${repoPath(root, levelScopeSnapshotPath)} is missing section ${heading}.`);
+  }
+  const next = markdown.indexOf("\n## ", start + 1);
+  const end = next === -1 ? markdown.length : next + 1;
+  return `${markdown.slice(0, start)}${replacement}${markdown.slice(end)}`;
+}
+
+function renderLevelScopeSnapshot(scopeRows) {
+  const current = renderCurrentQueueSection(scopeRows);
+  const future = renderFutureQueueSection(scopeRows);
+  const existing = fs.readFileSync(levelScopeSnapshotPath, "utf8");
+  return replaceTopLevelSection(
+    replaceTopLevelSection(existing, "Current Branch-Inventory-Ready Queue", current),
+    "Future Level 1-2 Queue",
+    future,
+  );
+}
+
+function renderScaffoldQueueArtifacts(scopeRows) {
+  if (
+    !fs.existsSync(activeWorkTemplatePath) ||
+    !fs.existsSync(levelScopeSnapshotPath)
+  ) {
+    return [];
+  }
+  return [
+    {
+      path: activeWorkTemplatePath,
+      text: renderActiveWorkTemplate(scopeRows),
+    },
+    {
+      path: levelScopeSnapshotPath,
+      text: renderLevelScopeSnapshot(scopeRows),
+    },
+  ];
 }
 
 function quintParse(filePath) {
@@ -1096,6 +1267,7 @@ function main() {
     for (const issue of issues) console.error(`  - ${issue}`);
     process.exit(1);
   }
+  const scopeRows = readJsonl(root, branchScopePath).map((entry) => entry.row);
 
   const inventoryText = stableStringify(inventory);
   const inventorySha = sha256Text(inventoryText);
@@ -1116,9 +1288,13 @@ function main() {
   }
 
   const report = renderReport({ inventory, targetEvidenceSummary });
+  const scaffoldArtifacts = renderScaffoldQueueArtifacts(scopeRows);
   const compareIssues = [
     ...writeOrCompare(inventoryPath, inventoryText, write),
     ...writeOrCompare(reportPath, report, write),
+    ...scaffoldArtifacts.flatMap((artifact) =>
+      writeOrCompare(artifact.path, artifact.text, write),
+    ),
   ];
   if (compareIssues.length > 0) {
     console.error("cleanroom branch coverage artifacts are stale:");

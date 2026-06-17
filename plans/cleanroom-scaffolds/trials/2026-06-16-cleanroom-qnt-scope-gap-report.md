@@ -6,9 +6,6 @@ This report records why copied `*.mbt.qnt` drivers are not active cleanroom
 tasks in the current source scaffold. It exists before hardening or eliminating
 the remaining inactive buckets.
 
-It also records a harness design flaw: activating one driver currently requires
-updates in multiple source-owned files. That should be eliminated.
-
 ## Current Counts
 
 Current synced source roots:
@@ -42,19 +39,22 @@ them yet.
 
 ## What The Inventory Actually Does
 
-The cleanroom flow has three source-owned layers:
+The active cleanroom work source of truth is
+`plans/cleanroom-branch-coverage/branch-scope.jsonl`.
 
-1. `branch-scope.jsonl` names drivers that enter source branch inventory and
-   supplies default scope/replay decisions.
-2. `source-branch-inventory.json` is generated from `branch-scope.jsonl` plus
-   parsed QNT. It records branch obligations and QNT file hashes.
-3. `ACTIVE_WORK.template.json` and `LEVEL_1_2_SCOPE.snapshot.md` define the
-   rendered cleanroom assignment queue.
+Its rows name active drivers and provide default branch scope/replay decisions.
+The branch coverage checker parses those drivers and, on `--write`, regenerates
+all derived active-work artifacts:
 
-This is too many places for one source truth. A driver should not require
-manual edits in all three layers. The next harness fix should make one queue
-source authoritative and generate the other views from it, with a checker that
-fails drift.
+- `plans/cleanroom-branch-coverage/source-branch-inventory.json`
+- `plans/cleanroom-branch-coverage/REPORT.md`
+- `plans/cleanroom-scaffolds/tasks/ACTIVE_WORK.template.json`
+- the generated queue sections in
+  `plans/cleanroom-scaffolds/tasks/LEVEL_1_2_SCOPE.snapshot.md`
+
+The non-write checker path fails if any of those derived artifacts drift from
+`branch-scope.jsonl`. The `Full Driver Decisions` table in the scope snapshot
+remains the curation record for `in`, `out`, and `flagged` decisions.
 
 ## Documented Curation Logic
 
@@ -91,7 +91,7 @@ There are 19 inactive drivers currently documented as `flagged`.
 
 This is the bucket that must be eliminated for a branch-complete cleanroom
 harness. `flagged` means "we know there are probably in-scope branches here, but
-the driver also contains out-of-scope or unresolved branches." The right fix is
+the driver also contains out-of-scope or unresolved branches." Elimination means
 branch-level scope, driver splitting, or source QNT cleanup, not permanent
 exclusion.
 
@@ -227,17 +227,13 @@ scope rows. It should not remain an informal reason for exclusion.
 
 ## Required Follow-Ups
 
-1. Make a single source of truth for active cleanroom drivers. Generate
-   `source-branch-inventory.json`, `ACTIVE_WORK.template.json`, and
-   `LEVEL_1_2_SCOPE.snapshot.md` from that source, or add a checker that fails
-   if they drift.
-2. Resolved: eliminate the 3 undocumented drivers by adding source-owned
+1. Resolved: eliminate the 3 undocumented drivers by adding source-owned
    decisions.
-3. Eliminate the 19 flagged drivers by splitting drivers or adding branch-level
+2. Eliminate the 19 flagged drivers by splitting drivers or adding branch-level
    scope rows.
-4. Add a replay-hardening report for every flagged driver after it enters
+3. Add a replay-hardening report for every flagged driver after it enters
    inventory, with explicit source blockers instead of silent exclusion.
-5. Keep the 56 `out` drivers excluded only for level-1/2 cleanroom scope; move
+4. Keep the 56 `out` drivers excluded only for level-1/2 cleanroom scope; move
    them into a later-level assignment when that scope exists.
 
 ## Verification

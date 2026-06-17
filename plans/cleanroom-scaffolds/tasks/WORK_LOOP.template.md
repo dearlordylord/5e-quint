@@ -29,11 +29,12 @@ none is named, stop and record a bootstrap blocker rather than choosing.
 Only drivers in the selected assignment's lane queues are eligible. Drivers in
 future queues, or drivers marked `out` or `flagged` in
 `tasks/LEVEL_1_2_SCOPE.md`, are not Work Loop tasks until the source-owned
-active work file, scope file, and source branch inventory are revised together.
+`branch-scope.jsonl` selects them and regenerates the cleanroom queue artifacts.
 
 Do not reorder or edit `tasks/LEVEL_1_2_SCOPE.md` in the target repo. It is a
 source-owned snapshot; if the queue is wrong, record a blocker and have the
-source repo update the scope snapshot and branch inventory together.
+source repo update `plans/cleanroom-branch-coverage/branch-scope.jsonl` and run
+the branch-coverage write path.
 
 `cleanroom-input/branch-coverage/source-branch-inventory.json` is the branch
 denominator. A queued driver is complete only when every in-scope replayable
