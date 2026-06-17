@@ -199,10 +199,14 @@ function characterWeaponAttackAbilityOptions(
   }
   const { alternateAbilityChoices: _alternateAbilityChoices, ...baseAttack } =
     attack;
+  const {
+    attackDamageAbilityModifierChoice: _baseAttackDamageAbilityModifierChoice,
+    ...baseAttackWithoutAbilityModifierChoice
+  } = baseAttack;
   return [
     baseAttack,
     ...attack.alternateAbilityChoices.map((choice) => ({
-      ...baseAttack,
+      ...baseAttackWithoutAbilityModifierChoice,
       ...choice,
       weapon: {
         ...baseAttack.weapon,

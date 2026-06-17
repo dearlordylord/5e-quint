@@ -492,7 +492,8 @@ module battleRuntimeMovement {
       damageRoll,
       abilityModifier,
       LightExtraAttackNoExistingDamageAbilityModifier,
-      false
+      false,
+      DeclineLightExtraAttackDamageAbilityModifier
     )
 
   pure def offHandAttackFighterWithDamageAbilityModifierFacts(
@@ -502,7 +503,8 @@ module battleRuntimeMovement {
     damageRoll: int,
     abilityModifier: int,
     damageAbilityModifier: LightExtraAttackDamageAbilityModifierFact,
-    twoWeaponFightingSelected: bool
+    twoWeaponFightingSelected: bool,
+    choice: LightExtraAttackDamageAbilityModifierChoice
   ): BattleState =
     if (fighterCanLightPropertyExtraAttack(state))
       if (attackHits(attackTotal, naturalD20, combatantArmorClass(state.goblin), fighterCriticalThreshold(state)))
@@ -514,7 +516,8 @@ module battleRuntimeMovement {
               damageRoll,
               abilityModifier,
               damageAbilityModifier,
-              twoWeaponFightingSelected
+              twoWeaponFightingSelected,
+              choice
             ),
             if (attackIsCritical(naturalD20, fighterCriticalThreshold(state))) 2 else 1,
             false,
@@ -544,7 +547,8 @@ module battleRuntimeMovement {
           damageRoll,
           abilityModifier,
           LightExtraAttackNoExistingDamageAbilityModifier,
-          false
+          false,
+          DeclineLightExtraAttackDamageAbilityModifier
         )
         val reducedDamage = if (baseDamage - reduction < 0) 0 else baseDamage - reduction
         {

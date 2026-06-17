@@ -309,6 +309,28 @@ describe("QMBT15 Spell Unit admission candidate narrowing", () => {
         [markedDamageRider],
       ),
     ).toBeNull();
+    expect(
+      validateSpellDamageFill(
+        damageRollFillWithGroups(
+          spellDamageHole(selectedSorcerousBurstInvocation, false, [
+            markedDamageRider,
+          ]),
+          [[8, 3, 4], [2]],
+          undefined,
+          undefined,
+          undefined,
+          {
+            unitId: "synthetic_attack_damage_ability_modifier_choice_unit",
+            selection: "apply",
+          },
+        ),
+        selectedSorcerousBurstInvocation,
+        false,
+        [markedDamageRider],
+      ),
+    ).toBe(
+      "Attack damage ability modifier choices are not available for this damage-roll owner.",
+    );
 
     const resolved = resolveBattleSubject({
       state,

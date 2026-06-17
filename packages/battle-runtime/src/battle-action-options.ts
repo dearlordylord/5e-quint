@@ -15,6 +15,7 @@ import type {
   WeaponDamage,
   WeaponRecord,
 } from "@dnd/surface/surface/types";
+import type { AttackDamageAbilityModifierChoice } from "./battle-reducer/attack-damage-ability-modifier-choice.ts";
 
 export type BattleWeaponDamage = Extract<
   WeaponDamage,
@@ -26,6 +27,7 @@ export type CharacterWeaponAttackAbilityChoice = {
   readonly abilityModifier: AbilityModifier;
   readonly attackBonus: AttackBonus;
   readonly damageAbilityModifier: AbilityModifier;
+  readonly attackDamageAbilityModifierChoice?: AttackDamageAbilityModifierChoice;
 };
 
 export type CharacterWeaponAttackDamageTypeChoices = readonly [
@@ -41,6 +43,7 @@ export type CharacterWeaponAttackActionOption = {
   readonly abilityModifier: AbilityModifier;
   readonly attackBonus?: AttackBonus;
   readonly damageAbilityModifier?: AbilityModifier;
+  readonly attackDamageAbilityModifierChoice?: AttackDamageAbilityModifierChoice;
   readonly damageBonus?: number;
   readonly damageTypeChoices?: CharacterWeaponAttackDamageTypeChoices;
   readonly alternateAbilityChoices?: ReadonlyNonEmptyArray<CharacterWeaponAttackAbilityChoice>;

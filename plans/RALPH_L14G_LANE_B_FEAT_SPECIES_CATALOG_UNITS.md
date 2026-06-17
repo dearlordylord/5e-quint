@@ -109,7 +109,7 @@
     {
       "number": 18,
       "id": "L3-FOLLOWUP-TWO-WEAPON-FIGHTING-DECLINE-RUNTIME",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Promote Two-Weapon Fighting optional decline support"
     },
     {
@@ -739,7 +739,7 @@ Verification:
 
 ### Task 18 - L3-FOLLOWUP-TWO-WEAPON-FIGHTING-DECLINE-RUNTIME
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 

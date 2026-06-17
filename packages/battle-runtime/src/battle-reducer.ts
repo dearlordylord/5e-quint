@@ -128,6 +128,16 @@ export type {
   AttackDamageDieFloorChoiceUnitIds,
 } from "./battle-reducer/attack-damage-die-floor-choice.ts";
 import type {
+  AttackDamageAbilityModifierChoice,
+  AttackDamageAbilityModifierChoiceFill,
+} from "./battle-reducer/attack-damage-ability-modifier-choice.ts";
+export type {
+  AttackDamageAbilityModifierChoice,
+  AttackDamageAbilityModifierChoiceFill,
+  AttackDamageAbilityModifierChoiceSelection,
+  AttackDamageAbilityModifierChoiceUnitIds,
+} from "./battle-reducer/attack-damage-ability-modifier-choice.ts";
+import type {
   BattleDruidWildShapeKnownForm,
   BattlePositiveHpUnconscious,
   CharacterBattleD20Statistics,
@@ -4771,6 +4781,7 @@ export type BattleDamageRollHole = Extract<
   readonly spellMarkedDamageRiders?: readonly SpellMarkedDamageRider[];
   readonly weaponDamageDiceRollChoiceUnitIds?: readonly UnitRecord["id"][];
   readonly attackDamageDieFloorChoiceUnitIds?: AttackDamageDieFloorChoiceUnitIds;
+  readonly attackDamageAbilityModifierChoice?: AttackDamageAbilityModifierChoice;
 };
 export type BattleSpellDamageRollHole = Extract<
   RuntimeHole,
@@ -5857,6 +5868,7 @@ export type BattleRolledDiceFill = {
   readonly selectedAttackDamageRiderUnitIds?: readonly UnitRecord["id"][];
   readonly weaponDamageDiceRollChoice?: WeaponDamageDiceRollChoiceFill;
   readonly attackDamageDieFloorChoice?: AttackDamageDieFloorChoiceFill;
+  readonly attackDamageAbilityModifierChoice?: AttackDamageAbilityModifierChoiceFill;
   readonly spellDamageReroll?: BattleSpellDamageRerollDecision;
 };
 export const EMPOWERED_SPELL_REROLL_UNSUPPORTED_DAMAGE_ROLL_OWNER_MESSAGE =
@@ -5877,6 +5889,15 @@ export function attackDamageDieFloorChoiceUnsupportedIssue(
     ? null
     : ATTACK_DAMAGE_DIE_FLOOR_CHOICE_UNSUPPORTED_DAMAGE_ROLL_OWNER_MESSAGE;
 }
+export const ATTACK_DAMAGE_ABILITY_MODIFIER_CHOICE_UNSUPPORTED_DAMAGE_ROLL_OWNER_MESSAGE =
+  "Attack damage ability modifier choices are not available for this damage-roll owner.";
+export function attackDamageAbilityModifierChoiceUnsupportedIssue(
+  damageRoll: BattleRolledDiceFill,
+): string | null {
+  return damageRoll.attackDamageAbilityModifierChoice === undefined
+    ? null
+    : ATTACK_DAMAGE_ABILITY_MODIFIER_CHOICE_UNSUPPORTED_DAMAGE_ROLL_OWNER_MESSAGE;
+}
 export function validateRolledDiceFillForDiceExpr(
   fill: BattleRolledDiceFill,
   expr: DiceExpr,
@@ -5889,6 +5910,11 @@ export function validateRolledDiceFillForDiceExpr(
     attackDamageDieFloorChoiceUnsupportedIssue(fill);
   if (attackDamageDieFloorChoiceIssue !== null) {
     return attackDamageDieFloorChoiceIssue;
+  }
+  const attackDamageAbilityModifierChoiceIssue =
+    attackDamageAbilityModifierChoiceUnsupportedIssue(fill);
+  if (attackDamageAbilityModifierChoiceIssue !== null) {
+    return attackDamageAbilityModifierChoiceIssue;
   }
   const validation = validateRolledDiceForDiceExpr(fill.value, expr);
   return validation === null ? null : validation.reason;

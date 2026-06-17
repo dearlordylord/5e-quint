@@ -78,6 +78,7 @@ import type {
   BattleCompanionDurableId,
   BattleCompanionProtocol,
 } from "../companion-state.ts";
+import { ATTACK_DAMAGE_ABILITY_MODIFIER_CHOICE_SELECTIONS } from "./attack-damage-ability-modifier-choice.ts";
 import { ATTACK_DAMAGE_DIE_FLOOR_CHOICE_SELECTIONS } from "./attack-damage-die-floor-choice.ts";
 import type {
   FindFamiliarFormSelection,
@@ -221,8 +222,15 @@ type AttackDamageDieFloorChoiceFillEncoded = {
   readonly unitId: string;
   readonly selection: (typeof ATTACK_DAMAGE_DIE_FLOOR_CHOICE_SELECTIONS)[number];
 };
+type AttackDamageAbilityModifierChoiceFillEncoded = {
+  readonly unitId: string;
+  readonly selection: (typeof ATTACK_DAMAGE_ABILITY_MODIFIER_CHOICE_SELECTIONS)[number];
+};
 const AttackDamageDieFloorChoiceSelectionSchema = Schema.Literal(
   ...ATTACK_DAMAGE_DIE_FLOOR_CHOICE_SELECTIONS,
+);
+const AttackDamageAbilityModifierChoiceSelectionSchema = Schema.Literal(
+  ...ATTACK_DAMAGE_ABILITY_MODIFIER_CHOICE_SELECTIONS,
 );
 
 const OngoingFeatureExpirationSchema = Schema.Union(
@@ -1342,6 +1350,14 @@ export const BattleHoleSchema = Schema.Union(
     ),
     attackDamageDieFloorChoiceUnitIds: Schema.optionalWith(
       Schema.NonEmptyArray(Schema.String),
+      { exact: true },
+    ),
+    attackDamageAbilityModifierChoice: Schema.optionalWith(
+      Schema.Struct({
+        unitIds: Schema.NonEmptyArray(Schema.String),
+        appliedDamageAbilityModifier: AbilityModifier,
+        declinedDamageAbilityModifier: AbilityModifier,
+      }),
       { exact: true },
     ),
   }),
@@ -2835,6 +2851,7 @@ type BattleFillEncoded =
       readonly selectedAttackDamageRiderUnitIds?: readonly string[];
       readonly weaponDamageDiceRollChoice?: WeaponDamageDiceRollChoiceFillEncoded;
       readonly attackDamageDieFloorChoice?: AttackDamageDieFloorChoiceFillEncoded;
+      readonly attackDamageAbilityModifierChoice?: AttackDamageAbilityModifierChoiceFillEncoded;
       readonly value: readonly [
         {
           readonly results: readonly [number, ...number[]];
@@ -3692,6 +3709,13 @@ export const BattleFillSchema: Schema.Schema<
         Schema.Struct({
           unitId: Schema.String,
           selection: AttackDamageDieFloorChoiceSelectionSchema,
+        }),
+        { exact: true },
+      ),
+      attackDamageAbilityModifierChoice: Schema.optionalWith(
+        Schema.Struct({
+          unitId: Schema.String,
+          selection: AttackDamageAbilityModifierChoiceSelectionSchema,
         }),
         { exact: true },
       ),

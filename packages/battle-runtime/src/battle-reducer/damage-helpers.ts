@@ -3,6 +3,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-creature-size-change
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.attack-damage-die-floor
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.light-extra-attack-damage-ability-modifier
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.passive-damage-resistance
 // KERNEL-COVERAGE: runtime-owner BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER
@@ -63,6 +64,7 @@ import {
   selectedAttackDamageDieFloorChoice,
   statBlockAttackDamage,
 } from "./statblock-attacks.ts";
+import { selectedAttackDamageAbilityModifierChoice } from "./attack-damage-ability-modifier-choice.ts";
 import {
   activeCreatureSizeChangeEffect,
   creatureSizeChangeAttackDamageComponent,
@@ -251,6 +253,7 @@ export function attackDamageByType(
       const modifier =
         fixedBaseDamageEntries === null && index === 0
           ? attackDamageModifier(attack) +
+            selectedAttackDamageAbilityModifier(attack, damageRoll) +
             ongoingFeatureDamageModifier(attacker, attack)
           : 0;
       if (component.operation === "subtract") {
@@ -279,6 +282,31 @@ export function attackDamageByType(
     });
   }, damageByType);
   return clampMinimumDamageTotal(reducedDamageByType, components);
+}
+
+function selectedAttackDamageAbilityModifier(
+  attack: SupportedAttackActionOption,
+  damageRoll: BattleRolledDiceFill,
+): number {
+  const offeredChoice =
+    attack.kind === "weapon"
+      ? attack.attackDamageAbilityModifierChoice
+      : undefined;
+  const selectedChoice = selectedAttackDamageAbilityModifierChoice(
+    offeredChoice,
+    damageRoll.attackDamageAbilityModifierChoice,
+  );
+  if (
+    offeredChoice === undefined ||
+    selectedChoice === null ||
+    selectedChoice.selection !== "apply"
+  ) {
+    return 0;
+  }
+  return (
+    Number(offeredChoice.appliedDamageAbilityModifier) -
+    Number(offeredChoice.declinedDamageAbilityModifier)
+  );
 }
 
 function attackDamageDieFloorMinimum(

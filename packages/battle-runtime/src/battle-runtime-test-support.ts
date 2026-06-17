@@ -1986,14 +1986,27 @@ function d20TestSavingThrowOutcomeValue(
 export function damageRollFill(
   hole: BattleFillableHole,
   dieResult: number,
+  attackDamageAbilityModifierChoice?: Extract<
+    BattleFill,
+    { readonly kind: "rolledDice" }
+  >["attackDamageAbilityModifierChoice"],
 ): BattleFill {
-  return damageRollFillWithGroups(hole, [[dieResult]]);
+  return damageRollFillWithGroups(
+    hole,
+    [[dieResult]],
+    undefined,
+    attackDamageAbilityModifierChoice,
+  );
 }
 
 export function damageRollFillWithGroups(
   hole: BattleFillableHole,
   groups: readonly (readonly number[])[],
   selectedAttackDamageRiderUnitIds?: readonly string[],
+  attackDamageAbilityModifierChoice?: Extract<
+    BattleFill,
+    { readonly kind: "rolledDice" }
+  >["attackDamageAbilityModifierChoice"],
 ): BattleFill {
   if (hole.kind !== "rolledDice") {
     throw new Error("Expected rolledDice hole.");
@@ -2004,6 +2017,9 @@ export function damageRollFillWithGroups(
     ...(selectedAttackDamageRiderUnitIds === undefined
       ? {}
       : { selectedAttackDamageRiderUnitIds }),
+    ...(attackDamageAbilityModifierChoice === undefined
+      ? {}
+      : { attackDamageAbilityModifierChoice }),
     value: rolledDiceGroups(groups),
   };
 }

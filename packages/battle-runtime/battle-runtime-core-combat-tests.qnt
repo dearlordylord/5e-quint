@@ -715,7 +715,18 @@ module battleRuntimeCoreCombatTests {
       4,
       3,
       LightExtraAttackNoExistingDamageAbilityModifier,
-      true
+      true,
+      ApplyLightExtraAttackDamageAbilityModifier
+    )
+    val twoWeaponFightingDeclined = offHandAttackFighterWithDamageAbilityModifierFacts(
+      afterAttack,
+      15,
+      10,
+      4,
+      3,
+      LightExtraAttackNoExistingDamageAbilityModifier,
+      true,
+      DeclineLightExtraAttackDamageAbilityModifier
     )
     val alreadyAdding = offHandAttackFighterWithDamageAbilityModifierFacts(
       afterAttack,
@@ -724,12 +735,14 @@ module battleRuntimeCoreCombatTests {
       4,
       3,
       LightExtraAttackExistingDamageAbilityModifier(2),
-      true
+      true,
+      DeclineLightExtraAttackDamageAbilityModifier
     )
     all {
       assert(positive.goblin.hp == 6),
       assert(negative.goblin.hp == 7),
       assert(twoWeaponFighting.goblin.hp == 3),
+      assert(twoWeaponFightingDeclined.goblin.hp == 6),
       assert(alreadyAdding.goblin.hp == 4),
       assert(not(negative.bonusActionAvailable)),
     }
