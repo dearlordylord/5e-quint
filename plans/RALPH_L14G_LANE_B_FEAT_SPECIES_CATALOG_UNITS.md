@@ -115,7 +115,7 @@
     {
       "number": 19,
       "id": "L3-FOLLOWUP-CREATURE-SPACE-TABLE-SPATIAL-DERIVATION",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Derive creature-space traversal witnesses from table routes"
     },
     {
@@ -123,6 +123,12 @@
       "id": "L3-FOLLOWUP-D20-TEST-ROLLED-DIE-REROLL-CHOICE",
       "status": "ready-for-research",
       "title": "Promote D20 Test rolled-die reroll choice support"
+    },
+    {
+      "number": 21,
+      "id": "L3-FOLLOWUP-CREATURE-SPACE-PATHFINDING-MAP-STATE",
+      "status": "ready-for-research",
+      "title": "Research creature-space pathfinding and durable map-state ownership"
     }
   ]
 }
@@ -181,6 +187,7 @@ the Unit catalog, or the Unit matrix.
 | L3-FOLLOWUP-HALFLING-BRAVE-RUNTIME | L14G-B07-SPECIES-HALFLING | Runtime support consumes Halfling Brave's typed Frightened-condition Saving Throw Advantage facts. |
 | L3-FOLLOWUP-HALFLING-NIMBLENESS-RUNTIME | L14G-B07-SPECIES-HALFLING | Runtime support consumes Halfling Nimbleness's typed creature-space movement permission facts. |
 | L3-FOLLOWUP-CREATURE-SPACE-TABLE-SPATIAL-DERIVATION | L3-FOLLOWUP-HALFLING-NIMBLENESS-RUNTIME | The promoted Nimbleness subset consumes caller/table-supplied occupied-space witnesses; automatic pathfinding, route extraction, and coordinate occupancy derivation need a separate table/spatial owner. |
+| L3-FOLLOWUP-CREATURE-SPACE-PATHFINDING-MAP-STATE | L3-FOLLOWUP-CREATURE-SPACE-TABLE-SPATIAL-DERIVATION | Task 19 derives Movement witnesses from an already selected route and explicit footprint facts; route-choice policy, automatic pathfinding, and durable coordinate map-state ownership remain separate table/spatial work. |
 | L3-FOLLOWUP-HALFLING-LUCK-RUNTIME | L14G-B07-SPECIES-HALFLING | Runtime support consumes Halfling Luck's typed natural-1 D20 Test reroll facts. |
 | L3-FOLLOWUP-D20-TEST-ROLLED-DIE-REROLL-CHOICE | L3-FOLLOWUP-HALFLING-LUCK-RUNTIME | The promoted Luck subset consumes selected/effective d20 facts; full Advantage/Disadvantage one-die reroll choice needs raw rolled-die vector and die-selection replacement facts. |
 | L3-FOLLOWUP-HALFLING-NATURALLY-STEALTHY-RUNTIME | L14G-B07-SPECIES-HALFLING | Runtime support consumes Naturally Stealthy's typed Hide-obscurement permission facts. |
@@ -1088,7 +1095,7 @@ Verification:
 
 ### Task 19 - L3-FOLLOWUP-CREATURE-SPACE-TABLE-SPATIAL-DERIVATION
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -1135,6 +1142,62 @@ Verification:
 - Focused table/spatial movement tests/QNT/MBT only for implemented battle
   behavior, with at most one focused MBT run after code changes are complete.
 - `pnpm --filter @dnd/battle-runtime typecheck`.
+- `git diff --check`.
+
+### Task 21 - L3-FOLLOWUP-CREATURE-SPACE-PATHFINDING-MAP-STATE
+
+Status: `ready-for-research`
+
+Depends on:
+
+- L3-FOLLOWUP-CREATURE-SPACE-TABLE-SPATIAL-DERIVATION
+
+Unit: `species_halfling_nimbleness`
+
+SRD anchor: `.references/srd-5.2.1/Character-Origins.md:222-223`;
+`.references/srd-5.2.1/Playing-the-Game.md:557-580`;
+`.references/srd-5.2.1/Rules-Glossary.md:736,1096`
+
+Current state:
+
+- Task 19 derives the existing occupied creature-space Movement witness from
+  an already selected route plus explicit creature footprint, occupied-position,
+  destination, and larger-than-mover size-relation facts.
+- The Movement reducer still owns support-profile, known-occupant, effective
+  size, and occupied-destination validation before Movement spending.
+- The Unit matrix now narrows the remaining table/spatial deferral to automatic
+  pathfinding, route-choice policy, and durable coordinate occupancy map-state
+  derivation.
+
+Output:
+
+- Research whether route-choice policy, automatic pathfinding, and durable
+  coordinate/token occupancy state belong in a promoted battle owner or should
+  remain closed as table/presentation state outside this lane.
+- If promoted, model coordinate map-state, creature-space dimensions,
+  footprint occupancy, and selected route derivation as table/spatial facts that
+  feed the Task 19 route-derived Movement witness boundary.
+- Keep pathfinding and durable map-state ownership separate from Halfling or
+  Nimbleness authored identity and from species-owned movement state.
+
+Acceptance:
+
+- The plan either installs a concrete pathfinding/map-state owner with focused
+  tests, or closes the remaining deferral with explicit owner evidence and no
+  overclaim in the Unit matrix.
+- Any implemented route-choice or occupancy derivation is keyed by map, route,
+  footprint, occupancy, and size/space facts, not authored identity.
+- No duplicate durable position, route, or creature-size facts are stored beside
+  an existing owner.
+
+Verification:
+
+- RAW and ubiquitous-language check against Halfling Nimbleness, Creature Size,
+  Moving around Other Creatures, occupied space, and unoccupied space.
+- Focused table/spatial tests/QNT/MBT only for implemented behavior, with at
+  most one focused MBT run after code changes are complete.
+- `pnpm --filter @dnd/battle-runtime typecheck` if battle runtime changes.
+- `pnpm unit-profile-coverage:check`.
 - `git diff --check`.
 
 ## Verification

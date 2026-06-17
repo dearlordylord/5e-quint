@@ -432,6 +432,16 @@ export {
   type BattlePossessionAttemptInput,
 } from "./battle-reducer/spell-condition-effects-helpers.ts";
 export {
+  deriveCreatureSpaceTraversalMovementFactFromTableRoute,
+  type BattleCreatureSpaceOccupantFootprintFact,
+  type BattleCreatureSpaceSizeRelationToMover,
+  type BattleCreatureSpaceTableRoute,
+  type BattleCreatureSpaceTableRouteDerivationInput,
+  type BattleCreatureSpaceTableRouteDerivationInvalidReason,
+  type BattleCreatureSpaceTableRouteDerivationResult,
+  type BattleRouteDerivedCreatureSpaceTraversalMovementFact,
+} from "./battle-reducer/creature-space-table-route.ts";
+export {
   ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE,
   ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_SUPPORT_PROFILE,
   ATTACK_ACTION_AREA_SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE,

@@ -1049,11 +1049,13 @@
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/unit-feature-support.ts",
-        "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts"
+        "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts",
+        "packages/battle-runtime/src/battle-reducer/creature-space-table-route.ts"
       ],
-      "sourceBoundary": "Battle Unit admission consumes the authored Surface creature_space_movement_permission shape and projects a typed occupied creature-space traversal permission. Battle runtime consumes retained selected character Unit support refs, existing Movement budget, effective combatant sizes, and caller/table-supplied occupied-space and destination witnesses to validate traversal through larger occupied creature spaces and reject occupied destinations without storing species-owned movement state, durable map-position state, or authored-identity dispatch.",
+      "sourceBoundary": "Battle Unit admission consumes the authored Surface creature_space_movement_permission shape and projects a typed occupied creature-space traversal permission. Battle runtime consumes retained selected character Unit support refs, existing Movement budget, effective combatant sizes, and caller/table-supplied occupied-space and destination witnesses to validate traversal through larger occupied creature spaces and reject occupied destinations. The table-route derivation owner can derive that Movement witness from an already selected route plus explicit creature footprint, occupancy, and larger-than-mover size-relation facts without storing species-owned movement state, durable map-position state, or authored-identity dispatch.",
       "taskRefs": [
-        "L3-FOLLOWUP-HALFLING-NIMBLENESS-RUNTIME"
+        "L3-FOLLOWUP-HALFLING-NIMBLENESS-RUNTIME",
+        "L3-FOLLOWUP-CREATURE-SPACE-TABLE-SPATIAL-DERIVATION"
       ],
       "title": "Unit feature permits Movement through larger occupied creature spaces without stopping there",
       "verificationOwners": [
@@ -16300,6 +16302,14 @@
     },
     {
       "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime tests cover table-route derivation of occupiedCreatureSpaceTraversal Movement witnesses from already selected route positions, explicit creature footprint/occupancy facts, and larger-than-mover size-relation facts; derived witnesses feed the existing Movement boundary for larger occupied-space traversal and occupied-destination rejection without storing species-owned movement state, durable map positions, or Halfling/Nimbleness authored-identity dispatch.",
+      "profileIds": [
+        "unit-feature.creature-space-movement-permission"
+      ],
+      "taskId": "L3-FOLLOWUP-CREATURE-SPACE-TABLE-SPATIAL-DERIVATION"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
       "note": "Focused Surface catalog and Character Creation runtime tests cover Skilled Origin feat authoring, background-origin feat proficiency choice discovery, supported skill/tool option admission, and CharacterBuild proficiency projection without battle-runtime execution.",
       "profileIds": [
         "character-creation.origin-feat-proficiency-choice"
@@ -25628,10 +25638,10 @@
           {
             "battleReadinessClosure": {
               "kind": "table-spatial-derivation",
-              "owner": "future table/spatial path owner",
-              "reason": "The promoted battle reducer validates typed occupancy witnesses supplied at the Movement boundary. Inferring those witnesses from a map, token footprint, and route remains table/spatial work outside this Unit profile."
+              "owner": "future table/spatial pathfinding and map-state owner",
+              "reason": "The promoted derivation consumes an already selected route plus explicit footprint and size-relation facts. Choosing routes from coordinates, maintaining durable token positions, and deriving occupied spaces from a persistent map remain table/spatial work outside this Unit profile."
             },
-            "mechanic": "automatic pathfinding, coordinate occupancy derivation, and route extraction for occupied creature spaces"
+            "mechanic": "automatic pathfinding, route-choice policy, and durable coordinate occupancy map-state derivation for occupied creature spaces"
           }
         ],
         "profileIds": [
@@ -25643,7 +25653,8 @@
         "supportedMechanics": [
           "Battle Unit admission derives the occupied creature-space traversal permission from Surface creature_space_movement_permission facts with occupied_creature_space traversal, a larger-creature relation, and canStopInOccupiedSpace false, without dispatching on Halfling or Nimbleness identity.",
           "Battle runtime validates caller-supplied Movement facts for occupied creature-space traversal by requiring a selected creature-space movement permission profile, existing occupied creature ids, larger effective creature size for every occupied space traversed, and an unoccupied destination before spending Movement.",
-          "The profile consumes existing movement budget, combatant effective size, selected Unit support profiles, and table-supplied position/occupancy witnesses without storing species-owned movement state or durable map-position state."
+          "A table-route derivation owner derives the existing occupiedCreatureSpaceTraversal Movement fact from an already selected table route, explicit creature footprint/position occupancy facts, and larger-than-mover size-relation facts; multi-position footprints collapse to one witness per occupied creature, and occupied destinations are marked for the Movement reducer to reject.",
+          "The profile consumes existing movement budget, combatant effective size, selected Unit support profiles, and table-supplied route, footprint, occupancy, size-relation, and destination witnesses without storing species-owned movement state or durable map-position state."
         ],
         "tag": "profile-subset-supported"
       },
@@ -25658,6 +25669,11 @@
           "ownerPath": "packages/battle-runtime/src/battle-runtime-movement-grapple-hide.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "L3-FOLLOWUP-HALFLING-NIMBLENESS-RUNTIME"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-movement-grapple-hide.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L3-FOLLOWUP-CREATURE-SPACE-TABLE-SPATIAL-DERIVATION"
         },
         {
           "ownerPath": "packages/battle-runtime/src/halfling-nimbleness-selected-identity.mbt.test.ts",
@@ -25676,11 +25692,13 @@
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/unit-feature-support.ts",
-            "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts"
+            "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts",
+            "packages/battle-runtime/src/battle-reducer/creature-space-table-route.ts"
           ],
-          "sourceBoundary": "Battle Unit admission consumes the authored Surface creature_space_movement_permission shape and projects a typed occupied creature-space traversal permission. Battle runtime consumes retained selected character Unit support refs, existing Movement budget, effective combatant sizes, and caller/table-supplied occupied-space and destination witnesses to validate traversal through larger occupied creature spaces and reject occupied destinations without storing species-owned movement state, durable map-position state, or authored-identity dispatch.",
+          "sourceBoundary": "Battle Unit admission consumes the authored Surface creature_space_movement_permission shape and projects a typed occupied creature-space traversal permission. Battle runtime consumes retained selected character Unit support refs, existing Movement budget, effective combatant sizes, and caller/table-supplied occupied-space and destination witnesses to validate traversal through larger occupied creature spaces and reject occupied destinations. The table-route derivation owner can derive that Movement witness from an already selected route plus explicit creature footprint, occupancy, and larger-than-mover size-relation facts without storing species-owned movement state, durable map-position state, or authored-identity dispatch.",
           "taskRefs": [
-            "L3-FOLLOWUP-HALFLING-NIMBLENESS-RUNTIME"
+            "L3-FOLLOWUP-HALFLING-NIMBLENESS-RUNTIME",
+            "L3-FOLLOWUP-CREATURE-SPACE-TABLE-SPATIAL-DERIVATION"
           ],
           "title": "Unit feature permits Movement through larger occupied creature spaces without stopping there",
           "verificationOwners": [
