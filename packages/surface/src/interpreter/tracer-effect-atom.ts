@@ -81,6 +81,23 @@ export function traceEffectAtom(
     case "share_damage_to_caster":
     case "retaliatory_damage":
       return traceOutcomeEffectAtom(e, nodes, ids, edges, traceEffectAtom);
+    case "deliver_mental_message": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "deliver_mental_message",
+        label: [
+          "deliver_mental_message",
+          `${e.message.maxWords} words`,
+          e.message.delivery,
+          `response: ${e.response.timing}`,
+          `${e.planarDelivery.failureChance.percent}% ${e.planarDelivery.failureChance.kind}`,
+          `block: ${e.recipientBlock.duration.amount} ${e.recipientBlock.duration.unit}`,
+        ].join("\n"),
+      });
+      return id;
+    }
     case "take_standard_action":
     case "grant_alternate_action_cost":
     case "grant_extra_action":
@@ -142,6 +159,7 @@ export function traceEffectAtom(
     case "prevent_drop_to_0_hp":
     case "negate_instant_death":
     case "make_stable":
+    case "revive_dead_creature":
     case "grant_feat":
     case "grant_proficiency":
     case "grant_expertise":
@@ -207,6 +225,7 @@ export function traceEffectAtom(
     case "area_emits_dim_light":
     case "area_is_lightly_obscured":
     case "area_is_heavily_obscured":
+    case "douse_exposed_flames":
     case "area_is_magical_darkness":
     case "area_of_silence":
     case "truthfulness_constraint":
@@ -217,6 +236,7 @@ export function traceEffectAtom(
     case "area_has_strong_wind":
     case "prevent_ranged_weapon_attacks":
     case "area_movement_cost_multiplier":
+    case "plant_enrichment":
     case "grant_cover":
     case "block_line_of_sight":
     case "prevent_creature_passage":

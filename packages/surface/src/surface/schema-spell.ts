@@ -116,6 +116,39 @@ export const DivinationOmenEffectSchema = strictStruct({
   }),
 });
 
+const MentalMessageRecipientBlockDurationSchema = strictStruct({
+  unit: Schema.Literal("hour"),
+  amount: Schema.Literal(8),
+});
+
+export const MentalMessageDeliveryEffectSchema = strictStruct({
+  kind: Schema.Literal("deliver_mental_message"),
+  recipient: Schema.Literal("met_by_caster_or_described_by_someone_who_met_it"),
+  message: strictStruct({
+    maxWords: Schema.Literal(25),
+    delivery: Schema.Literal("target_hears_in_mind"),
+    understanding: Schema.Literal("meaning_enabled"),
+  }),
+  senderRecognition: Schema.Literal("if_target_knows_sender"),
+  response: strictStruct({
+    manner: Schema.Literal("like_message"),
+    timing: Schema.Literal("immediate"),
+  }),
+  planarDelivery: strictStruct({
+    reach: Schema.Literal("any_distance_and_other_planes"),
+    failureChance: strictStruct({
+      kind: Schema.Literal("percent_if_different_plane"),
+      percent: Schema.Literal(5),
+      result: Schema.Literal("message_does_not_arrive"),
+      casterKnowsFailure: Schema.Literal(true),
+    }),
+  }),
+  recipientBlock: strictStruct({
+    duration: MentalMessageRecipientBlockDurationSchema,
+    retryResult: Schema.Literal("caster_learns_blocked_and_spell_fails"),
+  }),
+});
+
 const SPELL_CREATED_HELD_OBJECT_REQUIREMENTS = [
   "free_hand",
 ] as const satisfies ReadonlyNonEmptyArray<string>;
@@ -511,6 +544,9 @@ type JumpMovementReplacement = Schema.Schema.Type<
 type FeatherFallMitigation = Schema.Schema.Type<
   typeof FeatherFallMitigationSchema
 >;
+type MentalMessageDeliveryEffect = Schema.Schema.Type<
+  typeof MentalMessageDeliveryEffectSchema
+>;
 type ForceMoveEffect = Schema.Schema.Type<typeof ForceMoveEffectSchema>;
 type AudibleEffect = Schema.Schema.Type<typeof AudibleEffectSchema>;
 type AreaPushUnsecuredObjects = Schema.Schema.Type<
@@ -699,6 +735,7 @@ type EffectAtom =
       readonly resetBy: "target_finishes_long_rest";
       readonly target: "target_creature";
     }
+  | MentalMessageDeliveryEffect
   | {
       readonly kind: "prevent_hit_point_regain";
       readonly expiresAt: "end_of_caster_next_turn";
@@ -1072,6 +1109,27 @@ type EffectAtom =
       readonly consumesEffect?: true;
     }
   | { readonly kind: "make_stable" }
+  | {
+      readonly kind: "revive_dead_creature";
+      readonly deathWindow: {
+        readonly unit: "minute";
+        readonly amount: number;
+      };
+      readonly hitPoints: number;
+      readonly spiritConsent: "can_refuse";
+      readonly excludedDeathCauses: readonly ["old_age"];
+      readonly missingBodyParts: "not_restored";
+      readonly returningOngoingEffects: {
+        readonly conditions: "preserve_if_duration_ongoing";
+        readonly magicalContagions: "preserve_if_duration_ongoing";
+        readonly curses: "preserve_if_duration_ongoing";
+        readonly exhaustion: {
+          readonly kind: "reduce_by";
+          readonly amount: number;
+        };
+        readonly attunement: "ends";
+      };
+    }
   | { readonly kind: "grant_condition_immunity"; readonly condition: Condition }
   | {
       readonly kind: "suppress_condition_benefit";
@@ -1434,6 +1492,7 @@ type EffectAtom =
   | { readonly kind: "area_emits_dim_light" }
   | { readonly kind: "area_is_lightly_obscured" }
   | { readonly kind: "area_is_heavily_obscured" }
+  | { readonly kind: "douse_exposed_flames" }
   | { readonly kind: "area_is_magical_darkness" }
   | {
       readonly kind: "area_of_silence";
@@ -1487,6 +1546,14 @@ type EffectAtom =
       readonly kind: "area_movement_cost_multiplier";
       readonly multiplier: number;
       readonly appliesTo: "any_movement" | "toward_source";
+    }
+  | {
+      readonly kind: "plant_enrichment";
+      readonly duration: { readonly unit: "day"; readonly amount: number };
+      readonly harvestYieldMultiplier: number;
+      readonly benefitLimit: {
+        readonly kind: "one_application_per_year";
+      };
     }
   | { readonly kind: "grant_cover"; readonly cover: "three_quarters" }
   | { readonly kind: "block_line_of_sight" }
@@ -1727,11 +1794,17 @@ export const CastingTimeSchema = Schema.Union(
     amount: Schema.Number.pipe(Schema.int(), Schema.greaterThanOrEqualTo(1)),
     ritual: Schema.Boolean,
   }),
+  Schema.Struct({
+    kind: Schema.Literal("hours"),
+    amount: Schema.Number.pipe(Schema.int(), Schema.greaterThanOrEqualTo(1)),
+    ritual: Schema.Boolean,
+  }),
 );
 
 export const RangeSchema = Schema.Union(
   Schema.Struct({ kind: Schema.Literal("self") }),
   Schema.Struct({ kind: Schema.Literal("touch") }),
+  Schema.Struct({ kind: Schema.Literal("unlimited") }),
   Schema.Struct({
     kind: Schema.Literal("point"),
     feet: Schema.Union(Schema.Number, ThresholdTiersNumberSchema),
@@ -1813,14 +1886,20 @@ export const DurationSchema = Schema.Union(
   }),
 );
 
-export const SpellMechanicsHeaderSchema = Schema.Struct({
+export const SpellMechanicsCommonHeaderSchema = Schema.Struct({
   level: SpellLevelSchema,
   school: SpellSchoolSchema,
-  castingTime: CastingTimeSchema,
   range: RangeSchema,
   components: ComponentsSchema,
   duration: DurationSchema,
 });
+
+export const SpellMechanicsHeaderSchema = Schema.extend(
+  SpellMechanicsCommonHeaderSchema,
+  Schema.Struct({
+    castingTime: CastingTimeSchema,
+  }),
+);
 
 export const TargetTypeFilterSchema = nonEmpty(CreatureTypeSchema);
 
@@ -1831,6 +1910,12 @@ export const AreaOccupantDispositionFilterSchema = Schema.Literal(
 export const AreaOccupantPerceptionFilterSchema = Schema.Literal(
   "can_see_area_effect",
 );
+
+export const AreaExclusionSchema = strictStruct({
+  chooser: Schema.Literal("caster"),
+  count: Schema.Literal("one_or_more"),
+  size: Schema.Literal("any"),
+});
 
 export const TargetCountSlotScalingSchema = Schema.Struct({
   kind: Schema.Literal("linear"),
@@ -1846,8 +1931,10 @@ const TARGET_KINDS = [
 ] as const satisfies ReadonlyNonEmptyArray<string>;
 export const TargetKindSchema = Schema.Literal(...TARGET_KINDS);
 export const TargetDispositionSchema = Schema.Literal("willing");
-export const TargetStateFilterSchema = nonEmpty(
-  Schema.Literal("falling", "zero_hp_not_dead"),
+export const TargetStateFilterSchema = Schema.Union(
+  Schema.Tuple(Schema.Literal("falling")),
+  Schema.Tuple(Schema.Literal("zero_hp_not_dead")),
+  Schema.Tuple(Schema.Literal("dead")),
 );
 const CreatureTargetKindsSchema = nonEmpty(Schema.Literal("creature"));
 const CreatureOrObjectTargetKindsSchema = Schema.Union(
@@ -2127,6 +2214,7 @@ export const AreaAttachmentBaseSchema = Schema.Struct({
   selection: optionalExact(TargetSelectionSchema),
   occupantDispositionFilter: optionalExact(AreaOccupantDispositionFilterSchema),
   occupantPerceptionFilter: optionalExact(AreaOccupantPerceptionFilterSchema),
+  excludedAreas: optionalExact(AreaExclusionSchema),
   rangeOrigin: optionalExact(AttachmentRangeOriginSchema),
 });
 
@@ -2625,6 +2713,7 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
         resetBy: Schema.Literal("target_finishes_long_rest"),
         target: Schema.Literal("target_creature"),
       }),
+      MentalMessageDeliveryEffectSchema,
       Schema.Struct({
         kind: Schema.Literal("prevent_hit_point_regain"),
         expiresAt: Schema.Literal("end_of_caster_next_turn"),
@@ -3087,6 +3176,27 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
         consumesEffect: optionalExact(Schema.Literal(true)),
       }),
       Schema.Struct({ kind: Schema.Literal("make_stable") }),
+      strictStruct({
+        kind: Schema.Literal("revive_dead_creature"),
+        deathWindow: strictStruct({
+          unit: Schema.Literal("minute"),
+          amount: PositiveIntegerSchema,
+        }),
+        hitPoints: PositiveIntegerSchema,
+        spiritConsent: Schema.Literal("can_refuse"),
+        excludedDeathCauses: Schema.Tuple(Schema.Literal("old_age")),
+        missingBodyParts: Schema.Literal("not_restored"),
+        returningOngoingEffects: strictStruct({
+          conditions: Schema.Literal("preserve_if_duration_ongoing"),
+          magicalContagions: Schema.Literal("preserve_if_duration_ongoing"),
+          curses: Schema.Literal("preserve_if_duration_ongoing"),
+          exhaustion: strictStruct({
+            kind: Schema.Literal("reduce_by"),
+            amount: PositiveIntegerSchema,
+          }),
+          attunement: Schema.Literal("ends"),
+        }),
+      }),
       Schema.Struct({
         kind: Schema.Literal("grant_feat"),
         category: Schema.Literal(
@@ -3577,6 +3687,7 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
       Schema.Struct({ kind: Schema.Literal("area_emits_dim_light") }),
       Schema.Struct({ kind: Schema.Literal("area_is_lightly_obscured") }),
       Schema.Struct({ kind: Schema.Literal("area_is_heavily_obscured") }),
+      Schema.Struct({ kind: Schema.Literal("douse_exposed_flames") }),
       Schema.Struct({ kind: Schema.Literal("area_is_magical_darkness") }),
       strictStruct({
         kind: Schema.Literal("area_of_silence"),
@@ -3644,6 +3755,17 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
         kind: Schema.Literal("area_movement_cost_multiplier"),
         multiplier: PositiveIntegerSchema,
         appliesTo: Schema.Literal("any_movement", "toward_source"),
+      }),
+      strictStruct({
+        kind: Schema.Literal("plant_enrichment"),
+        duration: strictStruct({
+          unit: Schema.Literal("day"),
+          amount: PositiveIntegerSchema,
+        }),
+        harvestYieldMultiplier: PositiveIntegerSchema,
+        benefitLimit: strictStruct({
+          kind: Schema.Literal("one_application_per_year"),
+        }),
       }),
       Schema.Struct({
         kind: Schema.Literal("grant_cover"),
@@ -3909,6 +4031,25 @@ export const ActivationMechanicsSchema = Schema.extend(
   Schema.Struct({
     family: Schema.Literal("activation"),
     phases: nonEmpty(ActivationPhaseSchema),
+  }),
+);
+
+export const ModalActivationMechanicsSchema = Schema.extend(
+  SpellMechanicsCommonHeaderSchema,
+  Schema.Struct({
+    family: Schema.Literal("modal_activation"),
+    mode: strictStruct({
+      label: Schema.String,
+      options: nonEmpty(
+        strictStruct({
+          id: Schema.String,
+          displayName: Schema.String,
+          castingTime: CastingTimeSchema,
+          attachment: AttachmentSchema,
+          effects: nonEmpty(AreaDirectEffectAtomSchema),
+        }),
+      ),
+    }),
   }),
 );
 
@@ -4438,6 +4579,7 @@ export const SpawnedCreatureMechanicsSchema = Schema.extend(
 export const SpellMechanicsSchema = Schema.Union(
   OngoingEffectMechanicsSchema,
   ActivationMechanicsSchema,
+  ModalActivationMechanicsSchema,
   TriggeredReactionMechanicsSchema,
   PassiveHitInterceptMechanicsSchema,
   AnchoredTriggerMechanicsSchema,

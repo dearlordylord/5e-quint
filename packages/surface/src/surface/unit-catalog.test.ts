@@ -3226,6 +3226,435 @@ describe("SRD Unit catalog boundary", () => {
     );
   });
 
+  test("decodes Plant Growth as Overgrowth or Enrichment modal casting", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag !== "ok") return;
+    const plantGrowth = result.catalog.requireUnit("plant_growth");
+
+    expect(plantGrowth.kind).toBe("spell");
+    if (plantGrowth.kind !== "spell") return;
+    expect(plantGrowth.mechanics.family).toBe("modal_activation");
+    if (plantGrowth.mechanics.family !== "modal_activation") return;
+
+    expect(plantGrowth.mechanics).toMatchObject({
+      level: 3,
+      school: "transmutation",
+      range: { kind: "point", feet: 150 },
+      components: { v: true, s: true, m: false },
+      duration: { kind: "instantaneous" },
+      mode: {
+        label: "Plant Growth casting mode",
+        options: [
+          {
+            id: "overgrowth",
+            displayName: "Overgrowth",
+            castingTime: { kind: "action" },
+            attachment: {
+              kind: "area",
+              origin: { kind: "point_within_range" },
+              shape: { kind: "sphere", radiusFeet: 100 },
+              excludedAreas: {
+                chooser: "caster",
+                count: "one_or_more",
+                size: "any",
+              },
+            },
+            effects: [
+              {
+                kind: "area_movement_cost_multiplier",
+                multiplier: 4,
+                appliesTo: "any_movement",
+              },
+            ],
+          },
+          {
+            id: "enrichment",
+            displayName: "Enrichment",
+            castingTime: { kind: "hours", amount: 8, ritual: false },
+            attachment: {
+              kind: "area",
+              origin: { kind: "point_within_range" },
+              shape: { kind: "sphere", radiusFeet: 2640 },
+            },
+            effects: [
+              {
+                kind: "plant_enrichment",
+                duration: { unit: "day", amount: 365 },
+                harvestYieldMultiplier: 2,
+                benefitLimit: { kind: "one_application_per_year" },
+              },
+            ],
+          },
+        ],
+      },
+    });
+    expect(plantGrowth.description).toContain(
+      "4 feet of movement for every 1 foot",
+    );
+    expect(plantGrowth.description).toContain(
+      "yield twice the normal amount of food",
+    );
+  });
+
+  test("decodes Remove Curse as an authored Spell Definition without runtime curse cleanup admission", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag !== "ok") return;
+    const removeCurse = result.catalog.requireUnit("remove_curse");
+
+    expect(removeCurse.kind).toBe("spell");
+    if (removeCurse.kind !== "spell") return;
+    expect(removeCurse.mechanics.family).toBe("activation");
+    if (removeCurse.mechanics.family !== "activation") return;
+
+    expect(removeCurse.provenance).toEqual({
+      kind: "srd-5.2.1",
+      section: "Spells/Descriptions-Q-R#Remove Curse",
+    });
+    expect(removeCurse.mechanics).toMatchObject({
+      level: 3,
+      school: "abjuration",
+      castingTime: { kind: "action" },
+      range: { kind: "touch" },
+      components: { v: true, s: true, m: false },
+      duration: { kind: "instantaneous" },
+    });
+    expect(removeCurse.mechanics.phases).toEqual([
+      {
+        kind: "direct",
+        attachment: {
+          kind: "hole",
+          holeId: "remove_curse_target",
+          label: "creature or object",
+          value: {
+            kind: "target",
+            selection: {
+              mode: "one",
+              targetKinds: ["creature", "object"],
+            },
+          },
+        },
+        effects: [{ kind: "none" }],
+      },
+    ]);
+    expect(removeCurse.description).toContain("breaks its owner's Attunement");
+  });
+
+  test("decodes Revivify as a death-window revival Spell Definition", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag !== "ok") return;
+    const revivify = result.catalog.requireUnit("revivify");
+
+    expect(revivify.kind).toBe("spell");
+    if (revivify.kind !== "spell") return;
+    expect(revivify.mechanics.family).toBe("activation");
+    if (revivify.mechanics.family !== "activation") return;
+
+    expect(revivify.provenance).toEqual({
+      kind: "srd-5.2.1",
+      section: "Spells/Descriptions-Q-R#Revivify",
+    });
+    expect(revivify.mechanics).toMatchObject({
+      level: 3,
+      school: "necromancy",
+      castingTime: { kind: "action" },
+      range: { kind: "touch" },
+      components: {
+        v: true,
+        s: true,
+        m: "a diamond worth 300+ GP, which the spell consumes",
+        materialCostGp: 300,
+        materialConsumed: true,
+      },
+      duration: { kind: "instantaneous" },
+    });
+    expect(revivify.mechanics.phases).toEqual([
+      {
+        kind: "direct",
+        attachment: {
+          kind: "hole",
+          holeId: "revivify_target",
+          label: "dead creature",
+          value: {
+            kind: "target",
+            selection: {
+              mode: "one",
+              targetKinds: ["creature"],
+              stateFilter: ["dead"],
+            },
+          },
+        },
+        effects: [
+          {
+            kind: "revive_dead_creature",
+            deathWindow: { unit: "minute", amount: 1 },
+            hitPoints: 1,
+            spiritConsent: "can_refuse",
+            excludedDeathCauses: ["old_age"],
+            missingBodyParts: "not_restored",
+            returningOngoingEffects: {
+              conditions: "preserve_if_duration_ongoing",
+              magicalContagions: "preserve_if_duration_ongoing",
+              curses: "preserve_if_duration_ongoing",
+              exhaustion: { kind: "reduce_by", amount: 1 },
+              attunement: "ends",
+            },
+          },
+        ],
+      },
+    ]);
+    expect(revivify.description).toContain(
+      "conditions, magical contagions, and curses",
+    );
+  });
+
+  test("decodes Sending as table-owned mental message delivery", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag !== "ok") return;
+    const sending = result.catalog.requireUnit("sending");
+
+    expect(sending.kind).toBe("spell");
+    if (sending.kind !== "spell") return;
+    expect(sending.mechanics.family).toBe("activation");
+    if (sending.mechanics.family !== "activation") return;
+
+    expect(sending.provenance).toEqual({
+      kind: "srd-5.2.1",
+      section: "Spells/Descriptions-S-Z#Sending",
+    });
+    expect(sending.mechanics).toMatchObject({
+      level: 3,
+      school: "divination",
+      castingTime: { kind: "action" },
+      range: { kind: "unlimited" },
+      components: { v: true, s: true, m: "a copper wire" },
+      duration: { kind: "instantaneous" },
+    });
+    expect(sending.mechanics.phases).toEqual([
+      {
+        kind: "direct",
+        attachment: {
+          kind: "hole",
+          holeId: "sending_recipient",
+          label: "met or described creature",
+          value: {
+            kind: "target",
+            selection: {
+              mode: "one",
+              targetKinds: ["creature"],
+            },
+          },
+        },
+        effects: [
+          {
+            kind: "deliver_mental_message",
+            recipient: "met_by_caster_or_described_by_someone_who_met_it",
+            message: {
+              maxWords: 25,
+              delivery: "target_hears_in_mind",
+              understanding: "meaning_enabled",
+            },
+            senderRecognition: "if_target_knows_sender",
+            response: {
+              manner: "like_message",
+              timing: "immediate",
+            },
+            planarDelivery: {
+              reach: "any_distance_and_other_planes",
+              failureChance: {
+                kind: "percent_if_different_plane",
+                percent: 5,
+                result: "message_does_not_arrive",
+                casterKnowsFailure: true,
+              },
+            },
+            recipientBlock: {
+              duration: { unit: "hour", amount: 8 },
+              retryResult: "caster_learns_blocked_and_spell_fails",
+            },
+          },
+        ],
+      },
+    ]);
+    expect(sending.description).toContain(
+      "can answer in a like manner immediately",
+    );
+    expect(sending.description).toContain("5 percent chance");
+  });
+
+  test("rejects Sending mental message block durations other than 8 hours", () => {
+    const decode = Schema.decodeUnknownEither(EffectAtomSchema);
+    const sendingMentalMessageEffect = {
+      kind: "deliver_mental_message",
+      recipient: "met_by_caster_or_described_by_someone_who_met_it",
+      message: {
+        maxWords: 25,
+        delivery: "target_hears_in_mind",
+        understanding: "meaning_enabled",
+      },
+      senderRecognition: "if_target_knows_sender",
+      response: {
+        manner: "like_message",
+        timing: "immediate",
+      },
+      planarDelivery: {
+        reach: "any_distance_and_other_planes",
+        failureChance: {
+          kind: "percent_if_different_plane",
+          percent: 5,
+          result: "message_does_not_arrive",
+          casterKnowsFailure: true,
+        },
+      },
+      recipientBlock: {
+        duration: { unit: "hour", amount: 8 },
+        retryResult: "caster_learns_blocked_and_spell_fails",
+      },
+    };
+
+    expect(Either.isRight(decode(sendingMentalMessageEffect))).toBe(true);
+    for (const duration of [
+      { unit: "hour", amount: 1 },
+      { unit: "minute", amount: 8 },
+      { unit: "day", amount: 1 },
+    ] as const) {
+      expect(
+        Either.isLeft(
+          decode({
+            ...sendingMentalMessageEffect,
+            recipientBlock: {
+              ...sendingMentalMessageEffect.recipientBlock,
+              duration,
+            },
+          }),
+        ),
+      ).toBe(true);
+    }
+  });
+
+  test("decodes Sleet Storm as an authored Cylinder hazard Spell Definition", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag !== "ok") return;
+    const sleetStorm = result.catalog.requireUnit("sleet_storm");
+
+    expect(sleetStorm.kind).toBe("spell");
+    if (sleetStorm.kind !== "spell") return;
+    expect(sleetStorm.mechanics.family).toBe("ongoing_effect");
+    if (sleetStorm.mechanics.family !== "ongoing_effect") return;
+
+    expect(sleetStorm.provenance).toEqual({
+      kind: "srd-5.2.1",
+      section: "Spells/Descriptions-S-Z#Sleet Storm",
+    });
+    expect(sleetStorm.mechanics).toMatchObject({
+      level: 3,
+      school: "conjuration",
+      castingTime: { kind: "action" },
+      range: { kind: "point", feet: 150 },
+      components: { v: true, s: true, m: "a miniature umbrella" },
+      duration: { kind: "concentration", upTo: { unit: "minute", amount: 1 } },
+      attachment: {
+        kind: "hole",
+        holeId: "sleet_storm_cylinder",
+        label: "storm cylinder",
+        value: {
+          kind: "area",
+          shape: { kind: "cylinder", radiusFeet: 20, heightFeet: 40 },
+          origin: { kind: "point_within_range" },
+        },
+      },
+    });
+
+    const failedSave = {
+      kind: "composite",
+      effects: [
+        { kind: "apply_condition", condition: "prone" },
+        { kind: "break_concentration" },
+      ],
+    } as const;
+    const dexteritySave = {
+      kind: "save_gate",
+      ability: "dex",
+      dc: { kind: "caster_spell_save_dc" },
+      onFail: failedSave,
+      onSuccess: { kind: "none" },
+    } as const;
+
+    expect(sleetStorm.mechanics.operations).toEqual([
+      {
+        trigger: { kind: "passive" },
+        effect: { kind: "area_is_heavily_obscured" },
+      },
+      {
+        trigger: { kind: "passive" },
+        effect: { kind: "douse_exposed_flames" },
+      },
+      {
+        trigger: { kind: "passive" },
+        effect: { kind: "area_is_difficult_terrain" },
+      },
+      {
+        trigger: { kind: "on_creature_enters_area" },
+        effect: dexteritySave,
+        usageLimit: {
+          kind: "once_per_turn",
+          limitGroup: "sleet_storm_save_per_turn",
+        },
+      },
+      {
+        trigger: { kind: "on_creature_starts_turn_in_area" },
+        effect: dexteritySave,
+        usageLimit: {
+          kind: "once_per_turn",
+          limitGroup: "sleet_storm_save_per_turn",
+        },
+      },
+    ]);
+    expect(sleetStorm.description).toContain("Heavily Obscured");
+    expect(sleetStorm.description).toContain("lose Concentration");
+  });
+
+  test("rejects contradictory Revivify death target-state filters", () => {
+    const decode = Schema.decodeUnknownEither(TargetSelectionSchema);
+
+    expect(
+      Either.isRight(
+        decode({
+          mode: "one",
+          targetKinds: ["creature"],
+          stateFilter: ["dead"],
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        decode({
+          mode: "one",
+          targetKinds: ["creature"],
+          stateFilter: ["dead_within_last_minute"],
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        decode({
+          mode: "one",
+          targetKinds: ["creature"],
+          stateFilter: ["dead", "zero_hp_not_dead"],
+        }),
+      ),
+    ).toBe(true);
+  });
+
   test("decodes Locate Object as object location and motion disclosure", () => {
     const result = buildUnitCatalog({ collections: [srdUnitCollection] });
 

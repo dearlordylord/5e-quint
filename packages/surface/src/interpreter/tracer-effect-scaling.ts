@@ -32,6 +32,7 @@ export function traceEffectAtomScaling(
       return;
     case "grant_rest_benefit":
     case "spell_recipient_rest_lockout":
+    case "deliver_mental_message":
     case "prevent_hit_point_regain":
     case "heal_to_max_hp":
       return;
@@ -164,6 +165,7 @@ export function traceEffectAtomScaling(
     case "prevent_drop_to_0_hp":
     case "negate_instant_death":
     case "make_stable":
+    case "revive_dead_creature":
     case "grant_damage_immunity":
     case "block_max_hp_reduction":
     case "set_speed_ratio":
@@ -217,6 +219,7 @@ export function traceEffectAtomScaling(
     case "area_emits_dim_light":
     case "area_is_lightly_obscured":
     case "area_is_heavily_obscured":
+    case "douse_exposed_flames":
     case "area_is_magical_darkness":
     case "area_of_silence":
     case "truthfulness_constraint":
@@ -226,6 +229,7 @@ export function traceEffectAtomScaling(
     case "area_has_strong_wind":
     case "prevent_ranged_weapon_attacks":
     case "area_movement_cost_multiplier":
+    case "plant_enrichment":
     case "grant_cover":
     case "block_line_of_sight":
     case "prevent_creature_passage":

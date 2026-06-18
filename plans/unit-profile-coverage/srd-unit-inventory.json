@@ -231,7 +231,7 @@
     "levelSevenClassRows": 24,
     "spellPressureRows": 367,
     "levelThreeSpellPressureRows": 110,
-    "levelThreeInstalledSpellPressureRows": 22,
+    "levelThreeInstalledSpellPressureRows": 35,
     "levelFourSpellPressureRows": 81,
     "levelFourInstalledSpellPressureRows": 0,
     "levelOneBattleReadiness": {
@@ -293,13 +293,13 @@
     },
     "levelThreeSpellBattleReadiness": {
       "denominator": 110,
-      "numerator": 50,
-      "percent": "45.5%",
+      "numerator": 60,
+      "percent": "54.5%",
       "rowsByStatus": {
         "surface-widening-required": 17,
-        "accepted-no-battle-effect": 28,
+        "accepted-no-battle-effect": 38,
         "accepted": 22,
-        "battle-runtime-required": 31,
+        "battle-runtime-required": 21,
         "owner-evidence-required": 12
       }
     },
@@ -373,12 +373,12 @@
     "allRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 483,
       "non-runtime": 84,
-      "catalog-only/dead-for-now": 167,
+      "catalog-only/dead-for-now": 177,
       "level-5-7-follow-up-required": 24,
       "needs-surface-widening": 17,
-      "missing-authored-record": 63,
+      "missing-authored-record": 50,
       "catalog-authored-review-required": 61,
-      "catalog-installed-owner-evidence-required": 1
+      "catalog-installed-owner-evidence-required": 4
     },
     "spellPressureRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 249,
@@ -386,13 +386,16 @@
     },
     "levelThreeSpellPressureRowsByDisposition": {
       "needs-surface-widening": 17,
-      "catalog-only/dead-for-now": 28,
+      "catalog-only/dead-for-now": 38,
       "catalog-installed-owner-evidence-present": 22,
-      "missing-authored-record": 31,
-      "catalog-authored-review-required": 12
+      "missing-authored-record": 18,
+      "catalog-authored-review-required": 12,
+      "catalog-installed-owner-evidence-required": 3
     },
     "levelThreeInstalledSpellPressureRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 22
+      "catalog-installed-owner-evidence-present": 22,
+      "catalog-only/dead-for-now": 10,
+      "catalog-installed-owner-evidence-required": 3
     },
     "levelFourSpellPressureRowsByDisposition": {
       "catalog-authored-review-required": 49,
@@ -8656,19 +8659,39 @@
       "detail": "Plant Growth (Transmutation; —)",
       "candidateUnitId": "plant_growth",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "plant_growth",
+        "sourceRecordPath": "packages/surface/content/plant_growth.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "plant_growth"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-only/dead-for-now",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "outside-runtime-presentation-exploration",
+        "owner": "runtime-detached table/spatial/exploration/economy owner",
+        "reason": "Plant Growth supplies table-facing terrain and agriculture facts, but promoted battle runtime does not own normal-plant area membership, excluded-area geometry, pathfinding or travel-pacing derivation through overgrown terrain, plant-world state, harvest timing, food yield, or settlement economy."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit plant_growth is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "runtime-detached table/spatial/exploration/economy owner",
+          "evidence": "Plant Growth supplies table-facing terrain and agriculture facts, but promoted battle runtime does not own normal-plant area membership, excluded-area geometry, pathfinding or travel-pacing derivation through overgrown terrain, plant-world state, harvest timing, food yield, or settlement economy.",
+          "status": "catalog-only/dead-for-now closure"
+        }
+      ],
+      "nextAction": "Plant Growth supplies table-facing terrain and agriculture facts, but promoted battle runtime does not own normal-plant area membership, excluded-area geometry, pathfinding or travel-pacing derivation through overgrown terrain, plant-world state, harvest timing, food yield, or settlement economy.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
       "id": "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_sending",
@@ -8685,19 +8708,39 @@
       "detail": "Sending (Divination; —)",
       "candidateUnitId": "sending",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "sending",
+        "sourceRecordPath": "packages/surface/content/sending.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "sending"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-only/dead-for-now",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "outside-runtime-presentation-exploration",
+        "owner": "runtime-detached table communication owner",
+        "reason": "Sending supplies private mental message delivery, cross-plane failure chance, immediate response, and recipient block source facts, but promoted battle runtime does not own communication content, creature knowledge/description matching, planar location adjudication, message-delivery rolls, response contents, or persistent communication block state."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit sending is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "runtime-detached table communication owner",
+          "evidence": "Sending supplies private mental message delivery, cross-plane failure chance, immediate response, and recipient block source facts, but promoted battle runtime does not own communication content, creature knowledge/description matching, planar location adjudication, message-delivery rolls, response contents, or persistent communication block state.",
+          "status": "catalog-only/dead-for-now closure"
+        }
+      ],
+      "nextAction": "Sending supplies private mental message delivery, cross-plane failure chance, immediate response, and recipient block source facts, but promoted battle runtime does not own communication content, creature knowledge/description matching, planar location adjudication, message-delivery rolls, response contents, or persistent communication block state.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
       "id": "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_slow",
@@ -12515,19 +12558,39 @@
       "detail": "Remove Curse (Abjuration; —)",
       "candidateUnitId": "remove_curse",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "remove_curse",
+        "sourceRecordPath": "packages/surface/content/remove_curse.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "remove_curse"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-only/dead-for-now",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "outside-battle-runtime",
+        "owner": "future curse occurrence and magic-item Attunement owner",
+        "reason": "Remove Curse supplies table-facing curse-removal and cursed-item Attunement source facts, but promoted battle runtime does not own generic curse occurrence identity, curse-removal targeting semantics, cursed magic item curse persistence, or Attunement mutation for cursed objects."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit remove_curse is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "future curse occurrence and magic-item Attunement owner",
+          "evidence": "Remove Curse supplies table-facing curse-removal and cursed-item Attunement source facts, but promoted battle runtime does not own generic curse occurrence identity, curse-removal targeting semantics, cursed magic item curse persistence, or Attunement mutation for cursed objects.",
+          "status": "catalog-only/dead-for-now closure"
+        }
+      ],
+      "nextAction": "Remove Curse supplies table-facing curse-removal and cursed-item Attunement source facts, but promoted battle runtime does not own generic curse occurrence identity, curse-removal targeting semantics, cursed magic item curse persistence, or Attunement mutation for cursed objects.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
       "id": "srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_revivify",
@@ -12544,19 +12607,39 @@
       "detail": "Revivify (Necromancy; M)",
       "candidateUnitId": "revivify",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "revivify",
+        "sourceRecordPath": "packages/surface/content/revivify.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "revivify"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-only/dead-for-now",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "outside-battle-runtime",
+        "owner": "future rest/revival workflow owner",
+        "reason": "Revivify supplies death-window and return-to-life source facts, but promoted battle runtime does not own dead creature target eligibility, spirit refusal, corpse or missing-body-part state, generic revival transitions, Dead-glossary ongoing effect persistence, Exhaustion adjustment, or magic-item Attunement cleanup."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit revivify is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "future rest/revival workflow owner",
+          "evidence": "Revivify supplies death-window and return-to-life source facts, but promoted battle runtime does not own dead creature target eligibility, spirit refusal, corpse or missing-body-part state, generic revival transitions, Dead-glossary ongoing effect persistence, Exhaustion adjustment, or magic-item Attunement cleanup.",
+          "status": "catalog-only/dead-for-now closure"
+        }
+      ],
+      "nextAction": "Revivify supplies death-window and return-to-life source facts, but promoted battle runtime does not own dead creature target eligibility, spirit refusal, corpse or missing-body-part state, generic revival transitions, Dead-glossary ongoing effect persistence, Exhaustion adjustment, or magic-item Attunement cleanup.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
       "id": "srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_sending",
@@ -12573,19 +12656,39 @@
       "detail": "Sending (Divination; —)",
       "candidateUnitId": "sending",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "sending",
+        "sourceRecordPath": "packages/surface/content/sending.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "sending"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-only/dead-for-now",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "outside-runtime-presentation-exploration",
+        "owner": "runtime-detached table communication owner",
+        "reason": "Sending supplies private mental message delivery, cross-plane failure chance, immediate response, and recipient block source facts, but promoted battle runtime does not own communication content, creature knowledge/description matching, planar location adjudication, message-delivery rolls, response contents, or persistent communication block state."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit sending is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "runtime-detached table communication owner",
+          "evidence": "Sending supplies private mental message delivery, cross-plane failure chance, immediate response, and recipient block source facts, but promoted battle runtime does not own communication content, creature knowledge/description matching, planar location adjudication, message-delivery rolls, response contents, or persistent communication block state.",
+          "status": "catalog-only/dead-for-now closure"
+        }
+      ],
+      "nextAction": "Sending supplies private mental message delivery, cross-plane failure chance, immediate response, and recipient block source facts, but promoted battle runtime does not own communication content, creature knowledge/description matching, planar location adjudication, message-delivery rolls, response contents, or persistent communication block state.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
       "id": "srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_speak_with_dead",
@@ -16619,19 +16722,39 @@
       "detail": "Plant Growth (Transmutation; —)",
       "candidateUnitId": "plant_growth",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "plant_growth",
+        "sourceRecordPath": "packages/surface/content/plant_growth.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "plant_growth"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-only/dead-for-now",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "outside-runtime-presentation-exploration",
+        "owner": "runtime-detached table/spatial/exploration/economy owner",
+        "reason": "Plant Growth supplies table-facing terrain and agriculture facts, but promoted battle runtime does not own normal-plant area membership, excluded-area geometry, pathfinding or travel-pacing derivation through overgrown terrain, plant-world state, harvest timing, food yield, or settlement economy."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit plant_growth is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "runtime-detached table/spatial/exploration/economy owner",
+          "evidence": "Plant Growth supplies table-facing terrain and agriculture facts, but promoted battle runtime does not own normal-plant area membership, excluded-area geometry, pathfinding or travel-pacing derivation through overgrown terrain, plant-world state, harvest timing, food yield, or settlement economy.",
+          "status": "catalog-only/dead-for-now closure"
+        }
+      ],
+      "nextAction": "Plant Growth supplies table-facing terrain and agriculture facts, but promoted battle runtime does not own normal-plant area membership, excluded-area geometry, pathfinding or travel-pacing derivation through overgrown terrain, plant-world state, harvest timing, food yield, or settlement economy.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
       "id": "srd521:classes/druid:spell-level-3:spell-unit-pressure:druid_spell_list_protection_from_energy",
@@ -16679,19 +16802,39 @@
       "detail": "Revivify (Necromancy; M)",
       "candidateUnitId": "revivify",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "revivify",
+        "sourceRecordPath": "packages/surface/content/revivify.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "revivify"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-only/dead-for-now",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "outside-battle-runtime",
+        "owner": "future rest/revival workflow owner",
+        "reason": "Revivify supplies death-window and return-to-life source facts, but promoted battle runtime does not own dead creature target eligibility, spirit refusal, corpse or missing-body-part state, generic revival transitions, Dead-glossary ongoing effect persistence, Exhaustion adjustment, or magic-item Attunement cleanup."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit revivify is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "future rest/revival workflow owner",
+          "evidence": "Revivify supplies death-window and return-to-life source facts, but promoted battle runtime does not own dead creature target eligibility, spirit refusal, corpse or missing-body-part state, generic revival transitions, Dead-glossary ongoing effect persistence, Exhaustion adjustment, or magic-item Attunement cleanup.",
+          "status": "catalog-only/dead-for-now closure"
+        }
+      ],
+      "nextAction": "Revivify supplies death-window and return-to-life source facts, but promoted battle runtime does not own dead creature target eligibility, spirit refusal, corpse or missing-body-part state, generic revival transitions, Dead-glossary ongoing effect persistence, Exhaustion adjustment, or magic-item Attunement cleanup.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
       "id": "srd521:classes/druid:spell-level-3:spell-unit-pressure:druid_spell_list_sleet_storm",
@@ -16711,15 +16854,29 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "sleet_storm",
+        "sourceRecordPath": "packages/surface/content/sleet_storm.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "sleet_storm"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit sleet_storm is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection plus table/spatial and exposed-flame owners",
+          "evidence": "Promote follow-up split L3-FOLLOWUP-SLEET-STORM-AREA-HAZARD-RUNTIME: L3-FOLLOWUP-SLEET-STORM-AREA-HAZARD-RUNTIME owns Promote Sleet Storm as a Concentration-owned Cylinder area hazard with caller-supplied area identity, first-entry-on-a-turn and turn-start Dexterity Saving Throw triggers, Difficult Terrain and Heavily Obscured projections, failed-save Prone application, failed-save Concentration loss, and a runtime-detached exposed-flame dousing split. Required output: Supported-profile or profile-subset-supported Sleet Storm claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the area hazard while preserving table-owned area membership, pathfinding, and exposed-flame state.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Promote follow-up split L3-FOLLOWUP-SLEET-STORM-AREA-HAZARD-RUNTIME: L3-FOLLOWUP-SLEET-STORM-AREA-HAZARD-RUNTIME owns Promote Sleet Storm as a Concentration-owned Cylinder area hazard with caller-supplied area identity, first-entry-on-a-turn and turn-start Dexterity Saving Throw triggers, Difficult Terrain and Heavily Obscured projections, failed-save Prone application, failed-save Concentration loss, and a runtime-detached exposed-flame dousing split. Required output: Supported-profile or profile-subset-supported Sleet Storm claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the area hazard while preserving table-owned area membership, pathfinding, and exposed-flame state.",
       "battleReadinessStatus": "battle-runtime-required"
     },
     {
@@ -30662,15 +30819,29 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "sleet_storm",
+        "sourceRecordPath": "packages/surface/content/sleet_storm.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "sleet_storm"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit sleet_storm is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection plus table/spatial and exposed-flame owners",
+          "evidence": "Promote follow-up split L3-FOLLOWUP-SLEET-STORM-AREA-HAZARD-RUNTIME: L3-FOLLOWUP-SLEET-STORM-AREA-HAZARD-RUNTIME owns Promote Sleet Storm as a Concentration-owned Cylinder area hazard with caller-supplied area identity, first-entry-on-a-turn and turn-start Dexterity Saving Throw triggers, Difficult Terrain and Heavily Obscured projections, failed-save Prone application, failed-save Concentration loss, and a runtime-detached exposed-flame dousing split. Required output: Supported-profile or profile-subset-supported Sleet Storm claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the area hazard while preserving table-owned area membership, pathfinding, and exposed-flame state.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Promote follow-up split L3-FOLLOWUP-SLEET-STORM-AREA-HAZARD-RUNTIME: L3-FOLLOWUP-SLEET-STORM-AREA-HAZARD-RUNTIME owns Promote Sleet Storm as a Concentration-owned Cylinder area hazard with caller-supplied area identity, first-entry-on-a-turn and turn-start Dexterity Saving Throw triggers, Difficult Terrain and Heavily Obscured projections, failed-save Prone application, failed-save Concentration loss, and a runtime-detached exposed-flame dousing split. Required output: Supported-profile or profile-subset-supported Sleet Storm claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the area hazard while preserving table-owned area membership, pathfinding, and exposed-flame state.",
       "battleReadinessStatus": "battle-runtime-required"
     },
     {
@@ -33918,19 +34089,39 @@
       "detail": "Remove Curse (Abjuration; —)",
       "candidateUnitId": "remove_curse",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "remove_curse",
+        "sourceRecordPath": "packages/surface/content/remove_curse.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "remove_curse"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-only/dead-for-now",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "outside-battle-runtime",
+        "owner": "future curse occurrence and magic-item Attunement owner",
+        "reason": "Remove Curse supplies table-facing curse-removal and cursed-item Attunement source facts, but promoted battle runtime does not own generic curse occurrence identity, curse-removal targeting semantics, cursed magic item curse persistence, or Attunement mutation for cursed objects."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit remove_curse is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "future curse occurrence and magic-item Attunement owner",
+          "evidence": "Remove Curse supplies table-facing curse-removal and cursed-item Attunement source facts, but promoted battle runtime does not own generic curse occurrence identity, curse-removal targeting semantics, cursed magic item curse persistence, or Attunement mutation for cursed objects.",
+          "status": "catalog-only/dead-for-now closure"
+        }
+      ],
+      "nextAction": "Remove Curse supplies table-facing curse-removal and cursed-item Attunement source facts, but promoted battle runtime does not own generic curse occurrence identity, curse-removal targeting semantics, cursed magic item curse persistence, or Attunement mutation for cursed objects.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
       "id": "srd521:classes/warlock:spell-level-3:spell-unit-pressure:warlock_spell_list_tongues",
@@ -39511,19 +39702,39 @@
       "detail": "Remove Curse (Abjuration; —)",
       "candidateUnitId": "remove_curse",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "remove_curse",
+        "sourceRecordPath": "packages/surface/content/remove_curse.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "remove_curse"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-only/dead-for-now",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "outside-battle-runtime",
+        "owner": "future curse occurrence and magic-item Attunement owner",
+        "reason": "Remove Curse supplies table-facing curse-removal and cursed-item Attunement source facts, but promoted battle runtime does not own generic curse occurrence identity, curse-removal targeting semantics, cursed magic item curse persistence, or Attunement mutation for cursed objects."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit remove_curse is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "future curse occurrence and magic-item Attunement owner",
+          "evidence": "Remove Curse supplies table-facing curse-removal and cursed-item Attunement source facts, but promoted battle runtime does not own generic curse occurrence identity, curse-removal targeting semantics, cursed magic item curse persistence, or Attunement mutation for cursed objects.",
+          "status": "catalog-only/dead-for-now closure"
+        }
+      ],
+      "nextAction": "Remove Curse supplies table-facing curse-removal and cursed-item Attunement source facts, but promoted battle runtime does not own generic curse occurrence identity, curse-removal targeting semantics, cursed magic item curse persistence, or Attunement mutation for cursed objects.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
       "id": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_sending",
@@ -39540,19 +39751,39 @@
       "detail": "Sending (Divination; —)",
       "candidateUnitId": "sending",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "sending",
+        "sourceRecordPath": "packages/surface/content/sending.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "sending"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-only/dead-for-now",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "outside-runtime-presentation-exploration",
+        "owner": "runtime-detached table communication owner",
+        "reason": "Sending supplies private mental message delivery, cross-plane failure chance, immediate response, and recipient block source facts, but promoted battle runtime does not own communication content, creature knowledge/description matching, planar location adjudication, message-delivery rolls, response contents, or persistent communication block state."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit sending is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "runtime-detached table communication owner",
+          "evidence": "Sending supplies private mental message delivery, cross-plane failure chance, immediate response, and recipient block source facts, but promoted battle runtime does not own communication content, creature knowledge/description matching, planar location adjudication, message-delivery rolls, response contents, or persistent communication block state.",
+          "status": "catalog-only/dead-for-now closure"
+        }
+      ],
+      "nextAction": "Sending supplies private mental message delivery, cross-plane failure chance, immediate response, and recipient block source facts, but promoted battle runtime does not own communication content, creature knowledge/description matching, planar location adjudication, message-delivery rolls, response contents, or persistent communication block state.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
       "id": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_sleet_storm",
@@ -39572,15 +39803,29 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "sleet_storm",
+        "sourceRecordPath": "packages/surface/content/sleet_storm.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "sleet_storm"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit sleet_storm is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection plus table/spatial and exposed-flame owners",
+          "evidence": "Promote follow-up split L3-FOLLOWUP-SLEET-STORM-AREA-HAZARD-RUNTIME: L3-FOLLOWUP-SLEET-STORM-AREA-HAZARD-RUNTIME owns Promote Sleet Storm as a Concentration-owned Cylinder area hazard with caller-supplied area identity, first-entry-on-a-turn and turn-start Dexterity Saving Throw triggers, Difficult Terrain and Heavily Obscured projections, failed-save Prone application, failed-save Concentration loss, and a runtime-detached exposed-flame dousing split. Required output: Supported-profile or profile-subset-supported Sleet Storm claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the area hazard while preserving table-owned area membership, pathfinding, and exposed-flame state.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Promote follow-up split L3-FOLLOWUP-SLEET-STORM-AREA-HAZARD-RUNTIME: L3-FOLLOWUP-SLEET-STORM-AREA-HAZARD-RUNTIME owns Promote Sleet Storm as a Concentration-owned Cylinder area hazard with caller-supplied area identity, first-entry-on-a-turn and turn-start Dexterity Saving Throw triggers, Difficult Terrain and Heavily Obscured projections, failed-save Prone application, failed-save Concentration loss, and a runtime-detached exposed-flame dousing split. Required output: Supported-profile or profile-subset-supported Sleet Storm claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the area hazard while preserving table-owned area membership, pathfinding, and exposed-flame state.",
       "battleReadinessStatus": "battle-runtime-required"
     },
     {

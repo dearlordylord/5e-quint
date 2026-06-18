@@ -48,6 +48,7 @@ export type AttachmentAndAreaEffectAtom = Extract<
       | "area_emits_dim_light"
       | "area_is_lightly_obscured"
       | "area_is_heavily_obscured"
+      | "douse_exposed_flames"
       | "area_is_magical_darkness"
       | "area_of_silence"
       | "truthfulness_constraint"
@@ -58,6 +59,7 @@ export type AttachmentAndAreaEffectAtom = Extract<
       | "area_has_strong_wind"
       | "prevent_ranged_weapon_attacks"
       | "area_movement_cost_multiplier"
+      | "plant_enrichment"
       | "grant_cover"
       | "block_line_of_sight"
       | "prevent_creature_passage"
@@ -438,6 +440,16 @@ export function traceAttachmentAndAreaEffectAtom(
       });
       return id;
     }
+    case "douse_exposed_flames": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "douse_exposed_flames",
+        label: "douse_exposed_flames",
+      });
+      return id;
+    }
     case "area_is_magical_darkness": {
       const id = ids("eff");
       nodes.push({
@@ -561,6 +573,21 @@ export function traceAttachmentAndAreaEffectAtom(
         category: "effect",
         atomKind: "area_movement_cost_multiplier",
         label: `area_movement_cost_multiplier\nx${e.multiplier}\n${e.appliesTo}`,
+      });
+      return id;
+    }
+    case "plant_enrichment": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "plant_enrichment",
+        label: [
+          "plant_enrichment",
+          `duration: ${describeDurationValue(e.duration)}`,
+          `harvest yield x${e.harvestYieldMultiplier}`,
+          e.benefitLimit.kind,
+        ].join("\n"),
       });
       return id;
     }

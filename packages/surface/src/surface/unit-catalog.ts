@@ -189,6 +189,7 @@ import paladinPaladinsSmiteInput from "../../content/paladin_paladins_smite.json
 import paladinSacredWeaponInput from "../../content/paladin_sacred_weapon.json";
 import paladinWeaponMasteryInput from "../../content/paladin_weapon_mastery.json";
 import passWithoutTraceInput from "../../content/pass_without_trace.json";
+import plantGrowthInput from "../../content/plant_growth.json";
 import poisonSprayInput from "../../content/poison_spray.json";
 import prayerOfHealingInput from "../../content/prayer_of_healing.json";
 import protectionFromEvilAndGoodInput from "../../content/protection_from_evil_and_good.json";
@@ -204,7 +205,10 @@ import rangerHuntersPreyInput from "../../content/ranger_hunters_prey.json";
 import rangerRovingInput from "../../content/ranger_roving.json";
 import rangerWeaponMasteryInput from "../../content/ranger_weapon_mastery.json";
 import resistanceInput from "../../content/resistance.json";
+import removeCurseInput from "../../content/remove_curse.json";
+import revivifyInput from "../../content/revivify.json";
 import ropeTrickInput from "../../content/rope_trick.json";
+import sendingInput from "../../content/sending.json";
 import speciesDragonbornInput from "../../content/species_dragonborn.json";
 import speciesDragonbornBreathWeaponInput from "../../content/species_dragonborn_breath_weapon.json";
 import speciesDragonbornDamageResistanceInput from "../../content/species_dragonborn_damage_resistance.json";
@@ -265,6 +269,7 @@ import silenceInput from "../../content/silence.json";
 import shiningSmiteInput from "../../content/shining_smite.json";
 import shockingGraspInput from "../../content/shocking_grasp.json";
 import sleepInput from "../../content/sleep.json";
+import sleetStormInput from "../../content/sleet_storm.json";
 import spiderClimbInput from "../../content/spider_climb.json";
 import spikeGrowthInput from "../../content/spike_growth.json";
 import spiritualWeaponInput from "../../content/spiritual_weapon.json";
@@ -659,6 +664,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     longstriderInput,
     mistyStepInput,
     passWithoutTraceInput,
+    plantGrowthInput,
     poisonSprayInput,
     prayerOfHealingInput,
     protectionFromEvilAndGoodInput,
@@ -668,7 +674,10 @@ export const srdUnitCollection = defineSrdUnitCollection({
     rayOfFrostInput,
     rayOfSicknessInput,
     resistanceInput,
+    removeCurseInput,
+    revivifyInput,
     ropeTrickInput,
+    sendingInput,
     sacredFlameInput,
     sanctuaryInput,
     scorchingRayInput,
@@ -701,6 +710,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     silenceInput,
     shiningSmiteInput,
     sleepInput,
+    sleetStormInput,
     flyInput,
     spiderClimbInput,
     spikeGrowthInput,

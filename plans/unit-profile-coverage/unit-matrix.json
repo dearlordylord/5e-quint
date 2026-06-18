@@ -43,14 +43,14 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
-      "denominator": 443,
-      "numerator": 258,
-      "percent": "58.2%"
+      "denominator": 448,
+      "numerator": 263,
+      "percent": "58.7%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 531,
-      "numerator": 308,
-      "percent": "58%"
+      "denominator": 536,
+      "numerator": 313,
+      "percent": "58.4%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,7 +59,7 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 309
+      "value": 314
     },
     "deterministicAdmissionProjectionCoverage": {
       "denominator": 185,
@@ -67,8 +67,8 @@
       "percent": "97.3%"
     },
     "profileClassificationCoverage": {
-      "denominator": 309,
-      "numerator": 309,
+      "denominator": 314,
+      "numerator": 314,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -112,9 +112,9 @@
       "percent": "98.9%"
     },
     "supportedProfileCoverage": {
-      "denominator": 259,
+      "denominator": 264,
       "numerator": 185,
-      "percent": "71.4%"
+      "percent": "70.1%"
     }
   },
   "metricSemantics": [
@@ -16661,8 +16661,8 @@
         "unsupportedOrOtherUnits": 4
       },
       {
-        "executableUnitDenominator": 128,
-        "installedUnitDenominator": 128,
+        "executableUnitDenominator": 133,
+        "installedUnitDenominator": 133,
         "kind": "spell",
         "label": "Spell Units",
         "profileFactDenominator": 136,
@@ -16672,7 +16672,7 @@
         "selectedIdentityReplayGapUnits": 0,
         "selectedIdentityReplayWitnessUnits": 110,
         "supportedProfileUnits": 92,
-        "unsupportedOrOtherUnits": 18
+        "unsupportedOrOtherUnits": 23
       },
       {
         "executableUnitDenominator": 93,
@@ -31990,6 +31990,29 @@
         "status": "installed"
       },
       "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "runtime-detached table/spatial/exploration/economy owner",
+          "reason": "Plant Growth supplies table-facing terrain and agriculture facts, but promoted battle runtime does not own normal-plant area membership, excluded-area geometry, pathfinding or travel-pacing derivation through overgrown terrain, plant-world state, harvest timing, food yield, or settlement economy."
+        },
+        "reason": "Plant Growth is authored and installed as an SRD Surface Spell Definition with a modal Action Overgrowth or 8-hour Enrichment casting, 150-foot range, V/S components, Instantaneous spell duration, Overgrowth point-origin 100-foot-radius Sphere, normal-plant overgrowth, 4-feet-per-1-foot movement cost, caster-chosen excluded areas of any size, and Enrichment half-mile-radius plant enrichment for 365 days with twice-normal harvested food yield and one Plant Growth benefit per year. Task 1 claims no promoted battle-runtime profile because normal-plant area membership, excluded-area geometry, pathfinding and movement-distance derivation through overgrown terrain, table-travel effects, plant-world state, harvest timing, food yield, and settlement economy are runtime-detached table/spatial/exploration/economy facts outside promoted battle Unit profiles.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/plant_growth.json",
+      "unitId": "plant_growth"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
         "profileIds": [
           "spell.invocation-damage-save-or-attack",
           "spell.readied-action-time-spell"
@@ -32855,6 +32878,52 @@
       },
       "claim": {
         "battleReadinessClosure": {
+          "kind": "outside-battle-runtime",
+          "owner": "future curse occurrence and magic-item Attunement owner",
+          "reason": "Remove Curse supplies table-facing curse-removal and cursed-item Attunement source facts, but promoted battle runtime does not own generic curse occurrence identity, curse-removal targeting semantics, cursed magic item curse persistence, or Attunement mutation for cursed objects."
+        },
+        "reason": "Remove Curse is authored and installed as an SRD Surface Spell Definition with Magic Action Spell Slot casting, Touch range, V/S components, Instantaneous duration, one creature-or-object target, all-curse ending source facts, and cursed magic item Attunement-breaking source facts. Task 2 claims no promoted battle-runtime profile because no shared Bestow Curse curse occurrence and curse-removal target boundary is installed, and cursed magic item Attunement mutation belongs to a future curse or magic-item owner rather than this catalog admission task.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/remove_curse.json",
+      "unitId": "remove_curse"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-battle-runtime",
+          "owner": "future rest/revival workflow owner",
+          "reason": "Revivify supplies death-window and return-to-life source facts, but promoted battle runtime does not own dead creature target eligibility, spirit refusal, corpse or missing-body-part state, generic revival transitions, Dead-glossary ongoing effect persistence, Exhaustion adjustment, or magic-item Attunement cleanup."
+        },
+        "reason": "Revivify is authored and installed as an SRD Surface Spell Definition with Magic Action Spell Slot casting, Touch range, V/S/M components with a consumed 300+ GP diamond, Instantaneous duration, a dead creature target, a one-minute death-window revival effect with return to 1 Hit Point, old-age and missing-body-part exclusions, spirit-refusal facts, and Dead-glossary return-state facts for preserving ongoing conditions, magical contagions, and curses, reducing Exhaustion by 1, and ending magic-item Attunement. Task 3 claims no promoted battle-runtime profile because generic dead-creature target eligibility, spirit consent, corpse/body-part state, revival state transition, condition/contagion/curse persistence, Exhaustion adjustment, and Attunement cleanup belong to the future rest/revival workflow owner rather than this catalog admission task.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/revivify.json",
+      "unitId": "revivify"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
           "kind": "outside-runtime-presentation-exploration",
           "owner": "runtime-detached table/spatial/object presentation owner",
           "reason": "Rope object attachment, extradimensional-space occupancy, entry/exit climbing, line of sight through the portal, attack/spell/effect boundary blocking, and drop-out placement are table/spatial/object presentation facts outside promoted battle runtime."
@@ -32869,6 +32938,29 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/rope_trick.json",
       "unitId": "rope_trick"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "runtime-detached table communication owner",
+          "reason": "Sending supplies private mental message delivery, cross-plane failure chance, immediate response, and recipient block source facts, but promoted battle runtime does not own communication content, creature knowledge/description matching, planar location adjudication, message-delivery rolls, response contents, or persistent communication block state."
+        },
+        "reason": "Sending is authored and installed as an SRD Surface Spell Definition with Magic Action Spell Slot casting, Unlimited range, V/S/M copper-wire components, Instantaneous duration, one met-or-described creature target, a 25-word mental message delivery fact, target understanding, sender recognition when known, immediate like-manner response, cross-plane 5 percent delivery failure known to the caster, and 8-hour recipient block/retry failure facts. Task 4 claims no promoted battle-runtime profile because message contents, target identity matching, planar location, delivery-failure roll/adjudication, response contents, and recipient block state belong to the runtime-detached table communication owner rather than this catalog admission task.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/sending.json",
+      "unitId": "sending"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
@@ -35151,6 +35243,33 @@
       ],
       "sourceRecordPath": "packages/surface/content/sleep.json",
       "unitId": "sleep"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "followUpTasks": [
+          {
+            "id": "L3-FOLLOWUP-SLEET-STORM-AREA-HAZARD-RUNTIME",
+            "mechanic": "Promote Sleet Storm as a Concentration-owned Cylinder area hazard with caller-supplied area identity, first-entry-on-a-turn and turn-start Dexterity Saving Throw triggers, Difficult Terrain and Heavily Obscured projections, failed-save Prone application, failed-save Concentration loss, and a runtime-detached exposed-flame dousing split.",
+            "owner": "battle-runtime spell invocation/projection plus table/spatial and exposed-flame owners",
+            "requiredOutput": "Supported-profile or profile-subset-supported Sleet Storm claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the area hazard while preserving table-owned area membership, pathfinding, and exposed-flame state.",
+            "title": "Sleet Storm Area Hazard Runtime"
+          }
+        ],
+        "reason": "Sleet Storm is authored and installed as an SRD Surface Spell Definition with Magic Action Spell Slot casting, 150-foot range, V/S/M miniature-umbrella components, caster-owned Concentration up to 1 minute, a point-origin 20-foot-radius 40-foot-tall Cylinder, Heavily Obscured area, exposed-flame dousing, Difficult Terrain ground, and first-entry-on-a-turn or turn-start Dexterity Saving Throw failure facts that apply Prone and break Concentration. Task 5 leaves promoted battle-runtime support open because the runtime still needs a Sleet Storm area-hazard profile that consumes caller-supplied Cylinder identity, area-membership trigger facts, movement/obscurement projection facts, failed-save condition and Concentration-loss facts, and a separate exposed-flame object/environment owner without dispatching on authored spell identity.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/sleet_storm.json",
+      "unitId": "sleet_storm"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

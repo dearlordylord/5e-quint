@@ -1,6 +1,7 @@
 import type {
   CastingTime,
   Components,
+  ModalActivationMechanics,
   SpellLevel,
   SpellMechanics,
   SpellRecord,
@@ -33,6 +34,12 @@ import {
 import { traceSpawnedCreature } from "./tracer-creature-actions.ts";
 
 import { traceActivation } from "./tracer-activation.ts";
+
+import { traceEffectAtom } from "./tracer-effect-atom.ts";
+
+import { traceEffectAtomScaling } from "./tracer-effect-scaling.ts";
+
+import { traceTargetCountScaling } from "./tracer-scaling.ts";
 
 export function traceSpellUnit(spell: SpellRecord): Trace {
   const nodes: TraceNode[] = [];
@@ -78,8 +85,10 @@ export function traceSpellMechanics(
     label: procKind,
   });
 
-  const quotaId = traceCastingTimeQuota(m.castingTime, nodes, ids);
-  edges.push({ from: procId, to: quotaId, relation: "consumes" });
+  if (m.family !== "modal_activation") {
+    const quotaId = traceCastingTimeQuota(m.castingTime, nodes, ids);
+    edges.push({ from: procId, to: quotaId, relation: "consumes" });
+  }
 
   const slotId =
     m.level === 0 ? null : createSpellSlotNode(m.level, nodes, ids);
@@ -97,6 +106,9 @@ export function traceSpellMechanics(
       break;
     case "activation":
       traceActivation(m, ctx, nodes, edges, ids);
+      break;
+    case "modal_activation":
+      traceModalActivation(m, ctx, nodes, edges, ids);
       break;
     case "triggered_reaction":
       traceTriggeredReaction(m, ctx, nodes, edges, ids);
@@ -123,6 +135,63 @@ export function traceSpellMechanics(
   }
 
   return procId;
+}
+
+function traceModalActivation(
+  m: ModalActivationMechanics,
+  ctx: SpellCtx,
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): void {
+  const choiceId = ids("mode");
+  nodes.push({
+    id: choiceId,
+    category: "resolution",
+    atomKind: "modal_activation_choice",
+    label: `choose\n${m.mode.label}\n${m.mode.options
+      .map((option) => option.displayName)
+      .join(" | ")}`,
+  });
+  edges.push({ from: ctx.procId, to: choiceId, relation: "prompts" });
+
+  for (const option of m.mode.options) {
+    const modeId = ids("mode");
+    nodes.push({
+      id: modeId,
+      category: "procedure",
+      atomKind: "modal_activation_mode",
+      label: `mode\n${option.displayName}`,
+    });
+    edges.push({ from: choiceId, to: modeId, relation: "branches_to" });
+
+    const quotaId = traceCastingTimeQuota(option.castingTime, nodes, ids);
+    edges.push({ from: modeId, to: quotaId, relation: "consumes" });
+
+    const attachmentId = traceAttachment(
+      option.attachment,
+      ctx.range,
+      nodes,
+      ids,
+    );
+    edges.push({ from: modeId, to: attachmentId, relation: "attaches_to" });
+    traceTargetCountScaling(
+      option.attachment,
+      attachmentId,
+      ctx.slotId,
+      nodes,
+      edges,
+      ids,
+    );
+
+    for (const effect of option.effects) {
+      const effectId = traceEffectAtom(effect, nodes, ids, edges);
+      if (effectId === null) continue;
+      edges.push({ from: modeId, to: effectId, relation: "grants" });
+      edges.push({ from: effectId, to: attachmentId, relation: "attaches_to" });
+      traceEffectAtomScaling(effect, effectId, ctx.slotId, nodes, edges, ids);
+    }
+  }
 }
 
 function traceMaterialComponents(
@@ -223,6 +292,16 @@ export function traceCastingTimeQuota(
         label: `action_quota\n(Casting Time: ${ct.amount} min${
           ct.ritual ? " / Ritual" : ""
         })`,
+      });
+      return id;
+    case "hours":
+      nodes.push({
+        id,
+        category: "resource",
+        atomKind: "long_cast",
+        label: `long_cast\n(Casting Time: ${ct.amount} hour${
+          ct.amount === 1 ? "" : "s"
+        }${ct.ritual ? " / Ritual" : ""})`,
       });
       return id;
     default: {

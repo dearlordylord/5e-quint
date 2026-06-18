@@ -3,6 +3,7 @@ import type { TraceNode } from "./tracer-model.ts";
 import {
   describeAreaOccupantDispositionFilter,
   describeAreaOccupantPerceptionFilter,
+  describeAreaExclusions,
   describeAreaOrigin,
   describeAreaShape,
   describeAttachmentHole,
@@ -60,11 +61,12 @@ export function traceAttachment(
       const perceptionLabel = describeAreaOccupantPerceptionFilter(
         a.occupantPerceptionFilter,
       );
+      const exclusionLabel = describeAreaExclusions(a.excludedAreas);
       nodes.push({
         id,
         category: "attachment",
         atomKind: "area",
-        label: `area\n${describeAreaShape(a.shape)}\n${originLabel}${occupantLabel}${perceptionLabel}`,
+        label: `area\n${describeAreaShape(a.shape)}\n${originLabel}${occupantLabel}${perceptionLabel}${exclusionLabel}`,
       });
       return id;
     }
