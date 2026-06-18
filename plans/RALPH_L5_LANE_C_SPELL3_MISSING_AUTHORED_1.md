@@ -31,7 +31,7 @@
     {
       "number": 5,
       "id": "L5-C05-GLYPH-OF-WARDING",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Close Glyph of Warding missing authored record"
     },
     {
@@ -87,6 +87,12 @@
       "id": "L5-C14-GASEOUS-FORM-SURFACE-WIDENING",
       "status": "ready-for-research",
       "title": "Widen Gaseous Form Surface Spell Definition"
+    },
+    {
+      "number": 15,
+      "id": "L5-C15-GLYPH-OF-WARDING-SURFACE-WIDENING",
+      "status": "ready-for-research",
+      "title": "Widen Glyph of Warding Surface Spell Definition"
     }
   ]
 }
@@ -146,7 +152,7 @@ missing-record spells unless a RAW dependency is unavoidable and documented.
 | 2 | L5-C02-BLINK - Close Blink missing authored record | done | none | Closed as a Surface widening boundary, not an authored-record admission. |
 | 3 | L5-C03-CONJURE-ANIMALS - Close Conjure Animals missing authored record | done | none | Closed as a Surface widening boundary, not an authored-record admission. |
 | 4 | L5-C04-GASEOUS-FORM - Close Gaseous Form missing authored record | done | none | Closed as a Surface widening boundary, not an authored-record admission. |
-| 5 | L5-C05-GLYPH-OF-WARDING - Close Glyph of Warding missing authored record | ready-for-research | none | Independent missing spell Unit. |
+| 5 | L5-C05-GLYPH-OF-WARDING - Close Glyph of Warding missing authored record | done | none | Closed as a Surface widening boundary, not an authored-record admission; follow-up is L5-C15 for Glyph trigger, stored spell, movement invalidation, and table object/location facts. |
 | 6 | L5-C06-HASTE - Close Haste missing authored record | ready-for-research | none | Preserve Surface authoring, positive runtime, and lethargy runtime split from `plans/unit-profile-coverage/L3_HASTE_RUNTIME_SURVEY.md`. |
 | 7 | L5-C07-MAGIC-CIRCLE - Close Magic Circle missing authored record | ready-for-research | none | Independent missing spell Unit. |
 | 8 | L5-C08-MELD-INTO-STONE - Close Meld into Stone missing authored record | ready-for-research | none | Independent missing spell Unit. |
@@ -156,6 +162,7 @@ missing-record spells unless a RAW dependency is unavoidable and documented.
 | 12 | L5-C12-BLINK-SURFACE-WIDENING - Widen Blink Surface Spell Definition | ready-for-research | L5-C02-BLINK | Add typed Surface/table-spatial facts for Blink's turn-end roll, Ethereal Plane transition, already-on-plane ending predicate, and return-position availability before authoring/admitting the Spell Definition. |
 | 13 | L5-C13-CONJURE-ANIMALS-SURFACE-WIDENING - Widen Conjure Animals Surface Spell Definition | ready-for-research | L5-C03-CONJURE-ANIMALS | Add typed Surface/table-spatial facts for Conjure Animals' spectral pack occurrence, pack reposition, Strength Saving Throw Advantage predicate, Dexterity Saving Throw trigger eligibility, and once-per-turn limit before authoring/admitting the Spell Definition. |
 | 14 | L5-C14-GASEOUS-FORM-SURFACE-WIDENING - Widen Gaseous Form Surface Spell Definition | ready-for-research | L5-C04-GASEOUS-FORM | Add typed Surface/table-spatial facts for Gaseous Form's mist-cloud form state, movement replacement, Magic-action self-ending, B/P/S Resistance, Prone Immunity, Strength/Dexterity/Constitution Saving Throw Advantage, action/object/speech limits, creature-space occupancy, narrow-opening passage, and liquid-surface treatment before authoring/admitting the Spell Definition. |
+| 15 | L5-C15-GLYPH-OF-WARDING-SURFACE-WIDENING - Widen Glyph of Warding Surface Spell Definition | ready-for-research | L5-C05-GLYPH-OF-WARDING | Add typed Surface/table object-location facts for Glyph of Warding's surface or closeable-object inscription anchor, maximum glyph-area constraint, caster-defined/refined trigger, movement invalidation, explosive rune, stored spell eligibility/release/retargeting, hostile placement, and stored Concentration duration override before authoring/admitting the Spell Definition. |
 
 ## Shared Verification
 
@@ -599,7 +606,7 @@ Verification:
 
 ### Task 5 - L5-C05-GLYPH-OF-WARDING
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -619,7 +626,11 @@ SRD anchors:
 Current state:
 
 - Authored record is missing; catalog state is `not-installed`.
-- Mining disposition is `missing-authored-record`.
+- Mining disposition is `needs-surface-widening`.
+- Surface cannot yet express the Glyph of Warding Spell Definition without
+  losing the anchored surface/object inscription, maximum 10-foot-diameter
+  glyph coverage, caster-defined trigger, movement invalidation,
+  explosive-rune branch, stored-spell branch, or table object/location facts.
 
 Output:
 
@@ -628,7 +639,81 @@ Output:
 
 Acceptance:
 
-- `glyph_of_warding` leaves `missing-authored-record`.
+- `glyph_of_warding` leaves `missing-authored-record` by becoming
+  `needs-surface-widening`.
+
+Verification:
+
+- Shared lane verification.
+
+Plan Impact:
+
+- Follow-up work is split into
+  L5-C15-GLYPH-OF-WARDING-SURFACE-WIDENING before any SRD-provenance Glyph of
+  Warding Spell Definition is authored or admitted.
+
+### Task 15 - L5-C15-GLYPH-OF-WARDING-SURFACE-WIDENING
+
+Status: `ready-for-research`
+
+Depends on:
+
+- L5-C05-GLYPH-OF-WARDING
+
+Unit:
+
+- `glyph_of_warding`
+
+SRD anchors:
+
+- `.references/srd-5.2.1/Spells/Descriptions-E-L.md:842`
+- `.references/srd-5.2.1/Classes/Bard.md:221`
+- `.references/srd-5.2.1/Classes/Cleric.md:211`
+- `.references/srd-5.2.1/Classes/Wizard.md:247`
+
+Current state:
+
+- Generated inventory classifies the three Glyph of Warding class-list rows as
+  `needs-surface-widening` with battle-readiness
+  `surface-widening-required`.
+- Existing Surface spell facts cannot represent Glyph of Warding as one
+  complete SRD-provenance Spell Definition without losing its durable glyph
+  occurrence, maximum coverage constraint, trigger, movement, branch, and
+  table object/location distinctions.
+
+Output:
+
+- Widen Surface so a Glyph of Warding Spell Definition can represent a durable
+  glyph occurrence inscribed on either a surface or an object that can be
+  closed and carry the maximum 10-foot-diameter glyph coverage constraint.
+- Represent caster-defined and refined trigger conditions, including
+  creature-type activation filters and password or other non-trigger
+  exclusions, without dispatching on spell id or name in runtime behavior.
+- Represent table object/location ownership for cast location, movement of the
+  inscribed surface or object more than 10 feet from that location,
+  covered-area placement within the maximum, glyph concealment and noticing,
+  trigger occurrence, area membership, and close-as-possible hostile placement.
+- Represent the explosive-rune branch with caster-chosen Acid, Cold, Fire,
+  Lightning, or Thunder damage, Dexterity Saving Throw half damage, a
+  20-foot-radius Sphere centered on the glyph, and higher-slot damage scaling.
+- Represent the spell-glyph branch with stored prepared spell eligibility
+  (level plus single-creature or area target shape), no immediate effect at
+  storage time, release retargeting to or around the triggering creature,
+  hostile summon/object/trap placement, and full-duration execution for stored
+  Concentration spells.
+- Author or admit the SRD-provenance Glyph of Warding record only after typed
+  Surface and table object/location facts can preserve those RAW distinctions.
+
+Acceptance:
+
+- `glyph_of_warding` has an SRD-provenance Surface Spell Definition or remains
+  explicitly classified with a narrower executable blocker.
+- The record does not omit the inscription anchor choice, trigger refinement
+  and exclusions, maximum 10-foot-diameter coverage constraint, movement
+  invalidation, explosive-rune branch, stored-spell branch,
+  retargeting/placement facts, or stored Concentration duration override.
+- Runtime support, if added, dispatches on typed Surface/profile facts rather
+  than authored spell identity.
 
 Verification:
 

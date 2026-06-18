@@ -296,11 +296,11 @@
       "numerator": 34,
       "percent": "30.9%",
       "rowsByStatus": {
-        "surface-widening-required": 9,
+        "surface-widening-required": 12,
         "accepted-no-battle-effect": 12,
         "accepted": 22,
         "owner-evidence-required": 28,
-        "battle-runtime-required": 39
+        "battle-runtime-required": 36
       }
     },
     "levelFourSpellBattleReadiness": {
@@ -374,9 +374,9 @@
       "non-runtime": 84,
       "catalog-only/dead-for-now": 144,
       "level-5-7-follow-up-required": 33,
-      "needs-surface-widening": 9,
+      "needs-surface-widening": 12,
       "catalog-authored-review-required": 77,
-      "missing-authored-record": 71,
+      "missing-authored-record": 68,
       "catalog-installed-owner-evidence-required": 1
     },
     "spellPressureRowsByDisposition": {
@@ -384,11 +384,11 @@
       "catalog-only/dead-for-now": 118
     },
     "levelThreeSpellPressureRowsByDisposition": {
-      "needs-surface-widening": 9,
+      "needs-surface-widening": 12,
       "catalog-only/dead-for-now": 12,
       "catalog-installed-owner-evidence-present": 22,
       "catalog-authored-review-required": 28,
-      "missing-authored-record": 39
+      "missing-authored-record": 36
     },
     "levelThreeInstalledSpellPressureRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 22
@@ -8426,7 +8426,8 @@
       "detail": "Glyph of Warding (Abjuration; M)",
       "candidateUnitId": "glyph_of_warding",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "current-surface-cannot-express-mechanics-yet",
+        "missingConstruct": "Spell Definition warding glyph occurrence: cast-time choice between surface inscription and closeable-object inscription, maximum 10-foot-diameter glyph coverage, concealed glyph Wisdom (Perception) check against the caster's Spell Save DC, caster-defined/refined trigger with creature-type and password exclusions, movement invalidation when the inscribed surface or object moves more than 10 feet from the cast location, explosive-rune branch with caster-chosen Acid/Cold/Fire/Lightning/Thunder damage and slot scaling, and spell-glyph branch that stores a cast prepared spell, enforces single-creature or area spell eligibility, retargets the stored spell to or around the triggering creature, handles hostile summon/object/trap placement, and preserves full-duration execution for stored Concentration spells."
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -8435,10 +8436,22 @@
         "state": "not-installed",
         "unitId": "glyph_of_warding"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "finalDisposition": "needs-surface-widening",
+      "battleReadinessClosure": {
+        "source": "spell-unit-missing-classification",
+        "kind": "table-spatial-derivation",
+        "owner": "Surface Spell Definition plus table object/location glyph owner and future battle-runtime glyph release owner",
+        "reason": "Glyph of Warding needs a typed follow-up split before an SRD-provenance Spell Definition can be admitted: Surface must own the durable glyph occurrence, inscription anchor kind, maximum 10-foot-diameter coverage constraint, authored trigger/refinement shape, explosive-rune versus spell-glyph choice, explosive damage type and scaling, stored prepared spell eligibility, stored-spell retargeting, and stored Concentration full-duration override; table object/location ownership supplies cast location, covered-area placement within that maximum, more-than-10-foot movement invalidation, concealment and noticing, selected trigger predicate/event witnesses, area membership, and close-as-possible hostile placement witnesses; future battle runtime should consume typed glyph release facts without dispatching on spell id or name."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Surface Spell Definition plus table object/location glyph owner and future battle-runtime glyph release owner",
+          "evidence": "Spell Definition warding glyph occurrence: cast-time choice between surface inscription and closeable-object inscription, maximum 10-foot-diameter glyph coverage, concealed glyph Wisdom (Perception) check against the caster's Spell Save DC, caster-defined/refined trigger with creature-type and password exclusions, movement invalidation when the inscribed surface or object moves more than 10 feet from the cast location, explosive-rune branch with caster-chosen Acid/Cold/Fire/Lightning/Thunder damage and slot scaling, and spell-glyph branch that stores a cast prepared spell, enforces single-creature or area spell eligibility, retargets the stored spell to or around the triggering creature, handles hostile summon/object/trap placement, and preserves full-duration execution for stored Concentration spells.",
+          "status": "Surface widening required before owner evidence can be present"
+        }
+      ],
+      "nextAction": "Widen Surface: Spell Definition warding glyph occurrence: cast-time choice between surface inscription and closeable-object inscription, maximum 10-foot-diameter glyph coverage, concealed glyph Wisdom (Perception) check against the caster's Spell Save DC, caster-defined/refined trigger with creature-type and password exclusions, movement invalidation when the inscribed surface or object moves more than 10 feet from the cast location, explosive-rune branch with caster-chosen Acid/Cold/Fire/Lightning/Thunder damage and slot scaling, and spell-glyph branch that stores a cast prepared spell, enforces single-creature or area spell eligibility, retargets the stored spell to or around the triggering creature, handles hostile summon/object/trap placement, and preserves full-duration execution for stored Concentration spells.",
+      "battleReadinessStatus": "surface-widening-required"
     },
     {
       "id": "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_hypnotic_pattern",
@@ -12244,7 +12257,8 @@
       "detail": "Glyph of Warding (Abjuration; M)",
       "candidateUnitId": "glyph_of_warding",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "current-surface-cannot-express-mechanics-yet",
+        "missingConstruct": "Spell Definition warding glyph occurrence: cast-time choice between surface inscription and closeable-object inscription, maximum 10-foot-diameter glyph coverage, concealed glyph Wisdom (Perception) check against the caster's Spell Save DC, caster-defined/refined trigger with creature-type and password exclusions, movement invalidation when the inscribed surface or object moves more than 10 feet from the cast location, explosive-rune branch with caster-chosen Acid/Cold/Fire/Lightning/Thunder damage and slot scaling, and spell-glyph branch that stores a cast prepared spell, enforces single-creature or area spell eligibility, retargets the stored spell to or around the triggering creature, handles hostile summon/object/trap placement, and preserves full-duration execution for stored Concentration spells."
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -12253,10 +12267,22 @@
         "state": "not-installed",
         "unitId": "glyph_of_warding"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "finalDisposition": "needs-surface-widening",
+      "battleReadinessClosure": {
+        "source": "spell-unit-missing-classification",
+        "kind": "table-spatial-derivation",
+        "owner": "Surface Spell Definition plus table object/location glyph owner and future battle-runtime glyph release owner",
+        "reason": "Glyph of Warding needs a typed follow-up split before an SRD-provenance Spell Definition can be admitted: Surface must own the durable glyph occurrence, inscription anchor kind, maximum 10-foot-diameter coverage constraint, authored trigger/refinement shape, explosive-rune versus spell-glyph choice, explosive damage type and scaling, stored prepared spell eligibility, stored-spell retargeting, and stored Concentration full-duration override; table object/location ownership supplies cast location, covered-area placement within that maximum, more-than-10-foot movement invalidation, concealment and noticing, selected trigger predicate/event witnesses, area membership, and close-as-possible hostile placement witnesses; future battle runtime should consume typed glyph release facts without dispatching on spell id or name."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Surface Spell Definition plus table object/location glyph owner and future battle-runtime glyph release owner",
+          "evidence": "Spell Definition warding glyph occurrence: cast-time choice between surface inscription and closeable-object inscription, maximum 10-foot-diameter glyph coverage, concealed glyph Wisdom (Perception) check against the caster's Spell Save DC, caster-defined/refined trigger with creature-type and password exclusions, movement invalidation when the inscribed surface or object moves more than 10 feet from the cast location, explosive-rune branch with caster-chosen Acid/Cold/Fire/Lightning/Thunder damage and slot scaling, and spell-glyph branch that stores a cast prepared spell, enforces single-creature or area spell eligibility, retargets the stored spell to or around the triggering creature, handles hostile summon/object/trap placement, and preserves full-duration execution for stored Concentration spells.",
+          "status": "Surface widening required before owner evidence can be present"
+        }
+      ],
+      "nextAction": "Widen Surface: Spell Definition warding glyph occurrence: cast-time choice between surface inscription and closeable-object inscription, maximum 10-foot-diameter glyph coverage, concealed glyph Wisdom (Perception) check against the caster's Spell Save DC, caster-defined/refined trigger with creature-type and password exclusions, movement invalidation when the inscribed surface or object moves more than 10 feet from the cast location, explosive-rune branch with caster-chosen Acid/Cold/Fire/Lightning/Thunder damage and slot scaling, and spell-glyph branch that stores a cast prepared spell, enforces single-creature or area spell eligibility, retargets the stored spell to or around the triggering creature, handles hostile summon/object/trap placement, and preserves full-duration execution for stored Concentration spells.",
+      "battleReadinessStatus": "surface-widening-required"
     },
     {
       "id": "srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_magic_circle",
@@ -38924,7 +38950,8 @@
       "detail": "Glyph of Warding (Abjuration; M)",
       "candidateUnitId": "glyph_of_warding",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "current-surface-cannot-express-mechanics-yet",
+        "missingConstruct": "Spell Definition warding glyph occurrence: cast-time choice between surface inscription and closeable-object inscription, maximum 10-foot-diameter glyph coverage, concealed glyph Wisdom (Perception) check against the caster's Spell Save DC, caster-defined/refined trigger with creature-type and password exclusions, movement invalidation when the inscribed surface or object moves more than 10 feet from the cast location, explosive-rune branch with caster-chosen Acid/Cold/Fire/Lightning/Thunder damage and slot scaling, and spell-glyph branch that stores a cast prepared spell, enforces single-creature or area spell eligibility, retargets the stored spell to or around the triggering creature, handles hostile summon/object/trap placement, and preserves full-duration execution for stored Concentration spells."
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -38933,10 +38960,22 @@
         "state": "not-installed",
         "unitId": "glyph_of_warding"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "finalDisposition": "needs-surface-widening",
+      "battleReadinessClosure": {
+        "source": "spell-unit-missing-classification",
+        "kind": "table-spatial-derivation",
+        "owner": "Surface Spell Definition plus table object/location glyph owner and future battle-runtime glyph release owner",
+        "reason": "Glyph of Warding needs a typed follow-up split before an SRD-provenance Spell Definition can be admitted: Surface must own the durable glyph occurrence, inscription anchor kind, maximum 10-foot-diameter coverage constraint, authored trigger/refinement shape, explosive-rune versus spell-glyph choice, explosive damage type and scaling, stored prepared spell eligibility, stored-spell retargeting, and stored Concentration full-duration override; table object/location ownership supplies cast location, covered-area placement within that maximum, more-than-10-foot movement invalidation, concealment and noticing, selected trigger predicate/event witnesses, area membership, and close-as-possible hostile placement witnesses; future battle runtime should consume typed glyph release facts without dispatching on spell id or name."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Surface Spell Definition plus table object/location glyph owner and future battle-runtime glyph release owner",
+          "evidence": "Spell Definition warding glyph occurrence: cast-time choice between surface inscription and closeable-object inscription, maximum 10-foot-diameter glyph coverage, concealed glyph Wisdom (Perception) check against the caster's Spell Save DC, caster-defined/refined trigger with creature-type and password exclusions, movement invalidation when the inscribed surface or object moves more than 10 feet from the cast location, explosive-rune branch with caster-chosen Acid/Cold/Fire/Lightning/Thunder damage and slot scaling, and spell-glyph branch that stores a cast prepared spell, enforces single-creature or area spell eligibility, retargets the stored spell to or around the triggering creature, handles hostile summon/object/trap placement, and preserves full-duration execution for stored Concentration spells.",
+          "status": "Surface widening required before owner evidence can be present"
+        }
+      ],
+      "nextAction": "Widen Surface: Spell Definition warding glyph occurrence: cast-time choice between surface inscription and closeable-object inscription, maximum 10-foot-diameter glyph coverage, concealed glyph Wisdom (Perception) check against the caster's Spell Save DC, caster-defined/refined trigger with creature-type and password exclusions, movement invalidation when the inscribed surface or object moves more than 10 feet from the cast location, explosive-rune branch with caster-chosen Acid/Cold/Fire/Lightning/Thunder damage and slot scaling, and spell-glyph branch that stores a cast prepared spell, enforces single-creature or area spell eligibility, retargets the stored spell to or around the triggering creature, handles hostile summon/object/trap placement, and preserves full-duration execution for stored Concentration spells.",
+      "battleReadinessStatus": "surface-widening-required"
     },
     {
       "id": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_haste",
