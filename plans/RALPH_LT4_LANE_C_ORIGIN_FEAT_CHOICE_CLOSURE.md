@@ -7,7 +7,7 @@
     {
       "number": 1,
       "id": "LT4-C01-HUMAN-VERSATILE-ORIGIN-FEAT-DENOMINATOR",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Prove Human Versatile exposes every SRD Origin feat target"
     },
     {
@@ -93,7 +93,7 @@ spell-access closure, and Skilled nested proficiency choices.
 
 ### Task 1 - LT4-C01-HUMAN-VERSATILE-ORIGIN-FEAT-DENOMINATOR
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
