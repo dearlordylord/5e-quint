@@ -770,6 +770,8 @@ export function describeRange(r: Range): string {
       return "Self";
     case "touch":
       return "Touch";
+    case "unlimited":
+      return "Unlimited";
     case "point":
       return `${r.feet} ft`;
     default: {

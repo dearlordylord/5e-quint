@@ -231,7 +231,7 @@
     "levelSevenClassRows": 24,
     "spellPressureRows": 367,
     "levelThreeSpellPressureRows": 110,
-    "levelThreeInstalledSpellPressureRows": 29,
+    "levelThreeInstalledSpellPressureRows": 32,
     "levelFourSpellPressureRows": 81,
     "levelFourInstalledSpellPressureRows": 0,
     "levelOneBattleReadiness": {
@@ -293,11 +293,11 @@
     },
     "levelThreeSpellBattleReadiness": {
       "denominator": 110,
-      "numerator": 41,
-      "percent": "37.3%",
+      "numerator": 44,
+      "percent": "40%",
       "rowsByStatus": {
-        "battle-runtime-required": 41,
-        "accepted-no-battle-effect": 19,
+        "battle-runtime-required": 38,
+        "accepted-no-battle-effect": 22,
         "accepted": 22,
         "owner-evidence-required": 28
       }
@@ -371,9 +371,9 @@
     "allRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 481,
       "non-runtime": 84,
-      "catalog-only/dead-for-now": 151,
+      "catalog-only/dead-for-now": 154,
       "level-5-7-follow-up-required": 33,
-      "missing-authored-record": 73,
+      "missing-authored-record": 70,
       "catalog-authored-review-required": 77,
       "catalog-installed-owner-evidence-required": 1
     },
@@ -382,14 +382,14 @@
       "catalog-only/dead-for-now": 118
     },
     "levelThreeSpellPressureRowsByDisposition": {
-      "missing-authored-record": 41,
-      "catalog-only/dead-for-now": 19,
+      "missing-authored-record": 38,
+      "catalog-only/dead-for-now": 22,
       "catalog-installed-owner-evidence-present": 22,
       "catalog-authored-review-required": 28
     },
     "levelThreeInstalledSpellPressureRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 22,
-      "catalog-only/dead-for-now": 7
+      "catalog-only/dead-for-now": 10
     },
     "levelFourSpellPressureRowsByDisposition": {
       "catalog-authored-review-required": 49,
@@ -8653,19 +8653,39 @@
       "detail": "Sending (Divination; —)",
       "candidateUnitId": "sending",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "sending",
+        "sourceRecordPath": "packages/surface/content/sending.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "sending"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-only/dead-for-now",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "outside-runtime-presentation-exploration",
+        "owner": "runtime-detached table communication owner",
+        "reason": "Sending supplies private mental message delivery, cross-plane failure chance, immediate response, and recipient block source facts, but promoted battle runtime does not own communication content, creature knowledge/description matching, planar location adjudication, message-delivery rolls, response contents, or persistent communication block state."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit sending is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "runtime-detached table communication owner",
+          "evidence": "Sending supplies private mental message delivery, cross-plane failure chance, immediate response, and recipient block source facts, but promoted battle runtime does not own communication content, creature knowledge/description matching, planar location adjudication, message-delivery rolls, response contents, or persistent communication block state.",
+          "status": "catalog-only/dead-for-now closure"
+        }
+      ],
+      "nextAction": "Sending supplies private mental message delivery, cross-plane failure chance, immediate response, and recipient block source facts, but promoted battle runtime does not own communication content, creature knowledge/description matching, planar location adjudication, message-delivery rolls, response contents, or persistent communication block state.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
       "id": "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_slow",
@@ -12519,19 +12539,39 @@
       "detail": "Sending (Divination; —)",
       "candidateUnitId": "sending",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "sending",
+        "sourceRecordPath": "packages/surface/content/sending.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "sending"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-only/dead-for-now",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "outside-runtime-presentation-exploration",
+        "owner": "runtime-detached table communication owner",
+        "reason": "Sending supplies private mental message delivery, cross-plane failure chance, immediate response, and recipient block source facts, but promoted battle runtime does not own communication content, creature knowledge/description matching, planar location adjudication, message-delivery rolls, response contents, or persistent communication block state."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit sending is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "runtime-detached table communication owner",
+          "evidence": "Sending supplies private mental message delivery, cross-plane failure chance, immediate response, and recipient block source facts, but promoted battle runtime does not own communication content, creature knowledge/description matching, planar location adjudication, message-delivery rolls, response contents, or persistent communication block state.",
+          "status": "catalog-only/dead-for-now closure"
+        }
+      ],
+      "nextAction": "Sending supplies private mental message delivery, cross-plane failure chance, immediate response, and recipient block source facts, but promoted battle runtime does not own communication content, creature knowledge/description matching, planar location adjudication, message-delivery rolls, response contents, or persistent communication block state.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
       "id": "srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_speak_with_dead",
@@ -39315,19 +39355,39 @@
       "detail": "Sending (Divination; —)",
       "candidateUnitId": "sending",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "sending",
+        "sourceRecordPath": "packages/surface/content/sending.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "sending"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-only/dead-for-now",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "outside-runtime-presentation-exploration",
+        "owner": "runtime-detached table communication owner",
+        "reason": "Sending supplies private mental message delivery, cross-plane failure chance, immediate response, and recipient block source facts, but promoted battle runtime does not own communication content, creature knowledge/description matching, planar location adjudication, message-delivery rolls, response contents, or persistent communication block state."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit sending is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "runtime-detached table communication owner",
+          "evidence": "Sending supplies private mental message delivery, cross-plane failure chance, immediate response, and recipient block source facts, but promoted battle runtime does not own communication content, creature knowledge/description matching, planar location adjudication, message-delivery rolls, response contents, or persistent communication block state.",
+          "status": "catalog-only/dead-for-now closure"
+        }
+      ],
+      "nextAction": "Sending supplies private mental message delivery, cross-plane failure chance, immediate response, and recipient block source facts, but promoted battle runtime does not own communication content, creature knowledge/description matching, planar location adjudication, message-delivery rolls, response contents, or persistent communication block state.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
       "id": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_sleet_storm",

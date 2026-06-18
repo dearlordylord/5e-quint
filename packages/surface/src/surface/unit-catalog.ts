@@ -206,6 +206,7 @@ import resistanceInput from "../../content/resistance.json";
 import removeCurseInput from "../../content/remove_curse.json";
 import revivifyInput from "../../content/revivify.json";
 import ropeTrickInput from "../../content/rope_trick.json";
+import sendingInput from "../../content/sending.json";
 import speciesDragonbornInput from "../../content/species_dragonborn.json";
 import speciesDragonbornBreathWeaponInput from "../../content/species_dragonborn_breath_weapon.json";
 import speciesDragonbornDamageResistanceInput from "../../content/species_dragonborn_damage_resistance.json";
@@ -671,6 +672,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     removeCurseInput,
     revivifyInput,
     ropeTrickInput,
+    sendingInput,
     sacredFlameInput,
     sanctuaryInput,
     scorchingRayInput,

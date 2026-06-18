@@ -3413,6 +3413,132 @@ describe("SRD Unit catalog boundary", () => {
     );
   });
 
+  test("decodes Sending as table-owned mental message delivery", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag !== "ok") return;
+    const sending = result.catalog.requireUnit("sending");
+
+    expect(sending.kind).toBe("spell");
+    if (sending.kind !== "spell") return;
+    expect(sending.mechanics.family).toBe("activation");
+    if (sending.mechanics.family !== "activation") return;
+
+    expect(sending.provenance).toEqual({
+      kind: "srd-5.2.1",
+      section: "Spells/Descriptions-S-Z#Sending",
+    });
+    expect(sending.mechanics).toMatchObject({
+      level: 3,
+      school: "divination",
+      castingTime: { kind: "action" },
+      range: { kind: "unlimited" },
+      components: { v: true, s: true, m: "a copper wire" },
+      duration: { kind: "instantaneous" },
+    });
+    expect(sending.mechanics.phases).toEqual([
+      {
+        kind: "direct",
+        attachment: {
+          kind: "hole",
+          holeId: "sending_recipient",
+          label: "met or described creature",
+          value: {
+            kind: "target",
+            selection: {
+              mode: "one",
+              targetKinds: ["creature"],
+            },
+          },
+        },
+        effects: [
+          {
+            kind: "deliver_mental_message",
+            recipient: "met_by_caster_or_described_by_someone_who_met_it",
+            message: {
+              maxWords: 25,
+              delivery: "target_hears_in_mind",
+              understanding: "meaning_enabled",
+            },
+            senderRecognition: "if_target_knows_sender",
+            response: {
+              manner: "like_message",
+              timing: "immediate",
+            },
+            planarDelivery: {
+              reach: "any_distance_and_other_planes",
+              failureChance: {
+                kind: "percent_if_different_plane",
+                percent: 5,
+                result: "message_does_not_arrive",
+                casterKnowsFailure: true,
+              },
+            },
+            recipientBlock: {
+              duration: { unit: "hour", amount: 8 },
+              retryResult: "caster_learns_blocked_and_spell_fails",
+            },
+          },
+        ],
+      },
+    ]);
+    expect(sending.description).toContain(
+      "can answer in a like manner immediately",
+    );
+    expect(sending.description).toContain("5 percent chance");
+  });
+
+  test("rejects Sending mental message block durations other than 8 hours", () => {
+    const decode = Schema.decodeUnknownEither(EffectAtomSchema);
+    const sendingMentalMessageEffect = {
+      kind: "deliver_mental_message",
+      recipient: "met_by_caster_or_described_by_someone_who_met_it",
+      message: {
+        maxWords: 25,
+        delivery: "target_hears_in_mind",
+        understanding: "meaning_enabled",
+      },
+      senderRecognition: "if_target_knows_sender",
+      response: {
+        manner: "like_message",
+        timing: "immediate",
+      },
+      planarDelivery: {
+        reach: "any_distance_and_other_planes",
+        failureChance: {
+          kind: "percent_if_different_plane",
+          percent: 5,
+          result: "message_does_not_arrive",
+          casterKnowsFailure: true,
+        },
+      },
+      recipientBlock: {
+        duration: { unit: "hour", amount: 8 },
+        retryResult: "caster_learns_blocked_and_spell_fails",
+      },
+    };
+
+    expect(Either.isRight(decode(sendingMentalMessageEffect))).toBe(true);
+    for (const duration of [
+      { unit: "hour", amount: 1 },
+      { unit: "minute", amount: 8 },
+      { unit: "day", amount: 1 },
+    ] as const) {
+      expect(
+        Either.isLeft(
+          decode({
+            ...sendingMentalMessageEffect,
+            recipientBlock: {
+              ...sendingMentalMessageEffect.recipientBlock,
+              duration,
+            },
+          }),
+        ),
+      ).toBe(true);
+    }
+  });
+
   test("rejects contradictory Revivify death target-state filters", () => {
     const decode = Schema.decodeUnknownEither(TargetSelectionSchema);
 

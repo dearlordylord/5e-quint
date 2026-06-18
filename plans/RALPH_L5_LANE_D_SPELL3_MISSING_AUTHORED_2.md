@@ -25,7 +25,7 @@
     {
       "number": 4,
       "id": "L5-D04-SENDING",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Close Sending missing authored record"
     },
     {
@@ -121,7 +121,7 @@ missing-record spells unless a RAW dependency is unavoidable and documented.
 | 1 | L5-D01-PLANT-GROWTH - Close Plant Growth missing authored record | done | none | Independent missing spell Unit. |
 | 2 | L5-D02-REMOVE-CURSE - Close Remove Curse missing authored record | done | none | May resolve Surface Spell Definition before Bestow Curse runtime occurrence semantics exist. |
 | 3 | L5-D03-REVIVIFY - Close Revivify missing authored record | done | none | Independent missing spell Unit. |
-| 4 | L5-D04-SENDING - Close Sending missing authored record | ready-for-research | none | Independent missing spell Unit. |
+| 4 | L5-D04-SENDING - Close Sending missing authored record | done | none | Independent missing spell Unit. |
 | 5 | L5-D05-SLEET-STORM - Close Sleet Storm missing authored record | ready-for-research | none | Independent missing spell Unit. |
 | 6 | L5-D06-SLOW - Close Slow missing authored record | ready-for-research | none | Preserve Surface authoring, active penalties, and turn/Somatic split from `plans/unit-profile-coverage/L3_SLOW_RUNTIME_SURVEY.md`. |
 | 7 | L5-D07-SPEAK-WITH-DEAD - Close Speak with Dead missing authored record | ready-for-research | none | Independent missing spell Unit. |
@@ -270,7 +270,7 @@ Verification:
 
 ### Task 4 - L5-D04-SENDING
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 

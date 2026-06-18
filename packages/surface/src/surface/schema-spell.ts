@@ -116,6 +116,39 @@ export const DivinationOmenEffectSchema = strictStruct({
   }),
 });
 
+const MentalMessageRecipientBlockDurationSchema = strictStruct({
+  unit: Schema.Literal("hour"),
+  amount: Schema.Literal(8),
+});
+
+export const MentalMessageDeliveryEffectSchema = strictStruct({
+  kind: Schema.Literal("deliver_mental_message"),
+  recipient: Schema.Literal("met_by_caster_or_described_by_someone_who_met_it"),
+  message: strictStruct({
+    maxWords: Schema.Literal(25),
+    delivery: Schema.Literal("target_hears_in_mind"),
+    understanding: Schema.Literal("meaning_enabled"),
+  }),
+  senderRecognition: Schema.Literal("if_target_knows_sender"),
+  response: strictStruct({
+    manner: Schema.Literal("like_message"),
+    timing: Schema.Literal("immediate"),
+  }),
+  planarDelivery: strictStruct({
+    reach: Schema.Literal("any_distance_and_other_planes"),
+    failureChance: strictStruct({
+      kind: Schema.Literal("percent_if_different_plane"),
+      percent: Schema.Literal(5),
+      result: Schema.Literal("message_does_not_arrive"),
+      casterKnowsFailure: Schema.Literal(true),
+    }),
+  }),
+  recipientBlock: strictStruct({
+    duration: MentalMessageRecipientBlockDurationSchema,
+    retryResult: Schema.Literal("caster_learns_blocked_and_spell_fails"),
+  }),
+});
+
 const SPELL_CREATED_HELD_OBJECT_REQUIREMENTS = [
   "free_hand",
 ] as const satisfies ReadonlyNonEmptyArray<string>;
@@ -511,6 +544,9 @@ type JumpMovementReplacement = Schema.Schema.Type<
 type FeatherFallMitigation = Schema.Schema.Type<
   typeof FeatherFallMitigationSchema
 >;
+type MentalMessageDeliveryEffect = Schema.Schema.Type<
+  typeof MentalMessageDeliveryEffectSchema
+>;
 type ForceMoveEffect = Schema.Schema.Type<typeof ForceMoveEffectSchema>;
 type AudibleEffect = Schema.Schema.Type<typeof AudibleEffectSchema>;
 type AreaPushUnsecuredObjects = Schema.Schema.Type<
@@ -699,6 +735,7 @@ type EffectAtom =
       readonly resetBy: "target_finishes_long_rest";
       readonly target: "target_creature";
     }
+  | MentalMessageDeliveryEffect
   | {
       readonly kind: "prevent_hit_point_regain";
       readonly expiresAt: "end_of_caster_next_turn";
@@ -1766,6 +1803,7 @@ export const CastingTimeSchema = Schema.Union(
 export const RangeSchema = Schema.Union(
   Schema.Struct({ kind: Schema.Literal("self") }),
   Schema.Struct({ kind: Schema.Literal("touch") }),
+  Schema.Struct({ kind: Schema.Literal("unlimited") }),
   Schema.Struct({
     kind: Schema.Literal("point"),
     feet: Schema.Union(Schema.Number, ThresholdTiersNumberSchema),
@@ -2674,6 +2712,7 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
         resetBy: Schema.Literal("target_finishes_long_rest"),
         target: Schema.Literal("target_creature"),
       }),
+      MentalMessageDeliveryEffectSchema,
       Schema.Struct({
         kind: Schema.Literal("prevent_hit_point_regain"),
         expiresAt: Schema.Literal("end_of_caster_next_turn"),

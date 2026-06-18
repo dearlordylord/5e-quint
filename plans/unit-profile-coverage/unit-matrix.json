@@ -43,14 +43,14 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
-      "denominator": 444,
-      "numerator": 259,
-      "percent": "58.3%"
+      "denominator": 445,
+      "numerator": 260,
+      "percent": "58.4%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 532,
-      "numerator": 309,
-      "percent": "58.1%"
+      "denominator": 533,
+      "numerator": 310,
+      "percent": "58.2%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,7 +59,7 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 310
+      "value": 311
     },
     "deterministicAdmissionProjectionCoverage": {
       "denominator": 183,
@@ -67,8 +67,8 @@
       "percent": "97.3%"
     },
     "profileClassificationCoverage": {
-      "denominator": 310,
-      "numerator": 310,
+      "denominator": 311,
+      "numerator": 311,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -112,9 +112,9 @@
       "percent": "98.9%"
     },
     "supportedProfileCoverage": {
-      "denominator": 260,
+      "denominator": 261,
       "numerator": 183,
-      "percent": "70.4%"
+      "percent": "70.1%"
     }
   },
   "metricSemantics": [
@@ -16615,8 +16615,8 @@
         "unsupportedOrOtherUnits": 4
       },
       {
-        "executableUnitDenominator": 131,
-        "installedUnitDenominator": 131,
+        "executableUnitDenominator": 132,
+        "installedUnitDenominator": 132,
         "kind": "spell",
         "label": "Spell Units",
         "profileFactDenominator": 136,
@@ -16626,7 +16626,7 @@
         "selectedIdentityReplayGapUnits": 0,
         "selectedIdentityReplayWitnessUnits": 110,
         "supportedProfileUnits": 92,
-        "unsupportedOrOtherUnits": 21
+        "unsupportedOrOtherUnits": 22
       },
       {
         "executableUnitDenominator": 91,
@@ -32768,6 +32768,29 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/rope_trick.json",
       "unitId": "rope_trick"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "runtime-detached table communication owner",
+          "reason": "Sending supplies private mental message delivery, cross-plane failure chance, immediate response, and recipient block source facts, but promoted battle runtime does not own communication content, creature knowledge/description matching, planar location adjudication, message-delivery rolls, response contents, or persistent communication block state."
+        },
+        "reason": "Sending is authored and installed as an SRD Surface Spell Definition with Magic Action Spell Slot casting, Unlimited range, V/S/M copper-wire components, Instantaneous duration, one met-or-described creature target, a 25-word mental message delivery fact, target understanding, sender recognition when known, immediate like-manner response, cross-plane 5 percent delivery failure known to the caster, and 8-hour recipient block/retry failure facts. Task 4 claims no promoted battle-runtime profile because message contents, target identity matching, planar location, delivery-failure roll/adjudication, response contents, and recipient block state belong to the runtime-detached table communication owner rather than this catalog admission task.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/sending.json",
+      "unitId": "sending"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

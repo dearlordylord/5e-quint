@@ -32,6 +32,7 @@ export function traceEffectAtomScaling(
       return;
     case "grant_rest_benefit":
     case "spell_recipient_rest_lockout":
+    case "deliver_mental_message":
     case "prevent_hit_point_regain":
     case "heal_to_max_hp":
       return;

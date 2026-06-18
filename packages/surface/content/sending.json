@@ -1,0 +1,80 @@
+{
+  "description": "You send a short message of 25 words or fewer to a creature you have met or a creature described to you by someone who has met it. The target hears the message in its mind, recognizes you as the sender if it knows you, and can answer in a like manner immediately. The spell enables targets to understand the meaning of your message. You can send the message across any distance and even to other planes of existence, but if the target is on a different plane than you, there is a 5 percent chance that the message doesn't arrive. You know if the delivery fails. Upon receiving your message, a creature can block your ability to reach it again with this spell for 8 hours. If you try to send another message during that time, you learn that you are blocked, and the spell fails.",
+  "id": "sending",
+  "kind": "spell",
+  "mechanics": {
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": "a copper wire",
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "instantaneous"
+    },
+    "family": "activation",
+    "level": 3,
+    "phases": [
+      {
+        "attachment": {
+          "holeId": "sending_recipient",
+          "kind": "hole",
+          "label": "met or described creature",
+          "value": {
+            "kind": "target",
+            "selection": {
+              "mode": "one",
+              "targetKinds": [
+                "creature"
+              ]
+            }
+          }
+        },
+        "effects": [
+          {
+            "kind": "deliver_mental_message",
+            "message": {
+              "delivery": "target_hears_in_mind",
+              "maxWords": 25,
+              "understanding": "meaning_enabled"
+            },
+            "planarDelivery": {
+              "failureChance": {
+                "casterKnowsFailure": true,
+                "kind": "percent_if_different_plane",
+                "percent": 5,
+                "result": "message_does_not_arrive"
+              },
+              "reach": "any_distance_and_other_planes"
+            },
+            "recipient": "met_by_caster_or_described_by_someone_who_met_it",
+            "recipientBlock": {
+              "duration": {
+                "amount": 8,
+                "unit": "hour"
+              },
+              "retryResult": "caster_learns_blocked_and_spell_fails"
+            },
+            "response": {
+              "manner": "like_message",
+              "timing": "immediate"
+            },
+            "senderRecognition": "if_target_knows_sender"
+          }
+        ],
+        "kind": "direct"
+      }
+    ],
+    "range": {
+      "kind": "unlimited"
+    },
+    "school": "divination"
+  },
+  "name": "Sending",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-S-Z#Sending"
+  }
+}

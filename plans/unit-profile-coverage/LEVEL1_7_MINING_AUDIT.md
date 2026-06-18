@@ -44,34 +44,34 @@ These counts describe the current runtime/catalog state of mined rows. They are 
 | catalog-authored-review-required | 77 |
 | catalog-installed-owner-evidence-present | 481 |
 | catalog-installed-owner-evidence-required | 1 |
-| catalog-only/dead-for-now | 151 |
+| catalog-only/dead-for-now | 154 |
 | level-5-7-follow-up-required | 33 |
-| missing-authored-record | 73 |
+| missing-authored-record | 70 |
 | non-runtime | 84 |
 
 ### Catalog Admission
 
 | Catalog state | Rows |
 | --- | ---: |
-| installed | 645 |
-| not-installed | 255 |
+| installed | 648 |
+| not-installed | 252 |
 
 ### Unit Profile Disposition
 
 | Unit profile disposition | Rows |
 | --- | ---: |
-| not-recorded | 222 |
+| not-recorded | 219 |
 | profile-subset-supported | 53 |
 | supported-profile | 295 |
-| unsupported-profile | 330 |
+| unsupported-profile | 333 |
 
 ### Battle Readiness Snapshot
 
 | Battle readiness status | Rows |
 | --- | ---: |
 | accepted | 469 |
-| accepted-no-battle-effect | 203 |
-| battle-runtime-required | 73 |
+| accepted-no-battle-effect | 206 |
+| battle-runtime-required | 70 |
 | not-applicable | 77 |
 | owner-evidence-required | 78 |
 
@@ -90,8 +90,8 @@ These counts separate class-list rows from unique Spell Definition identities. A
 | --- | ---: |
 | catalog-authored-review-required | 31 |
 | catalog-installed-owner-evidence-present | 7 |
-| catalog-only/dead-for-now | 6 |
-| missing-authored-record | 32 |
+| catalog-only/dead-for-now | 7 |
+| missing-authored-record | 31 |
 
 ### Unique Spell Identities
 
@@ -126,7 +126,7 @@ These counts separate class-list rows from unique Spell Definition identities. A
 | `protection_from_energy` Protection from Energy | spell-level-3 | Cleric, Druid, Sorcerer, Wizard | 4 | authored-record-present | not-installed | not-recorded | catalog-authored-review-required | owner-evidence-required | not-recorded | Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this later-frontier spell row as accepted. |
 | `remove_curse` Remove Curse | spell-level-3 | Cleric, Warlock, Wizard | 3 | authored-record-present | installed | unsupported-profile | catalog-only/dead-for-now | accepted-no-battle-effect | outside-battle-runtime: future curse occurrence and magic-item Attunement owner | Remove Curse supplies table-facing curse-removal and cursed-item Attunement source facts, but promoted battle runtime does not own generic curse occurrence identity, curse-removal targeting semantics, cursed magic item curse persistence, or Attunement mutation for cursed objects. |
 | `revivify` Revivify | spell-level-3 | Cleric, Druid | 2 | authored-record-present | installed | unsupported-profile | catalog-only/dead-for-now | accepted-no-battle-effect | outside-battle-runtime: future rest/revival workflow owner | Revivify supplies death-window and return-to-life source facts, but promoted battle runtime does not own dead creature target eligibility, spirit refusal, corpse or missing-body-part state, generic revival transitions, Dead-glossary ongoing effect persistence, Exhaustion adjustment, or magic-item Attunement cleanup. |
-| `sending` Sending | spell-level-3 | Bard, Cleric, Wizard | 3 | missing-authored-record | not-installed | not-recorded | missing-authored-record | battle-runtime-required | not-recorded | Author an SRD-provenance Surface record or explicitly close the row. |
+| `sending` Sending | spell-level-3 | Bard, Cleric, Wizard | 3 | authored-record-present | installed | unsupported-profile | catalog-only/dead-for-now | accepted-no-battle-effect | outside-runtime-presentation-exploration: runtime-detached table communication owner | Sending supplies private mental message delivery, cross-plane failure chance, immediate response, and recipient block source facts, but promoted battle runtime does not own communication content, creature knowledge/description matching, planar location adjudication, message-delivery rolls, response contents, or persistent communication block state. |
 | `sleet_storm` Sleet Storm | spell-level-3 | Druid, Sorcerer, Wizard | 3 | missing-authored-record | not-installed | not-recorded | missing-authored-record | battle-runtime-required | not-recorded | Author an SRD-provenance Surface record or explicitly close the row. |
 | `slow` Slow | spell-level-3 | Bard, Sorcerer, Wizard | 3 | missing-authored-record | not-installed | not-recorded | missing-authored-record | battle-runtime-required | not-recorded | Author an SRD-provenance Surface record or explicitly close the row. |
 | `speak_with_dead` Speak with Dead | spell-level-3 | Bard, Cleric, Wizard | 3 | missing-authored-record | not-installed | not-recorded | missing-authored-record | battle-runtime-required | not-recorded | Author an SRD-provenance Surface record or explicitly close the row. |
@@ -382,7 +382,7 @@ These counts separate class-list rows from unique Spell Definition identities. A
 | Bard spell list Mass Healing Word | spell-level-3 | spell-level | spell Unit pressure | `mass_healing_word` | `.references/srd-5.2.1/Classes/Bard.md:224` | present | installed | supported-profile | catalog-installed-owner-evidence-present | accepted | not-recorded | Owner-specific operational evidence is classified and present. |
 | Bard spell list Nondetection | spell-level-3 | spell-level | spell Unit pressure | `nondetection` | `.references/srd-5.2.1/Classes/Bard.md:225` | present | not-installed | not-recorded | missing-authored-record | battle-runtime-required | not-recorded | Author an SRD-provenance Surface record or explicitly close the row. |
 | Bard spell list Plant Growth | spell-level-3 | spell-level | spell Unit pressure | `plant_growth` | `.references/srd-5.2.1/Classes/Bard.md:226` | present | installed | unsupported-profile | catalog-only/dead-for-now | accepted-no-battle-effect | outside-runtime-presentation-exploration: runtime-detached table/spatial/exploration/economy owner | Plant Growth supplies table-facing terrain and agriculture facts, but promoted battle runtime does not own normal-plant area membership, excluded-area geometry, pathfinding or travel-pacing derivation through overgrown terrain, plant-world state, harvest timing, food yield, or settlement economy. |
-| Bard spell list Sending | spell-level-3 | spell-level | spell Unit pressure | `sending` | `.references/srd-5.2.1/Classes/Bard.md:227` | present | not-installed | not-recorded | missing-authored-record | battle-runtime-required | not-recorded | Author an SRD-provenance Surface record or explicitly close the row. |
+| Bard spell list Sending | spell-level-3 | spell-level | spell Unit pressure | `sending` | `.references/srd-5.2.1/Classes/Bard.md:227` | present | installed | unsupported-profile | catalog-only/dead-for-now | accepted-no-battle-effect | outside-runtime-presentation-exploration: runtime-detached table communication owner | Sending supplies private mental message delivery, cross-plane failure chance, immediate response, and recipient block source facts, but promoted battle runtime does not own communication content, creature knowledge/description matching, planar location adjudication, message-delivery rolls, response contents, or persistent communication block state. |
 | Bard spell list Slow | spell-level-3 | spell-level | spell Unit pressure | `slow` | `.references/srd-5.2.1/Classes/Bard.md:228` | present | not-installed | not-recorded | missing-authored-record | battle-runtime-required | not-recorded | Author an SRD-provenance Surface record or explicitly close the row. |
 | Bard spell list Speak with Dead | spell-level-3 | spell-level | spell Unit pressure | `speak_with_dead` | `.references/srd-5.2.1/Classes/Bard.md:229` | present | not-installed | not-recorded | missing-authored-record | battle-runtime-required | not-recorded | Author an SRD-provenance Surface record or explicitly close the row. |
 | Bard spell list Speak with Plants | spell-level-3 | spell-level | spell Unit pressure | `speak_with_plants` | `.references/srd-5.2.1/Classes/Bard.md:230` | present | not-installed | not-recorded | missing-authored-record | battle-runtime-required | not-recorded | Author an SRD-provenance Surface record or explicitly close the row. |
@@ -479,7 +479,7 @@ These counts separate class-list rows from unique Spell Definition identities. A
 | Cleric spell list Protection from Energy | spell-level-3 | spell-level | spell Unit pressure | `protection_from_energy` | `.references/srd-5.2.1/Classes/Cleric.md:215` | present | not-installed | not-recorded | catalog-authored-review-required | owner-evidence-required | not-recorded | Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this later-frontier spell row as accepted. |
 | Cleric spell list Remove Curse | spell-level-3 | spell-level | spell Unit pressure | `remove_curse` | `.references/srd-5.2.1/Classes/Cleric.md:216` | present | installed | unsupported-profile | catalog-only/dead-for-now | accepted-no-battle-effect | outside-battle-runtime: future curse occurrence and magic-item Attunement owner | Remove Curse supplies table-facing curse-removal and cursed-item Attunement source facts, but promoted battle runtime does not own generic curse occurrence identity, curse-removal targeting semantics, cursed magic item curse persistence, or Attunement mutation for cursed objects. |
 | Cleric spell list Revivify | spell-level-3 | spell-level | spell Unit pressure | `revivify` | `.references/srd-5.2.1/Classes/Cleric.md:217` | present | installed | unsupported-profile | catalog-only/dead-for-now | accepted-no-battle-effect | outside-battle-runtime: future rest/revival workflow owner | Revivify supplies death-window and return-to-life source facts, but promoted battle runtime does not own dead creature target eligibility, spirit refusal, corpse or missing-body-part state, generic revival transitions, Dead-glossary ongoing effect persistence, Exhaustion adjustment, or magic-item Attunement cleanup. |
-| Cleric spell list Sending | spell-level-3 | spell-level | spell Unit pressure | `sending` | `.references/srd-5.2.1/Classes/Cleric.md:218` | present | not-installed | not-recorded | missing-authored-record | battle-runtime-required | not-recorded | Author an SRD-provenance Surface record or explicitly close the row. |
+| Cleric spell list Sending | spell-level-3 | spell-level | spell Unit pressure | `sending` | `.references/srd-5.2.1/Classes/Cleric.md:218` | present | installed | unsupported-profile | catalog-only/dead-for-now | accepted-no-battle-effect | outside-runtime-presentation-exploration: runtime-detached table communication owner | Sending supplies private mental message delivery, cross-plane failure chance, immediate response, and recipient block source facts, but promoted battle runtime does not own communication content, creature knowledge/description matching, planar location adjudication, message-delivery rolls, response contents, or persistent communication block state. |
 | Cleric spell list Speak with Dead | spell-level-3 | spell-level | spell Unit pressure | `speak_with_dead` | `.references/srd-5.2.1/Classes/Cleric.md:219` | present | not-installed | not-recorded | missing-authored-record | battle-runtime-required | not-recorded | Author an SRD-provenance Surface record or explicitly close the row. |
 | Cleric spell list Spirit Guardians | spell-level-3 | spell-level | spell Unit pressure | `spirit_guardians` | `.references/srd-5.2.1/Classes/Cleric.md:220` | present | not-installed | not-recorded | catalog-authored-review-required | owner-evidence-required | not-recorded | Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this later-frontier spell row as accepted. |
 | Cleric spell list Tongues | spell-level-3 | spell-level | spell Unit pressure | `tongues` | `.references/srd-5.2.1/Classes/Cleric.md:221` | present | not-installed | unsupported-profile | catalog-only/dead-for-now | accepted-no-battle-effect | outside-runtime-presentation-exploration: runtime-detached language/communication owner | Tongues changes communication intelligibility through hearing, sight, signing, speech, and known-language gates. Promoted battle runtime does not own conversation content, social outcomes, automatic communication adjudication, or language-table projection for this spell. |
@@ -1124,7 +1124,7 @@ These counts separate class-list rows from unique Spell Definition identities. A
 | Wizard spell list Phantom Steed | spell-level-3 | spell-level | spell Unit pressure | `phantom_steed` | `.references/srd-5.2.1/Classes/Wizard.md:254` | present | not-installed | not-recorded | missing-authored-record | battle-runtime-required | not-recorded | Author an SRD-provenance Surface record or explicitly close the row. |
 | Wizard spell list Protection from Energy | spell-level-3 | spell-level | spell Unit pressure | `protection_from_energy` | `.references/srd-5.2.1/Classes/Wizard.md:255` | present | not-installed | not-recorded | catalog-authored-review-required | owner-evidence-required | not-recorded | Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this later-frontier spell row as accepted. |
 | Wizard spell list Remove Curse | spell-level-3 | spell-level | spell Unit pressure | `remove_curse` | `.references/srd-5.2.1/Classes/Wizard.md:256` | present | installed | unsupported-profile | catalog-only/dead-for-now | accepted-no-battle-effect | outside-battle-runtime: future curse occurrence and magic-item Attunement owner | Remove Curse supplies table-facing curse-removal and cursed-item Attunement source facts, but promoted battle runtime does not own generic curse occurrence identity, curse-removal targeting semantics, cursed magic item curse persistence, or Attunement mutation for cursed objects. |
-| Wizard spell list Sending | spell-level-3 | spell-level | spell Unit pressure | `sending` | `.references/srd-5.2.1/Classes/Wizard.md:257` | present | not-installed | not-recorded | missing-authored-record | battle-runtime-required | not-recorded | Author an SRD-provenance Surface record or explicitly close the row. |
+| Wizard spell list Sending | spell-level-3 | spell-level | spell Unit pressure | `sending` | `.references/srd-5.2.1/Classes/Wizard.md:257` | present | installed | unsupported-profile | catalog-only/dead-for-now | accepted-no-battle-effect | outside-runtime-presentation-exploration: runtime-detached table communication owner | Sending supplies private mental message delivery, cross-plane failure chance, immediate response, and recipient block source facts, but promoted battle runtime does not own communication content, creature knowledge/description matching, planar location adjudication, message-delivery rolls, response contents, or persistent communication block state. |
 | Wizard spell list Sleet Storm | spell-level-3 | spell-level | spell Unit pressure | `sleet_storm` | `.references/srd-5.2.1/Classes/Wizard.md:258` | present | not-installed | not-recorded | missing-authored-record | battle-runtime-required | not-recorded | Author an SRD-provenance Surface record or explicitly close the row. |
 | Wizard spell list Slow | spell-level-3 | spell-level | spell Unit pressure | `slow` | `.references/srd-5.2.1/Classes/Wizard.md:259` | present | not-installed | not-recorded | missing-authored-record | battle-runtime-required | not-recorded | Author an SRD-provenance Surface record or explicitly close the row. |
 | Wizard spell list Speak with Dead | spell-level-3 | spell-level | spell Unit pressure | `speak_with_dead` | `.references/srd-5.2.1/Classes/Wizard.md:260` | present | not-installed | not-recorded | missing-authored-record | battle-runtime-required | not-recorded | Author an SRD-provenance Surface record or explicitly close the row. |

@@ -81,6 +81,23 @@ export function traceEffectAtom(
     case "share_damage_to_caster":
     case "retaliatory_damage":
       return traceOutcomeEffectAtom(e, nodes, ids, edges, traceEffectAtom);
+    case "deliver_mental_message": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "deliver_mental_message",
+        label: [
+          "deliver_mental_message",
+          `${e.message.maxWords} words`,
+          e.message.delivery,
+          `response: ${e.response.timing}`,
+          `${e.planarDelivery.failureChance.percent}% ${e.planarDelivery.failureChance.kind}`,
+          `block: ${e.recipientBlock.duration.amount} ${e.recipientBlock.duration.unit}`,
+        ].join("\n"),
+      });
+      return id;
+    }
     case "take_standard_action":
     case "grant_alternate_action_cost":
     case "grant_extra_action":
