@@ -19,7 +19,7 @@
     {
       "number": 3,
       "id": "L5-C03-CONJURE-ANIMALS",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Close Conjure Animals missing authored record"
     },
     {
@@ -75,6 +75,12 @@
       "id": "L5-C12-BLINK-SURFACE-WIDENING",
       "status": "ready-for-research",
       "title": "Widen Blink Surface Spell Definition"
+    },
+    {
+      "number": 13,
+      "id": "L5-C13-CONJURE-ANIMALS-SURFACE-WIDENING",
+      "status": "ready-for-research",
+      "title": "Widen Conjure Animals Surface Spell Definition"
     }
   ]
 }
@@ -132,7 +138,7 @@ missing-record spells unless a RAW dependency is unavoidable and documented.
 | ---: | --- | --- | --- | --- |
 | 1 | L5-C01-BESTOW-CURSE - Close Bestow Curse missing authored record | done | none | Closed as a Surface widening boundary, not an authored-record admission. |
 | 2 | L5-C02-BLINK - Close Blink missing authored record | done | none | Closed as a Surface widening boundary, not an authored-record admission. |
-| 3 | L5-C03-CONJURE-ANIMALS - Close Conjure Animals missing authored record | ready-for-research | none | Independent missing spell Unit. |
+| 3 | L5-C03-CONJURE-ANIMALS - Close Conjure Animals missing authored record | done | none | Closed as a Surface widening boundary, not an authored-record admission. |
 | 4 | L5-C04-GASEOUS-FORM - Close Gaseous Form missing authored record | ready-for-research | none | Independent missing spell Unit. |
 | 5 | L5-C05-GLYPH-OF-WARDING - Close Glyph of Warding missing authored record | ready-for-research | none | Independent missing spell Unit. |
 | 6 | L5-C06-HASTE - Close Haste missing authored record | ready-for-research | none | Preserve Surface authoring, positive runtime, and lethargy runtime split from `plans/unit-profile-coverage/L3_HASTE_RUNTIME_SURVEY.md`. |
@@ -142,6 +148,7 @@ missing-record spells unless a RAW dependency is unavoidable and documented.
 | 10 | L5-C10-PHANTOM-STEED - Close Phantom Steed missing authored record | ready-for-research | none | Independent missing spell Unit. |
 | 11 | L5-C11-BESTOW-CURSE-SURFACE-WIDENING - Widen Bestow Curse Surface Spell Definition | ready-for-research | L5-C01-BESTOW-CURSE | Add typed Surface facts for Bestow Curse curse-option selection, curse-removal targeting, and slot-dependent duration/Concentration before authoring/admitting the Spell Definition. |
 | 12 | L5-C12-BLINK-SURFACE-WIDENING - Widen Blink Surface Spell Definition | ready-for-research | L5-C02-BLINK | Add typed Surface/table-spatial facts for Blink's turn-end roll, Ethereal Plane transition, already-on-plane ending predicate, and return-position availability before authoring/admitting the Spell Definition. |
+| 13 | L5-C13-CONJURE-ANIMALS-SURFACE-WIDENING - Widen Conjure Animals Surface Spell Definition | ready-for-research | L5-C03-CONJURE-ANIMALS | Add typed Surface/table-spatial facts for Conjure Animals' spectral pack occurrence, pack reposition, Strength Saving Throw Advantage predicate, Dexterity Saving Throw trigger eligibility, and once-per-turn limit before authoring/admitting the Spell Definition. |
 
 ## Shared Verification
 
@@ -371,7 +378,7 @@ Verification:
 
 ### Task 3 - L5-C03-CONJURE-ANIMALS
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -389,7 +396,11 @@ SRD anchors:
 Current state:
 
 - Authored record is missing; catalog state is `not-installed`.
-- Mining disposition is `missing-authored-record`.
+- Mining disposition is `needs-surface-widening`.
+- Surface cannot yet express the Conjure Animals Spell Definition without
+  losing the spectral pack occurrence, pack position/reposition, caster
+  proximity, creature-visibility trigger eligibility, and shared once-per-turn
+  limit facts.
 
 Output:
 
@@ -400,7 +411,70 @@ Output:
 
 Acceptance:
 
-- `conjure_animals` leaves `missing-authored-record`.
+- `conjure_animals` leaves `missing-authored-record` by becoming
+  `needs-surface-widening`.
+
+Verification:
+
+- Shared lane verification.
+
+Plan Impact:
+
+- Follow-up work is split into L5-C13 before any SRD-provenance Conjure Animals
+  Spell Definition is authored or admitted.
+
+### Task 13 - L5-C13-CONJURE-ANIMALS-SURFACE-WIDENING
+
+Status: `ready-for-research`
+
+Depends on:
+
+- L5-C03-CONJURE-ANIMALS
+
+Unit:
+
+- `conjure_animals`
+
+SRD anchors:
+
+- `.references/srd-5.2.1/Spells/Descriptions-A-D.md:948`
+- `.references/srd-5.2.1/Classes/Druid.md:254`
+
+Current state:
+
+- The generated inventory classifies the Druid Conjure Animals class-list row as
+  `needs-surface-widening` / `surface-widening-required`.
+- Existing Surface spell facts cannot represent the complete Conjure Animals
+  shape as one SRD Spell Definition without a partial record.
+
+Output:
+
+- Widen Surface so a Conjure Animals Spell Definition can represent a Large
+  spectral, intangible pack occurrence placed in a visible unoccupied space.
+- Represent caster-turn movement of the pack up to 30 feet to a visible
+  unoccupied space, separate from ordinary creature movement or companion
+  control.
+- Represent the caster's Strength Saving Throw Advantage predicate while within
+  5 feet of the pack.
+- Represent the optional Dexterity Saving Throw Slashing damage trigger when
+  the pack moves within 10 feet of a caster-visible creature, or when a
+  caster-visible creature enters or ends its turn within 10 feet of the pack.
+- Represent the shared once-per-turn-per-creature trigger limit and higher-slot
+  damage scaling before any battle-runtime projection admits the Spell
+  Definition.
+- Author/admit the SRD-provenance Conjure Animals record only after the typed
+  Surface, table/spatial, and future pack Spell Effect facts can preserve those
+  RAW distinctions.
+
+Acceptance:
+
+- `conjure_animals` has an SRD-provenance Surface Spell Definition or remains
+  explicitly classified with a narrower executable blocker.
+- The record does not omit the pack occurrence, pack reposition, Strength Saving
+  Throw Advantage predicate, caster-visible Dexterity Saving Throw trigger
+  eligibility, once-per-turn limit, or higher-slot damage scaling.
+- Runtime support, if added, dispatches on typed Surface/profile facts rather
+  than authored spell identity.
 
 Verification:
 

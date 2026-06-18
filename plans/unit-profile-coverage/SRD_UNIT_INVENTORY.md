@@ -102,9 +102,9 @@ This metric is a separate seed for spell-level-3 pressure only. It belongs to th
 
 - accepted: 22
 - accepted-no-battle-effect: 12
-- battle-runtime-required: 43
+- battle-runtime-required: 42
 - owner-evidence-required: 28
-- surface-widening-required: 5
+- surface-widening-required: 6
 
 ### Spell-Level-4 Battle Readiness
 
@@ -209,8 +209,8 @@ This metric is a separate seed for spell-level-4 pressure only. It belongs to th
 - catalog-authored-review-required: 28
 - catalog-installed-owner-evidence-present: 22
 - catalog-only/dead-for-now: 12
-- missing-authored-record: 43
-- needs-surface-widening: 5
+- missing-authored-record: 42
+- needs-surface-widening: 6
 
 ### Spell-Level-3 Installed Unit Pressure by Disposition
 
@@ -727,7 +727,7 @@ These batches are generated planning recommendations for a separate SRD inventor
 |Cleric spell list Tongues|spell Unit pressure|outside-surface-runtime-mechanics|authored-record-present|not-installed|unsupported-profile|catalog-only/dead-for-now|accepted-no-battle-effect|outside-runtime-presentation-exploration: runtime-detached language/communication owner||Tongues changes communication intelligibility through hearing, sight, signing, speech, and known-language gates. Promoted battle runtime does not own conversation content, social outcomes, automatic communication adjudication, or language-table projection for this spell.|.references/srd-5.2.1/Classes/Cleric.md:221|
 |Cleric spell list Water Walk|spell Unit pressure|current-surface-can-express-source-facts|missing-authored-record|not-installed||missing-authored-record|battle-runtime-required|||Author an SRD-provenance Surface record or explicitly close the row.|.references/srd-5.2.1/Classes/Cleric.md:222|
 |Druid spell list Call Lightning|spell Unit pressure|current-surface-can-express-source-facts|authored-record-present|not-installed||catalog-authored-review-required|owner-evidence-required|||Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this later-frontier spell row as accepted.|.references/srd-5.2.1/Classes/Druid.md:253|
-|Druid spell list Conjure Animals|spell Unit pressure|current-surface-can-express-source-facts|missing-authored-record|not-installed||missing-authored-record|battle-runtime-required|||Author an SRD-provenance Surface record or explicitly close the row.|.references/srd-5.2.1/Classes/Druid.md:254|
+|Druid spell list Conjure Animals|spell Unit pressure|current-surface-cannot-express-mechanics-yet|missing-authored-record|not-installed||needs-surface-widening|surface-widening-required|table-spatial-derivation: Surface Spell Definition plus table/spatial pack-position owner and future battle-runtime pack Spell Effect owner|Surface Spell Definition plus table/spatial pack-position owner and future battle-runtime pack Spell Effect owner: Surface widening required before owner evidence can be present|Widen Surface: Spell Definition spectral nature-spirit pack occurrence: Large intangible pack form in a visible unoccupied space, caster-movement-triggered pack reposition up to 30 feet, caster-within-5-feet Strength Saving Throw Advantage, optional Dexterity Saving Throw Slashing damage when the pack moves within 10 feet of a creature the caster can see or a creature the caster can see enters or ends its turn within 10 feet, and a shared once-per-turn-per-creature trigger limit across those events.|.references/srd-5.2.1/Classes/Druid.md:254|
 |Druid spell list Daylight|spell Unit pressure|current-surface-can-express-source-facts|authored-record-present|not-installed||catalog-authored-review-required|owner-evidence-required|||Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this later-frontier spell row as accepted.|.references/srd-5.2.1/Classes/Druid.md:255|
 |Druid spell list Dispel Magic|spell Unit pressure|current-surface-can-express-source-facts|authored-record-present|installed|profile-subset-supported|catalog-installed-owner-evidence-present|accepted|profile-subset-remaining-mechanics-closed: broader ongoing Spell Effect occurrence model; table spatial witness and magical-effect identity owner|Unit catalog/admission: catalog evidence; battle-runtime spell invocation/projection: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Druid.md:256|
 |Druid spell list Meld into Stone|spell Unit pressure|current-surface-can-express-source-facts|missing-authored-record|not-installed||missing-authored-record|battle-runtime-required|||Author an SRD-provenance Surface record or explicitly close the row.|.references/srd-5.2.1/Classes/Druid.md:257|

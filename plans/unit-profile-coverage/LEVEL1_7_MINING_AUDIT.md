@@ -46,8 +46,8 @@ These counts describe the current runtime/catalog state of mined rows. They are 
 | catalog-installed-owner-evidence-required | 1 |
 | catalog-only/dead-for-now | 144 |
 | level-5-7-follow-up-required | 33 |
-| missing-authored-record | 75 |
-| needs-surface-widening | 5 |
+| missing-authored-record | 74 |
+| needs-surface-widening | 6 |
 | non-runtime | 84 |
 
 ### Catalog Admission
@@ -72,10 +72,10 @@ These counts describe the current runtime/catalog state of mined rows. They are 
 | --- | ---: |
 | accepted | 469 |
 | accepted-no-battle-effect | 196 |
-| battle-runtime-required | 75 |
+| battle-runtime-required | 74 |
 | not-applicable | 77 |
 | owner-evidence-required | 78 |
-| surface-widening-required | 5 |
+| surface-widening-required | 6 |
 
 ## Spell-Level 3-4 Pressure Summary
 
@@ -93,8 +93,8 @@ These counts separate class-list rows from unique Spell Definition identities. A
 | catalog-authored-review-required | 31 |
 | catalog-installed-owner-evidence-present | 7 |
 | catalog-only/dead-for-now | 3 |
-| missing-authored-record | 33 |
-| needs-surface-widening | 2 |
+| missing-authored-record | 32 |
+| needs-surface-widening | 3 |
 
 ### Unique Spell Identities
 
@@ -106,7 +106,7 @@ These counts separate class-list rows from unique Spell Definition identities. A
 | `blink` Blink | spell-level-3 | Sorcerer, Wizard | 2 | missing-authored-record | not-installed | not-recorded | needs-surface-widening | surface-widening-required | table-spatial-derivation: Surface Spell Definition plus table/spatial plane-position owner | Widen Surface: Spell Definition planar blink occurrence: caster-turn-end d6 threshold needs an OngoingEffect random table to gate the transition to the Ethereal Plane; spell-ending when the caster is already on that plane needs a plane-occupancy predicate; and start-of-next-turn/spell-end return placement chooses a visible unoccupied space within 10 feet of the origin space or the nearest unoccupied space when none is available, requiring typed Surface/table-spatial ownership for return-position availability. |
 | `call_lightning` Call Lightning | spell-level-3 | Druid | 1 | authored-record-present | not-installed | not-recorded | catalog-authored-review-required | owner-evidence-required | not-recorded | Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this later-frontier spell row as accepted. |
 | `clairvoyance` Clairvoyance | spell-level-3 | Bard, Cleric, Sorcerer, Wizard | 4 | authored-record-present | not-installed | unsupported-profile | catalog-only/dead-for-now | accepted-no-battle-effect | outside-runtime-presentation-exploration: runtime-detached table/perception and remote-sensor owner | Clairvoyance creates a table-placed remote sensor and remote perception channel. Promoted battle runtime does not own location familiarity, remote information disclosure, active sensor-sense presentation, observer visibility of the sensor, or autonomous sensor behavior, and must not treat the sensor as ordinary caster sight or a target-selection proxy. |
-| `conjure_animals` Conjure Animals | spell-level-3 | Druid | 1 | missing-authored-record | not-installed | not-recorded | missing-authored-record | battle-runtime-required | not-recorded | Author an SRD-provenance Surface record or explicitly close the row. |
+| `conjure_animals` Conjure Animals | spell-level-3 | Druid | 1 | missing-authored-record | not-installed | not-recorded | needs-surface-widening | surface-widening-required | table-spatial-derivation: Surface Spell Definition plus table/spatial pack-position owner and future battle-runtime pack Spell Effect owner | Widen Surface: Spell Definition spectral nature-spirit pack occurrence: Large intangible pack form in a visible unoccupied space, caster-movement-triggered pack reposition up to 30 feet, caster-within-5-feet Strength Saving Throw Advantage, optional Dexterity Saving Throw Slashing damage when the pack moves within 10 feet of a creature the caster can see or a creature the caster can see enters or ends its turn within 10 feet, and a shared once-per-turn-per-creature trigger limit across those events. |
 | `counterspell` Counterspell | spell-level-3 | Sorcerer, Warlock, Wizard | 3 | authored-record-present | installed | supported-profile | catalog-installed-owner-evidence-present | accepted | not-recorded | Owner-specific operational evidence is classified and present. |
 | `create_food_and_water` Create Food and Water | spell-level-3 | Cleric | 1 | authored-record-present | not-installed | not-recorded | catalog-authored-review-required | owner-evidence-required | not-recorded | Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this later-frontier spell row as accepted. |
 | `daylight` Daylight | spell-level-3 | Cleric, Druid, Sorcerer | 3 | authored-record-present | not-installed | not-recorded | catalog-authored-review-required | owner-evidence-required | not-recorded | Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this later-frontier spell row as accepted. |
@@ -576,7 +576,7 @@ These counts separate class-list rows from unique Spell Definition identities. A
 | Druid spell list Protection from Poison | spell-level-2 | spell-level | spell Unit pressure | `protection_from_poison` | `.references/srd-5.2.1/Classes/Druid.md:246` | present | installed | supported-profile | catalog-installed-owner-evidence-present | accepted | not-recorded | Owner-specific operational evidence is classified and present. |
 | Druid spell list Spike Growth | spell-level-2 | spell-level | spell Unit pressure | `spike_growth` | `.references/srd-5.2.1/Classes/Druid.md:247` | present | installed | profile-subset-supported | catalog-installed-owner-evidence-present | accepted | profile-subset-remaining-mechanics-closed: runtime-detached table Search/perception witness owner | Owner-specific operational evidence is classified and present. |
 | Druid spell list Call Lightning | spell-level-3 | spell-level | spell Unit pressure | `call_lightning` | `.references/srd-5.2.1/Classes/Druid.md:253` | present | not-installed | not-recorded | catalog-authored-review-required | owner-evidence-required | not-recorded | Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this later-frontier spell row as accepted. |
-| Druid spell list Conjure Animals | spell-level-3 | spell-level | spell Unit pressure | `conjure_animals` | `.references/srd-5.2.1/Classes/Druid.md:254` | present | not-installed | not-recorded | missing-authored-record | battle-runtime-required | not-recorded | Author an SRD-provenance Surface record or explicitly close the row. |
+| Druid spell list Conjure Animals | spell-level-3 | spell-level | spell Unit pressure | `conjure_animals` | `.references/srd-5.2.1/Classes/Druid.md:254` | present | not-installed | not-recorded | needs-surface-widening | surface-widening-required | table-spatial-derivation: Surface Spell Definition plus table/spatial pack-position owner and future battle-runtime pack Spell Effect owner | Widen Surface: Spell Definition spectral nature-spirit pack occurrence: Large intangible pack form in a visible unoccupied space, caster-movement-triggered pack reposition up to 30 feet, caster-within-5-feet Strength Saving Throw Advantage, optional Dexterity Saving Throw Slashing damage when the pack moves within 10 feet of a creature the caster can see or a creature the caster can see enters or ends its turn within 10 feet, and a shared once-per-turn-per-creature trigger limit across those events. |
 | Druid spell list Daylight | spell-level-3 | spell-level | spell Unit pressure | `daylight` | `.references/srd-5.2.1/Classes/Druid.md:255` | present | not-installed | not-recorded | catalog-authored-review-required | owner-evidence-required | not-recorded | Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this later-frontier spell row as accepted. |
 | Druid spell list Dispel Magic | spell-level-3 | spell-level | spell Unit pressure | `dispel_magic` | `.references/srd-5.2.1/Classes/Druid.md:256` | present | installed | profile-subset-supported | catalog-installed-owner-evidence-present | accepted | profile-subset-remaining-mechanics-closed: broader ongoing Spell Effect occurrence model; table spatial witness and magical-effect identity owner | Owner-specific operational evidence is classified and present. |
 | Druid spell list Meld into Stone | spell-level-3 | spell-level | spell Unit pressure | `meld_into_stone` | `.references/srd-5.2.1/Classes/Druid.md:257` | present | not-installed | not-recorded | missing-authored-record | battle-runtime-required | not-recorded | Author an SRD-provenance Surface record or explicitly close the row. |

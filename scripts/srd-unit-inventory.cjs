@@ -390,6 +390,9 @@ const spellAccessSurfaceBlockers = new Map();
 const blinkSurfaceWideningOwner =
   "Surface Spell Definition plus table/spatial plane-position owner";
 
+const conjureAnimalsSurfaceWideningOwner =
+  "Surface Spell Definition plus table/spatial pack-position owner and future battle-runtime pack Spell Effect owner";
+
 const spellUnitMissingClassifications = new Map([
   [
     "bestow_curse",
@@ -411,6 +414,21 @@ const spellUnitMissingClassifications = new Map([
         owner: blinkSurfaceWideningOwner,
         reason:
           "Blink needs a typed follow-up split: Surface owns the caster-turn-end d6 random table, Ethereal Plane transition, and already-on-plane ending predicate; table/spatial ownership supplies origin space, visible unoccupied-space availability within 10 feet, and nearest-unoccupied-space fallback before any battle-runtime projection admits it.",
+      },
+    },
+  ],
+  [
+    "conjure_animals",
+    {
+      kind: "needs-surface-widening",
+      owner: conjureAnimalsSurfaceWideningOwner,
+      missingConstruct:
+        "Spell Definition spectral nature-spirit pack occurrence: Large intangible pack form in a visible unoccupied space, caster-movement-triggered pack reposition up to 30 feet, caster-within-5-feet Strength Saving Throw Advantage, optional Dexterity Saving Throw Slashing damage when the pack moves within 10 feet of a creature the caster can see or a creature the caster can see enters or ends its turn within 10 feet, and a shared once-per-turn-per-creature trigger limit across those events.",
+      battleReadinessClosure: {
+        kind: "table-spatial-derivation",
+        owner: conjureAnimalsSurfaceWideningOwner,
+        reason:
+          "Conjure Animals needs a typed follow-up split before an SRD-provenance Spell Definition can be admitted: Surface must own the spectral pack occurrence, caster-proximity roll modifier predicate, caster-movement reposition trigger, optional area save trigger with caster-visible creature eligibility, and shared once-per-turn limit; table/spatial ownership supplies visible unoccupied-space, pack proximity, and caster creature-visibility witnesses; future battle runtime should consume those typed facts as a pack Spell Effect without dispatching on spell id or name.",
       },
     },
   ],
