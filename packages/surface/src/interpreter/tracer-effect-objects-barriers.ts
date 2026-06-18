@@ -41,6 +41,7 @@ export type ObjectAndBarrierEffectAtom = Extract<
       | "prevent_drop_to_0_hp"
       | "negate_instant_death"
       | "make_stable"
+      | "revive_dead_creature"
       | "grant_feat"
       | "grant_proficiency"
       | "grant_expertise"
@@ -294,6 +295,28 @@ export function traceObjectAndBarrierEffectAtom(
         category: "effect",
         atomKind: "make_stable",
         label: "make_stable",
+      });
+      return id;
+    }
+    case "revive_dead_creature": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "revive_dead_creature",
+        label: [
+          "revive_dead_creature",
+          `death window: ${e.deathWindow.amount} ${e.deathWindow.unit}`,
+          `returns with ${e.hitPoints} Hit Point`,
+          `spirit consent: ${e.spiritConsent}`,
+          `excludes: ${e.excludedDeathCauses.join(", ")}`,
+          `missing body parts: ${e.missingBodyParts}`,
+          `conditions: ${e.returningOngoingEffects.conditions}`,
+          `magical contagions: ${e.returningOngoingEffects.magicalContagions}`,
+          `curses: ${e.returningOngoingEffects.curses}`,
+          `exhaustion: ${e.returningOngoingEffects.exhaustion.kind} ${e.returningOngoingEffects.exhaustion.amount}`,
+          `attunement: ${e.returningOngoingEffects.attunement}`,
+        ].join("\n"),
       });
       return id;
     }

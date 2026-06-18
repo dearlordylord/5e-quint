@@ -142,6 +142,7 @@ export function traceEffectAtom(
     case "prevent_drop_to_0_hp":
     case "negate_instant_death":
     case "make_stable":
+    case "revive_dead_creature":
     case "grant_feat":
     case "grant_proficiency":
     case "grant_expertise":

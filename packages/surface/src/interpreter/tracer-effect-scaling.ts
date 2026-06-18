@@ -164,6 +164,7 @@ export function traceEffectAtomScaling(
     case "prevent_drop_to_0_hp":
     case "negate_instant_death":
     case "make_stable":
+    case "revive_dead_creature":
     case "grant_damage_immunity":
     case "block_max_hp_reduction":
     case "set_speed_ratio":

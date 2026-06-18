@@ -3340,9 +3340,109 @@ describe("SRD Unit catalog boundary", () => {
         effects: [{ kind: "none" }],
       },
     ]);
-    expect(removeCurse.description).toContain(
-      "breaks its owner's Attunement",
+    expect(removeCurse.description).toContain("breaks its owner's Attunement");
+  });
+
+  test("decodes Revivify as a death-window revival Spell Definition", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag !== "ok") return;
+    const revivify = result.catalog.requireUnit("revivify");
+
+    expect(revivify.kind).toBe("spell");
+    if (revivify.kind !== "spell") return;
+    expect(revivify.mechanics.family).toBe("activation");
+    if (revivify.mechanics.family !== "activation") return;
+
+    expect(revivify.provenance).toEqual({
+      kind: "srd-5.2.1",
+      section: "Spells/Descriptions-Q-R#Revivify",
+    });
+    expect(revivify.mechanics).toMatchObject({
+      level: 3,
+      school: "necromancy",
+      castingTime: { kind: "action" },
+      range: { kind: "touch" },
+      components: {
+        v: true,
+        s: true,
+        m: "a diamond worth 300+ GP, which the spell consumes",
+        materialCostGp: 300,
+        materialConsumed: true,
+      },
+      duration: { kind: "instantaneous" },
+    });
+    expect(revivify.mechanics.phases).toEqual([
+      {
+        kind: "direct",
+        attachment: {
+          kind: "hole",
+          holeId: "revivify_target",
+          label: "dead creature",
+          value: {
+            kind: "target",
+            selection: {
+              mode: "one",
+              targetKinds: ["creature"],
+              stateFilter: ["dead"],
+            },
+          },
+        },
+        effects: [
+          {
+            kind: "revive_dead_creature",
+            deathWindow: { unit: "minute", amount: 1 },
+            hitPoints: 1,
+            spiritConsent: "can_refuse",
+            excludedDeathCauses: ["old_age"],
+            missingBodyParts: "not_restored",
+            returningOngoingEffects: {
+              conditions: "preserve_if_duration_ongoing",
+              magicalContagions: "preserve_if_duration_ongoing",
+              curses: "preserve_if_duration_ongoing",
+              exhaustion: { kind: "reduce_by", amount: 1 },
+              attunement: "ends",
+            },
+          },
+        ],
+      },
+    ]);
+    expect(revivify.description).toContain(
+      "conditions, magical contagions, and curses",
     );
+  });
+
+  test("rejects contradictory Revivify death target-state filters", () => {
+    const decode = Schema.decodeUnknownEither(TargetSelectionSchema);
+
+    expect(
+      Either.isRight(
+        decode({
+          mode: "one",
+          targetKinds: ["creature"],
+          stateFilter: ["dead"],
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        decode({
+          mode: "one",
+          targetKinds: ["creature"],
+          stateFilter: ["dead_within_last_minute"],
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        decode({
+          mode: "one",
+          targetKinds: ["creature"],
+          stateFilter: ["dead", "zero_hp_not_dead"],
+        }),
+      ),
+    ).toBe(true);
   });
 
   test("decodes Locate Object as object location and motion disclosure", () => {

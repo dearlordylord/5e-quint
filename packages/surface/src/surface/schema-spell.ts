@@ -1072,6 +1072,27 @@ type EffectAtom =
       readonly consumesEffect?: true;
     }
   | { readonly kind: "make_stable" }
+  | {
+      readonly kind: "revive_dead_creature";
+      readonly deathWindow: {
+        readonly unit: "minute";
+        readonly amount: number;
+      };
+      readonly hitPoints: number;
+      readonly spiritConsent: "can_refuse";
+      readonly excludedDeathCauses: readonly ["old_age"];
+      readonly missingBodyParts: "not_restored";
+      readonly returningOngoingEffects: {
+        readonly conditions: "preserve_if_duration_ongoing";
+        readonly magicalContagions: "preserve_if_duration_ongoing";
+        readonly curses: "preserve_if_duration_ongoing";
+        readonly exhaustion: {
+          readonly kind: "reduce_by";
+          readonly amount: number;
+        };
+        readonly attunement: "ends";
+      };
+    }
   | { readonly kind: "grant_condition_immunity"; readonly condition: Condition }
   | {
       readonly kind: "suppress_condition_benefit";
@@ -1871,8 +1892,10 @@ const TARGET_KINDS = [
 ] as const satisfies ReadonlyNonEmptyArray<string>;
 export const TargetKindSchema = Schema.Literal(...TARGET_KINDS);
 export const TargetDispositionSchema = Schema.Literal("willing");
-export const TargetStateFilterSchema = nonEmpty(
-  Schema.Literal("falling", "zero_hp_not_dead"),
+export const TargetStateFilterSchema = Schema.Union(
+  Schema.Tuple(Schema.Literal("falling")),
+  Schema.Tuple(Schema.Literal("zero_hp_not_dead")),
+  Schema.Tuple(Schema.Literal("dead")),
 );
 const CreatureTargetKindsSchema = nonEmpty(Schema.Literal("creature"));
 const CreatureOrObjectTargetKindsSchema = Schema.Union(
@@ -3113,6 +3136,27 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
         consumesEffect: optionalExact(Schema.Literal(true)),
       }),
       Schema.Struct({ kind: Schema.Literal("make_stable") }),
+      strictStruct({
+        kind: Schema.Literal("revive_dead_creature"),
+        deathWindow: strictStruct({
+          unit: Schema.Literal("minute"),
+          amount: PositiveIntegerSchema,
+        }),
+        hitPoints: PositiveIntegerSchema,
+        spiritConsent: Schema.Literal("can_refuse"),
+        excludedDeathCauses: Schema.Tuple(Schema.Literal("old_age")),
+        missingBodyParts: Schema.Literal("not_restored"),
+        returningOngoingEffects: strictStruct({
+          conditions: Schema.Literal("preserve_if_duration_ongoing"),
+          magicalContagions: Schema.Literal("preserve_if_duration_ongoing"),
+          curses: Schema.Literal("preserve_if_duration_ongoing"),
+          exhaustion: strictStruct({
+            kind: Schema.Literal("reduce_by"),
+            amount: PositiveIntegerSchema,
+          }),
+          attunement: Schema.Literal("ends"),
+        }),
+      }),
       Schema.Struct({
         kind: Schema.Literal("grant_feat"),
         category: Schema.Literal(

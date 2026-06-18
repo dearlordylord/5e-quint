@@ -18,8 +18,8 @@
     "auditedUniqueSpellIdentitiesByFinalDisposition": {
       "catalog-authored-review-required": 31,
       "catalog-installed-owner-evidence-present": 7,
-      "catalog-only/dead-for-now": 5,
-      "missing-authored-record": 33
+      "catalog-only/dead-for-now": 6,
+      "missing-authored-record": 32
     },
     "auditedUniqueSpellIdentitiesByLevelBand": {
       "spell-level-3": 42,
@@ -33,14 +33,14 @@
     },
     "rowsByBattleReadinessStatus": {
       "accepted": 469,
-      "accepted-no-battle-effect": 201,
-      "battle-runtime-required": 75,
+      "accepted-no-battle-effect": 203,
+      "battle-runtime-required": 73,
       "not-applicable": 77,
       "owner-evidence-required": 78
     },
     "rowsByCatalogAdmission": {
-      "installed": 643,
-      "not-installed": 257
+      "installed": 645,
+      "not-installed": 255
     },
     "rowsByCategory": {
       "character-creation or progression mechanic": 172,
@@ -56,9 +56,9 @@
       "catalog-authored-review-required": 77,
       "catalog-installed-owner-evidence-present": 481,
       "catalog-installed-owner-evidence-required": 1,
-      "catalog-only/dead-for-now": 149,
+      "catalog-only/dead-for-now": 151,
       "level-5-7-follow-up-required": 33,
-      "missing-authored-record": 75,
+      "missing-authored-record": 73,
       "non-runtime": 84
     },
     "rowsByLevelBand": {
@@ -89,10 +89,10 @@
       "subclass-spell-access": 5
     },
     "rowsByUnitProfileDisposition": {
-      "not-recorded": 224,
+      "not-recorded": 222,
       "profile-subset-supported": 53,
       "supported-profile": 295,
-      "unsupported-profile": 328
+      "unsupported-profile": 330
     }
   },
   "rows": [
@@ -9758,7 +9758,7 @@
         "sourceInventoryRowId": "srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_revivify",
         "state": "present"
       },
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
+      "nextAction": "Revivify supplies death-window and return-to-life source facts, but promoted battle runtime does not own dead creature target eligibility, spirit refusal, corpse or missing-body-part state, generic revival transitions, Dead-glossary ongoing effect persistence, Exhaustion adjustment, or magic-item Attunement cleanup.",
       "rowId": "srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_revivify",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -9768,22 +9768,28 @@
       },
       "supportSnapshot": {
         "authoredContent": {
-          "state": "missing-authored-record"
+          "sourceRecordPath": "packages/surface/content/revivify.json",
+          "state": "authored-record-present",
+          "unitId": "revivify"
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "battle-runtime-required"
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "outside-battle-runtime",
+          "owner": "future rest/revival workflow owner",
+          "reason": "Revivify supplies death-window and return-to-life source facts, but promoted battle runtime does not own dead creature target eligibility, spirit refusal, corpse or missing-body-part state, generic revival transitions, Dead-glossary ongoing effect persistence, Exhaustion adjustment, or magic-item Attunement cleanup.",
+          "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "revivify"
         },
-        "finalDisposition": "missing-authored-record",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },
@@ -14209,7 +14215,7 @@
         "sourceInventoryRowId": "srd521:classes/druid:spell-level-3:spell-unit-pressure:druid_spell_list_revivify",
         "state": "present"
       },
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
+      "nextAction": "Revivify supplies death-window and return-to-life source facts, but promoted battle runtime does not own dead creature target eligibility, spirit refusal, corpse or missing-body-part state, generic revival transitions, Dead-glossary ongoing effect persistence, Exhaustion adjustment, or magic-item Attunement cleanup.",
       "rowId": "srd521:classes/druid:spell-level-3:spell-unit-pressure:druid_spell_list_revivify",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -14219,22 +14225,28 @@
       },
       "supportSnapshot": {
         "authoredContent": {
-          "state": "missing-authored-record"
+          "sourceRecordPath": "packages/surface/content/revivify.json",
+          "state": "authored-record-present",
+          "unitId": "revivify"
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "battle-runtime-required"
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "outside-battle-runtime",
+          "owner": "future rest/revival workflow owner",
+          "reason": "Revivify supplies death-window and return-to-life source facts, but promoted battle runtime does not own dead creature target eligibility, spirit refusal, corpse or missing-body-part state, generic revival transitions, Dead-glossary ongoing effect persistence, Exhaustion adjustment, or magic-item Attunement cleanup.",
+          "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "revivify"
         },
-        "finalDisposition": "missing-authored-record",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },
@@ -41594,27 +41606,33 @@
       ],
       "levelBand": "spell-level-3",
       "nextActions": [
-        "Author an SRD-provenance Surface record or explicitly close the row."
+        "Revivify supplies death-window and return-to-life source facts, but promoted battle runtime does not own dead creature target eligibility, spirit refusal, corpse or missing-body-part state, generic revival transitions, Dead-glossary ongoing effect persistence, Exhaustion adjustment, or magic-item Attunement cleanup."
       ],
       "spellName": "Revivify",
       "supportSnapshot": {
         "authoredContent": {
-          "state": "missing-authored-record"
+          "sourceRecordPath": "packages/surface/content/revivify.json",
+          "state": "authored-record-present",
+          "unitId": "revivify"
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "battle-runtime-required"
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "outside-battle-runtime",
+          "owner": "future rest/revival workflow owner",
+          "reason": "Revivify supplies death-window and return-to-life source facts, but promoted battle runtime does not own dead creature target eligibility, spirit refusal, corpse or missing-body-part state, generic revival transitions, Dead-glossary ongoing effect persistence, Exhaustion adjustment, or magic-item Attunement cleanup.",
+          "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "revivify"
         },
-        "finalDisposition": "missing-authored-record",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },
