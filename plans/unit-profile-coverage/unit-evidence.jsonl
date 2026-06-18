@@ -460,6 +460,8 @@
 {"unitId":"species_halfling_brave","evidence":{"tag":"selected-identity-mbt","taskId":"L3-FOLLOWUP-HALFLING-BRAVE-RUNTIME","ownerPath":"packages/battle-runtime/src/species-passive-trait-selected-identity.mbt.test.ts"}}
 {"unitId":"feat_skilled","evidence":{"tag":"deterministic-admission-projection","taskId":"L14G-B02-FEAT-SKILLED","ownerPath":"packages/character-creation-runtime/src/index.test.ts"}}
 {"unitId":"species_human_versatile","evidence":{"tag":"deterministic-admission-projection","taskId":"LT4-C01-HUMAN-VERSATILE-ORIGIN-FEAT-DENOMINATOR","ownerPath":"packages/character-creation-runtime/src/index.test.ts"}}
+{"unitId":"species_human_versatile","evidence":{"tag":"deterministic-admission-projection","taskId":"LT4-C03-SKILLED-HUMAN-VERSATILE-NESTED-CHOICE-EVIDENCE","ownerPath":"packages/character-creation-runtime/src/index.test.ts"}}
+{"unitId":"feat_skilled","evidence":{"tag":"deterministic-admission-projection","taskId":"LT4-C03-SKILLED-HUMAN-VERSATILE-NESTED-CHOICE-EVIDENCE","ownerPath":"packages/character-creation-runtime/src/index.test.ts"}}
 {"unitId":"feat_grappler","evidence":{"tag":"deterministic-admission-projection","taskId":"L3-FOLLOWUP-GRAPPLER-RUNTIME","ownerPath":"packages/character-creation-runtime/src/index.test.ts"}}
 {"unitId":"feat_grappler","evidence":{"tag":"deterministic-admission-projection","taskId":"L3-FOLLOWUP-GRAPPLER-RUNTIME","ownerPath":"packages/battle-runtime/src/battle-runtime-movement-grapple-hide.test.ts"}}
 {"unitId":"feat_grappler","evidence":{"tag":"selected-identity-mbt","taskId":"L3-FOLLOWUP-GRAPPLER-RUNTIME","ownerPath":"packages/battle-runtime/src/grappler-selected-identity.mbt.test.ts"}}

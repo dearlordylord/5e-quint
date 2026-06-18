@@ -871,6 +871,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `alert` | `unit-feature.initiative-proficiency-and-swap` | L12G-FOLLOWUP-ALERT-INITIATIVE-RUNTIME | `packages/character-battle-runtime/src/index.test.ts` |
 | `feat_savage_attacker` | `unit-feature.weapon-damage-dice-roll-choice` | QMBT31 | `packages/battle-runtime/src/unit-profile-admission-savage-attacker-and-mycelium-step.test.ts` |
 | `feat_skilled` | `character-creation.origin-feat-proficiency-choice`, `character-creation.species-origin-feat-proficiency-choice` | L14G-B02-FEAT-SKILLED | `packages/character-creation-runtime/src/index.test.ts` |
+| `feat_skilled` | `character-creation.origin-feat-proficiency-choice`, `character-creation.species-origin-feat-proficiency-choice` | LT4-C03-SKILLED-HUMAN-VERSATILE-NESTED-CHOICE-EVIDENCE | `packages/character-creation-runtime/src/index.test.ts` |
 | `feat_two_weapon_fighting` | `unit-feature.light-extra-attack-damage-ability-modifier` | L3-FOLLOWUP-TWO-WEAPON-FIGHTING-RUNTIME | `packages/battle-runtime/src/unit-profile-admission-two-weapon-fighting.test.ts` |
 | `feat_two_weapon_fighting` | `unit-feature.light-extra-attack-damage-ability-modifier` | L3-FOLLOWUP-TWO-WEAPON-FIGHTING-DECLINE-RUNTIME | `packages/battle-runtime/src/unit-profile-admission-two-weapon-fighting.test.ts` |
 | `paladin_channel_divinity` | `character-creation.class-feature-resource-projection` | L13UG-A17 | `packages/character-creation-runtime/src/index.test.ts` |
@@ -899,6 +900,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `species_halfling_brave` | `unit-feature.passive-saving-throw-roll-mode` | L3-FOLLOWUP-HALFLING-BRAVE-RUNTIME | `packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts` |
 | `species_halfling_brave` | `unit-feature.passive-saving-throw-roll-mode` | L3-FOLLOWUP-HALFLING-BRAVE-RUNTIME | `packages/character-battle-runtime/src/index.test.ts` |
 | `species_human_versatile` | `character-creation.species-origin-feat-choice` | LT4-C01-HUMAN-VERSATILE-ORIGIN-FEAT-DENOMINATOR | `packages/character-creation-runtime/src/index.test.ts` |
+| `species_human_versatile` | `character-creation.species-origin-feat-choice` | LT4-C03-SKILLED-HUMAN-VERSATILE-NESTED-CHOICE-EVIDENCE | `packages/character-creation-runtime/src/index.test.ts` |
 | `species_goliath_powerful_build` | `unit-feature.passive-ability-check-roll-mode` | L3MSPEC-07-GOLIATH-POWERFUL-BUILD-GRAPPLE | `packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts` |
 | `acid_splash` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | QMBT14 | `packages/battle-runtime/src/unit-profile-admission-damage-spells.test.ts` |
 | `acid_arrow` | `spell.invocation-acid-arrow-attack-timing` | L12G-FOLLOWUP-ACID-ARROW-DELAYED-RUNTIME-SUPPORT | `packages/battle-runtime/src/unit-profile-admission-damage-spells.test.ts` |

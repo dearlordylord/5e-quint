@@ -23678,6 +23678,11 @@
           "ownerPath": "packages/character-creation-runtime/src/index.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "L14G-B02-FEAT-SKILLED"
+        },
+        {
+          "ownerPath": "packages/character-creation-runtime/src/index.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "LT4-C03-SKILLED-HUMAN-VERSATILE-NESTED-CHOICE-EVIDENCE"
         }
       ],
       "executableMechanics": true,
@@ -26086,6 +26091,11 @@
           "ownerPath": "packages/character-creation-runtime/src/index.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "LT4-C01-HUMAN-VERSATILE-ORIGIN-FEAT-DENOMINATOR"
+        },
+        {
+          "ownerPath": "packages/character-creation-runtime/src/index.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "LT4-C03-SKILLED-HUMAN-VERSATILE-NESTED-CHOICE-EVIDENCE"
         }
       ],
       "executableMechanics": true,

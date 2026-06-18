@@ -19,7 +19,7 @@
     {
       "number": 3,
       "id": "LT4-C03-SKILLED-HUMAN-VERSATILE-NESTED-CHOICE-EVIDENCE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Prove Skilled nested choices work through Human Versatile"
     }
   ]
@@ -175,7 +175,7 @@ Verification:
 
 ### Task 3 - LT4-C03-SKILLED-HUMAN-VERSATILE-NESTED-CHOICE-EVIDENCE
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
