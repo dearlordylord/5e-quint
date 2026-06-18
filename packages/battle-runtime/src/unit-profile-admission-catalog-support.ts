@@ -65,6 +65,8 @@ export const barbarianFrenzyUnitId = "barbarian_frenzy";
 
 export const barbarianDangerSenseUnitId = "barbarian_danger_sense";
 
+export const barbarianExtraAttackUnitId = "barbarian_extra_attack";
+
 export const barbarianFastMovementUnitId = "barbarian_fast_movement";
 
 export const rangerRovingUnitId = "ranger_roving";
@@ -135,6 +137,8 @@ export const subclassWarlockFiendPatronUnitId = "subclass_warlock_fiend_patron";
 export const sorcererInnateSorceryUnitId = "sorcerer_innate_sorcery";
 
 export const monkMartialArtsUnitId = "monk_martial_arts";
+
+export const monkExtraAttackUnitId = "monk_extra_attack";
 
 export const monkUnarmoredMovementUnitId = "monk_unarmored_movement";
 

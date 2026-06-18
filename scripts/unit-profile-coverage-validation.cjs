@@ -409,10 +409,29 @@ function unitClaimCollectionId(unit) {
   );
 }
 
-function validateUnitClaims(claims, inventory, authoredSurfaceUnits, profiles) {
+function srdInventoryClaimableUnits(srdUnitInventory) {
+  if (!Array.isArray(srdUnitInventory?.rows)) return [];
+  const seen = new Set();
+  return srdUnitInventory.rows.flatMap((row) => {
+    if (!isNonEmptyString(row?.candidateUnitId)) return [];
+    if (seen.has(row.candidateUnitId)) return [];
+    seen.add(row.candidateUnitId);
+    return [{ unitId: row.candidateUnitId, collectionId: "srd-5.2.1" }];
+  });
+}
+
+function validateUnitClaims(
+  claims,
+  inventory,
+  authoredSurfaceUnits,
+  profiles,
+  additionalClaimableUnits = [],
+) {
   const issues = [];
   const claimableUnitsById = new Map(
-    [...inventory, ...authoredSurfaceUnits].map((unit) => [unit.unitId, unit]),
+    [...inventory, ...authoredSurfaceUnits, ...additionalClaimableUnits].map(
+      (unit) => [unit.unitId, unit],
+    ),
   );
   const profileIds = new Set(profiles.map((profile) => profile.id));
   const claimsByUnit = new Map();
@@ -1180,17 +1199,22 @@ function validateSelectedIdentityHardGate({
   return issues;
 }
 
-function validateCoverageInputs({
-  root,
-  collections,
-  inventory,
-  profiles,
-  unitClaims,
-  unitEvidence,
-  taskClaims,
-  authoredSurfaceUnits,
-  scannedClaims,
-}, options = {}) {
+function validateCoverageInputs(
+  {
+    root,
+    collections,
+    inventory,
+    profiles,
+    unitClaims,
+    unitEvidence,
+    taskClaims,
+    authoredSurfaceUnits,
+    srdUnitInventory,
+    scannedClaims,
+  },
+  options = {},
+) {
+  const additionalClaimableUnits = srdInventoryClaimableUnits(srdUnitInventory);
   const issues = [
     ...rulesKernelProfileKindClassificationIssues(),
     ...validateCollections(collections.collections, inventory),
@@ -1200,6 +1224,7 @@ function validateCoverageInputs({
       inventory,
       authoredSurfaceUnits,
       profiles,
+      additionalClaimableUnits,
     ),
     ...validateUnitEvidence(root, unitEvidence, unitClaims, scannedClaims, [
       ...inventory,

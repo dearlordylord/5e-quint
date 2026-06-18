@@ -8,25 +8,25 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 
 | Metric | Value |
 | --- | ---: |
-| Installed collection inventory count | 307 Units |
+| Installed collection inventory count | 309 Units |
 
 ## Coverage Metrics
 
 | Metric | Covered | Percent |
 | --- | ---: | ---: |
-| Authored Surface Unit catalog admission | 306/529 | 57.8% |
-| Authored Surface executable catalog admission | 256/441 | 58% |
-| Installed Unit profile classification coverage | 307/307 | 100% |
-| Supported executable Unit coverage | 183/257 | 71.2% |
+| Authored Surface Unit catalog admission | 308/531 | 58% |
+| Authored Surface executable catalog admission | 258/443 | 58.2% |
+| Installed Unit profile classification coverage | 309/309 | 100% |
+| Supported executable Unit coverage | 185/259 | 71.4% |
 | QNT profile modeling coverage | 121/121 | 100% |
 | QNT proof coverage | 118/121 | 97.5% |
 | Runtime mapping coverage | 121/121 | 100% |
 | Runtime parity coverage | 121/121 | 100% |
 | Rules-kernel profile join coverage | 159/159 | 100% |
 | Rules-kernel covered profile coverage | 159/159 | 100% |
-| Supported Unit rules-kernel chain coverage | 172/172 | 100% |
-| Deterministic admission/projection coverage | 178/183 | 97.3% |
-| Selected identity replay coverage | 174/176 | 98.9% |
+| Supported Unit rules-kernel chain coverage | 174/174 | 100% |
+| Deterministic admission/projection coverage | 180/185 | 97.3% |
+| Selected identity replay coverage | 176/178 | 98.9% |
 | Classic non-SRD expression gate | 1/1 | 100% |
 
 ## Metric Semantics
@@ -60,7 +60,7 @@ Background, feat, spell, and class-feature groups are counted from installed Uni
 | Background Units | 4 | 0 | 0 | 0 | 4 | 0 | 0/0 | 0 | 0 |
 | Feat Units | 13 | 13 | 9 | 0 | 4 | 11 | 6/8 | 2 | 0 |
 | Spell Units | 128 | 128 | 92 | 18 | 18 | 136 | 110/110 | 0 | 0 |
-| Class-feature Units | 91 | 91 | 69 | 8 | 14 | 117 | 72/72 | 0 | 0 |
+| Class-feature Units | 93 | 93 | 71 | 8 | 14 | 119 | 74/74 | 0 | 0 |
 
 | Denominator | Rule |
 | --- | --- |
@@ -81,7 +81,7 @@ The Unit matrix owns authored-content breadth. `plans/rules-kernel-coverage/prof
 
 | Supported Unit join status | Unit count | Units |
 | --- | ---: | --- |
-| covered | 172 | `acid_arrow`, `acid_splash`, `aid`, `alert`, `alter_self`, `animal_friendship`, `bane`, `barbarian_danger_sense`, `barbarian_fast_movement`, `barbarian_frenzy`, `barbarian_primal_knowledge`, `barbarian_rage`, `barbarian_reckless_attack`, `barbarian_unarmored_defense`, `barbarian_weapon_mastery`, `bard_bardic_inspiration`, `bard_cutting_words`, `bard_expertise`, `bard_jack_of_all_trades`, `barkskin`, `bless`, `blindness_deafness`, `blur`, `burning_hands`, `chill_touch`, `chromatic_orb`, `cleric_channel_divinity`, `cleric_disciple_of_life`, `cleric_divine_order`, `cleric_life_domain_spells`, `color_spray`, `command`, `counterspell`, `cure_wounds`, `dancing_lights`, `defense`, `dissonant_whispers`, `divine_favor`, `divine_smite`, `dragons_breath`, `druid_circle_of_the_land_spells`, `druid_primal_order`, `dwarf_dwarven_resilience`, `eldritch_blast`, `enhance_ability`, `ensnaring_strike`, `entangle`, `expeditious_retreat`, `faerie_fire`, `false_life`, `feat_archery`, `feat_boon_of_combat_prowess`, `feat_great_weapon_fighting`, `feat_savage_attacker`, `feat_two_weapon_fighting`, `feather_fall`, `fighter_action_surge`, `fighter_extra_attack`, `fighter_fighting_style`, `fighter_improved_critical`, `fighter_remarkable_athlete`, `fighter_second_wind`, `fighter_tactical_mind`, `fighter_weapon_mastery`, `fire_bolt`, `fireball`, `flame_blade`, `flaming_sphere`, `fog_cloud`, `grease`, `guidance`, `guiding_bolt`, `healing_word`, `heat_metal`, `hellish_rebuke`, `heroism`, `hex`, `hideous_laughter`, `hold_person`, `hunters_mark`, `hypnotic_pattern`, `ice_knife`, `inflict_wounds`, `invisibility`, `jump`, `lesser_restoration`, `light`, `lightning_bolt`, `longstrider`, `mage_armor`, `magic_missile`, `magic_weapon`, `mass_cure_wounds`, `mass_healing_word`, `mastery_cleave`, `mastery_sap`, `mastery_topple`, `mirror_image`, `misty_step`, `monk_deflect_attacks`, `monk_martial_arts`, `monk_slow_fall`, `monk_unarmored_defense`, `monk_unarmored_movement`, `monk_uncanny_metabolism`, `mycelium_step`, `orc_adrenaline_rush`, `orc_relentless_endurance`, `paladin_channel_divinity`, `paladin_extra_attack`, `paladin_fighting_style`, `paladin_lay_on_hands`, `paladin_oath_of_devotion_spells`, `paladin_paladins_smite`, `paladin_sacred_weapon`, `paladin_weapon_mastery`, `poison_spray`, `produce_flame`, `protection_from_evil_and_good`, `protection_from_poison`, `ranger_deft_explorer`, `ranger_extra_attack`, `ranger_fighting_style`, `ranger_roving`, `ranger_weapon_mastery`, `ray_of_enfeeblement`, `ray_of_frost`, `ray_of_sickness`, `resistance`, `rogue_cunning_action`, `rogue_evasion`, `rogue_expertise`, `rogue_sneak_attack`, `rogue_steady_aim`, `rogue_uncanny_dodge`, `rogue_weapon_mastery`, `sacred_flame`, `sanctuary`, `scorching_ray`, `searing_smite`, `see_invisibility`, `shatter`, `shield`, `shield_of_faith`, `shillelagh`, `shining_smite`, `shocking_grasp`, `sleep`, `sorcerer_draconic_resilience`, `sorcerer_draconic_spells`, `sorcerer_innate_sorcery`, `sorcerous_burst`, `spare_the_dying`, `species_dragonborn_damage_resistance`, `species_goliath_powerful_build`, `species_halfling_brave`, `spider_climb`, `spiritual_weapon`, `starry_wisp`, `thunderwave`, `true_strike`, `vicious_mockery`, `warding_bond`, `warlock_dark_ones_blessing`, `warlock_eldritch_invocations`, `warlock_fiend_spells`, `warlock_magical_cunning`, `warlock_pact_magic`, `web`, `wizard_arcane_recovery`, `wizard_ritual_adept`, `wizard_scholar` |
+| covered | 174 | `acid_arrow`, `acid_splash`, `aid`, `alert`, `alter_self`, `animal_friendship`, `bane`, `barbarian_danger_sense`, `barbarian_extra_attack`, `barbarian_fast_movement`, `barbarian_frenzy`, `barbarian_primal_knowledge`, `barbarian_rage`, `barbarian_reckless_attack`, `barbarian_unarmored_defense`, `barbarian_weapon_mastery`, `bard_bardic_inspiration`, `bard_cutting_words`, `bard_expertise`, `bard_jack_of_all_trades`, `barkskin`, `bless`, `blindness_deafness`, `blur`, `burning_hands`, `chill_touch`, `chromatic_orb`, `cleric_channel_divinity`, `cleric_disciple_of_life`, `cleric_divine_order`, `cleric_life_domain_spells`, `color_spray`, `command`, `counterspell`, `cure_wounds`, `dancing_lights`, `defense`, `dissonant_whispers`, `divine_favor`, `divine_smite`, `dragons_breath`, `druid_circle_of_the_land_spells`, `druid_primal_order`, `dwarf_dwarven_resilience`, `eldritch_blast`, `enhance_ability`, `ensnaring_strike`, `entangle`, `expeditious_retreat`, `faerie_fire`, `false_life`, `feat_archery`, `feat_boon_of_combat_prowess`, `feat_great_weapon_fighting`, `feat_savage_attacker`, `feat_two_weapon_fighting`, `feather_fall`, `fighter_action_surge`, `fighter_extra_attack`, `fighter_fighting_style`, `fighter_improved_critical`, `fighter_remarkable_athlete`, `fighter_second_wind`, `fighter_tactical_mind`, `fighter_weapon_mastery`, `fire_bolt`, `fireball`, `flame_blade`, `flaming_sphere`, `fog_cloud`, `grease`, `guidance`, `guiding_bolt`, `healing_word`, `heat_metal`, `hellish_rebuke`, `heroism`, `hex`, `hideous_laughter`, `hold_person`, `hunters_mark`, `hypnotic_pattern`, `ice_knife`, `inflict_wounds`, `invisibility`, `jump`, `lesser_restoration`, `light`, `lightning_bolt`, `longstrider`, `mage_armor`, `magic_missile`, `magic_weapon`, `mass_cure_wounds`, `mass_healing_word`, `mastery_cleave`, `mastery_sap`, `mastery_topple`, `mirror_image`, `misty_step`, `monk_deflect_attacks`, `monk_extra_attack`, `monk_martial_arts`, `monk_slow_fall`, `monk_unarmored_defense`, `monk_unarmored_movement`, `monk_uncanny_metabolism`, `mycelium_step`, `orc_adrenaline_rush`, `orc_relentless_endurance`, `paladin_channel_divinity`, `paladin_extra_attack`, `paladin_fighting_style`, `paladin_lay_on_hands`, `paladin_oath_of_devotion_spells`, `paladin_paladins_smite`, `paladin_sacred_weapon`, `paladin_weapon_mastery`, `poison_spray`, `produce_flame`, `protection_from_evil_and_good`, `protection_from_poison`, `ranger_deft_explorer`, `ranger_extra_attack`, `ranger_fighting_style`, `ranger_roving`, `ranger_weapon_mastery`, `ray_of_enfeeblement`, `ray_of_frost`, `ray_of_sickness`, `resistance`, `rogue_cunning_action`, `rogue_evasion`, `rogue_expertise`, `rogue_sneak_attack`, `rogue_steady_aim`, `rogue_uncanny_dodge`, `rogue_weapon_mastery`, `sacred_flame`, `sanctuary`, `scorching_ray`, `searing_smite`, `see_invisibility`, `shatter`, `shield`, `shield_of_faith`, `shillelagh`, `shining_smite`, `shocking_grasp`, `sleep`, `sorcerer_draconic_resilience`, `sorcerer_draconic_spells`, `sorcerer_innate_sorcery`, `sorcerous_burst`, `spare_the_dying`, `species_dragonborn_damage_resistance`, `species_goliath_powerful_build`, `species_halfling_brave`, `spider_climb`, `spiritual_weapon`, `starry_wisp`, `thunderwave`, `true_strike`, `vicious_mockery`, `warding_bond`, `warlock_dark_ones_blessing`, `warlock_eldritch_invocations`, `warlock_fiend_spells`, `warlock_magical_cunning`, `warlock_pact_magic`, `web`, `wizard_arcane_recovery`, `wizard_ritual_adept`, `wizard_scholar` |
 
 ### Rules-Kernel Profile Join Gaps
 
@@ -112,6 +112,7 @@ The Unit matrix owns authored-content breadth. `plans/rules-kernel-coverage/prof
 | `barbarian_unarmored_defense` | srd-5.2.1 | `character-sheet.armor-class-base-formula` |
 | `barbarian_reckless_attack` | srd-5.2.1 | `unit-feature.first-attack-roll-reckless-advantage` |
 | `barbarian_danger_sense` | srd-5.2.1 | `unit-feature.passive-saving-throw-roll-mode` |
+| `barbarian_extra_attack` | srd-5.2.1 | `unit-feature.attack-action-attack-count-scaling` |
 | `barbarian_fast_movement` | srd-5.2.1 | `unit-feature.passive-speed-bonus` |
 | `barbarian_primal_knowledge` | srd-5.2.1 | `character-creation.class-feature-source-fact-projection`, `character-sheet.ability-check-ability-substitution` |
 | `barbarian_weapon_mastery` | srd-5.2.1 | `character-creation.weapon-mastery-choice`, `character-creation.weapon-mastery-level-gain`, `character-sheet.weapon-mastery-class-level-reselection` |
@@ -132,6 +133,7 @@ The Unit matrix owns authored-content breadth. `plans/rules-kernel-coverage/prof
 | `monk_unarmored_movement` | srd-5.2.1 | `unit-feature.passive-speed-bonus` |
 | `monk_uncanny_metabolism` | srd-5.2.1 | `character-creation.class-feature-source-fact-projection`, `character-sheet.class-feature-long-rest-use-state`, `character-sheet.monk-uncanny-metabolism-initiative-recovery` |
 | `monk_deflect_attacks` | srd-5.2.1 | `unit-feature.attack-damage-reduction-zero-damage-redirect` |
+| `monk_extra_attack` | srd-5.2.1 | `unit-feature.attack-action-attack-count-scaling` |
 | `monk_slow_fall` | srd-5.2.1 | `unit-feature.reaction-roll-or-damage-reduction` |
 | `monk_open_hand_technique` | srd-5.2.1 | `unit-feature.open-hand-technique` |
 | `ranger_deft_explorer` | srd-5.2.1 | `character-creation.skill-expertise-choice` |
@@ -815,6 +817,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `barbarian_unarmored_defense` | `character-sheet.armor-class-base-formula` | SRDINV91B | `packages/character-sheet-runtime/src/armor-class.test.ts` |
 | `barbarian_reckless_attack` | `unit-feature.first-attack-roll-reckless-advantage` | QMBT7 | `packages/battle-runtime/src/unit-profile-admission-class-roll-and-resource-features.test.ts` |
 | `barbarian_danger_sense` | `unit-feature.passive-saving-throw-roll-mode` | L12G-CLASS-BARBARIAN-DANGER-SENSE | `packages/battle-runtime/src/unit-profile-admission-danger-sense.test.ts` |
+| `barbarian_extra_attack` | `unit-feature.attack-action-attack-count-scaling` | L5-A01-BARBARIAN-EXTRA-ATTACK | `packages/battle-runtime/src/unit-profile-admission-extra-attack-and-speed-features.test.ts` |
 | `barbarian_fast_movement` | `unit-feature.passive-speed-bonus` | QMBT40 | `packages/battle-runtime/src/unit-profile-admission-extra-attack-and-speed-features.test.ts` |
 | `barbarian_primal_knowledge` | `character-creation.class-feature-source-fact-projection`, `character-sheet.ability-check-ability-substitution` | L13UG-A15 | `packages/character-creation-runtime/src/index.test.ts` |
 | `barbarian_primal_knowledge` | `character-creation.class-feature-source-fact-projection`, `character-sheet.ability-check-ability-substitution` | L13UG-A15 | `packages/character-sheet-runtime/src/ability-checks.test.ts` |
@@ -839,6 +842,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `monk_uncanny_metabolism` | `character-creation.class-feature-source-fact-projection`, `character-sheet.class-feature-long-rest-use-state`, `character-sheet.monk-uncanny-metabolism-initiative-recovery` | L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-CHARACTER-FACTS | `packages/character-sheet-runtime/src/resources.test.ts` |
 | `monk_uncanny_metabolism` | `character-creation.class-feature-source-fact-projection`, `character-sheet.class-feature-long-rest-use-state`, `character-sheet.monk-uncanny-metabolism-initiative-recovery` | L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-RUNTIME | `packages/character-battle-runtime/src/index.test.ts` |
 | `monk_deflect_attacks` | `unit-feature.attack-damage-reduction-zero-damage-redirect` | QMBT59 | `packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts` |
+| `monk_extra_attack` | `unit-feature.attack-action-attack-count-scaling` | L5-A06-MONK-EXTRA-ATTACK | `packages/battle-runtime/src/unit-profile-admission-extra-attack-and-speed-features.test.ts` |
 | `monk_slow_fall` | `unit-feature.reaction-roll-or-damage-reduction` | L14G-03A-MONK-SLOW-FALL-RUNTIME | `packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts` |
 | `monk_open_hand_technique` | `unit-feature.open-hand-technique` | L13UG-A18 | `packages/battle-runtime/src/unit-profile-admission-level3-attack-movement-features.test.ts` |
 | `ranger_deft_explorer` | `character-creation.skill-expertise-choice` | L12G-AUTHOR-RANGER-FIGHTING-STYLE | `packages/character-creation-runtime/src/index.test.ts` |
@@ -1078,6 +1082,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `barbarian_unarmored_defense` | `character-sheet.armor-class-base-formula` | armor-class-base-formula | `packages/character-sheet-runtime/src/armor-class-base-selected-identity.mbt.test.ts` |
 | `barbarian_reckless_attack` | `unit-feature.first-attack-roll-reckless-advantage` | QMBT9 | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
 | `barbarian_danger_sense` | `unit-feature.passive-saving-throw-roll-mode` | B4-CLASS-FEATURE-IDENTITY-BATCH-1 | `packages/battle-runtime/src/danger-sense-selected-identity.mbt.test.ts` |
+| `barbarian_extra_attack` | `unit-feature.attack-action-attack-count-scaling` | extra-attack-count-scaling | `packages/battle-runtime/src/extra-attack-count.mbt.test.ts` |
 | `barbarian_fast_movement` | `unit-feature.passive-speed-bonus` | movement-forced-movement | `packages/battle-runtime/src/movement-forced-movement-selected-identity.mbt.test.ts` |
 | `barbarian_weapon_mastery` | `character-creation.weapon-mastery-choice`, `character-creation.weapon-mastery-level-gain`, `character-sheet.weapon-mastery-class-level-reselection` | L1D2-WEAPON-MASTERY-CONTAINERS | `packages/character-creation-runtime/src/weapon-mastery-containers-selected-identity.mbt.test.ts` |
 | `bard_bardic_inspiration` | `unit-feature.bardic-inspiration-grant`, `unit-feature.bardic-inspiration-failed-d20-test` | L1D2-BARDIC-INSPIRATION-SCALING | `packages/battle-runtime/src/bardic-inspiration-selected-identity.mbt.test.ts` |
@@ -1097,6 +1102,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `monk_unarmored_movement` | `unit-feature.passive-speed-bonus` | B5-CLASS-FEATURE-IDENTITY-BATCH-2 | `packages/battle-runtime/src/movement-forced-movement-selected-identity.mbt.test.ts` |
 | `monk_uncanny_metabolism` | `character-creation.class-feature-source-fact-projection`, `character-sheet.class-feature-long-rest-use-state`, `character-sheet.monk-uncanny-metabolism-initiative-recovery` | B5-CLASS-FEATURE-IDENTITY-BATCH-2 | `packages/character-creation-runtime/src/class-feature-selected-identity.mbt.test.ts` |
 | `monk_deflect_attacks` | `unit-feature.attack-damage-reduction-zero-damage-redirect` | reaction-interruption | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
+| `monk_extra_attack` | `unit-feature.attack-action-attack-count-scaling` | extra-attack-count-scaling | `packages/battle-runtime/src/extra-attack-count.mbt.test.ts` |
 | `monk_slow_fall` | `unit-feature.reaction-roll-or-damage-reduction` | L14G-03A-MONK-SLOW-FALL-RUNTIME | `packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts` |
 | `monk_open_hand_technique` | `unit-feature.open-hand-technique` | L3PUTB-06-MONK-OPEN-HAND-TECHNIQUE-RUNTIME | `packages/battle-runtime/src/open-hand-technique-selected-identity.mbt.test.ts` |
 | `ranger_deft_explorer` | `character-creation.skill-expertise-choice` | B5-CLASS-FEATURE-IDENTITY-BATCH-2 | `packages/character-creation-runtime/src/class-feature-selected-identity.mbt.test.ts` |

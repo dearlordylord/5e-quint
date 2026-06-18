@@ -37,18 +37,21 @@ import type { PassiveFeatUnit } from "./unit-profile-admission-catalog-support.t
 import {
   archerySupportProfile,
   archeryUnitId,
+  barbarianExtraAttackUnitId,
   barbarianFastMovementUnitId,
   boonOfCombatProwessUnitId,
   combatProwessSupportProfile,
   extraAttackSupportProfile,
   fighterExtraAttackUnitId,
   greatWeaponFightingUnitId,
+  monkExtraAttackUnitId,
   monkUnarmoredMovementUnitId,
   oppositionSide,
   orcAdrenalineRushUnitId,
   orcRelentlessEnduranceUnitId,
   paladinExtraAttackUnitId,
   partySide,
+  rangerExtraAttackUnitId,
   rangerRovingUnitId,
   rogueSneakAttackUnitId,
   savageAttackerUnitId,
@@ -642,8 +645,11 @@ export function relentlessEnduranceDamageResult(
 
 export function extraAttackBattleUnitRef(
   unitId:
+    | typeof barbarianExtraAttackUnitId
     | typeof fighterExtraAttackUnitId
-    | typeof paladinExtraAttackUnitId = fighterExtraAttackUnitId,
+    | typeof monkExtraAttackUnitId
+    | typeof paladinExtraAttackUnitId
+    | typeof rangerExtraAttackUnitId = fighterExtraAttackUnitId,
 ): Extract<
   BattleCreatureInit["creatureInit"],
   { readonly kind: "character" }

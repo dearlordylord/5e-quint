@@ -29,6 +29,7 @@ import barbarianFrenzyInput from "../../content/barbarian_frenzy.json";
 import barbarianPrimalKnowledgeInput from "../../content/barbarian_primal_knowledge.json";
 import barbarianRageInput from "../../content/barbarian_rage.json";
 import barbarianDangerSenseInput from "../../content/barbarian_danger_sense.json";
+import barbarianExtraAttackInput from "../../content/barbarian_extra_attack.json";
 import barbarianFastMovementInput from "../../content/barbarian_fast_movement.json";
 import barbarianRecklessAttackInput from "../../content/barbarian_reckless_attack.json";
 import barbarianUnarmoredDefenseInput from "../../content/barbarian_unarmored_defense.json";
@@ -165,6 +166,7 @@ import mistyStepInput from "../../content/misty_step.json";
 import mirrorImageInput from "../../content/mirror_image.json";
 import minorIllusionInput from "../../content/minor_illusion.json";
 import monkDeflectAttacksInput from "../../content/monk_deflect_attacks.json";
+import monkExtraAttackInput from "../../content/monk_extra_attack.json";
 import monkMartialArtsInput from "../../content/monk_martial_arts.json";
 import monkMonksFocusInput from "../../content/monk_monks_focus.json";
 import monkOpenHandTechniqueInput from "../../content/monk_open_hand_technique.json";
@@ -473,6 +475,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     barbarianUnarmoredDefenseInput,
     barbarianRecklessAttackInput,
     barbarianDangerSenseInput,
+    barbarianExtraAttackInput,
     barbarianFastMovementInput,
     barbarianPrimalKnowledgeInput,
     barbarianWeaponMasteryInput,
@@ -500,6 +503,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     monkUnarmoredMovementInput,
     monkUncannyMetabolismInput,
     monkDeflectAttacksInput,
+    monkExtraAttackInput,
     monkAbilityScoreImprovementL4Input,
     monkSlowFallInput,
     monkOpenHandTechniqueInput,
