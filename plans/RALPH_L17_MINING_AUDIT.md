@@ -7,7 +7,7 @@
     {
       "number": 1,
       "id": "L17-M01-DENOMINATOR-REPORT-SHAPE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Add non-blocking level 1-7 mining audit outputs"
     },
     {
@@ -102,7 +102,7 @@ survey verdicts as shipped content.
 
 ### Task 1 - L17-M01-DENOMINATOR-REPORT-SHAPE
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
