@@ -44,8 +44,8 @@ These counts describe the current runtime/catalog state of mined rows. They are 
 | catalog-authored-review-required | 77 |
 | catalog-installed-owner-evidence-present | 482 |
 | catalog-installed-owner-evidence-required | 1 |
-| catalog-only/dead-for-now | 145 |
-| level-5-7-follow-up-required | 31 |
+| catalog-only/dead-for-now | 146 |
+| level-5-7-follow-up-required | 30 |
 | missing-authored-record | 80 |
 | non-runtime | 84 |
 
@@ -60,10 +60,10 @@ These counts describe the current runtime/catalog state of mined rows. They are 
 
 | Unit profile disposition | Rows |
 | --- | ---: |
-| not-recorded | 227 |
+| not-recorded | 226 |
 | profile-subset-supported | 53 |
 | supported-profile | 296 |
-| unsupported-profile | 324 |
+| unsupported-profile | 325 |
 
 ### Battle Readiness Snapshot
 
@@ -420,7 +420,7 @@ These counts separate class-list rows from unique Spell Definition identities. A
 | Cleric Life Domain Spells | level-3 | character-level | spell access/list pressure | `cleric_life_domain_spells` | `.references/srd-5.2.1/Classes/Cleric.md:317` | present | installed | supported-profile | catalog-installed-owner-evidence-present | accepted | character-fact-and-runtime-detached-split: character-sheet-runtime plus spell invocation profiles | Owner-specific operational evidence is classified and present. |
 | Cleric Ability Score Improvement | level-4 | character-level | class feature | `cleric_ability_score_improvement_l4` | `.references/srd-5.2.1/Classes/Cleric.md:106` | present | installed | unsupported-profile | catalog-only/dead-for-now | accepted-no-battle-effect | selection-grant-container: character-creation-runtime ability-score projection and selected feat Unit profiles | The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim. |
 | Cleric level 4 feature table row | level-4 | character-level | character-creation or progression mechanic | `class_cleric` | `.references/srd-5.2.1/Classes/Cleric.md:38` | present | installed | unsupported-profile | non-runtime | accepted-no-battle-effect | not-recorded | No runtime work; keep classification as explicit closure. |
-| Cleric Sear Undead | level-5 | character-level | class feature | `cleric_sear_undead` | `.references/srd-5.2.1/Classes/Cleric.md:110` | present | not-installed | not-recorded | level-5-7-follow-up-required | not-applicable | not-recorded | Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported. |
+| Cleric Sear Undead | level-5 | character-level | class feature | `cleric_sear_undead` | `.references/srd-5.2.1/Classes/Cleric.md:110` | present | not-installed | unsupported-profile | catalog-only/dead-for-now | not-applicable | outside-battle-runtime: future Turn Undead Channel Divinity option execution owner | SRD Sear Undead triggers only when the Cleric uses Turn Undead: it optionally rolls Wisdom-modifier d8s, minimum 1d8, and applies Radiant damage to each Undead that fails that use's Wisdom saving throw, while the damage does not end the turn effect. The future Turn Undead owner must derive Sear Undead from the selected Cleric feature and existing Channel Divinity procedure state instead of adding a separate Sear Undead action, resource, target list, or Turn Undead cleanup rule. |
 | Cleric level 5 feature table row | level-5 | character-level | character-creation or progression mechanic | `class_cleric` | `.references/srd-5.2.1/Classes/Cleric.md:39` | present | installed | unsupported-profile | non-runtime | not-applicable | not-recorded | No runtime work; keep classification as explicit closure. |
 | Cleric Blessed Healer | level-6 | character-level | class feature | `cleric_blessed_healer` | `.references/srd-5.2.1/Classes/Cleric.md:334` | present | not-installed | not-recorded | level-5-7-follow-up-required | not-applicable | not-recorded | Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported. |
 | Cleric level 6 feature table row | level-6 | character-level | character-creation or progression mechanic | `class_cleric` | `.references/srd-5.2.1/Classes/Cleric.md:40` | present | installed | unsupported-profile | non-runtime | not-applicable | not-recorded | No runtime work; keep classification as explicit closure. |

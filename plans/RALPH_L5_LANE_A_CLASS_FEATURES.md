@@ -19,7 +19,7 @@
     {
       "number": 3,
       "id": "L5-A03-CLERIC-SEAR-UNDEAD",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Close Cleric Sear Undead level 5 follow-up"
     },
     {
@@ -129,7 +129,7 @@ out of scope unless a task's RAW pass finds a direct dependency.
 | ---: | --- | --- | --- | --- |
 | 1 | L5-A01-BARBARIAN-EXTRA-ATTACK - Close Barbarian Extra Attack level 5 follow-up | done | none | Authored and installed using the shared Extra Attack owner/evidence path. |
 | 2 | L5-A02-BARD-FONT-OF-INSPIRATION - Close Bard Font of Inspiration level 5 follow-up | done | none | Closed by unsupported-profile owner evidence for existing Bardic Inspiration resource recovery. |
-| 3 | L5-A03-CLERIC-SEAR-UNDEAD - Close Cleric Sear Undead level 5 follow-up | ready-for-research | none | Independent level-5 class feature row. |
+| 3 | L5-A03-CLERIC-SEAR-UNDEAD - Close Cleric Sear Undead level 5 follow-up | done | none | Closed by unsupported-profile owner evidence for the future Turn Undead Channel Divinity option execution owner. |
 | 4 | L5-A04-DRUID-WILD-RESURGENCE - Close Druid Wild Resurgence level 5 follow-up | ready-for-research | none | Independent level-5 class feature row. |
 | 5 | L5-A05-FIGHTER-TACTICAL-SHIFT - Close Fighter Tactical Shift level 5 follow-up | ready-for-research | none | Independent level-5 class feature row. |
 | 6 | L5-A06-MONK-EXTRA-ATTACK - Close Monk Extra Attack level 5 follow-up | ready-for-research | L5-A01-BARBARIAN-EXTRA-ATTACK | Reuse the established Extra Attack owner/evidence path. |
@@ -246,7 +246,7 @@ Verification:
 
 ### Task 3 - L5-A03-CLERIC-SEAR-UNDEAD
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -262,7 +262,11 @@ SRD anchor:
 
 Current state:
 
-- The mined row is not installed and has no unit profile/evidence row.
+- The mined row is closed by an unsupported-profile Unit claim with
+  checker-readable owner evidence. Sear Undead is a Turn Undead damage rider,
+  not a standalone resource, action, or Character Sheet progression fact; the
+  future Turn Undead Channel Divinity option execution owner must derive it from
+  the selected Cleric feature and existing Channel Divinity procedure state.
 
 Output:
 
