@@ -25,7 +25,7 @@
     {
       "number": 4,
       "id": "L5-B04-CREATE-FOOD-AND-WATER",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Close Create Food and Water authored spell pressure"
     },
     {
@@ -133,7 +133,7 @@ this lane; those are Lane C and Lane D.
 | 1 | L5-B01-ANIMATE-DEAD - Close Animate Dead authored spell pressure | done | none | Closed as a runtime-detached companion-control boundary. |
 | 2 | L5-B02-BEACON-OF-HOPE - Close Beacon of Hope authored spell pressure | done | none | Closed outside the promoted battle runtime active spell-effect boundary. |
 | 3 | L5-B03-CALL-LIGHTNING - Close Call Lightning authored spell pressure | done | none | Closed outside the promoted battle runtime active storm spell-effect and table/spatial weather boundary. |
-| 4 | L5-B04-CREATE-FOOD-AND-WATER - Close Create Food and Water authored spell pressure | ready-for-research | none | Independent authored spell pressure row. |
+| 4 | L5-B04-CREATE-FOOD-AND-WATER - Close Create Food and Water authored spell pressure | done | none | Closed as runtime-detached table inventory and survival ownership. |
 | 5 | L5-B05-DAYLIGHT - Close Daylight authored spell pressure | ready-for-research | none | Independent authored spell pressure row. |
 | 6 | L5-B06-FEAR - Close Fear authored spell pressure | ready-for-research | none | Independent authored spell pressure row. |
 | 7 | L5-B07-MAJOR-IMAGE - Close Major Image authored spell pressure | ready-for-research | none | Independent authored spell pressure row. |
@@ -307,7 +307,7 @@ Verification:
 
 ### Task 4 - L5-B04-CREATE-FOOD-AND-WATER
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -335,6 +335,17 @@ Output:
 Acceptance:
 
 - `create_food_and_water` leaves `catalog-authored-review-required`.
+
+Result:
+
+- `create_food_and_water` is recorded as `unsupported-profile` and
+  `catalog-only/dead-for-now` with an
+  `outside-runtime-presentation-exploration` closure.
+- The runtime-detached owner is a future table inventory and survival
+  adjudication owner for created provision quantities, ground/container
+  placement, holder/location state, food spoilage after 24 hours, later
+  consumption, and clean-water/nourishing-food effects on malnutrition and
+  dehydration.
 
 Verification:
 

@@ -37346,6 +37346,16 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "runtime-detached table inventory and survival adjudication owner",
+          "reason": "Create Food and Water's represented runtime behavior is closed outside promoted battle runtime: a future inventory or survival owner must model created provision quantities, placement on the ground or in containers, holder/location state, food spoilage after 24 hours, later consumption, and clean-water/nourishing-food effects on malnutrition and dehydration without duplicating inventory or survival clocks inside battle Spell Invocation reducers."
+        },
+        "reason": "Create Food and Water is an SRD level-3 Spell Definition whose Surface record models Action Spell Slot casting, 30-foot range, V/S components, Instantaneous duration, and direct creation of food and fresh water as object provisions. No promoted battle-runtime profile is claimed because the represented food and water require table or inventory ownership for placement on the ground or in containers, item quantity and holder state, clean-water and nourishing-food facts, food spoilage after 24 hours, later consumption, and malnutrition or dehydration hazard adjudication rather than generic Spell Invocation reducers.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "spell",

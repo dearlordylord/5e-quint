@@ -16,9 +16,9 @@
       "spell-level-4": 81
     },
     "auditedUniqueSpellIdentitiesByFinalDisposition": {
-      "catalog-authored-review-required": 28,
+      "catalog-authored-review-required": 27,
       "catalog-installed-owner-evidence-present": 7,
-      "catalog-only/dead-for-now": 6,
+      "catalog-only/dead-for-now": 7,
       "missing-authored-record": 35
     },
     "auditedUniqueSpellIdentitiesByLevelBand": {
@@ -33,10 +33,10 @@
     },
     "rowsByBattleReadinessStatus": {
       "accepted": 469,
-      "accepted-no-battle-effect": 200,
+      "accepted-no-battle-effect": 201,
       "battle-runtime-required": 80,
       "not-applicable": 77,
-      "owner-evidence-required": 74
+      "owner-evidence-required": 73
     },
     "rowsByCatalogAdmission": {
       "installed": 638,
@@ -53,10 +53,10 @@
       "subclass selection": 12
     },
     "rowsByFinalDisposition": {
-      "catalog-authored-review-required": 73,
+      "catalog-authored-review-required": 72,
       "catalog-installed-owner-evidence-present": 481,
       "catalog-installed-owner-evidence-required": 1,
-      "catalog-only/dead-for-now": 148,
+      "catalog-only/dead-for-now": 149,
       "level-5-7-follow-up-required": 33,
       "missing-authored-record": 80,
       "non-runtime": 84
@@ -89,10 +89,10 @@
       "subclass-spell-access": 5
     },
     "rowsByUnitProfileDisposition": {
-      "not-recorded": 225,
+      "not-recorded": 224,
       "profile-subset-supported": 53,
       "supported-profile": 295,
-      "unsupported-profile": 327
+      "unsupported-profile": 328
     }
   },
   "rows": [
@@ -9370,7 +9370,7 @@
         "sourceInventoryRowId": "srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_create_food_and_water",
         "state": "present"
       },
-      "nextAction": "Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this later-frontier spell row as accepted.",
+      "nextAction": "Create Food and Water's represented runtime behavior is closed outside promoted battle runtime: a future inventory or survival owner must model created provision quantities, placement on the ground or in containers, holder/location state, food spoilage after 24 hours, later consumption, and clean-water/nourishing-food effects on malnutrition and dehydration without duplicating inventory or survival clocks inside battle Spell Invocation reducers.",
       "rowId": "srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_create_food_and_water",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -9386,18 +9386,22 @@
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "owner-evidence-required"
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "runtime-detached table inventory and survival adjudication owner",
+          "reason": "Create Food and Water's represented runtime behavior is closed outside promoted battle runtime: a future inventory or survival owner must model created provision quantities, placement on the ground or in containers, holder/location state, food spoilage after 24 hours, later consumption, and clean-water/nourishing-food effects on malnutrition and dehydration without duplicating inventory or survival clocks inside battle Spell Invocation reducers.",
+          "state": "recorded"
         },
         "catalogAdmission": {
           "state": "not-installed",
           "unitId": "create_food_and_water"
         },
-        "finalDisposition": "catalog-authored-review-required",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },
@@ -40287,7 +40291,7 @@
       ],
       "levelBand": "spell-level-3",
       "nextActions": [
-        "Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this later-frontier spell row as accepted."
+        "Create Food and Water's represented runtime behavior is closed outside promoted battle runtime: a future inventory or survival owner must model created provision quantities, placement on the ground or in containers, holder/location state, food spoilage after 24 hours, later consumption, and clean-water/nourishing-food effects on malnutrition and dehydration without duplicating inventory or survival clocks inside battle Spell Invocation reducers."
       ],
       "spellName": "Create Food and Water",
       "supportSnapshot": {
@@ -40298,18 +40302,22 @@
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "owner-evidence-required"
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "runtime-detached table inventory and survival adjudication owner",
+          "reason": "Create Food and Water's represented runtime behavior is closed outside promoted battle runtime: a future inventory or survival owner must model created provision quantities, placement on the ground or in containers, holder/location state, food spoilage after 24 hours, later consumption, and clean-water/nourishing-food effects on malnutrition and dehydration without duplicating inventory or survival clocks inside battle Spell Invocation reducers.",
+          "state": "recorded"
         },
         "catalogAdmission": {
           "state": "not-installed",
           "unitId": "create_food_and_water"
         },
-        "finalDisposition": "catalog-authored-review-required",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },

@@ -96,14 +96,14 @@ This metric is a separate seed for level-4 class feature rows, including Ability
 
 This metric is a separate seed for spell-level-3 pressure only. It belongs to the later character-level-5 frontier for full casters and Warlock Pact Magic, with half-caster rows excluded until their own class tables grant matching slots. It does not affect Character Levels 1-2 or Character Levels 1-3 readiness denominators.
 
-- Accepted: 38/110 (34.5%)
+- Accepted: 39/110 (35.5%)
 
 #### Spell-Level-3 Battle Readiness by Status
 
 - accepted: 22
-- accepted-no-battle-effect: 16
+- accepted-no-battle-effect: 17
 - battle-runtime-required: 48
-- owner-evidence-required: 24
+- owner-evidence-required: 23
 
 ### Spell-Level-4 Battle Readiness
 
@@ -205,9 +205,9 @@ This metric is a separate seed for spell-level-4 pressure only. It belongs to th
 
 ### Spell-Level-3 Unit Pressure by Disposition
 
-- catalog-authored-review-required: 24
+- catalog-authored-review-required: 23
 - catalog-installed-owner-evidence-present: 22
-- catalog-only/dead-for-now: 16
+- catalog-only/dead-for-now: 17
 - missing-authored-record: 48
 
 ### Spell-Level-3 Installed Unit Pressure by Disposition
@@ -709,7 +709,7 @@ These batches are generated planning recommendations for a separate SRD inventor
 |Cleric spell list Beacon of Hope|spell Unit pressure|outside-surface-runtime-mechanics|authored-record-present|not-installed|unsupported-profile|catalog-only/dead-for-now|accepted-no-battle-effect|outside-battle-runtime: future active spell-effect healing-maximization and saving-throw roll-mode owner||Beacon of Hope's battle-relevant behavior is closed outside the current promoted battle-runtime boundary: a future active spell-effect owner must admit selected targets without authored-identity dispatch, carry Concentration expiry, maximize later healing received by affected targets, project Advantage onto affected targets' Wisdom Saving Throws, and project Advantage onto affected targets' Death Saving Throws.|.references/srd-5.2.1/Classes/Cleric.md:205|
 |Cleric spell list Bestow Curse|spell Unit pressure|current-surface-can-express-source-facts|missing-authored-record|not-installed||missing-authored-record|battle-runtime-required|||Author an SRD-provenance Surface record or explicitly close the row.|.references/srd-5.2.1/Classes/Cleric.md:206|
 |Cleric spell list Clairvoyance|spell Unit pressure|outside-surface-runtime-mechanics|authored-record-present|not-installed|unsupported-profile|catalog-only/dead-for-now|accepted-no-battle-effect|outside-runtime-presentation-exploration: runtime-detached table/perception and remote-sensor owner||Clairvoyance creates a table-placed remote sensor and remote perception channel. Promoted battle runtime does not own location familiarity, remote information disclosure, active sensor-sense presentation, observer visibility of the sensor, or autonomous sensor behavior, and must not treat the sensor as ordinary caster sight or a target-selection proxy.|.references/srd-5.2.1/Classes/Cleric.md:207|
-|Cleric spell list Create Food and Water|spell Unit pressure|current-surface-can-express-source-facts|authored-record-present|not-installed||catalog-authored-review-required|owner-evidence-required|||Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this later-frontier spell row as accepted.|.references/srd-5.2.1/Classes/Cleric.md:208|
+|Cleric spell list Create Food and Water|spell Unit pressure|outside-surface-runtime-mechanics|authored-record-present|not-installed|unsupported-profile|catalog-only/dead-for-now|accepted-no-battle-effect|outside-runtime-presentation-exploration: runtime-detached table inventory and survival adjudication owner||Create Food and Water's represented runtime behavior is closed outside promoted battle runtime: a future inventory or survival owner must model created provision quantities, placement on the ground or in containers, holder/location state, food spoilage after 24 hours, later consumption, and clean-water/nourishing-food effects on malnutrition and dehydration without duplicating inventory or survival clocks inside battle Spell Invocation reducers.|.references/srd-5.2.1/Classes/Cleric.md:208|
 |Cleric spell list Daylight|spell Unit pressure|current-surface-can-express-source-facts|authored-record-present|not-installed||catalog-authored-review-required|owner-evidence-required|||Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this later-frontier spell row as accepted.|.references/srd-5.2.1/Classes/Cleric.md:209|
 |Cleric spell list Dispel Magic|spell Unit pressure|current-surface-can-express-source-facts|authored-record-present|installed|profile-subset-supported|catalog-installed-owner-evidence-present|accepted|profile-subset-remaining-mechanics-closed: broader ongoing Spell Effect occurrence model; table spatial witness and magical-effect identity owner|Unit catalog/admission: catalog evidence; battle-runtime spell invocation/projection: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Cleric.md:210|
 |Cleric spell list Glyph of Warding|spell Unit pressure|current-surface-can-express-source-facts|missing-authored-record|not-installed||missing-authored-record|battle-runtime-required|||Author an SRD-provenance Surface record or explicitly close the row.|.references/srd-5.2.1/Classes/Cleric.md:211|
