@@ -1,0 +1,593 @@
+# Ralph L5 Lane B: Spell-Level 3 Authored Closure
+
+<!-- ralph-task-index
+{
+  "schema": "ralph-plan.v1",
+  "tasks": [
+    {
+      "number": 1,
+      "id": "L5-B01-ANIMATE-DEAD",
+      "status": "ready-for-research",
+      "title": "Close Animate Dead authored spell pressure"
+    },
+    {
+      "number": 2,
+      "id": "L5-B02-BEACON-OF-HOPE",
+      "status": "ready-for-research",
+      "title": "Close Beacon of Hope authored spell pressure"
+    },
+    {
+      "number": 3,
+      "id": "L5-B03-CALL-LIGHTNING",
+      "status": "ready-for-research",
+      "title": "Close Call Lightning authored spell pressure"
+    },
+    {
+      "number": 4,
+      "id": "L5-B04-CREATE-FOOD-AND-WATER",
+      "status": "ready-for-research",
+      "title": "Close Create Food and Water authored spell pressure"
+    },
+    {
+      "number": 5,
+      "id": "L5-B05-DAYLIGHT",
+      "status": "ready-for-research",
+      "title": "Close Daylight authored spell pressure"
+    },
+    {
+      "number": 6,
+      "id": "L5-B06-FEAR",
+      "status": "ready-for-research",
+      "title": "Close Fear authored spell pressure"
+    },
+    {
+      "number": 7,
+      "id": "L5-B07-MAJOR-IMAGE",
+      "status": "ready-for-research",
+      "title": "Close Major Image authored spell pressure"
+    },
+    {
+      "number": 8,
+      "id": "L5-B08-PROTECTION-FROM-ENERGY",
+      "status": "ready-for-research",
+      "title": "Close Protection from Energy authored spell pressure"
+    },
+    {
+      "number": 9,
+      "id": "L5-B09-SPIRIT-GUARDIANS",
+      "status": "ready-for-research",
+      "title": "Close Spirit Guardians authored spell pressure"
+    },
+    {
+      "number": 10,
+      "id": "L5-B10-STINKING-CLOUD",
+      "status": "ready-for-research",
+      "title": "Close Stinking Cloud authored spell pressure"
+    },
+    {
+      "number": 11,
+      "id": "L5-B11-VAMPIRIC-TOUCH",
+      "status": "ready-for-research",
+      "title": "Close Vampiric Touch authored spell pressure"
+    },
+    {
+      "number": 12,
+      "id": "L5-B12-WIND-WALL",
+      "status": "ready-for-research",
+      "title": "Close Wind Wall authored spell pressure"
+    }
+  ]
+}
+-->
+
+## Lane Scope
+
+This lane closes the spell-level-3 identities that already have authored SRD
+Surface records but are not installed or owner-classified for the character
+level 5 frontier.
+
+The output for each task is either supported catalog admission with
+checker-visible owner evidence, or an explicit runtime-detached/catalog-only
+closure. Do not author missing spell records in this lane; those are Lane C and
+Lane D.
+
+## Source Artifacts
+
+- `plans/unit-profile-coverage/LEVEL1_7_MINING_AUDIT.md`
+- `plans/unit-profile-coverage/level1-7-mining-audit.json`
+- `plans/unit-profile-coverage/unit-claims.jsonl`
+- `plans/unit-profile-coverage/unit-evidence.jsonl`
+- `plans/unit-profile-coverage/unit-matrix.json`
+- `packages/surface/content/*.json`
+- `packages/surface/content/*.dhall`
+- `packages/battle-runtime/src/`
+- `.references/srd-5.2.1/Classes/*.md`
+- `.references/srd-5.2.1/Spells/*.md`
+- `UBIQUITOUS_LANGUAGE.md`
+
+## Lane Rules
+
+- Run the Ralph task-base check before research or implementation.
+- Use only local SRD 5.2.1 sources under `.references/srd-5.2.1/`.
+- Do not browse external rules sources.
+- Do not add PHB+ authored identity.
+- One task equals one unique spell Unit identity. Class-list rows are evidence
+  for that Unit, not separate implementation tasks.
+- Do not install an authored spell into the catalog until its owner boundary is
+  explicit and checker-readable.
+- Runtime behavior must be admitted by parsed shape, support-profile readers,
+  typed procedure facts, and explicit runtime state; do not dispatch on spell
+  id/name/provenance section.
+- If the spell belongs outside the promoted runtime, close it with a precise
+  runtime-detached owner statement instead of a vague unsupported label.
+
+## Task DAG
+
+| Task | Depends on | Dependency reason |
+| --- | --- | --- |
+| L5-B01-ANIMATE-DEAD | merged L17 mining audit | Independent authored spell pressure row. |
+| L5-B02-BEACON-OF-HOPE | merged L17 mining audit | Independent authored spell pressure row. |
+| L5-B03-CALL-LIGHTNING | merged L17 mining audit | Independent authored spell pressure row. |
+| L5-B04-CREATE-FOOD-AND-WATER | merged L17 mining audit | Independent authored spell pressure row. |
+| L5-B05-DAYLIGHT | merged L17 mining audit | Independent authored spell pressure row. |
+| L5-B06-FEAR | merged L17 mining audit | Independent authored spell pressure row. |
+| L5-B07-MAJOR-IMAGE | merged L17 mining audit | Independent authored spell pressure row. |
+| L5-B08-PROTECTION-FROM-ENERGY | merged L17 mining audit | Independent authored spell pressure row. |
+| L5-B09-SPIRIT-GUARDIANS | merged L17 mining audit | Independent authored spell pressure row. |
+| L5-B10-STINKING-CLOUD | merged L17 mining audit | Independent authored spell pressure row. |
+| L5-B11-VAMPIRIC-TOUCH | merged L17 mining audit | Independent authored spell pressure row. |
+| L5-B12-WIND-WALL | merged L17 mining audit | Independent authored spell pressure row. |
+
+## Shared Verification
+
+- RAW and ubiquitous-language check: read the listed spell description, class
+  spell-list anchors, and `UBIQUITOUS_LANGUAGE.md` before closing the Unit.
+- Reviewer-loop convergence: RAW traceability, ubiquitous-language/domain,
+  architecture/connascence, and code-review passes until no reasonable findings
+  remain.
+- `pnpm --filter @dnd/surface typecheck`
+- `pnpm --filter @dnd/surface exec vitest run src/surface/unit-catalog.test.ts`
+- Run focused tests/typechecks for any touched owner package.
+- If battle-runtime behavior changes, update the relevant QNT/spec first and
+  run the focused MBT only after code changes are complete, one MBT run at a
+  time per `AGENTS.md`.
+- `pnpm unit-profile-coverage:check --write`
+- `pnpm unit-profile-coverage:check`
+- `git diff --check`
+
+### Task 1 - L5-B01-ANIMATE-DEAD
+
+Status: `ready-for-research`
+
+Depends on:
+
+- merged L17 mining audit
+
+Unit:
+
+- `animate_dead`
+
+SRD anchors:
+
+- `.references/srd-5.2.1/Spells/Descriptions-A-D.md:134`
+- `.references/srd-5.2.1/Classes/Cleric.md:204`
+- `.references/srd-5.2.1/Classes/Wizard.md:237`
+
+Current state:
+
+- Authored record exists; catalog state is `not-installed`.
+- Mining disposition is `catalog-authored-review-required`.
+
+Output:
+
+- Review the authored record against RAW and decide whether to admit it with
+  owner evidence or close it as runtime-detached with a precise owner.
+
+Acceptance:
+
+- `animate_dead` leaves `catalog-authored-review-required` in the generated
+  level 1-7 audit.
+
+Verification:
+
+- Shared lane verification.
+
+### Task 2 - L5-B02-BEACON-OF-HOPE
+
+Status: `ready-for-research`
+
+Depends on:
+
+- merged L17 mining audit
+
+Unit:
+
+- `beacon_of_hope`
+
+SRD anchors:
+
+- `.references/srd-5.2.1/Spells/Descriptions-A-D.md:451`
+- `.references/srd-5.2.1/Classes/Cleric.md:205`
+
+Current state:
+
+- Authored record exists; catalog state is `not-installed`.
+- Mining disposition is `catalog-authored-review-required`.
+
+Output:
+
+- Classify healing/save/death-save advantage ownership and either admit the
+  spell with evidence or close the runtime-detached boundary.
+
+Acceptance:
+
+- `beacon_of_hope` leaves `catalog-authored-review-required`.
+
+Verification:
+
+- Shared lane verification.
+
+### Task 3 - L5-B03-CALL-LIGHTNING
+
+Status: `ready-for-research`
+
+Depends on:
+
+- merged L17 mining audit
+
+Unit:
+
+- `call_lightning`
+
+SRD anchors:
+
+- `.references/srd-5.2.1/Spells/Descriptions-A-D.md:625`
+- `.references/srd-5.2.1/Classes/Druid.md:253`
+
+Current state:
+
+- Authored record exists; catalog state is `not-installed`.
+- Mining disposition is `catalog-authored-review-required`.
+
+Output:
+
+- Decide the owner for persistent storm state, repeated action damage, and
+  outdoor/storm-size table facts.
+
+Acceptance:
+
+- `call_lightning` leaves `catalog-authored-review-required`.
+
+Verification:
+
+- Shared lane verification.
+
+### Task 4 - L5-B04-CREATE-FOOD-AND-WATER
+
+Status: `ready-for-research`
+
+Depends on:
+
+- merged L17 mining audit
+
+Unit:
+
+- `create_food_and_water`
+
+SRD anchors:
+
+- `.references/srd-5.2.1/Spells/Descriptions-A-D.md:1200`
+- `.references/srd-5.2.1/Classes/Cleric.md:208`
+
+Current state:
+
+- Authored record exists; catalog state is `not-installed`.
+- Mining disposition is `catalog-authored-review-required`.
+
+Output:
+
+- Close the food/water creation effect as table inventory/survival ownership or
+  admit it if a typed owner already exists.
+
+Acceptance:
+
+- `create_food_and_water` leaves `catalog-authored-review-required`.
+
+Verification:
+
+- Shared lane verification.
+
+### Task 5 - L5-B05-DAYLIGHT
+
+Status: `ready-for-research`
+
+Depends on:
+
+- merged L17 mining audit
+
+Unit:
+
+- `daylight`
+
+SRD anchors:
+
+- `.references/srd-5.2.1/Spells/Descriptions-A-D.md:1337`
+- `.references/srd-5.2.1/Classes/Cleric.md:209`
+- `.references/srd-5.2.1/Classes/Druid.md:255`
+- `.references/srd-5.2.1/Classes/Sorcerer.md:303`
+
+Current state:
+
+- Authored record exists; catalog state is `not-installed`.
+- Mining disposition is `catalog-authored-review-required`.
+
+Output:
+
+- Decide the owner for light area, object targeting, overlap with magical
+  darkness, and table visibility.
+
+Acceptance:
+
+- `daylight` leaves `catalog-authored-review-required`.
+
+Verification:
+
+- Shared lane verification.
+
+### Task 6 - L5-B06-FEAR
+
+Status: `ready-for-research`
+
+Depends on:
+
+- merged L17 mining audit
+
+Unit:
+
+- `fear`
+
+SRD anchors:
+
+- `.references/srd-5.2.1/Spells/Descriptions-E-L.md:268`
+- `.references/srd-5.2.1/Classes/Bard.md:220`
+- `.references/srd-5.2.1/Classes/Sorcerer.md:305`
+- `.references/srd-5.2.1/Classes/Warlock.md:382`
+- `.references/srd-5.2.1/Classes/Wizard.md:243`
+
+Current state:
+
+- Authored record exists; catalog state is `not-installed`.
+- Mining disposition is `catalog-authored-review-required`.
+
+Output:
+
+- Decide the owner for cone targeting, Wisdom save, frightened state, forced
+  movement/drop behavior, and save retry timing.
+
+Acceptance:
+
+- `fear` leaves `catalog-authored-review-required`.
+
+Verification:
+
+- Shared lane verification.
+
+### Task 7 - L5-B07-MAJOR-IMAGE
+
+Status: `ready-for-research`
+
+Depends on:
+
+- merged L17 mining audit
+
+Unit:
+
+- `major_image`
+
+SRD anchors:
+
+- `.references/srd-5.2.1/Spells/Descriptions-M-P.md:153`
+- `.references/srd-5.2.1/Classes/Bard.md:223`
+- `.references/srd-5.2.1/Classes/Sorcerer.md:312`
+- `.references/srd-5.2.1/Classes/Warlock.md:387`
+- `.references/srd-5.2.1/Classes/Wizard.md:252`
+
+Current state:
+
+- Authored record exists; catalog state is `not-installed`.
+- Mining disposition is `catalog-authored-review-required`.
+
+Output:
+
+- Close or admit image/illusion ownership without treating table perception or
+  illusion believability as battle-state duplicates.
+
+Acceptance:
+
+- `major_image` leaves `catalog-authored-review-required`.
+
+Verification:
+
+- Shared lane verification.
+
+### Task 8 - L5-B08-PROTECTION-FROM-ENERGY
+
+Status: `ready-for-research`
+
+Depends on:
+
+- merged L17 mining audit
+
+Unit:
+
+- `protection_from_energy`
+
+SRD anchors:
+
+- `.references/srd-5.2.1/Spells/Descriptions-M-P.md:894`
+- `.references/srd-5.2.1/Classes/Cleric.md:215`
+- `.references/srd-5.2.1/Classes/Druid.md:259`
+- `.references/srd-5.2.1/Classes/Sorcerer.md:313`
+- `.references/srd-5.2.1/Classes/Wizard.md:255`
+
+Current state:
+
+- Authored record exists; catalog state is `not-installed`.
+- Mining disposition is `catalog-authored-review-required`.
+
+Output:
+
+- Decide the owner for chosen damage type resistance and concentration
+  duration.
+
+Acceptance:
+
+- `protection_from_energy` leaves `catalog-authored-review-required`.
+
+Verification:
+
+- Shared lane verification.
+
+### Task 9 - L5-B09-SPIRIT-GUARDIANS
+
+Status: `ready-for-research`
+
+Depends on:
+
+- merged L17 mining audit
+
+Unit:
+
+- `spirit_guardians`
+
+SRD anchors:
+
+- `.references/srd-5.2.1/Spells/Descriptions-S-Z.md:495`
+- `.references/srd-5.2.1/Classes/Cleric.md:220`
+
+Current state:
+
+- Authored record exists; catalog state is `not-installed`.
+- Mining disposition is `catalog-authored-review-required`.
+
+Output:
+
+- Decide the owner for aura area, save/damage timing, speed reduction, and
+  chosen unaffected creatures.
+
+Acceptance:
+
+- `spirit_guardians` leaves `catalog-authored-review-required`.
+
+Verification:
+
+- Shared lane verification.
+
+### Task 10 - L5-B10-STINKING-CLOUD
+
+Status: `ready-for-research`
+
+Depends on:
+
+- merged L17 mining audit
+
+Unit:
+
+- `stinking_cloud`
+
+SRD anchors:
+
+- `.references/srd-5.2.1/Spells/Descriptions-S-Z.md:544`
+- `.references/srd-5.2.1/Classes/Bard.md:231`
+- `.references/srd-5.2.1/Classes/Sorcerer.md:316`
+- `.references/srd-5.2.1/Classes/Wizard.md:261`
+
+Current state:
+
+- Authored record exists; catalog state is `not-installed`.
+- Mining disposition is `catalog-authored-review-required`.
+
+Output:
+
+- Decide the owner for area persistence, obscuration, poison save, action loss,
+  and wind dispersal.
+
+Acceptance:
+
+- `stinking_cloud` leaves `catalog-authored-review-required`.
+
+Verification:
+
+- Shared lane verification.
+
+### Task 11 - L5-B11-VAMPIRIC-TOUCH
+
+Status: `ready-for-research`
+
+Depends on:
+
+- merged L17 mining audit
+
+Unit:
+
+- `vampiric_touch`
+
+SRD anchors:
+
+- `.references/srd-5.2.1/Spells/Descriptions-S-Z.md:1075`
+- `.references/srd-5.2.1/Classes/Sorcerer.md:318`
+- `.references/srd-5.2.1/Classes/Warlock.md:390`
+- `.references/srd-5.2.1/Classes/Wizard.md:264`
+
+Current state:
+
+- Authored record exists; catalog state is `not-installed`.
+- Mining disposition is `catalog-authored-review-required`.
+
+Output:
+
+- Decide the owner for repeated spell attack, necrotic damage, and healing
+  derived from damage dealt.
+
+Acceptance:
+
+- `vampiric_touch` leaves `catalog-authored-review-required`.
+
+Verification:
+
+- Shared lane verification.
+
+### Task 12 - L5-B12-WIND-WALL
+
+Status: `ready-for-research`
+
+Depends on:
+
+- merged L17 mining audit
+
+Unit:
+
+- `wind_wall`
+
+SRD anchors:
+
+- `.references/srd-5.2.1/Spells/Descriptions-S-Z.md:1313`
+- `.references/srd-5.2.1/Classes/Druid.md:265`
+
+Current state:
+
+- Authored record exists; catalog state is `not-installed`.
+- Mining disposition is `catalog-authored-review-required`.
+
+Output:
+
+- Decide the owner for line geometry, damage on creation, ranged projectile
+  blocking, and gas/fog dispersal.
+
+Acceptance:
+
+- `wind_wall` leaves `catalog-authored-review-required`.
+
+Verification:
+
+- Shared lane verification.
