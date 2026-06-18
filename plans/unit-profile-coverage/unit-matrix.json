@@ -37072,6 +37072,16 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-battle-runtime",
+          "owner": "future active storm Spell Effect and table/spatial weather owner",
+          "reason": "Call Lightning's represented battle behavior is closed outside the current promoted battle-runtime boundary: a future active storm Spell Effect owner must carry the cloud occurrence, Concentration expiry, retained slot level and Spell Save DC, later Magic Action repeats, selected points under the cloud, and repeated Dexterity Saving Throw Lightning damage without authored-identity dispatch. Table/spatial weather ownership must supply visibility, under-cloud area membership, outdoor-in-a-storm state, existing storm control, and the storm damage bonus rather than duplicating map or weather state inside generic Spell Invocation reducers."
+        },
+        "reason": "Call Lightning is an SRD level-3 Spell Definition whose Surface record models Action Spell Slot casting, 120-foot range, V/S components, Concentration up to 10 minutes, a visible point above the caster, a 10-foot-tall 60-foot-radius storm-cloud Cylinder, initial Dexterity Saving Throw Lightning damage within 5 feet of a chosen point under the cloud, repeated Magic Action Lightning calls while the spell lasts, and +1d10 damage per Spell Slot level above 3. No promoted battle-runtime profile is claimed because the current Spell Invocation reducers do not own an active storm Spell Effect that stores the cloud occurrence, retains cast-time spell facts for later Magic Actions, validates later target points under the cloud, executes repeated save-gated damage without another Spell Slot spend, or consumes outdoor existing-storm substitution and storm-damage facts.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "spell",

@@ -41,10 +41,10 @@ These counts describe the current runtime/catalog state of mined rows. They are 
 
 | Disposition | Rows |
 | --- | ---: |
-| catalog-authored-review-required | 74 |
+| catalog-authored-review-required | 73 |
 | catalog-installed-owner-evidence-present | 481 |
 | catalog-installed-owner-evidence-required | 1 |
-| catalog-only/dead-for-now | 147 |
+| catalog-only/dead-for-now | 148 |
 | level-5-7-follow-up-required | 33 |
 | missing-authored-record | 80 |
 | non-runtime | 84 |
@@ -60,20 +60,20 @@ These counts describe the current runtime/catalog state of mined rows. They are 
 
 | Unit profile disposition | Rows |
 | --- | ---: |
-| not-recorded | 226 |
+| not-recorded | 225 |
 | profile-subset-supported | 53 |
 | supported-profile | 295 |
-| unsupported-profile | 326 |
+| unsupported-profile | 327 |
 
 ### Battle Readiness Snapshot
 
 | Battle readiness status | Rows |
 | --- | ---: |
 | accepted | 469 |
-| accepted-no-battle-effect | 199 |
+| accepted-no-battle-effect | 200 |
 | battle-runtime-required | 80 |
 | not-applicable | 77 |
-| owner-evidence-required | 75 |
+| owner-evidence-required | 74 |
 
 ## Spell-Level 3-4 Pressure Summary
 
@@ -88,9 +88,9 @@ These counts separate class-list rows from unique Spell Definition identities. A
 
 | Disposition | Spell identities |
 | --- | ---: |
-| catalog-authored-review-required | 29 |
+| catalog-authored-review-required | 28 |
 | catalog-installed-owner-evidence-present | 7 |
-| catalog-only/dead-for-now | 5 |
+| catalog-only/dead-for-now | 6 |
 | missing-authored-record | 35 |
 
 ### Unique Spell Identities
@@ -101,7 +101,7 @@ These counts separate class-list rows from unique Spell Definition identities. A
 | `beacon_of_hope` Beacon of Hope | spell-level-3 | Cleric | 1 | authored-record-present | not-installed | unsupported-profile | catalog-only/dead-for-now | accepted-no-battle-effect | outside-battle-runtime: future active spell-effect healing-maximization and saving-throw roll-mode owner | Beacon of Hope's battle-relevant behavior is closed outside the current promoted battle-runtime boundary: a future active spell-effect owner must admit selected targets without authored-identity dispatch, carry Concentration expiry, maximize later healing received by affected targets, project Advantage onto affected targets' Wisdom Saving Throws, and project Advantage onto affected targets' Death Saving Throws. |
 | `bestow_curse` Bestow Curse | spell-level-3 | Bard, Cleric, Wizard | 3 | missing-authored-record | not-installed | not-recorded | missing-authored-record | battle-runtime-required | not-recorded | Author an SRD-provenance Surface record or explicitly close the row. |
 | `blink` Blink | spell-level-3 | Sorcerer, Wizard | 2 | missing-authored-record | not-installed | not-recorded | missing-authored-record | battle-runtime-required | not-recorded | Author an SRD-provenance Surface record or explicitly close the row. |
-| `call_lightning` Call Lightning | spell-level-3 | Druid | 1 | authored-record-present | not-installed | not-recorded | catalog-authored-review-required | owner-evidence-required | not-recorded | Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this later-frontier spell row as accepted. |
+| `call_lightning` Call Lightning | spell-level-3 | Druid | 1 | authored-record-present | not-installed | unsupported-profile | catalog-only/dead-for-now | accepted-no-battle-effect | outside-battle-runtime: future active storm Spell Effect and table/spatial weather owner | Call Lightning's represented battle behavior is closed outside the current promoted battle-runtime boundary: a future active storm Spell Effect owner must carry the cloud occurrence, Concentration expiry, retained slot level and Spell Save DC, later Magic Action repeats, selected points under the cloud, and repeated Dexterity Saving Throw Lightning damage without authored-identity dispatch. Table/spatial weather ownership must supply visibility, under-cloud area membership, outdoor-in-a-storm state, existing storm control, and the storm damage bonus rather than duplicating map or weather state inside generic Spell Invocation reducers. |
 | `clairvoyance` Clairvoyance | spell-level-3 | Bard, Cleric, Sorcerer, Wizard | 4 | authored-record-present | not-installed | unsupported-profile | catalog-only/dead-for-now | accepted-no-battle-effect | outside-runtime-presentation-exploration: runtime-detached table/perception and remote-sensor owner | Clairvoyance creates a table-placed remote sensor and remote perception channel. Promoted battle runtime does not own location familiarity, remote information disclosure, active sensor-sense presentation, observer visibility of the sensor, or autonomous sensor behavior, and must not treat the sensor as ordinary caster sight or a target-selection proxy. |
 | `conjure_animals` Conjure Animals | spell-level-3 | Druid | 1 | missing-authored-record | not-installed | not-recorded | missing-authored-record | battle-runtime-required | not-recorded | Author an SRD-provenance Surface record or explicitly close the row. |
 | `counterspell` Counterspell | spell-level-3 | Sorcerer, Warlock, Wizard | 3 | authored-record-present | installed | supported-profile | catalog-installed-owner-evidence-present | accepted | not-recorded | Owner-specific operational evidence is classified and present. |
@@ -572,7 +572,7 @@ These counts separate class-list rows from unique Spell Definition identities. A
 | Druid spell list Pass without Trace | spell-level-2 | spell-level | spell Unit pressure | `pass_without_trace` | `.references/srd-5.2.1/Classes/Druid.md:245` | present | installed | profile-subset-supported | catalog-installed-owner-evidence-present | accepted | profile-subset-remaining-mechanics-closed: table/spatial and exploration/tracking owner | Owner-specific operational evidence is classified and present. |
 | Druid spell list Protection from Poison | spell-level-2 | spell-level | spell Unit pressure | `protection_from_poison` | `.references/srd-5.2.1/Classes/Druid.md:246` | present | installed | supported-profile | catalog-installed-owner-evidence-present | accepted | not-recorded | Owner-specific operational evidence is classified and present. |
 | Druid spell list Spike Growth | spell-level-2 | spell-level | spell Unit pressure | `spike_growth` | `.references/srd-5.2.1/Classes/Druid.md:247` | present | installed | profile-subset-supported | catalog-installed-owner-evidence-present | accepted | profile-subset-remaining-mechanics-closed: runtime-detached table Search/perception witness owner | Owner-specific operational evidence is classified and present. |
-| Druid spell list Call Lightning | spell-level-3 | spell-level | spell Unit pressure | `call_lightning` | `.references/srd-5.2.1/Classes/Druid.md:253` | present | not-installed | not-recorded | catalog-authored-review-required | owner-evidence-required | not-recorded | Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this later-frontier spell row as accepted. |
+| Druid spell list Call Lightning | spell-level-3 | spell-level | spell Unit pressure | `call_lightning` | `.references/srd-5.2.1/Classes/Druid.md:253` | present | not-installed | unsupported-profile | catalog-only/dead-for-now | accepted-no-battle-effect | outside-battle-runtime: future active storm Spell Effect and table/spatial weather owner | Call Lightning's represented battle behavior is closed outside the current promoted battle-runtime boundary: a future active storm Spell Effect owner must carry the cloud occurrence, Concentration expiry, retained slot level and Spell Save DC, later Magic Action repeats, selected points under the cloud, and repeated Dexterity Saving Throw Lightning damage without authored-identity dispatch. Table/spatial weather ownership must supply visibility, under-cloud area membership, outdoor-in-a-storm state, existing storm control, and the storm damage bonus rather than duplicating map or weather state inside generic Spell Invocation reducers. |
 | Druid spell list Conjure Animals | spell-level-3 | spell-level | spell Unit pressure | `conjure_animals` | `.references/srd-5.2.1/Classes/Druid.md:254` | present | not-installed | not-recorded | missing-authored-record | battle-runtime-required | not-recorded | Author an SRD-provenance Surface record or explicitly close the row. |
 | Druid spell list Daylight | spell-level-3 | spell-level | spell Unit pressure | `daylight` | `.references/srd-5.2.1/Classes/Druid.md:255` | present | not-installed | not-recorded | catalog-authored-review-required | owner-evidence-required | not-recorded | Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this later-frontier spell row as accepted. |
 | Druid spell list Dispel Magic | spell-level-3 | spell-level | spell Unit pressure | `dispel_magic` | `.references/srd-5.2.1/Classes/Druid.md:256` | present | installed | profile-subset-supported | catalog-installed-owner-evidence-present | accepted | profile-subset-remaining-mechanics-closed: broader ongoing Spell Effect occurrence model; table spatial witness and magical-effect identity owner | Owner-specific operational evidence is classified and present. |

@@ -19,7 +19,7 @@
     {
       "number": 3,
       "id": "L5-B03-CALL-LIGHTNING",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Close Call Lightning authored spell pressure"
     },
     {
@@ -132,7 +132,7 @@ this lane; those are Lane C and Lane D.
 | ---: | --- | --- | --- | --- |
 | 1 | L5-B01-ANIMATE-DEAD - Close Animate Dead authored spell pressure | done | none | Closed as a runtime-detached companion-control boundary. |
 | 2 | L5-B02-BEACON-OF-HOPE - Close Beacon of Hope authored spell pressure | done | none | Closed outside the promoted battle runtime active spell-effect boundary. |
-| 3 | L5-B03-CALL-LIGHTNING - Close Call Lightning authored spell pressure | ready-for-research | none | Independent authored spell pressure row. |
+| 3 | L5-B03-CALL-LIGHTNING - Close Call Lightning authored spell pressure | done | none | Closed outside the promoted battle runtime active storm spell-effect and table/spatial weather boundary. |
 | 4 | L5-B04-CREATE-FOOD-AND-WATER - Close Create Food and Water authored spell pressure | ready-for-research | none | Independent authored spell pressure row. |
 | 5 | L5-B05-DAYLIGHT - Close Daylight authored spell pressure | ready-for-research | none | Independent authored spell pressure row. |
 | 6 | L5-B06-FEAR - Close Fear authored spell pressure | ready-for-research | none | Independent authored spell pressure row. |
@@ -259,7 +259,7 @@ Verification:
 
 ### Task 3 - L5-B03-CALL-LIGHTNING
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -287,6 +287,19 @@ Output:
 Acceptance:
 
 - `call_lightning` leaves `catalog-authored-review-required`.
+
+Result:
+
+- `call_lightning` is recorded as `unsupported-profile` and
+  `catalog-only/dead-for-now` with an `outside-battle-runtime` closure.
+- The future owner is an active storm Spell Effect owner that carries the cloud
+  occurrence, Concentration expiry, retained slot level and Spell Save DC,
+  later Magic Action repeats, selected points under the cloud, and repeated
+  Dexterity Saving Throw Lightning damage without authored-identity dispatch.
+- Table/spatial weather ownership supplies visibility, under-cloud area
+  membership, outdoor-in-a-storm state, existing storm control, and the storm
+  damage bonus rather than duplicating map or weather state inside generic
+  Spell Invocation reducers.
 
 Verification:
 

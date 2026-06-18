@@ -96,14 +96,14 @@ This metric is a separate seed for level-4 class feature rows, including Ability
 
 This metric is a separate seed for spell-level-3 pressure only. It belongs to the later character-level-5 frontier for full casters and Warlock Pact Magic, with half-caster rows excluded until their own class tables grant matching slots. It does not affect Character Levels 1-2 or Character Levels 1-3 readiness denominators.
 
-- Accepted: 37/110 (33.6%)
+- Accepted: 38/110 (34.5%)
 
 #### Spell-Level-3 Battle Readiness by Status
 
 - accepted: 22
-- accepted-no-battle-effect: 15
+- accepted-no-battle-effect: 16
 - battle-runtime-required: 48
-- owner-evidence-required: 25
+- owner-evidence-required: 24
 
 ### Spell-Level-4 Battle Readiness
 
@@ -205,9 +205,9 @@ This metric is a separate seed for spell-level-4 pressure only. It belongs to th
 
 ### Spell-Level-3 Unit Pressure by Disposition
 
-- catalog-authored-review-required: 25
+- catalog-authored-review-required: 24
 - catalog-installed-owner-evidence-present: 22
-- catalog-only/dead-for-now: 15
+- catalog-only/dead-for-now: 16
 - missing-authored-record: 48
 
 ### Spell-Level-3 Installed Unit Pressure by Disposition
@@ -724,7 +724,7 @@ These batches are generated planning recommendations for a separate SRD inventor
 |Cleric spell list Spirit Guardians|spell Unit pressure|current-surface-can-express-source-facts|authored-record-present|not-installed||catalog-authored-review-required|owner-evidence-required|||Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this later-frontier spell row as accepted.|.references/srd-5.2.1/Classes/Cleric.md:220|
 |Cleric spell list Tongues|spell Unit pressure|outside-surface-runtime-mechanics|authored-record-present|not-installed|unsupported-profile|catalog-only/dead-for-now|accepted-no-battle-effect|outside-runtime-presentation-exploration: runtime-detached language/communication owner||Tongues changes communication intelligibility through hearing, sight, signing, speech, and known-language gates. Promoted battle runtime does not own conversation content, social outcomes, automatic communication adjudication, or language-table projection for this spell.|.references/srd-5.2.1/Classes/Cleric.md:221|
 |Cleric spell list Water Walk|spell Unit pressure|current-surface-can-express-source-facts|missing-authored-record|not-installed||missing-authored-record|battle-runtime-required|||Author an SRD-provenance Surface record or explicitly close the row.|.references/srd-5.2.1/Classes/Cleric.md:222|
-|Druid spell list Call Lightning|spell Unit pressure|current-surface-can-express-source-facts|authored-record-present|not-installed||catalog-authored-review-required|owner-evidence-required|||Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this later-frontier spell row as accepted.|.references/srd-5.2.1/Classes/Druid.md:253|
+|Druid spell list Call Lightning|spell Unit pressure|outside-surface-runtime-mechanics|authored-record-present|not-installed|unsupported-profile|catalog-only/dead-for-now|accepted-no-battle-effect|outside-battle-runtime: future active storm Spell Effect and table/spatial weather owner||Call Lightning's represented battle behavior is closed outside the current promoted battle-runtime boundary: a future active storm Spell Effect owner must carry the cloud occurrence, Concentration expiry, retained slot level and Spell Save DC, later Magic Action repeats, selected points under the cloud, and repeated Dexterity Saving Throw Lightning damage without authored-identity dispatch. Table/spatial weather ownership must supply visibility, under-cloud area membership, outdoor-in-a-storm state, existing storm control, and the storm damage bonus rather than duplicating map or weather state inside generic Spell Invocation reducers.|.references/srd-5.2.1/Classes/Druid.md:253|
 |Druid spell list Conjure Animals|spell Unit pressure|current-surface-can-express-source-facts|missing-authored-record|not-installed||missing-authored-record|battle-runtime-required|||Author an SRD-provenance Surface record or explicitly close the row.|.references/srd-5.2.1/Classes/Druid.md:254|
 |Druid spell list Daylight|spell Unit pressure|current-surface-can-express-source-facts|authored-record-present|not-installed||catalog-authored-review-required|owner-evidence-required|||Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this later-frontier spell row as accepted.|.references/srd-5.2.1/Classes/Druid.md:255|
 |Druid spell list Dispel Magic|spell Unit pressure|current-surface-can-express-source-facts|authored-record-present|installed|profile-subset-supported|catalog-installed-owner-evidence-present|accepted|profile-subset-remaining-mechanics-closed: broader ongoing Spell Effect occurrence model; table spatial witness and magical-effect identity owner|Unit catalog/admission: catalog evidence; battle-runtime spell invocation/projection: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Druid.md:256|
