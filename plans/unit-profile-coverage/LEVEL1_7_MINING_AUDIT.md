@@ -44,8 +44,8 @@ These counts describe the current runtime/catalog state of mined rows. They are 
 | catalog-authored-review-required | 77 |
 | catalog-installed-owner-evidence-present | 482 |
 | catalog-installed-owner-evidence-required | 1 |
-| catalog-only/dead-for-now | 144 |
-| level-5-7-follow-up-required | 32 |
+| catalog-only/dead-for-now | 145 |
+| level-5-7-follow-up-required | 31 |
 | missing-authored-record | 80 |
 | non-runtime | 84 |
 
@@ -60,10 +60,10 @@ These counts describe the current runtime/catalog state of mined rows. They are 
 
 | Unit profile disposition | Rows |
 | --- | ---: |
-| not-recorded | 228 |
+| not-recorded | 227 |
 | profile-subset-supported | 53 |
 | supported-profile | 296 |
-| unsupported-profile | 323 |
+| unsupported-profile | 324 |
 
 ### Battle Readiness Snapshot
 
@@ -311,7 +311,7 @@ These counts separate class-list rows from unique Spell Definition identities. A
 | Bard Subclass | level-3 | character-level | subclass selection | `class_bard` | `.references/srd-5.2.1/Classes/Bard.md:105` | present | installed | unsupported-profile | catalog-installed-owner-evidence-present | accepted | not-recorded | Owner-specific operational evidence is classified and present. |
 | Bard Ability Score Improvement | level-4 | character-level | class feature | `bard_ability_score_improvement_l4` | `.references/srd-5.2.1/Classes/Bard.md:109` | present | installed | unsupported-profile | catalog-only/dead-for-now | accepted-no-battle-effect | selection-grant-container: character-creation-runtime ability-score projection and selected feat Unit profiles | The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim. |
 | Bard level 4 feature table row | level-4 | character-level | character-creation or progression mechanic | `class_bard` | `.references/srd-5.2.1/Classes/Bard.md:39` | present | installed | unsupported-profile | non-runtime | accepted-no-battle-effect | not-recorded | No runtime work; keep classification as explicit closure. |
-| Bard Font of Inspiration | level-5 | character-level | class feature | `bard_font_of_inspiration` | `.references/srd-5.2.1/Classes/Bard.md:113` | present | not-installed | not-recorded | level-5-7-follow-up-required | not-applicable | not-recorded | Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported. |
+| Bard Font of Inspiration | level-5 | character-level | class feature | `bard_font_of_inspiration` | `.references/srd-5.2.1/Classes/Bard.md:113` | present | not-installed | unsupported-profile | catalog-only/dead-for-now | not-applicable | character-fact-and-runtime-detached-split: future character-sheet-runtime Bardic Inspiration resource-recovery owner plus existing battle-runtime Bardic Inspiration grant/use profiles | SRD Font of Inspiration changes the existing bard_bardic_inspiration use-count Pool to regain all expended uses on a Short Rest or Long Rest and permits spending a Spell Slot with no action to regain one expended use. Battle runtime already owns in-battle Bardic Inspiration grant and failed-D20 die use from the bard_bardic_inspiration Unit; persistent Short Rest, Long Rest, and Spell Slot recovery must be derived by a Character Sheet resource owner from the existing Bardic Inspiration resource instead of introducing duplicate bard_font_of_inspiration resource state. |
 | Bard level 5 feature table row | level-5 | character-level | character-creation or progression mechanic | `class_bard` | `.references/srd-5.2.1/Classes/Bard.md:40` | present | installed | unsupported-profile | non-runtime | not-applicable | not-recorded | No runtime work; keep classification as explicit closure. |
 | Bard Magical Discoveries | level-6 | character-level | class feature | `bard_magical_discoveries` | `.references/srd-5.2.1/Classes/Bard.md:336` | present | not-installed | not-recorded | level-5-7-follow-up-required | not-applicable | not-recorded | Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported. |
 | Bard level 6 feature table row | level-6 | character-level | character-creation or progression mechanic | `class_bard` | `.references/srd-5.2.1/Classes/Bard.md:41` | present | installed | unsupported-profile | non-runtime | not-applicable | not-recorded | No runtime work; keep classification as explicit closure. |

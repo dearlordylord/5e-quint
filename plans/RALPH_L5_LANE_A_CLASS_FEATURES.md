@@ -13,7 +13,7 @@
     {
       "number": 2,
       "id": "L5-A02-BARD-FONT-OF-INSPIRATION",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Close Bard Font of Inspiration level 5 follow-up"
     },
     {
@@ -128,7 +128,7 @@ out of scope unless a task's RAW pass finds a direct dependency.
 | # | Task | Status | Depends on | Notes |
 | ---: | --- | --- | --- | --- |
 | 1 | L5-A01-BARBARIAN-EXTRA-ATTACK - Close Barbarian Extra Attack level 5 follow-up | done | none | Authored and installed using the shared Extra Attack owner/evidence path. |
-| 2 | L5-A02-BARD-FONT-OF-INSPIRATION - Close Bard Font of Inspiration level 5 follow-up | ready-for-research | none | Independent level-5 class feature row. |
+| 2 | L5-A02-BARD-FONT-OF-INSPIRATION - Close Bard Font of Inspiration level 5 follow-up | done | none | Closed by unsupported-profile owner evidence for existing Bardic Inspiration resource recovery. |
 | 3 | L5-A03-CLERIC-SEAR-UNDEAD - Close Cleric Sear Undead level 5 follow-up | ready-for-research | none | Independent level-5 class feature row. |
 | 4 | L5-A04-DRUID-WILD-RESURGENCE - Close Druid Wild Resurgence level 5 follow-up | ready-for-research | none | Independent level-5 class feature row. |
 | 5 | L5-A05-FIGHTER-TACTICAL-SHIFT - Close Fighter Tactical Shift level 5 follow-up | ready-for-research | none | Independent level-5 class feature row. |
@@ -205,7 +205,7 @@ Verification:
 
 ### Task 2 - L5-A02-BARD-FONT-OF-INSPIRATION
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -221,7 +221,10 @@ SRD anchor:
 
 Current state:
 
-- The mined row is not installed and has no unit profile/evidence row.
+- The mined row is closed by an unsupported-profile Unit claim with
+  checker-readable owner evidence: Font of Inspiration modifies recovery for
+  the existing Bardic Inspiration Pool and does not create a separate battle
+  Unit profile or duplicate resource state.
 
 Output:
 

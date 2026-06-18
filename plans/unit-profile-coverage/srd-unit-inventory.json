@@ -344,7 +344,8 @@
     "levelFiveClassRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 6,
       "non-runtime": 12,
-      "level-5-7-follow-up-required": 10
+      "catalog-only/dead-for-now": 1,
+      "level-5-7-follow-up-required": 9
     },
     "levelSixClassRowsByDisposition": {
       "level-5-7-follow-up-required": 11,
@@ -371,8 +372,8 @@
     "allRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 482,
       "non-runtime": 84,
-      "catalog-only/dead-for-now": 144,
-      "level-5-7-follow-up-required": 32,
+      "catalog-only/dead-for-now": 145,
+      "level-5-7-follow-up-required": 31,
       "missing-authored-record": 80,
       "catalog-authored-review-required": 77,
       "catalog-installed-owner-evidence-required": 1
@@ -5745,9 +5746,16 @@
         "state": "not-installed",
         "unitId": "bard_font_of_inspiration"
       },
-      "finalDisposition": "level-5-7-follow-up-required",
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-only/dead-for-now",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "character-fact-and-runtime-detached-split",
+        "owner": "future character-sheet-runtime Bardic Inspiration resource-recovery owner plus existing battle-runtime Bardic Inspiration grant/use profiles",
+        "reason": "SRD Font of Inspiration changes the existing bard_bardic_inspiration use-count Pool to regain all expended uses on a Short Rest or Long Rest and permits spending a Spell Slot with no action to regain one expended use. Battle runtime already owns in-battle Bardic Inspiration grant and failed-D20 die use from the bard_bardic_inspiration Unit; persistent Short Rest, Long Rest, and Spell Slot recovery must be derived by a Character Sheet resource owner from the existing Bardic Inspiration resource instead of introducing duplicate bard_font_of_inspiration resource state."
+      },
       "ownerEvidence": [],
-      "nextAction": "Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported."
+      "nextAction": "SRD Font of Inspiration changes the existing bard_bardic_inspiration use-count Pool to regain all expended uses on a Short Rest or Long Rest and permits spending a Spell Slot with no action to regain one expended use. Battle runtime already owns in-battle Bardic Inspiration grant and failed-D20 die use from the bard_bardic_inspiration Unit; persistent Short Rest, Long Rest, and Spell Slot recovery must be derived by a Character Sheet resource owner from the existing Bardic Inspiration resource instead of introducing duplicate bard_font_of_inspiration resource state."
     },
     {
       "id": "srd521:classes/bard:level-5:class-table-summary:bard_level_5_feature_table_row",

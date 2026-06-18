@@ -196,6 +196,7 @@ function main() {
       unitEvidence,
       taskClaims,
       scannedClaims,
+      srdUnitInventory,
     },
     { selectedIdentityHardGate },
   );

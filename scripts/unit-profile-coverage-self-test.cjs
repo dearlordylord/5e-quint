@@ -1463,6 +1463,71 @@ function runSelfTest(root) {
         );
       }
     }
+    const minedCandidateClaimIssues = validateCoverageInputs({
+      root: tempDir,
+      collections: {
+        collections: [{ id: "srd-5.2.1", policy: { tag: "srd" } }],
+      },
+      inventory: [],
+      profiles: [],
+      unitClaims: [
+        {
+          unitId: "mined_level_five_feature",
+          collectionId: "srd-5.2.1",
+          claim: {
+            tag: "unsupported-profile",
+            reason: "fixture mined inventory closure",
+            battleReadinessClosure: {
+              kind: battleReadinessClosureKind.outsideBattleRuntime,
+              owner: "fixture owner",
+              reason: "fixture closure reason",
+            },
+          },
+        },
+        {
+          unitId: "unknown_feature",
+          collectionId: "srd-5.2.1",
+          claim: {
+            tag: "unsupported-profile",
+            reason: "fixture unknown closure",
+            battleReadinessClosure: {
+              kind: battleReadinessClosureKind.outsideBattleRuntime,
+              owner: "fixture owner",
+              reason: "fixture closure reason",
+            },
+          },
+        },
+      ],
+      unitEvidence: [],
+      taskClaims: [],
+      authoredSurfaceUnits: [],
+      srdUnitInventory: {
+        rows: [{ candidateUnitId: "mined_level_five_feature" }],
+      },
+      scannedClaims: {
+        profileClaims: [],
+        unitEvidence: [],
+        unitIdentityMbtReplays: [],
+        selectedUnitIdentityReplays: [],
+        selectedUnitIdentityReplayConsumers: [],
+      },
+    });
+    if (
+      minedCandidateClaimIssues.includes(
+        "Claim references unknown Unit id mined_level_five_feature.",
+      )
+    ) {
+      fail(
+        `Self-test failed: expected mined inventory candidate claim to be allowed, got ${JSON.stringify(minedCandidateClaimIssues)}`,
+      );
+    }
+    const expectedUnknownClaimIssue =
+      "Claim references unknown Unit id unknown_feature.";
+    if (!minedCandidateClaimIssues.includes(expectedUnknownClaimIssue)) {
+      fail(
+        `Self-test failed: expected arbitrary unknown Unit claim to remain rejected with ${JSON.stringify(expectedUnknownClaimIssue)}, got ${JSON.stringify(minedCandidateClaimIssues)}`,
+      );
+    }
     const rulesKernelProfileJoin = buildRulesKernelProfileJoin({
       obligations: [],
       profileObligations: [
