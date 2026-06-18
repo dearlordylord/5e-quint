@@ -202,6 +202,7 @@ const SRD_GNOMISH_LINEAGE_TRAIT_UNIT_ID = "species_gnome_gnomish_lineage";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L14G-B02-FEAT-SKILLED feat_skilled
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection LT4-B02-GNOMISH-LINEAGE-CHOICE-OWNER species_gnome_gnomish_lineage
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection LT4-B03-GNOME-LINEAGE-TRAIT-PROJECTION species_gnome_gnomish_lineage
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection LT4-B04-GNOME-SPECIES-ADMISSION-EVIDENCE species_gnome species_gnome_gnomish_lineage
 
 const unitCatalogResult = buildUnitCatalog({
   collections: [srdUnitCollection],
@@ -3470,6 +3471,16 @@ describe("character creation finalization", () => {
         spellcastingAbility: "wis",
       },
     });
+    expect(
+      characterBuildUnitRefs(build, unitLibrary).map((ref) => ref.unitId),
+    ).toEqual(
+      expect.arrayContaining([
+        SRD_GNOME_SPECIES_UNIT_ID,
+        "species_gnome_darkvision",
+        "species_gnome_gnomish_cunning",
+        SRD_GNOMISH_LINEAGE_TRAIT_UNIT_ID,
+      ]),
+    );
     expect(build.spellcasting).toBeUndefined();
   });
 
@@ -9671,7 +9682,7 @@ function completeManifestDraftForGnomishLineage(
   lineageId: "forest_gnome" | "rock_gnome",
   spellcastingAbility: "int" | "wis" | "cha",
 ): CharacterDraft {
-  const complete = completeManifestDraft();
+  const complete = completeManifestDraftForSpecies(SRD_GNOME_SPECIES_UNIT_ID);
 
   return {
     ...complete,

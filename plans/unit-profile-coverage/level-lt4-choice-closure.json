@@ -2,9 +2,9 @@
   "schema": "level-lt4-choice-closure.v1",
   "mode": "non-strict",
   "summary": {
-    "blockerCount": 3,
+    "blockerCount": 2,
     "cataloged": 19,
-    "selectable": 16,
+    "selectable": 17,
     "targetCount": 19
   },
   "notes": [
@@ -29,6 +29,7 @@
       "species_dragonborn",
       "species_dwarf",
       "species_elf",
+      "species_gnome",
       "species_goliath",
       "species_halfling",
       "species_human",
@@ -64,21 +65,6 @@
       "selectable": false,
       "sourceRecordPath": "packages/surface/content/feat_two_weapon_fighting.json",
       "unitId": "feat_two_weapon_fighting"
-    },
-    {
-      "admissionScope": "Character creation species choice",
-      "blockers": [
-        "missing-character-creation-admission"
-      ],
-      "cataloged": true,
-      "category": "srd-species-target",
-      "claimTag": "unsupported-profile",
-      "closureKind": "selection-grant-container",
-      "name": "Gnome",
-      "rawAnchor": ".references/srd-5.2.1/Character-Origins.md:177-193",
-      "selectable": false,
-      "sourceRecordPath": "packages/surface/content/species_gnome.json",
-      "unitId": "species_gnome"
     }
   ],
   "rows": [
@@ -248,16 +234,14 @@
     },
     {
       "admissionScope": "Character creation species choice",
-      "blockers": [
-        "missing-character-creation-admission"
-      ],
+      "blockers": [],
       "cataloged": true,
       "category": "srd-species-target",
-      "claimTag": "unsupported-profile",
+      "claimTag": "profile-subset-supported",
       "closureKind": "selection-grant-container",
       "name": "Gnome",
       "rawAnchor": ".references/srd-5.2.1/Character-Origins.md:177-193",
-      "selectable": false,
+      "selectable": true,
       "sourceRecordPath": "packages/surface/content/species_gnome.json",
       "unitId": "species_gnome"
     },

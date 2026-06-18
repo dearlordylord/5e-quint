@@ -465,3 +465,5 @@
 {"unitId":"species_halfling_naturally_stealthy","evidence":{"tag":"deterministic-admission-projection","taskId":"L3-FOLLOWUP-HALFLING-NATURALLY-STEALTHY-RUNTIME","ownerPath":"packages/battle-runtime/src/unit-profile-admission-halfling-naturally-stealthy.test.ts"}}
 {"unitId":"species_gnome_gnomish_lineage","evidence":{"tag":"deterministic-admission-projection","taskId":"LT4-B02-GNOMISH-LINEAGE-CHOICE-OWNER","ownerPath":"packages/character-creation-runtime/src/index.test.ts"}}
 {"unitId":"species_gnome_gnomish_lineage","evidence":{"tag":"deterministic-admission-projection","taskId":"LT4-B03-GNOME-LINEAGE-TRAIT-PROJECTION","ownerPath":"packages/character-creation-runtime/src/index.test.ts"}}
+{"unitId":"species_gnome","evidence":{"tag":"deterministic-admission-projection","taskId":"LT4-B04-GNOME-SPECIES-ADMISSION-EVIDENCE","ownerPath":"packages/character-creation-runtime/src/index.test.ts"}}
+{"unitId":"species_gnome_gnomish_lineage","evidence":{"tag":"deterministic-admission-projection","taskId":"LT4-B04-GNOME-SPECIES-ADMISSION-EVIDENCE","ownerPath":"packages/character-creation-runtime/src/index.test.ts"}}

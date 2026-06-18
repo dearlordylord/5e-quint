@@ -5107,9 +5107,10 @@
         "packages/character-creation-runtime/src/finalization.ts",
         "packages/character-creation-runtime/src/support-gates.ts"
       ],
-      "sourceBoundary": "Character Creation consumes selected Species authored trait Unit refs and the trait's species_lineage_choice Surface shape. It discovers a Gnomish Lineage choice hole from the selected trait Unit, discovers the associated spellcasting ability choice from the same trait mechanics, admits only the Surface-listed Forest/Rock lineage and Intelligence/Wisdom/Charisma ability options, and public finalization accepts an already-selected Gnome draft by retaining the selected lineage plus ability as CharacterBuild speciesChoiceFacts. Spell access, free-cast resources, and Rock clockwork-device behavior remain derived by future owners from the retained lineage source fact and Surface trait mechanics rather than stored in character creation.",
+      "sourceBoundary": "Character Creation consumes selected Species authored trait Unit refs and the trait's species_lineage_choice Surface shape. It admits Gnome through the SRD species option set, discovers a Gnomish Lineage choice hole from the selected trait Unit, discovers the associated spellcasting ability choice from the same trait mechanics, admits only the Surface-listed Forest/Rock lineage and Intelligence/Wisdom/Charisma ability options, and public finalization retains the selected lineage plus ability as CharacterBuild speciesChoiceFacts. Spell access, free-cast resources, and Rock clockwork-device behavior remain derived by future owners from the retained lineage source fact and Surface trait mechanics rather than stored in character creation.",
       "taskRefs": [
-        "LT4-B02-GNOMISH-LINEAGE-CHOICE-OWNER"
+        "LT4-B02-GNOMISH-LINEAGE-CHOICE-OWNER",
+        "LT4-B04-GNOME-SPECIES-ADMISSION-EVIDENCE"
       ],
       "title": "Character Creation finalizes species lineage choices as retained build source facts",
       "verificationOwners": [
@@ -12881,7 +12882,7 @@
       "evidenceTag": "selected-identity-mbt"
     },
     "deferredNonApplicableRows": [],
-    "rowCount": 5,
+    "rowCount": 6,
     "rows": [
       {
         "catalogAdmissionStatus": "installed",
@@ -12916,6 +12917,23 @@
           "tag": "supported-profile"
         },
         "unitId": "feat_two_weapon_fighting"
+      },
+      {
+        "catalogAdmissionStatus": "installed",
+        "collectionId": "srd-5.2.1",
+        "kind": "species",
+        "selectedIdentity": {
+          "reason": "The Unit has no selected-identity-mbt evidence.",
+          "status": "missing-witness"
+        },
+        "sourceRecordPath": "packages/surface/content/species_gnome.json",
+        "support": {
+          "profileIds": [
+            "character-creation.species-lineage-choice"
+          ],
+          "tag": "profile-subset-supported"
+        },
+        "unitId": "species_gnome"
       },
       {
         "catalogAdmissionStatus": "installed",
@@ -16522,7 +16540,7 @@
     },
     {
       "claimKind": "completed-runtime-parity",
-      "note": "Focused Character Creation runtime tests cover Gnomish Lineage hole discovery, Surface-listed Forest/Rock and Intelligence/Wisdom/Charisma option admission, and public finalizeCharacterDraft retention of CharacterBuild speciesChoiceFacts without projecting spell access or clockwork-device state. Ordinary draft species fill admission for Gnome remains Task 4.",
+      "note": "Focused Character Creation runtime tests cover Gnomish Lineage hole discovery, Surface-listed Forest/Rock and Intelligence/Wisdom/Charisma option admission, and public finalizeCharacterDraft retention of CharacterBuild speciesChoiceFacts without projecting spell access or clockwork-device state.",
       "profileIds": [
         "character-creation.species-lineage-choice"
       ],
@@ -16535,6 +16553,14 @@
         "character-sheet.species-lineage-trait-projection"
       ],
       "taskId": "LT4-B03-GNOME-LINEAGE-TRAIT-PROJECTION"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused Character Creation runtime tests cover ordinary SRD species option admission for Gnome, finalization of selected Gnome with selected Gnomish Lineage and spellcasting ability facts, and retained Gnome trait Unit refs without adding duplicate spell-access or clockwork-device state to CharacterBuild.",
+      "profileIds": [
+        "character-creation.species-lineage-choice"
+      ],
+      "taskId": "LT4-B04-GNOME-SPECIES-ADMISSION-EVIDENCE"
     }
   ],
   "unitGroupDenominatorAudit": {
@@ -16970,17 +16996,80 @@
       "claim": {
         "battleReadinessClosure": {
           "kind": "selection-grant-container",
-          "owner": "Task 4 character-creation species admission evidence",
-          "reason": "The aggregate species record names Darkvision, Gnomish Cunning, and Gnomish Lineage. Gnomish Lineage now has typed selection and selected-trait projection owners; admitting Gnome still requires updating the character-creation species option set and generated closure evidence in one task."
+          "owner": "character-creation-runtime selected Gnome and selected lineage owner plus character-sheet selected trait projection owner",
+          "reason": "Gnome admission, retained species/trait refs, and selected lineage facts are promoted. The individual trait Units own Darkvision, Gnomish Cunning, lineage spell grants, and Rock device execution boundaries."
         },
-        "reason": "Species admission container record; Surface retains Gnome source facts and authored trait Unit refs, but the species option remains intentionally outside the character-creation admission list until Task 4 adds selectable-species evidence.",
-        "tag": "unsupported-profile"
+        "deferredMechanics": [
+          {
+            "battleReadinessClosure": {
+              "kind": "outside-runtime-presentation-exploration",
+              "owner": "sight/illumination projection owner",
+              "reason": "The aggregate species record only retains the authored Darkvision trait ref. Sight and illumination behavior belongs to the Darkvision trait Unit profile and future observer/table visibility owner, not to duplicated species state."
+            },
+            "mechanic": "Darkvision sight and illumination projection"
+          },
+          {
+            "battleReadinessClosure": {
+              "kind": "outside-battle-runtime",
+              "owner": "future passive saving-throw ability-filter roll-mode owner",
+              "reason": "The aggregate species record only retains the authored Gnomish Cunning trait ref. Battle admission must consume that trait Unit's typed saveAbilityFilter through a narrowed passive saving-throw owner before reducers execute it."
+            },
+            "mechanic": "Gnomish Cunning Advantage on Intelligence, Wisdom, and Charisma Saving Throws"
+          },
+          {
+            "battleReadinessClosure": {
+              "kind": "outside-battle-runtime",
+              "owner": "future table/object device owner",
+              "reason": "Character creation stores only the selected lineage and spellcasting ability. The selected lineage projection exposes the Surface device facts; an in-play table/object owner should consume those facts without duplicating device state in character creation."
+            },
+            "mechanic": "Rock Gnome clockwork-device execution state, table effect choices, activation, duration countdown, concurrent limits, and dismantling"
+          }
+        ],
+        "profileIds": [
+          "character-creation.species-lineage-choice"
+        ],
+        "supportedMechanics": [
+          "Character Creation admits Gnome through the SRD species option set as a fixed Small Humanoid species with 30-foot Speed source facts retained from Surface",
+          "Character Creation retains the selected Gnome species Unit ref and authored trait Unit refs for Darkvision, Gnomish Cunning, and Gnomish Lineage without duplicating trait execution state on CharacterBuild",
+          "Character Creation consumes the retained Gnomish Lineage trait ref to discover the supported lineage and spellcasting ability choices",
+          "Character Creation finalizes selected Gnome plus selected Gnomish Lineage and spellcasting ability as CharacterBuild speciesChoiceFacts"
+        ],
+        "tag": "profile-subset-supported"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/character-creation-runtime/src/index.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "LT4-B04-GNOME-SPECIES-ADMISSION-EVIDENCE"
+        }
+      ],
       "executableMechanics": false,
       "kind": "species",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "character-creation.species-lineage-choice",
+          "profileKind": "character-creation",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/character-creation-runtime/src/discovery.ts",
+            "packages/character-creation-runtime/src/finalization.ts",
+            "packages/character-creation-runtime/src/support-gates.ts"
+          ],
+          "sourceBoundary": "Character Creation consumes selected Species authored trait Unit refs and the trait's species_lineage_choice Surface shape. It admits Gnome through the SRD species option set, discovers a Gnomish Lineage choice hole from the selected trait Unit, discovers the associated spellcasting ability choice from the same trait mechanics, admits only the Surface-listed Forest/Rock lineage and Intelligence/Wisdom/Charisma ability options, and public finalization retains the selected lineage plus ability as CharacterBuild speciesChoiceFacts. Spell access, free-cast resources, and Rock clockwork-device behavior remain derived by future owners from the retained lineage source fact and Surface trait mechanics rather than stored in character creation.",
+          "taskRefs": [
+            "LT4-B02-GNOMISH-LINEAGE-CHOICE-OWNER",
+            "LT4-B04-GNOME-SPECIES-ADMISSION-EVIDENCE"
+          ],
+          "title": "Character Creation finalizes species lineage choices as retained build source facts",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/species_gnome.json",
       "unitId": "species_gnome"
     },
@@ -25626,7 +25715,7 @@
         "battleReadinessClosure": {
           "kind": "selection-grant-container",
           "owner": "character-creation-runtime selected lineage owner plus character-sheet selected trait projection owner",
-          "reason": "Character creation owns lineage and spellcasting ability selection; the selected trait projection owns derivation of Forest/Rock spell grants and Rock device source facts. Rock device execution remains outside active battle runtime."
+          "reason": "Character creation owns lineage and spellcasting ability selection; the selected trait projection owns derivation of Forest/Rock spell grants and Rock device facts. Rock device execution remains outside active battle runtime."
         },
         "deferredMechanics": [
           {
@@ -25646,7 +25735,7 @@
           "Surface authors Gnomish Lineage as a species_lineage_choice with Forest Gnome and Rock Gnome options plus a closed Intelligence/Wisdom/Charisma spellcasting ability choice",
           "Character Creation discovers one lineage option hole and one trait spellcasting ability hole from the selected Gnomish Lineage species trait Unit",
           "Character Creation admits only the Surface-listed lineage options and spellcasting abilities through typed Unit choice keys",
-          "Character Creation public finalization accepts a draft that already selected Gnome plus the lineage choices, and retains the selected lineage and spellcasting ability on CharacterBuild.speciesChoiceFacts without storing lineage spell access, free-cast resources, or Rock clockwork-device behavior state",
+          "Character Creation public finalization accepts selected Gnome plus the lineage choices, and retains the selected lineage and spellcasting ability on CharacterBuild.speciesChoiceFacts without storing lineage spell access, free-cast resources, or Rock clockwork-device behavior state",
           "Character Sheet-facing projection derives selected Forest/Rock Gnome spell-access/free-cast grants and Rock Gnome clockwork-device source facts from CharacterBuild.speciesChoiceFacts plus the Surface trait Unit without storing duplicate spell ids or device state on CharacterBuild"
         ],
         "tag": "profile-subset-supported"
@@ -25662,6 +25751,11 @@
           "ownerPath": "packages/character-creation-runtime/src/index.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "LT4-B03-GNOME-LINEAGE-TRAIT-PROJECTION"
+        },
+        {
+          "ownerPath": "packages/character-creation-runtime/src/index.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "LT4-B04-GNOME-SPECIES-ADMISSION-EVIDENCE"
         }
       ],
       "executableMechanics": true,
@@ -25676,9 +25770,10 @@
             "packages/character-creation-runtime/src/finalization.ts",
             "packages/character-creation-runtime/src/support-gates.ts"
           ],
-          "sourceBoundary": "Character Creation consumes selected Species authored trait Unit refs and the trait's species_lineage_choice Surface shape. It discovers a Gnomish Lineage choice hole from the selected trait Unit, discovers the associated spellcasting ability choice from the same trait mechanics, admits only the Surface-listed Forest/Rock lineage and Intelligence/Wisdom/Charisma ability options, and public finalization accepts an already-selected Gnome draft by retaining the selected lineage plus ability as CharacterBuild speciesChoiceFacts. Spell access, free-cast resources, and Rock clockwork-device behavior remain derived by future owners from the retained lineage source fact and Surface trait mechanics rather than stored in character creation.",
+          "sourceBoundary": "Character Creation consumes selected Species authored trait Unit refs and the trait's species_lineage_choice Surface shape. It admits Gnome through the SRD species option set, discovers a Gnomish Lineage choice hole from the selected trait Unit, discovers the associated spellcasting ability choice from the same trait mechanics, admits only the Surface-listed Forest/Rock lineage and Intelligence/Wisdom/Charisma ability options, and public finalization retains the selected lineage plus ability as CharacterBuild speciesChoiceFacts. Spell access, free-cast resources, and Rock clockwork-device behavior remain derived by future owners from the retained lineage source fact and Surface trait mechanics rather than stored in character creation.",
           "taskRefs": [
-            "LT4-B02-GNOMISH-LINEAGE-CHOICE-OWNER"
+            "LT4-B02-GNOMISH-LINEAGE-CHOICE-OWNER",
+            "LT4-B04-GNOME-SPECIES-ADMISSION-EVIDENCE"
           ],
           "title": "Character Creation finalizes species lineage choices as retained build source facts",
           "verificationOwners": [

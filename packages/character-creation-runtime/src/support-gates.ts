@@ -41,7 +41,6 @@ import {
   PHASE1_LOADOUT_ARMOR_OPTION_ID,
   PHASE1_LOADOUT_SHIELD_OPTION_ID,
   PHASE1_LOADOUT_WEAPON_OPTION_ID,
-  SRD_GNOME_SPECIES_UNIT_ID,
   ORIGIN_FEAT_PROFICIENCY_CHOICE_KEY,
   SPECIES_ORIGIN_FEAT_CHOICE_KEY,
   SPECIES_ORIGIN_FEAT_PROFICIENCY_CHOICE_KEY,
@@ -651,17 +650,12 @@ export function supportedSpeciesUnitIds(): readonly UnitRecord["id"][] {
   return SRD_CHARACTER_ADMISSION_SPECIES_UNIT_IDS;
 }
 
-// Finalization can accept preselected species once all selected-trait holes have
-// owners. The ordinary draft species option fill remains narrower.
 export function finalizableSpeciesUnitIds(): readonly UnitRecord["id"][] {
   return speciesUnitIdsWithSupportedTraitChoices();
 }
 
 export function speciesUnitIdsWithSupportedTraitChoices(): readonly UnitRecord["id"][] {
-  return [
-    ...SRD_CHARACTER_ADMISSION_SPECIES_UNIT_IDS,
-    SRD_GNOME_SPECIES_UNIT_ID,
-  ];
+  return SRD_CHARACTER_ADMISSION_SPECIES_UNIT_IDS;
 }
 
 export function supportedPurchasableEquipmentUnitIds(): readonly UnitRecord["id"][] {
