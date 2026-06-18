@@ -203,6 +203,12 @@ export {
   characterBuildUnitRefs,
 } from "./finalization.ts";
 export {
+  characterBuildGnomishLineageTraitProjection,
+  type CharacterBuildGnomishLineageOption,
+  type CharacterBuildGnomishLineageTraitProjection,
+  type CharacterBuildGnomishLineageTraitProjectionIssue,
+} from "./gnomish-lineage.ts";
+export {
   isWeaponMasteryChoiceFeature,
   weaponMasteryChoiceProfileForFeature,
   type WeaponMasteryChoiceFeature,

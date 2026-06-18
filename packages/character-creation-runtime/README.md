@@ -134,6 +134,8 @@ This package supports these character-creation profiles:
 - supported level-1 Weapon Mastery choices for Fighter, Barbarian, Paladin,
   Ranger, and Rogue as retained build Unit refs for selected weapons;
 - Orc species;
+- retained Gnomish Lineage selection facts plus on-demand selected lineage trait
+  projection for Forest/Rock spell access and Rock clockwork-device source facts;
 - SRD Acolyte, Criminal, Sage, and Soldier backgrounds;
 - Standard Array ability assignment;
 - background ability-score increase;
@@ -213,6 +215,12 @@ Spell Access, and focus permissions for that source. Slot pools are explicit
 and rigid: ordinary `spellcasting` slots and optional `pactMagic` slots are
 separate pools. Battle and session projections decide which subset they can
 execute.
+
+Gnomish Lineage spell and device facts are not stored on `CharacterBuild`.
+`characterBuildGnomishLineageTraitProjection` derives the selected Forest or
+Rock Gnome Surface option from `speciesChoiceFacts` plus the Unit catalog when a
+downstream Character Sheet or table/object owner needs those facts. Rock Gnome
+clockwork-device execution state remains in-play table/object ownership.
 
 Equipment on a build is split into durable owned equipment and initial loadout.
 Loadout entries hold `CharacterEquipmentItemId`s for owned items instead of
