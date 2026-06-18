@@ -21,7 +21,7 @@ Darkvision is authored as a passive `grant_sense` source fact with 60-foot range
 
 Gnomish Cunning is authored as passive Advantage on Saving Throws with `saveAbilityFilter = ["int", "wis", "cha"]`. It remains unsupported until a passive saving-throw ability-filter roll-mode profile admits that typed fact. This avoids dispatching on Gnome identity in battle reducers.
 
-Gnomish Lineage is authored as a `species_lineage_choice` mechanics family with exact Forest and Rock branches. Forest owns Minor Illusion known access, Speak with Animals prepared access, and Speak with Animals Proficiency Bonus free casts per Long Rest. Rock owns Mending and Prestidigitation known access plus the clockwork-device source facts. Follow-up owners are character-creation lineage selection, character-sheet species spell access/free-cast projection, and table/object ownership for the Rock device behavior.
+Gnomish Lineage is authored as a `species_lineage_choice` mechanics family with exact Forest and Rock branches. Forest owns Minor Illusion known access, Speak with Animals prepared access, and Speak with Animals Proficiency Bonus free casts per Long Rest. Rock owns Mending and Prestidigitation known access plus the clockwork-device source facts. Character creation owns the lineage and spellcasting ability selections, the selected lineage trait projection derives Forest/Rock spell and device source facts from Surface, and table/object ownership remains the follow-up boundary for Rock device execution state.
 
 ## Reviewer Loop
 

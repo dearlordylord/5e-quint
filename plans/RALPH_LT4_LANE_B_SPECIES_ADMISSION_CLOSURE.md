@@ -7,25 +7,25 @@
     {
       "number": 1,
       "id": "LT4-B01-GNOME-ADMISSION-OWNER-RESEARCH",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Research the Gnome admission owner boundary"
     },
     {
       "number": 2,
       "id": "LT4-B02-GNOMISH-LINEAGE-CHOICE-OWNER",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Implement Gnomish Lineage choice ownership"
     },
     {
       "number": 3,
       "id": "LT4-B03-GNOME-LINEAGE-TRAIT-PROJECTION",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Retain Forest and Rock Gnome lineage facts without duplicate state"
     },
     {
       "number": 4,
       "id": "LT4-B04-GNOME-SPECIES-ADMISSION-EVIDENCE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Admit Gnome as a selectable SRD species and close coverage"
     }
   ]
@@ -96,7 +96,7 @@ explicitly.
 
 ### Task 1 - LT4-B01-GNOME-ADMISSION-OWNER-RESEARCH
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -136,7 +136,7 @@ Verification:
 
 ### Task 2 - LT4-B02-GNOMISH-LINEAGE-CHOICE-OWNER
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -173,7 +173,7 @@ Verification:
 
 ### Task 3 - LT4-B03-GNOME-LINEAGE-TRAIT-PROJECTION
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -210,7 +210,7 @@ Verification:
 
 ### Task 4 - LT4-B04-GNOME-SPECIES-ADMISSION-EVIDENCE
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -246,4 +246,3 @@ Acceptance:
 Verification:
 
 - Shared lane verification.
-

@@ -39,6 +39,7 @@ import type {
   ActivationResource,
   ArmorTrainingCategory,
   ClassSpellcastingCreation,
+  GnomishLineageMechanics,
   PointPoolResource,
   Skill,
   Size,
@@ -123,6 +124,8 @@ export const UNIT_CHOICE_KEYS = [
   "class_feature_language_choice",
   "origin_feat_proficiency_choice",
   "species_trait_proficiency_choice",
+  "gnome_lineage",
+  "gnomish_lineage_spellcasting_ability",
   "species_origin_feat_choice",
   "species_origin_feat_proficiency_choice",
   "divine_order",
@@ -851,9 +854,26 @@ export type CharacterBuildDraconicAncestryFact = {
   readonly ancestorId: CharacterDraconicAncestrySelection;
 };
 
-export type CharacterBuildSpeciesChoiceFacts = {
-  readonly draconicAncestry: CharacterBuildDraconicAncestryFact;
+export type CharacterBuildGnomishLineageId =
+  GnomishLineageMechanics["options"][number]["id"];
+export type CharacterBuildGnomishLineageSpellcastingAbility =
+  GnomishLineageMechanics["spellcastingAbilityChoice"]["abilities"][number];
+
+export type CharacterBuildGnomishLineageFact = {
+  readonly kind: "gnomishLineage";
+  readonly lineageId: CharacterBuildGnomishLineageId;
+  readonly spellcastingAbility: CharacterBuildGnomishLineageSpellcastingAbility;
 };
+
+export type CharacterBuildSpeciesChoiceFacts =
+  | {
+      readonly draconicAncestry: CharacterBuildDraconicAncestryFact;
+      readonly gnomishLineage?: never;
+    }
+  | {
+      readonly gnomishLineage: CharacterBuildGnomishLineageFact;
+      readonly draconicAncestry?: never;
+    };
 
 export type CharacterDraftSelections = {
   readonly progression?: CharacterProgression;

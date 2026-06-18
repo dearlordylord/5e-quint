@@ -6,14 +6,12 @@ Status: generated, non-strict until the Ralph closure lanes land.
 
 - Targets: 19
 - Cataloged: 19/19
-- Character-creation selectable: 18/19
-- Current blockers: 1
+- Character-creation selectable: 19/19
+- Current blockers: 0
 
 ## Current Blockers
 
-| Unit | Domain | Missing | RAW anchor |
-| --- | --- | --- | --- |
-| `species_gnome` | srd-species-target | missing-character-creation-admission | .references/srd-5.2.1/Character-Origins.md:177-193 |
+None.
 
 ## Target Rows
 
@@ -32,7 +30,7 @@ Status: generated, non-strict until the Ralph closure lanes land.
 | `species_dragonborn` | srd-species-target | yes | yes | unsupported-profile |  | .references/srd-5.2.1/Character-Origins.md:99-127 |
 | `species_dwarf` | srd-species-target | yes | yes | unsupported-profile |  | .references/srd-5.2.1/Character-Origins.md:129-145 |
 | `species_elf` | srd-species-target | yes | yes | unsupported-profile |  | .references/srd-5.2.1/Character-Origins.md:147-175 |
-| `species_gnome` | srd-species-target | yes | no | unsupported-profile | selection-grant-container | .references/srd-5.2.1/Character-Origins.md:177-193 |
+| `species_gnome` | srd-species-target | yes | yes | profile-subset-supported | selection-grant-container | .references/srd-5.2.1/Character-Origins.md:177-193 |
 | `species_goliath` | srd-species-target | yes | yes | unsupported-profile |  | .references/srd-5.2.1/Character-Origins.md:194-213 |
 | `species_halfling` | srd-species-target | yes | yes | unsupported-profile |  | .references/srd-5.2.1/Character-Origins.md:215-229 |
 | `species_human` | srd-species-target | yes | yes | unsupported-profile | selection-grant-container | .references/srd-5.2.1/Character-Origins.md:231-243 |

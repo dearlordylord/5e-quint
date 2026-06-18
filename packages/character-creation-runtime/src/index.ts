@@ -67,6 +67,9 @@ export {
   type CharacterBuildEldritchInvocationRepeatableChoice,
   type CharacterBuildEldritchInvocationSelection,
   type CharacterBuildFeature,
+  type CharacterBuildGnomishLineageFact,
+  type CharacterBuildGnomishLineageId,
+  type CharacterBuildGnomishLineageSpellcastingAbility,
   type CharacterBuildHitDiePool,
   type CharacterBuildHitPoints,
   type CharacterBuildLoadout,
@@ -200,6 +203,12 @@ export {
   characterBuildUnitRefs,
 } from "./finalization.ts";
 export {
+  characterBuildGnomishLineageTraitProjection,
+  type CharacterBuildGnomishLineageOption,
+  type CharacterBuildGnomishLineageTraitProjection,
+  type CharacterBuildGnomishLineageTraitProjectionIssue,
+} from "./gnomish-lineage.ts";
+export {
   isWeaponMasteryChoiceFeature,
   weaponMasteryChoiceProfileForFeature,
   type WeaponMasteryChoiceFeature,
@@ -321,6 +330,8 @@ export {
   BACKGROUND_TOOL_CHOICE_KEY,
   CLASS_EQUIPMENT_CHOICE_KEY,
   ELDRITCH_INVOCATIONS_CHOICE_KEY,
+  GNOMISH_LINEAGE_CHOICE_KEY,
+  GNOMISH_LINEAGE_SPELLCASTING_ABILITY_CHOICE_KEY,
   CLASS_FEATURE_FEAT_CHOICE_KEY,
   CLASS_SKILL_PROFICIENCY_CHOICE_KEY,
   EQUIPMENT_PURCHASE_CHOICE_KEY,
@@ -343,6 +354,7 @@ export {
   PHASE1_LOADOUT_SHIELD_OPTION_ID,
   PHASE1_LOADOUT_WEAPON_OPTION_ID,
   PHASE1_SHIELD_UNIT_ID,
+  SRD_GNOME_SPECIES_UNIT_ID,
   PHASE1_SPECIES_ORC_UNIT_ID,
   PHASE1_WEAPON_LONGSWORD_UNIT_ID,
   PHASE1_WEAPON_MASTERY_UNIT_IDS,

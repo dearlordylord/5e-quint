@@ -93,10 +93,12 @@ export const SRD_CHARACTER_ADMISSION_BACKGROUND_UNIT_IDS = [
   PHASE1_BACKGROUND_SOLDIER_UNIT_ID,
 ] as const satisfies ReadonlyArray<UnitRecord["id"]>;
 export const PHASE1_SPECIES_ORC_UNIT_ID = "species_orc";
+export const SRD_GNOME_SPECIES_UNIT_ID = "species_gnome";
 export const SRD_CHARACTER_ADMISSION_SPECIES_UNIT_IDS = [
   "species_dragonborn",
   "species_dwarf",
   "species_elf",
+  SRD_GNOME_SPECIES_UNIT_ID,
   "species_halfling",
   "species_human",
   "species_goliath",
@@ -242,6 +244,10 @@ export const ORIGIN_FEAT_PROFICIENCY_CHOICE_KEY =
   "origin_feat_proficiency_choice" satisfies UnitChoiceKey;
 export const SPECIES_TRAIT_PROFICIENCY_CHOICE_KEY =
   "species_trait_proficiency_choice" satisfies UnitChoiceKey;
+export const GNOMISH_LINEAGE_CHOICE_KEY =
+  "gnome_lineage" satisfies UnitChoiceKey;
+export const GNOMISH_LINEAGE_SPELLCASTING_ABILITY_CHOICE_KEY =
+  "gnomish_lineage_spellcasting_ability" satisfies UnitChoiceKey;
 export const SPECIES_ORIGIN_FEAT_CHOICE_KEY =
   "species_origin_feat_choice" satisfies UnitChoiceKey;
 export const SPECIES_ORIGIN_FEAT_PROFICIENCY_CHOICE_KEY =

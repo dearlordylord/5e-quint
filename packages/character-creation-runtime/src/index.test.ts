@@ -51,6 +51,7 @@ import {
   characterBuildUnitRefs,
   characterBuildSorcererFontOfMagicFacts,
   characterBuildSorcererMetamagicFacts,
+  characterBuildGnomishLineageTraitProjection,
   computeTotalLevel,
   CHARACTER_EQUIPMENT_ITEM_SLOTS,
   LOADOUT_SLOTS,
@@ -140,6 +141,8 @@ import {
   SPECIES_TRAIT_PROFICIENCY_CHOICE_KEY,
   CLASS_PREPARED_SPELL_CHOICE_KEY,
   CLASS_SKILL_PROFICIENCY_CHOICE_KEY,
+  GNOMISH_LINEAGE_CHOICE_KEY,
+  GNOMISH_LINEAGE_SPELLCASTING_ABILITY_CHOICE_KEY,
   PALADIN_FIGHTING_STYLE_CHOICE_KEY,
   RANGER_FIGHTING_STYLE_CHOICE_KEY,
   HUNTERS_PREY_CHOICE_KEY,
@@ -150,6 +153,7 @@ import {
   SRD_LEVEL_ONE_CLASS_UNIT_IDS,
   SRD_LEVEL_THREE_SUBCLASS_UNIT_IDS,
   SORCERER_METAMAGIC_OPTIONS_CHOICE_KEY,
+  SRD_GNOME_SPECIES_UNIT_ID,
   SUPPORTED_FIGHTING_STYLE_OPTION_IDS,
   SUPPORTED_FIGHTING_STYLE_UNIT_IDS,
   WEAPON_MASTERY_OPTIONS_CHOICE_KEY,
@@ -164,6 +168,7 @@ import {
 import { soldierBackgroundFixtureOptionIds } from "./background-fixture.test-support.ts";
 
 const SRD_SORCERY_POINTS_POOL_ID = "sorcery_points";
+const SRD_GNOMISH_LINEAGE_TRAIT_UNIT_ID = "species_gnome_gnomish_lineage";
 
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-creation.class-feature-feat-choice
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-creation.weapon-mastery-choice
@@ -179,7 +184,8 @@ const SRD_SORCERY_POINTS_POOL_ID = "sorcery_points";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-creation.hit-point-maximum-projection
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-creation.origin-feat-proficiency-choice
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-creation.grappler-general-feat
-// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-creation.species-trait-proficiency-choice character-creation.species-origin-feat-choice character-creation.species-origin-feat-proficiency-choice
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-creation.species-trait-proficiency-choice character-creation.species-origin-feat-choice character-creation.species-origin-feat-proficiency-choice character-creation.species-lineage-choice
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.species-lineage-trait-projection
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.hunters-prey
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3-FOLLOWUP-GRAPPLER-RUNTIME feat_grappler
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L13UG-A15 barbarian_primal_knowledge sorcerer_draconic_resilience
@@ -201,6 +207,9 @@ const SRD_SORCERY_POINTS_POOL_ID = "sorcery_points";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L14G-B02-FEAT-SKILLED feat_skilled
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection LT4-C01-HUMAN-VERSATILE-ORIGIN-FEAT-DENOMINATOR species_human_versatile
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection LT4-C03-SKILLED-HUMAN-VERSATILE-NESTED-CHOICE-EVIDENCE species_human_versatile feat_skilled
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection LT4-B02-GNOMISH-LINEAGE-CHOICE-OWNER species_gnome_gnomish_lineage
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection LT4-B03-GNOME-LINEAGE-TRAIT-PROJECTION species_gnome_gnomish_lineage
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection LT4-B04-GNOME-SPECIES-ADMISSION-EVIDENCE species_gnome species_gnome_gnomish_lineage
 
 const unitCatalogResult = buildUnitCatalog({
   collections: [srdUnitCollection],
@@ -2404,6 +2413,60 @@ describe("character creation hole discovery", () => {
       "white",
     ]);
   });
+
+  test("discovers and fills selected Gnomish Lineage trait choices", () => {
+    const draft = draftWithSelections({
+      species: SRD_GNOME_SPECIES_UNIT_ID,
+    });
+    const holes = discoverCreationHoles({ draft, unitLibrary });
+
+    expect(
+      optionIds(
+        holeById(
+          holes,
+          testUnitHoleId(
+            SRD_GNOMISH_LINEAGE_TRAIT_UNIT_ID,
+            GNOMISH_LINEAGE_CHOICE_KEY,
+          ),
+        ),
+      ),
+    ).toEqual(["forest_gnome", "rock_gnome"]);
+    expect(
+      optionIds(
+        holeById(
+          holes,
+          testUnitHoleId(
+            SRD_GNOMISH_LINEAGE_TRAIT_UNIT_ID,
+            GNOMISH_LINEAGE_SPELLCASTING_ABILITY_CHOICE_KEY,
+          ),
+        ),
+      ),
+    ).toEqual(["int", "wis", "cha"]);
+
+    const result = fillCreationHoles({
+      draft,
+      unitLibrary,
+      expectedRevision: draft.revision,
+      fills: [
+        choiceFill(
+          testUnitHoleId(
+            SRD_GNOMISH_LINEAGE_TRAIT_UNIT_ID,
+            GNOMISH_LINEAGE_CHOICE_KEY,
+          ),
+          "forest_gnome",
+        ),
+        choiceFill(
+          testUnitHoleId(
+            SRD_GNOMISH_LINEAGE_TRAIT_UNIT_ID,
+            GNOMISH_LINEAGE_SPELLCASTING_ABILITY_CHOICE_KEY,
+          ),
+          "int",
+        ),
+      ],
+    });
+
+    expect(result.tag).toBe("accepted");
+  });
 });
 
 describe("character creation QNT slice parity", () => {
@@ -3412,6 +3475,151 @@ describe("character creation finalization", () => {
         expect(unitRefIds, testCase.speciesUnitId).toContain(traitUnitId);
       }
     }
+  });
+
+  test("projects selected Gnomish Lineage without spell access or device state", () => {
+    const draft = completeManifestDraftForGnomishLineage("rock_gnome", "wis");
+    const finalization = finalizeCharacterDraft({ draft, unitLibrary });
+
+    expect(finalization.tag).toBe("ready");
+    if (finalization.tag !== "ready") {
+      return;
+    }
+
+    const build = finalization.build;
+    expect(build.species).toBe(SRD_GNOME_SPECIES_UNIT_ID);
+    expect(build.speciesChoiceFacts).toEqual({
+      gnomishLineage: {
+        kind: "gnomishLineage",
+        lineageId: "rock_gnome",
+        spellcastingAbility: "wis",
+      },
+    });
+    expect(
+      characterBuildUnitRefs(build, unitLibrary).map((ref) => ref.unitId),
+    ).toEqual(
+      expect.arrayContaining([
+        SRD_GNOME_SPECIES_UNIT_ID,
+        "species_gnome_darkvision",
+        "species_gnome_gnomish_cunning",
+        SRD_GNOMISH_LINEAGE_TRAIT_UNIT_ID,
+      ]),
+    );
+    expect(build.spellcasting).toBeUndefined();
+  });
+
+  test("derives selected Gnomish Lineage spell and device facts from Surface", () => {
+    const forestFinalization = finalizeCharacterDraft({
+      draft: completeManifestDraftForGnomishLineage("forest_gnome", "int"),
+      unitLibrary,
+    });
+    const rockFinalization = finalizeCharacterDraft({
+      draft: completeManifestDraftForGnomishLineage("rock_gnome", "cha"),
+      unitLibrary,
+    });
+
+    expect(forestFinalization.tag).toBe("ready");
+    expect(rockFinalization.tag).toBe("ready");
+    if (forestFinalization.tag !== "ready" || rockFinalization.tag !== "ready") {
+      return;
+    }
+
+    const forestProjection = expectRight(
+      characterBuildGnomishLineageTraitProjection({
+        build: forestFinalization.build,
+        unitLibrary,
+      }),
+    );
+    const rockProjection = expectRight(
+      characterBuildGnomishLineageTraitProjection({
+        build: rockFinalization.build,
+        unitLibrary,
+      }),
+    );
+    if (forestProjection === undefined || rockProjection === undefined) {
+      throw new Error("Expected selected Gnomish Lineage projections.");
+    }
+
+    expect(forestProjection).toMatchObject({
+      traitUnitId: SRD_GNOMISH_LINEAGE_TRAIT_UNIT_ID,
+      spellcastingAbility: "int",
+      option: {
+        id: "forest_gnome",
+        mechanics: {
+          grants: [
+            {
+              kind: "grant_spell_access",
+              mode: "known",
+              spellId: "minor_illusion",
+            },
+            {
+              kind: "grant_spell_access",
+              mode: "prepared",
+              spellId: "speak_with_animals",
+            },
+            {
+              count: { kind: "proficiency_bonus" },
+              kind: "grant_spell_free_casts",
+              resetCadence: "long_rest",
+              spellId: "speak_with_animals",
+            },
+          ],
+        },
+      },
+    });
+    expect("clockworkDevice" in forestProjection.option).toBe(false);
+
+    expect(rockProjection).toMatchObject({
+      traitUnitId: SRD_GNOMISH_LINEAGE_TRAIT_UNIT_ID,
+      spellcastingAbility: "cha",
+      option: {
+        id: "rock_gnome",
+        mechanics: {
+          grants: [
+            {
+              kind: "grant_spell_access",
+              mode: "known",
+              spellId: "mending",
+            },
+            {
+              kind: "grant_spell_access",
+              mode: "known",
+              spellId: "prestidigitation",
+            },
+          ],
+        },
+      },
+    });
+    if (rockProjection.option.id !== "rock_gnome") {
+      throw new Error("Expected Rock Gnome projection.");
+    }
+    expect(rockProjection.option.clockworkDevice).toMatchObject({
+      activation: {
+        action: "bonus_action",
+        activator: "self_or_another_creature",
+        contact: "touch",
+      },
+      concurrentLimit: 3,
+      creation: {
+        object: {
+          armorClass: 5,
+          hitPoints: 1,
+          kind: "clockwork_device",
+          size: "tiny",
+        },
+        trigger: {
+          castingTime: { amount: 10, unit: "minute" },
+          kind: "prestidigitation_cast",
+          spellId: "prestidigitation",
+        },
+      },
+      dismantle: {
+        action: "utilize",
+        actor: "creator",
+        contact: "touch",
+      },
+      duration: { amount: 8, unit: "hour" },
+    });
   });
 
   test("discovers and projects Human Skillful and Versatile species choices", () => {
@@ -9916,6 +10124,34 @@ function completeManifestDraftForSpecies(
         );
 
   return completeManifestDraftAfterProgression(afterDraconicAncestry);
+}
+
+function completeManifestDraftForGnomishLineage(
+  lineageId: "forest_gnome" | "rock_gnome",
+  spellcastingAbility: "int" | "wis" | "cha",
+): CharacterDraft {
+  const complete = completeManifestDraftForSpecies(SRD_GNOME_SPECIES_UNIT_ID);
+
+  return {
+    ...complete,
+    selections: {
+      ...complete.selections,
+      species: SRD_GNOME_SPECIES_UNIT_ID,
+      choices: [
+        ...complete.selections.choices,
+        selectedChoice(
+          SRD_GNOMISH_LINEAGE_TRAIT_UNIT_ID,
+          GNOMISH_LINEAGE_CHOICE_KEY,
+          lineageId,
+        ),
+        selectedChoice(
+          SRD_GNOMISH_LINEAGE_TRAIT_UNIT_ID,
+          GNOMISH_LINEAGE_SPELLCASTING_ABILITY_CHOICE_KEY,
+          spellcastingAbility,
+        ),
+      ],
+    },
+  };
 }
 
 function completeFighterTwoDraft(): CharacterDraft {
