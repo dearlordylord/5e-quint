@@ -48,6 +48,7 @@ export type AttachmentAndAreaEffectAtom = Extract<
       | "area_emits_dim_light"
       | "area_is_lightly_obscured"
       | "area_is_heavily_obscured"
+      | "douse_exposed_flames"
       | "area_is_magical_darkness"
       | "area_of_silence"
       | "truthfulness_constraint"
@@ -436,6 +437,16 @@ export function traceAttachmentAndAreaEffectAtom(
         category: "effect",
         atomKind: "area_is_heavily_obscured",
         label: "area_is_heavily_obscured",
+      });
+      return id;
+    }
+    case "douse_exposed_flames": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "douse_exposed_flames",
+        label: "douse_exposed_flames",
       });
       return id;
     }

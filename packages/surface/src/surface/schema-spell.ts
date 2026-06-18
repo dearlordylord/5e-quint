@@ -1492,6 +1492,7 @@ type EffectAtom =
   | { readonly kind: "area_emits_dim_light" }
   | { readonly kind: "area_is_lightly_obscured" }
   | { readonly kind: "area_is_heavily_obscured" }
+  | { readonly kind: "douse_exposed_flames" }
   | { readonly kind: "area_is_magical_darkness" }
   | {
       readonly kind: "area_of_silence";
@@ -3686,6 +3687,7 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
       Schema.Struct({ kind: Schema.Literal("area_emits_dim_light") }),
       Schema.Struct({ kind: Schema.Literal("area_is_lightly_obscured") }),
       Schema.Struct({ kind: Schema.Literal("area_is_heavily_obscured") }),
+      Schema.Struct({ kind: Schema.Literal("douse_exposed_flames") }),
       Schema.Struct({ kind: Schema.Literal("area_is_magical_darkness") }),
       strictStruct({
         kind: Schema.Literal("area_of_silence"),

@@ -3539,6 +3539,90 @@ describe("SRD Unit catalog boundary", () => {
     }
   });
 
+  test("decodes Sleet Storm as an authored Cylinder hazard Spell Definition", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag !== "ok") return;
+    const sleetStorm = result.catalog.requireUnit("sleet_storm");
+
+    expect(sleetStorm.kind).toBe("spell");
+    if (sleetStorm.kind !== "spell") return;
+    expect(sleetStorm.mechanics.family).toBe("ongoing_effect");
+    if (sleetStorm.mechanics.family !== "ongoing_effect") return;
+
+    expect(sleetStorm.provenance).toEqual({
+      kind: "srd-5.2.1",
+      section: "Spells/Descriptions-S-Z#Sleet Storm",
+    });
+    expect(sleetStorm.mechanics).toMatchObject({
+      level: 3,
+      school: "conjuration",
+      castingTime: { kind: "action" },
+      range: { kind: "point", feet: 150 },
+      components: { v: true, s: true, m: "a miniature umbrella" },
+      duration: { kind: "concentration", upTo: { unit: "minute", amount: 1 } },
+      attachment: {
+        kind: "hole",
+        holeId: "sleet_storm_cylinder",
+        label: "storm cylinder",
+        value: {
+          kind: "area",
+          shape: { kind: "cylinder", radiusFeet: 20, heightFeet: 40 },
+          origin: { kind: "point_within_range" },
+        },
+      },
+    });
+
+    const failedSave = {
+      kind: "composite",
+      effects: [
+        { kind: "apply_condition", condition: "prone" },
+        { kind: "break_concentration" },
+      ],
+    } as const;
+    const dexteritySave = {
+      kind: "save_gate",
+      ability: "dex",
+      dc: { kind: "caster_spell_save_dc" },
+      onFail: failedSave,
+      onSuccess: { kind: "none" },
+    } as const;
+
+    expect(sleetStorm.mechanics.operations).toEqual([
+      {
+        trigger: { kind: "passive" },
+        effect: { kind: "area_is_heavily_obscured" },
+      },
+      {
+        trigger: { kind: "passive" },
+        effect: { kind: "douse_exposed_flames" },
+      },
+      {
+        trigger: { kind: "passive" },
+        effect: { kind: "area_is_difficult_terrain" },
+      },
+      {
+        trigger: { kind: "on_creature_enters_area" },
+        effect: dexteritySave,
+        usageLimit: {
+          kind: "once_per_turn",
+          limitGroup: "sleet_storm_save_per_turn",
+        },
+      },
+      {
+        trigger: { kind: "on_creature_starts_turn_in_area" },
+        effect: dexteritySave,
+        usageLimit: {
+          kind: "once_per_turn",
+          limitGroup: "sleet_storm_save_per_turn",
+        },
+      },
+    ]);
+    expect(sleetStorm.description).toContain("Heavily Obscured");
+    expect(sleetStorm.description).toContain("lose Concentration");
+  });
+
   test("rejects contradictory Revivify death target-state filters", () => {
     const decode = Schema.decodeUnknownEither(TargetSelectionSchema);
 

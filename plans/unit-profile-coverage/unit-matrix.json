@@ -43,13 +43,13 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
-      "denominator": 445,
-      "numerator": 260,
-      "percent": "58.4%"
+      "denominator": 446,
+      "numerator": 261,
+      "percent": "58.5%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 533,
-      "numerator": 310,
+      "denominator": 534,
+      "numerator": 311,
       "percent": "58.2%"
     },
     "classicNonSrdExpressionGate": {
@@ -59,7 +59,7 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 311
+      "value": 312
     },
     "deterministicAdmissionProjectionCoverage": {
       "denominator": 183,
@@ -67,8 +67,8 @@
       "percent": "97.3%"
     },
     "profileClassificationCoverage": {
-      "denominator": 311,
-      "numerator": 311,
+      "denominator": 312,
+      "numerator": 312,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -112,9 +112,9 @@
       "percent": "98.9%"
     },
     "supportedProfileCoverage": {
-      "denominator": 261,
+      "denominator": 262,
       "numerator": 183,
-      "percent": "70.1%"
+      "percent": "69.8%"
     }
   },
   "metricSemantics": [
@@ -16615,8 +16615,8 @@
         "unsupportedOrOtherUnits": 4
       },
       {
-        "executableUnitDenominator": 132,
-        "installedUnitDenominator": 132,
+        "executableUnitDenominator": 133,
+        "installedUnitDenominator": 133,
         "kind": "spell",
         "label": "Spell Units",
         "profileFactDenominator": 136,
@@ -16626,7 +16626,7 @@
         "selectedIdentityReplayGapUnits": 0,
         "selectedIdentityReplayWitnessUnits": 110,
         "supportedProfileUnits": 92,
-        "unsupportedOrOtherUnits": 22
+        "unsupportedOrOtherUnits": 23
       },
       {
         "executableUnitDenominator": 91,
@@ -35073,6 +35073,33 @@
       ],
       "sourceRecordPath": "packages/surface/content/sleep.json",
       "unitId": "sleep"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "followUpTasks": [
+          {
+            "id": "L3-FOLLOWUP-SLEET-STORM-AREA-HAZARD-RUNTIME",
+            "mechanic": "Promote Sleet Storm as a Concentration-owned Cylinder area hazard with caller-supplied area identity, first-entry-on-a-turn and turn-start Dexterity Saving Throw triggers, Difficult Terrain and Heavily Obscured projections, failed-save Prone application, failed-save Concentration loss, and a runtime-detached exposed-flame dousing split.",
+            "owner": "battle-runtime spell invocation/projection plus table/spatial and exposed-flame owners",
+            "requiredOutput": "Supported-profile or profile-subset-supported Sleet Storm claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the area hazard while preserving table-owned area membership, pathfinding, and exposed-flame state.",
+            "title": "Sleet Storm Area Hazard Runtime"
+          }
+        ],
+        "reason": "Sleet Storm is authored and installed as an SRD Surface Spell Definition with Magic Action Spell Slot casting, 150-foot range, V/S/M miniature-umbrella components, caster-owned Concentration up to 1 minute, a point-origin 20-foot-radius 40-foot-tall Cylinder, Heavily Obscured area, exposed-flame dousing, Difficult Terrain ground, and first-entry-on-a-turn or turn-start Dexterity Saving Throw failure facts that apply Prone and break Concentration. Task 5 leaves promoted battle-runtime support open because the runtime still needs a Sleet Storm area-hazard profile that consumes caller-supplied Cylinder identity, area-membership trigger facts, movement/obscurement projection facts, failed-save condition and Concentration-loss facts, and a separate exposed-flame object/environment owner without dispatching on authored spell identity.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/sleet_storm.json",
+      "unitId": "sleet_storm"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

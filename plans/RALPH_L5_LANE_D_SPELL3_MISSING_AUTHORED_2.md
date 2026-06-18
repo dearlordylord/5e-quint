@@ -31,7 +31,7 @@
     {
       "number": 5,
       "id": "L5-D05-SLEET-STORM",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Close Sleet Storm missing authored record"
     },
     {
@@ -63,6 +63,12 @@
       "id": "L5-D10-WATER-WALK",
       "status": "ready-for-research",
       "title": "Close Water Walk missing authored record"
+    },
+    {
+      "number": 11,
+      "id": "L3-FOLLOWUP-SLEET-STORM-AREA-HAZARD-RUNTIME",
+      "status": "ready-for-research",
+      "title": "Promote Sleet Storm area hazard runtime support"
     }
   ]
 }
@@ -122,12 +128,13 @@ missing-record spells unless a RAW dependency is unavoidable and documented.
 | 2 | L5-D02-REMOVE-CURSE - Close Remove Curse missing authored record | done | none | May resolve Surface Spell Definition before Bestow Curse runtime occurrence semantics exist. |
 | 3 | L5-D03-REVIVIFY - Close Revivify missing authored record | done | none | Independent missing spell Unit. |
 | 4 | L5-D04-SENDING - Close Sending missing authored record | done | none | Independent missing spell Unit. |
-| 5 | L5-D05-SLEET-STORM - Close Sleet Storm missing authored record | ready-for-research | none | Independent missing spell Unit. |
+| 5 | L5-D05-SLEET-STORM - Close Sleet Storm missing authored record | done | none | Independent missing spell Unit. |
 | 6 | L5-D06-SLOW - Close Slow missing authored record | ready-for-research | none | Preserve Surface authoring, active penalties, and turn/Somatic split from `plans/unit-profile-coverage/L3_SLOW_RUNTIME_SURVEY.md`. |
 | 7 | L5-D07-SPEAK-WITH-DEAD - Close Speak with Dead missing authored record | ready-for-research | none | Independent missing spell Unit. |
 | 8 | L5-D08-SPEAK-WITH-PLANTS - Close Speak with Plants missing authored record | ready-for-research | none | Independent missing spell Unit. |
 | 9 | L5-D09-TINY-HUT - Close Tiny Hut missing authored record | ready-for-research | none | Independent missing spell Unit. |
 | 10 | L5-D10-WATER-WALK - Close Water Walk missing authored record | ready-for-research | none | Independent missing spell Unit. |
+| 11 | L3-FOLLOWUP-SLEET-STORM-AREA-HAZARD-RUNTIME - Promote Sleet Storm area hazard runtime support | ready-for-research | L5-D05-SLEET-STORM | Runtime support consumes the typed Sleet Storm Surface facts installed by Task 5. |
 
 ## Shared Verification
 
@@ -307,7 +314,7 @@ Verification:
 
 ### Task 5 - L5-D05-SLEET-STORM
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -529,3 +536,57 @@ Acceptance:
 Verification:
 
 - Shared lane verification.
+
+### Task 11 - L3-FOLLOWUP-SLEET-STORM-AREA-HAZARD-RUNTIME
+
+Status: `ready-for-research`
+
+Depends on:
+
+- L5-D05-SLEET-STORM
+
+Unit:
+
+- `sleet_storm`
+
+SRD anchors:
+
+- `.references/srd-5.2.1/Spells/Descriptions-S-Z.md:352`
+- `.references/srd-5.2.1/Classes/Druid.md:261`
+- `.references/srd-5.2.1/Classes/Sorcerer.md:314`
+- `.references/srd-5.2.1/Classes/Wizard.md:258`
+
+Current state:
+
+- Sleet Storm is authored and installed as an SRD Surface Spell Definition.
+- The Unit claim is `unsupported-profile` with follow-up runtime owner evidence
+  required for the area hazard.
+
+Output:
+
+- Promote Sleet Storm as a Concentration-owned Cylinder area hazard with
+  caller-supplied area identity.
+- Consume caller-supplied first-entry-on-a-turn and turn-start area-membership
+  trigger facts rather than deriving table geometry or pathfinding.
+- Support Difficult Terrain and Heavily Obscured projections, failed-save Prone
+  application, and failed-save Concentration loss.
+- Keep exposed-flame dousing as a separate runtime-detached object/environment
+  owner unless that owner is explicitly modeled.
+
+Acceptance:
+
+- `sleet_storm` has a `supported-profile` or `profile-subset-supported` claim
+  for the promoted area-hazard subset.
+- Deterministic admission/projection evidence and focused runtime tests cover
+  the promoted profile without dispatching on authored spell identity.
+- Focused Quint/runtime parity is updated for any battle-runtime behavior
+  change.
+- The claim still names any unimplemented exposed-flame, pathfinding, or
+  table-spatial facts as closed or follow-up owner boundaries.
+
+Verification:
+
+- Shared lane verification.
+- Battle-runtime focused tests for the promoted area-hazard behavior.
+- Relevant QNT proofs and one focused MBT run only if battle-runtime behavior
+  changes, following the MBT process in `AGENTS.md`.

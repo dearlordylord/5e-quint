@@ -225,6 +225,7 @@ export function traceEffectAtom(
     case "area_emits_dim_light":
     case "area_is_lightly_obscured":
     case "area_is_heavily_obscured":
+    case "douse_exposed_flames":
     case "area_is_magical_darkness":
     case "area_of_silence":
     case "truthfulness_constraint":
