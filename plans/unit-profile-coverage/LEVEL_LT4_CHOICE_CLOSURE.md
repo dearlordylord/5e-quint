@@ -6,15 +6,13 @@ Status: generated, non-strict until the Ralph closure lanes land.
 
 - Targets: 19
 - Cataloged: 19/19
-- Character-creation selectable: 16/19
-- Current blockers: 3
+- Character-creation selectable: 18/19
+- Current blockers: 1
 
 ## Current Blockers
 
 | Unit | Domain | Missing | RAW anchor |
 | --- | --- | --- | --- |
-| `feat_great_weapon_fighting` | fighting-style-feat-target | missing-character-creation-admission | .references/srd-5.2.1/Feats.md:105-109 |
-| `feat_two_weapon_fighting` | fighting-style-feat-target | missing-character-creation-admission | .references/srd-5.2.1/Feats.md:111-115 |
 | `species_gnome` | srd-species-target | missing-character-creation-admission | .references/srd-5.2.1/Character-Origins.md:177-193 |
 
 ## Target Rows
@@ -23,8 +21,8 @@ Status: generated, non-strict until the Ralph closure lanes land.
 | --- | --- | --- | --- | --- | --- | --- |
 | `feat_archery` | fighting-style-feat-target | yes | yes | supported-profile |  | .references/srd-5.2.1/Feats.md:91-97 |
 | `defense` | fighting-style-feat-target | yes | yes | supported-profile |  | .references/srd-5.2.1/Feats.md:99-103 |
-| `feat_great_weapon_fighting` | fighting-style-feat-target | yes | no | supported-profile |  | .references/srd-5.2.1/Feats.md:105-109 |
-| `feat_two_weapon_fighting` | fighting-style-feat-target | yes | no | supported-profile |  | .references/srd-5.2.1/Feats.md:111-115 |
+| `feat_great_weapon_fighting` | fighting-style-feat-target | yes | yes | supported-profile |  | .references/srd-5.2.1/Feats.md:105-109 |
+| `feat_two_weapon_fighting` | fighting-style-feat-target | yes | yes | supported-profile |  | .references/srd-5.2.1/Feats.md:111-115 |
 | `alert` | human-origin-feat-target | yes | yes | supported-profile |  | .references/srd-5.2.1/Feats.md:23-31 |
 | `feat_magic_initiate_cleric` | human-origin-feat-target | yes | yes | unsupported-profile | character-fact-and-runtime-detached-split | .references/srd-5.2.1/Feats.md:33-45 |
 | `feat_magic_initiate_druid` | human-origin-feat-target | yes | yes | unsupported-profile | character-fact-and-runtime-detached-split | .references/srd-5.2.1/Feats.md:33-45 |

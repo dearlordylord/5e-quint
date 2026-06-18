@@ -7,8 +7,8 @@ module characterCreationFighterFightingStyleSelectedIdentityMbt {
   var qSelectedFeatUnitId: str
   var qSelectedFightingStyleFeatureRefCount: int
   var qFighterFightingStyleUnitRefPresent: bool
-  var qDefenseUnitRefPresent: bool
-  var qArcheryUnitRefPresent: bool
+  var qSelectedFeatUnitRefCount: int
+  var qNonSelectedFightingStyleUnitRefCount: int
   var qTotalLevel: int
 
   action recordProjection(
@@ -17,8 +17,8 @@ module characterCreationFighterFightingStyleSelectedIdentityMbt {
     selectedFeatUnitId: str,
     selectedFightingStyleFeatureRefCount: int,
     fighterFightingStyleUnitRefPresent: bool,
-    defenseUnitRefPresent: bool,
-    archeryUnitRefPresent: bool,
+    selectedFeatUnitRefCount: int,
+    nonSelectedFightingStyleUnitRefCount: int,
     totalLevel: int,
   ): bool = all {
     qLastResult' = lastResult,
@@ -26,26 +26,62 @@ module characterCreationFighterFightingStyleSelectedIdentityMbt {
     qSelectedFeatUnitId' = selectedFeatUnitId,
     qSelectedFightingStyleFeatureRefCount' = selectedFightingStyleFeatureRefCount,
     qFighterFightingStyleUnitRefPresent' = fighterFightingStyleUnitRefPresent,
-    qDefenseUnitRefPresent' = defenseUnitRefPresent,
-    qArcheryUnitRefPresent' = archeryUnitRefPresent,
+    qSelectedFeatUnitRefCount' = selectedFeatUnitRefCount,
+    qNonSelectedFightingStyleUnitRefCount' = nonSelectedFightingStyleUnitRefCount,
     qTotalLevel' = totalLevel,
   }
 
   action init =
-    recordProjection("init", "none", "none", 0, false, false, false, 1)
+    recordProjection("init", "none", "none", 0, false, 0, 0, 1)
 
   action doSelectDefenseFightingStyle = all {
     qLastResult == "init",
-    recordProjection("finalized", "fighter_fighting_style", "defense", 1, true, true, false, 1),
+    recordProjection("finalized", "fighter_fighting_style", "defense", 1, true, 1, 0, 1),
+  }
+
+  action doSelectArcheryFightingStyle = all {
+    qLastResult == "init",
+    recordProjection("finalized", "fighter_fighting_style", "feat_archery", 1, true, 1, 0, 1),
+  }
+
+  action doSelectGreatWeaponFightingStyle = all {
+    qLastResult == "init",
+    recordProjection("finalized", "fighter_fighting_style", "feat_great_weapon_fighting", 1, true, 1, 0, 1),
+  }
+
+  action doSelectTwoWeaponFightingStyle = all {
+    qLastResult == "init",
+    recordProjection("finalized", "fighter_fighting_style", "feat_two_weapon_fighting", 1, true, 1, 0, 1),
+  }
+
+  action doReplaceArcheryWithDefenseOnFighterLevelGain = all {
+    qLastResult == "init",
+    recordProjection("replaced", "fighter_fighting_style", "defense", 1, true, 1, 0, 2),
   }
 
   action doReplaceDefenseWithArcheryOnFighterLevelGain = all {
     qLastResult == "init",
-    recordProjection("replaced", "fighter_fighting_style", "feat_archery", 1, true, false, true, 2),
+    recordProjection("replaced", "fighter_fighting_style", "feat_archery", 1, true, 1, 0, 2),
+  }
+
+  action doReplaceDefenseWithGreatWeaponFightingOnFighterLevelGain = all {
+    qLastResult == "init",
+    recordProjection("replaced", "fighter_fighting_style", "feat_great_weapon_fighting", 1, true, 1, 0, 2),
+  }
+
+  action doReplaceDefenseWithTwoWeaponFightingOnFighterLevelGain = all {
+    qLastResult == "init",
+    recordProjection("replaced", "fighter_fighting_style", "feat_two_weapon_fighting", 1, true, 1, 0, 2),
   }
 
   action step = any {
     doSelectDefenseFightingStyle,
+    doSelectArcheryFightingStyle,
+    doSelectGreatWeaponFightingStyle,
+    doSelectTwoWeaponFightingStyle,
+    doReplaceArcheryWithDefenseOnFighterLevelGain,
     doReplaceDefenseWithArcheryOnFighterLevelGain,
+    doReplaceDefenseWithGreatWeaponFightingOnFighterLevelGain,
+    doReplaceDefenseWithTwoWeaponFightingOnFighterLevelGain,
   }
 }

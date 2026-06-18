@@ -2,9 +2,9 @@
   "schema": "level-lt4-choice-closure.v1",
   "mode": "non-strict",
   "summary": {
-    "blockerCount": 3,
+    "blockerCount": 1,
     "cataloged": 19,
-    "selectable": 16,
+    "selectable": 18,
     "targetCount": 19
   },
   "notes": [
@@ -15,7 +15,9 @@
   "selectableSources": {
     "fightingStyleSelectableIds": [
       "defense",
-      "feat_archery"
+      "feat_archery",
+      "feat_great_weapon_fighting",
+      "feat_two_weapon_fighting"
     ],
     "humanOriginFeatSelectableIds": [
       "alert",
@@ -37,34 +39,6 @@
     ]
   },
   "blockers": [
-    {
-      "admissionScope": "Fighter 1, Paladin 2, Ranger 2 Fighting Style",
-      "blockers": [
-        "missing-character-creation-admission"
-      ],
-      "cataloged": true,
-      "category": "fighting-style-feat-target",
-      "claimTag": "supported-profile",
-      "name": "Great Weapon Fighting",
-      "rawAnchor": ".references/srd-5.2.1/Feats.md:105-109",
-      "selectable": false,
-      "sourceRecordPath": "packages/surface/content/feat_great_weapon_fighting.json",
-      "unitId": "feat_great_weapon_fighting"
-    },
-    {
-      "admissionScope": "Fighter 1, Paladin 2, Ranger 2 Fighting Style",
-      "blockers": [
-        "missing-character-creation-admission"
-      ],
-      "cataloged": true,
-      "category": "fighting-style-feat-target",
-      "claimTag": "supported-profile",
-      "name": "Two-Weapon Fighting",
-      "rawAnchor": ".references/srd-5.2.1/Feats.md:111-115",
-      "selectable": false,
-      "sourceRecordPath": "packages/surface/content/feat_two_weapon_fighting.json",
-      "unitId": "feat_two_weapon_fighting"
-    },
     {
       "admissionScope": "Character creation species choice",
       "blockers": [
@@ -108,29 +82,25 @@
     },
     {
       "admissionScope": "Fighter 1, Paladin 2, Ranger 2 Fighting Style",
-      "blockers": [
-        "missing-character-creation-admission"
-      ],
+      "blockers": [],
       "cataloged": true,
       "category": "fighting-style-feat-target",
       "claimTag": "supported-profile",
       "name": "Great Weapon Fighting",
       "rawAnchor": ".references/srd-5.2.1/Feats.md:105-109",
-      "selectable": false,
+      "selectable": true,
       "sourceRecordPath": "packages/surface/content/feat_great_weapon_fighting.json",
       "unitId": "feat_great_weapon_fighting"
     },
     {
       "admissionScope": "Fighter 1, Paladin 2, Ranger 2 Fighting Style",
-      "blockers": [
-        "missing-character-creation-admission"
-      ],
+      "blockers": [],
       "cataloged": true,
       "category": "fighting-style-feat-target",
       "claimTag": "supported-profile",
       "name": "Two-Weapon Fighting",
       "rawAnchor": ".references/srd-5.2.1/Feats.md:111-115",
-      "selectable": false,
+      "selectable": true,
       "sourceRecordPath": "packages/surface/content/feat_two_weapon_fighting.json",
       "unitId": "feat_two_weapon_fighting"
     },

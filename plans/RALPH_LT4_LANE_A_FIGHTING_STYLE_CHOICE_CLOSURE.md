@@ -7,19 +7,19 @@
     {
       "number": 1,
       "id": "LT4-A01-FIGHTING-STYLE-OPTION-DENOMINATOR",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Admit all SRD Fighting Style feat targets"
     },
     {
       "number": 2,
       "id": "LT4-A02-FIGHTER-FIGHTING-STYLE-ALL-TARGETS",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Prove Fighter level-1 Fighting Style can select every SRD target"
     },
     {
       "number": 3,
       "id": "LT4-A03-PALADIN-RANGER-FIGHTING-STYLE-ALL-TARGETS",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Prove Paladin and Ranger level-2 Fighting Style can select every SRD target"
     }
   ]
@@ -90,7 +90,7 @@ creation.
 
 ### Task 1 - LT4-A01-FIGHTING-STYLE-OPTION-DENOMINATOR
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -113,9 +113,9 @@ SRD anchors:
 Current state:
 
 - All four feat Units are cataloged.
-- `SUPPORTED_FIGHTING_STYLE_OPTION_IDS` admits only `defense` and
-  `feat_archery`.
-- The generated level <4 choice closure report marks GWF/TWF as
+- `SUPPORTED_FIGHTING_STYLE_OPTION_IDS` admits all four SRD Fighting Style
+  feat Units.
+- The generated level <4 choice closure report no longer marks GWF/TWF as
   `missing-character-creation-admission`.
 
 Output:
@@ -136,7 +136,7 @@ Verification:
 
 ### Task 2 - LT4-A02-FIGHTER-FIGHTING-STYLE-ALL-TARGETS
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -152,8 +152,9 @@ SRD anchor:
 
 Current state:
 
-- Fighter Fighting Style has selected-identity tests for Defense and Archery.
-- It does not prove Fighter level 1 can select GWF/TWF.
+- Fighter level 1 discovery exposes all four SRD Fighting Style feat targets.
+- Fighter Fighting Style selected-identity evidence covers finalization for all
+  four targets and replacement into the same complete target set.
 
 Output:
 
@@ -173,7 +174,7 @@ Verification:
 
 ### Task 3 - LT4-A03-PALADIN-RANGER-FIGHTING-STYLE-ALL-TARGETS
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -192,7 +193,9 @@ SRD anchors:
 Current state:
 
 - Paladin/Ranger can choose the Fighting Style feat branch.
-- The nested feat target set still only admits Defense and Archery.
+- The nested feat target set admits all four SRD Fighting Style feat targets
+  while preserving Blessed Warrior and Druidic Warrior as separate branch
+  options.
 
 Output:
 
@@ -209,4 +212,3 @@ Acceptance:
 Verification:
 
 - Shared lane verification.
-

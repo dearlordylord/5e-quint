@@ -204,6 +204,11 @@ function extractCreationChoiceIdsFromArray(source, constName, constants) {
     const resolved = constants.get(match[1]);
     if (resolved !== undefined) ids.push(resolved);
   }
+  for (const match of body.matchAll(
+    /\.\.\.\s*([A-Z0-9_]+)\s*\.\s*map\(\s*creationChoiceOptionId\s*\)/g,
+  )) {
+    ids.push(...extractUnitIdsFromArray(source, match[1], constants));
+  }
   return stableUnique(ids);
 }
 
@@ -460,9 +465,14 @@ function runSelfTest() {
       FIRST,
       "beta",
     ] as const satisfies ReadonlyArray<string>;
+    const CHOICE_UNITS = [
+      "delta",
+      "epsilon",
+    ] as const;
     const CHOICES = [
       creationChoiceOptionId(FIRST),
       creationChoiceOptionId("gamma"),
+      ...CHOICE_UNITS.map(creationChoiceOptionId),
     ] as const;
   `;
   const constants = extractStringConstants(source);
@@ -472,8 +482,10 @@ function runSelfTest() {
   if (values.join(",") !== "alpha,beta") {
     issues.push(`expected VALUES alpha,beta; received ${values.join(",")}`);
   }
-  if (choices.join(",") !== "alpha,gamma") {
-    issues.push(`expected CHOICES alpha,gamma; received ${choices.join(",")}`);
+  if (choices.join(",") !== "alpha,delta,epsilon,gamma") {
+    issues.push(
+      `expected CHOICES alpha,delta,epsilon,gamma; received ${choices.join(",")}`,
+    );
   }
   return issues;
 }
