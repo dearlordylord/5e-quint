@@ -15,7 +15,10 @@ import {
   buildStatBlockCatalog,
   srdStatBlockCollection,
 } from "@dnd/surface/surface/stat-block-catalog";
-import { readClassCreationFacts } from "@dnd/surface/surface/character-creation-readers";
+import {
+  readClassCreationFacts,
+  readMagicInitiateSpellAccessSourceFacts,
+} from "@dnd/surface/surface/character-creation-readers";
 import type {
   ProficiencyGrant,
   ProficiencyGrantSubject,
@@ -196,6 +199,8 @@ const SRD_SORCERY_POINTS_POOL_ID = "sorcery_points";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-SORCERER-METAMAGIC-CHARACTER-FACTS sorcerer_metamagic
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3PUTB-07-RANGER-HUNTERS-PREY-RUNTIME ranger_hunters_prey
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L14G-B02-FEAT-SKILLED feat_skilled
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection LT4-C01-HUMAN-VERSATILE-ORIGIN-FEAT-DENOMINATOR species_human_versatile
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection LT4-C03-SKILLED-HUMAN-VERSATILE-NESTED-CHOICE-EVIDENCE species_human_versatile feat_skilled
 
 const unitCatalogResult = buildUnitCatalog({
   collections: [srdUnitCollection],
@@ -3437,10 +3442,19 @@ describe("character creation finalization", () => {
       humanHoles,
       testUnitHoleId("species_human_versatile", SPECIES_ORIGIN_FEAT_CHOICE_KEY),
     );
+    const versatileTrait = unitLibrary.requireUnit("species_human_versatile");
 
     expect(
       optionIds(holeById(humanHoles, "cc:draft:draft.speciesSize")),
     ).toEqual(["medium", "small"]);
+    expect(versatileTrait).toMatchObject({
+      kind: "species_trait",
+      mechanics: {
+        family: "passive",
+        grants: [{ category: "origin", kind: "grant_feat" }],
+      },
+      species: "human",
+    });
     expect(skillfulHole).toMatchObject({
       kind: "choice",
       cardinality: { tag: "exactly", count: 1 },
@@ -3453,14 +3467,14 @@ describe("character creation finalization", () => {
     expect(versatileHole).toMatchObject({
       kind: "choice",
       cardinality: { tag: "exactly", count: 1 },
+      source: {
+        choiceKey: SPECIES_ORIGIN_FEAT_CHOICE_KEY,
+        tag: "unitChoice",
+        unitId: "species_human_versatile",
+      },
     });
-    expect(optionIds(versatileHole)).toEqual(
-      expect.arrayContaining([
-        "alert",
-        "feat_magic_initiate_druid",
-        "feat_savage_attacker",
-        "feat_skilled",
-      ]),
+    expect(sortedChoiceOptionIds(optionIds(versatileHole))).toEqual(
+      srdOriginFeatOptionIds(unitLibrary),
     );
 
     const afterHumanChoices = requireAcceptedBatch(
@@ -3638,6 +3652,84 @@ describe("character creation finalization", () => {
       ]),
     );
   });
+
+  test.each([
+    {
+      featUnitId: "feat_magic_initiate_cleric",
+      spellList: "cleric",
+    },
+    {
+      featUnitId: "feat_magic_initiate_druid",
+      spellList: "druid",
+    },
+    {
+      featUnitId: "feat_magic_initiate_wizard",
+      spellList: "wizard",
+    },
+  ] as const)(
+    "retains Human Versatile $spellList Magic Initiate spell-access source facts",
+    ({ featUnitId, spellList }) => {
+      const feat = unitLibrary.requireUnit(featUnitId);
+      expect(readMagicInitiateSpellAccessSourceFacts(feat)).toEqual({
+        tag: "readable",
+        value: {
+          recordId: featUnitId,
+          selectedCantrips: {
+            count: 2,
+            spellLevel: 0,
+          },
+          selectedLevelOneSpell: {
+            access: [
+              "always_prepared",
+              "one_free_cast_per_long_rest",
+              "spell_slot_cast",
+            ],
+            count: 1,
+            spellLevel: 1,
+          },
+          spellcastingAbilityOptions: ["int", "wis", "cha"],
+          spellList,
+        },
+      });
+
+      const afterHumanChoices =
+        humanVersatileOriginFeatDraftAfterSpeciesChoices(featUnitId);
+      const selectedFeatHoles = discoverCreationHoles({
+        draft: afterHumanChoices,
+        unitLibrary,
+      }).filter(
+        (hole) =>
+          hole.kind === "choice" &&
+          hole.source.tag === "unitChoice" &&
+          hole.source.unitId === featUnitId,
+      );
+      expect(selectedFeatHoles).toEqual([]);
+
+      const result = finalizeCharacterDraft({
+        draft: completeHumanVersatileOriginFeatDraft(featUnitId),
+        unitLibrary,
+      });
+      expect(result.tag).toBe("ready");
+      if (result.tag !== "ready") return;
+
+      expect(result.build.features).toContainEqual({
+        selectedFromUnitId: "species_human_versatile",
+        kind: "selectedClassChoice",
+        unitId: featUnitId,
+      });
+      expect(result.build.spellcasting).toBeUndefined();
+      expect(
+        characterBuildUnitRefs(result.build, unitLibrary).map(
+          (ref) => ref.unitId,
+        ),
+      ).toEqual(
+        expect.arrayContaining([
+          "species_human_versatile",
+          featUnitId,
+        ]),
+      );
+    },
+  );
 
   test("requires species size selection exactly for choice-sized species", () => {
     const tieflingWithoutSize = finalizeCharacterDraft({
@@ -8779,6 +8871,276 @@ describe("character creation finalization", () => {
     ).toBe("invalid");
   });
 
+  test("keeps background Skilled and Human Versatile Skilled proficiency choices keyed apart", () => {
+    const soldier = unitLibrary.requireUnit("background_soldier");
+    expect(soldier.kind).toBe("background");
+    if (soldier.kind !== "background") return;
+
+    const skilledSoldier = {
+      ...soldier,
+      originFeatId: "feat_skilled",
+    } satisfies UnitRecord;
+    const skilledOriginUnitLibrary = unitLibraryReplacingUnits([
+      skilledSoldier,
+    ]);
+    const draft = createTestDraft("draft:human-repeatable-skilled");
+    const afterInitial = requireAcceptedBatch(
+      fillCreationHoles({
+        draft,
+        unitLibrary: skilledOriginUnitLibrary,
+        expectedRevision: draft.revision,
+        fills: initialManifestFills(
+          "13:class_fighter:level_1:maximum_hit_die",
+          "species_human",
+        ),
+      }),
+    );
+    const initialHoles = discoverCreationHoles({
+      draft: afterInitial,
+      unitLibrary: skilledOriginUnitLibrary,
+    });
+    const backgroundSkilledHole = requireHoleById(
+      initialHoles,
+      testUnitHoleId("feat_skilled", ORIGIN_FEAT_PROFICIENCY_CHOICE_KEY),
+    );
+    expect(backgroundSkilledHole).toMatchObject({
+      kind: "choice",
+      cardinality: { tag: "exactly", count: 3 },
+      source: {
+        choiceKey: ORIGIN_FEAT_PROFICIENCY_CHOICE_KEY,
+        unitId: "feat_skilled",
+      },
+    });
+    expect(
+      requireHoleById(
+        initialHoles,
+        testUnitHoleId(
+          "species_human_versatile",
+          SPECIES_ORIGIN_FEAT_CHOICE_KEY,
+        ),
+      ),
+    ).toMatchObject({
+      kind: "choice",
+      cardinality: { tag: "exactly", count: 1 },
+      source: {
+        choiceKey: SPECIES_ORIGIN_FEAT_CHOICE_KEY,
+        unitId: "species_human_versatile",
+      },
+    });
+
+    const afterOriginFeatChoices = requireAcceptedBatch(
+      fillCreationHoles({
+        draft: afterInitial,
+        unitLibrary: skilledOriginUnitLibrary,
+        expectedRevision: afterInitial.revision,
+        fills: [
+          choiceFill("cc:draft:draft.speciesSize", "small"),
+          choiceFill(
+            testUnitHoleId(
+              "species_human_skillful",
+              SPECIES_TRAIT_PROFICIENCY_CHOICE_KEY,
+            ),
+            "arcana",
+          ),
+          choiceFill(
+            testUnitHoleId("feat_skilled", ORIGIN_FEAT_PROFICIENCY_CHOICE_KEY),
+            "history",
+            "tool:alchemists_supplies",
+            "tool:thieves_tools",
+          ),
+          choiceFill(
+            testUnitHoleId(
+              "species_human_versatile",
+              SPECIES_ORIGIN_FEAT_CHOICE_KEY,
+            ),
+            "feat_skilled",
+          ),
+        ],
+      }),
+    );
+    const speciesSkilledHole = requireHoleById(
+      discoverCreationHoles({
+        draft: afterOriginFeatChoices,
+        unitLibrary: skilledOriginUnitLibrary,
+      }),
+      testUnitHoleId(
+        "feat_skilled",
+        SPECIES_ORIGIN_FEAT_PROFICIENCY_CHOICE_KEY,
+      ),
+    );
+    expect(speciesSkilledHole).toMatchObject({
+      kind: "choice",
+      cardinality: { tag: "exactly", count: 3 },
+      source: {
+        choiceKey: SPECIES_ORIGIN_FEAT_PROFICIENCY_CHOICE_KEY,
+        unitId: "feat_skilled",
+      },
+    });
+    const speciesSkilledOptionIds = optionIds(speciesSkilledHole);
+    expect(speciesSkilledOptionIds).not.toEqual(
+      optionIds(backgroundSkilledHole),
+    );
+    expect(speciesSkilledOptionIds).toEqual(
+      expect.arrayContaining(["nature", "tool:smiths_tools", "tool:tool_lute"]),
+    );
+    for (const alreadySelectedOptionId of [
+      "arcana",
+      "history",
+      "tool:alchemists_supplies",
+      "tool:thieves_tools",
+    ]) {
+      expect(speciesSkilledOptionIds).not.toContain(alreadySelectedOptionId);
+    }
+
+    const afterChoices = requireAcceptedBatch(
+      fillCreationHoles({
+        draft: afterOriginFeatChoices,
+        unitLibrary: skilledOriginUnitLibrary,
+        expectedRevision: afterOriginFeatChoices.revision,
+        fills: [
+          choiceFill(
+            testUnitHoleId("class_fighter", "class_skill_proficiency_choice"),
+            "perception",
+            "survival",
+          ),
+          choiceFill(
+            testUnitHoleId(
+              "fighter_fighting_style",
+              "class_feature_feat_choice",
+            ),
+            "defense",
+          ),
+          choiceFill(
+            testUnitHoleId("fighter_weapon_mastery", "weapon_mastery_options"),
+            "weapon_longsword",
+            "weapon_spear",
+            "weapon_flail",
+          ),
+          choiceFill(
+            testUnitHoleId(
+              "background_soldier",
+              "background_ability_score_increase",
+            ),
+            "two_and_one:str:con",
+          ),
+          choiceFill(
+            testUnitHoleId("background_soldier", "background_tool_choice"),
+            "tool_dice_set",
+          ),
+          choiceFill(
+            testUnitHoleId(
+              "feat_skilled",
+              SPECIES_ORIGIN_FEAT_PROFICIENCY_CHOICE_KEY,
+            ),
+            "nature",
+            "tool:smiths_tools",
+            "tool:tool_lute",
+          ),
+          choiceFill(
+            testUnitHoleId("class_fighter", "class_equipment_choice"),
+            "option_c",
+          ),
+          choiceFill(
+            testUnitHoleId("background_soldier", "background_equipment_choice"),
+            "option_b",
+          ),
+        ],
+      }),
+    );
+    const afterPurchase = requireAcceptedBatch(
+      fillCreationHoles({
+        draft: afterChoices,
+        unitLibrary: skilledOriginUnitLibrary,
+        expectedRevision: afterChoices.revision,
+        fills: [
+          choiceFill(
+            testUnitHoleId("class_fighter", "equipment_purchase"),
+            "armor_chain_mail",
+            "weapon_longsword",
+            "equipment_shield",
+          ),
+        ],
+      }),
+    );
+    const complete = requireAcceptedBatch(
+      fillCreationHoles({
+        draft: afterPurchase,
+        unitLibrary: skilledOriginUnitLibrary,
+        expectedRevision: afterPurchase.revision,
+        fills: [
+          choiceFill(testLoadoutHoleId("armor_chain_mail", "armor"), "worn"),
+          choiceFill(
+            testLoadoutHoleId("equipment_shield", "shield"),
+            "wielded",
+          ),
+          choiceFill(
+            testLoadoutHoleId("weapon_longsword", "weapon"),
+            "wielded_one_handed",
+          ),
+        ],
+      }),
+    );
+    const finalization = finalizeCharacterDraft({
+      draft: complete,
+      unitLibrary: skilledOriginUnitLibrary,
+    });
+
+    expect(finalization.tag).toBe("ready");
+    if (finalization.tag !== "ready") return;
+    expect(finalization.build.features).toContainEqual({
+      selectedFromUnitId: "species_human_versatile",
+      kind: "selectedClassChoice",
+      unitId: "feat_skilled",
+    });
+    const expectedProficiencyChoiceSubjects = [
+      { kind: "skill", skill: "perception" },
+      { kind: "skill", skill: "survival" },
+      { kind: "tool", toolId: "tool_dice_set" },
+      { kind: "skill", skill: "arcana" },
+      { kind: "skill", skill: "history" },
+      { kind: "tool", toolId: "alchemists_supplies" },
+      { kind: "tool", toolId: "thieves_tools" },
+      { kind: "skill", skill: "nature" },
+      { kind: "tool", toolId: "smiths_tools" },
+      { kind: "tool", toolId: "tool_lute" },
+    ] as const;
+    expect(finalization.build.proficiencyChoices).toHaveLength(
+      expectedProficiencyChoiceSubjects.length,
+    );
+    expect(finalization.build.proficiencyChoices).toEqual(
+      expect.arrayContaining([...expectedProficiencyChoiceSubjects]),
+    );
+    const proficiencies = expectRight(
+      characterBuildProficiencies(finalization.build, skilledOriginUnitLibrary),
+    );
+    const expectedSkillProficiencies = [
+      "athletics",
+      "intimidation",
+      "perception",
+      "survival",
+      "arcana",
+      "history",
+      "nature",
+    ] as const;
+    expect(proficiencies.skills).toHaveLength(
+      expectedSkillProficiencies.length,
+    );
+    expect(proficiencies.skills).toEqual(
+      expect.arrayContaining([...expectedSkillProficiencies]),
+    );
+    const expectedToolProficiencies = [
+      "tool_dice_set",
+      "alchemists_supplies",
+      "thieves_tools",
+      "smiths_tools",
+      "tool_lute",
+    ] as const;
+    expect(proficiencies.tools).toHaveLength(expectedToolProficiencies.length);
+    expect(proficiencies.tools).toEqual(
+      expect.arrayContaining([...expectedToolProficiencies]),
+    );
+  });
+
   test("round-trips every class-feature proficiency subject option shape", () => {
     const subjects: readonly ProficiencyGrantSubject[] = [
       { kind: "skill", skill: "medicine" },
@@ -9087,6 +9449,23 @@ function selectedChoiceOptionIds(
       ? selection.options.map((option) => option.optionId)
       : [],
   );
+}
+
+function srdOriginFeatOptionIds(
+  catalog: UnitCatalog,
+): readonly CreationChoiceOptionId[] {
+  return sortedChoiceOptionIds(
+    catalog
+      .listUnits()
+      .filter((unit) => unit.kind === "feat" && unit.category === "origin")
+      .map((unit) => creationChoiceOptionId(unit.id)),
+  );
+}
+
+function sortedChoiceOptionIds<T extends string>(
+  optionIds: readonly T[],
+): readonly T[] {
+  return [...optionIds].sort((left, right) => left.localeCompare(right));
 }
 
 function selectedBuildClassChoiceUnitIds(
@@ -9420,6 +9799,56 @@ function initialManifestFills(
 
 function completeManifestDraft(): CharacterDraft {
   return completeManifestDraftForSpecies("species_orc");
+}
+
+function completeHumanVersatileOriginFeatDraft(
+  featUnitId: UnitRecord["id"],
+): CharacterDraft {
+  return completeManifestDraftAfterProgression(
+    humanVersatileOriginFeatDraftAfterSpeciesChoices(featUnitId),
+  );
+}
+
+function humanVersatileOriginFeatDraftAfterSpeciesChoices(
+  featUnitId: UnitRecord["id"],
+): CharacterDraft {
+  const draft = createTestDraft(`draft:human-versatile-${featUnitId}`);
+  const afterInitial = requireAcceptedBatch(
+    fillCreationHoles({
+      draft,
+      unitLibrary,
+      expectedRevision: draft.revision,
+      fills: initialManifestFills(
+        "13:class_fighter:level_1:maximum_hit_die",
+        "species_human",
+      ),
+    }),
+  );
+
+  return requireAcceptedBatch(
+    fillCreationHoles({
+      draft: afterInitial,
+      unitLibrary,
+      expectedRevision: afterInitial.revision,
+      fills: [
+        choiceFill("cc:draft:draft.speciesSize", "small"),
+        choiceFill(
+          testUnitHoleId(
+            "species_human_skillful",
+            SPECIES_TRAIT_PROFICIENCY_CHOICE_KEY,
+          ),
+          "arcana",
+        ),
+        choiceFill(
+          testUnitHoleId(
+            "species_human_versatile",
+            SPECIES_ORIGIN_FEAT_CHOICE_KEY,
+          ),
+          featUnitId,
+        ),
+      ],
+    }),
+  );
 }
 
 function completeManifestDraftForSpecies(input: {

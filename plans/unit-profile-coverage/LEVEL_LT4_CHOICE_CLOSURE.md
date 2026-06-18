@@ -39,6 +39,14 @@ Status: generated, non-strict until the Ralph closure lanes land.
 | `species_orc` | srd-species-target | yes | yes | unsupported-profile |  | .references/srd-5.2.1/Character-Origins.md:245-259 |
 | `species_tiefling` | srd-species-target | yes | yes | unsupported-profile |  | .references/srd-5.2.1/Character-Origins.md:261-274 |
 
+## Magic Initiate Spell Access Closure
+
+| Unit | Spell list | Character-creation retained fact | Selected cantrips owner | Selected level 1 spell owner | Spellcasting ability owner | Selected Spell Definition owner | Spell Invocation runtime owner |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `feat_magic_initiate_cleric` | cleric | character-creation-runtime: selected Origin feat Unit ref | future character-sheet spell-access owner: Magic Initiate selected cantrip choices | future character-sheet spell-access owner: Magic Initiate selected level-1 Spell Access choice | future character-sheet spell-access owner: Magic Initiate spellcasting ability choice | selected Spell Definition profiles: static execution/profile facts | spell invocation runtime boundary: runtime Spell Invocation |
+| `feat_magic_initiate_druid` | druid | character-creation-runtime: selected Origin feat Unit ref | future character-sheet spell-access owner: Magic Initiate selected cantrip choices | future character-sheet spell-access owner: Magic Initiate selected level-1 Spell Access choice | future character-sheet spell-access owner: Magic Initiate spellcasting ability choice | selected Spell Definition profiles: static execution/profile facts | spell invocation runtime boundary: runtime Spell Invocation |
+| `feat_magic_initiate_wizard` | wizard | character-creation-runtime: selected Origin feat Unit ref | future character-sheet spell-access owner: Magic Initiate selected cantrip choices | future character-sheet spell-access owner: Magic Initiate selected level-1 Spell Access choice | future character-sheet spell-access owner: Magic Initiate spellcasting ability choice | selected Spell Definition profiles: static execution/profile facts | spell invocation runtime boundary: runtime Spell Invocation |
+
 ## Verification
 
 - RAW/ubiquitous-language check: compare every row to `.references/srd-5.2.1/Feats.md`, `.references/srd-5.2.1/Character-Origins.md`, and `UBIQUITOUS_LANGUAGE.md` before implementing rules.

@@ -7,19 +7,19 @@
     {
       "number": 1,
       "id": "LT4-C01-HUMAN-VERSATILE-ORIGIN-FEAT-DENOMINATOR",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Prove Human Versatile exposes every SRD Origin feat target"
     },
     {
       "number": 2,
       "id": "LT4-C02-MAGIC-INITIATE-SPELL-ACCESS-CLOSURE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Make Magic Initiate spell-access closure checker-visible"
     },
     {
       "number": 3,
       "id": "LT4-C03-SKILLED-HUMAN-VERSATILE-NESTED-CHOICE-EVIDENCE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Prove Skilled nested choices work through Human Versatile"
     }
   ]
@@ -93,7 +93,7 @@ spell-access closure, and Skilled nested proficiency choices.
 
 ### Task 1 - LT4-C01-HUMAN-VERSATILE-ORIGIN-FEAT-DENOMINATOR
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -133,7 +133,7 @@ Verification:
 
 ### Task 2 - LT4-C02-MAGIC-INITIATE-SPELL-ACCESS-CLOSURE
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -175,7 +175,7 @@ Verification:
 
 ### Task 3 - LT4-C03-SKILLED-HUMAN-VERSATILE-NESTED-CHOICE-EVIDENCE
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -213,4 +213,3 @@ Acceptance:
 Verification:
 
 - Shared lane verification.
-

@@ -123,6 +123,36 @@
       "category": "human-origin-feat-target",
       "claimTag": "unsupported-profile",
       "closureKind": "character-fact-and-runtime-detached-split",
+      "magicInitiateSpellAccessClosure": {
+        "characterCreationRetention": {
+          "fact": "selected Origin feat Unit ref",
+          "owner": "character-creation-runtime"
+        },
+        "selectedCantrips": {
+          "owner": "future character-sheet spell-access owner",
+          "sourceFact": "Magic Initiate selected cantrip choices"
+        },
+        "selectedLevelOneSpell": {
+          "owner": "future character-sheet spell-access owner",
+          "sourceFact": "Magic Initiate selected level-1 Spell Access choice"
+        },
+        "sourceFact": {
+          "kind": "surface-magic-initiate-mechanics",
+          "spellList": "cleric"
+        },
+        "spellcastingAbility": {
+          "owner": "future character-sheet spell-access owner",
+          "sourceFact": "Magic Initiate spellcasting ability choice"
+        },
+        "spellDefinitionProfileOwner": {
+          "fact": "static execution/profile facts",
+          "owner": "selected Spell Definition profiles"
+        },
+        "spellInvocationRuntimeOwner": {
+          "fact": "runtime Spell Invocation",
+          "owner": "spell invocation runtime boundary"
+        }
+      },
       "name": "Magic Initiate (Cleric)",
       "rawAnchor": ".references/srd-5.2.1/Feats.md:33-45",
       "selectable": true,
@@ -136,6 +166,36 @@
       "category": "human-origin-feat-target",
       "claimTag": "unsupported-profile",
       "closureKind": "character-fact-and-runtime-detached-split",
+      "magicInitiateSpellAccessClosure": {
+        "characterCreationRetention": {
+          "fact": "selected Origin feat Unit ref",
+          "owner": "character-creation-runtime"
+        },
+        "selectedCantrips": {
+          "owner": "future character-sheet spell-access owner",
+          "sourceFact": "Magic Initiate selected cantrip choices"
+        },
+        "selectedLevelOneSpell": {
+          "owner": "future character-sheet spell-access owner",
+          "sourceFact": "Magic Initiate selected level-1 Spell Access choice"
+        },
+        "sourceFact": {
+          "kind": "surface-magic-initiate-mechanics",
+          "spellList": "druid"
+        },
+        "spellcastingAbility": {
+          "owner": "future character-sheet spell-access owner",
+          "sourceFact": "Magic Initiate spellcasting ability choice"
+        },
+        "spellDefinitionProfileOwner": {
+          "fact": "static execution/profile facts",
+          "owner": "selected Spell Definition profiles"
+        },
+        "spellInvocationRuntimeOwner": {
+          "fact": "runtime Spell Invocation",
+          "owner": "spell invocation runtime boundary"
+        }
+      },
       "name": "Magic Initiate (Druid)",
       "rawAnchor": ".references/srd-5.2.1/Feats.md:33-45",
       "selectable": true,
@@ -149,6 +209,36 @@
       "category": "human-origin-feat-target",
       "claimTag": "unsupported-profile",
       "closureKind": "character-fact-and-runtime-detached-split",
+      "magicInitiateSpellAccessClosure": {
+        "characterCreationRetention": {
+          "fact": "selected Origin feat Unit ref",
+          "owner": "character-creation-runtime"
+        },
+        "selectedCantrips": {
+          "owner": "future character-sheet spell-access owner",
+          "sourceFact": "Magic Initiate selected cantrip choices"
+        },
+        "selectedLevelOneSpell": {
+          "owner": "future character-sheet spell-access owner",
+          "sourceFact": "Magic Initiate selected level-1 Spell Access choice"
+        },
+        "sourceFact": {
+          "kind": "surface-magic-initiate-mechanics",
+          "spellList": "wizard"
+        },
+        "spellcastingAbility": {
+          "owner": "future character-sheet spell-access owner",
+          "sourceFact": "Magic Initiate spellcasting ability choice"
+        },
+        "spellDefinitionProfileOwner": {
+          "fact": "static execution/profile facts",
+          "owner": "selected Spell Definition profiles"
+        },
+        "spellInvocationRuntimeOwner": {
+          "fact": "runtime Spell Invocation",
+          "owner": "spell invocation runtime boundary"
+        }
+      },
       "name": "Magic Initiate (Wizard)",
       "rawAnchor": ".references/srd-5.2.1/Feats.md:33-45",
       "selectable": true,

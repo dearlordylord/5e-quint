@@ -63,8 +63,8 @@
     },
     "deterministicAdmissionProjectionCoverage": {
       "denominator": 183,
-      "numerator": 177,
-      "percent": "96.7%"
+      "numerator": 178,
+      "percent": "97.3%"
     },
     "profileClassificationCoverage": {
       "denominator": 307,
@@ -23522,9 +23522,9 @@
         "battleReadinessClosure": {
           "kind": "character-fact-and-runtime-detached-split",
           "owner": "character-creation-runtime and future character-sheet spell-access owner",
-          "reason": "The feat Unit owns SRD authored identity and typed spell-list source facts. Character finalization retains the feat ref without storing duplicate spell-access state, while future character-sheet spell-access support should derive selected spells from the feat's typed Magic Initiate facts and each selected Spell Definition owns invocation runtime behavior."
+          "reason": "The feat Unit owns SRD authored identity and typed Magic Initiate spell-list source facts. Character finalization retains the selected feat ref without storing duplicate spell-access state; future character-sheet spell-access support should derive selected cantrips, selected level-1 Spell Access, spellcasting ability choice, and free-cast recharge from the feat's typed Magic Initiate facts. Selected Spell Definition profiles own static execution/profile facts, while runtime Spell Invocation remains owned by the spell invocation runtime boundary."
         },
-        "reason": "Magic Initiate (Cleric) is an Origin feat spell-access selection source. Character creation retains the selected background and feat Unit refs; selected cantrips, level-1 spell access, and spellcasting ability choice belong to the character spell-access owner rather than promoted battle Unit execution.",
+        "reason": "Magic Initiate (Cleric) is an Origin feat spell-access selection source. Character creation retains selected Background or Human Versatile feat Unit refs plus the feat's typed spell-list source facts; selected cantrip ids, selected level-1 Spell Access, spellcasting ability choice, and one-free-Long Rest cast state belong to the character spell-access owner rather than promoted battle Unit execution.",
         "tag": "unsupported-profile"
       },
       "collectionId": "srd-5.2.1",
@@ -23545,9 +23545,9 @@
         "battleReadinessClosure": {
           "kind": "character-fact-and-runtime-detached-split",
           "owner": "character-creation-runtime and future character-sheet spell-access owner",
-          "reason": "The feat Unit owns SRD authored identity and typed spell-list source facts. Character finalization retains the feat ref without storing duplicate spell-access state, while future character-sheet spell-access support should derive selected spells from the feat's typed Magic Initiate facts and each selected Spell Definition owns invocation runtime behavior."
+          "reason": "The feat Unit owns SRD authored identity and typed Magic Initiate spell-list source facts. Character finalization retains the selected feat ref without storing duplicate spell-access state; future character-sheet spell-access support should derive selected cantrips, selected level-1 Spell Access, spellcasting ability choice, and free-cast recharge from the feat's typed Magic Initiate facts. Selected Spell Definition profiles own static execution/profile facts, while runtime Spell Invocation remains owned by the spell invocation runtime boundary."
         },
-        "reason": "Magic Initiate (Druid) is an Origin feat spell-access selection source. Character creation retains the selected background and feat Unit refs; selected cantrips, level-1 spell access, and spellcasting ability choice belong to the character spell-access owner rather than promoted battle Unit execution.",
+        "reason": "Magic Initiate (Druid) is an Origin feat spell-access selection source. Character creation retains selected Background or Human Versatile feat Unit refs plus the feat's typed spell-list source facts; selected cantrip ids, selected level-1 Spell Access, spellcasting ability choice, and one-free-Long Rest cast state belong to the character spell-access owner rather than promoted battle Unit execution.",
         "tag": "unsupported-profile"
       },
       "collectionId": "srd-5.2.1",
@@ -23568,9 +23568,9 @@
         "battleReadinessClosure": {
           "kind": "character-fact-and-runtime-detached-split",
           "owner": "character-creation-runtime and future character-sheet spell-access owner",
-          "reason": "The feat Unit owns SRD authored identity and typed spell-list source facts. Character finalization retains the feat ref without storing duplicate spell-access state, while future character-sheet spell-access support should derive selected spells from the feat's typed Magic Initiate facts and each selected Spell Definition owns invocation runtime behavior."
+          "reason": "The feat Unit owns SRD authored identity and typed Magic Initiate spell-list source facts. Character finalization retains the selected feat ref without storing duplicate spell-access state; future character-sheet spell-access support should derive selected cantrips, selected level-1 Spell Access, spellcasting ability choice, and free-cast recharge from the feat's typed Magic Initiate facts. Selected Spell Definition profiles own static execution/profile facts, while runtime Spell Invocation remains owned by the spell invocation runtime boundary."
         },
-        "reason": "Magic Initiate (Wizard) is an Origin feat spell-access selection source. Character creation retains the selected background and feat Unit refs; selected cantrips, level-1 spell access, and spellcasting ability choice belong to the character spell-access owner rather than promoted battle Unit execution.",
+        "reason": "Magic Initiate (Wizard) is an Origin feat spell-access selection source. Character creation retains selected Background or Human Versatile feat Unit refs plus the feat's typed spell-list source facts; selected cantrip ids, selected level-1 Spell Access, spellcasting ability choice, and one-free-Long Rest cast state belong to the character spell-access owner rather than promoted battle Unit execution.",
         "tag": "unsupported-profile"
       },
       "collectionId": "srd-5.2.1",
@@ -23678,6 +23678,11 @@
           "ownerPath": "packages/character-creation-runtime/src/index.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "L14G-B02-FEAT-SKILLED"
+        },
+        {
+          "ownerPath": "packages/character-creation-runtime/src/index.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "LT4-C03-SKILLED-HUMAN-VERSATILE-NESTED-CHOICE-EVIDENCE"
         }
       ],
       "executableMechanics": true,
@@ -26081,7 +26086,18 @@
         "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/character-creation-runtime/src/index.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "LT4-C01-HUMAN-VERSATILE-ORIGIN-FEAT-DENOMINATOR"
+        },
+        {
+          "ownerPath": "packages/character-creation-runtime/src/index.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "LT4-C03-SKILLED-HUMAN-VERSATILE-NESTED-CHOICE-EVIDENCE"
+        }
+      ],
       "executableMechanics": true,
       "kind": "species_trait",
       "profiles": [
