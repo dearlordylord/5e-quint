@@ -16,9 +16,9 @@
       "spell-level-4": 81
     },
     "auditedUniqueSpellIdentitiesByFinalDisposition": {
-      "catalog-authored-review-required": 26,
+      "catalog-authored-review-required": 25,
       "catalog-installed-owner-evidence-present": 7,
-      "catalog-only/dead-for-now": 8,
+      "catalog-only/dead-for-now": 9,
       "missing-authored-record": 35
     },
     "auditedUniqueSpellIdentitiesByLevelBand": {
@@ -33,10 +33,10 @@
     },
     "rowsByBattleReadinessStatus": {
       "accepted": 469,
-      "accepted-no-battle-effect": 204,
+      "accepted-no-battle-effect": 208,
       "battle-runtime-required": 80,
       "not-applicable": 77,
-      "owner-evidence-required": 70
+      "owner-evidence-required": 66
     },
     "rowsByCatalogAdmission": {
       "installed": 638,
@@ -53,10 +53,10 @@
       "subclass selection": 12
     },
     "rowsByFinalDisposition": {
-      "catalog-authored-review-required": 69,
+      "catalog-authored-review-required": 65,
       "catalog-installed-owner-evidence-present": 481,
       "catalog-installed-owner-evidence-required": 1,
-      "catalog-only/dead-for-now": 152,
+      "catalog-only/dead-for-now": 156,
       "level-5-7-follow-up-required": 33,
       "missing-authored-record": 80,
       "non-runtime": 84
@@ -89,10 +89,10 @@
       "subclass-spell-access": 5
     },
     "rowsByUnitProfileDisposition": {
-      "not-recorded": 221,
+      "not-recorded": 217,
       "profile-subset-supported": 53,
       "supported-profile": 295,
-      "unsupported-profile": 331
+      "unsupported-profile": 335
     }
   },
   "rows": [
@@ -5240,7 +5240,7 @@
         "sourceInventoryRowId": "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_fear",
         "state": "present"
       },
-      "nextAction": "Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this later-frontier spell row as accepted.",
+      "nextAction": "Fear's represented battle behavior is closed outside the current promoted battle-runtime boundary: a future active Spell Effect owner must admit the 30-foot Cone affected target set and Wisdom Saving Throw, carry per-target Frightened state under Concentration, release held objects on failed saves, force affected targets to Dash and move away by the safest route when movement is possible, gate repeat Wisdom Saving Throws on ending a turn without line of sight to the caster, and consume table/spatial pathing, line-of-sight, no-route, and held-object witnesses rather than duplicating map or inventory state inside generic Spell Invocation reducers.",
       "rowId": "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_fear",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -5256,18 +5256,22 @@
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "owner-evidence-required"
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "outside-battle-runtime",
+          "owner": "future active Frightened-compulsion Spell Effect, held-object release, and compelled-movement owner",
+          "reason": "Fear's represented battle behavior is closed outside the current promoted battle-runtime boundary: a future active Spell Effect owner must admit the 30-foot Cone affected target set and Wisdom Saving Throw, carry per-target Frightened state under Concentration, release held objects on failed saves, force affected targets to Dash and move away by the safest route when movement is possible, gate repeat Wisdom Saving Throws on ending a turn without line of sight to the caster, and consume table/spatial pathing, line-of-sight, no-route, and held-object witnesses rather than duplicating map or inventory state inside generic Spell Invocation reducers.",
+          "state": "recorded"
         },
         "catalogAdmission": {
           "state": "not-installed",
           "unitId": "fear"
         },
-        "finalDisposition": "catalog-authored-review-required",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },
@@ -28393,7 +28397,7 @@
         "sourceInventoryRowId": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_fear",
         "state": "present"
       },
-      "nextAction": "Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this later-frontier spell row as accepted.",
+      "nextAction": "Fear's represented battle behavior is closed outside the current promoted battle-runtime boundary: a future active Spell Effect owner must admit the 30-foot Cone affected target set and Wisdom Saving Throw, carry per-target Frightened state under Concentration, release held objects on failed saves, force affected targets to Dash and move away by the safest route when movement is possible, gate repeat Wisdom Saving Throws on ending a turn without line of sight to the caster, and consume table/spatial pathing, line-of-sight, no-route, and held-object witnesses rather than duplicating map or inventory state inside generic Spell Invocation reducers.",
       "rowId": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_fear",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -28409,18 +28413,22 @@
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "owner-evidence-required"
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "outside-battle-runtime",
+          "owner": "future active Frightened-compulsion Spell Effect, held-object release, and compelled-movement owner",
+          "reason": "Fear's represented battle behavior is closed outside the current promoted battle-runtime boundary: a future active Spell Effect owner must admit the 30-foot Cone affected target set and Wisdom Saving Throw, carry per-target Frightened state under Concentration, release held objects on failed saves, force affected targets to Dash and move away by the safest route when movement is possible, gate repeat Wisdom Saving Throws on ending a turn without line of sight to the caster, and consume table/spatial pathing, line-of-sight, no-route, and held-object witnesses rather than duplicating map or inventory state inside generic Spell Invocation reducers.",
+          "state": "recorded"
         },
         "catalogAdmission": {
           "state": "not-installed",
           "unitId": "fear"
         },
-        "finalDisposition": "catalog-authored-review-required",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },
@@ -32099,7 +32107,7 @@
         "sourceInventoryRowId": "srd521:classes/warlock:spell-level-3:spell-unit-pressure:warlock_spell_list_fear",
         "state": "present"
       },
-      "nextAction": "Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this later-frontier spell row as accepted.",
+      "nextAction": "Fear's represented battle behavior is closed outside the current promoted battle-runtime boundary: a future active Spell Effect owner must admit the 30-foot Cone affected target set and Wisdom Saving Throw, carry per-target Frightened state under Concentration, release held objects on failed saves, force affected targets to Dash and move away by the safest route when movement is possible, gate repeat Wisdom Saving Throws on ending a turn without line of sight to the caster, and consume table/spatial pathing, line-of-sight, no-route, and held-object witnesses rather than duplicating map or inventory state inside generic Spell Invocation reducers.",
       "rowId": "srd521:classes/warlock:spell-level-3:spell-unit-pressure:warlock_spell_list_fear",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -32115,18 +32123,22 @@
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "owner-evidence-required"
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "outside-battle-runtime",
+          "owner": "future active Frightened-compulsion Spell Effect, held-object release, and compelled-movement owner",
+          "reason": "Fear's represented battle behavior is closed outside the current promoted battle-runtime boundary: a future active Spell Effect owner must admit the 30-foot Cone affected target set and Wisdom Saving Throw, carry per-target Frightened state under Concentration, release held objects on failed saves, force affected targets to Dash and move away by the safest route when movement is possible, gate repeat Wisdom Saving Throws on ending a turn without line of sight to the caster, and consume table/spatial pathing, line-of-sight, no-route, and held-object witnesses rather than duplicating map or inventory state inside generic Spell Invocation reducers.",
+          "state": "recorded"
         },
         "catalogAdmission": {
           "state": "not-installed",
           "unitId": "fear"
         },
-        "finalDisposition": "catalog-authored-review-required",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },
@@ -37715,7 +37727,7 @@
         "sourceInventoryRowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_fear",
         "state": "present"
       },
-      "nextAction": "Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this later-frontier spell row as accepted.",
+      "nextAction": "Fear's represented battle behavior is closed outside the current promoted battle-runtime boundary: a future active Spell Effect owner must admit the 30-foot Cone affected target set and Wisdom Saving Throw, carry per-target Frightened state under Concentration, release held objects on failed saves, force affected targets to Dash and move away by the safest route when movement is possible, gate repeat Wisdom Saving Throws on ending a turn without line of sight to the caster, and consume table/spatial pathing, line-of-sight, no-route, and held-object witnesses rather than duplicating map or inventory state inside generic Spell Invocation reducers.",
       "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_fear",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -37731,18 +37743,22 @@
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "owner-evidence-required"
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "outside-battle-runtime",
+          "owner": "future active Frightened-compulsion Spell Effect, held-object release, and compelled-movement owner",
+          "reason": "Fear's represented battle behavior is closed outside the current promoted battle-runtime boundary: a future active Spell Effect owner must admit the 30-foot Cone affected target set and Wisdom Saving Throw, carry per-target Frightened state under Concentration, release held objects on failed saves, force affected targets to Dash and move away by the safest route when movement is possible, gate repeat Wisdom Saving Throws on ending a turn without line of sight to the caster, and consume table/spatial pathing, line-of-sight, no-route, and held-object witnesses rather than duplicating map or inventory state inside generic Spell Invocation reducers.",
+          "state": "recorded"
         },
         "catalogAdmission": {
           "state": "not-installed",
           "unitId": "fear"
         },
-        "finalDisposition": "catalog-authored-review-required",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },
@@ -40553,7 +40569,7 @@
       ],
       "levelBand": "spell-level-3",
       "nextActions": [
-        "Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this later-frontier spell row as accepted."
+        "Fear's represented battle behavior is closed outside the current promoted battle-runtime boundary: a future active Spell Effect owner must admit the 30-foot Cone affected target set and Wisdom Saving Throw, carry per-target Frightened state under Concentration, release held objects on failed saves, force affected targets to Dash and move away by the safest route when movement is possible, gate repeat Wisdom Saving Throws on ending a turn without line of sight to the caster, and consume table/spatial pathing, line-of-sight, no-route, and held-object witnesses rather than duplicating map or inventory state inside generic Spell Invocation reducers."
       ],
       "spellName": "Fear",
       "supportSnapshot": {
@@ -40564,18 +40580,22 @@
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "owner-evidence-required"
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "outside-battle-runtime",
+          "owner": "future active Frightened-compulsion Spell Effect, held-object release, and compelled-movement owner",
+          "reason": "Fear's represented battle behavior is closed outside the current promoted battle-runtime boundary: a future active Spell Effect owner must admit the 30-foot Cone affected target set and Wisdom Saving Throw, carry per-target Frightened state under Concentration, release held objects on failed saves, force affected targets to Dash and move away by the safest route when movement is possible, gate repeat Wisdom Saving Throws on ending a turn without line of sight to the caster, and consume table/spatial pathing, line-of-sight, no-route, and held-object witnesses rather than duplicating map or inventory state inside generic Spell Invocation reducers.",
+          "state": "recorded"
         },
         "catalogAdmission": {
           "state": "not-installed",
           "unitId": "fear"
         },
-        "finalDisposition": "catalog-authored-review-required",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },

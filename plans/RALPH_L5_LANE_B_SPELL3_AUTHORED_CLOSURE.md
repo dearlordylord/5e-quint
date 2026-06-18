@@ -37,7 +37,7 @@
     {
       "number": 6,
       "id": "L5-B06-FEAR",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Close Fear authored spell pressure"
     },
     {
@@ -135,7 +135,7 @@ this lane; those are Lane C and Lane D.
 | 3 | L5-B03-CALL-LIGHTNING - Close Call Lightning authored spell pressure | done | none | Closed outside the promoted battle runtime active storm spell-effect and table/spatial weather boundary. |
 | 4 | L5-B04-CREATE-FOOD-AND-WATER - Close Create Food and Water authored spell pressure | done | none | Closed as runtime-detached table inventory and survival ownership. |
 | 5 | L5-B05-DAYLIGHT - Close Daylight authored spell pressure | done | none | Closed outside the promoted battle runtime sunlight Spell Effect and table/spatial light-overlap boundary. |
-| 6 | L5-B06-FEAR - Close Fear authored spell pressure | ready-for-research | none | Independent authored spell pressure row. |
+| 6 | L5-B06-FEAR - Close Fear authored spell pressure | done | none | Closed outside the current promoted battle runtime active Frightened-compulsion Spell Effect, held-object release, and compelled-movement boundary. |
 | 7 | L5-B07-MAJOR-IMAGE - Close Major Image authored spell pressure | ready-for-research | none | Independent authored spell pressure row. |
 | 8 | L5-B08-PROTECTION-FROM-ENERGY - Close Protection from Energy authored spell pressure | ready-for-research | none | Preserve target-shape repair plus runtime admission prerequisite from `plans/unit-profile-coverage/L3_PROTECTION_FROM_ENERGY_RUNTIME_SURVEY.md`. |
 | 9 | L5-B09-SPIRIT-GUARDIANS - Close Spirit Guardians authored spell pressure | ready-for-research | none | Independent authored spell pressure row. |
@@ -404,7 +404,7 @@ Verification:
 
 ### Task 6 - L5-B06-FEAR
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -435,6 +435,21 @@ Output:
 Acceptance:
 
 - `fear` leaves `catalog-authored-review-required`.
+
+Result:
+
+- `fear` is recorded as `unsupported-profile` and
+  `catalog-only/dead-for-now` with an `outside-battle-runtime` closure.
+- The future owner is an active Frightened-compulsion Spell Effect,
+  held-object release, and compelled-movement owner for the 30-foot Cone
+  affected target set, Wisdom Saving Throw admission, per-target Frightened
+  state under Concentration, held-object release on failed saves, compelled
+  Dash and movement away by the safest route, no-move exception, and
+  end-of-turn repeat Wisdom Saving Throw timing when the target lacks line of
+  sight to the caster.
+- Table/spatial and inventory ownership supplies pathing, line-of-sight,
+  no-route, and held-object witnesses rather than duplicating map or inventory
+  state inside generic Spell Invocation reducers.
 
 Verification:
 

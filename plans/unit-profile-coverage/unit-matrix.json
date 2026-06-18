@@ -37621,6 +37621,16 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-battle-runtime",
+          "owner": "future active Frightened-compulsion Spell Effect, held-object release, and compelled-movement owner",
+          "reason": "Fear's represented battle behavior is closed outside the current promoted battle-runtime boundary: a future active Spell Effect owner must admit the 30-foot Cone affected target set and Wisdom Saving Throw, carry per-target Frightened state under Concentration, release held objects on failed saves, force affected targets to Dash and move away by the safest route when movement is possible, gate repeat Wisdom Saving Throws on ending a turn without line of sight to the caster, and consume table/spatial pathing, line-of-sight, no-route, and held-object witnesses rather than duplicating map or inventory state inside generic Spell Invocation reducers."
+        },
+        "reason": "Fear is an SRD level-3 Spell Definition whose authored Surface record captures Action Spell Slot casting, Self range, V/S/M white-feather components, Concentration up to 1 minute, a 30-foot Cone, and an initial Wisdom Saving Throw to apply Frightened; the RAW prose also requires failed-save held-object drop, mandatory Dash action and movement away from the caster by the safest route on each affected target's turns unless there is nowhere to move, and an end-of-turn Wisdom Saving Throw only when the target ends where it lacks line of sight to the caster. No promoted battle-runtime profile is claimed because full support needs an active Frightened-compulsion Spell Effect owner that stores affected targets, caster-target line-of-sight relation, held-object release, compelled Dash action use, safest-route movement/pathing, no-move exception, per-target repeat-save timing, and Concentration cleanup without authored-identity dispatch.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "spell",
