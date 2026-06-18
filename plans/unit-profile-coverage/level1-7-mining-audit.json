@@ -18,8 +18,8 @@
     "auditedUniqueSpellIdentitiesByFinalDisposition": {
       "catalog-authored-review-required": 31,
       "catalog-installed-owner-evidence-present": 7,
-      "catalog-only/dead-for-now": 4,
-      "missing-authored-record": 34
+      "catalog-only/dead-for-now": 5,
+      "missing-authored-record": 33
     },
     "auditedUniqueSpellIdentitiesByLevelBand": {
       "spell-level-3": 42,
@@ -33,14 +33,14 @@
     },
     "rowsByBattleReadinessStatus": {
       "accepted": 469,
-      "accepted-no-battle-effect": 198,
-      "battle-runtime-required": 78,
+      "accepted-no-battle-effect": 201,
+      "battle-runtime-required": 75,
       "not-applicable": 77,
       "owner-evidence-required": 78
     },
     "rowsByCatalogAdmission": {
-      "installed": 640,
-      "not-installed": 260
+      "installed": 643,
+      "not-installed": 257
     },
     "rowsByCategory": {
       "character-creation or progression mechanic": 172,
@@ -56,9 +56,9 @@
       "catalog-authored-review-required": 77,
       "catalog-installed-owner-evidence-present": 481,
       "catalog-installed-owner-evidence-required": 1,
-      "catalog-only/dead-for-now": 146,
+      "catalog-only/dead-for-now": 149,
       "level-5-7-follow-up-required": 33,
-      "missing-authored-record": 78,
+      "missing-authored-record": 75,
       "non-runtime": 84
     },
     "rowsByLevelBand": {
@@ -89,10 +89,10 @@
       "subclass-spell-access": 5
     },
     "rowsByUnitProfileDisposition": {
-      "not-recorded": 227,
+      "not-recorded": 224,
       "profile-subset-supported": 53,
       "supported-profile": 295,
-      "unsupported-profile": 325
+      "unsupported-profile": 328
     }
   },
   "rows": [
@@ -9711,7 +9711,7 @@
         "sourceInventoryRowId": "srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_remove_curse",
         "state": "present"
       },
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
+      "nextAction": "Remove Curse supplies table-facing curse-removal and cursed-item Attunement source facts, but promoted battle runtime does not own generic curse occurrence identity, curse-removal targeting semantics, cursed magic item curse persistence, or Attunement mutation for cursed objects.",
       "rowId": "srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_remove_curse",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -9721,22 +9721,28 @@
       },
       "supportSnapshot": {
         "authoredContent": {
-          "state": "missing-authored-record"
+          "sourceRecordPath": "packages/surface/content/remove_curse.json",
+          "state": "authored-record-present",
+          "unitId": "remove_curse"
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "battle-runtime-required"
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "outside-battle-runtime",
+          "owner": "future curse occurrence and magic-item Attunement owner",
+          "reason": "Remove Curse supplies table-facing curse-removal and cursed-item Attunement source facts, but promoted battle runtime does not own generic curse occurrence identity, curse-removal targeting semantics, cursed magic item curse persistence, or Attunement mutation for cursed objects.",
+          "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "remove_curse"
         },
-        "finalDisposition": "missing-authored-record",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },
@@ -32345,7 +32351,7 @@
         "sourceInventoryRowId": "srd521:classes/warlock:spell-level-3:spell-unit-pressure:warlock_spell_list_remove_curse",
         "state": "present"
       },
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
+      "nextAction": "Remove Curse supplies table-facing curse-removal and cursed-item Attunement source facts, but promoted battle runtime does not own generic curse occurrence identity, curse-removal targeting semantics, cursed magic item curse persistence, or Attunement mutation for cursed objects.",
       "rowId": "srd521:classes/warlock:spell-level-3:spell-unit-pressure:warlock_spell_list_remove_curse",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -32355,22 +32361,28 @@
       },
       "supportSnapshot": {
         "authoredContent": {
-          "state": "missing-authored-record"
+          "sourceRecordPath": "packages/surface/content/remove_curse.json",
+          "state": "authored-record-present",
+          "unitId": "remove_curse"
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "battle-runtime-required"
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "outside-battle-runtime",
+          "owner": "future curse occurrence and magic-item Attunement owner",
+          "reason": "Remove Curse supplies table-facing curse-removal and cursed-item Attunement source facts, but promoted battle runtime does not own generic curse occurrence identity, curse-removal targeting semantics, cursed magic item curse persistence, or Attunement mutation for cursed objects.",
+          "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "remove_curse"
         },
-        "finalDisposition": "missing-authored-record",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },
@@ -38258,7 +38270,7 @@
         "sourceInventoryRowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_remove_curse",
         "state": "present"
       },
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
+      "nextAction": "Remove Curse supplies table-facing curse-removal and cursed-item Attunement source facts, but promoted battle runtime does not own generic curse occurrence identity, curse-removal targeting semantics, cursed magic item curse persistence, or Attunement mutation for cursed objects.",
       "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_remove_curse",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -38268,22 +38280,28 @@
       },
       "supportSnapshot": {
         "authoredContent": {
-          "state": "missing-authored-record"
+          "sourceRecordPath": "packages/surface/content/remove_curse.json",
+          "state": "authored-record-present",
+          "unitId": "remove_curse"
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "battle-runtime-required"
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "outside-battle-runtime",
+          "owner": "future curse occurrence and magic-item Attunement owner",
+          "reason": "Remove Curse supplies table-facing curse-removal and cursed-item Attunement source facts, but promoted battle runtime does not own generic curse occurrence identity, curse-removal targeting semantics, cursed magic item curse persistence, or Attunement mutation for cursed objects.",
+          "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "remove_curse"
         },
-        "finalDisposition": "missing-authored-record",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },
@@ -41516,27 +41534,33 @@
       ],
       "levelBand": "spell-level-3",
       "nextActions": [
-        "Author an SRD-provenance Surface record or explicitly close the row."
+        "Remove Curse supplies table-facing curse-removal and cursed-item Attunement source facts, but promoted battle runtime does not own generic curse occurrence identity, curse-removal targeting semantics, cursed magic item curse persistence, or Attunement mutation for cursed objects."
       ],
       "spellName": "Remove Curse",
       "supportSnapshot": {
         "authoredContent": {
-          "state": "missing-authored-record"
+          "sourceRecordPath": "packages/surface/content/remove_curse.json",
+          "state": "authored-record-present",
+          "unitId": "remove_curse"
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "battle-runtime-required"
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "outside-battle-runtime",
+          "owner": "future curse occurrence and magic-item Attunement owner",
+          "reason": "Remove Curse supplies table-facing curse-removal and cursed-item Attunement source facts, but promoted battle runtime does not own generic curse occurrence identity, curse-removal targeting semantics, cursed magic item curse persistence, or Attunement mutation for cursed objects.",
+          "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "remove_curse"
         },
-        "finalDisposition": "missing-authored-record",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },

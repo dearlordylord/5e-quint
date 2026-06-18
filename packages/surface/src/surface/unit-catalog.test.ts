@@ -3298,6 +3298,53 @@ describe("SRD Unit catalog boundary", () => {
     );
   });
 
+  test("decodes Remove Curse as an authored Spell Definition without runtime curse cleanup admission", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag !== "ok") return;
+    const removeCurse = result.catalog.requireUnit("remove_curse");
+
+    expect(removeCurse.kind).toBe("spell");
+    if (removeCurse.kind !== "spell") return;
+    expect(removeCurse.mechanics.family).toBe("activation");
+    if (removeCurse.mechanics.family !== "activation") return;
+
+    expect(removeCurse.provenance).toEqual({
+      kind: "srd-5.2.1",
+      section: "Spells/Descriptions-Q-R#Remove Curse",
+    });
+    expect(removeCurse.mechanics).toMatchObject({
+      level: 3,
+      school: "abjuration",
+      castingTime: { kind: "action" },
+      range: { kind: "touch" },
+      components: { v: true, s: true, m: false },
+      duration: { kind: "instantaneous" },
+    });
+    expect(removeCurse.mechanics.phases).toEqual([
+      {
+        kind: "direct",
+        attachment: {
+          kind: "hole",
+          holeId: "remove_curse_target",
+          label: "creature or object",
+          value: {
+            kind: "target",
+            selection: {
+              mode: "one",
+              targetKinds: ["creature", "object"],
+            },
+          },
+        },
+        effects: [{ kind: "none" }],
+      },
+    ]);
+    expect(removeCurse.description).toContain(
+      "breaks its owner's Attunement",
+    );
+  });
+
   test("decodes Locate Object as object location and motion disclosure", () => {
     const result = buildUnitCatalog({ collections: [srdUnitCollection] });
 

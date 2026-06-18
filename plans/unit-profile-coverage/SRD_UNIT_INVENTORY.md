@@ -18,7 +18,7 @@ Character level and spell level are separate axes. Character levels 1-2 include 
 - Level-7 class/subclass mining rows: 24
 - Spell-list pressure rows for cantrips and spell levels 1-2: 367
 - Spell-level-3 pressure rows (character-level-5 frontier): 110
-- Spell-level-3 installed SRD Surface pressure rows (later character-level-5 frontier): 24
+- Spell-level-3 installed SRD Surface pressure rows (later character-level-5 frontier): 27
 - Spell-level-4 pressure rows (character-level-7 frontier): 81
 - Spell-level-4 installed SRD Surface pressure rows (later character-level-7 frontier): 0
 - Missing level-1 class containers: 0
@@ -96,13 +96,13 @@ This metric is a separate seed for level-4 class feature rows, including Ability
 
 This metric is a separate seed for spell-level-3 pressure only. It belongs to the later character-level-5 frontier for full casters and Warlock Pact Magic, with half-caster rows excluded until their own class tables grant matching slots. It does not affect Character Levels 1-2 or Character Levels 1-3 readiness denominators.
 
-- Accepted: 36/110 (32.7%)
+- Accepted: 39/110 (35.5%)
 
 #### Spell-Level-3 Battle Readiness by Status
 
 - accepted: 22
-- accepted-no-battle-effect: 14
-- battle-runtime-required: 46
+- accepted-no-battle-effect: 17
+- battle-runtime-required: 43
 - owner-evidence-required: 28
 
 ### Spell-Level-4 Battle Readiness
@@ -207,13 +207,13 @@ This metric is a separate seed for spell-level-4 pressure only. It belongs to th
 
 - catalog-authored-review-required: 28
 - catalog-installed-owner-evidence-present: 22
-- catalog-only/dead-for-now: 14
-- missing-authored-record: 46
+- catalog-only/dead-for-now: 17
+- missing-authored-record: 43
 
 ### Spell-Level-3 Installed Unit Pressure by Disposition
 
 - catalog-installed-owner-evidence-present: 22
-- catalog-only/dead-for-now: 2
+- catalog-only/dead-for-now: 5
 
 ### Spell-Level-4 Unit Pressure by Disposition
 
@@ -718,7 +718,7 @@ These batches are generated planning recommendations for a separate SRD inventor
 |Cleric spell list Mass Healing Word|spell Unit pressure|current-surface-can-express-source-facts|authored-record-present|installed|supported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; battle-runtime spell invocation/projection: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Cleric.md:213|
 |Cleric spell list Meld into Stone|spell Unit pressure|current-surface-can-express-source-facts|missing-authored-record|not-installed||missing-authored-record|battle-runtime-required|||Author an SRD-provenance Surface record or explicitly close the row.|.references/srd-5.2.1/Classes/Cleric.md:214|
 |Cleric spell list Protection from Energy|spell Unit pressure|current-surface-can-express-source-facts|authored-record-present|not-installed||catalog-authored-review-required|owner-evidence-required|||Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this later-frontier spell row as accepted.|.references/srd-5.2.1/Classes/Cleric.md:215|
-|Cleric spell list Remove Curse|spell Unit pressure|current-surface-can-express-source-facts|missing-authored-record|not-installed||missing-authored-record|battle-runtime-required|||Author an SRD-provenance Surface record or explicitly close the row.|.references/srd-5.2.1/Classes/Cleric.md:216|
+|Cleric spell list Remove Curse|spell Unit pressure|outside-surface-runtime-mechanics|authored-record-present|installed|unsupported-profile|catalog-only/dead-for-now|accepted-no-battle-effect|outside-battle-runtime: future curse occurrence and magic-item Attunement owner|Unit catalog/admission: catalog evidence; future curse occurrence and magic-item Attunement owner: catalog-only/dead-for-now closure|Remove Curse supplies table-facing curse-removal and cursed-item Attunement source facts, but promoted battle runtime does not own generic curse occurrence identity, curse-removal targeting semantics, cursed magic item curse persistence, or Attunement mutation for cursed objects.|.references/srd-5.2.1/Classes/Cleric.md:216|
 |Cleric spell list Revivify|spell Unit pressure|current-surface-can-express-source-facts|missing-authored-record|not-installed||missing-authored-record|battle-runtime-required|||Author an SRD-provenance Surface record or explicitly close the row.|.references/srd-5.2.1/Classes/Cleric.md:217|
 |Cleric spell list Sending|spell Unit pressure|current-surface-can-express-source-facts|missing-authored-record|not-installed||missing-authored-record|battle-runtime-required|||Author an SRD-provenance Surface record or explicitly close the row.|.references/srd-5.2.1/Classes/Cleric.md:218|
 |Cleric spell list Speak with Dead|spell Unit pressure|current-surface-can-express-source-facts|missing-authored-record|not-installed||missing-authored-record|battle-runtime-required|||Author an SRD-provenance Surface record or explicitly close the row.|.references/srd-5.2.1/Classes/Cleric.md:219|
@@ -767,7 +767,7 @@ These batches are generated planning recommendations for a separate SRD inventor
 |Warlock spell list Hypnotic Pattern|spell Unit pressure|current-surface-can-express-source-facts|authored-record-present|installed|supported-profile|catalog-installed-owner-evidence-present|accepted|table-spatial-derivation: table/spatial and sight witness provider|Unit catalog/admission: catalog evidence; battle-runtime spell invocation/projection: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Warlock.md:385|
 |Warlock spell list Magic Circle|spell Unit pressure|current-surface-can-express-source-facts|missing-authored-record|not-installed||missing-authored-record|battle-runtime-required|||Author an SRD-provenance Surface record or explicitly close the row.|.references/srd-5.2.1/Classes/Warlock.md:386|
 |Warlock spell list Major Image|spell Unit pressure|current-surface-can-express-source-facts|authored-record-present|not-installed||catalog-authored-review-required|owner-evidence-required|||Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this later-frontier spell row as accepted.|.references/srd-5.2.1/Classes/Warlock.md:387|
-|Warlock spell list Remove Curse|spell Unit pressure|current-surface-can-express-source-facts|missing-authored-record|not-installed||missing-authored-record|battle-runtime-required|||Author an SRD-provenance Surface record or explicitly close the row.|.references/srd-5.2.1/Classes/Warlock.md:388|
+|Warlock spell list Remove Curse|spell Unit pressure|outside-surface-runtime-mechanics|authored-record-present|installed|unsupported-profile|catalog-only/dead-for-now|accepted-no-battle-effect|outside-battle-runtime: future curse occurrence and magic-item Attunement owner|Unit catalog/admission: catalog evidence; future curse occurrence and magic-item Attunement owner: catalog-only/dead-for-now closure|Remove Curse supplies table-facing curse-removal and cursed-item Attunement source facts, but promoted battle runtime does not own generic curse occurrence identity, curse-removal targeting semantics, cursed magic item curse persistence, or Attunement mutation for cursed objects.|.references/srd-5.2.1/Classes/Warlock.md:388|
 |Warlock spell list Tongues|spell Unit pressure|outside-surface-runtime-mechanics|authored-record-present|not-installed|unsupported-profile|catalog-only/dead-for-now|accepted-no-battle-effect|outside-runtime-presentation-exploration: runtime-detached language/communication owner||Tongues changes communication intelligibility through hearing, sight, signing, speech, and known-language gates. Promoted battle runtime does not own conversation content, social outcomes, automatic communication adjudication, or language-table projection for this spell.|.references/srd-5.2.1/Classes/Warlock.md:389|
 |Warlock spell list Vampiric Touch|spell Unit pressure|current-surface-can-express-source-facts|authored-record-present|not-installed||catalog-authored-review-required|owner-evidence-required|||Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this later-frontier spell row as accepted.|.references/srd-5.2.1/Classes/Warlock.md:390|
 |Wizard spell list Animate Dead|spell Unit pressure|current-surface-can-express-source-facts|authored-record-present|not-installed||catalog-authored-review-required|owner-evidence-required|||Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this later-frontier spell row as accepted.|.references/srd-5.2.1/Classes/Wizard.md:237|
@@ -789,7 +789,7 @@ These batches are generated planning recommendations for a separate SRD inventor
 |Wizard spell list Nondetection|spell Unit pressure|current-surface-can-express-source-facts|missing-authored-record|not-installed||missing-authored-record|battle-runtime-required|||Author an SRD-provenance Surface record or explicitly close the row.|.references/srd-5.2.1/Classes/Wizard.md:253|
 |Wizard spell list Phantom Steed|spell Unit pressure|current-surface-can-express-source-facts|missing-authored-record|not-installed||missing-authored-record|battle-runtime-required|||Author an SRD-provenance Surface record or explicitly close the row.|.references/srd-5.2.1/Classes/Wizard.md:254|
 |Wizard spell list Protection from Energy|spell Unit pressure|current-surface-can-express-source-facts|authored-record-present|not-installed||catalog-authored-review-required|owner-evidence-required|||Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this later-frontier spell row as accepted.|.references/srd-5.2.1/Classes/Wizard.md:255|
-|Wizard spell list Remove Curse|spell Unit pressure|current-surface-can-express-source-facts|missing-authored-record|not-installed||missing-authored-record|battle-runtime-required|||Author an SRD-provenance Surface record or explicitly close the row.|.references/srd-5.2.1/Classes/Wizard.md:256|
+|Wizard spell list Remove Curse|spell Unit pressure|outside-surface-runtime-mechanics|authored-record-present|installed|unsupported-profile|catalog-only/dead-for-now|accepted-no-battle-effect|outside-battle-runtime: future curse occurrence and magic-item Attunement owner|Unit catalog/admission: catalog evidence; future curse occurrence and magic-item Attunement owner: catalog-only/dead-for-now closure|Remove Curse supplies table-facing curse-removal and cursed-item Attunement source facts, but promoted battle runtime does not own generic curse occurrence identity, curse-removal targeting semantics, cursed magic item curse persistence, or Attunement mutation for cursed objects.|.references/srd-5.2.1/Classes/Wizard.md:256|
 |Wizard spell list Sending|spell Unit pressure|current-surface-can-express-source-facts|missing-authored-record|not-installed||missing-authored-record|battle-runtime-required|||Author an SRD-provenance Surface record or explicitly close the row.|.references/srd-5.2.1/Classes/Wizard.md:257|
 |Wizard spell list Sleet Storm|spell Unit pressure|current-surface-can-express-source-facts|missing-authored-record|not-installed||missing-authored-record|battle-runtime-required|||Author an SRD-provenance Surface record or explicitly close the row.|.references/srd-5.2.1/Classes/Wizard.md:258|
 |Wizard spell list Slow|spell Unit pressure|current-surface-can-express-source-facts|missing-authored-record|not-installed||missing-authored-record|battle-runtime-required|||Author an SRD-provenance Surface record or explicitly close the row.|.references/srd-5.2.1/Classes/Wizard.md:259|

@@ -43,14 +43,14 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
-      "denominator": 442,
-      "numerator": 257,
-      "percent": "58.1%"
+      "denominator": 443,
+      "numerator": 258,
+      "percent": "58.2%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 530,
-      "numerator": 307,
-      "percent": "57.9%"
+      "denominator": 531,
+      "numerator": 308,
+      "percent": "58%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,7 +59,7 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 308
+      "value": 309
     },
     "deterministicAdmissionProjectionCoverage": {
       "denominator": 183,
@@ -67,8 +67,8 @@
       "percent": "97.3%"
     },
     "profileClassificationCoverage": {
-      "denominator": 308,
-      "numerator": 308,
+      "denominator": 309,
+      "numerator": 309,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -112,9 +112,9 @@
       "percent": "98.9%"
     },
     "supportedProfileCoverage": {
-      "denominator": 258,
+      "denominator": 259,
       "numerator": 183,
-      "percent": "70.9%"
+      "percent": "70.7%"
     }
   },
   "metricSemantics": [
@@ -16615,8 +16615,8 @@
         "unsupportedOrOtherUnits": 4
       },
       {
-        "executableUnitDenominator": 129,
-        "installedUnitDenominator": 129,
+        "executableUnitDenominator": 130,
+        "installedUnitDenominator": 130,
         "kind": "spell",
         "label": "Spell Units",
         "profileFactDenominator": 136,
@@ -16626,7 +16626,7 @@
         "selectedIdentityReplayGapUnits": 0,
         "selectedIdentityReplayWitnessUnits": 110,
         "supportedProfileUnits": 92,
-        "unsupportedOrOtherUnits": 19
+        "unsupportedOrOtherUnits": 20
       },
       {
         "executableUnitDenominator": 91,
@@ -32699,6 +32699,29 @@
       ],
       "sourceRecordPath": "packages/surface/content/resistance.json",
       "unitId": "resistance"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-battle-runtime",
+          "owner": "future curse occurrence and magic-item Attunement owner",
+          "reason": "Remove Curse supplies table-facing curse-removal and cursed-item Attunement source facts, but promoted battle runtime does not own generic curse occurrence identity, curse-removal targeting semantics, cursed magic item curse persistence, or Attunement mutation for cursed objects."
+        },
+        "reason": "Remove Curse is authored and installed as an SRD Surface Spell Definition with Magic Action Spell Slot casting, Touch range, V/S components, Instantaneous duration, one creature-or-object target, all-curse ending source facts, and cursed magic item Attunement-breaking source facts. Task 2 claims no promoted battle-runtime profile because no shared Bestow Curse curse occurrence and curse-removal target boundary is installed, and cursed magic item Attunement mutation belongs to a future curse or magic-item owner rather than this catalog admission task.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/remove_curse.json",
+      "unitId": "remove_curse"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

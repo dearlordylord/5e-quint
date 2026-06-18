@@ -44,34 +44,34 @@ These counts describe the current runtime/catalog state of mined rows. They are 
 | catalog-authored-review-required | 77 |
 | catalog-installed-owner-evidence-present | 481 |
 | catalog-installed-owner-evidence-required | 1 |
-| catalog-only/dead-for-now | 146 |
+| catalog-only/dead-for-now | 149 |
 | level-5-7-follow-up-required | 33 |
-| missing-authored-record | 78 |
+| missing-authored-record | 75 |
 | non-runtime | 84 |
 
 ### Catalog Admission
 
 | Catalog state | Rows |
 | --- | ---: |
-| installed | 640 |
-| not-installed | 260 |
+| installed | 643 |
+| not-installed | 257 |
 
 ### Unit Profile Disposition
 
 | Unit profile disposition | Rows |
 | --- | ---: |
-| not-recorded | 227 |
+| not-recorded | 224 |
 | profile-subset-supported | 53 |
 | supported-profile | 295 |
-| unsupported-profile | 325 |
+| unsupported-profile | 328 |
 
 ### Battle Readiness Snapshot
 
 | Battle readiness status | Rows |
 | --- | ---: |
 | accepted | 469 |
-| accepted-no-battle-effect | 198 |
-| battle-runtime-required | 78 |
+| accepted-no-battle-effect | 201 |
+| battle-runtime-required | 75 |
 | not-applicable | 77 |
 | owner-evidence-required | 78 |
 
@@ -90,8 +90,8 @@ These counts separate class-list rows from unique Spell Definition identities. A
 | --- | ---: |
 | catalog-authored-review-required | 31 |
 | catalog-installed-owner-evidence-present | 7 |
-| catalog-only/dead-for-now | 4 |
-| missing-authored-record | 34 |
+| catalog-only/dead-for-now | 5 |
+| missing-authored-record | 33 |
 
 ### Unique Spell Identities
 
@@ -124,7 +124,7 @@ These counts separate class-list rows from unique Spell Definition identities. A
 | `phantom_steed` Phantom Steed | spell-level-3 | Wizard | 1 | missing-authored-record | not-installed | not-recorded | missing-authored-record | battle-runtime-required | not-recorded | Author an SRD-provenance Surface record or explicitly close the row. |
 | `plant_growth` Plant Growth | spell-level-3 | Bard, Druid | 2 | authored-record-present | installed | unsupported-profile | catalog-only/dead-for-now | accepted-no-battle-effect | outside-runtime-presentation-exploration: runtime-detached table/spatial/exploration/economy owner | Plant Growth supplies table-facing terrain and agriculture facts, but promoted battle runtime does not own normal-plant area membership, excluded-area geometry, pathfinding or travel-pacing derivation through overgrown terrain, plant-world state, harvest timing, food yield, or settlement economy. |
 | `protection_from_energy` Protection from Energy | spell-level-3 | Cleric, Druid, Sorcerer, Wizard | 4 | authored-record-present | not-installed | not-recorded | catalog-authored-review-required | owner-evidence-required | not-recorded | Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this later-frontier spell row as accepted. |
-| `remove_curse` Remove Curse | spell-level-3 | Cleric, Warlock, Wizard | 3 | missing-authored-record | not-installed | not-recorded | missing-authored-record | battle-runtime-required | not-recorded | Author an SRD-provenance Surface record or explicitly close the row. |
+| `remove_curse` Remove Curse | spell-level-3 | Cleric, Warlock, Wizard | 3 | authored-record-present | installed | unsupported-profile | catalog-only/dead-for-now | accepted-no-battle-effect | outside-battle-runtime: future curse occurrence and magic-item Attunement owner | Remove Curse supplies table-facing curse-removal and cursed-item Attunement source facts, but promoted battle runtime does not own generic curse occurrence identity, curse-removal targeting semantics, cursed magic item curse persistence, or Attunement mutation for cursed objects. |
 | `revivify` Revivify | spell-level-3 | Cleric, Druid | 2 | missing-authored-record | not-installed | not-recorded | missing-authored-record | battle-runtime-required | not-recorded | Author an SRD-provenance Surface record or explicitly close the row. |
 | `sending` Sending | spell-level-3 | Bard, Cleric, Wizard | 3 | missing-authored-record | not-installed | not-recorded | missing-authored-record | battle-runtime-required | not-recorded | Author an SRD-provenance Surface record or explicitly close the row. |
 | `sleet_storm` Sleet Storm | spell-level-3 | Druid, Sorcerer, Wizard | 3 | missing-authored-record | not-installed | not-recorded | missing-authored-record | battle-runtime-required | not-recorded | Author an SRD-provenance Surface record or explicitly close the row. |
@@ -477,7 +477,7 @@ These counts separate class-list rows from unique Spell Definition identities. A
 | Cleric spell list Mass Healing Word | spell-level-3 | spell-level | spell Unit pressure | `mass_healing_word` | `.references/srd-5.2.1/Classes/Cleric.md:213` | present | installed | supported-profile | catalog-installed-owner-evidence-present | accepted | not-recorded | Owner-specific operational evidence is classified and present. |
 | Cleric spell list Meld into Stone | spell-level-3 | spell-level | spell Unit pressure | `meld_into_stone` | `.references/srd-5.2.1/Classes/Cleric.md:214` | present | not-installed | not-recorded | missing-authored-record | battle-runtime-required | not-recorded | Author an SRD-provenance Surface record or explicitly close the row. |
 | Cleric spell list Protection from Energy | spell-level-3 | spell-level | spell Unit pressure | `protection_from_energy` | `.references/srd-5.2.1/Classes/Cleric.md:215` | present | not-installed | not-recorded | catalog-authored-review-required | owner-evidence-required | not-recorded | Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this later-frontier spell row as accepted. |
-| Cleric spell list Remove Curse | spell-level-3 | spell-level | spell Unit pressure | `remove_curse` | `.references/srd-5.2.1/Classes/Cleric.md:216` | present | not-installed | not-recorded | missing-authored-record | battle-runtime-required | not-recorded | Author an SRD-provenance Surface record or explicitly close the row. |
+| Cleric spell list Remove Curse | spell-level-3 | spell-level | spell Unit pressure | `remove_curse` | `.references/srd-5.2.1/Classes/Cleric.md:216` | present | installed | unsupported-profile | catalog-only/dead-for-now | accepted-no-battle-effect | outside-battle-runtime: future curse occurrence and magic-item Attunement owner | Remove Curse supplies table-facing curse-removal and cursed-item Attunement source facts, but promoted battle runtime does not own generic curse occurrence identity, curse-removal targeting semantics, cursed magic item curse persistence, or Attunement mutation for cursed objects. |
 | Cleric spell list Revivify | spell-level-3 | spell-level | spell Unit pressure | `revivify` | `.references/srd-5.2.1/Classes/Cleric.md:217` | present | not-installed | not-recorded | missing-authored-record | battle-runtime-required | not-recorded | Author an SRD-provenance Surface record or explicitly close the row. |
 | Cleric spell list Sending | spell-level-3 | spell-level | spell Unit pressure | `sending` | `.references/srd-5.2.1/Classes/Cleric.md:218` | present | not-installed | not-recorded | missing-authored-record | battle-runtime-required | not-recorded | Author an SRD-provenance Surface record or explicitly close the row. |
 | Cleric spell list Speak with Dead | spell-level-3 | spell-level | spell Unit pressure | `speak_with_dead` | `.references/srd-5.2.1/Classes/Cleric.md:219` | present | not-installed | not-recorded | missing-authored-record | battle-runtime-required | not-recorded | Author an SRD-provenance Surface record or explicitly close the row. |
@@ -990,7 +990,7 @@ These counts separate class-list rows from unique Spell Definition identities. A
 | Warlock spell list Hypnotic Pattern | spell-level-3 | spell-level | spell Unit pressure | `hypnotic_pattern` | `.references/srd-5.2.1/Classes/Warlock.md:385` | present | installed | supported-profile | catalog-installed-owner-evidence-present | accepted | table-spatial-derivation: table/spatial and sight witness provider | Owner-specific operational evidence is classified and present. |
 | Warlock spell list Magic Circle | spell-level-3 | spell-level | spell Unit pressure | `magic_circle` | `.references/srd-5.2.1/Classes/Warlock.md:386` | present | not-installed | not-recorded | missing-authored-record | battle-runtime-required | not-recorded | Author an SRD-provenance Surface record or explicitly close the row. |
 | Warlock spell list Major Image | spell-level-3 | spell-level | spell Unit pressure | `major_image` | `.references/srd-5.2.1/Classes/Warlock.md:387` | present | not-installed | not-recorded | catalog-authored-review-required | owner-evidence-required | not-recorded | Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this later-frontier spell row as accepted. |
-| Warlock spell list Remove Curse | spell-level-3 | spell-level | spell Unit pressure | `remove_curse` | `.references/srd-5.2.1/Classes/Warlock.md:388` | present | not-installed | not-recorded | missing-authored-record | battle-runtime-required | not-recorded | Author an SRD-provenance Surface record or explicitly close the row. |
+| Warlock spell list Remove Curse | spell-level-3 | spell-level | spell Unit pressure | `remove_curse` | `.references/srd-5.2.1/Classes/Warlock.md:388` | present | installed | unsupported-profile | catalog-only/dead-for-now | accepted-no-battle-effect | outside-battle-runtime: future curse occurrence and magic-item Attunement owner | Remove Curse supplies table-facing curse-removal and cursed-item Attunement source facts, but promoted battle runtime does not own generic curse occurrence identity, curse-removal targeting semantics, cursed magic item curse persistence, or Attunement mutation for cursed objects. |
 | Warlock spell list Tongues | spell-level-3 | spell-level | spell Unit pressure | `tongues` | `.references/srd-5.2.1/Classes/Warlock.md:389` | present | not-installed | unsupported-profile | catalog-only/dead-for-now | accepted-no-battle-effect | outside-runtime-presentation-exploration: runtime-detached language/communication owner | Tongues changes communication intelligibility through hearing, sight, signing, speech, and known-language gates. Promoted battle runtime does not own conversation content, social outcomes, automatic communication adjudication, or language-table projection for this spell. |
 | Warlock spell list Vampiric Touch | spell-level-3 | spell-level | spell Unit pressure | `vampiric_touch` | `.references/srd-5.2.1/Classes/Warlock.md:390` | present | not-installed | not-recorded | catalog-authored-review-required | owner-evidence-required | not-recorded | Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this later-frontier spell row as accepted. |
 | Warlock spell list Banishment | spell-level-4 | spell-level | spell Unit pressure | `banishment` | `.references/srd-5.2.1/Classes/Warlock.md:396` | present | not-installed | not-recorded | catalog-authored-review-required | owner-evidence-required | not-recorded | Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this later-frontier spell row as accepted. |
@@ -1123,7 +1123,7 @@ These counts separate class-list rows from unique Spell Definition identities. A
 | Wizard spell list Nondetection | spell-level-3 | spell-level | spell Unit pressure | `nondetection` | `.references/srd-5.2.1/Classes/Wizard.md:253` | present | not-installed | not-recorded | missing-authored-record | battle-runtime-required | not-recorded | Author an SRD-provenance Surface record or explicitly close the row. |
 | Wizard spell list Phantom Steed | spell-level-3 | spell-level | spell Unit pressure | `phantom_steed` | `.references/srd-5.2.1/Classes/Wizard.md:254` | present | not-installed | not-recorded | missing-authored-record | battle-runtime-required | not-recorded | Author an SRD-provenance Surface record or explicitly close the row. |
 | Wizard spell list Protection from Energy | spell-level-3 | spell-level | spell Unit pressure | `protection_from_energy` | `.references/srd-5.2.1/Classes/Wizard.md:255` | present | not-installed | not-recorded | catalog-authored-review-required | owner-evidence-required | not-recorded | Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this later-frontier spell row as accepted. |
-| Wizard spell list Remove Curse | spell-level-3 | spell-level | spell Unit pressure | `remove_curse` | `.references/srd-5.2.1/Classes/Wizard.md:256` | present | not-installed | not-recorded | missing-authored-record | battle-runtime-required | not-recorded | Author an SRD-provenance Surface record or explicitly close the row. |
+| Wizard spell list Remove Curse | spell-level-3 | spell-level | spell Unit pressure | `remove_curse` | `.references/srd-5.2.1/Classes/Wizard.md:256` | present | installed | unsupported-profile | catalog-only/dead-for-now | accepted-no-battle-effect | outside-battle-runtime: future curse occurrence and magic-item Attunement owner | Remove Curse supplies table-facing curse-removal and cursed-item Attunement source facts, but promoted battle runtime does not own generic curse occurrence identity, curse-removal targeting semantics, cursed magic item curse persistence, or Attunement mutation for cursed objects. |
 | Wizard spell list Sending | spell-level-3 | spell-level | spell Unit pressure | `sending` | `.references/srd-5.2.1/Classes/Wizard.md:257` | present | not-installed | not-recorded | missing-authored-record | battle-runtime-required | not-recorded | Author an SRD-provenance Surface record or explicitly close the row. |
 | Wizard spell list Sleet Storm | spell-level-3 | spell-level | spell Unit pressure | `sleet_storm` | `.references/srd-5.2.1/Classes/Wizard.md:258` | present | not-installed | not-recorded | missing-authored-record | battle-runtime-required | not-recorded | Author an SRD-provenance Surface record or explicitly close the row. |
 | Wizard spell list Slow | spell-level-3 | spell-level | spell Unit pressure | `slow` | `.references/srd-5.2.1/Classes/Wizard.md:259` | present | not-installed | not-recorded | missing-authored-record | battle-runtime-required | not-recorded | Author an SRD-provenance Surface record or explicitly close the row. |

@@ -1,0 +1,54 @@
+{
+  "description": "At your touch, all curses affecting one creature or object end. If the object is a cursed magic item, its curse remains, but the spell breaks its owner's Attunement to the object so it can be removed or discarded.",
+  "id": "remove_curse",
+  "kind": "spell",
+  "mechanics": {
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": false,
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "instantaneous"
+    },
+    "family": "activation",
+    "level": 3,
+    "phases": [
+      {
+        "attachment": {
+          "holeId": "remove_curse_target",
+          "kind": "hole",
+          "label": "creature or object",
+          "value": {
+            "kind": "target",
+            "selection": {
+              "mode": "one",
+              "targetKinds": [
+                "creature",
+                "object"
+              ]
+            }
+          }
+        },
+        "effects": [
+          {
+            "kind": "none"
+          }
+        ],
+        "kind": "direct"
+      }
+    ],
+    "range": {
+      "kind": "touch"
+    },
+    "school": "abjuration"
+  },
+  "name": "Remove Curse",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-Q-R#Remove Curse"
+  }
+}

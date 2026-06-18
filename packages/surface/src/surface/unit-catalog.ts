@@ -203,6 +203,7 @@ import rangerHuntersPreyInput from "../../content/ranger_hunters_prey.json";
 import rangerRovingInput from "../../content/ranger_roving.json";
 import rangerWeaponMasteryInput from "../../content/ranger_weapon_mastery.json";
 import resistanceInput from "../../content/resistance.json";
+import removeCurseInput from "../../content/remove_curse.json";
 import ropeTrickInput from "../../content/rope_trick.json";
 import speciesDragonbornInput from "../../content/species_dragonborn.json";
 import speciesDragonbornBreathWeaponInput from "../../content/species_dragonborn_breath_weapon.json";
@@ -666,6 +667,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     rayOfFrostInput,
     rayOfSicknessInput,
     resistanceInput,
+    removeCurseInput,
     ropeTrickInput,
     sacredFlameInput,
     sanctuaryInput,
