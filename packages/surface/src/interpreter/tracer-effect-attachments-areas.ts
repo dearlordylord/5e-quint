@@ -58,6 +58,7 @@ export type AttachmentAndAreaEffectAtom = Extract<
       | "area_has_strong_wind"
       | "prevent_ranged_weapon_attacks"
       | "area_movement_cost_multiplier"
+      | "plant_enrichment"
       | "grant_cover"
       | "block_line_of_sight"
       | "prevent_creature_passage"
@@ -561,6 +562,21 @@ export function traceAttachmentAndAreaEffectAtom(
         category: "effect",
         atomKind: "area_movement_cost_multiplier",
         label: `area_movement_cost_multiplier\nx${e.multiplier}\n${e.appliesTo}`,
+      });
+      return id;
+    }
+    case "plant_enrichment": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "plant_enrichment",
+        label: [
+          "plant_enrichment",
+          `duration: ${describeDurationValue(e.duration)}`,
+          `harvest yield x${e.harvestYieldMultiplier}`,
+          e.benefitLimit.kind,
+        ].join("\n"),
       });
       return id;
     }

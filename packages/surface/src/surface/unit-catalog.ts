@@ -187,6 +187,7 @@ import paladinPaladinsSmiteInput from "../../content/paladin_paladins_smite.json
 import paladinSacredWeaponInput from "../../content/paladin_sacred_weapon.json";
 import paladinWeaponMasteryInput from "../../content/paladin_weapon_mastery.json";
 import passWithoutTraceInput from "../../content/pass_without_trace.json";
+import plantGrowthInput from "../../content/plant_growth.json";
 import poisonSprayInput from "../../content/poison_spray.json";
 import prayerOfHealingInput from "../../content/prayer_of_healing.json";
 import protectionFromEvilAndGoodInput from "../../content/protection_from_evil_and_good.json";
@@ -655,6 +656,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     longstriderInput,
     mistyStepInput,
     passWithoutTraceInput,
+    plantGrowthInput,
     poisonSprayInput,
     prayerOfHealingInput,
     protectionFromEvilAndGoodInput,

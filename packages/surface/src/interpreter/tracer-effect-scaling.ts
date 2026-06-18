@@ -226,6 +226,7 @@ export function traceEffectAtomScaling(
     case "area_has_strong_wind":
     case "prevent_ranged_weapon_attacks":
     case "area_movement_cost_multiplier":
+    case "plant_enrichment":
     case "grant_cover":
     case "block_line_of_sight":
     case "prevent_creature_passage":

@@ -43,14 +43,14 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
-      "denominator": 441,
-      "numerator": 256,
-      "percent": "58%"
+      "denominator": 442,
+      "numerator": 257,
+      "percent": "58.1%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 529,
-      "numerator": 306,
-      "percent": "57.8%"
+      "denominator": 530,
+      "numerator": 307,
+      "percent": "57.9%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,7 +59,7 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 307
+      "value": 308
     },
     "deterministicAdmissionProjectionCoverage": {
       "denominator": 183,
@@ -67,8 +67,8 @@
       "percent": "97.3%"
     },
     "profileClassificationCoverage": {
-      "denominator": 307,
-      "numerator": 307,
+      "denominator": 308,
+      "numerator": 308,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -112,9 +112,9 @@
       "percent": "98.9%"
     },
     "supportedProfileCoverage": {
-      "denominator": 257,
+      "denominator": 258,
       "numerator": 183,
-      "percent": "71.2%"
+      "percent": "70.9%"
     }
   },
   "metricSemantics": [
@@ -16615,8 +16615,8 @@
         "unsupportedOrOtherUnits": 4
       },
       {
-        "executableUnitDenominator": 128,
-        "installedUnitDenominator": 128,
+        "executableUnitDenominator": 129,
+        "installedUnitDenominator": 129,
         "kind": "spell",
         "label": "Spell Units",
         "profileFactDenominator": 136,
@@ -16626,7 +16626,7 @@
         "selectedIdentityReplayGapUnits": 0,
         "selectedIdentityReplayWitnessUnits": 110,
         "supportedProfileUnits": 92,
-        "unsupportedOrOtherUnits": 18
+        "unsupportedOrOtherUnits": 19
       },
       {
         "executableUnitDenominator": 91,
@@ -31812,6 +31812,29 @@
       ],
       "sourceRecordPath": "packages/surface/content/pass_without_trace.json",
       "unitId": "pass_without_trace"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "runtime-detached table/spatial/exploration/economy owner",
+          "reason": "Plant Growth supplies table-facing terrain and agriculture facts, but promoted battle runtime does not own normal-plant area membership, excluded-area geometry, pathfinding or travel-pacing derivation through overgrown terrain, plant-world state, harvest timing, food yield, or settlement economy."
+        },
+        "reason": "Plant Growth is authored and installed as an SRD Surface Spell Definition with a modal Action Overgrowth or 8-hour Enrichment casting, 150-foot range, V/S components, Instantaneous spell duration, Overgrowth point-origin 100-foot-radius Sphere, normal-plant overgrowth, 4-feet-per-1-foot movement cost, caster-chosen excluded areas of any size, and Enrichment half-mile-radius plant enrichment for 365 days with twice-normal harvested food yield and one Plant Growth benefit per year. Task 1 claims no promoted battle-runtime profile because normal-plant area membership, excluded-area geometry, pathfinding and movement-distance derivation through overgrown terrain, table-travel effects, plant-world state, harvest timing, food yield, and settlement economy are runtime-detached table/spatial/exploration/economy facts outside promoted battle Unit profiles.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/plant_growth.json",
+      "unitId": "plant_growth"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

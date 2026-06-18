@@ -318,6 +318,9 @@ export type AreaOccupantDispositionFilter = Schema.Schema.Type<
 export type AreaOccupantPerceptionFilter = Schema.Schema.Type<
   typeof SurfaceSchema.AreaOccupantPerceptionFilterSchema
 >;
+export type AreaExclusion = Schema.Schema.Type<
+  typeof SurfaceSchema.AreaExclusionSchema
+>;
 export type TargetCastingRequirement = Schema.Schema.Type<
   typeof SurfaceSchema.TargetCastingRequirementSchema
 >;
@@ -414,6 +417,9 @@ export type OngoingEffectMechanics = Schema.Schema.Type<
 >;
 export type ActivationMechanics = Schema.Schema.Type<
   typeof SurfaceSchema.ActivationMechanicsSchema
+>;
+export type ModalActivationMechanics = Schema.Schema.Type<
+  typeof SurfaceSchema.ModalActivationMechanicsSchema
 >;
 export type AlternateActionCostMechanics = Schema.Schema.Type<
   typeof SurfaceSchema.AlternateActionCostMechanicsSchema

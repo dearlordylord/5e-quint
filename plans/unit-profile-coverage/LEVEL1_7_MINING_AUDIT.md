@@ -44,34 +44,34 @@ These counts describe the current runtime/catalog state of mined rows. They are 
 | catalog-authored-review-required | 77 |
 | catalog-installed-owner-evidence-present | 481 |
 | catalog-installed-owner-evidence-required | 1 |
-| catalog-only/dead-for-now | 144 |
+| catalog-only/dead-for-now | 146 |
 | level-5-7-follow-up-required | 33 |
-| missing-authored-record | 80 |
+| missing-authored-record | 78 |
 | non-runtime | 84 |
 
 ### Catalog Admission
 
 | Catalog state | Rows |
 | --- | ---: |
-| installed | 638 |
-| not-installed | 262 |
+| installed | 640 |
+| not-installed | 260 |
 
 ### Unit Profile Disposition
 
 | Unit profile disposition | Rows |
 | --- | ---: |
-| not-recorded | 229 |
+| not-recorded | 227 |
 | profile-subset-supported | 53 |
 | supported-profile | 295 |
-| unsupported-profile | 323 |
+| unsupported-profile | 325 |
 
 ### Battle Readiness Snapshot
 
 | Battle readiness status | Rows |
 | --- | ---: |
 | accepted | 469 |
-| accepted-no-battle-effect | 196 |
-| battle-runtime-required | 80 |
+| accepted-no-battle-effect | 198 |
+| battle-runtime-required | 78 |
 | not-applicable | 77 |
 | owner-evidence-required | 78 |
 
@@ -90,8 +90,8 @@ These counts separate class-list rows from unique Spell Definition identities. A
 | --- | ---: |
 | catalog-authored-review-required | 31 |
 | catalog-installed-owner-evidence-present | 7 |
-| catalog-only/dead-for-now | 3 |
-| missing-authored-record | 35 |
+| catalog-only/dead-for-now | 4 |
+| missing-authored-record | 34 |
 
 ### Unique Spell Identities
 
@@ -122,7 +122,7 @@ These counts separate class-list rows from unique Spell Definition identities. A
 | `meld_into_stone` Meld into Stone | spell-level-3 | Cleric, Druid | 2 | missing-authored-record | not-installed | not-recorded | missing-authored-record | battle-runtime-required | not-recorded | Author an SRD-provenance Surface record or explicitly close the row. |
 | `nondetection` Nondetection | spell-level-3 | Bard, Wizard | 2 | missing-authored-record | not-installed | not-recorded | missing-authored-record | battle-runtime-required | not-recorded | Author an SRD-provenance Surface record or explicitly close the row. |
 | `phantom_steed` Phantom Steed | spell-level-3 | Wizard | 1 | missing-authored-record | not-installed | not-recorded | missing-authored-record | battle-runtime-required | not-recorded | Author an SRD-provenance Surface record or explicitly close the row. |
-| `plant_growth` Plant Growth | spell-level-3 | Bard, Druid | 2 | missing-authored-record | not-installed | not-recorded | missing-authored-record | battle-runtime-required | not-recorded | Author an SRD-provenance Surface record or explicitly close the row. |
+| `plant_growth` Plant Growth | spell-level-3 | Bard, Druid | 2 | authored-record-present | installed | unsupported-profile | catalog-only/dead-for-now | accepted-no-battle-effect | outside-runtime-presentation-exploration: runtime-detached table/spatial/exploration/economy owner | Plant Growth supplies table-facing terrain and agriculture facts, but promoted battle runtime does not own normal-plant area membership, excluded-area geometry, pathfinding or travel-pacing derivation through overgrown terrain, plant-world state, harvest timing, food yield, or settlement economy. |
 | `protection_from_energy` Protection from Energy | spell-level-3 | Cleric, Druid, Sorcerer, Wizard | 4 | authored-record-present | not-installed | not-recorded | catalog-authored-review-required | owner-evidence-required | not-recorded | Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this later-frontier spell row as accepted. |
 | `remove_curse` Remove Curse | spell-level-3 | Cleric, Warlock, Wizard | 3 | missing-authored-record | not-installed | not-recorded | missing-authored-record | battle-runtime-required | not-recorded | Author an SRD-provenance Surface record or explicitly close the row. |
 | `revivify` Revivify | spell-level-3 | Cleric, Druid | 2 | missing-authored-record | not-installed | not-recorded | missing-authored-record | battle-runtime-required | not-recorded | Author an SRD-provenance Surface record or explicitly close the row. |
@@ -381,7 +381,7 @@ These counts separate class-list rows from unique Spell Definition identities. A
 | Bard spell list Major Image | spell-level-3 | spell-level | spell Unit pressure | `major_image` | `.references/srd-5.2.1/Classes/Bard.md:223` | present | not-installed | not-recorded | catalog-authored-review-required | owner-evidence-required | not-recorded | Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this later-frontier spell row as accepted. |
 | Bard spell list Mass Healing Word | spell-level-3 | spell-level | spell Unit pressure | `mass_healing_word` | `.references/srd-5.2.1/Classes/Bard.md:224` | present | installed | supported-profile | catalog-installed-owner-evidence-present | accepted | not-recorded | Owner-specific operational evidence is classified and present. |
 | Bard spell list Nondetection | spell-level-3 | spell-level | spell Unit pressure | `nondetection` | `.references/srd-5.2.1/Classes/Bard.md:225` | present | not-installed | not-recorded | missing-authored-record | battle-runtime-required | not-recorded | Author an SRD-provenance Surface record or explicitly close the row. |
-| Bard spell list Plant Growth | spell-level-3 | spell-level | spell Unit pressure | `plant_growth` | `.references/srd-5.2.1/Classes/Bard.md:226` | present | not-installed | not-recorded | missing-authored-record | battle-runtime-required | not-recorded | Author an SRD-provenance Surface record or explicitly close the row. |
+| Bard spell list Plant Growth | spell-level-3 | spell-level | spell Unit pressure | `plant_growth` | `.references/srd-5.2.1/Classes/Bard.md:226` | present | installed | unsupported-profile | catalog-only/dead-for-now | accepted-no-battle-effect | outside-runtime-presentation-exploration: runtime-detached table/spatial/exploration/economy owner | Plant Growth supplies table-facing terrain and agriculture facts, but promoted battle runtime does not own normal-plant area membership, excluded-area geometry, pathfinding or travel-pacing derivation through overgrown terrain, plant-world state, harvest timing, food yield, or settlement economy. |
 | Bard spell list Sending | spell-level-3 | spell-level | spell Unit pressure | `sending` | `.references/srd-5.2.1/Classes/Bard.md:227` | present | not-installed | not-recorded | missing-authored-record | battle-runtime-required | not-recorded | Author an SRD-provenance Surface record or explicitly close the row. |
 | Bard spell list Slow | spell-level-3 | spell-level | spell Unit pressure | `slow` | `.references/srd-5.2.1/Classes/Bard.md:228` | present | not-installed | not-recorded | missing-authored-record | battle-runtime-required | not-recorded | Author an SRD-provenance Surface record or explicitly close the row. |
 | Bard spell list Speak with Dead | spell-level-3 | spell-level | spell Unit pressure | `speak_with_dead` | `.references/srd-5.2.1/Classes/Bard.md:229` | present | not-installed | not-recorded | missing-authored-record | battle-runtime-required | not-recorded | Author an SRD-provenance Surface record or explicitly close the row. |
@@ -577,7 +577,7 @@ These counts separate class-list rows from unique Spell Definition identities. A
 | Druid spell list Daylight | spell-level-3 | spell-level | spell Unit pressure | `daylight` | `.references/srd-5.2.1/Classes/Druid.md:255` | present | not-installed | not-recorded | catalog-authored-review-required | owner-evidence-required | not-recorded | Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this later-frontier spell row as accepted. |
 | Druid spell list Dispel Magic | spell-level-3 | spell-level | spell Unit pressure | `dispel_magic` | `.references/srd-5.2.1/Classes/Druid.md:256` | present | installed | profile-subset-supported | catalog-installed-owner-evidence-present | accepted | profile-subset-remaining-mechanics-closed: broader ongoing Spell Effect occurrence model; table spatial witness and magical-effect identity owner | Owner-specific operational evidence is classified and present. |
 | Druid spell list Meld into Stone | spell-level-3 | spell-level | spell Unit pressure | `meld_into_stone` | `.references/srd-5.2.1/Classes/Druid.md:257` | present | not-installed | not-recorded | missing-authored-record | battle-runtime-required | not-recorded | Author an SRD-provenance Surface record or explicitly close the row. |
-| Druid spell list Plant Growth | spell-level-3 | spell-level | spell Unit pressure | `plant_growth` | `.references/srd-5.2.1/Classes/Druid.md:258` | present | not-installed | not-recorded | missing-authored-record | battle-runtime-required | not-recorded | Author an SRD-provenance Surface record or explicitly close the row. |
+| Druid spell list Plant Growth | spell-level-3 | spell-level | spell Unit pressure | `plant_growth` | `.references/srd-5.2.1/Classes/Druid.md:258` | present | installed | unsupported-profile | catalog-only/dead-for-now | accepted-no-battle-effect | outside-runtime-presentation-exploration: runtime-detached table/spatial/exploration/economy owner | Plant Growth supplies table-facing terrain and agriculture facts, but promoted battle runtime does not own normal-plant area membership, excluded-area geometry, pathfinding or travel-pacing derivation through overgrown terrain, plant-world state, harvest timing, food yield, or settlement economy. |
 | Druid spell list Protection from Energy | spell-level-3 | spell-level | spell Unit pressure | `protection_from_energy` | `.references/srd-5.2.1/Classes/Druid.md:259` | present | not-installed | not-recorded | catalog-authored-review-required | owner-evidence-required | not-recorded | Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this later-frontier spell row as accepted. |
 | Druid spell list Revivify | spell-level-3 | spell-level | spell Unit pressure | `revivify` | `.references/srd-5.2.1/Classes/Druid.md:260` | present | not-installed | not-recorded | missing-authored-record | battle-runtime-required | not-recorded | Author an SRD-provenance Surface record or explicitly close the row. |
 | Druid spell list Sleet Storm | spell-level-3 | spell-level | spell Unit pressure | `sleet_storm` | `.references/srd-5.2.1/Classes/Druid.md:261` | present | not-installed | not-recorded | missing-authored-record | battle-runtime-required | not-recorded | Author an SRD-provenance Surface record or explicitly close the row. |

@@ -1488,6 +1488,14 @@ type EffectAtom =
       readonly multiplier: number;
       readonly appliesTo: "any_movement" | "toward_source";
     }
+  | {
+      readonly kind: "plant_enrichment";
+      readonly duration: { readonly unit: "day"; readonly amount: number };
+      readonly harvestYieldMultiplier: number;
+      readonly benefitLimit: {
+        readonly kind: "one_application_per_year";
+      };
+    }
   | { readonly kind: "grant_cover"; readonly cover: "three_quarters" }
   | { readonly kind: "block_line_of_sight" }
   | {
@@ -1727,6 +1735,11 @@ export const CastingTimeSchema = Schema.Union(
     amount: Schema.Number.pipe(Schema.int(), Schema.greaterThanOrEqualTo(1)),
     ritual: Schema.Boolean,
   }),
+  Schema.Struct({
+    kind: Schema.Literal("hours"),
+    amount: Schema.Number.pipe(Schema.int(), Schema.greaterThanOrEqualTo(1)),
+    ritual: Schema.Boolean,
+  }),
 );
 
 export const RangeSchema = Schema.Union(
@@ -1813,14 +1826,20 @@ export const DurationSchema = Schema.Union(
   }),
 );
 
-export const SpellMechanicsHeaderSchema = Schema.Struct({
+export const SpellMechanicsCommonHeaderSchema = Schema.Struct({
   level: SpellLevelSchema,
   school: SpellSchoolSchema,
-  castingTime: CastingTimeSchema,
   range: RangeSchema,
   components: ComponentsSchema,
   duration: DurationSchema,
 });
+
+export const SpellMechanicsHeaderSchema = Schema.extend(
+  SpellMechanicsCommonHeaderSchema,
+  Schema.Struct({
+    castingTime: CastingTimeSchema,
+  }),
+);
 
 export const TargetTypeFilterSchema = nonEmpty(CreatureTypeSchema);
 
@@ -1831,6 +1850,12 @@ export const AreaOccupantDispositionFilterSchema = Schema.Literal(
 export const AreaOccupantPerceptionFilterSchema = Schema.Literal(
   "can_see_area_effect",
 );
+
+export const AreaExclusionSchema = strictStruct({
+  chooser: Schema.Literal("caster"),
+  count: Schema.Literal("one_or_more"),
+  size: Schema.Literal("any"),
+});
 
 export const TargetCountSlotScalingSchema = Schema.Struct({
   kind: Schema.Literal("linear"),
@@ -2127,6 +2152,7 @@ export const AreaAttachmentBaseSchema = Schema.Struct({
   selection: optionalExact(TargetSelectionSchema),
   occupantDispositionFilter: optionalExact(AreaOccupantDispositionFilterSchema),
   occupantPerceptionFilter: optionalExact(AreaOccupantPerceptionFilterSchema),
+  excludedAreas: optionalExact(AreaExclusionSchema),
   rangeOrigin: optionalExact(AttachmentRangeOriginSchema),
 });
 
@@ -3645,6 +3671,17 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
         multiplier: PositiveIntegerSchema,
         appliesTo: Schema.Literal("any_movement", "toward_source"),
       }),
+      strictStruct({
+        kind: Schema.Literal("plant_enrichment"),
+        duration: strictStruct({
+          unit: Schema.Literal("day"),
+          amount: PositiveIntegerSchema,
+        }),
+        harvestYieldMultiplier: PositiveIntegerSchema,
+        benefitLimit: strictStruct({
+          kind: Schema.Literal("one_application_per_year"),
+        }),
+      }),
       Schema.Struct({
         kind: Schema.Literal("grant_cover"),
         cover: Schema.Literal("three_quarters"),
@@ -3909,6 +3946,25 @@ export const ActivationMechanicsSchema = Schema.extend(
   Schema.Struct({
     family: Schema.Literal("activation"),
     phases: nonEmpty(ActivationPhaseSchema),
+  }),
+);
+
+export const ModalActivationMechanicsSchema = Schema.extend(
+  SpellMechanicsCommonHeaderSchema,
+  Schema.Struct({
+    family: Schema.Literal("modal_activation"),
+    mode: strictStruct({
+      label: Schema.String,
+      options: nonEmpty(
+        strictStruct({
+          id: Schema.String,
+          displayName: Schema.String,
+          castingTime: CastingTimeSchema,
+          attachment: AttachmentSchema,
+          effects: nonEmpty(AreaDirectEffectAtomSchema),
+        }),
+      ),
+    }),
   }),
 );
 
@@ -4438,6 +4494,7 @@ export const SpawnedCreatureMechanicsSchema = Schema.extend(
 export const SpellMechanicsSchema = Schema.Union(
   OngoingEffectMechanicsSchema,
   ActivationMechanicsSchema,
+  ModalActivationMechanicsSchema,
   TriggeredReactionMechanicsSchema,
   PassiveHitInterceptMechanicsSchema,
   AnchoredTriggerMechanicsSchema,

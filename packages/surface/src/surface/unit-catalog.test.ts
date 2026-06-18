@@ -3226,6 +3226,78 @@ describe("SRD Unit catalog boundary", () => {
     );
   });
 
+  test("decodes Plant Growth as Overgrowth or Enrichment modal casting", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag !== "ok") return;
+    const plantGrowth = result.catalog.requireUnit("plant_growth");
+
+    expect(plantGrowth.kind).toBe("spell");
+    if (plantGrowth.kind !== "spell") return;
+    expect(plantGrowth.mechanics.family).toBe("modal_activation");
+    if (plantGrowth.mechanics.family !== "modal_activation") return;
+
+    expect(plantGrowth.mechanics).toMatchObject({
+      level: 3,
+      school: "transmutation",
+      range: { kind: "point", feet: 150 },
+      components: { v: true, s: true, m: false },
+      duration: { kind: "instantaneous" },
+      mode: {
+        label: "Plant Growth casting mode",
+        options: [
+          {
+            id: "overgrowth",
+            displayName: "Overgrowth",
+            castingTime: { kind: "action" },
+            attachment: {
+              kind: "area",
+              origin: { kind: "point_within_range" },
+              shape: { kind: "sphere", radiusFeet: 100 },
+              excludedAreas: {
+                chooser: "caster",
+                count: "one_or_more",
+                size: "any",
+              },
+            },
+            effects: [
+              {
+                kind: "area_movement_cost_multiplier",
+                multiplier: 4,
+                appliesTo: "any_movement",
+              },
+            ],
+          },
+          {
+            id: "enrichment",
+            displayName: "Enrichment",
+            castingTime: { kind: "hours", amount: 8, ritual: false },
+            attachment: {
+              kind: "area",
+              origin: { kind: "point_within_range" },
+              shape: { kind: "sphere", radiusFeet: 2640 },
+            },
+            effects: [
+              {
+                kind: "plant_enrichment",
+                duration: { unit: "day", amount: 365 },
+                harvestYieldMultiplier: 2,
+                benefitLimit: { kind: "one_application_per_year" },
+              },
+            ],
+          },
+        ],
+      },
+    });
+    expect(plantGrowth.description).toContain(
+      "4 feet of movement for every 1 foot",
+    );
+    expect(plantGrowth.description).toContain(
+      "yield twice the normal amount of food",
+    );
+  });
+
   test("decodes Locate Object as object location and motion disclosure", () => {
     const result = buildUnitCatalog({ collections: [srdUnitCollection] });
 

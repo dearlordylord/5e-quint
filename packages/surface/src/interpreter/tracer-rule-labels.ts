@@ -10,6 +10,7 @@ import * as Either from "effect/Either";
 import type {
   AreaOccupantDispositionFilter,
   AreaOccupantPerceptionFilter,
+  AreaExclusion,
   AreaOrigin,
   AreaShapeDescriptor,
   AreaShapeSpec,
@@ -65,6 +66,7 @@ export function procedureForFamily(
       return "store";
     case "ongoing_effect":
     case "activation":
+    case "modal_activation":
     case "passive_hit_intercept":
     case "spawned_creature":
     case "reanimated_creature":
@@ -182,7 +184,8 @@ export function describeAttachmentHole(
       const perceptionLabel = describeAreaOccupantPerceptionFilter(
         a.value.occupantPerceptionFilter,
       );
-      return `${labelPrefix}\narea\n${describeAreaShape(a.value.shape)}\n${originLabel}${occupantLabel}${perceptionLabel}`;
+      const exclusionLabel = describeAreaExclusions(a.value.excludedAreas);
+      return `${labelPrefix}\narea\n${describeAreaShape(a.value.shape)}\n${originLabel}${occupantLabel}${perceptionLabel}${exclusionLabel}`;
     }
     case "mark": {
       const transferLabel = a.value.transfer
@@ -418,6 +421,20 @@ export function describeAreaOccupantPerceptionFilter(
       );
     }
   }
+}
+
+export function describeAreaExclusions(
+  excludedAreas: AreaExclusion | undefined,
+): string {
+  if (excludedAreas === undefined) return "";
+  return Match.value(excludedAreas).pipe(
+    Match.when(
+      { chooser: "caster" },
+      (areaExclusion) =>
+        `\nexcludes: caster-chosen ${areaExclusion.count.replaceAll("_", " ")} areas, size ${areaExclusion.size}`,
+    ),
+    Match.exhaustive,
+  );
 }
 
 export function describeAreaShape(s: AreaShapeSpec): string {

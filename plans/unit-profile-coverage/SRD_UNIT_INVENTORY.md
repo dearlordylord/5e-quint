@@ -18,7 +18,7 @@ Character level and spell level are separate axes. Character levels 1-2 include 
 - Level-7 class/subclass mining rows: 24
 - Spell-list pressure rows for cantrips and spell levels 1-2: 367
 - Spell-level-3 pressure rows (character-level-5 frontier): 110
-- Spell-level-3 installed SRD Surface pressure rows (later character-level-5 frontier): 22
+- Spell-level-3 installed SRD Surface pressure rows (later character-level-5 frontier): 24
 - Spell-level-4 pressure rows (character-level-7 frontier): 81
 - Spell-level-4 installed SRD Surface pressure rows (later character-level-7 frontier): 0
 - Missing level-1 class containers: 0
@@ -96,13 +96,13 @@ This metric is a separate seed for level-4 class feature rows, including Ability
 
 This metric is a separate seed for spell-level-3 pressure only. It belongs to the later character-level-5 frontier for full casters and Warlock Pact Magic, with half-caster rows excluded until their own class tables grant matching slots. It does not affect Character Levels 1-2 or Character Levels 1-3 readiness denominators.
 
-- Accepted: 34/110 (30.9%)
+- Accepted: 36/110 (32.7%)
 
 #### Spell-Level-3 Battle Readiness by Status
 
 - accepted: 22
-- accepted-no-battle-effect: 12
-- battle-runtime-required: 48
+- accepted-no-battle-effect: 14
+- battle-runtime-required: 46
 - owner-evidence-required: 28
 
 ### Spell-Level-4 Battle Readiness
@@ -207,12 +207,13 @@ This metric is a separate seed for spell-level-4 pressure only. It belongs to th
 
 - catalog-authored-review-required: 28
 - catalog-installed-owner-evidence-present: 22
-- catalog-only/dead-for-now: 12
-- missing-authored-record: 48
+- catalog-only/dead-for-now: 14
+- missing-authored-record: 46
 
 ### Spell-Level-3 Installed Unit Pressure by Disposition
 
 - catalog-installed-owner-evidence-present: 22
+- catalog-only/dead-for-now: 2
 
 ### Spell-Level-4 Unit Pressure by Disposition
 
@@ -697,7 +698,7 @@ These batches are generated planning recommendations for a separate SRD inventor
 |Bard spell list Major Image|spell Unit pressure|current-surface-can-express-source-facts|authored-record-present|not-installed||catalog-authored-review-required|owner-evidence-required|||Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this later-frontier spell row as accepted.|.references/srd-5.2.1/Classes/Bard.md:223|
 |Bard spell list Mass Healing Word|spell Unit pressure|current-surface-can-express-source-facts|authored-record-present|installed|supported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; battle-runtime spell invocation/projection: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Bard.md:224|
 |Bard spell list Nondetection|spell Unit pressure|current-surface-can-express-source-facts|missing-authored-record|not-installed||missing-authored-record|battle-runtime-required|||Author an SRD-provenance Surface record or explicitly close the row.|.references/srd-5.2.1/Classes/Bard.md:225|
-|Bard spell list Plant Growth|spell Unit pressure|current-surface-can-express-source-facts|missing-authored-record|not-installed||missing-authored-record|battle-runtime-required|||Author an SRD-provenance Surface record or explicitly close the row.|.references/srd-5.2.1/Classes/Bard.md:226|
+|Bard spell list Plant Growth|spell Unit pressure|outside-surface-runtime-mechanics|authored-record-present|installed|unsupported-profile|catalog-only/dead-for-now|accepted-no-battle-effect|outside-runtime-presentation-exploration: runtime-detached table/spatial/exploration/economy owner|Unit catalog/admission: catalog evidence; runtime-detached table/spatial/exploration/economy owner: catalog-only/dead-for-now closure|Plant Growth supplies table-facing terrain and agriculture facts, but promoted battle runtime does not own normal-plant area membership, excluded-area geometry, pathfinding or travel-pacing derivation through overgrown terrain, plant-world state, harvest timing, food yield, or settlement economy.|.references/srd-5.2.1/Classes/Bard.md:226|
 |Bard spell list Sending|spell Unit pressure|current-surface-can-express-source-facts|missing-authored-record|not-installed||missing-authored-record|battle-runtime-required|||Author an SRD-provenance Surface record or explicitly close the row.|.references/srd-5.2.1/Classes/Bard.md:227|
 |Bard spell list Slow|spell Unit pressure|current-surface-can-express-source-facts|missing-authored-record|not-installed||missing-authored-record|battle-runtime-required|||Author an SRD-provenance Surface record or explicitly close the row.|.references/srd-5.2.1/Classes/Bard.md:228|
 |Bard spell list Speak with Dead|spell Unit pressure|current-surface-can-express-source-facts|missing-authored-record|not-installed||missing-authored-record|battle-runtime-required|||Author an SRD-provenance Surface record or explicitly close the row.|.references/srd-5.2.1/Classes/Bard.md:229|
@@ -729,7 +730,7 @@ These batches are generated planning recommendations for a separate SRD inventor
 |Druid spell list Daylight|spell Unit pressure|current-surface-can-express-source-facts|authored-record-present|not-installed||catalog-authored-review-required|owner-evidence-required|||Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this later-frontier spell row as accepted.|.references/srd-5.2.1/Classes/Druid.md:255|
 |Druid spell list Dispel Magic|spell Unit pressure|current-surface-can-express-source-facts|authored-record-present|installed|profile-subset-supported|catalog-installed-owner-evidence-present|accepted|profile-subset-remaining-mechanics-closed: broader ongoing Spell Effect occurrence model; table spatial witness and magical-effect identity owner|Unit catalog/admission: catalog evidence; battle-runtime spell invocation/projection: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Druid.md:256|
 |Druid spell list Meld into Stone|spell Unit pressure|current-surface-can-express-source-facts|missing-authored-record|not-installed||missing-authored-record|battle-runtime-required|||Author an SRD-provenance Surface record or explicitly close the row.|.references/srd-5.2.1/Classes/Druid.md:257|
-|Druid spell list Plant Growth|spell Unit pressure|current-surface-can-express-source-facts|missing-authored-record|not-installed||missing-authored-record|battle-runtime-required|||Author an SRD-provenance Surface record or explicitly close the row.|.references/srd-5.2.1/Classes/Druid.md:258|
+|Druid spell list Plant Growth|spell Unit pressure|outside-surface-runtime-mechanics|authored-record-present|installed|unsupported-profile|catalog-only/dead-for-now|accepted-no-battle-effect|outside-runtime-presentation-exploration: runtime-detached table/spatial/exploration/economy owner|Unit catalog/admission: catalog evidence; runtime-detached table/spatial/exploration/economy owner: catalog-only/dead-for-now closure|Plant Growth supplies table-facing terrain and agriculture facts, but promoted battle runtime does not own normal-plant area membership, excluded-area geometry, pathfinding or travel-pacing derivation through overgrown terrain, plant-world state, harvest timing, food yield, or settlement economy.|.references/srd-5.2.1/Classes/Druid.md:258|
 |Druid spell list Protection from Energy|spell Unit pressure|current-surface-can-express-source-facts|authored-record-present|not-installed||catalog-authored-review-required|owner-evidence-required|||Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this later-frontier spell row as accepted.|.references/srd-5.2.1/Classes/Druid.md:259|
 |Druid spell list Revivify|spell Unit pressure|current-surface-can-express-source-facts|missing-authored-record|not-installed||missing-authored-record|battle-runtime-required|||Author an SRD-provenance Surface record or explicitly close the row.|.references/srd-5.2.1/Classes/Druid.md:260|
 |Druid spell list Sleet Storm|spell Unit pressure|current-surface-can-express-source-facts|missing-authored-record|not-installed||missing-authored-record|battle-runtime-required|||Author an SRD-provenance Surface record or explicitly close the row.|.references/srd-5.2.1/Classes/Druid.md:261|
