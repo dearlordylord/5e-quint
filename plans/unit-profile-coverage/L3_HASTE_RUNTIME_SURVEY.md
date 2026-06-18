@@ -57,7 +57,7 @@ Existing reusable pieces:
 
 ## Decision
 
-Task 17 should close as a follow-up split, not as support. Adding a Haste Unit
+Task 6 should close as a follow-up split, not as support. Adding a Haste Unit
 claim now would collapse missing Surface authoring, action-economy widening,
 active AC/Speed/Saving Throw projections, and lethargy lifecycle into one
 unsupported row with no executable owner.

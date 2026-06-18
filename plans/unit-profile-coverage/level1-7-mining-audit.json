@@ -19,7 +19,8 @@
       "catalog-authored-review-required": 24,
       "catalog-installed-owner-evidence-present": 7,
       "catalog-only/dead-for-now": 10,
-      "missing-authored-record": 35
+      "missing-authored-record": 28,
+      "needs-surface-widening": 7
     },
     "auditedUniqueSpellIdentitiesByLevelBand": {
       "spell-level-3": 42,
@@ -34,9 +35,10 @@
     "rowsByBattleReadinessStatus": {
       "accepted": 469,
       "accepted-no-battle-effect": 212,
-      "battle-runtime-required": 80,
+      "battle-runtime-required": 63,
       "not-applicable": 77,
-      "owner-evidence-required": 62
+      "owner-evidence-required": 62,
+      "surface-widening-required": 17
     },
     "rowsByCatalogAdmission": {
       "installed": 640,
@@ -58,7 +60,8 @@
       "catalog-installed-owner-evidence-required": 1,
       "catalog-only/dead-for-now": 167,
       "level-5-7-follow-up-required": 24,
-      "missing-authored-record": 80,
+      "missing-authored-record": 63,
+      "needs-surface-widening": 17,
       "non-runtime": 84
     },
     "rowsByLevelBand": {
@@ -5112,7 +5115,7 @@
         "sourceInventoryRowId": "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_bestow_curse",
         "state": "present"
       },
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
+      "nextAction": "Widen Surface: Spell Definition curse occurrence: initial Wisdom Saving Throw gates one chosen ongoing curse option (chosen-ability Ability Check and Saving Throw Disadvantage, caster-targeted Attack Roll Disadvantage, start-of-turn Wisdom save or forced Dodge, or caster attack/spell damage rider), the target becomes a curse-removal target, and higher slot levels change both duration amount and Concentration requirement.",
       "rowId": "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_bestow_curse",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -5126,7 +5129,7 @@
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "battle-runtime-required"
+          "status": "surface-widening-required"
         },
         "battleReadinessClosure": {
           "state": "not-recorded"
@@ -5135,7 +5138,7 @@
           "state": "not-installed",
           "unitId": "bestow_curse"
         },
-        "finalDisposition": "missing-authored-record",
+        "finalDisposition": "needs-surface-widening",
         "unitProfile": {
           "state": "not-recorded"
         }
@@ -5294,7 +5297,7 @@
         "sourceInventoryRowId": "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_glyph_of_warding",
         "state": "present"
       },
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
+      "nextAction": "Widen Surface: Spell Definition warding glyph occurrence: cast-time choice between surface inscription and closeable-object inscription, maximum 10-foot-diameter glyph coverage, concealed glyph Wisdom (Perception) check against the caster's Spell Save DC, caster-defined/refined trigger with creature-type and password exclusions, movement invalidation when the inscribed surface or object moves more than 10 feet from the cast location, explosive-rune branch with caster-chosen Acid/Cold/Fire/Lightning/Thunder damage and slot scaling, and spell-glyph branch that stores a cast prepared spell, enforces single-creature or area spell eligibility, retargets the stored spell to or around the triggering creature, handles hostile summon/object/trap placement, and preserves full-duration execution for stored Concentration spells.",
       "rowId": "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_glyph_of_warding",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -5308,16 +5311,19 @@
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "battle-runtime-required"
+          "status": "surface-widening-required"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "table-spatial-derivation",
+          "owner": "Surface Spell Definition plus table object/location glyph owner and future battle-runtime glyph release owner",
+          "reason": "Glyph of Warding needs a typed follow-up split before an SRD-provenance Spell Definition can be admitted: Surface must own the durable glyph occurrence, inscription anchor kind, maximum 10-foot-diameter coverage constraint, authored trigger/refinement shape, explosive-rune versus spell-glyph choice, explosive damage type and scaling, stored prepared spell eligibility, stored-spell retargeting, and stored Concentration full-duration override; table object/location ownership supplies cast location, covered-area placement within that maximum, more-than-10-foot movement invalidation, concealment and noticing, selected trigger predicate/event witnesses, area membership, and close-as-possible hostile placement witnesses; future battle runtime should consume typed glyph release facts without dispatching on spell id or name.",
+          "state": "recorded"
         },
         "catalogAdmission": {
           "state": "not-installed",
           "unitId": "glyph_of_warding"
         },
-        "finalDisposition": "missing-authored-record",
+        "finalDisposition": "needs-surface-widening",
         "unitProfile": {
           "state": "not-recorded"
         }
@@ -9301,7 +9307,7 @@
         "sourceInventoryRowId": "srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_bestow_curse",
         "state": "present"
       },
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
+      "nextAction": "Widen Surface: Spell Definition curse occurrence: initial Wisdom Saving Throw gates one chosen ongoing curse option (chosen-ability Ability Check and Saving Throw Disadvantage, caster-targeted Attack Roll Disadvantage, start-of-turn Wisdom save or forced Dodge, or caster attack/spell damage rider), the target becomes a curse-removal target, and higher slot levels change both duration amount and Concentration requirement.",
       "rowId": "srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_bestow_curse",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -9315,7 +9321,7 @@
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "battle-runtime-required"
+          "status": "surface-widening-required"
         },
         "battleReadinessClosure": {
           "state": "not-recorded"
@@ -9324,7 +9330,7 @@
           "state": "not-installed",
           "unitId": "bestow_curse"
         },
-        "finalDisposition": "missing-authored-record",
+        "finalDisposition": "needs-surface-widening",
         "unitProfile": {
           "state": "not-recorded"
         }
@@ -9530,7 +9536,7 @@
         "sourceInventoryRowId": "srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_glyph_of_warding",
         "state": "present"
       },
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
+      "nextAction": "Widen Surface: Spell Definition warding glyph occurrence: cast-time choice between surface inscription and closeable-object inscription, maximum 10-foot-diameter glyph coverage, concealed glyph Wisdom (Perception) check against the caster's Spell Save DC, caster-defined/refined trigger with creature-type and password exclusions, movement invalidation when the inscribed surface or object moves more than 10 feet from the cast location, explosive-rune branch with caster-chosen Acid/Cold/Fire/Lightning/Thunder damage and slot scaling, and spell-glyph branch that stores a cast prepared spell, enforces single-creature or area spell eligibility, retargets the stored spell to or around the triggering creature, handles hostile summon/object/trap placement, and preserves full-duration execution for stored Concentration spells.",
       "rowId": "srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_glyph_of_warding",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -9544,16 +9550,19 @@
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "battle-runtime-required"
+          "status": "surface-widening-required"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "table-spatial-derivation",
+          "owner": "Surface Spell Definition plus table object/location glyph owner and future battle-runtime glyph release owner",
+          "reason": "Glyph of Warding needs a typed follow-up split before an SRD-provenance Spell Definition can be admitted: Surface must own the durable glyph occurrence, inscription anchor kind, maximum 10-foot-diameter coverage constraint, authored trigger/refinement shape, explosive-rune versus spell-glyph choice, explosive damage type and scaling, stored prepared spell eligibility, stored-spell retargeting, and stored Concentration full-duration override; table object/location ownership supplies cast location, covered-area placement within that maximum, more-than-10-foot movement invalidation, concealment and noticing, selected trigger predicate/event witnesses, area membership, and close-as-possible hostile placement witnesses; future battle runtime should consume typed glyph release facts without dispatching on spell id or name.",
+          "state": "recorded"
         },
         "catalogAdmission": {
           "state": "not-installed",
           "unitId": "glyph_of_warding"
         },
-        "finalDisposition": "missing-authored-record",
+        "finalDisposition": "needs-surface-widening",
         "unitProfile": {
           "state": "not-recorded"
         }
@@ -9571,7 +9580,7 @@
         "sourceInventoryRowId": "srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_magic_circle",
         "state": "present"
       },
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
+      "nextAction": "Widen Surface: Spell Definition warded-cylinder occurrence: 10-foot-radius, 20-foot-tall Cylinder area; slot-scaled timed duration of 1 hour plus 1 hour per Spell Slot level above 3; cast-time choice of one or more Celestial, Elemental, Fey, Fiend, or Undead creature types; normal or reversed area direction; nonmagical entry or exit prevention for affected creatures; Charisma Saving Throw gate for teleportation or interplanar travel across the ward; affected-creature Attack Roll Disadvantage against protected targets; and source-scoped possession, Charmed, and Frightened prevention for protected targets.",
       "rowId": "srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_magic_circle",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -9585,16 +9594,19 @@
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "battle-runtime-required"
+          "status": "surface-widening-required"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "table-spatial-derivation",
+          "owner": "Surface Spell Definition plus table/spatial planar-movement owner and future battle-runtime warded-area Spell Effect owner",
+          "reason": "Magic Circle needs a typed follow-up split before an SRD-provenance Spell Definition can be admitted: Surface must own the 10-foot-radius, 20-foot-tall Cylinder area, slot-scaled timed duration, cast-time creature-type set, normal-or-reversed area direction, nonmagical crossing prevention, magical-travel Charisma Saving Throw gate, scoped Attack Roll Disadvantage, and source-scoped possession plus Charmed/Frightened prevention; table/spatial ownership supplies ground-point placement, cylinder membership, inside/outside protected-target witnesses, entry or exit attempts, and teleportation or interplanar-travel crossing witnesses; future battle runtime should consume typed warded-area facts without dispatching on spell id or name.",
+          "state": "recorded"
         },
         "catalogAdmission": {
           "state": "not-installed",
           "unitId": "magic_circle"
         },
-        "finalDisposition": "missing-authored-record",
+        "finalDisposition": "needs-surface-widening",
         "unitProfile": {
           "state": "not-recorded"
         }
@@ -13978,7 +13990,7 @@
         "sourceInventoryRowId": "srd521:classes/druid:spell-level-3:spell-unit-pressure:druid_spell_list_conjure_animals",
         "state": "present"
       },
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
+      "nextAction": "Widen Surface: Spell Definition spectral nature-spirit pack occurrence: Large intangible pack form in a visible unoccupied space, caster-movement-triggered pack reposition up to 30 feet, caster-within-5-feet Strength Saving Throw Advantage, optional Dexterity Saving Throw Slashing damage when the pack moves within 10 feet of a creature the caster can see or a creature the caster can see enters or ends its turn within 10 feet, and a shared once-per-turn-per-creature trigger limit across those events.",
       "rowId": "srd521:classes/druid:spell-level-3:spell-unit-pressure:druid_spell_list_conjure_animals",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -13992,16 +14004,19 @@
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "battle-runtime-required"
+          "status": "surface-widening-required"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "table-spatial-derivation",
+          "owner": "Surface Spell Definition plus table/spatial pack-position owner and future battle-runtime pack Spell Effect owner",
+          "reason": "Conjure Animals needs a typed follow-up split before an SRD-provenance Spell Definition can be admitted: Surface must own the spectral pack occurrence, caster-proximity roll modifier predicate, caster-movement reposition trigger, optional area save trigger with caster-visible creature eligibility, and shared once-per-turn limit; table/spatial ownership supplies visible unoccupied-space, pack proximity, and caster creature-visibility witnesses; future battle runtime should consume those typed facts as a pack Spell Effect without dispatching on spell id or name.",
+          "state": "recorded"
         },
         "catalogAdmission": {
           "state": "not-installed",
           "unitId": "conjure_animals"
         },
-        "finalDisposition": "missing-authored-record",
+        "finalDisposition": "needs-surface-widening",
         "unitProfile": {
           "state": "not-recorded"
         }
@@ -28209,7 +28224,7 @@
         "sourceInventoryRowId": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_blink",
         "state": "present"
       },
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
+      "nextAction": "Widen Surface: Spell Definition planar blink occurrence: caster-turn-end d6 threshold needs an OngoingEffect random table to gate the transition to the Ethereal Plane; spell-ending when the caster is already on that plane needs a plane-occupancy predicate; and start-of-next-turn/spell-end return placement chooses a visible unoccupied space within 10 feet of the origin space or the nearest unoccupied space when none is available, requiring typed Surface/table-spatial ownership for return-position availability.",
       "rowId": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_blink",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -28223,16 +28238,19 @@
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "battle-runtime-required"
+          "status": "surface-widening-required"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "table-spatial-derivation",
+          "owner": "Surface Spell Definition plus table/spatial plane-position owner",
+          "reason": "Blink needs a typed follow-up split: Surface owns the caster-turn-end d6 random table, Ethereal Plane transition, and already-on-plane ending predicate; table/spatial ownership supplies origin space, visible unoccupied-space availability within 10 feet, and nearest-unoccupied-space fallback before any battle-runtime projection admits it.",
+          "state": "recorded"
         },
         "catalogAdmission": {
           "state": "not-installed",
           "unitId": "blink"
         },
-        "finalDisposition": "missing-authored-record",
+        "finalDisposition": "needs-surface-widening",
         "unitProfile": {
           "state": "not-recorded"
         }
@@ -28576,7 +28594,7 @@
         "sourceInventoryRowId": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_gaseous_form",
         "state": "present"
       },
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
+      "nextAction": "Widen Surface: Spell Definition mist-cloud form state: willing touched target and its worn/carried objects shape-shift into a non-catalog misty cloud; the form replaces the target's movement method with 10-foot Fly Speed and hover; permits entering another creature's space, passing through narrow openings, and treating liquids as solid; grants Bludgeoning, Piercing, and Slashing Resistance, Prone Immunity, and Strength, Dexterity, and Constitution Saving Throw Advantage; prevents talking, object manipulation/drop/use/interaction, attacks, and spellcasting; and ends when the target drops to 0 Hit Points or takes a Magic action to end the spell on itself.",
       "rowId": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_gaseous_form",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -28590,16 +28608,19 @@
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "battle-runtime-required"
+          "status": "surface-widening-required"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "table-spatial-derivation",
+          "owner": "Surface Spell Definition plus movement/table-spatial mist-form owner and future battle-runtime form Spell Effect owner",
+          "reason": "Gaseous Form needs a typed follow-up split before an SRD-provenance Spell Definition can be admitted: Surface must own the non-catalog mist-cloud form state, movement replacement rather than additive speed grant, Magic-action self-ending, damage Resistance, condition Immunity, Saving Throw Advantage, and action/object/speech limits; table/spatial ownership supplies creature-space occupancy, narrow-opening passage, and liquid-surface treatment witnesses; future battle runtime should consume those typed facts as a form Spell Effect without dispatching on spell id or name.",
+          "state": "recorded"
         },
         "catalogAdmission": {
           "state": "not-installed",
           "unitId": "gaseous_form"
         },
-        "finalDisposition": "missing-authored-record",
+        "finalDisposition": "needs-surface-widening",
         "unitProfile": {
           "state": "not-recorded"
         }
@@ -28617,7 +28638,7 @@
         "sourceInventoryRowId": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_haste",
         "state": "present"
       },
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
+      "nextAction": "Widen Surface: Spell Definition haste active-effect and lethargy split: Magic Action casting, level-3 Spell Slot, 30-foot visible willing-creature targeting, Concentration duration, doubled Speed, +2 Armor Class, Dexterity Saving Throw Advantage, a per-turn additional-action allow-list that caps Attack at one attack, and spell-end lethargy applying Incapacitated plus Speed 0 until the end of the target's next turn; Surface needs typed extra-action restriction and end-of-effect lethargy facts before the SRD record can be authored without collapsing later positive-runtime and lethargy-runtime follow-ups.",
       "rowId": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_haste",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -28631,7 +28652,7 @@
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "battle-runtime-required"
+          "status": "surface-widening-required"
         },
         "battleReadinessClosure": {
           "state": "not-recorded"
@@ -28640,7 +28661,7 @@
           "state": "not-installed",
           "unitId": "haste"
         },
-        "finalDisposition": "missing-authored-record",
+        "finalDisposition": "needs-surface-widening",
         "unitProfile": {
           "state": "not-recorded"
         }
@@ -32243,7 +32264,7 @@
         "sourceInventoryRowId": "srd521:classes/warlock:spell-level-3:spell-unit-pressure:warlock_spell_list_gaseous_form",
         "state": "present"
       },
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
+      "nextAction": "Widen Surface: Spell Definition mist-cloud form state: willing touched target and its worn/carried objects shape-shift into a non-catalog misty cloud; the form replaces the target's movement method with 10-foot Fly Speed and hover; permits entering another creature's space, passing through narrow openings, and treating liquids as solid; grants Bludgeoning, Piercing, and Slashing Resistance, Prone Immunity, and Strength, Dexterity, and Constitution Saving Throw Advantage; prevents talking, object manipulation/drop/use/interaction, attacks, and spellcasting; and ends when the target drops to 0 Hit Points or takes a Magic action to end the spell on itself.",
       "rowId": "srd521:classes/warlock:spell-level-3:spell-unit-pressure:warlock_spell_list_gaseous_form",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -32257,16 +32278,19 @@
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "battle-runtime-required"
+          "status": "surface-widening-required"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "table-spatial-derivation",
+          "owner": "Surface Spell Definition plus movement/table-spatial mist-form owner and future battle-runtime form Spell Effect owner",
+          "reason": "Gaseous Form needs a typed follow-up split before an SRD-provenance Spell Definition can be admitted: Surface must own the non-catalog mist-cloud form state, movement replacement rather than additive speed grant, Magic-action self-ending, damage Resistance, condition Immunity, Saving Throw Advantage, and action/object/speech limits; table/spatial ownership supplies creature-space occupancy, narrow-opening passage, and liquid-surface treatment witnesses; future battle runtime should consume those typed facts as a form Spell Effect without dispatching on spell id or name.",
+          "state": "recorded"
         },
         "catalogAdmission": {
           "state": "not-installed",
           "unitId": "gaseous_form"
         },
-        "finalDisposition": "missing-authored-record",
+        "finalDisposition": "needs-surface-widening",
         "unitProfile": {
           "state": "not-recorded"
         }
@@ -32331,7 +32355,7 @@
         "sourceInventoryRowId": "srd521:classes/warlock:spell-level-3:spell-unit-pressure:warlock_spell_list_magic_circle",
         "state": "present"
       },
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
+      "nextAction": "Widen Surface: Spell Definition warded-cylinder occurrence: 10-foot-radius, 20-foot-tall Cylinder area; slot-scaled timed duration of 1 hour plus 1 hour per Spell Slot level above 3; cast-time choice of one or more Celestial, Elemental, Fey, Fiend, or Undead creature types; normal or reversed area direction; nonmagical entry or exit prevention for affected creatures; Charisma Saving Throw gate for teleportation or interplanar travel across the ward; affected-creature Attack Roll Disadvantage against protected targets; and source-scoped possession, Charmed, and Frightened prevention for protected targets.",
       "rowId": "srd521:classes/warlock:spell-level-3:spell-unit-pressure:warlock_spell_list_magic_circle",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -32345,16 +32369,19 @@
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "battle-runtime-required"
+          "status": "surface-widening-required"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "table-spatial-derivation",
+          "owner": "Surface Spell Definition plus table/spatial planar-movement owner and future battle-runtime warded-area Spell Effect owner",
+          "reason": "Magic Circle needs a typed follow-up split before an SRD-provenance Spell Definition can be admitted: Surface must own the 10-foot-radius, 20-foot-tall Cylinder area, slot-scaled timed duration, cast-time creature-type set, normal-or-reversed area direction, nonmagical crossing prevention, magical-travel Charisma Saving Throw gate, scoped Attack Roll Disadvantage, and source-scoped possession plus Charmed/Frightened prevention; table/spatial ownership supplies ground-point placement, cylinder membership, inside/outside protected-target witnesses, entry or exit attempts, and teleportation or interplanar-travel crossing witnesses; future battle runtime should consume typed warded-area facts without dispatching on spell id or name.",
+          "state": "recorded"
         },
         "catalogAdmission": {
           "state": "not-installed",
           "unitId": "magic_circle"
         },
-        "finalDisposition": "missing-authored-record",
+        "finalDisposition": "needs-surface-widening",
         "unitProfile": {
           "state": "not-recorded"
         }
@@ -37553,7 +37580,7 @@
         "sourceInventoryRowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_bestow_curse",
         "state": "present"
       },
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
+      "nextAction": "Widen Surface: Spell Definition curse occurrence: initial Wisdom Saving Throw gates one chosen ongoing curse option (chosen-ability Ability Check and Saving Throw Disadvantage, caster-targeted Attack Roll Disadvantage, start-of-turn Wisdom save or forced Dodge, or caster attack/spell damage rider), the target becomes a curse-removal target, and higher slot levels change both duration amount and Concentration requirement.",
       "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_bestow_curse",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -37567,7 +37594,7 @@
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "battle-runtime-required"
+          "status": "surface-widening-required"
         },
         "battleReadinessClosure": {
           "state": "not-recorded"
@@ -37576,7 +37603,7 @@
           "state": "not-installed",
           "unitId": "bestow_curse"
         },
-        "finalDisposition": "missing-authored-record",
+        "finalDisposition": "needs-surface-widening",
         "unitProfile": {
           "state": "not-recorded"
         }
@@ -37594,7 +37621,7 @@
         "sourceInventoryRowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_blink",
         "state": "present"
       },
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
+      "nextAction": "Widen Surface: Spell Definition planar blink occurrence: caster-turn-end d6 threshold needs an OngoingEffect random table to gate the transition to the Ethereal Plane; spell-ending when the caster is already on that plane needs a plane-occupancy predicate; and start-of-next-turn/spell-end return placement chooses a visible unoccupied space within 10 feet of the origin space or the nearest unoccupied space when none is available, requiring typed Surface/table-spatial ownership for return-position availability.",
       "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_blink",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -37608,16 +37635,19 @@
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "battle-runtime-required"
+          "status": "surface-widening-required"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "table-spatial-derivation",
+          "owner": "Surface Spell Definition plus table/spatial plane-position owner",
+          "reason": "Blink needs a typed follow-up split: Surface owns the caster-turn-end d6 random table, Ethereal Plane transition, and already-on-plane ending predicate; table/spatial ownership supplies origin space, visible unoccupied-space availability within 10 feet, and nearest-unoccupied-space fallback before any battle-runtime projection admits it.",
+          "state": "recorded"
         },
         "catalogAdmission": {
           "state": "not-installed",
           "unitId": "blink"
         },
-        "finalDisposition": "missing-authored-record",
+        "finalDisposition": "needs-surface-widening",
         "unitProfile": {
           "state": "not-recorded"
         }
@@ -37914,7 +37944,7 @@
         "sourceInventoryRowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_gaseous_form",
         "state": "present"
       },
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
+      "nextAction": "Widen Surface: Spell Definition mist-cloud form state: willing touched target and its worn/carried objects shape-shift into a non-catalog misty cloud; the form replaces the target's movement method with 10-foot Fly Speed and hover; permits entering another creature's space, passing through narrow openings, and treating liquids as solid; grants Bludgeoning, Piercing, and Slashing Resistance, Prone Immunity, and Strength, Dexterity, and Constitution Saving Throw Advantage; prevents talking, object manipulation/drop/use/interaction, attacks, and spellcasting; and ends when the target drops to 0 Hit Points or takes a Magic action to end the spell on itself.",
       "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_gaseous_form",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -37928,16 +37958,19 @@
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "battle-runtime-required"
+          "status": "surface-widening-required"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "table-spatial-derivation",
+          "owner": "Surface Spell Definition plus movement/table-spatial mist-form owner and future battle-runtime form Spell Effect owner",
+          "reason": "Gaseous Form needs a typed follow-up split before an SRD-provenance Spell Definition can be admitted: Surface must own the non-catalog mist-cloud form state, movement replacement rather than additive speed grant, Magic-action self-ending, damage Resistance, condition Immunity, Saving Throw Advantage, and action/object/speech limits; table/spatial ownership supplies creature-space occupancy, narrow-opening passage, and liquid-surface treatment witnesses; future battle runtime should consume those typed facts as a form Spell Effect without dispatching on spell id or name.",
+          "state": "recorded"
         },
         "catalogAdmission": {
           "state": "not-installed",
           "unitId": "gaseous_form"
         },
-        "finalDisposition": "missing-authored-record",
+        "finalDisposition": "needs-surface-widening",
         "unitProfile": {
           "state": "not-recorded"
         }
@@ -37955,7 +37988,7 @@
         "sourceInventoryRowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_glyph_of_warding",
         "state": "present"
       },
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
+      "nextAction": "Widen Surface: Spell Definition warding glyph occurrence: cast-time choice between surface inscription and closeable-object inscription, maximum 10-foot-diameter glyph coverage, concealed glyph Wisdom (Perception) check against the caster's Spell Save DC, caster-defined/refined trigger with creature-type and password exclusions, movement invalidation when the inscribed surface or object moves more than 10 feet from the cast location, explosive-rune branch with caster-chosen Acid/Cold/Fire/Lightning/Thunder damage and slot scaling, and spell-glyph branch that stores a cast prepared spell, enforces single-creature or area spell eligibility, retargets the stored spell to or around the triggering creature, handles hostile summon/object/trap placement, and preserves full-duration execution for stored Concentration spells.",
       "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_glyph_of_warding",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -37969,16 +38002,19 @@
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "battle-runtime-required"
+          "status": "surface-widening-required"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "table-spatial-derivation",
+          "owner": "Surface Spell Definition plus table object/location glyph owner and future battle-runtime glyph release owner",
+          "reason": "Glyph of Warding needs a typed follow-up split before an SRD-provenance Spell Definition can be admitted: Surface must own the durable glyph occurrence, inscription anchor kind, maximum 10-foot-diameter coverage constraint, authored trigger/refinement shape, explosive-rune versus spell-glyph choice, explosive damage type and scaling, stored prepared spell eligibility, stored-spell retargeting, and stored Concentration full-duration override; table object/location ownership supplies cast location, covered-area placement within that maximum, more-than-10-foot movement invalidation, concealment and noticing, selected trigger predicate/event witnesses, area membership, and close-as-possible hostile placement witnesses; future battle runtime should consume typed glyph release facts without dispatching on spell id or name.",
+          "state": "recorded"
         },
         "catalogAdmission": {
           "state": "not-installed",
           "unitId": "glyph_of_warding"
         },
-        "finalDisposition": "missing-authored-record",
+        "finalDisposition": "needs-surface-widening",
         "unitProfile": {
           "state": "not-recorded"
         }
@@ -37996,7 +38032,7 @@
         "sourceInventoryRowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_haste",
         "state": "present"
       },
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
+      "nextAction": "Widen Surface: Spell Definition haste active-effect and lethargy split: Magic Action casting, level-3 Spell Slot, 30-foot visible willing-creature targeting, Concentration duration, doubled Speed, +2 Armor Class, Dexterity Saving Throw Advantage, a per-turn additional-action allow-list that caps Attack at one attack, and spell-end lethargy applying Incapacitated plus Speed 0 until the end of the target's next turn; Surface needs typed extra-action restriction and end-of-effect lethargy facts before the SRD record can be authored without collapsing later positive-runtime and lethargy-runtime follow-ups.",
       "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_haste",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -38010,7 +38046,7 @@
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "battle-runtime-required"
+          "status": "surface-widening-required"
         },
         "battleReadinessClosure": {
           "state": "not-recorded"
@@ -38019,7 +38055,7 @@
           "state": "not-installed",
           "unitId": "haste"
         },
-        "finalDisposition": "missing-authored-record",
+        "finalDisposition": "needs-surface-widening",
         "unitProfile": {
           "state": "not-recorded"
         }
@@ -38131,7 +38167,7 @@
         "sourceInventoryRowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_magic_circle",
         "state": "present"
       },
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
+      "nextAction": "Widen Surface: Spell Definition warded-cylinder occurrence: 10-foot-radius, 20-foot-tall Cylinder area; slot-scaled timed duration of 1 hour plus 1 hour per Spell Slot level above 3; cast-time choice of one or more Celestial, Elemental, Fey, Fiend, or Undead creature types; normal or reversed area direction; nonmagical entry or exit prevention for affected creatures; Charisma Saving Throw gate for teleportation or interplanar travel across the ward; affected-creature Attack Roll Disadvantage against protected targets; and source-scoped possession, Charmed, and Frightened prevention for protected targets.",
       "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_magic_circle",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -38145,16 +38181,19 @@
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "battle-runtime-required"
+          "status": "surface-widening-required"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "table-spatial-derivation",
+          "owner": "Surface Spell Definition plus table/spatial planar-movement owner and future battle-runtime warded-area Spell Effect owner",
+          "reason": "Magic Circle needs a typed follow-up split before an SRD-provenance Spell Definition can be admitted: Surface must own the 10-foot-radius, 20-foot-tall Cylinder area, slot-scaled timed duration, cast-time creature-type set, normal-or-reversed area direction, nonmagical crossing prevention, magical-travel Charisma Saving Throw gate, scoped Attack Roll Disadvantage, and source-scoped possession plus Charmed/Frightened prevention; table/spatial ownership supplies ground-point placement, cylinder membership, inside/outside protected-target witnesses, entry or exit attempts, and teleportation or interplanar-travel crossing witnesses; future battle runtime should consume typed warded-area facts without dispatching on spell id or name.",
+          "state": "recorded"
         },
         "catalogAdmission": {
           "state": "not-installed",
           "unitId": "magic_circle"
         },
-        "finalDisposition": "missing-authored-record",
+        "finalDisposition": "needs-surface-widening",
         "unitProfile": {
           "state": "not-recorded"
         }
@@ -40030,7 +40069,7 @@
       ],
       "levelBand": "spell-level-3",
       "nextActions": [
-        "Author an SRD-provenance Surface record or explicitly close the row."
+        "Widen Surface: Spell Definition curse occurrence: initial Wisdom Saving Throw gates one chosen ongoing curse option (chosen-ability Ability Check and Saving Throw Disadvantage, caster-targeted Attack Roll Disadvantage, start-of-turn Wisdom save or forced Dodge, or caster attack/spell damage rider), the target becomes a curse-removal target, and higher slot levels change both duration amount and Concentration requirement."
       ],
       "spellName": "Bestow Curse",
       "supportSnapshot": {
@@ -40039,7 +40078,7 @@
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "battle-runtime-required"
+          "status": "surface-widening-required"
         },
         "battleReadinessClosure": {
           "state": "not-recorded"
@@ -40048,7 +40087,7 @@
           "state": "not-installed",
           "unitId": "bestow_curse"
         },
-        "finalDisposition": "missing-authored-record",
+        "finalDisposition": "needs-surface-widening",
         "unitProfile": {
           "state": "not-recorded"
         }
@@ -40084,7 +40123,7 @@
       ],
       "levelBand": "spell-level-3",
       "nextActions": [
-        "Author an SRD-provenance Surface record or explicitly close the row."
+        "Widen Surface: Spell Definition planar blink occurrence: caster-turn-end d6 threshold needs an OngoingEffect random table to gate the transition to the Ethereal Plane; spell-ending when the caster is already on that plane needs a plane-occupancy predicate; and start-of-next-turn/spell-end return placement chooses a visible unoccupied space within 10 feet of the origin space or the nearest unoccupied space when none is available, requiring typed Surface/table-spatial ownership for return-position availability."
       ],
       "spellName": "Blink",
       "supportSnapshot": {
@@ -40093,16 +40132,19 @@
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "battle-runtime-required"
+          "status": "surface-widening-required"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "table-spatial-derivation",
+          "owner": "Surface Spell Definition plus table/spatial plane-position owner",
+          "reason": "Blink needs a typed follow-up split: Surface owns the caster-turn-end d6 random table, Ethereal Plane transition, and already-on-plane ending predicate; table/spatial ownership supplies origin space, visible unoccupied-space availability within 10 feet, and nearest-unoccupied-space fallback before any battle-runtime projection admits it.",
+          "state": "recorded"
         },
         "catalogAdmission": {
           "state": "not-installed",
           "unitId": "blink"
         },
-        "finalDisposition": "missing-authored-record",
+        "finalDisposition": "needs-surface-widening",
         "unitProfile": {
           "state": "not-recorded"
         }
@@ -40258,7 +40300,7 @@
       ],
       "levelBand": "spell-level-3",
       "nextActions": [
-        "Author an SRD-provenance Surface record or explicitly close the row."
+        "Widen Surface: Spell Definition spectral nature-spirit pack occurrence: Large intangible pack form in a visible unoccupied space, caster-movement-triggered pack reposition up to 30 feet, caster-within-5-feet Strength Saving Throw Advantage, optional Dexterity Saving Throw Slashing damage when the pack moves within 10 feet of a creature the caster can see or a creature the caster can see enters or ends its turn within 10 feet, and a shared once-per-turn-per-creature trigger limit across those events."
       ],
       "spellName": "Conjure Animals",
       "supportSnapshot": {
@@ -40267,16 +40309,19 @@
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "battle-runtime-required"
+          "status": "surface-widening-required"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "table-spatial-derivation",
+          "owner": "Surface Spell Definition plus table/spatial pack-position owner and future battle-runtime pack Spell Effect owner",
+          "reason": "Conjure Animals needs a typed follow-up split before an SRD-provenance Spell Definition can be admitted: Surface must own the spectral pack occurrence, caster-proximity roll modifier predicate, caster-movement reposition trigger, optional area save trigger with caster-visible creature eligibility, and shared once-per-turn limit; table/spatial ownership supplies visible unoccupied-space, pack proximity, and caster creature-visibility witnesses; future battle runtime should consume those typed facts as a pack Spell Effect without dispatching on spell id or name.",
+          "state": "recorded"
         },
         "catalogAdmission": {
           "state": "not-installed",
           "unitId": "conjure_animals"
         },
-        "finalDisposition": "missing-authored-record",
+        "finalDisposition": "needs-surface-widening",
         "unitProfile": {
           "state": "not-recorded"
         }
@@ -40819,7 +40864,7 @@
       ],
       "levelBand": "spell-level-3",
       "nextActions": [
-        "Author an SRD-provenance Surface record or explicitly close the row."
+        "Widen Surface: Spell Definition mist-cloud form state: willing touched target and its worn/carried objects shape-shift into a non-catalog misty cloud; the form replaces the target's movement method with 10-foot Fly Speed and hover; permits entering another creature's space, passing through narrow openings, and treating liquids as solid; grants Bludgeoning, Piercing, and Slashing Resistance, Prone Immunity, and Strength, Dexterity, and Constitution Saving Throw Advantage; prevents talking, object manipulation/drop/use/interaction, attacks, and spellcasting; and ends when the target drops to 0 Hit Points or takes a Magic action to end the spell on itself."
       ],
       "spellName": "Gaseous Form",
       "supportSnapshot": {
@@ -40828,16 +40873,19 @@
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "battle-runtime-required"
+          "status": "surface-widening-required"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "table-spatial-derivation",
+          "owner": "Surface Spell Definition plus movement/table-spatial mist-form owner and future battle-runtime form Spell Effect owner",
+          "reason": "Gaseous Form needs a typed follow-up split before an SRD-provenance Spell Definition can be admitted: Surface must own the non-catalog mist-cloud form state, movement replacement rather than additive speed grant, Magic-action self-ending, damage Resistance, condition Immunity, Saving Throw Advantage, and action/object/speech limits; table/spatial ownership supplies creature-space occupancy, narrow-opening passage, and liquid-surface treatment witnesses; future battle runtime should consume those typed facts as a form Spell Effect without dispatching on spell id or name.",
+          "state": "recorded"
         },
         "catalogAdmission": {
           "state": "not-installed",
           "unitId": "gaseous_form"
         },
-        "finalDisposition": "missing-authored-record",
+        "finalDisposition": "needs-surface-widening",
         "unitProfile": {
           "state": "not-recorded"
         }
@@ -40883,7 +40931,7 @@
       ],
       "levelBand": "spell-level-3",
       "nextActions": [
-        "Author an SRD-provenance Surface record or explicitly close the row."
+        "Widen Surface: Spell Definition warding glyph occurrence: cast-time choice between surface inscription and closeable-object inscription, maximum 10-foot-diameter glyph coverage, concealed glyph Wisdom (Perception) check against the caster's Spell Save DC, caster-defined/refined trigger with creature-type and password exclusions, movement invalidation when the inscribed surface or object moves more than 10 feet from the cast location, explosive-rune branch with caster-chosen Acid/Cold/Fire/Lightning/Thunder damage and slot scaling, and spell-glyph branch that stores a cast prepared spell, enforces single-creature or area spell eligibility, retargets the stored spell to or around the triggering creature, handles hostile summon/object/trap placement, and preserves full-duration execution for stored Concentration spells."
       ],
       "spellName": "Glyph of Warding",
       "supportSnapshot": {
@@ -40892,16 +40940,19 @@
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "battle-runtime-required"
+          "status": "surface-widening-required"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "table-spatial-derivation",
+          "owner": "Surface Spell Definition plus table object/location glyph owner and future battle-runtime glyph release owner",
+          "reason": "Glyph of Warding needs a typed follow-up split before an SRD-provenance Spell Definition can be admitted: Surface must own the durable glyph occurrence, inscription anchor kind, maximum 10-foot-diameter coverage constraint, authored trigger/refinement shape, explosive-rune versus spell-glyph choice, explosive damage type and scaling, stored prepared spell eligibility, stored-spell retargeting, and stored Concentration full-duration override; table object/location ownership supplies cast location, covered-area placement within that maximum, more-than-10-foot movement invalidation, concealment and noticing, selected trigger predicate/event witnesses, area membership, and close-as-possible hostile placement witnesses; future battle runtime should consume typed glyph release facts without dispatching on spell id or name.",
+          "state": "recorded"
         },
         "catalogAdmission": {
           "state": "not-installed",
           "unitId": "glyph_of_warding"
         },
-        "finalDisposition": "missing-authored-record",
+        "finalDisposition": "needs-surface-widening",
         "unitProfile": {
           "state": "not-recorded"
         }
@@ -40937,7 +40988,7 @@
       ],
       "levelBand": "spell-level-3",
       "nextActions": [
-        "Author an SRD-provenance Surface record or explicitly close the row."
+        "Widen Surface: Spell Definition haste active-effect and lethargy split: Magic Action casting, level-3 Spell Slot, 30-foot visible willing-creature targeting, Concentration duration, doubled Speed, +2 Armor Class, Dexterity Saving Throw Advantage, a per-turn additional-action allow-list that caps Attack at one attack, and spell-end lethargy applying Incapacitated plus Speed 0 until the end of the target's next turn; Surface needs typed extra-action restriction and end-of-effect lethargy facts before the SRD record can be authored without collapsing later positive-runtime and lethargy-runtime follow-ups."
       ],
       "spellName": "Haste",
       "supportSnapshot": {
@@ -40946,7 +40997,7 @@
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "battle-runtime-required"
+          "status": "surface-widening-required"
         },
         "battleReadinessClosure": {
           "state": "not-recorded"
@@ -40955,7 +41006,7 @@
           "state": "not-installed",
           "unitId": "haste"
         },
-        "finalDisposition": "missing-authored-record",
+        "finalDisposition": "needs-surface-widening",
         "unitProfile": {
           "state": "not-recorded"
         }
@@ -41141,7 +41192,7 @@
       ],
       "levelBand": "spell-level-3",
       "nextActions": [
-        "Author an SRD-provenance Surface record or explicitly close the row."
+        "Widen Surface: Spell Definition warded-cylinder occurrence: 10-foot-radius, 20-foot-tall Cylinder area; slot-scaled timed duration of 1 hour plus 1 hour per Spell Slot level above 3; cast-time choice of one or more Celestial, Elemental, Fey, Fiend, or Undead creature types; normal or reversed area direction; nonmagical entry or exit prevention for affected creatures; Charisma Saving Throw gate for teleportation or interplanar travel across the ward; affected-creature Attack Roll Disadvantage against protected targets; and source-scoped possession, Charmed, and Frightened prevention for protected targets."
       ],
       "spellName": "Magic Circle",
       "supportSnapshot": {
@@ -41150,16 +41201,19 @@
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "battle-runtime-required"
+          "status": "surface-widening-required"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "table-spatial-derivation",
+          "owner": "Surface Spell Definition plus table/spatial planar-movement owner and future battle-runtime warded-area Spell Effect owner",
+          "reason": "Magic Circle needs a typed follow-up split before an SRD-provenance Spell Definition can be admitted: Surface must own the 10-foot-radius, 20-foot-tall Cylinder area, slot-scaled timed duration, cast-time creature-type set, normal-or-reversed area direction, nonmagical crossing prevention, magical-travel Charisma Saving Throw gate, scoped Attack Roll Disadvantage, and source-scoped possession plus Charmed/Frightened prevention; table/spatial ownership supplies ground-point placement, cylinder membership, inside/outside protected-target witnesses, entry or exit attempts, and teleportation or interplanar-travel crossing witnesses; future battle runtime should consume typed warded-area facts without dispatching on spell id or name.",
+          "state": "recorded"
         },
         "catalogAdmission": {
           "state": "not-installed",
           "unitId": "magic_circle"
         },
-        "finalDisposition": "missing-authored-record",
+        "finalDisposition": "needs-surface-widening",
         "unitProfile": {
           "state": "not-recorded"
         }

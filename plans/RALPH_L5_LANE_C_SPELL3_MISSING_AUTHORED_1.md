@@ -7,43 +7,43 @@
     {
       "number": 1,
       "id": "L5-C01-BESTOW-CURSE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Close Bestow Curse missing authored record"
     },
     {
       "number": 2,
       "id": "L5-C02-BLINK",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Close Blink missing authored record"
     },
     {
       "number": 3,
       "id": "L5-C03-CONJURE-ANIMALS",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Close Conjure Animals missing authored record"
     },
     {
       "number": 4,
       "id": "L5-C04-GASEOUS-FORM",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Close Gaseous Form missing authored record"
     },
     {
       "number": 5,
       "id": "L5-C05-GLYPH-OF-WARDING",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Close Glyph of Warding missing authored record"
     },
     {
       "number": 6,
       "id": "L5-C06-HASTE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Close Haste missing authored record"
     },
     {
       "number": 7,
       "id": "L5-C07-MAGIC-CIRCLE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Close Magic Circle missing authored record"
     },
     {
@@ -63,6 +63,60 @@
       "id": "L5-C10-PHANTOM-STEED",
       "status": "ready-for-research",
       "title": "Close Phantom Steed missing authored record"
+    },
+    {
+      "number": 11,
+      "id": "L5-C11-BESTOW-CURSE-SURFACE-WIDENING",
+      "status": "ready-for-research",
+      "title": "Widen Bestow Curse Surface Spell Definition"
+    },
+    {
+      "number": 12,
+      "id": "L5-C12-BLINK-SURFACE-WIDENING",
+      "status": "ready-for-research",
+      "title": "Widen Blink Surface Spell Definition"
+    },
+    {
+      "number": 13,
+      "id": "L5-C13-CONJURE-ANIMALS-SURFACE-WIDENING",
+      "status": "ready-for-research",
+      "title": "Widen Conjure Animals Surface Spell Definition"
+    },
+    {
+      "number": 14,
+      "id": "L5-C14-GASEOUS-FORM-SURFACE-WIDENING",
+      "status": "ready-for-research",
+      "title": "Widen Gaseous Form Surface Spell Definition"
+    },
+    {
+      "number": 15,
+      "id": "L5-C15-GLYPH-OF-WARDING-SURFACE-WIDENING",
+      "status": "ready-for-research",
+      "title": "Widen Glyph of Warding Surface Spell Definition"
+    },
+    {
+      "number": 16,
+      "id": "L5-C16-HASTE-SURFACE-WIDENING",
+      "status": "ready-for-research",
+      "title": "Widen Haste Surface Spell Definition"
+    },
+    {
+      "number": 17,
+      "id": "L5-C17-HASTE-POSITIVE-RUNTIME",
+      "status": "ready-for-research",
+      "title": "Promote Haste positive runtime effect"
+    },
+    {
+      "number": 18,
+      "id": "L5-C18-HASTE-LETHARGY-RUNTIME",
+      "status": "ready-for-research",
+      "title": "Promote Haste lethargy runtime cleanup"
+    },
+    {
+      "number": 19,
+      "id": "L5-C19-MAGIC-CIRCLE-SURFACE-WIDENING",
+      "status": "ready-for-research",
+      "title": "Widen Magic Circle Surface Spell Definition"
     }
   ]
 }
@@ -118,16 +172,25 @@ missing-record spells unless a RAW dependency is unavoidable and documented.
 
 | # | Task | Status | Depends on | Notes |
 | ---: | --- | --- | --- | --- |
-| 1 | L5-C01-BESTOW-CURSE - Close Bestow Curse missing authored record | ready-for-research | none | Owns shared runtime Spell Effect curse occurrence and curse-removal target boundary if admitted. |
-| 2 | L5-C02-BLINK - Close Blink missing authored record | ready-for-research | none | Independent missing spell Unit. |
-| 3 | L5-C03-CONJURE-ANIMALS - Close Conjure Animals missing authored record | ready-for-research | none | Independent missing spell Unit. |
-| 4 | L5-C04-GASEOUS-FORM - Close Gaseous Form missing authored record | ready-for-research | none | Independent missing spell Unit. |
-| 5 | L5-C05-GLYPH-OF-WARDING - Close Glyph of Warding missing authored record | ready-for-research | none | Independent missing spell Unit. |
-| 6 | L5-C06-HASTE - Close Haste missing authored record | ready-for-research | none | Preserve Surface authoring, positive runtime, and lethargy runtime split from `plans/unit-profile-coverage/L3_HASTE_RUNTIME_SURVEY.md`. |
-| 7 | L5-C07-MAGIC-CIRCLE - Close Magic Circle missing authored record | ready-for-research | none | Independent missing spell Unit. |
+| 1 | L5-C01-BESTOW-CURSE - Close Bestow Curse missing authored record | done | none | Closed as a Surface widening boundary, not an authored-record admission. |
+| 2 | L5-C02-BLINK - Close Blink missing authored record | done | none | Closed as a Surface widening boundary, not an authored-record admission. |
+| 3 | L5-C03-CONJURE-ANIMALS - Close Conjure Animals missing authored record | done | none | Closed as a Surface widening boundary, not an authored-record admission. |
+| 4 | L5-C04-GASEOUS-FORM - Close Gaseous Form missing authored record | done | none | Closed as a Surface widening boundary, not an authored-record admission. |
+| 5 | L5-C05-GLYPH-OF-WARDING - Close Glyph of Warding missing authored record | done | none | Closed as a Surface widening boundary, not an authored-record admission; follow-up is L5-C15 for Glyph trigger, stored spell, movement invalidation, and table object/location facts. |
+| 6 | L5-C06-HASTE - Close Haste missing authored record | done | none | Closed as a Surface widening boundary, not an authored-record admission; follow-ups are L5-C16, L5-C17, and L5-C18 for Surface authoring, positive runtime, and lethargy cleanup. |
+| 7 | L5-C07-MAGIC-CIRCLE - Close Magic Circle missing authored record | done | none | Closed as a Surface widening boundary, not an authored-record admission; follow-up is L5-C19 for warded-cylinder, direction, travel-gate, and protected-target facts. |
 | 8 | L5-C08-MELD-INTO-STONE - Close Meld into Stone missing authored record | ready-for-research | none | Independent missing spell Unit. |
 | 9 | L5-C09-NONDETECTION - Close Nondetection missing authored record | ready-for-research | none | Independent missing spell Unit. |
 | 10 | L5-C10-PHANTOM-STEED - Close Phantom Steed missing authored record | ready-for-research | none | Independent missing spell Unit. |
+| 11 | L5-C11-BESTOW-CURSE-SURFACE-WIDENING - Widen Bestow Curse Surface Spell Definition | ready-for-research | L5-C01-BESTOW-CURSE | Add typed Surface facts for Bestow Curse curse-option selection, curse-removal targeting, and slot-dependent duration/Concentration before authoring/admitting the Spell Definition. |
+| 12 | L5-C12-BLINK-SURFACE-WIDENING - Widen Blink Surface Spell Definition | ready-for-research | L5-C02-BLINK | Add typed Surface/table-spatial facts for Blink's turn-end roll, Ethereal Plane transition, already-on-plane ending predicate, and return-position availability before authoring/admitting the Spell Definition. |
+| 13 | L5-C13-CONJURE-ANIMALS-SURFACE-WIDENING - Widen Conjure Animals Surface Spell Definition | ready-for-research | L5-C03-CONJURE-ANIMALS | Add typed Surface/table-spatial facts for Conjure Animals' spectral pack occurrence, pack reposition, Strength Saving Throw Advantage predicate, Dexterity Saving Throw trigger eligibility, and once-per-turn limit before authoring/admitting the Spell Definition. |
+| 14 | L5-C14-GASEOUS-FORM-SURFACE-WIDENING - Widen Gaseous Form Surface Spell Definition | ready-for-research | L5-C04-GASEOUS-FORM | Add typed Surface/table-spatial facts for Gaseous Form's mist-cloud form state, movement replacement, Magic-action self-ending, B/P/S Resistance, Prone Immunity, Strength/Dexterity/Constitution Saving Throw Advantage, action/object/speech limits, creature-space occupancy, narrow-opening passage, and liquid-surface treatment before authoring/admitting the Spell Definition. |
+| 15 | L5-C15-GLYPH-OF-WARDING-SURFACE-WIDENING - Widen Glyph of Warding Surface Spell Definition | ready-for-research | L5-C05-GLYPH-OF-WARDING | Add typed Surface/table object-location facts for Glyph of Warding's surface or closeable-object inscription anchor, maximum glyph-area constraint, caster-defined/refined trigger, movement invalidation, explosive rune, stored spell eligibility/release/retargeting, hostile placement, and stored Concentration duration override before authoring/admitting the Spell Definition. |
+| 16 | L5-C16-HASTE-SURFACE-WIDENING - Widen Haste Surface Spell Definition | ready-for-research | L5-C06-HASTE | Add typed Surface facts for Haste's restricted additional action and end-of-effect lethargy before authoring/admitting the Spell Definition. |
+| 17 | L5-C17-HASTE-POSITIVE-RUNTIME - Promote Haste positive runtime effect | ready-for-research | L5-C16-HASTE-SURFACE-WIDENING | Promote the active Haste effects: Speed ratio, +2 Armor Class, Dexterity Saving Throw Advantage, Concentration, and restricted spell-granted per-turn action resource. |
+| 18 | L5-C18-HASTE-LETHARGY-RUNTIME - Promote Haste lethargy runtime cleanup | ready-for-research | L5-C17-HASTE-POSITIVE-RUNTIME | Promote the spell-end lethargy rider: Incapacitated plus Speed 0 until the end of the target's next turn without treating Incapacitated as a Speed shortcut. |
+| 19 | L5-C19-MAGIC-CIRCLE-SURFACE-WIDENING - Widen Magic Circle Surface Spell Definition | ready-for-research | L5-C07-MAGIC-CIRCLE | Add typed Surface/table-spatial facts for Magic Circle's warded Cylinder, selected creature types, normal or reversed direction, nonmagical crossing prevention, teleportation or interplanar-travel Saving Throw gate, Attack Roll Disadvantage, and source-scoped possession plus Charmed/Frightened prevention before authoring/admitting the Spell Definition. |
 
 ## Shared Verification
 
@@ -156,7 +219,7 @@ missing-record spells unless a RAW dependency is unavoidable and documented.
 
 ### Task 1 - L5-C01-BESTOW-CURSE
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -176,7 +239,10 @@ SRD anchors:
 Current state:
 
 - Authored record is missing; catalog state is `not-installed`.
-- Mining disposition is `missing-authored-record`.
+- Mining disposition is `needs-surface-widening`.
+- Surface cannot yet express the Bestow Curse Spell Definition without losing
+  the exact curse-option choice, curse-removal target, and slot-dependent
+  duration/Concentration facts.
 
 Output:
 
@@ -188,7 +254,69 @@ Output:
 
 Acceptance:
 
-- `bestow_curse` leaves `missing-authored-record`.
+- `bestow_curse` leaves `missing-authored-record` by becoming
+  `needs-surface-widening`.
+
+Verification:
+
+- Shared lane verification.
+
+Plan Impact:
+
+- Follow-up work is split into L5-C11 before any SRD-provenance Bestow Curse
+  Spell Definition is authored or admitted.
+
+### Task 11 - L5-C11-BESTOW-CURSE-SURFACE-WIDENING
+
+Status: `ready-for-research`
+
+Depends on:
+
+- L5-C01-BESTOW-CURSE
+
+Unit:
+
+- `bestow_curse`
+
+SRD anchors:
+
+- `.references/srd-5.2.1/Spells/Descriptions-A-D.md:481`
+- `.references/srd-5.2.1/Classes/Bard.md:217`
+- `.references/srd-5.2.1/Classes/Cleric.md:206`
+- `.references/srd-5.2.1/Classes/Wizard.md:238`
+
+Current state:
+
+- The generated inventory classifies the three Bestow Curse class-list rows as
+  `needs-surface-widening` / `surface-widening-required`.
+- Existing Surface spell atoms can express some adjacent facts, but not the
+  complete Bestow Curse shape as one SRD Spell Definition without a partial
+  record.
+
+Output:
+
+- Widen Surface so a Bestow Curse Spell Definition can represent exactly one
+  chosen ongoing curse option: chosen-ability Ability Check and Saving Throw
+  Disadvantage, caster-targeted Attack Roll Disadvantage, start-of-turn Wisdom
+  save or forced Dodge, or caster attack/spell damage rider.
+- Represent the target as a curse-removal target consumed by Remove Curse or a
+  shared named-effect removal owner without dispatching on spell id/name in
+  runtime behavior.
+- Represent the higher-slot duration facts, including the level 5+ transition
+  away from Concentration and the level 9 lasts-until-dispelled case.
+- Author/admit the SRD-provenance Bestow Curse record only after the typed
+  Surface facts can preserve those RAW distinctions.
+
+Acceptance:
+
+- `bestow_curse` has an SRD-provenance Surface Spell Definition or remains
+  explicitly classified with a narrower executable blocker.
+- The record does not omit one of the four curse options or encode all options
+  as simultaneously active.
+- Duration/Concentration slot behavior is representable without a misleading
+  approximation.
+- Runtime support, if added, dispatches on typed Surface/profile facts rather
+  than authored spell identity.
 
 Verification:
 
@@ -196,7 +324,7 @@ Verification:
 
 ### Task 2 - L5-C02-BLINK
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -215,7 +343,10 @@ SRD anchors:
 Current state:
 
 - Authored record is missing; catalog state is `not-installed`.
-- Mining disposition is `missing-authored-record`.
+- Mining disposition is `needs-surface-widening`.
+- Surface cannot yet express the Blink Spell Definition without losing the
+  turn-end d6 roll, Ethereal Plane transition, already-on-plane ending
+  predicate, and return-position availability facts.
 
 Output:
 
@@ -224,7 +355,64 @@ Output:
 
 Acceptance:
 
-- `blink` leaves `missing-authored-record`.
+- `blink` leaves `missing-authored-record` by becoming
+  `needs-surface-widening`.
+
+Verification:
+
+- Shared lane verification.
+
+Plan Impact:
+
+- Follow-up work is split into L5-C12 before any SRD-provenance Blink Spell
+  Definition is authored or admitted.
+
+### Task 12 - L5-C12-BLINK-SURFACE-WIDENING
+
+Status: `ready-for-research`
+
+Depends on:
+
+- L5-C02-BLINK
+
+Unit:
+
+- `blink`
+
+SRD anchors:
+
+- `.references/srd-5.2.1/Spells/Descriptions-A-D.md:580`
+- `.references/srd-5.2.1/Classes/Sorcerer.md:300`
+- `.references/srd-5.2.1/Classes/Wizard.md:239`
+
+Current state:
+
+- The generated inventory classifies the two Blink class-list rows as
+  `needs-surface-widening` / `surface-widening-required`.
+- Existing Surface spell facts cannot represent the complete Blink shape as one
+  SRD Spell Definition without a partial record.
+
+Output:
+
+- Widen Surface so a Blink Spell Definition can represent the end-of-turn d6
+  roll, including the 4-6 threshold outcome.
+- Represent the Ethereal Plane transition, the spell-ending predicate when the
+  caster is already on that plane, and the start-of-next-turn/spell-end return
+  timing without dispatching on spell id/name in runtime behavior.
+- Assign table/spatial ownership for the origin space, visible unoccupied-space
+  choice within 10 feet, no-available-space condition, and nearest-unoccupied
+  fallback before any battle-runtime projection admits the Spell Definition.
+- Author/admit the SRD-provenance Blink record only after the typed Surface and
+  table/spatial facts can preserve those RAW distinctions.
+
+Acceptance:
+
+- `blink` has an SRD-provenance Surface Spell Definition or remains explicitly
+  classified with a narrower executable blocker.
+- The record does not omit the turn-end roll, the already-on-Ethereal-Plane
+  spell-ending case, or the return-position availability/fallback facts.
+- Runtime support, if added, dispatches on typed Surface/profile facts rather
+  than authored spell identity.
 
 Verification:
 
@@ -232,7 +420,7 @@ Verification:
 
 ### Task 3 - L5-C03-CONJURE-ANIMALS
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -250,7 +438,11 @@ SRD anchors:
 Current state:
 
 - Authored record is missing; catalog state is `not-installed`.
-- Mining disposition is `missing-authored-record`.
+- Mining disposition is `needs-surface-widening`.
+- Surface cannot yet express the Conjure Animals Spell Definition without
+  losing the spectral pack occurrence, pack position/reposition, caster
+  proximity, creature-visibility trigger eligibility, and shared once-per-turn
+  limit facts.
 
 Output:
 
@@ -261,7 +453,70 @@ Output:
 
 Acceptance:
 
-- `conjure_animals` leaves `missing-authored-record`.
+- `conjure_animals` leaves `missing-authored-record` by becoming
+  `needs-surface-widening`.
+
+Verification:
+
+- Shared lane verification.
+
+Plan Impact:
+
+- Follow-up work is split into L5-C13 before any SRD-provenance Conjure Animals
+  Spell Definition is authored or admitted.
+
+### Task 13 - L5-C13-CONJURE-ANIMALS-SURFACE-WIDENING
+
+Status: `ready-for-research`
+
+Depends on:
+
+- L5-C03-CONJURE-ANIMALS
+
+Unit:
+
+- `conjure_animals`
+
+SRD anchors:
+
+- `.references/srd-5.2.1/Spells/Descriptions-A-D.md:948`
+- `.references/srd-5.2.1/Classes/Druid.md:254`
+
+Current state:
+
+- The generated inventory classifies the Druid Conjure Animals class-list row as
+  `needs-surface-widening` / `surface-widening-required`.
+- Existing Surface spell facts cannot represent the complete Conjure Animals
+  shape as one SRD Spell Definition without a partial record.
+
+Output:
+
+- Widen Surface so a Conjure Animals Spell Definition can represent a Large
+  spectral, intangible pack occurrence placed in a visible unoccupied space.
+- Represent caster-turn movement of the pack up to 30 feet to a visible
+  unoccupied space, separate from ordinary creature movement or companion
+  control.
+- Represent the caster's Strength Saving Throw Advantage predicate while within
+  5 feet of the pack.
+- Represent the optional Dexterity Saving Throw Slashing damage trigger when
+  the pack moves within 10 feet of a caster-visible creature, or when a
+  caster-visible creature enters or ends its turn within 10 feet of the pack.
+- Represent the shared once-per-turn-per-creature trigger limit and higher-slot
+  damage scaling before any battle-runtime projection admits the Spell
+  Definition.
+- Author/admit the SRD-provenance Conjure Animals record only after the typed
+  Surface, table/spatial, and future pack Spell Effect facts can preserve those
+  RAW distinctions.
+
+Acceptance:
+
+- `conjure_animals` has an SRD-provenance Surface Spell Definition or remains
+  explicitly classified with a narrower executable blocker.
+- The record does not omit the pack occurrence, pack reposition, Strength Saving
+  Throw Advantage predicate, caster-visible Dexterity Saving Throw trigger
+  eligibility, once-per-turn limit, or higher-slot damage scaling.
+- Runtime support, if added, dispatches on typed Surface/profile facts rather
+  than authored spell identity.
 
 Verification:
 
@@ -269,7 +524,7 @@ Verification:
 
 ### Task 4 - L5-C04-GASEOUS-FORM
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -289,7 +544,11 @@ SRD anchors:
 Current state:
 
 - Authored record is missing; catalog state is `not-installed`.
-- Mining disposition is `missing-authored-record`.
+- Mining disposition is `needs-surface-widening`.
+- Surface cannot yet express the Gaseous Form Spell Definition without losing
+  the mist-cloud form state, movement replacement, Magic-action self-ending,
+  object/speech/action limits, creature-space occupancy, narrow-opening
+  passage, or liquid-surface treatment facts.
 
 Output:
 
@@ -298,7 +557,76 @@ Output:
 
 Acceptance:
 
-- `gaseous_form` leaves `missing-authored-record`.
+- `gaseous_form` leaves `missing-authored-record` by becoming
+  `needs-surface-widening`.
+
+Verification:
+
+- Shared lane verification.
+
+Plan Impact:
+
+- Follow-up work is split into L5-C14 before any SRD-provenance Gaseous Form
+  Spell Definition is authored or admitted.
+
+### Task 14 - L5-C14-GASEOUS-FORM-SURFACE-WIDENING
+
+Status: `ready-for-research`
+
+Depends on:
+
+- L5-C04-GASEOUS-FORM
+
+Unit:
+
+- `gaseous_form`
+
+SRD anchors:
+
+- `.references/srd-5.2.1/Spells/Descriptions-E-L.md:688`
+- `.references/srd-5.2.1/Classes/Sorcerer.md:308`
+- `.references/srd-5.2.1/Classes/Warlock.md:384`
+- `.references/srd-5.2.1/Classes/Wizard.md:246`
+
+Current state:
+
+- The generated inventory classifies the three Gaseous Form class-list rows as
+  `needs-surface-widening` / `surface-widening-required`.
+- Existing Surface spell atoms can express some adjacent facts, but not the
+  complete Gaseous Form shape as one SRD Spell Definition without a partial
+  record.
+
+Output:
+
+- Widen Surface so a Gaseous Form Spell Definition can represent a
+  spell-effect mist-cloud form that includes the target's worn and carried
+  objects without pretending the form is a catalog Stat Block or known-form
+  roster choice.
+- Represent replacement movement: the target's only movement method is 10-foot
+  Fly Speed with hover, rather than an additive special Speed grant.
+- Represent the target's Magic-action self-ending trigger and the
+  target-drops-to-0-Hit-Points ending trigger.
+- Represent the passive form facts: Bludgeoning, Piercing, and Slashing
+  Resistance; Prone Immunity; and Advantage on Strength, Dexterity, and
+  Constitution Saving Throws.
+- Represent action/object/speech limits precisely: no talking, no object
+  manipulation/drop/use/interaction, no attacks, and no spellcasting while
+  preserving the Magic-action self-ending exception.
+- Assign table/spatial ownership for entering and occupying another creature's
+  space, passing through narrow openings, and treating liquids as solid
+  surfaces before any battle-runtime projection admits the Spell Definition.
+- Author/admit the SRD-provenance Gaseous Form record only after the typed
+  Surface and table/spatial facts can preserve those RAW distinctions.
+
+Acceptance:
+
+- `gaseous_form` has an SRD-provenance Surface Spell Definition or remains
+  explicitly classified with a narrower executable blocker.
+- The record does not omit the form state, movement replacement, action/object
+  limits, creature-space occupancy, narrow-opening passage, liquid-surface
+  treatment, or Magic-action self-ending facts.
+- Runtime support, if added, dispatches on typed Surface/profile facts rather
+  than authored spell identity.
 
 Verification:
 
@@ -306,7 +634,7 @@ Verification:
 
 ### Task 5 - L5-C05-GLYPH-OF-WARDING
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -326,7 +654,11 @@ SRD anchors:
 Current state:
 
 - Authored record is missing; catalog state is `not-installed`.
-- Mining disposition is `missing-authored-record`.
+- Mining disposition is `needs-surface-widening`.
+- Surface cannot yet express the Glyph of Warding Spell Definition without
+  losing the anchored surface/object inscription, maximum 10-foot-diameter
+  glyph coverage, caster-defined trigger, movement invalidation,
+  explosive-rune branch, stored-spell branch, or table object/location facts.
 
 Output:
 
@@ -335,7 +667,81 @@ Output:
 
 Acceptance:
 
-- `glyph_of_warding` leaves `missing-authored-record`.
+- `glyph_of_warding` leaves `missing-authored-record` by becoming
+  `needs-surface-widening`.
+
+Verification:
+
+- Shared lane verification.
+
+Plan Impact:
+
+- Follow-up work is split into
+  L5-C15-GLYPH-OF-WARDING-SURFACE-WIDENING before any SRD-provenance Glyph of
+  Warding Spell Definition is authored or admitted.
+
+### Task 15 - L5-C15-GLYPH-OF-WARDING-SURFACE-WIDENING
+
+Status: `ready-for-research`
+
+Depends on:
+
+- L5-C05-GLYPH-OF-WARDING
+
+Unit:
+
+- `glyph_of_warding`
+
+SRD anchors:
+
+- `.references/srd-5.2.1/Spells/Descriptions-E-L.md:842`
+- `.references/srd-5.2.1/Classes/Bard.md:221`
+- `.references/srd-5.2.1/Classes/Cleric.md:211`
+- `.references/srd-5.2.1/Classes/Wizard.md:247`
+
+Current state:
+
+- Generated inventory classifies the three Glyph of Warding class-list rows as
+  `needs-surface-widening` with battle-readiness
+  `surface-widening-required`.
+- Existing Surface spell facts cannot represent Glyph of Warding as one
+  complete SRD-provenance Spell Definition without losing its durable glyph
+  occurrence, maximum coverage constraint, trigger, movement, branch, and
+  table object/location distinctions.
+
+Output:
+
+- Widen Surface so a Glyph of Warding Spell Definition can represent a durable
+  glyph occurrence inscribed on either a surface or an object that can be
+  closed and carry the maximum 10-foot-diameter glyph coverage constraint.
+- Represent caster-defined and refined trigger conditions, including
+  creature-type activation filters and password or other non-trigger
+  exclusions, without dispatching on spell id or name in runtime behavior.
+- Represent table object/location ownership for cast location, movement of the
+  inscribed surface or object more than 10 feet from that location,
+  covered-area placement within the maximum, glyph concealment and noticing,
+  trigger occurrence, area membership, and close-as-possible hostile placement.
+- Represent the explosive-rune branch with caster-chosen Acid, Cold, Fire,
+  Lightning, or Thunder damage, Dexterity Saving Throw half damage, a
+  20-foot-radius Sphere centered on the glyph, and higher-slot damage scaling.
+- Represent the spell-glyph branch with stored prepared spell eligibility
+  (level plus single-creature or area target shape), no immediate effect at
+  storage time, release retargeting to or around the triggering creature,
+  hostile summon/object/trap placement, and full-duration execution for stored
+  Concentration spells.
+- Author or admit the SRD-provenance Glyph of Warding record only after typed
+  Surface and table object/location facts can preserve those RAW distinctions.
+
+Acceptance:
+
+- `glyph_of_warding` has an SRD-provenance Surface Spell Definition or remains
+  explicitly classified with a narrower executable blocker.
+- The record does not omit the inscription anchor choice, trigger refinement
+  and exclusions, maximum 10-foot-diameter coverage constraint, movement
+  invalidation, explosive-rune branch, stored-spell branch,
+  retargeting/placement facts, or stored Concentration duration override.
+- Runtime support, if added, dispatches on typed Surface/profile facts rather
+  than authored spell identity.
 
 Verification:
 
@@ -343,7 +749,7 @@ Verification:
 
 ### Task 6 - L5-C06-HASTE
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -363,7 +769,10 @@ SRD anchors:
 Current state:
 
 - Authored record is missing; catalog state is `not-installed`.
-- Mining disposition is `missing-authored-record`.
+- Mining disposition is `needs-surface-widening`.
+- Surface cannot yet express the Haste Spell Definition without losing the
+  additional-action allow-list, Attack one-attack-only rider, or spell-end
+  lethargy state.
 
 Output:
 
@@ -373,15 +782,168 @@ Output:
 
 Acceptance:
 
-- `haste` leaves `missing-authored-record`.
+- `haste` leaves `missing-authored-record` by becoming
+  `needs-surface-widening`.
 
 Verification:
 
 - Shared lane verification.
 
-### Task 7 - L5-C07-MAGIC-CIRCLE
+Plan Impact:
+
+- Follow-up work is split into L5-C16, L5-C17, and L5-C18 before any
+  SRD-provenance Haste Spell Definition is authored, admitted, or promoted at
+  runtime.
+
+### Task 16 - L5-C16-HASTE-SURFACE-WIDENING
 
 Status: `ready-for-research`
+
+Depends on:
+
+- L5-C06-HASTE
+
+Unit:
+
+- `haste`
+
+SRD anchors:
+
+- `.references/srd-5.2.1/Spells/Descriptions-E-L.md:1091`
+- `.references/srd-5.2.1/Classes/Sorcerer.md:309`
+- `.references/srd-5.2.1/Classes/Wizard.md:248`
+
+Current state:
+
+- The generated inventory classifies the two Haste class-list rows as
+  `needs-surface-widening` / `surface-widening-required`.
+- Existing Surface spell atoms can express adjacent AC, Speed, roll-mode, and
+  extra-action facts, but cannot represent Haste's exact action allow-list with
+  Attack capped at one attack or its spell-end lethargy rider as typed facts.
+
+Output:
+
+- Widen Surface so a Haste Spell Definition can represent the additional action
+  allow-list: Attack with one attack only, Dash, Disengage, Hide, or Utilize.
+- Represent spell-end lethargy as an end-of-effect fact applying Incapacitated
+  plus Speed 0 until the end of the target's next turn.
+- Author/admit the SRD-provenance Haste record only after those typed Surface
+  facts preserve the RAW distinctions.
+
+Acceptance:
+
+- `haste` has an SRD-provenance Surface Spell Definition or remains explicitly
+  classified with a narrower executable blocker.
+- The record does not treat Haste's additional action as an unrestricted Action
+  or as the Action Surge exclusion shape.
+- Lethargy does not rely on Incapacitated as an implicit Speed-0 shortcut.
+- Runtime support, if added, dispatches on typed Surface/profile facts rather
+  than authored spell identity.
+
+Verification:
+
+- Shared lane verification.
+
+### Task 17 - L5-C17-HASTE-POSITIVE-RUNTIME
+
+Status: `ready-for-research`
+
+Depends on:
+
+- L5-C16-HASTE-SURFACE-WIDENING
+
+Unit:
+
+- `haste`
+
+SRD anchors:
+
+- `.references/srd-5.2.1/Spells/Descriptions-E-L.md:1091`
+- `.references/srd-5.2.1/Classes/Sorcerer.md:309`
+- `.references/srd-5.2.1/Classes/Wizard.md:248`
+
+Current state:
+
+- Haste positive runtime promotion requires a typed Surface record/profile from
+  L5-C16.
+- Battle runtime already has adjacent scalar AC and action-resource machinery,
+  but does not yet promote Haste's Speed ratio, Dexterity Saving Throw
+  Advantage, or restricted spell-granted per-turn action resource.
+
+Output:
+
+- Promote Magic Action and level-3+ Spell Slot spend, caster-owned
+  Concentration, known willing target admission, doubled Speed projection, +2
+  Armor Class projection, Dexterity Saving Throw Advantage, and one
+  spell-granted action resource on each target turn restricted to Attack with
+  one attack only, Dash, Disengage, Hide, or Utilize.
+- Add supported-profile or profile-subset-supported Unit evidence and focused
+  runtime tests.
+- Maintain promoted Quint/runtime parity without authored-identity dispatch.
+
+Acceptance:
+
+- Haste's active positive effects are executable from typed Surface/profile
+  facts.
+- The additional action is granted per target turn and cannot be spent on
+  disallowed actions or multiple attacks.
+- Runtime reducers do not branch on Haste id, name, slug, or provenance section.
+
+Verification:
+
+- Shared lane verification.
+- Focused battle-runtime tests and MBT per `AGENTS.md` after QNT/spec updates.
+
+### Task 18 - L5-C18-HASTE-LETHARGY-RUNTIME
+
+Status: `ready-for-research`
+
+Depends on:
+
+- L5-C17-HASTE-POSITIVE-RUNTIME
+
+Unit:
+
+- `haste`
+
+SRD anchors:
+
+- `.references/srd-5.2.1/Spells/Descriptions-E-L.md:1091`
+- `.references/srd-5.2.1/Classes/Sorcerer.md:309`
+- `.references/srd-5.2.1/Classes/Wizard.md:248`
+
+Current state:
+
+- Haste lethargy promotion depends on the active spell lifecycle from L5-C17.
+- The repo must model Incapacitated and Speed 0 as separate spell-end effects,
+  because Incapacitated alone does not set Speed to 0.
+
+Output:
+
+- When the Haste spell effect ends for a target, remove the positive effect and
+  apply source-owned lethargy that gives Incapacitated and Speed 0 until the end
+  of that target's next turn.
+- Preserve any pre-existing Incapacitated source and avoid using Incapacitated
+  as an implicit Speed-0 shortcut.
+- Add focused end-of-concentration, duration expiration, recast/replacement,
+  and target-turn cleanup tests plus promoted Quint/runtime parity.
+
+Acceptance:
+
+- Haste's spell-end rider is executable for concentration loss, duration end,
+  replacement/recast, and target-turn cleanup.
+- Existing Incapacitated sources are not removed by Haste lethargy cleanup.
+- Speed 0 ends with the lethargy state rather than with unrelated
+  Incapacitated sources.
+
+Verification:
+
+- Shared lane verification.
+- Focused battle-runtime tests and MBT per `AGENTS.md` after QNT/spec updates.
+
+### Task 7 - L5-C07-MAGIC-CIRCLE
+
+Status: `done`
 
 Depends on:
 
@@ -401,16 +963,94 @@ SRD anchors:
 Current state:
 
 - Authored record is missing; catalog state is `not-installed`.
-- Mining disposition is `missing-authored-record`.
+- Mining disposition is `needs-surface-widening`.
+- Surface cannot yet express the Magic Circle Spell Definition without losing
+  the warded Cylinder, selected creature types, normal or reversed direction,
+  nonmagical crossing prevention, teleportation or interplanar-travel Saving
+  Throw gate, scoped Attack Roll Disadvantage, and protected-target
+  possession/Charmed/Frightened prevention facts.
 
 Output:
 
-- Author or close Magic Circle with owner facts for creature types, planar
-  movement, charm/frighten/possession prevention, and area inversion.
+- Resolve the SRD Spell Definition record or record a catalog-boundary reason it
+  is not representable yet.
+- Own the split between Surface Spell Definition facts, table/spatial movement
+  and area witnesses, and future battle-runtime warded-area Spell Effect
+  projection before admitting the record.
 
 Acceptance:
 
-- `magic_circle` leaves `missing-authored-record`.
+- `magic_circle` leaves `missing-authored-record` by becoming
+  `needs-surface-widening`.
+
+Verification:
+
+- Shared lane verification.
+
+Plan Impact:
+
+- Follow-up work is split into L5-C19 before any SRD-provenance Magic Circle
+  Spell Definition is authored or admitted.
+
+### Task 19 - L5-C19-MAGIC-CIRCLE-SURFACE-WIDENING
+
+Status: `ready-for-research`
+
+Depends on:
+
+- L5-C07-MAGIC-CIRCLE
+
+Unit:
+
+- `magic_circle`
+
+SRD anchors:
+
+- `.references/srd-5.2.1/Spells/Descriptions-M-P.md:37`
+- `.references/srd-5.2.1/Classes/Cleric.md:212`
+- `.references/srd-5.2.1/Classes/Warlock.md:386`
+- `.references/srd-5.2.1/Classes/Wizard.md:251`
+
+Current state:
+
+- Generated inventory classifies the three Magic Circle class-list rows as
+  `needs-surface-widening` / `surface-widening-required`.
+- Existing Surface spell facts cannot represent Magic Circle as one complete
+  SRD-provenance Spell Definition without losing its warded Cylinder, direction,
+  creature-type filter, crossing/travel gate, and protected-target
+  distinctions.
+
+Output:
+
+- Widen Surface so a Magic Circle Spell Definition can represent a
+  10-foot-radius, 20-foot-tall Cylinder centered on a visible ground point
+  within 10 feet, plus duration scaling of 1 extra hour for each Spell Slot
+  level above 3.
+- Represent the cast-time choice of one or more Celestial, Elemental, Fey,
+  Fiend, or Undead creature types.
+- Represent normal and reversed ward direction: preventing affected creatures
+  from entering while protecting targets within the Cylinder, or preventing
+  affected creatures from leaving while protecting targets outside it.
+- Assign table/spatial ownership for ground-point placement, Cylinder
+  membership, inside/outside protected-target witnesses, nonmagical entry or
+  exit attempts, and teleportation or interplanar-travel crossing witnesses.
+- Represent the Charisma Saving Throw gate for magical crossing, affected
+  creature Attack Roll Disadvantage against protected targets, and
+  source-scoped possession plus Charmed/Frightened prevention without
+  dispatching on spell id or name in runtime behavior.
+- Author/admit the SRD-provenance Magic Circle record only after typed Surface
+  and table/spatial facts can preserve those RAW distinctions.
+
+Acceptance:
+
+- `magic_circle` has an SRD-provenance Surface Spell Definition or remains
+  explicitly classified with a narrower executable blocker.
+- The record does not omit Cylinder dimensions, selected creature types, ward
+  direction, nonmagical crossing prevention, teleportation or interplanar-travel
+  Saving Throw gates, Attack Roll Disadvantage, or source-scoped possession plus
+  Charmed/Frightened prevention.
+- Runtime support, if added, dispatches on typed Surface/profile facts rather
+  than authored spell identity.
 
 Verification:
 

@@ -387,7 +387,117 @@ const classFeatureSurfaceBlockers = new Map();
 
 const spellAccessSurfaceBlockers = new Map();
 
+const blinkSurfaceWideningOwner =
+  "Surface Spell Definition plus table/spatial plane-position owner";
+
+const conjureAnimalsSurfaceWideningOwner =
+  "Surface Spell Definition plus table/spatial pack-position owner and future battle-runtime pack Spell Effect owner";
+
+const gaseousFormSurfaceWideningOwner =
+  "Surface Spell Definition plus movement/table-spatial mist-form owner and future battle-runtime form Spell Effect owner";
+
+const glyphOfWardingSurfaceWideningOwner =
+  "Surface Spell Definition plus table object/location glyph owner and future battle-runtime glyph release owner";
+
+const hasteSurfaceWideningOwner =
+  "Surface Spell Definition plus future battle-runtime positive-effect and lethargy owners";
+
+const magicCircleSurfaceWideningOwner =
+  "Surface Spell Definition plus table/spatial planar-movement owner and future battle-runtime warded-area Spell Effect owner";
+
 const spellUnitMissingClassifications = new Map([
+  [
+    "bestow_curse",
+    {
+      kind: "needs-surface-widening",
+      missingConstruct:
+        "Spell Definition curse occurrence: initial Wisdom Saving Throw gates one chosen ongoing curse option (chosen-ability Ability Check and Saving Throw Disadvantage, caster-targeted Attack Roll Disadvantage, start-of-turn Wisdom save or forced Dodge, or caster attack/spell damage rider), the target becomes a curse-removal target, and higher slot levels change both duration amount and Concentration requirement.",
+    },
+  ],
+  [
+    "blink",
+    {
+      kind: "needs-surface-widening",
+      owner: blinkSurfaceWideningOwner,
+      missingConstruct:
+        "Spell Definition planar blink occurrence: caster-turn-end d6 threshold needs an OngoingEffect random table to gate the transition to the Ethereal Plane; spell-ending when the caster is already on that plane needs a plane-occupancy predicate; and start-of-next-turn/spell-end return placement chooses a visible unoccupied space within 10 feet of the origin space or the nearest unoccupied space when none is available, requiring typed Surface/table-spatial ownership for return-position availability.",
+      battleReadinessClosure: {
+        kind: "table-spatial-derivation",
+        owner: blinkSurfaceWideningOwner,
+        reason:
+          "Blink needs a typed follow-up split: Surface owns the caster-turn-end d6 random table, Ethereal Plane transition, and already-on-plane ending predicate; table/spatial ownership supplies origin space, visible unoccupied-space availability within 10 feet, and nearest-unoccupied-space fallback before any battle-runtime projection admits it.",
+      },
+    },
+  ],
+  [
+    "conjure_animals",
+    {
+      kind: "needs-surface-widening",
+      owner: conjureAnimalsSurfaceWideningOwner,
+      missingConstruct:
+        "Spell Definition spectral nature-spirit pack occurrence: Large intangible pack form in a visible unoccupied space, caster-movement-triggered pack reposition up to 30 feet, caster-within-5-feet Strength Saving Throw Advantage, optional Dexterity Saving Throw Slashing damage when the pack moves within 10 feet of a creature the caster can see or a creature the caster can see enters or ends its turn within 10 feet, and a shared once-per-turn-per-creature trigger limit across those events.",
+      battleReadinessClosure: {
+        kind: "table-spatial-derivation",
+        owner: conjureAnimalsSurfaceWideningOwner,
+        reason:
+          "Conjure Animals needs a typed follow-up split before an SRD-provenance Spell Definition can be admitted: Surface must own the spectral pack occurrence, caster-proximity roll modifier predicate, caster-movement reposition trigger, optional area save trigger with caster-visible creature eligibility, and shared once-per-turn limit; table/spatial ownership supplies visible unoccupied-space, pack proximity, and caster creature-visibility witnesses; future battle runtime should consume those typed facts as a pack Spell Effect without dispatching on spell id or name.",
+      },
+    },
+  ],
+  [
+    "gaseous_form",
+    {
+      kind: "needs-surface-widening",
+      owner: gaseousFormSurfaceWideningOwner,
+      missingConstruct:
+        "Spell Definition mist-cloud form state: willing touched target and its worn/carried objects shape-shift into a non-catalog misty cloud; the form replaces the target's movement method with 10-foot Fly Speed and hover; permits entering another creature's space, passing through narrow openings, and treating liquids as solid; grants Bludgeoning, Piercing, and Slashing Resistance, Prone Immunity, and Strength, Dexterity, and Constitution Saving Throw Advantage; prevents talking, object manipulation/drop/use/interaction, attacks, and spellcasting; and ends when the target drops to 0 Hit Points or takes a Magic action to end the spell on itself.",
+      battleReadinessClosure: {
+        kind: "table-spatial-derivation",
+        owner: gaseousFormSurfaceWideningOwner,
+        reason:
+          "Gaseous Form needs a typed follow-up split before an SRD-provenance Spell Definition can be admitted: Surface must own the non-catalog mist-cloud form state, movement replacement rather than additive speed grant, Magic-action self-ending, damage Resistance, condition Immunity, Saving Throw Advantage, and action/object/speech limits; table/spatial ownership supplies creature-space occupancy, narrow-opening passage, and liquid-surface treatment witnesses; future battle runtime should consume those typed facts as a form Spell Effect without dispatching on spell id or name.",
+      },
+    },
+  ],
+  [
+    "glyph_of_warding",
+    {
+      kind: "needs-surface-widening",
+      owner: glyphOfWardingSurfaceWideningOwner,
+      missingConstruct:
+        "Spell Definition warding glyph occurrence: cast-time choice between surface inscription and closeable-object inscription, maximum 10-foot-diameter glyph coverage, concealed glyph Wisdom (Perception) check against the caster's Spell Save DC, caster-defined/refined trigger with creature-type and password exclusions, movement invalidation when the inscribed surface or object moves more than 10 feet from the cast location, explosive-rune branch with caster-chosen Acid/Cold/Fire/Lightning/Thunder damage and slot scaling, and spell-glyph branch that stores a cast prepared spell, enforces single-creature or area spell eligibility, retargets the stored spell to or around the triggering creature, handles hostile summon/object/trap placement, and preserves full-duration execution for stored Concentration spells.",
+      battleReadinessClosure: {
+        kind: "table-spatial-derivation",
+        owner: glyphOfWardingSurfaceWideningOwner,
+        reason:
+          "Glyph of Warding needs a typed follow-up split before an SRD-provenance Spell Definition can be admitted: Surface must own the durable glyph occurrence, inscription anchor kind, maximum 10-foot-diameter coverage constraint, authored trigger/refinement shape, explosive-rune versus spell-glyph choice, explosive damage type and scaling, stored prepared spell eligibility, stored-spell retargeting, and stored Concentration full-duration override; table object/location ownership supplies cast location, covered-area placement within that maximum, more-than-10-foot movement invalidation, concealment and noticing, selected trigger predicate/event witnesses, area membership, and close-as-possible hostile placement witnesses; future battle runtime should consume typed glyph release facts without dispatching on spell id or name.",
+      },
+    },
+  ],
+  [
+    "haste",
+    {
+      kind: "needs-surface-widening",
+      owner: hasteSurfaceWideningOwner,
+      missingConstruct:
+        "Spell Definition haste active-effect and lethargy split: Magic Action casting, level-3 Spell Slot, 30-foot visible willing-creature targeting, Concentration duration, doubled Speed, +2 Armor Class, Dexterity Saving Throw Advantage, a per-turn additional-action allow-list that caps Attack at one attack, and spell-end lethargy applying Incapacitated plus Speed 0 until the end of the target's next turn; Surface needs typed extra-action restriction and end-of-effect lethargy facts before the SRD record can be authored without collapsing later positive-runtime and lethargy-runtime follow-ups.",
+    },
+  ],
+  [
+    "magic_circle",
+    {
+      kind: "needs-surface-widening",
+      owner: magicCircleSurfaceWideningOwner,
+      missingConstruct:
+        "Spell Definition warded-cylinder occurrence: 10-foot-radius, 20-foot-tall Cylinder area; slot-scaled timed duration of 1 hour plus 1 hour per Spell Slot level above 3; cast-time choice of one or more Celestial, Elemental, Fey, Fiend, or Undead creature types; normal or reversed area direction; nonmagical entry or exit prevention for affected creatures; Charisma Saving Throw gate for teleportation or interplanar travel across the ward; affected-creature Attack Roll Disadvantage against protected targets; and source-scoped possession, Charmed, and Frightened prevention for protected targets.",
+      battleReadinessClosure: {
+        kind: "table-spatial-derivation",
+        owner: magicCircleSurfaceWideningOwner,
+        reason:
+          "Magic Circle needs a typed follow-up split before an SRD-provenance Spell Definition can be admitted: Surface must own the 10-foot-radius, 20-foot-tall Cylinder area, slot-scaled timed duration, cast-time creature-type set, normal-or-reversed area direction, nonmagical crossing prevention, magical-travel Charisma Saving Throw gate, scoped Attack Roll Disadvantage, and source-scoped possession plus Charmed/Frightened prevention; table/spatial ownership supplies ground-point placement, cylinder membership, inside/outside protected-target witnesses, entry or exit attempts, and teleportation or interplanar-travel crossing witnesses; future battle runtime should consume typed warded-area facts without dispatching on spell id or name.",
+      },
+    },
+  ],
   [
     "create_or_destroy_water",
     {
@@ -2870,7 +2980,10 @@ function withState(rows, authored, installedIds, ownerEvidenceSources) {
       installedIds,
     );
     const battleReadinessClosure =
-      battleReadinessClosureFromUnitClaim(unitClaim);
+      battleReadinessClosureFromUnitClaim(unitClaim) ??
+      battleReadinessClosureFromSpellUnitMissingClassification(row);
+    const missingClassificationEvidence =
+      ownerEvidenceFromSpellUnitMissingClassification(row, disposition);
     const rowWithState = {
       ...row,
       surface: gate,
@@ -2904,7 +3017,7 @@ function withState(rows, authored, installedIds, ownerEvidenceSources) {
                 ? []
                 : ownerEvidenceEntries(installedClassification)),
             ]
-          : [],
+          : missingClassificationEvidence,
       nextAction: nextAction(
         row,
         disposition,
@@ -2964,6 +3077,43 @@ function ownerEvidenceEntries(classification) {
     }));
   }
   return [ownerEvidenceEntry(classification)];
+}
+
+function spellUnitMissingClassificationForRow(row) {
+  return row.rowKind === "spell-unit-pressure" && row.candidateUnitId
+    ? spellUnitMissingClassifications.get(row.candidateUnitId)
+    : undefined;
+}
+
+function battleReadinessClosureFromSpellUnitMissingClassification(row) {
+  const classification = spellUnitMissingClassificationForRow(row);
+  if (
+    classification?.kind !== "needs-surface-widening" ||
+    !isBattleReadinessClosure(classification.battleReadinessClosure)
+  ) {
+    return undefined;
+  }
+  return {
+    source: "spell-unit-missing-classification",
+    kind: classification.battleReadinessClosure.kind,
+    owner: classification.battleReadinessClosure.owner,
+    reason:
+      classification.battleReadinessClosure.reason ??
+      classification.missingConstruct,
+  };
+}
+
+function ownerEvidenceFromSpellUnitMissingClassification(row, disposition) {
+  if (disposition !== "needs-surface-widening") return [];
+  const classification = spellUnitMissingClassificationForRow(row);
+  if (
+    classification?.kind !== "needs-surface-widening" ||
+    typeof classification.owner !== "string" ||
+    classification.owner.length === 0
+  ) {
+    return [];
+  }
+  return ownerEvidenceEntries(classification);
 }
 
 function countBy(rows, key) {
@@ -4687,6 +4837,31 @@ function validateSrdUnitInventory(report) {
       issues.push(
         `${row.id} needs Surface widening but lacks missingConstruct.`,
       );
+    }
+    if (row.finalDisposition === "needs-surface-widening") {
+      const missingClassification = spellUnitMissingClassificationForRow(row);
+      if (
+        missingClassification?.kind === "needs-surface-widening" &&
+        typeof missingClassification.owner === "string" &&
+        missingClassification.owner.length > 0 &&
+        !row.ownerEvidence.some(
+          (evidence) => evidence.owner === missingClassification.owner,
+        )
+      ) {
+        issues.push(
+          `${row.id} declares a Surface-widening owner but lacks projected owner evidence.`,
+        );
+      }
+      if (
+        missingClassification?.kind === "needs-surface-widening" &&
+        isBattleReadinessClosure(missingClassification.battleReadinessClosure) &&
+        row.battleReadinessClosure?.owner !==
+          missingClassification.battleReadinessClosure.owner
+      ) {
+        issues.push(
+          `${row.id} declares a Surface-widening readiness closure but lacks projected closure evidence.`,
+        );
+      }
     }
     if (
       row.finalDisposition === "catalog-installed-needs-owner-evidence" &&
