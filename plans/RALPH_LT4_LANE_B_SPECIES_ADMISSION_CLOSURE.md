@@ -7,7 +7,7 @@
     {
       "number": 1,
       "id": "LT4-B01-GNOME-ADMISSION-OWNER-RESEARCH",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Research the Gnome admission owner boundary"
     },
     {
@@ -96,7 +96,7 @@ explicitly.
 
 ### Task 1 - LT4-B01-GNOME-ADMISSION-OWNER-RESEARCH
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
