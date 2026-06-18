@@ -25,7 +25,7 @@
     {
       "number": 4,
       "id": "LT4-B04-GNOME-SPECIES-ADMISSION-EVIDENCE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Admit Gnome as a selectable SRD species and close coverage"
     }
   ]
@@ -210,7 +210,7 @@ Verification:
 
 ### Task 4 - LT4-B04-GNOME-SPECIES-ADMISSION-EVIDENCE
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
