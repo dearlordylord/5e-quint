@@ -7,7 +7,7 @@
     {
       "number": 1,
       "id": "L5-D01-PLANT-GROWTH",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Close Plant Growth missing authored record"
     },
     {
@@ -118,7 +118,7 @@ missing-record spells unless a RAW dependency is unavoidable and documented.
 
 | # | Task | Status | Depends on | Notes |
 | ---: | --- | --- | --- | --- |
-| 1 | L5-D01-PLANT-GROWTH - Close Plant Growth missing authored record | ready-for-research | none | Independent missing spell Unit. |
+| 1 | L5-D01-PLANT-GROWTH - Close Plant Growth missing authored record | done | none | Independent missing spell Unit. |
 | 2 | L5-D02-REMOVE-CURSE - Close Remove Curse missing authored record | ready-for-research | none | May resolve Surface Spell Definition before Bestow Curse runtime occurrence semantics exist. |
 | 3 | L5-D03-REVIVIFY - Close Revivify missing authored record | ready-for-research | none | Independent missing spell Unit. |
 | 4 | L5-D04-SENDING - Close Sending missing authored record | ready-for-research | none | Independent missing spell Unit. |
@@ -156,7 +156,7 @@ missing-record spells unless a RAW dependency is unavoidable and documented.
 
 ### Task 1 - L5-D01-PLANT-GROWTH
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
