@@ -44,8 +44,8 @@ These counts describe the current runtime/catalog state of mined rows. They are 
 | catalog-authored-review-required | 77 |
 | catalog-installed-owner-evidence-present | 482 |
 | catalog-installed-owner-evidence-required | 1 |
-| catalog-only/dead-for-now | 147 |
-| level-5-7-follow-up-required | 29 |
+| catalog-only/dead-for-now | 148 |
+| level-5-7-follow-up-required | 28 |
 | missing-authored-record | 80 |
 | non-runtime | 84 |
 
@@ -60,10 +60,10 @@ These counts describe the current runtime/catalog state of mined rows. They are 
 
 | Unit profile disposition | Rows |
 | --- | ---: |
-| not-recorded | 225 |
+| not-recorded | 224 |
 | profile-subset-supported | 53 |
 | supported-profile | 296 |
-| unsupported-profile | 326 |
+| unsupported-profile | 327 |
 
 ### Battle Readiness Snapshot
 
@@ -626,7 +626,7 @@ These counts separate class-list rows from unique Spell Definition identities. A
 | Fighter Ability Score Improvement | level-4 | character-level | class feature | `fighter_ability_score_improvement_l4` | `.references/srd-5.2.1/Classes/Fighter.md:90` | present | installed | unsupported-profile | catalog-only/dead-for-now | accepted-no-battle-effect | selection-grant-container: character-creation-runtime ability-score projection and selected feat Unit profiles | The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim. |
 | Fighter level 4 feature table row | level-4 | character-level | character-creation or progression mechanic | `class_fighter` | `.references/srd-5.2.1/Classes/Fighter.md:34` | present | installed | unsupported-profile | non-runtime | accepted-no-battle-effect | not-recorded | No runtime work; keep classification as explicit closure. |
 | Fighter Extra Attack | level-5 | character-level | class feature | `fighter_extra_attack` | `.references/srd-5.2.1/Classes/Fighter.md:94` | present | installed | supported-profile | catalog-installed-owner-evidence-present | not-applicable | not-recorded | Owner-specific operational evidence is classified and present. |
-| Fighter Tactical Shift | level-5 | character-level | class feature | `fighter_tactical_shift` | `.references/srd-5.2.1/Classes/Fighter.md:98` | present | not-installed | not-recorded | level-5-7-follow-up-required | not-applicable | not-recorded | Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported. |
+| Fighter Tactical Shift | level-5 | character-level | class feature | `fighter_tactical_shift` | `.references/srd-5.2.1/Classes/Fighter.md:98` | present | not-installed | unsupported-profile | catalog-only/dead-for-now | not-applicable | outside-battle-runtime: future battle-runtime Second Wind activation rider owner plus existing movement and Opportunity Attack validation owners | SRD Tactical Shift triggers only when the Fighter activates Second Wind with a Bonus Action: the Fighter can move up to half Speed without provoking Opportunity Attacks. A future promoted owner must consume an admitted Tactical Shift support profile with the existing fighter_second_wind self-bonus-action-healing resource, then offer optional bonus Movement through the existing movement fill owner with a cap of half the actor's current Speed and Opportunity Attack rejection. It must not add a second Second Wind pool, duplicate turn Movement budget, duplicate Opportunity Attack state, or dispatch on Tactical Shift authored identity. |
 | Fighter level 5 feature table row | level-5 | character-level | character-creation or progression mechanic | `class_fighter` | `.references/srd-5.2.1/Classes/Fighter.md:35` | present | installed | unsupported-profile | non-runtime | not-applicable | not-recorded | No runtime work; keep classification as explicit closure. |
 | Fighter Ability Score Improvement | level-6 | character-level | class feature | `fighter_ability_score_improvement_l6` | `.references/srd-5.2.1/Classes/Fighter.md:36` | present | not-installed | not-recorded | level-5-7-follow-up-required | not-applicable | not-recorded | Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported. |
 | Fighter level 6 feature table row | level-6 | character-level | character-creation or progression mechanic | `class_fighter` | `.references/srd-5.2.1/Classes/Fighter.md:36` | present | installed | unsupported-profile | non-runtime | not-applicable | not-recorded | No runtime work; keep classification as explicit closure. |
