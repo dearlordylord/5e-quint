@@ -13,7 +13,7 @@
     {
       "number": 2,
       "id": "L17-M02-CLASS-LEVEL5-7-MINING",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Mine class progression rows through level 7"
     },
     {
@@ -149,7 +149,7 @@ Verification:
 
 ### Task 2 - L17-M02-CLASS-LEVEL5-7-MINING
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 

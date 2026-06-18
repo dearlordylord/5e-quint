@@ -1,31 +1,29 @@
 {
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
-    "minedDenominatorRows": 760,
+    "minedDenominatorRows": 837,
     "missingMinedLevelBands": [
-      "level-5",
-      "level-6",
-      "level-7",
       "spell-level-4"
     ],
     "rowsByAxis": {
-      "character-level": 265,
+      "character-level": 342,
       "spell-level": 495
     },
     "rowsByBattleReadinessStatus": {
       "accepted": 471,
       "accepted-no-battle-effect": 197,
       "battle-runtime-required": 58,
+      "not-applicable": 77,
       "owner-evidence-required": 34
     },
     "rowsByCatalogAdmission": {
-      "installed": 596,
-      "not-installed": 164
+      "installed": 640,
+      "not-installed": 197
     },
     "rowsByCategory": {
-      "character-creation or progression mechanic": 136,
+      "character-creation or progression mechanic": 172,
       "class container": 12,
-      "class feature": 76,
+      "class feature": 117,
       "equipment/weapon/armor pressure": 12,
       "mastery pressure": 5,
       "spell access/list pressure": 12,
@@ -34,20 +32,21 @@
     },
     "rowsByFinalDisposition": {
       "catalog-authored-review-required": 33,
-      "catalog-installed-owner-evidence-present": 475,
+      "catalog-installed-owner-evidence-present": 483,
       "catalog-installed-owner-evidence-required": 1,
       "catalog-only/dead-for-now": 145,
+      "level-5-7-follow-up-required": 33,
       "missing-authored-record": 58,
-      "non-runtime": 48
+      "non-runtime": 84
     },
     "rowsByLevelBand": {
       "level-1": 156,
       "level-2": 33,
       "level-3": 51,
       "level-4": 25,
-      "level-5": 0,
-      "level-6": 0,
-      "level-7": 0,
+      "level-5": 28,
+      "level-6": 25,
+      "level-7": 24,
       "spell-level-0": 66,
       "spell-level-1": 145,
       "spell-level-2": 156,
@@ -56,8 +55,8 @@
     },
     "rowsByRowKind": {
       "class-container": 12,
-      "class-feature-grant": 76,
-      "class-table-summary": 48,
+      "class-feature-grant": 117,
+      "class-table-summary": 84,
       "core-trait": 76,
       "equipment-pressure": 12,
       "mastery-pressure": 5,
@@ -68,10 +67,10 @@
       "subclass-spell-access": 5
     },
     "rowsByUnitProfileDisposition": {
-      "not-recorded": 130,
+      "not-recorded": 163,
       "profile-subset-supported": 55,
-      "supported-profile": 287,
-      "unsupported-profile": 288
+      "supported-profile": 295,
+      "unsupported-profile": 324
     }
   },
   "rows": [
@@ -913,6 +912,298 @@
     },
     {
       "axis": "character-level",
+      "candidateUnitId": "barbarian_extra_attack",
+      "category": "class feature",
+      "className": "Barbarian",
+      "concept": "Barbarian Extra Attack",
+      "levelBand": "level-5",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/barbarian:level-5:class-feature-grant:barbarian_extra_attack",
+        "state": "present"
+      },
+      "nextAction": "Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported.",
+      "rowId": "srd521:classes/barbarian:level-5:class-feature-grant:barbarian_extra_attack",
+      "rowKind": "class-feature-grant",
+      "source": {
+        "lineEnd": 115,
+        "lineStart": 112,
+        "path": ".references/srd-5.2.1/Classes/Barbarian.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "state": "missing-authored-record"
+        },
+        "battleReadiness": {
+          "state": "not-applicable"
+        },
+        "catalogAdmission": {
+          "state": "not-installed"
+        },
+        "finalDisposition": "level-5-7-follow-up-required",
+        "unitProfile": {
+          "state": "not-recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "barbarian_fast_movement",
+      "category": "class feature",
+      "className": "Barbarian",
+      "concept": "Barbarian Fast Movement",
+      "levelBand": "level-5",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/barbarian:level-5:class-feature-grant:barbarian_fast_movement",
+        "state": "present"
+      },
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "rowId": "srd521:classes/barbarian:level-5:class-feature-grant:barbarian_fast_movement",
+      "rowKind": "class-feature-grant",
+      "source": {
+        "lineEnd": 119,
+        "lineStart": 116,
+        "path": ".references/srd-5.2.1/Classes/Barbarian.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "state": "authored-record-present"
+        },
+        "battleReadiness": {
+          "state": "not-applicable"
+        },
+        "catalogAdmission": {
+          "state": "installed"
+        },
+        "finalDisposition": "catalog-installed-owner-evidence-present",
+        "unitProfile": {
+          "disposition": "supported-profile",
+          "state": "recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "class_barbarian",
+      "category": "character-creation or progression mechanic",
+      "className": "Barbarian",
+      "concept": "Barbarian level 5 feature table row",
+      "levelBand": "level-5",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/barbarian:level-5:class-table-summary:barbarian_level_5_feature_table_row",
+        "state": "present"
+      },
+      "nextAction": "No runtime work; keep classification as explicit closure.",
+      "rowId": "srd521:classes/barbarian:level-5:class-table-summary:barbarian_level_5_feature_table_row",
+      "rowKind": "class-table-summary",
+      "source": {
+        "lineEnd": 39,
+        "lineStart": 39,
+        "path": ".references/srd-5.2.1/Classes/Barbarian.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "state": "authored-record-present"
+        },
+        "battleReadiness": {
+          "state": "not-applicable"
+        },
+        "catalogAdmission": {
+          "state": "installed"
+        },
+        "finalDisposition": "non-runtime",
+        "unitProfile": {
+          "disposition": "unsupported-profile",
+          "state": "recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "barbarian_mindless_rage",
+      "category": "class feature",
+      "className": "Barbarian",
+      "concept": "Barbarian Mindless Rage",
+      "levelBand": "level-6",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/barbarian:level-6:class-feature-grant:barbarian_mindless_rage",
+        "state": "present"
+      },
+      "nextAction": "Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported.",
+      "rowId": "srd521:classes/barbarian:level-6:class-feature-grant:barbarian_mindless_rage",
+      "rowKind": "class-feature-grant",
+      "source": {
+        "lineEnd": 185,
+        "lineStart": 182,
+        "path": ".references/srd-5.2.1/Classes/Barbarian.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "state": "missing-authored-record"
+        },
+        "battleReadiness": {
+          "state": "not-applicable"
+        },
+        "catalogAdmission": {
+          "state": "not-installed"
+        },
+        "finalDisposition": "level-5-7-follow-up-required",
+        "unitProfile": {
+          "state": "not-recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "class_barbarian",
+      "category": "character-creation or progression mechanic",
+      "className": "Barbarian",
+      "concept": "Barbarian level 6 feature table row",
+      "levelBand": "level-6",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/barbarian:level-6:class-table-summary:barbarian_level_6_feature_table_row",
+        "state": "present"
+      },
+      "nextAction": "No runtime work; keep classification as explicit closure.",
+      "rowId": "srd521:classes/barbarian:level-6:class-table-summary:barbarian_level_6_feature_table_row",
+      "rowKind": "class-table-summary",
+      "source": {
+        "lineEnd": 40,
+        "lineStart": 40,
+        "path": ".references/srd-5.2.1/Classes/Barbarian.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "state": "authored-record-present"
+        },
+        "battleReadiness": {
+          "state": "not-applicable"
+        },
+        "catalogAdmission": {
+          "state": "installed"
+        },
+        "finalDisposition": "non-runtime",
+        "unitProfile": {
+          "disposition": "unsupported-profile",
+          "state": "recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "barbarian_feral_instinct",
+      "category": "class feature",
+      "className": "Barbarian",
+      "concept": "Barbarian Feral Instinct",
+      "levelBand": "level-7",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/barbarian:level-7:class-feature-grant:barbarian_feral_instinct",
+        "state": "present"
+      },
+      "nextAction": "Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported.",
+      "rowId": "srd521:classes/barbarian:level-7:class-feature-grant:barbarian_feral_instinct",
+      "rowKind": "class-feature-grant",
+      "source": {
+        "lineEnd": 123,
+        "lineStart": 120,
+        "path": ".references/srd-5.2.1/Classes/Barbarian.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "state": "missing-authored-record"
+        },
+        "battleReadiness": {
+          "state": "not-applicable"
+        },
+        "catalogAdmission": {
+          "state": "not-installed"
+        },
+        "finalDisposition": "level-5-7-follow-up-required",
+        "unitProfile": {
+          "state": "not-recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "barbarian_instinctive_pounce",
+      "category": "class feature",
+      "className": "Barbarian",
+      "concept": "Barbarian Instinctive Pounce",
+      "levelBand": "level-7",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/barbarian:level-7:class-feature-grant:barbarian_instinctive_pounce",
+        "state": "present"
+      },
+      "nextAction": "Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported.",
+      "rowId": "srd521:classes/barbarian:level-7:class-feature-grant:barbarian_instinctive_pounce",
+      "rowKind": "class-feature-grant",
+      "source": {
+        "lineEnd": 127,
+        "lineStart": 124,
+        "path": ".references/srd-5.2.1/Classes/Barbarian.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "state": "missing-authored-record"
+        },
+        "battleReadiness": {
+          "state": "not-applicable"
+        },
+        "catalogAdmission": {
+          "state": "not-installed"
+        },
+        "finalDisposition": "level-5-7-follow-up-required",
+        "unitProfile": {
+          "state": "not-recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "class_barbarian",
+      "category": "character-creation or progression mechanic",
+      "className": "Barbarian",
+      "concept": "Barbarian level 7 feature table row",
+      "levelBand": "level-7",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/barbarian:level-7:class-table-summary:barbarian_level_7_feature_table_row",
+        "state": "present"
+      },
+      "nextAction": "No runtime work; keep classification as explicit closure.",
+      "rowId": "srd521:classes/barbarian:level-7:class-table-summary:barbarian_level_7_feature_table_row",
+      "rowKind": "class-table-summary",
+      "source": {
+        "lineEnd": 41,
+        "lineStart": 41,
+        "path": ".references/srd-5.2.1/Classes/Barbarian.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "state": "authored-record-present"
+        },
+        "battleReadiness": {
+          "state": "not-applicable"
+        },
+        "catalogAdmission": {
+          "state": "installed"
+        },
+        "finalDisposition": "non-runtime",
+        "unitProfile": {
+          "disposition": "unsupported-profile",
+          "state": "recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
       "candidateUnitId": "class_bard",
       "category": "class container",
       "className": "Bard",
@@ -1736,6 +2027,225 @@
         "battleReadiness": {
           "state": "recorded",
           "status": "accepted-no-battle-effect"
+        },
+        "catalogAdmission": {
+          "state": "installed"
+        },
+        "finalDisposition": "non-runtime",
+        "unitProfile": {
+          "disposition": "unsupported-profile",
+          "state": "recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "bard_font_of_inspiration",
+      "category": "class feature",
+      "className": "Bard",
+      "concept": "Bard Font of Inspiration",
+      "levelBand": "level-5",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/bard:level-5:class-feature-grant:bard_font_of_inspiration",
+        "state": "present"
+      },
+      "nextAction": "Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported.",
+      "rowId": "srd521:classes/bard:level-5:class-feature-grant:bard_font_of_inspiration",
+      "rowKind": "class-feature-grant",
+      "source": {
+        "lineEnd": 118,
+        "lineStart": 113,
+        "path": ".references/srd-5.2.1/Classes/Bard.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "state": "missing-authored-record"
+        },
+        "battleReadiness": {
+          "state": "not-applicable"
+        },
+        "catalogAdmission": {
+          "state": "not-installed"
+        },
+        "finalDisposition": "level-5-7-follow-up-required",
+        "unitProfile": {
+          "state": "not-recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "class_bard",
+      "category": "character-creation or progression mechanic",
+      "className": "Bard",
+      "concept": "Bard level 5 feature table row",
+      "levelBand": "level-5",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/bard:level-5:class-table-summary:bard_level_5_feature_table_row",
+        "state": "present"
+      },
+      "nextAction": "No runtime work; keep classification as explicit closure.",
+      "rowId": "srd521:classes/bard:level-5:class-table-summary:bard_level_5_feature_table_row",
+      "rowKind": "class-table-summary",
+      "source": {
+        "lineEnd": 40,
+        "lineStart": 40,
+        "path": ".references/srd-5.2.1/Classes/Bard.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "state": "authored-record-present"
+        },
+        "battleReadiness": {
+          "state": "not-applicable"
+        },
+        "catalogAdmission": {
+          "state": "installed"
+        },
+        "finalDisposition": "non-runtime",
+        "unitProfile": {
+          "disposition": "unsupported-profile",
+          "state": "recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "bard_magical_discoveries",
+      "category": "class feature",
+      "className": "Bard",
+      "concept": "Bard Magical Discoveries",
+      "levelBand": "level-6",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/bard:level-6:class-feature-grant:bard_magical_discoveries",
+        "state": "present"
+      },
+      "nextAction": "Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported.",
+      "rowId": "srd521:classes/bard:level-6:class-feature-grant:bard_magical_discoveries",
+      "rowKind": "class-feature-grant",
+      "source": {
+        "lineEnd": 341,
+        "lineStart": 336,
+        "path": ".references/srd-5.2.1/Classes/Bard.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "state": "missing-authored-record"
+        },
+        "battleReadiness": {
+          "state": "not-applicable"
+        },
+        "catalogAdmission": {
+          "state": "not-installed"
+        },
+        "finalDisposition": "level-5-7-follow-up-required",
+        "unitProfile": {
+          "state": "not-recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "class_bard",
+      "category": "character-creation or progression mechanic",
+      "className": "Bard",
+      "concept": "Bard level 6 feature table row",
+      "levelBand": "level-6",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/bard:level-6:class-table-summary:bard_level_6_feature_table_row",
+        "state": "present"
+      },
+      "nextAction": "No runtime work; keep classification as explicit closure.",
+      "rowId": "srd521:classes/bard:level-6:class-table-summary:bard_level_6_feature_table_row",
+      "rowKind": "class-table-summary",
+      "source": {
+        "lineEnd": 41,
+        "lineStart": 41,
+        "path": ".references/srd-5.2.1/Classes/Bard.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "state": "authored-record-present"
+        },
+        "battleReadiness": {
+          "state": "not-applicable"
+        },
+        "catalogAdmission": {
+          "state": "installed"
+        },
+        "finalDisposition": "non-runtime",
+        "unitProfile": {
+          "disposition": "unsupported-profile",
+          "state": "recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "bard_countercharm",
+      "category": "class feature",
+      "className": "Bard",
+      "concept": "Bard Countercharm",
+      "levelBand": "level-7",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/bard:level-7:class-feature-grant:bard_countercharm",
+        "state": "present"
+      },
+      "nextAction": "Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported.",
+      "rowId": "srd521:classes/bard:level-7:class-feature-grant:bard_countercharm",
+      "rowKind": "class-feature-grant",
+      "source": {
+        "lineEnd": 122,
+        "lineStart": 119,
+        "path": ".references/srd-5.2.1/Classes/Bard.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "state": "missing-authored-record"
+        },
+        "battleReadiness": {
+          "state": "not-applicable"
+        },
+        "catalogAdmission": {
+          "state": "not-installed"
+        },
+        "finalDisposition": "level-5-7-follow-up-required",
+        "unitProfile": {
+          "state": "not-recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "class_bard",
+      "category": "character-creation or progression mechanic",
+      "className": "Bard",
+      "concept": "Bard level 7 feature table row",
+      "levelBand": "level-7",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/bard:level-7:class-table-summary:bard_level_7_feature_table_row",
+        "state": "present"
+      },
+      "nextAction": "No runtime work; keep classification as explicit closure.",
+      "rowId": "srd521:classes/bard:level-7:class-table-summary:bard_level_7_feature_table_row",
+      "rowKind": "class-table-summary",
+      "source": {
+        "lineEnd": 42,
+        "lineStart": 42,
+        "path": ".references/srd-5.2.1/Classes/Bard.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "state": "authored-record-present"
+        },
+        "battleReadiness": {
+          "state": "not-applicable"
         },
         "catalogAdmission": {
           "state": "installed"
@@ -5263,6 +5773,225 @@
       }
     },
     {
+      "axis": "character-level",
+      "candidateUnitId": "cleric_sear_undead",
+      "category": "class feature",
+      "className": "Cleric",
+      "concept": "Cleric Sear Undead",
+      "levelBand": "level-5",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/cleric:level-5:class-feature-grant:cleric_sear_undead",
+        "state": "present"
+      },
+      "nextAction": "Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported.",
+      "rowId": "srd521:classes/cleric:level-5:class-feature-grant:cleric_sear_undead",
+      "rowKind": "class-feature-grant",
+      "source": {
+        "lineEnd": 113,
+        "lineStart": 110,
+        "path": ".references/srd-5.2.1/Classes/Cleric.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "state": "missing-authored-record"
+        },
+        "battleReadiness": {
+          "state": "not-applicable"
+        },
+        "catalogAdmission": {
+          "state": "not-installed"
+        },
+        "finalDisposition": "level-5-7-follow-up-required",
+        "unitProfile": {
+          "state": "not-recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "class_cleric",
+      "category": "character-creation or progression mechanic",
+      "className": "Cleric",
+      "concept": "Cleric level 5 feature table row",
+      "levelBand": "level-5",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/cleric:level-5:class-table-summary:cleric_level_5_feature_table_row",
+        "state": "present"
+      },
+      "nextAction": "No runtime work; keep classification as explicit closure.",
+      "rowId": "srd521:classes/cleric:level-5:class-table-summary:cleric_level_5_feature_table_row",
+      "rowKind": "class-table-summary",
+      "source": {
+        "lineEnd": 39,
+        "lineStart": 39,
+        "path": ".references/srd-5.2.1/Classes/Cleric.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "state": "authored-record-present"
+        },
+        "battleReadiness": {
+          "state": "not-applicable"
+        },
+        "catalogAdmission": {
+          "state": "installed"
+        },
+        "finalDisposition": "non-runtime",
+        "unitProfile": {
+          "disposition": "unsupported-profile",
+          "state": "recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "cleric_blessed_healer",
+      "category": "class feature",
+      "className": "Cleric",
+      "concept": "Cleric Blessed Healer",
+      "levelBand": "level-6",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/cleric:level-6:class-feature-grant:cleric_blessed_healer",
+        "state": "present"
+      },
+      "nextAction": "Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported.",
+      "rowId": "srd521:classes/cleric:level-6:class-feature-grant:cleric_blessed_healer",
+      "rowKind": "class-feature-grant",
+      "source": {
+        "lineEnd": 337,
+        "lineStart": 334,
+        "path": ".references/srd-5.2.1/Classes/Cleric.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "state": "missing-authored-record"
+        },
+        "battleReadiness": {
+          "state": "not-applicable"
+        },
+        "catalogAdmission": {
+          "state": "not-installed"
+        },
+        "finalDisposition": "level-5-7-follow-up-required",
+        "unitProfile": {
+          "state": "not-recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "class_cleric",
+      "category": "character-creation or progression mechanic",
+      "className": "Cleric",
+      "concept": "Cleric level 6 feature table row",
+      "levelBand": "level-6",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/cleric:level-6:class-table-summary:cleric_level_6_feature_table_row",
+        "state": "present"
+      },
+      "nextAction": "No runtime work; keep classification as explicit closure.",
+      "rowId": "srd521:classes/cleric:level-6:class-table-summary:cleric_level_6_feature_table_row",
+      "rowKind": "class-table-summary",
+      "source": {
+        "lineEnd": 40,
+        "lineStart": 40,
+        "path": ".references/srd-5.2.1/Classes/Cleric.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "state": "authored-record-present"
+        },
+        "battleReadiness": {
+          "state": "not-applicable"
+        },
+        "catalogAdmission": {
+          "state": "installed"
+        },
+        "finalDisposition": "non-runtime",
+        "unitProfile": {
+          "disposition": "unsupported-profile",
+          "state": "recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "cleric_blessed_strikes",
+      "category": "class feature",
+      "className": "Cleric",
+      "concept": "Cleric Blessed Strikes",
+      "levelBand": "level-7",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/cleric:level-7:class-feature-grant:cleric_blessed_strikes",
+        "state": "present"
+      },
+      "nextAction": "Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported.",
+      "rowId": "srd521:classes/cleric:level-7:class-feature-grant:cleric_blessed_strikes",
+      "rowKind": "class-feature-grant",
+      "source": {
+        "lineEnd": 121,
+        "lineStart": 114,
+        "path": ".references/srd-5.2.1/Classes/Cleric.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "state": "missing-authored-record"
+        },
+        "battleReadiness": {
+          "state": "not-applicable"
+        },
+        "catalogAdmission": {
+          "state": "not-installed"
+        },
+        "finalDisposition": "level-5-7-follow-up-required",
+        "unitProfile": {
+          "state": "not-recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "class_cleric",
+      "category": "character-creation or progression mechanic",
+      "className": "Cleric",
+      "concept": "Cleric level 7 feature table row",
+      "levelBand": "level-7",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/cleric:level-7:class-table-summary:cleric_level_7_feature_table_row",
+        "state": "present"
+      },
+      "nextAction": "No runtime work; keep classification as explicit closure.",
+      "rowId": "srd521:classes/cleric:level-7:class-table-summary:cleric_level_7_feature_table_row",
+      "rowKind": "class-table-summary",
+      "source": {
+        "lineEnd": 41,
+        "lineStart": 41,
+        "path": ".references/srd-5.2.1/Classes/Cleric.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "state": "authored-record-present"
+        },
+        "battleReadiness": {
+          "state": "not-applicable"
+        },
+        "catalogAdmission": {
+          "state": "installed"
+        },
+        "finalDisposition": "non-runtime",
+        "unitProfile": {
+          "disposition": "unsupported-profile",
+          "state": "recorded"
+        }
+      }
+    },
+    {
       "axis": "spell-level",
       "candidateUnitId": "guidance",
       "category": "spell Unit pressure",
@@ -8311,6 +9040,225 @@
         "battleReadiness": {
           "state": "recorded",
           "status": "accepted-no-battle-effect"
+        },
+        "catalogAdmission": {
+          "state": "installed"
+        },
+        "finalDisposition": "non-runtime",
+        "unitProfile": {
+          "disposition": "unsupported-profile",
+          "state": "recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "druid_wild_resurgence",
+      "category": "class feature",
+      "className": "Druid",
+      "concept": "Druid Wild Resurgence",
+      "levelBand": "level-5",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/druid:level-5:class-feature-grant:druid_wild_resurgence",
+        "state": "present"
+      },
+      "nextAction": "Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported.",
+      "rowId": "srd521:classes/druid:level-5:class-feature-grant:druid_wild_resurgence",
+      "rowKind": "class-feature-grant",
+      "source": {
+        "lineEnd": 143,
+        "lineStart": 138,
+        "path": ".references/srd-5.2.1/Classes/Druid.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "state": "missing-authored-record"
+        },
+        "battleReadiness": {
+          "state": "not-applicable"
+        },
+        "catalogAdmission": {
+          "state": "not-installed"
+        },
+        "finalDisposition": "level-5-7-follow-up-required",
+        "unitProfile": {
+          "state": "not-recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "class_druid",
+      "category": "character-creation or progression mechanic",
+      "className": "Druid",
+      "concept": "Druid level 5 feature table row",
+      "levelBand": "level-5",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/druid:level-5:class-table-summary:druid_level_5_feature_table_row",
+        "state": "present"
+      },
+      "nextAction": "No runtime work; keep classification as explicit closure.",
+      "rowId": "srd521:classes/druid:level-5:class-table-summary:druid_level_5_feature_table_row",
+      "rowKind": "class-table-summary",
+      "source": {
+        "lineEnd": 36,
+        "lineStart": 36,
+        "path": ".references/srd-5.2.1/Classes/Druid.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "state": "authored-record-present"
+        },
+        "battleReadiness": {
+          "state": "not-applicable"
+        },
+        "catalogAdmission": {
+          "state": "installed"
+        },
+        "finalDisposition": "non-runtime",
+        "unitProfile": {
+          "disposition": "unsupported-profile",
+          "state": "recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "druid_natural_recovery",
+      "category": "class feature",
+      "className": "Druid",
+      "concept": "Druid Natural Recovery",
+      "levelBand": "level-6",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/druid:level-6:class-feature-grant:druid_natural_recovery",
+        "state": "present"
+      },
+      "nextAction": "Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported.",
+      "rowId": "srd521:classes/druid:level-6:class-feature-grant:druid_natural_recovery",
+      "rowKind": "class-feature-grant",
+      "source": {
+        "lineEnd": 417,
+        "lineStart": 412,
+        "path": ".references/srd-5.2.1/Classes/Druid.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "state": "missing-authored-record"
+        },
+        "battleReadiness": {
+          "state": "not-applicable"
+        },
+        "catalogAdmission": {
+          "state": "not-installed"
+        },
+        "finalDisposition": "level-5-7-follow-up-required",
+        "unitProfile": {
+          "state": "not-recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "class_druid",
+      "category": "character-creation or progression mechanic",
+      "className": "Druid",
+      "concept": "Druid level 6 feature table row",
+      "levelBand": "level-6",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/druid:level-6:class-table-summary:druid_level_6_feature_table_row",
+        "state": "present"
+      },
+      "nextAction": "No runtime work; keep classification as explicit closure.",
+      "rowId": "srd521:classes/druid:level-6:class-table-summary:druid_level_6_feature_table_row",
+      "rowKind": "class-table-summary",
+      "source": {
+        "lineEnd": 37,
+        "lineStart": 37,
+        "path": ".references/srd-5.2.1/Classes/Druid.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "state": "authored-record-present"
+        },
+        "battleReadiness": {
+          "state": "not-applicable"
+        },
+        "catalogAdmission": {
+          "state": "installed"
+        },
+        "finalDisposition": "non-runtime",
+        "unitProfile": {
+          "disposition": "unsupported-profile",
+          "state": "recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "druid_elemental_fury",
+      "category": "class feature",
+      "className": "Druid",
+      "concept": "Druid Elemental Fury",
+      "levelBand": "level-7",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/druid:level-7:class-feature-grant:druid_elemental_fury",
+        "state": "present"
+      },
+      "nextAction": "Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported.",
+      "rowId": "srd521:classes/druid:level-7:class-feature-grant:druid_elemental_fury",
+      "rowKind": "class-feature-grant",
+      "source": {
+        "lineEnd": 151,
+        "lineStart": 144,
+        "path": ".references/srd-5.2.1/Classes/Druid.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "state": "missing-authored-record"
+        },
+        "battleReadiness": {
+          "state": "not-applicable"
+        },
+        "catalogAdmission": {
+          "state": "not-installed"
+        },
+        "finalDisposition": "level-5-7-follow-up-required",
+        "unitProfile": {
+          "state": "not-recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "class_druid",
+      "category": "character-creation or progression mechanic",
+      "className": "Druid",
+      "concept": "Druid level 7 feature table row",
+      "levelBand": "level-7",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/druid:level-7:class-table-summary:druid_level_7_feature_table_row",
+        "state": "present"
+      },
+      "nextAction": "No runtime work; keep classification as explicit closure.",
+      "rowId": "srd521:classes/druid:level-7:class-table-summary:druid_level_7_feature_table_row",
+      "rowKind": "class-table-summary",
+      "source": {
+        "lineEnd": 38,
+        "lineStart": 38,
+        "path": ".references/srd-5.2.1/Classes/Druid.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "state": "authored-record-present"
+        },
+        "battleReadiness": {
+          "state": "not-applicable"
         },
         "catalogAdmission": {
           "state": "installed"
@@ -11536,6 +12484,262 @@
     },
     {
       "axis": "character-level",
+      "candidateUnitId": "fighter_extra_attack",
+      "category": "class feature",
+      "className": "Fighter",
+      "concept": "Fighter Extra Attack",
+      "levelBand": "level-5",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/fighter:level-5:class-feature-grant:fighter_extra_attack",
+        "state": "present"
+      },
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "rowId": "srd521:classes/fighter:level-5:class-feature-grant:fighter_extra_attack",
+      "rowKind": "class-feature-grant",
+      "source": {
+        "lineEnd": 97,
+        "lineStart": 94,
+        "path": ".references/srd-5.2.1/Classes/Fighter.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "state": "authored-record-present"
+        },
+        "battleReadiness": {
+          "state": "not-applicable"
+        },
+        "catalogAdmission": {
+          "state": "installed"
+        },
+        "finalDisposition": "catalog-installed-owner-evidence-present",
+        "unitProfile": {
+          "disposition": "supported-profile",
+          "state": "recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "fighter_tactical_shift",
+      "category": "class feature",
+      "className": "Fighter",
+      "concept": "Fighter Tactical Shift",
+      "levelBand": "level-5",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/fighter:level-5:class-feature-grant:fighter_tactical_shift",
+        "state": "present"
+      },
+      "nextAction": "Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported.",
+      "rowId": "srd521:classes/fighter:level-5:class-feature-grant:fighter_tactical_shift",
+      "rowKind": "class-feature-grant",
+      "source": {
+        "lineEnd": 101,
+        "lineStart": 98,
+        "path": ".references/srd-5.2.1/Classes/Fighter.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "state": "missing-authored-record"
+        },
+        "battleReadiness": {
+          "state": "not-applicable"
+        },
+        "catalogAdmission": {
+          "state": "not-installed"
+        },
+        "finalDisposition": "level-5-7-follow-up-required",
+        "unitProfile": {
+          "state": "not-recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "class_fighter",
+      "category": "character-creation or progression mechanic",
+      "className": "Fighter",
+      "concept": "Fighter level 5 feature table row",
+      "levelBand": "level-5",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/fighter:level-5:class-table-summary:fighter_level_5_feature_table_row",
+        "state": "present"
+      },
+      "nextAction": "No runtime work; keep classification as explicit closure.",
+      "rowId": "srd521:classes/fighter:level-5:class-table-summary:fighter_level_5_feature_table_row",
+      "rowKind": "class-table-summary",
+      "source": {
+        "lineEnd": 35,
+        "lineStart": 35,
+        "path": ".references/srd-5.2.1/Classes/Fighter.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "state": "authored-record-present"
+        },
+        "battleReadiness": {
+          "state": "not-applicable"
+        },
+        "catalogAdmission": {
+          "state": "installed"
+        },
+        "finalDisposition": "non-runtime",
+        "unitProfile": {
+          "disposition": "unsupported-profile",
+          "state": "recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "fighter_ability_score_improvement_l6",
+      "category": "class feature",
+      "className": "Fighter",
+      "concept": "Fighter Ability Score Improvement",
+      "levelBand": "level-6",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/fighter:level-6:class-feature-grant:fighter_ability_score_improvement",
+        "state": "present"
+      },
+      "nextAction": "Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported.",
+      "rowId": "srd521:classes/fighter:level-6:class-feature-grant:fighter_ability_score_improvement",
+      "rowKind": "class-feature-grant",
+      "source": {
+        "lineEnd": 36,
+        "lineStart": 36,
+        "path": ".references/srd-5.2.1/Classes/Fighter.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "state": "missing-authored-record"
+        },
+        "battleReadiness": {
+          "state": "not-applicable"
+        },
+        "catalogAdmission": {
+          "state": "not-installed"
+        },
+        "finalDisposition": "level-5-7-follow-up-required",
+        "unitProfile": {
+          "state": "not-recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "class_fighter",
+      "category": "character-creation or progression mechanic",
+      "className": "Fighter",
+      "concept": "Fighter level 6 feature table row",
+      "levelBand": "level-6",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/fighter:level-6:class-table-summary:fighter_level_6_feature_table_row",
+        "state": "present"
+      },
+      "nextAction": "No runtime work; keep classification as explicit closure.",
+      "rowId": "srd521:classes/fighter:level-6:class-table-summary:fighter_level_6_feature_table_row",
+      "rowKind": "class-table-summary",
+      "source": {
+        "lineEnd": 36,
+        "lineStart": 36,
+        "path": ".references/srd-5.2.1/Classes/Fighter.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "state": "authored-record-present"
+        },
+        "battleReadiness": {
+          "state": "not-applicable"
+        },
+        "catalogAdmission": {
+          "state": "installed"
+        },
+        "finalDisposition": "non-runtime",
+        "unitProfile": {
+          "disposition": "unsupported-profile",
+          "state": "recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "fighter_additional_fighting_style",
+      "category": "class feature",
+      "className": "Fighter",
+      "concept": "Fighter Additional Fighting Style",
+      "levelBand": "level-7",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/fighter:level-7:class-feature-grant:fighter_additional_fighting_style",
+        "state": "present"
+      },
+      "nextAction": "Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported.",
+      "rowId": "srd521:classes/fighter:level-7:class-feature-grant:fighter_additional_fighting_style",
+      "rowKind": "class-feature-grant",
+      "source": {
+        "lineEnd": 149,
+        "lineStart": 146,
+        "path": ".references/srd-5.2.1/Classes/Fighter.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "state": "missing-authored-record"
+        },
+        "battleReadiness": {
+          "state": "not-applicable"
+        },
+        "catalogAdmission": {
+          "state": "not-installed"
+        },
+        "finalDisposition": "level-5-7-follow-up-required",
+        "unitProfile": {
+          "state": "not-recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "class_fighter",
+      "category": "character-creation or progression mechanic",
+      "className": "Fighter",
+      "concept": "Fighter level 7 feature table row",
+      "levelBand": "level-7",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/fighter:level-7:class-table-summary:fighter_level_7_feature_table_row",
+        "state": "present"
+      },
+      "nextAction": "No runtime work; keep classification as explicit closure.",
+      "rowId": "srd521:classes/fighter:level-7:class-table-summary:fighter_level_7_feature_table_row",
+      "rowKind": "class-table-summary",
+      "source": {
+        "lineEnd": 37,
+        "lineStart": 37,
+        "path": ".references/srd-5.2.1/Classes/Fighter.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "state": "authored-record-present"
+        },
+        "battleReadiness": {
+          "state": "not-applicable"
+        },
+        "catalogAdmission": {
+          "state": "installed"
+        },
+        "finalDisposition": "non-runtime",
+        "unitProfile": {
+          "disposition": "unsupported-profile",
+          "state": "recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
       "candidateUnitId": "class_monk",
       "category": "class container",
       "className": "Monk",
@@ -12448,6 +13652,297 @@
     },
     {
       "axis": "character-level",
+      "candidateUnitId": "monk_extra_attack",
+      "category": "class feature",
+      "className": "Monk",
+      "concept": "Monk Extra Attack",
+      "levelBand": "level-5",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/monk:level-5:class-feature-grant:monk_extra_attack",
+        "state": "present"
+      },
+      "nextAction": "Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported.",
+      "rowId": "srd521:classes/monk:level-5:class-feature-grant:monk_extra_attack",
+      "rowKind": "class-feature-grant",
+      "source": {
+        "lineEnd": 123,
+        "lineStart": 120,
+        "path": ".references/srd-5.2.1/Classes/Monk.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "state": "missing-authored-record"
+        },
+        "battleReadiness": {
+          "state": "not-applicable"
+        },
+        "catalogAdmission": {
+          "state": "not-installed"
+        },
+        "finalDisposition": "level-5-7-follow-up-required",
+        "unitProfile": {
+          "state": "not-recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "monk_stunning_strike",
+      "category": "class feature",
+      "className": "Monk",
+      "concept": "Monk Stunning Strike",
+      "levelBand": "level-5",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/monk:level-5:class-feature-grant:monk_stunning_strike",
+        "state": "present"
+      },
+      "nextAction": "Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported.",
+      "rowId": "srd521:classes/monk:level-5:class-feature-grant:monk_stunning_strike",
+      "rowKind": "class-feature-grant",
+      "source": {
+        "lineEnd": 127,
+        "lineStart": 124,
+        "path": ".references/srd-5.2.1/Classes/Monk.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "state": "missing-authored-record"
+        },
+        "battleReadiness": {
+          "state": "not-applicable"
+        },
+        "catalogAdmission": {
+          "state": "not-installed"
+        },
+        "finalDisposition": "level-5-7-follow-up-required",
+        "unitProfile": {
+          "state": "not-recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "class_monk",
+      "category": "character-creation or progression mechanic",
+      "className": "Monk",
+      "concept": "Monk level 5 feature table row",
+      "levelBand": "level-5",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/monk:level-5:class-table-summary:monk_level_5_feature_table_row",
+        "state": "present"
+      },
+      "nextAction": "No runtime work; keep classification as explicit closure.",
+      "rowId": "srd521:classes/monk:level-5:class-table-summary:monk_level_5_feature_table_row",
+      "rowKind": "class-table-summary",
+      "source": {
+        "lineEnd": 36,
+        "lineStart": 36,
+        "path": ".references/srd-5.2.1/Classes/Monk.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "state": "authored-record-present"
+        },
+        "battleReadiness": {
+          "state": "not-applicable"
+        },
+        "catalogAdmission": {
+          "state": "installed"
+        },
+        "finalDisposition": "non-runtime",
+        "unitProfile": {
+          "disposition": "unsupported-profile",
+          "state": "recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "monk_empowered_strikes",
+      "category": "class feature",
+      "className": "Monk",
+      "concept": "Monk Empowered Strikes",
+      "levelBand": "level-6",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/monk:level-6:class-feature-grant:monk_empowered_strikes",
+        "state": "present"
+      },
+      "nextAction": "Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported.",
+      "rowId": "srd521:classes/monk:level-6:class-feature-grant:monk_empowered_strikes",
+      "rowKind": "class-feature-grant",
+      "source": {
+        "lineEnd": 131,
+        "lineStart": 128,
+        "path": ".references/srd-5.2.1/Classes/Monk.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "state": "missing-authored-record"
+        },
+        "battleReadiness": {
+          "state": "not-applicable"
+        },
+        "catalogAdmission": {
+          "state": "not-installed"
+        },
+        "finalDisposition": "level-5-7-follow-up-required",
+        "unitProfile": {
+          "state": "not-recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "monk_wholeness_of_body",
+      "category": "class feature",
+      "className": "Monk",
+      "concept": "Monk Wholeness of Body",
+      "levelBand": "level-6",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/monk:level-6:class-feature-grant:monk_wholeness_of_body",
+        "state": "present"
+      },
+      "nextAction": "Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported.",
+      "rowId": "srd521:classes/monk:level-6:class-feature-grant:monk_wholeness_of_body",
+      "rowKind": "class-feature-grant",
+      "source": {
+        "lineEnd": 207,
+        "lineStart": 202,
+        "path": ".references/srd-5.2.1/Classes/Monk.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "state": "missing-authored-record"
+        },
+        "battleReadiness": {
+          "state": "not-applicable"
+        },
+        "catalogAdmission": {
+          "state": "not-installed"
+        },
+        "finalDisposition": "level-5-7-follow-up-required",
+        "unitProfile": {
+          "state": "not-recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "class_monk",
+      "category": "character-creation or progression mechanic",
+      "className": "Monk",
+      "concept": "Monk level 6 feature table row",
+      "levelBand": "level-6",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/monk:level-6:class-table-summary:monk_level_6_feature_table_row",
+        "state": "present"
+      },
+      "nextAction": "No runtime work; keep classification as explicit closure.",
+      "rowId": "srd521:classes/monk:level-6:class-table-summary:monk_level_6_feature_table_row",
+      "rowKind": "class-table-summary",
+      "source": {
+        "lineEnd": 37,
+        "lineStart": 37,
+        "path": ".references/srd-5.2.1/Classes/Monk.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "state": "authored-record-present"
+        },
+        "battleReadiness": {
+          "state": "not-applicable"
+        },
+        "catalogAdmission": {
+          "state": "installed"
+        },
+        "finalDisposition": "non-runtime",
+        "unitProfile": {
+          "disposition": "unsupported-profile",
+          "state": "recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "monk_evasion",
+      "category": "class feature",
+      "className": "Monk",
+      "concept": "Monk Evasion",
+      "levelBand": "level-7",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/monk:level-7:class-feature-grant:monk_evasion",
+        "state": "present"
+      },
+      "nextAction": "Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported.",
+      "rowId": "srd521:classes/monk:level-7:class-feature-grant:monk_evasion",
+      "rowKind": "class-feature-grant",
+      "source": {
+        "lineEnd": 137,
+        "lineStart": 132,
+        "path": ".references/srd-5.2.1/Classes/Monk.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "state": "missing-authored-record"
+        },
+        "battleReadiness": {
+          "state": "not-applicable"
+        },
+        "catalogAdmission": {
+          "state": "not-installed"
+        },
+        "finalDisposition": "level-5-7-follow-up-required",
+        "unitProfile": {
+          "state": "not-recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "class_monk",
+      "category": "character-creation or progression mechanic",
+      "className": "Monk",
+      "concept": "Monk level 7 feature table row",
+      "levelBand": "level-7",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/monk:level-7:class-table-summary:monk_level_7_feature_table_row",
+        "state": "present"
+      },
+      "nextAction": "No runtime work; keep classification as explicit closure.",
+      "rowId": "srd521:classes/monk:level-7:class-table-summary:monk_level_7_feature_table_row",
+      "rowKind": "class-table-summary",
+      "source": {
+        "lineEnd": 38,
+        "lineStart": 38,
+        "path": ".references/srd-5.2.1/Classes/Monk.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "state": "authored-record-present"
+        },
+        "battleReadiness": {
+          "state": "not-applicable"
+        },
+        "catalogAdmission": {
+          "state": "installed"
+        },
+        "finalDisposition": "non-runtime",
+        "unitProfile": {
+          "disposition": "unsupported-profile",
+          "state": "recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
       "candidateUnitId": "class_paladin",
       "category": "class container",
       "className": "Paladin",
@@ -13309,6 +14804,262 @@
         "battleReadiness": {
           "state": "recorded",
           "status": "accepted-no-battle-effect"
+        },
+        "catalogAdmission": {
+          "state": "installed"
+        },
+        "finalDisposition": "non-runtime",
+        "unitProfile": {
+          "disposition": "unsupported-profile",
+          "state": "recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "paladin_extra_attack",
+      "category": "class feature",
+      "className": "Paladin",
+      "concept": "Paladin Extra Attack",
+      "levelBand": "level-5",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/paladin:level-5:class-feature-grant:paladin_extra_attack",
+        "state": "present"
+      },
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "rowId": "srd521:classes/paladin:level-5:class-feature-grant:paladin_extra_attack",
+      "rowKind": "class-feature-grant",
+      "source": {
+        "lineEnd": 129,
+        "lineStart": 126,
+        "path": ".references/srd-5.2.1/Classes/Paladin.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "state": "authored-record-present"
+        },
+        "battleReadiness": {
+          "state": "not-applicable"
+        },
+        "catalogAdmission": {
+          "state": "installed"
+        },
+        "finalDisposition": "catalog-installed-owner-evidence-present",
+        "unitProfile": {
+          "disposition": "supported-profile",
+          "state": "recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "paladin_faithful_steed",
+      "category": "class feature",
+      "className": "Paladin",
+      "concept": "Paladin Faithful Steed",
+      "levelBand": "level-5",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/paladin:level-5:class-feature-grant:paladin_faithful_steed",
+        "state": "present"
+      },
+      "nextAction": "Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported.",
+      "rowId": "srd521:classes/paladin:level-5:class-feature-grant:paladin_faithful_steed",
+      "rowKind": "class-feature-grant",
+      "source": {
+        "lineEnd": 135,
+        "lineStart": 130,
+        "path": ".references/srd-5.2.1/Classes/Paladin.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "state": "missing-authored-record"
+        },
+        "battleReadiness": {
+          "state": "not-applicable"
+        },
+        "catalogAdmission": {
+          "state": "not-installed"
+        },
+        "finalDisposition": "level-5-7-follow-up-required",
+        "unitProfile": {
+          "state": "not-recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "class_paladin",
+      "category": "character-creation or progression mechanic",
+      "className": "Paladin",
+      "concept": "Paladin level 5 feature table row",
+      "levelBand": "level-5",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/paladin:level-5:class-table-summary:paladin_level_5_feature_table_row",
+        "state": "present"
+      },
+      "nextAction": "No runtime work; keep classification as explicit closure.",
+      "rowId": "srd521:classes/paladin:level-5:class-table-summary:paladin_level_5_feature_table_row",
+      "rowKind": "class-table-summary",
+      "source": {
+        "lineEnd": 39,
+        "lineStart": 39,
+        "path": ".references/srd-5.2.1/Classes/Paladin.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "state": "authored-record-present"
+        },
+        "battleReadiness": {
+          "state": "not-applicable"
+        },
+        "catalogAdmission": {
+          "state": "installed"
+        },
+        "finalDisposition": "non-runtime",
+        "unitProfile": {
+          "disposition": "unsupported-profile",
+          "state": "recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "paladin_aura_of_protection",
+      "category": "class feature",
+      "className": "Paladin",
+      "concept": "Paladin Aura of Protection",
+      "levelBand": "level-6",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/paladin:level-6:class-feature-grant:paladin_aura_of_protection",
+        "state": "present"
+      },
+      "nextAction": "Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported.",
+      "rowId": "srd521:classes/paladin:level-6:class-feature-grant:paladin_aura_of_protection",
+      "rowKind": "class-feature-grant",
+      "source": {
+        "lineEnd": 143,
+        "lineStart": 136,
+        "path": ".references/srd-5.2.1/Classes/Paladin.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "state": "missing-authored-record"
+        },
+        "battleReadiness": {
+          "state": "not-applicable"
+        },
+        "catalogAdmission": {
+          "state": "not-installed"
+        },
+        "finalDisposition": "level-5-7-follow-up-required",
+        "unitProfile": {
+          "state": "not-recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "class_paladin",
+      "category": "character-creation or progression mechanic",
+      "className": "Paladin",
+      "concept": "Paladin level 6 feature table row",
+      "levelBand": "level-6",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/paladin:level-6:class-table-summary:paladin_level_6_feature_table_row",
+        "state": "present"
+      },
+      "nextAction": "No runtime work; keep classification as explicit closure.",
+      "rowId": "srd521:classes/paladin:level-6:class-table-summary:paladin_level_6_feature_table_row",
+      "rowKind": "class-table-summary",
+      "source": {
+        "lineEnd": 40,
+        "lineStart": 40,
+        "path": ".references/srd-5.2.1/Classes/Paladin.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "state": "authored-record-present"
+        },
+        "battleReadiness": {
+          "state": "not-applicable"
+        },
+        "catalogAdmission": {
+          "state": "installed"
+        },
+        "finalDisposition": "non-runtime",
+        "unitProfile": {
+          "disposition": "unsupported-profile",
+          "state": "recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "paladin_aura_of_devotion",
+      "category": "class feature",
+      "className": "Paladin",
+      "concept": "Paladin Aura of Devotion",
+      "levelBand": "level-7",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/paladin:level-7:class-feature-grant:paladin_aura_of_devotion",
+        "state": "present"
+      },
+      "nextAction": "Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported.",
+      "rowId": "srd521:classes/paladin:level-7:class-feature-grant:paladin_aura_of_devotion",
+      "rowKind": "class-feature-grant",
+      "source": {
+        "lineEnd": 274,
+        "lineStart": 271,
+        "path": ".references/srd-5.2.1/Classes/Paladin.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "state": "missing-authored-record"
+        },
+        "battleReadiness": {
+          "state": "not-applicable"
+        },
+        "catalogAdmission": {
+          "state": "not-installed"
+        },
+        "finalDisposition": "level-5-7-follow-up-required",
+        "unitProfile": {
+          "state": "not-recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "class_paladin",
+      "category": "character-creation or progression mechanic",
+      "className": "Paladin",
+      "concept": "Paladin level 7 feature table row",
+      "levelBand": "level-7",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/paladin:level-7:class-table-summary:paladin_level_7_feature_table_row",
+        "state": "present"
+      },
+      "nextAction": "No runtime work; keep classification as explicit closure.",
+      "rowId": "srd521:classes/paladin:level-7:class-table-summary:paladin_level_7_feature_table_row",
+      "rowKind": "class-table-summary",
+      "source": {
+        "lineEnd": 41,
+        "lineStart": 41,
+        "path": ".references/srd-5.2.1/Classes/Paladin.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "state": "authored-record-present"
+        },
+        "battleReadiness": {
+          "state": "not-applicable"
         },
         "catalogAdmission": {
           "state": "installed"
@@ -15278,6 +17029,227 @@
         "battleReadiness": {
           "state": "recorded",
           "status": "accepted-no-battle-effect"
+        },
+        "catalogAdmission": {
+          "state": "installed"
+        },
+        "finalDisposition": "non-runtime",
+        "unitProfile": {
+          "disposition": "unsupported-profile",
+          "state": "recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "ranger_extra_attack",
+      "category": "class feature",
+      "className": "Ranger",
+      "concept": "Ranger Extra Attack",
+      "levelBand": "level-5",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/ranger:level-5:class-feature-grant:ranger_extra_attack",
+        "state": "present"
+      },
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "rowId": "srd521:classes/ranger:level-5:class-feature-grant:ranger_extra_attack",
+      "rowKind": "class-feature-grant",
+      "source": {
+        "lineEnd": 113,
+        "lineStart": 110,
+        "path": ".references/srd-5.2.1/Classes/Ranger.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "state": "authored-record-present"
+        },
+        "battleReadiness": {
+          "state": "not-applicable"
+        },
+        "catalogAdmission": {
+          "state": "installed"
+        },
+        "finalDisposition": "catalog-installed-owner-evidence-present",
+        "unitProfile": {
+          "disposition": "supported-profile",
+          "state": "recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "class_ranger",
+      "category": "character-creation or progression mechanic",
+      "className": "Ranger",
+      "concept": "Ranger level 5 feature table row",
+      "levelBand": "level-5",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/ranger:level-5:class-table-summary:ranger_level_5_feature_table_row",
+        "state": "present"
+      },
+      "nextAction": "No runtime work; keep classification as explicit closure.",
+      "rowId": "srd521:classes/ranger:level-5:class-table-summary:ranger_level_5_feature_table_row",
+      "rowKind": "class-table-summary",
+      "source": {
+        "lineEnd": 39,
+        "lineStart": 39,
+        "path": ".references/srd-5.2.1/Classes/Ranger.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "state": "authored-record-present"
+        },
+        "battleReadiness": {
+          "state": "not-applicable"
+        },
+        "catalogAdmission": {
+          "state": "installed"
+        },
+        "finalDisposition": "non-runtime",
+        "unitProfile": {
+          "disposition": "unsupported-profile",
+          "state": "recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "ranger_roving",
+      "category": "class feature",
+      "className": "Ranger",
+      "concept": "Ranger Roving",
+      "levelBand": "level-6",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/ranger:level-6:class-feature-grant:ranger_roving",
+        "state": "present"
+      },
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "rowId": "srd521:classes/ranger:level-6:class-feature-grant:ranger_roving",
+      "rowKind": "class-feature-grant",
+      "source": {
+        "lineEnd": 117,
+        "lineStart": 114,
+        "path": ".references/srd-5.2.1/Classes/Ranger.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "state": "authored-record-present"
+        },
+        "battleReadiness": {
+          "state": "not-applicable"
+        },
+        "catalogAdmission": {
+          "state": "installed"
+        },
+        "finalDisposition": "catalog-installed-owner-evidence-present",
+        "unitProfile": {
+          "disposition": "supported-profile",
+          "state": "recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "class_ranger",
+      "category": "character-creation or progression mechanic",
+      "className": "Ranger",
+      "concept": "Ranger level 6 feature table row",
+      "levelBand": "level-6",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/ranger:level-6:class-table-summary:ranger_level_6_feature_table_row",
+        "state": "present"
+      },
+      "nextAction": "No runtime work; keep classification as explicit closure.",
+      "rowId": "srd521:classes/ranger:level-6:class-table-summary:ranger_level_6_feature_table_row",
+      "rowKind": "class-table-summary",
+      "source": {
+        "lineEnd": 40,
+        "lineStart": 40,
+        "path": ".references/srd-5.2.1/Classes/Ranger.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "state": "authored-record-present"
+        },
+        "battleReadiness": {
+          "state": "not-applicable"
+        },
+        "catalogAdmission": {
+          "state": "installed"
+        },
+        "finalDisposition": "non-runtime",
+        "unitProfile": {
+          "disposition": "unsupported-profile",
+          "state": "recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "ranger_defensive_tactics",
+      "category": "class feature",
+      "className": "Ranger",
+      "concept": "Ranger Defensive Tactics",
+      "levelBand": "level-7",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/ranger:level-7:class-feature-grant:ranger_defensive_tactics",
+        "state": "present"
+      },
+      "nextAction": "Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported.",
+      "rowId": "srd521:classes/ranger:level-7:class-feature-grant:ranger_defensive_tactics",
+      "rowKind": "class-feature-grant",
+      "source": {
+        "lineEnd": 258,
+        "lineStart": 251,
+        "path": ".references/srd-5.2.1/Classes/Ranger.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "state": "missing-authored-record"
+        },
+        "battleReadiness": {
+          "state": "not-applicable"
+        },
+        "catalogAdmission": {
+          "state": "not-installed"
+        },
+        "finalDisposition": "level-5-7-follow-up-required",
+        "unitProfile": {
+          "state": "not-recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "class_ranger",
+      "category": "character-creation or progression mechanic",
+      "className": "Ranger",
+      "concept": "Ranger level 7 feature table row",
+      "levelBand": "level-7",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/ranger:level-7:class-table-summary:ranger_level_7_feature_table_row",
+        "state": "present"
+      },
+      "nextAction": "No runtime work; keep classification as explicit closure.",
+      "rowId": "srd521:classes/ranger:level-7:class-table-summary:ranger_level_7_feature_table_row",
+      "rowKind": "class-table-summary",
+      "source": {
+        "lineEnd": 41,
+        "lineStart": 41,
+        "path": ".references/srd-5.2.1/Classes/Ranger.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "state": "authored-record-present"
+        },
+        "battleReadiness": {
+          "state": "not-applicable"
         },
         "catalogAdmission": {
           "state": "installed"
@@ -17712,6 +19684,300 @@
     },
     {
       "axis": "character-level",
+      "candidateUnitId": "rogue_cunning_strike",
+      "category": "class feature",
+      "className": "Rogue",
+      "concept": "Rogue Cunning Strike",
+      "levelBand": "level-5",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/rogue:level-5:class-feature-grant:rogue_cunning_strike",
+        "state": "present"
+      },
+      "nextAction": "Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported.",
+      "rowId": "srd521:classes/rogue:level-5:class-feature-grant:rogue_cunning_strike",
+      "rowKind": "class-feature-grant",
+      "source": {
+        "lineEnd": 108,
+        "lineStart": 97,
+        "path": ".references/srd-5.2.1/Classes/Rogue.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "state": "missing-authored-record"
+        },
+        "battleReadiness": {
+          "state": "not-applicable"
+        },
+        "catalogAdmission": {
+          "state": "not-installed"
+        },
+        "finalDisposition": "level-5-7-follow-up-required",
+        "unitProfile": {
+          "state": "not-recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "rogue_uncanny_dodge",
+      "category": "class feature",
+      "className": "Rogue",
+      "concept": "Rogue Uncanny Dodge",
+      "levelBand": "level-5",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/rogue:level-5:class-feature-grant:rogue_uncanny_dodge",
+        "state": "present"
+      },
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "rowId": "srd521:classes/rogue:level-5:class-feature-grant:rogue_uncanny_dodge",
+      "rowKind": "class-feature-grant",
+      "source": {
+        "lineEnd": 112,
+        "lineStart": 109,
+        "path": ".references/srd-5.2.1/Classes/Rogue.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "state": "authored-record-present"
+        },
+        "battleReadiness": {
+          "state": "not-applicable"
+        },
+        "catalogAdmission": {
+          "state": "installed"
+        },
+        "finalDisposition": "catalog-installed-owner-evidence-present",
+        "unitProfile": {
+          "disposition": "supported-profile",
+          "state": "recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "class_rogue",
+      "category": "character-creation or progression mechanic",
+      "className": "Rogue",
+      "concept": "Rogue level 5 feature table row",
+      "levelBand": "level-5",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/rogue:level-5:class-table-summary:rogue_level_5_feature_table_row",
+        "state": "present"
+      },
+      "nextAction": "No runtime work; keep classification as explicit closure.",
+      "rowId": "srd521:classes/rogue:level-5:class-table-summary:rogue_level_5_feature_table_row",
+      "rowKind": "class-table-summary",
+      "source": {
+        "lineEnd": 40,
+        "lineStart": 40,
+        "path": ".references/srd-5.2.1/Classes/Rogue.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "state": "authored-record-present"
+        },
+        "battleReadiness": {
+          "state": "not-applicable"
+        },
+        "catalogAdmission": {
+          "state": "installed"
+        },
+        "finalDisposition": "non-runtime",
+        "unitProfile": {
+          "disposition": "unsupported-profile",
+          "state": "recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "rogue_expertise",
+      "category": "class feature",
+      "className": "Rogue",
+      "concept": "Rogue Expertise",
+      "levelBand": "level-6",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/rogue:level-6:class-feature-grant:rogue_expertise",
+        "state": "present"
+      },
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "rowId": "srd521:classes/rogue:level-6:class-feature-grant:rogue_expertise",
+      "rowKind": "class-feature-grant",
+      "source": {
+        "lineEnd": 41,
+        "lineStart": 41,
+        "path": ".references/srd-5.2.1/Classes/Rogue.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "state": "authored-record-present"
+        },
+        "battleReadiness": {
+          "state": "not-applicable"
+        },
+        "catalogAdmission": {
+          "state": "installed"
+        },
+        "finalDisposition": "catalog-installed-owner-evidence-present",
+        "unitProfile": {
+          "disposition": "supported-profile",
+          "state": "recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "class_rogue",
+      "category": "character-creation or progression mechanic",
+      "className": "Rogue",
+      "concept": "Rogue level 6 feature table row",
+      "levelBand": "level-6",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/rogue:level-6:class-table-summary:rogue_level_6_feature_table_row",
+        "state": "present"
+      },
+      "nextAction": "No runtime work; keep classification as explicit closure.",
+      "rowId": "srd521:classes/rogue:level-6:class-table-summary:rogue_level_6_feature_table_row",
+      "rowKind": "class-table-summary",
+      "source": {
+        "lineEnd": 41,
+        "lineStart": 41,
+        "path": ".references/srd-5.2.1/Classes/Rogue.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "state": "authored-record-present"
+        },
+        "battleReadiness": {
+          "state": "not-applicable"
+        },
+        "catalogAdmission": {
+          "state": "installed"
+        },
+        "finalDisposition": "non-runtime",
+        "unitProfile": {
+          "disposition": "unsupported-profile",
+          "state": "recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "rogue_evasion",
+      "category": "class feature",
+      "className": "Rogue",
+      "concept": "Rogue Evasion",
+      "levelBand": "level-7",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/rogue:level-7:class-feature-grant:rogue_evasion",
+        "state": "present"
+      },
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "rowId": "srd521:classes/rogue:level-7:class-feature-grant:rogue_evasion",
+      "rowKind": "class-feature-grant",
+      "source": {
+        "lineEnd": 116,
+        "lineStart": 113,
+        "path": ".references/srd-5.2.1/Classes/Rogue.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "state": "authored-record-present"
+        },
+        "battleReadiness": {
+          "state": "not-applicable"
+        },
+        "catalogAdmission": {
+          "state": "installed"
+        },
+        "finalDisposition": "catalog-installed-owner-evidence-present",
+        "unitProfile": {
+          "disposition": "supported-profile",
+          "state": "recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "rogue_reliable_talent",
+      "category": "class feature",
+      "className": "Rogue",
+      "concept": "Rogue Reliable Talent",
+      "levelBand": "level-7",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/rogue:level-7:class-feature-grant:rogue_reliable_talent",
+        "state": "present"
+      },
+      "nextAction": "Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported.",
+      "rowId": "srd521:classes/rogue:level-7:class-feature-grant:rogue_reliable_talent",
+      "rowKind": "class-feature-grant",
+      "source": {
+        "lineEnd": 120,
+        "lineStart": 117,
+        "path": ".references/srd-5.2.1/Classes/Rogue.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "state": "missing-authored-record"
+        },
+        "battleReadiness": {
+          "state": "not-applicable"
+        },
+        "catalogAdmission": {
+          "state": "not-installed"
+        },
+        "finalDisposition": "level-5-7-follow-up-required",
+        "unitProfile": {
+          "state": "not-recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "class_rogue",
+      "category": "character-creation or progression mechanic",
+      "className": "Rogue",
+      "concept": "Rogue level 7 feature table row",
+      "levelBand": "level-7",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/rogue:level-7:class-table-summary:rogue_level_7_feature_table_row",
+        "state": "present"
+      },
+      "nextAction": "No runtime work; keep classification as explicit closure.",
+      "rowId": "srd521:classes/rogue:level-7:class-table-summary:rogue_level_7_feature_table_row",
+      "rowKind": "class-table-summary",
+      "source": {
+        "lineEnd": 42,
+        "lineStart": 42,
+        "path": ".references/srd-5.2.1/Classes/Rogue.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "state": "authored-record-present"
+        },
+        "battleReadiness": {
+          "state": "not-applicable"
+        },
+        "catalogAdmission": {
+          "state": "installed"
+        },
+        "finalDisposition": "non-runtime",
+        "unitProfile": {
+          "disposition": "unsupported-profile",
+          "state": "recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
       "candidateUnitId": "class_sorcerer",
       "category": "class container",
       "className": "Sorcerer",
@@ -18497,6 +20763,225 @@
         "battleReadiness": {
           "state": "recorded",
           "status": "accepted-no-battle-effect"
+        },
+        "catalogAdmission": {
+          "state": "installed"
+        },
+        "finalDisposition": "non-runtime",
+        "unitProfile": {
+          "disposition": "unsupported-profile",
+          "state": "recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "sorcerer_sorcerous_restoration",
+      "category": "class feature",
+      "className": "Sorcerer",
+      "concept": "Sorcerer Sorcerous Restoration",
+      "levelBand": "level-5",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/sorcerer:level-5:class-feature-grant:sorcerer_sorcerous_restoration",
+        "state": "present"
+      },
+      "nextAction": "Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported.",
+      "rowId": "srd521:classes/sorcerer:level-5:class-feature-grant:sorcerer_sorcerous_restoration",
+      "rowKind": "class-feature-grant",
+      "source": {
+        "lineEnd": 130,
+        "lineStart": 127,
+        "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "state": "missing-authored-record"
+        },
+        "battleReadiness": {
+          "state": "not-applicable"
+        },
+        "catalogAdmission": {
+          "state": "not-installed"
+        },
+        "finalDisposition": "level-5-7-follow-up-required",
+        "unitProfile": {
+          "state": "not-recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "class_sorcerer",
+      "category": "character-creation or progression mechanic",
+      "className": "Sorcerer",
+      "concept": "Sorcerer level 5 feature table row",
+      "levelBand": "level-5",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/sorcerer:level-5:class-table-summary:sorcerer_level_5_feature_table_row",
+        "state": "present"
+      },
+      "nextAction": "No runtime work; keep classification as explicit closure.",
+      "rowId": "srd521:classes/sorcerer:level-5:class-table-summary:sorcerer_level_5_feature_table_row",
+      "rowKind": "class-table-summary",
+      "source": {
+        "lineEnd": 39,
+        "lineStart": 39,
+        "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "state": "authored-record-present"
+        },
+        "battleReadiness": {
+          "state": "not-applicable"
+        },
+        "catalogAdmission": {
+          "state": "installed"
+        },
+        "finalDisposition": "non-runtime",
+        "unitProfile": {
+          "disposition": "unsupported-profile",
+          "state": "recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "sorcerer_elemental_affinity",
+      "category": "class feature",
+      "className": "Sorcerer",
+      "concept": "Sorcerer Elemental Affinity",
+      "levelBand": "level-6",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/sorcerer:level-6:class-feature-grant:sorcerer_elemental_affinity",
+        "state": "present"
+      },
+      "nextAction": "Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported.",
+      "rowId": "srd521:classes/sorcerer:level-6:class-feature-grant:sorcerer_elemental_affinity",
+      "rowKind": "class-feature-grant",
+      "source": {
+        "lineEnd": 437,
+        "lineStart": 432,
+        "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "state": "missing-authored-record"
+        },
+        "battleReadiness": {
+          "state": "not-applicable"
+        },
+        "catalogAdmission": {
+          "state": "not-installed"
+        },
+        "finalDisposition": "level-5-7-follow-up-required",
+        "unitProfile": {
+          "state": "not-recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "class_sorcerer",
+      "category": "character-creation or progression mechanic",
+      "className": "Sorcerer",
+      "concept": "Sorcerer level 6 feature table row",
+      "levelBand": "level-6",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/sorcerer:level-6:class-table-summary:sorcerer_level_6_feature_table_row",
+        "state": "present"
+      },
+      "nextAction": "No runtime work; keep classification as explicit closure.",
+      "rowId": "srd521:classes/sorcerer:level-6:class-table-summary:sorcerer_level_6_feature_table_row",
+      "rowKind": "class-table-summary",
+      "source": {
+        "lineEnd": 40,
+        "lineStart": 40,
+        "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "state": "authored-record-present"
+        },
+        "battleReadiness": {
+          "state": "not-applicable"
+        },
+        "catalogAdmission": {
+          "state": "installed"
+        },
+        "finalDisposition": "non-runtime",
+        "unitProfile": {
+          "disposition": "unsupported-profile",
+          "state": "recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "sorcerer_sorcery_incarnate",
+      "category": "class feature",
+      "className": "Sorcerer",
+      "concept": "Sorcerer Sorcery Incarnate",
+      "levelBand": "level-7",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/sorcerer:level-7:class-feature-grant:sorcerer_sorcery_incarnate",
+        "state": "present"
+      },
+      "nextAction": "Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported.",
+      "rowId": "srd521:classes/sorcerer:level-7:class-feature-grant:sorcerer_sorcery_incarnate",
+      "rowKind": "class-feature-grant",
+      "source": {
+        "lineEnd": 136,
+        "lineStart": 131,
+        "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "state": "missing-authored-record"
+        },
+        "battleReadiness": {
+          "state": "not-applicable"
+        },
+        "catalogAdmission": {
+          "state": "not-installed"
+        },
+        "finalDisposition": "level-5-7-follow-up-required",
+        "unitProfile": {
+          "state": "not-recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "class_sorcerer",
+      "category": "character-creation or progression mechanic",
+      "className": "Sorcerer",
+      "concept": "Sorcerer level 7 feature table row",
+      "levelBand": "level-7",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/sorcerer:level-7:class-table-summary:sorcerer_level_7_feature_table_row",
+        "state": "present"
+      },
+      "nextAction": "No runtime work; keep classification as explicit closure.",
+      "rowId": "srd521:classes/sorcerer:level-7:class-table-summary:sorcerer_level_7_feature_table_row",
+      "rowKind": "class-table-summary",
+      "source": {
+        "lineEnd": 41,
+        "lineStart": 41,
+        "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "state": "authored-record-present"
+        },
+        "battleReadiness": {
+          "state": "not-applicable"
         },
         "catalogAdmission": {
           "state": "installed"
@@ -22405,6 +24890,153 @@
       }
     },
     {
+      "axis": "character-level",
+      "candidateUnitId": "class_warlock",
+      "category": "character-creation or progression mechanic",
+      "className": "Warlock",
+      "concept": "Warlock level 5 feature table row",
+      "levelBand": "level-5",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/warlock:level-5:class-table-summary:warlock_level_5_feature_table_row",
+        "state": "present"
+      },
+      "nextAction": "No runtime work; keep classification as explicit closure.",
+      "rowId": "srd521:classes/warlock:level-5:class-table-summary:warlock_level_5_feature_table_row",
+      "rowKind": "class-table-summary",
+      "source": {
+        "lineEnd": 39,
+        "lineStart": 39,
+        "path": ".references/srd-5.2.1/Classes/Warlock.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "state": "authored-record-present"
+        },
+        "battleReadiness": {
+          "state": "not-applicable"
+        },
+        "catalogAdmission": {
+          "state": "installed"
+        },
+        "finalDisposition": "non-runtime",
+        "unitProfile": {
+          "disposition": "unsupported-profile",
+          "state": "recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "warlock_dark_ones_own_luck",
+      "category": "class feature",
+      "className": "Warlock",
+      "concept": "Warlock Dark One's Own Luck",
+      "levelBand": "level-6",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/warlock:level-6:class-feature-grant:warlock_dark_ones_own_luck",
+        "state": "present"
+      },
+      "nextAction": "Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported.",
+      "rowId": "srd521:classes/warlock:level-6:class-feature-grant:warlock_dark_ones_own_luck",
+      "rowKind": "class-feature-grant",
+      "source": {
+        "lineEnd": 482,
+        "lineStart": 477,
+        "path": ".references/srd-5.2.1/Classes/Warlock.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "state": "missing-authored-record"
+        },
+        "battleReadiness": {
+          "state": "not-applicable"
+        },
+        "catalogAdmission": {
+          "state": "not-installed"
+        },
+        "finalDisposition": "level-5-7-follow-up-required",
+        "unitProfile": {
+          "state": "not-recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "class_warlock",
+      "category": "character-creation or progression mechanic",
+      "className": "Warlock",
+      "concept": "Warlock level 6 feature table row",
+      "levelBand": "level-6",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/warlock:level-6:class-table-summary:warlock_level_6_feature_table_row",
+        "state": "present"
+      },
+      "nextAction": "No runtime work; keep classification as explicit closure.",
+      "rowId": "srd521:classes/warlock:level-6:class-table-summary:warlock_level_6_feature_table_row",
+      "rowKind": "class-table-summary",
+      "source": {
+        "lineEnd": 40,
+        "lineStart": 40,
+        "path": ".references/srd-5.2.1/Classes/Warlock.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "state": "authored-record-present"
+        },
+        "battleReadiness": {
+          "state": "not-applicable"
+        },
+        "catalogAdmission": {
+          "state": "installed"
+        },
+        "finalDisposition": "non-runtime",
+        "unitProfile": {
+          "disposition": "unsupported-profile",
+          "state": "recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "class_warlock",
+      "category": "character-creation or progression mechanic",
+      "className": "Warlock",
+      "concept": "Warlock level 7 feature table row",
+      "levelBand": "level-7",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/warlock:level-7:class-table-summary:warlock_level_7_feature_table_row",
+        "state": "present"
+      },
+      "nextAction": "No runtime work; keep classification as explicit closure.",
+      "rowId": "srd521:classes/warlock:level-7:class-table-summary:warlock_level_7_feature_table_row",
+      "rowKind": "class-table-summary",
+      "source": {
+        "lineEnd": 41,
+        "lineStart": 41,
+        "path": ".references/srd-5.2.1/Classes/Warlock.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "state": "authored-record-present"
+        },
+        "battleReadiness": {
+          "state": "not-applicable"
+        },
+        "catalogAdmission": {
+          "state": "installed"
+        },
+        "finalDisposition": "non-runtime",
+        "unitProfile": {
+          "disposition": "unsupported-profile",
+          "state": "recorded"
+        }
+      }
+    },
+    {
       "axis": "spell-level",
       "candidateUnitId": "chill_touch",
       "category": "spell Unit pressure",
@@ -24701,6 +27333,189 @@
         "battleReadiness": {
           "state": "recorded",
           "status": "accepted-no-battle-effect"
+        },
+        "catalogAdmission": {
+          "state": "installed"
+        },
+        "finalDisposition": "non-runtime",
+        "unitProfile": {
+          "disposition": "unsupported-profile",
+          "state": "recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "wizard_memorize_spell",
+      "category": "class feature",
+      "className": "Wizard",
+      "concept": "Wizard Memorize Spell",
+      "levelBand": "level-5",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/wizard:level-5:class-feature-grant:wizard_memorize_spell",
+        "state": "present"
+      },
+      "nextAction": "Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported.",
+      "rowId": "srd521:classes/wizard:level-5:class-feature-grant:wizard_memorize_spell",
+      "rowKind": "class-feature-grant",
+      "source": {
+        "lineEnd": 119,
+        "lineStart": 116,
+        "path": ".references/srd-5.2.1/Classes/Wizard.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "state": "missing-authored-record"
+        },
+        "battleReadiness": {
+          "state": "not-applicable"
+        },
+        "catalogAdmission": {
+          "state": "not-installed"
+        },
+        "finalDisposition": "level-5-7-follow-up-required",
+        "unitProfile": {
+          "state": "not-recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "class_wizard",
+      "category": "character-creation or progression mechanic",
+      "className": "Wizard",
+      "concept": "Wizard level 5 feature table row",
+      "levelBand": "level-5",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/wizard:level-5:class-table-summary:wizard_level_5_feature_table_row",
+        "state": "present"
+      },
+      "nextAction": "No runtime work; keep classification as explicit closure.",
+      "rowId": "srd521:classes/wizard:level-5:class-table-summary:wizard_level_5_feature_table_row",
+      "rowKind": "class-table-summary",
+      "source": {
+        "lineEnd": 39,
+        "lineStart": 39,
+        "path": ".references/srd-5.2.1/Classes/Wizard.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "state": "authored-record-present"
+        },
+        "battleReadiness": {
+          "state": "not-applicable"
+        },
+        "catalogAdmission": {
+          "state": "installed"
+        },
+        "finalDisposition": "non-runtime",
+        "unitProfile": {
+          "disposition": "unsupported-profile",
+          "state": "recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "wizard_sculpt_spells",
+      "category": "class feature",
+      "className": "Wizard",
+      "concept": "Wizard Sculpt Spells",
+      "levelBand": "level-6",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/wizard:level-6:class-feature-grant:wizard_sculpt_spells",
+        "state": "present"
+      },
+      "nextAction": "Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported.",
+      "rowId": "srd521:classes/wizard:level-6:class-feature-grant:wizard_sculpt_spells",
+      "rowKind": "class-feature-grant",
+      "source": {
+        "lineEnd": 424,
+        "lineStart": 421,
+        "path": ".references/srd-5.2.1/Classes/Wizard.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "state": "missing-authored-record"
+        },
+        "battleReadiness": {
+          "state": "not-applicable"
+        },
+        "catalogAdmission": {
+          "state": "not-installed"
+        },
+        "finalDisposition": "level-5-7-follow-up-required",
+        "unitProfile": {
+          "state": "not-recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "class_wizard",
+      "category": "character-creation or progression mechanic",
+      "className": "Wizard",
+      "concept": "Wizard level 6 feature table row",
+      "levelBand": "level-6",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/wizard:level-6:class-table-summary:wizard_level_6_feature_table_row",
+        "state": "present"
+      },
+      "nextAction": "No runtime work; keep classification as explicit closure.",
+      "rowId": "srd521:classes/wizard:level-6:class-table-summary:wizard_level_6_feature_table_row",
+      "rowKind": "class-table-summary",
+      "source": {
+        "lineEnd": 40,
+        "lineStart": 40,
+        "path": ".references/srd-5.2.1/Classes/Wizard.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "state": "authored-record-present"
+        },
+        "battleReadiness": {
+          "state": "not-applicable"
+        },
+        "catalogAdmission": {
+          "state": "installed"
+        },
+        "finalDisposition": "non-runtime",
+        "unitProfile": {
+          "disposition": "unsupported-profile",
+          "state": "recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "class_wizard",
+      "category": "character-creation or progression mechanic",
+      "className": "Wizard",
+      "concept": "Wizard level 7 feature table row",
+      "levelBand": "level-7",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/wizard:level-7:class-table-summary:wizard_level_7_feature_table_row",
+        "state": "present"
+      },
+      "nextAction": "No runtime work; keep classification as explicit closure.",
+      "rowId": "srd521:classes/wizard:level-7:class-table-summary:wizard_level_7_feature_table_row",
+      "rowKind": "class-table-summary",
+      "source": {
+        "lineEnd": 41,
+        "lineStart": 41,
+        "path": ".references/srd-5.2.1/Classes/Wizard.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "state": "authored-record-present"
+        },
+        "battleReadiness": {
+          "state": "not-applicable"
         },
         "catalogAdmission": {
           "state": "installed"

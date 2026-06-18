@@ -1,7 +1,7 @@
 {
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "sourceCorpus": ".references/srd-5.2.1/Classes",
-  "scope": "SRD 5.2.1 class-derived Unit/catalog backlog rows, prioritized by character level. Character levels 1-2 include cantrips and spell-level-1 pressure; character level 3 adds class/subclass level-3 rows and spell-level-2 pressure; character level 4 adds level-4 class-feature pressure while continuing to exclude spell-level-3 pressure. Spell-level-3 pressure is reported separately as a later character-level-5 frontier seed.",
+  "scope": "SRD 5.2.1 class-derived Unit/catalog backlog rows, prioritized by character level. Character levels 1-2 include cantrips and spell-level-1 pressure; character level 3 adds class/subclass level-3 rows and spell-level-2 pressure; character level 4 adds level-4 class-feature pressure while continuing to exclude spell-level-3 pressure. Character levels 5-7 are mined as a non-blocking audit frontier for class-table, class-feature, subclass-feature, and repeated progression rows; spell-level-3 pressure is reported separately as a later character-level-5 frontier seed.",
   "evidenceArtifacts": {
     "characterCreationOwnerEvidence": {
       "schema": "dnd.srd-character-creation-owner-evidence.v1",
@@ -221,11 +221,14 @@
     }
   },
   "metrics": {
-    "totalRows": 760,
+    "totalRows": 837,
     "levelOneRows": 156,
     "levelTwoRows": 33,
     "levelThreeClassRows": 51,
     "levelFourClassRows": 25,
+    "levelFiveClassRows": 28,
+    "levelSixClassRows": 25,
+    "levelSevenClassRows": 24,
     "spellPressureRows": 367,
     "levelThreeSpellPressureRows": 128,
     "levelThreeInstalledSpellPressureRows": 24,
@@ -327,10 +330,38 @@
       "class feature": 13,
       "character-creation or progression mechanic": 12
     },
+    "levelFiveClassRowsByDisposition": {
+      "level-5-7-follow-up-required": 11,
+      "catalog-installed-owner-evidence-present": 5,
+      "non-runtime": 12
+    },
+    "levelSixClassRowsByDisposition": {
+      "level-5-7-follow-up-required": 11,
+      "non-runtime": 12,
+      "catalog-installed-owner-evidence-present": 2
+    },
+    "levelSevenClassRowsByDisposition": {
+      "level-5-7-follow-up-required": 11,
+      "non-runtime": 12,
+      "catalog-installed-owner-evidence-present": 1
+    },
+    "levelFiveClassRowsByCategory": {
+      "class feature": 16,
+      "character-creation or progression mechanic": 12
+    },
+    "levelSixClassRowsByCategory": {
+      "class feature": 13,
+      "character-creation or progression mechanic": 12
+    },
+    "levelSevenClassRowsByCategory": {
+      "class feature": 12,
+      "character-creation or progression mechanic": 12
+    },
     "allRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 475,
-      "non-runtime": 48,
+      "catalog-installed-owner-evidence-present": 483,
+      "non-runtime": 84,
       "catalog-only/dead-for-now": 145,
+      "level-5-7-follow-up-required": 33,
       "missing-authored-record": 58,
       "catalog-authored-review-required": 33,
       "catalog-installed-owner-evidence-required": 1
@@ -4416,6 +4447,268 @@
       "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
+      "id": "srd521:classes/barbarian:level-5:class-feature-grant:barbarian_extra_attack",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Barbarian.md",
+        "lineStart": 112,
+        "lineEnd": 115
+      },
+      "className": "Barbarian",
+      "levelBand": "level-5",
+      "rowKind": "class-feature-grant",
+      "category": "class feature",
+      "concept": "Barbarian Extra Attack",
+      "detail": "Level 5 class feature.",
+      "candidateUnitId": "barbarian_extra_attack",
+      "surface": {
+        "state": "current-surface-can-express-source-facts"
+      },
+      "authoredContent": {
+        "state": "missing-authored-record"
+      },
+      "catalogAdmission": {
+        "state": "not-installed",
+        "unitId": "barbarian_extra_attack"
+      },
+      "finalDisposition": "level-5-7-follow-up-required",
+      "ownerEvidence": [],
+      "nextAction": "Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported."
+    },
+    {
+      "id": "srd521:classes/barbarian:level-5:class-feature-grant:barbarian_fast_movement",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Barbarian.md",
+        "lineStart": 116,
+        "lineEnd": 119
+      },
+      "className": "Barbarian",
+      "levelBand": "level-5",
+      "rowKind": "class-feature-grant",
+      "category": "class feature",
+      "concept": "Barbarian Fast Movement",
+      "detail": "Level 5 class feature.",
+      "candidateUnitId": "barbarian_fast_movement",
+      "surface": {
+        "state": "current-surface-can-express-source-facts"
+      },
+      "authoredContent": {
+        "state": "authored-record-present",
+        "unitId": "barbarian_fast_movement",
+        "sourceRecordPath": "packages/surface/content/barbarian_fast_movement.json"
+      },
+      "catalogAdmission": {
+        "state": "installed",
+        "unitId": "barbarian_fast_movement"
+      },
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit barbarian_fast_movement is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; QMBT40 at packages/battle-runtime/src/unit-profile-admission-extra-attack-and-speed-features.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present."
+    },
+    {
+      "id": "srd521:classes/barbarian:level-5:class-table-summary:barbarian_level_5_feature_table_row",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Barbarian.md",
+        "lineStart": 39,
+        "lineEnd": 39
+      },
+      "className": "Barbarian",
+      "levelBand": "level-5",
+      "rowKind": "class-table-summary",
+      "category": "character-creation or progression mechanic",
+      "concept": "Barbarian level 5 feature table row",
+      "detail": "5 | +3 | Extra Attack, Fast Movement | 3 | +2 | 3",
+      "candidateUnitId": "class_barbarian",
+      "surface": {
+        "state": "outside-surface-runtime-mechanics"
+      },
+      "authoredContent": {
+        "state": "authored-record-present",
+        "unitId": "class_barbarian",
+        "sourceRecordPath": "packages/surface/content/class_barbarian.json"
+      },
+      "catalogAdmission": {
+        "state": "installed",
+        "unitId": "class_barbarian"
+      },
+      "characterCreationOwnership": {
+        "state": "non-runtime-table-summary",
+        "owner": "not-applicable",
+        "evidenceBoundary": "The feature table summarizes level progression; narrower class trait, feature, spell-access, mastery, and equipment rows own executable evidence."
+      },
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "non-runtime",
+      "ownerEvidence": [],
+      "nextAction": "No runtime work; keep classification as explicit closure."
+    },
+    {
+      "id": "srd521:classes/barbarian:level-6:class-feature-grant:barbarian_mindless_rage",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Barbarian.md",
+        "lineStart": 182,
+        "lineEnd": 185
+      },
+      "className": "Barbarian",
+      "levelBand": "level-6",
+      "rowKind": "class-feature-grant",
+      "category": "class feature",
+      "concept": "Barbarian Mindless Rage",
+      "detail": "Level 6 class feature.",
+      "candidateUnitId": "barbarian_mindless_rage",
+      "surface": {
+        "state": "current-surface-can-express-source-facts"
+      },
+      "authoredContent": {
+        "state": "missing-authored-record"
+      },
+      "catalogAdmission": {
+        "state": "not-installed",
+        "unitId": "barbarian_mindless_rage"
+      },
+      "finalDisposition": "level-5-7-follow-up-required",
+      "ownerEvidence": [],
+      "nextAction": "Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported."
+    },
+    {
+      "id": "srd521:classes/barbarian:level-6:class-table-summary:barbarian_level_6_feature_table_row",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Barbarian.md",
+        "lineStart": 40,
+        "lineEnd": 40
+      },
+      "className": "Barbarian",
+      "levelBand": "level-6",
+      "rowKind": "class-table-summary",
+      "category": "character-creation or progression mechanic",
+      "concept": "Barbarian level 6 feature table row",
+      "detail": "6 | +3 | Subclass feature | 4 | +2 | 3",
+      "candidateUnitId": "class_barbarian",
+      "surface": {
+        "state": "outside-surface-runtime-mechanics"
+      },
+      "authoredContent": {
+        "state": "authored-record-present",
+        "unitId": "class_barbarian",
+        "sourceRecordPath": "packages/surface/content/class_barbarian.json"
+      },
+      "catalogAdmission": {
+        "state": "installed",
+        "unitId": "class_barbarian"
+      },
+      "characterCreationOwnership": {
+        "state": "non-runtime-table-summary",
+        "owner": "not-applicable",
+        "evidenceBoundary": "The feature table summarizes level progression; narrower class trait, feature, spell-access, mastery, and equipment rows own executable evidence."
+      },
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "non-runtime",
+      "ownerEvidence": [],
+      "nextAction": "No runtime work; keep classification as explicit closure."
+    },
+    {
+      "id": "srd521:classes/barbarian:level-7:class-feature-grant:barbarian_feral_instinct",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Barbarian.md",
+        "lineStart": 120,
+        "lineEnd": 123
+      },
+      "className": "Barbarian",
+      "levelBand": "level-7",
+      "rowKind": "class-feature-grant",
+      "category": "class feature",
+      "concept": "Barbarian Feral Instinct",
+      "detail": "Level 7 class feature.",
+      "candidateUnitId": "barbarian_feral_instinct",
+      "surface": {
+        "state": "current-surface-can-express-source-facts"
+      },
+      "authoredContent": {
+        "state": "missing-authored-record"
+      },
+      "catalogAdmission": {
+        "state": "not-installed",
+        "unitId": "barbarian_feral_instinct"
+      },
+      "finalDisposition": "level-5-7-follow-up-required",
+      "ownerEvidence": [],
+      "nextAction": "Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported."
+    },
+    {
+      "id": "srd521:classes/barbarian:level-7:class-feature-grant:barbarian_instinctive_pounce",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Barbarian.md",
+        "lineStart": 124,
+        "lineEnd": 127
+      },
+      "className": "Barbarian",
+      "levelBand": "level-7",
+      "rowKind": "class-feature-grant",
+      "category": "class feature",
+      "concept": "Barbarian Instinctive Pounce",
+      "detail": "Level 7 class feature.",
+      "candidateUnitId": "barbarian_instinctive_pounce",
+      "surface": {
+        "state": "current-surface-can-express-source-facts"
+      },
+      "authoredContent": {
+        "state": "missing-authored-record"
+      },
+      "catalogAdmission": {
+        "state": "not-installed",
+        "unitId": "barbarian_instinctive_pounce"
+      },
+      "finalDisposition": "level-5-7-follow-up-required",
+      "ownerEvidence": [],
+      "nextAction": "Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported."
+    },
+    {
+      "id": "srd521:classes/barbarian:level-7:class-table-summary:barbarian_level_7_feature_table_row",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Barbarian.md",
+        "lineStart": 41,
+        "lineEnd": 41
+      },
+      "className": "Barbarian",
+      "levelBand": "level-7",
+      "rowKind": "class-table-summary",
+      "category": "character-creation or progression mechanic",
+      "concept": "Barbarian level 7 feature table row",
+      "detail": "7 | +3 | Feral Instinct, Instinctive Pounce | 4 | +2 | 3",
+      "candidateUnitId": "class_barbarian",
+      "surface": {
+        "state": "outside-surface-runtime-mechanics"
+      },
+      "authoredContent": {
+        "state": "authored-record-present",
+        "unitId": "class_barbarian",
+        "sourceRecordPath": "packages/surface/content/class_barbarian.json"
+      },
+      "catalogAdmission": {
+        "state": "installed",
+        "unitId": "class_barbarian"
+      },
+      "characterCreationOwnership": {
+        "state": "non-runtime-table-summary",
+        "owner": "not-applicable",
+        "evidenceBoundary": "The feature table summarizes level progression; narrower class trait, feature, spell-access, mastery, and equipment rows own executable evidence."
+      },
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "non-runtime",
+      "ownerEvidence": [],
+      "nextAction": "No runtime work; keep classification as explicit closure."
+    },
+    {
       "id": "srd521:classes/bard:level-1:class-container:bard_class_container",
       "source": {
         "path": ".references/srd-5.2.1/Classes/Bard.md",
@@ -5397,6 +5690,198 @@
       "ownerEvidence": [],
       "nextAction": "No runtime work; keep classification as explicit closure.",
       "battleReadinessStatus": "accepted-no-battle-effect"
+    },
+    {
+      "id": "srd521:classes/bard:level-5:class-feature-grant:bard_font_of_inspiration",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Bard.md",
+        "lineStart": 113,
+        "lineEnd": 118
+      },
+      "className": "Bard",
+      "levelBand": "level-5",
+      "rowKind": "class-feature-grant",
+      "category": "class feature",
+      "concept": "Bard Font of Inspiration",
+      "detail": "Level 5 class feature.",
+      "candidateUnitId": "bard_font_of_inspiration",
+      "surface": {
+        "state": "current-surface-can-express-source-facts"
+      },
+      "authoredContent": {
+        "state": "missing-authored-record"
+      },
+      "catalogAdmission": {
+        "state": "not-installed",
+        "unitId": "bard_font_of_inspiration"
+      },
+      "finalDisposition": "level-5-7-follow-up-required",
+      "ownerEvidence": [],
+      "nextAction": "Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported."
+    },
+    {
+      "id": "srd521:classes/bard:level-5:class-table-summary:bard_level_5_feature_table_row",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Bard.md",
+        "lineStart": 40,
+        "lineEnd": 40
+      },
+      "className": "Bard",
+      "levelBand": "level-5",
+      "rowKind": "class-table-summary",
+      "category": "character-creation or progression mechanic",
+      "concept": "Bard level 5 feature table row",
+      "detail": "5 | +3 | Font of Inspiration | D8 | 3 | 9 | 4 | 3 | 2 | — | — | — | — | — | —",
+      "candidateUnitId": "class_bard",
+      "surface": {
+        "state": "outside-surface-runtime-mechanics"
+      },
+      "authoredContent": {
+        "state": "authored-record-present",
+        "unitId": "class_bard",
+        "sourceRecordPath": "packages/surface/content/class_bard.json"
+      },
+      "catalogAdmission": {
+        "state": "installed",
+        "unitId": "class_bard"
+      },
+      "characterCreationOwnership": {
+        "state": "non-runtime-table-summary",
+        "owner": "not-applicable",
+        "evidenceBoundary": "The feature table summarizes level progression; narrower class trait, feature, spell-access, mastery, and equipment rows own executable evidence."
+      },
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "non-runtime",
+      "ownerEvidence": [],
+      "nextAction": "No runtime work; keep classification as explicit closure."
+    },
+    {
+      "id": "srd521:classes/bard:level-6:class-feature-grant:bard_magical_discoveries",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Bard.md",
+        "lineStart": 336,
+        "lineEnd": 341
+      },
+      "className": "Bard",
+      "levelBand": "level-6",
+      "rowKind": "class-feature-grant",
+      "category": "class feature",
+      "concept": "Bard Magical Discoveries",
+      "detail": "Level 6 class feature.",
+      "candidateUnitId": "bard_magical_discoveries",
+      "surface": {
+        "state": "current-surface-can-express-source-facts"
+      },
+      "authoredContent": {
+        "state": "missing-authored-record"
+      },
+      "catalogAdmission": {
+        "state": "not-installed",
+        "unitId": "bard_magical_discoveries"
+      },
+      "finalDisposition": "level-5-7-follow-up-required",
+      "ownerEvidence": [],
+      "nextAction": "Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported."
+    },
+    {
+      "id": "srd521:classes/bard:level-6:class-table-summary:bard_level_6_feature_table_row",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Bard.md",
+        "lineStart": 41,
+        "lineEnd": 41
+      },
+      "className": "Bard",
+      "levelBand": "level-6",
+      "rowKind": "class-table-summary",
+      "category": "character-creation or progression mechanic",
+      "concept": "Bard level 6 feature table row",
+      "detail": "6 | +3 | Subclass feature | D8 | 3 | 10 | 4 | 3 | 3 | — | — | — | — | — | —",
+      "candidateUnitId": "class_bard",
+      "surface": {
+        "state": "outside-surface-runtime-mechanics"
+      },
+      "authoredContent": {
+        "state": "authored-record-present",
+        "unitId": "class_bard",
+        "sourceRecordPath": "packages/surface/content/class_bard.json"
+      },
+      "catalogAdmission": {
+        "state": "installed",
+        "unitId": "class_bard"
+      },
+      "characterCreationOwnership": {
+        "state": "non-runtime-table-summary",
+        "owner": "not-applicable",
+        "evidenceBoundary": "The feature table summarizes level progression; narrower class trait, feature, spell-access, mastery, and equipment rows own executable evidence."
+      },
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "non-runtime",
+      "ownerEvidence": [],
+      "nextAction": "No runtime work; keep classification as explicit closure."
+    },
+    {
+      "id": "srd521:classes/bard:level-7:class-feature-grant:bard_countercharm",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Bard.md",
+        "lineStart": 119,
+        "lineEnd": 122
+      },
+      "className": "Bard",
+      "levelBand": "level-7",
+      "rowKind": "class-feature-grant",
+      "category": "class feature",
+      "concept": "Bard Countercharm",
+      "detail": "Level 7 class feature.",
+      "candidateUnitId": "bard_countercharm",
+      "surface": {
+        "state": "current-surface-can-express-source-facts"
+      },
+      "authoredContent": {
+        "state": "missing-authored-record"
+      },
+      "catalogAdmission": {
+        "state": "not-installed",
+        "unitId": "bard_countercharm"
+      },
+      "finalDisposition": "level-5-7-follow-up-required",
+      "ownerEvidence": [],
+      "nextAction": "Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported."
+    },
+    {
+      "id": "srd521:classes/bard:level-7:class-table-summary:bard_level_7_feature_table_row",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Bard.md",
+        "lineStart": 42,
+        "lineEnd": 42
+      },
+      "className": "Bard",
+      "levelBand": "level-7",
+      "rowKind": "class-table-summary",
+      "category": "character-creation or progression mechanic",
+      "concept": "Bard level 7 feature table row",
+      "detail": "7 | +3 | Countercharm | D8 | 3 | 11 | 4 | 3 | 3 | 1 | — | — | — | — | —",
+      "candidateUnitId": "class_bard",
+      "surface": {
+        "state": "outside-surface-runtime-mechanics"
+      },
+      "authoredContent": {
+        "state": "authored-record-present",
+        "unitId": "class_bard",
+        "sourceRecordPath": "packages/surface/content/class_bard.json"
+      },
+      "catalogAdmission": {
+        "state": "installed",
+        "unitId": "class_bard"
+      },
+      "characterCreationOwnership": {
+        "state": "non-runtime-table-summary",
+        "owner": "not-applicable",
+        "evidenceBoundary": "The feature table summarizes level progression; narrower class trait, feature, spell-access, mastery, and equipment rows own executable evidence."
+      },
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "non-runtime",
+      "ownerEvidence": [],
+      "nextAction": "No runtime work; keep classification as explicit closure."
     },
     {
       "id": "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_dancing_lights",
@@ -9276,6 +9761,198 @@
       "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
+      "id": "srd521:classes/cleric:level-5:class-feature-grant:cleric_sear_undead",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Cleric.md",
+        "lineStart": 110,
+        "lineEnd": 113
+      },
+      "className": "Cleric",
+      "levelBand": "level-5",
+      "rowKind": "class-feature-grant",
+      "category": "class feature",
+      "concept": "Cleric Sear Undead",
+      "detail": "Level 5 class feature.",
+      "candidateUnitId": "cleric_sear_undead",
+      "surface": {
+        "state": "current-surface-can-express-source-facts"
+      },
+      "authoredContent": {
+        "state": "missing-authored-record"
+      },
+      "catalogAdmission": {
+        "state": "not-installed",
+        "unitId": "cleric_sear_undead"
+      },
+      "finalDisposition": "level-5-7-follow-up-required",
+      "ownerEvidence": [],
+      "nextAction": "Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported."
+    },
+    {
+      "id": "srd521:classes/cleric:level-5:class-table-summary:cleric_level_5_feature_table_row",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Cleric.md",
+        "lineStart": 39,
+        "lineEnd": 39
+      },
+      "className": "Cleric",
+      "levelBand": "level-5",
+      "rowKind": "class-table-summary",
+      "category": "character-creation or progression mechanic",
+      "concept": "Cleric level 5 feature table row",
+      "detail": "5 | +3 | Sear Undead | 2 | 4 | 9 | 4 | 3 | 2 | — | — | — | — | — | —",
+      "candidateUnitId": "class_cleric",
+      "surface": {
+        "state": "outside-surface-runtime-mechanics"
+      },
+      "authoredContent": {
+        "state": "authored-record-present",
+        "unitId": "class_cleric",
+        "sourceRecordPath": "packages/surface/content/class_cleric.json"
+      },
+      "catalogAdmission": {
+        "state": "installed",
+        "unitId": "class_cleric"
+      },
+      "characterCreationOwnership": {
+        "state": "non-runtime-table-summary",
+        "owner": "not-applicable",
+        "evidenceBoundary": "The feature table summarizes level progression; narrower class trait, feature, spell-access, mastery, and equipment rows own executable evidence."
+      },
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "non-runtime",
+      "ownerEvidence": [],
+      "nextAction": "No runtime work; keep classification as explicit closure."
+    },
+    {
+      "id": "srd521:classes/cleric:level-6:class-feature-grant:cleric_blessed_healer",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Cleric.md",
+        "lineStart": 334,
+        "lineEnd": 337
+      },
+      "className": "Cleric",
+      "levelBand": "level-6",
+      "rowKind": "class-feature-grant",
+      "category": "class feature",
+      "concept": "Cleric Blessed Healer",
+      "detail": "Level 6 class feature.",
+      "candidateUnitId": "cleric_blessed_healer",
+      "surface": {
+        "state": "current-surface-can-express-source-facts"
+      },
+      "authoredContent": {
+        "state": "missing-authored-record"
+      },
+      "catalogAdmission": {
+        "state": "not-installed",
+        "unitId": "cleric_blessed_healer"
+      },
+      "finalDisposition": "level-5-7-follow-up-required",
+      "ownerEvidence": [],
+      "nextAction": "Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported."
+    },
+    {
+      "id": "srd521:classes/cleric:level-6:class-table-summary:cleric_level_6_feature_table_row",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Cleric.md",
+        "lineStart": 40,
+        "lineEnd": 40
+      },
+      "className": "Cleric",
+      "levelBand": "level-6",
+      "rowKind": "class-table-summary",
+      "category": "character-creation or progression mechanic",
+      "concept": "Cleric level 6 feature table row",
+      "detail": "6 | +3 | Subclass feature | 3 | 4 | 10 | 4 | 3 | 3 | — | — | — | — | — | —",
+      "candidateUnitId": "class_cleric",
+      "surface": {
+        "state": "outside-surface-runtime-mechanics"
+      },
+      "authoredContent": {
+        "state": "authored-record-present",
+        "unitId": "class_cleric",
+        "sourceRecordPath": "packages/surface/content/class_cleric.json"
+      },
+      "catalogAdmission": {
+        "state": "installed",
+        "unitId": "class_cleric"
+      },
+      "characterCreationOwnership": {
+        "state": "non-runtime-table-summary",
+        "owner": "not-applicable",
+        "evidenceBoundary": "The feature table summarizes level progression; narrower class trait, feature, spell-access, mastery, and equipment rows own executable evidence."
+      },
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "non-runtime",
+      "ownerEvidence": [],
+      "nextAction": "No runtime work; keep classification as explicit closure."
+    },
+    {
+      "id": "srd521:classes/cleric:level-7:class-feature-grant:cleric_blessed_strikes",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Cleric.md",
+        "lineStart": 114,
+        "lineEnd": 121
+      },
+      "className": "Cleric",
+      "levelBand": "level-7",
+      "rowKind": "class-feature-grant",
+      "category": "class feature",
+      "concept": "Cleric Blessed Strikes",
+      "detail": "Level 7 class feature.",
+      "candidateUnitId": "cleric_blessed_strikes",
+      "surface": {
+        "state": "current-surface-can-express-source-facts"
+      },
+      "authoredContent": {
+        "state": "missing-authored-record"
+      },
+      "catalogAdmission": {
+        "state": "not-installed",
+        "unitId": "cleric_blessed_strikes"
+      },
+      "finalDisposition": "level-5-7-follow-up-required",
+      "ownerEvidence": [],
+      "nextAction": "Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported."
+    },
+    {
+      "id": "srd521:classes/cleric:level-7:class-table-summary:cleric_level_7_feature_table_row",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Cleric.md",
+        "lineStart": 41,
+        "lineEnd": 41
+      },
+      "className": "Cleric",
+      "levelBand": "level-7",
+      "rowKind": "class-table-summary",
+      "category": "character-creation or progression mechanic",
+      "concept": "Cleric level 7 feature table row",
+      "detail": "7 | +3 | Blessed Strikes | 3 | 4 | 11 | 4 | 3 | 3 | 1 | — | — | — | — | —",
+      "candidateUnitId": "class_cleric",
+      "surface": {
+        "state": "outside-surface-runtime-mechanics"
+      },
+      "authoredContent": {
+        "state": "authored-record-present",
+        "unitId": "class_cleric",
+        "sourceRecordPath": "packages/surface/content/class_cleric.json"
+      },
+      "catalogAdmission": {
+        "state": "installed",
+        "unitId": "class_cleric"
+      },
+      "characterCreationOwnership": {
+        "state": "non-runtime-table-summary",
+        "owner": "not-applicable",
+        "evidenceBoundary": "The feature table summarizes level progression; narrower class trait, feature, spell-access, mastery, and equipment rows own executable evidence."
+      },
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "non-runtime",
+      "ownerEvidence": [],
+      "nextAction": "No runtime work; keep classification as explicit closure."
+    },
+    {
       "id": "srd521:classes/cleric:spell-level-0:spell-unit-pressure:cleric_spell_list_guidance",
       "source": {
         "path": ".references/srd-5.2.1/Classes/Cleric.md",
@@ -12668,6 +13345,198 @@
       "ownerEvidence": [],
       "nextAction": "No runtime work; keep classification as explicit closure.",
       "battleReadinessStatus": "accepted-no-battle-effect"
+    },
+    {
+      "id": "srd521:classes/druid:level-5:class-feature-grant:druid_wild_resurgence",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Druid.md",
+        "lineStart": 138,
+        "lineEnd": 143
+      },
+      "className": "Druid",
+      "levelBand": "level-5",
+      "rowKind": "class-feature-grant",
+      "category": "class feature",
+      "concept": "Druid Wild Resurgence",
+      "detail": "Level 5 class feature.",
+      "candidateUnitId": "druid_wild_resurgence",
+      "surface": {
+        "state": "current-surface-can-express-source-facts"
+      },
+      "authoredContent": {
+        "state": "missing-authored-record"
+      },
+      "catalogAdmission": {
+        "state": "not-installed",
+        "unitId": "druid_wild_resurgence"
+      },
+      "finalDisposition": "level-5-7-follow-up-required",
+      "ownerEvidence": [],
+      "nextAction": "Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported."
+    },
+    {
+      "id": "srd521:classes/druid:level-5:class-table-summary:druid_level_5_feature_table_row",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Druid.md",
+        "lineStart": 36,
+        "lineEnd": 36
+      },
+      "className": "Druid",
+      "levelBand": "level-5",
+      "rowKind": "class-table-summary",
+      "category": "character-creation or progression mechanic",
+      "concept": "Druid level 5 feature table row",
+      "detail": "5 | +3 | Wild Resurgence | 2 | 3 | 9 | 4 | 3 | 2 | — | — | — | — | — | —",
+      "candidateUnitId": "class_druid",
+      "surface": {
+        "state": "outside-surface-runtime-mechanics"
+      },
+      "authoredContent": {
+        "state": "authored-record-present",
+        "unitId": "class_druid",
+        "sourceRecordPath": "packages/surface/content/class_druid.json"
+      },
+      "catalogAdmission": {
+        "state": "installed",
+        "unitId": "class_druid"
+      },
+      "characterCreationOwnership": {
+        "state": "non-runtime-table-summary",
+        "owner": "not-applicable",
+        "evidenceBoundary": "The feature table summarizes level progression; narrower class trait, feature, spell-access, mastery, and equipment rows own executable evidence."
+      },
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "non-runtime",
+      "ownerEvidence": [],
+      "nextAction": "No runtime work; keep classification as explicit closure."
+    },
+    {
+      "id": "srd521:classes/druid:level-6:class-feature-grant:druid_natural_recovery",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Druid.md",
+        "lineStart": 412,
+        "lineEnd": 417
+      },
+      "className": "Druid",
+      "levelBand": "level-6",
+      "rowKind": "class-feature-grant",
+      "category": "class feature",
+      "concept": "Druid Natural Recovery",
+      "detail": "Level 6 class feature.",
+      "candidateUnitId": "druid_natural_recovery",
+      "surface": {
+        "state": "current-surface-can-express-source-facts"
+      },
+      "authoredContent": {
+        "state": "missing-authored-record"
+      },
+      "catalogAdmission": {
+        "state": "not-installed",
+        "unitId": "druid_natural_recovery"
+      },
+      "finalDisposition": "level-5-7-follow-up-required",
+      "ownerEvidence": [],
+      "nextAction": "Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported."
+    },
+    {
+      "id": "srd521:classes/druid:level-6:class-table-summary:druid_level_6_feature_table_row",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Druid.md",
+        "lineStart": 37,
+        "lineEnd": 37
+      },
+      "className": "Druid",
+      "levelBand": "level-6",
+      "rowKind": "class-table-summary",
+      "category": "character-creation or progression mechanic",
+      "concept": "Druid level 6 feature table row",
+      "detail": "6 | +3 | Subclass feature | 3 | 3 | 10 | 4 | 3 | 3 | — | — | — | — | — | —",
+      "candidateUnitId": "class_druid",
+      "surface": {
+        "state": "outside-surface-runtime-mechanics"
+      },
+      "authoredContent": {
+        "state": "authored-record-present",
+        "unitId": "class_druid",
+        "sourceRecordPath": "packages/surface/content/class_druid.json"
+      },
+      "catalogAdmission": {
+        "state": "installed",
+        "unitId": "class_druid"
+      },
+      "characterCreationOwnership": {
+        "state": "non-runtime-table-summary",
+        "owner": "not-applicable",
+        "evidenceBoundary": "The feature table summarizes level progression; narrower class trait, feature, spell-access, mastery, and equipment rows own executable evidence."
+      },
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "non-runtime",
+      "ownerEvidence": [],
+      "nextAction": "No runtime work; keep classification as explicit closure."
+    },
+    {
+      "id": "srd521:classes/druid:level-7:class-feature-grant:druid_elemental_fury",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Druid.md",
+        "lineStart": 144,
+        "lineEnd": 151
+      },
+      "className": "Druid",
+      "levelBand": "level-7",
+      "rowKind": "class-feature-grant",
+      "category": "class feature",
+      "concept": "Druid Elemental Fury",
+      "detail": "Level 7 class feature.",
+      "candidateUnitId": "druid_elemental_fury",
+      "surface": {
+        "state": "current-surface-can-express-source-facts"
+      },
+      "authoredContent": {
+        "state": "missing-authored-record"
+      },
+      "catalogAdmission": {
+        "state": "not-installed",
+        "unitId": "druid_elemental_fury"
+      },
+      "finalDisposition": "level-5-7-follow-up-required",
+      "ownerEvidence": [],
+      "nextAction": "Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported."
+    },
+    {
+      "id": "srd521:classes/druid:level-7:class-table-summary:druid_level_7_feature_table_row",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Druid.md",
+        "lineStart": 38,
+        "lineEnd": 38
+      },
+      "className": "Druid",
+      "levelBand": "level-7",
+      "rowKind": "class-table-summary",
+      "category": "character-creation or progression mechanic",
+      "concept": "Druid level 7 feature table row",
+      "detail": "7 | +3 | Elemental Fury | 3 | 3 | 11 | 4 | 3 | 3 | 1 | — | — | — | — | —",
+      "candidateUnitId": "class_druid",
+      "surface": {
+        "state": "outside-surface-runtime-mechanics"
+      },
+      "authoredContent": {
+        "state": "authored-record-present",
+        "unitId": "class_druid",
+        "sourceRecordPath": "packages/surface/content/class_druid.json"
+      },
+      "catalogAdmission": {
+        "state": "installed",
+        "unitId": "class_druid"
+      },
+      "characterCreationOwnership": {
+        "state": "non-runtime-table-summary",
+        "owner": "not-applicable",
+        "evidenceBoundary": "The feature table summarizes level progression; narrower class trait, feature, spell-access, mastery, and equipment rows own executable evidence."
+      },
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "non-runtime",
+      "ownerEvidence": [],
+      "nextAction": "No runtime work; keep classification as explicit closure."
     },
     {
       "id": "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_druidcraft",
@@ -16239,6 +17108,240 @@
       "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
+      "id": "srd521:classes/fighter:level-5:class-feature-grant:fighter_extra_attack",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Fighter.md",
+        "lineStart": 94,
+        "lineEnd": 97
+      },
+      "className": "Fighter",
+      "levelBand": "level-5",
+      "rowKind": "class-feature-grant",
+      "category": "class feature",
+      "concept": "Fighter Extra Attack",
+      "detail": "Level 5 class feature.",
+      "candidateUnitId": "fighter_extra_attack",
+      "surface": {
+        "state": "current-surface-can-express-source-facts"
+      },
+      "authoredContent": {
+        "state": "authored-record-present",
+        "unitId": "fighter_extra_attack",
+        "sourceRecordPath": "packages/surface/content/fighter_extra_attack.json"
+      },
+      "catalogAdmission": {
+        "state": "installed",
+        "unitId": "fighter_extra_attack"
+      },
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit fighter_extra_attack is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; QMBT37 at packages/battle-runtime/src/unit-profile-admission-extra-attack-and-speed-features.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present."
+    },
+    {
+      "id": "srd521:classes/fighter:level-5:class-feature-grant:fighter_tactical_shift",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Fighter.md",
+        "lineStart": 98,
+        "lineEnd": 101
+      },
+      "className": "Fighter",
+      "levelBand": "level-5",
+      "rowKind": "class-feature-grant",
+      "category": "class feature",
+      "concept": "Fighter Tactical Shift",
+      "detail": "Level 5 class feature.",
+      "candidateUnitId": "fighter_tactical_shift",
+      "surface": {
+        "state": "current-surface-can-express-source-facts"
+      },
+      "authoredContent": {
+        "state": "missing-authored-record"
+      },
+      "catalogAdmission": {
+        "state": "not-installed",
+        "unitId": "fighter_tactical_shift"
+      },
+      "finalDisposition": "level-5-7-follow-up-required",
+      "ownerEvidence": [],
+      "nextAction": "Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported."
+    },
+    {
+      "id": "srd521:classes/fighter:level-5:class-table-summary:fighter_level_5_feature_table_row",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Fighter.md",
+        "lineStart": 35,
+        "lineEnd": 35
+      },
+      "className": "Fighter",
+      "levelBand": "level-5",
+      "rowKind": "class-table-summary",
+      "category": "character-creation or progression mechanic",
+      "concept": "Fighter level 5 feature table row",
+      "detail": "5 | +3 | Extra Attack, Tactical Shift | 3 | 4",
+      "candidateUnitId": "class_fighter",
+      "surface": {
+        "state": "outside-surface-runtime-mechanics"
+      },
+      "authoredContent": {
+        "state": "authored-record-present",
+        "unitId": "class_fighter",
+        "sourceRecordPath": "packages/surface/content/class_fighter.json"
+      },
+      "catalogAdmission": {
+        "state": "installed",
+        "unitId": "class_fighter"
+      },
+      "characterCreationOwnership": {
+        "state": "non-runtime-table-summary",
+        "owner": "not-applicable",
+        "evidenceBoundary": "The feature table summarizes level progression; narrower class trait, feature, spell-access, mastery, and equipment rows own executable evidence."
+      },
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "non-runtime",
+      "ownerEvidence": [],
+      "nextAction": "No runtime work; keep classification as explicit closure."
+    },
+    {
+      "id": "srd521:classes/fighter:level-6:class-feature-grant:fighter_ability_score_improvement",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Fighter.md",
+        "lineStart": 36,
+        "lineEnd": 36
+      },
+      "className": "Fighter",
+      "levelBand": "level-6",
+      "rowKind": "class-feature-grant",
+      "category": "class feature",
+      "concept": "Fighter Ability Score Improvement",
+      "detail": "Level 6 table-derived repeated class feature; the feature's dedicated rule text appears at an earlier level.",
+      "candidateUnitId": "fighter_ability_score_improvement_l6",
+      "surface": {
+        "state": "current-surface-can-express-source-facts"
+      },
+      "authoredContent": {
+        "state": "missing-authored-record"
+      },
+      "catalogAdmission": {
+        "state": "not-installed",
+        "unitId": "fighter_ability_score_improvement_l6"
+      },
+      "finalDisposition": "level-5-7-follow-up-required",
+      "ownerEvidence": [],
+      "nextAction": "Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported."
+    },
+    {
+      "id": "srd521:classes/fighter:level-6:class-table-summary:fighter_level_6_feature_table_row",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Fighter.md",
+        "lineStart": 36,
+        "lineEnd": 36
+      },
+      "className": "Fighter",
+      "levelBand": "level-6",
+      "rowKind": "class-table-summary",
+      "category": "character-creation or progression mechanic",
+      "concept": "Fighter level 6 feature table row",
+      "detail": "6 | +3 | Ability Score Improvement | 3 | 4",
+      "candidateUnitId": "class_fighter",
+      "surface": {
+        "state": "outside-surface-runtime-mechanics"
+      },
+      "authoredContent": {
+        "state": "authored-record-present",
+        "unitId": "class_fighter",
+        "sourceRecordPath": "packages/surface/content/class_fighter.json"
+      },
+      "catalogAdmission": {
+        "state": "installed",
+        "unitId": "class_fighter"
+      },
+      "characterCreationOwnership": {
+        "state": "non-runtime-table-summary",
+        "owner": "not-applicable",
+        "evidenceBoundary": "The feature table summarizes level progression; narrower class trait, feature, spell-access, mastery, and equipment rows own executable evidence."
+      },
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "non-runtime",
+      "ownerEvidence": [],
+      "nextAction": "No runtime work; keep classification as explicit closure."
+    },
+    {
+      "id": "srd521:classes/fighter:level-7:class-feature-grant:fighter_additional_fighting_style",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Fighter.md",
+        "lineStart": 146,
+        "lineEnd": 149
+      },
+      "className": "Fighter",
+      "levelBand": "level-7",
+      "rowKind": "class-feature-grant",
+      "category": "class feature",
+      "concept": "Fighter Additional Fighting Style",
+      "detail": "Level 7 class feature.",
+      "candidateUnitId": "fighter_additional_fighting_style",
+      "surface": {
+        "state": "current-surface-can-express-source-facts"
+      },
+      "authoredContent": {
+        "state": "missing-authored-record"
+      },
+      "catalogAdmission": {
+        "state": "not-installed",
+        "unitId": "fighter_additional_fighting_style"
+      },
+      "finalDisposition": "level-5-7-follow-up-required",
+      "ownerEvidence": [],
+      "nextAction": "Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported."
+    },
+    {
+      "id": "srd521:classes/fighter:level-7:class-table-summary:fighter_level_7_feature_table_row",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Fighter.md",
+        "lineStart": 37,
+        "lineEnd": 37
+      },
+      "className": "Fighter",
+      "levelBand": "level-7",
+      "rowKind": "class-table-summary",
+      "category": "character-creation or progression mechanic",
+      "concept": "Fighter level 7 feature table row",
+      "detail": "7 | +3 | Subclass feature | 3 | 4",
+      "candidateUnitId": "class_fighter",
+      "surface": {
+        "state": "outside-surface-runtime-mechanics"
+      },
+      "authoredContent": {
+        "state": "authored-record-present",
+        "unitId": "class_fighter",
+        "sourceRecordPath": "packages/surface/content/class_fighter.json"
+      },
+      "catalogAdmission": {
+        "state": "installed",
+        "unitId": "class_fighter"
+      },
+      "characterCreationOwnership": {
+        "state": "non-runtime-table-summary",
+        "owner": "not-applicable",
+        "evidenceBoundary": "The feature table summarizes level progression; narrower class trait, feature, spell-access, mastery, and equipment rows own executable evidence."
+      },
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "non-runtime",
+      "ownerEvidence": [],
+      "nextAction": "No runtime work; keep classification as explicit closure."
+    },
+    {
       "id": "srd521:classes/monk:level-1:class-container:monk_class_container",
       "source": {
         "path": ".references/srd-5.2.1/Classes/Monk.md",
@@ -17334,6 +18437,254 @@
       "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
+      "id": "srd521:classes/monk:level-5:class-feature-grant:monk_extra_attack",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Monk.md",
+        "lineStart": 120,
+        "lineEnd": 123
+      },
+      "className": "Monk",
+      "levelBand": "level-5",
+      "rowKind": "class-feature-grant",
+      "category": "class feature",
+      "concept": "Monk Extra Attack",
+      "detail": "Level 5 class feature.",
+      "candidateUnitId": "monk_extra_attack",
+      "surface": {
+        "state": "current-surface-can-express-source-facts"
+      },
+      "authoredContent": {
+        "state": "missing-authored-record"
+      },
+      "catalogAdmission": {
+        "state": "not-installed",
+        "unitId": "monk_extra_attack"
+      },
+      "finalDisposition": "level-5-7-follow-up-required",
+      "ownerEvidence": [],
+      "nextAction": "Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported."
+    },
+    {
+      "id": "srd521:classes/monk:level-5:class-feature-grant:monk_stunning_strike",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Monk.md",
+        "lineStart": 124,
+        "lineEnd": 127
+      },
+      "className": "Monk",
+      "levelBand": "level-5",
+      "rowKind": "class-feature-grant",
+      "category": "class feature",
+      "concept": "Monk Stunning Strike",
+      "detail": "Level 5 class feature.",
+      "candidateUnitId": "monk_stunning_strike",
+      "surface": {
+        "state": "current-surface-can-express-source-facts"
+      },
+      "authoredContent": {
+        "state": "missing-authored-record"
+      },
+      "catalogAdmission": {
+        "state": "not-installed",
+        "unitId": "monk_stunning_strike"
+      },
+      "finalDisposition": "level-5-7-follow-up-required",
+      "ownerEvidence": [],
+      "nextAction": "Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported."
+    },
+    {
+      "id": "srd521:classes/monk:level-5:class-table-summary:monk_level_5_feature_table_row",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Monk.md",
+        "lineStart": 36,
+        "lineEnd": 36
+      },
+      "className": "Monk",
+      "levelBand": "level-5",
+      "rowKind": "class-table-summary",
+      "category": "character-creation or progression mechanic",
+      "concept": "Monk level 5 feature table row",
+      "detail": "5 | +3 | Extra Attack, Stunning Strike | 1d8 | 5 | +10 ft.",
+      "candidateUnitId": "class_monk",
+      "surface": {
+        "state": "outside-surface-runtime-mechanics"
+      },
+      "authoredContent": {
+        "state": "authored-record-present",
+        "unitId": "class_monk",
+        "sourceRecordPath": "packages/surface/content/class_monk.json"
+      },
+      "catalogAdmission": {
+        "state": "installed",
+        "unitId": "class_monk"
+      },
+      "characterCreationOwnership": {
+        "state": "non-runtime-table-summary",
+        "owner": "not-applicable",
+        "evidenceBoundary": "The feature table summarizes level progression; narrower class trait, feature, spell-access, mastery, and equipment rows own executable evidence."
+      },
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "non-runtime",
+      "ownerEvidence": [],
+      "nextAction": "No runtime work; keep classification as explicit closure."
+    },
+    {
+      "id": "srd521:classes/monk:level-6:class-feature-grant:monk_empowered_strikes",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Monk.md",
+        "lineStart": 128,
+        "lineEnd": 131
+      },
+      "className": "Monk",
+      "levelBand": "level-6",
+      "rowKind": "class-feature-grant",
+      "category": "class feature",
+      "concept": "Monk Empowered Strikes",
+      "detail": "Level 6 class feature.",
+      "candidateUnitId": "monk_empowered_strikes",
+      "surface": {
+        "state": "current-surface-can-express-source-facts"
+      },
+      "authoredContent": {
+        "state": "missing-authored-record"
+      },
+      "catalogAdmission": {
+        "state": "not-installed",
+        "unitId": "monk_empowered_strikes"
+      },
+      "finalDisposition": "level-5-7-follow-up-required",
+      "ownerEvidence": [],
+      "nextAction": "Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported."
+    },
+    {
+      "id": "srd521:classes/monk:level-6:class-feature-grant:monk_wholeness_of_body",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Monk.md",
+        "lineStart": 202,
+        "lineEnd": 207
+      },
+      "className": "Monk",
+      "levelBand": "level-6",
+      "rowKind": "class-feature-grant",
+      "category": "class feature",
+      "concept": "Monk Wholeness of Body",
+      "detail": "Level 6 class feature.",
+      "candidateUnitId": "monk_wholeness_of_body",
+      "surface": {
+        "state": "current-surface-can-express-source-facts"
+      },
+      "authoredContent": {
+        "state": "missing-authored-record"
+      },
+      "catalogAdmission": {
+        "state": "not-installed",
+        "unitId": "monk_wholeness_of_body"
+      },
+      "finalDisposition": "level-5-7-follow-up-required",
+      "ownerEvidence": [],
+      "nextAction": "Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported."
+    },
+    {
+      "id": "srd521:classes/monk:level-6:class-table-summary:monk_level_6_feature_table_row",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Monk.md",
+        "lineStart": 37,
+        "lineEnd": 37
+      },
+      "className": "Monk",
+      "levelBand": "level-6",
+      "rowKind": "class-table-summary",
+      "category": "character-creation or progression mechanic",
+      "concept": "Monk level 6 feature table row",
+      "detail": "6 | +3 | Empowered Strikes, Subclass feature | 1d8 | 6 | +15 ft.",
+      "candidateUnitId": "class_monk",
+      "surface": {
+        "state": "outside-surface-runtime-mechanics"
+      },
+      "authoredContent": {
+        "state": "authored-record-present",
+        "unitId": "class_monk",
+        "sourceRecordPath": "packages/surface/content/class_monk.json"
+      },
+      "catalogAdmission": {
+        "state": "installed",
+        "unitId": "class_monk"
+      },
+      "characterCreationOwnership": {
+        "state": "non-runtime-table-summary",
+        "owner": "not-applicable",
+        "evidenceBoundary": "The feature table summarizes level progression; narrower class trait, feature, spell-access, mastery, and equipment rows own executable evidence."
+      },
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "non-runtime",
+      "ownerEvidence": [],
+      "nextAction": "No runtime work; keep classification as explicit closure."
+    },
+    {
+      "id": "srd521:classes/monk:level-7:class-feature-grant:monk_evasion",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Monk.md",
+        "lineStart": 132,
+        "lineEnd": 137
+      },
+      "className": "Monk",
+      "levelBand": "level-7",
+      "rowKind": "class-feature-grant",
+      "category": "class feature",
+      "concept": "Monk Evasion",
+      "detail": "Level 7 class feature.",
+      "candidateUnitId": "monk_evasion",
+      "surface": {
+        "state": "current-surface-can-express-source-facts"
+      },
+      "authoredContent": {
+        "state": "missing-authored-record"
+      },
+      "catalogAdmission": {
+        "state": "not-installed",
+        "unitId": "monk_evasion"
+      },
+      "finalDisposition": "level-5-7-follow-up-required",
+      "ownerEvidence": [],
+      "nextAction": "Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported."
+    },
+    {
+      "id": "srd521:classes/monk:level-7:class-table-summary:monk_level_7_feature_table_row",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Monk.md",
+        "lineStart": 38,
+        "lineEnd": 38
+      },
+      "className": "Monk",
+      "levelBand": "level-7",
+      "rowKind": "class-table-summary",
+      "category": "character-creation or progression mechanic",
+      "concept": "Monk level 7 feature table row",
+      "detail": "7 | +3 | Evasion | 1d8 | 7 | +15 ft.",
+      "candidateUnitId": "class_monk",
+      "surface": {
+        "state": "outside-surface-runtime-mechanics"
+      },
+      "authoredContent": {
+        "state": "authored-record-present",
+        "unitId": "class_monk",
+        "sourceRecordPath": "packages/surface/content/class_monk.json"
+      },
+      "catalogAdmission": {
+        "state": "installed",
+        "unitId": "class_monk"
+      },
+      "characterCreationOwnership": {
+        "state": "non-runtime-table-summary",
+        "owner": "not-applicable",
+        "evidenceBoundary": "The feature table summarizes level progression; narrower class trait, feature, spell-access, mastery, and equipment rows own executable evidence."
+      },
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "non-runtime",
+      "ownerEvidence": [],
+      "nextAction": "No runtime work; keep classification as explicit closure."
+    },
+    {
       "id": "srd521:classes/paladin:level-1:class-container:paladin_class_container",
       "source": {
         "path": ".references/srd-5.2.1/Classes/Paladin.md",
@@ -18375,6 +19726,240 @@
       "ownerEvidence": [],
       "nextAction": "No runtime work; keep classification as explicit closure.",
       "battleReadinessStatus": "accepted-no-battle-effect"
+    },
+    {
+      "id": "srd521:classes/paladin:level-5:class-feature-grant:paladin_extra_attack",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Paladin.md",
+        "lineStart": 126,
+        "lineEnd": 129
+      },
+      "className": "Paladin",
+      "levelBand": "level-5",
+      "rowKind": "class-feature-grant",
+      "category": "class feature",
+      "concept": "Paladin Extra Attack",
+      "detail": "Level 5 class feature.",
+      "candidateUnitId": "paladin_extra_attack",
+      "surface": {
+        "state": "current-surface-can-express-source-facts"
+      },
+      "authoredContent": {
+        "state": "authored-record-present",
+        "unitId": "paladin_extra_attack",
+        "sourceRecordPath": "packages/surface/content/paladin_extra_attack.json"
+      },
+      "catalogAdmission": {
+        "state": "installed",
+        "unitId": "paladin_extra_attack"
+      },
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit paladin_extra_attack is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; QMBT37 at packages/battle-runtime/src/unit-profile-admission-extra-attack-and-speed-features.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present."
+    },
+    {
+      "id": "srd521:classes/paladin:level-5:class-feature-grant:paladin_faithful_steed",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Paladin.md",
+        "lineStart": 130,
+        "lineEnd": 135
+      },
+      "className": "Paladin",
+      "levelBand": "level-5",
+      "rowKind": "class-feature-grant",
+      "category": "class feature",
+      "concept": "Paladin Faithful Steed",
+      "detail": "Level 5 class feature.",
+      "candidateUnitId": "paladin_faithful_steed",
+      "surface": {
+        "state": "current-surface-can-express-source-facts"
+      },
+      "authoredContent": {
+        "state": "missing-authored-record"
+      },
+      "catalogAdmission": {
+        "state": "not-installed",
+        "unitId": "paladin_faithful_steed"
+      },
+      "finalDisposition": "level-5-7-follow-up-required",
+      "ownerEvidence": [],
+      "nextAction": "Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported."
+    },
+    {
+      "id": "srd521:classes/paladin:level-5:class-table-summary:paladin_level_5_feature_table_row",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Paladin.md",
+        "lineStart": 39,
+        "lineEnd": 39
+      },
+      "className": "Paladin",
+      "levelBand": "level-5",
+      "rowKind": "class-table-summary",
+      "category": "character-creation or progression mechanic",
+      "concept": "Paladin level 5 feature table row",
+      "detail": "5 | +3 | Extra Attack, Faithful Steed | 2 | 6 | 4 | 2 | — | — | —",
+      "candidateUnitId": "class_paladin",
+      "surface": {
+        "state": "outside-surface-runtime-mechanics"
+      },
+      "authoredContent": {
+        "state": "authored-record-present",
+        "unitId": "class_paladin",
+        "sourceRecordPath": "packages/surface/content/class_paladin.json"
+      },
+      "catalogAdmission": {
+        "state": "installed",
+        "unitId": "class_paladin"
+      },
+      "characterCreationOwnership": {
+        "state": "non-runtime-table-summary",
+        "owner": "not-applicable",
+        "evidenceBoundary": "The feature table summarizes level progression; narrower class trait, feature, spell-access, mastery, and equipment rows own executable evidence."
+      },
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "non-runtime",
+      "ownerEvidence": [],
+      "nextAction": "No runtime work; keep classification as explicit closure."
+    },
+    {
+      "id": "srd521:classes/paladin:level-6:class-feature-grant:paladin_aura_of_protection",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Paladin.md",
+        "lineStart": 136,
+        "lineEnd": 143
+      },
+      "className": "Paladin",
+      "levelBand": "level-6",
+      "rowKind": "class-feature-grant",
+      "category": "class feature",
+      "concept": "Paladin Aura of Protection",
+      "detail": "Level 6 class feature.",
+      "candidateUnitId": "paladin_aura_of_protection",
+      "surface": {
+        "state": "current-surface-can-express-source-facts"
+      },
+      "authoredContent": {
+        "state": "missing-authored-record"
+      },
+      "catalogAdmission": {
+        "state": "not-installed",
+        "unitId": "paladin_aura_of_protection"
+      },
+      "finalDisposition": "level-5-7-follow-up-required",
+      "ownerEvidence": [],
+      "nextAction": "Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported."
+    },
+    {
+      "id": "srd521:classes/paladin:level-6:class-table-summary:paladin_level_6_feature_table_row",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Paladin.md",
+        "lineStart": 40,
+        "lineEnd": 40
+      },
+      "className": "Paladin",
+      "levelBand": "level-6",
+      "rowKind": "class-table-summary",
+      "category": "character-creation or progression mechanic",
+      "concept": "Paladin level 6 feature table row",
+      "detail": "6 | +3 | Aura of Protection | 2 | 6 | 4 | 2 | — | — | —",
+      "candidateUnitId": "class_paladin",
+      "surface": {
+        "state": "outside-surface-runtime-mechanics"
+      },
+      "authoredContent": {
+        "state": "authored-record-present",
+        "unitId": "class_paladin",
+        "sourceRecordPath": "packages/surface/content/class_paladin.json"
+      },
+      "catalogAdmission": {
+        "state": "installed",
+        "unitId": "class_paladin"
+      },
+      "characterCreationOwnership": {
+        "state": "non-runtime-table-summary",
+        "owner": "not-applicable",
+        "evidenceBoundary": "The feature table summarizes level progression; narrower class trait, feature, spell-access, mastery, and equipment rows own executable evidence."
+      },
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "non-runtime",
+      "ownerEvidence": [],
+      "nextAction": "No runtime work; keep classification as explicit closure."
+    },
+    {
+      "id": "srd521:classes/paladin:level-7:class-feature-grant:paladin_aura_of_devotion",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Paladin.md",
+        "lineStart": 271,
+        "lineEnd": 274
+      },
+      "className": "Paladin",
+      "levelBand": "level-7",
+      "rowKind": "class-feature-grant",
+      "category": "class feature",
+      "concept": "Paladin Aura of Devotion",
+      "detail": "Level 7 class feature.",
+      "candidateUnitId": "paladin_aura_of_devotion",
+      "surface": {
+        "state": "current-surface-can-express-source-facts"
+      },
+      "authoredContent": {
+        "state": "missing-authored-record"
+      },
+      "catalogAdmission": {
+        "state": "not-installed",
+        "unitId": "paladin_aura_of_devotion"
+      },
+      "finalDisposition": "level-5-7-follow-up-required",
+      "ownerEvidence": [],
+      "nextAction": "Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported."
+    },
+    {
+      "id": "srd521:classes/paladin:level-7:class-table-summary:paladin_level_7_feature_table_row",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Paladin.md",
+        "lineStart": 41,
+        "lineEnd": 41
+      },
+      "className": "Paladin",
+      "levelBand": "level-7",
+      "rowKind": "class-table-summary",
+      "category": "character-creation or progression mechanic",
+      "concept": "Paladin level 7 feature table row",
+      "detail": "7 | +3 | Subclass feature | 2 | 7 | 4 | 3 | — | — | —",
+      "candidateUnitId": "class_paladin",
+      "surface": {
+        "state": "outside-surface-runtime-mechanics"
+      },
+      "authoredContent": {
+        "state": "authored-record-present",
+        "unitId": "class_paladin",
+        "sourceRecordPath": "packages/surface/content/class_paladin.json"
+      },
+      "catalogAdmission": {
+        "state": "installed",
+        "unitId": "class_paladin"
+      },
+      "characterCreationOwnership": {
+        "state": "non-runtime-table-summary",
+        "owner": "not-applicable",
+        "evidenceBoundary": "The feature table summarizes level progression; narrower class trait, feature, spell-access, mastery, and equipment rows own executable evidence."
+      },
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "non-runtime",
+      "ownerEvidence": [],
+      "nextAction": "No runtime work; keep classification as explicit closure."
     },
     {
       "id": "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_bless",
@@ -20615,6 +22200,226 @@
       "ownerEvidence": [],
       "nextAction": "No runtime work; keep classification as explicit closure.",
       "battleReadinessStatus": "accepted-no-battle-effect"
+    },
+    {
+      "id": "srd521:classes/ranger:level-5:class-feature-grant:ranger_extra_attack",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Ranger.md",
+        "lineStart": 110,
+        "lineEnd": 113
+      },
+      "className": "Ranger",
+      "levelBand": "level-5",
+      "rowKind": "class-feature-grant",
+      "category": "class feature",
+      "concept": "Ranger Extra Attack",
+      "detail": "Level 5 class feature.",
+      "candidateUnitId": "ranger_extra_attack",
+      "surface": {
+        "state": "current-surface-can-express-source-facts"
+      },
+      "authoredContent": {
+        "state": "authored-record-present",
+        "unitId": "ranger_extra_attack",
+        "sourceRecordPath": "packages/surface/content/ranger_extra_attack.json"
+      },
+      "catalogAdmission": {
+        "state": "installed",
+        "unitId": "ranger_extra_attack"
+      },
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit ranger_extra_attack is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; QMBT37 at packages/battle-runtime/src/unit-profile-admission-extra-attack-and-speed-features.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present."
+    },
+    {
+      "id": "srd521:classes/ranger:level-5:class-table-summary:ranger_level_5_feature_table_row",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Ranger.md",
+        "lineStart": 39,
+        "lineEnd": 39
+      },
+      "className": "Ranger",
+      "levelBand": "level-5",
+      "rowKind": "class-table-summary",
+      "category": "character-creation or progression mechanic",
+      "concept": "Ranger level 5 feature table row",
+      "detail": "5 | +3 | Extra Attack | 3 | 6 | 4 | 2 | — | — | —",
+      "candidateUnitId": "class_ranger",
+      "surface": {
+        "state": "outside-surface-runtime-mechanics"
+      },
+      "authoredContent": {
+        "state": "authored-record-present",
+        "unitId": "class_ranger",
+        "sourceRecordPath": "packages/surface/content/class_ranger.json"
+      },
+      "catalogAdmission": {
+        "state": "installed",
+        "unitId": "class_ranger"
+      },
+      "characterCreationOwnership": {
+        "state": "non-runtime-table-summary",
+        "owner": "not-applicable",
+        "evidenceBoundary": "The feature table summarizes level progression; narrower class trait, feature, spell-access, mastery, and equipment rows own executable evidence."
+      },
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "non-runtime",
+      "ownerEvidence": [],
+      "nextAction": "No runtime work; keep classification as explicit closure."
+    },
+    {
+      "id": "srd521:classes/ranger:level-6:class-feature-grant:ranger_roving",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Ranger.md",
+        "lineStart": 114,
+        "lineEnd": 117
+      },
+      "className": "Ranger",
+      "levelBand": "level-6",
+      "rowKind": "class-feature-grant",
+      "category": "class feature",
+      "concept": "Ranger Roving",
+      "detail": "Level 6 class feature.",
+      "candidateUnitId": "ranger_roving",
+      "surface": {
+        "state": "current-surface-can-express-source-facts"
+      },
+      "authoredContent": {
+        "state": "authored-record-present",
+        "unitId": "ranger_roving",
+        "sourceRecordPath": "packages/surface/content/ranger_roving.json"
+      },
+      "catalogAdmission": {
+        "state": "installed",
+        "unitId": "ranger_roving"
+      },
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit ranger_roving is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; QMBT44 at packages/battle-runtime/src/unit-profile-admission-extra-attack-and-speed-features.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present."
+    },
+    {
+      "id": "srd521:classes/ranger:level-6:class-table-summary:ranger_level_6_feature_table_row",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Ranger.md",
+        "lineStart": 40,
+        "lineEnd": 40
+      },
+      "className": "Ranger",
+      "levelBand": "level-6",
+      "rowKind": "class-table-summary",
+      "category": "character-creation or progression mechanic",
+      "concept": "Ranger level 6 feature table row",
+      "detail": "6 | +3 | Roving | 3 | 6 | 4 | 2 | — | — | —",
+      "candidateUnitId": "class_ranger",
+      "surface": {
+        "state": "outside-surface-runtime-mechanics"
+      },
+      "authoredContent": {
+        "state": "authored-record-present",
+        "unitId": "class_ranger",
+        "sourceRecordPath": "packages/surface/content/class_ranger.json"
+      },
+      "catalogAdmission": {
+        "state": "installed",
+        "unitId": "class_ranger"
+      },
+      "characterCreationOwnership": {
+        "state": "non-runtime-table-summary",
+        "owner": "not-applicable",
+        "evidenceBoundary": "The feature table summarizes level progression; narrower class trait, feature, spell-access, mastery, and equipment rows own executable evidence."
+      },
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "non-runtime",
+      "ownerEvidence": [],
+      "nextAction": "No runtime work; keep classification as explicit closure."
+    },
+    {
+      "id": "srd521:classes/ranger:level-7:class-feature-grant:ranger_defensive_tactics",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Ranger.md",
+        "lineStart": 251,
+        "lineEnd": 258
+      },
+      "className": "Ranger",
+      "levelBand": "level-7",
+      "rowKind": "class-feature-grant",
+      "category": "class feature",
+      "concept": "Ranger Defensive Tactics",
+      "detail": "Level 7 class feature.",
+      "candidateUnitId": "ranger_defensive_tactics",
+      "surface": {
+        "state": "current-surface-can-express-source-facts"
+      },
+      "authoredContent": {
+        "state": "missing-authored-record"
+      },
+      "catalogAdmission": {
+        "state": "not-installed",
+        "unitId": "ranger_defensive_tactics"
+      },
+      "finalDisposition": "level-5-7-follow-up-required",
+      "ownerEvidence": [],
+      "nextAction": "Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported."
+    },
+    {
+      "id": "srd521:classes/ranger:level-7:class-table-summary:ranger_level_7_feature_table_row",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Ranger.md",
+        "lineStart": 41,
+        "lineEnd": 41
+      },
+      "className": "Ranger",
+      "levelBand": "level-7",
+      "rowKind": "class-table-summary",
+      "category": "character-creation or progression mechanic",
+      "concept": "Ranger level 7 feature table row",
+      "detail": "7 | +3 | Subclass feature | 3 | 7 | 4 | 3 | — | — | —",
+      "candidateUnitId": "class_ranger",
+      "surface": {
+        "state": "outside-surface-runtime-mechanics"
+      },
+      "authoredContent": {
+        "state": "authored-record-present",
+        "unitId": "class_ranger",
+        "sourceRecordPath": "packages/surface/content/class_ranger.json"
+      },
+      "catalogAdmission": {
+        "state": "installed",
+        "unitId": "class_ranger"
+      },
+      "characterCreationOwnership": {
+        "state": "non-runtime-table-summary",
+        "owner": "not-applicable",
+        "evidenceBoundary": "The feature table summarizes level progression; narrower class trait, feature, spell-access, mastery, and equipment rows own executable evidence."
+      },
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "non-runtime",
+      "ownerEvidence": [],
+      "nextAction": "No runtime work; keep classification as explicit closure."
     },
     {
       "id": "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_alarm",
@@ -23344,6 +25149,296 @@
       "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
+      "id": "srd521:classes/rogue:level-5:class-feature-grant:rogue_cunning_strike",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Rogue.md",
+        "lineStart": 97,
+        "lineEnd": 108
+      },
+      "className": "Rogue",
+      "levelBand": "level-5",
+      "rowKind": "class-feature-grant",
+      "category": "class feature",
+      "concept": "Rogue Cunning Strike",
+      "detail": "Level 5 class feature.",
+      "candidateUnitId": "rogue_cunning_strike",
+      "surface": {
+        "state": "current-surface-can-express-source-facts"
+      },
+      "authoredContent": {
+        "state": "missing-authored-record"
+      },
+      "catalogAdmission": {
+        "state": "not-installed",
+        "unitId": "rogue_cunning_strike"
+      },
+      "finalDisposition": "level-5-7-follow-up-required",
+      "ownerEvidence": [],
+      "nextAction": "Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported."
+    },
+    {
+      "id": "srd521:classes/rogue:level-5:class-feature-grant:rogue_uncanny_dodge",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Rogue.md",
+        "lineStart": 109,
+        "lineEnd": 112
+      },
+      "className": "Rogue",
+      "levelBand": "level-5",
+      "rowKind": "class-feature-grant",
+      "category": "class feature",
+      "concept": "Rogue Uncanny Dodge",
+      "detail": "Level 5 class feature.",
+      "candidateUnitId": "rogue_uncanny_dodge",
+      "surface": {
+        "state": "current-surface-can-express-source-facts"
+      },
+      "authoredContent": {
+        "state": "authored-record-present",
+        "unitId": "rogue_uncanny_dodge",
+        "sourceRecordPath": "packages/surface/content/rogue_uncanny_dodge.json"
+      },
+      "catalogAdmission": {
+        "state": "installed",
+        "unitId": "rogue_uncanny_dodge"
+      },
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit rogue_uncanny_dodge is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; QMBT8 at packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present."
+    },
+    {
+      "id": "srd521:classes/rogue:level-5:class-table-summary:rogue_level_5_feature_table_row",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Rogue.md",
+        "lineStart": 40,
+        "lineEnd": 40
+      },
+      "className": "Rogue",
+      "levelBand": "level-5",
+      "rowKind": "class-table-summary",
+      "category": "character-creation or progression mechanic",
+      "concept": "Rogue level 5 feature table row",
+      "detail": "5 | +3 | Cunning Strike, Uncanny Dodge | 3d6",
+      "candidateUnitId": "class_rogue",
+      "surface": {
+        "state": "outside-surface-runtime-mechanics"
+      },
+      "authoredContent": {
+        "state": "authored-record-present",
+        "unitId": "class_rogue",
+        "sourceRecordPath": "packages/surface/content/class_rogue.json"
+      },
+      "catalogAdmission": {
+        "state": "installed",
+        "unitId": "class_rogue"
+      },
+      "characterCreationOwnership": {
+        "state": "non-runtime-table-summary",
+        "owner": "not-applicable",
+        "evidenceBoundary": "The feature table summarizes level progression; narrower class trait, feature, spell-access, mastery, and equipment rows own executable evidence."
+      },
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "non-runtime",
+      "ownerEvidence": [],
+      "nextAction": "No runtime work; keep classification as explicit closure."
+    },
+    {
+      "id": "srd521:classes/rogue:level-6:class-feature-grant:rogue_expertise",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Rogue.md",
+        "lineStart": 41,
+        "lineEnd": 41
+      },
+      "className": "Rogue",
+      "levelBand": "level-6",
+      "rowKind": "class-feature-grant",
+      "category": "class feature",
+      "concept": "Rogue Expertise",
+      "detail": "Level 6 table-derived repeated class feature; the feature's dedicated rule text appears at an earlier level.",
+      "candidateUnitId": "rogue_expertise",
+      "surface": {
+        "state": "current-surface-can-express-source-facts"
+      },
+      "authoredContent": {
+        "state": "authored-record-present",
+        "unitId": "rogue_expertise",
+        "sourceRecordPath": "packages/surface/content/rogue_expertise.json"
+      },
+      "catalogAdmission": {
+        "state": "installed",
+        "unitId": "rogue_expertise"
+      },
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit rogue_expertise is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L1C-ROGUE-EXPERTISE-LEVEL-6-GRANT at packages/character-creation-runtime/src/rogue-expertise-level6.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present."
+    },
+    {
+      "id": "srd521:classes/rogue:level-6:class-table-summary:rogue_level_6_feature_table_row",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Rogue.md",
+        "lineStart": 41,
+        "lineEnd": 41
+      },
+      "className": "Rogue",
+      "levelBand": "level-6",
+      "rowKind": "class-table-summary",
+      "category": "character-creation or progression mechanic",
+      "concept": "Rogue level 6 feature table row",
+      "detail": "6 | +3 | Expertise | 3d6",
+      "candidateUnitId": "class_rogue",
+      "surface": {
+        "state": "outside-surface-runtime-mechanics"
+      },
+      "authoredContent": {
+        "state": "authored-record-present",
+        "unitId": "class_rogue",
+        "sourceRecordPath": "packages/surface/content/class_rogue.json"
+      },
+      "catalogAdmission": {
+        "state": "installed",
+        "unitId": "class_rogue"
+      },
+      "characterCreationOwnership": {
+        "state": "non-runtime-table-summary",
+        "owner": "not-applicable",
+        "evidenceBoundary": "The feature table summarizes level progression; narrower class trait, feature, spell-access, mastery, and equipment rows own executable evidence."
+      },
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "non-runtime",
+      "ownerEvidence": [],
+      "nextAction": "No runtime work; keep classification as explicit closure."
+    },
+    {
+      "id": "srd521:classes/rogue:level-7:class-feature-grant:rogue_evasion",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Rogue.md",
+        "lineStart": 113,
+        "lineEnd": 116
+      },
+      "className": "Rogue",
+      "levelBand": "level-7",
+      "rowKind": "class-feature-grant",
+      "category": "class feature",
+      "concept": "Rogue Evasion",
+      "detail": "Level 7 class feature.",
+      "candidateUnitId": "rogue_evasion",
+      "surface": {
+        "state": "current-surface-can-express-source-facts"
+      },
+      "authoredContent": {
+        "state": "authored-record-present",
+        "unitId": "rogue_evasion",
+        "sourceRecordPath": "packages/surface/content/rogue_evasion.json"
+      },
+      "catalogAdmission": {
+        "state": "installed",
+        "unitId": "rogue_evasion"
+      },
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit rogue_evasion is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; QMBT7 at packages/battle-runtime/src/unit-profile-admission-class-roll-and-resource-features.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present."
+    },
+    {
+      "id": "srd521:classes/rogue:level-7:class-feature-grant:rogue_reliable_talent",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Rogue.md",
+        "lineStart": 117,
+        "lineEnd": 120
+      },
+      "className": "Rogue",
+      "levelBand": "level-7",
+      "rowKind": "class-feature-grant",
+      "category": "class feature",
+      "concept": "Rogue Reliable Talent",
+      "detail": "Level 7 class feature.",
+      "candidateUnitId": "rogue_reliable_talent",
+      "surface": {
+        "state": "current-surface-can-express-source-facts"
+      },
+      "authoredContent": {
+        "state": "missing-authored-record"
+      },
+      "catalogAdmission": {
+        "state": "not-installed",
+        "unitId": "rogue_reliable_talent"
+      },
+      "finalDisposition": "level-5-7-follow-up-required",
+      "ownerEvidence": [],
+      "nextAction": "Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported."
+    },
+    {
+      "id": "srd521:classes/rogue:level-7:class-table-summary:rogue_level_7_feature_table_row",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Rogue.md",
+        "lineStart": 42,
+        "lineEnd": 42
+      },
+      "className": "Rogue",
+      "levelBand": "level-7",
+      "rowKind": "class-table-summary",
+      "category": "character-creation or progression mechanic",
+      "concept": "Rogue level 7 feature table row",
+      "detail": "7 | +3 | Evasion, Reliable Talent | 4d6",
+      "candidateUnitId": "class_rogue",
+      "surface": {
+        "state": "outside-surface-runtime-mechanics"
+      },
+      "authoredContent": {
+        "state": "authored-record-present",
+        "unitId": "class_rogue",
+        "sourceRecordPath": "packages/surface/content/class_rogue.json"
+      },
+      "catalogAdmission": {
+        "state": "installed",
+        "unitId": "class_rogue"
+      },
+      "characterCreationOwnership": {
+        "state": "non-runtime-table-summary",
+        "owner": "not-applicable",
+        "evidenceBoundary": "The feature table summarizes level progression; narrower class trait, feature, spell-access, mastery, and equipment rows own executable evidence."
+      },
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "non-runtime",
+      "ownerEvidence": [],
+      "nextAction": "No runtime work; keep classification as explicit closure."
+    },
+    {
       "id": "srd521:classes/sorcerer:level-1:class-container:sorcerer_class_container",
       "source": {
         "path": ".references/srd-5.2.1/Classes/Sorcerer.md",
@@ -24314,6 +26409,198 @@
       "ownerEvidence": [],
       "nextAction": "No runtime work; keep classification as explicit closure.",
       "battleReadinessStatus": "accepted-no-battle-effect"
+    },
+    {
+      "id": "srd521:classes/sorcerer:level-5:class-feature-grant:sorcerer_sorcerous_restoration",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Sorcerer.md",
+        "lineStart": 127,
+        "lineEnd": 130
+      },
+      "className": "Sorcerer",
+      "levelBand": "level-5",
+      "rowKind": "class-feature-grant",
+      "category": "class feature",
+      "concept": "Sorcerer Sorcerous Restoration",
+      "detail": "Level 5 class feature.",
+      "candidateUnitId": "sorcerer_sorcerous_restoration",
+      "surface": {
+        "state": "current-surface-can-express-source-facts"
+      },
+      "authoredContent": {
+        "state": "missing-authored-record"
+      },
+      "catalogAdmission": {
+        "state": "not-installed",
+        "unitId": "sorcerer_sorcerous_restoration"
+      },
+      "finalDisposition": "level-5-7-follow-up-required",
+      "ownerEvidence": [],
+      "nextAction": "Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported."
+    },
+    {
+      "id": "srd521:classes/sorcerer:level-5:class-table-summary:sorcerer_level_5_feature_table_row",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Sorcerer.md",
+        "lineStart": 39,
+        "lineEnd": 39
+      },
+      "className": "Sorcerer",
+      "levelBand": "level-5",
+      "rowKind": "class-table-summary",
+      "category": "character-creation or progression mechanic",
+      "concept": "Sorcerer level 5 feature table row",
+      "detail": "5 | +3 | Sorcerous Restoration | 5 | 5 | 9 | 4 | 3 | 2 | — | — | — | — | — | —",
+      "candidateUnitId": "class_sorcerer",
+      "surface": {
+        "state": "outside-surface-runtime-mechanics"
+      },
+      "authoredContent": {
+        "state": "authored-record-present",
+        "unitId": "class_sorcerer",
+        "sourceRecordPath": "packages/surface/content/class_sorcerer.json"
+      },
+      "catalogAdmission": {
+        "state": "installed",
+        "unitId": "class_sorcerer"
+      },
+      "characterCreationOwnership": {
+        "state": "non-runtime-table-summary",
+        "owner": "not-applicable",
+        "evidenceBoundary": "The feature table summarizes level progression; narrower class trait, feature, spell-access, mastery, and equipment rows own executable evidence."
+      },
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "non-runtime",
+      "ownerEvidence": [],
+      "nextAction": "No runtime work; keep classification as explicit closure."
+    },
+    {
+      "id": "srd521:classes/sorcerer:level-6:class-feature-grant:sorcerer_elemental_affinity",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Sorcerer.md",
+        "lineStart": 432,
+        "lineEnd": 437
+      },
+      "className": "Sorcerer",
+      "levelBand": "level-6",
+      "rowKind": "class-feature-grant",
+      "category": "class feature",
+      "concept": "Sorcerer Elemental Affinity",
+      "detail": "Level 6 class feature.",
+      "candidateUnitId": "sorcerer_elemental_affinity",
+      "surface": {
+        "state": "current-surface-can-express-source-facts"
+      },
+      "authoredContent": {
+        "state": "missing-authored-record"
+      },
+      "catalogAdmission": {
+        "state": "not-installed",
+        "unitId": "sorcerer_elemental_affinity"
+      },
+      "finalDisposition": "level-5-7-follow-up-required",
+      "ownerEvidence": [],
+      "nextAction": "Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported."
+    },
+    {
+      "id": "srd521:classes/sorcerer:level-6:class-table-summary:sorcerer_level_6_feature_table_row",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Sorcerer.md",
+        "lineStart": 40,
+        "lineEnd": 40
+      },
+      "className": "Sorcerer",
+      "levelBand": "level-6",
+      "rowKind": "class-table-summary",
+      "category": "character-creation or progression mechanic",
+      "concept": "Sorcerer level 6 feature table row",
+      "detail": "6 | +3 | Subclass feature | 6 | 5 | 10 | 4 | 3 | 3 | — | — | — | — | — | —",
+      "candidateUnitId": "class_sorcerer",
+      "surface": {
+        "state": "outside-surface-runtime-mechanics"
+      },
+      "authoredContent": {
+        "state": "authored-record-present",
+        "unitId": "class_sorcerer",
+        "sourceRecordPath": "packages/surface/content/class_sorcerer.json"
+      },
+      "catalogAdmission": {
+        "state": "installed",
+        "unitId": "class_sorcerer"
+      },
+      "characterCreationOwnership": {
+        "state": "non-runtime-table-summary",
+        "owner": "not-applicable",
+        "evidenceBoundary": "The feature table summarizes level progression; narrower class trait, feature, spell-access, mastery, and equipment rows own executable evidence."
+      },
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "non-runtime",
+      "ownerEvidence": [],
+      "nextAction": "No runtime work; keep classification as explicit closure."
+    },
+    {
+      "id": "srd521:classes/sorcerer:level-7:class-feature-grant:sorcerer_sorcery_incarnate",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Sorcerer.md",
+        "lineStart": 131,
+        "lineEnd": 136
+      },
+      "className": "Sorcerer",
+      "levelBand": "level-7",
+      "rowKind": "class-feature-grant",
+      "category": "class feature",
+      "concept": "Sorcerer Sorcery Incarnate",
+      "detail": "Level 7 class feature.",
+      "candidateUnitId": "sorcerer_sorcery_incarnate",
+      "surface": {
+        "state": "current-surface-can-express-source-facts"
+      },
+      "authoredContent": {
+        "state": "missing-authored-record"
+      },
+      "catalogAdmission": {
+        "state": "not-installed",
+        "unitId": "sorcerer_sorcery_incarnate"
+      },
+      "finalDisposition": "level-5-7-follow-up-required",
+      "ownerEvidence": [],
+      "nextAction": "Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported."
+    },
+    {
+      "id": "srd521:classes/sorcerer:level-7:class-table-summary:sorcerer_level_7_feature_table_row",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Sorcerer.md",
+        "lineStart": 41,
+        "lineEnd": 41
+      },
+      "className": "Sorcerer",
+      "levelBand": "level-7",
+      "rowKind": "class-table-summary",
+      "category": "character-creation or progression mechanic",
+      "concept": "Sorcerer level 7 feature table row",
+      "detail": "7 | +3 | Sorcery Incarnate | 7 | 5 | 11 | 4 | 3 | 3 | 1 | — | — | — | — | —",
+      "candidateUnitId": "class_sorcerer",
+      "surface": {
+        "state": "outside-surface-runtime-mechanics"
+      },
+      "authoredContent": {
+        "state": "authored-record-present",
+        "unitId": "class_sorcerer",
+        "sourceRecordPath": "packages/surface/content/class_sorcerer.json"
+      },
+      "catalogAdmission": {
+        "state": "installed",
+        "unitId": "class_sorcerer"
+      },
+      "characterCreationOwnership": {
+        "state": "non-runtime-table-summary",
+        "owner": "not-applicable",
+        "evidenceBoundary": "The feature table summarizes level progression; narrower class trait, feature, spell-access, mastery, and equipment rows own executable evidence."
+      },
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "non-runtime",
+      "ownerEvidence": [],
+      "nextAction": "No runtime work; keep classification as explicit closure."
     },
     {
       "id": "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_acid_splash",
@@ -28696,6 +30983,142 @@
       "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
+      "id": "srd521:classes/warlock:level-5:class-table-summary:warlock_level_5_feature_table_row",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Warlock.md",
+        "lineStart": 39,
+        "lineEnd": 39
+      },
+      "className": "Warlock",
+      "levelBand": "level-5",
+      "rowKind": "class-table-summary",
+      "category": "character-creation or progression mechanic",
+      "concept": "Warlock level 5 feature table row",
+      "detail": "5 | +3 | — | 5 | 3 | 6 | 2 | 3",
+      "candidateUnitId": "class_warlock",
+      "surface": {
+        "state": "outside-surface-runtime-mechanics"
+      },
+      "authoredContent": {
+        "state": "authored-record-present",
+        "unitId": "class_warlock",
+        "sourceRecordPath": "packages/surface/content/class_warlock.json"
+      },
+      "catalogAdmission": {
+        "state": "installed",
+        "unitId": "class_warlock"
+      },
+      "characterCreationOwnership": {
+        "state": "non-runtime-table-summary",
+        "owner": "not-applicable",
+        "evidenceBoundary": "The feature table summarizes level progression; narrower class trait, feature, spell-access, mastery, and equipment rows own executable evidence."
+      },
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "non-runtime",
+      "ownerEvidence": [],
+      "nextAction": "No runtime work; keep classification as explicit closure."
+    },
+    {
+      "id": "srd521:classes/warlock:level-6:class-feature-grant:warlock_dark_ones_own_luck",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Warlock.md",
+        "lineStart": 477,
+        "lineEnd": 482
+      },
+      "className": "Warlock",
+      "levelBand": "level-6",
+      "rowKind": "class-feature-grant",
+      "category": "class feature",
+      "concept": "Warlock Dark One's Own Luck",
+      "detail": "Level 6 class feature.",
+      "candidateUnitId": "warlock_dark_ones_own_luck",
+      "surface": {
+        "state": "current-surface-can-express-source-facts"
+      },
+      "authoredContent": {
+        "state": "missing-authored-record"
+      },
+      "catalogAdmission": {
+        "state": "not-installed",
+        "unitId": "warlock_dark_ones_own_luck"
+      },
+      "finalDisposition": "level-5-7-follow-up-required",
+      "ownerEvidence": [],
+      "nextAction": "Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported."
+    },
+    {
+      "id": "srd521:classes/warlock:level-6:class-table-summary:warlock_level_6_feature_table_row",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Warlock.md",
+        "lineStart": 40,
+        "lineEnd": 40
+      },
+      "className": "Warlock",
+      "levelBand": "level-6",
+      "rowKind": "class-table-summary",
+      "category": "character-creation or progression mechanic",
+      "concept": "Warlock level 6 feature table row",
+      "detail": "6 | +3 | Subclass feature | 5 | 3 | 7 | 2 | 3",
+      "candidateUnitId": "class_warlock",
+      "surface": {
+        "state": "outside-surface-runtime-mechanics"
+      },
+      "authoredContent": {
+        "state": "authored-record-present",
+        "unitId": "class_warlock",
+        "sourceRecordPath": "packages/surface/content/class_warlock.json"
+      },
+      "catalogAdmission": {
+        "state": "installed",
+        "unitId": "class_warlock"
+      },
+      "characterCreationOwnership": {
+        "state": "non-runtime-table-summary",
+        "owner": "not-applicable",
+        "evidenceBoundary": "The feature table summarizes level progression; narrower class trait, feature, spell-access, mastery, and equipment rows own executable evidence."
+      },
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "non-runtime",
+      "ownerEvidence": [],
+      "nextAction": "No runtime work; keep classification as explicit closure."
+    },
+    {
+      "id": "srd521:classes/warlock:level-7:class-table-summary:warlock_level_7_feature_table_row",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Warlock.md",
+        "lineStart": 41,
+        "lineEnd": 41
+      },
+      "className": "Warlock",
+      "levelBand": "level-7",
+      "rowKind": "class-table-summary",
+      "category": "character-creation or progression mechanic",
+      "concept": "Warlock level 7 feature table row",
+      "detail": "7 | +3 | — | 6 | 3 | 8 | 2 | 4",
+      "candidateUnitId": "class_warlock",
+      "surface": {
+        "state": "outside-surface-runtime-mechanics"
+      },
+      "authoredContent": {
+        "state": "authored-record-present",
+        "unitId": "class_warlock",
+        "sourceRecordPath": "packages/surface/content/class_warlock.json"
+      },
+      "catalogAdmission": {
+        "state": "installed",
+        "unitId": "class_warlock"
+      },
+      "characterCreationOwnership": {
+        "state": "non-runtime-table-summary",
+        "owner": "not-applicable",
+        "evidenceBoundary": "The feature table summarizes level progression; narrower class trait, feature, spell-access, mastery, and equipment rows own executable evidence."
+      },
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "non-runtime",
+      "ownerEvidence": [],
+      "nextAction": "No runtime work; keep classification as explicit closure."
+    },
+    {
       "id": "srd521:classes/warlock:spell-level-0:spell-unit-pressure:warlock_spell_list_chill_touch",
       "source": {
         "path": ".references/srd-5.2.1/Classes/Warlock.md",
@@ -31288,6 +33711,170 @@
       "ownerEvidence": [],
       "nextAction": "No runtime work; keep classification as explicit closure.",
       "battleReadinessStatus": "accepted-no-battle-effect"
+    },
+    {
+      "id": "srd521:classes/wizard:level-5:class-feature-grant:wizard_memorize_spell",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Wizard.md",
+        "lineStart": 116,
+        "lineEnd": 119
+      },
+      "className": "Wizard",
+      "levelBand": "level-5",
+      "rowKind": "class-feature-grant",
+      "category": "class feature",
+      "concept": "Wizard Memorize Spell",
+      "detail": "Level 5 class feature.",
+      "candidateUnitId": "wizard_memorize_spell",
+      "surface": {
+        "state": "current-surface-can-express-source-facts"
+      },
+      "authoredContent": {
+        "state": "missing-authored-record"
+      },
+      "catalogAdmission": {
+        "state": "not-installed",
+        "unitId": "wizard_memorize_spell"
+      },
+      "finalDisposition": "level-5-7-follow-up-required",
+      "ownerEvidence": [],
+      "nextAction": "Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported."
+    },
+    {
+      "id": "srd521:classes/wizard:level-5:class-table-summary:wizard_level_5_feature_table_row",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Wizard.md",
+        "lineStart": 39,
+        "lineEnd": 39
+      },
+      "className": "Wizard",
+      "levelBand": "level-5",
+      "rowKind": "class-table-summary",
+      "category": "character-creation or progression mechanic",
+      "concept": "Wizard level 5 feature table row",
+      "detail": "5 | +3 | Memorize Spell | 4 | 9 | 4 | 3 | 2 | — | — | — | — | — | —",
+      "candidateUnitId": "class_wizard",
+      "surface": {
+        "state": "outside-surface-runtime-mechanics"
+      },
+      "authoredContent": {
+        "state": "authored-record-present",
+        "unitId": "class_wizard",
+        "sourceRecordPath": "packages/surface/content/class_wizard.json"
+      },
+      "catalogAdmission": {
+        "state": "installed",
+        "unitId": "class_wizard"
+      },
+      "characterCreationOwnership": {
+        "state": "non-runtime-table-summary",
+        "owner": "not-applicable",
+        "evidenceBoundary": "The feature table summarizes level progression; narrower class trait, feature, spell-access, mastery, and equipment rows own executable evidence."
+      },
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "non-runtime",
+      "ownerEvidence": [],
+      "nextAction": "No runtime work; keep classification as explicit closure."
+    },
+    {
+      "id": "srd521:classes/wizard:level-6:class-feature-grant:wizard_sculpt_spells",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Wizard.md",
+        "lineStart": 421,
+        "lineEnd": 424
+      },
+      "className": "Wizard",
+      "levelBand": "level-6",
+      "rowKind": "class-feature-grant",
+      "category": "class feature",
+      "concept": "Wizard Sculpt Spells",
+      "detail": "Level 6 class feature.",
+      "candidateUnitId": "wizard_sculpt_spells",
+      "surface": {
+        "state": "current-surface-can-express-source-facts"
+      },
+      "authoredContent": {
+        "state": "missing-authored-record"
+      },
+      "catalogAdmission": {
+        "state": "not-installed",
+        "unitId": "wizard_sculpt_spells"
+      },
+      "finalDisposition": "level-5-7-follow-up-required",
+      "ownerEvidence": [],
+      "nextAction": "Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported."
+    },
+    {
+      "id": "srd521:classes/wizard:level-6:class-table-summary:wizard_level_6_feature_table_row",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Wizard.md",
+        "lineStart": 40,
+        "lineEnd": 40
+      },
+      "className": "Wizard",
+      "levelBand": "level-6",
+      "rowKind": "class-table-summary",
+      "category": "character-creation or progression mechanic",
+      "concept": "Wizard level 6 feature table row",
+      "detail": "6 | +3 | Subclass feature | 4 | 10 | 4 | 3 | 3 | — | — | — | — | — | —",
+      "candidateUnitId": "class_wizard",
+      "surface": {
+        "state": "outside-surface-runtime-mechanics"
+      },
+      "authoredContent": {
+        "state": "authored-record-present",
+        "unitId": "class_wizard",
+        "sourceRecordPath": "packages/surface/content/class_wizard.json"
+      },
+      "catalogAdmission": {
+        "state": "installed",
+        "unitId": "class_wizard"
+      },
+      "characterCreationOwnership": {
+        "state": "non-runtime-table-summary",
+        "owner": "not-applicable",
+        "evidenceBoundary": "The feature table summarizes level progression; narrower class trait, feature, spell-access, mastery, and equipment rows own executable evidence."
+      },
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "non-runtime",
+      "ownerEvidence": [],
+      "nextAction": "No runtime work; keep classification as explicit closure."
+    },
+    {
+      "id": "srd521:classes/wizard:level-7:class-table-summary:wizard_level_7_feature_table_row",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Wizard.md",
+        "lineStart": 41,
+        "lineEnd": 41
+      },
+      "className": "Wizard",
+      "levelBand": "level-7",
+      "rowKind": "class-table-summary",
+      "category": "character-creation or progression mechanic",
+      "concept": "Wizard level 7 feature table row",
+      "detail": "7 | +3 | — | 4 | 11 | 4 | 3 | 3 | 1 | — | — | — | — | —",
+      "candidateUnitId": "class_wizard",
+      "surface": {
+        "state": "outside-surface-runtime-mechanics"
+      },
+      "authoredContent": {
+        "state": "authored-record-present",
+        "unitId": "class_wizard",
+        "sourceRecordPath": "packages/surface/content/class_wizard.json"
+      },
+      "catalogAdmission": {
+        "state": "installed",
+        "unitId": "class_wizard"
+      },
+      "characterCreationOwnership": {
+        "state": "non-runtime-table-summary",
+        "owner": "not-applicable",
+        "evidenceBoundary": "The feature table summarizes level progression; narrower class trait, feature, spell-access, mastery, and equipment rows own executable evidence."
+      },
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "non-runtime",
+      "ownerEvidence": [],
+      "nextAction": "No runtime work; keep classification as explicit closure."
     },
     {
       "id": "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_acid_splash",
