@@ -55,7 +55,7 @@
     {
       "number": 9,
       "id": "L5-A09-ROGUE-CUNNING-STRIKE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Close Rogue Cunning Strike level 5 follow-up"
     },
     {
@@ -75,6 +75,12 @@
       "id": "L5-A12-MONK-STUNNING-STRIKE-BATTLE-RUNTIME",
       "status": "ready-for-research",
       "title": "Promote Monk Stunning Strike battle-runtime owner"
+    },
+    {
+      "number": 13,
+      "id": "L5-A13-ROGUE-CUNNING-STRIKE-BATTLE-RUNTIME",
+      "status": "ready-for-research",
+      "title": "Promote Rogue Cunning Strike battle-runtime owner"
     }
   ]
 }
@@ -143,10 +149,11 @@ out of scope unless a task's RAW pass finds a direct dependency.
 | 6 | L5-A06-MONK-EXTRA-ATTACK - Close Monk Extra Attack level 5 follow-up | done | L5-A01-BARBARIAN-EXTRA-ATTACK | Authored and installed using the shared Extra Attack owner/evidence path. |
 | 7 | L5-A07-MONK-STUNNING-STRIKE - Close Monk Stunning Strike level 5 follow-up | done | none | Closed by unsupported-profile owner evidence for the future Monk attack-hit rider owner. |
 | 8 | L5-A08-PALADIN-FAITHFUL-STEED - Close Paladin Faithful Steed level 5 follow-up | done | none | Closed by unsupported-profile owner evidence splitting Character Sheet Spell Access/resource ownership from the existing Find Steed companion-control boundary. |
-| 9 | L5-A09-ROGUE-CUNNING-STRIKE - Close Rogue Cunning Strike level 5 follow-up | ready-for-research | none | Independent level-5 class feature row. |
+| 9 | L5-A09-ROGUE-CUNNING-STRIKE - Close Rogue Cunning Strike level 5 follow-up | done | none | Closed by unsupported-profile owner evidence; promoted runtime execution is split to L5-A13. |
 | 10 | L5-A10-SORCERER-SORCEROUS-RESTORATION - Close Sorcerer Sorcerous Restoration level 5 follow-up | ready-for-research | none | Independent level-5 class feature row. |
 | 11 | L5-A11-WIZARD-MEMORIZE-SPELL - Close Wizard Memorize Spell level 5 follow-up | ready-for-research | none | Independent level-5 class feature row. |
 | 12 | L5-A12-MONK-STUNNING-STRIKE-BATTLE-RUNTIME - Promote Monk Stunning Strike battle-runtime owner | ready-for-research | L5-A07-MONK-STUNNING-STRIKE | Executable split from Task 7 for promoted attack-hit rider behavior using existing Focus Point, Saving Throw, condition/effect, Speed, and Attack Roll Advantage owners. |
+| 13 | L5-A13-ROGUE-CUNNING-STRIKE-BATTLE-RUNTIME - Promote Rogue Cunning Strike battle-runtime owner | ready-for-research | L5-A09-ROGUE-CUNNING-STRIKE | Executable split from Task 9 for promoted Sneak Attack damage-exchange behavior using existing Sneak Attack, Saving Throw, condition/effect, movement, Opportunity Attack, and inventory/tool-possession owners. |
 
 ## Shared Verification
 
@@ -493,7 +500,7 @@ Verification:
 
 ### Task 9 - L5-A09-ROGUE-CUNNING-STRIKE
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -509,7 +516,10 @@ SRD anchor:
 
 Current state:
 
-- The mined row is not installed and has no unit profile/evidence row.
+- The mined row is closed by an unsupported-profile Unit claim with
+  checker-readable owner evidence. Cunning Strike is a Sneak Attack
+  damage-exchange rider with a trigger-time option choice; promoted runtime
+  behavior is split to L5-A13-ROGUE-CUNNING-STRIKE-BATTLE-RUNTIME.
 
 Output:
 
@@ -521,6 +531,7 @@ Output:
 Acceptance:
 
 - `rogue_cunning_strike` is no longer a level 5 follow-up.
+- Promoted battle-runtime work remains visible as a same-Unit follow-up task.
 - Any option list has a single source of truth.
 
 Verification:
@@ -640,6 +651,61 @@ Acceptance:
   parallel state.
 - Focused runtime tests and any required QNT/MBT parity checks cover failed
   and successful Saving Throw outcomes plus the once-per-turn rider gate.
+
+Verification:
+
+- Shared lane verification.
+- Follow the battle-runtime QNT/MBT protocol in `AGENTS.md` if promoted
+  behavior changes battle execution.
+
+### Task 13 - L5-A13-ROGUE-CUNNING-STRIKE-BATTLE-RUNTIME
+
+Status: `ready-for-research`
+
+Depends on:
+
+- L5-A09-ROGUE-CUNNING-STRIKE
+
+Unit:
+
+- `rogue_cunning_strike`
+
+SRD anchor:
+
+- `.references/srd-5.2.1/Classes/Rogue.md:97`
+
+Current state:
+
+- The generated coverage row has checker-visible unsupported-profile owner
+  evidence, but promoted battle-runtime execution is not implemented.
+
+Output:
+
+- Promote Cunning Strike as a battle-runtime Rogue Sneak Attack
+  damage-exchange rider without dispatching on authored identity.
+- Consume one typed Cunning Strike option fact source for Poison, Trip, and
+  Withdraw; do not maintain a parallel option registry.
+- Derive available Sneak Attack dice from the existing `rogue_sneak_attack`
+  attack-damage rider workflow, forgo the option die cost before rolling, and
+  apply the chosen effect immediately after the attack damage is dealt.
+- Reuse existing Saving Throw, active condition/effect lifecycle, movement,
+  Opportunity Attack, and inventory/tool-possession witness owners instead of
+  adding parallel Sneak Attack dice, condition, movement, or equipment state.
+- Model the level-5 options: Poison's Poisoner's Kit possession requirement,
+  Constitution Saving Throw DC of 8 plus Dexterity modifier plus Proficiency
+  Bonus, Poisoned duration with end-turn repeat saves; Trip's Large-or-smaller
+  target gate and Dexterity Saving Throw before Prone; and Withdraw's movement
+  up to half Speed without provoking Opportunity Attacks.
+
+Acceptance:
+
+- `rogue_cunning_strike` is admitted through typed source-shape support facts
+  rather than authored identity dispatch.
+- Battle-runtime/QNT behavior consumes existing Sneak Attack, Saving Throw,
+  condition/effect, movement, Opportunity Attack, and inventory/tool-possession
+  owners without adding parallel state.
+- Focused runtime tests and any required QNT/MBT parity checks cover each
+  level-5 option, die-cost exchange, and immediate post-damage timing.
 
 Verification:
 

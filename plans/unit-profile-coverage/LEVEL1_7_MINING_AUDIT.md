@@ -44,8 +44,8 @@ These counts describe the current runtime/catalog state of mined rows. They are 
 | catalog-authored-review-required | 77 |
 | catalog-installed-owner-evidence-present | 483 |
 | catalog-installed-owner-evidence-required | 1 |
-| catalog-only/dead-for-now | 150 |
-| level-5-7-follow-up-required | 25 |
+| catalog-only/dead-for-now | 151 |
+| level-5-7-follow-up-required | 24 |
 | missing-authored-record | 80 |
 | non-runtime | 84 |
 
@@ -60,10 +60,10 @@ These counts describe the current runtime/catalog state of mined rows. They are 
 
 | Unit profile disposition | Rows |
 | --- | ---: |
-| not-recorded | 221 |
+| not-recorded | 220 |
 | profile-subset-supported | 53 |
 | supported-profile | 297 |
-| unsupported-profile | 329 |
+| unsupported-profile | 330 |
 
 ### Battle Readiness Snapshot
 
@@ -798,7 +798,7 @@ These counts separate class-list rows from unique Spell Definition identities. A
 | Rogue Subclass | level-3 | character-level | subclass selection | `class_rogue` | `.references/srd-5.2.1/Classes/Rogue.md:85` | present | installed | unsupported-profile | catalog-installed-owner-evidence-present | accepted | not-recorded | Owner-specific operational evidence is classified and present. |
 | Rogue Ability Score Improvement | level-4 | character-level | class feature | `rogue_ability_score_improvement_l4` | `.references/srd-5.2.1/Classes/Rogue.md:93` | present | installed | unsupported-profile | catalog-only/dead-for-now | accepted-no-battle-effect | selection-grant-container: character-creation-runtime ability-score projection and selected feat Unit profiles | The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim. |
 | Rogue level 4 feature table row | level-4 | character-level | character-creation or progression mechanic | `class_rogue` | `.references/srd-5.2.1/Classes/Rogue.md:39` | present | installed | unsupported-profile | non-runtime | accepted-no-battle-effect | not-recorded | No runtime work; keep classification as explicit closure. |
-| Rogue Cunning Strike | level-5 | character-level | class feature | `rogue_cunning_strike` | `.references/srd-5.2.1/Classes/Rogue.md:97` | present | not-installed | not-recorded | level-5-7-follow-up-required | not-applicable | not-recorded | Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported. |
+| Rogue Cunning Strike | level-5 | character-level | class feature | `rogue_cunning_strike` | `.references/srd-5.2.1/Classes/Rogue.md:97` | present | not-installed | unsupported-profile | catalog-only/dead-for-now | not-applicable | outside-battle-runtime: future battle-runtime Cunning Strike Sneak Attack exchange owner plus existing rogue_sneak_attack attack-damage rider, Saving Throw, active condition/effect, movement, Opportunity Attack, and inventory/tool-possession witness owners | SRD Cunning Strike triggers when the Rogue deals Sneak Attack damage: the Rogue may choose one Cunning Strike effect, forgo that effect's Sneak Attack damage dice before rolling, and apply the effect immediately after the attack's damage is dealt. Poison requires the Rogue to have a Poisoner's Kit on their person, forces a Constitution Saving Throw against 8 plus Dexterity modifier plus Proficiency Bonus, applies Poisoned for 1 minute on failure, and repeats the save at the end of each target turn; Trip requires a Large-or-smaller target and a Dexterity Saving Throw before applying Prone; Withdraw grants movement up to half Speed without provoking Opportunity Attacks. A future promoted owner must consume one typed Cunning Strike option fact source for Poison, Trip, and Withdraw, derive the available Sneak Attack dice from the existing rogue_sneak_attack rider workflow, and reuse existing Saving Throw, condition/effect lifecycle, movement, Opportunity Attack validation, and inventory/tool-possession witness owners. It must not add a second Sneak Attack dice pool, duplicate condition, movement, or equipment inventory state, maintain a parallel option registry, or dispatch on Rogue or Cunning Strike authored identity. |
 | Rogue Uncanny Dodge | level-5 | character-level | class feature | `rogue_uncanny_dodge` | `.references/srd-5.2.1/Classes/Rogue.md:109` | present | installed | supported-profile | catalog-installed-owner-evidence-present | not-applicable | not-recorded | Owner-specific operational evidence is classified and present. |
 | Rogue level 5 feature table row | level-5 | character-level | character-creation or progression mechanic | `class_rogue` | `.references/srd-5.2.1/Classes/Rogue.md:40` | present | installed | unsupported-profile | non-runtime | not-applicable | not-recorded | No runtime work; keep classification as explicit closure. |
 | Rogue Expertise | level-6 | character-level | class feature | `rogue_expertise` | `.references/srd-5.2.1/Classes/Rogue.md:41` | present | installed | supported-profile | catalog-installed-owner-evidence-present | not-applicable | not-recorded | Owner-specific operational evidence is classified and present. |
