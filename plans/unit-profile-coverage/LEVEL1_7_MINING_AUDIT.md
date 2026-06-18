@@ -42,10 +42,10 @@ These counts describe the current runtime/catalog state of mined rows. They are 
 | Disposition | Rows |
 | --- | ---: |
 | catalog-authored-review-required | 77 |
-| catalog-installed-owner-evidence-present | 481 |
+| catalog-installed-owner-evidence-present | 482 |
 | catalog-installed-owner-evidence-required | 1 |
 | catalog-only/dead-for-now | 144 |
-| level-5-7-follow-up-required | 33 |
+| level-5-7-follow-up-required | 32 |
 | missing-authored-record | 80 |
 | non-runtime | 84 |
 
@@ -53,16 +53,16 @@ These counts describe the current runtime/catalog state of mined rows. They are 
 
 | Catalog state | Rows |
 | --- | ---: |
-| installed | 638 |
-| not-installed | 262 |
+| installed | 639 |
+| not-installed | 261 |
 
 ### Unit Profile Disposition
 
 | Unit profile disposition | Rows |
 | --- | ---: |
-| not-recorded | 229 |
+| not-recorded | 228 |
 | profile-subset-supported | 53 |
-| supported-profile | 295 |
+| supported-profile | 296 |
 | unsupported-profile | 323 |
 
 ### Battle Readiness Snapshot
@@ -281,7 +281,7 @@ These counts separate class-list rows from unique Spell Definition identities. A
 | Barbarian Subclass | level-3 | character-level | subclass selection | `class_barbarian` | `.references/srd-5.2.1/Classes/Barbarian.md:98` | present | installed | unsupported-profile | catalog-installed-owner-evidence-present | accepted | not-recorded | Owner-specific operational evidence is classified and present. |
 | Barbarian Ability Score Improvement | level-4 | character-level | class feature | `barbarian_ability_score_improvement_l4` | `.references/srd-5.2.1/Classes/Barbarian.md:108` | present | installed | unsupported-profile | catalog-only/dead-for-now | accepted-no-battle-effect | selection-grant-container: character-creation-runtime ability-score projection and selected feat Unit profiles | The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim. |
 | Barbarian level 4 feature table row | level-4 | character-level | character-creation or progression mechanic | `class_barbarian` | `.references/srd-5.2.1/Classes/Barbarian.md:38` | present | installed | unsupported-profile | non-runtime | accepted-no-battle-effect | not-recorded | No runtime work; keep classification as explicit closure. |
-| Barbarian Extra Attack | level-5 | character-level | class feature | `barbarian_extra_attack` | `.references/srd-5.2.1/Classes/Barbarian.md:112` | present | not-installed | not-recorded | level-5-7-follow-up-required | not-applicable | not-recorded | Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported. |
+| Barbarian Extra Attack | level-5 | character-level | class feature | `barbarian_extra_attack` | `.references/srd-5.2.1/Classes/Barbarian.md:112` | present | installed | supported-profile | catalog-installed-owner-evidence-present | not-applicable | not-recorded | Owner-specific operational evidence is classified and present. |
 | Barbarian Fast Movement | level-5 | character-level | class feature | `barbarian_fast_movement` | `.references/srd-5.2.1/Classes/Barbarian.md:116` | present | installed | supported-profile | catalog-installed-owner-evidence-present | not-applicable | not-recorded | Owner-specific operational evidence is classified and present. |
 | Barbarian level 5 feature table row | level-5 | character-level | character-creation or progression mechanic | `class_barbarian` | `.references/srd-5.2.1/Classes/Barbarian.md:39` | present | installed | unsupported-profile | non-runtime | not-applicable | not-recorded | No runtime work; keep classification as explicit closure. |
 | Barbarian Mindless Rage | level-6 | character-level | class feature | `barbarian_mindless_rage` | `.references/srd-5.2.1/Classes/Barbarian.md:182` | present | not-installed | not-recorded | level-5-7-follow-up-required | not-applicable | not-recorded | Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported. |

@@ -65,6 +65,8 @@ export const barbarianFrenzyUnitId = "barbarian_frenzy";
 
 export const barbarianDangerSenseUnitId = "barbarian_danger_sense";
 
+export const barbarianExtraAttackUnitId = "barbarian_extra_attack";
+
 export const barbarianFastMovementUnitId = "barbarian_fast_movement";
 
 export const rangerRovingUnitId = "ranger_roving";

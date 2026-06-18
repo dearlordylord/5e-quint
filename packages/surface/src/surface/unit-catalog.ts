@@ -29,6 +29,7 @@ import barbarianFrenzyInput from "../../content/barbarian_frenzy.json";
 import barbarianPrimalKnowledgeInput from "../../content/barbarian_primal_knowledge.json";
 import barbarianRageInput from "../../content/barbarian_rage.json";
 import barbarianDangerSenseInput from "../../content/barbarian_danger_sense.json";
+import barbarianExtraAttackInput from "../../content/barbarian_extra_attack.json";
 import barbarianFastMovementInput from "../../content/barbarian_fast_movement.json";
 import barbarianRecklessAttackInput from "../../content/barbarian_reckless_attack.json";
 import barbarianUnarmoredDefenseInput from "../../content/barbarian_unarmored_defense.json";
@@ -473,6 +474,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     barbarianUnarmoredDefenseInput,
     barbarianRecklessAttackInput,
     barbarianDangerSenseInput,
+    barbarianExtraAttackInput,
     barbarianFastMovementInput,
     barbarianPrimalKnowledgeInput,
     barbarianWeaponMasteryInput,

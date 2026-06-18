@@ -1,10 +1,12 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT37 fighter_extra_attack paladin_extra_attack ranger_extra_attack
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L5-A01-BARBARIAN-EXTRA-ATTACK barbarian_extra_attack
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT40 barbarian_fast_movement
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT44 ranger_roving
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-AUTHOR-MONK-UNARMORED-MOVEMENT monk_unarmored_movement
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants
 import { describe, expect, test } from "vitest";
 import {
+  barbarianExtraAttackUnitId,
   barbarianFastMovementUnitId,
   extraAttackSupportProfile,
   fighterExtraAttackUnitId,
@@ -66,6 +68,7 @@ type SyntheticExtraAttackCount = (typeof syntheticExtraAttackCounts)[number];
 
 describe("QMBT37 deterministic Extra Attack admission", () => {
   test.each([
+    [barbarianExtraAttackUnitId, "barbarian", 5],
     [fighterExtraAttackUnitId, "fighter", 5],
     [paladinExtraAttackUnitId, "paladin", 5],
     [rangerExtraAttackUnitId, "ranger", 5],

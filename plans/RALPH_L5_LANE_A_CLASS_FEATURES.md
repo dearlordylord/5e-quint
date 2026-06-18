@@ -7,7 +7,7 @@
     {
       "number": 1,
       "id": "L5-A01-BARBARIAN-EXTRA-ATTACK",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Close Barbarian Extra Attack level 5 follow-up"
     },
     {
@@ -37,7 +37,7 @@
     {
       "number": 6,
       "id": "L5-A06-MONK-EXTRA-ATTACK",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Close Monk Extra Attack level 5 follow-up"
     },
     {
@@ -127,12 +127,12 @@ out of scope unless a task's RAW pass finds a direct dependency.
 
 | # | Task | Status | Depends on | Notes |
 | ---: | --- | --- | --- | --- |
-| 1 | L5-A01-BARBARIAN-EXTRA-ATTACK - Close Barbarian Extra Attack level 5 follow-up | ready-for-research | none | Owns the shared Extra Attack reuse/widening decision for remaining class rows. |
+| 1 | L5-A01-BARBARIAN-EXTRA-ATTACK - Close Barbarian Extra Attack level 5 follow-up | done | none | Authored and installed using the shared Extra Attack owner/evidence path. |
 | 2 | L5-A02-BARD-FONT-OF-INSPIRATION - Close Bard Font of Inspiration level 5 follow-up | ready-for-research | none | Independent level-5 class feature row. |
 | 3 | L5-A03-CLERIC-SEAR-UNDEAD - Close Cleric Sear Undead level 5 follow-up | ready-for-research | none | Independent level-5 class feature row. |
 | 4 | L5-A04-DRUID-WILD-RESURGENCE - Close Druid Wild Resurgence level 5 follow-up | ready-for-research | none | Independent level-5 class feature row. |
 | 5 | L5-A05-FIGHTER-TACTICAL-SHIFT - Close Fighter Tactical Shift level 5 follow-up | ready-for-research | none | Independent level-5 class feature row. |
-| 6 | L5-A06-MONK-EXTRA-ATTACK - Close Monk Extra Attack level 5 follow-up | blocked | L5-A01-BARBARIAN-EXTRA-ATTACK | Reuses the same Extra Attack owner/evidence path. |
+| 6 | L5-A06-MONK-EXTRA-ATTACK - Close Monk Extra Attack level 5 follow-up | ready-for-research | L5-A01-BARBARIAN-EXTRA-ATTACK | Reuse the established Extra Attack owner/evidence path. |
 | 7 | L5-A07-MONK-STUNNING-STRIKE - Close Monk Stunning Strike level 5 follow-up | ready-for-research | none | Independent level-5 class feature row. |
 | 8 | L5-A08-PALADIN-FAITHFUL-STEED - Close Paladin Faithful Steed level 5 follow-up | ready-for-research | none | Independent level-5 class feature row. |
 | 9 | L5-A09-ROGUE-CUNNING-STRIKE - Close Rogue Cunning Strike level 5 follow-up | ready-for-research | none | Independent level-5 class feature row. |
@@ -165,7 +165,7 @@ out of scope unless a task's RAW pass finds a direct dependency.
 
 ### Task 1 - L5-A01-BARBARIAN-EXTRA-ATTACK
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -181,8 +181,10 @@ SRD anchor:
 
 Current state:
 
-- The level 1-7 mining audit marks this row `level-5-7-follow-up-required`.
-- Candidate Unit is not installed and has no unit profile/evidence row.
+- `barbarian_extra_attack` is authored, installed, and classified as a
+  supported `unit-feature.attack-action-attack-count-scaling` profile.
+- Generated coverage records deterministic admission and selected-identity MBT
+  owner evidence through the existing Extra Attack path.
 
 Output:
 
@@ -349,11 +351,7 @@ Verification:
 
 ### Task 6 - L5-A06-MONK-EXTRA-ATTACK
 
-Status: `blocked`
-
-Blocker Type: dependency
-Blocker Detail: waits for L5-A01-BARBARIAN-EXTRA-ATTACK to settle the shared
-Extra Attack owner/evidence path.
+Status: `ready-for-research`
 
 Depends on:
 

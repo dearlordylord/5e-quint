@@ -141,8 +141,8 @@ This metric is a separate seed for spell-level-4 pressure only. It belongs to th
 
 ### Level-5 Class/Subclass Mining Rows by Disposition
 
-- catalog-installed-owner-evidence-present: 5
-- level-5-7-follow-up-required: 11
+- catalog-installed-owner-evidence-present: 6
+- level-5-7-follow-up-required: 10
 - non-runtime: 12
 
 ### Level-6 Class/Subclass Mining Rows by Disposition
@@ -596,7 +596,7 @@ These batches are generated planning recommendations for a separate SRD inventor
 
 | Row | Category | Surface | Authored | Catalog | Unit profile | Disposition | Battle readiness | Readiness closure | Owner evidence | Next action | Source |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-|Barbarian Extra Attack|class feature|current-surface-can-express-source-facts|missing-authored-record|not-installed||level-5-7-follow-up-required||||Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported.|.references/srd-5.2.1/Classes/Barbarian.md:112|
+|Barbarian Extra Attack|class feature|current-surface-can-express-source-facts|authored-record-present|installed|supported-profile|catalog-installed-owner-evidence-present|||Unit catalog/admission: catalog evidence; battle-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Barbarian.md:112|
 |Barbarian Fast Movement|class feature|current-surface-can-express-source-facts|authored-record-present|installed|supported-profile|catalog-installed-owner-evidence-present|||Unit catalog/admission: catalog evidence; battle-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Barbarian.md:116|
 |Barbarian level 5 feature table row|character-creation or progression mechanic|outside-surface-runtime-mechanics|authored-record-present|installed|unsupported-profile|non-runtime||||No runtime work; keep classification as explicit closure.|.references/srd-5.2.1/Classes/Barbarian.md:39|
 |Bard Font of Inspiration|class feature|current-surface-can-express-source-facts|missing-authored-record|not-installed||level-5-7-follow-up-required||||Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported.|.references/srd-5.2.1/Classes/Bard.md:113|
