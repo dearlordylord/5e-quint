@@ -19,7 +19,7 @@
     {
       "number": 3,
       "id": "LT4-B03-GNOME-LINEAGE-TRAIT-PROJECTION",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Retain Forest and Rock Gnome lineage facts without duplicate state"
     },
     {
@@ -173,7 +173,7 @@ Verification:
 
 ### Task 3 - LT4-B03-GNOME-LINEAGE-TRAIT-PROJECTION
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
