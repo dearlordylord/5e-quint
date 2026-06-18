@@ -25,7 +25,7 @@
     {
       "number": 4,
       "id": "L5-C04-GASEOUS-FORM",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Close Gaseous Form missing authored record"
     },
     {
@@ -81,6 +81,12 @@
       "id": "L5-C13-CONJURE-ANIMALS-SURFACE-WIDENING",
       "status": "ready-for-research",
       "title": "Widen Conjure Animals Surface Spell Definition"
+    },
+    {
+      "number": 14,
+      "id": "L5-C14-GASEOUS-FORM-SURFACE-WIDENING",
+      "status": "ready-for-research",
+      "title": "Widen Gaseous Form Surface Spell Definition"
     }
   ]
 }
@@ -139,7 +145,7 @@ missing-record spells unless a RAW dependency is unavoidable and documented.
 | 1 | L5-C01-BESTOW-CURSE - Close Bestow Curse missing authored record | done | none | Closed as a Surface widening boundary, not an authored-record admission. |
 | 2 | L5-C02-BLINK - Close Blink missing authored record | done | none | Closed as a Surface widening boundary, not an authored-record admission. |
 | 3 | L5-C03-CONJURE-ANIMALS - Close Conjure Animals missing authored record | done | none | Closed as a Surface widening boundary, not an authored-record admission. |
-| 4 | L5-C04-GASEOUS-FORM - Close Gaseous Form missing authored record | ready-for-research | none | Independent missing spell Unit. |
+| 4 | L5-C04-GASEOUS-FORM - Close Gaseous Form missing authored record | done | none | Closed as a Surface widening boundary, not an authored-record admission. |
 | 5 | L5-C05-GLYPH-OF-WARDING - Close Glyph of Warding missing authored record | ready-for-research | none | Independent missing spell Unit. |
 | 6 | L5-C06-HASTE - Close Haste missing authored record | ready-for-research | none | Preserve Surface authoring, positive runtime, and lethargy runtime split from `plans/unit-profile-coverage/L3_HASTE_RUNTIME_SURVEY.md`. |
 | 7 | L5-C07-MAGIC-CIRCLE - Close Magic Circle missing authored record | ready-for-research | none | Independent missing spell Unit. |
@@ -149,6 +155,7 @@ missing-record spells unless a RAW dependency is unavoidable and documented.
 | 11 | L5-C11-BESTOW-CURSE-SURFACE-WIDENING - Widen Bestow Curse Surface Spell Definition | ready-for-research | L5-C01-BESTOW-CURSE | Add typed Surface facts for Bestow Curse curse-option selection, curse-removal targeting, and slot-dependent duration/Concentration before authoring/admitting the Spell Definition. |
 | 12 | L5-C12-BLINK-SURFACE-WIDENING - Widen Blink Surface Spell Definition | ready-for-research | L5-C02-BLINK | Add typed Surface/table-spatial facts for Blink's turn-end roll, Ethereal Plane transition, already-on-plane ending predicate, and return-position availability before authoring/admitting the Spell Definition. |
 | 13 | L5-C13-CONJURE-ANIMALS-SURFACE-WIDENING - Widen Conjure Animals Surface Spell Definition | ready-for-research | L5-C03-CONJURE-ANIMALS | Add typed Surface/table-spatial facts for Conjure Animals' spectral pack occurrence, pack reposition, Strength Saving Throw Advantage predicate, Dexterity Saving Throw trigger eligibility, and once-per-turn limit before authoring/admitting the Spell Definition. |
+| 14 | L5-C14-GASEOUS-FORM-SURFACE-WIDENING - Widen Gaseous Form Surface Spell Definition | ready-for-research | L5-C04-GASEOUS-FORM | Add typed Surface/table-spatial facts for Gaseous Form's mist-cloud form state, movement replacement, Magic-action self-ending, B/P/S Resistance, Prone Immunity, Strength/Dexterity/Constitution Saving Throw Advantage, action/object/speech limits, creature-space occupancy, narrow-opening passage, and liquid-surface treatment before authoring/admitting the Spell Definition. |
 
 ## Shared Verification
 
@@ -482,7 +489,7 @@ Verification:
 
 ### Task 4 - L5-C04-GASEOUS-FORM
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -502,7 +509,11 @@ SRD anchors:
 Current state:
 
 - Authored record is missing; catalog state is `not-installed`.
-- Mining disposition is `missing-authored-record`.
+- Mining disposition is `needs-surface-widening`.
+- Surface cannot yet express the Gaseous Form Spell Definition without losing
+  the mist-cloud form state, movement replacement, Magic-action self-ending,
+  object/speech/action limits, creature-space occupancy, narrow-opening
+  passage, or liquid-surface treatment facts.
 
 Output:
 
@@ -511,7 +522,76 @@ Output:
 
 Acceptance:
 
-- `gaseous_form` leaves `missing-authored-record`.
+- `gaseous_form` leaves `missing-authored-record` by becoming
+  `needs-surface-widening`.
+
+Verification:
+
+- Shared lane verification.
+
+Plan Impact:
+
+- Follow-up work is split into L5-C14 before any SRD-provenance Gaseous Form
+  Spell Definition is authored or admitted.
+
+### Task 14 - L5-C14-GASEOUS-FORM-SURFACE-WIDENING
+
+Status: `ready-for-research`
+
+Depends on:
+
+- L5-C04-GASEOUS-FORM
+
+Unit:
+
+- `gaseous_form`
+
+SRD anchors:
+
+- `.references/srd-5.2.1/Spells/Descriptions-E-L.md:688`
+- `.references/srd-5.2.1/Classes/Sorcerer.md:308`
+- `.references/srd-5.2.1/Classes/Warlock.md:384`
+- `.references/srd-5.2.1/Classes/Wizard.md:246`
+
+Current state:
+
+- The generated inventory classifies the three Gaseous Form class-list rows as
+  `needs-surface-widening` / `surface-widening-required`.
+- Existing Surface spell atoms can express some adjacent facts, but not the
+  complete Gaseous Form shape as one SRD Spell Definition without a partial
+  record.
+
+Output:
+
+- Widen Surface so a Gaseous Form Spell Definition can represent a
+  spell-effect mist-cloud form that includes the target's worn and carried
+  objects without pretending the form is a catalog Stat Block or known-form
+  roster choice.
+- Represent replacement movement: the target's only movement method is 10-foot
+  Fly Speed with hover, rather than an additive special Speed grant.
+- Represent the target's Magic-action self-ending trigger and the
+  target-drops-to-0-Hit-Points ending trigger.
+- Represent the passive form facts: Bludgeoning, Piercing, and Slashing
+  Resistance; Prone Immunity; and Advantage on Strength, Dexterity, and
+  Constitution Saving Throws.
+- Represent action/object/speech limits precisely: no talking, no object
+  manipulation/drop/use/interaction, no attacks, and no spellcasting while
+  preserving the Magic-action self-ending exception.
+- Assign table/spatial ownership for entering and occupying another creature's
+  space, passing through narrow openings, and treating liquids as solid
+  surfaces before any battle-runtime projection admits the Spell Definition.
+- Author/admit the SRD-provenance Gaseous Form record only after the typed
+  Surface and table/spatial facts can preserve those RAW distinctions.
+
+Acceptance:
+
+- `gaseous_form` has an SRD-provenance Surface Spell Definition or remains
+  explicitly classified with a narrower executable blocker.
+- The record does not omit the form state, movement replacement, action/object
+  limits, creature-space occupancy, narrow-opening passage, liquid-surface
+  treatment, or Magic-action self-ending facts.
+- Runtime support, if added, dispatches on typed Surface/profile facts rather
+  than authored spell identity.
 
 Verification:
 

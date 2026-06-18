@@ -393,6 +393,9 @@ const blinkSurfaceWideningOwner =
 const conjureAnimalsSurfaceWideningOwner =
   "Surface Spell Definition plus table/spatial pack-position owner and future battle-runtime pack Spell Effect owner";
 
+const gaseousFormSurfaceWideningOwner =
+  "Surface Spell Definition plus movement/table-spatial mist-form owner and future battle-runtime form Spell Effect owner";
+
 const spellUnitMissingClassifications = new Map([
   [
     "bestow_curse",
@@ -429,6 +432,21 @@ const spellUnitMissingClassifications = new Map([
         owner: conjureAnimalsSurfaceWideningOwner,
         reason:
           "Conjure Animals needs a typed follow-up split before an SRD-provenance Spell Definition can be admitted: Surface must own the spectral pack occurrence, caster-proximity roll modifier predicate, caster-movement reposition trigger, optional area save trigger with caster-visible creature eligibility, and shared once-per-turn limit; table/spatial ownership supplies visible unoccupied-space, pack proximity, and caster creature-visibility witnesses; future battle runtime should consume those typed facts as a pack Spell Effect without dispatching on spell id or name.",
+      },
+    },
+  ],
+  [
+    "gaseous_form",
+    {
+      kind: "needs-surface-widening",
+      owner: gaseousFormSurfaceWideningOwner,
+      missingConstruct:
+        "Spell Definition mist-cloud form state: willing touched target and its worn/carried objects shape-shift into a non-catalog misty cloud; the form replaces the target's movement method with 10-foot Fly Speed and hover; permits entering another creature's space, passing through narrow openings, and treating liquids as solid; grants Bludgeoning, Piercing, and Slashing Resistance, Prone Immunity, and Strength, Dexterity, and Constitution Saving Throw Advantage; prevents talking, object manipulation/drop/use/interaction, attacks, and spellcasting; and ends when the target drops to 0 Hit Points or takes a Magic action to end the spell on itself.",
+      battleReadinessClosure: {
+        kind: "table-spatial-derivation",
+        owner: gaseousFormSurfaceWideningOwner,
+        reason:
+          "Gaseous Form needs a typed follow-up split before an SRD-provenance Spell Definition can be admitted: Surface must own the non-catalog mist-cloud form state, movement replacement rather than additive speed grant, Magic-action self-ending, damage Resistance, condition Immunity, Saving Throw Advantage, and action/object/speech limits; table/spatial ownership supplies creature-space occupancy, narrow-opening passage, and liquid-surface treatment witnesses; future battle runtime should consume those typed facts as a form Spell Effect without dispatching on spell id or name.",
       },
     },
   ],
