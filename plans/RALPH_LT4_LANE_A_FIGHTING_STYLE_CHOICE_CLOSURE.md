@@ -7,7 +7,7 @@
     {
       "number": 1,
       "id": "LT4-A01-FIGHTING-STYLE-OPTION-DENOMINATOR",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Admit all SRD Fighting Style feat targets"
     },
     {
@@ -90,7 +90,7 @@ creation.
 
 ### Task 1 - LT4-A01-FIGHTING-STYLE-OPTION-DENOMINATOR
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -113,9 +113,9 @@ SRD anchors:
 Current state:
 
 - All four feat Units are cataloged.
-- `SUPPORTED_FIGHTING_STYLE_OPTION_IDS` admits only `defense` and
-  `feat_archery`.
-- The generated level <4 choice closure report marks GWF/TWF as
+- `SUPPORTED_FIGHTING_STYLE_OPTION_IDS` admits all four SRD Fighting Style
+  feat Units.
+- The generated level <4 choice closure report no longer marks GWF/TWF as
   `missing-character-creation-admission`.
 
 Output:
@@ -209,4 +209,3 @@ Acceptance:
 Verification:
 
 - Shared lane verification.
-
