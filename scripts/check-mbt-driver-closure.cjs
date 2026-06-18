@@ -15,7 +15,10 @@
 // Simulated drivers must compose over small leaf modules (types + pure facts),
 // never over barrels or behavioural machines. We bound each driver's transitive
 // import file-count (a stable proxy: a stray barrel/behaviour import pulls in many
-// files, while line-count churns on every comment edit to a shared module).
+// files, while line-count churns on every comment edit to a shared module). Pure
+// vocabulary leaves are counted separately: they are tiny shared domain type/fact
+// modules, and the checker validates that they have no imports, vars, actions, or
+// run blocks before discounting them from the behavioural closure budget.
 //   - A NEW driver must keep its closure <= BUDGET_FILES.
 //   - The heavy drivers that predate this gate are listed in ALLOWLIST as the
 //     migration backlog. Convert each to a leaf-based projection witness, then
@@ -30,6 +33,10 @@ const path = require("node:path");
 
 const ROOT = path.resolve(__dirname, "..");
 const BUDGET_FILES = 8;
+
+const PURE_VOCABULARY_LEAF_MODULES = new Set([
+  "packages/shared-algebras/proofs/rule-core/creature-size-order.qnt",
+]);
 
 // Legacy mutable protocol names from the pre-WitnessProtocol convention.
 const LEGACY_WITNESS_PROTOCOL_NAMES = [
@@ -162,8 +169,44 @@ function forbiddenReason(root, file) {
   return "battle-runtime behavioral rule module";
 }
 
-// number of OTHER .qnt files transitively imported (excludes the driver itself)
-function importedFileCount(start) {
+function validatePureVocabularyLeaf(root, rel) {
+  const file = path.join(root, ...rel.split("/"));
+  const issues = [];
+  if (!fs.existsSync(file)) {
+    return [`${rel}: configured pure vocabulary leaf does not exist.`];
+  }
+  const text = fs.readFileSync(file, "utf8");
+  if (depsOf(file).length > 0) {
+    issues.push(`${rel}: pure vocabulary leaf must not import other modules.`);
+  }
+  for (const [label, pattern] of [
+    ["var", /^\s*var\b/m],
+    ["action", /^\s*action\b/m],
+    ["run", /^\s*run\b/m],
+  ]) {
+    if (pattern.test(text)) {
+      issues.push(`${rel}: pure vocabulary leaf must not contain ${label} declarations.`);
+    }
+  }
+  return issues;
+}
+
+function validPureVocabularyLeaves(root) {
+  const valid = new Set();
+  const failures = [];
+  for (const rel of PURE_VOCABULARY_LEAF_MODULES) {
+    const issues = validatePureVocabularyLeaf(root, rel);
+    if (issues.length > 0) {
+      failures.push(...issues);
+    } else {
+      valid.add(path.resolve(root, ...rel.split("/")));
+    }
+  }
+  return { valid, failures };
+}
+
+// OTHER .qnt files transitively imported (excludes the driver itself)
+function importedFiles(start) {
   const seen = new Set();
   const stack = [start];
   while (stack.length) {
@@ -173,7 +216,25 @@ function importedFileCount(start) {
     stack.push(...depsOf(f));
   }
   seen.delete(start);
-  return seen.size;
+  return seen;
+}
+
+function importedFileStats(start, pureVocabularyLeaves) {
+  const files = importedFiles(start);
+  let pureVocabularyLeafCount = 0;
+  for (const file of files) {
+    if (pureVocabularyLeaves.has(file)) pureVocabularyLeafCount += 1;
+  }
+  return {
+    counted: files.size - pureVocabularyLeafCount,
+    pureVocabularyLeafCount,
+    total: files.size,
+  };
+}
+
+function formatImportStats(stats) {
+  if (stats.pureVocabularyLeafCount === 0) return `${stats.counted} files`;
+  return `${stats.counted} counted files plus ${stats.pureVocabularyLeafCount} pure vocabulary leaves (${stats.total} total)`;
 }
 
 function findForbiddenImportPaths(root, start) {
@@ -203,24 +264,26 @@ function formatImportPath(root, chain) {
 
 function checkMbtDriverClosure(root) {
   const pkgs = path.join(root, "packages");
-  const failures = [];
+  const { valid: pureVocabularyLeaves, failures: pureVocabularyFailures } =
+    validPureVocabularyLeaves(root);
+  const failures = [...pureVocabularyFailures];
   const graduated = [];
   const seenAllowed = new Set();
   for (const driver of listDrivers(pkgs)) {
     const base = path.basename(driver);
-    const count = importedFileCount(driver);
+    const stats = importedFileStats(driver, pureVocabularyLeaves);
     const forbiddenPaths = findForbiddenImportPaths(root, driver);
     if (base in ALLOWLIST) {
       seenAllowed.add(base);
-      if (count <= BUDGET_FILES && forbiddenPaths.length === 0) {
+      if (stats.counted <= BUDGET_FILES && forbiddenPaths.length === 0) {
         graduated.push(
-          `${base}: now imports ${count} files (<= ${BUDGET_FILES}) and has no forbidden imports. Remove it from ALLOWLIST to lock the win.`,
+          `${base}: now imports ${formatImportStats(stats)} (counted budget ${BUDGET_FILES}) and has no forbidden imports. Remove it from ALLOWLIST to lock the win.`,
         );
       }
     } else {
-      if (count > BUDGET_FILES) {
+      if (stats.counted > BUDGET_FILES) {
         failures.push(
-          `${base}: imports ${count} files (budget ${BUDGET_FILES}). Compose over leaf modules, not barrels/behaviour. If unavoidable, add to ALLOWLIST with a reason.`,
+          `${base}: imports ${formatImportStats(stats)} (counted budget ${BUDGET_FILES}). Compose over leaf modules, not barrels/behaviour. If unavoidable, add to ALLOWLIST with a reason.`,
         );
       }
       for (const { chain, reason } of forbiddenPaths) {
@@ -292,6 +355,11 @@ function withFixtureRoot(fn) {
 function runSelfTest() {
   withFixtureRoot((fixtureRoot) => {
     const runtimeDir = path.join(fixtureRoot, "packages/battle-runtime");
+    const ruleCoreDir = path.join(
+      fixtureRoot,
+      "packages/shared-algebras/proofs/rule-core",
+    );
+    fs.mkdirSync(ruleCoreDir, { recursive: true });
     fs.writeFileSync(
       path.join(runtimeDir, "battle-runtime-model.qnt"),
       "module battleRuntimeModel { type Fixture = Fixture }\n",
@@ -364,8 +432,93 @@ function runSelfTest() {
       );
     }
   });
+  withFixtureRoot((fixtureRoot) => {
+    const runtimeDir = path.join(fixtureRoot, "packages/battle-runtime");
+    const ruleCoreDir = path.join(
+      fixtureRoot,
+      "packages/shared-algebras/proofs/rule-core",
+    );
+    fs.mkdirSync(ruleCoreDir, { recursive: true });
+    fs.writeFileSync(
+      path.join(ruleCoreDir, "creature-size-order.qnt"),
+      [
+        "module creatureSizeOrder {",
+        "  type RuleSize = SmallSize | MediumSize",
+        "  pure def sizeRank(creatureSize: RuleSize): int = if (creatureSize == SmallSize) 1 else 2",
+        "}",
+        "",
+      ].join("\n"),
+    );
+    for (let index = 0; index < 9; index += 1) {
+      fs.writeFileSync(
+        path.join(ruleCoreDir, `counted-${index}.qnt`),
+        `module counted${index} { type Counted${index} = Counted${index} }\n`,
+      );
+    }
+    const imports = (countedCount) => [
+      ...Array.from(
+        { length: countedCount },
+        (_, index) =>
+          `  import counted${index}.* from "../shared-algebras/proofs/rule-core/counted-${index}"`,
+      ),
+      '  import creatureSizeOrder.* from "../shared-algebras/proofs/rule-core/creature-size-order"',
+    ];
+    fs.writeFileSync(
+      path.join(runtimeDir, "fixture-pure-vocabulary-budget.mbt.qnt"),
+      [
+        "module fixturePureVocabularyBudgetMbt {",
+        ...imports(8),
+        "}",
+        "",
+      ].join("\n"),
+    );
+    const passingResult = checkMbtDriverClosure(fixtureRoot);
+    if (passingResult.failures.length > 0) {
+      throw new Error(
+        `Self-test failed: expected pure vocabulary leaf not to consume the counted budget, got ${JSON.stringify(passingResult.failures)}`,
+      );
+    }
+    fs.writeFileSync(
+      path.join(runtimeDir, "fixture-pure-vocabulary-budget.mbt.qnt"),
+      [
+        "module fixturePureVocabularyBudgetMbt {",
+        ...imports(9),
+        "}",
+        "",
+      ].join("\n"),
+    );
+    const countedFailure = checkMbtDriverClosure(fixtureRoot);
+    if (
+      !countedFailure.failures.some((failure) =>
+        failure.includes("imports 9 counted files plus 1 pure vocabulary leaves (10 total)"),
+      )
+    ) {
+      throw new Error(
+        `Self-test failed: expected only counted files to consume the budget, got ${JSON.stringify(countedFailure.failures)}`,
+      );
+    }
+    fs.writeFileSync(
+      path.join(ruleCoreDir, "creature-size-order.qnt"),
+      [
+        "module creatureSizeOrder {",
+        "  action notVocabulary = true",
+        "}",
+        "",
+      ].join("\n"),
+    );
+    const badVocabularyResult = checkMbtDriverClosure(fixtureRoot);
+    if (
+      !badVocabularyResult.failures.some((failure) =>
+        failure.includes("pure vocabulary leaf must not contain action declarations"),
+      )
+    ) {
+      throw new Error(
+        `Self-test failed: expected invalid pure vocabulary leaf to fail, got ${JSON.stringify(badVocabularyResult.failures)}`,
+      );
+    }
+  });
   console.log(
-    "MBT driver closure and legacy witness protocol name self-test OK.",
+    "MBT driver closure, pure vocabulary leaf, and legacy witness protocol name self-test OK.",
   );
 }
 
@@ -396,7 +549,7 @@ if (process.argv.includes("--self-test")) {
     process.exit(1);
   }
   console.log(
-    `MBT driver closure gate passed (budget ${BUDGET_FILES} files; ${Object.keys(ALLOWLIST).length} grandfathered drivers tracked for migration).`,
+    `MBT driver closure gate passed (counted budget ${BUDGET_FILES} files; pure vocabulary leaves are validated and counted separately; ${Object.keys(ALLOWLIST).length} grandfathered drivers tracked for migration).`,
   );
   console.log(
     "MBT legacy witness protocol name gate passed (no pre-protocol mutable qLast*/qHoles vars).",
