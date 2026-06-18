@@ -19,7 +19,7 @@
     {
       "number": 3,
       "id": "LT4-A03-PALADIN-RANGER-FIGHTING-STYLE-ALL-TARGETS",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Prove Paladin and Ranger level-2 Fighting Style can select every SRD target"
     }
   ]
@@ -174,7 +174,7 @@ Verification:
 
 ### Task 3 - LT4-A03-PALADIN-RANGER-FIGHTING-STYLE-ALL-TARGETS
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -193,7 +193,9 @@ SRD anchors:
 Current state:
 
 - Paladin/Ranger can choose the Fighting Style feat branch.
-- The nested feat target set still only admits Defense and Archery.
+- The nested feat target set admits all four SRD Fighting Style feat targets
+  while preserving Blessed Warrior and Druidic Warrior as separate branch
+  options.
 
 Output:
 

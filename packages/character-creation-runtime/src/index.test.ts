@@ -148,6 +148,7 @@ import {
   SRD_LEVEL_THREE_SUBCLASS_UNIT_IDS,
   SORCERER_METAMAGIC_OPTIONS_CHOICE_KEY,
   SUPPORTED_FIGHTING_STYLE_OPTION_IDS,
+  SUPPORTED_FIGHTING_STYLE_UNIT_IDS,
   WEAPON_MASTERY_OPTIONS_CHOICE_KEY,
   WIZARD_PREPARED_SPELL_CHOICE_KEY,
   WIZARD_SPELLBOOK_CHOICE_KEY,
@@ -1097,8 +1098,11 @@ describe("character creation hole discovery", () => {
       },
       cardinality: { tag: "exactly", count: 1 },
     });
-    expect(optionIds(featBranchHoles[0])).toEqual(
-      expect.arrayContaining(["defense", "feat_archery"]),
+    expect([...optionIds(featBranchHoles[0])].sort()).toEqual(
+      [...SUPPORTED_FIGHTING_STYLE_OPTION_IDS].sort(),
+    );
+    expect(supportedHoleOptionIds(featBranchHoles[0]) ?? []).toEqual(
+      expect.arrayContaining([...SUPPORTED_FIGHTING_STYLE_OPTION_IDS]),
     );
 
     const blessedWarriorHoles = selectedClassFeatureAcquisitionGrantChoiceHoles(
@@ -1166,49 +1170,57 @@ describe("character creation hole discovery", () => {
       cardinality: { tag: "exactly", count: 1 },
     });
 
-    const featDraft = completeSupportedProgressionDraft({
-      draftId: "draft:paladin-fighting-style-feat",
-      progression,
-      preferredOptionIdsBySource: {
-        [testUnitChoiceSourceKey(
+    for (const selectedFeatUnitId of SUPPORTED_FIGHTING_STYLE_UNIT_IDS) {
+      const selectedFeatOptionId = creationChoiceOptionId(selectedFeatUnitId);
+      const featDraft = completeSupportedProgressionDraft({
+        draftId: `draft:paladin-fighting-style-feat:${selectedFeatUnitId}`,
+        progression,
+        preferredOptionIdsBySource: {
+          [testUnitChoiceSourceKey(
+            "paladin_fighting_style",
+            PALADIN_FIGHTING_STYLE_CHOICE_KEY,
+          )]: [creationChoiceOptionId("fighting_style_feat")],
+          [testUnitChoiceSourceKey(
+            "paladin_fighting_style",
+            CLASS_FEATURE_FEAT_CHOICE_KEY,
+          )]: [selectedFeatOptionId],
+        },
+      });
+      expect(
+        selectedChoiceOptionIds(
+          featDraft,
           "paladin_fighting_style",
           PALADIN_FIGHTING_STYLE_CHOICE_KEY,
-        )]: [creationChoiceOptionId("fighting_style_feat")],
-        [testUnitChoiceSourceKey(
+        ),
+      ).toEqual(["fighting_style_feat"]);
+      expect(
+        selectedChoiceOptionIds(
+          featDraft,
           "paladin_fighting_style",
           CLASS_FEATURE_FEAT_CHOICE_KEY,
-        )]: [creationChoiceOptionId("defense")],
-      },
-    });
-    expect(
-      selectedChoiceOptionIds(
-        featDraft,
-        "paladin_fighting_style",
-        PALADIN_FIGHTING_STYLE_CHOICE_KEY,
-      ),
-    ).toEqual(["fighting_style_feat"]);
-    expect(
-      selectedChoiceOptionIds(
-        featDraft,
-        "paladin_fighting_style",
-        CLASS_FEATURE_FEAT_CHOICE_KEY,
-      ),
-    ).toEqual(["defense"]);
-    const paladinFeatBuild = finalizeCharacterDraft({
-      draft: featDraft,
-      unitLibrary,
-    });
-    expect(paladinFeatBuild.tag).toBe("ready");
-    if (paladinFeatBuild.tag !== "ready") return;
-    expect(
-      characterBuildFeatureUnitIds(paladinFeatBuild.build, unitLibrary),
-    ).toEqual(expect.arrayContaining(["paladin_fighting_style", "defense"]));
-    expect(
-      selectedBuildClassChoiceUnitIds(
-        paladinFeatBuild.build,
-        "paladin_fighting_style",
-      ),
-    ).toEqual(["defense"]);
+        ),
+      ).toEqual([selectedFeatOptionId]);
+      const paladinFeatBuild = finalizeCharacterDraft({
+        draft: featDraft,
+        unitLibrary,
+      });
+      expect(paladinFeatBuild.tag).toBe("ready");
+      if (paladinFeatBuild.tag !== "ready") return;
+      expect(
+        characterBuildFeatureUnitIds(paladinFeatBuild.build, unitLibrary),
+      ).toEqual(
+        expect.arrayContaining([
+          "paladin_fighting_style",
+          selectedFeatUnitId,
+        ]),
+      );
+      expect(
+        selectedBuildClassChoiceUnitIds(
+          paladinFeatBuild.build,
+          "paladin_fighting_style",
+        ),
+      ).toEqual([selectedFeatUnitId]);
+    }
 
     const blessedWarriorDraft = completeSupportedProgressionDraft({
       draftId: "draft:paladin-fighting-style-blessed-warrior",
@@ -1375,8 +1387,11 @@ describe("character creation hole discovery", () => {
       },
       cardinality: { tag: "exactly", count: 1 },
     });
-    expect(optionIds(featBranchHoles[0])).toEqual(
-      expect.arrayContaining(["defense", "feat_archery"]),
+    expect([...optionIds(featBranchHoles[0])].sort()).toEqual(
+      [...SUPPORTED_FIGHTING_STYLE_OPTION_IDS].sort(),
+    );
+    expect(supportedHoleOptionIds(featBranchHoles[0]) ?? []).toEqual(
+      expect.arrayContaining([...SUPPORTED_FIGHTING_STYLE_OPTION_IDS]),
     );
 
     const druidicWarriorHoles = selectedClassFeatureAcquisitionGrantChoiceHoles(
@@ -1489,81 +1504,84 @@ describe("character creation hole discovery", () => {
         CLASS_FEATURE_LANGUAGE_CHOICE_KEY,
       )]: [creationChoiceOptionId("Elvish"), creationChoiceOptionId("Gnomish")],
     } as const;
-    const featDraft = completeSupportedProgressionDraft({
-      draftId: "draft:ranger-level-2-fighting-style-feat",
-      progression,
-      preferredOptionIdsBySource: {
-        ...rangerCommonChoices,
-        [testUnitChoiceSourceKey(
+    for (const selectedFeatUnitId of SUPPORTED_FIGHTING_STYLE_UNIT_IDS) {
+      const selectedFeatOptionId = creationChoiceOptionId(selectedFeatUnitId);
+      const featDraft = completeSupportedProgressionDraft({
+        draftId: `draft:ranger-level-2-fighting-style-feat:${selectedFeatUnitId}`,
+        progression,
+        preferredOptionIdsBySource: {
+          ...rangerCommonChoices,
+          [testUnitChoiceSourceKey(
+            "ranger_fighting_style",
+            RANGER_FIGHTING_STYLE_CHOICE_KEY,
+          )]: [creationChoiceOptionId("fighting_style_feat")],
+          [testUnitChoiceSourceKey(
+            "ranger_fighting_style",
+            CLASS_FEATURE_FEAT_CHOICE_KEY,
+          )]: [selectedFeatOptionId],
+        },
+      });
+      expect(
+        selectedChoiceOptionIds(
+          featDraft,
           "ranger_fighting_style",
           RANGER_FIGHTING_STYLE_CHOICE_KEY,
-        )]: [creationChoiceOptionId("fighting_style_feat")],
-        [testUnitChoiceSourceKey(
+        ),
+      ).toEqual(["fighting_style_feat"]);
+      expect(
+        selectedChoiceOptionIds(
+          featDraft,
           "ranger_fighting_style",
           CLASS_FEATURE_FEAT_CHOICE_KEY,
-        )]: [creationChoiceOptionId("defense")],
-      },
-    });
-    expect(
-      selectedChoiceOptionIds(
-        featDraft,
-        "ranger_fighting_style",
-        RANGER_FIGHTING_STYLE_CHOICE_KEY,
-      ),
-    ).toEqual(["fighting_style_feat"]);
-    expect(
-      selectedChoiceOptionIds(
-        featDraft,
-        "ranger_fighting_style",
-        CLASS_FEATURE_FEAT_CHOICE_KEY,
-      ),
-    ).toEqual(["defense"]);
-    const rangerFeatBuild = finalizeCharacterDraft({
-      draft: featDraft,
-      unitLibrary,
-    });
-    expect(rangerFeatBuild.tag).toBe("ready");
-    if (rangerFeatBuild.tag !== "ready") return;
-    expect(
-      characterBuildFeatureUnitIds(rangerFeatBuild.build, unitLibrary),
-    ).toEqual(
-      expect.arrayContaining([
-        "ranger_deft_explorer",
-        "ranger_fighting_style",
-        "defense",
-      ]),
-    );
-    expect(
-      selectedBuildClassChoiceUnitIds(
-        rangerFeatBuild.build,
-        "ranger_fighting_style",
-      ),
-    ).toEqual(["defense"]);
-    expect(
-      expectRight(
-        characterBuildProficiencies(rangerFeatBuild.build, unitLibrary),
-      ),
-    ).toMatchObject({
-      skills: expect.arrayContaining(["athletics"]),
-      expertise: ["athletics"],
-    });
-    expect(rangerFeatBuild.build.classFeatureLanguages).toEqual([
-      {
-        kind: "classFeatureLanguageChoice",
-        sourceUnitId: "ranger_deft_explorer",
-        language: "Elvish",
-      },
-      {
-        kind: "classFeatureLanguageChoice",
-        sourceUnitId: "ranger_deft_explorer",
-        language: "Gnomish",
-      },
-    ]);
-    expect(
-      rangerFeatBuild.build.spellcasting?.sources.find(
-        (source) => source.sourceUnitId === "class_ranger",
-      )?.preparedSpells,
-    ).toHaveLength(3);
+        ),
+      ).toEqual([selectedFeatOptionId]);
+      const rangerFeatBuild = finalizeCharacterDraft({
+        draft: featDraft,
+        unitLibrary,
+      });
+      expect(rangerFeatBuild.tag).toBe("ready");
+      if (rangerFeatBuild.tag !== "ready") return;
+      expect(
+        characterBuildFeatureUnitIds(rangerFeatBuild.build, unitLibrary),
+      ).toEqual(
+        expect.arrayContaining([
+          "ranger_deft_explorer",
+          "ranger_fighting_style",
+          selectedFeatUnitId,
+        ]),
+      );
+      expect(
+        selectedBuildClassChoiceUnitIds(
+          rangerFeatBuild.build,
+          "ranger_fighting_style",
+        ),
+      ).toEqual([selectedFeatUnitId]);
+      expect(
+        expectRight(
+          characterBuildProficiencies(rangerFeatBuild.build, unitLibrary),
+        ),
+      ).toMatchObject({
+        skills: expect.arrayContaining(["athletics"]),
+        expertise: ["athletics"],
+      });
+      expect(rangerFeatBuild.build.classFeatureLanguages).toEqual([
+        {
+          kind: "classFeatureLanguageChoice",
+          sourceUnitId: "ranger_deft_explorer",
+          language: "Elvish",
+        },
+        {
+          kind: "classFeatureLanguageChoice",
+          sourceUnitId: "ranger_deft_explorer",
+          language: "Gnomish",
+        },
+      ]);
+      expect(
+        rangerFeatBuild.build.spellcasting?.sources.find(
+          (source) => source.sourceUnitId === "class_ranger",
+        )?.preparedSpells,
+      ).toHaveLength(3);
+    }
 
     const druidicWarriorDraft = completeSupportedProgressionDraft({
       draftId: "draft:ranger-level-2-druidic-warrior",
