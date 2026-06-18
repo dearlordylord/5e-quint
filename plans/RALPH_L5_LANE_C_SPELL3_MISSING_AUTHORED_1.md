@@ -13,7 +13,7 @@
     {
       "number": 2,
       "id": "L5-C02-BLINK",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Close Blink missing authored record"
     },
     {
@@ -69,6 +69,12 @@
       "id": "L5-C11-BESTOW-CURSE-SURFACE-WIDENING",
       "status": "ready-for-research",
       "title": "Widen Bestow Curse Surface Spell Definition"
+    },
+    {
+      "number": 12,
+      "id": "L5-C12-BLINK-SURFACE-WIDENING",
+      "status": "ready-for-research",
+      "title": "Widen Blink Surface Spell Definition"
     }
   ]
 }
@@ -125,7 +131,7 @@ missing-record spells unless a RAW dependency is unavoidable and documented.
 | # | Task | Status | Depends on | Notes |
 | ---: | --- | --- | --- | --- |
 | 1 | L5-C01-BESTOW-CURSE - Close Bestow Curse missing authored record | done | none | Closed as a Surface widening boundary, not an authored-record admission. |
-| 2 | L5-C02-BLINK - Close Blink missing authored record | ready-for-research | none | Independent missing spell Unit. |
+| 2 | L5-C02-BLINK - Close Blink missing authored record | done | none | Closed as a Surface widening boundary, not an authored-record admission. |
 | 3 | L5-C03-CONJURE-ANIMALS - Close Conjure Animals missing authored record | ready-for-research | none | Independent missing spell Unit. |
 | 4 | L5-C04-GASEOUS-FORM - Close Gaseous Form missing authored record | ready-for-research | none | Independent missing spell Unit. |
 | 5 | L5-C05-GLYPH-OF-WARDING - Close Glyph of Warding missing authored record | ready-for-research | none | Independent missing spell Unit. |
@@ -135,6 +141,7 @@ missing-record spells unless a RAW dependency is unavoidable and documented.
 | 9 | L5-C09-NONDETECTION - Close Nondetection missing authored record | ready-for-research | none | Independent missing spell Unit. |
 | 10 | L5-C10-PHANTOM-STEED - Close Phantom Steed missing authored record | ready-for-research | none | Independent missing spell Unit. |
 | 11 | L5-C11-BESTOW-CURSE-SURFACE-WIDENING - Widen Bestow Curse Surface Spell Definition | ready-for-research | L5-C01-BESTOW-CURSE | Add typed Surface facts for Bestow Curse curse-option selection, curse-removal targeting, and slot-dependent duration/Concentration before authoring/admitting the Spell Definition. |
+| 12 | L5-C12-BLINK-SURFACE-WIDENING - Widen Blink Surface Spell Definition | ready-for-research | L5-C02-BLINK | Add typed Surface/table-spatial facts for Blink's turn-end roll, Ethereal Plane transition, already-on-plane ending predicate, and return-position availability before authoring/admitting the Spell Definition. |
 
 ## Shared Verification
 
@@ -268,7 +275,7 @@ Verification:
 
 ### Task 2 - L5-C02-BLINK
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -287,7 +294,10 @@ SRD anchors:
 Current state:
 
 - Authored record is missing; catalog state is `not-installed`.
-- Mining disposition is `missing-authored-record`.
+- Mining disposition is `needs-surface-widening`.
+- Surface cannot yet express the Blink Spell Definition without losing the
+  turn-end d6 roll, Ethereal Plane transition, already-on-plane ending
+  predicate, and return-position availability facts.
 
 Output:
 
@@ -296,7 +306,64 @@ Output:
 
 Acceptance:
 
-- `blink` leaves `missing-authored-record`.
+- `blink` leaves `missing-authored-record` by becoming
+  `needs-surface-widening`.
+
+Verification:
+
+- Shared lane verification.
+
+Plan Impact:
+
+- Follow-up work is split into L5-C12 before any SRD-provenance Blink Spell
+  Definition is authored or admitted.
+
+### Task 12 - L5-C12-BLINK-SURFACE-WIDENING
+
+Status: `ready-for-research`
+
+Depends on:
+
+- L5-C02-BLINK
+
+Unit:
+
+- `blink`
+
+SRD anchors:
+
+- `.references/srd-5.2.1/Spells/Descriptions-A-D.md:580`
+- `.references/srd-5.2.1/Classes/Sorcerer.md:300`
+- `.references/srd-5.2.1/Classes/Wizard.md:239`
+
+Current state:
+
+- The generated inventory classifies the two Blink class-list rows as
+  `needs-surface-widening` / `surface-widening-required`.
+- Existing Surface spell facts cannot represent the complete Blink shape as one
+  SRD Spell Definition without a partial record.
+
+Output:
+
+- Widen Surface so a Blink Spell Definition can represent the end-of-turn d6
+  roll, including the 4-6 threshold outcome.
+- Represent the Ethereal Plane transition, the spell-ending predicate when the
+  caster is already on that plane, and the start-of-next-turn/spell-end return
+  timing without dispatching on spell id/name in runtime behavior.
+- Assign table/spatial ownership for the origin space, visible unoccupied-space
+  choice within 10 feet, no-available-space condition, and nearest-unoccupied
+  fallback before any battle-runtime projection admits the Spell Definition.
+- Author/admit the SRD-provenance Blink record only after the typed Surface and
+  table/spatial facts can preserve those RAW distinctions.
+
+Acceptance:
+
+- `blink` has an SRD-provenance Surface Spell Definition or remains explicitly
+  classified with a narrower executable blocker.
+- The record does not omit the turn-end roll, the already-on-Ethereal-Plane
+  spell-ending case, or the return-position availability/fallback facts.
+- Runtime support, if added, dispatches on typed Surface/profile facts rather
+  than authored spell identity.
 
 Verification:
 

@@ -387,6 +387,9 @@ const classFeatureSurfaceBlockers = new Map();
 
 const spellAccessSurfaceBlockers = new Map();
 
+const blinkSurfaceWideningOwner =
+  "Surface Spell Definition plus table/spatial plane-position owner";
+
 const spellUnitMissingClassifications = new Map([
   [
     "bestow_curse",
@@ -394,6 +397,21 @@ const spellUnitMissingClassifications = new Map([
       kind: "needs-surface-widening",
       missingConstruct:
         "Spell Definition curse occurrence: initial Wisdom Saving Throw gates one chosen ongoing curse option (chosen-ability Ability Check and Saving Throw Disadvantage, caster-targeted Attack Roll Disadvantage, start-of-turn Wisdom save or forced Dodge, or caster attack/spell damage rider), the target becomes a curse-removal target, and higher slot levels change both duration amount and Concentration requirement.",
+    },
+  ],
+  [
+    "blink",
+    {
+      kind: "needs-surface-widening",
+      owner: blinkSurfaceWideningOwner,
+      missingConstruct:
+        "Spell Definition planar blink occurrence: caster-turn-end d6 threshold needs an OngoingEffect random table to gate the transition to the Ethereal Plane; spell-ending when the caster is already on that plane needs a plane-occupancy predicate; and start-of-next-turn/spell-end return placement chooses a visible unoccupied space within 10 feet of the origin space or the nearest unoccupied space when none is available, requiring typed Surface/table-spatial ownership for return-position availability.",
+      battleReadinessClosure: {
+        kind: "table-spatial-derivation",
+        owner: blinkSurfaceWideningOwner,
+        reason:
+          "Blink needs a typed follow-up split: Surface owns the caster-turn-end d6 random table, Ethereal Plane transition, and already-on-plane ending predicate; table/spatial ownership supplies origin space, visible unoccupied-space availability within 10 feet, and nearest-unoccupied-space fallback before any battle-runtime projection admits it.",
+      },
     },
   ],
   [
@@ -2878,7 +2896,10 @@ function withState(rows, authored, installedIds, ownerEvidenceSources) {
       installedIds,
     );
     const battleReadinessClosure =
-      battleReadinessClosureFromUnitClaim(unitClaim);
+      battleReadinessClosureFromUnitClaim(unitClaim) ??
+      battleReadinessClosureFromSpellUnitMissingClassification(row);
+    const missingClassificationEvidence =
+      ownerEvidenceFromSpellUnitMissingClassification(row, disposition);
     const rowWithState = {
       ...row,
       surface: gate,
@@ -2912,7 +2933,7 @@ function withState(rows, authored, installedIds, ownerEvidenceSources) {
                 ? []
                 : ownerEvidenceEntries(installedClassification)),
             ]
-          : [],
+          : missingClassificationEvidence,
       nextAction: nextAction(
         row,
         disposition,
@@ -2972,6 +2993,43 @@ function ownerEvidenceEntries(classification) {
     }));
   }
   return [ownerEvidenceEntry(classification)];
+}
+
+function spellUnitMissingClassificationForRow(row) {
+  return row.rowKind === "spell-unit-pressure" && row.candidateUnitId
+    ? spellUnitMissingClassifications.get(row.candidateUnitId)
+    : undefined;
+}
+
+function battleReadinessClosureFromSpellUnitMissingClassification(row) {
+  const classification = spellUnitMissingClassificationForRow(row);
+  if (
+    classification?.kind !== "needs-surface-widening" ||
+    !isBattleReadinessClosure(classification.battleReadinessClosure)
+  ) {
+    return undefined;
+  }
+  return {
+    source: "spell-unit-missing-classification",
+    kind: classification.battleReadinessClosure.kind,
+    owner: classification.battleReadinessClosure.owner,
+    reason:
+      classification.battleReadinessClosure.reason ??
+      classification.missingConstruct,
+  };
+}
+
+function ownerEvidenceFromSpellUnitMissingClassification(row, disposition) {
+  if (disposition !== "needs-surface-widening") return [];
+  const classification = spellUnitMissingClassificationForRow(row);
+  if (
+    classification?.kind !== "needs-surface-widening" ||
+    typeof classification.owner !== "string" ||
+    classification.owner.length === 0
+  ) {
+    return [];
+  }
+  return ownerEvidenceEntries(classification);
 }
 
 function countBy(rows, key) {
@@ -4695,6 +4753,31 @@ function validateSrdUnitInventory(report) {
       issues.push(
         `${row.id} needs Surface widening but lacks missingConstruct.`,
       );
+    }
+    if (row.finalDisposition === "needs-surface-widening") {
+      const missingClassification = spellUnitMissingClassificationForRow(row);
+      if (
+        missingClassification?.kind === "needs-surface-widening" &&
+        typeof missingClassification.owner === "string" &&
+        missingClassification.owner.length > 0 &&
+        !row.ownerEvidence.some(
+          (evidence) => evidence.owner === missingClassification.owner,
+        )
+      ) {
+        issues.push(
+          `${row.id} declares a Surface-widening owner but lacks projected owner evidence.`,
+        );
+      }
+      if (
+        missingClassification?.kind === "needs-surface-widening" &&
+        isBattleReadinessClosure(missingClassification.battleReadinessClosure) &&
+        row.battleReadinessClosure?.owner !==
+          missingClassification.battleReadinessClosure.owner
+      ) {
+        issues.push(
+          `${row.id} declares a Surface-widening readiness closure but lacks projected closure evidence.`,
+        );
+      }
     }
     if (
       row.finalDisposition === "catalog-installed-needs-owner-evidence" &&

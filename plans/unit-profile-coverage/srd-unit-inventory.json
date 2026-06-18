@@ -296,11 +296,11 @@
       "numerator": 34,
       "percent": "30.9%",
       "rowsByStatus": {
-        "surface-widening-required": 3,
+        "surface-widening-required": 5,
         "accepted-no-battle-effect": 12,
         "accepted": 22,
         "owner-evidence-required": 28,
-        "battle-runtime-required": 45
+        "battle-runtime-required": 43
       }
     },
     "levelFourSpellBattleReadiness": {
@@ -374,9 +374,9 @@
       "non-runtime": 84,
       "catalog-only/dead-for-now": 144,
       "level-5-7-follow-up-required": 33,
-      "needs-surface-widening": 3,
+      "needs-surface-widening": 5,
       "catalog-authored-review-required": 77,
-      "missing-authored-record": 77,
+      "missing-authored-record": 75,
       "catalog-installed-owner-evidence-required": 1
     },
     "spellPressureRowsByDisposition": {
@@ -384,11 +384,11 @@
       "catalog-only/dead-for-now": 118
     },
     "levelThreeSpellPressureRowsByDisposition": {
-      "needs-surface-widening": 3,
+      "needs-surface-widening": 5,
       "catalog-only/dead-for-now": 12,
       "catalog-installed-owner-evidence-present": 22,
       "catalog-authored-review-required": 28,
-      "missing-authored-record": 45
+      "missing-authored-record": 43
     },
     "levelThreeInstalledSpellPressureRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 22
@@ -29882,7 +29882,8 @@
       "detail": "Blink (Transmutation; —)",
       "candidateUnitId": "blink",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "current-surface-cannot-express-mechanics-yet",
+        "missingConstruct": "Spell Definition planar blink occurrence: caster-turn-end d6 threshold needs an OngoingEffect random table to gate the transition to the Ethereal Plane; spell-ending when the caster is already on that plane needs a plane-occupancy predicate; and start-of-next-turn/spell-end return placement chooses a visible unoccupied space within 10 feet of the origin space or the nearest unoccupied space when none is available, requiring typed Surface/table-spatial ownership for return-position availability."
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -29891,10 +29892,22 @@
         "state": "not-installed",
         "unitId": "blink"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "finalDisposition": "needs-surface-widening",
+      "battleReadinessClosure": {
+        "source": "spell-unit-missing-classification",
+        "kind": "table-spatial-derivation",
+        "owner": "Surface Spell Definition plus table/spatial plane-position owner",
+        "reason": "Blink needs a typed follow-up split: Surface owns the caster-turn-end d6 random table, Ethereal Plane transition, and already-on-plane ending predicate; table/spatial ownership supplies origin space, visible unoccupied-space availability within 10 feet, and nearest-unoccupied-space fallback before any battle-runtime projection admits it."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Surface Spell Definition plus table/spatial plane-position owner",
+          "evidence": "Spell Definition planar blink occurrence: caster-turn-end d6 threshold needs an OngoingEffect random table to gate the transition to the Ethereal Plane; spell-ending when the caster is already on that plane needs a plane-occupancy predicate; and start-of-next-turn/spell-end return placement chooses a visible unoccupied space within 10 feet of the origin space or the nearest unoccupied space when none is available, requiring typed Surface/table-spatial ownership for return-position availability.",
+          "status": "Surface widening required before owner evidence can be present"
+        }
+      ],
+      "nextAction": "Widen Surface: Spell Definition planar blink occurrence: caster-turn-end d6 threshold needs an OngoingEffect random table to gate the transition to the Ethereal Plane; spell-ending when the caster is already on that plane needs a plane-occupancy predicate; and start-of-next-turn/spell-end return placement chooses a visible unoccupied space within 10 feet of the origin space or the nearest unoccupied space when none is available, requiring typed Surface/table-spatial ownership for return-position availability.",
+      "battleReadinessStatus": "surface-widening-required"
     },
     {
       "id": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_clairvoyance",
@@ -38529,7 +38542,8 @@
       "detail": "Blink (Transmutation; —)",
       "candidateUnitId": "blink",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "current-surface-cannot-express-mechanics-yet",
+        "missingConstruct": "Spell Definition planar blink occurrence: caster-turn-end d6 threshold needs an OngoingEffect random table to gate the transition to the Ethereal Plane; spell-ending when the caster is already on that plane needs a plane-occupancy predicate; and start-of-next-turn/spell-end return placement chooses a visible unoccupied space within 10 feet of the origin space or the nearest unoccupied space when none is available, requiring typed Surface/table-spatial ownership for return-position availability."
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -38538,10 +38552,22 @@
         "state": "not-installed",
         "unitId": "blink"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "finalDisposition": "needs-surface-widening",
+      "battleReadinessClosure": {
+        "source": "spell-unit-missing-classification",
+        "kind": "table-spatial-derivation",
+        "owner": "Surface Spell Definition plus table/spatial plane-position owner",
+        "reason": "Blink needs a typed follow-up split: Surface owns the caster-turn-end d6 random table, Ethereal Plane transition, and already-on-plane ending predicate; table/spatial ownership supplies origin space, visible unoccupied-space availability within 10 feet, and nearest-unoccupied-space fallback before any battle-runtime projection admits it."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Surface Spell Definition plus table/spatial plane-position owner",
+          "evidence": "Spell Definition planar blink occurrence: caster-turn-end d6 threshold needs an OngoingEffect random table to gate the transition to the Ethereal Plane; spell-ending when the caster is already on that plane needs a plane-occupancy predicate; and start-of-next-turn/spell-end return placement chooses a visible unoccupied space within 10 feet of the origin space or the nearest unoccupied space when none is available, requiring typed Surface/table-spatial ownership for return-position availability.",
+          "status": "Surface widening required before owner evidence can be present"
+        }
+      ],
+      "nextAction": "Widen Surface: Spell Definition planar blink occurrence: caster-turn-end d6 threshold needs an OngoingEffect random table to gate the transition to the Ethereal Plane; spell-ending when the caster is already on that plane needs a plane-occupancy predicate; and start-of-next-turn/spell-end return placement chooses a visible unoccupied space within 10 feet of the origin space or the nearest unoccupied space when none is available, requiring typed Surface/table-spatial ownership for return-position availability.",
+      "battleReadinessStatus": "surface-widening-required"
     },
     {
       "id": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_clairvoyance",
