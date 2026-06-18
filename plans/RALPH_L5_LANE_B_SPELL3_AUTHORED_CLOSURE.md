@@ -43,7 +43,7 @@
     {
       "number": 7,
       "id": "L5-B07-MAJOR-IMAGE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Close Major Image authored spell pressure"
     },
     {
@@ -136,7 +136,7 @@ this lane; those are Lane C and Lane D.
 | 4 | L5-B04-CREATE-FOOD-AND-WATER - Close Create Food and Water authored spell pressure | done | none | Closed as runtime-detached table inventory and survival ownership. |
 | 5 | L5-B05-DAYLIGHT - Close Daylight authored spell pressure | done | none | Closed outside the promoted battle runtime sunlight Spell Effect and table/spatial light-overlap boundary. |
 | 6 | L5-B06-FEAR - Close Fear authored spell pressure | done | none | Closed outside the current promoted battle runtime active Frightened-compulsion Spell Effect, held-object release, and compelled-movement boundary. |
-| 7 | L5-B07-MAJOR-IMAGE - Close Major Image authored spell pressure | ready-for-research | none | Independent authored spell pressure row. |
+| 7 | L5-B07-MAJOR-IMAGE - Close Major Image authored spell pressure | done | none | Independent authored spell pressure row. |
 | 8 | L5-B08-PROTECTION-FROM-ENERGY - Close Protection from Energy authored spell pressure | ready-for-research | none | Preserve target-shape repair plus runtime admission prerequisite from `plans/unit-profile-coverage/L3_PROTECTION_FROM_ENERGY_RUNTIME_SURVEY.md`. |
 | 9 | L5-B09-SPIRIT-GUARDIANS - Close Spirit Guardians authored spell pressure | ready-for-research | none | Independent authored spell pressure row. |
 | 10 | L5-B10-STINKING-CLOUD - Close Stinking Cloud authored spell pressure | ready-for-research | none | Independent authored spell pressure row. |
@@ -457,7 +457,7 @@ Verification:
 
 ### Task 7 - L5-B07-MAJOR-IMAGE
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
