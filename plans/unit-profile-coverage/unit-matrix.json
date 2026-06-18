@@ -37008,6 +37008,16 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-battle-runtime",
+          "owner": "future active spell-effect healing-maximization and saving-throw roll-mode owner",
+          "reason": "Beacon of Hope's battle-relevant behavior is closed outside the current promoted battle-runtime boundary: a future active spell-effect owner must admit selected targets without authored-identity dispatch, carry Concentration expiry, maximize later healing received by affected targets, project Advantage onto affected targets' Wisdom Saving Throws, and project Advantage onto affected targets' Death Saving Throws."
+        },
+        "reason": "Beacon of Hope is an SRD level-3 Spell Definition whose Surface record models Action Spell Slot casting, 30-foot range, V/S components, Concentration up to 1 minute, any-number creature target selection, passive Advantage on Wisdom Saving Throws and Death Saving Throws, and passive maximization of Hit Points regained from any healing. No promoted battle-runtime profile is claimed because the current Spell Invocation and Hit Point restoration reducers do not own an active concentration Spell Effect that stores selected targets and intercepts later healing resolution plus Wisdom and Death Saving Throw roll-mode projection.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "spell",

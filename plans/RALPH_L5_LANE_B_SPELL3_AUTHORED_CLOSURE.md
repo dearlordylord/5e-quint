@@ -13,7 +13,7 @@
     {
       "number": 2,
       "id": "L5-B02-BEACON-OF-HOPE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Close Beacon of Hope authored spell pressure"
     },
     {
@@ -131,7 +131,7 @@ this lane; those are Lane C and Lane D.
 | # | Task | Status | Depends on | Notes |
 | ---: | --- | --- | --- | --- |
 | 1 | L5-B01-ANIMATE-DEAD - Close Animate Dead authored spell pressure | done | none | Closed as a runtime-detached companion-control boundary. |
-| 2 | L5-B02-BEACON-OF-HOPE - Close Beacon of Hope authored spell pressure | ready-for-research | none | Independent authored spell pressure row. |
+| 2 | L5-B02-BEACON-OF-HOPE - Close Beacon of Hope authored spell pressure | done | none | Closed outside the promoted battle runtime active spell-effect boundary. |
 | 3 | L5-B03-CALL-LIGHTNING - Close Call Lightning authored spell pressure | ready-for-research | none | Independent authored spell pressure row. |
 | 4 | L5-B04-CREATE-FOOD-AND-WATER - Close Create Food and Water authored spell pressure | ready-for-research | none | Independent authored spell pressure row. |
 | 5 | L5-B05-DAYLIGHT - Close Daylight authored spell pressure | ready-for-research | none | Independent authored spell pressure row. |
@@ -214,7 +214,7 @@ Verification:
 
 ### Task 2 - L5-B02-BEACON-OF-HOPE
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -243,6 +243,15 @@ Output:
 Acceptance:
 
 - `beacon_of_hope` leaves `catalog-authored-review-required`.
+
+Result:
+
+- `beacon_of_hope` is recorded as `unsupported-profile` and
+  `catalog-only/dead-for-now` with an `outside-battle-runtime` closure.
+- The future owner is an active spell-effect owner that carries selected targets
+  and Concentration expiry, maximizes later healing received by affected
+  targets, and projects Advantage on Wisdom Saving Throws and Death Saving
+  Throws without authored-identity dispatch.
 
 Verification:
 

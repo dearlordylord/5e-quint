@@ -293,13 +293,13 @@
     },
     "levelThreeSpellBattleReadiness": {
       "denominator": 110,
-      "numerator": 36,
-      "percent": "32.7%",
+      "numerator": 37,
+      "percent": "33.6%",
       "rowsByStatus": {
         "battle-runtime-required": 48,
-        "accepted-no-battle-effect": 14,
+        "accepted-no-battle-effect": 15,
         "accepted": 22,
-        "owner-evidence-required": 26
+        "owner-evidence-required": 25
       }
     },
     "levelFourSpellBattleReadiness": {
@@ -371,10 +371,10 @@
     "allRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 481,
       "non-runtime": 84,
-      "catalog-only/dead-for-now": 146,
+      "catalog-only/dead-for-now": 147,
       "level-5-7-follow-up-required": 33,
       "missing-authored-record": 80,
-      "catalog-authored-review-required": 75,
+      "catalog-authored-review-required": 74,
       "catalog-installed-owner-evidence-required": 1
     },
     "spellPressureRowsByDisposition": {
@@ -383,9 +383,9 @@
     },
     "levelThreeSpellPressureRowsByDisposition": {
       "missing-authored-record": 48,
-      "catalog-only/dead-for-now": 14,
+      "catalog-only/dead-for-now": 15,
       "catalog-installed-owner-evidence-present": 22,
-      "catalog-authored-review-required": 26
+      "catalog-authored-review-required": 25
     },
     "levelThreeInstalledSpellPressureRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 22
@@ -12037,7 +12037,7 @@
       "detail": "Beacon of Hope (Abjuration; C)",
       "candidateUnitId": "beacon_of_hope",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
         "state": "authored-record-present",
@@ -12048,10 +12048,17 @@
         "state": "not-installed",
         "unitId": "beacon_of_hope"
       },
-      "finalDisposition": "catalog-authored-review-required",
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-only/dead-for-now",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "outside-battle-runtime",
+        "owner": "future active spell-effect healing-maximization and saving-throw roll-mode owner",
+        "reason": "Beacon of Hope's battle-relevant behavior is closed outside the current promoted battle-runtime boundary: a future active spell-effect owner must admit selected targets without authored-identity dispatch, carry Concentration expiry, maximize later healing received by affected targets, project Advantage onto affected targets' Wisdom Saving Throws, and project Advantage onto affected targets' Death Saving Throws."
+      },
       "ownerEvidence": [],
-      "nextAction": "Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this later-frontier spell row as accepted.",
-      "battleReadinessStatus": "owner-evidence-required"
+      "nextAction": "Beacon of Hope's battle-relevant behavior is closed outside the current promoted battle-runtime boundary: a future active spell-effect owner must admit selected targets without authored-identity dispatch, carry Concentration expiry, maximize later healing received by affected targets, project Advantage onto affected targets' Wisdom Saving Throws, and project Advantage onto affected targets' Death Saving Throws.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
       "id": "srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_bestow_curse",
