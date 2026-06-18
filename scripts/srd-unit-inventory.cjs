@@ -402,6 +402,9 @@ const glyphOfWardingSurfaceWideningOwner =
 const hasteSurfaceWideningOwner =
   "Surface Spell Definition plus future battle-runtime positive-effect and lethargy owners";
 
+const magicCircleSurfaceWideningOwner =
+  "Surface Spell Definition plus table/spatial planar-movement owner and future battle-runtime warded-area Spell Effect owner";
+
 const spellUnitMissingClassifications = new Map([
   [
     "bestow_curse",
@@ -478,6 +481,21 @@ const spellUnitMissingClassifications = new Map([
       owner: hasteSurfaceWideningOwner,
       missingConstruct:
         "Spell Definition haste active-effect and lethargy split: Magic Action casting, level-3 Spell Slot, 30-foot visible willing-creature targeting, Concentration duration, doubled Speed, +2 Armor Class, Dexterity Saving Throw Advantage, a per-turn additional-action allow-list that caps Attack at one attack, and spell-end lethargy applying Incapacitated plus Speed 0 until the end of the target's next turn; Surface needs typed extra-action restriction and end-of-effect lethargy facts before the SRD record can be authored without collapsing later positive-runtime and lethargy-runtime follow-ups.",
+    },
+  ],
+  [
+    "magic_circle",
+    {
+      kind: "needs-surface-widening",
+      owner: magicCircleSurfaceWideningOwner,
+      missingConstruct:
+        "Spell Definition warded-cylinder occurrence: 10-foot-radius, 20-foot-tall Cylinder area; slot-scaled timed duration of 1 hour plus 1 hour per Spell Slot level above 3; cast-time choice of one or more Celestial, Elemental, Fey, Fiend, or Undead creature types; normal or reversed area direction; nonmagical entry or exit prevention for affected creatures; Charisma Saving Throw gate for teleportation or interplanar travel across the ward; affected-creature Attack Roll Disadvantage against protected targets; and source-scoped possession, Charmed, and Frightened prevention for protected targets.",
+      battleReadinessClosure: {
+        kind: "table-spatial-derivation",
+        owner: magicCircleSurfaceWideningOwner,
+        reason:
+          "Magic Circle needs a typed follow-up split before an SRD-provenance Spell Definition can be admitted: Surface must own the 10-foot-radius, 20-foot-tall Cylinder area, slot-scaled timed duration, cast-time creature-type set, normal-or-reversed area direction, nonmagical crossing prevention, magical-travel Charisma Saving Throw gate, scoped Attack Roll Disadvantage, and source-scoped possession plus Charmed/Frightened prevention; table/spatial ownership supplies ground-point placement, cylinder membership, inside/outside protected-target witnesses, entry or exit attempts, and teleportation or interplanar-travel crossing witnesses; future battle runtime should consume typed warded-area facts without dispatching on spell id or name.",
+      },
     },
   ],
   [

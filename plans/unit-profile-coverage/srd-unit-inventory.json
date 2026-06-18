@@ -296,11 +296,11 @@
       "numerator": 34,
       "percent": "30.9%",
       "rowsByStatus": {
-        "surface-widening-required": 14,
+        "surface-widening-required": 17,
         "accepted-no-battle-effect": 12,
         "accepted": 22,
         "owner-evidence-required": 28,
-        "battle-runtime-required": 34
+        "battle-runtime-required": 31
       }
     },
     "levelFourSpellBattleReadiness": {
@@ -374,9 +374,9 @@
       "non-runtime": 84,
       "catalog-only/dead-for-now": 144,
       "level-5-7-follow-up-required": 33,
-      "needs-surface-widening": 14,
+      "needs-surface-widening": 17,
       "catalog-authored-review-required": 77,
-      "missing-authored-record": 66,
+      "missing-authored-record": 63,
       "catalog-installed-owner-evidence-required": 1
     },
     "spellPressureRowsByDisposition": {
@@ -384,11 +384,11 @@
       "catalog-only/dead-for-now": 118
     },
     "levelThreeSpellPressureRowsByDisposition": {
-      "needs-surface-widening": 14,
+      "needs-surface-widening": 17,
       "catalog-only/dead-for-now": 12,
       "catalog-installed-owner-evidence-present": 22,
       "catalog-authored-review-required": 28,
-      "missing-authored-record": 34
+      "missing-authored-record": 31
     },
     "levelThreeInstalledSpellPressureRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 22
@@ -12299,7 +12299,8 @@
       "detail": "Magic Circle (Abjuration; M)",
       "candidateUnitId": "magic_circle",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "current-surface-cannot-express-mechanics-yet",
+        "missingConstruct": "Spell Definition warded-cylinder occurrence: 10-foot-radius, 20-foot-tall Cylinder area; slot-scaled timed duration of 1 hour plus 1 hour per Spell Slot level above 3; cast-time choice of one or more Celestial, Elemental, Fey, Fiend, or Undead creature types; normal or reversed area direction; nonmagical entry or exit prevention for affected creatures; Charisma Saving Throw gate for teleportation or interplanar travel across the ward; affected-creature Attack Roll Disadvantage against protected targets; and source-scoped possession, Charmed, and Frightened prevention for protected targets."
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -12308,10 +12309,22 @@
         "state": "not-installed",
         "unitId": "magic_circle"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "finalDisposition": "needs-surface-widening",
+      "battleReadinessClosure": {
+        "source": "spell-unit-missing-classification",
+        "kind": "table-spatial-derivation",
+        "owner": "Surface Spell Definition plus table/spatial planar-movement owner and future battle-runtime warded-area Spell Effect owner",
+        "reason": "Magic Circle needs a typed follow-up split before an SRD-provenance Spell Definition can be admitted: Surface must own the 10-foot-radius, 20-foot-tall Cylinder area, slot-scaled timed duration, cast-time creature-type set, normal-or-reversed area direction, nonmagical crossing prevention, magical-travel Charisma Saving Throw gate, scoped Attack Roll Disadvantage, and source-scoped possession plus Charmed/Frightened prevention; table/spatial ownership supplies ground-point placement, cylinder membership, inside/outside protected-target witnesses, entry or exit attempts, and teleportation or interplanar-travel crossing witnesses; future battle runtime should consume typed warded-area facts without dispatching on spell id or name."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Surface Spell Definition plus table/spatial planar-movement owner and future battle-runtime warded-area Spell Effect owner",
+          "evidence": "Spell Definition warded-cylinder occurrence: 10-foot-radius, 20-foot-tall Cylinder area; slot-scaled timed duration of 1 hour plus 1 hour per Spell Slot level above 3; cast-time choice of one or more Celestial, Elemental, Fey, Fiend, or Undead creature types; normal or reversed area direction; nonmagical entry or exit prevention for affected creatures; Charisma Saving Throw gate for teleportation or interplanar travel across the ward; affected-creature Attack Roll Disadvantage against protected targets; and source-scoped possession, Charmed, and Frightened prevention for protected targets.",
+          "status": "Surface widening required before owner evidence can be present"
+        }
+      ],
+      "nextAction": "Widen Surface: Spell Definition warded-cylinder occurrence: 10-foot-radius, 20-foot-tall Cylinder area; slot-scaled timed duration of 1 hour plus 1 hour per Spell Slot level above 3; cast-time choice of one or more Celestial, Elemental, Fey, Fiend, or Undead creature types; normal or reversed area direction; nonmagical entry or exit prevention for affected creatures; Charisma Saving Throw gate for teleportation or interplanar travel across the ward; affected-creature Attack Roll Disadvantage against protected targets; and source-scoped possession, Charmed, and Frightened prevention for protected targets.",
+      "battleReadinessStatus": "surface-widening-required"
     },
     {
       "id": "srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_mass_healing_word",
@@ -33663,7 +33676,8 @@
       "detail": "Magic Circle (Abjuration; M)",
       "candidateUnitId": "magic_circle",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "current-surface-cannot-express-mechanics-yet",
+        "missingConstruct": "Spell Definition warded-cylinder occurrence: 10-foot-radius, 20-foot-tall Cylinder area; slot-scaled timed duration of 1 hour plus 1 hour per Spell Slot level above 3; cast-time choice of one or more Celestial, Elemental, Fey, Fiend, or Undead creature types; normal or reversed area direction; nonmagical entry or exit prevention for affected creatures; Charisma Saving Throw gate for teleportation or interplanar travel across the ward; affected-creature Attack Roll Disadvantage against protected targets; and source-scoped possession, Charmed, and Frightened prevention for protected targets."
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -33672,10 +33686,22 @@
         "state": "not-installed",
         "unitId": "magic_circle"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "finalDisposition": "needs-surface-widening",
+      "battleReadinessClosure": {
+        "source": "spell-unit-missing-classification",
+        "kind": "table-spatial-derivation",
+        "owner": "Surface Spell Definition plus table/spatial planar-movement owner and future battle-runtime warded-area Spell Effect owner",
+        "reason": "Magic Circle needs a typed follow-up split before an SRD-provenance Spell Definition can be admitted: Surface must own the 10-foot-radius, 20-foot-tall Cylinder area, slot-scaled timed duration, cast-time creature-type set, normal-or-reversed area direction, nonmagical crossing prevention, magical-travel Charisma Saving Throw gate, scoped Attack Roll Disadvantage, and source-scoped possession plus Charmed/Frightened prevention; table/spatial ownership supplies ground-point placement, cylinder membership, inside/outside protected-target witnesses, entry or exit attempts, and teleportation or interplanar-travel crossing witnesses; future battle runtime should consume typed warded-area facts without dispatching on spell id or name."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Surface Spell Definition plus table/spatial planar-movement owner and future battle-runtime warded-area Spell Effect owner",
+          "evidence": "Spell Definition warded-cylinder occurrence: 10-foot-radius, 20-foot-tall Cylinder area; slot-scaled timed duration of 1 hour plus 1 hour per Spell Slot level above 3; cast-time choice of one or more Celestial, Elemental, Fey, Fiend, or Undead creature types; normal or reversed area direction; nonmagical entry or exit prevention for affected creatures; Charisma Saving Throw gate for teleportation or interplanar travel across the ward; affected-creature Attack Roll Disadvantage against protected targets; and source-scoped possession, Charmed, and Frightened prevention for protected targets.",
+          "status": "Surface widening required before owner evidence can be present"
+        }
+      ],
+      "nextAction": "Widen Surface: Spell Definition warded-cylinder occurrence: 10-foot-radius, 20-foot-tall Cylinder area; slot-scaled timed duration of 1 hour plus 1 hour per Spell Slot level above 3; cast-time choice of one or more Celestial, Elemental, Fey, Fiend, or Undead creature types; normal or reversed area direction; nonmagical entry or exit prevention for affected creatures; Charisma Saving Throw gate for teleportation or interplanar travel across the ward; affected-creature Attack Roll Disadvantage against protected targets; and source-scoped possession, Charmed, and Frightened prevention for protected targets.",
+      "battleReadinessStatus": "surface-widening-required"
     },
     {
       "id": "srd521:classes/warlock:spell-level-3:spell-unit-pressure:warlock_spell_list_major_image",
@@ -39133,7 +39159,8 @@
       "detail": "Magic Circle (Abjuration; M)",
       "candidateUnitId": "magic_circle",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "current-surface-cannot-express-mechanics-yet",
+        "missingConstruct": "Spell Definition warded-cylinder occurrence: 10-foot-radius, 20-foot-tall Cylinder area; slot-scaled timed duration of 1 hour plus 1 hour per Spell Slot level above 3; cast-time choice of one or more Celestial, Elemental, Fey, Fiend, or Undead creature types; normal or reversed area direction; nonmagical entry or exit prevention for affected creatures; Charisma Saving Throw gate for teleportation or interplanar travel across the ward; affected-creature Attack Roll Disadvantage against protected targets; and source-scoped possession, Charmed, and Frightened prevention for protected targets."
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -39142,10 +39169,22 @@
         "state": "not-installed",
         "unitId": "magic_circle"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "finalDisposition": "needs-surface-widening",
+      "battleReadinessClosure": {
+        "source": "spell-unit-missing-classification",
+        "kind": "table-spatial-derivation",
+        "owner": "Surface Spell Definition plus table/spatial planar-movement owner and future battle-runtime warded-area Spell Effect owner",
+        "reason": "Magic Circle needs a typed follow-up split before an SRD-provenance Spell Definition can be admitted: Surface must own the 10-foot-radius, 20-foot-tall Cylinder area, slot-scaled timed duration, cast-time creature-type set, normal-or-reversed area direction, nonmagical crossing prevention, magical-travel Charisma Saving Throw gate, scoped Attack Roll Disadvantage, and source-scoped possession plus Charmed/Frightened prevention; table/spatial ownership supplies ground-point placement, cylinder membership, inside/outside protected-target witnesses, entry or exit attempts, and teleportation or interplanar-travel crossing witnesses; future battle runtime should consume typed warded-area facts without dispatching on spell id or name."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Surface Spell Definition plus table/spatial planar-movement owner and future battle-runtime warded-area Spell Effect owner",
+          "evidence": "Spell Definition warded-cylinder occurrence: 10-foot-radius, 20-foot-tall Cylinder area; slot-scaled timed duration of 1 hour plus 1 hour per Spell Slot level above 3; cast-time choice of one or more Celestial, Elemental, Fey, Fiend, or Undead creature types; normal or reversed area direction; nonmagical entry or exit prevention for affected creatures; Charisma Saving Throw gate for teleportation or interplanar travel across the ward; affected-creature Attack Roll Disadvantage against protected targets; and source-scoped possession, Charmed, and Frightened prevention for protected targets.",
+          "status": "Surface widening required before owner evidence can be present"
+        }
+      ],
+      "nextAction": "Widen Surface: Spell Definition warded-cylinder occurrence: 10-foot-radius, 20-foot-tall Cylinder area; slot-scaled timed duration of 1 hour plus 1 hour per Spell Slot level above 3; cast-time choice of one or more Celestial, Elemental, Fey, Fiend, or Undead creature types; normal or reversed area direction; nonmagical entry or exit prevention for affected creatures; Charisma Saving Throw gate for teleportation or interplanar travel across the ward; affected-creature Attack Roll Disadvantage against protected targets; and source-scoped possession, Charmed, and Frightened prevention for protected targets.",
+      "battleReadinessStatus": "surface-widening-required"
     },
     {
       "id": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_major_image",

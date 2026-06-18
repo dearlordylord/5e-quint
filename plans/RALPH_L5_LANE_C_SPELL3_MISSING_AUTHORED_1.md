@@ -43,7 +43,7 @@
     {
       "number": 7,
       "id": "L5-C07-MAGIC-CIRCLE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Close Magic Circle missing authored record"
     },
     {
@@ -111,6 +111,12 @@
       "id": "L5-C18-HASTE-LETHARGY-RUNTIME",
       "status": "ready-for-research",
       "title": "Promote Haste lethargy runtime cleanup"
+    },
+    {
+      "number": 19,
+      "id": "L5-C19-MAGIC-CIRCLE-SURFACE-WIDENING",
+      "status": "ready-for-research",
+      "title": "Widen Magic Circle Surface Spell Definition"
     }
   ]
 }
@@ -172,7 +178,7 @@ missing-record spells unless a RAW dependency is unavoidable and documented.
 | 4 | L5-C04-GASEOUS-FORM - Close Gaseous Form missing authored record | done | none | Closed as a Surface widening boundary, not an authored-record admission. |
 | 5 | L5-C05-GLYPH-OF-WARDING - Close Glyph of Warding missing authored record | done | none | Closed as a Surface widening boundary, not an authored-record admission; follow-up is L5-C15 for Glyph trigger, stored spell, movement invalidation, and table object/location facts. |
 | 6 | L5-C06-HASTE - Close Haste missing authored record | done | none | Closed as a Surface widening boundary, not an authored-record admission; follow-ups are L5-C16, L5-C17, and L5-C18 for Surface authoring, positive runtime, and lethargy cleanup. |
-| 7 | L5-C07-MAGIC-CIRCLE - Close Magic Circle missing authored record | ready-for-research | none | Independent missing spell Unit. |
+| 7 | L5-C07-MAGIC-CIRCLE - Close Magic Circle missing authored record | done | none | Closed as a Surface widening boundary, not an authored-record admission; follow-up is L5-C19 for warded-cylinder, direction, travel-gate, and protected-target facts. |
 | 8 | L5-C08-MELD-INTO-STONE - Close Meld into Stone missing authored record | ready-for-research | none | Independent missing spell Unit. |
 | 9 | L5-C09-NONDETECTION - Close Nondetection missing authored record | ready-for-research | none | Independent missing spell Unit. |
 | 10 | L5-C10-PHANTOM-STEED - Close Phantom Steed missing authored record | ready-for-research | none | Independent missing spell Unit. |
@@ -184,6 +190,7 @@ missing-record spells unless a RAW dependency is unavoidable and documented.
 | 16 | L5-C16-HASTE-SURFACE-WIDENING - Widen Haste Surface Spell Definition | ready-for-research | L5-C06-HASTE | Add typed Surface facts for Haste's restricted additional action and end-of-effect lethargy before authoring/admitting the Spell Definition. |
 | 17 | L5-C17-HASTE-POSITIVE-RUNTIME - Promote Haste positive runtime effect | ready-for-research | L5-C16-HASTE-SURFACE-WIDENING | Promote the active Haste effects: Speed ratio, +2 Armor Class, Dexterity Saving Throw Advantage, Concentration, and restricted spell-granted per-turn action resource. |
 | 18 | L5-C18-HASTE-LETHARGY-RUNTIME - Promote Haste lethargy runtime cleanup | ready-for-research | L5-C17-HASTE-POSITIVE-RUNTIME | Promote the spell-end lethargy rider: Incapacitated plus Speed 0 until the end of the target's next turn without treating Incapacitated as a Speed shortcut. |
+| 19 | L5-C19-MAGIC-CIRCLE-SURFACE-WIDENING - Widen Magic Circle Surface Spell Definition | ready-for-research | L5-C07-MAGIC-CIRCLE | Add typed Surface/table-spatial facts for Magic Circle's warded Cylinder, selected creature types, normal or reversed direction, nonmagical crossing prevention, teleportation or interplanar-travel Saving Throw gate, Attack Roll Disadvantage, and source-scoped possession plus Charmed/Frightened prevention before authoring/admitting the Spell Definition. |
 
 ## Shared Verification
 
@@ -936,7 +943,7 @@ Verification:
 
 ### Task 7 - L5-C07-MAGIC-CIRCLE
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -956,16 +963,94 @@ SRD anchors:
 Current state:
 
 - Authored record is missing; catalog state is `not-installed`.
-- Mining disposition is `missing-authored-record`.
+- Mining disposition is `needs-surface-widening`.
+- Surface cannot yet express the Magic Circle Spell Definition without losing
+  the warded Cylinder, selected creature types, normal or reversed direction,
+  nonmagical crossing prevention, teleportation or interplanar-travel Saving
+  Throw gate, scoped Attack Roll Disadvantage, and protected-target
+  possession/Charmed/Frightened prevention facts.
 
 Output:
 
-- Author or close Magic Circle with owner facts for creature types, planar
-  movement, charm/frighten/possession prevention, and area inversion.
+- Resolve the SRD Spell Definition record or record a catalog-boundary reason it
+  is not representable yet.
+- Own the split between Surface Spell Definition facts, table/spatial movement
+  and area witnesses, and future battle-runtime warded-area Spell Effect
+  projection before admitting the record.
 
 Acceptance:
 
-- `magic_circle` leaves `missing-authored-record`.
+- `magic_circle` leaves `missing-authored-record` by becoming
+  `needs-surface-widening`.
+
+Verification:
+
+- Shared lane verification.
+
+Plan Impact:
+
+- Follow-up work is split into L5-C19 before any SRD-provenance Magic Circle
+  Spell Definition is authored or admitted.
+
+### Task 19 - L5-C19-MAGIC-CIRCLE-SURFACE-WIDENING
+
+Status: `ready-for-research`
+
+Depends on:
+
+- L5-C07-MAGIC-CIRCLE
+
+Unit:
+
+- `magic_circle`
+
+SRD anchors:
+
+- `.references/srd-5.2.1/Spells/Descriptions-M-P.md:37`
+- `.references/srd-5.2.1/Classes/Cleric.md:212`
+- `.references/srd-5.2.1/Classes/Warlock.md:386`
+- `.references/srd-5.2.1/Classes/Wizard.md:251`
+
+Current state:
+
+- Generated inventory classifies the three Magic Circle class-list rows as
+  `needs-surface-widening` / `surface-widening-required`.
+- Existing Surface spell facts cannot represent Magic Circle as one complete
+  SRD-provenance Spell Definition without losing its warded Cylinder, direction,
+  creature-type filter, crossing/travel gate, and protected-target
+  distinctions.
+
+Output:
+
+- Widen Surface so a Magic Circle Spell Definition can represent a
+  10-foot-radius, 20-foot-tall Cylinder centered on a visible ground point
+  within 10 feet, plus duration scaling of 1 extra hour for each Spell Slot
+  level above 3.
+- Represent the cast-time choice of one or more Celestial, Elemental, Fey,
+  Fiend, or Undead creature types.
+- Represent normal and reversed ward direction: preventing affected creatures
+  from entering while protecting targets within the Cylinder, or preventing
+  affected creatures from leaving while protecting targets outside it.
+- Assign table/spatial ownership for ground-point placement, Cylinder
+  membership, inside/outside protected-target witnesses, nonmagical entry or
+  exit attempts, and teleportation or interplanar-travel crossing witnesses.
+- Represent the Charisma Saving Throw gate for magical crossing, affected
+  creature Attack Roll Disadvantage against protected targets, and
+  source-scoped possession plus Charmed/Frightened prevention without
+  dispatching on spell id or name in runtime behavior.
+- Author/admit the SRD-provenance Magic Circle record only after typed Surface
+  and table/spatial facts can preserve those RAW distinctions.
+
+Acceptance:
+
+- `magic_circle` has an SRD-provenance Surface Spell Definition or remains
+  explicitly classified with a narrower executable blocker.
+- The record does not omit Cylinder dimensions, selected creature types, ward
+  direction, nonmagical crossing prevention, teleportation or interplanar-travel
+  Saving Throw gates, Attack Roll Disadvantage, or source-scoped possession plus
+  Charmed/Frightened prevention.
+- Runtime support, if added, dispatches on typed Surface/profile facts rather
+  than authored spell identity.
 
 Verification:
 
