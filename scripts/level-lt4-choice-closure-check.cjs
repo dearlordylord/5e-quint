@@ -93,6 +93,14 @@ const originFeats = [
   },
 ];
 
+const magicInitiateSpellListsByUnitId = new Map([
+  ["feat_magic_initiate_cleric", "cleric"],
+  ["feat_magic_initiate_druid", "druid"],
+  ["feat_magic_initiate_wizard", "wizard"],
+]);
+const magicInitiateSpellAccessSelectionOwner =
+  "future character-sheet spell-access owner";
+
 const srdSpecies = [
   {
     admissionScope: "Character creation species choice",
@@ -270,6 +278,56 @@ function closureKind(entry) {
   );
 }
 
+function magicInitiateSpellAccessClosure(expected, sourceRecordPath) {
+  const expectedSpellList = magicInitiateSpellListsByUnitId.get(
+    expected.unitId,
+  );
+  if (expectedSpellList === undefined || sourceRecordPath === undefined) {
+    return undefined;
+  }
+
+  const record = readJson(sourceRecordPath);
+  if (
+    record?.mechanics?.family !== "magic_initiate" ||
+    record.mechanics.spellList !== expectedSpellList
+  ) {
+    return { blocker: "missing-magic-initiate-spell-access-source-facts" };
+  }
+
+  return {
+    value: {
+      characterCreationRetention: {
+        fact: "selected Origin feat Unit ref",
+        owner: "character-creation-runtime",
+      },
+      selectedCantrips: {
+        owner: magicInitiateSpellAccessSelectionOwner,
+        sourceFact: "Magic Initiate selected cantrip choices",
+      },
+      selectedLevelOneSpell: {
+        owner: magicInitiateSpellAccessSelectionOwner,
+        sourceFact: "Magic Initiate selected level-1 Spell Access choice",
+      },
+      sourceFact: {
+        kind: "surface-magic-initiate-mechanics",
+        spellList: record.mechanics.spellList,
+      },
+      spellcastingAbility: {
+        owner: magicInitiateSpellAccessSelectionOwner,
+        sourceFact: "Magic Initiate spellcasting ability choice",
+      },
+      spellDefinitionProfileOwner: {
+        fact: "static execution/profile facts",
+        owner: "selected Spell Definition profiles",
+      },
+      spellInvocationRuntimeOwner: {
+        fact: "runtime Spell Invocation",
+        owner: "spell invocation runtime boundary",
+      },
+    },
+  };
+}
+
 function buildRow({
   category,
   expected,
@@ -280,9 +338,15 @@ function buildRow({
   const matrixEntry = matrixEntryFor(entriesByUnitId, expected.unitId);
   const cataloged = surfaceContentIds.has(expected.unitId);
   const selectable = selectableIds.includes(expected.unitId);
+  const sourceRecordPath = surfaceContentIds.get(expected.unitId);
+  const magicInitiateClosure = magicInitiateSpellAccessClosure(
+    expected,
+    sourceRecordPath,
+  );
   const blockers = [
     cataloged ? undefined : "missing-surface-catalog",
     selectable ? undefined : "missing-character-creation-admission",
+    magicInitiateClosure?.blocker,
   ].filter(Boolean);
   return {
     admissionScope: expected.admissionScope,
@@ -291,10 +355,11 @@ function buildRow({
     category,
     claimTag: claimTag(matrixEntry),
     closureKind: closureKind(matrixEntry),
+    magicInitiateSpellAccessClosure: magicInitiateClosure?.value,
     name: expected.name,
     rawAnchor: expected.rawAnchor,
     selectable,
-    sourceRecordPath: surfaceContentIds.get(expected.unitId),
+    sourceRecordPath,
     unitId: expected.unitId,
   };
 }
@@ -423,6 +488,24 @@ function renderMarkdown(report) {
     lines.push(
       `| \`${row.unitId}\` | ${row.category} | ${yesNo(row.cataloged)} | ${yesNo(row.selectable)} | ${row.claimTag} | ${row.closureKind ?? ""} | ${row.rawAnchor} |`,
     );
+  }
+  const magicInitiateRows = report.rows.filter(
+    (row) => row.magicInitiateSpellAccessClosure !== undefined,
+  );
+  if (magicInitiateRows.length > 0) {
+    lines.push(
+      "",
+      "## Magic Initiate Spell Access Closure",
+      "",
+      "| Unit | Spell list | Character-creation retained fact | Selected cantrips owner | Selected level 1 spell owner | Spellcasting ability owner | Selected Spell Definition owner | Spell Invocation runtime owner |",
+      "| --- | --- | --- | --- | --- | --- | --- | --- |",
+    );
+    for (const row of magicInitiateRows) {
+      const closure = row.magicInitiateSpellAccessClosure;
+      lines.push(
+        `| \`${row.unitId}\` | ${closure.sourceFact.spellList} | ${closure.characterCreationRetention.owner}: ${closure.characterCreationRetention.fact} | ${closure.selectedCantrips.owner}: ${closure.selectedCantrips.sourceFact} | ${closure.selectedLevelOneSpell.owner}: ${closure.selectedLevelOneSpell.sourceFact} | ${closure.spellcastingAbility.owner}: ${closure.spellcastingAbility.sourceFact} | ${closure.spellDefinitionProfileOwner.owner}: ${closure.spellDefinitionProfileOwner.fact} | ${closure.spellInvocationRuntimeOwner.owner}: ${closure.spellInvocationRuntimeOwner.fact} |`,
+      );
+    }
   }
   lines.push(
     "",

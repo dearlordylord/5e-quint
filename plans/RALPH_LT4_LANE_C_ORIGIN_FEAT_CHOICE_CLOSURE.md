@@ -13,7 +13,7 @@
     {
       "number": 2,
       "id": "LT4-C02-MAGIC-INITIATE-SPELL-ACCESS-CLOSURE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Make Magic Initiate spell-access closure checker-visible"
     },
     {
@@ -133,7 +133,7 @@ Verification:
 
 ### Task 2 - LT4-C02-MAGIC-INITIATE-SPELL-ACCESS-CLOSURE
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -213,4 +213,3 @@ Acceptance:
 Verification:
 
 - Shared lane verification.
-

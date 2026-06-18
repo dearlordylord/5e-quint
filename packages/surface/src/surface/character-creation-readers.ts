@@ -7,6 +7,8 @@ import type {
   ClassFeatureGrant,
   ClassRecord,
   ClassSpellcastingCreation,
+  FeatRecord,
+  MagicInitiateMechanics,
   NonWizardClassRecord,
   OrcSpeciesRecord,
   PrimaryAbilityExpression,
@@ -81,6 +83,35 @@ export type BackgroundCreationFacts = {
   readonly skillProficiencies: readonly Skill[];
   readonly toolProficiency: BackgroundToolProficiency;
   readonly startingEquipment: readonly StartingEquipmentChoice[];
+};
+
+export const MAGIC_INITIATE_SELECTED_CANTRIPS = {
+  count: 2,
+  spellLevel: 0,
+} as const;
+
+export const MAGIC_INITIATE_SELECTED_LEVEL_ONE_SPELL = {
+  access: [
+    "always_prepared",
+    "one_free_cast_per_long_rest",
+    "spell_slot_cast",
+  ],
+  count: 1,
+  spellLevel: 1,
+} as const;
+
+export const MAGIC_INITIATE_SPELLCASTING_ABILITY_OPTIONS = [
+  "int",
+  "wis",
+  "cha",
+] as const satisfies ReadonlyArray<Ability>;
+
+export type MagicInitiateSpellAccessSourceFacts = {
+  readonly recordId: FeatRecord["id"];
+  readonly spellList: MagicInitiateMechanics["spellList"];
+  readonly selectedCantrips: typeof MAGIC_INITIATE_SELECTED_CANTRIPS;
+  readonly selectedLevelOneSpell: typeof MAGIC_INITIATE_SELECTED_LEVEL_ONE_SPELL;
+  readonly spellcastingAbilityOptions: typeof MAGIC_INITIATE_SPELLCASTING_ABILITY_OPTIONS;
 };
 
 export type SpeciesCreationFacts = {
@@ -173,6 +204,34 @@ export function readBackgroundCreationFacts(
       skillProficiencies: unit.skillProficiencies,
       toolProficiency: unit.toolProficiency,
       startingEquipment: unit.startingEquipment,
+    },
+  };
+}
+
+export function readMagicInitiateSpellAccessSourceFacts(
+  unit: UnitRecord,
+): UnitReaderResult<MagicInitiateSpellAccessSourceFacts> {
+  if (unit.kind !== "feat" || unit.mechanics.family !== "magic_initiate") {
+    return {
+      tag: "unreadable",
+      issues: [
+        {
+          code: "unsupportedUnitKind",
+          message: `Expected magic_initiate feat record, received ${unit.kind}.`,
+          unitId: unit.id,
+        },
+      ],
+    };
+  }
+
+  return {
+    tag: "readable",
+    value: {
+      recordId: unit.id,
+      spellList: unit.mechanics.spellList,
+      selectedCantrips: MAGIC_INITIATE_SELECTED_CANTRIPS,
+      selectedLevelOneSpell: MAGIC_INITIATE_SELECTED_LEVEL_ONE_SPELL,
+      spellcastingAbilityOptions: MAGIC_INITIATE_SPELLCASTING_ABILITY_OPTIONS,
     },
   };
 }

@@ -15,7 +15,10 @@ import {
   buildStatBlockCatalog,
   srdStatBlockCollection,
 } from "@dnd/surface/surface/stat-block-catalog";
-import { readClassCreationFacts } from "@dnd/surface/surface/character-creation-readers";
+import {
+  readClassCreationFacts,
+  readMagicInitiateSpellAccessSourceFacts,
+} from "@dnd/surface/surface/character-creation-readers";
 import type {
   ProficiencyGrant,
   ProficiencyGrantSubject,
@@ -3629,6 +3632,84 @@ describe("character creation finalization", () => {
       ]),
     );
   });
+
+  test.each([
+    {
+      featUnitId: "feat_magic_initiate_cleric",
+      spellList: "cleric",
+    },
+    {
+      featUnitId: "feat_magic_initiate_druid",
+      spellList: "druid",
+    },
+    {
+      featUnitId: "feat_magic_initiate_wizard",
+      spellList: "wizard",
+    },
+  ] as const)(
+    "retains Human Versatile $spellList Magic Initiate spell-access source facts",
+    ({ featUnitId, spellList }) => {
+      const feat = unitLibrary.requireUnit(featUnitId);
+      expect(readMagicInitiateSpellAccessSourceFacts(feat)).toEqual({
+        tag: "readable",
+        value: {
+          recordId: featUnitId,
+          selectedCantrips: {
+            count: 2,
+            spellLevel: 0,
+          },
+          selectedLevelOneSpell: {
+            access: [
+              "always_prepared",
+              "one_free_cast_per_long_rest",
+              "spell_slot_cast",
+            ],
+            count: 1,
+            spellLevel: 1,
+          },
+          spellcastingAbilityOptions: ["int", "wis", "cha"],
+          spellList,
+        },
+      });
+
+      const afterHumanChoices =
+        humanVersatileOriginFeatDraftAfterSpeciesChoices(featUnitId);
+      const selectedFeatHoles = discoverCreationHoles({
+        draft: afterHumanChoices,
+        unitLibrary,
+      }).filter(
+        (hole) =>
+          hole.kind === "choice" &&
+          hole.source.tag === "unitChoice" &&
+          hole.source.unitId === featUnitId,
+      );
+      expect(selectedFeatHoles).toEqual([]);
+
+      const result = finalizeCharacterDraft({
+        draft: completeHumanVersatileOriginFeatDraft(featUnitId),
+        unitLibrary,
+      });
+      expect(result.tag).toBe("ready");
+      if (result.tag !== "ready") return;
+
+      expect(result.build.features).toContainEqual({
+        selectedFromUnitId: "species_human_versatile",
+        kind: "selectedClassChoice",
+        unitId: featUnitId,
+      });
+      expect(result.build.spellcasting).toBeUndefined();
+      expect(
+        characterBuildUnitRefs(result.build, unitLibrary).map(
+          (ref) => ref.unitId,
+        ),
+      ).toEqual(
+        expect.arrayContaining([
+          "species_human_versatile",
+          featUnitId,
+        ]),
+      );
+    },
+  );
 
   test("requires species size selection exactly for choice-sized species", () => {
     const tieflingWithoutSize = finalizeCharacterDraft({
@@ -9428,6 +9509,56 @@ function initialManifestFills(
 
 function completeManifestDraft(): CharacterDraft {
   return completeManifestDraftForSpecies("species_orc");
+}
+
+function completeHumanVersatileOriginFeatDraft(
+  featUnitId: UnitRecord["id"],
+): CharacterDraft {
+  return completeManifestDraftAfterProgression(
+    humanVersatileOriginFeatDraftAfterSpeciesChoices(featUnitId),
+  );
+}
+
+function humanVersatileOriginFeatDraftAfterSpeciesChoices(
+  featUnitId: UnitRecord["id"],
+): CharacterDraft {
+  const draft = createTestDraft(`draft:human-versatile-${featUnitId}`);
+  const afterInitial = requireAcceptedBatch(
+    fillCreationHoles({
+      draft,
+      unitLibrary,
+      expectedRevision: draft.revision,
+      fills: initialManifestFills(
+        "13:class_fighter:level_1:maximum_hit_die",
+        "species_human",
+      ),
+    }),
+  );
+
+  return requireAcceptedBatch(
+    fillCreationHoles({
+      draft: afterInitial,
+      unitLibrary,
+      expectedRevision: afterInitial.revision,
+      fills: [
+        choiceFill("cc:draft:draft.speciesSize", "small"),
+        choiceFill(
+          testUnitHoleId(
+            "species_human_skillful",
+            SPECIES_TRAIT_PROFICIENCY_CHOICE_KEY,
+          ),
+          "arcana",
+        ),
+        choiceFill(
+          testUnitHoleId(
+            "species_human_versatile",
+            SPECIES_ORIGIN_FEAT_CHOICE_KEY,
+          ),
+          featUnitId,
+        ),
+      ],
+    }),
+  );
 }
 
 function completeManifestDraftForSpecies(input: {
