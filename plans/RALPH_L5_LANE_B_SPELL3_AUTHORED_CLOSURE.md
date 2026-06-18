@@ -7,43 +7,43 @@
     {
       "number": 1,
       "id": "L5-B01-ANIMATE-DEAD",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Close Animate Dead authored spell pressure"
     },
     {
       "number": 2,
       "id": "L5-B02-BEACON-OF-HOPE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Close Beacon of Hope authored spell pressure"
     },
     {
       "number": 3,
       "id": "L5-B03-CALL-LIGHTNING",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Close Call Lightning authored spell pressure"
     },
     {
       "number": 4,
       "id": "L5-B04-CREATE-FOOD-AND-WATER",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Close Create Food and Water authored spell pressure"
     },
     {
       "number": 5,
       "id": "L5-B05-DAYLIGHT",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Close Daylight authored spell pressure"
     },
     {
       "number": 6,
       "id": "L5-B06-FEAR",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Close Fear authored spell pressure"
     },
     {
       "number": 7,
       "id": "L5-B07-MAJOR-IMAGE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Close Major Image authored spell pressure"
     },
     {
@@ -130,13 +130,13 @@ this lane; those are Lane C and Lane D.
 
 | # | Task | Status | Depends on | Notes |
 | ---: | --- | --- | --- | --- |
-| 1 | L5-B01-ANIMATE-DEAD - Close Animate Dead authored spell pressure | ready-for-research | none | Independent authored spell pressure row. |
-| 2 | L5-B02-BEACON-OF-HOPE - Close Beacon of Hope authored spell pressure | ready-for-research | none | Independent authored spell pressure row. |
-| 3 | L5-B03-CALL-LIGHTNING - Close Call Lightning authored spell pressure | ready-for-research | none | Independent authored spell pressure row. |
-| 4 | L5-B04-CREATE-FOOD-AND-WATER - Close Create Food and Water authored spell pressure | ready-for-research | none | Independent authored spell pressure row. |
-| 5 | L5-B05-DAYLIGHT - Close Daylight authored spell pressure | ready-for-research | none | Independent authored spell pressure row. |
-| 6 | L5-B06-FEAR - Close Fear authored spell pressure | ready-for-research | none | Independent authored spell pressure row. |
-| 7 | L5-B07-MAJOR-IMAGE - Close Major Image authored spell pressure | ready-for-research | none | Independent authored spell pressure row. |
+| 1 | L5-B01-ANIMATE-DEAD - Close Animate Dead authored spell pressure | done | none | Closed as a runtime-detached companion-control boundary. |
+| 2 | L5-B02-BEACON-OF-HOPE - Close Beacon of Hope authored spell pressure | done | none | Closed outside the promoted battle runtime active spell-effect boundary. |
+| 3 | L5-B03-CALL-LIGHTNING - Close Call Lightning authored spell pressure | done | none | Closed outside the promoted battle runtime active storm spell-effect and table/spatial weather boundary. |
+| 4 | L5-B04-CREATE-FOOD-AND-WATER - Close Create Food and Water authored spell pressure | done | none | Closed as runtime-detached table inventory and survival ownership. |
+| 5 | L5-B05-DAYLIGHT - Close Daylight authored spell pressure | done | none | Closed outside the promoted battle runtime sunlight Spell Effect and table/spatial light-overlap boundary. |
+| 6 | L5-B06-FEAR - Close Fear authored spell pressure | done | none | Closed outside the current promoted battle runtime active Frightened-compulsion Spell Effect, held-object release, and compelled-movement boundary. |
+| 7 | L5-B07-MAJOR-IMAGE - Close Major Image authored spell pressure | done | none | Independent authored spell pressure row. |
 | 8 | L5-B08-PROTECTION-FROM-ENERGY - Close Protection from Energy authored spell pressure | ready-for-research | none | Preserve target-shape repair plus runtime admission prerequisite from `plans/unit-profile-coverage/L3_PROTECTION_FROM_ENERGY_RUNTIME_SURVEY.md`. |
 | 9 | L5-B09-SPIRIT-GUARDIANS - Close Spirit Guardians authored spell pressure | ready-for-research | none | Independent authored spell pressure row. |
 | 10 | L5-B10-STINKING-CLOUD - Close Stinking Cloud authored spell pressure | ready-for-research | none | Independent authored spell pressure row. |
@@ -169,7 +169,7 @@ this lane; those are Lane C and Lane D.
 
 ### Task 1 - L5-B01-ANIMATE-DEAD
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -200,13 +200,21 @@ Acceptance:
 - `animate_dead` leaves `catalog-authored-review-required` in the generated
   level 1-7 audit.
 
+Result:
+
+- `animate_dead` is recorded as `unsupported-profile` and
+  `catalog-only/dead-for-now` with a `companion-control-boundary` closure.
+- The runtime-detached owner is the future reanimated companion
+  lifecycle/control owner for Skeleton/Zombie creation, command fan-out,
+  default behavior, control expiry, reassertion, and stat-block execution.
+
 Verification:
 
 - Shared lane verification.
 
 ### Task 2 - L5-B02-BEACON-OF-HOPE
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -236,13 +244,22 @@ Acceptance:
 
 - `beacon_of_hope` leaves `catalog-authored-review-required`.
 
+Result:
+
+- `beacon_of_hope` is recorded as `unsupported-profile` and
+  `catalog-only/dead-for-now` with an `outside-battle-runtime` closure.
+- The future owner is an active spell-effect owner that carries selected targets
+  and Concentration expiry, maximizes later healing received by affected
+  targets, and projects Advantage on Wisdom Saving Throws and Death Saving
+  Throws without authored-identity dispatch.
+
 Verification:
 
 - Shared lane verification.
 
 ### Task 3 - L5-B03-CALL-LIGHTNING
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -271,13 +288,26 @@ Acceptance:
 
 - `call_lightning` leaves `catalog-authored-review-required`.
 
+Result:
+
+- `call_lightning` is recorded as `unsupported-profile` and
+  `catalog-only/dead-for-now` with an `outside-battle-runtime` closure.
+- The future owner is an active storm Spell Effect owner that carries the cloud
+  occurrence, Concentration expiry, retained slot level and Spell Save DC,
+  later Magic Action repeats, selected points under the cloud, and repeated
+  Dexterity Saving Throw Lightning damage without authored-identity dispatch.
+- Table/spatial weather ownership supplies visibility, under-cloud area
+  membership, outdoor-in-a-storm state, existing storm control, and the storm
+  damage bonus rather than duplicating map or weather state inside generic
+  Spell Invocation reducers.
+
 Verification:
 
 - Shared lane verification.
 
 ### Task 4 - L5-B04-CREATE-FOOD-AND-WATER
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -306,13 +336,24 @@ Acceptance:
 
 - `create_food_and_water` leaves `catalog-authored-review-required`.
 
+Result:
+
+- `create_food_and_water` is recorded as `unsupported-profile` and
+  `catalog-only/dead-for-now` with an
+  `outside-runtime-presentation-exploration` closure.
+- The runtime-detached owner is a future table inventory and survival
+  adjudication owner for created provision quantities, ground/container
+  placement, holder/location state, food spoilage after 24 hours, later
+  consumption, and clean-water/nourishing-food effects on malnutrition and
+  dehydration.
+
 Verification:
 
 - Shared lane verification.
 
 ### Task 5 - L5-B05-DAYLIGHT
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -343,13 +384,27 @@ Acceptance:
 
 - `daylight` leaves `catalog-authored-review-required`.
 
+Result:
+
+- `daylight` is recorded as `unsupported-profile` and
+  `catalog-only/dead-for-now` with an `outside-battle-runtime` closure.
+- The future owner is a sunlight Spell Effect and table/spatial light-overlap
+  owner for point-origin Sphere sunlight, object-origin Emanation sunlight,
+  object worn/carried admission, opaque-cover suppression, one-hour occurrence
+  cleanup, Bright Light and Dim Light illumination projection, and
+  overlap-triggered dispelling of magical Darkness spell effects of level 3 or
+  lower without authored-identity dispatch.
+- Table/spatial ownership supplies area membership, object movement, cover, line
+  of sight, and spell-area overlap facts rather than duplicating map
+  illumination or object state inside generic Spell Invocation reducers.
+
 Verification:
 
 - Shared lane verification.
 
 ### Task 6 - L5-B06-FEAR
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -381,13 +436,28 @@ Acceptance:
 
 - `fear` leaves `catalog-authored-review-required`.
 
+Result:
+
+- `fear` is recorded as `unsupported-profile` and
+  `catalog-only/dead-for-now` with an `outside-battle-runtime` closure.
+- The future owner is an active Frightened-compulsion Spell Effect,
+  held-object release, and compelled-movement owner for the 30-foot Cone
+  affected target set, Wisdom Saving Throw admission, per-target Frightened
+  state under Concentration, held-object release on failed saves, compelled
+  Dash and movement away by the safest route, no-move exception, and
+  end-of-turn repeat Wisdom Saving Throw timing when the target lacks line of
+  sight to the caster.
+- Table/spatial and inventory ownership supplies pathing, line-of-sight,
+  no-route, and held-object witnesses rather than duplicating map or inventory
+  state inside generic Spell Invocation reducers.
+
 Verification:
 
 - Shared lane verification.
 
 ### Task 7 - L5-B07-MAJOR-IMAGE
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
