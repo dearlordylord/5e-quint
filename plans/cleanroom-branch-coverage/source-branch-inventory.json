@@ -4329,6 +4329,177 @@
       }
     },
     {
+      "branchAction": "doDiscoverSlotSpell",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doDiscoverSlotSpell"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/battle-runtime-reducer-spine-contract.mbt.qnt",
+      "obligationId": "packages/battle-runtime/battle-runtime-reducer-spine-contract.mbt.qnt#step:doDiscoverSlotSpell",
+      "qntFileSha256": "5b7fe7a06d31dda4e32625ede181289efe9c2b9ddb8fe6e42df87d826b88e565",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doDiscoverWeaponAttack",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doDiscoverWeaponAttack"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/battle-runtime-reducer-spine-contract.mbt.qnt",
+      "obligationId": "packages/battle-runtime/battle-runtime-reducer-spine-contract.mbt.qnt#step:doDiscoverWeaponAttack",
+      "qntFileSha256": "5b7fe7a06d31dda4e32625ede181289efe9c2b9ddb8fe6e42df87d826b88e565",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doEndTurnToTarget",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doEndTurnToTarget"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/battle-runtime-reducer-spine-contract.mbt.qnt",
+      "obligationId": "packages/battle-runtime/battle-runtime-reducer-spine-contract.mbt.qnt#step:doEndTurnToTarget",
+      "qntFileSha256": "5b7fe7a06d31dda4e32625ede181289efe9c2b9ddb8fe6e42df87d826b88e565",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doResolveSlotSpellDamage",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doResolveSlotSpellDamage"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/battle-runtime-reducer-spine-contract.mbt.qnt",
+      "obligationId": "packages/battle-runtime/battle-runtime-reducer-spine-contract.mbt.qnt#step:doResolveSlotSpellDamage",
+      "qntFileSha256": "5b7fe7a06d31dda4e32625ede181289efe9c2b9ddb8fe6e42df87d826b88e565",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doResolveSlotSpellTargets",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doResolveSlotSpellTargets"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/battle-runtime-reducer-spine-contract.mbt.qnt",
+      "obligationId": "packages/battle-runtime/battle-runtime-reducer-spine-contract.mbt.qnt#step:doResolveSlotSpellTargets",
+      "qntFileSha256": "5b7fe7a06d31dda4e32625ede181289efe9c2b9ddb8fe6e42df87d826b88e565",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doResolveWeaponAttackHit",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doResolveWeaponAttackHit"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/battle-runtime-reducer-spine-contract.mbt.qnt",
+      "obligationId": "packages/battle-runtime/battle-runtime-reducer-spine-contract.mbt.qnt#step:doResolveWeaponAttackHit",
+      "qntFileSha256": "5b7fe7a06d31dda4e32625ede181289efe9c2b9ddb8fe6e42df87d826b88e565",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doResolveWeaponDamage",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doResolveWeaponDamage"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/battle-runtime-reducer-spine-contract.mbt.qnt",
+      "obligationId": "packages/battle-runtime/battle-runtime-reducer-spine-contract.mbt.qnt#step:doResolveWeaponDamage",
+      "qntFileSha256": "5b7fe7a06d31dda4e32625ede181289efe9c2b9ddb8fe6e42df87d826b88e565",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doResolveWeaponTarget",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doResolveWeaponTarget"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/battle-runtime-reducer-spine-contract.mbt.qnt",
+      "obligationId": "packages/battle-runtime/battle-runtime-reducer-spine-contract.mbt.qnt#step:doResolveWeaponTarget",
+      "qntFileSha256": "5b7fe7a06d31dda4e32625ede181289efe9c2b9ddb8fe6e42df87d826b88e565",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doStartBattle",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doStartBattle"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/battle-runtime-reducer-spine-contract.mbt.qnt",
+      "obligationId": "packages/battle-runtime/battle-runtime-reducer-spine-contract.mbt.qnt#step:doStartBattle",
+      "qntFileSha256": "5b7fe7a06d31dda4e32625ede181289efe9c2b9ddb8fe6e42df87d826b88e565",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
       "branchAction": "doBreakConcentration",
       "branchFamily": "step",
       "branchPath": [
@@ -11226,6 +11397,25 @@
       }
     },
     {
+      "branchAction": "doReplaceArcheryWithDefenseOnFighterLevelGain",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doReplaceArcheryWithDefenseOnFighterLevelGain"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/character-creation-runtime/character-creation-fighter-fighting-style-selected-identity.mbt.qnt",
+      "obligationId": "packages/character-creation-runtime/character-creation-fighter-fighting-style-selected-identity.mbt.qnt#step:doReplaceArcheryWithDefenseOnFighterLevelGain",
+      "qntFileSha256": "ae0579d4ce4650b29b1fbc393bd2a823b95a0324585305e9aaea6be456e1165b",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
       "branchAction": "doReplaceDefenseWithArcheryOnFighterLevelGain",
       "branchFamily": "step",
       "branchPath": [
@@ -11235,7 +11425,64 @@
       "decisionSource": "default",
       "driverPath": "packages/character-creation-runtime/character-creation-fighter-fighting-style-selected-identity.mbt.qnt",
       "obligationId": "packages/character-creation-runtime/character-creation-fighter-fighting-style-selected-identity.mbt.qnt#step:doReplaceDefenseWithArcheryOnFighterLevelGain",
-      "qntFileSha256": "e9b2ce51a7bcff3477b01220be328e5f9283f6ddf36fb62312d933d1222e10d6",
+      "qntFileSha256": "ae0579d4ce4650b29b1fbc393bd2a823b95a0324585305e9aaea6be456e1165b",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doReplaceDefenseWithGreatWeaponFightingOnFighterLevelGain",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doReplaceDefenseWithGreatWeaponFightingOnFighterLevelGain"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/character-creation-runtime/character-creation-fighter-fighting-style-selected-identity.mbt.qnt",
+      "obligationId": "packages/character-creation-runtime/character-creation-fighter-fighting-style-selected-identity.mbt.qnt#step:doReplaceDefenseWithGreatWeaponFightingOnFighterLevelGain",
+      "qntFileSha256": "ae0579d4ce4650b29b1fbc393bd2a823b95a0324585305e9aaea6be456e1165b",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doReplaceDefenseWithTwoWeaponFightingOnFighterLevelGain",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doReplaceDefenseWithTwoWeaponFightingOnFighterLevelGain"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/character-creation-runtime/character-creation-fighter-fighting-style-selected-identity.mbt.qnt",
+      "obligationId": "packages/character-creation-runtime/character-creation-fighter-fighting-style-selected-identity.mbt.qnt#step:doReplaceDefenseWithTwoWeaponFightingOnFighterLevelGain",
+      "qntFileSha256": "ae0579d4ce4650b29b1fbc393bd2a823b95a0324585305e9aaea6be456e1165b",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doSelectArcheryFightingStyle",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doSelectArcheryFightingStyle"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/character-creation-runtime/character-creation-fighter-fighting-style-selected-identity.mbt.qnt",
+      "obligationId": "packages/character-creation-runtime/character-creation-fighter-fighting-style-selected-identity.mbt.qnt#step:doSelectArcheryFightingStyle",
+      "qntFileSha256": "ae0579d4ce4650b29b1fbc393bd2a823b95a0324585305e9aaea6be456e1165b",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -11254,7 +11501,45 @@
       "decisionSource": "default",
       "driverPath": "packages/character-creation-runtime/character-creation-fighter-fighting-style-selected-identity.mbt.qnt",
       "obligationId": "packages/character-creation-runtime/character-creation-fighter-fighting-style-selected-identity.mbt.qnt#step:doSelectDefenseFightingStyle",
-      "qntFileSha256": "e9b2ce51a7bcff3477b01220be328e5f9283f6ddf36fb62312d933d1222e10d6",
+      "qntFileSha256": "ae0579d4ce4650b29b1fbc393bd2a823b95a0324585305e9aaea6be456e1165b",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doSelectGreatWeaponFightingStyle",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doSelectGreatWeaponFightingStyle"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/character-creation-runtime/character-creation-fighter-fighting-style-selected-identity.mbt.qnt",
+      "obligationId": "packages/character-creation-runtime/character-creation-fighter-fighting-style-selected-identity.mbt.qnt#step:doSelectGreatWeaponFightingStyle",
+      "qntFileSha256": "ae0579d4ce4650b29b1fbc393bd2a823b95a0324585305e9aaea6be456e1165b",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doSelectTwoWeaponFightingStyle",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doSelectTwoWeaponFightingStyle"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/character-creation-runtime/character-creation-fighter-fighting-style-selected-identity.mbt.qnt",
+      "obligationId": "packages/character-creation-runtime/character-creation-fighter-fighting-style-selected-identity.mbt.qnt#step:doSelectTwoWeaponFightingStyle",
+      "qntFileSha256": "ae0579d4ce4650b29b1fbc393bd2a823b95a0324585305e9aaea6be456e1165b",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"

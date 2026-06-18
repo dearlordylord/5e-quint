@@ -779,6 +779,72 @@ type CommandOrderingProjection = {
   readonly reactionWindowOpen: boolean;
 };
 
+const REDUCER_SPINE_CONTRACT_STAGES = [
+  "notStarted",
+  "battleStarted",
+  "actDiscovered",
+  "subjectNeedsHoles",
+  "subjectResolved",
+  "turnAdvanced",
+] as const;
+type ReducerSpineContractStage =
+  (typeof REDUCER_SPINE_CONTRACT_STAGES)[number];
+const REDUCER_SPINE_CONTRACT_ENTRYPOINTS = [
+  "none",
+  "startBattle",
+  "discoverBattleActs",
+  "resolveBattleSubject",
+] as const;
+type ReducerSpineContractEntrypoint =
+  (typeof REDUCER_SPINE_CONTRACT_ENTRYPOINTS)[number];
+const REDUCER_SPINE_CONTRACT_SUBJECTS = [
+  "none",
+  "slotSpell",
+  "weaponAttack",
+  "endTurn",
+] as const;
+type ReducerSpineContractSubject =
+  (typeof REDUCER_SPINE_CONTRACT_SUBJECTS)[number];
+const REDUCER_SPINE_CONTRACT_ACTORS = [
+  "none",
+  "caster",
+  "target",
+] as const;
+type ReducerSpineContractActor =
+  (typeof REDUCER_SPINE_CONTRACT_ACTORS)[number];
+const REDUCER_SPINE_CONTRACT_SPELL_SLOT_USES = [
+  "none",
+  "pending",
+  "committed",
+] as const;
+type ReducerSpineContractSpellSlotUse =
+  (typeof REDUCER_SPINE_CONTRACT_SPELL_SLOT_USES)[number];
+const REDUCER_SPINE_CONTRACT_HOLES = [
+  "targetChoice",
+  "spellTargetAllocation",
+  "attackRoll",
+  "rolledDice",
+] as const;
+type ReducerSpineContractHole =
+  (typeof REDUCER_SPINE_CONTRACT_HOLES)[number];
+type ReducerSpineContractProjection = {
+  readonly stage: ReducerSpineContractStage;
+  readonly entrypoint: ReducerSpineContractEntrypoint;
+  readonly subject: ReducerSpineContractSubject;
+  readonly currentActor: ReducerSpineContractActor;
+  readonly holes: readonly ReducerSpineContractHole[];
+  readonly lastResult: MbtLastResult;
+  readonly lastInvalidReason: MbtLastInvalidReason;
+  readonly actionAvailable: boolean;
+  readonly bonusActionAvailable: boolean;
+  readonly casterReactionAvailable: boolean;
+  readonly targetReactionAvailable: boolean;
+  readonly spellSlotUse: ReducerSpineContractSpellSlotUse;
+  readonly interruptDepth: number;
+  readonly casterHp: number;
+  readonly targetHp: number;
+};
+
 export type ExtraAttackMbtProjection = {
   readonly skeletonHp: number;
   readonly actionAvailable: boolean;
@@ -953,6 +1019,20 @@ const magicMissileDriverSchema = {
   init: {},
   doFillMagicMissileAllocation: {},
   doFillMagicMissileDamage: { dartRollTotal: mbtPickSchemas.int },
+  step: {},
+} as const;
+
+const reducerSpineContractDriverSchema = {
+  init: {},
+  doStartBattle: {},
+  doDiscoverSlotSpell: {},
+  doResolveSlotSpellTargets: {},
+  doResolveSlotSpellDamage: {},
+  doEndTurnToTarget: {},
+  doDiscoverWeaponAttack: {},
+  doResolveWeaponTarget: {},
+  doResolveWeaponAttackHit: {},
+  doResolveWeaponDamage: {},
   step: {},
 } as const;
 
@@ -2598,6 +2678,210 @@ export function createMagicMissileDriver() {
   });
 }
 
+export function createReducerSpineContractDriver() {
+  return defineDriver(reducerSpineContractDriverSchema, () => {
+    let state: BattleState | null = null;
+    let subject: BattleSubject = magicMissileSubject();
+    let fills: readonly BattleFill[] = [];
+    let holes: readonly BattleHole[] = [];
+    let stage: ReducerSpineContractProjection["stage"] = "notStarted";
+    let entrypoint: ReducerSpineContractProjection["entrypoint"] = "none";
+    let subjectKind: ReducerSpineContractProjection["subject"] = "none";
+    let lastResult: ReducerSpineContractProjection["lastResult"] = "init";
+    let lastInvalidReason: ReducerSpineContractProjection["lastInvalidReason"] =
+      "";
+
+    function reset(): void {
+      state = null;
+      subject = magicMissileSubject();
+      fills = [];
+      holes = [];
+      stage = "notStarted";
+      entrypoint = "none";
+      subjectKind = "none";
+      lastResult = "init";
+      lastInvalidReason = "";
+    }
+
+    function requireStartedState(): BattleState {
+      if (state === null) {
+        throw new Error("Expected reducer-spine battle state to be started.");
+      }
+      return state;
+    }
+
+    function recordAccepted(
+      result: BattleResolutionResult,
+      nextStage: ReducerSpineContractProjection["stage"],
+    ): void {
+      lastResult = result.tag;
+      if (result.tag === "resolved") {
+        state = result.state;
+        holes = [];
+        stage = nextStage;
+        lastInvalidReason = "";
+        return;
+      }
+      if (result.tag === "needsHoles") {
+        state = result.state;
+        holes = result.holes;
+        stage = nextStage;
+        lastInvalidReason = "";
+        return;
+      }
+      throw new Error(
+        `Expected accepted reducer-spine result, got ${result.tag}: ${
+          "message" in result ? result.message : ""
+        }`,
+      );
+    }
+
+    return {
+      init: reset,
+      doStartBattle: () => {
+        state = fighterVsSkeletonBattle();
+        subject = magicMissileSubject();
+        fills = [];
+        holes = [];
+        stage = "battleStarted";
+        entrypoint = "startBattle";
+        subjectKind = "none";
+        lastResult = "resolved";
+        lastInvalidReason = "";
+      },
+      doDiscoverSlotSpell: () => {
+        state = requireStartedState();
+        const spellSubject = magicMissileSubject();
+        subject = spellSubject;
+        fills = [];
+        holes = discoverMagicMissileHoles(state, spellSubject);
+        stage = "actDiscovered";
+        entrypoint = "discoverBattleActs";
+        subjectKind = "slotSpell";
+        lastResult = "needsHoles";
+        lastInvalidReason = "";
+      },
+      doResolveSlotSpellTargets: () => {
+        const allocation = requireHole(holes, "spellTargetAllocation");
+        fills = fillsWithMbtSpellCastReactionFacts(holes, [
+          spellTargetAllocationFill(allocation, skeletonId, 3),
+        ]);
+        recordAccepted(
+          resolveBattleSubject({
+            state: requireStartedState(),
+            subject,
+            fills,
+          }),
+          "subjectNeedsHoles",
+        );
+        entrypoint = "resolveBattleSubject";
+        subjectKind = "slotSpell";
+      },
+      doResolveSlotSpellDamage: () => {
+        const damage = requireHole(holes, "rolledDice");
+        fills = [
+          ...fills,
+          damageRollFillWithGroups(damage, [
+            magicMissileDamageRollGroup(3),
+          ]),
+        ];
+        recordAccepted(
+          resolveBattleSubject({
+            state: requireStartedState(),
+            subject,
+            fills,
+          }),
+          "subjectResolved",
+        );
+        entrypoint = "resolveBattleSubject";
+        subjectKind = "slotSpell";
+      },
+      doEndTurnToTarget: () => {
+        subject = endTurnSubjectFor(fighterId);
+        fills = [];
+        recordAccepted(
+          resolveBattleSubject({
+            state: requireStartedState(),
+            subject,
+            fills,
+          }),
+          "turnAdvanced",
+        );
+        entrypoint = "resolveBattleSubject";
+        subjectKind = "endTurn";
+      },
+      doDiscoverWeaponAttack: () => {
+        state = requireStartedState();
+        const attackSubject = skeletonShortswordSubject();
+        subject = attackSubject;
+        fills = [];
+        holes = discoverAttackHoles(state, attackSubject);
+        stage = "actDiscovered";
+        entrypoint = "discoverBattleActs";
+        subjectKind = "weaponAttack";
+        lastResult = "needsHoles";
+        lastInvalidReason = "";
+      },
+      doResolveWeaponTarget: () => {
+        const target = requireHole(holes, "targetChoice");
+        fills = [targetFill(target, fighterId)];
+        recordAccepted(
+          resolveBattleSubject({
+            state: requireStartedState(),
+            subject,
+            fills,
+          }),
+          "subjectNeedsHoles",
+        );
+        entrypoint = "resolveBattleSubject";
+        subjectKind = "weaponAttack";
+      },
+      doResolveWeaponAttackHit: () => {
+        const attackRoll = requireHole(holes, "attackRoll");
+        fills = [
+          ...fills,
+          attackRollFill(attackRoll, { total: 18, naturalD20: 14 }),
+        ];
+        recordAccepted(
+          resolveBattleSubject({
+            state: requireStartedState(),
+            subject,
+            fills,
+          }),
+          "subjectNeedsHoles",
+        );
+        entrypoint = "resolveBattleSubject";
+        subjectKind = "weaponAttack";
+      },
+      doResolveWeaponDamage: () => {
+        const damage = requireHole(holes, "rolledDice");
+        fills = [...fills, damageRollFill(damage, 3)];
+        recordAccepted(
+          resolveBattleSubject({
+            state: requireStartedState(),
+            subject,
+            fills,
+          }),
+          "subjectResolved",
+        );
+        entrypoint = "resolveBattleSubject";
+        subjectKind = "weaponAttack";
+      },
+      step: () => {},
+      getState: () =>
+        projectReducerSpineContractState({
+          state,
+          holes,
+          stage,
+          entrypoint,
+          subject: subjectKind,
+          lastResult,
+          lastInvalidReason,
+        }),
+    };
+  });
+}
+
 function magicMissileDamageRollGroup(
   dartRollTotal: number,
 ): readonly [number, number, number] {
@@ -3013,6 +3297,40 @@ function normalizeCommandOrderingQuintState(
   };
 }
 
+function normalizeReducerSpineContractQuintState(
+  raw: unknown,
+): ReducerSpineContractProjection {
+  const state = quintStateRecord(raw);
+  const protocol = decodeWitnessProtocolState({
+    state,
+    protocolField: "qProtocol",
+    noInvalidReason: "",
+    decodeHole: reducerSpineContractHole,
+    compareHoles: (left, right) => left.localeCompare(right),
+  });
+
+  return {
+    stage: reducerSpineContractStage(state["qStage"]),
+    entrypoint: reducerSpineContractEntrypoint(state["qEntrypoint"]),
+    subject: reducerSpineContractSubject(state["qSubject"]),
+    currentActor: reducerSpineContractActor(state["qCurrentActor"]),
+    holes: protocol.holes,
+    lastResult: mbtLastResult(protocol.lastResult),
+    lastInvalidReason: mbtLastInvalidReason(protocol.lastInvalidReason),
+    actionAvailable: booleanField(state, "qActionAvailable"),
+    bonusActionAvailable: booleanField(state, "qBonusActionAvailable"),
+    casterReactionAvailable: booleanField(state, "qCasterReactionAvailable"),
+    targetReactionAvailable: booleanField(state, "qTargetReactionAvailable"),
+    spellSlotUse: reducerSpineContractSpellSlotUse(state["qSpellSlotUse"]),
+    interruptDepth: numberFromQuintInt(
+      state["qInterruptDepth"],
+      "qInterruptDepth",
+    ),
+    casterHp: numberFromQuintInt(state["qCasterHp"], "qCasterHp"),
+    targetHp: numberFromQuintInt(state["qTargetHp"], "qTargetHp"),
+  };
+}
+
 function normalizeExtraAttackQuintState(
   raw: unknown,
 ): ExtraAttackMbtProjection {
@@ -3218,6 +3536,16 @@ export const commandOrderingStateCheck = stateCheck(
     return true;
   },
 );
+export const reducerSpineContractStateCheck = stateCheck(
+  normalizeReducerSpineContractQuintState,
+  (
+    spec: ReducerSpineContractProjection,
+    impl: ReducerSpineContractProjection,
+  ) => {
+    expect(impl).toEqual(spec);
+    return true;
+  },
+);
 export const extraAttackStateCheck = stateCheck(
   normalizeExtraAttackQuintState,
   (spec: ExtraAttackMbtProjection, impl: ExtraAttackMbtProjection) => {
@@ -3380,6 +3708,62 @@ function projectCommandOrderingState(input: {
         : Number(targetSnapshot.movement.spentFeet),
     currentActor: commandOrderingActorId(snapshot.currentActorId),
     reactionWindowOpen: input.state.interruptStack.length > 0,
+  };
+}
+
+function projectReducerSpineContractState(input: {
+  readonly state: BattleState | null;
+  readonly holes: readonly BattleHole[];
+  readonly stage: ReducerSpineContractProjection["stage"];
+  readonly entrypoint: ReducerSpineContractProjection["entrypoint"];
+  readonly subject: ReducerSpineContractProjection["subject"];
+  readonly lastResult: ReducerSpineContractProjection["lastResult"];
+  readonly lastInvalidReason: ReducerSpineContractProjection["lastInvalidReason"];
+}): ReducerSpineContractProjection {
+  if (input.state === null) {
+    return {
+      stage: input.stage,
+      entrypoint: input.entrypoint,
+      subject: input.subject,
+      currentActor: "none",
+      holes: [],
+      lastResult: input.lastResult,
+      lastInvalidReason: input.lastInvalidReason,
+      actionAvailable: false,
+      bonusActionAvailable: false,
+      casterReactionAvailable: false,
+      targetReactionAvailable: false,
+      spellSlotUse: "none",
+      interruptDepth: 0,
+      casterHp: 0,
+      targetHp: 0,
+    };
+  }
+
+  const snapshot = snapshotBattle(input.state);
+  const caster = snapshotCombatant(input.state, fighterId);
+  const target = snapshotCombatant(input.state, skeletonId);
+
+  return {
+    stage: input.stage,
+    entrypoint: input.entrypoint,
+    subject: input.subject,
+    currentActor: reducerSpineContractActorId(snapshot.currentActorId),
+    holes: input.holes.map(reducerSpineContractHoleFromRuntime).sort(),
+    lastResult: input.lastResult,
+    lastInvalidReason: input.lastInvalidReason,
+    actionAvailable: snapshot.turn.actionResources.some(
+      (resource) => resource.source === "turn",
+    ),
+    bonusActionAvailable: input.state.currentTurnResources.currentHasBonusAction,
+    casterReactionAvailable:
+      input.state.combatants.get(fighterId)?.reactionAvailable ?? false,
+    targetReactionAvailable:
+      input.state.combatants.get(skeletonId)?.reactionAvailable ?? false,
+    spellSlotUse: reducerSpineContractSpellSlotUseFromRuntime(input.state),
+    interruptDepth: input.state.interruptStack.length,
+    casterHp: caster.hp,
+    targetHp: target.hp,
   };
 }
 
@@ -5845,6 +6229,109 @@ function commandOrderingActor(
 ): CommandOrderingProjection["currentActor"] {
   if (raw === "Caster" || raw === "Target") return raw;
   throw new Error(`Unknown Command ordering actor: ${String(raw)}.`);
+}
+
+function reducerSpineContractStage(
+  raw: unknown,
+): ReducerSpineContractStage {
+  const tag = quintVariantTag(raw);
+  if (tag === "ReducerNotStarted") return "notStarted";
+  if (tag === "ReducerBattleStarted") return "battleStarted";
+  if (tag === "ReducerActDiscovered") return "actDiscovered";
+  if (tag === "ReducerSubjectNeedsHoles") return "subjectNeedsHoles";
+  if (tag === "ReducerSubjectResolved") return "subjectResolved";
+  if (tag === "ReducerTurnAdvanced") return "turnAdvanced";
+
+  throw new Error(`Unknown reducer-spine stage: ${tag}.`);
+}
+
+function reducerSpineContractEntrypoint(
+  raw: unknown,
+): ReducerSpineContractEntrypoint {
+  const tag = quintVariantTag(raw);
+  if (tag === "NoReducerEntrypoint") return "none";
+  if (tag === "StartBattleEntrypoint") return "startBattle";
+  if (tag === "DiscoverBattleActsEntrypoint") return "discoverBattleActs";
+  if (tag === "ResolveBattleSubjectEntrypoint") {
+    return "resolveBattleSubject";
+  }
+
+  throw new Error(`Unknown reducer-spine entrypoint: ${tag}.`);
+}
+
+function reducerSpineContractSubject(
+  raw: unknown,
+): ReducerSpineContractSubject {
+  const tag = quintVariantTag(raw);
+  if (tag === "NoReducerSubject") return "none";
+  if (tag === "SlotSpellSubject") return "slotSpell";
+  if (tag === "WeaponAttackSubject") return "weaponAttack";
+  if (tag === "EndTurnSubject") return "endTurn";
+
+  throw new Error(`Unknown reducer-spine subject: ${tag}.`);
+}
+
+function reducerSpineContractActor(raw: unknown): ReducerSpineContractActor {
+  const tag = quintVariantTag(raw);
+  if (tag === "NoSpineActor") return "none";
+  if (tag === "CasterActor") return "caster";
+  if (tag === "TargetActor") return "target";
+
+  throw new Error(`Unknown reducer-spine actor: ${tag}.`);
+}
+
+function reducerSpineContractSpellSlotUse(
+  raw: unknown,
+): ReducerSpineContractSpellSlotUse {
+  const tag = quintVariantTag(raw);
+  if (tag === "NoSpellSlotUse") return "none";
+  if (tag === "PendingSpellSlotUse") return "pending";
+  if (tag === "CommittedSpellSlotUse") return "committed";
+
+  throw new Error(`Unknown reducer-spine spell-slot use: ${tag}.`);
+}
+
+function reducerSpineContractHole(raw: unknown): ReducerSpineContractHole {
+  const tag = quintVariantTag(raw);
+  if (tag === "TargetChoiceHoleKind") return "targetChoice";
+  if (tag === "SpellTargetAllocationHoleKind") {
+    return "spellTargetAllocation";
+  }
+  if (tag === "AttackRollHoleKind") return "attackRoll";
+  if (tag === "RolledDiceHoleKind") return "rolledDice";
+
+  throw new Error(`Unknown reducer-spine hole: ${tag}.`);
+}
+
+function reducerSpineContractHoleFromRuntime(
+  hole: Pick<BattleHole, "kind">,
+): ReducerSpineContractHole {
+  if (hole.kind === "targetChoice") return "targetChoice";
+  if (hole.kind === "spellTargetAllocation") return "spellTargetAllocation";
+  if (hole.kind === "attackRoll") return "attackRoll";
+  if (hole.kind === "rolledDice") return "rolledDice";
+
+  throw new Error(`Unexpected reducer-spine hole: ${hole.kind}.`);
+}
+
+function reducerSpineContractActorId(
+  actorId: CombatantId,
+): ReducerSpineContractActor {
+  if (actorId === fighterId) return "caster";
+  if (actorId === skeletonId) return "target";
+
+  throw new Error(`Unexpected reducer-spine actor id: ${actorId}.`);
+}
+
+function reducerSpineContractSpellSlotUseFromRuntime(
+  state: BattleState,
+): ReducerSpineContractSpellSlotUse {
+  const uses = state.currentTurnResources.spellSlotUsesThisTurn.filter(
+    (use) => use.combatantId === fighterId,
+  );
+  if (uses.some((use) => use.kind === "committed")) return "committed";
+  if (uses.some((use) => use.kind === "pending")) return "pending";
+  return "none";
 }
 
 function mbtLastResult(raw: unknown): MbtLastResult {

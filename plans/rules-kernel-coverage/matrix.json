@@ -1,18 +1,18 @@
 {
   "summary": {
-    "total": 121,
-    "covered": 115,
+    "total": 122,
+    "covered": 116,
     "open": 0,
     "nonSemantic": 6,
     "byRuntime": {
       "shared-algebras": 1,
-      "battle": 90,
+      "battle": 91,
       "character-creation": 14,
       "character-sheet": 12,
       "character-battle": 4
     },
     "byStatus": {
-      "covered": 115,
+      "covered": 116,
       "needs-qnt-owner": 0,
       "needs-parity-witness": 0,
       "needs-surface-evidence": 0,
@@ -3987,6 +3987,39 @@
       "title": "Battle Dragon's Breath target-granted Magic action resolves Cone save-for-half damage"
     },
     {
+      "id": "BATTLE.COMPOSITION.REDUCER_SPINE_CONTRACT",
+      "kind": "composition",
+      "parityWitnesses": [
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/reducer-spine-contract.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-reducer-spine-contract.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profiles": [],
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime-reducer-spine-contract.mbt.qnt"
+      ],
+      "reason": "This is a thin composition witness for cleanroom reducer architecture, not a replacement for focused rule owners. The MBT trace drives startBattle, discoverBattleActs, and resolveBattleSubject through a Magic Missile spell, End Turn runtime command, and Skeleton Shortsword attack. It asserts closed reducer-spine variants and high-signal projections only: current actor, public hole frontier, action and bonus-action resources, committed spell-slot turn state for this fixture, interrupt-stack depth, reactions as durable creature resources, and caster/target Hit Points. Detailed spell targeting, damage math, attack resolution, turn-boundary effects, and interrupt/resume behavior remain owned by their existing focused QNT rows.",
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts",
+        "packages/battle-runtime/src/battle-reducer/api-lifecycle.ts",
+        "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
+        "packages/battle-runtime/src/battle-reducer/dispatcher.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Playing-the-Game.md#The Order of Combat",
+        ".references/srd-5.2.1/Playing-the-Game.md#Hit Points",
+        ".references/srd-5.2.1/Spells/Gaining-and-Casting.md#Spell Slots",
+        "UBIQUITOUS_LANGUAGE.md#Action Lifecycle",
+        "UBIQUITOUS_LANGUAGE.md#Hit Points and Death"
+      ],
+      "title": "Battle reducer spine composition from battle start through act discovery, subject hole/fill resolution, turn advancement, and battle-owned resource/vital projection"
+    },
+    {
       "id": "BATTLE.ATTACK.MINIMAL_RESOLUTION",
       "kind": "state-transition",
       "parityWitnesses": [
@@ -7913,6 +7946,14 @@
       ],
       "ownerPath": "packages/battle-runtime/battle-runtime-find-familiar.qnt",
       "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-reducer-spine-contract.mbt.qnt is a thin reducer-spine composition fixture for battle start, act discovery, subject hole/fill resolution, turn advancement, and reducer-owned resource/vital projections. Focused QNT owners remain authoritative for detailed spell, attack, turn-boundary, and interrupt semantics.",
+      "obligationIds": [
+        "BATTLE.COMPOSITION.REDUCER_SPINE_CONTRACT"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-reducer-spine-contract.mbt.qnt",
+      "role": "mbt-fixture"
     },
     {
       "evidence": "packages/character-battle-runtime/character-battle-init-projection.mbt.qnt is a bounded replay or run-test owner for covered parity evidence; treat it as fixture-bound unless later split.",
@@ -14001,6 +14042,7 @@
     "character-creation.hit-point-maximum-projection",
     "character-creation.origin-feat-proficiency-choice",
     "character-creation.skill-expertise-choice",
+    "character-creation.species-lineage-choice",
     "character-creation.species-origin-feat-choice",
     "character-creation.species-origin-feat-proficiency-choice",
     "character-creation.species-trait-proficiency-choice",
@@ -14024,7 +14066,9 @@
     "character-sheet.metamagic-battle-resource-bridge",
     "character-sheet.monk-uncanny-metabolism-initiative-recovery",
     "character-sheet.pact-slot-recovery",
+    "character-sheet.rest-triggered-heroic-inspiration",
     "character-sheet.short-rest-spell-slot-recovery",
+    "character-sheet.species-lineage-trait-projection",
     "character-sheet.spell-rest-benefit-application",
     "character-sheet.spellbook-ritual-invocation",
     "character-sheet.weapon-mastery-class-level-reselection",

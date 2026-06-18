@@ -4,14 +4,14 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 
 ## Summary
 
-- Total obligations: 121
-- Covered obligations: 115
+- Total obligations: 122
+- Covered obligations: 116
 - Open transitional obligations: 0
 - Boundary or unsupported obligations: 6
 
 | Status | Count |
 | --- | ---: |
-| covered | 115 |
+| covered | 116 |
 | needs-qnt-owner | 0 |
 | needs-parity-witness | 0 |
 | needs-surface-evidence | 0 |
@@ -21,7 +21,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | Runtime | Count |
 | --- | ---: |
 | shared-algebras | 1 |
-| battle | 90 |
+| battle | 91 |
 | character-creation | 14 |
 | character-sheet | 12 |
 | character-battle | 4 |
@@ -143,6 +143,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `SHEET.SPELL_ACCESS.CLASS_FEATURE_PREPARED_PROJECTION` | character-sheet | covered | `character-sheet.class-feature-prepared-spell-access`, `character-sheet.druid-circle-land-spell-access` |
 | `BATTLE.SPELL.DRAGONS_BREATH_INITIAL_EFFECT_STATE` | battle | covered | `spell.invocation-dragons-breath-initial` |
 | `BATTLE.SPELL.DRAGONS_BREATH_GRANTED_ACTION` | battle | covered | `spell.invocation-dragons-breath-granted-action` |
+| `BATTLE.COMPOSITION.REDUCER_SPINE_CONTRACT` | battle | covered | _direct reducer entrypoint_ |
 | `BATTLE.ATTACK.MINIMAL_RESOLUTION` | battle | covered | _direct reducer entrypoint_ |
 | `BATTLE.FEATURE.METAMAGIC_SEEKING_SPELL_ATTACK_REROLL` | battle | covered | `unit-feature.metamagic-missed-spell-attack-reroll` |
 | `BATTLE.FEATURE.METAMAGIC_EMPOWERED_DAMAGE_DICE_REROLL` | battle | covered | `unit-feature.metamagic-damage-dice-reroll` |
@@ -405,6 +406,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `packages/battle-runtime/battle-runtime-dragons-breath.qnt` | semantic-core | `BATTLE.SPELL.DRAGONS_BREATH_GRANTED_ACTION`, `BATTLE.SPELL.DRAGONS_BREATH_INITIAL_EFFECT_STATE` |
 | `packages/battle-runtime/battle-runtime-druid-wild-shape.qnt` | semantic-core | `BATTLE.FEATURE.WILD_SHAPE_FORM_LIFECYCLE` |
 | `packages/battle-runtime/battle-runtime-find-familiar.qnt` | semantic-core | `BATTLE.SPELL.FIND_FAMILIAR_COMPANION_LIFECYCLE` |
+| `packages/battle-runtime/battle-runtime-reducer-spine-contract.mbt.qnt` | mbt-fixture | `BATTLE.COMPOSITION.REDUCER_SPINE_CONTRACT` |
 | `packages/character-battle-runtime/character-battle-init-projection.mbt.qnt` | mbt-fixture | `CHARACTER.BATTLE.HANDOFF.IDENTITY_CONFLICTS`, `CHARACTER.BATTLE.HANDOFF.INIT_PROJECTION` |
 | `packages/character-battle-runtime/character-layer-projection-lifecycle.mbt.qnt` | mbt-fixture | `CHARACTER.LIFECYCLE.LAYER_PROJECTION` |
 | `packages/character-battle-runtime/character-battle-settlement.mbt.qnt` | mbt-fixture | `CHARACTER.BATTLE.HANDOFF.IDENTITY_CONFLICTS`, `CHARACTER.BATTLE.HANDOFF.SETTLEMENT` |
