@@ -194,6 +194,7 @@ const SRD_SORCERY_POINTS_POOL_ID = "sorcery_points";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-SORCERER-METAMAGIC-CHARACTER-FACTS sorcerer_metamagic
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3PUTB-07-RANGER-HUNTERS-PREY-RUNTIME ranger_hunters_prey
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L14G-B02-FEAT-SKILLED feat_skilled
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection LT4-C01-HUMAN-VERSATILE-ORIGIN-FEAT-DENOMINATOR species_human_versatile
 
 const unitCatalogResult = buildUnitCatalog({
   collections: [srdUnitCollection],
@@ -3418,10 +3419,19 @@ describe("character creation finalization", () => {
       humanHoles,
       testUnitHoleId("species_human_versatile", SPECIES_ORIGIN_FEAT_CHOICE_KEY),
     );
+    const versatileTrait = unitLibrary.requireUnit("species_human_versatile");
 
     expect(
       optionIds(holeById(humanHoles, "cc:draft:draft.speciesSize")),
     ).toEqual(["medium", "small"]);
+    expect(versatileTrait).toMatchObject({
+      kind: "species_trait",
+      mechanics: {
+        family: "passive",
+        grants: [{ category: "origin", kind: "grant_feat" }],
+      },
+      species: "human",
+    });
     expect(skillfulHole).toMatchObject({
       kind: "choice",
       cardinality: { tag: "exactly", count: 1 },
@@ -3434,14 +3444,14 @@ describe("character creation finalization", () => {
     expect(versatileHole).toMatchObject({
       kind: "choice",
       cardinality: { tag: "exactly", count: 1 },
+      source: {
+        choiceKey: SPECIES_ORIGIN_FEAT_CHOICE_KEY,
+        tag: "unitChoice",
+        unitId: "species_human_versatile",
+      },
     });
-    expect(optionIds(versatileHole)).toEqual(
-      expect.arrayContaining([
-        "alert",
-        "feat_magic_initiate_druid",
-        "feat_savage_attacker",
-        "feat_skilled",
-      ]),
+    expect(sortedChoiceOptionIds(optionIds(versatileHole))).toEqual(
+      srdOriginFeatOptionIds(unitLibrary),
     );
 
     const afterHumanChoices = requireAcceptedBatch(
@@ -9068,6 +9078,23 @@ function selectedChoiceOptionIds(
       ? selection.options.map((option) => option.optionId)
       : [],
   );
+}
+
+function srdOriginFeatOptionIds(
+  catalog: UnitCatalog,
+): readonly CreationChoiceOptionId[] {
+  return sortedChoiceOptionIds(
+    catalog
+      .listUnits()
+      .filter((unit) => unit.kind === "feat" && unit.category === "origin")
+      .map((unit) => creationChoiceOptionId(unit.id)),
+  );
+}
+
+function sortedChoiceOptionIds<T extends string>(
+  optionIds: readonly T[],
+): readonly T[] {
+  return [...optionIds].sort((left, right) => left.localeCompare(right));
 }
 
 function selectedBuildClassChoiceUnitIds(

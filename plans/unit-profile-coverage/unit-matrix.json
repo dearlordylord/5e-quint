@@ -63,8 +63,8 @@
     },
     "deterministicAdmissionProjectionCoverage": {
       "denominator": 183,
-      "numerator": 177,
-      "percent": "96.7%"
+      "numerator": 178,
+      "percent": "97.3%"
     },
     "profileClassificationCoverage": {
       "denominator": 307,
@@ -26081,7 +26081,13 @@
         "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/character-creation-runtime/src/index.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "LT4-C01-HUMAN-VERSATILE-ORIGIN-FEAT-DENOMINATOR"
+        }
+      ],
       "executableMechanics": true,
       "kind": "species_trait",
       "profiles": [

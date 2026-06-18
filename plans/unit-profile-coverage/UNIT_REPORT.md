@@ -25,7 +25,7 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | Rules-kernel profile join coverage | 159/159 | 100% |
 | Rules-kernel covered profile coverage | 159/159 | 100% |
 | Supported Unit rules-kernel chain coverage | 172/172 | 100% |
-| Deterministic admission/projection coverage | 177/183 | 96.7% |
+| Deterministic admission/projection coverage | 178/183 | 97.3% |
 | Selected identity replay coverage | 174/176 | 98.9% |
 | Classic non-SRD expression gate | 1/1 | 100% |
 
@@ -898,6 +898,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `dwarf_dwarven_resilience` | `unit-feature.passive-damage-resistance`, `unit-feature.passive-saving-throw-roll-mode` | L3MSPEC-06-DWARVEN-RESILIENCE-SAVE-MODE | `packages/character-battle-runtime/src/index.test.ts` |
 | `species_halfling_brave` | `unit-feature.passive-saving-throw-roll-mode` | L3-FOLLOWUP-HALFLING-BRAVE-RUNTIME | `packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts` |
 | `species_halfling_brave` | `unit-feature.passive-saving-throw-roll-mode` | L3-FOLLOWUP-HALFLING-BRAVE-RUNTIME | `packages/character-battle-runtime/src/index.test.ts` |
+| `species_human_versatile` | `character-creation.species-origin-feat-choice` | LT4-C01-HUMAN-VERSATILE-ORIGIN-FEAT-DENOMINATOR | `packages/character-creation-runtime/src/index.test.ts` |
 | `species_goliath_powerful_build` | `unit-feature.passive-ability-check-roll-mode` | L3MSPEC-07-GOLIATH-POWERFUL-BUILD-GRAPPLE | `packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts` |
 | `acid_splash` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | QMBT14 | `packages/battle-runtime/src/unit-profile-admission-damage-spells.test.ts` |
 | `acid_arrow` | `spell.invocation-acid-arrow-attack-timing` | L12G-FOLLOWUP-ACID-ARROW-DELAYED-RUNTIME-SUPPORT | `packages/battle-runtime/src/unit-profile-admission-damage-spells.test.ts` |
