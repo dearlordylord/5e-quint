@@ -41,10 +41,10 @@ These counts describe the current runtime/catalog state of mined rows. They are 
 
 | Disposition | Rows |
 | --- | ---: |
-| catalog-authored-review-required | 77 |
+| catalog-authored-review-required | 75 |
 | catalog-installed-owner-evidence-present | 481 |
 | catalog-installed-owner-evidence-required | 1 |
-| catalog-only/dead-for-now | 144 |
+| catalog-only/dead-for-now | 146 |
 | level-5-7-follow-up-required | 33 |
 | missing-authored-record | 80 |
 | non-runtime | 84 |
@@ -60,20 +60,20 @@ These counts describe the current runtime/catalog state of mined rows. They are 
 
 | Unit profile disposition | Rows |
 | --- | ---: |
-| not-recorded | 229 |
+| not-recorded | 227 |
 | profile-subset-supported | 53 |
 | supported-profile | 295 |
-| unsupported-profile | 323 |
+| unsupported-profile | 325 |
 
 ### Battle Readiness Snapshot
 
 | Battle readiness status | Rows |
 | --- | ---: |
 | accepted | 469 |
-| accepted-no-battle-effect | 196 |
+| accepted-no-battle-effect | 198 |
 | battle-runtime-required | 80 |
 | not-applicable | 77 |
-| owner-evidence-required | 78 |
+| owner-evidence-required | 76 |
 
 ## Spell-Level 3-4 Pressure Summary
 
@@ -88,16 +88,16 @@ These counts separate class-list rows from unique Spell Definition identities. A
 
 | Disposition | Spell identities |
 | --- | ---: |
-| catalog-authored-review-required | 31 |
+| catalog-authored-review-required | 30 |
 | catalog-installed-owner-evidence-present | 7 |
-| catalog-only/dead-for-now | 3 |
+| catalog-only/dead-for-now | 4 |
 | missing-authored-record | 35 |
 
 ### Unique Spell Identities
 
 | Spell identity | Level band | Classes | Class-list rows | Authored | Catalog | Unit profile | Final disposition | Battle readiness | Runtime closure/follow-up | Next action |
 | --- | --- | --- | ---: | --- | --- | --- | --- | --- | --- | --- |
-| `animate_dead` Animate Dead | spell-level-3 | Cleric, Wizard | 2 | authored-record-present | not-installed | not-recorded | catalog-authored-review-required | owner-evidence-required | not-recorded | Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this later-frontier spell row as accepted. |
+| `animate_dead` Animate Dead | spell-level-3 | Cleric, Wizard | 2 | authored-record-present | not-installed | unsupported-profile | catalog-only/dead-for-now | accepted-no-battle-effect | companion-control-boundary: future reanimated companion lifecycle/control owner | Animate Dead's represented runtime behavior is closed at the companion-control boundary: a future reanimated companion owner must model Skeleton/Zombie combatant creation from corpse-or-bones targets, control-window ownership, Bonus Action command fan-out, default Dodge-and-avoid behavior, autonomous task following, 24-hour control expiry, higher-slot reassertion, and stat-block action execution without authored-identity dispatch in generic runtime code. |
 | `beacon_of_hope` Beacon of Hope | spell-level-3 | Cleric | 1 | authored-record-present | not-installed | not-recorded | catalog-authored-review-required | owner-evidence-required | not-recorded | Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this later-frontier spell row as accepted. |
 | `bestow_curse` Bestow Curse | spell-level-3 | Bard, Cleric, Wizard | 3 | missing-authored-record | not-installed | not-recorded | missing-authored-record | battle-runtime-required | not-recorded | Author an SRD-provenance Surface record or explicitly close the row. |
 | `blink` Blink | spell-level-3 | Sorcerer, Wizard | 2 | missing-authored-record | not-installed | not-recorded | missing-authored-record | battle-runtime-required | not-recorded | Author an SRD-provenance Surface record or explicitly close the row. |
@@ -465,7 +465,7 @@ These counts separate class-list rows from unique Spell Definition identities. A
 | Cleric spell list Spiritual Weapon | spell-level-2 | spell-level | spell Unit pressure | `spiritual_weapon` | `.references/srd-5.2.1/Classes/Cleric.md:196` | present | installed | supported-profile | catalog-installed-owner-evidence-present | accepted | table-spatial-derivation: table/spatial owner | Owner-specific operational evidence is classified and present. |
 | Cleric spell list Warding Bond | spell-level-2 | spell-level | spell Unit pressure | `warding_bond` | `.references/srd-5.2.1/Classes/Cleric.md:197` | present | installed | supported-profile | catalog-installed-owner-evidence-present | accepted | table-spatial-derivation: table/material/spatial witness provider | Owner-specific operational evidence is classified and present. |
 | Cleric spell list Zone of Truth | spell-level-2 | spell-level | spell Unit pressure | `zone_of_truth` | `.references/srd-5.2.1/Classes/Cleric.md:198` | present | installed | unsupported-profile | catalog-only/dead-for-now | accepted-no-battle-effect | social-knowledge-effect: runtime-detached table/social truth adjudication owner | Zone of Truth's truthfulness constraint, conversation answers, deliberate-lie judgment, evasive response handling, and caster save-outcome knowledge require table/social adjudication facts; promoted battle runtime must not add conversation-state or lie-detection state without a clear executable battle owner. |
-| Cleric spell list Animate Dead | spell-level-3 | spell-level | spell Unit pressure | `animate_dead` | `.references/srd-5.2.1/Classes/Cleric.md:204` | present | not-installed | not-recorded | catalog-authored-review-required | owner-evidence-required | not-recorded | Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this later-frontier spell row as accepted. |
+| Cleric spell list Animate Dead | spell-level-3 | spell-level | spell Unit pressure | `animate_dead` | `.references/srd-5.2.1/Classes/Cleric.md:204` | present | not-installed | unsupported-profile | catalog-only/dead-for-now | accepted-no-battle-effect | companion-control-boundary: future reanimated companion lifecycle/control owner | Animate Dead's represented runtime behavior is closed at the companion-control boundary: a future reanimated companion owner must model Skeleton/Zombie combatant creation from corpse-or-bones targets, control-window ownership, Bonus Action command fan-out, default Dodge-and-avoid behavior, autonomous task following, 24-hour control expiry, higher-slot reassertion, and stat-block action execution without authored-identity dispatch in generic runtime code. |
 | Cleric spell list Beacon of Hope | spell-level-3 | spell-level | spell Unit pressure | `beacon_of_hope` | `.references/srd-5.2.1/Classes/Cleric.md:205` | present | not-installed | not-recorded | catalog-authored-review-required | owner-evidence-required | not-recorded | Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this later-frontier spell row as accepted. |
 | Cleric spell list Bestow Curse | spell-level-3 | spell-level | spell Unit pressure | `bestow_curse` | `.references/srd-5.2.1/Classes/Cleric.md:206` | present | not-installed | not-recorded | missing-authored-record | battle-runtime-required | not-recorded | Author an SRD-provenance Surface record or explicitly close the row. |
 | Cleric spell list Clairvoyance | spell-level-3 | spell-level | spell Unit pressure | `clairvoyance` | `.references/srd-5.2.1/Classes/Cleric.md:207` | present | not-installed | unsupported-profile | catalog-only/dead-for-now | accepted-no-battle-effect | outside-runtime-presentation-exploration: runtime-detached table/perception and remote-sensor owner | Clairvoyance creates a table-placed remote sensor and remote perception channel. Promoted battle runtime does not own location familiarity, remote information disclosure, active sensor-sense presentation, observer visibility of the sensor, or autonomous sensor behavior, and must not treat the sensor as ordinary caster sight or a target-selection proxy. |
@@ -1104,7 +1104,7 @@ These counts separate class-list rows from unique Spell Definition identities. A
 | Wizard spell list Spider Climb | spell-level-2 | spell-level | spell Unit pressure | `spider_climb` | `.references/srd-5.2.1/Classes/Wizard.md:229` | present | installed | supported-profile | catalog-installed-owner-evidence-present | accepted | table-spatial-derivation: table/spatial movement owner | Owner-specific operational evidence is classified and present. |
 | Wizard spell list Suggestion | spell-level-2 | spell-level | spell Unit pressure | `suggestion` | `.references/srd-5.2.1/Classes/Wizard.md:230` | present | installed | unsupported-profile | catalog-only/dead-for-now | accepted-no-battle-effect | social-knowledge-effect: runtime-detached table/social suggestion adjudication owner | Suggestion's hearing/understanding gate, suggested course of activity, achievable and obvious-damage judgment, Charmed target pursuit, and activity-completion ending require table/player choice and social adjudication facts; promoted battle runtime must not infer or enforce commanded behavior from authored spell identity. |
 | Wizard spell list Web | spell-level-2 | spell-level | spell Unit pressure | `web` | `.references/srd-5.2.1/Classes/Wizard.md:231` | present | installed | supported-profile | catalog-installed-owner-evidence-present | accepted | table-spatial-derivation: table/spatial/environment owner | Owner-specific operational evidence is classified and present. |
-| Wizard spell list Animate Dead | spell-level-3 | spell-level | spell Unit pressure | `animate_dead` | `.references/srd-5.2.1/Classes/Wizard.md:237` | present | not-installed | not-recorded | catalog-authored-review-required | owner-evidence-required | not-recorded | Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this later-frontier spell row as accepted. |
+| Wizard spell list Animate Dead | spell-level-3 | spell-level | spell Unit pressure | `animate_dead` | `.references/srd-5.2.1/Classes/Wizard.md:237` | present | not-installed | unsupported-profile | catalog-only/dead-for-now | accepted-no-battle-effect | companion-control-boundary: future reanimated companion lifecycle/control owner | Animate Dead's represented runtime behavior is closed at the companion-control boundary: a future reanimated companion owner must model Skeleton/Zombie combatant creation from corpse-or-bones targets, control-window ownership, Bonus Action command fan-out, default Dodge-and-avoid behavior, autonomous task following, 24-hour control expiry, higher-slot reassertion, and stat-block action execution without authored-identity dispatch in generic runtime code. |
 | Wizard spell list Bestow Curse | spell-level-3 | spell-level | spell Unit pressure | `bestow_curse` | `.references/srd-5.2.1/Classes/Wizard.md:238` | present | not-installed | not-recorded | missing-authored-record | battle-runtime-required | not-recorded | Author an SRD-provenance Surface record or explicitly close the row. |
 | Wizard spell list Blink | spell-level-3 | spell-level | spell Unit pressure | `blink` | `.references/srd-5.2.1/Classes/Wizard.md:239` | present | not-installed | not-recorded | missing-authored-record | battle-runtime-required | not-recorded | Author an SRD-provenance Surface record or explicitly close the row. |
 | Wizard spell list Clairvoyance | spell-level-3 | spell-level | spell Unit pressure | `clairvoyance` | `.references/srd-5.2.1/Classes/Wizard.md:240` | present | not-installed | unsupported-profile | catalog-only/dead-for-now | accepted-no-battle-effect | outside-runtime-presentation-exploration: runtime-detached table/perception and remote-sensor owner | Clairvoyance creates a table-placed remote sensor and remote perception channel. Promoted battle runtime does not own location familiarity, remote information disclosure, active sensor-sense presentation, observer visibility of the sensor, or autonomous sensor behavior, and must not treat the sensor as ordinary caster sight or a target-selection proxy. |

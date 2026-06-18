@@ -96,14 +96,14 @@ This metric is a separate seed for level-4 class feature rows, including Ability
 
 This metric is a separate seed for spell-level-3 pressure only. It belongs to the later character-level-5 frontier for full casters and Warlock Pact Magic, with half-caster rows excluded until their own class tables grant matching slots. It does not affect Character Levels 1-2 or Character Levels 1-3 readiness denominators.
 
-- Accepted: 34/110 (30.9%)
+- Accepted: 36/110 (32.7%)
 
 #### Spell-Level-3 Battle Readiness by Status
 
 - accepted: 22
-- accepted-no-battle-effect: 12
+- accepted-no-battle-effect: 14
 - battle-runtime-required: 48
-- owner-evidence-required: 28
+- owner-evidence-required: 26
 
 ### Spell-Level-4 Battle Readiness
 
@@ -205,9 +205,9 @@ This metric is a separate seed for spell-level-4 pressure only. It belongs to th
 
 ### Spell-Level-3 Unit Pressure by Disposition
 
-- catalog-authored-review-required: 28
+- catalog-authored-review-required: 26
 - catalog-installed-owner-evidence-present: 22
-- catalog-only/dead-for-now: 12
+- catalog-only/dead-for-now: 14
 - missing-authored-record: 48
 
 ### Spell-Level-3 Installed Unit Pressure by Disposition
@@ -705,7 +705,7 @@ These batches are generated planning recommendations for a separate SRD inventor
 |Bard spell list Stinking Cloud|spell Unit pressure|current-surface-can-express-source-facts|authored-record-present|not-installed||catalog-authored-review-required|owner-evidence-required|||Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this later-frontier spell row as accepted.|.references/srd-5.2.1/Classes/Bard.md:231|
 |Bard spell list Tiny Hut|spell Unit pressure|current-surface-can-express-source-facts|missing-authored-record|not-installed||missing-authored-record|battle-runtime-required|||Author an SRD-provenance Surface record or explicitly close the row.|.references/srd-5.2.1/Classes/Bard.md:232|
 |Bard spell list Tongues|spell Unit pressure|outside-surface-runtime-mechanics|authored-record-present|not-installed|unsupported-profile|catalog-only/dead-for-now|accepted-no-battle-effect|outside-runtime-presentation-exploration: runtime-detached language/communication owner||Tongues changes communication intelligibility through hearing, sight, signing, speech, and known-language gates. Promoted battle runtime does not own conversation content, social outcomes, automatic communication adjudication, or language-table projection for this spell.|.references/srd-5.2.1/Classes/Bard.md:233|
-|Cleric spell list Animate Dead|spell Unit pressure|current-surface-can-express-source-facts|authored-record-present|not-installed||catalog-authored-review-required|owner-evidence-required|||Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this later-frontier spell row as accepted.|.references/srd-5.2.1/Classes/Cleric.md:204|
+|Cleric spell list Animate Dead|spell Unit pressure|outside-surface-runtime-mechanics|authored-record-present|not-installed|unsupported-profile|catalog-only/dead-for-now|accepted-no-battle-effect|companion-control-boundary: future reanimated companion lifecycle/control owner||Animate Dead's represented runtime behavior is closed at the companion-control boundary: a future reanimated companion owner must model Skeleton/Zombie combatant creation from corpse-or-bones targets, control-window ownership, Bonus Action command fan-out, default Dodge-and-avoid behavior, autonomous task following, 24-hour control expiry, higher-slot reassertion, and stat-block action execution without authored-identity dispatch in generic runtime code.|.references/srd-5.2.1/Classes/Cleric.md:204|
 |Cleric spell list Beacon of Hope|spell Unit pressure|current-surface-can-express-source-facts|authored-record-present|not-installed||catalog-authored-review-required|owner-evidence-required|||Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this later-frontier spell row as accepted.|.references/srd-5.2.1/Classes/Cleric.md:205|
 |Cleric spell list Bestow Curse|spell Unit pressure|current-surface-can-express-source-facts|missing-authored-record|not-installed||missing-authored-record|battle-runtime-required|||Author an SRD-provenance Surface record or explicitly close the row.|.references/srd-5.2.1/Classes/Cleric.md:206|
 |Cleric spell list Clairvoyance|spell Unit pressure|outside-surface-runtime-mechanics|authored-record-present|not-installed|unsupported-profile|catalog-only/dead-for-now|accepted-no-battle-effect|outside-runtime-presentation-exploration: runtime-detached table/perception and remote-sensor owner||Clairvoyance creates a table-placed remote sensor and remote perception channel. Promoted battle runtime does not own location familiarity, remote information disclosure, active sensor-sense presentation, observer visibility of the sensor, or autonomous sensor behavior, and must not treat the sensor as ordinary caster sight or a target-selection proxy.|.references/srd-5.2.1/Classes/Cleric.md:207|
@@ -769,7 +769,7 @@ These batches are generated planning recommendations for a separate SRD inventor
 |Warlock spell list Remove Curse|spell Unit pressure|current-surface-can-express-source-facts|missing-authored-record|not-installed||missing-authored-record|battle-runtime-required|||Author an SRD-provenance Surface record or explicitly close the row.|.references/srd-5.2.1/Classes/Warlock.md:388|
 |Warlock spell list Tongues|spell Unit pressure|outside-surface-runtime-mechanics|authored-record-present|not-installed|unsupported-profile|catalog-only/dead-for-now|accepted-no-battle-effect|outside-runtime-presentation-exploration: runtime-detached language/communication owner||Tongues changes communication intelligibility through hearing, sight, signing, speech, and known-language gates. Promoted battle runtime does not own conversation content, social outcomes, automatic communication adjudication, or language-table projection for this spell.|.references/srd-5.2.1/Classes/Warlock.md:389|
 |Warlock spell list Vampiric Touch|spell Unit pressure|current-surface-can-express-source-facts|authored-record-present|not-installed||catalog-authored-review-required|owner-evidence-required|||Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this later-frontier spell row as accepted.|.references/srd-5.2.1/Classes/Warlock.md:390|
-|Wizard spell list Animate Dead|spell Unit pressure|current-surface-can-express-source-facts|authored-record-present|not-installed||catalog-authored-review-required|owner-evidence-required|||Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this later-frontier spell row as accepted.|.references/srd-5.2.1/Classes/Wizard.md:237|
+|Wizard spell list Animate Dead|spell Unit pressure|outside-surface-runtime-mechanics|authored-record-present|not-installed|unsupported-profile|catalog-only/dead-for-now|accepted-no-battle-effect|companion-control-boundary: future reanimated companion lifecycle/control owner||Animate Dead's represented runtime behavior is closed at the companion-control boundary: a future reanimated companion owner must model Skeleton/Zombie combatant creation from corpse-or-bones targets, control-window ownership, Bonus Action command fan-out, default Dodge-and-avoid behavior, autonomous task following, 24-hour control expiry, higher-slot reassertion, and stat-block action execution without authored-identity dispatch in generic runtime code.|.references/srd-5.2.1/Classes/Wizard.md:237|
 |Wizard spell list Bestow Curse|spell Unit pressure|current-surface-can-express-source-facts|missing-authored-record|not-installed||missing-authored-record|battle-runtime-required|||Author an SRD-provenance Surface record or explicitly close the row.|.references/srd-5.2.1/Classes/Wizard.md:238|
 |Wizard spell list Blink|spell Unit pressure|current-surface-can-express-source-facts|missing-authored-record|not-installed||missing-authored-record|battle-runtime-required|||Author an SRD-provenance Surface record or explicitly close the row.|.references/srd-5.2.1/Classes/Wizard.md:239|
 |Wizard spell list Clairvoyance|spell Unit pressure|outside-surface-runtime-mechanics|authored-record-present|not-installed|unsupported-profile|catalog-only/dead-for-now|accepted-no-battle-effect|outside-runtime-presentation-exploration: runtime-detached table/perception and remote-sensor owner||Clairvoyance creates a table-placed remote sensor and remote perception channel. Promoted battle runtime does not own location familiarity, remote information disclosure, active sensor-sense presentation, observer visibility of the sensor, or autonomous sensor behavior, and must not treat the sensor as ordinary caster sight or a target-selection proxy.|.references/srd-5.2.1/Classes/Wizard.md:240|
