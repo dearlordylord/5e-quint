@@ -389,6 +389,14 @@ const spellAccessSurfaceBlockers = new Map();
 
 const spellUnitMissingClassifications = new Map([
   [
+    "bestow_curse",
+    {
+      kind: "needs-surface-widening",
+      missingConstruct:
+        "Spell Definition curse occurrence: initial Wisdom Saving Throw gates one chosen ongoing curse option (chosen-ability Ability Check and Saving Throw Disadvantage, caster-targeted Attack Roll Disadvantage, start-of-turn Wisdom save or forced Dodge, or caster attack/spell damage rider), the target becomes a curse-removal target, and higher slot levels change both duration amount and Concentration requirement.",
+    },
+  ],
+  [
     "create_or_destroy_water",
     {
       kind: "catalog-only-closure",

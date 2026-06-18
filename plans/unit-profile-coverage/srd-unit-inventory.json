@@ -296,10 +296,11 @@
       "numerator": 34,
       "percent": "30.9%",
       "rowsByStatus": {
-        "battle-runtime-required": 48,
+        "surface-widening-required": 3,
         "accepted-no-battle-effect": 12,
         "accepted": 22,
-        "owner-evidence-required": 28
+        "owner-evidence-required": 28,
+        "battle-runtime-required": 45
       }
     },
     "levelFourSpellBattleReadiness": {
@@ -373,8 +374,9 @@
       "non-runtime": 84,
       "catalog-only/dead-for-now": 144,
       "level-5-7-follow-up-required": 33,
-      "missing-authored-record": 80,
+      "needs-surface-widening": 3,
       "catalog-authored-review-required": 77,
+      "missing-authored-record": 77,
       "catalog-installed-owner-evidence-required": 1
     },
     "spellPressureRowsByDisposition": {
@@ -382,10 +384,11 @@
       "catalog-only/dead-for-now": 118
     },
     "levelThreeSpellPressureRowsByDisposition": {
-      "missing-authored-record": 48,
+      "needs-surface-widening": 3,
       "catalog-only/dead-for-now": 12,
       "catalog-installed-owner-evidence-present": 22,
-      "catalog-authored-review-required": 28
+      "catalog-authored-review-required": 28,
+      "missing-authored-record": 45
     },
     "levelThreeInstalledSpellPressureRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 22
@@ -8275,7 +8278,8 @@
       "detail": "Bestow Curse (Necromancy; C)",
       "candidateUnitId": "bestow_curse",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "current-surface-cannot-express-mechanics-yet",
+        "missingConstruct": "Spell Definition curse occurrence: initial Wisdom Saving Throw gates one chosen ongoing curse option (chosen-ability Ability Check and Saving Throw Disadvantage, caster-targeted Attack Roll Disadvantage, start-of-turn Wisdom save or forced Dodge, or caster attack/spell damage rider), the target becomes a curse-removal target, and higher slot levels change both duration amount and Concentration requirement."
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -8284,10 +8288,10 @@
         "state": "not-installed",
         "unitId": "bestow_curse"
       },
-      "finalDisposition": "missing-authored-record",
+      "finalDisposition": "needs-surface-widening",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "nextAction": "Widen Surface: Spell Definition curse occurrence: initial Wisdom Saving Throw gates one chosen ongoing curse option (chosen-ability Ability Check and Saving Throw Disadvantage, caster-targeted Attack Roll Disadvantage, start-of-turn Wisdom save or forced Dodge, or caster attack/spell damage rider), the target becomes a curse-removal target, and higher slot levels change both duration amount and Concentration requirement.",
+      "battleReadinessStatus": "surface-widening-required"
     },
     {
       "id": "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_clairvoyance",
@@ -12061,7 +12065,8 @@
       "detail": "Bestow Curse (Necromancy; C)",
       "candidateUnitId": "bestow_curse",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "current-surface-cannot-express-mechanics-yet",
+        "missingConstruct": "Spell Definition curse occurrence: initial Wisdom Saving Throw gates one chosen ongoing curse option (chosen-ability Ability Check and Saving Throw Disadvantage, caster-targeted Attack Roll Disadvantage, start-of-turn Wisdom save or forced Dodge, or caster attack/spell damage rider), the target becomes a curse-removal target, and higher slot levels change both duration amount and Concentration requirement."
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -12070,10 +12075,10 @@
         "state": "not-installed",
         "unitId": "bestow_curse"
       },
-      "finalDisposition": "missing-authored-record",
+      "finalDisposition": "needs-surface-widening",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "nextAction": "Widen Surface: Spell Definition curse occurrence: initial Wisdom Saving Throw gates one chosen ongoing curse option (chosen-ability Ability Check and Saving Throw Disadvantage, caster-targeted Attack Roll Disadvantage, start-of-turn Wisdom save or forced Dodge, or caster attack/spell damage rider), the target becomes a curse-removal target, and higher slot levels change both duration amount and Concentration requirement.",
+      "battleReadinessStatus": "surface-widening-required"
     },
     {
       "id": "srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_clairvoyance",
@@ -38494,7 +38499,8 @@
       "detail": "Bestow Curse (Necromancy; C)",
       "candidateUnitId": "bestow_curse",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "current-surface-cannot-express-mechanics-yet",
+        "missingConstruct": "Spell Definition curse occurrence: initial Wisdom Saving Throw gates one chosen ongoing curse option (chosen-ability Ability Check and Saving Throw Disadvantage, caster-targeted Attack Roll Disadvantage, start-of-turn Wisdom save or forced Dodge, or caster attack/spell damage rider), the target becomes a curse-removal target, and higher slot levels change both duration amount and Concentration requirement."
       },
       "authoredContent": {
         "state": "missing-authored-record"
@@ -38503,10 +38509,10 @@
         "state": "not-installed",
         "unitId": "bestow_curse"
       },
-      "finalDisposition": "missing-authored-record",
+      "finalDisposition": "needs-surface-widening",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "nextAction": "Widen Surface: Spell Definition curse occurrence: initial Wisdom Saving Throw gates one chosen ongoing curse option (chosen-ability Ability Check and Saving Throw Disadvantage, caster-targeted Attack Roll Disadvantage, start-of-turn Wisdom save or forced Dodge, or caster attack/spell damage rider), the target becomes a curse-removal target, and higher slot levels change both duration amount and Concentration requirement.",
+      "battleReadinessStatus": "surface-widening-required"
     },
     {
       "id": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_blink",

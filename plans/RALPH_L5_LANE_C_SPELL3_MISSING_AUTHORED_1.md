@@ -7,7 +7,7 @@
     {
       "number": 1,
       "id": "L5-C01-BESTOW-CURSE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Close Bestow Curse missing authored record"
     },
     {
@@ -63,6 +63,12 @@
       "id": "L5-C10-PHANTOM-STEED",
       "status": "ready-for-research",
       "title": "Close Phantom Steed missing authored record"
+    },
+    {
+      "number": 11,
+      "id": "L5-C11-BESTOW-CURSE-SURFACE-WIDENING",
+      "status": "ready-for-research",
+      "title": "Widen Bestow Curse Surface Spell Definition"
     }
   ]
 }
@@ -118,7 +124,7 @@ missing-record spells unless a RAW dependency is unavoidable and documented.
 
 | # | Task | Status | Depends on | Notes |
 | ---: | --- | --- | --- | --- |
-| 1 | L5-C01-BESTOW-CURSE - Close Bestow Curse missing authored record | ready-for-research | none | Owns shared runtime Spell Effect curse occurrence and curse-removal target boundary if admitted. |
+| 1 | L5-C01-BESTOW-CURSE - Close Bestow Curse missing authored record | done | none | Closed as a Surface widening boundary, not an authored-record admission. |
 | 2 | L5-C02-BLINK - Close Blink missing authored record | ready-for-research | none | Independent missing spell Unit. |
 | 3 | L5-C03-CONJURE-ANIMALS - Close Conjure Animals missing authored record | ready-for-research | none | Independent missing spell Unit. |
 | 4 | L5-C04-GASEOUS-FORM - Close Gaseous Form missing authored record | ready-for-research | none | Independent missing spell Unit. |
@@ -128,6 +134,7 @@ missing-record spells unless a RAW dependency is unavoidable and documented.
 | 8 | L5-C08-MELD-INTO-STONE - Close Meld into Stone missing authored record | ready-for-research | none | Independent missing spell Unit. |
 | 9 | L5-C09-NONDETECTION - Close Nondetection missing authored record | ready-for-research | none | Independent missing spell Unit. |
 | 10 | L5-C10-PHANTOM-STEED - Close Phantom Steed missing authored record | ready-for-research | none | Independent missing spell Unit. |
+| 11 | L5-C11-BESTOW-CURSE-SURFACE-WIDENING - Widen Bestow Curse Surface Spell Definition | ready-for-research | L5-C01-BESTOW-CURSE | Add typed Surface facts for Bestow Curse curse-option selection, curse-removal targeting, and slot-dependent duration/Concentration before authoring/admitting the Spell Definition. |
 
 ## Shared Verification
 
@@ -156,7 +163,7 @@ missing-record spells unless a RAW dependency is unavoidable and documented.
 
 ### Task 1 - L5-C01-BESTOW-CURSE
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -176,7 +183,10 @@ SRD anchors:
 Current state:
 
 - Authored record is missing; catalog state is `not-installed`.
-- Mining disposition is `missing-authored-record`.
+- Mining disposition is `needs-surface-widening`.
+- Surface cannot yet express the Bestow Curse Spell Definition without losing
+  the exact curse-option choice, curse-removal target, and slot-dependent
+  duration/Concentration facts.
 
 Output:
 
@@ -188,7 +198,69 @@ Output:
 
 Acceptance:
 
-- `bestow_curse` leaves `missing-authored-record`.
+- `bestow_curse` leaves `missing-authored-record` by becoming
+  `needs-surface-widening`.
+
+Verification:
+
+- Shared lane verification.
+
+Plan Impact:
+
+- Follow-up work is split into L5-C11 before any SRD-provenance Bestow Curse
+  Spell Definition is authored or admitted.
+
+### Task 11 - L5-C11-BESTOW-CURSE-SURFACE-WIDENING
+
+Status: `ready-for-research`
+
+Depends on:
+
+- L5-C01-BESTOW-CURSE
+
+Unit:
+
+- `bestow_curse`
+
+SRD anchors:
+
+- `.references/srd-5.2.1/Spells/Descriptions-A-D.md:481`
+- `.references/srd-5.2.1/Classes/Bard.md:217`
+- `.references/srd-5.2.1/Classes/Cleric.md:206`
+- `.references/srd-5.2.1/Classes/Wizard.md:238`
+
+Current state:
+
+- The generated inventory classifies the three Bestow Curse class-list rows as
+  `needs-surface-widening` / `surface-widening-required`.
+- Existing Surface spell atoms can express some adjacent facts, but not the
+  complete Bestow Curse shape as one SRD Spell Definition without a partial
+  record.
+
+Output:
+
+- Widen Surface so a Bestow Curse Spell Definition can represent exactly one
+  chosen ongoing curse option: chosen-ability Ability Check and Saving Throw
+  Disadvantage, caster-targeted Attack Roll Disadvantage, start-of-turn Wisdom
+  save or forced Dodge, or caster attack/spell damage rider.
+- Represent the target as a curse-removal target consumed by Remove Curse or a
+  shared named-effect removal owner without dispatching on spell id/name in
+  runtime behavior.
+- Represent the higher-slot duration facts, including the level 5+ transition
+  away from Concentration and the level 9 lasts-until-dispelled case.
+- Author/admit the SRD-provenance Bestow Curse record only after the typed
+  Surface facts can preserve those RAW distinctions.
+
+Acceptance:
+
+- `bestow_curse` has an SRD-provenance Surface Spell Definition or remains
+  explicitly classified with a narrower executable blocker.
+- The record does not omit one of the four curse options or encode all options
+  as simultaneously active.
+- Duration/Concentration slot behavior is representable without a misleading
+  approximation.
+- Runtime support, if added, dispatches on typed Surface/profile facts rather
+  than authored spell identity.
 
 Verification:
 
