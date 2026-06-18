@@ -87,9 +87,9 @@ Surface records but are not installed or owner-classified for the character
 level 5 frontier.
 
 The output for each task is either supported catalog admission with
-checker-visible owner evidence, or an explicit runtime-detached/catalog-only
-closure. Do not author missing spell records in this lane; those are Lane C and
-Lane D.
+checker-visible owner evidence, or a precise table-only or
+battle-runtime-detached owner statement. Do not author missing spell records in
+this lane; those are Lane C and Lane D.
 
 ## Source Artifacts
 
@@ -98,17 +98,22 @@ Lane D.
 - `plans/unit-profile-coverage/unit-claims.jsonl`
 - `plans/unit-profile-coverage/unit-evidence.jsonl`
 - `plans/unit-profile-coverage/unit-matrix.json`
+- `plans/unit-profile-coverage/L3_PROTECTION_FROM_ENERGY_RUNTIME_SURVEY.md`
 - `packages/surface/content/*.json`
 - `packages/surface/content/*.dhall`
 - `packages/battle-runtime/src/`
 - `.references/srd-5.2.1/Classes/*.md`
 - `.references/srd-5.2.1/Spells/*.md`
 - `UBIQUITOUS_LANGUAGE.md`
+- `ASSUMPTIONS.md`
 
 ## Lane Rules
 
 - Run the Ralph task-base check before research or implementation.
 - Use only local SRD 5.2.1 sources under `.references/srd-5.2.1/`.
+- If RAW is ambiguous or a task requires a modeling choice the SRD does not
+  prescribe, do not silently choose; document the proposed assumption in
+  `ASSUMPTIONS.md` or stop for owner direction.
 - Do not browse external rules sources.
 - Do not add PHB+ authored identity.
 - One task equals one unique spell Unit identity. Class-list rows are evidence
@@ -118,25 +123,25 @@ Lane D.
 - Runtime behavior must be admitted by parsed shape, support-profile readers,
   typed procedure facts, and explicit runtime state; do not dispatch on spell
   id/name/provenance section.
-- If the spell belongs outside the promoted runtime, close it with a precise
+- If the spell belongs outside battle runtime, close it with a precise
   runtime-detached owner statement instead of a vague unsupported label.
 
-## Task DAG
+## DAG / Queue Order
 
-| Task | Depends on | Dependency reason |
-| --- | --- | --- |
-| L5-B01-ANIMATE-DEAD | merged L17 mining audit | Independent authored spell pressure row. |
-| L5-B02-BEACON-OF-HOPE | merged L17 mining audit | Independent authored spell pressure row. |
-| L5-B03-CALL-LIGHTNING | merged L17 mining audit | Independent authored spell pressure row. |
-| L5-B04-CREATE-FOOD-AND-WATER | merged L17 mining audit | Independent authored spell pressure row. |
-| L5-B05-DAYLIGHT | merged L17 mining audit | Independent authored spell pressure row. |
-| L5-B06-FEAR | merged L17 mining audit | Independent authored spell pressure row. |
-| L5-B07-MAJOR-IMAGE | merged L17 mining audit | Independent authored spell pressure row. |
-| L5-B08-PROTECTION-FROM-ENERGY | merged L17 mining audit | Independent authored spell pressure row. |
-| L5-B09-SPIRIT-GUARDIANS | merged L17 mining audit | Independent authored spell pressure row. |
-| L5-B10-STINKING-CLOUD | merged L17 mining audit | Independent authored spell pressure row. |
-| L5-B11-VAMPIRIC-TOUCH | merged L17 mining audit | Independent authored spell pressure row. |
-| L5-B12-WIND-WALL | merged L17 mining audit | Independent authored spell pressure row. |
+| # | Task | Status | Depends on | Notes |
+| ---: | --- | --- | --- | --- |
+| 1 | L5-B01-ANIMATE-DEAD - Close Animate Dead authored spell pressure | ready-for-research | none | Independent authored spell pressure row. |
+| 2 | L5-B02-BEACON-OF-HOPE - Close Beacon of Hope authored spell pressure | ready-for-research | none | Independent authored spell pressure row. |
+| 3 | L5-B03-CALL-LIGHTNING - Close Call Lightning authored spell pressure | ready-for-research | none | Independent authored spell pressure row. |
+| 4 | L5-B04-CREATE-FOOD-AND-WATER - Close Create Food and Water authored spell pressure | ready-for-research | none | Independent authored spell pressure row. |
+| 5 | L5-B05-DAYLIGHT - Close Daylight authored spell pressure | ready-for-research | none | Independent authored spell pressure row. |
+| 6 | L5-B06-FEAR - Close Fear authored spell pressure | ready-for-research | none | Independent authored spell pressure row. |
+| 7 | L5-B07-MAJOR-IMAGE - Close Major Image authored spell pressure | ready-for-research | none | Independent authored spell pressure row. |
+| 8 | L5-B08-PROTECTION-FROM-ENERGY - Close Protection from Energy authored spell pressure | ready-for-research | none | Preserve target-shape repair plus runtime admission prerequisite from `plans/unit-profile-coverage/L3_PROTECTION_FROM_ENERGY_RUNTIME_SURVEY.md`. |
+| 9 | L5-B09-SPIRIT-GUARDIANS - Close Spirit Guardians authored spell pressure | ready-for-research | none | Independent authored spell pressure row. |
+| 10 | L5-B10-STINKING-CLOUD - Close Stinking Cloud authored spell pressure | ready-for-research | none | Independent authored spell pressure row. |
+| 11 | L5-B11-VAMPIRIC-TOUCH - Close Vampiric Touch authored spell pressure | ready-for-research | none | Independent authored spell pressure row. |
+| 12 | L5-B12-WIND-WALL - Close Wind Wall authored spell pressure | ready-for-research | none | Independent authored spell pressure row. |
 
 ## Shared Verification
 
@@ -151,9 +156,16 @@ Lane D.
 - If battle-runtime behavior changes, update the relevant QNT/spec first and
   run the focused MBT only after code changes are complete, one MBT run at a
   time per `AGENTS.md`.
-- `pnpm unit-profile-coverage:check --write`
+- If a unit task changes coverage inputs, run
+  `pnpm unit-profile-coverage:check --write` locally. Shared generated
+  inventory/matrix refresh is owned by
+  `plans/RALPH_L5_POST_LANE_GENERATED_COVERAGE_FINALIZATION.md` after all four
+  lanes merge; individual unit-task agents should not hand-resolve cross-lane
+  generated artifact conflicts.
 - `pnpm unit-profile-coverage:check`
 - `git diff --check`
+
+## Task Details
 
 ### Task 1 - L5-B01-ANIMATE-DEAD
 
@@ -216,8 +228,9 @@ Current state:
 
 Output:
 
-- Classify healing/save/death-save advantage ownership and either admit the
-  spell with evidence or close the runtime-detached boundary.
+- Classify healing, Saving Throw Advantage, and Death Saving Throw Advantage
+  ownership and either admit the spell with evidence or close the
+  battle-runtime-detached boundary.
 
 Acceptance:
 
@@ -323,8 +336,8 @@ Current state:
 
 Output:
 
-- Decide the owner for light area, object targeting, overlap with magical
-  darkness, and table visibility.
+- Decide the owner for light area, object targeting, Illumination, and overlap
+  with magical Darkness.
 
 Acceptance:
 
@@ -361,8 +374,8 @@ Current state:
 
 Output:
 
-- Decide the owner for cone targeting, Wisdom save, frightened state, forced
-  movement/drop behavior, and save retry timing.
+- Decide the owner for cone targeting, Wisdom Saving Throw, frightened state,
+  forced movement/drop behavior, and repeat Saving Throw timing.
 
 Acceptance:
 
@@ -417,6 +430,7 @@ Status: `ready-for-research`
 Depends on:
 
 - merged L17 mining audit
+- plans/unit-profile-coverage/L3_PROTECTION_FROM_ENERGY_RUNTIME_SURVEY.md
 
 Unit:
 
@@ -437,8 +451,9 @@ Current state:
 
 Output:
 
-- Decide the owner for chosen damage type resistance and concentration
-  duration.
+- Preserve the survey's ordered prerequisite: repair the target shape for one
+  willing touched creature, then admit chosen damage type Resistance and
+  Concentration duration only through typed runtime facts.
 
 Acceptance:
 
@@ -472,8 +487,8 @@ Current state:
 
 Output:
 
-- Decide the owner for aura area, save/damage timing, speed reduction, and
-  chosen unaffected creatures.
+- Decide the owner for aura area, Saving Throw/damage timing, speed reduction,
+  and chosen unaffected creatures.
 
 Acceptance:
 
@@ -509,8 +524,9 @@ Current state:
 
 Output:
 
-- Decide the owner for area persistence, obscuration, poison save, action loss,
-  and wind dispersal.
+- Decide the owner for area persistence, Heavily Obscured gas, Constitution
+  Saving Throw, Poisoned condition, action/Bonus Action loss, and wind
+  dispersal.
 
 Acceptance:
 

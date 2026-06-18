@@ -73,11 +73,12 @@
 This lane closes the first half of spell-level-3 identities that the level 1-7
 mining audit marks as `missing-authored-record`.
 
-Each task owns one missing SRD spell Unit. The task may author a redistributable
-SRD-provenance Surface record, install it only after support/owner evidence is
-clear, or explicitly close the row with a typed runtime-detached boundary. Do
-not touch Lane B authored-review spells or Lane D missing-record spells unless a
-RAW dependency is unavoidable and documented.
+Each task owns one missing SRD Spell Definition decision first, then a separate
+catalog admission or owner-boundary decision. Author a redistributable
+SRD-provenance Surface record when the local SRD body is representable; if it is
+not representable yet, record the catalog-boundary reason and any typed
+follow-up split. Do not touch Lane B authored-review spells or Lane D
+missing-record spells unless a RAW dependency is unavoidable and documented.
 
 ## Source Artifacts
 
@@ -85,41 +86,48 @@ RAW dependency is unavoidable and documented.
 - `plans/unit-profile-coverage/level1-7-mining-audit.json`
 - `plans/unit-profile-coverage/unit-claims.jsonl`
 - `plans/unit-profile-coverage/unit-evidence.jsonl`
+- `plans/unit-profile-coverage/L3_HASTE_RUNTIME_SURVEY.md`
 - `packages/surface/content/*.json`
 - `packages/surface/content/*.dhall`
 - `packages/battle-runtime/src/`
 - `.references/srd-5.2.1/Classes/*.md`
 - `.references/srd-5.2.1/Spells/*.md`
 - `UBIQUITOUS_LANGUAGE.md`
+- `ASSUMPTIONS.md`
 
 ## Lane Rules
 
 - Run the Ralph task-base check before research or implementation.
 - Use only local SRD 5.2.1 sources under `.references/srd-5.2.1/`.
+- If RAW is ambiguous or a task requires a modeling choice the SRD does not
+  prescribe, do not silently choose; document the proposed assumption in
+  `ASSUMPTIONS.md` or stop for owner direction.
 - Do not browse external rules sources.
 - Do not add PHB+ authored identity.
 - One task equals one unique spell Unit identity. Class-list rows are evidence
   for that Unit, not separate implementation tasks.
 - Keep provenance, structured input, and runtime projection separate.
-- Missing authored record closure means either a real SRD-provenance Surface
-  record exists or the task records a precise reason the row is outside this
-  runtime/catalog boundary. Do not hide it with a status-only label.
+- Missing authored record closure requires resolving the Surface Spell
+  Definition/provenance question first: author the SRD-provenance record when
+  the local SRD body is representable, or record a catalog-boundary reason it is
+  not representable yet. A battle-runtime-detached owner statement alone does
+  not close a missing authored record.
 - Runtime behavior must not dispatch on spell id, name, or provenance section.
 
-## Task DAG
+## DAG / Queue Order
 
-| Task | Depends on | Dependency reason |
-| --- | --- | --- |
-| L5-C01-BESTOW-CURSE | merged L17 mining audit | Independent missing spell Unit. |
-| L5-C02-BLINK | merged L17 mining audit | Independent missing spell Unit. |
-| L5-C03-CONJURE-ANIMALS | merged L17 mining audit | Independent missing spell Unit. |
-| L5-C04-GASEOUS-FORM | merged L17 mining audit | Independent missing spell Unit. |
-| L5-C05-GLYPH-OF-WARDING | merged L17 mining audit | Independent missing spell Unit. |
-| L5-C06-HASTE | merged L17 mining audit | Independent missing spell Unit. |
-| L5-C07-MAGIC-CIRCLE | merged L17 mining audit | Independent missing spell Unit. |
-| L5-C08-MELD-INTO-STONE | merged L17 mining audit | Independent missing spell Unit. |
-| L5-C09-NONDETECTION | merged L17 mining audit | Independent missing spell Unit. |
-| L5-C10-PHANTOM-STEED | merged L17 mining audit | Independent missing spell Unit. |
+| # | Task | Status | Depends on | Notes |
+| ---: | --- | --- | --- | --- |
+| 1 | L5-C01-BESTOW-CURSE - Close Bestow Curse missing authored record | ready-for-research | none | Owns shared runtime Spell Effect curse occurrence and curse-removal target boundary if admitted. |
+| 2 | L5-C02-BLINK - Close Blink missing authored record | ready-for-research | none | Independent missing spell Unit. |
+| 3 | L5-C03-CONJURE-ANIMALS - Close Conjure Animals missing authored record | ready-for-research | none | Independent missing spell Unit. |
+| 4 | L5-C04-GASEOUS-FORM - Close Gaseous Form missing authored record | ready-for-research | none | Independent missing spell Unit. |
+| 5 | L5-C05-GLYPH-OF-WARDING - Close Glyph of Warding missing authored record | ready-for-research | none | Independent missing spell Unit. |
+| 6 | L5-C06-HASTE - Close Haste missing authored record | ready-for-research | none | Preserve Surface authoring, positive runtime, and lethargy runtime split from `plans/unit-profile-coverage/L3_HASTE_RUNTIME_SURVEY.md`. |
+| 7 | L5-C07-MAGIC-CIRCLE - Close Magic Circle missing authored record | ready-for-research | none | Independent missing spell Unit. |
+| 8 | L5-C08-MELD-INTO-STONE - Close Meld into Stone missing authored record | ready-for-research | none | Independent missing spell Unit. |
+| 9 | L5-C09-NONDETECTION - Close Nondetection missing authored record | ready-for-research | none | Independent missing spell Unit. |
+| 10 | L5-C10-PHANTOM-STEED - Close Phantom Steed missing authored record | ready-for-research | none | Independent missing spell Unit. |
 
 ## Shared Verification
 
@@ -135,9 +143,16 @@ RAW dependency is unavoidable and documented.
 - If battle-runtime behavior changes, update the relevant QNT/spec first and
   run the focused MBT only after code changes are complete, one MBT run at a
   time per `AGENTS.md`.
-- `pnpm unit-profile-coverage:check --write`
+- If a unit task changes coverage inputs, run
+  `pnpm unit-profile-coverage:check --write` locally. Shared generated
+  inventory/matrix refresh is owned by
+  `plans/RALPH_L5_POST_LANE_GENERATED_COVERAGE_FINALIZATION.md` after all four
+  lanes merge; individual unit-task agents should not hand-resolve cross-lane
+  generated artifact conflicts.
 - `pnpm unit-profile-coverage:check`
 - `git diff --check`
+
+## Task Details
 
 ### Task 1 - L5-C01-BESTOW-CURSE
 
@@ -165,9 +180,11 @@ Current state:
 
 Output:
 
-- Author the SRD Surface record or record a precise typed closure.
-- If admitted, add support-profile/evidence for curse options, save timing, and
-  concentration ownership.
+- Resolve the SRD Spell Definition record or record a catalog-boundary reason it
+  is not representable yet.
+- Own the shared runtime Spell Effect curse occurrence and curse-removal target
+  boundary consumed by Remove Curse; if admitted, add support-profile/evidence
+  for curse options, Saving Throw timing, and Concentration ownership.
 
 Acceptance:
 
@@ -237,8 +254,10 @@ Current state:
 
 Output:
 
-- Author or close Conjure Animals with a precise owner for summoned creature
-  selection, initiative, control, and stat-block provenance.
+- Resolve the SRD Spell Definition record for Conjure Animals, then classify
+  owner facts for the spectral nature-spirit pack form, pack movement, Strength
+  Saving Throw Advantage near the pack, Dexterity Saving Throw damage trigger,
+  and once-per-turn trigger limit.
 
 Acceptance:
 
@@ -329,6 +348,7 @@ Status: `ready-for-research`
 Depends on:
 
 - merged L17 mining audit
+- plans/unit-profile-coverage/L3_HASTE_RUNTIME_SURVEY.md
 
 Unit:
 
@@ -347,8 +367,9 @@ Current state:
 
 Output:
 
-- Author or close Haste with typed facts for speed, AC, Dexterity saves, extra
-  action limits, and lethargy cleanup.
+- Preserve the survey's follow-up split: Surface authoring, positive runtime
+  effect, and lethargy cleanup. Do not collapse those prerequisites into a
+  single support or unsupported label.
 
 Acceptance:
 

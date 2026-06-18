@@ -37,7 +37,7 @@
     {
       "number": 6,
       "id": "L5-A06-MONK-EXTRA-ATTACK",
-      "status": "ready-for-research",
+      "status": "blocked",
       "title": "Close Monk Extra Attack level 5 follow-up"
     },
     {
@@ -81,8 +81,9 @@ mining audit marks as `level-5-7-follow-up-required`.
 
 The lane does not own spell-level-3 pressure. The level-5 class table summary
 rows are already explicit `non-runtime` closures, and already accepted level-5
-features such as Fighter, Paladin, Ranger, Rogue, and Barbarian movement
-features are out of scope unless a task's RAW pass finds a direct dependency.
+rows such as `barbarian_fast_movement`, `fighter_extra_attack`,
+`paladin_extra_attack`, `ranger_extra_attack`, and `rogue_uncanny_dodge` are
+out of scope unless a task's RAW pass finds a direct dependency.
 
 ## Source Artifacts
 
@@ -99,12 +100,17 @@ features are out of scope unless a task's RAW pass finds a direct dependency.
 - `packages/character-sheet-runtime/src/`
 - `packages/battle-runtime/src/`
 - `.references/srd-5.2.1/Classes/*.md`
+- `.references/srd-5.2.1/Spells/*.md`
 - `UBIQUITOUS_LANGUAGE.md`
+- `ASSUMPTIONS.md`
 
 ## Lane Rules
 
 - Run the Ralph task-base check before research or implementation.
 - Use only local SRD 5.2.1 sources under `.references/srd-5.2.1/`.
+- If RAW is ambiguous or a task requires a modeling choice the SRD does not
+  prescribe, do not silently choose; document the proposed assumption in
+  `ASSUMPTIONS.md` or stop for owner direction.
 - Do not browse external rules sources.
 - Do not add PHB+ authored identity.
 - One task equals one mined Unit row. Do not broaden a task into unrelated
@@ -112,26 +118,26 @@ features are out of scope unless a task's RAW pass finds a direct dependency.
 - Before adding a field or status, search for an existing source fact and avoid
   duplicate state.
 - For each Unit, first decide the owner boundary in domain language:
-  character creation, Character Sheet/progression, battle runtime, or explicit
-  non-runtime/runtime-detached closure.
+  character creation, Character Sheet/progression, battle runtime, or
+  table-only closure.
 - Do not mark a row supported only by adding a label. The closure must have a
   type/runtime consequence or checker-readable owner evidence.
 
-## Task DAG
+## DAG / Queue Order
 
-| Task | Depends on | Dependency reason |
-| --- | --- | --- |
-| L5-A01-BARBARIAN-EXTRA-ATTACK | merged L17 mining audit | Independent level-5 class feature row. |
-| L5-A02-BARD-FONT-OF-INSPIRATION | merged L17 mining audit | Independent level-5 class feature row. |
-| L5-A03-CLERIC-SEAR-UNDEAD | merged L17 mining audit | Independent level-5 class feature row. |
-| L5-A04-DRUID-WILD-RESURGENCE | merged L17 mining audit | Independent level-5 class feature row. |
-| L5-A05-FIGHTER-TACTICAL-SHIFT | merged L17 mining audit | Independent level-5 class feature row. |
-| L5-A06-MONK-EXTRA-ATTACK | merged L17 mining audit | Independent level-5 class feature row. |
-| L5-A07-MONK-STUNNING-STRIKE | merged L17 mining audit | Independent level-5 class feature row. |
-| L5-A08-PALADIN-FAITHFUL-STEED | merged L17 mining audit | Independent level-5 class feature row. |
-| L5-A09-ROGUE-CUNNING-STRIKE | merged L17 mining audit | Independent level-5 class feature row. |
-| L5-A10-SORCERER-SORCEROUS-RESTORATION | merged L17 mining audit | Independent level-5 class feature row. |
-| L5-A11-WIZARD-MEMORIZE-SPELL | merged L17 mining audit | Independent level-5 class feature row. |
+| # | Task | Status | Depends on | Notes |
+| ---: | --- | --- | --- | --- |
+| 1 | L5-A01-BARBARIAN-EXTRA-ATTACK - Close Barbarian Extra Attack level 5 follow-up | ready-for-research | none | Owns the shared Extra Attack reuse/widening decision for remaining class rows. |
+| 2 | L5-A02-BARD-FONT-OF-INSPIRATION - Close Bard Font of Inspiration level 5 follow-up | ready-for-research | none | Independent level-5 class feature row. |
+| 3 | L5-A03-CLERIC-SEAR-UNDEAD - Close Cleric Sear Undead level 5 follow-up | ready-for-research | none | Independent level-5 class feature row. |
+| 4 | L5-A04-DRUID-WILD-RESURGENCE - Close Druid Wild Resurgence level 5 follow-up | ready-for-research | none | Independent level-5 class feature row. |
+| 5 | L5-A05-FIGHTER-TACTICAL-SHIFT - Close Fighter Tactical Shift level 5 follow-up | ready-for-research | none | Independent level-5 class feature row. |
+| 6 | L5-A06-MONK-EXTRA-ATTACK - Close Monk Extra Attack level 5 follow-up | blocked | L5-A01-BARBARIAN-EXTRA-ATTACK | Reuses the same Extra Attack owner/evidence path. |
+| 7 | L5-A07-MONK-STUNNING-STRIKE - Close Monk Stunning Strike level 5 follow-up | ready-for-research | none | Independent level-5 class feature row. |
+| 8 | L5-A08-PALADIN-FAITHFUL-STEED - Close Paladin Faithful Steed level 5 follow-up | ready-for-research | none | Independent level-5 class feature row. |
+| 9 | L5-A09-ROGUE-CUNNING-STRIKE - Close Rogue Cunning Strike level 5 follow-up | ready-for-research | none | Independent level-5 class feature row. |
+| 10 | L5-A10-SORCERER-SORCEROUS-RESTORATION - Close Sorcerer Sorcerous Restoration level 5 follow-up | ready-for-research | none | Independent level-5 class feature row. |
+| 11 | L5-A11-WIZARD-MEMORIZE-SPELL - Close Wizard Memorize Spell level 5 follow-up | ready-for-research | none | Independent level-5 class feature row. |
 
 ## Shared Verification
 
@@ -146,9 +152,16 @@ features are out of scope unless a task's RAW pass finds a direct dependency.
 - If battle-runtime behavior changes, update the relevant QNT/spec first and
   run the focused MBT only after code changes are complete, one MBT run at a
   time per `AGENTS.md`.
-- `pnpm unit-profile-coverage:check --write`
+- If a unit task changes coverage inputs, run
+  `pnpm unit-profile-coverage:check --write` locally. Shared generated
+  inventory/matrix refresh is owned by
+  `plans/RALPH_L5_POST_LANE_GENERATED_COVERAGE_FINALIZATION.md` after all four
+  lanes merge; individual unit-task agents should not hand-resolve cross-lane
+  generated artifact conflicts.
 - `pnpm unit-profile-coverage:check`
 - `git diff --check`
+
+## Task Details
 
 ### Task 1 - L5-A01-BARBARIAN-EXTRA-ATTACK
 
@@ -175,8 +188,9 @@ Output:
 
 - Author or explicitly close the Barbarian Extra Attack Unit with a precise
   owner boundary.
-- If it duplicates an existing generic Extra Attack owner, reuse that owner
-  rather than creating parallel state.
+- Own the generic Extra Attack reuse/widening decision for remaining class rows,
+  including Monk, and reuse the existing owner rather than creating parallel
+  state.
 
 Acceptance:
 
@@ -210,7 +224,8 @@ Current state:
 Output:
 
 - Decide whether Font of Inspiration is Character Sheet/progression, battle
-  runtime, or runtime-detached resource-clock evidence.
+  runtime, or battle-runtime-detached Bardic Inspiration Pool evidence with
+  Short Rest and Long Rest restoration timing.
 - Add the minimal authored record, catalog/evidence entry, or closure required
   by that owner decision.
 
@@ -283,14 +298,14 @@ Current state:
 
 Output:
 
-- Decide the Wild Resurgence owner boundary across Wild Shape, spell-slot, and
+- Decide the Wild Resurgence owner boundary across Wild Shape, Spell Slot, and
   resource-restoration facts.
 - Add only the owner evidence or typed closure required for level-5 parity.
 
 Acceptance:
 
 - `druid_wild_resurgence` is no longer a generated follow-up.
-- No spell-slot or Wild Shape count is copied into a second runtime state.
+- No Spell Slot or Wild Shape count is copied into a second runtime state.
 
 Verification:
 
@@ -334,11 +349,15 @@ Verification:
 
 ### Task 6 - L5-A06-MONK-EXTRA-ATTACK
 
-Status: `ready-for-research`
+Status: `blocked`
+
+Blocker Type: dependency
+Blocker Detail: waits for L5-A01-BARBARIAN-EXTRA-ATTACK to settle the shared
+Extra Attack owner/evidence path.
 
 Depends on:
 
-- merged L17 mining audit
+- L5-A01-BARBARIAN-EXTRA-ATTACK
 
 Unit:
 
@@ -354,8 +373,8 @@ Current state:
 
 Output:
 
-- Reuse the existing Extra Attack support model if it already carries the SRD
-  semantics needed by Monk.
+- Reuse the Extra Attack owner/evidence path settled by
+  L5-A01-BARBARIAN-EXTRA-ATTACK.
 - Add Monk-specific evidence only where the class Unit selection boundary needs
   it.
 
@@ -390,8 +409,8 @@ Current state:
 
 Output:
 
-- Identify the owner for Stunning Strike across attack-hit timing, saving
-  throws, condition application, and Monk resource cost.
+- Identify the owner for Stunning Strike across attack-hit timing, Saving
+  Throws, condition application, and Monk resource cost.
 - Implement or explicitly split follow-up work only after the RAW owner is
   clear.
 
@@ -399,7 +418,7 @@ Acceptance:
 
 - `monk_stunning_strike` has checker-visible owner evidence or a precise
   executable follow-up split.
-- No condition or save workflow relies on authored identity dispatch.
+- No condition or Saving Throw workflow relies on authored identity dispatch.
 
 Verification:
 
@@ -417,9 +436,10 @@ Unit:
 
 - `paladin_faithful_steed`
 
-SRD anchor:
+SRD anchors:
 
 - `.references/srd-5.2.1/Classes/Paladin.md:130`
+- `.references/srd-5.2.1/Spells/Descriptions-E-L.md:319`
 
 Current state:
 
@@ -427,10 +447,12 @@ Current state:
 
 Output:
 
-- Decide whether Faithful Steed is a Character Sheet/spell-access owner,
-  summoned creature owner, or runtime-detached table companion closure.
-- Record the owner boundary without copying mount state into Paladin class
-  state.
+- Decide whether Faithful Steed is Character Sheet spell-access/progression
+  evidence, or whether the linked Find Steed Spell Definition and Otherworldly
+  Steed Stat Block require Companion, Companion Control, or Companion Execution
+  ownership.
+- Record the owner boundary without copying mount or companion state into
+  Paladin class state.
 
 Acceptance:
 
@@ -464,7 +486,7 @@ Current state:
 Output:
 
 - Determine the owner for Cunning Strike across Sneak Attack damage exchange,
-  options, saving throws, and condition/effect outcomes.
+  options, Saving Throws, and condition/effect outcomes.
 - If implemented, make option facts typed and avoid positional or stringly
   option protocols.
 
@@ -534,7 +556,7 @@ Current state:
 
 Output:
 
-- Decide the owner for prepared/memorized spell list mutation and level-5
+- Decide the owner for prepared/memorized Spell Access mutation and level-5
   Wizard progression evidence.
 - Add only the authored record, owner evidence, or closure required by that
   boundary.
@@ -542,8 +564,7 @@ Output:
 Acceptance:
 
 - `wizard_memorize_spell` is no longer a generated level-5 follow-up.
-- Spell preparation state is not duplicated beside the canonical spell list
-  owner.
+- Spell Access state is not duplicated beside the canonical Spell Access owner.
 
 Verification:
 

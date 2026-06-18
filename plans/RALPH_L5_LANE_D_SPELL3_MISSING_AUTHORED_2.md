@@ -73,11 +73,12 @@
 This lane closes the second half of spell-level-3 identities that the level 1-7
 mining audit marks as `missing-authored-record`.
 
-Each task owns one missing SRD spell Unit. The task may author a redistributable
-SRD-provenance Surface record, install it only after support/owner evidence is
-clear, or explicitly close the row with a typed runtime-detached boundary. Do
-not touch Lane B authored-review spells or Lane C missing-record spells unless a
-RAW dependency is unavoidable and documented.
+Each task owns one missing SRD Spell Definition decision first, then a separate
+catalog admission or owner-boundary decision. Author a redistributable
+SRD-provenance Surface record when the local SRD body is representable; if it is
+not representable yet, record the catalog-boundary reason and any typed
+follow-up split. Do not touch Lane B authored-review spells or Lane C
+missing-record spells unless a RAW dependency is unavoidable and documented.
 
 ## Source Artifacts
 
@@ -85,41 +86,48 @@ RAW dependency is unavoidable and documented.
 - `plans/unit-profile-coverage/level1-7-mining-audit.json`
 - `plans/unit-profile-coverage/unit-claims.jsonl`
 - `plans/unit-profile-coverage/unit-evidence.jsonl`
+- `plans/unit-profile-coverage/L3_SLOW_RUNTIME_SURVEY.md`
 - `packages/surface/content/*.json`
 - `packages/surface/content/*.dhall`
 - `packages/battle-runtime/src/`
 - `.references/srd-5.2.1/Classes/*.md`
 - `.references/srd-5.2.1/Spells/*.md`
 - `UBIQUITOUS_LANGUAGE.md`
+- `ASSUMPTIONS.md`
 
 ## Lane Rules
 
 - Run the Ralph task-base check before research or implementation.
 - Use only local SRD 5.2.1 sources under `.references/srd-5.2.1/`.
+- If RAW is ambiguous or a task requires a modeling choice the SRD does not
+  prescribe, do not silently choose; document the proposed assumption in
+  `ASSUMPTIONS.md` or stop for owner direction.
 - Do not browse external rules sources.
 - Do not add PHB+ authored identity.
 - One task equals one unique spell Unit identity. Class-list rows are evidence
   for that Unit, not separate implementation tasks.
 - Keep provenance, structured input, and runtime projection separate.
-- Missing authored record closure means either a real SRD-provenance Surface
-  record exists or the task records a precise reason the row is outside this
-  runtime/catalog boundary. Do not hide it with a status-only label.
+- Missing authored record closure requires resolving the Surface Spell
+  Definition/provenance question first: author the SRD-provenance record when
+  the local SRD body is representable, or record a catalog-boundary reason it is
+  not representable yet. A battle-runtime-detached owner statement alone does
+  not close a missing authored record.
 - Runtime behavior must not dispatch on spell id, name, or provenance section.
 
-## Task DAG
+## DAG / Queue Order
 
-| Task | Depends on | Dependency reason |
-| --- | --- | --- |
-| L5-D01-PLANT-GROWTH | merged L17 mining audit | Independent missing spell Unit. |
-| L5-D02-REMOVE-CURSE | merged L17 mining audit | Independent missing spell Unit. |
-| L5-D03-REVIVIFY | merged L17 mining audit | Independent missing spell Unit. |
-| L5-D04-SENDING | merged L17 mining audit | Independent missing spell Unit. |
-| L5-D05-SLEET-STORM | merged L17 mining audit | Independent missing spell Unit. |
-| L5-D06-SLOW | merged L17 mining audit | Independent missing spell Unit. |
-| L5-D07-SPEAK-WITH-DEAD | merged L17 mining audit | Independent missing spell Unit. |
-| L5-D08-SPEAK-WITH-PLANTS | merged L17 mining audit | Independent missing spell Unit. |
-| L5-D09-TINY-HUT | merged L17 mining audit | Independent missing spell Unit. |
-| L5-D10-WATER-WALK | merged L17 mining audit | Independent missing spell Unit. |
+| # | Task | Status | Depends on | Notes |
+| ---: | --- | --- | --- | --- |
+| 1 | L5-D01-PLANT-GROWTH - Close Plant Growth missing authored record | ready-for-research | none | Independent missing spell Unit. |
+| 2 | L5-D02-REMOVE-CURSE - Close Remove Curse missing authored record | ready-for-research | none | May resolve Surface Spell Definition before Bestow Curse runtime occurrence semantics exist. |
+| 3 | L5-D03-REVIVIFY - Close Revivify missing authored record | ready-for-research | none | Independent missing spell Unit. |
+| 4 | L5-D04-SENDING - Close Sending missing authored record | ready-for-research | none | Independent missing spell Unit. |
+| 5 | L5-D05-SLEET-STORM - Close Sleet Storm missing authored record | ready-for-research | none | Independent missing spell Unit. |
+| 6 | L5-D06-SLOW - Close Slow missing authored record | ready-for-research | none | Preserve Surface authoring, active penalties, and turn/Somatic split from `plans/unit-profile-coverage/L3_SLOW_RUNTIME_SURVEY.md`. |
+| 7 | L5-D07-SPEAK-WITH-DEAD - Close Speak with Dead missing authored record | ready-for-research | none | Independent missing spell Unit. |
+| 8 | L5-D08-SPEAK-WITH-PLANTS - Close Speak with Plants missing authored record | ready-for-research | none | Independent missing spell Unit. |
+| 9 | L5-D09-TINY-HUT - Close Tiny Hut missing authored record | ready-for-research | none | Independent missing spell Unit. |
+| 10 | L5-D10-WATER-WALK - Close Water Walk missing authored record | ready-for-research | none | Independent missing spell Unit. |
 
 ## Shared Verification
 
@@ -135,9 +143,16 @@ RAW dependency is unavoidable and documented.
 - If battle-runtime behavior changes, update the relevant QNT/spec first and
   run the focused MBT only after code changes are complete, one MBT run at a
   time per `AGENTS.md`.
-- `pnpm unit-profile-coverage:check --write`
+- If a unit task changes coverage inputs, run
+  `pnpm unit-profile-coverage:check --write` locally. Shared generated
+  inventory/matrix refresh is owned by
+  `plans/RALPH_L5_POST_LANE_GENERATED_COVERAGE_FINALIZATION.md` after all four
+  lanes merge; individual unit-task agents should not hand-resolve cross-lane
+  generated artifact conflicts.
 - `pnpm unit-profile-coverage:check`
 - `git diff --check`
+
+## Task Details
 
 ### Task 1 - L5-D01-PLANT-GROWTH
 
@@ -164,8 +179,10 @@ Current state:
 
 Output:
 
-- Author or close Plant Growth with owner facts for difficult terrain,
-  enrichment, radius/area, and table travel/economy effects.
+- Resolve the SRD Spell Definition record for Plant Growth, then classify owner
+  facts for Overgrowth's 4-feet-per-1-foot movement cost, excluded areas,
+  Enrichment duration, harvest yield, radius/area, and table travel/economy
+  effects.
 
 Acceptance:
 
@@ -201,8 +218,11 @@ Current state:
 
 Output:
 
-- Author or close Remove Curse with owner facts for curse removal, cursed
-  object attunement, and effect identity boundaries.
+- Resolve the SRD Spell Definition record for Remove Curse.
+- If L5-C01-BESTOW-CURSE has already settled runtime Spell Effect curse
+  occurrence and curse-removal target semantics, reuse that boundary. Otherwise
+  do not create a competing runtime curse occurrence model or claim runtime
+  curse-removal support.
 
 Acceptance:
 
@@ -311,8 +331,9 @@ Current state:
 
 Output:
 
-- Author or close Sleet Storm with owner facts for area, difficult terrain,
-  obscuration, falling prone, and concentration disruption.
+- Resolve the SRD Spell Definition record for Sleet Storm, then classify owner
+  facts for area, Difficult Terrain, Heavily Obscured area, Dexterity Saving
+  Throw, Prone condition, and Concentration loss.
 
 Acceptance:
 
@@ -329,6 +350,7 @@ Status: `ready-for-research`
 Depends on:
 
 - merged L17 mining audit
+- plans/unit-profile-coverage/L3_SLOW_RUNTIME_SURVEY.md
 
 Unit:
 
@@ -348,9 +370,10 @@ Current state:
 
 Output:
 
-- Author or close Slow with owner facts for target count, Wisdom save,
-  action/reaction limits, speed, AC/Dex saves, spellcasting delay, and repeat
-  save timing.
+- Preserve the survey's follow-up split: Surface authoring, active penalties,
+  and target-turn/Somatic runtime. Do not collapse target count, Wisdom Saving
+  Throw, Speed, AC, Dexterity Saving Throw, Reaction, spellcasting delay, and
+  repeat Saving Throw facts into a single support or unsupported label.
 
 Acceptance:
 
@@ -495,8 +518,9 @@ Current state:
 
 Output:
 
-- Author or close Water Walk with owner facts for supported liquid surfaces,
-  unwilling submerged targets, and table environment boundaries.
+- Resolve the SRD Spell Definition record for Water Walk, then classify owner
+  facts for willing creature targets, supported liquid surfaces, movement across
+  those surfaces, and table environment boundaries.
 
 Acceptance:
 
