@@ -37392,6 +37392,16 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-battle-runtime",
+          "owner": "future sunlight Spell Effect and table/spatial light-overlap owner",
+          "reason": "Daylight's represented battle behavior is closed outside the promoted battle-runtime boundary: a future sunlight Spell Effect owner must model point-origin Sphere sunlight, object-origin Emanation sunlight, object worn/carried admission, opaque-cover suppression, one-hour occurrence cleanup, Bright Light and Dim Light illumination projection, and overlap-triggered dispelling of magical Darkness spell effects of level 3 or lower. Table/spatial ownership must supply area membership, object movement, cover, line of sight, and spell-area overlap facts rather than duplicating map illumination or object state inside generic Spell Invocation reducers."
+        },
+        "reason": "Daylight is an SRD level-3 Spell Definition whose authored Surface record models Action Spell Slot casting, 60-foot range, V/S components, timed 1-hour duration, point-origin 60-foot Sphere sunlight, and Bright Light plus Dim Light facts, with RAW prose for the alternative object-origin Emanation and overlap dispel against Darkness created by a spell of level 3 or lower. No promoted battle-runtime profile is claimed because full support needs a sunlight Spell Effect owner that admits both point-origin and object-origin modes, carries the occurrence duration, consumes table-supplied object worn/carried, opaque-cover, area, and overlap witnesses, projects Bright Light and Dim Light illumination consequences, and ends qualifying magical Darkness spell effects by generic source-level and effect facts rather than authored-identity dispatch.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "spell",

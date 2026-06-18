@@ -31,7 +31,7 @@
     {
       "number": 5,
       "id": "L5-B05-DAYLIGHT",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Close Daylight authored spell pressure"
     },
     {
@@ -134,7 +134,7 @@ this lane; those are Lane C and Lane D.
 | 2 | L5-B02-BEACON-OF-HOPE - Close Beacon of Hope authored spell pressure | done | none | Closed outside the promoted battle runtime active spell-effect boundary. |
 | 3 | L5-B03-CALL-LIGHTNING - Close Call Lightning authored spell pressure | done | none | Closed outside the promoted battle runtime active storm spell-effect and table/spatial weather boundary. |
 | 4 | L5-B04-CREATE-FOOD-AND-WATER - Close Create Food and Water authored spell pressure | done | none | Closed as runtime-detached table inventory and survival ownership. |
-| 5 | L5-B05-DAYLIGHT - Close Daylight authored spell pressure | ready-for-research | none | Independent authored spell pressure row. |
+| 5 | L5-B05-DAYLIGHT - Close Daylight authored spell pressure | done | none | Closed outside the promoted battle runtime sunlight Spell Effect and table/spatial light-overlap boundary. |
 | 6 | L5-B06-FEAR - Close Fear authored spell pressure | ready-for-research | none | Independent authored spell pressure row. |
 | 7 | L5-B07-MAJOR-IMAGE - Close Major Image authored spell pressure | ready-for-research | none | Independent authored spell pressure row. |
 | 8 | L5-B08-PROTECTION-FROM-ENERGY - Close Protection from Energy authored spell pressure | ready-for-research | none | Preserve target-shape repair plus runtime admission prerequisite from `plans/unit-profile-coverage/L3_PROTECTION_FROM_ENERGY_RUNTIME_SURVEY.md`. |
@@ -353,7 +353,7 @@ Verification:
 
 ### Task 5 - L5-B05-DAYLIGHT
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -383,6 +383,20 @@ Output:
 Acceptance:
 
 - `daylight` leaves `catalog-authored-review-required`.
+
+Result:
+
+- `daylight` is recorded as `unsupported-profile` and
+  `catalog-only/dead-for-now` with an `outside-battle-runtime` closure.
+- The future owner is a sunlight Spell Effect and table/spatial light-overlap
+  owner for point-origin Sphere sunlight, object-origin Emanation sunlight,
+  object worn/carried admission, opaque-cover suppression, one-hour occurrence
+  cleanup, Bright Light and Dim Light illumination projection, and
+  overlap-triggered dispelling of magical Darkness spell effects of level 3 or
+  lower without authored-identity dispatch.
+- Table/spatial ownership supplies area membership, object movement, cover, line
+  of sight, and spell-area overlap facts rather than duplicating map
+  illumination or object state inside generic Spell Invocation reducers.
 
 Verification:
 
