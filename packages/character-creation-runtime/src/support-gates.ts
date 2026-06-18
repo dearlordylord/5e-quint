@@ -1,5 +1,5 @@
 // KERNEL-COVERAGE: runtime-owner CREATION.CHOICE_DISCOVERY_CARDINALITY
-// UNIT-PROFILE-COVERAGE: runtime-owner character-creation.grappler-general-feat character-creation.origin-feat-proficiency-choice character-creation.species-trait-proficiency-choice character-creation.species-origin-feat-choice character-creation.species-origin-feat-proficiency-choice
+// UNIT-PROFILE-COVERAGE: runtime-owner character-creation.grappler-general-feat character-creation.origin-feat-proficiency-choice character-creation.species-trait-proficiency-choice character-creation.species-origin-feat-choice character-creation.species-origin-feat-proficiency-choice character-creation.species-lineage-choice
 import { Either } from "effect";
 import {
   BACKGROUND_ABILITY_SCORE_INCREASE_CHOICE_KEY,
@@ -19,6 +19,8 @@ import {
   CLASS_EQUIPMENT_CHOICE_KEY,
   EQUIPMENT_PURCHASE_CHOICE_KEY,
   ELDRITCH_INVOCATIONS_CHOICE_KEY,
+  GNOMISH_LINEAGE_CHOICE_KEY,
+  GNOMISH_LINEAGE_SPELLCASTING_ABILITY_CHOICE_KEY,
   WEAPON_MASTERY_OPTIONS_CHOICE_KEY,
   WIZARD_CANTRIP_CHOICE_KEY,
   WIZARD_PREPARED_SPELL_CHOICE_KEY,
@@ -39,6 +41,7 @@ import {
   PHASE1_LOADOUT_ARMOR_OPTION_ID,
   PHASE1_LOADOUT_SHIELD_OPTION_ID,
   PHASE1_LOADOUT_WEAPON_OPTION_ID,
+  SRD_GNOME_SPECIES_UNIT_ID,
   ORIGIN_FEAT_PROFICIENCY_CHOICE_KEY,
   SPECIES_ORIGIN_FEAT_CHOICE_KEY,
   SPECIES_ORIGIN_FEAT_PROFICIENCY_CHOICE_KEY,
@@ -558,6 +561,14 @@ export function supportedHoleOptionIds(
       );
   }
 
+  if (
+    hole.kind === "choice" &&
+    (source.choiceKey === GNOMISH_LINEAGE_CHOICE_KEY ||
+      source.choiceKey === GNOMISH_LINEAGE_SPELLCASTING_ABILITY_CHOICE_KEY)
+  ) {
+    return hole.options.map((option) => option.optionId);
+  }
+
   return supportedUnitOptionIdsForSource(source);
 }
 
@@ -638,6 +649,19 @@ export function supportedBackgroundUnitIds(): readonly UnitRecord["id"][] {
 
 export function supportedSpeciesUnitIds(): readonly UnitRecord["id"][] {
   return SRD_CHARACTER_ADMISSION_SPECIES_UNIT_IDS;
+}
+
+// Finalization can accept preselected species once all selected-trait holes have
+// owners. The ordinary draft species option fill remains narrower.
+export function finalizableSpeciesUnitIds(): readonly UnitRecord["id"][] {
+  return speciesUnitIdsWithSupportedTraitChoices();
+}
+
+export function speciesUnitIdsWithSupportedTraitChoices(): readonly UnitRecord["id"][] {
+  return [
+    ...SRD_CHARACTER_ADMISSION_SPECIES_UNIT_IDS,
+    SRD_GNOME_SPECIES_UNIT_ID,
+  ];
 }
 
 export function supportedPurchasableEquipmentUnitIds(): readonly UnitRecord["id"][] {

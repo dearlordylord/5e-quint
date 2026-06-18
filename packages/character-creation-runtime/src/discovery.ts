@@ -1,5 +1,5 @@
 // KERNEL-COVERAGE: runtime-owner CREATION.CHOICE_DISCOVERY_CARDINALITY CREATION.SPELL_ACCESS.PACT_MAGIC_PROGRESSION CREATION.ELDRITCH_INVOCATION.CHOICE_LIFECYCLE CREATION.WIZARD_SPELLBOOK_LEARNING.CHOICE_FINALIZATION
-// UNIT-PROFILE-COVERAGE: runtime-owner character-creation.wizard-spellbook-learning-choice unit-feature.hunters-prey character-creation.origin-feat-proficiency-choice character-creation.species-trait-proficiency-choice character-creation.species-origin-feat-choice character-creation.species-origin-feat-proficiency-choice
+// UNIT-PROFILE-COVERAGE: runtime-owner character-creation.wizard-spellbook-learning-choice unit-feature.hunters-prey character-creation.origin-feat-proficiency-choice character-creation.species-trait-proficiency-choice character-creation.species-origin-feat-choice character-creation.species-origin-feat-proficiency-choice character-creation.species-lineage-choice
 import { Either, Match, Option } from "effect";
 import {
   ALIGNMENT_CHOICES,
@@ -27,6 +27,7 @@ import type {
   EffectAtom,
   FeatRecord,
   FeatureChoiceMechanics,
+  GnomishLineageMechanics,
   ProficiencyGrant,
   ProficiencyGrantSubject,
   Skill,
@@ -57,6 +58,7 @@ import {
   CLASS_SKILL_PROFICIENCY_CHOICE_KEY,
   CLASS_TOOL_PROFICIENCY_CHOICE_KEY,
   WEAPON_MASTERY_OPTIONS_CHOICE_KEY,
+  GNOMISH_LINEAGE_SPELLCASTING_ABILITY_CHOICE_KEY,
   HUNTERS_PREY_CHOICE_KEY,
   ORIGIN_FEAT_PROFICIENCY_CHOICE_KEY,
   SPECIES_ORIGIN_FEAT_CHOICE_KEY,
@@ -121,7 +123,7 @@ import {
   supportedLoadoutChoices,
   supportedProgressionsForClass,
   supportedPurchasableEquipmentUnitIdsForClass,
-  supportedSpeciesUnitIds,
+  speciesUnitIdsWithSupportedTraitChoices,
   unsupportedHoleSelectionOptionId,
 } from "./support-gates.ts";
 import {
@@ -868,6 +870,10 @@ function speciesTraitGrantChoiceHoles(input: {
   readonly unitLibrary: UnitCatalog;
 }): readonly ChoiceCreationHole[] {
   return selectedSpeciesTraitUnits(input).flatMap((trait) => {
+    if (trait.mechanics.family === "species_lineage_choice") {
+      return speciesLineageChoiceHoles(trait.id, trait.mechanics);
+    }
+
     if (trait.mechanics.family !== "passive") {
       return [];
     }
@@ -891,6 +897,41 @@ function speciesTraitGrantChoiceHoles(input: {
       }),
     );
   });
+}
+
+export function speciesLineageChoiceHoles(
+  traitUnitId: UnitRecord["id"],
+  mechanics: GnomishLineageMechanics,
+): readonly ChoiceCreationHole[] {
+  return [
+    choiceHole({
+      source: unitSource(traitUnitId, mechanics.choiceKey),
+      cardinality: EXACTLY_ONE_CHOICE,
+      options: mechanics.options.map((option) => ({
+        optionId: creationChoiceOptionId(option.id),
+        label: option.displayName,
+      })),
+    }),
+    choiceHole({
+      source: unitSource(
+        traitUnitId,
+        GNOMISH_LINEAGE_SPELLCASTING_ABILITY_CHOICE_KEY,
+      ),
+      cardinality: EXACTLY_ONE_CHOICE,
+      options: mechanics.spellcastingAbilityChoice.abilities.map(
+        (ability) => ({
+          optionId: creationChoiceOptionId(ability),
+          label: ability.toUpperCase(),
+        }),
+      ),
+    }),
+  ].filter(isChoiceCreationHole);
+}
+
+function isChoiceCreationHole(
+  hole: CreationHole | undefined,
+): hole is ChoiceCreationHole {
+  return hole?.kind === "choice";
 }
 
 function speciesSelectedOriginFeatGrantChoiceHoles(input: {
@@ -929,7 +970,7 @@ function selectedSpeciesTraitUnits(input: {
   const speciesUnitId = input.draft.selections.species;
   if (
     speciesUnitId == null ||
-    !isSupported(speciesUnitId, supportedSpeciesUnitIds())
+    !isSupported(speciesUnitId, speciesUnitIdsWithSupportedTraitChoices())
   ) {
     return [];
   }

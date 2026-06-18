@@ -6,7 +6,7 @@
 // KERNEL-COVERAGE: runtime-owner CHARACTER.LIFECYCLE.LAYER_PROJECTION
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.class-feature-prepared-spell-access
 // UNIT-PROFILE-COVERAGE: runtime-owner character-creation.grappler-general-feat character-creation.wizard-spellbook-learning-choice character-creation.origin-feat-proficiency-choice character-creation.species-trait-proficiency-choice character-creation.species-origin-feat-choice character-creation.species-origin-feat-proficiency-choice
-// UNIT-PROFILE-COVERAGE: runtime-owner character-creation.hit-point-maximum-projection unit-feature.hunters-prey
+// UNIT-PROFILE-COVERAGE: runtime-owner character-creation.hit-point-maximum-projection unit-feature.hunters-prey character-creation.species-lineage-choice
 import { Either, Match, Option } from "effect";
 import { isValidAbilityScoreAssignment } from "@dnd/shared-algebras/ability-score-algebra";
 import { traverseValidation } from "@dnd/shared-algebras/validation-algebra";
@@ -32,6 +32,7 @@ import type {
   Skill,
   StartingEquipmentChoice,
   EffectAtom,
+  GnomishLineageMechanics,
   PassiveMechanics,
   DragonbornSpeciesRecord,
   UnitRecord,
@@ -41,6 +42,7 @@ import {
   originFeatGrantChoiceHoles,
   passiveGrantChoiceHoles,
   selectedClassFeatureAcquisitionGrantChoiceHoles,
+  speciesLineageChoiceHoles,
 } from "./discovery.ts";
 import { type CharacterProgression } from "./character-progression-algebra.ts";
 import {
@@ -108,6 +110,7 @@ import {
   WIZARD_PREPARED_SPELL_CHOICE_KEY,
   WIZARD_SPELLBOOK_CHOICE_KEY,
   ELDRITCH_INVOCATIONS_CHOICE_KEY,
+  GNOMISH_LINEAGE_SPELLCASTING_ABILITY_CHOICE_KEY,
   SORCERER_METAMAGIC_OPTIONS_CHOICE_KEY,
   HUNTERS_PREY_CHOICE_KEY,
 } from "./phase1-manifest.ts";
@@ -131,7 +134,8 @@ import {
   supportedLoadoutChoiceForSource,
   supportedLoadoutChoices,
   supportedPurchasableEquipmentUnitIdsForClass,
-  supportedSpeciesUnitIds,
+  finalizableSpeciesUnitIds,
+  speciesUnitIdsWithSupportedTraitChoices,
   supportsCharacterBuildResourceUnitId,
   unitRefsForSupportedSelectedUnitChoice,
 } from "./support-gates.ts";
@@ -157,6 +161,8 @@ import {
   type CharacterEquipmentItemSlot,
   type CharacterBuildClassFeatureLanguage,
   type CharacterBuildSpeciesChoiceFacts,
+  type CharacterBuildGnomishLineageId,
+  type CharacterBuildGnomishLineageSpellcastingAbility,
   type CharacterBuildFeature,
   type CharacterBuildHitPoints,
   type CharacterBuildLoadout,
@@ -361,7 +367,7 @@ export function executableSupportIssues(
       "Finalized build must use a supported background.",
     ),
     ...expectedValueIssue(
-      supportedSpeciesUnitIds().includes(selections.species),
+      finalizableSpeciesUnitIds().includes(selections.species),
       "Finalized build must use a supported species.",
     ),
     ...expectedValueIssue(
@@ -661,22 +667,53 @@ function draconicAncestryDamageTypeSource(
 }
 
 function finalizedSpeciesChoiceFacts(
-  selections: Pick<FinalizedCharacterSelections, "draconicAncestry">,
+  selections: Pick<
+    FinalizedCharacterSelections,
+    "choices" | "draconicAncestry"
+  >,
   species: UnitRecord,
+  unitLibrary: UnitCatalog,
 ): Either.Either<
   CharacterBuildSpeciesChoiceFacts | undefined,
   FinalizationIssues
 > {
-  const source = draconicAncestryDamageTypeSource(species);
-  if (source === undefined) {
-    return selections.draconicAncestry === undefined
-      ? Either.right(undefined)
-      : Either.left([
-          illegalFinalizationIssue(
-            `Cannot project Draconic Ancestry for species without a Draconic Ancestry source fact: ${species.id}.`,
-          ),
-        ]);
+  const draconicSource = draconicAncestryDamageTypeSource(species);
+  const lineageSource = speciesLineageChoiceSource(species, unitLibrary);
+  if (Either.isLeft(lineageSource)) {
+    return Either.left(lineageSource.left);
   }
+  if (draconicSource !== undefined && lineageSource.right !== undefined) {
+    return Either.left([
+      illegalFinalizationIssue(
+        `Cannot project multiple species choice source facts for species: ${species.id}.`,
+      ),
+    ]);
+  }
+  if (draconicSource !== undefined) {
+    return finalizedDraconicAncestryChoiceFacts(
+      selections,
+      species,
+      draconicSource,
+    );
+  }
+  if (lineageSource.right !== undefined) {
+    return finalizedGnomishLineageChoiceFacts(selections, lineageSource.right);
+  }
+
+  return selections.draconicAncestry === undefined
+    ? Either.right(undefined)
+    : Either.left([
+        illegalFinalizationIssue(
+          `Cannot project Draconic Ancestry for species without a Draconic Ancestry source fact: ${species.id}.`,
+        ),
+      ]);
+}
+
+function finalizedDraconicAncestryChoiceFacts(
+  selections: Pick<FinalizedCharacterSelections, "draconicAncestry">,
+  species: UnitRecord,
+  source: DragonbornSpeciesRecord["draconicAncestry"]["damageType"],
+): Either.Either<CharacterBuildSpeciesChoiceFacts, FinalizationIssues> {
   const selected = source.options.find(
     (option) => option.id === selections.draconicAncestry,
   );
@@ -694,6 +731,115 @@ function finalizedSpeciesChoiceFacts(
       ancestorId: selections.draconicAncestry,
     },
   });
+}
+
+type SpeciesLineageChoiceSource = {
+  readonly traitUnitId: UnitRecord["id"];
+  readonly mechanics: GnomishLineageMechanics;
+};
+
+function speciesLineageChoiceSource(
+  species: UnitRecord,
+  unitLibrary: UnitCatalog,
+): Either.Either<SpeciesLineageChoiceSource | undefined, FinalizationIssues> {
+  const facts = readSpeciesCreationFacts(species);
+  if (facts.tag !== "readable") {
+    return Either.right(undefined);
+  }
+
+  const sources = Object.values(facts.value.traits).flatMap((traitUnitId) => {
+    const traitUnit = unitLibrary.getUnit(traitUnitId);
+    if (Option.isNone(traitUnit) || traitUnit.value.kind !== "species_trait") {
+      return [];
+    }
+    return traitUnit.value.mechanics.family === "species_lineage_choice"
+      ? [
+          {
+            traitUnitId: traitUnit.value.id,
+            mechanics: traitUnit.value.mechanics,
+          },
+        ]
+      : [];
+  });
+  if (sources.length > 1) {
+    return Either.left([
+      illegalFinalizationIssue(
+        `Cannot project multiple species lineage choice source facts for species: ${species.id}.`,
+      ),
+    ]);
+  }
+
+  return Either.right(sources[0]);
+}
+
+function finalizedGnomishLineageChoiceFacts(
+  selections: Pick<FinalizedCharacterSelections, "choices">,
+  source: SpeciesLineageChoiceSource,
+): Either.Either<CharacterBuildSpeciesChoiceFacts, FinalizationIssues> {
+  const lineageId = selectedGnomishLineageId(selections, source);
+  const spellcastingAbility = selectedGnomishLineageSpellcastingAbility(
+    selections,
+    source,
+  );
+  if (lineageId === undefined || spellcastingAbility === undefined) {
+    return Either.left([
+      illegalFinalizationIssue(
+        `Cannot project selected Gnomish Lineage for species trait: ${source.traitUnitId}.`,
+      ),
+    ]);
+  }
+
+  return Either.right({
+    gnomishLineage: {
+      kind: "gnomishLineage",
+      lineageId,
+      spellcastingAbility,
+    },
+  });
+}
+
+function selectedGnomishLineageId(
+  selections: Pick<FinalizedCharacterSelections, "choices">,
+  source: SpeciesLineageChoiceSource,
+): CharacterBuildGnomishLineageId | undefined {
+  const selectedOptionId = selectedSingleUnitChoiceOptionId(
+    selections,
+    source.traitUnitId,
+    source.mechanics.choiceKey,
+  );
+  return source.mechanics.options.find(
+    (option) => option.id === selectedOptionId,
+  )?.id;
+}
+
+function selectedGnomishLineageSpellcastingAbility(
+  selections: Pick<FinalizedCharacterSelections, "choices">,
+  source: SpeciesLineageChoiceSource,
+): CharacterBuildGnomishLineageSpellcastingAbility | undefined {
+  const selectedOptionId = selectedSingleUnitChoiceOptionId(
+    selections,
+    source.traitUnitId,
+    GNOMISH_LINEAGE_SPELLCASTING_ABILITY_CHOICE_KEY,
+  );
+  return source.mechanics.spellcastingAbilityChoice.abilities.find(
+    (ability) => ability === selectedOptionId,
+  );
+}
+
+function selectedSingleUnitChoiceOptionId(
+  selections: Pick<FinalizedCharacterSelections, "choices">,
+  traitUnitId: UnitRecord["id"],
+  choiceKey: UnitChoiceKey,
+): CreationChoiceOptionId | undefined {
+  const selection = selections.choices.find(
+    (candidate) =>
+      candidate.kind === "unitChoice" &&
+      candidate.source.unitId === traitUnitId &&
+      candidate.source.choiceKey === choiceKey,
+  );
+  return selection?.options.length === 1
+    ? selection.options[0]?.optionId
+    : undefined;
 }
 
 export function illegalFinalizationIssue(
@@ -871,6 +1017,7 @@ export function buildCharacterBuild(input: {
   const speciesChoiceFacts = finalizedSpeciesChoiceFacts(
     selections,
     speciesUnit.right,
+    input.unitLibrary,
   );
   if (Either.isLeft(speciesChoiceFacts)) {
     return Either.left(speciesChoiceFacts.left);
@@ -1969,6 +2116,10 @@ function speciesTraitGrantChoiceHolesForFinalization(
   input: SupportedFinalizationChoiceHoleInput,
 ): readonly ChoiceCreationHole[] {
   return selectedSpeciesTraitUnitsForFinalization(input).flatMap((trait) => {
+    if (trait.mechanics.family === "species_lineage_choice") {
+      return speciesLineageChoiceHoles(trait.id, trait.mechanics);
+    }
+
     if (trait.mechanics.family !== "passive") {
       return [];
     }
@@ -2033,7 +2184,9 @@ function selectedSpeciesTraitUnitsForFinalization(
     "selections" | "unitLibrary"
   >,
 ): readonly Extract<UnitRecord, { readonly kind: "species_trait" }>[] {
-  if (!supportedSpeciesUnitIds().includes(input.selections.species)) {
+  if (
+    !speciesUnitIdsWithSupportedTraitChoices().includes(input.selections.species)
+  ) {
     return [];
   }
 

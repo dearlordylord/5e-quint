@@ -13,7 +13,7 @@
     {
       "number": 2,
       "id": "LT4-B02-GNOMISH-LINEAGE-CHOICE-OWNER",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Implement Gnomish Lineage choice ownership"
     },
     {
@@ -136,7 +136,7 @@ Verification:
 
 ### Task 2 - LT4-B02-GNOMISH-LINEAGE-CHOICE-OWNER
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -246,4 +246,3 @@ Acceptance:
 Verification:
 
 - Shared lane verification.
-
