@@ -49,7 +49,7 @@
     {
       "number": 8,
       "id": "L5-A08-PALADIN-FAITHFUL-STEED",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Close Paladin Faithful Steed level 5 follow-up"
     },
     {
@@ -142,7 +142,7 @@ out of scope unless a task's RAW pass finds a direct dependency.
 | 5 | L5-A05-FIGHTER-TACTICAL-SHIFT - Close Fighter Tactical Shift level 5 follow-up | done | none | Independent level-5 class feature row. |
 | 6 | L5-A06-MONK-EXTRA-ATTACK - Close Monk Extra Attack level 5 follow-up | done | L5-A01-BARBARIAN-EXTRA-ATTACK | Authored and installed using the shared Extra Attack owner/evidence path. |
 | 7 | L5-A07-MONK-STUNNING-STRIKE - Close Monk Stunning Strike level 5 follow-up | done | none | Closed by unsupported-profile owner evidence for the future Monk attack-hit rider owner. |
-| 8 | L5-A08-PALADIN-FAITHFUL-STEED - Close Paladin Faithful Steed level 5 follow-up | ready-for-research | none | Independent level-5 class feature row. |
+| 8 | L5-A08-PALADIN-FAITHFUL-STEED - Close Paladin Faithful Steed level 5 follow-up | done | none | Closed by unsupported-profile owner evidence splitting Character Sheet Spell Access/resource ownership from the existing Find Steed companion-control boundary. |
 | 9 | L5-A09-ROGUE-CUNNING-STRIKE - Close Rogue Cunning Strike level 5 follow-up | ready-for-research | none | Independent level-5 class feature row. |
 | 10 | L5-A10-SORCERER-SORCEROUS-RESTORATION - Close Sorcerer Sorcerous Restoration level 5 follow-up | ready-for-research | none | Independent level-5 class feature row. |
 | 11 | L5-A11-WIZARD-MEMORIZE-SPELL - Close Wizard Memorize Spell level 5 follow-up | ready-for-research | none | Independent level-5 class feature row. |
@@ -449,7 +449,7 @@ Verification:
 
 ### Task 8 - L5-A08-PALADIN-FAITHFUL-STEED
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -466,7 +466,12 @@ SRD anchors:
 
 Current state:
 
-- The mined row is not installed and has no unit profile/evidence row.
+- The mined row is closed by an unsupported-profile Unit claim with
+  checker-readable owner evidence. Faithful Steed is a Character Sheet Spell
+  Access and once-per-Long-Rest casting resource feature for Find Steed; the
+  summoned steed lifecycle, rider/control state, stat-block projection, and
+  companion action execution stay with the existing Find Steed companion-control
+  boundary.
 
 Output:
 

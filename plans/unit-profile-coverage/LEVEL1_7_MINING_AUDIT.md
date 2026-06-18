@@ -44,8 +44,8 @@ These counts describe the current runtime/catalog state of mined rows. They are 
 | catalog-authored-review-required | 77 |
 | catalog-installed-owner-evidence-present | 483 |
 | catalog-installed-owner-evidence-required | 1 |
-| catalog-only/dead-for-now | 149 |
-| level-5-7-follow-up-required | 26 |
+| catalog-only/dead-for-now | 150 |
+| level-5-7-follow-up-required | 25 |
 | missing-authored-record | 80 |
 | non-runtime | 84 |
 
@@ -60,10 +60,10 @@ These counts describe the current runtime/catalog state of mined rows. They are 
 
 | Unit profile disposition | Rows |
 | --- | ---: |
-| not-recorded | 222 |
+| not-recorded | 221 |
 | profile-subset-supported | 53 |
 | supported-profile | 297 |
-| unsupported-profile | 328 |
+| unsupported-profile | 329 |
 
 ### Battle Readiness Snapshot
 
@@ -688,7 +688,7 @@ These counts separate class-list rows from unique Spell Definition identities. A
 | Paladin Ability Score Improvement | level-4 | character-level | class feature | `paladin_ability_score_improvement_l4` | `.references/srd-5.2.1/Classes/Paladin.md:122` | present | installed | unsupported-profile | catalog-only/dead-for-now | accepted-no-battle-effect | selection-grant-container: character-creation-runtime ability-score projection and selected feat Unit profiles | The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim. |
 | Paladin level 4 feature table row | level-4 | character-level | character-creation or progression mechanic | `class_paladin` | `.references/srd-5.2.1/Classes/Paladin.md:38` | present | installed | unsupported-profile | non-runtime | accepted-no-battle-effect | not-recorded | No runtime work; keep classification as explicit closure. |
 | Paladin Extra Attack | level-5 | character-level | class feature | `paladin_extra_attack` | `.references/srd-5.2.1/Classes/Paladin.md:126` | present | installed | supported-profile | catalog-installed-owner-evidence-present | not-applicable | not-recorded | Owner-specific operational evidence is classified and present. |
-| Paladin Faithful Steed | level-5 | character-level | class feature | `paladin_faithful_steed` | `.references/srd-5.2.1/Classes/Paladin.md:130` | present | not-installed | not-recorded | level-5-7-follow-up-required | not-applicable | not-recorded | Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported. |
+| Paladin Faithful Steed | level-5 | character-level | class feature | `paladin_faithful_steed` | `.references/srd-5.2.1/Classes/Paladin.md:130` | present | not-installed | unsupported-profile | catalog-only/dead-for-now | not-applicable | character-fact-and-runtime-detached-split: future character-sheet-runtime Paladin Faithful Steed prepared Spell Access and once-per-Long-Rest casting owner plus existing Find Steed companion-control boundary | SRD Faithful Steed grants a Paladin Find Steed as always prepared and one casting without expending a Spell Slot, recovered on a Long Rest. A future Character Sheet owner should derive the prepared Spell Access and Long Rest-cleared casting marker from the Paladin level-5 feature and existing Spell Slot and rest state, while the existing find_steed Unit remains closed at the companion-control boundary for summoned steed lifecycle, rider/control state, stat-block projection and actions, disappearance, and item-drop handling. Paladin class state must not copy steed identity, companion lifecycle, or mount execution state, and generic runtime code must not dispatch on Paladin or Faithful Steed authored identity. |
 | Paladin level 5 feature table row | level-5 | character-level | character-creation or progression mechanic | `class_paladin` | `.references/srd-5.2.1/Classes/Paladin.md:39` | present | installed | unsupported-profile | non-runtime | not-applicable | not-recorded | No runtime work; keep classification as explicit closure. |
 | Paladin Aura of Protection | level-6 | character-level | class feature | `paladin_aura_of_protection` | `.references/srd-5.2.1/Classes/Paladin.md:136` | present | not-installed | not-recorded | level-5-7-follow-up-required | not-applicable | not-recorded | Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported. |
 | Paladin level 6 feature table row | level-6 | character-level | character-creation or progression mechanic | `class_paladin` | `.references/srd-5.2.1/Classes/Paladin.md:40` | present | installed | unsupported-profile | non-runtime | not-applicable | not-recorded | No runtime work; keep classification as explicit closure. |

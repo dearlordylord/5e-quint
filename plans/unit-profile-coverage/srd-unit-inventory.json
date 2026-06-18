@@ -344,8 +344,8 @@
     "levelFiveClassRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 7,
       "non-runtime": 12,
-      "catalog-only/dead-for-now": 5,
-      "level-5-7-follow-up-required": 4
+      "catalog-only/dead-for-now": 6,
+      "level-5-7-follow-up-required": 3
     },
     "levelSixClassRowsByDisposition": {
       "level-5-7-follow-up-required": 11,
@@ -372,8 +372,8 @@
     "allRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 483,
       "non-runtime": 84,
-      "catalog-only/dead-for-now": 149,
-      "level-5-7-follow-up-required": 26,
+      "catalog-only/dead-for-now": 150,
+      "level-5-7-follow-up-required": 25,
       "missing-authored-record": 80,
       "catalog-authored-review-required": 77,
       "catalog-installed-owner-evidence-required": 1
@@ -20988,9 +20988,16 @@
         "state": "not-installed",
         "unitId": "paladin_faithful_steed"
       },
-      "finalDisposition": "level-5-7-follow-up-required",
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-only/dead-for-now",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "character-fact-and-runtime-detached-split",
+        "owner": "future character-sheet-runtime Paladin Faithful Steed prepared Spell Access and once-per-Long-Rest casting owner plus existing Find Steed companion-control boundary",
+        "reason": "SRD Faithful Steed grants a Paladin Find Steed as always prepared and one casting without expending a Spell Slot, recovered on a Long Rest. A future Character Sheet owner should derive the prepared Spell Access and Long Rest-cleared casting marker from the Paladin level-5 feature and existing Spell Slot and rest state, while the existing find_steed Unit remains closed at the companion-control boundary for summoned steed lifecycle, rider/control state, stat-block projection and actions, disappearance, and item-drop handling. Paladin class state must not copy steed identity, companion lifecycle, or mount execution state, and generic runtime code must not dispatch on Paladin or Faithful Steed authored identity."
+      },
       "ownerEvidence": [],
-      "nextAction": "Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported."
+      "nextAction": "SRD Faithful Steed grants a Paladin Find Steed as always prepared and one casting without expending a Spell Slot, recovered on a Long Rest. A future Character Sheet owner should derive the prepared Spell Access and Long Rest-cleared casting marker from the Paladin level-5 feature and existing Spell Slot and rest state, while the existing find_steed Unit remains closed at the companion-control boundary for summoned steed lifecycle, rider/control state, stat-block projection and actions, disappearance, and item-drop handling. Paladin class state must not copy steed identity, companion lifecycle, or mount execution state, and generic runtime code must not dispatch on Paladin or Faithful Steed authored identity."
     },
     {
       "id": "srd521:classes/paladin:level-5:class-table-summary:paladin_level_5_feature_table_row",
