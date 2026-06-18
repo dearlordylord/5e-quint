@@ -44,8 +44,8 @@ These counts describe the current runtime/catalog state of mined rows. They are 
 | catalog-authored-review-required | 77 |
 | catalog-installed-owner-evidence-present | 482 |
 | catalog-installed-owner-evidence-required | 1 |
-| catalog-only/dead-for-now | 146 |
-| level-5-7-follow-up-required | 30 |
+| catalog-only/dead-for-now | 147 |
+| level-5-7-follow-up-required | 29 |
 | missing-authored-record | 80 |
 | non-runtime | 84 |
 
@@ -60,10 +60,10 @@ These counts describe the current runtime/catalog state of mined rows. They are 
 
 | Unit profile disposition | Rows |
 | --- | ---: |
-| not-recorded | 226 |
+| not-recorded | 225 |
 | profile-subset-supported | 53 |
 | supported-profile | 296 |
-| unsupported-profile | 325 |
+| unsupported-profile | 326 |
 
 ### Battle Readiness Snapshot
 
@@ -516,7 +516,7 @@ These counts separate class-list rows from unique Spell Definition identities. A
 | Druid Circle of the Land Spells | level-3 | character-level | spell access/list pressure | `druid_circle_of_the_land_spells` | `.references/srd-5.2.1/Classes/Druid.md:366` | present | installed | supported-profile | catalog-installed-owner-evidence-present | accepted | character-fact-and-runtime-detached-split: character-sheet-runtime selected-land Spell Access owner plus spell invocation profiles | Owner-specific operational evidence is classified and present. |
 | Druid Ability Score Improvement | level-4 | character-level | class feature | `druid_ability_score_improvement_l4` | `.references/srd-5.2.1/Classes/Druid.md:134` | present | installed | unsupported-profile | catalog-only/dead-for-now | accepted-no-battle-effect | selection-grant-container: character-creation-runtime ability-score projection and selected feat Unit profiles | The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim. |
 | Druid level 4 feature table row | level-4 | character-level | character-creation or progression mechanic | `class_druid` | `.references/srd-5.2.1/Classes/Druid.md:35` | present | installed | unsupported-profile | non-runtime | accepted-no-battle-effect | not-recorded | No runtime work; keep classification as explicit closure. |
-| Druid Wild Resurgence | level-5 | character-level | class feature | `druid_wild_resurgence` | `.references/srd-5.2.1/Classes/Druid.md:138` | present | not-installed | not-recorded | level-5-7-follow-up-required | not-applicable | not-recorded | Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported. |
+| Druid Wild Resurgence | level-5 | character-level | class feature | `druid_wild_resurgence` | `.references/srd-5.2.1/Classes/Druid.md:138` | present | not-installed | unsupported-profile | catalog-only/dead-for-now | not-applicable | character-fact-and-runtime-detached-split: future character-sheet-runtime Wild Resurgence resource-restoration owner plus existing Druid Wild Shape and Spell Slot state owners | SRD Wild Resurgence lets a Druid once on each turn expend a Spell Slot with no action to regain one Wild Shape use only when no Wild Shape uses remain, and separately lets the Druid expend one Wild Shape use with no action to gain one level 1 Spell Slot once per Long Rest. The future Character Sheet owner must consume the existing druid_wild_shape use-count resource, existing Spell Slot state, and a Long Rest-cleared Wild Resurgence use marker instead of adding a battle action, duplicate Wild Shape pool, duplicate Spell Slot pool, or authored-identity dispatch. |
 | Druid level 5 feature table row | level-5 | character-level | character-creation or progression mechanic | `class_druid` | `.references/srd-5.2.1/Classes/Druid.md:36` | present | installed | unsupported-profile | non-runtime | not-applicable | not-recorded | No runtime work; keep classification as explicit closure. |
 | Druid Natural Recovery | level-6 | character-level | class feature | `druid_natural_recovery` | `.references/srd-5.2.1/Classes/Druid.md:412` | present | not-installed | not-recorded | level-5-7-follow-up-required | not-applicable | not-recorded | Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported. |
 | Druid level 6 feature table row | level-6 | character-level | character-creation or progression mechanic | `class_druid` | `.references/srd-5.2.1/Classes/Druid.md:37` | present | installed | unsupported-profile | non-runtime | not-applicable | not-recorded | No runtime work; keep classification as explicit closure. |

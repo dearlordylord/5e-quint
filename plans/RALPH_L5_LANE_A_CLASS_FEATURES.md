@@ -25,7 +25,7 @@
     {
       "number": 4,
       "id": "L5-A04-DRUID-WILD-RESURGENCE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Close Druid Wild Resurgence level 5 follow-up"
     },
     {
@@ -130,7 +130,7 @@ out of scope unless a task's RAW pass finds a direct dependency.
 | 1 | L5-A01-BARBARIAN-EXTRA-ATTACK - Close Barbarian Extra Attack level 5 follow-up | done | none | Authored and installed using the shared Extra Attack owner/evidence path. |
 | 2 | L5-A02-BARD-FONT-OF-INSPIRATION - Close Bard Font of Inspiration level 5 follow-up | done | none | Closed by unsupported-profile owner evidence for existing Bardic Inspiration resource recovery. |
 | 3 | L5-A03-CLERIC-SEAR-UNDEAD - Close Cleric Sear Undead level 5 follow-up | done | none | Closed by unsupported-profile owner evidence for the future Turn Undead Channel Divinity option execution owner. |
-| 4 | L5-A04-DRUID-WILD-RESURGENCE - Close Druid Wild Resurgence level 5 follow-up | ready-for-research | none | Independent level-5 class feature row. |
+| 4 | L5-A04-DRUID-WILD-RESURGENCE - Close Druid Wild Resurgence level 5 follow-up | done | none | Closed by unsupported-profile owner evidence for the future Character Sheet Wild Resurgence resource-restoration owner using existing Wild Shape and Spell Slot state owners. |
 | 5 | L5-A05-FIGHTER-TACTICAL-SHIFT - Close Fighter Tactical Shift level 5 follow-up | ready-for-research | none | Independent level-5 class feature row. |
 | 6 | L5-A06-MONK-EXTRA-ATTACK - Close Monk Extra Attack level 5 follow-up | ready-for-research | L5-A01-BARBARIAN-EXTRA-ATTACK | Reuse the established Extra Attack owner/evidence path. |
 | 7 | L5-A07-MONK-STUNNING-STRIKE - Close Monk Stunning Strike level 5 follow-up | ready-for-research | none | Independent level-5 class feature row. |
@@ -287,7 +287,7 @@ Verification:
 
 ### Task 4 - L5-A04-DRUID-WILD-RESURGENCE
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -303,7 +303,10 @@ SRD anchor:
 
 Current state:
 
-- The mined row is not installed and has no unit profile/evidence row.
+- The mined row is closed by an unsupported-profile Unit claim with
+  checker-readable owner evidence. Wild Resurgence is a resource-restoration
+  modifier between existing Wild Shape uses and Spell Slot state, not a
+  separate battle Unit profile or duplicate resource pool.
 
 Output:
 
