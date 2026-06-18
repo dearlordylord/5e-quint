@@ -55,6 +55,34 @@ const classContainerOwnedCreationRowKinds = new Set([
 const characterCreationProfileIdPrefix = "character-creation.";
 const characterSheetProfileIdPrefix = "character-sheet.";
 const unitFeatureProfileIdPrefix = "unit-feature.";
+const unitEvidenceProfileOwners = [
+  {
+    profileIdPrefix: characterCreationProfileIdPrefix,
+    owner: "character-creation-runtime",
+  },
+  {
+    profileIdPrefix: characterSheetProfileIdPrefix,
+    owner: "character-sheet-runtime",
+  },
+  {
+    profileIdPrefix: unitFeatureProfileIdPrefix,
+    owner: "battle-runtime",
+  },
+];
+const unitEvidenceOwnerPathFragments = [
+  {
+    pathFragment: "packages/character-creation-runtime/",
+    owner: "character-creation-runtime",
+  },
+  {
+    pathFragment: "packages/character-sheet-runtime/",
+    owner: "character-sheet-runtime",
+  },
+  {
+    pathFragment: "packages/battle-runtime/",
+    owner: "battle-runtime",
+  },
+];
 const characterCreationOwnerEvidenceSchema =
   "dnd.srd-character-creation-owner-evidence.v1";
 const characterSheetOwnerEvidenceSchema =
@@ -74,8 +102,27 @@ const catalogAuthoredReviewRequiredDisposition =
   "catalog-authored-review-required";
 const levelThreeFollowUpRequiredDisposition = "level-3-follow-up-required";
 const levelFourFollowUpRequiredDisposition = "level-4-follow-up-required";
+const levelFiveSevenFollowUpRequiredDisposition =
+  "level-5-7-follow-up-required";
 const subclassSelectionLevel = 3;
-const inventoriedClassFeatureLevels = [1, 2, 3, 4];
+const maxLevelOneSevenMiningCharacterLevel = 7;
+const maxInventoriedClassFeatureLevel = maxLevelOneSevenMiningCharacterLevel;
+const inventoriedClassFeatureLevels = Array.from(
+  { length: maxInventoriedClassFeatureLevel },
+  (_, index) => index + 1,
+);
+const levelFiveSevenClassLevelBands = new Set([
+  "level-5",
+  "level-6",
+  "level-7",
+]);
+const subclassSpellAccessFeatureNames = new Set([
+  "Circle of the Land Spells",
+  "Draconic Spells",
+  "Fiend Spells",
+  "Life Domain Spells",
+  "Oath of Devotion Spells",
+]);
 
 const battleRuntimeExecutableEvidenceRequirementsByUnitId = new Map([
   [
@@ -260,9 +307,14 @@ const spellLevelBand = (spellLevel) => `spell-level-${spellLevel}`;
 const levelOneSpellPressureLevels = [0, 1];
 const spellPressureLevels = [0, 1, 2];
 const levelThreeSpellPressureLevels = [3];
+const levelFourSpellPressureLevels = [4];
+const laterFrontierSpellPressureLevels = [
+  ...levelThreeSpellPressureLevels,
+  ...levelFourSpellPressureLevels,
+];
 const inventoriedSpellPressureLevels = [
   ...spellPressureLevels,
-  ...levelThreeSpellPressureLevels,
+  ...laterFrontierSpellPressureLevels,
 ];
 const levelOneSpellPressureLevelBands = new Set(
   levelOneSpellPressureLevels.map(spellLevelBand),
@@ -271,17 +323,23 @@ const spellPressureLevelBands = new Set(spellPressureLevels.map(spellLevelBand))
 const levelThreeSpellPressureLevelBands = new Set(
   levelThreeSpellPressureLevels.map(spellLevelBand),
 );
+const levelFourSpellPressureLevelBands = new Set(
+  levelFourSpellPressureLevels.map(spellLevelBand),
+);
+const laterFrontierSpellPressureLevelBands = new Set(
+  laterFrontierSpellPressureLevels.map(spellLevelBand),
+);
 const inventoriedSpellPressureLevelBands = new Set([
   ...spellPressureLevelBands,
-  ...levelThreeSpellPressureLevelBands,
+  ...laterFrontierSpellPressureLevelBands,
 ]);
 const rowBattleReadinessLevelBands = new Set([
   ...levelOneFourBattleReadinessLevelBands,
-  ...levelThreeSpellPressureLevelBands,
+  ...laterFrontierSpellPressureLevelBands,
 ]);
 const authoredNotInstalledSpellReviewRequiredLevelBands = new Set([
   ...levelOneSpellPressureLevelBands,
-  ...levelThreeSpellPressureLevelBands,
+  ...laterFrontierSpellPressureLevelBands,
 ]);
 
 const battleRuntimeRelevantFeatureUnitIds = new Set([
@@ -594,6 +652,23 @@ function levelFeatureHeadings(lines, level) {
     }));
 }
 
+function featureTableNames(featureTable) {
+  const classFeaturesColumn = featureTable.header.indexOf("Class Features");
+  if (classFeaturesColumn === -1) return [];
+  const featureCell = featureTable.row.cells[classFeaturesColumn] ?? "";
+  if (featureCell === "—") return [];
+  return featureCell
+    .split(",")
+    .map((name) => featureIdentity(name))
+    .filter(
+      (name) => name.length > 0 && name.toLowerCase() !== "subclass feature",
+    );
+}
+
+function featureIdentity(name) {
+  return name.replace(/\s*\([^)]*\)/g, "").trim();
+}
+
 function spellListEntries(lines, className, spellLevel) {
   const title =
     spellLevel === 0
@@ -609,6 +684,59 @@ function spellListEntries(lines, className, spellLevel) {
       special: entry.cells[2],
     }))
     .filter((entry) => entry.name.length > 0);
+}
+
+function numericTableCell(cell) {
+  const value = Number(cell);
+  return Number.isInteger(value) ? value : undefined;
+}
+
+function spellSlotCellHasSlots(cell) {
+  const value = numericTableCell(cell);
+  return value !== undefined && value > 0;
+}
+
+function classSpellLevelIsReachableByCharacterLevel(
+  lines,
+  className,
+  spellLevel,
+  maxCharacterLevel,
+) {
+  if (spellLevel === 0) return true;
+  const rows = tableRows(
+    lines,
+    new RegExp(`^### ${className} Features$|^## ${className} Features$`),
+  );
+  const header = rows[0]?.cells ?? [];
+  const bodyRows = rows.slice(1).filter((entry) => {
+    const level = numericTableCell(entry.cells[0]);
+    return level !== undefined && level <= maxCharacterLevel;
+  });
+  const pactSlotLevelColumn = header.indexOf("Slot Level");
+  if (pactSlotLevelColumn !== -1) {
+    return bodyRows.some((entry) => {
+      const slotLevel = numericTableCell(entry.cells[pactSlotLevelColumn]);
+      return slotLevel !== undefined && slotLevel >= spellLevel;
+    });
+  }
+  const spellSlotColumn = header.indexOf(String(spellLevel));
+  if (spellSlotColumn === -1) return false;
+  return bodyRows.some((entry) =>
+    spellSlotCellHasSlots(entry.cells[spellSlotColumn]),
+  );
+}
+
+function inventoriedSpellListEntries(lines, className, spellLevel) {
+  const entries = spellListEntries(lines, className, spellLevel);
+  if (!laterFrontierSpellPressureLevels.includes(spellLevel)) return entries;
+  return classSpellLevelIsReachableByCharacterLevel(
+    lines,
+    className,
+    spellLevel,
+    maxLevelOneSevenMiningCharacterLevel,
+  )
+    ? entries
+    : [];
 }
 
 function findAuthored(root) {
@@ -758,7 +886,7 @@ function sourceReference(sourcePath, startLine, endLine = startLine) {
 
 function classifyFeature(name) {
   if (name === "Spellcasting") return "spell-access";
-  if (name.endsWith(" Spells")) return "subclass-spell-access";
+  if (subclassSpellAccessFeatureNames.has(name)) return "subclass-spell-access";
   if (name === "Weapon Mastery") return "mastery-pressure";
   return "class-feature";
 }
@@ -915,6 +1043,13 @@ function finalDisposition(row, authored, installedIds, ownerEvidenceSources) {
   if (levelFourClassification?.kind === "catalog-only-closure") {
     return "catalog-only/dead-for-now";
   }
+  const levelFiveSevenClassification = levelFiveSevenClassOwnerClassification(
+    row,
+    ownerEvidenceSources,
+  );
+  if (levelFiveSevenClassification?.kind === "catalog-only-closure") {
+    return "catalog-only/dead-for-now";
+  }
   const spellUnitClassification = spellUnitMissingClassifications.get(
     row.candidateUnitId,
   );
@@ -929,6 +1064,9 @@ function finalDisposition(row, authored, installedIds, ownerEvidenceSources) {
     if (levelFourClassification?.kind === "evidence-required") {
       return levelFourFollowUpRequiredDisposition;
     }
+    if (levelFiveSevenClassification?.kind === "evidence-required") {
+      return levelFiveSevenFollowUpRequiredDisposition;
+    }
     return "missing-authored-record";
   }
   if (
@@ -939,6 +1077,9 @@ function finalDisposition(row, authored, installedIds, ownerEvidenceSources) {
     }
     if (levelFourClassification?.kind === "evidence-required") {
       return levelFourFollowUpRequiredDisposition;
+    }
+    if (levelFiveSevenClassification?.kind === "evidence-required") {
+      return levelFiveSevenFollowUpRequiredDisposition;
     }
     const claim = row.candidateUnitId
       ? ownerEvidenceSources.unitClaims.get(row.candidateUnitId)?.claim
@@ -958,7 +1099,7 @@ function finalDisposition(row, authored, installedIds, ownerEvidenceSources) {
     }
     if (
       row.rowKind === "spell-unit-pressure" &&
-      levelThreeSpellPressureLevelBands.has(row.levelBand)
+      laterFrontierSpellPressureLevelBands.has(row.levelBand)
     ) {
       return catalogAuthoredReviewRequiredDisposition;
     }
@@ -1022,8 +1163,11 @@ function nextAction(
   if (disposition === levelFourFollowUpRequiredDisposition) {
     return installedClassification.requirement;
   }
+  if (disposition === levelFiveSevenFollowUpRequiredDisposition) {
+    return installedClassification.requirement;
+  }
   if (disposition === catalogAuthoredReviewRequiredDisposition) {
-    return "Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this level-3 spell row as accepted.";
+    return "Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this later-frontier spell row as accepted.";
   }
   if (
     disposition === "catalog-only/dead-for-now" &&
@@ -1074,6 +1218,10 @@ function installedOwnerClassification(row, ownerEvidenceSources, installedIds) {
     installedIds,
   );
   if (spellUnitClassification !== undefined) return spellUnitClassification;
+  const levelFiveSevenClassClassification =
+    levelFiveSevenClassOwnerClassification(row, ownerEvidenceSources);
+  if (levelFiveSevenClassClassification !== undefined)
+    return levelFiveSevenClassClassification;
   const levelFourClassClassification = levelFourClassOwnerClassification(
     row,
     ownerEvidenceSources,
@@ -1091,6 +1239,123 @@ function installedOwnerClassification(row, ownerEvidenceSources, installedIds) {
   if (levelTwoClassFeatureClassification !== undefined)
     return levelTwoClassFeatureClassification;
   return installedLevelOneOwnerClassification(row, ownerEvidenceSources);
+}
+
+function levelFiveSevenClassOwnerClassification(row, ownerEvidenceSources) {
+  if (
+    !levelFiveSevenClassLevelBands.has(row.levelBand) ||
+    row.rowKind === "class-table-summary" ||
+    row.rowKind === "spell-unit-pressure"
+  ) {
+    return undefined;
+  }
+  const characterCreationEvidence = ownerEvidenceSources.characterCreation.get(
+    row.id,
+  );
+  if (characterCreationEvidence) {
+    return {
+      kind: "evidence-present",
+      owner: "character-creation-runtime",
+      evidence: characterCreationEvidence,
+    };
+  }
+  const characterSheetEvidence = ownerEvidenceSources.characterSheet.get(
+    row.id,
+  );
+  if (characterSheetEvidence) {
+    return {
+      kind: "evidence-present",
+      owner: "character-sheet-runtime",
+      evidence: characterSheetEvidence,
+    };
+  }
+  const claim = row.candidateUnitId
+    ? ownerEvidenceSources.unitClaims.get(row.candidateUnitId)?.claim
+    : undefined;
+  const unitLevelOperationalEvidence = row.candidateUnitId
+    ? ownerEvidenceSources.battleRuntime.get(row.candidateUnitId)
+    : undefined;
+  if (unitLevelOperationalEvidence) {
+    return {
+      kind: "evidence-present",
+      owner: unitLevelOperationalEvidenceOwner(
+        claim,
+        unitLevelOperationalEvidence,
+      ),
+      evidence: unitLevelOperationalEvidence,
+    };
+  }
+  if (claim?.tag === "needs-surface-widening") {
+    return {
+      kind: "needs-surface-widening",
+      owner: "Surface level 5-7 class/subclass feature plus promoted runtime owner",
+      missingConstruct: claim.issue,
+    };
+  }
+  const followUpTasks = claimFollowUpTasks(claim);
+  if (claim?.tag === "unsupported-profile" && followUpTasks.length > 0) {
+    return {
+      kind: "evidence-required",
+      owner: followUpTaskOwners(followUpTasks),
+      requirement: followUpTaskRequirement(followUpTasks),
+    };
+  }
+  if (
+    claim?.tag === "unsupported-profile" &&
+    isBattleReadinessClosure(claim.battleReadinessClosure)
+  ) {
+    return {
+      kind: "catalog-only-closure",
+      owner: claim.battleReadinessClosure.owner,
+      reason: claim.battleReadinessClosure.reason ?? claim.reason,
+    };
+  }
+  return {
+    kind: "evidence-required",
+    owner: "future level 5-7 class/subclass feature owner",
+    requirement:
+      "Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported.",
+  };
+}
+
+function unitLevelOperationalEvidenceOwner(claim, evidence) {
+  const profileOwners = unitEvidenceOwnersFromClaimProfiles(claim);
+  if (profileOwners.length > 0) {
+    return profileOwners.join("; ");
+  }
+  const pathOwners = unitEvidenceOwnersFromPaths(evidence);
+  if (pathOwners.length > 0) {
+    return pathOwners.join("; ");
+  }
+  return "unit-level operational evidence";
+}
+
+function unitEvidenceOwnersFromClaimProfiles(claim) {
+  if (!Array.isArray(claim?.profileIds) || claim.profileIds.length === 0) {
+    return [];
+  }
+  if (
+    !claim.profileIds.every((profileId) =>
+      unitEvidenceProfileOwners.some(({ profileIdPrefix }) =>
+        profileId.startsWith(profileIdPrefix),
+      ),
+    )
+  ) {
+    return [];
+  }
+  return unitEvidenceProfileOwners
+    .filter(({ profileIdPrefix }) =>
+      claim.profileIds.some((profileId) =>
+        profileId.startsWith(profileIdPrefix),
+      ),
+    )
+    .map(({ owner }) => owner);
+}
+
+function unitEvidenceOwnersFromPaths(evidence) {
+  return unitEvidenceOwnerPathFragments
+    .filter(({ pathFragment }) => evidence.includes(pathFragment))
+    .map(({ owner }) => owner);
 }
 
 function levelFourClassOwnerClassification(row, ownerEvidenceSources) {
@@ -1672,6 +1937,13 @@ function classRows(root, className) {
   const rows = [];
   const coreLine = headingLine(lines, /^## Core .* Traits$/);
   const becomingLine = headingLine(lines, /^## Becoming a /);
+  const featureHeadingsByLevel = new Map(
+    inventoriedClassFeatureLevels.map((level) => [
+      level,
+      levelFeatureHeadings(lines, level),
+    ]),
+  );
+  const previouslyMinedFeatureNames = new Set();
 
   rows.push(
     makeRow({
@@ -1728,6 +2000,10 @@ function classRows(root, className) {
 
   for (const level of inventoriedClassFeatureLevels) {
     const featureTable = classFeatureTableRow(lines, className, level);
+    const featureHeadings = featureHeadingsByLevel.get(level) ?? [];
+    const featureNamesWithSameLevelHeading = new Set(
+      featureHeadings.map((feature) => featureIdentity(feature.name)),
+    );
     if (featureTable) {
       rows.push(
         makeRow({
@@ -1741,9 +2017,37 @@ function classRows(root, className) {
           candidateUnitId: `class_${classSlug}`,
         }),
       );
+      for (const featureName of featureTableNames(featureTable)) {
+        if (
+          featureNamesWithSameLevelHeading.has(featureName) ||
+          !previouslyMinedFeatureNames.has(featureName)
+        ) {
+          continue;
+        }
+        const featureKind = classifyFeature(featureName);
+        rows.push(
+          makeRow({
+            sourcePath,
+            className,
+            levelBand: `level-${level}`,
+            rowKind:
+              featureKind === "class-feature"
+                ? "class-feature-grant"
+                : featureKind,
+            concept: `${className} ${featureName}`,
+            detail: `Level ${level} table-derived repeated class feature; the feature's dedicated rule text appears at an earlier level.`,
+            lineStart: featureTable.row.line,
+            candidateUnitId: candidateUnitIdForFeature(
+              classSlug,
+              featureName,
+              level,
+            ),
+          }),
+        );
+      }
     }
 
-    for (const feature of levelFeatureHeadings(lines, level)) {
+    for (const feature of featureHeadings) {
       const featureKind = classifyFeature(feature.name);
       const candidateUnitId =
         feature.name === `${className} Subclass`
@@ -1779,10 +2083,13 @@ function classRows(root, className) {
         }),
       );
     }
+    for (const feature of featureHeadings) {
+      previouslyMinedFeatureNames.add(featureIdentity(feature.name));
+    }
   }
 
   for (const spell of inventoriedSpellPressureLevels.flatMap((spellLevel) =>
-    spellListEntries(lines, className, spellLevel),
+    inventoriedSpellListEntries(lines, className, spellLevel),
   )) {
     rows.push(
       makeRow({
@@ -4207,21 +4514,33 @@ function buildSrdUnitInventory({
   const levelTwoRows = rows.filter((row) => row.levelBand === "level-2");
   const levelThreeClassRows = rows.filter((row) => row.levelBand === "level-3");
   const levelFourClassRows = rows.filter((row) => row.levelBand === "level-4");
+  const levelFiveClassRows = rows.filter((row) => row.levelBand === "level-5");
+  const levelSixClassRows = rows.filter((row) => row.levelBand === "level-6");
+  const levelSevenClassRows = rows.filter(
+    (row) => row.levelBand === "level-7",
+  );
   const spellPressureRows = rows.filter((row) =>
     spellPressureLevelBands.has(row.levelBand),
   );
   const levelThreeSpellPressureRows = rows.filter((row) =>
     levelThreeSpellPressureLevelBands.has(row.levelBand),
   );
+  const levelFourSpellPressureRows = rows.filter((row) =>
+    levelFourSpellPressureLevelBands.has(row.levelBand),
+  );
   const levelThreeInstalledSpellPressureRows =
     levelThreeSpellPressureRows.filter(
+      (row) => row.catalogAdmission.state === "installed",
+    );
+  const levelFourInstalledSpellPressureRows =
+    levelFourSpellPressureRows.filter(
       (row) => row.catalogAdmission.state === "installed",
     );
   return {
     generatedBy: "scripts/unit-profile-coverage-check.cjs",
     sourceCorpus: ".references/srd-5.2.1/Classes",
     scope:
-      "SRD 5.2.1 class-derived Unit/catalog backlog rows, prioritized by character level. Character levels 1-2 include cantrips and spell-level-1 pressure; character level 3 adds class/subclass level-3 rows and spell-level-2 pressure; character level 4 adds level-4 class-feature pressure while continuing to exclude spell-level-3 pressure. Spell-level-3 pressure is reported separately as a later character-level-5 frontier seed.",
+      "SRD 5.2.1 class-derived Unit/catalog backlog rows, prioritized by character level. Character levels 1-2 include cantrips and spell-level-1 pressure; character level 3 adds class/subclass level-3 rows and spell-level-2 pressure; character level 4 adds level-4 class-feature pressure while continuing to exclude spell-level-3 pressure. Character levels 5-7 are mined as a non-blocking audit frontier for class-table, class-feature, subclass-feature, repeated progression rows, and later-frontier spell-list pressure. Spell-level-3 pressure starts at character level 5 for full casters and Warlock Pact Magic; spell-level-4 pressure starts at character level 7 for the same table-derived owners. Paladin and Ranger spell-level-3 and spell-level-4 lists are excluded from this level-7 frontier because their SRD class tables do not grant matching slots by character level 7.",
     evidenceArtifacts: {
       characterCreationOwnerEvidence: summarizeCharacterCreationOwnerEvidence(
         root,
@@ -4242,10 +4561,16 @@ function buildSrdUnitInventory({
       levelTwoRows: levelTwoRows.length,
       levelThreeClassRows: levelThreeClassRows.length,
       levelFourClassRows: levelFourClassRows.length,
+      levelFiveClassRows: levelFiveClassRows.length,
+      levelSixClassRows: levelSixClassRows.length,
+      levelSevenClassRows: levelSevenClassRows.length,
       spellPressureRows: spellPressureRows.length,
       levelThreeSpellPressureRows: levelThreeSpellPressureRows.length,
       levelThreeInstalledSpellPressureRows:
         levelThreeInstalledSpellPressureRows.length,
+      levelFourSpellPressureRows: levelFourSpellPressureRows.length,
+      levelFourInstalledSpellPressureRows:
+        levelFourInstalledSpellPressureRows.length,
       levelOneBattleReadiness: countBattleReadiness(
         rows,
         levelOneBattleReadinessLevelBands,
@@ -4274,6 +4599,10 @@ function buildSrdUnitInventory({
         rows,
         levelThreeSpellPressureLevelBands,
       ),
+      levelFourSpellBattleReadiness: countBattleReadiness(
+        rows,
+        levelFourSpellPressureLevelBands,
+      ),
       levelOneClassContainers: levelOneRows.filter(
         (row) => row.rowKind === "class-container",
       ).length,
@@ -4289,6 +4618,21 @@ function buildSrdUnitInventory({
         "finalDisposition",
       ),
       levelFourClassRowsByCategory: countBy(levelFourClassRows, "category"),
+      levelFiveClassRowsByDisposition: countBy(
+        levelFiveClassRows,
+        "finalDisposition",
+      ),
+      levelSixClassRowsByDisposition: countBy(
+        levelSixClassRows,
+        "finalDisposition",
+      ),
+      levelSevenClassRowsByDisposition: countBy(
+        levelSevenClassRows,
+        "finalDisposition",
+      ),
+      levelFiveClassRowsByCategory: countBy(levelFiveClassRows, "category"),
+      levelSixClassRowsByCategory: countBy(levelSixClassRows, "category"),
+      levelSevenClassRowsByCategory: countBy(levelSevenClassRows, "category"),
       allRowsByDisposition: countBy(rows, "finalDisposition"),
       spellPressureRowsByDisposition: countBy(
         spellPressureRows,
@@ -4300,6 +4644,14 @@ function buildSrdUnitInventory({
       ),
       levelThreeInstalledSpellPressureRowsByDisposition: countBy(
         levelThreeInstalledSpellPressureRows,
+        "finalDisposition",
+      ),
+      levelFourSpellPressureRowsByDisposition: countBy(
+        levelFourSpellPressureRows,
+        "finalDisposition",
+      ),
+      levelFourInstalledSpellPressureRowsByDisposition: countBy(
+        levelFourInstalledSpellPressureRows,
         "finalDisposition",
       ),
       levelOneRowsByCategory: countBy(levelOneRows, "category"),
@@ -4370,18 +4722,36 @@ function validateSrdUnitInventory(report) {
         `${row.id} is an installed level-1 row with generic owner evidence.`,
       );
     }
+    if (levelFiveSevenClassLevelBands.has(row.levelBand)) {
+      for (const evidence of row.ownerEvidence ?? []) {
+        if (evidence.status !== "owner evidence present") continue;
+        for (const {
+          pathFragment,
+          owner: expectedOwner,
+        } of unitEvidenceOwnerPathFragments) {
+          if (
+            evidence.evidence.includes(pathFragment) &&
+            !ownerFieldIncludes(evidence.owner, expectedOwner)
+          ) {
+            issues.push(
+              `${row.id} has ${pathFragment} owner evidence but labels the owner as ${evidence.owner}.`,
+            );
+          }
+        }
+      }
+    }
     if (
       row.rowKind === "spell-unit-pressure" &&
       isAuthoredNotInstalledSpellReviewRow(row)
     ) {
       const reviewed = hasAuthoredNotInstalledSpellReview(row);
       if (!reviewed) {
-        if (levelThreeSpellPressureLevelBands.has(row.levelBand)) {
+        if (laterFrontierSpellPressureLevelBands.has(row.levelBand)) {
           if (
             row.finalDisposition !== catalogAuthoredReviewRequiredDisposition
           ) {
             issues.push(
-              `${row.id} is an unreviewed level-3 authored not-installed Spell Unit row but is not classified ${catalogAuthoredReviewRequiredDisposition}.`,
+              `${row.id} is an unreviewed later-frontier authored not-installed Spell Unit row but is not classified ${catalogAuthoredReviewRequiredDisposition}.`,
             );
           }
         } else {
@@ -4412,13 +4782,13 @@ function validateSrdUnitInventory(report) {
       row.finalDisposition === catalogAuthoredReviewRequiredDisposition &&
       !(
         row.rowKind === "spell-unit-pressure" &&
-        levelThreeSpellPressureLevelBands.has(row.levelBand) &&
+        laterFrontierSpellPressureLevelBands.has(row.levelBand) &&
         isAuthoredNotInstalledSpellReviewRow(row) &&
         !hasAuthoredNotInstalledSpellReview(row)
       )
     ) {
       issues.push(
-        `${row.id} uses ${catalogAuthoredReviewRequiredDisposition} outside an unreviewed level-3 authored not-installed Spell Unit row.`,
+        `${row.id} uses ${catalogAuthoredReviewRequiredDisposition} outside an unreviewed later-frontier authored not-installed Spell Unit row.`,
       );
     }
   }
@@ -4556,6 +4926,59 @@ function validateSrdUnitInventory(report) {
     ) {
       issues.push(
         `${row.id} is a level-4 follow-up row without a precise promoted split.`,
+      );
+    }
+  }
+  const levelFiveSevenExpectedCounts = new Map([
+    ["level-5", 28],
+    ["level-6", 25],
+    ["level-7", 24],
+  ]);
+  for (const [levelBand, expectedCount] of levelFiveSevenExpectedCounts) {
+    const levelRows = report.rows.filter((row) => row.levelBand === levelBand);
+    if (levelRows.length !== expectedCount) {
+      issues.push(
+        `${levelBand} class/subclass mining inventory must contain ${expectedCount} rows; got ${levelRows.length}.`,
+      );
+    }
+  }
+  const levelFiveSevenFeatureCandidateIds = new Map(
+    report.rows
+      .filter(
+        (row) =>
+          levelFiveSevenClassLevelBands.has(row.levelBand) &&
+          row.rowKind === "class-feature-grant",
+      )
+      .map((row) => [`${row.levelBand}:${row.candidateUnitId}`, row]),
+  );
+  for (const [levelBand, candidateUnitId] of [
+    ["level-6", "fighter_ability_score_improvement_l6"],
+    ["level-6", "rogue_expertise"],
+  ]) {
+    const repeatedFeatureKey = `${levelBand}:${candidateUnitId}`;
+    if (!levelFiveSevenFeatureCandidateIds.has(repeatedFeatureKey)) {
+      issues.push(
+        `${levelBand} table-derived repeated class-feature inventory lacks candidate Unit ${candidateUnitId}.`,
+      );
+    }
+  }
+  for (const row of report.rows.filter((candidate) =>
+    levelFiveSevenClassLevelBands.has(candidate.levelBand),
+  )) {
+    if (
+      row.finalDisposition === "missing-authored-record" ||
+      row.finalDisposition === "catalog-installed-needs-owner-evidence"
+    ) {
+      issues.push(
+        `${row.id} is a level 5-7 class/subclass row with generic disposition ${row.finalDisposition}.`,
+      );
+    }
+    if (
+      row.finalDisposition === levelFiveSevenFollowUpRequiredDisposition &&
+      !row.nextAction.startsWith("Promote ")
+    ) {
+      issues.push(
+        `${row.id} is a level 5-7 follow-up row without a precise promoted split.`,
       );
     }
   }
@@ -4725,6 +5148,13 @@ function validateSrdUnitInventory(report) {
   return issues;
 }
 
+function ownerFieldIncludes(ownerField, expectedOwner) {
+  return ownerField
+    .split(";")
+    .map((owner) => owner.trim())
+    .includes(expectedOwner);
+}
+
 function renderSrdUnitInventory(report) {
   const levelOne = report.rows.filter((row) => row.levelBand === "level-1");
   const levelTwo = report.rows.filter((row) => row.levelBand === "level-2");
@@ -4734,8 +5164,20 @@ function renderSrdUnitInventory(report) {
   const levelFourClass = report.rows.filter(
     (row) => row.levelBand === "level-4",
   );
+  const levelFiveClass = report.rows.filter(
+    (row) => row.levelBand === "level-5",
+  );
+  const levelSixClass = report.rows.filter(
+    (row) => row.levelBand === "level-6",
+  );
+  const levelSevenClass = report.rows.filter(
+    (row) => row.levelBand === "level-7",
+  );
   const levelThreeSpellPressure = report.rows.filter(
     (row) => row.levelBand === "spell-level-3",
+  );
+  const levelFourSpellPressure = report.rows.filter(
+    (row) => row.levelBand === "spell-level-4",
   );
   const missingClassContainers = levelOne
     .filter(
@@ -4755,7 +5197,7 @@ function renderSrdUnitInventory(report) {
     "",
     "This is a Unit/catalog backlog denominator, not RAW span coverage and not an MBT queue.",
     "",
-    "Character level and spell level are separate axes. Character levels 1-2 include cantrips and spell-level-1 pressure; spell-level-2 pressure first enters the character-level-3 readiness metric for full casters, and spell-level-3 pressure belongs to the later character-level-5 frontier.",
+    "Character level and spell level are separate axes. Character levels 1-2 include cantrips and spell-level-1 pressure; spell-level-2 pressure first enters the character-level-3 readiness metric for full casters, spell-level-3 pressure starts at character level 5 for full casters and Warlock Pact Magic, and spell-level-4 pressure starts at character level 7 for the same table-derived owners. Paladin and Ranger spell-level-3 and spell-level-4 lists stay outside this level-7 mining frontier because their SRD class tables do not grant matching slots by character level 7.",
     "",
     "## Metrics",
     "",
@@ -4764,9 +5206,14 @@ function renderSrdUnitInventory(report) {
     `- Level-2 rows: ${report.metrics.levelTwoRows}`,
     `- Level-3 class/subclass rows: ${report.metrics.levelThreeClassRows}`,
     `- Level-4 class-feature rows: ${report.metrics.levelFourClassRows}`,
+    `- Level-5 class/subclass mining rows: ${report.metrics.levelFiveClassRows}`,
+    `- Level-6 class/subclass mining rows: ${report.metrics.levelSixClassRows}`,
+    `- Level-7 class/subclass mining rows: ${report.metrics.levelSevenClassRows}`,
     `- Spell-list pressure rows for cantrips and spell levels 1-2: ${report.metrics.spellPressureRows}`,
-    `- Spell-level-3 pressure rows (later character-level-5 frontier): ${report.metrics.levelThreeSpellPressureRows}`,
+    `- Spell-level-3 pressure rows (character-level-5 frontier): ${report.metrics.levelThreeSpellPressureRows}`,
     `- Spell-level-3 installed SRD Surface pressure rows (later character-level-5 frontier): ${report.metrics.levelThreeInstalledSpellPressureRows}`,
+    `- Spell-level-4 pressure rows (character-level-7 frontier): ${report.metrics.levelFourSpellPressureRows}`,
+    `- Spell-level-4 installed SRD Surface pressure rows (later character-level-7 frontier): ${report.metrics.levelFourInstalledSpellPressureRows}`,
     `- Missing level-1 class containers: ${report.metrics.missingClassContainers}${missingClassContainerDetail}`,
     "",
     "### Default Progress Metric: Level-1 Battle Readiness",
@@ -4843,13 +5290,25 @@ function renderSrdUnitInventory(report) {
     "",
     "### Spell-Level-3 Battle Readiness",
     "",
-    "This metric is a separate seed for spell-level-3 pressure only. It belongs to the later character-level-5 frontier for full casters and does not affect Character Levels 1-2 or Character Levels 1-3 readiness denominators.",
+    "This metric is a separate seed for spell-level-3 pressure only. It belongs to the later character-level-5 frontier for full casters and Warlock Pact Magic, with half-caster rows excluded until their own class tables grant matching slots. It does not affect Character Levels 1-2 or Character Levels 1-3 readiness denominators.",
     "",
     `- Accepted: ${report.metrics.levelThreeSpellBattleReadiness.numerator}/${report.metrics.levelThreeSpellBattleReadiness.denominator} (${report.metrics.levelThreeSpellBattleReadiness.percent})`,
     "",
     "#### Spell-Level-3 Battle Readiness by Status",
     "",
     ...Object.entries(report.metrics.levelThreeSpellBattleReadiness.rowsByStatus)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([key, count]) => `- ${key}: ${count}`),
+    "",
+    "### Spell-Level-4 Battle Readiness",
+    "",
+    "This metric is a separate seed for spell-level-4 pressure only. It belongs to the later character-level-7 frontier for full casters and Warlock Pact Magic, with half-caster rows excluded until their own class tables grant matching slots.",
+    "",
+    `- Accepted: ${report.metrics.levelFourSpellBattleReadiness.numerator}/${report.metrics.levelFourSpellBattleReadiness.denominator} (${report.metrics.levelFourSpellBattleReadiness.percent})`,
+    "",
+    "#### Spell-Level-4 Battle Readiness by Status",
+    "",
+    ...Object.entries(report.metrics.levelFourSpellBattleReadiness.rowsByStatus)
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([key, count]) => `- ${key}: ${count}`),
     "",
@@ -4877,6 +5336,24 @@ function renderSrdUnitInventory(report) {
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([key, count]) => `- ${key}: ${count}`),
     "",
+    "### Level-5 Class/Subclass Mining Rows by Disposition",
+    "",
+    ...Object.entries(report.metrics.levelFiveClassRowsByDisposition)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([key, count]) => `- ${key}: ${count}`),
+    "",
+    "### Level-6 Class/Subclass Mining Rows by Disposition",
+    "",
+    ...Object.entries(report.metrics.levelSixClassRowsByDisposition)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([key, count]) => `- ${key}: ${count}`),
+    "",
+    "### Level-7 Class/Subclass Mining Rows by Disposition",
+    "",
+    ...Object.entries(report.metrics.levelSevenClassRowsByDisposition)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([key, count]) => `- ${key}: ${count}`),
+    "",
     "### Level-3 Class/Subclass Rows by Category",
     "",
     ...Object.entries(report.metrics.levelThreeClassRowsByCategory)
@@ -4886,6 +5363,24 @@ function renderSrdUnitInventory(report) {
     "### Level-4 Class Feature Rows by Category",
     "",
     ...Object.entries(report.metrics.levelFourClassRowsByCategory)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([key, count]) => `- ${key}: ${count}`),
+    "",
+    "### Level-5 Class/Subclass Mining Rows by Category",
+    "",
+    ...Object.entries(report.metrics.levelFiveClassRowsByCategory)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([key, count]) => `- ${key}: ${count}`),
+    "",
+    "### Level-6 Class/Subclass Mining Rows by Category",
+    "",
+    ...Object.entries(report.metrics.levelSixClassRowsByCategory)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([key, count]) => `- ${key}: ${count}`),
+    "",
+    "### Level-7 Class/Subclass Mining Rows by Category",
+    "",
+    ...Object.entries(report.metrics.levelSevenClassRowsByCategory)
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([key, count]) => `- ${key}: ${count}`),
     "",
@@ -4917,6 +5412,20 @@ function renderSrdUnitInventory(report) {
     "",
     ...Object.entries(
       report.metrics.levelThreeInstalledSpellPressureRowsByDisposition,
+    )
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([key, count]) => `- ${key}: ${count}`),
+    "",
+    "### Spell-Level-4 Unit Pressure by Disposition",
+    "",
+    ...Object.entries(report.metrics.levelFourSpellPressureRowsByDisposition)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([key, count]) => `- ${key}: ${count}`),
+    "",
+    "### Spell-Level-4 Installed Unit Pressure by Disposition",
+    "",
+    ...Object.entries(
+      report.metrics.levelFourInstalledSpellPressureRowsByDisposition,
     )
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([key, count]) => `- ${key}: ${count}`),
@@ -5060,11 +5569,127 @@ function renderSrdUnitInventory(report) {
         .replace(/$/, "|"),
     ),
     "",
+    "## Level-5 Class/Subclass Mining Rows",
+    "",
+    "| Row | Category | Surface | Authored | Catalog | Unit profile | Disposition | Battle readiness | Readiness closure | Owner evidence | Next action | Source |",
+    "|---|---|---|---|---|---|---|---|---|---|---|---|",
+    ...levelFiveClass.map((row) =>
+      [
+        row.concept,
+        row.category,
+        row.surface.state,
+        row.authoredContent.state,
+        row.catalogAdmission.state,
+        row.unitProfileDisposition ?? "",
+        row.finalDisposition,
+        row.battleReadinessStatus ?? "",
+        row.battleReadinessClosure === undefined
+          ? ""
+          : `${row.battleReadinessClosure.kind}: ${row.battleReadinessClosure.owner}`,
+        row.ownerEvidence
+          .map((evidence) => `${evidence.owner}: ${evidence.status}`)
+          .join("; "),
+        row.nextAction,
+        `${row.source.path}:${row.source.lineStart}`,
+      ]
+        .map((cell) => String(cell).replace(/\|/g, "\\|"))
+        .join("|")
+        .replace(/^/, "|")
+        .replace(/$/, "|"),
+    ),
+    "",
+    "## Level-6 Class/Subclass Mining Rows",
+    "",
+    "| Row | Category | Surface | Authored | Catalog | Unit profile | Disposition | Battle readiness | Readiness closure | Owner evidence | Next action | Source |",
+    "|---|---|---|---|---|---|---|---|---|---|---|---|",
+    ...levelSixClass.map((row) =>
+      [
+        row.concept,
+        row.category,
+        row.surface.state,
+        row.authoredContent.state,
+        row.catalogAdmission.state,
+        row.unitProfileDisposition ?? "",
+        row.finalDisposition,
+        row.battleReadinessStatus ?? "",
+        row.battleReadinessClosure === undefined
+          ? ""
+          : `${row.battleReadinessClosure.kind}: ${row.battleReadinessClosure.owner}`,
+        row.ownerEvidence
+          .map((evidence) => `${evidence.owner}: ${evidence.status}`)
+          .join("; "),
+        row.nextAction,
+        `${row.source.path}:${row.source.lineStart}`,
+      ]
+        .map((cell) => String(cell).replace(/\|/g, "\\|"))
+        .join("|")
+        .replace(/^/, "|")
+        .replace(/$/, "|"),
+    ),
+    "",
+    "## Level-7 Class/Subclass Mining Rows",
+    "",
+    "| Row | Category | Surface | Authored | Catalog | Unit profile | Disposition | Battle readiness | Readiness closure | Owner evidence | Next action | Source |",
+    "|---|---|---|---|---|---|---|---|---|---|---|---|",
+    ...levelSevenClass.map((row) =>
+      [
+        row.concept,
+        row.category,
+        row.surface.state,
+        row.authoredContent.state,
+        row.catalogAdmission.state,
+        row.unitProfileDisposition ?? "",
+        row.finalDisposition,
+        row.battleReadinessStatus ?? "",
+        row.battleReadinessClosure === undefined
+          ? ""
+          : `${row.battleReadinessClosure.kind}: ${row.battleReadinessClosure.owner}`,
+        row.ownerEvidence
+          .map((evidence) => `${evidence.owner}: ${evidence.status}`)
+          .join("; "),
+        row.nextAction,
+        `${row.source.path}:${row.source.lineStart}`,
+      ]
+        .map((cell) => String(cell).replace(/\|/g, "\\|"))
+        .join("|")
+        .replace(/^/, "|")
+        .replace(/$/, "|"),
+    ),
+    "",
     "## Spell-Level-3 Pressure Rows",
     "",
     "| Row | Category | Surface | Authored | Catalog | Unit profile | Disposition | Battle readiness | Readiness closure | Owner evidence | Next action | Source |",
     "|---|---|---|---|---|---|---|---|---|---|---|---|",
     ...levelThreeSpellPressure.map((row) =>
+      [
+        row.concept,
+        row.category,
+        row.surface.state,
+        row.authoredContent.state,
+        row.catalogAdmission.state,
+        row.unitProfileDisposition ?? "",
+        row.finalDisposition,
+        row.battleReadinessStatus ?? "",
+        row.battleReadinessClosure === undefined
+          ? ""
+          : `${row.battleReadinessClosure.kind}: ${row.battleReadinessClosure.owner}`,
+        row.ownerEvidence
+          .map((evidence) => `${evidence.owner}: ${evidence.status}`)
+          .join("; "),
+        row.nextAction,
+        `${row.source.path}:${row.source.lineStart}`,
+      ]
+        .map((cell) => String(cell).replace(/\|/g, "\\|"))
+        .join("|")
+        .replace(/^/, "|")
+        .replace(/$/, "|"),
+    ),
+    "",
+    "## Spell-Level-4 Pressure Rows",
+    "",
+    "| Row | Category | Surface | Authored | Catalog | Unit profile | Disposition | Battle readiness | Readiness closure | Owner evidence | Next action | Source |",
+    "|---|---|---|---|---|---|---|---|---|---|---|---|",
+    ...levelFourSpellPressure.map((row) =>
       [
         row.concept,
         row.category,

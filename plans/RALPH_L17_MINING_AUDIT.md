@@ -7,19 +7,19 @@
     {
       "number": 1,
       "id": "L17-M01-DENOMINATOR-REPORT-SHAPE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Add non-blocking level 1-7 mining audit outputs"
     },
     {
       "number": 2,
       "id": "L17-M02-CLASS-LEVEL5-7-MINING",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Mine class progression rows through level 7"
     },
     {
       "number": 3,
       "id": "L17-M03-SPELL-LEVEL3-4-MINING",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Mine spell-level 3 and 4 pressure for the level 7 frontier"
     }
   ]
@@ -102,7 +102,7 @@ survey verdicts as shipped content.
 
 ### Task 1 - L17-M01-DENOMINATOR-REPORT-SHAPE
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -149,7 +149,7 @@ Verification:
 
 ### Task 2 - L17-M02-CLASS-LEVEL5-7-MINING
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -211,7 +211,7 @@ Verification:
 
 ### Task 3 - L17-M03-SPELL-LEVEL3-4-MINING
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 

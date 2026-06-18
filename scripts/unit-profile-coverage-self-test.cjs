@@ -49,6 +49,11 @@ const {
   buildFeatureProcedureMbtEvidenceGate,
 } = require("./feature-procedure-mbt-evidence-gate.cjs");
 const {
+  buildLevelOneSevenMiningAudit,
+  levelOneSevenMiningAuditLevelBands,
+  renderLevelOneSevenMiningAudit,
+} = require("./level1-7-mining-audit-report.cjs");
+const {
   buildMatrix,
   selectedIdentityEvidenceStatus,
   selectedIdentityStatus,
@@ -542,6 +547,114 @@ function assertSelectedIdentityMetricExcludesWholeClaimNotApplicable() {
   }
 }
 
+function assertLevelOneSevenMiningAuditSeparatesRowPresenceFromSupport() {
+  const report = buildLevelOneSevenMiningAudit({
+    rows: [
+      {
+        id: "fixture:level-5:feature",
+        levelBand: "level-5",
+        rowKind: "class-feature-grant",
+        category: "class feature",
+        className: "Fixture",
+        concept: "Fixture Level 5 Feature",
+        candidateUnitId: "fixture_level_5_feature",
+        source: {
+          path: ".references/srd-5.2.1/Classes/Fixture.md",
+          lineStart: 1,
+          lineEnd: 1,
+        },
+        authoredContent: { state: "missing-authored-record" },
+        catalogAdmission: { state: "not-installed" },
+        unitProfileDisposition: "unsupported-profile",
+        finalDisposition: "missing-authored-record",
+        nextAction: "Fixture follow-up.",
+      },
+    ],
+  });
+  const row = report.rows[0];
+  if (
+    row.minedDenominator.state !== "present" ||
+    row.supportSnapshot.catalogAdmission.state !== "not-installed" ||
+    row.supportSnapshot.unitProfile.disposition !== "unsupported-profile" ||
+    row.supportSnapshot.finalDisposition !== "missing-authored-record"
+  ) {
+    fail(
+      `Self-test failed: expected level 1-7 mining audit to keep row presence separate from support state, got ${JSON.stringify(row)}`,
+    );
+  }
+  const expectedAuditBands = [
+    "level-1",
+    "level-2",
+    "level-3",
+    "level-4",
+    "level-5",
+    "level-6",
+    "level-7",
+    "spell-level-0",
+    "spell-level-1",
+    "spell-level-2",
+    "spell-level-3",
+    "spell-level-4",
+  ];
+  if (
+    JSON.stringify(levelOneSevenMiningAuditLevelBands) !==
+    JSON.stringify(expectedAuditBands)
+  ) {
+    fail(
+      `Self-test failed: expected level 1-7 mining audit bands ${JSON.stringify(expectedAuditBands)}, got ${JSON.stringify(levelOneSevenMiningAuditLevelBands)}`,
+    );
+  }
+  const rendered = renderLevelOneSevenMiningAudit(report);
+  for (const expectedText of [
+    "not a full-support claim",
+    "| level-7 | character-level | not-yet-mined | 0 |",
+    "| spell-level-4 | spell-level | not-yet-mined | 0 |",
+    "| Fixture Level 5 Feature | level-5 | character-level | class feature | `fixture_level_5_feature` | `.references/srd-5.2.1/Classes/Fixture.md:1` | present | not-installed | unsupported-profile | missing-authored-record | not-applicable | not-recorded | Fixture follow-up. |",
+  ]) {
+    if (!rendered.includes(expectedText)) {
+      fail(
+        `Self-test failed: expected level 1-7 mining audit report to include ${JSON.stringify(expectedText)}, got ${JSON.stringify(rendered)}`,
+      );
+    }
+  }
+  const spellReport = buildLevelOneSevenMiningAudit({
+    rows: ["Fixture", "Example"].map((className, index) => ({
+      id: `fixture:spell-level-4:${className.toLowerCase()}:shared_spell`,
+      levelBand: "spell-level-4",
+      rowKind: "spell-unit-pressure",
+      category: "spell Unit pressure",
+      className,
+      concept: `${className} spell list Shared Spell`,
+      candidateUnitId: "shared_spell",
+      source: {
+        path: `.references/srd-5.2.1/Classes/${className}.md`,
+        lineStart: index + 1,
+        lineEnd: index + 1,
+      },
+      authoredContent: { state: "authored-record-present" },
+      catalogAdmission: { state: "not-installed" },
+      unitProfileDisposition: "unsupported-profile",
+      finalDisposition: "catalog-authored-review-required",
+      battleReadinessStatus: "owner-evidence-required",
+      nextAction: "Record a fixture closure.",
+    })),
+  });
+  if (
+    spellReport.uniqueSpellIdentities.length !== 1 ||
+    spellReport.uniqueSpellIdentities[0].classListRowCount !== 2 ||
+    spellReport.metrics.auditedSpellClassListRowsByLevelBand[
+      "spell-level-4"
+    ] !== 2 ||
+    spellReport.metrics.auditedUniqueSpellIdentitiesByLevelBand[
+      "spell-level-4"
+    ] !== 1
+  ) {
+    fail(
+      `Self-test failed: expected level 1-7 mining audit to summarize duplicate class-list rows as one spell identity, got ${JSON.stringify(spellReport.uniqueSpellIdentities)}`,
+    );
+  }
+}
+
 function runSelfTest(root) {
   const levelTwoBands = characterLevelBands(2);
   if (
@@ -589,6 +702,7 @@ function runSelfTest(root) {
   assertSelectionGrantContainerScopeAccounting();
   assertMindSpikeDeferredSelectedIdentityGate();
   assertSelectedIdentityMetricExcludesWholeClaimNotApplicable();
+  assertLevelOneSevenMiningAuditSeparatesRowPresenceFromSupport();
 
   const tempDir = fs.mkdtempSync(
     path.join(os.tmpdir(), "unit-profile-coverage-self-test-"),
@@ -1905,11 +2019,13 @@ function runSelfTest(root) {
       ],
       recommendedBatches: [],
     });
-    const levelThreeReviewExpected =
-      "fixture:l3-authored-not-installed is an unreviewed level-3 authored not-installed Spell Unit row but is not classified catalog-authored-review-required.";
-    if (!unreviewedLevelThreeSpellIssues.includes(levelThreeReviewExpected)) {
+    const laterFrontierReviewExpected =
+      "fixture:l3-authored-not-installed is an unreviewed later-frontier authored not-installed Spell Unit row but is not classified catalog-authored-review-required.";
+    if (
+      !unreviewedLevelThreeSpellIssues.includes(laterFrontierReviewExpected)
+    ) {
       fail(
-        `Self-test failed: expected unreviewed level-3 spell issue ${JSON.stringify(levelThreeReviewExpected)}, got ${JSON.stringify(unreviewedLevelThreeSpellIssues)}`,
+        `Self-test failed: expected unreviewed later-frontier spell issue ${JSON.stringify(laterFrontierReviewExpected)}, got ${JSON.stringify(unreviewedLevelThreeSpellIssues)}`,
       );
     }
     const characterSheetRuntimeFixtureDir = path.join(

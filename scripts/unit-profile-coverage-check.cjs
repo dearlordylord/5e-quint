@@ -46,6 +46,10 @@ const {
   renderLevel12QntMbtJoin,
 } = require("./level12-qnt-mbt-join-report.cjs");
 const {
+  buildLevelOneSevenMiningAudit,
+  renderLevelOneSevenMiningAudit,
+} = require("./level1-7-mining-audit-report.cjs");
+const {
   buildSpellProcedureMbtEvidenceGate,
   renderSpellProcedureMbtEvidenceGate,
 } = require("./spell-procedure-mbt-evidence-gate.cjs");
@@ -238,6 +242,8 @@ function main() {
   const level14FullSupport = buildLevel14FullSupport(matrix, srdUnitInventory, {
     root,
   });
+  const levelOneSevenMiningAudit =
+    buildLevelOneSevenMiningAudit(srdUnitInventory);
   const ultraGoldenGate = buildUltraGoldenGate({
     level1FullSupport,
     level12FullSupport,
@@ -380,6 +386,16 @@ function main() {
     { root, write },
     paths.level14FullSupportReport,
     renderLevel14FullSupport(level14FullSupport),
+  );
+  writeOrCompare(
+    { root, write },
+    paths.levelOneSevenMiningAudit,
+    `${JSON.stringify(levelOneSevenMiningAudit, null, 2)}\n`,
+  );
+  writeOrCompare(
+    { root, write },
+    paths.levelOneSevenMiningAuditReport,
+    renderLevelOneSevenMiningAudit(levelOneSevenMiningAudit),
   );
   writeOrCompare(
     { root, write },
