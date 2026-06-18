@@ -19,8 +19,8 @@
       "catalog-authored-review-required": 31,
       "catalog-installed-owner-evidence-present": 7,
       "catalog-only/dead-for-now": 3,
-      "missing-authored-record": 30,
-      "needs-surface-widening": 5
+      "missing-authored-record": 29,
+      "needs-surface-widening": 6
     },
     "auditedUniqueSpellIdentitiesByLevelBand": {
       "spell-level-3": 42,
@@ -35,10 +35,10 @@
     "rowsByBattleReadinessStatus": {
       "accepted": 469,
       "accepted-no-battle-effect": 196,
-      "battle-runtime-required": 68,
+      "battle-runtime-required": 66,
       "not-applicable": 77,
       "owner-evidence-required": 78,
-      "surface-widening-required": 12
+      "surface-widening-required": 14
     },
     "rowsByCatalogAdmission": {
       "installed": 638,
@@ -60,8 +60,8 @@
       "catalog-installed-owner-evidence-required": 1,
       "catalog-only/dead-for-now": 144,
       "level-5-7-follow-up-required": 33,
-      "missing-authored-record": 68,
-      "needs-surface-widening": 12,
+      "missing-authored-record": 66,
+      "needs-surface-widening": 14,
       "non-runtime": 84
     },
     "rowsByLevelBand": {
@@ -28561,7 +28561,7 @@
         "sourceInventoryRowId": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_haste",
         "state": "present"
       },
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
+      "nextAction": "Widen Surface: Spell Definition haste active-effect and lethargy split: Magic Action casting, level-3 Spell Slot, 30-foot visible willing-creature targeting, Concentration duration, doubled Speed, +2 Armor Class, Dexterity Saving Throw Advantage, a per-turn additional-action allow-list that caps Attack at one attack, and spell-end lethargy applying Incapacitated plus Speed 0 until the end of the target's next turn; Surface needs typed extra-action restriction and end-of-effect lethargy facts before the SRD record can be authored without collapsing later positive-runtime and lethargy-runtime follow-ups.",
       "rowId": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_haste",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -28575,7 +28575,7 @@
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "battle-runtime-required"
+          "status": "surface-widening-required"
         },
         "battleReadinessClosure": {
           "state": "not-recorded"
@@ -28584,7 +28584,7 @@
           "state": "not-installed",
           "unitId": "haste"
         },
-        "finalDisposition": "missing-authored-record",
+        "finalDisposition": "needs-surface-widening",
         "unitProfile": {
           "state": "not-recorded"
         }
@@ -37932,7 +37932,7 @@
         "sourceInventoryRowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_haste",
         "state": "present"
       },
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
+      "nextAction": "Widen Surface: Spell Definition haste active-effect and lethargy split: Magic Action casting, level-3 Spell Slot, 30-foot visible willing-creature targeting, Concentration duration, doubled Speed, +2 Armor Class, Dexterity Saving Throw Advantage, a per-turn additional-action allow-list that caps Attack at one attack, and spell-end lethargy applying Incapacitated plus Speed 0 until the end of the target's next turn; Surface needs typed extra-action restriction and end-of-effect lethargy facts before the SRD record can be authored without collapsing later positive-runtime and lethargy-runtime follow-ups.",
       "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_haste",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -37946,7 +37946,7 @@
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "battle-runtime-required"
+          "status": "surface-widening-required"
         },
         "battleReadinessClosure": {
           "state": "not-recorded"
@@ -37955,7 +37955,7 @@
           "state": "not-installed",
           "unitId": "haste"
         },
-        "finalDisposition": "missing-authored-record",
+        "finalDisposition": "needs-surface-widening",
         "unitProfile": {
           "state": "not-recorded"
         }
@@ -40857,7 +40857,7 @@
       ],
       "levelBand": "spell-level-3",
       "nextActions": [
-        "Author an SRD-provenance Surface record or explicitly close the row."
+        "Widen Surface: Spell Definition haste active-effect and lethargy split: Magic Action casting, level-3 Spell Slot, 30-foot visible willing-creature targeting, Concentration duration, doubled Speed, +2 Armor Class, Dexterity Saving Throw Advantage, a per-turn additional-action allow-list that caps Attack at one attack, and spell-end lethargy applying Incapacitated plus Speed 0 until the end of the target's next turn; Surface needs typed extra-action restriction and end-of-effect lethargy facts before the SRD record can be authored without collapsing later positive-runtime and lethargy-runtime follow-ups."
       ],
       "spellName": "Haste",
       "supportSnapshot": {
@@ -40866,7 +40866,7 @@
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "battle-runtime-required"
+          "status": "surface-widening-required"
         },
         "battleReadinessClosure": {
           "state": "not-recorded"
@@ -40875,7 +40875,7 @@
           "state": "not-installed",
           "unitId": "haste"
         },
-        "finalDisposition": "missing-authored-record",
+        "finalDisposition": "needs-surface-widening",
         "unitProfile": {
           "state": "not-recorded"
         }

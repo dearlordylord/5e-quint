@@ -37,7 +37,7 @@
     {
       "number": 6,
       "id": "L5-C06-HASTE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Close Haste missing authored record"
     },
     {
@@ -93,6 +93,24 @@
       "id": "L5-C15-GLYPH-OF-WARDING-SURFACE-WIDENING",
       "status": "ready-for-research",
       "title": "Widen Glyph of Warding Surface Spell Definition"
+    },
+    {
+      "number": 16,
+      "id": "L5-C16-HASTE-SURFACE-WIDENING",
+      "status": "ready-for-research",
+      "title": "Widen Haste Surface Spell Definition"
+    },
+    {
+      "number": 17,
+      "id": "L5-C17-HASTE-POSITIVE-RUNTIME",
+      "status": "ready-for-research",
+      "title": "Promote Haste positive runtime effect"
+    },
+    {
+      "number": 18,
+      "id": "L5-C18-HASTE-LETHARGY-RUNTIME",
+      "status": "ready-for-research",
+      "title": "Promote Haste lethargy runtime cleanup"
     }
   ]
 }
@@ -153,7 +171,7 @@ missing-record spells unless a RAW dependency is unavoidable and documented.
 | 3 | L5-C03-CONJURE-ANIMALS - Close Conjure Animals missing authored record | done | none | Closed as a Surface widening boundary, not an authored-record admission. |
 | 4 | L5-C04-GASEOUS-FORM - Close Gaseous Form missing authored record | done | none | Closed as a Surface widening boundary, not an authored-record admission. |
 | 5 | L5-C05-GLYPH-OF-WARDING - Close Glyph of Warding missing authored record | done | none | Closed as a Surface widening boundary, not an authored-record admission; follow-up is L5-C15 for Glyph trigger, stored spell, movement invalidation, and table object/location facts. |
-| 6 | L5-C06-HASTE - Close Haste missing authored record | ready-for-research | none | Preserve Surface authoring, positive runtime, and lethargy runtime split from `plans/unit-profile-coverage/L3_HASTE_RUNTIME_SURVEY.md`. |
+| 6 | L5-C06-HASTE - Close Haste missing authored record | done | none | Closed as a Surface widening boundary, not an authored-record admission; follow-ups are L5-C16, L5-C17, and L5-C18 for Surface authoring, positive runtime, and lethargy cleanup. |
 | 7 | L5-C07-MAGIC-CIRCLE - Close Magic Circle missing authored record | ready-for-research | none | Independent missing spell Unit. |
 | 8 | L5-C08-MELD-INTO-STONE - Close Meld into Stone missing authored record | ready-for-research | none | Independent missing spell Unit. |
 | 9 | L5-C09-NONDETECTION - Close Nondetection missing authored record | ready-for-research | none | Independent missing spell Unit. |
@@ -163,6 +181,9 @@ missing-record spells unless a RAW dependency is unavoidable and documented.
 | 13 | L5-C13-CONJURE-ANIMALS-SURFACE-WIDENING - Widen Conjure Animals Surface Spell Definition | ready-for-research | L5-C03-CONJURE-ANIMALS | Add typed Surface/table-spatial facts for Conjure Animals' spectral pack occurrence, pack reposition, Strength Saving Throw Advantage predicate, Dexterity Saving Throw trigger eligibility, and once-per-turn limit before authoring/admitting the Spell Definition. |
 | 14 | L5-C14-GASEOUS-FORM-SURFACE-WIDENING - Widen Gaseous Form Surface Spell Definition | ready-for-research | L5-C04-GASEOUS-FORM | Add typed Surface/table-spatial facts for Gaseous Form's mist-cloud form state, movement replacement, Magic-action self-ending, B/P/S Resistance, Prone Immunity, Strength/Dexterity/Constitution Saving Throw Advantage, action/object/speech limits, creature-space occupancy, narrow-opening passage, and liquid-surface treatment before authoring/admitting the Spell Definition. |
 | 15 | L5-C15-GLYPH-OF-WARDING-SURFACE-WIDENING - Widen Glyph of Warding Surface Spell Definition | ready-for-research | L5-C05-GLYPH-OF-WARDING | Add typed Surface/table object-location facts for Glyph of Warding's surface or closeable-object inscription anchor, maximum glyph-area constraint, caster-defined/refined trigger, movement invalidation, explosive rune, stored spell eligibility/release/retargeting, hostile placement, and stored Concentration duration override before authoring/admitting the Spell Definition. |
+| 16 | L5-C16-HASTE-SURFACE-WIDENING - Widen Haste Surface Spell Definition | ready-for-research | L5-C06-HASTE | Add typed Surface facts for Haste's restricted additional action and end-of-effect lethargy before authoring/admitting the Spell Definition. |
+| 17 | L5-C17-HASTE-POSITIVE-RUNTIME - Promote Haste positive runtime effect | ready-for-research | L5-C16-HASTE-SURFACE-WIDENING | Promote the active Haste effects: Speed ratio, +2 Armor Class, Dexterity Saving Throw Advantage, Concentration, and restricted spell-granted per-turn action resource. |
+| 18 | L5-C18-HASTE-LETHARGY-RUNTIME - Promote Haste lethargy runtime cleanup | ready-for-research | L5-C17-HASTE-POSITIVE-RUNTIME | Promote the spell-end lethargy rider: Incapacitated plus Speed 0 until the end of the target's next turn without treating Incapacitated as a Speed shortcut. |
 
 ## Shared Verification
 
@@ -721,7 +742,7 @@ Verification:
 
 ### Task 6 - L5-C06-HASTE
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -741,7 +762,10 @@ SRD anchors:
 Current state:
 
 - Authored record is missing; catalog state is `not-installed`.
-- Mining disposition is `missing-authored-record`.
+- Mining disposition is `needs-surface-widening`.
+- Surface cannot yet express the Haste Spell Definition without losing the
+  additional-action allow-list, Attack one-attack-only rider, or spell-end
+  lethargy state.
 
 Output:
 
@@ -751,11 +775,164 @@ Output:
 
 Acceptance:
 
-- `haste` leaves `missing-authored-record`.
+- `haste` leaves `missing-authored-record` by becoming
+  `needs-surface-widening`.
 
 Verification:
 
 - Shared lane verification.
+
+Plan Impact:
+
+- Follow-up work is split into L5-C16, L5-C17, and L5-C18 before any
+  SRD-provenance Haste Spell Definition is authored, admitted, or promoted at
+  runtime.
+
+### Task 16 - L5-C16-HASTE-SURFACE-WIDENING
+
+Status: `ready-for-research`
+
+Depends on:
+
+- L5-C06-HASTE
+
+Unit:
+
+- `haste`
+
+SRD anchors:
+
+- `.references/srd-5.2.1/Spells/Descriptions-E-L.md:1091`
+- `.references/srd-5.2.1/Classes/Sorcerer.md:309`
+- `.references/srd-5.2.1/Classes/Wizard.md:248`
+
+Current state:
+
+- The generated inventory classifies the two Haste class-list rows as
+  `needs-surface-widening` / `surface-widening-required`.
+- Existing Surface spell atoms can express adjacent AC, Speed, roll-mode, and
+  extra-action facts, but cannot represent Haste's exact action allow-list with
+  Attack capped at one attack or its spell-end lethargy rider as typed facts.
+
+Output:
+
+- Widen Surface so a Haste Spell Definition can represent the additional action
+  allow-list: Attack with one attack only, Dash, Disengage, Hide, or Utilize.
+- Represent spell-end lethargy as an end-of-effect fact applying Incapacitated
+  plus Speed 0 until the end of the target's next turn.
+- Author/admit the SRD-provenance Haste record only after those typed Surface
+  facts preserve the RAW distinctions.
+
+Acceptance:
+
+- `haste` has an SRD-provenance Surface Spell Definition or remains explicitly
+  classified with a narrower executable blocker.
+- The record does not treat Haste's additional action as an unrestricted Action
+  or as the Action Surge exclusion shape.
+- Lethargy does not rely on Incapacitated as an implicit Speed-0 shortcut.
+- Runtime support, if added, dispatches on typed Surface/profile facts rather
+  than authored spell identity.
+
+Verification:
+
+- Shared lane verification.
+
+### Task 17 - L5-C17-HASTE-POSITIVE-RUNTIME
+
+Status: `ready-for-research`
+
+Depends on:
+
+- L5-C16-HASTE-SURFACE-WIDENING
+
+Unit:
+
+- `haste`
+
+SRD anchors:
+
+- `.references/srd-5.2.1/Spells/Descriptions-E-L.md:1091`
+- `.references/srd-5.2.1/Classes/Sorcerer.md:309`
+- `.references/srd-5.2.1/Classes/Wizard.md:248`
+
+Current state:
+
+- Haste positive runtime promotion requires a typed Surface record/profile from
+  L5-C16.
+- Battle runtime already has adjacent scalar AC and action-resource machinery,
+  but does not yet promote Haste's Speed ratio, Dexterity Saving Throw
+  Advantage, or restricted spell-granted per-turn action resource.
+
+Output:
+
+- Promote Magic Action and level-3+ Spell Slot spend, caster-owned
+  Concentration, known willing target admission, doubled Speed projection, +2
+  Armor Class projection, Dexterity Saving Throw Advantage, and one
+  spell-granted action resource on each target turn restricted to Attack with
+  one attack only, Dash, Disengage, Hide, or Utilize.
+- Add supported-profile or profile-subset-supported Unit evidence and focused
+  runtime tests.
+- Maintain promoted Quint/runtime parity without authored-identity dispatch.
+
+Acceptance:
+
+- Haste's active positive effects are executable from typed Surface/profile
+  facts.
+- The additional action is granted per target turn and cannot be spent on
+  disallowed actions or multiple attacks.
+- Runtime reducers do not branch on Haste id, name, slug, or provenance section.
+
+Verification:
+
+- Shared lane verification.
+- Focused battle-runtime tests and MBT per `AGENTS.md` after QNT/spec updates.
+
+### Task 18 - L5-C18-HASTE-LETHARGY-RUNTIME
+
+Status: `ready-for-research`
+
+Depends on:
+
+- L5-C17-HASTE-POSITIVE-RUNTIME
+
+Unit:
+
+- `haste`
+
+SRD anchors:
+
+- `.references/srd-5.2.1/Spells/Descriptions-E-L.md:1091`
+- `.references/srd-5.2.1/Classes/Sorcerer.md:309`
+- `.references/srd-5.2.1/Classes/Wizard.md:248`
+
+Current state:
+
+- Haste lethargy promotion depends on the active spell lifecycle from L5-C17.
+- The repo must model Incapacitated and Speed 0 as separate spell-end effects,
+  because Incapacitated alone does not set Speed to 0.
+
+Output:
+
+- When the Haste spell effect ends for a target, remove the positive effect and
+  apply source-owned lethargy that gives Incapacitated and Speed 0 until the end
+  of that target's next turn.
+- Preserve any pre-existing Incapacitated source and avoid using Incapacitated
+  as an implicit Speed-0 shortcut.
+- Add focused end-of-concentration, duration expiration, recast/replacement,
+  and target-turn cleanup tests plus promoted Quint/runtime parity.
+
+Acceptance:
+
+- Haste's spell-end rider is executable for concentration loss, duration end,
+  replacement/recast, and target-turn cleanup.
+- Existing Incapacitated sources are not removed by Haste lethargy cleanup.
+- Speed 0 ends with the lethargy state rather than with unrelated
+  Incapacitated sources.
+
+Verification:
+
+- Shared lane verification.
+- Focused battle-runtime tests and MBT per `AGENTS.md` after QNT/spec updates.
 
 ### Task 7 - L5-C07-MAGIC-CIRCLE
 

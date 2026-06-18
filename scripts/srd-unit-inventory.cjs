@@ -399,6 +399,9 @@ const gaseousFormSurfaceWideningOwner =
 const glyphOfWardingSurfaceWideningOwner =
   "Surface Spell Definition plus table object/location glyph owner and future battle-runtime glyph release owner";
 
+const hasteSurfaceWideningOwner =
+  "Surface Spell Definition plus future battle-runtime positive-effect and lethargy owners";
+
 const spellUnitMissingClassifications = new Map([
   [
     "bestow_curse",
@@ -466,6 +469,15 @@ const spellUnitMissingClassifications = new Map([
         reason:
           "Glyph of Warding needs a typed follow-up split before an SRD-provenance Spell Definition can be admitted: Surface must own the durable glyph occurrence, inscription anchor kind, maximum 10-foot-diameter coverage constraint, authored trigger/refinement shape, explosive-rune versus spell-glyph choice, explosive damage type and scaling, stored prepared spell eligibility, stored-spell retargeting, and stored Concentration full-duration override; table object/location ownership supplies cast location, covered-area placement within that maximum, more-than-10-foot movement invalidation, concealment and noticing, selected trigger predicate/event witnesses, area membership, and close-as-possible hostile placement witnesses; future battle runtime should consume typed glyph release facts without dispatching on spell id or name.",
       },
+    },
+  ],
+  [
+    "haste",
+    {
+      kind: "needs-surface-widening",
+      owner: hasteSurfaceWideningOwner,
+      missingConstruct:
+        "Spell Definition haste active-effect and lethargy split: Magic Action casting, level-3 Spell Slot, 30-foot visible willing-creature targeting, Concentration duration, doubled Speed, +2 Armor Class, Dexterity Saving Throw Advantage, a per-turn additional-action allow-list that caps Attack at one attack, and spell-end lethargy applying Incapacitated plus Speed 0 until the end of the target's next turn; Surface needs typed extra-action restriction and end-of-effect lethargy facts before the SRD record can be authored without collapsing later positive-runtime and lethargy-runtime follow-ups.",
     },
   ],
   [
