@@ -27,11 +27,12 @@ const coverageRoot =
   path.join(root, "plans/cleanroom-branch-coverage");
 const branchScopePath = path.join(coverageRoot, "branch-scope.jsonl");
 const inventoryPath = path.join(coverageRoot, "source-branch-inventory.json");
-const reportPath = path.join(coverageRoot, "REPORT.md");
-const scaffoldTasksRoot = path.join(
-  root,
-  "plans/cleanroom-scaffolds/tasks",
+const reducerRouteInventoryPath = path.join(
+  coverageRoot,
+  "reducer-route-inventory.json",
 );
+const reportPath = path.join(coverageRoot, "REPORT.md");
+const scaffoldTasksRoot = path.join(root, "plans/cleanroom-scaffolds/tasks");
 const activeWorkTemplatePath = path.join(
   scaffoldTasksRoot,
   "ACTIVE_WORK.template.json",
@@ -43,8 +44,14 @@ const levelScopeSnapshotPath = path.join(
 const targetReplayEvidencePath = argValue("--target-replay-evidence");
 const passingStateCheckTags = new Set(["state-match", "projection-match"]);
 const sha256Pattern = /^[0-9a-f]{64}$/i;
-const scaffoldLaneOrder = ["creation", "sheet", "handoff", "battle", "rules-core"];
-const scaffoldAssignments = [
+const scaffoldLaneOrder = [
+  "creation",
+  "sheet",
+  "handoff",
+  "battle",
+  "rules-core",
+];
+const baseScaffoldAssignments = [
   {
     assignmentId: "level-1-2-full",
     lanes: scaffoldLaneOrder,
@@ -70,6 +77,13 @@ const scaffoldAssignments = [
     lanes: ["rules-core"],
   },
 ];
+const reducerRouteTags = new Set([
+  "reducer-routed",
+  "component-first",
+  "substrate-first",
+  "catalog-after-substrate",
+  "replay-refresh-only",
+]);
 
 function validatePassingStateCheck(stateCheck, context, issues) {
   if (!isRecord(stateCheck) || typeof stateCheck.tag !== "string") {
@@ -98,8 +112,14 @@ function validatePassingStateCheck(stateCheck, context, issues) {
       `${context}: passing target replay stateCheck requires comparator.`,
     );
   }
-  for (const field of ["expectedProjectionSha256", "observedProjectionSha256"]) {
-    if (typeof stateCheck[field] !== "string" || !sha256Pattern.test(stateCheck[field])) {
+  for (const field of [
+    "expectedProjectionSha256",
+    "observedProjectionSha256",
+  ]) {
+    if (
+      typeof stateCheck[field] !== "string" ||
+      !sha256Pattern.test(stateCheck[field])
+    ) {
       issues.push(
         `${context}: passing target replay stateCheck ${field} must be a sha256 hex string.`,
       );
@@ -200,7 +220,9 @@ function writeOrCompare(filePath, content, shouldWrite) {
 function cleanroomDriverPath(driverPath) {
   const parts = driverPath.split("/");
   if (parts[0] !== "packages" || parts.length < 3) {
-    throw new Error(`${driverPath}: branch-scope driverPath must start with packages/<package>/`);
+    throw new Error(
+      `${driverPath}: branch-scope driverPath must start with packages/<package>/`,
+    );
   }
   return path.posix.join("cleanroom-input/qnt", parts[1], ...parts.slice(2));
 }
@@ -233,16 +255,57 @@ function cleanroomQueueByLane(scopeRows) {
   return queues;
 }
 
-function renderActiveWorkTemplate(scopeRows) {
+function reducerDiagnosticBatch(routeInventory) {
+  if (
+    !isRecord(routeInventory) ||
+    !Array.isArray(routeInventory.diagnosticBatches)
+  ) {
+    return undefined;
+  }
+  return (
+    routeInventory.diagnosticBatches.find(
+      (batch) => batch.batchId === routeInventory.activeDiagnosticBatchId,
+    ) ?? routeInventory.diagnosticBatches[0]
+  );
+}
+
+function reducerDiagnosticAssignment(routeInventory) {
+  const batch = reducerDiagnosticBatch(routeInventory);
+  if (batch === undefined) return undefined;
+  const queue = (batch.entries ?? []).map((entry) =>
+    cleanroomDriverPath(entry.driverPath),
+  );
+  return {
+    assignmentId: batch.assignmentId,
+    customLanes: [
+      {
+        laneId: "battle",
+        queue,
+      },
+    ],
+  };
+}
+
+function scaffoldAssignmentsFor(routeInventory) {
+  const reducerAssignment = reducerDiagnosticAssignment(routeInventory);
+  return [
+    ...(reducerAssignment === undefined ? [] : [reducerAssignment]),
+    ...baseScaffoldAssignments,
+  ];
+}
+
+function renderActiveWorkTemplate(scopeRows, routeInventory) {
   const queues = cleanroomQueueByLane(scopeRows);
   const activeWork = {
     schemaVersion: 1,
-    assignments: scaffoldAssignments.map((assignment) => ({
+    assignments: scaffoldAssignmentsFor(routeInventory).map((assignment) => ({
       assignmentId: assignment.assignmentId,
-      lanes: assignment.lanes.map((laneId) => ({
-        laneId,
-        queue: queues.get(laneId) ?? [],
-      })),
+      lanes:
+        assignment.customLanes ??
+        assignment.lanes.map((laneId) => ({
+          laneId,
+          queue: queues.get(laneId) ?? [],
+        })),
     })),
   };
   return `${JSON.stringify(activeWork, null, 2)}\n`;
@@ -273,7 +336,9 @@ function renderFutureQueueSection(scopeRows) {
       numberedList(queues.get(laneId) ?? []),
       "",
     ]),
-  ].join("\n").replace(/\n+$/, "\n\n");
+  ]
+    .join("\n")
+    .replace(/\n+$/, "\n\n");
 }
 
 function renderCurrentQueueSection(scopeRows) {
@@ -289,28 +354,70 @@ function renderCurrentQueueSection(scopeRows) {
   ].join("\n");
 }
 
+function renderReducerDiagnosticQueueSection(routeInventory) {
+  const batch = reducerDiagnosticBatch(routeInventory);
+  if (batch === undefined) {
+    return [
+      "## Reducer-Spine Diagnostic Queue",
+      "",
+      "No reducer-spine diagnostic batch is configured.",
+      "",
+      "",
+    ].join("\n");
+  }
+  return [
+    "## Reducer-Spine Diagnostic Queue",
+    "",
+    "This queue is generated from `plans/cleanroom-branch-coverage/reducer-route-inventory.json`.",
+    "It is a focused battle diagnostic assignment, not a replacement for the full level-1/2 queue.",
+    "",
+    `- Assignment: \`${batch.assignmentId}\``,
+    `- Batch: \`${batch.batchId}\``,
+    "",
+    "| Order | Driver | Route | Acceptance condition |",
+    "| --- | --- | --- | --- |",
+    ...batch.entries.map(
+      (entry) =>
+        `| ${entry.order} | \`${cleanroomDriverPath(entry.driverPath)}\` | ${entry.route} | ${md(entry.acceptanceCondition)} |`,
+    ),
+    "",
+    "",
+  ].join("\n");
+}
+
 function replaceTopLevelSection(markdown, heading, replacement) {
   const start = markdown.indexOf(`## ${heading}\n`);
   if (start === -1) {
-    throw new Error(`${repoPath(root, levelScopeSnapshotPath)} is missing section ${heading}.`);
+    throw new Error(
+      `${repoPath(root, levelScopeSnapshotPath)} is missing section ${heading}.`,
+    );
   }
   const next = markdown.indexOf("\n## ", start + 1);
   const end = next === -1 ? markdown.length : next + 1;
   return `${markdown.slice(0, start)}${replacement}${markdown.slice(end)}`;
 }
 
-function renderLevelScopeSnapshot(scopeRows) {
+function renderLevelScopeSnapshot(scopeRows, routeInventory) {
   const current = renderCurrentQueueSection(scopeRows);
+  const reducerDiagnostic = renderReducerDiagnosticQueueSection(routeInventory);
   const future = renderFutureQueueSection(scopeRows);
   const existing = fs.readFileSync(levelScopeSnapshotPath, "utf8");
   return replaceTopLevelSection(
-    replaceTopLevelSection(existing, "Current Branch-Inventory-Ready Queue", current),
+    replaceTopLevelSection(
+      replaceTopLevelSection(
+        existing,
+        "Current Branch-Inventory-Ready Queue",
+        current,
+      ),
+      "Reducer-Spine Diagnostic Queue",
+      reducerDiagnostic,
+    ),
     "Future Level 1-2 Queue",
     future,
   );
 }
 
-function renderScaffoldQueueArtifacts(scopeRows) {
+function renderScaffoldQueueArtifacts(scopeRows, routeInventory) {
   if (
     !fs.existsSync(activeWorkTemplatePath) ||
     !fs.existsSync(levelScopeSnapshotPath)
@@ -320,11 +427,11 @@ function renderScaffoldQueueArtifacts(scopeRows) {
   return [
     {
       path: activeWorkTemplatePath,
-      text: renderActiveWorkTemplate(scopeRows),
+      text: renderActiveWorkTemplate(scopeRows, routeInventory),
     },
     {
       path: levelScopeSnapshotPath,
-      text: renderLevelScopeSnapshot(scopeRows),
+      text: renderLevelScopeSnapshot(scopeRows, routeInventory),
     },
   ];
 }
@@ -470,7 +577,10 @@ function validateScope(scope, context) {
     if (typeof scope.reason !== "string" || scope.reason.trim() === "") {
       issues.push(`${context}: out-of-scope scope requires reason.`);
     }
-    if (typeof scope.reviewedBy !== "string" || scope.reviewedBy.trim() === "") {
+    if (
+      typeof scope.reviewedBy !== "string" ||
+      scope.reviewedBy.trim() === ""
+    ) {
       issues.push(`${context}: out-of-scope scope requires reviewedBy.`);
     }
     return issues;
@@ -488,7 +598,9 @@ function validateReplay(replay, context) {
       typeof replay.stepAction !== "string" ||
       replay.stepAction.trim() === ""
     ) {
-      issues.push(`${context}: observable-from-step replay requires stepAction.`);
+      issues.push(
+        `${context}: observable-from-step replay requires stepAction.`,
+      );
     }
     return issues;
   }
@@ -537,12 +649,16 @@ function validateScopeRow(entry, rootPath, scopePath) {
     issues.push(`${context}: branchFamilies must be a non-empty string array.`);
   }
   issues.push(...validateScope(row.defaultScope, `${context}: defaultScope`));
-  issues.push(...validateReplay(row.defaultReplay, `${context}: defaultReplay`));
+  issues.push(
+    ...validateReplay(row.defaultReplay, `${context}: defaultReplay`),
+  );
   if (
     row.defaultReplay?.tag === "transit-only" &&
     row.defaultScope?.tag !== "out-of-scope"
   ) {
-    issues.push(`${context}: transit-only defaultReplay requires out-of-scope defaultScope.`);
+    issues.push(
+      `${context}: transit-only defaultReplay requires out-of-scope defaultScope.`,
+    );
   }
   if (!Array.isArray(row.branchDecisions)) {
     issues.push(`${context}: branchDecisions must be an array.`);
@@ -559,7 +675,9 @@ function validateScopeRow(entry, rootPath, scopePath) {
       ) {
         issues.push(`${decisionContext}: branchAction must be a string.`);
       }
-      issues.push(...validateScope(decision.scope, `${decisionContext}: scope`));
+      issues.push(
+        ...validateScope(decision.scope, `${decisionContext}: scope`),
+      );
       issues.push(
         ...validateReplay(decision.replay, `${decisionContext}: replay`),
       );
@@ -567,11 +685,139 @@ function validateScopeRow(entry, rootPath, scopePath) {
         decision.replay?.tag === "transit-only" &&
         decision.scope?.tag !== "out-of-scope"
       ) {
-        issues.push(`${decisionContext}: transit-only replay requires out-of-scope scope.`);
+        issues.push(
+          `${decisionContext}: transit-only replay requires out-of-scope scope.`,
+        );
       }
     }
   }
   return { row, issues };
+}
+
+function validateReducerRouteInventory(routeInventory, scopeRows) {
+  const issues = [];
+  if (routeInventory === undefined) return issues;
+  const context = repoPath(root, reducerRouteInventoryPath);
+  const scopedDrivers = new Set(scopeRows.map((row) => row.driverPath));
+  if (!isRecord(routeInventory)) {
+    return [`${context}: route inventory must be an object.`];
+  }
+  if (routeInventory.schemaVersion !== 1) {
+    issues.push(`${context}: schemaVersion must be 1.`);
+  }
+  if (
+    !Array.isArray(routeInventory.routeTags) ||
+    routeInventory.routeTags.length !== reducerRouteTags.size ||
+    routeInventory.routeTags.some((tag) => !reducerRouteTags.has(tag))
+  ) {
+    issues.push(
+      `${context}: routeTags must match ${Array.from(reducerRouteTags).join(", ")}.`,
+    );
+  }
+  if (
+    typeof routeInventory.activeDiagnosticBatchId !== "string" ||
+    routeInventory.activeDiagnosticBatchId.trim() === ""
+  ) {
+    issues.push(
+      `${context}: activeDiagnosticBatchId must be a non-empty string.`,
+    );
+  }
+  if (!Array.isArray(routeInventory.diagnosticBatches)) {
+    issues.push(`${context}: diagnosticBatches must be an array.`);
+    return issues;
+  }
+  const batchIds = new Set();
+  for (const [
+    batchIndex,
+    batch,
+  ] of routeInventory.diagnosticBatches.entries()) {
+    const batchContext = `${context}: diagnosticBatches[${batchIndex}]`;
+    if (!isRecord(batch)) {
+      issues.push(`${batchContext}: batch must be an object.`);
+      continue;
+    }
+    for (const field of ["batchId", "assignmentId"]) {
+      if (typeof batch[field] !== "string" || batch[field].trim() === "") {
+        issues.push(`${batchContext}: ${field} must be a non-empty string.`);
+      }
+    }
+    if (typeof batch.batchId === "string") {
+      if (batchIds.has(batch.batchId)) {
+        issues.push(`${batchContext}: duplicate batchId ${batch.batchId}.`);
+      }
+      batchIds.add(batch.batchId);
+    }
+    if (!Array.isArray(batch.entries) || batch.entries.length === 0) {
+      issues.push(`${batchContext}: entries must be a non-empty array.`);
+      continue;
+    }
+    const seenOrders = new Set();
+    const seenDrivers = new Set();
+    for (const [entryIndex, entry] of batch.entries.entries()) {
+      const entryContext = `${batchContext}: entries[${entryIndex}]`;
+      if (!isRecord(entry)) {
+        issues.push(`${entryContext}: entry must be an object.`);
+        continue;
+      }
+      if (!Number.isInteger(entry.order) || entry.order < 1) {
+        issues.push(`${entryContext}: order must be a positive integer.`);
+      } else if (entry.order !== entryIndex + 1) {
+        issues.push(`${entryContext}: order must match entry position.`);
+      } else if (seenOrders.has(entry.order)) {
+        issues.push(`${entryContext}: duplicate order ${entry.order}.`);
+      } else {
+        seenOrders.add(entry.order);
+      }
+      if (
+        typeof entry.driverPath !== "string" ||
+        entry.driverPath.trim() === ""
+      ) {
+        issues.push(`${entryContext}: driverPath must be a non-empty string.`);
+      } else {
+        if (!scopedDrivers.has(entry.driverPath)) {
+          issues.push(
+            `${entryContext}: driverPath is not in branch-scope.jsonl.`,
+          );
+        }
+        if (seenDrivers.has(entry.driverPath)) {
+          issues.push(
+            `${entryContext}: duplicate driverPath ${entry.driverPath}.`,
+          );
+        }
+        seenDrivers.add(entry.driverPath);
+      }
+      if (!reducerRouteTags.has(entry.route)) {
+        issues.push(
+          `${entryContext}: route must be one of ${Array.from(reducerRouteTags).join(", ")}.`,
+        );
+      }
+      for (const field of ["subjectFamily", "acceptanceCondition"]) {
+        if (typeof entry[field] !== "string" || entry[field].trim() === "") {
+          issues.push(`${entryContext}: ${field} must be a non-empty string.`);
+        }
+      }
+      if (!isRecord(entry.derivability)) {
+        issues.push(`${entryContext}: derivability must be an object.`);
+      } else {
+        for (const field of ["qntFacts", "rawDomainFacts", "blockers"]) {
+          if (!Array.isArray(entry.derivability[field])) {
+            issues.push(
+              `${entryContext}: derivability.${field} must be an array.`,
+            );
+          }
+        }
+      }
+    }
+  }
+  if (
+    typeof routeInventory.activeDiagnosticBatchId === "string" &&
+    !batchIds.has(routeInventory.activeDiagnosticBatchId)
+  ) {
+    issues.push(
+      `${context}: activeDiagnosticBatchId ${routeInventory.activeDiagnosticBatchId} is not a diagnostic batch.`,
+    );
+  }
+  return issues;
 }
 
 function decisionForBranch(row, branchAction) {
@@ -746,7 +992,10 @@ function validateTargetReplayEvidence(
   const expectedTargetProfileSha256 = options.expectedTargetProfileSha256;
   const issues = [];
   if (!isRecord(evidence)) {
-    return { issues: ["target replay evidence must be an object."], covered: [] };
+    return {
+      issues: ["target replay evidence must be an object."],
+      covered: [],
+    };
   }
   if (
     !isRecord(evidence.generatedBy) ||
@@ -856,9 +1105,12 @@ function validateTargetReplayEvidence(
       );
     }
     traceIdsByObligation.add(traceKey);
-    const expectedPickNames = sampledInputsByObligation.get(obligationId) ?? new Set();
+    const expectedPickNames =
+      sampledInputsByObligation.get(obligationId) ?? new Set();
     if (expectedPickNames.size > 0 && !Array.isArray(run.sampledInputs)) {
-      issues.push(`${context}: sampledInputs array is required for sampled QNT inputs.`);
+      issues.push(
+        `${context}: sampledInputs array is required for sampled QNT inputs.`,
+      );
     } else if (Array.isArray(run.sampledInputs)) {
       const observedPickNames = new Set();
       for (const [inputIndex, input] of run.sampledInputs.entries()) {
@@ -867,15 +1119,22 @@ function validateTargetReplayEvidence(
           issues.push(`${inputContext}: sampled input must be an object.`);
           continue;
         }
-        if (typeof input.pickName !== "string" || input.pickName.trim() === "") {
+        if (
+          typeof input.pickName !== "string" ||
+          input.pickName.trim() === ""
+        ) {
           issues.push(`${inputContext}: pickName must be a non-empty string.`);
         } else {
           if (observedPickNames.has(input.pickName)) {
-            issues.push(`${inputContext}: duplicate sampled input ${input.pickName}.`);
+            issues.push(
+              `${inputContext}: duplicate sampled input ${input.pickName}.`,
+            );
           }
           observedPickNames.add(input.pickName);
           if (!expectedPickNames.has(input.pickName)) {
-            issues.push(`${inputContext}: unknown sampled input ${input.pickName}.`);
+            issues.push(
+              `${inputContext}: unknown sampled input ${input.pickName}.`,
+            );
           }
         }
         if (!Object.prototype.hasOwnProperty.call(input, "value")) {
@@ -1048,7 +1307,9 @@ function runSelfTest() {
       scopePath,
     });
     if (issues.length > 0 || inventory === undefined) {
-      throw new Error(`expected fixture inventory to pass: ${issues.join("; ")}`);
+      throw new Error(
+        `expected fixture inventory to pass: ${issues.join("; ")}`,
+      );
     }
     const obligationIds = inventory.branchObligations.map(
       (obligation) => obligation.obligationId,
@@ -1068,6 +1329,67 @@ function runSelfTest() {
     ) {
       throw new Error(
         `expected one sampled input named roll, got ${JSON.stringify(inventory.sampledInputs)}`,
+      );
+    }
+    const routeInventory = {
+      schemaVersion: 1,
+      activeDiagnosticBatchId: "fixture-route",
+      routeTags: Array.from(reducerRouteTags),
+      diagnosticBatches: [
+        {
+          batchId: "fixture-route",
+          assignmentId: "fixture-assignment",
+          entries: [
+            {
+              order: 1,
+              driverPath: "packages/fixture/fixture.mbt.qnt",
+              route: "reducer-routed",
+              subjectFamily: "fixture subject",
+              acceptanceCondition: "fixture acceptance",
+              derivability: {
+                qntFacts: [],
+                rawDomainFacts: [],
+                blockers: [],
+              },
+            },
+          ],
+        },
+      ],
+    };
+    const routeIssues = validateReducerRouteInventory(routeInventory, [
+      { driverPath: "packages/fixture/fixture.mbt.qnt" },
+    ]);
+    if (routeIssues.length > 0) {
+      throw new Error(
+        `expected route inventory to pass: ${JSON.stringify(routeIssues)}`,
+      );
+    }
+    const badRouteTags = stable(routeInventory);
+    badRouteTags.routeTags = ["reducer-routed"];
+    const badRouteTagsIssues = validateReducerRouteInventory(badRouteTags, [
+      { driverPath: "packages/fixture/fixture.mbt.qnt" },
+    ]);
+    if (
+      !badRouteTagsIssues.some((issue) =>
+        issue.includes("routeTags must match"),
+      )
+    ) {
+      throw new Error(
+        `expected routeTags mismatch to fail, got ${JSON.stringify(badRouteTagsIssues)}`,
+      );
+    }
+    const badRouteOrder = stable(routeInventory);
+    badRouteOrder.diagnosticBatches[0].entries[0].order = 2;
+    const badRouteOrderIssues = validateReducerRouteInventory(badRouteOrder, [
+      { driverPath: "packages/fixture/fixture.mbt.qnt" },
+    ]);
+    if (
+      !badRouteOrderIssues.some((issue) =>
+        issue.includes("order must match entry position"),
+      )
+    ) {
+      throw new Error(
+        `expected route order mismatch to fail, got ${JSON.stringify(badRouteOrderIssues)}`,
       );
     }
     const inventorySha = sha256Text(stableStringify(inventory));
@@ -1185,7 +1507,9 @@ function runSelfTest() {
     );
     if (
       !mismatchedProjectionResult.issues.some((issue) =>
-        issue.includes("expectedProjectionSha256 and observedProjectionSha256 must match"),
+        issue.includes(
+          "expectedProjectionSha256 and observedProjectionSha256 must match",
+        ),
       )
     ) {
       throw new Error(
@@ -1307,7 +1631,10 @@ function runSelfTest() {
       rootPath: fixtureRoot,
       scopePath,
     });
-    if (transitResult.issues.length > 0 || transitResult.inventory === undefined) {
+    if (
+      transitResult.issues.length > 0 ||
+      transitResult.inventory === undefined
+    ) {
       throw new Error(
         `expected out-of-scope transit-only branch to pass, got ${JSON.stringify(transitResult.issues)}`,
       );
@@ -1379,6 +1706,18 @@ function main() {
     process.exit(1);
   }
   const scopeRows = readJsonl(root, branchScopePath).map((entry) => entry.row);
+  const reducerRouteInventory = fs.existsSync(reducerRouteInventoryPath)
+    ? readJson(reducerRouteInventoryPath)
+    : undefined;
+  const routeIssues = validateReducerRouteInventory(
+    reducerRouteInventory,
+    scopeRows,
+  );
+  if (routeIssues.length > 0) {
+    console.error("cleanroom reducer route inventory FAILED:");
+    for (const issue of routeIssues) console.error(`  - ${issue}`);
+    process.exit(1);
+  }
 
   const inventoryText = stableStringify(inventory);
   const inventorySha = sha256Text(inventoryText);
@@ -1399,7 +1738,10 @@ function main() {
   }
 
   const report = renderReport({ inventory, targetEvidenceSummary });
-  const scaffoldArtifacts = renderScaffoldQueueArtifacts(scopeRows);
+  const scaffoldArtifacts = renderScaffoldQueueArtifacts(
+    scopeRows,
+    reducerRouteInventory,
+  );
   const compareIssues = [
     ...writeOrCompare(inventoryPath, inventoryText, write),
     ...writeOrCompare(reportPath, report, write),

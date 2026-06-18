@@ -3,11 +3,17 @@
 This is the current source-side guidance root copied into future cleanroom
 repositories as `cleanroom-input/guidance/**`.
 
-The full curated guidance pack is a later implementation phase. Until that
-phase lands, this root is intentionally minimal:
+Use this pack with the copied RAW, QNT, source branch inventory, reducer-route
+inventory, domain language, and assumptions. Those files are the cleanroom
+authority; production TypeScript code and previous cleanroom attempts are not
+inputs.
 
-- Treat the copied RAW, QNT, source branch inventory, domain language, and
-  assumptions as the executable authority.
+Core rules:
+
+- Treat copied `.qnt` files as formal rule statements and `.mbt.qnt` files as
+  conformance specifications.
+- Use `cleanroom-input/branch-coverage/reducer-route-inventory.json` when the
+  selected assignment is a reducer-spine diagnostic assignment.
 - Keep QNT/MBT replay adapters quarantined from production modules.
 - Do not dispatch production runtime behavior on authored ids, names, slugs,
   provenance headings, page references, or official catalog labels.
@@ -16,4 +22,8 @@ phase lands, this root is intentionally minimal:
 - Record missing architecture guidance as a `source-qnt-corpus` blocker instead
   of guessing.
 
-Do not treat this file as completion of the full guidance-pack phase.
+Guidance files:
+
+- `reducer-spine.md` defines the cleanroom reducer surface, subject/fill
+  lifecycle, durable state ownership rules, adapter quarantine rules, and
+  reducer-spine diagnostic constraints.

@@ -71,6 +71,7 @@ function validateArchive(archivePath) {
     "./tasks/VALIDATION_REPORT.md",
     "./cleanroom-input/MANIFEST.md",
     "./cleanroom-input/branch-coverage/source-branch-inventory.json",
+    "./cleanroom-input/branch-coverage/reducer-route-inventory.json",
   ]);
   const listing = execFileSync("tar", ["-tzf", archivePath], {
     encoding: "utf8",

@@ -24,6 +24,9 @@ run multiple checklists, but each checklist result must be recorded separately.
 
 - Production behavior is centralized in reusable rules modules under
   `{{enginePath}}`.
+- Reducer-spine diagnostic drivers listed in
+  `cleanroom-input/branch-coverage/reducer-route-inventory.json` replay through
+  the shared battle reducer surface and not through slice-local replay helpers.
 - Strong connascence is localized or weakened by named domain helpers.
 - Magic strings, positional conventions, and caller sequencing protocols are
   rejected unless type- or gate-enforced.

@@ -10,12 +10,13 @@ Read these files, in this order:
 2. `BOOTSTRAP_QUERY.md`
 3. `cleanroom-input/MANIFEST.md`
 4. `cleanroom-input/branch-coverage/source-branch-inventory.json`
-5. `tasks/LEVEL_1_2_SCOPE.md`
-6. `tasks/ACTIVE_WORK.json`
-7. `tasks/IMPLEMENTER_TASK.md`
-8. `tasks/VALIDATION_REPORT.md`
-9. `tasks/BLOCKERS.md`
-10. `tasks/TARGET_REPLAY_EVIDENCE.example.json`
+5. `cleanroom-input/branch-coverage/reducer-route-inventory.json`
+6. `tasks/LEVEL_1_2_SCOPE.md`
+7. `tasks/ACTIVE_WORK.json`
+8. `tasks/IMPLEMENTER_TASK.md`
+9. `tasks/VALIDATION_REPORT.md`
+10. `tasks/BLOCKERS.md`
+11. `tasks/TARGET_REPLAY_EVIDENCE.example.json`
 
 Do not read any file outside this repository. Do not read sibling repos.
 
@@ -40,6 +41,10 @@ the branch-coverage write path.
 denominator. A queued driver is complete only when every in-scope replayable
 branch obligation for that driver has passing harness-generated target replay
 evidence.
+
+`cleanroom-input/branch-coverage/reducer-route-inventory.json` is the reducer
+diagnostic route source. If the selected assignment id appears there, follow
+its ordered batch and route class before using the broader level-1/2 queue.
 
 `tasks/VALIDATION_REPORT.md` is the completion ledger. A queued branch set is
 complete only when that report contains an entry that:
@@ -95,23 +100,25 @@ For the selected branch set:
 3. Read the relevant RAW from `cleanroom-input/raw/srd-5.2.1/**`.
 4. Check `cleanroom-input/domain/UBIQUITOUS_LANGUAGE.md`.
 5. Check `cleanroom-input/domain/CLEANROOM_ASSUMPTIONS.md`.
-6. Check the relevant guidance files in `cleanroom-input/guidance/**`.
-7. Implement the smallest {{targetLabel}} slice in `{{enginePath}}` that makes
+6. Check `cleanroom-input/branch-coverage/reducer-route-inventory.json` when
+   the selected assignment is reducer-routed or substrate-first.
+7. Check the relevant guidance files in `cleanroom-input/guidance/**`.
+8. Implement the smallest {{targetLabel}} slice in `{{enginePath}}` that makes
    the branch set conform.
-8. Record or update `tasks/ENGINE_DEPTH_MANIFEST.json` for the production
+9. Record or update `tasks/ENGINE_DEPTH_MANIFEST.json` for the production
    modules, domain APIs, adapter modules, quarantined witness names, and next
    reuse.
-9. Record or update `tasks/STATE_OWNER_MANIFEST.json` for every durable field
-   introduced or changed by the task.
-10. Wire applicable executable QNT/MBT coverage through {{quintBindingName}}.
-11. Add focused target-language tests only when they clarify RAW/QNT behavior or
-   diagnose a documented conformance gap; these tests do not close branch
-   coverage.
-12. Run all required verification commands.
-13. Write target replay evidence under `tasks/target-replay-evidence/`,
+10. Record or update `tasks/STATE_OWNER_MANIFEST.json` for every durable field
+    introduced or changed by the task.
+11. Wire applicable executable QNT/MBT coverage through {{quintBindingName}}.
+12. Add focused target-language tests only when they clarify RAW/QNT behavior or
+    diagnose a documented conformance gap; these tests do not close branch
+    coverage.
+13. Run all required verification commands.
+14. Write target replay evidence under `tasks/target-replay-evidence/`,
     matching `tasks/TARGET_REPLAY_EVIDENCE.example.json`.
-14. Update `tasks/VALIDATION_REPORT.md`.
-15. Update `tasks/BLOCKERS.md` only if the allowed corpus or target
+15. Update `tasks/VALIDATION_REPORT.md`.
+16. Update `tasks/BLOCKERS.md` only if the allowed corpus or target
     implementation remains insufficient.
 
 If the selected branch set cannot be implemented from the allowed inputs,

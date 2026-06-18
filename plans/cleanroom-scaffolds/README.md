@@ -21,7 +21,9 @@ the target repo.
 - `tasks/WORK_LOOP.template.md` — durable fresh-agent Work Loop instructions.
   Copy to `tasks/WORK_LOOP.md`.
 - `tasks/ACTIVE_WORK.template.json` — machine-readable active assignment and
-  lane queues. Render to `tasks/ACTIVE_WORK.json`.
+  lane queues. Render to `tasks/ACTIVE_WORK.json`. The reducer-spine diagnostic
+  assignment is generated from
+  `plans/cleanroom-branch-coverage/reducer-route-inventory.json`.
 - `tasks/IMPLEMENTER_TASK.template.md` — implementer start gate and required
   task outputs. Render to `tasks/IMPLEMENTER_TASK.md`.
 - `tasks/REVIEWER_CHECKLIST.template.md` — reviewer loop checklists. Render to
@@ -32,7 +34,8 @@ the target repo.
   `tasks/HANDBACK.md`.
 - `tasks/LEVEL_1_2_SCOPE.snapshot.md` — source-owned level-1-2 driver scope
   filter snapshot. The renderer writes it to `tasks/LEVEL_1_2_SCOPE.md`; target
-  runs must not reorder it by hand.
+  runs must not reorder it by hand. Its reducer-spine diagnostic queue is
+  generated from `plans/cleanroom-branch-coverage/reducer-route-inventory.json`.
 - `tasks/VALIDATION_REPORT.example.md` — example readable validation report
   and cursor. Use as a starting format; reset or revalidate task entries for
   the cleanroom repo's current manifest source commit SHA.

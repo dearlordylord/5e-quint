@@ -8,7 +8,9 @@ guidance; failures and blockers are research data.
 
 All agent rules live in `AGENTS.md`. The corpus snapshot and its source commit
 SHA live in `cleanroom-input/MANIFEST.md`. The source branch inventory lives in
-`cleanroom-input/branch-coverage/source-branch-inventory.json`.
+`cleanroom-input/branch-coverage/source-branch-inventory.json`. Reducer-spine
+diagnostic route selection lives in
+`cleanroom-input/branch-coverage/reducer-route-inventory.json`.
 
 Target profile: `{{targetProfileId}}`. Target package/tooling:
 {{packageManager}}. Target source extensions: {{sourceFileExtensionsMarkdown}}.
@@ -16,8 +18,8 @@ Target profile: `{{targetProfileId}}`. Target package/tooling:
 ## Layout
 
 - `cleanroom-input/` — the only rules corpus (RAW, QNT, domain, source branch
-  inventory, and guidance pack). Read-only; populated by the source repo's sync
-  script.
+  inventory, reducer route inventory, and guidance pack). Read-only; populated
+  by the source repo's sync script.
 - `BOOTSTRAP_QUERY.md` — owner-facing query for starting a cleanroom session
   after the corpus and scaffold files have been copied here.
 - `{{enginePath}}` — target implementation and its tests.

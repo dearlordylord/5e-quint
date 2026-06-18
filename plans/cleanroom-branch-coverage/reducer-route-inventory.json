@@ -1,0 +1,170 @@
+{
+  "schemaVersion": 1,
+  "generatedBy": "curated-source-guidance",
+  "activeDiagnosticBatchId": "reducer-spine-diagnostic-v1",
+  "routeTags": [
+    "reducer-routed",
+    "component-first",
+    "substrate-first",
+    "catalog-after-substrate",
+    "replay-refresh-only"
+  ],
+  "defaultRoutingPolicy": [
+    {
+      "match": "packages/battle-runtime/rule-core-*.mbt.qnt",
+      "route": "component-first",
+      "reason": "Rule-core drivers prove reusable mechanics and should deepen a rule module before a battle subject consumes them."
+    },
+    {
+      "match": "packages/battle-runtime/*selected-identity*.mbt.qnt",
+      "route": "catalog-after-substrate",
+      "reason": "Selected-identity/catalog drivers wait until their generic runtime substrate exists; authored identity is not a production dispatch mechanism."
+    },
+    {
+      "match": "unlisted packages/battle-runtime/*.mbt.qnt",
+      "route": "component-first",
+      "reason": "Unlisted battle drivers need a short derivability record before they become reducer-spine diagnostic tasks."
+    }
+  ],
+  "prerequisites": [
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-reducer-spine-contract.mbt.qnt",
+      "route": "reducer-routed",
+      "role": "baseline composition witness",
+      "parityWitness": "packages/battle-runtime/src/reducer-spine-contract.mbt.test.ts",
+      "qntFacts": [
+        "packages/battle-runtime/battle-runtime-reducer-spine-contract.mbt.qnt models the reducer lifecycle from battle start through act discovery, subject hole/fill resolution, turn advancement, and reducer-owned resource/vital projections."
+      ]
+    }
+  ],
+  "diagnosticBatches": [
+    {
+      "batchId": "reducer-spine-diagnostic-v1",
+      "assignmentId": "reducer-spine-diagnostic-battle",
+      "purpose": "Route selected focused battle drivers through the shared BattleState reducer surface instead of slice-local replay helpers.",
+      "entries": [
+        {
+          "order": 1,
+          "driverPath": "packages/battle-runtime/battle-runtime-magic-missile.mbt.qnt",
+          "route": "reducer-routed",
+          "subjectFamily": "slot spell with target allocation and damage roll fills",
+          "requiredReducerEntrypoints": [
+            "start_battle",
+            "discover_battle_acts",
+            "resolve_battle_subject"
+          ],
+          "durableStateOwner": "BattleState owns current actor, turn action resource, spell-slot expenditure, and target Hit Points; the adapter owns only replay evidence.",
+          "acceptanceCondition": "Target replay evidence shows Magic Missile allocation and damage actions resolved through the shared reducer entrypoints and battle-owned state fields.",
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/battle-runtime-magic-missile.mbt.qnt exposes SpellTargetAllocation then SpellDamageRoll and asserts target HP, death flag, action availability, multiattack dispatch count, and Sneak Attack turn use projection.",
+              "packages/battle-runtime/battle-runtime-reducer-spine-contract.mbt.qnt already models SlotSpellSubject discovery, spell target fills, damage fills, committed spell-slot use, and battle-owned Hit Points through the reducer surface."
+            ],
+            "rawDomainFacts": [
+              ".references/srd-5.2.1/Spells/Gaining-and-Casting.md#Spell Slots establishes slot expenditure on cast.",
+              ".references/srd-5.2.1/Playing-the-Game.md#Hit Points and UBIQUITOUS_LANGUAGE.md#Hit Points and Death establish BattleState-owned Hit Point projection.",
+              "UBIQUITOUS_LANGUAGE.md#Action Lifecycle names subject, hole, fill, and resolution vocabulary."
+            ],
+            "blockers": []
+          }
+        },
+        {
+          "order": 2,
+          "driverPath": "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.mbt.qnt",
+          "route": "reducer-routed",
+          "subjectFamily": "save-gated spell frontier ordering",
+          "requiredReducerEntrypoints": [
+            "discover_battle_acts",
+            "resolve_battle_subject"
+          ],
+          "durableStateOwner": "BattleState owns subject frontier progress and spell resource effects; ordering-error labels remain reducer result facts, not adapter state.",
+          "acceptanceCondition": "Target replay evidence reuses the existing Magic-action and spell-slot ownership instead of introducing a local save-gated ordering island.",
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.mbt.qnt exposes target or area, Saving Throw outcome, condition choice, and damage dice frontiers.",
+              "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.qnt is the semantic core for save-gated spell hole-frontier order."
+            ],
+            "rawDomainFacts": [
+              ".references/srd-5.2.1/Playing-the-Game.md#Saving Throws defines Saving Throw resolution as effect resistance.",
+              ".references/srd-5.2.1/Spells/Gaining-and-Casting.md#Saving Throws establishes spell save outcomes.",
+              "UBIQUITOUS_LANGUAGE.md#Spellcasting and UBIQUITOUS_LANGUAGE.md#Action Lifecycle provide domain vocabulary."
+            ],
+            "blockers": [
+              "If the target engine has not yet represented Magic-action spell subjects or slot ownership from the Magic Missile route, record a source/target blocker instead of building a driver-local ordering module."
+            ]
+          }
+        },
+        {
+          "order": 3,
+          "driverPath": "packages/battle-runtime/battle-runtime-hit-point-restoration-ordering.mbt.qnt",
+          "route": "substrate-first",
+          "subjectFamily": "Hit Point restoration frontier ordering and zero-HP cleanup",
+          "requiredReducerEntrypoints": [
+            "discover_battle_acts",
+            "resolve_battle_subject"
+          ],
+          "durableStateOwner": "BattleState owns restored target Hit Points and zero-Hit-Point lifecycle cleanup; the healing frontier does not own a duplicate HP ledger.",
+          "acceptanceCondition": "Target replay evidence adds HP restoration through the battle-owned HP lifecycle and keeps spell target/distribution fills as reducer subject progress.",
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/battle-runtime-hit-point-restoration-ordering.mbt.qnt exposes spell healing target choice/list, healing roll, feature healing-pool distribution, and zero-HP cleanup projections.",
+              "packages/battle-runtime/battle-runtime-hit-point-restoration-ordering.qnt is the semantic core for restoration frontier order."
+            ],
+            "rawDomainFacts": [
+              ".references/srd-5.2.1/Playing-the-Game.md#Healing and .references/srd-5.2.1/Rules-Glossary.md#Hit Points define Hit Point restoration.",
+              ".references/srd-5.2.1/Playing-the-Game.md#Dropping to 0 Hit Points and UBIQUITOUS_LANGUAGE.md#Hit Points and Death define zero-HP lifecycle effects."
+            ],
+            "blockers": [
+              "If the target engine has no battle-owned HP lifecycle substrate yet, implement that substrate first and record the durable field derivability before routing this driver."
+            ]
+          }
+        },
+        {
+          "order": 4,
+          "driverPath": "packages/battle-runtime/battle-runtime-death-saving-throw.mbt.qnt",
+          "route": "substrate-first",
+          "subjectFamily": "start-turn Death Saving Throw lifecycle",
+          "requiredReducerEntrypoints": ["resolve_battle_subject"],
+          "durableStateOwner": "BattleState owns target Hit Points, Stable, Unconscious, Dead, and death-save counters; the adapter owns only sampled roll evidence.",
+          "acceptanceCondition": "Target replay evidence routes Death Saving Throw discovery/fill through turn advancement or subject resolution using the same HP lifecycle owner as damage and healing.",
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/battle-runtime-death-saving-throw.mbt.qnt samples natural 1, ordinary failure, ordinary success, and natural 20 outcomes over the DeathSavingThrow hole.",
+              "packages/battle-runtime/battle-runtime-hit-points.qnt and packages/shared-algebras/proofs/rule-core/zero-hit-point-lifecycle.qnt own the copied reusable death-save and zero-HP lifecycle facts."
+            ],
+            "rawDomainFacts": [
+              ".references/srd-5.2.1/Rules-Glossary.md#Death Saving Throw establishes the start-turn trigger.",
+              ".references/srd-5.2.1/Playing-the-Game.md#Death Saving Throws defines success, failure, natural 1, natural 20, Stable, and death outcomes.",
+              "UBIQUITOUS_LANGUAGE.md#Hit Points and Death names the lifecycle."
+            ],
+            "blockers": [
+              "If the target engine has no durable death-save counters or Stable/Unconscious state owner, record the missing owner before treating replay evidence as meaningful."
+            ]
+          }
+        },
+        {
+          "order": 5,
+          "driverPath": "packages/battle-runtime/battle-runtime-concentration-break-teardown.mbt.qnt",
+          "route": "substrate-first",
+          "subjectFamily": "Concentration break teardown",
+          "requiredReducerEntrypoints": ["resolve_battle_subject"],
+          "durableStateOwner": "BattleState owns concentrating source, active Spell Effect instances, and teardown before the next command; no adapter-local concentration ledger is allowed.",
+          "acceptanceCondition": "Target replay evidence proves failed damage save, voluntary end, and replacement Concentration teardown through one durable Concentration owner.",
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/battle-runtime-concentration-break-teardown.mbt.qnt covers damage-save failure, voluntary end, and replacement Concentration teardown.",
+              "packages/battle-runtime/battle-runtime-concentration.qnt is the semantic owner for Concentration break facts."
+            ],
+            "rawDomainFacts": [
+              ".references/srd-5.2.1/Rules-Glossary.md#Concentration defines effect end, voluntary end, replacement Concentration, and damage save DC.",
+              "UBIQUITOUS_LANGUAGE.md#Spellcasting defines Concentration and Spell Effect terms."
+            ],
+            "blockers": [
+              "Before implementation, identify the minimal durable concentration owner. If QNT/guidance does not state enough to choose that owner, record a source-qnt-corpus blocker."
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

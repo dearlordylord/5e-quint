@@ -52,6 +52,12 @@ const ALLOWLIST = [
     transform: "source-branch-inventory-cleanroom-paths",
   },
   {
+    sourceRoot: "plans/cleanroom-branch-coverage/reducer-route-inventory.json",
+    destRoot: "branch-coverage/reducer-route-inventory.json",
+    kind: "file",
+    transform: "cleanroom-paths",
+  },
+  {
     sourceRoot: "plans/cleanroom-guidance",
     destRoot: "guidance",
     kind: "tree",
@@ -158,7 +164,11 @@ function collectCopies(repoRoot) {
     }
     const destRoot = destRootFor(rule);
     if (rule.kind === "file") {
-      copies.push({ source: rule.sourceRoot, dest: destRoot, transform: rule.transform });
+      copies.push({
+        source: rule.sourceRoot,
+        dest: destRoot,
+        transform: rule.transform,
+      });
     } else {
       const files =
         rule.kind === "flat"
@@ -203,7 +213,9 @@ function verifyImportsResolve(inputRoot, inventory) {
       const resolvedDir = path.dirname(item.dest);
       const target = `${path.join(resolvedDir, importPath)}.qnt`;
       if (!present.has(target)) {
-        dangling.push(`${item.dest}: from "${importPath}" -> missing ${target}`);
+        dangling.push(
+          `${item.dest}: from "${importPath}" -> missing ${target}`,
+        );
       }
     }
   }
@@ -307,10 +319,13 @@ function transformSourceBranchInventory(content) {
       ...inventory,
       sourceArtifacts: {
         ...inventory.sourceArtifacts,
-        branchScope: "materialized in branchObligations; source branch-scope rows are not copied to cleanroom input",
+        branchScope:
+          "materialized in branchObligations; source branch-scope rows are not copied to cleanroom input",
         driverPathModel: "cleanroom-input/qnt paths",
       },
-      branchObligations: (inventory.branchObligations ?? []).map(transformEntry),
+      branchObligations: (inventory.branchObligations ?? []).map(
+        transformEntry,
+      ),
       sampledInputs: (inventory.sampledInputs ?? []).map(transformEntry),
     },
     null,
@@ -318,16 +333,52 @@ function transformSourceBranchInventory(content) {
   )}\n`;
 }
 
+function cleanroomPathString(value) {
+  if (value.startsWith("packages/")) return cleanroomQntPath(value);
+  return value;
+}
+
+function cleanroomPathValue(value) {
+  if (typeof value === "string") return cleanroomPathString(value);
+  if (Array.isArray(value)) return value.map(cleanroomPathValue);
+  if (value !== null && typeof value === "object") {
+    return Object.fromEntries(
+      Object.entries(value).map(([key, entry]) => [
+        key,
+        cleanroomPathValue(entry),
+      ]),
+    );
+  }
+  return value;
+}
+
+function transformCleanroomPaths(content) {
+  return `${JSON.stringify(cleanroomPathValue(JSON.parse(content)), null, 2)}\n`;
+}
+
 function runSelfTest() {
   const copies = collectCopies(path.resolve(__dirname, ".."));
   const inventoryCopy = copies.find(
     (copy) => copy.dest === "branch-coverage/source-branch-inventory.json",
   );
+  const routeInventoryCopy = copies.find(
+    (copy) => copy.dest === "branch-coverage/reducer-route-inventory.json",
+  );
   if (
     inventoryCopy === undefined ||
     inventoryCopy.transform !== "source-branch-inventory-cleanroom-paths"
   ) {
-    fail("source branch inventory copy must preserve its cleanroom path transform.");
+    fail(
+      "source branch inventory copy must preserve its cleanroom path transform.",
+    );
+  }
+  if (
+    routeInventoryCopy === undefined ||
+    routeInventoryCopy.transform !== "cleanroom-paths"
+  ) {
+    fail(
+      "reducer route inventory copy must preserve its cleanroom path transform.",
+    );
   }
   const transformed = JSON.parse(
     transformSourceBranchInventory(
@@ -351,6 +402,24 @@ function runSelfTest() {
       }),
     ),
   );
+  const transformedRoutes = JSON.parse(
+    transformCleanroomPaths(
+      JSON.stringify({
+        diagnosticBatches: [
+          {
+            entries: [
+              {
+                driverPath: "packages/example/example.mbt.qnt",
+                derivability: {
+                  qntFacts: ["packages/example/example.mbt.qnt"],
+                },
+              },
+            ],
+          },
+        ],
+      }),
+    ),
+  );
   if (
     transformed.branchObligations[0].driverPath !==
       "cleanroom-input/qnt/example/example.mbt.qnt" ||
@@ -360,7 +429,19 @@ function runSelfTest() {
       "cleanroom-input/qnt/example/example.mbt.qnt" ||
     transformed.sourceArtifacts.branchScope.includes("plans/")
   ) {
-    fail("source branch inventory transform did not produce target-local paths.");
+    fail(
+      "source branch inventory transform did not produce target-local paths.",
+    );
+  }
+  if (
+    transformedRoutes.diagnosticBatches[0].entries[0].driverPath !==
+      "cleanroom-input/qnt/example/example.mbt.qnt" ||
+    transformedRoutes.diagnosticBatches[0].entries[0].derivability
+      .qntFacts[0] !== "cleanroom-input/qnt/example/example.mbt.qnt"
+  ) {
+    fail(
+      "reducer route inventory transform did not produce target-local paths.",
+    );
   }
   process.stdout.write("cleanroom input sync self-test OK.\n");
 }
@@ -369,6 +450,9 @@ function transformedContent(copy, sourceAbs) {
   const content = fs.readFileSync(sourceAbs, "utf8");
   if (copy.transform === "source-branch-inventory-cleanroom-paths") {
     return transformSourceBranchInventory(content);
+  }
+  if (copy.transform === "cleanroom-paths") {
+    return transformCleanroomPaths(content);
   }
   return content;
 }
@@ -455,6 +539,7 @@ function main() {
     "- `raw/srd-5.2.1/**`: SRD 5.2.1 RAW markdown.",
     "- `qnt/**`: active QNT specs, MBT drivers, and rule-core slices.",
     "- `branch-coverage/source-branch-inventory.json`: source branch obligations.",
+    "- `branch-coverage/reducer-route-inventory.json`: source reducer-route task selection.",
     "- `guidance/**`: curated source-side cleanroom guidance.",
     "- `domain/UBIQUITOUS_LANGUAGE.md`: domain language.",
     "- `domain/CLEANROOM_ASSUMPTIONS.md`: curated RAW-ambiguity decisions.",
@@ -479,7 +564,8 @@ function main() {
     "| File | sha256 | Source path |",
     "| --- | --- | --- |",
     ...inventory.map(
-      (item) => `| \`${item.dest}\` | \`${item.sha256}\` | \`${item.source}\` |`,
+      (item) =>
+        `| \`${item.dest}\` | \`${item.sha256}\` | \`${item.source}\` |`,
     ),
     "",
     "## Validator Snapshot",

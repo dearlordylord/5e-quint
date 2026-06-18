@@ -22,6 +22,8 @@ Target profile: `{{targetProfileId}}`. Target package/tooling:
   {{quintBindingName}}.
 - `cleanroom-input/branch-coverage/source-branch-inventory.json` — the source
   branch obligations each target task must satisfy.
+- `cleanroom-input/branch-coverage/reducer-route-inventory.json` — curated
+  reducer-spine diagnostic route selection and derivability records.
 - `cleanroom-input/guidance/**` — curated language-independent architecture
   guidance.
 - `cleanroom-input/domain/UBIQUITOUS_LANGUAGE.md` — canonical terminology. Use
@@ -31,7 +33,7 @@ Target profile: `{{targetProfileId}}`. Target package/tooling:
 - `cleanroom-input/MANIFEST.md` — the snapshot you are implementing against.
 - Repo-local files: `tasks/**`, `{{enginePath}}/**`, this file, `README.md`.
 - Target documentation allowed by the profile:
-{{allowedTargetDocsMarkdown}}
+  {{allowedTargetDocsMarkdown}}
 
 ## Forbidden Inputs
 
@@ -136,7 +138,9 @@ Every implementation task must update:
 
 The corpus is the backlog: each in-scope branch obligation from
 `cleanroom-input/branch-coverage/source-branch-inventory.json` is a unit of
-conformance work. `tasks/ACTIVE_WORK.json` selects the assignment and lane
+conformance work. `cleanroom-input/branch-coverage/reducer-route-inventory.json`
+selects the focused reducer-spine diagnostic route when `tasks/ACTIVE_WORK.json`
+uses that assignment. `tasks/ACTIVE_WORK.json` selects the assignment and lane
 order for this run. `tasks/LEVEL_1_2_SCOPE.md` records which drivers are in
 scope for character levels 1-2.
 `tasks/LEVEL_1_2_SCOPE.md` is source-owned; do not reorder it in the target
