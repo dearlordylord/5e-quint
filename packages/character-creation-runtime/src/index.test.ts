@@ -147,6 +147,7 @@ import {
   SRD_LEVEL_ONE_CLASS_UNIT_IDS,
   SRD_LEVEL_THREE_SUBCLASS_UNIT_IDS,
   SORCERER_METAMAGIC_OPTIONS_CHOICE_KEY,
+  SUPPORTED_FIGHTING_STYLE_OPTION_IDS,
   WEAPON_MASTERY_OPTIONS_CHOICE_KEY,
   WIZARD_PREPARED_SPELL_CHOICE_KEY,
   WIZARD_SPELLBOOK_CHOICE_KEY,
@@ -1002,8 +1003,8 @@ describe("character creation hole discovery", () => {
       kind: "choice",
       cardinality: { tag: "exactly", count: 1 },
     });
-    expect(optionIds(fightingStyleHole)).toEqual(
-      expect.arrayContaining(["defense"]),
+    expect([...optionIds(fightingStyleHole)].sort()).toEqual(
+      [...SUPPORTED_FIGHTING_STYLE_OPTION_IDS].sort(),
     );
     const weaponMasteryHole = holeById(
       holes,

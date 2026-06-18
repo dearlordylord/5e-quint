@@ -1,5 +1,5 @@
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1D2-FIGHTER-FIGHTING-STYLE fighter_fighting_style
-// UNIT-IDENTITY-MBT-REPLAY: L1D2-FIGHTER-FIGHTING-STYLE fighter_fighting_style doSelectDefenseFightingStyle doReplaceDefenseWithArcheryOnFighterLevelGain
+// UNIT-IDENTITY-MBT-REPLAY: L1D2-FIGHTER-FIGHTING-STYLE fighter_fighting_style doSelectDefenseFightingStyle doSelectArcheryFightingStyle doSelectGreatWeaponFightingStyle doSelectTwoWeaponFightingStyle doReplaceArcheryWithDefenseOnFighterLevelGain doReplaceDefenseWithArcheryOnFighterLevelGain doReplaceDefenseWithGreatWeaponFightingOnFighterLevelGain doReplaceDefenseWithTwoWeaponFightingOnFighterLevelGain
 // KERNEL-COVERAGE: parity-witness CREATION.CLASS_FEATURE_FEAT.CHOICE_FINALIZATION
 // KERNEL-COVERAGE: parity-witness CREATION.ADVANCEMENT.CLASS_FEATURE_REPLACEMENT
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt character-creation.fighter-fighting-style-advancement-replacement
@@ -48,6 +48,8 @@ import {
   PHASE1_CLASS_FIGHTER_UNIT_ID,
   PHASE1_FIGHTING_STYLE_ARCHERY_UNIT_ID,
   PHASE1_FIGHTING_STYLE_DEFENSE_UNIT_ID,
+  PHASE1_FIGHTING_STYLE_GREAT_WEAPON_FIGHTING_UNIT_ID,
+  PHASE1_FIGHTING_STYLE_TWO_WEAPON_FIGHTING_UNIT_ID,
   PHASE1_LOADOUT_ARMOR_OPTION_ID,
   PHASE1_LOADOUT_SHIELD_OPTION_ID,
   PHASE1_LOADOUT_WEAPON_OPTION_ID,
@@ -68,9 +70,12 @@ import {
 import {
   PHASE1_WEAPON_FLAIL_UNIT_ID,
   PHASE1_WEAPON_SPEAR_UNIT_ID,
+  SUPPORTED_FIGHTING_STYLE_UNIT_IDS,
 } from "./phase1-manifest.ts";
 
 const FIGHTER_FIGHTING_STYLE_UNIT_ID = "fighter_fighting_style";
+type SupportedFightingStyleUnitId =
+  (typeof SUPPORTED_FIGHTING_STYLE_UNIT_IDS)[number];
 type ChoiceCreationHole = Extract<CreationHole, { readonly kind: "choice" }>;
 type SelectedClassChoiceFeature = Extract<
   CharacterBuild["features"][number],
@@ -80,7 +85,13 @@ type SelectedClassChoiceFeature = Extract<
 const fighterFightingStyleSelectedIdentityDriverSchema = {
   init: {},
   doSelectDefenseFightingStyle: {},
+  doSelectArcheryFightingStyle: {},
+  doSelectGreatWeaponFightingStyle: {},
+  doSelectTwoWeaponFightingStyle: {},
+  doReplaceArcheryWithDefenseOnFighterLevelGain: {},
   doReplaceDefenseWithArcheryOnFighterLevelGain: {},
+  doReplaceDefenseWithGreatWeaponFightingOnFighterLevelGain: {},
+  doReplaceDefenseWithTwoWeaponFightingOnFighterLevelGain: {},
   step: {},
 } as const;
 type FighterFightingStyleSelectedIdentityDriverAction = Exclude<
@@ -88,6 +99,9 @@ type FighterFightingStyleSelectedIdentityDriverAction = Exclude<
   "init" | "step"
 >;
 
+const supportedFightingStyleUnitIdSchema = z.enum(
+  SUPPORTED_FIGHTING_STYLE_UNIT_IDS,
+);
 const fighterFightingStyleSelectedIdentityProjectionSchema =
   z.discriminatedUnion("lastResult", [
     z.object({
@@ -96,28 +110,28 @@ const fighterFightingStyleSelectedIdentityProjectionSchema =
       selectedFeatUnitId: z.literal("none"),
       selectedFightingStyleFeatureRefCount: z.literal(0),
       fighterFightingStyleUnitRefPresent: z.literal(false),
-      defenseUnitRefPresent: z.literal(false),
-      archeryUnitRefPresent: z.literal(false),
+      selectedFeatUnitRefCount: z.literal(0),
+      nonSelectedFightingStyleUnitRefCount: z.literal(0),
       totalLevel: z.literal(1),
     }),
     z.object({
       lastResult: z.literal("finalized"),
       selectedFromUnitId: z.literal(FIGHTER_FIGHTING_STYLE_UNIT_ID),
-      selectedFeatUnitId: z.literal(PHASE1_FIGHTING_STYLE_DEFENSE_UNIT_ID),
+      selectedFeatUnitId: supportedFightingStyleUnitIdSchema,
       selectedFightingStyleFeatureRefCount: z.literal(1),
       fighterFightingStyleUnitRefPresent: z.literal(true),
-      defenseUnitRefPresent: z.literal(true),
-      archeryUnitRefPresent: z.literal(false),
+      selectedFeatUnitRefCount: z.literal(1),
+      nonSelectedFightingStyleUnitRefCount: z.literal(0),
       totalLevel: z.literal(1),
     }),
     z.object({
       lastResult: z.literal("replaced"),
       selectedFromUnitId: z.literal(FIGHTER_FIGHTING_STYLE_UNIT_ID),
-      selectedFeatUnitId: z.literal(PHASE1_FIGHTING_STYLE_ARCHERY_UNIT_ID),
+      selectedFeatUnitId: supportedFightingStyleUnitIdSchema,
       selectedFightingStyleFeatureRefCount: z.literal(1),
       fighterFightingStyleUnitRefPresent: z.literal(true),
-      defenseUnitRefPresent: z.literal(false),
-      archeryUnitRefPresent: z.literal(true),
+      selectedFeatUnitRefCount: z.literal(1),
+      nonSelectedFightingStyleUnitRefCount: z.literal(0),
       totalLevel: z.literal(2),
     }),
   ]);
@@ -152,18 +166,75 @@ const selectedUnitIdentityReplays = [
     unitId: "fighter_fighting_style",
     actions: [
       "doSelectDefenseFightingStyle",
+      "doSelectArcheryFightingStyle",
+      "doSelectGreatWeaponFightingStyle",
+      "doSelectTwoWeaponFightingStyle",
+      "doReplaceArcheryWithDefenseOnFighterLevelGain",
       "doReplaceDefenseWithArcheryOnFighterLevelGain",
+      "doReplaceDefenseWithGreatWeaponFightingOnFighterLevelGain",
+      "doReplaceDefenseWithTwoWeaponFightingOnFighterLevelGain",
     ],
     sequences: [
       {
         name: "fighter-one-finalizes-selected-defense-fighting-style",
         actions: ["doSelectDefenseFightingStyle"],
-        expected: finalizedDefenseProjection(),
+        expected: finalizedFightingStyleProjection(
+          PHASE1_FIGHTING_STYLE_DEFENSE_UNIT_ID,
+        ),
+      },
+      {
+        name: "fighter-one-finalizes-selected-archery-fighting-style",
+        actions: ["doSelectArcheryFightingStyle"],
+        expected: finalizedFightingStyleProjection(
+          PHASE1_FIGHTING_STYLE_ARCHERY_UNIT_ID,
+        ),
+      },
+      {
+        name: "fighter-one-finalizes-selected-great-weapon-fighting-style",
+        actions: ["doSelectGreatWeaponFightingStyle"],
+        expected: finalizedFightingStyleProjection(
+          PHASE1_FIGHTING_STYLE_GREAT_WEAPON_FIGHTING_UNIT_ID,
+        ),
+      },
+      {
+        name: "fighter-one-finalizes-selected-two-weapon-fighting-style",
+        actions: ["doSelectTwoWeaponFightingStyle"],
+        expected: finalizedFightingStyleProjection(
+          PHASE1_FIGHTING_STYLE_TWO_WEAPON_FIGHTING_UNIT_ID,
+        ),
+      },
+      {
+        name: "fighter-level-gain-replaces-archery-with-defense",
+        actions: ["doReplaceArcheryWithDefenseOnFighterLevelGain"],
+        expected: replacedFightingStyleProjection({
+          initialFeatUnitId: PHASE1_FIGHTING_STYLE_ARCHERY_UNIT_ID,
+          selectedFeatUnitId: PHASE1_FIGHTING_STYLE_DEFENSE_UNIT_ID,
+        }),
       },
       {
         name: "fighter-level-gain-replaces-defense-with-archery",
         actions: ["doReplaceDefenseWithArcheryOnFighterLevelGain"],
-        expected: replacedArcheryProjection(),
+        expected: replacedFightingStyleProjection({
+          initialFeatUnitId: PHASE1_FIGHTING_STYLE_DEFENSE_UNIT_ID,
+          selectedFeatUnitId: PHASE1_FIGHTING_STYLE_ARCHERY_UNIT_ID,
+        }),
+      },
+      {
+        name: "fighter-level-gain-replaces-defense-with-great-weapon-fighting",
+        actions: ["doReplaceDefenseWithGreatWeaponFightingOnFighterLevelGain"],
+        expected: replacedFightingStyleProjection({
+          initialFeatUnitId: PHASE1_FIGHTING_STYLE_DEFENSE_UNIT_ID,
+          selectedFeatUnitId:
+            PHASE1_FIGHTING_STYLE_GREAT_WEAPON_FIGHTING_UNIT_ID,
+        }),
+      },
+      {
+        name: "fighter-level-gain-replaces-defense-with-two-weapon-fighting",
+        actions: ["doReplaceDefenseWithTwoWeaponFightingOnFighterLevelGain"],
+        expected: replacedFightingStyleProjection({
+          initialFeatUnitId: PHASE1_FIGHTING_STYLE_DEFENSE_UNIT_ID,
+          selectedFeatUnitId: PHASE1_FIGHTING_STYLE_TWO_WEAPON_FIGHTING_UNIT_ID,
+        }),
       },
     ],
   },
@@ -181,13 +252,12 @@ const quintStateSchema = z.object({
   ]),
   qSelectedFeatUnitId: z.union([
     z.literal("none"),
-    z.literal(PHASE1_FIGHTING_STYLE_DEFENSE_UNIT_ID),
-    z.literal(PHASE1_FIGHTING_STYLE_ARCHERY_UNIT_ID),
+    supportedFightingStyleUnitIdSchema,
   ]),
   qSelectedFightingStyleFeatureRefCount: z.bigint(),
   qFighterFightingStyleUnitRefPresent: z.boolean(),
-  qDefenseUnitRefPresent: z.boolean(),
-  qArcheryUnitRefPresent: z.boolean(),
+  qSelectedFeatUnitRefCount: z.bigint(),
+  qNonSelectedFightingStyleUnitRefCount: z.bigint(),
   qTotalLevel: z.bigint(),
 });
 
@@ -255,10 +325,49 @@ function createFighterFightingStyleSelectedIdentityDriver() {
     return {
       init: reset,
       doSelectDefenseFightingStyle: () => {
-        projection = finalizedDefenseProjection();
+        projection = finalizedFightingStyleProjection(
+          PHASE1_FIGHTING_STYLE_DEFENSE_UNIT_ID,
+        );
+      },
+      doSelectArcheryFightingStyle: () => {
+        projection = finalizedFightingStyleProjection(
+          PHASE1_FIGHTING_STYLE_ARCHERY_UNIT_ID,
+        );
+      },
+      doSelectGreatWeaponFightingStyle: () => {
+        projection = finalizedFightingStyleProjection(
+          PHASE1_FIGHTING_STYLE_GREAT_WEAPON_FIGHTING_UNIT_ID,
+        );
+      },
+      doSelectTwoWeaponFightingStyle: () => {
+        projection = finalizedFightingStyleProjection(
+          PHASE1_FIGHTING_STYLE_TWO_WEAPON_FIGHTING_UNIT_ID,
+        );
+      },
+      doReplaceArcheryWithDefenseOnFighterLevelGain: () => {
+        projection = replacedFightingStyleProjection({
+          initialFeatUnitId: PHASE1_FIGHTING_STYLE_ARCHERY_UNIT_ID,
+          selectedFeatUnitId: PHASE1_FIGHTING_STYLE_DEFENSE_UNIT_ID,
+        });
       },
       doReplaceDefenseWithArcheryOnFighterLevelGain: () => {
-        projection = replacedArcheryProjection();
+        projection = replacedFightingStyleProjection({
+          initialFeatUnitId: PHASE1_FIGHTING_STYLE_DEFENSE_UNIT_ID,
+          selectedFeatUnitId: PHASE1_FIGHTING_STYLE_ARCHERY_UNIT_ID,
+        });
+      },
+      doReplaceDefenseWithGreatWeaponFightingOnFighterLevelGain: () => {
+        projection = replacedFightingStyleProjection({
+          initialFeatUnitId: PHASE1_FIGHTING_STYLE_DEFENSE_UNIT_ID,
+          selectedFeatUnitId:
+            PHASE1_FIGHTING_STYLE_GREAT_WEAPON_FIGHTING_UNIT_ID,
+        });
+      },
+      doReplaceDefenseWithTwoWeaponFightingOnFighterLevelGain: () => {
+        projection = replacedFightingStyleProjection({
+          initialFeatUnitId: PHASE1_FIGHTING_STYLE_DEFENSE_UNIT_ID,
+          selectedFeatUnitId: PHASE1_FIGHTING_STYLE_TWO_WEAPON_FIGHTING_UNIT_ID,
+        });
       },
       step: () => {},
       getState: () => projection,
@@ -276,20 +385,24 @@ function initialProjection(): Extract<
     selectedFeatUnitId: "none",
     selectedFightingStyleFeatureRefCount: 0,
     fighterFightingStyleUnitRefPresent: false,
-    defenseUnitRefPresent: false,
-    archeryUnitRefPresent: false,
+    selectedFeatUnitRefCount: 0,
+    nonSelectedFightingStyleUnitRefCount: 0,
     totalLevel: 1,
   };
 }
 
-function finalizedDefenseProjection(): Extract<
+function finalizedFightingStyleProjection(
+  selectedFeatUnitId: SupportedFightingStyleUnitId,
+): Extract<
   FighterFightingStyleSelectedIdentityProjection,
   { readonly lastResult: "finalized" }
 > {
-  const facts = requiredFightingStyleBuildFacts(finalizedFighterOneBuild());
-  if (facts.selectedFeatUnitId !== PHASE1_FIGHTING_STYLE_DEFENSE_UNIT_ID) {
+  const facts = requiredFightingStyleBuildFacts(
+    finalizedFighterOneBuild(selectedFeatUnitId),
+  );
+  if (facts.selectedFeatUnitId !== selectedFeatUnitId) {
     throw new Error(
-      `Expected finalized Fighter Fighting Style selection to be ${PHASE1_FIGHTING_STYLE_DEFENSE_UNIT_ID}, received ${facts.selectedFeatUnitId}.`,
+      `Expected finalized Fighter Fighting Style selection to be ${selectedFeatUnitId}, received ${facts.selectedFeatUnitId}.`,
     );
   }
   if (facts.totalLevel !== 1) {
@@ -299,11 +412,11 @@ function finalizedDefenseProjection(): Extract<
   }
   if (
     !facts.fighterFightingStyleUnitRefPresent ||
-    !facts.defenseUnitRefPresent ||
-    facts.archeryUnitRefPresent
+    facts.selectedFeatUnitRefCount !== 1 ||
+    facts.nonSelectedFightingStyleUnitRefCount !== 0
   ) {
     throw new Error(
-      "Expected finalized Fighter Fighting Style Unit refs to include the container and Defense only.",
+      `Expected finalized Fighter Fighting Style Unit refs to include the container and ${selectedFeatUnitId} only.`,
     );
   }
 
@@ -313,16 +426,24 @@ function finalizedDefenseProjection(): Extract<
     selectedFeatUnitId: facts.selectedFeatUnitId,
     selectedFightingStyleFeatureRefCount: 1,
     fighterFightingStyleUnitRefPresent: true,
-    defenseUnitRefPresent: true,
-    archeryUnitRefPresent: false,
+    selectedFeatUnitRefCount: 1,
+    nonSelectedFightingStyleUnitRefCount: 0,
     totalLevel: facts.totalLevel,
   };
 }
 
-function replacedArcheryProjection(): Extract<
+function replacedFightingStyleProjection(input: {
+  readonly initialFeatUnitId: SupportedFightingStyleUnitId;
+  readonly selectedFeatUnitId: SupportedFightingStyleUnitId;
+}): Extract<
   FighterFightingStyleSelectedIdentityProjection,
   { readonly lastResult: "replaced" }
 > {
+  if (input.initialFeatUnitId === input.selectedFeatUnitId) {
+    throw new Error(
+      `Expected distinct Fighter Fighting Style replacement Units, received ${input.selectedFeatUnitId}.`,
+    );
+  }
   const fighterClassUnitId = expectRight(
     classUnitIdFromUnitId({
       unitLibrary,
@@ -334,21 +455,21 @@ function replacedArcheryProjection(): Extract<
       unitLibrary,
       classUnitId: fighterClassUnitId,
       hitPointRule: { tag: "fixedHigherLevelGain" },
-      selectedFeatUnitId: PHASE1_FIGHTING_STYLE_ARCHERY_UNIT_ID,
+      selectedFeatUnitId: input.selectedFeatUnitId,
     }),
   );
   const build = expectRight(
     advanceCharacterBuildClassLevel({
-      build: finalizedFighterOneBuild(),
+      build: finalizedFighterOneBuild(input.initialFeatUnitId),
       unitLibrary,
       levelGain,
     }),
   );
 
   const facts = requiredFightingStyleBuildFacts(build);
-  if (facts.selectedFeatUnitId !== PHASE1_FIGHTING_STYLE_ARCHERY_UNIT_ID) {
+  if (facts.selectedFeatUnitId !== input.selectedFeatUnitId) {
     throw new Error(
-      `Expected replaced Fighter Fighting Style selection to be ${PHASE1_FIGHTING_STYLE_ARCHERY_UNIT_ID}, received ${facts.selectedFeatUnitId}.`,
+      `Expected replaced Fighter Fighting Style selection to be ${input.selectedFeatUnitId}, received ${facts.selectedFeatUnitId}.`,
     );
   }
   if (facts.totalLevel !== 2) {
@@ -358,11 +479,11 @@ function replacedArcheryProjection(): Extract<
   }
   if (
     !facts.fighterFightingStyleUnitRefPresent ||
-    facts.defenseUnitRefPresent ||
-    !facts.archeryUnitRefPresent
+    facts.selectedFeatUnitRefCount !== 1 ||
+    facts.nonSelectedFightingStyleUnitRefCount !== 0
   ) {
     throw new Error(
-      "Expected replaced Fighter Fighting Style Unit refs to include the container and Archery only.",
+      `Expected replaced Fighter Fighting Style Unit refs to include the container and ${input.selectedFeatUnitId} only.`,
     );
   }
 
@@ -372,19 +493,17 @@ function replacedArcheryProjection(): Extract<
     selectedFeatUnitId: facts.selectedFeatUnitId,
     selectedFightingStyleFeatureRefCount: 1,
     fighterFightingStyleUnitRefPresent: true,
-    defenseUnitRefPresent: false,
-    archeryUnitRefPresent: true,
+    selectedFeatUnitRefCount: 1,
+    nonSelectedFightingStyleUnitRefCount: 0,
     totalLevel: facts.totalLevel,
   };
 }
 
 function requiredFightingStyleBuildFacts(build: CharacterBuild): {
-  readonly selectedFeatUnitId:
-    | typeof PHASE1_FIGHTING_STYLE_DEFENSE_UNIT_ID
-    | typeof PHASE1_FIGHTING_STYLE_ARCHERY_UNIT_ID;
+  readonly selectedFeatUnitId: SupportedFightingStyleUnitId;
   readonly fighterFightingStyleUnitRefPresent: boolean;
-  readonly defenseUnitRefPresent: boolean;
-  readonly archeryUnitRefPresent: boolean;
+  readonly selectedFeatUnitRefCount: number;
+  readonly nonSelectedFightingStyleUnitRefCount: number;
   readonly totalLevel: number;
 } {
   const selectedFightingStyleFeatures = build.features.filter(
@@ -398,38 +517,46 @@ function requiredFightingStyleBuildFacts(build: CharacterBuild): {
     );
   }
   const selectedFightingStyleFeature = selectedFightingStyleFeatures[0];
-  if (
-    selectedFightingStyleFeature.unitId !==
-      PHASE1_FIGHTING_STYLE_DEFENSE_UNIT_ID &&
-    selectedFightingStyleFeature.unitId !==
-      PHASE1_FIGHTING_STYLE_ARCHERY_UNIT_ID
-  ) {
+  if (!isSupportedFightingStyleUnitId(selectedFightingStyleFeature.unitId)) {
     throw new Error(
-      `Expected selected Fighter Fighting Style feat to be Defense or Archery, received ${selectedFightingStyleFeature.unitId}.`,
+      `Expected selected Fighter Fighting Style feat to be one of ${SUPPORTED_FIGHTING_STYLE_UNIT_IDS.join(", ")}, received ${selectedFightingStyleFeature.unitId}.`,
     );
   }
 
   const unitRefIds = characterBuildUnitRefs(build, unitLibrary).map(
     (ref) => ref.unitId,
   );
+  const fightingStyleUnitRefIds = unitRefIds.filter(
+    isSupportedFightingStyleUnitId,
+  );
   return {
     fighterFightingStyleUnitRefPresent: unitRefIds.includes(
       FIGHTER_FIGHTING_STYLE_UNIT_ID,
     ),
-    defenseUnitRefPresent: unitRefIds.includes(
-      PHASE1_FIGHTING_STYLE_DEFENSE_UNIT_ID,
-    ),
-    archeryUnitRefPresent: unitRefIds.includes(
-      PHASE1_FIGHTING_STYLE_ARCHERY_UNIT_ID,
-    ),
+    selectedFeatUnitRefCount: fightingStyleUnitRefIds.filter(
+      (unitId) => unitId === selectedFightingStyleFeature.unitId,
+    ).length,
+    nonSelectedFightingStyleUnitRefCount: fightingStyleUnitRefIds.filter(
+      (unitId) => unitId !== selectedFightingStyleFeature.unitId,
+    ).length,
     selectedFeatUnitId: selectedFightingStyleFeature.unitId,
     totalLevel: computeTotalLevel(build.progression),
   };
 }
 
-function finalizedFighterOneBuild(): CharacterBuild {
+function isSupportedFightingStyleUnitId(
+  unitId: string,
+): unitId is SupportedFightingStyleUnitId {
+  return SUPPORTED_FIGHTING_STYLE_UNIT_IDS.some(
+    (supportedUnitId) => supportedUnitId === unitId,
+  );
+}
+
+function finalizedFighterOneBuild(
+  selectedFeatUnitId: SupportedFightingStyleUnitId,
+): CharacterBuild {
   const finalized = finalizeCharacterDraft({
-    draft: completeFighterOneDraft(),
+    draft: completeFighterOneDraft(selectedFeatUnitId),
     unitLibrary,
   });
   if (finalized.tag !== "ready") {
@@ -441,7 +568,9 @@ function finalizedFighterOneBuild(): CharacterBuild {
   return finalized.build;
 }
 
-function completeFighterOneDraft(): CharacterDraft {
+function completeFighterOneDraft(
+  selectedFeatUnitId: SupportedFightingStyleUnitId,
+): CharacterDraft {
   const draft = createCharacterDraft({
     draftId: characterDraftId("fighter-fighting-style-selected-identity"),
   });
@@ -460,7 +589,10 @@ function completeFighterOneDraft(): CharacterDraft {
       draft: afterCharacterChoices.draft,
       unitLibrary,
       expectedRevision: afterCharacterChoices.draft.revision,
-      fills: classAndBackgroundChoiceFills(afterCharacterChoices.holes),
+      fills: classAndBackgroundChoiceFills(
+        afterCharacterChoices.holes,
+        selectedFeatUnitId,
+      ),
     }),
   );
   const afterPurchase = acceptedBatch(
@@ -511,6 +643,7 @@ function characterChoiceFills(
 
 function classAndBackgroundChoiceFills(
   holes: readonly CreationHole[],
+  selectedFeatUnitId: SupportedFightingStyleUnitId,
 ): readonly CreationFill[] {
   return [
     choiceFill(
@@ -527,7 +660,7 @@ function classAndBackgroundChoiceFills(
         FIGHTER_FIGHTING_STYLE_UNIT_ID,
         CLASS_FEATURE_FEAT_CHOICE_KEY,
       ),
-      [PHASE1_FIGHTING_STYLE_DEFENSE_UNIT_ID],
+      [selectedFeatUnitId],
     ),
     choiceFill(
       choiceHoleByUnit(
@@ -758,8 +891,10 @@ function normalizeQuintState(
     ),
     fighterFightingStyleUnitRefPresent:
       parsed.qFighterFightingStyleUnitRefPresent,
-    defenseUnitRefPresent: parsed.qDefenseUnitRefPresent,
-    archeryUnitRefPresent: parsed.qArcheryUnitRefPresent,
+    selectedFeatUnitRefCount: Number(parsed.qSelectedFeatUnitRefCount),
+    nonSelectedFightingStyleUnitRefCount: Number(
+      parsed.qNonSelectedFightingStyleUnitRefCount,
+    ),
     totalLevel: Number(parsed.qTotalLevel),
   });
 }
