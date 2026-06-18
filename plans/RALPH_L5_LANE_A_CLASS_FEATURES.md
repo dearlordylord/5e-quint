@@ -43,7 +43,7 @@
     {
       "number": 7,
       "id": "L5-A07-MONK-STUNNING-STRIKE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Close Monk Stunning Strike level 5 follow-up"
     },
     {
@@ -69,6 +69,12 @@
       "id": "L5-A11-WIZARD-MEMORIZE-SPELL",
       "status": "ready-for-research",
       "title": "Close Wizard Memorize Spell level 5 follow-up"
+    },
+    {
+      "number": 12,
+      "id": "L5-A12-MONK-STUNNING-STRIKE-BATTLE-RUNTIME",
+      "status": "ready-for-research",
+      "title": "Promote Monk Stunning Strike battle-runtime owner"
     }
   ]
 }
@@ -113,8 +119,10 @@ out of scope unless a task's RAW pass finds a direct dependency.
   `ASSUMPTIONS.md` or stop for owner direction.
 - Do not browse external rules sources.
 - Do not add PHB+ authored identity.
-- One task equals one mined Unit row. Do not broaden a task into unrelated
-  level 6, level 7, subclass, or spell work.
+- Closure tasks map one-to-one with mined Unit rows. Do not broaden a closure
+  task into unrelated level 6, level 7, subclass, or spell work. If a closure
+  splits off promoted runtime work, keep that split as a same-Unit follow-up
+  task rather than hiding it in prose.
 - Before adding a field or status, search for an existing source fact and avoid
   duplicate state.
 - For each Unit, first decide the owner boundary in domain language:
@@ -133,11 +141,12 @@ out of scope unless a task's RAW pass finds a direct dependency.
 | 4 | L5-A04-DRUID-WILD-RESURGENCE - Close Druid Wild Resurgence level 5 follow-up | done | none | Closed by unsupported-profile owner evidence for the future Character Sheet Wild Resurgence resource-restoration owner using existing Wild Shape and Spell Slot state owners. |
 | 5 | L5-A05-FIGHTER-TACTICAL-SHIFT - Close Fighter Tactical Shift level 5 follow-up | done | none | Independent level-5 class feature row. |
 | 6 | L5-A06-MONK-EXTRA-ATTACK - Close Monk Extra Attack level 5 follow-up | done | L5-A01-BARBARIAN-EXTRA-ATTACK | Authored and installed using the shared Extra Attack owner/evidence path. |
-| 7 | L5-A07-MONK-STUNNING-STRIKE - Close Monk Stunning Strike level 5 follow-up | ready-for-research | none | Independent level-5 class feature row. |
+| 7 | L5-A07-MONK-STUNNING-STRIKE - Close Monk Stunning Strike level 5 follow-up | done | none | Closed by unsupported-profile owner evidence for the future Monk attack-hit rider owner. |
 | 8 | L5-A08-PALADIN-FAITHFUL-STEED - Close Paladin Faithful Steed level 5 follow-up | ready-for-research | none | Independent level-5 class feature row. |
 | 9 | L5-A09-ROGUE-CUNNING-STRIKE - Close Rogue Cunning Strike level 5 follow-up | ready-for-research | none | Independent level-5 class feature row. |
 | 10 | L5-A10-SORCERER-SORCEROUS-RESTORATION - Close Sorcerer Sorcerous Restoration level 5 follow-up | ready-for-research | none | Independent level-5 class feature row. |
 | 11 | L5-A11-WIZARD-MEMORIZE-SPELL - Close Wizard Memorize Spell level 5 follow-up | ready-for-research | none | Independent level-5 class feature row. |
+| 12 | L5-A12-MONK-STUNNING-STRIKE-BATTLE-RUNTIME - Promote Monk Stunning Strike battle-runtime owner | ready-for-research | L5-A07-MONK-STUNNING-STRIKE | Executable split from Task 7 for promoted attack-hit rider behavior using existing Focus Point, Saving Throw, condition/effect, Speed, and Attack Roll Advantage owners. |
 
 ## Shared Verification
 
@@ -398,7 +407,7 @@ Verification:
 
 ### Task 7 - L5-A07-MONK-STUNNING-STRIKE
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -414,7 +423,12 @@ SRD anchor:
 
 Current state:
 
-- The mined row is not installed and has no unit profile/evidence row.
+- The mined row is closed by an unsupported-profile Unit claim with
+  checker-readable owner evidence. Stunning Strike is a Monk attack-hit rider
+  that spends the existing Focus Point Pool and depends on existing attack-hit,
+  Saving Throw, condition/effect lifecycle, Speed, and Attack Roll Advantage
+  owners; promoted runtime behavior is split to
+  L5-A12-MONK-STUNNING-STRIKE-BATTLE-RUNTIME.
 
 Output:
 
@@ -578,3 +592,52 @@ Acceptance:
 Verification:
 
 - Shared lane verification.
+
+### Task 12 - L5-A12-MONK-STUNNING-STRIKE-BATTLE-RUNTIME
+
+Status: `ready-for-research`
+
+Depends on:
+
+- L5-A07-MONK-STUNNING-STRIKE
+
+Unit:
+
+- `monk_stunning_strike`
+
+SRD anchor:
+
+- `.references/srd-5.2.1/Classes/Monk.md:124`
+
+Current state:
+
+- The generated coverage row has checker-visible unsupported-profile owner
+  evidence, but promoted battle-runtime execution is not implemented.
+
+Output:
+
+- Promote Stunning Strike as a battle-runtime Monk attack-hit rider without
+  dispatching on authored identity.
+- Reuse the existing `monk_monks_focus` Focus Point owner, attack-hit and
+  Monk weapon/Unarmed Strike gates, Saving Throw roll mode, condition/effect
+  lifecycle, Speed, and Attack Roll Advantage owners instead of duplicating
+  state.
+- Model the once-per-turn rider timing, 1 Focus Point spend, Constitution
+  Saving Throw against the Monk Focus save DC, failed-save Stunned duration,
+  and successful-save Speed/next Attack Roll Advantage duration.
+
+Acceptance:
+
+- `monk_stunning_strike` is admitted through typed source-shape support facts
+  rather than authored identity dispatch.
+- Battle-runtime/QNT behavior consumes existing Focus Point, Saving Throw,
+  condition/effect, Speed, and Attack Roll Advantage owners without adding
+  parallel state.
+- Focused runtime tests and any required QNT/MBT parity checks cover failed
+  and successful Saving Throw outcomes plus the once-per-turn rider gate.
+
+Verification:
+
+- Shared lane verification.
+- Follow the battle-runtime QNT/MBT protocol in `AGENTS.md` if promoted
+  behavior changes battle execution.

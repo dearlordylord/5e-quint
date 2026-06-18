@@ -56,8 +56,8 @@
       "catalog-authored-review-required": 77,
       "catalog-installed-owner-evidence-present": 483,
       "catalog-installed-owner-evidence-required": 1,
-      "catalog-only/dead-for-now": 148,
-      "level-5-7-follow-up-required": 27,
+      "catalog-only/dead-for-now": 149,
+      "level-5-7-follow-up-required": 26,
       "missing-authored-record": 80,
       "non-runtime": 84
     },
@@ -89,10 +89,10 @@
       "subclass-spell-access": 5
     },
     "rowsByUnitProfileDisposition": {
-      "not-recorded": 223,
+      "not-recorded": 222,
       "profile-subset-supported": 53,
       "supported-profile": 297,
-      "unsupported-profile": 327
+      "unsupported-profile": 328
     }
   },
   "rows": [
@@ -17598,7 +17598,7 @@
         "sourceInventoryRowId": "srd521:classes/monk:level-5:class-feature-grant:monk_stunning_strike",
         "state": "present"
       },
-      "nextAction": "Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported.",
+      "nextAction": "SRD Stunning Strike triggers once per turn when a Monk hits a creature with a Monk weapon or Unarmed Strike: the Monk can spend 1 Focus Point, the target makes a Constitution Saving Throw against the Monk Focus save DC, failure applies the Stunned condition until the start of the Monk's next turn, and success halves target Speed plus grants Advantage to the next Attack Roll against the target before then. The future promoted owner must consume typed support facts from the admitted source shape, existing monk_monks_focus resource state, existing attack-hit and weapon/Unarmed Strike gates, the existing Saving Throw roll mode, and source-owned condition/effect lifecycle projections. It must not add a second Focus Point pool, duplicate condition or Speed state, or dispatch on Stunning Strike or Monk authored identity.",
       "rowId": "srd521:classes/monk:level-5:class-feature-grant:monk_stunning_strike",
       "rowKind": "class-feature-grant",
       "source": {
@@ -17614,15 +17614,19 @@
           "state": "not-applicable"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "outside-battle-runtime",
+          "owner": "future battle-runtime Monk attack-hit rider owner plus existing Monk Focus resource, Saving Throw, active condition/effect, Speed, and Attack Roll Advantage owners",
+          "reason": "SRD Stunning Strike triggers once per turn when a Monk hits a creature with a Monk weapon or Unarmed Strike: the Monk can spend 1 Focus Point, the target makes a Constitution Saving Throw against the Monk Focus save DC, failure applies the Stunned condition until the start of the Monk's next turn, and success halves target Speed plus grants Advantage to the next Attack Roll against the target before then. The future promoted owner must consume typed support facts from the admitted source shape, existing monk_monks_focus resource state, existing attack-hit and weapon/Unarmed Strike gates, the existing Saving Throw roll mode, and source-owned condition/effect lifecycle projections. It must not add a second Focus Point pool, duplicate condition or Speed state, or dispatch on Stunning Strike or Monk authored identity.",
+          "state": "recorded"
         },
         "catalogAdmission": {
           "state": "not-installed",
           "unitId": "monk_stunning_strike"
         },
-        "finalDisposition": "level-5-7-follow-up-required",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },
