@@ -52,6 +52,17 @@ function battleReadinessSnapshot(battleReadinessStatus) {
     : { state: "recorded", status: battleReadinessStatus };
 }
 
+function battleReadinessClosureSnapshot(battleReadinessClosure) {
+  return battleReadinessClosure === undefined
+    ? { state: "not-recorded" }
+    : {
+        state: "recorded",
+        kind: battleReadinessClosure.kind,
+        owner: battleReadinessClosure.owner,
+        reason: battleReadinessClosure.reason,
+      };
+}
+
 function projectAuditRow(row) {
   return {
     rowId: row.id,
@@ -69,11 +80,14 @@ function projectAuditRow(row) {
       sourceInventoryRowId: row.id,
     },
     supportSnapshot: {
-      authoredContent: { state: row.authoredContent.state },
-      catalogAdmission: { state: row.catalogAdmission.state },
+      authoredContent: row.authoredContent,
+      catalogAdmission: row.catalogAdmission,
       unitProfile: unitProfileSnapshot(row.unitProfileDisposition),
       finalDisposition: row.finalDisposition,
       battleReadiness: battleReadinessSnapshot(row.battleReadinessStatus),
+      battleReadinessClosure: battleReadinessClosureSnapshot(
+        row.battleReadinessClosure,
+      ),
     },
     nextAction: row.nextAction,
   };
@@ -91,11 +105,83 @@ function battleReadinessSnapshotLabel(battleReadiness) {
     : battleReadiness.state;
 }
 
+function battleReadinessClosureSnapshotLabel(battleReadinessClosure) {
+  return battleReadinessClosure.state === "recorded"
+    ? `${battleReadinessClosure.kind}: ${battleReadinessClosure.owner}`
+    : battleReadinessClosure.state;
+}
+
+const auditedSpellPressureLevelBands = [
+  "spell-level-3",
+  "spell-level-4",
+];
+const auditedSpellPressureLevelBandSet = new Set(
+  auditedSpellPressureLevelBands,
+);
+
+function spellNameFromPressureRow(row) {
+  const prefix = `${row.className} spell list `;
+  return row.concept.startsWith(prefix)
+    ? row.concept.slice(prefix.length)
+    : row.concept;
+}
+
+function uniqueSorted(values) {
+  return Array.from(new Set(values)).sort();
+}
+
+function uniqueSpellIdentityKey(row) {
+  return `${row.levelBand}:${row.candidateUnitId}`;
+}
+
+function buildUniqueSpellIdentities(rows) {
+  const groups = new Map();
+  for (const row of rows) {
+    if (
+      row.rowKind !== "spell-unit-pressure" ||
+      !auditedSpellPressureLevelBandSet.has(row.levelBand)
+    ) {
+      continue;
+    }
+    const key = uniqueSpellIdentityKey(row);
+    const group = groups.get(key) ?? [];
+    group.push(row);
+    groups.set(key, group);
+  }
+  return Array.from(groups.values())
+    .map((classListRows) => {
+      const representative = classListRows[0];
+      return {
+        levelBand: representative.levelBand,
+        axis: representative.axis,
+        spellName: spellNameFromPressureRow(representative),
+        candidateUnitId: representative.candidateUnitId,
+        classListRowCount: classListRows.length,
+        classNames: uniqueSorted(classListRows.map((row) => row.className)),
+        classListRows: classListRows
+          .map((row) => ({
+            rowId: row.rowId,
+            className: row.className,
+            source: row.source,
+          }))
+          .sort((left, right) => left.rowId.localeCompare(right.rowId)),
+        supportSnapshot: representative.supportSnapshot,
+        nextActions: uniqueSorted(classListRows.map((row) => row.nextAction)),
+      };
+    })
+    .sort((left, right) =>
+      `${left.levelBand}:${left.candidateUnitId}`.localeCompare(
+        `${right.levelBand}:${right.candidateUnitId}`,
+      ),
+    );
+}
+
 function buildLevelOneSevenMiningAudit(srdUnitInventory) {
   const rows = srdUnitInventory.rows
     .filter((row) => levelOneSevenMiningAuditLevelBandSet.has(row.levelBand))
     .map(projectAuditRow)
     .sort((left, right) => left.rowId.localeCompare(right.rowId));
+  const uniqueSpellIdentities = buildUniqueSpellIdentities(rows);
   const rowsByLevelBand = countByLevelBand(rows);
   const missingMinedLevelBands = levelOneSevenMiningAuditLevelBands.filter(
     (levelBand) => rowsByLevelBand[levelBand] === 0,
@@ -118,7 +204,7 @@ function buildLevelOneSevenMiningAudit(srdUnitInventory) {
       supportGate:
         "non-blocking mining frontier; runtime admission and support snapshots are reported but do not pass or fail level 1-4 full-support gates",
       axisRule:
-        "Character level and spell level are separate axes. Character level 5 opens spell-level-3 pressure for full casters; character level 7 opens spell-level-4 pressure for full casters.",
+        "Character level and spell level are separate axes. Character level 5 opens spell-level-3 pressure for full casters and Warlock Pact Magic; character level 7 opens spell-level-4 pressure for those same table-derived owners. Paladin and Ranger spell-level-3 and spell-level-4 list sections are not counted in this level-7 frontier because their SRD class tables do not grant matching slots by character level 7.",
     },
     metrics: {
       minedDenominatorRows: rows.length,
@@ -143,8 +229,24 @@ function buildLevelOneSevenMiningAudit(srdUnitInventory) {
           battleReadinessSnapshotLabel(row.supportSnapshot.battleReadiness),
         ),
       ),
+      auditedSpellClassListRowsByLevelBand: countByLevelBand(
+        rows.filter(
+          (row) =>
+            row.rowKind === "spell-unit-pressure" &&
+            auditedSpellPressureLevelBandSet.has(row.levelBand),
+        ),
+      ),
+      auditedUniqueSpellIdentitiesByLevelBand: countValues(
+        uniqueSpellIdentities.map((spell) => spell.levelBand),
+      ),
+      auditedUniqueSpellIdentitiesByFinalDisposition: countValues(
+        uniqueSpellIdentities.map(
+          (spell) => spell.supportSnapshot.finalDisposition,
+        ),
+      ),
     },
     rows,
+    uniqueSpellIdentities,
   });
 }
 
@@ -174,6 +276,12 @@ function renderMissingBands(missingMinedLevelBands) {
     .join(", ");
 }
 
+function renderClassListRowRefs(classListRows) {
+  return classListRows
+    .map((row) => `${row.className} ${sourceRef(row.source)}`)
+    .join("; ");
+}
+
 function renderLevelOneSevenMiningAudit(report) {
   return `${[
     "# Character Levels 1-7 Mining Audit",
@@ -182,7 +290,7 @@ function renderLevelOneSevenMiningAudit(report) {
     "",
     "**This is a mining/audit frontier, not a full-support claim.** A `present` row means the SRD source row exists in the mined denominator. Runtime support, catalog admission, and battle-readiness columns are non-blocking snapshots and do not pass or fail the current level 1-4 gates.",
     "",
-    "Character level and spell level are separate axes. Character level 5 opens spell-level-3 pressure for full casters; character level 7 opens spell-level-4 pressure for full casters.",
+    "Character level and spell level are separate axes. Character level 5 opens spell-level-3 pressure for full casters and Warlock Pact Magic; character level 7 opens spell-level-4 pressure for those same table-derived owners. Paladin and Ranger spell-level-3 and spell-level-4 list sections are not counted in this level-7 frontier because their SRD class tables do not grant matching slots by character level 7.",
     "",
     "## Scope",
     "",
@@ -228,10 +336,65 @@ function renderLevelOneSevenMiningAudit(report) {
     "| --- | ---: |",
     ...renderKeyCountRows(report.metrics.rowsByBattleReadinessStatus),
     "",
+    "## Spell-Level 3-4 Pressure Summary",
+    "",
+    "These counts separate class-list rows from unique Spell Definition identities. A class-list row is one class spell-list entry; a unique identity is the candidate Spell Definition Unit after deduplicating the class lists within a spell level.",
+    "",
+    "| Level band | Class-list rows | Unique spell identities |",
+    "| --- | ---: | ---: |",
+    ...auditedSpellPressureLevelBands.map(
+      (levelBand) =>
+        `| ${levelBand} | ${report.metrics.auditedSpellClassListRowsByLevelBand[levelBand] ?? 0} | ${report.metrics.auditedUniqueSpellIdentitiesByLevelBand[levelBand] ?? 0} |`,
+    ),
+    "",
+    "### Unique Spell Identities by Final Disposition",
+    "",
+    "| Disposition | Spell identities |",
+    "| --- | ---: |",
+    ...renderKeyCountRows(
+      report.metrics.auditedUniqueSpellIdentitiesByFinalDisposition,
+    ),
+    "",
+    "### Unique Spell Identities",
+    "",
+    "| Spell identity | Level band | Classes | Class-list rows | Authored | Catalog | Unit profile | Final disposition | Battle readiness | Runtime closure/follow-up | Next action |",
+    "| --- | --- | --- | ---: | --- | --- | --- | --- | --- | --- | --- |",
+    ...report.uniqueSpellIdentities.map((spell) => {
+      const cells = [
+        `\`${spell.candidateUnitId}\` ${spell.spellName}`,
+        spell.levelBand,
+        spell.classNames.join(", "),
+        spell.classListRowCount,
+        spell.supportSnapshot.authoredContent.state,
+        spell.supportSnapshot.catalogAdmission.state,
+        unitProfileSnapshotLabel(spell.supportSnapshot.unitProfile),
+        spell.supportSnapshot.finalDisposition,
+        battleReadinessSnapshotLabel(spell.supportSnapshot.battleReadiness),
+        battleReadinessClosureSnapshotLabel(
+          spell.supportSnapshot.battleReadinessClosure,
+        ),
+        spell.nextActions.join("; "),
+      ];
+      return `| ${cells.map(md).join(" | ")} |`;
+    }),
+    "",
+    "### Spell Class-List Row Sources",
+    "",
+    "| Spell identity | Level band | Class-list source rows |",
+    "| --- | --- | --- |",
+    ...report.uniqueSpellIdentities.map((spell) => {
+      const cells = [
+        `\`${spell.candidateUnitId}\` ${spell.spellName}`,
+        spell.levelBand,
+        renderClassListRowRefs(spell.classListRows),
+      ];
+      return `| ${cells.map(md).join(" | ")} |`;
+    }),
+    "",
     "## Mined Rows",
     "",
-    "| Row | Level band | Axis | Category | Unit | Source | Mined denominator | Catalog | Unit profile | Final disposition | Battle readiness | Next action |",
-    "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |",
+    "| Row | Level band | Axis | Category | Unit | Source | Mined denominator | Catalog | Unit profile | Final disposition | Battle readiness | Readiness closure | Next action |",
+    "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |",
     ...report.rows.map((row) => {
       const cells = [
         row.concept,
@@ -245,6 +408,9 @@ function renderLevelOneSevenMiningAudit(report) {
         unitProfileSnapshotLabel(row.supportSnapshot.unitProfile),
         row.supportSnapshot.finalDisposition,
         battleReadinessSnapshotLabel(row.supportSnapshot.battleReadiness),
+        battleReadinessClosureSnapshotLabel(
+          row.supportSnapshot.battleReadinessClosure,
+        ),
         row.nextAction,
       ];
       return `| ${cells.map(md).join(" | ")} |`;

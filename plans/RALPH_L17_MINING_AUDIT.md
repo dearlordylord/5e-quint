@@ -19,7 +19,7 @@
     {
       "number": 3,
       "id": "L17-M03-SPELL-LEVEL3-4-MINING",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Mine spell-level 3 and 4 pressure for the level 7 frontier"
     }
   ]
@@ -211,7 +211,7 @@ Verification:
 
 ### Task 3 - L17-M03-SPELL-LEVEL3-4-MINING
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
