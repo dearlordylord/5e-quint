@@ -39453,6 +39453,16 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "future illusion Spell Effect and table/presentation/perception owner",
+          "reason": "Major Image's represented runtime behavior is closed outside promoted battle runtime: a future illusion Spell Effect and table/presentation/perception owner must carry the illusion occurrence, Concentration or level-4+ until-dispelled duration, selected spot and 20-foot Cube bounds, caster Magic Action repositioning and content changes, physical-interaction reveal, Study/Investigation discovery, and per-observer see-through/faint sensory presentation without duplicating map, line-of-sight, object or creature presence, or believability state inside battle Spell Invocation reducers."
+        },
+        "reason": "Major Image is an SRD level-3 Spell Definition whose authored Surface record models Action Spell Slot casting, 120-foot point range, V/S/M fleece component, Concentration up to 10 minutes, a visible point-origin 20-foot Cube illusion, visual/sound/smell/temperature sensory channels, and the no-damage/no-conditions limit. RAW also requires caster Magic Action repositioning and content changes while within range, physical-interaction reveal, Study action Intelligence (Investigation) discovery against Spell Save DC, per-creature see-through and faint sensory qualities after discernment, and level-4+ Spell Slot duration until dispelled without Concentration. No promoted battle-runtime profile is claimed because full support needs an illusion Spell Effect and table/presentation/perception owner for depicted content, sensory believability, image movement and conversation, physical interaction, per-observer discerned state, and duration-kind substitution rather than generic Spell Invocation reducers or duplicated battle map/perception state.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "spell",

@@ -16,9 +16,9 @@
       "spell-level-4": 81
     },
     "auditedUniqueSpellIdentitiesByFinalDisposition": {
-      "catalog-authored-review-required": 25,
+      "catalog-authored-review-required": 24,
       "catalog-installed-owner-evidence-present": 7,
-      "catalog-only/dead-for-now": 9,
+      "catalog-only/dead-for-now": 10,
       "missing-authored-record": 35
     },
     "auditedUniqueSpellIdentitiesByLevelBand": {
@@ -33,10 +33,10 @@
     },
     "rowsByBattleReadinessStatus": {
       "accepted": 469,
-      "accepted-no-battle-effect": 208,
+      "accepted-no-battle-effect": 212,
       "battle-runtime-required": 80,
       "not-applicable": 77,
-      "owner-evidence-required": 66
+      "owner-evidence-required": 62
     },
     "rowsByCatalogAdmission": {
       "installed": 638,
@@ -53,10 +53,10 @@
       "subclass selection": 12
     },
     "rowsByFinalDisposition": {
-      "catalog-authored-review-required": 65,
+      "catalog-authored-review-required": 61,
       "catalog-installed-owner-evidence-present": 481,
       "catalog-installed-owner-evidence-required": 1,
-      "catalog-only/dead-for-now": 156,
+      "catalog-only/dead-for-now": 160,
       "level-5-7-follow-up-required": 33,
       "missing-authored-record": 80,
       "non-runtime": 84
@@ -89,10 +89,10 @@
       "subclass-spell-access": 5
     },
     "rowsByUnitProfileDisposition": {
-      "not-recorded": 217,
+      "not-recorded": 213,
       "profile-subset-supported": 53,
       "supported-profile": 295,
-      "unsupported-profile": 335
+      "unsupported-profile": 339
     }
   },
   "rows": [
@@ -5375,7 +5375,7 @@
         "sourceInventoryRowId": "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_major_image",
         "state": "present"
       },
-      "nextAction": "Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this later-frontier spell row as accepted.",
+      "nextAction": "Major Image's represented runtime behavior is closed outside promoted battle runtime: a future illusion Spell Effect and table/presentation/perception owner must carry the illusion occurrence, Concentration or level-4+ until-dispelled duration, selected spot and 20-foot Cube bounds, caster Magic Action repositioning and content changes, physical-interaction reveal, Study/Investigation discovery, and per-observer see-through/faint sensory presentation without duplicating map, line-of-sight, object or creature presence, or believability state inside battle Spell Invocation reducers.",
       "rowId": "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_major_image",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -5391,18 +5391,22 @@
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "owner-evidence-required"
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "future illusion Spell Effect and table/presentation/perception owner",
+          "reason": "Major Image's represented runtime behavior is closed outside promoted battle runtime: a future illusion Spell Effect and table/presentation/perception owner must carry the illusion occurrence, Concentration or level-4+ until-dispelled duration, selected spot and 20-foot Cube bounds, caster Magic Action repositioning and content changes, physical-interaction reveal, Study/Investigation discovery, and per-observer see-through/faint sensory presentation without duplicating map, line-of-sight, object or creature presence, or believability state inside battle Spell Invocation reducers.",
+          "state": "recorded"
         },
         "catalogAdmission": {
           "state": "not-installed",
           "unitId": "major_image"
         },
-        "finalDisposition": "catalog-authored-review-required",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },
@@ -28714,7 +28718,7 @@
         "sourceInventoryRowId": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_major_image",
         "state": "present"
       },
-      "nextAction": "Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this later-frontier spell row as accepted.",
+      "nextAction": "Major Image's represented runtime behavior is closed outside promoted battle runtime: a future illusion Spell Effect and table/presentation/perception owner must carry the illusion occurrence, Concentration or level-4+ until-dispelled duration, selected spot and 20-foot Cube bounds, caster Magic Action repositioning and content changes, physical-interaction reveal, Study/Investigation discovery, and per-observer see-through/faint sensory presentation without duplicating map, line-of-sight, object or creature presence, or believability state inside battle Spell Invocation reducers.",
       "rowId": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_major_image",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -28730,18 +28734,22 @@
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "owner-evidence-required"
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "future illusion Spell Effect and table/presentation/perception owner",
+          "reason": "Major Image's represented runtime behavior is closed outside promoted battle runtime: a future illusion Spell Effect and table/presentation/perception owner must carry the illusion occurrence, Concentration or level-4+ until-dispelled duration, selected spot and 20-foot Cube bounds, caster Magic Action repositioning and content changes, physical-interaction reveal, Study/Investigation discovery, and per-observer see-through/faint sensory presentation without duplicating map, line-of-sight, object or creature presence, or believability state inside battle Spell Invocation reducers.",
+          "state": "recorded"
         },
         "catalogAdmission": {
           "state": "not-installed",
           "unitId": "major_image"
         },
-        "finalDisposition": "catalog-authored-review-required",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },
@@ -32330,7 +32338,7 @@
         "sourceInventoryRowId": "srd521:classes/warlock:spell-level-3:spell-unit-pressure:warlock_spell_list_major_image",
         "state": "present"
       },
-      "nextAction": "Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this later-frontier spell row as accepted.",
+      "nextAction": "Major Image's represented runtime behavior is closed outside promoted battle runtime: a future illusion Spell Effect and table/presentation/perception owner must carry the illusion occurrence, Concentration or level-4+ until-dispelled duration, selected spot and 20-foot Cube bounds, caster Magic Action repositioning and content changes, physical-interaction reveal, Study/Investigation discovery, and per-observer see-through/faint sensory presentation without duplicating map, line-of-sight, object or creature presence, or believability state inside battle Spell Invocation reducers.",
       "rowId": "srd521:classes/warlock:spell-level-3:spell-unit-pressure:warlock_spell_list_major_image",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -32346,18 +32354,22 @@
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "owner-evidence-required"
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "future illusion Spell Effect and table/presentation/perception owner",
+          "reason": "Major Image's represented runtime behavior is closed outside promoted battle runtime: a future illusion Spell Effect and table/presentation/perception owner must carry the illusion occurrence, Concentration or level-4+ until-dispelled duration, selected spot and 20-foot Cube bounds, caster Magic Action repositioning and content changes, physical-interaction reveal, Study/Investigation discovery, and per-observer see-through/faint sensory presentation without duplicating map, line-of-sight, object or creature presence, or believability state inside battle Spell Invocation reducers.",
+          "state": "recorded"
         },
         "catalogAdmission": {
           "state": "not-installed",
           "unitId": "major_image"
         },
-        "finalDisposition": "catalog-authored-review-required",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },
@@ -38126,7 +38138,7 @@
         "sourceInventoryRowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_major_image",
         "state": "present"
       },
-      "nextAction": "Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this later-frontier spell row as accepted.",
+      "nextAction": "Major Image's represented runtime behavior is closed outside promoted battle runtime: a future illusion Spell Effect and table/presentation/perception owner must carry the illusion occurrence, Concentration or level-4+ until-dispelled duration, selected spot and 20-foot Cube bounds, caster Magic Action repositioning and content changes, physical-interaction reveal, Study/Investigation discovery, and per-observer see-through/faint sensory presentation without duplicating map, line-of-sight, object or creature presence, or believability state inside battle Spell Invocation reducers.",
       "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_major_image",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -38142,18 +38154,22 @@
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "owner-evidence-required"
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "future illusion Spell Effect and table/presentation/perception owner",
+          "reason": "Major Image's represented runtime behavior is closed outside promoted battle runtime: a future illusion Spell Effect and table/presentation/perception owner must carry the illusion occurrence, Concentration or level-4+ until-dispelled duration, selected spot and 20-foot Cube bounds, caster Magic Action repositioning and content changes, physical-interaction reveal, Study/Investigation discovery, and per-observer see-through/faint sensory presentation without duplicating map, line-of-sight, object or creature presence, or believability state inside battle Spell Invocation reducers.",
+          "state": "recorded"
         },
         "catalogAdmission": {
           "state": "not-installed",
           "unitId": "major_image"
         },
-        "finalDisposition": "catalog-authored-review-required",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },
@@ -41165,7 +41181,7 @@
       ],
       "levelBand": "spell-level-3",
       "nextActions": [
-        "Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this later-frontier spell row as accepted."
+        "Major Image's represented runtime behavior is closed outside promoted battle runtime: a future illusion Spell Effect and table/presentation/perception owner must carry the illusion occurrence, Concentration or level-4+ until-dispelled duration, selected spot and 20-foot Cube bounds, caster Magic Action repositioning and content changes, physical-interaction reveal, Study/Investigation discovery, and per-observer see-through/faint sensory presentation without duplicating map, line-of-sight, object or creature presence, or believability state inside battle Spell Invocation reducers."
       ],
       "spellName": "Major Image",
       "supportSnapshot": {
@@ -41176,18 +41192,22 @@
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "owner-evidence-required"
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "future illusion Spell Effect and table/presentation/perception owner",
+          "reason": "Major Image's represented runtime behavior is closed outside promoted battle runtime: a future illusion Spell Effect and table/presentation/perception owner must carry the illusion occurrence, Concentration or level-4+ until-dispelled duration, selected spot and 20-foot Cube bounds, caster Magic Action repositioning and content changes, physical-interaction reveal, Study/Investigation discovery, and per-observer see-through/faint sensory presentation without duplicating map, line-of-sight, object or creature presence, or believability state inside battle Spell Invocation reducers.",
+          "state": "recorded"
         },
         "catalogAdmission": {
           "state": "not-installed",
           "unitId": "major_image"
         },
-        "finalDisposition": "catalog-authored-review-required",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },
