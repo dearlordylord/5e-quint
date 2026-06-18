@@ -1,8 +1,9 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.attack-action-attack-count-scaling
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt extra-attack-count-scaling barbarian_extra_attack fighter_extra_attack paladin_extra_attack ranger_extra_attack
+// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt extra-attack-count-scaling barbarian_extra_attack fighter_extra_attack monk_extra_attack paladin_extra_attack ranger_extra_attack
 // UNIT-IDENTITY-MBT-REPLAY: extra-attack-count-scaling barbarian_extra_attack doResolveFirstExtraAttackMiss doResolveSecondExtraAttackMiss
 // UNIT-IDENTITY-MBT-REPLAY: extra-attack-count-scaling fighter_extra_attack doResolveFirstExtraAttackMiss doResolveSecondExtraAttackMiss
+// UNIT-IDENTITY-MBT-REPLAY: extra-attack-count-scaling monk_extra_attack doResolveFirstExtraAttackMiss doResolveSecondExtraAttackMiss
 // UNIT-IDENTITY-MBT-REPLAY: extra-attack-count-scaling paladin_extra_attack doResolveFirstExtraAttackMiss doResolveSecondExtraAttackMiss
 // UNIT-IDENTITY-MBT-REPLAY: extra-attack-count-scaling ranger_extra_attack doResolveFirstExtraAttackMiss doResolveSecondExtraAttackMiss
 import { describe, expect, it } from "vitest";
@@ -84,6 +85,16 @@ const selectedUnitIdentityReplays = [
   {
     taskId: "extra-attack-count-scaling",
     unitId: "fighter_extra_attack",
+    driver: "extraAttack",
+    actions: [
+      "doResolveFirstExtraAttackMiss",
+      "doResolveSecondExtraAttackMiss",
+    ],
+    sequences: [...extraAttackSelectedIdentitySequences],
+  },
+  {
+    taskId: "extra-attack-count-scaling",
+    unitId: "monk_extra_attack",
     driver: "extraAttack",
     actions: [
       "doResolveFirstExtraAttackMiss",

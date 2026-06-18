@@ -43,14 +43,14 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
-      "denominator": 442,
-      "numerator": 257,
-      "percent": "58.1%"
+      "denominator": 443,
+      "numerator": 258,
+      "percent": "58.2%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 530,
-      "numerator": 307,
-      "percent": "57.9%"
+      "denominator": 531,
+      "numerator": 308,
+      "percent": "58%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,16 +59,16 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 308
+      "value": 309
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 184,
-      "numerator": 179,
+      "denominator": 185,
+      "numerator": 180,
       "percent": "97.3%"
     },
     "profileClassificationCoverage": {
-      "denominator": 308,
-      "numerator": 308,
+      "denominator": 309,
+      "numerator": 309,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -92,8 +92,8 @@
       "percent": "100%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 173,
-      "numerator": 173,
+      "denominator": 174,
+      "numerator": 174,
       "percent": "100%"
     },
     "runtimeMappingCoverage": {
@@ -107,14 +107,14 @@
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 177,
-      "numerator": 175,
+      "denominator": 178,
+      "numerator": 176,
       "percent": "98.9%"
     },
     "supportedProfileCoverage": {
-      "denominator": 258,
-      "numerator": 184,
-      "percent": "71.3%"
+      "denominator": 259,
+      "numerator": 185,
+      "percent": "71.4%"
     }
   },
   "metricSemantics": [
@@ -8133,8 +8133,8 @@
       "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
       "metrics": {
         "rulesKernelSupportedUnitCoverage": {
-          "denominator": 173,
-          "numerator": 173,
+          "denominator": 174,
+          "numerator": 174,
           "percent": "100%"
         }
       },
@@ -10921,6 +10921,29 @@
             }
           ],
           "unitId": "monk_deflect_attacks"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+                }
+              ],
+              "profileId": "unit-feature.attack-action-attack-count-scaling",
+              "profileKind": "passive",
+              "qntOwners": [
+                "packages/battle-runtime/battle-runtime-feature-turn-end-effects.qnt",
+                "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt"
+              ]
+            }
+          ],
+          "unitId": "monk_extra_attack"
         },
         {
           "joinStatus": "covered",
@@ -16652,17 +16675,17 @@
         "unsupportedOrOtherUnits": 18
       },
       {
-        "executableUnitDenominator": 92,
-        "installedUnitDenominator": 92,
+        "executableUnitDenominator": 93,
+        "installedUnitDenominator": 93,
         "kind": "class_feature",
         "label": "Class-feature Units",
-        "profileFactDenominator": 118,
+        "profileFactDenominator": 119,
         "profileSubsetSupportedUnits": 8,
         "selectedIdentityDeferredNonApplicableUnits": 0,
-        "selectedIdentityReplayDenominator": 73,
+        "selectedIdentityReplayDenominator": 74,
         "selectedIdentityReplayGapUnits": 0,
-        "selectedIdentityReplayWitnessUnits": 73,
-        "supportedProfileUnits": 70,
+        "selectedIdentityReplayWitnessUnits": 74,
+        "supportedProfileUnits": 71,
         "unsupportedOrOtherUnits": 14
       }
     ]
@@ -20465,6 +20488,68 @@
       ],
       "sourceRecordPath": "packages/surface/content/monk_deflect_attacks.json",
       "unitId": "monk_deflect_attacks"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "profileIds": [
+          "unit-feature.attack-action-attack-count-scaling"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE9-UNIT-FEATURE-PROFILES-001"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-extra-attack-and-speed-features.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L5-A06-MONK-EXTRA-ATTACK"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/extra-attack-count.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "extra-attack-count-scaling"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [
+        {
+          "id": "unit-feature.attack-action-attack-count-scaling",
+          "profileKind": "passive",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt",
+            "packages/battle-runtime/battle-runtime-feature-turn-end-effects.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/unit-feature-support.ts",
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "taskRefs": [
+            "QCORE9",
+            "QMBT37"
+          ],
+          "title": "Unit feature adds ordinary attack slots inside the Attack action",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles-inductive.qnt"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/extra-attack-count.mbt.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/monk_extra_attack.json",
+      "unitId": "monk_extra_attack"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

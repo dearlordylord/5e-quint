@@ -138,6 +138,8 @@ export const sorcererInnateSorceryUnitId = "sorcerer_innate_sorcery";
 
 export const monkMartialArtsUnitId = "monk_martial_arts";
 
+export const monkExtraAttackUnitId = "monk_extra_attack";
+
 export const monkUnarmoredMovementUnitId = "monk_unarmored_movement";
 
 export const monkOpenHandTechniqueUnitId = "monk_open_hand_technique";

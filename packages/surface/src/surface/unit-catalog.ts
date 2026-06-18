@@ -166,6 +166,7 @@ import mistyStepInput from "../../content/misty_step.json";
 import mirrorImageInput from "../../content/mirror_image.json";
 import minorIllusionInput from "../../content/minor_illusion.json";
 import monkDeflectAttacksInput from "../../content/monk_deflect_attacks.json";
+import monkExtraAttackInput from "../../content/monk_extra_attack.json";
 import monkMartialArtsInput from "../../content/monk_martial_arts.json";
 import monkMonksFocusInput from "../../content/monk_monks_focus.json";
 import monkOpenHandTechniqueInput from "../../content/monk_open_hand_technique.json";
@@ -502,6 +503,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     monkUnarmoredMovementInput,
     monkUncannyMetabolismInput,
     monkDeflectAttacksInput,
+    monkExtraAttackInput,
     monkAbilityScoreImprovementL4Input,
     monkSlowFallInput,
     monkOpenHandTechniqueInput,

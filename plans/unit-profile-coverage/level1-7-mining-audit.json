@@ -39,8 +39,8 @@
       "owner-evidence-required": 78
     },
     "rowsByCatalogAdmission": {
-      "installed": 639,
-      "not-installed": 261
+      "installed": 640,
+      "not-installed": 260
     },
     "rowsByCategory": {
       "character-creation or progression mechanic": 172,
@@ -54,10 +54,10 @@
     },
     "rowsByFinalDisposition": {
       "catalog-authored-review-required": 77,
-      "catalog-installed-owner-evidence-present": 482,
+      "catalog-installed-owner-evidence-present": 483,
       "catalog-installed-owner-evidence-required": 1,
       "catalog-only/dead-for-now": 148,
-      "level-5-7-follow-up-required": 28,
+      "level-5-7-follow-up-required": 27,
       "missing-authored-record": 80,
       "non-runtime": 84
     },
@@ -89,9 +89,9 @@
       "subclass-spell-access": 5
     },
     "rowsByUnitProfileDisposition": {
-      "not-recorded": 224,
+      "not-recorded": 223,
       "profile-subset-supported": 53,
-      "supported-profile": 296,
+      "supported-profile": 297,
       "unsupported-profile": 327
     }
   },
@@ -17555,7 +17555,7 @@
         "sourceInventoryRowId": "srd521:classes/monk:level-5:class-feature-grant:monk_extra_attack",
         "state": "present"
       },
-      "nextAction": "Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported.",
+      "nextAction": "Owner-specific operational evidence is classified and present.",
       "rowId": "srd521:classes/monk:level-5:class-feature-grant:monk_extra_attack",
       "rowKind": "class-feature-grant",
       "source": {
@@ -17565,7 +17565,9 @@
       },
       "supportSnapshot": {
         "authoredContent": {
-          "state": "missing-authored-record"
+          "sourceRecordPath": "packages/surface/content/monk_extra_attack.json",
+          "state": "authored-record-present",
+          "unitId": "monk_extra_attack"
         },
         "battleReadiness": {
           "state": "not-applicable"
@@ -17574,12 +17576,13 @@
           "state": "not-recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "monk_extra_attack"
         },
-        "finalDisposition": "level-5-7-follow-up-required",
+        "finalDisposition": "catalog-installed-owner-evidence-present",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "supported-profile",
+          "state": "recorded"
         }
       }
     },

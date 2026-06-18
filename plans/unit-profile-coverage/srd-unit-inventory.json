@@ -342,10 +342,10 @@
       "character-creation or progression mechanic": 12
     },
     "levelFiveClassRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 6,
+      "catalog-installed-owner-evidence-present": 7,
       "non-runtime": 12,
       "catalog-only/dead-for-now": 4,
-      "level-5-7-follow-up-required": 6
+      "level-5-7-follow-up-required": 5
     },
     "levelSixClassRowsByDisposition": {
       "level-5-7-follow-up-required": 11,
@@ -370,10 +370,10 @@
       "character-creation or progression mechanic": 12
     },
     "allRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 482,
+      "catalog-installed-owner-evidence-present": 483,
       "non-runtime": 84,
       "catalog-only/dead-for-now": 148,
-      "level-5-7-follow-up-required": 28,
+      "level-5-7-follow-up-required": 27,
       "missing-authored-record": 80,
       "catalog-authored-review-required": 77,
       "catalog-installed-owner-evidence-required": 1
@@ -19628,15 +19628,29 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "monk_extra_attack",
+        "sourceRecordPath": "packages/surface/content/monk_extra_attack.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "monk_extra_attack"
       },
-      "finalDisposition": "level-5-7-follow-up-required",
-      "ownerEvidence": [],
-      "nextAction": "Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported."
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit monk_extra_attack is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L5-A06-MONK-EXTRA-ATTACK at packages/battle-runtime/src/unit-profile-admission-extra-attack-and-speed-features.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/monk:level-5:class-feature-grant:monk_stunning_strike",

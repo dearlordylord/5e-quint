@@ -44,6 +44,7 @@ import {
   extraAttackSupportProfile,
   fighterExtraAttackUnitId,
   greatWeaponFightingUnitId,
+  monkExtraAttackUnitId,
   monkUnarmoredMovementUnitId,
   oppositionSide,
   orcAdrenalineRushUnitId,
@@ -646,6 +647,7 @@ export function extraAttackBattleUnitRef(
   unitId:
     | typeof barbarianExtraAttackUnitId
     | typeof fighterExtraAttackUnitId
+    | typeof monkExtraAttackUnitId
     | typeof paladinExtraAttackUnitId
     | typeof rangerExtraAttackUnitId = fighterExtraAttackUnitId,
 ): Extract<

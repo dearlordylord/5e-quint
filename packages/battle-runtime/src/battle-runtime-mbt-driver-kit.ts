@@ -1012,6 +1012,7 @@ export type RogueSteadyAimDriverAction = Exclude<
 const extraAttackSelectedUnitIds = [
   "barbarian_extra_attack",
   "fighter_extra_attack",
+  "monk_extra_attack",
   "paladin_extra_attack",
   "ranger_extra_attack",
 ] as const;

@@ -53,6 +53,8 @@
 {"unitId":"barbarian_extra_attack","evidence":{"tag":"selected-identity-mbt","taskId":"extra-attack-count-scaling","ownerPath":"packages/battle-runtime/src/extra-attack-count.mbt.test.ts"}}
 {"unitId":"fighter_extra_attack","evidence":{"tag":"deterministic-admission-projection","taskId":"QMBT37","ownerPath":"packages/battle-runtime/src/unit-profile-admission-extra-attack-and-speed-features.test.ts"}}
 {"unitId":"fighter_extra_attack","evidence":{"tag":"selected-identity-mbt","taskId":"extra-attack-count-scaling","ownerPath":"packages/battle-runtime/src/extra-attack-count.mbt.test.ts"}}
+{"unitId":"monk_extra_attack","evidence":{"tag":"deterministic-admission-projection","taskId":"L5-A06-MONK-EXTRA-ATTACK","ownerPath":"packages/battle-runtime/src/unit-profile-admission-extra-attack-and-speed-features.test.ts"}}
+{"unitId":"monk_extra_attack","evidence":{"tag":"selected-identity-mbt","taskId":"extra-attack-count-scaling","ownerPath":"packages/battle-runtime/src/extra-attack-count.mbt.test.ts"}}
 {"unitId":"paladin_extra_attack","evidence":{"tag":"deterministic-admission-projection","taskId":"QMBT37","ownerPath":"packages/battle-runtime/src/unit-profile-admission-extra-attack-and-speed-features.test.ts"}}
 {"unitId":"paladin_extra_attack","evidence":{"tag":"selected-identity-mbt","taskId":"extra-attack-count-scaling","ownerPath":"packages/battle-runtime/src/extra-attack-count.mbt.test.ts"}}
 {"unitId":"ranger_extra_attack","evidence":{"tag":"deterministic-admission-projection","taskId":"QMBT37","ownerPath":"packages/battle-runtime/src/unit-profile-admission-extra-attack-and-speed-features.test.ts"}}

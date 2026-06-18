@@ -1,5 +1,6 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT37 fighter_extra_attack paladin_extra_attack ranger_extra_attack
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L5-A01-BARBARIAN-EXTRA-ATTACK barbarian_extra_attack
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L5-A06-MONK-EXTRA-ATTACK monk_extra_attack
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT40 barbarian_fast_movement
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT44 ranger_roving
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-AUTHOR-MONK-UNARMORED-MOVEMENT monk_unarmored_movement
@@ -10,6 +11,7 @@ import {
   barbarianFastMovementUnitId,
   extraAttackSupportProfile,
   fighterExtraAttackUnitId,
+  monkExtraAttackUnitId,
   monkUnarmoredMovementUnitId,
   paladinExtraAttackUnitId,
   rangerExtraAttackUnitId,
@@ -70,6 +72,7 @@ describe("QMBT37 deterministic Extra Attack admission", () => {
   test.each([
     [barbarianExtraAttackUnitId, "barbarian", 5],
     [fighterExtraAttackUnitId, "fighter", 5],
+    [monkExtraAttackUnitId, "monk", 5],
     [paladinExtraAttackUnitId, "paladin", 5],
     [rangerExtraAttackUnitId, "ranger", 5],
   ] as const)(
@@ -482,13 +485,15 @@ function classFeatureExtraAttackSlotCount(state: BattleState): number {
 function classFeatureExtraAttackSourceUnitIds(
   state: BattleState,
 ): readonly string[] {
-  return snapshotBattle(state).turn.actionResources
-    .filter(isSpellCasterClassFeatureExtraAttackResource)
+  return snapshotBattle(state)
+    .turn.actionResources.filter(isSpellCasterClassFeatureExtraAttackResource)
     .map((resource) => resource.sourceUnitId);
 }
 
 function isSpellCasterClassFeatureExtraAttackResource(
-  resource: ReturnType<typeof snapshotBattle>["turn"]["actionResources"][number],
+  resource: ReturnType<
+    typeof snapshotBattle
+  >["turn"]["actionResources"][number],
 ): resource is ClassFeatureExtraAttackActionResource {
   return (
     resource.source === "classFeatureExtraAttack" &&
@@ -496,9 +501,9 @@ function isSpellCasterClassFeatureExtraAttackResource(
   );
 }
 
-function resolveWeaponAttackMiss(state: BattleState): ReturnType<
-  typeof resolveBattleSubject
-> {
+function resolveWeaponAttackMiss(
+  state: BattleState,
+): ReturnType<typeof resolveBattleSubject> {
   const subject = weaponAttackSubject("Longsword");
   const target = requireResultHole(
     resolveBattleSubject({ state, subject, fills: [] }),

@@ -141,9 +141,9 @@ This metric is a separate seed for spell-level-4 pressure only. It belongs to th
 
 ### Level-5 Class/Subclass Mining Rows by Disposition
 
-- catalog-installed-owner-evidence-present: 6
+- catalog-installed-owner-evidence-present: 7
 - catalog-only/dead-for-now: 4
-- level-5-7-follow-up-required: 6
+- level-5-7-follow-up-required: 5
 - non-runtime: 12
 
 ### Level-6 Class/Subclass Mining Rows by Disposition
@@ -609,7 +609,7 @@ These batches are generated planning recommendations for a separate SRD inventor
 |Fighter Extra Attack|class feature|current-surface-can-express-source-facts|authored-record-present|installed|supported-profile|catalog-installed-owner-evidence-present|||Unit catalog/admission: catalog evidence; battle-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Fighter.md:94|
 |Fighter Tactical Shift|class feature|current-surface-can-express-source-facts|missing-authored-record|not-installed|unsupported-profile|catalog-only/dead-for-now||outside-battle-runtime: future battle-runtime Second Wind activation rider owner plus existing movement and Opportunity Attack validation owners||SRD Tactical Shift triggers only when the Fighter activates Second Wind with a Bonus Action: the Fighter can move up to half Speed without provoking Opportunity Attacks. A future promoted owner must consume an admitted Tactical Shift support profile with the existing fighter_second_wind self-bonus-action-healing resource, then offer optional bonus Movement through the existing movement fill owner with a cap of half the actor's current Speed and Opportunity Attack rejection. It must not add a second Second Wind pool, duplicate turn Movement budget, duplicate Opportunity Attack state, or dispatch on Tactical Shift authored identity.|.references/srd-5.2.1/Classes/Fighter.md:98|
 |Fighter level 5 feature table row|character-creation or progression mechanic|outside-surface-runtime-mechanics|authored-record-present|installed|unsupported-profile|non-runtime||||No runtime work; keep classification as explicit closure.|.references/srd-5.2.1/Classes/Fighter.md:35|
-|Monk Extra Attack|class feature|current-surface-can-express-source-facts|missing-authored-record|not-installed||level-5-7-follow-up-required||||Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported.|.references/srd-5.2.1/Classes/Monk.md:120|
+|Monk Extra Attack|class feature|current-surface-can-express-source-facts|authored-record-present|installed|supported-profile|catalog-installed-owner-evidence-present|||Unit catalog/admission: catalog evidence; battle-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Monk.md:120|
 |Monk Stunning Strike|class feature|current-surface-can-express-source-facts|missing-authored-record|not-installed||level-5-7-follow-up-required||||Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported.|.references/srd-5.2.1/Classes/Monk.md:124|
 |Monk level 5 feature table row|character-creation or progression mechanic|outside-surface-runtime-mechanics|authored-record-present|installed|unsupported-profile|non-runtime||||No runtime work; keep classification as explicit closure.|.references/srd-5.2.1/Classes/Monk.md:36|
 |Paladin Extra Attack|class feature|current-surface-can-express-source-facts|authored-record-present|installed|supported-profile|catalog-installed-owner-evidence-present|||Unit catalog/admission: catalog evidence; battle-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Paladin.md:126|
