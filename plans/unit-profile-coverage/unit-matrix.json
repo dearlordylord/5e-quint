@@ -16761,6 +16761,12 @@
       "note": "Task 21 rechecked Phantom Steed RAW and Surface facts, added a typed spawned-creature-damage early spell-end trigger, and closed promoted support as an explicit owner split rather than a battle-runtime claim: spell-created mount lifecycle/control, created-equipment distance cleanup, and table travel pace each need their own follow-up owner before Phantom Steed can move beyond unsupported-profile.",
       "profileIds": [],
       "taskId": "L5-C21-PHANTOM-STEED-MOUNT-LIFECYCLE"
+    },
+    {
+      "claimKind": "accepted-follow-up-split",
+      "note": "Task 22 leaves Glyph of Warding unsupported because Surface-only catalog evidence is not runtime owner evidence. The durable glyph occurrence, explosive-rune release, stored-spell release, and stored Concentration override are split into narrower L3 follow-ups that must add executable owners and focused verification before Glyph can claim runtime support.",
+      "profileIds": [],
+      "taskId": "L5-C22-GLYPH-OF-WARDING-RUNTIME"
     }
   ],
   "unitGroupDenominatorAudit": {
@@ -35771,14 +35777,35 @@
       "claim": {
         "followUpTasks": [
           {
-            "id": "L3-FOLLOWUP-GLYPH-OF-WARDING-RUNTIME",
-            "mechanic": "Promote Glyph of Warding as a durable glyph occurrence and release workflow that consumes typed Surface facts for inscription anchor, maximum covered area, hidden-noticing DC source, trigger refinement/exclusion, movement invalidation, explosive-rune save/damage/scaling, stored prepared-spell eligibility, stored-spell retargeting, hostile close-as-possible placement, and stored Concentration full-duration override.",
-            "owner": "future battle-runtime glyph occurrence/release Spell Effect plus table object/location, trigger-event, and stored-spell invocation witness owner",
-            "requiredOutput": "Supported-profile or profile-subset-supported Glyph of Warding claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the glyph release workflow while preserving table-owned object location, covered-area placement, trigger-event, area-membership, hostile placement, stored spell invocation, and stored Concentration witnesses without authored spell identity dispatch.",
-            "title": "Glyph of Warding Runtime Release"
+            "id": "L3-FOLLOWUP-GLYPH-DURABLE-OCCURRENCE",
+            "mechanic": "Promote Glyph of Warding creation and cleanup as a durable glyph occurrence that consumes typed inscription anchor, maximum covered area, cast location, hidden-noticing DC, trigger refinement/exclusion, trigger occurrence, and movement invalidation facts without duplicating table map/object state or dispatching on authored spell identity.",
+            "owner": "battle-runtime durable glyph Spell Effect plus table object/location, covered-area, notice, trigger-event, and movement-invalidation witness owner",
+            "requiredOutput": "Profile-subset-supported or supported Glyph occurrence claim with focused runtime tests and Quint/runtime parity for occurrence creation, trigger/end cleanup, and movement invalidation witness consumption.",
+            "title": "Glyph Durable Occurrence"
+          },
+          {
+            "id": "L3-FOLLOWUP-GLYPH-EXPLOSIVE-RUNE-RELEASE",
+            "mechanic": "Promote explosive-rune release from a triggered glyph occurrence using typed 20-foot Sphere, Dexterity Saving Throw half damage, caster-chosen Acid/Cold/Fire/Lightning/Thunder damage type, slot scaling, and table-supplied area-membership witnesses without treating glyph creation as an immediate save-damage cast.",
+            "owner": "battle-runtime glyph release and save-damage owner plus table area-membership witness owner",
+            "requiredOutput": "Supported explosive-rune release profile with focused runtime tests and Quint/runtime parity for non-immediate glyph release damage, damage-type choice, slot scaling, area-membership witnesses, and spell-end cleanup.",
+            "title": "Glyph Explosive Rune Release"
+          },
+          {
+            "id": "L3-FOLLOWUP-GLYPH-STORED-SPELL-RELEASE",
+            "mechanic": "Promote spell-glyph storage and release by carrying an eligible prepared stored spell invocation from glyph creation, enforcing no immediate storage-time effect, retargeting single-creature and area spells to the triggering creature, and consuming hostile close-as-possible placement witnesses for summons, harmful objects, and traps.",
+            "owner": "stored spell invocation release owner plus table hostile-placement and retargeting witnesses",
+            "requiredOutput": "Supported or profile-subset-supported stored-spell release claim with focused runtime tests and Quint/runtime parity for stored invocation identity, trigger-creature retargeting, area centering, hostile placement witnesses, and no ordinary immediate-cast collapse.",
+            "title": "Glyph Stored Spell Release"
+          },
+          {
+            "id": "L3-FOLLOWUP-GLYPH-STORED-CONCENTRATION",
+            "mechanic": "Promote the spell-glyph Concentration override so a stored Concentration spell released by the glyph lasts to full duration without ordinary caster Concentration ownership, triggering-creature Concentration ownership, or readied-spell Concentration cleanup semantics.",
+            "owner": "stored Concentration full-duration Spell Effect owner",
+            "requiredOutput": "Supported or profile-subset-supported stored Concentration override claim with focused runtime tests and Quint/runtime parity for full-duration stored Concentration lifecycle, cleanup, and rejection of ordinary Concentration/readied-spell ownership shortcuts.",
+            "title": "Glyph Stored Concentration Override"
           }
         ],
-        "reason": "Glyph of Warding is authored and installed as an SRD Surface Spell Definition with 1-hour casting, Touch range, V/S/M powdered diamond worth 200+ GP consumed component, a permanent-until-dispelled-or-triggered duration, a cast-time choice between surface inscription and closeable-object inscription, maximum 10-foot-diameter glyph coverage, concealed glyph noticing by Wisdom (Perception) against the caster's Spell Save DC, caster-defined and refined trigger facts with creature-type and password-style exclusions, movement invalidation when the inscribed surface or object moves more than 10 feet from the cast location, an explosive-rune branch with 20-foot Sphere Dexterity Saving Throw half damage, Acid/Cold/Fire/Lightning/Thunder damage type choice, and higher-slot d8 scaling, plus a spell-glyph branch that stores a prepared spell cast as part of glyph creation, enforces single-creature or area spell eligibility, has no immediate effect, retargets the stored spell to or around the triggering creature, handles hostile summon/object/trap placement, and preserves full-duration execution for stored Concentration spells. No promoted battle-runtime profile is claimed because promoted runtime still needs a glyph occurrence/release owner that consumes table object/location, trigger-event, area-membership, close-as-possible placement, stored spell invocation, and stored Concentration witnesses without dispatching on Glyph of Warding authored identity.",
+        "reason": "Glyph of Warding is authored and installed as an SRD Surface Spell Definition with 1-hour casting, Touch range, V/S/M powdered diamond worth 200+ GP consumed component, a permanent-until-dispelled-or-triggered duration, a cast-time choice between surface inscription and closeable-object inscription, maximum 10-foot-diameter glyph coverage, concealed glyph noticing by Wisdom (Perception) against the caster's Spell Save DC, caster-defined and refined trigger facts with creature-type and password-style exclusions, movement invalidation when the inscribed surface or object moves more than 10 feet from the cast location, an explosive-rune branch with 20-foot Sphere Dexterity Saving Throw half damage, Acid/Cold/Fire/Lightning/Thunder damage type choice, and higher-slot d8 scaling, plus a spell-glyph branch that stores a prepared spell cast as part of glyph creation, enforces single-creature or area spell eligibility, has no immediate effect, retargets the stored spell to or around the triggering creature, handles hostile summon/object/trap placement, and preserves full-duration execution for stored Concentration spells. No promoted battle-runtime profile is claimed: Surface catalog tests prove authored fact admission, not executable owner evidence. Promoted runtime still needs dedicated glyph occurrence/release owners that consume table object/location, covered-area placement, trigger-event, area-membership, hostile placement, stored spell invocation, and stored Concentration witnesses without dispatching on Glyph of Warding authored identity.",
         "tag": "unsupported-profile"
       },
       "collectionId": "srd-5.2.1",

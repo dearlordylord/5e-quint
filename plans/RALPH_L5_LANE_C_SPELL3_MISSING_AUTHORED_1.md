@@ -133,7 +133,7 @@
     {
       "number": 22,
       "id": "L5-C22-GLYPH-OF-WARDING-RUNTIME",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Promote Glyph of Warding runtime release owner"
     },
     {
@@ -153,6 +153,30 @@
       "id": "L3-FOLLOWUP-PHANTOM-STEED-TRAVEL-PACE",
       "status": "ready-for-research",
       "title": "Phantom Steed Table Travel Pace"
+    },
+    {
+      "number": 26,
+      "id": "L3-FOLLOWUP-GLYPH-DURABLE-OCCURRENCE",
+      "status": "ready-for-research",
+      "title": "Glyph Durable Occurrence"
+    },
+    {
+      "number": 27,
+      "id": "L3-FOLLOWUP-GLYPH-EXPLOSIVE-RUNE-RELEASE",
+      "status": "ready-for-research",
+      "title": "Glyph Explosive Rune Release"
+    },
+    {
+      "number": 28,
+      "id": "L3-FOLLOWUP-GLYPH-STORED-SPELL-RELEASE",
+      "status": "ready-for-research",
+      "title": "Glyph Stored Spell Release"
+    },
+    {
+      "number": 29,
+      "id": "L3-FOLLOWUP-GLYPH-STORED-CONCENTRATION",
+      "status": "ready-for-research",
+      "title": "Glyph Stored Concentration Override"
     }
   ]
 }
@@ -231,10 +255,14 @@ missing-record spells unless a RAW dependency is unavoidable and documented.
 | 19 | L5-C19-MAGIC-CIRCLE-SURFACE-WIDENING - Widen Magic Circle Surface Spell Definition | done | L5-C07-MAGIC-CIRCLE | Magic Circle is authored/admitted as an SRD Surface Spell Definition with typed warded-cylinder, selected creature-type, direction, crossing-gate, and protected-target facts; promoted runtime remains unclaimed. |
 | 20 | L5-C20-MELD-INTO-STONE-SURFACE-WIDENING - Widen Meld into Stone Surface Spell Definition | done | L5-C08-MELD-INTO-STONE | Meld into Stone is authored/admitted as an SRD Surface Spell Definition with typed stone object-or-surface containment, hidden merged occupancy, outside-sense, self-spell, Movement-limited exit, destructive expulsion damage, closest-unoccupied-space placement, and Prone rider facts; promoted runtime remains unclaimed. |
 | 21 | L5-C21-PHANTOM-STEED-MOUNT-LIFECYCLE - Promote Phantom Steed mount lifecycle owner | done | L5-C10-PHANTOM-STEED | Added the typed spawned-creature-damage spell-end fact and split remaining runtime work into executable follow-ups L3-FOLLOWUP-PHANTOM-STEED-MOUNT-LIFECYCLE, L3-FOLLOWUP-PHANTOM-STEED-CREATED-EQUIPMENT, and L3-FOLLOWUP-PHANTOM-STEED-TRAVEL-PACE. |
-| 22 | L5-C22-GLYPH-OF-WARDING-RUNTIME - Promote Glyph of Warding runtime release owner | ready-for-research | L5-C15-GLYPH-OF-WARDING-SURFACE-WIDENING | Promote the durable glyph occurrence/release workflow from the typed Surface record, preserving table object/location, trigger-event, area-membership, hostile placement, stored spell invocation, and stored Concentration witnesses without authored spell identity dispatch. |
+| 22 | L5-C22-GLYPH-OF-WARDING-RUNTIME - Promote Glyph of Warding runtime release owner | done | L5-C15-GLYPH-OF-WARDING-SURFACE-WIDENING | Closed as an owner split: Glyph remains unsupported-profile while durable occurrence, explosive-rune release, stored-spell release, and stored Concentration override are tracked as narrower follow-up owners. |
 | 23 | L3-FOLLOWUP-PHANTOM-STEED-MOUNT-LIFECYCLE - Phantom Steed Mount Lifecycle Runtime | ready-for-research | L5-C21-PHANTOM-STEED-MOUNT-LIFECYCLE | Promote spell-created mount occurrence creation, caller-supplied unoccupied placement, Riding Horse catalog projection with Speed override, rider permission, damage-triggered spell end, and gradual fade/dismount grace. |
 | 24 | L3-FOLLOWUP-PHANTOM-STEED-CREATED-EQUIPMENT - Phantom Steed Created Equipment Cleanup | ready-for-research | L5-C21-PHANTOM-STEED-MOUNT-LIFECYCLE | Promote saddle/bit/bridle object or equipment occurrences and the 10-foot carried-distance vanish boundary. |
 | 25 | L3-FOLLOWUP-PHANTOM-STEED-TRAVEL-PACE - Phantom Steed Table Travel Pace | ready-for-research | L5-C21-PHANTOM-STEED-MOUNT-LIFECYCLE | Promote the 13 miles/hour travel fact through a table travel owner without adding battle-map travel state. |
+| 26 | L3-FOLLOWUP-GLYPH-DURABLE-OCCURRENCE - Glyph Durable Occurrence | ready-for-research | L5-C22-GLYPH-OF-WARDING-RUNTIME | Promote durable glyph occurrence creation, trigger/end cleanup, notice, movement invalidation, and table object/location witnesses. |
+| 27 | L3-FOLLOWUP-GLYPH-EXPLOSIVE-RUNE-RELEASE - Glyph Explosive Rune Release | ready-for-research | L3-FOLLOWUP-GLYPH-DURABLE-OCCURRENCE | Promote non-immediate explosive-rune release with area-membership witnesses, damage-type choice, Dexterity Saving Throw half damage, slot scaling, and cleanup. |
+| 28 | L3-FOLLOWUP-GLYPH-STORED-SPELL-RELEASE - Glyph Stored Spell Release | ready-for-research | L3-FOLLOWUP-GLYPH-DURABLE-OCCURRENCE | Promote stored spell invocation state, no-immediate-effect storage, trigger retargeting or area centering, and hostile close-as-possible placement witnesses. |
+| 29 | L3-FOLLOWUP-GLYPH-STORED-CONCENTRATION - Glyph Stored Concentration Override | ready-for-research | L3-FOLLOWUP-GLYPH-STORED-SPELL-RELEASE | Promote the stored Concentration full-duration override outside ordinary caster, triggering-creature, or readied-spell Concentration ownership. |
 
 ## Shared Verification
 
@@ -1508,7 +1536,7 @@ Verification:
 
 ### Task 22 - L5-C22-GLYPH-OF-WARDING-RUNTIME
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -1561,6 +1589,215 @@ Acceptance:
   table witnesses rather than authored spell identity.
 - Stored spell release and Concentration override are not collapsed into an
   ordinary immediate spell cast or ordinary Concentration ownership rule.
+
+Verification:
+
+- Shared lane verification.
+- Focused owner-package tests, and if battle-runtime behavior changes, update
+  the relevant QNT/spec first and run focused MBT per `AGENTS.md`.
+
+Plan Impact:
+
+- Glyph of Warding remains `unsupported-profile`; Surface catalog admission is
+  not runtime owner evidence.
+- The broad durable glyph occurrence/release workflow is split into
+  L3-FOLLOWUP-GLYPH-DURABLE-OCCURRENCE,
+  L3-FOLLOWUP-GLYPH-EXPLOSIVE-RUNE-RELEASE,
+  L3-FOLLOWUP-GLYPH-STORED-SPELL-RELEASE, and
+  L3-FOLLOWUP-GLYPH-STORED-CONCENTRATION before any supported Glyph runtime
+  profile claims execution.
+
+### Task 26 - L3-FOLLOWUP-GLYPH-DURABLE-OCCURRENCE
+
+Status: `ready-for-research`
+
+Depends on:
+
+- L5-C22-GLYPH-OF-WARDING-RUNTIME
+
+Unit:
+
+- `glyph_of_warding`
+
+SRD anchors:
+
+- `.references/srd-5.2.1/Spells/Descriptions-E-L.md:842`
+- `.references/srd-5.2.1/Classes/Bard.md:221`
+- `.references/srd-5.2.1/Classes/Cleric.md:211`
+- `.references/srd-5.2.1/Classes/Wizard.md:247`
+
+Current state:
+
+- Glyph of Warding has typed Surface facts for inscription anchor, maximum
+  covered area, hidden-noticing DC source, trigger refinement/exclusion, and
+  movement invalidation.
+- No promoted runtime owner creates or cleans up a durable glyph occurrence, and
+  no owner consumes table object/location, covered-area, notice,
+  trigger-event, or movement-invalidation witnesses.
+
+Output:
+
+- Promote Glyph creation and cleanup as a durable Spell Effect occurrence that
+  consumes typed Surface facts and table witnesses for inscription anchor,
+  maximum covered area, cast location, hidden-noticing DC, trigger
+  refinement/exclusion, trigger occurrence, and movement invalidation.
+- Do not duplicate table map/object state or dispatch on Glyph authored
+  identity.
+
+Acceptance:
+
+- Glyph has a supported or profile-subset-supported occurrence boundary with
+  focused runtime tests and, if battle-runtime behavior changes, promoted
+  Quint/runtime parity.
+- Trigger cleanup and movement invalidation end the occurrence without treating
+  the one-hour creation cast as the runtime release.
+
+Verification:
+
+- Shared lane verification.
+- Focused owner-package tests, and if battle-runtime behavior changes, update
+  the relevant QNT/spec first and run focused MBT per `AGENTS.md`.
+
+### Task 27 - L3-FOLLOWUP-GLYPH-EXPLOSIVE-RUNE-RELEASE
+
+Status: `ready-for-research`
+
+Depends on:
+
+- L3-FOLLOWUP-GLYPH-DURABLE-OCCURRENCE
+
+Unit:
+
+- `glyph_of_warding`
+
+SRD anchors:
+
+- `.references/srd-5.2.1/Spells/Descriptions-E-L.md:842`
+- `.references/srd-5.2.1/Classes/Bard.md:221`
+- `.references/srd-5.2.1/Classes/Cleric.md:211`
+- `.references/srd-5.2.1/Classes/Wizard.md:247`
+
+Current state:
+
+- Glyph of Warding has typed Surface facts for the explosive-rune branch:
+  20-foot Sphere, Dexterity Saving Throw half damage, caster-chosen Acid, Cold,
+  Fire, Lightning, or Thunder damage, and higher-slot d8 scaling.
+- No promoted runtime owner releases that branch from a triggered durable glyph
+  occurrence.
+
+Output:
+
+- Promote explosive-rune release from a triggered glyph occurrence using typed
+  Surface facts and table-supplied area-membership witnesses.
+- Preserve non-immediate release timing; do not collapse the branch into an
+  ordinary save-damage spell cast at glyph creation.
+
+Acceptance:
+
+- Glyph has a supported or profile-subset-supported explosive-rune release
+  boundary with focused runtime tests and, if battle-runtime behavior changes,
+  promoted Quint/runtime parity.
+- Damage type choice, slot scaling, Saving Throw half damage, area-membership
+  witnesses, and spell-end cleanup are executable.
+
+Verification:
+
+- Shared lane verification.
+- Focused owner-package tests, and if battle-runtime behavior changes, update
+  the relevant QNT/spec first and run focused MBT per `AGENTS.md`.
+
+### Task 28 - L3-FOLLOWUP-GLYPH-STORED-SPELL-RELEASE
+
+Status: `ready-for-research`
+
+Depends on:
+
+- L3-FOLLOWUP-GLYPH-DURABLE-OCCURRENCE
+
+Unit:
+
+- `glyph_of_warding`
+
+SRD anchors:
+
+- `.references/srd-5.2.1/Spells/Descriptions-E-L.md:842`
+- `.references/srd-5.2.1/Classes/Bard.md:221`
+- `.references/srd-5.2.1/Classes/Cleric.md:211`
+- `.references/srd-5.2.1/Classes/Wizard.md:247`
+
+Current state:
+
+- Glyph of Warding has typed Surface facts for stored prepared-spell
+  eligibility, no immediate effect at storage time, trigger-creature
+  retargeting, area centering, and hostile close-as-possible placement.
+- No promoted runtime owner carries and releases a stored Spell Invocation from
+  a triggered durable glyph occurrence.
+
+Output:
+
+- Promote spell-glyph storage and release by carrying an eligible prepared
+  stored Spell Invocation from glyph creation to trigger release.
+- Consume table witnesses for trigger-creature retargeting, area centering, and
+  hostile close-as-possible placement for summons, harmful objects, and traps.
+- Do not collapse storage into an ordinary immediate cast or dispatch on Glyph
+  authored identity.
+
+Acceptance:
+
+- Glyph has a supported or profile-subset-supported stored-spell release
+  boundary with focused runtime tests and, if battle-runtime behavior changes,
+  promoted Quint/runtime parity.
+- The owner preserves stored invocation state, trigger retargeting, area
+  centering, hostile placement witnesses, and the no-immediate-effect storage
+  rule.
+
+Verification:
+
+- Shared lane verification.
+- Focused owner-package tests, and if battle-runtime behavior changes, update
+  the relevant QNT/spec first and run focused MBT per `AGENTS.md`.
+
+### Task 29 - L3-FOLLOWUP-GLYPH-STORED-CONCENTRATION
+
+Status: `ready-for-research`
+
+Depends on:
+
+- L3-FOLLOWUP-GLYPH-STORED-SPELL-RELEASE
+
+Unit:
+
+- `glyph_of_warding`
+
+SRD anchors:
+
+- `.references/srd-5.2.1/Spells/Descriptions-E-L.md:842`
+- `.references/srd-5.2.1/Classes/Bard.md:221`
+- `.references/srd-5.2.1/Classes/Cleric.md:211`
+- `.references/srd-5.2.1/Classes/Wizard.md:247`
+
+Current state:
+
+- Glyph of Warding has typed Surface facts for the stored Concentration
+  full-duration override.
+- No promoted runtime owner executes a released stored Concentration spell to
+  full duration outside ordinary caster, triggering-creature, or readied-spell
+  Concentration ownership.
+
+Output:
+
+- Promote the stored Concentration override for stored spells released by a
+  triggered glyph.
+- Preserve full-duration lifecycle and cleanup without ordinary Concentration
+  ownership shortcuts.
+
+Acceptance:
+
+- Glyph has a supported or profile-subset-supported stored Concentration
+  override boundary with focused runtime tests and, if battle-runtime behavior
+  changes, promoted Quint/runtime parity.
+- The owner rejects ordinary caster Concentration, triggering-creature
+  Concentration, and readied-spell cleanup semantics for this release path.
 
 Verification:
 
