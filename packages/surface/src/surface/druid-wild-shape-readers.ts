@@ -6,7 +6,7 @@ import type {
   UnitRecord,
   UseCountResource,
 } from "./types.ts";
-import { isEffectAtom } from "./types.ts";
+import { isEffectAtom, isStatBlockTransformTargetEffect } from "./types.ts";
 
 export type DruidWildShapeFeatureRecord = ClassFeatureRecord & {
   readonly className: "druid";
@@ -95,6 +95,7 @@ export function druidWildShapeKnownFormRosterFromPhase(
   }
   for (const effect of phase.effects) {
     if (effect.kind !== "transform_target") continue;
+    if (!isStatBlockTransformTargetEffect(effect)) continue;
     const form = effect.newForm;
     if (
       form.kind === "known_forms_roster" &&

@@ -43,14 +43,14 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
-      "denominator": 453,
-      "numerator": 267,
-      "percent": "58.9%"
+      "denominator": 454,
+      "numerator": 268,
+      "percent": "59%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 541,
-      "numerator": 317,
-      "percent": "58.6%"
+      "denominator": 542,
+      "numerator": 318,
+      "percent": "58.7%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,7 +59,7 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 318
+      "value": 319
     },
     "deterministicAdmissionProjectionCoverage": {
       "denominator": 185,
@@ -67,8 +67,8 @@
       "percent": "97.3%"
     },
     "profileClassificationCoverage": {
-      "denominator": 318,
-      "numerator": 318,
+      "denominator": 319,
+      "numerator": 319,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -112,9 +112,9 @@
       "percent": "98.9%"
     },
     "supportedProfileCoverage": {
-      "denominator": 268,
+      "denominator": 269,
       "numerator": 185,
-      "percent": "69%"
+      "percent": "68.8%"
     }
   },
   "metricSemantics": [
@@ -16661,8 +16661,8 @@
         "unsupportedOrOtherUnits": 4
       },
       {
-        "executableUnitDenominator": 137,
-        "installedUnitDenominator": 137,
+        "executableUnitDenominator": 138,
+        "installedUnitDenominator": 138,
         "kind": "spell",
         "label": "Spell Units",
         "profileFactDenominator": 136,
@@ -16672,7 +16672,7 @@
         "selectedIdentityReplayGapUnits": 0,
         "selectedIdentityReplayWitnessUnits": 110,
         "supportedProfileUnits": 92,
-        "unsupportedOrOtherUnits": 27
+        "unsupportedOrOtherUnits": 28
       },
       {
         "executableUnitDenominator": 93,
@@ -35450,6 +35450,33 @@
       ],
       "sourceRecordPath": "packages/surface/content/fly.json",
       "unitId": "fly"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "followUpTasks": [
+          {
+            "id": "L3-FOLLOWUP-GASEOUS-FORM-MIST-CLOUD-RUNTIME",
+            "mechanic": "Promote Gaseous Form's typed mist-cloud form as a spell effect with active form state, movement replacement in effective movement and Dash budgets, passive Resistance/Immunity/Saving Throw Advantage projections, attack/spellcasting/object/speech activity restrictions with Magic-action self-ending preserved, zero-Hit-Point and spell-end cleanup, and caller/table-spatial witnesses for creature-space occupancy, narrow-opening passage, and liquid-surface treatment.",
+            "owner": "future battle-runtime mist-cloud form Spell Effect plus table/spatial witness owner",
+            "requiredOutput": "Supported-profile or profile-subset-supported Gaseous Form claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the typed mist-cloud form effect without dispatching on spell id, name, or provenance.",
+            "title": "Gaseous Form Mist-Cloud Runtime"
+          }
+        ],
+        "reason": "Gaseous Form is authored and installed as an SRD Surface Spell Definition with Action Spell Slot casting, Touch range, V/S/M gauze components, Concentration up to 1 hour, willing touched creature targeting with one additional target per slot level above 3, and a typed spell-effect mist-cloud form for the target plus its worn and carried objects. The form facts include replacement movement as the target's only movement method: 10-foot Fly Speed with hover; table/spatial ownership for occupying another creature's space, passing through narrow openings, and treating liquids as solid surfaces; Bludgeoning, Piercing, and Slashing Resistance; Prone Immunity; Strength, Dexterity, and Constitution Saving Throw Advantage; no talking; no object manipulation, object dropping, use, or interaction; no attacks; no spellcasting; zero-Hit-Point ending; Magic-action self-ending; and normal spell-end cleanup. No promoted battle-runtime profile is claimed because these form facts require a future mist-cloud form Spell Effect owner and table/spatial witnesses rather than generic spell-id dispatch.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/gaseous_form.json",
+      "unitId": "gaseous_form"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

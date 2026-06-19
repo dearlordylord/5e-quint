@@ -533,6 +533,9 @@ export type CreatureDismissal = Schema.Schema.Type<
 export type ShapeShiftFormSource = Schema.Schema.Type<
   typeof SurfaceSchema.ShapeShiftFormSourceSchema
 >;
+export type ShapeShiftStatBlockFormSource = Schema.Schema.Type<
+  typeof SurfaceSchema.ShapeShiftStatBlockFormSourceSchema
+>;
 export type ShapeShiftRetainedField = Schema.Schema.Type<
   typeof SurfaceSchema.ShapeShiftRetainedFieldSchema
 >;
@@ -542,6 +545,23 @@ export type ShapeShiftActionRestriction = Schema.Schema.Type<
 export type ShapeShiftRevertTrigger = Schema.Schema.Type<
   typeof SurfaceSchema.ShapeShiftRevertTriggerSchema
 >;
+export type TransformTargetEffect = Schema.Schema.Type<
+  typeof SurfaceSchema.TransformTargetEffectSchema
+>;
+export type StatBlockTransformTargetEffect = Extract<
+  TransformTargetEffect,
+  { readonly newForm: ShapeShiftStatBlockFormSource }
+>;
+function isShapeShiftStatBlockFormSource(
+  form: ShapeShiftFormSource,
+): form is ShapeShiftStatBlockFormSource {
+  return form.kind === "catalog_ref" || form.kind === "known_forms_roster";
+}
+export function isStatBlockTransformTargetEffect(
+  effect: TransformTargetEffect,
+): effect is StatBlockTransformTargetEffect {
+  return isShapeShiftStatBlockFormSource(effect.newForm);
+}
 export type TemplatedCapacity = Schema.Schema.Type<
   typeof SurfaceSchema.TemplatedCapacitySchema
 >;

@@ -218,6 +218,7 @@ const requiredFirstVerticalUnitIds = [
   "shining_smite",
   "see_invisibility",
   "sleep",
+  "gaseous_form",
   "spider_climb",
   "suggestion",
   "zone_of_truth",
@@ -1183,6 +1184,97 @@ describe("SRD Unit catalog boundary", () => {
         },
       ]);
     }
+  });
+
+  test("keeps Gaseous Form's mist-cloud form facts in the catalog projection", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag !== "ok") return;
+
+    const gaseousForm = result.catalog.requireUnit("gaseous_form");
+    expect(gaseousForm.kind).toBe("spell");
+    if (
+      gaseousForm.kind !== "spell" ||
+      gaseousForm.mechanics.family !== "ongoing_effect"
+    ) {
+      throw new Error("Expected Gaseous Form to be an ongoing-effect spell.");
+    }
+
+    expect(gaseousForm.provenance).toEqual({
+      kind: "srd-5.2.1",
+      section: "Spells/Descriptions-E-L#Gaseous Form",
+    });
+    expect(gaseousForm.mechanics).toMatchObject({
+      level: 3,
+      school: "transmutation",
+      castingTime: { kind: "action" },
+      range: { kind: "touch" },
+      components: { v: true, s: true, m: "a bit of gauze" },
+      duration: {
+        kind: "concentration",
+        upTo: { unit: "hour", amount: 1 },
+      },
+      attachment: {
+        kind: "hole",
+        holeId: "gaseous_form_target",
+        label: "target",
+        value: {
+          kind: "target",
+          selection: {
+            mode: "choose_up_to",
+            count: {
+              kind: "linear",
+              base: 1,
+              perSlotAboveBase: 1,
+              baseLevel: 3,
+            },
+            targetKinds: ["creature"],
+            disposition: "willing",
+          },
+        },
+      },
+      operations: [
+        {
+          trigger: { kind: "passive" },
+          effect: {
+            kind: "transform_target",
+            newForm: {
+              kind: "spell_effect_mist_cloud",
+              transformedObjects: "worn_and_carried",
+              movement: {
+                kind: "replace_all_movement_methods",
+                speedKind: "fly",
+                feet: 10,
+                hover: true,
+              },
+              tableSpatial: {
+                creatureSpace: "can_enter_and_occupy_other_creature_space",
+                narrowOpenings: "can_pass_through",
+                liquids: "treat_as_solid_surfaces",
+              },
+              passive: {
+                damageResistances: ["bludgeoning", "piercing", "slashing"],
+                conditionImmunities: ["prone"],
+                savingThrowAdvantage: ["str", "dex", "con"],
+              },
+              activityLimits: {
+                communication: "cannot_talk",
+                objectManipulation: "cannot_manipulate_objects",
+                carriedOrHeldObjects:
+                  "cannot_be_dropped_used_or_interacted_with",
+                prohibitedActivities: ["attack", "spellcasting"],
+              },
+            },
+            revertTriggers: [
+              { kind: "zero_hp" },
+              { kind: "dismissed_by_target", action: "magic_action" },
+              { kind: "spell_ends" },
+            ],
+          },
+        },
+      ],
+    });
   });
 
   test("keeps Druid Wild Shape as catalog-only shape-shifting metadata", () => {

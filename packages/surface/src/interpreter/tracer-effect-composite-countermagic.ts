@@ -2,7 +2,9 @@ import type {
   AreaDirectEffectAtom,
   OngoingOperation,
   OngoingTrigger,
+  TransformTargetEffect,
 } from "../surface/types.ts";
+import { isStatBlockTransformTargetEffect } from "../surface/types.ts";
 import type { TraceEdge, TraceNode } from "./tracer-model.ts";
 import { Match } from "effect";
 import {
@@ -46,10 +48,6 @@ export type CompositeAndCountermagicEffectAtom = Extract<
   }
 >;
 
-type TransformTargetEffect = Extract<
-  CompositeAndCountermagicEffectAtom,
-  { readonly kind: "transform_target" }
->;
 type ShapeShiftFormSource = TransformTargetEffect["newForm"];
 type ShapeShiftRevertTrigger = TransformTargetEffect["revertTriggers"][number];
 
@@ -106,6 +104,29 @@ function describeShapeShiftKnownFormChange(
   );
 }
 
+function describeShapeShiftSpellEffectForm(
+  form: Extract<
+    ShapeShiftFormSource,
+    { readonly kind: "spell_effect_mist_cloud" }
+  >,
+): string {
+  return [
+    "spell-effect mist cloud",
+    `objects: ${form.transformedObjects}`,
+    `movement: ${form.movement.kind} -> ${form.movement.speedKind} ${form.movement.feet} ft (hover)`,
+    `table/spatial: ${form.tableSpatial.creatureSpace}`,
+    `table/spatial: narrow openings ${form.tableSpatial.narrowOpenings}`,
+    `table/spatial: liquids ${form.tableSpatial.liquids}`,
+    `resistance: ${form.passive.damageResistances.join(", ")}`,
+    `condition immunity: ${form.passive.conditionImmunities.join(", ")}`,
+    `saving throw advantage: ${form.passive.savingThrowAdvantage.join(", ")}`,
+    `communication: ${form.activityLimits.communication}`,
+    `objects: ${form.activityLimits.objectManipulation}`,
+    `carried/held: ${form.activityLimits.carriedOrHeldObjects}`,
+    `prohibited: ${form.activityLimits.prohibitedActivities.join(", ")}`,
+  ].join("\n");
+}
+
 function describeShapeShiftFormSource(newForm: ShapeShiftFormSource): string {
   return Match.value(newForm).pipe(
     Match.when(
@@ -121,6 +142,9 @@ function describeShapeShiftFormSource(newForm: ShapeShiftFormSource): string {
         `max CR: ${describeScaling(roster.maxChallengeRating)}`,
         describeShapeShiftFlySpeed(roster.flySpeed),
       ].join("\n"),
+    ),
+    Match.when({ kind: "spell_effect_mist_cloud" }, (form) =>
+      describeShapeShiftSpellEffectForm(form),
     ),
     Match.exhaustive,
   );
@@ -147,6 +171,24 @@ function describeShapeShiftRevertTrigger(
     ),
     Match.exhaustive,
   );
+}
+
+function describeTransformTargetExtras(effect: TransformTargetEffect): string {
+  const rev = effect.revertTriggers
+    .map(describeShapeShiftRevertTrigger)
+    .join(" | ");
+  if (!isStatBlockTransformTargetEffect(effect)) {
+    return `revert: ${rev}`;
+  }
+
+  return [
+    `retain: ${effect.retainedFields.join(", ")}`,
+    `revert: ${rev}`,
+    effect.tempHpFromForm === true ? "temp HP = new form HP" : null,
+    effect.actionRestriction !== undefined ? effect.actionRestriction : null,
+  ]
+    .filter((s): s is string => s !== null)
+    .join("\n");
 }
 
 export function traceCompositeAndCountermagicEffectAtom(
@@ -642,17 +684,7 @@ export function traceCompositeAndCountermagicEffectAtom(
     case "transform_target": {
       const id = ids("eff");
       const form = describeShapeShiftFormSource(e.newForm);
-      const rev = e.revertTriggers
-        .map(describeShapeShiftRevertTrigger)
-        .join(" | ");
-      const extras = [
-        `retain: ${e.retainedFields.join(", ")}`,
-        `revert: ${rev}`,
-        e.tempHpFromForm === true ? "temp HP = new form HP" : null,
-        e.actionRestriction !== undefined ? e.actionRestriction : null,
-      ]
-        .filter((s): s is string => s !== null)
-        .join("\n");
+      const extras = describeTransformTargetExtras(e);
       nodes.push({
         id,
         category: "effect",

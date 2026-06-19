@@ -559,15 +559,6 @@ type CreatedObjectDurability = Schema.Schema.Type<
 type IllusionSensoryChannel = Schema.Schema.Type<
   typeof IllusionSensoryChannelSchema
 >;
-type ShapeShiftFormSource = Schema.Schema.Type<
-  typeof ShapeShiftFormSourceSchema
->;
-type ShapeShiftRetainedField = Schema.Schema.Type<
-  typeof ShapeShiftRetainedFieldSchema
->;
-type ShapeShiftActionRestriction = Schema.Schema.Type<
-  typeof ShapeShiftActionRestrictionSchema
->;
 type CommandTargetNextTurnOptions = Schema.Schema.Type<
   typeof CommandTargetNextTurnOptionsSchema
 >;
@@ -599,8 +590,8 @@ type ClassLevelPreparedSpellAccessTier = {
   readonly minimumClassLevel: number;
   readonly spellIds: ReadonlyNonEmptyArray<string>;
 };
-type ShapeShiftRevertTrigger = Schema.Schema.Type<
-  typeof ShapeShiftRevertTriggerSchema
+type TransformTargetEffect = Schema.Schema.Type<
+  typeof TransformTargetEffectSchema
 >;
 type AreaAttachment = Schema.Schema.Type<typeof AreaAttachmentSchema>;
 type CreatureTargetAttachment = Schema.Schema.Type<
@@ -1109,14 +1100,7 @@ type EffectAtom =
   | { readonly kind: "reflect_triggering_spell" }
   | { readonly kind: "waste_triggering_spell_or_effect" }
   | { readonly kind: "maximize_healing_received" }
-  | {
-      readonly kind: "transform_target";
-      readonly newForm: ShapeShiftFormSource;
-      readonly retainedFields: ReadonlyNonEmptyArray<ShapeShiftRetainedField>;
-      readonly tempHpFromForm?: true;
-      readonly actionRestriction?: ShapeShiftActionRestriction;
-      readonly revertTriggers: ReadonlyNonEmptyArray<ShapeShiftRevertTrigger>;
-    }
+  | TransformTargetEffect
   | {
       readonly kind: "end_ongoing_spells";
       readonly maxSpellLevel:
@@ -2774,9 +2758,54 @@ export const ShapeShiftKnownFormsRosterSourceSchema = Schema.Struct({
   ),
 });
 
-export const ShapeShiftFormSourceSchema = Schema.Union(
+export const ShapeShiftStatBlockFormSourceSchema = Schema.Union(
   ShapeShiftCatalogRefFormSourceSchema,
   ShapeShiftKnownFormsRosterSourceSchema,
+);
+
+export const ShapeShiftSpellEffectFormSourceSchema = strictStruct({
+  kind: Schema.Literal("spell_effect_mist_cloud"),
+  transformedObjects: Schema.Literal("worn_and_carried"),
+  movement: strictStruct({
+    kind: Schema.Literal("replace_all_movement_methods"),
+    speedKind: Schema.Literal("fly"),
+    feet: Schema.Literal(10),
+    hover: Schema.Literal(true),
+  }),
+  tableSpatial: strictStruct({
+    creatureSpace: Schema.Literal("can_enter_and_occupy_other_creature_space"),
+    narrowOpenings: Schema.Literal("can_pass_through"),
+    liquids: Schema.Literal("treat_as_solid_surfaces"),
+  }),
+  passive: strictStruct({
+    damageResistances: Schema.Tuple(
+      Schema.Literal("bludgeoning"),
+      Schema.Literal("piercing"),
+      Schema.Literal("slashing"),
+    ),
+    conditionImmunities: Schema.Tuple(Schema.Literal("prone")),
+    savingThrowAdvantage: Schema.Tuple(
+      Schema.Literal("str"),
+      Schema.Literal("dex"),
+      Schema.Literal("con"),
+    ),
+  }),
+  activityLimits: strictStruct({
+    communication: Schema.Literal("cannot_talk"),
+    objectManipulation: Schema.Literal("cannot_manipulate_objects"),
+    carriedOrHeldObjects: Schema.Literal(
+      "cannot_be_dropped_used_or_interacted_with",
+    ),
+    prohibitedActivities: Schema.Tuple(
+      Schema.Literal("attack"),
+      Schema.Literal("spellcasting"),
+    ),
+  }),
+});
+
+export const ShapeShiftFormSourceSchema = Schema.Union(
+  ShapeShiftStatBlockFormSourceSchema,
+  ShapeShiftSpellEffectFormSourceSchema,
 );
 
 export const ShapeShiftRetainedFieldSchema = Schema.Literal(
@@ -2816,7 +2845,23 @@ export const ShapeShiftRevertTriggerSchema = Schema.Union(
   Schema.Struct({ kind: Schema.Literal("death") }),
   Schema.Struct({
     kind: Schema.Literal("dismissed_by_target"),
-    action: Schema.Literal("bonus_action"),
+    action: Schema.Literal("bonus_action", "magic_action"),
+  }),
+);
+
+export const TransformTargetEffectSchema = Schema.Union(
+  strictStruct({
+    kind: Schema.Literal("transform_target"),
+    newForm: ShapeShiftStatBlockFormSourceSchema,
+    retainedFields: nonEmpty(ShapeShiftRetainedFieldSchema),
+    tempHpFromForm: optionalExact(Schema.Literal(true)),
+    actionRestriction: optionalExact(ShapeShiftActionRestrictionSchema),
+    revertTriggers: nonEmpty(ShapeShiftRevertTriggerSchema),
+  }),
+  strictStruct({
+    kind: Schema.Literal("transform_target"),
+    newForm: ShapeShiftSpellEffectFormSourceSchema,
+    revertTriggers: nonEmpty(ShapeShiftRevertTriggerSchema),
   }),
 );
 
@@ -3356,14 +3401,7 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
         kind: Schema.Literal("waste_triggering_spell_or_effect"),
       }),
       Schema.Struct({ kind: Schema.Literal("maximize_healing_received") }),
-      Schema.Struct({
-        kind: Schema.Literal("transform_target"),
-        newForm: ShapeShiftFormSourceSchema,
-        retainedFields: nonEmpty(ShapeShiftRetainedFieldSchema),
-        tempHpFromForm: optionalExact(Schema.Literal(true)),
-        actionRestriction: optionalExact(ShapeShiftActionRestrictionSchema),
-        revertTriggers: nonEmpty(ShapeShiftRevertTriggerSchema),
-      }),
+      TransformTargetEffectSchema,
       Schema.Struct({
         kind: Schema.Literal("end_ongoing_spells"),
         maxSpellLevel: Schema.Union(

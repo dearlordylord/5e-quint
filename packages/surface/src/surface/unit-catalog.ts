@@ -129,6 +129,7 @@ import findFamiliarInput from "../../content/find_familiar.json";
 import findTrapsInput from "../../content/find_traps.json";
 import flamingSphereInput from "../../content/flaming_sphere.json";
 import fogCloudInput from "../../content/fog_cloud.json";
+import gaseousFormInput from "../../content/gaseous_form.json";
 import guidanceInput from "../../content/guidance.json";
 import greaseInput from "../../content/grease.json";
 import guidingBoltInput from "../../content/guiding_bolt.json";
@@ -720,6 +721,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     sleepInput,
     sleetStormInput,
     flyInput,
+    gaseousFormInput,
     spiderClimbInput,
     spikeGrowthInput,
     spiritualWeaponInput,
