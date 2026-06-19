@@ -259,6 +259,9 @@ export type FeatherFallMitigation = Schema.Schema.Type<
 export type MentalMessageDeliveryEffect = Schema.Schema.Type<
   typeof SurfaceSchema.MentalMessageDeliveryEffectSchema
 >;
+export type EtherealPhaseEffect = Schema.Schema.Type<
+  typeof SurfaceSchema.EtherealPhaseEffectSchema
+>;
 export type ForceMoveEffect = Schema.Schema.Type<
   typeof SurfaceSchema.ForceMoveEffectSchema
 >;
@@ -420,6 +423,9 @@ export type RandomTableRoll = Schema.Schema.Type<
 >;
 export type RandomTableOutcome = Schema.Schema.Type<
   typeof SurfaceSchema.RandomTableOutcomeSchema
+>;
+export type OngoingRandomTableOutcome = Schema.Schema.Type<
+  typeof SurfaceSchema.OngoingRandomTableOutcomeSchema
 >;
 export type ActivationPhase = Schema.Schema.Type<
   typeof SurfaceSchema.ActivationPhaseSchema

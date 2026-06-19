@@ -11,6 +11,8 @@ import {
   describeAbilityCheck,
   describeDc,
   describeOngoingPredicate,
+  describeRandomTableOutcomeRange,
+  describeRandomTableRoll,
   describeTransferEvent,
 } from "./tracer-rule-labels.ts";
 import type { IdGen } from "./tracer-rule-labels.ts";
@@ -592,6 +594,45 @@ export function traceOngoingOpEffect(
       });
       edges.push({ from: hostId, to: id, relation: hostRelation });
       edges.push({ from: id, to: attId, relation: "attaches_to" });
+      return;
+    }
+    case "random_table": {
+      const resId = ids("res");
+      nodes.push({
+        id: resId,
+        category: "resolution",
+        atomKind: "random_table",
+        label: `random_table\nroll: ${describeRandomTableRoll(eff.roll)}`,
+      });
+      edges.push({ from: hostId, to: resId, relation: hostRelation });
+      edges.push({ from: resId, to: attId, relation: "attaches_to" });
+
+      for (const outcome of eff.outcomes) {
+        const branchId = ids("tbl");
+        nodes.push({
+          id: branchId,
+          category: "resolution",
+          atomKind: "table_result",
+          label:
+            `table_result\n${describeRandomTableOutcomeRange(outcome)}` +
+            `\n${outcome.label}`,
+        });
+        edges.push({ from: resId, to: branchId, relation: "branches_on_roll" });
+
+        for (const effect of outcome.effects ?? []) {
+          traceOngoingOpEffect(
+            effect,
+            branchId,
+            "grants",
+            attId,
+            slotId,
+            range,
+            nodes,
+            edges,
+            ids,
+          );
+        }
+      }
       return;
     }
     case "save_gate": {

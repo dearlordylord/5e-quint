@@ -73,7 +73,7 @@
     {
       "number": 12,
       "id": "L5-C12-BLINK-SURFACE-WIDENING",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Widen Blink Surface Spell Definition"
     },
     {
@@ -195,7 +195,7 @@ missing-record spells unless a RAW dependency is unavoidable and documented.
 | 9 | L5-C09-NONDETECTION - Close Nondetection missing authored record | done | none | Independent missing spell Unit. |
 | 10 | L5-C10-PHANTOM-STEED - Close Phantom Steed missing authored record | done | none | Closed by an SRD-provenance Surface record plus unsupported-profile mount lifecycle/travel/fade owner boundary; follow-up is L5-C21. |
 | 11 | L5-C11-BESTOW-CURSE-SURFACE-WIDENING - Widen Bestow Curse Surface Spell Definition | done | L5-C01-BESTOW-CURSE | Add typed Surface facts for Bestow Curse curse-option selection, curse-removal targeting, and slot-dependent duration/Concentration before authoring/admitting the Spell Definition. |
-| 12 | L5-C12-BLINK-SURFACE-WIDENING - Widen Blink Surface Spell Definition | ready-for-research | L5-C02-BLINK | Add typed Surface/table-spatial facts for Blink's turn-end roll, Ethereal Plane transition, already-on-plane ending predicate, and return-position availability before authoring/admitting the Spell Definition. |
+| 12 | L5-C12-BLINK-SURFACE-WIDENING - Widen Blink Surface Spell Definition | done | L5-C02-BLINK | Blink is authored/admitted as an SRD Surface Spell Definition with typed turn-end random-table and Ethereal phase facts; runtime remains closed at the planar lifecycle/table-spatial owner boundary. |
 | 13 | L5-C13-CONJURE-ANIMALS-SURFACE-WIDENING - Widen Conjure Animals Surface Spell Definition | ready-for-research | L5-C03-CONJURE-ANIMALS | Add typed Surface/table-spatial facts for Conjure Animals' spectral pack occurrence, pack reposition, Strength Saving Throw Advantage predicate, Dexterity Saving Throw trigger eligibility, and once-per-turn limit before authoring/admitting the Spell Definition. |
 | 14 | L5-C14-GASEOUS-FORM-SURFACE-WIDENING - Widen Gaseous Form Surface Spell Definition | ready-for-research | L5-C04-GASEOUS-FORM | Add typed Surface/table-spatial facts for Gaseous Form's mist-cloud form state, movement replacement, Magic-action self-ending, B/P/S Resistance, Prone Immunity, Strength/Dexterity/Constitution Saving Throw Advantage, action/object/speech limits, creature-space occupancy, narrow-opening passage, and liquid-surface treatment before authoring/admitting the Spell Definition. |
 | 15 | L5-C15-GLYPH-OF-WARDING-SURFACE-WIDENING - Widen Glyph of Warding Surface Spell Definition | ready-for-research | L5-C05-GLYPH-OF-WARDING | Add typed Surface/table object-location facts for Glyph of Warding's surface or closeable-object inscription anchor, maximum glyph-area constraint, caster-defined/refined trigger, movement invalidation, explosive rune, stored spell eligibility/release/retargeting, hostile placement, and stored Concentration duration override before authoring/admitting the Spell Definition. |
@@ -383,7 +383,7 @@ Plan Impact:
 
 ### Task 12 - L5-C12-BLINK-SURFACE-WIDENING
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 

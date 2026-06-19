@@ -198,6 +198,7 @@ export function traceEffectAtom(
       );
     case "teleport":
     case "transport_exile":
+    case "ethereal_phase":
     case "make_weapon_attack":
     case "override_attached_weapon_attack":
     case "container_storage":

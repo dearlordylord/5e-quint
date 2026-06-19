@@ -11,6 +11,8 @@ import {
   describeDc,
   describeDamageTypeRef,
   describeLinkedSpeed,
+  describeRandomTableOutcomeRange,
+  describeRandomTableRoll,
   describeScaling,
 } from "./tracer-rule-labels.ts";
 import type { IdGen } from "./tracer-rule-labels.ts";
@@ -263,6 +265,44 @@ export function traceCompositeAndCountermagicEffectAtom(
           atomKind: "modify_ac",
           label: `modify_ac\nfloor: max(AC, ${eff.const})`,
         });
+        return id;
+      }
+      case "random_table": {
+        const id = ids("op");
+        nodes.push({
+          id,
+          category: "resolution",
+          atomKind: "random_table",
+          label: `random_table\nroll: ${describeRandomTableRoll(eff.roll)}`,
+        });
+        for (const outcome of eff.outcomes) {
+          const branchId = ids("tbl");
+          nodes.push({
+            id: branchId,
+            category: "resolution",
+            atomKind: "table_result",
+            label:
+              `table_result\n${describeRandomTableOutcomeRange(outcome)}` +
+              `\n${outcome.label}`,
+          });
+          edges.push({
+            from: id,
+            to: branchId,
+            relation: "branches_on_roll",
+          });
+
+          for (const effect of outcome.effects ?? []) {
+            const childId = traceDetachedOngoingChoiceEffect(
+              effect,
+              nodes,
+              ids,
+              edges,
+            );
+            if (childId !== null) {
+              edges.push({ from: branchId, to: childId, relation: "grants" });
+            }
+          }
+        }
         return id;
       }
       default:

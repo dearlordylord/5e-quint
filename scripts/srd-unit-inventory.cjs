@@ -387,9 +387,6 @@ const classFeatureSurfaceBlockers = new Map();
 
 const spellAccessSurfaceBlockers = new Map();
 
-const blinkSurfaceWideningOwner =
-  "Surface Spell Definition plus table/spatial plane-position owner";
-
 const conjureAnimalsSurfaceWideningOwner =
   "Surface Spell Definition plus table/spatial pack-position owner and future battle-runtime pack Spell Effect owner";
 
@@ -409,21 +406,6 @@ const meldIntoStoneSurfaceWideningOwner =
   "Surface Spell Definition plus table terrain/object occupancy owner and future battle-runtime merged-state, perception, damage, and forced-exit Spell Effect owner";
 
 const spellUnitMissingClassifications = new Map([
-  [
-    "blink",
-    {
-      kind: "needs-surface-widening",
-      owner: blinkSurfaceWideningOwner,
-      missingConstruct:
-        "Spell Definition planar blink occurrence: caster-turn-end d6 threshold needs an OngoingEffect random table to gate the transition to the Ethereal Plane; spell-ending when the caster is already on that plane needs a plane-occupancy predicate; and start-of-next-turn/spell-end return placement chooses a visible unoccupied space within 10 feet of the origin space or the nearest unoccupied space when none is available, requiring typed Surface/table-spatial ownership for return-position availability.",
-      battleReadinessClosure: {
-        kind: "table-spatial-derivation",
-        owner: blinkSurfaceWideningOwner,
-        reason:
-          "Blink needs a typed follow-up split: Surface owns the caster-turn-end d6 random table, Ethereal Plane transition, and already-on-plane ending predicate; table/spatial ownership supplies origin space, visible unoccupied-space availability within 10 feet, and nearest-unoccupied-space fallback before any battle-runtime projection admits it.",
-      },
-    },
-  ],
   [
     "conjure_animals",
     {

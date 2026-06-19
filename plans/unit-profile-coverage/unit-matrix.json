@@ -43,14 +43,14 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
-      "denominator": 457,
-      "numerator": 272,
-      "percent": "59.5%"
+      "denominator": 458,
+      "numerator": 273,
+      "percent": "59.6%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 545,
-      "numerator": 322,
-      "percent": "59.1%"
+      "denominator": 546,
+      "numerator": 323,
+      "percent": "59.2%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,7 +59,7 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 323
+      "value": 324
     },
     "deterministicAdmissionProjectionCoverage": {
       "denominator": 188,
@@ -67,8 +67,8 @@
       "percent": "97.3%"
     },
     "profileClassificationCoverage": {
-      "denominator": 323,
-      "numerator": 323,
+      "denominator": 324,
+      "numerator": 324,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -112,9 +112,9 @@
       "percent": "98.3%"
     },
     "supportedProfileCoverage": {
-      "denominator": 273,
+      "denominator": 274,
       "numerator": 188,
-      "percent": "68.9%"
+      "percent": "68.6%"
     }
   },
   "metricSemantics": [
@@ -16831,8 +16831,8 @@
         "unsupportedOrOtherUnits": 4
       },
       {
-        "executableUnitDenominator": 140,
-        "installedUnitDenominator": 140,
+        "executableUnitDenominator": 141,
+        "installedUnitDenominator": 141,
         "kind": "spell",
         "label": "Spell Units",
         "profileFactDenominator": 137,
@@ -16842,7 +16842,7 @@
         "selectedIdentityReplayGapUnits": 1,
         "selectedIdentityReplayWitnessUnits": 110,
         "supportedProfileUnits": 93,
-        "unsupportedOrOtherUnits": 29
+        "unsupportedOrOtherUnits": 30
       },
       {
         "executableUnitDenominator": 95,
@@ -27967,6 +27967,29 @@
       ],
       "sourceRecordPath": "packages/surface/content/bless.json",
       "unitId": "bless"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "table-spatial-derivation",
+          "owner": "future planar phase lifecycle owner plus table/spatial plane-position owner",
+          "reason": "Blink supplies typed Surface facts for the caster-turn-end random table, Ethereal Plane transition, already-on-plane spell-ending predicate, origin-space identity, origin-plane perception, Ethereal-only interaction, and return placement/fallback. Promoted battle runtime still needs a planar phase lifecycle owner that consumes caller/table-spatial plane occupancy, origin-space, visible-unoccupied availability within 10 feet, and nearest-unoccupied fallback witnesses without dispatching on Blink authored identity."
+        },
+        "reason": "Blink is authored and installed as an SRD Surface Spell Definition with Action Spell Slot casting, Self range, V/S components, a timed 1-minute duration, a caster-turn-end d6 random table whose 4-6 branch enters an Ethereal Plane phase, typed already-on-Ethereal spell-ending, origin-space tracking, 60-foot gray-origin-plane perception, Ethereal-only interaction, and start-of-next-turn or spell-end return placement to a caster-chosen visible unoccupied space within 10 feet of the space left or the nearest unoccupied space when none is available. No promoted battle-runtime profile is claimed because promoted runtime still needs a planar phase lifecycle owner that consumes table/spatial plane occupancy, origin-space, visible-unoccupied availability, and nearest-unoccupied fallback witnesses without dispatching on Blink authored identity.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/blink.json",
+      "unitId": "blink"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

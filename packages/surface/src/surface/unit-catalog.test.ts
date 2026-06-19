@@ -4366,6 +4366,81 @@ describe("SRD Unit catalog boundary", () => {
     );
   });
 
+  test("decodes Blink as an end-turn Ethereal phase random table", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag !== "ok") return;
+    const blink = result.catalog.requireUnit("blink");
+
+    expect(blink.kind).toBe("spell");
+    if (blink.kind !== "spell") return;
+    expect(blink.mechanics.family).toBe("ongoing_effect");
+    if (blink.mechanics.family !== "ongoing_effect") return;
+
+    expect(blink.mechanics).toMatchObject({
+      level: 3,
+      school: "transmutation",
+      castingTime: { kind: "action" },
+      range: { kind: "self" },
+      components: { v: true, s: true, m: false },
+      duration: {
+        kind: "timed",
+        value: { amount: 1, unit: "minute" },
+      },
+      attachment: { kind: "self" },
+    });
+    expect(blink.mechanics.operations).toEqual([
+      {
+        trigger: { kind: "on_caster_turn_end" },
+        effect: {
+          kind: "random_table",
+          roll: { die: 6 },
+          outcomes: [
+            {
+              min: 1,
+              max: 3,
+              label: "remain on origin plane",
+            },
+            {
+              min: 4,
+              max: 6,
+              label: "vanish to the Ethereal Plane or end if already there",
+              effects: [
+                {
+                  kind: "ethereal_phase",
+                  destination: "ethereal_plane",
+                  alreadyAtDestination: { kind: "end_current_effect" },
+                  originSpace: "space_left",
+                  perception: {
+                    originPlaneAppearance: "shades_of_gray",
+                    maxOriginPlaneSightFeet: 60,
+                    originPlaneCreaturesPerceiveSubject:
+                      "only_with_special_ethereal_perception",
+                  },
+                  interaction: "ethereal_plane_creatures_only",
+                  returnPlan: {
+                    timings: [
+                      "start_of_next_caster_turn",
+                      "effect_end_if_on_destination",
+                    ],
+                    placement: {
+                      kind: "visible_unoccupied_space_within_feet_of_origin_space",
+                      chooser: "caster",
+                      maxFeet: 10,
+                      unavailableFallback: "nearest_unoccupied_space",
+                    },
+                  },
+                },
+              ],
+            },
+          ],
+        },
+      },
+    ]);
+    expect(blink.description).toContain("On a roll of 4-6");
+  });
+
   test("rejects non-RAW Locate Object subject variants", () => {
     const decode = Schema.decodeUnknownEither(EffectAtomSchema);
 
