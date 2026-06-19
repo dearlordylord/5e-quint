@@ -7,9 +7,10 @@ import {
   type UnitCatalog,
 } from "@dnd/character-creation-runtime";
 import { readClassCreationFacts } from "@dnd/surface/surface/character-creation-readers";
-import type {
-  SpellRecord,
-  UnitRecord,
+import {
+  spellHasTopLevelRitualTag,
+  type SpellRecord,
+  type UnitRecord,
 } from "@dnd/surface/surface/types";
 import { Either, Option } from "effect";
 
@@ -138,7 +139,7 @@ function characterSheetBookOfShadowsRitualInvocation(
   if (!isSpellRecord(spell.right)) {
     return characterSheetIssue("Ritual spell invocation requires a Spell.");
   }
-  if (!spellHasRitualTag(spell.right)) {
+  if (!spellHasTopLevelRitualTag(spell.right)) {
     return characterSheetIssue(
       "Ritual spell invocation requires a ritual-tagged Spell Definition.",
     );
@@ -309,14 +310,8 @@ function isSpellRecord(unit: UnitRecord): unit is SpellRecord {
   return unit.kind === "spell";
 }
 
-function spellHasRitualTag(spell: SpellRecord): boolean {
-  return "ritual" in spell.mechanics.castingTime
-    ? spell.mechanics.castingTime.ritual === true
-    : false;
-}
-
 function spellHasLeveledRitualTag(spell: SpellRecord): boolean {
-  return spell.mechanics.level >= 1 && spellHasRitualTag(spell);
+  return spell.mechanics.level >= 1 && spellHasTopLevelRitualTag(spell);
 }
 
 function isSpellcastingBuild(

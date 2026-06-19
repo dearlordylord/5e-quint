@@ -5,10 +5,12 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.remarkable-athlete
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-cast-range-increase
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.d20-test-natural-one-reroll
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-slow-active-penalties
 // Spell replay fill parser extracted from spells-resolve.ts.
 // Owns classification and validation of supplied fills against spell replay holes.
 
 // KERNEL-COVERAGE: runtime-owner BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES BATTLE.COMMAND.OPTION_AND_NEXT_TURN BATTLE.FEATURE.METAMAGIC_DISTANT_CAST_RANGE_INCREASE BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE
 import type { Condition, MovementFeet } from "@dnd/shared/types";
 import type { Ability, Skill } from "@dnd/surface/surface/types";
 import {
@@ -410,6 +412,10 @@ export function spellFillSet(
     | Extract<BattleFill, { readonly kind: "rolledDice" }>
     | undefined;
   for (const fill of fills) {
+    if (fill.kind === "slowSomaticSpellFailureOutcome") {
+      continue;
+    }
+
     if (fill.kind === "sanctuaryInterdictionOutcome") {
       continue;
     }
@@ -782,6 +788,7 @@ export function spellFillSet(
         invocation.procedure !== "flamingSphere" &&
         invocation.procedure !== "spikeGrowthMovementHazard" &&
         invocation.procedure !== "moonbeam" &&
+        invocation.procedure !== "sleetStormAreaHazard" &&
         invocation.procedure !== "webRestraintHazard"
       ) {
         return {
@@ -1707,8 +1714,8 @@ export function spellFillSetContainsOnlySpellCastReactionFacts(
       (attackSequencePartFill) =>
         attackSequencePartFill.target === undefined &&
         attackSequencePartFill.attackRoll === undefined &&
-        attackSequencePartFill
-          .remarkableAthleteCriticalHitMovementDecision === undefined &&
+        attackSequencePartFill.remarkableAthleteCriticalHitMovementDecision ===
+          undefined &&
         attackSequencePartFill.remarkableAthleteCriticalHitMovement ===
           undefined &&
         attackSequencePartFill.mirrorImageDuplicateRoll === undefined &&
@@ -1866,7 +1873,8 @@ export function spellFillSetSavingThrowTargeting(
         invocation.procedure === "creatureSizeDecrease" ||
         invocation.procedure === "levitatedCreature" ||
         invocation.procedure === "greaseGroundHazard" ||
-        invocation.procedure === "gustOfWindLine"
+        invocation.procedure === "gustOfWindLine" ||
+        invocation.procedure === "slowActivePenalties"
       ? invocation.targeting
       : { kind: "singleCombatant" };
 }
@@ -1880,7 +1888,7 @@ function isTargetAbilityChoicesRollModifierInvocation(
   return invocation.procedure === "rollModifier"
     ? invocation.abilityChoices !== null &&
         rollModifierUsesTargetAbilityChoices(invocation)
-      : false;
+    : false;
 }
 
 function isRollModifierInvocation(

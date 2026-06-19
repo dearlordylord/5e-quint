@@ -10,6 +10,7 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR BATTLE.FEATURE.METAMAGIC_CAREFUL_SAVE_PROTECTION BATTLE.FEATURE.METAMAGIC_HEIGHTENED_SAVE_DISADVANTAGE BATTLE.FEATURE.METAMAGIC_TRANSMUTED_DAMAGE_TYPE_SUBSTITUTION BATTLE.FEATURE.METAMAGIC_TWINNED_EFFECTIVE_LEVEL_EXTRA_TARGET BATTLE.FEATURE.METAMAGIC_DISTANT_CAST_RANGE_INCREASE BATTLE.FEATURE.METAMAGIC_EXTENDED_CAST_DURATION_CONCENTRATION BATTLE.FEATURE.METAMAGIC_SUBTLE_COMPONENT_SUPPRESSION BATTLE.FEATURE.METAMAGIC_SEEKING_SPELL_ATTACK_REROLL BATTLE.FEATURE.METAMAGIC_EMPOWERED_DAMAGE_DICE_REROLL
 
 import * as Either from "effect/Either";
+import { canSpendBonusAction } from "@dnd/shared-algebras/action-economy-algebra";
 import { abilityScoreToMod } from "@dnd/shared/types";
 import type {
   BattleAttackRollResult,
@@ -275,7 +276,7 @@ export function actorCanOfferQuickenedSpellMetamagic(input: {
   if (!spellInvocationSupportsQuickenedActionRewrite(input.invocation)) {
     return false;
   }
-  if (!input.state.currentTurnResources.currentHasBonusAction) {
+  if (!canSpendBonusAction(input.state.currentTurnResources)) {
     return false;
   }
   if (

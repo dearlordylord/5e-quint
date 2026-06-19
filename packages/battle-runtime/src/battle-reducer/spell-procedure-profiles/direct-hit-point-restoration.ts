@@ -27,9 +27,11 @@ import type {
   Attachment,
   DiceExpr,
   SpellRecord,
+  TopLevelSpellCastingTime,
   DiceAmount as SurfaceDiceAmount,
   TargetSelection,
 } from "@dnd/surface/surface/types";
+import { topLevelSpellCastingTime } from "@dnd/surface/surface/types";
 import { Match } from "effect";
 
 import type { SpellInvocationRef } from "../../battle-subjects.ts";
@@ -128,9 +130,11 @@ function directHitPointRestorationProjection(spell: SpellRecord): {
   if (spell.mechanics.family !== "activation") {
     return null;
   }
+  const castingTime = topLevelSpellCastingTime(spell.mechanics);
   const phase = spell.mechanics.phases[0];
   const effect = phase?.kind === "direct" ? phase.effects?.[0] : undefined;
-  const actionCost = hitPointRestorationActionCost(spell.mechanics.castingTime);
+  const actionCost =
+    castingTime === null ? null : hitPointRestorationActionCost(castingTime);
   const targeting =
     phase?.kind === "direct" && phase.attachment.kind === "hole"
       ? hitPointRestorationTargeting(phase.attachment.value)
@@ -198,7 +202,7 @@ function hitPointRestorationTargeting(
 }
 
 function hitPointRestorationActionCost(
-  castingTime: SpellRecord["mechanics"]["castingTime"],
+  castingTime: TopLevelSpellCastingTime,
 ): HealingSpellActionCost | null {
   return Match.value(castingTime).pipe(
     Match.when({ kind: "action" }, () => "magicAction" as const),

@@ -1,7 +1,7 @@
 // Battle act discovery extracted from ../battle-reducer.ts.
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-warding-bond-linked-effect
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-self-transformation-mode spell.invocation-spell-created-held-object
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-web-restraint-hazard spell.invocation-spike-growth-movement-hazard
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-web-restraint-hazard spell.invocation-sleet-storm-area-hazard spell.invocation-spike-growth-movement-hazard
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-levitated-creature
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-dragons-breath-granted-action
 // Owns top-level act discovery and subject/action-resource discovery helpers.
@@ -11,8 +11,10 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.martial-arts-attack-projection unit-feature.monk-focus-battle-options unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.invocation-flaming-sphere-hazard-ram spell.invocation-fog-cloud-obscurement spell.invocation-grease-ground-hazard spell.invocation-gust-of-wind-line spell.invocation-jump-movement-replacement spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE BATTLE.SPELL.FOG_CLOUD_OBSCUREMENT_LIFECYCLE BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.DRAGONS_BREATH_GRANTED_ACTION
-// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE BATTLE.SPELL.GUST_OF_WIND_LINE_LIFECYCLE BATTLE.SPELL.SPIKE_GROWTH_MOVEMENT_HAZARD
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE BATTLE.SPELL.SLEET_STORM_AREA_HAZARD_LIFECYCLE BATTLE.SPELL.GUST_OF_WIND_LINE_LIFECYCLE BATTLE.SPELL.SPIKE_GROWTH_MOVEMENT_HAZARD
 // KERNEL-COVERAGE: runtime-owner BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING CHARACTER.LIFECYCLE.LAYER_PROJECTION BATTLE.COMPOSITION.REDUCER_SPINE_CONTRACT
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-slow-active-penalties
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE
 import type {
   ActionEconomyState,
   RuntimeActionResource,
@@ -21,7 +23,9 @@ import type {
 import {
   actionResourceAllows,
   canSpendAction,
+  canSpendBonusAction,
   canSpendUnarmedStrikeActionResource,
+  spendActionResourceAtIndex,
 } from "@dnd/shared-algebras/action-economy-algebra";
 
 import { type StandardActionKind } from "@dnd/shared/game-facts";
@@ -574,7 +578,7 @@ export function discoverBattleActs(
   for (const offHand of offHandAttackActionOptionsForActor(state, actorId)) {
     if (
       combatantCanTakeActions(state.combatants.get(actorId)) &&
-      state.currentTurnResources.currentHasBonusAction &&
+      canSpendBonusAction(state.currentTurnResources) &&
       offHandAttackPrerequisiteMet(state, actorId, offHand) &&
       attackTargetChoices(state, actorId, offHand).length > 0
     ) {
@@ -596,7 +600,7 @@ export function discoverBattleActs(
   if (
     martialArtsUnarmedStrike !== undefined &&
     combatantCanTakeActions(state.combatants.get(actorId)) &&
-    state.currentTurnResources.currentHasBonusAction &&
+    canSpendBonusAction(state.currentTurnResources) &&
     attackTargetChoices(state, actorId, martialArtsUnarmedStrike).length > 0
   ) {
     acts.push({
@@ -741,7 +745,7 @@ function companionProtocolActs(
       },
     );
   }
-  if (actorCanAct && state.currentTurnResources.currentHasBonusAction) {
+  if (actorCanAct && canSpendBonusAction(state.currentTurnResources)) {
     acts.push({
       subject: {
         tag: "findFamiliarSharedSenses",
@@ -1271,7 +1275,7 @@ function gustOfWindLineDirectionChangeActs(
   actorId: CombatantId,
 ): readonly AvailableBattleAct[] {
   if (
-    !state.currentTurnResources.currentHasBonusAction ||
+    !canSpendBonusAction(state.currentTurnResources) ||
     !combatantCanTakeActions(state.combatants.get(actorId))
   ) {
     return [];
@@ -1324,7 +1328,7 @@ function flamingSphereRamActs(
   actorId: CombatantId,
 ): readonly AvailableBattleAct[] {
   if (
-    !state.currentTurnResources.currentHasBonusAction ||
+    !canSpendBonusAction(state.currentTurnResources) ||
     !combatantCanTakeActions(state.combatants.get(actorId))
   ) {
     return [];
@@ -1343,7 +1347,7 @@ function flamingSphereRepositionActs(
   actorId: CombatantId,
 ): readonly AvailableBattleAct[] {
   if (
-    !state.currentTurnResources.currentHasBonusAction ||
+    !canSpendBonusAction(state.currentTurnResources) ||
     !combatantCanTakeActions(state.combatants.get(actorId))
   ) {
     return [];
@@ -1769,7 +1773,7 @@ export function statBlockBonusActionOptionActs(
   if (
     actor?.origin.kind !== "statBlock" ||
     !combatantCanTakeActions(actor) ||
-    !state.currentTurnResources.currentHasBonusAction
+    !canSpendBonusAction(state.currentTurnResources)
   ) {
     return [];
   }
@@ -1996,7 +2000,10 @@ export function subjectAllowedDuringStatBlockMultiattackDispatch(
 }
 
 export function hasTurnActionResource(state: ActionEconomyState): boolean {
-  return state.actionResources.some((resource) => resource.source === "turn");
+  return (
+    canSpendAction(state, "attack") &&
+    state.actionResources.some((resource) => resource.source === "turn")
+  );
 }
 
 export function spendTurnAction<T extends ActionEconomyState>(
@@ -2005,16 +2012,13 @@ export function spendTurnAction<T extends ActionEconomyState>(
   const turnActionResourceIndex = state.actionResources.findIndex(
     (resource) => resource.source === "turn",
   );
-  if (turnActionResourceIndex === -1) {
+  if (turnActionResourceIndex === -1 || !canSpendAction(state, "attack")) {
     return Either.left("no action resource available");
   }
 
-  return Either.right({
-    ...state,
-    actionResources: state.actionResources.filter(
-      (_, index) => index !== turnActionResourceIndex,
-    ),
-  });
+  return Either.right(
+    spendActionResourceAtIndex(state, turnActionResourceIndex),
+  );
 }
 
 export function isStatBlockBattleCreatureState(

@@ -128,7 +128,11 @@ type LightCantripObjectTargetFact = Extract<
 >;
 type TouchedObjectTargetFact = Extract<
   ObjectLightTargetFact,
-  { readonly kind: "spellTouchedObjectTarget" | "spellDistantTouchedObjectTarget" }
+  {
+    readonly kind:
+      | "spellTouchedObjectTarget"
+      | "spellDistantTouchedObjectTarget";
+  }
 >;
 type ObjectTargetSightFact = Extract<
   BattleTargetSpatialFact,
@@ -593,6 +597,7 @@ export function spellAreaChoiceHole(
         | "flamingSphere"
         | "spikeGrowthMovementHazard"
         | "moonbeam"
+        | "sleetStormAreaHazard"
         | "webRestraintHazard";
     }
   >,
@@ -619,6 +624,7 @@ export function spellAreaChoiceHoleId(
         | "flamingSphere"
         | "spikeGrowthMovementHazard"
         | "moonbeam"
+        | "sleetStormAreaHazard"
         | "webRestraintHazard";
     }
   >,

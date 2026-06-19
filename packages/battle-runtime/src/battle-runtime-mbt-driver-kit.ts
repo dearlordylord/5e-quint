@@ -624,7 +624,8 @@ type MbtHole =
   | "SpellDamageRoll"
   | "StatBlockRechargeRoll"
   | "LevitateAltitudeChange"
-  | "LevitateInitialRise";
+  | "LevitateInitialRise"
+  | "SlowSomaticSpellFailureOutcome";
 type MbtLastResult = "init" | "needsHoles" | "resolved" | "invalid";
 type MbtLastInvalidReason = "" | "invalidFill" | "staleSubject" | "wrongActor";
 type WeaponAttackOrderingStage =
@@ -5790,6 +5791,9 @@ function projectHole(hole: BattleHole): readonly MbtHole[] {
   if (hole.kind === "levitateInitialRise") {
     return ["LevitateInitialRise"];
   }
+  if (hole.kind === "slowSomaticSpellFailureOutcome") {
+    return ["SlowSomaticSpellFailureOutcome"];
+  }
   if (hole.kind === "targetAbilityChoices") {
     throw new Error(
       "Battle runtime MBT does not model target ability choices holes.",
@@ -5923,7 +5927,8 @@ function holeName(raw: unknown): MbtHole {
     tag === "SpellDamageRoll" ||
     tag === "StatBlockRechargeRoll" ||
     tag === "LevitateAltitudeChange" ||
-    tag === "LevitateInitialRise"
+    tag === "LevitateInitialRise" ||
+    tag === "SlowSomaticSpellFailureOutcome"
   ) {
     return tag;
   }

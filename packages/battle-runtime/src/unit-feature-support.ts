@@ -4587,6 +4587,11 @@ export function passiveSavingThrowRollModeProfileForUnit(
   const rollModeEffects = unit.mechanics.grants.filter(isRollModeAdvantage);
   const [effect] = rollModeEffects;
   const [suppressor, ...extraSuppressors] = unit.mechanics.suppressedBy ?? [];
+  const saveAbilityFilter =
+    effect?.saveAbilityFilter === undefined ||
+    Array.isArray(effect.saveAbilityFilter)
+      ? (effect?.saveAbilityFilter ?? [])
+      : null;
   if (
     effect === undefined ||
     rollModeEffects.length !== 1 ||
@@ -4609,7 +4614,8 @@ export function passiveSavingThrowRollModeProfileForUnit(
   }
   if (
     unit.kind === "class_feature" &&
-    sameStringSet(effect.saveAbilityFilter ?? [], ["dex"]) &&
+    saveAbilityFilter !== null &&
+    sameStringSet(saveAbilityFilter, ["dex"]) &&
     effect.conditionFilter === undefined &&
     suppressor?.kind === "condition_active" &&
     sameStringSet(suppressor.conditions, ["incapacitated"]) &&
@@ -4626,7 +4632,8 @@ export function passiveSavingThrowRollModeProfileForUnit(
   }
   if (
     unit.kind === "species_trait" &&
-    sameStringSet(effect.saveAbilityFilter ?? [], []) &&
+    saveAbilityFilter !== null &&
+    sameStringSet(saveAbilityFilter, []) &&
     suppressor === undefined &&
     extraSuppressors.length === 0
   ) {

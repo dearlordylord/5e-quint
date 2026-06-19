@@ -20,9 +20,11 @@ import type {
   Skill,
   SkillFilter,
   SpellRecord,
+  TopLevelSpellCastingTime,
   DiceAmount as SurfaceDiceAmount,
   TargetSelection,
 } from "@dnd/surface/surface/types";
+import { topLevelSpellCastingTime } from "@dnd/surface/surface/types";
 import { Either, Match } from "effect";
 import {
   BATTLE_D20_ROLL_MODIFIER_KINDS,
@@ -100,10 +102,11 @@ export function thaumaturgyBoomingVoiceProjection(
   ThaumaturgyBoomingVoiceSpellInvocation,
   "activeEffect" | "rangeFeet"
 > | null {
+  const castingTime = topLevelSpellCastingTime(spell.mechanics);
   if (
     spell.mechanics.family !== "ongoing_effect" ||
     spell.mechanics.level !== 0 ||
-    spell.mechanics.castingTime.kind !== "action" ||
+    castingTime?.kind !== "action" ||
     spell.mechanics.range.kind !== "point" ||
     spell.mechanics.range.feet !== 30 ||
     spell.mechanics.duration.kind !== "timed" ||
@@ -156,7 +159,7 @@ export function thaumaturgyBoomingVoiceProjection(
 }
 
 export function scalarBuffSpellActionCost(
-  castingTime: SpellRecord["mechanics"]["castingTime"],
+  castingTime: TopLevelSpellCastingTime,
 ): HealingSpellActionCost | null {
   return Match.value(castingTime).pipe(
     Match.when({ kind: "action" }, () => "magicAction" as const),
@@ -391,7 +394,8 @@ export function rollModifierSpellProjection(
   spell: SpellRecord,
   slotLevel: SpellSlotLevel,
 ): RollModifierSpellProjection | null {
-  if (spell.mechanics.castingTime.kind !== "action") {
+  const castingTime = topLevelSpellCastingTime(spell.mechanics);
+  if (castingTime?.kind !== "action") {
     return null;
   }
   const expiresAt = scalarBuffActiveEffectExpiration(

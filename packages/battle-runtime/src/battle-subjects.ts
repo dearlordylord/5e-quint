@@ -1,6 +1,8 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.druid-wild-shape-known-form spell.invocation-flaming-sphere-hazard-ram spell.invocation-self-transformation-mode spell.invocation-spell-created-held-object
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-web-restraint-hazard
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spike-growth-movement-hazard
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-sleet-storm-area-hazard
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-slow-active-penalties
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-levitated-creature
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-cast-governor-quickened
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-damage-type-substitution
@@ -8,7 +10,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spiritual-weapon-attack-proxy
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE BATTLE.SPELL.SPELL_CREATED_HELD_OBJECT_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.DRAGONS_BREATH_GRANTED_ACTION
-// KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR BATTLE.SPELL.SPIKE_GROWTH_MOVEMENT_HAZARD
+// KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR BATTLE.SPELL.SPIKE_GROWTH_MOVEMENT_HAZARD BATTLE.SPELL.SLEET_STORM_AREA_HAZARD_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_TRANSMUTED_DAMAGE_TYPE_SUBSTITUTION
 
 import { Match, Schema } from "effect";
@@ -17,6 +19,7 @@ import { SpellSlotLevel, spellSlotLevel } from "@dnd/shared/types";
 import { DamageTypeSchema } from "@dnd/surface/surface/schema";
 import type { DamageType } from "@dnd/surface/surface/types";
 import {
+  BattleAreaId,
   BattleLineDirectionId,
   CombatantId,
   SpellId,
@@ -79,6 +82,7 @@ export const BATTLE_RUNTIME_COMMANDS = [
   "opportunityAttack",
   "greaseGroundHazardSave",
   "webRestraintSave",
+  "sleetStormAreaHazardSave",
   "webRestrainedNoLongerInArea",
   "webAreaRemoved",
   "gustOfWindLineSave",
@@ -125,6 +129,23 @@ export type MonkFocusStepOfTheWindMode =
 
 export const BattleSubjectTextSchema = Schema.NonEmptyTrimmedString;
 
+export const BattleSleetStormAreaMembershipTriggerSchema = Schema.Union(
+  Schema.Struct({
+    kind: Schema.Literal("firstEntryOnTurn"),
+    sourceCombatantId: CombatantId,
+    sourceSpellId: SpellId,
+    areaId: BattleAreaId,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("turnStartInArea"),
+    sourceCombatantId: CombatantId,
+    sourceSpellId: SpellId,
+    areaId: BattleAreaId,
+  }),
+);
+export type BattleSleetStormAreaMembershipTrigger =
+  typeof BattleSleetStormAreaMembershipTriggerSchema.Type;
+
 export const CANTRIP_SPELL_PROCEDURES = [
   "heldLight",
   "objectLight",
@@ -161,6 +182,7 @@ export const SPELL_SLOT_PROCEDURES = [
   "sleepTargetAdmission",
   "hideousLaughter",
   "hypnoticPattern",
+  "slowActivePenalties",
   "greaseGroundHazard",
   "webRestraintHazard",
   "gustOfWindLine",
@@ -171,6 +193,7 @@ export const SPELL_SLOT_PROCEDURES = [
   "spiritualWeaponAttackProxy",
   "spikeGrowthMovementHazard",
   "moonbeam",
+  "sleetStormAreaHazard",
   "objectContactDamage",
   "spellCreatedHeldObject",
   "command",
@@ -722,6 +745,12 @@ export const BattleSubjectSchema = Schema.Union(
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),
     actorId: CombatantId,
+    command: Schema.Literal("sleetStormAreaHazardSave"),
+    areaMembershipTrigger: BattleSleetStormAreaMembershipTriggerSchema,
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("runtimeCommand"),
+    actorId: CombatantId,
     command: Schema.Literal("webRestrainedNoLongerInArea"),
     sourceCombatantId: CombatantId,
     sourceSpellId: SpellId,
@@ -1242,6 +1271,9 @@ function battleSubjectKey(subject: BattleSubject): string {
           : null,
         "areaId" in command ? command.areaId : null,
         "trigger" in command ? command.trigger : null,
+        "areaMembershipTrigger" in command
+          ? JSON.stringify(command.areaMembershipTrigger)
+          : null,
         "relevantEffect" in command ? command.relevantEffect : null,
       ]),
     ),

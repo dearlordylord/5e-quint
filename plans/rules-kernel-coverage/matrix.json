@@ -1,18 +1,18 @@
 {
   "summary": {
-    "total": 122,
-    "covered": 116,
+    "total": 124,
+    "covered": 118,
     "open": 0,
     "nonSemantic": 6,
     "byRuntime": {
       "shared-algebras": 1,
-      "battle": 91,
+      "battle": 93,
       "character-creation": 14,
       "character-sheet": 12,
       "character-battle": 4
     },
     "byStatus": {
-      "covered": 116,
+      "covered": 118,
       "needs-qnt-owner": 0,
       "needs-parity-witness": 0,
       "needs-surface-evidence": 0,
@@ -27,14 +27,14 @@
     "qntRegistry[]": "Derived from packages/**/*.qnt excluding .mbt.qnt drivers and *-tests.qnt files, qnt-owner-roles.jsonl, and checker-owned qntRegistryExemptions."
   },
   "battleHoleFrontierSummary": {
-    "total": 160,
+    "total": 164,
     "bySubject": {
-      "battle-hole-family": 77,
-      "battle-fill-kind": 47,
+      "battle-hole-family": 80,
+      "battle-fill-kind": 48,
       "battle-subject-kind": 36
     },
     "byClassification": {
-      "semantic-frontier": 129,
+      "semantic-frontier": 133,
       "deterministic-boundary-projection": 0,
       "table-owned-fact": 31,
       "unsupported-dead-branch": 0
@@ -70,6 +70,96 @@
       "status": "covered",
       "surfaceEvidence": [],
       "title": "Battle movement, Stand/Drop Prone, Grapple/Escape/Release, and caller-supplied Opportunity Attack frontier facts"
+    },
+    {
+      "id": "BATTLE.SPELL.SLEET_STORM_AREA_HAZARD_LIFECYCLE",
+      "kind": "active-effect-lifecycle",
+      "parityWitnesses": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-sleet-storm-area-hazard.test.ts"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/sleet-storm-area-hazard.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-sleet-storm-area-hazard.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profiles": [
+        "spell.invocation-sleet-storm-area-hazard"
+      ],
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime-ground-command.qnt",
+        "packages/battle-runtime/battle-runtime-area-trigger-timing.qnt"
+      ],
+      "reason": "The promoted Sleet Storm runtime consumes caller-supplied area identity, movement facts, and entry/start-turn trigger subjects. Automatic geometry, pathfinding, area membership, and exposed-flame state are explicit table/environment boundaries.",
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/sleet-storm-area-hazard.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-area-effects.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts",
+        "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts",
+        "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
+        "packages/battle-runtime/src/battle-subjects.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Spells/Descriptions-S-Z.md#Sleet Storm",
+        "UBIQUITOUS_LANGUAGE.md#Movement",
+        "UBIQUITOUS_LANGUAGE.md#Conditions",
+        "UBIQUITOUS_LANGUAGE.md#Spellcasting"
+      ],
+      "title": "Battle Sleet Storm active Cylinder hazard projects Difficult Terrain and Heavily Obscured area facts, resolves entry/start-turn Prone and Concentration-loss saves, and cleans up on Concentration or duration end"
+    },
+    {
+      "id": "BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE",
+      "kind": "active-effect-lifecycle",
+      "parityWitnesses": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-slow-active-penalties.test.ts"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/slow-active-penalties.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-slow-active-penalties.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profiles": [
+        "spell.invocation-slow-active-penalties"
+      ],
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime-slow-active-penalties.mbt.qnt"
+      ],
+      "reason": "The promoted Slow runtime consumes caller-supplied affected-creature area witnesses, save outcomes, retained active Slow effects, shared action-economy state, Attack action resource state, and canonical spell component facts. Automatic Cube geometry, line of effect, point-of-origin inclusion, and area membership derivation remain caller/table facts.",
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/slow-active-penalties.ts",
+        "packages/battle-runtime/src/battle-reducer/attack-resolution.ts",
+        "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
+        "packages/battle-runtime/src/battle-reducer/creature-state.ts",
+        "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
+        "packages/battle-runtime/src/battle-reducer/movement-speed.ts",
+        "packages/battle-runtime/src/battle-reducer/slow-active-penalties-runtime.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-turn-resources.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-discovery.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-damage-fills.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-fill-set.ts",
+        "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts",
+        "packages/shared-algebras/src/action-economy-algebra.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Spells/Descriptions-S-Z.md#Slow",
+        "UBIQUITOUS_LANGUAGE.md#Spellcasting",
+        "UBIQUITOUS_LANGUAGE.md#D20 Rolls",
+        "UBIQUITOUS_LANGUAGE.md#Action Lifecycle",
+        "UBIQUITOUS_LANGUAGE.md#Movement"
+      ],
+      "title": "Battle Slow applies active penalties, target-turn Action or Bonus Action restriction, Attack cap, Somatic failure, and repeat-save cleanup"
     },
     {
       "id": "BATTLE.SHOVE.OUTCOME_AND_PUSH_BOUNDARY",
@@ -4333,6 +4423,40 @@
       "subject": "battle-hole-family"
     },
     {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.SPELL.SLEET_STORM_AREA_HAZARD_LIFECYCLE",
+        "BATTLE.TABLE.HOLE_FACT_BOUNDARIES"
+      ],
+      "followUpTaskIds": [],
+      "holeKind": "savingThrowOutcome",
+      "id": "BattleSleetStormAreaHazardSavingThrowOutcomeHole",
+      "reason": "Sleet Storm Saving Throw outcomes consume table-triggered first-entry or start-turn area membership witnesses and drive reducer-owned Prone application, target Concentration loss, and per-trigger save ledger updates. Automatic geometry, pathfinding, area membership derivation, and exposed-flame state remain table/environment-owned boundary facts.",
+      "subject": "battle-hole-family"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE"
+      ],
+      "followUpTaskIds": [],
+      "holeKind": "savingThrowOutcome",
+      "id": "BattleSlowActivePenaltiesEndTurnSavingThrowOutcomeHole",
+      "reason": "Slow end-of-target-turn Saving Throw outcomes drive reducer-owned per-target active penalty cleanup and caster Concentration cleanup when no affected targets remain.",
+      "subject": "battle-hole-family"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE"
+      ],
+      "followUpTaskIds": [],
+      "holeKind": "slowSomaticSpellFailureOutcome",
+      "id": "BattleSlowSomaticSpellFailureOutcomeHole",
+      "reason": "Slow Somatic spell-failure outcome holes carry the RAW 25 percent chance for an affected target casting a spell with an effective Somatic component. The fill determines whether casting resources are spent without applying the spell or resolution continues.",
+      "subject": "battle-hole-family"
+    },
+    {
       "classification": "table-owned-fact",
       "coveredByObligationIds": [
         "BATTLE.TABLE.HOLE_FACT_BOUNDARIES",
@@ -5104,6 +5228,17 @@
       "followUpTaskIds": [],
       "id": "savingThrowOutcome",
       "reason": "Saving Throw outcomes drive damage, condition, Command, creature-type protection, poison protection, feature, reaction-casting, and active-effect lifecycle branches. Protocol ordering owns when Saving Throw outcome fills are admitted in save-gated and Command procedure shapes; semantic branches point to dedicated obligations, including Protection from Poison's condition-scoped Saving Throw Advantage projection.",
+      "subject": "battle-fill-kind"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE"
+      ],
+      "fillKind": "slowSomaticSpellFailureOutcome",
+      "followUpTaskIds": [],
+      "id": "slowSomaticSpellFailureOutcome",
+      "reason": "Slow Somatic spell-failure fills decide the RAW 25 percent failure branch for affected targets: failed outcomes spend casting resources without applying the spell or starting Concentration, while nonfailed outcomes allow ordinary spell resolution to continue.",
       "subject": "battle-fill-kind"
     },
     {
@@ -6225,6 +6360,18 @@
     },
     {
       "obligationIds": [
+        "BATTLE.SPELL.SLEET_STORM_AREA_HAZARD_LIFECYCLE"
+      ],
+      "profileId": "spell.invocation-sleet-storm-area-hazard"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE"
+      ],
+      "profileId": "spell.invocation-slow-active-penalties"
+    },
+    {
+      "obligationIds": [
         "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
       ],
       "profileId": "unit-feature.action-surge-resource"
@@ -7220,6 +7367,7 @@
         "BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE",
         "BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE",
         "BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE",
+        "BATTLE.SPELL.SLEET_STORM_AREA_HAZARD_LIFECYCLE",
         "BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE"
       ],
       "ownerPath": "packages/battle-runtime/battle-runtime-area-trigger-timing.qnt",
@@ -7239,6 +7387,14 @@
         "BATTLE.SPELL.ANTIMAGIC_FIELD_ACTION_INTERDICTION"
       ],
       "ownerPath": "packages/battle-runtime/battle-runtime-antimagic-field-action-interdiction.mbt.qnt",
+      "role": "mbt-fixture"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-slow-active-penalties.mbt.qnt is the focused Slow active-penalties literal projection witness for failed-save active penalties, target-end repeat saves, and cleanup. It is MBT-only parity evidence, not qnt-proof verification evidence.",
+      "obligationIds": [
+        "BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-slow-active-penalties.mbt.qnt",
       "role": "mbt-fixture"
     },
     {
@@ -7478,6 +7634,7 @@
         "BATTLE.SPELL.FOG_CLOUD_OBSCUREMENT_LIFECYCLE",
         "BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE",
         "BATTLE.SPELL.MAGICAL_DARKNESS_POINT_ORIGIN_LIFECYCLE",
+        "BATTLE.SPELL.SLEET_STORM_AREA_HAZARD_LIFECYCLE",
         "BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE"
       ],
       "ownerPath": "packages/battle-runtime/battle-runtime-ground-command.qnt",
@@ -11031,6 +11188,41 @@
         "import",
         "variant",
         "record",
+        "record-update",
+        "pure-def",
+        "constant-def",
+        "int",
+        "bool",
+        "if-expression",
+        "let-binding",
+        "arithmetic",
+        "comparison",
+        "boolean-connective",
+        "pattern-match",
+        "set",
+        "map",
+        "filter",
+        "fold",
+        "exists",
+        "set-operators",
+        "membership"
+      ],
+      "obligationId": "BATTLE.SPELL.SLEET_STORM_AREA_HAZARD_LIFECYCLE",
+      "proofOnly": [
+        "packages/battle-runtime/battle-runtime-ground-command-tests.qnt"
+      ],
+      "semanticCore": [
+        "packages/battle-runtime/battle-runtime-ground-command.qnt",
+        "packages/battle-runtime/battle-runtime-area-trigger-timing.qnt"
+      ],
+      "status": "generation-subset-clean"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [
+        "import",
+        "variant",
+        "record",
         "pure-def",
         "constant-def",
         "int",
@@ -14205,6 +14397,8 @@
     "spell.invocation-self-transformation-mode",
     "spell.invocation-sleep-repeat-save-lifecycle",
     "spell.invocation-sleep-target-admission",
+    "spell.invocation-sleet-storm-area-hazard",
+    "spell.invocation-slow-active-penalties",
     "spell.invocation-spell-created-held-object",
     "spell.invocation-spell-hosted-weapon-attack",
     "spell.invocation-spike-growth-movement-hazard",

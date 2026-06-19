@@ -502,7 +502,7 @@ function cunningStrikeSavingThrowHole(
       save.ability,
       save.condition === undefined ? undefined : { condition: save.condition },
     ).filter((projection) => projection.targetId === context.targetId),
-    targetFlatBonuses: savingThrowFlatBonusProjections(state).filter(
+    targetFlatBonuses: savingThrowFlatBonusProjections(state, save.ability).filter(
       (projection) => projection.targetId === context.targetId,
     ),
   };

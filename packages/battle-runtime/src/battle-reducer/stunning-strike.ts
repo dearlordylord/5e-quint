@@ -222,7 +222,7 @@ function stunningStrikeSavingThrowHole(
     targetRollModes: savingThrowRollModeProjections(state, ability).filter(
       (projection) => projection.targetId === hit.targetId,
     ),
-    targetFlatBonuses: savingThrowFlatBonusProjections(state).filter(
+    targetFlatBonuses: savingThrowFlatBonusProjections(state, ability).filter(
       (projection) => projection.targetId === hit.targetId,
     ),
   };

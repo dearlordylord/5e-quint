@@ -574,6 +574,9 @@ describe("QMBT15 Spell Unit admission candidate narrowing", () => {
     const spell = spellRecord(shieldUnitId);
 
     expect(spell.mechanics.family).toBe("triggered_reaction");
+    if (spell.mechanics.family !== "triggered_reaction") {
+      throw new Error("Expected Shield to be a triggered Reaction spell.");
+    }
     expect(spell.mechanics.castingTime.kind).toBe("reaction");
     expect(spell.mechanics.level).toBe(1);
     expect(

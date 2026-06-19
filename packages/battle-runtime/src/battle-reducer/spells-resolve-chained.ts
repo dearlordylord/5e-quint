@@ -918,6 +918,10 @@ export function chainedSpellFillSet(
   let reactionSpellTargetFactsFilled = false;
 
   for (const fill of fills) {
+    if (fill.kind === "slowSomaticSpellFailureOutcome") {
+      continue;
+    }
+
     const spellCastReactionFacts = parseSpellCastReactionFactsFill(fill);
     if (spellCastReactionFacts.tag !== "notSpellCastReactionFactsFill") {
       if (reactionSpellTargetFactsFilled) {

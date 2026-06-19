@@ -6,6 +6,9 @@ import { CreatureId as CreatureIdSchema } from "@dnd/shared/types";
 import { Index, Initiative, Round } from "@dnd/shared/types";
 
 import {
+  canSpendAction,
+  canSpendBonusAction,
+  enableActionOrBonusActionExclusion,
   grantUnitActionResource,
   resetTurnActionEconomy,
   spendAction,
@@ -78,6 +81,93 @@ describe("action-economy-algebra", () => {
     expect(
       spendActivationResource(spentBonusAction.right, { kind: "bonusAction" }),
     ).toEqual(Either.left("no bonus action available"));
+  });
+
+  it("restricts a turn to either an Action or a Bonus Action", () => {
+    const restricted = enableActionOrBonusActionExclusion(
+      resetTurnActionEconomy(emptyActionEconomyState()),
+    );
+
+    expect(canSpendAction(restricted, "attack")).toBe(true);
+    expect(canSpendBonusAction(restricted)).toBe(true);
+
+    const spentAction = spendAction(restricted, "attack");
+    expect(Either.isRight(spentAction)).toBe(true);
+    if (Either.isLeft(spentAction)) return;
+    expect(spentAction.right.actionResources).toEqual([]);
+    expect(spentAction.right.currentHasBonusAction).toBe(false);
+    expect(spentAction.right.actionOrBonusActionExclusion).toEqual({
+      kind: "restricted",
+      choice: "action",
+    });
+    expect(canSpendAction(spentAction.right, "attack")).toBe(false);
+    expect(canSpendBonusAction(spentAction.right)).toBe(false);
+
+    const spentBonusAction = spendActivationResource(restricted, {
+      kind: "bonusAction",
+    });
+    expect(Either.isRight(spentBonusAction)).toBe(true);
+    if (Either.isLeft(spentBonusAction)) return;
+    expect(spentBonusAction.right.actionResources).toEqual([]);
+    expect(spentBonusAction.right.currentHasBonusAction).toBe(false);
+    expect(spentBonusAction.right.actionOrBonusActionExclusion).toEqual({
+      kind: "restricted",
+      choice: "bonusAction",
+    });
+    expect(canSpendAction(spentBonusAction.right, "attack")).toBe(false);
+    expect(canSpendBonusAction(spentBonusAction.right)).toBe(false);
+    expect(
+      grantUnitActionResource(
+        spentBonusAction.right,
+        sourceOwnerId,
+        unitActionId,
+        attackOnlyRestriction,
+      ),
+    ).toEqual(Either.left("no action resource available"));
+  });
+
+  it("reconciles prior Action spending when the Action or Bonus Action restriction starts mid-turn", () => {
+    const actionSpent = spendAction(
+      resetTurnActionEconomy(emptyActionEconomyState()),
+      "magic",
+    );
+    expect(Either.isRight(actionSpent)).toBe(true);
+    if (Either.isLeft(actionSpent)) return;
+    expect(actionSpent.right.currentHasBonusAction).toBe(true);
+
+    const restricted = enableActionOrBonusActionExclusion(actionSpent.right);
+
+    expect(restricted.actionResources).toEqual([]);
+    expect(restricted.currentHasBonusAction).toBe(false);
+    expect(restricted.actionOrBonusActionExclusion).toEqual({
+      kind: "restricted",
+      choice: "action",
+    });
+    expect(canSpendAction(restricted, "attack")).toBe(false);
+    expect(canSpendBonusAction(restricted)).toBe(false);
+  });
+
+  it("reconciles prior Bonus Action spending when the Action or Bonus Action restriction starts mid-turn", () => {
+    const bonusActionSpent = spendActivationResource(
+      resetTurnActionEconomy(emptyActionEconomyState()),
+      { kind: "bonusAction" },
+    );
+    expect(Either.isRight(bonusActionSpent)).toBe(true);
+    if (Either.isLeft(bonusActionSpent)) return;
+    expect(canSpendAction(bonusActionSpent.right, "attack")).toBe(true);
+
+    const restricted = enableActionOrBonusActionExclusion(
+      bonusActionSpent.right,
+    );
+
+    expect(restricted.actionResources).toEqual([]);
+    expect(restricted.currentHasBonusAction).toBe(false);
+    expect(restricted.actionOrBonusActionExclusion).toEqual({
+      kind: "restricted",
+      choice: "bonusAction",
+    });
+    expect(canSpendAction(restricted, "attack")).toBe(false);
+    expect(canSpendBonusAction(restricted)).toBe(false);
   });
 
   it("rejects duplicate unit-granted action resources by owner and unit id", () => {
@@ -219,6 +309,7 @@ function emptyActionEconomyState(): ActionEconomyState {
   return {
     actionResources: [],
     currentHasBonusAction: false,
+    actionOrBonusActionExclusion: { kind: "notRestricted" },
   };
 }
 

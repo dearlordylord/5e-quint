@@ -2,6 +2,7 @@ import type {
   BattleInterruptCheckpointInput,
   SupportedSpellInvocation,
 } from "../battle-reducer.ts";
+import { topLevelSpellCastingTime } from "@dnd/surface/surface/types";
 import {
   reactionTriggerIncludesHitByAttackRoll,
   reactionTriggerNamedSpellIds,
@@ -14,8 +15,8 @@ export function shieldReactionSpellMatchesTrigger(
   >,
   frame: BattleInterruptCheckpointInput,
 ): boolean {
-  const castingTime = invocation.spell.mechanics.castingTime;
-  if (castingTime.kind !== "reaction") {
+  const castingTime = topLevelSpellCastingTime(invocation.spell.mechanics);
+  if (castingTime?.kind !== "reaction") {
     return false;
   }
   if (frame.trigger === "attackHit") {

@@ -1,7 +1,10 @@
 // Monk's Focus option execution.
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.monk-focus-battle-options unit-feature.open-hand-technique unit-feature.stunning-strike
 
-import { spendActivationResource } from "@dnd/shared-algebras/action-economy-algebra";
+import {
+  canSpendBonusAction,
+  spendActivationResource,
+} from "@dnd/shared-algebras/action-economy-algebra";
 import * as Either from "effect/Either";
 
 import type {
@@ -71,7 +74,7 @@ function monkFocusOptionActs(
   state: BattleState,
   actor: CharacterBattleCreatureState,
 ): readonly AvailableBattleAct[] {
-  if (!state.currentTurnResources.currentHasBonusAction) return [];
+  if (!canSpendBonusAction(state.currentTurnResources)) return [];
   const focus = monkFocusResourceForActor(state, actor.combatantId);
   if (focus === null) return [];
   const acts: AvailableBattleAct[] = [];

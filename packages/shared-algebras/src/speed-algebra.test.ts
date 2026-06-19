@@ -2,14 +2,12 @@ import { describe, expect, test } from "vitest";
 import { SPEED_TYPES, type SpeedType } from "@dnd/shared/game-facts";
 import { movementDeltaFeet, movementFeet } from "@dnd/shared/types";
 
-import {
-  effectiveSpeed,
-  type CreatureSpeedFacts,
-} from "./speed-algebra.ts";
+import { effectiveSpeed, type CreatureSpeedFacts } from "./speed-algebra.ts";
 
 const ORDINARY_SPEED_FACTS: CreatureSpeedFacts = {
   ordinarySpeedFeet: movementFeet(30),
   speedChanges: [],
+  speedRatios: [],
   specialSpeeds: [],
   terminalSpeedZero: false,
 };
@@ -60,6 +58,23 @@ describe("speed algebra", () => {
 
     expect(speedValue(facts, "walk")).toBe(40);
     expect(speedValue(facts, "swim")).toBe(30);
+  });
+
+  test("applies global Speed ratios after additive speed changes", () => {
+    const facts: CreatureSpeedFacts = {
+      ...ORDINARY_SPEED_FACTS,
+      ordinarySpeedFeet: movementFeet(25),
+      speedChanges: [{ deltaFeet: movementDeltaFeet(10) }],
+      speedRatios: [{ numerator: 1, denominator: 2 }],
+      specialSpeeds: [
+        { kind: "equalToSpeed", speedType: "climb" },
+        { kind: "fixed", speedType: "swim", speedFeet: movementFeet(45) },
+      ],
+    };
+
+    expect(speedValue(facts, "walk")).toBe(17);
+    expect(speedValue(facts, "climb")).toBe(17);
+    expect(speedValue(facts, "swim")).toBe(27);
   });
 
   test("collapses same-kind candidates by best resulting capacity", () => {

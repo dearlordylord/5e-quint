@@ -9,6 +9,8 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-damage-dice-reroll
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-acid-arrow-attack-timing
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.d20-test-natural-one-reroll
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-sleet-storm-area-hazard
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-slow-active-penalties
 // KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_SEEKING_SPELL_ATTACK_REROLL BATTLE.FEATURE.METAMAGIC_EMPOWERED_DAMAGE_DICE_REROLL
 // Extracted from ../battle-reducer.ts; this module owns Effect Schema values,
 // while domain types remain exported by the reducer facade.
@@ -96,6 +98,7 @@ import {
   MIRROR_IMAGE_DUPLICATE_SUCCESS_AT_LEAST,
   MIRROR_IMAGE_UNAFFECTED_SENSES,
   SELF_TRANSFORMATION_MODE_KINDS,
+  SLOW_ACTIVE_PENALTIES_SOMATIC_FAILURE_PERCENT,
   THAUMATURGY_MAX_ACTIVE_ONE_MINUTE_EFFECTS,
 } from "./domain-constants.ts";
 import {
@@ -478,6 +481,20 @@ const BattleSpellAreaChoiceSchema = Schema.Union(
         targetId: CombatantId,
         inCube: Schema.Literal(true),
         canSeePattern: Schema.Literal(true),
+      }),
+    ),
+    areaId: Schema.optionalWith(Schema.Never, { exact: true }),
+    sleepNonSleeperFacts: Schema.optionalWith(Schema.Never, { exact: true }),
+  }),
+  Schema.Struct({
+    ...BattleSpellAreaChoiceBaseSchema,
+    kind: Schema.Literal("slowArea"),
+    cubeSideFeet: Schema.Literal(40),
+    affectedCreatureWitnesses: Schema.Array(
+      Schema.Struct({
+        targetId: CombatantId,
+        inCube: Schema.Literal(true),
+        chosenByCaster: Schema.Literal(true),
       }),
     ),
     areaId: Schema.optionalWith(Schema.Never, { exact: true }),
@@ -1118,6 +1135,21 @@ export const BattleHoleSchema = Schema.Union(
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
+    kind: Schema.Literal("slowSomaticSpellFailureOutcome"),
+    actorId: CombatantId,
+    spellId: SpellId,
+    failurePercent: Schema.Literal(
+      SLOW_ACTIVE_PENALTIES_SOMATIC_FAILURE_PERCENT,
+    ),
+    activeEffectSources: Schema.Array(
+      Schema.Struct({
+        sourceSpellId: Schema.String,
+        sourceCombatantId: CombatantId,
+      }),
+    ),
+  }),
+  Schema.Struct({
+    ...BattleHoleBaseSchema,
     kind: Schema.Literal("objectTargetChoice"),
     requiresTableSpatialFact: Schema.Literal(true),
   }),
@@ -1653,6 +1685,17 @@ export const BattleHoleSchema = Schema.Union(
     ...BattleHoleBaseSchema,
     kind: Schema.Literal("savingThrowOutcome"),
     label: Schema.String,
+    sleetStormAreaHazard: BattleRuntimeObjectSchema,
+    ability: Schema.Literal("dex"),
+    dc: DcSourceSchema,
+    areaChoices: Schema.Array(BattleRuntimeObjectSchema),
+    targetRollModes: Schema.Array(BattleSavingThrowRollModeProjectionSchema),
+    targetFlatBonuses: Schema.Array(BattleSavingThrowFlatBonusProjectionSchema),
+  }),
+  Schema.Struct({
+    ...BattleHoleBaseSchema,
+    kind: Schema.Literal("savingThrowOutcome"),
+    label: Schema.String,
     gustOfWindLine: BattleRuntimeObjectSchema,
     ability: Schema.Literal("str"),
     dc: DcSourceSchema,
@@ -1687,6 +1730,17 @@ export const BattleHoleSchema = Schema.Union(
     label: Schema.String,
     unitFeatureConditionEndTurnSave: BattleRuntimeObjectSchema,
     ability: AbilitySchema,
+    dc: DcSourceSchema,
+    areaChoices: Schema.Array(BattleRuntimeObjectSchema),
+    targetRollModes: Schema.Array(BattleSavingThrowRollModeProjectionSchema),
+    targetFlatBonuses: Schema.Array(BattleSavingThrowFlatBonusProjectionSchema),
+  }),
+  Schema.Struct({
+    ...BattleHoleBaseSchema,
+    kind: Schema.Literal("savingThrowOutcome"),
+    label: Schema.String,
+    slowActivePenaltiesEndTurnSave: BattleRuntimeObjectSchema,
+    ability: Schema.Literal("wis"),
     dc: DcSourceSchema,
     areaChoices: Schema.Array(BattleRuntimeObjectSchema),
     targetRollModes: Schema.Array(BattleSavingThrowRollModeProjectionSchema),
@@ -2174,6 +2228,17 @@ type BattleSpellAreaChoiceEncoded = {
       readonly sleepNonSleeperFacts?: never;
     }
   | {
+      readonly kind: "slowArea";
+      readonly cubeSideFeet: 40;
+      readonly affectedCreatureWitnesses: readonly {
+        readonly targetId: string;
+        readonly inCube: true;
+        readonly chosenByCaster: true;
+      }[];
+      readonly areaId?: never;
+      readonly sleepNonSleeperFacts?: never;
+    }
+  | {
       readonly kind: "greaseGroundArea";
       readonly areaId: string;
       readonly sleepNonSleeperFacts?: never;
@@ -2342,6 +2407,13 @@ type BattleFillEncoded =
       readonly kind: "targetSpatialFacts";
       readonly holeId: string;
       readonly spatialFacts: readonly unknown[];
+    }
+  | {
+      readonly kind: "slowSomaticSpellFailureOutcome";
+      readonly holeId: string;
+      readonly value: {
+        readonly spellFailed: boolean;
+      };
     }
   | {
       readonly kind: "objectTargetChoice";
@@ -2634,6 +2706,10 @@ type BattleFillEncoded =
           }
         | {
             readonly kind: "webCubeArea";
+            readonly areaId: string;
+          }
+        | {
+            readonly kind: "sleetStormCylinderArea";
             readonly areaId: string;
           }
         | {
@@ -3127,6 +3203,12 @@ type BattleFillEncoded =
                 readonly areaId: string;
               }
             | {
+                readonly kind: "sleetStormHazard";
+                readonly sourceCombatantId: string;
+                readonly sourceSpellId: string;
+                readonly areaId: string;
+              }
+            | {
                 readonly kind: "spikeGrowthHazard";
                 readonly sourceCombatantId: string;
                 readonly sourceSpellId: string;
@@ -3291,6 +3373,13 @@ export const BattleFillSchema: Schema.Schema<
       kind: Schema.Literal("targetSpatialFacts"),
       holeId: BattleHoleIdSchema,
       spatialFacts: BattleTargetSpatialFactsSchema,
+    }),
+    Schema.Struct({
+      kind: Schema.Literal("slowSomaticSpellFailureOutcome"),
+      holeId: BattleHoleIdSchema,
+      value: Schema.Struct({
+        spellFailed: Schema.Boolean,
+      }),
     }),
     Schema.Struct({
       kind: Schema.Literal("hitPointHealingDistribution"),
@@ -3607,6 +3696,10 @@ export const BattleFillSchema: Schema.Schema<
         }),
         Schema.Struct({
           kind: Schema.Literal("webCubeArea"),
+          areaId: BattleAreaId,
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("sleetStormCylinderArea"),
           areaId: BattleAreaId,
         }),
         Schema.Struct({
@@ -3974,6 +4067,12 @@ export const BattleFillSchema: Schema.Schema<
                 }),
                 Schema.Struct({
                   kind: Schema.Literal("webAreaHazard"),
+                  sourceCombatantId: CombatantId,
+                  sourceSpellId: Schema.String,
+                  areaId: BattleAreaId,
+                }),
+                Schema.Struct({
+                  kind: Schema.Literal("sleetStormHazard"),
                   sourceCombatantId: CombatantId,
                   sourceSpellId: Schema.String,
                   areaId: BattleAreaId,
@@ -4652,6 +4751,13 @@ const BattlePointOriginSphereAreaSchema = Schema.Struct({
   radiusFeet: MovementFeet,
 });
 
+const BattlePointOriginCylinderAreaSchema = Schema.Struct({
+  kind: Schema.Literal("pointOriginCylinder"),
+  areaId: BattleAreaId,
+  radiusFeet: MovementFeet,
+  heightFeet: MovementFeet,
+});
+
 const BattleConcentrationExpirationSchema = Schema.Struct({
   kind: Schema.Literal("concentration"),
   combatantId: CombatantId,
@@ -4666,6 +4772,7 @@ const BattleObscurementZoneSchema = Schema.Union(
     obscurement: Schema.Literal("lightlyObscured", "heavilyObscured"),
     area: Schema.Union(
       BattlePointOriginSphereAreaSchema,
+      BattlePointOriginCylinderAreaSchema,
       Schema.Struct({
         kind: Schema.Literal("pointOriginCube"),
         areaId: BattleAreaId,

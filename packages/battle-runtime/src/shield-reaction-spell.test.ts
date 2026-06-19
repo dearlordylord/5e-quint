@@ -428,6 +428,9 @@ describe("Shield Reaction spell", () => {
 
   test("Magic Missile negation is not offered without the named-spell Reaction trigger", () => {
     const shield = srdSpellRecord(shieldUnitId);
+    if (shield.mechanics.family !== "triggered_reaction") {
+      throw new Error("Expected Shield to be a triggered Reaction spell.");
+    }
     const attackHitOnlyShield: SpellRecord = {
       ...shield,
       mechanics: {

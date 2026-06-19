@@ -208,6 +208,7 @@
         "srd521:classes/rogue:level-1:mastery-pressure:rogue_weapon_mastery tests evidence reference must identify a test name symbol used by test()/it(): packages/character-sheet-runtime/src/rests.test.ts:weaponMasteryBuild",
         "srd521:classes/rogue:level-1:mastery-pressure:rogue_weapon_mastery tests evidence reference must identify a test name symbol used by test()/it(): packages/character-sheet-runtime/src/rests.test.ts:selectedClassChoiceUnitIds",
         "srd521:classes/wizard:level-1:class-feature-grant:wizard_ritual_adept runtimeProjection evidence reference points to missing symbol spellbookRitualAccessFeatureForBuild: packages/character-sheet-runtime/src/index.ts:spellbookRitualAccessFeatureForBuild",
+        "srd521:classes/wizard:level-1:class-feature-grant:wizard_ritual_adept runtimeProjection evidence reference points to missing symbol spellHasRitualTag: packages/character-sheet-runtime/src/spell-invocation.ts:spellHasRitualTag",
         "srd521:classes/wizard:level-1:class-feature-grant:wizard_arcane_recovery tests evidence reference must identify a test name symbol used by test()/it(): packages/character-sheet-runtime/src/rests.test.ts:wizardBuild",
         "srd521:classes/wizard:level-1:class-feature-grant:wizard_arcane_recovery tests evidence reference must identify a test name symbol used by test()/it(): packages/character-sheet-runtime/src/rests.test.ts:wizardWarlockBuild",
         "srd521:classes/wizard:level-1:class-feature-grant:wizard_arcane_recovery tests evidence reference must identify a test name symbol used by test()/it(): packages/character-sheet-runtime/src/armor-class.test.ts:expectRight",
@@ -293,13 +294,12 @@
     },
     "levelThreeSpellBattleReadiness": {
       "denominator": 110,
-      "numerator": 90,
-      "percent": "81.8%",
+      "numerator": 96,
+      "percent": "87.3%",
       "rowsByStatus": {
         "accepted-no-battle-effect": 64,
-        "accepted": 26,
-        "surface-widening-required": 14,
-        "battle-runtime-required": 6
+        "accepted": 32,
+        "surface-widening-required": 14
       }
     },
     "levelFourSpellBattleReadiness": {
@@ -369,14 +369,14 @@
       "character-creation or progression mechanic": 12
     },
     "allRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 490,
+      "catalog-installed-owner-evidence-present": 496,
       "non-runtime": 84,
       "catalog-only/dead-for-now": 202,
       "level-5-7-follow-up-required": 22,
       "needs-surface-widening": 14,
-      "catalog-installed-owner-evidence-required": 7,
       "catalog-authored-review-required": 49,
-      "missing-authored-record": 32
+      "missing-authored-record": 32,
+      "catalog-installed-owner-evidence-required": 1
     },
     "spellPressureRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 249,
@@ -384,14 +384,12 @@
     },
     "levelThreeSpellPressureRowsByDisposition": {
       "catalog-only/dead-for-now": 64,
-      "catalog-installed-owner-evidence-present": 26,
-      "needs-surface-widening": 14,
-      "catalog-installed-owner-evidence-required": 6
+      "catalog-installed-owner-evidence-present": 32,
+      "needs-surface-widening": 14
     },
     "levelThreeInstalledSpellPressureRowsByDisposition": {
       "catalog-only/dead-for-now": 27,
-      "catalog-installed-owner-evidence-present": 26,
-      "catalog-installed-owner-evidence-required": 6
+      "catalog-installed-owner-evidence-present": 32
     },
     "levelFourSpellPressureRowsByDisposition": {
       "catalog-authored-review-required": 49,
@@ -8803,8 +8801,14 @@
         "state": "installed",
         "unitId": "slow"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "table-spatial-derivation",
+        "owner": "battle-runtime Slow active-penalties owner plus table/spatial witness provider",
+        "reason": "The promoted runtime owns spell admission, resource spend, typed area witness validation, active penalty projections, target-turn Action-or-Bonus-Action restriction, Attack-action cap, Somatic failure chance, and end-turn repeat-save cleanup. Automatic Cube geometry, line of effect, point-of-origin inclusion, and area membership derivation remain caller-supplied table facts rather than duplicated battle runtime state."
+      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -8812,13 +8816,13 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "battle-runtime spell invocation/projection owner; battle-runtime action-resource, Attack action, spell component, and chance-result owners",
-          "evidence": "Promote follow-up split L3-FOLLOWUP-SLOW-ACTIVE-PENALTIES-RUNTIME, L3-FOLLOWUP-SLOW-TURN-AND-SOMATIC-RUNTIME: L3-FOLLOWUP-SLOW-ACTIVE-PENALTIES-RUNTIME owns Promote Slow's Magic Action and level-3+ Spell Slot spend, caster-owned Concentration, caller-supplied affected-creature set for the 40-foot Cube, Wisdom Saving Throw, failed-save active Speed ratio projection, -2 Armor Class projection, -2 Dexterity Saving Throw modifier, no-Reaction projection, and end-of-target-turn repeat Saving Throw cleanup for each affected target. Required output: Supported-profile or profile-subset-supported Slow claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for active penalties without authored-identity dispatch.; L3-FOLLOWUP-SLOW-TURN-AND-SOMATIC-RUNTIME owns Promote Slow's target-turn Action or Bonus Action mutual-exclusion rule, Attack-action one-attack cap, and 25 percent spell failure chance for affected targets casting spells with Somatic components after the active effect lifecycle exists. Required output: Focused action-resource, Attack action, spell component, chance-result, cleanup, and promoted Quint/runtime parity tests, consuming typed Slow Surface facts without spell-id-specific gates.",
-          "status": "owner evidence required"
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L3-FOLLOWUP-SLOW-TURN-AND-SOMATIC-RUNTIME at packages/battle-runtime/src/unit-profile-admission-slow-active-penalties.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Promote follow-up split L3-FOLLOWUP-SLOW-ACTIVE-PENALTIES-RUNTIME, L3-FOLLOWUP-SLOW-TURN-AND-SOMATIC-RUNTIME: L3-FOLLOWUP-SLOW-ACTIVE-PENALTIES-RUNTIME owns Promote Slow's Magic Action and level-3+ Spell Slot spend, caster-owned Concentration, caller-supplied affected-creature set for the 40-foot Cube, Wisdom Saving Throw, failed-save active Speed ratio projection, -2 Armor Class projection, -2 Dexterity Saving Throw modifier, no-Reaction projection, and end-of-target-turn repeat Saving Throw cleanup for each affected target. Required output: Supported-profile or profile-subset-supported Slow claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for active penalties without authored-identity dispatch.; L3-FOLLOWUP-SLOW-TURN-AND-SOMATIC-RUNTIME owns Promote Slow's target-turn Action or Bonus Action mutual-exclusion rule, Attack-action one-attack cap, and 25 percent spell failure chance for affected targets casting spells with Somatic components after the active effect lifecycle exists. Required output: Focused action-resource, Attack action, spell component, chance-result, cleanup, and promoted Quint/runtime parity tests, consuming typed Slow Surface facts without spell-id-specific gates.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_speak_with_dead",
@@ -17094,8 +17098,14 @@
         "state": "installed",
         "unitId": "sleet_storm"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "unitProfileDisposition": "profile-subset-supported",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "deferred-mechanics",
+        "kind": "profile-subset-remaining-mechanics-closed",
+        "owner": "shared table/spatial area geometry and pathfinding owner; future object/environment exposed-flame state owner",
+        "reason": "The promoted Sleet Storm owner consumes explicit area identity, movement facts, and first-entry/start-turn area-membership trigger facts. It does not infer position, path crossing, or Cylinder membership from map geometry.; The current battle runtime has no represented exposed-flame object or environmental flame state to douse. Sleet Storm admission verifies the Surface exposed-flame operation but keeps execution detached until that owner exists."
+      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -17103,13 +17113,13 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "battle-runtime spell invocation/projection plus table/spatial and exposed-flame owners",
-          "evidence": "Promote follow-up split L3-FOLLOWUP-SLEET-STORM-AREA-HAZARD-RUNTIME: L3-FOLLOWUP-SLEET-STORM-AREA-HAZARD-RUNTIME owns Promote Sleet Storm as a Concentration-owned Cylinder area hazard with caller-supplied area identity, first-entry-on-a-turn and turn-start Dexterity Saving Throw triggers, Difficult Terrain and Heavily Obscured projections, failed-save Prone application, failed-save Concentration loss, and a runtime-detached exposed-flame dousing split. Required output: Supported-profile or profile-subset-supported Sleet Storm claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the area hazard while preserving table-owned area membership, pathfinding, and exposed-flame state.",
-          "status": "owner evidence required"
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L3-FOLLOWUP-SLEET-STORM-AREA-HAZARD-RUNTIME at packages/battle-runtime/src/unit-profile-admission-sleet-storm-area-hazard.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Promote follow-up split L3-FOLLOWUP-SLEET-STORM-AREA-HAZARD-RUNTIME: L3-FOLLOWUP-SLEET-STORM-AREA-HAZARD-RUNTIME owns Promote Sleet Storm as a Concentration-owned Cylinder area hazard with caller-supplied area identity, first-entry-on-a-turn and turn-start Dexterity Saving Throw triggers, Difficult Terrain and Heavily Obscured projections, failed-save Prone application, failed-save Concentration loss, and a runtime-detached exposed-flame dousing split. Required output: Supported-profile or profile-subset-supported Sleet Storm claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the area hazard while preserving table-owned area membership, pathfinding, and exposed-flame state.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/druid:spell-level-3:spell-unit-pressure:druid_spell_list_speak_with_plants",
@@ -31153,8 +31163,14 @@
         "state": "installed",
         "unitId": "sleet_storm"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "unitProfileDisposition": "profile-subset-supported",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "deferred-mechanics",
+        "kind": "profile-subset-remaining-mechanics-closed",
+        "owner": "shared table/spatial area geometry and pathfinding owner; future object/environment exposed-flame state owner",
+        "reason": "The promoted Sleet Storm owner consumes explicit area identity, movement facts, and first-entry/start-turn area-membership trigger facts. It does not infer position, path crossing, or Cylinder membership from map geometry.; The current battle runtime has no represented exposed-flame object or environmental flame state to douse. Sleet Storm admission verifies the Surface exposed-flame operation but keeps execution detached until that owner exists."
+      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -31162,13 +31178,13 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "battle-runtime spell invocation/projection plus table/spatial and exposed-flame owners",
-          "evidence": "Promote follow-up split L3-FOLLOWUP-SLEET-STORM-AREA-HAZARD-RUNTIME: L3-FOLLOWUP-SLEET-STORM-AREA-HAZARD-RUNTIME owns Promote Sleet Storm as a Concentration-owned Cylinder area hazard with caller-supplied area identity, first-entry-on-a-turn and turn-start Dexterity Saving Throw triggers, Difficult Terrain and Heavily Obscured projections, failed-save Prone application, failed-save Concentration loss, and a runtime-detached exposed-flame dousing split. Required output: Supported-profile or profile-subset-supported Sleet Storm claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the area hazard while preserving table-owned area membership, pathfinding, and exposed-flame state.",
-          "status": "owner evidence required"
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L3-FOLLOWUP-SLEET-STORM-AREA-HAZARD-RUNTIME at packages/battle-runtime/src/unit-profile-admission-sleet-storm-area-hazard.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Promote follow-up split L3-FOLLOWUP-SLEET-STORM-AREA-HAZARD-RUNTIME: L3-FOLLOWUP-SLEET-STORM-AREA-HAZARD-RUNTIME owns Promote Sleet Storm as a Concentration-owned Cylinder area hazard with caller-supplied area identity, first-entry-on-a-turn and turn-start Dexterity Saving Throw triggers, Difficult Terrain and Heavily Obscured projections, failed-save Prone application, failed-save Concentration loss, and a runtime-detached exposed-flame dousing split. Required output: Supported-profile or profile-subset-supported Sleet Storm claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the area hazard while preserving table-owned area membership, pathfinding, and exposed-flame state.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_slow",
@@ -31196,8 +31212,14 @@
         "state": "installed",
         "unitId": "slow"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "table-spatial-derivation",
+        "owner": "battle-runtime Slow active-penalties owner plus table/spatial witness provider",
+        "reason": "The promoted runtime owns spell admission, resource spend, typed area witness validation, active penalty projections, target-turn Action-or-Bonus-Action restriction, Attack-action cap, Somatic failure chance, and end-turn repeat-save cleanup. Automatic Cube geometry, line of effect, point-of-origin inclusion, and area membership derivation remain caller-supplied table facts rather than duplicated battle runtime state."
+      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -31205,13 +31227,13 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "battle-runtime spell invocation/projection owner; battle-runtime action-resource, Attack action, spell component, and chance-result owners",
-          "evidence": "Promote follow-up split L3-FOLLOWUP-SLOW-ACTIVE-PENALTIES-RUNTIME, L3-FOLLOWUP-SLOW-TURN-AND-SOMATIC-RUNTIME: L3-FOLLOWUP-SLOW-ACTIVE-PENALTIES-RUNTIME owns Promote Slow's Magic Action and level-3+ Spell Slot spend, caster-owned Concentration, caller-supplied affected-creature set for the 40-foot Cube, Wisdom Saving Throw, failed-save active Speed ratio projection, -2 Armor Class projection, -2 Dexterity Saving Throw modifier, no-Reaction projection, and end-of-target-turn repeat Saving Throw cleanup for each affected target. Required output: Supported-profile or profile-subset-supported Slow claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for active penalties without authored-identity dispatch.; L3-FOLLOWUP-SLOW-TURN-AND-SOMATIC-RUNTIME owns Promote Slow's target-turn Action or Bonus Action mutual-exclusion rule, Attack-action one-attack cap, and 25 percent spell failure chance for affected targets casting spells with Somatic components after the active effect lifecycle exists. Required output: Focused action-resource, Attack action, spell component, chance-result, cleanup, and promoted Quint/runtime parity tests, consuming typed Slow Surface facts without spell-id-specific gates.",
-          "status": "owner evidence required"
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L3-FOLLOWUP-SLOW-TURN-AND-SOMATIC-RUNTIME at packages/battle-runtime/src/unit-profile-admission-slow-active-penalties.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Promote follow-up split L3-FOLLOWUP-SLOW-ACTIVE-PENALTIES-RUNTIME, L3-FOLLOWUP-SLOW-TURN-AND-SOMATIC-RUNTIME: L3-FOLLOWUP-SLOW-ACTIVE-PENALTIES-RUNTIME owns Promote Slow's Magic Action and level-3+ Spell Slot spend, caster-owned Concentration, caller-supplied affected-creature set for the 40-foot Cube, Wisdom Saving Throw, failed-save active Speed ratio projection, -2 Armor Class projection, -2 Dexterity Saving Throw modifier, no-Reaction projection, and end-of-target-turn repeat Saving Throw cleanup for each affected target. Required output: Supported-profile or profile-subset-supported Slow claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for active penalties without authored-identity dispatch.; L3-FOLLOWUP-SLOW-TURN-AND-SOMATIC-RUNTIME owns Promote Slow's target-turn Action or Bonus Action mutual-exclusion rule, Attack-action one-attack cap, and 25 percent spell failure chance for affected targets casting spells with Somatic components after the active effect lifecycle exists. Required output: Focused action-resource, Attack action, spell component, chance-result, cleanup, and promoted Quint/runtime parity tests, consuming typed Slow Surface facts without spell-id-specific gates.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_stinking_cloud",
@@ -40266,8 +40288,14 @@
         "state": "installed",
         "unitId": "sleet_storm"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "unitProfileDisposition": "profile-subset-supported",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "deferred-mechanics",
+        "kind": "profile-subset-remaining-mechanics-closed",
+        "owner": "shared table/spatial area geometry and pathfinding owner; future object/environment exposed-flame state owner",
+        "reason": "The promoted Sleet Storm owner consumes explicit area identity, movement facts, and first-entry/start-turn area-membership trigger facts. It does not infer position, path crossing, or Cylinder membership from map geometry.; The current battle runtime has no represented exposed-flame object or environmental flame state to douse. Sleet Storm admission verifies the Surface exposed-flame operation but keeps execution detached until that owner exists."
+      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -40275,13 +40303,13 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "battle-runtime spell invocation/projection plus table/spatial and exposed-flame owners",
-          "evidence": "Promote follow-up split L3-FOLLOWUP-SLEET-STORM-AREA-HAZARD-RUNTIME: L3-FOLLOWUP-SLEET-STORM-AREA-HAZARD-RUNTIME owns Promote Sleet Storm as a Concentration-owned Cylinder area hazard with caller-supplied area identity, first-entry-on-a-turn and turn-start Dexterity Saving Throw triggers, Difficult Terrain and Heavily Obscured projections, failed-save Prone application, failed-save Concentration loss, and a runtime-detached exposed-flame dousing split. Required output: Supported-profile or profile-subset-supported Sleet Storm claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the area hazard while preserving table-owned area membership, pathfinding, and exposed-flame state.",
-          "status": "owner evidence required"
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L3-FOLLOWUP-SLEET-STORM-AREA-HAZARD-RUNTIME at packages/battle-runtime/src/unit-profile-admission-sleet-storm-area-hazard.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Promote follow-up split L3-FOLLOWUP-SLEET-STORM-AREA-HAZARD-RUNTIME: L3-FOLLOWUP-SLEET-STORM-AREA-HAZARD-RUNTIME owns Promote Sleet Storm as a Concentration-owned Cylinder area hazard with caller-supplied area identity, first-entry-on-a-turn and turn-start Dexterity Saving Throw triggers, Difficult Terrain and Heavily Obscured projections, failed-save Prone application, failed-save Concentration loss, and a runtime-detached exposed-flame dousing split. Required output: Supported-profile or profile-subset-supported Sleet Storm claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the area hazard while preserving table-owned area membership, pathfinding, and exposed-flame state.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_slow",
@@ -40309,8 +40337,14 @@
         "state": "installed",
         "unitId": "slow"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "table-spatial-derivation",
+        "owner": "battle-runtime Slow active-penalties owner plus table/spatial witness provider",
+        "reason": "The promoted runtime owns spell admission, resource spend, typed area witness validation, active penalty projections, target-turn Action-or-Bonus-Action restriction, Attack-action cap, Somatic failure chance, and end-turn repeat-save cleanup. Automatic Cube geometry, line of effect, point-of-origin inclusion, and area membership derivation remain caller-supplied table facts rather than duplicated battle runtime state."
+      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -40318,13 +40352,13 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "battle-runtime spell invocation/projection owner; battle-runtime action-resource, Attack action, spell component, and chance-result owners",
-          "evidence": "Promote follow-up split L3-FOLLOWUP-SLOW-ACTIVE-PENALTIES-RUNTIME, L3-FOLLOWUP-SLOW-TURN-AND-SOMATIC-RUNTIME: L3-FOLLOWUP-SLOW-ACTIVE-PENALTIES-RUNTIME owns Promote Slow's Magic Action and level-3+ Spell Slot spend, caster-owned Concentration, caller-supplied affected-creature set for the 40-foot Cube, Wisdom Saving Throw, failed-save active Speed ratio projection, -2 Armor Class projection, -2 Dexterity Saving Throw modifier, no-Reaction projection, and end-of-target-turn repeat Saving Throw cleanup for each affected target. Required output: Supported-profile or profile-subset-supported Slow claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for active penalties without authored-identity dispatch.; L3-FOLLOWUP-SLOW-TURN-AND-SOMATIC-RUNTIME owns Promote Slow's target-turn Action or Bonus Action mutual-exclusion rule, Attack-action one-attack cap, and 25 percent spell failure chance for affected targets casting spells with Somatic components after the active effect lifecycle exists. Required output: Focused action-resource, Attack action, spell component, chance-result, cleanup, and promoted Quint/runtime parity tests, consuming typed Slow Surface facts without spell-id-specific gates.",
-          "status": "owner evidence required"
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L3-FOLLOWUP-SLOW-TURN-AND-SOMATIC-RUNTIME at packages/battle-runtime/src/unit-profile-admission-slow-active-penalties.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Promote follow-up split L3-FOLLOWUP-SLOW-ACTIVE-PENALTIES-RUNTIME, L3-FOLLOWUP-SLOW-TURN-AND-SOMATIC-RUNTIME: L3-FOLLOWUP-SLOW-ACTIVE-PENALTIES-RUNTIME owns Promote Slow's Magic Action and level-3+ Spell Slot spend, caster-owned Concentration, caller-supplied affected-creature set for the 40-foot Cube, Wisdom Saving Throw, failed-save active Speed ratio projection, -2 Armor Class projection, -2 Dexterity Saving Throw modifier, no-Reaction projection, and end-of-target-turn repeat Saving Throw cleanup for each affected target. Required output: Supported-profile or profile-subset-supported Slow claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for active penalties without authored-identity dispatch.; L3-FOLLOWUP-SLOW-TURN-AND-SOMATIC-RUNTIME owns Promote Slow's target-turn Action or Bonus Action mutual-exclusion rule, Attack-action one-attack cap, and 25 percent spell failure chance for affected targets casting spells with Somatic components after the active effect lifecycle exists. Required output: Focused action-resource, Attack action, spell component, chance-result, cleanup, and promoted Quint/runtime parity tests, consuming typed Slow Surface facts without spell-id-specific gates.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_speak_with_dead",

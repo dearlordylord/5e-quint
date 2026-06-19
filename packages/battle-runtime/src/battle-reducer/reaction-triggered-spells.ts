@@ -6,6 +6,7 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.ANTIMAGIC_FIELD_ACTION_INTERDICTION
 
 import { CombatantId } from "../identity.ts";
+import { topLevelSpellCastingTime } from "@dnd/surface/surface/types";
 import { currentActorId } from "./creature-state-leaves.ts";
 import { combatantCanTakeReactions } from "./creature-state.ts";
 import {
@@ -199,12 +200,12 @@ export function counterspellReactionSpellMatchesTrigger(
   frame: BattleInterruptCheckpointInput,
   reactorId: CombatantId,
 ): boolean {
-  const castingTime = invocation.spell.mechanics.castingTime;
+  const castingTime = topLevelSpellCastingTime(invocation.spell.mechanics);
   if (
     frame.trigger !== "spellCast" ||
     frame.casterId === reactorId ||
     invocation.spell.mechanics.family !== "triggered_reaction" ||
-    castingTime.kind !== "reaction" ||
+    castingTime?.kind !== "reaction" ||
     castingTime.trigger.kind !== "creature_casts_spell"
   ) {
     return false;
@@ -232,12 +233,12 @@ export function hellishRebukeReactionSpellMatchesTrigger(
   >,
   frame: BattleInterruptCheckpointInput,
 ): boolean {
-  const castingTime = invocation.spell.mechanics.castingTime;
+  const castingTime = topLevelSpellCastingTime(invocation.spell.mechanics);
   return (
     frame.trigger === "afterDamage" &&
     Number(frame.damageAmount) > 0 &&
     invocation.spell.mechanics.family === "triggered_reaction" &&
-    castingTime.kind === "reaction" &&
+    castingTime?.kind === "reaction" &&
     castingTime.trigger.kind === "takes_damage_from_creature" &&
     frame.damagedId !== frame.damageSourceId &&
     (frame.reactionSpellTargetFacts ?? []).some(
@@ -273,11 +274,11 @@ export function featherFallReactionSpellMatchesTrigger(
   >,
   frame: BattleInterruptCheckpointInput,
 ): boolean {
-  const castingTime = invocation.spell.mechanics.castingTime;
+  const castingTime = topLevelSpellCastingTime(invocation.spell.mechanics);
   return (
     frame.trigger === "creatureFalls" &&
     invocation.spell.mechanics.family === "triggered_reaction" &&
-    castingTime.kind === "reaction" &&
+    castingTime?.kind === "reaction" &&
     castingTime.trigger.kind === "self_or_visible_creature_falls" &&
     frame.reactionSpellTargetFacts.some(
       (fact) =>

@@ -57,7 +57,10 @@ import {
   allLeveledSpellsFromAnyClassSpellList,
 } from "@dnd/surface/surface/schema";
 import { readClassCreationFacts } from "@dnd/surface/surface/character-creation-readers";
-import { isSupportedClassFeatureSpellFreeCastResourceTag } from "@dnd/surface/surface/types";
+import {
+  isSupportedClassFeatureSpellFreeCastResourceTag,
+  spellHasTopLevelRitualTag,
+} from "@dnd/surface/surface/types";
 import type {
   DragonbornSpeciesRecord,
   SpellRecord,
@@ -892,9 +895,7 @@ function storedBookOfShadowsSelectionIssue(
   if (
     ritualSpells.right.some(
       (spell) =>
-        spell.mechanics.level !== 1 ||
-        !("ritual" in spell.mechanics.castingTime) ||
-        spell.mechanics.castingTime.ritual !== true,
+        spell.mechanics.level !== 1 || !spellHasTopLevelRitualTag(spell),
     )
   ) {
     return characterSheetIssue(

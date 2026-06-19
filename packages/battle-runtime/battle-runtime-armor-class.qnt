@@ -127,6 +127,7 @@ module battleRuntimeArmorClass {
         | FlamingSphere(_) => false
         | MoonbeamMovableZone(_) => false
         | WebRestraintHazard(_) => false
+        | SleetStormAreaHazard(_) => false
         | WebRestrained(_) => false
         | HeatMetalObjectContactDamage(_) => false
         | HeatMetalHoldingWearingPenalty(_) => false

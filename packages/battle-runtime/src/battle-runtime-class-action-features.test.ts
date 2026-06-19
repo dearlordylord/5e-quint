@@ -75,6 +75,7 @@ describe("battle runtime: class action features", () => {
       currentTurnResources: {
         actionResources: [],
         currentHasBonusAction: true,
+        actionOrBonusActionExclusion: { kind: "notRestricted" },
         commandHalt: null,
         jumpDistanceMultiplier: null,
         spellSlotUsesThisTurn: [],
@@ -199,6 +200,7 @@ describe("battle runtime: class action features", () => {
       currentTurnResources: {
         actionResources: [],
         currentHasBonusAction: true,
+        actionOrBonusActionExclusion: { kind: "notRestricted" },
         commandHalt: null,
         jumpDistanceMultiplier: null,
         spellSlotUsesThisTurn: [],
@@ -248,6 +250,7 @@ describe("battle runtime: class action features", () => {
       currentTurnResources: {
         actionResources: [],
         currentHasBonusAction: true,
+        actionOrBonusActionExclusion: { kind: "notRestricted" },
         commandHalt: null,
         jumpDistanceMultiplier: null,
         spellSlotUsesThisTurn: [],
@@ -376,6 +379,7 @@ describe("battle runtime: class action features", () => {
       currentTurnResources: {
         actionResources: [{ kind: "action", source: "turn" }],
         currentHasBonusAction: false,
+        actionOrBonusActionExclusion: { kind: "notRestricted" },
         commandHalt: null,
         jumpDistanceMultiplier: null,
         spellSlotUsesThisTurn: [],

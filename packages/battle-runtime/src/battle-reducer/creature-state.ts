@@ -1,7 +1,9 @@
 // Creature state init/snapshot/lifecycle helpers extracted from
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.d20-test-natural-one-reroll
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.druid-wild-shape-known-form unit-feature.enemy-zero-hit-point-temporary-hit-points unit-feature.magic-action-area-save-damage-healing unit-feature.magic-action-healing-pool unit-feature.paladin-sacred-weapon unit-feature.potent-cantrip unit-feature.remarkable-athlete unit-feature.spell-slot-healing-modifier spell.invocation-warding-bond-linked-effect character-sheet.metamagic-battle-resource-bridge
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-slow-active-penalties
 // KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.WILD_SHAPE_FORM_LIFECYCLE
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.PROTOCOL.ZERO_HIT_POINT_MID_RESOLUTION
 // battle-reducer.ts. Cluster G (creature_state). Mechanical extraction —
 // no behavior change. Pass 8 also absorbed:
@@ -113,7 +115,10 @@ import {
   type OngoingFeatureSourceKey,
 } from "../battle-reducer.ts";
 import { battleStateInitIssue } from "./domain-helpers.ts";
-import { WARDING_BOND_ARMOR_CLASS_BONUS } from "./domain-constants.ts";
+import {
+  SLOW_ACTIVE_PENALTIES_ARMOR_CLASS_DELTA,
+  WARDING_BOND_ARMOR_CLASS_BONUS,
+} from "./domain-constants.ts";
 import {
   applyInitialZeroHpLifecycle,
   effectiveHitPointMaximum,
@@ -228,7 +233,8 @@ export function battleCreatureStateFromInit(
         ...(creatureInit.druidWildShapeAvailableForms === undefined
           ? {}
           : {
-              druidWildShapeAvailableForms: creatureInit.druidWildShapeAvailableForms,
+              druidWildShapeAvailableForms:
+                creatureInit.druidWildShapeAvailableForms,
             }),
         weaponProficiencies: creatureInit.weaponProficiencies ?? [],
         selectedLoadout: creatureInit.selectedLoadout,
@@ -774,12 +780,26 @@ export function activeEffectArmorClass(
           ]
         : [],
   );
+  const slowActivePenaltyEffect = combatant.activeEffects.find(
+    (effect) => effect.kind === "slowActivePenalties",
+  );
+  const armorClassBonuses =
+    slowActivePenaltyEffect === undefined
+      ? spellArmorClassBonuses
+      : [
+          ...spellArmorClassBonuses,
+          {
+            kind: "flat" as const,
+            bonus: armorClassDelta(SLOW_ACTIVE_PENALTIES_ARMOR_CLASS_DELTA),
+            sourceUnitId: slowActivePenaltyEffect.sourceSpellId,
+          },
+        ];
   const withBonuses =
-    spellArmorClassBonuses.length === 0
+    armorClassBonuses.length === 0
       ? withBase
       : {
           ...withBase,
-          bonuses: [...withBase.bonuses, ...spellArmorClassBonuses],
+          bonuses: [...withBase.bonuses, ...armorClassBonuses],
         };
   const spellArmorClassFloors = combatant.activeEffects.flatMap((effect) =>
     effect.kind === "spellArmorClassFloor"
@@ -1111,7 +1131,13 @@ export function combatantCanTakeActions(
 export function combatantCanTakeReactions(
   combatant: BattleCreatureState | undefined,
 ): boolean {
-  return combatantCanTakeActions(combatant) && combatant.reactionAvailable;
+  return (
+    combatantCanTakeActions(combatant) &&
+    combatant.reactionAvailable &&
+    !combatant.activeEffects.some(
+      (effect) => effect.kind === "slowActivePenalties",
+    )
+  );
 }
 
 export function activeConditions(

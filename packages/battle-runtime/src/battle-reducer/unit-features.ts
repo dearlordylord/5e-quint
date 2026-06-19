@@ -15,6 +15,7 @@
 
 import {
   canSpendAction,
+  canSpendBonusAction,
   grantUnitActionResource,
   spendActivationResource,
 } from "@dnd/shared-algebras/action-economy-algebra";
@@ -241,7 +242,7 @@ export function supportedUnitFeatureActs(
       if (
         unitFeature?.kind === "bardicInspirationGrant" &&
         resourceHasUsesRemaining(resource) &&
-        state.currentTurnResources.currentHasBonusAction &&
+        canSpendBonusAction(state.currentTurnResources) &&
         bardicInspirationGrantTargetChoices(state, actorId).length > 0
       ) {
         return [
@@ -263,7 +264,7 @@ export function supportedUnitFeatureActs(
 
       if (
         unitFeature?.kind === "druidWildShapeKnownForm" &&
-        state.currentTurnResources.currentHasBonusAction
+        canSpendBonusAction(state.currentTurnResources)
       ) {
         return druidWildShapeActsForResource(
           state,
@@ -275,7 +276,7 @@ export function supportedUnitFeatureActs(
 
       return unitFeature?.kind === "selfBonusActionHealing" &&
         resourceHasUsesRemaining(resource) &&
-        state.currentTurnResources.currentHasBonusAction
+        canSpendBonusAction(state.currentTurnResources)
         ? [
             {
               subject: {
@@ -564,7 +565,7 @@ function rogueSteadyAimActs(
   actor: CharacterBattleCreatureState,
 ): readonly AvailableBattleAct[] {
   if (
-    !state.currentTurnResources.currentHasBonusAction ||
+    !canSpendBonusAction(state.currentTurnResources) ||
     Number(actor.movementSpentFeet) > 0
   ) {
     return [];
@@ -1550,7 +1551,7 @@ export function resolveBardicInspirationGrantUnitFeature(
 ): Extract<BattleResolutionResult, { readonly tag: "resolved" | "invalid" }> {
   if (
     !resourceHasUsesRemaining(resource) ||
-    !input.state.currentTurnResources.currentHasBonusAction
+    !canSpendBonusAction(input.state.currentTurnResources)
   ) {
     return invalidResult(
       input.state,
@@ -2589,7 +2590,10 @@ function attackActionAreaSaveDamageReplacementSavingThrowHole(
       state,
       unitFeature.breath.save.ability,
     ),
-    targetFlatBonuses: savingThrowFlatBonusProjections(state),
+    targetFlatBonuses: savingThrowFlatBonusProjections(
+      state,
+      unitFeature.breath.save.ability,
+    ),
   };
 }
 
@@ -2991,7 +2995,10 @@ function magicActionAreaSaveDamageHealingSavingThrowHole(
       state,
       unitFeature.damageHealing.save.ability,
     ),
-    targetFlatBonuses: savingThrowFlatBonusProjections(state),
+    targetFlatBonuses: savingThrowFlatBonusProjections(
+      state,
+      unitFeature.damageHealing.save.ability,
+    ),
   };
 }
 
@@ -3430,7 +3437,9 @@ export function resolveExtraActionGrantUnitFeature(
     return invalidResult(
       input.state,
       "staleSubject",
-      "This Unit feature has already granted an action this turn.",
+      granted.left === "unit-granted action resource already granted"
+        ? "This Unit feature has already granted an action this turn."
+        : "This Unit feature cannot grant an action for the current turn.",
     );
   }
 
@@ -3475,7 +3484,7 @@ export function resolveSelfBonusActionHealingUnitFeature(
 ): BattleResolutionResult {
   if (
     !resourceHasUsesRemaining(resource) ||
-    !input.state.currentTurnResources.currentHasBonusAction
+    !canSpendBonusAction(input.state.currentTurnResources)
   ) {
     return invalidResult(
       input.state,
@@ -3552,7 +3561,7 @@ export function ongoingFeatureIsAvailable(
     activeOngoingFeatureOccurrencesForCombatant(actor).get(occurrenceKey);
   if (activeOngoingFeature !== undefined) {
     return (
-      state.currentTurnResources.currentHasBonusAction &&
+      canSpendBonusAction(state.currentTurnResources) &&
       ongoingFeatureLifecycleHasExtensionTrigger(
         unitFeature.lifecycle,
         "bonusAction",
@@ -3562,7 +3571,7 @@ export function ongoingFeatureIsAvailable(
   if (unitFeature.spendsUse && !resourceHasUsesRemaining(resource)) {
     return false;
   }
-  if (!state.currentTurnResources.currentHasBonusAction) {
+  if (!canSpendBonusAction(state.currentTurnResources)) {
     return false;
   }
   return !unitFeature.lifecycle.earlyEndArmorCategories.some((category) =>

@@ -29,7 +29,10 @@
 //   - spellScalarBuffRollHole and fill validation stay with hole/fill helpers.
 //   - The metamagic table entry remains for the Wave 9 cross-cutting cleanup.
 
-import { isEffectAtom } from "@dnd/surface/surface/types";
+import {
+  isEffectAtom,
+  topLevelSpellCastingTime,
+} from "@dnd/surface/surface/types";
 import type {
   Attachment,
   EffectAtom,
@@ -166,7 +169,9 @@ function scalarBuffSpellProjection(spell: SpellRecord): {
   readonly duration: SpellRecord["mechanics"]["duration"];
   readonly effect: EffectAtom | OngoingEffect;
 } | null {
-  const actionCost = scalarBuffSpellActionCost(spell.mechanics.castingTime);
+  const castingTime = topLevelSpellCastingTime(spell.mechanics);
+  const actionCost =
+    castingTime === null ? null : scalarBuffSpellActionCost(castingTime);
   const rangeFeet = scalarBuffSpellRangeFeet(spell.mechanics.range);
   if (actionCost === null || rangeFeet === null) {
     return null;

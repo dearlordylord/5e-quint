@@ -409,6 +409,7 @@ export function subjectName(
   | "opportunityAttack"
   | "greaseGroundHazardSave"
   | "webRestraintSave"
+  | "sleetStormAreaHazardSave"
   | "webRestrainedNoLongerInArea"
   | "webAreaRemoved"
   | "gustOfWindLineSave"

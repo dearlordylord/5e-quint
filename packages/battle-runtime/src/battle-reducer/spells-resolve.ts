@@ -13,6 +13,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spiritual-weapon-attack-proxy
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.remarkable-athlete
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-acid-arrow-attack-timing
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-slow-active-penalties
 // KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR
 // KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_TRANSMUTED_DAMAGE_TYPE_SUBSTITUTION
 // KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_TWINNED_EFFECTIVE_LEVEL_EXTRA_TARGET
@@ -20,6 +21,7 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_EXTENDED_CAST_DURATION_CONCENTRATION
 // KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_SEEKING_SPELL_ATTACK_REROLL
 // KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_EMPOWERED_DAMAGE_DICE_REROLL
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE
 // Spell resolution dispatch (Cluster L). Mechanical extraction from
 // battle-reducer.ts. The largest cluster in the file: master spell-act
 // resolvers (`resolveSpellAct`, `resolveAttackBurstSaveDamageSpellAct`,
@@ -41,6 +43,7 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE
 
 import {
+  canSpendBonusAction,
   spendAction,
   spendActivationResource,
 } from "@dnd/shared-algebras/action-economy-algebra";
@@ -266,6 +269,7 @@ import {
   sanctuaryTargetingInterdictionCheck,
 } from "./sanctuary-targeting-interdiction.ts";
 import { spellCastInterruptFrame } from "./spell-cast-interrupt-frame.ts";
+import { resolveSlowSomaticSpellFailure } from "./slow-active-penalties-runtime.ts";
 
 import { spellFillSet, type SpellFillSet } from "./spells-resolve-fill-set.ts";
 
@@ -810,6 +814,7 @@ function resolveSpellActInternal(
       invocation.procedure === "magicalDarknessPointOrigin" ||
       invocation.procedure === "antimagicFieldOngoingSpellSuppression" ||
       invocation.procedure === "webRestraintHazard" ||
+      invocation.procedure === "sleetStormAreaHazard" ||
       invocation.procedure === "gustOfWindLine" ||
       invocation.procedure === "flamingSphere" ||
       invocation.procedure === "moonbeam" ||
@@ -890,6 +895,21 @@ function resolveSpellActInternal(
     spellRequiresVerbal(invocation.spell)
       ? revealHidden(input.state, subject.actorId)
       : input.state;
+  const slowSomaticSpellFailure = resolveSlowSomaticSpellFailure({
+    state: input.state,
+    castingState,
+    subject,
+    actorId: subject.actorId,
+    invocation,
+    fills: input.fills,
+    ...(options.actionCostOverride === undefined
+      ? {}
+      : { actionCostOverride: options.actionCostOverride }),
+    metamagicApplications: metamagicAdmission.applications,
+  });
+  if (slowSomaticSpellFailure.tag !== "continue") {
+    return slowSomaticSpellFailure;
+  }
   if (subject.mode.tag === "ready") {
     if (!isReadiedSpellInvocation(invocation)) {
       return invalidResult(
@@ -3091,7 +3111,7 @@ export function resolveBonusActionSpellAct(
       input.state,
       "staleSubject",
       actionCostOverride === "bonusAction" &&
-        !input.state.currentTurnResources.currentHasBonusAction
+        !canSpendBonusAction(input.state.currentTurnResources)
         ? "Bonus Action spell is no longer available for the current actor."
         : "This turn has already expended a Spell Slot.",
     );
@@ -3113,6 +3133,19 @@ export function resolveBonusActionSpellAct(
     spellRequiresVerbal(invocation.spell)
       ? revealHidden(input.state, subject.actorId)
       : input.state;
+  const slowSomaticSpellFailure = resolveSlowSomaticSpellFailure({
+    state: input.state,
+    castingState,
+    subject,
+    actorId: subject.actorId,
+    invocation,
+    fills: input.fills,
+    ...(actionCostOverride === undefined ? {} : { actionCostOverride }),
+    metamagicApplications: metamagicAdmission.applications,
+  });
+  if (slowSomaticSpellFailure.tag !== "continue") {
+    return slowSomaticSpellFailure;
+  }
   const fillSet = spellFillSet(input.fills, invocation);
   if (fillSet.tag === "invalid") {
     return invalidResult(input.state, "invalidFill", fillSet.message);
@@ -3254,13 +3287,29 @@ export function resolveBonusActionDashSpellAct(
       "Bonus Action Dash spell act requires a supported Expeditious Retreat spell.",
     );
   }
+  const castingState =
+    spellInvocationIsSpellcasting(invocation) &&
+    spellRequiresVerbal(invocation.spell)
+      ? revealHidden(input.state, subject.actorId)
+      : input.state;
+  const slowSomaticSpellFailure = resolveSlowSomaticSpellFailure({
+    state: input.state,
+    castingState,
+    subject,
+    actorId: subject.actorId,
+    invocation,
+    fills: input.fills,
+  });
+  if (slowSomaticSpellFailure.tag !== "continue") {
+    return slowSomaticSpellFailure;
+  }
   const fillSet = spellFillSet(input.fills, invocation);
   if (fillSet.tag === "invalid") {
     return invalidResult(input.state, "invalidFill", fillSet.message);
   }
   const profile = spellProcedureProfileFor(invocation.procedure);
   return resolveRegisteredSpellProcedureProfile(profile, {
-    input,
+    input: { ...input, state: castingState },
     actorId: subject.actorId,
     invocation,
     fillSet,

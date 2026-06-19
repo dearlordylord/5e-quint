@@ -477,7 +477,7 @@ export function dragonsBreathSavingThrowOutcomeHole(
     dc: { kind: "fixed", dc: effect.spellSaveDc },
     areaChoices: [],
     targetRollModes: savingThrowRollModeProjections(state, "dex"),
-    targetFlatBonuses: savingThrowFlatBonusProjections(state),
+    targetFlatBonuses: savingThrowFlatBonusProjections(state, "dex"),
   };
 }
 

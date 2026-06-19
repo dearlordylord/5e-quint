@@ -10,6 +10,11 @@ export type SpeedChange = {
   readonly deltaFeet: MovementDeltaFeet;
 };
 
+export type SpeedRatioChange = {
+  readonly numerator: 1;
+  readonly denominator: 2;
+};
+
 export type SpecialSpeedCandidate =
   | {
       readonly kind: "fixed";
@@ -24,6 +29,7 @@ export type SpecialSpeedCandidate =
 export type CreatureSpeedFacts = {
   readonly ordinarySpeedFeet: MovementFeet;
   readonly speedChanges: readonly SpeedChange[];
+  readonly speedRatios: readonly SpeedRatioChange[];
   readonly specialSpeeds: readonly SpecialSpeedCandidate[];
   readonly terminalSpeedZero: boolean;
 };
@@ -38,13 +44,21 @@ export function effectiveSpeeds(
   }
 
   const globalDelta = totalSpeedChangeFeet(facts.speedChanges);
-  const ordinarySpeedFeet = changedSpeed(facts.ordinarySpeedFeet, globalDelta);
+  const ordinarySpeedFeet = changedSpeedByRatios(
+    changedSpeed(facts.ordinarySpeedFeet, globalDelta),
+    facts.speedRatios,
+  );
   const speeds = new Map<SpeedType, MovementFeet>([
     ["walk", ordinarySpeedFeet],
   ]);
 
   for (const candidate of facts.specialSpeeds) {
-    const speed = specialSpeed(candidate, ordinarySpeedFeet, globalDelta);
+    const speed = specialSpeed(
+      candidate,
+      ordinarySpeedFeet,
+      globalDelta,
+      facts.speedRatios,
+    );
     const current = speeds.get(candidate.speedType);
     if (current === undefined || Number(speed) > Number(current)) {
       speeds.set(candidate.speedType, speed);
@@ -86,16 +100,31 @@ function changedSpeed(
   return movementFeet(Number(speedFeet) + Number(deltaFeet));
 }
 
+function changedSpeedByRatios(
+  speedFeet: MovementFeet,
+  ratios: readonly SpeedRatioChange[],
+): MovementFeet {
+  return ratios.reduce(
+    (speed, ratio) =>
+      movementFeet((Number(speed) * ratio.numerator) / ratio.denominator),
+    speedFeet,
+  );
+}
+
 function specialSpeed(
   candidate: SpecialSpeedCandidate,
   ordinarySpeedFeet: MovementFeet,
   globalDeltaFeet: MovementDeltaFeet,
+  speedRatios: readonly SpeedRatioChange[],
 ): MovementFeet {
   if (candidate.kind === "equalToSpeed") {
     return ordinarySpeedFeet;
   }
   if (candidate.kind === "fixed") {
-    return changedSpeed(candidate.speedFeet, globalDeltaFeet);
+    return changedSpeedByRatios(
+      changedSpeed(candidate.speedFeet, globalDeltaFeet),
+      speedRatios,
+    );
   }
   const exhaustive: never = candidate;
   return exhaustive;

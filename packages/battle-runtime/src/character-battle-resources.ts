@@ -21,7 +21,9 @@ import type {
   UnitRecord,
 } from "@dnd/surface/surface/types";
 import {
+  spellHasTopLevelRitualTag,
   supportedClassFeatureSpellFreeCastGrantsForUnit,
+  topLevelSpellCastingTime,
   type SupportedClassFeatureSpellFreeCastProfile,
 } from "@dnd/surface/surface/types";
 import {
@@ -375,8 +377,7 @@ export function characterBattleSpellbookRitualSpellAccessInitIssue(
     }
     if (
       access.spell.mechanics.level < 1 ||
-      !("ritual" in access.spell.mechanics.castingTime) ||
-      access.spell.mechanics.castingTime.ritual !== true
+      !spellHasTopLevelRitualTag(access.spell)
     ) {
       return "Spellbook Ritual Spell Access must reference ritual-tagged leveled Spell Definitions.";
     }
@@ -1081,6 +1082,7 @@ function isPactOfTheChainFindFamiliarSpell(
   spell: SpellRecord,
 ): spell is PactOfTheChainFindFamiliarSpellRecord {
   const components = spell.mechanics.components;
+  const castingTime = topLevelSpellCastingTime(spell.mechanics);
 
   return (
     spell.id === FIND_FAMILIAR_SPELL_ID &&
@@ -1089,7 +1091,7 @@ function isPactOfTheChainFindFamiliarSpell(
     spell.provenance.section === FIND_FAMILIAR_SPELL_PROVENANCE_SECTION &&
     spell.mechanics.family === "spawned_creature" &&
     spell.mechanics.level === 1 &&
-    spell.mechanics.castingTime.kind === "action" &&
+    castingTime?.kind === "action" &&
     "materialCostGp" in components &&
     "materialConsumed" in components &&
     components.materialCostGp === 10 &&

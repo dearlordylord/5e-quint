@@ -159,7 +159,7 @@ describe("L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME deterministic Warding
         },
       }),
     ]);
-    expect(savingThrowFlatBonusProjections(resolved.state)).toEqual([
+    expect(savingThrowFlatBonusProjections(resolved.state, "wis")).toEqual([
       {
         targetId: spellTargetId,
         sourceSpellId: wardingBondUnitId,

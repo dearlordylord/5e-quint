@@ -112,6 +112,10 @@ export function battleFillKind(fill: BattleFill): BattleFillKind {
         "selfTransformationModeChoice",
         () => "selfTransformationModeChoice" as const,
       ),
+      byBattleFillKind(
+        "slowSomaticSpellFailureOutcome",
+        () => "slowSomaticSpellFailureOutcome" as const,
+      ),
     )
     .pipe(
       byBattleFillKind("shoveOutcome", () => "shoveOutcome" as const),
@@ -328,6 +332,10 @@ function runtimeCommandSubjectKind(
       byCommand("opportunityAttack", () => "runtimeReaction" as const),
       byCommand("greaseGroundHazardSave", () => "runtimeSavingThrow" as const),
       byCommand("webRestraintSave", () => "runtimeSavingThrow" as const),
+      byCommand(
+        "sleetStormAreaHazardSave",
+        () => "runtimeSavingThrow" as const,
+      ),
       byCommand(
         "webRestrainedNoLongerInArea",
         () => "runtimeEffectCleanup" as const,

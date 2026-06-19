@@ -14,6 +14,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.remarkable-athlete
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.hide-action-obscurement-permission
 import { Match } from "effect";
+import { canSpendBonusAction } from "@dnd/shared-algebras/action-economy-algebra";
 import { hasCondition } from "@dnd/shared-algebras/conditions-algebra";
 import type { AttackRollMode } from "@dnd/shared-algebras/runtime-hole-algebra";
 import {
@@ -206,6 +207,10 @@ export function battleHoleFamilyKind(hole: BattleHole): BattleHoleFamilyKind {
       byBattleHoleKind(
         "selfTransformationModeChoice",
         () => "selfTransformationModeChoice" as const,
+      ),
+      byBattleHoleKind(
+        "slowSomaticSpellFailureOutcome",
+        () => "slowSomaticSpellFailureOutcome" as const,
       ),
     )
     .pipe(
@@ -829,7 +834,7 @@ export function bonusActionStandardActionActs(
   const actor = state.combatants.get(actorId);
   if (
     !combatantCanTakeActions(actor) ||
-    !state.currentTurnResources.currentHasBonusAction
+    !canSpendBonusAction(state.currentTurnResources)
   ) {
     return [];
   }

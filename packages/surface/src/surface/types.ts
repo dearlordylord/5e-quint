@@ -791,6 +791,30 @@ export type Provenance = Schema.Schema.Type<
 export type SpellRecord = Schema.Schema.Type<
   typeof SurfaceSchema.SpellRecordSchema
 >;
+export type SpellMechanicsWithTopLevelCastingTime = Extract<
+  SpellRecord["mechanics"],
+  { readonly castingTime: CastingTime }
+>;
+export type TopLevelSpellCastingTime =
+  SpellMechanicsWithTopLevelCastingTime["castingTime"];
+export function topLevelSpellCastingTime(
+  mechanics: SpellRecord["mechanics"],
+): TopLevelSpellCastingTime | null {
+  return "castingTime" in mechanics ? mechanics.castingTime : null;
+}
+export function spellHasTopLevelCastingTime(
+  spell: SpellRecord,
+): spell is SpellRecord & {
+  readonly mechanics: SpellMechanicsWithTopLevelCastingTime;
+} {
+  return topLevelSpellCastingTime(spell.mechanics) !== null;
+}
+export function spellHasTopLevelRitualTag(spell: SpellRecord): boolean {
+  const castingTime = topLevelSpellCastingTime(spell.mechanics);
+  return castingTime !== null && "ritual" in castingTime
+    ? castingTime.ritual === true
+    : false;
+}
 export type StartingEquipmentChoice = Schema.Schema.Type<
   typeof SurfaceSchema.StartingEquipmentChoiceSchema
 >;

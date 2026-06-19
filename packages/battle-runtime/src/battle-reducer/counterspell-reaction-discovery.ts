@@ -2,6 +2,7 @@ import {
   type BattleState,
   type SupportedSpellInvocation,
 } from "../battle-reducer.ts";
+import { topLevelSpellCastingTime } from "@dnd/surface/surface/types";
 import type { CombatantId } from "../identity.ts";
 import { combatantCanTakeReactions } from "./creature-state.ts";
 import {
@@ -63,8 +64,10 @@ export function spellCastCanTriggerCounterspell(input: {
       (reactor) =>
         reactor.combatantId !== input.casterId &&
         reactor.invocations.some((counterspell) => {
-          const castingTime = counterspell.spell.mechanics.castingTime;
-          if (castingTime.kind !== "reaction") return false;
+          const castingTime = topLevelSpellCastingTime(
+            counterspell.spell.mechanics,
+          );
+          if (castingTime?.kind !== "reaction") return false;
           const trigger = castingTime.trigger;
           return (
             trigger.kind === "creature_casts_spell" &&
@@ -80,10 +83,10 @@ export function spellCastCanTriggerCounterspell(input: {
 function counterspellInvocationHasSpellCastTrigger(
   invocation: CounterspellInvocation,
 ): boolean {
-  const castingTime = invocation.spell.mechanics.castingTime;
+  const castingTime = topLevelSpellCastingTime(invocation.spell.mechanics);
   return (
     invocation.spell.mechanics.family === "triggered_reaction" &&
-    castingTime.kind === "reaction" &&
+    castingTime?.kind === "reaction" &&
     castingTime.trigger.kind === "creature_casts_spell" &&
     castingTime.trigger.components.length > 0
   );

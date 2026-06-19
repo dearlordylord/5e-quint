@@ -7,16 +7,19 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-gust-of-wind-line
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-object-contact-damage
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-web-restraint-hazard
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-sleet-storm-area-hazard
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-acid-arrow-attack-timing
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-d20-lifecycle
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-levitated-creature
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-slow-active-penalties
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-heightened-save-disadvantage
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.cunning-strike
 // RAW-COVERAGE: runtime-owner RAW-QCORE7-MOVEMENT-GRAPPLE-001 RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-QCORE9-UNIT-FEATURE-PROFILES-001 RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
 // KERNEL-COVERAGE: runtime-owner BATTLE.DAMAGE.DEATH_SAVING_THROW_LIFECYCLE BATTLE.COMMAND.OPTION_AND_NEXT_TURN BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE BATTLE.SPELL.SLEEP_REPEAT_SAVE_LIFECYCLE BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE BATTLE.SPELL.LEVITATED_CREATURE_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE
-// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE BATTLE.SPELL.HEAT_METAL_OBJECT_CONTACT_LIFECYCLE BATTLE.SPELL.GUST_OF_WIND_LINE_LIFECYCLE BATTLE.SPELL.SPIKE_GROWTH_MOVEMENT_HAZARD
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE BATTLE.SPELL.HEAT_METAL_OBJECT_CONTACT_LIFECYCLE BATTLE.SPELL.GUST_OF_WIND_LINE_LIFECYCLE BATTLE.SPELL.SPIKE_GROWTH_MOVEMENT_HAZARD BATTLE.SPELL.SLEET_STORM_AREA_HAZARD_LIFECYCLE
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE
@@ -33,6 +36,7 @@
 import { Either, Match } from "effect";
 
 import {
+  canSpendBonusAction,
   resetTurnActionEconomy,
   spendAction,
   spendActivationResource,
@@ -67,6 +71,7 @@ import {
 } from "@dnd/shared/types";
 
 import {
+  type BattleSleetStormAreaMembershipTrigger,
   type BattleMovementSpeedKind,
   type BattleSubject,
 } from "../battle-subjects.ts";
@@ -157,6 +162,7 @@ import {
 } from "./movement-speed.ts";
 
 import { invalidResult } from "./result-helpers.ts";
+import { slowActionOrBonusActionTurnResources } from "./slow-active-penalties-runtime.ts";
 
 import {
   combatantsAfterConcentrationSpellEffectsEndedIfNoEffects,
@@ -178,7 +184,6 @@ import {
   savingThrowFlatBonusProjections,
   savingThrowRollModeProjections,
 } from "./spells-damage-fills.ts";
-import { wardingBondSavingThrowFlatBonusProjectionsForTarget } from "./warding-bond.ts";
 import {
   activeDruidWildShape,
   combatantEffectiveSize,
@@ -199,12 +204,15 @@ import {
   applyWebRestrainedCondition,
   expireBattleLightEmitters,
   addMoonbeamShapeShiftSuppression,
+  applySleetStormAreaHazardFailedSaveEffect,
   markWebSavedThisTurn,
+  markSleetStormAreaHazardSavedThisTurn,
   markMoonbeamSavedThisTurn,
   removeMoonbeamShapeShiftSuppression,
   removeWebRestrainedCondition,
   replaceGustOfWindLineDirection,
   resetAllMoonbeamSavedThisTurn,
+  resetAllSleetStormSavedThisTurn,
   resetAllWebSavedThisTurn,
   tickDurationBattleLightEmitters,
 } from "./spells-active-effects.ts";
@@ -252,6 +260,8 @@ import type {
   BattleGrappleDragMovementFact,
   BattleGreaseGroundHazardSavingThrowOutcomeHole,
   BattleSpikeGrowthMovementDamageRollHole,
+  BattleSleetStormAreaHazardSavingThrowOutcomeHole,
+  BattleSleetStormAreaHazardTrigger,
   BattleWebRestraintSavingThrowOutcomeHole,
   BattleWebRestraintTrigger,
   BattleHideousLaughterRepeatSavingThrowOutcomeHole,
@@ -269,6 +279,7 @@ import type {
   BattleSpellAreaChoice,
   BattleSpellConditionEndTurnSavingThrowOutcomeHole,
   BattleUnitFeatureConditionEndTurnSavingThrowOutcomeHole,
+  BattleSlowActivePenaltiesEndTurnSavingThrowOutcomeHole,
   BattleSpellTurnEndDamageRollHole,
   BattleSpellTurnStartDamageRollHole,
   BattleSpellTurnStartSavingThrowOutcomeHole,
@@ -306,6 +317,10 @@ export function resolveEndTurn(
     { readonly kind: "savingThrowOutcome" }
   >[] = [],
   unitFeatureConditionEndTurnSaves: readonly Extract<
+    BattleFill,
+    { readonly kind: "savingThrowOutcome" }
+  >[] = [],
+  slowActivePenaltiesEndTurnSaves: readonly Extract<
     BattleFill,
     { readonly kind: "savingThrowOutcome" }
   >[] = [],
@@ -417,9 +432,15 @@ export function resolveEndTurn(
       currentActorId(state),
       unitFeatureConditionEndTurnSaves,
     );
+  const combatantsAfterSlowActivePenaltyRepeatSaves =
+    applySlowActivePenaltiesEndTurnSaveFills(
+      combatantsAfterUnitFeatureConditionRepeatSaves,
+      currentActorId(state),
+      slowActivePenaltiesEndTurnSaves,
+    );
   const combatantsAfterAbilityD20TestRepeatSaves =
     applyAbilityD20TestRollModeEndTurnSaveFills(
-      combatantsAfterUnitFeatureConditionRepeatSaves,
+      combatantsAfterSlowActivePenaltyRepeatSaves,
       currentActorId(state),
       abilityD20TestRollModeEndTurnSaves,
     );
@@ -465,8 +486,11 @@ export function resolveEndTurn(
   const combatantsAfterWebSaveReset = resetAllWebSavedThisTurn(
     combatantsAfterMoonbeamReset,
   );
-  const combatantsAfterStartTurnEffects = applyStartOfTurnActiveEffects(
+  const combatantsAfterSleetStormSaveReset = resetAllSleetStormSavedThisTurn(
     combatantsAfterWebSaveReset,
+  );
+  const combatantsAfterStartTurnEffects = applyStartOfTurnActiveEffects(
+    combatantsAfterSleetStormSaveReset,
     nextActorId,
   );
   const combatantsAfterSpellTurnStartDamage = applyStartTurnSpellDamageFills(
@@ -515,6 +539,10 @@ export function resolveEndTurn(
     resetTurnResources,
     commandHalt,
   );
+  const currentTurnResourcesAfterSlow = slowActionOrBonusActionTurnResources(
+    currentTurnResources,
+    combatantsAfterDamageReductionReset.get(nextActorId),
+  );
   const combatantsAfterCommandHalt =
     commandHalt === null
       ? combatantsAfterDamageReductionReset
@@ -529,7 +557,7 @@ export function resolveEndTurn(
       initiative,
       combatants: combatantsAfterCommandHalt,
       lightEmitters: lightEmittersAfterDurationTick,
-      currentTurnResources,
+      currentTurnResources: currentTurnResourcesAfterSlow,
       readiedSpells,
       readiedMovements,
       helpAttacks,
@@ -1143,6 +1171,65 @@ function unitFeatureConditionEndTurnSavingThrowOutcomeFor(
   return fills.find((fill) => fill.holeId === hole.holeId);
 }
 
+function slowActivePenaltiesEffects(
+  combatant: BattleCreatureState | undefined,
+): readonly SlowActivePenaltiesEffect[] {
+  return combatant === undefined
+    ? []
+    : combatant.activeEffects.filter(
+        (effect): effect is SlowActivePenaltiesEffect =>
+          effect.kind === "slowActivePenalties",
+      );
+}
+
+function slowActivePenaltiesEndTurnSavingThrowOutcomeHole(
+  targetId: CombatantId,
+  effect: SlowActivePenaltiesEffect,
+  state?: BattleState,
+  targetFlatBonuses: readonly BattleSavingThrowFlatBonusProjection[] = [],
+): BattleSlowActivePenaltiesEndTurnSavingThrowOutcomeHole {
+  const key = [
+    "battle:slow-active-penalties-end-turn-save",
+    targetId,
+    effect.sourceCombatantId,
+    effect.sourceSpellId,
+  ]
+    .map(String)
+    .join(":");
+  return {
+    kind: "savingThrowOutcome",
+    holeId: holeId(key),
+    holeInstanceKey: holeInstanceKey(key),
+    label: `${effect.sourceSpellId} end-turn WIS save`,
+    slowActivePenaltiesEndTurnSave: {
+      targetId,
+      sourceSpellId: effect.sourceSpellId,
+      sourceCombatantId: effect.sourceCombatantId,
+      save: effect.save,
+    },
+    ability: effect.save.ability,
+    dc: effect.save.dc,
+    areaChoices: [],
+    targetRollModes:
+      state === undefined
+        ? []
+        : savingThrowRollModeProjections(state, effect.save.ability).filter(
+            (projection) => projection.targetId === targetId,
+          ),
+    targetFlatBonuses,
+  };
+}
+
+function slowActivePenaltiesEndTurnSavingThrowOutcomeFor(
+  fills: readonly Extract<
+    BattleFill,
+    { readonly kind: "savingThrowOutcome" }
+  >[],
+  hole: BattleSlowActivePenaltiesEndTurnSavingThrowOutcomeHole,
+): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> | undefined {
+  return fills.find((fill) => fill.holeId === hole.holeId);
+}
+
 function abilityD20TestRollModeEndTurnSaveEffects(
   combatant: BattleCreatureState | undefined,
 ): readonly AbilityD20TestRollModeEndTurnSaveEffect[] {
@@ -1238,6 +1325,18 @@ function validateSpellConditionEndTurnSavingThrowOutcome(
     : "Spell condition end-turn Saving Throw outcome must match the ending-turn target.";
 }
 
+function validateSlowActivePenaltiesEndTurnSavingThrowOutcome(
+  value: BattleSavingThrowOutcomeValue,
+  targetId: CombatantId,
+): string | null {
+  if ("area" in value) {
+    return "Slow end-turn Saving Throw outcome must not include area facts.";
+  }
+  return value.outcomes.length === 1 && value.outcomes[0]?.targetId === targetId
+    ? null
+    : "Slow end-turn Saving Throw outcome must match the ending-turn target.";
+}
+
 export type GreaseGroundHazardEffect = Extract<
   BattleActiveEffect,
   { readonly kind: "greaseGroundHazard" }
@@ -1245,6 +1344,14 @@ export type GreaseGroundHazardEffect = Extract<
 export type WebRestraintHazardEffect = Extract<
   BattleActiveEffect,
   { readonly kind: "webRestraintHazard" }
+>;
+export type SleetStormAreaHazardEffect = Extract<
+  BattleActiveEffect,
+  { readonly kind: "sleetStormAreaHazard" }
+>;
+export type SlowActivePenaltiesEffect = Extract<
+  BattleActiveEffect,
+  { readonly kind: "slowActivePenalties" }
 >;
 export type FlamingSphereEffect = Extract<
   BattleActiveEffect,
@@ -1992,9 +2099,10 @@ export function greaseGroundHazardSavingThrowOutcomeHole(
       undefined,
       greaseGroundHazardHeightenedRollModeProjection(effect, targetId),
     ).filter((projection) => projection.targetId === targetId),
-    targetFlatBonuses: savingThrowFlatBonusProjections(state).filter(
-      (projection) => projection.targetId === targetId,
-    ),
+    targetFlatBonuses: savingThrowFlatBonusProjections(
+      state,
+      effect.save.ability,
+    ).filter((projection) => projection.targetId === targetId),
   };
 }
 
@@ -2185,9 +2293,10 @@ export function webRestraintSavingThrowOutcomeHole(
       state,
       effect.save.ability,
     ).filter((projection) => projection.targetId === targetId),
-    targetFlatBonuses: savingThrowFlatBonusProjections(state).filter(
-      (projection) => projection.targetId === targetId,
-    ),
+    targetFlatBonuses: savingThrowFlatBonusProjections(
+      state,
+      effect.save.ability,
+    ).filter((projection) => projection.targetId === targetId),
   };
 }
 
@@ -2321,6 +2430,209 @@ export function resolveWebRestraintSaveCommand(
     !outcome.succeeded && nextEffect !== undefined
       ? applyWebRestrainedCondition(marked, input.subject.actorId, nextEffect)
       : marked;
+  return {
+    tag: "resolved",
+    state: nextState,
+    snapshot: snapshotBattle(nextState),
+  };
+}
+
+function sleetStormAreaHazardEffectFor(
+  state: BattleState,
+  subject: Extract<
+    BattleSubject,
+    {
+      readonly tag: "runtimeCommand";
+      readonly command: "sleetStormAreaHazardSave";
+    }
+  >,
+): SleetStormAreaHazardEffect | undefined {
+  const source = state.combatants.get(
+    subject.areaMembershipTrigger.sourceCombatantId,
+  );
+  return source?.activeEffects.find(
+    (effect): effect is SleetStormAreaHazardEffect =>
+      effect.kind === "sleetStormAreaHazard" &&
+      effect.sourceSpellId === subject.areaMembershipTrigger.sourceSpellId &&
+      effect.sourceCombatantId ===
+        subject.areaMembershipTrigger.sourceCombatantId &&
+      effect.areaId === subject.areaMembershipTrigger.areaId,
+  );
+}
+
+const bySleetStormAreaMembershipTriggerKind = Match.discriminator("kind");
+
+function sleetStormAreaHazardTriggerFromMembershipFact(
+  trigger: BattleSleetStormAreaMembershipTrigger,
+): BattleSleetStormAreaHazardTrigger {
+  return Match.value(trigger).pipe(
+    bySleetStormAreaMembershipTriggerKind(
+      "firstEntryOnTurn",
+      () => "entersArea" as const,
+    ),
+    bySleetStormAreaMembershipTriggerKind(
+      "turnStartInArea",
+      () => "startsTurnInArea" as const,
+    ),
+    Match.exhaustive,
+  );
+}
+
+export function sleetStormAreaHazardSavingThrowOutcomeHole(
+  state: BattleState,
+  targetId: CombatantId,
+  effect: SleetStormAreaHazardEffect,
+  trigger: BattleSleetStormAreaHazardTrigger,
+): BattleSleetStormAreaHazardSavingThrowOutcomeHole {
+  const key = `battle:sleet-storm-area-hazard-save:${targetId}:${effect.sourceCombatantId}:${effect.sourceSpellId}:${effect.areaId}:${trigger}`;
+  return {
+    kind: "savingThrowOutcome",
+    holeId: holeId(key),
+    holeInstanceKey: holeInstanceKey(key),
+    label: `${effect.sourceSpellId} ${trigger === "entersArea" ? "entry" : "start-turn"} DEX save`,
+    sleetStormAreaHazard: {
+      targetId,
+      sourceSpellId: effect.sourceSpellId,
+      sourceCombatantId: effect.sourceCombatantId,
+      areaId: effect.areaId,
+      trigger,
+      save: effect.save,
+    },
+    ability: effect.save.ability,
+    dc: effect.save.dc,
+    areaChoices: [],
+    targetRollModes: savingThrowRollModeProjections(
+      state,
+      effect.save.ability,
+    ).filter((projection) => projection.targetId === targetId),
+    targetFlatBonuses: savingThrowFlatBonusProjections(
+      state,
+      effect.save.ability,
+    ).filter((projection) => projection.targetId === targetId),
+  };
+}
+
+function validateSleetStormAreaHazardSavingThrowOutcome(
+  value: BattleSavingThrowOutcomeValue,
+  targetId: CombatantId,
+): string | null {
+  if ("area" in value) {
+    return "Sleet Storm Saving Throw outcome must not include area facts.";
+  }
+  return value.outcomes.length === 1 && value.outcomes[0]?.targetId === targetId
+    ? null
+    : "Sleet Storm Saving Throw outcome must match the triggering target.";
+}
+
+function sleetStormAreaHazardSaveAlreadyResolved(
+  effect: SleetStormAreaHazardEffect,
+  targetId: CombatantId,
+): boolean {
+  return effect.savedThisTurn.includes(targetId);
+}
+
+export function resolveSleetStormAreaHazardSaveCommand(
+  input: BattleResolutionInput & {
+    readonly subject: Extract<
+      BattleSubject,
+      {
+        readonly tag: "runtimeCommand";
+        readonly command: "sleetStormAreaHazardSave";
+      }
+    >;
+    readonly handledInterruptTrigger?: BattleInterruptTrigger | undefined;
+  },
+): BattleResolutionResult {
+  if (
+    input.fills.some((fill) => fill.kind !== "savingThrowOutcome") ||
+    input.fills.length > 1
+  ) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Sleet Storm save accepts exactly one Saving Throw outcome fill.",
+    );
+  }
+  const effect = sleetStormAreaHazardEffectFor(input.state, input.subject);
+  if (
+    effect === undefined ||
+    !input.state.combatants.has(input.subject.actorId)
+  ) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Sleet Storm save is no longer available.",
+    );
+  }
+  const trigger = sleetStormAreaHazardTriggerFromMembershipFact(
+    input.subject.areaMembershipTrigger,
+  );
+  if (sleetStormAreaHazardSaveAlreadyResolved(effect, input.subject.actorId)) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Sleet Storm save was already resolved for this target this turn.",
+    );
+  }
+  const hole = sleetStormAreaHazardSavingThrowOutcomeHole(
+    input.state,
+    input.subject.actorId,
+    effect,
+    trigger,
+  );
+  const [savingThrowFill] = input.fills;
+  if (savingThrowFill === undefined) {
+    return needsHolesResult(input.state, input.subject, [hole]);
+  }
+  if (savingThrowFill.kind !== "savingThrowOutcome") {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Sleet Storm save requires a Saving Throw outcome fill.",
+    );
+  }
+  if (savingThrowFill.holeId !== hole.holeId) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Sleet Storm save requires the matching Saving Throw outcome fill.",
+    );
+  }
+  const validation = validateSleetStormAreaHazardSavingThrowOutcome(
+    savingThrowFill.value,
+    input.subject.actorId,
+  );
+  if (validation !== null) {
+    return invalidResult(input.state, "invalidFill", validation);
+  }
+  const outcome = savingThrowFill.value.outcomes[0]!;
+  if (!outcome.succeeded) {
+    const saveFailedReactionWindow = maybeOpenInterruptWindow(
+      input.state,
+      {
+        trigger: "saveFailed",
+        targetId: input.subject.actorId,
+        sourceSpellId: effect.sourceSpellId,
+        continuation: {
+          kind: "replay",
+          subject: input.subject,
+          fills: input.fills,
+        },
+      },
+      input.handledInterruptTrigger,
+    );
+    if (saveFailedReactionWindow !== null) {
+      return saveFailedReactionWindow;
+    }
+  }
+  const marked = markSleetStormAreaHazardSavedThisTurn(
+    input.state,
+    input.subject.actorId,
+    effect,
+  );
+  const nextState = outcome.succeeded
+    ? marked
+    : applySleetStormAreaHazardFailedSaveEffect(marked, input.subject.actorId);
   return {
     tag: "resolved",
     state: nextState,
@@ -2579,9 +2891,10 @@ export function gustOfWindLineSavingThrowOutcomeHole(
       undefined,
       gustOfWindLineHeightenedRollModeProjection(effect, targetId),
     ).filter((projection) => projection.targetId === targetId),
-    targetFlatBonuses: savingThrowFlatBonusProjections(state).filter(
-      (projection) => projection.targetId === targetId,
-    ),
+    targetFlatBonuses: savingThrowFlatBonusProjections(
+      state,
+      effect.save.ability,
+    ).filter((projection) => projection.targetId === targetId),
   };
 }
 
@@ -2954,9 +3267,10 @@ export function flamingSphereSavingThrowOutcomeHole(
       state,
       effect.save.ability,
     ).filter((projection) => projection.targetId === targetId),
-    targetFlatBonuses: savingThrowFlatBonusProjections(state).filter(
-      (projection) => projection.targetId === targetId,
-    ),
+    targetFlatBonuses: savingThrowFlatBonusProjections(
+      state,
+      effect.save.ability,
+    ).filter((projection) => projection.targetId === targetId),
   };
 }
 
@@ -3361,7 +3675,7 @@ export function resolveFlamingSphereRepositionCommand(
       "Movable zone reposition is no longer available.",
     );
   }
-  if (!input.state.currentTurnResources.currentHasBonusAction) {
+  if (!canSpendBonusAction(input.state.currentTurnResources)) {
     return invalidResult(
       input.state,
       "staleSubject",
@@ -3402,12 +3716,19 @@ export function resolveFlamingSphereRepositionCommand(
   if (movementValidation !== null) {
     return invalidResult(input.state, "invalidFill", movementValidation);
   }
+  const spent = spendActivationResource(input.state.currentTurnResources, {
+    kind: "bonusAction",
+  });
+  if (Either.isLeft(spent)) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Movable zone reposition requires an available Bonus Action.",
+    );
+  }
   const nextState = {
     ...input.state,
-    currentTurnResources: {
-      ...input.state.currentTurnResources,
-      currentHasBonusAction: false,
-    },
+    currentTurnResources: spent.right,
   };
   return {
     tag: "resolved",
@@ -3457,7 +3778,7 @@ export function resolveFlamingSphereRamCommand(
       "Movable zone ram is no longer available.",
     );
   }
-  if (!input.state.currentTurnResources.currentHasBonusAction) {
+  if (!canSpendBonusAction(input.state.currentTurnResources)) {
     return invalidResult(
       input.state,
       "staleSubject",
@@ -3635,12 +3956,19 @@ export function resolveFlamingSphereRamCommand(
     saveSucceeded: saveOutcome.succeeded,
     concentrationSavingThrow: concentrationFill,
   });
+  const spent = spendActivationResource(damaged.currentTurnResources, {
+    kind: "bonusAction",
+  });
+  if (Either.isLeft(spent)) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Movable zone ram requires an available Bonus Action.",
+    );
+  }
   const nextState = {
     ...damaged,
-    currentTurnResources: {
-      ...damaged.currentTurnResources,
-      currentHasBonusAction: false,
-    },
+    currentTurnResources: spent.right,
   };
   return {
     tag: "resolved",
@@ -3722,9 +4050,10 @@ export function moonbeamSavingThrowOutcomeHole(
       state,
       effect.save.ability,
     ).filter((projection) => projection.targetId === targetId),
-    targetFlatBonuses: savingThrowFlatBonusProjections(state).filter(
-      (projection) => projection.targetId === targetId,
-    ),
+    targetFlatBonuses: savingThrowFlatBonusProjections(
+      state,
+      effect.save.ability,
+    ).filter((projection) => projection.targetId === targetId),
   };
 }
 
@@ -4440,6 +4769,36 @@ function applyUnitFeatureConditionEndTurnSaveFills(
   }, combatants);
 }
 
+function applySlowActivePenaltiesEndTurnSaveFills(
+  combatants: ReadonlyMap<CombatantId, BattleCreatureState>,
+  actorId: CombatantId,
+  saves: readonly Extract<
+    BattleFill,
+    { readonly kind: "savingThrowOutcome" }
+  >[],
+): ReadonlyMap<CombatantId, BattleCreatureState> {
+  const actor = combatants.get(actorId);
+  const effects = slowActivePenaltiesEffects(actor);
+  if (actor === undefined || effects.length === 0) {
+    return combatants;
+  }
+  return effects.reduce((nextCombatants, effect) => {
+    const hole = slowActivePenaltiesEndTurnSavingThrowOutcomeHole(
+      actorId,
+      effect,
+    );
+    const save = slowActivePenaltiesEndTurnSavingThrowOutcomeFor(saves, hole);
+    if (save?.value.outcomes[0]?.succeeded !== true) {
+      return nextCombatants;
+    }
+    return removeSlowActivePenaltiesEffectFromCombatants(
+      nextCombatants,
+      actorId,
+      effect,
+    );
+  }, combatants);
+}
+
 function applyAbilityD20TestRollModeEndTurnSaveFills(
   combatants: ReadonlyMap<CombatantId, BattleCreatureState>,
   actorId: CombatantId,
@@ -4563,6 +4922,29 @@ function removeUnitFeatureConditionEndTurnSaveEffectFromCombatants(
         }
       : { ...target, activeEffects };
   return new Map(combatants).set(targetId, nextCombatant);
+}
+
+function removeSlowActivePenaltiesEffectFromCombatants(
+  combatants: ReadonlyMap<CombatantId, BattleCreatureState>,
+  targetId: CombatantId,
+  expiringEffect: SlowActivePenaltiesEffect,
+): ReadonlyMap<CombatantId, BattleCreatureState> {
+  const target = combatants.get(targetId);
+  if (
+    target === undefined ||
+    !target.activeEffects.some((effect) => effect === expiringEffect)
+  ) {
+    return combatants;
+  }
+  return combatantsAfterConcentrationSpellEffectsEndedIfNoEffects(
+    new Map(combatants).set(targetId, {
+      ...target,
+      activeEffects: target.activeEffects.filter(
+        (effect) => effect !== expiringEffect,
+      ),
+    }),
+    expiringEffect,
+  );
 }
 
 function removeHideousLaughterEffectFromCombatants(
@@ -5222,7 +5604,10 @@ export function resolveEndTurnCommand(
       effect,
       actor === undefined
         ? []
-        : wardingBondSavingThrowFlatBonusProjectionsForTarget(actor),
+        : savingThrowFlatBonusProjections(
+            input.state,
+            effect.save.ability,
+          ).filter((projection) => projection.targetId === actorId),
     ),
   }));
   const sleepRepeatSaveHoles = sleepRepeatSaveRequests.map(
@@ -5238,7 +5623,10 @@ export function resolveEndTurnCommand(
         undefined,
         actor === undefined
           ? []
-          : wardingBondSavingThrowFlatBonusProjectionsForTarget(actor),
+          : savingThrowFlatBonusProjections(
+              input.state,
+              effect.save.ability,
+            ).filter((projection) => projection.targetId === actorId),
       ),
     }),
   );
@@ -5255,7 +5643,10 @@ export function resolveEndTurnCommand(
       input.state,
       actor === undefined
         ? []
-        : wardingBondSavingThrowFlatBonusProjectionsForTarget(actor),
+        : savingThrowFlatBonusProjections(
+            input.state,
+            effect.save.ability,
+          ).filter((projection) => projection.targetId === actorId),
     ),
   }));
   const spellConditionEndTurnSaveHoles = spellConditionEndTurnSaveRequests.map(
@@ -5270,11 +5661,32 @@ export function resolveEndTurnCommand(
         input.state,
         actor === undefined
           ? []
-          : wardingBondSavingThrowFlatBonusProjectionsForTarget(actor),
+          : savingThrowFlatBonusProjections(
+              input.state,
+              effect.save.ability,
+            ).filter((projection) => projection.targetId === actorId),
       ),
     }));
   const unitFeatureConditionEndTurnSaveHoles =
     unitFeatureConditionEndTurnSaveRequests.map((request) => request.hole);
+  const slowActivePenaltiesEndTurnSaveRequests = slowActivePenaltiesEffects(
+    actor,
+  ).map((effect) => ({
+    effect,
+    hole: slowActivePenaltiesEndTurnSavingThrowOutcomeHole(
+      actorId,
+      effect,
+      input.state,
+      actor === undefined
+        ? []
+        : savingThrowFlatBonusProjections(
+            input.state,
+            effect.save.ability,
+          ).filter((projection) => projection.targetId === actorId),
+    ),
+  }));
+  const slowActivePenaltiesEndTurnSaveHoles =
+    slowActivePenaltiesEndTurnSaveRequests.map((request) => request.hole);
   const abilityD20TestEndTurnSaveRequests =
     abilityD20TestRollModeEndTurnSaveEffects(actor).map((effect) => ({
       effect,
@@ -5284,7 +5696,10 @@ export function resolveEndTurnCommand(
         input.state,
         actor === undefined
           ? []
-          : wardingBondSavingThrowFlatBonusProjectionsForTarget(actor),
+          : savingThrowFlatBonusProjections(
+              input.state,
+              effect.save.ability,
+            ).filter((projection) => projection.targetId === actorId),
       ),
     }));
   const abilityD20TestEndTurnSaveHoles = abilityD20TestEndTurnSaveRequests.map(
@@ -5322,9 +5737,10 @@ export function resolveEndTurnCommand(
               effect,
               nextActor === undefined
                 ? []
-                : wardingBondSavingThrowFlatBonusProjectionsForTarget(
-                    nextActor,
-                  ),
+                : savingThrowFlatBonusProjections(
+                    input.state,
+                    effect.save.ability,
+                  ).filter((projection) => projection.targetId === nextActorId),
             ),
           },
         ]
@@ -5338,6 +5754,7 @@ export function resolveEndTurnCommand(
     ...hideousLaughterRepeatSaveHoles,
     ...spellConditionEndTurnSaveHoles,
     ...unitFeatureConditionEndTurnSaveHoles,
+    ...slowActivePenaltiesEndTurnSaveHoles,
     ...abilityD20TestEndTurnSaveHoles,
     ...endTurnDamageHoles,
     ...(needsDeathSavingThrow ? [deathSavingThrowHole(nextActorId)] : []),
@@ -5427,6 +5844,14 @@ export function resolveEndTurnCommand(
       );
       return fill === undefined ? [] : [fill];
     });
+  const slowActivePenaltiesEndTurnSaves =
+    slowActivePenaltiesEndTurnSaveRequests.flatMap((request) => {
+      const fill = slowActivePenaltiesEndTurnSavingThrowOutcomeFor(
+        savingThrowOutcomeFills,
+        request.hole,
+      );
+      return fill === undefined ? [] : [fill];
+    });
   const abilityD20TestEndTurnSaves = abilityD20TestEndTurnSaveRequests.flatMap(
     (request) => {
       const fill = abilityD20TestRollModeEndTurnSavingThrowOutcomeFor(
@@ -5490,6 +5915,20 @@ export function resolveEndTurnCommand(
   if (missingUnitFeatureConditionEndTurnSaveHoles.length > 0) {
     return needsHolesResult(input.state, input.subject, [
       ...missingUnitFeatureConditionEndTurnSaveHoles,
+    ]);
+  }
+  const missingSlowActivePenaltiesEndTurnSaveHoles =
+    slowActivePenaltiesEndTurnSaveRequests.flatMap((request) =>
+      slowActivePenaltiesEndTurnSavingThrowOutcomeFor(
+        savingThrowOutcomeFills,
+        request.hole,
+      ) === undefined
+        ? [request.hole]
+        : [],
+    );
+  if (missingSlowActivePenaltiesEndTurnSaveHoles.length > 0) {
+    return needsHolesResult(input.state, input.subject, [
+      ...missingSlowActivePenaltiesEndTurnSaveHoles,
     ]);
   }
   const missingAbilityD20TestEndTurnSaveHoles =
@@ -5709,6 +6148,7 @@ export function resolveEndTurnCommand(
       ...hideousLaughterRepeatSaveHoles,
       ...spellConditionEndTurnSaveHoles,
       ...unitFeatureConditionEndTurnSaveHoles,
+      ...slowActivePenaltiesEndTurnSaveHoles,
       ...abilityD20TestEndTurnSaveHoles,
       ...startTurnSaveHoles,
       ...endTurnHideousLaughterDamageRepeatSaveHoles,
@@ -5734,6 +6174,7 @@ export function resolveEndTurnCommand(
       hideousLaughterRepeatSaves.length +
       spellConditionEndTurnSaves.length +
       unitFeatureConditionEndTurnSaves.length +
+      slowActivePenaltiesEndTurnSaves.length +
       abilityD20TestEndTurnSaves.length +
       startTurnSaves.length +
       endTurnHideousLaughterDamageRepeatSaves.length +
@@ -5754,6 +6195,22 @@ export function resolveEndTurnCommand(
       continue;
     }
     const validation = validateSleepRepeatSavingThrowOutcome(
+      fill.value,
+      actorId,
+    );
+    if (validation !== null) {
+      return invalidResult(input.state, "invalidFill", validation);
+    }
+  }
+  for (const request of slowActivePenaltiesEndTurnSaveRequests) {
+    const fill = slowActivePenaltiesEndTurnSavingThrowOutcomeFor(
+      savingThrowOutcomeFills,
+      request.hole,
+    );
+    if (fill === undefined) {
+      continue;
+    }
+    const validation = validateSlowActivePenaltiesEndTurnSavingThrowOutcome(
       fill.value,
       actorId,
     );
@@ -6088,6 +6545,7 @@ export function resolveEndTurnCommand(
     hideousLaughterRepeatSaves,
     spellConditionEndTurnSaves,
     unitFeatureConditionEndTurnSaves,
+    slowActivePenaltiesEndTurnSaves,
     abilityD20TestEndTurnSaves,
     endTurnDamageRolls,
     startTurnDamageRolls,
@@ -7105,6 +7563,17 @@ function activeAreaDifficultTerrainSourceMatches(
         sourceCombatant?.activeEffects.some(
           (effect) =>
             effect.kind === "webRestraintHazard" &&
+            effect.sourceCombatantId === terrainSource.sourceCombatantId &&
+            effect.sourceSpellId === terrainSource.sourceSpellId &&
+            effect.areaId === terrainSource.areaId,
+        ) === true,
+    ),
+    byAreaDifficultTerrainSourceKind(
+      "sleetStormHazard",
+      (terrainSource) =>
+        sourceCombatant?.activeEffects.some(
+          (effect) =>
+            effect.kind === "sleetStormAreaHazard" &&
             effect.sourceCombatantId === terrainSource.sourceCombatantId &&
             effect.sourceSpellId === terrainSource.sourceSpellId &&
             effect.areaId === terrainSource.areaId,

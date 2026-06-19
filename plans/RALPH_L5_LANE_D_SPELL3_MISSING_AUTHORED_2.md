@@ -67,19 +67,19 @@
     {
       "number": 11,
       "id": "L3-FOLLOWUP-SLEET-STORM-AREA-HAZARD-RUNTIME",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Promote Sleet Storm area hazard runtime support"
     },
     {
       "number": 12,
       "id": "L3-FOLLOWUP-SLOW-ACTIVE-PENALTIES-RUNTIME",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Promote Slow active penalties runtime support"
     },
     {
       "number": 13,
       "id": "L3-FOLLOWUP-SLOW-TURN-AND-SOMATIC-RUNTIME",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Promote Slow target-turn and Somatic runtime support"
     }
   ]
@@ -146,9 +146,9 @@ missing-record spells unless a RAW dependency is unavoidable and documented.
 | 8 | L5-D08-SPEAK-WITH-PLANTS - Close Speak with Plants missing authored record | done | none | Authored and installed Speak with Plants as an SRD Surface Spell Definition with a runtime-detached table/spatial/exploration owner. |
 | 9 | L5-D09-TINY-HUT - Close Tiny Hut missing authored record | done | none | Authored and installed Tiny Hut as an SRD Surface Spell Definition with a runtime-detached table/spatial/environment shelter owner. |
 | 10 | L5-D10-WATER-WALK - Close Water Walk missing authored record | done | none | Independent missing spell Unit. |
-| 11 | L3-FOLLOWUP-SLEET-STORM-AREA-HAZARD-RUNTIME - Promote Sleet Storm area hazard runtime support | ready-for-research | L5-D05-SLEET-STORM | Runtime support consumes the typed Sleet Storm Surface facts installed by Task 5. |
-| 12 | L3-FOLLOWUP-SLOW-ACTIVE-PENALTIES-RUNTIME - Promote Slow active penalties runtime support | ready-for-research | L5-D06-SLOW | Runtime support consumes the typed Slow Surface facts installed by Task 6 for invocation, active penalties, and repeat-save cleanup. |
-| 13 | L3-FOLLOWUP-SLOW-TURN-AND-SOMATIC-RUNTIME - Promote Slow target-turn and Somatic runtime support | ready-for-research | L3-FOLLOWUP-SLOW-ACTIVE-PENALTIES-RUNTIME | Runtime support consumes the active Slow effect lifecycle before enforcing target-turn action economy and Somatic failure chance. |
+| 11 | L3-FOLLOWUP-SLEET-STORM-AREA-HAZARD-RUNTIME - Promote Sleet Storm area hazard runtime support | done | L5-D05-SLEET-STORM | Promoted Sleet Storm as a profile-subset-supported area hazard while leaving automatic geometry/pathfinding and exposed-flame dousing at their table/environment owners. |
+| 12 | L3-FOLLOWUP-SLOW-ACTIVE-PENALTIES-RUNTIME - Promote Slow active penalties runtime support | done | L5-D06-SLOW | Promoted Slow active-penalty runtime support with caller-supplied Cube witnesses, failed-save penalties, Concentration ownership, and repeat-save cleanup. |
+| 13 | L3-FOLLOWUP-SLOW-TURN-AND-SOMATIC-RUNTIME - Promote Slow target-turn and Somatic runtime support | done | L3-FOLLOWUP-SLOW-ACTIVE-PENALTIES-RUNTIME | Promoted Slow target-turn Action/Bonus Action restriction, Attack-action cap, and Somatic failure chance from the active Slow effect lifecycle. |
 
 ## Shared Verification
 
@@ -557,7 +557,7 @@ Verification:
 
 ### Task 11 - L3-FOLLOWUP-SLEET-STORM-AREA-HAZARD-RUNTIME
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -611,7 +611,7 @@ Verification:
 
 ### Task 12 - L3-FOLLOWUP-SLOW-ACTIVE-PENALTIES-RUNTIME
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -631,8 +631,9 @@ SRD anchors:
 Current state:
 
 - Slow is authored and installed as an SRD Surface Spell Definition.
-- Unit claim is `unsupported-profile` with active-penalty runtime owner
-  evidence required.
+- Unit claim is `profile-subset-supported` for the active-penalty runtime
+  subset; target-turn and Somatic facts remain visible in
+  `L3-FOLLOWUP-SLOW-TURN-AND-SOMATIC-RUNTIME`.
 
 Output:
 
@@ -667,7 +668,7 @@ Verification:
 
 ### Task 13 - L3-FOLLOWUP-SLOW-TURN-AND-SOMATIC-RUNTIME
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 

@@ -137,7 +137,8 @@ export function resolveOpenHandTechniqueAfterHit(input: {
   if (!isOpenHandTechniqueChoice(input.decision.value)) {
     return {
       tag: "invalid",
-      message: "Open Hand Technique decision must choose Addle, Push, Topple, or decline.",
+      message:
+        "Open Hand Technique decision must choose Addle, Push, Topple, or decline.",
     };
   }
   return Match.value(input.decision.value).pipe(
@@ -269,7 +270,7 @@ function openHandTechniqueSavingThrowHole(
     targetRollModes: savingThrowRollModeProjections(state, ability).filter(
       (projection) => projection.targetId === hit.targetId,
     ),
-    targetFlatBonuses: savingThrowFlatBonusProjections(state).filter(
+    targetFlatBonuses: savingThrowFlatBonusProjections(state, ability).filter(
       (projection) => projection.targetId === hit.targetId,
     ),
   };
@@ -323,7 +324,8 @@ function applyOpenHandTechniquePush(
   if (push.targetId !== hit.targetId) {
     return {
       tag: "invalid",
-      message: "Open Hand Technique Push disposition must target the attacked creature.",
+      message:
+        "Open Hand Technique Push disposition must target the attacked creature.",
     };
   }
   const validation = validateOpenHandTechniquePushDisposition(

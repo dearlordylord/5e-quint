@@ -930,7 +930,7 @@ export function weaponMasteryToppleSavingThrowHole(
     },
     targetIds: [targetId],
     targetRollModes: savingThrowRollModeProjections(state, "con"),
-    targetFlatBonuses: savingThrowFlatBonusProjections(state),
+    targetFlatBonuses: savingThrowFlatBonusProjections(state, "con"),
   };
 }
 

@@ -61,6 +61,7 @@ import type {
   UnitRecord,
   WeaponRecord,
 } from "@dnd/surface/surface/types";
+import { spellHasTopLevelRitualTag } from "@dnd/surface/surface/types";
 import {
   allCantripsFromAnyClassSpellList,
   allLeveledSpellsFromAnyClassSpellList,
@@ -946,9 +947,7 @@ function bookOfShadowsSpellAccess(input: {
   if (
     ritualSpells.right.some(
       (spell) =>
-        spell.mechanics.level !== 1 ||
-        !("ritual" in spell.mechanics.castingTime) ||
-        spell.mechanics.castingTime.ritual !== true,
+        spell.mechanics.level !== 1 || !spellHasTopLevelRitualTag(spell),
     )
   ) {
     return battleCreatureInitIssue(

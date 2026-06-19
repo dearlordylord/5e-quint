@@ -339,7 +339,10 @@ export function attackDamageReductionZeroDamageRedirectHoles(
         state,
         offer.redirect.saveAbility,
       ),
-      targetFlatBonuses: savingThrowFlatBonusProjections(state),
+      targetFlatBonuses: savingThrowFlatBonusProjections(
+        state,
+        offer.redirect.saveAbility,
+      ),
     },
     {
       kind: "rolledDice",

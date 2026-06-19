@@ -62,8 +62,8 @@
       "value": 326
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 189,
-      "numerator": 184,
+      "denominator": 190,
+      "numerator": 185,
       "percent": "97.4%"
     },
     "profileClassificationCoverage": {
@@ -72,49 +72,49 @@
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 122,
-      "numerator": 122,
+      "denominator": 124,
+      "numerator": 124,
       "percent": "100%"
     },
     "qntProofCoverage": {
-      "denominator": 122,
-      "numerator": 119,
-      "percent": "97.5%"
+      "denominator": 124,
+      "numerator": 120,
+      "percent": "96.8%"
     },
     "rulesKernelCoveredProfileCoverage": {
-      "denominator": 160,
-      "numerator": 160,
+      "denominator": 162,
+      "numerator": 162,
       "percent": "100%"
     },
     "rulesKernelProfileJoinCoverage": {
-      "denominator": 160,
-      "numerator": 160,
+      "denominator": 162,
+      "numerator": 162,
       "percent": "100%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 175,
-      "numerator": 175,
+      "denominator": 176,
+      "numerator": 176,
       "percent": "100%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 122,
-      "numerator": 122,
+      "denominator": 124,
+      "numerator": 124,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 122,
-      "numerator": 122,
+      "denominator": 124,
+      "numerator": 124,
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 181,
+      "denominator": 182,
       "numerator": 178,
-      "percent": "98.3%"
+      "percent": "97.8%"
     },
     "supportedProfileCoverage": {
       "denominator": 276,
-      "numerator": 189,
-      "percent": "68.5%"
+      "numerator": 190,
+      "percent": "68.8%"
     }
   },
   "metricSemantics": [
@@ -262,6 +262,90 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "spell.invocation-sleet-storm-area-hazard",
+      "profileKind": "spell-invocation",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime-ground-command.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts",
+        "packages/battle-runtime/src/active-effect/types.ts",
+        "packages/battle-runtime/src/battle-reducer/battle-codecs.ts",
+        "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
+        "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/sleet-storm-area-hazard.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-profiles.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-area-effects.ts",
+        "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts",
+        "packages/battle-runtime/src/battle-subjects.ts"
+      ],
+      "sourceBoundary": "The runtime consumes the authored Sleet Storm spell shape, caller-supplied point-origin Cylinder area identity, caller-supplied first-entry and starts-turn-in-area save trigger subjects, and caller-supplied movement path facts for travel through active Sleet Storm Difficult Terrain. It owns Magic Action and level-3-or-higher Spell Slot spending, caster-owned Concentration, active Sleet Storm area effect state with radius, height, and one shared per-turn save ledger, failed-save Prone application, failed-save target Concentration loss through the shared Concentration teardown owner, noncumulative Difficult Terrain movement-cost validation for active Sleet Storm areas, Heavily Obscured Cylinder projection, and cleanup on Concentration or duration end. Automatic geometry, area membership, pathfinding, and exposed-flame object/environment dousing remain caller/table/environment facts rather than parallel runtime map or object state.",
+      "taskRefs": [
+        "L3-FOLLOWUP-SLEET-STORM-AREA-HAZARD-RUNTIME"
+      ],
+      "title": "Spell invocation creates a Sleet Storm Cylinder area hazard with table-triggered saves, movement, and obscurement projections",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-ground-command-tests.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-sleet-storm-area-hazard.test.ts"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/sleet-storm-area-hazard.mbt.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "spell.invocation-slow-active-penalties",
+      "profileKind": "spell-invocation",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime-slow-active-penalties.mbt.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts",
+        "packages/battle-runtime/src/active-effect/types.ts",
+        "packages/battle-runtime/src/battle-reducer/attack-resolution.ts",
+        "packages/battle-runtime/src/battle-reducer/battle-codecs.ts",
+        "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
+        "packages/battle-runtime/src/battle-reducer/creature-state.ts",
+        "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
+        "packages/battle-runtime/src/battle-reducer/movement-speed.ts",
+        "packages/battle-runtime/src/battle-reducer/slow-active-penalties-runtime.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/slow-active-penalties.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-turn-resources.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-discovery.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-damage-fills.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-profiles.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-fill-set.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-save-gates.ts",
+        "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts",
+        "packages/battle-runtime/src/battle-subjects.ts",
+        "packages/shared-algebras/src/action-economy-algebra.ts"
+      ],
+      "sourceBoundary": "The runtime consumes the authored Slow spell shape, caller-supplied point-origin Cube affected-creature witnesses for up to six chosen creatures, Wisdom Saving Throw outcomes, active Slow effect state, action-economy state, Attack action resource state, and canonical spell component facts. It owns Magic Action and level-3-or-higher Spell Slot spending, caster Concentration, failed-save active Speed, Armor Class, Dexterity Saving Throw, and Reaction penalties, target-turn Action or Bonus Action mutual exclusion, Attack action one-attack cap, Somatic component failure chance before spell resolution, failed-Somatic cast resource spending without applying the spell effect, target-end repeat-save cleanup, and concentration cleanup when no affected targets remain. Automatic Cube geometry, line of effect, point-of-origin inclusion, and area membership derivation remain caller/table facts.",
+      "taskRefs": [
+        "L3-FOLLOWUP-SLOW-ACTIVE-PENALTIES-RUNTIME",
+        "L3-FOLLOWUP-SLOW-TURN-AND-SOMATIC-RUNTIME"
+      ],
+      "title": "Spell invocation applies Slow active penalties with target-turn and Somatic runtime restrictions",
+      "verificationOwners": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-slow-active-penalties.test.ts"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/slow-active-penalties.mbt.test.ts"
         }
       ]
     },
@@ -5510,13 +5594,13 @@
     "denominatorRule": "profile records with rules-kernel profile kinds and either QNT owners or explicit profile-obligation mappings",
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
-        "denominator": 160,
-        "numerator": 160,
+        "denominator": 162,
+        "numerator": 162,
         "percent": "100%"
       },
       "rulesKernelProfileJoinCoverage": {
-        "denominator": 160,
-        "numerator": 160,
+        "denominator": 162,
+        "numerator": 162,
         "percent": "100%"
       }
     },
@@ -5549,6 +5633,38 @@
         "profileKind": "bonus-action",
         "qntOwners": [
           "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt"
+        ]
+      },
+      {
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.SPELL.SLEET_STORM_AREA_HAZARD_LIFECYCLE",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Sleet Storm active Cylinder hazard projects Difficult Terrain and Heavily Obscured area facts, resolves entry/start-turn Prone and Concentration-loss saves, and cleans up on Concentration or duration end"
+          }
+        ],
+        "profileId": "spell.invocation-sleet-storm-area-hazard",
+        "profileKind": "spell-invocation",
+        "qntOwners": [
+          "packages/battle-runtime/battle-runtime-ground-command.qnt"
+        ]
+      },
+      {
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Slow applies active penalties, target-turn Action or Bonus Action restriction, Attack cap, Somatic failure, and repeat-save cleanup"
+          }
+        ],
+        "profileId": "spell.invocation-slow-active-penalties",
+        "profileKind": "spell-invocation",
+        "qntOwners": [
+          "packages/battle-runtime/battle-runtime-slow-active-penalties.mbt.qnt"
         ]
       },
       {
@@ -8268,8 +8384,8 @@
       "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
       "metrics": {
         "rulesKernelSupportedUnitCoverage": {
-          "denominator": 175,
-          "numerator": 175,
+          "denominator": 176,
+          "numerator": 176,
           "percent": "100%"
         }
       },
@@ -12505,6 +12621,28 @@
               "joinStatus": "covered",
               "obligations": [
                 {
+                  "obligationId": "BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Slow applies active penalties, target-turn Action or Bonus Action restriction, Attack cap, Somatic failure, and repeat-save cleanup"
+                }
+              ],
+              "profileId": "spell.invocation-slow-active-penalties",
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/battle-runtime/battle-runtime-slow-active-penalties.mbt.qnt"
+              ]
+            }
+          ],
+          "unitId": "slow"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
                   "obligationId": "SHEET.ARMOR_CLASS.BASE_FORMULA_CHOICE",
                   "runtime": "character-sheet",
                   "status": "covered",
@@ -13085,7 +13223,7 @@
       "evidenceTag": "selected-identity-mbt"
     },
     "deferredNonApplicableRows": [],
-    "rowCount": 7,
+    "rowCount": 9,
     "rows": [
       {
         "catalogAdmissionStatus": "installed",
@@ -13206,6 +13344,40 @@
           "tag": "supported-profile"
         },
         "unitId": "protection_from_energy"
+      },
+      {
+        "catalogAdmissionStatus": "installed",
+        "collectionId": "srd-5.2.1",
+        "kind": "spell",
+        "selectedIdentity": {
+          "reason": "The Unit has no selected-identity-mbt evidence.",
+          "status": "missing-witness"
+        },
+        "sourceRecordPath": "packages/surface/content/sleet_storm.json",
+        "support": {
+          "profileIds": [
+            "spell.invocation-sleet-storm-area-hazard"
+          ],
+          "tag": "profile-subset-supported"
+        },
+        "unitId": "sleet_storm"
+      },
+      {
+        "catalogAdmissionStatus": "installed",
+        "collectionId": "srd-5.2.1",
+        "kind": "spell",
+        "selectedIdentity": {
+          "reason": "The Unit has no selected-identity-mbt evidence.",
+          "status": "missing-witness"
+        },
+        "sourceRecordPath": "packages/surface/content/slow.json",
+        "support": {
+          "profileIds": [
+            "spell.invocation-slow-active-penalties"
+          ],
+          "tag": "supported-profile"
+        },
+        "unitId": "slow"
       }
     ]
   },
@@ -13215,6 +13387,38 @@
       "note": "Movement, spatial, and grapple pressure is tracked as a rule-core family; current UnitRecord rows do not claim a movement Unit profile.",
       "profileIds": [],
       "taskId": "QCORE7"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime tests cover Sleet Storm Surface admission, Cylinder area fill validation, Magic Action and Spell Slot spending, active Concentration area effect recording, caller-supplied Difficult Terrain movement-cost projection, Heavily Obscured Cylinder projection, caller-supplied first-entry and start-turn area-membership save command subjects, one shared once-per-turn save ledger, failed-save Prone application, failed-save target Concentration loss, and ledger reset. Automatic geometry, pathfinding, area membership, and exposed-flame dousing remain explicit table/environment-owned boundaries.",
+      "profileIds": [
+        "spell.invocation-sleet-storm-area-hazard"
+      ],
+      "taskId": "L3-FOLLOWUP-SLEET-STORM-AREA-HAZARD-RUNTIME"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime tests and MBT cover Slow Surface admission, Magic Action and level-3-or-higher Spell Slot spending, caster Concentration, caller-supplied Cube affected-creature witnesses for up to six chosen creatures, Wisdom Saving Throw outcomes, failed-save active Speed ratio, Armor Class, Dexterity Saving Throw, and Reaction penalties, target-end repeat-save cleanup, and concentration cleanup when no affected targets remain. Automatic geometry and the target-turn Action or Bonus Action, Attack-action cap, and Somatic spell-failure mechanics remain explicit Task 13 boundaries.",
+      "profileIds": [
+        "spell.invocation-slow-active-penalties"
+      ],
+      "taskId": "L3-FOLLOWUP-SLOW-ACTIVE-PENALTIES-RUNTIME"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime tests and MBT cover the promoted Slow target-turn Action or Bonus Action mutual exclusion across shared action-economy spenders, Attack-action one-attack cap, Somatic component failure chance before spell resolution, failed-Somatic resource spending without spell effect application or Concentration start, and non-Somatic or component-suppressed spell casts that bypass the Slow chance outcome.",
+      "profileIds": [
+        "spell.invocation-slow-active-penalties"
+      ],
+      "taskId": "L3-FOLLOWUP-SLOW-TURN-AND-SOMATIC-RUNTIME"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Promoted battle-runtime Quint facts for Sleet Storm's level-3 Concentration Cylinder hazard, caller-supplied area identity, Difficult Terrain and Heavily Obscured projections, caller-supplied first-entry and start-turn Dexterity save trigger facts, failed-save Prone application and target Concentration loss, one shared once-per-turn ledger, and duration or Concentration cleanup. Automatic geometry, pathfinding, area membership, and exposed-flame dousing remain table/environment boundaries.",
+      "profileIds": [
+        "spell.invocation-sleet-storm-area-hazard"
+      ],
+      "taskId": "L3-FOLLOWUP-SLEET-STORM-AREA-HAZARD-RUNTIME"
     },
     {
       "claimKind": "qnt-proof",
@@ -16887,14 +17091,14 @@
         "installedUnitDenominator": 142,
         "kind": "spell",
         "label": "Spell Units",
-        "profileFactDenominator": 137,
-        "profileSubsetSupportedUnits": 18,
+        "profileFactDenominator": 139,
+        "profileSubsetSupportedUnits": 19,
         "selectedIdentityDeferredNonApplicableUnits": 0,
-        "selectedIdentityReplayDenominator": 111,
-        "selectedIdentityReplayGapUnits": 1,
+        "selectedIdentityReplayDenominator": 113,
+        "selectedIdentityReplayGapUnits": 3,
         "selectedIdentityReplayWitnessUnits": 110,
-        "supportedProfileUnits": 93,
-        "unsupportedOrOtherUnits": 31
+        "supportedProfileUnits": 94,
+        "unsupportedOrOtherUnits": 29
       },
       {
         "executableUnitDenominator": 96,
@@ -35917,23 +36121,98 @@
         "status": "installed"
       },
       "claim": {
-        "followUpTasks": [
+        "battleReadinessClosure": {
+          "kind": "table-spatial-derivation",
+          "owner": "battle-runtime Sleet Storm area-hazard owner plus table/spatial and exposed-flame owners",
+          "reason": "The promoted runtime owns cast admission, area-effect lifecycle, movement/obscurement projections, the shared per-turn save ledger, failed-save Prone, and failed-save Concentration loss. Automatic Cylinder geometry, area-membership derivation, pathfinding, and exposed-flame object/environment state remain caller/table-owned facts rather than duplicated battle runtime state."
+        },
+        "deferredMechanics": [
           {
-            "id": "L3-FOLLOWUP-SLEET-STORM-AREA-HAZARD-RUNTIME",
-            "mechanic": "Promote Sleet Storm as a Concentration-owned Cylinder area hazard with caller-supplied area identity, first-entry-on-a-turn and turn-start Dexterity Saving Throw triggers, Difficult Terrain and Heavily Obscured projections, failed-save Prone application, failed-save Concentration loss, and a runtime-detached exposed-flame dousing split.",
-            "owner": "battle-runtime spell invocation/projection plus table/spatial and exposed-flame owners",
-            "requiredOutput": "Supported-profile or profile-subset-supported Sleet Storm claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the area hazard while preserving table-owned area membership, pathfinding, and exposed-flame state.",
-            "title": "Sleet Storm Area Hazard Runtime"
+            "battleReadinessClosure": {
+              "kind": "table-spatial-derivation",
+              "owner": "shared table/spatial area geometry and pathfinding owner",
+              "reason": "The promoted Sleet Storm owner consumes explicit area identity, movement facts, and first-entry/start-turn area-membership trigger facts. It does not infer position, path crossing, or Cylinder membership from map geometry."
+            },
+            "mechanic": "automatic table geometry, pathfinding, and area-membership trigger derivation for creatures entering or starting in the Cylinder"
+          },
+          {
+            "battleReadinessClosure": {
+              "kind": "outside-battle-runtime",
+              "owner": "future object/environment exposed-flame state owner",
+              "reason": "The current battle runtime has no represented exposed-flame object or environmental flame state to douse. Sleet Storm admission verifies the Surface exposed-flame operation but keeps execution detached until that owner exists."
+            },
+            "mechanic": "exposed-flame dousing inside the Sleet Storm area"
           }
         ],
-        "reason": "Sleet Storm is authored and installed as an SRD Surface Spell Definition with Magic Action Spell Slot casting, 150-foot range, V/S/M miniature-umbrella components, caster-owned Concentration up to 1 minute, a point-origin 20-foot-radius 40-foot-tall Cylinder, Heavily Obscured area, exposed-flame dousing, Difficult Terrain ground, and first-entry-on-a-turn or turn-start Dexterity Saving Throw failure facts that apply Prone and break Concentration. Task 5 leaves promoted battle-runtime support open because the runtime still needs a Sleet Storm area-hazard profile that consumes caller-supplied Cylinder identity, area-membership trigger facts, movement/obscurement projection facts, failed-save condition and Concentration-loss facts, and a separate exposed-flame object/environment owner without dispatching on authored spell identity.",
-        "tag": "unsupported-profile"
+        "profileIds": [
+          "spell.invocation-sleet-storm-area-hazard"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "Magic Action level-3-or-higher Spell Slot casting from the authored SRD Sleet Storm Unit",
+          "caller-supplied point-origin 20-foot-radius 40-foot-tall Cylinder area identity via the Sleet Storm area fill",
+          "caster-owned Concentration up to 1 minute",
+          "active Difficult Terrain movement-cost facts projected from caller-supplied movement through the area",
+          "Heavily Obscured spell obscuration projection for the caller-supplied Cylinder area",
+          "caller-supplied first-entry-on-a-turn and turn-start area-membership trigger facts are accepted as Dexterity Saving Throw command subjects with one shared per-turn save ledger",
+          "failed Sleet Storm Saving Throws apply Prone to the triggering creature and break that creature's Concentration through the shared Concentration teardown owner",
+          "Concentration and duration cleanup remove the active Sleet Storm area effect"
+        ],
+        "tag": "profile-subset-supported"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-sleet-storm-area-hazard.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L3-FOLLOWUP-SLEET-STORM-AREA-HAZARD-RUNTIME"
+        }
+      ],
       "executableMechanics": true,
       "kind": "spell",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "spell.invocation-sleet-storm-area-hazard",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime-ground-command.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts",
+            "packages/battle-runtime/src/active-effect/types.ts",
+            "packages/battle-runtime/src/battle-reducer/battle-codecs.ts",
+            "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
+            "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
+            "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/sleet-storm-area-hazard.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-profiles.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-resolve-area-effects.ts",
+            "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts",
+            "packages/battle-runtime/src/battle-subjects.ts"
+          ],
+          "sourceBoundary": "The runtime consumes the authored Sleet Storm spell shape, caller-supplied point-origin Cylinder area identity, caller-supplied first-entry and starts-turn-in-area save trigger subjects, and caller-supplied movement path facts for travel through active Sleet Storm Difficult Terrain. It owns Magic Action and level-3-or-higher Spell Slot spending, caster-owned Concentration, active Sleet Storm area effect state with radius, height, and one shared per-turn save ledger, failed-save Prone application, failed-save target Concentration loss through the shared Concentration teardown owner, noncumulative Difficult Terrain movement-cost validation for active Sleet Storm areas, Heavily Obscured Cylinder projection, and cleanup on Concentration or duration end. Automatic geometry, area membership, pathfinding, and exposed-flame object/environment dousing remain caller/table/environment facts rather than parallel runtime map or object state.",
+          "taskRefs": [
+            "L3-FOLLOWUP-SLEET-STORM-AREA-HAZARD-RUNTIME"
+          ],
+          "title": "Spell invocation creates a Sleet Storm Cylinder area hazard with table-triggered saves, movement, and obscurement projections",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-ground-command-tests.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-sleet-storm-area-hazard.test.ts"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/sleet-storm-area-hazard.mbt.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/sleet_storm.json",
       "unitId": "sleet_storm"
     },
@@ -35944,30 +36223,94 @@
         "status": "installed"
       },
       "claim": {
-        "followUpTasks": [
-          {
-            "id": "L3-FOLLOWUP-SLOW-ACTIVE-PENALTIES-RUNTIME",
-            "mechanic": "Promote Slow's Magic Action and level-3+ Spell Slot spend, caster-owned Concentration, caller-supplied affected-creature set for the 40-foot Cube, Wisdom Saving Throw, failed-save active Speed ratio projection, -2 Armor Class projection, -2 Dexterity Saving Throw modifier, no-Reaction projection, and end-of-target-turn repeat Saving Throw cleanup for each affected target.",
-            "owner": "battle-runtime spell invocation/projection owner",
-            "requiredOutput": "Supported-profile or profile-subset-supported Slow claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for active penalties without authored-identity dispatch.",
-            "title": "Slow Active Penalties Runtime"
-          },
-          {
-            "id": "L3-FOLLOWUP-SLOW-TURN-AND-SOMATIC-RUNTIME",
-            "mechanic": "Promote Slow's target-turn Action or Bonus Action mutual-exclusion rule, Attack-action one-attack cap, and 25 percent spell failure chance for affected targets casting spells with Somatic components after the active effect lifecycle exists.",
-            "owner": "battle-runtime action-resource, Attack action, spell component, and chance-result owners",
-            "requiredOutput": "Focused action-resource, Attack action, spell component, chance-result, cleanup, and promoted Quint/runtime parity tests, consuming typed Slow Surface facts without spell-id-specific gates.",
-            "title": "Slow Turn And Somatic Runtime"
-          }
+        "battleReadinessClosure": {
+          "kind": "table-spatial-derivation",
+          "owner": "battle-runtime Slow active-penalties owner plus table/spatial witness provider",
+          "reason": "The promoted runtime owns spell admission, resource spend, typed area witness validation, active penalty projections, target-turn Action-or-Bonus-Action restriction, Attack-action cap, Somatic failure chance, and end-turn repeat-save cleanup. Automatic Cube geometry, line of effect, point-of-origin inclusion, and area membership derivation remain caller-supplied table facts rather than duplicated battle runtime state."
+        },
+        "profileIds": [
+          "spell.invocation-slow-active-penalties"
         ],
-        "reason": "Slow is authored and installed as an SRD Surface Spell Definition with Magic Action Spell Slot casting, 120-foot range, V/S/M molasses components, caster-owned Concentration up to 1 minute, up to six chosen creature targets in a point-origin 40-foot Cube, Wisdom Saving Throw, failed-save active Speed ratio 1/2, -2 Armor Class, -2 Dexterity Saving Throw modifier, no Reactions, Action-or-Bonus-Action target-turn mutual exclusion, Attack action one-attack cap, Somatic-component 25 percent spell failure chance, and end-of-target-turn repeat Saving Throw. Task 6 leaves promoted battle-runtime support open because the runtime still needs typed active penalty projection and target-turn/Somatic execution owners without dispatching on authored spell identity.",
-        "tag": "unsupported-profile"
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "Magic Action and level-3-or-higher Spell Slot casting from the authored SRD Slow Unit",
+          "caller-supplied point-origin 40-foot Cube affected-creature witnesses for up to six caster-chosen creatures",
+          "Wisdom Saving Throw against the caster Spell Save DC",
+          "failed-save source-owned active effect projecting Speed ratio 1/2, -2 Armor Class, -2 Dexterity Saving Throw modifier, and no Reactions without authored-identity dispatch",
+          "target turns under an active Slow effect are restricted to either an Action or a Bonus Action, not both",
+          "affected targets make only one attack when they take the Attack action, including suppression of Extra Attack action resources",
+          "affected targets casting spells with an effective Somatic component request a 25 percent failure chance outcome before spell resolution",
+          "failed Slow Somatic spell chance outcomes spend casting resources without applying the spell effect or starting Concentration, while non-Somatic or component-suppressed spell casts do not request the Slow chance outcome",
+          "caster Concentration ownership up to 1 minute only while at least one target remains affected",
+          "successful end-of-target-turn repeat Saving Throw removes the target's Slow active penalties and clears caster Concentration when no affected targets remain",
+          "Concentration and duration cleanup remove the active Slow penalties"
+        ],
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-slow-active-penalties.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L3-FOLLOWUP-SLOW-ACTIVE-PENALTIES-RUNTIME"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-slow-active-penalties.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L3-FOLLOWUP-SLOW-TURN-AND-SOMATIC-RUNTIME"
+        }
+      ],
       "executableMechanics": true,
       "kind": "spell",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "spell.invocation-slow-active-penalties",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime-slow-active-penalties.mbt.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts",
+            "packages/battle-runtime/src/active-effect/types.ts",
+            "packages/battle-runtime/src/battle-reducer/attack-resolution.ts",
+            "packages/battle-runtime/src/battle-reducer/battle-codecs.ts",
+            "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
+            "packages/battle-runtime/src/battle-reducer/creature-state.ts",
+            "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
+            "packages/battle-runtime/src/battle-reducer/movement-speed.ts",
+            "packages/battle-runtime/src/battle-reducer/slow-active-penalties-runtime.ts",
+            "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/slow-active-penalties.ts",
+            "packages/battle-runtime/src/battle-reducer/spell-turn-resources.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-discovery.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-damage-fills.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-profiles.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-resolve.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-resolve-fill-set.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-resolve-save-gates.ts",
+            "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts",
+            "packages/battle-runtime/src/battle-subjects.ts",
+            "packages/shared-algebras/src/action-economy-algebra.ts"
+          ],
+          "sourceBoundary": "The runtime consumes the authored Slow spell shape, caller-supplied point-origin Cube affected-creature witnesses for up to six chosen creatures, Wisdom Saving Throw outcomes, active Slow effect state, action-economy state, Attack action resource state, and canonical spell component facts. It owns Magic Action and level-3-or-higher Spell Slot spending, caster Concentration, failed-save active Speed, Armor Class, Dexterity Saving Throw, and Reaction penalties, target-turn Action or Bonus Action mutual exclusion, Attack action one-attack cap, Somatic component failure chance before spell resolution, failed-Somatic cast resource spending without applying the spell effect, target-end repeat-save cleanup, and concentration cleanup when no affected targets remain. Automatic Cube geometry, line of effect, point-of-origin inclusion, and area membership derivation remain caller/table facts.",
+          "taskRefs": [
+            "L3-FOLLOWUP-SLOW-ACTIVE-PENALTIES-RUNTIME",
+            "L3-FOLLOWUP-SLOW-TURN-AND-SOMATIC-RUNTIME"
+          ],
+          "title": "Spell invocation applies Slow active penalties with target-turn and Somatic runtime restrictions",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-slow-active-penalties.test.ts"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/slow-active-penalties.mbt.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/slow.json",
       "unitId": "slow"
     },

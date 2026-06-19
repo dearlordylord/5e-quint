@@ -5,6 +5,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-careful-save-protection
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-heightened-save-disadvantage
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-damage-type-substitution
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-slow-active-penalties
 // Save-gated spell resolution extracted from spells-resolve.ts.
 // Owns save-gated damage, condition, and attack-roll-advantage procedures.
 
@@ -212,6 +213,7 @@ export function saveMetamagicSelectionState(input: {
         | "saveGatedAttackRollAdvantage"
         | "hideousLaughter"
         | "hypnoticPattern"
+        | "slowActivePenalties"
         | "command"
         | "greaseGroundHazard"
         | "gustOfWindLine";
@@ -362,6 +364,7 @@ function saveMetamagicSelectionFills(
         | "saveGatedAttackRollAdvantage"
         | "hideousLaughter"
         | "hypnoticPattern"
+        | "slowActivePenalties"
         | "command"
         | "greaseGroundHazard"
         | "gustOfWindLine";
@@ -3056,6 +3059,11 @@ export function validateSavingThrowOutcomes(
   if ("kind" in value.area && value.area.kind === "gustOfWindLineArea") {
     if (hole.spell.procedure !== "gustOfWindLine") {
       return "Gust of Wind Line area facts are only valid for Gust of Wind.";
+    }
+  }
+  if ("kind" in value.area && value.area.kind === "slowArea") {
+    if (hole.spell.procedure !== "slowActivePenalties") {
+      return "Slow area facts are only valid for Slow.";
     }
   }
   if ("sleepNonSleeperFacts" in value.area) {

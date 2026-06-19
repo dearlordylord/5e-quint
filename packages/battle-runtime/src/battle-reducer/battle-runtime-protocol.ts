@@ -40,6 +40,7 @@ export const INITIAL_ROUND: RoundType = Round(1);
 export const INITIAL_TURN_RESOURCES = resetTurnActionEconomy({
   actionResources: [],
   currentHasBonusAction: false,
+  actionOrBonusActionExclusion: { kind: "notRestricted" },
   commandHalt: null,
   jumpDistanceMultiplier: null,
   spellSlotUsesThisTurn: [],

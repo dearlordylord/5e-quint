@@ -1,11 +1,13 @@
-import type { SpellRecord } from "@dnd/surface/surface/types";
+import type { TopLevelSpellCastingTime } from "@dnd/surface/surface/types";
 import { Match } from "effect";
 
+type ReactionCastingTime = Extract<
+  TopLevelSpellCastingTime,
+  { kind: "reaction" }
+>;
+
 export function reactionTriggerIncludesHitByAttackRoll(
-  castingTime: Extract<
-    SpellRecord["mechanics"]["castingTime"],
-    { kind: "reaction" }
-  >,
+  castingTime: ReactionCastingTime,
 ): boolean {
   const trigger = castingTime.trigger;
   return trigger.kind === "hit_by_attack_roll"
@@ -17,18 +19,12 @@ export function reactionTriggerIncludesHitByAttackRoll(
 }
 
 export function reactionTriggerNamedSpellIds(
-  castingTime: Extract<
-    SpellRecord["mechanics"]["castingTime"],
-    { kind: "reaction" }
-  >,
+  castingTime: ReactionCastingTime,
 ): readonly string[] {
   return reactionTriggerNamedSpellIdsFromTrigger(castingTime.trigger);
 }
 
-export type ReactionTrigger = Extract<
-  SpellRecord["mechanics"]["castingTime"],
-  { kind: "reaction" }
->["trigger"];
+export type ReactionTrigger = ReactionCastingTime["trigger"];
 
 export function reactionTriggerNamedSpellIdsFromTrigger(
   trigger: ReactionTrigger,

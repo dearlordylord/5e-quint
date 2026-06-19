@@ -24,7 +24,11 @@ import {
   type ResourceCount,
   type SpellSlotLevel,
 } from "@dnd/shared/types";
-import type { SpellRecord, UnitRecord } from "@dnd/surface/surface/types";
+import {
+  topLevelSpellCastingTime,
+  type SpellRecord,
+  type UnitRecord,
+} from "@dnd/surface/surface/types";
 import { Either, Option } from "effect";
 
 import {
@@ -854,10 +858,11 @@ function isRestSpellSlotRecoveryFeature(
 }
 
 function isSpellRestBenefitCastingShell(mechanics: SpellRecord["mechanics"]) {
+  const castingTime = topLevelSpellCastingTime(mechanics);
   return (
-    mechanics.castingTime.kind === "minutes" &&
-    mechanics.castingTime.amount === 10 &&
-    mechanics.castingTime.ritual === false &&
+    castingTime?.kind === "minutes" &&
+    castingTime.amount === 10 &&
+    castingTime.ritual === false &&
     mechanics.range.kind === "point" &&
     mechanics.range.feet === 30 &&
     mechanics.duration.kind === "instantaneous"

@@ -20,6 +20,7 @@ import type {
   SpellRecord,
   TargetSelection,
 } from "@dnd/surface/surface/types";
+import { topLevelSpellCastingTime } from "@dnd/surface/surface/types";
 import { Either, Match } from "effect";
 import {
   COLOR_SPRAY_FAILED_SAVE_CONDITION,
@@ -132,6 +133,10 @@ const RAY_OF_ENFEEBLEMENT_BASE_SPELL_LEVEL = 2;
 const RAY_OF_ENFEEBLEMENT_RANGE_FEET = 60;
 const RAY_OF_ENFEEBLEMENT_DURATION_AMOUNT = 1;
 const RAY_OF_ENFEEBLEMENT_DURATION_UNIT = "minute";
+
+function spellHasActionCastingTime(spell: SpellRecord): boolean {
+  return topLevelSpellCastingTime(spell.mechanics)?.kind === "action";
+}
 
 export function hasSaveGateRepeatSaves(
   phase: ActivationPhase | undefined,
@@ -344,7 +349,7 @@ function calmEmotionsSaveGateConditionImmunitySpell(
       : null;
   if (
     spell.mechanics.level !== CALM_EMOTIONS_BASE_SPELL_LEVEL ||
-    spell.mechanics.castingTime.kind !== "action" ||
+    !spellHasActionCastingTime(spell) ||
     spell.mechanics.range.kind !== "point" ||
     spell.mechanics.range.feet !== CALM_EMOTIONS_RANGE_FEET ||
     spell.mechanics.duration.kind !== "concentration" ||
@@ -477,7 +482,7 @@ function abilityD20TestRollModeSaveGateSpell(
       : null;
   if (
     spell.mechanics.level !== RAY_OF_ENFEEBLEMENT_BASE_SPELL_LEVEL ||
-    spell.mechanics.castingTime.kind !== "action" ||
+    !spellHasActionCastingTime(spell) ||
     spell.mechanics.range.kind !== "point" ||
     spell.mechanics.range.feet !== RAY_OF_ENFEEBLEMENT_RANGE_FEET ||
     spell.mechanics.duration.kind !== "concentration" ||
@@ -616,7 +621,7 @@ export function faerieFireSaveGateAttackRollAdvantageSpell(
     faerieFireFailedSaveAttackAdvantageEffect(failedEffect);
   if (
     spell.mechanics.level !== 1 ||
-    spell.mechanics.castingTime.kind !== "action" ||
+    !spellHasActionCastingTime(spell) ||
     spell.mechanics.range.kind !== "point" ||
     spell.mechanics.range.feet !== 60 ||
     spell.mechanics.duration.kind !== "concentration" ||
@@ -724,7 +729,7 @@ export function blindnessDeafnessSaveGateConditionSpell(
       : null;
   if (
     spell.mechanics.level !== BLINDNESS_DEAFNESS_BASE_SPELL_LEVEL ||
-    spell.mechanics.castingTime.kind !== "action" ||
+    !spellHasActionCastingTime(spell) ||
     spell.mechanics.range.kind !== "point" ||
     spell.mechanics.range.feet !== BLINDNESS_DEAFNESS_RANGE_FEET ||
     spell.mechanics.duration.kind !== "timed" ||
@@ -816,7 +821,7 @@ export function holdPersonSaveGateConditionSpell(
       : null;
   if (
     spell.mechanics.level !== HOLD_PERSON_BASE_SPELL_LEVEL ||
-    spell.mechanics.castingTime.kind !== "action" ||
+    !spellHasActionCastingTime(spell) ||
     spell.mechanics.range.kind !== "point" ||
     spell.mechanics.range.feet !== HOLD_PERSON_RANGE_FEET ||
     spell.mechanics.duration.kind !== "concentration" ||
@@ -905,7 +910,7 @@ function creatureTypeCharmedSaveGateConditionSpell(input: {
       : [];
   if (
     spell.mechanics.level !== 1 ||
-    spell.mechanics.castingTime.kind !== "action" ||
+    !spellHasActionCastingTime(spell) ||
     spell.mechanics.range.kind !== "point" ||
     spell.mechanics.range.feet !== 30 ||
     spell.mechanics.duration.kind !== "timed" ||
@@ -974,7 +979,7 @@ export function colorSpraySaveGateConditionSpell(
   const failedEffect = phase?.kind === "save_gate" ? phase.onFail : undefined;
   if (
     spell.mechanics.level !== 1 ||
-    spell.mechanics.castingTime.kind !== "action" ||
+    !spellHasActionCastingTime(spell) ||
     spell.mechanics.range.kind !== "self" ||
     spell.mechanics.duration.kind !== "timed" ||
     spell.mechanics.duration.value.unit !== "round" ||
@@ -1027,7 +1032,7 @@ export function entangleSaveGateConditionSpell(
   const failedEffect = phase?.kind === "save_gate" ? phase.onFail : undefined;
   if (
     spell.mechanics.level !== 1 ||
-    spell.mechanics.castingTime.kind !== "action" ||
+    !spellHasActionCastingTime(spell) ||
     spell.mechanics.range.kind !== "point" ||
     spell.mechanics.range.feet !== 90 ||
     spell.mechanics.duration.kind !== "concentration" ||
@@ -1125,7 +1130,7 @@ export function supportedSaveGateDamageProfile(
     (input.access.tag === "classCantrip"
       ? spell.mechanics.level !== 0
       : spell.mechanics.level < 1) ||
-    spell.mechanics.castingTime.kind !== "action" ||
+    !spellHasActionCastingTime(spell) ||
     rangeFeet === null ||
     spell.mechanics.phases.length !==
       saveGatedDamagePhaseCount(postSaveAreaEffect) ||
@@ -1261,7 +1266,7 @@ function fireballPointOriginSphereTargeting(
   const value = attachment.kind === "hole" ? attachment.value : attachment;
   if (
     spell.mechanics.level === FIREBALL_BASE_SPELL_LEVEL &&
-    spell.mechanics.castingTime.kind === "action" &&
+    spellHasActionCastingTime(spell) &&
     value.kind === "area" &&
     value.origin.kind === "point_within_range" &&
     value.shape.kind === "sphere" &&
@@ -1282,7 +1287,7 @@ function shatterPointOriginSphereTargeting(
   const value = attachment.kind === "hole" ? attachment.value : attachment;
   if (
     spell.mechanics.level === SHATTER_BASE_SPELL_LEVEL &&
-    spell.mechanics.castingTime.kind === "action" &&
+    spellHasActionCastingTime(spell) &&
     spell.mechanics.range.kind === "point" &&
     spell.mechanics.range.feet === SHATTER_RANGE_FEET &&
     value.kind === "area" &&
@@ -1455,7 +1460,7 @@ function isDissonantWhispersForcedReactionMovementShape(
 ): boolean {
   return (
     spell.mechanics.level === 1 &&
-    spell.mechanics.castingTime.kind === "action" &&
+    spellHasActionCastingTime(spell) &&
     spell.mechanics.range.kind === "point" &&
     spell.mechanics.range.feet === 60 &&
     spell.mechanics.duration.kind === "instantaneous" &&
@@ -1541,7 +1546,7 @@ function fireballPostSaveAreaEffect(
     directPhase?.kind === "direct" ? directPhase.effects?.[0] : undefined;
   if (
     spell.mechanics.level !== FIREBALL_BASE_SPELL_LEVEL ||
-    spell.mechanics.castingTime.kind !== "action" ||
+    !spellHasActionCastingTime(spell) ||
     spell.mechanics.range.kind !== "point" ||
     spell.mechanics.range.feet !== FIREBALL_RANGE_FEET ||
     spell.mechanics.duration.kind !== "instantaneous" ||
@@ -1595,7 +1600,7 @@ function isShatterSaveGateDamageShape(
   const damage = phase.onFail;
   return (
     spell.mechanics.level === SHATTER_BASE_SPELL_LEVEL &&
-    spell.mechanics.castingTime.kind === "action" &&
+    spellHasActionCastingTime(spell) &&
     spell.mechanics.range.kind === "point" &&
     spell.mechanics.range.feet === SHATTER_RANGE_FEET &&
     spell.mechanics.duration.kind === "instantaneous" &&
@@ -1630,7 +1635,7 @@ function thunderwavePostSaveAreaEffect(
 ): SpellPostSaveAreaEffect | null {
   if (
     spell.mechanics.level !== 1 ||
-    spell.mechanics.castingTime.kind !== "action" ||
+    !spellHasActionCastingTime(spell) ||
     spell.mechanics.range.kind !== "self" ||
     spell.mechanics.duration.kind !== "instantaneous" ||
     phase.ability !== "con" ||
