@@ -1,6 +1,7 @@
 // KERNEL-COVERAGE: parity-witness SHEET.SPELL_REST_BENEFIT.APPLICATION
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.healing-resource-action
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.spell-rest-benefit-application
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.sorcerous-restoration-sorcery-point-recovery
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV91B paladin_lay_on_hands
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-PRAYER-OF-HEALING-CHARACTER-SHEET-REST prayer_of_healing
 import { describe, expect, test } from "vitest";
@@ -31,14 +32,14 @@ import {
   replacePrayerOfHealingDirectPhase,
   requireRight,
   resourceCount,
+  SORCERER_FONT_OF_MAGIC_UNIT_ID,
+  sorcererFontOfMagicBuild,
   spellSlotLevel,
   storedAvailableSheetInput,
   unitLibrary,
-  wizardWarlockBuild
+  wizardWarlockBuild,
 } from "./test-support.ts";
-import type {
-  PrayerOfHealingDirectPhase
-} from "./test-support.ts";
+import type { PrayerOfHealingDirectPhase } from "./test-support.ts";
 
 describe("Character Sheet runtime / healing and rest benefit spells", () => {
   test(layOnHandsSpendsHealingPoolTestName, () => {
@@ -213,6 +214,23 @@ describe("Character Sheet runtime / healing and rest benefit spells", () => {
         unitLibrary,
       }),
     );
+    const woundedSorcerer = requireRight(
+      createFreshCharacterSheet({
+        characterId: characterSheetId("character:prayer-sorcerer"),
+        build: sorcererFontOfMagicBuild({ sorcererAdvancements: 4 }),
+        maximumHp: Hp(24),
+        currentHp: Hp(12),
+        tempHp: Hp(0),
+        unitLibrary,
+        resourceExpenditures: [
+          {
+            tag: "pointPoolResource",
+            unitId: SORCERER_FONT_OF_MAGIC_UNIT_ID,
+            expended: resourceCount(4),
+          },
+        ],
+      }),
+    );
 
     const result = requireRight(
       applyCharacterSheetSpellRestBenefit({
@@ -228,6 +246,14 @@ describe("Character Sheet runtime / healing and rest benefit spells", () => {
               { classUnitId: "class_wizard", roll: DieRollResult(4) },
             ],
             healingRolls: [DieRollResult(7), DieRollResult(6)],
+          },
+          {
+            sheet: woundedSorcerer,
+            eligibility: { remainedWithinRangeForEntireCasting: true },
+            sorcerousRestoration: {
+              recoverSorceryPoints: resourceCount(2),
+            },
+            healingRolls: [DieRollResult(3), DieRollResult(4)],
           },
           {
             sheet: woundedFighter,
@@ -267,11 +293,32 @@ describe("Character Sheet runtime / healing and rest benefit spells", () => {
     ).toEqual([
       { classUnitId: "class_wizard", dieSize: 6, total: 1, spent: 1 },
     ]);
-    expect(characterSheetCurrentHp(result.recipients[1])).toBe(11);
+    expect(characterSheetCurrentHp(result.recipients[1])).toBe(19);
+    expect(
+      characterSheetResources(result.recipients[1], unitLibrary),
+    ).toMatchObject({
+      _tag: "Right",
+      right: expect.arrayContaining([
+        expect.objectContaining({
+          tag: "pointPoolResource",
+          unitId: SORCERER_FONT_OF_MAGIC_UNIT_ID,
+          expended: 2,
+        }),
+      ]),
+    });
+    expect(characterSheetCurrentHp(result.recipients[2])).toBe(11);
     expect(
       result.recipients.map((recipient) => recipient.restFeatureUses),
     ).toEqual([
       [
+        {
+          tag: "spellRecipientRestLockout",
+          spellId: "prayer_of_healing",
+          usedSinceLongRest: true,
+        },
+      ],
+      [
+        { tag: "sorcerousRestoration", usedSinceLongRest: true },
         {
           tag: "spellRecipientRestLockout",
           spellId: "prayer_of_healing",

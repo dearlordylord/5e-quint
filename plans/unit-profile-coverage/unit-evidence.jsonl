@@ -319,6 +319,7 @@
 {"unitId":"sorcerer_font_of_magic","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS","ownerPath":"packages/character-sheet-runtime/src/resources.test.ts"}}
 {"unitId":"sorcerer_font_of_magic","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-FOLLOWUP-SORCERER-FONT-BONUS-ACTION-BATTLE-SOURCE","ownerPath":"packages/character-battle-runtime/src/index.test.ts"}}
 {"unitId":"sorcerer_font_of_magic","evidence":{"tag":"deterministic-admission-projection","taskId":"L3MCHAR-07-FONT-OF-MAGIC-BATTLE-SLOT-SOURCE","ownerPath":"packages/character-battle-runtime/src/index.test.ts"}}
+{"unitId":"sorcerer_sorcerous_restoration","evidence":{"tag":"deterministic-admission-projection","taskId":"L5-A10-SORCERER-SORCEROUS-RESTORATION","ownerPath":"packages/character-sheet-runtime/src/resources.test.ts"}}
 {"unitId":"sorcerer_metamagic","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-FOLLOWUP-SORCERER-METAMAGIC-CHARACTER-FACTS","ownerPath":"packages/character-creation-runtime/src/index.test.ts"}}
 {"unitId":"sorcerer_metamagic","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-FOLLOWUP-SORCERER-METAMAGIC-CHARACTER-FACTS","ownerPath":"packages/character-sheet-runtime/src/sheet-lifecycle.test.ts"}}
 {"unitId":"sorcerer_metamagic","evidence":{"tag":"deterministic-admission-projection","taskId":"L14G-D03-SORCERER-METAMAGIC-PARTIAL-PROFILE","ownerPath":"packages/battle-runtime/src/unit-profile-admission-object-light-spells.test.ts"}}

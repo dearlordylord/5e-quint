@@ -1,4 +1,5 @@
 // KERNEL-COVERAGE: runtime-owner CHARACTER.LIFECYCLE.LAYER_PROJECTION
+// UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.sorcerous-restoration-sorcery-point-recovery
 import {
   characterBuildMonkUncannyMetabolismFacts,
   type CharacterBuild,
@@ -18,7 +19,10 @@ import {
   characterSheetSpellRestBenefitProfile,
   restSpellSlotRecoveryProfileForBuild,
 } from "./healing-rest-benefit.ts";
-import { resourceExpendituresFromInput } from "./resources.ts";
+import {
+  resourceExpendituresFromInput,
+  sorcerousRestorationProfileForBuild,
+} from "./resources.ts";
 import { pactSlotRecoveryProfileForBuild } from "./rests.ts";
 import {
   pactSlotExpenditureFromInput,
@@ -37,6 +41,7 @@ import {
   ARCANE_RECOVERY_REST_FEATURE_TAG,
   CHARACTER_SHEET_CONDITIONS,
   MAGICAL_CUNNING_REST_FEATURE_TAG,
+  SORCEROUS_RESTORATION_REST_FEATURE_TAG,
   SPELL_RECIPIENT_REST_LOCKOUT_TAG,
   UNCANNY_METABOLISM_REST_FEATURE_TAG,
   CHARACTER_SHEET_HEROIC_INSPIRATION_AVAILABLE,
@@ -493,6 +498,18 @@ function restFeatureUseStateMatchesBuild(
     }
     return Either.right(undefined);
   }
+  if (use.tag === SORCEROUS_RESTORATION_REST_FEATURE_TAG) {
+    if (
+      Either.isLeft(
+        sorcerousRestorationProfileForBuild(input.build, input.unitLibrary),
+      )
+    ) {
+      return characterSheetIssue(
+        "Sorcerous Restoration rest feature use requires the Sorcerer level 5 feature.",
+      );
+    }
+    return Either.right(undefined);
+  }
   return characterSheetIssue("Expected supported rest feature use state.");
 }
 
@@ -584,6 +601,7 @@ function parseStoredRestFeatureUses(
       (use.tag !== ARCANE_RECOVERY_REST_FEATURE_TAG &&
         use.tag !== MAGICAL_CUNNING_REST_FEATURE_TAG &&
         use.tag !== UNCANNY_METABOLISM_REST_FEATURE_TAG &&
+        use.tag !== SORCEROUS_RESTORATION_REST_FEATURE_TAG &&
         use.tag !== SPELL_RECIPIENT_REST_LOCKOUT_TAG) ||
       use.usedSinceLongRest !== true
     ) {

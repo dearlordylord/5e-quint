@@ -343,10 +343,10 @@
       "character-creation or progression mechanic": 12
     },
     "levelFiveClassRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 7,
+      "catalog-installed-owner-evidence-present": 8,
       "non-runtime": 12,
       "catalog-only/dead-for-now": 7,
-      "level-5-7-follow-up-required": 2
+      "level-5-7-follow-up-required": 1
     },
     "levelSixClassRowsByDisposition": {
       "level-5-7-follow-up-required": 11,
@@ -371,10 +371,10 @@
       "character-creation or progression mechanic": 12
     },
     "allRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 483,
+      "catalog-installed-owner-evidence-present": 484,
       "non-runtime": 84,
       "catalog-only/dead-for-now": 177,
-      "level-5-7-follow-up-required": 24,
+      "level-5-7-follow-up-required": 23,
       "needs-surface-widening": 17,
       "missing-authored-record": 50,
       "catalog-authored-review-required": 61,
@@ -27326,15 +27326,29 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "sorcerer_sorcerous_restoration",
+        "sourceRecordPath": "packages/surface/content/sorcerer_sorcerous_restoration.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "sorcerer_sorcerous_restoration"
       },
-      "finalDisposition": "level-5-7-follow-up-required",
-      "ownerEvidence": [],
-      "nextAction": "Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported."
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit sorcerer_sorcerous_restoration is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-sheet-runtime",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L5-A10-SORCERER-SORCEROUS-RESTORATION at packages/character-sheet-runtime/src/resources.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/sorcerer:level-5:class-table-summary:sorcerer_level_5_feature_table_row",

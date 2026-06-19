@@ -6,6 +6,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.short-rest-spell-slot-recovery
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.class-feature-long-rest-use-state
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.rest-triggered-heroic-inspiration
+// UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.sorcerous-restoration-sorcery-point-recovery
 import {
   characterBuildFeatureUnitIds,
   classLevelForUnit,
@@ -161,6 +162,7 @@ export function completeShortRest(
     hpGate: "requiresShortRestStartHp",
     spendHitDice: input.spendHitDice,
     arcaneRecovery: input.arcaneRecovery,
+    sorcerousRestoration: input.sorcerousRestoration,
   });
 }
 
@@ -410,7 +412,8 @@ export function interruptLongRest(
   if (Number(input.restedTicks) < Number(CHARACTER_SHEET_SHORT_REST_TICKS)) {
     if (
       input.spendHitDice !== undefined ||
-      input.arcaneRecovery !== undefined
+      input.arcaneRecovery !== undefined ||
+      input.sorcerousRestoration !== undefined
     ) {
       return characterSheetIssue(
         "Interrupted Long Rest before 1 hour cannot receive Short Rest benefit inputs.",
@@ -429,6 +432,7 @@ export function interruptLongRest(
     hpGate: "requiresShortRestStartHp",
     spendHitDice: input.spendHitDice,
     arcaneRecovery: input.arcaneRecovery,
+    sorcerousRestoration: input.sorcerousRestoration,
   });
   if (Either.isLeft(shortRest)) return Either.left(shortRest.left);
   const resumedRestWithBenefits = characterSheetLongRestAfterInterruption({

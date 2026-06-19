@@ -284,6 +284,7 @@ import sorcererDraconicResilienceInput from "../../content/sorcerer_draconic_res
 import sorcererFontOfMagicInput from "../../content/sorcerer_font_of_magic.json";
 import sorcererInnateSorceryInput from "../../content/sorcerer_innate_sorcery.json";
 import sorcererMetamagicInput from "../../content/sorcerer_metamagic.json";
+import sorcererSorcerousRestorationInput from "../../content/sorcerer_sorcerous_restoration.json";
 import sorcerousBurstInput from "../../content/sorcerous_burst.json";
 import spareTheDyingInput from "../../content/spare_the_dying.json";
 import starryWispInput from "../../content/starry_wisp.json";
@@ -529,6 +530,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     sorcererInnateSorceryInput,
     sorcererFontOfMagicInput,
     sorcererMetamagicInput,
+    sorcererSorcerousRestorationInput,
     sorcererAbilityScoreImprovementL4Input,
     sorcererDraconicResilienceInput,
     sorcererDraconicSpellsInput,

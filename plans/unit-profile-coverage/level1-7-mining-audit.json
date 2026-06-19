@@ -42,8 +42,8 @@
       "surface-widening-required": 17
     },
     "rowsByCatalogAdmission": {
-      "installed": 653,
-      "not-installed": 247
+      "installed": 654,
+      "not-installed": 246
     },
     "rowsByCategory": {
       "character-creation or progression mechanic": 172,
@@ -57,10 +57,10 @@
     },
     "rowsByFinalDisposition": {
       "catalog-authored-review-required": 61,
-      "catalog-installed-owner-evidence-present": 483,
+      "catalog-installed-owner-evidence-present": 484,
       "catalog-installed-owner-evidence-required": 4,
       "catalog-only/dead-for-now": 177,
-      "level-5-7-follow-up-required": 24,
+      "level-5-7-follow-up-required": 23,
       "missing-authored-record": 50,
       "needs-surface-widening": 17,
       "non-runtime": 84
@@ -93,9 +93,9 @@
       "subclass-spell-access": 5
     },
     "rowsByUnitProfileDisposition": {
-      "not-recorded": 191,
+      "not-recorded": 190,
       "profile-subset-supported": 53,
-      "supported-profile": 297,
+      "supported-profile": 298,
       "unsupported-profile": 359
     }
   },
@@ -25236,7 +25236,7 @@
         "sourceInventoryRowId": "srd521:classes/sorcerer:level-5:class-feature-grant:sorcerer_sorcerous_restoration",
         "state": "present"
       },
-      "nextAction": "Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported.",
+      "nextAction": "Owner-specific operational evidence is classified and present.",
       "rowId": "srd521:classes/sorcerer:level-5:class-feature-grant:sorcerer_sorcerous_restoration",
       "rowKind": "class-feature-grant",
       "source": {
@@ -25246,7 +25246,9 @@
       },
       "supportSnapshot": {
         "authoredContent": {
-          "state": "missing-authored-record"
+          "sourceRecordPath": "packages/surface/content/sorcerer_sorcerous_restoration.json",
+          "state": "authored-record-present",
+          "unitId": "sorcerer_sorcerous_restoration"
         },
         "battleReadiness": {
           "state": "not-applicable"
@@ -25255,12 +25257,13 @@
           "state": "not-recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "sorcerer_sorcerous_restoration"
         },
-        "finalDisposition": "level-5-7-follow-up-required",
+        "finalDisposition": "catalog-installed-owner-evidence-present",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "supported-profile",
+          "state": "recorded"
         }
       }
     },

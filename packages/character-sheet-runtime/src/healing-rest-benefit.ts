@@ -4,6 +4,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.healing-resource-action
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.short-rest-spell-slot-recovery
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.spell-rest-benefit-application
+// UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.sorcerous-restoration-sorcery-point-recovery
 import {
   characterBuildFeatureUnitIds,
   characterBuildHitPoints,
@@ -32,6 +33,7 @@ import {
 } from "./hit-points.ts";
 import {
   characterSheetResources,
+  recoverSorceryPointsWithSorcerousRestoration,
   recoverShortRestUseCountResources,
 } from "./resources.ts";
 import {
@@ -308,6 +310,11 @@ export function completeShortRestBenefits(input: {
         readonly refundSpellSlots: readonly CharacterSheetArcaneRecoverySlotRefund[];
       }
     | undefined;
+  readonly sorcerousRestoration?:
+    | {
+        readonly recoverSorceryPoints: ResourceCount;
+      }
+    | undefined;
 }): Either.Either<CharacterSheet, CharacterSheetIssue> {
   if (
     input.hpGate === "requiresShortRestStartHp" &&
@@ -331,10 +338,22 @@ export function completeShortRestBenefits(input: {
     spendHitDice: input.spendHitDice,
   });
   if (Either.isLeft(hitDiceSpent)) return Either.left(hitDiceSpent.left);
+  const sorceryPointsRecovered =
+    input.sorcerousRestoration === undefined
+      ? Either.right(hitDiceSpent.right)
+      : recoverSorceryPointsWithSorcerousRestoration({
+          sheet: hitDiceSpent.right,
+          unitLibrary: input.unitLibrary,
+          recoverSorceryPoints:
+            input.sorcerousRestoration.recoverSorceryPoints,
+        });
+  if (Either.isLeft(sorceryPointsRecovered)) {
+    return Either.left(sorceryPointsRecovered.left);
+  }
   if (input.arcaneRecovery === undefined)
-    return Either.right(hitDiceSpent.right);
+    return Either.right(sorceryPointsRecovered.right);
   return applyArcaneRecovery({
-    sheet: hitDiceSpent.right,
+    sheet: sorceryPointsRecovered.right,
     unitLibrary: input.unitLibrary,
     refundSpellSlots: input.arcaneRecovery.refundSpellSlots,
   });
@@ -437,6 +456,7 @@ function applySpellRestBenefitToRecipient(input: {
     hpGate: "spellGrantedRestBenefit",
     spendHitDice: input.recipient.spendHitDice,
     arcaneRecovery: input.recipient.arcaneRecovery,
+    sorcerousRestoration: input.recipient.sorcerousRestoration,
   });
   if (Either.isLeft(shortRested)) return Either.left(shortRested.left);
   const healing = spellRestBenefitHealingAmount({

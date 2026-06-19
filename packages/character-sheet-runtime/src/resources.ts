@@ -3,6 +3,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.class-feature-point-pool-resource
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.metamagic-battle-resource-bridge
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.monk-uncanny-metabolism-initiative-recovery
+// UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.sorcerous-restoration-sorcery-point-recovery
 import {
   characterBuildFeatureUnitIds,
   characterBuildMonkUncannyMetabolismFacts,
@@ -14,6 +15,7 @@ import {
   isClassLevelLinearPerLevel,
   isClassLevelThresholdTiers,
   progressionClassUnitIds,
+  SORCERER_FONT_OF_MAGIC_UNIT_ID,
   thresholdTierValueAtClassLevel,
   type CharacterBuild,
   type CharacterBuildResource,
@@ -31,6 +33,7 @@ import {
   supportedClassFeatureSpellFreeCastGrantsForUnit,
   type ChargePoolResource,
   type RestResetCadence,
+  type SorcererSorcerousRestorationMechanics,
   type UnitRecord,
 } from "@dnd/surface/surface/types";
 import { Either, Match, Option } from "effect";
@@ -38,6 +41,7 @@ import { Either, Match, Option } from "effect";
 import { characterSheetProficiencyBonusForCharacterLevel } from "./ability-checks.ts";
 import { recoverCharacterSheetHitPoints } from "./hit-points.ts";
 import {
+  SORCEROUS_RESTORATION_REST_FEATURE_TAG,
   UNCANNY_METABOLISM_REST_FEATURE_TAG,
   characterSheetIssue,
   getRequiredUnit,
@@ -55,6 +59,8 @@ import {
   type CharacterSheetPointPoolResourceUnitId,
   type CharacterSheetResourceExpenditure,
   type CharacterSheetResourceState,
+  type CharacterSheetSorcerousRestorationInput,
+  type CharacterSheetSorceryPointPoolResourceState,
   type CharacterSheetUseCountResource,
 } from "./sheet-types.ts";
 
@@ -392,6 +398,15 @@ type CharacterSheetClassFeatureRecord = Extract<
   UnitRecord,
   { readonly kind: "class_feature" }
 >;
+type CharacterSheetSorcerousRestorationFeature =
+  CharacterSheetClassFeatureRecord & {
+    readonly className: "sorcerer";
+    readonly mechanics: SorcererSorcerousRestorationMechanics;
+  };
+export type CharacterSheetSorcerousRestorationProfile = {
+  readonly feature: CharacterSheetSorcerousRestorationFeature;
+  readonly ownerClassLevel: number;
+};
 
 function characterSheetResourceExpenditureCapacity(input: {
   readonly build: CharacterBuild;
@@ -631,6 +646,141 @@ function classFeaturePointPoolResourcesForBuild(
     });
   }
   return Either.right(resources);
+}
+
+export function recoverSorceryPointsWithSorcerousRestoration(
+  input: CharacterSheetSorcerousRestorationInput,
+): Either.Either<CharacterSheet, CharacterSheetIssue> {
+  const profile = sorcerousRestorationProfileForBuild(
+    input.sheet.build,
+    input.unitLibrary,
+  );
+  if (Either.isLeft(profile)) return Either.left(profile.left);
+  if (
+    input.sheet.restFeatureUses.some(
+      (use) => use.tag === SORCEROUS_RESTORATION_REST_FEATURE_TAG,
+    )
+  ) {
+    return characterSheetIssue(
+      "Sorcerous Restoration cannot be used again until a Long Rest.",
+    );
+  }
+  if (input.recoverSorceryPoints < resourceCount(1)) {
+    return characterSheetIssue(
+      "Sorcerous Restoration must recover expended Sorcery Points.",
+    );
+  }
+  const resources = characterSheetResources(input.sheet, input.unitLibrary);
+  if (Either.isLeft(resources)) return Either.left(resources.left);
+  const sorceryPointResourceUnitId =
+    profile.right.feature.mechanics.resource.resourceUnitId;
+  const sorceryPoints = resources.right.find(
+    (resource): resource is CharacterSheetSorceryPointPoolResourceState =>
+      resource.tag === "pointPoolResource" &&
+      resource.unitId === sorceryPointResourceUnitId,
+  );
+  if (sorceryPoints === undefined) {
+    return characterSheetIssue(
+      "Sorcerous Restoration requires the Font of Magic Sorcery Point pool.",
+    );
+  }
+  if (sorceryPoints.expended < resourceCount(1)) {
+    return characterSheetIssue(
+      "Sorcerous Restoration must recover expended Sorcery Points.",
+    );
+  }
+  if (input.recoverSorceryPoints > sorceryPoints.expended) {
+    return characterSheetIssue(
+      "Sorcerous Restoration cannot recover more Sorcery Points than are expended.",
+    );
+  }
+  const recoveryCap = sorcerousRestorationRecoveryCap(profile.right);
+  if (input.recoverSorceryPoints > recoveryCap) {
+    return characterSheetIssue(
+      "Sorcerous Restoration cannot recover more than half Sorcerer level rounded down.",
+    );
+  }
+  return Either.right({
+    ...input.sheet,
+    resourceExpenditures: replacePointPoolResourceExpenditure({
+      expenditures: input.sheet.resourceExpenditures,
+      unitId: sorceryPointResourceUnitId,
+      expended: resourceCount(
+        sorceryPoints.expended - input.recoverSorceryPoints,
+      ),
+    }),
+    restFeatureUses: [
+      ...input.sheet.restFeatureUses,
+      {
+        tag: SORCEROUS_RESTORATION_REST_FEATURE_TAG,
+        usedSinceLongRest: true,
+      },
+    ],
+  });
+}
+
+export function sorcerousRestorationProfileForBuild(
+  build: CharacterBuild,
+  unitLibrary: UnitCatalog,
+): Either.Either<CharacterSheetSorcerousRestorationProfile, CharacterSheetIssue> {
+  const profiles: CharacterSheetSorcerousRestorationProfile[] = [];
+  for (const unitId of characterBuildFeatureUnitIds(build, unitLibrary)) {
+    const unit = getRequiredUnit(unitLibrary, unitId);
+    if (Either.isLeft(unit)) return Either.left(unit.left);
+    if (!isSorcerousRestorationFeature(unit.right)) continue;
+    const ownerClassLevel = classFeatureOwnerLevel(
+      { build, unitLibrary },
+      unit.right,
+    );
+    if (Either.isLeft(ownerClassLevel)) return Either.left(ownerClassLevel.left);
+    profiles.push({
+      feature: unit.right,
+      ownerClassLevel: ownerClassLevel.right,
+    });
+  }
+  if (profiles.length === 0) {
+    return characterSheetIssue(
+      "Sorcerous Restoration requires the Sorcerer level 5 feature.",
+    );
+  }
+  if (profiles.length > 1) {
+    return characterSheetIssue(
+      "Character Sheet supports only one Sorcerous Restoration feature.",
+    );
+  }
+  const profile = profiles[0];
+  if (profile === undefined) {
+    return characterSheetIssue(
+      "Sorcerous Restoration requires the Sorcerer level 5 feature.",
+    );
+  }
+  return Either.right(profile);
+}
+
+function isSorcerousRestorationFeature(
+  unit: UnitRecord,
+): unit is CharacterSheetSorcerousRestorationFeature {
+  return (
+    unit.kind === "class_feature" &&
+    unit.className === "sorcerer" &&
+    unit.mechanics.family === "sorcery_point_short_rest_recovery" &&
+    unit.mechanics.recoveryTrigger === "short_rest" &&
+    unit.mechanics.resource.kind === "point_pool" &&
+    unit.mechanics.resource.resourceUnitId === SORCERER_FONT_OF_MAGIC_UNIT_ID &&
+    unit.mechanics.recoveryCap.kind === "half_class_level_rounded_down" &&
+    unit.mechanics.resetCadence.kind === "long_rest"
+  );
+}
+
+function sorcerousRestorationRecoveryCap(
+  profile: CharacterSheetSorcerousRestorationProfile,
+): ResourceCount {
+  return Match.value(profile.feature.mechanics.recoveryCap.kind).pipe(
+    Match.when("half_class_level_rounded_down", () =>
+      resourceCount(Math.floor(profile.ownerClassLevel / 2)),
+    ),
+    Match.exhaustive,
+  );
 }
 
 function restResetCadenceForUseCountResourceUnit(

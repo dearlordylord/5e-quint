@@ -42,10 +42,10 @@ These counts describe the current runtime/catalog state of mined rows. They are 
 | Disposition | Rows |
 | --- | ---: |
 | catalog-authored-review-required | 61 |
-| catalog-installed-owner-evidence-present | 483 |
+| catalog-installed-owner-evidence-present | 484 |
 | catalog-installed-owner-evidence-required | 4 |
 | catalog-only/dead-for-now | 177 |
-| level-5-7-follow-up-required | 24 |
+| level-5-7-follow-up-required | 23 |
 | missing-authored-record | 50 |
 | needs-surface-widening | 17 |
 | non-runtime | 84 |
@@ -54,16 +54,16 @@ These counts describe the current runtime/catalog state of mined rows. They are 
 
 | Catalog state | Rows |
 | --- | ---: |
-| installed | 653 |
-| not-installed | 247 |
+| installed | 654 |
+| not-installed | 246 |
 
 ### Unit Profile Disposition
 
 | Unit profile disposition | Rows |
 | --- | ---: |
-| not-recorded | 191 |
+| not-recorded | 190 |
 | profile-subset-supported | 53 |
-| supported-profile | 297 |
+| supported-profile | 298 |
 | unsupported-profile | 359 |
 
 ### Battle Readiness Snapshot
@@ -831,7 +831,7 @@ These counts separate class-list rows from unique Spell Definition identities. A
 | Sorcerer Draconic Spells | level-3 | character-level | spell access/list pressure | `sorcerer_draconic_spells` | `.references/srd-5.2.1/Classes/Sorcerer.md:419` | present | installed | supported-profile | catalog-installed-owner-evidence-present | accepted | character-fact-and-runtime-detached-split: character-sheet-runtime plus spell invocation profiles | Owner-specific operational evidence is classified and present. |
 | Sorcerer Ability Score Improvement | level-4 | character-level | class feature | `sorcerer_ability_score_improvement_l4` | `.references/srd-5.2.1/Classes/Sorcerer.md:123` | present | installed | unsupported-profile | catalog-only/dead-for-now | accepted-no-battle-effect | selection-grant-container: character-creation-runtime ability-score projection and selected feat Unit profiles | The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim. |
 | Sorcerer level 4 feature table row | level-4 | character-level | character-creation or progression mechanic | `class_sorcerer` | `.references/srd-5.2.1/Classes/Sorcerer.md:38` | present | installed | unsupported-profile | non-runtime | accepted-no-battle-effect | not-recorded | No runtime work; keep classification as explicit closure. |
-| Sorcerer Sorcerous Restoration | level-5 | character-level | class feature | `sorcerer_sorcerous_restoration` | `.references/srd-5.2.1/Classes/Sorcerer.md:127` | present | not-installed | not-recorded | level-5-7-follow-up-required | not-applicable | not-recorded | Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported. |
+| Sorcerer Sorcerous Restoration | level-5 | character-level | class feature | `sorcerer_sorcerous_restoration` | `.references/srd-5.2.1/Classes/Sorcerer.md:127` | present | installed | supported-profile | catalog-installed-owner-evidence-present | not-applicable | not-recorded | Owner-specific operational evidence is classified and present. |
 | Sorcerer level 5 feature table row | level-5 | character-level | character-creation or progression mechanic | `class_sorcerer` | `.references/srd-5.2.1/Classes/Sorcerer.md:39` | present | installed | unsupported-profile | non-runtime | not-applicable | not-recorded | No runtime work; keep classification as explicit closure. |
 | Sorcerer Elemental Affinity | level-6 | character-level | class feature | `sorcerer_elemental_affinity` | `.references/srd-5.2.1/Classes/Sorcerer.md:432` | present | not-installed | not-recorded | level-5-7-follow-up-required | not-applicable | not-recorded | Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported. |
 | Sorcerer level 6 feature table row | level-6 | character-level | character-creation or progression mechanic | `class_sorcerer` | `.references/srd-5.2.1/Classes/Sorcerer.md:40` | present | installed | unsupported-profile | non-runtime | not-applicable | not-recorded | No runtime work; keep classification as explicit closure. |

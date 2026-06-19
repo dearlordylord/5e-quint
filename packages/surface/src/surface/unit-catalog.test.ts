@@ -5452,6 +5452,41 @@ describe("SRD Unit catalog boundary", () => {
     });
   });
 
+  test("installs Sorcerer Sorcerous Restoration as Short Rest Sorcery Point recovery metadata", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag !== "ok") return;
+
+    expect(result.catalog.requireUnit("class_sorcerer")).toMatchObject({
+      featureGrants: expect.arrayContaining([
+        { level: 5, unitId: "sorcerer_sorcerous_restoration" },
+      ]),
+      kind: "class",
+    });
+    expect(
+      result.catalog.requireUnit("sorcerer_sorcerous_restoration"),
+    ).toMatchObject({
+      acquiredAtLevel: 5,
+      className: "sorcerer",
+      kind: "class_feature",
+      mechanics: {
+        family: "sorcery_point_short_rest_recovery",
+        recoveryCap: { kind: "half_class_level_rounded_down" },
+        recoveryTrigger: "short_rest",
+        resetCadence: { kind: "long_rest" },
+        resource: {
+          kind: "point_pool",
+          resourceUnitId: "sorcerer_font_of_magic",
+        },
+      },
+      provenance: {
+        kind: "srd-5.2.1",
+        section: "Classes/Sorcerer.md:127-129",
+      },
+    });
+  });
+
   test("rejects incomplete or duplicated Sorcerer Metamagic option sets", () => {
     const metamagic = decodeUnitRecordSync(sorcererMetamagicInput);
     if (

@@ -105,6 +105,8 @@ export type CharacterSheetPointPoolResourceUnitId =
 export const ARCANE_RECOVERY_REST_FEATURE_TAG = "arcaneRecovery" as const;
 export const MAGICAL_CUNNING_REST_FEATURE_TAG = "magicalCunning" as const;
 export const UNCANNY_METABOLISM_REST_FEATURE_TAG = "uncannyMetabolism" as const;
+export const SORCEROUS_RESTORATION_REST_FEATURE_TAG =
+  "sorcerousRestoration" as const;
 export const SPELL_RECIPIENT_REST_LOCKOUT_TAG =
   "spellRecipientRestLockout" as const;
 export const JACK_OF_ALL_TRADES_PROFICIENCY_BONUS_DIVISOR = 2;
@@ -445,6 +447,10 @@ export type CharacterSheetRestFeatureUse =
       readonly usedSinceLongRest: true;
     }
   | {
+      readonly tag: typeof SORCEROUS_RESTORATION_REST_FEATURE_TAG;
+      readonly usedSinceLongRest: true;
+    }
+  | {
       readonly tag: typeof SPELL_RECIPIENT_REST_LOCKOUT_TAG;
       readonly spellId: UnitRecord["id"];
       readonly usedSinceLongRest: true;
@@ -564,6 +570,12 @@ export type CharacterSheetFontOfMagicSorceryPointsToSpellSlotInput = {
   readonly spellLevel: SpellSlotLevel;
 };
 
+export type CharacterSheetSorcerousRestorationInput = {
+  readonly sheet: CharacterSheet;
+  readonly unitLibrary: UnitCatalog;
+  readonly recoverSorceryPoints: ResourceCount;
+};
+
 export type CharacterSheetShortRestStart = {
   readonly tag: "shortRestStarted";
   readonly sheet: CharacterSheet;
@@ -593,6 +605,9 @@ export type CharacterSheetShortRestInput = {
   readonly spendHitDice?: readonly CharacterSheetHitDieSpend[];
   readonly arcaneRecovery?: {
     readonly refundSpellSlots: readonly CharacterSheetArcaneRecoverySlotRefund[];
+  };
+  readonly sorcerousRestoration?: {
+    readonly recoverSorceryPoints: ResourceCount;
   };
 };
 
@@ -678,6 +693,9 @@ export type CharacterSheetLongRestInterruptionInput = {
   readonly arcaneRecovery?: {
     readonly refundSpellSlots: readonly CharacterSheetArcaneRecoverySlotRefund[];
   };
+  readonly sorcerousRestoration?: {
+    readonly recoverSorceryPoints: ResourceCount;
+  };
 };
 
 export type CharacterSheetLongRestInterruptionOutcome =
@@ -718,6 +736,9 @@ export type CharacterSheetSpellRestBenefitRecipient = {
   readonly spendHitDice?: readonly CharacterSheetHitDieSpend[];
   readonly arcaneRecovery?: {
     readonly refundSpellSlots: readonly CharacterSheetArcaneRecoverySlotRefund[];
+  };
+  readonly sorcerousRestoration?: {
+    readonly recoverSorceryPoints: ResourceCount;
   };
 };
 
