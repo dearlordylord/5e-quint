@@ -26,6 +26,7 @@ export type CompositeAndCountermagicEffectAtom = Extract<
       | "choose_effect_mode"
       | "curse_occurrence"
       | "grant_speed"
+      | "grant_liquid_surface_traversal"
       | "ignore_web_restrictions"
       | "alter_item_kind"
       | "natural_weapons"
@@ -432,6 +433,23 @@ export function traceCompositeAndCountermagicEffectAtom(
         category: "effect",
         atomKind: "grant_speed",
         label: `grant_speed\n${e.speedKind} ${feet}${suffix}`,
+      });
+      return id;
+    }
+    case "grant_liquid_surface_traversal": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "grant_liquid_surface_traversal",
+        label: [
+          "grant_liquid_surface_traversal",
+          `${e.surfaceScope.kind}: ${e.surfaceScope.examples.join(", ")}`,
+          `${e.traversal.path} as ${e.traversal.treatedAs}`,
+          `${e.surfaceHazardException.surface} ${e.surfaceHazardException.hazard}: ${e.surfaceHazardException.outcome}`,
+          `transition cost: ${e.surfaceLiquidTransition.deliberateCost}`,
+          `falling: ${e.surfaceLiquidTransition.fallingIntoLiquid}`,
+        ].join("\n"),
       });
       return id;
     }

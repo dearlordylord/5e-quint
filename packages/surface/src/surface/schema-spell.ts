@@ -79,6 +79,45 @@ const LOCATE_KIND_SUBJECTS = [
 const LocateKindSubjectSchema = Schema.Literal(...LOCATE_KIND_SUBJECTS);
 type LocateKindSubject = Schema.Schema.Type<typeof LocateKindSubjectSchema>;
 
+const LiquidSurfaceTraversalExamplesSchema = Schema.Tuple(
+  Schema.Literal("water"),
+  Schema.Literal("acid"),
+  Schema.Literal("mud"),
+  Schema.Literal("snow"),
+  Schema.Literal("quicksand"),
+  Schema.Literal("lava"),
+);
+
+export const LiquidSurfaceTraversalSchema = strictStruct({
+  kind: Schema.Literal("grant_liquid_surface_traversal"),
+  surfaceScope: strictStruct({
+    kind: Schema.Literal("any_liquid_surface"),
+    examples: LiquidSurfaceTraversalExamplesSchema,
+  }),
+  traversal: strictStruct({
+    path: Schema.Literal("across_surface"),
+    treatedAs: Schema.Literal("harmless_solid_ground"),
+  }),
+  surfaceHazardException: strictStruct({
+    surface: Schema.Literal("lava"),
+    hazard: Schema.Literal("heat"),
+    outcome: Schema.Literal("still_applies"),
+  }),
+  surfaceLiquidTransition: strictStruct({
+    deliberateCost: Schema.Literal("bonus_action"),
+    directions: Schema.Tuple(
+      Schema.Literal("surface_to_liquid"),
+      Schema.Literal("liquid_to_surface"),
+    ),
+    fallingIntoLiquid: Schema.Literal(
+      "passes_through_surface_into_liquid_below",
+    ),
+  }),
+});
+type LiquidSurfaceTraversal = Schema.Schema.Type<
+  typeof LiquidSurfaceTraversalSchema
+>;
+
 const ObjectLocationSenseSearchModesSchema = strictStruct({
   specificKnownObject: strictStruct({
     seenUpCloseWithinFeet: Schema.Literal(30),
@@ -1277,6 +1316,7 @@ type EffectAtom =
       readonly feet: number | Schema.Schema.Type<typeof LinkedSpeedSchema>;
       readonly hover?: boolean;
     }
+  | LiquidSurfaceTraversal
   | { readonly kind: "ignore_web_restrictions" }
   | { readonly kind: "alter_item_kind"; readonly newKind: string }
   | {
@@ -3706,6 +3746,7 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
         feet: Schema.Union(Schema.Number, LinkedSpeedSchema),
         hover: optionalExact(Schema.Boolean),
       }),
+      LiquidSurfaceTraversalSchema,
       Schema.Struct({ kind: Schema.Literal("ignore_web_restrictions") }),
       Schema.Struct({
         kind: Schema.Literal("alter_item_kind"),

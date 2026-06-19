@@ -61,7 +61,7 @@
     {
       "number": 10,
       "id": "L5-D10-WATER-WALK",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Close Water Walk missing authored record"
     },
     {
@@ -145,7 +145,7 @@ missing-record spells unless a RAW dependency is unavoidable and documented.
 | 7 | L5-D07-SPEAK-WITH-DEAD - Close Speak with Dead missing authored record | done | none | Independent missing spell Unit. |
 | 8 | L5-D08-SPEAK-WITH-PLANTS - Close Speak with Plants missing authored record | done | none | Authored and installed Speak with Plants as an SRD Surface Spell Definition with a runtime-detached table/spatial/exploration owner. |
 | 9 | L5-D09-TINY-HUT - Close Tiny Hut missing authored record | done | none | Authored and installed Tiny Hut as an SRD Surface Spell Definition with a runtime-detached table/spatial/environment shelter owner. |
-| 10 | L5-D10-WATER-WALK - Close Water Walk missing authored record | ready-for-research | none | Independent missing spell Unit. |
+| 10 | L5-D10-WATER-WALK - Close Water Walk missing authored record | done | none | Independent missing spell Unit. |
 | 11 | L3-FOLLOWUP-SLEET-STORM-AREA-HAZARD-RUNTIME - Promote Sleet Storm area hazard runtime support | ready-for-research | L5-D05-SLEET-STORM | Runtime support consumes the typed Sleet Storm Surface facts installed by Task 5. |
 | 12 | L3-FOLLOWUP-SLOW-ACTIVE-PENALTIES-RUNTIME - Promote Slow active penalties runtime support | ready-for-research | L5-D06-SLOW | Runtime support consumes the typed Slow Surface facts installed by Task 6 for invocation, active penalties, and repeat-save cleanup. |
 | 13 | L3-FOLLOWUP-SLOW-TURN-AND-SOMATIC-RUNTIME - Promote Slow target-turn and Somatic runtime support | ready-for-research | L3-FOLLOWUP-SLOW-ACTIVE-PENALTIES-RUNTIME | Runtime support consumes the active Slow effect lifecycle before enforcing target-turn action economy and Somatic failure chance. |
@@ -519,7 +519,7 @@ Verification:
 
 ### Task 10 - L5-D10-WATER-WALK
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
