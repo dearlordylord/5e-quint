@@ -67,7 +67,7 @@
     {
       "number": 11,
       "id": "L5-B11-VAMPIRIC-TOUCH",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Close Vampiric Touch authored spell pressure"
     },
     {
@@ -140,7 +140,7 @@ this lane; those are Lane C and Lane D.
 | 8 | L5-B08-PROTECTION-FROM-ENERGY - Close Protection from Energy authored spell pressure | done | none | Preserve target-shape repair plus runtime admission prerequisite from `plans/unit-profile-coverage/L3_PROTECTION_FROM_ENERGY_RUNTIME_SURVEY.md`. |
 | 9 | L5-B09-SPIRIT-GUARDIANS - Close Spirit Guardians authored spell pressure | done | none | Closed outside the current promoted battle runtime active Emanation area-hazard Spell Effect and table/spatial membership boundary. |
 | 10 | L5-B10-STINKING-CLOUD - Close Stinking Cloud authored spell pressure | done | none | Closed outside the promoted battle-runtime active gas area-hazard Spell Effect and table/spatial air movement boundary. |
-| 11 | L5-B11-VAMPIRIC-TOUCH - Close Vampiric Touch authored spell pressure | ready-for-research | none | Independent authored spell pressure row. |
+| 11 | L5-B11-VAMPIRIC-TOUCH - Close Vampiric Touch authored spell pressure | done | none | Closed outside the promoted battle runtime active touch-attack Spell Effect and linked damage-to-healing owner. |
 | 12 | L5-B12-WIND-WALL - Close Wind Wall authored spell pressure | ready-for-research | none | Independent authored spell pressure row. |
 
 ## Shared Verification
@@ -629,7 +629,7 @@ Verification:
 
 ### Task 11 - L5-B11-VAMPIRIC-TOUCH
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -659,6 +659,19 @@ Output:
 Acceptance:
 
 - `vampiric_touch` leaves `catalog-authored-review-required`.
+
+Result:
+
+- `vampiric_touch` is recorded as `unsupported-profile` and
+  `catalog-only/dead-for-now` with an `outside-battle-runtime` closure.
+- The future owner is an active touch-attack Spell Effect and linked
+  damage-to-healing owner for the caster-owned Concentration occurrence,
+  retained slot-scaled Necrotic damage and Spell Attack facts, later-turn Magic
+  Action repeat attacks against the same or a different creature, damage
+  resolution, and caster self-healing equal to half the damage dealt.
+- Table/spatial ownership supplies reach and target-legality witnesses rather
+  than duplicating creature-position state inside generic Spell Invocation
+  reducers.
 
 Verification:
 
