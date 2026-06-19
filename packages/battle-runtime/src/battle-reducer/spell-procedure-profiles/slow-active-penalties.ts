@@ -4,9 +4,9 @@
 // Slow active-penalties profile: action-time level-3+ Spell Slot casting,
 // caller-supplied point-origin 40-foot Cube affected creatures chosen by the
 // caster, Wisdom Saving Throws, source-owned Concentration effects for failed
-// saves, and target end-turn repeat-save cleanup. The target-turn Action/Bonus
-// Action choice, Attack action cap, and Somatic spell failure chance remain
-// explicit Surface facts but are not executed by this profile.
+// saves, target end-turn repeat-save cleanup, and support-profile admission for
+// target-turn Action/Bonus Action choice, Attack action cap, and Somatic spell
+// failure chance consumed by active-effect runtime helpers.
 //
 // RAW anchors:
 //   - SRD 5.2.1 Spells/Descriptions-S-Z.md "Slow": Action; 120 feet;
@@ -44,6 +44,7 @@ import { spellId, type CombatantId } from "../../identity.ts";
 import {
   SLOW_ACTIVE_PENALTIES_ARMOR_CLASS_DELTA,
   SLOW_ACTIVE_PENALTIES_DEX_SAVE_DELTA,
+  SLOW_ACTIVE_PENALTIES_SOMATIC_FAILURE_PERCENT,
   SLOW_ACTIVE_PENALTIES_SPEED_RATIO,
 } from "../domain-constants.ts";
 import { extendSavingThrowOngoingFeatures } from "../attack-roll.ts";
@@ -79,6 +80,8 @@ import {
   PreparedSpellAccessSchema,
   SpellSlotInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
+import { currentActorId } from "../creature-state-leaves.ts";
+import { slowActionOrBonusActionTurnResources } from "../slow-active-penalties-runtime.ts";
 import type {
   SpellAdmissionContext,
   SpellProcedureProfile,
@@ -131,7 +134,6 @@ const SLOW_ACTIVE_PENALTIES_DURATION_MINUTES = 1;
 const SLOW_ACTIVE_PENALTIES_CUBE_SIDE_FEET = 40;
 const SLOW_ACTIVE_PENALTIES_MAX_TARGETS = 6;
 const SLOW_ACTIVE_PENALTIES_FAILED_EFFECT_COUNT = 7;
-const SLOW_ACTIVE_PENALTIES_SOMATIC_FAILURE_PERCENT = 25;
 
 function admitSlowActivePenalties(
   spell: SlowActivePenaltiesSpellInvocation["spell"],
@@ -621,7 +623,17 @@ function applySlowActivePenaltyEffects(
     );
     appliedTargetIds.push(targetId);
   }
-  return { state: { ...state, combatants }, appliedTargetIds };
+  const currentTurnActorId = currentActorId(state);
+  const currentTurnResources = appliedTargetIds.includes(currentTurnActorId)
+    ? slowActionOrBonusActionTurnResources(
+        state.currentTurnResources,
+        combatants.get(currentTurnActorId),
+      )
+    : state.currentTurnResources;
+  return {
+    state: { ...state, combatants, currentTurnResources },
+    appliedTargetIds,
+  };
 }
 
 function validateSlowAreaWitness(

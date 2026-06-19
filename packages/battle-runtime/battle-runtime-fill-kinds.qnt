@@ -36,6 +36,7 @@ module battleRuntimeFillKinds {
     | SelfTransformationModeChoiceFillKind
     | ShoveOutcomeFillKind
     | SkillChoiceFillKind
+    | SlowSomaticSpellFailureOutcomeFillKind
     | SpellTargetAllocationFillKind
     | SpellTargetListFillKind
     | StatBlockRechargeRollFillKind

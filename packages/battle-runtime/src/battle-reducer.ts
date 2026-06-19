@@ -4436,6 +4436,19 @@ export type BattleSpellCastReactionFactsHole = {
   };
   readonly requiresTableSpatialFact: true;
 };
+export type BattleSlowSomaticSpellFailureOutcomeHole = {
+  readonly holeInstanceKey: HoleInstanceKey;
+  readonly holeId: BattleHoleId;
+  readonly kind: "slowSomaticSpellFailureOutcome";
+  readonly label: string;
+  readonly actorId: CombatantId;
+  readonly spellId: SpellId;
+  readonly failurePercent: 25;
+  readonly activeEffectSources: readonly {
+    readonly sourceSpellId: SpellRecord["id"];
+    readonly sourceCombatantId: CombatantId;
+  }[];
+};
 export type BattleWardingBondSeparationFactsHole = {
   readonly holeInstanceKey: HoleInstanceKey;
   readonly holeId: BattleHoleId;
@@ -5916,6 +5929,7 @@ export type BattleWildShapeEquipmentDispositionHole = {
 export type BattleHole =
   | BattleTargetChoiceHole
   | BattleSpellCastReactionFactsHole
+  | BattleSlowSomaticSpellFailureOutcomeHole
   | BattleWardingBondSeparationFactsHole
   | BattleObjectTargetChoiceHole
   | BattleObjectContactTargetsHole
@@ -6220,6 +6234,13 @@ export type BattleFill =
       readonly kind: "targetSpatialFacts";
       readonly holeId: BattleHoleId;
       readonly spatialFacts: readonly BattleTargetSpatialFact[];
+    }
+  | {
+      readonly kind: "slowSomaticSpellFailureOutcome";
+      readonly holeId: BattleHoleId;
+      readonly value: {
+        readonly spellFailed: boolean;
+      };
     }
   | {
       readonly kind: "objectTargetChoice";

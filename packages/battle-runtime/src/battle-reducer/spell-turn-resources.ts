@@ -1,6 +1,11 @@
 // Spell turn-resource predicates and markers shared by discovery and resolve.
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-slow-active-penalties
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE
 
-import { canSpendAction } from "@dnd/shared-algebras/action-economy-algebra";
+import {
+  canSpendAction,
+  canSpendBonusAction,
+} from "@dnd/shared-algebras/action-economy-algebra";
 import { Either } from "effect";
 
 import type {
@@ -60,7 +65,7 @@ export function spellActTurnResourceAvailable(
   }
   const actionCost = spellInvocationActionCost(invocation, options);
   if (actionCost === "bonusAction") {
-    return resources.currentHasBonusAction;
+    return canSpendBonusAction(resources);
   }
   if (invocation.resource.tag === "none") {
     return canSpendAction(resources, "magic");

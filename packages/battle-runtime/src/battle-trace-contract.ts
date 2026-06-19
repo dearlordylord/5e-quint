@@ -43,6 +43,7 @@ export const BATTLE_TRACE_HOLE_KINDS = [
   "movableZoneRamMovement",
   "movableZoneRepositionMovement",
   "savingThrowOutcome",
+  "slowSomaticSpellFailureOutcome",
   "deathSavingThrow",
   "statBlockRechargeRoll",
   "concentrationSavingThrow",

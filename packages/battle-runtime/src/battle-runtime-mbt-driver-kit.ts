@@ -624,7 +624,8 @@ type MbtHole =
   | "SpellDamageRoll"
   | "StatBlockRechargeRoll"
   | "LevitateAltitudeChange"
-  | "LevitateInitialRise";
+  | "LevitateInitialRise"
+  | "SlowSomaticSpellFailureOutcome";
 type MbtLastResult = "init" | "needsHoles" | "resolved" | "invalid";
 type MbtLastInvalidReason = "" | "invalidFill" | "staleSubject" | "wrongActor";
 type WeaponAttackOrderingStage =
@@ -787,8 +788,7 @@ const REDUCER_SPINE_CONTRACT_STAGES = [
   "subjectResolved",
   "turnAdvanced",
 ] as const;
-type ReducerSpineContractStage =
-  (typeof REDUCER_SPINE_CONTRACT_STAGES)[number];
+type ReducerSpineContractStage = (typeof REDUCER_SPINE_CONTRACT_STAGES)[number];
 const REDUCER_SPINE_CONTRACT_ENTRYPOINTS = [
   "none",
   "startBattle",
@@ -805,13 +805,8 @@ const REDUCER_SPINE_CONTRACT_SUBJECTS = [
 ] as const;
 type ReducerSpineContractSubject =
   (typeof REDUCER_SPINE_CONTRACT_SUBJECTS)[number];
-const REDUCER_SPINE_CONTRACT_ACTORS = [
-  "none",
-  "caster",
-  "target",
-] as const;
-type ReducerSpineContractActor =
-  (typeof REDUCER_SPINE_CONTRACT_ACTORS)[number];
+const REDUCER_SPINE_CONTRACT_ACTORS = ["none", "caster", "target"] as const;
+type ReducerSpineContractActor = (typeof REDUCER_SPINE_CONTRACT_ACTORS)[number];
 const REDUCER_SPINE_CONTRACT_SPELL_SLOT_USES = [
   "none",
   "pending",
@@ -825,8 +820,7 @@ const REDUCER_SPINE_CONTRACT_HOLES = [
   "attackRoll",
   "rolledDice",
 ] as const;
-type ReducerSpineContractHole =
-  (typeof REDUCER_SPINE_CONTRACT_HOLES)[number];
+type ReducerSpineContractHole = (typeof REDUCER_SPINE_CONTRACT_HOLES)[number];
 type ReducerSpineContractProjection = {
   readonly stage: ReducerSpineContractStage;
   readonly entrypoint: ReducerSpineContractEntrypoint;
@@ -2783,9 +2777,7 @@ export function createReducerSpineContractDriver() {
         const damage = requireHole(holes, "rolledDice");
         fills = [
           ...fills,
-          damageRollFillWithGroups(damage, [
-            magicMissileDamageRollGroup(3),
-          ]),
+          damageRollFillWithGroups(damage, [magicMissileDamageRollGroup(3)]),
         ];
         recordAccepted(
           resolveBattleSubject({
@@ -3757,7 +3749,8 @@ function projectReducerSpineContractState(input: {
     actionAvailable: snapshot.turn.actionResources.some(
       (resource) => resource.source === "turn",
     ),
-    bonusActionAvailable: input.state.currentTurnResources.currentHasBonusAction,
+    bonusActionAvailable:
+      input.state.currentTurnResources.currentHasBonusAction,
     casterReactionAvailable:
       input.state.combatants.get(fighterId)?.reactionAvailable ?? false,
     targetReactionAvailable:
@@ -5798,6 +5791,9 @@ function projectHole(hole: BattleHole): readonly MbtHole[] {
   if (hole.kind === "levitateInitialRise") {
     return ["LevitateInitialRise"];
   }
+  if (hole.kind === "slowSomaticSpellFailureOutcome") {
+    return ["SlowSomaticSpellFailureOutcome"];
+  }
   if (hole.kind === "targetAbilityChoices") {
     throw new Error(
       "Battle runtime MBT does not model target ability choices holes.",
@@ -5921,7 +5917,8 @@ function holeName(raw: unknown): MbtHole {
     tag === "SpellDamageRoll" ||
     tag === "StatBlockRechargeRoll" ||
     tag === "LevitateAltitudeChange" ||
-    tag === "LevitateInitialRise"
+    tag === "LevitateInitialRise" ||
+    tag === "SlowSomaticSpellFailureOutcome"
   ) {
     return tag;
   }
@@ -6233,9 +6230,7 @@ function commandOrderingActor(
   throw new Error(`Unknown Command ordering actor: ${String(raw)}.`);
 }
 
-function reducerSpineContractStage(
-  raw: unknown,
-): ReducerSpineContractStage {
+function reducerSpineContractStage(raw: unknown): ReducerSpineContractStage {
   const tag = quintVariantTag(raw);
   if (tag === "ReducerNotStarted") return "notStarted";
   if (tag === "ReducerBattleStarted") return "battleStarted";

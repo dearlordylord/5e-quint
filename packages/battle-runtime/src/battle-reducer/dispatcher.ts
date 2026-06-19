@@ -24,9 +24,12 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.PROTOCOL.CONCENTRATION_BREAK_TEARDOWN
 // KERNEL-COVERAGE: runtime-owner CHARACTER.LIFECYCLE.LAYER_PROJECTION BATTLE.COMPOSITION.REDUCER_SPINE_CONTRACT
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.d20-test-natural-one-reroll
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-slow-active-penalties
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE
 
 import {
   canSpendAction,
+  canSpendBonusAction,
   canSpendUnarmedStrikeActionResource,
   spendAction,
 } from "@dnd/shared-algebras/action-economy-algebra";
@@ -950,7 +953,7 @@ export function resolveBattleSubjectInternal(
   if (
     input.subject.tag === "bonusAction" &&
     (!combatantCanTakeActions(input.state.combatants.get(actorId)) ||
-      !input.state.currentTurnResources.currentHasBonusAction)
+      !canSpendBonusAction(input.state.currentTurnResources))
   ) {
     return invalidResult(
       input.state,
@@ -961,7 +964,7 @@ export function resolveBattleSubjectInternal(
   if (
     input.subject.tag === "bonusActionStandardAction" &&
     (!combatantCanTakeActions(input.state.combatants.get(actorId)) ||
-      !input.state.currentTurnResources.currentHasBonusAction)
+      !canSpendBonusAction(input.state.currentTurnResources))
   ) {
     return invalidResult(
       input.state,
@@ -984,7 +987,7 @@ export function resolveBattleSubjectInternal(
     (input.subject.tag === "bonusActionSpell" ||
       input.subject.tag === "bonusActionDashSpell") &&
     (!combatantCanTakeActions(input.state.combatants.get(actorId)) ||
-      !input.state.currentTurnResources.currentHasBonusAction)
+      !canSpendBonusAction(input.state.currentTurnResources))
   ) {
     return invalidResult(
       input.state,
@@ -1017,7 +1020,7 @@ export function resolveBattleSubjectInternal(
   if (
     input.subject.tag === "druidWildShape" &&
     (!combatantCanTakeActions(input.state.combatants.get(actorId)) ||
-      !input.state.currentTurnResources.currentHasBonusAction)
+      !canSpendBonusAction(input.state.currentTurnResources))
   ) {
     return invalidResult(
       input.state,
@@ -5386,7 +5389,7 @@ export function battleTurnSnapshot(state: BattleState): BattleTurnSnapshot {
   const resources = state.currentTurnResources;
   return {
     actionResources: resources.actionResources,
-    bonusActionAvailable: resources.currentHasBonusAction,
+    bonusActionAvailable: canSpendBonusAction(resources),
     jumpDistanceMultiplier: resources.jumpDistanceMultiplier,
     spellSlotUsesThisTurn: resources.spellSlotUsesThisTurn,
     levelOnePlusSpellCastsThisTurn: resources.levelOnePlusSpellCastsThisTurn,
@@ -5733,7 +5736,7 @@ export function attackHitBonusActionSpellReactionChoices(
     actor?.origin.kind !== "character" ||
     target === undefined ||
     !combatantCanTakeActions(actor) ||
-    !state.currentTurnResources.currentHasBonusAction ||
+    !canSpendBonusAction(state.currentTurnResources) ||
     combatantInsideActiveAntimagicFieldAura(state, frame.attackerId)
   ) {
     return [];

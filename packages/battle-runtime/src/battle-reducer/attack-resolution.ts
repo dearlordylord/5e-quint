@@ -9,6 +9,8 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.light-extra-attack-damage-ability-modifier
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.d20-test-natural-one-reroll
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-slow-active-penalties
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE
 import type {
   ActionEconomyState,
   RuntimeActionResource,
@@ -17,6 +19,8 @@ import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
 
 import {
   actionResourceAllows,
+  canSpendAction,
+  spendActionResourceAtIndex,
   spendAction,
   spendActivationResource,
   spendMatchingActionResource,
@@ -136,6 +140,7 @@ import {
 } from "./movement-speed.ts";
 
 import { invalidResult } from "./result-helpers.ts";
+import { combatantHasSlowActivePenalties } from "./slow-active-penalties-runtime.ts";
 
 import {
   hypnoticPatternShakeAwakeTargetChoices,
@@ -980,13 +985,16 @@ export function resolveMultiattack(
     );
   }
   const [consumedDispatch, ...pendingDispatches] = multiattack.dispatches;
+  const grantedPendingDispatches = combatantHasSlowActivePenalties(actor)
+    ? []
+    : pendingDispatches;
   const nextStateWithPendingDispatches = {
     ...input.state,
     currentTurnResources: {
       ...spent.right,
       actionResources: [
         ...spent.right.actionResources,
-        ...pendingDispatches.map((dispatch) => ({
+        ...grantedPendingDispatches.map((dispatch) => ({
           kind: "action" as const,
           source: "statBlockMultiattack" as const,
           sourceOwnerId: input.subject.actorId,
@@ -2271,17 +2279,15 @@ export function spendAttackActionResource<T extends ActionEconomyState>(
   { readonly state: T; readonly spentResource: RuntimeActionResource },
   "no action resource available"
 > {
+  if (!canSpendAction(state, "attack")) {
+    return Either.left("no action resource available");
+  }
   const actionResource = compatibleAttackActionResource(state.actionResources);
   if (actionResource === null) {
     return Either.left("no action resource available");
   }
   return Either.right({
-    state: {
-      ...state,
-      actionResources: state.actionResources.filter(
-        (_, index) => index !== actionResource.index,
-      ),
-    },
+    state: spendActionResourceAtIndex(state, actionResource.index),
     spentResource: actionResource.resource,
   });
 }
@@ -2325,7 +2331,8 @@ export function openClassFeatureExtraAttackResource(input: {
 }): BattleTurnResources {
   if (
     input.spentResource.source === "classFeatureExtraAttack" ||
-    actorHasClassFeatureExtraAttackActionResource(input.state, input.actorId)
+    actorHasClassFeatureExtraAttackActionResource(input.state, input.actorId) ||
+    combatantHasSlowActivePenalties(input.state.combatants.get(input.actorId))
   ) {
     return input.state.currentTurnResources;
   }

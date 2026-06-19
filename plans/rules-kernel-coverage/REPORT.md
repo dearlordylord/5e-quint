@@ -157,17 +157,17 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 
 ## Battle Hole Frontier
 
-- Total classified rows: 159
+- Total classified rows: 161
 
 | Subject | Count |
 | --- | ---: |
-| battle-hole-family | 77 |
-| battle-fill-kind | 46 |
+| battle-hole-family | 78 |
+| battle-fill-kind | 47 |
 | battle-subject-kind | 36 |
 
 | Classification | Count |
 | --- | ---: |
-| semantic-frontier | 130 |
+| semantic-frontier | 132 |
 | deterministic-boundary-projection | 0 |
 | table-owned-fact | 29 |
 | unsupported-dead-branch | 0 |
@@ -177,6 +177,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | battle-hole-family | `BattleTargetChoiceHole` | `targetChoice` | semantic-frontier | `BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND`, `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`, `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS`, `BATTLE.DAMAGE.ATTACK_BRANCHES`, `BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES` | _none_ |
 | battle-hole-family | `BattleSleetStormAreaHazardSavingThrowOutcomeHole` | `savingThrowOutcome` | semantic-frontier | `BATTLE.SPELL.SLEET_STORM_AREA_HAZARD_LIFECYCLE`, `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | _none_ |
 | battle-hole-family | `BattleSlowActivePenaltiesEndTurnSavingThrowOutcomeHole` | `savingThrowOutcome` | semantic-frontier | `BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE` | _none_ |
+| battle-hole-family | `BattleSlowSomaticSpellFailureOutcomeHole` | `slowSomaticSpellFailureOutcome` | semantic-frontier | `BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE` | _none_ |
 | battle-hole-family | `BattleSpellCastReactionFactsHole` | `targetSpatialFacts` | table-owned-fact | `BATTLE.TABLE.HOLE_FACT_BOUNDARIES`, `BATTLE.REACTION.OFFER_DECLINE_RESUME` | _none_ |
 | battle-hole-family | `BattleWardingBondSeparationFactsHole` | `targetSpatialFacts` | table-owned-fact | `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | _none_ |
 | battle-hole-family | `BattleObjectTargetChoiceHole` | `objectTargetChoice` | table-owned-fact | `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | _none_ |
@@ -239,6 +240,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | battle-fill-kind | `hitPointHealingDistribution` | `hitPointHealingDistribution` | semantic-frontier | `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`, `BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING` | _none_ |
 | battle-fill-kind | `damageTypeChoice` | `damageTypeChoice` | semantic-frontier | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS`, `BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION` | _none_ |
 | battle-fill-kind | `savingThrowOutcome` | `savingThrowOutcome` | semantic-frontier | `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`, `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS`, `BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES`, `BATTLE.COMMAND.OPTION_AND_NEXT_TURN`, `BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING`, `BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE`, `BATTLE.SPELL.REACTION_CASTING_TIME`, `BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS`, `BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE`, `BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION`, `BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION` | _none_ |
+| battle-fill-kind | `slowSomaticSpellFailureOutcome` | `slowSomaticSpellFailureOutcome` | semantic-frontier | `BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE` | _none_ |
 | battle-fill-kind | `conditionChoice` | `conditionChoice` | semantic-frontier | `BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE` | _none_ |
 | battle-fill-kind | `skillChoice` | `skillChoice` | semantic-frontier | `BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES` | _none_ |
 | battle-fill-kind | `abilityChoice` | `abilityChoice` | semantic-frontier | `BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES`, `BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS`, `BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER` | _none_ |

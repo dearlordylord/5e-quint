@@ -293,14 +293,13 @@
     },
     "levelThreeSpellBattleReadiness": {
       "denominator": 110,
-      "numerator": 73,
-      "percent": "66.4%",
+      "numerator": 76,
+      "percent": "69.1%",
       "rowsByStatus": {
         "surface-widening-required": 17,
         "accepted-no-battle-effect": 48,
-        "accepted": 25,
+        "accepted": 28,
         "battle-runtime-required": 5,
-        "partial-battle-runtime": 3,
         "owner-evidence-required": 12
       }
     },
@@ -8767,8 +8766,14 @@
         "state": "installed",
         "unitId": "slow"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "table-spatial-derivation",
+        "owner": "battle-runtime Slow active-penalties owner plus table/spatial witness provider",
+        "reason": "The promoted runtime owns spell admission, resource spend, typed area witness validation, active penalty projections, target-turn Action-or-Bonus-Action restriction, Attack-action cap, Somatic failure chance, and end-turn repeat-save cleanup. Automatic Cube geometry, line of effect, point-of-origin inclusion, and area membership derivation remain caller-supplied table facts rather than duplicated battle runtime state."
+      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -8777,12 +8782,12 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L3-FOLLOWUP-SLOW-ACTIVE-PENALTIES-RUNTIME at packages/battle-runtime/src/unit-profile-admission-slow-active-penalties.test.ts",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L3-FOLLOWUP-SLOW-TURN-AND-SOMATIC-RUNTIME at packages/battle-runtime/src/unit-profile-admission-slow-active-penalties.test.ts",
           "status": "owner evidence present"
         }
       ],
       "nextAction": "Owner-specific operational evidence is classified and present.",
-      "battleReadinessStatus": "partial-battle-runtime"
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_speak_with_dead",
@@ -31035,8 +31040,14 @@
         "state": "installed",
         "unitId": "slow"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "table-spatial-derivation",
+        "owner": "battle-runtime Slow active-penalties owner plus table/spatial witness provider",
+        "reason": "The promoted runtime owns spell admission, resource spend, typed area witness validation, active penalty projections, target-turn Action-or-Bonus-Action restriction, Attack-action cap, Somatic failure chance, and end-turn repeat-save cleanup. Automatic Cube geometry, line of effect, point-of-origin inclusion, and area membership derivation remain caller-supplied table facts rather than duplicated battle runtime state."
+      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -31045,12 +31056,12 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L3-FOLLOWUP-SLOW-ACTIVE-PENALTIES-RUNTIME at packages/battle-runtime/src/unit-profile-admission-slow-active-penalties.test.ts",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L3-FOLLOWUP-SLOW-TURN-AND-SOMATIC-RUNTIME at packages/battle-runtime/src/unit-profile-admission-slow-active-penalties.test.ts",
           "status": "owner evidence present"
         }
       ],
       "nextAction": "Owner-specific operational evidence is classified and present.",
-      "battleReadinessStatus": "partial-battle-runtime"
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_stinking_cloud",
@@ -40059,8 +40070,14 @@
         "state": "installed",
         "unitId": "slow"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "table-spatial-derivation",
+        "owner": "battle-runtime Slow active-penalties owner plus table/spatial witness provider",
+        "reason": "The promoted runtime owns spell admission, resource spend, typed area witness validation, active penalty projections, target-turn Action-or-Bonus-Action restriction, Attack-action cap, Somatic failure chance, and end-turn repeat-save cleanup. Automatic Cube geometry, line of effect, point-of-origin inclusion, and area membership derivation remain caller-supplied table facts rather than duplicated battle runtime state."
+      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -40069,12 +40086,12 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L3-FOLLOWUP-SLOW-ACTIVE-PENALTIES-RUNTIME at packages/battle-runtime/src/unit-profile-admission-slow-active-penalties.test.ts",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L3-FOLLOWUP-SLOW-TURN-AND-SOMATIC-RUNTIME at packages/battle-runtime/src/unit-profile-admission-slow-active-penalties.test.ts",
           "status": "owner evidence present"
         }
       ],
       "nextAction": "Owner-specific operational evidence is classified and present.",
-      "battleReadinessStatus": "partial-battle-runtime"
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_speak_with_dead",

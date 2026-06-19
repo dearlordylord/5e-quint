@@ -35,6 +35,7 @@
 import { Either, Match } from "effect";
 
 import {
+  canSpendBonusAction,
   resetTurnActionEconomy,
   spendAction,
   spendActivationResource,
@@ -160,6 +161,7 @@ import {
 } from "./movement-speed.ts";
 
 import { invalidResult } from "./result-helpers.ts";
+import { slowActionOrBonusActionTurnResources } from "./slow-active-penalties-runtime.ts";
 
 import {
   combatantsAfterConcentrationSpellEffectsEndedIfNoEffects,
@@ -524,6 +526,10 @@ export function resolveEndTurn(
     resetTurnResources,
     commandHalt,
   );
+  const currentTurnResourcesAfterSlow = slowActionOrBonusActionTurnResources(
+    currentTurnResources,
+    combatantsAfterDamageReductionReset.get(nextActorId),
+  );
   const combatantsAfterCommandHalt =
     commandHalt === null
       ? combatantsAfterDamageReductionReset
@@ -538,7 +544,7 @@ export function resolveEndTurn(
       initiative,
       combatants: combatantsAfterCommandHalt,
       lightEmitters: lightEmittersAfterDurationTick,
-      currentTurnResources,
+      currentTurnResources: currentTurnResourcesAfterSlow,
       readiedSpells,
       readiedMovements,
       helpAttacks,
@@ -3595,7 +3601,7 @@ export function resolveFlamingSphereRepositionCommand(
       "Movable zone reposition is no longer available.",
     );
   }
-  if (!input.state.currentTurnResources.currentHasBonusAction) {
+  if (!canSpendBonusAction(input.state.currentTurnResources)) {
     return invalidResult(
       input.state,
       "staleSubject",
@@ -3636,12 +3642,19 @@ export function resolveFlamingSphereRepositionCommand(
   if (movementValidation !== null) {
     return invalidResult(input.state, "invalidFill", movementValidation);
   }
+  const spent = spendActivationResource(input.state.currentTurnResources, {
+    kind: "bonusAction",
+  });
+  if (Either.isLeft(spent)) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Movable zone reposition requires an available Bonus Action.",
+    );
+  }
   const nextState = {
     ...input.state,
-    currentTurnResources: {
-      ...input.state.currentTurnResources,
-      currentHasBonusAction: false,
-    },
+    currentTurnResources: spent.right,
   };
   return {
     tag: "resolved",
@@ -3691,7 +3704,7 @@ export function resolveFlamingSphereRamCommand(
       "Movable zone ram is no longer available.",
     );
   }
-  if (!input.state.currentTurnResources.currentHasBonusAction) {
+  if (!canSpendBonusAction(input.state.currentTurnResources)) {
     return invalidResult(
       input.state,
       "staleSubject",
@@ -3869,12 +3882,19 @@ export function resolveFlamingSphereRamCommand(
     saveSucceeded: saveOutcome.succeeded,
     concentrationSavingThrow: concentrationFill,
   });
+  const spent = spendActivationResource(damaged.currentTurnResources, {
+    kind: "bonusAction",
+  });
+  if (Either.isLeft(spent)) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Movable zone ram requires an available Bonus Action.",
+    );
+  }
   const nextState = {
     ...damaged,
-    currentTurnResources: {
-      ...damaged.currentTurnResources,
-      currentHasBonusAction: false,
-    },
+    currentTurnResources: spent.right,
   };
   return {
     tag: "resolved",

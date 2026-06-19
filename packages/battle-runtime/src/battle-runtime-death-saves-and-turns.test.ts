@@ -1017,6 +1017,7 @@ describe("battle runtime: death saves and turns", () => {
       currentTurnResources: {
         actionResources: [{ kind: "action", source: "turn" }],
         currentHasBonusAction: true,
+        actionOrBonusActionExclusion: { kind: "notRestricted" },
         commandHalt: null,
         jumpDistanceMultiplier: null,
         spellSlotUsesThisTurn: [],
@@ -1240,6 +1241,7 @@ describe("battle runtime: death saves and turns", () => {
       currentTurnResources: {
         actionResources: [],
         currentHasBonusAction: false,
+        actionOrBonusActionExclusion: { kind: "notRestricted" },
         commandHalt: null,
         jumpDistanceMultiplier: null,
         spellSlotUsesThisTurn: [],
@@ -1274,6 +1276,7 @@ describe("battle runtime: death saves and turns", () => {
       currentTurnResources: {
         actionResources: [],
         currentHasBonusAction: false,
+        actionOrBonusActionExclusion: { kind: "notRestricted" },
         commandHalt: null,
         jumpDistanceMultiplier: null,
         spellSlotUsesThisTurn: [],

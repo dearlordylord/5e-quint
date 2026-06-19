@@ -8,16 +8,25 @@ module battleRuntimeSlowActivePenaltiesMbt {
   // RAW trace:
   // - .references/srd-5.2.1/Spells/Descriptions-S-Z.md#Slow:
   //   failed Wisdom Saving Throws halve Speed, apply -2 AC and -2 Dexterity
-  //   Saving Throw penalties, prevent Reactions, and allow an end-of-target-turn
-  //   repeat save ending the spell on that target on success.
+  //   Saving Throw penalties, prevent Reactions, restrict the affected target's
+  //   turns to either an Action or Bonus Action, cap the Attack action at one
+  //   attack, impose a 25 percent Somatic spell failure chance, and allow an
+  //   end-of-target-turn repeat save ending the spell on that target on success.
   // - UBIQUITOUS_LANGUAGE.md: Magic Action, Spell Slot, Concentration, Saving
   //   Throw, Speed, Armor Class, Reaction, Area of Effect/Cube, and Spell Effect.
   type Hole =
     | NoHole
     | EndTurnSave
+    | SomaticFailure
 
   type SlowActivePenaltiesWitnessState = {
     currentTurnRole: str,
+    turnActionOrBonusChoice: str,
+    targetTurnCanSpendAction: bool,
+    targetTurnCanSpendBonusAction: bool,
+    extraAttackResourceCount: int,
+    casterTurnCanSpendBonusAction: bool,
+    statBlockMultiattackResourceCount: int,
     targetSlowed: bool,
     targetSpeedFeet: int,
     targetArmorClass: int,
@@ -32,6 +41,12 @@ module battleRuntimeSlowActivePenaltiesMbt {
 
   action recordSlowState(
     currentTurnRole: str,
+    turnActionOrBonusChoice: str,
+    targetTurnCanSpendAction: bool,
+    targetTurnCanSpendBonusAction: bool,
+    extraAttackResourceCount: int,
+    casterTurnCanSpendBonusAction: bool,
+    statBlockMultiattackResourceCount: int,
     targetSlowed: bool,
     targetSpeedFeet: int,
     targetArmorClass: int,
@@ -43,6 +58,12 @@ module battleRuntimeSlowActivePenaltiesMbt {
   ): bool = all {
     qState' = {
       currentTurnRole: currentTurnRole,
+      turnActionOrBonusChoice: turnActionOrBonusChoice,
+      targetTurnCanSpendAction: targetTurnCanSpendAction,
+      targetTurnCanSpendBonusAction: targetTurnCanSpendBonusAction,
+      extraAttackResourceCount: extraAttackResourceCount,
+      casterTurnCanSpendBonusAction: casterTurnCanSpendBonusAction,
+      statBlockMultiattackResourceCount: statBlockMultiattackResourceCount,
       targetSlowed: targetSlowed,
       targetSpeedFeet: targetSpeedFeet,
       targetArmorClass: targetArmorClass,
@@ -56,6 +77,12 @@ module battleRuntimeSlowActivePenaltiesMbt {
 
   action init = recordSlowState(
     "caster",
+    "notRestricted",
+    false,
+    false,
+    0,
+    true,
+    0,
     false,
     30,
     10,
@@ -70,6 +97,12 @@ module battleRuntimeSlowActivePenaltiesMbt {
     qState.scenarioResult == "init",
     recordSlowState(
       "caster",
+      "notRestricted",
+      false,
+      false,
+      0,
+      true,
+      0,
       true,
       15,
       8,
@@ -85,6 +118,12 @@ module battleRuntimeSlowActivePenaltiesMbt {
     qState.scenarioResult == "failedSave",
     recordSlowState(
       "target",
+      "notChosen",
+      true,
+      true,
+      0,
+      false,
+      0,
       true,
       15,
       8,
@@ -100,6 +139,12 @@ module battleRuntimeSlowActivePenaltiesMbt {
     qState.scenarioResult == "targetTurn",
     recordSlowState(
       "target",
+      "notChosen",
+      true,
+      true,
+      0,
+      false,
+      0,
       true,
       15,
       8,
@@ -116,6 +161,12 @@ module battleRuntimeSlowActivePenaltiesMbt {
     qState.protocol.holes == Set(EndTurnSave),
     recordSlowState(
       "caster",
+      "notRestricted",
+      false,
+      false,
+      0,
+      true,
+      0,
       false,
       30,
       10,
@@ -132,6 +183,12 @@ module battleRuntimeSlowActivePenaltiesMbt {
     qState.protocol.holes == Set(EndTurnSave),
     recordSlowState(
       "caster",
+      "notRestricted",
+      false,
+      false,
+      0,
+      true,
+      0,
       true,
       15,
       8,
@@ -143,10 +200,193 @@ module battleRuntimeSlowActivePenaltiesMbt {
     ),
   }
 
+  action doSpendTargetAction = all {
+    qState.scenarioResult == "targetTurn",
+    recordSlowState(
+      "target",
+      "action",
+      false,
+      false,
+      0,
+      false,
+      0,
+      true,
+      15,
+      8,
+      -2,
+      false,
+      true,
+      "spentAction",
+      witnessResolved(NoHole),
+    ),
+  }
+
+  action doMakeTargetAttack = all {
+    qState.scenarioResult == "targetTurn",
+    recordSlowState(
+      "target",
+      "action",
+      false,
+      false,
+      0,
+      false,
+      0,
+      true,
+      15,
+      8,
+      -2,
+      false,
+      true,
+      "attackedOnce",
+      witnessResolved(NoHole),
+    ),
+  }
+
+  action doRequestSomaticFailure = all {
+    qState.scenarioResult == "targetTurn",
+    recordSlowState(
+      "target",
+      "notChosen",
+      true,
+      true,
+      0,
+      false,
+      0,
+      true,
+      15,
+      8,
+      -2,
+      false,
+      true,
+      "needsSomaticFailure",
+      witnessNeedsHoles(Set(SomaticFailure)),
+    ),
+  }
+
+  action doFillSomaticSpellFailure = all {
+    qState.scenarioResult == "needsSomaticFailure",
+    qState.protocol.holes == Set(SomaticFailure),
+    recordSlowState(
+      "target",
+      "bonusAction",
+      false,
+      false,
+      0,
+      false,
+      0,
+      true,
+      15,
+      8,
+      -2,
+      false,
+      true,
+      "somaticSpellFailed",
+      witnessResolved(NoHole),
+    ),
+  }
+
+  action doCastSlowSelfFailedSave = all {
+    qState.scenarioResult == "init",
+    recordSlowState(
+      "caster",
+      "action",
+      false,
+      false,
+      0,
+      false,
+      0,
+      false,
+      30,
+      10,
+      0,
+      true,
+      true,
+      "selfFailedSave",
+      witnessResolved(NoHole),
+    ),
+  }
+
+  action doCastSlowMultiattackFailedSave = all {
+    qState.scenarioResult == "init",
+    recordSlowState(
+      "caster",
+      "notRestricted",
+      false,
+      false,
+      0,
+      true,
+      0,
+      false,
+      30,
+      10,
+      0,
+      true,
+      true,
+      "multiattackFailedSave",
+      witnessResolved(NoHole),
+    ),
+  }
+
+  action doEndCasterTurnForMultiattackTarget = all {
+    qState.scenarioResult == "multiattackFailedSave",
+    recordSlowState(
+      "multiattackTarget",
+      "notChosen",
+      true,
+      true,
+      0,
+      false,
+      0,
+      false,
+      30,
+      10,
+      0,
+      true,
+      true,
+      "multiattackTargetTurn",
+      witnessResolved(NoHole),
+    ),
+  }
+
+  action doMakeSlowedStatBlockMultiattack = all {
+    qState.scenarioResult == "multiattackTargetTurn",
+    recordSlowState(
+      "multiattackTarget",
+      "action",
+      false,
+      false,
+      0,
+      false,
+      0,
+      false,
+      30,
+      10,
+      0,
+      true,
+      true,
+      "multiattackedOnce",
+      witnessResolved(NoHole),
+    ),
+  }
+
   action doStutter = all {
-    qState.scenarioResult.in(Set("saved", "failedAgain")),
+    qState.scenarioResult.in(Set(
+      "saved",
+      "failedAgain",
+      "spentAction",
+      "attackedOnce",
+      "somaticSpellFailed",
+      "selfFailedSave",
+      "multiattackedOnce",
+    )),
     recordSlowState(
       qState.currentTurnRole,
+      qState.turnActionOrBonusChoice,
+      qState.targetTurnCanSpendAction,
+      qState.targetTurnCanSpendBonusAction,
+      qState.extraAttackResourceCount,
+      qState.casterTurnCanSpendBonusAction,
+      qState.statBlockMultiattackResourceCount,
       qState.targetSlowed,
       qState.targetSpeedFeet,
       qState.targetArmorClass,
@@ -164,6 +404,14 @@ module battleRuntimeSlowActivePenaltiesMbt {
     doRequestEndTurnSave,
     doFillEndTurnSaveSuccess,
     doFillEndTurnSaveFailure,
+    doSpendTargetAction,
+    doMakeTargetAttack,
+    doRequestSomaticFailure,
+    doFillSomaticSpellFailure,
+    doCastSlowSelfFailedSave,
+    doCastSlowMultiattackFailedSave,
+    doEndCasterTurnForMultiattackTarget,
+    doMakeSlowedStatBlockMultiattack,
     doStutter,
   }
 }

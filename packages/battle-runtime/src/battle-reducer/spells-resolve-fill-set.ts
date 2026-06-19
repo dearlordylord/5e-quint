@@ -10,6 +10,7 @@
 // Owns classification and validation of supplied fills against spell replay holes.
 
 // KERNEL-COVERAGE: runtime-owner BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES BATTLE.COMMAND.OPTION_AND_NEXT_TURN BATTLE.FEATURE.METAMAGIC_DISTANT_CAST_RANGE_INCREASE BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE
 import type { Condition, MovementFeet } from "@dnd/shared/types";
 import type { Ability, Skill } from "@dnd/surface/surface/types";
 import {
@@ -411,6 +412,10 @@ export function spellFillSet(
     | Extract<BattleFill, { readonly kind: "rolledDice" }>
     | undefined;
   for (const fill of fills) {
+    if (fill.kind === "slowSomaticSpellFailureOutcome") {
+      continue;
+    }
+
     if (fill.kind === "sanctuaryInterdictionOutcome") {
       continue;
     }

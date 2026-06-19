@@ -97,6 +97,7 @@ import {
   MIRROR_IMAGE_DUPLICATE_SUCCESS_AT_LEAST,
   MIRROR_IMAGE_UNAFFECTED_SENSES,
   SELF_TRANSFORMATION_MODE_KINDS,
+  SLOW_ACTIVE_PENALTIES_SOMATIC_FAILURE_PERCENT,
   THAUMATURGY_MAX_ACTIVE_ONE_MINUTE_EFFECTS,
 } from "./domain-constants.ts";
 import {
@@ -1130,6 +1131,21 @@ export const BattleHoleSchema = Schema.Union(
       components: Schema.Array(Schema.Literal("V", "S", "M")),
     }),
     requiresTableSpatialFact: Schema.Literal(true),
+  }),
+  Schema.Struct({
+    ...BattleHoleBaseSchema,
+    kind: Schema.Literal("slowSomaticSpellFailureOutcome"),
+    actorId: CombatantId,
+    spellId: SpellId,
+    failurePercent: Schema.Literal(
+      SLOW_ACTIVE_PENALTIES_SOMATIC_FAILURE_PERCENT,
+    ),
+    activeEffectSources: Schema.Array(
+      Schema.Struct({
+        sourceSpellId: Schema.String,
+        sourceCombatantId: CombatantId,
+      }),
+    ),
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
@@ -2370,6 +2386,13 @@ type BattleFillEncoded =
       readonly spatialFacts: readonly unknown[];
     }
   | {
+      readonly kind: "slowSomaticSpellFailureOutcome";
+      readonly holeId: string;
+      readonly value: {
+        readonly spellFailed: boolean;
+      };
+    }
+  | {
       readonly kind: "objectTargetChoice";
       readonly holeId: string;
       readonly value: string;
@@ -3310,6 +3333,13 @@ export const BattleFillSchema: Schema.Schema<
       kind: Schema.Literal("targetSpatialFacts"),
       holeId: BattleHoleIdSchema,
       spatialFacts: BattleTargetSpatialFactsSchema,
+    }),
+    Schema.Struct({
+      kind: Schema.Literal("slowSomaticSpellFailureOutcome"),
+      holeId: BattleHoleIdSchema,
+      value: Schema.Struct({
+        spellFailed: Schema.Boolean,
+      }),
     }),
     Schema.Struct({
       kind: Schema.Literal("hitPointHealingDistribution"),

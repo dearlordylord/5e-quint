@@ -438,6 +438,7 @@ function initialActionEconomyState(): ActionEconomyState {
   return resetTurnActionEconomy({
     actionResources: [],
     currentHasBonusAction: false,
+    actionOrBonusActionExclusion: { kind: "notRestricted" },
   });
 }
 

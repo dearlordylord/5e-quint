@@ -5,10 +5,12 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-damage-type-substitution
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-effective-level-extra-target
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-antimagic-field-action-interdiction
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-slow-active-penalties
 // KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR
 // KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_TRANSMUTED_DAMAGE_TYPE_SUBSTITUTION
 // KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_TWINNED_EFFECTIVE_LEVEL_EXTRA_TARGET
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.ANTIMAGIC_FIELD_ACTION_INTERDICTION
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE
 // Spell discovery (Cluster K). Mechanical extraction from battle-reducer.ts.
 // Discovers per-actor SupportedSpellInvocation acts, computes cast-summary
 // strings, classifies invocations, and synthesises the optional readied-spell
@@ -33,6 +35,7 @@ import {
   type SupportedSpellInvocation,
   type TargetListSpellInvocation,
 } from "../battle-reducer.ts";
+import type { BattleSubject } from "../battle-subjects.ts";
 import {
   spellInvocationIsSpellcasting,
   spellActTurnResourceAvailable,
@@ -67,7 +70,9 @@ import {
   spellInvocationSupportsQuickenedActionRewrite,
   transmutedSpellMetamagicLabel,
   twinnedSpellTargetCountInvocation,
+  admitSpellMetamagicApplications,
 } from "./metamagic.ts";
+import { slowSomaticSpellFailureOutcomeHole } from "./slow-active-penalties-runtime.ts";
 
 type SpellProcedureProfileDiscovery = {
   readonly discoverCastAct: (
@@ -186,6 +191,8 @@ export function discoverSupportedSpellInvocations(
     )
     .map((act) =>
       spellCastReactionFactsAct(
+        state,
+        actor,
         actorId,
         invocations,
         counterspellReactors,
@@ -343,6 +350,8 @@ function spellActWithTwinnedTargetCount(input: {
 }
 
 function spellCastReactionFactsAct(
+  state: BattleState,
+  actor: BattleCreatureState,
   actorId: CombatantId,
   invocations: readonly SupportedSpellInvocation[],
   counterspellReactors: readonly CounterspellCapableReactor[],
@@ -365,6 +374,9 @@ function spellCastReactionFactsAct(
     : {
         ...act,
         initialHoles: spellCastInitialHoles(
+          state,
+          actor,
+          subject,
           actorId,
           invocation,
           counterspellReactors,
@@ -374,18 +386,61 @@ function spellCastReactionFactsAct(
 }
 
 function spellCastInitialHoles(
+  state: BattleState,
+  actor: BattleCreatureState,
+  subject: Extract<
+    BattleSubject,
+    {
+      readonly tag: "actionSpell" | "bonusActionSpell" | "bonusActionDashSpell";
+    }
+  >,
   actorId: CombatantId,
   invocation: SupportedSpellInvocation,
   counterspellReactors: readonly CounterspellCapableReactor[],
   holes: readonly BattleHole[],
 ): readonly BattleHole[] {
-  return spellCastCanTriggerCounterspell({
+  const metamagicApplications =
+    subject.tag === "actionSpell" || subject.tag === "bonusActionSpell"
+      ? admittedSpellMetamagicApplications({
+          state,
+          actor,
+          actorId,
+          invocation,
+          subject,
+        })
+      : [];
+  const slowHole = slowSomaticSpellFailureOutcomeHole({
+    state,
+    actorId,
+    invocation,
+    metamagicApplications,
+  });
+  const counterspellHole = spellCastCanTriggerCounterspell({
     casterId: actorId,
     invocation,
     reactors: counterspellReactors,
   })
-    ? [...holes, spellCastReactionFactsHole({ casterId: actorId, invocation })]
-    : holes;
+    ? spellCastReactionFactsHole({ casterId: actorId, invocation })
+    : null;
+  return [
+    ...holes,
+    ...(slowHole === null ? [] : [slowHole]),
+    ...(counterspellHole === null ? [] : [counterspellHole]),
+  ];
+}
+
+function admittedSpellMetamagicApplications(input: {
+  readonly state: BattleState;
+  readonly actor: BattleCreatureState;
+  readonly actorId: CombatantId;
+  readonly invocation: SupportedSpellInvocation;
+  readonly subject: Extract<
+    BattleSubject,
+    { readonly tag: "actionSpell" | "bonusActionSpell" }
+  >;
+}) {
+  const admission = admitSpellMetamagicApplications(input);
+  return admission.tag === "ok" ? admission.applications : [];
 }
 
 export function spellInvocationCastSummary(

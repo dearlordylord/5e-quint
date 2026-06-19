@@ -33,12 +33,11 @@
       "spell-level": 558
     },
     "rowsByBattleReadinessStatus": {
-      "accepted": 472,
+      "accepted": 475,
       "accepted-no-battle-effect": 232,
       "battle-runtime-required": 37,
       "not-applicable": 77,
       "owner-evidence-required": 62,
-      "partial-battle-runtime": 3,
       "surface-widening-required": 17
     },
     "rowsByCatalogAdmission": {
@@ -94,8 +93,8 @@
     },
     "rowsByUnitProfileDisposition": {
       "not-recorded": 178,
-      "profile-subset-supported": 59,
-      "supported-profile": 297,
+      "profile-subset-supported": 56,
+      "supported-profile": 300,
       "unsupported-profile": 366
     }
   },
@@ -5631,10 +5630,13 @@
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "partial-battle-runtime"
+          "status": "accepted"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "table-spatial-derivation",
+          "owner": "battle-runtime Slow active-penalties owner plus table/spatial witness provider",
+          "reason": "The promoted runtime owns spell admission, resource spend, typed area witness validation, active penalty projections, target-turn Action-or-Bonus-Action restriction, Attack-action cap, Somatic failure chance, and end-turn repeat-save cleanup. Automatic Cube geometry, line of effect, point-of-origin inclusion, and area membership derivation remain caller-supplied table facts rather than duplicated battle runtime state.",
+          "state": "recorded"
         },
         "catalogAdmission": {
           "state": "installed",
@@ -5642,7 +5644,7 @@
         },
         "finalDisposition": "catalog-installed-owner-evidence-present",
         "unitProfile": {
-          "disposition": "profile-subset-supported",
+          "disposition": "supported-profile",
           "state": "recorded"
         }
       }
@@ -29020,10 +29022,13 @@
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "partial-battle-runtime"
+          "status": "accepted"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "table-spatial-derivation",
+          "owner": "battle-runtime Slow active-penalties owner plus table/spatial witness provider",
+          "reason": "The promoted runtime owns spell admission, resource spend, typed area witness validation, active penalty projections, target-turn Action-or-Bonus-Action restriction, Attack-action cap, Somatic failure chance, and end-turn repeat-save cleanup. Automatic Cube geometry, line of effect, point-of-origin inclusion, and area membership derivation remain caller-supplied table facts rather than duplicated battle runtime state.",
+          "state": "recorded"
         },
         "catalogAdmission": {
           "state": "installed",
@@ -29031,7 +29036,7 @@
         },
         "finalDisposition": "catalog-installed-owner-evidence-present",
         "unitProfile": {
-          "disposition": "profile-subset-supported",
+          "disposition": "supported-profile",
           "state": "recorded"
         }
       }
@@ -38655,10 +38660,13 @@
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "partial-battle-runtime"
+          "status": "accepted"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "table-spatial-derivation",
+          "owner": "battle-runtime Slow active-penalties owner plus table/spatial witness provider",
+          "reason": "The promoted runtime owns spell admission, resource spend, typed area witness validation, active penalty projections, target-turn Action-or-Bonus-Action restriction, Attack-action cap, Somatic failure chance, and end-turn repeat-save cleanup. Automatic Cube geometry, line of effect, point-of-origin inclusion, and area membership derivation remain caller-supplied table facts rather than duplicated battle runtime state.",
+          "state": "recorded"
         },
         "catalogAdmission": {
           "state": "installed",
@@ -38666,7 +38674,7 @@
         },
         "finalDisposition": "catalog-installed-owner-evidence-present",
         "unitProfile": {
-          "disposition": "profile-subset-supported",
+          "disposition": "supported-profile",
           "state": "recorded"
         }
       }
@@ -42113,10 +42121,13 @@
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "partial-battle-runtime"
+          "status": "accepted"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "table-spatial-derivation",
+          "owner": "battle-runtime Slow active-penalties owner plus table/spatial witness provider",
+          "reason": "The promoted runtime owns spell admission, resource spend, typed area witness validation, active penalty projections, target-turn Action-or-Bonus-Action restriction, Attack-action cap, Somatic failure chance, and end-turn repeat-save cleanup. Automatic Cube geometry, line of effect, point-of-origin inclusion, and area membership derivation remain caller-supplied table facts rather than duplicated battle runtime state.",
+          "state": "recorded"
         },
         "catalogAdmission": {
           "state": "installed",
@@ -42124,7 +42135,7 @@
         },
         "finalDisposition": "catalog-installed-owner-evidence-present",
         "unitProfile": {
-          "disposition": "profile-subset-supported",
+          "disposition": "supported-profile",
           "state": "recorded"
         }
       }

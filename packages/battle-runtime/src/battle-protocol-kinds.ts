@@ -112,6 +112,10 @@ export function battleFillKind(fill: BattleFill): BattleFillKind {
         "selfTransformationModeChoice",
         () => "selfTransformationModeChoice" as const,
       ),
+      byBattleFillKind(
+        "slowSomaticSpellFailureOutcome",
+        () => "slowSomaticSpellFailureOutcome" as const,
+      ),
     )
     .pipe(
       byBattleFillKind("shoveOutcome", () => "shoveOutcome" as const),

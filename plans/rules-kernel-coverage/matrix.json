@@ -27,14 +27,14 @@
     "qntRegistry[]": "Derived from packages/**/*.qnt excluding .mbt.qnt drivers and *-tests.qnt files, qnt-owner-roles.jsonl, and checker-owned qntRegistryExemptions."
   },
   "battleHoleFrontierSummary": {
-    "total": 159,
+    "total": 161,
     "bySubject": {
-      "battle-hole-family": 77,
-      "battle-fill-kind": 46,
+      "battle-hole-family": 78,
+      "battle-fill-kind": 47,
       "battle-subject-kind": 36
     },
     "byClassification": {
-      "semantic-frontier": 130,
+      "semantic-frontier": 132,
       "deterministic-boundary-projection": 0,
       "table-owned-fact": 29,
       "unsupported-dead-branch": 0
@@ -133,14 +133,23 @@
       "qntOwners": [
         "packages/battle-runtime/battle-runtime-slow-active-penalties.mbt.qnt"
       ],
-      "reason": "The promoted Slow runtime consumes caller-supplied affected-creature area witnesses and save outcomes. Automatic Cube geometry and full target-turn or Somatic restrictions remain explicit boundaries or follow-up work.",
+      "reason": "The promoted Slow runtime consumes caller-supplied affected-creature area witnesses, save outcomes, retained active Slow effects, shared action-economy state, Attack action resource state, and canonical spell component facts. Automatic Cube geometry, line of effect, point-of-origin inclusion, and area membership derivation remain caller/table facts.",
       "runtime": "battle",
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/slow-active-penalties.ts",
+        "packages/battle-runtime/src/battle-reducer/attack-resolution.ts",
+        "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
         "packages/battle-runtime/src/battle-reducer/creature-state.ts",
+        "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
         "packages/battle-runtime/src/battle-reducer/movement-speed.ts",
+        "packages/battle-runtime/src/battle-reducer/slow-active-penalties-runtime.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-turn-resources.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-discovery.ts",
         "packages/battle-runtime/src/battle-reducer/spells-damage-fills.ts",
-        "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts"
+        "packages/battle-runtime/src/battle-reducer/spells-resolve.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-fill-set.ts",
+        "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts",
+        "packages/shared-algebras/src/action-economy-algebra.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [
@@ -150,7 +159,7 @@
         "UBIQUITOUS_LANGUAGE.md#Action Lifecycle",
         "UBIQUITOUS_LANGUAGE.md#Movement"
       ],
-      "title": "Battle Slow applies active Speed, Armor Class, Dexterity Saving Throw, and Reaction penalties with target-end repeat-save cleanup"
+      "title": "Battle Slow applies active penalties, target-turn Action or Bonus Action restriction, Attack cap, Somatic failure, and repeat-save cleanup"
     },
     {
       "id": "BATTLE.SHOVE.OUTCOME_AND_PUSH_BOUNDARY",
@@ -4430,7 +4439,18 @@
       "followUpTaskIds": [],
       "holeKind": "savingThrowOutcome",
       "id": "BattleSlowActivePenaltiesEndTurnSavingThrowOutcomeHole",
-      "reason": "Slow end-of-target-turn Saving Throw outcomes drive reducer-owned per-target active penalty cleanup and caster Concentration cleanup when no affected targets remain. The ongoing target-turn action-resource and Somatic chance restrictions remain separate follow-up runtime work.",
+      "reason": "Slow end-of-target-turn Saving Throw outcomes drive reducer-owned per-target active penalty cleanup and caster Concentration cleanup when no affected targets remain.",
+      "subject": "battle-hole-family"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE"
+      ],
+      "followUpTaskIds": [],
+      "holeKind": "slowSomaticSpellFailureOutcome",
+      "id": "BattleSlowSomaticSpellFailureOutcomeHole",
+      "reason": "Slow Somatic spell-failure outcome holes carry the RAW 25 percent chance for an affected target casting a spell with an effective Somatic component. The fill determines whether casting resources are spent without applying the spell or resolution continues.",
       "subject": "battle-hole-family"
     },
     {
@@ -5205,6 +5225,17 @@
       "followUpTaskIds": [],
       "id": "savingThrowOutcome",
       "reason": "Saving Throw outcomes drive damage, condition, Command, creature-type protection, poison protection, feature, reaction-casting, and active-effect lifecycle branches. Protocol ordering owns when Saving Throw outcome fills are admitted in save-gated and Command procedure shapes; semantic branches point to dedicated obligations, including Protection from Poison's condition-scoped Saving Throw Advantage projection.",
+      "subject": "battle-fill-kind"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE"
+      ],
+      "fillKind": "slowSomaticSpellFailureOutcome",
+      "followUpTaskIds": [],
+      "id": "slowSomaticSpellFailureOutcome",
+      "reason": "Slow Somatic spell-failure fills decide the RAW 25 percent failure branch for affected targets: failed outcomes spend casting resources without applying the spell or starting Concentration, while nonfailed outcomes allow ordinary spell resolution to continue.",
       "subject": "battle-fill-kind"
     },
     {

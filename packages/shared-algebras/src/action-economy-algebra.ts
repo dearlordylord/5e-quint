@@ -1,3 +1,5 @@
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-slow-active-penalties
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE
 import { Either, Match } from "effect";
 import type { ActionRestriction, UnitRecord } from "@dnd/surface/surface/types";
 import {
@@ -43,9 +45,26 @@ export type RuntimeActionResource =
       readonly sourceUnitId: UnitRecord["id"];
     };
 
+const ACTION_OR_BONUS_ACTION_EXCLUSION_CHOICES = [
+  "notChosen",
+  "action",
+  "bonusAction",
+] as const;
+
+export type ActionOrBonusActionExclusionChoice =
+  (typeof ACTION_OR_BONUS_ACTION_EXCLUSION_CHOICES)[number];
+
+export type ActionOrBonusActionExclusion =
+  | { readonly kind: "notRestricted" }
+  | {
+      readonly kind: "restricted";
+      readonly choice: ActionOrBonusActionExclusionChoice;
+    };
+
 export type ActionEconomyState = {
   readonly actionResources: ReadonlyArray<RuntimeActionResource>;
   readonly currentHasBonusAction: boolean;
+  readonly actionOrBonusActionExclusion: ActionOrBonusActionExclusion;
 };
 
 export type ActivationResourceCost =
@@ -214,23 +233,130 @@ function matchingActionResourceIndex(
   return index === -1 ? null : index;
 }
 
+function actionOrBonusActionExclusionAllowsAction(
+  state: ActionEconomyState,
+): boolean {
+  return (
+    state.actionOrBonusActionExclusion.kind === "notRestricted" ||
+    state.actionOrBonusActionExclusion.choice === "notChosen"
+  );
+}
+
+function actionOrBonusActionExclusionAllowsBonusAction(
+  state: ActionEconomyState,
+): boolean {
+  return (
+    state.actionOrBonusActionExclusion.kind === "notRestricted" ||
+    state.actionOrBonusActionExclusion.choice === "notChosen"
+  );
+}
+
+function markActionSpentForActionOrBonusActionExclusion<
+  T extends ActionEconomyState,
+>(state: T): T {
+  return state.actionOrBonusActionExclusion.kind === "notRestricted"
+    ? state
+    : {
+        ...state,
+        actionResources: [],
+        currentHasBonusAction: false,
+        actionOrBonusActionExclusion: {
+          kind: "restricted",
+          choice: "action",
+        },
+      };
+}
+
+function markBonusActionSpentForActionOrBonusActionExclusion<
+  T extends ActionEconomyState,
+>(state: T): T {
+  return state.actionOrBonusActionExclusion.kind === "notRestricted"
+    ? state
+    : {
+        ...state,
+        actionResources: [],
+        currentHasBonusAction: false,
+        actionOrBonusActionExclusion: {
+          kind: "restricted",
+          choice: "bonusAction",
+        },
+      };
+}
+
+export function enableActionOrBonusActionExclusion<
+  T extends ActionEconomyState,
+>(state: T): T {
+  if (state.actionOrBonusActionExclusion.kind === "restricted") {
+    return state;
+  }
+
+  const turnActionAvailable = state.actionResources.some(
+    (resource) => resource.source === "turn",
+  );
+  if (!turnActionAvailable) {
+    return markActionSpentForActionOrBonusActionExclusion({
+      ...state,
+      actionOrBonusActionExclusion: {
+        kind: "restricted",
+        choice: "notChosen",
+      },
+    });
+  }
+  if (!state.currentHasBonusAction) {
+    return markBonusActionSpentForActionOrBonusActionExclusion({
+      ...state,
+      actionOrBonusActionExclusion: {
+        kind: "restricted",
+        choice: "notChosen",
+      },
+    });
+  }
+
+  return {
+    ...state,
+    actionOrBonusActionExclusion: {
+      kind: "restricted",
+      choice: "notChosen",
+    },
+  };
+}
+
+export function spendActionResourceAtIndex<T extends ActionEconomyState>(
+  state: T,
+  actionResourceIndex: number,
+): T {
+  return markActionSpentForActionOrBonusActionExclusion({
+    ...state,
+    actionResources: state.actionResources.filter(
+      (_, index) => index !== actionResourceIndex,
+    ),
+  });
+}
+
 export function canSpendAction(
   state: ActionEconomyState,
   action: StandardActionKind,
 ): boolean {
-  return compatibleActionResourceIndex(state.actionResources, action) !== null;
+  return (
+    actionOrBonusActionExclusionAllowsAction(state) &&
+    compatibleActionResourceIndex(state.actionResources, action) !== null
+  );
 }
 
 export function canSpendUnarmedStrikeActionResource(
   state: ActionEconomyState,
 ): boolean {
   return (
+    actionOrBonusActionExclusionAllowsAction(state) &&
     compatibleUnarmedStrikeActionResourceIndex(state.actionResources) !== null
   );
 }
 
 export function canSpendBonusAction(state: ActionEconomyState): boolean {
-  return state.currentHasBonusAction;
+  return (
+    state.currentHasBonusAction &&
+    actionOrBonusActionExclusionAllowsBonusAction(state)
+  );
 }
 
 export function resetTurnActionEconomy<T extends ActionEconomyState>(
@@ -240,6 +366,7 @@ export function resetTurnActionEconomy<T extends ActionEconomyState>(
     ...state,
     actionResources: [{ kind: "action", source: "turn" }],
     currentHasBonusAction: true,
+    actionOrBonusActionExclusion: { kind: "notRestricted" },
   };
 }
 
@@ -258,12 +385,7 @@ export function spendAction<T extends ActionEconomyState>(
   // TODO: If multiple compatible action resources are available and spending
   // one versus another can change later legality, expose resource choice as a
   // runtime hole instead of choosing deterministically here.
-  return Either.right({
-    ...state,
-    actionResources: state.actionResources.filter(
-      (_, index) => index !== actionResourceIndex,
-    ),
-  });
+  return Either.right(spendActionResourceAtIndex(state, actionResourceIndex));
 }
 
 export function spendUnarmedStrikeActionResource<T extends ActionEconomyState>(
@@ -276,12 +398,7 @@ export function spendUnarmedStrikeActionResource<T extends ActionEconomyState>(
     return Either.left("no action resource available");
   }
 
-  return Either.right({
-    ...state,
-    actionResources: state.actionResources.filter(
-      (_, index) => index !== actionResourceIndex,
-    ),
-  });
+  return Either.right(spendActionResourceAtIndex(state, actionResourceIndex));
 }
 
 export function spendMatchingActionResource<T extends ActionEconomyState>(
@@ -298,12 +415,7 @@ export function spendMatchingActionResource<T extends ActionEconomyState>(
     return Either.left("no action resource available");
   }
 
-  return Either.right({
-    ...state,
-    actionResources: state.actionResources.filter(
-      (_, index) => index !== actionResourceIndex,
-    ),
-  });
+  return Either.right(spendActionResourceAtIndex(state, actionResourceIndex));
 }
 
 export function spendActivationResource<T extends ActionEconomyState>(
@@ -318,14 +430,16 @@ export function spendActivationResource<T extends ActionEconomyState>(
     return spendAction(state, cost.action);
   }
 
-  if (!state.currentHasBonusAction) {
+  if (!canSpendBonusAction(state)) {
     return Either.left("no bonus action available");
   }
 
-  return Either.right({
-    ...state,
-    currentHasBonusAction: false,
-  });
+  return Either.right(
+    markBonusActionSpentForActionOrBonusActionExclusion({
+      ...state,
+      currentHasBonusAction: false,
+    }),
+  );
 }
 
 export function hasUnitActionResource(
@@ -347,6 +461,9 @@ export function grantUnitActionResource<T extends ActionEconomyState>(
   sourceUnitId: UnitRecord["id"],
   restriction: ActionRestriction,
 ): Either.Either<T, ActionEconomySpendError> {
+  if (!actionOrBonusActionExclusionAllowsAction(state)) {
+    return Either.left("no action resource available");
+  }
   if (hasUnitActionResource(state, sourceOwnerId, sourceUnitId)) {
     return Either.left("unit-granted action resource already granted");
   }

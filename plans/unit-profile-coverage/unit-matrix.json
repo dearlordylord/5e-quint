@@ -62,8 +62,8 @@
       "value": 319
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 185,
-      "numerator": 180,
+      "denominator": 186,
+      "numerator": 181,
       "percent": "97.3%"
     },
     "profileClassificationCoverage": {
@@ -92,8 +92,8 @@
       "percent": "100%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 174,
-      "numerator": 174,
+      "denominator": 175,
+      "numerator": 175,
       "percent": "100%"
     },
     "runtimeMappingCoverage": {
@@ -107,14 +107,14 @@
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 178,
+      "denominator": 179,
       "numerator": 176,
-      "percent": "98.9%"
+      "percent": "98.3%"
     },
     "supportedProfileCoverage": {
       "denominator": 269,
-      "numerator": 185,
-      "percent": "68.8%"
+      "numerator": 186,
+      "percent": "69.1%"
     }
   },
   "metricSemantics": [
@@ -313,22 +313,31 @@
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer.ts",
         "packages/battle-runtime/src/active-effect/types.ts",
+        "packages/battle-runtime/src/battle-reducer/attack-resolution.ts",
         "packages/battle-runtime/src/battle-reducer/battle-codecs.ts",
+        "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
         "packages/battle-runtime/src/battle-reducer/creature-state.ts",
+        "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
         "packages/battle-runtime/src/battle-reducer/movement-speed.ts",
+        "packages/battle-runtime/src/battle-reducer/slow-active-penalties-runtime.ts",
         "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/slow-active-penalties.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-turn-resources.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-discovery.ts",
         "packages/battle-runtime/src/battle-reducer/spells-damage-fills.ts",
         "packages/battle-runtime/src/battle-reducer/spells-profiles.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve.ts",
         "packages/battle-runtime/src/battle-reducer/spells-resolve-fill-set.ts",
         "packages/battle-runtime/src/battle-reducer/spells-resolve-save-gates.ts",
         "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts",
-        "packages/battle-runtime/src/battle-subjects.ts"
+        "packages/battle-runtime/src/battle-subjects.ts",
+        "packages/shared-algebras/src/action-economy-algebra.ts"
       ],
-      "sourceBoundary": "The runtime consumes the authored Slow spell shape, caller-supplied point-origin Cube affected-creature witnesses for up to six chosen creatures, and Wisdom Saving Throw outcomes. It owns Magic Action and level-3-or-higher Spell Slot spending, caster Concentration, failed-save active Speed, Armor Class, Dexterity Saving Throw, and Reaction penalties, target-end repeat-save cleanup, and concentration cleanup when no affected targets remain. Automatic Cube geometry, line of effect, point-of-origin inclusion, and area membership derivation remain caller/table facts. Target-turn Action or Bonus Action mutual exclusion, Attack action one-attack cap, and Somatic spell failure chance are admitted Surface facts deferred to the follow-up owner.",
+      "sourceBoundary": "The runtime consumes the authored Slow spell shape, caller-supplied point-origin Cube affected-creature witnesses for up to six chosen creatures, Wisdom Saving Throw outcomes, active Slow effect state, action-economy state, Attack action resource state, and canonical spell component facts. It owns Magic Action and level-3-or-higher Spell Slot spending, caster Concentration, failed-save active Speed, Armor Class, Dexterity Saving Throw, and Reaction penalties, target-turn Action or Bonus Action mutual exclusion, Attack action one-attack cap, Somatic component failure chance before spell resolution, failed-Somatic cast resource spending without applying the spell effect, target-end repeat-save cleanup, and concentration cleanup when no affected targets remain. Automatic Cube geometry, line of effect, point-of-origin inclusion, and area membership derivation remain caller/table facts.",
       "taskRefs": [
-        "L3-FOLLOWUP-SLOW-ACTIVE-PENALTIES-RUNTIME"
+        "L3-FOLLOWUP-SLOW-ACTIVE-PENALTIES-RUNTIME",
+        "L3-FOLLOWUP-SLOW-TURN-AND-SOMATIC-RUNTIME"
       ],
-      "title": "Spell invocation applies Slow active penalties with repeat-save cleanup",
+      "title": "Spell invocation applies Slow active penalties with target-turn and Somatic runtime restrictions",
       "verificationOwners": [
         {
           "kind": "runtime-test",
@@ -5530,7 +5539,7 @@
             "obligationId": "BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE",
             "runtime": "battle",
             "status": "covered",
-            "title": "Battle Slow applies active Speed, Armor Class, Dexterity Saving Throw, and Reaction penalties with target-end repeat-save cleanup"
+            "title": "Battle Slow applies active penalties, target-turn Action or Bonus Action restriction, Attack cap, Somatic failure, and repeat-save cleanup"
           }
         ],
         "profileId": "spell.invocation-slow-active-penalties",
@@ -8240,8 +8249,8 @@
       "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
       "metrics": {
         "rulesKernelSupportedUnitCoverage": {
-          "denominator": 174,
-          "numerator": 174,
+          "denominator": 175,
+          "numerator": 175,
           "percent": "100%"
         }
       },
@@ -12455,6 +12464,28 @@
               "joinStatus": "covered",
               "obligations": [
                 {
+                  "obligationId": "BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Slow applies active penalties, target-turn Action or Bonus Action restriction, Attack cap, Somatic failure, and repeat-save cleanup"
+                }
+              ],
+              "profileId": "spell.invocation-slow-active-penalties",
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/battle-runtime/battle-runtime-slow-active-penalties.mbt.qnt"
+              ]
+            }
+          ],
+          "unitId": "slow"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
                   "obligationId": "SHEET.ARMOR_CLASS.BASE_FORMULA_CHOICE",
                   "runtime": "character-sheet",
                   "status": "covered",
@@ -13170,7 +13201,7 @@
           "profileIds": [
             "spell.invocation-slow-active-penalties"
           ],
-          "tag": "profile-subset-supported"
+          "tag": "supported-profile"
         },
         "unitId": "slow"
       }
@@ -13193,11 +13224,19 @@
     },
     {
       "claimKind": "completed-runtime-parity",
-      "note": "Focused battle-runtime tests and MBT cover Slow Surface admission, Magic Action and level-3-or-higher Spell Slot spending, caster Concentration, caller-supplied Cube affected-creature witnesses for up to six chosen creatures, Wisdom Saving Throw outcomes, failed-save active Speed ratio, Armor Class, Dexterity Saving Throw, and Reaction penalties, target-end repeat-save cleanup, and concentration cleanup when no affected targets remain. Automatic geometry and the target-turn Action or Bonus Action, Attack-action cap, and Somatic spell-failure mechanics remain explicit follow-up boundaries.",
+      "note": "Focused battle-runtime tests and MBT cover Slow Surface admission, Magic Action and level-3-or-higher Spell Slot spending, caster Concentration, caller-supplied Cube affected-creature witnesses for up to six chosen creatures, Wisdom Saving Throw outcomes, failed-save active Speed ratio, Armor Class, Dexterity Saving Throw, and Reaction penalties, target-end repeat-save cleanup, and concentration cleanup when no affected targets remain. Automatic geometry and the target-turn Action or Bonus Action, Attack-action cap, and Somatic spell-failure mechanics remain explicit Task 13 boundaries.",
       "profileIds": [
         "spell.invocation-slow-active-penalties"
       ],
       "taskId": "L3-FOLLOWUP-SLOW-ACTIVE-PENALTIES-RUNTIME"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime tests and MBT cover the promoted Slow target-turn Action or Bonus Action mutual exclusion across shared action-economy spenders, Attack-action one-attack cap, Somatic component failure chance before spell resolution, failed-Somatic resource spending without spell effect application or Concentration start, and non-Somatic or component-suppressed spell casts that bypass the Slow chance outcome.",
+      "profileIds": [
+        "spell.invocation-slow-active-penalties"
+      ],
+      "taskId": "L3-FOLLOWUP-SLOW-TURN-AND-SOMATIC-RUNTIME"
     },
     {
       "claimKind": "qnt-proof",
@@ -16831,12 +16870,12 @@
         "kind": "spell",
         "label": "Spell Units",
         "profileFactDenominator": 138,
-        "profileSubsetSupportedUnits": 20,
+        "profileSubsetSupportedUnits": 19,
         "selectedIdentityDeferredNonApplicableUnits": 0,
         "selectedIdentityReplayDenominator": 112,
         "selectedIdentityReplayGapUnits": 2,
         "selectedIdentityReplayWitnessUnits": 110,
-        "supportedProfileUnits": 92,
+        "supportedProfileUnits": 93,
         "unsupportedOrOtherUnits": 26
       },
       {
@@ -35613,32 +35652,8 @@
         "battleReadinessClosure": {
           "kind": "table-spatial-derivation",
           "owner": "battle-runtime Slow active-penalties owner plus table/spatial witness provider",
-          "reason": "The promoted runtime owns spell admission, resource spend, typed area witness validation, active penalty projections, and end-turn repeat-save cleanup. Automatic Cube geometry, line of effect, point-of-origin inclusion, and area membership derivation remain caller-supplied table facts rather than duplicated battle runtime state."
+          "reason": "The promoted runtime owns spell admission, resource spend, typed area witness validation, active penalty projections, target-turn Action-or-Bonus-Action restriction, Attack-action cap, Somatic failure chance, and end-turn repeat-save cleanup. Automatic Cube geometry, line of effect, point-of-origin inclusion, and area membership derivation remain caller-supplied table facts rather than duplicated battle runtime state."
         },
-        "deferredMechanics": [
-          {
-            "followUpTaskId": "L3-FOLLOWUP-SLOW-TURN-AND-SOMATIC-RUNTIME",
-            "mechanic": "target-turn Action or Bonus Action mutual exclusion"
-          },
-          {
-            "followUpTaskId": "L3-FOLLOWUP-SLOW-TURN-AND-SOMATIC-RUNTIME",
-            "mechanic": "Attack action one-attack cap for affected targets"
-          },
-          {
-            "followUpTaskId": "L3-FOLLOWUP-SLOW-TURN-AND-SOMATIC-RUNTIME",
-            "mechanic": "25 percent failure chance when an affected target casts a spell with a Somatic component"
-          }
-        ],
-        "followUpTasks": [
-          {
-            "id": "L3-FOLLOWUP-SLOW-TURN-AND-SOMATIC-RUNTIME",
-            "mechanic": "Promote Slow's target-turn Action or Bonus Action mutual-exclusion rule, Attack-action one-attack cap, and 25 percent spell failure chance for affected targets casting spells with Somatic components after the active effect lifecycle exists.",
-            "owner": "battle-runtime action-resource, Attack action, spell component, and chance-result owners",
-            "requiredOutput": "Focused action-resource, Attack action, spell component, chance-result, cleanup, and promoted Quint/runtime parity tests, consuming typed Slow Surface facts without spell-id-specific gates.",
-            "title": "Slow Turn And Somatic Runtime"
-          }
-        ],
-        "futureProfileOwner": "split Slow target-turn action-resource, Attack action, and Somatic spell failure owners",
         "profileIds": [
           "spell.invocation-slow-active-penalties"
         ],
@@ -35650,11 +35665,15 @@
           "caller-supplied point-origin 40-foot Cube affected-creature witnesses for up to six caster-chosen creatures",
           "Wisdom Saving Throw against the caster Spell Save DC",
           "failed-save source-owned active effect projecting Speed ratio 1/2, -2 Armor Class, -2 Dexterity Saving Throw modifier, and no Reactions without authored-identity dispatch",
+          "target turns under an active Slow effect are restricted to either an Action or a Bonus Action, not both",
+          "affected targets make only one attack when they take the Attack action, including suppression of Extra Attack action resources",
+          "affected targets casting spells with an effective Somatic component request a 25 percent failure chance outcome before spell resolution",
+          "failed Slow Somatic spell chance outcomes spend casting resources without applying the spell effect or starting Concentration, while non-Somatic or component-suppressed spell casts do not request the Slow chance outcome",
           "caster Concentration ownership up to 1 minute only while at least one target remains affected",
           "successful end-of-target-turn repeat Saving Throw removes the target's Slow active penalties and clears caster Concentration when no affected targets remain",
           "Concentration and duration cleanup remove the active Slow penalties"
         ],
-        "tag": "profile-subset-supported"
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
@@ -35662,6 +35681,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-slow-active-penalties.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "L3-FOLLOWUP-SLOW-ACTIVE-PENALTIES-RUNTIME"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-slow-active-penalties.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L3-FOLLOWUP-SLOW-TURN-AND-SOMATIC-RUNTIME"
         }
       ],
       "executableMechanics": true,
@@ -35676,22 +35700,31 @@
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-reducer.ts",
             "packages/battle-runtime/src/active-effect/types.ts",
+            "packages/battle-runtime/src/battle-reducer/attack-resolution.ts",
             "packages/battle-runtime/src/battle-reducer/battle-codecs.ts",
+            "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
             "packages/battle-runtime/src/battle-reducer/creature-state.ts",
+            "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
             "packages/battle-runtime/src/battle-reducer/movement-speed.ts",
+            "packages/battle-runtime/src/battle-reducer/slow-active-penalties-runtime.ts",
             "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/slow-active-penalties.ts",
+            "packages/battle-runtime/src/battle-reducer/spell-turn-resources.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-discovery.ts",
             "packages/battle-runtime/src/battle-reducer/spells-damage-fills.ts",
             "packages/battle-runtime/src/battle-reducer/spells-profiles.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-resolve.ts",
             "packages/battle-runtime/src/battle-reducer/spells-resolve-fill-set.ts",
             "packages/battle-runtime/src/battle-reducer/spells-resolve-save-gates.ts",
             "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts",
-            "packages/battle-runtime/src/battle-subjects.ts"
+            "packages/battle-runtime/src/battle-subjects.ts",
+            "packages/shared-algebras/src/action-economy-algebra.ts"
           ],
-          "sourceBoundary": "The runtime consumes the authored Slow spell shape, caller-supplied point-origin Cube affected-creature witnesses for up to six chosen creatures, and Wisdom Saving Throw outcomes. It owns Magic Action and level-3-or-higher Spell Slot spending, caster Concentration, failed-save active Speed, Armor Class, Dexterity Saving Throw, and Reaction penalties, target-end repeat-save cleanup, and concentration cleanup when no affected targets remain. Automatic Cube geometry, line of effect, point-of-origin inclusion, and area membership derivation remain caller/table facts. Target-turn Action or Bonus Action mutual exclusion, Attack action one-attack cap, and Somatic spell failure chance are admitted Surface facts deferred to the follow-up owner.",
+          "sourceBoundary": "The runtime consumes the authored Slow spell shape, caller-supplied point-origin Cube affected-creature witnesses for up to six chosen creatures, Wisdom Saving Throw outcomes, active Slow effect state, action-economy state, Attack action resource state, and canonical spell component facts. It owns Magic Action and level-3-or-higher Spell Slot spending, caster Concentration, failed-save active Speed, Armor Class, Dexterity Saving Throw, and Reaction penalties, target-turn Action or Bonus Action mutual exclusion, Attack action one-attack cap, Somatic component failure chance before spell resolution, failed-Somatic cast resource spending without applying the spell effect, target-end repeat-save cleanup, and concentration cleanup when no affected targets remain. Automatic Cube geometry, line of effect, point-of-origin inclusion, and area membership derivation remain caller/table facts.",
           "taskRefs": [
-            "L3-FOLLOWUP-SLOW-ACTIVE-PENALTIES-RUNTIME"
+            "L3-FOLLOWUP-SLOW-ACTIVE-PENALTIES-RUNTIME",
+            "L3-FOLLOWUP-SLOW-TURN-AND-SOMATIC-RUNTIME"
           ],
-          "title": "Spell invocation applies Slow active penalties with repeat-save cleanup",
+          "title": "Spell invocation applies Slow active penalties with target-turn and Somatic runtime restrictions",
           "verificationOwners": [
             {
               "kind": "runtime-test",
