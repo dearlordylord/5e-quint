@@ -8,6 +8,7 @@ import conjureAnimalsInput from "../../content/conjure_animals.json";
 import dragonsBreathInput from "../../content/dragons_breath.json";
 import flameBladeInput from "../../content/flame_blade.json";
 import fighterWeaponMasteryInput from "../../content/fighter_weapon_mastery.json";
+import hasteInput from "../../content/haste.json";
 import heatMetalInput from "../../content/heat_metal.json";
 import locateAnimalsOrPlantsInput from "../../content/locate_animals_or_plants.json";
 import locateObjectInput from "../../content/locate_object.json";
@@ -167,6 +168,36 @@ describe("Surface trace interpreter", () => {
           atomKind: "ongoing_predicate",
           label:
             "ongoing_predicate\ntable-witnessed attachment within spell range",
+        }),
+      ]),
+    );
+  });
+
+  test("renders Haste's restricted action set and lethargy rider as typed facts", () => {
+    const trace = traceUnit(decodeUnitRecordSync(hasteInput));
+
+    expect(trace.nodes).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          atomKind: "hole",
+          label: expect.stringContaining("visibility: caster_can_see"),
+        }),
+        expect.objectContaining({
+          atomKind: "restrict_action_set",
+          label:
+            "restrict_action_set\nallow only: attack (one attack only), dash, disengage, hide, utilize",
+        }),
+        expect.objectContaining({
+          atomKind: "effect_end_target_state",
+          label: "effect_end_target_state\nuntil: end_of_target_next_turn",
+        }),
+        expect.objectContaining({
+          atomKind: "apply_condition",
+          label: "apply_condition\nincapacitated",
+        }),
+        expect.objectContaining({
+          atomKind: "set_speed",
+          label: "set_speed\n= 0 ft",
         }),
       ]),
     );

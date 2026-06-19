@@ -231,7 +231,7 @@
     "levelSevenClassRows": 24,
     "spellPressureRows": 367,
     "levelThreeSpellPressureRows": 110,
-    "levelThreeInstalledSpellPressureRows": 49,
+    "levelThreeInstalledSpellPressureRows": 51,
     "levelFourSpellPressureRows": 81,
     "levelFourInstalledSpellPressureRows": 0,
     "levelOneBattleReadiness": {
@@ -298,9 +298,9 @@
       "rowsByStatus": {
         "accepted-no-battle-effect": 47,
         "accepted": 22,
-        "battle-runtime-required": 22,
+        "battle-runtime-required": 24,
         "owner-evidence-required": 12,
-        "surface-widening-required": 7
+        "surface-widening-required": 5
       }
     },
     "levelFourSpellBattleReadiness": {
@@ -375,10 +375,10 @@
       "non-runtime": 84,
       "catalog-only/dead-for-now": 186,
       "level-5-7-follow-up-required": 24,
-      "catalog-installed-owner-evidence-required": 10,
+      "catalog-installed-owner-evidence-required": 12,
       "missing-authored-record": 45,
       "catalog-authored-review-required": 61,
-      "needs-surface-widening": 7
+      "needs-surface-widening": 5
     },
     "spellPressureRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 249,
@@ -387,15 +387,15 @@
     "levelThreeSpellPressureRowsByDisposition": {
       "catalog-only/dead-for-now": 47,
       "catalog-installed-owner-evidence-present": 22,
-      "catalog-installed-owner-evidence-required": 9,
+      "catalog-installed-owner-evidence-required": 11,
       "missing-authored-record": 13,
       "catalog-authored-review-required": 12,
-      "needs-surface-widening": 7
+      "needs-surface-widening": 5
     },
     "levelThreeInstalledSpellPressureRowsByDisposition": {
       "catalog-only/dead-for-now": 18,
       "catalog-installed-owner-evidence-present": 22,
-      "catalog-installed-owner-evidence-required": 9
+      "catalog-installed-owner-evidence-required": 11
     },
     "levelFourSpellPressureRowsByDisposition": {
       "catalog-authored-review-required": 49,
@@ -30714,26 +30714,33 @@
       "detail": "Haste (Transmutation; C)",
       "candidateUnitId": "haste",
       "surface": {
-        "state": "current-surface-cannot-express-mechanics-yet",
-        "missingConstruct": "Spell Definition haste active-effect and lethargy split: Magic Action casting, level-3 Spell Slot, 30-foot visible willing-creature targeting, Concentration duration, doubled Speed, +2 Armor Class, Dexterity Saving Throw Advantage, a per-turn additional-action allow-list that caps Attack at one attack, and spell-end lethargy applying Incapacitated plus Speed 0 until the end of the target's next turn; Surface needs typed extra-action restriction and end-of-effect lethargy facts before the SRD record can be authored without collapsing later positive-runtime and lethargy-runtime follow-ups."
+        "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "haste",
+        "sourceRecordPath": "packages/surface/content/haste.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "haste"
       },
-      "finalDisposition": "needs-surface-widening",
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-required",
       "ownerEvidence": [
         {
-          "owner": "Surface Spell Definition plus future battle-runtime positive-effect and lethargy owners",
-          "evidence": "Spell Definition haste active-effect and lethargy split: Magic Action casting, level-3 Spell Slot, 30-foot visible willing-creature targeting, Concentration duration, doubled Speed, +2 Armor Class, Dexterity Saving Throw Advantage, a per-turn additional-action allow-list that caps Attack at one attack, and spell-end lethargy applying Incapacitated plus Speed 0 until the end of the target's next turn; Surface needs typed extra-action restriction and end-of-effect lethargy facts before the SRD record can be authored without collapsing later positive-runtime and lethargy-runtime follow-ups.",
-          "status": "Surface widening required before owner evidence can be present"
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit haste is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/effect lifecycle plus restricted spell-granted action resource owner; battle-runtime spell-end lethargy cleanup owner",
+          "evidence": "Promote follow-up split L3-FOLLOWUP-HASTE-POSITIVE-RUNTIME, L3-FOLLOWUP-HASTE-LETHARGY-RUNTIME: L3-FOLLOWUP-HASTE-POSITIVE-RUNTIME owns Promote Haste's active positive effects from typed Surface/profile facts: Magic Action level-3+ Spell Slot spend, caster-owned Concentration, willing visible target admission, doubled Speed projection, +2 Armor Class, Dexterity Saving Throw Advantage, and one target-turn additional action restricted to Attack with one attack only, Dash, Disengage, Hide, or Utilize. Required output: Supported-profile or profile-subset-supported Haste claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity without authored spell identity dispatch.; L3-FOLLOWUP-HASTE-LETHARGY-RUNTIME owns Promote Haste's spell-end rider by removing the positive effect and applying source-owned Incapacitated plus Speed 0 until the end of the target's next turn for concentration loss, duration expiration, replacement/recast, and cleanup boundaries. Required output: Focused cleanup tests and promoted Quint/runtime parity preserving independent Incapacitated sources and keeping Speed 0 tied to the lethargy state, not Incapacitated generally.",
+          "status": "owner evidence required"
         }
       ],
-      "nextAction": "Widen Surface: Spell Definition haste active-effect and lethargy split: Magic Action casting, level-3 Spell Slot, 30-foot visible willing-creature targeting, Concentration duration, doubled Speed, +2 Armor Class, Dexterity Saving Throw Advantage, a per-turn additional-action allow-list that caps Attack at one attack, and spell-end lethargy applying Incapacitated plus Speed 0 until the end of the target's next turn; Surface needs typed extra-action restriction and end-of-effect lethargy facts before the SRD record can be authored without collapsing later positive-runtime and lethargy-runtime follow-ups.",
-      "battleReadinessStatus": "surface-widening-required"
+      "nextAction": "Promote follow-up split L3-FOLLOWUP-HASTE-POSITIVE-RUNTIME, L3-FOLLOWUP-HASTE-LETHARGY-RUNTIME: L3-FOLLOWUP-HASTE-POSITIVE-RUNTIME owns Promote Haste's active positive effects from typed Surface/profile facts: Magic Action level-3+ Spell Slot spend, caster-owned Concentration, willing visible target admission, doubled Speed projection, +2 Armor Class, Dexterity Saving Throw Advantage, and one target-turn additional action restricted to Attack with one attack only, Dash, Disengage, Hide, or Utilize. Required output: Supported-profile or profile-subset-supported Haste claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity without authored spell identity dispatch.; L3-FOLLOWUP-HASTE-LETHARGY-RUNTIME owns Promote Haste's spell-end rider by removing the positive effect and applying source-owned Incapacitated plus Speed 0 until the end of the target's next turn for concentration loss, duration expiration, replacement/recast, and cleanup boundaries. Required output: Focused cleanup tests and promoted Quint/runtime parity preserving independent Incapacitated sources and keeping Speed 0 tied to the lethargy state, not Incapacitated generally.",
+      "battleReadinessStatus": "battle-runtime-required"
     },
     {
       "id": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_hypnotic_pattern",
@@ -39529,26 +39536,33 @@
       "detail": "Haste (Transmutation; C)",
       "candidateUnitId": "haste",
       "surface": {
-        "state": "current-surface-cannot-express-mechanics-yet",
-        "missingConstruct": "Spell Definition haste active-effect and lethargy split: Magic Action casting, level-3 Spell Slot, 30-foot visible willing-creature targeting, Concentration duration, doubled Speed, +2 Armor Class, Dexterity Saving Throw Advantage, a per-turn additional-action allow-list that caps Attack at one attack, and spell-end lethargy applying Incapacitated plus Speed 0 until the end of the target's next turn; Surface needs typed extra-action restriction and end-of-effect lethargy facts before the SRD record can be authored without collapsing later positive-runtime and lethargy-runtime follow-ups."
+        "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "haste",
+        "sourceRecordPath": "packages/surface/content/haste.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "haste"
       },
-      "finalDisposition": "needs-surface-widening",
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-required",
       "ownerEvidence": [
         {
-          "owner": "Surface Spell Definition plus future battle-runtime positive-effect and lethargy owners",
-          "evidence": "Spell Definition haste active-effect and lethargy split: Magic Action casting, level-3 Spell Slot, 30-foot visible willing-creature targeting, Concentration duration, doubled Speed, +2 Armor Class, Dexterity Saving Throw Advantage, a per-turn additional-action allow-list that caps Attack at one attack, and spell-end lethargy applying Incapacitated plus Speed 0 until the end of the target's next turn; Surface needs typed extra-action restriction and end-of-effect lethargy facts before the SRD record can be authored without collapsing later positive-runtime and lethargy-runtime follow-ups.",
-          "status": "Surface widening required before owner evidence can be present"
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit haste is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/effect lifecycle plus restricted spell-granted action resource owner; battle-runtime spell-end lethargy cleanup owner",
+          "evidence": "Promote follow-up split L3-FOLLOWUP-HASTE-POSITIVE-RUNTIME, L3-FOLLOWUP-HASTE-LETHARGY-RUNTIME: L3-FOLLOWUP-HASTE-POSITIVE-RUNTIME owns Promote Haste's active positive effects from typed Surface/profile facts: Magic Action level-3+ Spell Slot spend, caster-owned Concentration, willing visible target admission, doubled Speed projection, +2 Armor Class, Dexterity Saving Throw Advantage, and one target-turn additional action restricted to Attack with one attack only, Dash, Disengage, Hide, or Utilize. Required output: Supported-profile or profile-subset-supported Haste claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity without authored spell identity dispatch.; L3-FOLLOWUP-HASTE-LETHARGY-RUNTIME owns Promote Haste's spell-end rider by removing the positive effect and applying source-owned Incapacitated plus Speed 0 until the end of the target's next turn for concentration loss, duration expiration, replacement/recast, and cleanup boundaries. Required output: Focused cleanup tests and promoted Quint/runtime parity preserving independent Incapacitated sources and keeping Speed 0 tied to the lethargy state, not Incapacitated generally.",
+          "status": "owner evidence required"
         }
       ],
-      "nextAction": "Widen Surface: Spell Definition haste active-effect and lethargy split: Magic Action casting, level-3 Spell Slot, 30-foot visible willing-creature targeting, Concentration duration, doubled Speed, +2 Armor Class, Dexterity Saving Throw Advantage, a per-turn additional-action allow-list that caps Attack at one attack, and spell-end lethargy applying Incapacitated plus Speed 0 until the end of the target's next turn; Surface needs typed extra-action restriction and end-of-effect lethargy facts before the SRD record can be authored without collapsing later positive-runtime and lethargy-runtime follow-ups.",
-      "battleReadinessStatus": "surface-widening-required"
+      "nextAction": "Promote follow-up split L3-FOLLOWUP-HASTE-POSITIVE-RUNTIME, L3-FOLLOWUP-HASTE-LETHARGY-RUNTIME: L3-FOLLOWUP-HASTE-POSITIVE-RUNTIME owns Promote Haste's active positive effects from typed Surface/profile facts: Magic Action level-3+ Spell Slot spend, caster-owned Concentration, willing visible target admission, doubled Speed projection, +2 Armor Class, Dexterity Saving Throw Advantage, and one target-turn additional action restricted to Attack with one attack only, Dash, Disengage, Hide, or Utilize. Required output: Supported-profile or profile-subset-supported Haste claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity without authored spell identity dispatch.; L3-FOLLOWUP-HASTE-LETHARGY-RUNTIME owns Promote Haste's spell-end rider by removing the positive effect and applying source-owned Incapacitated plus Speed 0 until the end of the target's next turn for concentration loss, duration expiration, replacement/recast, and cleanup boundaries. Required output: Focused cleanup tests and promoted Quint/runtime parity preserving independent Incapacitated sources and keeping Speed 0 tied to the lethargy state, not Incapacitated generally.",
+      "battleReadinessStatus": "battle-runtime-required"
     },
     {
       "id": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_hypnotic_pattern",

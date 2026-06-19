@@ -49,6 +49,14 @@ const PositiveIntegerSchema = Schema.Number.pipe(
   Schema.int(),
   Schema.greaterThanOrEqualTo(1),
 );
+type StandardActionKind = Schema.Schema.Type<typeof StandardActionKindSchema>;
+
+const ACTION_RESTRICTION_ACTIONS_WITHOUT_ATTACK_LIMIT = [
+  "dash",
+  "disengage",
+  "hide",
+  "utilize",
+] as const satisfies ReadonlyArray<StandardActionKind>;
 
 export const SpellSchoolSchema = Schema.Literal(
   "abjuration",
@@ -346,6 +354,19 @@ const AlterSelfNaturalWeaponGrowthDamageTypeChoiceSchema = strictStruct({
   ),
 });
 
+export const ActionRestrictionAllowedActionSchema = Schema.Union(
+  strictStruct({
+    action: Schema.Literal("attack"),
+    attackLimit: strictStruct({
+      kind: Schema.Literal("attack_count"),
+      count: Schema.Literal(1),
+    }),
+  }),
+  strictStruct({
+    action: Schema.Literal(...ACTION_RESTRICTION_ACTIONS_WITHOUT_ATTACK_LIMIT),
+  }),
+);
+
 export const ActionRestrictionSchema = Schema.Union(
   Schema.Struct({
     kind: Schema.Literal("none"),
@@ -353,6 +374,10 @@ export const ActionRestrictionSchema = Schema.Union(
   Schema.Struct({
     kind: Schema.Literal("exclude"),
     actions: nonEmpty(StandardActionKindSchema),
+  }),
+  strictStruct({
+    kind: Schema.Literal("allow_only"),
+    actions: nonEmpty(ActionRestrictionAllowedActionSchema),
   }),
 );
 
@@ -492,7 +517,6 @@ type SavingThrowSourceFilter = Schema.Schema.Type<
 >;
 type ActionRestriction = Schema.Schema.Type<typeof ActionRestrictionSchema>;
 type ActionEconomyKind = "action" | "bonus_action" | "reaction";
-type StandardActionKind = Schema.Schema.Type<typeof StandardActionKindSchema>;
 type TargetEffectEscapeAction = {
   readonly kind: "target_effect_escape_action";
   readonly actor: "another_creature";
@@ -695,9 +719,20 @@ type CurseOccurrenceEffect = {
   }>;
 };
 
+type EffectEndTargetState = {
+  readonly kind: "effect_end_target_state";
+  readonly duration: "end_of_target_next_turn";
+  readonly condition: Condition;
+  readonly speed: {
+    readonly kind: "set_speed";
+    readonly feet: 0;
+  };
+};
+
 type EffectAtom =
   | ObjectContactDamageEffect
   | CurseOccurrenceEffect
+  | EffectEndTargetState
   | {
       readonly kind: "damage";
       readonly damageType: DamageTypeRef;
@@ -2055,6 +2090,8 @@ const TARGET_KINDS = [
 ] as const satisfies ReadonlyNonEmptyArray<string>;
 export const TargetKindSchema = Schema.Literal(...TARGET_KINDS);
 export const TargetDispositionSchema = Schema.Literal("willing");
+export const TargetVisibilityRequirementSchema =
+  Schema.Literal("caster_can_see");
 export const TargetStateFilterSchema = Schema.Union(
   Schema.Tuple(Schema.Literal("falling")),
   Schema.Tuple(Schema.Literal("zero_hp_not_dead")),
@@ -2111,6 +2148,7 @@ export const CreatureTargetSelectionSchema = strictStruct({
   creatureSizeFilter: optionalExact(
     Schema.suspend(() => CreatureSizeFilterSchema),
   ),
+  visibility: optionalExact(TargetVisibilityRequirementSchema),
   relativePosition: optionalExact(TargetRelativePositionSchema),
 });
 
@@ -2149,6 +2187,7 @@ export const TargetSelectionSchema = Schema.Union(
     disposition: TargetDispositionSchema,
     typeFilter: optionalExact(TargetTypeFilterSchema),
     stateFilter: optionalExact(TargetStateFilterSchema),
+    visibility: optionalExact(TargetVisibilityRequirementSchema),
   }),
   strictStruct({
     mode: Schema.Literal("choose_up_to"),
@@ -2186,6 +2225,7 @@ export const TargetSelectionSchema = Schema.Union(
     disposition: TargetDispositionSchema,
     typeFilter: optionalExact(TargetTypeFilterSchema),
     stateFilter: optionalExact(TargetStateFilterSchema),
+    visibility: optionalExact(TargetVisibilityRequirementSchema),
   }),
   strictStruct({
     mode: Schema.Literal("any_number"),
@@ -2204,6 +2244,7 @@ export const TargetSelectionSchema = Schema.Union(
     disposition: TargetDispositionSchema,
     typeFilter: optionalExact(TargetTypeFilterSchema),
     stateFilter: optionalExact(TargetStateFilterSchema),
+    visibility: optionalExact(TargetVisibilityRequirementSchema),
   }),
 );
 
@@ -2831,6 +2872,16 @@ export const ShapeShiftActionRestrictionSchema = Schema.Literal(
   "no_spellcasting",
 );
 
+export const EffectEndTargetStateSchema = strictStruct({
+  kind: Schema.Literal("effect_end_target_state"),
+  duration: Schema.Literal("end_of_target_next_turn"),
+  condition: ConditionSchema,
+  speed: strictStruct({
+    kind: Schema.Literal("set_speed"),
+    feet: Schema.Literal(0),
+  }),
+});
+
 export const ShapeShiftRevertTriggerSchema = Schema.Union(
   Schema.Struct({ kind: Schema.Literal("zero_hp") }),
   Schema.Struct({ kind: Schema.Literal("spell_ends") }),
@@ -2909,6 +2960,7 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
   Schema.suspend(() =>
     Schema.Union(
       ObjectContactDamageEffectSchema,
+      EffectEndTargetStateSchema,
       Schema.Struct({
         kind: Schema.Literal("curse_occurrence"),
         removal: strictStruct({

@@ -93,6 +93,7 @@ export function traceEffectAtomScaling(
     case "grant_resistance":
     case "kill_target":
     case "end_current_effect":
+    case "effect_end_target_state":
     case "repeat_save_for_condition":
     case "condition_persists_after_full_duration":
     case "take_standard_action":

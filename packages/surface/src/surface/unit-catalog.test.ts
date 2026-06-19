@@ -6,6 +6,7 @@ import { describe, expect, test } from "vitest";
 import findFamiliarInput from "../../content/find_familiar.json";
 import flyInput from "../../content/fly.json";
 import glyphOfWardingInput from "../../content/glyph_of_warding.json";
+import hasteInput from "../../content/haste.json";
 import hypnoticPatternInput from "../../content/hypnotic_pattern.json";
 import magicWeaponInput from "../../content/magic_weapon.json";
 import moonbeamInput from "../../content/moonbeam.json";
@@ -240,6 +241,7 @@ const requiredFirstVerticalUnitIds = [
   "enthrall",
   "find_traps",
   "gust_of_wind",
+  "haste",
   "expeditious_retreat",
   "feather_fall",
   "jump",
@@ -274,6 +276,90 @@ describe("SRD Unit catalog boundary", () => {
         expect(result.catalog.requireUnit(unitId).id).toBe(unitId);
       }
     }
+  });
+
+  test("keeps Haste's restricted extra action and spell-end lethargy explicit", () => {
+    const decoded = decodeUnitRecordSync(hasteInput);
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag !== "ok") return;
+    expect(result.catalog.requireUnit("haste")).toEqual(decoded);
+
+    expect(decoded).toMatchObject({
+      id: "haste",
+      kind: "spell",
+      mechanics: {
+        castingTime: { kind: "action" },
+        duration: {
+          kind: "concentration",
+          upTo: { amount: 1, unit: "minute" },
+        },
+        family: "activation",
+        level: 3,
+        phases: [
+          {
+            attachment: {
+              value: {
+                kind: "target",
+                selection: {
+                  disposition: "willing",
+                  mode: "one",
+                  targetKinds: ["creature"],
+                  visibility: "caster_can_see",
+                },
+              },
+            },
+            effects: [
+              {
+                denominator: 1,
+                kind: "set_speed_ratio",
+                numerator: 2,
+              },
+              {
+                delta: { amount: 2, kind: "fixed_number", sign: "+" },
+                kind: "modify_ac",
+              },
+              {
+                kind: "modify_roll_advantage",
+                mode: "advantage",
+                on: ["saving_throw"],
+                saveAbilityFilter: ["dex"],
+              },
+              {
+                kind: "grant_extra_action",
+                restriction: {
+                  actions: [
+                    {
+                      action: "attack",
+                      attackLimit: { count: 1, kind: "attack_count" },
+                    },
+                    { action: "dash" },
+                    { action: "disengage" },
+                    { action: "hide" },
+                    { action: "utilize" },
+                  ],
+                  kind: "allow_only",
+                },
+              },
+              {
+                condition: "incapacitated",
+                duration: "end_of_target_next_turn",
+                kind: "effect_end_target_state",
+                speed: { feet: 0, kind: "set_speed" },
+              },
+            ],
+            kind: "direct",
+          },
+        ],
+        range: { feet: 30, kind: "point" },
+        school: "transmutation",
+      },
+      provenance: {
+        kind: "srd-5.2.1",
+        section: "Spells/Descriptions-E-L#Haste",
+      },
+    });
   });
 
   test("keeps Fireball's SRD object-ignition clause in the catalog projection", () => {

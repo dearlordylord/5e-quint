@@ -280,6 +280,9 @@ export type AreaDirectEffectAtom = Schema.Schema.Type<
 export type EffectAtom = Schema.Schema.Type<
   typeof SurfaceSchema.EffectAtomSchema
 >;
+export type EffectEndTargetState = Schema.Schema.Type<
+  typeof SurfaceSchema.EffectEndTargetStateSchema
+>;
 
 export function isAreaScopedEffectAtom(
   effect: AreaDirectEffectAtom,
@@ -338,6 +341,9 @@ export type TargetRelativePosition = Schema.Schema.Type<
 >;
 export type TargetSelection = Schema.Schema.Type<
   typeof SurfaceSchema.TargetSelectionSchema
+>;
+export type TargetVisibilityRequirement = Schema.Schema.Type<
+  typeof SurfaceSchema.TargetVisibilityRequirementSchema
 >;
 export type AreaOrigin = Schema.Schema.Type<
   typeof SurfaceSchema.AreaOriginSchema
@@ -405,6 +411,9 @@ export type PassiveOperation = Schema.Schema.Type<
 >;
 export type ActionRestriction = Schema.Schema.Type<
   typeof SurfaceSchema.ActionRestrictionSchema
+>;
+export type ActionRestrictionAllowedAction = Schema.Schema.Type<
+  typeof SurfaceSchema.ActionRestrictionAllowedActionSchema
 >;
 export type SaveSuccessOutcome = Schema.Schema.Type<
   typeof SurfaceSchema.SaveSuccessOutcomeSchema

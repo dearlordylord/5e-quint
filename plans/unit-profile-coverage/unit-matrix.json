@@ -43,14 +43,14 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
-      "denominator": 455,
-      "numerator": 269,
-      "percent": "59.1%"
+      "denominator": 456,
+      "numerator": 270,
+      "percent": "59.2%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 543,
-      "numerator": 319,
-      "percent": "58.7%"
+      "denominator": 544,
+      "numerator": 320,
+      "percent": "58.8%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,7 +59,7 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 320
+      "value": 321
     },
     "deterministicAdmissionProjectionCoverage": {
       "denominator": 185,
@@ -67,8 +67,8 @@
       "percent": "97.3%"
     },
     "profileClassificationCoverage": {
-      "denominator": 320,
-      "numerator": 320,
+      "denominator": 321,
+      "numerator": 321,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -112,9 +112,9 @@
       "percent": "98.9%"
     },
     "supportedProfileCoverage": {
-      "denominator": 270,
+      "denominator": 271,
       "numerator": 185,
-      "percent": "68.5%"
+      "percent": "68.3%"
     }
   },
   "metricSemantics": [
@@ -16661,8 +16661,8 @@
         "unsupportedOrOtherUnits": 4
       },
       {
-        "executableUnitDenominator": 139,
-        "installedUnitDenominator": 139,
+        "executableUnitDenominator": 140,
+        "installedUnitDenominator": 140,
         "kind": "spell",
         "label": "Spell Units",
         "profileFactDenominator": 136,
@@ -16672,7 +16672,7 @@
         "selectedIdentityReplayGapUnits": 0,
         "selectedIdentityReplayWitnessUnits": 110,
         "supportedProfileUnits": 92,
-        "unsupportedOrOtherUnits": 29
+        "unsupportedOrOtherUnits": 30
       },
       {
         "executableUnitDenominator": 93,
@@ -30781,6 +30781,40 @@
       ],
       "sourceRecordPath": "packages/surface/content/gust_of_wind.json",
       "unitId": "gust_of_wind"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "followUpTasks": [
+          {
+            "id": "L3-FOLLOWUP-HASTE-POSITIVE-RUNTIME",
+            "mechanic": "Promote Haste's active positive effects from typed Surface/profile facts: Magic Action level-3+ Spell Slot spend, caster-owned Concentration, willing visible target admission, doubled Speed projection, +2 Armor Class, Dexterity Saving Throw Advantage, and one target-turn additional action restricted to Attack with one attack only, Dash, Disengage, Hide, or Utilize.",
+            "owner": "battle-runtime spell invocation/effect lifecycle plus restricted spell-granted action resource owner",
+            "requiredOutput": "Supported-profile or profile-subset-supported Haste claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity without authored spell identity dispatch.",
+            "title": "Haste Positive Runtime"
+          },
+          {
+            "id": "L3-FOLLOWUP-HASTE-LETHARGY-RUNTIME",
+            "mechanic": "Promote Haste's spell-end rider by removing the positive effect and applying source-owned Incapacitated plus Speed 0 until the end of the target's next turn for concentration loss, duration expiration, replacement/recast, and cleanup boundaries.",
+            "owner": "battle-runtime spell-end lethargy cleanup owner",
+            "requiredOutput": "Focused cleanup tests and promoted Quint/runtime parity preserving independent Incapacitated sources and keeping Speed 0 tied to the lethargy state, not Incapacitated generally.",
+            "title": "Haste Lethargy Runtime Cleanup"
+          }
+        ],
+        "reason": "Haste is authored and installed as an SRD Surface Spell Definition with Magic Action Spell Slot casting, 30-foot visible willing-creature targeting, Concentration up to 1 minute, doubled Speed, +2 Armor Class, Dexterity Saving Throw Advantage, a restricted per-turn additional action allow-list with Attack capped at one attack plus Dash, Disengage, Hide, and Utilize, and a spell-end lethargy rider that applies Incapacitated plus Speed 0 until the end of the target's next turn. No promoted battle-runtime profile is claimed because positive active effects and lethargy cleanup are split into follow-up runtime owners that must consume typed Surface facts without authored spell identity dispatch.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/haste.json",
+      "unitId": "haste"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

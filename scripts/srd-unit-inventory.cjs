@@ -387,9 +387,6 @@ const classFeatureSurfaceBlockers = new Map();
 
 const spellAccessSurfaceBlockers = new Map();
 
-const hasteSurfaceWideningOwner =
-  "Surface Spell Definition plus future battle-runtime positive-effect and lethargy owners";
-
 const magicCircleSurfaceWideningOwner =
   "Surface Spell Definition plus table/spatial planar-movement owner and future battle-runtime warded-area Spell Effect owner";
 
@@ -397,15 +394,6 @@ const meldIntoStoneSurfaceWideningOwner =
   "Surface Spell Definition plus table terrain/object occupancy owner and future battle-runtime merged-state, perception, damage, and forced-exit Spell Effect owner";
 
 const spellUnitMissingClassifications = new Map([
-  [
-    "haste",
-    {
-      kind: "needs-surface-widening",
-      owner: hasteSurfaceWideningOwner,
-      missingConstruct:
-        "Spell Definition haste active-effect and lethargy split: Magic Action casting, level-3 Spell Slot, 30-foot visible willing-creature targeting, Concentration duration, doubled Speed, +2 Armor Class, Dexterity Saving Throw Advantage, a per-turn additional-action allow-list that caps Attack at one attack, and spell-end lethargy applying Incapacitated plus Speed 0 until the end of the target's next turn; Surface needs typed extra-action restriction and end-of-effect lethargy facts before the SRD record can be authored without collapsing later positive-runtime and lethargy-runtime follow-ups.",
-    },
-  ],
   [
     "magic_circle",
     {

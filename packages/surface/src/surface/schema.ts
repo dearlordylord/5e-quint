@@ -2,6 +2,7 @@ import { Either, ParseResult, Schema } from "effect";
 
 export {
   ActionRestrictionSchema,
+  ActionRestrictionAllowedActionSchema,
   ActivationMechanicsSchema,
   ActivationPhaseSchema,
   AnchorTargetSchema,
@@ -59,6 +60,7 @@ export {
   DurationEndTriggerSchema,
   DurationSchema,
   EffectAtomSchema,
+  EffectEndTargetStateSchema,
   EtherealPhaseEffectSchema,
   ExtradimensionalSpaceEffectSchema,
   FeatherFallMitigationSchema,
@@ -137,6 +139,7 @@ export {
   TargetDispositionSchema,
   TargetRelativePositionSchema,
   TargetSelectionSchema,
+  TargetVisibilityRequirementSchema,
   TargetStateFilterSchema,
   TargetTypeFilterSchema,
   TimedPermanentAfterSchema,

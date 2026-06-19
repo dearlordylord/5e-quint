@@ -353,13 +353,17 @@ export function describeTargetSelection(s: TargetSelection): string {
     "relativePosition" in s && s.relativePosition !== undefined
       ? `\nrelative: ${describeTargetRelativePosition(s.relativePosition)}`
       : "";
+  const visibility =
+    "visibility" in s && s.visibility !== undefined
+      ? `\nvisibility: ${s.visibility}`
+      : "";
   if (s.mode === "one") {
-    return `one${targetKinds}${typeFilter}${creatureSizeFilter}${objectFilter}${stateFilter}${disposition}${creatureDisposition}${objectOrLocationMaxDimension}${castingRequirement}${relativePosition}`;
+    return `one${targetKinds}${typeFilter}${creatureSizeFilter}${objectFilter}${stateFilter}${disposition}${creatureDisposition}${objectOrLocationMaxDimension}${castingRequirement}${relativePosition}${visibility}`;
   }
   if (s.mode === "any_number")
-    return `any_number${targetKinds}${typeFilter}${creatureSizeFilter}${objectFilter}${stateFilter}${disposition}${creatureDisposition}${objectOrLocationMaxDimension}${castingRequirement}${relativePosition}`;
+    return `any_number${targetKinds}${typeFilter}${creatureSizeFilter}${objectFilter}${stateFilter}${disposition}${creatureDisposition}${objectOrLocationMaxDimension}${castingRequirement}${relativePosition}${visibility}`;
   const repeats = s.repeatsAllowed === true ? " (repeats allowed)" : "";
-  return `choose_up_to: ${describeScaling(s.count)}${repeats}${targetKinds}${typeFilter}${creatureSizeFilter}${objectFilter}${stateFilter}${disposition}${creatureDisposition}${objectOrLocationMaxDimension}${castingRequirement}${relativePosition}`;
+  return `choose_up_to: ${describeScaling(s.count)}${repeats}${targetKinds}${typeFilter}${creatureSizeFilter}${objectFilter}${stateFilter}${disposition}${creatureDisposition}${objectOrLocationMaxDimension}${castingRequirement}${relativePosition}${visibility}`;
 }
 
 function describeTargetRelativePosition(r: TargetRelativePosition): string {
