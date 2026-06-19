@@ -116,7 +116,9 @@ defineSelectedIdentityWitness({
   quintStateFieldPrefix: "q",
   witnessProtocolField: "protocol",
   quintFieldNames: { lastResult: "qScenarioOutcome" },
-  quintVariantFieldTags: { lastResult: ATTACK_SPELL_SHAPE_SELECTED_IDENTITY_SCENARIO_OUTCOME_BY_TAG },
+  quintVariantFieldTags: {
+    lastResult: ATTACK_SPELL_SHAPE_SELECTED_IDENTITY_SCENARIO_OUTCOME_BY_TAG,
+  },
   projectionSchema: {
     targetHp: "int",
     spellSlotSpentThisTurn: "bool",
@@ -697,6 +699,7 @@ function activeEffectKind(
     effects.some(
       (effect) =>
         effect.kind === "nextAttackRollAgainstSelf" &&
+        "sourceSpellId" in effect &&
         effect.sourceSpellId === "guiding_bolt",
     )
   ) {

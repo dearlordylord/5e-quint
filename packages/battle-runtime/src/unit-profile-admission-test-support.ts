@@ -192,6 +192,7 @@ import {
   battleRemarkableAthleteSupportForUnit,
   battleRogueSteadyAimSupportForUnit,
   battleSpellSlotHealingModifierSupportForUnit,
+  battleStunningStrikeSupportForUnit,
   BONUS_ACTION_DELEGATED_STANDARD_ACTIONS_SUPPORT_PROFILE,
   BONUS_ACTION_DASH_TEMPORARY_HIT_POINTS_SUPPORT_PROFILE,
   bonusActionDashTemporaryHitPointsProfileForUnit,
@@ -214,6 +215,7 @@ import {
   REMARKABLE_ATHLETE_SUPPORT_PROFILE,
   ROGUE_STEADY_AIM_SUPPORT_PROFILE,
   SPELL_SLOT_HEALING_MODIFIER_SUPPORT_PROFILE,
+  STUNNING_STRIKE_SUPPORT_PROFILE,
 } from "./unit-feature-support.ts";
 export * from "./unit-profile-admission-catalog-support.ts";
 export * from "./unit-profile-admission-creature-fixture-support.ts";
@@ -278,6 +280,7 @@ export {
   battleRogueSteadyAimSupportForUnit,
   battleSightObscurement,
   battleSpellSlotHealingModifierSupportForUnit,
+  battleStunningStrikeSupportForUnit,
   battleTablePositionId,
   battleUnitRefWithSupportProfiles,
   battleWeaponItemHasMagicWeaponEnhancement,
@@ -364,6 +367,7 @@ export {
   spellSlotInvocationRef,
   spellSlotLevel,
   SPELL_SLOT_HEALING_MODIFIER_SUPPORT_PROFILE,
+  STUNNING_STRIKE_SUPPORT_PROFILE,
   srdStatBlockCollection,
   srdUnitCollection,
   starryWispInput,

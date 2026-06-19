@@ -3808,6 +3808,7 @@ export type BattleTurnResources = ActionEconomyState & {
   readonly quickenedLevelOnePlusSpellCastsThisTurn: readonly CombatantId[];
   readonly attackRollMadeThisTurn: boolean;
   readonly attackDamageRidersUsedThisTurn: readonly AttackDamageRiderUsage[];
+  readonly stunningStrikesUsedThisTurn: readonly StunningStrikeUsage[];
   readonly recklessAttackWhileRagingUsedThisTurn: readonly RecklessAttackWhileRagingUsage[];
   readonly weaponDamageDiceRollChoicesUsedThisTurn: readonly WeaponDamageDiceRollChoiceUsage[];
   readonly weaponMasteryCleaveAttackersUsedThisTurn: readonly CombatantId[];
@@ -3894,6 +3895,10 @@ export type SpellMarkedDamageRider = Extract<
   { readonly kind: "spellMarkedDamageRider" }
 >;
 export type AttackDamageRiderUsage = {
+  readonly attackerId: CombatantId;
+  readonly unitId: UnitRecord["id"];
+};
+export type StunningStrikeUsage = {
   readonly attackerId: CombatantId;
   readonly unitId: UnitRecord["id"];
 };
@@ -5588,6 +5593,7 @@ export type BattleUnitFeatureDecisionHole = {
   };
   readonly choices:
     | readonly ["use", "decline"]
+    | readonly ["attempt", "decline"]
     | readonly ["addle", "push", "topple", "decline"];
 };
 export type BattleHitPointHealingPoolAllocation = {
@@ -6055,7 +6061,13 @@ export type BattleFill =
   | {
       readonly kind: "unitFeatureDecision";
       readonly holeId: BattleHoleId;
-      readonly value: "use" | "addle" | "push" | "topple" | "decline";
+      readonly value:
+        | "use"
+        | "attempt"
+        | "addle"
+        | "push"
+        | "topple"
+        | "decline";
     }
   | {
       readonly kind: "hitPointHealingDistribution";
@@ -6569,6 +6581,7 @@ export type BattleTurnSnapshot = {
   readonly quickenedLevelOnePlusSpellCastsThisTurn: readonly CombatantId[];
   readonly attackRollMadeThisTurn: boolean;
   readonly attackDamageRidersUsedThisTurn: readonly AttackDamageRiderUsage[];
+  readonly stunningStrikesUsedThisTurn: readonly StunningStrikeUsage[];
   readonly recklessAttackWhileRagingUsedThisTurn: readonly RecklessAttackWhileRagingUsage[];
   readonly weaponDamageDiceRollChoicesUsedThisTurn: readonly WeaponDamageDiceRollChoiceUsage[];
   readonly weaponMasteryCleaveAttackersUsedThisTurn: readonly CombatantId[];

@@ -2,6 +2,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT59 monk_deflect_attacks
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L14G-03A-MONK-SLOW-FALL-RUNTIME monk_slow_fall
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-MONK-MONKS-FOCUS-BATTLE-OPTIONS monk_monks_focus
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L5-A12-MONK-STUNNING-STRIKE-BATTLE-RUNTIME monk_stunning_strike
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3-FOLLOWUP-BARBARIAN-FRENZY barbarian_frenzy
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3MSPEC-02-DRAGONBORN-BREATH-WEAPON-SURFACE species_dragonborn_breath_weapon
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3MSPEC-04-DRAGONBORN-DAMAGE-RESISTANCE species_dragonborn_damage_resistance
@@ -10,7 +11,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3-FOLLOWUP-HALFLING-BRAVE-RUNTIME species_halfling_brave
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3-FOLLOWUP-HALFLING-NIMBLENESS-RUNTIME species_halfling_nimbleness
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV73A monk_martial_arts
-// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.attack-action-area-save-damage-replacement unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.creature-space-movement-permission unit-feature.martial-arts-attack-projection unit-feature.monk-focus-battle-options unit-feature.passive-ability-check-roll-mode unit-feature.passive-damage-resistance unit-feature.passive-saving-throw-roll-mode unit-feature.reaction-roll-or-damage-reduction
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.attack-action-area-save-damage-replacement unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.creature-space-movement-permission unit-feature.martial-arts-attack-projection unit-feature.monk-focus-battle-options unit-feature.passive-ability-check-roll-mode unit-feature.passive-damage-resistance unit-feature.passive-saving-throw-roll-mode unit-feature.reaction-roll-or-damage-reduction unit-feature.stunning-strike
 import { decodeSpeciesRecordSync } from "@dnd/surface/surface/schema";
 import { describe, expect, test } from "vitest";
 import speciesDragonbornInput from "../../surface/content/species_dragonborn.json";
@@ -25,6 +26,7 @@ import {
   monkMartialArtsUnitId,
   monkMonksFocusUnitId,
   monkSlowFallUnitId,
+  monkStunningStrikeUnitId,
   rogueCunningActionUnitId,
   rogueSneakAttackUnitId,
   rogueUncannyDodgeUnitId,
@@ -43,6 +45,7 @@ import {
   battleCreatureSpaceMovementPermissionSupportForUnit,
   battleId,
   battleMartialArtsAttackProjectionSupportForUnit,
+  battleStunningStrikeSupportForUnit,
   battlePassiveAbilityCheckRollModeSupportForUnit,
   battlePassiveDamageResistanceSupportForUnit,
   battleMonkFocusBattleOptionsSupportForUnit,
@@ -71,6 +74,7 @@ import {
   resolveBattleSubject,
   startBattle,
   WEAPON_OR_UNARMED_CRITICAL_RANGE_19_SUPPORT_PROFILE,
+  STUNNING_STRIKE_SUPPORT_PROFILE,
 } from "./unit-profile-admission-test-support.ts";
 import { characterCreature } from "./unit-profile-admission-creature-fixture-support.ts";
 import {
@@ -1171,6 +1175,11 @@ describe("QMBT68 Monk Deflect Attacks deterministic Unit profile admission", () 
     const unit = unitLibrary.requireUnit(monkMonksFocusUnitId);
     const supportProfile = {
       kind: MONK_FOCUS_BATTLE_OPTIONS_SUPPORT_PROFILE,
+      effectSaveDc: {
+        kind: "classFeatureAbilitySaveDc",
+        base: 8,
+        ability: "wis",
+      },
       flurryOfBlows: {
         displayName: "Flurry of Blows",
         focusPointCost: 1,
@@ -1235,6 +1244,85 @@ describe("QMBT68 Monk Deflect Attacks deterministic Unit profile admission", () 
     expect(
       parseSupportedUnitFeatureProfile(malformedUnit, [
         { className: "monk", level: classLevel(2) },
+      ]),
+    ).toBeNull();
+  });
+
+  test("monk_stunning_strike admits attack-hit Focus rider executable facts", () => {
+    const unit = unitLibrary.requireUnit(monkStunningStrikeUnitId);
+    const supportProfile = {
+      kind: STUNNING_STRIKE_SUPPORT_PROFILE,
+      stunningStrike: {
+        trigger: {
+          kind: "hitCreatureWithMonkWeaponOrUnarmedStrike",
+          usageLimit: "oncePerTurn",
+        },
+        optional: true,
+        spends: { resourceUnitId: "monk_monks_focus", amount: 1 },
+        savingThrow: { ability: "con" },
+        onFail: {
+          kind: "applyCondition",
+          condition: "stunned",
+          expires: "startOfSourceNextTurn",
+        },
+        onSuccess: {
+          speed: { kind: "halve", expires: "startOfSourceNextTurn" },
+          attackRoll: {
+            mode: "advantage",
+            appliesTo: "nextAttackRollAgainstTargetBeforeExpiration",
+          },
+        },
+      },
+    } as const;
+
+    expect(battleStunningStrikeSupportForUnit(unit)).toEqual(supportProfile);
+    expect(
+      parseSupportedUnitFeatureProfile(unit, [
+        { className: "monk", level: classLevel(5) },
+      ]),
+    ).toEqual({
+      kind: "stunningStrike",
+      unit,
+      stunningStrike: supportProfile.stunningStrike,
+    });
+    expect(
+      battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
+    ).toEqual(
+      Either.right({
+        unitId: monkStunningStrikeUnitId,
+        supportProfiles: [supportProfile],
+      }),
+    );
+  });
+
+  test("monk_stunning_strike rejects malformed attack-hit rider facts", () => {
+    const unit = unitLibrary.requireUnit(monkStunningStrikeUnitId);
+    if (
+      unit.kind !== "class_feature" ||
+      unit.mechanics.family !== "stunning_strike"
+    ) {
+      throw new Error("Expected Stunning Strike mechanics.");
+    }
+    const malformedUnit = unitMechanicsVariant(unit, {
+      id: "monk_stunning_strike_wrong_success_attack_roll_mode",
+      mechanics: {
+        ...unit.mechanics,
+        onSuccess: {
+          ...unit.mechanics.onSuccess,
+          attackRoll: {
+            ...unit.mechanics.onSuccess.attackRoll,
+            mode: "disadvantage",
+          },
+        },
+      },
+    });
+
+    expect(battleStunningStrikeSupportForUnit(malformedUnit)).toBe(
+      "unsupported",
+    );
+    expect(
+      parseSupportedUnitFeatureProfile(malformedUnit, [
+        { className: "monk", level: classLevel(5) },
       ]),
     ).toBeNull();
   });

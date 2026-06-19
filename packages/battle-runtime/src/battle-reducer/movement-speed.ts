@@ -1,4 +1,4 @@
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.druid-wild-shape-known-form unit-feature.grappler unit-feature.martial-arts-attack-projection
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.druid-wild-shape-known-form unit-feature.grappler unit-feature.martial-arts-attack-projection unit-feature.stunning-strike
 // KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.WILD_SHAPE_FORM_LIFECYCLE
 // Movement-budget and speed helpers extracted from battle-reducer.ts.
 // Cluster S (movement_speed). Mechanical extraction — no behavior change.
@@ -181,12 +181,18 @@ export function effectiveMovementSpeed(
   speedKind: BattleMovementSpeedKind,
   isGrappled = false,
 ): MovementFeet {
-  return (
+  const speedFeet =
     sharedEffectiveSpeed(
       battleCreatureSpeedFacts(combatant, isGrappled),
       speedKind,
-    ) ?? movementFeet(0)
-  );
+    ) ?? movementFeet(0);
+  return combatant.activeEffects.some((effect) => effect.kind === "speedHalved")
+    ? halveMovementSpeed(speedFeet)
+    : speedFeet;
+}
+
+function halveMovementSpeed(speedFeet: MovementFeet): MovementFeet {
+  return movementFeet(Math.floor(Number(speedFeet) / 2));
 }
 
 export function baseWalkSpeed(combatant: BattleCreatureState): number {
@@ -751,10 +757,7 @@ export function targetIsNoMoreThanOneSizeLarger(
   return SIZE_RANKS[target] - SIZE_RANKS[grappler] <= 1;
 }
 
-export function creatureSizeIsLargerThanSelf(
-  self: Size,
-  other: Size,
-): boolean {
+export function creatureSizeIsLargerThanSelf(self: Size, other: Size): boolean {
   return SIZE_RANKS[other] > SIZE_RANKS[self];
 }
 

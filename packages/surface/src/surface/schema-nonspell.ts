@@ -1226,6 +1226,39 @@ export const OpenHandTechniqueMechanicsSchema = strictStruct({
   ),
 });
 
+export const StunningStrikeMechanicsSchema = strictStruct({
+  family: Schema.Literal("stunning_strike"),
+  trigger: strictStruct({
+    kind: Schema.Literal("hit_creature_with_monk_weapon_or_unarmed_strike"),
+    usageLimit: Schema.Literal("once_per_turn"),
+  }),
+  optional: Schema.Literal(true),
+  spends: strictStruct({
+    resourceUnitId: Schema.Literal("monk_monks_focus"),
+    amount: Schema.Literal(1),
+  }),
+  savingThrow: strictStruct({
+    ability: Schema.Literal("con"),
+  }),
+  onFail: strictStruct({
+    kind: Schema.Literal("apply_condition"),
+    condition: Schema.Literal("stunned"),
+    expires: Schema.Literal("start_of_source_next_turn"),
+  }),
+  onSuccess: strictStruct({
+    speed: strictStruct({
+      kind: Schema.Literal("halve"),
+      expires: Schema.Literal("start_of_source_next_turn"),
+    }),
+    attackRoll: strictStruct({
+      mode: Schema.Literal("advantage"),
+      appliesTo: Schema.Literal(
+        "next_attack_roll_against_target_before_expiration",
+      ),
+    }),
+  }),
+});
+
 export const SacredWeaponMechanicsSchema = strictStruct({
   family: Schema.Literal("sacred_weapon"),
   activationCost: strictStruct({
@@ -1382,6 +1415,7 @@ export const ClassFeatureMechanicsSchema = Schema.Union(
   BonusActionDelegatedStandardActionsMechanicsSchema,
   RemarkableAthleteMechanicsSchema,
   OpenHandTechniqueMechanicsSchema,
+  StunningStrikeMechanicsSchema,
   SacredWeaponMechanicsSchema,
   HuntersPreyMechanicsSchema,
   SteadyAimMechanicsSchema,
@@ -1428,6 +1462,7 @@ export const MonkClassFeatureMechanicsSchema = Schema.Union(
   ClassGeneralFeatureMechanicsSchema,
   MonkInitiativeFocusRecoveryMechanicsSchema,
   OpenHandTechniqueMechanicsSchema,
+  StunningStrikeMechanicsSchema,
 );
 
 export const PaladinClassFeatureMechanicsSchema = Schema.Union(

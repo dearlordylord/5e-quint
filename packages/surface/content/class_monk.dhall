@@ -10,7 +10,7 @@ let WeaponProficiency : Type =
 let monk =
       { armorTraining = { kind = "none" }
       , className = "monk"
-      , description = "SRD Monk class creation facts plus early progression through level 4."
+      , description = "SRD Monk class creation facts plus early progression through level 5."
       , featureGrants =
         [ { level = 1, unitId = "monk_martial_arts" }
         , { level = 1, unitId = "monk_unarmored_defense" }
@@ -19,6 +19,8 @@ let monk =
         , { level = 2, unitId = "monk_uncanny_metabolism" }
         , { level = 4, unitId = "monk_ability_score_improvement_l4" }
         , { level = 4, unitId = "monk_slow_fall" }
+        , { level = 5, unitId = "monk_extra_attack" }
+        , { level = 5, unitId = "monk_stunning_strike" }
         ]
       , hitPointDie = 8
       , id = "class_monk"
@@ -26,7 +28,7 @@ let monk =
       , multiclassProficiencies = { kind = "none" }
       , name = "Monk"
       , primaryAbilities = { abilities = [ "dex", "wis" ], kind = "all_of" }
-      , provenance = { kind = "srd-5.2.1", section = "Classes/Monk.md:3-25,28-35,53-117" }
+      , provenance = { kind = "srd-5.2.1", section = "Classes/Monk.md:3-25,28-35,53-128" }
       , savingThrowProficiencies = [ "str", "dex" ]
       , skillProficiencyChoice =
         { choose = 2, options = [ "acrobatics", "athletics", "history", "insight", "religion", "stealth" ] }

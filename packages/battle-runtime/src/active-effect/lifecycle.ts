@@ -1,4 +1,5 @@
 // Active Effect lifecycle: pure-effect operations over a creature's effect list.
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.stunning-strike
 // This module is a value-leaf — it depends only on effect types and the
 // conditions algebra, never on battle-reducer runtime. Spell-coupled
 // apply-from-invocation logic stays in battle-reducer/ and calls into here.
@@ -23,6 +24,7 @@ const HYPNOTIC_PATTERN_CONDITIONS = [
 
 export type ConditionApplyingActiveEffect =
   | Extract<BattleActiveEffect, { readonly kind: "spellCondition" }>
+  | Extract<BattleActiveEffect, { readonly kind: "unitFeatureCondition" }>
   | Extract<
       BattleActiveEffect,
       { readonly kind: "targetActionEndedSpellCondition" }
@@ -47,6 +49,7 @@ export function isConditionApplyingActiveEffect(
 ): effect is ConditionApplyingActiveEffect {
   return (
     effect.kind === "spellCondition" ||
+    effect.kind === "unitFeatureCondition" ||
     effect.kind === "targetActionEndedSpellCondition" ||
     effect.kind === "spellConditionRepeatSave" ||
     effect.kind === "spellConditionEndTurnSave" ||
@@ -62,6 +65,7 @@ export function activeEffectCondition(
 ): Condition {
   if (
     effect.kind === "spellCondition" ||
+    effect.kind === "unitFeatureCondition" ||
     effect.kind === "targetActionEndedSpellCondition" ||
     effect.kind === "spellConditionRepeatSave" ||
     effect.kind === "spellConditionEndTurnSave"
@@ -160,7 +164,9 @@ export function conditionsAfterApplyingSpellConditionEffects(
 export const SPELL_CREATED_HELD_OBJECT_HAND_USE =
   "spellCreatedHeldObject" as const satisfies HandUse;
 
-function spellCreatedHeldObjectEffectIsHeld(effect: BattleActiveEffect): boolean {
+function spellCreatedHeldObjectEffectIsHeld(
+  effect: BattleActiveEffect,
+): boolean {
   return (
     effect.kind === "spellCreatedHeldObject" &&
     effect.objectState.kind === "held"
@@ -208,7 +214,10 @@ export function battleCreatureWithSpellActiveEffects(
   const exclusiveActiveEffects =
     shapeShiftOwner === null
       ? activeEffects
-      : activeEffectsWithShapeShiftOwnerReplaced(activeEffects, shapeShiftOwner);
+      : activeEffectsWithShapeShiftOwnerReplaced(
+          activeEffects,
+          shapeShiftOwner,
+        );
   const nextCombatant =
     combatant.positiveHpUnconscious === null
       ? {

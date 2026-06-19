@@ -1,5 +1,5 @@
 // Monk's Focus option execution.
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.monk-focus-battle-options unit-feature.open-hand-technique
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.monk-focus-battle-options unit-feature.open-hand-technique unit-feature.stunning-strike
 
 import { spendActivationResource } from "@dnd/shared-algebras/action-economy-algebra";
 import * as Either from "effect/Either";
@@ -47,7 +47,7 @@ import {
   clearPendingAttackRollMissToHitReplacementSelection,
 } from "./statblock-attacks.ts";
 
-type MonkFocusResourceFact = {
+export type MonkFocusResourceFact = {
   readonly actor: CharacterBattleCreatureState;
   readonly resource: CharacterBattleUseCountResourceState;
   readonly profile: BattleMonkFocusBattleOptionsSupportProfile;
@@ -414,8 +414,10 @@ function resolveStepOfTheWindFocus(
     spentResources,
   );
   const withDisengage = applyDisengage(withDash, withDash.currentTurnResources);
-  const withJumpDistanceMultiplier =
-    applyStepOfTheWindJumpDistanceMultiplier(withDisengage, focus);
+  const withJumpDistanceMultiplier = applyStepOfTheWindJumpDistanceMultiplier(
+    withDisengage,
+    focus,
+  );
   const actor = withDisengage.combatants.get(input.subject.actorId);
   if (!isCharacterBattleCreatureState(actor)) {
     return invalidResult(
@@ -442,8 +444,8 @@ function applyStepOfTheWindJumpDistanceMultiplier(
     currentTurnResources: {
       ...state.currentTurnResources,
       jumpDistanceMultiplier: {
-        multiplier: focus.profile.stepOfTheWind.jumpDistanceMultiplier
-          .multiplier,
+        multiplier:
+          focus.profile.stepOfTheWind.jumpDistanceMultiplier.multiplier,
       },
     },
   };
@@ -555,7 +557,7 @@ export function isMonkFocusFlurryOfBlowsActionResource(
   );
 }
 
-function monkFocusResourceForActor(
+export function monkFocusResourceForActor(
   state: BattleState,
   actorId: CombatantId,
 ): MonkFocusResourceFact | null {
@@ -598,7 +600,7 @@ function flurryOfBlowsUnarmedStrikeForActor(
   return unarmedStrike;
 }
 
-function stateWithMonkFocusResource(
+export function stateWithMonkFocusResource(
   state: BattleState,
   actor: CharacterBattleCreatureState,
   resource: CharacterBattleUseCountResourceState,

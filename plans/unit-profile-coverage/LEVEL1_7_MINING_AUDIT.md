@@ -42,9 +42,9 @@ These counts describe the current runtime/catalog state of mined rows. They are 
 | Disposition | Rows |
 | --- | ---: |
 | catalog-authored-review-required | 61 |
-| catalog-installed-owner-evidence-present | 484 |
+| catalog-installed-owner-evidence-present | 485 |
 | catalog-installed-owner-evidence-required | 4 |
-| catalog-only/dead-for-now | 178 |
+| catalog-only/dead-for-now | 177 |
 | level-5-7-follow-up-required | 22 |
 | missing-authored-record | 50 |
 | needs-surface-widening | 17 |
@@ -54,8 +54,8 @@ These counts describe the current runtime/catalog state of mined rows. They are 
 
 | Catalog state | Rows |
 | --- | ---: |
-| installed | 654 |
-| not-installed | 246 |
+| installed | 655 |
+| not-installed | 245 |
 
 ### Unit Profile Disposition
 
@@ -63,8 +63,8 @@ These counts describe the current runtime/catalog state of mined rows. They are 
 | --- | ---: |
 | not-recorded | 189 |
 | profile-subset-supported | 53 |
-| supported-profile | 298 |
-| unsupported-profile | 360 |
+| supported-profile | 299 |
+| unsupported-profile | 359 |
 
 ### Battle Readiness Snapshot
 
@@ -661,7 +661,7 @@ These counts separate class-list rows from unique Spell Definition identities. A
 | Monk Slow Fall | level-4 | character-level | class feature | `monk_slow_fall` | `.references/srd-5.2.1/Classes/Monk.md:116` | present | installed | supported-profile | catalog-installed-owner-evidence-present | accepted | not-recorded | Owner-specific operational evidence is classified and present. |
 | Monk level 4 feature table row | level-4 | character-level | character-creation or progression mechanic | `class_monk` | `.references/srd-5.2.1/Classes/Monk.md:35` | present | installed | unsupported-profile | non-runtime | accepted-no-battle-effect | not-recorded | No runtime work; keep classification as explicit closure. |
 | Monk Extra Attack | level-5 | character-level | class feature | `monk_extra_attack` | `.references/srd-5.2.1/Classes/Monk.md:120` | present | installed | supported-profile | catalog-installed-owner-evidence-present | not-applicable | not-recorded | Owner-specific operational evidence is classified and present. |
-| Monk Stunning Strike | level-5 | character-level | class feature | `monk_stunning_strike` | `.references/srd-5.2.1/Classes/Monk.md:124` | present | not-installed | unsupported-profile | catalog-only/dead-for-now | not-applicable | outside-battle-runtime: future battle-runtime Monk attack-hit rider owner plus existing Monk Focus resource, Saving Throw, active condition/effect, Speed, and Attack Roll Advantage owners | SRD Stunning Strike triggers once per turn when a Monk hits a creature with a Monk weapon or Unarmed Strike: the Monk can spend 1 Focus Point, the target makes a Constitution Saving Throw against the Monk Focus save DC, failure applies the Stunned condition until the start of the Monk's next turn, and success halves target Speed plus grants Advantage to the next Attack Roll against the target before then. The future promoted owner must consume typed support facts from the admitted source shape, existing monk_monks_focus resource state, existing attack-hit and weapon/Unarmed Strike gates, the existing Saving Throw roll mode, and source-owned condition/effect lifecycle projections. It must not add a second Focus Point pool, duplicate condition or Speed state, or dispatch on Stunning Strike or Monk authored identity. |
+| Monk Stunning Strike | level-5 | character-level | class feature | `monk_stunning_strike` | `.references/srd-5.2.1/Classes/Monk.md:124` | present | installed | supported-profile | catalog-installed-owner-evidence-present | not-applicable | not-recorded | Owner-specific operational evidence is classified and present. |
 | Monk level 5 feature table row | level-5 | character-level | character-creation or progression mechanic | `class_monk` | `.references/srd-5.2.1/Classes/Monk.md:36` | present | installed | unsupported-profile | non-runtime | not-applicable | not-recorded | No runtime work; keep classification as explicit closure. |
 | Monk Empowered Strikes | level-6 | character-level | class feature | `monk_empowered_strikes` | `.references/srd-5.2.1/Classes/Monk.md:128` | present | not-installed | not-recorded | level-5-7-follow-up-required | not-applicable | not-recorded | Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported. |
 | Monk Wholeness of Body | level-6 | character-level | class feature | `monk_wholeness_of_body` | `.references/srd-5.2.1/Classes/Monk.md:202` | present | not-installed | not-recorded | level-5-7-follow-up-required | not-applicable | not-recorded | Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported. |

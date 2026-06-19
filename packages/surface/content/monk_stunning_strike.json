@@ -1,0 +1,42 @@
+{
+  "acquiredAtLevel": 5,
+  "className": "monk",
+  "description": "Once per turn when you hit a creature with a Monk weapon or an Unarmed Strike, you can expend 1 Focus Point to force a Constitution saving throw.",
+  "id": "monk_stunning_strike",
+  "kind": "class_feature",
+  "mechanics": {
+    "family": "stunning_strike",
+    "onFail": {
+      "condition": "stunned",
+      "expires": "start_of_source_next_turn",
+      "kind": "apply_condition"
+    },
+    "onSuccess": {
+      "attackRoll": {
+        "appliesTo": "next_attack_roll_against_target_before_expiration",
+        "mode": "advantage"
+      },
+      "speed": {
+        "expires": "start_of_source_next_turn",
+        "kind": "halve"
+      }
+    },
+    "optional": true,
+    "savingThrow": {
+      "ability": "con"
+    },
+    "spends": {
+      "amount": 1,
+      "resourceUnitId": "monk_monks_focus"
+    },
+    "trigger": {
+      "kind": "hit_creature_with_monk_weapon_or_unarmed_strike",
+      "usageLimit": "once_per_turn"
+    }
+  },
+  "name": "Stunning Strike",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Classes/Monk#Stunning Strike"
+  }
+}

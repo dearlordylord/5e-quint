@@ -247,6 +247,8 @@ export const monkSlowFallUnitId = "monk_slow_fall";
 
 export const monkMonksFocusUnitId = "monk_monks_focus";
 
+export const monkStunningStrikeUnitId = "monk_stunning_strike";
+
 export const defenseUnitId = "defense";
 
 export const divineFavorUnitId = "divine_favor";

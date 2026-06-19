@@ -354,6 +354,13 @@ export type BattleActiveEffect =
       readonly deltaFeet: MovementDeltaFeet;
       readonly expiresAt: BattleActiveEffectExpiration;
     })
+  | (BattleUnitFeatureEffectBase & {
+      readonly kind: "speedHalved";
+      readonly expiresAt: Extract<
+        BattleActiveEffectExpiration,
+        { readonly kind: "startOfTurn" }
+      >;
+    })
   | (BattleSpellEffectBase & {
       readonly kind: "specialSpeedGrant";
       readonly expiresAt: BattleActiveEffectExpiration;
@@ -423,6 +430,12 @@ export type BattleActiveEffect =
       readonly conditionHadNonSpellSource: boolean;
       readonly escape: SpellConditionEscape | null;
       readonly turnStartDamage: SpellTurnStartDamage | null;
+      readonly expiresAt: BattleActiveEffectExpiration;
+    })
+  | (BattleUnitFeatureEffectBase & {
+      readonly kind: "unitFeatureCondition";
+      readonly condition: Condition;
+      readonly conditionHadNonSpellSource: boolean;
       readonly expiresAt: BattleActiveEffectExpiration;
     })
   | (BattleSpellEffectBase & {
@@ -675,7 +688,7 @@ export type BattleActiveEffect =
       readonly mode: AttackRollMode;
       readonly expiresAt: BattleActiveEffectExpiration;
     })
-  | (BattleSpellEffectBase & {
+  | ((BattleSpellEffectBase | BattleUnitFeatureEffectBase) & {
       readonly kind: "nextAttackRollAgainstSelf";
       readonly mode: AttackRollMode;
       readonly expiresAt: BattleActiveEffectExpiration;

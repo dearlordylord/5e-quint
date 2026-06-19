@@ -452,6 +452,8 @@ function activeEffectSourcesCondition(
     (effect.kind === "spellCondition" &&
       (effect.condition === condition ||
         (condition === "prone" && effect.condition === "unconscious"))) ||
+    (effect.kind === "unitFeatureCondition" &&
+      effect.condition === condition) ||
     (effect.kind === "targetActionEndedSpellCondition" &&
       effect.condition === condition) ||
     (effect.kind === "spellConditionRepeatSave" &&
@@ -470,6 +472,8 @@ function activeEffectDirectlyAppliesCondition(
 ): boolean {
   return (
     (effect.kind === "spellCondition" && effect.condition === condition) ||
+    (effect.kind === "unitFeatureCondition" &&
+      effect.condition === condition) ||
     (effect.kind === "targetActionEndedSpellCondition" &&
       effect.condition === condition) ||
     (effect.kind === "spellConditionRepeatSave" &&

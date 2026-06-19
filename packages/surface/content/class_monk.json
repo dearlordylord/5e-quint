@@ -3,7 +3,7 @@
     "kind": "none"
   },
   "className": "monk",
-  "description": "SRD Monk class creation facts plus early progression through level 4.",
+  "description": "SRD Monk class creation facts plus early progression through level 5.",
   "featureGrants": [
     {
       "level": 1,
@@ -32,6 +32,14 @@
     {
       "level": 4,
       "unitId": "monk_slow_fall"
+    },
+    {
+      "level": 5,
+      "unitId": "monk_extra_attack"
+    },
+    {
+      "level": 5,
+      "unitId": "monk_stunning_strike"
     }
   ],
   "hitPointDie": 8,
@@ -50,7 +58,7 @@
   },
   "provenance": {
     "kind": "srd-5.2.1",
-    "section": "Classes/Monk.md:3-25,28-35,53-117"
+    "section": "Classes/Monk.md:3-25,28-35,53-128"
   },
   "savingThrowProficiencies": [
     "str",

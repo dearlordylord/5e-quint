@@ -113,6 +113,18 @@ export const OPEN_HAND_TECHNIQUE_SAVE_HOLE_ID = holeId(
 export const OPEN_HAND_TECHNIQUE_SAVE_HOLE_INSTANCE = holeInstanceKey(
   "battle:unit-feature:open-hand-technique:save",
 );
+export const STUNNING_STRIKE_DECISION_HOLE_ID = holeId(
+  "battle:unit-feature:stunning-strike:decision",
+);
+export const STUNNING_STRIKE_DECISION_HOLE_INSTANCE = holeInstanceKey(
+  "battle:unit-feature:stunning-strike:decision",
+);
+export const STUNNING_STRIKE_SAVE_HOLE_ID = holeId(
+  "battle:unit-feature:stunning-strike:save",
+);
+export const STUNNING_STRIKE_SAVE_HOLE_INSTANCE = holeInstanceKey(
+  "battle:unit-feature:stunning-strike:save",
+);
 export const DIRECT_CONDITION_REMOVAL_CONDITIONS = [
   "blinded",
   "deafened",
@@ -220,8 +232,9 @@ export const WEAPON_MASTERY_CLEAVE_DAMAGE_DISPOSITION_HOLE_ID = holeId(
 );
 export const WEAPON_MASTERY_CLEAVE_DAMAGE_DISPOSITION_HOLE_INSTANCE =
   holeInstanceKey("battle:weapon-mastery-cleave:damage-disposition");
-export const REMARKABLE_ATHLETE_CRITICAL_HIT_MOVEMENT_DECISION_HOLE_ID =
-  holeId("battle:remarkable-athlete:critical-hit-movement:decision");
+export const REMARKABLE_ATHLETE_CRITICAL_HIT_MOVEMENT_DECISION_HOLE_ID = holeId(
+  "battle:remarkable-athlete:critical-hit-movement:decision",
+);
 export const REMARKABLE_ATHLETE_CRITICAL_HIT_MOVEMENT_DECISION_HOLE_INSTANCE =
   holeInstanceKey("battle:remarkable-athlete:critical-hit-movement:decision");
 export const REMARKABLE_ATHLETE_CRITICAL_HIT_MOVEMENT_HOLE_ID = holeId(
