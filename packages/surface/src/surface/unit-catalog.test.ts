@@ -3584,6 +3584,61 @@ describe("SRD Unit catalog boundary", () => {
     expect(speakWithDead.description).toContain("can't speculate about future");
   });
 
+  test("decodes Speak with Plants as a table-owned plant communication Spell Definition", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag !== "ok") return;
+    const speakWithPlants = result.catalog.requireUnit("speak_with_plants");
+
+    expect(speakWithPlants.kind).toBe("spell");
+    if (speakWithPlants.kind !== "spell") return;
+    expect(speakWithPlants.mechanics.family).toBe("activation");
+    if (speakWithPlants.mechanics.family !== "activation") return;
+
+    expect(speakWithPlants.provenance).toEqual({
+      kind: "srd-5.2.1",
+      section: "Spells/Descriptions-S-Z#Speak with Plants",
+    });
+    expect(speakWithPlants.mechanics).toMatchObject({
+      level: 3,
+      school: "transmutation",
+      castingTime: { kind: "action" },
+      range: { kind: "self" },
+      components: { v: true, s: true, m: false },
+      duration: { kind: "timed", value: { unit: "minute", amount: 10 } },
+    });
+    expect(speakWithPlants.mechanics.phases).toEqual([
+      {
+        kind: "direct",
+        attachment: {
+          kind: "hole",
+          holeId: "speak_with_plants_area",
+          label: "immobile 30-foot Emanation with plants",
+          value: {
+            kind: "area",
+            shape: { kind: "emanation", radiusFeet: 30 },
+            origin: { kind: "self" },
+          },
+        },
+        effects: [
+          {
+            kind: "grant_creature_communication",
+            creatureType: "plant",
+            includesInfluenceActionOptions: false,
+          },
+        ],
+      },
+    ]);
+    expect(speakWithPlants.description).toContain(
+      "events in the spell's area within the past day",
+    );
+    expect(speakWithPlants.description).toContain(
+      "turn Difficult Terrain caused by plant growth into ordinary terrain",
+    );
+    expect(speakWithPlants.description).toContain("shared a common language");
+  });
+
   test("decodes Sleet Storm as an authored Cylinder hazard Spell Definition", () => {
     const result = buildUnitCatalog({ collections: [srdUnitCollection] });
 

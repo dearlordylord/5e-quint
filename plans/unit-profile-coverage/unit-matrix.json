@@ -43,13 +43,13 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
-      "denominator": 450,
-      "numerator": 265,
-      "percent": "58.9%"
+      "denominator": 451,
+      "numerator": 266,
+      "percent": "59%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 538,
-      "numerator": 315,
+      "denominator": 539,
+      "numerator": 316,
       "percent": "58.6%"
     },
     "classicNonSrdExpressionGate": {
@@ -59,7 +59,7 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 316
+      "value": 317
     },
     "deterministicAdmissionProjectionCoverage": {
       "denominator": 185,
@@ -67,8 +67,8 @@
       "percent": "97.3%"
     },
     "profileClassificationCoverage": {
-      "denominator": 316,
-      "numerator": 316,
+      "denominator": 317,
+      "numerator": 317,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -112,9 +112,9 @@
       "percent": "98.9%"
     },
     "supportedProfileCoverage": {
-      "denominator": 266,
+      "denominator": 267,
       "numerator": 185,
-      "percent": "69.5%"
+      "percent": "69.3%"
     }
   },
   "metricSemantics": [
@@ -16661,8 +16661,8 @@
         "unsupportedOrOtherUnits": 4
       },
       {
-        "executableUnitDenominator": 135,
-        "installedUnitDenominator": 135,
+        "executableUnitDenominator": 136,
+        "installedUnitDenominator": 136,
         "kind": "spell",
         "label": "Spell Units",
         "profileFactDenominator": 136,
@@ -16672,7 +16672,7 @@
         "selectedIdentityReplayGapUnits": 0,
         "selectedIdentityReplayWitnessUnits": 110,
         "supportedProfileUnits": 92,
-        "unsupportedOrOtherUnits": 25
+        "unsupportedOrOtherUnits": 26
       },
       {
         "executableUnitDenominator": 93,
@@ -32984,6 +32984,29 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/speak_with_dead.json",
       "unitId": "speak_with_dead"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "runtime-detached table/spatial/exploration plant communication and terrain owner",
+          "reason": "Speak with Plants supplies plant communication, plant-command, past-day area information, plant-presence terrain conversion, and no-uprooting source facts, but promoted battle runtime does not own plant-world state, non-creature plant sentience, table information answers, terrain-conversion choice and persistence, immobile area placement, or pathfinding and movement-cost derivation through affected terrain."
+        },
+        "reason": "Speak with Plants is authored and installed as an SRD Surface Spell Definition with Magic Action Spell Slot casting, Self range, V/S components, 10-minute duration, an immobile 30-foot Emanation plant area, limited plant sentience and animation, simple-command following, past-day event questioning, Plant creature common-language communication, plant-caused Difficult Terrain removal, ordinary-terrain-to-Difficult-Terrain conversion where plants are present, and no-uprooting movement limits. Task 8 claims no promoted battle-runtime profile because non-creature plant sentience, simple commands, event answers, plant presence, terrain conversion choice and persistence, immobile area placement, and table information adjudication belong to the runtime-detached table/spatial/exploration owner rather than this catalog admission task.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/speak_with_plants.json",
+      "unitId": "speak_with_plants"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

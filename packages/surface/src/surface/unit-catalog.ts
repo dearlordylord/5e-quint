@@ -210,6 +210,7 @@ import revivifyInput from "../../content/revivify.json";
 import ropeTrickInput from "../../content/rope_trick.json";
 import sendingInput from "../../content/sending.json";
 import speakWithDeadInput from "../../content/speak_with_dead.json";
+import speakWithPlantsInput from "../../content/speak_with_plants.json";
 import speciesDragonbornInput from "../../content/species_dragonborn.json";
 import speciesDragonbornBreathWeaponInput from "../../content/species_dragonborn_breath_weapon.json";
 import speciesDragonbornDamageResistanceInput from "../../content/species_dragonborn_damage_resistance.json";
@@ -681,6 +682,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     ropeTrickInput,
     sendingInput,
     speakWithDeadInput,
+    speakWithPlantsInput,
     sacredFlameInput,
     sanctuaryInput,
     scorchingRayInput,
