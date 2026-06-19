@@ -43,14 +43,14 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
-      "denominator": 449,
+      "denominator": 450,
       "numerator": 264,
-      "percent": "58.8%"
+      "percent": "58.7%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 537,
+      "denominator": 538,
       "numerator": 314,
-      "percent": "58.5%"
+      "percent": "58.4%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -39938,6 +39938,34 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/paladin_epic_boon.json",
       "unitId": "paladin_epic_boon"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "disposition": {
+          "category": "srd-candidate",
+          "planningLane": "QMBT14-QMBT16",
+          "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
+        },
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "companion-control-boundary",
+          "owner": "future spell-created mount lifecycle, rider/control, table travel, and fade/dismount owner",
+          "reason": "Phantom Steed is closed at the mount companion boundary: a future owner must model spell-created mount identity and placement, Riding Horse stat-block projection with the spell Speed override, rider selection/control, damage-triggered early spell end, one-minute fade and dismount grace, created equipment distance-vanish, and 13 miles/hour travel without duplicating stat-block data, table geometry, or authored-identity dispatch in generic runtime code."
+        },
+        "reason": "Phantom Steed's Surface record has SRD provenance and structured spawned-creature/mount facts for 1-minute-or-Ritual casting, 30-foot point range, V/S components, 1-hour timed duration, an existing Riding Horse catalog reference with a walk Speed 100 override, caster-or-chosen-creature rider permission, saddle/bit/bridle created equipment with a 10-foot vanish boundary, 13 miles/hour table travel, and a one-minute rider dismount grace while the steed fades at spell end. The source prose and closure retain the damage-triggered early spell end because Surface has no created-creature damage subject trigger. No promoted battle-runtime profile is claimed because these clauses require a mount lifecycle/travel owner rather than companion command placeholders.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/phantom_steed.json",
+      "unitId": "phantom_steed"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

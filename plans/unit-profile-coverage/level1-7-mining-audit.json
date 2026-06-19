@@ -19,8 +19,8 @@
       "catalog-authored-review-required": 24,
       "catalog-installed-owner-evidence-present": 7,
       "catalog-installed-owner-evidence-required": 1,
-      "catalog-only/dead-for-now": 15,
-      "missing-authored-record": 21,
+      "catalog-only/dead-for-now": 16,
+      "missing-authored-record": 20,
       "needs-surface-widening": 8
     },
     "auditedUniqueSpellIdentitiesByLevelBand": {
@@ -35,8 +35,8 @@
     },
     "rowsByBattleReadinessStatus": {
       "accepted": 469,
-      "accepted-no-battle-effect": 224,
-      "battle-runtime-required": 49,
+      "accepted-no-battle-effect": 225,
+      "battle-runtime-required": 48,
       "not-applicable": 77,
       "owner-evidence-required": 62,
       "surface-widening-required": 19
@@ -59,9 +59,9 @@
       "catalog-authored-review-required": 61,
       "catalog-installed-owner-evidence-present": 483,
       "catalog-installed-owner-evidence-required": 4,
-      "catalog-only/dead-for-now": 179,
+      "catalog-only/dead-for-now": 180,
       "level-5-7-follow-up-required": 24,
-      "missing-authored-record": 46,
+      "missing-authored-record": 45,
       "needs-surface-widening": 19,
       "non-runtime": 84
     },
@@ -93,10 +93,10 @@
       "subclass-spell-access": 5
     },
     "rowsByUnitProfileDisposition": {
-      "not-recorded": 189,
+      "not-recorded": 188,
       "profile-subset-supported": 53,
       "supported-profile": 297,
-      "unsupported-profile": 361
+      "unsupported-profile": 362
     }
   },
   "rows": [
@@ -38372,7 +38372,7 @@
         "sourceInventoryRowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_phantom_steed",
         "state": "present"
       },
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
+      "nextAction": "Phantom Steed is closed at the mount companion boundary: a future owner must model spell-created mount identity and placement, Riding Horse stat-block projection with the spell Speed override, rider selection/control, damage-triggered early spell end, one-minute fade and dismount grace, created equipment distance-vanish, and 13 miles/hour travel without duplicating stat-block data, table geometry, or authored-identity dispatch in generic runtime code.",
       "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_phantom_steed",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -38382,22 +38382,28 @@
       },
       "supportSnapshot": {
         "authoredContent": {
-          "state": "missing-authored-record"
+          "sourceRecordPath": "packages/surface/content/phantom_steed.json",
+          "state": "authored-record-present",
+          "unitId": "phantom_steed"
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "battle-runtime-required"
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "companion-control-boundary",
+          "owner": "future spell-created mount lifecycle, rider/control, table travel, and fade/dismount owner",
+          "reason": "Phantom Steed is closed at the mount companion boundary: a future owner must model spell-created mount identity and placement, Riding Horse stat-block projection with the spell Speed override, rider selection/control, damage-triggered early spell end, one-minute fade and dismount grace, created equipment distance-vanish, and 13 miles/hour travel without duplicating stat-block data, table geometry, or authored-identity dispatch in generic runtime code.",
+          "state": "recorded"
         },
         "catalogAdmission": {
           "state": "not-installed",
           "unitId": "phantom_steed"
         },
-        "finalDisposition": "missing-authored-record",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },
@@ -41581,27 +41587,33 @@
       ],
       "levelBand": "spell-level-3",
       "nextActions": [
-        "Author an SRD-provenance Surface record or explicitly close the row."
+        "Phantom Steed is closed at the mount companion boundary: a future owner must model spell-created mount identity and placement, Riding Horse stat-block projection with the spell Speed override, rider selection/control, damage-triggered early spell end, one-minute fade and dismount grace, created equipment distance-vanish, and 13 miles/hour travel without duplicating stat-block data, table geometry, or authored-identity dispatch in generic runtime code."
       ],
       "spellName": "Phantom Steed",
       "supportSnapshot": {
         "authoredContent": {
-          "state": "missing-authored-record"
+          "sourceRecordPath": "packages/surface/content/phantom_steed.json",
+          "state": "authored-record-present",
+          "unitId": "phantom_steed"
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "battle-runtime-required"
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "companion-control-boundary",
+          "owner": "future spell-created mount lifecycle, rider/control, table travel, and fade/dismount owner",
+          "reason": "Phantom Steed is closed at the mount companion boundary: a future owner must model spell-created mount identity and placement, Riding Horse stat-block projection with the spell Speed override, rider selection/control, damage-triggered early spell end, one-minute fade and dismount grace, created equipment distance-vanish, and 13 miles/hour travel without duplicating stat-block data, table geometry, or authored-identity dispatch in generic runtime code.",
+          "state": "recorded"
         },
         "catalogAdmission": {
           "state": "not-installed",
           "unitId": "phantom_steed"
         },
-        "finalDisposition": "missing-authored-record",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },

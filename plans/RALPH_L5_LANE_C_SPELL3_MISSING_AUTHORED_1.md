@@ -61,7 +61,7 @@
     {
       "number": 10,
       "id": "L5-C10-PHANTOM-STEED",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Close Phantom Steed missing authored record"
     },
     {
@@ -123,6 +123,12 @@
       "id": "L5-C20-MELD-INTO-STONE-SURFACE-WIDENING",
       "status": "ready-for-research",
       "title": "Widen Meld into Stone Surface Spell Definition"
+    },
+    {
+      "number": 21,
+      "id": "L5-C21-PHANTOM-STEED-MOUNT-LIFECYCLE",
+      "status": "ready-for-research",
+      "title": "Promote Phantom Steed mount lifecycle owner"
     }
   ]
 }
@@ -187,7 +193,7 @@ missing-record spells unless a RAW dependency is unavoidable and documented.
 | 7 | L5-C07-MAGIC-CIRCLE - Close Magic Circle missing authored record | done | none | Closed as a Surface widening boundary, not an authored-record admission; follow-up is L5-C19 for warded-cylinder, direction, travel-gate, and protected-target facts. |
 | 8 | L5-C08-MELD-INTO-STONE - Close Meld into Stone missing authored record | done | none | Closed as a Surface widening boundary, not an authored-record admission; follow-up is L5-C20 for stone-merge occupancy, perception, damage, and forced-exit facts. |
 | 9 | L5-C09-NONDETECTION - Close Nondetection missing authored record | done | none | Independent missing spell Unit. |
-| 10 | L5-C10-PHANTOM-STEED - Close Phantom Steed missing authored record | ready-for-research | none | Independent missing spell Unit. |
+| 10 | L5-C10-PHANTOM-STEED - Close Phantom Steed missing authored record | done | none | Closed by an SRD-provenance Surface record plus unsupported-profile mount lifecycle/travel/fade owner boundary; follow-up is L5-C21. |
 | 11 | L5-C11-BESTOW-CURSE-SURFACE-WIDENING - Widen Bestow Curse Surface Spell Definition | ready-for-research | L5-C01-BESTOW-CURSE | Add typed Surface facts for Bestow Curse curse-option selection, curse-removal targeting, and slot-dependent duration/Concentration before authoring/admitting the Spell Definition. |
 | 12 | L5-C12-BLINK-SURFACE-WIDENING - Widen Blink Surface Spell Definition | ready-for-research | L5-C02-BLINK | Add typed Surface/table-spatial facts for Blink's turn-end roll, Ethereal Plane transition, already-on-plane ending predicate, and return-position availability before authoring/admitting the Spell Definition. |
 | 13 | L5-C13-CONJURE-ANIMALS-SURFACE-WIDENING - Widen Conjure Animals Surface Spell Definition | ready-for-research | L5-C03-CONJURE-ANIMALS | Add typed Surface/table-spatial facts for Conjure Animals' spectral pack occurrence, pack reposition, Strength Saving Throw Advantage predicate, Dexterity Saving Throw trigger eligibility, and once-per-turn limit before authoring/admitting the Spell Definition. |
@@ -198,6 +204,7 @@ missing-record spells unless a RAW dependency is unavoidable and documented.
 | 18 | L5-C18-HASTE-LETHARGY-RUNTIME - Promote Haste lethargy runtime cleanup | ready-for-research | L5-C17-HASTE-POSITIVE-RUNTIME | Promote the spell-end lethargy rider: Incapacitated plus Speed 0 until the end of the target's next turn without treating Incapacitated as a Speed shortcut. |
 | 19 | L5-C19-MAGIC-CIRCLE-SURFACE-WIDENING - Widen Magic Circle Surface Spell Definition | ready-for-research | L5-C07-MAGIC-CIRCLE | Add typed Surface/table-spatial facts for Magic Circle's warded Cylinder, selected creature types, normal or reversed direction, nonmagical crossing prevention, teleportation or interplanar-travel Saving Throw gate, Attack Roll Disadvantage, and source-scoped possession plus Charmed/Frightened prevention before authoring/admitting the Spell Definition. |
 | 20 | L5-C20-MELD-INTO-STONE-SURFACE-WIDENING - Widen Meld into Stone Surface Spell Definition | ready-for-research | L5-C08-MELD-INTO-STONE | Add typed Surface/table terrain facts for Meld into Stone's stone object-or-surface containment target, hidden merged occupancy, outside-sense limits, self-spell and Movement-limited exit permissions, destructive expulsion damage, closest-unoccupied-space placement, and Prone rider before authoring/admitting the Spell Definition. |
+| 21 | L5-C21-PHANTOM-STEED-MOUNT-LIFECYCLE - Promote Phantom Steed mount lifecycle owner | ready-for-research | L5-C10-PHANTOM-STEED | Promote the spell-created mount lifecycle, Riding Horse Speed override, rider permission, damage-ended spell cleanup, fade/dismount grace, equipment vanish, and table travel boundary from the typed Surface record. |
 
 ## Shared Verification
 
@@ -1211,7 +1218,7 @@ Verification:
 
 ### Task 10 - L5-C10-PHANTOM-STEED
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -1243,3 +1250,65 @@ Acceptance:
 Verification:
 
 - Shared lane verification.
+
+Plan Impact:
+
+- Follow-up runtime work is split into
+  L5-C21-PHANTOM-STEED-MOUNT-LIFECYCLE before any promoted Phantom Steed
+  battle/table runtime profile claims support for the spell-created mount.
+
+### Task 21 - L5-C21-PHANTOM-STEED-MOUNT-LIFECYCLE
+
+Status: `ready-for-research`
+
+Depends on:
+
+- L5-C10-PHANTOM-STEED
+
+Unit:
+
+- `phantom_steed`
+
+SRD anchors:
+
+- `.references/srd-5.2.1/Spells/Descriptions-M-P.md:558`
+- `.references/srd-5.2.1/Classes/Wizard.md:254`
+- `.references/srd-5.2.1/Playing-the-Game.md:445`
+- `.references/srd-5.2.1/Playing-the-Game.md:642`
+
+Current state:
+
+- The SRD-provenance Phantom Steed Surface Spell Definition is authored.
+- Generated coverage classifies the Unit as `unsupported-profile` /
+  `catalog-only/dead-for-now` with a `companion-control-boundary` owner.
+- No promoted runtime profile executes the spell-created mount lifecycle,
+  Riding Horse Speed override, rider state, damage-ended spell cleanup,
+  fade/dismount grace, created-equipment vanish boundary, or table travel fact.
+
+Output:
+
+- Promote or further split an executable owner for Phantom Steed's
+  spell-created mount occurrence, caller-supplied unoccupied placement, Riding
+  Horse stat-block projection with the spell Speed override, caster-or-chosen
+  rider permission, damage-triggered spell end, one-minute fade and dismount
+  grace, saddle/bit/bridle vanish boundary, and 13 miles/hour travel fact.
+- Reuse the existing stat-block catalog and Surface spawned-creature/mount
+  facts; do not copy Riding Horse data into a parallel Phantom Steed runtime
+  table or dispatch on spell id/name/provenance in generic runtime behavior.
+- If this remains larger than one runtime owner, split the remaining work into
+  concrete follow-up task IDs before closing the task.
+
+Acceptance:
+
+- Phantom Steed has a supported or explicitly narrower profile/owner boundary
+  whose typed facts cover every represented Surface mount clause.
+- Runtime support, if added, consumes typed Surface/profile facts and explicit
+  placement/rider/travel witnesses rather than authored spell identity.
+- The damage-ended spell cleanup and fade/dismount grace are not silently
+  treated as ordinary 0-HP disappearance or immediate spell-end disappearance.
+
+Verification:
+
+- Shared lane verification.
+- Focused owner-package tests, and if battle-runtime behavior changes, update
+  the relevant QNT/spec first and run focused MBT per `AGENTS.md`.

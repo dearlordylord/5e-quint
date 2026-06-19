@@ -4508,13 +4508,30 @@ export const CreatureControlSchema = Schema.Struct({
 });
 
 export const CreatureDismissalSchema = Schema.Struct({
-  onZeroHp: Schema.Literal("disappears"),
-  onSpellEnd: Schema.Literal("disappears"),
+  onZeroHp: optionalExact(Schema.Literal("disappears")),
+  onSpellEnd: Schema.Union(
+    Schema.Literal("disappears"),
+    Schema.Struct({
+      kind: Schema.Literal("gradual_fade"),
+      riderDismountGrace: DurationValueSchema,
+    }),
+  ),
   caster0Hp: optionalExact(Schema.Literal("disappears")),
   manualDismiss: optionalExact(
     Schema.Literal("magic_action", "bonus_action", "never"),
   ),
   leavesBehind: optionalExact(Schema.Literal("equipment", "nothing")),
+});
+
+export const SpawnedCreatureMountSchema = Schema.Struct({
+  riderPermission: Schema.Literal("caster_or_chosen_creature"),
+  hourlyTravelMiles: optionalExact(PositiveIntegerSchema),
+  createdEquipment: optionalExact(
+    Schema.Struct({
+      items: nonEmpty(Schema.Literal("saddle", "bit", "bridle")),
+      vanishesIfCarriedMoreThanFeetFromCreature: PositiveIntegerSchema,
+    }),
+  ),
 });
 
 export const TemplatedCapacitySchema = Schema.Struct({
@@ -4587,6 +4604,7 @@ export const SpawnedCreatureStatBlockSchema = Schema.Union(
     kind: Schema.Literal("catalog_ref"),
     monsterId: Schema.String,
     displayName: Schema.String,
+    overrides: optionalExact(CreatureStatBlockOverridesSchema),
   }),
   Schema.Struct({
     kind: Schema.Literal("familiar_form_catalog"),
@@ -4606,7 +4624,8 @@ export const SpawnedCreatureStatBlockSchema = Schema.Union(
 export const SpawnedCreaturePayloadSchema = Schema.Struct({
   creature: SpawnedCreatureStatBlockSchema,
   mode: optionalExact(CreatureModeSchema),
-  control: CreatureControlSchema,
+  mount: optionalExact(SpawnedCreatureMountSchema),
+  control: optionalExact(CreatureControlSchema),
   dismissal: CreatureDismissalSchema,
 });
 

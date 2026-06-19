@@ -44,9 +44,9 @@ These counts describe the current runtime/catalog state of mined rows. They are 
 | catalog-authored-review-required | 61 |
 | catalog-installed-owner-evidence-present | 483 |
 | catalog-installed-owner-evidence-required | 4 |
-| catalog-only/dead-for-now | 179 |
+| catalog-only/dead-for-now | 180 |
 | level-5-7-follow-up-required | 24 |
-| missing-authored-record | 46 |
+| missing-authored-record | 45 |
 | needs-surface-widening | 19 |
 | non-runtime | 84 |
 
@@ -61,18 +61,18 @@ These counts describe the current runtime/catalog state of mined rows. They are 
 
 | Unit profile disposition | Rows |
 | --- | ---: |
-| not-recorded | 189 |
+| not-recorded | 188 |
 | profile-subset-supported | 53 |
 | supported-profile | 297 |
-| unsupported-profile | 361 |
+| unsupported-profile | 362 |
 
 ### Battle Readiness Snapshot
 
 | Battle readiness status | Rows |
 | --- | ---: |
 | accepted | 469 |
-| accepted-no-battle-effect | 224 |
-| battle-runtime-required | 49 |
+| accepted-no-battle-effect | 225 |
+| battle-runtime-required | 48 |
 | not-applicable | 77 |
 | owner-evidence-required | 62 |
 | surface-widening-required | 19 |
@@ -93,8 +93,8 @@ These counts separate class-list rows from unique Spell Definition identities. A
 | catalog-authored-review-required | 24 |
 | catalog-installed-owner-evidence-present | 7 |
 | catalog-installed-owner-evidence-required | 1 |
-| catalog-only/dead-for-now | 15 |
-| missing-authored-record | 21 |
+| catalog-only/dead-for-now | 16 |
+| missing-authored-record | 20 |
 | needs-surface-widening | 8 |
 
 ### Unique Spell Identities
@@ -125,7 +125,7 @@ These counts separate class-list rows from unique Spell Definition identities. A
 | `mass_healing_word` Mass Healing Word | spell-level-3 | Bard, Cleric | 2 | authored-record-present | installed | supported-profile | catalog-installed-owner-evidence-present | accepted | not-recorded | Owner-specific operational evidence is classified and present. |
 | `meld_into_stone` Meld into Stone | spell-level-3 | Cleric, Druid | 2 | missing-authored-record | not-installed | not-recorded | needs-surface-widening | surface-widening-required | table-spatial-derivation: Surface Spell Definition plus table terrain/object occupancy owner and future battle-runtime merged-state, perception, damage, and forced-exit Spell Effect owner | Widen Surface: Spell Definition stone-merge occurrence: the self-only cast requires touching a stone object or surface large enough to fully contain the caster's body; the caster and equipment merge into hidden stone occupancy for 8 hours; nonmagical senses cannot detect the caster; outside sight is blocked; outside-sound Wisdom (Perception) checks have Disadvantage; the caster remains time-aware, can cast spells on themselves, can spend 5 feet of Movement to leave only where they entered, and otherwise cannot move; minor stone damage is harmless; partial destruction or shape change that makes the caster no longer fit expels them with 6d6 Force damage; complete destruction or transmutation expels them with 50 Force damage; any expulsion places them in the closest unoccupied space to the entry location and gives the Prone condition. |
 | `nondetection` Nondetection | spell-level-3 | Bard, Wizard | 2 | authored-record-present | installed | unsupported-profile | catalog-only/dead-for-now | accepted-no-battle-effect | outside-runtime-presentation-exploration: future divination targeting and magical scrying-sensor perception owner | Nondetection supplies a source fact that blocks Divination targeting and magical scrying-sensor perception for a touched creature, place, or object, but promoted battle runtime does not own generic Divination targetability, active remote-sensor perception, place identity, or table/perception disclosure. Those facts should be consumed by a future divination/perception owner without duplicating battle map, sensor, or authored spell identity state in generic Spell Invocation reducers. |
-| `phantom_steed` Phantom Steed | spell-level-3 | Wizard | 1 | missing-authored-record | not-installed | not-recorded | missing-authored-record | battle-runtime-required | not-recorded | Author an SRD-provenance Surface record or explicitly close the row. |
+| `phantom_steed` Phantom Steed | spell-level-3 | Wizard | 1 | authored-record-present | not-installed | unsupported-profile | catalog-only/dead-for-now | accepted-no-battle-effect | companion-control-boundary: future spell-created mount lifecycle, rider/control, table travel, and fade/dismount owner | Phantom Steed is closed at the mount companion boundary: a future owner must model spell-created mount identity and placement, Riding Horse stat-block projection with the spell Speed override, rider selection/control, damage-triggered early spell end, one-minute fade and dismount grace, created equipment distance-vanish, and 13 miles/hour travel without duplicating stat-block data, table geometry, or authored-identity dispatch in generic runtime code. |
 | `plant_growth` Plant Growth | spell-level-3 | Bard, Druid | 2 | authored-record-present | installed | unsupported-profile | catalog-only/dead-for-now | accepted-no-battle-effect | outside-runtime-presentation-exploration: runtime-detached table/spatial/exploration/economy owner | Plant Growth supplies table-facing terrain and agriculture facts, but promoted battle runtime does not own normal-plant area membership, excluded-area geometry, pathfinding or travel-pacing derivation through overgrown terrain, plant-world state, harvest timing, food yield, or settlement economy. |
 | `protection_from_energy` Protection from Energy | spell-level-3 | Cleric, Druid, Sorcerer, Wizard | 4 | authored-record-present | not-installed | not-recorded | catalog-authored-review-required | owner-evidence-required | not-recorded | Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this later-frontier spell row as accepted. |
 | `remove_curse` Remove Curse | spell-level-3 | Cleric, Warlock, Wizard | 3 | authored-record-present | installed | unsupported-profile | catalog-only/dead-for-now | accepted-no-battle-effect | outside-battle-runtime: future curse occurrence and magic-item Attunement owner | Remove Curse supplies table-facing curse-removal and cursed-item Attunement source facts, but promoted battle runtime does not own generic curse occurrence identity, curse-removal targeting semantics, cursed magic item curse persistence, or Attunement mutation for cursed objects. |
@@ -1125,7 +1125,7 @@ These counts separate class-list rows from unique Spell Definition identities. A
 | Wizard spell list Magic Circle | spell-level-3 | spell-level | spell Unit pressure | `magic_circle` | `.references/srd-5.2.1/Classes/Wizard.md:251` | present | not-installed | not-recorded | needs-surface-widening | surface-widening-required | table-spatial-derivation: Surface Spell Definition plus table/spatial planar-movement owner and future battle-runtime warded-area Spell Effect owner | Widen Surface: Spell Definition warded-cylinder occurrence: 10-foot-radius, 20-foot-tall Cylinder area; slot-scaled timed duration of 1 hour plus 1 hour per Spell Slot level above 3; cast-time choice of one or more Celestial, Elemental, Fey, Fiend, or Undead creature types; normal or reversed area direction; nonmagical entry or exit prevention for affected creatures; Charisma Saving Throw gate for teleportation or interplanar travel across the ward; affected-creature Attack Roll Disadvantage against protected targets; and source-scoped possession, Charmed, and Frightened prevention for protected targets. |
 | Wizard spell list Major Image | spell-level-3 | spell-level | spell Unit pressure | `major_image` | `.references/srd-5.2.1/Classes/Wizard.md:252` | present | not-installed | unsupported-profile | catalog-only/dead-for-now | accepted-no-battle-effect | outside-runtime-presentation-exploration: future illusion Spell Effect and table/presentation/perception owner | Major Image's represented runtime behavior is closed outside promoted battle runtime: a future illusion Spell Effect and table/presentation/perception owner must carry the illusion occurrence, Concentration or level-4+ until-dispelled duration, selected spot and 20-foot Cube bounds, caster Magic Action repositioning and content changes, physical-interaction reveal, Study/Investigation discovery, and per-observer see-through/faint sensory presentation without duplicating map, line-of-sight, object or creature presence, or believability state inside battle Spell Invocation reducers. |
 | Wizard spell list Nondetection | spell-level-3 | spell-level | spell Unit pressure | `nondetection` | `.references/srd-5.2.1/Classes/Wizard.md:253` | present | installed | unsupported-profile | catalog-only/dead-for-now | accepted-no-battle-effect | outside-runtime-presentation-exploration: future divination targeting and magical scrying-sensor perception owner | Nondetection supplies a source fact that blocks Divination targeting and magical scrying-sensor perception for a touched creature, place, or object, but promoted battle runtime does not own generic Divination targetability, active remote-sensor perception, place identity, or table/perception disclosure. Those facts should be consumed by a future divination/perception owner without duplicating battle map, sensor, or authored spell identity state in generic Spell Invocation reducers. |
-| Wizard spell list Phantom Steed | spell-level-3 | spell-level | spell Unit pressure | `phantom_steed` | `.references/srd-5.2.1/Classes/Wizard.md:254` | present | not-installed | not-recorded | missing-authored-record | battle-runtime-required | not-recorded | Author an SRD-provenance Surface record or explicitly close the row. |
+| Wizard spell list Phantom Steed | spell-level-3 | spell-level | spell Unit pressure | `phantom_steed` | `.references/srd-5.2.1/Classes/Wizard.md:254` | present | not-installed | unsupported-profile | catalog-only/dead-for-now | accepted-no-battle-effect | companion-control-boundary: future spell-created mount lifecycle, rider/control, table travel, and fade/dismount owner | Phantom Steed is closed at the mount companion boundary: a future owner must model spell-created mount identity and placement, Riding Horse stat-block projection with the spell Speed override, rider selection/control, damage-triggered early spell end, one-minute fade and dismount grace, created equipment distance-vanish, and 13 miles/hour travel without duplicating stat-block data, table geometry, or authored-identity dispatch in generic runtime code. |
 | Wizard spell list Protection from Energy | spell-level-3 | spell-level | spell Unit pressure | `protection_from_energy` | `.references/srd-5.2.1/Classes/Wizard.md:255` | present | not-installed | not-recorded | catalog-authored-review-required | owner-evidence-required | not-recorded | Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this later-frontier spell row as accepted. |
 | Wizard spell list Remove Curse | spell-level-3 | spell-level | spell Unit pressure | `remove_curse` | `.references/srd-5.2.1/Classes/Wizard.md:256` | present | installed | unsupported-profile | catalog-only/dead-for-now | accepted-no-battle-effect | outside-battle-runtime: future curse occurrence and magic-item Attunement owner | Remove Curse supplies table-facing curse-removal and cursed-item Attunement source facts, but promoted battle runtime does not own generic curse occurrence identity, curse-removal targeting semantics, cursed magic item curse persistence, or Attunement mutation for cursed objects. |
 | Wizard spell list Sending | spell-level-3 | spell-level | spell Unit pressure | `sending` | `.references/srd-5.2.1/Classes/Wizard.md:257` | present | installed | unsupported-profile | catalog-only/dead-for-now | accepted-no-battle-effect | outside-runtime-presentation-exploration: runtime-detached table communication owner | Sending supplies private mental message delivery, cross-plane failure chance, immediate response, and recipient block source facts, but promoted battle runtime does not own communication content, creature knowledge/description matching, planar location adjudication, message-delivery rolls, response contents, or persistent communication block state. |

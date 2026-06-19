@@ -8,6 +8,7 @@ import flyInput from "../../content/fly.json";
 import hypnoticPatternInput from "../../content/hypnotic_pattern.json";
 import magicWeaponInput from "../../content/magic_weapon.json";
 import moonbeamInput from "../../content/moonbeam.json";
+import phantomSteedInput from "../../content/phantom_steed.json";
 import sorcererFontOfMagicInput from "../../content/sorcerer_font_of_magic.json";
 import sorcererMetamagicInput from "../../content/sorcerer_metamagic.json";
 import {
@@ -6084,6 +6085,52 @@ describe("SRD Unit catalog boundary", () => {
         },
       });
     }
+  });
+
+  test("decodes Phantom Steed as a catalog-backed mount with a speed override", () => {
+    const phantomSteed = decodeUnitRecordSync(phantomSteedInput);
+
+    expect(phantomSteed.kind).toBe("spell");
+    if (phantomSteed.kind !== "spell") {
+      throw new Error("Expected Phantom Steed spell record.");
+    }
+    expect(phantomSteed.mechanics.family).toBe("spawned_creature");
+    if (phantomSteed.mechanics.family !== "spawned_creature") {
+      throw new Error("Expected spawned creature mechanics.");
+    }
+
+    expect(phantomSteed.mechanics.duration).toEqual({
+      kind: "timed",
+      value: { unit: "hour", amount: 1 },
+    });
+    expect(phantomSteed.mechanics.creature).toEqual({
+      kind: "catalog_ref",
+      monsterId: "stat_block_riding_horse",
+      displayName: "Riding Horse",
+      overrides: {
+        speeds: [
+          {
+            kind: "walk",
+            feet: { kind: "literal", value: 100 },
+          },
+        ],
+      },
+    });
+    expect(phantomSteed.mechanics.control).toBeUndefined();
+    expect(phantomSteed.mechanics.mount).toEqual({
+      riderPermission: "caster_or_chosen_creature",
+      hourlyTravelMiles: 13,
+      createdEquipment: {
+        items: ["saddle", "bit", "bridle"],
+        vanishesIfCarriedMoreThanFeetFromCreature: 10,
+      },
+    });
+    expect(phantomSteed.mechanics.dismissal).toEqual({
+      onSpellEnd: {
+        kind: "gradual_fade",
+        riderDismountGrace: { unit: "minute", amount: 1 },
+      },
+    });
   });
 
   test("rejects blank Find Familiar form catalog references", () => {
