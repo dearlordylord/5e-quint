@@ -127,7 +127,7 @@
     {
       "number": 21,
       "id": "L5-C21-PHANTOM-STEED-MOUNT-LIFECYCLE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Promote Phantom Steed mount lifecycle owner"
     },
     {
@@ -135,6 +135,24 @@
       "id": "L5-C22-GLYPH-OF-WARDING-RUNTIME",
       "status": "ready-for-research",
       "title": "Promote Glyph of Warding runtime release owner"
+    },
+    {
+      "number": 23,
+      "id": "L3-FOLLOWUP-PHANTOM-STEED-MOUNT-LIFECYCLE",
+      "status": "ready-for-research",
+      "title": "Phantom Steed Mount Lifecycle Runtime"
+    },
+    {
+      "number": 24,
+      "id": "L3-FOLLOWUP-PHANTOM-STEED-CREATED-EQUIPMENT",
+      "status": "ready-for-research",
+      "title": "Phantom Steed Created Equipment Cleanup"
+    },
+    {
+      "number": 25,
+      "id": "L3-FOLLOWUP-PHANTOM-STEED-TRAVEL-PACE",
+      "status": "ready-for-research",
+      "title": "Phantom Steed Table Travel Pace"
     }
   ]
 }
@@ -176,8 +194,10 @@ missing-record spells unless a RAW dependency is unavoidable and documented.
   `ASSUMPTIONS.md` or stop for owner direction.
 - Do not browse external rules sources.
 - Do not add PHB+ authored identity.
-- One task equals one unique spell Unit identity. Class-list rows are evidence
-  for that Unit, not separate implementation tasks.
+- Initial missing-authored tasks each own one unique spell Unit identity.
+  Follow-up owner splits may share that Unit when the executable owners are
+  genuinely distinct. Class-list rows remain evidence for the Unit, not
+  separate implementation tasks.
 - Keep provenance, structured input, and runtime projection separate.
 - Missing authored record closure requires resolving the Surface Spell
   Definition/provenance question first: author the SRD-provenance record when
@@ -210,8 +230,11 @@ missing-record spells unless a RAW dependency is unavoidable and documented.
 | 18 | L5-C18-HASTE-LETHARGY-RUNTIME - Promote Haste lethargy runtime cleanup | done | L5-C17-HASTE-POSITIVE-RUNTIME | Promoted the spell-end lethargy rider: Incapacitated plus Speed 0 until the end of the target's next turn without treating Incapacitated as a Speed shortcut. |
 | 19 | L5-C19-MAGIC-CIRCLE-SURFACE-WIDENING - Widen Magic Circle Surface Spell Definition | done | L5-C07-MAGIC-CIRCLE | Magic Circle is authored/admitted as an SRD Surface Spell Definition with typed warded-cylinder, selected creature-type, direction, crossing-gate, and protected-target facts; promoted runtime remains unclaimed. |
 | 20 | L5-C20-MELD-INTO-STONE-SURFACE-WIDENING - Widen Meld into Stone Surface Spell Definition | done | L5-C08-MELD-INTO-STONE | Meld into Stone is authored/admitted as an SRD Surface Spell Definition with typed stone object-or-surface containment, hidden merged occupancy, outside-sense, self-spell, Movement-limited exit, destructive expulsion damage, closest-unoccupied-space placement, and Prone rider facts; promoted runtime remains unclaimed. |
-| 21 | L5-C21-PHANTOM-STEED-MOUNT-LIFECYCLE - Promote Phantom Steed mount lifecycle owner | ready-for-research | L5-C10-PHANTOM-STEED | Promote the spell-created mount lifecycle, Riding Horse Speed override, rider permission, damage-ended spell cleanup, fade/dismount grace, equipment vanish, and table travel boundary from the typed Surface record. |
+| 21 | L5-C21-PHANTOM-STEED-MOUNT-LIFECYCLE - Promote Phantom Steed mount lifecycle owner | done | L5-C10-PHANTOM-STEED | Added the typed spawned-creature-damage spell-end fact and split remaining runtime work into executable follow-ups L3-FOLLOWUP-PHANTOM-STEED-MOUNT-LIFECYCLE, L3-FOLLOWUP-PHANTOM-STEED-CREATED-EQUIPMENT, and L3-FOLLOWUP-PHANTOM-STEED-TRAVEL-PACE. |
 | 22 | L5-C22-GLYPH-OF-WARDING-RUNTIME - Promote Glyph of Warding runtime release owner | ready-for-research | L5-C15-GLYPH-OF-WARDING-SURFACE-WIDENING | Promote the durable glyph occurrence/release workflow from the typed Surface record, preserving table object/location, trigger-event, area-membership, hostile placement, stored spell invocation, and stored Concentration witnesses without authored spell identity dispatch. |
+| 23 | L3-FOLLOWUP-PHANTOM-STEED-MOUNT-LIFECYCLE - Phantom Steed Mount Lifecycle Runtime | ready-for-research | L5-C21-PHANTOM-STEED-MOUNT-LIFECYCLE | Promote spell-created mount occurrence creation, caller-supplied unoccupied placement, Riding Horse catalog projection with Speed override, rider permission, damage-triggered spell end, and gradual fade/dismount grace. |
+| 24 | L3-FOLLOWUP-PHANTOM-STEED-CREATED-EQUIPMENT - Phantom Steed Created Equipment Cleanup | ready-for-research | L5-C21-PHANTOM-STEED-MOUNT-LIFECYCLE | Promote saddle/bit/bridle object or equipment occurrences and the 10-foot carried-distance vanish boundary. |
+| 25 | L3-FOLLOWUP-PHANTOM-STEED-TRAVEL-PACE - Phantom Steed Table Travel Pace | ready-for-research | L5-C21-PHANTOM-STEED-MOUNT-LIFECYCLE | Promote the 13 miles/hour travel fact through a table travel owner without adding battle-map travel state. |
 
 ## Shared Verification
 
@@ -1296,7 +1319,7 @@ Plan Impact:
 
 ### Task 21 - L5-C21-PHANTOM-STEED-MOUNT-LIFECYCLE
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -1316,39 +1339,172 @@ SRD anchors:
 Current state:
 
 - The SRD-provenance Phantom Steed Surface Spell Definition is authored.
+- Surface records the damage-triggered early spell end as
+  `dismissal.onSpawnedCreatureDamage = "spell_ends"` and keeps spell-end
+  cleanup as gradual fade with 1-minute rider dismount grace.
 - Generated coverage classifies the Unit as `unsupported-profile` /
-  `catalog-only/dead-for-now` with a `companion-control-boundary` owner.
-- No promoted runtime profile executes the spell-created mount lifecycle,
-  Riding Horse Speed override, rider state, damage-ended spell cleanup,
-  fade/dismount grace, created-equipment vanish boundary, or table travel fact.
+  `catalog-authored-executable-follow-up`, with explicit split follow-up
+  owners for mount lifecycle/control, created equipment cleanup, and table
+  travel pace.
 
 Output:
 
-- Promote or further split an executable owner for Phantom Steed's
-  spell-created mount occurrence, caller-supplied unoccupied placement, Riding
-  Horse stat-block projection with the spell Speed override, caster-or-chosen
-  rider permission, damage-triggered spell end, one-minute fade and dismount
-  grace, saddle/bit/bridle vanish boundary, and 13 miles/hour travel fact.
-- Reuse the existing stat-block catalog and Surface spawned-creature/mount
-  facts; do not copy Riding Horse data into a parallel Phantom Steed runtime
-  table or dispatch on spell id/name/provenance in generic runtime behavior.
-- If this remains larger than one runtime owner, split the remaining work into
-  concrete follow-up task IDs before closing the task.
+- Done by adding the missing typed Surface damage trigger and splitting the
+  remaining executable owners into:
+  L3-FOLLOWUP-PHANTOM-STEED-MOUNT-LIFECYCLE,
+  L3-FOLLOWUP-PHANTOM-STEED-CREATED-EQUIPMENT, and
+  L3-FOLLOWUP-PHANTOM-STEED-TRAVEL-PACE.
 
 Acceptance:
 
-- Phantom Steed has a supported or explicitly narrower profile/owner boundary
-  whose typed facts cover every represented Surface mount clause.
-- Runtime support, if added, consumes typed Surface/profile facts and explicit
-  placement/rider/travel witnesses rather than authored spell identity.
-- The damage-ended spell cleanup and fade/dismount grace are not silently
-  treated as ordinary 0-HP disappearance or immediate spell-end disappearance.
+- Phantom Steed has an explicitly narrower split owner boundary whose typed
+  facts cover represented Surface mount clauses without claiming promoted
+  battle-runtime support.
+- The damage-ended spell cleanup is not modeled as ordinary 0-HP disappearance;
+  it ends the spell and routes future runtime work through spell-end gradual
+  fade/dismount cleanup.
 
 Verification:
 
 - Shared lane verification.
 - Focused owner-package tests, and if battle-runtime behavior changes, update
   the relevant QNT/spec first and run focused MBT per `AGENTS.md`.
+
+Plan Impact:
+
+- Remaining executable work is split into the three follow-up task details
+  below. Each follow-up must consume typed Surface/profile facts and explicit
+  witnesses without copying Riding Horse data, table geometry, travel state,
+  equipment state, or Phantom Steed authored identity into generic runtime
+  behavior.
+
+### Task 23 - L3-FOLLOWUP-PHANTOM-STEED-MOUNT-LIFECYCLE
+
+Status: `ready-for-research`
+
+Depends on:
+
+- L5-C21-PHANTOM-STEED-MOUNT-LIFECYCLE
+
+Unit:
+
+- `phantom_steed`
+
+SRD anchors:
+
+- `.references/srd-5.2.1/Spells/Descriptions-M-P.md:558`
+- `.references/srd-5.2.1/Classes/Wizard.md:254`
+- `.references/srd-5.2.1/Playing-the-Game.md:642`
+
+Current state:
+
+- Phantom Steed has typed Surface spawned-creature, mount, Riding Horse
+  catalog-ref, Speed override, rider permission, damage-triggered spell-end,
+  and gradual-fade facts.
+- No promoted runtime owner creates or controls the spell-created mount
+  occurrence.
+
+Output:
+
+- Promote spell-created mount occurrence creation from typed spawned-creature
+  facts, caller-supplied unoccupied placement, Riding Horse catalog stat-block
+  projection with the spell Speed override, caster-or-chosen rider permission,
+  damage-triggered spell end, and one-minute fade/dismount grace on spell end.
+
+Acceptance:
+
+- Phantom Steed has a supported or profile-subset-supported mount
+  lifecycle/control claim with deterministic admission/projection evidence.
+- Focused runtime tests and promoted Quint/runtime parity cover the mount
+  lifecycle/control behavior without copying Riding Horse stat-block data or
+  dispatching on Phantom Steed identity.
+
+Verification:
+
+- Shared lane verification.
+- Focused owner-package tests, and if battle-runtime behavior changes, update
+  the relevant QNT/spec first and run focused MBT per `AGENTS.md`.
+
+### Task 24 - L3-FOLLOWUP-PHANTOM-STEED-CREATED-EQUIPMENT
+
+Status: `ready-for-research`
+
+Depends on:
+
+- L5-C21-PHANTOM-STEED-MOUNT-LIFECYCLE
+
+Unit:
+
+- `phantom_steed`
+
+SRD anchors:
+
+- `.references/srd-5.2.1/Spells/Descriptions-M-P.md:558`
+
+Current state:
+
+- Phantom Steed has typed Surface created-equipment facts for saddle, bit, and
+  bridle, including the 10-foot carried-distance vanish boundary.
+- No promoted object/equipment occurrence owner consumes these facts.
+
+Output:
+
+- Promote the saddle, bit, and bridle created by the spell as object/equipment
+  occurrences that vanish when carried more than 10 feet from the steed,
+  consuming explicit distance and carried-state witnesses.
+
+Acceptance:
+
+- Phantom Steed has a supported or profile-subset-supported object/equipment
+  cleanup claim with focused tests after an object/equipment occurrence owner
+  exists.
+- No Phantom Steed-local inventory ledger or duplicated equipment state is
+  added.
+
+Verification:
+
+- Shared lane verification.
+- Focused owner-package tests, and if battle-runtime behavior changes, update
+  the relevant QNT/spec first and run focused MBT per `AGENTS.md`.
+
+### Task 25 - L3-FOLLOWUP-PHANTOM-STEED-TRAVEL-PACE
+
+Status: `ready-for-research`
+
+Depends on:
+
+- L5-C21-PHANTOM-STEED-MOUNT-LIFECYCLE
+
+Unit:
+
+- `phantom_steed`
+
+SRD anchors:
+
+- `.references/srd-5.2.1/Spells/Descriptions-M-P.md:558`
+- `.references/srd-5.2.1/Playing-the-Game.md:445`
+
+Current state:
+
+- Phantom Steed has a typed Surface mount travel fact for 13 miles in an hour.
+- No promoted table travel owner consumes this fact.
+
+Output:
+
+- Promote the 13 miles/hour travel fact through a table travel owner that
+  consumes the typed mount travel fact without deriving route, terrain, pace
+  choice, or map distance in battle runtime.
+
+Acceptance:
+
+- Phantom Steed has a runtime-detached or supported travel-owner claim with
+  focused tests after table travel facts are represented.
+- No battle-map travel state or authored spell identity dispatch is added.
+
+Verification:
+
+- Shared lane verification.
+- Focused owner-package tests for any touched owner package.
 
 ### Task 22 - L5-C22-GLYPH-OF-WARDING-RUNTIME
 

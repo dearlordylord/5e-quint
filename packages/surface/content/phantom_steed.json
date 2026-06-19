@@ -30,6 +30,7 @@
       }
     },
     "dismissal": {
+      "onSpawnedCreatureDamage": "spell_ends",
       "onSpellEnd": {
         "kind": "gradual_fade",
         "riderDismountGrace": {

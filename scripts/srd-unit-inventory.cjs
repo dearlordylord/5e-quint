@@ -567,7 +567,8 @@ function isAuthoredSpellUnitCatalogOnlyClosure(row) {
     row.authoredContent?.state === "authored-record-present" &&
     row.catalogAdmission?.state === "not-installed" &&
     row.unitProfileDisposition === "unsupported-profile" &&
-    row.battleReadinessClosure?.source === "unit-claim"
+    row.battleReadinessClosure?.source === "unit-claim" &&
+    row.finalDisposition !== "catalog-authored-executable-follow-up"
   );
 }
 
@@ -5135,6 +5136,7 @@ function validateSrdUnitInventory(report) {
     (candidate) =>
       candidate.rowKind === "spell-unit-pressure" &&
       candidate.unitProfileDisposition === "unsupported-profile" &&
+      candidate.finalDisposition === "catalog-only/dead-for-now" &&
       candidate.battleReadinessClosure !== undefined,
   )) {
     const authoredRecordPresent =

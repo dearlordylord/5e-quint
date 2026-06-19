@@ -87,6 +87,17 @@ export function traceSpawnedCreature(
     edges.push({ from: cmdId, to: compId, relation: "attaches_to" });
   }
 
+  if (m.dismissal.onSpawnedCreatureDamage === "spell_ends") {
+    const damageEndId = ids("exp");
+    nodes.push({
+      id: damageEndId,
+      category: "lifecycle",
+      atomKind: "expire",
+      label: "expire\ntrigger: spawned creature takes damage",
+    });
+    edges.push({ from: compId, to: damageEndId, relation: "triggers" });
+  }
+
   if (m.creature.kind === "inline") {
     for (const [slot, kind] of [
       [m.creature.statBlock.actions, "action"],

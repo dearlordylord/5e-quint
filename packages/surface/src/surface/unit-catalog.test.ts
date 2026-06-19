@@ -7358,6 +7358,7 @@ describe("SRD Unit catalog boundary", () => {
       },
     });
     expect(phantomSteed.mechanics.dismissal).toEqual({
+      onSpawnedCreatureDamage: "spell_ends",
       onSpellEnd: {
         kind: "gradual_fade",
         riderDismountGrace: { unit: "minute", amount: 1 },

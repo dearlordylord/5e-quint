@@ -16755,6 +16755,12 @@
         "character-creation.species-lineage-choice"
       ],
       "taskId": "LT4-B04-GNOME-SPECIES-ADMISSION-EVIDENCE"
+    },
+    {
+      "claimKind": "accepted-runtime-closure",
+      "note": "Task 21 rechecked Phantom Steed RAW and Surface facts, added a typed spawned-creature-damage early spell-end trigger, and closed promoted support as an explicit owner split rather than a battle-runtime claim: spell-created mount lifecycle/control, created-equipment distance cleanup, and table travel pace each need their own follow-up owner before Phantom Steed can move beyond unsupported-profile.",
+      "profileIds": [],
+      "taskId": "L5-C21-PHANTOM-STEED-MOUNT-LIFECYCLE"
     }
   ],
   "unitGroupDenominatorAudit": {
@@ -40354,10 +40360,34 @@
       "claim": {
         "battleReadinessClosure": {
           "kind": "companion-control-boundary",
-          "owner": "future spell-created mount lifecycle, rider/control, table travel, and fade/dismount owner",
-          "reason": "Phantom Steed is closed at the mount companion boundary: a future owner must model spell-created mount identity and placement, Riding Horse stat-block projection with the spell Speed override, rider selection/control, damage-triggered early spell end, one-minute fade and dismount grace, created equipment distance-vanish, and 13 miles/hour travel without duplicating stat-block data, table geometry, or authored-identity dispatch in generic runtime code."
+          "owner": "split spell-created mount lifecycle/control, created-equipment object cleanup, and table travel owners",
+          "reason": "Phantom Steed remains closed at an explicit split owner boundary: mount lifecycle/control must model spell-created mount identity, caller-supplied unoccupied placement, Riding Horse stat-block projection with the spell Speed override, caster-or-chosen rider permission, damage-triggered spell end, and one-minute fade/dismount grace; object cleanup must model saddle/bit/bridle distance-vanish; table travel must model the 13 miles/hour fact. These owners must consume typed Surface/profile facts and explicit table witnesses without duplicating Riding Horse data, table geometry, travel state, equipment state, or authored-identity dispatch in generic runtime code."
         },
-        "reason": "Phantom Steed's Surface record has SRD provenance and structured spawned-creature/mount facts for 1-minute-or-Ritual casting, 30-foot point range, V/S components, 1-hour timed duration, an existing Riding Horse catalog reference with a walk Speed 100 override, caster-or-chosen-creature rider permission, saddle/bit/bridle created equipment with a 10-foot vanish boundary, 13 miles/hour table travel, and a one-minute rider dismount grace while the steed fades at spell end. The source prose and closure retain the damage-triggered early spell end because Surface has no created-creature damage subject trigger. No promoted battle-runtime profile is claimed because these clauses require a mount lifecycle/travel owner rather than companion command placeholders.",
+        "followUpTasks": [
+          {
+            "id": "L3-FOLLOWUP-PHANTOM-STEED-MOUNT-LIFECYCLE",
+            "mechanic": "Promote spell-created mount occurrence creation from typed spawned-creature facts, caller-supplied unoccupied placement, Riding Horse catalog stat-block projection with the spell Speed override, caster-or-chosen rider permission, damage-triggered spell end, and one-minute fade/dismount grace on spell end.",
+            "owner": "future spell-created mount companion lifecycle/control owner plus stat-block projection owner",
+            "requiredOutput": "Supported-profile or profile-subset-supported Phantom Steed claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for mount lifecycle/control without copying Riding Horse stat-block data or dispatching on Phantom Steed identity.",
+            "title": "Phantom Steed Mount Lifecycle Runtime"
+          },
+          {
+            "id": "L3-FOLLOWUP-PHANTOM-STEED-CREATED-EQUIPMENT",
+            "mechanic": "Promote the saddle, bit, and bridle created by the spell as object/equipment occurrences that vanish when carried more than 10 feet from the steed, consuming explicit distance and carried-state witnesses.",
+            "owner": "future object/equipment occurrence and distance witness owner",
+            "requiredOutput": "Supported-profile or profile-subset-supported object/equipment cleanup claim with focused tests after an object/equipment occurrence owner exists; no Phantom Steed-local inventory ledger or duplicated equipment state.",
+            "title": "Phantom Steed Created Equipment Cleanup"
+          },
+          {
+            "id": "L3-FOLLOWUP-PHANTOM-STEED-TRAVEL-PACE",
+            "mechanic": "Promote the 13 miles/hour travel fact through a table travel owner that consumes the typed mount travel fact without deriving route, terrain, pace choice, or map distance in battle runtime.",
+            "owner": "future table travel pace owner",
+            "requiredOutput": "Runtime-detached or supported travel-owner claim with focused tests after table travel facts are represented; no battle-map travel state or authored spell identity dispatch.",
+            "title": "Phantom Steed Table Travel Pace"
+          }
+        ],
+        "futureProfileOwner": "split spell-created mount lifecycle/control, created-equipment object cleanup, and table travel owners",
+        "reason": "Phantom Steed's Surface record has SRD provenance and structured spawned-creature/mount facts for 1-minute-or-Ritual casting, 30-foot point range, V/S components, 1-hour timed duration, an existing Riding Horse catalog reference with a walk Speed 100 override, caster-or-chosen-creature rider permission, saddle/bit/bridle created equipment with a 10-foot vanish boundary, 13 miles/hour table travel, a typed spawned-creature-damage early spell-end trigger, and a one-minute rider dismount grace while the steed fades at spell end. No promoted battle-runtime profile is claimed because the represented clauses split across mount lifecycle/control, created-equipment object cleanup, and table travel owners rather than generic companion command placeholders. The damage trigger is not modeled as ordinary 0-HP disappearance; it must end the spell and then route through the gradual-fade spell-end cleanup.",
         "tag": "unsupported-profile"
       },
       "collectionId": "srd-5.2.1",
