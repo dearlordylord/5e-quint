@@ -139,7 +139,7 @@ this lane; those are Lane C and Lane D.
 | 7 | L5-B07-MAJOR-IMAGE - Close Major Image authored spell pressure | done | none | Independent authored spell pressure row. |
 | 8 | L5-B08-PROTECTION-FROM-ENERGY - Close Protection from Energy authored spell pressure | done | none | Preserve target-shape repair plus runtime admission prerequisite from `plans/unit-profile-coverage/L3_PROTECTION_FROM_ENERGY_RUNTIME_SURVEY.md`. |
 | 9 | L5-B09-SPIRIT-GUARDIANS - Close Spirit Guardians authored spell pressure | done | none | Closed outside the current promoted battle runtime active Emanation area-hazard Spell Effect and table/spatial membership boundary. |
-| 10 | L5-B10-STINKING-CLOUD - Close Stinking Cloud authored spell pressure | ready-for-research | none | Independent authored spell pressure row. |
+| 10 | L5-B10-STINKING-CLOUD - Close Stinking Cloud authored spell pressure | done | none | Closed outside the promoted battle-runtime active gas area-hazard Spell Effect and table/spatial air movement boundary. |
 | 11 | L5-B11-VAMPIRIC-TOUCH - Close Vampiric Touch authored spell pressure | ready-for-research | none | Independent authored spell pressure row. |
 | 12 | L5-B12-WIND-WALL - Close Wind Wall authored spell pressure | ready-for-research | none | Independent authored spell pressure row. |
 
@@ -580,7 +580,7 @@ Verification:
 
 ### Task 10 - L5-B10-STINKING-CLOUD
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -611,6 +611,17 @@ Output:
 Acceptance:
 
 - `stinking_cloud` leaves `catalog-authored-review-required`.
+
+Result:
+
+- `stinking_cloud` is recorded as `unsupported-profile` and
+  `catalog-only/dead-for-now` with an `outside-battle-runtime` closure.
+- The future owner is an active gas area-hazard Spell Effect plus
+  table/spatial air movement owner for the caster-owned Concentration
+  occurrence, the point-origin 20-foot-radius Sphere cloud, Heavily Obscured
+  projection, start-turn Constitution Saving Throw timing, spell-scoped
+  Poisoned lifecycle until the end of the turn, Action and Bonus Action denial
+  while Poisoned this way, and strong-wind dispersal.
 
 Verification:
 

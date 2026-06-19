@@ -40356,6 +40356,16 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-battle-runtime",
+          "owner": "future active gas area-hazard Spell Effect and table/spatial air movement owner",
+          "reason": "Stinking Cloud's represented battle behavior is closed outside the promoted battle-runtime boundary: a future active Spell Effect owner must carry the Concentration-owned 20-foot-radius Sphere cloud occurrence, project Heavily Obscured gas, resolve Constitution Saving Throws for creatures that start their turns in the Sphere, apply and clear the spell-scoped Poisoned condition at the end of the current turn, and deny Action and Bonus Action use only while Poisoned in this way. Table/spatial air movement ownership must supply area-membership start-turn witnesses, wind strength, and dispersal timing rather than duplicating map, weather, or area state inside generic Spell Invocation reducers."
+        },
+        "reason": "Stinking Cloud is an SRD level-3 Spell Definition whose authored Surface record models Action Spell Slot casting, 90-foot point range, V/S/M rotten-egg components, Concentration up to 1 minute, a point-origin 20-foot-radius Sphere of nauseating gas, passive Heavily Obscured projection, start-of-turn Constitution Saving Throw timing, spell-scoped Poisoned until the end of the current turn on a failed save, and denial of both Action and Bonus Action while Poisoned in this way. No promoted battle-runtime profile is claimed because full support needs an active gas area-hazard Spell Effect that carries the cloud occurrence, Concentration expiry, area-obscurement projection, per-creature start-turn save timing, temporary Poisoned lifecycle, action-resource denial while the spell-scoped Poisoned state lasts, and strong-wind dispersal without authored-identity dispatch.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "spell",
