@@ -61,7 +61,7 @@
     {
       "number": 10,
       "id": "L5-B10-STINKING-CLOUD",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Close Stinking Cloud authored spell pressure"
     },
     {
