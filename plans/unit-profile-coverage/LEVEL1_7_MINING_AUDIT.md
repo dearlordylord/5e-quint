@@ -44,38 +44,38 @@ These counts describe the current runtime/catalog state of mined rows. They are 
 | catalog-authored-review-required | 61 |
 | catalog-installed-owner-evidence-present | 483 |
 | catalog-installed-owner-evidence-required | 4 |
-| catalog-only/dead-for-now | 185 |
+| catalog-only/dead-for-now | 186 |
 | level-5-7-follow-up-required | 24 |
 | missing-authored-record | 45 |
-| needs-surface-widening | 14 |
+| needs-surface-widening | 13 |
 | non-runtime | 84 |
 
 ### Catalog Admission
 
 | Catalog state | Rows |
 | --- | ---: |
-| installed | 660 |
-| not-installed | 240 |
+| installed | 661 |
+| not-installed | 239 |
 
 ### Unit Profile Disposition
 
 | Unit profile disposition | Rows |
 | --- | ---: |
-| not-recorded | 183 |
+| not-recorded | 182 |
 | profile-subset-supported | 53 |
 | supported-profile | 297 |
-| unsupported-profile | 367 |
+| unsupported-profile | 368 |
 
 ### Battle Readiness Snapshot
 
 | Battle readiness status | Rows |
 | --- | ---: |
 | accepted | 469 |
-| accepted-no-battle-effect | 230 |
+| accepted-no-battle-effect | 231 |
 | battle-runtime-required | 48 |
 | not-applicable | 77 |
 | owner-evidence-required | 62 |
-| surface-widening-required | 14 |
+| surface-widening-required | 13 |
 
 ## Spell-Level 3-4 Pressure Summary
 
@@ -93,9 +93,9 @@ These counts separate class-list rows from unique Spell Definition identities. A
 | catalog-authored-review-required | 24 |
 | catalog-installed-owner-evidence-present | 7 |
 | catalog-installed-owner-evidence-required | 1 |
-| catalog-only/dead-for-now | 18 |
+| catalog-only/dead-for-now | 19 |
 | missing-authored-record | 20 |
-| needs-surface-widening | 6 |
+| needs-surface-widening | 5 |
 
 ### Unique Spell Identities
 
@@ -107,7 +107,7 @@ These counts separate class-list rows from unique Spell Definition identities. A
 | `blink` Blink | spell-level-3 | Sorcerer, Wizard | 2 | authored-record-present | installed | unsupported-profile | catalog-only/dead-for-now | accepted-no-battle-effect | table-spatial-derivation: future planar phase lifecycle owner plus table/spatial plane-position owner | Blink supplies typed Surface facts for the caster-turn-end random table, Ethereal Plane transition, already-on-plane spell-ending predicate, origin-space identity, origin-plane perception, Ethereal-only interaction, and return placement/fallback. Promoted battle runtime still needs a planar phase lifecycle owner that consumes caller/table-spatial plane occupancy, origin-space, visible-unoccupied availability within 10 feet, and nearest-unoccupied fallback witnesses without dispatching on Blink authored identity. |
 | `call_lightning` Call Lightning | spell-level-3 | Druid | 1 | authored-record-present | not-installed | unsupported-profile | catalog-only/dead-for-now | accepted-no-battle-effect | outside-battle-runtime: future active storm Spell Effect and table/spatial weather owner | Call Lightning's represented battle behavior is closed outside the current promoted battle-runtime boundary: a future active storm Spell Effect owner must carry the cloud occurrence, Concentration expiry, retained slot level and Spell Save DC, later Magic Action repeats, selected points under the cloud, and repeated Dexterity Saving Throw Lightning damage without authored-identity dispatch. Table/spatial weather ownership must supply visibility, under-cloud area membership, outdoor-in-a-storm state, existing storm control, and the storm damage bonus rather than duplicating map or weather state inside generic Spell Invocation reducers. |
 | `clairvoyance` Clairvoyance | spell-level-3 | Bard, Cleric, Sorcerer, Wizard | 4 | authored-record-present | not-installed | unsupported-profile | catalog-only/dead-for-now | accepted-no-battle-effect | outside-runtime-presentation-exploration: runtime-detached table/perception and remote-sensor owner | Clairvoyance creates a table-placed remote sensor and remote perception channel. Promoted battle runtime does not own location familiarity, remote information disclosure, active sensor-sense presentation, observer visibility of the sensor, or autonomous sensor behavior, and must not treat the sensor as ordinary caster sight or a target-selection proxy. |
-| `conjure_animals` Conjure Animals | spell-level-3 | Druid | 1 | missing-authored-record | not-installed | not-recorded | needs-surface-widening | surface-widening-required | table-spatial-derivation: Surface Spell Definition plus table/spatial pack-position owner and future battle-runtime pack Spell Effect owner | Widen Surface: Spell Definition spectral nature-spirit pack occurrence: Large intangible pack form in a visible unoccupied space, caster-movement-triggered pack reposition up to 30 feet, caster-within-5-feet Strength Saving Throw Advantage, optional Dexterity Saving Throw Slashing damage when the pack moves within 10 feet of a creature the caster can see or a creature the caster can see enters or ends its turn within 10 feet, and a shared once-per-turn-per-creature trigger limit across those events. |
+| `conjure_animals` Conjure Animals | spell-level-3 | Druid | 1 | authored-record-present | installed | unsupported-profile | catalog-only/dead-for-now | accepted-no-battle-effect | table-spatial-derivation: future pack Spell Effect owner plus table/spatial pack-position and visible-creature witness owner | Conjure Animals supplies typed Surface facts for the spectral pack occurrence, visible-unoccupied placement and reposition destination, caster-proximity Strength Saving Throw Advantage predicate, caster-movement reposition trigger, optional Dexterity Saving Throw damage application, caster-visible creature trigger eligibility, shared once-per-turn limit, and higher-slot damage scaling. Promoted battle runtime still needs a pack Spell Effect owner that consumes caller/table-spatial pack position, caster proximity, visible-creature membership, and per-turn per-creature trigger witnesses without adding companion-control state or dispatching on the authored spell id or name. |
 | `counterspell` Counterspell | spell-level-3 | Sorcerer, Warlock, Wizard | 3 | authored-record-present | installed | supported-profile | catalog-installed-owner-evidence-present | accepted | not-recorded | Owner-specific operational evidence is classified and present. |
 | `create_food_and_water` Create Food and Water | spell-level-3 | Cleric | 1 | authored-record-present | not-installed | unsupported-profile | catalog-only/dead-for-now | accepted-no-battle-effect | outside-runtime-presentation-exploration: runtime-detached table inventory and survival adjudication owner | Create Food and Water's represented runtime behavior is closed outside promoted battle runtime: a future inventory or survival owner must model created provision quantities, placement on the ground or in containers, holder/location state, food spoilage after 24 hours, later consumption, and clean-water/nourishing-food effects on malnutrition and dehydration without duplicating inventory or survival clocks inside battle Spell Invocation reducers. |
 | `daylight` Daylight | spell-level-3 | Cleric, Druid, Sorcerer | 3 | authored-record-present | not-installed | unsupported-profile | catalog-only/dead-for-now | accepted-no-battle-effect | outside-battle-runtime: future sunlight Spell Effect and table/spatial light-overlap owner | Daylight's represented battle behavior is closed outside the promoted battle-runtime boundary: a future sunlight Spell Effect owner must model point-origin Sphere sunlight, object-origin Emanation sunlight, object worn/carried admission, opaque-cover suppression, one-hour occurrence cleanup, Bright Light and Dim Light illumination projection, and overlap-triggered dispelling of magical Darkness spell effects of level 3 or lower. Table/spatial ownership must supply area membership, object movement, cover, line of sight, and spell-area overlap facts rather than duplicating map illumination or object state inside generic Spell Invocation reducers. |
@@ -577,7 +577,7 @@ These counts separate class-list rows from unique Spell Definition identities. A
 | Druid spell list Protection from Poison | spell-level-2 | spell-level | spell Unit pressure | `protection_from_poison` | `.references/srd-5.2.1/Classes/Druid.md:246` | present | installed | supported-profile | catalog-installed-owner-evidence-present | accepted | not-recorded | Owner-specific operational evidence is classified and present. |
 | Druid spell list Spike Growth | spell-level-2 | spell-level | spell Unit pressure | `spike_growth` | `.references/srd-5.2.1/Classes/Druid.md:247` | present | installed | profile-subset-supported | catalog-installed-owner-evidence-present | accepted | profile-subset-remaining-mechanics-closed: runtime-detached table Search/perception witness owner | Owner-specific operational evidence is classified and present. |
 | Druid spell list Call Lightning | spell-level-3 | spell-level | spell Unit pressure | `call_lightning` | `.references/srd-5.2.1/Classes/Druid.md:253` | present | not-installed | unsupported-profile | catalog-only/dead-for-now | accepted-no-battle-effect | outside-battle-runtime: future active storm Spell Effect and table/spatial weather owner | Call Lightning's represented battle behavior is closed outside the current promoted battle-runtime boundary: a future active storm Spell Effect owner must carry the cloud occurrence, Concentration expiry, retained slot level and Spell Save DC, later Magic Action repeats, selected points under the cloud, and repeated Dexterity Saving Throw Lightning damage without authored-identity dispatch. Table/spatial weather ownership must supply visibility, under-cloud area membership, outdoor-in-a-storm state, existing storm control, and the storm damage bonus rather than duplicating map or weather state inside generic Spell Invocation reducers. |
-| Druid spell list Conjure Animals | spell-level-3 | spell-level | spell Unit pressure | `conjure_animals` | `.references/srd-5.2.1/Classes/Druid.md:254` | present | not-installed | not-recorded | needs-surface-widening | surface-widening-required | table-spatial-derivation: Surface Spell Definition plus table/spatial pack-position owner and future battle-runtime pack Spell Effect owner | Widen Surface: Spell Definition spectral nature-spirit pack occurrence: Large intangible pack form in a visible unoccupied space, caster-movement-triggered pack reposition up to 30 feet, caster-within-5-feet Strength Saving Throw Advantage, optional Dexterity Saving Throw Slashing damage when the pack moves within 10 feet of a creature the caster can see or a creature the caster can see enters or ends its turn within 10 feet, and a shared once-per-turn-per-creature trigger limit across those events. |
+| Druid spell list Conjure Animals | spell-level-3 | spell-level | spell Unit pressure | `conjure_animals` | `.references/srd-5.2.1/Classes/Druid.md:254` | present | installed | unsupported-profile | catalog-only/dead-for-now | accepted-no-battle-effect | table-spatial-derivation: future pack Spell Effect owner plus table/spatial pack-position and visible-creature witness owner | Conjure Animals supplies typed Surface facts for the spectral pack occurrence, visible-unoccupied placement and reposition destination, caster-proximity Strength Saving Throw Advantage predicate, caster-movement reposition trigger, optional Dexterity Saving Throw damage application, caster-visible creature trigger eligibility, shared once-per-turn limit, and higher-slot damage scaling. Promoted battle runtime still needs a pack Spell Effect owner that consumes caller/table-spatial pack position, caster proximity, visible-creature membership, and per-turn per-creature trigger witnesses without adding companion-control state or dispatching on the authored spell id or name. |
 | Druid spell list Daylight | spell-level-3 | spell-level | spell Unit pressure | `daylight` | `.references/srd-5.2.1/Classes/Druid.md:255` | present | not-installed | unsupported-profile | catalog-only/dead-for-now | accepted-no-battle-effect | outside-battle-runtime: future sunlight Spell Effect and table/spatial light-overlap owner | Daylight's represented battle behavior is closed outside the promoted battle-runtime boundary: a future sunlight Spell Effect owner must model point-origin Sphere sunlight, object-origin Emanation sunlight, object worn/carried admission, opaque-cover suppression, one-hour occurrence cleanup, Bright Light and Dim Light illumination projection, and overlap-triggered dispelling of magical Darkness spell effects of level 3 or lower. Table/spatial ownership must supply area membership, object movement, cover, line of sight, and spell-area overlap facts rather than duplicating map illumination or object state inside generic Spell Invocation reducers. |
 | Druid spell list Dispel Magic | spell-level-3 | spell-level | spell Unit pressure | `dispel_magic` | `.references/srd-5.2.1/Classes/Druid.md:256` | present | installed | profile-subset-supported | catalog-installed-owner-evidence-present | accepted | profile-subset-remaining-mechanics-closed: broader ongoing Spell Effect occurrence model; table spatial witness and magical-effect identity owner | Owner-specific operational evidence is classified and present. |
 | Druid spell list Meld into Stone | spell-level-3 | spell-level | spell Unit pressure | `meld_into_stone` | `.references/srd-5.2.1/Classes/Druid.md:257` | present | not-installed | not-recorded | needs-surface-widening | surface-widening-required | table-spatial-derivation: Surface Spell Definition plus table terrain/object occupancy owner and future battle-runtime merged-state, perception, damage, and forced-exit Spell Effect owner | Widen Surface: Spell Definition stone-merge occurrence: the self-only cast requires touching a stone object or surface large enough to fully contain the caster's body; the caster and equipment merge into hidden stone occupancy for 8 hours; nonmagical senses cannot detect the caster; outside sight is blocked; outside-sound Wisdom (Perception) checks have Disadvantage; the caster remains time-aware, can cast spells on themselves, can spend 5 feet of Movement to leave only where they entered, and otherwise cannot move; minor stone damage is harmless; partial destruction or shape change that makes the caster no longer fit expels them with 6d6 Force damage; complete destruction or transmutation expels them with 50 Force damage; any expulsion places them in the closest unoccupied space to the entry location and gives the Prone condition. |

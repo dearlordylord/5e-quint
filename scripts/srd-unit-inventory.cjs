@@ -387,9 +387,6 @@ const classFeatureSurfaceBlockers = new Map();
 
 const spellAccessSurfaceBlockers = new Map();
 
-const conjureAnimalsSurfaceWideningOwner =
-  "Surface Spell Definition plus table/spatial pack-position owner and future battle-runtime pack Spell Effect owner";
-
 const gaseousFormSurfaceWideningOwner =
   "Surface Spell Definition plus movement/table-spatial mist-form owner and future battle-runtime form Spell Effect owner";
 
@@ -406,21 +403,6 @@ const meldIntoStoneSurfaceWideningOwner =
   "Surface Spell Definition plus table terrain/object occupancy owner and future battle-runtime merged-state, perception, damage, and forced-exit Spell Effect owner";
 
 const spellUnitMissingClassifications = new Map([
-  [
-    "conjure_animals",
-    {
-      kind: "needs-surface-widening",
-      owner: conjureAnimalsSurfaceWideningOwner,
-      missingConstruct:
-        "Spell Definition spectral nature-spirit pack occurrence: Large intangible pack form in a visible unoccupied space, caster-movement-triggered pack reposition up to 30 feet, caster-within-5-feet Strength Saving Throw Advantage, optional Dexterity Saving Throw Slashing damage when the pack moves within 10 feet of a creature the caster can see or a creature the caster can see enters or ends its turn within 10 feet, and a shared once-per-turn-per-creature trigger limit across those events.",
-      battleReadinessClosure: {
-        kind: "table-spatial-derivation",
-        owner: conjureAnimalsSurfaceWideningOwner,
-        reason:
-          "Conjure Animals needs a typed follow-up split before an SRD-provenance Spell Definition can be admitted: Surface must own the spectral pack occurrence, caster-proximity roll modifier predicate, caster-movement reposition trigger, optional area save trigger with caster-visible creature eligibility, and shared once-per-turn limit; table/spatial ownership supplies visible unoccupied-space, pack proximity, and caster creature-visibility witnesses; future battle runtime should consume those typed facts as a pack Spell Effect without dispatching on spell id or name.",
-      },
-    },
-  ],
   [
     "gaseous_form",
     {

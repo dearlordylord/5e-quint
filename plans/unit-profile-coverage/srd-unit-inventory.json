@@ -231,7 +231,7 @@
     "levelSevenClassRows": 24,
     "spellPressureRows": 367,
     "levelThreeSpellPressureRows": 110,
-    "levelThreeInstalledSpellPressureRows": 42,
+    "levelThreeInstalledSpellPressureRows": 43,
     "levelFourSpellPressureRows": 81,
     "levelFourInstalledSpellPressureRows": 0,
     "levelOneBattleReadiness": {
@@ -293,12 +293,12 @@
     },
     "levelThreeSpellBattleReadiness": {
       "denominator": 110,
-      "numerator": 68,
-      "percent": "61.8%",
+      "numerator": 69,
+      "percent": "62.7%",
       "rowsByStatus": {
-        "accepted-no-battle-effect": 46,
+        "accepted-no-battle-effect": 47,
         "accepted": 22,
-        "surface-widening-required": 14,
+        "surface-widening-required": 13,
         "battle-runtime-required": 16,
         "owner-evidence-required": 12
       }
@@ -373,9 +373,9 @@
     "allRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 483,
       "non-runtime": 84,
-      "catalog-only/dead-for-now": 185,
+      "catalog-only/dead-for-now": 186,
       "level-5-7-follow-up-required": 24,
-      "needs-surface-widening": 14,
+      "needs-surface-widening": 13,
       "missing-authored-record": 45,
       "catalog-authored-review-required": 61,
       "catalog-installed-owner-evidence-required": 4
@@ -385,15 +385,15 @@
       "catalog-only/dead-for-now": 118
     },
     "levelThreeSpellPressureRowsByDisposition": {
-      "catalog-only/dead-for-now": 46,
+      "catalog-only/dead-for-now": 47,
       "catalog-installed-owner-evidence-present": 22,
-      "needs-surface-widening": 14,
+      "needs-surface-widening": 13,
       "missing-authored-record": 13,
       "catalog-authored-review-required": 12,
       "catalog-installed-owner-evidence-required": 3
     },
     "levelThreeInstalledSpellPressureRowsByDisposition": {
-      "catalog-only/dead-for-now": 17,
+      "catalog-only/dead-for-now": 18,
       "catalog-installed-owner-evidence-present": 22,
       "catalog-installed-owner-evidence-required": 3
     },
@@ -16635,32 +16635,39 @@
       "detail": "Conjure Animals (Conjuration; C)",
       "candidateUnitId": "conjure_animals",
       "surface": {
-        "state": "current-surface-cannot-express-mechanics-yet",
-        "missingConstruct": "Spell Definition spectral nature-spirit pack occurrence: Large intangible pack form in a visible unoccupied space, caster-movement-triggered pack reposition up to 30 feet, caster-within-5-feet Strength Saving Throw Advantage, optional Dexterity Saving Throw Slashing damage when the pack moves within 10 feet of a creature the caster can see or a creature the caster can see enters or ends its turn within 10 feet, and a shared once-per-turn-per-creature trigger limit across those events."
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "conjure_animals",
+        "sourceRecordPath": "packages/surface/content/conjure_animals.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "conjure_animals"
       },
-      "finalDisposition": "needs-surface-widening",
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-only/dead-for-now",
       "battleReadinessClosure": {
-        "source": "spell-unit-missing-classification",
+        "source": "unit-claim",
         "kind": "table-spatial-derivation",
-        "owner": "Surface Spell Definition plus table/spatial pack-position owner and future battle-runtime pack Spell Effect owner",
-        "reason": "Conjure Animals needs a typed follow-up split before an SRD-provenance Spell Definition can be admitted: Surface must own the spectral pack occurrence, caster-proximity roll modifier predicate, caster-movement reposition trigger, optional area save trigger with caster-visible creature eligibility, and shared once-per-turn limit; table/spatial ownership supplies visible unoccupied-space, pack proximity, and caster creature-visibility witnesses; future battle runtime should consume those typed facts as a pack Spell Effect without dispatching on spell id or name."
+        "owner": "future pack Spell Effect owner plus table/spatial pack-position and visible-creature witness owner",
+        "reason": "Conjure Animals supplies typed Surface facts for the spectral pack occurrence, visible-unoccupied placement and reposition destination, caster-proximity Strength Saving Throw Advantage predicate, caster-movement reposition trigger, optional Dexterity Saving Throw damage application, caster-visible creature trigger eligibility, shared once-per-turn limit, and higher-slot damage scaling. Promoted battle runtime still needs a pack Spell Effect owner that consumes caller/table-spatial pack position, caster proximity, visible-creature membership, and per-turn per-creature trigger witnesses without adding companion-control state or dispatching on the authored spell id or name."
       },
       "ownerEvidence": [
         {
-          "owner": "Surface Spell Definition plus table/spatial pack-position owner and future battle-runtime pack Spell Effect owner",
-          "evidence": "Spell Definition spectral nature-spirit pack occurrence: Large intangible pack form in a visible unoccupied space, caster-movement-triggered pack reposition up to 30 feet, caster-within-5-feet Strength Saving Throw Advantage, optional Dexterity Saving Throw Slashing damage when the pack moves within 10 feet of a creature the caster can see or a creature the caster can see enters or ends its turn within 10 feet, and a shared once-per-turn-per-creature trigger limit across those events.",
-          "status": "Surface widening required before owner evidence can be present"
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit conjure_animals is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "future pack Spell Effect owner plus table/spatial pack-position and visible-creature witness owner",
+          "evidence": "Conjure Animals supplies typed Surface facts for the spectral pack occurrence, visible-unoccupied placement and reposition destination, caster-proximity Strength Saving Throw Advantage predicate, caster-movement reposition trigger, optional Dexterity Saving Throw damage application, caster-visible creature trigger eligibility, shared once-per-turn limit, and higher-slot damage scaling. Promoted battle runtime still needs a pack Spell Effect owner that consumes caller/table-spatial pack position, caster proximity, visible-creature membership, and per-turn per-creature trigger witnesses without adding companion-control state or dispatching on the authored spell id or name.",
+          "status": "catalog-only/dead-for-now closure"
         }
       ],
-      "nextAction": "Widen Surface: Spell Definition spectral nature-spirit pack occurrence: Large intangible pack form in a visible unoccupied space, caster-movement-triggered pack reposition up to 30 feet, caster-within-5-feet Strength Saving Throw Advantage, optional Dexterity Saving Throw Slashing damage when the pack moves within 10 feet of a creature the caster can see or a creature the caster can see enters or ends its turn within 10 feet, and a shared once-per-turn-per-creature trigger limit across those events.",
-      "battleReadinessStatus": "surface-widening-required"
+      "nextAction": "Conjure Animals supplies typed Surface facts for the spectral pack occurrence, visible-unoccupied placement and reposition destination, caster-proximity Strength Saving Throw Advantage predicate, caster-movement reposition trigger, optional Dexterity Saving Throw damage application, caster-visible creature trigger eligibility, shared once-per-turn limit, and higher-slot damage scaling. Promoted battle runtime still needs a pack Spell Effect owner that consumes caller/table-spatial pack position, caster proximity, visible-creature membership, and per-turn per-creature trigger witnesses without adding companion-control state or dispatching on the authored spell id or name.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
       "id": "srd521:classes/druid:spell-level-3:spell-unit-pressure:druid_spell_list_daylight",

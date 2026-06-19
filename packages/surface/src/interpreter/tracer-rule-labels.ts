@@ -204,11 +204,33 @@ export function describeAttachmentHole(
       return `${labelPrefix}\nlocation\n${a.value.description}\nrange ${describeAttachmentRange(range, a.value.rangeOrigin)}`;
     case "caster_target_bond":
       return `${labelPrefix}\n${describeCasterTargetBondAttachment(a.value, range)}`;
+    case "spell_spatial_manifestation":
+      return `${labelPrefix}\n${describeSpellSpatialManifestationAttachment(a.value, range)}`;
     default: {
       const _: never = a.value;
       throw new Error(`unhandled attachment hole value: ${String(_)}`);
     }
   }
+}
+
+type SpellSpatialManifestationAttachmentDescriptionInput =
+  | Extract<Attachment, { readonly kind: "spell_spatial_manifestation" }>
+  | (Extract<Attachment, { readonly kind: "hole" }>["value"] & {
+      readonly kind: "spell_spatial_manifestation";
+    });
+
+export function describeSpellSpatialManifestationAttachment(
+  attachment: SpellSpatialManifestationAttachmentDescriptionInput,
+  range: Range,
+): string {
+  return [
+    "spell_spatial_manifestation",
+    `size: ${attachment.manifestation.creatureSize}`,
+    `appearance: ${attachment.manifestation.appearance}`,
+    `tangibility: ${attachment.manifestation.tangibility}`,
+    `form choice: ${attachment.manifestation.formChoice.chooser} ${attachment.manifestation.formChoice.domain}`,
+    `placement: ${attachment.placement.chooser} visible unoccupied space within ${describeAttachmentRange(range, attachment.rangeOrigin)}`,
+  ].join("\n");
 }
 
 export function describeCasterTargetBondAttachment(
@@ -855,6 +877,8 @@ export function describeOngoingPredicate(
       return "spell-created held object active";
     case "table_witnessed_attachment_within_spell_range":
       return "table-witnessed attachment within spell range";
+    case "caster_within_feet_of_attachment":
+      return `caster within ${p.feet} ft of attachment`;
     default: {
       const _exhaustive: never = p;
       throw new Error(`unhandled ongoing predicate: ${String(_exhaustive)}`);

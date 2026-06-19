@@ -18,7 +18,7 @@ Character level and spell level are separate axes. Character levels 1-2 include 
 - Level-7 class/subclass mining rows: 24
 - Spell-list pressure rows for cantrips and spell levels 1-2: 367
 - Spell-level-3 pressure rows (character-level-5 frontier): 110
-- Spell-level-3 installed SRD Surface pressure rows (later character-level-5 frontier): 42
+- Spell-level-3 installed SRD Surface pressure rows (later character-level-5 frontier): 43
 - Spell-level-4 pressure rows (character-level-7 frontier): 81
 - Spell-level-4 installed SRD Surface pressure rows (later character-level-7 frontier): 0
 - Missing level-1 class containers: 0
@@ -96,15 +96,15 @@ This metric is a separate seed for level-4 class feature rows, including Ability
 
 This metric is a separate seed for spell-level-3 pressure only. It belongs to the later character-level-5 frontier for full casters and Warlock Pact Magic, with half-caster rows excluded until their own class tables grant matching slots. It does not affect Character Levels 1-2 or Character Levels 1-3 readiness denominators.
 
-- Accepted: 68/110 (61.8%)
+- Accepted: 69/110 (62.7%)
 
 #### Spell-Level-3 Battle Readiness by Status
 
 - accepted: 22
-- accepted-no-battle-effect: 46
+- accepted-no-battle-effect: 47
 - battle-runtime-required: 16
 - owner-evidence-required: 12
-- surface-widening-required: 14
+- surface-widening-required: 13
 
 ### Spell-Level-4 Battle Readiness
 
@@ -210,15 +210,15 @@ This metric is a separate seed for spell-level-4 pressure only. It belongs to th
 - catalog-authored-review-required: 12
 - catalog-installed-owner-evidence-present: 22
 - catalog-installed-owner-evidence-required: 3
-- catalog-only/dead-for-now: 46
+- catalog-only/dead-for-now: 47
 - missing-authored-record: 13
-- needs-surface-widening: 14
+- needs-surface-widening: 13
 
 ### Spell-Level-3 Installed Unit Pressure by Disposition
 
 - catalog-installed-owner-evidence-present: 22
 - catalog-installed-owner-evidence-required: 3
-- catalog-only/dead-for-now: 17
+- catalog-only/dead-for-now: 18
 
 ### Spell-Level-4 Unit Pressure by Disposition
 
@@ -731,7 +731,7 @@ These batches are generated planning recommendations for a separate SRD inventor
 |Cleric spell list Tongues|spell Unit pressure|outside-surface-runtime-mechanics|authored-record-present|not-installed|unsupported-profile|catalog-only/dead-for-now|accepted-no-battle-effect|outside-runtime-presentation-exploration: runtime-detached language/communication owner||Tongues changes communication intelligibility through hearing, sight, signing, speech, and known-language gates. Promoted battle runtime does not own conversation content, social outcomes, automatic communication adjudication, or language-table projection for this spell.|.references/srd-5.2.1/Classes/Cleric.md:221|
 |Cleric spell list Water Walk|spell Unit pressure|current-surface-can-express-source-facts|missing-authored-record|not-installed||missing-authored-record|battle-runtime-required|||Author an SRD-provenance Surface record or explicitly close the row.|.references/srd-5.2.1/Classes/Cleric.md:222|
 |Druid spell list Call Lightning|spell Unit pressure|outside-surface-runtime-mechanics|authored-record-present|not-installed|unsupported-profile|catalog-only/dead-for-now|accepted-no-battle-effect|outside-battle-runtime: future active storm Spell Effect and table/spatial weather owner||Call Lightning's represented battle behavior is closed outside the current promoted battle-runtime boundary: a future active storm Spell Effect owner must carry the cloud occurrence, Concentration expiry, retained slot level and Spell Save DC, later Magic Action repeats, selected points under the cloud, and repeated Dexterity Saving Throw Lightning damage without authored-identity dispatch. Table/spatial weather ownership must supply visibility, under-cloud area membership, outdoor-in-a-storm state, existing storm control, and the storm damage bonus rather than duplicating map or weather state inside generic Spell Invocation reducers.|.references/srd-5.2.1/Classes/Druid.md:253|
-|Druid spell list Conjure Animals|spell Unit pressure|current-surface-cannot-express-mechanics-yet|missing-authored-record|not-installed||needs-surface-widening|surface-widening-required|table-spatial-derivation: Surface Spell Definition plus table/spatial pack-position owner and future battle-runtime pack Spell Effect owner|Surface Spell Definition plus table/spatial pack-position owner and future battle-runtime pack Spell Effect owner: Surface widening required before owner evidence can be present|Widen Surface: Spell Definition spectral nature-spirit pack occurrence: Large intangible pack form in a visible unoccupied space, caster-movement-triggered pack reposition up to 30 feet, caster-within-5-feet Strength Saving Throw Advantage, optional Dexterity Saving Throw Slashing damage when the pack moves within 10 feet of a creature the caster can see or a creature the caster can see enters or ends its turn within 10 feet, and a shared once-per-turn-per-creature trigger limit across those events.|.references/srd-5.2.1/Classes/Druid.md:254|
+|Druid spell list Conjure Animals|spell Unit pressure|outside-surface-runtime-mechanics|authored-record-present|installed|unsupported-profile|catalog-only/dead-for-now|accepted-no-battle-effect|table-spatial-derivation: future pack Spell Effect owner plus table/spatial pack-position and visible-creature witness owner|Unit catalog/admission: catalog evidence; future pack Spell Effect owner plus table/spatial pack-position and visible-creature witness owner: catalog-only/dead-for-now closure|Conjure Animals supplies typed Surface facts for the spectral pack occurrence, visible-unoccupied placement and reposition destination, caster-proximity Strength Saving Throw Advantage predicate, caster-movement reposition trigger, optional Dexterity Saving Throw damage application, caster-visible creature trigger eligibility, shared once-per-turn limit, and higher-slot damage scaling. Promoted battle runtime still needs a pack Spell Effect owner that consumes caller/table-spatial pack position, caster proximity, visible-creature membership, and per-turn per-creature trigger witnesses without adding companion-control state or dispatching on the authored spell id or name.|.references/srd-5.2.1/Classes/Druid.md:254|
 |Druid spell list Daylight|spell Unit pressure|outside-surface-runtime-mechanics|authored-record-present|not-installed|unsupported-profile|catalog-only/dead-for-now|accepted-no-battle-effect|outside-battle-runtime: future sunlight Spell Effect and table/spatial light-overlap owner||Daylight's represented battle behavior is closed outside the promoted battle-runtime boundary: a future sunlight Spell Effect owner must model point-origin Sphere sunlight, object-origin Emanation sunlight, object worn/carried admission, opaque-cover suppression, one-hour occurrence cleanup, Bright Light and Dim Light illumination projection, and overlap-triggered dispelling of magical Darkness spell effects of level 3 or lower. Table/spatial ownership must supply area membership, object movement, cover, line of sight, and spell-area overlap facts rather than duplicating map illumination or object state inside generic Spell Invocation reducers.|.references/srd-5.2.1/Classes/Druid.md:255|
 |Druid spell list Dispel Magic|spell Unit pressure|current-surface-can-express-source-facts|authored-record-present|installed|profile-subset-supported|catalog-installed-owner-evidence-present|accepted|profile-subset-remaining-mechanics-closed: broader ongoing Spell Effect occurrence model; table spatial witness and magical-effect identity owner|Unit catalog/admission: catalog evidence; battle-runtime spell invocation/projection: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Druid.md:256|
 |Druid spell list Meld into Stone|spell Unit pressure|current-surface-cannot-express-mechanics-yet|missing-authored-record|not-installed||needs-surface-widening|surface-widening-required|table-spatial-derivation: Surface Spell Definition plus table terrain/object occupancy owner and future battle-runtime merged-state, perception, damage, and forced-exit Spell Effect owner|Surface Spell Definition plus table terrain/object occupancy owner and future battle-runtime merged-state, perception, damage, and forced-exit Spell Effect owner: Surface widening required before owner evidence can be present|Widen Surface: Spell Definition stone-merge occurrence: the self-only cast requires touching a stone object or surface large enough to fully contain the caster's body; the caster and equipment merge into hidden stone occupancy for 8 hours; nonmagical senses cannot detect the caster; outside sight is blocked; outside-sound Wisdom (Perception) checks have Disadvantage; the caster remains time-aware, can cast spells on themselves, can spend 5 feet of Movement to leave only where they entered, and otherwise cannot move; minor stone damage is harmless; partial destruction or shape change that makes the caster no longer fit expels them with 6d6 Force damage; complete destruction or transmutation expels them with 50 Force damage; any expulsion places them in the closest unoccupied space to the entry location and gives the Prone condition.|.references/srd-5.2.1/Classes/Druid.md:257|

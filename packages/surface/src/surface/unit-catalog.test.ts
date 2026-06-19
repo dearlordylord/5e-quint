@@ -9,6 +9,7 @@ import hypnoticPatternInput from "../../content/hypnotic_pattern.json";
 import magicWeaponInput from "../../content/magic_weapon.json";
 import moonbeamInput from "../../content/moonbeam.json";
 import phantomSteedInput from "../../content/phantom_steed.json";
+import conjureAnimalsInput from "../../content/conjure_animals.json";
 import sorcererFontOfMagicInput from "../../content/sorcerer_font_of_magic.json";
 import sorcererMetamagicInput from "../../content/sorcerer_metamagic.json";
 import {
@@ -1712,6 +1713,102 @@ describe("SRD Unit catalog boundary", () => {
       expect(op.effect).toMatchObject({
         kind: "save_gate",
         onFail: shapeShiftOnFail,
+      });
+    }
+  });
+
+  test("decodes Conjure Animals with pack occurrence, movement, proximity, optional save, shared limiter, and slot scaling", () => {
+    const conjureAnimals = decodeUnitRecordSync(conjureAnimalsInput);
+    expect(conjureAnimals.kind).toBe("spell");
+    if (conjureAnimals.kind !== "spell") return;
+    expect(conjureAnimals.provenance).toEqual({
+      kind: "srd-5.2.1",
+      section: "Spells/Descriptions-A-D#Conjure Animals",
+    });
+    expect(conjureAnimals.mechanics.family).toBe("ongoing_effect");
+    if (conjureAnimals.mechanics.family !== "ongoing_effect") return;
+
+    expect(conjureAnimals.mechanics.attachment).toEqual({
+      kind: "hole",
+      holeId: "conjure_animals_pack",
+      label: "Large spectral intangible animal pack",
+      value: {
+        kind: "spell_spatial_manifestation",
+        manifestation: {
+          creatureSize: "large",
+          appearance: "spectral_animals_pack",
+          tangibility: "intangible",
+          formChoice: { chooser: "caster", domain: "animal_form" },
+        },
+        placement: {
+          kind: "visible_unoccupied_space_within_range",
+          chooser: "caster",
+        },
+      },
+    });
+
+    const [strengthAdvantage, reposition, ...saveOps] =
+      conjureAnimals.mechanics.operations;
+    expect(strengthAdvantage).toEqual({
+      trigger: { kind: "passive" },
+      predicate: { kind: "caster_within_feet_of_attachment", feet: 5 },
+      effect: {
+        kind: "modify_roll_advantage",
+        mode: "advantage",
+        affects: "self_roll",
+        on: ["saving_throw"],
+        saveAbilityFilter: ["str"],
+      },
+    });
+    expect(reposition).toEqual({
+      trigger: { kind: "on_caster_moves_on_turn" },
+      effect: {
+        kind: "reposition_attachment",
+        maxMoveFeet: 30,
+        destination: { kind: "visible_unoccupied_space", chooser: "caster" },
+      },
+    });
+
+    expect(saveOps.map((op) => op.trigger)).toEqual([
+      {
+        kind: "on_spatial_manifestation_moves_within_distance_of_creature",
+        distanceFeet: 10,
+        requiresVisibleCreature: true,
+      },
+      {
+        kind: "on_creature_enters_distance_of_spatial_manifestation",
+        distanceFeet: 10,
+        requiresVisibleCreature: true,
+      },
+      {
+        kind: "on_creature_ends_turn_within_distance_of_spatial_manifestation",
+        distanceFeet: 10,
+        requiresVisibleCreature: true,
+      },
+    ]);
+
+    for (const op of saveOps) {
+      expect(op.usageLimit).toEqual({
+        kind: "once_per_turn",
+        limitGroup: "conjure_animals_save_per_turn",
+      });
+      expect(op.effect).toMatchObject({
+        kind: "save_gate",
+        ability: "dex",
+        dc: { kind: "caster_spell_save_dc" },
+        onSuccess: { kind: "none" },
+        saveApplication: { kind: "caster_may_force_target_save" },
+        onFail: {
+          kind: "damage",
+          damageType: "slashing",
+          amount: {
+            kind: "linear_per_level",
+            axis: "slot",
+            base: { dice: 3, dieSize: 10 },
+            perLevel: { dice: 1 },
+            startingAtLevel: 3,
+          },
+        },
       });
     }
   });

@@ -67,6 +67,7 @@ import clericPreserveLifeInput from "../../content/cleric_preserve_life.json";
 import colorSprayInput from "../../content/color_spray.json";
 import commandInput from "../../content/command.json";
 import continualFlameInput from "../../content/continual_flame.json";
+import conjureAnimalsInput from "../../content/conjure_animals.json";
 import counterspellInput from "../../content/counterspell.json";
 import cureWoundsInput from "../../content/cure_wounds.json";
 import dancingLightsInput from "../../content/dancing_lights.json";
@@ -621,6 +622,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     colorSprayInput,
     commandInput,
     continualFlameInput,
+    conjureAnimalsInput,
     counterspellInput,
     cureWoundsInput,
     dancingLightsInput,

@@ -4,6 +4,7 @@ import animalMessengerInput from "../../content/animal_messenger.json";
 import arcanistsMagicAuraInput from "../../content/arcanists_magic_aura.json";
 import auguryInput from "../../content/augury.json";
 import classFighterInput from "../../content/class_fighter.json";
+import conjureAnimalsInput from "../../content/conjure_animals.json";
 import dragonsBreathInput from "../../content/dragons_breath.json";
 import flameBladeInput from "../../content/flame_blade.json";
 import fighterWeaponMasteryInput from "../../content/fighter_weapon_mastery.json";
@@ -442,6 +443,71 @@ describe("Surface trace interpreter", () => {
       (e) => e.to === "moonbeam_save_per_turn" && e.relation === "limits",
     );
     expect(limitsEdges).toHaveLength(4);
+  });
+
+  test("renders Conjure Animals pack occurrence, caster movement, visible-creature triggers, and shared per-turn fence", () => {
+    const trace = traceUnit(decodeUnitRecordSync(conjureAnimalsInput));
+
+    expect(trace.nodes).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          atomKind: "hole",
+          label: expect.stringContaining("spell_spatial_manifestation"),
+        }),
+        expect.objectContaining({
+          atomKind: "ongoing_predicate",
+          label: "ongoing_predicate\ncaster within 5 ft of attachment",
+        }),
+        expect.objectContaining({
+          atomKind: "movement_window",
+          label: "movement_window\n(caster moves on own turn)",
+        }),
+        expect.objectContaining({
+          atomKind: "reposition_attachment",
+          label: [
+            "reposition_attachment",
+            "max 30 ft",
+            "dest: caster visible unoccupied space",
+          ].join("\n"),
+        }),
+        expect.objectContaining({
+          atomKind: "post_action_window",
+          label:
+            "post_action_window\n(spatial manifestation moves within 10 ft of visible creature)",
+        }),
+        expect.objectContaining({
+          atomKind: "post_action_window",
+          label:
+            "post_action_window\n(visible creature enters within 10 ft of spatial manifestation)",
+        }),
+        expect.objectContaining({
+          atomKind: "post_action_window",
+          label:
+            "post_action_window\n(visible creature ends turn within 10 ft of spatial manifestation)",
+        }),
+        expect.objectContaining({
+          atomKind: "save_gate",
+          label: [
+            "save_gate",
+            "DEX vs caster spell save DC",
+            "application: caster may force target save",
+          ].join("\n"),
+        }),
+      ]),
+    );
+
+    const fenceNodes = trace.nodes.filter((n) => n.atomKind === "use_count");
+    expect(fenceNodes).toContainEqual(
+      expect.objectContaining({
+        id: "conjure_animals_save_per_turn",
+        label: "use_count\nonce per turn",
+      }),
+    );
+    const limitsEdges = trace.edges.filter(
+      (e) =>
+        e.to === "conjure_animals_save_per_turn" && e.relation === "limits",
+    );
+    expect(limitsEdges).toHaveLength(3);
   });
 
   test("renders Spiritual Weapon later movement and repeat attack behind one Bonus Action window", () => {

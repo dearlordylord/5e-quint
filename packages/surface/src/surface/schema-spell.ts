@@ -1540,7 +1540,14 @@ type EffectAtom =
       readonly duration: { readonly unit: "minute"; readonly amount: 10 };
       readonly allowsOpenClose: true;
     }
-  | { readonly kind: "reposition_attachment"; readonly maxMoveFeet?: number }
+  | {
+      readonly kind: "reposition_attachment";
+      readonly maxMoveFeet?: number;
+      readonly destination?: {
+        readonly kind: "visible_unoccupied_space";
+        readonly chooser: "caster";
+      };
+    }
   | { readonly kind: "area_is_difficult_terrain" }
   | { readonly kind: "area_emits_dim_light" }
   | { readonly kind: "area_is_lightly_obscured" }
@@ -1770,6 +1777,9 @@ type OngoingEffect =
       readonly dc: DcSource;
       readonly onFail: EffectAtom;
       readonly onSuccess: SaveSuccessOutcome;
+      readonly saveApplication?: {
+        readonly kind: "caster_may_force_target_save";
+      };
     }
   | {
       readonly kind: "ability_check_gate";
@@ -2391,6 +2401,29 @@ export const AreaAttachmentSchema = Schema.Union(
   makeHoleSchema(AreaAttachmentBaseSchema),
 );
 
+export const SpellSpatialManifestationAttachmentBaseSchema = strictStruct({
+  kind: Schema.Literal("spell_spatial_manifestation"),
+  manifestation: strictStruct({
+    creatureSize: SizeSchema,
+    appearance: Schema.Literal("spectral_animals_pack"),
+    tangibility: Schema.Literal("intangible"),
+    formChoice: strictStruct({
+      chooser: Schema.Literal("caster"),
+      domain: Schema.Literal("animal_form"),
+    }),
+  }),
+  placement: strictStruct({
+    kind: Schema.Literal("visible_unoccupied_space_within_range"),
+    chooser: Schema.Literal("caster"),
+  }),
+  rangeOrigin: optionalExact(AttachmentRangeOriginSchema),
+});
+
+export const SpellSpatialManifestationAttachmentSchema = Schema.Union(
+  SpellSpatialManifestationAttachmentBaseSchema,
+  makeHoleSchema(SpellSpatialManifestationAttachmentBaseSchema),
+);
+
 export const AttachmentBaseSchema = Schema.Union(
   Schema.Struct({
     kind: Schema.Literal("self"),
@@ -2425,6 +2458,7 @@ export const AttachmentBaseSchema = Schema.Union(
     description: Schema.String,
     rangeOrigin: optionalExact(AttachmentRangeOriginSchema),
   }),
+  SpellSpatialManifestationAttachmentBaseSchema,
 );
 
 export const AttachmentSchema = Schema.Union(
@@ -2596,7 +2630,29 @@ export const OngoingTriggerSchema = Schema.Union(
     kind: Schema.Literal("on_area_moves_into_creature_space"),
     maxCreatureSize: optionalExact(SizeSchema),
   }),
+  Schema.Struct({
+    kind: Schema.Literal(
+      "on_spatial_manifestation_moves_within_distance_of_creature",
+    ),
+    distanceFeet: Schema.Number,
+    requiresVisibleCreature: optionalExact(Schema.Literal(true)),
+  }),
+  Schema.Struct({
+    kind: Schema.Literal(
+      "on_creature_enters_distance_of_spatial_manifestation",
+    ),
+    distanceFeet: Schema.Number,
+    requiresVisibleCreature: optionalExact(Schema.Literal(true)),
+  }),
+  Schema.Struct({
+    kind: Schema.Literal(
+      "on_creature_ends_turn_within_distance_of_spatial_manifestation",
+    ),
+    distanceFeet: Schema.Number,
+    requiresVisibleCreature: optionalExact(Schema.Literal(true)),
+  }),
   Schema.Struct({ kind: Schema.Literal("on_creature_exits_area") }),
+  Schema.Struct({ kind: Schema.Literal("on_caster_moves_on_turn") }),
   Schema.Struct({
     kind: Schema.Literal("on_structure_collapses"),
     affectedWithin: Schema.Literal("half_structure_height"),
@@ -2635,6 +2691,10 @@ export const OngoingPredicateSchema = Schema.Union(
   }),
   Schema.Struct({
     kind: Schema.Literal("table_witnessed_attachment_within_spell_range"),
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("caster_within_feet_of_attachment"),
+    feet: Schema.Number,
   }),
 );
 
@@ -3875,6 +3935,12 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
       Schema.Struct({
         kind: Schema.Literal("reposition_attachment"),
         maxMoveFeet: optionalExact(Schema.Number),
+        destination: optionalExact(
+          strictStruct({
+            kind: Schema.Literal("visible_unoccupied_space"),
+            chooser: Schema.Literal("caster"),
+          }),
+        ),
       }),
       Schema.Struct({ kind: Schema.Literal("area_is_difficult_terrain") }),
       Schema.Struct({ kind: Schema.Literal("area_emits_dim_light") }),
@@ -4189,6 +4255,11 @@ export const OngoingEffectSchema: Schema.suspend<
       dc: DcSourceSchema,
       onFail: EffectAtomSchema,
       onSuccess: SaveSuccessOutcomeSchema,
+      saveApplication: optionalExact(
+        strictStruct({
+          kind: Schema.Literal("caster_may_force_target_save"),
+        }),
+      ),
     }),
     Schema.Struct({
       kind: Schema.Literal("ability_check_gate"),

@@ -452,6 +452,45 @@ export function traceOngoingTrigger(
       edges.push({ from: procId, to: winId, relation: "opens_window" });
       return { hostId: winId, hostRelation: "grants" };
     }
+    case "on_spatial_manifestation_moves_within_distance_of_creature": {
+      const winId = ids("win");
+      const visible =
+        trigger.requiresVisibleCreature === true ? " visible" : "";
+      nodes.push({
+        id: winId,
+        category: "window",
+        atomKind: "post_action_window",
+        label: `post_action_window\n(spatial manifestation moves within ${trigger.distanceFeet} ft of${visible} creature)`,
+      });
+      edges.push({ from: procId, to: winId, relation: "opens_window" });
+      return { hostId: winId, hostRelation: "grants" };
+    }
+    case "on_creature_enters_distance_of_spatial_manifestation": {
+      const winId = ids("win");
+      const visible =
+        trigger.requiresVisibleCreature === true ? "visible " : "";
+      nodes.push({
+        id: winId,
+        category: "window",
+        atomKind: "post_action_window",
+        label: `post_action_window\n(${visible}creature enters within ${trigger.distanceFeet} ft of spatial manifestation)`,
+      });
+      edges.push({ from: procId, to: winId, relation: "opens_window" });
+      return { hostId: winId, hostRelation: "grants" };
+    }
+    case "on_creature_ends_turn_within_distance_of_spatial_manifestation": {
+      const winId = ids("win");
+      const visible =
+        trigger.requiresVisibleCreature === true ? "visible " : "";
+      nodes.push({
+        id: winId,
+        category: "window",
+        atomKind: "post_action_window",
+        label: `post_action_window\n(${visible}creature ends turn within ${trigger.distanceFeet} ft of spatial manifestation)`,
+      });
+      edges.push({ from: procId, to: winId, relation: "opens_window" });
+      return { hostId: winId, hostRelation: "grants" };
+    }
     case "on_creature_exits_area": {
       const winId = ids("win");
       nodes.push({
@@ -459,6 +498,17 @@ export function traceOngoingTrigger(
         category: "window",
         atomKind: "post_action_window",
         label: "post_action_window\n(creature exits area)",
+      });
+      edges.push({ from: procId, to: winId, relation: "opens_window" });
+      return { hostId: winId, hostRelation: "grants" };
+    }
+    case "on_caster_moves_on_turn": {
+      const winId = ids("win");
+      nodes.push({
+        id: winId,
+        category: "window",
+        atomKind: "movement_window",
+        label: "movement_window\n(caster moves on own turn)",
       });
       edges.push({ from: procId, to: winId, relation: "opens_window" });
       return { hostId: winId, hostRelation: "grants" };
@@ -643,11 +693,15 @@ export function traceOngoingOpEffect(
           ? attId
           : traceAttachment(eff.attachment, range, nodes, ids);
       const sgId = ids("sg");
+      const application =
+        eff.saveApplication?.kind === "caster_may_force_target_save"
+          ? "\napplication: caster may force target save"
+          : "";
       nodes.push({
         id: sgId,
         category: "resolution",
         atomKind: "save_gate",
-        label: `save_gate\n${eff.ability.toUpperCase()} vs ${describeDc(eff.dc)}`,
+        label: `save_gate\n${eff.ability.toUpperCase()} vs ${describeDc(eff.dc)}${application}`,
       });
       edges.push({ from: hostId, to: sgId, relation: hostRelation });
       edges.push({ from: sgId, to: saveAttachmentId, relation: "attaches_to" });
