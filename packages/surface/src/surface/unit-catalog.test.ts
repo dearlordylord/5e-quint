@@ -3705,6 +3705,121 @@ describe("SRD Unit catalog boundary", () => {
     expect(tinyHut.description).toContain("leave the Emanation");
   });
 
+  test("decodes Water Walk as a willing-target liquid traversal Spell Definition", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag !== "ok") return;
+    const waterWalk = result.catalog.requireUnit("water_walk");
+
+    expect(waterWalk.kind).toBe("spell");
+    if (waterWalk.kind !== "spell") return;
+    expect(waterWalk.mechanics.family).toBe("activation");
+    if (waterWalk.mechanics.family !== "activation") return;
+
+    expect(waterWalk.provenance).toEqual({
+      kind: "srd-5.2.1",
+      section: "Spells/Descriptions-S-Z#Water Walk",
+    });
+    expect(waterWalk.mechanics).toMatchObject({
+      level: 3,
+      school: "transmutation",
+      castingTime: { kind: "action", ritual: true },
+      range: { kind: "point", feet: 30 },
+      components: { v: true, s: true, m: "a piece of cork" },
+      duration: {
+        kind: "timed",
+        value: { unit: "hour", amount: 1 },
+      },
+    });
+    expect(waterWalk.mechanics.phases).toEqual([
+      {
+        kind: "direct",
+        attachment: {
+          kind: "hole",
+          holeId: "water_walk_targets",
+          label: "up to ten willing creatures",
+          value: {
+            kind: "target",
+            selection: {
+              mode: "choose_up_to",
+              count: 10,
+              targetKinds: ["creature"],
+              disposition: "willing",
+            },
+          },
+        },
+        effects: [
+          {
+            kind: "grant_liquid_surface_traversal",
+            surfaceScope: {
+              kind: "any_liquid_surface",
+              examples: ["water", "acid", "mud", "snow", "quicksand", "lava"],
+            },
+            traversal: {
+              path: "across_surface",
+              treatedAs: "harmless_solid_ground",
+            },
+            surfaceHazardException: {
+              surface: "lava",
+              hazard: "heat",
+              outcome: "still_applies",
+            },
+            surfaceLiquidTransition: {
+              deliberateCost: "bonus_action",
+              directions: ["surface_to_liquid", "liquid_to_surface"],
+              fallingIntoLiquid: "passes_through_surface_into_liquid_below",
+            },
+          },
+        ],
+      },
+    ]);
+    expect(waterWalk.description).toContain("any liquid surface");
+    expect(waterWalk.description).toContain("molten lava");
+    expect(waterWalk.description).toContain("Bonus Action");
+    expect(waterWalk.description).toContain("falls into the liquid");
+  });
+
+  test("rejects Water Walk traversal facts with non-RAW surface example sequences", () => {
+    const decode = Schema.decodeUnknownEither(EffectAtomSchema);
+    const baseEffect = {
+      kind: "grant_liquid_surface_traversal",
+      surfaceScope: {
+        kind: "any_liquid_surface",
+        examples: ["water", "acid", "mud", "snow", "quicksand", "lava"],
+      },
+      traversal: {
+        path: "across_surface",
+        treatedAs: "harmless_solid_ground",
+      },
+      surfaceHazardException: {
+        surface: "lava",
+        hazard: "heat",
+        outcome: "still_applies",
+      },
+      surfaceLiquidTransition: {
+        deliberateCost: "bonus_action",
+        directions: ["surface_to_liquid", "liquid_to_surface"],
+        fallingIntoLiquid: "passes_through_surface_into_liquid_below",
+      },
+    };
+
+    for (const examples of [
+      ["water"],
+      ["water", "water", "mud", "snow", "quicksand", "lava"],
+      ["acid", "water", "mud", "snow", "quicksand", "lava"],
+    ]) {
+      expect(
+        Either.isLeft(
+          decode({
+            ...baseEffect,
+            surfaceScope: { ...baseEffect.surfaceScope, examples },
+          }),
+        ),
+      ).toBe(true);
+    }
+  });
+
   test("decodes Sleet Storm as an authored Cylinder hazard Spell Definition", () => {
     const result = buildUnitCatalog({ collections: [srdUnitCollection] });
 

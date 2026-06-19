@@ -263,6 +263,7 @@ export function traceEffectAtom(
     case "composite":
     case "choose_effect_mode":
     case "grant_speed":
+    case "grant_liquid_surface_traversal":
     case "ignore_web_restrictions":
     case "alter_item_kind":
     case "natural_weapons":

@@ -69,6 +69,7 @@ export {
   ForcedReactionMovementSchema,
   IllusionSensoryChannelSchema,
   JumpMovementReplacementSchema,
+  LiquidSurfaceTraversalSchema,
   MentalMessageDeliveryEffectSchema,
   MarkTransferCostSchema,
   MarkTransferEventSchema,

@@ -43,14 +43,14 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
-      "denominator": 452,
-      "numerator": 267,
-      "percent": "59.1%"
+      "denominator": 453,
+      "numerator": 268,
+      "percent": "59.2%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 540,
-      "numerator": 317,
-      "percent": "58.7%"
+      "denominator": 541,
+      "numerator": 318,
+      "percent": "58.8%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,7 +59,7 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 318
+      "value": 319
     },
     "deterministicAdmissionProjectionCoverage": {
       "denominator": 185,
@@ -67,8 +67,8 @@
       "percent": "97.3%"
     },
     "profileClassificationCoverage": {
-      "denominator": 318,
-      "numerator": 318,
+      "denominator": 319,
+      "numerator": 319,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -112,9 +112,9 @@
       "percent": "98.9%"
     },
     "supportedProfileCoverage": {
-      "denominator": 268,
+      "denominator": 269,
       "numerator": 185,
-      "percent": "69%"
+      "percent": "68.8%"
     }
   },
   "metricSemantics": [
@@ -16661,8 +16661,8 @@
         "unsupportedOrOtherUnits": 4
       },
       {
-        "executableUnitDenominator": 137,
-        "installedUnitDenominator": 137,
+        "executableUnitDenominator": 138,
+        "installedUnitDenominator": 138,
         "kind": "spell",
         "label": "Spell Units",
         "profileFactDenominator": 136,
@@ -16672,7 +16672,7 @@
         "selectedIdentityReplayGapUnits": 0,
         "selectedIdentityReplayWitnessUnits": 110,
         "supportedProfileUnits": 92,
-        "unsupportedOrOtherUnits": 27
+        "unsupportedOrOtherUnits": 28
       },
       {
         "executableUnitDenominator": 93,
@@ -33953,6 +33953,29 @@
       ],
       "sourceRecordPath": "packages/surface/content/vicious_mockery.json",
       "unitId": "vicious_mockery"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "runtime-detached table/spatial/environment traversal owner",
+          "reason": "Water Walk supplies willing-target liquid-surface traversal, harmless-solid-ground treatment, lava heat exception, and Bonus Action surface/liquid transition source facts, but promoted battle runtime does not own table liquid-surface classification, map or volume geometry, pathfinding, environmental heat damage, buoyancy or submersion state, or deliberate and falling surface-transition execution."
+        },
+        "reason": "Water Walk is authored and installed as an SRD Surface Spell Definition with Action-or-Ritual casting, 30-foot range, V/S/M cork components, 1-hour duration, up to ten willing creature targets, any-liquid-surface traversal as harmless solid ground, the molten-lava heat-damage exception, and the Bonus Action surface/liquid transition plus falling-into-liquid passage facts. Task 10 claims no promoted battle-runtime profile because table surface classification, map geometry, liquid volume, environmental hazards, and transition execution belong to runtime-detached table/spatial/environment owners rather than this catalog admission task.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/water_walk.json",
+      "unitId": "water_walk"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

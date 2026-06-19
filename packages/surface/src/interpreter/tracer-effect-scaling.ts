@@ -182,6 +182,7 @@ export function traceEffectAtomScaling(
     case "create_sensor":
     case "remote_perception":
     case "grant_speed":
+    case "grant_liquid_surface_traversal":
     case "ignore_web_restrictions":
     case "alter_item_kind":
     case "detect":

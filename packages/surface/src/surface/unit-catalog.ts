@@ -294,6 +294,7 @@ import thaumaturgyInput from "../../content/thaumaturgy.json";
 import tinyHutInput from "../../content/tiny_hut.json";
 import thunderwaveInput from "../../content/thunderwave.json";
 import trueStrikeInput from "../../content/true_strike.json";
+import waterWalkInput from "../../content/water_walk.json";
 import warlockEldritchInvocationsInput from "../../content/warlock_eldritch_invocations.json";
 import warlockAbilityScoreImprovementL4Input from "../../content/warlock_ability_score_improvement_l4.json";
 import warlockDarkOnesBlessingInput from "../../content/warlock_dark_ones_blessing.json";
@@ -696,6 +697,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     thaumaturgyInput,
     tinyHutInput,
     viciousMockeryInput,
+    waterWalkInput,
     detectEvilAndGoodInput,
     detectMagicInput,
     detectPoisonAndDiseaseInput,

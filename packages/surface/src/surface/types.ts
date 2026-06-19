@@ -253,6 +253,9 @@ export type JumpMovementReplacement = Schema.Schema.Type<
 export type FeatherFallMitigation = Schema.Schema.Type<
   typeof SurfaceSchema.FeatherFallMitigationSchema
 >;
+export type LiquidSurfaceTraversal = Schema.Schema.Type<
+  typeof SurfaceSchema.LiquidSurfaceTraversalSchema
+>;
 export type MentalMessageDeliveryEffect = Schema.Schema.Type<
   typeof SurfaceSchema.MentalMessageDeliveryEffectSchema
 >;
