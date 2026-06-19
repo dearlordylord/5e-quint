@@ -118,6 +118,9 @@ export type SavingThrowSourceFilter = Schema.Schema.Type<
   typeof SurfaceSchema.SavingThrowSourceFilterSchema
 >;
 export type Ability = Schema.Schema.Type<typeof SurfaceSchema.AbilitySchema>;
+export type AbilityFilter = Schema.Schema.Type<
+  typeof SurfaceSchema.AbilityFilterSchema
+>;
 export type DamageType = Schema.Schema.Type<
   typeof SurfaceSchema.DamageTypeSchema
 >;

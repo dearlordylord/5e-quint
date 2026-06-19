@@ -239,6 +239,17 @@ export function traceOngoingTrigger(
       edges.push({ from: procId, to: winId, relation: "opens_window" });
       return { hostId: winId, hostRelation: "grants" };
     }
+    case "on_caster_deals_damage_to_attachment": {
+      const winId = ids("win");
+      nodes.push({
+        id: winId,
+        category: "window",
+        atomKind: "damage_window",
+        label: `damage_window\n(caster damages attachment)\nsource: ${trigger.damageSource.join(" or ")}`,
+      });
+      edges.push({ from: procId, to: winId, relation: "opens_window" });
+      return { hostId: winId, hostRelation: "grants" };
+    }
     case "on_attached_hit_by_attack_roll": {
       const winId = ids("win");
       const attack =

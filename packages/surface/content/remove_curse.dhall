@@ -8,9 +8,8 @@
 --
 -- The Rules Glossary says curses are defined by the effect that confers them,
 -- and the Gameplay Toolbox leaves some curse-removal outcomes to GM judgment.
--- This record does not introduce a shared runtime curse occurrence or
--- curse-removal target boundary, and the Surface EffectAtom vocabulary has no
--- distinct remove_curse atom. This Spell Definition preserves the SRD source
+-- Bestow Curse now exposes a shared all-curses-ending removal boundary on its
+-- curse occurrence. This Spell Definition preserves Remove Curse's SRD source
 -- facts and target shape without claiming executable battle-runtime curse
 -- cleanup or cursed-item Attunement mutation.
 

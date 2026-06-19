@@ -259,6 +259,7 @@ export function traceEffectAtom(
       );
     case "composite":
     case "choose_effect_mode":
+    case "curse_occurrence":
     case "grant_speed":
     case "ignore_web_restrictions":
     case "alter_item_kind":

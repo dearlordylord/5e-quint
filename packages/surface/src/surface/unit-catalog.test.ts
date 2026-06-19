@@ -2477,6 +2477,175 @@ describe("SRD Unit catalog boundary", () => {
     }
   });
 
+  test("decodes Bestow Curse as one chosen curse occurrence with slot-tiered duration", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag !== "ok") return;
+    const bestowCurse = result.catalog.requireUnit("bestow_curse");
+
+    expect(bestowCurse.kind).toBe("spell");
+    if (bestowCurse.kind !== "spell") return;
+    expect(bestowCurse.mechanics.family).toBe("activation");
+    if (bestowCurse.mechanics.family !== "activation") return;
+
+    expect(bestowCurse.provenance).toEqual({
+      kind: "srd-5.2.1",
+      section: "Spells/Descriptions-A-D#Bestow Curse",
+    });
+    expect(bestowCurse.mechanics).toMatchObject({
+      level: 3,
+      school: "necromancy",
+      castingTime: { kind: "action" },
+      range: { kind: "touch" },
+      components: { v: true, s: true, m: false },
+      duration: {
+        kind: "slot_tiered",
+        base: {
+          kind: "concentration",
+          upTo: { unit: "minute", amount: 1 },
+        },
+        tiers: [
+          {
+            atSlot: 4,
+            duration: {
+              kind: "concentration",
+              upTo: { unit: "minute", amount: 10 },
+            },
+          },
+          {
+            atSlot: 5,
+            duration: { kind: "timed", value: { unit: "hour", amount: 8 } },
+          },
+          {
+            atSlot: 7,
+            duration: { kind: "timed", value: { unit: "hour", amount: 24 } },
+          },
+          {
+            atSlot: 9,
+            duration: { kind: "permanent", endsOn: ["dispel"] },
+          },
+        ],
+      },
+    });
+
+    expect(bestowCurse.mechanics.phases).toHaveLength(1);
+    const phase = bestowCurse.mechanics.phases[0];
+    expect(phase).toMatchObject({
+      kind: "save_gate",
+      ability: "wis",
+      dc: { kind: "caster_spell_save_dc" },
+      attachment: {
+        kind: "hole",
+        holeId: "bestow_curse_target",
+        label: "target",
+        value: {
+          kind: "target",
+          selection: { mode: "one", targetKinds: ["creature"] },
+        },
+      },
+      onSuccess: { kind: "none" },
+    });
+    if (phase?.kind !== "save_gate") return;
+    expect(phase.onFail.kind).toBe("curse_occurrence");
+    if (phase.onFail.kind !== "curse_occurrence") return;
+
+    expect(phase.onFail.removal).toEqual({
+      kind: "all_curses_affecting_target_end",
+      target: "attached_target",
+    });
+    expect(phase.onFail.options.map((option) => option.id)).toEqual([
+      "chosen_ability_disadvantage",
+      "caster_targeted_attack_disadvantage",
+      "turn_start_wisdom_save_or_dodge",
+      "caster_damage_necrotic_rider",
+    ]);
+    expect(phase.onFail.options).toEqual([
+      {
+        id: "chosen_ability_disadvantage",
+        displayName: "Chosen ability checks and saving throws",
+        operations: [
+          {
+            trigger: { kind: "passive" },
+            effect: {
+              kind: "modify_roll_advantage",
+              mode: "disadvantage",
+              affects: "self_roll",
+              on: ["ability_check", "saving_throw"],
+              abilityFilter: {
+                kind: "hole",
+                holeId: "bestow_curse_ability",
+                label: "cursed ability",
+                value: {
+                  kind: "choice",
+                  label: "cursed ability",
+                  options: ["str", "dex", "con", "int", "wis", "cha"],
+                },
+              },
+              saveAbilityFilter: {
+                kind: "same_choice_as",
+                holeId: "bestow_curse_ability",
+              },
+            },
+          },
+        ],
+      },
+      {
+        id: "caster_targeted_attack_disadvantage",
+        displayName: "Attack rolls against caster",
+        operations: [
+          {
+            trigger: { kind: "passive" },
+            effect: {
+              kind: "modify_roll_advantage",
+              mode: "disadvantage",
+              affects: "self_roll",
+              on: ["attack_roll"],
+              attackRollTarget: "caster",
+            },
+          },
+        ],
+      },
+      {
+        id: "turn_start_wisdom_save_or_dodge",
+        displayName: "Start-of-turn Wisdom save or Dodge",
+        operations: [
+          {
+            trigger: { kind: "on_attached_turn_start" },
+            effect: {
+              kind: "save_gate",
+              ability: "wis",
+              dc: { kind: "caster_spell_save_dc" },
+              onFail: {
+                kind: "take_standard_action",
+                action: "dodge",
+                cost: "included_in_effect",
+              },
+              onSuccess: { kind: "none" },
+            },
+          },
+        ],
+      },
+      {
+        id: "caster_damage_necrotic_rider",
+        displayName: "Caster attack-roll or spell damage rider",
+        operations: [
+          {
+            trigger: {
+              kind: "on_caster_deals_damage_to_attachment",
+              damageSource: ["attack_roll", "spell"],
+            },
+            effect: {
+              kind: "damage",
+              damageType: "necrotic",
+              amount: { kind: "fixed", expr: { dice: 1, dieSize: 8 } },
+            },
+          },
+        ],
+      },
+    ]);
+  });
+
   test("decodes Enhance Ability as chosen-ability Ability Check Advantage with slot-scaled touched targets", () => {
     const result = buildUnitCatalog({ collections: [srdUnitCollection] });
 

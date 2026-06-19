@@ -19,9 +19,9 @@
       "catalog-authored-review-required": 24,
       "catalog-installed-owner-evidence-present": 7,
       "catalog-installed-owner-evidence-required": 1,
-      "catalog-only/dead-for-now": 16,
+      "catalog-only/dead-for-now": 17,
       "missing-authored-record": 20,
-      "needs-surface-widening": 8
+      "needs-surface-widening": 7
     },
     "auditedUniqueSpellIdentitiesByLevelBand": {
       "spell-level-3": 42,
@@ -35,15 +35,15 @@
     },
     "rowsByBattleReadinessStatus": {
       "accepted": 469,
-      "accepted-no-battle-effect": 225,
+      "accepted-no-battle-effect": 228,
       "battle-runtime-required": 48,
       "not-applicable": 77,
       "owner-evidence-required": 62,
-      "surface-widening-required": 19
+      "surface-widening-required": 16
     },
     "rowsByCatalogAdmission": {
-      "installed": 655,
-      "not-installed": 245
+      "installed": 658,
+      "not-installed": 242
     },
     "rowsByCategory": {
       "character-creation or progression mechanic": 172,
@@ -59,10 +59,10 @@
       "catalog-authored-review-required": 61,
       "catalog-installed-owner-evidence-present": 483,
       "catalog-installed-owner-evidence-required": 4,
-      "catalog-only/dead-for-now": 180,
+      "catalog-only/dead-for-now": 183,
       "level-5-7-follow-up-required": 24,
       "missing-authored-record": 45,
-      "needs-surface-widening": 19,
+      "needs-surface-widening": 16,
       "non-runtime": 84
     },
     "rowsByLevelBand": {
@@ -93,10 +93,10 @@
       "subclass-spell-access": 5
     },
     "rowsByUnitProfileDisposition": {
-      "not-recorded": 188,
+      "not-recorded": 185,
       "profile-subset-supported": 53,
       "supported-profile": 297,
-      "unsupported-profile": 362
+      "unsupported-profile": 365
     }
   },
   "rows": [
@@ -5116,7 +5116,7 @@
         "sourceInventoryRowId": "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_bestow_curse",
         "state": "present"
       },
-      "nextAction": "Widen Surface: Spell Definition curse occurrence: initial Wisdom Saving Throw gates one chosen ongoing curse option (chosen-ability Ability Check and Saving Throw Disadvantage, caster-targeted Attack Roll Disadvantage, start-of-turn Wisdom save or forced Dodge, or caster attack/spell damage rider), the target becomes a curse-removal target, and higher slot levels change both duration amount and Concentration requirement.",
+      "nextAction": "Bestow Curse supplies typed Surface facts for one chosen curse option and a shared all-curses-ending target boundary, but promoted battle runtime must still model active curse occurrence identity, selected option storage, ability-choice propagation, caster-targeted attack-roll filtering, target-turn forced Dodge, caster attack-roll-or-spell damage riders, slot-tiered Concentration/no-Concentration duration admission, and cleanup from all-curses-ending effects without dispatching on Bestow Curse or Remove Curse authored identity.",
       "rowId": "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_bestow_curse",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -5126,22 +5126,28 @@
       },
       "supportSnapshot": {
         "authoredContent": {
-          "state": "missing-authored-record"
+          "sourceRecordPath": "packages/surface/content/bestow_curse.json",
+          "state": "authored-record-present",
+          "unitId": "bestow_curse"
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "surface-widening-required"
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "outside-battle-runtime",
+          "owner": "future generic curse occurrence, curse-removal cleanup, and selected curse-option owner",
+          "reason": "Bestow Curse supplies typed Surface facts for one chosen curse option and a shared all-curses-ending target boundary, but promoted battle runtime must still model active curse occurrence identity, selected option storage, ability-choice propagation, caster-targeted attack-roll filtering, target-turn forced Dodge, caster attack-roll-or-spell damage riders, slot-tiered Concentration/no-Concentration duration admission, and cleanup from all-curses-ending effects without dispatching on Bestow Curse or Remove Curse authored identity.",
+          "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "bestow_curse"
         },
-        "finalDisposition": "needs-surface-widening",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },
@@ -9326,7 +9332,7 @@
         "sourceInventoryRowId": "srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_bestow_curse",
         "state": "present"
       },
-      "nextAction": "Widen Surface: Spell Definition curse occurrence: initial Wisdom Saving Throw gates one chosen ongoing curse option (chosen-ability Ability Check and Saving Throw Disadvantage, caster-targeted Attack Roll Disadvantage, start-of-turn Wisdom save or forced Dodge, or caster attack/spell damage rider), the target becomes a curse-removal target, and higher slot levels change both duration amount and Concentration requirement.",
+      "nextAction": "Bestow Curse supplies typed Surface facts for one chosen curse option and a shared all-curses-ending target boundary, but promoted battle runtime must still model active curse occurrence identity, selected option storage, ability-choice propagation, caster-targeted attack-roll filtering, target-turn forced Dodge, caster attack-roll-or-spell damage riders, slot-tiered Concentration/no-Concentration duration admission, and cleanup from all-curses-ending effects without dispatching on Bestow Curse or Remove Curse authored identity.",
       "rowId": "srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_bestow_curse",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -9336,22 +9342,28 @@
       },
       "supportSnapshot": {
         "authoredContent": {
-          "state": "missing-authored-record"
+          "sourceRecordPath": "packages/surface/content/bestow_curse.json",
+          "state": "authored-record-present",
+          "unitId": "bestow_curse"
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "surface-widening-required"
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "outside-battle-runtime",
+          "owner": "future generic curse occurrence, curse-removal cleanup, and selected curse-option owner",
+          "reason": "Bestow Curse supplies typed Surface facts for one chosen curse option and a shared all-curses-ending target boundary, but promoted battle runtime must still model active curse occurrence identity, selected option storage, ability-choice propagation, caster-targeted attack-roll filtering, target-turn forced Dodge, caster attack-roll-or-spell damage riders, slot-tiered Concentration/no-Concentration duration admission, and cleanup from all-curses-ending effects without dispatching on Bestow Curse or Remove Curse authored identity.",
+          "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "bestow_curse"
         },
-        "finalDisposition": "needs-surface-widening",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },
@@ -9774,7 +9786,7 @@
         "sourceInventoryRowId": "srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_remove_curse",
         "state": "present"
       },
-      "nextAction": "Remove Curse supplies table-facing curse-removal and cursed-item Attunement source facts, but promoted battle runtime does not own generic curse occurrence identity, curse-removal targeting semantics, cursed magic item curse persistence, or Attunement mutation for cursed objects.",
+      "nextAction": "Remove Curse supplies table-facing all-curses-ending and cursed-item Attunement source facts. Bestow Curse supplies a shared curse-occurrence removal boundary, but promoted battle runtime does not yet own generic all-curses-ending cleanup across active curse occurrences, curse persistence on cursed magic items, or Attunement mutation for cursed objects.",
       "rowId": "srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_remove_curse",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -9794,8 +9806,8 @@
         },
         "battleReadinessClosure": {
           "kind": "outside-battle-runtime",
-          "owner": "future curse occurrence and magic-item Attunement owner",
-          "reason": "Remove Curse supplies table-facing curse-removal and cursed-item Attunement source facts, but promoted battle runtime does not own generic curse occurrence identity, curse-removal targeting semantics, cursed magic item curse persistence, or Attunement mutation for cursed objects.",
+          "owner": "future all-curses-ending cleanup and magic-item Attunement owner",
+          "reason": "Remove Curse supplies table-facing all-curses-ending and cursed-item Attunement source facts. Bestow Curse supplies a shared curse-occurrence removal boundary, but promoted battle runtime does not yet own generic all-curses-ending cleanup across active curse occurrences, curse persistence on cursed magic items, or Attunement mutation for cursed objects.",
           "state": "recorded"
         },
         "catalogAdmission": {
@@ -32507,7 +32519,7 @@
         "sourceInventoryRowId": "srd521:classes/warlock:spell-level-3:spell-unit-pressure:warlock_spell_list_remove_curse",
         "state": "present"
       },
-      "nextAction": "Remove Curse supplies table-facing curse-removal and cursed-item Attunement source facts, but promoted battle runtime does not own generic curse occurrence identity, curse-removal targeting semantics, cursed magic item curse persistence, or Attunement mutation for cursed objects.",
+      "nextAction": "Remove Curse supplies table-facing all-curses-ending and cursed-item Attunement source facts. Bestow Curse supplies a shared curse-occurrence removal boundary, but promoted battle runtime does not yet own generic all-curses-ending cleanup across active curse occurrences, curse persistence on cursed magic items, or Attunement mutation for cursed objects.",
       "rowId": "srd521:classes/warlock:spell-level-3:spell-unit-pressure:warlock_spell_list_remove_curse",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -32527,8 +32539,8 @@
         },
         "battleReadinessClosure": {
           "kind": "outside-battle-runtime",
-          "owner": "future curse occurrence and magic-item Attunement owner",
-          "reason": "Remove Curse supplies table-facing curse-removal and cursed-item Attunement source facts, but promoted battle runtime does not own generic curse occurrence identity, curse-removal targeting semantics, cursed magic item curse persistence, or Attunement mutation for cursed objects.",
+          "owner": "future all-curses-ending cleanup and magic-item Attunement owner",
+          "reason": "Remove Curse supplies table-facing all-curses-ending and cursed-item Attunement source facts. Bestow Curse supplies a shared curse-occurrence removal boundary, but promoted battle runtime does not yet own generic all-curses-ending cleanup across active curse occurrences, curse persistence on cursed magic items, or Attunement mutation for cursed objects.",
           "state": "recorded"
         },
         "catalogAdmission": {
@@ -37647,7 +37659,7 @@
         "sourceInventoryRowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_bestow_curse",
         "state": "present"
       },
-      "nextAction": "Widen Surface: Spell Definition curse occurrence: initial Wisdom Saving Throw gates one chosen ongoing curse option (chosen-ability Ability Check and Saving Throw Disadvantage, caster-targeted Attack Roll Disadvantage, start-of-turn Wisdom save or forced Dodge, or caster attack/spell damage rider), the target becomes a curse-removal target, and higher slot levels change both duration amount and Concentration requirement.",
+      "nextAction": "Bestow Curse supplies typed Surface facts for one chosen curse option and a shared all-curses-ending target boundary, but promoted battle runtime must still model active curse occurrence identity, selected option storage, ability-choice propagation, caster-targeted attack-roll filtering, target-turn forced Dodge, caster attack-roll-or-spell damage riders, slot-tiered Concentration/no-Concentration duration admission, and cleanup from all-curses-ending effects without dispatching on Bestow Curse or Remove Curse authored identity.",
       "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_bestow_curse",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -37657,22 +37669,28 @@
       },
       "supportSnapshot": {
         "authoredContent": {
-          "state": "missing-authored-record"
+          "sourceRecordPath": "packages/surface/content/bestow_curse.json",
+          "state": "authored-record-present",
+          "unitId": "bestow_curse"
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "surface-widening-required"
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "outside-battle-runtime",
+          "owner": "future generic curse occurrence, curse-removal cleanup, and selected curse-option owner",
+          "reason": "Bestow Curse supplies typed Surface facts for one chosen curse option and a shared all-curses-ending target boundary, but promoted battle runtime must still model active curse occurrence identity, selected option storage, ability-choice propagation, caster-targeted attack-roll filtering, target-turn forced Dodge, caster attack-roll-or-spell damage riders, slot-tiered Concentration/no-Concentration duration admission, and cleanup from all-curses-ending effects without dispatching on Bestow Curse or Remove Curse authored identity.",
+          "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "bestow_curse"
         },
-        "finalDisposition": "needs-surface-widening",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },
@@ -38462,7 +38480,7 @@
         "sourceInventoryRowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_remove_curse",
         "state": "present"
       },
-      "nextAction": "Remove Curse supplies table-facing curse-removal and cursed-item Attunement source facts, but promoted battle runtime does not own generic curse occurrence identity, curse-removal targeting semantics, cursed magic item curse persistence, or Attunement mutation for cursed objects.",
+      "nextAction": "Remove Curse supplies table-facing all-curses-ending and cursed-item Attunement source facts. Bestow Curse supplies a shared curse-occurrence removal boundary, but promoted battle runtime does not yet own generic all-curses-ending cleanup across active curse occurrences, curse persistence on cursed magic items, or Attunement mutation for cursed objects.",
       "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_remove_curse",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -38482,8 +38500,8 @@
         },
         "battleReadinessClosure": {
           "kind": "outside-battle-runtime",
-          "owner": "future curse occurrence and magic-item Attunement owner",
-          "reason": "Remove Curse supplies table-facing curse-removal and cursed-item Attunement source facts, but promoted battle runtime does not own generic curse occurrence identity, curse-removal targeting semantics, cursed magic item curse persistence, or Attunement mutation for cursed objects.",
+          "owner": "future all-curses-ending cleanup and magic-item Attunement owner",
+          "reason": "Remove Curse supplies table-facing all-curses-ending and cursed-item Attunement source facts. Bestow Curse supplies a shared curse-occurrence removal boundary, but promoted battle runtime does not yet own generic all-curses-ending cleanup across active curse occurrences, curse persistence on cursed magic items, or Attunement mutation for cursed objects.",
           "state": "recorded"
         },
         "catalogAdmission": {
@@ -40163,27 +40181,33 @@
       ],
       "levelBand": "spell-level-3",
       "nextActions": [
-        "Widen Surface: Spell Definition curse occurrence: initial Wisdom Saving Throw gates one chosen ongoing curse option (chosen-ability Ability Check and Saving Throw Disadvantage, caster-targeted Attack Roll Disadvantage, start-of-turn Wisdom save or forced Dodge, or caster attack/spell damage rider), the target becomes a curse-removal target, and higher slot levels change both duration amount and Concentration requirement."
+        "Bestow Curse supplies typed Surface facts for one chosen curse option and a shared all-curses-ending target boundary, but promoted battle runtime must still model active curse occurrence identity, selected option storage, ability-choice propagation, caster-targeted attack-roll filtering, target-turn forced Dodge, caster attack-roll-or-spell damage riders, slot-tiered Concentration/no-Concentration duration admission, and cleanup from all-curses-ending effects without dispatching on Bestow Curse or Remove Curse authored identity."
       ],
       "spellName": "Bestow Curse",
       "supportSnapshot": {
         "authoredContent": {
-          "state": "missing-authored-record"
+          "sourceRecordPath": "packages/surface/content/bestow_curse.json",
+          "state": "authored-record-present",
+          "unitId": "bestow_curse"
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "surface-widening-required"
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "outside-battle-runtime",
+          "owner": "future generic curse occurrence, curse-removal cleanup, and selected curse-option owner",
+          "reason": "Bestow Curse supplies typed Surface facts for one chosen curse option and a shared all-curses-ending target boundary, but promoted battle runtime must still model active curse occurrence identity, selected option storage, ability-choice propagation, caster-targeted attack-roll filtering, target-turn forced Dodge, caster attack-roll-or-spell damage riders, slot-tiered Concentration/no-Concentration duration admission, and cleanup from all-curses-ending effects without dispatching on Bestow Curse or Remove Curse authored identity.",
+          "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "bestow_curse"
         },
-        "finalDisposition": "needs-surface-widening",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },
@@ -41793,7 +41817,7 @@
       ],
       "levelBand": "spell-level-3",
       "nextActions": [
-        "Remove Curse supplies table-facing curse-removal and cursed-item Attunement source facts, but promoted battle runtime does not own generic curse occurrence identity, curse-removal targeting semantics, cursed magic item curse persistence, or Attunement mutation for cursed objects."
+        "Remove Curse supplies table-facing all-curses-ending and cursed-item Attunement source facts. Bestow Curse supplies a shared curse-occurrence removal boundary, but promoted battle runtime does not yet own generic all-curses-ending cleanup across active curse occurrences, curse persistence on cursed magic items, or Attunement mutation for cursed objects."
       ],
       "spellName": "Remove Curse",
       "supportSnapshot": {
@@ -41808,8 +41832,8 @@
         },
         "battleReadinessClosure": {
           "kind": "outside-battle-runtime",
-          "owner": "future curse occurrence and magic-item Attunement owner",
-          "reason": "Remove Curse supplies table-facing curse-removal and cursed-item Attunement source facts, but promoted battle runtime does not own generic curse occurrence identity, curse-removal targeting semantics, cursed magic item curse persistence, or Attunement mutation for cursed objects.",
+          "owner": "future all-curses-ending cleanup and magic-item Attunement owner",
+          "reason": "Remove Curse supplies table-facing all-curses-ending and cursed-item Attunement source facts. Bestow Curse supplies a shared curse-occurrence removal boundary, but promoted battle runtime does not yet own generic all-curses-ending cleanup across active curse occurrences, curse persistence on cursed magic items, or Attunement mutation for cursed objects.",
           "state": "recorded"
         },
         "catalogAdmission": {

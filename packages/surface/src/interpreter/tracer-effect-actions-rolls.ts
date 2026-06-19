@@ -1,4 +1,4 @@
-import type { AreaDirectEffectAtom } from "../surface/types.ts";
+import type { AbilityFilter, AreaDirectEffectAtom } from "../surface/types.ts";
 import type { TraceEdge, TraceNode } from "./tracer-model.ts";
 import {
   describeCriticalRangeAttackFilter,
@@ -53,6 +53,18 @@ export type ActionAndRollEffectAtom = Extract<
       | "allow_designated_creatures_safe_passage";
   }
 >;
+
+function describeAbilityFilter(
+  filter: AbilityFilter | undefined,
+  label: string,
+): string {
+  if (filter === undefined) return "";
+  if (!("kind" in filter)) return `\n${label}: ${filter.join("/")}`;
+  if (filter.kind === "same_choice_as") {
+    return `\n${label}: same choice as ${filter.holeId}`;
+  }
+  return `\n${label}: ${filter.label ?? filter.holeId}`;
+}
 
 export function traceActionAndRollEffectAtom(
   e: ActionAndRollEffectAtom,
@@ -166,22 +178,19 @@ export function traceActionAndRollEffectAtom(
         e.conditionFilter !== undefined && e.conditionFilter.length > 0
           ? `\ncondition: ${e.conditionFilter.join("/")}`
           : "";
-      const ability =
-        e.abilityFilter === undefined
-          ? ""
-          : Array.isArray(e.abilityFilter)
-            ? `\nability: ${e.abilityFilter.join("/")}`
-            : "holeId" in e.abilityFilter
-              ? `\nability: ${e.abilityFilter.label ?? e.abilityFilter.holeId}`
-              : "";
-      const saveAbility =
-        e.saveAbilityFilter === undefined
-          ? ""
-          : `\nsave ability: ${e.saveAbilityFilter.join("/")}`;
+      const ability = describeAbilityFilter(e.abilityFilter, "ability");
+      const saveAbility = describeAbilityFilter(
+        e.saveAbilityFilter,
+        "save ability",
+      );
       const contextRange =
         e.contextRangeFeet !== undefined
           ? `\ncontext: within ${e.contextRangeFeet} ft`
           : "";
+      const attackRollTarget =
+        e.attackRollTarget === undefined
+          ? ""
+          : `\nattack target: ${e.attackRollTarget}`;
       const spellSource =
         e.spellSourceFilter === undefined
           ? ""
@@ -191,7 +200,7 @@ export function traceActionAndRollEffectAtom(
         id,
         category: "effect",
         atomKind: "modify_roll_advantage",
-        label: `modify_roll_advantage\n${e.mode} on ${e.on.join(", ")}${by}${condition}${ability}${saveAbility}${spellSource}${saveSource}${contextRange}`,
+        label: `modify_roll_advantage\n${e.mode} on ${e.on.join(", ")}${by}${condition}${ability}${saveAbility}${attackRollTarget}${spellSource}${saveSource}${contextRange}`,
       });
       return id;
     }

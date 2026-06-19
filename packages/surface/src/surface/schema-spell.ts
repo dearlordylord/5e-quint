@@ -248,6 +248,10 @@ export const AbilityFilterSchema = Schema.Union(
   nonEmpty(AbilitySchema),
   makeHoleSchema(CastTimeChoiceAbilitySchema),
   Schema.Struct({
+    kind: Schema.Literal("same_choice_as"),
+    holeId: HoleIdSchema,
+  }),
+  Schema.Struct({
     kind: Schema.Literal("per_target_hole"),
     holeId: HoleIdSchema,
     value: CastTimeChoiceAbilitySchema,
@@ -433,6 +437,7 @@ export const ForceMoveEffectSchema = Schema.Union(
 type DamageTypeRef = Schema.Schema.Type<typeof DamageTypeRefSchema>;
 type DiceAmount = Schema.Schema.Type<typeof DiceAmountSchema>;
 type DiceDelta = Schema.Schema.Type<typeof DiceDeltaSchema>;
+type DurationValue = Schema.Schema.Type<typeof DurationValueSchema>;
 type MagicWeaponEnhancementBonus = Schema.Schema.Type<
   typeof MagicWeaponEnhancementBonusSchema
 >;
@@ -655,8 +660,22 @@ type ObjectContactDamageEffect = {
   };
 };
 
+type CurseOccurrenceEffect = {
+  readonly kind: "curse_occurrence";
+  readonly removal: {
+    readonly kind: "all_curses_affecting_target_end";
+    readonly target: "attached_target";
+  };
+  readonly options: ReadonlyNonEmptyArray<{
+    readonly id: string;
+    readonly displayName: string;
+    readonly operations: ReadonlyNonEmptyArray<OngoingOperation>;
+  }>;
+};
+
 type EffectAtom =
   | ObjectContactDamageEffect
+  | CurseOccurrenceEffect
   | {
       readonly kind: "damage";
       readonly damageType: DamageTypeRef;
@@ -922,9 +941,10 @@ type EffectAtom =
           };
       readonly conditionFilter?: ReadonlyNonEmptyArray<Condition>;
       readonly abilityFilter?: AbilityFilter;
-      readonly saveAbilityFilter?: ReadonlyNonEmptyArray<Ability>;
+      readonly saveAbilityFilter?: AbilityFilter;
       readonly saveSourceFilter?: SavingThrowSourceFilter;
       readonly contextRangeFeet?: number;
+      readonly attackRollTarget?: "caster";
       readonly count?: number;
       readonly expiresOn?:
         | { readonly kind: "target_uses_or_turn_start" }
@@ -1728,6 +1748,18 @@ type OngoingEffect =
     }
   | ModifyAcSetFloorEffect;
 
+type OngoingOperation = {
+  readonly trigger: Schema.Schema.Type<typeof OngoingTriggerSchema>;
+  readonly predicate?: Schema.Schema.Type<typeof OngoingPredicateSchema>;
+  readonly targetLimit?: {
+    readonly count: number;
+    readonly distinct: true;
+    readonly targetTypes: ReadonlyNonEmptyArray<"creature" | "object">;
+  };
+  readonly effect: OngoingEffect;
+  readonly usageLimit?: UsageLimit;
+};
+
 export const ReactionTriggerSchema: Schema.suspend<
   ReactionTrigger,
   ReactionTrigger,
@@ -1865,7 +1897,42 @@ export const TimedPermanentAfterSchema = Schema.Struct({
   endsOn: nonEmpty(Schema.Literal("dispel")),
 });
 
-export const DurationSchema = Schema.Union(
+type DurationEndTrigger = Schema.Schema.Type<typeof DurationEndTriggerSchema>;
+type TimedPermanentAfter = Schema.Schema.Type<typeof TimedPermanentAfterSchema>;
+type DurationBranch =
+  | { readonly kind: "instantaneous" }
+  | {
+      readonly kind: "concentration";
+      readonly upTo: DurationValue;
+      readonly earlyEnd?: ReadonlyNonEmptyArray<DurationEndTrigger>;
+      readonly permanentIfMaintainedFull?: true;
+    }
+  | {
+      readonly kind: "timed";
+      readonly value: DurationValue;
+      readonly earlyEnd?: ReadonlyNonEmptyArray<DurationEndTrigger>;
+      readonly permanentAfter?: TimedPermanentAfter;
+    }
+  | {
+      readonly kind: "permanent";
+      readonly endsOn?: ReadonlyNonEmptyArray<"dispel" | "damage">;
+    };
+type Duration =
+  | DurationBranch
+  | {
+      readonly kind: "slot_tiered";
+      readonly base: DurationBranch;
+      readonly tiers: ReadonlyNonEmptyArray<{
+        readonly atSlot: number;
+        readonly duration: DurationBranch;
+      }>;
+    };
+
+const DurationBranchSchema: Schema.Schema<
+  DurationBranch,
+  DurationBranch,
+  never
+> = Schema.Union(
   Schema.Struct({
     kind: Schema.Literal("instantaneous"),
   }),
@@ -1886,6 +1953,24 @@ export const DurationSchema = Schema.Union(
     endsOn: optionalExact(nonEmpty(Schema.Literal("dispel", "damage"))),
   }),
 );
+
+export const DurationSchema: Schema.Schema<Duration, Duration, never> =
+  Schema.Union(
+    DurationBranchSchema,
+    Schema.Struct({
+      kind: Schema.Literal("slot_tiered"),
+      base: DurationBranchSchema,
+      tiers: nonEmpty(
+        Schema.Struct({
+          atSlot: Schema.Number.pipe(
+            Schema.int(),
+            Schema.greaterThanOrEqualTo(1),
+          ),
+          duration: DurationBranchSchema,
+        }),
+      ),
+    }),
+  );
 
 export const SpellMechanicsCommonHeaderSchema = Schema.Struct({
   level: SpellLevelSchema,
@@ -2416,6 +2501,10 @@ export const OngoingTriggerSchema = Schema.Union(
   Schema.Struct({ kind: Schema.Literal("on_effect_starts") }),
   Schema.Struct({ kind: Schema.Literal("on_caster_attack_hit") }),
   Schema.Struct({
+    kind: Schema.Literal("on_caster_deals_damage_to_attachment"),
+    damageSource: nonEmpty(Schema.Literal("attack_roll", "spell")),
+  }),
+  Schema.Struct({
     kind: Schema.Literal("on_attached_hit_by_attack_roll"),
     attackKind: optionalExact(Schema.Literal("melee")),
     attackerWithinFeet: optionalExact(Schema.Number),
@@ -2671,6 +2760,20 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
   Schema.suspend(() =>
     Schema.Union(
       ObjectContactDamageEffectSchema,
+      Schema.Struct({
+        kind: Schema.Literal("curse_occurrence"),
+        removal: strictStruct({
+          kind: Schema.Literal("all_curses_affecting_target_end"),
+          target: Schema.Literal("attached_target"),
+        }),
+        options: nonEmpty(
+          strictStruct({
+            id: Schema.String,
+            displayName: Schema.String,
+            operations: nonEmpty(Schema.suspend(() => OngoingOperationSchema)),
+          }),
+        ),
+      }),
       Schema.Struct({
         kind: Schema.Literal("damage"),
         damageType: DamageTypeRefSchema,
@@ -2972,9 +3075,10 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
         ),
         conditionFilter: optionalExact(nonEmpty(ConditionSchema)),
         abilityFilter: optionalExact(AbilityFilterSchema),
-        saveAbilityFilter: optionalExact(nonEmpty(AbilitySchema)),
+        saveAbilityFilter: optionalExact(AbilityFilterSchema),
         saveSourceFilter: optionalExact(SavingThrowSourceFilterSchema),
         contextRangeFeet: optionalExact(Schema.Number),
+        attackRollTarget: optionalExact(Schema.Literal("caster")),
         count: optionalExact(Schema.Number),
         expiresOn: optionalExact(
           Schema.Union(

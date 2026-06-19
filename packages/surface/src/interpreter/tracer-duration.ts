@@ -1,3 +1,4 @@
+import { Match } from "effect";
 import type { ClassFeatureDuration, Duration } from "../surface/types.ts";
 import type { TraceEdge, TraceNode } from "./tracer-model.ts";
 import {
@@ -6,6 +7,39 @@ import {
   describeTimedPermanentAfter,
 } from "./tracer-rule-labels.ts";
 import type { IdGen } from "./tracer-rule-labels.ts";
+
+const byKind = Match.discriminator("kind");
+
+function describeDurationBranch(d: Duration): string {
+  return Match.value(d).pipe(
+    byKind("instantaneous", () => "instantaneous"),
+    byKind(
+      "concentration",
+      (concentration) =>
+        `concentration up to ${describeDurationValue(concentration.upTo)}${describeEarlyEnd(concentration.earlyEnd)}`,
+    ),
+    byKind(
+      "timed",
+      (timed) =>
+        `${describeDurationValue(timed.value)}${describeEarlyEnd(timed.earlyEnd)}${describeTimedPermanentAfter(timed.permanentAfter)}`,
+    ),
+    byKind("permanent", (permanent) =>
+      permanent.endsOn === undefined
+        ? "permanent"
+        : `permanent until ${permanent.endsOn.join(", ")}`,
+    ),
+    byKind("slot_tiered", (tiered) =>
+      [
+        `base: ${describeDurationBranch(tiered.base)}`,
+        ...tiered.tiers.map(
+          (tier) =>
+            `slot >= ${tier.atSlot}: ${describeDurationBranch(tier.duration)}`,
+        ),
+      ].join("\n"),
+    ),
+    Match.exhaustive,
+  );
+}
 
 export function traceDuration(
   d: Duration | ClassFeatureDuration,
@@ -91,6 +125,17 @@ export function traceDuration(
         });
         edges.push({ from: persistId, to: expId, relation: "persists_until" });
       }
+      return;
+    }
+    case "slot_tiered": {
+      const tierId = ids("duration");
+      nodes.push({
+        id: tierId,
+        category: "lifecycle",
+        atomKind: "slot_tiered_duration",
+        label: `slot_tiered_duration\n${describeDurationBranch(d)}`,
+      });
+      edges.push({ from: procId, to: tierId, relation: "grants" });
       return;
     }
     default: {

@@ -37,6 +37,7 @@ import barbarianWeaponMasteryInput from "../../content/barbarian_weapon_mastery.
 import barkskinInput from "../../content/barkskin.json";
 import blindnessDeafnessInput from "../../content/blindness_deafness.json";
 import baneInput from "../../content/bane.json";
+import bestowCurseInput from "../../content/bestow_curse.json";
 import blessInput from "../../content/bless.json";
 import blurInput from "../../content/blur.json";
 import burningHandsInput from "../../content/burning_hands.json";
@@ -608,6 +609,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     barkskinInput,
     blindnessDeafnessInput,
     baneInput,
+    bestowCurseInput,
     blessInput,
     blurInput,
     burningHandsInput,

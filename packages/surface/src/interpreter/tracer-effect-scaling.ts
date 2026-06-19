@@ -337,6 +337,20 @@ export function traceEffectAtomScaling(
         }
       }
       return;
+    case "curse_occurrence":
+      for (const option of e.options) {
+        for (const operation of option.operations) {
+          traceOngoingChoiceEffectScaling(
+            operation.effect,
+            effectId,
+            slotId,
+            nodes,
+            edges,
+            ids,
+          );
+        }
+      }
+      return;
     default: {
       const _exhaustive: never = e;
       throw new Error(`unhandled effect atom scaling: ${String(_exhaustive)}`);

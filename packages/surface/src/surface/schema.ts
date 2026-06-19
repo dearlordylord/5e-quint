@@ -23,6 +23,7 @@ export {
   AreaShapeSpecSchema,
   AttachmentRangeOriginSchema,
   AttachmentSchema,
+  AbilityFilterSchema,
   CastTimeEffectModeChoiceSchema,
   CastTimeChoiceCreatureTypeSchema,
   CastTimeChoiceDamageTypeSchema,
