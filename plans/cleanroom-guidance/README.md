@@ -15,6 +15,12 @@ Core rules:
 - Use `cleanroom-input/branch-coverage/reducer-route-inventory.json` when the
   selected assignment is a reducer-spine diagnostic assignment.
 - Keep QNT/MBT replay adapters quarantined from production modules.
+- Treat forbidden source-code reads and production reducer dispatch on
+  authored or fixture identity as the same cleanroom-boundary violation class.
+  Production behavior routes by runtime shape, typed facts, capabilities,
+  procedures, and battle-owned state; fixture identity belongs only in
+  adapters, tests, evidence, catalog/selection boundaries, or documented
+  support-profile admission.
 - Do not dispatch production runtime behavior on authored ids, names, slugs,
   provenance headings, page references, or official catalog labels.
 - Do not store derivable facts beside their owners unless the duplicate is an

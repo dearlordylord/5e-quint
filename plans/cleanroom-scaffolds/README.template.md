@@ -12,6 +12,12 @@ SHA live in `cleanroom-input/MANIFEST.md`. The source branch inventory lives in
 diagnostic route selection lives in
 `cleanroom-input/branch-coverage/reducer-route-inventory.json`.
 
+Cleanroom boundary rule: production reducers route by runtime shape and typed
+facts, not authored or fixture identity. Using fixture identity to choose
+production behavior is treated as the same boundary violation class as reading
+forbidden source code; fixture names belong in adapters, tests, evidence, or
+explicit catalog/selection and support-profile boundaries.
+
 Target profile: `{{targetProfileId}}`. Target package/tooling:
 {{packageManager}}. Target source extensions: {{sourceFileExtensionsMarkdown}}.
 

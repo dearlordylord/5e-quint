@@ -62,6 +62,12 @@ only by the source repo's sync script, which rewrites the manifest.
   inventory, and guidance pack together are insufficient to implement a
   behavior, record a blocker in `tasks/BLOCKERS.md` and move on. Do not guess,
   and do not fill gaps from memory of D&D rules.
+- Treat production reducer dispatch on authored or fixture identity as the same
+  class of cleanroom-boundary violation as reading forbidden source code.
+  Production behavior must route by runtime shape, typed facts, capabilities,
+  procedure state, and battle-owned state. Fixture names and QNT branch names
+  belong in adapters, tests, and evidence only unless a catalog/selection or
+  documented support-profile boundary explicitly owns them.
 - Cite sources: tests and rule-bearing code comments reference the exact corpus
   file (for example `cleanroom-input/raw/srd-5.2.1/Playing-the-Game.md`,
   heading or rule name) and/or the QNT module/definition they implement.

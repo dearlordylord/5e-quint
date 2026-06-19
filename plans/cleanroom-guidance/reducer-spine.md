@@ -77,6 +77,25 @@ Production modules must not import adapter modules, branch on QNT action names,
 or expose witness protocol fields as domain APIs. Adapters translate between
 QNT replay and the reducer surface; they do not own rules behavior.
 
+## Cleanroom Boundary And Identity Dispatch
+
+Reading unapproved source code and dispatching production reducer behavior on
+authored or fixture identity are the same class of cleanroom-boundary failure.
+Both import knowledge from outside the reducer's runtime facts.
+
+Production reducer code routes by shape: subject kind, typed procedure facts,
+capability/profile facts, combatant state, turn resources, and durable
+BattleState-owned facts. It must not select mechanics by fixture names,
+authored ids, authored names, slugs, source headings, page references, or
+official catalog labels.
+
+Fixture names, QNT branch names, selected authored identities, and catalog rows
+belong only in adapters, tests, replay evidence, catalog/selection boundaries,
+or explicitly documented support-profile admission. If a reducer route appears
+to need a selected identity, first extract the generic shape or capability it
+represents. If the copied corpus does not state that shape, record a
+`source-qnt-corpus` blocker instead of inferring it.
+
 ## Selected Identity And Catalog Timing
 
 Selected-identity and catalog QNT should wait until the generic substrate
