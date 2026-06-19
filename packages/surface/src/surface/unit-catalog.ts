@@ -159,6 +159,7 @@ import mindSpikeInput from "../../content/mind_spike.json";
 import massCureWoundsInput from "../../content/mass_cure_wounds.json";
 import massHealingWordInput from "../../content/mass_healing_word.json";
 import moonbeamInput from "../../content/moonbeam.json";
+import nondetectionInput from "../../content/nondetection.json";
 import masteryCleaveInput from "../../content/mastery_cleave.json";
 import masterySapInput from "../../content/mastery_sap.json";
 import masteryToppleInput from "../../content/mastery_topple.json";
@@ -700,6 +701,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     mindSpikeInput,
     mirrorImageInput,
     moonbeamInput,
+    nondetectionInput,
     massCureWoundsInput,
     massHealingWordInput,
     healingWordInput,

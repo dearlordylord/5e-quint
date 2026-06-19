@@ -204,6 +204,7 @@ const requiredFirstVerticalUnitIds = [
   "mage_armor",
   "magic_missile",
   "magic_mouth",
+  "nondetection",
   "mind_spike",
   "mass_cure_wounds",
   "healing_word",
@@ -3116,6 +3117,64 @@ describe("SRD Unit catalog boundary", () => {
     ]);
     expect(magicAura.description).toContain(
       "spells and other magical effects treat the target",
+    );
+  });
+
+  test("decodes Nondetection as a divination targeting and scrying ward", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag !== "ok") return;
+    const nondetection = result.catalog.requireUnit("nondetection");
+
+    expect(nondetection.kind).toBe("spell");
+    if (nondetection.kind !== "spell") return;
+    expect(nondetection.mechanics.family).toBe("activation");
+    if (nondetection.mechanics.family !== "activation") return;
+
+    expect(nondetection.mechanics).toMatchObject({
+      level: 3,
+      school: "abjuration",
+      castingTime: { kind: "action" },
+      range: { kind: "touch" },
+      components: {
+        v: true,
+        s: true,
+        m: "a pinch of diamond dust worth 25+ GP, which the spell consumes",
+        materialCostGp: 25,
+        materialConsumed: true,
+      },
+      duration: {
+        kind: "timed",
+        value: { unit: "hour", amount: 8 },
+      },
+    });
+    expect(nondetection.mechanics.phases).toEqual([
+      {
+        kind: "direct",
+        attachment: {
+          kind: "hole",
+          holeId: "nondetection_target",
+          label: "willing creature, place, or object",
+          value: {
+            kind: "target",
+            selection: {
+              mode: "one",
+              targetKinds: ["creature", "object", "location"],
+              creatureDisposition: "willing",
+              objectOrLocationMaxDimensionFeet: 10,
+            },
+          },
+        },
+        effects: [
+          {
+            kind: "block_divination_targeting_and_scrying_perception",
+          },
+        ],
+      },
+    ]);
+    expect(nondetection.description).toContain(
+      "can't be targeted by any Divination spell",
     );
   });
 

@@ -1190,6 +1190,7 @@ type EffectAtom =
       readonly result: "direction_to_location_and_movement";
       readonly blockedBy: "any_thickness_of_lead_direct_path";
     }
+  | { readonly kind: "block_divination_targeting_and_scrying_perception" }
   | Schema.Schema.Type<typeof DivinationOmenEffectSchema>
   | CourierTaskEffect
   | {
@@ -1941,6 +1942,38 @@ const CreatureOrObjectTargetKindsSchema = Schema.Union(
   Schema.Tuple(Schema.Literal("creature"), Schema.Literal("object")),
   Schema.Tuple(Schema.Literal("object"), Schema.Literal("creature")),
 );
+const CreatureObjectOrLocationTargetKindsSchema = Schema.Union(
+  Schema.Tuple(
+    Schema.Literal("creature"),
+    Schema.Literal("object"),
+    Schema.Literal("location"),
+  ),
+  Schema.Tuple(
+    Schema.Literal("creature"),
+    Schema.Literal("location"),
+    Schema.Literal("object"),
+  ),
+  Schema.Tuple(
+    Schema.Literal("object"),
+    Schema.Literal("creature"),
+    Schema.Literal("location"),
+  ),
+  Schema.Tuple(
+    Schema.Literal("object"),
+    Schema.Literal("location"),
+    Schema.Literal("creature"),
+  ),
+  Schema.Tuple(
+    Schema.Literal("location"),
+    Schema.Literal("creature"),
+    Schema.Literal("object"),
+  ),
+  Schema.Tuple(
+    Schema.Literal("location"),
+    Schema.Literal("object"),
+    Schema.Literal("creature"),
+  ),
+);
 
 export const TargetRelativePositionSchema = strictStruct({
   kind: Schema.Literal("within_feet_of_attachment"),
@@ -1968,6 +2001,12 @@ export const TargetSelectionSchema = Schema.Union(
     targetKinds: CreatureOrObjectTargetKindsSchema,
     objectFilter: Schema.suspend(() => ObjectFilterSchema),
     creatureDisposition: optionalExact(TargetDispositionSchema),
+  }),
+  strictStruct({
+    mode: Schema.Literal("one"),
+    targetKinds: CreatureObjectOrLocationTargetKindsSchema,
+    creatureDisposition: TargetDispositionSchema,
+    objectOrLocationMaxDimensionFeet: Schema.Literal(10),
   }),
   CreatureTargetSelectionSchema,
   strictStruct({
@@ -3475,6 +3514,11 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
         maxDistanceFeet: PositiveIntegerSchema,
         result: Schema.Literal("direction_to_location_and_movement"),
         blockedBy: Schema.Literal("any_thickness_of_lead_direct_path"),
+      }),
+      Schema.Struct({
+        kind: Schema.Literal(
+          "block_divination_targeting_and_scrying_perception",
+        ),
       }),
       DivinationOmenEffectSchema,
       CourierTaskEffectSchema,

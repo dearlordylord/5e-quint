@@ -55,7 +55,7 @@
     {
       "number": 9,
       "id": "L5-C09-NONDETECTION",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Close Nondetection missing authored record"
     },
     {
@@ -186,7 +186,7 @@ missing-record spells unless a RAW dependency is unavoidable and documented.
 | 6 | L5-C06-HASTE - Close Haste missing authored record | done | none | Closed as a Surface widening boundary, not an authored-record admission; follow-ups are L5-C16, L5-C17, and L5-C18 for Surface authoring, positive runtime, and lethargy cleanup. |
 | 7 | L5-C07-MAGIC-CIRCLE - Close Magic Circle missing authored record | done | none | Closed as a Surface widening boundary, not an authored-record admission; follow-up is L5-C19 for warded-cylinder, direction, travel-gate, and protected-target facts. |
 | 8 | L5-C08-MELD-INTO-STONE - Close Meld into Stone missing authored record | done | none | Closed as a Surface widening boundary, not an authored-record admission; follow-up is L5-C20 for stone-merge occupancy, perception, damage, and forced-exit facts. |
-| 9 | L5-C09-NONDETECTION - Close Nondetection missing authored record | ready-for-research | none | Independent missing spell Unit. |
+| 9 | L5-C09-NONDETECTION - Close Nondetection missing authored record | done | none | Independent missing spell Unit. |
 | 10 | L5-C10-PHANTOM-STEED - Close Phantom Steed missing authored record | ready-for-research | none | Independent missing spell Unit. |
 | 11 | L5-C11-BESTOW-CURSE-SURFACE-WIDENING - Widen Bestow Curse Surface Spell Definition | ready-for-research | L5-C01-BESTOW-CURSE | Add typed Surface facts for Bestow Curse curse-option selection, curse-removal targeting, and slot-dependent duration/Concentration before authoring/admitting the Spell Definition. |
 | 12 | L5-C12-BLINK-SURFACE-WIDENING - Widen Blink Surface Spell Definition | ready-for-research | L5-C02-BLINK | Add typed Surface/table-spatial facts for Blink's turn-end roll, Ethereal Plane transition, already-on-plane ending predicate, and return-position availability before authoring/admitting the Spell Definition. |
@@ -1175,7 +1175,7 @@ Verification:
 
 ### Task 9 - L5-C09-NONDETECTION
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 

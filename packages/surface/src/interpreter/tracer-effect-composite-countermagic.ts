@@ -27,6 +27,7 @@ export type CompositeAndCountermagicEffectAtom = Extract<
       | "magical_identity_mask"
       | "locate_kind"
       | "object_location_sense"
+      | "block_divination_targeting_and_scrying_perception"
       | "divination_omen"
       | "assign_courier_task"
       | "negate_triggering_spell"
@@ -420,6 +421,20 @@ export function traceCompositeAndCountermagicEffectAtom(
           `nearest ${e.searchModes.nearestObjectKind} within ${e.maxDistanceFeet} ft`,
           e.result,
           `blocked_by: ${e.blockedBy}`,
+        ].join("\n"),
+      });
+      return id;
+    }
+    case "block_divination_targeting_and_scrying_perception": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "block_divination_targeting_and_scrying_perception",
+        label: [
+          "block_divination_targeting_and_scrying_perception",
+          "targeting: Divination spells",
+          "perception: magical scrying sensors",
         ].join("\n"),
       });
       return id;

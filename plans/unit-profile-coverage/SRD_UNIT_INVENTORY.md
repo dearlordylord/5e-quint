@@ -18,7 +18,7 @@ Character level and spell level are separate axes. Character levels 1-2 include 
 - Level-7 class/subclass mining rows: 24
 - Spell-list pressure rows for cantrips and spell levels 1-2: 367
 - Spell-level-3 pressure rows (character-level-5 frontier): 110
-- Spell-level-3 installed SRD Surface pressure rows (later character-level-5 frontier): 35
+- Spell-level-3 installed SRD Surface pressure rows (later character-level-5 frontier): 37
 - Spell-level-4 pressure rows (character-level-7 frontier): 81
 - Spell-level-4 installed SRD Surface pressure rows (later character-level-7 frontier): 0
 - Missing level-1 class containers: 0
@@ -96,13 +96,13 @@ This metric is a separate seed for level-4 class feature rows, including Ability
 
 This metric is a separate seed for spell-level-3 pressure only. It belongs to the later character-level-5 frontier for full casters and Warlock Pact Magic, with half-caster rows excluded until their own class tables grant matching slots. It does not affect Character Levels 1-2 or Character Levels 1-3 readiness denominators.
 
-- Accepted: 60/110 (54.5%)
+- Accepted: 62/110 (56.4%)
 
 #### Spell-Level-3 Battle Readiness by Status
 
 - accepted: 22
-- accepted-no-battle-effect: 38
-- battle-runtime-required: 19
+- accepted-no-battle-effect: 40
+- battle-runtime-required: 17
 - owner-evidence-required: 12
 - surface-widening-required: 19
 
@@ -210,15 +210,15 @@ This metric is a separate seed for spell-level-4 pressure only. It belongs to th
 - catalog-authored-review-required: 12
 - catalog-installed-owner-evidence-present: 22
 - catalog-installed-owner-evidence-required: 3
-- catalog-only/dead-for-now: 38
-- missing-authored-record: 16
+- catalog-only/dead-for-now: 40
+- missing-authored-record: 14
 - needs-surface-widening: 19
 
 ### Spell-Level-3 Installed Unit Pressure by Disposition
 
 - catalog-installed-owner-evidence-present: 22
 - catalog-installed-owner-evidence-required: 3
-- catalog-only/dead-for-now: 10
+- catalog-only/dead-for-now: 12
 
 ### Spell-Level-4 Unit Pressure by Disposition
 
@@ -702,7 +702,7 @@ These batches are generated planning recommendations for a separate SRD inventor
 |Bard spell list Hypnotic Pattern|spell Unit pressure|current-surface-can-express-source-facts|authored-record-present|installed|supported-profile|catalog-installed-owner-evidence-present|accepted|table-spatial-derivation: table/spatial and sight witness provider|Unit catalog/admission: catalog evidence; battle-runtime spell invocation/projection: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Bard.md:222|
 |Bard spell list Major Image|spell Unit pressure|outside-surface-runtime-mechanics|authored-record-present|not-installed|unsupported-profile|catalog-only/dead-for-now|accepted-no-battle-effect|outside-runtime-presentation-exploration: future illusion Spell Effect and table/presentation/perception owner||Major Image's represented runtime behavior is closed outside promoted battle runtime: a future illusion Spell Effect and table/presentation/perception owner must carry the illusion occurrence, Concentration or level-4+ until-dispelled duration, selected spot and 20-foot Cube bounds, caster Magic Action repositioning and content changes, physical-interaction reveal, Study/Investigation discovery, and per-observer see-through/faint sensory presentation without duplicating map, line-of-sight, object or creature presence, or believability state inside battle Spell Invocation reducers.|.references/srd-5.2.1/Classes/Bard.md:223|
 |Bard spell list Mass Healing Word|spell Unit pressure|current-surface-can-express-source-facts|authored-record-present|installed|supported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; battle-runtime spell invocation/projection: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Bard.md:224|
-|Bard spell list Nondetection|spell Unit pressure|current-surface-can-express-source-facts|missing-authored-record|not-installed||missing-authored-record|battle-runtime-required|||Author an SRD-provenance Surface record or explicitly close the row.|.references/srd-5.2.1/Classes/Bard.md:225|
+|Bard spell list Nondetection|spell Unit pressure|outside-surface-runtime-mechanics|authored-record-present|installed|unsupported-profile|catalog-only/dead-for-now|accepted-no-battle-effect|outside-runtime-presentation-exploration: future divination targeting and magical scrying-sensor perception owner|Unit catalog/admission: catalog evidence; future divination targeting and magical scrying-sensor perception owner: catalog-only/dead-for-now closure|Nondetection supplies a source fact that blocks Divination targeting and magical scrying-sensor perception for a touched creature, place, or object, but promoted battle runtime does not own generic Divination targetability, active remote-sensor perception, place identity, or table/perception disclosure. Those facts should be consumed by a future divination/perception owner without duplicating battle map, sensor, or authored spell identity state in generic Spell Invocation reducers.|.references/srd-5.2.1/Classes/Bard.md:225|
 |Bard spell list Plant Growth|spell Unit pressure|outside-surface-runtime-mechanics|authored-record-present|installed|unsupported-profile|catalog-only/dead-for-now|accepted-no-battle-effect|outside-runtime-presentation-exploration: runtime-detached table/spatial/exploration/economy owner|Unit catalog/admission: catalog evidence; runtime-detached table/spatial/exploration/economy owner: catalog-only/dead-for-now closure|Plant Growth supplies table-facing terrain and agriculture facts, but promoted battle runtime does not own normal-plant area membership, excluded-area geometry, pathfinding or travel-pacing derivation through overgrown terrain, plant-world state, harvest timing, food yield, or settlement economy.|.references/srd-5.2.1/Classes/Bard.md:226|
 |Bard spell list Sending|spell Unit pressure|outside-surface-runtime-mechanics|authored-record-present|installed|unsupported-profile|catalog-only/dead-for-now|accepted-no-battle-effect|outside-runtime-presentation-exploration: runtime-detached table communication owner|Unit catalog/admission: catalog evidence; runtime-detached table communication owner: catalog-only/dead-for-now closure|Sending supplies private mental message delivery, cross-plane failure chance, immediate response, and recipient block source facts, but promoted battle runtime does not own communication content, creature knowledge/description matching, planar location adjudication, message-delivery rolls, response contents, or persistent communication block state.|.references/srd-5.2.1/Classes/Bard.md:227|
 |Bard spell list Slow|spell Unit pressure|current-surface-can-express-source-facts|missing-authored-record|not-installed||missing-authored-record|battle-runtime-required|||Author an SRD-provenance Surface record or explicitly close the row.|.references/srd-5.2.1/Classes/Bard.md:228|
@@ -791,7 +791,7 @@ These batches are generated planning recommendations for a separate SRD inventor
 |Wizard spell list Lightning Bolt|spell Unit pressure|current-surface-can-express-source-facts|authored-record-present|installed|supported-profile|catalog-installed-owner-evidence-present|accepted|table-spatial-derivation: table/spatial owner|Unit catalog/admission: catalog evidence; battle-runtime spell invocation/projection: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Wizard.md:250|
 |Wizard spell list Magic Circle|spell Unit pressure|current-surface-cannot-express-mechanics-yet|missing-authored-record|not-installed||needs-surface-widening|surface-widening-required|table-spatial-derivation: Surface Spell Definition plus table/spatial planar-movement owner and future battle-runtime warded-area Spell Effect owner|Surface Spell Definition plus table/spatial planar-movement owner and future battle-runtime warded-area Spell Effect owner: Surface widening required before owner evidence can be present|Widen Surface: Spell Definition warded-cylinder occurrence: 10-foot-radius, 20-foot-tall Cylinder area; slot-scaled timed duration of 1 hour plus 1 hour per Spell Slot level above 3; cast-time choice of one or more Celestial, Elemental, Fey, Fiend, or Undead creature types; normal or reversed area direction; nonmagical entry or exit prevention for affected creatures; Charisma Saving Throw gate for teleportation or interplanar travel across the ward; affected-creature Attack Roll Disadvantage against protected targets; and source-scoped possession, Charmed, and Frightened prevention for protected targets.|.references/srd-5.2.1/Classes/Wizard.md:251|
 |Wizard spell list Major Image|spell Unit pressure|outside-surface-runtime-mechanics|authored-record-present|not-installed|unsupported-profile|catalog-only/dead-for-now|accepted-no-battle-effect|outside-runtime-presentation-exploration: future illusion Spell Effect and table/presentation/perception owner||Major Image's represented runtime behavior is closed outside promoted battle runtime: a future illusion Spell Effect and table/presentation/perception owner must carry the illusion occurrence, Concentration or level-4+ until-dispelled duration, selected spot and 20-foot Cube bounds, caster Magic Action repositioning and content changes, physical-interaction reveal, Study/Investigation discovery, and per-observer see-through/faint sensory presentation without duplicating map, line-of-sight, object or creature presence, or believability state inside battle Spell Invocation reducers.|.references/srd-5.2.1/Classes/Wizard.md:252|
-|Wizard spell list Nondetection|spell Unit pressure|current-surface-can-express-source-facts|missing-authored-record|not-installed||missing-authored-record|battle-runtime-required|||Author an SRD-provenance Surface record or explicitly close the row.|.references/srd-5.2.1/Classes/Wizard.md:253|
+|Wizard spell list Nondetection|spell Unit pressure|outside-surface-runtime-mechanics|authored-record-present|installed|unsupported-profile|catalog-only/dead-for-now|accepted-no-battle-effect|outside-runtime-presentation-exploration: future divination targeting and magical scrying-sensor perception owner|Unit catalog/admission: catalog evidence; future divination targeting and magical scrying-sensor perception owner: catalog-only/dead-for-now closure|Nondetection supplies a source fact that blocks Divination targeting and magical scrying-sensor perception for a touched creature, place, or object, but promoted battle runtime does not own generic Divination targetability, active remote-sensor perception, place identity, or table/perception disclosure. Those facts should be consumed by a future divination/perception owner without duplicating battle map, sensor, or authored spell identity state in generic Spell Invocation reducers.|.references/srd-5.2.1/Classes/Wizard.md:253|
 |Wizard spell list Phantom Steed|spell Unit pressure|current-surface-can-express-source-facts|missing-authored-record|not-installed||missing-authored-record|battle-runtime-required|||Author an SRD-provenance Surface record or explicitly close the row.|.references/srd-5.2.1/Classes/Wizard.md:254|
 |Wizard spell list Protection from Energy|spell Unit pressure|current-surface-can-express-source-facts|authored-record-present|not-installed||catalog-authored-review-required|owner-evidence-required|||Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this later-frontier spell row as accepted.|.references/srd-5.2.1/Classes/Wizard.md:255|
 |Wizard spell list Remove Curse|spell Unit pressure|outside-surface-runtime-mechanics|authored-record-present|installed|unsupported-profile|catalog-only/dead-for-now|accepted-no-battle-effect|outside-battle-runtime: future curse occurrence and magic-item Attunement owner|Unit catalog/admission: catalog evidence; future curse occurrence and magic-item Attunement owner: catalog-only/dead-for-now closure|Remove Curse supplies table-facing curse-removal and cursed-item Attunement source facts, but promoted battle runtime does not own generic curse occurrence identity, curse-removal targeting semantics, cursed magic item curse persistence, or Attunement mutation for cursed objects.|.references/srd-5.2.1/Classes/Wizard.md:256|

@@ -184,6 +184,7 @@ export function traceEffectAtomScaling(
     case "detect":
     case "locate_kind":
     case "object_location_sense":
+    case "block_divination_targeting_and_scrying_perception":
     case "divination_omen":
     case "assign_courier_task":
     case "magical_identity_mask":

@@ -43,14 +43,14 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
-      "denominator": 448,
-      "numerator": 263,
-      "percent": "58.7%"
+      "denominator": 449,
+      "numerator": 264,
+      "percent": "58.8%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 536,
-      "numerator": 313,
-      "percent": "58.4%"
+      "denominator": 537,
+      "numerator": 314,
+      "percent": "58.5%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,7 +59,7 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 314
+      "value": 315
     },
     "deterministicAdmissionProjectionCoverage": {
       "denominator": 185,
@@ -67,8 +67,8 @@
       "percent": "97.3%"
     },
     "profileClassificationCoverage": {
-      "denominator": 314,
-      "numerator": 314,
+      "denominator": 315,
+      "numerator": 315,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -112,9 +112,9 @@
       "percent": "98.9%"
     },
     "supportedProfileCoverage": {
-      "denominator": 264,
+      "denominator": 265,
       "numerator": 185,
-      "percent": "70.1%"
+      "percent": "69.8%"
     }
   },
   "metricSemantics": [
@@ -16661,8 +16661,8 @@
         "unsupportedOrOtherUnits": 4
       },
       {
-        "executableUnitDenominator": 133,
-        "installedUnitDenominator": 133,
+        "executableUnitDenominator": 134,
+        "installedUnitDenominator": 134,
         "kind": "spell",
         "label": "Spell Units",
         "profileFactDenominator": 136,
@@ -16672,7 +16672,7 @@
         "selectedIdentityReplayGapUnits": 0,
         "selectedIdentityReplayWitnessUnits": 110,
         "supportedProfileUnits": 92,
-        "unsupportedOrOtherUnits": 23
+        "unsupportedOrOtherUnits": 24
       },
       {
         "executableUnitDenominator": 93,
@@ -34566,6 +34566,29 @@
       ],
       "sourceRecordPath": "packages/surface/content/moonbeam.json",
       "unitId": "moonbeam"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "future divination targeting and magical scrying-sensor perception owner",
+          "reason": "Nondetection supplies a source fact that blocks Divination targeting and magical scrying-sensor perception for a touched creature, place, or object, but promoted battle runtime does not own generic Divination targetability, active remote-sensor perception, place identity, or table/perception disclosure. Those facts should be consumed by a future divination/perception owner without duplicating battle map, sensor, or authored spell identity state in generic Spell Invocation reducers."
+        },
+        "reason": "Nondetection is an SRD level-3 Spell Definition whose authored Surface record models Action Spell Slot casting, Touch range, V/S/M consumed 25+ GP diamond-dust component, 8-hour duration, one willing creature or 10-foot-bounded place/object target, and the paired ward fact that the target cannot be targeted by Divination spells or perceived through magical scrying sensors. No promoted battle-runtime profile is claimed because Divination spell classification, targetability interdiction, active magical scrying sensor perception, place identity, and table/perception disclosure are runtime-detached divination/perception facts outside promoted battle Unit profiles.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/nondetection.json",
+      "unitId": "nondetection"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
