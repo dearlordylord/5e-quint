@@ -49,7 +49,7 @@
     {
       "number": 8,
       "id": "L5-C08-MELD-INTO-STONE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Close Meld into Stone missing authored record"
     },
     {
@@ -117,6 +117,12 @@
       "id": "L5-C19-MAGIC-CIRCLE-SURFACE-WIDENING",
       "status": "ready-for-research",
       "title": "Widen Magic Circle Surface Spell Definition"
+    },
+    {
+      "number": 20,
+      "id": "L5-C20-MELD-INTO-STONE-SURFACE-WIDENING",
+      "status": "ready-for-research",
+      "title": "Widen Meld into Stone Surface Spell Definition"
     }
   ]
 }
@@ -179,7 +185,7 @@ missing-record spells unless a RAW dependency is unavoidable and documented.
 | 5 | L5-C05-GLYPH-OF-WARDING - Close Glyph of Warding missing authored record | done | none | Closed as a Surface widening boundary, not an authored-record admission; follow-up is L5-C15 for Glyph trigger, stored spell, movement invalidation, and table object/location facts. |
 | 6 | L5-C06-HASTE - Close Haste missing authored record | done | none | Closed as a Surface widening boundary, not an authored-record admission; follow-ups are L5-C16, L5-C17, and L5-C18 for Surface authoring, positive runtime, and lethargy cleanup. |
 | 7 | L5-C07-MAGIC-CIRCLE - Close Magic Circle missing authored record | done | none | Closed as a Surface widening boundary, not an authored-record admission; follow-up is L5-C19 for warded-cylinder, direction, travel-gate, and protected-target facts. |
-| 8 | L5-C08-MELD-INTO-STONE - Close Meld into Stone missing authored record | ready-for-research | none | Independent missing spell Unit. |
+| 8 | L5-C08-MELD-INTO-STONE - Close Meld into Stone missing authored record | done | none | Closed as a Surface widening boundary, not an authored-record admission; follow-up is L5-C20 for stone-merge occupancy, perception, damage, and forced-exit facts. |
 | 9 | L5-C09-NONDETECTION - Close Nondetection missing authored record | ready-for-research | none | Independent missing spell Unit. |
 | 10 | L5-C10-PHANTOM-STEED - Close Phantom Steed missing authored record | ready-for-research | none | Independent missing spell Unit. |
 | 11 | L5-C11-BESTOW-CURSE-SURFACE-WIDENING - Widen Bestow Curse Surface Spell Definition | ready-for-research | L5-C01-BESTOW-CURSE | Add typed Surface facts for Bestow Curse curse-option selection, curse-removal targeting, and slot-dependent duration/Concentration before authoring/admitting the Spell Definition. |
@@ -191,6 +197,7 @@ missing-record spells unless a RAW dependency is unavoidable and documented.
 | 17 | L5-C17-HASTE-POSITIVE-RUNTIME - Promote Haste positive runtime effect | ready-for-research | L5-C16-HASTE-SURFACE-WIDENING | Promote the active Haste effects: Speed ratio, +2 Armor Class, Dexterity Saving Throw Advantage, Concentration, and restricted spell-granted per-turn action resource. |
 | 18 | L5-C18-HASTE-LETHARGY-RUNTIME - Promote Haste lethargy runtime cleanup | ready-for-research | L5-C17-HASTE-POSITIVE-RUNTIME | Promote the spell-end lethargy rider: Incapacitated plus Speed 0 until the end of the target's next turn without treating Incapacitated as a Speed shortcut. |
 | 19 | L5-C19-MAGIC-CIRCLE-SURFACE-WIDENING - Widen Magic Circle Surface Spell Definition | ready-for-research | L5-C07-MAGIC-CIRCLE | Add typed Surface/table-spatial facts for Magic Circle's warded Cylinder, selected creature types, normal or reversed direction, nonmagical crossing prevention, teleportation or interplanar-travel Saving Throw gate, Attack Roll Disadvantage, and source-scoped possession plus Charmed/Frightened prevention before authoring/admitting the Spell Definition. |
+| 20 | L5-C20-MELD-INTO-STONE-SURFACE-WIDENING - Widen Meld into Stone Surface Spell Definition | ready-for-research | L5-C08-MELD-INTO-STONE | Add typed Surface/table terrain facts for Meld into Stone's stone object-or-surface containment target, hidden merged occupancy, outside-sense limits, self-spell and Movement-limited exit permissions, destructive expulsion damage, closest-unoccupied-space placement, and Prone rider before authoring/admitting the Spell Definition. |
 
 ## Shared Verification
 
@@ -1058,7 +1065,7 @@ Verification:
 
 ### Task 8 - L5-C08-MELD-INTO-STONE
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -1077,16 +1084,90 @@ SRD anchors:
 Current state:
 
 - Authored record is missing; catalog state is `not-installed`.
-- Mining disposition is `missing-authored-record`.
+- Mining disposition is `needs-surface-widening`.
+- Surface cannot yet express the Meld into Stone Spell Definition without losing
+  the stone object-or-surface containment target, hidden merged occupancy,
+  outside-sense limits, self-spell permission, Movement-limited voluntary exit,
+  otherwise-no-movement restriction, destructive expulsion damage, closest
+  unoccupied-space placement, and Prone rider facts.
 
 Output:
 
-- Author or close Meld into Stone with an owner for table terrain, occupancy,
-  perception, damage, and forced exit facts.
+- Resolve the SRD Spell Definition record or record a catalog-boundary reason it
+  is not representable yet.
+- Own the split between Surface Spell Definition facts, table terrain/object
+  occupancy witnesses, and future battle-runtime merged-state, perception,
+  damage, and forced-exit projection before admitting the record.
 
 Acceptance:
 
-- `meld_into_stone` leaves `missing-authored-record`.
+- `meld_into_stone` leaves `missing-authored-record` by becoming
+  `needs-surface-widening`.
+
+Verification:
+
+- Shared lane verification.
+
+Plan Impact:
+
+- Follow-up work is split into L5-C20 before any SRD-provenance Meld into Stone
+  Spell Definition is authored or admitted.
+
+### Task 20 - L5-C20-MELD-INTO-STONE-SURFACE-WIDENING
+
+Status: `ready-for-research`
+
+Depends on:
+
+- L5-C08-MELD-INTO-STONE
+
+Unit:
+
+- `meld_into_stone`
+
+SRD anchors:
+
+- `.references/srd-5.2.1/Spells/Descriptions-M-P.md:247`
+- `.references/srd-5.2.1/Classes/Cleric.md:214`
+- `.references/srd-5.2.1/Classes/Druid.md:257`
+
+Current state:
+
+- Generated inventory classifies the two Meld into Stone class-list rows as
+  `needs-surface-widening` / `surface-widening-required`.
+- Existing Surface spell facts cannot represent Meld into Stone as one complete
+  SRD-provenance Spell Definition without losing its stone containment,
+  occupancy, perception, movement, damage, and forced-exit distinctions.
+
+Output:
+
+- Widen Surface so a Meld into Stone Spell Definition can represent the
+  self-only touch cast into a stone object or surface large enough to contain
+  the caster's body and equipment.
+- Represent hidden merged occupancy, blocked outside sight, nonmagical
+  undetectability, outside-sound Wisdom (Perception) Disadvantage, passage of
+  time awareness, self-spell permission, voluntary exit by spending 5 feet of
+  Movement where the caster entered, and the otherwise-no-movement restriction.
+- Assign table terrain/object occupancy ownership for stone size, shape,
+  material, entry location, damage/destruction/transmutation events,
+  fit-after-shape-change predicates, and closest-unoccupied-space placement.
+- Represent minor stone damage as harmless, partial destruction or shape change
+  that makes the caster no longer fit as 6d6 Force damage plus expulsion, and
+  complete destruction or transmutation as 50 Force damage plus expulsion.
+- Represent the Prone rider on expulsion without dispatching on spell id or name
+  in runtime behavior.
+- Author/admit the SRD-provenance Meld into Stone record only after typed
+  Surface and table terrain/object facts can preserve those RAW distinctions.
+
+Acceptance:
+
+- `meld_into_stone` has an SRD-provenance Surface Spell Definition or remains
+  explicitly classified with a narrower executable blocker.
+- The record does not omit stone containment, hidden occupancy, outside-sense
+  limits, self-spell permission, Movement-limited voluntary exit, destructive
+  expulsion damage, closest-unoccupied-space placement, or the Prone rider.
+- Runtime support, if added, dispatches on typed Surface/profile facts rather
+  than authored spell identity.
 
 Verification:
 
