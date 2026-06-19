@@ -41307,6 +41307,16 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-battle-runtime",
+          "owner": "future active wall-area Spell Effect and table/spatial/environment projectile owner",
+          "reason": "Wind Wall's represented battle behavior is closed outside the promoted battle-runtime boundary: a future active Spell Effect owner must carry the Concentration-owned wall occurrence, resolve the appearance-time Strength Saving Throw and Bludgeoning damage for creatures in the wall's area, project ordinary projectile deflection against targets behind the wall while preserving giant-hurled and siege-engine exceptions, keep fog, smoke, and other gases at bay, block creatures in gaseous form, and block Small-or-smaller flying creatures or objects from passing through. Table/spatial/environment ownership must supply the shaped continuous line geometry, height and thickness placement, area-membership witnesses, behind-wall target relation, projectile ordinariness/source classification, gas or fog overlap, gaseous-form movement attempt, object size and flight facts, and loose lightweight material movement rather than duplicating map, projectile, object, or weather state inside generic Spell Invocation reducers."
+        },
+        "reason": "Wind Wall is an SRD level-3 Spell Definition whose authored Surface record models Action Spell Slot casting, 120-foot point range, V/S/M fan-and-feather components, Concentration up to 1 minute, a point-origin shaped line wall up to 50 feet long, 15 feet high, and 1 foot thick, an initial Strength Saving Throw for creatures in the wall's area, 4d8 Bludgeoning damage with half damage on success, passive ordinary-projectile deflection with giant-hurled and siege-engine projectile exceptions, gas and gaseous-creature blocking, and Small-or-smaller flying creature/object passage blocking. No promoted battle-runtime profile is claimed because full support needs an active wall-area Spell Effect that carries the wall occurrence, Concentration expiry, caller-supplied continuous ground path identity, appearance-time area membership, initial save-damage resolution, behind-wall ordinary-projectile auto-miss projection, gas/fog boundary projection, gaseous-form passage denial, Small-or-smaller flying passage denial, and loose lightweight material movement without authored-identity dispatch.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "spell",

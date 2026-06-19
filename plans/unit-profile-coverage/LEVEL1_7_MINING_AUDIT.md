@@ -41,10 +41,10 @@ These counts describe the current runtime/catalog state of mined rows. They are 
 
 | Disposition | Rows |
 | --- | ---: |
-| catalog-authored-review-required | 50 |
+| catalog-authored-review-required | 49 |
 | catalog-installed-owner-evidence-present | 487 |
 | catalog-installed-owner-evidence-required | 4 |
-| catalog-only/dead-for-now | 184 |
+| catalog-only/dead-for-now | 185 |
 | level-5-7-follow-up-required | 24 |
 | missing-authored-record | 50 |
 | needs-surface-widening | 17 |
@@ -61,20 +61,20 @@ These counts describe the current runtime/catalog state of mined rows. They are 
 
 | Unit profile disposition | Rows |
 | --- | ---: |
-| not-recorded | 180 |
+| not-recorded | 179 |
 | profile-subset-supported | 53 |
 | supported-profile | 301 |
-| unsupported-profile | 366 |
+| unsupported-profile | 367 |
 
 ### Battle Readiness Snapshot
 
 | Battle readiness status | Rows |
 | --- | ---: |
 | accepted | 473 |
-| accepted-no-battle-effect | 229 |
+| accepted-no-battle-effect | 230 |
 | battle-runtime-required | 53 |
 | not-applicable | 77 |
-| owner-evidence-required | 51 |
+| owner-evidence-required | 50 |
 | surface-widening-required | 17 |
 
 ## Spell-Level 3-4 Pressure Summary
@@ -90,10 +90,10 @@ These counts separate class-list rows from unique Spell Definition identities. A
 
 | Disposition | Spell identities |
 | --- | ---: |
-| catalog-authored-review-required | 20 |
+| catalog-authored-review-required | 19 |
 | catalog-installed-owner-evidence-present | 8 |
 | catalog-installed-owner-evidence-required | 1 |
-| catalog-only/dead-for-now | 17 |
+| catalog-only/dead-for-now | 18 |
 | missing-authored-record | 23 |
 | needs-surface-widening | 7 |
 
@@ -142,7 +142,7 @@ These counts separate class-list rows from unique Spell Definition identities. A
 | `vampiric_touch` Vampiric Touch | spell-level-3 | Sorcerer, Warlock, Wizard | 3 | authored-record-present | not-installed | unsupported-profile | catalog-only/dead-for-now | accepted-no-battle-effect | outside-battle-runtime: future active touch-attack Spell Effect and linked damage-to-healing owner | Vampiric Touch's represented battle behavior is closed outside the promoted battle-runtime boundary: a future active Spell Effect owner must carry the Concentration-owned touch attack occurrence, retain slot-scaled Necrotic damage and spell attack facts for later Magic Action repeats, admit same-target or different-target creature choices within reach on each repeat, resolve damage, and apply caster self-healing equal to half the damage dealt. Table/spatial ownership must supply reach and target-legality witnesses rather than duplicating map or creature-position state inside generic Spell Invocation reducers. |
 | `water_breathing` Water Breathing | spell-level-3 | Druid, Sorcerer, Wizard | 3 | authored-record-present | not-installed | unsupported-profile | catalog-only/dead-for-now | accepted-no-battle-effect | outside-runtime-presentation-exploration: runtime-detached table/environment suffocation and underwater-breathing owner | Water Breathing supplies a table-facing breathing capability for willing targets, but promoted battle runtime does not own underwater environment membership, breath availability, hold-breath clocks, suffocation turn progression, or restoration cleanup for this spell. Those facts belong to a table/environment hazard owner rather than duplicate spell-local state. |
 | `water_walk` Water Walk | spell-level-3 | Cleric, Druid, Sorcerer | 3 | missing-authored-record | not-installed | not-recorded | missing-authored-record | battle-runtime-required | not-recorded | Author an SRD-provenance Surface record or explicitly close the row. |
-| `wind_wall` Wind Wall | spell-level-3 | Druid | 1 | authored-record-present | not-installed | not-recorded | catalog-authored-review-required | owner-evidence-required | not-recorded | Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this later-frontier spell row as accepted. |
+| `wind_wall` Wind Wall | spell-level-3 | Druid | 1 | authored-record-present | not-installed | unsupported-profile | catalog-only/dead-for-now | accepted-no-battle-effect | outside-battle-runtime: future active wall-area Spell Effect and table/spatial/environment projectile owner | Wind Wall's represented battle behavior is closed outside the promoted battle-runtime boundary: a future active Spell Effect owner must carry the Concentration-owned wall occurrence, resolve the appearance-time Strength Saving Throw and Bludgeoning damage for creatures in the wall's area, project ordinary projectile deflection against targets behind the wall while preserving giant-hurled and siege-engine exceptions, keep fog, smoke, and other gases at bay, block creatures in gaseous form, and block Small-or-smaller flying creatures or objects from passing through. Table/spatial/environment ownership must supply the shaped continuous line geometry, height and thickness placement, area-membership witnesses, behind-wall target relation, projectile ordinariness/source classification, gas or fog overlap, gaseous-form movement attempt, object size and flight facts, and loose lightweight material movement rather than duplicating map, projectile, object, or weather state inside generic Spell Invocation reducers. |
 | `arcane_eye` Arcane Eye | spell-level-4 | Wizard | 1 | authored-record-present | not-installed | not-recorded | catalog-authored-review-required | owner-evidence-required | not-recorded | Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this later-frontier spell row as accepted. |
 | `aura_of_life` Aura of Life | spell-level-4 | Cleric | 1 | authored-record-present | not-installed | not-recorded | catalog-authored-review-required | owner-evidence-required | not-recorded | Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this later-frontier spell row as accepted. |
 | `banishment` Banishment | spell-level-4 | Cleric, Sorcerer, Warlock, Wizard | 4 | authored-record-present | not-installed | not-recorded | catalog-authored-review-required | owner-evidence-required | not-recorded | Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this later-frontier spell row as accepted. |
@@ -588,7 +588,7 @@ These counts separate class-list rows from unique Spell Definition identities. A
 | Druid spell list Speak with Plants | spell-level-3 | spell-level | spell Unit pressure | `speak_with_plants` | `.references/srd-5.2.1/Classes/Druid.md:262` | present | not-installed | not-recorded | missing-authored-record | battle-runtime-required | not-recorded | Author an SRD-provenance Surface record or explicitly close the row. |
 | Druid spell list Water Breathing | spell-level-3 | spell-level | spell Unit pressure | `water_breathing` | `.references/srd-5.2.1/Classes/Druid.md:263` | present | not-installed | unsupported-profile | catalog-only/dead-for-now | accepted-no-battle-effect | outside-runtime-presentation-exploration: runtime-detached table/environment suffocation and underwater-breathing owner | Water Breathing supplies a table-facing breathing capability for willing targets, but promoted battle runtime does not own underwater environment membership, breath availability, hold-breath clocks, suffocation turn progression, or restoration cleanup for this spell. Those facts belong to a table/environment hazard owner rather than duplicate spell-local state. |
 | Druid spell list Water Walk | spell-level-3 | spell-level | spell Unit pressure | `water_walk` | `.references/srd-5.2.1/Classes/Druid.md:264` | present | not-installed | not-recorded | missing-authored-record | battle-runtime-required | not-recorded | Author an SRD-provenance Surface record or explicitly close the row. |
-| Druid spell list Wind Wall | spell-level-3 | spell-level | spell Unit pressure | `wind_wall` | `.references/srd-5.2.1/Classes/Druid.md:265` | present | not-installed | not-recorded | catalog-authored-review-required | owner-evidence-required | not-recorded | Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this later-frontier spell row as accepted. |
+| Druid spell list Wind Wall | spell-level-3 | spell-level | spell Unit pressure | `wind_wall` | `.references/srd-5.2.1/Classes/Druid.md:265` | present | not-installed | unsupported-profile | catalog-only/dead-for-now | accepted-no-battle-effect | outside-battle-runtime: future active wall-area Spell Effect and table/spatial/environment projectile owner | Wind Wall's represented battle behavior is closed outside the promoted battle-runtime boundary: a future active Spell Effect owner must carry the Concentration-owned wall occurrence, resolve the appearance-time Strength Saving Throw and Bludgeoning damage for creatures in the wall's area, project ordinary projectile deflection against targets behind the wall while preserving giant-hurled and siege-engine exceptions, keep fog, smoke, and other gases at bay, block creatures in gaseous form, and block Small-or-smaller flying creatures or objects from passing through. Table/spatial/environment ownership must supply the shaped continuous line geometry, height and thickness placement, area-membership witnesses, behind-wall target relation, projectile ordinariness/source classification, gas or fog overlap, gaseous-form movement attempt, object size and flight facts, and loose lightweight material movement rather than duplicating map, projectile, object, or weather state inside generic Spell Invocation reducers. |
 | Druid spell list Blight | spell-level-4 | spell-level | spell Unit pressure | `blight` | `.references/srd-5.2.1/Classes/Druid.md:271` | present | not-installed | not-recorded | catalog-authored-review-required | owner-evidence-required | not-recorded | Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this later-frontier spell row as accepted. |
 | Druid spell list Charm Monster | spell-level-4 | spell-level | spell Unit pressure | `charm_monster` | `.references/srd-5.2.1/Classes/Druid.md:272` | present | not-installed | not-recorded | catalog-authored-review-required | owner-evidence-required | not-recorded | Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this later-frontier spell row as accepted. |
 | Druid spell list Confusion | spell-level-4 | spell-level | spell Unit pressure | `confusion` | `.references/srd-5.2.1/Classes/Druid.md:273` | present | not-installed | not-recorded | missing-authored-record | battle-runtime-required | not-recorded | Author an SRD-provenance Surface record or explicitly close the row. |

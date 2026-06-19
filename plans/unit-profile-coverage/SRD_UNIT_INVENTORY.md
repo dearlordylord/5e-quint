@@ -96,14 +96,13 @@ This metric is a separate seed for level-4 class feature rows, including Ability
 
 This metric is a separate seed for spell-level-3 pressure only. It belongs to the later character-level-5 frontier for full casters and Warlock Pact Magic, with half-caster rows excluded until their own class tables grant matching slots. It does not affect Character Levels 1-2 or Character Levels 1-3 readiness denominators.
 
-- Accepted: 71/110 (64.5%)
+- Accepted: 72/110 (65.5%)
 
 #### Spell-Level-3 Battle Readiness by Status
 
 - accepted: 26
-- accepted-no-battle-effect: 45
+- accepted-no-battle-effect: 46
 - battle-runtime-required: 21
-- owner-evidence-required: 1
 - surface-widening-required: 17
 
 ### Spell-Level-4 Battle Readiness
@@ -207,10 +206,9 @@ This metric is a separate seed for spell-level-4 pressure only. It belongs to th
 
 ### Spell-Level-3 Unit Pressure by Disposition
 
-- catalog-authored-review-required: 1
 - catalog-installed-owner-evidence-present: 26
 - catalog-installed-owner-evidence-required: 3
-- catalog-only/dead-for-now: 45
+- catalog-only/dead-for-now: 46
 - missing-authored-record: 18
 - needs-surface-widening: 17
 
@@ -742,7 +740,7 @@ These batches are generated planning recommendations for a separate SRD inventor
 |Druid spell list Speak with Plants|spell Unit pressure|current-surface-can-express-source-facts|missing-authored-record|not-installed||missing-authored-record|battle-runtime-required|||Author an SRD-provenance Surface record or explicitly close the row.|.references/srd-5.2.1/Classes/Druid.md:262|
 |Druid spell list Water Breathing|spell Unit pressure|outside-surface-runtime-mechanics|authored-record-present|not-installed|unsupported-profile|catalog-only/dead-for-now|accepted-no-battle-effect|outside-runtime-presentation-exploration: runtime-detached table/environment suffocation and underwater-breathing owner||Water Breathing supplies a table-facing breathing capability for willing targets, but promoted battle runtime does not own underwater environment membership, breath availability, hold-breath clocks, suffocation turn progression, or restoration cleanup for this spell. Those facts belong to a table/environment hazard owner rather than duplicate spell-local state.|.references/srd-5.2.1/Classes/Druid.md:263|
 |Druid spell list Water Walk|spell Unit pressure|current-surface-can-express-source-facts|missing-authored-record|not-installed||missing-authored-record|battle-runtime-required|||Author an SRD-provenance Surface record or explicitly close the row.|.references/srd-5.2.1/Classes/Druid.md:264|
-|Druid spell list Wind Wall|spell Unit pressure|current-surface-can-express-source-facts|authored-record-present|not-installed||catalog-authored-review-required|owner-evidence-required|||Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this later-frontier spell row as accepted.|.references/srd-5.2.1/Classes/Druid.md:265|
+|Druid spell list Wind Wall|spell Unit pressure|outside-surface-runtime-mechanics|authored-record-present|not-installed|unsupported-profile|catalog-only/dead-for-now|accepted-no-battle-effect|outside-battle-runtime: future active wall-area Spell Effect and table/spatial/environment projectile owner||Wind Wall's represented battle behavior is closed outside the promoted battle-runtime boundary: a future active Spell Effect owner must carry the Concentration-owned wall occurrence, resolve the appearance-time Strength Saving Throw and Bludgeoning damage for creatures in the wall's area, project ordinary projectile deflection against targets behind the wall while preserving giant-hurled and siege-engine exceptions, keep fog, smoke, and other gases at bay, block creatures in gaseous form, and block Small-or-smaller flying creatures or objects from passing through. Table/spatial/environment ownership must supply the shaped continuous line geometry, height and thickness placement, area-membership witnesses, behind-wall target relation, projectile ordinariness/source classification, gas or fog overlap, gaseous-form movement attempt, object size and flight facts, and loose lightweight material movement rather than duplicating map, projectile, object, or weather state inside generic Spell Invocation reducers.|.references/srd-5.2.1/Classes/Druid.md:265|
 |Sorcerer spell list Blink|spell Unit pressure|current-surface-cannot-express-mechanics-yet|missing-authored-record|not-installed||needs-surface-widening|surface-widening-required|table-spatial-derivation: Surface Spell Definition plus table/spatial plane-position owner|Surface Spell Definition plus table/spatial plane-position owner: Surface widening required before owner evidence can be present|Widen Surface: Spell Definition planar blink occurrence: caster-turn-end d6 threshold needs an OngoingEffect random table to gate the transition to the Ethereal Plane; spell-ending when the caster is already on that plane needs a plane-occupancy predicate; and start-of-next-turn/spell-end return placement chooses a visible unoccupied space within 10 feet of the origin space or the nearest unoccupied space when none is available, requiring typed Surface/table-spatial ownership for return-position availability.|.references/srd-5.2.1/Classes/Sorcerer.md:300|
 |Sorcerer spell list Clairvoyance|spell Unit pressure|outside-surface-runtime-mechanics|authored-record-present|not-installed|unsupported-profile|catalog-only/dead-for-now|accepted-no-battle-effect|outside-runtime-presentation-exploration: runtime-detached table/perception and remote-sensor owner||Clairvoyance creates a table-placed remote sensor and remote perception channel. Promoted battle runtime does not own location familiarity, remote information disclosure, active sensor-sense presentation, observer visibility of the sensor, or autonomous sensor behavior, and must not treat the sensor as ordinary caster sight or a target-selection proxy.|.references/srd-5.2.1/Classes/Sorcerer.md:301|
 |Sorcerer spell list Counterspell|spell Unit pressure|current-surface-can-express-source-facts|authored-record-present|installed|supported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; battle-runtime spell invocation/projection: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Sorcerer.md:302|
