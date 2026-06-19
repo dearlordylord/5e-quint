@@ -73,7 +73,7 @@
     {
       "number": 12,
       "id": "L5-B12-WIND-WALL",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Close Wind Wall authored spell pressure"
     }
   ]
@@ -141,7 +141,7 @@ this lane; those are Lane C and Lane D.
 | 9 | L5-B09-SPIRIT-GUARDIANS - Close Spirit Guardians authored spell pressure | done | none | Closed outside the current promoted battle runtime active Emanation area-hazard Spell Effect and table/spatial membership boundary. |
 | 10 | L5-B10-STINKING-CLOUD - Close Stinking Cloud authored spell pressure | done | none | Closed outside the promoted battle-runtime active gas area-hazard Spell Effect and table/spatial air movement boundary. |
 | 11 | L5-B11-VAMPIRIC-TOUCH - Close Vampiric Touch authored spell pressure | done | none | Closed outside the promoted battle runtime active touch-attack Spell Effect and linked damage-to-healing owner. |
-| 12 | L5-B12-WIND-WALL - Close Wind Wall authored spell pressure | ready-for-research | none | Independent authored spell pressure row. |
+| 12 | L5-B12-WIND-WALL - Close Wind Wall authored spell pressure | done | none | Independent authored spell pressure row. |
 
 ## Shared Verification
 
@@ -679,7 +679,7 @@ Verification:
 
 ### Task 12 - L5-B12-WIND-WALL
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
