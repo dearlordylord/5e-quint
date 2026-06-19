@@ -58,7 +58,7 @@ module battleRuntimeTimedEffects {
   }
 
   pure def expireStartOfTurnEffectsForActiveActor(effects: Set[ActiveEffect]): Set[ActiveEffect] = {
-    val resetEffects = resetWebSavedThisTurnEffects(resetResistanceDamageReductions(effects))
+    val resetEffects = resetAreaHazardSavedThisTurnEffects(resetResistanceDamageReductions(effects))
     if (battleRuntimeOneRoundShieldArmorClassBonusExpiresAtStartOfNextTurn)
       resetEffects.exclude(Set(ShieldArmorClassBonus))
     else
@@ -66,7 +66,7 @@ module battleRuntimeTimedEffects {
   }
 
   pure def expireStartOfTurnEffectsForNonActiveActor(effects: Set[ActiveEffect], actor: Actor): Set[ActiveEffect] =
-    activeEffectsWithoutExpiredSapStartOfTurnRiders(resetWebSavedThisTurnEffects(effects), actor)
+    activeEffectsWithoutExpiredSapStartOfTurnRiders(resetAreaHazardSavedThisTurnEffects(effects), actor)
 
   pure def expireStartOfTurnSpellEffects(state: BattleState, nextActor: Actor): BattleState =
     match nextActor {
@@ -113,12 +113,16 @@ module battleRuntimeTimedEffects {
       | _ => effect
     })
 
-  pure def resetWebSavedThisTurnEffects(effects: Set[ActiveEffect]): Set[ActiveEffect] =
+  pure def resetAreaHazardSavedThisTurnEffects(effects: Set[ActiveEffect]): Set[ActiveEffect] =
     effects.map(effect => match effect {
       | WebRestraintHazard(data) => WebRestraintHazard({
           ...data,
           entrySavedThisTurn: Set(),
           startTurnSavedThisTurn: Set(),
+        })
+      | SleetStormAreaHazard(data) => SleetStormAreaHazard({
+          ...data,
+          savedThisTurn: Set(),
         })
       | _ => effect
     })
@@ -392,6 +396,13 @@ module battleRuntimeTimedEffects {
             entrySavedThisTurn: data.entrySavedThisTurn,
             startTurnSavedThisTurn: data.startTurnSavedThisTurn,
           })
+        | SleetStormAreaHazard(data) => SleetStormAreaHazard({
+            areaId: data.areaId,
+            radiusFeet: data.radiusFeet,
+            heightFeet: data.heightFeet,
+            durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
+            savedThisTurn: data.savedThisTurn,
+          })
         | WebRestrained(data) => WebRestrained({
             source: data.source,
             durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
@@ -458,6 +469,7 @@ module battleRuntimeTimedEffects {
         | FlamingSphere(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | MoonbeamMovableZone(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | WebRestraintHazard(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
+        | SleetStormAreaHazard(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | WebRestrained(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | HeatMetalObjectContactDamage(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | BardicInspirationDie(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)

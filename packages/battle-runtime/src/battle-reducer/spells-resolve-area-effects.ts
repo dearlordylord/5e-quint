@@ -2,12 +2,14 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spike-growth-movement-hazard
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-gust-of-wind-line
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-web-restraint-hazard
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-sleet-storm-area-hazard
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magical-darkness-point-origin
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-heightened-save-disadvantage
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.FOG_CLOUD_OBSCUREMENT_LIFECYCLE BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.MAGICAL_DARKNESS_POINT_ORIGIN_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE BATTLE.SPELL.GUST_OF_WIND_LINE_LIFECYCLE BATTLE.SPELL.SPIKE_GROWTH_MOVEMENT_HAZARD
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SLEET_STORM_AREA_HAZARD_LIFECYCLE
 import type {
   ActionSpellBattleResolutionInput,
   BattleMagicalDarknessAreaChoice,
@@ -26,6 +28,7 @@ import {
   applyGustOfWindLineCastEffect,
   applyMagicalDarknessPointOriginCastEffect,
   applyMoonbeamCastEffect,
+  applySleetStormAreaHazardCastEffect,
   applyWebRestraintHazardCastEffect,
 } from "./spells-active-effects.ts";
 import { spellSavingThrowOutcomeHole } from "./spells-damage-fills.ts";
@@ -38,9 +41,7 @@ import {
   validateSavingThrowOutcomes,
 } from "./spells-resolve-save-gates.ts";
 import type { SpellFillSet } from "./spells-resolve-fill-set.ts";
-import {
-  isTrackedOngoingSpellLightEmitter,
-} from "./antimagic-field-suppression.ts";
+import { isTrackedOngoingSpellLightEmitter } from "./antimagic-field-suppression.ts";
 import type { CharacterBattleMetamagicOptionFact } from "../character-battle-resources.ts";
 
 export function resolveFogCloudObscurementSpellAct(input: {
@@ -528,6 +529,79 @@ export function resolveWebRestraintHazardSpellAct(input: {
   };
 }
 
+export function resolveSleetStormAreaHazardSpellAct(input: {
+  readonly input: ActionSpellBattleResolutionInput;
+  readonly actorId: CombatantId;
+  readonly invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "sleetStormAreaHazard" }
+  >;
+  readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
+}): BattleResolutionResult {
+  if (
+    input.fillSet.targetId !== undefined ||
+    input.fillSet.objectTarget !== undefined ||
+    input.fillSet.targetAllocation !== undefined ||
+    input.fillSet.targetList !== undefined ||
+    input.fillSet.attackRoll !== undefined ||
+    input.fillSet.savingThrowOutcomes !== undefined ||
+    input.fillSet.skillChoice !== undefined ||
+    input.fillSet.targetAbilityChoices !== undefined ||
+    input.fillSet.abilityChoice !== undefined ||
+    input.fillSet.commandOptionChoice !== undefined ||
+    input.fillSet.damageTypeChoice !== undefined ||
+    input.fillSet.concentrationSavingThrows.length > 0 ||
+    input.fillSet.damageDispositions.length > 0 ||
+    input.fillSet.damageRoll !== undefined ||
+    input.fillSet.movement !== undefined ||
+    input.fillSet.spellDamageReductionRolls.length > 0 ||
+    input.fillSet.attackBurstDamageRoll !== undefined ||
+    input.fillSet.healingRoll !== undefined
+  ) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      "Sleet Storm uses one table-supplied cylinder area fill.",
+    );
+  }
+  if (input.fillSet.areaChoice === undefined) {
+    return needsHolesResult(input.input.state, input.input.subject, [
+      spellAreaChoiceHole(input.invocation),
+    ]);
+  }
+  if (
+    input.fillSet.areaChoice.kind !== "sleetStormCylinderArea" ||
+    input.fillSet.areaChoice.areaId.length === 0
+  ) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      "Sleet Storm area id must be a non-empty cylinder area.",
+    );
+  }
+
+  const resourced = spendSpellCastResources({
+    state: input.input.state,
+    actorId: input.actorId,
+    invocation: input.invocation,
+    errorState: input.input.state,
+  });
+  if (resourced.tag === "invalid") {
+    return resourced;
+  }
+  const nextState = applySleetStormAreaHazardCastEffect({
+    state: resourced.state,
+    actorId: input.actorId,
+    areaId: input.fillSet.areaChoice.areaId,
+    invocation: input.invocation,
+  });
+  return {
+    tag: "resolved",
+    state: nextState,
+    snapshot: snapshotBattle(nextState),
+  };
+}
+
 export function resolveGustOfWindLineSpellAct(input: {
   readonly input: ActionSpellBattleResolutionInput;
   readonly actorId: CombatantId;
@@ -679,7 +753,8 @@ export function resolveGustOfWindLineSpellAct(input: {
     actorId: input.actorId,
     area,
     invocation: input.invocation,
-    heightenedSpellTargetId: metamagicSelections.heightenedSpellTargetId ?? null,
+    heightenedSpellTargetId:
+      metamagicSelections.heightenedSpellTargetId ?? null,
   });
   return {
     tag: "resolved",

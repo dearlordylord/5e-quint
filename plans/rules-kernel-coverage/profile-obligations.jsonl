@@ -1,4 +1,5 @@
 {"profileId":"unit-feature.alternate-action-cost","obligationIds":["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"]}
+{"profileId":"spell.invocation-sleet-storm-area-hazard","obligationIds":["BATTLE.SPELL.SLEET_STORM_AREA_HAZARD_LIFECYCLE"]}
 {"profileId":"unit-feature.action-surge-resource","obligationIds":["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"]}
 {"profileId":"unit-feature.attack-action-attack-count-scaling","obligationIds":["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"]}
 {"profileId":"unit-feature.attack-damage-reduction-zero-damage-redirect","obligationIds":["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS","BATTLE.REACTION.OFFER_DECLINE_RESUME"]}

@@ -2,6 +2,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-self-transformation-mode spell.invocation-spell-created-held-object
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-dragons-breath-initial
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-web-restraint-hazard
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-sleet-storm-area-hazard
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spike-growth-movement-hazard
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magical-darkness-point-origin
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spiritual-weapon-attack-proxy
@@ -18,6 +19,7 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.DRAGONS_BREATH_INITIAL_EFFECT_STATE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.ACID_ARROW_ATTACK_TIMING
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE BATTLE.SPELL.ANTIMAGIC_FIELD_ONGOING_SUPPRESSION BATTLE.SPELL.SPIKE_GROWTH_MOVEMENT_HAZARD
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SLEET_STORM_AREA_HAZARD_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION
 // KERNEL-COVERAGE: runtime-owner BATTLE.PROTOCOL.CONCENTRATION_BREAK_TEARDOWN
 // KERNEL-COVERAGE: runtime-owner BATTLE.COMPOSITION.TURN_BOUNDARY_EFFECT_LIFECYCLE_ORDERING
@@ -241,7 +243,10 @@ export function applySpellActiveEffects(
   if (invocation.procedure !== "spellAttackDamage") {
     return state;
   }
-  if (invocation.postDamageRiders.length === 0 && invocation.laterDamage === null) {
+  if (
+    invocation.postDamageRiders.length === 0 &&
+    invocation.laterDamage === null
+  ) {
     return state;
   }
   const target = state.combatants.get(targetId);
@@ -262,26 +267,29 @@ export function applySpellActiveEffects(
         ];
   const activeEffects = invocation.postDamageRiders
     .filter(isSpellActiveEffectPostDamageRider)
-    .reduce((effects, rider): readonly BattleActiveEffect[] => {
-      const replacedEffects = effects.filter((effect) =>
-        spellPostDamageRiderReplacesActiveEffect(
-          rider,
-          effect,
-          invocation.spell.id,
-          actorId,
-        ),
-      );
-      return [
-        ...effects.filter((effect) => !replacedEffects.includes(effect)),
-        spellPostDamageRiderActiveEffect({
-          state,
-          actorId,
-          target,
-          spellId: invocation.spell.id,
-          rider,
-        }),
-      ];
-    }, [...target.activeEffects, ...laterDamageEffect]);
+    .reduce(
+      (effects, rider): readonly BattleActiveEffect[] => {
+        const replacedEffects = effects.filter((effect) =>
+          spellPostDamageRiderReplacesActiveEffect(
+            rider,
+            effect,
+            invocation.spell.id,
+            actorId,
+          ),
+        );
+        return [
+          ...effects.filter((effect) => !replacedEffects.includes(effect)),
+          spellPostDamageRiderActiveEffect({
+            state,
+            actorId,
+            target,
+            spellId: invocation.spell.id,
+            rider,
+          }),
+        ];
+      },
+      [...target.activeEffects, ...laterDamageEffect],
+    );
 
   return {
     ...state,
@@ -882,7 +890,23 @@ export function battleObscurementZones(
                       expiresAt: effect.expiresAt,
                     },
                   ]
-                : [],
+                : effect.kind === "sleetStormAreaHazard"
+                  ? [
+                      {
+                        kind: "spellObscurementZone",
+                        sourceSpellId: effect.sourceSpellId,
+                        sourceCombatantId: effect.sourceCombatantId,
+                        obscurement: "heavilyObscured",
+                        area: {
+                          kind: "pointOriginCylinder",
+                          areaId: effect.areaId,
+                          radiusFeet: effect.radiusFeet,
+                          heightFeet: effect.heightFeet,
+                        },
+                        expiresAt: effect.expiresAt,
+                      },
+                    ]
+                  : [],
       ),
   );
 }
@@ -1763,7 +1787,7 @@ export function applyGreaseGroundHazardCastEffects(input: {
   }
   return {
     ...input.state,
-    combatants: applyGreaseProneToCombatants(combatants, input.failedTargetIds),
+    combatants: applyProneToCombatants(combatants, input.failedTargetIds),
   };
 }
 
@@ -2150,6 +2174,52 @@ export function applyWebRestraintHazardCastEffect(input: {
   return { ...input.state, combatants };
 }
 
+export function applySleetStormAreaHazardCastEffect(input: {
+  readonly state: BattleState;
+  readonly actorId: CombatantId;
+  readonly areaId: BattleAreaId;
+  readonly invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "sleetStormAreaHazard" }
+  >;
+}): BattleState {
+  const combatants = new Map(input.state.combatants);
+  const caster = combatants.get(input.actorId);
+  if (caster === undefined) {
+    return input.state;
+  }
+  const replacing = caster.activeEffects.filter(
+    (effect) =>
+      effect.kind === "sleetStormAreaHazard" &&
+      effect.sourceSpellId === input.invocation.spell.id &&
+      effect.sourceCombatantId === input.actorId &&
+      effect.areaId === input.areaId,
+  );
+  const activeEffects = [
+    ...caster.activeEffects.filter((effect) => !replacing.includes(effect)),
+    {
+      kind: "sleetStormAreaHazard" as const,
+      sourceSpellId: input.invocation.spell.id,
+      sourceCombatantId: input.actorId,
+      areaId: input.areaId,
+      radiusFeet: input.invocation.targeting.radiusFeet,
+      heightFeet: input.invocation.targeting.heightFeet,
+      save: {
+        ability: input.invocation.ability,
+        dc: input.invocation.dc,
+      },
+      savedThisTurn: [],
+      expiresAt: {
+        kind: "concentration" as const,
+        combatantId: input.actorId,
+        durationTicks: input.invocation.durationTicks,
+      },
+    },
+  ];
+  combatants.set(input.actorId, { ...caster, activeEffects });
+  return { ...input.state, combatants };
+}
+
 export function applyGustOfWindLineCastEffect(input: {
   readonly state: BattleState;
   readonly actorId: CombatantId;
@@ -2273,6 +2343,30 @@ export function resetAllWebSavedThisTurn(
             ...effect,
             entrySavedThisTurn: [] as readonly CombatantId[],
             startTurnSavedThisTurn: [] as readonly CombatantId[],
+          }
+        : effect,
+    );
+    if (
+      activeEffects.some(
+        (effect, index) => effect !== combatant.activeEffects[index],
+      )
+    ) {
+      next.set(id, { ...combatant, activeEffects });
+    }
+  }
+  return next;
+}
+
+export function resetAllSleetStormSavedThisTurn(
+  combatants: ReadonlyMap<CombatantId, BattleCreatureState>,
+): ReadonlyMap<CombatantId, BattleCreatureState> {
+  const next = new Map(combatants);
+  for (const [id, combatant] of next) {
+    const activeEffects = combatant.activeEffects.map((effect) =>
+      effect.kind === "sleetStormAreaHazard" && effect.savedThisTurn.length > 0
+        ? {
+            ...effect,
+            savedThisTurn: [] as readonly CombatantId[],
           }
         : effect,
     );
@@ -2420,6 +2514,35 @@ export function markWebSavedThisTurn(
   };
 }
 
+export function markSleetStormAreaHazardSavedThisTurn(
+  state: BattleState,
+  targetId: CombatantId,
+  effect: Extract<
+    BattleActiveEffect,
+    { readonly kind: "sleetStormAreaHazard" }
+  >,
+): BattleState {
+  const caster = state.combatants.get(effect.sourceCombatantId);
+  if (caster === undefined || effect.savedThisTurn.includes(targetId)) {
+    return state;
+  }
+  const activeEffects = caster.activeEffects.map((current) =>
+    current === effect
+      ? {
+          ...current,
+          savedThisTurn: [...current.savedThisTurn, targetId],
+        }
+      : current,
+  );
+  return {
+    ...state,
+    combatants: new Map(state.combatants).set(effect.sourceCombatantId, {
+      ...caster,
+      activeEffects,
+    }),
+  };
+}
+
 export function applyWebRestrainedCondition(
   state: BattleState,
   targetId: CombatantId,
@@ -2497,12 +2620,27 @@ export function applyGreaseProneToTarget(
   state: BattleState,
   targetId: CombatantId,
 ): BattleState {
+  return applyProneToTarget(state, targetId);
+}
+
+export function applyProneToTarget(
+  state: BattleState,
+  targetId: CombatantId,
+): BattleState {
   return {
     ...state,
-    combatants: applyGreaseProneToCombatants(new Map(state.combatants), [
-      targetId,
-    ]),
+    combatants: applyProneToCombatants(new Map(state.combatants), [targetId]),
   };
+}
+
+export function applySleetStormAreaHazardFailedSaveEffect(
+  state: BattleState,
+  targetId: CombatantId,
+): BattleState {
+  return breakBattleConcentration(
+    applyProneToTarget(state, targetId),
+    targetId,
+  );
 }
 
 export function applyCommandPendingEffects(
@@ -2571,7 +2709,7 @@ export function applyCommandGrovelProneToTarget(
   };
 }
 
-function applyGreaseProneToCombatants(
+function applyProneToCombatants(
   combatants: Map<CombatantId, BattleCreatureState>,
   targetIds: readonly CombatantId[],
 ): Map<CombatantId, BattleCreatureState> {

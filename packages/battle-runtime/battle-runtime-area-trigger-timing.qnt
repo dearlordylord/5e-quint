@@ -1,6 +1,6 @@
 // -*- mode: Bluespec; -*-
 
-// KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE
+// KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE BATTLE.SPELL.SLEET_STORM_AREA_HAZARD_LIFECYCLE
 //
 // Reusable reducer-owned timing core for area and emanation triggers. The core
 // accepts table-supplied area-membership or movement witnesses as facts; it does
@@ -13,6 +13,8 @@
 //   save triggers.
 // - Spells/Descriptions-M-P.md lines 454-456: Moonbeam appears, moves into
 //   space, enters-area, and end-turn save triggers with once-per-turn limiting.
+// - Spells/Descriptions-S-Z.md lines 361-363: Sleet Storm first-entry and
+//   start-turn save triggers.
 // - Spells/Descriptions-S-Z.md lines 1269-1275: Web first-entry and start-turn
 //   save triggers.
 // - UBIQUITOUS_LANGUAGE.md entries for Turn, Boundary Crossing, and Movement.
@@ -29,7 +31,7 @@ module battleRuntimeAreaTriggerTiming {
   type AreaEffectTriggerProfile =
     | GreaseGroundHazardEveryTriggerProfile
     | FlamingSphereHazardEveryTriggerProfile
-    | WebRestraintFirstEntryAndStartTurnProfile({
+    | FirstEntryAndStartTurnProfile({
         entryResolvedThisTurn: bool,
         startTurnResolvedThisTurn: bool,
       })
@@ -39,7 +41,16 @@ module battleRuntimeAreaTriggerTiming {
     entryResolvedThisTurn: bool,
     startTurnResolvedThisTurn: bool,
   ): AreaEffectTriggerProfile =
-    WebRestraintFirstEntryAndStartTurnProfile({
+    FirstEntryAndStartTurnProfile({
+      entryResolvedThisTurn: entryResolvedThisTurn,
+      startTurnResolvedThisTurn: startTurnResolvedThisTurn,
+    })
+
+  pure def sleetStormFirstEntryAndStartTurnProfile(
+    entryResolvedThisTurn: bool,
+    startTurnResolvedThisTurn: bool,
+  ): AreaEffectTriggerProfile =
+    FirstEntryAndStartTurnProfile({
       entryResolvedThisTurn: entryResolvedThisTurn,
       startTurnResolvedThisTurn: startTurnResolvedThisTurn,
     })
@@ -60,7 +71,7 @@ module battleRuntimeAreaTriggerTiming {
           timing == CreatureEndsTurnInArea
       | FlamingSphereHazardEveryTriggerProfile =>
           timing == AreaMovesIntoSpace or timing == CreatureEndsTurnNearArea
-      | WebRestraintFirstEntryAndStartTurnProfile(_) =>
+      | FirstEntryAndStartTurnProfile(_) =>
           timing == CreatureEntersArea or timing == CreatureStartsTurnInArea
       | MoonbeamOnceAcrossQualifiedTriggersProfile(_) =>
           timing == AreaAppearsInSpace or
@@ -76,7 +87,7 @@ module battleRuntimeAreaTriggerTiming {
     match profile {
       | GreaseGroundHazardEveryTriggerProfile => false
       | FlamingSphereHazardEveryTriggerProfile => false
-      | WebRestraintFirstEntryAndStartTurnProfile(data) =>
+      | FirstEntryAndStartTurnProfile(data) =>
           if (timing == CreatureEntersArea)
             data.entryResolvedThisTurn
           else if (timing == CreatureStartsTurnInArea)

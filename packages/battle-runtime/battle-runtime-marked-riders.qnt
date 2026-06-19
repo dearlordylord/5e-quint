@@ -46,6 +46,7 @@ module battleRuntimeMarkedRiders {
       | FogCloudObscurement(_) => true
       | MagicalDarknessPointOrigin(_) => true
       | WebRestraintHazard(_) => true
+      | SleetStormAreaHazard(_) => true
       | HeatMetalObjectContactDamage(_) => true
       | SpikeGrowthMovementHazard(_) => true
       | DancingLightsEffect(_) => true

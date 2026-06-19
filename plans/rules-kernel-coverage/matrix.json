@@ -1,18 +1,18 @@
 {
   "summary": {
-    "total": 122,
-    "covered": 116,
+    "total": 123,
+    "covered": 117,
     "open": 0,
     "nonSemantic": 6,
     "byRuntime": {
       "shared-algebras": 1,
-      "battle": 91,
+      "battle": 92,
       "character-creation": 14,
       "character-sheet": 12,
       "character-battle": 4
     },
     "byStatus": {
-      "covered": 116,
+      "covered": 117,
       "needs-qnt-owner": 0,
       "needs-parity-witness": 0,
       "needs-surface-evidence": 0,
@@ -27,14 +27,14 @@
     "qntRegistry[]": "Derived from packages/**/*.qnt excluding .mbt.qnt drivers and *-tests.qnt files, qnt-owner-roles.jsonl, and checker-owned qntRegistryExemptions."
   },
   "battleHoleFrontierSummary": {
-    "total": 157,
+    "total": 158,
     "bySubject": {
-      "battle-hole-family": 75,
+      "battle-hole-family": 76,
       "battle-fill-kind": 46,
       "battle-subject-kind": 36
     },
     "byClassification": {
-      "semantic-frontier": 128,
+      "semantic-frontier": 129,
       "deterministic-boundary-projection": 0,
       "table-owned-fact": 29,
       "unsupported-dead-branch": 0
@@ -70,6 +70,47 @@
       "status": "covered",
       "surfaceEvidence": [],
       "title": "Battle movement, Stand/Drop Prone, Grapple/Escape/Release, and caller-supplied Opportunity Attack frontier facts"
+    },
+    {
+      "id": "BATTLE.SPELL.SLEET_STORM_AREA_HAZARD_LIFECYCLE",
+      "kind": "active-effect-lifecycle",
+      "parityWitnesses": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-sleet-storm-area-hazard.test.ts"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/sleet-storm-area-hazard.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-sleet-storm-area-hazard.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profiles": [
+        "spell.invocation-sleet-storm-area-hazard"
+      ],
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime-ground-command.qnt",
+        "packages/battle-runtime/battle-runtime-area-trigger-timing.qnt"
+      ],
+      "reason": "The promoted Sleet Storm runtime consumes caller-supplied area identity, movement facts, and entry/start-turn trigger subjects. Automatic geometry, pathfinding, area membership, and exposed-flame state are explicit table/environment boundaries.",
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/sleet-storm-area-hazard.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-area-effects.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts",
+        "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts",
+        "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
+        "packages/battle-runtime/src/battle-subjects.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Spells/Descriptions-S-Z.md#Sleet Storm",
+        "UBIQUITOUS_LANGUAGE.md#Movement",
+        "UBIQUITOUS_LANGUAGE.md#Conditions",
+        "UBIQUITOUS_LANGUAGE.md#Spellcasting"
+      ],
+      "title": "Battle Sleet Storm active Cylinder hazard projects Difficult Terrain and Heavily Obscured area facts, resolves entry/start-turn Prone and Concentration-loss saves, and cleans up on Concentration or duration end"
     },
     {
       "id": "BATTLE.SHOVE.OUTCOME_AND_PUSH_BOUNDARY",
@@ -4330,6 +4371,18 @@
       "subject": "battle-hole-family"
     },
     {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.SPELL.SLEET_STORM_AREA_HAZARD_LIFECYCLE",
+        "BATTLE.TABLE.HOLE_FACT_BOUNDARIES"
+      ],
+      "followUpTaskIds": [],
+      "holeKind": "savingThrowOutcome",
+      "id": "BattleSleetStormAreaHazardSavingThrowOutcomeHole",
+      "reason": "Sleet Storm Saving Throw outcomes consume table-triggered first-entry or start-turn area membership witnesses and drive reducer-owned Prone application, target Concentration loss, and per-trigger save ledger updates. Automatic geometry, pathfinding, area membership derivation, and exposed-flame state remain table/environment-owned boundary facts.",
+      "subject": "battle-hole-family"
+    },
+    {
       "classification": "table-owned-fact",
       "coveredByObligationIds": [
         "BATTLE.TABLE.HOLE_FACT_BOUNDARIES",
@@ -6189,6 +6242,12 @@
     },
     {
       "obligationIds": [
+        "BATTLE.SPELL.SLEET_STORM_AREA_HAZARD_LIFECYCLE"
+      ],
+      "profileId": "spell.invocation-sleet-storm-area-hazard"
+    },
+    {
+      "obligationIds": [
         "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
       ],
       "profileId": "unit-feature.action-surge-resource"
@@ -7178,6 +7237,7 @@
         "BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE",
         "BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE",
         "BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE",
+        "BATTLE.SPELL.SLEET_STORM_AREA_HAZARD_LIFECYCLE",
         "BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE"
       ],
       "ownerPath": "packages/battle-runtime/battle-runtime-area-trigger-timing.qnt",
@@ -7420,6 +7480,7 @@
         "BATTLE.SPELL.FOG_CLOUD_OBSCUREMENT_LIFECYCLE",
         "BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE",
         "BATTLE.SPELL.MAGICAL_DARKNESS_POINT_ORIGIN_LIFECYCLE",
+        "BATTLE.SPELL.SLEET_STORM_AREA_HAZARD_LIFECYCLE",
         "BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE"
       ],
       "ownerPath": "packages/battle-runtime/battle-runtime-ground-command.qnt",
@@ -10963,6 +11024,41 @@
         "import",
         "variant",
         "record",
+        "record-update",
+        "pure-def",
+        "constant-def",
+        "int",
+        "bool",
+        "if-expression",
+        "let-binding",
+        "arithmetic",
+        "comparison",
+        "boolean-connective",
+        "pattern-match",
+        "set",
+        "map",
+        "filter",
+        "fold",
+        "exists",
+        "set-operators",
+        "membership"
+      ],
+      "obligationId": "BATTLE.SPELL.SLEET_STORM_AREA_HAZARD_LIFECYCLE",
+      "proofOnly": [
+        "packages/battle-runtime/battle-runtime-ground-command-tests.qnt"
+      ],
+      "semanticCore": [
+        "packages/battle-runtime/battle-runtime-ground-command.qnt",
+        "packages/battle-runtime/battle-runtime-area-trigger-timing.qnt"
+      ],
+      "status": "generation-subset-clean"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [
+        "import",
+        "variant",
+        "record",
         "pure-def",
         "constant-def",
         "int",
@@ -14135,6 +14231,7 @@
     "spell.invocation-self-transformation-mode",
     "spell.invocation-sleep-repeat-save-lifecycle",
     "spell.invocation-sleep-target-admission",
+    "spell.invocation-sleet-storm-area-hazard",
     "spell.invocation-spell-created-held-object",
     "spell.invocation-spell-hosted-weapon-attack",
     "spell.invocation-spike-growth-movement-hazard",

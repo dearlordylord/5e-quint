@@ -293,13 +293,13 @@
     },
     "levelThreeSpellBattleReadiness": {
       "denominator": 110,
-      "numerator": 70,
-      "percent": "63.6%",
+      "numerator": 73,
+      "percent": "66.4%",
       "rowsByStatus": {
         "surface-widening-required": 17,
         "accepted-no-battle-effect": 48,
-        "accepted": 22,
-        "battle-runtime-required": 11,
+        "accepted": 25,
+        "battle-runtime-required": 8,
         "owner-evidence-required": 12
       }
     },
@@ -371,13 +371,13 @@
       "character-creation or progression mechanic": 12
     },
     "allRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 483,
+      "catalog-installed-owner-evidence-present": 486,
       "non-runtime": 84,
       "catalog-only/dead-for-now": 187,
       "level-5-7-follow-up-required": 24,
       "needs-surface-widening": 17,
       "missing-authored-record": 37,
-      "catalog-installed-owner-evidence-required": 7,
+      "catalog-installed-owner-evidence-required": 4,
       "catalog-authored-review-required": 61
     },
     "spellPressureRowsByDisposition": {
@@ -387,15 +387,15 @@
     "levelThreeSpellPressureRowsByDisposition": {
       "needs-surface-widening": 17,
       "catalog-only/dead-for-now": 48,
-      "catalog-installed-owner-evidence-present": 22,
+      "catalog-installed-owner-evidence-present": 25,
       "missing-authored-record": 5,
-      "catalog-installed-owner-evidence-required": 6,
+      "catalog-installed-owner-evidence-required": 3,
       "catalog-authored-review-required": 12
     },
     "levelThreeInstalledSpellPressureRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 22,
+      "catalog-installed-owner-evidence-present": 25,
       "catalog-only/dead-for-now": 20,
-      "catalog-installed-owner-evidence-required": 6
+      "catalog-installed-owner-evidence-required": 3
     },
     "levelFourSpellPressureRowsByDisposition": {
       "catalog-authored-review-required": 49,
@@ -16976,8 +16976,14 @@
         "state": "installed",
         "unitId": "sleet_storm"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "unitProfileDisposition": "profile-subset-supported",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "deferred-mechanics",
+        "kind": "profile-subset-remaining-mechanics-closed",
+        "owner": "shared table/spatial area geometry and pathfinding owner; future object/environment exposed-flame state owner",
+        "reason": "The promoted Sleet Storm owner consumes explicit area identity, movement facts, and first-entry/start-turn area-membership trigger facts. It does not infer position, path crossing, or Cylinder membership from map geometry.; The current battle runtime has no represented exposed-flame object or environmental flame state to douse. Sleet Storm admission verifies the Surface exposed-flame operation but keeps execution detached until that owner exists."
+      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -16985,13 +16991,13 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "battle-runtime spell invocation/projection plus table/spatial and exposed-flame owners",
-          "evidence": "Promote follow-up split L3-FOLLOWUP-SLEET-STORM-AREA-HAZARD-RUNTIME: L3-FOLLOWUP-SLEET-STORM-AREA-HAZARD-RUNTIME owns Promote Sleet Storm as a Concentration-owned Cylinder area hazard with caller-supplied area identity, first-entry-on-a-turn and turn-start Dexterity Saving Throw triggers, Difficult Terrain and Heavily Obscured projections, failed-save Prone application, failed-save Concentration loss, and a runtime-detached exposed-flame dousing split. Required output: Supported-profile or profile-subset-supported Sleet Storm claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the area hazard while preserving table-owned area membership, pathfinding, and exposed-flame state.",
-          "status": "owner evidence required"
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L3-FOLLOWUP-SLEET-STORM-AREA-HAZARD-RUNTIME at packages/battle-runtime/src/unit-profile-admission-sleet-storm-area-hazard.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Promote follow-up split L3-FOLLOWUP-SLEET-STORM-AREA-HAZARD-RUNTIME: L3-FOLLOWUP-SLEET-STORM-AREA-HAZARD-RUNTIME owns Promote Sleet Storm as a Concentration-owned Cylinder area hazard with caller-supplied area identity, first-entry-on-a-turn and turn-start Dexterity Saving Throw triggers, Difficult Terrain and Heavily Obscured projections, failed-save Prone application, failed-save Concentration loss, and a runtime-detached exposed-flame dousing split. Required output: Supported-profile or profile-subset-supported Sleet Storm claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the area hazard while preserving table-owned area membership, pathfinding, and exposed-flame state.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/druid:spell-level-3:spell-unit-pressure:druid_spell_list_speak_with_plants",
@@ -30981,8 +30987,14 @@
         "state": "installed",
         "unitId": "sleet_storm"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "unitProfileDisposition": "profile-subset-supported",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "deferred-mechanics",
+        "kind": "profile-subset-remaining-mechanics-closed",
+        "owner": "shared table/spatial area geometry and pathfinding owner; future object/environment exposed-flame state owner",
+        "reason": "The promoted Sleet Storm owner consumes explicit area identity, movement facts, and first-entry/start-turn area-membership trigger facts. It does not infer position, path crossing, or Cylinder membership from map geometry.; The current battle runtime has no represented exposed-flame object or environmental flame state to douse. Sleet Storm admission verifies the Surface exposed-flame operation but keeps execution detached until that owner exists."
+      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -30990,13 +31002,13 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "battle-runtime spell invocation/projection plus table/spatial and exposed-flame owners",
-          "evidence": "Promote follow-up split L3-FOLLOWUP-SLEET-STORM-AREA-HAZARD-RUNTIME: L3-FOLLOWUP-SLEET-STORM-AREA-HAZARD-RUNTIME owns Promote Sleet Storm as a Concentration-owned Cylinder area hazard with caller-supplied area identity, first-entry-on-a-turn and turn-start Dexterity Saving Throw triggers, Difficult Terrain and Heavily Obscured projections, failed-save Prone application, failed-save Concentration loss, and a runtime-detached exposed-flame dousing split. Required output: Supported-profile or profile-subset-supported Sleet Storm claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the area hazard while preserving table-owned area membership, pathfinding, and exposed-flame state.",
-          "status": "owner evidence required"
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L3-FOLLOWUP-SLEET-STORM-AREA-HAZARD-RUNTIME at packages/battle-runtime/src/unit-profile-admission-sleet-storm-area-hazard.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Promote follow-up split L3-FOLLOWUP-SLEET-STORM-AREA-HAZARD-RUNTIME: L3-FOLLOWUP-SLEET-STORM-AREA-HAZARD-RUNTIME owns Promote Sleet Storm as a Concentration-owned Cylinder area hazard with caller-supplied area identity, first-entry-on-a-turn and turn-start Dexterity Saving Throw triggers, Difficult Terrain and Heavily Obscured projections, failed-save Prone application, failed-save Concentration loss, and a runtime-detached exposed-flame dousing split. Required output: Supported-profile or profile-subset-supported Sleet Storm claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the area hazard while preserving table-owned area membership, pathfinding, and exposed-flame state.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_slow",
@@ -39999,8 +40011,14 @@
         "state": "installed",
         "unitId": "sleet_storm"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "unitProfileDisposition": "profile-subset-supported",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "deferred-mechanics",
+        "kind": "profile-subset-remaining-mechanics-closed",
+        "owner": "shared table/spatial area geometry and pathfinding owner; future object/environment exposed-flame state owner",
+        "reason": "The promoted Sleet Storm owner consumes explicit area identity, movement facts, and first-entry/start-turn area-membership trigger facts. It does not infer position, path crossing, or Cylinder membership from map geometry.; The current battle runtime has no represented exposed-flame object or environmental flame state to douse. Sleet Storm admission verifies the Surface exposed-flame operation but keeps execution detached until that owner exists."
+      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -40008,13 +40026,13 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "battle-runtime spell invocation/projection plus table/spatial and exposed-flame owners",
-          "evidence": "Promote follow-up split L3-FOLLOWUP-SLEET-STORM-AREA-HAZARD-RUNTIME: L3-FOLLOWUP-SLEET-STORM-AREA-HAZARD-RUNTIME owns Promote Sleet Storm as a Concentration-owned Cylinder area hazard with caller-supplied area identity, first-entry-on-a-turn and turn-start Dexterity Saving Throw triggers, Difficult Terrain and Heavily Obscured projections, failed-save Prone application, failed-save Concentration loss, and a runtime-detached exposed-flame dousing split. Required output: Supported-profile or profile-subset-supported Sleet Storm claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the area hazard while preserving table-owned area membership, pathfinding, and exposed-flame state.",
-          "status": "owner evidence required"
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L3-FOLLOWUP-SLEET-STORM-AREA-HAZARD-RUNTIME at packages/battle-runtime/src/unit-profile-admission-sleet-storm-area-hazard.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Promote follow-up split L3-FOLLOWUP-SLEET-STORM-AREA-HAZARD-RUNTIME: L3-FOLLOWUP-SLEET-STORM-AREA-HAZARD-RUNTIME owns Promote Sleet Storm as a Concentration-owned Cylinder area hazard with caller-supplied area identity, first-entry-on-a-turn and turn-start Dexterity Saving Throw triggers, Difficult Terrain and Heavily Obscured projections, failed-save Prone application, failed-save Concentration loss, and a runtime-detached exposed-flame dousing split. Required output: Supported-profile or profile-subset-supported Sleet Storm claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the area hazard while preserving table-owned area membership, pathfinding, and exposed-flame state.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_slow",

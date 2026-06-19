@@ -810,6 +810,7 @@ function resolveSpellActInternal(
       invocation.procedure === "magicalDarknessPointOrigin" ||
       invocation.procedure === "antimagicFieldOngoingSpellSuppression" ||
       invocation.procedure === "webRestraintHazard" ||
+      invocation.procedure === "sleetStormAreaHazard" ||
       invocation.procedure === "gustOfWindLine" ||
       invocation.procedure === "flamingSphere" ||
       invocation.procedure === "moonbeam" ||

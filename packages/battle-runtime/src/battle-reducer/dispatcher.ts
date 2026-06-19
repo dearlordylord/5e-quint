@@ -4,7 +4,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.druid-wild-shape-known-form spell.invocation-warding-bond-linked-effect
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spell-created-held-object
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-object-contact-damage
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-web-restraint-hazard spell.invocation-spike-growth-movement-hazard
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-web-restraint-hazard spell.invocation-spike-growth-movement-hazard spell.invocation-sleet-storm-area-hazard
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-levitated-creature
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-dragons-breath-granted-action
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-antimagic-field-action-interdiction
@@ -330,6 +330,7 @@ import {
   resolveMoonbeamRepositionCommand,
   resolveMoonbeamSaveCommand,
   resolveGreaseGroundHazardSaveCommand,
+  resolveSleetStormAreaHazardSaveCommand,
   resolveWebAreaRemovedCommand,
   resolveWebRestrainedNoLongerInAreaCommand,
   resolveWebRestraintSaveCommand,
@@ -1324,6 +1325,16 @@ export function resolveBattleSubjectInternal(
       subject.command === "webRestraintSave"
     ) {
       return resolveWebRestraintSaveCommand({
+        ...input,
+        subject,
+        handledInterruptTrigger: options.handledInterruptTrigger,
+      });
+    }
+    if (
+      subject.tag === "runtimeCommand" &&
+      subject.command === "sleetStormAreaHazardSave"
+    ) {
+      return resolveSleetStormAreaHazardSaveCommand({
         ...input,
         subject,
         handledInterruptTrigger: options.handledInterruptTrigger,

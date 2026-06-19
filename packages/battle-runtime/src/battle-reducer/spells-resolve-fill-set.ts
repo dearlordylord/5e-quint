@@ -782,6 +782,7 @@ export function spellFillSet(
         invocation.procedure !== "flamingSphere" &&
         invocation.procedure !== "spikeGrowthMovementHazard" &&
         invocation.procedure !== "moonbeam" &&
+        invocation.procedure !== "sleetStormAreaHazard" &&
         invocation.procedure !== "webRestraintHazard"
       ) {
         return {
@@ -1706,8 +1707,8 @@ export function spellFillSetContainsOnlySpellCastReactionFacts(
       (attackSequencePartFill) =>
         attackSequencePartFill.target === undefined &&
         attackSequencePartFill.attackRoll === undefined &&
-        attackSequencePartFill
-          .remarkableAthleteCriticalHitMovementDecision === undefined &&
+        attackSequencePartFill.remarkableAthleteCriticalHitMovementDecision ===
+          undefined &&
         attackSequencePartFill.remarkableAthleteCriticalHitMovement ===
           undefined &&
         attackSequencePartFill.mirrorImageDuplicateRoll === undefined &&
@@ -1879,7 +1880,7 @@ function isTargetAbilityChoicesRollModifierInvocation(
   return invocation.procedure === "rollModifier"
     ? invocation.abilityChoices !== null &&
         rollModifierUsesTargetAbilityChoices(invocation)
-      : false;
+    : false;
 }
 
 function isRollModifierInvocation(

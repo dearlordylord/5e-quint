@@ -49,6 +49,7 @@
     "test:mbt:see-invisibility-observer-sight": "vitest run src/see-invisibility-observer-sight.mbt.test.ts",
     "test:mbt:self-teleport-lifecycle": "vitest run src/self-teleport-lifecycle.mbt.test.ts",
     "test:mbt:self-transformation-mode-lifecycle": "vitest run src/self-transformation-mode-lifecycle.mbt.test.ts",
+    "test:mbt:sleet-storm-area-hazard": "vitest run src/sleet-storm-area-hazard.mbt.test.ts",
     "test:mbt:spell-created-held-object-lifecycle": "vitest run src/spell-created-held-object-lifecycle.mbt.test.ts",
     "test:mbt:spell-sequencing-integration": "vitest run src/spell-sequencing-integration.mbt.test.ts",
     "test:mbt:spike-growth-movement-hazard": "vitest run src/spike-growth-movement-hazard.mbt.test.ts",

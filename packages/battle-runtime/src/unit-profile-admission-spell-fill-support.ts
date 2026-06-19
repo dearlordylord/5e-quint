@@ -6,7 +6,12 @@ import {
 } from "@dnd/shared/types";
 import type { Ability, Size } from "@dnd/surface/surface/types";
 import { expect } from "vitest";
-import type { SupportedDamageSpellInvocation } from "./battle-reducer.ts";
+import {
+  sleetStormAreaHazardSavingThrowOutcomeHole,
+  type BattleActiveEffect,
+  type BattleSleetStormAreaHazardTrigger,
+  type SupportedDamageSpellInvocation,
+} from "./battle-reducer.ts";
 import {
   battleAreaId,
   battleObjectId,
@@ -41,6 +46,8 @@ import {
   gustOfWindEastDirectionId,
   gustOfWindNorthDirectionId,
   moonbeamAreaId,
+  sleetStormAreaId,
+  sleetStormUnitId,
   spikeGrowthAreaId,
   resistanceUnitId,
   spellCasterId,
@@ -49,6 +56,11 @@ import {
   webAreaId,
 } from "./unit-profile-admission-catalog-support.ts";
 import { requireCombatant } from "./unit-profile-admission-creature-fixture-support.ts";
+
+type SleetStormAreaHazardEffect = Extract<
+  BattleActiveEffect,
+  { readonly kind: "sleetStormAreaHazard" }
+>;
 
 export function spellAct(input: {
   readonly state: BattleState;
@@ -643,8 +655,7 @@ export function spellDistantTouchedObjectTargetFill(input: {
     { readonly kind: "spellDistantTouchedObjectTarget" }
   >["rangeFeet"];
 }): ObjectTargetChoiceFill {
-  const objectId =
-    input.objectId ?? battleObjectId("distant-touched-object");
+  const objectId = input.objectId ?? battleObjectId("distant-touched-object");
   return {
     kind: "objectTargetChoice",
     holeId: input.hole.holeId,
@@ -766,18 +777,16 @@ export function savingThrowOutcomeFill(
   };
 }
 
-function d20TestSavingThrowOutcomeValue(
-  outcome: {
-    readonly targetId: CombatantId;
-    readonly succeeded: boolean;
-    readonly naturalD20?: number;
-    readonly withoutRoll?: true;
-    readonly d20TestNaturalOneReroll?: Extract<
-      BattleFill,
-      { readonly kind: "savingThrowOutcome" }
-    >["value"]["outcomes"][number]["d20TestNaturalOneReroll"];
-  },
-): Extract<
+function d20TestSavingThrowOutcomeValue(outcome: {
+  readonly targetId: CombatantId;
+  readonly succeeded: boolean;
+  readonly naturalD20?: number;
+  readonly withoutRoll?: true;
+  readonly d20TestNaturalOneReroll?: Extract<
+    BattleFill,
+    { readonly kind: "savingThrowOutcome" }
+  >["value"]["outcomes"][number]["d20TestNaturalOneReroll"];
+}): Extract<
   BattleFill,
   { readonly kind: "savingThrowOutcome" }
 >["value"]["outcomes"][number] {
@@ -1000,6 +1009,17 @@ export function moonbeamAreaFill(
   };
 }
 
+export function sleetStormAreaFill(
+  hole: Extract<BattleHole, { readonly kind: "spellAreaChoice" }>,
+  areaId = sleetStormAreaId,
+): Extract<BattleFill, { readonly kind: "spellAreaChoice" }> {
+  return {
+    kind: "spellAreaChoice",
+    holeId: hole.holeId,
+    value: { kind: "sleetStormCylinderArea", areaId },
+  };
+}
+
 export function webAreaFill(
   hole: Extract<BattleHole, { readonly kind: "spellAreaChoice" }>,
   areaId = webAreaId,
@@ -1170,6 +1190,76 @@ export function webRestraintSaveAct(
     throw new Error(`Expected Web ${trigger} save act.`);
   }
   return act;
+}
+
+export function sleetStormAreaHazardSaveAct(
+  state: BattleState,
+  actorId: CombatantId,
+  trigger: BattleSleetStormAreaHazardTrigger,
+): AvailableBattleAct & {
+  readonly subject: Extract<
+    BattleSubject,
+    {
+      readonly tag: "runtimeCommand";
+      readonly command: "sleetStormAreaHazardSave";
+    }
+  >;
+} {
+  const effect = activeSleetStormAreaHazardEffect(state);
+  if (effect === undefined) {
+    throw new Error("Expected active Sleet Storm area hazard.");
+  }
+  const subject: Extract<
+    BattleSubject,
+    {
+      readonly tag: "runtimeCommand";
+      readonly command: "sleetStormAreaHazardSave";
+    }
+  > = {
+    tag: "runtimeCommand",
+    actorId,
+    command: "sleetStormAreaHazardSave",
+    areaMembershipTrigger: {
+      kind:
+        trigger === "entersArea" ? "firstEntryOnTurn" : "turnStartInArea",
+      sourceCombatantId: effect.sourceCombatantId,
+      sourceSpellId: spellId(effect.sourceSpellId),
+      areaId: effect.areaId,
+    },
+  };
+  return {
+    subject,
+    label:
+      trigger === "entersArea"
+        ? "Enter Sleet Storm"
+        : "Start Turn in Sleet Storm",
+    summary:
+      trigger === "entersArea"
+        ? "Resolve the caller-supplied first-entry Sleet Storm Dexterity Saving Throw."
+        : "Resolve the caller-supplied start-turn Sleet Storm Dexterity Saving Throw.",
+    initialHoles: [
+      sleetStormAreaHazardSavingThrowOutcomeHole(
+        state,
+        actorId,
+        effect,
+        trigger,
+      ),
+    ],
+  };
+}
+
+function activeSleetStormAreaHazardEffect(
+  state: BattleState,
+): SleetStormAreaHazardEffect | undefined {
+  return [...state.combatants.values()]
+    .flatMap((combatant) => combatant.activeEffects)
+    .find(
+      (effect): effect is SleetStormAreaHazardEffect =>
+        effect.kind === "sleetStormAreaHazard" &&
+        effect.sourceCombatantId === spellCasterId &&
+        effect.sourceSpellId === sleetStormUnitId &&
+        effect.areaId === sleetStormAreaId,
+    );
 }
 
 export function webRestrainedNoLongerInAreaAct(

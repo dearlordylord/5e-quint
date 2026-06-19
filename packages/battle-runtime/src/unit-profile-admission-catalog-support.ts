@@ -310,6 +310,8 @@ export const moonbeamUnitId = "moonbeam";
 
 export const webUnitId = "web";
 
+export const sleetStormUnitId = "sleet_storm";
+
 export const guidingBoltUnitId = "guiding_bolt";
 
 export const guidanceUnitId = "guidance";
@@ -442,6 +444,8 @@ export const spikeGrowthAreaId = battleAreaId("unit-profile-spike-growth-area");
 export const moonbeamAreaId = battleAreaId("unit-profile-moonbeam-area");
 
 export const webAreaId = battleAreaId("unit-profile-web-area");
+
+export const sleetStormAreaId = battleAreaId("unit-profile-sleet-storm-area");
 
 export const gustOfWindAreaId = battleAreaId(
   "unit-profile-gust-of-wind-line-area",

@@ -9,6 +9,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-damage-dice-reroll
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-acid-arrow-attack-timing
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.d20-test-natural-one-reroll
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-sleet-storm-area-hazard
 // KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_SEEKING_SPELL_ATTACK_REROLL BATTLE.FEATURE.METAMAGIC_EMPOWERED_DAMAGE_DICE_REROLL
 // Extracted from ../battle-reducer.ts; this module owns Effect Schema values,
 // while domain types remain exported by the reducer facade.
@@ -1642,6 +1643,17 @@ export const BattleHoleSchema = Schema.Union(
     ...BattleHoleBaseSchema,
     kind: Schema.Literal("savingThrowOutcome"),
     label: Schema.String,
+    sleetStormAreaHazard: BattleRuntimeObjectSchema,
+    ability: Schema.Literal("dex"),
+    dc: DcSourceSchema,
+    areaChoices: Schema.Array(BattleRuntimeObjectSchema),
+    targetRollModes: Schema.Array(BattleSavingThrowRollModeProjectionSchema),
+    targetFlatBonuses: Schema.Array(BattleSavingThrowFlatBonusProjectionSchema),
+  }),
+  Schema.Struct({
+    ...BattleHoleBaseSchema,
+    kind: Schema.Literal("savingThrowOutcome"),
+    label: Schema.String,
     gustOfWindLine: BattleRuntimeObjectSchema,
     ability: Schema.Literal("str"),
     dc: DcSourceSchema,
@@ -2614,6 +2626,10 @@ type BattleFillEncoded =
             readonly areaId: string;
           }
         | {
+            readonly kind: "sleetStormCylinderArea";
+            readonly areaId: string;
+          }
+        | {
             readonly kind: "flamingSphereArea";
             readonly areaId: string;
           }
@@ -3082,6 +3098,12 @@ type BattleFillEncoded =
               }
             | {
                 readonly kind: "webAreaHazard";
+                readonly sourceCombatantId: string;
+                readonly sourceSpellId: string;
+                readonly areaId: string;
+              }
+            | {
+                readonly kind: "sleetStormHazard";
                 readonly sourceCombatantId: string;
                 readonly sourceSpellId: string;
                 readonly areaId: string;
@@ -3570,6 +3592,10 @@ export const BattleFillSchema: Schema.Schema<
           areaId: BattleAreaId,
         }),
         Schema.Struct({
+          kind: Schema.Literal("sleetStormCylinderArea"),
+          areaId: BattleAreaId,
+        }),
+        Schema.Struct({
           kind: Schema.Literal("flamingSphereArea"),
           areaId: BattleAreaId,
         }),
@@ -3913,6 +3939,12 @@ export const BattleFillSchema: Schema.Schema<
                 }),
                 Schema.Struct({
                   kind: Schema.Literal("webAreaHazard"),
+                  sourceCombatantId: CombatantId,
+                  sourceSpellId: Schema.String,
+                  areaId: BattleAreaId,
+                }),
+                Schema.Struct({
+                  kind: Schema.Literal("sleetStormHazard"),
                   sourceCombatantId: CombatantId,
                   sourceSpellId: Schema.String,
                   areaId: BattleAreaId,
@@ -4585,6 +4617,13 @@ const BattlePointOriginSphereAreaSchema = Schema.Struct({
   radiusFeet: MovementFeet,
 });
 
+const BattlePointOriginCylinderAreaSchema = Schema.Struct({
+  kind: Schema.Literal("pointOriginCylinder"),
+  areaId: BattleAreaId,
+  radiusFeet: MovementFeet,
+  heightFeet: MovementFeet,
+});
+
 const BattleConcentrationExpirationSchema = Schema.Struct({
   kind: Schema.Literal("concentration"),
   combatantId: CombatantId,
@@ -4599,6 +4638,7 @@ const BattleObscurementZoneSchema = Schema.Union(
     obscurement: Schema.Literal("lightlyObscured", "heavilyObscured"),
     area: Schema.Union(
       BattlePointOriginSphereAreaSchema,
+      BattlePointOriginCylinderAreaSchema,
       Schema.Struct({
         kind: Schema.Literal("pointOriginCube"),
         areaId: BattleAreaId,

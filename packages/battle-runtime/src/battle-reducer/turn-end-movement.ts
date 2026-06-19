@@ -7,6 +7,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-gust-of-wind-line
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-object-contact-damage
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-web-restraint-hazard
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-sleet-storm-area-hazard
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-acid-arrow-attack-timing
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-d20-lifecycle
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-levitated-creature
@@ -15,7 +16,7 @@
 // RAW-COVERAGE: runtime-owner RAW-QCORE7-MOVEMENT-GRAPPLE-001 RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-QCORE9-UNIT-FEATURE-PROFILES-001 RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
 // KERNEL-COVERAGE: runtime-owner BATTLE.DAMAGE.DEATH_SAVING_THROW_LIFECYCLE BATTLE.COMMAND.OPTION_AND_NEXT_TURN BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE BATTLE.SPELL.SLEEP_REPEAT_SAVE_LIFECYCLE BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE BATTLE.SPELL.LEVITATED_CREATURE_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE
-// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE BATTLE.SPELL.HEAT_METAL_OBJECT_CONTACT_LIFECYCLE BATTLE.SPELL.GUST_OF_WIND_LINE_LIFECYCLE BATTLE.SPELL.SPIKE_GROWTH_MOVEMENT_HAZARD
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE BATTLE.SPELL.HEAT_METAL_OBJECT_CONTACT_LIFECYCLE BATTLE.SPELL.GUST_OF_WIND_LINE_LIFECYCLE BATTLE.SPELL.SPIKE_GROWTH_MOVEMENT_HAZARD BATTLE.SPELL.SLEET_STORM_AREA_HAZARD_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE
@@ -66,6 +67,7 @@ import {
 } from "@dnd/shared/types";
 
 import {
+  type BattleSleetStormAreaMembershipTrigger,
   type BattleMovementSpeedKind,
   type BattleSubject,
 } from "../battle-subjects.ts";
@@ -198,12 +200,15 @@ import {
   applyWebRestrainedCondition,
   expireBattleLightEmitters,
   addMoonbeamShapeShiftSuppression,
+  applySleetStormAreaHazardFailedSaveEffect,
   markWebSavedThisTurn,
+  markSleetStormAreaHazardSavedThisTurn,
   markMoonbeamSavedThisTurn,
   removeMoonbeamShapeShiftSuppression,
   removeWebRestrainedCondition,
   replaceGustOfWindLineDirection,
   resetAllMoonbeamSavedThisTurn,
+  resetAllSleetStormSavedThisTurn,
   resetAllWebSavedThisTurn,
   tickDurationBattleLightEmitters,
 } from "./spells-active-effects.ts";
@@ -251,6 +256,8 @@ import type {
   BattleGrappleDragMovementFact,
   BattleGreaseGroundHazardSavingThrowOutcomeHole,
   BattleSpikeGrowthMovementDamageRollHole,
+  BattleSleetStormAreaHazardSavingThrowOutcomeHole,
+  BattleSleetStormAreaHazardTrigger,
   BattleWebRestraintSavingThrowOutcomeHole,
   BattleWebRestraintTrigger,
   BattleHideousLaughterRepeatSavingThrowOutcomeHole,
@@ -452,8 +459,11 @@ export function resolveEndTurn(
   const combatantsAfterWebSaveReset = resetAllWebSavedThisTurn(
     combatantsAfterMoonbeamReset,
   );
-  const combatantsAfterStartTurnEffects = applyStartOfTurnActiveEffects(
+  const combatantsAfterSleetStormSaveReset = resetAllSleetStormSavedThisTurn(
     combatantsAfterWebSaveReset,
+  );
+  const combatantsAfterStartTurnEffects = applyStartOfTurnActiveEffects(
+    combatantsAfterSleetStormSaveReset,
     nextActorId,
   );
   const combatantsAfterSpellTurnStartDamage = applyStartTurnSpellDamageFills(
@@ -1171,6 +1181,10 @@ export type GreaseGroundHazardEffect = Extract<
 export type WebRestraintHazardEffect = Extract<
   BattleActiveEffect,
   { readonly kind: "webRestraintHazard" }
+>;
+export type SleetStormAreaHazardEffect = Extract<
+  BattleActiveEffect,
+  { readonly kind: "sleetStormAreaHazard" }
 >;
 export type FlamingSphereEffect = Extract<
   BattleActiveEffect,
@@ -2247,6 +2261,213 @@ export function resolveWebRestraintSaveCommand(
     !outcome.succeeded && nextEffect !== undefined
       ? applyWebRestrainedCondition(marked, input.subject.actorId, nextEffect)
       : marked;
+  return {
+    tag: "resolved",
+    state: nextState,
+    snapshot: snapshotBattle(nextState),
+  };
+}
+
+function sleetStormAreaHazardEffectFor(
+  state: BattleState,
+  subject: Extract<
+    BattleSubject,
+    {
+      readonly tag: "runtimeCommand";
+      readonly command: "sleetStormAreaHazardSave";
+    }
+  >,
+): SleetStormAreaHazardEffect | undefined {
+  const source = state.combatants.get(
+    subject.areaMembershipTrigger.sourceCombatantId,
+  );
+  return source?.activeEffects.find(
+    (effect): effect is SleetStormAreaHazardEffect =>
+      effect.kind === "sleetStormAreaHazard" &&
+      effect.sourceSpellId === subject.areaMembershipTrigger.sourceSpellId &&
+      effect.sourceCombatantId ===
+        subject.areaMembershipTrigger.sourceCombatantId &&
+      effect.areaId === subject.areaMembershipTrigger.areaId,
+  );
+}
+
+const bySleetStormAreaMembershipTriggerKind = Match.discriminator("kind");
+
+function sleetStormAreaHazardTriggerFromMembershipFact(
+  trigger: BattleSleetStormAreaMembershipTrigger,
+): BattleSleetStormAreaHazardTrigger {
+  return Match.value(trigger).pipe(
+    bySleetStormAreaMembershipTriggerKind(
+      "firstEntryOnTurn",
+      () => "entersArea" as const,
+    ),
+    bySleetStormAreaMembershipTriggerKind(
+      "turnStartInArea",
+      () => "startsTurnInArea" as const,
+    ),
+    Match.exhaustive,
+  );
+}
+
+export function sleetStormAreaHazardSavingThrowOutcomeHole(
+  state: BattleState,
+  targetId: CombatantId,
+  effect: SleetStormAreaHazardEffect,
+  trigger: BattleSleetStormAreaHazardTrigger,
+): BattleSleetStormAreaHazardSavingThrowOutcomeHole {
+  const key = `battle:sleet-storm-area-hazard-save:${targetId}:${effect.sourceCombatantId}:${effect.sourceSpellId}:${effect.areaId}:${trigger}`;
+  return {
+    kind: "savingThrowOutcome",
+    holeId: holeId(key),
+    holeInstanceKey: holeInstanceKey(key),
+    label: `${effect.sourceSpellId} ${trigger === "entersArea" ? "entry" : "start-turn"} DEX save`,
+    sleetStormAreaHazard: {
+      targetId,
+      sourceSpellId: effect.sourceSpellId,
+      sourceCombatantId: effect.sourceCombatantId,
+      areaId: effect.areaId,
+      trigger,
+      save: effect.save,
+    },
+    ability: effect.save.ability,
+    dc: effect.save.dc,
+    areaChoices: [],
+    targetRollModes: savingThrowRollModeProjections(
+      state,
+      effect.save.ability,
+    ).filter((projection) => projection.targetId === targetId),
+    targetFlatBonuses: savingThrowFlatBonusProjections(state).filter(
+      (projection) => projection.targetId === targetId,
+    ),
+  };
+}
+
+function validateSleetStormAreaHazardSavingThrowOutcome(
+  value: BattleSavingThrowOutcomeValue,
+  targetId: CombatantId,
+): string | null {
+  if ("area" in value) {
+    return "Sleet Storm Saving Throw outcome must not include area facts.";
+  }
+  return value.outcomes.length === 1 && value.outcomes[0]?.targetId === targetId
+    ? null
+    : "Sleet Storm Saving Throw outcome must match the triggering target.";
+}
+
+function sleetStormAreaHazardSaveAlreadyResolved(
+  effect: SleetStormAreaHazardEffect,
+  targetId: CombatantId,
+): boolean {
+  return effect.savedThisTurn.includes(targetId);
+}
+
+export function resolveSleetStormAreaHazardSaveCommand(
+  input: BattleResolutionInput & {
+    readonly subject: Extract<
+      BattleSubject,
+      {
+        readonly tag: "runtimeCommand";
+        readonly command: "sleetStormAreaHazardSave";
+      }
+    >;
+    readonly handledInterruptTrigger?: BattleInterruptTrigger | undefined;
+  },
+): BattleResolutionResult {
+  if (
+    input.fills.some((fill) => fill.kind !== "savingThrowOutcome") ||
+    input.fills.length > 1
+  ) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Sleet Storm save accepts exactly one Saving Throw outcome fill.",
+    );
+  }
+  const effect = sleetStormAreaHazardEffectFor(input.state, input.subject);
+  if (
+    effect === undefined ||
+    !input.state.combatants.has(input.subject.actorId)
+  ) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Sleet Storm save is no longer available.",
+    );
+  }
+  const trigger = sleetStormAreaHazardTriggerFromMembershipFact(
+    input.subject.areaMembershipTrigger,
+  );
+  if (
+    sleetStormAreaHazardSaveAlreadyResolved(
+      effect,
+      input.subject.actorId,
+    )
+  ) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Sleet Storm save was already resolved for this target this turn.",
+    );
+  }
+  const hole = sleetStormAreaHazardSavingThrowOutcomeHole(
+    input.state,
+    input.subject.actorId,
+    effect,
+    trigger,
+  );
+  const [savingThrowFill] = input.fills;
+  if (savingThrowFill === undefined) {
+    return needsHolesResult(input.state, input.subject, [hole]);
+  }
+  if (savingThrowFill.kind !== "savingThrowOutcome") {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Sleet Storm save requires a Saving Throw outcome fill.",
+    );
+  }
+  if (savingThrowFill.holeId !== hole.holeId) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Sleet Storm save requires the matching Saving Throw outcome fill.",
+    );
+  }
+  const validation = validateSleetStormAreaHazardSavingThrowOutcome(
+    savingThrowFill.value,
+    input.subject.actorId,
+  );
+  if (validation !== null) {
+    return invalidResult(input.state, "invalidFill", validation);
+  }
+  const outcome = savingThrowFill.value.outcomes[0]!;
+  if (!outcome.succeeded) {
+    const saveFailedReactionWindow = maybeOpenInterruptWindow(
+      input.state,
+      {
+        trigger: "saveFailed",
+        targetId: input.subject.actorId,
+        sourceSpellId: effect.sourceSpellId,
+        continuation: {
+          kind: "replay",
+          subject: input.subject,
+          fills: input.fills,
+        },
+      },
+      input.handledInterruptTrigger,
+    );
+    if (saveFailedReactionWindow !== null) {
+      return saveFailedReactionWindow;
+    }
+  }
+  const marked = markSleetStormAreaHazardSavedThisTurn(
+    input.state,
+    input.subject.actorId,
+    effect,
+  );
+  const nextState = outcome.succeeded
+    ? marked
+    : applySleetStormAreaHazardFailedSaveEffect(marked, input.subject.actorId);
   return {
     tag: "resolved",
     state: nextState,
@@ -5338,12 +5559,10 @@ export function resolveEndTurnCommand(
     const fill = spellTurnEndDamageRollFor(input.fills, request.hole);
     return fill === undefined ? [] : [fill];
   });
-  const endTurnDamageRollRequests = endTurnDamageRequests.flatMap(
-    (request) => {
-      const roll = spellTurnEndDamageRollFor(input.fills, request.hole);
-      return roll === undefined ? [] : [{ ...request, roll }];
-    },
-  );
+  const endTurnDamageRollRequests = endTurnDamageRequests.flatMap((request) => {
+    const roll = spellTurnEndDamageRollFor(input.fills, request.hole);
+    return roll === undefined ? [] : [{ ...request, roll }];
+  });
   const missingEndTurnDamageHoles = endTurnDamageRequests.flatMap((request) =>
     spellTurnEndDamageRollFor(input.fills, request.hole) === undefined
       ? [request.hole]
@@ -5376,9 +5595,7 @@ export function resolveEndTurnCommand(
     ]);
   }
   const turnBoundaryDamageHoleIds = new Set<BattleHoleId>(
-    [...endTurnDamageHoles, ...startTurnDamageHoles].map(
-      (hole) => hole.holeId,
-    ),
+    [...endTurnDamageHoles, ...startTurnDamageHoles].map((hole) => hole.holeId),
   );
   if (
     input.fills.some(
@@ -5765,7 +5982,8 @@ export function resolveEndTurnCommand(
     );
   }
   if (
-    concentrationSavingThrowFills.length !== turnBoundaryConcentrationHoles.length
+    concentrationSavingThrowFills.length !==
+    turnBoundaryConcentrationHoles.length
   ) {
     return invalidResult(
       input.state,
@@ -6923,6 +7141,17 @@ function activeAreaDifficultTerrainSourceMatches(
         ) === true,
     ),
     byAreaDifficultTerrainSourceKind(
+      "sleetStormHazard",
+      (terrainSource) =>
+        sourceCombatant?.activeEffects.some(
+          (effect) =>
+            effect.kind === "sleetStormAreaHazard" &&
+            effect.sourceCombatantId === terrainSource.sourceCombatantId &&
+            effect.sourceSpellId === terrainSource.sourceSpellId &&
+            effect.areaId === terrainSource.areaId,
+        ) === true,
+    ),
+    byAreaDifficultTerrainSourceKind(
       "spikeGrowthHazard",
       (terrainSource) =>
         sourceCombatant?.activeEffects.some(
@@ -7277,10 +7506,13 @@ function validateMovementCostFacts(
     return "Area movement-cost facts must agree on total Movement distance.";
   }
   if (
-    allCosts.slice(1).some(
-      (cost) =>
-        Number(cost.totalDistanceFeet) !== Number(firstCost.totalDistanceFeet),
-    )
+    allCosts
+      .slice(1)
+      .some(
+        (cost) =>
+          Number(cost.totalDistanceFeet) !==
+          Number(firstCost.totalDistanceFeet),
+      )
   ) {
     return "Movement-cost facts must agree on total Movement distance.";
   }
@@ -7292,10 +7524,7 @@ function validateMovementCostFacts(
   }
   const expectedCostFeet = movementFeet(
     Number(firstCost.totalDistanceFeet) +
-      allCosts.reduce(
-        (total, cost) => total + Number(cost.extraCostFeet),
-        0,
-      ),
+      allCosts.reduce((total, cost) => total + Number(cost.extraCostFeet), 0),
   );
   if (Number(value.movementCostFeet) === Number(expectedCostFeet)) {
     return null;
@@ -7355,10 +7584,7 @@ function validateGrappleDragMovementFact(
   const seenTargets = new Set<CombatantId>();
   let extraCostFeet = 0;
   for (const target of fact.targets) {
-    if (
-      !Number.isInteger(target.distanceFeet) ||
-      target.distanceFeet <= 0
-    ) {
+    if (!Number.isInteger(target.distanceFeet) || target.distanceFeet <= 0) {
       return {
         tag: "invalid",
         message: "Grapple drag target distance must be a positive integer.",
@@ -7395,8 +7621,7 @@ function validateGrappleDragMovementFact(
     if (grappler === undefined || draggedTarget === undefined) {
       return {
         tag: "invalid",
-        message:
-          "Grapple drag movement fact references a stale Grapple link.",
+        message: "Grapple drag movement fact references a stale Grapple link.",
       };
     }
     if (!grappleTargetExemptFromDragCost(grappler, draggedTarget)) {

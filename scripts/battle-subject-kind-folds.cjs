@@ -67,6 +67,7 @@ function runtimeCommandSubjectKind(discriminatorValue) {
       return "runtimeLinkRelease";
     case "greaseGroundHazardSave":
     case "webRestraintSave":
+    case "sleetStormAreaHazardSave":
     case "gustOfWindLineSave":
     case "movableZoneSave":
     case "moonbeamCylinderExit":
@@ -261,11 +262,7 @@ function extractBattleSubjectKindCases(rootPath) {
     if (discriminator === undefined) {
       cases.push({
         tag,
-        subjectKind: subjectKindFromDiscriminators(
-          tag,
-          undefined,
-          undefined,
-        ),
+        subjectKind: subjectKindFromDiscriminators(tag, undefined, undefined),
       });
       return;
     }
