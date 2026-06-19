@@ -27,16 +27,16 @@
     "qntRegistry[]": "Derived from packages/**/*.qnt excluding .mbt.qnt drivers and *-tests.qnt files, qnt-owner-roles.jsonl, and checker-owned qntRegistryExemptions."
   },
   "battleHoleFrontierSummary": {
-    "total": 157,
+    "total": 160,
     "bySubject": {
-      "battle-hole-family": 75,
-      "battle-fill-kind": 46,
+      "battle-hole-family": 77,
+      "battle-fill-kind": 47,
       "battle-subject-kind": 36
     },
     "byClassification": {
-      "semantic-frontier": 128,
+      "semantic-frontier": 129,
       "deterministic-boundary-projection": 0,
-      "table-owned-fact": 29,
+      "table-owned-fact": 31,
       "unsupported-dead-branch": 0
     }
   },
@@ -216,7 +216,8 @@
         "packages/battle-runtime/battle-runtime-fighter-ongoing-features.qnt",
         "packages/shared-algebras/proofs/rule-core/action-turn-procedures.qnt",
         "packages/shared-algebras/proofs/rule-core/attack-action-additional-attacks.qnt",
-        "packages/battle-runtime/battle-runtime-slow-fall.qnt"
+        "packages/battle-runtime/battle-runtime-slow-fall.qnt",
+        "packages/battle-runtime/battle-runtime-cunning-strike.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -6178,6 +6179,39 @@
       "reason": "BattleSubject kind vocabulary is covered by BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY: QNT subject-kind leaf vocabulary and the runtime projection contract test join this schema discriminant to the battle protocol registry. Procedure ordering, interrupt resume, replay, and reducer semantics remain covered by separate obligations.",
       "subject": "battle-subject-kind",
       "subjectKind": "runtimeAreaEffect"
+    },
+    {
+      "classification": "table-owned-fact",
+      "coveredByObligationIds": [
+        "BATTLE.TABLE.HOLE_FACT_BOUNDARIES"
+      ],
+      "followUpTaskIds": [],
+      "holeKind": "toolPossessionFacts",
+      "id": "BattleToolPossessionFactsHole",
+      "reason": "Tool possession facts are caller/table inventory evidence consumed by Cunning Strike Poison. The reducer owns the Poison option consequences through the feature procedure profile, while equipment location derivation remains boundary state.",
+      "subject": "battle-hole-family"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "followUpTaskIds": [],
+      "holeKind": "savingThrowOutcome",
+      "id": "BattleUnitFeatureConditionEndTurnSavingThrowOutcomeHole",
+      "reason": "Feature-owned end-turn condition Saving Throw outcomes decide whether a supported Unit feature condition persists or is removed. Cunning Strike Poison uses this lifecycle through the feature procedure obligation rather than adding spell-owned repeat-save state.",
+      "subject": "battle-hole-family"
+    },
+    {
+      "classification": "table-owned-fact",
+      "coveredByObligationIds": [
+        "BATTLE.TABLE.HOLE_FACT_BOUNDARIES"
+      ],
+      "fillKind": "toolPossessionFacts",
+      "followUpTaskIds": [],
+      "id": "toolPossessionFacts",
+      "reason": "Tool possession fills are caller/table inventory facts consumed by supported feature procedures such as Cunning Strike Poison; durable equipment ownership and on-person derivation remain outside reducer state.",
+      "subject": "battle-fill-kind"
     }
   ],
   "profileObligations": [
@@ -7396,6 +7430,14 @@
       ],
       "ownerPath": "packages/battle-runtime/battle-runtime-ground-command-tests.qnt",
       "role": "mbt-fixture"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-cunning-strike.qnt is the focused Cunning Strike literal projection proof for Sneak Attack die-cost timing, level-5 option effect shapes, effective-size Trip gating, Poison repeat-save lifecycle facts, and Withdraw no-Opportunity-Attack movement.",
+      "obligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-cunning-strike.qnt",
+      "role": "proof-only"
     },
     {
       "evidence": "packages/battle-runtime/battle-runtime-rogue-steady-aim.mbt.qnt is the focused Steady Aim literal projection witness for Bonus Action spend, movement rejection, next-attack Advantage, Speed 0, and end-turn cleanup.",
@@ -9448,6 +9490,11 @@
       "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-creature-type-protection.qnt",
       "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-cunning-strike.qnt",
+      "role": "proof-only"
     },
     {
       "classification": "qnt-owner-role",
@@ -14164,6 +14211,7 @@
     "unit-feature.bonus-action-delegated-standard-actions",
     "unit-feature.bonus-action-ongoing-rage",
     "unit-feature.creature-space-movement-permission",
+    "unit-feature.cunning-strike",
     "unit-feature.d20-test-natural-one-reroll",
     "unit-feature.druid-wild-shape-known-form",
     "unit-feature.enemy-zero-hit-point-temporary-hit-points",

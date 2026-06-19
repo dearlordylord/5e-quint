@@ -1,0 +1,93 @@
+{
+  "acquiredAtLevel": 5,
+  "className": "rogue",
+  "description": "When you deal Sneak Attack damage, forgo one Sneak Attack die to add one Cunning Strike effect.",
+  "id": "rogue_cunning_strike",
+  "kind": "class_feature",
+  "mechanics": {
+    "choice": {
+      "kind": "choose_one",
+      "maxOptions": 1
+    },
+    "effectSaveDc": {
+      "ability": "dex",
+      "base": 8,
+      "kind": "class_feature_ability_save_dc"
+    },
+    "family": "cunning_strike",
+    "options": [
+      {
+        "cost": {
+          "dice": 1,
+          "dieSize": 6,
+          "kind": "sneak_attack_damage_dice"
+        },
+        "id": "poison",
+        "onFail": {
+          "condition": "poisoned",
+          "duration": {
+            "amount": 1,
+            "unit": "minute"
+          },
+          "kind": "apply_condition",
+          "repeatSave": {
+            "cadence": "end_of_target_turn",
+            "onSuccess": "end_condition"
+          }
+        },
+        "requires": {
+          "equipment": {
+            "kind": "tool",
+            "toolId": "poisoners_kit"
+          },
+          "kind": "equipment_on_person"
+        },
+        "save": {
+          "ability": "con"
+        }
+      },
+      {
+        "cost": {
+          "dice": 1,
+          "dieSize": 6,
+          "kind": "sneak_attack_damage_dice"
+        },
+        "id": "trip",
+        "onFail": {
+          "condition": "prone",
+          "kind": "apply_condition"
+        },
+        "save": {
+          "ability": "dex"
+        },
+        "target": {
+          "maxSize": "large"
+        }
+      },
+      {
+        "cost": {
+          "dice": 1,
+          "dieSize": 6,
+          "kind": "sneak_attack_damage_dice"
+        },
+        "id": "withdraw",
+        "movement": {
+          "distance": {
+            "kind": "half_speed"
+          },
+          "opportunityAttacks": "does_not_provoke",
+          "timing": "immediately_after_attack"
+        }
+      }
+    ],
+    "trigger": {
+      "kind": "deal_sneak_attack_damage",
+      "sourceUnitId": "rogue_sneak_attack"
+    }
+  },
+  "name": "Cunning Strike",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Classes/Rogue.md:95-150"
+  }
+}

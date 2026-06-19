@@ -284,6 +284,19 @@ export function traceClassFeatureMechanics(
       });
       return [stunningId];
     }
+    case "cunning_strike": {
+      const cunningId = ids("cunning-strike");
+      nodes.push({
+        id: cunningId,
+        category: "procedure",
+        atomKind: "cunning_strike",
+        label:
+          `cunning_strike\n${m.trigger.kind}:${m.trigger.sourceUnitId}\n` +
+          `${m.effectSaveDc.ability} save DC\n` +
+          m.options.map((option) => option.id).join(" | "),
+      });
+      return [cunningId];
+    }
     case "sacred_weapon": {
       const sacredWeaponId = ids("sacred-weapon");
       nodes.push({

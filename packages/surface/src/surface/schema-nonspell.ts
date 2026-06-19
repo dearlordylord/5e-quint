@@ -1259,6 +1259,92 @@ export const StunningStrikeMechanicsSchema = strictStruct({
   }),
 });
 
+const CunningStrikeDieCostSchema = strictStruct({
+  kind: Schema.Literal("sneak_attack_damage_dice"),
+  dice: Schema.Literal(1),
+  dieSize: Schema.Literal(6),
+});
+
+const CUNNING_STRIKE_POISON_OPTION_SELECTION_ID = "poison";
+const CUNNING_STRIKE_TRIP_OPTION_SELECTION_ID = "trip";
+const CUNNING_STRIKE_WITHDRAW_OPTION_SELECTION_ID = "withdraw";
+
+export const CUNNING_STRIKE_OPTION_SELECTION_IDS = [
+  CUNNING_STRIKE_POISON_OPTION_SELECTION_ID,
+  CUNNING_STRIKE_TRIP_OPTION_SELECTION_ID,
+  CUNNING_STRIKE_WITHDRAW_OPTION_SELECTION_ID,
+] as const;
+
+export const CunningStrikeMechanicsSchema = strictStruct({
+  family: Schema.Literal("cunning_strike"),
+  trigger: strictStruct({
+    kind: Schema.Literal("deal_sneak_attack_damage"),
+    sourceUnitId: Schema.Literal("rogue_sneak_attack"),
+  }),
+  choice: strictStruct({
+    kind: Schema.Literal("choose_one"),
+    maxOptions: Schema.Literal(1),
+  }),
+  effectSaveDc: strictStruct({
+    kind: Schema.Literal("class_feature_ability_save_dc"),
+    base: Schema.Literal(8),
+    ability: Schema.Literal("dex"),
+  }),
+  options: Schema.Tuple(
+    strictStruct({
+      id: Schema.Literal(CUNNING_STRIKE_POISON_OPTION_SELECTION_ID),
+      cost: CunningStrikeDieCostSchema,
+      requires: strictStruct({
+        kind: Schema.Literal("equipment_on_person"),
+        equipment: strictStruct({
+          kind: Schema.Literal("tool"),
+          toolId: Schema.Literal("poisoners_kit"),
+        }),
+      }),
+      save: strictStruct({
+        ability: Schema.Literal("con"),
+      }),
+      onFail: strictStruct({
+        kind: Schema.Literal("apply_condition"),
+        condition: Schema.Literal("poisoned"),
+        duration: strictStruct({
+          amount: Schema.Literal(1),
+          unit: Schema.Literal("minute"),
+        }),
+        repeatSave: strictStruct({
+          cadence: Schema.Literal("end_of_target_turn"),
+          onSuccess: Schema.Literal("end_condition"),
+        }),
+      }),
+    }),
+    strictStruct({
+      id: Schema.Literal(CUNNING_STRIKE_TRIP_OPTION_SELECTION_ID),
+      cost: CunningStrikeDieCostSchema,
+      target: strictStruct({
+        maxSize: Schema.Literal("large"),
+      }),
+      save: strictStruct({
+        ability: Schema.Literal("dex"),
+      }),
+      onFail: strictStruct({
+        kind: Schema.Literal("apply_condition"),
+        condition: Schema.Literal("prone"),
+      }),
+    }),
+    strictStruct({
+      id: Schema.Literal(CUNNING_STRIKE_WITHDRAW_OPTION_SELECTION_ID),
+      cost: CunningStrikeDieCostSchema,
+      movement: strictStruct({
+        timing: Schema.Literal("immediately_after_attack"),
+        distance: strictStruct({
+          kind: Schema.Literal("half_speed"),
+        }),
+        opportunityAttacks: Schema.Literal("does_not_provoke"),
+      }),
+    }),
+  ),
+});
+
 export const SacredWeaponMechanicsSchema = strictStruct({
   family: Schema.Literal("sacred_weapon"),
   activationCost: strictStruct({
@@ -1416,6 +1502,7 @@ export const ClassFeatureMechanicsSchema = Schema.Union(
   RemarkableAthleteMechanicsSchema,
   OpenHandTechniqueMechanicsSchema,
   StunningStrikeMechanicsSchema,
+  CunningStrikeMechanicsSchema,
   SacredWeaponMechanicsSchema,
   HuntersPreyMechanicsSchema,
   SteadyAimMechanicsSchema,
@@ -1477,6 +1564,7 @@ export const RangerClassFeatureMechanicsSchema = Schema.Union(
 
 export const RogueClassFeatureMechanicsSchema = Schema.Union(
   ClassGeneralFeatureMechanicsSchema,
+  CunningStrikeMechanicsSchema,
   SteadyAimMechanicsSchema,
 );
 

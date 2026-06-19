@@ -121,6 +121,7 @@ import { tickDurationEffects } from "./battle-reducer/turn-end-movement.ts";
 import { combatantCanSee } from "./battle-reducer/creature-state-leaves.ts";
 import { requiredAbilityCheckRollMode } from "./battle-reducer/hole-helpers.ts";
 import { applyWeaponMasterySapOnHit } from "./battle-reducer/attack-roll.ts";
+import { battleCunningStrikeSupportForUnit } from "./unit-feature-support.ts";
 import {
   holeId,
   holeInstanceKey,
@@ -539,6 +540,24 @@ export function sneakAttackUnitRefs(): Extract<
     {
       unitId: "rogue_sneak_attack",
       supportProfiles: [ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE],
+    },
+  ];
+}
+
+export function cunningStrikeUnitRefs(): Extract<
+  BattleCreatureInit["creatureInit"],
+  { readonly kind: "character" }
+>["characterUnitRefs"] {
+  const unit = rogueCunningStrikeUnit();
+  const support = battleCunningStrikeSupportForUnit(unit);
+  if (support === null || support === "unsupported") {
+    throw new Error("Expected Cunning Strike support profile.");
+  }
+  return [
+    ...sneakAttackUnitRefs(),
+    {
+      unitId: unit.id,
+      supportProfiles: [support],
     },
   ];
 }
@@ -2039,6 +2058,10 @@ export function damageRollFillWithGroups(
     BattleFill,
     { readonly kind: "rolledDice" }
   >["attackDamageAbilityModifierChoice"],
+  cunningStrikeOption?: Extract<
+    BattleFill,
+    { readonly kind: "rolledDice" }
+  >["cunningStrikeOption"],
 ): BattleFill {
   if (hole.kind !== "rolledDice") {
     throw new Error("Expected rolledDice hole.");
@@ -2052,6 +2075,7 @@ export function damageRollFillWithGroups(
     ...(attackDamageAbilityModifierChoice === undefined
       ? {}
       : { attackDamageAbilityModifierChoice }),
+    ...(cunningStrikeOption === undefined ? {} : { cunningStrikeOption }),
     value: rolledDiceGroups(groups),
   };
 }
@@ -2917,6 +2941,17 @@ export function sneakAttackFeature(input?: {
   return { unit: rogueSneakAttackUnit(input) };
 }
 
+export function cunningStrikeFeature(input?: {
+  readonly acquiredAtLevel?: number;
+}): NonNullable<
+  Extract<
+    BattleCreatureInit["creatureInit"],
+    { readonly kind: "character" }
+  >["unitFeatures"]
+>[number] {
+  return { unit: rogueCunningStrikeUnit(input) };
+}
+
 function evasionFeature(input?: {
   readonly ability?: "dex" | "con";
 }): NonNullable<
@@ -3420,6 +3455,73 @@ function rogueSneakAttackUnit(input?: {
         },
         damageType: "same_as_attack",
       },
+    },
+  };
+}
+
+function rogueCunningStrikeUnit(input?: {
+  readonly acquiredAtLevel?: number;
+}): Extract<UnitRecord, { readonly kind: "class_feature" }> {
+  return {
+    id: "rogue_cunning_strike",
+    kind: "class_feature",
+    name: "Cunning Strike",
+    className: "rogue",
+    acquiredAtLevel: input?.acquiredAtLevel ?? 5,
+    description:
+      "When Sneak Attack damage is dealt, forgo one Sneak Attack die to add one Cunning Strike effect.",
+    provenance: {
+      kind: "srd-5.2.1",
+      section: "Classes/Rogue.md:95-150",
+    },
+    mechanics: {
+      family: "cunning_strike",
+      trigger: {
+        kind: "deal_sneak_attack_damage",
+        sourceUnitId: "rogue_sneak_attack",
+      },
+      choice: { kind: "choose_one", maxOptions: 1 },
+      effectSaveDc: {
+        kind: "class_feature_ability_save_dc",
+        base: 8,
+        ability: "dex",
+      },
+      options: [
+        {
+          id: "poison",
+          cost: { kind: "sneak_attack_damage_dice", dice: 1, dieSize: 6 },
+          requires: {
+            kind: "equipment_on_person",
+            equipment: { kind: "tool", toolId: "poisoners_kit" },
+          },
+          save: { ability: "con" },
+          onFail: {
+            kind: "apply_condition",
+            condition: "poisoned",
+            duration: { amount: 1, unit: "minute" },
+            repeatSave: {
+              cadence: "end_of_target_turn",
+              onSuccess: "end_condition",
+            },
+          },
+        },
+        {
+          id: "trip",
+          cost: { kind: "sneak_attack_damage_dice", dice: 1, dieSize: 6 },
+          target: { maxSize: "large" },
+          save: { ability: "dex" },
+          onFail: { kind: "apply_condition", condition: "prone" },
+        },
+        {
+          id: "withdraw",
+          cost: { kind: "sneak_attack_damage_dice", dice: 1, dieSize: 6 },
+          movement: {
+            timing: "immediately_after_attack",
+            distance: { kind: "half_speed" },
+            opportunityAttacks: "does_not_provoke",
+          },
+        },
+      ],
     },
   };
 }

@@ -48,6 +48,7 @@ export const BATTLE_TRACE_HOLE_KINDS = [
   "concentrationSavingThrow",
   "interruptDecision",
   "unitFeatureDecision",
+  "toolPossessionFacts",
   "movement",
   "levitateAltitudeChange",
   "levitateInitialRise",

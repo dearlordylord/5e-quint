@@ -102,6 +102,12 @@ import {
   applyTemporaryHitPoints,
   breakBattleConcentration,
 } from "./damage-apply.ts";
+import {
+  attackDamageRidersAfterCunningStrikeCost,
+  selectedCunningStrikeContext,
+  validateCunningStrikeDamageRollSelection,
+  type CunningStrikeContext,
+} from "./cunning-strike.ts";
 import { effectiveD20TestNaturalOneRerollAbilityCheckValue } from "./d20-test-natural-one-reroll.ts";
 
 import {
@@ -2017,6 +2023,7 @@ export function validateAttackDamageFill(
   ongoingDamageModifier = 0,
   eligibleWeaponDamageDiceRollChoiceUnitIds: readonly UnitRecord["id"][] = [],
   eligibleAttackDamageDieFloorChoiceUnitIds: readonly UnitRecord["id"][] = [],
+  eligibleCunningStrikeContexts: readonly CunningStrikeContext[] = [],
 ): string | null {
   const selectedRiders = selectedAttackDamageRiders(
     eligibleAttackDamageRiders,
@@ -2025,6 +2032,23 @@ export function validateAttackDamageFill(
   if (selectedRiders === null) {
     return "Selected attack damage rider is not eligible for this attack.";
   }
+  const cunningStrikeIssue = validateCunningStrikeDamageRollSelection({
+    fill,
+    selectedAttackDamageRiders: selectedRiders,
+    contexts: eligibleCunningStrikeContexts,
+  });
+  if (cunningStrikeIssue !== null) {
+    return cunningStrikeIssue;
+  }
+  const selectedCunningStrike = selectedCunningStrikeContext(
+    eligibleCunningStrikeContexts,
+    fill.cunningStrikeOption,
+  );
+  const selectedRidersAfterCunningStrikeCost =
+    attackDamageRidersAfterCunningStrikeCost(
+      selectedRiders,
+      selectedCunningStrike,
+    );
   if (
     fill.holeId !==
     attackDamageHoleId(
@@ -2073,7 +2097,7 @@ export function validateAttackDamageFill(
     attack,
     critical,
     attackRoll,
-    selectedRiders,
+    selectedRidersAfterCunningStrikeCost,
     spellWeaponDamageRiders,
     spellMarkedDamageRiders,
     weaponDamageDiceRollChoice ?? undefined,

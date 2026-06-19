@@ -1,6 +1,7 @@
 // Opportunity attack resolution extracted from turn-end-movement.ts.
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.d20-test-natural-one-reroll
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.cunning-strike
 
 import { currentArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
 import { attackRollResultIsValid } from "@dnd/shared-algebras/attack-roll-algebra";
@@ -64,6 +65,14 @@ import {
   snapshotBattle,
 } from "./dispatcher.ts";
 import { needsHolesResult, revealHidden } from "./hole-helpers.ts";
+import {
+  attackDamageRidersAfterCunningStrikeCost,
+  cunningStrikeDamageContinuation,
+  cunningStrikeDamageRollOptions,
+  eligibleCunningStrikeContexts,
+  resolveCunningStrikeAfterAttackDamage,
+  selectedCunningStrikeContext,
+} from "./cunning-strike.ts";
 import {
   attackHitTriggerKind,
   attackKindForDeflectRedirect,
@@ -282,6 +291,26 @@ export function resolveOpportunityAttackCommand(
           eligibleDamageRiders,
           fillSet.damageRoll.selectedAttackDamageRiderUnitIds,
         ) ?? []);
+  const eligibleCunningStrikeDamageOptions = hit
+    ? eligibleCunningStrikeContexts({
+        state: attackRolledState,
+        attackerId: subject.reactorId,
+        targetId: subject.targetId,
+        eligibleAttackDamageRiders: eligibleDamageRiders,
+      })
+    : [];
+  const selectedCunningStrike = selectedCunningStrikeContext(
+    eligibleCunningStrikeDamageOptions,
+    fillSet.damageRoll?.cunningStrikeOption,
+  );
+  const selectedCunningStrikeContinuation = cunningStrikeDamageContinuation(
+    selectedCunningStrike,
+  );
+  const selectedDamageRidersAfterCunningStrikeCost =
+    attackDamageRidersAfterCunningStrikeCost(
+      selectedDamageRiders,
+      selectedCunningStrike,
+    );
   if (hit && input.handledInterruptTrigger !== "attackHit") {
     const reactionWindow = maybeOpenInterruptWindow(
       attackRolledState,
@@ -577,6 +606,7 @@ export function resolveOpportunityAttackCommand(
         ),
         eligibleDamageDiceChoiceUnitIds,
         eligibleDamageDieFloorChoiceUnitIds,
+        cunningStrikeDamageRollOptions(eligibleCunningStrikeDamageOptions),
       ),
     ]);
   }
@@ -598,6 +628,7 @@ export function resolveOpportunityAttackCommand(
     ),
     eligibleDamageDiceChoiceUnitIds,
     eligibleDamageDieFloorChoiceUnitIds,
+    eligibleCunningStrikeDamageOptions,
   );
   if (damageValidation !== null) {
     return invalidResult(input.state, "invalidFill", damageValidation);
@@ -609,7 +640,7 @@ export function resolveOpportunityAttackCommand(
     fillSet.damageRoll,
     critical,
     effectiveAttackRoll,
-    selectedDamageRiders,
+    selectedDamageRidersAfterCunningStrikeCost,
     spellWeaponDamageRiders,
     spellMarkedDamageRiders,
   );
@@ -735,10 +766,13 @@ export function resolveOpportunityAttackCommand(
         concentrationSavingThrows: fillSet.concentrationSavingThrows,
         deathFailuresAtZeroHp: critical ? 2 : 1,
         damageDisposition: fillSet.damageDisposition,
-        attackDamageRiders: selectedDamageRiders,
+        attackDamageRiders: selectedDamageRidersAfterCunningStrikeCost,
         ...(selectedDamageDiceChoice === null
           ? {}
           : { weaponDamageDiceRollChoice: selectedDamageDiceChoice }),
+        ...(selectedCunningStrikeContinuation === undefined
+          ? {}
+          : { cunningStrike: selectedCunningStrikeContinuation }),
       },
     },
     input.handledInterruptTrigger,
@@ -802,15 +836,30 @@ export function resolveOpportunityAttackCommand(
     reducedDamageAmount,
     critical ? 2 : 1,
     fillSet.damageDisposition,
-    selectedDamageRiders,
+    selectedDamageRidersAfterCunningStrikeCost,
     selectedDamageDiceChoice ?? undefined,
     primaryConcentrationSavingThrow,
     fillSet.hideousLaughterDamageRepeatSaves,
     fillSet.concentrationSavingThrows,
     fillSet.targetSpatialFacts,
   );
+  const cunningStrike = resolveCunningStrikeAfterAttackDamage({
+    state: nextState,
+    selected: selectedCunningStrike,
+    savingThrow: fillSet.cunningStrikeSavingThrow,
+    movement: fillSet.cunningStrikeMovement,
+    toolPossession: fillSet.cunningStrikeToolPossession,
+  });
+  if (cunningStrike.tag === "needsHoles") {
+    return needsHolesResult(spellReducedState, input.subject, [
+      ...cunningStrike.holes,
+    ]);
+  }
+  if (cunningStrike.tag === "invalid") {
+    return invalidResult(input.state, "invalidFill", cunningStrike.message);
+  }
   const reactionWindow = maybeOpenInterruptWindow(
-    nextState,
+    cunningStrike.state,
     {
       trigger: "afterDamage",
       damageSourceId: subject.reactorId,
@@ -833,7 +882,7 @@ export function resolveOpportunityAttackCommand(
   }
   return {
     tag: "resolved",
-    state: nextState,
-    snapshot: snapshotBattle(nextState),
+    state: cunningStrike.state,
+    snapshot: snapshotBattle(cunningStrike.state),
   };
 }

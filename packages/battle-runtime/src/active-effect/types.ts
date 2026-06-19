@@ -438,6 +438,13 @@ export type BattleActiveEffect =
       readonly conditionHadNonSpellSource: boolean;
       readonly expiresAt: BattleActiveEffectExpiration;
     })
+  | (BattleUnitFeatureEffectBase & {
+      readonly kind: "unitFeatureConditionEndTurnSave";
+      readonly condition: Condition;
+      readonly conditionHadNonSpellSource: boolean;
+      readonly save: SpellConditionRepeatSave;
+      readonly expiresAt: BattleActiveEffectExpiration;
+    })
   | (BattleSpellEffectBase & {
       readonly kind: "targetActionEndedSpellCondition";
       readonly condition: Condition;

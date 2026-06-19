@@ -125,6 +125,26 @@ export const STUNNING_STRIKE_SAVE_HOLE_ID = holeId(
 export const STUNNING_STRIKE_SAVE_HOLE_INSTANCE = holeInstanceKey(
   "battle:unit-feature:stunning-strike:save",
 );
+export const CUNNING_STRIKE_SAVE_HOLE_ID = holeId(
+  "battle:unit-feature:cunning-strike:save",
+);
+export const CUNNING_STRIKE_SAVE_HOLE_INSTANCE = holeInstanceKey(
+  "battle:unit-feature:cunning-strike:save",
+);
+export const CUNNING_STRIKE_MOVEMENT_HOLE_ID = holeId(
+  "battle:unit-feature:cunning-strike:movement",
+);
+export const CUNNING_STRIKE_MOVEMENT_HOLE_INSTANCE = holeInstanceKey(
+  "battle:unit-feature:cunning-strike:movement",
+);
+export const CUNNING_STRIKE_TOOL_POSSESSION_HOLE_ID = holeId(
+  "battle:unit-feature:cunning-strike:tool-possession",
+);
+export const CUNNING_STRIKE_TOOL_POSSESSION_HOLE_INSTANCE = holeInstanceKey(
+  "battle:unit-feature:cunning-strike:tool-possession",
+);
+export const UNIT_FEATURE_CONDITION_END_TURN_SAVE_HOLE_KEY_PREFIX =
+  "battle:unit-feature-condition-end-turn-save:";
 export const DIRECT_CONDITION_REMOVAL_CONDITIONS = [
   "blinded",
   "deafened",

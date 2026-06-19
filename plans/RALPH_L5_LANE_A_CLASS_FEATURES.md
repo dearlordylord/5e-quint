@@ -79,7 +79,7 @@
     {
       "number": 13,
       "id": "L5-A13-ROGUE-CUNNING-STRIKE-BATTLE-RUNTIME",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Promote Rogue Cunning Strike battle-runtime owner"
     }
   ]
@@ -153,7 +153,7 @@ out of scope unless a task's RAW pass finds a direct dependency.
 | 10 | L5-A10-SORCERER-SORCEROUS-RESTORATION - Close Sorcerer Sorcerous Restoration level 5 follow-up | done | none | Closed by executable Character Sheet Short Rest recovery against the existing Font of Magic point-pool expenditure. |
 | 11 | L5-A11-WIZARD-MEMORIZE-SPELL - Close Wizard Memorize Spell level 5 follow-up | done | none | Closed by unsupported-profile owner evidence for the future Character Sheet prepared Spell Access Short Rest replacement owner using existing Wizard spellbook/progression facts. |
 | 12 | L5-A12-MONK-STUNNING-STRIKE-BATTLE-RUNTIME - Promote Monk Stunning Strike battle-runtime owner | done | L5-A07-MONK-STUNNING-STRIKE | Promoted attack-hit rider behavior using existing Focus Point, Saving Throw, condition/effect, Speed, and Attack Roll Advantage owners. |
-| 13 | L5-A13-ROGUE-CUNNING-STRIKE-BATTLE-RUNTIME - Promote Rogue Cunning Strike battle-runtime owner | ready-for-research | L5-A09-ROGUE-CUNNING-STRIKE | Executable split from Task 9 for promoted Sneak Attack damage-exchange behavior using existing Sneak Attack, Saving Throw, condition/effect, movement, Opportunity Attack, and inventory/tool-possession owners. |
+| 13 | L5-A13-ROGUE-CUNNING-STRIKE-BATTLE-RUNTIME - Promote Rogue Cunning Strike battle-runtime owner | done | L5-A09-ROGUE-CUNNING-STRIKE | Promoted Cunning Strike runtime support using existing Sneak Attack, Saving Throw, condition/effect, movement, Opportunity Attack, and inventory/tool-possession owners. |
 
 ## Shared Verification
 
@@ -669,7 +669,7 @@ Verification:
 
 ### Task 13 - L5-A13-ROGUE-CUNNING-STRIKE-BATTLE-RUNTIME
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 

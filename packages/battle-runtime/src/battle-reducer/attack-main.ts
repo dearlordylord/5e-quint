@@ -9,6 +9,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.grappler unit-feature.hunters-prey unit-feature.open-hand-technique unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.remarkable-athlete unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.stunning-strike unit-feature.weapon-damage-dice-roll-choice unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.d20-test-natural-one-reroll
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.cunning-strike
 
 import { currentArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
 
@@ -131,6 +132,14 @@ import { mirrorImageHitInterceptionCheck } from "./mirror-image-hit-interception
 import { resolveOpenHandTechniqueAfterHit } from "./open-hand-technique.ts";
 import { resolveRemarkableAthleteCriticalHitMovement } from "./remarkable-athlete-critical-movement.ts";
 import { resolveStunningStrikeAfterHit } from "./stunning-strike.ts";
+import {
+  attackDamageRidersAfterCunningStrikeCost,
+  cunningStrikeDamageContinuation,
+  cunningStrikeDamageRollOptions,
+  eligibleCunningStrikeContexts,
+  resolveCunningStrikeAfterAttackDamage,
+  selectedCunningStrikeContext,
+} from "./cunning-strike.ts";
 import { applyStatBlockAttackHitConditionRiders } from "./statblock-attack-hit-condition-riders.ts";
 import { HUNTERS_PREY_SUPPORT_PROFILE } from "../unit-feature-support.ts";
 import { grapplerSupportProfileRefForCombatant } from "./grappler-support-profile.ts";
@@ -865,6 +874,26 @@ export function resolveSelectedAttackProcedure(
           eligibleDamageRiders,
           fillSet.damageRoll.selectedAttackDamageRiderUnitIds,
         ) ?? []);
+  const eligibleCunningStrikeDamageOptions = hit
+    ? eligibleCunningStrikeContexts({
+        state: attackRolledState,
+        attackerId,
+        targetId: target.combatantId,
+        eligibleAttackDamageRiders: eligibleDamageRiders,
+      })
+    : [];
+  const selectedCunningStrike = selectedCunningStrikeContext(
+    eligibleCunningStrikeDamageOptions,
+    fillSet.damageRoll?.cunningStrikeOption,
+  );
+  const selectedCunningStrikeContinuation = cunningStrikeDamageContinuation(
+    selectedCunningStrike,
+  );
+  const selectedDamageRidersAfterCunningStrikeCost =
+    attackDamageRidersAfterCunningStrikeCost(
+      selectedDamageRiders,
+      selectedCunningStrike,
+    );
   const fixedDamageByTypeBeforeTargetAdjustments = hit
     ? eligibleDamageRiders.length > 0 ||
       spellMarkedDamageRiders.length > 0 ||
@@ -1348,6 +1377,7 @@ export function resolveSelectedAttackProcedure(
         ),
         eligibleDamageDiceChoiceUnitIds,
         eligibleDamageDieFloorChoiceUnitIds,
+        cunningStrikeDamageRollOptions(eligibleCunningStrikeDamageOptions),
       ),
     ]);
   }
@@ -1382,6 +1412,7 @@ export function resolveSelectedAttackProcedure(
       ),
       eligibleDamageDiceChoiceUnitIds,
       eligibleDamageDieFloorChoiceUnitIds,
+      eligibleCunningStrikeDamageOptions,
     );
     if (damageValidation !== null) {
       return invalidResult(input.state, "invalidFill", damageValidation);
@@ -1393,7 +1424,7 @@ export function resolveSelectedAttackProcedure(
       fillSet.damageRoll,
       critical,
       effectiveAttackRoll,
-      selectedDamageRiders,
+      selectedDamageRidersAfterCunningStrikeCost,
       spellWeaponDamageRiders,
       spellMarkedDamageRiders,
     );
@@ -1556,10 +1587,13 @@ export function resolveSelectedAttackProcedure(
           concentrationSavingThrows: primaryConcentrationSavingThrows,
           deathFailuresAtZeroHp: critical ? 2 : 1,
           damageDisposition: primaryAttackDamageDisposition(fillSet),
-          attackDamageRiders: selectedDamageRiders,
+          attackDamageRiders: selectedDamageRidersAfterCunningStrikeCost,
           ...(selectedDamageDiceChoice === null
             ? {}
             : { weaponDamageDiceRollChoice: selectedDamageDiceChoice }),
+          ...(selectedCunningStrikeContinuation === undefined
+            ? {}
+            : { cunningStrike: selectedCunningStrikeContinuation }),
         },
       },
       input.handledInterruptTrigger,
@@ -1613,10 +1647,13 @@ export function resolveSelectedAttackProcedure(
             concentrationSavingThrows: primaryConcentrationSavingThrows,
             deathFailuresAtZeroHp: critical ? 2 : 1,
             damageDisposition: primaryAttackDamageDisposition(fillSet),
-            attackDamageRiders: selectedDamageRiders,
+            attackDamageRiders: selectedDamageRidersAfterCunningStrikeCost,
             ...(selectedDamageDiceChoice === null
               ? {}
               : { weaponDamageDiceRollChoice: selectedDamageDiceChoice }),
+            ...(selectedCunningStrikeContinuation === undefined
+              ? {}
+              : { cunningStrike: selectedCunningStrikeContinuation }),
           },
           concentrationSave: pendingConcentrationSave,
         });
@@ -1648,24 +1685,36 @@ export function resolveSelectedAttackProcedure(
         hideousLaughterSaveCheck.message,
       );
     }
-    const spent = spendAttackProcedure(
-      applyAttackDamageAmount(
-        grapplerPunchAndGrab.state,
-        attackerId,
-        target.combatantId,
-        toDamageAmount(reducedDamageAmount),
-        critical ? 2 : 1,
-        fillSet.damageDisposition,
-        selectedDamageRiders,
-        selectedDamageDiceChoice ?? undefined,
-        primaryConcentrationSavingThrow,
-        fillSet.hideousLaughterDamageRepeatSaves,
-        primaryConcentrationSavingThrows,
-        fillSet.targetSpatialFacts,
-      ),
+    const damageAppliedState = applyAttackDamageAmount(
+      grapplerPunchAndGrab.state,
       attackerId,
-      attack,
+      target.combatantId,
+      toDamageAmount(reducedDamageAmount),
+      critical ? 2 : 1,
+      fillSet.damageDisposition,
+      selectedDamageRidersAfterCunningStrikeCost,
+      selectedDamageDiceChoice ?? undefined,
+      primaryConcentrationSavingThrow,
+      fillSet.hideousLaughterDamageRepeatSaves,
+      primaryConcentrationSavingThrows,
+      fillSet.targetSpatialFacts,
     );
+    const cunningStrike = resolveCunningStrikeAfterAttackDamage({
+      state: damageAppliedState,
+      selected: selectedCunningStrike,
+      savingThrow: fillSet.cunningStrikeSavingThrow,
+      movement: fillSet.cunningStrikeMovement,
+      toolPossession: fillSet.cunningStrikeToolPossession,
+    });
+    if (cunningStrike.tag === "needsHoles") {
+      return needsHolesResult(grapplerPunchAndGrab.state, input.subject, [
+        ...cunningStrike.holes,
+      ]);
+    }
+    if (cunningStrike.tag === "invalid") {
+      return invalidResult(input.state, "invalidFill", cunningStrike.message);
+    }
+    const spent = spendAttackProcedure(cunningStrike.state, attackerId, attack);
     if (spent.tag === "invalid") {
       return spent;
     }

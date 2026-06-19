@@ -8,16 +8,16 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 
 | Metric | Value |
 | --- | ---: |
-| Installed collection inventory count | 316 Units |
+| Installed collection inventory count | 317 Units |
 
 ## Coverage Metrics
 
 | Metric | Covered | Percent |
 | --- | ---: | ---: |
-| Authored Surface Unit catalog admission | 315/538 | 58.6% |
-| Authored Surface executable catalog admission | 265/450 | 58.9% |
-| Installed Unit profile classification coverage | 316/316 | 100% |
-| Supported executable Unit coverage | 187/266 | 70.3% |
+| Authored Surface Unit catalog admission | 316/539 | 58.6% |
+| Authored Surface executable catalog admission | 266/451 | 59% |
+| Installed Unit profile classification coverage | 317/317 | 100% |
+| Supported executable Unit coverage | 188/267 | 70.4% |
 | QNT profile modeling coverage | 121/121 | 100% |
 | QNT proof coverage | 118/121 | 97.5% |
 | Runtime mapping coverage | 121/121 | 100% |
@@ -25,8 +25,8 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | Rules-kernel profile join coverage | 159/159 | 100% |
 | Rules-kernel covered profile coverage | 159/159 | 100% |
 | Supported Unit rules-kernel chain coverage | 174/174 | 100% |
-| Deterministic admission/projection coverage | 182/187 | 97.3% |
-| Selected identity replay coverage | 177/179 | 98.9% |
+| Deterministic admission/projection coverage | 183/188 | 97.3% |
+| Selected identity replay coverage | 178/180 | 98.9% |
 | Classic non-SRD expression gate | 1/1 | 100% |
 
 ## Metric Semantics
@@ -60,7 +60,7 @@ Background, feat, spell, and class-feature groups are counted from installed Uni
 | Background Units | 4 | 0 | 0 | 0 | 4 | 0 | 0/0 | 0 | 0 |
 | Feat Units | 13 | 13 | 9 | 0 | 4 | 11 | 6/8 | 2 | 0 |
 | Spell Units | 133 | 133 | 92 | 18 | 23 | 136 | 110/110 | 0 | 0 |
-| Class-feature Units | 95 | 95 | 73 | 8 | 14 | 121 | 75/75 | 0 | 0 |
+| Class-feature Units | 96 | 96 | 74 | 8 | 14 | 122 | 76/76 | 0 | 0 |
 
 | Denominator | Rule |
 | --- | --- |
@@ -146,6 +146,7 @@ The Unit matrix owns authored-content breadth. `plans/rules-kernel-coverage/prof
 | `rogue_second_story_work` | srd-5.2.1 | `character-sheet.linked-speed-grant-projection`, `character-sheet.jump-distance-ability-substitution` |
 | `rogue_steady_aim` | srd-5.2.1 | `unit-feature.rogue-steady-aim` |
 | `rogue_sneak_attack` | srd-5.2.1 | `unit-feature.attack-damage-rider` |
+| `rogue_cunning_strike` | srd-5.2.1 | `unit-feature.cunning-strike` |
 | `sorcerer_innate_sorcery` | srd-5.2.1 | `unit-feature.innate-sorcery-activation` |
 | `sorcerer_sorcerous_restoration` | srd-5.2.1 | `character-sheet.sorcerous-restoration-sorcery-point-recovery` |
 | `sorcerer_draconic_resilience` | srd-5.2.1 | `character-creation.hit-point-maximum-projection`, `character-sheet.armor-class-base-formula` |
@@ -858,6 +859,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `rogue_second_story_work` | `character-sheet.linked-speed-grant-projection`, `character-sheet.jump-distance-ability-substitution` | L13UG-A15 | `packages/character-sheet-runtime/src/ability-checks.test.ts` |
 | `rogue_steady_aim` | `unit-feature.rogue-steady-aim` | L13UG-A18 | `packages/battle-runtime/src/unit-profile-admission-level3-attack-movement-features.test.ts` |
 | `rogue_sneak_attack` | `unit-feature.attack-damage-rider` | QMBT8 | `packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts` |
+| `rogue_cunning_strike` | `unit-feature.cunning-strike` | L5-A13-ROGUE-CUNNING-STRIKE-BATTLE-RUNTIME | `packages/battle-runtime/src/battle-runtime-cunning-strike.test.ts` |
 | `sorcerer_innate_sorcery` | `unit-feature.innate-sorcery-activation` | SRDINV75A | `packages/battle-runtime/src/unit-profile-admission-class-roll-and-resource-features.test.ts` |
 | `sorcerer_innate_sorcery` | `unit-feature.innate-sorcery-activation` | SRDINV75B | `packages/battle-runtime/src/battle-runtime-test-support.ts` |
 | `sorcerer_sorcerous_restoration` | `character-sheet.sorcerous-restoration-sorcery-point-recovery` | L5-A10-SORCERER-SORCEROUS-RESTORATION | `packages/character-sheet-runtime/src/resources.test.ts` |
@@ -1118,6 +1120,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `rogue_expertise` | `character-creation.skill-expertise-choice` | L1D2-ROGUE-EXPERTISE | `packages/character-creation-runtime/src/rogue-expertise-selected-identity.mbt.test.ts` |
 | `rogue_steady_aim` | `unit-feature.rogue-steady-aim` | L3PUTB-01-ROGUE-STEADY-AIM-RUNTIME | `packages/battle-runtime/src/rogue-steady-aim.mbt.test.ts` |
 | `rogue_sneak_attack` | `unit-feature.attack-damage-rider` | QMBT9 | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
+| `rogue_cunning_strike` | `unit-feature.cunning-strike` | L5-A13-ROGUE-CUNNING-STRIKE-BATTLE-RUNTIME | `packages/battle-runtime/src/cunning-strike-selected-identity.mbt.test.ts` |
 | `sorcerer_innate_sorcery` | `unit-feature.innate-sorcery-activation` | L1D2-SORCERER-INNATE-SORCERY | `packages/battle-runtime/src/feature-selected-identity.mbt.test.ts` |
 | `sorcerer_draconic_spells` | `character-sheet.class-feature-prepared-spell-access` | B6-CLASS-FEATURE-IDENTITY-BATCH-3 | `packages/character-sheet-runtime/src/class-feature-selected-identity.mbt.test.ts` |
 | `warlock_eldritch_invocations` | `character-creation.eldritch-invocation-choice`, `character-creation.warlock-pact-magic-advancement` | L1D2-WARLOCK-ELDRITCH-INVOCATIONS | `packages/character-creation-runtime/src/warlock-eldritch-invocations-selected-identity.mbt.test.ts` |
@@ -1904,6 +1907,8 @@ These profile-subset rows have no selected-identity replay witness, but the decl
 | LT4-B03-GNOME-LINEAGE-TRAIT-PROJECTION | completed-runtime-parity | `character-sheet.species-lineage-trait-projection` |
 | LT4-B04-GNOME-SPECIES-ADMISSION-EVIDENCE | completed-runtime-parity | `character-creation.species-lineage-choice` |
 | L5-A10-SORCERER-SORCEROUS-RESTORATION | completed-runtime-parity | `character-sheet.sorcerous-restoration-sorcery-point-recovery` |
+| L5-A13-ROGUE-CUNNING-STRIKE-BATTLE-RUNTIME | qnt-proof | `unit-feature.cunning-strike` |
+| L5-A13-ROGUE-CUNNING-STRIKE-BATTLE-RUNTIME | completed-runtime-parity | `unit-feature.cunning-strike` |
 
 ## Supported Profiles Lacking Runtime Parity
 

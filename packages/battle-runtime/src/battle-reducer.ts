@@ -192,6 +192,9 @@ import {
 import {
   type BattlePassiveSpeedBonusSupportProfile,
   type BattlePassiveSpeedKindGrantsSupportProfile,
+  type BattleCunningStrikeSupportProfile,
+  type CunningStrikeOption,
+  type CunningStrikeOptionSelectionId,
   type ReactionReductionResourceDie,
   type ReactionReductionResourceSpend,
   type ReactionRollOrDamageReductionProfile,
@@ -995,6 +998,7 @@ export type BattleInterruptedProcedure =
       readonly damageDisposition: BattleAttackDamageDisposition;
       readonly attackDamageRiders: readonly AttackDamageRider[];
       readonly weaponDamageDiceRollChoice?: WeaponDamageDiceRollChoiceFill;
+      readonly cunningStrike?: BattleCunningStrikeDamageContinuation;
     };
 export type BattleAttackHostSubject =
   | Extract<
@@ -1031,6 +1035,23 @@ export type BattleAttackDamagePrefixFill = Extract<
       | "attackDamageDisposition";
   }
 >;
+export type BattleCunningStrikeSelectedOption = {
+  readonly attackerId: CombatantId;
+  readonly targetId: CombatantId;
+  readonly unitId: UnitRecord["id"];
+  readonly label: string;
+  readonly sourceDamageRiderUnitId: UnitRecord["id"];
+  readonly support: BattleCunningStrikeSupportProfile;
+  readonly option: CunningStrikeOption;
+};
+export type BattleCunningStrikeContinuationFill =
+  | Extract<BattleFill, { readonly kind: "savingThrowOutcome" }>
+  | Extract<BattleFill, { readonly kind: "movement" }>
+  | Extract<BattleFill, { readonly kind: "toolPossessionFacts" }>;
+export type BattleCunningStrikeDamageContinuation = {
+  readonly selected: BattleCunningStrikeSelectedOption;
+  readonly fills: readonly BattleCunningStrikeContinuationFill[];
+};
 export type BattleAfterDamageEvent = {
   readonly damageSourceId: CombatantId;
   readonly damagedId: CombatantId;
@@ -1311,7 +1332,8 @@ export type BattleInterruptFrame =
   | BattleFlySpeedGrantEndFallCleanupFrame
   | BattleFallDamageLandingMitigationFrame
   | BattleReplayContinuationFrame
-  | BattleAttackDamageContinuationConcentrationFrame;
+  | BattleAttackDamageContinuationConcentrationFrame
+  | BattleAttackDamageContinuationCunningStrikeFrame;
 export type BattleInterruptCheckpointFrame = Extract<
   BattleInterruptFrame,
   { readonly kind: "interruptCheckpoint" }
@@ -1340,6 +1362,12 @@ export type BattleReplayContinuationFrame = {
 export type BattleAttackDamageContinuationConcentrationFrame = {
   readonly kind: "attackDamageContinuationConcentration";
   readonly continuation: BattleAttackDamageContinuationWithoutConcentration;
+  readonly handledInterruptTrigger: BattleInterruptTrigger;
+};
+export type BattleAttackDamageContinuationCunningStrikeFrame = {
+  readonly kind: "attackDamageContinuationCunningStrike";
+  readonly continuation: BattleAttackDamageContinuationWithoutConcentration;
+  readonly afterDamageEvent: BattleAfterDamageEvent;
   readonly handledInterruptTrigger: BattleInterruptTrigger;
 };
 export type BattleInterruptCheckpointInput =
@@ -4463,6 +4491,14 @@ export type BattleHeldObjectFactsHole = {
   readonly label: string;
   readonly actorId: CombatantId;
 };
+export type BattleToolPossessionFactsHole = {
+  readonly holeInstanceKey: HoleInstanceKey;
+  readonly holeId: BattleHoleId;
+  readonly kind: "toolPossessionFacts";
+  readonly label: string;
+  readonly actorId: CombatantId;
+  readonly toolIds: readonly ["poisoners_kit"];
+};
 export type BattleFindFamiliarConnectionHole = {
   readonly holeInstanceKey: HoleInstanceKey;
   readonly holeId: BattleHoleId;
@@ -4803,6 +4839,18 @@ export type BattleSpellAttackRollHole = Extract<
   readonly spellAttackRerolls?: readonly BattleSpellAttackRerollOption[];
   readonly d20TestNaturalOneRerolls?: readonly BattleD20TestNaturalOneRerollOption[];
 };
+export type BattleCunningStrikeOptionSelection = {
+  readonly unitId: UnitRecord["id"];
+  readonly optionId: CunningStrikeOptionSelectionId;
+};
+export type BattleCunningStrikeOption = BattleCunningStrikeOptionSelection & {
+  readonly label: string;
+  readonly sourceDamageRiderUnitId: UnitRecord["id"];
+  readonly dieCost: {
+    readonly dice: 1;
+    readonly dieSize: 6;
+  };
+};
 export type BattleDamageRollHole = Extract<
   RuntimeHole,
   { readonly kind: "rolledDice" }
@@ -4812,6 +4860,7 @@ export type BattleDamageRollHole = Extract<
   readonly attackDamageRiders?: readonly AttackDamageRider[];
   readonly spellWeaponDamageRiders?: readonly SpellAttackDamageComponent[];
   readonly spellMarkedDamageRiders?: readonly SpellMarkedDamageRider[];
+  readonly cunningStrikeOptions?: readonly BattleCunningStrikeOption[];
   readonly weaponDamageDiceRollChoiceUnitIds?: readonly UnitRecord["id"][];
   readonly attackDamageDieFloorChoiceUnitIds?: AttackDamageDieFloorChoiceUnitIds;
   readonly attackDamageAbilityModifierChoice?: AttackDamageAbilityModifierChoice;
@@ -5056,6 +5105,24 @@ export type BattleSpellConditionEndTurnSavingThrowOutcomeHole = {
   readonly spellConditionEndTurnSave: {
     readonly targetId: CombatantId;
     readonly sourceSpellId: SpellRecord["id"];
+    readonly sourceCombatantId: CombatantId;
+    readonly condition: Condition;
+    readonly save: SpellConditionRepeatSave;
+  };
+  readonly ability: Ability;
+  readonly dc: DcSource;
+  readonly areaChoices: readonly [];
+  readonly targetRollModes: readonly BattleSavingThrowRollModeProjection[];
+  readonly targetFlatBonuses: readonly BattleSavingThrowFlatBonusProjection[];
+};
+export type BattleUnitFeatureConditionEndTurnSavingThrowOutcomeHole = {
+  readonly holeInstanceKey: HoleInstanceKey;
+  readonly holeId: BattleHoleId;
+  readonly kind: "savingThrowOutcome";
+  readonly label: string;
+  readonly unitFeatureConditionEndTurnSave: {
+    readonly targetId: CombatantId;
+    readonly sourceUnitId: UnitRecord["id"];
     readonly sourceCombatantId: CombatantId;
     readonly condition: Condition;
     readonly save: SpellConditionRepeatSave;
@@ -5817,6 +5884,7 @@ export type BattleHole =
   | BattleTeleportDestinationHole
   | BattleSpiritualWeaponForcePositionHole
   | BattleHeldObjectFactsHole
+  | BattleToolPossessionFactsHole
   | BattleFindFamiliarConnectionHole
   | BattleCompanionReappearancePlacementHole
   | BattleCompanionReappearanceInitiativeHole
@@ -5855,6 +5923,7 @@ export type BattleHole =
   | BattleGustOfWindLineSavingThrowOutcomeHole
   | BattleGustOfWindLineDirectionChoiceHole
   | BattleSpellConditionEndTurnSavingThrowOutcomeHole
+  | BattleUnitFeatureConditionEndTurnSavingThrowOutcomeHole
   | BattleAbilityD20TestRollModeEndTurnSavingThrowOutcomeHole
   | BattleFlamingSphereRamMovementHole
   | BattleMovableZoneRepositionMovementHole
@@ -5903,6 +5972,7 @@ export type BattleRolledDiceFill = {
   readonly holeId: BattleHoleId;
   readonly value: readonly [RolledDiceGroup, ...RolledDiceGroup[]];
   readonly selectedAttackDamageRiderUnitIds?: readonly UnitRecord["id"][];
+  readonly cunningStrikeOption?: BattleCunningStrikeOptionSelection;
   readonly weaponDamageDiceRollChoice?: WeaponDamageDiceRollChoiceFill;
   readonly attackDamageDieFloorChoice?: AttackDamageDieFloorChoiceFill;
   readonly attackDamageAbilityModifierChoice?: AttackDamageAbilityModifierChoiceFill;
@@ -5953,8 +6023,21 @@ export function validateRolledDiceFillForDiceExpr(
   if (attackDamageAbilityModifierChoiceIssue !== null) {
     return attackDamageAbilityModifierChoiceIssue;
   }
+  const cunningStrikeSelectionIssue = cunningStrikeOptionUnsupportedIssue(fill);
+  if (cunningStrikeSelectionIssue !== null) {
+    return cunningStrikeSelectionIssue;
+  }
   const validation = validateRolledDiceForDiceExpr(fill.value, expr);
   return validation === null ? null : validation.reason;
+}
+export const CUNNING_STRIKE_OPTION_UNSUPPORTED_DAMAGE_ROLL_OWNER_MESSAGE =
+  "Cunning Strike options are not available for this damage-roll owner.";
+export function cunningStrikeOptionUnsupportedIssue(
+  damageRoll: BattleRolledDiceFill,
+): string | null {
+  return damageRoll.cunningStrikeOption === undefined
+    ? null
+    : CUNNING_STRIKE_OPTION_UNSUPPORTED_DAMAGE_ROLL_OWNER_MESSAGE;
 }
 export type SpellDamageReductionFill = {
   readonly sourceSpellId: SpellRecord["id"];
@@ -6082,6 +6165,13 @@ export type BattleFill =
       readonly holeId: BattleHoleId;
       readonly value: {
         readonly objectIds: readonly BattleObjectId[];
+      };
+    }
+  | {
+      readonly kind: "toolPossessionFacts";
+      readonly holeId: BattleHoleId;
+      readonly value: {
+        readonly toolIdsOnPerson: readonly "poisoners_kit"[];
       };
     }
   | {

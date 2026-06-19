@@ -148,6 +148,10 @@ export function battleFillKind(fill: BattleFill): BattleFillKind {
         () => "thaumaturgyActiveOneMinuteEffectCount" as const,
       ),
       byBattleFillKind(
+        "toolPossessionFacts",
+        () => "toolPossessionFacts" as const,
+      ),
+      byBattleFillKind(
         "unitFeatureDecision",
         () => "unitFeatureDecision" as const,
       ),
@@ -158,7 +162,6 @@ export function battleFillKind(fill: BattleFill): BattleFillKind {
       Match.exhaustive,
     );
 }
-
 
 export function battleSubjectKind(subject: BattleSubject) {
   return Match.value(subject)
@@ -190,10 +193,7 @@ export function battleSubjectKind(subject: BattleSubject) {
         () => "featureWeaponActivation" as const,
       ),
       byBattleSubjectTag("druidWildShape", druidWildShapeSubjectKind),
-      byBattleSubjectTag(
-        "companionLifecycle",
-        companionLifecycleSubjectKind,
-      ),
+      byBattleSubjectTag("companionLifecycle", companionLifecycleSubjectKind),
       byBattleSubjectTag(
         "findFamiliarSharedSenses",
         () => "companionSenses" as const,
@@ -258,10 +258,7 @@ function bonusActionStandardActionSubjectKind(
 ) {
   return Match.value(subject.action).pipe(
     Match.when("dash", () => "bonusActionGrantedStandardAction" as const),
-    Match.when(
-      "disengage",
-      () => "bonusActionGrantedStandardAction" as const,
-    ),
+    Match.when("disengage", () => "bonusActionGrantedStandardAction" as const),
     Match.when("hide", () => "bonusActionGrantedStandardAction" as const),
     Match.exhaustive,
   );
@@ -317,38 +314,26 @@ function runtimeCommandSubjectKind(
       byCommand("endTurn", () => "runtimeTurnBoundary" as const),
       byCommand("move", () => "runtimeMovement" as const),
       byCommand("standFromProne", () => "runtimeMovement" as const),
-      byCommand(
-        "releaseReadiedSpell",
-        () => "runtimeReadiedResponse" as const,
-      ),
+      byCommand("releaseReadiedSpell", () => "runtimeReadiedResponse" as const),
       byCommand(
         "releaseReadiedMovement",
         () => "runtimeReadiedResponse" as const,
       ),
-      byCommand(
-        "castTriggeredReactionSpell",
-        () => "runtimeReaction" as const,
-      ),
+      byCommand("castTriggeredReactionSpell", () => "runtimeReaction" as const),
       byCommand(
         "castAttackHitBonusActionSpell",
         () => "runtimeReaction" as const,
       ),
       byCommand("releaseGrapple", () => "runtimeLinkRelease" as const),
       byCommand("opportunityAttack", () => "runtimeReaction" as const),
-      byCommand(
-        "greaseGroundHazardSave",
-        () => "runtimeSavingThrow" as const,
-      ),
+      byCommand("greaseGroundHazardSave", () => "runtimeSavingThrow" as const),
       byCommand("webRestraintSave", () => "runtimeSavingThrow" as const),
       byCommand(
         "webRestrainedNoLongerInArea",
         () => "runtimeEffectCleanup" as const,
       ),
       byCommand("webAreaRemoved", () => "runtimeEffectCleanup" as const),
-      byCommand(
-        "gustOfWindLineSave",
-        () => "runtimeSavingThrow" as const,
-      ),
+      byCommand("gustOfWindLineSave", () => "runtimeSavingThrow" as const),
       byCommand(
         "gustOfWindLineDirectionChange",
         () => "runtimeEffectControl" as const,
@@ -356,14 +341,8 @@ function runtimeCommandSubjectKind(
     )
     .pipe(
       byCommand("movableZoneSave", () => "runtimeSavingThrow" as const),
-      byCommand(
-        "moonbeamCylinderExit",
-        () => "runtimeSavingThrow" as const,
-      ),
-      byCommand(
-        "movableZoneReposition",
-        () => "runtimeEffectControl" as const,
-      ),
+      byCommand("moonbeamCylinderExit", () => "runtimeSavingThrow" as const),
+      byCommand("movableZoneReposition", () => "runtimeEffectControl" as const),
       byCommand("movableZoneRam", () => "runtimeEffectControl" as const),
       byCommand(
         "releaseSpellCreatedHeldObject",
@@ -373,18 +352,9 @@ function runtimeCommandSubjectKind(
         "protectionRelevantEffectSave",
         () => "runtimeProtectionSave" as const,
       ),
-      byCommand(
-        "disperseFogCloud",
-        () => "runtimeEffectCleanup" as const,
-      ),
-      byCommand(
-        "wardingBondSeparation",
-        () => "runtimeEffectCleanup" as const,
-      ),
-      byCommand(
-        "jumpMovementReplacement",
-        () => "runtimeMovement" as const,
-      ),
+      byCommand("disperseFogCloud", () => "runtimeEffectCleanup" as const),
+      byCommand("wardingBondSeparation", () => "runtimeEffectCleanup" as const),
+      byCommand("jumpMovementReplacement", () => "runtimeMovement" as const),
       byCommand("dragonsBreathExhale", () => "runtimeAreaEffect" as const),
       byCommand(
         "replaceSelfTransformationMode",

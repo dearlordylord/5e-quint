@@ -343,9 +343,9 @@
       "character-creation or progression mechanic": 12
     },
     "levelFiveClassRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 9,
+      "catalog-installed-owner-evidence-present": 10,
       "non-runtime": 12,
-      "catalog-only/dead-for-now": 7
+      "catalog-only/dead-for-now": 6
     },
     "levelSixClassRowsByDisposition": {
       "level-5-7-follow-up-required": 11,
@@ -370,9 +370,9 @@
       "character-creation or progression mechanic": 12
     },
     "allRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 485,
+      "catalog-installed-owner-evidence-present": 486,
       "non-runtime": 84,
-      "catalog-only/dead-for-now": 177,
+      "catalog-only/dead-for-now": 176,
       "level-5-7-follow-up-required": 22,
       "needs-surface-widening": 17,
       "missing-authored-record": 50,
@@ -26063,22 +26063,29 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "rogue_cunning_strike",
+        "sourceRecordPath": "packages/surface/content/rogue_cunning_strike.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "rogue_cunning_strike"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-only/dead-for-now",
-      "battleReadinessClosure": {
-        "source": "unit-claim",
-        "kind": "outside-battle-runtime",
-        "owner": "future battle-runtime Cunning Strike Sneak Attack exchange owner plus existing rogue_sneak_attack attack-damage rider, Saving Throw, active condition/effect, movement, Opportunity Attack, and inventory/tool-possession witness owners",
-        "reason": "SRD Cunning Strike triggers when the Rogue deals Sneak Attack damage: the Rogue may choose one Cunning Strike effect, forgo that effect's Sneak Attack damage dice before rolling, and apply the effect immediately after the attack's damage is dealt. Poison requires the Rogue to have a Poisoner's Kit on their person, forces a Constitution Saving Throw against 8 plus Dexterity modifier plus Proficiency Bonus, applies Poisoned for 1 minute on failure, and repeats the save at the end of each target turn; Trip requires a Large-or-smaller target and a Dexterity Saving Throw before applying Prone; Withdraw grants movement up to half Speed without provoking Opportunity Attacks. A future promoted owner must consume one typed Cunning Strike option fact source for Poison, Trip, and Withdraw, derive the available Sneak Attack dice from the existing rogue_sneak_attack rider workflow, and reuse existing Saving Throw, condition/effect lifecycle, movement, Opportunity Attack validation, and inventory/tool-possession witness owners. It must not add a second Sneak Attack dice pool, duplicate condition, movement, or equipment inventory state, maintain a parallel option registry, or dispatch on Rogue or Cunning Strike authored identity."
-      },
-      "ownerEvidence": [],
-      "nextAction": "SRD Cunning Strike triggers when the Rogue deals Sneak Attack damage: the Rogue may choose one Cunning Strike effect, forgo that effect's Sneak Attack damage dice before rolling, and apply the effect immediately after the attack's damage is dealt. Poison requires the Rogue to have a Poisoner's Kit on their person, forces a Constitution Saving Throw against 8 plus Dexterity modifier plus Proficiency Bonus, applies Poisoned for 1 minute on failure, and repeats the save at the end of each target turn; Trip requires a Large-or-smaller target and a Dexterity Saving Throw before applying Prone; Withdraw grants movement up to half Speed without provoking Opportunity Attacks. A future promoted owner must consume one typed Cunning Strike option fact source for Poison, Trip, and Withdraw, derive the available Sneak Attack dice from the existing rogue_sneak_attack rider workflow, and reuse existing Saving Throw, condition/effect lifecycle, movement, Opportunity Attack validation, and inventory/tool-possession witness owners. It must not add a second Sneak Attack dice pool, duplicate condition, movement, or equipment inventory state, maintain a parallel option registry, or dispatch on Rogue or Cunning Strike authored identity."
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit rogue_cunning_strike is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L5-A13-ROGUE-CUNNING-STRIKE-BATTLE-RUNTIME at packages/battle-runtime/src/battle-runtime-cunning-strike.test.ts; plans/unit-profile-coverage/unit-evidence.jsonl records required selected-identity-mbt executable evidence; L5-A13-ROGUE-CUNNING-STRIKE-BATTLE-RUNTIME at packages/battle-runtime/src/cunning-strike-selected-identity.mbt.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/rogue:level-5:class-feature-grant:rogue_uncanny_dodge",

@@ -260,6 +260,8 @@ export {
   MagicEquipmentTraitSchema,
   MagicActionAreaSaveDamageHealingMechanicsSchema,
   MagicActionHealingPoolMechanicsSchema,
+  CUNNING_STRIKE_OPTION_SELECTION_IDS,
+  CunningStrikeMechanicsSchema,
   HuntersPreyMechanicsSchema,
   MagicEquipmentVariantSchema,
   MagicItemVariantSchema,
