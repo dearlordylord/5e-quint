@@ -457,6 +457,36 @@ export type AnchoredSignal = Schema.Schema.Type<
 export type AnchoredTriggerMechanics = Schema.Schema.Type<
   typeof SurfaceSchema.AnchoredTriggerMechanicsSchema
 >;
+export type GlyphWardingInscriptionAnchorChoice = Schema.Schema.Type<
+  typeof SurfaceSchema.GlyphWardingInscriptionAnchorChoiceSchema
+>;
+export type GlyphWardingOccurrence = Schema.Schema.Type<
+  typeof SurfaceSchema.GlyphWardingOccurrenceSchema
+>;
+export type GlyphWardingTrigger = Schema.Schema.Type<
+  typeof SurfaceSchema.GlyphWardingTriggerSchema
+>;
+export type GlyphWardingExplosiveRuneDamageTypeRef = Schema.Schema.Type<
+  typeof SurfaceSchema.GlyphWardingExplosiveRuneDamageTypeRefSchema
+>;
+export type GlyphWardingExplosiveRuneDamageAmount = Schema.Schema.Type<
+  typeof SurfaceSchema.GlyphWardingExplosiveRuneDamageAmountSchema
+>;
+export type GlyphWardingExplosiveRuneBranch = Schema.Schema.Type<
+  typeof SurfaceSchema.GlyphWardingExplosiveRuneBranchSchema
+>;
+export type GlyphWardingStoredSpellEligibility = Schema.Schema.Type<
+  typeof SurfaceSchema.GlyphWardingStoredSpellEligibilitySchema
+>;
+export type GlyphWardingSpellGlyphBranch = Schema.Schema.Type<
+  typeof SurfaceSchema.GlyphWardingSpellGlyphBranchSchema
+>;
+export type GlyphWardingReleaseChoice = Schema.Schema.Type<
+  typeof SurfaceSchema.GlyphWardingReleaseChoiceSchema
+>;
+export type GlyphWardingMechanics = Schema.Schema.Type<
+  typeof SurfaceSchema.GlyphWardingMechanicsSchema
+>;
 export type StatBlockValue = Schema.Schema.Type<
   typeof SurfaceSchema.StatBlockValueSchema
 >;

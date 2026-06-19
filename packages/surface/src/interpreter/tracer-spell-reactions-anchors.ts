@@ -4,11 +4,13 @@ import type {
   AnchoredFilter,
   AnchoredSignal,
   AnchoredTriggerMechanics,
+  GlyphWardingMechanics,
   Range,
   TriggeredReactionMechanics,
 } from "../surface/types.ts";
 import type { TraceEdge, TraceNode } from "./tracer-model.ts";
 import {
+  describeDamageTypeRef,
   describeRange,
   describeReactionTrigger,
 } from "./tracer-rule-labels.ts";
@@ -16,6 +18,7 @@ import type { IdGen } from "./tracer-rule-labels.ts";
 import type { SpellCtx } from "./tracer-spell-context.ts";
 
 import { tracePhase } from "./tracer-activation.ts";
+import { traceDiceAmountScaling } from "./tracer-scaling.ts";
 
 type ObjectAnchor = Extract<AnchorTarget, { kind: "object" }>;
 type SpokenMessageSignal = Extract<AnchoredSignal, { kind: "spoken_message" }>;
@@ -199,6 +202,95 @@ export function traceAnchoredTrigger(
     edges.push({ from: anchorId, to: eId, relation: "opens_window" });
     edges.push({ from: eId, to: releaseId, relation: "prompts" });
   }
+}
+
+export function traceGlyphWarding(
+  m: GlyphWardingMechanics,
+  ctx: SpellCtx,
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): void {
+  const occurrenceId = ids("glyph");
+  nodes.push({
+    id: occurrenceId,
+    category: "attachment",
+    atomKind: "glyph_warding_occurrence",
+    label: [
+      "glyph_warding_occurrence",
+      "anchor: surface or closeable object",
+      `coverage: <= ${m.occurrence.coverage.maxDiameterFeet} ft diameter`,
+      `notice: ${m.occurrence.concealment.notice.ability.toUpperCase()} (${m.occurrence.concealment.notice.skill}) vs Spell Save DC`,
+      `breaks if moved > ${m.occurrence.movementInvalidation.moreThanFeet} ft from cast location`,
+    ].join("\n"),
+  });
+  edges.push({ from: ctx.procId, to: occurrenceId, relation: "stores" });
+
+  const triggerId = ids("evt");
+  nodes.push({
+    id: triggerId,
+    category: "window",
+    atomKind: "post_action_window",
+    label: [
+      "post_action_window",
+      "caster-defined glyph trigger",
+      `type filter: ${m.trigger.refinement.activationFilter.typeChoice.options.join(", ")}`,
+      `exclusion: ${m.trigger.refinement.nonTriggerExclusion.kind}`,
+    ].join("\n"),
+  });
+  edges.push({ from: occurrenceId, to: triggerId, relation: "opens_window" });
+
+  const releaseId = ids("rel");
+  nodes.push({
+    id: releaseId,
+    category: "procedure",
+    atomKind: "release",
+    label: "release\nexplosive rune or spell glyph\nspell ends on trigger",
+  });
+  edges.push({ from: ctx.procId, to: releaseId, relation: "stores" });
+  edges.push({ from: triggerId, to: releaseId, relation: "prompts" });
+  edges.push({ from: releaseId, to: occurrenceId, relation: "attaches_to" });
+
+  const explosiveRune = m.release.explosiveRune;
+  const explosiveId = ids("eff");
+  nodes.push({
+    id: explosiveId,
+    category: "effect",
+    atomKind: "glyph_explosive_rune",
+    label: [
+      "glyph_explosive_rune",
+      `${explosiveRune.area.radiusFeet} ft ${explosiveRune.area.kind}`,
+      `${explosiveRune.save.ability.toUpperCase()} save, half damage on success`,
+      `${explosiveRune.damage.amount.base.dice}d${explosiveRune.damage.amount.base.dieSize} ${describeDamageTypeRef(explosiveRune.damage.damageType)}`,
+    ].join("\n"),
+  });
+  edges.push({ from: releaseId, to: explosiveId, relation: "grants" });
+  traceDiceAmountScaling(
+    explosiveRune.damage.amount,
+    explosiveId,
+    ctx.slotId,
+    nodes,
+    edges,
+    ids,
+  );
+
+  const spellGlyph = m.release.spellGlyph;
+  const storedSpellId = ids("eff");
+  nodes.push({
+    id: storedSpellId,
+    category: "effect",
+    atomKind: "glyph_stored_spell_release",
+    label: [
+      "glyph_stored_spell_release",
+      `${spellGlyph.storage.spellAccess}; no immediate effect`,
+      `max level: ${spellGlyph.storage.maxStoredSpellLevel.baseMaxLevel} or cast slot`,
+      "single target -> triggering creature",
+      "area -> centered on triggering creature",
+      "Concentration -> full duration",
+      "hostile summons/objects/traps as close as possible",
+    ].join("\n"),
+  });
+  edges.push({ from: releaseId, to: storedSpellId, relation: "grants" });
 }
 
 export function traceAnchorTarget(

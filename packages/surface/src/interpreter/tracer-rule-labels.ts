@@ -59,24 +59,19 @@ import type {
 export function procedureForFamily(
   f: SpellMechanics["family"],
 ): "activate" | "respond" | "store" {
-  switch (f) {
-    case "triggered_reaction":
-      return "respond";
-    case "anchored_trigger":
-      return "store";
-    case "ongoing_effect":
-    case "activation":
-    case "modal_activation":
-    case "passive_hit_intercept":
-    case "spawned_creature":
-    case "reanimated_creature":
-    case "templated_multi_spawn":
-      return "activate";
-    default: {
-      const _: never = f;
-      throw new Error(`unhandled spell family for procedure: ${String(_)}`);
-    }
-  }
+  return Match.value(f).pipe(
+    Match.when("triggered_reaction", () => "respond" as const),
+    Match.when("anchored_trigger", () => "store" as const),
+    Match.when("glyph_warding", () => "store" as const),
+    Match.when("ongoing_effect", () => "activate" as const),
+    Match.when("activation", () => "activate" as const),
+    Match.when("modal_activation", () => "activate" as const),
+    Match.when("passive_hit_intercept", () => "activate" as const),
+    Match.when("spawned_creature", () => "activate" as const),
+    Match.when("reanimated_creature", () => "activate" as const),
+    Match.when("templated_multi_spawn", () => "activate" as const),
+    Match.exhaustive,
+  );
 }
 
 export function procedurePrefix(k: "activate" | "respond" | "store"): string {

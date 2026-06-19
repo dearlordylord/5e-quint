@@ -43,13 +43,13 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
-      "denominator": 454,
-      "numerator": 268,
-      "percent": "59%"
+      "denominator": 455,
+      "numerator": 269,
+      "percent": "59.1%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 542,
-      "numerator": 318,
+      "denominator": 543,
+      "numerator": 319,
       "percent": "58.7%"
     },
     "classicNonSrdExpressionGate": {
@@ -59,7 +59,7 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 319
+      "value": 320
     },
     "deterministicAdmissionProjectionCoverage": {
       "denominator": 185,
@@ -67,8 +67,8 @@
       "percent": "97.3%"
     },
     "profileClassificationCoverage": {
-      "denominator": 319,
-      "numerator": 319,
+      "denominator": 320,
+      "numerator": 320,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -112,9 +112,9 @@
       "percent": "98.9%"
     },
     "supportedProfileCoverage": {
-      "denominator": 269,
+      "denominator": 270,
       "numerator": 185,
-      "percent": "68.8%"
+      "percent": "68.5%"
     }
   },
   "metricSemantics": [
@@ -16661,8 +16661,8 @@
         "unsupportedOrOtherUnits": 4
       },
       {
-        "executableUnitDenominator": 138,
-        "installedUnitDenominator": 138,
+        "executableUnitDenominator": 139,
+        "installedUnitDenominator": 139,
         "kind": "spell",
         "label": "Spell Units",
         "profileFactDenominator": 136,
@@ -16672,7 +16672,7 @@
         "selectedIdentityReplayGapUnits": 0,
         "selectedIdentityReplayWitnessUnits": 110,
         "supportedProfileUnits": 92,
-        "unsupportedOrOtherUnits": 28
+        "unsupportedOrOtherUnits": 29
       },
       {
         "executableUnitDenominator": 93,
@@ -35477,6 +35477,33 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/gaseous_form.json",
       "unitId": "gaseous_form"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "followUpTasks": [
+          {
+            "id": "L3-FOLLOWUP-GLYPH-OF-WARDING-RUNTIME",
+            "mechanic": "Promote Glyph of Warding as a durable glyph occurrence and release workflow that consumes typed Surface facts for inscription anchor, maximum covered area, hidden-noticing DC source, trigger refinement/exclusion, movement invalidation, explosive-rune save/damage/scaling, stored prepared-spell eligibility, stored-spell retargeting, hostile close-as-possible placement, and stored Concentration full-duration override.",
+            "owner": "future battle-runtime glyph occurrence/release Spell Effect plus table object/location, trigger-event, and stored-spell invocation witness owner",
+            "requiredOutput": "Supported-profile or profile-subset-supported Glyph of Warding claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the glyph release workflow while preserving table-owned object location, covered-area placement, trigger-event, area-membership, hostile placement, stored spell invocation, and stored Concentration witnesses without authored spell identity dispatch.",
+            "title": "Glyph of Warding Runtime Release"
+          }
+        ],
+        "reason": "Glyph of Warding is authored and installed as an SRD Surface Spell Definition with 1-hour casting, Touch range, V/S/M powdered diamond worth 200+ GP consumed component, a permanent-until-dispelled-or-triggered duration, a cast-time choice between surface inscription and closeable-object inscription, maximum 10-foot-diameter glyph coverage, concealed glyph noticing by Wisdom (Perception) against the caster's Spell Save DC, caster-defined and refined trigger facts with creature-type and password-style exclusions, movement invalidation when the inscribed surface or object moves more than 10 feet from the cast location, an explosive-rune branch with 20-foot Sphere Dexterity Saving Throw half damage, Acid/Cold/Fire/Lightning/Thunder damage type choice, and higher-slot d8 scaling, plus a spell-glyph branch that stores a prepared spell cast as part of glyph creation, enforces single-creature or area spell eligibility, has no immediate effect, retargets the stored spell to or around the triggering creature, handles hostile summon/object/trap placement, and preserves full-duration execution for stored Concentration spells. No promoted battle-runtime profile is claimed because promoted runtime still needs a glyph occurrence/release owner that consumes table object/location, trigger-event, area-membership, close-as-possible placement, stored spell invocation, and stored Concentration witnesses without dispatching on Glyph of Warding authored identity.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/glyph_of_warding.json",
+      "unitId": "glyph_of_warding"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

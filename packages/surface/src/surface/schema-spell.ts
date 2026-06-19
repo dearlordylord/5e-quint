@@ -4700,6 +4700,184 @@ export const CastTimeChoiceCreatureTypeSchema = Schema.Struct({
   options: nonEmpty(CreatureTypeSchema),
 });
 
+export const GlyphWardingInscriptionAnchorChoiceSchema = strictStruct({
+  chooser: Schema.Literal("caster"),
+  surface: strictStruct({
+    kind: Schema.Literal("surface"),
+    inscriptionSite: Schema.Literal("on_surface"),
+  }),
+  closeableObject: strictStruct({
+    kind: Schema.Literal("closeable_object"),
+    inscriptionSite: Schema.Literal("within_object"),
+    concealmentMethod: Schema.Literal("object_can_be_closed"),
+  }),
+});
+
+export const GlyphWardingOccurrenceSchema = strictStruct({
+  kind: Schema.Literal("durable_glyph_occurrence"),
+  inscriptionAnchor: GlyphWardingInscriptionAnchorChoiceSchema,
+  coverage: strictStruct({
+    maxDiameterFeet: Schema.Literal(10),
+    placement: strictStruct({
+      kind: Schema.Literal("table_witnessed_covered_area_on_inscribed_anchor"),
+      constraint: Schema.Literal("within_max_diameter"),
+    }),
+  }),
+  castLocation: strictStruct({
+    kind: Schema.Literal("table_witnessed_cast_location"),
+  }),
+  movementInvalidation: strictStruct({
+    movedSubject: Schema.Literal("inscribed_surface_or_object"),
+    distanceFrom: Schema.Literal("cast_location"),
+    moreThanFeet: Schema.Literal(10),
+    outcome: Schema.Literal("glyph_breaks_spell_ends_without_triggering"),
+  }),
+  concealment: strictStruct({
+    visibility: Schema.Literal("nearly_imperceptible"),
+    notice: strictStruct({
+      kind: Schema.Literal("wisdom_perception_check"),
+      ability: Schema.Literal("wis"),
+      skill: Schema.Literal("perception"),
+      dc: strictStruct({ kind: Schema.Literal("caster_spell_save_dc") }),
+      owner: Schema.Literal("table_witnessed_glyph_notice"),
+    }),
+  }),
+});
+
+export const GlyphWardingTriggerSchema = strictStruct({
+  kind: Schema.Literal("caster_defined_glyph_trigger"),
+  setWhen: Schema.Literal("glyph_inscribed"),
+  triggerOccurrence: strictStruct({
+    kind: Schema.Literal("table_witnessed_trigger_occurrence"),
+  }),
+  commonEvents: strictStruct({
+    surface: Schema.Tuple(
+      Schema.Literal("touching_glyph"),
+      Schema.Literal("stepping_on_glyph"),
+      Schema.Literal("removing_covering_object"),
+      Schema.Literal("approaching_within_caster_set_distance"),
+    ),
+    closeableObject: Schema.Tuple(
+      Schema.Literal("opening_object"),
+      Schema.Literal("seeing_glyph"),
+    ),
+  }),
+  refinement: strictStruct({
+    activationFilter: strictStruct({
+      kind: Schema.Literal("creature_type"),
+      chooser: Schema.Literal("caster"),
+      typeChoice: CastTimeChoiceCreatureTypeSchema,
+    }),
+    nonTriggerExclusion: strictStruct({
+      kind: Schema.Literal("password_or_other_condition"),
+      chooser: Schema.Literal("caster"),
+    }),
+  }),
+  onTriggered: Schema.Literal("spell_ends"),
+});
+
+export const GlyphWardingExplosiveRuneDamageTypeRefSchema = strictStruct({
+  kind: Schema.Literal("hole"),
+  holeId: Schema.Literal("glyph_of_warding_explosive_rune_damage_type"),
+  label: Schema.Literal("explosive rune damage type"),
+  value: strictStruct({
+    kind: Schema.Literal("choice"),
+    label: Schema.Literal("explosive rune damage type"),
+    options: Schema.Tuple(
+      Schema.Literal("acid"),
+      Schema.Literal("cold"),
+      Schema.Literal("fire"),
+      Schema.Literal("lightning"),
+      Schema.Literal("thunder"),
+    ),
+  }),
+});
+
+export const GlyphWardingExplosiveRuneDamageAmountSchema = strictStruct({
+  kind: Schema.Literal("linear_per_level"),
+  axis: Schema.Literal("slot"),
+  base: strictStruct({
+    dice: Schema.Literal(5),
+    dieSize: Schema.Literal(8),
+  }),
+  perLevel: strictStruct({
+    dice: Schema.Literal(1),
+  }),
+  startingAtLevel: Schema.Literal(3),
+});
+
+export const GlyphWardingExplosiveRuneBranchSchema = strictStruct({
+  kind: Schema.Literal("explosive_rune"),
+  area: strictStruct({
+    kind: Schema.Literal("sphere"),
+    radiusFeet: Schema.Literal(20),
+    origin: Schema.Literal("glyph"),
+  }),
+  save: strictStruct({
+    ability: Schema.Literal("dex"),
+    dc: strictStruct({ kind: Schema.Literal("caster_spell_save_dc") }),
+    onSuccess: strictStruct({ kind: Schema.Literal("half_damage") }),
+  }),
+  damage: strictStruct({
+    damageType: GlyphWardingExplosiveRuneDamageTypeRefSchema,
+    amount: GlyphWardingExplosiveRuneDamageAmountSchema,
+  }),
+});
+
+export const GlyphWardingStoredSpellEligibilitySchema = strictStruct({
+  spellAccess: Schema.Literal("prepared_spell"),
+  castAsPartOfCreatingGlyph: Schema.Literal(true),
+  immediateEffect: Schema.Literal("none"),
+  maxStoredSpellLevel: strictStruct({
+    baseMaxLevel: Schema.Literal(3),
+    upcastMaxLevel: Schema.Literal("same_as_cast_slot_level"),
+  }),
+  targetShape: Schema.Tuple(
+    strictStruct({ kind: Schema.Literal("single_creature_target") }),
+    strictStruct({ kind: Schema.Literal("area_target") }),
+  ),
+});
+
+export const GlyphWardingSpellGlyphBranchSchema = strictStruct({
+  kind: Schema.Literal("spell_glyph"),
+  storage: GlyphWardingStoredSpellEligibilitySchema,
+  release: strictStruct({
+    when: Schema.Literal("glyph_triggered"),
+    retargeting: strictStruct({
+      singleCreatureSpellTarget: Schema.Literal("triggering_creature"),
+      areaSpellOrigin: Schema.Literal("centered_on_triggering_creature"),
+    }),
+    hostilePlacement: strictStruct({
+      appliesTo: Schema.Tuple(
+        Schema.Literal("summoned_hostile_creatures"),
+        Schema.Literal("harmful_objects"),
+        Schema.Literal("traps"),
+      ),
+      placement: Schema.Literal("as_close_as_possible_to_triggering_creature"),
+      attackTarget: Schema.Literal("triggering_creature"),
+    }),
+    concentration: strictStruct({
+      ifStoredSpellRequiresConcentration: Schema.Literal("lasts_full_duration"),
+    }),
+  }),
+});
+
+export const GlyphWardingReleaseChoiceSchema = strictStruct({
+  chooser: Schema.Literal("caster"),
+  explosiveRune: GlyphWardingExplosiveRuneBranchSchema,
+  spellGlyph: GlyphWardingSpellGlyphBranchSchema,
+});
+
+export const GlyphWardingMechanicsSchema = Schema.extend(
+  SpellMechanicsHeaderSchema,
+  strictStruct({
+    family: Schema.Literal("glyph_warding"),
+    occurrence: GlyphWardingOccurrenceSchema,
+    trigger: GlyphWardingTriggerSchema,
+    release: GlyphWardingReleaseChoiceSchema,
+  }),
+);
+
 export const CreatureSavingThrowModifierSchema = Schema.Struct({
   ability: AbilitySchema,
   modifier: Schema.Number.pipe(Schema.int()),
@@ -4922,6 +5100,7 @@ export const SpellMechanicsSchema = Schema.Union(
   TriggeredReactionMechanicsSchema,
   PassiveHitInterceptMechanicsSchema,
   AnchoredTriggerMechanicsSchema,
+  GlyphWardingMechanicsSchema,
   SpawnedCreatureMechanicsSchema,
   ReanimatedCreatureMechanicsSchema,
   TemplatedMultiSpawnMechanicsSchema,

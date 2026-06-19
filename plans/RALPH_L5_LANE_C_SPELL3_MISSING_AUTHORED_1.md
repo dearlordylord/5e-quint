@@ -91,7 +91,7 @@
     {
       "number": 15,
       "id": "L5-C15-GLYPH-OF-WARDING-SURFACE-WIDENING",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Widen Glyph of Warding Surface Spell Definition"
     },
     {
@@ -129,6 +129,12 @@
       "id": "L5-C21-PHANTOM-STEED-MOUNT-LIFECYCLE",
       "status": "ready-for-research",
       "title": "Promote Phantom Steed mount lifecycle owner"
+    },
+    {
+      "number": 22,
+      "id": "L5-C22-GLYPH-OF-WARDING-RUNTIME",
+      "status": "ready-for-research",
+      "title": "Promote Glyph of Warding runtime release owner"
     }
   ]
 }
@@ -198,13 +204,14 @@ missing-record spells unless a RAW dependency is unavoidable and documented.
 | 12 | L5-C12-BLINK-SURFACE-WIDENING - Widen Blink Surface Spell Definition | done | L5-C02-BLINK | Blink is authored/admitted as an SRD Surface Spell Definition with typed turn-end random-table and Ethereal phase facts; runtime remains closed at the planar lifecycle/table-spatial owner boundary. |
 | 13 | L5-C13-CONJURE-ANIMALS-SURFACE-WIDENING - Widen Conjure Animals Surface Spell Definition | done | L5-C03-CONJURE-ANIMALS | Add typed Surface/table-spatial facts for Conjure Animals' spectral pack occurrence, pack reposition, Strength Saving Throw Advantage predicate, Dexterity Saving Throw trigger eligibility, and once-per-turn limit before authoring/admitting the Spell Definition. |
 | 14 | L5-C14-GASEOUS-FORM-SURFACE-WIDENING - Widen Gaseous Form Surface Spell Definition | done | L5-C04-GASEOUS-FORM | Add typed Surface/table-spatial facts for Gaseous Form's mist-cloud form state, movement replacement, Magic-action self-ending, B/P/S Resistance, Prone Immunity, Strength/Dexterity/Constitution Saving Throw Advantage, action/object/speech limits, creature-space occupancy, narrow-opening passage, and liquid-surface treatment before authoring/admitting the Spell Definition. |
-| 15 | L5-C15-GLYPH-OF-WARDING-SURFACE-WIDENING - Widen Glyph of Warding Surface Spell Definition | ready-for-research | L5-C05-GLYPH-OF-WARDING | Add typed Surface/table object-location facts for Glyph of Warding's surface or closeable-object inscription anchor, maximum glyph-area constraint, caster-defined/refined trigger, movement invalidation, explosive rune, stored spell eligibility/release/retargeting, hostile placement, and stored Concentration duration override before authoring/admitting the Spell Definition. |
+| 15 | L5-C15-GLYPH-OF-WARDING-SURFACE-WIDENING - Widen Glyph of Warding Surface Spell Definition | done | L5-C05-GLYPH-OF-WARDING | Glyph of Warding is authored/admitted as an SRD Surface Spell Definition with typed durable glyph occurrence, trigger, movement invalidation, explosive-rune, and spell-glyph facts; runtime follow-up is L5-C22. |
 | 16 | L5-C16-HASTE-SURFACE-WIDENING - Widen Haste Surface Spell Definition | ready-for-research | L5-C06-HASTE | Add typed Surface facts for Haste's restricted additional action and end-of-effect lethargy before authoring/admitting the Spell Definition. |
 | 17 | L5-C17-HASTE-POSITIVE-RUNTIME - Promote Haste positive runtime effect | ready-for-research | L5-C16-HASTE-SURFACE-WIDENING | Promote the active Haste effects: Speed ratio, +2 Armor Class, Dexterity Saving Throw Advantage, Concentration, and restricted spell-granted per-turn action resource. |
 | 18 | L5-C18-HASTE-LETHARGY-RUNTIME - Promote Haste lethargy runtime cleanup | ready-for-research | L5-C17-HASTE-POSITIVE-RUNTIME | Promote the spell-end lethargy rider: Incapacitated plus Speed 0 until the end of the target's next turn without treating Incapacitated as a Speed shortcut. |
 | 19 | L5-C19-MAGIC-CIRCLE-SURFACE-WIDENING - Widen Magic Circle Surface Spell Definition | ready-for-research | L5-C07-MAGIC-CIRCLE | Add typed Surface/table-spatial facts for Magic Circle's warded Cylinder, selected creature types, normal or reversed direction, nonmagical crossing prevention, teleportation or interplanar-travel Saving Throw gate, Attack Roll Disadvantage, and source-scoped possession plus Charmed/Frightened prevention before authoring/admitting the Spell Definition. |
 | 20 | L5-C20-MELD-INTO-STONE-SURFACE-WIDENING - Widen Meld into Stone Surface Spell Definition | ready-for-research | L5-C08-MELD-INTO-STONE | Add typed Surface/table terrain facts for Meld into Stone's stone object-or-surface containment target, hidden merged occupancy, outside-sense limits, self-spell and Movement-limited exit permissions, destructive expulsion damage, closest-unoccupied-space placement, and Prone rider before authoring/admitting the Spell Definition. |
 | 21 | L5-C21-PHANTOM-STEED-MOUNT-LIFECYCLE - Promote Phantom Steed mount lifecycle owner | ready-for-research | L5-C10-PHANTOM-STEED | Promote the spell-created mount lifecycle, Riding Horse Speed override, rider permission, damage-ended spell cleanup, fade/dismount grace, equipment vanish, and table travel boundary from the typed Surface record. |
+| 22 | L5-C22-GLYPH-OF-WARDING-RUNTIME - Promote Glyph of Warding runtime release owner | ready-for-research | L5-C15-GLYPH-OF-WARDING-SURFACE-WIDENING | Promote the durable glyph occurrence/release workflow from the typed Surface record, preserving table object/location, trigger-event, area-membership, hostile placement, stored spell invocation, and stored Concentration witnesses without authored spell identity dispatch. |
 
 ## Shared Verification
 
@@ -696,7 +703,7 @@ Plan Impact:
 
 ### Task 15 - L5-C15-GLYPH-OF-WARDING-SURFACE-WIDENING
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -760,6 +767,13 @@ Acceptance:
 Verification:
 
 - Shared lane verification.
+
+Plan Impact:
+
+- Glyph of Warding is authored/admitted as an SRD-provenance Surface Spell
+  Definition. Remaining promoted runtime work is split into
+  L5-C22-GLYPH-OF-WARDING-RUNTIME before any supported Glyph runtime profile
+  claims the durable glyph occurrence/release workflow.
 
 ### Task 6 - L5-C06-HASTE
 
@@ -1306,6 +1320,68 @@ Acceptance:
   placement/rider/travel witnesses rather than authored spell identity.
 - The damage-ended spell cleanup and fade/dismount grace are not silently
   treated as ordinary 0-HP disappearance or immediate spell-end disappearance.
+
+Verification:
+
+- Shared lane verification.
+- Focused owner-package tests, and if battle-runtime behavior changes, update
+  the relevant QNT/spec first and run focused MBT per `AGENTS.md`.
+
+### Task 22 - L5-C22-GLYPH-OF-WARDING-RUNTIME
+
+Status: `ready-for-research`
+
+Depends on:
+
+- L5-C15-GLYPH-OF-WARDING-SURFACE-WIDENING
+
+Unit:
+
+- `glyph_of_warding`
+
+SRD anchors:
+
+- `.references/srd-5.2.1/Spells/Descriptions-E-L.md:842`
+- `.references/srd-5.2.1/Classes/Bard.md:221`
+- `.references/srd-5.2.1/Classes/Cleric.md:211`
+- `.references/srd-5.2.1/Classes/Wizard.md:247`
+
+Current state:
+
+- Glyph of Warding is authored and installed as an SRD Surface Spell Definition
+  with typed facts for inscription anchor, maximum covered area, hidden-noticing
+  DC source, trigger refinement/exclusion, movement invalidation,
+  explosive-rune save/damage/scaling, stored prepared-spell eligibility,
+  stored-spell retargeting, hostile close-as-possible placement, and stored
+  Concentration full-duration override.
+- Generated coverage classifies the Unit as `unsupported-profile` with
+  `catalog-installed-owner-evidence-required` / `battle-runtime-required`.
+- No promoted runtime profile executes the durable glyph occurrence/release
+  workflow.
+
+Output:
+
+- Promote or further split an executable owner for Glyph of Warding's durable
+  glyph occurrence and release workflow.
+- Consume typed Surface facts for inscription anchor, maximum covered area,
+  hidden-noticing DC source, trigger refinement/exclusion, movement
+  invalidation, explosive-rune Dexterity Saving Throw half damage,
+  caster-chosen damage type and scaling, stored prepared-spell eligibility,
+  stored-spell retargeting, hostile close-as-possible placement, and stored
+  Concentration full-duration override.
+- Preserve table-owned object location, covered-area placement, trigger-event,
+  area-membership, hostile placement, stored spell invocation, and stored
+  Concentration witnesses instead of duplicating map, object, or stored-spell
+  state in a generic spell-id adapter.
+
+Acceptance:
+
+- Glyph of Warding has a supported or explicitly narrower profile/owner boundary
+  whose typed facts cover every represented Surface glyph clause.
+- Runtime support, if added, consumes typed Surface/profile facts and explicit
+  table witnesses rather than authored spell identity.
+- Stored spell release and Concentration override are not collapsed into an
+  ordinary immediate spell cast or ordinary Concentration ownership rule.
 
 Verification:
 

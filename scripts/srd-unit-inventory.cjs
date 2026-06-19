@@ -387,9 +387,6 @@ const classFeatureSurfaceBlockers = new Map();
 
 const spellAccessSurfaceBlockers = new Map();
 
-const glyphOfWardingSurfaceWideningOwner =
-  "Surface Spell Definition plus table object/location glyph owner and future battle-runtime glyph release owner";
-
 const hasteSurfaceWideningOwner =
   "Surface Spell Definition plus future battle-runtime positive-effect and lethargy owners";
 
@@ -400,21 +397,6 @@ const meldIntoStoneSurfaceWideningOwner =
   "Surface Spell Definition plus table terrain/object occupancy owner and future battle-runtime merged-state, perception, damage, and forced-exit Spell Effect owner";
 
 const spellUnitMissingClassifications = new Map([
-  [
-    "glyph_of_warding",
-    {
-      kind: "needs-surface-widening",
-      owner: glyphOfWardingSurfaceWideningOwner,
-      missingConstruct:
-        "Spell Definition warding glyph occurrence: cast-time choice between surface inscription and closeable-object inscription, maximum 10-foot-diameter glyph coverage, concealed glyph Wisdom (Perception) check against the caster's Spell Save DC, caster-defined/refined trigger with creature-type and password exclusions, movement invalidation when the inscribed surface or object moves more than 10 feet from the cast location, explosive-rune branch with caster-chosen Acid/Cold/Fire/Lightning/Thunder damage and slot scaling, and spell-glyph branch that stores a cast prepared spell, enforces single-creature or area spell eligibility, retargets the stored spell to or around the triggering creature, handles hostile summon/object/trap placement, and preserves full-duration execution for stored Concentration spells.",
-      battleReadinessClosure: {
-        kind: "table-spatial-derivation",
-        owner: glyphOfWardingSurfaceWideningOwner,
-        reason:
-          "Glyph of Warding needs a typed follow-up split before an SRD-provenance Spell Definition can be admitted: Surface must own the durable glyph occurrence, inscription anchor kind, maximum 10-foot-diameter coverage constraint, authored trigger/refinement shape, explosive-rune versus spell-glyph choice, explosive damage type and scaling, stored prepared spell eligibility, stored-spell retargeting, and stored Concentration full-duration override; table object/location ownership supplies cast location, covered-area placement within that maximum, more-than-10-foot movement invalidation, concealment and noticing, selected trigger predicate/event witnesses, area membership, and close-as-possible hostile placement witnesses; future battle runtime should consume typed glyph release facts without dispatching on spell id or name.",
-      },
-    },
-  ],
   [
     "haste",
     {

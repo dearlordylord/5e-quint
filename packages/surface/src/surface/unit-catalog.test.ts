@@ -5,6 +5,7 @@ import { describe, expect, test } from "vitest";
 
 import findFamiliarInput from "../../content/find_familiar.json";
 import flyInput from "../../content/fly.json";
+import glyphOfWardingInput from "../../content/glyph_of_warding.json";
 import hypnoticPatternInput from "../../content/hypnotic_pattern.json";
 import magicWeaponInput from "../../content/magic_weapon.json";
 import moonbeamInput from "../../content/moonbeam.json";
@@ -21,6 +22,7 @@ import {
   decodeUnitRecordSync,
   EffectAtomSchema,
   FeatherFallMitigationSchema,
+  GlyphWardingMechanicsSchema,
   JumpMovementReplacementSchema,
   OnHitTriggerMechanicsSchema,
   TargetSelectionSchema,
@@ -31,6 +33,7 @@ import {
   defineSrdUnitCollection,
   srdUnitCollection,
 } from "./unit-catalog.ts";
+import { CREATURE_TYPES } from "./types.ts";
 import type { Srd521Unit, SrdUnitCollection } from "./unit-catalog.ts";
 import type { WeaponRecord } from "./types.ts";
 
@@ -1275,6 +1278,253 @@ describe("SRD Unit catalog boundary", () => {
         },
       ],
     });
+  });
+
+  test("decodes Glyph of Warding with durable inscription, trigger refinement, and both release branches", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag !== "ok") return;
+
+    const glyph = result.catalog.requireUnit("glyph_of_warding");
+    expect(glyph.kind).toBe("spell");
+    if (glyph.kind !== "spell") return;
+    expect(glyph.mechanics.family).toBe("glyph_warding");
+    if (glyph.mechanics.family !== "glyph_warding") return;
+
+    expect(glyph.provenance).toEqual({
+      kind: "srd-5.2.1",
+      section: "Spells/Descriptions-E-L#Glyph of Warding",
+    });
+    expect(glyph.mechanics).toMatchObject({
+      level: 3,
+      school: "abjuration",
+      castingTime: { kind: "hours", amount: 1, ritual: false },
+      range: { kind: "touch" },
+      components: {
+        v: true,
+        s: true,
+        m: "powdered diamond worth 200+ GP, which the spell consumes",
+        materialCostGp: 200,
+        materialConsumed: true,
+      },
+      duration: { kind: "permanent", endsOn: ["dispel"] },
+    });
+
+    expect(glyph.mechanics.occurrence).toEqual({
+      kind: "durable_glyph_occurrence",
+      inscriptionAnchor: {
+        chooser: "caster",
+        surface: { kind: "surface", inscriptionSite: "on_surface" },
+        closeableObject: {
+          kind: "closeable_object",
+          inscriptionSite: "within_object",
+          concealmentMethod: "object_can_be_closed",
+        },
+      },
+      coverage: {
+        maxDiameterFeet: 10,
+        placement: {
+          kind: "table_witnessed_covered_area_on_inscribed_anchor",
+          constraint: "within_max_diameter",
+        },
+      },
+      castLocation: { kind: "table_witnessed_cast_location" },
+      movementInvalidation: {
+        movedSubject: "inscribed_surface_or_object",
+        distanceFrom: "cast_location",
+        moreThanFeet: 10,
+        outcome: "glyph_breaks_spell_ends_without_triggering",
+      },
+      concealment: {
+        visibility: "nearly_imperceptible",
+        notice: {
+          kind: "wisdom_perception_check",
+          ability: "wis",
+          skill: "perception",
+          dc: { kind: "caster_spell_save_dc" },
+          owner: "table_witnessed_glyph_notice",
+        },
+      },
+    });
+
+    expect(glyph.mechanics.trigger).toMatchObject({
+      kind: "caster_defined_glyph_trigger",
+      setWhen: "glyph_inscribed",
+      triggerOccurrence: { kind: "table_witnessed_trigger_occurrence" },
+      commonEvents: {
+        surface: [
+          "touching_glyph",
+          "stepping_on_glyph",
+          "removing_covering_object",
+          "approaching_within_caster_set_distance",
+        ],
+        closeableObject: ["opening_object", "seeing_glyph"],
+      },
+      refinement: {
+        activationFilter: {
+          kind: "creature_type",
+          chooser: "caster",
+          typeChoice: {
+            kind: "choice",
+            label: "triggering creature types",
+            options: CREATURE_TYPES,
+          },
+        },
+        nonTriggerExclusion: {
+          kind: "password_or_other_condition",
+          chooser: "caster",
+        },
+      },
+      onTriggered: "spell_ends",
+    });
+
+    expect(glyph.mechanics.release.explosiveRune).toEqual({
+      kind: "explosive_rune",
+      area: { kind: "sphere", radiusFeet: 20, origin: "glyph" },
+      save: {
+        ability: "dex",
+        dc: { kind: "caster_spell_save_dc" },
+        onSuccess: { kind: "half_damage" },
+      },
+      damage: {
+        damageType: {
+          kind: "hole",
+          holeId: "glyph_of_warding_explosive_rune_damage_type",
+          label: "explosive rune damage type",
+          value: {
+            kind: "choice",
+            label: "explosive rune damage type",
+            options: ["acid", "cold", "fire", "lightning", "thunder"],
+          },
+        },
+        amount: {
+          kind: "linear_per_level",
+          axis: "slot",
+          base: { dice: 5, dieSize: 8 },
+          perLevel: { dice: 1 },
+          startingAtLevel: 3,
+        },
+      },
+    });
+    expect(glyph.mechanics.release.spellGlyph).toEqual({
+      kind: "spell_glyph",
+      storage: {
+        spellAccess: "prepared_spell",
+        castAsPartOfCreatingGlyph: true,
+        immediateEffect: "none",
+        maxStoredSpellLevel: {
+          baseMaxLevel: 3,
+          upcastMaxLevel: "same_as_cast_slot_level",
+        },
+        targetShape: [
+          { kind: "single_creature_target" },
+          { kind: "area_target" },
+        ],
+      },
+      release: {
+        when: "glyph_triggered",
+        retargeting: {
+          singleCreatureSpellTarget: "triggering_creature",
+          areaSpellOrigin: "centered_on_triggering_creature",
+        },
+        hostilePlacement: {
+          appliesTo: ["summoned_hostile_creatures", "harmful_objects", "traps"],
+          placement: "as_close_as_possible_to_triggering_creature",
+          attackTarget: "triggering_creature",
+        },
+        concentration: {
+          ifStoredSpellRequiresConcentration: "lasts_full_duration",
+        },
+      },
+    });
+  });
+
+  test("rejects Glyph of Warding shapes that lose fixed SRD branch facts", () => {
+    const glyph = decodeUnitRecordSync(glyphOfWardingInput);
+    expect(glyph.kind).toBe("spell");
+    if (glyph.kind !== "spell") return;
+    expect(glyph.mechanics.family).toBe("glyph_warding");
+    if (glyph.mechanics.family !== "glyph_warding") return;
+
+    const decode = Schema.decodeUnknownEither(GlyphWardingMechanicsSchema);
+    const mechanics = glyph.mechanics;
+
+    expect(
+      Either.isLeft(
+        decode({
+          ...mechanics,
+          occurrence: {
+            ...mechanics.occurrence,
+            coverage: {
+              ...mechanics.occurrence.coverage,
+              maxDiameterFeet: 20,
+            },
+          },
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        decode({
+          ...mechanics,
+          release: {
+            ...mechanics.release,
+            explosiveRune: {
+              ...mechanics.release.explosiveRune,
+              damage: {
+                ...mechanics.release.explosiveRune.damage,
+                damageType: {
+                  kind: "choice",
+                  label: "explosive rune damage type",
+                  options: ["acid", "cold", "fire", "lightning", "thunder"],
+                },
+              },
+            },
+          },
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        decode({
+          ...mechanics,
+          release: {
+            ...mechanics.release,
+            explosiveRune: {
+              ...mechanics.release.explosiveRune,
+              damage: {
+                ...mechanics.release.explosiveRune.damage,
+                damageType: {
+                  ...mechanics.release.explosiveRune.damage.damageType,
+                  value: {
+                    ...mechanics.release.explosiveRune.damage.damageType.value,
+                    options: ["fire"],
+                  },
+                },
+              },
+            },
+          },
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        decode({
+          ...mechanics,
+          release: {
+            ...mechanics.release,
+            spellGlyph: {
+              ...mechanics.release.spellGlyph,
+              storage: {
+                ...mechanics.release.spellGlyph.storage,
+                immediateEffect: "stored_spell_takes_effect_now",
+              },
+            },
+          },
+        }),
+      ),
+    ).toBe(true);
   });
 
   test("keeps Druid Wild Shape as catalog-only shape-shifting metadata", () => {

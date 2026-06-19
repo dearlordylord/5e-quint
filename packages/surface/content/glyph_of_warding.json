@@ -1,0 +1,207 @@
+{
+  "description": "You inscribe a glyph that later unleashes a magical effect. You inscribe it either on a surface or within an object that can be closed to conceal the glyph. The glyph can cover an area no larger than 10 feet in diameter. If the surface or object is moved more than 10 feet from where you cast this spell, the glyph is broken, and the spell ends without being triggered. The glyph is nearly imperceptible and requires a successful Wisdom (Perception) check against your spell save DC to notice. When you inscribe the glyph, you set its trigger and choose whether it's an explosive rune or a spell glyph. You can refine the trigger so that only creatures of certain types activate it, and you can set conditions for creatures that don't trigger it, such as a password. An explosive rune releases a 20-foot-radius Sphere of caster-chosen Acid, Cold, Fire, Lightning, or Thunder damage with a Dexterity saving throw for half damage. A spell glyph stores a prepared spell, has no immediate effect when stored, and releases the stored spell against or around the triggering creature; hostile summons, objects, or traps appear as close as possible to the triggering creature, and stored Concentration spells last their full duration. Using a Higher-Level Spell Slot increases explosive rune damage by 1d8 per slot level above 3 or lets a spell glyph store a spell up to the slot level used.",
+  "id": "glyph_of_warding",
+  "kind": "spell",
+  "mechanics": {
+    "castingTime": {
+      "amount": 1,
+      "kind": "hours",
+      "ritual": false
+    },
+    "components": {
+      "m": "powdered diamond worth 200+ GP, which the spell consumes",
+      "materialConsumed": true,
+      "materialCostGp": 200,
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "endsOn": ["dispel"],
+      "kind": "permanent"
+    },
+    "family": "glyph_warding",
+    "level": 3,
+    "occurrence": {
+      "castLocation": {
+        "kind": "table_witnessed_cast_location"
+      },
+      "concealment": {
+        "notice": {
+          "ability": "wis",
+          "dc": {
+            "kind": "caster_spell_save_dc"
+          },
+          "kind": "wisdom_perception_check",
+          "owner": "table_witnessed_glyph_notice",
+          "skill": "perception"
+        },
+        "visibility": "nearly_imperceptible"
+      },
+      "coverage": {
+        "maxDiameterFeet": 10,
+        "placement": {
+          "constraint": "within_max_diameter",
+          "kind": "table_witnessed_covered_area_on_inscribed_anchor"
+        }
+      },
+      "inscriptionAnchor": {
+        "chooser": "caster",
+        "closeableObject": {
+          "concealmentMethod": "object_can_be_closed",
+          "inscriptionSite": "within_object",
+          "kind": "closeable_object"
+        },
+        "surface": {
+          "inscriptionSite": "on_surface",
+          "kind": "surface"
+        }
+      },
+      "kind": "durable_glyph_occurrence",
+      "movementInvalidation": {
+        "distanceFrom": "cast_location",
+        "moreThanFeet": 10,
+        "movedSubject": "inscribed_surface_or_object",
+        "outcome": "glyph_breaks_spell_ends_without_triggering"
+      }
+    },
+    "range": {
+      "kind": "touch"
+    },
+    "release": {
+      "chooser": "caster",
+      "explosiveRune": {
+        "area": {
+          "kind": "sphere",
+          "origin": "glyph",
+          "radiusFeet": 20
+        },
+        "damage": {
+          "amount": {
+            "axis": "slot",
+            "base": {
+              "dice": 5,
+              "dieSize": 8
+            },
+            "kind": "linear_per_level",
+            "perLevel": {
+              "dice": 1
+            },
+            "startingAtLevel": 3
+          },
+          "damageType": {
+            "kind": "hole",
+            "holeId": "glyph_of_warding_explosive_rune_damage_type",
+            "label": "explosive rune damage type",
+            "value": {
+              "kind": "choice",
+              "label": "explosive rune damage type",
+              "options": ["acid", "cold", "fire", "lightning", "thunder"]
+            }
+          }
+        },
+        "kind": "explosive_rune",
+        "save": {
+          "ability": "dex",
+          "dc": {
+            "kind": "caster_spell_save_dc"
+          },
+          "onSuccess": {
+            "kind": "half_damage"
+          }
+        }
+      },
+      "spellGlyph": {
+        "kind": "spell_glyph",
+        "release": {
+          "concentration": {
+            "ifStoredSpellRequiresConcentration": "lasts_full_duration"
+          },
+          "hostilePlacement": {
+            "appliesTo": [
+              "summoned_hostile_creatures",
+              "harmful_objects",
+              "traps"
+            ],
+            "attackTarget": "triggering_creature",
+            "placement": "as_close_as_possible_to_triggering_creature"
+          },
+          "retargeting": {
+            "areaSpellOrigin": "centered_on_triggering_creature",
+            "singleCreatureSpellTarget": "triggering_creature"
+          },
+          "when": "glyph_triggered"
+        },
+        "storage": {
+          "castAsPartOfCreatingGlyph": true,
+          "immediateEffect": "none",
+          "maxStoredSpellLevel": {
+            "baseMaxLevel": 3,
+            "upcastMaxLevel": "same_as_cast_slot_level"
+          },
+          "spellAccess": "prepared_spell",
+          "targetShape": [
+            {
+              "kind": "single_creature_target"
+            },
+            {
+              "kind": "area_target"
+            }
+          ]
+        }
+      }
+    },
+    "school": "abjuration",
+    "trigger": {
+      "commonEvents": {
+        "closeableObject": ["opening_object", "seeing_glyph"],
+        "surface": [
+          "touching_glyph",
+          "stepping_on_glyph",
+          "removing_covering_object",
+          "approaching_within_caster_set_distance"
+        ]
+      },
+      "kind": "caster_defined_glyph_trigger",
+      "onTriggered": "spell_ends",
+      "refinement": {
+        "activationFilter": {
+          "chooser": "caster",
+          "kind": "creature_type",
+          "typeChoice": {
+            "kind": "choice",
+            "label": "triggering creature types",
+            "options": [
+              "aberration",
+              "beast",
+              "celestial",
+              "construct",
+              "dragon",
+              "elemental",
+              "fey",
+              "fiend",
+              "giant",
+              "humanoid",
+              "monstrosity",
+              "ooze",
+              "plant",
+              "undead"
+            ]
+          }
+        },
+        "nonTriggerExclusion": {
+          "chooser": "caster",
+          "kind": "password_or_other_condition"
+        }
+      },
+      "setWhen": "glyph_inscribed",
+      "triggerOccurrence": {
+        "kind": "table_witnessed_trigger_occurrence"
+      }
+    }
+  },
+  "name": "Glyph of Warding",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-E-L#Glyph of Warding"
+  }
+}
