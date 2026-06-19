@@ -787,8 +787,7 @@ const REDUCER_SPINE_CONTRACT_STAGES = [
   "subjectResolved",
   "turnAdvanced",
 ] as const;
-type ReducerSpineContractStage =
-  (typeof REDUCER_SPINE_CONTRACT_STAGES)[number];
+type ReducerSpineContractStage = (typeof REDUCER_SPINE_CONTRACT_STAGES)[number];
 const REDUCER_SPINE_CONTRACT_ENTRYPOINTS = [
   "none",
   "startBattle",
@@ -805,13 +804,8 @@ const REDUCER_SPINE_CONTRACT_SUBJECTS = [
 ] as const;
 type ReducerSpineContractSubject =
   (typeof REDUCER_SPINE_CONTRACT_SUBJECTS)[number];
-const REDUCER_SPINE_CONTRACT_ACTORS = [
-  "none",
-  "caster",
-  "target",
-] as const;
-type ReducerSpineContractActor =
-  (typeof REDUCER_SPINE_CONTRACT_ACTORS)[number];
+const REDUCER_SPINE_CONTRACT_ACTORS = ["none", "caster", "target"] as const;
+type ReducerSpineContractActor = (typeof REDUCER_SPINE_CONTRACT_ACTORS)[number];
 const REDUCER_SPINE_CONTRACT_SPELL_SLOT_USES = [
   "none",
   "pending",
@@ -825,8 +819,7 @@ const REDUCER_SPINE_CONTRACT_HOLES = [
   "attackRoll",
   "rolledDice",
 ] as const;
-type ReducerSpineContractHole =
-  (typeof REDUCER_SPINE_CONTRACT_HOLES)[number];
+type ReducerSpineContractHole = (typeof REDUCER_SPINE_CONTRACT_HOLES)[number];
 type ReducerSpineContractProjection = {
   readonly stage: ReducerSpineContractStage;
   readonly entrypoint: ReducerSpineContractEntrypoint;
@@ -2783,9 +2776,7 @@ export function createReducerSpineContractDriver() {
         const damage = requireHole(holes, "rolledDice");
         fills = [
           ...fills,
-          damageRollFillWithGroups(damage, [
-            magicMissileDamageRollGroup(3),
-          ]),
+          damageRollFillWithGroups(damage, [magicMissileDamageRollGroup(3)]),
         ];
         recordAccepted(
           resolveBattleSubject({
@@ -3757,7 +3748,8 @@ function projectReducerSpineContractState(input: {
     actionAvailable: snapshot.turn.actionResources.some(
       (resource) => resource.source === "turn",
     ),
-    bonusActionAvailable: input.state.currentTurnResources.currentHasBonusAction,
+    bonusActionAvailable:
+      input.state.currentTurnResources.currentHasBonusAction,
     casterReactionAvailable:
       input.state.combatants.get(fighterId)?.reactionAvailable ?? false,
     targetReactionAvailable:
@@ -5827,85 +5819,95 @@ function projectHole(hole: BattleHole): readonly MbtHole[] {
     );
   }
   return [
-    Match.value(hole).pipe(
-      Match.when({ kind: "targetChoice" }, () => "TargetChoice" as const),
-      Match.when(
-        { kind: "objectTargetChoice" },
-        () => "ObjectTargetChoice" as const,
+    Match.value(hole)
+      .pipe(
+        Match.when({ kind: "targetChoice" }, () => "TargetChoice" as const),
+        Match.when(
+          { kind: "objectTargetChoice" },
+          () => "ObjectTargetChoice" as const,
+        ),
+        Match.when(
+          { kind: "spellTargetAllocation" },
+          () => "SpellTargetAllocation" as const,
+        ),
+        Match.when({ kind: "spellTargetList" }, () => {
+          throw new Error(
+            "Battle runtime MBT does not model spell target-list holes.",
+          );
+        }),
+        Match.when({ kind: "attackRoll" }, () => {
+          return "AttackRoll" as const;
+        }),
+        Match.when({ kind: "rolledDice" }, (rolledDice) => {
+          if ("spell" in rolledDice) {
+            return "SpellDamageRoll" as const;
+          }
+          return "DamageRoll" as const;
+        }),
+        Match.when({ kind: "deathSavingThrow" }, () => {
+          throw new Error(
+            "Battle runtime aggregate MBT does not model Death Saving Throw holes.",
+          );
+        }),
+        Match.when({ kind: "statBlockRechargeRoll" }, () => {
+          return "StatBlockRechargeRoll" as const;
+        }),
+        Match.when({ kind: "savingThrowOutcome" }, () => {
+          return "SavingThrowOutcome" as const;
+        }),
+        Match.when({ kind: "skillChoice" }, () => {
+          throw new Error(
+            "Battle runtime MBT does not model skill choice holes.",
+          );
+        }),
+        Match.when({ kind: "commandOptionChoice" }, () => {
+          throw new Error(
+            "Battle runtime MBT does not model Command option holes.",
+          );
+        }),
+        Match.when({ kind: "heldObjectFacts" }, () => {
+          throw new Error(
+            "Battle runtime MBT does not model held-object fact holes.",
+          );
+        }),
+        Match.when({ kind: "concentrationSavingThrow" }, () => {
+          throw new Error(
+            "Battle runtime MBT does not model concentration saving throw holes.",
+          );
+        }),
+        Match.when({ kind: "damageTypeChoice" }, () => {
+          throw new Error(
+            "Battle runtime MBT does not model damage type holes.",
+          );
+        }),
+        Match.when({ kind: "interruptDecision" }, () => {
+          throw new Error("Battle runtime MBT does not model reaction holes.");
+        }),
+        Match.when({ kind: "movement" }, () => {
+          throw new Error("Battle runtime MBT does not model movement holes.");
+        }),
+      )
+      .pipe(
+        Match.when({ kind: "toolPossessionFacts" }, () => {
+          throw new Error(
+            "Battle runtime MBT does not model tool possession holes.",
+          );
+        }),
+        Match.when({ kind: "abilityCheck" }, () => {
+          throw new Error(
+            "Battle runtime MBT does not model ability check holes.",
+          );
+        }),
+        Match.when({ kind: "grappleOutcome" }, () => {
+          throw new Error("Battle runtime MBT does not model Grapple holes.");
+        }),
+        Match.when({ kind: "attackDamageDisposition" }, () => {
+          throw new Error(
+            "Battle runtime MBT does not model attack damage disposition holes.",
+          );
+        }),
+        Match.exhaustive,
       ),
-      Match.when(
-        { kind: "spellTargetAllocation" },
-        () => "SpellTargetAllocation" as const,
-      ),
-      Match.when({ kind: "spellTargetList" }, () => {
-        throw new Error(
-          "Battle runtime MBT does not model spell target-list holes.",
-        );
-      }),
-      Match.when({ kind: "attackRoll" }, () => {
-        return "AttackRoll" as const;
-      }),
-      Match.when({ kind: "rolledDice" }, (rolledDice) => {
-        if ("spell" in rolledDice) {
-          return "SpellDamageRoll" as const;
-        }
-        return "DamageRoll" as const;
-      }),
-      Match.when({ kind: "deathSavingThrow" }, () => {
-        throw new Error(
-          "Battle runtime aggregate MBT does not model Death Saving Throw holes.",
-        );
-      }),
-      Match.when({ kind: "statBlockRechargeRoll" }, () => {
-        return "StatBlockRechargeRoll" as const;
-      }),
-      Match.when({ kind: "savingThrowOutcome" }, () => {
-        return "SavingThrowOutcome" as const;
-      }),
-      Match.when({ kind: "skillChoice" }, () => {
-        throw new Error(
-          "Battle runtime MBT does not model skill choice holes.",
-        );
-      }),
-      Match.when({ kind: "commandOptionChoice" }, () => {
-        throw new Error(
-          "Battle runtime MBT does not model Command option holes.",
-        );
-      }),
-      Match.when({ kind: "heldObjectFacts" }, () => {
-        throw new Error(
-          "Battle runtime MBT does not model held-object fact holes.",
-        );
-      }),
-      Match.when({ kind: "concentrationSavingThrow" }, () => {
-        throw new Error(
-          "Battle runtime MBT does not model concentration saving throw holes.",
-        );
-      }),
-      Match.when({ kind: "damageTypeChoice" }, () => {
-        throw new Error("Battle runtime MBT does not model damage type holes.");
-      }),
-      Match.when({ kind: "interruptDecision" }, () => {
-        throw new Error("Battle runtime MBT does not model reaction holes.");
-      }),
-      Match.when({ kind: "movement" }, () => {
-        throw new Error("Battle runtime MBT does not model movement holes.");
-      }),
-      Match.when({ kind: "abilityCheck" }, () => {
-        throw new Error(
-          "Battle runtime MBT does not model ability check holes.",
-        );
-      }),
-      Match.when({ kind: "grappleOutcome" }, () => {
-        throw new Error("Battle runtime MBT does not model Grapple holes.");
-      }),
-      Match.when({ kind: "attackDamageDisposition" }, () => {
-        throw new Error(
-          "Battle runtime MBT does not model attack damage disposition holes.",
-        );
-      }),
-      Match.exhaustive,
-    ),
   ];
 }
 
@@ -6233,9 +6235,7 @@ function commandOrderingActor(
   throw new Error(`Unknown Command ordering actor: ${String(raw)}.`);
 }
 
-function reducerSpineContractStage(
-  raw: unknown,
-): ReducerSpineContractStage {
+function reducerSpineContractStage(raw: unknown): ReducerSpineContractStage {
   const tag = quintVariantTag(raw);
   if (tag === "ReducerNotStarted") return "notStarted";
   if (tag === "ReducerBattleStarted") return "battleStarted";

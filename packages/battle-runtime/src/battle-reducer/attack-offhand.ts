@@ -4,6 +4,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.martial-arts-attack-projection unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.d20-test-natural-one-reroll
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.cunning-strike
 
 import { spendActivationResource } from "@dnd/shared-algebras/action-economy-algebra";
 
@@ -82,6 +83,14 @@ import {
 } from "./hole-helpers.ts";
 import { reactionSpellTargetFactsForAfterDamage } from "./reaction-triggered-spells.ts";
 import { resolveRemarkableAthleteCriticalHitMovement } from "./remarkable-athlete-critical-movement.ts";
+import {
+  attackDamageRidersAfterCunningStrikeCost,
+  cunningStrikeDamageContinuation,
+  cunningStrikeDamageRollOptions,
+  eligibleCunningStrikeContexts,
+  resolveCunningStrikeAfterAttackDamage,
+  selectedCunningStrikeContext,
+} from "./cunning-strike.ts";
 
 import {
   attackHitTriggerKind,
@@ -426,6 +435,26 @@ function resolveBonusActionAttack(
           eligibleDamageRiders,
           fillSet.damageRoll.selectedAttackDamageRiderUnitIds,
         ) ?? []);
+  const eligibleCunningStrikeDamageOptions = hit
+    ? eligibleCunningStrikeContexts({
+        state: attackRolledState,
+        attackerId: input.subject.actorId,
+        targetId: target.combatantId,
+        eligibleAttackDamageRiders: eligibleDamageRiders,
+      })
+    : [];
+  const selectedCunningStrike = selectedCunningStrikeContext(
+    eligibleCunningStrikeDamageOptions,
+    fillSet.damageRoll?.cunningStrikeOption,
+  );
+  const selectedCunningStrikeContinuation = cunningStrikeDamageContinuation(
+    selectedCunningStrike,
+  );
+  const selectedDamageRidersAfterCunningStrikeCost =
+    attackDamageRidersAfterCunningStrikeCost(
+      selectedDamageRiders,
+      selectedCunningStrike,
+    );
   if (hit && input.handledInterruptTrigger !== "attackHit") {
     const reactionWindow = maybeOpenInterruptWindow(
       attackRolledState,
@@ -491,6 +520,7 @@ function resolveBonusActionAttack(
         ),
         eligibleDamageDiceChoiceUnitIds,
         eligibleDamageDieFloorChoiceUnitIds,
+        cunningStrikeDamageRollOptions(eligibleCunningStrikeDamageOptions),
       ),
     ]);
   }
@@ -528,6 +558,7 @@ function resolveBonusActionAttack(
       ),
       eligibleDamageDiceChoiceUnitIds,
       eligibleDamageDieFloorChoiceUnitIds,
+      eligibleCunningStrikeDamageOptions,
     );
     if (damageValidation !== null) {
       return invalidResult(input.state, "invalidFill", damageValidation);
@@ -541,7 +572,7 @@ function resolveBonusActionAttack(
       fillSet.damageRoll,
       critical,
       effectiveAttackRoll,
-      selectedDamageRiders,
+      selectedDamageRidersAfterCunningStrikeCost,
       spellWeaponDamageRiders,
       spellMarkedDamageRiders,
     );
@@ -669,10 +700,13 @@ function resolveBonusActionAttack(
           concentrationSavingThrows: fillSet.concentrationSavingThrows,
           deathFailuresAtZeroHp: critical ? 2 : 1,
           damageDisposition: fillSet.damageDisposition,
-          attackDamageRiders: selectedDamageRiders,
+          attackDamageRiders: selectedDamageRidersAfterCunningStrikeCost,
           ...(selectedDamageDiceChoice === null
             ? {}
             : { weaponDamageDiceRollChoice: selectedDamageDiceChoice }),
+          ...(selectedCunningStrikeContinuation === undefined
+            ? {}
+            : { cunningStrike: selectedCunningStrikeContinuation }),
         },
       },
       input.handledInterruptTrigger,
@@ -743,14 +777,29 @@ function resolveBonusActionAttack(
       damageAmount,
       critical ? 2 : 1,
       fillSet.damageDisposition,
-      selectedDamageRiders,
+      selectedDamageRidersAfterCunningStrikeCost,
       selectedDamageDiceChoice ?? undefined,
       primaryConcentrationSavingThrow,
       fillSet.hideousLaughterDamageRepeatSaves,
       fillSet.concentrationSavingThrows,
       fillSet.targetSpatialFacts,
     );
-    const spent = spendOffHandBonusAction(damaged);
+    const cunningStrike = resolveCunningStrikeAfterAttackDamage({
+      state: damaged,
+      selected: selectedCunningStrike,
+      savingThrow: fillSet.cunningStrikeSavingThrow,
+      movement: fillSet.cunningStrikeMovement,
+      toolPossession: fillSet.cunningStrikeToolPossession,
+    });
+    if (cunningStrike.tag === "needsHoles") {
+      return needsHolesResult(spellReducedState, input.subject, [
+        ...cunningStrike.holes,
+      ]);
+    }
+    if (cunningStrike.tag === "invalid") {
+      return invalidResult(input.state, "invalidFill", cunningStrike.message);
+    }
+    const spent = spendOffHandBonusAction(cunningStrike.state);
     if (spent.tag === "invalid") {
       return spent;
     }

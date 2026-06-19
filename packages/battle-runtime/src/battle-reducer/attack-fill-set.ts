@@ -39,6 +39,9 @@ import {
   GRAPPLER_PUNCH_AND_GRAB_DECISION_HOLE_ID,
   OPEN_HAND_TECHNIQUE_DECISION_HOLE_ID,
   OPEN_HAND_TECHNIQUE_SAVE_HOLE_ID,
+  CUNNING_STRIKE_MOVEMENT_HOLE_ID,
+  CUNNING_STRIKE_SAVE_HOLE_ID,
+  CUNNING_STRIKE_TOOL_POSSESSION_HOLE_ID,
   STUNNING_STRIKE_DECISION_HOLE_ID,
   STUNNING_STRIKE_SAVE_HOLE_ID,
 } from "./domain-constants.ts";
@@ -94,6 +97,15 @@ export function attackFillSet(fills: readonly BattleFill[]): AttackFillSet {
     | undefined;
   let stunningStrikeSavingThrow:
     | Extract<BattleFill, { readonly kind: "savingThrowOutcome" }>
+    | undefined;
+  let cunningStrikeSavingThrow:
+    | Extract<BattleFill, { readonly kind: "savingThrowOutcome" }>
+    | undefined;
+  let cunningStrikeMovement:
+    | Extract<BattleFill, { readonly kind: "movement" }>
+    | undefined;
+  let cunningStrikeToolPossession:
+    | Extract<BattleFill, { readonly kind: "toolPossessionFacts" }>
     | undefined;
   const hideousLaughterDamageRepeatSaves: Extract<
     BattleFill,
@@ -472,6 +484,48 @@ export function attackFillSet(fills: readonly BattleFill[]): AttackFillSet {
 
     if (
       fill.kind === "savingThrowOutcome" &&
+      fill.holeId === CUNNING_STRIKE_SAVE_HOLE_ID
+    ) {
+      if (cunningStrikeSavingThrow !== undefined) {
+        return {
+          tag: "invalid",
+          message: "Cunning Strike Saving Throw was filled twice.",
+        };
+      }
+      cunningStrikeSavingThrow = fill;
+      continue;
+    }
+
+    if (
+      fill.kind === "movement" &&
+      fill.holeId === CUNNING_STRIKE_MOVEMENT_HOLE_ID
+    ) {
+      if (cunningStrikeMovement !== undefined) {
+        return {
+          tag: "invalid",
+          message: "Cunning Strike movement was filled twice.",
+        };
+      }
+      cunningStrikeMovement = fill;
+      continue;
+    }
+
+    if (
+      fill.kind === "toolPossessionFacts" &&
+      fill.holeId === CUNNING_STRIKE_TOOL_POSSESSION_HOLE_ID
+    ) {
+      if (cunningStrikeToolPossession !== undefined) {
+        return {
+          tag: "invalid",
+          message: "Cunning Strike tool-possession facts were filled twice.",
+        };
+      }
+      cunningStrikeToolPossession = fill;
+      continue;
+    }
+
+    if (
+      fill.kind === "savingThrowOutcome" &&
       isHideousLaughterDamageRepeatSaveFill(fill)
     ) {
       if (
@@ -671,6 +725,9 @@ export function attackFillSet(fills: readonly BattleFill[]): AttackFillSet {
     openHandTechniqueSavingThrow,
     stunningStrikeDecision,
     stunningStrikeSavingThrow,
+    cunningStrikeSavingThrow,
+    cunningStrikeMovement,
+    cunningStrikeToolPossession,
     weaponMasteryCleaveDecision,
     weaponMasteryCleaveTarget,
     weaponMasteryCleaveAttackRoll,

@@ -16,6 +16,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-flaming-sphere-hazard-ram
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.monk-focus-battle-options
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.cunning-strike
 // RAW-COVERAGE: runtime-owner RAW-QCORE7-MOVEMENT-GRAPPLE-001 RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-QCORE9-UNIT-FEATURE-PROFILES-001 RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-after-hit-damage-illumination spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.invocation-feather-fall-mitigation spell.invocation-mirror-image-hit-interception spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-counterspell spell.reaction-hellish-rebuke spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.DRAGONS_BREATH_GRANTED_ACTION
@@ -143,6 +144,7 @@ import {
   d20TestNaturalOneRerollRollDecisionRequired,
   d20TestNaturalOneRerollRollIssue,
 } from "./d20-test-natural-one-reroll.ts";
+import { resolveCunningStrikeAfterAttackDamage } from "./cunning-strike.ts";
 import {
   reactionModifierReductionRoll,
   reactionRollOrDamageReductionChoices,
@@ -257,6 +259,7 @@ import { attackActionOptionName } from "./statblock-attacks.ts";
 import type {
   BattleAfterDamageEvent,
   BattleAttackRollResult,
+  BattleAttackDamageContinuationCunningStrikeFrame,
   BattleAttackDamageContinuationConcentrationFrame,
   BattleAttackDamageContinuationWithoutConcentration,
   BattleAttackDamageEvent,
@@ -284,6 +287,7 @@ import type {
   BattleInterruptProcedureChoice,
   BattleInterruptProcedureModifierChoice,
   BattleInterruptProcedureSelection,
+  BattleCunningStrikeContinuationFill,
   BattleReplayContinuationFrame,
   BattleResolutionInput,
   BattleResolutionInputForSubject,
@@ -720,6 +724,23 @@ export function resolveBattleSubjectInternal(
           );
         }
         return resolveAttackDamageContinuationConcentration({
+          state: input.state,
+          frame: activeFrame,
+          subject: input.subject,
+          fills: input.fills,
+        });
+      }
+      if (activeFrame.kind === "attackDamageContinuationCunningStrike") {
+        if (
+          !sameBattleSubject(input.subject, activeFrame.continuation.subject)
+        ) {
+          return invalidResult(
+            input.state,
+            "staleSubject",
+            "Cunning Strike after-damage effect must be resolved before other battle subjects.",
+          );
+        }
+        return resolveAttackDamageContinuationCunningStrike({
           state: input.state,
           frame: activeFrame,
           subject: input.subject,
@@ -4502,25 +4523,26 @@ export function resumeInterruptedProcedure(
       continuationConcentrationSavingThrows,
       attackDamageContinuationTargetSpatialFacts(continuation),
     );
-    return openAfterDamageSequenceInterruptWindow({
+    const afterDamageEvent = {
+      damageSourceId: continuation.attackerId,
+      damagedId: continuation.targetId,
+      damageAmount,
+      reactionSpellTargetFacts: reactionSpellTargetFactsForAfterDamage({
+        facts: attackDamageContinuationTargetSpatialFacts(continuation),
+        damagedId: continuation.targetId,
+        damageSourceId: continuation.attackerId,
+      }),
+    } satisfies BattleAfterDamageEvent;
+    return resolveAttackDamageContinuationCunningStrike({
       state: damagedState,
+      frame: {
+        kind: "attackDamageContinuationCunningStrike",
+        continuation,
+        afterDamageEvent,
+        handledInterruptTrigger,
+      },
       subject: continuation.subject,
-      events: [
-        {
-          damageSourceId: continuation.attackerId,
-          damagedId: continuation.targetId,
-          damageAmount,
-          reactionSpellTargetFacts: reactionSpellTargetFactsForAfterDamage({
-            facts: attackDamageContinuationTargetSpatialFacts(continuation),
-            damagedId: continuation.targetId,
-            damageSourceId: continuation.attackerId,
-          }),
-        },
-      ],
-      objectDamages: [],
-      objectIgnitions: [],
-      droppedObjects: [],
-      handledInterruptTrigger,
+      fills: attackDamageContinuationCunningStrikePrefixFills(continuation),
     });
   }
 
@@ -4530,6 +4552,90 @@ export function resumeInterruptedProcedure(
     handledInterruptTrigger,
     continuation.fills,
   );
+}
+
+export function resolveAttackDamageContinuationCunningStrike(input: {
+  readonly state: BattleState;
+  readonly frame: BattleAttackDamageContinuationCunningStrikeFrame;
+  readonly subject: BattleSubject;
+  readonly fills: readonly BattleFill[];
+}): BattleResolutionResult {
+  const continuation = input.frame.continuation;
+  if (continuation.cunningStrike === undefined) {
+    return openAfterDamageSequenceInterruptWindow({
+      state: input.state,
+      subject: continuation.subject,
+      events: [input.frame.afterDamageEvent],
+      objectDamages: [],
+      objectIgnitions: [],
+      droppedObjects: [],
+      handledInterruptTrigger: input.frame.handledInterruptTrigger,
+    });
+  }
+  const stateWithoutCurrentFrame =
+    currentInterruptFrame(input.state)?.kind ===
+    "attackDamageContinuationCunningStrike"
+      ? {
+          ...input.state,
+          interruptStack: input.state.interruptStack.slice(0, -1),
+        }
+      : input.state;
+  const nextFill = attackDamageContinuationCunningStrikeFill(
+    input.frame,
+    input.fills,
+  );
+  if (nextFill.tag === "invalid") {
+    return invalidResult(input.state, "invalidFill", nextFill.message);
+  }
+  const cunningStrike = {
+    ...continuation.cunningStrike,
+    fills:
+      nextFill.value === undefined
+        ? continuation.cunningStrike.fills
+        : [...continuation.cunningStrike.fills, nextFill.value],
+  };
+  const fillSet = attackDamageContinuationCunningStrikeFillSet(
+    cunningStrike.fills,
+  );
+  if (fillSet.tag === "invalid") {
+    return invalidResult(input.state, "invalidFill", fillSet.message);
+  }
+  const resolved = resolveCunningStrikeAfterAttackDamage({
+    state: stateWithoutCurrentFrame,
+    selected: cunningStrike.selected,
+    savingThrow: fillSet.savingThrow,
+    movement: fillSet.movement,
+    toolPossession: fillSet.toolPossession,
+  });
+  if (resolved.tag === "invalid") {
+    return invalidResult(input.state, "invalidFill", resolved.message);
+  }
+  if (resolved.tag === "needsHoles") {
+    const pendingFrame: BattleAttackDamageContinuationCunningStrikeFrame = {
+      ...input.frame,
+      continuation: {
+        ...continuation,
+        cunningStrike,
+      },
+    };
+    const pendingState = {
+      ...stateWithoutCurrentFrame,
+      interruptStack: [
+        ...stateWithoutCurrentFrame.interruptStack,
+        pendingFrame,
+      ],
+    };
+    return needsHolesResult(pendingState, input.subject, resolved.holes);
+  }
+  return openAfterDamageSequenceInterruptWindow({
+    state: resolved.state,
+    subject: continuation.subject,
+    events: [input.frame.afterDamageEvent],
+    objectDamages: [],
+    objectIgnitions: [],
+    droppedObjects: [],
+    handledInterruptTrigger: input.frame.handledInterruptTrigger,
+  });
 }
 
 export function openAfterDamageSequenceInterruptWindow(input: {
@@ -5043,6 +5149,111 @@ export function attackDamageContinuationConcentrationFill(
   return { tag: "ok", value: remaining[0] };
 }
 
+function attackDamageContinuationCunningStrikeFill(
+  frame: BattleAttackDamageContinuationCunningStrikeFrame,
+  fills: readonly BattleFill[],
+):
+  | {
+      readonly tag: "ok";
+      readonly value: BattleCunningStrikeContinuationFill | undefined;
+    }
+  | { readonly tag: "invalid"; readonly message: string } {
+  const prefix = attackDamageContinuationCunningStrikePrefixFills(
+    frame.continuation,
+  );
+  const accumulated = battleFillPrefixAccumulated(prefix, fills);
+  const remaining = accumulated ? fills.slice(prefix.length) : fills;
+  if (remaining.length === 0) {
+    return { tag: "ok", value: undefined };
+  }
+  if (
+    remaining.length !== 1 ||
+    !isCunningStrikeContinuationFill(remaining[0]!)
+  ) {
+    return {
+      tag: "invalid",
+      message:
+        "Cunning Strike continuation accepts one requested Cunning Strike after-damage fill after the original attack fills.",
+    };
+  }
+  return { tag: "ok", value: remaining[0] };
+}
+
+function attackDamageContinuationCunningStrikePrefixFills(
+  continuation: BattleAttackDamageContinuationWithoutConcentration,
+): readonly BattleFill[] {
+  return [
+    ...continuation.fills,
+    ...attackDamageContinuationConcentrationFills(continuation),
+    ...(continuation.cunningStrike?.fills ?? []),
+  ];
+}
+
+function isCunningStrikeContinuationFill(
+  fill: BattleFill,
+): fill is BattleCunningStrikeContinuationFill {
+  return (
+    fill.kind === "savingThrowOutcome" ||
+    fill.kind === "movement" ||
+    fill.kind === "toolPossessionFacts"
+  );
+}
+
+function attackDamageContinuationCunningStrikeFillSet(
+  fills: readonly BattleCunningStrikeContinuationFill[],
+):
+  | {
+      readonly tag: "ok";
+      readonly savingThrow:
+        | Extract<BattleFill, { readonly kind: "savingThrowOutcome" }>
+        | undefined;
+      readonly movement:
+        | Extract<BattleFill, { readonly kind: "movement" }>
+        | undefined;
+      readonly toolPossession:
+        | Extract<BattleFill, { readonly kind: "toolPossessionFacts" }>
+        | undefined;
+    }
+  | { readonly tag: "invalid"; readonly message: string } {
+  let savingThrow:
+    | Extract<BattleFill, { readonly kind: "savingThrowOutcome" }>
+    | undefined;
+  let movement: Extract<BattleFill, { readonly kind: "movement" }> | undefined;
+  let toolPossession:
+    | Extract<BattleFill, { readonly kind: "toolPossessionFacts" }>
+    | undefined;
+  for (const fill of fills) {
+    if (fill.kind === "savingThrowOutcome") {
+      if (savingThrow !== undefined) {
+        return {
+          tag: "invalid",
+          message: "Cunning Strike Saving Throw was filled twice.",
+        };
+      }
+      savingThrow = fill;
+      continue;
+    }
+    if (fill.kind === "movement") {
+      if (movement !== undefined) {
+        return {
+          tag: "invalid",
+          message: "Cunning Strike movement was filled twice.",
+        };
+      }
+      movement = fill;
+      continue;
+    }
+    if (toolPossession !== undefined) {
+      return {
+        tag: "invalid",
+        message: "Cunning Strike tool-possession facts were filled twice.",
+      };
+    }
+    toolPossession = fill;
+  }
+  return { tag: "ok", savingThrow, movement, toolPossession };
+}
+
 export function battleFillEquals(a: BattleFill, b: BattleFill): boolean {
   if (a.kind !== b.kind || a.holeId !== b.holeId) {
     return false;
@@ -5059,6 +5270,10 @@ export function battleFillEquals(a: BattleFill, b: BattleFill): boolean {
       attackDamageRiderSelectionsEqual(
         a.selectedAttackDamageRiderUnitIds,
         b.selectedAttackDamageRiderUnitIds,
+      ) &&
+      cunningStrikeOptionSelectionsEqual(
+        a.cunningStrikeOption,
+        b.cunningStrikeOption,
       ) &&
       spellDamageRerollDecisionsEqual(a.spellDamageReroll, b.spellDamageReroll)
     );
@@ -5083,6 +5298,15 @@ export function battleFillEquals(a: BattleFill, b: BattleFill): boolean {
         b.value.d20TestNaturalOneReroll,
       )
     );
+  }
+  if (a.kind === "savingThrowOutcome" && b.kind === "savingThrowOutcome") {
+    return savingThrowOutcomeValuesEqual(a.value, b.value);
+  }
+  if (a.kind === "movement" && b.kind === "movement") {
+    return movementFillValuesEqual(a.value, b.value);
+  }
+  if (a.kind === "toolPossessionFacts" && b.kind === "toolPossessionFacts") {
+    return arrayValuesEqual(a.value.toolIdsOnPerson, b.value.toolIdsOnPerson);
   }
   if (a.kind === "deathSavingThrow" && b.kind === "deathSavingThrow") {
     return (
@@ -5238,6 +5462,71 @@ function rolledD20sEqual(
   );
 }
 
+function savingThrowOutcomeValuesEqual(
+  a: Extract<BattleFill, { readonly kind: "savingThrowOutcome" }>["value"],
+  b: Extract<BattleFill, { readonly kind: "savingThrowOutcome" }>["value"],
+): boolean {
+  return (
+    a.outcomes.length === b.outcomes.length &&
+    a.outcomes.every((outcome, index) =>
+      savingThrowOutcomesEqual(outcome, b.outcomes[index]),
+    )
+  );
+}
+
+function savingThrowOutcomesEqual(
+  a: BattleSavingThrowOutcome,
+  b: BattleSavingThrowOutcome | undefined,
+): boolean {
+  return (
+    b !== undefined &&
+    a.targetId === b.targetId &&
+    a.succeeded === b.succeeded &&
+    a.naturalD20 === b.naturalD20 &&
+    a.withoutRoll === b.withoutRoll &&
+    rolledD20sEqual(a.rolledD20s, b.rolledD20s) &&
+    d20TestNaturalOneRerollOutcomeDecisionsEqual(
+      a.d20TestNaturalOneReroll,
+      b.d20TestNaturalOneReroll,
+    )
+  );
+}
+
+function movementFillValuesEqual(
+  a: Extract<BattleFill, { readonly kind: "movement" }>["value"],
+  b: Extract<BattleFill, { readonly kind: "movement" }>["value"],
+): boolean {
+  return (
+    a.speedKind === b.speedKind &&
+    a.movementCostFeet === b.movementCostFeet &&
+    opportunityAttackThreatsEqual(
+      a.provokedOpportunityAttacks,
+      b.provokedOpportunityAttacks,
+    )
+  );
+}
+
+function opportunityAttackThreatsEqual(
+  a: readonly BattleOpportunityAttackThreat[],
+  b: readonly BattleOpportunityAttackThreat[],
+): boolean {
+  return (
+    a.length === b.length &&
+    a.every((threat, index) => {
+      const other = b[index];
+      return (
+        other !== undefined &&
+        threat.reactorId === other.reactorId &&
+        threat.attackName === other.attackName
+      );
+    })
+  );
+}
+
+function arrayValuesEqual<T>(a: readonly T[], b: readonly T[]): boolean {
+  return a.length === b.length && a.every((value, index) => value === b[index]);
+}
+
 export function rolledDiceGroupsEqual(
   a: BattleRolledDiceFill["value"],
   b: BattleRolledDiceFill["value"],
@@ -5262,6 +5551,16 @@ export function attackDamageRiderSelectionsEqual(
     (a ?? []).length === (b ?? []).length &&
     (a ?? []).every((unitId, index) => unitId === (b ?? [])[index])
   );
+}
+
+function cunningStrikeOptionSelectionsEqual(
+  a: BattleRolledDiceFill["cunningStrikeOption"],
+  b: BattleRolledDiceFill["cunningStrikeOption"],
+): boolean {
+  if (a === undefined || b === undefined) {
+    return a === b;
+  }
+  return a.unitId === b.unitId && a.optionId === b.optionId;
 }
 
 function spellDamageRerollDecisionsEqual(

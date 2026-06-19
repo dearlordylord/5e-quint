@@ -454,6 +454,8 @@ function activeEffectSourcesCondition(
         (condition === "prone" && effect.condition === "unconscious"))) ||
     (effect.kind === "unitFeatureCondition" &&
       effect.condition === condition) ||
+    (effect.kind === "unitFeatureConditionEndTurnSave" &&
+      effect.condition === condition) ||
     (effect.kind === "targetActionEndedSpellCondition" &&
       effect.condition === condition) ||
     (effect.kind === "spellConditionRepeatSave" &&
@@ -473,6 +475,8 @@ function activeEffectDirectlyAppliesCondition(
   return (
     (effect.kind === "spellCondition" && effect.condition === condition) ||
     (effect.kind === "unitFeatureCondition" &&
+      effect.condition === condition) ||
+    (effect.kind === "unitFeatureConditionEndTurnSave" &&
       effect.condition === condition) ||
     (effect.kind === "targetActionEndedSpellCondition" &&
       effect.condition === condition) ||

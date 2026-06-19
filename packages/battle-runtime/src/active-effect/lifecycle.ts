@@ -1,5 +1,6 @@
 // Active Effect lifecycle: pure-effect operations over a creature's effect list.
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.stunning-strike
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.cunning-strike
 // This module is a value-leaf — it depends only on effect types and the
 // conditions algebra, never on battle-reducer runtime. Spell-coupled
 // apply-from-invocation logic stays in battle-reducer/ and calls into here.
@@ -27,6 +28,10 @@ export type ConditionApplyingActiveEffect =
   | Extract<BattleActiveEffect, { readonly kind: "unitFeatureCondition" }>
   | Extract<
       BattleActiveEffect,
+      { readonly kind: "unitFeatureConditionEndTurnSave" }
+    >
+  | Extract<
+      BattleActiveEffect,
       { readonly kind: "targetActionEndedSpellCondition" }
     >
   | Extract<BattleActiveEffect, { readonly kind: "spellConditionRepeatSave" }>
@@ -50,6 +55,7 @@ export function isConditionApplyingActiveEffect(
   return (
     effect.kind === "spellCondition" ||
     effect.kind === "unitFeatureCondition" ||
+    effect.kind === "unitFeatureConditionEndTurnSave" ||
     effect.kind === "targetActionEndedSpellCondition" ||
     effect.kind === "spellConditionRepeatSave" ||
     effect.kind === "spellConditionEndTurnSave" ||
@@ -66,6 +72,7 @@ export function activeEffectCondition(
   if (
     effect.kind === "spellCondition" ||
     effect.kind === "unitFeatureCondition" ||
+    effect.kind === "unitFeatureConditionEndTurnSave" ||
     effect.kind === "targetActionEndedSpellCondition" ||
     effect.kind === "spellConditionRepeatSave" ||
     effect.kind === "spellConditionEndTurnSave"

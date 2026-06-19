@@ -1,5 +1,5 @@
 // RAW-COVERAGE: runtime-owner RAW-QCORE9-UNIT-FEATURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-action-area-save-damage-replacement unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-damage-die-floor unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bardic-inspiration-grant unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-delegated-standard-actions unit-feature.bonus-action-ongoing-rage unit-feature.creature-space-movement-permission unit-feature.druid-wild-shape-known-form unit-feature.enemy-zero-hit-point-temporary-hit-points unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.grappler unit-feature.hide-action-obscurement-permission unit-feature.hunters-prey unit-feature.initiative-proficiency-and-swap unit-feature.innate-sorcery-activation unit-feature.light-extra-attack-damage-ability-modifier unit-feature.magic-action-area-save-damage-healing unit-feature.magic-action-healing-pool unit-feature.martial-arts-attack-projection unit-feature.monk-focus-battle-options unit-feature.open-hand-technique unit-feature.paladin-sacred-weapon unit-feature.passive-ability-check-roll-mode unit-feature.passive-armor-class-bonus unit-feature.passive-damage-resistance unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-saving-throw-roll-mode unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.potent-cantrip unit-feature.reaction-roll-or-damage-reduction unit-feature.remarkable-athlete unit-feature.rogue-steady-aim unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.spell-slot-healing-modifier unit-feature.stunning-strike unit-feature.weapon-critical-range-19 unit-feature.weapon-damage-dice-roll-choice unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave unit-feature.zero-hit-point-replacement
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-action-area-save-damage-replacement unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-damage-die-floor unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bardic-inspiration-grant unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-delegated-standard-actions unit-feature.bonus-action-ongoing-rage unit-feature.creature-space-movement-permission unit-feature.cunning-strike unit-feature.druid-wild-shape-known-form unit-feature.enemy-zero-hit-point-temporary-hit-points unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.grappler unit-feature.hide-action-obscurement-permission unit-feature.hunters-prey unit-feature.initiative-proficiency-and-swap unit-feature.innate-sorcery-activation unit-feature.light-extra-attack-damage-ability-modifier unit-feature.magic-action-area-save-damage-healing unit-feature.magic-action-healing-pool unit-feature.martial-arts-attack-projection unit-feature.monk-focus-battle-options unit-feature.open-hand-technique unit-feature.paladin-sacred-weapon unit-feature.passive-ability-check-roll-mode unit-feature.passive-armor-class-bonus unit-feature.passive-damage-resistance unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-saving-throw-roll-mode unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.potent-cantrip unit-feature.reaction-roll-or-damage-reduction unit-feature.remarkable-athlete unit-feature.rogue-steady-aim unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.spell-slot-healing-modifier unit-feature.stunning-strike unit-feature.weapon-critical-range-19 unit-feature.weapon-damage-dice-roll-choice unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave unit-feature.zero-hit-point-replacement
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.d20-test-natural-one-reroll
 import { Match } from "effect";
 import * as Either from "effect/Either";
@@ -34,6 +34,7 @@ import type {
   EffectAtom,
   EquipmentPredicate,
   CreatureType,
+  CunningStrikeMechanics,
   DragonbornSpeciesRecord,
   StandardActionKind,
   UnitRecord,
@@ -131,6 +132,7 @@ export const BONUS_ACTION_DELEGATED_STANDARD_ACTIONS_SUPPORT_PROFILE =
 export const REMARKABLE_ATHLETE_SUPPORT_PROFILE = "remarkableAthlete";
 export const OPEN_HAND_TECHNIQUE_SUPPORT_PROFILE = "openHandTechnique";
 export const STUNNING_STRIKE_SUPPORT_PROFILE = "stunningStrike";
+export const CUNNING_STRIKE_SUPPORT_PROFILE = "cunningStrike";
 export const PALADIN_SACRED_WEAPON_SUPPORT_PROFILE = "paladinSacredWeapon";
 export const HUNTERS_PREY_SUPPORT_PROFILE = "huntersPrey";
 export const ROGUE_STEADY_AIM_SUPPORT_PROFILE = "rogueSteadyAim";
@@ -229,6 +231,7 @@ export const BATTLE_UNIT_SUPPORT_PROFILES = [
   REMARKABLE_ATHLETE_SUPPORT_PROFILE,
   OPEN_HAND_TECHNIQUE_SUPPORT_PROFILE,
   STUNNING_STRIKE_SUPPORT_PROFILE,
+  CUNNING_STRIKE_SUPPORT_PROFILE,
   PALADIN_SACRED_WEAPON_SUPPORT_PROFILE,
   HUNTERS_PREY_SUPPORT_PROFILE,
   ROGUE_STEADY_AIM_SUPPORT_PROFILE,
@@ -711,6 +714,81 @@ export type BattleStunningStrikeSupportProfile = {
   readonly kind: typeof STUNNING_STRIKE_SUPPORT_PROFILE;
   readonly stunningStrike: StunningStrikeProfile;
 };
+export type CunningStrikeDieCost = {
+  readonly kind: "sneakAttackDamageDice";
+  readonly dice: 1;
+  readonly dieSize: 6;
+};
+export type CunningStrikeSurfaceOption =
+  CunningStrikeMechanics["options"][number];
+export type CunningStrikeOptionSelectionId = CunningStrikeSurfaceOption["id"];
+export type CunningStrikeEquipmentGatedConditionSaveEffect = {
+  readonly kind: "equipmentGatedConditionSave";
+  readonly requires: {
+    readonly kind: "equipmentOnPerson";
+    readonly equipment: {
+      readonly kind: "tool";
+      readonly toolId: "poisoners_kit";
+    };
+  };
+  readonly save: { readonly ability: "con" };
+  readonly onFail: {
+    readonly kind: "applyCondition";
+    readonly condition: "poisoned";
+    readonly durationTicks: ElapsedTimeTicks;
+    readonly repeatSave: {
+      readonly cadence: "endOfTargetTurn";
+      readonly onSuccess: "endCondition";
+    };
+  };
+};
+export type CunningStrikeSizeGatedConditionSaveEffect = {
+  readonly kind: "sizeGatedConditionSave";
+  readonly target: { readonly maxSize: "large" };
+  readonly save: { readonly ability: "dex" };
+  readonly onFail: {
+    readonly kind: "applyCondition";
+    readonly condition: "prone";
+  };
+};
+export type CunningStrikePostDamageMovementEffect = {
+  readonly kind: "postDamageMovement";
+  readonly movement: {
+    readonly timing: "immediatelyAfterAttack";
+    readonly distance: { readonly kind: "halfSpeed" };
+    readonly opportunityAttacks: "doesNotProvoke";
+  };
+};
+export type CunningStrikeOptionEffect =
+  | CunningStrikeEquipmentGatedConditionSaveEffect
+  | CunningStrikeSizeGatedConditionSaveEffect
+  | CunningStrikePostDamageMovementEffect;
+export type CunningStrikeOption = {
+  readonly selectionId: CunningStrikeOptionSelectionId;
+  readonly cost: CunningStrikeDieCost;
+  readonly effect: CunningStrikeOptionEffect;
+};
+export type CunningStrikeProfile = {
+  readonly trigger: {
+    readonly kind: "dealSneakAttackDamage";
+    readonly sourceUnitId: UnitRecord["id"];
+  };
+  readonly choice: {
+    readonly kind: "chooseOne";
+    readonly maxOptions: 1;
+  };
+  readonly effectSaveDc: {
+    readonly kind: "classFeatureAbilitySaveDc";
+    readonly base: 8;
+    readonly ability: "dex";
+  };
+  readonly options: readonly CunningStrikeOption[];
+};
+export type BattleCunningStrikeSupportProfile = {
+  readonly kind: typeof CUNNING_STRIKE_SUPPORT_PROFILE;
+  readonly unit: UnitRecord;
+  readonly cunningStrike: CunningStrikeProfile;
+};
 export type PaladinSacredWeaponProfile = {
   readonly activationCost: {
     readonly kind: "standardAction";
@@ -904,6 +982,7 @@ export type BattleUnitSupportProfile =
   | BattleRemarkableAthleteSupportProfile
   | BattleOpenHandTechniqueSupportProfile
   | BattleStunningStrikeSupportProfile
+  | BattleCunningStrikeSupportProfile
   | BattlePaladinSacredWeaponSupportProfile
   | BattleHuntersPreySupportProfile
   | BattleRogueSteadyAimSupportProfile
@@ -938,6 +1017,7 @@ export type BattleUnitSupportProfile =
       | "remarkableAthlete"
       | "openHandTechnique"
       | "stunningStrike"
+      | "cunningStrike"
       | "paladinSacredWeapon"
       | "huntersPrey"
       | "rogueSteadyAim"
@@ -1394,6 +1474,16 @@ export function battleUnitSupportProfilesForUnit(input: {
   }
   if (stunningStrikeSupport !== null) {
     supportProfiles.push(stunningStrikeSupport);
+  }
+
+  const cunningStrikeSupport = battleCunningStrikeSupportForUnit(input.unit);
+  if (cunningStrikeSupport === "unsupported") {
+    return battleUnitSupportProfileIssue(
+      `Unsupported battle Cunning Strike Unit hook: ${input.unit.id}.`,
+    );
+  }
+  if (cunningStrikeSupport !== null) {
+    supportProfiles.push(cunningStrikeSupport);
   }
 
   const paladinSacredWeaponSupport = battlePaladinSacredWeaponSupportForUnit(
@@ -2150,6 +2240,7 @@ export type SupportedUnitFeatureProfile =
       readonly unit: UnitRecord;
       readonly stunningStrike: StunningStrikeProfile;
     }
+  | BattleCunningStrikeSupportProfile
   | {
       readonly kind: "paladinSacredWeapon";
       readonly unit: UnitRecord;
@@ -2220,6 +2311,10 @@ export type BattleOpenHandTechniqueSupport =
   | null;
 export type BattleStunningStrikeSupport =
   | BattleStunningStrikeSupportProfile
+  | "unsupported"
+  | null;
+export type BattleCunningStrikeSupport =
+  | BattleCunningStrikeSupportProfile
   | "unsupported"
   | null;
 export type BattlePaladinSacredWeaponSupport =
@@ -3309,6 +3404,22 @@ export function battleStunningStrikeSupportForUnit(
     : {
         kind: STUNNING_STRIKE_SUPPORT_PROFILE,
         stunningStrike: profile.stunningStrike,
+      };
+}
+
+export function battleCunningStrikeSupportForUnit(
+  unit: UnitRecord,
+): BattleCunningStrikeSupport {
+  if (!hasClassFeatureMechanicsFamily(unit, "cunning_strike")) {
+    return null;
+  }
+  const profile = cunningStrikeProfileForUnit(unit);
+  return profile === null
+    ? "unsupported"
+    : {
+        kind: CUNNING_STRIKE_SUPPORT_PROFILE,
+        unit,
+        cunningStrike: profile.cunningStrike,
       };
 }
 
@@ -5236,6 +5347,7 @@ export function parseSupportedUnitFeatureProfile(
     remarkableAthleteProfileForUnit(unit) ??
     openHandTechniqueProfileForUnit(unit) ??
     stunningStrikeProfileForUnit(unit) ??
+    cunningStrikeProfileForUnit(unit, classLevels) ??
     paladinSacredWeaponProfileForUnit(unit) ??
     huntersPreyProfileForUnit(unit) ??
     rogueSteadyAimProfileForUnit(unit) ??
@@ -5458,6 +5570,174 @@ function stunningStrikeProfileForUnit(
           appliesTo: "nextAttackRollAgainstTargetBeforeExpiration",
         },
       },
+    },
+  };
+}
+
+function cunningStrikeCostForSurfaceOption(
+  option: CunningStrikeSurfaceOption,
+): CunningStrikeDieCost | null {
+  return option.cost.kind === "sneak_attack_damage_dice" &&
+    option.cost.dice === 1 &&
+    option.cost.dieSize === 6
+    ? { kind: "sneakAttackDamageDice", dice: 1, dieSize: 6 }
+    : null;
+}
+
+function cunningStrikeEffectForSurfaceOption(
+  option: CunningStrikeSurfaceOption,
+): CunningStrikeOptionEffect | null {
+  if ("requires" in option) {
+    if (
+      option.requires.kind !== "equipment_on_person" ||
+      option.requires.equipment.kind !== "tool" ||
+      option.requires.equipment.toolId !== "poisoners_kit" ||
+      option.save.ability !== "con" ||
+      option.onFail.kind !== "apply_condition" ||
+      option.onFail.condition !== "poisoned" ||
+      option.onFail.repeatSave.cadence !== "end_of_target_turn" ||
+      option.onFail.repeatSave.onSuccess !== "end_condition"
+    ) {
+      return null;
+    }
+    const duration = elapsedTimeTicksFromTimeSpanDuration(
+      option.onFail.duration,
+    );
+    if (Either.isLeft(duration)) {
+      return null;
+    }
+    return {
+      kind: "equipmentGatedConditionSave",
+      requires: {
+        kind: "equipmentOnPerson",
+        equipment: { kind: "tool", toolId: "poisoners_kit" },
+      },
+      save: { ability: option.save.ability },
+      onFail: {
+        kind: "applyCondition",
+        condition: option.onFail.condition,
+        durationTicks: duration.right,
+        repeatSave: {
+          cadence: "endOfTargetTurn",
+          onSuccess: "endCondition",
+        },
+      },
+    };
+  }
+  if ("target" in option) {
+    return option.target.maxSize === "large" &&
+      option.save.ability === "dex" &&
+      option.onFail.kind === "apply_condition" &&
+      option.onFail.condition === "prone"
+      ? {
+          kind: "sizeGatedConditionSave",
+          target: { maxSize: option.target.maxSize },
+          save: { ability: option.save.ability },
+          onFail: {
+            kind: "applyCondition",
+            condition: option.onFail.condition,
+          },
+        }
+      : null;
+  }
+  if ("movement" in option) {
+    return option.movement.timing === "immediately_after_attack" &&
+      option.movement.distance.kind === "half_speed" &&
+      option.movement.opportunityAttacks === "does_not_provoke"
+      ? {
+          kind: "postDamageMovement",
+          movement: {
+            timing: "immediatelyAfterAttack",
+            distance: { kind: "halfSpeed" },
+            opportunityAttacks: "doesNotProvoke",
+          },
+        }
+      : null;
+  }
+  return null;
+}
+
+function cunningStrikeOptionForSurfaceOption(
+  option: CunningStrikeSurfaceOption,
+): CunningStrikeOption | null {
+  const cost = cunningStrikeCostForSurfaceOption(option);
+  if (cost === null) {
+    return null;
+  }
+  const effect = cunningStrikeEffectForSurfaceOption(option);
+  return effect === null
+    ? null
+    : {
+        selectionId: option.id,
+        cost,
+        effect,
+      };
+}
+
+function cunningStrikeOptionsForMechanics(
+  mechanics: CunningStrikeMechanics,
+): readonly CunningStrikeOption[] | null {
+  const options: CunningStrikeOption[] = [];
+  for (const option of mechanics.options) {
+    const projected = cunningStrikeOptionForSurfaceOption(option);
+    if (projected === null) {
+      return null;
+    }
+    options.push(projected);
+  }
+  return options;
+}
+
+function cunningStrikeProfileForUnit(
+  unit: UnitRecord,
+  classLevels?: readonly CharacterBattleClassLevel[],
+): Extract<
+  SupportedUnitFeatureProfile,
+  { readonly kind: "cunningStrike" }
+> | null {
+  if (
+    unit.kind !== "class_feature" ||
+    unit.className !== "rogue" ||
+    unit.mechanics.family !== "cunning_strike"
+  ) {
+    return null;
+  }
+  if (classLevels !== undefined) {
+    const classLevel = findCharacterClassLevel(classLevels, unit.className);
+    if (classLevel === undefined || classLevel < unit.acquiredAtLevel) {
+      return null;
+    }
+  }
+  const mechanics = unit.mechanics;
+  if (
+    mechanics.trigger.kind !== "deal_sneak_attack_damage" ||
+    mechanics.choice.kind !== "choose_one" ||
+    mechanics.choice.maxOptions !== 1 ||
+    mechanics.effectSaveDc.kind !== "class_feature_ability_save_dc" ||
+    mechanics.effectSaveDc.base !== 8 ||
+    mechanics.effectSaveDc.ability !== "dex"
+  ) {
+    return null;
+  }
+  const options = cunningStrikeOptionsForMechanics(mechanics);
+  if (options === null) {
+    return null;
+  }
+  return {
+    kind: CUNNING_STRIKE_SUPPORT_PROFILE,
+    unit,
+    cunningStrike: {
+      trigger: {
+        kind: "dealSneakAttackDamage",
+        sourceUnitId: mechanics.trigger.sourceUnitId,
+      },
+      choice: { kind: "chooseOne", maxOptions: 1 },
+      effectSaveDc: {
+        kind: "classFeatureAbilitySaveDc",
+        base: 8,
+        ability: "dex",
+      },
+      options,
     },
   };
 }

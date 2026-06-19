@@ -851,6 +851,15 @@ export type OpenHandTechniqueMechanics = Schema.Schema.Type<
 export type StunningStrikeMechanics = Schema.Schema.Type<
   typeof SurfaceSchema.StunningStrikeMechanicsSchema
 >;
+export type CunningStrikeMechanics = Schema.Schema.Type<
+  typeof SurfaceSchema.CunningStrikeMechanicsSchema
+>;
+export type RogueCunningStrikeClassFeatureRecord = Omit<
+  Schema.Schema.Type<typeof SurfaceSchema.RogueClassFeatureRecordSchema>,
+  "mechanics"
+> & {
+  readonly mechanics: CunningStrikeMechanics;
+};
 export type SacredWeaponMechanics = Schema.Schema.Type<
   typeof SurfaceSchema.SacredWeaponMechanicsSchema
 >;
@@ -887,18 +896,18 @@ export type NonSpellcastingClassRecord = Schema.Schema.Type<
 export type NonWizardClassRecord = Schema.Schema.Type<
   typeof SurfaceSchema.NonWizardClassRecordSchema
 >;
-export type ClassFeatureRecord = Schema.Schema.Type<
-  typeof SurfaceSchema.ClassFeatureRecordSchema
->;
+export type ClassFeatureRecord =
+  | Schema.Schema.Type<typeof SurfaceSchema.ClassFeatureRecordSchema>
+  | RogueCunningStrikeClassFeatureRecord;
 export type PaladinClassFeatureRecord = Schema.Schema.Type<
   typeof SurfaceSchema.PaladinClassFeatureRecordSchema
 >;
 export type RangerClassFeatureRecord = Schema.Schema.Type<
   typeof SurfaceSchema.RangerClassFeatureRecordSchema
 >;
-export type RogueClassFeatureRecord = Schema.Schema.Type<
-  typeof SurfaceSchema.RogueClassFeatureRecordSchema
->;
+export type RogueClassFeatureRecord =
+  | Schema.Schema.Type<typeof SurfaceSchema.RogueClassFeatureRecordSchema>
+  | RogueCunningStrikeClassFeatureRecord;
 export type WarlockClassFeatureRecord = Schema.Schema.Type<
   typeof SurfaceSchema.WarlockClassFeatureRecordSchema
 >;
@@ -1065,9 +1074,9 @@ export type WeaponTemplateRecord = Schema.Schema.Type<
 export type WeaponRecord = Schema.Schema.Type<
   typeof SurfaceSchema.WeaponRecordSchema
 >;
-export type UnitRecord = Schema.Schema.Type<
-  typeof SurfaceSchema.UnitRecordSchema
->;
+export type UnitRecord =
+  | Schema.Schema.Type<typeof SurfaceSchema.UnitRecordSchema>
+  | RogueCunningStrikeClassFeatureRecord;
 export type StatBlockRecord = Schema.Schema.Type<
   typeof SurfaceSchema.StatBlockRecordSchema
 >;

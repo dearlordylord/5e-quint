@@ -147,6 +147,15 @@ const battleRuntimeExecutableEvidenceRequirementsByUnitId = new Map([
       },
     ],
   ],
+  [
+    "rogue_cunning_strike",
+    [
+      {
+        tag: selectedIdentityMbtEvidenceTag,
+        taskId: "L5-A13-ROGUE-CUNNING-STRIKE-BATTLE-RUNTIME",
+      },
+    ],
+  ],
 ]);
 
 const ownerEvidenceRequired = new Map([

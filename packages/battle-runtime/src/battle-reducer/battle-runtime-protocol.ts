@@ -265,6 +265,15 @@ export type AttackFillSet =
       readonly stunningStrikeSavingThrow:
         | Extract<BattleFill, { readonly kind: "savingThrowOutcome" }>
         | undefined;
+      readonly cunningStrikeSavingThrow:
+        | Extract<BattleFill, { readonly kind: "savingThrowOutcome" }>
+        | undefined;
+      readonly cunningStrikeMovement:
+        | Extract<BattleFill, { readonly kind: "movement" }>
+        | undefined;
+      readonly cunningStrikeToolPossession:
+        | Extract<BattleFill, { readonly kind: "toolPossessionFacts" }>
+        | undefined;
       readonly weaponMasteryCleaveDecision:
         | Extract<BattleFill, { readonly kind: "unitFeatureDecision" }>
         | undefined;

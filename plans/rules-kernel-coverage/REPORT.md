@@ -155,19 +155,19 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 
 ## Battle Hole Frontier
 
-- Total classified rows: 157
+- Total classified rows: 160
 
 | Subject | Count |
 | --- | ---: |
-| battle-hole-family | 75 |
-| battle-fill-kind | 46 |
+| battle-hole-family | 77 |
+| battle-fill-kind | 47 |
 | battle-subject-kind | 36 |
 
 | Classification | Count |
 | --- | ---: |
-| semantic-frontier | 128 |
+| semantic-frontier | 129 |
 | deterministic-boundary-projection | 0 |
-| table-owned-fact | 29 |
+| table-owned-fact | 31 |
 | unsupported-dead-branch | 0 |
 
 | Subject | Id | Kind | Classification | Coverage | Follow-up |
@@ -329,6 +329,9 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | battle-subject-kind | `runtimeCompelledAction` | `runtimeCompelledAction` | semantic-frontier | `BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY` | _none_ |
 | battle-subject-kind | `runtimeAltitudeControl` | `runtimeAltitudeControl` | semantic-frontier | `BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY` | _none_ |
 | battle-subject-kind | `runtimeAreaEffect` | `runtimeAreaEffect` | semantic-frontier | `BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY` | _none_ |
+| battle-hole-family | `BattleToolPossessionFactsHole` | `toolPossessionFacts` | table-owned-fact | `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | _none_ |
+| battle-hole-family | `BattleUnitFeatureConditionEndTurnSavingThrowOutcomeHole` | `savingThrowOutcome` | semantic-frontier | `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS` | _none_ |
+| battle-fill-kind | `toolPossessionFacts` | `toolPossessionFacts` | table-owned-fact | `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | _none_ |
 
 ## QNT Owner Roles
 
@@ -357,6 +360,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `packages/battle-runtime/battle-runtime-feather-fall.qnt` | semantic-core | `BATTLE.SPELL.FEATHER_FALL_MITIGATION_LIFECYCLE` |
 | `packages/battle-runtime/battle-runtime-feature-turn-end-effects.qnt` | semantic-core | `BATTLE.COMPOSITION.TURN_BOUNDARY_EFFECT_LIFECYCLE_ORDERING`<br>profile-scoped: `unit-feature.attack-action-attack-count-scaling` (`BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
 | `packages/battle-runtime/battle-runtime-ground-command-tests.qnt` | mbt-fixture | `BATTLE.SPELL.SPIKE_GROWTH_MOVEMENT_HAZARD` |
+| `packages/battle-runtime/battle-runtime-cunning-strike.qnt` | proof-only | `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS` |
 | `packages/battle-runtime/battle-runtime-rogue-steady-aim.mbt.qnt` | mbt-fixture | profile-scoped: `unit-feature.rogue-steady-aim` (`BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
 | `packages/battle-runtime/battle-runtime-ground-command.qnt` | semantic-core | `BATTLE.COMMAND.OPTION_AND_NEXT_TURN`, `BATTLE.SPELL.FOG_CLOUD_OBSCUREMENT_LIFECYCLE`, `BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE`, `BATTLE.SPELL.MAGICAL_DARKNESS_POINT_ORIGIN_LIFECYCLE`, `BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE` |
 | `packages/battle-runtime/battle-runtime-gust-of-wind.qnt` | semantic-core | `BATTLE.SPELL.GUST_OF_WIND_LINE_LIFECYCLE` |
@@ -592,6 +596,7 @@ Rows here inventory `packages/**/*.qnt` files excluding `.mbt.qnt` drivers and `
 | `packages/battle-runtime/battle-runtime-condition-spell-resolution.qnt` | qnt-owner-role | proof-only |
 | `packages/battle-runtime/battle-runtime-creature-size-change.qnt` | qnt-owner-role | semantic-core |
 | `packages/battle-runtime/battle-runtime-creature-type-protection.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-cunning-strike.qnt` | qnt-owner-role | proof-only |
 | `packages/battle-runtime/battle-runtime-damage-adjustments.qnt` | qnt-owner-role | semantic-core |
 | `packages/battle-runtime/battle-runtime-direct-condition-lifecycle.qnt` | qnt-owner-role | semantic-core |
 | `packages/battle-runtime/battle-runtime-direct-condition-removal.qnt` | qnt-owner-role | semantic-core |

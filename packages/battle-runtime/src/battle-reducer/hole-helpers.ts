@@ -107,9 +107,7 @@ const byBattleHoleKind = Match.discriminator("kind");
 
 export type BattleHoleFamilyKind = BattleHole["kind"];
 
-export function battleHoleFamilyKind(
-  hole: BattleHole,
-): BattleHoleFamilyKind {
+export function battleHoleFamilyKind(hole: BattleHole): BattleHoleFamilyKind {
   return Match.value(hole)
     .pipe(
       byBattleHoleKind("abilityCheck", () => "abilityCheck" as const),
@@ -247,6 +245,10 @@ export function battleHoleFamilyKind(
       byBattleHoleKind(
         "thaumaturgyActiveOneMinuteEffectCount",
         () => "thaumaturgyActiveOneMinuteEffectCount" as const,
+      ),
+      byBattleHoleKind(
+        "toolPossessionFacts",
+        () => "toolPossessionFacts" as const,
       ),
       byBattleHoleKind(
         "unitFeatureDecision",

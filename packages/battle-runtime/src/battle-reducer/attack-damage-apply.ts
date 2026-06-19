@@ -91,6 +91,7 @@ export function attackDamageHole(
   ongoingDamageModifier = 0,
   weaponDamageDiceRollChoiceUnitIds: readonly UnitRecord["id"][] = [],
   eligibleAttackDamageDieFloorChoiceUnitIds: readonly UnitRecord["id"][] = [],
+  cunningStrikeOptions: BattleDamageRollHole["cunningStrikeOptions"] = [],
 ): BattleDamageRollHole {
   const expression = weaponAttackDamageExpression(
     attack,
@@ -128,6 +129,7 @@ export function attackDamageHole(
     ...(spellMarkedDamageRiders.length === 0
       ? {}
       : { spellMarkedDamageRiders }),
+    ...(cunningStrikeOptions.length === 0 ? {} : { cunningStrikeOptions }),
     ...(weaponDamageDiceRollChoiceUnitIds.length === 0
       ? {}
       : { weaponDamageDiceRollChoiceUnitIds }),
@@ -489,7 +491,8 @@ export function offHandAttackActionOptionsForActor(
     offHandWeaponItemIdForAttack(actor, offHand),
   );
   const {
-    attackDamageAbilityModifierChoice: _projectedOffHandDamageAbilityModifierChoice,
+    attackDamageAbilityModifierChoice:
+      _projectedOffHandDamageAbilityModifierChoice,
     ...projectedOffHandWithoutDamageAbilityModifierChoice
   } = projectedOffHand;
   const twoWeaponFightingSupportUnitIds =
@@ -1017,9 +1020,8 @@ function lightPropertyAbilityChoice(
   } = choice;
   return {
     ...choiceWithoutDamageAbilityModifierChoice,
-    damageAbilityModifier: lightPropertyDamageAbilityModifierForAbilityChoice(
-      choice,
-    ),
+    damageAbilityModifier:
+      lightPropertyDamageAbilityModifierForAbilityChoice(choice),
     ...lightPropertyAttackDamageAbilityModifierChoiceForAbilityChoice(
       choice,
       twoWeaponFightingSupportUnitIds,

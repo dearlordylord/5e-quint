@@ -29,6 +29,7 @@ import type {
   Skill,
   StatBlockRecord,
 } from "@dnd/surface/surface/types";
+import { CUNNING_STRIKE_OPTION_SELECTION_IDS } from "@dnd/surface/surface/schema";
 import { Schema } from "effect";
 import type { StatBlockPartSection } from "../battle-action-options.ts";
 import {
@@ -1196,6 +1197,12 @@ export const BattleHoleSchema = Schema.Union(
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
+    kind: Schema.Literal("toolPossessionFacts"),
+    actorId: CombatantId,
+    toolIds: Schema.Tuple(Schema.Literal("poisoners_kit")),
+  }),
+  Schema.Struct({
+    ...BattleHoleBaseSchema,
     kind: Schema.Literal("findFamiliarConnection"),
     ownerId: CombatantId,
     companionId: CombatantId,
@@ -1341,6 +1348,10 @@ export const BattleHoleSchema = Schema.Union(
       { exact: true },
     ),
     spellMarkedDamageRiders: Schema.optionalWith(
+      Schema.Array(BattleRuntimeObjectSchema),
+      { exact: true },
+    ),
+    cunningStrikeOptions: Schema.optionalWith(
       Schema.Array(BattleRuntimeObjectSchema),
       { exact: true },
     ),
@@ -1664,6 +1675,17 @@ export const BattleHoleSchema = Schema.Union(
     kind: Schema.Literal("savingThrowOutcome"),
     label: Schema.String,
     spellConditionEndTurnSave: BattleRuntimeObjectSchema,
+    ability: AbilitySchema,
+    dc: DcSourceSchema,
+    areaChoices: Schema.Array(BattleRuntimeObjectSchema),
+    targetRollModes: Schema.Array(BattleSavingThrowRollModeProjectionSchema),
+    targetFlatBonuses: Schema.Array(BattleSavingThrowFlatBonusProjectionSchema),
+  }),
+  Schema.Struct({
+    ...BattleHoleBaseSchema,
+    kind: Schema.Literal("savingThrowOutcome"),
+    label: Schema.String,
+    unitFeatureConditionEndTurnSave: BattleRuntimeObjectSchema,
     ability: AbilitySchema,
     dc: DcSourceSchema,
     areaChoices: Schema.Array(BattleRuntimeObjectSchema),
@@ -2899,6 +2921,13 @@ type BattleFillEncoded =
       };
     }
   | {
+      readonly kind: "toolPossessionFacts";
+      readonly holeId: string;
+      readonly value: {
+        readonly toolIdsOnPerson: readonly "poisoners_kit"[];
+      };
+    }
+  | {
       readonly kind: "findFamiliarConnection";
       readonly holeId: string;
       readonly value: {
@@ -2919,6 +2948,10 @@ type BattleFillEncoded =
       readonly kind: "rolledDice";
       readonly holeId: string;
       readonly selectedAttackDamageRiderUnitIds?: readonly string[];
+      readonly cunningStrikeOption?: {
+        readonly unitId: string;
+        readonly optionId: (typeof CUNNING_STRIKE_OPTION_SELECTION_IDS)[number];
+      };
       readonly weaponDamageDiceRollChoice?: WeaponDamageDiceRollChoiceFillEncoded;
       readonly attackDamageDieFloorChoice?: AttackDamageDieFloorChoiceFillEncoded;
       readonly attackDamageAbilityModifierChoice?: AttackDamageAbilityModifierChoiceFillEncoded;
@@ -3740,6 +3773,13 @@ export const BattleFillSchema: Schema.Schema<
       }),
     }),
     Schema.Struct({
+      kind: Schema.Literal("toolPossessionFacts"),
+      holeId: BattleHoleIdSchema,
+      value: Schema.Struct({
+        toolIdsOnPerson: Schema.Array(Schema.Literal("poisoners_kit")),
+      }),
+    }),
+    Schema.Struct({
       kind: Schema.Literal("findFamiliarConnection"),
       holeId: BattleHoleIdSchema,
       value: Schema.Struct({
@@ -3761,6 +3801,13 @@ export const BattleFillSchema: Schema.Schema<
       holeId: BattleHoleIdSchema,
       selectedAttackDamageRiderUnitIds: Schema.optionalWith(
         Schema.Array(Schema.String),
+        { exact: true },
+      ),
+      cunningStrikeOption: Schema.optionalWith(
+        Schema.Struct({
+          unitId: Schema.String,
+          optionId: Schema.Literal(...CUNNING_STRIKE_OPTION_SELECTION_IDS),
+        }),
         { exact: true },
       ),
       weaponDamageDiceRollChoice: Schema.optionalWith(

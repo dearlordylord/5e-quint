@@ -43,14 +43,14 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
-      "denominator": 459,
-      "numerator": 274,
-      "percent": "59.7%"
+      "denominator": 460,
+      "numerator": 275,
+      "percent": "59.8%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 547,
-      "numerator": 324,
-      "percent": "59.2%"
+      "denominator": 548,
+      "numerator": 325,
+      "percent": "59.3%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,16 +59,16 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 325
+      "value": 326
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 188,
-      "numerator": 183,
-      "percent": "97.3%"
+      "denominator": 189,
+      "numerator": 184,
+      "percent": "97.4%"
     },
     "profileClassificationCoverage": {
-      "denominator": 325,
-      "numerator": 325,
+      "denominator": 326,
+      "numerator": 326,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -107,14 +107,14 @@
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 180,
-      "numerator": 177,
+      "denominator": 181,
+      "numerator": 178,
       "percent": "98.3%"
     },
     "supportedProfileCoverage": {
-      "denominator": 275,
-      "numerator": 188,
-      "percent": "68.4%"
+      "denominator": 276,
+      "numerator": 189,
+      "percent": "68.5%"
     }
   },
   "metricSemantics": [
@@ -5466,6 +5466,42 @@
         {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-halfling-naturally-stealthy.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "unit-feature.cunning-strike",
+      "profileKind": "battle-admission",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime-cunning-strike.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/unit-feature-support.ts",
+        "packages/battle-runtime/src/battle-reducer/attack-main.ts",
+        "packages/battle-runtime/src/battle-reducer/attack-offhand.ts",
+        "packages/battle-runtime/src/battle-reducer/opportunity-attacks.ts",
+        "packages/battle-runtime/src/battle-reducer/cunning-strike.ts",
+        "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
+        "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts",
+        "packages/battle-runtime/src/active-effect/lifecycle.ts"
+      ],
+      "sourceBoundary": "Battle Unit admission consumes the authored Surface cunning_strike shape for Sneak Attack damage exchange, retaining option ids only as selection keys while projecting executable equipment-gated condition save, size-gated condition save, and post-damage movement facts. Battle runtime consumes the retained profile only from eligible selected rogue_sneak_attack damage riders, subtracts the option die cost before validating the damage roll, and reuses existing Saving Throw, active condition/effect, end-turn lifecycle, movement, Opportunity Attack, and tool-possession witness owners for the post-damage option effects without duplicating Sneak Attack dice, condition, movement, or inventory state.",
+      "taskRefs": [
+        "L5-A13-ROGUE-CUNNING-STRIKE-BATTLE-RUNTIME"
+      ],
+      "title": "Unit feature admits Cunning Strike Sneak Attack exchange options",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-cunning-strike.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-cunning-strike.test.ts"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/cunning-strike-selected-identity.mbt.test.ts"
         }
       ]
     }
@@ -16777,6 +16813,22 @@
         "character-sheet.sorcerous-restoration-sorcery-point-recovery"
       ],
       "taskId": "L5-A10-SORCERER-SORCEROUS-RESTORATION"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Focused QNT projection witness covers Cunning Strike's Sneak Attack die-cost timing, the three level-5 executable effect shapes, Poison's tool-gated end-turn save lifecycle facts, Trip's effective Large-or-smaller size gate, and Withdraw half-Speed no-Opportunity-Attack movement facts.",
+      "profileIds": [
+        "unit-feature.cunning-strike"
+      ],
+      "taskId": "L5-A13-ROGUE-CUNNING-STRIKE-BATTLE-RUNTIME"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused Surface catalog and battle-runtime tests cover Rogue level-5 Cunning Strike authoring, structural support-profile admission without authored-identity dispatch, eligible Sneak Attack damage rider discovery, Poison/Trip/Withdraw option exposure, one Sneak Attack die cost before damage validation, Poisoner's Kit possession witness gating, Constitution and Dexterity save outcomes against the Dexterity-based feature DC, Poisoned repeat-save lifecycle cleanup, Trip Prone application, and Withdraw half-Speed no-Opportunity-Attack movement without duplicating Sneak Attack dice, condition, movement, or inventory state.",
+      "profileIds": [
+        "unit-feature.cunning-strike"
+      ],
+      "taskId": "L5-A13-ROGUE-CUNNING-STRIKE-BATTLE-RUNTIME"
     }
   ],
   "unitGroupDenominatorAudit": {
@@ -16845,17 +16897,17 @@
         "unsupportedOrOtherUnits": 31
       },
       {
-        "executableUnitDenominator": 95,
-        "installedUnitDenominator": 95,
+        "executableUnitDenominator": 96,
+        "installedUnitDenominator": 96,
         "kind": "class_feature",
         "label": "Class-feature Units",
-        "profileFactDenominator": 121,
+        "profileFactDenominator": 122,
         "profileSubsetSupportedUnits": 8,
         "selectedIdentityDeferredNonApplicableUnits": 0,
-        "selectedIdentityReplayDenominator": 75,
+        "selectedIdentityReplayDenominator": 76,
         "selectedIdentityReplayGapUnits": 0,
-        "selectedIdentityReplayWitnessUnits": 75,
-        "supportedProfileUnits": 73,
+        "selectedIdentityReplayWitnessUnits": 76,
+        "supportedProfileUnits": 74,
         "unsupportedOrOtherUnits": 14
       }
     ]
@@ -21854,6 +21906,87 @@
       ],
       "sourceRecordPath": "packages/surface/content/rogue_sneak_attack.json",
       "unitId": "rogue_sneak_attack"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "profileIds": [
+          "unit-feature.cunning-strike"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE9-UNIT-FEATURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "Rogue grants Cunning Strike as a level-5 class feature Unit with typed Poison, Trip, and Withdraw option facts",
+          "Battle Unit support admits the Surface cunning_strike mechanics by source shape, including the Sneak Attack source Unit ref, one-option choice, Dexterity-based save DC formula, option die costs, Poisoner's Kit requirement, target size gate, save effects, repeat-save duration, and Withdraw movement facts, without authored-identity dispatch",
+          "Attack damage resolution offers Cunning Strike options only from an eligible selected rogue_sneak_attack damage rider and rejects selections that do not also select the triggering Sneak Attack rider",
+          "The selected Cunning Strike option forgoes one Sneak Attack d6 before the damage roll is validated, so the existing attack-damage rider dice owner remains authoritative for available Sneak Attack dice",
+          "After attack damage is dealt, Poison consumes the tool-possession witness owner for a Poisoner's Kit on the Rogue's person, then consumes the existing Saving Throw owner for the Constitution save against 8 plus Dexterity modifier plus Proficiency Bonus",
+          "Failed Poison saves apply Poisoned through the active condition/effect lifecycle and install an end-of-target-turn repeat save that removes the condition on success",
+          "After attack damage is dealt, Trip is offered only against Large-or-smaller targets and consumes the existing Saving Throw owner for the Dexterity save before applying Prone on failure",
+          "After attack damage is dealt, Withdraw consumes the existing movement owner with a half-Speed cap, rejects any supplied Opportunity Attack threats, and applies movement without spending the Rogue's turn movement"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-cunning-strike.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L5-A13-ROGUE-CUNNING-STRIKE-BATTLE-RUNTIME"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/cunning-strike-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "L5-A13-ROGUE-CUNNING-STRIKE-BATTLE-RUNTIME"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [
+        {
+          "id": "unit-feature.cunning-strike",
+          "profileKind": "battle-admission",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime-cunning-strike.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/unit-feature-support.ts",
+            "packages/battle-runtime/src/battle-reducer/attack-main.ts",
+            "packages/battle-runtime/src/battle-reducer/attack-offhand.ts",
+            "packages/battle-runtime/src/battle-reducer/opportunity-attacks.ts",
+            "packages/battle-runtime/src/battle-reducer/cunning-strike.ts",
+            "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
+            "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts",
+            "packages/battle-runtime/src/active-effect/lifecycle.ts"
+          ],
+          "sourceBoundary": "Battle Unit admission consumes the authored Surface cunning_strike shape for Sneak Attack damage exchange, retaining option ids only as selection keys while projecting executable equipment-gated condition save, size-gated condition save, and post-damage movement facts. Battle runtime consumes the retained profile only from eligible selected rogue_sneak_attack damage riders, subtracts the option die cost before validating the damage roll, and reuses existing Saving Throw, active condition/effect, end-turn lifecycle, movement, Opportunity Attack, and tool-possession witness owners for the post-damage option effects without duplicating Sneak Attack dice, condition, movement, or inventory state.",
+          "taskRefs": [
+            "L5-A13-ROGUE-CUNNING-STRIKE-BATTLE-RUNTIME"
+          ],
+          "title": "Unit feature admits Cunning Strike Sneak Attack exchange options",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-cunning-strike.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-cunning-strike.test.ts"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/cunning-strike-selected-identity.mbt.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/rogue_cunning_strike.json",
+      "unitId": "rogue_cunning_strike"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
