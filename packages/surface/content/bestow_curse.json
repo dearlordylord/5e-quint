@@ -1,0 +1,225 @@
+{
+  "description": "You touch a creature, which must succeed on a Wisdom saving throw or become cursed for the duration. Until the curse ends, the target suffers one of four effects of your choice: chosen-ability Disadvantage on ability checks and saving throws, Disadvantage on attack rolls against you, a start-of-turn Wisdom saving throw or forced Dodge, or extra Necrotic damage when you damage it with an attack roll or a spell. Using a Higher-Level Spell Slot. Level 4 lasts up to 10 minutes with Concentration. Level 5+ does not require Concentration: level 5-6 lasts 8 hours, level 7-8 lasts 24 hours, and level 9 lasts until dispelled.",
+  "id": "bestow_curse",
+  "kind": "spell",
+  "mechanics": {
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": false,
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "base": {
+        "kind": "concentration",
+        "upTo": {
+          "amount": 1,
+          "unit": "minute"
+        }
+      },
+      "kind": "slot_tiered",
+      "tiers": [
+        {
+          "atSlot": 4,
+          "duration": {
+            "kind": "concentration",
+            "upTo": {
+              "amount": 10,
+              "unit": "minute"
+            }
+          }
+        },
+        {
+          "atSlot": 5,
+          "duration": {
+            "kind": "timed",
+            "value": {
+              "amount": 8,
+              "unit": "hour"
+            }
+          }
+        },
+        {
+          "atSlot": 7,
+          "duration": {
+            "kind": "timed",
+            "value": {
+              "amount": 24,
+              "unit": "hour"
+            }
+          }
+        },
+        {
+          "atSlot": 9,
+          "duration": {
+            "endsOn": [
+              "dispel"
+            ],
+            "kind": "permanent"
+          }
+        }
+      ]
+    },
+    "family": "activation",
+    "level": 3,
+    "phases": [
+      {
+        "ability": "wis",
+        "attachment": {
+          "holeId": "bestow_curse_target",
+          "kind": "hole",
+          "label": "target",
+          "value": {
+            "kind": "target",
+            "selection": {
+              "mode": "one",
+              "targetKinds": [
+                "creature"
+              ]
+            }
+          }
+        },
+        "dc": {
+          "kind": "caster_spell_save_dc"
+        },
+        "kind": "save_gate",
+        "onFail": {
+          "kind": "curse_occurrence",
+          "options": [
+            {
+              "displayName": "Chosen ability checks and saving throws",
+              "id": "chosen_ability_disadvantage",
+              "operations": [
+                {
+                  "effect": {
+                    "abilityFilter": {
+                      "holeId": "bestow_curse_ability",
+                      "kind": "hole",
+                      "label": "cursed ability",
+                      "value": {
+                        "kind": "choice",
+                        "label": "cursed ability",
+                        "options": [
+                          "str",
+                          "dex",
+                          "con",
+                          "int",
+                          "wis",
+                          "cha"
+                        ]
+                      }
+                    },
+                    "affects": "self_roll",
+                    "kind": "modify_roll_advantage",
+                    "mode": "disadvantage",
+                    "on": [
+                      "ability_check",
+                      "saving_throw"
+                    ],
+                    "saveAbilityFilter": {
+                      "holeId": "bestow_curse_ability",
+                      "kind": "same_choice_as"
+                    }
+                  },
+                  "trigger": {
+                    "kind": "passive"
+                  }
+                }
+              ]
+            },
+            {
+              "displayName": "Attack rolls against caster",
+              "id": "caster_targeted_attack_disadvantage",
+              "operations": [
+                {
+                  "effect": {
+                    "affects": "self_roll",
+                    "attackRollTarget": "caster",
+                    "kind": "modify_roll_advantage",
+                    "mode": "disadvantage",
+                    "on": [
+                      "attack_roll"
+                    ]
+                  },
+                  "trigger": {
+                    "kind": "passive"
+                  }
+                }
+              ]
+            },
+            {
+              "displayName": "Start-of-turn Wisdom save or Dodge",
+              "id": "turn_start_wisdom_save_or_dodge",
+              "operations": [
+                {
+                  "effect": {
+                    "ability": "wis",
+                    "dc": {
+                      "kind": "caster_spell_save_dc"
+                    },
+                    "kind": "save_gate",
+                    "onFail": {
+                      "action": "dodge",
+                      "cost": "included_in_effect",
+                      "kind": "take_standard_action"
+                    },
+                    "onSuccess": {
+                      "kind": "none"
+                    }
+                  },
+                  "trigger": {
+                    "kind": "on_attached_turn_start"
+                  }
+                }
+              ]
+            },
+            {
+              "displayName": "Caster attack-roll or spell damage rider",
+              "id": "caster_damage_necrotic_rider",
+              "operations": [
+                {
+                  "effect": {
+                    "amount": {
+                      "expr": {
+                        "dice": 1,
+                        "dieSize": 8
+                      },
+                      "kind": "fixed"
+                    },
+                    "damageType": "necrotic",
+                    "kind": "damage"
+                  },
+                  "trigger": {
+                    "damageSource": [
+                      "attack_roll",
+                      "spell"
+                    ],
+                    "kind": "on_caster_deals_damage_to_attachment"
+                  }
+                }
+              ]
+            }
+          ],
+          "removal": {
+            "kind": "all_curses_affecting_target_end",
+            "target": "attached_target"
+          }
+        },
+        "onSuccess": {
+          "kind": "none"
+        }
+      }
+    ],
+    "range": {
+      "kind": "touch"
+    },
+    "school": "necromancy"
+  },
+  "name": "Bestow Curse",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-A-D#Bestow Curse"
+  }
+}

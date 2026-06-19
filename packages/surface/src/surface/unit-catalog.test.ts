@@ -8,6 +8,7 @@ import flyInput from "../../content/fly.json";
 import hypnoticPatternInput from "../../content/hypnotic_pattern.json";
 import magicWeaponInput from "../../content/magic_weapon.json";
 import moonbeamInput from "../../content/moonbeam.json";
+import phantomSteedInput from "../../content/phantom_steed.json";
 import sorcererFontOfMagicInput from "../../content/sorcerer_font_of_magic.json";
 import sorcererMetamagicInput from "../../content/sorcerer_metamagic.json";
 import {
@@ -204,6 +205,7 @@ const requiredFirstVerticalUnitIds = [
   "mage_armor",
   "magic_missile",
   "magic_mouth",
+  "nondetection",
   "mind_spike",
   "mass_cure_wounds",
   "healing_word",
@@ -2536,6 +2538,175 @@ describe("SRD Unit catalog boundary", () => {
     }
   });
 
+  test("decodes Bestow Curse as one chosen curse occurrence with slot-tiered duration", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag !== "ok") return;
+    const bestowCurse = result.catalog.requireUnit("bestow_curse");
+
+    expect(bestowCurse.kind).toBe("spell");
+    if (bestowCurse.kind !== "spell") return;
+    expect(bestowCurse.mechanics.family).toBe("activation");
+    if (bestowCurse.mechanics.family !== "activation") return;
+
+    expect(bestowCurse.provenance).toEqual({
+      kind: "srd-5.2.1",
+      section: "Spells/Descriptions-A-D#Bestow Curse",
+    });
+    expect(bestowCurse.mechanics).toMatchObject({
+      level: 3,
+      school: "necromancy",
+      castingTime: { kind: "action" },
+      range: { kind: "touch" },
+      components: { v: true, s: true, m: false },
+      duration: {
+        kind: "slot_tiered",
+        base: {
+          kind: "concentration",
+          upTo: { unit: "minute", amount: 1 },
+        },
+        tiers: [
+          {
+            atSlot: 4,
+            duration: {
+              kind: "concentration",
+              upTo: { unit: "minute", amount: 10 },
+            },
+          },
+          {
+            atSlot: 5,
+            duration: { kind: "timed", value: { unit: "hour", amount: 8 } },
+          },
+          {
+            atSlot: 7,
+            duration: { kind: "timed", value: { unit: "hour", amount: 24 } },
+          },
+          {
+            atSlot: 9,
+            duration: { kind: "permanent", endsOn: ["dispel"] },
+          },
+        ],
+      },
+    });
+
+    expect(bestowCurse.mechanics.phases).toHaveLength(1);
+    const phase = bestowCurse.mechanics.phases[0];
+    expect(phase).toMatchObject({
+      kind: "save_gate",
+      ability: "wis",
+      dc: { kind: "caster_spell_save_dc" },
+      attachment: {
+        kind: "hole",
+        holeId: "bestow_curse_target",
+        label: "target",
+        value: {
+          kind: "target",
+          selection: { mode: "one", targetKinds: ["creature"] },
+        },
+      },
+      onSuccess: { kind: "none" },
+    });
+    if (phase?.kind !== "save_gate") return;
+    expect(phase.onFail.kind).toBe("curse_occurrence");
+    if (phase.onFail.kind !== "curse_occurrence") return;
+
+    expect(phase.onFail.removal).toEqual({
+      kind: "all_curses_affecting_target_end",
+      target: "attached_target",
+    });
+    expect(phase.onFail.options.map((option) => option.id)).toEqual([
+      "chosen_ability_disadvantage",
+      "caster_targeted_attack_disadvantage",
+      "turn_start_wisdom_save_or_dodge",
+      "caster_damage_necrotic_rider",
+    ]);
+    expect(phase.onFail.options).toEqual([
+      {
+        id: "chosen_ability_disadvantage",
+        displayName: "Chosen ability checks and saving throws",
+        operations: [
+          {
+            trigger: { kind: "passive" },
+            effect: {
+              kind: "modify_roll_advantage",
+              mode: "disadvantage",
+              affects: "self_roll",
+              on: ["ability_check", "saving_throw"],
+              abilityFilter: {
+                kind: "hole",
+                holeId: "bestow_curse_ability",
+                label: "cursed ability",
+                value: {
+                  kind: "choice",
+                  label: "cursed ability",
+                  options: ["str", "dex", "con", "int", "wis", "cha"],
+                },
+              },
+              saveAbilityFilter: {
+                kind: "same_choice_as",
+                holeId: "bestow_curse_ability",
+              },
+            },
+          },
+        ],
+      },
+      {
+        id: "caster_targeted_attack_disadvantage",
+        displayName: "Attack rolls against caster",
+        operations: [
+          {
+            trigger: { kind: "passive" },
+            effect: {
+              kind: "modify_roll_advantage",
+              mode: "disadvantage",
+              affects: "self_roll",
+              on: ["attack_roll"],
+              attackRollTarget: "caster",
+            },
+          },
+        ],
+      },
+      {
+        id: "turn_start_wisdom_save_or_dodge",
+        displayName: "Start-of-turn Wisdom save or Dodge",
+        operations: [
+          {
+            trigger: { kind: "on_attached_turn_start" },
+            effect: {
+              kind: "save_gate",
+              ability: "wis",
+              dc: { kind: "caster_spell_save_dc" },
+              onFail: {
+                kind: "take_standard_action",
+                action: "dodge",
+                cost: "included_in_effect",
+              },
+              onSuccess: { kind: "none" },
+            },
+          },
+        ],
+      },
+      {
+        id: "caster_damage_necrotic_rider",
+        displayName: "Caster attack-roll or spell damage rider",
+        operations: [
+          {
+            trigger: {
+              kind: "on_caster_deals_damage_to_attachment",
+              damageSource: ["attack_roll", "spell"],
+            },
+            effect: {
+              kind: "damage",
+              damageType: "necrotic",
+              amount: { kind: "fixed", expr: { dice: 1, dieSize: 8 } },
+            },
+          },
+        ],
+      },
+    ]);
+  });
+
   test("decodes Enhance Ability as chosen-ability Ability Check Advantage with slot-scaled touched targets", () => {
     const result = buildUnitCatalog({ collections: [srdUnitCollection] });
 
@@ -3177,6 +3348,64 @@ describe("SRD Unit catalog boundary", () => {
     ]);
     expect(magicAura.description).toContain(
       "spells and other magical effects treat the target",
+    );
+  });
+
+  test("decodes Nondetection as a divination targeting and scrying ward", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag !== "ok") return;
+    const nondetection = result.catalog.requireUnit("nondetection");
+
+    expect(nondetection.kind).toBe("spell");
+    if (nondetection.kind !== "spell") return;
+    expect(nondetection.mechanics.family).toBe("activation");
+    if (nondetection.mechanics.family !== "activation") return;
+
+    expect(nondetection.mechanics).toMatchObject({
+      level: 3,
+      school: "abjuration",
+      castingTime: { kind: "action" },
+      range: { kind: "touch" },
+      components: {
+        v: true,
+        s: true,
+        m: "a pinch of diamond dust worth 25+ GP, which the spell consumes",
+        materialCostGp: 25,
+        materialConsumed: true,
+      },
+      duration: {
+        kind: "timed",
+        value: { unit: "hour", amount: 8 },
+      },
+    });
+    expect(nondetection.mechanics.phases).toEqual([
+      {
+        kind: "direct",
+        attachment: {
+          kind: "hole",
+          holeId: "nondetection_target",
+          label: "willing creature, place, or object",
+          value: {
+            kind: "target",
+            selection: {
+              mode: "one",
+              targetKinds: ["creature", "object", "location"],
+              creatureDisposition: "willing",
+              objectOrLocationMaxDimensionFeet: 10,
+            },
+          },
+        },
+        effects: [
+          {
+            kind: "block_divination_targeting_and_scrying_perception",
+          },
+        ],
+      },
+    ]);
+    expect(nondetection.description).toContain(
+      "can't be targeted by any Divination spell",
     );
   });
 
@@ -6121,6 +6350,52 @@ describe("SRD Unit catalog boundary", () => {
         },
       });
     }
+  });
+
+  test("decodes Phantom Steed as a catalog-backed mount with a speed override", () => {
+    const phantomSteed = decodeUnitRecordSync(phantomSteedInput);
+
+    expect(phantomSteed.kind).toBe("spell");
+    if (phantomSteed.kind !== "spell") {
+      throw new Error("Expected Phantom Steed spell record.");
+    }
+    expect(phantomSteed.mechanics.family).toBe("spawned_creature");
+    if (phantomSteed.mechanics.family !== "spawned_creature") {
+      throw new Error("Expected spawned creature mechanics.");
+    }
+
+    expect(phantomSteed.mechanics.duration).toEqual({
+      kind: "timed",
+      value: { unit: "hour", amount: 1 },
+    });
+    expect(phantomSteed.mechanics.creature).toEqual({
+      kind: "catalog_ref",
+      monsterId: "stat_block_riding_horse",
+      displayName: "Riding Horse",
+      overrides: {
+        speeds: [
+          {
+            kind: "walk",
+            feet: { kind: "literal", value: 100 },
+          },
+        ],
+      },
+    });
+    expect(phantomSteed.mechanics.control).toBeUndefined();
+    expect(phantomSteed.mechanics.mount).toEqual({
+      riderPermission: "caster_or_chosen_creature",
+      hourlyTravelMiles: 13,
+      createdEquipment: {
+        items: ["saddle", "bit", "bridle"],
+        vanishesIfCarriedMoreThanFeetFromCreature: 10,
+      },
+    });
+    expect(phantomSteed.mechanics.dismissal).toEqual({
+      onSpellEnd: {
+        kind: "gradual_fade",
+        riderDismountGrace: { unit: "minute", amount: 1 },
+      },
+    });
   });
 
   test("rejects blank Find Familiar form catalog references", () => {

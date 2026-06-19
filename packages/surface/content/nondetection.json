@@ -1,0 +1,63 @@
+{
+  "description": "For the duration, you hide a target that you touch from Divination spells. The target can be a willing creature, or it can be a place or an object no larger than 10 feet in any dimension. The target can't be targeted by any Divination spell or perceived through magical scrying sensors.",
+  "id": "nondetection",
+  "kind": "spell",
+  "mechanics": {
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": "a pinch of diamond dust worth 25+ GP, which the spell consumes",
+      "materialConsumed": true,
+      "materialCostGp": 25,
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "timed",
+      "value": {
+        "amount": 8,
+        "unit": "hour"
+      }
+    },
+    "family": "activation",
+    "level": 3,
+    "phases": [
+      {
+        "attachment": {
+          "holeId": "nondetection_target",
+          "kind": "hole",
+          "label": "willing creature, place, or object",
+          "value": {
+            "kind": "target",
+            "selection": {
+              "creatureDisposition": "willing",
+              "mode": "one",
+              "objectOrLocationMaxDimensionFeet": 10,
+              "targetKinds": [
+                "creature",
+                "object",
+                "location"
+              ]
+            }
+          }
+        },
+        "effects": [
+          {
+            "kind": "block_divination_targeting_and_scrying_perception"
+          }
+        ],
+        "kind": "direct"
+      }
+    ],
+    "range": {
+      "kind": "touch"
+    },
+    "school": "abjuration"
+  },
+  "name": "Nondetection",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-M-P#Nondetection"
+  }
+}

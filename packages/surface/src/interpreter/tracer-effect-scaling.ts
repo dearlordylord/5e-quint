@@ -184,6 +184,7 @@ export function traceEffectAtomScaling(
     case "detect":
     case "locate_kind":
     case "object_location_sense":
+    case "block_divination_targeting_and_scrying_perception":
     case "divination_omen":
     case "assign_courier_task":
     case "magical_identity_mask":
@@ -327,6 +328,20 @@ export function traceEffectAtomScaling(
         for (const effect of option.effects) {
           traceOngoingChoiceEffectScaling(
             effect,
+            effectId,
+            slotId,
+            nodes,
+            edges,
+            ids,
+          );
+        }
+      }
+      return;
+    case "curse_occurrence":
+      for (const option of e.options) {
+        for (const operation of option.operations) {
+          traceOngoingChoiceEffectScaling(
+            operation.effect,
             effectId,
             slotId,
             nodes,

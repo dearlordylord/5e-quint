@@ -324,6 +324,10 @@ export function describeTargetSelection(s: TargetSelection): string {
     "creatureDisposition" in s && s.creatureDisposition !== undefined
       ? `\ncreature disposition: ${s.creatureDisposition}`
       : "";
+  const objectOrLocationMaxDimension =
+    "objectOrLocationMaxDimensionFeet" in s
+      ? `\nobject/location max dimension: ${s.objectOrLocationMaxDimensionFeet} ft`
+      : "";
   const castingRequirement =
     "castingRequirement" in s && s.castingRequirement !== undefined
       ? `\ncasting requirement: ${describeTargetCastingRequirement(s.castingRequirement)}`
@@ -333,12 +337,12 @@ export function describeTargetSelection(s: TargetSelection): string {
       ? `\nrelative: ${describeTargetRelativePosition(s.relativePosition)}`
       : "";
   if (s.mode === "one") {
-    return `one${targetKinds}${typeFilter}${creatureSizeFilter}${objectFilter}${stateFilter}${disposition}${creatureDisposition}${castingRequirement}${relativePosition}`;
+    return `one${targetKinds}${typeFilter}${creatureSizeFilter}${objectFilter}${stateFilter}${disposition}${creatureDisposition}${objectOrLocationMaxDimension}${castingRequirement}${relativePosition}`;
   }
   if (s.mode === "any_number")
-    return `any_number${targetKinds}${typeFilter}${creatureSizeFilter}${objectFilter}${stateFilter}${disposition}${creatureDisposition}${castingRequirement}${relativePosition}`;
+    return `any_number${targetKinds}${typeFilter}${creatureSizeFilter}${objectFilter}${stateFilter}${disposition}${creatureDisposition}${objectOrLocationMaxDimension}${castingRequirement}${relativePosition}`;
   const repeats = s.repeatsAllowed === true ? " (repeats allowed)" : "";
-  return `choose_up_to: ${describeScaling(s.count)}${repeats}${targetKinds}${typeFilter}${creatureSizeFilter}${objectFilter}${stateFilter}${disposition}${creatureDisposition}${castingRequirement}${relativePosition}`;
+  return `choose_up_to: ${describeScaling(s.count)}${repeats}${targetKinds}${typeFilter}${creatureSizeFilter}${objectFilter}${stateFilter}${disposition}${creatureDisposition}${objectOrLocationMaxDimension}${castingRequirement}${relativePosition}`;
 }
 
 function describeTargetRelativePosition(r: TargetRelativePosition): string {

@@ -19,8 +19,8 @@
       "catalog-authored-review-required": 19,
       "catalog-installed-owner-evidence-present": 8,
       "catalog-installed-owner-evidence-required": 1,
-      "catalog-only/dead-for-now": 18,
-      "missing-authored-record": 23,
+      "catalog-only/dead-for-now": 21,
+      "missing-authored-record": 20,
       "needs-surface-widening": 7
     },
     "auditedUniqueSpellIdentitiesByLevelBand": {
@@ -35,15 +35,15 @@
     },
     "rowsByBattleReadinessStatus": {
       "accepted": 473,
-      "accepted-no-battle-effect": 230,
-      "battle-runtime-required": 53,
+      "accepted-no-battle-effect": 236,
+      "battle-runtime-required": 48,
       "not-applicable": 77,
       "owner-evidence-required": 50,
-      "surface-widening-required": 17
+      "surface-widening-required": 16
     },
     "rowsByCatalogAdmission": {
-      "installed": 658,
-      "not-installed": 242
+      "installed": 663,
+      "not-installed": 237
     },
     "rowsByCategory": {
       "character-creation or progression mechanic": 172,
@@ -59,10 +59,10 @@
       "catalog-authored-review-required": 49,
       "catalog-installed-owner-evidence-present": 488,
       "catalog-installed-owner-evidence-required": 4,
-      "catalog-only/dead-for-now": 186,
+      "catalog-only/dead-for-now": 192,
       "level-5-7-follow-up-required": 22,
-      "missing-authored-record": 50,
-      "needs-surface-widening": 17,
+      "missing-authored-record": 45,
+      "needs-surface-widening": 16,
       "non-runtime": 84
     },
     "rowsByLevelBand": {
@@ -93,10 +93,10 @@
       "subclass-spell-access": 5
     },
     "rowsByUnitProfileDisposition": {
-      "not-recorded": 177,
+      "not-recorded": 171,
       "profile-subset-supported": 53,
       "supported-profile": 302,
-      "unsupported-profile": 368
+      "unsupported-profile": 374
     }
   },
   "rows": [
@@ -5116,7 +5116,7 @@
         "sourceInventoryRowId": "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_bestow_curse",
         "state": "present"
       },
-      "nextAction": "Widen Surface: Spell Definition curse occurrence: initial Wisdom Saving Throw gates one chosen ongoing curse option (chosen-ability Ability Check and Saving Throw Disadvantage, caster-targeted Attack Roll Disadvantage, start-of-turn Wisdom save or forced Dodge, or caster attack/spell damage rider), the target becomes a curse-removal target, and higher slot levels change both duration amount and Concentration requirement.",
+      "nextAction": "Bestow Curse supplies typed Surface facts for one chosen curse option and a shared all-curses-ending target boundary, but promoted battle runtime must still model active curse occurrence identity, selected option storage, ability-choice propagation, caster-targeted attack-roll filtering, target-turn forced Dodge, caster attack-roll-or-spell damage riders, slot-tiered Concentration/no-Concentration duration admission, and cleanup from all-curses-ending effects without dispatching on Bestow Curse or Remove Curse authored identity.",
       "rowId": "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_bestow_curse",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -5126,22 +5126,28 @@
       },
       "supportSnapshot": {
         "authoredContent": {
-          "state": "missing-authored-record"
+          "sourceRecordPath": "packages/surface/content/bestow_curse.json",
+          "state": "authored-record-present",
+          "unitId": "bestow_curse"
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "surface-widening-required"
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "outside-battle-runtime",
+          "owner": "future generic curse occurrence, curse-removal cleanup, and selected curse-option owner",
+          "reason": "Bestow Curse supplies typed Surface facts for one chosen curse option and a shared all-curses-ending target boundary, but promoted battle runtime must still model active curse occurrence identity, selected option storage, ability-choice propagation, caster-targeted attack-roll filtering, target-turn forced Dodge, caster attack-roll-or-spell damage riders, slot-tiered Concentration/no-Concentration duration admission, and cleanup from all-curses-ending effects without dispatching on Bestow Curse or Remove Curse authored identity.",
+          "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "bestow_curse"
         },
-        "finalDisposition": "needs-surface-widening",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },
@@ -5480,7 +5486,7 @@
         "sourceInventoryRowId": "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_nondetection",
         "state": "present"
       },
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
+      "nextAction": "Nondetection supplies a source fact that blocks Divination targeting and magical scrying-sensor perception for a touched creature, place, or object, but promoted battle runtime does not own generic Divination targetability, active remote-sensor perception, place identity, or table/perception disclosure. Those facts should be consumed by a future divination/perception owner without duplicating battle map, sensor, or authored spell identity state in generic Spell Invocation reducers.",
       "rowId": "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_nondetection",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -5490,22 +5496,28 @@
       },
       "supportSnapshot": {
         "authoredContent": {
-          "state": "missing-authored-record"
+          "sourceRecordPath": "packages/surface/content/nondetection.json",
+          "state": "authored-record-present",
+          "unitId": "nondetection"
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "battle-runtime-required"
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "future divination targeting and magical scrying-sensor perception owner",
+          "reason": "Nondetection supplies a source fact that blocks Divination targeting and magical scrying-sensor perception for a touched creature, place, or object, but promoted battle runtime does not own generic Divination targetability, active remote-sensor perception, place identity, or table/perception disclosure. Those facts should be consumed by a future divination/perception owner without duplicating battle map, sensor, or authored spell identity state in generic Spell Invocation reducers.",
+          "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "nondetection"
         },
-        "finalDisposition": "missing-authored-record",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },
@@ -9324,7 +9336,7 @@
         "sourceInventoryRowId": "srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_bestow_curse",
         "state": "present"
       },
-      "nextAction": "Widen Surface: Spell Definition curse occurrence: initial Wisdom Saving Throw gates one chosen ongoing curse option (chosen-ability Ability Check and Saving Throw Disadvantage, caster-targeted Attack Roll Disadvantage, start-of-turn Wisdom save or forced Dodge, or caster attack/spell damage rider), the target becomes a curse-removal target, and higher slot levels change both duration amount and Concentration requirement.",
+      "nextAction": "Bestow Curse supplies typed Surface facts for one chosen curse option and a shared all-curses-ending target boundary, but promoted battle runtime must still model active curse occurrence identity, selected option storage, ability-choice propagation, caster-targeted attack-roll filtering, target-turn forced Dodge, caster attack-roll-or-spell damage riders, slot-tiered Concentration/no-Concentration duration admission, and cleanup from all-curses-ending effects without dispatching on Bestow Curse or Remove Curse authored identity.",
       "rowId": "srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_bestow_curse",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -9334,22 +9346,28 @@
       },
       "supportSnapshot": {
         "authoredContent": {
-          "state": "missing-authored-record"
+          "sourceRecordPath": "packages/surface/content/bestow_curse.json",
+          "state": "authored-record-present",
+          "unitId": "bestow_curse"
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "surface-widening-required"
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "outside-battle-runtime",
+          "owner": "future generic curse occurrence, curse-removal cleanup, and selected curse-option owner",
+          "reason": "Bestow Curse supplies typed Surface facts for one chosen curse option and a shared all-curses-ending target boundary, but promoted battle runtime must still model active curse occurrence identity, selected option storage, ability-choice propagation, caster-targeted attack-roll filtering, target-turn forced Dodge, caster attack-roll-or-spell damage riders, slot-tiered Concentration/no-Concentration duration admission, and cleanup from all-curses-ending effects without dispatching on Bestow Curse or Remove Curse authored identity.",
+          "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "bestow_curse"
         },
-        "finalDisposition": "needs-surface-widening",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },
@@ -9685,7 +9703,7 @@
         "sourceInventoryRowId": "srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_meld_into_stone",
         "state": "present"
       },
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
+      "nextAction": "Widen Surface: Spell Definition stone-merge occurrence: the self-only cast requires touching a stone object or surface large enough to fully contain the caster's body; the caster and equipment merge into hidden stone occupancy for 8 hours; nonmagical senses cannot detect the caster; outside sight is blocked; outside-sound Wisdom (Perception) checks have Disadvantage; the caster remains time-aware, can cast spells on themselves, can spend 5 feet of Movement to leave only where they entered, and otherwise cannot move; minor stone damage is harmless; partial destruction or shape change that makes the caster no longer fit expels them with 6d6 Force damage; complete destruction or transmutation expels them with 50 Force damage; any expulsion places them in the closest unoccupied space to the entry location and gives the Prone condition.",
       "rowId": "srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_meld_into_stone",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -9699,16 +9717,19 @@
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "battle-runtime-required"
+          "status": "surface-widening-required"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "table-spatial-derivation",
+          "owner": "Surface Spell Definition plus table terrain/object occupancy owner and future battle-runtime merged-state, perception, damage, and forced-exit Spell Effect owner",
+          "reason": "Meld into Stone needs a typed follow-up split before an SRD-provenance Spell Definition can be admitted: Surface must own the self-only touch cast, stone object-or-surface containment target, hidden merged occupancy, blocked outside sight, outside-sound Wisdom (Perception) Disadvantage, self-spell permission, Movement-limited voluntary exit, otherwise-no-movement restriction, damage-free minor stone damage, destructive expulsion damage branches, and Prone rider; table terrain/object occupancy ownership supplies stone size/shape/material witnesses, entry location, damage/destruction/transmutation events, fit-after-shape-change predicate, closest-unoccupied-space placement, and forced-exit witnesses; future battle runtime should consume typed merged-state and expulsion facts without dispatching on spell id or name.",
+          "state": "recorded"
         },
         "catalogAdmission": {
           "state": "not-installed",
           "unitId": "meld_into_stone"
         },
-        "finalDisposition": "missing-authored-record",
+        "finalDisposition": "needs-surface-widening",
         "unitProfile": {
           "state": "not-recorded"
         }
@@ -9770,7 +9791,7 @@
         "sourceInventoryRowId": "srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_remove_curse",
         "state": "present"
       },
-      "nextAction": "Remove Curse supplies table-facing curse-removal and cursed-item Attunement source facts, but promoted battle runtime does not own generic curse occurrence identity, curse-removal targeting semantics, cursed magic item curse persistence, or Attunement mutation for cursed objects.",
+      "nextAction": "Remove Curse supplies table-facing all-curses-ending and cursed-item Attunement source facts. Bestow Curse supplies a shared curse-occurrence removal boundary, but promoted battle runtime does not yet own generic all-curses-ending cleanup across active curse occurrences, curse persistence on cursed magic items, or Attunement mutation for cursed objects.",
       "rowId": "srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_remove_curse",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -9790,8 +9811,8 @@
         },
         "battleReadinessClosure": {
           "kind": "outside-battle-runtime",
-          "owner": "future curse occurrence and magic-item Attunement owner",
-          "reason": "Remove Curse supplies table-facing curse-removal and cursed-item Attunement source facts, but promoted battle runtime does not own generic curse occurrence identity, curse-removal targeting semantics, cursed magic item curse persistence, or Attunement mutation for cursed objects.",
+          "owner": "future all-curses-ending cleanup and magic-item Attunement owner",
+          "reason": "Remove Curse supplies table-facing all-curses-ending and cursed-item Attunement source facts. Bestow Curse supplies a shared curse-occurrence removal boundary, but promoted battle runtime does not yet own generic all-curses-ending cleanup across active curse occurrences, curse persistence on cursed magic items, or Attunement mutation for cursed objects.",
           "state": "recorded"
         },
         "catalogAdmission": {
@@ -14168,7 +14189,7 @@
         "sourceInventoryRowId": "srd521:classes/druid:spell-level-3:spell-unit-pressure:druid_spell_list_meld_into_stone",
         "state": "present"
       },
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
+      "nextAction": "Widen Surface: Spell Definition stone-merge occurrence: the self-only cast requires touching a stone object or surface large enough to fully contain the caster's body; the caster and equipment merge into hidden stone occupancy for 8 hours; nonmagical senses cannot detect the caster; outside sight is blocked; outside-sound Wisdom (Perception) checks have Disadvantage; the caster remains time-aware, can cast spells on themselves, can spend 5 feet of Movement to leave only where they entered, and otherwise cannot move; minor stone damage is harmless; partial destruction or shape change that makes the caster no longer fit expels them with 6d6 Force damage; complete destruction or transmutation expels them with 50 Force damage; any expulsion places them in the closest unoccupied space to the entry location and gives the Prone condition.",
       "rowId": "srd521:classes/druid:spell-level-3:spell-unit-pressure:druid_spell_list_meld_into_stone",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -14182,16 +14203,19 @@
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "battle-runtime-required"
+          "status": "surface-widening-required"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "table-spatial-derivation",
+          "owner": "Surface Spell Definition plus table terrain/object occupancy owner and future battle-runtime merged-state, perception, damage, and forced-exit Spell Effect owner",
+          "reason": "Meld into Stone needs a typed follow-up split before an SRD-provenance Spell Definition can be admitted: Surface must own the self-only touch cast, stone object-or-surface containment target, hidden merged occupancy, blocked outside sight, outside-sound Wisdom (Perception) Disadvantage, self-spell permission, Movement-limited voluntary exit, otherwise-no-movement restriction, damage-free minor stone damage, destructive expulsion damage branches, and Prone rider; table terrain/object occupancy ownership supplies stone size/shape/material witnesses, entry location, damage/destruction/transmutation events, fit-after-shape-change predicate, closest-unoccupied-space placement, and forced-exit witnesses; future battle runtime should consume typed merged-state and expulsion facts without dispatching on spell id or name.",
+          "state": "recorded"
         },
         "catalogAdmission": {
           "state": "not-installed",
           "unitId": "meld_into_stone"
         },
-        "finalDisposition": "missing-authored-record",
+        "finalDisposition": "needs-surface-widening",
         "unitProfile": {
           "state": "not-recorded"
         }
@@ -32521,7 +32545,7 @@
         "sourceInventoryRowId": "srd521:classes/warlock:spell-level-3:spell-unit-pressure:warlock_spell_list_remove_curse",
         "state": "present"
       },
-      "nextAction": "Remove Curse supplies table-facing curse-removal and cursed-item Attunement source facts, but promoted battle runtime does not own generic curse occurrence identity, curse-removal targeting semantics, cursed magic item curse persistence, or Attunement mutation for cursed objects.",
+      "nextAction": "Remove Curse supplies table-facing all-curses-ending and cursed-item Attunement source facts. Bestow Curse supplies a shared curse-occurrence removal boundary, but promoted battle runtime does not yet own generic all-curses-ending cleanup across active curse occurrences, curse persistence on cursed magic items, or Attunement mutation for cursed objects.",
       "rowId": "srd521:classes/warlock:spell-level-3:spell-unit-pressure:warlock_spell_list_remove_curse",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -32541,8 +32565,8 @@
         },
         "battleReadinessClosure": {
           "kind": "outside-battle-runtime",
-          "owner": "future curse occurrence and magic-item Attunement owner",
-          "reason": "Remove Curse supplies table-facing curse-removal and cursed-item Attunement source facts, but promoted battle runtime does not own generic curse occurrence identity, curse-removal targeting semantics, cursed magic item curse persistence, or Attunement mutation for cursed objects.",
+          "owner": "future all-curses-ending cleanup and magic-item Attunement owner",
+          "reason": "Remove Curse supplies table-facing all-curses-ending and cursed-item Attunement source facts. Bestow Curse supplies a shared curse-occurrence removal boundary, but promoted battle runtime does not yet own generic all-curses-ending cleanup across active curse occurrences, curse persistence on cursed magic items, or Attunement mutation for cursed objects.",
           "state": "recorded"
         },
         "catalogAdmission": {
@@ -37669,7 +37693,7 @@
         "sourceInventoryRowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_bestow_curse",
         "state": "present"
       },
-      "nextAction": "Widen Surface: Spell Definition curse occurrence: initial Wisdom Saving Throw gates one chosen ongoing curse option (chosen-ability Ability Check and Saving Throw Disadvantage, caster-targeted Attack Roll Disadvantage, start-of-turn Wisdom save or forced Dodge, or caster attack/spell damage rider), the target becomes a curse-removal target, and higher slot levels change both duration amount and Concentration requirement.",
+      "nextAction": "Bestow Curse supplies typed Surface facts for one chosen curse option and a shared all-curses-ending target boundary, but promoted battle runtime must still model active curse occurrence identity, selected option storage, ability-choice propagation, caster-targeted attack-roll filtering, target-turn forced Dodge, caster attack-roll-or-spell damage riders, slot-tiered Concentration/no-Concentration duration admission, and cleanup from all-curses-ending effects without dispatching on Bestow Curse or Remove Curse authored identity.",
       "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_bestow_curse",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -37679,22 +37703,28 @@
       },
       "supportSnapshot": {
         "authoredContent": {
-          "state": "missing-authored-record"
+          "sourceRecordPath": "packages/surface/content/bestow_curse.json",
+          "state": "authored-record-present",
+          "unitId": "bestow_curse"
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "surface-widening-required"
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "outside-battle-runtime",
+          "owner": "future generic curse occurrence, curse-removal cleanup, and selected curse-option owner",
+          "reason": "Bestow Curse supplies typed Surface facts for one chosen curse option and a shared all-curses-ending target boundary, but promoted battle runtime must still model active curse occurrence identity, selected option storage, ability-choice propagation, caster-targeted attack-roll filtering, target-turn forced Dodge, caster attack-roll-or-spell damage riders, slot-tiered Concentration/no-Concentration duration admission, and cleanup from all-curses-ending effects without dispatching on Bestow Curse or Remove Curse authored identity.",
+          "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "bestow_curse"
         },
-        "finalDisposition": "needs-surface-widening",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },
@@ -38347,7 +38377,7 @@
         "sourceInventoryRowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_nondetection",
         "state": "present"
       },
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
+      "nextAction": "Nondetection supplies a source fact that blocks Divination targeting and magical scrying-sensor perception for a touched creature, place, or object, but promoted battle runtime does not own generic Divination targetability, active remote-sensor perception, place identity, or table/perception disclosure. Those facts should be consumed by a future divination/perception owner without duplicating battle map, sensor, or authored spell identity state in generic Spell Invocation reducers.",
       "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_nondetection",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -38357,22 +38387,28 @@
       },
       "supportSnapshot": {
         "authoredContent": {
-          "state": "missing-authored-record"
+          "sourceRecordPath": "packages/surface/content/nondetection.json",
+          "state": "authored-record-present",
+          "unitId": "nondetection"
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "battle-runtime-required"
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "future divination targeting and magical scrying-sensor perception owner",
+          "reason": "Nondetection supplies a source fact that blocks Divination targeting and magical scrying-sensor perception for a touched creature, place, or object, but promoted battle runtime does not own generic Divination targetability, active remote-sensor perception, place identity, or table/perception disclosure. Those facts should be consumed by a future divination/perception owner without duplicating battle map, sensor, or authored spell identity state in generic Spell Invocation reducers.",
+          "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "nondetection"
         },
-        "finalDisposition": "missing-authored-record",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },
@@ -38388,7 +38424,7 @@
         "sourceInventoryRowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_phantom_steed",
         "state": "present"
       },
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
+      "nextAction": "Phantom Steed is closed at the mount companion boundary: a future owner must model spell-created mount identity and placement, Riding Horse stat-block projection with the spell Speed override, rider selection/control, damage-triggered early spell end, one-minute fade and dismount grace, created equipment distance-vanish, and 13 miles/hour travel without duplicating stat-block data, table geometry, or authored-identity dispatch in generic runtime code.",
       "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_phantom_steed",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -38398,22 +38434,28 @@
       },
       "supportSnapshot": {
         "authoredContent": {
-          "state": "missing-authored-record"
+          "sourceRecordPath": "packages/surface/content/phantom_steed.json",
+          "state": "authored-record-present",
+          "unitId": "phantom_steed"
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "battle-runtime-required"
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "companion-control-boundary",
+          "owner": "future spell-created mount lifecycle, rider/control, table travel, and fade/dismount owner",
+          "reason": "Phantom Steed is closed at the mount companion boundary: a future owner must model spell-created mount identity and placement, Riding Horse stat-block projection with the spell Speed override, rider selection/control, damage-triggered early spell end, one-minute fade and dismount grace, created equipment distance-vanish, and 13 miles/hour travel without duplicating stat-block data, table geometry, or authored-identity dispatch in generic runtime code.",
+          "state": "recorded"
         },
         "catalogAdmission": {
           "state": "not-installed",
           "unitId": "phantom_steed"
         },
-        "finalDisposition": "missing-authored-record",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },
@@ -38473,7 +38515,7 @@
         "sourceInventoryRowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_remove_curse",
         "state": "present"
       },
-      "nextAction": "Remove Curse supplies table-facing curse-removal and cursed-item Attunement source facts, but promoted battle runtime does not own generic curse occurrence identity, curse-removal targeting semantics, cursed magic item curse persistence, or Attunement mutation for cursed objects.",
+      "nextAction": "Remove Curse supplies table-facing all-curses-ending and cursed-item Attunement source facts. Bestow Curse supplies a shared curse-occurrence removal boundary, but promoted battle runtime does not yet own generic all-curses-ending cleanup across active curse occurrences, curse persistence on cursed magic items, or Attunement mutation for cursed objects.",
       "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_remove_curse",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -38493,8 +38535,8 @@
         },
         "battleReadinessClosure": {
           "kind": "outside-battle-runtime",
-          "owner": "future curse occurrence and magic-item Attunement owner",
-          "reason": "Remove Curse supplies table-facing curse-removal and cursed-item Attunement source facts, but promoted battle runtime does not own generic curse occurrence identity, curse-removal targeting semantics, cursed magic item curse persistence, or Attunement mutation for cursed objects.",
+          "owner": "future all-curses-ending cleanup and magic-item Attunement owner",
+          "reason": "Remove Curse supplies table-facing all-curses-ending and cursed-item Attunement source facts. Bestow Curse supplies a shared curse-occurrence removal boundary, but promoted battle runtime does not yet own generic all-curses-ending cleanup across active curse occurrences, curse persistence on cursed magic items, or Attunement mutation for cursed objects.",
           "state": "recorded"
         },
         "catalogAdmission": {
@@ -40182,27 +40224,33 @@
       ],
       "levelBand": "spell-level-3",
       "nextActions": [
-        "Widen Surface: Spell Definition curse occurrence: initial Wisdom Saving Throw gates one chosen ongoing curse option (chosen-ability Ability Check and Saving Throw Disadvantage, caster-targeted Attack Roll Disadvantage, start-of-turn Wisdom save or forced Dodge, or caster attack/spell damage rider), the target becomes a curse-removal target, and higher slot levels change both duration amount and Concentration requirement."
+        "Bestow Curse supplies typed Surface facts for one chosen curse option and a shared all-curses-ending target boundary, but promoted battle runtime must still model active curse occurrence identity, selected option storage, ability-choice propagation, caster-targeted attack-roll filtering, target-turn forced Dodge, caster attack-roll-or-spell damage riders, slot-tiered Concentration/no-Concentration duration admission, and cleanup from all-curses-ending effects without dispatching on Bestow Curse or Remove Curse authored identity."
       ],
       "spellName": "Bestow Curse",
       "supportSnapshot": {
         "authoredContent": {
-          "state": "missing-authored-record"
+          "sourceRecordPath": "packages/surface/content/bestow_curse.json",
+          "state": "authored-record-present",
+          "unitId": "bestow_curse"
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "surface-widening-required"
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "outside-battle-runtime",
+          "owner": "future generic curse occurrence, curse-removal cleanup, and selected curse-option owner",
+          "reason": "Bestow Curse supplies typed Surface facts for one chosen curse option and a shared all-curses-ending target boundary, but promoted battle runtime must still model active curse occurrence identity, selected option storage, ability-choice propagation, caster-targeted attack-roll filtering, target-turn forced Dodge, caster attack-roll-or-spell damage riders, slot-tiered Concentration/no-Concentration duration admission, and cleanup from all-curses-ending effects without dispatching on Bestow Curse or Remove Curse authored identity.",
+          "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "bestow_curse"
         },
-        "finalDisposition": "needs-surface-widening",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },
@@ -41499,7 +41547,7 @@
       ],
       "levelBand": "spell-level-3",
       "nextActions": [
-        "Author an SRD-provenance Surface record or explicitly close the row."
+        "Widen Surface: Spell Definition stone-merge occurrence: the self-only cast requires touching a stone object or surface large enough to fully contain the caster's body; the caster and equipment merge into hidden stone occupancy for 8 hours; nonmagical senses cannot detect the caster; outside sight is blocked; outside-sound Wisdom (Perception) checks have Disadvantage; the caster remains time-aware, can cast spells on themselves, can spend 5 feet of Movement to leave only where they entered, and otherwise cannot move; minor stone damage is harmless; partial destruction or shape change that makes the caster no longer fit expels them with 6d6 Force damage; complete destruction or transmutation expels them with 50 Force damage; any expulsion places them in the closest unoccupied space to the entry location and gives the Prone condition."
       ],
       "spellName": "Meld into Stone",
       "supportSnapshot": {
@@ -41508,16 +41556,19 @@
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "battle-runtime-required"
+          "status": "surface-widening-required"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "table-spatial-derivation",
+          "owner": "Surface Spell Definition plus table terrain/object occupancy owner and future battle-runtime merged-state, perception, damage, and forced-exit Spell Effect owner",
+          "reason": "Meld into Stone needs a typed follow-up split before an SRD-provenance Spell Definition can be admitted: Surface must own the self-only touch cast, stone object-or-surface containment target, hidden merged occupancy, blocked outside sight, outside-sound Wisdom (Perception) Disadvantage, self-spell permission, Movement-limited voluntary exit, otherwise-no-movement restriction, damage-free minor stone damage, destructive expulsion damage branches, and Prone rider; table terrain/object occupancy ownership supplies stone size/shape/material witnesses, entry location, damage/destruction/transmutation events, fit-after-shape-change predicate, closest-unoccupied-space placement, and forced-exit witnesses; future battle runtime should consume typed merged-state and expulsion facts without dispatching on spell id or name.",
+          "state": "recorded"
         },
         "catalogAdmission": {
           "state": "not-installed",
           "unitId": "meld_into_stone"
         },
-        "finalDisposition": "missing-authored-record",
+        "finalDisposition": "needs-surface-widening",
         "unitProfile": {
           "state": "not-recorded"
         }
@@ -41553,27 +41604,33 @@
       ],
       "levelBand": "spell-level-3",
       "nextActions": [
-        "Author an SRD-provenance Surface record or explicitly close the row."
+        "Nondetection supplies a source fact that blocks Divination targeting and magical scrying-sensor perception for a touched creature, place, or object, but promoted battle runtime does not own generic Divination targetability, active remote-sensor perception, place identity, or table/perception disclosure. Those facts should be consumed by a future divination/perception owner without duplicating battle map, sensor, or authored spell identity state in generic Spell Invocation reducers."
       ],
       "spellName": "Nondetection",
       "supportSnapshot": {
         "authoredContent": {
-          "state": "missing-authored-record"
+          "sourceRecordPath": "packages/surface/content/nondetection.json",
+          "state": "authored-record-present",
+          "unitId": "nondetection"
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "battle-runtime-required"
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "future divination targeting and magical scrying-sensor perception owner",
+          "reason": "Nondetection supplies a source fact that blocks Divination targeting and magical scrying-sensor perception for a touched creature, place, or object, but promoted battle runtime does not own generic Divination targetability, active remote-sensor perception, place identity, or table/perception disclosure. Those facts should be consumed by a future divination/perception owner without duplicating battle map, sensor, or authored spell identity state in generic Spell Invocation reducers.",
+          "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "nondetection"
         },
-        "finalDisposition": "missing-authored-record",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },
@@ -41597,27 +41654,33 @@
       ],
       "levelBand": "spell-level-3",
       "nextActions": [
-        "Author an SRD-provenance Surface record or explicitly close the row."
+        "Phantom Steed is closed at the mount companion boundary: a future owner must model spell-created mount identity and placement, Riding Horse stat-block projection with the spell Speed override, rider selection/control, damage-triggered early spell end, one-minute fade and dismount grace, created equipment distance-vanish, and 13 miles/hour travel without duplicating stat-block data, table geometry, or authored-identity dispatch in generic runtime code."
       ],
       "spellName": "Phantom Steed",
       "supportSnapshot": {
         "authoredContent": {
-          "state": "missing-authored-record"
+          "sourceRecordPath": "packages/surface/content/phantom_steed.json",
+          "state": "authored-record-present",
+          "unitId": "phantom_steed"
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "battle-runtime-required"
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "companion-control-boundary",
+          "owner": "future spell-created mount lifecycle, rider/control, table travel, and fade/dismount owner",
+          "reason": "Phantom Steed is closed at the mount companion boundary: a future owner must model spell-created mount identity and placement, Riding Horse stat-block projection with the spell Speed override, rider selection/control, damage-triggered early spell end, one-minute fade and dismount grace, created equipment distance-vanish, and 13 miles/hour travel without duplicating stat-block data, table geometry, or authored-identity dispatch in generic runtime code.",
+          "state": "recorded"
         },
         "catalogAdmission": {
           "state": "not-installed",
           "unitId": "phantom_steed"
         },
-        "finalDisposition": "missing-authored-record",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },
@@ -41798,7 +41861,7 @@
       ],
       "levelBand": "spell-level-3",
       "nextActions": [
-        "Remove Curse supplies table-facing curse-removal and cursed-item Attunement source facts, but promoted battle runtime does not own generic curse occurrence identity, curse-removal targeting semantics, cursed magic item curse persistence, or Attunement mutation for cursed objects."
+        "Remove Curse supplies table-facing all-curses-ending and cursed-item Attunement source facts. Bestow Curse supplies a shared curse-occurrence removal boundary, but promoted battle runtime does not yet own generic all-curses-ending cleanup across active curse occurrences, curse persistence on cursed magic items, or Attunement mutation for cursed objects."
       ],
       "spellName": "Remove Curse",
       "supportSnapshot": {
@@ -41813,8 +41876,8 @@
         },
         "battleReadinessClosure": {
           "kind": "outside-battle-runtime",
-          "owner": "future curse occurrence and magic-item Attunement owner",
-          "reason": "Remove Curse supplies table-facing curse-removal and cursed-item Attunement source facts, but promoted battle runtime does not own generic curse occurrence identity, curse-removal targeting semantics, cursed magic item curse persistence, or Attunement mutation for cursed objects.",
+          "owner": "future all-curses-ending cleanup and magic-item Attunement owner",
+          "reason": "Remove Curse supplies table-facing all-curses-ending and cursed-item Attunement source facts. Bestow Curse supplies a shared curse-occurrence removal boundary, but promoted battle runtime does not yet own generic all-curses-ending cleanup across active curse occurrences, curse persistence on cursed magic items, or Attunement mutation for cursed objects.",
           "state": "recorded"
         },
         "catalogAdmission": {

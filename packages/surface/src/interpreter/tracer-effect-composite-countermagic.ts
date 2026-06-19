@@ -1,4 +1,8 @@
-import type { AreaDirectEffectAtom } from "../surface/types.ts";
+import type {
+  AreaDirectEffectAtom,
+  OngoingOperation,
+  OngoingTrigger,
+} from "../surface/types.ts";
 import type { TraceEdge, TraceNode } from "./tracer-model.ts";
 import { Match } from "effect";
 import {
@@ -18,6 +22,7 @@ export type CompositeAndCountermagicEffectAtom = Extract<
     readonly kind:
       | "composite"
       | "choose_effect_mode"
+      | "curse_occurrence"
       | "grant_speed"
       | "ignore_web_restrictions"
       | "alter_item_kind"
@@ -27,6 +32,7 @@ export type CompositeAndCountermagicEffectAtom = Extract<
       | "magical_identity_mask"
       | "locate_kind"
       | "object_location_sense"
+      | "block_divination_targeting_and_scrying_perception"
       | "divination_omen"
       | "assign_courier_task"
       | "negate_triggering_spell"
@@ -44,6 +50,13 @@ type TransformTargetEffect = Extract<
 >;
 type ShapeShiftFormSource = TransformTargetEffect["newForm"];
 type ShapeShiftRevertTrigger = TransformTargetEffect["revertTriggers"][number];
+
+function describeOngoingTrigger(trigger: OngoingTrigger): string {
+  if (trigger.kind === "on_caster_deals_damage_to_attachment") {
+    return `${trigger.kind}: ${trigger.damageSource.join(" or ")}`;
+  }
+  return trigger.kind;
+}
 
 function describeShapeShiftCrBound(
   crBound: Extract<
@@ -257,6 +270,33 @@ export function traceCompositeAndCountermagicEffectAtom(
     }
   }
 
+  function traceCurseOperation(
+    operation: OngoingOperation,
+    optionId: string,
+    nodes: TraceNode[],
+    ids: IdGen,
+    edges: TraceEdge[],
+  ): void {
+    const operationId = ids("curse-op");
+    nodes.push({
+      id: operationId,
+      category: "window",
+      atomKind: "curse_option_operation",
+      label: `curse_option_operation\n${describeOngoingTrigger(operation.trigger)}`,
+    });
+    edges.push({ from: optionId, to: operationId, relation: "opens_window" });
+
+    const effectId = traceDetachedOngoingChoiceEffect(
+      operation.effect,
+      nodes,
+      ids,
+      edges,
+    );
+    if (effectId !== null) {
+      edges.push({ from: operationId, to: effectId, relation: "grants" });
+    }
+  }
+
   switch (e.kind) {
     case "composite": {
       // Emit a container node; children are traced as siblings all
@@ -306,6 +346,35 @@ export function traceCompositeAndCountermagicEffectAtom(
             if (effectId !== null) {
               edges.push({ from: optionId, to: effectId, relation: "grants" });
             }
+          }
+        }
+      }
+      return id;
+    }
+    case "curse_occurrence": {
+      const id = ids("curse");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "curse_occurrence",
+        label: [
+          "curse_occurrence",
+          `${e.removal.kind}`,
+          `target: ${e.removal.target}`,
+        ].join("\n"),
+      });
+      if (edges !== undefined) {
+        for (const option of e.options) {
+          const optionId = ids("curse-opt");
+          nodes.push({
+            id: optionId,
+            category: "resolution",
+            atomKind: "curse_option",
+            label: `curse_option\n${option.displayName}`,
+          });
+          edges.push({ from: id, to: optionId, relation: "offers" });
+          for (const operation of option.operations) {
+            traceCurseOperation(operation, optionId, nodes, ids, edges);
           }
         }
       }
@@ -420,6 +489,20 @@ export function traceCompositeAndCountermagicEffectAtom(
           `nearest ${e.searchModes.nearestObjectKind} within ${e.maxDistanceFeet} ft`,
           e.result,
           `blocked_by: ${e.blockedBy}`,
+        ].join("\n"),
+      });
+      return id;
+    }
+    case "block_divination_targeting_and_scrying_perception": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "block_divination_targeting_and_scrying_perception",
+        label: [
+          "block_divination_targeting_and_scrying_perception",
+          "targeting: Divination spells",
+          "perception: magical scrying sensors",
         ].join("\n"),
       });
       return id;

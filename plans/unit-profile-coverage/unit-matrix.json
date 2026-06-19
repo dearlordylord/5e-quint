@@ -43,13 +43,13 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
-      "denominator": 449,
-      "numerator": 265,
-      "percent": "59%"
+      "denominator": 452,
+      "numerator": 267,
+      "percent": "59.1%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 537,
-      "numerator": 315,
+      "denominator": 540,
+      "numerator": 317,
       "percent": "58.7%"
     },
     "classicNonSrdExpressionGate": {
@@ -59,7 +59,7 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 316
+      "value": 318
     },
     "deterministicAdmissionProjectionCoverage": {
       "denominator": 187,
@@ -67,8 +67,8 @@
       "percent": "97.3%"
     },
     "profileClassificationCoverage": {
-      "denominator": 316,
-      "numerator": 316,
+      "denominator": 318,
+      "numerator": 318,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -112,9 +112,9 @@
       "percent": "98.3%"
     },
     "supportedProfileCoverage": {
-      "denominator": 266,
+      "denominator": 268,
       "numerator": 187,
-      "percent": "70.3%"
+      "percent": "69.8%"
     }
   },
   "metricSemantics": [
@@ -16791,8 +16791,8 @@
         "unsupportedOrOtherUnits": 4
       },
       {
-        "executableUnitDenominator": 134,
-        "installedUnitDenominator": 134,
+        "executableUnitDenominator": 136,
+        "installedUnitDenominator": 136,
         "kind": "spell",
         "label": "Spell Units",
         "profileFactDenominator": 137,
@@ -16802,7 +16802,7 @@
         "selectedIdentityReplayGapUnits": 1,
         "selectedIdentityReplayWitnessUnits": 110,
         "supportedProfileUnits": 93,
-        "unsupportedOrOtherUnits": 23
+        "unsupportedOrOtherUnits": 25
       },
       {
         "executableUnitDenominator": 94,
@@ -27775,6 +27775,29 @@
         "status": "installed"
       },
       "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-battle-runtime",
+          "owner": "future generic curse occurrence, curse-removal cleanup, and selected curse-option owner",
+          "reason": "Bestow Curse supplies typed Surface facts for one chosen curse option and a shared all-curses-ending target boundary, but promoted battle runtime must still model active curse occurrence identity, selected option storage, ability-choice propagation, caster-targeted attack-roll filtering, target-turn forced Dodge, caster attack-roll-or-spell damage riders, slot-tiered Concentration/no-Concentration duration admission, and cleanup from all-curses-ending effects without dispatching on Bestow Curse or Remove Curse authored identity."
+        },
+        "reason": "Bestow Curse is authored and installed as an SRD Surface Spell Definition with Action Spell Slot casting, Touch range, V/S components, a slot-tiered duration that preserves the level 4 Concentration extension, level 5+ no-Concentration durations, and level 9 until-dispelled case, an initial Wisdom Saving Throw, one selected curse option among chosen-ability Ability Check and Saving Throw Disadvantage, Attack Roll Disadvantage against the caster, start-of-turn Wisdom save or forced Dodge, and caster attack-roll-or-spell Necrotic damage rider, plus a shared all-curses-ending removal boundary on the attached target. No promoted battle-runtime profile is claimed because the runtime does not yet own generic curse occurrences, curse-removal cleanup, per-curse option execution, or slot-tiered Concentration/no-Concentration effect admission for this spell.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/bestow_curse.json",
+      "unitId": "bestow_curse"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
         "profileIds": [
           "spell.invocation-roll-modifier"
         ],
@@ -33137,10 +33160,10 @@
       "claim": {
         "battleReadinessClosure": {
           "kind": "outside-battle-runtime",
-          "owner": "future curse occurrence and magic-item Attunement owner",
-          "reason": "Remove Curse supplies table-facing curse-removal and cursed-item Attunement source facts, but promoted battle runtime does not own generic curse occurrence identity, curse-removal targeting semantics, cursed magic item curse persistence, or Attunement mutation for cursed objects."
+          "owner": "future all-curses-ending cleanup and magic-item Attunement owner",
+          "reason": "Remove Curse supplies table-facing all-curses-ending and cursed-item Attunement source facts. Bestow Curse supplies a shared curse-occurrence removal boundary, but promoted battle runtime does not yet own generic all-curses-ending cleanup across active curse occurrences, curse persistence on cursed magic items, or Attunement mutation for cursed objects."
         },
-        "reason": "Remove Curse is authored and installed as an SRD Surface Spell Definition with Magic Action Spell Slot casting, Touch range, V/S components, Instantaneous duration, one creature-or-object target, all-curse ending source facts, and cursed magic item Attunement-breaking source facts. Task 2 claims no promoted battle-runtime profile because no shared Bestow Curse curse occurrence and curse-removal target boundary is installed, and cursed magic item Attunement mutation belongs to a future curse or magic-item owner rather than this catalog admission task.",
+        "reason": "Remove Curse is authored and installed as an SRD Surface Spell Definition with Magic Action Spell Slot casting, Touch range, V/S components, Instantaneous duration, one creature-or-object target, all-curse ending source facts, and cursed magic item Attunement-breaking source facts. No promoted battle-runtime profile is claimed because promoted runtime still lacks an all-curses-ending cleanup owner for shared curse occurrences, and cursed magic item Attunement mutation belongs to a future curse or magic-item owner rather than this catalog admission task.",
         "tag": "unsupported-profile"
       },
       "collectionId": "srd-5.2.1",
@@ -34824,6 +34847,29 @@
       ],
       "sourceRecordPath": "packages/surface/content/moonbeam.json",
       "unitId": "moonbeam"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "future divination targeting and magical scrying-sensor perception owner",
+          "reason": "Nondetection supplies a source fact that blocks Divination targeting and magical scrying-sensor perception for a touched creature, place, or object, but promoted battle runtime does not own generic Divination targetability, active remote-sensor perception, place identity, or table/perception disclosure. Those facts should be consumed by a future divination/perception owner without duplicating battle map, sensor, or authored spell identity state in generic Spell Invocation reducers."
+        },
+        "reason": "Nondetection is an SRD level-3 Spell Definition whose authored Surface record models Action Spell Slot casting, Touch range, V/S/M consumed 25+ GP diamond-dust component, 8-hour duration, one willing creature or 10-foot-bounded place/object target, and the paired ward fact that the target cannot be targeted by Divination spells or perceived through magical scrying sensors. No promoted battle-runtime profile is claimed because Divination spell classification, targetability interdiction, active magical scrying sensor perception, place identity, and table/perception disclosure are runtime-detached divination/perception facts outside promoted battle Unit profiles.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/nondetection.json",
+      "unitId": "nondetection"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
@@ -40173,6 +40219,34 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/paladin_epic_boon.json",
       "unitId": "paladin_epic_boon"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "disposition": {
+          "category": "srd-candidate",
+          "planningLane": "QMBT14-QMBT16",
+          "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
+        },
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "companion-control-boundary",
+          "owner": "future spell-created mount lifecycle, rider/control, table travel, and fade/dismount owner",
+          "reason": "Phantom Steed is closed at the mount companion boundary: a future owner must model spell-created mount identity and placement, Riding Horse stat-block projection with the spell Speed override, rider selection/control, damage-triggered early spell end, one-minute fade and dismount grace, created equipment distance-vanish, and 13 miles/hour travel without duplicating stat-block data, table geometry, or authored-identity dispatch in generic runtime code."
+        },
+        "reason": "Phantom Steed's Surface record has SRD provenance and structured spawned-creature/mount facts for 1-minute-or-Ritual casting, 30-foot point range, V/S components, 1-hour timed duration, an existing Riding Horse catalog reference with a walk Speed 100 override, caster-or-chosen-creature rider permission, saddle/bit/bridle created equipment with a 10-foot vanish boundary, 13 miles/hour table travel, and a one-minute rider dismount grace while the steed fades at spell end. The source prose and closure retain the damage-triggered early spell end because Surface has no created-creature damage subject trigger. No promoted battle-runtime profile is claimed because these clauses require a mount lifecycle/travel owner rather than companion command placeholders.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/phantom_steed.json",
+      "unitId": "phantom_steed"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

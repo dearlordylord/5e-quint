@@ -259,6 +259,7 @@ export function traceEffectAtom(
       );
     case "composite":
     case "choose_effect_mode":
+    case "curse_occurrence":
     case "grant_speed":
     case "ignore_web_restrictions":
     case "alter_item_kind":
@@ -268,6 +269,7 @@ export function traceEffectAtom(
     case "magical_identity_mask":
     case "locate_kind":
     case "object_location_sense":
+    case "block_divination_targeting_and_scrying_perception":
     case "divination_omen":
     case "assign_courier_task":
     case "negate_triggering_spell":

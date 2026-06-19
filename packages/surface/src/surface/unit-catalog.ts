@@ -37,6 +37,7 @@ import barbarianWeaponMasteryInput from "../../content/barbarian_weapon_mastery.
 import barkskinInput from "../../content/barkskin.json";
 import blindnessDeafnessInput from "../../content/blindness_deafness.json";
 import baneInput from "../../content/bane.json";
+import bestowCurseInput from "../../content/bestow_curse.json";
 import blessInput from "../../content/bless.json";
 import blurInput from "../../content/blur.json";
 import burningHandsInput from "../../content/burning_hands.json";
@@ -159,6 +160,7 @@ import mindSpikeInput from "../../content/mind_spike.json";
 import massCureWoundsInput from "../../content/mass_cure_wounds.json";
 import massHealingWordInput from "../../content/mass_healing_word.json";
 import moonbeamInput from "../../content/moonbeam.json";
+import nondetectionInput from "../../content/nondetection.json";
 import masteryCleaveInput from "../../content/mastery_cleave.json";
 import masterySapInput from "../../content/mastery_sap.json";
 import masteryToppleInput from "../../content/mastery_topple.json";
@@ -610,6 +612,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     barkskinInput,
     blindnessDeafnessInput,
     baneInput,
+    bestowCurseInput,
     blessInput,
     blurInput,
     burningHandsInput,
@@ -704,6 +707,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     mindSpikeInput,
     mirrorImageInput,
     moonbeamInput,
+    nondetectionInput,
     massCureWoundsInput,
     massHealingWordInput,
     healingWordInput,
