@@ -16,10 +16,10 @@
       "spell-level-4": 81
     },
     "auditedUniqueSpellIdentitiesByFinalDisposition": {
-      "catalog-authored-review-required": 23,
+      "catalog-authored-review-required": 22,
       "catalog-installed-owner-evidence-present": 8,
       "catalog-installed-owner-evidence-required": 1,
-      "catalog-only/dead-for-now": 14,
+      "catalog-only/dead-for-now": 15,
       "missing-authored-record": 23,
       "needs-surface-widening": 7
     },
@@ -35,10 +35,10 @@
     },
     "rowsByBattleReadinessStatus": {
       "accepted": 473,
-      "accepted-no-battle-effect": 222,
+      "accepted-no-battle-effect": 223,
       "battle-runtime-required": 53,
       "not-applicable": 77,
-      "owner-evidence-required": 58,
+      "owner-evidence-required": 57,
       "surface-widening-required": 17
     },
     "rowsByCatalogAdmission": {
@@ -56,10 +56,10 @@
       "subclass selection": 12
     },
     "rowsByFinalDisposition": {
-      "catalog-authored-review-required": 57,
+      "catalog-authored-review-required": 56,
       "catalog-installed-owner-evidence-present": 487,
       "catalog-installed-owner-evidence-required": 4,
-      "catalog-only/dead-for-now": 177,
+      "catalog-only/dead-for-now": 178,
       "level-5-7-follow-up-required": 24,
       "missing-authored-record": 50,
       "needs-surface-widening": 17,
@@ -93,10 +93,10 @@
       "subclass-spell-access": 5
     },
     "rowsByUnitProfileDisposition": {
-      "not-recorded": 187,
+      "not-recorded": 186,
       "profile-subset-supported": 53,
       "supported-profile": 301,
-      "unsupported-profile": 359
+      "unsupported-profile": 360
     }
   },
   "rows": [
@@ -9948,7 +9948,7 @@
         "sourceInventoryRowId": "srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_spirit_guardians",
         "state": "present"
       },
-      "nextAction": "Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this later-frontier spell row as accepted.",
+      "nextAction": "Spirit Guardians' represented battle behavior is closed outside the current promoted battle-runtime boundary: a future active Spell Effect owner must admit the caster-selected unaffected creatures, carry the caster-owned Concentration occurrence and self-origin 15-foot Emanation, project Speed halving only for affected creatures in the Emanation, and resolve Wisdom Saving Throw Radiant-or-Necrotic damage when the Emanation enters a creature's space, a creature enters the Emanation, or a creature ends its turn there, with a shared once-per-turn save limit. Table/spatial ownership must supply moving Emanation membership and area-entry witnesses rather than duplicating map or path state inside generic Spell Invocation reducers.",
       "rowId": "srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_spirit_guardians",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -9964,18 +9964,22 @@
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "owner-evidence-required"
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "outside-battle-runtime",
+          "owner": "future active Emanation area-hazard Spell Effect and table/spatial membership owner",
+          "reason": "Spirit Guardians' represented battle behavior is closed outside the current promoted battle-runtime boundary: a future active Spell Effect owner must admit the caster-selected unaffected creatures, carry the caster-owned Concentration occurrence and self-origin 15-foot Emanation, project Speed halving only for affected creatures in the Emanation, and resolve Wisdom Saving Throw Radiant-or-Necrotic damage when the Emanation enters a creature's space, a creature enters the Emanation, or a creature ends its turn there, with a shared once-per-turn save limit. Table/spatial ownership must supply moving Emanation membership and area-entry witnesses rather than duplicating map or path state inside generic Spell Invocation reducers.",
+          "state": "recorded"
         },
         "catalogAdmission": {
           "state": "not-installed",
           "unitId": "spirit_guardians"
         },
-        "finalDisposition": "catalog-authored-review-required",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },
@@ -42188,7 +42192,7 @@
       ],
       "levelBand": "spell-level-3",
       "nextActions": [
-        "Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this later-frontier spell row as accepted."
+        "Spirit Guardians' represented battle behavior is closed outside the current promoted battle-runtime boundary: a future active Spell Effect owner must admit the caster-selected unaffected creatures, carry the caster-owned Concentration occurrence and self-origin 15-foot Emanation, project Speed halving only for affected creatures in the Emanation, and resolve Wisdom Saving Throw Radiant-or-Necrotic damage when the Emanation enters a creature's space, a creature enters the Emanation, or a creature ends its turn there, with a shared once-per-turn save limit. Table/spatial ownership must supply moving Emanation membership and area-entry witnesses rather than duplicating map or path state inside generic Spell Invocation reducers."
       ],
       "spellName": "Spirit Guardians",
       "supportSnapshot": {
@@ -42199,18 +42203,22 @@
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "owner-evidence-required"
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "outside-battle-runtime",
+          "owner": "future active Emanation area-hazard Spell Effect and table/spatial membership owner",
+          "reason": "Spirit Guardians' represented battle behavior is closed outside the current promoted battle-runtime boundary: a future active Spell Effect owner must admit the caster-selected unaffected creatures, carry the caster-owned Concentration occurrence and self-origin 15-foot Emanation, project Speed halving only for affected creatures in the Emanation, and resolve Wisdom Saving Throw Radiant-or-Necrotic damage when the Emanation enters a creature's space, a creature enters the Emanation, or a creature ends its turn there, with a shared once-per-turn save limit. Table/spatial ownership must supply moving Emanation membership and area-entry witnesses rather than duplicating map or path state inside generic Spell Invocation reducers.",
+          "state": "recorded"
         },
         "catalogAdmission": {
           "state": "not-installed",
           "unitId": "spirit_guardians"
         },
-        "finalDisposition": "catalog-authored-review-required",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },

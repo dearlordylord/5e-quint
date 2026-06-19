@@ -40328,6 +40328,16 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-battle-runtime",
+          "owner": "future active Emanation area-hazard Spell Effect and table/spatial membership owner",
+          "reason": "Spirit Guardians' represented battle behavior is closed outside the current promoted battle-runtime boundary: a future active Spell Effect owner must admit the caster-selected unaffected creatures, carry the caster-owned Concentration occurrence and self-origin 15-foot Emanation, project Speed halving only for affected creatures in the Emanation, and resolve Wisdom Saving Throw Radiant-or-Necrotic damage when the Emanation enters a creature's space, a creature enters the Emanation, or a creature ends its turn there, with a shared once-per-turn save limit. Table/spatial ownership must supply moving Emanation membership and area-entry witnesses rather than duplicating map or path state inside generic Spell Invocation reducers."
+        },
+        "reason": "Spirit Guardians is an SRD level-3 Spell Definition whose authored Surface record models Action Spell Slot casting, Self range, V/S/M prayer-scroll components, caster-owned Concentration up to 10 minutes, a self-origin 15-foot Emanation, passive halving of affected creatures' Speed in the Emanation, a Wisdom Saving Throw gate, Radiant-or-Necrotic damage with half damage on success, and +1d8 damage per Spell Slot level above 3. No promoted battle-runtime profile is claimed because full support needs an active Emanation area-hazard Spell Effect that carries the caster-selected unaffected creature set, self-moving Emanation identity, area-membership trigger facts, Speed projection, save-gated damage timing, and per-creature once-per-turn save ledger without authored-identity dispatch.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "spell",

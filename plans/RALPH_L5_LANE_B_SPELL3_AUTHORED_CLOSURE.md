@@ -55,7 +55,7 @@
     {
       "number": 9,
       "id": "L5-B09-SPIRIT-GUARDIANS",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Close Spirit Guardians authored spell pressure"
     },
     {
@@ -138,7 +138,7 @@ this lane; those are Lane C and Lane D.
 | 6 | L5-B06-FEAR - Close Fear authored spell pressure | done | none | Closed outside the current promoted battle runtime active Frightened-compulsion Spell Effect, held-object release, and compelled-movement boundary. |
 | 7 | L5-B07-MAJOR-IMAGE - Close Major Image authored spell pressure | done | none | Independent authored spell pressure row. |
 | 8 | L5-B08-PROTECTION-FROM-ENERGY - Close Protection from Energy authored spell pressure | done | none | Preserve target-shape repair plus runtime admission prerequisite from `plans/unit-profile-coverage/L3_PROTECTION_FROM_ENERGY_RUNTIME_SURVEY.md`. |
-| 9 | L5-B09-SPIRIT-GUARDIANS - Close Spirit Guardians authored spell pressure | ready-for-research | none | Independent authored spell pressure row. |
+| 9 | L5-B09-SPIRIT-GUARDIANS - Close Spirit Guardians authored spell pressure | done | none | Closed outside the current promoted battle runtime active Emanation area-hazard Spell Effect and table/spatial membership boundary. |
 | 10 | L5-B10-STINKING-CLOUD - Close Stinking Cloud authored spell pressure | ready-for-research | none | Independent authored spell pressure row. |
 | 11 | L5-B11-VAMPIRIC-TOUCH - Close Vampiric Touch authored spell pressure | ready-for-research | none | Independent authored spell pressure row. |
 | 12 | L5-B12-WIND-WALL - Close Wind Wall authored spell pressure | ready-for-research | none | Independent authored spell pressure row. |
@@ -535,7 +535,7 @@ Verification:
 
 ### Task 9 - L5-B09-SPIRIT-GUARDIANS
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -563,6 +563,16 @@ Output:
 Acceptance:
 
 - `spirit_guardians` leaves `catalog-authored-review-required`.
+
+Result:
+
+- `spirit_guardians` is recorded as `unsupported-profile` and
+  `catalog-only/dead-for-now` with an `outside-battle-runtime` closure.
+- The future owner is an active Emanation area-hazard Spell Effect plus
+  table/spatial membership owner for caster-selected unaffected creatures,
+  the caster-owned Concentration occurrence, the self-origin 15-foot Emanation,
+  Speed halving for affected creatures in the Emanation, Wisdom Saving Throw
+  Radiant-or-Necrotic damage timing, and the shared once-per-turn save limit.
 
 Verification:
 

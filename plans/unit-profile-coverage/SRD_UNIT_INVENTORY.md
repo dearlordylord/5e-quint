@@ -96,14 +96,14 @@ This metric is a separate seed for level-4 class feature rows, including Ability
 
 This metric is a separate seed for spell-level-3 pressure only. It belongs to the later character-level-5 frontier for full casters and Warlock Pact Magic, with half-caster rows excluded until their own class tables grant matching slots. It does not affect Character Levels 1-2 or Character Levels 1-3 readiness denominators.
 
-- Accepted: 64/110 (58.2%)
+- Accepted: 65/110 (59.1%)
 
 #### Spell-Level-3 Battle Readiness by Status
 
 - accepted: 26
-- accepted-no-battle-effect: 38
+- accepted-no-battle-effect: 39
 - battle-runtime-required: 21
-- owner-evidence-required: 8
+- owner-evidence-required: 7
 - surface-widening-required: 17
 
 ### Spell-Level-4 Battle Readiness
@@ -207,10 +207,10 @@ This metric is a separate seed for spell-level-4 pressure only. It belongs to th
 
 ### Spell-Level-3 Unit Pressure by Disposition
 
-- catalog-authored-review-required: 8
+- catalog-authored-review-required: 7
 - catalog-installed-owner-evidence-present: 26
 - catalog-installed-owner-evidence-required: 3
-- catalog-only/dead-for-now: 38
+- catalog-only/dead-for-now: 39
 - missing-authored-record: 18
 - needs-surface-widening: 17
 
@@ -727,7 +727,7 @@ These batches are generated planning recommendations for a separate SRD inventor
 |Cleric spell list Revivify|spell Unit pressure|outside-surface-runtime-mechanics|authored-record-present|installed|unsupported-profile|catalog-only/dead-for-now|accepted-no-battle-effect|outside-battle-runtime: future rest/revival workflow owner|Unit catalog/admission: catalog evidence; future rest/revival workflow owner: catalog-only/dead-for-now closure|Revivify supplies death-window and return-to-life source facts, but promoted battle runtime does not own dead creature target eligibility, spirit refusal, corpse or missing-body-part state, generic revival transitions, Dead-glossary ongoing effect persistence, Exhaustion adjustment, or magic-item Attunement cleanup.|.references/srd-5.2.1/Classes/Cleric.md:217|
 |Cleric spell list Sending|spell Unit pressure|outside-surface-runtime-mechanics|authored-record-present|installed|unsupported-profile|catalog-only/dead-for-now|accepted-no-battle-effect|outside-runtime-presentation-exploration: runtime-detached table communication owner|Unit catalog/admission: catalog evidence; runtime-detached table communication owner: catalog-only/dead-for-now closure|Sending supplies private mental message delivery, cross-plane failure chance, immediate response, and recipient block source facts, but promoted battle runtime does not own communication content, creature knowledge/description matching, planar location adjudication, message-delivery rolls, response contents, or persistent communication block state.|.references/srd-5.2.1/Classes/Cleric.md:218|
 |Cleric spell list Speak with Dead|spell Unit pressure|current-surface-can-express-source-facts|missing-authored-record|not-installed||missing-authored-record|battle-runtime-required|||Author an SRD-provenance Surface record or explicitly close the row.|.references/srd-5.2.1/Classes/Cleric.md:219|
-|Cleric spell list Spirit Guardians|spell Unit pressure|current-surface-can-express-source-facts|authored-record-present|not-installed||catalog-authored-review-required|owner-evidence-required|||Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this later-frontier spell row as accepted.|.references/srd-5.2.1/Classes/Cleric.md:220|
+|Cleric spell list Spirit Guardians|spell Unit pressure|outside-surface-runtime-mechanics|authored-record-present|not-installed|unsupported-profile|catalog-only/dead-for-now|accepted-no-battle-effect|outside-battle-runtime: future active Emanation area-hazard Spell Effect and table/spatial membership owner||Spirit Guardians' represented battle behavior is closed outside the current promoted battle-runtime boundary: a future active Spell Effect owner must admit the caster-selected unaffected creatures, carry the caster-owned Concentration occurrence and self-origin 15-foot Emanation, project Speed halving only for affected creatures in the Emanation, and resolve Wisdom Saving Throw Radiant-or-Necrotic damage when the Emanation enters a creature's space, a creature enters the Emanation, or a creature ends its turn there, with a shared once-per-turn save limit. Table/spatial ownership must supply moving Emanation membership and area-entry witnesses rather than duplicating map or path state inside generic Spell Invocation reducers.|.references/srd-5.2.1/Classes/Cleric.md:220|
 |Cleric spell list Tongues|spell Unit pressure|outside-surface-runtime-mechanics|authored-record-present|not-installed|unsupported-profile|catalog-only/dead-for-now|accepted-no-battle-effect|outside-runtime-presentation-exploration: runtime-detached language/communication owner||Tongues changes communication intelligibility through hearing, sight, signing, speech, and known-language gates. Promoted battle runtime does not own conversation content, social outcomes, automatic communication adjudication, or language-table projection for this spell.|.references/srd-5.2.1/Classes/Cleric.md:221|
 |Cleric spell list Water Walk|spell Unit pressure|current-surface-can-express-source-facts|missing-authored-record|not-installed||missing-authored-record|battle-runtime-required|||Author an SRD-provenance Surface record or explicitly close the row.|.references/srd-5.2.1/Classes/Cleric.md:222|
 |Druid spell list Call Lightning|spell Unit pressure|outside-surface-runtime-mechanics|authored-record-present|not-installed|unsupported-profile|catalog-only/dead-for-now|accepted-no-battle-effect|outside-battle-runtime: future active storm Spell Effect and table/spatial weather owner||Call Lightning's represented battle behavior is closed outside the current promoted battle-runtime boundary: a future active storm Spell Effect owner must carry the cloud occurrence, Concentration expiry, retained slot level and Spell Save DC, later Magic Action repeats, selected points under the cloud, and repeated Dexterity Saving Throw Lightning damage without authored-identity dispatch. Table/spatial weather ownership must supply visibility, under-cloud area membership, outdoor-in-a-storm state, existing storm control, and the storm damage bonus rather than duplicating map or weather state inside generic Spell Invocation reducers.|.references/srd-5.2.1/Classes/Druid.md:253|

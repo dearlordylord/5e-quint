@@ -41,10 +41,10 @@ These counts describe the current runtime/catalog state of mined rows. They are 
 
 | Disposition | Rows |
 | --- | ---: |
-| catalog-authored-review-required | 57 |
+| catalog-authored-review-required | 56 |
 | catalog-installed-owner-evidence-present | 487 |
 | catalog-installed-owner-evidence-required | 4 |
-| catalog-only/dead-for-now | 177 |
+| catalog-only/dead-for-now | 178 |
 | level-5-7-follow-up-required | 24 |
 | missing-authored-record | 50 |
 | needs-surface-widening | 17 |
@@ -61,20 +61,20 @@ These counts describe the current runtime/catalog state of mined rows. They are 
 
 | Unit profile disposition | Rows |
 | --- | ---: |
-| not-recorded | 187 |
+| not-recorded | 186 |
 | profile-subset-supported | 53 |
 | supported-profile | 301 |
-| unsupported-profile | 359 |
+| unsupported-profile | 360 |
 
 ### Battle Readiness Snapshot
 
 | Battle readiness status | Rows |
 | --- | ---: |
 | accepted | 473 |
-| accepted-no-battle-effect | 222 |
+| accepted-no-battle-effect | 223 |
 | battle-runtime-required | 53 |
 | not-applicable | 77 |
-| owner-evidence-required | 58 |
+| owner-evidence-required | 57 |
 | surface-widening-required | 17 |
 
 ## Spell-Level 3-4 Pressure Summary
@@ -90,10 +90,10 @@ These counts separate class-list rows from unique Spell Definition identities. A
 
 | Disposition | Spell identities |
 | --- | ---: |
-| catalog-authored-review-required | 23 |
+| catalog-authored-review-required | 22 |
 | catalog-installed-owner-evidence-present | 8 |
 | catalog-installed-owner-evidence-required | 1 |
-| catalog-only/dead-for-now | 14 |
+| catalog-only/dead-for-now | 15 |
 | missing-authored-record | 23 |
 | needs-surface-widening | 7 |
 
@@ -135,7 +135,7 @@ These counts separate class-list rows from unique Spell Definition identities. A
 | `slow` Slow | spell-level-3 | Bard, Sorcerer, Wizard | 3 | missing-authored-record | not-installed | not-recorded | missing-authored-record | battle-runtime-required | not-recorded | Author an SRD-provenance Surface record or explicitly close the row. |
 | `speak_with_dead` Speak with Dead | spell-level-3 | Bard, Cleric, Wizard | 3 | missing-authored-record | not-installed | not-recorded | missing-authored-record | battle-runtime-required | not-recorded | Author an SRD-provenance Surface record or explicitly close the row. |
 | `speak_with_plants` Speak with Plants | spell-level-3 | Bard, Druid | 2 | missing-authored-record | not-installed | not-recorded | missing-authored-record | battle-runtime-required | not-recorded | Author an SRD-provenance Surface record or explicitly close the row. |
-| `spirit_guardians` Spirit Guardians | spell-level-3 | Cleric | 1 | authored-record-present | not-installed | not-recorded | catalog-authored-review-required | owner-evidence-required | not-recorded | Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this later-frontier spell row as accepted. |
+| `spirit_guardians` Spirit Guardians | spell-level-3 | Cleric | 1 | authored-record-present | not-installed | unsupported-profile | catalog-only/dead-for-now | accepted-no-battle-effect | outside-battle-runtime: future active Emanation area-hazard Spell Effect and table/spatial membership owner | Spirit Guardians' represented battle behavior is closed outside the current promoted battle-runtime boundary: a future active Spell Effect owner must admit the caster-selected unaffected creatures, carry the caster-owned Concentration occurrence and self-origin 15-foot Emanation, project Speed halving only for affected creatures in the Emanation, and resolve Wisdom Saving Throw Radiant-or-Necrotic damage when the Emanation enters a creature's space, a creature enters the Emanation, or a creature ends its turn there, with a shared once-per-turn save limit. Table/spatial ownership must supply moving Emanation membership and area-entry witnesses rather than duplicating map or path state inside generic Spell Invocation reducers. |
 | `stinking_cloud` Stinking Cloud | spell-level-3 | Bard, Sorcerer, Wizard | 3 | authored-record-present | not-installed | not-recorded | catalog-authored-review-required | owner-evidence-required | not-recorded | Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this later-frontier spell row as accepted. |
 | `tiny_hut` Tiny Hut | spell-level-3 | Bard, Wizard | 2 | missing-authored-record | not-installed | not-recorded | missing-authored-record | battle-runtime-required | not-recorded | Author an SRD-provenance Surface record or explicitly close the row. |
 | `tongues` Tongues | spell-level-3 | Bard, Cleric, Sorcerer, Warlock, Wizard | 5 | authored-record-present | not-installed | unsupported-profile | catalog-only/dead-for-now | accepted-no-battle-effect | outside-runtime-presentation-exploration: runtime-detached language/communication owner | Tongues changes communication intelligibility through hearing, sight, signing, speech, and known-language gates. Promoted battle runtime does not own conversation content, social outcomes, automatic communication adjudication, or language-table projection for this spell. |
@@ -485,7 +485,7 @@ These counts separate class-list rows from unique Spell Definition identities. A
 | Cleric spell list Revivify | spell-level-3 | spell-level | spell Unit pressure | `revivify` | `.references/srd-5.2.1/Classes/Cleric.md:217` | present | installed | unsupported-profile | catalog-only/dead-for-now | accepted-no-battle-effect | outside-battle-runtime: future rest/revival workflow owner | Revivify supplies death-window and return-to-life source facts, but promoted battle runtime does not own dead creature target eligibility, spirit refusal, corpse or missing-body-part state, generic revival transitions, Dead-glossary ongoing effect persistence, Exhaustion adjustment, or magic-item Attunement cleanup. |
 | Cleric spell list Sending | spell-level-3 | spell-level | spell Unit pressure | `sending` | `.references/srd-5.2.1/Classes/Cleric.md:218` | present | installed | unsupported-profile | catalog-only/dead-for-now | accepted-no-battle-effect | outside-runtime-presentation-exploration: runtime-detached table communication owner | Sending supplies private mental message delivery, cross-plane failure chance, immediate response, and recipient block source facts, but promoted battle runtime does not own communication content, creature knowledge/description matching, planar location adjudication, message-delivery rolls, response contents, or persistent communication block state. |
 | Cleric spell list Speak with Dead | spell-level-3 | spell-level | spell Unit pressure | `speak_with_dead` | `.references/srd-5.2.1/Classes/Cleric.md:219` | present | not-installed | not-recorded | missing-authored-record | battle-runtime-required | not-recorded | Author an SRD-provenance Surface record or explicitly close the row. |
-| Cleric spell list Spirit Guardians | spell-level-3 | spell-level | spell Unit pressure | `spirit_guardians` | `.references/srd-5.2.1/Classes/Cleric.md:220` | present | not-installed | not-recorded | catalog-authored-review-required | owner-evidence-required | not-recorded | Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this later-frontier spell row as accepted. |
+| Cleric spell list Spirit Guardians | spell-level-3 | spell-level | spell Unit pressure | `spirit_guardians` | `.references/srd-5.2.1/Classes/Cleric.md:220` | present | not-installed | unsupported-profile | catalog-only/dead-for-now | accepted-no-battle-effect | outside-battle-runtime: future active Emanation area-hazard Spell Effect and table/spatial membership owner | Spirit Guardians' represented battle behavior is closed outside the current promoted battle-runtime boundary: a future active Spell Effect owner must admit the caster-selected unaffected creatures, carry the caster-owned Concentration occurrence and self-origin 15-foot Emanation, project Speed halving only for affected creatures in the Emanation, and resolve Wisdom Saving Throw Radiant-or-Necrotic damage when the Emanation enters a creature's space, a creature enters the Emanation, or a creature ends its turn there, with a shared once-per-turn save limit. Table/spatial ownership must supply moving Emanation membership and area-entry witnesses rather than duplicating map or path state inside generic Spell Invocation reducers. |
 | Cleric spell list Tongues | spell-level-3 | spell-level | spell Unit pressure | `tongues` | `.references/srd-5.2.1/Classes/Cleric.md:221` | present | not-installed | unsupported-profile | catalog-only/dead-for-now | accepted-no-battle-effect | outside-runtime-presentation-exploration: runtime-detached language/communication owner | Tongues changes communication intelligibility through hearing, sight, signing, speech, and known-language gates. Promoted battle runtime does not own conversation content, social outcomes, automatic communication adjudication, or language-table projection for this spell. |
 | Cleric spell list Water Walk | spell-level-3 | spell-level | spell Unit pressure | `water_walk` | `.references/srd-5.2.1/Classes/Cleric.md:222` | present | not-installed | not-recorded | missing-authored-record | battle-runtime-required | not-recorded | Author an SRD-provenance Surface record or explicitly close the row. |
 | Cleric spell list Aura of Life | spell-level-4 | spell-level | spell Unit pressure | `aura_of_life` | `.references/srd-5.2.1/Classes/Cleric.md:228` | present | not-installed | not-recorded | catalog-authored-review-required | owner-evidence-required | not-recorded | Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this later-frontier spell row as accepted. |
