@@ -67,7 +67,7 @@
     {
       "number": 11,
       "id": "L5-A11-WIZARD-MEMORIZE-SPELL",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Close Wizard Memorize Spell level 5 follow-up"
     },
     {
