@@ -219,6 +219,7 @@ const requiredFirstVerticalUnitIds = [
   "suggestion",
   "zone_of_truth",
   "thunderwave",
+  "speak_with_dead",
   "eldritch_blast",
   "minor_illusion",
   "sorcerous_burst",
@@ -3537,6 +3538,50 @@ describe("SRD Unit catalog boundary", () => {
         ),
       ).toBe(true);
     }
+  });
+
+  test("decodes Speak with Dead as a table-owned corpse communication Spell Definition", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag !== "ok") return;
+    const speakWithDead = result.catalog.requireUnit("speak_with_dead");
+
+    expect(speakWithDead.kind).toBe("spell");
+    if (speakWithDead.kind !== "spell") return;
+    expect(speakWithDead.mechanics.family).toBe("activation");
+    if (speakWithDead.mechanics.family !== "activation") return;
+
+    expect(speakWithDead.provenance).toEqual({
+      kind: "srd-5.2.1",
+      section: "Spells/Descriptions-S-Z#Speak with Dead",
+    });
+    expect(speakWithDead.mechanics).toMatchObject({
+      level: 3,
+      school: "necromancy",
+      castingTime: { kind: "action" },
+      range: { kind: "point", feet: 10 },
+      components: { v: true, s: true, m: "burning incense" },
+      duration: { kind: "timed", value: { unit: "minute", amount: 10 } },
+    });
+    expect(speakWithDead.mechanics.phases).toEqual([
+      {
+        kind: "direct",
+        attachment: {
+          kind: "hole",
+          holeId: "speak_with_dead_corpse",
+          label: "corpse with a mouth",
+          value: {
+            kind: "object",
+            count: 1,
+          },
+        },
+        effects: [{ kind: "none" }],
+      },
+    ]);
+    expect(speakWithDead.description).toContain("up to five questions");
+    expect(speakWithDead.description).toContain("target of this spell within");
+    expect(speakWithDead.description).toContain("can't speculate about future");
   });
 
   test("decodes Sleet Storm as an authored Cylinder hazard Spell Definition", () => {

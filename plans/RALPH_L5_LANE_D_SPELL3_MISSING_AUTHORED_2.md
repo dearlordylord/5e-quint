@@ -43,7 +43,7 @@
     {
       "number": 7,
       "id": "L5-D07-SPEAK-WITH-DEAD",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Close Speak with Dead missing authored record"
     },
     {
@@ -142,7 +142,7 @@ missing-record spells unless a RAW dependency is unavoidable and documented.
 | 4 | L5-D04-SENDING - Close Sending missing authored record | done | none | Independent missing spell Unit. |
 | 5 | L5-D05-SLEET-STORM - Close Sleet Storm missing authored record | done | none | Independent missing spell Unit. |
 | 6 | L5-D06-SLOW - Close Slow missing authored record | done | none | Authored and installed Slow as an SRD Surface Spell Definition while preserving active-penalties and turn/Somatic runtime follow-up tasks. |
-| 7 | L5-D07-SPEAK-WITH-DEAD - Close Speak with Dead missing authored record | ready-for-research | none | Independent missing spell Unit. |
+| 7 | L5-D07-SPEAK-WITH-DEAD - Close Speak with Dead missing authored record | done | none | Independent missing spell Unit. |
 | 8 | L5-D08-SPEAK-WITH-PLANTS - Close Speak with Plants missing authored record | ready-for-research | none | Independent missing spell Unit. |
 | 9 | L5-D09-TINY-HUT - Close Tiny Hut missing authored record | ready-for-research | none | Independent missing spell Unit. |
 | 10 | L5-D10-WATER-WALK - Close Water Walk missing authored record | ready-for-research | none | Independent missing spell Unit. |
@@ -407,7 +407,7 @@ Verification:
 
 ### Task 7 - L5-D07-SPEAK-WITH-DEAD
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
