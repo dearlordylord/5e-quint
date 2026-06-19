@@ -1336,6 +1336,7 @@ export function spellFillSet(
     if (fill.kind === "damageTypeChoice") {
       if (
         invocation.procedure !== "damageReduction" &&
+        invocation.procedure !== "chosenDamageResistance" &&
         invocation.procedure !== "dragonsBreathInitial" &&
         !(
           invocation.procedure === "spellAttackDamage" &&

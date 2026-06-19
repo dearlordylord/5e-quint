@@ -44,13 +44,13 @@
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
       "denominator": 448,
-      "numerator": 263,
-      "percent": "58.7%"
+      "numerator": 264,
+      "percent": "58.9%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
       "denominator": 536,
-      "numerator": 313,
-      "percent": "58.4%"
+      "numerator": 314,
+      "percent": "58.6%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,62 +59,62 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 314
+      "value": 315
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 185,
-      "numerator": 180,
+      "denominator": 186,
+      "numerator": 181,
       "percent": "97.3%"
     },
     "profileClassificationCoverage": {
-      "denominator": 314,
-      "numerator": 314,
+      "denominator": 315,
+      "numerator": 315,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 121,
-      "numerator": 121,
+      "denominator": 122,
+      "numerator": 122,
       "percent": "100%"
     },
     "qntProofCoverage": {
-      "denominator": 121,
-      "numerator": 118,
+      "denominator": 122,
+      "numerator": 119,
       "percent": "97.5%"
     },
     "rulesKernelCoveredProfileCoverage": {
-      "denominator": 159,
-      "numerator": 159,
+      "denominator": 160,
+      "numerator": 160,
       "percent": "100%"
     },
     "rulesKernelProfileJoinCoverage": {
-      "denominator": 159,
-      "numerator": 159,
+      "denominator": 160,
+      "numerator": 160,
       "percent": "100%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 174,
-      "numerator": 174,
+      "denominator": 175,
+      "numerator": 175,
       "percent": "100%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 121,
-      "numerator": 121,
+      "denominator": 122,
+      "numerator": 122,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 121,
-      "numerator": 121,
+      "denominator": 122,
+      "numerator": 122,
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 178,
+      "denominator": 179,
       "numerator": 176,
-      "percent": "98.9%"
+      "percent": "98.3%"
     },
     "supportedProfileCoverage": {
-      "denominator": 264,
-      "numerator": 185,
-      "percent": "70.1%"
+      "denominator": 265,
+      "numerator": 186,
+      "percent": "70.2%"
     }
   },
   "metricSemantics": [
@@ -3535,6 +3535,31 @@
       ]
     },
     {
+      "id": "spell.invocation-chosen-damage-resistance",
+      "profileKind": "spell-invocation",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime-chosen-damage-resistance.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/chosen-damage-resistance.ts"
+      ],
+      "sourceBoundary": "The runtime consumes an authored spell shape with one willing touched creature target, an exact caster-selected Acid/Cold/Fire/Lightning/Thunder damage-type choice, and Concentration up to 1 hour. It spends the Magic Action and level-3-or-higher Spell Slot, validates the willing-target fact through typed target disposition, records a spell-owned target-side damageResistance active effect with the selected damage type and one-hour maximum duration, replaces prior same-caster same-spell Resistance, removes it through Concentration cleanup or duration expiry, and applies matching-damage-only halving through the normal target-side damage adjustment pipeline without dispatching on authored spell identity.",
+      "taskRefs": [
+        "L5-B08-PROTECTION-FROM-ENERGY"
+      ],
+      "title": "Spell invocation grants Concentration-owned Resistance to one caster-chosen damage type",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-chosen-damage-resistance.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-roll-modifier-and-resistance-spells.test.ts"
+        }
+      ]
+    },
+    {
       "id": "spell.invocation-warding-bond-linked-effect",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -5391,13 +5416,13 @@
     "denominatorRule": "profile records with rules-kernel profile kinds and either QNT owners or explicit profile-obligation mappings",
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
-        "denominator": 159,
-        "numerator": 159,
+        "denominator": 160,
+        "numerator": 160,
         "percent": "100%"
       },
       "rulesKernelProfileJoinCoverage": {
-        "denominator": 159,
-        "numerator": 159,
+        "denominator": 160,
+        "numerator": 160,
         "percent": "100%"
       }
     },
@@ -7422,6 +7447,22 @@
         "joinStatus": "covered",
         "obligations": [
           {
+            "obligationId": "BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle damage type choice and Resistance spell damage-reduction rolls feed by-type damage math and once-per-turn use state"
+          }
+        ],
+        "profileId": "spell.invocation-chosen-damage-resistance",
+        "profileKind": "spell-invocation",
+        "qntOwners": [
+          "packages/battle-runtime/battle-runtime-chosen-damage-resistance.qnt"
+        ]
+      },
+      {
+        "joinStatus": "covered",
+        "obligations": [
+          {
             "obligationId": "BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING",
             "runtime": "battle",
             "status": "covered",
@@ -8133,8 +8174,8 @@
       "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
       "metrics": {
         "rulesKernelSupportedUnitCoverage": {
-          "denominator": 174,
-          "numerator": 174,
+          "denominator": 175,
+          "numerator": 175,
           "percent": "100%"
         }
       },
@@ -11468,6 +11509,28 @@
               "joinStatus": "covered",
               "obligations": [
                 {
+                  "obligationId": "BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle damage type choice and Resistance spell damage-reduction rolls feed by-type damage math and once-per-turn use state"
+                }
+              ],
+              "profileId": "spell.invocation-chosen-damage-resistance",
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/battle-runtime/battle-runtime-chosen-damage-resistance.qnt"
+              ]
+            }
+          ],
+          "unitId": "protection_from_energy"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
                   "obligationId": "BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION",
                   "runtime": "battle",
                   "status": "covered",
@@ -12928,7 +12991,7 @@
       "evidenceTag": "selected-identity-mbt"
     },
     "deferredNonApplicableRows": [],
-    "rowCount": 6,
+    "rowCount": 7,
     "rows": [
       {
         "catalogAdmissionStatus": "installed",
@@ -13032,6 +13095,23 @@
           "tag": "profile-subset-supported"
         },
         "unitId": "species_halfling_naturally_stealthy"
+      },
+      {
+        "catalogAdmissionStatus": "installed",
+        "collectionId": "srd-5.2.1",
+        "kind": "spell",
+        "selectedIdentity": {
+          "reason": "The Unit has no selected-identity-mbt evidence.",
+          "status": "missing-witness"
+        },
+        "sourceRecordPath": "packages/surface/content/protection_from_energy.json",
+        "support": {
+          "profileIds": [
+            "spell.invocation-chosen-damage-resistance"
+          ],
+          "tag": "supported-profile"
+        },
+        "unitId": "protection_from_energy"
       }
     ]
   },
@@ -16562,6 +16642,22 @@
     },
     {
       "claimKind": "qnt-proof",
+      "note": "Package-local Protection from Energy Quint witness covers the exact Acid, Cold, Fire, Lightning, and Thunder choice set, matching-damage-only Resistance through the shared target-side damage adjustment algebra, same-caster recast replacement, Concentration cleanup, and one-hour duration expiry for the chosen Resistance effect.",
+      "profileIds": [
+        "spell.invocation-chosen-damage-resistance"
+      ],
+      "taskId": "L5-B08-PROTECTION-FROM-ENERGY"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime tests decode the catalog-installed SRD Protection from Energy spell record directly while covering level-3-or-higher Spell Slot admission, willing touched creature target validation, chosen damage-type fill validation, Concentration-owned one-hour damageResistance projection, concentration-break cleanup, duration-expiry cleanup, and matching-only target-side damage halving without authored-identity dispatch.",
+      "profileIds": [
+        "spell.invocation-chosen-damage-resistance"
+      ],
+      "taskId": "L5-B08-PROTECTION-FROM-ENERGY"
+    },
+    {
+      "claimKind": "qnt-proof",
       "note": "Rule-core witness covers the selected Hide obscurement permission predicate: the hider must be obscured only by a creature, out of enemy line of sight, and the obscuring creature must be at least one size larger than the hider.",
       "profileIds": [
         "unit-feature.hide-action-obscurement-permission"
@@ -16661,17 +16757,17 @@
         "unsupportedOrOtherUnits": 4
       },
       {
-        "executableUnitDenominator": 133,
-        "installedUnitDenominator": 133,
+        "executableUnitDenominator": 134,
+        "installedUnitDenominator": 134,
         "kind": "spell",
         "label": "Spell Units",
-        "profileFactDenominator": 136,
+        "profileFactDenominator": 137,
         "profileSubsetSupportedUnits": 18,
         "selectedIdentityDeferredNonApplicableUnits": 0,
-        "selectedIdentityReplayDenominator": 110,
-        "selectedIdentityReplayGapUnits": 0,
+        "selectedIdentityReplayDenominator": 111,
+        "selectedIdentityReplayGapUnits": 1,
         "selectedIdentityReplayWitnessUnits": 110,
-        "supportedProfileUnits": 92,
+        "supportedProfileUnits": 93,
         "unsupportedOrOtherUnits": 23
       },
       {
@@ -32199,6 +32295,71 @@
       "claim": {
         "deferredMechanics": [],
         "profileIds": [
+          "spell.invocation-chosen-damage-resistance"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "Magic Action level-3-or-higher Spell Slot casting",
+          "one known willing touched creature target through caller-supplied target facts",
+          "cast-time damage type choice restricted to Acid, Cold, Fire, Lightning, or Thunder",
+          "caster-owned Concentration for up to 1 hour",
+          "target-side spell-owned Resistance active effect for only the chosen damage type through the normal target-side damage adjustment pipeline",
+          "same-caster recast replacement removes the prior Protection from Energy Resistance effect from the same target",
+          "Concentration cleanup and one-hour duration cleanup remove the chosen Resistance effect"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-roll-modifier-and-resistance-spells.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L5-B08-PROTECTION-FROM-ENERGY"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [
+        {
+          "id": "spell.invocation-chosen-damage-resistance",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime-chosen-damage-resistance.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/chosen-damage-resistance.ts"
+          ],
+          "sourceBoundary": "The runtime consumes an authored spell shape with one willing touched creature target, an exact caster-selected Acid/Cold/Fire/Lightning/Thunder damage-type choice, and Concentration up to 1 hour. It spends the Magic Action and level-3-or-higher Spell Slot, validates the willing-target fact through typed target disposition, records a spell-owned target-side damageResistance active effect with the selected damage type and one-hour maximum duration, replaces prior same-caster same-spell Resistance, removes it through Concentration cleanup or duration expiry, and applies matching-damage-only halving through the normal target-side damage adjustment pipeline without dispatching on authored spell identity.",
+          "taskRefs": [
+            "L5-B08-PROTECTION-FROM-ENERGY"
+          ],
+          "title": "Spell invocation grants Concentration-owned Resistance to one caster-chosen damage type",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-chosen-damage-resistance.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-roll-modifier-and-resistance-spells.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/protection_from_energy.json",
+      "unitId": "protection_from_energy"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "deferredMechanics": [],
+        "profileIds": [
           "spell.creature-type-protection-and-charm"
         ],
         "rawRequirementIds": [
@@ -40010,24 +40171,6 @@
       "authoredSurfaceDuplicateIdCount": 1,
       "catalogAdmission": {
         "disposition": {
-          "category": "srd-candidate",
-          "planningLane": "QMBT14-QMBT16",
-          "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/protection_from_energy.json",
-      "unitId": "protection_from_energy"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
           "category": "unsupported-widening-pressure",
           "planningLane": "QMBT18",
           "reason": "Executable SRD authored data is absent from the catalog and needs an explicit unsupported profile or surface-widening slice."
@@ -40185,6 +40328,16 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-battle-runtime",
+          "owner": "future active Emanation area-hazard Spell Effect and table/spatial membership owner",
+          "reason": "Spirit Guardians' represented battle behavior is closed outside the current promoted battle-runtime boundary: a future active Spell Effect owner must admit the caster-selected unaffected creatures, carry the caster-owned Concentration occurrence and self-origin 15-foot Emanation, project Speed halving only for affected creatures in the Emanation, and resolve Wisdom Saving Throw Radiant-or-Necrotic damage when the Emanation enters a creature's space, a creature enters the Emanation, or a creature ends its turn there, with a shared once-per-turn save limit. Table/spatial ownership must supply moving Emanation membership and area-entry witnesses rather than duplicating map or path state inside generic Spell Invocation reducers."
+        },
+        "reason": "Spirit Guardians is an SRD level-3 Spell Definition whose authored Surface record models Action Spell Slot casting, Self range, V/S/M prayer-scroll components, caster-owned Concentration up to 10 minutes, a self-origin 15-foot Emanation, passive halving of affected creatures' Speed in the Emanation, a Wisdom Saving Throw gate, Radiant-or-Necrotic damage with half damage on success, and +1d8 damage per Spell Slot level above 3. No promoted battle-runtime profile is claimed because full support needs an active Emanation area-hazard Spell Effect that carries the caster-selected unaffected creature set, self-moving Emanation identity, area-membership trigger facts, Speed projection, save-gated damage timing, and per-creature once-per-turn save ledger without authored-identity dispatch.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "spell",
@@ -40203,6 +40356,16 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-battle-runtime",
+          "owner": "future active gas area-hazard Spell Effect and table/spatial air movement owner",
+          "reason": "Stinking Cloud's represented battle behavior is closed outside the promoted battle-runtime boundary: a future active Spell Effect owner must carry the Concentration-owned 20-foot-radius Sphere cloud occurrence, project Heavily Obscured gas, resolve Constitution Saving Throws for creatures that start their turns in the Sphere, apply and clear the spell-scoped Poisoned condition at the end of the current turn, and deny Action and Bonus Action use only while Poisoned in this way. Table/spatial air movement ownership must supply area-membership start-turn witnesses, wind strength, and dispersal timing rather than duplicating map, weather, or area state inside generic Spell Invocation reducers."
+        },
+        "reason": "Stinking Cloud is an SRD level-3 Spell Definition whose authored Surface record models Action Spell Slot casting, 90-foot point range, V/S/M rotten-egg components, Concentration up to 1 minute, a point-origin 20-foot-radius Sphere of nauseating gas, passive Heavily Obscured projection, start-of-turn Constitution Saving Throw timing, spell-scoped Poisoned until the end of the current turn on a failed save, and denial of both Action and Bonus Action while Poisoned in this way. No promoted battle-runtime profile is claimed because full support needs an active gas area-hazard Spell Effect that carries the cloud occurrence, Concentration expiry, area-obscurement projection, per-creature start-turn save timing, temporary Poisoned lifecycle, action-resource denial while the spell-scoped Poisoned state lasts, and strong-wind dispersal without authored-identity dispatch.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "spell",
@@ -40411,6 +40574,16 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-battle-runtime",
+          "owner": "future active touch-attack Spell Effect and linked damage-to-healing owner",
+          "reason": "Vampiric Touch's represented battle behavior is closed outside the promoted battle-runtime boundary: a future active Spell Effect owner must carry the Concentration-owned touch attack occurrence, retain slot-scaled Necrotic damage and spell attack facts for later Magic Action repeats, admit same-target or different-target creature choices within reach on each repeat, resolve damage, and apply caster self-healing equal to half the damage dealt. Table/spatial ownership must supply reach and target-legality witnesses rather than duplicating map or creature-position state inside generic Spell Invocation reducers."
+        },
+        "reason": "Vampiric Touch is an SRD level-3 Spell Definition whose authored Surface record models Action Spell Slot casting, Self range, V/S components, caster-owned Concentration up to 1 minute, an initial one-target melee spell attack, slot-scaled Necrotic damage, and caster self-healing linked to half the Necrotic damage dealt. No promoted battle-runtime profile is claimed because full support needs an active touch-attack Spell Effect that retains the cast occurrence, slot level, spell attack facts, and Concentration expiry; opens later caster-turn Magic Action repeats against the same creature or a different creature; resolves repeated Necrotic damage; and derives self-healing from actual damage dealt without authored-identity dispatch.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "spell",
@@ -41134,6 +41307,16 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-battle-runtime",
+          "owner": "future active wall-area Spell Effect and table/spatial/environment projectile owner",
+          "reason": "Wind Wall's represented battle behavior is closed outside the promoted battle-runtime boundary: a future active Spell Effect owner must carry the Concentration-owned wall occurrence, resolve the appearance-time Strength Saving Throw and Bludgeoning damage for creatures in the wall's area, project ordinary projectile deflection against targets behind the wall while preserving giant-hurled and siege-engine exceptions, keep fog, smoke, and other gases at bay, block creatures in gaseous form, and block Small-or-smaller flying creatures or objects from passing through. Table/spatial/environment ownership must supply the shaped continuous line geometry, height and thickness placement, area-membership witnesses, behind-wall target relation, projectile ordinariness/source classification, gas or fog overlap, gaseous-form movement attempt, object size and flight facts, and loose lightweight material movement rather than duplicating map, projectile, object, or weather state inside generic Spell Invocation reducers."
+        },
+        "reason": "Wind Wall is an SRD level-3 Spell Definition whose authored Surface record models Action Spell Slot casting, 120-foot point range, V/S/M fan-and-feather components, Concentration up to 1 minute, a point-origin shaped line wall up to 50 feet long, 15 feet high, and 1 foot thick, an initial Strength Saving Throw for creatures in the wall's area, 4d8 Bludgeoning damage with half damage on success, passive ordinary-projectile deflection with giant-hurled and siege-engine projectile exceptions, gas and gaseous-creature blocking, and Small-or-smaller flying creature/object passage blocking. No promoted battle-runtime profile is claimed because full support needs an active wall-area Spell Effect that carries the wall occurrence, Concentration expiry, caller-supplied continuous ground path identity, appearance-time area membership, initial save-damage resolution, behind-wall ordinary-projectile auto-miss projection, gas/fog boundary projection, gaseous-form passage denial, Small-or-smaller flying passage denial, and loose lightweight material movement without authored-identity dispatch.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "spell",

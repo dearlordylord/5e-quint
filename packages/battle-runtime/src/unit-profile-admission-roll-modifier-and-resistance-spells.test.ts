@@ -3,15 +3,20 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3SPELL-01-ENHANCE-ABILITY-UPCAST-PER-TARGET enhance_ability
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME enthrall
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-SPELL-PROTECTION-FROM-POISON protection_from_poison
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L5-B08-PROTECTION-FROM-ENERGY protection_from_energy
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV30F resistance
-// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-roll-modifier spell.invocation-damage-reduction spell.invocation-condition-removal-protection
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-roll-modifier spell.invocation-damage-reduction spell.invocation-condition-removal-protection spell.invocation-chosen-damage-resistance
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION
 import { describe, expect, test } from "vitest";
+import protectionFromEnergyInput from "../../surface/content/protection_from_energy.json";
+import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
+import type { DamageType, SpellRecord } from "@dnd/surface/surface/types";
 import {
   baneUnitId,
   blessUnitId,
   enhanceAbilityUnitId,
   enthrallUnitId,
+  fireBoltUnitId,
   guidanceUnitId,
   passWithoutTraceUnitId,
   poisonSprayUnitId,
@@ -40,6 +45,7 @@ import {
   savingThrowOutcomeFill,
   skillChoiceFill,
   spellAct,
+  knownWillingSpellTargetFill,
   targetAbilityChoicesFill,
   spellTargetFill,
   spellTargetListFill,
@@ -70,12 +76,24 @@ import type {
   BattleState,
   BattleSubject,
 } from "./unit-profile-admission-test-support.ts";
+import { tickDurationEffects } from "./battle-reducer/turn-end-movement.ts";
 import {
   passivePerceptionModifierDelta,
   requiredAbilityCheckRollMode,
 } from "./battle-reducer/hole-helpers.ts";
-import { BattleHoleSchema } from "./index.ts";
+import { BattleHoleSchema, type BattleFill, type BattleHole } from "./index.ts";
 import { Either, Schema } from "effect";
+
+const protectionFromEnergyUnitId = "protection_from_energy";
+const protectionFromEnergyDurationTicks = elapsedTimeTicks(600);
+
+function authoredProtectionFromEnergySpell(): SpellRecord {
+  const unit = decodeUnitRecordSync(protectionFromEnergyInput);
+  if (unit.kind !== "spell") {
+    throw new Error("Expected Protection from Energy content to be a spell.");
+  }
+  return unit;
+}
 
 function withProtectionFromPoisonResistance(
   state: BattleState,
@@ -101,6 +119,41 @@ function withProtectionFromPoisonResistance(
       ],
     }),
   };
+}
+
+function withProtectionFromEnergyResistance(
+  state: BattleState,
+  targetId: typeof spellTargetId,
+  damageType: DamageType,
+): BattleState {
+  const target = requireCombatant(state, targetId);
+  return {
+    ...state,
+    combatants: new Map(state.combatants).set(targetId, {
+      ...target,
+      activeEffects: [
+        ...target.activeEffects,
+        {
+          kind: "damageResistance" as const,
+          sourceSpellId: protectionFromEnergyUnitId,
+          sourceCombatantId: spellCasterId,
+          damageType,
+          expiresAt: {
+            kind: "concentration" as const,
+            combatantId: spellCasterId,
+            durationTicks: protectionFromEnergyDurationTicks,
+          },
+        },
+      ],
+    }),
+  };
+}
+
+function damageTypeChoiceFill(
+  hole: Extract<BattleHole, { readonly kind: "damageTypeChoice" }>,
+  value: Extract<BattleFill, { readonly kind: "damageTypeChoice" }>["value"],
+): Extract<BattleFill, { readonly kind: "damageTypeChoice" }> {
+  return { kind: "damageTypeChoice", holeId: hole.holeId, value };
 }
 
 describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
@@ -1911,5 +1964,251 @@ describe("L12G Protection from Poison deterministic Spell Unit admission", () =>
           effect.sourceSpellId === protectionFromPoisonUnitId,
       ),
     ).toBe(false);
+  });
+});
+
+describe("L5-B08 Protection from Energy deterministic Spell Unit admission", () => {
+  test("protection_from_energy stores a Concentration-owned chosen damage Resistance on one willing touched creature", () => {
+    const spell = authoredProtectionFromEnergySpell();
+    const state = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 3, count: 1 }],
+    });
+    const act = spellAct({
+      state,
+      spellId: protectionFromEnergyUnitId,
+      slotLevel: 3,
+    });
+    const targetHole = requireHole(act.initialHoles, "targetChoice");
+    const damageTypeHole = requireHole(act.initialHoles, "damageTypeChoice");
+
+    expect(act.subject).toEqual({
+      tag: "actionSpell",
+      actorId: spellCasterId,
+      invocation: spellSlotInvocationRef(
+        protectionFromEnergyUnitId,
+        3,
+        "chosenDamageResistance",
+      ),
+      mode: { tag: "cast" },
+    });
+    expect(damageTypeHole.choices).toEqual([
+      "acid",
+      "cold",
+      "fire",
+      "lightning",
+      "thunder",
+    ]);
+
+    const targetFill = spellTargetFill(
+      targetHole,
+      protectionFromEnergyUnitId,
+      spellCasterId,
+      spellTargetId,
+    );
+    const damageTypeFill = damageTypeChoiceFill(damageTypeHole, "fire");
+    expect(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [targetFill, damageTypeFill],
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "invalidFill" });
+
+    const willingTargetFill = knownWillingSpellTargetFill(
+      targetHole,
+      protectionFromEnergyUnitId,
+      spellCasterId,
+      spellTargetId,
+    );
+    const resolved = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [willingTargetFill, damageTypeFill],
+    });
+
+    expect(resolved).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        combatants: [
+          expect.objectContaining({
+            combatantId: spellCasterId,
+            concentrating: true,
+          }),
+          expect.anything(),
+        ],
+      },
+    });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Protection from Energy to resolve.");
+    }
+    expect(
+      requireCombatant(resolved.state, spellTargetId).activeEffects,
+    ).toContainEqual(
+      expect.objectContaining({
+        kind: "damageResistance",
+        sourceSpellId: protectionFromEnergyUnitId,
+        sourceCombatantId: spellCasterId,
+        damageType: "fire",
+        expiresAt: {
+          kind: "concentration",
+          combatantId: spellCasterId,
+          durationTicks: protectionFromEnergyDurationTicks,
+        },
+      }),
+    );
+
+    const ended = breakBattleConcentration(resolved.state, spellCasterId);
+    expect(
+      requireCombatant(ended, spellTargetId).activeEffects.some(
+        (effect) =>
+          effect.kind === "damageResistance" &&
+          effect.sourceSpellId === protectionFromEnergyUnitId,
+      ),
+    ).toBe(false);
+  });
+
+  test("protection_from_energy duration expiry removes the Resistance and caster concentration", () => {
+    const spell = authoredProtectionFromEnergySpell();
+    const state = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 3, count: 1 }],
+    });
+    const act = spellAct({
+      state,
+      spellId: protectionFromEnergyUnitId,
+      slotLevel: 3,
+    });
+    const targetHole = requireHole(act.initialHoles, "targetChoice");
+    const damageTypeHole = requireHole(act.initialHoles, "damageTypeChoice");
+    const resolved = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        knownWillingSpellTargetFill(
+          targetHole,
+          protectionFromEnergyUnitId,
+          spellCasterId,
+          spellTargetId,
+        ),
+        damageTypeChoiceFill(damageTypeHole, "fire"),
+      ],
+    });
+    expect(resolved).toMatchObject({ tag: "resolved" });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Protection from Energy to resolve.");
+    }
+
+    const target = requireCombatant(resolved.state, spellTargetId);
+    const nearlyExpiredCombatants = new Map(resolved.state.combatants).set(
+      spellTargetId,
+      {
+        ...target,
+        activeEffects: target.activeEffects.map((effect) =>
+          effect.kind === "damageResistance" &&
+          effect.sourceSpellId === protectionFromEnergyUnitId &&
+          effect.expiresAt.kind === "concentration"
+            ? {
+                ...effect,
+                expiresAt: {
+                  ...effect.expiresAt,
+                  durationTicks: elapsedTimeTicks(1),
+                },
+              }
+            : effect,
+        ),
+      },
+    );
+    const expiredCombatants = tickDurationEffects(
+      nearlyExpiredCombatants,
+    ).value;
+
+    expect(expiredCombatants.get(spellCasterId)?.concentration).toBeNull();
+    expect(
+      expiredCombatants
+        .get(spellTargetId)
+        ?.activeEffects.some(
+          (effect) =>
+            effect.kind === "damageResistance" &&
+            effect.sourceSpellId === protectionFromEnergyUnitId,
+        ),
+    ).toBe(false);
+  });
+
+  test("protection_from_energy Resistance halves only matching damage through the target-side adjustment pipeline", () => {
+    const fireSpell = spellRecord(fireBoltUnitId);
+    const fireBase = spellBattle({ cantrips: [fireSpell], spellSlots: [] });
+    const fireState = withProtectionFromEnergyResistance(
+      fireBase,
+      spellTargetId,
+      "fire",
+    );
+    const act = spellAct({ state: fireState, spellId: fireBoltUnitId });
+    const targetHole = requireHole(act.initialHoles, "targetChoice");
+    const targetFill = spellTargetFill(
+      targetHole,
+      fireBoltUnitId,
+      spellCasterId,
+      spellTargetId,
+    );
+    const attackHole = requireResultHole(
+      resolveBattleSubject({
+        state: fireState,
+        subject: act.subject,
+        fills: [targetFill],
+      }),
+      "attackRoll",
+    );
+    const attackFill = attackRollFill(attackHole, {
+      total: 18,
+      naturalD20: 12,
+    });
+    const damageHole = requireResultHole(
+      resolveBattleSubject({
+        state: fireState,
+        subject: act.subject,
+        fills: [targetFill, attackFill],
+      }),
+      "rolledDice",
+    );
+    const fireResolved = resolveBattleSubject({
+      state: fireState,
+      subject: act.subject,
+      fills: [
+        targetFill,
+        attackFill,
+        damageRollFillWithGroups(damageHole, [[8]]),
+      ],
+    });
+    expect(fireResolved).toMatchObject({ tag: "resolved" });
+    if (fireResolved.tag !== "resolved") {
+      throw new Error("Expected Fire Bolt damage to resolve.");
+    }
+    expect(fireResolved.state.combatants.get(spellTargetId)?.hp).toBe(
+      Hp(Number(requireCombatant(fireBase, spellTargetId).hp) - 4),
+    );
+
+    const weaponBase = spellBattle({
+      attack: zeroAbilityWeaponAttack("weapon_longsword"),
+      spellSlots: [],
+    });
+    const weaponState = withProtectionFromEnergyResistance(
+      weaponBase,
+      spellTargetId,
+      "fire",
+    );
+    const weaponDamage = completedWeaponDamageInput(weaponState);
+    const weaponResolved = resolveBattleSubject({
+      state: weaponState,
+      subject: weaponDamage.subject,
+      fills: weaponDamage.fills,
+    });
+    expect(weaponResolved).toMatchObject({ tag: "resolved" });
+    if (weaponResolved.tag !== "resolved") {
+      throw new Error("Expected nonmatching weapon damage to resolve.");
+    }
+    expect(weaponResolved.state.combatants.get(spellTargetId)?.hp).toBe(
+      Hp(Number(requireCombatant(weaponBase, spellTargetId).hp) - 4),
+    );
   });
 });

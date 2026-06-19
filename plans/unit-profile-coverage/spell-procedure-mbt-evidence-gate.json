@@ -5823,6 +5823,10 @@
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-damage-adjustments.qnt",
               "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-chosen-damage-resistance.qnt",
+              "role": "proof-only"
             }
           ],
           "runtime": "battle",
@@ -13520,6 +13524,10 @@
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-damage-adjustments.qnt",
               "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-chosen-damage-resistance.qnt",
+              "role": "proof-only"
             }
           ],
           "runtime": "battle",

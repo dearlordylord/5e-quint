@@ -49,31 +49,31 @@
     {
       "number": 8,
       "id": "L5-B08-PROTECTION-FROM-ENERGY",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Close Protection from Energy authored spell pressure"
     },
     {
       "number": 9,
       "id": "L5-B09-SPIRIT-GUARDIANS",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Close Spirit Guardians authored spell pressure"
     },
     {
       "number": 10,
       "id": "L5-B10-STINKING-CLOUD",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Close Stinking Cloud authored spell pressure"
     },
     {
       "number": 11,
       "id": "L5-B11-VAMPIRIC-TOUCH",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Close Vampiric Touch authored spell pressure"
     },
     {
       "number": 12,
       "id": "L5-B12-WIND-WALL",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Close Wind Wall authored spell pressure"
     }
   ]
@@ -137,11 +137,11 @@ this lane; those are Lane C and Lane D.
 | 5 | L5-B05-DAYLIGHT - Close Daylight authored spell pressure | done | none | Closed outside the promoted battle runtime sunlight Spell Effect and table/spatial light-overlap boundary. |
 | 6 | L5-B06-FEAR - Close Fear authored spell pressure | done | none | Closed outside the current promoted battle runtime active Frightened-compulsion Spell Effect, held-object release, and compelled-movement boundary. |
 | 7 | L5-B07-MAJOR-IMAGE - Close Major Image authored spell pressure | done | none | Independent authored spell pressure row. |
-| 8 | L5-B08-PROTECTION-FROM-ENERGY - Close Protection from Energy authored spell pressure | ready-for-research | none | Preserve target-shape repair plus runtime admission prerequisite from `plans/unit-profile-coverage/L3_PROTECTION_FROM_ENERGY_RUNTIME_SURVEY.md`. |
-| 9 | L5-B09-SPIRIT-GUARDIANS - Close Spirit Guardians authored spell pressure | ready-for-research | none | Independent authored spell pressure row. |
-| 10 | L5-B10-STINKING-CLOUD - Close Stinking Cloud authored spell pressure | ready-for-research | none | Independent authored spell pressure row. |
-| 11 | L5-B11-VAMPIRIC-TOUCH - Close Vampiric Touch authored spell pressure | ready-for-research | none | Independent authored spell pressure row. |
-| 12 | L5-B12-WIND-WALL - Close Wind Wall authored spell pressure | ready-for-research | none | Independent authored spell pressure row. |
+| 8 | L5-B08-PROTECTION-FROM-ENERGY - Close Protection from Energy authored spell pressure | done | none | Preserve target-shape repair plus runtime admission prerequisite from `plans/unit-profile-coverage/L3_PROTECTION_FROM_ENERGY_RUNTIME_SURVEY.md`. |
+| 9 | L5-B09-SPIRIT-GUARDIANS - Close Spirit Guardians authored spell pressure | done | none | Closed outside the current promoted battle runtime active Emanation area-hazard Spell Effect and table/spatial membership boundary. |
+| 10 | L5-B10-STINKING-CLOUD - Close Stinking Cloud authored spell pressure | done | none | Closed outside the promoted battle-runtime active gas area-hazard Spell Effect and table/spatial air movement boundary. |
+| 11 | L5-B11-VAMPIRIC-TOUCH - Close Vampiric Touch authored spell pressure | done | none | Closed outside the promoted battle runtime active touch-attack Spell Effect and linked damage-to-healing owner. |
+| 12 | L5-B12-WIND-WALL - Close Wind Wall authored spell pressure | done | none | Independent authored spell pressure row. |
 
 ## Shared Verification
 
@@ -495,7 +495,7 @@ Verification:
 
 ### Task 8 - L5-B08-PROTECTION-FROM-ENERGY
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -535,7 +535,7 @@ Verification:
 
 ### Task 9 - L5-B09-SPIRIT-GUARDIANS
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -564,13 +564,23 @@ Acceptance:
 
 - `spirit_guardians` leaves `catalog-authored-review-required`.
 
+Result:
+
+- `spirit_guardians` is recorded as `unsupported-profile` and
+  `catalog-only/dead-for-now` with an `outside-battle-runtime` closure.
+- The future owner is an active Emanation area-hazard Spell Effect plus
+  table/spatial membership owner for caster-selected unaffected creatures,
+  the caster-owned Concentration occurrence, the self-origin 15-foot Emanation,
+  Speed halving for affected creatures in the Emanation, Wisdom Saving Throw
+  Radiant-or-Necrotic damage timing, and the shared once-per-turn save limit.
+
 Verification:
 
 - Shared lane verification.
 
 ### Task 10 - L5-B10-STINKING-CLOUD
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -602,13 +612,24 @@ Acceptance:
 
 - `stinking_cloud` leaves `catalog-authored-review-required`.
 
+Result:
+
+- `stinking_cloud` is recorded as `unsupported-profile` and
+  `catalog-only/dead-for-now` with an `outside-battle-runtime` closure.
+- The future owner is an active gas area-hazard Spell Effect plus
+  table/spatial air movement owner for the caster-owned Concentration
+  occurrence, the point-origin 20-foot-radius Sphere cloud, Heavily Obscured
+  projection, start-turn Constitution Saving Throw timing, spell-scoped
+  Poisoned lifecycle until the end of the turn, Action and Bonus Action denial
+  while Poisoned this way, and strong-wind dispersal.
+
 Verification:
 
 - Shared lane verification.
 
 ### Task 11 - L5-B11-VAMPIRIC-TOUCH
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -639,13 +660,26 @@ Acceptance:
 
 - `vampiric_touch` leaves `catalog-authored-review-required`.
 
+Result:
+
+- `vampiric_touch` is recorded as `unsupported-profile` and
+  `catalog-only/dead-for-now` with an `outside-battle-runtime` closure.
+- The future owner is an active touch-attack Spell Effect and linked
+  damage-to-healing owner for the caster-owned Concentration occurrence,
+  retained slot-scaled Necrotic damage and Spell Attack facts, later-turn Magic
+  Action repeat attacks against the same or a different creature, damage
+  resolution, and caster self-healing equal to half the damage dealt.
+- Table/spatial ownership supplies reach and target-legality witnesses rather
+  than duplicating creature-position state inside generic Spell Invocation
+  reducers.
+
 Verification:
 
 - Shared lane verification.
 
 ### Task 12 - L5-B12-WIND-WALL
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 

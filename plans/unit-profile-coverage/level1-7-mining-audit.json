@@ -16,10 +16,10 @@
       "spell-level-4": 81
     },
     "auditedUniqueSpellIdentitiesByFinalDisposition": {
-      "catalog-authored-review-required": 24,
-      "catalog-installed-owner-evidence-present": 7,
+      "catalog-authored-review-required": 19,
+      "catalog-installed-owner-evidence-present": 8,
       "catalog-installed-owner-evidence-required": 1,
-      "catalog-only/dead-for-now": 14,
+      "catalog-only/dead-for-now": 18,
       "missing-authored-record": 23,
       "needs-surface-widening": 7
     },
@@ -34,16 +34,16 @@
       "spell-level": 558
     },
     "rowsByBattleReadinessStatus": {
-      "accepted": 469,
-      "accepted-no-battle-effect": 222,
+      "accepted": 473,
+      "accepted-no-battle-effect": 230,
       "battle-runtime-required": 53,
       "not-applicable": 77,
-      "owner-evidence-required": 62,
+      "owner-evidence-required": 50,
       "surface-widening-required": 17
     },
     "rowsByCatalogAdmission": {
-      "installed": 653,
-      "not-installed": 247
+      "installed": 657,
+      "not-installed": 243
     },
     "rowsByCategory": {
       "character-creation or progression mechanic": 172,
@@ -56,10 +56,10 @@
       "subclass selection": 12
     },
     "rowsByFinalDisposition": {
-      "catalog-authored-review-required": 61,
-      "catalog-installed-owner-evidence-present": 483,
+      "catalog-authored-review-required": 49,
+      "catalog-installed-owner-evidence-present": 487,
       "catalog-installed-owner-evidence-required": 4,
-      "catalog-only/dead-for-now": 177,
+      "catalog-only/dead-for-now": 185,
       "level-5-7-follow-up-required": 24,
       "missing-authored-record": 50,
       "needs-surface-widening": 17,
@@ -93,10 +93,10 @@
       "subclass-spell-access": 5
     },
     "rowsByUnitProfileDisposition": {
-      "not-recorded": 191,
+      "not-recorded": 179,
       "profile-subset-supported": 53,
-      "supported-profile": 297,
-      "unsupported-profile": 359
+      "supported-profile": 301,
+      "unsupported-profile": 367
     }
   },
   "rows": [
@@ -5738,7 +5738,7 @@
         "sourceInventoryRowId": "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_stinking_cloud",
         "state": "present"
       },
-      "nextAction": "Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this later-frontier spell row as accepted.",
+      "nextAction": "Stinking Cloud's represented battle behavior is closed outside the promoted battle-runtime boundary: a future active Spell Effect owner must carry the Concentration-owned 20-foot-radius Sphere cloud occurrence, project Heavily Obscured gas, resolve Constitution Saving Throws for creatures that start their turns in the Sphere, apply and clear the spell-scoped Poisoned condition at the end of the current turn, and deny Action and Bonus Action use only while Poisoned in this way. Table/spatial air movement ownership must supply area-membership start-turn witnesses, wind strength, and dispersal timing rather than duplicating map, weather, or area state inside generic Spell Invocation reducers.",
       "rowId": "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_stinking_cloud",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -5754,18 +5754,22 @@
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "owner-evidence-required"
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "outside-battle-runtime",
+          "owner": "future active gas area-hazard Spell Effect and table/spatial air movement owner",
+          "reason": "Stinking Cloud's represented battle behavior is closed outside the promoted battle-runtime boundary: a future active Spell Effect owner must carry the Concentration-owned 20-foot-radius Sphere cloud occurrence, project Heavily Obscured gas, resolve Constitution Saving Throws for creatures that start their turns in the Sphere, apply and clear the spell-scoped Poisoned condition at the end of the current turn, and deny Action and Bonus Action use only while Poisoned in this way. Table/spatial air movement ownership must supply area-membership start-turn witnesses, wind strength, and dispersal timing rather than duplicating map, weather, or area state inside generic Spell Invocation reducers.",
+          "state": "recorded"
         },
         "catalogAdmission": {
           "state": "not-installed",
           "unitId": "stinking_cloud"
         },
-        "finalDisposition": "catalog-authored-review-required",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },
@@ -9722,7 +9726,7 @@
         "sourceInventoryRowId": "srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_protection_from_energy",
         "state": "present"
       },
-      "nextAction": "Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this later-frontier spell row as accepted.",
+      "nextAction": "Owner-specific operational evidence is classified and present.",
       "rowId": "srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_protection_from_energy",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -9738,18 +9742,19 @@
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "owner-evidence-required"
+          "status": "accepted"
         },
         "battleReadinessClosure": {
           "state": "not-recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "protection_from_energy"
         },
-        "finalDisposition": "catalog-authored-review-required",
+        "finalDisposition": "catalog-installed-owner-evidence-present",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "supported-profile",
+          "state": "recorded"
         }
       }
     },
@@ -9947,7 +9952,7 @@
         "sourceInventoryRowId": "srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_spirit_guardians",
         "state": "present"
       },
-      "nextAction": "Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this later-frontier spell row as accepted.",
+      "nextAction": "Spirit Guardians' represented battle behavior is closed outside the current promoted battle-runtime boundary: a future active Spell Effect owner must admit the caster-selected unaffected creatures, carry the caster-owned Concentration occurrence and self-origin 15-foot Emanation, project Speed halving only for affected creatures in the Emanation, and resolve Wisdom Saving Throw Radiant-or-Necrotic damage when the Emanation enters a creature's space, a creature enters the Emanation, or a creature ends its turn there, with a shared once-per-turn save limit. Table/spatial ownership must supply moving Emanation membership and area-entry witnesses rather than duplicating map or path state inside generic Spell Invocation reducers.",
       "rowId": "srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_spirit_guardians",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -9963,18 +9968,22 @@
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "owner-evidence-required"
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "outside-battle-runtime",
+          "owner": "future active Emanation area-hazard Spell Effect and table/spatial membership owner",
+          "reason": "Spirit Guardians' represented battle behavior is closed outside the current promoted battle-runtime boundary: a future active Spell Effect owner must admit the caster-selected unaffected creatures, carry the caster-owned Concentration occurrence and self-origin 15-foot Emanation, project Speed halving only for affected creatures in the Emanation, and resolve Wisdom Saving Throw Radiant-or-Necrotic damage when the Emanation enters a creature's space, a creature enters the Emanation, or a creature ends its turn there, with a shared once-per-turn save limit. Table/spatial ownership must supply moving Emanation membership and area-entry witnesses rather than duplicating map or path state inside generic Spell Invocation reducers.",
+          "state": "recorded"
         },
         "catalogAdmission": {
           "state": "not-installed",
           "unitId": "spirit_guardians"
         },
-        "finalDisposition": "catalog-authored-review-required",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },
@@ -14247,7 +14256,7 @@
         "sourceInventoryRowId": "srd521:classes/druid:spell-level-3:spell-unit-pressure:druid_spell_list_protection_from_energy",
         "state": "present"
       },
-      "nextAction": "Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this later-frontier spell row as accepted.",
+      "nextAction": "Owner-specific operational evidence is classified and present.",
       "rowId": "srd521:classes/druid:spell-level-3:spell-unit-pressure:druid_spell_list_protection_from_energy",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -14263,18 +14272,19 @@
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "owner-evidence-required"
+          "status": "accepted"
         },
         "battleReadinessClosure": {
           "state": "not-recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "protection_from_energy"
         },
-        "finalDisposition": "catalog-authored-review-required",
+        "finalDisposition": "catalog-installed-owner-evidence-present",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "supported-profile",
+          "state": "recorded"
         }
       }
     },
@@ -14510,7 +14520,7 @@
         "sourceInventoryRowId": "srd521:classes/druid:spell-level-3:spell-unit-pressure:druid_spell_list_wind_wall",
         "state": "present"
       },
-      "nextAction": "Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this later-frontier spell row as accepted.",
+      "nextAction": "Wind Wall's represented battle behavior is closed outside the promoted battle-runtime boundary: a future active Spell Effect owner must carry the Concentration-owned wall occurrence, resolve the appearance-time Strength Saving Throw and Bludgeoning damage for creatures in the wall's area, project ordinary projectile deflection against targets behind the wall while preserving giant-hurled and siege-engine exceptions, keep fog, smoke, and other gases at bay, block creatures in gaseous form, and block Small-or-smaller flying creatures or objects from passing through. Table/spatial/environment ownership must supply the shaped continuous line geometry, height and thickness placement, area-membership witnesses, behind-wall target relation, projectile ordinariness/source classification, gas or fog overlap, gaseous-form movement attempt, object size and flight facts, and loose lightweight material movement rather than duplicating map, projectile, object, or weather state inside generic Spell Invocation reducers.",
       "rowId": "srd521:classes/druid:spell-level-3:spell-unit-pressure:druid_spell_list_wind_wall",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -14526,18 +14536,22 @@
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "owner-evidence-required"
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "outside-battle-runtime",
+          "owner": "future active wall-area Spell Effect and table/spatial/environment projectile owner",
+          "reason": "Wind Wall's represented battle behavior is closed outside the promoted battle-runtime boundary: a future active Spell Effect owner must carry the Concentration-owned wall occurrence, resolve the appearance-time Strength Saving Throw and Bludgeoning damage for creatures in the wall's area, project ordinary projectile deflection against targets behind the wall while preserving giant-hurled and siege-engine exceptions, keep fog, smoke, and other gases at bay, block creatures in gaseous form, and block Small-or-smaller flying creatures or objects from passing through. Table/spatial/environment ownership must supply the shaped continuous line geometry, height and thickness placement, area-membership witnesses, behind-wall target relation, projectile ordinariness/source classification, gas or fog overlap, gaseous-form movement attempt, object size and flight facts, and loose lightweight material movement rather than duplicating map, projectile, object, or weather state inside generic Spell Invocation reducers.",
+          "state": "recorded"
         },
         "catalogAdmission": {
           "state": "not-installed",
           "unitId": "wind_wall"
         },
-        "finalDisposition": "catalog-authored-review-required",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },
@@ -28866,7 +28880,7 @@
         "sourceInventoryRowId": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_protection_from_energy",
         "state": "present"
       },
-      "nextAction": "Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this later-frontier spell row as accepted.",
+      "nextAction": "Owner-specific operational evidence is classified and present.",
       "rowId": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_protection_from_energy",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -28882,18 +28896,19 @@
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "owner-evidence-required"
+          "status": "accepted"
         },
         "battleReadinessClosure": {
           "state": "not-recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "protection_from_energy"
         },
-        "finalDisposition": "catalog-authored-review-required",
+        "finalDisposition": "catalog-installed-owner-evidence-present",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "supported-profile",
+          "state": "recorded"
         }
       }
     },
@@ -28994,7 +29009,7 @@
         "sourceInventoryRowId": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_stinking_cloud",
         "state": "present"
       },
-      "nextAction": "Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this later-frontier spell row as accepted.",
+      "nextAction": "Stinking Cloud's represented battle behavior is closed outside the promoted battle-runtime boundary: a future active Spell Effect owner must carry the Concentration-owned 20-foot-radius Sphere cloud occurrence, project Heavily Obscured gas, resolve Constitution Saving Throws for creatures that start their turns in the Sphere, apply and clear the spell-scoped Poisoned condition at the end of the current turn, and deny Action and Bonus Action use only while Poisoned in this way. Table/spatial air movement ownership must supply area-membership start-turn witnesses, wind strength, and dispersal timing rather than duplicating map, weather, or area state inside generic Spell Invocation reducers.",
       "rowId": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_stinking_cloud",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -29010,18 +29025,22 @@
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "owner-evidence-required"
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "outside-battle-runtime",
+          "owner": "future active gas area-hazard Spell Effect and table/spatial air movement owner",
+          "reason": "Stinking Cloud's represented battle behavior is closed outside the promoted battle-runtime boundary: a future active Spell Effect owner must carry the Concentration-owned 20-foot-radius Sphere cloud occurrence, project Heavily Obscured gas, resolve Constitution Saving Throws for creatures that start their turns in the Sphere, apply and clear the spell-scoped Poisoned condition at the end of the current turn, and deny Action and Bonus Action use only while Poisoned in this way. Table/spatial air movement ownership must supply area-membership start-turn witnesses, wind strength, and dispersal timing rather than duplicating map, weather, or area state inside generic Spell Invocation reducers.",
+          "state": "recorded"
         },
         "catalogAdmission": {
           "state": "not-installed",
           "unitId": "stinking_cloud"
         },
-        "finalDisposition": "catalog-authored-review-required",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },
@@ -29084,7 +29103,7 @@
         "sourceInventoryRowId": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_vampiric_touch",
         "state": "present"
       },
-      "nextAction": "Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this later-frontier spell row as accepted.",
+      "nextAction": "Vampiric Touch's represented battle behavior is closed outside the promoted battle-runtime boundary: a future active Spell Effect owner must carry the Concentration-owned touch attack occurrence, retain slot-scaled Necrotic damage and spell attack facts for later Magic Action repeats, admit same-target or different-target creature choices within reach on each repeat, resolve damage, and apply caster self-healing equal to half the damage dealt. Table/spatial ownership must supply reach and target-legality witnesses rather than duplicating map or creature-position state inside generic Spell Invocation reducers.",
       "rowId": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_vampiric_touch",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -29100,18 +29119,22 @@
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "owner-evidence-required"
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "outside-battle-runtime",
+          "owner": "future active touch-attack Spell Effect and linked damage-to-healing owner",
+          "reason": "Vampiric Touch's represented battle behavior is closed outside the promoted battle-runtime boundary: a future active Spell Effect owner must carry the Concentration-owned touch attack occurrence, retain slot-scaled Necrotic damage and spell attack facts for later Magic Action repeats, admit same-target or different-target creature choices within reach on each repeat, resolve damage, and apply caster self-healing equal to half the damage dealt. Table/spatial ownership must supply reach and target-legality witnesses rather than duplicating map or creature-position state inside generic Spell Invocation reducers.",
+          "state": "recorded"
         },
         "catalogAdmission": {
           "state": "not-installed",
           "unitId": "vampiric_touch"
         },
-        "finalDisposition": "catalog-authored-review-required",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },
@@ -32589,7 +32612,7 @@
         "sourceInventoryRowId": "srd521:classes/warlock:spell-level-3:spell-unit-pressure:warlock_spell_list_vampiric_touch",
         "state": "present"
       },
-      "nextAction": "Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this later-frontier spell row as accepted.",
+      "nextAction": "Vampiric Touch's represented battle behavior is closed outside the promoted battle-runtime boundary: a future active Spell Effect owner must carry the Concentration-owned touch attack occurrence, retain slot-scaled Necrotic damage and spell attack facts for later Magic Action repeats, admit same-target or different-target creature choices within reach on each repeat, resolve damage, and apply caster self-healing equal to half the damage dealt. Table/spatial ownership must supply reach and target-legality witnesses rather than duplicating map or creature-position state inside generic Spell Invocation reducers.",
       "rowId": "srd521:classes/warlock:spell-level-3:spell-unit-pressure:warlock_spell_list_vampiric_touch",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -32605,18 +32628,22 @@
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "owner-evidence-required"
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "outside-battle-runtime",
+          "owner": "future active touch-attack Spell Effect and linked damage-to-healing owner",
+          "reason": "Vampiric Touch's represented battle behavior is closed outside the promoted battle-runtime boundary: a future active Spell Effect owner must carry the Concentration-owned touch attack occurrence, retain slot-scaled Necrotic damage and spell attack facts for later Magic Action repeats, admit same-target or different-target creature choices within reach on each repeat, resolve damage, and apply caster self-healing equal to half the damage dealt. Table/spatial ownership must supply reach and target-legality witnesses rather than duplicating map or creature-position state inside generic Spell Invocation reducers.",
+          "state": "recorded"
         },
         "catalogAdmission": {
           "state": "not-installed",
           "unitId": "vampiric_touch"
         },
-        "finalDisposition": "catalog-authored-review-required",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },
@@ -38395,7 +38422,7 @@
         "sourceInventoryRowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_protection_from_energy",
         "state": "present"
       },
-      "nextAction": "Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this later-frontier spell row as accepted.",
+      "nextAction": "Owner-specific operational evidence is classified and present.",
       "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_protection_from_energy",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -38411,18 +38438,19 @@
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "owner-evidence-required"
+          "status": "accepted"
         },
         "battleReadinessClosure": {
           "state": "not-recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "protection_from_energy"
         },
-        "finalDisposition": "catalog-authored-review-required",
+        "finalDisposition": "catalog-installed-owner-evidence-present",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "supported-profile",
+          "state": "recorded"
         }
       }
     },
@@ -38658,7 +38686,7 @@
         "sourceInventoryRowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_stinking_cloud",
         "state": "present"
       },
-      "nextAction": "Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this later-frontier spell row as accepted.",
+      "nextAction": "Stinking Cloud's represented battle behavior is closed outside the promoted battle-runtime boundary: a future active Spell Effect owner must carry the Concentration-owned 20-foot-radius Sphere cloud occurrence, project Heavily Obscured gas, resolve Constitution Saving Throws for creatures that start their turns in the Sphere, apply and clear the spell-scoped Poisoned condition at the end of the current turn, and deny Action and Bonus Action use only while Poisoned in this way. Table/spatial air movement ownership must supply area-membership start-turn witnesses, wind strength, and dispersal timing rather than duplicating map, weather, or area state inside generic Spell Invocation reducers.",
       "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_stinking_cloud",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -38674,18 +38702,22 @@
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "owner-evidence-required"
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "outside-battle-runtime",
+          "owner": "future active gas area-hazard Spell Effect and table/spatial air movement owner",
+          "reason": "Stinking Cloud's represented battle behavior is closed outside the promoted battle-runtime boundary: a future active Spell Effect owner must carry the Concentration-owned 20-foot-radius Sphere cloud occurrence, project Heavily Obscured gas, resolve Constitution Saving Throws for creatures that start their turns in the Sphere, apply and clear the spell-scoped Poisoned condition at the end of the current turn, and deny Action and Bonus Action use only while Poisoned in this way. Table/spatial air movement ownership must supply area-membership start-turn witnesses, wind strength, and dispersal timing rather than duplicating map, weather, or area state inside generic Spell Invocation reducers.",
+          "state": "recorded"
         },
         "catalogAdmission": {
           "state": "not-installed",
           "unitId": "stinking_cloud"
         },
-        "finalDisposition": "catalog-authored-review-required",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },
@@ -38789,7 +38821,7 @@
         "sourceInventoryRowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_vampiric_touch",
         "state": "present"
       },
-      "nextAction": "Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this later-frontier spell row as accepted.",
+      "nextAction": "Vampiric Touch's represented battle behavior is closed outside the promoted battle-runtime boundary: a future active Spell Effect owner must carry the Concentration-owned touch attack occurrence, retain slot-scaled Necrotic damage and spell attack facts for later Magic Action repeats, admit same-target or different-target creature choices within reach on each repeat, resolve damage, and apply caster self-healing equal to half the damage dealt. Table/spatial ownership must supply reach and target-legality witnesses rather than duplicating map or creature-position state inside generic Spell Invocation reducers.",
       "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_vampiric_touch",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -38805,18 +38837,22 @@
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "owner-evidence-required"
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "outside-battle-runtime",
+          "owner": "future active touch-attack Spell Effect and linked damage-to-healing owner",
+          "reason": "Vampiric Touch's represented battle behavior is closed outside the promoted battle-runtime boundary: a future active Spell Effect owner must carry the Concentration-owned touch attack occurrence, retain slot-scaled Necrotic damage and spell attack facts for later Magic Action repeats, admit same-target or different-target creature choices within reach on each repeat, resolve damage, and apply caster self-healing equal to half the damage dealt. Table/spatial ownership must supply reach and target-legality witnesses rather than duplicating map or creature-position state inside generic Spell Invocation reducers.",
+          "state": "recorded"
         },
         "catalogAdmission": {
           "state": "not-installed",
           "unitId": "vampiric_touch"
         },
-        "finalDisposition": "catalog-authored-review-required",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },
@@ -41688,7 +41724,7 @@
       ],
       "levelBand": "spell-level-3",
       "nextActions": [
-        "Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this later-frontier spell row as accepted."
+        "Owner-specific operational evidence is classified and present."
       ],
       "spellName": "Protection from Energy",
       "supportSnapshot": {
@@ -41699,18 +41735,19 @@
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "owner-evidence-required"
+          "status": "accepted"
         },
         "battleReadinessClosure": {
           "state": "not-recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "protection_from_energy"
         },
-        "finalDisposition": "catalog-authored-review-required",
+        "finalDisposition": "catalog-installed-owner-evidence-present",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "supported-profile",
+          "state": "recorded"
         }
       }
     },
@@ -42183,7 +42220,7 @@
       ],
       "levelBand": "spell-level-3",
       "nextActions": [
-        "Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this later-frontier spell row as accepted."
+        "Spirit Guardians' represented battle behavior is closed outside the current promoted battle-runtime boundary: a future active Spell Effect owner must admit the caster-selected unaffected creatures, carry the caster-owned Concentration occurrence and self-origin 15-foot Emanation, project Speed halving only for affected creatures in the Emanation, and resolve Wisdom Saving Throw Radiant-or-Necrotic damage when the Emanation enters a creature's space, a creature enters the Emanation, or a creature ends its turn there, with a shared once-per-turn save limit. Table/spatial ownership must supply moving Emanation membership and area-entry witnesses rather than duplicating map or path state inside generic Spell Invocation reducers."
       ],
       "spellName": "Spirit Guardians",
       "supportSnapshot": {
@@ -42194,18 +42231,22 @@
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "owner-evidence-required"
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "outside-battle-runtime",
+          "owner": "future active Emanation area-hazard Spell Effect and table/spatial membership owner",
+          "reason": "Spirit Guardians' represented battle behavior is closed outside the current promoted battle-runtime boundary: a future active Spell Effect owner must admit the caster-selected unaffected creatures, carry the caster-owned Concentration occurrence and self-origin 15-foot Emanation, project Speed halving only for affected creatures in the Emanation, and resolve Wisdom Saving Throw Radiant-or-Necrotic damage when the Emanation enters a creature's space, a creature enters the Emanation, or a creature ends its turn there, with a shared once-per-turn save limit. Table/spatial ownership must supply moving Emanation membership and area-entry witnesses rather than duplicating map or path state inside generic Spell Invocation reducers.",
+          "state": "recorded"
         },
         "catalogAdmission": {
           "state": "not-installed",
           "unitId": "spirit_guardians"
         },
-        "finalDisposition": "catalog-authored-review-required",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },
@@ -42249,7 +42290,7 @@
       ],
       "levelBand": "spell-level-3",
       "nextActions": [
-        "Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this later-frontier spell row as accepted."
+        "Stinking Cloud's represented battle behavior is closed outside the promoted battle-runtime boundary: a future active Spell Effect owner must carry the Concentration-owned 20-foot-radius Sphere cloud occurrence, project Heavily Obscured gas, resolve Constitution Saving Throws for creatures that start their turns in the Sphere, apply and clear the spell-scoped Poisoned condition at the end of the current turn, and deny Action and Bonus Action use only while Poisoned in this way. Table/spatial air movement ownership must supply area-membership start-turn witnesses, wind strength, and dispersal timing rather than duplicating map, weather, or area state inside generic Spell Invocation reducers."
       ],
       "spellName": "Stinking Cloud",
       "supportSnapshot": {
@@ -42260,18 +42301,22 @@
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "owner-evidence-required"
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "outside-battle-runtime",
+          "owner": "future active gas area-hazard Spell Effect and table/spatial air movement owner",
+          "reason": "Stinking Cloud's represented battle behavior is closed outside the promoted battle-runtime boundary: a future active Spell Effect owner must carry the Concentration-owned 20-foot-radius Sphere cloud occurrence, project Heavily Obscured gas, resolve Constitution Saving Throws for creatures that start their turns in the Sphere, apply and clear the spell-scoped Poisoned condition at the end of the current turn, and deny Action and Bonus Action use only while Poisoned in this way. Table/spatial air movement ownership must supply area-membership start-turn witnesses, wind strength, and dispersal timing rather than duplicating map, weather, or area state inside generic Spell Invocation reducers.",
+          "state": "recorded"
         },
         "catalogAdmission": {
           "state": "not-installed",
           "unitId": "stinking_cloud"
         },
-        "finalDisposition": "catalog-authored-review-required",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },
@@ -42459,7 +42504,7 @@
       ],
       "levelBand": "spell-level-3",
       "nextActions": [
-        "Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this later-frontier spell row as accepted."
+        "Vampiric Touch's represented battle behavior is closed outside the promoted battle-runtime boundary: a future active Spell Effect owner must carry the Concentration-owned touch attack occurrence, retain slot-scaled Necrotic damage and spell attack facts for later Magic Action repeats, admit same-target or different-target creature choices within reach on each repeat, resolve damage, and apply caster self-healing equal to half the damage dealt. Table/spatial ownership must supply reach and target-legality witnesses rather than duplicating map or creature-position state inside generic Spell Invocation reducers."
       ],
       "spellName": "Vampiric Touch",
       "supportSnapshot": {
@@ -42470,18 +42515,22 @@
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "owner-evidence-required"
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "outside-battle-runtime",
+          "owner": "future active touch-attack Spell Effect and linked damage-to-healing owner",
+          "reason": "Vampiric Touch's represented battle behavior is closed outside the promoted battle-runtime boundary: a future active Spell Effect owner must carry the Concentration-owned touch attack occurrence, retain slot-scaled Necrotic damage and spell attack facts for later Magic Action repeats, admit same-target or different-target creature choices within reach on each repeat, resolve damage, and apply caster self-healing equal to half the damage dealt. Table/spatial ownership must supply reach and target-legality witnesses rather than duplicating map or creature-position state inside generic Spell Invocation reducers.",
+          "state": "recorded"
         },
         "catalogAdmission": {
           "state": "not-installed",
           "unitId": "vampiric_touch"
         },
-        "finalDisposition": "catalog-authored-review-required",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },
@@ -42639,7 +42688,7 @@
       ],
       "levelBand": "spell-level-3",
       "nextActions": [
-        "Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this later-frontier spell row as accepted."
+        "Wind Wall's represented battle behavior is closed outside the promoted battle-runtime boundary: a future active Spell Effect owner must carry the Concentration-owned wall occurrence, resolve the appearance-time Strength Saving Throw and Bludgeoning damage for creatures in the wall's area, project ordinary projectile deflection against targets behind the wall while preserving giant-hurled and siege-engine exceptions, keep fog, smoke, and other gases at bay, block creatures in gaseous form, and block Small-or-smaller flying creatures or objects from passing through. Table/spatial/environment ownership must supply the shaped continuous line geometry, height and thickness placement, area-membership witnesses, behind-wall target relation, projectile ordinariness/source classification, gas or fog overlap, gaseous-form movement attempt, object size and flight facts, and loose lightweight material movement rather than duplicating map, projectile, object, or weather state inside generic Spell Invocation reducers."
       ],
       "spellName": "Wind Wall",
       "supportSnapshot": {
@@ -42650,18 +42699,22 @@
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "owner-evidence-required"
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "outside-battle-runtime",
+          "owner": "future active wall-area Spell Effect and table/spatial/environment projectile owner",
+          "reason": "Wind Wall's represented battle behavior is closed outside the promoted battle-runtime boundary: a future active Spell Effect owner must carry the Concentration-owned wall occurrence, resolve the appearance-time Strength Saving Throw and Bludgeoning damage for creatures in the wall's area, project ordinary projectile deflection against targets behind the wall while preserving giant-hurled and siege-engine exceptions, keep fog, smoke, and other gases at bay, block creatures in gaseous form, and block Small-or-smaller flying creatures or objects from passing through. Table/spatial/environment ownership must supply the shaped continuous line geometry, height and thickness placement, area-membership witnesses, behind-wall target relation, projectile ordinariness/source classification, gas or fog overlap, gaseous-form movement attempt, object size and flight facts, and loose lightweight material movement rather than duplicating map, projectile, object, or weather state inside generic Spell Invocation reducers.",
+          "state": "recorded"
         },
         "catalogAdmission": {
           "state": "not-installed",
           "unitId": "wind_wall"
         },
-        "finalDisposition": "catalog-authored-review-required",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },

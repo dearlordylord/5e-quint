@@ -29,7 +29,11 @@
           "value": {
             "kind": "target",
             "selection": {
-              "mode": "one"
+              "disposition": "willing",
+              "mode": "one",
+              "targetKinds": [
+                "creature"
+              ]
             }
           }
         },

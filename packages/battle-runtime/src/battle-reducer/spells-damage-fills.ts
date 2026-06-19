@@ -256,6 +256,7 @@ export function spellDamageTypeChoiceHole(
     {
       readonly procedure:
         | "chainedSpellAttackDamage"
+        | "chosenDamageResistance"
         | "damageReduction"
         | "dragonsBreathInitial"
         | "selfTransformationMode"
