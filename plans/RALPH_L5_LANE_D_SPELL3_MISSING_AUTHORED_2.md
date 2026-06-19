@@ -37,7 +37,7 @@
     {
       "number": 6,
       "id": "L5-D06-SLOW",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Close Slow missing authored record"
     },
     {
@@ -69,6 +69,18 @@
       "id": "L3-FOLLOWUP-SLEET-STORM-AREA-HAZARD-RUNTIME",
       "status": "ready-for-research",
       "title": "Promote Sleet Storm area hazard runtime support"
+    },
+    {
+      "number": 12,
+      "id": "L3-FOLLOWUP-SLOW-ACTIVE-PENALTIES-RUNTIME",
+      "status": "ready-for-research",
+      "title": "Promote Slow active penalties runtime support"
+    },
+    {
+      "number": 13,
+      "id": "L3-FOLLOWUP-SLOW-TURN-AND-SOMATIC-RUNTIME",
+      "status": "ready-for-research",
+      "title": "Promote Slow target-turn and Somatic runtime support"
     }
   ]
 }
@@ -129,12 +141,14 @@ missing-record spells unless a RAW dependency is unavoidable and documented.
 | 3 | L5-D03-REVIVIFY - Close Revivify missing authored record | done | none | Independent missing spell Unit. |
 | 4 | L5-D04-SENDING - Close Sending missing authored record | done | none | Independent missing spell Unit. |
 | 5 | L5-D05-SLEET-STORM - Close Sleet Storm missing authored record | done | none | Independent missing spell Unit. |
-| 6 | L5-D06-SLOW - Close Slow missing authored record | ready-for-research | none | Preserve Surface authoring, active penalties, and turn/Somatic split from `plans/unit-profile-coverage/L3_SLOW_RUNTIME_SURVEY.md`. |
+| 6 | L5-D06-SLOW - Close Slow missing authored record | done | none | Authored and installed Slow as an SRD Surface Spell Definition while preserving active-penalties and turn/Somatic runtime follow-up tasks. |
 | 7 | L5-D07-SPEAK-WITH-DEAD - Close Speak with Dead missing authored record | ready-for-research | none | Independent missing spell Unit. |
 | 8 | L5-D08-SPEAK-WITH-PLANTS - Close Speak with Plants missing authored record | ready-for-research | none | Independent missing spell Unit. |
 | 9 | L5-D09-TINY-HUT - Close Tiny Hut missing authored record | ready-for-research | none | Independent missing spell Unit. |
 | 10 | L5-D10-WATER-WALK - Close Water Walk missing authored record | ready-for-research | none | Independent missing spell Unit. |
 | 11 | L3-FOLLOWUP-SLEET-STORM-AREA-HAZARD-RUNTIME - Promote Sleet Storm area hazard runtime support | ready-for-research | L5-D05-SLEET-STORM | Runtime support consumes the typed Sleet Storm Surface facts installed by Task 5. |
+| 12 | L3-FOLLOWUP-SLOW-ACTIVE-PENALTIES-RUNTIME - Promote Slow active penalties runtime support | ready-for-research | L5-D06-SLOW | Runtime support consumes the typed Slow Surface facts installed by Task 6 for invocation, active penalties, and repeat-save cleanup. |
+| 13 | L3-FOLLOWUP-SLOW-TURN-AND-SOMATIC-RUNTIME - Promote Slow target-turn and Somatic runtime support | ready-for-research | L3-FOLLOWUP-SLOW-ACTIVE-PENALTIES-RUNTIME | Runtime support consumes the active Slow effect lifecycle before enforcing target-turn action economy and Somatic failure chance. |
 
 ## Shared Verification
 
@@ -352,7 +366,7 @@ Verification:
 
 ### Task 6 - L5-D06-SLOW
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -372,8 +386,9 @@ SRD anchors:
 
 Current state:
 
-- Authored record is missing; catalog state is `not-installed`.
-- Mining disposition is `missing-authored-record`.
+- Slow is authored and installed as an SRD Surface Spell Definition.
+- Unit claim is `unsupported-profile` with active-penalty and target-turn/Somatic
+  runtime follow-up tasks.
 
 Output:
 
@@ -588,5 +603,111 @@ Verification:
 
 - Shared lane verification.
 - Battle-runtime focused tests for the promoted area-hazard behavior.
+- Relevant QNT proofs and one focused MBT run only if battle-runtime behavior
+  changes, following the MBT process in `AGENTS.md`.
+
+### Task 12 - L3-FOLLOWUP-SLOW-ACTIVE-PENALTIES-RUNTIME
+
+Status: `ready-for-research`
+
+Depends on:
+
+- L5-D06-SLOW
+
+Unit:
+
+- `slow`
+
+SRD anchors:
+
+- `.references/srd-5.2.1/Spells/Descriptions-S-Z.md:367`
+- `.references/srd-5.2.1/Classes/Bard.md:228`
+- `.references/srd-5.2.1/Classes/Sorcerer.md:315`
+- `.references/srd-5.2.1/Classes/Wizard.md:259`
+
+Current state:
+
+- Slow is authored and installed as an SRD Surface Spell Definition.
+- Unit claim is `unsupported-profile` with active-penalty runtime owner
+  evidence required.
+
+Output:
+
+- Promote Slow's Magic Action and level-3+ Spell Slot spend, caster-owned
+  Concentration, caller-supplied affected-creature set for the 40-foot Cube,
+  Wisdom Saving Throw, failed-save active Speed ratio projection, -2 Armor
+  Class projection, -2 Dexterity Saving Throw modifier, no-Reaction projection,
+  and end-of-target-turn repeat Saving Throw cleanup for each affected target.
+- Consume typed Slow Surface facts without spell-id, spell-name, or provenance
+  dispatch.
+- Leave target-turn Action-or-Bonus-Action, Attack action one-attack cap, and
+  Somatic spell failure chance to
+  `L3-FOLLOWUP-SLOW-TURN-AND-SOMATIC-RUNTIME` unless this task explicitly
+  promotes shared lifecycle support that task consumes.
+
+Acceptance:
+
+- `slow` has a `supported-profile` or `profile-subset-supported` claim for the
+  promoted active-penalty subset.
+- Deterministic admission/projection evidence and focused runtime tests cover
+  the promoted active penalties without authored-identity dispatch.
+- Focused Quint/runtime parity is updated for any battle-runtime behavior
+  change.
+- Remaining target-turn/Somatic facts stay visible as follow-up work.
+
+Verification:
+
+- Shared lane verification.
+- Battle-runtime focused tests for the promoted active-penalty behavior.
+- Relevant QNT proofs and one focused MBT run only if battle-runtime behavior
+  changes, following the MBT process in `AGENTS.md`.
+
+### Task 13 - L3-FOLLOWUP-SLOW-TURN-AND-SOMATIC-RUNTIME
+
+Status: `ready-for-research`
+
+Depends on:
+
+- L3-FOLLOWUP-SLOW-ACTIVE-PENALTIES-RUNTIME
+
+Unit:
+
+- `slow`
+
+SRD anchors:
+
+- `.references/srd-5.2.1/Spells/Descriptions-S-Z.md:367`
+- `.references/srd-5.2.1/Classes/Bard.md:228`
+- `.references/srd-5.2.1/Classes/Sorcerer.md:315`
+- `.references/srd-5.2.1/Classes/Wizard.md:259`
+
+Current state:
+
+- Slow is authored and installed as an SRD Surface Spell Definition.
+- Target-turn action economy and Somatic spell failure chance require an active
+  Slow effect lifecycle to consume.
+
+Output:
+
+- Promote Slow's target-turn Action or Bonus Action mutual-exclusion rule,
+  Attack-action one-attack cap, and 25 percent spell failure chance for
+  affected targets casting spells with Somatic components.
+- Consume typed Slow Surface facts and active effect state without spell-id,
+  spell-name, or provenance dispatch.
+
+Acceptance:
+
+- Runtime action-resource, Attack action, spell component, chance-result, and
+  cleanup tests cover the promoted target-turn/Somatic behavior.
+- Focused Quint/runtime parity is updated for any battle-runtime behavior
+  change.
+- The Unit claim keeps any still-unimplemented Slow facts explicit instead of
+  collapsing them into an opaque support label.
+
+Verification:
+
+- Shared lane verification.
+- Battle-runtime focused tests for the promoted target-turn and Somatic
+  behavior.
 - Relevant QNT proofs and one focused MBT run only if battle-runtime behavior
   changes, following the MBT process in `AGENTS.md`.

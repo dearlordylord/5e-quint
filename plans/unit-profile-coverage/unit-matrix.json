@@ -43,14 +43,14 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
-      "denominator": 448,
-      "numerator": 263,
-      "percent": "58.7%"
+      "denominator": 449,
+      "numerator": 264,
+      "percent": "58.8%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 536,
-      "numerator": 313,
-      "percent": "58.4%"
+      "denominator": 537,
+      "numerator": 314,
+      "percent": "58.5%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,7 +59,7 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 314
+      "value": 315
     },
     "deterministicAdmissionProjectionCoverage": {
       "denominator": 185,
@@ -67,8 +67,8 @@
       "percent": "97.3%"
     },
     "profileClassificationCoverage": {
-      "denominator": 314,
-      "numerator": 314,
+      "denominator": 315,
+      "numerator": 315,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -112,9 +112,9 @@
       "percent": "98.9%"
     },
     "supportedProfileCoverage": {
-      "denominator": 264,
+      "denominator": 265,
       "numerator": 185,
-      "percent": "70.1%"
+      "percent": "69.8%"
     }
   },
   "metricSemantics": [
@@ -16661,8 +16661,8 @@
         "unsupportedOrOtherUnits": 4
       },
       {
-        "executableUnitDenominator": 133,
-        "installedUnitDenominator": 133,
+        "executableUnitDenominator": 134,
+        "installedUnitDenominator": 134,
         "kind": "spell",
         "label": "Spell Units",
         "profileFactDenominator": 136,
@@ -16672,7 +16672,7 @@
         "selectedIdentityReplayGapUnits": 0,
         "selectedIdentityReplayWitnessUnits": 110,
         "supportedProfileUnits": 92,
-        "unsupportedOrOtherUnits": 23
+        "unsupportedOrOtherUnits": 24
       },
       {
         "executableUnitDenominator": 93,
@@ -35270,6 +35270,40 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/sleet_storm.json",
       "unitId": "sleet_storm"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "followUpTasks": [
+          {
+            "id": "L3-FOLLOWUP-SLOW-ACTIVE-PENALTIES-RUNTIME",
+            "mechanic": "Promote Slow's Magic Action and level-3+ Spell Slot spend, caster-owned Concentration, caller-supplied affected-creature set for the 40-foot Cube, Wisdom Saving Throw, failed-save active Speed ratio projection, -2 Armor Class projection, -2 Dexterity Saving Throw modifier, no-Reaction projection, and end-of-target-turn repeat Saving Throw cleanup for each affected target.",
+            "owner": "battle-runtime spell invocation/projection owner",
+            "requiredOutput": "Supported-profile or profile-subset-supported Slow claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for active penalties without authored-identity dispatch.",
+            "title": "Slow Active Penalties Runtime"
+          },
+          {
+            "id": "L3-FOLLOWUP-SLOW-TURN-AND-SOMATIC-RUNTIME",
+            "mechanic": "Promote Slow's target-turn Action or Bonus Action mutual-exclusion rule, Attack-action one-attack cap, and 25 percent spell failure chance for affected targets casting spells with Somatic components after the active effect lifecycle exists.",
+            "owner": "battle-runtime action-resource, Attack action, spell component, and chance-result owners",
+            "requiredOutput": "Focused action-resource, Attack action, spell component, chance-result, cleanup, and promoted Quint/runtime parity tests, consuming typed Slow Surface facts without spell-id-specific gates.",
+            "title": "Slow Turn And Somatic Runtime"
+          }
+        ],
+        "reason": "Slow is authored and installed as an SRD Surface Spell Definition with Magic Action Spell Slot casting, 120-foot range, V/S/M molasses components, caster-owned Concentration up to 1 minute, up to six chosen creature targets in a point-origin 40-foot Cube, Wisdom Saving Throw, failed-save active Speed ratio 1/2, -2 Armor Class, -2 Dexterity Saving Throw modifier, no Reactions, Action-or-Bonus-Action target-turn mutual exclusion, Attack action one-attack cap, Somatic-component 25 percent spell failure chance, and end-of-target-turn repeat Saving Throw. Task 6 leaves promoted battle-runtime support open because the runtime still needs typed active penalty projection and target-turn/Somatic execution owners without dispatching on authored spell identity.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/slow.json",
+      "unitId": "slow"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

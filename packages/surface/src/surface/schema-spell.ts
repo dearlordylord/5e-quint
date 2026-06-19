@@ -430,6 +430,20 @@ export const ForceMoveEffectSchema = Schema.Union(
   ForceMoveAnyDirectionEffectSchema,
 );
 
+export const ActionBonusActionChoiceEffectSchema = strictStruct({
+  kind: Schema.Literal("choose_action_or_bonus_action_each_turn"),
+});
+
+export const AttackActionAttackCapEffectSchema = strictStruct({
+  kind: Schema.Literal("cap_attack_action_attacks"),
+  maxAttacks: PositiveIntegerSchema,
+});
+
+export const SomaticSpellFailureChanceEffectSchema = strictStruct({
+  kind: Schema.Literal("somatic_spell_failure_chance"),
+  percent: Schema.Literal(25),
+});
+
 type DamageTypeRef = Schema.Schema.Type<typeof DamageTypeRefSchema>;
 type DiceAmount = Schema.Schema.Type<typeof DiceAmountSchema>;
 type DiceDelta = Schema.Schema.Type<typeof DiceDeltaSchema>;
@@ -548,6 +562,15 @@ type MentalMessageDeliveryEffect = Schema.Schema.Type<
   typeof MentalMessageDeliveryEffectSchema
 >;
 type ForceMoveEffect = Schema.Schema.Type<typeof ForceMoveEffectSchema>;
+type ActionBonusActionChoiceEffect = Schema.Schema.Type<
+  typeof ActionBonusActionChoiceEffectSchema
+>;
+type AttackActionAttackCapEffect = Schema.Schema.Type<
+  typeof AttackActionAttackCapEffectSchema
+>;
+type SomaticSpellFailureChanceEffect = Schema.Schema.Type<
+  typeof SomaticSpellFailureChanceEffectSchema
+>;
 type AudibleEffect = Schema.Schema.Type<typeof AudibleEffectSchema>;
 type AreaPushUnsecuredObjects = Schema.Schema.Type<
   typeof AreaPushUnsecuredObjectsSchema
@@ -787,6 +810,7 @@ type EffectAtom =
       readonly whileCondition?: Condition;
       readonly duration?: "current_turn" | "spell_duration";
     }
+  | ActionBonusActionChoiceEffect
   | TargetEffectEscapeAction
   | {
       readonly kind: "command_target_next_turn";
@@ -842,6 +866,8 @@ type EffectAtom =
       readonly restriction: ActionRestriction;
     }
   | { readonly kind: "scale_attack_count"; readonly additional: number }
+  | AttackActionAttackCapEffect
+  | SomaticSpellFailureChanceEffect
   | {
       readonly kind: "modify_roll_numeric";
       readonly on: ReadonlyNonEmptyArray<RollKind>;
@@ -2775,6 +2801,7 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
           Schema.Literal("current_turn", "spell_duration"),
         ),
       }),
+      ActionBonusActionChoiceEffectSchema,
       strictStruct({
         kind: Schema.Literal("target_effect_escape_action"),
         actor: Schema.Literal("another_creature"),
@@ -2839,6 +2866,8 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
         kind: Schema.Literal("scale_attack_count"),
         additional: Schema.Number,
       }),
+      AttackActionAttackCapEffectSchema,
+      SomaticSpellFailureChanceEffectSchema,
       Schema.Struct({
         kind: Schema.Literal("modify_roll_numeric"),
         on: nonEmpty(RollKindSchema),

@@ -83,6 +83,7 @@ export function traceEffectAtomScaling(
     case "suppress_condition_self_end":
     case "target_effect_escape_action":
     case "restrict_action_usage":
+    case "choose_action_or_bonus_action_each_turn":
     case "command_target_next_turn":
     case "forced_reaction_movement":
     case "jump_movement_replacement":
@@ -109,6 +110,8 @@ export function traceEffectAtomScaling(
     case "transfer_weapon_bonus_to_ac":
     case "suppress_incoming_critical_hit":
     case "scale_attack_count":
+    case "cap_attack_action_attacks":
+    case "somatic_spell_failure_chance":
     case "modify_speed":
     case "force_move":
     case "suspend_target":

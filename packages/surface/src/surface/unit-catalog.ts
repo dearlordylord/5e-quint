@@ -270,6 +270,7 @@ import shiningSmiteInput from "../../content/shining_smite.json";
 import shockingGraspInput from "../../content/shocking_grasp.json";
 import sleepInput from "../../content/sleep.json";
 import sleetStormInput from "../../content/sleet_storm.json";
+import slowInput from "../../content/slow.json";
 import spiderClimbInput from "../../content/spider_climb.json";
 import spikeGrowthInput from "../../content/spike_growth.json";
 import spiritualWeaponInput from "../../content/spiritual_weapon.json";
@@ -711,6 +712,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     shiningSmiteInput,
     sleepInput,
     sleetStormInput,
+    slowInput,
     flyInput,
     spiderClimbInput,
     spikeGrowthInput,

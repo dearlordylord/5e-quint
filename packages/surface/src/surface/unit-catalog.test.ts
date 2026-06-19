@@ -3623,6 +3623,83 @@ describe("SRD Unit catalog boundary", () => {
     expect(sleetStorm.description).toContain("lose Concentration");
   });
 
+  test("decodes Slow as save-gated active penalties", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag !== "ok") return;
+    const slow = result.catalog.requireUnit("slow");
+
+    expect(slow.kind).toBe("spell");
+    if (slow.kind !== "spell") return;
+    expect(slow.mechanics.family).toBe("activation");
+    if (slow.mechanics.family !== "activation") return;
+
+    expect(slow.provenance).toEqual({
+      kind: "srd-5.2.1",
+      section: "Spells/Descriptions-S-Z#Slow",
+    });
+    expect(slow.mechanics).toMatchObject({
+      level: 3,
+      school: "transmutation",
+      castingTime: { kind: "action" },
+      range: { kind: "point", feet: 120 },
+      components: { v: true, s: true, m: "a drop of molasses" },
+      duration: { kind: "concentration", upTo: { unit: "minute", amount: 1 } },
+    });
+
+    const minusTwo = {
+      kind: "fixed_number",
+      amount: 2,
+      sign: "-",
+    } as const;
+    expect(slow.mechanics.phases).toEqual([
+      {
+        kind: "save_gate",
+        attachment: {
+          kind: "hole",
+          holeId: "slow_cube",
+          label: "spell cube",
+          value: {
+            kind: "area",
+            shape: { kind: "cube", sideFeet: 40 },
+            origin: { kind: "point_within_range" },
+            selection: {
+              mode: "choose_up_to",
+              count: 6,
+              targetKinds: ["creature"],
+            },
+          },
+        },
+        ability: "wis",
+        dc: { kind: "caster_spell_save_dc" },
+        onFail: {
+          kind: "composite",
+          effects: [
+            { kind: "set_speed_ratio", numerator: 1, denominator: 2 },
+            { kind: "modify_ac", delta: minusTwo },
+            {
+              kind: "modify_roll_numeric",
+              on: ["saving_throw"],
+              abilityFilter: ["dex"],
+              delta: minusTwo,
+            },
+            { kind: "restrict_action_usage", actions: ["reaction"] },
+            { kind: "choose_action_or_bonus_action_each_turn" },
+            { kind: "cap_attack_action_attacks", maxAttacks: 1 },
+            { kind: "somatic_spell_failure_chance", percent: 25 },
+          ],
+        },
+        onSuccess: { kind: "none" },
+        repeatSaves: [
+          { cadence: "end_of_target_turn", onSuccess: "ends_on_target" },
+        ],
+      },
+    ]);
+    expect(slow.description).toContain("Dexterity saving throws");
+    expect(slow.description).toContain("25 percent chance");
+  });
+
   test("rejects contradictory Revivify death target-state filters", () => {
     const decode = Schema.decodeUnknownEither(TargetSelectionSchema);
 
