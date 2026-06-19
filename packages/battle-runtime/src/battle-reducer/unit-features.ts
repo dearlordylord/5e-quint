@@ -2589,7 +2589,10 @@ function attackActionAreaSaveDamageReplacementSavingThrowHole(
       state,
       unitFeature.breath.save.ability,
     ),
-    targetFlatBonuses: savingThrowFlatBonusProjections(state),
+    targetFlatBonuses: savingThrowFlatBonusProjections(
+      state,
+      unitFeature.breath.save.ability,
+    ),
   };
 }
 
@@ -2991,7 +2994,10 @@ function magicActionAreaSaveDamageHealingSavingThrowHole(
       state,
       unitFeature.damageHealing.save.ability,
     ),
-    targetFlatBonuses: savingThrowFlatBonusProjections(state),
+    targetFlatBonuses: savingThrowFlatBonusProjections(
+      state,
+      unitFeature.damageHealing.save.ability,
+    ),
   };
 }
 

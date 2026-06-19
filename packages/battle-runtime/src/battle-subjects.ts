@@ -2,6 +2,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-web-restraint-hazard
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spike-growth-movement-hazard
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-sleet-storm-area-hazard
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-slow-active-penalties
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-levitated-creature
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-cast-governor-quickened
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-damage-type-substitution
@@ -181,6 +182,7 @@ export const SPELL_SLOT_PROCEDURES = [
   "sleepTargetAdmission",
   "hideousLaughter",
   "hypnoticPattern",
+  "slowActivePenalties",
   "greaseGroundHazard",
   "webRestraintHazard",
   "gustOfWindLine",

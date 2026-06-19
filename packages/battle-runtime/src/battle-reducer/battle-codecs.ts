@@ -10,6 +10,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-acid-arrow-attack-timing
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.d20-test-natural-one-reroll
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-sleet-storm-area-hazard
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-slow-active-penalties
 // KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_SEEKING_SPELL_ATTACK_REROLL BATTLE.FEATURE.METAMAGIC_EMPOWERED_DAMAGE_DICE_REROLL
 // Extracted from ../battle-reducer.ts; this module owns Effect Schema values,
 // while domain types remain exported by the reducer facade.
@@ -478,6 +479,20 @@ const BattleSpellAreaChoiceSchema = Schema.Union(
         targetId: CombatantId,
         inCube: Schema.Literal(true),
         canSeePattern: Schema.Literal(true),
+      }),
+    ),
+    areaId: Schema.optionalWith(Schema.Never, { exact: true }),
+    sleepNonSleeperFacts: Schema.optionalWith(Schema.Never, { exact: true }),
+  }),
+  Schema.Struct({
+    ...BattleSpellAreaChoiceBaseSchema,
+    kind: Schema.Literal("slowArea"),
+    cubeSideFeet: Schema.Literal(40),
+    affectedCreatureWitnesses: Schema.Array(
+      Schema.Struct({
+        targetId: CombatantId,
+        inCube: Schema.Literal(true),
+        chosenByCaster: Schema.Literal(true),
       }),
     ),
     areaId: Schema.optionalWith(Schema.Never, { exact: true }),
@@ -1686,6 +1701,17 @@ export const BattleHoleSchema = Schema.Union(
     ...BattleHoleBaseSchema,
     kind: Schema.Literal("savingThrowOutcome"),
     label: Schema.String,
+    slowActivePenaltiesEndTurnSave: BattleRuntimeObjectSchema,
+    ability: Schema.Literal("wis"),
+    dc: DcSourceSchema,
+    areaChoices: Schema.Array(BattleRuntimeObjectSchema),
+    targetRollModes: Schema.Array(BattleSavingThrowRollModeProjectionSchema),
+    targetFlatBonuses: Schema.Array(BattleSavingThrowFlatBonusProjectionSchema),
+  }),
+  Schema.Struct({
+    ...BattleHoleBaseSchema,
+    kind: Schema.Literal("savingThrowOutcome"),
+    label: Schema.String,
     abilityD20TestRollModeEndTurnSave: BattleRuntimeObjectSchema,
     ability: AbilitySchema,
     dc: DcSourceSchema,
@@ -2158,6 +2184,17 @@ type BattleSpellAreaChoiceEncoded = {
         readonly targetId: string;
         readonly inCube: true;
         readonly canSeePattern: true;
+      }[];
+      readonly areaId?: never;
+      readonly sleepNonSleeperFacts?: never;
+    }
+  | {
+      readonly kind: "slowArea";
+      readonly cubeSideFeet: 40;
+      readonly affectedCreatureWitnesses: readonly {
+        readonly targetId: string;
+        readonly inCube: true;
+        readonly chosenByCaster: true;
       }[];
       readonly areaId?: never;
       readonly sleepNonSleeperFacts?: never;

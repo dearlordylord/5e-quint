@@ -10,12 +10,14 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-heightened-save-disadvantage
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-damage-dice-reroll
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spiritual-weapon-attack-proxy
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-slow-active-penalties
 // KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_CAREFUL_SAVE_PROTECTION BATTLE.FEATURE.METAMAGIC_HEIGHTENED_SAVE_DISADVANTAGE BATTLE.FEATURE.METAMAGIC_EMPOWERED_DAMAGE_DICE_REROLL
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_DAMAGE_PENALTY
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE
 
 import { Match } from "effect";
 import {
@@ -109,6 +111,7 @@ import {
   validateRolledDiceFillForDiceExpr,
 } from "../battle-reducer.ts";
 import {
+  SLOW_ACTIVE_PENALTIES_DEX_SAVE_DELTA,
   THAUMATURGY_ACTIVE_ONE_MINUTE_EFFECT_COUNT_HOLE_ID,
   THAUMATURGY_ACTIVE_ONE_MINUTE_EFFECT_COUNT_HOLE_INSTANCE,
   THAUMATURGY_MAX_ACTIVE_ONE_MINUTE_EFFECTS,
@@ -869,6 +872,7 @@ export function spellSavingThrowOutcomeHole(
         | "sleepTargetAdmission"
         | "hideousLaughter"
         | "hypnoticPattern"
+        | "slowActivePenalties"
         | "command"
         | "greaseGroundHazard"
         | "gustOfWindLine";
@@ -877,6 +881,12 @@ export function spellSavingThrowOutcomeHole(
   heightenedSpellTargetId?: CombatantId,
 ): BattleSpellSavingThrowOutcomeHole {
   const holeKey = `battle:spell:saving-throw-outcome:${invocation.spell.id}`;
+  const ability =
+    invocation.procedure === "attackBurstSaveDamage"
+      ? invocation.burst.ability
+      : invocation.procedure === "rollModifier"
+        ? (invocation.saveGate?.ability ?? "cha")
+        : invocation.ability;
   return {
     kind: "savingThrowOutcome",
     holeId: spellSavingThrowOutcomeHoleId(invocation),
@@ -893,12 +903,7 @@ export function spellSavingThrowOutcomeHole(
           : `${invocation.spell.name} ${spellAreaTargetingLabel(targeting)} Saving Throw outcomes`;
     })(),
     spell: invocation,
-    ability:
-      invocation.procedure === "attackBurstSaveDamage"
-        ? invocation.burst.ability
-        : invocation.procedure === "rollModifier"
-          ? (invocation.saveGate?.ability ?? "cha")
-          : invocation.ability,
+    ability,
     dc:
       invocation.procedure === "attackBurstSaveDamage"
         ? invocation.burst.dc
@@ -908,11 +913,7 @@ export function spellSavingThrowOutcomeHole(
     areaChoices: [],
     targetRollModes: savingThrowRollModeProjections(
       state,
-      invocation.procedure === "attackBurstSaveDamage"
-        ? invocation.burst.ability
-        : invocation.procedure === "rollModifier"
-          ? (invocation.saveGate?.ability ?? "cha")
-          : invocation.ability,
+      ability,
       invocation.procedure === "saveGatedCondition" ||
         invocation.procedure === "saveGatedDamage"
         ? {
@@ -926,7 +927,7 @@ export function spellSavingThrowOutcomeHole(
         : undefined,
       heightenedRollModeProjection(heightenedSpellTargetId),
     ),
-    targetFlatBonuses: savingThrowFlatBonusProjections(state),
+    targetFlatBonuses: savingThrowFlatBonusProjections(state, ability),
   };
 }
 
@@ -1026,7 +1027,8 @@ export function spellSavingThrowAbility(
         | "hypnoticPattern"
         | "command"
         | "greaseGroundHazard"
-        | "gustOfWindLine";
+        | "gustOfWindLine"
+        | "slowActivePenalties";
     }
   >,
 ): Ability {
@@ -1060,7 +1062,8 @@ export function spellSavingThrowTargeting(
         | "hypnoticPattern"
         | "command"
         | "greaseGroundHazard"
-        | "gustOfWindLine";
+        | "gustOfWindLine"
+        | "slowActivePenalties";
     }
   >,
 ): SpellTargeting {
@@ -1263,10 +1266,38 @@ function activeAbilityD20TestSavingThrowRollModeProjections(
 
 export function savingThrowFlatBonusProjections(
   state: BattleState,
+  ability: Ability,
 ): readonly BattleSavingThrowFlatBonusProjection[] {
-  return [...state.combatants].flatMap(([, target]) =>
-    wardingBondSavingThrowFlatBonusProjectionsForTarget(target),
+  return [...state.combatants].flatMap(([, target]) => [
+    ...wardingBondSavingThrowFlatBonusProjectionsForTarget(target),
+    ...slowActivePenaltiesSavingThrowFlatBonusProjection(target, ability),
+  ]);
+}
+
+function slowActivePenaltiesSavingThrowFlatBonusProjection(
+  target: BattleCreatureState,
+  ability: Ability,
+): readonly BattleSavingThrowFlatBonusProjection[] {
+  if (ability !== "dex") {
+    return [];
+  }
+  const effect = target.activeEffects.find(
+    (
+      candidate,
+    ): candidate is Extract<
+      BattleCreatureState["activeEffects"][number],
+      { readonly kind: "slowActivePenalties" }
+    > => candidate.kind === "slowActivePenalties",
   );
+  return effect === undefined
+    ? []
+    : [
+        {
+          targetId: target.combatantId,
+          sourceSpellId: effect.sourceSpellId,
+          bonus: SLOW_ACTIVE_PENALTIES_DEX_SAVE_DELTA,
+        },
+      ];
 }
 
 function passiveSavingThrowRollModeProjections(
@@ -1296,14 +1327,13 @@ function passiveSavingThrowRollModeProjection(
   }
   const profile = [
     ...target.origin.passiveSavingThrowRollModeProfiles.values(),
-  ].find(
-    (candidate) =>
-      passiveSavingThrowRollModeScopeMatches(
-        candidate.savingThrow,
-        ability,
-        condition,
-        isIncapacitated(target.conditions),
-      ),
+  ].find((candidate) =>
+    passiveSavingThrowRollModeScopeMatches(
+      candidate.savingThrow,
+      ability,
+      condition,
+      isIncapacitated(target.conditions),
+    ),
   );
   return profile === undefined
     ? null

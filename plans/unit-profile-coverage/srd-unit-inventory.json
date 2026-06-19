@@ -299,7 +299,8 @@
         "surface-widening-required": 17,
         "accepted-no-battle-effect": 48,
         "accepted": 25,
-        "battle-runtime-required": 8,
+        "battle-runtime-required": 5,
+        "partial-battle-runtime": 3,
         "owner-evidence-required": 12
       }
     },
@@ -371,14 +372,14 @@
       "character-creation or progression mechanic": 12
     },
     "allRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 486,
+      "catalog-installed-owner-evidence-present": 489,
       "non-runtime": 84,
       "catalog-only/dead-for-now": 187,
       "level-5-7-follow-up-required": 24,
       "needs-surface-widening": 17,
       "missing-authored-record": 37,
-      "catalog-installed-owner-evidence-required": 4,
-      "catalog-authored-review-required": 61
+      "catalog-authored-review-required": 61,
+      "catalog-installed-owner-evidence-required": 1
     },
     "spellPressureRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 249,
@@ -387,15 +388,13 @@
     "levelThreeSpellPressureRowsByDisposition": {
       "needs-surface-widening": 17,
       "catalog-only/dead-for-now": 48,
-      "catalog-installed-owner-evidence-present": 25,
+      "catalog-installed-owner-evidence-present": 28,
       "missing-authored-record": 5,
-      "catalog-installed-owner-evidence-required": 3,
       "catalog-authored-review-required": 12
     },
     "levelThreeInstalledSpellPressureRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 25,
-      "catalog-only/dead-for-now": 20,
-      "catalog-installed-owner-evidence-required": 3
+      "catalog-installed-owner-evidence-present": 28,
+      "catalog-only/dead-for-now": 20
     },
     "levelFourSpellPressureRowsByDisposition": {
       "catalog-authored-review-required": 49,
@@ -8768,8 +8767,8 @@
         "state": "installed",
         "unitId": "slow"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "unitProfileDisposition": "profile-subset-supported",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -8777,13 +8776,13 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "battle-runtime spell invocation/projection owner; battle-runtime action-resource, Attack action, spell component, and chance-result owners",
-          "evidence": "Promote follow-up split L3-FOLLOWUP-SLOW-ACTIVE-PENALTIES-RUNTIME, L3-FOLLOWUP-SLOW-TURN-AND-SOMATIC-RUNTIME: L3-FOLLOWUP-SLOW-ACTIVE-PENALTIES-RUNTIME owns Promote Slow's Magic Action and level-3+ Spell Slot spend, caster-owned Concentration, caller-supplied affected-creature set for the 40-foot Cube, Wisdom Saving Throw, failed-save active Speed ratio projection, -2 Armor Class projection, -2 Dexterity Saving Throw modifier, no-Reaction projection, and end-of-target-turn repeat Saving Throw cleanup for each affected target. Required output: Supported-profile or profile-subset-supported Slow claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for active penalties without authored-identity dispatch.; L3-FOLLOWUP-SLOW-TURN-AND-SOMATIC-RUNTIME owns Promote Slow's target-turn Action or Bonus Action mutual-exclusion rule, Attack-action one-attack cap, and 25 percent spell failure chance for affected targets casting spells with Somatic components after the active effect lifecycle exists. Required output: Focused action-resource, Attack action, spell component, chance-result, cleanup, and promoted Quint/runtime parity tests, consuming typed Slow Surface facts without spell-id-specific gates.",
-          "status": "owner evidence required"
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L3-FOLLOWUP-SLOW-ACTIVE-PENALTIES-RUNTIME at packages/battle-runtime/src/unit-profile-admission-slow-active-penalties.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Promote follow-up split L3-FOLLOWUP-SLOW-ACTIVE-PENALTIES-RUNTIME, L3-FOLLOWUP-SLOW-TURN-AND-SOMATIC-RUNTIME: L3-FOLLOWUP-SLOW-ACTIVE-PENALTIES-RUNTIME owns Promote Slow's Magic Action and level-3+ Spell Slot spend, caster-owned Concentration, caller-supplied affected-creature set for the 40-foot Cube, Wisdom Saving Throw, failed-save active Speed ratio projection, -2 Armor Class projection, -2 Dexterity Saving Throw modifier, no-Reaction projection, and end-of-target-turn repeat Saving Throw cleanup for each affected target. Required output: Supported-profile or profile-subset-supported Slow claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for active penalties without authored-identity dispatch.; L3-FOLLOWUP-SLOW-TURN-AND-SOMATIC-RUNTIME owns Promote Slow's target-turn Action or Bonus Action mutual-exclusion rule, Attack-action one-attack cap, and 25 percent spell failure chance for affected targets casting spells with Somatic components after the active effect lifecycle exists. Required output: Focused action-resource, Attack action, spell component, chance-result, cleanup, and promoted Quint/runtime parity tests, consuming typed Slow Surface facts without spell-id-specific gates.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "partial-battle-runtime"
     },
     {
       "id": "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_speak_with_dead",
@@ -31036,8 +31035,8 @@
         "state": "installed",
         "unitId": "slow"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "unitProfileDisposition": "profile-subset-supported",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -31045,13 +31044,13 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "battle-runtime spell invocation/projection owner; battle-runtime action-resource, Attack action, spell component, and chance-result owners",
-          "evidence": "Promote follow-up split L3-FOLLOWUP-SLOW-ACTIVE-PENALTIES-RUNTIME, L3-FOLLOWUP-SLOW-TURN-AND-SOMATIC-RUNTIME: L3-FOLLOWUP-SLOW-ACTIVE-PENALTIES-RUNTIME owns Promote Slow's Magic Action and level-3+ Spell Slot spend, caster-owned Concentration, caller-supplied affected-creature set for the 40-foot Cube, Wisdom Saving Throw, failed-save active Speed ratio projection, -2 Armor Class projection, -2 Dexterity Saving Throw modifier, no-Reaction projection, and end-of-target-turn repeat Saving Throw cleanup for each affected target. Required output: Supported-profile or profile-subset-supported Slow claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for active penalties without authored-identity dispatch.; L3-FOLLOWUP-SLOW-TURN-AND-SOMATIC-RUNTIME owns Promote Slow's target-turn Action or Bonus Action mutual-exclusion rule, Attack-action one-attack cap, and 25 percent spell failure chance for affected targets casting spells with Somatic components after the active effect lifecycle exists. Required output: Focused action-resource, Attack action, spell component, chance-result, cleanup, and promoted Quint/runtime parity tests, consuming typed Slow Surface facts without spell-id-specific gates.",
-          "status": "owner evidence required"
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L3-FOLLOWUP-SLOW-ACTIVE-PENALTIES-RUNTIME at packages/battle-runtime/src/unit-profile-admission-slow-active-penalties.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Promote follow-up split L3-FOLLOWUP-SLOW-ACTIVE-PENALTIES-RUNTIME, L3-FOLLOWUP-SLOW-TURN-AND-SOMATIC-RUNTIME: L3-FOLLOWUP-SLOW-ACTIVE-PENALTIES-RUNTIME owns Promote Slow's Magic Action and level-3+ Spell Slot spend, caster-owned Concentration, caller-supplied affected-creature set for the 40-foot Cube, Wisdom Saving Throw, failed-save active Speed ratio projection, -2 Armor Class projection, -2 Dexterity Saving Throw modifier, no-Reaction projection, and end-of-target-turn repeat Saving Throw cleanup for each affected target. Required output: Supported-profile or profile-subset-supported Slow claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for active penalties without authored-identity dispatch.; L3-FOLLOWUP-SLOW-TURN-AND-SOMATIC-RUNTIME owns Promote Slow's target-turn Action or Bonus Action mutual-exclusion rule, Attack-action one-attack cap, and 25 percent spell failure chance for affected targets casting spells with Somatic components after the active effect lifecycle exists. Required output: Focused action-resource, Attack action, spell component, chance-result, cleanup, and promoted Quint/runtime parity tests, consuming typed Slow Surface facts without spell-id-specific gates.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "partial-battle-runtime"
     },
     {
       "id": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_stinking_cloud",
@@ -40060,8 +40059,8 @@
         "state": "installed",
         "unitId": "slow"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "unitProfileDisposition": "profile-subset-supported",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -40069,13 +40068,13 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "battle-runtime spell invocation/projection owner; battle-runtime action-resource, Attack action, spell component, and chance-result owners",
-          "evidence": "Promote follow-up split L3-FOLLOWUP-SLOW-ACTIVE-PENALTIES-RUNTIME, L3-FOLLOWUP-SLOW-TURN-AND-SOMATIC-RUNTIME: L3-FOLLOWUP-SLOW-ACTIVE-PENALTIES-RUNTIME owns Promote Slow's Magic Action and level-3+ Spell Slot spend, caster-owned Concentration, caller-supplied affected-creature set for the 40-foot Cube, Wisdom Saving Throw, failed-save active Speed ratio projection, -2 Armor Class projection, -2 Dexterity Saving Throw modifier, no-Reaction projection, and end-of-target-turn repeat Saving Throw cleanup for each affected target. Required output: Supported-profile or profile-subset-supported Slow claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for active penalties without authored-identity dispatch.; L3-FOLLOWUP-SLOW-TURN-AND-SOMATIC-RUNTIME owns Promote Slow's target-turn Action or Bonus Action mutual-exclusion rule, Attack-action one-attack cap, and 25 percent spell failure chance for affected targets casting spells with Somatic components after the active effect lifecycle exists. Required output: Focused action-resource, Attack action, spell component, chance-result, cleanup, and promoted Quint/runtime parity tests, consuming typed Slow Surface facts without spell-id-specific gates.",
-          "status": "owner evidence required"
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L3-FOLLOWUP-SLOW-ACTIVE-PENALTIES-RUNTIME at packages/battle-runtime/src/unit-profile-admission-slow-active-penalties.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Promote follow-up split L3-FOLLOWUP-SLOW-ACTIVE-PENALTIES-RUNTIME, L3-FOLLOWUP-SLOW-TURN-AND-SOMATIC-RUNTIME: L3-FOLLOWUP-SLOW-ACTIVE-PENALTIES-RUNTIME owns Promote Slow's Magic Action and level-3+ Spell Slot spend, caster-owned Concentration, caller-supplied affected-creature set for the 40-foot Cube, Wisdom Saving Throw, failed-save active Speed ratio projection, -2 Armor Class projection, -2 Dexterity Saving Throw modifier, no-Reaction projection, and end-of-target-turn repeat Saving Throw cleanup for each affected target. Required output: Supported-profile or profile-subset-supported Slow claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for active penalties without authored-identity dispatch.; L3-FOLLOWUP-SLOW-TURN-AND-SOMATIC-RUNTIME owns Promote Slow's target-turn Action or Bonus Action mutual-exclusion rule, Attack-action one-attack cap, and 25 percent spell failure chance for affected targets casting spells with Somatic components after the active effect lifecycle exists. Required output: Focused action-resource, Attack action, spell component, chance-result, cleanup, and promoted Quint/runtime parity tests, consuming typed Slow Surface facts without spell-id-specific gates.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "partial-battle-runtime"
     },
     {
       "id": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_speak_with_dead",

@@ -75,6 +75,7 @@ import { selfTeleportProfile } from "./self-teleport.ts";
 import { shieldReactionProfile } from "./shield-reaction.ts";
 import { sleepTargetAdmissionProfile } from "./sleep-target-admission.ts";
 import { sleetStormAreaHazardProfile } from "./sleet-storm-area-hazard.ts";
+import { slowActivePenaltiesProfile } from "./slow-active-penalties.ts";
 import { spikeGrowthMovementHazardProfile } from "./spike-growth-movement-hazard.ts";
 import { webRestraintHazardProfile } from "./web-restraint-hazard.ts";
 import { spellAttackDamageProfile } from "./spell-attack-damage.ts";
@@ -144,6 +145,7 @@ function registeredSpellProcedureProfiles() {
     sleepTargetAdmissionProfile,
     hideousLaughterProfile,
     hypnoticPatternProfile,
+    slowActivePenaltiesProfile,
     greaseGroundHazardProfile,
     gustOfWindLineProfile,
     flamingSphereProfile,

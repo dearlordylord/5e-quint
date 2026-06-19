@@ -5,6 +5,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.remarkable-athlete
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-cast-range-increase
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.d20-test-natural-one-reroll
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-slow-active-penalties
 // Spell replay fill parser extracted from spells-resolve.ts.
 // Owns classification and validation of supplied fills against spell replay holes.
 
@@ -1866,7 +1867,8 @@ export function spellFillSetSavingThrowTargeting(
         invocation.procedure === "creatureSizeDecrease" ||
         invocation.procedure === "levitatedCreature" ||
         invocation.procedure === "greaseGroundHazard" ||
-        invocation.procedure === "gustOfWindLine"
+        invocation.procedure === "gustOfWindLine" ||
+        invocation.procedure === "slowActivePenalties"
       ? invocation.targeting
       : { kind: "singleCombatant" };
 }

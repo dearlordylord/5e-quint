@@ -16,6 +16,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spike-growth-movement-hazard
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-web-restraint-hazard
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-sleet-storm-area-hazard
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-slow-active-penalties
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magical-darkness-point-origin
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-levitated-creature
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.MAGICAL_DARKNESS_POINT_ORIGIN_LIFECYCLE
@@ -104,6 +105,7 @@ import { selfTeleportProfile } from "./spell-procedure-profiles/self-teleport.ts
 import { shieldReactionProfile } from "./spell-procedure-profiles/shield-reaction.ts";
 import { sleepTargetAdmissionProfile } from "./spell-procedure-profiles/sleep-target-admission.ts";
 import { sleetStormAreaHazardProfile } from "./spell-procedure-profiles/sleet-storm-area-hazard.ts";
+import { slowActivePenaltiesProfile } from "./spell-procedure-profiles/slow-active-penalties.ts";
 import { spikeGrowthMovementHazardProfile } from "./spell-procedure-profiles/spike-growth-movement-hazard.ts";
 import { webRestraintHazardProfile } from "./spell-procedure-profiles/web-restraint-hazard.ts";
 import { spellAttackDamageProfile } from "./spell-procedure-profiles/spell-attack-damage.ts";
@@ -213,6 +215,9 @@ export function supportedSpellActs(
     ),
     ...preparedSpells.flatMap((spell) =>
       hypnoticPatternProfile.admit(spell, admissionContext),
+    ),
+    ...preparedSpells.flatMap((spell) =>
+      slowActivePenaltiesProfile.admit(spell, admissionContext),
     ),
     ...preparedSpells.flatMap((spell) =>
       greaseGroundHazardProfile.admit(spell, admissionContext),

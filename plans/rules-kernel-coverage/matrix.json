@@ -1,18 +1,18 @@
 {
   "summary": {
-    "total": 123,
-    "covered": 117,
+    "total": 124,
+    "covered": 118,
     "open": 0,
     "nonSemantic": 6,
     "byRuntime": {
       "shared-algebras": 1,
-      "battle": 92,
+      "battle": 93,
       "character-creation": 14,
       "character-sheet": 12,
       "character-battle": 4
     },
     "byStatus": {
-      "covered": 117,
+      "covered": 118,
       "needs-qnt-owner": 0,
       "needs-parity-witness": 0,
       "needs-surface-evidence": 0,
@@ -27,14 +27,14 @@
     "qntRegistry[]": "Derived from packages/**/*.qnt excluding .mbt.qnt drivers and *-tests.qnt files, qnt-owner-roles.jsonl, and checker-owned qntRegistryExemptions."
   },
   "battleHoleFrontierSummary": {
-    "total": 158,
+    "total": 159,
     "bySubject": {
-      "battle-hole-family": 76,
+      "battle-hole-family": 77,
       "battle-fill-kind": 46,
       "battle-subject-kind": 36
     },
     "byClassification": {
-      "semantic-frontier": 129,
+      "semantic-frontier": 130,
       "deterministic-boundary-projection": 0,
       "table-owned-fact": 29,
       "unsupported-dead-branch": 0
@@ -111,6 +111,46 @@
         "UBIQUITOUS_LANGUAGE.md#Spellcasting"
       ],
       "title": "Battle Sleet Storm active Cylinder hazard projects Difficult Terrain and Heavily Obscured area facts, resolves entry/start-turn Prone and Concentration-loss saves, and cleans up on Concentration or duration end"
+    },
+    {
+      "id": "BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE",
+      "kind": "active-effect-lifecycle",
+      "parityWitnesses": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-slow-active-penalties.test.ts"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/slow-active-penalties.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-slow-active-penalties.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profiles": [
+        "spell.invocation-slow-active-penalties"
+      ],
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime-slow-active-penalties.mbt.qnt"
+      ],
+      "reason": "The promoted Slow runtime consumes caller-supplied affected-creature area witnesses and save outcomes. Automatic Cube geometry and full target-turn or Somatic restrictions remain explicit boundaries or follow-up work.",
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/slow-active-penalties.ts",
+        "packages/battle-runtime/src/battle-reducer/creature-state.ts",
+        "packages/battle-runtime/src/battle-reducer/movement-speed.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-damage-fills.ts",
+        "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Spells/Descriptions-S-Z.md#Slow",
+        "UBIQUITOUS_LANGUAGE.md#Spellcasting",
+        "UBIQUITOUS_LANGUAGE.md#D20 Rolls",
+        "UBIQUITOUS_LANGUAGE.md#Action Lifecycle",
+        "UBIQUITOUS_LANGUAGE.md#Movement"
+      ],
+      "title": "Battle Slow applies active Speed, Armor Class, Dexterity Saving Throw, and Reaction penalties with target-end repeat-save cleanup"
     },
     {
       "id": "BATTLE.SHOVE.OUTCOME_AND_PUSH_BOUNDARY",
@@ -4383,6 +4423,17 @@
       "subject": "battle-hole-family"
     },
     {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE"
+      ],
+      "followUpTaskIds": [],
+      "holeKind": "savingThrowOutcome",
+      "id": "BattleSlowActivePenaltiesEndTurnSavingThrowOutcomeHole",
+      "reason": "Slow end-of-target-turn Saving Throw outcomes drive reducer-owned per-target active penalty cleanup and caster Concentration cleanup when no affected targets remain. The ongoing target-turn action-resource and Somatic chance restrictions remain separate follow-up runtime work.",
+      "subject": "battle-hole-family"
+    },
+    {
       "classification": "table-owned-fact",
       "coveredByObligationIds": [
         "BATTLE.TABLE.HOLE_FACT_BOUNDARIES",
@@ -6248,6 +6299,12 @@
     },
     {
       "obligationIds": [
+        "BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE"
+      ],
+      "profileId": "spell.invocation-slow-active-penalties"
+    },
+    {
+      "obligationIds": [
         "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
       ],
       "profileId": "unit-feature.action-surge-resource"
@@ -7257,6 +7314,14 @@
         "BATTLE.SPELL.ANTIMAGIC_FIELD_ACTION_INTERDICTION"
       ],
       "ownerPath": "packages/battle-runtime/battle-runtime-antimagic-field-action-interdiction.mbt.qnt",
+      "role": "mbt-fixture"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-slow-active-penalties.mbt.qnt is the focused Slow active-penalties literal projection witness for failed-save active penalties, target-end repeat saves, and cleanup. It is MBT-only parity evidence, not qnt-proof verification evidence.",
+      "obligationIds": [
+        "BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-slow-active-penalties.mbt.qnt",
       "role": "mbt-fixture"
     },
     {
@@ -14232,6 +14297,7 @@
     "spell.invocation-sleep-repeat-save-lifecycle",
     "spell.invocation-sleep-target-admission",
     "spell.invocation-sleet-storm-area-hazard",
+    "spell.invocation-slow-active-penalties",
     "spell.invocation-spell-created-held-object",
     "spell.invocation-spell-hosted-weapon-attack",
     "spell.invocation-spike-growth-movement-hazard",

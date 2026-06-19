@@ -12,11 +12,13 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-d20-lifecycle
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-levitated-creature
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-slow-active-penalties
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-heightened-save-disadvantage
 // RAW-COVERAGE: runtime-owner RAW-QCORE7-MOVEMENT-GRAPPLE-001 RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-QCORE9-UNIT-FEATURE-PROFILES-001 RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
 // KERNEL-COVERAGE: runtime-owner BATTLE.DAMAGE.DEATH_SAVING_THROW_LIFECYCLE BATTLE.COMMAND.OPTION_AND_NEXT_TURN BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE BATTLE.SPELL.SLEEP_REPEAT_SAVE_LIFECYCLE BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE BATTLE.SPELL.LEVITATED_CREATURE_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE BATTLE.SPELL.HEAT_METAL_OBJECT_CONTACT_LIFECYCLE BATTLE.SPELL.GUST_OF_WIND_LINE_LIFECYCLE BATTLE.SPELL.SPIKE_GROWTH_MOVEMENT_HAZARD BATTLE.SPELL.SLEET_STORM_AREA_HAZARD_LIFECYCLE
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE
@@ -179,7 +181,6 @@ import {
   savingThrowFlatBonusProjections,
   savingThrowRollModeProjections,
 } from "./spells-damage-fills.ts";
-import { wardingBondSavingThrowFlatBonusProjectionsForTarget } from "./warding-bond.ts";
 import {
   activeDruidWildShape,
   combatantEffectiveSize,
@@ -274,6 +275,7 @@ import type {
   BattleSleepRepeatSavingThrowOutcomeHole,
   BattleSpellAreaChoice,
   BattleSpellConditionEndTurnSavingThrowOutcomeHole,
+  BattleSlowActivePenaltiesEndTurnSavingThrowOutcomeHole,
   BattleSpellTurnEndDamageRollHole,
   BattleSpellTurnStartDamageRollHole,
   BattleSpellTurnStartSavingThrowOutcomeHole,
@@ -306,6 +308,10 @@ export function resolveEndTurn(
     { readonly kind: "savingThrowOutcome" }
   >[] = [],
   spellConditionEndTurnSaves: readonly Extract<
+    BattleFill,
+    { readonly kind: "savingThrowOutcome" }
+  >[] = [],
+  slowActivePenaltiesEndTurnSaves: readonly Extract<
     BattleFill,
     { readonly kind: "savingThrowOutcome" }
   >[] = [],
@@ -411,9 +417,15 @@ export function resolveEndTurn(
       currentActorId(state),
       spellConditionEndTurnSaves,
     );
+  const combatantsAfterSlowActivePenaltyRepeatSaves =
+    applySlowActivePenaltiesEndTurnSaveFills(
+      combatantsAfterSpellConditionRepeatSaves,
+      currentActorId(state),
+      slowActivePenaltiesEndTurnSaves,
+    );
   const combatantsAfterAbilityD20TestRepeatSaves =
     applyAbilityD20TestRollModeEndTurnSaveFills(
-      combatantsAfterSpellConditionRepeatSaves,
+      combatantsAfterSlowActivePenaltyRepeatSaves,
       currentActorId(state),
       abilityD20TestRollModeEndTurnSaves,
     );
@@ -1079,6 +1091,65 @@ function spellConditionEndTurnSavingThrowOutcomeFor(
   return fills.find((fill) => fill.holeId === hole.holeId);
 }
 
+function slowActivePenaltiesEffects(
+  combatant: BattleCreatureState | undefined,
+): readonly SlowActivePenaltiesEffect[] {
+  return combatant === undefined
+    ? []
+    : combatant.activeEffects.filter(
+        (effect): effect is SlowActivePenaltiesEffect =>
+          effect.kind === "slowActivePenalties",
+      );
+}
+
+function slowActivePenaltiesEndTurnSavingThrowOutcomeHole(
+  targetId: CombatantId,
+  effect: SlowActivePenaltiesEffect,
+  state?: BattleState,
+  targetFlatBonuses: readonly BattleSavingThrowFlatBonusProjection[] = [],
+): BattleSlowActivePenaltiesEndTurnSavingThrowOutcomeHole {
+  const key = [
+    "battle:slow-active-penalties-end-turn-save",
+    targetId,
+    effect.sourceCombatantId,
+    effect.sourceSpellId,
+  ]
+    .map(String)
+    .join(":");
+  return {
+    kind: "savingThrowOutcome",
+    holeId: holeId(key),
+    holeInstanceKey: holeInstanceKey(key),
+    label: `${effect.sourceSpellId} end-turn WIS save`,
+    slowActivePenaltiesEndTurnSave: {
+      targetId,
+      sourceSpellId: effect.sourceSpellId,
+      sourceCombatantId: effect.sourceCombatantId,
+      save: effect.save,
+    },
+    ability: effect.save.ability,
+    dc: effect.save.dc,
+    areaChoices: [],
+    targetRollModes:
+      state === undefined
+        ? []
+        : savingThrowRollModeProjections(state, effect.save.ability).filter(
+            (projection) => projection.targetId === targetId,
+          ),
+    targetFlatBonuses,
+  };
+}
+
+function slowActivePenaltiesEndTurnSavingThrowOutcomeFor(
+  fills: readonly Extract<
+    BattleFill,
+    { readonly kind: "savingThrowOutcome" }
+  >[],
+  hole: BattleSlowActivePenaltiesEndTurnSavingThrowOutcomeHole,
+): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> | undefined {
+  return fills.find((fill) => fill.holeId === hole.holeId);
+}
+
 function abilityD20TestRollModeEndTurnSaveEffects(
   combatant: BattleCreatureState | undefined,
 ): readonly AbilityD20TestRollModeEndTurnSaveEffect[] {
@@ -1174,6 +1245,18 @@ function validateSpellConditionEndTurnSavingThrowOutcome(
     : "Spell condition end-turn Saving Throw outcome must match the ending-turn target.";
 }
 
+function validateSlowActivePenaltiesEndTurnSavingThrowOutcome(
+  value: BattleSavingThrowOutcomeValue,
+  targetId: CombatantId,
+): string | null {
+  if ("area" in value) {
+    return "Slow end-turn Saving Throw outcome must not include area facts.";
+  }
+  return value.outcomes.length === 1 && value.outcomes[0]?.targetId === targetId
+    ? null
+    : "Slow end-turn Saving Throw outcome must match the ending-turn target.";
+}
+
 export type GreaseGroundHazardEffect = Extract<
   BattleActiveEffect,
   { readonly kind: "greaseGroundHazard" }
@@ -1185,6 +1268,10 @@ export type WebRestraintHazardEffect = Extract<
 export type SleetStormAreaHazardEffect = Extract<
   BattleActiveEffect,
   { readonly kind: "sleetStormAreaHazard" }
+>;
+export type SlowActivePenaltiesEffect = Extract<
+  BattleActiveEffect,
+  { readonly kind: "slowActivePenalties" }
 >;
 export type FlamingSphereEffect = Extract<
   BattleActiveEffect,
@@ -1932,9 +2019,10 @@ export function greaseGroundHazardSavingThrowOutcomeHole(
       undefined,
       greaseGroundHazardHeightenedRollModeProjection(effect, targetId),
     ).filter((projection) => projection.targetId === targetId),
-    targetFlatBonuses: savingThrowFlatBonusProjections(state).filter(
-      (projection) => projection.targetId === targetId,
-    ),
+    targetFlatBonuses: savingThrowFlatBonusProjections(
+      state,
+      effect.save.ability,
+    ).filter((projection) => projection.targetId === targetId),
   };
 }
 
@@ -2125,9 +2213,10 @@ export function webRestraintSavingThrowOutcomeHole(
       state,
       effect.save.ability,
     ).filter((projection) => projection.targetId === targetId),
-    targetFlatBonuses: savingThrowFlatBonusProjections(state).filter(
-      (projection) => projection.targetId === targetId,
-    ),
+    targetFlatBonuses: savingThrowFlatBonusProjections(
+      state,
+      effect.save.ability,
+    ).filter((projection) => projection.targetId === targetId),
   };
 }
 
@@ -2336,9 +2425,10 @@ export function sleetStormAreaHazardSavingThrowOutcomeHole(
       state,
       effect.save.ability,
     ).filter((projection) => projection.targetId === targetId),
-    targetFlatBonuses: savingThrowFlatBonusProjections(state).filter(
-      (projection) => projection.targetId === targetId,
-    ),
+    targetFlatBonuses: savingThrowFlatBonusProjections(
+      state,
+      effect.save.ability,
+    ).filter((projection) => projection.targetId === targetId),
   };
 }
 
@@ -2397,12 +2487,7 @@ export function resolveSleetStormAreaHazardSaveCommand(
   const trigger = sleetStormAreaHazardTriggerFromMembershipFact(
     input.subject.areaMembershipTrigger,
   );
-  if (
-    sleetStormAreaHazardSaveAlreadyResolved(
-      effect,
-      input.subject.actorId,
-    )
-  ) {
+  if (sleetStormAreaHazardSaveAlreadyResolved(effect, input.subject.actorId)) {
     return invalidResult(
       input.state,
       "staleSubject",
@@ -2726,9 +2811,10 @@ export function gustOfWindLineSavingThrowOutcomeHole(
       undefined,
       gustOfWindLineHeightenedRollModeProjection(effect, targetId),
     ).filter((projection) => projection.targetId === targetId),
-    targetFlatBonuses: savingThrowFlatBonusProjections(state).filter(
-      (projection) => projection.targetId === targetId,
-    ),
+    targetFlatBonuses: savingThrowFlatBonusProjections(
+      state,
+      effect.save.ability,
+    ).filter((projection) => projection.targetId === targetId),
   };
 }
 
@@ -3101,9 +3187,10 @@ export function flamingSphereSavingThrowOutcomeHole(
       state,
       effect.save.ability,
     ).filter((projection) => projection.targetId === targetId),
-    targetFlatBonuses: savingThrowFlatBonusProjections(state).filter(
-      (projection) => projection.targetId === targetId,
-    ),
+    targetFlatBonuses: savingThrowFlatBonusProjections(
+      state,
+      effect.save.ability,
+    ).filter((projection) => projection.targetId === targetId),
   };
 }
 
@@ -3869,9 +3956,10 @@ export function moonbeamSavingThrowOutcomeHole(
       state,
       effect.save.ability,
     ).filter((projection) => projection.targetId === targetId),
-    targetFlatBonuses: savingThrowFlatBonusProjections(state).filter(
-      (projection) => projection.targetId === targetId,
-    ),
+    targetFlatBonuses: savingThrowFlatBonusProjections(
+      state,
+      effect.save.ability,
+    ).filter((projection) => projection.targetId === targetId),
   };
 }
 
@@ -4557,6 +4645,36 @@ function applySpellConditionEndTurnSaveFills(
   }, combatants);
 }
 
+function applySlowActivePenaltiesEndTurnSaveFills(
+  combatants: ReadonlyMap<CombatantId, BattleCreatureState>,
+  actorId: CombatantId,
+  saves: readonly Extract<
+    BattleFill,
+    { readonly kind: "savingThrowOutcome" }
+  >[],
+): ReadonlyMap<CombatantId, BattleCreatureState> {
+  const actor = combatants.get(actorId);
+  const effects = slowActivePenaltiesEffects(actor);
+  if (actor === undefined || effects.length === 0) {
+    return combatants;
+  }
+  return effects.reduce((nextCombatants, effect) => {
+    const hole = slowActivePenaltiesEndTurnSavingThrowOutcomeHole(
+      actorId,
+      effect,
+    );
+    const save = slowActivePenaltiesEndTurnSavingThrowOutcomeFor(saves, hole);
+    if (save?.value.outcomes[0]?.succeeded !== true) {
+      return nextCombatants;
+    }
+    return removeSlowActivePenaltiesEffectFromCombatants(
+      nextCombatants,
+      actorId,
+      effect,
+    );
+  }, combatants);
+}
+
 function applyAbilityD20TestRollModeEndTurnSaveFills(
   combatants: ReadonlyMap<CombatantId, BattleCreatureState>,
   actorId: CombatantId,
@@ -4648,6 +4766,29 @@ function removeSpellConditionEffectFromCombatants(
       : { ...target, activeEffects };
   return combatantsAfterConcentrationSpellEffectsEndedIfNoEffects(
     new Map(combatants).set(targetId, nextCombatant),
+    expiringEffect,
+  );
+}
+
+function removeSlowActivePenaltiesEffectFromCombatants(
+  combatants: ReadonlyMap<CombatantId, BattleCreatureState>,
+  targetId: CombatantId,
+  expiringEffect: SlowActivePenaltiesEffect,
+): ReadonlyMap<CombatantId, BattleCreatureState> {
+  const target = combatants.get(targetId);
+  if (
+    target === undefined ||
+    !target.activeEffects.some((effect) => effect === expiringEffect)
+  ) {
+    return combatants;
+  }
+  return combatantsAfterConcentrationSpellEffectsEndedIfNoEffects(
+    new Map(combatants).set(targetId, {
+      ...target,
+      activeEffects: target.activeEffects.filter(
+        (effect) => effect !== expiringEffect,
+      ),
+    }),
     expiringEffect,
   );
 }
@@ -5308,7 +5449,10 @@ export function resolveEndTurnCommand(
       effect,
       actor === undefined
         ? []
-        : wardingBondSavingThrowFlatBonusProjectionsForTarget(actor),
+        : savingThrowFlatBonusProjections(
+            input.state,
+            effect.save.ability,
+          ).filter((projection) => projection.targetId === actorId),
     ),
   }));
   const sleepRepeatSaveHoles = sleepRepeatSaveRequests.map(
@@ -5324,7 +5468,10 @@ export function resolveEndTurnCommand(
         undefined,
         actor === undefined
           ? []
-          : wardingBondSavingThrowFlatBonusProjectionsForTarget(actor),
+          : savingThrowFlatBonusProjections(
+              input.state,
+              effect.save.ability,
+            ).filter((projection) => projection.targetId === actorId),
       ),
     }),
   );
@@ -5341,12 +5488,33 @@ export function resolveEndTurnCommand(
       input.state,
       actor === undefined
         ? []
-        : wardingBondSavingThrowFlatBonusProjectionsForTarget(actor),
+        : savingThrowFlatBonusProjections(
+            input.state,
+            effect.save.ability,
+          ).filter((projection) => projection.targetId === actorId),
     ),
   }));
   const spellConditionEndTurnSaveHoles = spellConditionEndTurnSaveRequests.map(
     (request) => request.hole,
   );
+  const slowActivePenaltiesEndTurnSaveRequests = slowActivePenaltiesEffects(
+    actor,
+  ).map((effect) => ({
+    effect,
+    hole: slowActivePenaltiesEndTurnSavingThrowOutcomeHole(
+      actorId,
+      effect,
+      input.state,
+      actor === undefined
+        ? []
+        : savingThrowFlatBonusProjections(
+            input.state,
+            effect.save.ability,
+          ).filter((projection) => projection.targetId === actorId),
+    ),
+  }));
+  const slowActivePenaltiesEndTurnSaveHoles =
+    slowActivePenaltiesEndTurnSaveRequests.map((request) => request.hole);
   const abilityD20TestEndTurnSaveRequests =
     abilityD20TestRollModeEndTurnSaveEffects(actor).map((effect) => ({
       effect,
@@ -5356,7 +5524,10 @@ export function resolveEndTurnCommand(
         input.state,
         actor === undefined
           ? []
-          : wardingBondSavingThrowFlatBonusProjectionsForTarget(actor),
+          : savingThrowFlatBonusProjections(
+              input.state,
+              effect.save.ability,
+            ).filter((projection) => projection.targetId === actorId),
       ),
     }));
   const abilityD20TestEndTurnSaveHoles = abilityD20TestEndTurnSaveRequests.map(
@@ -5394,9 +5565,10 @@ export function resolveEndTurnCommand(
               effect,
               nextActor === undefined
                 ? []
-                : wardingBondSavingThrowFlatBonusProjectionsForTarget(
-                    nextActor,
-                  ),
+                : savingThrowFlatBonusProjections(
+                    input.state,
+                    effect.save.ability,
+                  ).filter((projection) => projection.targetId === nextActorId),
             ),
           },
         ]
@@ -5409,6 +5581,7 @@ export function resolveEndTurnCommand(
     ...sleepRepeatSaveHoles,
     ...hideousLaughterRepeatSaveHoles,
     ...spellConditionEndTurnSaveHoles,
+    ...slowActivePenaltiesEndTurnSaveHoles,
     ...abilityD20TestEndTurnSaveHoles,
     ...endTurnDamageHoles,
     ...(needsDeathSavingThrow ? [deathSavingThrowHole(nextActorId)] : []),
@@ -5490,6 +5663,14 @@ export function resolveEndTurnCommand(
       return fill === undefined ? [] : [fill];
     },
   );
+  const slowActivePenaltiesEndTurnSaves =
+    slowActivePenaltiesEndTurnSaveRequests.flatMap((request) => {
+      const fill = slowActivePenaltiesEndTurnSavingThrowOutcomeFor(
+        savingThrowOutcomeFills,
+        request.hole,
+      );
+      return fill === undefined ? [] : [fill];
+    });
   const abilityD20TestEndTurnSaves = abilityD20TestEndTurnSaveRequests.flatMap(
     (request) => {
       const fill = abilityD20TestRollModeEndTurnSavingThrowOutcomeFor(
@@ -5539,6 +5720,20 @@ export function resolveEndTurnCommand(
   if (missingSpellConditionEndTurnSaveHoles.length > 0) {
     return needsHolesResult(input.state, input.subject, [
       ...missingSpellConditionEndTurnSaveHoles,
+    ]);
+  }
+  const missingSlowActivePenaltiesEndTurnSaveHoles =
+    slowActivePenaltiesEndTurnSaveRequests.flatMap((request) =>
+      slowActivePenaltiesEndTurnSavingThrowOutcomeFor(
+        savingThrowOutcomeFills,
+        request.hole,
+      ) === undefined
+        ? [request.hole]
+        : [],
+    );
+  if (missingSlowActivePenaltiesEndTurnSaveHoles.length > 0) {
+    return needsHolesResult(input.state, input.subject, [
+      ...missingSlowActivePenaltiesEndTurnSaveHoles,
     ]);
   }
   const missingAbilityD20TestEndTurnSaveHoles =
@@ -5757,6 +5952,7 @@ export function resolveEndTurnCommand(
       ...sleepRepeatSaveHoles,
       ...hideousLaughterRepeatSaveHoles,
       ...spellConditionEndTurnSaveHoles,
+      ...slowActivePenaltiesEndTurnSaveHoles,
       ...abilityD20TestEndTurnSaveHoles,
       ...startTurnSaveHoles,
       ...endTurnHideousLaughterDamageRepeatSaveHoles,
@@ -5781,6 +5977,7 @@ export function resolveEndTurnCommand(
     sleepRepeatSaves.length +
       hideousLaughterRepeatSaves.length +
       spellConditionEndTurnSaves.length +
+      slowActivePenaltiesEndTurnSaves.length +
       abilityD20TestEndTurnSaves.length +
       startTurnSaves.length +
       endTurnHideousLaughterDamageRepeatSaves.length +
@@ -5801,6 +5998,22 @@ export function resolveEndTurnCommand(
       continue;
     }
     const validation = validateSleepRepeatSavingThrowOutcome(
+      fill.value,
+      actorId,
+    );
+    if (validation !== null) {
+      return invalidResult(input.state, "invalidFill", validation);
+    }
+  }
+  for (const request of slowActivePenaltiesEndTurnSaveRequests) {
+    const fill = slowActivePenaltiesEndTurnSavingThrowOutcomeFor(
+      savingThrowOutcomeFills,
+      request.hole,
+    );
+    if (fill === undefined) {
+      continue;
+    }
+    const validation = validateSlowActivePenaltiesEndTurnSavingThrowOutcome(
       fill.value,
       actorId,
     );
@@ -6118,6 +6331,7 @@ export function resolveEndTurnCommand(
     sleepRepeatSaves,
     hideousLaughterRepeatSaves,
     spellConditionEndTurnSaves,
+    slowActivePenaltiesEndTurnSaves,
     abilityD20TestEndTurnSaves,
     endTurnDamageRolls,
     startTurnDamageRolls,

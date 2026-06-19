@@ -1,10 +1,12 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.druid-wild-shape-known-form unit-feature.grappler unit-feature.martial-arts-attack-projection
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-slow-active-penalties
 // KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.WILD_SHAPE_FORM_LIFECYCLE
 // Movement-budget and speed helpers extracted from battle-reducer.ts.
 // Cluster S (movement_speed). Mechanical extraction — no behavior change.
 // Reads creature-state-leaves.ts to avoid cycling back into G.
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SELF_TRANSFORMATION_MODE
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE
 
 import { Match } from "effect";
 import {
@@ -21,6 +23,7 @@ import {
   type CreatureSpeedFacts,
   type SpecialSpeedCandidate,
   type SpeedChange,
+  type SpeedRatioChange,
 } from "@dnd/shared-algebras/speed-algebra";
 import type { SpeedType } from "@dnd/shared/game-facts";
 import type { Size, StatBlockRecord } from "@dnd/surface/surface/types";
@@ -62,6 +65,7 @@ import {
 import { attackActionOptionsForActor } from "./attack-damage-apply.ts";
 import { combatantHasGrapplerSupportProfile } from "./grappler-support-profile.ts";
 import { selfTransformationModeSpecialSpeedKind } from "./spells-active-effects.ts";
+import { SLOW_ACTIVE_PENALTIES_SPEED_RATIO } from "./domain-constants.ts";
 import {
   combatantCanSee,
   combatantWearingArmor,
@@ -218,6 +222,7 @@ export function battleCreatureSpeedFacts(
   return {
     ordinarySpeedFeet: movementFeet(baseWalkSpeed(combatant)),
     speedChanges: battleSpeedChanges(combatant),
+    speedRatios: battleSpeedRatios(combatant),
     specialSpeeds: battleSpecialSpeedCandidates(combatant),
     terminalSpeedZero: battleTerminalSpeedZero(combatant, isGrappled),
   };
@@ -233,6 +238,16 @@ export function battleSpeedChanges(
   return [
     { deltaFeet: movementDeltaFeet(passiveFeatureDelta + activeEffectDelta) },
   ];
+}
+
+export function battleSpeedRatios(
+  combatant: BattleCreatureState,
+): readonly SpeedRatioChange[] {
+  return combatant.activeEffects.some(
+    (effect) => effect.kind === "slowActivePenalties",
+  )
+    ? [SLOW_ACTIVE_PENALTIES_SPEED_RATIO]
+    : [];
 }
 
 export function battleSpecialSpeedCandidates(
@@ -751,10 +766,7 @@ export function targetIsNoMoreThanOneSizeLarger(
   return SIZE_RANKS[target] - SIZE_RANKS[grappler] <= 1;
 }
 
-export function creatureSizeIsLargerThanSelf(
-  self: Size,
-  other: Size,
-): boolean {
+export function creatureSizeIsLargerThanSelf(self: Size, other: Size): boolean {
   return SIZE_RANKS[other] > SIZE_RANKS[self];
 }
 

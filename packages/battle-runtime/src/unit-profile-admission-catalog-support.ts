@@ -312,6 +312,8 @@ export const webUnitId = "web";
 
 export const sleetStormUnitId = "sleet_storm";
 
+export const slowUnitId = "slow";
+
 export const guidingBoltUnitId = "guiding_bolt";
 
 export const guidanceUnitId = "guidance";

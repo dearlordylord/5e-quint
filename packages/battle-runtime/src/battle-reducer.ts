@@ -20,6 +20,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-web-restraint-hazard
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-sleet-storm-area-hazard
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-slow-active-penalties
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magical-darkness-point-origin
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-antimagic-field-ongoing-spell-suppression
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-creature-size-change
@@ -3409,6 +3410,22 @@ export type SupportedSpellInvocation =
   | {
       readonly access: PreparedSpellAccess;
       readonly resource: SpellSlotInvocationResource;
+      readonly procedure: "slowActivePenalties";
+      readonly spell: SpellRecord;
+      readonly actionCost: "magicAction";
+      readonly ability: Extract<Ability, "wis">;
+      readonly dc: DcSource;
+      readonly targeting: Extract<
+        SpellTargeting,
+        { readonly kind: "pointOriginCube" }
+      >;
+      readonly maxTargets: 6;
+      readonly rangeFeet: MovementFeet;
+      readonly durationTicks: ElapsedTimeTicks;
+    }
+  | {
+      readonly access: PreparedSpellAccess;
+      readonly resource: SpellSlotInvocationResource;
       readonly procedure: "greaseGroundHazard";
       readonly spell: SpellRecord;
       readonly ability: Extract<Ability, "dex">;
@@ -3758,6 +3775,7 @@ type AnySupportedDamageSpellInvocation = Exclude<
       | "sleepTargetAdmission"
       | "hideousLaughter"
       | "hypnoticPattern"
+      | "slowActivePenalties"
       | "command"
       | "greaseGroundHazard"
       | "webRestraintHazard"
@@ -4677,6 +4695,7 @@ export type BattleSpellTargetListHole = {
         | "saveGatedAttackRollAdvantage"
         | "hideousLaughter"
         | "hypnoticPattern"
+        | "slowActivePenalties"
         | "creatureTypeProtection"
         | "creatureSizeIncrease"
         | "creatureSizeDecrease"
@@ -5125,6 +5144,26 @@ export type BattleSpellConditionEndTurnSavingThrowOutcomeHole = {
   readonly targetRollModes: readonly BattleSavingThrowRollModeProjection[];
   readonly targetFlatBonuses: readonly BattleSavingThrowFlatBonusProjection[];
 };
+export type BattleSlowActivePenaltiesEndTurnSavingThrowOutcomeHole = {
+  readonly holeInstanceKey: HoleInstanceKey;
+  readonly holeId: BattleHoleId;
+  readonly kind: "savingThrowOutcome";
+  readonly label: string;
+  readonly slowActivePenaltiesEndTurnSave: {
+    readonly targetId: CombatantId;
+    readonly sourceSpellId: SpellRecord["id"];
+    readonly sourceCombatantId: CombatantId;
+    readonly save: {
+      readonly ability: Extract<Ability, "wis">;
+      readonly dc: DcSource;
+    };
+  };
+  readonly ability: Extract<Ability, "wis">;
+  readonly dc: DcSource;
+  readonly areaChoices: readonly [];
+  readonly targetRollModes: readonly BattleSavingThrowRollModeProjection[];
+  readonly targetFlatBonuses: readonly BattleSavingThrowFlatBonusProjection[];
+};
 export type BattleAbilityD20TestRollModeEndTurnSavingThrowOutcomeHole = {
   readonly holeInstanceKey: HoleInstanceKey;
   readonly holeId: BattleHoleId;
@@ -5508,6 +5547,11 @@ type BattleSpellAreaChoiceKind =
       readonly affectedCreatureWitnesses: readonly BattleHypnoticPatternAffectedCreatureWitness[];
     }
   | {
+      readonly kind: "slowArea";
+      readonly cubeSideFeet: 40;
+      readonly affectedCreatureWitnesses: readonly BattleSlowAffectedCreatureWitness[];
+    }
+  | {
       readonly kind: "greaseGroundArea";
       readonly areaId: BattleAreaId;
     }
@@ -5539,6 +5583,11 @@ export type BattleHypnoticPatternAffectedCreatureWitness = {
   readonly targetId: CombatantId;
   readonly inCube: true;
   readonly canSeePattern: true;
+};
+export type BattleSlowAffectedCreatureWitness = {
+  readonly targetId: CombatantId;
+  readonly inCube: true;
+  readonly chosenByCaster: true;
 };
 export type BattleSavingThrowRollModeProjection = {
   readonly targetId: CombatantId;
@@ -5573,6 +5622,7 @@ export type BattleSpellSavingThrowOutcomeHole = {
         | "sleepTargetAdmission"
         | "hideousLaughter"
         | "hypnoticPattern"
+        | "slowActivePenalties"
         | "command"
         | "greaseGroundHazard"
         | "gustOfWindLine";
@@ -5914,6 +5964,7 @@ export type BattleHole =
   | BattleGustOfWindLineSavingThrowOutcomeHole
   | BattleGustOfWindLineDirectionChoiceHole
   | BattleSpellConditionEndTurnSavingThrowOutcomeHole
+  | BattleSlowActivePenaltiesEndTurnSavingThrowOutcomeHole
   | BattleAbilityD20TestRollModeEndTurnSavingThrowOutcomeHole
   | BattleFlamingSphereRamMovementHole
   | BattleMovableZoneRepositionMovementHole

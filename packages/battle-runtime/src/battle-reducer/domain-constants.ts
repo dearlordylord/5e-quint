@@ -101,6 +101,12 @@ export const CHROMATIC_ORB_CONTINUATION_LIMIT_KINDS = [
 export const HIDEOUS_LAUGHTER_REPEAT_SAVE_HOLE_KEY_PREFIX =
   "battle:hideous-laughter-repeat-save:";
 export const HIDEOUS_LAUGHTER_DURATION_TICKS = elapsedTimeTicks(10);
+export const SLOW_ACTIVE_PENALTIES_SPEED_RATIO = {
+  numerator: 1,
+  denominator: 2,
+} as const;
+export const SLOW_ACTIVE_PENALTIES_ARMOR_CLASS_DELTA = -2;
+export const SLOW_ACTIVE_PENALTIES_DEX_SAVE_DELTA = -2;
 export const OPEN_HAND_TECHNIQUE_DECISION_HOLE_ID = holeId(
   "battle:unit-feature:open-hand-technique:decision",
 );
@@ -220,8 +226,9 @@ export const WEAPON_MASTERY_CLEAVE_DAMAGE_DISPOSITION_HOLE_ID = holeId(
 );
 export const WEAPON_MASTERY_CLEAVE_DAMAGE_DISPOSITION_HOLE_INSTANCE =
   holeInstanceKey("battle:weapon-mastery-cleave:damage-disposition");
-export const REMARKABLE_ATHLETE_CRITICAL_HIT_MOVEMENT_DECISION_HOLE_ID =
-  holeId("battle:remarkable-athlete:critical-hit-movement:decision");
+export const REMARKABLE_ATHLETE_CRITICAL_HIT_MOVEMENT_DECISION_HOLE_ID = holeId(
+  "battle:remarkable-athlete:critical-hit-movement:decision",
+);
 export const REMARKABLE_ATHLETE_CRITICAL_HIT_MOVEMENT_DECISION_HOLE_INSTANCE =
   holeInstanceKey("battle:remarkable-athlete:critical-hit-movement:decision");
 export const REMARKABLE_ATHLETE_CRITICAL_HIT_MOVEMENT_HOLE_ID = holeId(

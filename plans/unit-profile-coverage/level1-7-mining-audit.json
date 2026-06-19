@@ -17,8 +17,7 @@
     },
     "auditedUniqueSpellIdentitiesByFinalDisposition": {
       "catalog-authored-review-required": 24,
-      "catalog-installed-owner-evidence-present": 8,
-      "catalog-installed-owner-evidence-required": 1,
+      "catalog-installed-owner-evidence-present": 9,
       "catalog-only/dead-for-now": 18,
       "missing-authored-record": 18,
       "needs-surface-widening": 7
@@ -36,9 +35,10 @@
     "rowsByBattleReadinessStatus": {
       "accepted": 472,
       "accepted-no-battle-effect": 232,
-      "battle-runtime-required": 40,
+      "battle-runtime-required": 37,
       "not-applicable": 77,
       "owner-evidence-required": 62,
+      "partial-battle-runtime": 3,
       "surface-widening-required": 17
     },
     "rowsByCatalogAdmission": {
@@ -57,8 +57,8 @@
     },
     "rowsByFinalDisposition": {
       "catalog-authored-review-required": 61,
-      "catalog-installed-owner-evidence-present": 486,
-      "catalog-installed-owner-evidence-required": 4,
+      "catalog-installed-owner-evidence-present": 489,
+      "catalog-installed-owner-evidence-required": 1,
       "catalog-only/dead-for-now": 187,
       "level-5-7-follow-up-required": 24,
       "missing-authored-record": 37,
@@ -94,9 +94,9 @@
     },
     "rowsByUnitProfileDisposition": {
       "not-recorded": 178,
-      "profile-subset-supported": 56,
+      "profile-subset-supported": 59,
       "supported-profile": 297,
-      "unsupported-profile": 369
+      "unsupported-profile": 366
     }
   },
   "rows": [
@@ -5615,7 +5615,7 @@
         "sourceInventoryRowId": "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_slow",
         "state": "present"
       },
-      "nextAction": "Promote follow-up split L3-FOLLOWUP-SLOW-ACTIVE-PENALTIES-RUNTIME, L3-FOLLOWUP-SLOW-TURN-AND-SOMATIC-RUNTIME: L3-FOLLOWUP-SLOW-ACTIVE-PENALTIES-RUNTIME owns Promote Slow's Magic Action and level-3+ Spell Slot spend, caster-owned Concentration, caller-supplied affected-creature set for the 40-foot Cube, Wisdom Saving Throw, failed-save active Speed ratio projection, -2 Armor Class projection, -2 Dexterity Saving Throw modifier, no-Reaction projection, and end-of-target-turn repeat Saving Throw cleanup for each affected target. Required output: Supported-profile or profile-subset-supported Slow claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for active penalties without authored-identity dispatch.; L3-FOLLOWUP-SLOW-TURN-AND-SOMATIC-RUNTIME owns Promote Slow's target-turn Action or Bonus Action mutual-exclusion rule, Attack-action one-attack cap, and 25 percent spell failure chance for affected targets casting spells with Somatic components after the active effect lifecycle exists. Required output: Focused action-resource, Attack action, spell component, chance-result, cleanup, and promoted Quint/runtime parity tests, consuming typed Slow Surface facts without spell-id-specific gates.",
+      "nextAction": "Owner-specific operational evidence is classified and present.",
       "rowId": "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_slow",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -5631,7 +5631,7 @@
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "battle-runtime-required"
+          "status": "partial-battle-runtime"
         },
         "battleReadinessClosure": {
           "state": "not-recorded"
@@ -5640,9 +5640,9 @@
           "state": "installed",
           "unitId": "slow"
         },
-        "finalDisposition": "catalog-installed-owner-evidence-required",
+        "finalDisposition": "catalog-installed-owner-evidence-present",
         "unitProfile": {
-          "disposition": "unsupported-profile",
+          "disposition": "profile-subset-supported",
           "state": "recorded"
         }
       }
@@ -29004,7 +29004,7 @@
         "sourceInventoryRowId": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_slow",
         "state": "present"
       },
-      "nextAction": "Promote follow-up split L3-FOLLOWUP-SLOW-ACTIVE-PENALTIES-RUNTIME, L3-FOLLOWUP-SLOW-TURN-AND-SOMATIC-RUNTIME: L3-FOLLOWUP-SLOW-ACTIVE-PENALTIES-RUNTIME owns Promote Slow's Magic Action and level-3+ Spell Slot spend, caster-owned Concentration, caller-supplied affected-creature set for the 40-foot Cube, Wisdom Saving Throw, failed-save active Speed ratio projection, -2 Armor Class projection, -2 Dexterity Saving Throw modifier, no-Reaction projection, and end-of-target-turn repeat Saving Throw cleanup for each affected target. Required output: Supported-profile or profile-subset-supported Slow claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for active penalties without authored-identity dispatch.; L3-FOLLOWUP-SLOW-TURN-AND-SOMATIC-RUNTIME owns Promote Slow's target-turn Action or Bonus Action mutual-exclusion rule, Attack-action one-attack cap, and 25 percent spell failure chance for affected targets casting spells with Somatic components after the active effect lifecycle exists. Required output: Focused action-resource, Attack action, spell component, chance-result, cleanup, and promoted Quint/runtime parity tests, consuming typed Slow Surface facts without spell-id-specific gates.",
+      "nextAction": "Owner-specific operational evidence is classified and present.",
       "rowId": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_slow",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -29020,7 +29020,7 @@
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "battle-runtime-required"
+          "status": "partial-battle-runtime"
         },
         "battleReadinessClosure": {
           "state": "not-recorded"
@@ -29029,9 +29029,9 @@
           "state": "installed",
           "unitId": "slow"
         },
-        "finalDisposition": "catalog-installed-owner-evidence-required",
+        "finalDisposition": "catalog-installed-owner-evidence-present",
         "unitProfile": {
-          "disposition": "unsupported-profile",
+          "disposition": "profile-subset-supported",
           "state": "recorded"
         }
       }
@@ -38639,7 +38639,7 @@
         "sourceInventoryRowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_slow",
         "state": "present"
       },
-      "nextAction": "Promote follow-up split L3-FOLLOWUP-SLOW-ACTIVE-PENALTIES-RUNTIME, L3-FOLLOWUP-SLOW-TURN-AND-SOMATIC-RUNTIME: L3-FOLLOWUP-SLOW-ACTIVE-PENALTIES-RUNTIME owns Promote Slow's Magic Action and level-3+ Spell Slot spend, caster-owned Concentration, caller-supplied affected-creature set for the 40-foot Cube, Wisdom Saving Throw, failed-save active Speed ratio projection, -2 Armor Class projection, -2 Dexterity Saving Throw modifier, no-Reaction projection, and end-of-target-turn repeat Saving Throw cleanup for each affected target. Required output: Supported-profile or profile-subset-supported Slow claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for active penalties without authored-identity dispatch.; L3-FOLLOWUP-SLOW-TURN-AND-SOMATIC-RUNTIME owns Promote Slow's target-turn Action or Bonus Action mutual-exclusion rule, Attack-action one-attack cap, and 25 percent spell failure chance for affected targets casting spells with Somatic components after the active effect lifecycle exists. Required output: Focused action-resource, Attack action, spell component, chance-result, cleanup, and promoted Quint/runtime parity tests, consuming typed Slow Surface facts without spell-id-specific gates.",
+      "nextAction": "Owner-specific operational evidence is classified and present.",
       "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_slow",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -38655,7 +38655,7 @@
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "battle-runtime-required"
+          "status": "partial-battle-runtime"
         },
         "battleReadinessClosure": {
           "state": "not-recorded"
@@ -38664,9 +38664,9 @@
           "state": "installed",
           "unitId": "slow"
         },
-        "finalDisposition": "catalog-installed-owner-evidence-required",
+        "finalDisposition": "catalog-installed-owner-evidence-present",
         "unitProfile": {
-          "disposition": "unsupported-profile",
+          "disposition": "profile-subset-supported",
           "state": "recorded"
         }
       }
@@ -42102,7 +42102,7 @@
       ],
       "levelBand": "spell-level-3",
       "nextActions": [
-        "Promote follow-up split L3-FOLLOWUP-SLOW-ACTIVE-PENALTIES-RUNTIME, L3-FOLLOWUP-SLOW-TURN-AND-SOMATIC-RUNTIME: L3-FOLLOWUP-SLOW-ACTIVE-PENALTIES-RUNTIME owns Promote Slow's Magic Action and level-3+ Spell Slot spend, caster-owned Concentration, caller-supplied affected-creature set for the 40-foot Cube, Wisdom Saving Throw, failed-save active Speed ratio projection, -2 Armor Class projection, -2 Dexterity Saving Throw modifier, no-Reaction projection, and end-of-target-turn repeat Saving Throw cleanup for each affected target. Required output: Supported-profile or profile-subset-supported Slow claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for active penalties without authored-identity dispatch.; L3-FOLLOWUP-SLOW-TURN-AND-SOMATIC-RUNTIME owns Promote Slow's target-turn Action or Bonus Action mutual-exclusion rule, Attack-action one-attack cap, and 25 percent spell failure chance for affected targets casting spells with Somatic components after the active effect lifecycle exists. Required output: Focused action-resource, Attack action, spell component, chance-result, cleanup, and promoted Quint/runtime parity tests, consuming typed Slow Surface facts without spell-id-specific gates."
+        "Owner-specific operational evidence is classified and present."
       ],
       "spellName": "Slow",
       "supportSnapshot": {
@@ -42113,7 +42113,7 @@
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "battle-runtime-required"
+          "status": "partial-battle-runtime"
         },
         "battleReadinessClosure": {
           "state": "not-recorded"
@@ -42122,9 +42122,9 @@
           "state": "installed",
           "unitId": "slow"
         },
-        "finalDisposition": "catalog-installed-owner-evidence-required",
+        "finalDisposition": "catalog-installed-owner-evidence-present",
         "unitProfile": {
-          "disposition": "unsupported-profile",
+          "disposition": "profile-subset-supported",
           "state": "recorded"
         }
       }
