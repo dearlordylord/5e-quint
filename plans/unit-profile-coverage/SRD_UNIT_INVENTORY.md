@@ -143,8 +143,7 @@ This metric is a separate seed for spell-level-4 pressure only. It belongs to th
 ### Level-5 Class/Subclass Mining Rows by Disposition
 
 - catalog-installed-owner-evidence-present: 8
-- catalog-only/dead-for-now: 7
-- level-5-7-follow-up-required: 1
+- catalog-only/dead-for-now: 8
 - non-runtime: 12
 
 ### Level-6 Class/Subclass Mining Rows by Disposition
@@ -628,7 +627,7 @@ These batches are generated planning recommendations for a separate SRD inventor
 |Sorcerer Sorcerous Restoration|class feature|current-surface-can-express-source-facts|authored-record-present|installed|supported-profile|catalog-installed-owner-evidence-present|||Unit catalog/admission: catalog evidence; character-sheet-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Sorcerer.md:127|
 |Sorcerer level 5 feature table row|character-creation or progression mechanic|outside-surface-runtime-mechanics|authored-record-present|installed|unsupported-profile|non-runtime||||No runtime work; keep classification as explicit closure.|.references/srd-5.2.1/Classes/Sorcerer.md:39|
 |Warlock level 5 feature table row|character-creation or progression mechanic|outside-surface-runtime-mechanics|authored-record-present|installed|unsupported-profile|non-runtime||||No runtime work; keep classification as explicit closure.|.references/srd-5.2.1/Classes/Warlock.md:39|
-|Wizard Memorize Spell|class feature|current-surface-can-express-source-facts|missing-authored-record|not-installed||level-5-7-follow-up-required||||Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported.|.references/srd-5.2.1/Classes/Wizard.md:116|
+|Wizard Memorize Spell|class feature|current-surface-can-express-source-facts|missing-authored-record|not-installed|unsupported-profile|catalog-only/dead-for-now||character-fact-and-runtime-detached-split: future character-sheet-runtime Wizard prepared Spell Access Short Rest replacement owner plus existing class_wizard Spell Access/progression facts and spell invocation profiles||SRD Memorize Spell lets a Wizard who finishes a Short Rest study the spellbook and replace one prepared level 1+ Wizard spell with another level 1+ spell from that book. The existing class_wizard spellcasting record is the canonical owner for Wizard spellbook Spell Access, prepared-from-spellbook options, and level-5 spellbook/prepared-spell/Spell Slot progression; a future Character Sheet owner must consume those facts and Short Rest completion to rewrite the existing prepared Spell Access selection instead of adding a memorize-spell list, duplicate prepared-spell state, or authored-identity dispatch. Individual Spell Definition invocation behavior remains owned by spell invocation profiles.|.references/srd-5.2.1/Classes/Wizard.md:116|
 |Wizard level 5 feature table row|character-creation or progression mechanic|outside-surface-runtime-mechanics|authored-record-present|installed|unsupported-profile|non-runtime||||No runtime work; keep classification as explicit closure.|.references/srd-5.2.1/Classes/Wizard.md:39|
 
 ## Level-6 Class/Subclass Mining Rows

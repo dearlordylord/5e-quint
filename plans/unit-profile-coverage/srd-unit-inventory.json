@@ -345,8 +345,7 @@
     "levelFiveClassRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 8,
       "non-runtime": 12,
-      "catalog-only/dead-for-now": 7,
-      "level-5-7-follow-up-required": 1
+      "catalog-only/dead-for-now": 8
     },
     "levelSixClassRowsByDisposition": {
       "level-5-7-follow-up-required": 11,
@@ -373,8 +372,8 @@
     "allRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 484,
       "non-runtime": 84,
-      "catalog-only/dead-for-now": 177,
-      "level-5-7-follow-up-required": 23,
+      "catalog-only/dead-for-now": 178,
+      "level-5-7-follow-up-required": 22,
       "needs-surface-widening": 17,
       "missing-authored-record": 50,
       "catalog-authored-review-required": 61,
@@ -35328,9 +35327,16 @@
         "state": "not-installed",
         "unitId": "wizard_memorize_spell"
       },
-      "finalDisposition": "level-5-7-follow-up-required",
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-only/dead-for-now",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "character-fact-and-runtime-detached-split",
+        "owner": "future character-sheet-runtime Wizard prepared Spell Access Short Rest replacement owner plus existing class_wizard Spell Access/progression facts and spell invocation profiles",
+        "reason": "SRD Memorize Spell lets a Wizard who finishes a Short Rest study the spellbook and replace one prepared level 1+ Wizard spell with another level 1+ spell from that book. The existing class_wizard spellcasting record is the canonical owner for Wizard spellbook Spell Access, prepared-from-spellbook options, and level-5 spellbook/prepared-spell/Spell Slot progression; a future Character Sheet owner must consume those facts and Short Rest completion to rewrite the existing prepared Spell Access selection instead of adding a memorize-spell list, duplicate prepared-spell state, or authored-identity dispatch. Individual Spell Definition invocation behavior remains owned by spell invocation profiles."
+      },
       "ownerEvidence": [],
-      "nextAction": "Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported."
+      "nextAction": "SRD Memorize Spell lets a Wizard who finishes a Short Rest study the spellbook and replace one prepared level 1+ Wizard spell with another level 1+ spell from that book. The existing class_wizard spellcasting record is the canonical owner for Wizard spellbook Spell Access, prepared-from-spellbook options, and level-5 spellbook/prepared-spell/Spell Slot progression; a future Character Sheet owner must consume those facts and Short Rest completion to rewrite the existing prepared Spell Access selection instead of adding a memorize-spell list, duplicate prepared-spell state, or authored-identity dispatch. Individual Spell Definition invocation behavior remains owned by spell invocation profiles."
     },
     {
       "id": "srd521:classes/wizard:level-5:class-table-summary:wizard_level_5_feature_table_row",

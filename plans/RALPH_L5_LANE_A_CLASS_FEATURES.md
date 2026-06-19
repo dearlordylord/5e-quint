@@ -151,7 +151,7 @@ out of scope unless a task's RAW pass finds a direct dependency.
 | 8 | L5-A08-PALADIN-FAITHFUL-STEED - Close Paladin Faithful Steed level 5 follow-up | done | none | Closed by unsupported-profile owner evidence splitting Character Sheet Spell Access/resource ownership from the existing Find Steed companion-control boundary. |
 | 9 | L5-A09-ROGUE-CUNNING-STRIKE - Close Rogue Cunning Strike level 5 follow-up | done | none | Closed by unsupported-profile owner evidence; promoted runtime execution is split to L5-A13. |
 | 10 | L5-A10-SORCERER-SORCEROUS-RESTORATION - Close Sorcerer Sorcerous Restoration level 5 follow-up | done | none | Closed by executable Character Sheet Short Rest recovery against the existing Font of Magic point-pool expenditure. |
-| 11 | L5-A11-WIZARD-MEMORIZE-SPELL - Close Wizard Memorize Spell level 5 follow-up | ready-for-research | none | Independent level-5 class feature row. |
+| 11 | L5-A11-WIZARD-MEMORIZE-SPELL - Close Wizard Memorize Spell level 5 follow-up | done | none | Closed by unsupported-profile owner evidence for the future Character Sheet prepared Spell Access Short Rest replacement owner using existing Wizard spellbook/progression facts. |
 | 12 | L5-A12-MONK-STUNNING-STRIKE-BATTLE-RUNTIME - Promote Monk Stunning Strike battle-runtime owner | ready-for-research | L5-A07-MONK-STUNNING-STRIKE | Executable split from Task 7 for promoted attack-hit rider behavior using existing Focus Point, Saving Throw, condition/effect, Speed, and Attack Roll Advantage owners. |
 | 13 | L5-A13-ROGUE-CUNNING-STRIKE-BATTLE-RUNTIME - Promote Rogue Cunning Strike battle-runtime owner | ready-for-research | L5-A09-ROGUE-CUNNING-STRIKE | Executable split from Task 9 for promoted Sneak Attack damage-exchange behavior using existing Sneak Attack, Saving Throw, condition/effect, movement, Opportunity Attack, and inventory/tool-possession owners. |
 
@@ -579,7 +579,7 @@ Verification:
 
 ### Task 11 - L5-A11-WIZARD-MEMORIZE-SPELL
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -595,7 +595,12 @@ SRD anchor:
 
 Current state:
 
-- The mined row is not installed and has no unit profile/evidence row.
+- The mined row is closed by an unsupported-profile Unit claim with
+  checker-readable owner evidence. Memorize Spell is a Character Sheet prepared
+  Spell Access Short Rest replacement feature over the existing Wizard
+  spellbook source; `class_wizard` remains the canonical owner for Wizard
+  spellbook Spell Access, prepared-from-spellbook options, and level-5
+  spellbook/prepared-spell/Spell Slot progression.
 
 Output:
 
