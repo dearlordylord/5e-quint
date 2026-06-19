@@ -43,14 +43,14 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
-      "denominator": 448,
-      "numerator": 264,
-      "percent": "58.9%"
+      "denominator": 449,
+      "numerator": 265,
+      "percent": "59%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 536,
-      "numerator": 314,
-      "percent": "58.6%"
+      "denominator": 537,
+      "numerator": 315,
+      "percent": "58.7%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,16 +59,16 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 315
+      "value": 316
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 186,
-      "numerator": 181,
+      "denominator": 187,
+      "numerator": 182,
       "percent": "97.3%"
     },
     "profileClassificationCoverage": {
-      "denominator": 315,
-      "numerator": 315,
+      "denominator": 316,
+      "numerator": 316,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -112,9 +112,9 @@
       "percent": "98.3%"
     },
     "supportedProfileCoverage": {
-      "denominator": 265,
-      "numerator": 186,
-      "percent": "70.2%"
+      "denominator": 266,
+      "numerator": 187,
+      "percent": "70.3%"
     }
   },
   "metricSemantics": [
@@ -3262,6 +3262,32 @@
         {
           "kind": "runtime-test",
           "ownerPath": "packages/character-sheet-runtime/src/resources.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "character-sheet.sorcerous-restoration-sorcery-point-recovery",
+      "profileKind": "character-sheet",
+      "qntOwners": [],
+      "runtimeOwners": [
+        "packages/character-sheet-runtime/src/resources.ts",
+        "packages/character-sheet-runtime/src/healing-rest-benefit.ts",
+        "packages/character-sheet-runtime/src/rests.ts",
+        "packages/character-sheet-runtime/src/sheet-lifecycle.ts"
+      ],
+      "sourceBoundary": "Character Sheet consumes a retained Sorcerer level-5 Sorcerous Restoration feature whose Surface mechanics reference the existing Font of Magic Sorcery Point point-pool resource, Short Rest trigger, half-Sorcerer-level rounded-down recovery cap, and Long Rest reset cadence. Shared Short Rest benefit callers, including ordinary Short Rest completion, Long Rest interruption after 1 hour, and spell-granted Short Rest benefits, can reduce only the existing Font of Magic pointPoolResource expenditure, record a Long Rest-cleared feature-use marker, reject repeat use before Long Rest, and validate stored use state against retained feature ownership without adding a second Sorcery Point pool.",
+      "taskRefs": [
+        "L5-A10-SORCERER-SORCEROUS-RESTORATION"
+      ],
+      "title": "Character Sheet applies Sorcerous Restoration Short Rest Sorcery Point recovery",
+      "verificationOwners": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-sheet-runtime/src/resources.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-sheet-runtime/src/healing-rest-benefit.test.ts"
         }
       ]
     },
@@ -16703,6 +16729,14 @@
         "character-creation.species-lineage-choice"
       ],
       "taskId": "LT4-B04-GNOME-SPECIES-ADMISSION-EVIDENCE"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused Surface catalog and Character Sheet runtime tests cover Sorcerer level-5 Sorcerous Restoration authoring, ordinary and spell-granted Short Rest recovery from the existing Font of Magic Sorcery Point point-pool expenditure, half-Sorcerer-level rounded-down recovery cap, once-per-Long-Rest use marker, stored use ownership validation, and Long Rest clearing without adding a second Sorcery Point pool. Long Rest interruptions after 1 hour share the same Short Rest benefit owner and input shape.",
+      "profileIds": [
+        "character-sheet.sorcerous-restoration-sorcery-point-recovery"
+      ],
+      "taskId": "L5-A10-SORCERER-SORCEROUS-RESTORATION"
     }
   ],
   "unitGroupDenominatorAudit": {
@@ -16771,17 +16805,17 @@
         "unsupportedOrOtherUnits": 23
       },
       {
-        "executableUnitDenominator": 93,
-        "installedUnitDenominator": 93,
+        "executableUnitDenominator": 94,
+        "installedUnitDenominator": 94,
         "kind": "class_feature",
         "label": "Class-feature Units",
-        "profileFactDenominator": 119,
+        "profileFactDenominator": 120,
         "profileSubsetSupportedUnits": 8,
         "selectedIdentityDeferredNonApplicableUnits": 0,
         "selectedIdentityReplayDenominator": 74,
         "selectedIdentityReplayGapUnits": 0,
         "selectedIdentityReplayWitnessUnits": 74,
-        "supportedProfileUnits": 71,
+        "supportedProfileUnits": 72,
         "unsupportedOrOtherUnits": 14
       }
     ]
@@ -22619,6 +22653,69 @@
       ],
       "sourceRecordPath": "packages/surface/content/sorcerer_metamagic.json",
       "unitId": "sorcerer_metamagic"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "profileIds": [
+          "character-sheet.sorcerous-restoration-sorcery-point-recovery"
+        ],
+        "selectedIdentityEvidenceDisposition": {
+          "owner": "character-sheet-runtime deterministic rest/resource projection owner",
+          "reason": "Sorcerous Restoration support is retained CharacterBuild class-feature ownership plus Character Sheet Short Rest recovery against the existing Font of Magic point-pool expenditure. It has no battle-runtime selected Unit identity replay boundary; focused Character Sheet tests bind the authored Unit identity to the executable typed rest trigger, resource, cap, and Long Rest reset facts.",
+          "tag": "not-applicable"
+        },
+        "supportedMechanics": [
+          "Surface installs Sorcerous Restoration as a Sorcerer level-5 class feature with typed Short Rest Sorcery Point recovery mechanics that reference the existing Font of Magic point-pool resource, half-Sorcerer-level rounded-down recovery cap, and Long Rest reset cadence",
+          "Character Sheet applies optional Short Rest recovery through the shared Short Rest benefit boundary, including ordinary Short Rest completion, Long Rest interruption after 1 hour, and spell-granted Short Rest benefits, by reducing only the existing Font of Magic pointPoolResource expenditure, rejecting zero recovery, over-recovery beyond expended points, and recovery above the SRD cap",
+          "Character Sheet records a Sorcerous Restoration used-since-Long-Rest marker, rejects repeat use before Long Rest, validates stored use state against retained Sorcerer level-5 feature ownership, and clears the marker and point-pool expenditure on Long Rest"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/character-sheet-runtime/src/resources.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L5-A10-SORCERER-SORCEROUS-RESTORATION"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [
+        {
+          "id": "character-sheet.sorcerous-restoration-sorcery-point-recovery",
+          "profileKind": "character-sheet",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/character-sheet-runtime/src/resources.ts",
+            "packages/character-sheet-runtime/src/healing-rest-benefit.ts",
+            "packages/character-sheet-runtime/src/rests.ts",
+            "packages/character-sheet-runtime/src/sheet-lifecycle.ts"
+          ],
+          "sourceBoundary": "Character Sheet consumes a retained Sorcerer level-5 Sorcerous Restoration feature whose Surface mechanics reference the existing Font of Magic Sorcery Point point-pool resource, Short Rest trigger, half-Sorcerer-level rounded-down recovery cap, and Long Rest reset cadence. Shared Short Rest benefit callers, including ordinary Short Rest completion, Long Rest interruption after 1 hour, and spell-granted Short Rest benefits, can reduce only the existing Font of Magic pointPoolResource expenditure, record a Long Rest-cleared feature-use marker, reject repeat use before Long Rest, and validate stored use state against retained feature ownership without adding a second Sorcery Point pool.",
+          "taskRefs": [
+            "L5-A10-SORCERER-SORCEROUS-RESTORATION"
+          ],
+          "title": "Character Sheet applies Sorcerous Restoration Short Rest Sorcery Point recovery",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-sheet-runtime/src/resources.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-sheet-runtime/src/healing-rest-benefit.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/sorcerer_sorcerous_restoration.json",
+      "unitId": "sorcerer_sorcerous_restoration"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

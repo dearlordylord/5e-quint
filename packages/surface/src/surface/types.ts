@@ -656,6 +656,9 @@ export type DruidClassFeatureMechanics = Schema.Schema.Type<
 export type WarlockPactSlotRecoveryMechanics = Schema.Schema.Type<
   typeof SurfaceSchema.WarlockPactSlotRecoveryMechanicsSchema
 >;
+export type SorcererSorcerousRestorationMechanics = Schema.Schema.Type<
+  typeof SurfaceSchema.SorcererSorcerousRestorationMechanicsSchema
+>;
 export type WeaponMasteryChoiceMechanics = Schema.Schema.Type<
   typeof SurfaceSchema.WeaponMasteryChoiceMechanicsSchema
 >;

@@ -213,6 +213,8 @@ export const druidWildShapeShortRestRecoveryTestName =
   "Short Rest partially restores the Druid Wild Shape use pool";
 export const sorcererFontOfMagicLongRestRecoveryTestName =
   "Long Rest restores the Sorcerer Font of Magic Sorcery Point pool";
+export const sorcererSorcerousRestorationShortRestRecoveryTestName =
+  "Sorcerous Restoration recovers Sorcery Points on Short Rest once per Long Rest";
 export const sorcererFontOfMagicSlotConversionTestName =
   "Font of Magic converts an ordinary Spell Slot into Sorcery Points";
 export const sorcererFontOfMagicSlotConversionGateTestName =

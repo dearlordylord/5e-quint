@@ -42,8 +42,8 @@
       "surface-widening-required": 17
     },
     "rowsByCatalogAdmission": {
-      "installed": 657,
-      "not-installed": 243
+      "installed": 658,
+      "not-installed": 242
     },
     "rowsByCategory": {
       "character-creation or progression mechanic": 172,
@@ -57,10 +57,10 @@
     },
     "rowsByFinalDisposition": {
       "catalog-authored-review-required": 49,
-      "catalog-installed-owner-evidence-present": 487,
+      "catalog-installed-owner-evidence-present": 488,
       "catalog-installed-owner-evidence-required": 4,
-      "catalog-only/dead-for-now": 185,
-      "level-5-7-follow-up-required": 24,
+      "catalog-only/dead-for-now": 186,
+      "level-5-7-follow-up-required": 22,
       "missing-authored-record": 50,
       "needs-surface-widening": 17,
       "non-runtime": 84
@@ -93,10 +93,10 @@
       "subclass-spell-access": 5
     },
     "rowsByUnitProfileDisposition": {
-      "not-recorded": 179,
+      "not-recorded": 177,
       "profile-subset-supported": 53,
-      "supported-profile": 301,
-      "unsupported-profile": 367
+      "supported-profile": 302,
+      "unsupported-profile": 368
     }
   },
   "rows": [
@@ -25250,7 +25250,7 @@
         "sourceInventoryRowId": "srd521:classes/sorcerer:level-5:class-feature-grant:sorcerer_sorcerous_restoration",
         "state": "present"
       },
-      "nextAction": "Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported.",
+      "nextAction": "Owner-specific operational evidence is classified and present.",
       "rowId": "srd521:classes/sorcerer:level-5:class-feature-grant:sorcerer_sorcerous_restoration",
       "rowKind": "class-feature-grant",
       "source": {
@@ -25260,7 +25260,9 @@
       },
       "supportSnapshot": {
         "authoredContent": {
-          "state": "missing-authored-record"
+          "sourceRecordPath": "packages/surface/content/sorcerer_sorcerous_restoration.json",
+          "state": "authored-record-present",
+          "unitId": "sorcerer_sorcerous_restoration"
         },
         "battleReadiness": {
           "state": "not-applicable"
@@ -25269,12 +25271,13 @@
           "state": "not-recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "sorcerer_sorcerous_restoration"
         },
-        "finalDisposition": "level-5-7-follow-up-required",
+        "finalDisposition": "catalog-installed-owner-evidence-present",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "supported-profile",
+          "state": "recorded"
         }
       }
     },
@@ -33802,7 +33805,7 @@
         "sourceInventoryRowId": "srd521:classes/wizard:level-5:class-feature-grant:wizard_memorize_spell",
         "state": "present"
       },
-      "nextAction": "Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported.",
+      "nextAction": "SRD Memorize Spell lets a Wizard who finishes a Short Rest study the spellbook and replace one prepared level 1+ Wizard spell with another level 1+ spell from that book. The existing class_wizard spellcasting record is the canonical owner for Wizard spellbook Spell Access, prepared-from-spellbook options, and level-5 spellbook/prepared-spell/Spell Slot progression; a future Character Sheet owner must consume those facts and Short Rest completion to rewrite the existing prepared Spell Access selection instead of adding a memorize-spell list, duplicate prepared-spell state, or authored-identity dispatch. Individual Spell Definition invocation behavior remains owned by spell invocation profiles.",
       "rowId": "srd521:classes/wizard:level-5:class-feature-grant:wizard_memorize_spell",
       "rowKind": "class-feature-grant",
       "source": {
@@ -33818,15 +33821,19 @@
           "state": "not-applicable"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "character-fact-and-runtime-detached-split",
+          "owner": "future character-sheet-runtime Wizard prepared Spell Access Short Rest replacement owner plus existing class_wizard Spell Access/progression facts and spell invocation profiles",
+          "reason": "SRD Memorize Spell lets a Wizard who finishes a Short Rest study the spellbook and replace one prepared level 1+ Wizard spell with another level 1+ spell from that book. The existing class_wizard spellcasting record is the canonical owner for Wizard spellbook Spell Access, prepared-from-spellbook options, and level-5 spellbook/prepared-spell/Spell Slot progression; a future Character Sheet owner must consume those facts and Short Rest completion to rewrite the existing prepared Spell Access selection instead of adding a memorize-spell list, duplicate prepared-spell state, or authored-identity dispatch. Individual Spell Definition invocation behavior remains owned by spell invocation profiles.",
+          "state": "recorded"
         },
         "catalogAdmission": {
           "state": "not-installed",
           "unitId": "wizard_memorize_spell"
         },
-        "finalDisposition": "level-5-7-follow-up-required",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },

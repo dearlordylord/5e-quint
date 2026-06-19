@@ -42,10 +42,10 @@ These counts describe the current runtime/catalog state of mined rows. They are 
 | Disposition | Rows |
 | --- | ---: |
 | catalog-authored-review-required | 49 |
-| catalog-installed-owner-evidence-present | 487 |
+| catalog-installed-owner-evidence-present | 488 |
 | catalog-installed-owner-evidence-required | 4 |
-| catalog-only/dead-for-now | 185 |
-| level-5-7-follow-up-required | 24 |
+| catalog-only/dead-for-now | 186 |
+| level-5-7-follow-up-required | 22 |
 | missing-authored-record | 50 |
 | needs-surface-widening | 17 |
 | non-runtime | 84 |
@@ -54,17 +54,17 @@ These counts describe the current runtime/catalog state of mined rows. They are 
 
 | Catalog state | Rows |
 | --- | ---: |
-| installed | 657 |
-| not-installed | 243 |
+| installed | 658 |
+| not-installed | 242 |
 
 ### Unit Profile Disposition
 
 | Unit profile disposition | Rows |
 | --- | ---: |
-| not-recorded | 179 |
+| not-recorded | 177 |
 | profile-subset-supported | 53 |
-| supported-profile | 301 |
-| unsupported-profile | 367 |
+| supported-profile | 302 |
+| unsupported-profile | 368 |
 
 ### Battle Readiness Snapshot
 
@@ -831,7 +831,7 @@ These counts separate class-list rows from unique Spell Definition identities. A
 | Sorcerer Draconic Spells | level-3 | character-level | spell access/list pressure | `sorcerer_draconic_spells` | `.references/srd-5.2.1/Classes/Sorcerer.md:419` | present | installed | supported-profile | catalog-installed-owner-evidence-present | accepted | character-fact-and-runtime-detached-split: character-sheet-runtime plus spell invocation profiles | Owner-specific operational evidence is classified and present. |
 | Sorcerer Ability Score Improvement | level-4 | character-level | class feature | `sorcerer_ability_score_improvement_l4` | `.references/srd-5.2.1/Classes/Sorcerer.md:123` | present | installed | unsupported-profile | catalog-only/dead-for-now | accepted-no-battle-effect | selection-grant-container: character-creation-runtime ability-score projection and selected feat Unit profiles | The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim. |
 | Sorcerer level 4 feature table row | level-4 | character-level | character-creation or progression mechanic | `class_sorcerer` | `.references/srd-5.2.1/Classes/Sorcerer.md:38` | present | installed | unsupported-profile | non-runtime | accepted-no-battle-effect | not-recorded | No runtime work; keep classification as explicit closure. |
-| Sorcerer Sorcerous Restoration | level-5 | character-level | class feature | `sorcerer_sorcerous_restoration` | `.references/srd-5.2.1/Classes/Sorcerer.md:127` | present | not-installed | not-recorded | level-5-7-follow-up-required | not-applicable | not-recorded | Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported. |
+| Sorcerer Sorcerous Restoration | level-5 | character-level | class feature | `sorcerer_sorcerous_restoration` | `.references/srd-5.2.1/Classes/Sorcerer.md:127` | present | installed | supported-profile | catalog-installed-owner-evidence-present | not-applicable | not-recorded | Owner-specific operational evidence is classified and present. |
 | Sorcerer level 5 feature table row | level-5 | character-level | character-creation or progression mechanic | `class_sorcerer` | `.references/srd-5.2.1/Classes/Sorcerer.md:39` | present | installed | unsupported-profile | non-runtime | not-applicable | not-recorded | No runtime work; keep classification as explicit closure. |
 | Sorcerer Elemental Affinity | level-6 | character-level | class feature | `sorcerer_elemental_affinity` | `.references/srd-5.2.1/Classes/Sorcerer.md:432` | present | not-installed | not-recorded | level-5-7-follow-up-required | not-applicable | not-recorded | Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported. |
 | Sorcerer level 6 feature table row | level-6 | character-level | character-creation or progression mechanic | `class_sorcerer` | `.references/srd-5.2.1/Classes/Sorcerer.md:40` | present | installed | unsupported-profile | non-runtime | not-applicable | not-recorded | No runtime work; keep classification as explicit closure. |
@@ -1023,7 +1023,7 @@ These counts separate class-list rows from unique Spell Definition identities. A
 | Wizard Subclass | level-3 | character-level | subclass selection | `class_wizard` | `.references/srd-5.2.1/Classes/Wizard.md:108` | present | installed | unsupported-profile | catalog-installed-owner-evidence-present | accepted | not-recorded | Owner-specific operational evidence is classified and present. |
 | Wizard Ability Score Improvement | level-4 | character-level | class feature | `wizard_ability_score_improvement_l4` | `.references/srd-5.2.1/Classes/Wizard.md:112` | present | installed | unsupported-profile | catalog-only/dead-for-now | accepted-no-battle-effect | selection-grant-container: character-creation-runtime ability-score projection and selected feat Unit profiles | The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim. |
 | Wizard level 4 feature table row | level-4 | character-level | character-creation or progression mechanic | `class_wizard` | `.references/srd-5.2.1/Classes/Wizard.md:38` | present | installed | unsupported-profile | non-runtime | accepted-no-battle-effect | not-recorded | No runtime work; keep classification as explicit closure. |
-| Wizard Memorize Spell | level-5 | character-level | class feature | `wizard_memorize_spell` | `.references/srd-5.2.1/Classes/Wizard.md:116` | present | not-installed | not-recorded | level-5-7-follow-up-required | not-applicable | not-recorded | Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported. |
+| Wizard Memorize Spell | level-5 | character-level | class feature | `wizard_memorize_spell` | `.references/srd-5.2.1/Classes/Wizard.md:116` | present | not-installed | unsupported-profile | catalog-only/dead-for-now | not-applicable | character-fact-and-runtime-detached-split: future character-sheet-runtime Wizard prepared Spell Access Short Rest replacement owner plus existing class_wizard Spell Access/progression facts and spell invocation profiles | SRD Memorize Spell lets a Wizard who finishes a Short Rest study the spellbook and replace one prepared level 1+ Wizard spell with another level 1+ spell from that book. The existing class_wizard spellcasting record is the canonical owner for Wizard spellbook Spell Access, prepared-from-spellbook options, and level-5 spellbook/prepared-spell/Spell Slot progression; a future Character Sheet owner must consume those facts and Short Rest completion to rewrite the existing prepared Spell Access selection instead of adding a memorize-spell list, duplicate prepared-spell state, or authored-identity dispatch. Individual Spell Definition invocation behavior remains owned by spell invocation profiles. |
 | Wizard level 5 feature table row | level-5 | character-level | character-creation or progression mechanic | `class_wizard` | `.references/srd-5.2.1/Classes/Wizard.md:39` | present | installed | unsupported-profile | non-runtime | not-applicable | not-recorded | No runtime work; keep classification as explicit closure. |
 | Wizard Sculpt Spells | level-6 | character-level | class feature | `wizard_sculpt_spells` | `.references/srd-5.2.1/Classes/Wizard.md:421` | present | not-installed | not-recorded | level-5-7-follow-up-required | not-applicable | not-recorded | Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported. |
 | Wizard level 6 feature table row | level-6 | character-level | character-creation or progression mechanic | `class_wizard` | `.references/srd-5.2.1/Classes/Wizard.md:40` | present | installed | unsupported-profile | non-runtime | not-applicable | not-recorded | No runtime work; keep classification as explicit closure. |

@@ -8,16 +8,16 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 
 | Metric | Value |
 | --- | ---: |
-| Installed collection inventory count | 315 Units |
+| Installed collection inventory count | 316 Units |
 
 ## Coverage Metrics
 
 | Metric | Covered | Percent |
 | --- | ---: | ---: |
-| Authored Surface Unit catalog admission | 314/536 | 58.6% |
-| Authored Surface executable catalog admission | 264/448 | 58.9% |
-| Installed Unit profile classification coverage | 315/315 | 100% |
-| Supported executable Unit coverage | 186/265 | 70.2% |
+| Authored Surface Unit catalog admission | 315/537 | 58.7% |
+| Authored Surface executable catalog admission | 265/449 | 59% |
+| Installed Unit profile classification coverage | 316/316 | 100% |
+| Supported executable Unit coverage | 187/266 | 70.3% |
 | QNT profile modeling coverage | 122/122 | 100% |
 | QNT proof coverage | 119/122 | 97.5% |
 | Runtime mapping coverage | 122/122 | 100% |
@@ -25,7 +25,7 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | Rules-kernel profile join coverage | 160/160 | 100% |
 | Rules-kernel covered profile coverage | 160/160 | 100% |
 | Supported Unit rules-kernel chain coverage | 175/175 | 100% |
-| Deterministic admission/projection coverage | 181/186 | 97.3% |
+| Deterministic admission/projection coverage | 182/187 | 97.3% |
 | Selected identity replay coverage | 176/179 | 98.3% |
 | Classic non-SRD expression gate | 1/1 | 100% |
 
@@ -60,7 +60,7 @@ Background, feat, spell, and class-feature groups are counted from installed Uni
 | Background Units | 4 | 0 | 0 | 0 | 4 | 0 | 0/0 | 0 | 0 |
 | Feat Units | 13 | 13 | 9 | 0 | 4 | 11 | 6/8 | 2 | 0 |
 | Spell Units | 134 | 134 | 93 | 18 | 23 | 137 | 110/111 | 1 | 0 |
-| Class-feature Units | 93 | 93 | 71 | 8 | 14 | 119 | 74/74 | 0 | 0 |
+| Class-feature Units | 94 | 94 | 72 | 8 | 14 | 120 | 74/74 | 0 | 0 |
 
 | Denominator | Rule |
 | --- | --- |
@@ -146,6 +146,7 @@ The Unit matrix owns authored-content breadth. `plans/rules-kernel-coverage/prof
 | `rogue_steady_aim` | srd-5.2.1 | `unit-feature.rogue-steady-aim` |
 | `rogue_sneak_attack` | srd-5.2.1 | `unit-feature.attack-damage-rider` |
 | `sorcerer_innate_sorcery` | srd-5.2.1 | `unit-feature.innate-sorcery-activation` |
+| `sorcerer_sorcerous_restoration` | srd-5.2.1 | `character-sheet.sorcerous-restoration-sorcery-point-recovery` |
 | `sorcerer_draconic_resilience` | srd-5.2.1 | `character-creation.hit-point-maximum-projection`, `character-sheet.armor-class-base-formula` |
 | `sorcerer_draconic_spells` | srd-5.2.1 | `character-sheet.class-feature-prepared-spell-access` |
 | `warlock_eldritch_invocations` | srd-5.2.1 | `character-creation.eldritch-invocation-choice`, `character-creation.warlock-pact-magic-advancement` |
@@ -856,6 +857,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `rogue_sneak_attack` | `unit-feature.attack-damage-rider` | QMBT8 | `packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts` |
 | `sorcerer_innate_sorcery` | `unit-feature.innate-sorcery-activation` | SRDINV75A | `packages/battle-runtime/src/unit-profile-admission-class-roll-and-resource-features.test.ts` |
 | `sorcerer_innate_sorcery` | `unit-feature.innate-sorcery-activation` | SRDINV75B | `packages/battle-runtime/src/battle-runtime-test-support.ts` |
+| `sorcerer_sorcerous_restoration` | `character-sheet.sorcerous-restoration-sorcery-point-recovery` | L5-A10-SORCERER-SORCEROUS-RESTORATION | `packages/character-sheet-runtime/src/resources.test.ts` |
 | `sorcerer_draconic_resilience` | `character-creation.hit-point-maximum-projection`, `character-sheet.armor-class-base-formula` | L13UG-A15 | `packages/character-creation-runtime/src/index.test.ts` |
 | `sorcerer_draconic_resilience` | `character-creation.hit-point-maximum-projection`, `character-sheet.armor-class-base-formula` | L13UG-A15 | `packages/character-sheet-runtime/src/armor-class.test.ts` |
 | `warlock_eldritch_invocations` | `character-creation.eldritch-invocation-choice`, `character-creation.warlock-pact-magic-advancement` | L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE | `packages/character-creation-runtime/src/index.test.ts` |
@@ -1904,6 +1906,7 @@ These profile-subset rows have no selected-identity replay witness, but the decl
 | LT4-B02-GNOMISH-LINEAGE-CHOICE-OWNER | completed-runtime-parity | `character-creation.species-lineage-choice` |
 | LT4-B03-GNOME-LINEAGE-TRAIT-PROJECTION | completed-runtime-parity | `character-sheet.species-lineage-trait-projection` |
 | LT4-B04-GNOME-SPECIES-ADMISSION-EVIDENCE | completed-runtime-parity | `character-creation.species-lineage-choice` |
+| L5-A10-SORCERER-SORCEROUS-RESTORATION | completed-runtime-parity | `character-sheet.sorcerous-restoration-sorcery-point-recovery` |
 
 ## Supported Profiles Lacking Runtime Parity
 

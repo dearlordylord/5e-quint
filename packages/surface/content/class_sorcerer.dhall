@@ -10,12 +10,13 @@ let ClassSpellAccess : Type = { spellId : Text, spellLevel : Natural }
 let sorcerer =
       { armorTraining = { kind = "none" }
       , className = "sorcerer"
-      , description = "SRD Sorcerer class creation and early progression facts, including class-list prepared Spell Access, Spell Slots, spellcasting focus facts, level-1 and level-2 class-feature grants, level-3 subclass selection, and the level-4 Ability Score Improvement feature grant."
+      , description = "SRD Sorcerer class creation and early progression facts, including class-list prepared Spell Access, Spell Slots, spellcasting focus facts, level-1 and level-2 class-feature grants, level-3 subclass selection, the level-4 Ability Score Improvement feature grant, and the level-5 Sorcerous Restoration feature grant."
       , featureGrants =
         [ { level = 1, unitId = "sorcerer_innate_sorcery" }
         , { level = 2, unitId = "sorcerer_font_of_magic" }
         , { level = 2, unitId = "sorcerer_metamagic" }
         , { level = 4, unitId = "sorcerer_ability_score_improvement_l4" }
+        , { level = 5, unitId = "sorcerer_sorcerous_restoration" }
         ]
       , hitPointDie = 6
       , id = "class_sorcerer"
@@ -23,7 +24,7 @@ let sorcerer =
       , multiclassProficiencies = { kind = "none" }
       , name = "Sorcerer"
       , primaryAbilities = { abilities = [ "cha" ], kind = "all_of" }
-      , provenance = { kind = "srd-5.2.1", section = "Classes/Sorcerer.md:3-24,33-76,123-126" }
+      , provenance = { kind = "srd-5.2.1", section = "Classes/Sorcerer.md:3-24,33-76,123-129" }
       , savingThrowProficiencies = [ "con", "cha" ]
       , skillProficiencyChoice =
         { choose = 2, options = [ "arcana", "deception", "insight", "intimidation", "persuasion", "religion" ] }

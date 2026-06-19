@@ -945,6 +945,19 @@ export const RestSpellSlotRecoveryMechanicsSchema = Schema.Struct({
   }),
 });
 
+export const SorcererSorcerousRestorationMechanicsSchema = Schema.Struct({
+  family: Schema.Literal("sorcery_point_short_rest_recovery"),
+  recoveryTrigger: Schema.Literal("short_rest"),
+  resource: Schema.Struct({
+    kind: Schema.Literal("point_pool"),
+    resourceUnitId: Schema.Literal("sorcerer_font_of_magic"),
+  }),
+  recoveryCap: Schema.Struct({
+    kind: Schema.Literal("half_class_level_rounded_down"),
+  }),
+  resetCadence: Schema.Struct({ kind: Schema.Literal("long_rest") }),
+});
+
 const WizardSpellbookLearningEligibilitySchema = Schema.Struct({
   className: Schema.Literal("wizard"),
   school: SpellSchoolSchema,
@@ -1356,6 +1369,7 @@ export const ClassFeatureMechanicsSchema = Schema.Union(
   WeaponMasteryChoiceMechanicsSchema,
   SpellbookRitualAccessMechanicsSchema,
   RestSpellSlotRecoveryMechanicsSchema,
+  SorcererSorcerousRestorationMechanicsSchema,
   WizardSpellbookLearningMechanicsSchema,
   DruidWildCompanionSpellCastMechanicsSchema,
   WarlockPactSlotRecoveryMechanicsSchema,
@@ -1434,6 +1448,7 @@ export const RogueClassFeatureMechanicsSchema = Schema.Union(
 export const SorcererClassFeatureMechanicsSchema = Schema.Union(
   ClassGeneralFeatureMechanicsSchema,
   SorcererMetamagicMechanicsSchema,
+  SorcererSorcerousRestorationMechanicsSchema,
 );
 
 export const WarlockClassFeatureMechanicsSchema = Schema.Union(

@@ -3,9 +3,11 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.class-feature-point-pool-resource
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.metamagic-battle-resource-bridge
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.monk-uncanny-metabolism-initiative-recovery
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.sorcerous-restoration-sorcery-point-recovery
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS monk_monks_focus
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-CHARACTER-FACTS monk_uncanny_metabolism
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS sorcerer_font_of_magic
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L5-A10-SORCERER-SORCEROUS-RESTORATION sorcerer_sorcerous_restoration
 import { describe, expect, test } from "vitest";
 import {
   DieRollResult,
@@ -30,6 +32,7 @@ import {
   resourceCount,
   sorcererFontOfMagicBuild,
   sorcererFontOfMagicLongRestRecoveryTestName,
+  sorcererSorcerousRestorationShortRestRecoveryTestName,
   uncannyMetabolismInitiativeGatesTestName,
   uncannyMetabolismInitiativeRecoveryTestName,
   uncannyMetabolismLongRestUseStateTestName,
@@ -281,6 +284,160 @@ describe("Character Sheet runtime / resources", () => {
           tag: "pointPoolResource",
           unitId: SORCERER_FONT_OF_MAGIC_UNIT_ID,
           count: 2,
+          expended: 0,
+        }),
+      ]),
+    });
+  });
+
+  test(sorcererSorcerousRestorationShortRestRecoveryTestName, () => {
+    const sorcererBuild = sorcererFontOfMagicBuild({
+      sorcererAdvancements: 4,
+    });
+    const spent = requireRight(
+      createFreshCharacterSheet({
+        characterId: characterSheetId(
+          "character:sorcerer-sorcerous-restoration",
+        ),
+        build: sorcererBuild,
+        maximumHp: Hp(28),
+        currentHp: Hp(28),
+        tempHp: Hp(0),
+        unitLibrary,
+        resourceExpenditures: [
+          {
+            tag: "pointPoolResource",
+            unitId: SORCERER_FONT_OF_MAGIC_UNIT_ID,
+            expended: resourceCount(4),
+          },
+        ],
+      }),
+    );
+
+    expect(characterSheetResources(spent, unitLibrary)).toMatchObject({
+      _tag: "Right",
+      right: expect.arrayContaining([
+        expect.objectContaining({
+          tag: "pointPoolResource",
+          unitId: SORCERER_FONT_OF_MAGIC_UNIT_ID,
+          count: 5,
+          expended: 4,
+          resetCadence: { kind: "long_rest" },
+        }),
+      ]),
+    });
+
+    const shortRested = requireRight(
+      completeShortRest({
+        sheet: spent,
+        unitLibrary,
+        sorcerousRestoration: {
+          recoverSorceryPoints: resourceCount(2),
+        },
+      }),
+    );
+
+    expect(shortRested.resourceExpenditures).toEqual([
+      {
+        tag: "pointPoolResource",
+        unitId: SORCERER_FONT_OF_MAGIC_UNIT_ID,
+        expended: resourceCount(2),
+      },
+    ]);
+    expect(shortRested.restFeatureUses).toEqual([
+      { tag: "sorcerousRestoration", usedSinceLongRest: true },
+    ]);
+    expect(characterSheetResources(shortRested, unitLibrary)).toMatchObject({
+      _tag: "Right",
+      right: expect.arrayContaining([
+        expect.objectContaining({
+          tag: "pointPoolResource",
+          unitId: SORCERER_FONT_OF_MAGIC_UNIT_ID,
+          count: 5,
+          expended: 2,
+        }),
+      ]),
+    });
+
+    expect(
+      completeShortRest({
+        sheet: shortRested,
+        unitLibrary,
+        sorcerousRestoration: {
+          recoverSorceryPoints: resourceCount(1),
+        },
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        message:
+          "Sorcerous Restoration cannot be used again until a Long Rest.",
+      },
+    });
+    expect(
+      completeShortRest({
+        sheet: spent,
+        unitLibrary,
+        sorcerousRestoration: {
+          recoverSorceryPoints: resourceCount(3),
+        },
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        message:
+          "Sorcerous Restoration cannot recover more than half Sorcerer level rounded down.",
+      },
+    });
+
+    const lowerLevelSpent = requireRight(
+      createFreshCharacterSheet({
+        characterId: characterSheetId(
+          "character:sorcerer-no-sorcerous-restoration",
+        ),
+        build: sorcererFontOfMagicBuild({ sorcererAdvancements: 3 }),
+        maximumHp: Hp(24),
+        currentHp: Hp(24),
+        tempHp: Hp(0),
+        unitLibrary,
+        resourceExpenditures: [
+          {
+            tag: "pointPoolResource",
+            unitId: SORCERER_FONT_OF_MAGIC_UNIT_ID,
+            expended: resourceCount(2),
+          },
+        ],
+      }),
+    );
+
+    expect(
+      completeShortRest({
+        sheet: lowerLevelSpent,
+        unitLibrary,
+        sorcerousRestoration: {
+          recoverSorceryPoints: resourceCount(1),
+        },
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        message: "Sorcerous Restoration requires the Sorcerer level 5 feature.",
+      },
+    });
+
+    const longRested = requireRight(
+      completeLongRest({ sheet: shortRested, unitLibrary }),
+    );
+
+    expect(longRested.resourceExpenditures).toEqual([]);
+    expect(longRested.restFeatureUses).toEqual([]);
+    expect(characterSheetResources(longRested, unitLibrary)).toMatchObject({
+      _tag: "Right",
+      right: expect.arrayContaining([
+        expect.objectContaining({
+          tag: "pointPoolResource",
+          unitId: SORCERER_FONT_OF_MAGIC_UNIT_ID,
+          count: 5,
           expended: 0,
         }),
       ]),

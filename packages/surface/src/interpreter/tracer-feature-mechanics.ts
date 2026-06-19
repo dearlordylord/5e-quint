@@ -322,6 +322,19 @@ export function traceClassFeatureMechanics(
     }
     case "initiative_focus_recovery":
       return [traceInitiativeFocusRecoveryMechanics(m, nodes, edges, ids)];
+    case "sorcery_point_short_rest_recovery": {
+      const recoveryId = ids("sorceryPointShortRestRecovery");
+      nodes.push({
+        id: recoveryId,
+        category: "procedure",
+        atomKind: "sorcery_point_short_rest_recovery",
+        label:
+          `sorcery_point_short_rest_recovery\n${m.recoveryTrigger}\n` +
+          `${m.resource.resourceUnitId}\n${m.recoveryCap.kind}\n` +
+          `reset ${m.resetCadence.kind}`,
+      });
+      return [recoveryId];
+    }
     case "composite":
       return m.parts.map((part) => {
         switch (part.family) {
