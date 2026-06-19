@@ -18,6 +18,7 @@ export type AttachmentAndAreaEffectAtom = Extract<
     readonly kind:
       | "teleport"
       | "transport_exile"
+      | "ethereal_phase"
       | "make_weapon_attack"
       | "override_attached_weapon_attack"
       | "container_storage"
@@ -101,6 +102,26 @@ export function traceAttachmentAndAreaEffectAtom(
         category: "effect",
         atomKind: "transport_exile",
         label: `transport_exile\ndest: ${e.destination}`,
+      });
+      return id;
+    }
+    case "ethereal_phase": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "ethereal_phase",
+        label: [
+          "ethereal_phase",
+          `dest: ${e.destination}`,
+          `already there: ${e.alreadyAtDestination.kind}`,
+          `origin: ${e.originSpace}`,
+          `perceive origin: ${e.perception.maxOriginPlaneSightFeet} ft, ${e.perception.originPlaneAppearance}`,
+          `origin perception: ${e.perception.originPlaneCreaturesPerceiveSubject}`,
+          `interaction: ${e.interaction}`,
+          `return: ${e.returnPlan.timings.join(", ")}`,
+          `placement: ${e.returnPlan.placement.chooser} visible unoccupied within ${e.returnPlan.placement.maxFeet} ft, fallback ${e.returnPlan.placement.unavailableFallback}`,
+        ].join("\n"),
       });
       return id;
     }

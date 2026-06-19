@@ -19,9 +19,9 @@
       "catalog-authored-review-required": 24,
       "catalog-installed-owner-evidence-present": 7,
       "catalog-installed-owner-evidence-required": 1,
-      "catalog-only/dead-for-now": 17,
+      "catalog-only/dead-for-now": 18,
       "missing-authored-record": 20,
-      "needs-surface-widening": 7
+      "needs-surface-widening": 6
     },
     "auditedUniqueSpellIdentitiesByLevelBand": {
       "spell-level-3": 42,
@@ -35,15 +35,15 @@
     },
     "rowsByBattleReadinessStatus": {
       "accepted": 469,
-      "accepted-no-battle-effect": 228,
+      "accepted-no-battle-effect": 230,
       "battle-runtime-required": 48,
       "not-applicable": 77,
       "owner-evidence-required": 62,
-      "surface-widening-required": 16
+      "surface-widening-required": 14
     },
     "rowsByCatalogAdmission": {
-      "installed": 658,
-      "not-installed": 242
+      "installed": 660,
+      "not-installed": 240
     },
     "rowsByCategory": {
       "character-creation or progression mechanic": 172,
@@ -59,10 +59,10 @@
       "catalog-authored-review-required": 61,
       "catalog-installed-owner-evidence-present": 483,
       "catalog-installed-owner-evidence-required": 4,
-      "catalog-only/dead-for-now": 183,
+      "catalog-only/dead-for-now": 185,
       "level-5-7-follow-up-required": 24,
       "missing-authored-record": 45,
-      "needs-surface-widening": 16,
+      "needs-surface-widening": 14,
       "non-runtime": 84
     },
     "rowsByLevelBand": {
@@ -93,10 +93,10 @@
       "subclass-spell-access": 5
     },
     "rowsByUnitProfileDisposition": {
-      "not-recorded": 185,
+      "not-recorded": 183,
       "profile-subset-supported": 53,
       "supported-profile": 297,
-      "unsupported-profile": 365
+      "unsupported-profile": 367
     }
   },
   "rows": [
@@ -28294,7 +28294,7 @@
         "sourceInventoryRowId": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_blink",
         "state": "present"
       },
-      "nextAction": "Widen Surface: Spell Definition planar blink occurrence: caster-turn-end d6 threshold needs an OngoingEffect random table to gate the transition to the Ethereal Plane; spell-ending when the caster is already on that plane needs a plane-occupancy predicate; and start-of-next-turn/spell-end return placement chooses a visible unoccupied space within 10 feet of the origin space or the nearest unoccupied space when none is available, requiring typed Surface/table-spatial ownership for return-position availability.",
+      "nextAction": "Blink supplies typed Surface facts for the caster-turn-end random table, Ethereal Plane transition, already-on-plane spell-ending predicate, origin-space identity, origin-plane perception, Ethereal-only interaction, and return placement/fallback. Promoted battle runtime still needs a planar phase lifecycle owner that consumes caller/table-spatial plane occupancy, origin-space, visible-unoccupied availability within 10 feet, and nearest-unoccupied fallback witnesses without dispatching on Blink authored identity.",
       "rowId": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_blink",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -28304,25 +28304,28 @@
       },
       "supportSnapshot": {
         "authoredContent": {
-          "state": "missing-authored-record"
+          "sourceRecordPath": "packages/surface/content/blink.json",
+          "state": "authored-record-present",
+          "unitId": "blink"
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "surface-widening-required"
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
           "kind": "table-spatial-derivation",
-          "owner": "Surface Spell Definition plus table/spatial plane-position owner",
-          "reason": "Blink needs a typed follow-up split: Surface owns the caster-turn-end d6 random table, Ethereal Plane transition, and already-on-plane ending predicate; table/spatial ownership supplies origin space, visible unoccupied-space availability within 10 feet, and nearest-unoccupied-space fallback before any battle-runtime projection admits it.",
+          "owner": "future planar phase lifecycle owner plus table/spatial plane-position owner",
+          "reason": "Blink supplies typed Surface facts for the caster-turn-end random table, Ethereal Plane transition, already-on-plane spell-ending predicate, origin-space identity, origin-plane perception, Ethereal-only interaction, and return placement/fallback. Promoted battle runtime still needs a planar phase lifecycle owner that consumes caller/table-spatial plane occupancy, origin-space, visible-unoccupied availability within 10 feet, and nearest-unoccupied fallback witnesses without dispatching on Blink authored identity.",
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "blink"
         },
-        "finalDisposition": "needs-surface-widening",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },
@@ -37706,7 +37709,7 @@
         "sourceInventoryRowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_blink",
         "state": "present"
       },
-      "nextAction": "Widen Surface: Spell Definition planar blink occurrence: caster-turn-end d6 threshold needs an OngoingEffect random table to gate the transition to the Ethereal Plane; spell-ending when the caster is already on that plane needs a plane-occupancy predicate; and start-of-next-turn/spell-end return placement chooses a visible unoccupied space within 10 feet of the origin space or the nearest unoccupied space when none is available, requiring typed Surface/table-spatial ownership for return-position availability.",
+      "nextAction": "Blink supplies typed Surface facts for the caster-turn-end random table, Ethereal Plane transition, already-on-plane spell-ending predicate, origin-space identity, origin-plane perception, Ethereal-only interaction, and return placement/fallback. Promoted battle runtime still needs a planar phase lifecycle owner that consumes caller/table-spatial plane occupancy, origin-space, visible-unoccupied availability within 10 feet, and nearest-unoccupied fallback witnesses without dispatching on Blink authored identity.",
       "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_blink",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -37716,25 +37719,28 @@
       },
       "supportSnapshot": {
         "authoredContent": {
-          "state": "missing-authored-record"
+          "sourceRecordPath": "packages/surface/content/blink.json",
+          "state": "authored-record-present",
+          "unitId": "blink"
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "surface-widening-required"
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
           "kind": "table-spatial-derivation",
-          "owner": "Surface Spell Definition plus table/spatial plane-position owner",
-          "reason": "Blink needs a typed follow-up split: Surface owns the caster-turn-end d6 random table, Ethereal Plane transition, and already-on-plane ending predicate; table/spatial ownership supplies origin space, visible unoccupied-space availability within 10 feet, and nearest-unoccupied-space fallback before any battle-runtime projection admits it.",
+          "owner": "future planar phase lifecycle owner plus table/spatial plane-position owner",
+          "reason": "Blink supplies typed Surface facts for the caster-turn-end random table, Ethereal Plane transition, already-on-plane spell-ending predicate, origin-space identity, origin-plane perception, Ethereal-only interaction, and return placement/fallback. Promoted battle runtime still needs a planar phase lifecycle owner that consumes caller/table-spatial plane occupancy, origin-space, visible-unoccupied availability within 10 feet, and nearest-unoccupied fallback witnesses without dispatching on Blink authored identity.",
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "blink"
         },
-        "finalDisposition": "needs-surface-widening",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },
@@ -40241,30 +40247,33 @@
       ],
       "levelBand": "spell-level-3",
       "nextActions": [
-        "Widen Surface: Spell Definition planar blink occurrence: caster-turn-end d6 threshold needs an OngoingEffect random table to gate the transition to the Ethereal Plane; spell-ending when the caster is already on that plane needs a plane-occupancy predicate; and start-of-next-turn/spell-end return placement chooses a visible unoccupied space within 10 feet of the origin space or the nearest unoccupied space when none is available, requiring typed Surface/table-spatial ownership for return-position availability."
+        "Blink supplies typed Surface facts for the caster-turn-end random table, Ethereal Plane transition, already-on-plane spell-ending predicate, origin-space identity, origin-plane perception, Ethereal-only interaction, and return placement/fallback. Promoted battle runtime still needs a planar phase lifecycle owner that consumes caller/table-spatial plane occupancy, origin-space, visible-unoccupied availability within 10 feet, and nearest-unoccupied fallback witnesses without dispatching on Blink authored identity."
       ],
       "spellName": "Blink",
       "supportSnapshot": {
         "authoredContent": {
-          "state": "missing-authored-record"
+          "sourceRecordPath": "packages/surface/content/blink.json",
+          "state": "authored-record-present",
+          "unitId": "blink"
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "surface-widening-required"
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
           "kind": "table-spatial-derivation",
-          "owner": "Surface Spell Definition plus table/spatial plane-position owner",
-          "reason": "Blink needs a typed follow-up split: Surface owns the caster-turn-end d6 random table, Ethereal Plane transition, and already-on-plane ending predicate; table/spatial ownership supplies origin space, visible unoccupied-space availability within 10 feet, and nearest-unoccupied-space fallback before any battle-runtime projection admits it.",
+          "owner": "future planar phase lifecycle owner plus table/spatial plane-position owner",
+          "reason": "Blink supplies typed Surface facts for the caster-turn-end random table, Ethereal Plane transition, already-on-plane spell-ending predicate, origin-space identity, origin-plane perception, Ethereal-only interaction, and return placement/fallback. Promoted battle runtime still needs a planar phase lifecycle owner that consumes caller/table-spatial plane occupancy, origin-space, visible-unoccupied availability within 10 feet, and nearest-unoccupied fallback witnesses without dispatching on Blink authored identity.",
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "blink"
         },
-        "finalDisposition": "needs-surface-widening",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },

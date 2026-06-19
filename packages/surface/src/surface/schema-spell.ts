@@ -149,6 +149,37 @@ export const MentalMessageDeliveryEffectSchema = strictStruct({
   }),
 });
 
+export const EtherealPhaseEffectSchema = strictStruct({
+  kind: Schema.Literal("ethereal_phase"),
+  destination: Schema.Literal("ethereal_plane"),
+  alreadyAtDestination: strictStruct({
+    kind: Schema.Literal("end_current_effect"),
+  }),
+  originSpace: Schema.Literal("space_left"),
+  perception: strictStruct({
+    originPlaneAppearance: Schema.Literal("shades_of_gray"),
+    maxOriginPlaneSightFeet: Schema.Literal(60),
+    originPlaneCreaturesPerceiveSubject: Schema.Literal(
+      "only_with_special_ethereal_perception",
+    ),
+  }),
+  interaction: Schema.Literal("ethereal_plane_creatures_only"),
+  returnPlan: strictStruct({
+    timings: Schema.Tuple(
+      Schema.Literal("start_of_next_caster_turn"),
+      Schema.Literal("effect_end_if_on_destination"),
+    ),
+    placement: strictStruct({
+      kind: Schema.Literal(
+        "visible_unoccupied_space_within_feet_of_origin_space",
+      ),
+      chooser: Schema.Literal("caster"),
+      maxFeet: Schema.Literal(10),
+      unavailableFallback: Schema.Literal("nearest_unoccupied_space"),
+    }),
+  }),
+});
+
 const SPELL_CREATED_HELD_OBJECT_REQUIREMENTS = [
   "free_hand",
 ] as const satisfies ReadonlyNonEmptyArray<string>;
@@ -1213,6 +1244,7 @@ type EffectAtom =
   | { readonly kind: "block_divination_targeting_and_scrying_perception" }
   | Schema.Schema.Type<typeof DivinationOmenEffectSchema>
   | CourierTaskEffect
+  | Schema.Schema.Type<typeof EtherealPhaseEffectSchema>
   | {
       readonly kind: "grant_speed";
       readonly speedKind: "fly" | "swim" | "climb" | "burrow";
@@ -1633,6 +1665,13 @@ type RandomTableOutcome = {
   readonly phases?: ReadonlyNonEmptyArray<ActivationPhase>;
 };
 
+type OngoingRandomTableOutcome = {
+  readonly min: number;
+  readonly max: number;
+  readonly label: string;
+  readonly effects?: ReadonlyNonEmptyArray<OngoingEffect>;
+};
+
 type ContinuationPredicate = {
   readonly kind: "damage_roll_has_duplicate_faces";
   readonly minimumMultiplicity: 2;
@@ -1719,6 +1758,11 @@ type ActivationPhase =
 
 type OngoingEffect =
   | EffectAtom
+  | {
+      readonly kind: "random_table";
+      readonly roll: RandomTableRoll;
+      readonly outcomes: ReadonlyNonEmptyArray<OngoingRandomTableOutcome>;
+    }
   | {
       readonly kind: "save_gate";
       readonly attachment?: AreaAttachment;
@@ -3626,6 +3670,7 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
       }),
       DivinationOmenEffectSchema,
       CourierTaskEffectSchema,
+      EtherealPhaseEffectSchema,
       Schema.Struct({
         kind: Schema.Literal("grant_speed"),
         speedKind: Schema.Literal("fly", "swim", "climb", "burrow"),
@@ -4019,6 +4064,19 @@ export const RandomTableOutcomeSchema: Schema.suspend<
   }),
 );
 
+export const OngoingRandomTableOutcomeSchema: Schema.suspend<
+  OngoingRandomTableOutcome,
+  OngoingRandomTableOutcome,
+  never
+> = Schema.suspend(() =>
+  Schema.Struct({
+    min: Schema.Number,
+    max: Schema.Number,
+    label: Schema.String,
+    effects: optionalExact(nonEmpty(OngoingEffectSchema)),
+  }),
+);
+
 export const PhaseContinuationSchema: Schema.suspend<
   PhaseContinuation,
   PhaseContinuation,
@@ -4119,6 +4177,11 @@ export const OngoingEffectSchema: Schema.suspend<
 > = Schema.suspend(() =>
   Schema.Union(
     EffectAtomSchema,
+    Schema.Struct({
+      kind: Schema.Literal("random_table"),
+      roll: RandomTableRollSchema,
+      outcomes: nonEmpty(OngoingRandomTableOutcomeSchema),
+    }),
     Schema.Struct({
       kind: Schema.Literal("save_gate"),
       attachment: optionalExact(AreaAttachmentSchema),

@@ -174,6 +174,7 @@ export function traceEffectAtomScaling(
     case "modify_proficiency_bonus":
     case "teleport":
     case "transport_exile":
+    case "ethereal_phase":
     case "container_storage":
     case "create_extradimensional_space":
     case "create_sensor":
@@ -438,6 +439,20 @@ export function traceOngoingChoiceEffectScaling(
           edges,
           ids,
         );
+      }
+      return;
+    case "random_table":
+      for (const outcome of eff.outcomes) {
+        for (const effect of outcome.effects ?? []) {
+          traceOngoingChoiceEffectScaling(
+            effect,
+            effectId,
+            slotId,
+            nodes,
+            edges,
+            ids,
+          );
+        }
       }
       return;
     case "modify_ac_set_floor":
