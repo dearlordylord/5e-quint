@@ -222,6 +222,7 @@ const requiredFirstVerticalUnitIds = [
   "suggestion",
   "zone_of_truth",
   "thunderwave",
+  "speak_with_dead",
   "eldritch_blast",
   "minor_illusion",
   "sorcerous_burst",
@@ -3829,6 +3830,171 @@ describe("SRD Unit catalog boundary", () => {
     }
   });
 
+  test("decodes Speak with Dead as a table-owned corpse communication Spell Definition", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag !== "ok") return;
+    const speakWithDead = result.catalog.requireUnit("speak_with_dead");
+
+    expect(speakWithDead.kind).toBe("spell");
+    if (speakWithDead.kind !== "spell") return;
+    expect(speakWithDead.mechanics.family).toBe("activation");
+    if (speakWithDead.mechanics.family !== "activation") return;
+
+    expect(speakWithDead.provenance).toEqual({
+      kind: "srd-5.2.1",
+      section: "Spells/Descriptions-S-Z#Speak with Dead",
+    });
+    expect(speakWithDead.mechanics).toMatchObject({
+      level: 3,
+      school: "necromancy",
+      castingTime: { kind: "action" },
+      range: { kind: "point", feet: 10 },
+      components: { v: true, s: true, m: "burning incense" },
+      duration: { kind: "timed", value: { unit: "minute", amount: 10 } },
+    });
+    expect(speakWithDead.mechanics.phases).toEqual([
+      {
+        kind: "direct",
+        attachment: {
+          kind: "hole",
+          holeId: "speak_with_dead_corpse",
+          label: "corpse with a mouth",
+          value: {
+            kind: "object",
+            count: 1,
+          },
+        },
+        effects: [{ kind: "none" }],
+      },
+    ]);
+    expect(speakWithDead.description).toContain("up to five questions");
+    expect(speakWithDead.description).toContain("target of this spell within");
+    expect(speakWithDead.description).toContain("can't speculate about future");
+  });
+
+  test("decodes Speak with Plants as a table-owned plant communication Spell Definition", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag !== "ok") return;
+    const speakWithPlants = result.catalog.requireUnit("speak_with_plants");
+
+    expect(speakWithPlants.kind).toBe("spell");
+    if (speakWithPlants.kind !== "spell") return;
+    expect(speakWithPlants.mechanics.family).toBe("activation");
+    if (speakWithPlants.mechanics.family !== "activation") return;
+
+    expect(speakWithPlants.provenance).toEqual({
+      kind: "srd-5.2.1",
+      section: "Spells/Descriptions-S-Z#Speak with Plants",
+    });
+    expect(speakWithPlants.mechanics).toMatchObject({
+      level: 3,
+      school: "transmutation",
+      castingTime: { kind: "action" },
+      range: { kind: "self" },
+      components: { v: true, s: true, m: false },
+      duration: { kind: "timed", value: { unit: "minute", amount: 10 } },
+    });
+    expect(speakWithPlants.mechanics.phases).toEqual([
+      {
+        kind: "direct",
+        attachment: {
+          kind: "hole",
+          holeId: "speak_with_plants_area",
+          label: "immobile 30-foot Emanation with plants",
+          value: {
+            kind: "area",
+            shape: { kind: "emanation", radiusFeet: 30 },
+            origin: { kind: "self" },
+          },
+        },
+        effects: [
+          {
+            kind: "grant_creature_communication",
+            creatureType: "plant",
+            includesInfluenceActionOptions: false,
+          },
+        ],
+      },
+    ]);
+    expect(speakWithPlants.description).toContain(
+      "events in the spell's area within the past day",
+    );
+    expect(speakWithPlants.description).toContain(
+      "turn Difficult Terrain caused by plant growth into ordinary terrain",
+    );
+    expect(speakWithPlants.description).toContain("shared a common language");
+  });
+
+  test("decodes Tiny Hut as a runtime-detached shelter boundary Spell Definition", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag !== "ok") return;
+    const tinyHut = result.catalog.requireUnit("tiny_hut");
+
+    expect(tinyHut.kind).toBe("spell");
+    if (tinyHut.kind !== "spell") return;
+    expect(tinyHut.mechanics.family).toBe("ongoing_effect");
+    if (tinyHut.mechanics.family !== "ongoing_effect") return;
+
+    expect(tinyHut.provenance).toEqual({
+      kind: "srd-5.2.1",
+      section: "Spells/Descriptions-S-Z#Tiny Hut",
+    });
+    expect(tinyHut.mechanics).toMatchObject({
+      level: 3,
+      school: "evocation",
+      castingTime: { kind: "minutes", amount: 1, ritual: true },
+      range: { kind: "self" },
+      components: { v: true, s: true, m: "a crystal bead" },
+      duration: {
+        kind: "timed",
+        value: { unit: "hour", amount: 8 },
+        earlyEnd: [{ kind: "caster_recasts_spell" }],
+      },
+      attachment: {
+        kind: "hole",
+        holeId: "tiny_hut_emanation",
+        label: "stationary 10-foot Emanation",
+        value: {
+          kind: "area",
+          shape: { kind: "emanation", radiusFeet: 10 },
+          origin: { kind: "self" },
+        },
+      },
+    });
+    expect(tinyHut.mechanics.operations).toEqual([
+      {
+        trigger: { kind: "passive" },
+        effect: {
+          kind: "block_travel",
+          scope: "non_initial_creatures_and_objects_through_emanation",
+        },
+      },
+      {
+        trigger: { kind: "passive" },
+        effect: {
+          kind: "block_travel",
+          scope:
+            "level_3_or_lower_spell_casting_through_or_effects_extending_into_emanation",
+        },
+      },
+    ]);
+    expect(tinyHut.description).toContain(
+      "fully encapsulate all creatures in its area",
+    );
+    expect(tinyHut.description).toContain("comfortable and dry");
+    expect(tinyHut.description).toContain("regardless of the weather outside");
+    expect(tinyHut.description).toContain("Dim Light or Darkness");
+    expect(tinyHut.description).toContain("opaque from the outside");
+    expect(tinyHut.description).toContain("transparent from the inside");
+    expect(tinyHut.description).toContain("leave the Emanation");
+  });
+
   test("decodes Sleet Storm as an authored Cylinder hazard Spell Definition", () => {
     const result = buildUnitCatalog({ collections: [srdUnitCollection] });
 
@@ -3911,6 +4077,83 @@ describe("SRD Unit catalog boundary", () => {
     ]);
     expect(sleetStorm.description).toContain("Heavily Obscured");
     expect(sleetStorm.description).toContain("lose Concentration");
+  });
+
+  test("decodes Slow as save-gated active penalties", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag !== "ok") return;
+    const slow = result.catalog.requireUnit("slow");
+
+    expect(slow.kind).toBe("spell");
+    if (slow.kind !== "spell") return;
+    expect(slow.mechanics.family).toBe("activation");
+    if (slow.mechanics.family !== "activation") return;
+
+    expect(slow.provenance).toEqual({
+      kind: "srd-5.2.1",
+      section: "Spells/Descriptions-S-Z#Slow",
+    });
+    expect(slow.mechanics).toMatchObject({
+      level: 3,
+      school: "transmutation",
+      castingTime: { kind: "action" },
+      range: { kind: "point", feet: 120 },
+      components: { v: true, s: true, m: "a drop of molasses" },
+      duration: { kind: "concentration", upTo: { unit: "minute", amount: 1 } },
+    });
+
+    const minusTwo = {
+      kind: "fixed_number",
+      amount: 2,
+      sign: "-",
+    } as const;
+    expect(slow.mechanics.phases).toEqual([
+      {
+        kind: "save_gate",
+        attachment: {
+          kind: "hole",
+          holeId: "slow_cube",
+          label: "spell cube",
+          value: {
+            kind: "area",
+            shape: { kind: "cube", sideFeet: 40 },
+            origin: { kind: "point_within_range" },
+            selection: {
+              mode: "choose_up_to",
+              count: 6,
+              targetKinds: ["creature"],
+            },
+          },
+        },
+        ability: "wis",
+        dc: { kind: "caster_spell_save_dc" },
+        onFail: {
+          kind: "composite",
+          effects: [
+            { kind: "set_speed_ratio", numerator: 1, denominator: 2 },
+            { kind: "modify_ac", delta: minusTwo },
+            {
+              kind: "modify_roll_numeric",
+              on: ["saving_throw"],
+              abilityFilter: ["dex"],
+              delta: minusTwo,
+            },
+            { kind: "restrict_action_usage", actions: ["reaction"] },
+            { kind: "choose_action_or_bonus_action_each_turn" },
+            { kind: "cap_attack_action_attacks", maxAttacks: 1 },
+            { kind: "somatic_spell_failure_chance", percent: 25 },
+          ],
+        },
+        onSuccess: { kind: "none" },
+        repeatSaves: [
+          { cadence: "end_of_target_turn", onSuccess: "ends_on_target" },
+        ],
+      },
+    ]);
+    expect(slow.description).toContain("Dexterity saving throws");
+    expect(slow.description).toContain("25 percent chance");
   });
 
   test("rejects contradictory Revivify death target-state filters", () => {

@@ -101,6 +101,7 @@ export function traceEffectAtom(
     case "take_standard_action":
     case "grant_alternate_action_cost":
     case "grant_extra_action":
+    case "choose_action_or_bonus_action_each_turn":
     case "modify_roll_numeric":
     case "initiative_swap":
     case "jack_of_all_trades_ability_check_bonus":
@@ -113,6 +114,8 @@ export function traceEffectAtom(
     case "transfer_weapon_bonus_to_ac":
     case "suppress_incoming_critical_hit":
     case "scale_attack_count":
+    case "cap_attack_action_attacks":
+    case "somatic_spell_failure_chance":
     case "modify_speed":
     case "force_move":
     case "push_unsecured_objects":

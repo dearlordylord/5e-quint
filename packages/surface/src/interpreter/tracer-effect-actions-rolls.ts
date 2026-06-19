@@ -19,6 +19,7 @@ export type ActionAndRollEffectAtom = Extract<
       | "take_standard_action"
       | "grant_alternate_action_cost"
       | "grant_extra_action"
+      | "choose_action_or_bonus_action_each_turn"
       | "modify_roll_numeric"
       | "initiative_swap"
       | "jack_of_all_trades_ability_check_bonus"
@@ -31,6 +32,8 @@ export type ActionAndRollEffectAtom = Extract<
       | "transfer_weapon_bonus_to_ac"
       | "suppress_incoming_critical_hit"
       | "scale_attack_count"
+      | "cap_attack_action_attacks"
+      | "somatic_spell_failure_chance"
       | "modify_speed"
       | "force_move"
       | "push_unsecured_objects"
@@ -56,7 +59,7 @@ export type ActionAndRollEffectAtom = Extract<
 
 function describeAbilityFilter(
   filter: AbilityFilter | undefined,
-  label: string,
+  label = "ability",
 ): string {
   if (filter === undefined) return "";
   if (!("kind" in filter)) return `\n${label}: ${filter.join("/")}`;
@@ -104,13 +107,24 @@ export function traceActionAndRollEffectAtom(
       });
       return id;
     }
+    case "choose_action_or_bonus_action_each_turn": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "choose_action_or_bonus_action_each_turn",
+        label:
+          "choose_action_or_bonus_action_each_turn\ntarget chooses Action or Bonus Action each turn",
+      });
+      return id;
+    }
     case "modify_roll_numeric": {
       const id = ids("eff");
       nodes.push({
         id,
         category: "effect",
         atomKind: "modify_roll_numeric",
-        label: `modify_roll_numeric\n${describeDelta(e.delta)}\non ${e.on.join(", ")}${describeWeaponFilter(e.weaponFilter)}`,
+        label: `modify_roll_numeric\n${describeDelta(e.delta)}\non ${e.on.join(", ")}${describeAbilityFilter(e.abilityFilter)}${describeWeaponFilter(e.weaponFilter)}`,
       });
       return id;
     }
@@ -262,6 +276,26 @@ export function traceActionAndRollEffectAtom(
         category: "effect",
         atomKind: "scale_attack_count",
         label: `scale_attack_count\n+${e.additional} attack${e.additional === 1 ? "" : "s"} per Attack action`,
+      });
+      return id;
+    }
+    case "cap_attack_action_attacks": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "cap_attack_action_attacks",
+        label: `cap_attack_action_attacks\nmax ${e.maxAttacks} attack${e.maxAttacks === 1 ? "" : "s"} per Attack action`,
+      });
+      return id;
+    }
+    case "somatic_spell_failure_chance": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "somatic_spell_failure_chance",
+        label: `somatic_spell_failure_chance\n${e.percent}% chance spell fails`,
       });
       return id;
     }

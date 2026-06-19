@@ -32,23 +32,21 @@ reuse mastery identity or dispatch on authored spell id.
 
 ## Current State
 
-`slow` is present in the local SRD corpus but not authored in
-`packages/surface/content/`, not imported by
-`packages/surface/src/surface/unit-catalog.ts`, and not present in
-`plans/unit-profile-coverage/unit-claims.jsonl` or the generated Unit matrix.
-The active Unit matrix therefore has no Slow spell row to mark supported or
-unsupported.
+`slow` is present in the local SRD corpus and is now authored as an SRD
+Surface Spell Definition in `packages/surface/content/slow.dhall` with
+generated `packages/surface/content/slow.json`. It is imported by
+`packages/surface/src/surface/unit-catalog.ts` and has a checker-visible
+`unsupported-profile` claim in `plans/unit-profile-coverage/unit-claims.jsonl`
+with runtime follow-ups split by owner.
 
 Existing reusable pieces:
 
-- Surface can represent the 40-foot Cube target/save boundary, concentration,
-  `set_speed_ratio`, `modify_ac`, and numeric d20 modifiers such as Bane's
-  `modify_roll_numeric`.
-- Surface can represent `restrict_action_usage` for specific action kinds, but
-  the current shape does not encode Slow's mutual-exclusion rule of Action or
-  Bonus Action, not both.
-- Surface has `scale_attack_count`, but Slow needs a cap of one attack when the
-  target takes the Attack action, not an additive attack-count scaler.
+- Surface represents the 40-foot Cube chosen-target save boundary,
+  Concentration, `set_speed_ratio`, `modify_ac`, Dexterity Saving Throw
+  numeric modifiers through `modify_roll_numeric`, `restrict_action_usage` for
+  Reactions, the target-turn Action-or-Bonus-Action choice, Attack-action
+  attack caps, Somatic spell failure chance, and end-of-target-turn repeat
+  saves.
 - Surface and battle runtime have Reaction resources and spell-cast Reaction
   windows, but no active spell effect that suppresses all Reactions while the
   effect is present.
@@ -60,11 +58,13 @@ Existing reusable pieces:
 
 ## Decision
 
-Task 18 should close as a follow-up split, not as support. Adding a Slow Unit
-claim now would collapse missing Surface authoring, save-gated multi-target
-active effects, speed/AC/save projections, action-economy restrictions, Reaction
-suppression, repeated end-of-turn saves, and Somatic failure chance into one
-unsupported row.
+Task 6 closes the missing authored record by installing the lossless Surface
+Spell Definition and adding a Unit claim. The claim remains unsupported because
+promoted battle-runtime support still needs the active-penalty and
+target-turn/Somatic execution owners below. The claim keeps those facts separate
+instead of collapsing Speed, Armor Class, Dexterity Saving Throw, Reaction,
+Action/Bonus Action, Attack action, Somatic failure chance, and repeat Saving
+Throw behavior into one opaque unsupported label.
 
 Runtime admission must use typed spell procedure facts and active-effect support
 profiles, not `spell.id === "slow"` or a reused weapon-mastery Slow identity.
@@ -74,16 +74,16 @@ choose actions for the target.
 
 ## Follow-Up Split
 
-`L3-FOLLOWUP-SLOW-SURFACE-AUTHORING`
+`L3-FOLLOWUP-SLOW-SURFACE-AUTHORING` (completed by `L5-D06-SLOW`)
 
-Author `packages/surface/content/slow.dhall` and generated JSON only after
-Surface can represent Slow losslessly. Required Surface work: encode Magic
-Action casting, level-3 Spell Slot, 120-foot range, V/S/M molasses component,
-Concentration up to 1 minute, up to six chosen creature targets in a 40-foot
-Cube, Wisdom save, failed-save active Speed ratio 1/2, -2 AC, -2 Dexterity
-Saving Throw modifier, no Reactions, Action-or-Bonus-Action mutual exclusion,
-Attack-action one-attack cap, Somatic-component spell failure chance, and
-end-of-target-turn repeat saves that end the spell on that target on success.
+Authored `packages/surface/content/slow.dhall` and generated JSON after adding
+the missing Surface atoms. The record encodes Magic Action casting, level-3
+Spell Slot, 120-foot range, V/S/M molasses component, Concentration up to 1
+minute, up to six chosen creature targets in a 40-foot Cube, Wisdom save,
+failed-save active Speed ratio 1/2, -2 AC, -2 Dexterity Saving Throw modifier,
+no Reactions, Action-or-Bonus-Action mutual exclusion, Attack-action
+one-attack cap, Somatic-component spell failure chance, and end-of-target-turn
+repeat saves that end the spell on that target on success.
 
 `L3-FOLLOWUP-SLOW-ACTIVE-PENALTIES-RUNTIME`
 
@@ -111,6 +111,8 @@ parity tests.
 
 ## Verification Notes
 
-This survey does not add or change Unit claims, Surface catalog admission,
-runtime reducers, or promoted Quint behavior. The appropriate verification is
-coverage consistency and whitespace checking, not MBT.
+Task 6 changes Surface catalog admission, Surface schema, and Unit coverage
+inputs. The appropriate verification is Surface typecheck, focused Surface unit
+catalog tests, unit-profile coverage check, `pnpm quality`, and whitespace
+checking. It does not change runtime reducers or promoted Quint behavior, so MBT
+is not appropriate for this task.

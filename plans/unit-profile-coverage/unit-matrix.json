@@ -43,14 +43,14 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
-      "denominator": 452,
-      "numerator": 267,
-      "percent": "59.1%"
+      "denominator": 456,
+      "numerator": 271,
+      "percent": "59.4%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 540,
-      "numerator": 317,
-      "percent": "58.7%"
+      "denominator": 544,
+      "numerator": 321,
+      "percent": "59%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,7 +59,7 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 318
+      "value": 322
     },
     "deterministicAdmissionProjectionCoverage": {
       "denominator": 187,
@@ -67,8 +67,8 @@
       "percent": "97.3%"
     },
     "profileClassificationCoverage": {
-      "denominator": 318,
-      "numerator": 318,
+      "denominator": 322,
+      "numerator": 322,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -112,9 +112,9 @@
       "percent": "98.3%"
     },
     "supportedProfileCoverage": {
-      "denominator": 268,
+      "denominator": 272,
       "numerator": 187,
-      "percent": "69.8%"
+      "percent": "68.8%"
     }
   },
   "metricSemantics": [
@@ -16791,8 +16791,8 @@
         "unsupportedOrOtherUnits": 4
       },
       {
-        "executableUnitDenominator": 136,
-        "installedUnitDenominator": 136,
+        "executableUnitDenominator": 140,
+        "installedUnitDenominator": 140,
         "kind": "spell",
         "label": "Spell Units",
         "profileFactDenominator": 137,
@@ -16802,7 +16802,7 @@
         "selectedIdentityReplayGapUnits": 1,
         "selectedIdentityReplayWitnessUnits": 110,
         "supportedProfileUnits": 93,
-        "unsupportedOrOtherUnits": 25
+        "unsupportedOrOtherUnits": 29
       },
       {
         "executableUnitDenominator": 94,
@@ -33250,6 +33250,52 @@
         "status": "installed"
       },
       "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "runtime-detached table communication and corpse/remains eligibility owner",
+          "reason": "Speak with Dead supplies corpse-questioning and corpse-eligibility source facts, but promoted battle runtime does not own corpse identity or mouth state, former creature type at death, recent spell-target history, conversation contents, truthfulness or relationship adjudication, language and knowledge history, soul or animating-spirit state, or future-event speculation."
+        },
+        "reason": "Speak with Dead is authored and installed as an SRD Surface Spell Definition with Magic Action Spell Slot casting, 10-foot range, V/S/M burning-incense components, 10-minute duration, one corpse target, mouth-required and not-former-Undead corpse eligibility facts, a past-10-days repeat-target failure fact, an up-to-five-question table communication window, corpse knowledge and language limits, brief or cryptic answer guidance, truthfulness relationship adjudication, and soul/animating-spirit source facts. Task 7 claims no promoted battle-runtime profile because corpse identity, mouth presence, former creature type at death, recent spell-target history, question and answer contents, truthfulness, knowledge and language history, soul state, animating-spirit state, and future-event speculation are table communication and corpse/remains lifecycle facts rather than promoted battle runtime facts.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/speak_with_dead.json",
+      "unitId": "speak_with_dead"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "runtime-detached table/spatial/exploration plant communication and terrain owner",
+          "reason": "Speak with Plants supplies plant communication, plant-command, past-day area information, plant-presence terrain conversion, and no-uprooting source facts, but promoted battle runtime does not own plant-world state, non-creature plant sentience, table information answers, terrain-conversion choice and persistence, immobile area placement, or pathfinding and movement-cost derivation through affected terrain."
+        },
+        "reason": "Speak with Plants is authored and installed as an SRD Surface Spell Definition with Magic Action Spell Slot casting, Self range, V/S components, 10-minute duration, an immobile 30-foot Emanation plant area, limited plant sentience and animation, simple-command following, past-day event questioning, Plant creature common-language communication, plant-caused Difficult Terrain removal, ordinary-terrain-to-Difficult-Terrain conversion where plants are present, and no-uprooting movement limits. Task 8 claims no promoted battle-runtime profile because non-creature plant sentience, simple commands, event answers, plant presence, terrain conversion choice and persistence, immobile area placement, and table information adjudication belong to the runtime-detached table/spatial/exploration owner rather than this catalog admission task.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/speak_with_plants.json",
+      "unitId": "speak_with_plants"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
         "profileIds": [
           "spell.invocation-damage-save-or-attack",
           "spell.readied-action-time-spell"
@@ -34055,6 +34101,29 @@
       ],
       "sourceRecordPath": "packages/surface/content/thaumaturgy.json",
       "unitId": "thaumaturgy"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "runtime-detached table/spatial/environment shelter owner",
+          "reason": "Tiny Hut supplies stationary shelter, creature and object passage, level-capped spell-boundary, weather/atmosphere, interior-light, color, and one-way visibility source facts, but promoted battle runtime does not own stationary Emanation placement, cast-time encapsulation and membership, initial-versus-later creature and object identity, passage through shelter boundaries, weather or atmosphere projection, interior light commands, color presentation, one-way visibility, or level-capped spell-boundary adjudication."
+        },
+        "reason": "Tiny Hut is authored and installed as an SRD Surface Spell Definition with 1-minute-or-Ritual casting, Self range, V/S/M crystal-bead components, 8-hour duration, a stationary 10-foot Emanation, a cast-failure source fact when the Emanation cannot fully encapsulate all creatures in its area, initial creature and object free passage, later creature and object passage blocking, level-3-or-lower spell casting and effect-extension blocking through or into the Emanation, comfortable dry atmosphere regardless of outside weather, caster-commanded Dim Light or Darkness with no action, outside opacity, inside transparency, chosen color, and early ending when the caster leaves the Emanation or casts the spell again. Task 9 claims no promoted battle-runtime profile because the active shelter depends on table/spatial/environment state rather than a promoted battle area owner in this catalog admission task.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/tiny_hut.json",
+      "unitId": "tiny_hut"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
@@ -35574,6 +35643,40 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/sleet_storm.json",
       "unitId": "sleet_storm"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "followUpTasks": [
+          {
+            "id": "L3-FOLLOWUP-SLOW-ACTIVE-PENALTIES-RUNTIME",
+            "mechanic": "Promote Slow's Magic Action and level-3+ Spell Slot spend, caster-owned Concentration, caller-supplied affected-creature set for the 40-foot Cube, Wisdom Saving Throw, failed-save active Speed ratio projection, -2 Armor Class projection, -2 Dexterity Saving Throw modifier, no-Reaction projection, and end-of-target-turn repeat Saving Throw cleanup for each affected target.",
+            "owner": "battle-runtime spell invocation/projection owner",
+            "requiredOutput": "Supported-profile or profile-subset-supported Slow claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for active penalties without authored-identity dispatch.",
+            "title": "Slow Active Penalties Runtime"
+          },
+          {
+            "id": "L3-FOLLOWUP-SLOW-TURN-AND-SOMATIC-RUNTIME",
+            "mechanic": "Promote Slow's target-turn Action or Bonus Action mutual-exclusion rule, Attack-action one-attack cap, and 25 percent spell failure chance for affected targets casting spells with Somatic components after the active effect lifecycle exists.",
+            "owner": "battle-runtime action-resource, Attack action, spell component, and chance-result owners",
+            "requiredOutput": "Focused action-resource, Attack action, spell component, chance-result, cleanup, and promoted Quint/runtime parity tests, consuming typed Slow Surface facts without spell-id-specific gates.",
+            "title": "Slow Turn And Somatic Runtime"
+          }
+        ],
+        "reason": "Slow is authored and installed as an SRD Surface Spell Definition with Magic Action Spell Slot casting, 120-foot range, V/S/M molasses components, caster-owned Concentration up to 1 minute, up to six chosen creature targets in a point-origin 40-foot Cube, Wisdom Saving Throw, failed-save active Speed ratio 1/2, -2 Armor Class, -2 Dexterity Saving Throw modifier, no Reactions, Action-or-Bonus-Action target-turn mutual exclusion, Attack action one-attack cap, Somatic-component 25 percent spell failure chance, and end-of-target-turn repeat Saving Throw. Task 6 leaves promoted battle-runtime support open because the runtime still needs typed active penalty projection and target-turn/Somatic execution owners without dispatching on authored spell identity.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/slow.json",
+      "unitId": "slow"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

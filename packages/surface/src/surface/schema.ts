@@ -1,6 +1,7 @@
 import { Either, ParseResult, Schema } from "effect";
 
 export {
+  ActionBonusActionChoiceEffectSchema,
   ActionRestrictionSchema,
   ActivationMechanicsSchema,
   ActivationPhaseSchema,
@@ -24,6 +25,7 @@ export {
   AttachmentRangeOriginSchema,
   AttachmentSchema,
   AbilityFilterSchema,
+  AttackActionAttackCapEffectSchema,
   CastTimeEffectModeChoiceSchema,
   CastTimeChoiceCreatureTypeSchema,
   CastTimeChoiceDamageTypeSchema,
@@ -108,6 +110,7 @@ export {
   SpawnedCreatureStatBlockSchema,
   SpellLevelSchema,
   SpellSlotLevelSchema,
+  SomaticSpellFailureChanceEffectSchema,
   SpellMechanicsHeaderSchema,
   SpellMechanicsSchema,
   SpellRecordSchema,

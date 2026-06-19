@@ -18,9 +18,9 @@
     "auditedUniqueSpellIdentitiesByFinalDisposition": {
       "catalog-authored-review-required": 19,
       "catalog-installed-owner-evidence-present": 8,
-      "catalog-installed-owner-evidence-required": 1,
-      "catalog-only/dead-for-now": 21,
-      "missing-authored-record": 20,
+      "catalog-installed-owner-evidence-required": 2,
+      "catalog-only/dead-for-now": 24,
+      "missing-authored-record": 16,
       "needs-surface-widening": 7
     },
     "auditedUniqueSpellIdentitiesByLevelBand": {
@@ -35,15 +35,15 @@
     },
     "rowsByBattleReadinessStatus": {
       "accepted": 473,
-      "accepted-no-battle-effect": 236,
-      "battle-runtime-required": 48,
+      "accepted-no-battle-effect": 243,
+      "battle-runtime-required": 41,
       "not-applicable": 77,
       "owner-evidence-required": 50,
       "surface-widening-required": 16
     },
     "rowsByCatalogAdmission": {
-      "installed": 663,
-      "not-installed": 237
+      "installed": 673,
+      "not-installed": 227
     },
     "rowsByCategory": {
       "character-creation or progression mechanic": 172,
@@ -58,10 +58,10 @@
     "rowsByFinalDisposition": {
       "catalog-authored-review-required": 49,
       "catalog-installed-owner-evidence-present": 488,
-      "catalog-installed-owner-evidence-required": 4,
-      "catalog-only/dead-for-now": 192,
+      "catalog-installed-owner-evidence-required": 7,
+      "catalog-only/dead-for-now": 199,
       "level-5-7-follow-up-required": 22,
-      "missing-authored-record": 45,
+      "missing-authored-record": 35,
       "needs-surface-widening": 16,
       "non-runtime": 84
     },
@@ -93,10 +93,10 @@
       "subclass-spell-access": 5
     },
     "rowsByUnitProfileDisposition": {
-      "not-recorded": 171,
+      "not-recorded": 161,
       "profile-subset-supported": 53,
       "supported-profile": 302,
-      "unsupported-profile": 374
+      "unsupported-profile": 384
     }
   },
   "rows": [
@@ -5627,7 +5627,7 @@
         "sourceInventoryRowId": "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_slow",
         "state": "present"
       },
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
+      "nextAction": "Promote follow-up split L3-FOLLOWUP-SLOW-ACTIVE-PENALTIES-RUNTIME, L3-FOLLOWUP-SLOW-TURN-AND-SOMATIC-RUNTIME: L3-FOLLOWUP-SLOW-ACTIVE-PENALTIES-RUNTIME owns Promote Slow's Magic Action and level-3+ Spell Slot spend, caster-owned Concentration, caller-supplied affected-creature set for the 40-foot Cube, Wisdom Saving Throw, failed-save active Speed ratio projection, -2 Armor Class projection, -2 Dexterity Saving Throw modifier, no-Reaction projection, and end-of-target-turn repeat Saving Throw cleanup for each affected target. Required output: Supported-profile or profile-subset-supported Slow claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for active penalties without authored-identity dispatch.; L3-FOLLOWUP-SLOW-TURN-AND-SOMATIC-RUNTIME owns Promote Slow's target-turn Action or Bonus Action mutual-exclusion rule, Attack-action one-attack cap, and 25 percent spell failure chance for affected targets casting spells with Somatic components after the active effect lifecycle exists. Required output: Focused action-resource, Attack action, spell component, chance-result, cleanup, and promoted Quint/runtime parity tests, consuming typed Slow Surface facts without spell-id-specific gates.",
       "rowId": "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_slow",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -5637,7 +5637,9 @@
       },
       "supportSnapshot": {
         "authoredContent": {
-          "state": "missing-authored-record"
+          "sourceRecordPath": "packages/surface/content/slow.json",
+          "state": "authored-record-present",
+          "unitId": "slow"
         },
         "battleReadiness": {
           "state": "recorded",
@@ -5647,12 +5649,13 @@
           "state": "not-recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "slow"
         },
-        "finalDisposition": "missing-authored-record",
+        "finalDisposition": "catalog-installed-owner-evidence-required",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },
@@ -5668,7 +5671,7 @@
         "sourceInventoryRowId": "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_speak_with_dead",
         "state": "present"
       },
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
+      "nextAction": "Speak with Dead supplies corpse-questioning and corpse-eligibility source facts, but promoted battle runtime does not own corpse identity or mouth state, former creature type at death, recent spell-target history, conversation contents, truthfulness or relationship adjudication, language and knowledge history, soul or animating-spirit state, or future-event speculation.",
       "rowId": "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_speak_with_dead",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -5678,22 +5681,28 @@
       },
       "supportSnapshot": {
         "authoredContent": {
-          "state": "missing-authored-record"
+          "sourceRecordPath": "packages/surface/content/speak_with_dead.json",
+          "state": "authored-record-present",
+          "unitId": "speak_with_dead"
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "battle-runtime-required"
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "runtime-detached table communication and corpse/remains eligibility owner",
+          "reason": "Speak with Dead supplies corpse-questioning and corpse-eligibility source facts, but promoted battle runtime does not own corpse identity or mouth state, former creature type at death, recent spell-target history, conversation contents, truthfulness or relationship adjudication, language and knowledge history, soul or animating-spirit state, or future-event speculation.",
+          "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "speak_with_dead"
         },
-        "finalDisposition": "missing-authored-record",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },
@@ -5709,7 +5718,7 @@
         "sourceInventoryRowId": "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_speak_with_plants",
         "state": "present"
       },
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
+      "nextAction": "Speak with Plants supplies plant communication, plant-command, past-day area information, plant-presence terrain conversion, and no-uprooting source facts, but promoted battle runtime does not own plant-world state, non-creature plant sentience, table information answers, terrain-conversion choice and persistence, immobile area placement, or pathfinding and movement-cost derivation through affected terrain.",
       "rowId": "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_speak_with_plants",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -5719,22 +5728,28 @@
       },
       "supportSnapshot": {
         "authoredContent": {
-          "state": "missing-authored-record"
+          "sourceRecordPath": "packages/surface/content/speak_with_plants.json",
+          "state": "authored-record-present",
+          "unitId": "speak_with_plants"
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "battle-runtime-required"
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "runtime-detached table/spatial/exploration plant communication and terrain owner",
+          "reason": "Speak with Plants supplies plant communication, plant-command, past-day area information, plant-presence terrain conversion, and no-uprooting source facts, but promoted battle runtime does not own plant-world state, non-creature plant sentience, table information answers, terrain-conversion choice and persistence, immobile area placement, or pathfinding and movement-cost derivation through affected terrain.",
+          "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "speak_with_plants"
         },
-        "finalDisposition": "missing-authored-record",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },
@@ -5797,7 +5812,7 @@
         "sourceInventoryRowId": "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_tiny_hut",
         "state": "present"
       },
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
+      "nextAction": "Tiny Hut supplies stationary shelter, creature and object passage, level-capped spell-boundary, weather/atmosphere, interior-light, color, and one-way visibility source facts, but promoted battle runtime does not own stationary Emanation placement, cast-time encapsulation and membership, initial-versus-later creature and object identity, passage through shelter boundaries, weather or atmosphere projection, interior light commands, color presentation, one-way visibility, or level-capped spell-boundary adjudication.",
       "rowId": "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_tiny_hut",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -5807,22 +5822,28 @@
       },
       "supportSnapshot": {
         "authoredContent": {
-          "state": "missing-authored-record"
+          "sourceRecordPath": "packages/surface/content/tiny_hut.json",
+          "state": "authored-record-present",
+          "unitId": "tiny_hut"
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "battle-runtime-required"
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "runtime-detached table/spatial/environment shelter owner",
+          "reason": "Tiny Hut supplies stationary shelter, creature and object passage, level-capped spell-boundary, weather/atmosphere, interior-light, color, and one-way visibility source facts, but promoted battle runtime does not own stationary Emanation placement, cast-time encapsulation and membership, initial-versus-later creature and object identity, passage through shelter boundaries, weather or atmosphere projection, interior light commands, color presentation, one-way visibility, or level-capped spell-boundary adjudication.",
+          "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "tiny_hut"
         },
-        "finalDisposition": "missing-authored-record",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },
@@ -9932,7 +9953,7 @@
         "sourceInventoryRowId": "srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_speak_with_dead",
         "state": "present"
       },
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
+      "nextAction": "Speak with Dead supplies corpse-questioning and corpse-eligibility source facts, but promoted battle runtime does not own corpse identity or mouth state, former creature type at death, recent spell-target history, conversation contents, truthfulness or relationship adjudication, language and knowledge history, soul or animating-spirit state, or future-event speculation.",
       "rowId": "srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_speak_with_dead",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -9942,22 +9963,28 @@
       },
       "supportSnapshot": {
         "authoredContent": {
-          "state": "missing-authored-record"
+          "sourceRecordPath": "packages/surface/content/speak_with_dead.json",
+          "state": "authored-record-present",
+          "unitId": "speak_with_dead"
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "battle-runtime-required"
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "runtime-detached table communication and corpse/remains eligibility owner",
+          "reason": "Speak with Dead supplies corpse-questioning and corpse-eligibility source facts, but promoted battle runtime does not own corpse identity or mouth state, former creature type at death, recent spell-target history, conversation contents, truthfulness or relationship adjudication, language and knowledge history, soul or animating-spirit state, or future-event speculation.",
+          "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "speak_with_dead"
         },
-        "finalDisposition": "missing-authored-record",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },
@@ -14415,7 +14442,7 @@
         "sourceInventoryRowId": "srd521:classes/druid:spell-level-3:spell-unit-pressure:druid_spell_list_speak_with_plants",
         "state": "present"
       },
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
+      "nextAction": "Speak with Plants supplies plant communication, plant-command, past-day area information, plant-presence terrain conversion, and no-uprooting source facts, but promoted battle runtime does not own plant-world state, non-creature plant sentience, table information answers, terrain-conversion choice and persistence, immobile area placement, or pathfinding and movement-cost derivation through affected terrain.",
       "rowId": "srd521:classes/druid:spell-level-3:spell-unit-pressure:druid_spell_list_speak_with_plants",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -14425,22 +14452,28 @@
       },
       "supportSnapshot": {
         "authoredContent": {
-          "state": "missing-authored-record"
+          "sourceRecordPath": "packages/surface/content/speak_with_plants.json",
+          "state": "authored-record-present",
+          "unitId": "speak_with_plants"
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "battle-runtime-required"
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "runtime-detached table/spatial/exploration plant communication and terrain owner",
+          "reason": "Speak with Plants supplies plant communication, plant-command, past-day area information, plant-presence terrain conversion, and no-uprooting source facts, but promoted battle runtime does not own plant-world state, non-creature plant sentience, table information answers, terrain-conversion choice and persistence, immobile area placement, or pathfinding and movement-cost derivation through affected terrain.",
+          "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "speak_with_plants"
         },
-        "finalDisposition": "missing-authored-record",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },
@@ -28995,7 +29028,7 @@
         "sourceInventoryRowId": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_slow",
         "state": "present"
       },
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
+      "nextAction": "Promote follow-up split L3-FOLLOWUP-SLOW-ACTIVE-PENALTIES-RUNTIME, L3-FOLLOWUP-SLOW-TURN-AND-SOMATIC-RUNTIME: L3-FOLLOWUP-SLOW-ACTIVE-PENALTIES-RUNTIME owns Promote Slow's Magic Action and level-3+ Spell Slot spend, caster-owned Concentration, caller-supplied affected-creature set for the 40-foot Cube, Wisdom Saving Throw, failed-save active Speed ratio projection, -2 Armor Class projection, -2 Dexterity Saving Throw modifier, no-Reaction projection, and end-of-target-turn repeat Saving Throw cleanup for each affected target. Required output: Supported-profile or profile-subset-supported Slow claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for active penalties without authored-identity dispatch.; L3-FOLLOWUP-SLOW-TURN-AND-SOMATIC-RUNTIME owns Promote Slow's target-turn Action or Bonus Action mutual-exclusion rule, Attack-action one-attack cap, and 25 percent spell failure chance for affected targets casting spells with Somatic components after the active effect lifecycle exists. Required output: Focused action-resource, Attack action, spell component, chance-result, cleanup, and promoted Quint/runtime parity tests, consuming typed Slow Surface facts without spell-id-specific gates.",
       "rowId": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_slow",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -29005,7 +29038,9 @@
       },
       "supportSnapshot": {
         "authoredContent": {
-          "state": "missing-authored-record"
+          "sourceRecordPath": "packages/surface/content/slow.json",
+          "state": "authored-record-present",
+          "unitId": "slow"
         },
         "battleReadiness": {
           "state": "recorded",
@@ -29015,12 +29050,13 @@
           "state": "not-recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "slow"
         },
-        "finalDisposition": "missing-authored-record",
+        "finalDisposition": "catalog-installed-owner-evidence-required",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },
@@ -38653,7 +38689,7 @@
         "sourceInventoryRowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_slow",
         "state": "present"
       },
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
+      "nextAction": "Promote follow-up split L3-FOLLOWUP-SLOW-ACTIVE-PENALTIES-RUNTIME, L3-FOLLOWUP-SLOW-TURN-AND-SOMATIC-RUNTIME: L3-FOLLOWUP-SLOW-ACTIVE-PENALTIES-RUNTIME owns Promote Slow's Magic Action and level-3+ Spell Slot spend, caster-owned Concentration, caller-supplied affected-creature set for the 40-foot Cube, Wisdom Saving Throw, failed-save active Speed ratio projection, -2 Armor Class projection, -2 Dexterity Saving Throw modifier, no-Reaction projection, and end-of-target-turn repeat Saving Throw cleanup for each affected target. Required output: Supported-profile or profile-subset-supported Slow claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for active penalties without authored-identity dispatch.; L3-FOLLOWUP-SLOW-TURN-AND-SOMATIC-RUNTIME owns Promote Slow's target-turn Action or Bonus Action mutual-exclusion rule, Attack-action one-attack cap, and 25 percent spell failure chance for affected targets casting spells with Somatic components after the active effect lifecycle exists. Required output: Focused action-resource, Attack action, spell component, chance-result, cleanup, and promoted Quint/runtime parity tests, consuming typed Slow Surface facts without spell-id-specific gates.",
       "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_slow",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -38663,7 +38699,9 @@
       },
       "supportSnapshot": {
         "authoredContent": {
-          "state": "missing-authored-record"
+          "sourceRecordPath": "packages/surface/content/slow.json",
+          "state": "authored-record-present",
+          "unitId": "slow"
         },
         "battleReadiness": {
           "state": "recorded",
@@ -38673,12 +38711,13 @@
           "state": "not-recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "slow"
         },
-        "finalDisposition": "missing-authored-record",
+        "finalDisposition": "catalog-installed-owner-evidence-required",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },
@@ -38694,7 +38733,7 @@
         "sourceInventoryRowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_speak_with_dead",
         "state": "present"
       },
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
+      "nextAction": "Speak with Dead supplies corpse-questioning and corpse-eligibility source facts, but promoted battle runtime does not own corpse identity or mouth state, former creature type at death, recent spell-target history, conversation contents, truthfulness or relationship adjudication, language and knowledge history, soul or animating-spirit state, or future-event speculation.",
       "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_speak_with_dead",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -38704,22 +38743,28 @@
       },
       "supportSnapshot": {
         "authoredContent": {
-          "state": "missing-authored-record"
+          "sourceRecordPath": "packages/surface/content/speak_with_dead.json",
+          "state": "authored-record-present",
+          "unitId": "speak_with_dead"
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "battle-runtime-required"
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "runtime-detached table communication and corpse/remains eligibility owner",
+          "reason": "Speak with Dead supplies corpse-questioning and corpse-eligibility source facts, but promoted battle runtime does not own corpse identity or mouth state, former creature type at death, recent spell-target history, conversation contents, truthfulness or relationship adjudication, language and knowledge history, soul or animating-spirit state, or future-event speculation.",
+          "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "speak_with_dead"
         },
-        "finalDisposition": "missing-authored-record",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },
@@ -38782,7 +38827,7 @@
         "sourceInventoryRowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_tiny_hut",
         "state": "present"
       },
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
+      "nextAction": "Tiny Hut supplies stationary shelter, creature and object passage, level-capped spell-boundary, weather/atmosphere, interior-light, color, and one-way visibility source facts, but promoted battle runtime does not own stationary Emanation placement, cast-time encapsulation and membership, initial-versus-later creature and object identity, passage through shelter boundaries, weather or atmosphere projection, interior light commands, color presentation, one-way visibility, or level-capped spell-boundary adjudication.",
       "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_tiny_hut",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -38792,22 +38837,28 @@
       },
       "supportSnapshot": {
         "authoredContent": {
-          "state": "missing-authored-record"
+          "sourceRecordPath": "packages/surface/content/tiny_hut.json",
+          "state": "authored-record-present",
+          "unitId": "tiny_hut"
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "battle-runtime-required"
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "runtime-detached table/spatial/environment shelter owner",
+          "reason": "Tiny Hut supplies stationary shelter, creature and object passage, level-capped spell-boundary, weather/atmosphere, interior-light, color, and one-way visibility source facts, but promoted battle runtime does not own stationary Emanation placement, cast-time encapsulation and membership, initial-versus-later creature and object identity, passage through shelter boundaries, weather or atmosphere projection, interior light commands, color presentation, one-way visibility, or level-capped spell-boundary adjudication.",
+          "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "tiny_hut"
         },
-        "finalDisposition": "missing-authored-record",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },
@@ -42128,12 +42179,14 @@
       ],
       "levelBand": "spell-level-3",
       "nextActions": [
-        "Author an SRD-provenance Surface record or explicitly close the row."
+        "Promote follow-up split L3-FOLLOWUP-SLOW-ACTIVE-PENALTIES-RUNTIME, L3-FOLLOWUP-SLOW-TURN-AND-SOMATIC-RUNTIME: L3-FOLLOWUP-SLOW-ACTIVE-PENALTIES-RUNTIME owns Promote Slow's Magic Action and level-3+ Spell Slot spend, caster-owned Concentration, caller-supplied affected-creature set for the 40-foot Cube, Wisdom Saving Throw, failed-save active Speed ratio projection, -2 Armor Class projection, -2 Dexterity Saving Throw modifier, no-Reaction projection, and end-of-target-turn repeat Saving Throw cleanup for each affected target. Required output: Supported-profile or profile-subset-supported Slow claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for active penalties without authored-identity dispatch.; L3-FOLLOWUP-SLOW-TURN-AND-SOMATIC-RUNTIME owns Promote Slow's target-turn Action or Bonus Action mutual-exclusion rule, Attack-action one-attack cap, and 25 percent spell failure chance for affected targets casting spells with Somatic components after the active effect lifecycle exists. Required output: Focused action-resource, Attack action, spell component, chance-result, cleanup, and promoted Quint/runtime parity tests, consuming typed Slow Surface facts without spell-id-specific gates."
       ],
       "spellName": "Slow",
       "supportSnapshot": {
         "authoredContent": {
-          "state": "missing-authored-record"
+          "sourceRecordPath": "packages/surface/content/slow.json",
+          "state": "authored-record-present",
+          "unitId": "slow"
         },
         "battleReadiness": {
           "state": "recorded",
@@ -42143,12 +42196,13 @@
           "state": "not-recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "slow"
         },
-        "finalDisposition": "missing-authored-record",
+        "finalDisposition": "catalog-installed-owner-evidence-required",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },
@@ -42192,27 +42246,33 @@
       ],
       "levelBand": "spell-level-3",
       "nextActions": [
-        "Author an SRD-provenance Surface record or explicitly close the row."
+        "Speak with Dead supplies corpse-questioning and corpse-eligibility source facts, but promoted battle runtime does not own corpse identity or mouth state, former creature type at death, recent spell-target history, conversation contents, truthfulness or relationship adjudication, language and knowledge history, soul or animating-spirit state, or future-event speculation."
       ],
       "spellName": "Speak with Dead",
       "supportSnapshot": {
         "authoredContent": {
-          "state": "missing-authored-record"
+          "sourceRecordPath": "packages/surface/content/speak_with_dead.json",
+          "state": "authored-record-present",
+          "unitId": "speak_with_dead"
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "battle-runtime-required"
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "runtime-detached table communication and corpse/remains eligibility owner",
+          "reason": "Speak with Dead supplies corpse-questioning and corpse-eligibility source facts, but promoted battle runtime does not own corpse identity or mouth state, former creature type at death, recent spell-target history, conversation contents, truthfulness or relationship adjudication, language and knowledge history, soul or animating-spirit state, or future-event speculation.",
+          "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "speak_with_dead"
         },
-        "finalDisposition": "missing-authored-record",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },
@@ -42246,27 +42306,33 @@
       ],
       "levelBand": "spell-level-3",
       "nextActions": [
-        "Author an SRD-provenance Surface record or explicitly close the row."
+        "Speak with Plants supplies plant communication, plant-command, past-day area information, plant-presence terrain conversion, and no-uprooting source facts, but promoted battle runtime does not own plant-world state, non-creature plant sentience, table information answers, terrain-conversion choice and persistence, immobile area placement, or pathfinding and movement-cost derivation through affected terrain."
       ],
       "spellName": "Speak with Plants",
       "supportSnapshot": {
         "authoredContent": {
-          "state": "missing-authored-record"
+          "sourceRecordPath": "packages/surface/content/speak_with_plants.json",
+          "state": "authored-record-present",
+          "unitId": "speak_with_plants"
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "battle-runtime-required"
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "runtime-detached table/spatial/exploration plant communication and terrain owner",
+          "reason": "Speak with Plants supplies plant communication, plant-command, past-day area information, plant-presence terrain conversion, and no-uprooting source facts, but promoted battle runtime does not own plant-world state, non-creature plant sentience, table information answers, terrain-conversion choice and persistence, immobile area placement, or pathfinding and movement-cost derivation through affected terrain.",
+          "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "speak_with_plants"
         },
-        "finalDisposition": "missing-authored-record",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },
@@ -42420,27 +42486,33 @@
       ],
       "levelBand": "spell-level-3",
       "nextActions": [
-        "Author an SRD-provenance Surface record or explicitly close the row."
+        "Tiny Hut supplies stationary shelter, creature and object passage, level-capped spell-boundary, weather/atmosphere, interior-light, color, and one-way visibility source facts, but promoted battle runtime does not own stationary Emanation placement, cast-time encapsulation and membership, initial-versus-later creature and object identity, passage through shelter boundaries, weather or atmosphere projection, interior light commands, color presentation, one-way visibility, or level-capped spell-boundary adjudication."
       ],
       "spellName": "Tiny Hut",
       "supportSnapshot": {
         "authoredContent": {
-          "state": "missing-authored-record"
+          "sourceRecordPath": "packages/surface/content/tiny_hut.json",
+          "state": "authored-record-present",
+          "unitId": "tiny_hut"
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "battle-runtime-required"
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "runtime-detached table/spatial/environment shelter owner",
+          "reason": "Tiny Hut supplies stationary shelter, creature and object passage, level-capped spell-boundary, weather/atmosphere, interior-light, color, and one-way visibility source facts, but promoted battle runtime does not own stationary Emanation placement, cast-time encapsulation and membership, initial-versus-later creature and object identity, passage through shelter boundaries, weather or atmosphere projection, interior light commands, color presentation, one-way visibility, or level-capped spell-boundary adjudication.",
+          "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "tiny_hut"
         },
-        "finalDisposition": "missing-authored-record",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },

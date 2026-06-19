@@ -1,0 +1,123 @@
+{
+  "description": "You alter time around up to six creatures of your choice in a 40-foot Cube within range. Each target must succeed on a Wisdom saving throw or be affected by this spell for the duration. An affected target's Speed is halved, it takes a -2 penalty to AC and Dexterity saving throws, and it can't take Reactions. On its turns, it can take either an action or a Bonus Action, not both, and it can make only one attack if it takes the Attack action. If it casts a spell with a Somatic component, there is a 25 percent chance the spell fails as a result of the target making the spell's gestures too slowly. An affected target repeats the save at the end of each of its turns, ending the spell on itself on a success.",
+  "id": "slow",
+  "kind": "spell",
+  "mechanics": {
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": "a drop of molasses",
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "concentration",
+      "upTo": {
+        "amount": 1,
+        "unit": "minute"
+      }
+    },
+    "family": "activation",
+    "level": 3,
+    "phases": [
+      {
+        "ability": "wis",
+        "attachment": {
+          "holeId": "slow_cube",
+          "kind": "hole",
+          "label": "spell cube",
+          "value": {
+            "kind": "area",
+            "origin": {
+              "kind": "point_within_range"
+            },
+            "selection": {
+              "count": 6,
+              "mode": "choose_up_to",
+              "targetKinds": [
+                "creature"
+              ]
+            },
+            "shape": {
+              "kind": "cube",
+              "sideFeet": 40
+            }
+          }
+        },
+        "dc": {
+          "kind": "caster_spell_save_dc"
+        },
+        "kind": "save_gate",
+        "onFail": {
+          "effects": [
+            {
+              "denominator": 2,
+              "kind": "set_speed_ratio",
+              "numerator": 1
+            },
+            {
+              "delta": {
+                "amount": 2,
+                "kind": "fixed_number",
+                "sign": "-"
+              },
+              "kind": "modify_ac"
+            },
+            {
+              "abilityFilter": [
+                "dex"
+              ],
+              "delta": {
+                "amount": 2,
+                "kind": "fixed_number",
+                "sign": "-"
+              },
+              "kind": "modify_roll_numeric",
+              "on": [
+                "saving_throw"
+              ]
+            },
+            {
+              "actions": [
+                "reaction"
+              ],
+              "kind": "restrict_action_usage"
+            },
+            {
+              "kind": "choose_action_or_bonus_action_each_turn"
+            },
+            {
+              "kind": "cap_attack_action_attacks",
+              "maxAttacks": 1
+            },
+            {
+              "kind": "somatic_spell_failure_chance",
+              "percent": 25
+            }
+          ],
+          "kind": "composite"
+        },
+        "onSuccess": {
+          "kind": "none"
+        },
+        "repeatSaves": [
+          {
+            "cadence": "end_of_target_turn",
+            "onSuccess": "ends_on_target"
+          }
+        ]
+      }
+    ],
+    "range": {
+      "feet": 120,
+      "kind": "point"
+    },
+    "school": "transmutation"
+  },
+  "name": "Slow",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-S-Z#Slow"
+  }
+}

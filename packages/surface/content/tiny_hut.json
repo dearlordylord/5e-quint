@@ -1,0 +1,75 @@
+{
+  "description": "A 10-foot Emanation springs into existence around you and remains stationary for the duration. The spell fails when you cast it if the Emanation isn't big enough to fully encapsulate all creatures in its area. Creatures and objects within the Emanation when you cast the spell can move through it freely. All other creatures and objects are barred from passing through it. Spells of level 3 or lower can't be cast through it, and the effects of such spells can't extend into it. The atmosphere inside the Emanation is comfortable and dry, regardless of the weather outside. Until the spell ends, you can command the interior to have Dim Light or Darkness, no action required. The Emanation is opaque from the outside and of any color you choose, but transparent from the inside. The spell ends early if you leave the Emanation or if you cast it again.",
+  "id": "tiny_hut",
+  "kind": "spell",
+  "mechanics": {
+    "attachment": {
+      "holeId": "tiny_hut_emanation",
+      "kind": "hole",
+      "label": "stationary 10-foot Emanation",
+      "value": {
+        "kind": "area",
+        "origin": {
+          "kind": "self"
+        },
+        "shape": {
+          "kind": "emanation",
+          "radiusFeet": 10
+        }
+      }
+    },
+    "castingTime": {
+      "amount": 1,
+      "kind": "minutes",
+      "ritual": true
+    },
+    "components": {
+      "m": "a crystal bead",
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "earlyEnd": [
+        {
+          "kind": "caster_recasts_spell"
+        }
+      ],
+      "kind": "timed",
+      "value": {
+        "amount": 8,
+        "unit": "hour"
+      }
+    },
+    "family": "ongoing_effect",
+    "level": 3,
+    "operations": [
+      {
+        "effect": {
+          "kind": "block_travel",
+          "scope": "non_initial_creatures_and_objects_through_emanation"
+        },
+        "trigger": {
+          "kind": "passive"
+        }
+      },
+      {
+        "effect": {
+          "kind": "block_travel",
+          "scope": "level_3_or_lower_spell_casting_through_or_effects_extending_into_emanation"
+        },
+        "trigger": {
+          "kind": "passive"
+        }
+      }
+    ],
+    "range": {
+      "kind": "self"
+    },
+    "school": "evocation"
+  },
+  "name": "Tiny Hut",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-S-Z#Tiny Hut"
+  }
+}

@@ -1,0 +1,60 @@
+{
+  "description": "You imbue plants in an immobile 30-foot Emanation with limited sentience and animation, giving them the ability to communicate with you and follow your simple commands. You can question plants about events in the spell's area within the past day, gaining information about creatures that have passed, weather, and other circumstances. You can also turn Difficult Terrain caused by plant growth into ordinary terrain that lasts for the duration, or turn ordinary terrain where plants are present into Difficult Terrain that lasts for the duration. The spell doesn't enable plants to uproot themselves and move about, but they can move their branches, tendrils, and stalks for you. If a Plant creature is in the area, you can communicate with it as if you shared a common language.",
+  "id": "speak_with_plants",
+  "kind": "spell",
+  "mechanics": {
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": false,
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "timed",
+      "value": {
+        "amount": 10,
+        "unit": "minute"
+      }
+    },
+    "family": "activation",
+    "level": 3,
+    "phases": [
+      {
+        "attachment": {
+          "holeId": "speak_with_plants_area",
+          "kind": "hole",
+          "label": "immobile 30-foot Emanation with plants",
+          "value": {
+            "kind": "area",
+            "origin": {
+              "kind": "self"
+            },
+            "shape": {
+              "kind": "emanation",
+              "radiusFeet": 30
+            }
+          }
+        },
+        "effects": [
+          {
+            "creatureType": "plant",
+            "includesInfluenceActionOptions": false,
+            "kind": "grant_creature_communication"
+          }
+        ],
+        "kind": "direct"
+      }
+    ],
+    "range": {
+      "kind": "self"
+    },
+    "school": "transmutation"
+  },
+  "name": "Speak with Plants",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-S-Z#Speak with Plants"
+  }
+}

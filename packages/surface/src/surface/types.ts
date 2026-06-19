@@ -262,6 +262,15 @@ export type MentalMessageDeliveryEffect = Schema.Schema.Type<
 export type ForceMoveEffect = Schema.Schema.Type<
   typeof SurfaceSchema.ForceMoveEffectSchema
 >;
+export type ActionBonusActionChoiceEffect = Schema.Schema.Type<
+  typeof SurfaceSchema.ActionBonusActionChoiceEffectSchema
+>;
+export type AttackActionAttackCapEffect = Schema.Schema.Type<
+  typeof SurfaceSchema.AttackActionAttackCapEffectSchema
+>;
+export type SomaticSpellFailureChanceEffect = Schema.Schema.Type<
+  typeof SurfaceSchema.SomaticSpellFailureChanceEffectSchema
+>;
 export type AudibleEffect = Schema.Schema.Type<
   typeof SurfaceSchema.AudibleEffectSchema
 >;

@@ -212,6 +212,8 @@ import removeCurseInput from "../../content/remove_curse.json";
 import revivifyInput from "../../content/revivify.json";
 import ropeTrickInput from "../../content/rope_trick.json";
 import sendingInput from "../../content/sending.json";
+import speakWithDeadInput from "../../content/speak_with_dead.json";
+import speakWithPlantsInput from "../../content/speak_with_plants.json";
 import speciesDragonbornInput from "../../content/species_dragonborn.json";
 import speciesDragonbornBreathWeaponInput from "../../content/species_dragonborn_breath_weapon.json";
 import speciesDragonbornDamageResistanceInput from "../../content/species_dragonborn_damage_resistance.json";
@@ -273,6 +275,7 @@ import shiningSmiteInput from "../../content/shining_smite.json";
 import shockingGraspInput from "../../content/shocking_grasp.json";
 import sleepInput from "../../content/sleep.json";
 import sleetStormInput from "../../content/sleet_storm.json";
+import slowInput from "../../content/slow.json";
 import spiderClimbInput from "../../content/spider_climb.json";
 import spikeGrowthInput from "../../content/spike_growth.json";
 import spiritualWeaponInput from "../../content/spiritual_weapon.json";
@@ -292,6 +295,7 @@ import sorcerousBurstInput from "../../content/sorcerous_burst.json";
 import spareTheDyingInput from "../../content/spare_the_dying.json";
 import starryWispInput from "../../content/starry_wisp.json";
 import thaumaturgyInput from "../../content/thaumaturgy.json";
+import tinyHutInput from "../../content/tiny_hut.json";
 import thunderwaveInput from "../../content/thunderwave.json";
 import trueStrikeInput from "../../content/true_strike.json";
 import warlockEldritchInvocationsInput from "../../content/warlock_eldritch_invocations.json";
@@ -685,6 +689,8 @@ export const srdUnitCollection = defineSrdUnitCollection({
     revivifyInput,
     ropeTrickInput,
     sendingInput,
+    speakWithDeadInput,
+    speakWithPlantsInput,
     sacredFlameInput,
     sanctuaryInput,
     scorchingRayInput,
@@ -695,6 +701,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     spareTheDyingInput,
     starryWispInput,
     thaumaturgyInput,
+    tinyHutInput,
     viciousMockeryInput,
     detectEvilAndGoodInput,
     detectMagicInput,
@@ -719,6 +726,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     shiningSmiteInput,
     sleepInput,
     sleetStormInput,
+    slowInput,
     flyInput,
     spiderClimbInput,
     spikeGrowthInput,
