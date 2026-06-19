@@ -291,6 +291,7 @@ import sorcerousBurstInput from "../../content/sorcerous_burst.json";
 import spareTheDyingInput from "../../content/spare_the_dying.json";
 import starryWispInput from "../../content/starry_wisp.json";
 import thaumaturgyInput from "../../content/thaumaturgy.json";
+import tinyHutInput from "../../content/tiny_hut.json";
 import thunderwaveInput from "../../content/thunderwave.json";
 import trueStrikeInput from "../../content/true_strike.json";
 import warlockEldritchInvocationsInput from "../../content/warlock_eldritch_invocations.json";
@@ -693,6 +694,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     spareTheDyingInput,
     starryWispInput,
     thaumaturgyInput,
+    tinyHutInput,
     viciousMockeryInput,
     detectEvilAndGoodInput,
     detectMagicInput,

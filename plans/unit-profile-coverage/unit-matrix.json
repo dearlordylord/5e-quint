@@ -43,14 +43,14 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
-      "denominator": 451,
-      "numerator": 266,
-      "percent": "59%"
+      "denominator": 452,
+      "numerator": 267,
+      "percent": "59.1%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 539,
-      "numerator": 316,
-      "percent": "58.6%"
+      "denominator": 540,
+      "numerator": 317,
+      "percent": "58.7%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,7 +59,7 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 317
+      "value": 318
     },
     "deterministicAdmissionProjectionCoverage": {
       "denominator": 185,
@@ -67,8 +67,8 @@
       "percent": "97.3%"
     },
     "profileClassificationCoverage": {
-      "denominator": 317,
-      "numerator": 317,
+      "denominator": 318,
+      "numerator": 318,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -112,9 +112,9 @@
       "percent": "98.9%"
     },
     "supportedProfileCoverage": {
-      "denominator": 267,
+      "denominator": 268,
       "numerator": 185,
-      "percent": "69.3%"
+      "percent": "69%"
     }
   },
   "metricSemantics": [
@@ -16661,8 +16661,8 @@
         "unsupportedOrOtherUnits": 4
       },
       {
-        "executableUnitDenominator": 136,
-        "installedUnitDenominator": 136,
+        "executableUnitDenominator": 137,
+        "installedUnitDenominator": 137,
         "kind": "spell",
         "label": "Spell Units",
         "profileFactDenominator": 136,
@@ -16672,7 +16672,7 @@
         "selectedIdentityReplayGapUnits": 0,
         "selectedIdentityReplayWitnessUnits": 110,
         "supportedProfileUnits": 92,
-        "unsupportedOrOtherUnits": 26
+        "unsupportedOrOtherUnits": 27
       },
       {
         "executableUnitDenominator": 93,
@@ -33820,6 +33820,29 @@
       ],
       "sourceRecordPath": "packages/surface/content/thaumaturgy.json",
       "unitId": "thaumaturgy"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "runtime-detached table/spatial/environment shelter owner",
+          "reason": "Tiny Hut supplies stationary shelter, creature and object passage, level-capped spell-boundary, weather/atmosphere, interior-light, color, and one-way visibility source facts, but promoted battle runtime does not own stationary Emanation placement, cast-time encapsulation and membership, initial-versus-later creature and object identity, passage through shelter boundaries, weather or atmosphere projection, interior light commands, color presentation, one-way visibility, or level-capped spell-boundary adjudication."
+        },
+        "reason": "Tiny Hut is authored and installed as an SRD Surface Spell Definition with 1-minute-or-Ritual casting, Self range, V/S/M crystal-bead components, 8-hour duration, a stationary 10-foot Emanation, a cast-failure source fact when the Emanation cannot fully encapsulate all creatures in its area, initial creature and object free passage, later creature and object passage blocking, level-3-or-lower spell casting and effect-extension blocking through or into the Emanation, comfortable dry atmosphere regardless of outside weather, caster-commanded Dim Light or Darkness with no action, outside opacity, inside transparency, chosen color, and early ending when the caster leaves the Emanation or casts the spell again. Task 9 claims no promoted battle-runtime profile because the active shelter depends on table/spatial/environment state rather than a promoted battle area owner in this catalog admission task.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/tiny_hut.json",
+      "unitId": "tiny_hut"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

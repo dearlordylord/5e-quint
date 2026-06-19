@@ -55,7 +55,7 @@
     {
       "number": 9,
       "id": "L5-D09-TINY-HUT",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Close Tiny Hut missing authored record"
     },
     {
@@ -144,7 +144,7 @@ missing-record spells unless a RAW dependency is unavoidable and documented.
 | 6 | L5-D06-SLOW - Close Slow missing authored record | done | none | Authored and installed Slow as an SRD Surface Spell Definition while preserving active-penalties and turn/Somatic runtime follow-up tasks. |
 | 7 | L5-D07-SPEAK-WITH-DEAD - Close Speak with Dead missing authored record | done | none | Independent missing spell Unit. |
 | 8 | L5-D08-SPEAK-WITH-PLANTS - Close Speak with Plants missing authored record | done | none | Authored and installed Speak with Plants as an SRD Surface Spell Definition with a runtime-detached table/spatial/exploration owner. |
-| 9 | L5-D09-TINY-HUT - Close Tiny Hut missing authored record | ready-for-research | none | Independent missing spell Unit. |
+| 9 | L5-D09-TINY-HUT - Close Tiny Hut missing authored record | done | none | Authored and installed Tiny Hut as an SRD Surface Spell Definition with a runtime-detached table/spatial/environment shelter owner. |
 | 10 | L5-D10-WATER-WALK - Close Water Walk missing authored record | ready-for-research | none | Independent missing spell Unit. |
 | 11 | L3-FOLLOWUP-SLEET-STORM-AREA-HAZARD-RUNTIME - Promote Sleet Storm area hazard runtime support | ready-for-research | L5-D05-SLEET-STORM | Runtime support consumes the typed Sleet Storm Surface facts installed by Task 5. |
 | 12 | L3-FOLLOWUP-SLOW-ACTIVE-PENALTIES-RUNTIME - Promote Slow active penalties runtime support | ready-for-research | L5-D06-SLOW | Runtime support consumes the typed Slow Surface facts installed by Task 6 for invocation, active penalties, and repeat-save cleanup. |
@@ -482,7 +482,7 @@ Verification:
 
 ### Task 9 - L5-D09-TINY-HUT
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -500,8 +500,9 @@ SRD anchors:
 
 Current state:
 
-- Authored record is missing; catalog state is `not-installed`.
-- Mining disposition is `missing-authored-record`.
+- Tiny Hut is authored and installed as an SRD Surface Spell Definition.
+- Unit claim is `unsupported-profile` with a runtime-detached
+  table/spatial/environment shelter owner.
 
 Output:
 

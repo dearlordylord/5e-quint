@@ -3639,6 +3639,72 @@ describe("SRD Unit catalog boundary", () => {
     expect(speakWithPlants.description).toContain("shared a common language");
   });
 
+  test("decodes Tiny Hut as a runtime-detached shelter boundary Spell Definition", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag !== "ok") return;
+    const tinyHut = result.catalog.requireUnit("tiny_hut");
+
+    expect(tinyHut.kind).toBe("spell");
+    if (tinyHut.kind !== "spell") return;
+    expect(tinyHut.mechanics.family).toBe("ongoing_effect");
+    if (tinyHut.mechanics.family !== "ongoing_effect") return;
+
+    expect(tinyHut.provenance).toEqual({
+      kind: "srd-5.2.1",
+      section: "Spells/Descriptions-S-Z#Tiny Hut",
+    });
+    expect(tinyHut.mechanics).toMatchObject({
+      level: 3,
+      school: "evocation",
+      castingTime: { kind: "minutes", amount: 1, ritual: true },
+      range: { kind: "self" },
+      components: { v: true, s: true, m: "a crystal bead" },
+      duration: {
+        kind: "timed",
+        value: { unit: "hour", amount: 8 },
+        earlyEnd: [{ kind: "caster_recasts_spell" }],
+      },
+      attachment: {
+        kind: "hole",
+        holeId: "tiny_hut_emanation",
+        label: "stationary 10-foot Emanation",
+        value: {
+          kind: "area",
+          shape: { kind: "emanation", radiusFeet: 10 },
+          origin: { kind: "self" },
+        },
+      },
+    });
+    expect(tinyHut.mechanics.operations).toEqual([
+      {
+        trigger: { kind: "passive" },
+        effect: {
+          kind: "block_travel",
+          scope: "non_initial_creatures_and_objects_through_emanation",
+        },
+      },
+      {
+        trigger: { kind: "passive" },
+        effect: {
+          kind: "block_travel",
+          scope:
+            "level_3_or_lower_spell_casting_through_or_effects_extending_into_emanation",
+        },
+      },
+    ]);
+    expect(tinyHut.description).toContain(
+      "fully encapsulate all creatures in its area",
+    );
+    expect(tinyHut.description).toContain("comfortable and dry");
+    expect(tinyHut.description).toContain("regardless of the weather outside");
+    expect(tinyHut.description).toContain("Dim Light or Darkness");
+    expect(tinyHut.description).toContain("opaque from the outside");
+    expect(tinyHut.description).toContain("transparent from the inside");
+    expect(tinyHut.description).toContain("leave the Emanation");
+  });
+
   test("decodes Sleet Storm as an authored Cylinder hazard Spell Definition", () => {
     const result = buildUnitCatalog({ collections: [srdUnitCollection] });
 
