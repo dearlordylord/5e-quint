@@ -162,6 +162,7 @@ import magicCircleInput from "../../content/magic_circle.json";
 import magicMissileInput from "../../content/magic_missile.json";
 import magicMouthInput from "../../content/magic_mouth.json";
 import magicWeaponInput from "../../content/magic_weapon.json";
+import meldIntoStoneInput from "../../content/meld_into_stone.json";
 import mindSpikeInput from "../../content/mind_spike.json";
 import massCureWoundsInput from "../../content/mass_cure_wounds.json";
 import massHealingWordInput from "../../content/mass_healing_word.json";
@@ -710,6 +711,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     magicMissileInput,
     magicMouthInput,
     magicWeaponInput,
+    meldIntoStoneInput,
     mindSpikeInput,
     mirrorImageInput,
     moonbeamInput,

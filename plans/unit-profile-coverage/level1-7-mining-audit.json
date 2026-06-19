@@ -19,9 +19,8 @@
       "catalog-authored-review-required": 24,
       "catalog-installed-owner-evidence-present": 8,
       "catalog-installed-owner-evidence-required": 3,
-      "catalog-only/dead-for-now": 20,
-      "missing-authored-record": 20,
-      "needs-surface-widening": 1
+      "catalog-only/dead-for-now": 21,
+      "missing-authored-record": 20
     },
     "auditedUniqueSpellIdentitiesByLevelBand": {
       "spell-level-3": 42,
@@ -35,15 +34,14 @@
     },
     "rowsByBattleReadinessStatus": {
       "accepted": 471,
-      "accepted-no-battle-effect": 234,
+      "accepted-no-battle-effect": 236,
       "battle-runtime-required": 54,
       "not-applicable": 77,
-      "owner-evidence-required": 62,
-      "surface-widening-required": 2
+      "owner-evidence-required": 62
     },
     "rowsByCatalogAdmission": {
-      "installed": 672,
-      "not-installed": 228
+      "installed": 674,
+      "not-installed": 226
     },
     "rowsByCategory": {
       "character-creation or progression mechanic": 172,
@@ -59,10 +57,9 @@
       "catalog-authored-review-required": 61,
       "catalog-installed-owner-evidence-present": 485,
       "catalog-installed-owner-evidence-required": 10,
-      "catalog-only/dead-for-now": 189,
+      "catalog-only/dead-for-now": 191,
       "level-5-7-follow-up-required": 24,
       "missing-authored-record": 45,
-      "needs-surface-widening": 2,
       "non-runtime": 84
     },
     "rowsByLevelBand": {
@@ -93,10 +90,10 @@
       "subclass-spell-access": 5
     },
     "rowsByUnitProfileDisposition": {
-      "not-recorded": 171,
+      "not-recorded": 169,
       "profile-subset-supported": 53,
       "supported-profile": 299,
-      "unsupported-profile": 377
+      "unsupported-profile": 379
     }
   },
   "rows": [
@@ -9702,7 +9699,7 @@
         "sourceInventoryRowId": "srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_meld_into_stone",
         "state": "present"
       },
-      "nextAction": "Widen Surface: Spell Definition stone-merge occurrence: the self-only cast requires touching a stone object or surface large enough to fully contain the caster's body; the caster and equipment merge into hidden stone occupancy for 8 hours; nonmagical senses cannot detect the caster; outside sight is blocked; outside-sound Wisdom (Perception) checks have Disadvantage; the caster remains time-aware, can cast spells on themselves, can spend 5 feet of Movement to leave only where they entered, and otherwise cannot move; minor stone damage is harmless; partial destruction or shape change that makes the caster no longer fit expels them with 6d6 Force damage; complete destruction or transmutation expels them with 50 Force damage; any expulsion places them in the closest unoccupied space to the entry location and gives the Prone condition.",
+      "nextAction": "Meld into Stone supplies typed Surface facts for the stone object-or-surface containment target, hidden merged occupancy, outside-sense limits, time awareness, self-spell permission, Movement-limited voluntary exit, otherwise-no-movement restriction, harmless minor stone damage, destructive/transmuting expulsion damage, closest-unoccupied-space placement, and Prone rider. Promoted battle runtime still needs a merged-state effect owner that consumes table terrain/object witnesses for stone size, shape, material, entry location, damage/destruction/transmutation events, fit-after-shape-change predicates, and closest-unoccupied placement without duplicating battle map/object state or branching on authored spell id or name.",
       "rowId": "srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_meld_into_stone",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -9712,25 +9709,28 @@
       },
       "supportSnapshot": {
         "authoredContent": {
-          "state": "missing-authored-record"
+          "sourceRecordPath": "packages/surface/content/meld_into_stone.json",
+          "state": "authored-record-present",
+          "unitId": "meld_into_stone"
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "surface-widening-required"
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
           "kind": "table-spatial-derivation",
-          "owner": "Surface Spell Definition plus table terrain/object occupancy owner and future battle-runtime merged-state, perception, damage, and forced-exit Spell Effect owner",
-          "reason": "Meld into Stone needs a typed follow-up split before an SRD-provenance Spell Definition can be admitted: Surface must own the self-only touch cast, stone object-or-surface containment target, hidden merged occupancy, blocked outside sight, outside-sound Wisdom (Perception) Disadvantage, self-spell permission, Movement-limited voluntary exit, otherwise-no-movement restriction, damage-free minor stone damage, destructive expulsion damage branches, and Prone rider; table terrain/object occupancy ownership supplies stone size/shape/material witnesses, entry location, damage/destruction/transmutation events, fit-after-shape-change predicate, closest-unoccupied-space placement, and forced-exit witnesses; future battle runtime should consume typed merged-state and expulsion facts without dispatching on spell id or name.",
+          "owner": "future merged-state Spell Effect owner plus table terrain/object occupancy witness owner",
+          "reason": "Meld into Stone supplies typed Surface facts for the stone object-or-surface containment target, hidden merged occupancy, outside-sense limits, time awareness, self-spell permission, Movement-limited voluntary exit, otherwise-no-movement restriction, harmless minor stone damage, destructive/transmuting expulsion damage, closest-unoccupied-space placement, and Prone rider. Promoted battle runtime still needs a merged-state effect owner that consumes table terrain/object witnesses for stone size, shape, material, entry location, damage/destruction/transmutation events, fit-after-shape-change predicates, and closest-unoccupied placement without duplicating battle map/object state or branching on authored spell id or name.",
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "meld_into_stone"
         },
-        "finalDisposition": "needs-surface-widening",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },
@@ -14186,7 +14186,7 @@
         "sourceInventoryRowId": "srd521:classes/druid:spell-level-3:spell-unit-pressure:druid_spell_list_meld_into_stone",
         "state": "present"
       },
-      "nextAction": "Widen Surface: Spell Definition stone-merge occurrence: the self-only cast requires touching a stone object or surface large enough to fully contain the caster's body; the caster and equipment merge into hidden stone occupancy for 8 hours; nonmagical senses cannot detect the caster; outside sight is blocked; outside-sound Wisdom (Perception) checks have Disadvantage; the caster remains time-aware, can cast spells on themselves, can spend 5 feet of Movement to leave only where they entered, and otherwise cannot move; minor stone damage is harmless; partial destruction or shape change that makes the caster no longer fit expels them with 6d6 Force damage; complete destruction or transmutation expels them with 50 Force damage; any expulsion places them in the closest unoccupied space to the entry location and gives the Prone condition.",
+      "nextAction": "Meld into Stone supplies typed Surface facts for the stone object-or-surface containment target, hidden merged occupancy, outside-sense limits, time awareness, self-spell permission, Movement-limited voluntary exit, otherwise-no-movement restriction, harmless minor stone damage, destructive/transmuting expulsion damage, closest-unoccupied-space placement, and Prone rider. Promoted battle runtime still needs a merged-state effect owner that consumes table terrain/object witnesses for stone size, shape, material, entry location, damage/destruction/transmutation events, fit-after-shape-change predicates, and closest-unoccupied placement without duplicating battle map/object state or branching on authored spell id or name.",
       "rowId": "srd521:classes/druid:spell-level-3:spell-unit-pressure:druid_spell_list_meld_into_stone",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -14196,25 +14196,28 @@
       },
       "supportSnapshot": {
         "authoredContent": {
-          "state": "missing-authored-record"
+          "sourceRecordPath": "packages/surface/content/meld_into_stone.json",
+          "state": "authored-record-present",
+          "unitId": "meld_into_stone"
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "surface-widening-required"
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
           "kind": "table-spatial-derivation",
-          "owner": "Surface Spell Definition plus table terrain/object occupancy owner and future battle-runtime merged-state, perception, damage, and forced-exit Spell Effect owner",
-          "reason": "Meld into Stone needs a typed follow-up split before an SRD-provenance Spell Definition can be admitted: Surface must own the self-only touch cast, stone object-or-surface containment target, hidden merged occupancy, blocked outside sight, outside-sound Wisdom (Perception) Disadvantage, self-spell permission, Movement-limited voluntary exit, otherwise-no-movement restriction, damage-free minor stone damage, destructive expulsion damage branches, and Prone rider; table terrain/object occupancy ownership supplies stone size/shape/material witnesses, entry location, damage/destruction/transmutation events, fit-after-shape-change predicate, closest-unoccupied-space placement, and forced-exit witnesses; future battle runtime should consume typed merged-state and expulsion facts without dispatching on spell id or name.",
+          "owner": "future merged-state Spell Effect owner plus table terrain/object occupancy witness owner",
+          "reason": "Meld into Stone supplies typed Surface facts for the stone object-or-surface containment target, hidden merged occupancy, outside-sense limits, time awareness, self-spell permission, Movement-limited voluntary exit, otherwise-no-movement restriction, harmless minor stone damage, destructive/transmuting expulsion damage, closest-unoccupied-space placement, and Prone rider. Promoted battle runtime still needs a merged-state effect owner that consumes table terrain/object witnesses for stone size, shape, material, entry location, damage/destruction/transmutation events, fit-after-shape-change predicates, and closest-unoccupied placement without duplicating battle map/object state or branching on authored spell id or name.",
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "meld_into_stone"
         },
-        "finalDisposition": "needs-surface-widening",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },
@@ -41540,30 +41543,33 @@
       ],
       "levelBand": "spell-level-3",
       "nextActions": [
-        "Widen Surface: Spell Definition stone-merge occurrence: the self-only cast requires touching a stone object or surface large enough to fully contain the caster's body; the caster and equipment merge into hidden stone occupancy for 8 hours; nonmagical senses cannot detect the caster; outside sight is blocked; outside-sound Wisdom (Perception) checks have Disadvantage; the caster remains time-aware, can cast spells on themselves, can spend 5 feet of Movement to leave only where they entered, and otherwise cannot move; minor stone damage is harmless; partial destruction or shape change that makes the caster no longer fit expels them with 6d6 Force damage; complete destruction or transmutation expels them with 50 Force damage; any expulsion places them in the closest unoccupied space to the entry location and gives the Prone condition."
+        "Meld into Stone supplies typed Surface facts for the stone object-or-surface containment target, hidden merged occupancy, outside-sense limits, time awareness, self-spell permission, Movement-limited voluntary exit, otherwise-no-movement restriction, harmless minor stone damage, destructive/transmuting expulsion damage, closest-unoccupied-space placement, and Prone rider. Promoted battle runtime still needs a merged-state effect owner that consumes table terrain/object witnesses for stone size, shape, material, entry location, damage/destruction/transmutation events, fit-after-shape-change predicates, and closest-unoccupied placement without duplicating battle map/object state or branching on authored spell id or name."
       ],
       "spellName": "Meld into Stone",
       "supportSnapshot": {
         "authoredContent": {
-          "state": "missing-authored-record"
+          "sourceRecordPath": "packages/surface/content/meld_into_stone.json",
+          "state": "authored-record-present",
+          "unitId": "meld_into_stone"
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "surface-widening-required"
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
           "kind": "table-spatial-derivation",
-          "owner": "Surface Spell Definition plus table terrain/object occupancy owner and future battle-runtime merged-state, perception, damage, and forced-exit Spell Effect owner",
-          "reason": "Meld into Stone needs a typed follow-up split before an SRD-provenance Spell Definition can be admitted: Surface must own the self-only touch cast, stone object-or-surface containment target, hidden merged occupancy, blocked outside sight, outside-sound Wisdom (Perception) Disadvantage, self-spell permission, Movement-limited voluntary exit, otherwise-no-movement restriction, damage-free minor stone damage, destructive expulsion damage branches, and Prone rider; table terrain/object occupancy ownership supplies stone size/shape/material witnesses, entry location, damage/destruction/transmutation events, fit-after-shape-change predicate, closest-unoccupied-space placement, and forced-exit witnesses; future battle runtime should consume typed merged-state and expulsion facts without dispatching on spell id or name.",
+          "owner": "future merged-state Spell Effect owner plus table terrain/object occupancy witness owner",
+          "reason": "Meld into Stone supplies typed Surface facts for the stone object-or-surface containment target, hidden merged occupancy, outside-sense limits, time awareness, self-spell permission, Movement-limited voluntary exit, otherwise-no-movement restriction, harmless minor stone damage, destructive/transmuting expulsion damage, closest-unoccupied-space placement, and Prone rider. Promoted battle runtime still needs a merged-state effect owner that consumes table terrain/object witnesses for stone size, shape, material, entry location, damage/destruction/transmutation events, fit-after-shape-change predicates, and closest-unoccupied placement without duplicating battle map/object state or branching on authored spell id or name.",
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "meld_into_stone"
         },
-        "finalDisposition": "needs-surface-widening",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },

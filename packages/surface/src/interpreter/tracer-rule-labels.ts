@@ -64,6 +64,7 @@ export function procedureForFamily(
     Match.when("anchored_trigger", () => "store" as const),
     Match.when("glyph_warding", () => "store" as const),
     Match.when("magic_circle_ward", () => "activate" as const),
+    Match.when("stone_merge", () => "activate" as const),
     Match.when("ongoing_effect", () => "activate" as const),
     Match.when("activation", () => "activate" as const),
     Match.when("modal_activation", () => "activate" as const),

@@ -2400,7 +2400,11 @@ export const CreatureSizeFilterSchema = strictStruct({
   creatureSize: SizeSchema,
 });
 
-export const ObjectMaterialSchema = Schema.Literal("metal", "flammable");
+export const ObjectMaterialSchema = Schema.Literal(
+  "metal",
+  "flammable",
+  "stone",
+);
 const ObjectKindFilterSchema = Schema.Literal("weapon");
 const ObjectMagicalityFilterSchema = MagicalitySchema;
 
@@ -4905,6 +4909,146 @@ export const MagicCircleWardMechanicsSchema = Schema.extend(
   }),
 );
 
+export const StoneMergeAnchorChoiceSchema = strictStruct({
+  chooser: Schema.Literal("caster"),
+  object: strictStruct({
+    kind: Schema.Literal("stone_object"),
+    material: Schema.Literal("stone"),
+  }),
+  surface: strictStruct({
+    kind: Schema.Literal("stone_surface"),
+    material: Schema.Literal("stone"),
+  }),
+});
+
+export const StoneMergeTargetSchema = strictStruct({
+  kind: Schema.Literal("stone_object_or_surface"),
+  anchor: StoneMergeAnchorChoiceSchema,
+  contact: Schema.Literal("caster_must_touch_stone"),
+  containment: strictStruct({
+    subject: Schema.Literal("caster_body_and_equipment"),
+    requirement: Schema.Literal("large_enough_to_fully_contain_subject"),
+  }),
+  tableTerrainObject: strictStruct({
+    stoneSize: Schema.Literal("table_witnessed_stone_size"),
+    stoneShape: Schema.Literal("table_witnessed_stone_shape"),
+    stoneMaterial: Schema.Literal("table_witnessed_stone_material"),
+    entryLocation: Schema.Literal("table_witnessed_entry_location"),
+  }),
+});
+
+export const StoneMergeOccupancySchema = strictStruct({
+  kind: Schema.Literal("hidden_merged_occupancy"),
+  subject: Schema.Literal("caster_and_equipment"),
+  state: Schema.Literal("merged_with_stone"),
+  detection: strictStruct({
+    visiblePresence: Schema.Literal("none"),
+    nonmagicalSenses: Schema.Literal("not_detectable"),
+  }),
+  outsidePerception: strictStruct({
+    sight: Schema.Literal("cannot_see_outside_stone"),
+    hearing: strictStruct({
+      kind: Schema.Literal("wisdom_perception_check_disadvantage"),
+      ability: Schema.Literal("wis"),
+      skill: Schema.Literal("perception"),
+      stimulus: Schema.Literal("sounds_outside_stone"),
+      mode: Schema.Literal("disadvantage"),
+    }),
+  }),
+  timeAwareness: Schema.Literal("aware_of_passage_of_time"),
+  selfSpellcasting: strictStruct({
+    target: Schema.Literal("self"),
+    permission: Schema.Literal("can_cast_spells_on_self"),
+  }),
+  movement: strictStruct({
+    voluntaryExit: strictStruct({
+      cost: strictStruct({
+        kind: Schema.Literal("movement"),
+        feet: Schema.Literal(5),
+      }),
+      location: Schema.Literal("entry_location"),
+      outcome: Schema.Literal("spell_ends"),
+    }),
+    otherwise: Schema.Literal("cannot_move"),
+  }),
+});
+
+export const StoneMergeExpulsionSchema = strictStruct({
+  kind: Schema.Literal("stone_merge_expulsion"),
+  placement: strictStruct({
+    kind: Schema.Literal("closest_unoccupied_space_to_entry_location"),
+    owner: Schema.Literal("table_witnessed_closest_unoccupied_space"),
+  }),
+  condition: Schema.Literal("prone"),
+});
+
+export const StoneMergePartialExpulsionDamageSchema = strictStruct({
+  damageType: Schema.Literal("force"),
+  amount: strictStruct({
+    kind: Schema.Literal("fixed"),
+    expr: strictStruct({
+      dice: Schema.Literal(6),
+      dieSize: Schema.Literal(6),
+    }),
+  }),
+});
+
+export const StoneMergeCompleteExpulsionDamageSchema = strictStruct({
+  damageType: Schema.Literal("force"),
+  amount: strictStruct({
+    kind: Schema.Literal("fixed"),
+    expr: strictStruct({
+      dice: Schema.Literal(0),
+      dieSize: Schema.Literal(1),
+      flat: Schema.Literal(50),
+    }),
+  }),
+});
+
+export const StoneMergeStoneEventResponsesSchema = strictStruct({
+  tableTerrainObject: strictStruct({
+    stoneDamageEvents: Schema.Literal(
+      "table_witnessed_stone_damage_destruction_transmutation_events",
+    ),
+    fitAfterShapeChange: Schema.Literal(
+      "table_witnessed_fit_after_shape_change",
+    ),
+    closestUnoccupiedSpace: Schema.Literal(
+      "table_witnessed_closest_unoccupied_space_to_entry_location",
+    ),
+  }),
+  minorPhysicalDamage: strictStruct({
+    trigger: Schema.Literal("minor_physical_damage"),
+    outcome: Schema.Literal("no_harm_to_merged_creature"),
+  }),
+  partialDestructionOrShapeChange: strictStruct({
+    triggers: Schema.Tuple(
+      Schema.Literal("partial_destruction"),
+      Schema.Literal("shape_change_no_longer_fits"),
+    ),
+    damage: StoneMergePartialExpulsionDamageSchema,
+    expulsion: StoneMergeExpulsionSchema,
+  }),
+  completeDestructionOrTransmutation: strictStruct({
+    triggers: Schema.Tuple(
+      Schema.Literal("complete_destruction"),
+      Schema.Literal("transmutation_to_different_substance"),
+    ),
+    damage: StoneMergeCompleteExpulsionDamageSchema,
+    expulsion: StoneMergeExpulsionSchema,
+  }),
+});
+
+export const StoneMergeMechanicsSchema = Schema.extend(
+  SpellMechanicsHeaderSchema,
+  strictStruct({
+    family: Schema.Literal("stone_merge"),
+    target: StoneMergeTargetSchema,
+    occupancy: StoneMergeOccupancySchema,
+    stoneEventResponses: StoneMergeStoneEventResponsesSchema,
+  }),
+);
+
 export const GlyphWardingInscriptionAnchorChoiceSchema = strictStruct({
   chooser: Schema.Literal("caster"),
   surface: strictStruct({
@@ -5306,6 +5450,7 @@ export const SpellMechanicsSchema = Schema.Union(
   PassiveHitInterceptMechanicsSchema,
   AnchoredTriggerMechanicsSchema,
   MagicCircleWardMechanicsSchema,
+  StoneMergeMechanicsSchema,
   GlyphWardingMechanicsSchema,
   SpawnedCreatureMechanicsSchema,
   ReanimatedCreatureMechanicsSchema,

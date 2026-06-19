@@ -7,6 +7,7 @@ import type {
   GlyphWardingMechanics,
   MagicCircleWardMechanics,
   Range,
+  StoneMergeMechanics,
   TriggeredReactionMechanics,
 } from "../surface/types.ts";
 import type { TraceEdge, TraceNode } from "./tracer-model.ts";
@@ -385,6 +386,69 @@ function traceMagicCircleWardDirection(
   });
   edges.push({ from: choiceId, to: directionId, relation: "branches_to" });
   edges.push({ from: directionId, to: occurrenceId, relation: "guards" });
+}
+
+export function traceStoneMerge(
+  m: StoneMergeMechanics,
+  ctx: SpellCtx,
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): void {
+  const targetId = ids("stone");
+  nodes.push({
+    id: targetId,
+    category: "attachment",
+    atomKind: "stone_merge_target",
+    label: [
+      "stone_merge_target",
+      `${m.target.anchor.object.kind} or ${m.target.anchor.surface.kind}`,
+      m.target.containment.requirement,
+      `contact: ${m.target.contact}`,
+      `size: ${m.target.tableTerrainObject.stoneSize}`,
+      `shape: ${m.target.tableTerrainObject.stoneShape}`,
+      `entry: ${m.target.tableTerrainObject.entryLocation}`,
+    ].join("\n"),
+  });
+  edges.push({ from: ctx.procId, to: targetId, relation: "attaches_to" });
+
+  const occupancyId = ids("occ");
+  nodes.push({
+    id: occupancyId,
+    category: "effect",
+    atomKind: "stone_merge_occupancy",
+    label: [
+      m.occupancy.kind,
+      `${m.occupancy.subject}: ${m.occupancy.state}`,
+      `nonmagical senses: ${m.occupancy.detection.nonmagicalSenses}`,
+      `outside sight: ${m.occupancy.outsidePerception.sight}`,
+      `${m.occupancy.outsidePerception.hearing.ability.toUpperCase()} (${m.occupancy.outsidePerception.hearing.skill}) ${m.occupancy.outsidePerception.hearing.mode} for outside sounds`,
+      m.occupancy.timeAwareness,
+      m.occupancy.selfSpellcasting.permission,
+      `exit: ${m.occupancy.movement.voluntaryExit.cost.feet} ft ${m.occupancy.movement.voluntaryExit.cost.kind} at ${m.occupancy.movement.voluntaryExit.location}`,
+      `otherwise: ${m.occupancy.movement.otherwise}`,
+    ].join("\n"),
+  });
+  edges.push({ from: targetId, to: occupancyId, relation: "grants" });
+
+  const eventId = ids("evt");
+  const responses = m.stoneEventResponses;
+  nodes.push({
+    id: eventId,
+    category: "window",
+    atomKind: "stone_event_response",
+    label: [
+      "stone_event_response",
+      responses.tableTerrainObject.stoneDamageEvents,
+      responses.tableTerrainObject.fitAfterShapeChange,
+      responses.minorPhysicalDamage.outcome,
+      `partial/shape: ${responses.partialDestructionOrShapeChange.damage.amount.expr.dice}d${responses.partialDestructionOrShapeChange.damage.amount.expr.dieSize} ${responses.partialDestructionOrShapeChange.damage.damageType}`,
+      `complete/transmute: ${responses.completeDestructionOrTransmutation.damage.amount.expr.flat} ${responses.completeDestructionOrTransmutation.damage.damageType}`,
+      responses.completeDestructionOrTransmutation.expulsion.placement.kind,
+      `condition: ${responses.completeDestructionOrTransmutation.expulsion.condition}`,
+    ].join("\n"),
+  });
+  edges.push({ from: occupancyId, to: eventId, relation: "opens_window" });
 }
 
 export function traceAnchorTarget(

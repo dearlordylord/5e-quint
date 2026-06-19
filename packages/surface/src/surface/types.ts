@@ -40,6 +40,7 @@ export const ILLUSION_SENSORY_CHANNELS = [
 export const OBJECT_MATERIALS = [
   "metal",
   "flammable",
+  "stone",
 ] as const satisfies ReadonlyArray<ObjectMaterial>;
 
 // Generic type-level utilities retained for authored-surface helper composition.
@@ -492,6 +493,30 @@ export type MagicCircleWardDirectionChoice = Schema.Schema.Type<
 >;
 export type MagicCircleWardMechanics = Schema.Schema.Type<
   typeof SurfaceSchema.MagicCircleWardMechanicsSchema
+>;
+export type StoneMergeAnchorChoice = Schema.Schema.Type<
+  typeof SurfaceSchema.StoneMergeAnchorChoiceSchema
+>;
+export type StoneMergeTarget = Schema.Schema.Type<
+  typeof SurfaceSchema.StoneMergeTargetSchema
+>;
+export type StoneMergeOccupancy = Schema.Schema.Type<
+  typeof SurfaceSchema.StoneMergeOccupancySchema
+>;
+export type StoneMergeExpulsion = Schema.Schema.Type<
+  typeof SurfaceSchema.StoneMergeExpulsionSchema
+>;
+export type StoneMergePartialExpulsionDamage = Schema.Schema.Type<
+  typeof SurfaceSchema.StoneMergePartialExpulsionDamageSchema
+>;
+export type StoneMergeCompleteExpulsionDamage = Schema.Schema.Type<
+  typeof SurfaceSchema.StoneMergeCompleteExpulsionDamageSchema
+>;
+export type StoneMergeStoneEventResponses = Schema.Schema.Type<
+  typeof SurfaceSchema.StoneMergeStoneEventResponsesSchema
+>;
+export type StoneMergeMechanics = Schema.Schema.Type<
+  typeof SurfaceSchema.StoneMergeMechanicsSchema
 >;
 export type GlyphWardingInscriptionAnchorChoice = Schema.Schema.Type<
   typeof SurfaceSchema.GlyphWardingInscriptionAnchorChoiceSchema

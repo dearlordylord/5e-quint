@@ -10,6 +10,7 @@ import hasteInput from "../../content/haste.json";
 import hypnoticPatternInput from "../../content/hypnotic_pattern.json";
 import magicCircleInput from "../../content/magic_circle.json";
 import magicWeaponInput from "../../content/magic_weapon.json";
+import meldIntoStoneInput from "../../content/meld_into_stone.json";
 import moonbeamInput from "../../content/moonbeam.json";
 import phantomSteedInput from "../../content/phantom_steed.json";
 import conjureAnimalsInput from "../../content/conjure_animals.json";
@@ -28,6 +29,7 @@ import {
   JumpMovementReplacementSchema,
   MagicCircleWardMechanicsSchema,
   OnHitTriggerMechanicsSchema,
+  StoneMergeMechanicsSchema,
   TargetSelectionSchema,
 } from "./schema.ts";
 import {
@@ -1742,6 +1744,243 @@ describe("SRD Unit catalog boundary", () => {
               protectedTargets: {
                 ...mechanics.direction.defaultDirection.protectedTargets,
                 location: "outside_cylinder",
+              },
+            },
+          },
+        }),
+      ),
+    ).toBe(true);
+  });
+
+  test("decodes Meld into Stone with stone containment, hidden occupancy, and expulsion facts", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag !== "ok") return;
+
+    const meldIntoStone = result.catalog.requireUnit("meld_into_stone");
+    expect(meldIntoStone.kind).toBe("spell");
+    if (meldIntoStone.kind !== "spell") return;
+    expect(meldIntoStone.mechanics.family).toBe("stone_merge");
+    if (meldIntoStone.mechanics.family !== "stone_merge") return;
+
+    expect(meldIntoStone.provenance).toEqual({
+      kind: "srd-5.2.1",
+      section: "Spells/Descriptions-M-P#Meld into Stone",
+    });
+    expect(meldIntoStone.mechanics).toMatchObject({
+      level: 3,
+      school: "transmutation",
+      castingTime: { kind: "action", ritual: true },
+      range: { kind: "touch" },
+      components: { v: true, s: true, m: false },
+      duration: {
+        kind: "timed",
+        value: { unit: "hour", amount: 8 },
+      },
+    });
+    expect(meldIntoStone.mechanics.target).toEqual({
+      kind: "stone_object_or_surface",
+      anchor: {
+        chooser: "caster",
+        object: { kind: "stone_object", material: "stone" },
+        surface: { kind: "stone_surface", material: "stone" },
+      },
+      contact: "caster_must_touch_stone",
+      containment: {
+        subject: "caster_body_and_equipment",
+        requirement: "large_enough_to_fully_contain_subject",
+      },
+      tableTerrainObject: {
+        stoneSize: "table_witnessed_stone_size",
+        stoneShape: "table_witnessed_stone_shape",
+        stoneMaterial: "table_witnessed_stone_material",
+        entryLocation: "table_witnessed_entry_location",
+      },
+    });
+    expect(meldIntoStone.mechanics.occupancy).toEqual({
+      kind: "hidden_merged_occupancy",
+      subject: "caster_and_equipment",
+      state: "merged_with_stone",
+      detection: {
+        visiblePresence: "none",
+        nonmagicalSenses: "not_detectable",
+      },
+      outsidePerception: {
+        sight: "cannot_see_outside_stone",
+        hearing: {
+          kind: "wisdom_perception_check_disadvantage",
+          ability: "wis",
+          skill: "perception",
+          stimulus: "sounds_outside_stone",
+          mode: "disadvantage",
+        },
+      },
+      timeAwareness: "aware_of_passage_of_time",
+      selfSpellcasting: {
+        target: "self",
+        permission: "can_cast_spells_on_self",
+      },
+      movement: {
+        voluntaryExit: {
+          cost: { kind: "movement", feet: 5 },
+          location: "entry_location",
+          outcome: "spell_ends",
+        },
+        otherwise: "cannot_move",
+      },
+    });
+    expect(meldIntoStone.mechanics.stoneEventResponses).toEqual({
+      tableTerrainObject: {
+        stoneDamageEvents:
+          "table_witnessed_stone_damage_destruction_transmutation_events",
+        fitAfterShapeChange: "table_witnessed_fit_after_shape_change",
+        closestUnoccupiedSpace:
+          "table_witnessed_closest_unoccupied_space_to_entry_location",
+      },
+      minorPhysicalDamage: {
+        trigger: "minor_physical_damage",
+        outcome: "no_harm_to_merged_creature",
+      },
+      partialDestructionOrShapeChange: {
+        triggers: ["partial_destruction", "shape_change_no_longer_fits"],
+        damage: {
+          damageType: "force",
+          amount: { kind: "fixed", expr: { dice: 6, dieSize: 6 } },
+        },
+        expulsion: {
+          kind: "stone_merge_expulsion",
+          placement: {
+            kind: "closest_unoccupied_space_to_entry_location",
+            owner: "table_witnessed_closest_unoccupied_space",
+          },
+          condition: "prone",
+        },
+      },
+      completeDestructionOrTransmutation: {
+        triggers: [
+          "complete_destruction",
+          "transmutation_to_different_substance",
+        ],
+        damage: {
+          damageType: "force",
+          amount: {
+            kind: "fixed",
+            expr: { dice: 0, dieSize: 1, flat: 50 },
+          },
+        },
+        expulsion: {
+          kind: "stone_merge_expulsion",
+          placement: {
+            kind: "closest_unoccupied_space_to_entry_location",
+            owner: "table_witnessed_closest_unoccupied_space",
+          },
+          condition: "prone",
+        },
+      },
+    });
+  });
+
+  test("rejects Meld into Stone shapes that lose fixed SRD stone-merge facts", () => {
+    const meldIntoStone = decodeUnitRecordSync(meldIntoStoneInput);
+    expect(meldIntoStone.kind).toBe("spell");
+    if (meldIntoStone.kind !== "spell") return;
+    expect(meldIntoStone.mechanics.family).toBe("stone_merge");
+    if (meldIntoStone.mechanics.family !== "stone_merge") return;
+
+    const decode = Schema.decodeUnknownEither(StoneMergeMechanicsSchema);
+    const mechanics = meldIntoStone.mechanics;
+
+    expect(
+      Either.isLeft(
+        decode({
+          ...mechanics,
+          target: {
+            ...mechanics.target,
+            containment: {
+              ...mechanics.target.containment,
+              requirement: "large_enough_to_contain_creature",
+            },
+          },
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        decode({
+          ...mechanics,
+          occupancy: {
+            ...mechanics.occupancy,
+            outsidePerception: {
+              ...mechanics.occupancy.outsidePerception,
+              hearing: {
+                ...mechanics.occupancy.outsidePerception.hearing,
+                mode: "advantage",
+              },
+            },
+          },
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        decode({
+          ...mechanics,
+          occupancy: {
+            ...mechanics.occupancy,
+            movement: {
+              ...mechanics.occupancy.movement,
+              voluntaryExit: {
+                ...mechanics.occupancy.movement.voluntaryExit,
+                cost: {
+                  ...mechanics.occupancy.movement.voluntaryExit.cost,
+                  feet: 10,
+                },
+              },
+            },
+          },
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        decode({
+          ...mechanics,
+          stoneEventResponses: {
+            ...mechanics.stoneEventResponses,
+            partialDestructionOrShapeChange: {
+              ...mechanics.stoneEventResponses.partialDestructionOrShapeChange,
+              damage: {
+                ...mechanics.stoneEventResponses.partialDestructionOrShapeChange
+                  .damage,
+                amount: {
+                  ...mechanics.stoneEventResponses
+                    .partialDestructionOrShapeChange.damage.amount,
+                  expr: {
+                    ...mechanics.stoneEventResponses
+                      .partialDestructionOrShapeChange.damage.amount.expr,
+                    dieSize: 8,
+                  },
+                },
+              },
+            },
+          },
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        decode({
+          ...mechanics,
+          stoneEventResponses: {
+            ...mechanics.stoneEventResponses,
+            completeDestructionOrTransmutation: {
+              ...mechanics.stoneEventResponses
+                .completeDestructionOrTransmutation,
+              expulsion: {
+                ...mechanics.stoneEventResponses
+                  .completeDestructionOrTransmutation.expulsion,
+                condition: "restrained",
               },
             },
           },

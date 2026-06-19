@@ -121,7 +121,7 @@
     {
       "number": 20,
       "id": "L5-C20-MELD-INTO-STONE-SURFACE-WIDENING",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Widen Meld into Stone Surface Spell Definition"
     },
     {
@@ -209,7 +209,7 @@ missing-record spells unless a RAW dependency is unavoidable and documented.
 | 17 | L5-C17-HASTE-POSITIVE-RUNTIME - Promote Haste positive runtime effect | done | L5-C16-HASTE-SURFACE-WIDENING | Haste positive runtime effects are promoted from typed Surface facts; spell-end lethargy cleanup completed in L5-C18. |
 | 18 | L5-C18-HASTE-LETHARGY-RUNTIME - Promote Haste lethargy runtime cleanup | done | L5-C17-HASTE-POSITIVE-RUNTIME | Promoted the spell-end lethargy rider: Incapacitated plus Speed 0 until the end of the target's next turn without treating Incapacitated as a Speed shortcut. |
 | 19 | L5-C19-MAGIC-CIRCLE-SURFACE-WIDENING - Widen Magic Circle Surface Spell Definition | done | L5-C07-MAGIC-CIRCLE | Magic Circle is authored/admitted as an SRD Surface Spell Definition with typed warded-cylinder, selected creature-type, direction, crossing-gate, and protected-target facts; promoted runtime remains unclaimed. |
-| 20 | L5-C20-MELD-INTO-STONE-SURFACE-WIDENING - Widen Meld into Stone Surface Spell Definition | ready-for-research | L5-C08-MELD-INTO-STONE | Add typed Surface/table terrain facts for Meld into Stone's stone object-or-surface containment target, hidden merged occupancy, outside-sense limits, self-spell and Movement-limited exit permissions, destructive expulsion damage, closest-unoccupied-space placement, and Prone rider before authoring/admitting the Spell Definition. |
+| 20 | L5-C20-MELD-INTO-STONE-SURFACE-WIDENING - Widen Meld into Stone Surface Spell Definition | done | L5-C08-MELD-INTO-STONE | Meld into Stone is authored/admitted as an SRD Surface Spell Definition with typed stone object-or-surface containment, hidden merged occupancy, outside-sense, self-spell, Movement-limited exit, destructive expulsion damage, closest-unoccupied-space placement, and Prone rider facts; promoted runtime remains unclaimed. |
 | 21 | L5-C21-PHANTOM-STEED-MOUNT-LIFECYCLE - Promote Phantom Steed mount lifecycle owner | ready-for-research | L5-C10-PHANTOM-STEED | Promote the spell-created mount lifecycle, Riding Horse Speed override, rider permission, damage-ended spell cleanup, fade/dismount grace, equipment vanish, and table travel boundary from the typed Surface record. |
 | 22 | L5-C22-GLYPH-OF-WARDING-RUNTIME - Promote Glyph of Warding runtime release owner | ready-for-research | L5-C15-GLYPH-OF-WARDING-SURFACE-WIDENING | Promote the durable glyph occurrence/release workflow from the typed Surface record, preserving table object/location, trigger-event, area-membership, hostile placement, stored spell invocation, and stored Concentration witnesses without authored spell identity dispatch. |
 
@@ -1152,7 +1152,7 @@ Plan Impact:
 
 ### Task 20 - L5-C20-MELD-INTO-STONE-SURFACE-WIDENING
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -1209,6 +1209,13 @@ Acceptance:
 Verification:
 
 - Shared lane verification.
+
+Plan Impact:
+
+- Meld into Stone is authored/admitted as an SRD-provenance Surface Spell
+  Definition with typed stone-merge facts. Remaining merged-state and table
+  terrain/object runtime ownership is retained as an unsupported-profile
+  boundary, not a promoted runtime claim.
 
 ### Task 9 - L5-C09-NONDETECTION
 

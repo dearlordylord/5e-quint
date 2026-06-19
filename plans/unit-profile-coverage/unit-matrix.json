@@ -43,14 +43,14 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
-      "denominator": 457,
-      "numerator": 271,
-      "percent": "59.3%"
+      "denominator": 458,
+      "numerator": 272,
+      "percent": "59.4%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 545,
-      "numerator": 321,
-      "percent": "58.9%"
+      "denominator": 546,
+      "numerator": 322,
+      "percent": "59%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,7 +59,7 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 322
+      "value": 323
     },
     "deterministicAdmissionProjectionCoverage": {
       "denominator": 186,
@@ -67,8 +67,8 @@
       "percent": "97.3%"
     },
     "profileClassificationCoverage": {
-      "denominator": 322,
-      "numerator": 322,
+      "denominator": 323,
+      "numerator": 323,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -112,9 +112,9 @@
       "percent": "98.3%"
     },
     "supportedProfileCoverage": {
-      "denominator": 272,
+      "denominator": 273,
       "numerator": 186,
-      "percent": "68.4%"
+      "percent": "68.1%"
     }
   },
   "metricSemantics": [
@@ -16809,8 +16809,8 @@
         "unsupportedOrOtherUnits": 4
       },
       {
-        "executableUnitDenominator": 141,
-        "installedUnitDenominator": 141,
+        "executableUnitDenominator": 142,
+        "installedUnitDenominator": 142,
         "kind": "spell",
         "label": "Spell Units",
         "profileFactDenominator": 137,
@@ -16820,7 +16820,7 @@
         "selectedIdentityReplayGapUnits": 1,
         "selectedIdentityReplayWitnessUnits": 110,
         "supportedProfileUnits": 93,
-        "unsupportedOrOtherUnits": 30
+        "unsupportedOrOtherUnits": 31
       },
       {
         "executableUnitDenominator": 93,
@@ -34615,6 +34615,29 @@
       ],
       "sourceRecordPath": "packages/surface/content/magic_weapon.json",
       "unitId": "magic_weapon"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "table-spatial-derivation",
+          "owner": "future merged-state Spell Effect owner plus table terrain/object occupancy witness owner",
+          "reason": "Meld into Stone supplies typed Surface facts for the stone object-or-surface containment target, hidden merged occupancy, outside-sense limits, time awareness, self-spell permission, Movement-limited voluntary exit, otherwise-no-movement restriction, harmless minor stone damage, destructive/transmuting expulsion damage, closest-unoccupied-space placement, and Prone rider. Promoted battle runtime still needs a merged-state effect owner that consumes table terrain/object witnesses for stone size, shape, material, entry location, damage/destruction/transmutation events, fit-after-shape-change predicates, and closest-unoccupied placement without duplicating battle map/object state or branching on authored spell id or name."
+        },
+        "reason": "Meld into Stone is authored and installed as an SRD Surface Spell Definition with Action-or-Ritual Spell Slot casting, Touch range, V/S components, an 8-hour timed duration, a caster-only stone object-or-surface merge target that requires caster touch and stone large enough to fully contain the caster's body and equipment, hidden merged occupancy with no visible presence or nonmagical-sense detectability, blocked outside sight, outside-sound Wisdom (Perception) Disadvantage, passage-of-time awareness, self-spellcasting permission while merged, a voluntary exit that spends 5 feet of Movement where the caster entered and ends the spell, and an otherwise-no-movement restriction. The record also carries table terrain/object witnesses for stone size, shape, material, entry location, damage/destruction/transmutation events, fit-after-shape-change predicates, and closest-unoccupied-space placement; minor physical damage is harmless, partial destruction or shape change that makes the caster no longer fit expels them with 6d6 Force damage, and complete destruction or transmutation expels them with 50 Force damage plus closest-unoccupied placement and the Prone condition. No promoted battle-runtime profile is claimed because full support needs a merged-state Spell Effect and table terrain/object owner without dispatching on Meld into Stone authored identity.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/meld_into_stone.json",
+      "unitId": "meld_into_stone"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
