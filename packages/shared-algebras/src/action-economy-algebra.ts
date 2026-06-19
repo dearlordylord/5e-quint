@@ -1,5 +1,12 @@
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-haste-positive
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.HASTE_POSITIVE_EFFECTS
 import { Either, Match } from "effect";
-import type { ActionRestriction, UnitRecord } from "@dnd/surface/surface/types";
+import type {
+  ActionRestriction,
+  ActionRestrictionAllowedAction,
+  SpellRecord,
+  UnitRecord,
+} from "@dnd/surface/surface/types";
 import {
   STANDARD_ACTION_KINDS,
   type StandardActionKind,
@@ -17,6 +24,13 @@ export type RuntimeActionResource =
       readonly source: "unit";
       readonly sourceOwnerId: CreatureId;
       readonly sourceUnitId: UnitRecord["id"];
+      readonly restriction: ActionRestriction;
+    }
+  | {
+      readonly kind: "action";
+      readonly source: "spellEffect";
+      readonly sourceOwnerId: CreatureId;
+      readonly sourceSpellId: SpellRecord["id"];
       readonly restriction: ActionRestriction;
     }
   | {
@@ -59,6 +73,7 @@ export type ActionEconomySpendError =
   | "no action resource available"
   | "no bonus action available"
   | "unit-granted action resource already granted"
+  | "spell-effect action resource already granted"
   | "unsupported unit activation cost"
   | "unsupported unit casting time"
   | "unsupported unit activation resource cost";
@@ -151,7 +166,46 @@ export function actionRestrictionAllows(
       { kind: "exclude" },
       (exclude) => !exclude.actions.includes(action),
     ),
+    Match.when({ kind: "allow_only" }, (allowOnly) =>
+      allowOnly.actions.some((allowed) => allowed.action === action),
+    ),
     Match.exhaustive,
+  );
+}
+
+export function actionRestrictionAllowsAdditionalAttacks(
+  restriction: ActionRestriction,
+): boolean {
+  return Match.value(restriction).pipe(
+    Match.when({ kind: "none" }, () => true),
+    Match.when({ kind: "exclude" }, (exclude) =>
+      !exclude.actions.includes("attack"),
+    ),
+    Match.when({ kind: "allow_only" }, (allowOnly) => {
+      const attack = allowOnly.actions.find(
+        (allowed): allowed is Extract<
+          ActionRestrictionAllowedAction,
+          { readonly action: "attack" }
+        > => allowed.action === "attack",
+      );
+      return attack !== undefined && attack.attackLimit.count !== 1;
+    }),
+    Match.exhaustive,
+  );
+}
+
+export function actionResourceAllowsAdditionalAttacks(
+  resource: RuntimeActionResource,
+): boolean {
+  if (
+    resource.source === "classFeatureExtraAttack" ||
+    resource.source === "monkFocusFlurryOfBlows"
+  ) {
+    return false;
+  }
+  return (
+    resource.source === "turn" ||
+    actionRestrictionAllowsAdditionalAttacks(resource.restriction)
   );
 }
 
@@ -341,6 +395,19 @@ export function hasUnitActionResource(
   );
 }
 
+export function hasSpellEffectActionResource(
+  state: ActionEconomyState,
+  sourceOwnerId: CreatureId,
+  sourceSpellId: SpellRecord["id"],
+): boolean {
+  return state.actionResources.some(
+    (resource) =>
+      resource.source === "spellEffect" &&
+      resource.sourceOwnerId === sourceOwnerId &&
+      resource.sourceSpellId === sourceSpellId,
+  );
+}
+
 export function grantUnitActionResource<T extends ActionEconomyState>(
   state: T,
   sourceOwnerId: CreatureId,
@@ -360,6 +427,31 @@ export function grantUnitActionResource<T extends ActionEconomyState>(
         source: "unit",
         sourceOwnerId,
         sourceUnitId,
+        restriction,
+      },
+    ],
+  });
+}
+
+export function grantSpellEffectActionResource<T extends ActionEconomyState>(
+  state: T,
+  sourceOwnerId: CreatureId,
+  sourceSpellId: SpellRecord["id"],
+  restriction: ActionRestriction,
+): Either.Either<T, ActionEconomySpendError> {
+  if (hasSpellEffectActionResource(state, sourceOwnerId, sourceSpellId)) {
+    return Either.left("spell-effect action resource already granted");
+  }
+
+  return Either.right({
+    ...state,
+    actionResources: [
+      ...state.actionResources,
+      {
+        kind: "action",
+        source: "spellEffect",
+        sourceOwnerId,
+        sourceSpellId,
         restriction,
       },
     ],

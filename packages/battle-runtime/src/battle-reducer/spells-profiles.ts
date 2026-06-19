@@ -84,6 +84,7 @@ import { flamingSphereProfile } from "./spell-procedure-profiles/flaming-sphere.
 import { fogCloudObscurementProfile } from "./spell-procedure-profiles/fog-cloud-obscurement.ts";
 import { greaseGroundHazardProfile } from "./spell-procedure-profiles/grease-ground-hazard.ts";
 import { gustOfWindLineProfile } from "./spell-procedure-profiles/gust-of-wind-line.ts";
+import { hastePositiveProfile } from "./spell-procedure-profiles/haste-positive.ts";
 import { jumpMovementReplacementProfile } from "./spell-procedure-profiles/jump-movement-replacement.ts";
 import { levitatedCreatureProfile } from "./spell-procedure-profiles/levitated-creature.ts";
 import { magicalDarknessPointOriginProfile } from "./spell-procedure-profiles/magical-darkness-point-origin.ts";
@@ -259,6 +260,9 @@ export function supportedSpellActs(
     ),
     ...preparedSpells.flatMap((spell) =>
       scalarBuffProfile.admit(spell, admissionContext),
+    ),
+    ...preparedSpells.flatMap((spell) =>
+      hastePositiveProfile.admit(spell, admissionContext),
     ),
     ...preparedSpells.flatMap((spell) =>
       selfTransformationModeProfile.admit(spell, admissionContext),

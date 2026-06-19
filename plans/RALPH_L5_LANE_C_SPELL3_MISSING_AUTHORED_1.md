@@ -103,7 +103,7 @@
     {
       "number": 17,
       "id": "L5-C17-HASTE-POSITIVE-RUNTIME",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Promote Haste positive runtime effect"
     },
     {
@@ -206,7 +206,7 @@ missing-record spells unless a RAW dependency is unavoidable and documented.
 | 14 | L5-C14-GASEOUS-FORM-SURFACE-WIDENING - Widen Gaseous Form Surface Spell Definition | done | L5-C04-GASEOUS-FORM | Add typed Surface/table-spatial facts for Gaseous Form's mist-cloud form state, movement replacement, Magic-action self-ending, B/P/S Resistance, Prone Immunity, Strength/Dexterity/Constitution Saving Throw Advantage, action/object/speech limits, creature-space occupancy, narrow-opening passage, and liquid-surface treatment before authoring/admitting the Spell Definition. |
 | 15 | L5-C15-GLYPH-OF-WARDING-SURFACE-WIDENING - Widen Glyph of Warding Surface Spell Definition | done | L5-C05-GLYPH-OF-WARDING | Glyph of Warding is authored/admitted as an SRD Surface Spell Definition with typed durable glyph occurrence, trigger, movement invalidation, explosive-rune, and spell-glyph facts; runtime follow-up is L5-C22. |
 | 16 | L5-C16-HASTE-SURFACE-WIDENING - Widen Haste Surface Spell Definition | done | L5-C06-HASTE | Haste is authored/admitted as an SRD Surface Spell Definition with typed restricted additional-action and spell-end lethargy facts; runtime follow-ups remain L5-C17 and L5-C18. |
-| 17 | L5-C17-HASTE-POSITIVE-RUNTIME - Promote Haste positive runtime effect | ready-for-research | L5-C16-HASTE-SURFACE-WIDENING | Promote the active Haste effects: Speed ratio, +2 Armor Class, Dexterity Saving Throw Advantage, Concentration, and restricted spell-granted per-turn action resource. |
+| 17 | L5-C17-HASTE-POSITIVE-RUNTIME - Promote Haste positive runtime effect | done | L5-C16-HASTE-SURFACE-WIDENING | Haste positive runtime effects are promoted from typed Surface facts; lethargy cleanup remains L5-C18. |
 | 18 | L5-C18-HASTE-LETHARGY-RUNTIME - Promote Haste lethargy runtime cleanup | ready-for-research | L5-C17-HASTE-POSITIVE-RUNTIME | Promote the spell-end lethargy rider: Incapacitated plus Speed 0 until the end of the target's next turn without treating Incapacitated as a Speed shortcut. |
 | 19 | L5-C19-MAGIC-CIRCLE-SURFACE-WIDENING - Widen Magic Circle Surface Spell Definition | ready-for-research | L5-C07-MAGIC-CIRCLE | Add typed Surface/table-spatial facts for Magic Circle's warded Cylinder, selected creature types, normal or reversed direction, nonmagical crossing prevention, teleportation or interplanar-travel Saving Throw gate, Attack Roll Disadvantage, and source-scoped possession plus Charmed/Frightened prevention before authoring/admitting the Spell Definition. |
 | 20 | L5-C20-MELD-INTO-STONE-SURFACE-WIDENING - Widen Meld into Stone Surface Spell Definition | ready-for-research | L5-C08-MELD-INTO-STONE | Add typed Surface/table terrain facts for Meld into Stone's stone object-or-surface containment target, hidden merged occupancy, outside-sense limits, self-spell and Movement-limited exit permissions, destructive expulsion damage, closest-unoccupied-space placement, and Prone rider before authoring/admitting the Spell Definition. |
@@ -882,7 +882,7 @@ Plan Impact:
 
 ### Task 17 - L5-C17-HASTE-POSITIVE-RUNTIME
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -900,11 +900,14 @@ SRD anchors:
 
 Current state:
 
-- Haste has a typed SRD Surface record/profile from L5-C16 for positive runtime
-  promotion.
-- Battle runtime already has adjacent scalar AC and action-resource machinery,
-  but does not yet promote Haste's Speed ratio, Dexterity Saving Throw
-  Advantage, or restricted spell-granted per-turn action resource.
+- Haste positive runtime promotion consumes the typed SRD Surface profile from
+  L5-C16 without authored spell identity dispatch.
+- Battle runtime promotes Magic Action and level-3+ Spell Slot spend,
+  caster-owned Concentration, willing target admission, doubled Speed, +2 Armor
+  Class, Dexterity Saving Throw Advantage, and the restricted target-turn
+  spell-granted action resource.
+- Haste remains `profile-subset-supported` until L5-C18 promotes the spell-end
+  lethargy rider.
 
 Output:
 
@@ -929,6 +932,11 @@ Verification:
 
 - Shared lane verification.
 - Focused battle-runtime tests and MBT per `AGENTS.md` after QNT/spec updates.
+
+Plan Impact:
+
+- L5-C18 remains the dependency-ordered follow-up for spell-end lethargy
+  cleanup.
 
 ### Task 18 - L5-C18-HASTE-LETHARGY-RUNTIME
 

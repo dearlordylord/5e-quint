@@ -1,10 +1,11 @@
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.druid-wild-shape-known-form unit-feature.grappler unit-feature.martial-arts-attack-projection
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.druid-wild-shape-known-form unit-feature.grappler unit-feature.martial-arts-attack-projection spell.invocation-haste-positive
 // KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.WILD_SHAPE_FORM_LIFECYCLE
 // Movement-budget and speed helpers extracted from battle-reducer.ts.
 // Cluster S (movement_speed). Mechanical extraction — no behavior change.
 // Reads creature-state-leaves.ts to avoid cycling back into G.
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SELF_TRANSFORMATION_MODE
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.HASTE_POSITIVE_EFFECTS
 
 import { Match } from "effect";
 import {
@@ -231,7 +232,17 @@ export function battleSpeedChanges(
     .filter((effect) => effect.kind === "speedDelta")
     .reduce((total, effect) => total + effect.deltaFeet, 0);
   return [
-    { deltaFeet: movementDeltaFeet(passiveFeatureDelta + activeEffectDelta) },
+    {
+      kind: "delta",
+      deltaFeet: movementDeltaFeet(passiveFeatureDelta + activeEffectDelta),
+    },
+    ...combatant.activeEffects
+      .filter((effect) => effect.kind === "speedRatio")
+      .map((effect) => ({
+        kind: "ratio" as const,
+        numerator: effect.numerator,
+        denominator: effect.denominator,
+      })),
   ];
 }
 

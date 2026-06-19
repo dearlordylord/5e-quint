@@ -44,6 +44,7 @@ import { greaseGroundHazardProfile } from "./grease-ground-hazard.ts";
 import { gustOfWindLineProfile } from "./gust-of-wind-line.ts";
 import { heldLightHurlProfile } from "./held-light-hurl.ts";
 import { heldLightProfile } from "./held-light.ts";
+import { hastePositiveProfile } from "./haste-positive.ts";
 import { hideousLaughterProfile } from "./hideous-laughter.ts";
 import { hypnoticPatternProfile } from "./hypnotic-pattern.ts";
 import { jumpMovementReplacementProfile } from "./jump-movement-replacement.ts";
@@ -112,6 +113,7 @@ function registeredSpellProcedureProfiles() {
     wardingBondProfile,
     creatureTypeProtectionProfile,
     conditionRemovalProtectionProfile,
+    hastePositiveProfile,
     directConditionProfile,
     directConditionRemovalProfile,
     conditionImmunityAndTurnStartTemporaryHitPointsProfile,

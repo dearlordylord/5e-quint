@@ -1,18 +1,18 @@
 {
   "summary": {
-    "total": 122,
-    "covered": 116,
+    "total": 123,
+    "covered": 117,
     "open": 0,
     "nonSemantic": 6,
     "byRuntime": {
       "shared-algebras": 1,
-      "battle": 91,
+      "battle": 92,
       "character-creation": 14,
       "character-sheet": 12,
       "character-battle": 4
     },
     "byStatus": {
-      "covered": 116,
+      "covered": 117,
       "needs-qnt-owner": 0,
       "needs-parity-witness": 0,
       "needs-surface-evidence": 0,
@@ -239,6 +239,7 @@
       ],
       "profiles": [
         "spell.invocation-damage-save-or-attack",
+        "spell.invocation-haste-positive",
         "spell.invocation-see-invisible-observer-sight",
         "spell.invocation-spiritual-weapon-attack-proxy",
         "spell.reaction-shield",
@@ -4241,6 +4242,47 @@
       "title": "Battle turn-boundary effect lifecycle ordering across end-turn cleanup, initiative advancement, start-turn spell effects, ongoing-feature expiration, and weapon-hit turn effects"
     },
     {
+      "id": "BATTLE.SPELL.HASTE_POSITIVE_EFFECTS",
+      "kind": "active-effect-lifecycle",
+      "parityWitnesses": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-haste-positive.test.ts"
+        }
+      ],
+      "profiles": [
+        "spell.invocation-haste-positive"
+      ],
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/spell-haste-positive-effects-core.qnt",
+        "packages/shared-algebras/proofs/rule-core/spell-haste-positive-effects-core-examples.qnt"
+      ],
+      "reason": "The positive Haste slice admits the typed SRD Surface shape without authored spell identity dispatch, spends Magic Action plus a level-3-or-higher Spell Slot, owns caster Concentration, applies doubled Speed, +2 Armor Class, Dexterity Saving Throw Advantage, derives one target-turn spell-effect action resource restricted to Attack with one attack only, Dash, Disengage, Hide, or Utilize, and clears a current-turn Haste spell-effect action resource when the source Concentration effect ends. Spell-end lethargy remains owned by the follow-up cleanup task.",
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/haste-positive.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-granted-action-resource.ts",
+        "packages/battle-runtime/src/battle-reducer/damage-apply.ts",
+        "packages/battle-runtime/src/battle-reducer/movement-speed.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-damage-fills.ts",
+        "packages/battle-runtime/src/battle-reducer/attack-resolution.ts",
+        "packages/battle-runtime/src/active-effect/types.ts",
+        "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts",
+        "packages/battle-runtime/src/battle-reducer/battle-codecs.ts",
+        "packages/shared-algebras/src/action-economy-algebra.ts",
+        "packages/shared-algebras/src/speed-algebra.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Spells/Descriptions-E-L.md#Haste",
+        "UBIQUITOUS_LANGUAGE.md#Speed",
+        "UBIQUITOUS_LANGUAGE.md#Armor-Class-AC",
+        "UBIQUITOUS_LANGUAGE.md#Multiattack"
+      ],
+      "title": "Battle Haste positive cast applies active target buffs and a restricted target-turn action"
+    },
+    {
       "id": "BATTLE.PROTOCOL.CONCENTRATION_BREAK_TEARDOWN",
       "kind": "composition",
       "parityWitnesses": [
@@ -7161,6 +7203,13 @@
         "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES"
       ],
       "profileId": "spell.invocation-acid-arrow-attack-timing"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.SPELL.HASTE_POSITIVE_EFFECTS",
+        "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "profileId": "spell.invocation-haste-positive"
     }
   ],
   "qntOwnerRoles": [
@@ -9351,6 +9400,22 @@
       "obligationIds": [],
       "ownerPath": "packages/battle-runtime/battle-runtime-zero-hit-point-mid-resolution.mbt.qnt",
       "role": "mbt-fixture"
+    },
+    {
+      "evidence": "packages/shared-algebras/proofs/rule-core/spell-haste-positive-effects-core.qnt carries identity-free Haste positive-effect semantics for doubled Speed, +2 Armor Class, Dexterity Saving Throw Advantage, and the restricted additional action with Attack capped to one attack.",
+      "obligationIds": [
+        "BATTLE.SPELL.HASTE_POSITIVE_EFFECTS"
+      ],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-haste-positive-effects-core.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/shared-algebras/proofs/rule-core/spell-haste-positive-effects-core-examples.qnt is proof-only example evidence for Haste positive-effect semantics and restricted additional-action facts.",
+      "obligationIds": [
+        "BATTLE.SPELL.HASTE_POSITIVE_EFFECTS"
+      ],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-haste-positive-effects-core-examples.qnt",
+      "role": "proof-only"
     }
   ],
   "qntRegistry": [
@@ -10110,6 +10175,16 @@
     {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-direct-damage-projection-core.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-haste-positive-effects-core-examples.qnt",
+      "role": "proof-only"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-haste-positive-effects-core.qnt",
       "role": "semantic-core"
     },
     {
@@ -13887,6 +13962,29 @@
         "packages/battle-runtime/battle-runtime-restoration-and-buffs.qnt"
       ],
       "status": "generation-subset-clean"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [
+        "variant",
+        "record",
+        "pure-def",
+        "constant-def",
+        "int",
+        "bool",
+        "if-expression",
+        "comparison",
+        "boolean-connective",
+        "all-block",
+        "set",
+        "membership"
+      ],
+      "obligationId": "BATTLE.SPELL.HASTE_POSITIVE_EFFECTS",
+      "proofOnly": [],
+      "semanticCore": [
+        "packages/shared-algebras/proofs/rule-core/spell-haste-positive-effects-core.qnt"
+      ],
+      "status": "generation-subset-clean"
     }
   ],
   "generatorReadinessBacklog": [],
@@ -14109,6 +14207,7 @@
     "spell.invocation-forced-reaction-movement",
     "spell.invocation-grease-ground-hazard",
     "spell.invocation-gust-of-wind-line",
+    "spell.invocation-haste-positive",
     "spell.invocation-held-light-emitter",
     "spell.invocation-hideous-laughter-repeat-save-lifecycle",
     "spell.invocation-hypnotic-pattern-control",

@@ -37,7 +37,7 @@ describe("speed algebra", () => {
   test("resolves Roving-style climb and swim speeds equal to final Speed", () => {
     const facts: CreatureSpeedFacts = {
       ...ORDINARY_SPEED_FACTS,
-      speedChanges: [{ deltaFeet: movementDeltaFeet(10) }],
+      speedChanges: [{ kind: "delta", deltaFeet: movementDeltaFeet(10) }],
       specialSpeeds: [
         { kind: "equalToSpeed", speedType: "climb" },
         { kind: "equalToSpeed", speedType: "swim" },
@@ -52,7 +52,7 @@ describe("speed algebra", () => {
   test("applies Fast Movement-style global speed changes to ordinary and special speeds", () => {
     const facts: CreatureSpeedFacts = {
       ...ORDINARY_SPEED_FACTS,
-      speedChanges: [{ deltaFeet: movementDeltaFeet(10) }],
+      speedChanges: [{ kind: "delta", deltaFeet: movementDeltaFeet(10) }],
       specialSpeeds: [
         { kind: "fixed", speedType: "swim", speedFeet: movementFeet(20) },
       ],
@@ -74,11 +74,26 @@ describe("speed algebra", () => {
     expect(speedValue(facts, "swim")).toBe(35);
   });
 
+  test("applies Speed ratios to ordinary and special speeds", () => {
+    const facts: CreatureSpeedFacts = {
+      ...ORDINARY_SPEED_FACTS,
+      speedChanges: [{ kind: "ratio", numerator: 2, denominator: 1 }],
+      specialSpeeds: [
+        { kind: "equalToSpeed", speedType: "climb" },
+        { kind: "fixed", speedType: "swim", speedFeet: movementFeet(20) },
+      ],
+    };
+
+    expect(speedValue(facts, "walk")).toBe(60);
+    expect(speedValue(facts, "climb")).toBe(60);
+    expect(speedValue(facts, "swim")).toBe(40);
+  });
+
   test("terminal Speed 0 prevents increases", () => {
     const facts: CreatureSpeedFacts = {
       ...ORDINARY_SPEED_FACTS,
       terminalSpeedZero: true,
-      speedChanges: [{ deltaFeet: movementDeltaFeet(10) }],
+      speedChanges: [{ kind: "delta", deltaFeet: movementDeltaFeet(10) }],
       specialSpeeds: [
         { kind: "equalToSpeed", speedType: "climb" },
         { kind: "fixed", speedType: "fly", speedFeet: movementFeet(60) },

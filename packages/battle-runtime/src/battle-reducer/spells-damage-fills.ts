@@ -10,12 +10,14 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-heightened-save-disadvantage
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-damage-dice-reroll
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spiritual-weapon-attack-proxy
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-haste-positive
 // KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_CAREFUL_SAVE_PROTECTION BATTLE.FEATURE.METAMAGIC_HEIGHTENED_SAVE_DISADVANTAGE BATTLE.FEATURE.METAMAGIC_EMPOWERED_DAMAGE_DICE_REROLL
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_DAMAGE_PENALTY
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.HASTE_POSITIVE_EFFECTS
 
 import { Match } from "effect";
 import {
@@ -1126,6 +1128,7 @@ export function savingThrowRollModeProjections(
     ...dodgeProjections,
     ...passiveRollModeProjections,
     ...activeAbilityD20TestSavingThrowRollModeProjections(state, ability),
+    ...activeSavingThrowRollModeProjections(state, ability),
     ...creatureSizeChangeSavingThrowRollModeProjections(state, ability),
     ...conditionSavingThrowRollModeProjections(
       state,
@@ -1242,6 +1245,24 @@ function conditionSavingThrowRollModeProjections(
         > =>
           effect.kind === "conditionSavingThrowRollMode" &&
           effect.condition === condition,
+      )
+      .map((effect) => ({ targetId, rollMode: effect.mode })),
+  );
+}
+
+function activeSavingThrowRollModeProjections(
+  state: BattleState,
+  ability: Ability,
+): readonly BattleSavingThrowRollModeProjection[] {
+  return [...state.combatants].flatMap(([targetId, target]) =>
+    target.activeEffects
+      .filter(
+        (
+          effect,
+        ): effect is Extract<
+          BattleActiveEffect,
+          { readonly kind: "savingThrowRollMode" }
+        > => effect.kind === "savingThrowRollMode" && effect.ability === ability,
       )
       .map((effect) => ({ targetId, rollMode: effect.mode })),
   );

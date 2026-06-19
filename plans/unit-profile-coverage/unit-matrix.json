@@ -72,23 +72,23 @@
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 121,
-      "numerator": 121,
+      "denominator": 122,
+      "numerator": 122,
       "percent": "100%"
     },
     "qntProofCoverage": {
-      "denominator": 121,
-      "numerator": 118,
+      "denominator": 122,
+      "numerator": 119,
       "percent": "97.5%"
     },
     "rulesKernelCoveredProfileCoverage": {
-      "denominator": 159,
-      "numerator": 159,
+      "denominator": 160,
+      "numerator": 160,
       "percent": "100%"
     },
     "rulesKernelProfileJoinCoverage": {
-      "denominator": 159,
-      "numerator": 159,
+      "denominator": 160,
+      "numerator": 160,
       "percent": "100%"
     },
     "rulesKernelSupportedUnitCoverage": {
@@ -97,13 +97,13 @@
       "percent": "100%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 121,
-      "numerator": 121,
+      "denominator": 122,
+      "numerator": 122,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 121,
-      "numerator": 121,
+      "denominator": 122,
+      "numerator": 122,
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
@@ -5385,19 +5385,55 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-halfling-naturally-stealthy.test.ts"
         }
       ]
+    },
+    {
+      "id": "spell.invocation-haste-positive",
+      "profileKind": "spell-invocation",
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/spell-haste-positive-effects-core.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/haste-positive.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-granted-action-resource.ts",
+        "packages/battle-runtime/src/battle-reducer/damage-apply.ts",
+        "packages/battle-runtime/src/battle-reducer/movement-speed.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-damage-fills.ts",
+        "packages/battle-runtime/src/battle-reducer/attack-resolution.ts",
+        "packages/battle-runtime/src/active-effect/types.ts",
+        "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts",
+        "packages/battle-runtime/src/battle-reducer/battle-codecs.ts",
+        "packages/shared-algebras/src/action-economy-algebra.ts",
+        "packages/shared-algebras/src/speed-algebra.ts"
+      ],
+      "sourceBoundary": "The runtime consumes Haste's typed Surface direct target-effect shape rather than authored spell identity: Magic Action and level-3-or-higher Spell Slot spend, caster-owned Concentration up to 1 minute, one visible willing creature target, doubled Speed ratio, +2 Armor Class, Dexterity Saving Throw Advantage, and one target-turn spell-effect action resource restricted to Attack with one attack only, Dash, Disengage, Hide, or Utilize. The positive-effects profile owns clearing an immediately usable current-turn spell-effect action when the source Haste effect ends through Concentration loss; duration turnover resets the turn-resource ledger before the next actor receives resources. The spell-end lethargy rider is admitted only as a deferred shape boundary owned by L5-C18. Automatic target choice, spatial visibility derivation, and the later lethargy lifecycle remain caller/table or follow-up owner facts.",
+      "taskRefs": [
+        "L5-C17-HASTE-POSITIVE-RUNTIME"
+      ],
+      "title": "Spell invocation applies Haste's active positive target effects and restricted target-turn action",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-haste-positive-effects-core-examples.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-haste-positive.test.ts"
+        }
+      ]
     }
   ],
   "rulesKernelProfileJoin": {
     "denominatorRule": "profile records with rules-kernel profile kinds and either QNT owners or explicit profile-obligation mappings",
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
-        "denominator": 159,
-        "numerator": 159,
+        "denominator": 160,
+        "numerator": 160,
         "percent": "100%"
       },
       "rulesKernelProfileJoinCoverage": {
-        "denominator": 159,
-        "numerator": 159,
+        "denominator": 160,
+        "numerator": 160,
         "percent": "100%"
       }
     },
@@ -8122,6 +8158,28 @@
         "profileKind": "passive",
         "qntOwners": [
           "packages/shared-algebras/proofs/rule-core/unit-feature-hide-obscurement-permission-core.qnt"
+        ]
+      },
+      {
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.SPELL.HASTE_POSITIVE_EFFECTS",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Haste positive cast applies active target buffs and a restricted target-turn action"
+          },
+          {
+            "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
+          }
+        ],
+        "profileId": "spell.invocation-haste-positive",
+        "profileKind": "spell-invocation",
+        "qntOwners": [
+          "packages/shared-algebras/proofs/rule-core/spell-haste-positive-effects-core.qnt"
         ]
       }
     ],
@@ -12928,7 +12986,7 @@
       "evidenceTag": "selected-identity-mbt"
     },
     "deferredNonApplicableRows": [],
-    "rowCount": 6,
+    "rowCount": 7,
     "rows": [
       {
         "catalogAdmissionStatus": "installed",
@@ -13032,6 +13090,23 @@
           "tag": "profile-subset-supported"
         },
         "unitId": "species_halfling_naturally_stealthy"
+      },
+      {
+        "catalogAdmissionStatus": "installed",
+        "collectionId": "srd-5.2.1",
+        "kind": "spell",
+        "selectedIdentity": {
+          "reason": "The Unit has no selected-identity-mbt evidence.",
+          "status": "missing-witness"
+        },
+        "sourceRecordPath": "packages/surface/content/haste.json",
+        "support": {
+          "profileIds": [
+            "spell.invocation-haste-positive"
+          ],
+          "tag": "profile-subset-supported"
+        },
+        "unitId": "haste"
       }
     ]
   },
@@ -16577,6 +16652,22 @@
       "taskId": "L3-FOLLOWUP-HALFLING-NATURALLY-STEALTHY-RUNTIME"
     },
     {
+      "claimKind": "qnt-proof",
+      "note": "Proof-only QNT example exercises identity-free Haste positive-effect facts and restricted additional-action semantics, including the one-attack-only Attack action, allowed Dash action, disallowed Dodge action, and rejection of additional Haste attacks.",
+      "profileIds": [
+        "spell.invocation-haste-positive"
+      ],
+      "taskId": "L5-C17-HASTE-POSITIVE-RUNTIME"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime and shared-algebra tests cover Haste positive spell admission from typed Surface facts, Magic Action and level-3 Spell Slot spending, caster-owned Concentration, visible willing target selection, Speed ratio projection, +2 Armor Class, Dexterity Saving Throw Advantage, target-turn and self-target current-turn spell-granted action resource derivation, same-turn Concentration-end resource cleanup, disallowed-action rejection, and preventing the restricted Haste action from opening class-feature Extra Attack.",
+      "profileIds": [
+        "spell.invocation-haste-positive"
+      ],
+      "taskId": "L5-C17-HASTE-POSITIVE-RUNTIME"
+    },
+    {
       "claimKind": "completed-runtime-parity",
       "note": "Focused Character Sheet runtime tests cover Resourceful Long Rest Heroic Inspiration grants from retained typed rest-trigger and heroic-inspiration Surface facts, duplicate grants remaining one available Heroic Inspiration state, and non-qualifying builds preserving current Heroic Inspiration state without species-owned rest or inspiration state.",
       "profileIds": [
@@ -16665,14 +16756,14 @@
         "installedUnitDenominator": 140,
         "kind": "spell",
         "label": "Spell Units",
-        "profileFactDenominator": 136,
-        "profileSubsetSupportedUnits": 18,
+        "profileFactDenominator": 137,
+        "profileSubsetSupportedUnits": 19,
         "selectedIdentityDeferredNonApplicableUnits": 0,
-        "selectedIdentityReplayDenominator": 110,
-        "selectedIdentityReplayGapUnits": 0,
+        "selectedIdentityReplayDenominator": 111,
+        "selectedIdentityReplayGapUnits": 1,
         "selectedIdentityReplayWitnessUnits": 110,
         "supportedProfileUnits": 92,
-        "unsupportedOrOtherUnits": 30
+        "unsupportedOrOtherUnits": 29
       },
       {
         "executableUnitDenominator": 93,
@@ -30789,30 +30880,72 @@
         "status": "installed"
       },
       "claim": {
-        "followUpTasks": [
+        "deferredMechanics": [
           {
-            "id": "L3-FOLLOWUP-HASTE-POSITIVE-RUNTIME",
-            "mechanic": "Promote Haste's active positive effects from typed Surface/profile facts: Magic Action level-3+ Spell Slot spend, caster-owned Concentration, willing visible target admission, doubled Speed projection, +2 Armor Class, Dexterity Saving Throw Advantage, and one target-turn additional action restricted to Attack with one attack only, Dash, Disengage, Hide, or Utilize.",
-            "owner": "battle-runtime spell invocation/effect lifecycle plus restricted spell-granted action resource owner",
-            "requiredOutput": "Supported-profile or profile-subset-supported Haste claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity without authored spell identity dispatch.",
-            "title": "Haste Positive Runtime"
-          },
-          {
-            "id": "L3-FOLLOWUP-HASTE-LETHARGY-RUNTIME",
-            "mechanic": "Promote Haste's spell-end rider by removing the positive effect and applying source-owned Incapacitated plus Speed 0 until the end of the target's next turn for concentration loss, duration expiration, replacement/recast, and cleanup boundaries.",
-            "owner": "battle-runtime spell-end lethargy cleanup owner",
-            "requiredOutput": "Focused cleanup tests and promoted Quint/runtime parity preserving independent Incapacitated sources and keeping Speed 0 tied to the lethargy state, not Incapacitated generally.",
-            "title": "Haste Lethargy Runtime Cleanup"
+            "followUpTaskId": "L5-C18-HASTE-LETHARGY-RUNTIME",
+            "mechanic": "Spell-end lethargy rider: when the Haste spell ends for a target, apply source-owned Incapacitated plus Speed 0 until the end of that target's next turn for concentration loss, duration expiration, recast/replacement, and cleanup boundaries while preserving independent Incapacitated sources."
           }
         ],
-        "reason": "Haste is authored and installed as an SRD Surface Spell Definition with Magic Action Spell Slot casting, 30-foot visible willing-creature targeting, Concentration up to 1 minute, doubled Speed, +2 Armor Class, Dexterity Saving Throw Advantage, a restricted per-turn additional action allow-list with Attack capped at one attack plus Dash, Disengage, Hide, and Utilize, and a spell-end lethargy rider that applies Incapacitated plus Speed 0 until the end of the target's next turn. No promoted battle-runtime profile is claimed because positive active effects and lethargy cleanup are split into follow-up runtime owners that must consume typed Surface facts without authored spell identity dispatch.",
-        "tag": "unsupported-profile"
+        "profileIds": [
+          "spell.invocation-haste-positive"
+        ],
+        "supportedMechanics": [
+          "Surface authors Haste as an SRD Spell Definition with Magic Action Spell Slot casting, level 3, 30-foot visible willing-creature targeting, Concentration up to 1 minute, doubled Speed, +2 Armor Class, Dexterity Saving Throw Advantage, one restricted additional action, and a typed spell-end lethargy rider",
+          "Battle runtime admits the exact typed direct-effect shape without branching on Haste id, name, slug, provenance section, or spell list identity",
+          "Battle runtime spends the Magic Action and a level-3-or-higher Spell Slot, opens the normal spell-cast interrupt window, and owns caster Concentration for the positive active effects",
+          "Battle runtime applies target active effects for doubled Speed, +2 Armor Class, and Dexterity Saving Throw Advantage from the admitted Surface facts",
+          "Battle runtime derives one target-turn spell-effect action resource from the active effect, restricts it to Attack with one attack only, Dash, Disengage, Hide, or Utilize, rejects disallowed spends, and prevents that restricted action from opening class-feature Extra Attack"
+        ],
+        "tag": "profile-subset-supported"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-haste-positive.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L5-C17-HASTE-POSITIVE-RUNTIME"
+        }
+      ],
       "executableMechanics": true,
       "kind": "spell",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "spell.invocation-haste-positive",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/spell-haste-positive-effects-core.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts",
+            "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/haste-positive.ts",
+            "packages/battle-runtime/src/battle-reducer/spell-granted-action-resource.ts",
+            "packages/battle-runtime/src/battle-reducer/damage-apply.ts",
+            "packages/battle-runtime/src/battle-reducer/movement-speed.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-damage-fills.ts",
+            "packages/battle-runtime/src/battle-reducer/attack-resolution.ts",
+            "packages/battle-runtime/src/active-effect/types.ts",
+            "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts",
+            "packages/battle-runtime/src/battle-reducer/battle-codecs.ts",
+            "packages/shared-algebras/src/action-economy-algebra.ts",
+            "packages/shared-algebras/src/speed-algebra.ts"
+          ],
+          "sourceBoundary": "The runtime consumes Haste's typed Surface direct target-effect shape rather than authored spell identity: Magic Action and level-3-or-higher Spell Slot spend, caster-owned Concentration up to 1 minute, one visible willing creature target, doubled Speed ratio, +2 Armor Class, Dexterity Saving Throw Advantage, and one target-turn spell-effect action resource restricted to Attack with one attack only, Dash, Disengage, Hide, or Utilize. The positive-effects profile owns clearing an immediately usable current-turn spell-effect action when the source Haste effect ends through Concentration loss; duration turnover resets the turn-resource ledger before the next actor receives resources. The spell-end lethargy rider is admitted only as a deferred shape boundary owned by L5-C18. Automatic target choice, spatial visibility derivation, and the later lethargy lifecycle remain caller/table or follow-up owner facts.",
+          "taskRefs": [
+            "L5-C17-HASTE-POSITIVE-RUNTIME"
+          ],
+          "title": "Spell invocation applies Haste's active positive target effects and restricted target-turn action",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-haste-positive-effects-core-examples.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-haste-positive.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/haste.json",
       "unitId": "haste"
     },

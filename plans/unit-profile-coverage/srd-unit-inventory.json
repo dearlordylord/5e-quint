@@ -298,9 +298,10 @@
       "rowsByStatus": {
         "accepted-no-battle-effect": 47,
         "accepted": 22,
-        "battle-runtime-required": 24,
+        "battle-runtime-required": 22,
         "owner-evidence-required": 12,
-        "surface-widening-required": 5
+        "surface-widening-required": 5,
+        "partial-battle-runtime": 2
       }
     },
     "levelFourSpellBattleReadiness": {
@@ -371,11 +372,11 @@
       "character-creation or progression mechanic": 12
     },
     "allRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 483,
+      "catalog-installed-owner-evidence-present": 485,
       "non-runtime": 84,
       "catalog-only/dead-for-now": 186,
       "level-5-7-follow-up-required": 24,
-      "catalog-installed-owner-evidence-required": 12,
+      "catalog-installed-owner-evidence-required": 10,
       "missing-authored-record": 45,
       "catalog-authored-review-required": 61,
       "needs-surface-widening": 5
@@ -386,16 +387,16 @@
     },
     "levelThreeSpellPressureRowsByDisposition": {
       "catalog-only/dead-for-now": 47,
-      "catalog-installed-owner-evidence-present": 22,
-      "catalog-installed-owner-evidence-required": 11,
+      "catalog-installed-owner-evidence-present": 24,
+      "catalog-installed-owner-evidence-required": 9,
       "missing-authored-record": 13,
       "catalog-authored-review-required": 12,
       "needs-surface-widening": 5
     },
     "levelThreeInstalledSpellPressureRowsByDisposition": {
       "catalog-only/dead-for-now": 18,
-      "catalog-installed-owner-evidence-present": 22,
-      "catalog-installed-owner-evidence-required": 11
+      "catalog-installed-owner-evidence-present": 24,
+      "catalog-installed-owner-evidence-required": 9
     },
     "levelFourSpellPressureRowsByDisposition": {
       "catalog-authored-review-required": 49,
@@ -30725,8 +30726,8 @@
         "state": "installed",
         "unitId": "haste"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "unitProfileDisposition": "profile-subset-supported",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -30734,13 +30735,13 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "battle-runtime spell invocation/effect lifecycle plus restricted spell-granted action resource owner; battle-runtime spell-end lethargy cleanup owner",
-          "evidence": "Promote follow-up split L3-FOLLOWUP-HASTE-POSITIVE-RUNTIME, L3-FOLLOWUP-HASTE-LETHARGY-RUNTIME: L3-FOLLOWUP-HASTE-POSITIVE-RUNTIME owns Promote Haste's active positive effects from typed Surface/profile facts: Magic Action level-3+ Spell Slot spend, caster-owned Concentration, willing visible target admission, doubled Speed projection, +2 Armor Class, Dexterity Saving Throw Advantage, and one target-turn additional action restricted to Attack with one attack only, Dash, Disengage, Hide, or Utilize. Required output: Supported-profile or profile-subset-supported Haste claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity without authored spell identity dispatch.; L3-FOLLOWUP-HASTE-LETHARGY-RUNTIME owns Promote Haste's spell-end rider by removing the positive effect and applying source-owned Incapacitated plus Speed 0 until the end of the target's next turn for concentration loss, duration expiration, replacement/recast, and cleanup boundaries. Required output: Focused cleanup tests and promoted Quint/runtime parity preserving independent Incapacitated sources and keeping Speed 0 tied to the lethargy state, not Incapacitated generally.",
-          "status": "owner evidence required"
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L5-C17-HASTE-POSITIVE-RUNTIME at packages/battle-runtime/src/unit-profile-admission-haste-positive.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Promote follow-up split L3-FOLLOWUP-HASTE-POSITIVE-RUNTIME, L3-FOLLOWUP-HASTE-LETHARGY-RUNTIME: L3-FOLLOWUP-HASTE-POSITIVE-RUNTIME owns Promote Haste's active positive effects from typed Surface/profile facts: Magic Action level-3+ Spell Slot spend, caster-owned Concentration, willing visible target admission, doubled Speed projection, +2 Armor Class, Dexterity Saving Throw Advantage, and one target-turn additional action restricted to Attack with one attack only, Dash, Disengage, Hide, or Utilize. Required output: Supported-profile or profile-subset-supported Haste claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity without authored spell identity dispatch.; L3-FOLLOWUP-HASTE-LETHARGY-RUNTIME owns Promote Haste's spell-end rider by removing the positive effect and applying source-owned Incapacitated plus Speed 0 until the end of the target's next turn for concentration loss, duration expiration, replacement/recast, and cleanup boundaries. Required output: Focused cleanup tests and promoted Quint/runtime parity preserving independent Incapacitated sources and keeping Speed 0 tied to the lethargy state, not Incapacitated generally.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "partial-battle-runtime"
     },
     {
       "id": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_hypnotic_pattern",
@@ -39547,8 +39548,8 @@
         "state": "installed",
         "unitId": "haste"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "unitProfileDisposition": "profile-subset-supported",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -39556,13 +39557,13 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "battle-runtime spell invocation/effect lifecycle plus restricted spell-granted action resource owner; battle-runtime spell-end lethargy cleanup owner",
-          "evidence": "Promote follow-up split L3-FOLLOWUP-HASTE-POSITIVE-RUNTIME, L3-FOLLOWUP-HASTE-LETHARGY-RUNTIME: L3-FOLLOWUP-HASTE-POSITIVE-RUNTIME owns Promote Haste's active positive effects from typed Surface/profile facts: Magic Action level-3+ Spell Slot spend, caster-owned Concentration, willing visible target admission, doubled Speed projection, +2 Armor Class, Dexterity Saving Throw Advantage, and one target-turn additional action restricted to Attack with one attack only, Dash, Disengage, Hide, or Utilize. Required output: Supported-profile or profile-subset-supported Haste claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity without authored spell identity dispatch.; L3-FOLLOWUP-HASTE-LETHARGY-RUNTIME owns Promote Haste's spell-end rider by removing the positive effect and applying source-owned Incapacitated plus Speed 0 until the end of the target's next turn for concentration loss, duration expiration, replacement/recast, and cleanup boundaries. Required output: Focused cleanup tests and promoted Quint/runtime parity preserving independent Incapacitated sources and keeping Speed 0 tied to the lethargy state, not Incapacitated generally.",
-          "status": "owner evidence required"
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L5-C17-HASTE-POSITIVE-RUNTIME at packages/battle-runtime/src/unit-profile-admission-haste-positive.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Promote follow-up split L3-FOLLOWUP-HASTE-POSITIVE-RUNTIME, L3-FOLLOWUP-HASTE-LETHARGY-RUNTIME: L3-FOLLOWUP-HASTE-POSITIVE-RUNTIME owns Promote Haste's active positive effects from typed Surface/profile facts: Magic Action level-3+ Spell Slot spend, caster-owned Concentration, willing visible target admission, doubled Speed projection, +2 Armor Class, Dexterity Saving Throw Advantage, and one target-turn additional action restricted to Attack with one attack only, Dash, Disengage, Hide, or Utilize. Required output: Supported-profile or profile-subset-supported Haste claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity without authored spell identity dispatch.; L3-FOLLOWUP-HASTE-LETHARGY-RUNTIME owns Promote Haste's spell-end rider by removing the positive effect and applying source-owned Incapacitated plus Speed 0 until the end of the target's next turn for concentration loss, duration expiration, replacement/recast, and cleanup boundaries. Required output: Focused cleanup tests and promoted Quint/runtime parity preserving independent Incapacitated sources and keeping Speed 0 tied to the lethargy state, not Incapacitated generally.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "partial-battle-runtime"
     },
     {
       "id": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_hypnotic_pattern",

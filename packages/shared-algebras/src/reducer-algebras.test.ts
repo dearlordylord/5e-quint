@@ -1,11 +1,18 @@
 import { Either, Option, Schema } from "effect";
 import { describe, expect, it } from "vitest";
 
-import type { ActionRestriction, UnitRecord } from "@dnd/surface/surface/types";
+import type {
+  ActionRestriction,
+  SpellRecord,
+  UnitRecord,
+} from "@dnd/surface/surface/types";
 import { CreatureId as CreatureIdSchema } from "@dnd/shared/types";
 import { Index, Initiative, Round } from "@dnd/shared/types";
 
 import {
+  actionResourceAllowsAdditionalAttacks,
+  canSpendAction,
+  grantSpellEffectActionResource,
   grantUnitActionResource,
   resetTurnActionEconomy,
   spendAction,
@@ -38,9 +45,20 @@ import {
 
 const sourceOwnerId = Schema.decodeUnknownSync(CreatureIdSchema)("owner-a");
 const unitActionId: UnitRecord["id"] = "unit-action-a";
+const spellActionId: SpellRecord["id"] = "spell-action-a";
 const attackOnlyRestriction: ActionRestriction = {
   kind: "exclude",
   actions: ["magic"],
+};
+const oneAttackDashDisengageHideUtilizeRestriction: ActionRestriction = {
+  kind: "allow_only",
+  actions: [
+    { action: "attack", attackLimit: { kind: "attack_count", count: 1 } },
+    { action: "dash" },
+    { action: "disengage" },
+    { action: "hide" },
+    { action: "utilize" },
+  ],
 };
 
 describe("action-economy-algebra", () => {
@@ -91,6 +109,73 @@ describe("action-economy-algebra", () => {
         attackOnlyRestriction,
       ),
     ).toEqual(Either.left("unit-granted action resource already granted"));
+  });
+
+  it("spends spell-effect allow-only action resources only on admitted actions", () => {
+    const granted = grantSpellEffectActionResource(
+      resetTurnActionEconomy(emptyActionEconomyState()),
+      sourceOwnerId,
+      spellActionId,
+      oneAttackDashDisengageHideUtilizeRestriction,
+    );
+    expect(Either.isRight(granted)).toBe(true);
+    if (Either.isLeft(granted)) return;
+
+    const ordinaryActionSpent = spendAction(granted.right, "magic");
+    expect(Either.isRight(ordinaryActionSpent)).toBe(true);
+    if (Either.isLeft(ordinaryActionSpent)) return;
+
+    expect(canSpendAction(ordinaryActionSpent.right, "magic")).toBe(false);
+    expect(canSpendAction(ordinaryActionSpent.right, "dash")).toBe(true);
+    const [spellEffectResource] = ordinaryActionSpent.right.actionResources;
+    expect(spellEffectResource).toBeDefined();
+    if (spellEffectResource === undefined) return;
+    expect(
+      actionResourceAllowsAdditionalAttacks(spellEffectResource),
+    ).toBe(false);
+  });
+
+  it("does not treat allow-only non-attack resources as additional Attack resources", () => {
+    const granted = grantSpellEffectActionResource(
+      resetTurnActionEconomy(emptyActionEconomyState()),
+      sourceOwnerId,
+      spellActionId,
+      {
+        kind: "allow_only",
+        actions: [{ action: "dash" }],
+      },
+    );
+    expect(Either.isRight(granted)).toBe(true);
+    if (Either.isLeft(granted)) return;
+
+    const spellEffectResource = granted.right.actionResources.find(
+      (resource) => resource.source === "spellEffect",
+    );
+    expect(spellEffectResource).toBeDefined();
+    if (spellEffectResource === undefined) return;
+    expect(
+      actionResourceAllowsAdditionalAttacks(spellEffectResource),
+    ).toBe(false);
+  });
+
+  it("rejects duplicate spell-effect action resources by owner and spell id", () => {
+    const granted = grantSpellEffectActionResource(
+      resetTurnActionEconomy(emptyActionEconomyState()),
+      sourceOwnerId,
+      spellActionId,
+      oneAttackDashDisengageHideUtilizeRestriction,
+    );
+    expect(Either.isRight(granted)).toBe(true);
+    if (Either.isLeft(granted)) return;
+
+    expect(
+      grantSpellEffectActionResource(
+        granted.right,
+        sourceOwnerId,
+        spellActionId,
+        oneAttackDashDisengageHideUtilizeRestriction,
+      ),
+    ).toEqual(Either.left("spell-effect action resource already granted"));
   });
 });
 

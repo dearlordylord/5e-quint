@@ -7,6 +7,8 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.ACID_ARROW_ATTACK_TIMING
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-gust-of-wind-line unit-feature.metamagic-heightened-save-disadvantage
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-haste-positive
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.HASTE_POSITIVE_EFFECTS
 import type { ArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
 import type { ElapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import type { AttackRollMode } from "@dnd/shared-algebras/runtime-hole-algebra";
@@ -24,6 +26,7 @@ import type {
 } from "@dnd/shared/types";
 import type {
   Ability,
+  ActionRestriction,
   CreatureSense,
   DamageType,
   DcSource,
@@ -352,6 +355,12 @@ export type BattleActiveEffect =
   | (BattleSpellEffectBase & {
       readonly kind: "speedDelta";
       readonly deltaFeet: MovementDeltaFeet;
+      readonly expiresAt: BattleActiveEffectExpiration;
+    })
+  | (BattleSpellEffectBase & {
+      readonly kind: "speedRatio";
+      readonly numerator: number;
+      readonly denominator: number;
       readonly expiresAt: BattleActiveEffectExpiration;
     })
   | (BattleSpellEffectBase & {
@@ -750,6 +759,17 @@ export type BattleActiveEffect =
       readonly kind: "conditionSavingThrowRollMode";
       readonly condition: Condition;
       readonly mode: "advantage";
+      readonly expiresAt: BattleActiveEffectExpiration;
+    })
+  | (BattleSpellEffectBase & {
+      readonly kind: "savingThrowRollMode";
+      readonly ability: Ability;
+      readonly mode: "advantage";
+      readonly expiresAt: BattleActiveEffectExpiration;
+    })
+  | (BattleSpellEffectBase & {
+      readonly kind: "spellGrantedActionResource";
+      readonly restriction: ActionRestriction;
       readonly expiresAt: BattleActiveEffectExpiration;
     })
   | (BattleSpellEffectBase & {
