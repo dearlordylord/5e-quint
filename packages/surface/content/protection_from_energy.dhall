@@ -40,7 +40,11 @@ let protectionFromEnergy =
                     , label = "target"
                     , value =
                         { kind = "target"
-                        , selection = { mode = "one" }
+                        , selection =
+                            { mode = "one"
+                            , targetKinds = [ "creature" ]
+                            , disposition = "willing"
+                            }
                         }
                     }
                 , effects =

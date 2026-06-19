@@ -192,6 +192,7 @@ import passWithoutTraceInput from "../../content/pass_without_trace.json";
 import plantGrowthInput from "../../content/plant_growth.json";
 import poisonSprayInput from "../../content/poison_spray.json";
 import prayerOfHealingInput from "../../content/prayer_of_healing.json";
+import protectionFromEnergyInput from "../../content/protection_from_energy.json";
 import protectionFromEvilAndGoodInput from "../../content/protection_from_evil_and_good.json";
 import protectionFromPoisonInput from "../../content/protection_from_poison.json";
 import produceFlameInput from "../../content/produce_flame.json";
@@ -667,6 +668,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     plantGrowthInput,
     poisonSprayInput,
     prayerOfHealingInput,
+    protectionFromEnergyInput,
     protectionFromEvilAndGoodInput,
     protectionFromPoisonInput,
     produceFlameInput,

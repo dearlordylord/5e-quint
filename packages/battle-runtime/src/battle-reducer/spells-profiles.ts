@@ -65,6 +65,7 @@ import {
   persistentArmorEffectProfile,
 } from "./spell-procedure-profiles/persistent-armor-effect.ts";
 import { conditionRemovalProtectionProfile } from "./spell-procedure-profiles/condition-removal-protection.ts";
+import { chosenDamageResistanceProfile } from "./spell-procedure-profiles/chosen-damage-resistance.ts";
 import { conditionImmunityAndTurnStartTemporaryHitPointsProfile } from "./spell-procedure-profiles/condition-immunity-turn-start-temporary-hit-points.ts";
 import { counterspellProfile } from "./spell-procedure-profiles/counterspell.ts";
 import { creatureSizeChangeProfile } from "./spell-procedure-profiles/creature-size-change.ts";
@@ -289,6 +290,9 @@ export function supportedSpellActs(
     ),
     ...preparedSpells.flatMap((spell) =>
       conditionRemovalProtectionProfile.admit(spell, admissionContext),
+    ),
+    ...preparedSpells.flatMap((spell) =>
+      chosenDamageResistanceProfile.admit(spell, admissionContext),
     ),
     ...preparedSpells.flatMap((spell) =>
       objectLightProfile.admit(spell, admissionContext),

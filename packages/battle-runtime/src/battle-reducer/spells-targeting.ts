@@ -1133,13 +1133,22 @@ export function spellInvocationRequiresKnownWillingTarget(
       "conditionImmunityAndTurnStartTemporaryHitPoints" ||
     invocation.procedure === "wardingBond" ||
     invocation.procedure === "dragonsBreathInitial" ||
-    (invocation.procedure === "scalarBuff" &&
-      invocation.targeting.kind === "targetList" &&
-      invocation.targeting.requiredTargetDisposition === "willing") ||
+    spellTargetListRequiresKnownWillingTarget(invocation) ||
     (registeredSpellProcedureProfile(
       invocation.procedure,
     )?.knownWillingTargetSpellIds.includes(invocation.spell.id) ??
       false)
+  );
+}
+
+function spellTargetListRequiresKnownWillingTarget(
+  invocation: SupportedSpellInvocation,
+): boolean {
+  return (
+    "targeting" in invocation &&
+    invocation.targeting.kind === "targetList" &&
+    "requiredTargetDisposition" in invocation.targeting &&
+    invocation.targeting.requiredTargetDisposition === "willing"
   );
 }
 

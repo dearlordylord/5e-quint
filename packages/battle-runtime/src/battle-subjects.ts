@@ -189,6 +189,7 @@ export const SPELL_SLOT_PROCEDURES = [
   "seeInvisibleObserverSight",
   "mirrorImageHitInterception",
   "conditionRemovalProtection",
+  "chosenDamageResistance",
   "directConditionRemoval",
   "weaponDamageRider",
   "magicWeaponEnhancement",

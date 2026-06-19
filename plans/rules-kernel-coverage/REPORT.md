@@ -101,7 +101,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `BATTLE.COMMAND.OPTION_AND_NEXT_TURN` | battle | covered | `spell.invocation-command-approach-route`, `spell.invocation-command-drop-held-object`, `spell.invocation-command-flee-route`, `spell.invocation-command-halt-grovel` |
 | `BATTLE.DAMAGE.ATTACK_BRANCHES` | battle | covered | `unit-feature.light-extra-attack-damage-ability-modifier` |
 | `BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES` | battle | covered | `spell.invocation-acid-arrow-attack-timing`, `spell.invocation-damage-save-or-attack`, `spell.invocation-flaming-sphere-hazard-ram`, `spell.invocation-moonbeam-movable-zone`, `spell.invocation-spell-created-held-object` |
-| `BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION` | battle | covered | `spell.invocation-damage-reduction`, `unit-feature.passive-damage-resistance` |
+| `BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION` | battle | covered | `spell.invocation-chosen-damage-resistance`, `spell.invocation-damage-reduction`, `unit-feature.passive-damage-resistance` |
 | `BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP` | battle | covered | `spell.invocation-flaming-sphere-hazard-ram`, `spell.invocation-moonbeam-movable-zone`, `spell.invocation-spell-created-held-object` |
 | `BATTLE.DAMAGE.DEATH_SAVING_THROW_LIFECYCLE` | battle | covered | _direct reducer entrypoint_ |
 | `CREATION.DRAFT.FILL_BATCH_SLICE_REPLAY` | character-creation | covered | _direct reducer entrypoint_ |
@@ -350,6 +350,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `packages/battle-runtime/battle-runtime-preserve-life.mbt.qnt` | mbt-fixture | `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS` |
 | `packages/battle-runtime/battle-runtime-creature-type-protection.qnt` | semantic-core | `BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION` |
 | `packages/battle-runtime/battle-runtime-damage-adjustments.qnt` | semantic-core | `BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION` |
+| `packages/battle-runtime/battle-runtime-chosen-damage-resistance.qnt` | proof-only | `BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION` |
 | `packages/battle-runtime/battle-runtime-direct-condition-lifecycle.qnt` | semantic-core | `BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE` |
 | `packages/battle-runtime/battle-runtime-direct-condition-removal.qnt` | semantic-core | `BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION` |
 | `packages/battle-runtime/battle-runtime-flaming-sphere-hazard-ram.qnt` | semantic-core | `BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE` |
@@ -582,6 +583,7 @@ Rows here inventory `packages/**/*.qnt` files excluding `.mbt.qnt` drivers and `
 | `packages/battle-runtime/battle-runtime-bardic-inspiration.qnt` | qnt-owner-role | proof-only |
 | `packages/battle-runtime/battle-runtime-blur-attack-roll-defense.qnt` | qnt-owner-role | semantic-core |
 | `packages/battle-runtime/battle-runtime-chained-spell-attack.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-chosen-damage-resistance.qnt` | qnt-owner-role | proof-only |
 | `packages/battle-runtime/battle-runtime-combat-holes.qnt` | qnt-owner-role | proof-only |
 | `packages/battle-runtime/battle-runtime-combatant-side.qnt` | qnt-owner-role | proof-only |
 | `packages/battle-runtime/battle-runtime-command-choice.qnt` | qnt-owner-role | semantic-core |

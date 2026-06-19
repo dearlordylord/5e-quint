@@ -2653,12 +2653,14 @@
         }
       ],
       "profiles": [
+        "spell.invocation-chosen-damage-resistance",
         "spell.invocation-damage-reduction",
         "unit-feature.passive-damage-resistance"
       ],
       "qntOwners": [
         "packages/shared-algebras/proofs/rule-core/damage-component-adjustments.qnt",
-        "packages/battle-runtime/battle-runtime-damage-adjustments.qnt"
+        "packages/battle-runtime/battle-runtime-damage-adjustments.qnt",
+        "packages/battle-runtime/battle-runtime-chosen-damage-resistance.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -6451,6 +6453,12 @@
     },
     {
       "obligationIds": [
+        "BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION"
+      ],
+      "profileId": "spell.invocation-chosen-damage-resistance"
+    },
+    {
+      "obligationIds": [
         "BATTLE.SPELL.HIT_POINT_RESTORATION"
       ],
       "profileId": "spell.hit-point-restoration"
@@ -7339,6 +7347,14 @@
       ],
       "ownerPath": "packages/battle-runtime/battle-runtime-damage-adjustments.qnt",
       "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-chosen-damage-resistance.qnt is focused proof evidence for the chosen damage Resistance spell profile; reusable target-side damage adjustment semantics remain in the shared damage component adjustment core.",
+      "obligationIds": [
+        "BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-chosen-damage-resistance.qnt",
+      "role": "proof-only"
     },
     {
       "evidence": "packages/battle-runtime/battle-runtime-direct-condition-lifecycle.qnt is the focused QNT owner carrying direct spell-owned condition lifecycle reducer semantics.",
@@ -9408,6 +9424,11 @@
       "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-chained-spell-attack.qnt",
       "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-chosen-damage-resistance.qnt",
+      "role": "proof-only"
     },
     {
       "classification": "qnt-owner-role",
@@ -14087,6 +14108,7 @@
     "spell.invocation-attack-roll-advantage-save",
     "spell.invocation-blur-attack-roll-defense",
     "spell.invocation-chained-attack-damage",
+    "spell.invocation-chosen-damage-resistance",
     "spell.invocation-command-approach-route",
     "spell.invocation-command-drop-held-object",
     "spell.invocation-command-flee-route",

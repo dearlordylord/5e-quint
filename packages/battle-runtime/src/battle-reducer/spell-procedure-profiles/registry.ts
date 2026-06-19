@@ -19,6 +19,7 @@ import { attackBurstSaveDamageProfile } from "./attack-burst-save-damage.ts";
 import { blurAttackRollDefenseProfile } from "./blur-attack-roll-defense.ts";
 import { commandProfile } from "./command.ts";
 import { chainedSpellAttackDamageProfile } from "./chained-spell-attack-damage.ts";
+import { chosenDamageResistanceProfile } from "./chosen-damage-resistance.ts";
 import { conditionImmunityAndTurnStartTemporaryHitPointsProfile } from "./condition-immunity-turn-start-temporary-hit-points.ts";
 import { conditionRemovalProtectionProfile } from "./condition-removal-protection.ts";
 import { counterspellProfile } from "./counterspell.ts";
@@ -112,6 +113,7 @@ function registeredSpellProcedureProfiles() {
     wardingBondProfile,
     creatureTypeProtectionProfile,
     conditionRemovalProtectionProfile,
+    chosenDamageResistanceProfile,
     directConditionProfile,
     directConditionRemovalProfile,
     conditionImmunityAndTurnStartTemporaryHitPointsProfile,

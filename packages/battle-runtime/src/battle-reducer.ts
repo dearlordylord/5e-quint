@@ -2350,6 +2350,10 @@ export type TargetListSpellInvocation =
     >
   | Extract<
       SupportedSpellInvocation,
+      { readonly procedure: "chosenDamageResistance" }
+    >
+  | Extract<
+      SupportedSpellInvocation,
       { readonly procedure: "directConditionRemoval" }
     >
   | Extract<
@@ -2558,6 +2562,22 @@ export type ConditionRemovalProtectionSpellInvocation = {
       { readonly kind: "damageResistance" }
     >;
   };
+  readonly rangeFeet: MovementFeet;
+};
+export type ChosenDamageResistanceSpellInvocation = {
+  readonly access: PreparedSpellAccess;
+  readonly resource: SpellSlotInvocationResource;
+  readonly procedure: "chosenDamageResistance";
+  readonly spell: SpellRecord;
+  readonly actionCost: "magicAction";
+  readonly targeting: SpellTargetListTargeting & {
+    readonly requiredTargetDisposition: "willing";
+  };
+  readonly damageTypeChoices: readonly DamageType[];
+  readonly expiresAt: Extract<
+    BattleActiveEffectExpiration,
+    { readonly kind: "concentration" }
+  > & { readonly durationTicks: ElapsedTimeTicks };
   readonly rangeFeet: MovementFeet;
 };
 export type DirectConditionRemovalSpellInvocation = {
@@ -3160,6 +3180,7 @@ export type SupportedSpellInvocation =
   | SpiritualWeaponRepeatAttackSpellInvocation
   | SpellHostedWeaponAttackInvocation
   | WeaponAttackOverrideSpellInvocation
+  | ChosenDamageResistanceSpellInvocation
   | DamageReductionSpellInvocation
   | WardingBondSpellInvocation
   | ThaumaturgyBoomingVoiceSpellInvocation
@@ -3686,6 +3707,7 @@ type AnySupportedDamageSpellInvocation = Exclude<
       | "seeInvisibleObserverSight"
       | "mirrorImageHitInterception"
       | "conditionRemovalProtection"
+      | "chosenDamageResistance"
       | "conditionImmunityAndTurnStartTemporaryHitPoints"
       | "selfTransformationMode"
       | "scalarBuff"
@@ -4574,6 +4596,7 @@ export type BattleSpellDamageTypeChoiceHole = {
     {
       readonly procedure:
         | "chainedSpellAttackDamage"
+        | "chosenDamageResistance"
         | "damageReduction"
         | "dragonsBreathInitial"
         | "selfTransformationMode"
@@ -4643,6 +4666,7 @@ export type BattleSpellTargetListHole = {
         | "creatureSizeDecrease"
         | "levitatedCreature"
         | "conditionRemovalProtection"
+        | "chosenDamageResistance"
         | "damageReduction"
         | "scalarBuff"
         | "conditionImmunityAndTurnStartTemporaryHitPoints"

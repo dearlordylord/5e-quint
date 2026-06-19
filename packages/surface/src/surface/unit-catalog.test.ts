@@ -208,6 +208,7 @@ const requiredFirstVerticalUnitIds = [
   "mass_cure_wounds",
   "healing_word",
   "prayer_of_healing",
+  "protection_from_energy",
   "protection_from_poison",
   "shield",
   "shatter",
@@ -639,6 +640,66 @@ describe("SRD Unit catalog boundary", () => {
             },
             onSuccess: { kind: "half_damage" },
           },
+        },
+      ],
+    });
+  });
+
+  test("installs Protection from Energy with chosen Resistance spell facts", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag !== "ok") return;
+    const protectionFromEnergy = result.catalog.requireUnit(
+      "protection_from_energy",
+    );
+
+    expect(protectionFromEnergy).toMatchObject({
+      id: "protection_from_energy",
+      kind: "spell",
+      provenance: {
+        kind: "srd-5.2.1",
+        section: "Spells/Descriptions-M-P#Protection from Energy",
+      },
+    });
+    expect("evidence" in protectionFromEnergy).toBe(false);
+    if (protectionFromEnergy.kind !== "spell") return;
+    expect(protectionFromEnergy.mechanics).toMatchObject({
+      family: "activation",
+      level: 3,
+      school: "abjuration",
+      castingTime: { kind: "action" },
+      range: { kind: "touch" },
+      components: { v: true, s: true, m: false },
+      duration: { kind: "concentration", upTo: { amount: 1, unit: "hour" } },
+      phases: [
+        {
+          kind: "direct",
+          attachment: {
+            kind: "hole",
+            holeId: "protection_from_energy_target",
+            value: {
+              kind: "target",
+              selection: {
+                disposition: "willing",
+                mode: "one",
+                targetKinds: ["creature"],
+              },
+            },
+          },
+          effects: [
+            {
+              kind: "grant_resistance",
+              damageType: {
+                kind: "hole",
+                holeId: "protection_from_energy_damage_type",
+                value: {
+                  kind: "choice",
+                  options: ["acid", "cold", "fire", "lightning", "thunder"],
+                },
+              },
+            },
+          ],
         },
       ],
     });
