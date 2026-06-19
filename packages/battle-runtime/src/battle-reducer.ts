@@ -18,6 +18,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-antimagic-field-action-interdiction
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-haste-positive
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.HASTE_POSITIVE_EFFECTS
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.HASTE_LETHARGY_LIFECYCLE
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magic-weapon-enhancement
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-web-restraint-hazard
@@ -2704,6 +2705,10 @@ export type HastePositiveSpellInvocation = {
     readonly grantedActionResource: Extract<
       BattleActiveEffect,
       { readonly kind: "spellGrantedActionResource" }
+    >;
+    readonly spellEndTargetState: Extract<
+      BattleActiveEffect,
+      { readonly kind: "spellEndTargetState" }
     >;
   };
   readonly rangeFeet: MovementFeet;

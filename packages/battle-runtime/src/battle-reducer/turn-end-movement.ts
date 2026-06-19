@@ -18,6 +18,7 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE BATTLE.SPELL.HEAT_METAL_OBJECT_CONTACT_LIFECYCLE BATTLE.SPELL.GUST_OF_WIND_LINE_LIFECYCLE BATTLE.SPELL.SPIKE_GROWTH_MOVEMENT_HAZARD
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.HASTE_POSITIVE_EFFECTS
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.HASTE_LETHARGY_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE
@@ -101,6 +102,7 @@ import {
   applyStartTurnDeathSavingThrow,
   applyHitPointMaximumIncreaseExpiration,
   applyTemporaryHitPoints,
+  battleStateAfterSpellEndTargetStatePromotionConcentrationBreaks,
   breakBattleConcentration,
   breakCombatantConcentration,
   concentrationSavingThrowHole,
@@ -169,6 +171,12 @@ import {
   spellConcentrationEffectSourceFromEffect,
 } from "./spell-condition-effects-helpers.ts";
 import { battleCreatureWithSpellCreatedHeldObjectHandStateFromActiveEffects } from "./spell-created-held-object.ts";
+import {
+  battleCreatureWithSpellEndTargetStatePromotions,
+  END_OF_NEXT_TURN_NEW_ROUND_DURATION_TICK,
+  type EndOfNextTurnExpirationTiming,
+  spellEndTargetStatePromotesIncapacitated,
+} from "./spell-end-target-state.ts";
 import { spellGrantedActionResourceTurnResources } from "./spell-granted-action-resource.ts";
 
 import { damageAmountAfterTargetAdjustments } from "./damage-helpers.ts";
@@ -376,6 +384,10 @@ export function resolveEndTurn(
   let combatantsAfterExpiredReadiedSpells = afterDeathSavingThrow;
   for (const casterId of expiringReadiedSpellCasterIds) {
     const broken = breakCombatantConcentration(
+      {
+        ...state,
+        combatants: combatantsAfterExpiredReadiedSpells,
+      },
       combatantsAfterExpiredReadiedSpells,
       casterId,
     );
@@ -389,12 +401,19 @@ export function resolveEndTurn(
     currentActorId(state),
     state.initiative.round,
   );
-  const combatantsAfterSleepRepeatSaves = applySleepRepeatSaveFills(
-    combatantsAfterEndTurnOngoingFeatures,
+  const stateAfterSleepRepeatSaves = applySleepRepeatSaveFills(
+    {
+      ...state,
+      combatants: combatantsAfterEndTurnOngoingFeatures,
+      readiedSpells,
+      readiedMovements,
+      helpAttacks,
+    },
     currentActorId(state),
     state.initiative.round,
     sleepRepeatSaves,
   );
+  const combatantsAfterSleepRepeatSaves = stateAfterSleepRepeatSaves.combatants;
   const combatantsAfterHideousLaughterRepeatSaves =
     applyHideousLaughterRepeatSaveFills(
       combatantsAfterSleepRepeatSaves,
@@ -474,10 +493,19 @@ export function resolveEndTurn(
   ).combatants;
   const durationTick =
     Number(initiative.round) > Number(state.initiative.round)
-      ? tickDurationEffects(combatantsAfterSpellTurnStartDamage)
+      ? tickDurationEffects(combatantsAfterSpellTurnStartDamage, {
+          state: {
+            ...state,
+            initiative,
+            combatants: combatantsAfterSpellTurnStartDamage,
+          },
+          spellEndTargetStatePromotionTiming:
+            END_OF_NEXT_TURN_NEW_ROUND_DURATION_TICK,
+        })
       : {
           value: combatantsAfterSpellTurnStartDamage,
           flySpeedGrantEndFallCleanupFrames: [],
+          spellEndTargetStatePromotionIds: [],
         };
   const combatantsAfterDurationTick = durationTick.value;
   flySpeedGrantEndFallCleanupFrames.push(
@@ -516,14 +544,14 @@ export function resolveEndTurn(
         );
   const nextState = battleStateWithFlySpeedGrantEndFallCleanupFrames(
     {
-      ...state,
+      ...stateAfterSleepRepeatSaves,
       initiative,
       combatants: combatantsAfterCommandHalt,
       lightEmitters: lightEmittersAfterDurationTick,
       currentTurnResources,
-      readiedSpells,
-      readiedMovements,
-      helpAttacks,
+      readiedSpells: stateAfterSleepRepeatSaves.readiedSpells,
+      readiedMovements: stateAfterSleepRepeatSaves.readiedMovements,
+      helpAttacks: stateAfterSleepRepeatSaves.helpAttacks,
       legendaryActionWindow: {
         afterTurnActorId: currentActorId(state),
         consumed: false,
@@ -531,11 +559,18 @@ export function resolveEndTurn(
     },
     flySpeedGrantEndFallCleanupFrames,
   );
+  const nextStateWithSpellEndTargetStateConcentrationBreaks =
+    battleStateAfterSpellEndTargetStatePromotionConcentrationBreaks(
+      nextState,
+      durationTick.spellEndTargetStatePromotionIds,
+    );
 
   return {
     tag: "resolved",
-    state: nextState,
-    snapshot: snapshotBattle(nextState),
+    state: nextStateWithSpellEndTargetStateConcentrationBreaks,
+    snapshot: snapshotBattle(
+      nextStateWithSpellEndTargetStateConcentrationBreaks,
+    ),
   };
 }
 
@@ -4183,28 +4218,29 @@ export function resolveMoonbeamRepositionCommand(
 }
 
 function applySleepRepeatSaveFills(
-  combatants: ReadonlyMap<CombatantId, BattleCreatureState>,
+  state: BattleState,
   actorId: CombatantId,
   round: RoundType,
   saves: readonly Extract<
     BattleFill,
     { readonly kind: "savingThrowOutcome" }
   >[],
-): ReadonlyMap<CombatantId, BattleCreatureState> {
-  const actor = combatants.get(actorId);
+): BattleState {
+  const actor = state.combatants.get(actorId);
   const effects = sleepPendingRepeatSaveEffects(actor, actorId, round);
   if (actor === undefined || effects.length === 0) {
-    return combatants;
+    return state;
   }
-  return effects.reduce((nextCombatants, effect) => {
+  return effects.reduce((nextState, effect) => {
+    const nextCombatants = nextState.combatants;
     const target = nextCombatants.get(actorId);
     if (target === undefined) {
-      return nextCombatants;
+      return nextState;
     }
     const hole = sleepRepeatSavingThrowOutcomeHole(actorId, effect);
     const save = sleepRepeatSavingThrowOutcomeFor(saves, hole);
     if (save === undefined) {
-      return nextCombatants;
+      return nextState;
     }
     const activeEffectsWithoutPending = target.activeEffects.filter(
       (candidate) => candidate !== effect,
@@ -4217,14 +4253,17 @@ function applySleepRepeatSaveFills(
       );
     const succeeded = save.value.outcomes[0]?.succeeded === true;
     if (succeeded) {
-      return new Map(nextCombatants).set(
-        actorId,
-        battleCreatureWithActiveEffectsAndConditions(
-          target,
-          activeEffectsWithoutPending,
-          conditionsWithoutPending,
+      return {
+        ...nextState,
+        combatants: new Map(nextCombatants).set(
+          actorId,
+          battleCreatureWithActiveEffectsAndConditions(
+            target,
+            activeEffectsWithoutPending,
+            conditionsWithoutPending,
+          ),
         ),
-      );
+      };
     }
     const targetWithoutPending: BattleCreatureState =
       target.positiveHpUnconscious === null
@@ -4254,21 +4293,38 @@ function applySleepRepeatSaveFills(
       },
     };
     const activeEffects = [...activeEffectsWithoutPending, unconsciousEffect];
-    return breakCombatantConcentration(
-      new Map(nextCombatants).set(
-        actorId,
-        battleCreatureWithActiveEffectsAndConditions(
-          target,
+    const nextMap = new Map(nextCombatants).set(
+      actorId,
+      battleCreatureWithActiveEffectsAndConditions(
+        target,
+        activeEffects,
+        conditionsAfterApplyingSpellConditionEffects(
+          conditionsWithoutPending,
           activeEffects,
-          conditionsAfterApplyingSpellConditionEffects(
-            conditionsWithoutPending,
-            activeEffects,
-          ),
         ),
       ),
+    );
+    const stateWithSleepFailure = {
+      ...nextState,
+      combatants: nextMap,
+    };
+    const broken = breakCombatantConcentration(
+      stateWithSleepFailure,
+      nextMap,
       actorId,
-    ).value;
-  }, combatants);
+    );
+    const brokenState = battleStateWithFlySpeedGrantEndFallCleanupFrames(
+      {
+        ...stateWithSleepFailure,
+        combatants: broken.value,
+      },
+      broken.flySpeedGrantEndFallCleanupFrames,
+    );
+    return battleStateAfterSpellEndTargetStatePromotionConcentrationBreaks(
+      brokenState,
+      broken.spellEndTargetStatePromotionIds,
+    );
+  }, state);
 }
 
 function hideousLaughterEffects(
@@ -4722,15 +4778,23 @@ export function expireEndOfTurnEffects(
   );
 }
 
+type DurationTickContext = {
+  readonly state: BattleState;
+  readonly spellEndTargetStatePromotionTiming: EndOfNextTurnExpirationTiming;
+};
+
 export function tickDurationEffects(
   combatants: ReadonlyMap<CombatantId, BattleCreatureState>,
+  context?: DurationTickContext,
 ): {
   readonly value: ReadonlyMap<CombatantId, BattleCreatureState>;
   readonly flySpeedGrantEndFallCleanupFrames: readonly BattleFlySpeedGrantEndFallCleanupFrame[];
+  readonly spellEndTargetStatePromotionIds: readonly CombatantId[];
 } {
   const expiredConcentrationSources: ConcentrationEffectSource[] = [];
   const flySpeedGrantEndFallCleanupFrames: BattleFlySpeedGrantEndFallCleanupFrame[] =
     [];
+  const spellEndTargetStatePromotionIds: CombatantId[] = [];
   const tickedCombatants = new Map(
     [...combatants].map(([id, combatant]) => {
       const expiring: BattleActiveEffect[] = [];
@@ -4769,6 +4833,12 @@ export function tickDurationEffects(
         } as BattleActiveEffect;
         activeEffects.push(ticked);
       }
+      if (
+        context !== undefined &&
+        expiring.some(spellEndTargetStatePromotesIncapacitated)
+      ) {
+        spellEndTargetStatePromotionIds.push(id);
+      }
       flySpeedGrantEndFallCleanupFrames.push(
         ...flySpeedGrantEndFallCleanupFramesForExpiredEffects(id, expiring),
       );
@@ -4784,10 +4854,21 @@ export function tickDurationEffects(
               ),
             }
           : { ...combatant, activeEffects };
-      const nextCombatant = applyHitPointMaximumIncreaseExpiration(
+      const nextCombatantWithHeldObjectState =
         battleCreatureWithSpellCreatedHeldObjectHandStateFromActiveEffects(
           nextCombatantBase,
-        ),
+        );
+      const nextCombatantWithEndState =
+        context === undefined
+          ? nextCombatantWithHeldObjectState
+          : battleCreatureWithSpellEndTargetStatePromotions({
+              state: context.state,
+              combatant: nextCombatantWithHeldObjectState,
+              expiringEffects: expiring,
+              timing: context.spellEndTargetStatePromotionTiming,
+            });
+      const nextCombatant = applyHitPointMaximumIncreaseExpiration(
+        nextCombatantWithEndState,
         expiring,
       );
       return [id, nextCombatant];
@@ -4797,12 +4878,17 @@ export function tickDurationEffects(
     expireConcentrationDurationSourcesWithFlySpeedGrantEndFallCleanupFrames(
       tickedCombatants,
       expiredConcentrationSources,
+      context,
     );
   return {
     value: concentrationExpired.value,
     flySpeedGrantEndFallCleanupFrames: [
       ...flySpeedGrantEndFallCleanupFrames,
       ...concentrationExpired.flySpeedGrantEndFallCleanupFrames,
+    ],
+    spellEndTargetStatePromotionIds: [
+      ...spellEndTargetStatePromotionIds,
+      ...concentrationExpired.spellEndTargetStatePromotionIds,
     ],
   };
 }
@@ -4851,9 +4937,11 @@ function isTickingDurationActiveEffect(
 function expireConcentrationDurationSourcesWithFlySpeedGrantEndFallCleanupFrames(
   combatants: ReadonlyMap<CombatantId, BattleCreatureState>,
   sources: readonly ConcentrationEffectSource[],
+  context?: DurationTickContext,
 ): {
   readonly value: ReadonlyMap<CombatantId, BattleCreatureState>;
   readonly flySpeedGrantEndFallCleanupFrames: readonly BattleFlySpeedGrantEndFallCleanupFrame[];
+  readonly spellEndTargetStatePromotionIds: readonly CombatantId[];
 } {
   const uniqueSources = [
     ...new Map(
@@ -4866,21 +4954,28 @@ function expireConcentrationDurationSourcesWithFlySpeedGrantEndFallCleanupFrames
   const initial: {
     readonly value: ReadonlyMap<CombatantId, BattleCreatureState>;
     readonly flySpeedGrantEndFallCleanupFrames: readonly BattleFlySpeedGrantEndFallCleanupFrame[];
+    readonly spellEndTargetStatePromotionIds: readonly CombatantId[];
   } = {
     value: combatants,
     flySpeedGrantEndFallCleanupFrames: [],
+    spellEndTargetStatePromotionIds: [],
   };
   return uniqueSources.reduce((current, source) => {
     const expired =
       expireConcentrationDurationSourceWithFlySpeedGrantEndFallCleanupFrames(
         current.value,
         source,
+        context,
       );
     return {
       value: expired.value,
       flySpeedGrantEndFallCleanupFrames: [
         ...current.flySpeedGrantEndFallCleanupFrames,
         ...expired.flySpeedGrantEndFallCleanupFrames,
+      ],
+      spellEndTargetStatePromotionIds: [
+        ...current.spellEndTargetStatePromotionIds,
+        ...expired.spellEndTargetStatePromotionIds,
       ],
     };
   }, initial);
@@ -4889,17 +4984,26 @@ function expireConcentrationDurationSourcesWithFlySpeedGrantEndFallCleanupFrames
 function expireConcentrationDurationSourceWithFlySpeedGrantEndFallCleanupFrames(
   combatants: ReadonlyMap<CombatantId, BattleCreatureState>,
   source: ConcentrationEffectSource,
+  context?: DurationTickContext,
 ): {
   readonly value: ReadonlyMap<CombatantId, BattleCreatureState>;
   readonly flySpeedGrantEndFallCleanupFrames: readonly BattleFlySpeedGrantEndFallCleanupFrame[];
+  readonly spellEndTargetStatePromotionIds: readonly CombatantId[];
 } {
   const flySpeedGrantEndFallCleanupFrames: BattleFlySpeedGrantEndFallCleanupFrame[] =
     [];
+  const spellEndTargetStatePromotionIds: CombatantId[] = [];
   const value = new Map(
     [...combatants].map(([id, combatant]) => {
       const expiring = combatant.activeEffects.filter((effect) =>
         activeEffectExpiresWithConcentrationSource(effect, source),
       );
+      if (
+        context !== undefined &&
+        expiring.some(spellEndTargetStatePromotesIncapacitated)
+      ) {
+        spellEndTargetStatePromotionIds.push(id);
+      }
       flySpeedGrantEndFallCleanupFrames.push(
         ...flySpeedGrantEndFallCleanupFramesForExpiredEffects(id, expiring),
       );
@@ -4931,16 +5035,31 @@ function expireConcentrationDurationSourceWithFlySpeedGrantEndFallCleanupFrames(
                 : combatant.concentration,
               activeEffects,
             };
-      const nextCombatant = applyHitPointMaximumIncreaseExpiration(
+      const nextCombatantWithHeldObjectState =
         battleCreatureWithSpellCreatedHeldObjectHandStateFromActiveEffects(
           nextCombatantBase,
-        ),
+        );
+      const nextCombatantWithEndState =
+        context === undefined
+          ? nextCombatantWithHeldObjectState
+          : battleCreatureWithSpellEndTargetStatePromotions({
+              state: context.state,
+              combatant: nextCombatantWithHeldObjectState,
+              expiringEffects: expiring,
+              timing: context.spellEndTargetStatePromotionTiming,
+            });
+      const nextCombatant = applyHitPointMaximumIncreaseExpiration(
+        nextCombatantWithEndState,
         expiring,
       );
       return [id, nextCombatant];
     }),
   );
-  return { value, flySpeedGrantEndFallCleanupFrames };
+  return {
+    value,
+    flySpeedGrantEndFallCleanupFrames,
+    spellEndTargetStatePromotionIds,
+  };
 }
 
 function activeEffectExpiresWithConcentrationSource(
@@ -5342,12 +5461,10 @@ export function resolveEndTurnCommand(
     const fill = spellTurnEndDamageRollFor(input.fills, request.hole);
     return fill === undefined ? [] : [fill];
   });
-  const endTurnDamageRollRequests = endTurnDamageRequests.flatMap(
-    (request) => {
-      const roll = spellTurnEndDamageRollFor(input.fills, request.hole);
-      return roll === undefined ? [] : [{ ...request, roll }];
-    },
-  );
+  const endTurnDamageRollRequests = endTurnDamageRequests.flatMap((request) => {
+    const roll = spellTurnEndDamageRollFor(input.fills, request.hole);
+    return roll === undefined ? [] : [{ ...request, roll }];
+  });
   const missingEndTurnDamageHoles = endTurnDamageRequests.flatMap((request) =>
     spellTurnEndDamageRollFor(input.fills, request.hole) === undefined
       ? [request.hole]
@@ -5380,9 +5497,7 @@ export function resolveEndTurnCommand(
     ]);
   }
   const turnBoundaryDamageHoleIds = new Set<BattleHoleId>(
-    [...endTurnDamageHoles, ...startTurnDamageHoles].map(
-      (hole) => hole.holeId,
-    ),
+    [...endTurnDamageHoles, ...startTurnDamageHoles].map((hole) => hole.holeId),
   );
   if (
     input.fills.some(
@@ -5769,7 +5884,8 @@ export function resolveEndTurnCommand(
     );
   }
   if (
-    concentrationSavingThrowFills.length !== turnBoundaryConcentrationHoles.length
+    concentrationSavingThrowFills.length !==
+    turnBoundaryConcentrationHoles.length
   ) {
     return invalidResult(
       input.state,
@@ -7281,10 +7397,13 @@ function validateMovementCostFacts(
     return "Area movement-cost facts must agree on total Movement distance.";
   }
   if (
-    allCosts.slice(1).some(
-      (cost) =>
-        Number(cost.totalDistanceFeet) !== Number(firstCost.totalDistanceFeet),
-    )
+    allCosts
+      .slice(1)
+      .some(
+        (cost) =>
+          Number(cost.totalDistanceFeet) !==
+          Number(firstCost.totalDistanceFeet),
+      )
   ) {
     return "Movement-cost facts must agree on total Movement distance.";
   }
@@ -7296,10 +7415,7 @@ function validateMovementCostFacts(
   }
   const expectedCostFeet = movementFeet(
     Number(firstCost.totalDistanceFeet) +
-      allCosts.reduce(
-        (total, cost) => total + Number(cost.extraCostFeet),
-        0,
-      ),
+      allCosts.reduce((total, cost) => total + Number(cost.extraCostFeet), 0),
   );
   if (Number(value.movementCostFeet) === Number(expectedCostFeet)) {
     return null;
@@ -7359,10 +7475,7 @@ function validateGrappleDragMovementFact(
   const seenTargets = new Set<CombatantId>();
   let extraCostFeet = 0;
   for (const target of fact.targets) {
-    if (
-      !Number.isInteger(target.distanceFeet) ||
-      target.distanceFeet <= 0
-    ) {
+    if (!Number.isInteger(target.distanceFeet) || target.distanceFeet <= 0) {
       return {
         tag: "invalid",
         message: "Grapple drag target distance must be a positive integer.",
@@ -7399,8 +7512,7 @@ function validateGrappleDragMovementFact(
     if (grappler === undefined || draggedTarget === undefined) {
       return {
         tag: "invalid",
-        message:
-          "Grapple drag movement fact references a stale Grapple link.",
+        message: "Grapple drag movement fact references a stale Grapple link.",
       };
     }
     if (!grappleTargetExemptFromDragCost(grappler, draggedTarget)) {

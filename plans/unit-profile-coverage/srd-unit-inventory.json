@@ -293,15 +293,14 @@
     },
     "levelThreeSpellBattleReadiness": {
       "denominator": 110,
-      "numerator": 69,
-      "percent": "62.7%",
+      "numerator": 71,
+      "percent": "64.5%",
       "rowsByStatus": {
         "accepted-no-battle-effect": 47,
-        "accepted": 22,
+        "accepted": 24,
         "battle-runtime-required": 22,
         "owner-evidence-required": 12,
-        "surface-widening-required": 5,
-        "partial-battle-runtime": 2
+        "surface-widening-required": 5
       }
     },
     "levelFourSpellBattleReadiness": {
@@ -30726,7 +30725,7 @@
         "state": "installed",
         "unitId": "haste"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -30736,12 +30735,12 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L5-C17-HASTE-POSITIVE-RUNTIME at packages/battle-runtime/src/unit-profile-admission-haste-positive.test.ts",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L5-C18-HASTE-LETHARGY-RUNTIME at packages/battle-runtime/src/unit-profile-admission-haste-positive.test.ts",
           "status": "owner evidence present"
         }
       ],
       "nextAction": "Owner-specific operational evidence is classified and present.",
-      "battleReadinessStatus": "partial-battle-runtime"
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_hypnotic_pattern",
@@ -39548,7 +39547,7 @@
         "state": "installed",
         "unitId": "haste"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -39558,12 +39557,12 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L5-C17-HASTE-POSITIVE-RUNTIME at packages/battle-runtime/src/unit-profile-admission-haste-positive.test.ts",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L5-C18-HASTE-LETHARGY-RUNTIME at packages/battle-runtime/src/unit-profile-admission-haste-positive.test.ts",
           "status": "owner evidence present"
         }
       ],
       "nextAction": "Owner-specific operational evidence is classified and present.",
-      "battleReadinessStatus": "partial-battle-runtime"
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_hypnotic_pattern",

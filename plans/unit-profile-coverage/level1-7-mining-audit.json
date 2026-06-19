@@ -34,12 +34,11 @@
       "spell-level": 558
     },
     "rowsByBattleReadinessStatus": {
-      "accepted": 469,
+      "accepted": 471,
       "accepted-no-battle-effect": 231,
       "battle-runtime-required": 54,
       "not-applicable": 77,
       "owner-evidence-required": 62,
-      "partial-battle-runtime": 2,
       "surface-widening-required": 5
     },
     "rowsByCatalogAdmission": {
@@ -95,8 +94,8 @@
     },
     "rowsByUnitProfileDisposition": {
       "not-recorded": 174,
-      "profile-subset-supported": 55,
-      "supported-profile": 297,
+      "profile-subset-supported": 53,
+      "supported-profile": 299,
       "unsupported-profile": 374
     }
   },
@@ -28731,7 +28730,7 @@
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "partial-battle-runtime"
+          "status": "accepted"
         },
         "battleReadinessClosure": {
           "state": "not-recorded"
@@ -28742,7 +28741,7 @@
         },
         "finalDisposition": "catalog-installed-owner-evidence-present",
         "unitProfile": {
-          "disposition": "profile-subset-supported",
+          "disposition": "supported-profile",
           "state": "recorded"
         }
       }
@@ -38146,7 +38145,7 @@
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "partial-battle-runtime"
+          "status": "accepted"
         },
         "battleReadinessClosure": {
           "state": "not-recorded"
@@ -38157,7 +38156,7 @@
         },
         "finalDisposition": "catalog-installed-owner-evidence-present",
         "unitProfile": {
-          "disposition": "profile-subset-supported",
+          "disposition": "supported-profile",
           "state": "recorded"
         }
       }
@@ -41139,7 +41138,7 @@
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "partial-battle-runtime"
+          "status": "accepted"
         },
         "battleReadinessClosure": {
           "state": "not-recorded"
@@ -41150,7 +41149,7 @@
         },
         "finalDisposition": "catalog-installed-owner-evidence-present",
         "unitProfile": {
-          "disposition": "profile-subset-supported",
+          "disposition": "supported-profile",
           "state": "recorded"
         }
       }

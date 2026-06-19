@@ -6,6 +6,7 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SELF_TRANSFORMATION_MODE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.HASTE_POSITIVE_EFFECTS
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.HASTE_LETHARGY_LIFECYCLE
 
 import { Match } from "effect";
 import {
@@ -282,6 +283,9 @@ export function battleTerminalSpeedZero(
   return (
     isGrappled ||
     combatant.activeEffects.some((effect) => effect.kind === "selfSpeedZero") ||
+    combatant.activeEffects.some(
+      (effect) => effect.kind === "spellSpeedZero",
+    ) ||
     combatant.activeEffects.some(
       (effect) => effect.kind === "hypnoticPatternControl",
     ) ||
@@ -762,10 +766,7 @@ export function targetIsNoMoreThanOneSizeLarger(
   return SIZE_RANKS[target] - SIZE_RANKS[grappler] <= 1;
 }
 
-export function creatureSizeIsLargerThanSelf(
-  self: Size,
-  other: Size,
-): boolean {
+export function creatureSizeIsLargerThanSelf(self: Size, other: Size): boolean {
   return SIZE_RANKS[other] > SIZE_RANKS[self];
 }
 

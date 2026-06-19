@@ -1,10 +1,10 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-haste-positive
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.HASTE_POSITIVE_EFFECTS
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.HASTE_LETHARGY_LIFECYCLE
 //
 // The Haste-positive Spell Procedure Profile: the SRD Haste cast path that
-// grants its active positive effects. The spell-end lethargy rider is admitted
-// as part of the supported surface shape but executed by the follow-up profile
-// task that owns effect-end cleanup.
+// grants its active positive effects and carries the spell-end lethargy rider
+// until Concentration or duration cleanup promotes it.
 
 import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
 import type { StandardActionKind } from "@dnd/shared/game-facts";
@@ -223,6 +223,13 @@ function hastePositiveSpellProjection(
         sourceSpellId: spell.id,
         sourceCombatantId: actorId,
         restriction: extraAction.restriction,
+        expiresAt,
+      },
+      spellEndTargetState: {
+        kind: "spellEndTargetState",
+        sourceSpellId: spell.id,
+        sourceCombatantId: actorId,
+        condition: spellEndLethargy.condition,
         expiresAt,
       },
     },
@@ -503,7 +510,8 @@ function hastePositiveEffects(
       | "speedRatio"
       | "spellArmorClassBonus"
       | "savingThrowRollMode"
-      | "spellGrantedActionResource";
+      | "spellGrantedActionResource"
+      | "spellEndTargetState";
   }
 >[] {
   return [
@@ -511,6 +519,7 @@ function hastePositiveEffects(
     invocation.activeEffects.armorClassBonus,
     invocation.activeEffects.dexteritySavingThrowAdvantage,
     invocation.activeEffects.grantedActionResource,
+    invocation.activeEffects.spellEndTargetState,
   ];
 }
 
@@ -521,34 +530,35 @@ function isHastePositiveActiveEffect(
     effect.kind === "speedRatio" ||
     effect.kind === "spellArmorClassBonus" ||
     effect.kind === "savingThrowRollMode" ||
-    effect.kind === "spellGrantedActionResource"
+    effect.kind === "spellGrantedActionResource" ||
+    effect.kind === "spellEndTargetState"
   );
 }
 
-const HastePositiveInvocationSchema = spellProcedureInvocationSchema<
-  HastePositiveSpellInvocation
->(
-  Schema.Struct({
-    access: PreparedSpellAccessSchema,
-    resource: SpellSlotInvocationResourceSchema,
-    procedure: Schema.Literal("hastePositive"),
-    spell: BattleRuntimeObjectSchema,
-    actionCost: Schema.Literal("magicAction"),
-    targeting: Schema.Struct({
-      kind: Schema.Literal("targetList"),
-      minTargets: Schema.Literal(1),
-      maxTargets: Schema.Literal(1),
-      requiredTargetDisposition: Schema.Literal("willing"),
+const HastePositiveInvocationSchema =
+  spellProcedureInvocationSchema<HastePositiveSpellInvocation>(
+    Schema.Struct({
+      access: PreparedSpellAccessSchema,
+      resource: SpellSlotInvocationResourceSchema,
+      procedure: Schema.Literal("hastePositive"),
+      spell: BattleRuntimeObjectSchema,
+      actionCost: Schema.Literal("magicAction"),
+      targeting: Schema.Struct({
+        kind: Schema.Literal("targetList"),
+        minTargets: Schema.Literal(1),
+        maxTargets: Schema.Literal(1),
+        requiredTargetDisposition: Schema.Literal("willing"),
+      }),
+      activeEffects: Schema.Struct({
+        speedRatio: BattleRuntimeObjectSchema,
+        armorClassBonus: BattleRuntimeObjectSchema,
+        dexteritySavingThrowAdvantage: BattleRuntimeObjectSchema,
+        grantedActionResource: BattleRuntimeObjectSchema,
+        spellEndTargetState: BattleRuntimeObjectSchema,
+      }),
+      rangeFeet: MovementFeet,
     }),
-    activeEffects: Schema.Struct({
-      speedRatio: BattleRuntimeObjectSchema,
-      armorClassBonus: BattleRuntimeObjectSchema,
-      dexteritySavingThrowAdvantage: BattleRuntimeObjectSchema,
-      grantedActionResource: BattleRuntimeObjectSchema,
-    }),
-    rangeFeet: MovementFeet,
-  }),
-);
+  );
 
 export const hastePositiveProfile = {
   procedure: "hastePositive",

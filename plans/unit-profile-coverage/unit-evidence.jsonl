@@ -475,3 +475,4 @@
 {"unitId":"species_gnome","evidence":{"tag":"deterministic-admission-projection","taskId":"LT4-B04-GNOME-SPECIES-ADMISSION-EVIDENCE","ownerPath":"packages/character-creation-runtime/src/index.test.ts"}}
 {"unitId":"species_gnome_gnomish_lineage","evidence":{"tag":"deterministic-admission-projection","taskId":"LT4-B04-GNOME-SPECIES-ADMISSION-EVIDENCE","ownerPath":"packages/character-creation-runtime/src/index.test.ts"}}
 {"unitId":"haste","evidence":{"tag":"deterministic-admission-projection","taskId":"L5-C17-HASTE-POSITIVE-RUNTIME","ownerPath":"packages/battle-runtime/src/unit-profile-admission-haste-positive.test.ts"}}
+{"unitId":"haste","evidence":{"tag":"deterministic-admission-projection","taskId":"L5-C18-HASTE-LETHARGY-RUNTIME","ownerPath":"packages/battle-runtime/src/unit-profile-admission-haste-positive.test.ts"}}

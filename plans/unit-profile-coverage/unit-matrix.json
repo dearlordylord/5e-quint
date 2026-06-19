@@ -62,8 +62,8 @@
       "value": 321
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 185,
-      "numerator": 180,
+      "denominator": 186,
+      "numerator": 181,
       "percent": "97.3%"
     },
     "profileClassificationCoverage": {
@@ -92,8 +92,8 @@
       "percent": "100%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 174,
-      "numerator": 174,
+      "denominator": 175,
+      "numerator": 175,
       "percent": "100%"
     },
     "runtimeMappingCoverage": {
@@ -107,14 +107,14 @@
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 178,
+      "denominator": 179,
       "numerator": 176,
-      "percent": "98.9%"
+      "percent": "98.3%"
     },
     "supportedProfileCoverage": {
       "denominator": 271,
-      "numerator": 185,
-      "percent": "68.3%"
+      "numerator": 186,
+      "percent": "68.6%"
     }
   },
   "metricSemantics": [
@@ -5390,11 +5390,13 @@
       "id": "spell.invocation-haste-positive",
       "profileKind": "spell-invocation",
       "qntOwners": [
-        "packages/shared-algebras/proofs/rule-core/spell-haste-positive-effects-core.qnt"
+        "packages/shared-algebras/proofs/rule-core/spell-haste-positive-effects-core.qnt",
+        "packages/battle-runtime/battle-runtime-haste-lethargy-lifecycle.mbt.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer.ts",
         "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/haste-positive.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-end-target-state.ts",
         "packages/battle-runtime/src/battle-reducer/spell-granted-action-resource.ts",
         "packages/battle-runtime/src/battle-reducer/damage-apply.ts",
         "packages/battle-runtime/src/battle-reducer/movement-speed.ts",
@@ -5406,11 +5408,12 @@
         "packages/shared-algebras/src/action-economy-algebra.ts",
         "packages/shared-algebras/src/speed-algebra.ts"
       ],
-      "sourceBoundary": "The runtime consumes Haste's typed Surface direct target-effect shape rather than authored spell identity: Magic Action and level-3-or-higher Spell Slot spend, caster-owned Concentration up to 1 minute, one visible willing creature target, doubled Speed ratio, +2 Armor Class, Dexterity Saving Throw Advantage, and one target-turn spell-effect action resource restricted to Attack with one attack only, Dash, Disengage, Hide, or Utilize. The positive-effects profile owns clearing an immediately usable current-turn spell-effect action when the source Haste effect ends through Concentration loss; duration turnover resets the turn-resource ledger before the next actor receives resources. The spell-end lethargy rider is admitted only as a deferred shape boundary owned by L5-C18. Automatic target choice, spatial visibility derivation, and the later lethargy lifecycle remain caller/table or follow-up owner facts.",
+      "sourceBoundary": "The runtime consumes Haste's typed Surface direct target-effect shape rather than authored spell identity: Magic Action and level-3-or-higher Spell Slot spend, caster-owned Concentration up to 1 minute, one visible willing creature target, doubled Speed ratio, +2 Armor Class, Dexterity Saving Throw Advantage, one target-turn spell-effect action resource restricted to Attack with one attack only, Dash, Disengage, Hide, or Utilize, and the spell-end target state. The profile carries the spell-end state as a source-owned active effect while Haste is active, then Concentration or duration cleanup promotes source-owned Incapacitated plus Speed 0 until the end of the target's next turn. Promoted Incapacitated uses the shared Concentration teardown path to end any target-owned Concentration. Incapacitated is not treated as a Speed shortcut; the Speed 0 effect has its own source-owned lifetime, and cleanup preserves unrelated Incapacitated sources. Automatic target choice and spatial visibility derivation remain caller/table facts.",
       "taskRefs": [
-        "L5-C17-HASTE-POSITIVE-RUNTIME"
+        "L5-C17-HASTE-POSITIVE-RUNTIME",
+        "L5-C18-HASTE-LETHARGY-RUNTIME"
       ],
-      "title": "Spell invocation applies Haste's active positive target effects and restricted target-turn action",
+      "title": "Spell invocation applies Haste's active positive target effects, restricted target-turn action, and spell-end lethargy",
       "verificationOwners": [
         {
           "kind": "qnt-proof",
@@ -5419,6 +5422,10 @@
         {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-haste-positive.test.ts"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/haste-lethargy-lifecycle.mbt.test.ts"
         }
       ]
     }
@@ -8164,6 +8171,12 @@
         "joinStatus": "covered",
         "obligations": [
           {
+            "obligationId": "BATTLE.SPELL.HASTE_LETHARGY_LIFECYCLE",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Haste spell-end lethargy applies Incapacitated plus separate Speed 0 until the target's next turn end"
+          },
+          {
             "obligationId": "BATTLE.SPELL.HASTE_POSITIVE_EFFECTS",
             "runtime": "battle",
             "status": "covered",
@@ -8179,6 +8192,7 @@
         "profileId": "spell.invocation-haste-positive",
         "profileKind": "spell-invocation",
         "qntOwners": [
+          "packages/battle-runtime/battle-runtime-haste-lethargy-lifecycle.mbt.qnt",
           "packages/shared-algebras/proofs/rule-core/spell-haste-positive-effects-core.qnt"
         ]
       }
@@ -8191,8 +8205,8 @@
       "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
       "metrics": {
         "rulesKernelSupportedUnitCoverage": {
-          "denominator": 174,
-          "numerator": 174,
+          "denominator": 175,
+          "numerator": 175,
           "percent": "100%"
         }
       },
@@ -10216,6 +10230,41 @@
             }
           ],
           "unitId": "guiding_bolt"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.SPELL.HASTE_LETHARGY_LIFECYCLE",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Haste spell-end lethargy applies Incapacitated plus separate Speed 0 until the target's next turn end"
+                },
+                {
+                  "obligationId": "BATTLE.SPELL.HASTE_POSITIVE_EFFECTS",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Haste positive cast applies active target buffs and a restricted target-turn action"
+                },
+                {
+                  "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
+                }
+              ],
+              "profileId": "spell.invocation-haste-positive",
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/battle-runtime/battle-runtime-haste-lethargy-lifecycle.mbt.qnt",
+                "packages/shared-algebras/proofs/rule-core/spell-haste-positive-effects-core.qnt"
+              ]
+            }
+          ],
+          "unitId": "haste"
         },
         {
           "joinStatus": "covered",
@@ -13104,7 +13153,7 @@
           "profileIds": [
             "spell.invocation-haste-positive"
           ],
-          "tag": "profile-subset-supported"
+          "tag": "supported-profile"
         },
         "unitId": "haste"
       }
@@ -16669,6 +16718,14 @@
     },
     {
       "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime tests cover Haste spell-end target-state admission from typed Surface facts, Concentration-break promotion to Incapacitated plus separate Speed 0, target-owned Concentration break from promoted Incapacitated, duration-expiry promotion, replacement/recast ordering, cleanup at the target's next turn end, self-cast current-turn action-resource cleanup, and preservation of independent Incapacitated sources.",
+      "profileIds": [
+        "spell.invocation-haste-positive"
+      ],
+      "taskId": "L5-C18-HASTE-LETHARGY-RUNTIME"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
       "note": "Focused Character Sheet runtime tests cover Resourceful Long Rest Heroic Inspiration grants from retained typed rest-trigger and heroic-inspiration Surface facts, duplicate grants remaining one available Heroic Inspiration state, and non-qualifying builds preserving current Heroic Inspiration state without species-owned rest or inspiration state.",
       "profileIds": [
         "character-sheet.rest-triggered-heroic-inspiration"
@@ -16757,12 +16814,12 @@
         "kind": "spell",
         "label": "Spell Units",
         "profileFactDenominator": 137,
-        "profileSubsetSupportedUnits": 19,
+        "profileSubsetSupportedUnits": 18,
         "selectedIdentityDeferredNonApplicableUnits": 0,
         "selectedIdentityReplayDenominator": 111,
         "selectedIdentityReplayGapUnits": 1,
         "selectedIdentityReplayWitnessUnits": 110,
-        "supportedProfileUnits": 92,
+        "supportedProfileUnits": 93,
         "unsupportedOrOtherUnits": 29
       },
       {
@@ -30880,23 +30937,19 @@
         "status": "installed"
       },
       "claim": {
-        "deferredMechanics": [
-          {
-            "followUpTaskId": "L5-C18-HASTE-LETHARGY-RUNTIME",
-            "mechanic": "Spell-end lethargy rider: when the Haste spell ends for a target, apply source-owned Incapacitated plus Speed 0 until the end of that target's next turn for concentration loss, duration expiration, recast/replacement, and cleanup boundaries while preserving independent Incapacitated sources."
-          }
-        ],
         "profileIds": [
           "spell.invocation-haste-positive"
         ],
         "supportedMechanics": [
           "Surface authors Haste as an SRD Spell Definition with Magic Action Spell Slot casting, level 3, 30-foot visible willing-creature targeting, Concentration up to 1 minute, doubled Speed, +2 Armor Class, Dexterity Saving Throw Advantage, one restricted additional action, and a typed spell-end lethargy rider",
           "Battle runtime admits the exact typed direct-effect shape without branching on Haste id, name, slug, provenance section, or spell list identity",
-          "Battle runtime spends the Magic Action and a level-3-or-higher Spell Slot, opens the normal spell-cast interrupt window, and owns caster Concentration for the positive active effects",
+          "Battle runtime spends the Magic Action and a level-3-or-higher Spell Slot, opens the normal spell-cast interrupt window, and owns caster Concentration for the Haste active effects",
           "Battle runtime applies target active effects for doubled Speed, +2 Armor Class, and Dexterity Saving Throw Advantage from the admitted Surface facts",
-          "Battle runtime derives one target-turn spell-effect action resource from the active effect, restricts it to Attack with one attack only, Dash, Disengage, Hide, or Utilize, rejects disallowed spends, and prevents that restricted action from opening class-feature Extra Attack"
+          "Battle runtime derives one target-turn spell-effect action resource from the active effect, restricts it to Attack with one attack only, Dash, Disengage, Hide, or Utilize, rejects disallowed spends, and prevents that restricted action from opening class-feature Extra Attack",
+          "Battle runtime promotes the spell-end lethargy rider on Concentration loss, duration expiration, or replacement/recast into source-owned Incapacitated plus a separate source-owned Speed 0 effect until the end of the target's next turn",
+          "Battle runtime cleans up the Haste lethargy condition and Speed 0 at the target-turn boundary while preserving independent Incapacitated sources and without treating Incapacitated itself as a Speed shortcut"
         ],
-        "tag": "profile-subset-supported"
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
@@ -30904,6 +30957,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-haste-positive.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "L5-C17-HASTE-POSITIVE-RUNTIME"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-haste-positive.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L5-C18-HASTE-LETHARGY-RUNTIME"
         }
       ],
       "executableMechanics": true,
@@ -30913,11 +30971,13 @@
           "id": "spell.invocation-haste-positive",
           "profileKind": "spell-invocation",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/spell-haste-positive-effects-core.qnt"
+            "packages/shared-algebras/proofs/rule-core/spell-haste-positive-effects-core.qnt",
+            "packages/battle-runtime/battle-runtime-haste-lethargy-lifecycle.mbt.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-reducer.ts",
             "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/haste-positive.ts",
+            "packages/battle-runtime/src/battle-reducer/spell-end-target-state.ts",
             "packages/battle-runtime/src/battle-reducer/spell-granted-action-resource.ts",
             "packages/battle-runtime/src/battle-reducer/damage-apply.ts",
             "packages/battle-runtime/src/battle-reducer/movement-speed.ts",
@@ -30929,11 +30989,12 @@
             "packages/shared-algebras/src/action-economy-algebra.ts",
             "packages/shared-algebras/src/speed-algebra.ts"
           ],
-          "sourceBoundary": "The runtime consumes Haste's typed Surface direct target-effect shape rather than authored spell identity: Magic Action and level-3-or-higher Spell Slot spend, caster-owned Concentration up to 1 minute, one visible willing creature target, doubled Speed ratio, +2 Armor Class, Dexterity Saving Throw Advantage, and one target-turn spell-effect action resource restricted to Attack with one attack only, Dash, Disengage, Hide, or Utilize. The positive-effects profile owns clearing an immediately usable current-turn spell-effect action when the source Haste effect ends through Concentration loss; duration turnover resets the turn-resource ledger before the next actor receives resources. The spell-end lethargy rider is admitted only as a deferred shape boundary owned by L5-C18. Automatic target choice, spatial visibility derivation, and the later lethargy lifecycle remain caller/table or follow-up owner facts.",
+          "sourceBoundary": "The runtime consumes Haste's typed Surface direct target-effect shape rather than authored spell identity: Magic Action and level-3-or-higher Spell Slot spend, caster-owned Concentration up to 1 minute, one visible willing creature target, doubled Speed ratio, +2 Armor Class, Dexterity Saving Throw Advantage, one target-turn spell-effect action resource restricted to Attack with one attack only, Dash, Disengage, Hide, or Utilize, and the spell-end target state. The profile carries the spell-end state as a source-owned active effect while Haste is active, then Concentration or duration cleanup promotes source-owned Incapacitated plus Speed 0 until the end of the target's next turn. Promoted Incapacitated uses the shared Concentration teardown path to end any target-owned Concentration. Incapacitated is not treated as a Speed shortcut; the Speed 0 effect has its own source-owned lifetime, and cleanup preserves unrelated Incapacitated sources. Automatic target choice and spatial visibility derivation remain caller/table facts.",
           "taskRefs": [
-            "L5-C17-HASTE-POSITIVE-RUNTIME"
+            "L5-C17-HASTE-POSITIVE-RUNTIME",
+            "L5-C18-HASTE-LETHARGY-RUNTIME"
           ],
-          "title": "Spell invocation applies Haste's active positive target effects and restricted target-turn action",
+          "title": "Spell invocation applies Haste's active positive target effects, restricted target-turn action, and spell-end lethargy",
           "verificationOwners": [
             {
               "kind": "qnt-proof",
@@ -30942,6 +31003,10 @@
             {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/unit-profile-admission-haste-positive.test.ts"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/haste-lethargy-lifecycle.mbt.test.ts"
             }
           ]
         }
