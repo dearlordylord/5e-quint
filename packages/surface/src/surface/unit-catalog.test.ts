@@ -8,6 +8,7 @@ import flyInput from "../../content/fly.json";
 import glyphOfWardingInput from "../../content/glyph_of_warding.json";
 import hasteInput from "../../content/haste.json";
 import hypnoticPatternInput from "../../content/hypnotic_pattern.json";
+import magicCircleInput from "../../content/magic_circle.json";
 import magicWeaponInput from "../../content/magic_weapon.json";
 import moonbeamInput from "../../content/moonbeam.json";
 import phantomSteedInput from "../../content/phantom_steed.json";
@@ -25,6 +26,7 @@ import {
   FeatherFallMitigationSchema,
   GlyphWardingMechanicsSchema,
   JumpMovementReplacementSchema,
+  MagicCircleWardMechanicsSchema,
   OnHitTriggerMechanicsSchema,
   TargetSelectionSchema,
 } from "./schema.ts";
@@ -1524,6 +1526,228 @@ describe("SRD Unit catalog boundary", () => {
         },
       },
     });
+  });
+
+  test("decodes Magic Circle with warded Cylinder, direction choice, crossing gates, and protected-target facts", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag !== "ok") return;
+
+    const magicCircle = result.catalog.requireUnit("magic_circle");
+    expect(magicCircle.kind).toBe("spell");
+    if (magicCircle.kind !== "spell") return;
+    expect(magicCircle.mechanics.family).toBe("magic_circle_ward");
+    if (magicCircle.mechanics.family !== "magic_circle_ward") return;
+
+    expect(magicCircle.provenance).toEqual({
+      kind: "srd-5.2.1",
+      section: "Spells/Descriptions-M-P#Magic Circle",
+    });
+    expect(magicCircle.mechanics).toMatchObject({
+      level: 3,
+      school: "abjuration",
+      castingTime: { kind: "minutes", amount: 1, ritual: false },
+      range: { kind: "point", feet: 10 },
+      components: {
+        v: true,
+        s: true,
+        m: "salt and powdered silver worth 100+ GP, which the spell consumes",
+        materialCostGp: 100,
+        materialConsumed: true,
+      },
+      duration: {
+        kind: "timed",
+        value: {
+          unit: "hour",
+          amount: 1,
+          upcastTiers: [
+            { atSlot: 4, amount: 2 },
+            { atSlot: 5, amount: 3 },
+            { atSlot: 6, amount: 4 },
+            { atSlot: 7, amount: 5 },
+            { atSlot: 8, amount: 6 },
+            { atSlot: 9, amount: 7 },
+          ],
+        },
+      },
+    });
+
+    expect(magicCircle.mechanics.occurrence).toEqual({
+      kind: "warded_cylinder_occurrence",
+      area: {
+        shape: { kind: "cylinder", radiusFeet: 10, heightFeet: 20 },
+        origin: {
+          kind: "visible_point_on_ground_within_spell_range",
+          chooser: "caster",
+        },
+      },
+      runes: {
+        appearWhere: "cylinder_intersects_floor_or_other_surface",
+      },
+      tableSpatial: {
+        placement: "table_witnessed_visible_ground_point",
+        cylinderMembership: "table_witnessed_cylinder_membership",
+        insideProtectedTargets: "table_witnessed_targets_inside_cylinder",
+        outsideProtectedTargets: "table_witnessed_targets_outside_cylinder",
+        willingNonmagicalEntryAttempt:
+          "table_witnessed_willing_nonmagical_entry_attempt",
+        nonmagicalExitAttempt: "table_witnessed_nonmagical_exit_attempt",
+        teleportationCrossing: "table_witnessed_teleportation_crossing",
+        interplanarTravelCrossing:
+          "table_witnessed_interplanar_travel_crossing",
+      },
+    });
+    expect(magicCircle.mechanics.affectedCreatureTypes).toEqual({
+      kind: "one_or_more_creature_type_choice",
+      chooser: "caster",
+      label: "affected creature types",
+      selection: "one_or_more",
+      options: ["celestial", "elemental", "fey", "fiend", "undead"],
+    });
+    expect(magicCircle.mechanics.direction).toEqual({
+      chooser: "caster",
+      defaultDirection: {
+        kind: "normal",
+        affectedCreatureCrossing: {
+          blockedCrossing: "willingly_enter_cylinder",
+          nonmagicalMeans: "prevented",
+          magicalMeans: {
+            methods: ["teleportation", "interplanar_travel"],
+            ability: "cha",
+            dc: { kind: "caster_spell_save_dc" },
+          },
+        },
+        protectedTargets: {
+          location: "inside_cylinder",
+          effects: {
+            attackRollDisadvantage: {
+              attacker: "affected_creature",
+              target: "protected_target",
+              on: ["attack_roll"],
+            },
+            sourceScopedPrevention: {
+              source: "affected_creature",
+              possession: "prevented",
+              conditions: ["charmed", "frightened"],
+            },
+          },
+        },
+      },
+      reversedDirection: {
+        kind: "reversed",
+        affectedCreatureCrossing: {
+          blockedCrossing: "leave_cylinder",
+          nonmagicalMeans: "prevented",
+          magicalMeans: {
+            methods: ["teleportation", "interplanar_travel"],
+            ability: "cha",
+            dc: { kind: "caster_spell_save_dc" },
+          },
+        },
+        protectedTargets: {
+          location: "outside_cylinder",
+          effects: {
+            attackRollDisadvantage: {
+              attacker: "affected_creature",
+              target: "protected_target",
+              on: ["attack_roll"],
+            },
+            sourceScopedPrevention: {
+              source: "affected_creature",
+              possession: "prevented",
+              conditions: ["charmed", "frightened"],
+            },
+          },
+        },
+      },
+    });
+  });
+
+  test("rejects Magic Circle shapes that lose fixed SRD ward facts", () => {
+    const magicCircle = decodeUnitRecordSync(magicCircleInput);
+    expect(magicCircle.kind).toBe("spell");
+    if (magicCircle.kind !== "spell") return;
+    expect(magicCircle.mechanics.family).toBe("magic_circle_ward");
+    if (magicCircle.mechanics.family !== "magic_circle_ward") return;
+
+    const decode = Schema.decodeUnknownEither(MagicCircleWardMechanicsSchema);
+    const mechanics = magicCircle.mechanics;
+
+    expect(
+      Either.isLeft(
+        decode({
+          ...mechanics,
+          affectedCreatureTypes: {
+            ...mechanics.affectedCreatureTypes,
+            options: ["fiend"],
+          },
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        decode({
+          ...mechanics,
+          affectedCreatureTypes: {
+            ...mechanics.affectedCreatureTypes,
+            options: ["celestial", "elemental", "fey", "fiend", "fiend"],
+          },
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        decode({
+          ...mechanics,
+          occurrence: {
+            ...mechanics.occurrence,
+            area: {
+              ...mechanics.occurrence.area,
+              shape: {
+                ...mechanics.occurrence.area.shape,
+                heightFeet: 10,
+              },
+            },
+          },
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        decode({
+          ...mechanics,
+          direction: {
+            ...mechanics.direction,
+            defaultDirection: {
+              ...mechanics.direction.defaultDirection,
+              affectedCreatureCrossing: {
+                ...mechanics.direction.defaultDirection
+                  .affectedCreatureCrossing,
+                blockedCrossing: "enter_cylinder",
+              },
+            },
+          },
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        decode({
+          ...mechanics,
+          direction: {
+            ...mechanics.direction,
+            defaultDirection: {
+              ...mechanics.direction.defaultDirection,
+              protectedTargets: {
+                ...mechanics.direction.defaultDirection.protectedTargets,
+                location: "outside_cylinder",
+              },
+            },
+          },
+        }),
+      ),
+    ).toBe(true);
   });
 
   test("rejects Glyph of Warding shapes that lose fixed SRD branch facts", () => {

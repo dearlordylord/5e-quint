@@ -19,9 +19,9 @@
       "catalog-authored-review-required": 24,
       "catalog-installed-owner-evidence-present": 8,
       "catalog-installed-owner-evidence-required": 3,
-      "catalog-only/dead-for-now": 19,
+      "catalog-only/dead-for-now": 20,
       "missing-authored-record": 20,
-      "needs-surface-widening": 2
+      "needs-surface-widening": 1
     },
     "auditedUniqueSpellIdentitiesByLevelBand": {
       "spell-level-3": 42,
@@ -35,15 +35,15 @@
     },
     "rowsByBattleReadinessStatus": {
       "accepted": 471,
-      "accepted-no-battle-effect": 231,
+      "accepted-no-battle-effect": 234,
       "battle-runtime-required": 54,
       "not-applicable": 77,
       "owner-evidence-required": 62,
-      "surface-widening-required": 5
+      "surface-widening-required": 2
     },
     "rowsByCatalogAdmission": {
-      "installed": 669,
-      "not-installed": 231
+      "installed": 672,
+      "not-installed": 228
     },
     "rowsByCategory": {
       "character-creation or progression mechanic": 172,
@@ -59,10 +59,10 @@
       "catalog-authored-review-required": 61,
       "catalog-installed-owner-evidence-present": 485,
       "catalog-installed-owner-evidence-required": 10,
-      "catalog-only/dead-for-now": 186,
+      "catalog-only/dead-for-now": 189,
       "level-5-7-follow-up-required": 24,
       "missing-authored-record": 45,
-      "needs-surface-widening": 5,
+      "needs-surface-widening": 2,
       "non-runtime": 84
     },
     "rowsByLevelBand": {
@@ -93,10 +93,10 @@
       "subclass-spell-access": 5
     },
     "rowsByUnitProfileDisposition": {
-      "not-recorded": 174,
+      "not-recorded": 171,
       "profile-subset-supported": 53,
       "supported-profile": 299,
-      "unsupported-profile": 374
+      "unsupported-profile": 377
     }
   },
   "rows": [
@@ -9611,7 +9611,7 @@
         "sourceInventoryRowId": "srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_magic_circle",
         "state": "present"
       },
-      "nextAction": "Widen Surface: Spell Definition warded-cylinder occurrence: 10-foot-radius, 20-foot-tall Cylinder area; slot-scaled timed duration of 1 hour plus 1 hour per Spell Slot level above 3; cast-time choice of one or more Celestial, Elemental, Fey, Fiend, or Undead creature types; normal or reversed area direction; nonmagical entry or exit prevention for affected creatures; Charisma Saving Throw gate for teleportation or interplanar travel across the ward; affected-creature Attack Roll Disadvantage against protected targets; and source-scoped possession, Charmed, and Frightened prevention for protected targets.",
+      "nextAction": "Magic Circle supplies typed Surface facts for the warded Cylinder, affected creature type choice, direction branch, crossing gates, protected-target Attack Roll Disadvantage, and source-scoped possession/condition prevention. Promoted battle runtime still needs a warded-area effect owner that consumes table-supplied placement, area membership, protected-target location, willing nonmagical entry attempts, nonmagical exit attempts, teleportation or interplanar-travel crossing witnesses, and source-scoped possession/Charmed/Frightened prevention without duplicating battle map state or branching on authored spell id or name.",
       "rowId": "srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_magic_circle",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -9621,25 +9621,28 @@
       },
       "supportSnapshot": {
         "authoredContent": {
-          "state": "missing-authored-record"
+          "sourceRecordPath": "packages/surface/content/magic_circle.json",
+          "state": "authored-record-present",
+          "unitId": "magic_circle"
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "surface-widening-required"
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
           "kind": "table-spatial-derivation",
-          "owner": "Surface Spell Definition plus table/spatial planar-movement owner and future battle-runtime warded-area Spell Effect owner",
-          "reason": "Magic Circle needs a typed follow-up split before an SRD-provenance Spell Definition can be admitted: Surface must own the 10-foot-radius, 20-foot-tall Cylinder area, slot-scaled timed duration, cast-time creature-type set, normal-or-reversed area direction, nonmagical crossing prevention, magical-travel Charisma Saving Throw gate, scoped Attack Roll Disadvantage, and source-scoped possession plus Charmed/Frightened prevention; table/spatial ownership supplies ground-point placement, cylinder membership, inside/outside protected-target witnesses, entry or exit attempts, and teleportation or interplanar-travel crossing witnesses; future battle runtime should consume typed warded-area facts without dispatching on spell id or name.",
+          "owner": "future warded-area Spell Effect owner plus table/spatial crossing and protected-target witness owner",
+          "reason": "Magic Circle supplies typed Surface facts for the warded Cylinder, affected creature type choice, direction branch, crossing gates, protected-target Attack Roll Disadvantage, and source-scoped possession/condition prevention. Promoted battle runtime still needs a warded-area effect owner that consumes table-supplied placement, area membership, protected-target location, willing nonmagical entry attempts, nonmagical exit attempts, teleportation or interplanar-travel crossing witnesses, and source-scoped possession/Charmed/Frightened prevention without duplicating battle map state or branching on authored spell id or name.",
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "magic_circle"
         },
-        "finalDisposition": "needs-surface-widening",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },
@@ -32437,7 +32440,7 @@
         "sourceInventoryRowId": "srd521:classes/warlock:spell-level-3:spell-unit-pressure:warlock_spell_list_magic_circle",
         "state": "present"
       },
-      "nextAction": "Widen Surface: Spell Definition warded-cylinder occurrence: 10-foot-radius, 20-foot-tall Cylinder area; slot-scaled timed duration of 1 hour plus 1 hour per Spell Slot level above 3; cast-time choice of one or more Celestial, Elemental, Fey, Fiend, or Undead creature types; normal or reversed area direction; nonmagical entry or exit prevention for affected creatures; Charisma Saving Throw gate for teleportation or interplanar travel across the ward; affected-creature Attack Roll Disadvantage against protected targets; and source-scoped possession, Charmed, and Frightened prevention for protected targets.",
+      "nextAction": "Magic Circle supplies typed Surface facts for the warded Cylinder, affected creature type choice, direction branch, crossing gates, protected-target Attack Roll Disadvantage, and source-scoped possession/condition prevention. Promoted battle runtime still needs a warded-area effect owner that consumes table-supplied placement, area membership, protected-target location, willing nonmagical entry attempts, nonmagical exit attempts, teleportation or interplanar-travel crossing witnesses, and source-scoped possession/Charmed/Frightened prevention without duplicating battle map state or branching on authored spell id or name.",
       "rowId": "srd521:classes/warlock:spell-level-3:spell-unit-pressure:warlock_spell_list_magic_circle",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -32447,25 +32450,28 @@
       },
       "supportSnapshot": {
         "authoredContent": {
-          "state": "missing-authored-record"
+          "sourceRecordPath": "packages/surface/content/magic_circle.json",
+          "state": "authored-record-present",
+          "unitId": "magic_circle"
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "surface-widening-required"
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
           "kind": "table-spatial-derivation",
-          "owner": "Surface Spell Definition plus table/spatial planar-movement owner and future battle-runtime warded-area Spell Effect owner",
-          "reason": "Magic Circle needs a typed follow-up split before an SRD-provenance Spell Definition can be admitted: Surface must own the 10-foot-radius, 20-foot-tall Cylinder area, slot-scaled timed duration, cast-time creature-type set, normal-or-reversed area direction, nonmagical crossing prevention, magical-travel Charisma Saving Throw gate, scoped Attack Roll Disadvantage, and source-scoped possession plus Charmed/Frightened prevention; table/spatial ownership supplies ground-point placement, cylinder membership, inside/outside protected-target witnesses, entry or exit attempts, and teleportation or interplanar-travel crossing witnesses; future battle runtime should consume typed warded-area facts without dispatching on spell id or name.",
+          "owner": "future warded-area Spell Effect owner plus table/spatial crossing and protected-target witness owner",
+          "reason": "Magic Circle supplies typed Surface facts for the warded Cylinder, affected creature type choice, direction branch, crossing gates, protected-target Attack Roll Disadvantage, and source-scoped possession/condition prevention. Promoted battle runtime still needs a warded-area effect owner that consumes table-supplied placement, area membership, protected-target location, willing nonmagical entry attempts, nonmagical exit attempts, teleportation or interplanar-travel crossing witnesses, and source-scoped possession/Charmed/Frightened prevention without duplicating battle map state or branching on authored spell id or name.",
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "magic_circle"
         },
-        "finalDisposition": "needs-surface-widening",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },
@@ -38267,7 +38273,7 @@
         "sourceInventoryRowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_magic_circle",
         "state": "present"
       },
-      "nextAction": "Widen Surface: Spell Definition warded-cylinder occurrence: 10-foot-radius, 20-foot-tall Cylinder area; slot-scaled timed duration of 1 hour plus 1 hour per Spell Slot level above 3; cast-time choice of one or more Celestial, Elemental, Fey, Fiend, or Undead creature types; normal or reversed area direction; nonmagical entry or exit prevention for affected creatures; Charisma Saving Throw gate for teleportation or interplanar travel across the ward; affected-creature Attack Roll Disadvantage against protected targets; and source-scoped possession, Charmed, and Frightened prevention for protected targets.",
+      "nextAction": "Magic Circle supplies typed Surface facts for the warded Cylinder, affected creature type choice, direction branch, crossing gates, protected-target Attack Roll Disadvantage, and source-scoped possession/condition prevention. Promoted battle runtime still needs a warded-area effect owner that consumes table-supplied placement, area membership, protected-target location, willing nonmagical entry attempts, nonmagical exit attempts, teleportation or interplanar-travel crossing witnesses, and source-scoped possession/Charmed/Frightened prevention without duplicating battle map state or branching on authored spell id or name.",
       "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_magic_circle",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -38277,25 +38283,28 @@
       },
       "supportSnapshot": {
         "authoredContent": {
-          "state": "missing-authored-record"
+          "sourceRecordPath": "packages/surface/content/magic_circle.json",
+          "state": "authored-record-present",
+          "unitId": "magic_circle"
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "surface-widening-required"
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
           "kind": "table-spatial-derivation",
-          "owner": "Surface Spell Definition plus table/spatial planar-movement owner and future battle-runtime warded-area Spell Effect owner",
-          "reason": "Magic Circle needs a typed follow-up split before an SRD-provenance Spell Definition can be admitted: Surface must own the 10-foot-radius, 20-foot-tall Cylinder area, slot-scaled timed duration, cast-time creature-type set, normal-or-reversed area direction, nonmagical crossing prevention, magical-travel Charisma Saving Throw gate, scoped Attack Roll Disadvantage, and source-scoped possession plus Charmed/Frightened prevention; table/spatial ownership supplies ground-point placement, cylinder membership, inside/outside protected-target witnesses, entry or exit attempts, and teleportation or interplanar-travel crossing witnesses; future battle runtime should consume typed warded-area facts without dispatching on spell id or name.",
+          "owner": "future warded-area Spell Effect owner plus table/spatial crossing and protected-target witness owner",
+          "reason": "Magic Circle supplies typed Surface facts for the warded Cylinder, affected creature type choice, direction branch, crossing gates, protected-target Attack Roll Disadvantage, and source-scoped possession/condition prevention. Promoted battle runtime still needs a warded-area effect owner that consumes table-supplied placement, area membership, protected-target location, willing nonmagical entry attempts, nonmagical exit attempts, teleportation or interplanar-travel crossing witnesses, and source-scoped possession/Charmed/Frightened prevention without duplicating battle map state or branching on authored spell id or name.",
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "magic_circle"
         },
-        "finalDisposition": "needs-surface-widening",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },
@@ -41334,30 +41343,33 @@
       ],
       "levelBand": "spell-level-3",
       "nextActions": [
-        "Widen Surface: Spell Definition warded-cylinder occurrence: 10-foot-radius, 20-foot-tall Cylinder area; slot-scaled timed duration of 1 hour plus 1 hour per Spell Slot level above 3; cast-time choice of one or more Celestial, Elemental, Fey, Fiend, or Undead creature types; normal or reversed area direction; nonmagical entry or exit prevention for affected creatures; Charisma Saving Throw gate for teleportation or interplanar travel across the ward; affected-creature Attack Roll Disadvantage against protected targets; and source-scoped possession, Charmed, and Frightened prevention for protected targets."
+        "Magic Circle supplies typed Surface facts for the warded Cylinder, affected creature type choice, direction branch, crossing gates, protected-target Attack Roll Disadvantage, and source-scoped possession/condition prevention. Promoted battle runtime still needs a warded-area effect owner that consumes table-supplied placement, area membership, protected-target location, willing nonmagical entry attempts, nonmagical exit attempts, teleportation or interplanar-travel crossing witnesses, and source-scoped possession/Charmed/Frightened prevention without duplicating battle map state or branching on authored spell id or name."
       ],
       "spellName": "Magic Circle",
       "supportSnapshot": {
         "authoredContent": {
-          "state": "missing-authored-record"
+          "sourceRecordPath": "packages/surface/content/magic_circle.json",
+          "state": "authored-record-present",
+          "unitId": "magic_circle"
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "surface-widening-required"
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
           "kind": "table-spatial-derivation",
-          "owner": "Surface Spell Definition plus table/spatial planar-movement owner and future battle-runtime warded-area Spell Effect owner",
-          "reason": "Magic Circle needs a typed follow-up split before an SRD-provenance Spell Definition can be admitted: Surface must own the 10-foot-radius, 20-foot-tall Cylinder area, slot-scaled timed duration, cast-time creature-type set, normal-or-reversed area direction, nonmagical crossing prevention, magical-travel Charisma Saving Throw gate, scoped Attack Roll Disadvantage, and source-scoped possession plus Charmed/Frightened prevention; table/spatial ownership supplies ground-point placement, cylinder membership, inside/outside protected-target witnesses, entry or exit attempts, and teleportation or interplanar-travel crossing witnesses; future battle runtime should consume typed warded-area facts without dispatching on spell id or name.",
+          "owner": "future warded-area Spell Effect owner plus table/spatial crossing and protected-target witness owner",
+          "reason": "Magic Circle supplies typed Surface facts for the warded Cylinder, affected creature type choice, direction branch, crossing gates, protected-target Attack Roll Disadvantage, and source-scoped possession/condition prevention. Promoted battle runtime still needs a warded-area effect owner that consumes table-supplied placement, area membership, protected-target location, willing nonmagical entry attempts, nonmagical exit attempts, teleportation or interplanar-travel crossing witnesses, and source-scoped possession/Charmed/Frightened prevention without duplicating battle map state or branching on authored spell id or name.",
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "magic_circle"
         },
-        "finalDisposition": "needs-surface-widening",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },

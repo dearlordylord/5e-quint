@@ -466,6 +466,33 @@ export type AnchoredSignal = Schema.Schema.Type<
 export type AnchoredTriggerMechanics = Schema.Schema.Type<
   typeof SurfaceSchema.AnchoredTriggerMechanicsSchema
 >;
+export type MagicCircleAffectedCreatureType = Schema.Schema.Type<
+  typeof SurfaceSchema.MagicCircleAffectedCreatureTypeSchema
+>;
+export type MagicCircleAffectedCreatureTypeChoice = Schema.Schema.Type<
+  typeof SurfaceSchema.MagicCircleAffectedCreatureTypeChoiceSchema
+>;
+export type MagicCircleWardedCylinderOccurrence = Schema.Schema.Type<
+  typeof SurfaceSchema.MagicCircleWardedCylinderOccurrenceSchema
+>;
+export type MagicCircleMagicalCrossingGate = Schema.Schema.Type<
+  typeof SurfaceSchema.MagicCircleMagicalCrossingGateSchema
+>;
+export type MagicCircleProtectedTargetEffects = Schema.Schema.Type<
+  typeof SurfaceSchema.MagicCircleProtectedTargetEffectsSchema
+>;
+export type MagicCircleNormalWardDirection = Schema.Schema.Type<
+  typeof SurfaceSchema.MagicCircleNormalWardDirectionSchema
+>;
+export type MagicCircleReversedWardDirection = Schema.Schema.Type<
+  typeof SurfaceSchema.MagicCircleReversedWardDirectionSchema
+>;
+export type MagicCircleWardDirectionChoice = Schema.Schema.Type<
+  typeof SurfaceSchema.MagicCircleWardDirectionChoiceSchema
+>;
+export type MagicCircleWardMechanics = Schema.Schema.Type<
+  typeof SurfaceSchema.MagicCircleWardMechanicsSchema
+>;
 export type GlyphWardingInscriptionAnchorChoice = Schema.Schema.Type<
   typeof SurfaceSchema.GlyphWardingInscriptionAnchorChoiceSchema
 >;

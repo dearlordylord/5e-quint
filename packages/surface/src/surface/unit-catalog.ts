@@ -158,6 +158,7 @@ import locateAnimalsOrPlantsInput from "../../content/locate_animals_or_plants.j
 import locateObjectInput from "../../content/locate_object.json";
 import longstriderInput from "../../content/longstrider.json";
 import mageArmorInput from "../../content/mage_armor.json";
+import magicCircleInput from "../../content/magic_circle.json";
 import magicMissileInput from "../../content/magic_missile.json";
 import magicMouthInput from "../../content/magic_mouth.json";
 import magicWeaponInput from "../../content/magic_weapon.json";
@@ -705,6 +706,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     detectPoisonAndDiseaseInput,
     detectThoughtsInput,
     mageArmorInput,
+    magicCircleInput,
     magicMissileInput,
     magicMouthInput,
     magicWeaponInput,

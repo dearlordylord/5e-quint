@@ -1,0 +1,181 @@
+{
+  "description": "You create a 10-foot-radius, 20-foot-tall Cylinder of magical energy centered on a point on the ground that you can see within range. Glowing runes appear wherever the Cylinder intersects with the floor or other surface. Choose one or more of the following types of creatures when you cast the spell: Celestials, Elementals, Fey, Fiends, or Undead. The chosen creatures can't willingly enter the Cylinder by nonmagical means. If a chosen creature tries to use teleportation or interplanar travel to enter the Cylinder, it must first succeed on a Charisma saving throw. The chosen creatures have Disadvantage on attack rolls against targets within the Cylinder and can't possess those targets or give those targets the Charmed or Frightened condition. When you cast the spell, you can cause the magic to operate in the reverse direction, preventing a chosen creature from leaving the Cylinder and protecting targets outside it. Using a Higher-Level Spell Slot increases the duration by 1 hour for each slot level above 3.",
+  "id": "magic_circle",
+  "kind": "spell",
+  "mechanics": {
+    "affectedCreatureTypes": {
+      "chooser": "caster",
+      "kind": "one_or_more_creature_type_choice",
+      "label": "affected creature types",
+      "options": [
+        "celestial",
+        "elemental",
+        "fey",
+        "fiend",
+        "undead"
+      ],
+      "selection": "one_or_more"
+    },
+    "castingTime": {
+      "amount": 1,
+      "kind": "minutes",
+      "ritual": false
+    },
+    "components": {
+      "m": "salt and powdered silver worth 100+ GP, which the spell consumes",
+      "materialConsumed": true,
+      "materialCostGp": 100,
+      "s": true,
+      "v": true
+    },
+    "direction": {
+      "chooser": "caster",
+      "defaultDirection": {
+        "affectedCreatureCrossing": {
+          "blockedCrossing": "willingly_enter_cylinder",
+          "magicalMeans": {
+            "ability": "cha",
+            "dc": {
+              "kind": "caster_spell_save_dc"
+            },
+            "methods": [
+              "teleportation",
+              "interplanar_travel"
+            ]
+          },
+          "nonmagicalMeans": "prevented"
+        },
+        "kind": "normal",
+        "protectedTargets": {
+          "effects": {
+            "attackRollDisadvantage": {
+              "attacker": "affected_creature",
+              "on": [
+                "attack_roll"
+              ],
+              "target": "protected_target"
+            },
+            "sourceScopedPrevention": {
+              "conditions": [
+                "charmed",
+                "frightened"
+              ],
+              "possession": "prevented",
+              "source": "affected_creature"
+            }
+          },
+          "location": "inside_cylinder"
+        }
+      },
+      "reversedDirection": {
+        "affectedCreatureCrossing": {
+          "blockedCrossing": "leave_cylinder",
+          "magicalMeans": {
+            "ability": "cha",
+            "dc": {
+              "kind": "caster_spell_save_dc"
+            },
+            "methods": [
+              "teleportation",
+              "interplanar_travel"
+            ]
+          },
+          "nonmagicalMeans": "prevented"
+        },
+        "kind": "reversed",
+        "protectedTargets": {
+          "effects": {
+            "attackRollDisadvantage": {
+              "attacker": "affected_creature",
+              "on": [
+                "attack_roll"
+              ],
+              "target": "protected_target"
+            },
+            "sourceScopedPrevention": {
+              "conditions": [
+                "charmed",
+                "frightened"
+              ],
+              "possession": "prevented",
+              "source": "affected_creature"
+            }
+          },
+          "location": "outside_cylinder"
+        }
+      }
+    },
+    "duration": {
+      "kind": "timed",
+      "value": {
+        "amount": 1,
+        "unit": "hour",
+        "upcastTiers": [
+          {
+            "amount": 2,
+            "atSlot": 4
+          },
+          {
+            "amount": 3,
+            "atSlot": 5
+          },
+          {
+            "amount": 4,
+            "atSlot": 6
+          },
+          {
+            "amount": 5,
+            "atSlot": 7
+          },
+          {
+            "amount": 6,
+            "atSlot": 8
+          },
+          {
+            "amount": 7,
+            "atSlot": 9
+          }
+        ]
+      }
+    },
+    "family": "magic_circle_ward",
+    "level": 3,
+    "occurrence": {
+      "area": {
+        "origin": {
+          "chooser": "caster",
+          "kind": "visible_point_on_ground_within_spell_range"
+        },
+        "shape": {
+          "heightFeet": 20,
+          "kind": "cylinder",
+          "radiusFeet": 10
+        }
+      },
+      "kind": "warded_cylinder_occurrence",
+      "runes": {
+        "appearWhere": "cylinder_intersects_floor_or_other_surface"
+      },
+      "tableSpatial": {
+        "cylinderMembership": "table_witnessed_cylinder_membership",
+        "insideProtectedTargets": "table_witnessed_targets_inside_cylinder",
+        "interplanarTravelCrossing": "table_witnessed_interplanar_travel_crossing",
+        "nonmagicalExitAttempt": "table_witnessed_nonmagical_exit_attempt",
+        "outsideProtectedTargets": "table_witnessed_targets_outside_cylinder",
+        "placement": "table_witnessed_visible_ground_point",
+        "teleportationCrossing": "table_witnessed_teleportation_crossing",
+        "willingNonmagicalEntryAttempt": "table_witnessed_willing_nonmagical_entry_attempt"
+      }
+    },
+    "range": {
+      "feet": 10,
+      "kind": "point"
+    },
+    "school": "abjuration"
+  },
+  "name": "Magic Circle",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-M-P#Magic Circle"
+  }
+}

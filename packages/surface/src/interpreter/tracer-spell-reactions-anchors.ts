@@ -5,6 +5,7 @@ import type {
   AnchoredSignal,
   AnchoredTriggerMechanics,
   GlyphWardingMechanics,
+  MagicCircleWardMechanics,
   Range,
   TriggeredReactionMechanics,
 } from "../surface/types.ts";
@@ -21,6 +22,9 @@ import { tracePhase } from "./tracer-activation.ts";
 import { traceDiceAmountScaling } from "./tracer-scaling.ts";
 
 type ObjectAnchor = Extract<AnchorTarget, { kind: "object" }>;
+type MagicCircleWardDirection =
+  | MagicCircleWardMechanics["direction"]["defaultDirection"]
+  | MagicCircleWardMechanics["direction"]["reversedDirection"];
 type SpokenMessageSignal = Extract<AnchoredSignal, { kind: "spoken_message" }>;
 
 const objectAnchorVisibilityLabels = {
@@ -291,6 +295,96 @@ export function traceGlyphWarding(
     ].join("\n"),
   });
   edges.push({ from: releaseId, to: storedSpellId, relation: "grants" });
+}
+
+export function traceMagicCircleWard(
+  m: MagicCircleWardMechanics,
+  ctx: SpellCtx,
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): void {
+  const occurrenceId = ids("ward");
+  nodes.push({
+    id: occurrenceId,
+    category: "attachment",
+    atomKind: "magic_circle_warded_cylinder",
+    label: [
+      "magic_circle_warded_cylinder",
+      `${m.occurrence.area.shape.radiusFeet} ft radius, ${m.occurrence.area.shape.heightFeet} ft tall Cylinder`,
+      "origin: visible ground point within range",
+      "runes: floor or other surface intersection",
+      `placement: ${m.occurrence.tableSpatial.placement}`,
+      `membership: ${m.occurrence.tableSpatial.cylinderMembership}`,
+      `willing entry witness: ${m.occurrence.tableSpatial.willingNonmagicalEntryAttempt}`,
+      `exit witness: ${m.occurrence.tableSpatial.nonmagicalExitAttempt}`,
+    ].join("\n"),
+  });
+  edges.push({ from: ctx.procId, to: occurrenceId, relation: "attaches" });
+
+  const typeChoiceId = ids("choice");
+  nodes.push({
+    id: typeChoiceId,
+    category: "resolution",
+    atomKind: "creature_type_choice",
+    label: [
+      "choose one or more creature types",
+      m.affectedCreatureTypes.options.join(", "),
+    ].join("\n"),
+  });
+  edges.push({ from: ctx.procId, to: typeChoiceId, relation: "prompts" });
+
+  traceMagicCircleWardDirection(
+    m.direction.defaultDirection,
+    m.occurrence.tableSpatial.insideProtectedTargets,
+    typeChoiceId,
+    occurrenceId,
+    nodes,
+    edges,
+    ids,
+  );
+  traceMagicCircleWardDirection(
+    m.direction.reversedDirection,
+    m.occurrence.tableSpatial.outsideProtectedTargets,
+    typeChoiceId,
+    occurrenceId,
+    nodes,
+    edges,
+    ids,
+  );
+}
+
+function traceMagicCircleWardDirection(
+  direction: MagicCircleWardDirection,
+  protectedTargetWitness: string,
+  choiceId: string,
+  occurrenceId: string,
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): void {
+  const crossing = direction.affectedCreatureCrossing;
+  const gate = crossing.magicalMeans;
+  const protectedTargets = direction.protectedTargets;
+  const directionId = ids("ward");
+
+  nodes.push({
+    id: directionId,
+    category: "effect",
+    atomKind: "magic_circle_ward_direction",
+    label: [
+      `${direction.kind} direction`,
+      `blocked crossing: ${crossing.blockedCrossing}`,
+      `nonmagical means: ${crossing.nonmagicalMeans}`,
+      `${gate.ability.toUpperCase()} save before ${gate.methods.join(" or ")}`,
+      `protected targets: ${protectedTargets.location}`,
+      `witness: ${protectedTargetWitness}`,
+      "Attack Roll Disadvantage against protected targets",
+      `source-scoped prevention: possession, ${protectedTargets.effects.sourceScopedPrevention.conditions.join(", ")}`,
+    ].join("\n"),
+  });
+  edges.push({ from: choiceId, to: directionId, relation: "branches_to" });
+  edges.push({ from: directionId, to: occurrenceId, relation: "guards" });
 }
 
 export function traceAnchorTarget(

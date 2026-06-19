@@ -542,6 +542,23 @@ type AlterSelfNaturalWeaponGrowthDamageTypeChoice = Schema.Schema.Type<
 function distinctSkills(skills: readonly Skill[]): boolean {
   return new Set(skills).size === skills.length;
 }
+
+function sameStringSet(
+  left: readonly string[],
+  right: readonly string[],
+): boolean {
+  if (left.length !== right.length) {
+    return false;
+  }
+
+  const leftSet = new Set(left);
+  if (leftSet.size !== left.length) {
+    return false;
+  }
+
+  const rightSet = new Set(right);
+  return left.every((value) => rightSet.has(value));
+}
 type SpellGrantedWeaponAttack = {
   readonly kind: "make_weapon_attack";
   readonly weapon: "material_component";
@@ -4752,6 +4769,142 @@ export const CastTimeChoiceCreatureTypeSchema = Schema.Struct({
   options: nonEmpty(CreatureTypeSchema),
 });
 
+const MAGIC_CIRCLE_AFFECTED_CREATURE_TYPES = [
+  "celestial",
+  "elemental",
+  "fey",
+  "fiend",
+  "undead",
+] as const satisfies ReadonlyNonEmptyArray<CreatureType>;
+
+export const MagicCircleAffectedCreatureTypeSchema = Schema.Literal(
+  ...MAGIC_CIRCLE_AFFECTED_CREATURE_TYPES,
+);
+
+export const MagicCircleAffectedCreatureTypeChoiceSchema = strictStruct({
+  kind: Schema.Literal("one_or_more_creature_type_choice"),
+  chooser: Schema.Literal("caster"),
+  label: Schema.Literal("affected creature types"),
+  selection: Schema.Literal("one_or_more"),
+  options: nonEmpty(MagicCircleAffectedCreatureTypeSchema),
+}).pipe(
+  Schema.filter(
+    (choice) =>
+      sameStringSet(choice.options, MAGIC_CIRCLE_AFFECTED_CREATURE_TYPES),
+    {
+      message: () =>
+        "Magic Circle affected creature type choice must expose exactly Celestial, Elemental, Fey, Fiend, and Undead.",
+    },
+  ),
+);
+
+export const MagicCircleWardedCylinderOccurrenceSchema = strictStruct({
+  kind: Schema.Literal("warded_cylinder_occurrence"),
+  area: strictStruct({
+    shape: strictStruct({
+      kind: Schema.Literal("cylinder"),
+      radiusFeet: Schema.Literal(10),
+      heightFeet: Schema.Literal(20),
+    }),
+    origin: strictStruct({
+      kind: Schema.Literal("visible_point_on_ground_within_spell_range"),
+      chooser: Schema.Literal("caster"),
+    }),
+  }),
+  runes: strictStruct({
+    appearWhere: Schema.Literal("cylinder_intersects_floor_or_other_surface"),
+  }),
+  tableSpatial: strictStruct({
+    placement: Schema.Literal("table_witnessed_visible_ground_point"),
+    cylinderMembership: Schema.Literal("table_witnessed_cylinder_membership"),
+    insideProtectedTargets: Schema.Literal(
+      "table_witnessed_targets_inside_cylinder",
+    ),
+    outsideProtectedTargets: Schema.Literal(
+      "table_witnessed_targets_outside_cylinder",
+    ),
+    willingNonmagicalEntryAttempt: Schema.Literal(
+      "table_witnessed_willing_nonmagical_entry_attempt",
+    ),
+    nonmagicalExitAttempt: Schema.Literal(
+      "table_witnessed_nonmagical_exit_attempt",
+    ),
+    teleportationCrossing: Schema.Literal(
+      "table_witnessed_teleportation_crossing",
+    ),
+    interplanarTravelCrossing: Schema.Literal(
+      "table_witnessed_interplanar_travel_crossing",
+    ),
+  }),
+});
+
+export const MagicCircleMagicalCrossingGateSchema = strictStruct({
+  methods: Schema.Tuple(
+    Schema.Literal("teleportation"),
+    Schema.Literal("interplanar_travel"),
+  ),
+  ability: Schema.Literal("cha"),
+  dc: DcSourceSchema,
+});
+
+export const MagicCircleProtectedTargetEffectsSchema = strictStruct({
+  attackRollDisadvantage: strictStruct({
+    attacker: Schema.Literal("affected_creature"),
+    target: Schema.Literal("protected_target"),
+    on: Schema.Tuple(Schema.Literal("attack_roll")),
+  }),
+  sourceScopedPrevention: strictStruct({
+    source: Schema.Literal("affected_creature"),
+    possession: Schema.Literal("prevented"),
+    conditions: Schema.Tuple(
+      Schema.Literal("charmed"),
+      Schema.Literal("frightened"),
+    ),
+  }),
+});
+
+export const MagicCircleNormalWardDirectionSchema = strictStruct({
+  kind: Schema.Literal("normal"),
+  affectedCreatureCrossing: strictStruct({
+    blockedCrossing: Schema.Literal("willingly_enter_cylinder"),
+    nonmagicalMeans: Schema.Literal("prevented"),
+    magicalMeans: MagicCircleMagicalCrossingGateSchema,
+  }),
+  protectedTargets: strictStruct({
+    location: Schema.Literal("inside_cylinder"),
+    effects: MagicCircleProtectedTargetEffectsSchema,
+  }),
+});
+
+export const MagicCircleReversedWardDirectionSchema = strictStruct({
+  kind: Schema.Literal("reversed"),
+  affectedCreatureCrossing: strictStruct({
+    blockedCrossing: Schema.Literal("leave_cylinder"),
+    nonmagicalMeans: Schema.Literal("prevented"),
+    magicalMeans: MagicCircleMagicalCrossingGateSchema,
+  }),
+  protectedTargets: strictStruct({
+    location: Schema.Literal("outside_cylinder"),
+    effects: MagicCircleProtectedTargetEffectsSchema,
+  }),
+});
+
+export const MagicCircleWardDirectionChoiceSchema = strictStruct({
+  chooser: Schema.Literal("caster"),
+  defaultDirection: MagicCircleNormalWardDirectionSchema,
+  reversedDirection: MagicCircleReversedWardDirectionSchema,
+});
+
+export const MagicCircleWardMechanicsSchema = Schema.extend(
+  SpellMechanicsHeaderSchema,
+  strictStruct({
+    family: Schema.Literal("magic_circle_ward"),
+    occurrence: MagicCircleWardedCylinderOccurrenceSchema,
+    affectedCreatureTypes: MagicCircleAffectedCreatureTypeChoiceSchema,
+    direction: MagicCircleWardDirectionChoiceSchema,
+  }),
+);
+
 export const GlyphWardingInscriptionAnchorChoiceSchema = strictStruct({
   chooser: Schema.Literal("caster"),
   surface: strictStruct({
@@ -5152,6 +5305,7 @@ export const SpellMechanicsSchema = Schema.Union(
   TriggeredReactionMechanicsSchema,
   PassiveHitInterceptMechanicsSchema,
   AnchoredTriggerMechanicsSchema,
+  MagicCircleWardMechanicsSchema,
   GlyphWardingMechanicsSchema,
   SpawnedCreatureMechanicsSchema,
   ReanimatedCreatureMechanicsSchema,

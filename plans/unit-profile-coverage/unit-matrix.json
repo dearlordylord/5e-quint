@@ -43,14 +43,14 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
-      "denominator": 456,
-      "numerator": 270,
-      "percent": "59.2%"
+      "denominator": 457,
+      "numerator": 271,
+      "percent": "59.3%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 544,
-      "numerator": 320,
-      "percent": "58.8%"
+      "denominator": 545,
+      "numerator": 321,
+      "percent": "58.9%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,7 +59,7 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 321
+      "value": 322
     },
     "deterministicAdmissionProjectionCoverage": {
       "denominator": 186,
@@ -67,8 +67,8 @@
       "percent": "97.3%"
     },
     "profileClassificationCoverage": {
-      "denominator": 321,
-      "numerator": 321,
+      "denominator": 322,
+      "numerator": 322,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -112,9 +112,9 @@
       "percent": "98.3%"
     },
     "supportedProfileCoverage": {
-      "denominator": 271,
+      "denominator": 272,
       "numerator": 186,
-      "percent": "68.6%"
+      "percent": "68.4%"
     }
   },
   "metricSemantics": [
@@ -16809,8 +16809,8 @@
         "unsupportedOrOtherUnits": 4
       },
       {
-        "executableUnitDenominator": 140,
-        "installedUnitDenominator": 140,
+        "executableUnitDenominator": 141,
+        "installedUnitDenominator": 141,
         "kind": "spell",
         "label": "Spell Units",
         "profileFactDenominator": 137,
@@ -16820,7 +16820,7 @@
         "selectedIdentityReplayGapUnits": 1,
         "selectedIdentityReplayWitnessUnits": 110,
         "supportedProfileUnits": 93,
-        "unsupportedOrOtherUnits": 29
+        "unsupportedOrOtherUnits": 30
       },
       {
         "executableUnitDenominator": 93,
@@ -34387,6 +34387,29 @@
       ],
       "sourceRecordPath": "packages/surface/content/mage_armor.json",
       "unitId": "mage_armor"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "table-spatial-derivation",
+          "owner": "future warded-area Spell Effect owner plus table/spatial crossing and protected-target witness owner",
+          "reason": "Magic Circle supplies typed Surface facts for the warded Cylinder, affected creature type choice, direction branch, crossing gates, protected-target Attack Roll Disadvantage, and source-scoped possession/condition prevention. Promoted battle runtime still needs a warded-area effect owner that consumes table-supplied placement, area membership, protected-target location, willing nonmagical entry attempts, nonmagical exit attempts, teleportation or interplanar-travel crossing witnesses, and source-scoped possession/Charmed/Frightened prevention without duplicating battle map state or branching on authored spell id or name."
+        },
+        "reason": "Magic Circle is authored and installed as an SRD Surface Spell Definition with 1-minute Spell Slot casting, 10-foot point range, V/S/M consumed 100+ GP salt and powdered silver component, a 1-hour timed duration with +1 hour per slot above 3, a 10-foot-radius 20-foot-tall warded Cylinder centered on a visible ground point within spell range, cast-time one-or-more selection from Celestial, Elemental, Fey, Fiend, and Undead creature types, normal and reversed ward direction branches, willing nonmagical entry prevention and nonmagical exit prevention for affected creatures, Charisma Saving Throw gates for teleportation or interplanar-travel crossing, Attack Roll Disadvantage against protected targets, and source-scoped possession plus Charmed/Frightened prevention. No promoted battle-runtime profile is claimed because full support needs a warded-area Spell Effect and table/spatial owner for ground-point placement, Cylinder membership, inside/outside protected-target witnesses, willing entry attempts, exit attempts, magical-travel witnesses, and per-source condition/possession prevention without dispatching on Magic Circle authored identity.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/magic_circle.json",
+      "unitId": "magic_circle"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

@@ -24,6 +24,7 @@ import { traceOngoingEffect } from "./tracer-spell-ongoing.ts";
 
 import {
   traceGlyphWarding,
+  traceMagicCircleWard,
   traceAnchoredTrigger,
   traceTriggeredReaction,
 } from "./tracer-spell-reactions-anchors.ts";
@@ -122,6 +123,9 @@ export function traceSpellMechanics(
     ),
     byFamily("anchored_trigger", (mechanics) =>
       traceAnchoredTrigger(mechanics, ctx, nodes, edges, ids),
+    ),
+    byFamily("magic_circle_ward", (mechanics) =>
+      traceMagicCircleWard(mechanics, ctx, nodes, edges, ids),
     ),
     byFamily("glyph_warding", (mechanics) =>
       traceGlyphWarding(mechanics, ctx, nodes, edges, ids),

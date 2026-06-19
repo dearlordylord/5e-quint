@@ -387,28 +387,10 @@ const classFeatureSurfaceBlockers = new Map();
 
 const spellAccessSurfaceBlockers = new Map();
 
-const magicCircleSurfaceWideningOwner =
-  "Surface Spell Definition plus table/spatial planar-movement owner and future battle-runtime warded-area Spell Effect owner";
-
 const meldIntoStoneSurfaceWideningOwner =
   "Surface Spell Definition plus table terrain/object occupancy owner and future battle-runtime merged-state, perception, damage, and forced-exit Spell Effect owner";
 
 const spellUnitMissingClassifications = new Map([
-  [
-    "magic_circle",
-    {
-      kind: "needs-surface-widening",
-      owner: magicCircleSurfaceWideningOwner,
-      missingConstruct:
-        "Spell Definition warded-cylinder occurrence: 10-foot-radius, 20-foot-tall Cylinder area; slot-scaled timed duration of 1 hour plus 1 hour per Spell Slot level above 3; cast-time choice of one or more Celestial, Elemental, Fey, Fiend, or Undead creature types; normal or reversed area direction; nonmagical entry or exit prevention for affected creatures; Charisma Saving Throw gate for teleportation or interplanar travel across the ward; affected-creature Attack Roll Disadvantage against protected targets; and source-scoped possession, Charmed, and Frightened prevention for protected targets.",
-      battleReadinessClosure: {
-        kind: "table-spatial-derivation",
-        owner: magicCircleSurfaceWideningOwner,
-        reason:
-          "Magic Circle needs a typed follow-up split before an SRD-provenance Spell Definition can be admitted: Surface must own the 10-foot-radius, 20-foot-tall Cylinder area, slot-scaled timed duration, cast-time creature-type set, normal-or-reversed area direction, nonmagical crossing prevention, magical-travel Charisma Saving Throw gate, scoped Attack Roll Disadvantage, and source-scoped possession plus Charmed/Frightened prevention; table/spatial ownership supplies ground-point placement, cylinder membership, inside/outside protected-target witnesses, entry or exit attempts, and teleportation or interplanar-travel crossing witnesses; future battle runtime should consume typed warded-area facts without dispatching on spell id or name.",
-      },
-    },
-  ],
   [
     "meld_into_stone",
     {
