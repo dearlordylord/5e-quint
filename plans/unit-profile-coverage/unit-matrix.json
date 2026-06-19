@@ -43,14 +43,14 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
-      "denominator": 456,
-      "numerator": 271,
-      "percent": "59.4%"
+      "denominator": 457,
+      "numerator": 272,
+      "percent": "59.5%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 544,
-      "numerator": 321,
-      "percent": "59%"
+      "denominator": 545,
+      "numerator": 322,
+      "percent": "59.1%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,16 +59,16 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 322
+      "value": 323
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 187,
-      "numerator": 182,
+      "denominator": 188,
+      "numerator": 183,
       "percent": "97.3%"
     },
     "profileClassificationCoverage": {
-      "denominator": 322,
-      "numerator": 322,
+      "denominator": 323,
+      "numerator": 323,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -107,14 +107,14 @@
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 179,
-      "numerator": 176,
+      "denominator": 180,
+      "numerator": 177,
       "percent": "98.3%"
     },
     "supportedProfileCoverage": {
-      "denominator": 272,
-      "numerator": 187,
-      "percent": "68.8%"
+      "denominator": 273,
+      "numerator": 188,
+      "percent": "68.9%"
     }
   },
   "metricSemantics": [
@@ -4977,6 +4977,38 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/open-hand-technique-selected-identity.mbt.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "unit-feature.stunning-strike",
+      "profileKind": "battle-admission",
+      "qntOwners": [],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/unit-feature-support.ts",
+        "packages/battle-runtime/src/battle-reducer/monk-focus.ts",
+        "packages/battle-runtime/src/battle-reducer/attack-main.ts",
+        "packages/battle-runtime/src/battle-reducer/stunning-strike.ts",
+        "packages/battle-runtime/src/active-effect/lifecycle.ts",
+        "packages/battle-runtime/src/battle-reducer/movement-speed.ts"
+      ],
+      "sourceBoundary": "Battle Unit admission consumes the authored Surface stunning_strike shape for once-per-turn Monk weapon or Unarmed Strike hits, the shared Monk Focus spend, Constitution Saving Throw, failed-save Stunned condition, and successful-save Speed-halving plus next-attack Advantage facts. Battle runtime consumes the retained support profile from eligible hit windows, reads the Focus-owned save DC from the existing Monk Focus support profile, spends the existing Monk Focus resource, records one use per turn, applies source-turn-start condition/effect cleanup through existing active-effect lifecycle owners, and rejects stale, ineligible weapon, missing-resource, and already-used cases without duplicating Focus, condition, Speed, Attack Roll, save DC, or authored identity state.",
+      "taskRefs": [
+        "L5-A12-MONK-STUNNING-STRIKE-BATTLE-RUNTIME"
+      ],
+      "title": "Unit feature admits Stunning Strike attack-hit Focus rider facts",
+      "verificationOwners": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-stunning-strike.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/stunning-strike-selected-identity.mbt.test.ts"
         }
       ]
     },
@@ -15981,6 +16013,14 @@
       "taskId": "L3PUTB-06-MONK-OPEN-HAND-TECHNIQUE-RUNTIME"
     },
     {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime reducer tests and selected-identity MBT cover selected Stunning Strike support profile retention, eligible hit-window discovery for Unarmed Strike and Monk weapons, non-Monk weapon and missing-Focus rejection, explicit attempt or decline decision, exact 1 Focus Point spend on attempt, once-per-turn use recording, Constitution Saving Throw resolution against the Monk Focus save DC, failed-save Stunned application until the source Monk's next turn starts, successful-save Speed halving plus next-attack Advantage until that same source-turn boundary, stale fill rejection, and cleanup through existing active-effect lifecycle owners without authored-identity dispatch.",
+      "profileIds": [
+        "unit-feature.stunning-strike"
+      ],
+      "taskId": "L5-A12-MONK-STUNNING-STRIKE-BATTLE-RUNTIME"
+    },
+    {
       "claimKind": "qnt-proof",
       "note": "Focused Hunter's Prey QNT proof and selected-identity MBT witness model retained choice, optional Colossus Slayer missing-Hit-Point weapon-hit gating and once-per-turn damage, skipped Colossus use, Horde Breaker same-weapon extra attack gating after a primary hit or miss with different nearby target predicates, missing selected-option rejection, same-target rejection, invalid target-predicate rejection, and repeated-use exclusion.",
       "profileIds": [
@@ -16805,17 +16845,17 @@
         "unsupportedOrOtherUnits": 29
       },
       {
-        "executableUnitDenominator": 94,
-        "installedUnitDenominator": 94,
+        "executableUnitDenominator": 95,
+        "installedUnitDenominator": 95,
         "kind": "class_feature",
         "label": "Class-feature Units",
-        "profileFactDenominator": 120,
+        "profileFactDenominator": 121,
         "profileSubsetSupportedUnits": 8,
         "selectedIdentityDeferredNonApplicableUnits": 0,
-        "selectedIdentityReplayDenominator": 74,
+        "selectedIdentityReplayDenominator": 75,
         "selectedIdentityReplayGapUnits": 0,
-        "selectedIdentityReplayWitnessUnits": 74,
-        "supportedProfileUnits": 72,
+        "selectedIdentityReplayWitnessUnits": 75,
+        "supportedProfileUnits": 73,
         "unsupportedOrOtherUnits": 14
       }
     ]
@@ -20798,6 +20838,80 @@
       ],
       "sourceRecordPath": "packages/surface/content/monk_slow_fall.json",
       "unitId": "monk_slow_fall"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "profileIds": [
+          "unit-feature.stunning-strike"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE9-UNIT-FEATURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "Battle Unit support admits the Surface stunning_strike mechanics for once-per-turn Monk weapon or Unarmed Strike hits",
+          "The projected support profile carries the shared Monk Focus Point spend, Constitution Saving Throw, failed-save Stunned condition until the source Monk's next turn, and successful-save Speed halving plus next-attack Advantage facts without authored-identity dispatch",
+          "Battle runtime discovers the rider only after an eligible hit by a selected character with an unspent shared Monk Focus resource and no prior Stunning Strike use in the current turn",
+          "Attempting the rider spends exactly 1 Focus Point, records the turn use, resolves the target Constitution Saving Throw against the existing Monk Focus support profile save DC through existing save fill owners, applies Stunned on failure, and applies source-owned Speed-halving plus next-attack Advantage effects on success",
+          "The rider declines without spending Focus, rejects stale fills for ineligible hits, does not offer on non-Monk weapon hits or without available Focus, and clears failed/success effects at the start of the source Monk's next turn through existing active-effect lifecycle owners"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L5-A12-MONK-STUNNING-STRIKE-BATTLE-RUNTIME"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/stunning-strike-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "L5-A12-MONK-STUNNING-STRIKE-BATTLE-RUNTIME"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [
+        {
+          "id": "unit-feature.stunning-strike",
+          "profileKind": "battle-admission",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/unit-feature-support.ts",
+            "packages/battle-runtime/src/battle-reducer/monk-focus.ts",
+            "packages/battle-runtime/src/battle-reducer/attack-main.ts",
+            "packages/battle-runtime/src/battle-reducer/stunning-strike.ts",
+            "packages/battle-runtime/src/active-effect/lifecycle.ts",
+            "packages/battle-runtime/src/battle-reducer/movement-speed.ts"
+          ],
+          "sourceBoundary": "Battle Unit admission consumes the authored Surface stunning_strike shape for once-per-turn Monk weapon or Unarmed Strike hits, the shared Monk Focus spend, Constitution Saving Throw, failed-save Stunned condition, and successful-save Speed-halving plus next-attack Advantage facts. Battle runtime consumes the retained support profile from eligible hit windows, reads the Focus-owned save DC from the existing Monk Focus support profile, spends the existing Monk Focus resource, records one use per turn, applies source-turn-start condition/effect cleanup through existing active-effect lifecycle owners, and rejects stale, ineligible weapon, missing-resource, and already-used cases without duplicating Focus, condition, Speed, Attack Roll, save DC, or authored identity state.",
+          "taskRefs": [
+            "L5-A12-MONK-STUNNING-STRIKE-BATTLE-RUNTIME"
+          ],
+          "title": "Unit feature admits Stunning Strike attack-hit Focus rider facts",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-stunning-strike.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/stunning-strike-selected-identity.mbt.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/monk_stunning_strike.json",
+      "unitId": "monk_stunning_strike"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

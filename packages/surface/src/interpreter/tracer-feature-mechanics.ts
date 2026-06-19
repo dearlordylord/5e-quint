@@ -269,6 +269,21 @@ export function traceClassFeatureMechanics(
       });
       return [openHandId];
     }
+    case "stunning_strike": {
+      const stunningId = ids("stunning-strike");
+      nodes.push({
+        id: stunningId,
+        category: "procedure",
+        atomKind: "stunning_strike",
+        label:
+          `stunning_strike\n${m.trigger.kind}\n` +
+          `spend ${m.spends.amount} ${m.spends.resourceUnitId}\n` +
+          `${m.savingThrow.ability} save via ${m.spends.resourceUnitId}\n` +
+          `${m.onFail.condition} until ${m.onFail.expires}\n` +
+          `${m.onSuccess.speed.kind} speed\n${m.onSuccess.attackRoll.mode} next attack`,
+      });
+      return [stunningId];
+    }
     case "sacred_weapon": {
       const sacredWeaponId = ids("sacred-weapon");
       nodes.push({

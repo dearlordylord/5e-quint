@@ -5048,6 +5048,7 @@ export function resetBattleTurnResources(
     quickenedLevelOnePlusSpellCastsThisTurn: [],
     attackRollMadeThisTurn: false,
     attackDamageRidersUsedThisTurn: [],
+    stunningStrikesUsedThisTurn: [],
     huntersPreyHordeBreakerUsedThisTurn: [],
     recklessAttackWhileRagingUsedThisTurn: [],
     weaponDamageDiceRollChoicesUsedThisTurn: [],
@@ -5338,12 +5339,10 @@ export function resolveEndTurnCommand(
     const fill = spellTurnEndDamageRollFor(input.fills, request.hole);
     return fill === undefined ? [] : [fill];
   });
-  const endTurnDamageRollRequests = endTurnDamageRequests.flatMap(
-    (request) => {
-      const roll = spellTurnEndDamageRollFor(input.fills, request.hole);
-      return roll === undefined ? [] : [{ ...request, roll }];
-    },
-  );
+  const endTurnDamageRollRequests = endTurnDamageRequests.flatMap((request) => {
+    const roll = spellTurnEndDamageRollFor(input.fills, request.hole);
+    return roll === undefined ? [] : [{ ...request, roll }];
+  });
   const missingEndTurnDamageHoles = endTurnDamageRequests.flatMap((request) =>
     spellTurnEndDamageRollFor(input.fills, request.hole) === undefined
       ? [request.hole]
@@ -5376,9 +5375,7 @@ export function resolveEndTurnCommand(
     ]);
   }
   const turnBoundaryDamageHoleIds = new Set<BattleHoleId>(
-    [...endTurnDamageHoles, ...startTurnDamageHoles].map(
-      (hole) => hole.holeId,
-    ),
+    [...endTurnDamageHoles, ...startTurnDamageHoles].map((hole) => hole.holeId),
   );
   if (
     input.fills.some(
@@ -5765,7 +5762,8 @@ export function resolveEndTurnCommand(
     );
   }
   if (
-    concentrationSavingThrowFills.length !== turnBoundaryConcentrationHoles.length
+    concentrationSavingThrowFills.length !==
+    turnBoundaryConcentrationHoles.length
   ) {
     return invalidResult(
       input.state,
@@ -7277,10 +7275,13 @@ function validateMovementCostFacts(
     return "Area movement-cost facts must agree on total Movement distance.";
   }
   if (
-    allCosts.slice(1).some(
-      (cost) =>
-        Number(cost.totalDistanceFeet) !== Number(firstCost.totalDistanceFeet),
-    )
+    allCosts
+      .slice(1)
+      .some(
+        (cost) =>
+          Number(cost.totalDistanceFeet) !==
+          Number(firstCost.totalDistanceFeet),
+      )
   ) {
     return "Movement-cost facts must agree on total Movement distance.";
   }
@@ -7292,10 +7293,7 @@ function validateMovementCostFacts(
   }
   const expectedCostFeet = movementFeet(
     Number(firstCost.totalDistanceFeet) +
-      allCosts.reduce(
-        (total, cost) => total + Number(cost.extraCostFeet),
-        0,
-      ),
+      allCosts.reduce((total, cost) => total + Number(cost.extraCostFeet), 0),
   );
   if (Number(value.movementCostFeet) === Number(expectedCostFeet)) {
     return null;
@@ -7355,10 +7353,7 @@ function validateGrappleDragMovementFact(
   const seenTargets = new Set<CombatantId>();
   let extraCostFeet = 0;
   for (const target of fact.targets) {
-    if (
-      !Number.isInteger(target.distanceFeet) ||
-      target.distanceFeet <= 0
-    ) {
+    if (!Number.isInteger(target.distanceFeet) || target.distanceFeet <= 0) {
       return {
         tag: "invalid",
         message: "Grapple drag target distance must be a positive integer.",
@@ -7395,8 +7390,7 @@ function validateGrappleDragMovementFact(
     if (grappler === undefined || draggedTarget === undefined) {
       return {
         tag: "invalid",
-        message:
-          "Grapple drag movement fact references a stale Grapple link.",
+        message: "Grapple drag movement fact references a stale Grapple link.",
       };
     }
     if (!grappleTargetExemptFromDragCost(grappler, draggedTarget)) {

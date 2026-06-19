@@ -839,6 +839,9 @@ export type RemarkableAthleteMechanics = Schema.Schema.Type<
 export type OpenHandTechniqueMechanics = Schema.Schema.Type<
   typeof SurfaceSchema.OpenHandTechniqueMechanicsSchema
 >;
+export type StunningStrikeMechanics = Schema.Schema.Type<
+  typeof SurfaceSchema.StunningStrikeMechanicsSchema
+>;
 export type SacredWeaponMechanics = Schema.Schema.Type<
   typeof SurfaceSchema.SacredWeaponMechanicsSchema
 >;

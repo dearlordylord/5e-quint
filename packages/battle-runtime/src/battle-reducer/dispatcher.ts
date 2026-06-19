@@ -5383,6 +5383,7 @@ export function battleTurnSnapshot(state: BattleState): BattleTurnSnapshot {
       resources.quickenedLevelOnePlusSpellCastsThisTurn,
     attackRollMadeThisTurn: resources.attackRollMadeThisTurn,
     attackDamageRidersUsedThisTurn: resources.attackDamageRidersUsedThisTurn,
+    stunningStrikesUsedThisTurn: resources.stunningStrikesUsedThisTurn,
     recklessAttackWhileRagingUsedThisTurn:
       resources.recklessAttackWhileRagingUsedThisTurn,
     weaponDamageDiceRollChoicesUsedThisTurn:

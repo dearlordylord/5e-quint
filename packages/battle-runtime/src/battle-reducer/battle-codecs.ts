@@ -1790,6 +1790,7 @@ export const BattleHoleSchema = Schema.Union(
     unitFeature: BattleRuntimeObjectSchema,
     choices: Schema.Union(
       Schema.Tuple(Schema.Literal("use"), Schema.Literal("decline")),
+      Schema.Tuple(Schema.Literal("attempt"), Schema.Literal("decline")),
       Schema.Tuple(
         Schema.Literal("addle"),
         Schema.Literal("push"),
@@ -2871,7 +2872,13 @@ type BattleFillEncoded =
   | {
       readonly kind: "unitFeatureDecision";
       readonly holeId: string;
-      readonly value: "use" | "addle" | "push" | "topple" | "decline";
+      readonly value:
+        | "use"
+        | "attempt"
+        | "addle"
+        | "push"
+        | "topple"
+        | "decline";
     }
   | {
       readonly kind: "hitPointHealingDistribution";
@@ -3716,7 +3723,14 @@ export const BattleFillSchema: Schema.Schema<
     Schema.Struct({
       kind: Schema.Literal("unitFeatureDecision"),
       holeId: BattleHoleIdSchema,
-      value: Schema.Literal("use", "addle", "push", "topple", "decline"),
+      value: Schema.Literal(
+        "use",
+        "attempt",
+        "addle",
+        "push",
+        "topple",
+        "decline",
+      ),
     }),
     Schema.Struct({
       kind: Schema.Literal("heldObjectFacts"),
@@ -4211,6 +4225,12 @@ const BattleTurnSnapshotSchema = Schema.Struct({
   quickenedLevelOnePlusSpellCastsThisTurn: Schema.Array(CombatantId),
   attackRollMadeThisTurn: Schema.Boolean,
   attackDamageRidersUsedThisTurn: Schema.Array(
+    Schema.Struct({
+      attackerId: CombatantId,
+      unitId: Schema.String,
+    }),
+  ),
+  stunningStrikesUsedThisTurn: Schema.Array(
     Schema.Struct({
       attackerId: CombatantId,
       unitId: Schema.String,

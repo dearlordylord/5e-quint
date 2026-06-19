@@ -277,6 +277,7 @@ export {
   MonkInitiativeFocusRecoveryMechanicsSchema,
   ModifyRollAdvantageRiderSchema,
   OpenHandTechniqueMechanicsSchema,
+  StunningStrikeMechanicsSchema,
   MasteryOrWeaponDamageDiceRerollMechanicsSchema,
   OnHitTriggerMechanicsSchema,
   OnHitRiderEffectSchema,

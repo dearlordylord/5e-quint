@@ -342,9 +342,9 @@
       "character-creation or progression mechanic": 12
     },
     "levelFiveClassRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 8,
+      "catalog-installed-owner-evidence-present": 9,
       "non-runtime": 12,
-      "catalog-only/dead-for-now": 8
+      "catalog-only/dead-for-now": 7
     },
     "levelSixClassRowsByDisposition": {
       "level-5-7-follow-up-required": 11,
@@ -369,9 +369,9 @@
       "character-creation or progression mechanic": 12
     },
     "allRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 488,
+      "catalog-installed-owner-evidence-present": 489,
       "non-runtime": 84,
-      "catalog-only/dead-for-now": 199,
+      "catalog-only/dead-for-now": 198,
       "level-5-7-follow-up-required": 22,
       "needs-surface-widening": 16,
       "catalog-installed-owner-evidence-required": 7,
@@ -20180,22 +20180,29 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "monk_stunning_strike",
+        "sourceRecordPath": "packages/surface/content/monk_stunning_strike.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "monk_stunning_strike"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-only/dead-for-now",
-      "battleReadinessClosure": {
-        "source": "unit-claim",
-        "kind": "outside-battle-runtime",
-        "owner": "future battle-runtime Monk attack-hit rider owner plus existing Monk Focus resource, Saving Throw, active condition/effect, Speed, and Attack Roll Advantage owners",
-        "reason": "SRD Stunning Strike triggers once per turn when a Monk hits a creature with a Monk weapon or Unarmed Strike: the Monk can spend 1 Focus Point, the target makes a Constitution Saving Throw against the Monk Focus save DC, failure applies the Stunned condition until the start of the Monk's next turn, and success halves target Speed plus grants Advantage to the next Attack Roll against the target before then. The future promoted owner must consume typed support facts from the admitted source shape, existing monk_monks_focus resource state, existing attack-hit and weapon/Unarmed Strike gates, the existing Saving Throw roll mode, and source-owned condition/effect lifecycle projections. It must not add a second Focus Point pool, duplicate condition or Speed state, or dispatch on Stunning Strike or Monk authored identity."
-      },
-      "ownerEvidence": [],
-      "nextAction": "SRD Stunning Strike triggers once per turn when a Monk hits a creature with a Monk weapon or Unarmed Strike: the Monk can spend 1 Focus Point, the target makes a Constitution Saving Throw against the Monk Focus save DC, failure applies the Stunned condition until the start of the Monk's next turn, and success halves target Speed plus grants Advantage to the next Attack Roll against the target before then. The future promoted owner must consume typed support facts from the admitted source shape, existing monk_monks_focus resource state, existing attack-hit and weapon/Unarmed Strike gates, the existing Saving Throw roll mode, and source-owned condition/effect lifecycle projections. It must not add a second Focus Point pool, duplicate condition or Speed state, or dispatch on Stunning Strike or Monk authored identity."
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit monk_stunning_strike is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L5-A12-MONK-STUNNING-STRIKE-BATTLE-RUNTIME at packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/monk:level-5:class-table-summary:monk_level_5_feature_table_row",

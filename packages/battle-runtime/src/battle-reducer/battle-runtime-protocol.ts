@@ -47,6 +47,7 @@ export const INITIAL_TURN_RESOURCES = resetTurnActionEconomy({
   quickenedLevelOnePlusSpellCastsThisTurn: [],
   attackRollMadeThisTurn: false,
   attackDamageRidersUsedThisTurn: [],
+  stunningStrikesUsedThisTurn: [],
   recklessAttackWhileRagingUsedThisTurn: [],
   weaponDamageDiceRollChoicesUsedThisTurn: [],
   weaponMasteryCleaveAttackersUsedThisTurn: [],
@@ -256,6 +257,12 @@ export type AttackFillSet =
         | Extract<BattleFill, { readonly kind: "unitFeatureDecision" }>
         | undefined;
       readonly openHandTechniqueSavingThrow:
+        | Extract<BattleFill, { readonly kind: "savingThrowOutcome" }>
+        | undefined;
+      readonly stunningStrikeDecision:
+        | Extract<BattleFill, { readonly kind: "unitFeatureDecision" }>
+        | undefined;
+      readonly stunningStrikeSavingThrow:
         | Extract<BattleFill, { readonly kind: "savingThrowOutcome" }>
         | undefined;
       readonly weaponMasteryCleaveDecision:

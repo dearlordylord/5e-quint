@@ -1,5 +1,5 @@
 // RAW-COVERAGE: runtime-owner RAW-QCORE9-UNIT-FEATURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-action-area-save-damage-replacement unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-damage-die-floor unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bardic-inspiration-grant unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-delegated-standard-actions unit-feature.bonus-action-ongoing-rage unit-feature.creature-space-movement-permission unit-feature.druid-wild-shape-known-form unit-feature.enemy-zero-hit-point-temporary-hit-points unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.grappler unit-feature.hide-action-obscurement-permission unit-feature.hunters-prey unit-feature.initiative-proficiency-and-swap unit-feature.innate-sorcery-activation unit-feature.light-extra-attack-damage-ability-modifier unit-feature.magic-action-area-save-damage-healing unit-feature.magic-action-healing-pool unit-feature.martial-arts-attack-projection unit-feature.monk-focus-battle-options unit-feature.open-hand-technique unit-feature.paladin-sacred-weapon unit-feature.passive-ability-check-roll-mode unit-feature.passive-armor-class-bonus unit-feature.passive-damage-resistance unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-saving-throw-roll-mode unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.potent-cantrip unit-feature.reaction-roll-or-damage-reduction unit-feature.remarkable-athlete unit-feature.rogue-steady-aim unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.spell-slot-healing-modifier unit-feature.weapon-critical-range-19 unit-feature.weapon-damage-dice-roll-choice unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave unit-feature.zero-hit-point-replacement
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-action-area-save-damage-replacement unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-damage-die-floor unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bardic-inspiration-grant unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-delegated-standard-actions unit-feature.bonus-action-ongoing-rage unit-feature.creature-space-movement-permission unit-feature.druid-wild-shape-known-form unit-feature.enemy-zero-hit-point-temporary-hit-points unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.grappler unit-feature.hide-action-obscurement-permission unit-feature.hunters-prey unit-feature.initiative-proficiency-and-swap unit-feature.innate-sorcery-activation unit-feature.light-extra-attack-damage-ability-modifier unit-feature.magic-action-area-save-damage-healing unit-feature.magic-action-healing-pool unit-feature.martial-arts-attack-projection unit-feature.monk-focus-battle-options unit-feature.open-hand-technique unit-feature.paladin-sacred-weapon unit-feature.passive-ability-check-roll-mode unit-feature.passive-armor-class-bonus unit-feature.passive-damage-resistance unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-saving-throw-roll-mode unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.potent-cantrip unit-feature.reaction-roll-or-damage-reduction unit-feature.remarkable-athlete unit-feature.rogue-steady-aim unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.spell-slot-healing-modifier unit-feature.stunning-strike unit-feature.weapon-critical-range-19 unit-feature.weapon-damage-dice-roll-choice unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave unit-feature.zero-hit-point-replacement
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.d20-test-natural-one-reroll
 import { Match } from "effect";
 import * as Either from "effect/Either";
@@ -130,6 +130,7 @@ export const BONUS_ACTION_DELEGATED_STANDARD_ACTIONS_SUPPORT_PROFILE =
   "bonusActionDelegatedStandardActions";
 export const REMARKABLE_ATHLETE_SUPPORT_PROFILE = "remarkableAthlete";
 export const OPEN_HAND_TECHNIQUE_SUPPORT_PROFILE = "openHandTechnique";
+export const STUNNING_STRIKE_SUPPORT_PROFILE = "stunningStrike";
 export const PALADIN_SACRED_WEAPON_SUPPORT_PROFILE = "paladinSacredWeapon";
 export const HUNTERS_PREY_SUPPORT_PROFILE = "huntersPrey";
 export const ROGUE_STEADY_AIM_SUPPORT_PROFILE = "rogueSteadyAim";
@@ -227,6 +228,7 @@ export const BATTLE_UNIT_SUPPORT_PROFILES = [
   BONUS_ACTION_DELEGATED_STANDARD_ACTIONS_SUPPORT_PROFILE,
   REMARKABLE_ATHLETE_SUPPORT_PROFILE,
   OPEN_HAND_TECHNIQUE_SUPPORT_PROFILE,
+  STUNNING_STRIKE_SUPPORT_PROFILE,
   PALADIN_SACRED_WEAPON_SUPPORT_PROFILE,
   HUNTERS_PREY_SUPPORT_PROFILE,
   ROGUE_STEADY_AIM_SUPPORT_PROFILE,
@@ -678,6 +680,37 @@ export type BattleOpenHandTechniqueSupportProfile = {
   readonly kind: typeof OPEN_HAND_TECHNIQUE_SUPPORT_PROFILE;
   readonly technique: OpenHandTechniqueProfile;
 };
+export type StunningStrikeProfile = {
+  readonly trigger: {
+    readonly kind: "hitCreatureWithMonkWeaponOrUnarmedStrike";
+    readonly usageLimit: "oncePerTurn";
+  };
+  readonly optional: true;
+  readonly spends: {
+    readonly resourceUnitId: typeof MONK_FOCUS_RESOURCE_UNIT_ID;
+    readonly amount: 1;
+  };
+  readonly savingThrow: { readonly ability: "con" };
+  readonly onFail: {
+    readonly kind: "applyCondition";
+    readonly condition: "stunned";
+    readonly expires: "startOfSourceNextTurn";
+  };
+  readonly onSuccess: {
+    readonly speed: {
+      readonly kind: "halve";
+      readonly expires: "startOfSourceNextTurn";
+    };
+    readonly attackRoll: {
+      readonly mode: "advantage";
+      readonly appliesTo: "nextAttackRollAgainstTargetBeforeExpiration";
+    };
+  };
+};
+export type BattleStunningStrikeSupportProfile = {
+  readonly kind: typeof STUNNING_STRIKE_SUPPORT_PROFILE;
+  readonly stunningStrike: StunningStrikeProfile;
+};
 export type PaladinSacredWeaponProfile = {
   readonly activationCost: {
     readonly kind: "standardAction";
@@ -803,6 +836,11 @@ export type BattleGrapplerSupportProfile = {
 };
 export type BattleMonkFocusBattleOptionsSupportProfile = {
   readonly kind: typeof MONK_FOCUS_BATTLE_OPTIONS_SUPPORT_PROFILE;
+  readonly effectSaveDc: {
+    readonly kind: "classFeatureAbilitySaveDc";
+    readonly base: 8;
+    readonly ability: "wis";
+  };
   readonly flurryOfBlows: {
     readonly displayName: string;
     readonly focusPointCost: 1;
@@ -865,6 +903,7 @@ export type BattleUnitSupportProfile =
   | BattleDruidWildShapeKnownFormSupportProfile
   | BattleRemarkableAthleteSupportProfile
   | BattleOpenHandTechniqueSupportProfile
+  | BattleStunningStrikeSupportProfile
   | BattlePaladinSacredWeaponSupportProfile
   | BattleHuntersPreySupportProfile
   | BattleRogueSteadyAimSupportProfile
@@ -898,6 +937,7 @@ export type BattleUnitSupportProfile =
       | "druidWildShapeKnownForm"
       | "remarkableAthlete"
       | "openHandTechnique"
+      | "stunningStrike"
       | "paladinSacredWeapon"
       | "huntersPrey"
       | "rogueSteadyAim"
@@ -1186,8 +1226,9 @@ export function battleUnitSupportProfilesForUnit(input: {
     supportProfiles.push(WEAPON_DAMAGE_DICE_ROLL_CHOICE_SUPPORT_PROFILE);
   }
 
-  const attackDamageDieFloorSupport =
-    battleAttackDamageDieFloorSupportForUnit(input.unit);
+  const attackDamageDieFloorSupport = battleAttackDamageDieFloorSupportForUnit(
+    input.unit,
+  );
   if (attackDamageDieFloorSupport === "unsupported") {
     return battleUnitSupportProfileIssue(
       `Unsupported battle attack damage die floor Unit hook: ${input.unit.id}.`,
@@ -1343,6 +1384,16 @@ export function battleUnitSupportProfilesForUnit(input: {
   }
   if (openHandTechniqueSupport !== null) {
     supportProfiles.push(openHandTechniqueSupport);
+  }
+
+  const stunningStrikeSupport = battleStunningStrikeSupportForUnit(input.unit);
+  if (stunningStrikeSupport === "unsupported") {
+    return battleUnitSupportProfileIssue(
+      `Unsupported battle Stunning Strike Unit hook: ${input.unit.id}.`,
+    );
+  }
+  if (stunningStrikeSupport !== null) {
+    supportProfiles.push(stunningStrikeSupport);
   }
 
   const paladinSacredWeaponSupport = battlePaladinSacredWeaponSupportForUnit(
@@ -2095,6 +2146,11 @@ export type SupportedUnitFeatureProfile =
       readonly technique: OpenHandTechniqueProfile;
     }
   | {
+      readonly kind: "stunningStrike";
+      readonly unit: UnitRecord;
+      readonly stunningStrike: StunningStrikeProfile;
+    }
+  | {
       readonly kind: "paladinSacredWeapon";
       readonly unit: UnitRecord;
       readonly sacredWeapon: PaladinSacredWeaponProfile;
@@ -2160,6 +2216,10 @@ export type BattleRemarkableAthleteSupport =
   | null;
 export type BattleOpenHandTechniqueSupport =
   | BattleOpenHandTechniqueSupportProfile
+  | "unsupported"
+  | null;
+export type BattleStunningStrikeSupport =
+  | BattleStunningStrikeSupportProfile
   | "unsupported"
   | null;
 export type BattlePaladinSacredWeaponSupport =
@@ -2390,6 +2450,11 @@ export function battleMonkFocusBattleOptionsSupportForUnit(
 
   return {
     kind: MONK_FOCUS_BATTLE_OPTIONS_SUPPORT_PROFILE,
+    effectSaveDc: {
+      kind: "classFeatureAbilitySaveDc",
+      base: unit.mechanics.effectSaveDc.base,
+      ability: unit.mechanics.effectSaveDc.ability,
+    },
     flurryOfBlows: {
       displayName: flurryOfBlows.displayName,
       focusPointCost: flurryOfBlows.battleExecution.focusPointCost,
@@ -3229,6 +3294,21 @@ export function battleOpenHandTechniqueSupportForUnit(
     : {
         kind: OPEN_HAND_TECHNIQUE_SUPPORT_PROFILE,
         technique: profile.technique,
+      };
+}
+
+export function battleStunningStrikeSupportForUnit(
+  unit: UnitRecord,
+): BattleStunningStrikeSupport {
+  if (!hasClassFeatureMechanicsFamily(unit, "stunning_strike")) {
+    return null;
+  }
+  const profile = stunningStrikeProfileForUnit(unit);
+  return profile === null
+    ? "unsupported"
+    : {
+        kind: STUNNING_STRIKE_SUPPORT_PROFILE,
+        stunningStrike: profile.stunningStrike,
       };
 }
 
@@ -4742,8 +4822,7 @@ export function attackDamageDieFloorProfileForUnit(
     mechanics.trigger.kind !== "attack_damage_roll" ||
     mechanics.trigger.attackWeapon.kind !==
       "melee_weapon_held_with_two_hands" ||
-    mechanics.trigger.attackWeapon.propertyGate !==
-      "two_handed_or_versatile" ||
+    mechanics.trigger.attackWeapon.propertyGate !== "two_handed_or_versatile" ||
     mechanics.effect.kind !== "floor_damage_die_results" ||
     mechanics.effect.dieScope !== "attack_damage_dice" ||
     mechanics.effect.minimumResult !== ATTACK_DAMAGE_DIE_FLOOR_MINIMUM_RESULT
@@ -5156,6 +5235,7 @@ export function parseSupportedUnitFeatureProfile(
     bonusActionDelegatedStandardActionsProfileForUnit(unit) ??
     remarkableAthleteProfileForUnit(unit) ??
     openHandTechniqueProfileForUnit(unit) ??
+    stunningStrikeProfileForUnit(unit) ??
     paladinSacredWeaponProfileForUnit(unit) ??
     huntersPreyProfileForUnit(unit) ??
     rogueSteadyAimProfileForUnit(unit) ??
@@ -5312,6 +5392,72 @@ function openHandTechniqueProfileForUnit(
           onFail: { kind: "applyCondition", condition: "prone" },
         },
       ],
+    },
+  };
+}
+
+function stunningStrikeProfileForUnit(
+  unit: UnitRecord,
+): Extract<
+  SupportedUnitFeatureProfile,
+  { readonly kind: "stunningStrike" }
+> | null {
+  if (
+    unit.kind !== "class_feature" ||
+    unit.className !== "monk" ||
+    unit.mechanics.family !== "stunning_strike"
+  ) {
+    return null;
+  }
+  const mechanics = unit.mechanics;
+  if (
+    mechanics.trigger.kind !==
+      "hit_creature_with_monk_weapon_or_unarmed_strike" ||
+    mechanics.trigger.usageLimit !== "once_per_turn" ||
+    mechanics.optional !== true ||
+    mechanics.spends.resourceUnitId !== MONK_FOCUS_RESOURCE_UNIT_ID ||
+    mechanics.spends.amount !== 1 ||
+    mechanics.savingThrow.ability !== "con" ||
+    mechanics.onFail.kind !== "apply_condition" ||
+    mechanics.onFail.condition !== "stunned" ||
+    mechanics.onFail.expires !== "start_of_source_next_turn" ||
+    mechanics.onSuccess.speed.kind !== "halve" ||
+    mechanics.onSuccess.speed.expires !== "start_of_source_next_turn" ||
+    mechanics.onSuccess.attackRoll.mode !== "advantage" ||
+    mechanics.onSuccess.attackRoll.appliesTo !==
+      "next_attack_roll_against_target_before_expiration"
+  ) {
+    return null;
+  }
+  return {
+    kind: "stunningStrike",
+    unit,
+    stunningStrike: {
+      trigger: {
+        kind: "hitCreatureWithMonkWeaponOrUnarmedStrike",
+        usageLimit: "oncePerTurn",
+      },
+      optional: true,
+      spends: {
+        resourceUnitId: MONK_FOCUS_RESOURCE_UNIT_ID,
+        amount: 1,
+      },
+      savingThrow: { ability: "con" },
+      onFail: {
+        kind: "applyCondition",
+        condition: "stunned",
+        expires: "startOfSourceNextTurn",
+      },
+      onSuccess: {
+        speed: {
+          kind: "halve",
+          expires: "startOfSourceNextTurn",
+        },
+        attackRoll: {
+          mode: "advantage",
+          appliesTo: "nextAttackRollAgainstTargetBeforeExpiration",
+        },
+      },
     },
   };
 }
@@ -5684,8 +5830,7 @@ function battleDruidWildShapeKnownFormSupportForUnitAtClassLevels(
   const actualClassLevel = findCharacterClassLevel(classLevels, unit.className);
   if (
     isDruidWildShapeFeatureRecord(unit) &&
-    (actualClassLevel === undefined ||
-      actualClassLevel < unit.acquiredAtLevel)
+    (actualClassLevel === undefined || actualClassLevel < unit.acquiredAtLevel)
   ) {
     return null;
   }

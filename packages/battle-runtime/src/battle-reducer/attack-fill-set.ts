@@ -39,6 +39,8 @@ import {
   GRAPPLER_PUNCH_AND_GRAB_DECISION_HOLE_ID,
   OPEN_HAND_TECHNIQUE_DECISION_HOLE_ID,
   OPEN_HAND_TECHNIQUE_SAVE_HOLE_ID,
+  STUNNING_STRIKE_DECISION_HOLE_ID,
+  STUNNING_STRIKE_SAVE_HOLE_ID,
 } from "./domain-constants.ts";
 import { isHideousLaughterDamageRepeatSaveFill } from "./hideous-laughter-repeat-save.ts";
 import { isMirrorImageDuplicateRollFill } from "./mirror-image-hit-interception.ts";
@@ -85,6 +87,12 @@ export function attackFillSet(fills: readonly BattleFill[]): AttackFillSet {
     | Extract<BattleFill, { readonly kind: "unitFeatureDecision" }>
     | undefined;
   let openHandTechniqueSavingThrow:
+    | Extract<BattleFill, { readonly kind: "savingThrowOutcome" }>
+    | undefined;
+  let stunningStrikeDecision:
+    | Extract<BattleFill, { readonly kind: "unitFeatureDecision" }>
+    | undefined;
+  let stunningStrikeSavingThrow:
     | Extract<BattleFill, { readonly kind: "savingThrowOutcome" }>
     | undefined;
   const hideousLaughterDamageRepeatSaves: Extract<
@@ -277,6 +285,20 @@ export function attackFillSet(fills: readonly BattleFill[]): AttackFillSet {
     }
 
     if (
+      fill.kind === "unitFeatureDecision" &&
+      fill.holeId === STUNNING_STRIKE_DECISION_HOLE_ID
+    ) {
+      if (stunningStrikeDecision !== undefined) {
+        return {
+          tag: "invalid",
+          message: "Stunning Strike decision was filled twice.",
+        };
+      }
+      stunningStrikeDecision = fill;
+      continue;
+    }
+
+    if (
       fill.kind === "attackRoll" &&
       fill.holeId === HUNTERS_PREY_HORDE_BREAKER_ATTACK_ROLL_HOLE_ID
     ) {
@@ -431,6 +453,20 @@ export function attackFillSet(fills: readonly BattleFill[]): AttackFillSet {
         };
       }
       openHandTechniqueSavingThrow = fill;
+      continue;
+    }
+
+    if (
+      fill.kind === "savingThrowOutcome" &&
+      fill.holeId === STUNNING_STRIKE_SAVE_HOLE_ID
+    ) {
+      if (stunningStrikeSavingThrow !== undefined) {
+        return {
+          tag: "invalid",
+          message: "Stunning Strike Saving Throw was filled twice.",
+        };
+      }
+      stunningStrikeSavingThrow = fill;
       continue;
     }
 
@@ -633,6 +669,8 @@ export function attackFillSet(fills: readonly BattleFill[]): AttackFillSet {
     weaponMasteryToppleSavingThrow,
     openHandTechniqueDecision,
     openHandTechniqueSavingThrow,
+    stunningStrikeDecision,
+    stunningStrikeSavingThrow,
     weaponMasteryCleaveDecision,
     weaponMasteryCleaveTarget,
     weaponMasteryCleaveAttackRoll,

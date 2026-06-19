@@ -8,16 +8,16 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 
 | Metric | Value |
 | --- | ---: |
-| Installed collection inventory count | 322 Units |
+| Installed collection inventory count | 323 Units |
 
 ## Coverage Metrics
 
 | Metric | Covered | Percent |
 | --- | ---: | ---: |
-| Authored Surface Unit catalog admission | 321/544 | 59% |
-| Authored Surface executable catalog admission | 271/456 | 59.4% |
-| Installed Unit profile classification coverage | 322/322 | 100% |
-| Supported executable Unit coverage | 187/272 | 68.8% |
+| Authored Surface Unit catalog admission | 322/545 | 59.1% |
+| Authored Surface executable catalog admission | 272/457 | 59.5% |
+| Installed Unit profile classification coverage | 323/323 | 100% |
+| Supported executable Unit coverage | 188/273 | 68.9% |
 | QNT profile modeling coverage | 122/122 | 100% |
 | QNT proof coverage | 119/122 | 97.5% |
 | Runtime mapping coverage | 122/122 | 100% |
@@ -25,8 +25,8 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | Rules-kernel profile join coverage | 160/160 | 100% |
 | Rules-kernel covered profile coverage | 160/160 | 100% |
 | Supported Unit rules-kernel chain coverage | 175/175 | 100% |
-| Deterministic admission/projection coverage | 182/187 | 97.3% |
-| Selected identity replay coverage | 176/179 | 98.3% |
+| Deterministic admission/projection coverage | 183/188 | 97.3% |
+| Selected identity replay coverage | 177/180 | 98.3% |
 | Classic non-SRD expression gate | 1/1 | 100% |
 
 ## Metric Semantics
@@ -60,7 +60,7 @@ Background, feat, spell, and class-feature groups are counted from installed Uni
 | Background Units | 4 | 0 | 0 | 0 | 4 | 0 | 0/0 | 0 | 0 |
 | Feat Units | 13 | 13 | 9 | 0 | 4 | 11 | 6/8 | 2 | 0 |
 | Spell Units | 140 | 140 | 93 | 18 | 29 | 137 | 110/111 | 1 | 0 |
-| Class-feature Units | 94 | 94 | 72 | 8 | 14 | 120 | 74/74 | 0 | 0 |
+| Class-feature Units | 95 | 95 | 73 | 8 | 14 | 121 | 75/75 | 0 | 0 |
 
 | Denominator | Rule |
 | --- | --- |
@@ -135,6 +135,7 @@ The Unit matrix owns authored-content breadth. `plans/rules-kernel-coverage/prof
 | `monk_deflect_attacks` | srd-5.2.1 | `unit-feature.attack-damage-reduction-zero-damage-redirect` |
 | `monk_extra_attack` | srd-5.2.1 | `unit-feature.attack-action-attack-count-scaling` |
 | `monk_slow_fall` | srd-5.2.1 | `unit-feature.reaction-roll-or-damage-reduction` |
+| `monk_stunning_strike` | srd-5.2.1 | `unit-feature.stunning-strike` |
 | `monk_open_hand_technique` | srd-5.2.1 | `unit-feature.open-hand-technique` |
 | `ranger_deft_explorer` | srd-5.2.1 | `character-creation.skill-expertise-choice` |
 | `ranger_fighting_style` | srd-5.2.1 | `character-creation.class-feature-feat-choice`, `character-creation.class-feature-option-projection`, `character-creation.fighting-style-cantrip-advancement-replacement` |
@@ -846,6 +847,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `monk_deflect_attacks` | `unit-feature.attack-damage-reduction-zero-damage-redirect` | QMBT59 | `packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts` |
 | `monk_extra_attack` | `unit-feature.attack-action-attack-count-scaling` | L5-A06-MONK-EXTRA-ATTACK | `packages/battle-runtime/src/unit-profile-admission-extra-attack-and-speed-features.test.ts` |
 | `monk_slow_fall` | `unit-feature.reaction-roll-or-damage-reduction` | L14G-03A-MONK-SLOW-FALL-RUNTIME | `packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts` |
+| `monk_stunning_strike` | `unit-feature.stunning-strike` | L5-A12-MONK-STUNNING-STRIKE-BATTLE-RUNTIME | `packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts` |
 | `monk_open_hand_technique` | `unit-feature.open-hand-technique` | L13UG-A18 | `packages/battle-runtime/src/unit-profile-admission-level3-attack-movement-features.test.ts` |
 | `ranger_deft_explorer` | `character-creation.skill-expertise-choice` | L12G-AUTHOR-RANGER-FIGHTING-STYLE | `packages/character-creation-runtime/src/index.test.ts` |
 | `ranger_fighting_style` | `character-creation.class-feature-feat-choice`, `character-creation.class-feature-option-projection`, `character-creation.fighting-style-cantrip-advancement-replacement` | L12G-AUTHOR-RANGER-FIGHTING-STYLE | `packages/character-creation-runtime/src/index.test.ts` |
@@ -1108,6 +1110,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `monk_deflect_attacks` | `unit-feature.attack-damage-reduction-zero-damage-redirect` | reaction-interruption | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
 | `monk_extra_attack` | `unit-feature.attack-action-attack-count-scaling` | extra-attack-count-scaling | `packages/battle-runtime/src/extra-attack-count.mbt.test.ts` |
 | `monk_slow_fall` | `unit-feature.reaction-roll-or-damage-reduction` | L14G-03A-MONK-SLOW-FALL-RUNTIME | `packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts` |
+| `monk_stunning_strike` | `unit-feature.stunning-strike` | L5-A12-MONK-STUNNING-STRIKE-BATTLE-RUNTIME | `packages/battle-runtime/src/stunning-strike-selected-identity.mbt.test.ts` |
 | `monk_open_hand_technique` | `unit-feature.open-hand-technique` | L3PUTB-06-MONK-OPEN-HAND-TECHNIQUE-RUNTIME | `packages/battle-runtime/src/open-hand-technique-selected-identity.mbt.test.ts` |
 | `ranger_deft_explorer` | `character-creation.skill-expertise-choice` | B5-CLASS-FEATURE-IDENTITY-BATCH-2 | `packages/character-creation-runtime/src/class-feature-selected-identity.mbt.test.ts` |
 | `ranger_fighting_style` | `character-creation.class-feature-feat-choice`, `character-creation.class-feature-option-projection`, `character-creation.fighting-style-cantrip-advancement-replacement` | B5-CLASS-FEATURE-IDENTITY-BATCH-2 | `packages/character-creation-runtime/src/class-feature-selected-identity.mbt.test.ts` |
@@ -1820,6 +1823,7 @@ These profile-subset rows have no selected-identity replay witness, but the decl
 | L3PUTB-05 | completed-runtime-parity | `unit-feature.potent-cantrip` |
 | L3PUTB-06-MONK-OPEN-HAND-TECHNIQUE-RUNTIME | qnt-proof | `unit-feature.open-hand-technique` |
 | L3PUTB-06-MONK-OPEN-HAND-TECHNIQUE-RUNTIME | completed-runtime-parity | `unit-feature.open-hand-technique` |
+| L5-A12-MONK-STUNNING-STRIKE-BATTLE-RUNTIME | completed-runtime-parity | `unit-feature.stunning-strike` |
 | L3PUTB-07-RANGER-HUNTERS-PREY-RUNTIME | qnt-proof | `unit-feature.hunters-prey` |
 | L3PUTB-07-RANGER-HUNTERS-PREY-RUNTIME | completed-runtime-parity | `unit-feature.hunters-prey` |
 | L3PUTB-08-DRUID-LANDS-AID-RUNTIME | qnt-proof | `unit-feature.magic-action-area-save-damage-healing` |
