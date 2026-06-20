@@ -163,7 +163,7 @@
     {
       "number": 27,
       "id": "L3-FOLLOWUP-GLYPH-EXPLOSIVE-RUNE-RELEASE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Glyph Explosive Rune Release"
     },
     {
@@ -260,7 +260,7 @@ missing-record spells unless a RAW dependency is unavoidable and documented.
 | 24 | L3-FOLLOWUP-PHANTOM-STEED-CREATED-EQUIPMENT - Phantom Steed Created Equipment Cleanup | deferred | L5-C21-PHANTOM-STEED-MOUNT-LIFECYCLE | Owner deferred on 2026-06-20 with the rest of Phantom Steed runtime backlog; requires a generic created object/equipment occurrence owner. |
 | 25 | L3-FOLLOWUP-PHANTOM-STEED-TRAVEL-PACE - Phantom Steed Table Travel Pace | deferred | L5-C21-PHANTOM-STEED-MOUNT-LIFECYCLE | Owner deferred on 2026-06-20 with the rest of Phantom Steed runtime backlog; requires a table travel owner, not battle-map travel state. |
 | 26 | L3-FOLLOWUP-GLYPH-DURABLE-OCCURRENCE - Glyph Durable Occurrence | done | L5-C22-GLYPH-OF-WARDING-RUNTIME | Promoted the completed-inscription durable occurrence owner with trigger cleanup and movement invalidation witnesses; release work remains in Tasks 27-29. |
-| 27 | L3-FOLLOWUP-GLYPH-EXPLOSIVE-RUNE-RELEASE - Glyph Explosive Rune Release | ready-for-research | L3-FOLLOWUP-GLYPH-DURABLE-OCCURRENCE | Promote non-immediate explosive-rune release with area-membership witnesses, damage-type choice, Dexterity Saving Throw half damage, slot scaling, and cleanup. |
+| 27 | L3-FOLLOWUP-GLYPH-EXPLOSIVE-RUNE-RELEASE - Glyph Explosive Rune Release | done | L3-FOLLOWUP-GLYPH-DURABLE-OCCURRENCE | Promoted non-immediate explosive-rune release with area-membership witnesses, damage-type choice, Dexterity Saving Throw half damage, slot scaling, cleanup, and duplicate fill rejection. |
 | 28 | L3-FOLLOWUP-GLYPH-STORED-SPELL-RELEASE - Glyph Stored Spell Release | ready-for-research | L3-FOLLOWUP-GLYPH-DURABLE-OCCURRENCE | Promote stored spell invocation state, no-immediate-effect storage, trigger retargeting or area centering, and hostile close-as-possible placement witnesses. |
 | 29 | L3-FOLLOWUP-GLYPH-STORED-CONCENTRATION - Glyph Stored Concentration Override | ready-for-research | L3-FOLLOWUP-GLYPH-STORED-SPELL-RELEASE | Promote the stored Concentration full-duration override outside ordinary caster, triggering-creature, or readied-spell Concentration ownership. |
 
@@ -1684,7 +1684,7 @@ Plan Impact:
 
 ### Task 27 - L3-FOLLOWUP-GLYPH-EXPLOSIVE-RUNE-RELEASE
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -1731,6 +1731,12 @@ Verification:
 - Shared lane verification.
 - Focused owner-package tests, and if battle-runtime behavior changes, update
   the relevant QNT/spec first and run focused MBT per `AGENTS.md`.
+
+Plan Impact:
+
+- Task 27 is complete. Glyph of Warding can claim the explosive-rune release
+  subset; stored-spell release and stored Concentration remain visible in Tasks
+  28-29.
 
 ### Task 28 - L3-FOLLOWUP-GLYPH-STORED-SPELL-RELEASE
 

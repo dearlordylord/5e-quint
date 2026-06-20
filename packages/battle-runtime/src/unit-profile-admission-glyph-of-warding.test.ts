@@ -1,8 +1,12 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3-FOLLOWUP-GLYPH-DURABLE-OCCURRENCE glyph_of_warding
-// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-glyph-durable-occurrence
-// KERNEL-COVERAGE: parity-witness BATTLE.SPELL.GLYPH_DURABLE_OCCURRENCE_LIFECYCLE
-import { movementFeet } from "@dnd/shared/types";
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3-FOLLOWUP-GLYPH-EXPLOSIVE-RUNE-RELEASE glyph_of_warding
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-glyph-durable-occurrence spell.invocation-glyph-explosive-rune-release
+// KERNEL-COVERAGE: parity-witness BATTLE.SPELL.GLYPH_DURABLE_OCCURRENCE_LIFECYCLE BATTLE.SPELL.GLYPH_EXPLOSIVE_RUNE_RELEASE
+import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
+import type { RolledDiceGroup } from "@dnd/shared-algebras/runtime-hole-algebra";
+import { DieRollResult, movementFeet } from "@dnd/shared/types";
 import type {
+  DamageType,
   GlyphWardingMechanics,
   SpellRecord,
 } from "@dnd/surface/surface/types";
@@ -10,19 +14,30 @@ import { describe, expect, test } from "vitest";
 import {
   addGlyphDurableOccurrence,
   endGlyphDurableOccurrence,
+  glyphExplosiveRuneDamageRollHole,
+  glyphExplosiveRuneSavingThrowOutcomeHole,
+  glyphExplosiveRuneReleaseProfileForSpell,
   glyphDurableOccurrenceEffectFromCompletedInscription,
   glyphDurableOccurrenceProfileForSpell,
+  releaseGlyphExplosiveRune,
   type CompletedGlyphInscriptionWitness,
   type GlyphDurableOccurrenceEndWitness,
   type GlyphDurableOccurrenceProfile,
+  type GlyphExplosiveRuneReleaseProfile,
 } from "./battle-reducer/glyph-durable-occurrence.ts";
+import { D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND } from "./battle-reducer.ts";
 import {
   parseBattleSpellEffectLevel,
   type BattleSpellEffectLevel,
 } from "./battle-reducer/spells-effective-level.ts";
 import {
   glyphOfWardingUnitId,
+  orcRelentlessEnduranceUnitId,
+  speciesHalflingLuckUnitId,
   spellCasterId,
+  spellTargetId,
+  thunderwaveSecondTargetId,
+  unitLibrary,
 } from "./unit-profile-admission-catalog-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
 import { maybeSpellAct } from "./unit-profile-admission-spell-fill-support.ts";
@@ -31,8 +46,14 @@ import {
   battleAreaId,
   battleObjectId,
   battleTablePositionId,
+  battleD20TestNaturalOneRerollSupportForUnit,
   type BattleActiveEffect,
+  type BattleFill,
+  type BattleHole,
   type BattleState,
+  type CombatantId,
+  ZERO_HIT_POINT_REPLACEMENT_SUPPORT_PROFILE,
+  spellSaveDcForCaster,
 } from "./unit-profile-admission-test-support.ts";
 import { battleSpellEffectOccurrenceId } from "./identity.ts";
 
@@ -40,6 +61,7 @@ type GlyphDurableOccurrenceEffect = Extract<
   BattleActiveEffect,
   { readonly kind: "glyphDurableOccurrence" }
 >;
+type NonEmptyDamageDice = readonly [number, ...ReadonlyArray<number>];
 const glyphSourceEffectId = battleSpellEffectOccurrenceId(
   "glyph:durable-occurrence:test-effect",
 );
@@ -52,6 +74,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
   test("admits the durable occurrence profile by Surface shape, not authored identity", () => {
     const glyph = spellRecord(glyphOfWardingUnitId);
     const profile = glyphDurableOccurrenceProfileForSpell(glyph);
+    const release = requireGlyphExplosiveRuneProfile();
     const synthetic = {
       ...glyph,
       id: "synthetic_completed_mark",
@@ -85,8 +108,74 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
         moreThanFeet: movementFeet(10),
         outcome: "glyph_breaks_spell_ends_without_triggering",
       },
+      release,
     });
     expect(glyphDurableOccurrenceProfileForSpell(synthetic)).toEqual(profile);
+  });
+
+  test("admits the explosive-rune release profile by Surface shape, not authored identity", () => {
+    const glyph = spellRecord(glyphOfWardingUnitId);
+    const profile = glyphExplosiveRuneReleaseProfileForSpell(glyph);
+    const synthetic = {
+      ...glyph,
+      id: "synthetic_delayed_burst_mark",
+      name: "Synthetic Delayed Burst Mark",
+      description:
+        "Synthetic delayed mark record for identity-free release tests.",
+    } satisfies SpellRecord;
+    const glyphMechanics = requireGlyphMechanics(glyph);
+    const renamedDamageTypeHole = {
+      ...synthetic,
+      mechanics: {
+        ...glyphMechanics,
+        release: {
+          ...glyphMechanics.release,
+          explosiveRune: {
+            ...glyphMechanics.release.explosiveRune,
+            damage: {
+              ...glyphMechanics.release.explosiveRune.damage,
+              damageType: {
+                ...glyphMechanics.release.explosiveRune.damage.damageType,
+                holeId: "synthetic_delayed_burst_damage_type",
+              },
+            },
+          },
+        },
+      },
+    } as unknown as SpellRecord;
+
+    expect(profile).toEqual({
+      kind: "glyphExplosiveRuneReleaseProfile",
+      area: {
+        kind: "sphere",
+        radiusFeet: movementFeet(20),
+        origin: "glyph",
+        membership: "table_witnessed_area_membership",
+      },
+      save: {
+        ability: "dex",
+        dc: { kind: "caster_spell_save_dc" },
+        successDamage: "half",
+      },
+      damage: {
+        damageTypes: ["acid", "cold", "fire", "lightning", "thunder"],
+        dice: {
+          baseDice: 5,
+          dieSize: 8,
+          perSlotAboveBaseDice: 1,
+          baseLevel: 3,
+        },
+      },
+    });
+    expect(glyphExplosiveRuneReleaseProfileForSpell(synthetic)).toEqual(
+      profile,
+    );
+    expect(
+      glyphExplosiveRuneReleaseProfileForSpell(renamedDamageTypeHole),
+    ).toEqual(profile);
+    expect(
+      glyphDurableOccurrenceProfileForSpell(renamedDamageTypeHole)?.release,
+    ).toEqual(profile);
   });
 
   test("rejects adjacent glyph shapes that change occurrence or trigger facts", () => {
@@ -115,9 +204,61 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
         },
       },
     });
+    const wrongExplosiveRuneRadius = malformedGlyphRecordForAdmissionRejection({
+      glyph,
+      mechanics: {
+        ...glyphMechanics,
+        release: {
+          ...glyphMechanics.release,
+          explosiveRune: {
+            ...glyphMechanics.release.explosiveRune,
+            area: {
+              ...glyphMechanics.release.explosiveRune.area,
+              radiusFeet: 10,
+            },
+          },
+        },
+      },
+    });
+    const wrongExplosiveRuneDamageTypes =
+      malformedGlyphRecordForAdmissionRejection({
+        glyph,
+        mechanics: {
+          ...glyphMechanics,
+          release: {
+            ...glyphMechanics.release,
+            explosiveRune: {
+              ...glyphMechanics.release.explosiveRune,
+              damage: {
+                ...glyphMechanics.release.explosiveRune.damage,
+                damageType: {
+                  ...glyphMechanics.release.explosiveRune.damage.damageType,
+                  value: {
+                    ...glyphMechanics.release.explosiveRune.damage.damageType
+                      .value,
+                    options: ["force"],
+                  },
+                },
+              },
+            },
+          },
+        },
+      });
 
     expect(glyphDurableOccurrenceProfileForSpell(wrongMovement)).toBeNull();
     expect(glyphDurableOccurrenceProfileForSpell(wrongTriggerOutcome)).toBeNull();
+    expect(
+      glyphExplosiveRuneReleaseProfileForSpell(wrongExplosiveRuneRadius),
+    ).toBeNull();
+    expect(
+      glyphDurableOccurrenceProfileForSpell(wrongExplosiveRuneRadius),
+    ).toBeNull();
+    expect(
+      glyphExplosiveRuneReleaseProfileForSpell(wrongExplosiveRuneDamageTypes),
+    ).toBeNull();
+    expect(
+      glyphDurableOccurrenceProfileForSpell(wrongExplosiveRuneDamageTypes),
+    ).toBeNull();
   });
 
   test("creates and adds a durable occurrence only from a completed inscription witness", () => {
@@ -140,6 +281,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
       sourceCombatantId: spellCasterId,
       sourceEffectId: glyphSourceEffectId,
       sourceSpellLevel: testBattleSpellEffectLevel(3),
+      release: { kind: "explosiveRune", damageType: "thunder" },
       anchor: { kind: "surface", areaId: glyphSurfaceAnchorAreaId },
       coveredAreaId: glyphCoveredAreaId,
       castLocationId: glyphCastLocationId,
@@ -185,6 +327,19 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
       sourceSpellLevel: testBattleSpellEffectLevel(2),
       minimumSpellLevel: profile.minimumSpellLevel,
     });
+    expect(
+      glyphDurableOccurrenceEffectFromCompletedInscription({
+        profile,
+        witness: completedGlyphInscriptionWitness({
+          anchor: { kind: "surface", areaId: glyphSurfaceAnchorAreaId },
+          release: { kind: "explosiveRune", damageType: "force" },
+        }),
+      }),
+    ).toEqual({
+      tag: "unsupportedExplosiveRuneDamageType",
+      damageType: "force",
+      supportedDamageTypes: ["acid", "cold", "fire", "lightning", "thunder"],
+    });
   });
 
   test("does not discover the one-hour creation as a Magic Action spell invocation", () => {
@@ -202,7 +357,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
     ).toBeUndefined();
   });
 
-  test("table-witnessed trigger occurrence ends the durable occurrence without release", () => {
+  test("table-witnessed trigger occurrence cannot bypass explosive-rune release", () => {
     const state = stateWithGlyphEffect(
       requireCompletedGlyphEffect({
         anchor: { kind: "surface", areaId: glyphSurfaceAnchorAreaId },
@@ -216,14 +371,820 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
       },
     });
 
-    expect(ended.tag).toBe("ended");
-    if (ended.tag !== "ended") return;
-    expect(ended.reason).toBe("triggered");
-    expect(glyphEffects(ended.state)).toEqual([]);
-    expect(ended.state.lightEmitters).toEqual(state.lightEmitters);
-    expect(ended.state.combatants.get(spellCasterId)?.hp).toBe(
-      state.combatants.get(spellCasterId)?.hp,
+    expect(ended).toMatchObject({
+      tag: "invalidWitness",
+      reason: "releaseRequired",
+    });
+    expect(glyphEffects(ended.state)).toEqual(glyphEffects(state));
+  });
+
+  test("explosive-rune release uses area witnesses, chosen damage type, slot scaling, save half damage, and cleanup", () => {
+    const state = stateWithGlyphEffect(
+      requireCompletedGlyphEffect({
+        anchor: { kind: "surface", areaId: glyphSurfaceAnchorAreaId },
+        sourceSpellLevel: testBattleSpellEffectLevel(5),
+      }),
+      glyphBattle({
+        targetHp: 50,
+        targetMaxHp: 50,
+        extraTargetIds: [thunderwaveSecondTargetId],
+        extraTargetHp: 50,
+        extraTargetMaxHp: 50,
+      }),
     );
+    const effect = glyphEffects(state)[0];
+    expect(effect).toBeDefined();
+    if (effect === undefined) return;
+    const profile = requireGlyphExplosiveRuneProfile();
+    const saveHole = requireGlyphSavingThrowOutcomeHole({
+      state,
+      effect,
+      targetIds: [spellTargetId, thunderwaveSecondTargetId],
+    });
+    expect(saveHole).toMatchObject({
+      ability: "dex",
+      dc: { kind: "fixed", dc: spellSaveDcForCaster(state, spellCasterId) },
+      glyphExplosiveRune: {
+        sourceCombatantId: spellCasterId,
+        sourceSpellId: glyphOfWardingUnitId,
+        sourceEffectId: glyphSourceEffectId,
+        radiusFeet: 20,
+      },
+      targetIds: [spellTargetId, thunderwaveSecondTargetId],
+    });
+    const released = releaseGlyphExplosiveRune({
+      state,
+      profile,
+      witness: {
+        kind: "tableWitnessedGlyphExplosiveRuneRelease",
+        triggerOccurrence: glyphTriggerOccurrenceWitness(),
+        coveredAreaId: glyphCoveredAreaId,
+        areaMembership: {
+          kind: "creaturesInArea",
+          affectedTargetIds: [spellTargetId, thunderwaveSecondTargetId],
+          savingThrowOutcomes: [
+            glyphSavingThrowOutcomeFill(saveHole, [
+              {
+                targetId: spellTargetId,
+                succeeded: false,
+                withoutRoll: true,
+              },
+              {
+                targetId: thunderwaveSecondTargetId,
+                succeeded: true,
+                withoutRoll: true,
+              },
+            ]),
+          ],
+          damageRoll: glyphDamageRollFill(
+            glyphExplosiveRuneDamageRollHole({ profile, effect }),
+            [[4, 4, 4, 4, 4, 4, 4]],
+          ),
+          spellDamageReductionRolls: [],
+          concentrationSavingThrows: [],
+          damageDispositions: [],
+          hideousLaughterDamageRepeatSaves: [],
+        },
+      },
+    });
+
+    expect(released.tag).toBe("released");
+    if (released.tag !== "released") return;
+    expect(released.damageRollTotal).toBe(28);
+    expect(released.affectedTargetIds).toEqual([
+      spellTargetId,
+      thunderwaveSecondTargetId,
+    ]);
+    expect(glyphEffects(released.state)).toEqual([]);
+    expect(Number(released.state.combatants.get(spellTargetId)?.hp)).toBe(22);
+    expect(
+      Number(released.state.combatants.get(thunderwaveSecondTargetId)?.hp),
+    ).toBe(36);
+  });
+
+  test("explosive-rune release requests and consumes spell damage reduction fills before damage", () => {
+    const profile = requireGlyphExplosiveRuneProfile();
+    const baseState = stateWithSpellDamageReduction(
+      stateWithGlyphEffect(
+        requireCompletedGlyphEffect({
+          anchor: { kind: "surface", areaId: glyphSurfaceAnchorAreaId },
+          release: { kind: "explosiveRune", damageType: "thunder" },
+        }),
+        glyphBattle({ targetHp: 50, targetMaxHp: 50 }),
+      ),
+      spellTargetId,
+      "thunder",
+    );
+    const effect = glyphEffects(baseState)[0];
+    expect(effect).toBeDefined();
+    if (effect === undefined) return;
+    const areaMembership = {
+      kind: "creaturesInArea" as const,
+      affectedTargetIds: [spellTargetId] as const,
+      savingThrowOutcomes: [
+        glyphSavingThrowOutcomeFillForTargets({
+          state: baseState,
+          effect,
+          targetIds: [spellTargetId],
+          outcomes: [
+            {
+              targetId: spellTargetId,
+              succeeded: false,
+              withoutRoll: true,
+            },
+          ],
+        }),
+      ],
+      damageRoll: glyphDamageRollFill(
+        glyphExplosiveRuneDamageRollHole({ profile, effect }),
+        [[2, 2, 2, 2, 2]],
+      ),
+      spellDamageReductionRolls: [],
+      concentrationSavingThrows: [],
+      damageDispositions: [],
+      hideousLaughterDamageRepeatSaves: [],
+    };
+
+    const needsReduction = releaseGlyphExplosiveRune({
+      state: baseState,
+      profile,
+      witness: {
+        kind: "tableWitnessedGlyphExplosiveRuneRelease",
+        triggerOccurrence: glyphTriggerOccurrenceWitness(),
+        coveredAreaId: glyphCoveredAreaId,
+        areaMembership,
+      },
+    });
+
+    expect(needsReduction.tag).toBe("needsHoles");
+    if (needsReduction.tag !== "needsHoles") return;
+    const reductionHole = requireReleaseHole(needsReduction.holes, "rolledDice");
+    expect(reductionHole).toMatchObject({
+      spellDamageReduction: {
+        targetId: spellTargetId,
+        damageType: "thunder",
+      },
+    });
+    const reductionFill = glyphDamageRollFill(reductionHole, [[4]]);
+
+    expect(
+      releaseGlyphExplosiveRune({
+        state: baseState,
+        profile,
+        witness: {
+          kind: "tableWitnessedGlyphExplosiveRuneRelease",
+          triggerOccurrence: glyphTriggerOccurrenceWitness(),
+          coveredAreaId: glyphCoveredAreaId,
+          areaMembership: {
+            ...areaMembership,
+            spellDamageReductionRolls: [reductionFill, reductionFill],
+          },
+        },
+      }),
+    ).toMatchObject({
+      tag: "invalidWitness",
+      reason: "spellDamageReductionMismatch",
+    });
+
+    const released = releaseGlyphExplosiveRune({
+      state: baseState,
+      profile,
+      witness: {
+        kind: "tableWitnessedGlyphExplosiveRuneRelease",
+        triggerOccurrence: glyphTriggerOccurrenceWitness(),
+        coveredAreaId: glyphCoveredAreaId,
+        areaMembership: {
+          ...areaMembership,
+          spellDamageReductionRolls: [reductionFill],
+        },
+      },
+    });
+
+    expect(released.tag).toBe("released");
+    if (released.tag !== "released") return;
+    const damagedTarget = requireCombatant(released.state, spellTargetId);
+    expect(Number(damagedTarget.hp)).toBe(44);
+    expect(damagedTarget.activeEffects).toContainEqual(
+      expect.objectContaining({
+        kind: "spellDamageReduction",
+        damageType: "thunder",
+        usedThisTurn: true,
+      }),
+    );
+  });
+
+  test("explosive-rune release validates area, saving throws, and damage roll witnesses", () => {
+    const state = stateWithGlyphEffect(
+      requireCompletedGlyphEffect({
+        anchor: { kind: "surface", areaId: glyphSurfaceAnchorAreaId },
+      }),
+      glyphBattle({ targetHp: 50, targetMaxHp: 50 }),
+    );
+    const effect = glyphEffects(state)[0];
+    expect(effect).toBeDefined();
+    if (effect === undefined) return;
+    const profile = requireGlyphExplosiveRuneProfile();
+    const saveFill = glyphSavingThrowOutcomeFillForTargets({
+      state,
+      effect,
+      targetIds: [spellTargetId],
+      outcomes: [
+        {
+          targetId: spellTargetId,
+          succeeded: false,
+          withoutRoll: true,
+        },
+      ],
+    });
+    const validWitness = {
+      kind: "tableWitnessedGlyphExplosiveRuneRelease" as const,
+      triggerOccurrence: glyphTriggerOccurrenceWitness(),
+      coveredAreaId: glyphCoveredAreaId,
+      areaMembership: {
+        kind: "creaturesInArea" as const,
+        affectedTargetIds: [spellTargetId] as const,
+        savingThrowOutcomes: [saveFill],
+        damageRoll: glyphDamageRollFill(
+          glyphExplosiveRuneDamageRollHole({ profile, effect }),
+          [[5, 5, 5, 5, 5]],
+        ),
+        spellDamageReductionRolls: [],
+        concentrationSavingThrows: [],
+        damageDispositions: [],
+        hideousLaughterDamageRepeatSaves: [],
+      },
+    };
+
+    expect(
+      releaseGlyphExplosiveRune({
+        state,
+        profile,
+        witness: {
+          ...validWitness,
+          coveredAreaId: battleAreaId("wrong-glyph-covered-area"),
+        },
+      }),
+    ).toMatchObject({ tag: "invalidWitness", reason: "coveredAreaMismatch" });
+    const missingSave = releaseGlyphExplosiveRune({
+      state,
+      profile,
+      witness: {
+        ...validWitness,
+        areaMembership: {
+          ...validWitness.areaMembership,
+          savingThrowOutcomes: [],
+        },
+      },
+    });
+    expect(missingSave.tag).toBe("needsHoles");
+    if (missingSave.tag !== "needsHoles") return;
+    expect(
+      requireReleaseHole(missingSave.holes, "savingThrowOutcome"),
+    ).toMatchObject({
+      ability: "dex",
+      dc: { kind: "fixed", dc: spellSaveDcForCaster(state, spellCasterId) },
+      targetIds: [spellTargetId],
+      glyphExplosiveRune: {
+        sourceCombatantId: spellCasterId,
+        sourceSpellId: glyphOfWardingUnitId,
+        sourceEffectId: glyphSourceEffectId,
+        radiusFeet: 20,
+      },
+    });
+    const areaMembershipWithoutDamageRoll = {
+      kind: validWitness.areaMembership.kind,
+      affectedTargetIds: validWitness.areaMembership.affectedTargetIds,
+      savingThrowOutcomes: validWitness.areaMembership.savingThrowOutcomes,
+      spellDamageReductionRolls:
+        validWitness.areaMembership.spellDamageReductionRolls,
+      concentrationSavingThrows:
+        validWitness.areaMembership.concentrationSavingThrows,
+      damageDispositions: validWitness.areaMembership.damageDispositions,
+      hideousLaughterDamageRepeatSaves:
+        validWitness.areaMembership.hideousLaughterDamageRepeatSaves,
+    };
+    const missingDamageRoll = releaseGlyphExplosiveRune({
+      state,
+      profile,
+      witness: {
+        ...validWitness,
+        areaMembership: areaMembershipWithoutDamageRoll,
+      },
+    });
+    expect(missingDamageRoll.tag).toBe("needsHoles");
+    if (missingDamageRoll.tag !== "needsHoles") return;
+    expect(
+      requireReleaseHole(missingDamageRoll.holes, "rolledDice"),
+    ).toMatchObject({
+      glyphExplosiveRune: {
+        sourceCombatantId: spellCasterId,
+        sourceSpellId: glyphOfWardingUnitId,
+        sourceEffectId: glyphSourceEffectId,
+        damage: {
+          expr: {
+            dice: 5,
+            dieSize: 8,
+          },
+        },
+      },
+    });
+    expect(
+      releaseGlyphExplosiveRune({
+        state,
+        profile,
+        witness: {
+          ...validWitness,
+          areaMembership: {
+            ...validWitness.areaMembership,
+            savingThrowOutcomes: [
+              {
+                ...saveFill,
+                holeId: "wrong-glyph-save-hole" as typeof saveFill.holeId,
+              },
+            ],
+          },
+        },
+      }),
+    ).toMatchObject({
+      tag: "invalidWitness",
+      reason: "savingThrowOutcomeMismatch",
+    });
+    const wrongDamageRollHoleId =
+      "wrong-glyph-damage-hole" as typeof validWitness.areaMembership.damageRoll.holeId;
+    expect(
+      releaseGlyphExplosiveRune({
+        state,
+        profile,
+        witness: {
+          ...validWitness,
+          areaMembership: {
+            ...validWitness.areaMembership,
+            damageRoll: {
+              ...validWitness.areaMembership.damageRoll,
+              holeId: wrongDamageRollHoleId,
+            },
+          },
+        },
+      }),
+    ).toMatchObject({ tag: "invalidWitness", reason: "damageRollMismatch" });
+  });
+
+  test("explosive-rune release validates Saving Throw d20 fills before damage", () => {
+    const profile = requireGlyphExplosiveRuneProfile();
+    const state = stateWithGlyphEffect(
+      requireCompletedGlyphEffect({
+        anchor: { kind: "surface", areaId: glyphSurfaceAnchorAreaId },
+      }),
+      glyphBattle({ targetHp: 50, targetMaxHp: 50 }),
+    );
+    const effect = glyphEffects(state)[0];
+    expect(effect).toBeDefined();
+    if (effect === undefined) return;
+    const malformedWithoutRollOutcome = {
+      targetId: spellTargetId,
+      succeeded: false,
+      withoutRoll: true,
+      naturalD20: DieRollResult(1),
+      // Typed callers cannot construct this fill; the cast exercises runtime
+      // boundary validation for decoded or otherwise weak fill input.
+    } as unknown as Extract<
+      BattleFill,
+      { readonly kind: "savingThrowOutcome" }
+    >["value"]["outcomes"][number];
+
+    expect(
+      releaseGlyphExplosiveRune({
+        state,
+        profile,
+        witness: glyphExplosiveRuneReleaseWitness({
+          effect,
+          profile,
+          state,
+          outcomes: [malformedWithoutRollOutcome],
+        }),
+      }),
+    ).toMatchObject({
+      tag: "invalidWitness",
+      reason: "savingThrowOutcomeMismatch",
+    });
+
+    const luckUnit = unitLibrary.requireUnit(speciesHalflingLuckUnitId);
+    const luckSupport = battleD20TestNaturalOneRerollSupportForUnit(luckUnit);
+    expect(luckSupport).toMatchObject({
+      kind: "d20TestNaturalOneReroll",
+    });
+    if (luckSupport === null || luckSupport === "unsupported") return;
+    const luckState = stateWithGlyphEffect(
+      requireCompletedGlyphEffect({
+        anchor: { kind: "surface", areaId: glyphSurfaceAnchorAreaId },
+      }),
+      glyphBattle({
+        targetHp: 50,
+        targetMaxHp: 50,
+        targetUnitRefs: [
+          {
+            unitId: speciesHalflingLuckUnitId,
+            supportProfiles: [luckSupport],
+          },
+        ],
+        targetUnitFeatures: [{ unit: luckUnit }],
+      }),
+    );
+    const luckEffect = glyphEffects(luckState)[0];
+    expect(luckEffect).toBeDefined();
+    if (luckEffect === undefined) return;
+
+    expect(
+      releaseGlyphExplosiveRune({
+        state: luckState,
+        profile,
+        witness: glyphExplosiveRuneReleaseWitness({
+          effect: luckEffect,
+          profile,
+          state: luckState,
+          outcomes: [
+            {
+              targetId: spellTargetId,
+              succeeded: false,
+              naturalD20: DieRollResult(1),
+            },
+          ],
+        }),
+      }),
+    ).toMatchObject({
+      tag: "invalidWitness",
+      reason: "savingThrowOutcomeMismatch",
+    });
+
+    const rerolled = releaseGlyphExplosiveRune({
+      state: luckState,
+      profile,
+      witness: glyphExplosiveRuneReleaseWitness({
+        effect: luckEffect,
+        profile,
+        state: luckState,
+        outcomes: [
+          {
+            targetId: spellTargetId,
+            succeeded: false,
+            naturalD20: DieRollResult(1),
+            d20TestNaturalOneReroll: {
+              kind: "reroll",
+              effectKind: D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND,
+              replacement: {
+                succeeded: true,
+                naturalD20: DieRollResult(12),
+              },
+            },
+          },
+        ],
+      }),
+    });
+
+    expect(rerolled.tag).toBe("released");
+    if (rerolled.tag !== "released") return;
+    expect(Number(rerolled.state.combatants.get(spellTargetId)?.hp)).toBe(38);
+  });
+
+  test("explosive-rune release can clean up a triggered glyph with no creatures in the area", () => {
+    const state = stateWithGlyphEffect(
+      requireCompletedGlyphEffect({
+        anchor: { kind: "surface", areaId: glyphSurfaceAnchorAreaId },
+      }),
+      glyphBattle({ targetHp: 50, targetMaxHp: 50 }),
+    );
+    const released = releaseGlyphExplosiveRune({
+      state,
+      profile: requireGlyphExplosiveRuneProfile(),
+      witness: {
+        kind: "tableWitnessedGlyphExplosiveRuneRelease",
+        triggerOccurrence: glyphTriggerOccurrenceWitness(),
+        coveredAreaId: glyphCoveredAreaId,
+        areaMembership: {
+          kind: "noCreaturesInArea",
+          affectedTargetIds: [],
+        },
+      },
+    });
+
+    expect(released.tag).toBe("released");
+    if (released.tag !== "released") return;
+    expect(glyphEffects(released.state)).toEqual([]);
+    expect(Number(released.state.combatants.get(spellTargetId)?.hp)).toBe(50);
+  });
+
+  test("explosive-rune release requests and consumes Concentration save fills before damage", () => {
+    const baseState = stateWithTargetConcentration(
+      stateWithGlyphEffect(
+        requireCompletedGlyphEffect({
+          anchor: { kind: "surface", areaId: glyphSurfaceAnchorAreaId },
+        }),
+        glyphBattle({ targetHp: 50, targetMaxHp: 50 }),
+      ),
+      spellTargetId,
+    );
+    const effect = glyphEffects(baseState)[0];
+    expect(effect).toBeDefined();
+    if (effect === undefined) return;
+    const profile = requireGlyphExplosiveRuneProfile();
+    const areaMembership = {
+      kind: "creaturesInArea" as const,
+      affectedTargetIds: [spellTargetId] as const,
+      savingThrowOutcomes: [
+        glyphSavingThrowOutcomeFillForTargets({
+          state: baseState,
+          effect,
+          targetIds: [spellTargetId],
+          outcomes: [
+            {
+              targetId: spellTargetId,
+              succeeded: false,
+              withoutRoll: true,
+            },
+          ],
+        }),
+      ],
+      damageRoll: glyphDamageRollFill(
+        glyphExplosiveRuneDamageRollHole({ profile, effect }),
+        [[4, 4, 4, 4, 4]],
+      ),
+      spellDamageReductionRolls: [],
+      concentrationSavingThrows: [],
+      damageDispositions: [],
+      hideousLaughterDamageRepeatSaves: [],
+    };
+    const pending = releaseGlyphExplosiveRune({
+      state: baseState,
+      profile,
+      witness: {
+        kind: "tableWitnessedGlyphExplosiveRuneRelease",
+        triggerOccurrence: glyphTriggerOccurrenceWitness(),
+        coveredAreaId: glyphCoveredAreaId,
+        areaMembership,
+      },
+    });
+
+    expect(pending.tag).toBe("needsHoles");
+    if (pending.tag !== "needsHoles") return;
+    const concentration = requireReleaseHole(
+      pending.holes,
+      "concentrationSavingThrow",
+    );
+    expect(concentration.combatantId).toBe(spellTargetId);
+    expect(Number(concentration.damageAmount)).toBe(20);
+    const failedConcentrationFill = concentrationSavingThrowFill(
+      concentration,
+      false,
+    );
+
+    expect(
+      releaseGlyphExplosiveRune({
+        state: baseState,
+        profile,
+        witness: {
+          kind: "tableWitnessedGlyphExplosiveRuneRelease",
+          triggerOccurrence: glyphTriggerOccurrenceWitness(),
+          coveredAreaId: glyphCoveredAreaId,
+          areaMembership: {
+            ...areaMembership,
+            concentrationSavingThrows: [
+              failedConcentrationFill,
+              failedConcentrationFill,
+            ],
+          },
+        },
+      }),
+    ).toMatchObject({
+      tag: "invalidWitness",
+      reason: "concentrationSavingThrowMismatch",
+    });
+
+    const released = releaseGlyphExplosiveRune({
+      state: baseState,
+      profile,
+      witness: {
+        kind: "tableWitnessedGlyphExplosiveRuneRelease",
+        triggerOccurrence: glyphTriggerOccurrenceWitness(),
+        coveredAreaId: glyphCoveredAreaId,
+        areaMembership: {
+          ...areaMembership,
+          concentrationSavingThrows: [failedConcentrationFill],
+        },
+      },
+    });
+
+    expect(released.tag).toBe("released");
+    if (released.tag !== "released") return;
+    const damagedTarget = released.state.combatants.get(spellTargetId);
+    expect(Number(damagedTarget?.hp)).toBe(30);
+    expect(damagedTarget?.concentration).toBeNull();
+  });
+
+  test("explosive-rune release requests and consumes zero-HP damage disposition fills", () => {
+    const targetResource = unitLibrary.requireUnit(
+      orcRelentlessEnduranceUnitId,
+    );
+    const baseState = stateWithGlyphEffect(
+      requireCompletedGlyphEffect({
+        anchor: { kind: "surface", areaId: glyphSurfaceAnchorAreaId },
+      }),
+      glyphBattle({
+        targetHp: 10,
+        targetMaxHp: 50,
+        targetResources: [{ unit: targetResource }],
+        targetUnitRefs: [
+          {
+            unitId: orcRelentlessEnduranceUnitId,
+            supportProfiles: [ZERO_HIT_POINT_REPLACEMENT_SUPPORT_PROFILE],
+          },
+        ],
+      }),
+    );
+    const effect = glyphEffects(baseState)[0];
+    expect(effect).toBeDefined();
+    if (effect === undefined) return;
+    const profile = requireGlyphExplosiveRuneProfile();
+    const areaMembership = {
+      kind: "creaturesInArea" as const,
+      affectedTargetIds: [spellTargetId] as const,
+      savingThrowOutcomes: [
+        glyphSavingThrowOutcomeFillForTargets({
+          state: baseState,
+          effect,
+          targetIds: [spellTargetId],
+          outcomes: [
+            {
+              targetId: spellTargetId,
+              succeeded: false,
+              withoutRoll: true,
+            },
+          ],
+        }),
+      ],
+      damageRoll: glyphDamageRollFill(
+        glyphExplosiveRuneDamageRollHole({ profile, effect }),
+        [[4, 4, 4, 4, 4]],
+      ),
+      spellDamageReductionRolls: [],
+      concentrationSavingThrows: [],
+      damageDispositions: [],
+      hideousLaughterDamageRepeatSaves: [],
+    };
+    const pending = releaseGlyphExplosiveRune({
+      state: baseState,
+      profile,
+      witness: {
+        kind: "tableWitnessedGlyphExplosiveRuneRelease",
+        triggerOccurrence: glyphTriggerOccurrenceWitness(),
+        coveredAreaId: glyphCoveredAreaId,
+        areaMembership,
+      },
+    });
+
+    expect(pending.tag).toBe("needsHoles");
+    if (pending.tag !== "needsHoles") return;
+    const disposition = requireReleaseHole(
+      pending.holes,
+      "attackDamageDisposition",
+    );
+    expect(disposition.targetId).toBe(spellTargetId);
+    expect(disposition.choices).toContainEqual({
+      kind: "zeroHitPointReplacement",
+      unitId: orcRelentlessEnduranceUnitId,
+    });
+    const replacementDispositionFill = attackDamageDispositionFill(disposition, {
+      kind: "zeroHitPointReplacement",
+      unitId: orcRelentlessEnduranceUnitId,
+    });
+
+    expect(
+      releaseGlyphExplosiveRune({
+        state: baseState,
+        profile,
+        witness: {
+          kind: "tableWitnessedGlyphExplosiveRuneRelease",
+          triggerOccurrence: glyphTriggerOccurrenceWitness(),
+          coveredAreaId: glyphCoveredAreaId,
+          areaMembership: {
+            ...areaMembership,
+            damageDispositions: [
+              replacementDispositionFill,
+              replacementDispositionFill,
+            ],
+          },
+        },
+      }),
+    ).toMatchObject({
+      tag: "invalidWitness",
+      reason: "damageDispositionMismatch",
+    });
+
+    const released = releaseGlyphExplosiveRune({
+      state: baseState,
+      profile,
+      witness: {
+        kind: "tableWitnessedGlyphExplosiveRuneRelease",
+        triggerOccurrence: glyphTriggerOccurrenceWitness(),
+        coveredAreaId: glyphCoveredAreaId,
+        areaMembership: {
+          ...areaMembership,
+          damageDispositions: [replacementDispositionFill],
+        },
+      },
+    });
+
+    expect(released.tag).toBe("released");
+    if (released.tag !== "released") return;
+    const damagedTarget = released.state.combatants.get(spellTargetId);
+    expect(Number(damagedTarget?.hp)).toBe(1);
+  });
+
+  test("explosive-rune release rejects duplicate Hideous Laughter repeat-save fills", () => {
+    const baseState = stateWithTargetHideousLaughter(
+      stateWithGlyphEffect(
+        requireCompletedGlyphEffect({
+          anchor: { kind: "surface", areaId: glyphSurfaceAnchorAreaId },
+        }),
+        glyphBattle({ targetHp: 50, targetMaxHp: 50 }),
+      ),
+      spellTargetId,
+    );
+    const effect = glyphEffects(baseState)[0];
+    expect(effect).toBeDefined();
+    if (effect === undefined) return;
+    const profile = requireGlyphExplosiveRuneProfile();
+    const areaMembership = {
+      kind: "creaturesInArea" as const,
+      affectedTargetIds: [spellTargetId] as const,
+      savingThrowOutcomes: [
+        glyphSavingThrowOutcomeFillForTargets({
+          state: baseState,
+          effect,
+          targetIds: [spellTargetId],
+          outcomes: [
+            {
+              targetId: spellTargetId,
+              succeeded: false,
+              withoutRoll: true,
+            },
+          ],
+        }),
+      ],
+      damageRoll: glyphDamageRollFill(
+        glyphExplosiveRuneDamageRollHole({ profile, effect }),
+        [[4, 4, 4, 4, 4]],
+      ),
+      spellDamageReductionRolls: [],
+      concentrationSavingThrows: [],
+      damageDispositions: [],
+      hideousLaughterDamageRepeatSaves: [],
+    };
+    const pending = releaseGlyphExplosiveRune({
+      state: baseState,
+      profile,
+      witness: {
+        kind: "tableWitnessedGlyphExplosiveRuneRelease",
+        triggerOccurrence: glyphTriggerOccurrenceWitness(),
+        coveredAreaId: glyphCoveredAreaId,
+        areaMembership,
+      },
+    });
+
+    expect(pending.tag).toBe("needsHoles");
+    if (pending.tag !== "needsHoles") return;
+    const repeatSave = requireReleaseHole(pending.holes, "savingThrowOutcome");
+    expect(repeatSave).toMatchObject({
+      hideousLaughterRepeatSave: {
+        targetId: spellTargetId,
+        trigger: "damage",
+      },
+    });
+    const repeatSaveFill = repeatSavingThrowOutcomeFill(repeatSave, [
+      {
+        targetId: spellTargetId,
+        succeeded: false,
+        withoutRoll: true,
+      },
+    ]);
+
+    expect(
+      releaseGlyphExplosiveRune({
+        state: baseState,
+        profile,
+        witness: {
+          kind: "tableWitnessedGlyphExplosiveRuneRelease",
+          triggerOccurrence: glyphTriggerOccurrenceWitness(),
+          coveredAreaId: glyphCoveredAreaId,
+          areaMembership: {
+            ...areaMembership,
+            hideousLaughterDamageRepeatSaves: [repeatSaveFill, repeatSaveFill],
+          },
+        },
+      }),
+    ).toMatchObject({
+      tag: "invalidWitness",
+      reason: "hideousLaughterDamageRepeatSaveMismatch",
+    });
   });
 
   test("movement invalidation consumes cast-location and more-than-threshold witnesses", () => {
@@ -284,9 +1245,20 @@ function requireGlyphProfile(): GlyphDurableOccurrenceProfile {
   return profile;
 }
 
+function requireGlyphExplosiveRuneProfile(): GlyphExplosiveRuneReleaseProfile {
+  const profile = glyphExplosiveRuneReleaseProfileForSpell(
+    spellRecord(glyphOfWardingUnitId),
+  );
+  if (profile === null) {
+    throw new Error("Expected Glyph of Warding explosive rune profile.");
+  }
+  return profile;
+}
+
 function completedGlyphInscriptionWitness(input: {
   readonly anchor: CompletedGlyphInscriptionWitness["anchor"];
   readonly sourceSpellLevel?: BattleSpellEffectLevel;
+  readonly release?: CompletedGlyphInscriptionWitness["release"];
 }): CompletedGlyphInscriptionWitness {
   return {
     kind: "completedGlyphInscription",
@@ -294,6 +1266,7 @@ function completedGlyphInscriptionWitness(input: {
     sourceSpellId: glyphOfWardingUnitId,
     sourceCombatantId: spellCasterId,
     sourceSpellLevel: input.sourceSpellLevel ?? testBattleSpellEffectLevel(3),
+    release: input.release ?? { kind: "explosiveRune", damageType: "thunder" },
     anchor: input.anchor,
     coveredAreaId: glyphCoveredAreaId,
     castLocationId: glyphCastLocationId,
@@ -302,10 +1275,18 @@ function completedGlyphInscriptionWitness(input: {
 
 function requireCompletedGlyphEffect(input: {
   readonly anchor: CompletedGlyphInscriptionWitness["anchor"];
+  readonly sourceSpellLevel?: BattleSpellEffectLevel;
+  readonly release?: CompletedGlyphInscriptionWitness["release"];
 }): GlyphDurableOccurrenceEffect {
   const result = glyphDurableOccurrenceEffectFromCompletedInscription({
     profile: requireGlyphProfile(),
-    witness: completedGlyphInscriptionWitness({ anchor: input.anchor }),
+    witness: completedGlyphInscriptionWitness({
+      anchor: input.anchor,
+      ...(input.sourceSpellLevel === undefined
+        ? {}
+        : { sourceSpellLevel: input.sourceSpellLevel }),
+      ...(input.release === undefined ? {} : { release: input.release }),
+    }),
   });
   if (result.tag !== "created") {
     throw new Error("Expected completed Glyph witness to create an effect.");
@@ -327,12 +1308,24 @@ function movementInvalidationWitness(input: {
   };
 }
 
-function glyphBattle(): BattleState {
-  return spellBattle({ preparedSpells: [], spellSlots: [] });
+function glyphTriggerOccurrenceWitness() {
+  return {
+    kind: "tableWitnessedGlyphTriggerOccurrence" as const,
+    sourceEffectId: glyphSourceEffectId,
+  };
 }
 
-function stateWithGlyphEffect(effect: GlyphDurableOccurrenceEffect): BattleState {
-  const added = addGlyphDurableOccurrence({ state: glyphBattle(), effect });
+function glyphBattle(
+  input: Parameters<typeof spellBattle>[0] = {},
+): BattleState {
+  return spellBattle({ ...input, preparedSpells: [], spellSlots: [] });
+}
+
+function stateWithGlyphEffect(
+  effect: GlyphDurableOccurrenceEffect,
+  state: BattleState = glyphBattle(),
+): BattleState {
+  const added = addGlyphDurableOccurrence({ state, effect });
   if (added.tag !== "added") {
     throw new Error("Expected Glyph occurrence to be added.");
   }
@@ -354,6 +1347,249 @@ function stateWithoutCaster(state: BattleState): BattleState {
   const combatants = new Map(state.combatants);
   combatants.delete(spellCasterId);
   return { ...state, combatants };
+}
+
+function stateWithTargetConcentration(
+  state: BattleState,
+  combatantId: typeof spellTargetId,
+): BattleState {
+  const target = requireCombatant(state, combatantId);
+  return {
+    ...state,
+    combatants: new Map(state.combatants).set(combatantId, {
+      ...target,
+      concentration: {
+        sourceSpellId: glyphOfWardingUnitId,
+        effectKind: "spellEffect",
+      },
+    }),
+  };
+}
+
+function stateWithTargetHideousLaughter(
+  state: BattleState,
+  combatantId: typeof spellTargetId,
+): BattleState {
+  const target = requireCombatant(state, combatantId);
+  const hideousLaughterEffect = {
+    kind: "hideousLaughter",
+    sourceSpellId: "synthetic_laughter",
+    sourceCombatantId: spellCasterId,
+    conditionHadNonSpellProneSource: false,
+    conditionHadNonSpellIncapacitatedSource: false,
+    repeatSaveRollMode: null,
+    save: { ability: "wis", dc: { kind: "caster_spell_save_dc" } },
+    expiresAt: {
+      kind: "concentration",
+      combatantId: spellCasterId,
+      durationTicks: elapsedTimeTicks(60),
+    },
+  } satisfies Extract<BattleActiveEffect, { readonly kind: "hideousLaughter" }>;
+  return {
+    ...state,
+    combatants: new Map(state.combatants).set(combatantId, {
+      ...target,
+      activeEffects: [...target.activeEffects, hideousLaughterEffect],
+    }),
+  };
+}
+
+function stateWithSpellDamageReduction(
+  state: BattleState,
+  targetId: CombatantId,
+  damageType: DamageType,
+): BattleState {
+  const target = requireCombatant(state, targetId);
+  const spellDamageReductionEffect = {
+    kind: "spellDamageReduction",
+    sourceSpellId: glyphOfWardingUnitId,
+    sourceCombatantId: spellCasterId,
+    damageType,
+    amount: { dice: 1, dieSize: 4 },
+    usedThisTurn: false,
+    expiresAt: {
+      kind: "duration",
+      durationTicks: elapsedTimeTicks(60),
+    },
+  } satisfies Extract<
+    BattleActiveEffect,
+    { readonly kind: "spellDamageReduction" }
+  >;
+  return {
+    ...state,
+    combatants: new Map(state.combatants).set(targetId, {
+      ...target,
+      activeEffects: [...target.activeEffects, spellDamageReductionEffect],
+    }),
+  };
+}
+
+function requireCombatant(state: BattleState, combatantId: CombatantId) {
+  const combatant = state.combatants.get(combatantId);
+  if (combatant === undefined) {
+    throw new Error("Expected combatant in Glyph test fixture.");
+  }
+  return combatant;
+}
+
+function requireReleaseHole<K extends BattleHole["kind"]>(
+  holes: readonly BattleHole[],
+  kind: K,
+): Extract<BattleHole, { readonly kind: K }> {
+  const hole = holes.find(
+    (candidate): candidate is Extract<BattleHole, { readonly kind: K }> =>
+      candidate.kind === kind,
+  );
+  if (hole === undefined) {
+    throw new Error(`Expected ${kind} release hole.`);
+  }
+  return hole;
+}
+
+function concentrationSavingThrowFill(
+  hole: Extract<BattleHole, { readonly kind: "concentrationSavingThrow" }>,
+  succeeded: boolean,
+): Extract<BattleFill, { readonly kind: "concentrationSavingThrow" }> {
+  return {
+    kind: "concentrationSavingThrow",
+    holeId: hole.holeId,
+    value: { succeeded, withoutRoll: true },
+  };
+}
+
+function attackDamageDispositionFill(
+  hole: Extract<BattleHole, { readonly kind: "attackDamageDisposition" }>,
+  value: Extract<
+    BattleFill,
+    { readonly kind: "attackDamageDisposition" }
+  >["value"],
+): Extract<BattleFill, { readonly kind: "attackDamageDisposition" }> {
+  return {
+    kind: "attackDamageDisposition",
+    holeId: hole.holeId,
+    value,
+  };
+}
+
+function glyphSavingThrowOutcomeFillForTargets(input: {
+  readonly state: BattleState;
+  readonly effect: GlyphDurableOccurrenceEffect;
+  readonly targetIds: readonly [CombatantId, ...CombatantId[]];
+  readonly outcomes: Extract<
+    BattleFill,
+    { readonly kind: "savingThrowOutcome" }
+  >["value"]["outcomes"];
+}): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {
+  return glyphSavingThrowOutcomeFill(
+    requireGlyphSavingThrowOutcomeHole({
+      state: input.state,
+      effect: input.effect,
+      targetIds: input.targetIds,
+    }),
+    input.outcomes,
+  );
+}
+
+function glyphExplosiveRuneReleaseWitness(input: {
+  readonly state: BattleState;
+  readonly effect: GlyphDurableOccurrenceEffect;
+  readonly profile: GlyphExplosiveRuneReleaseProfile;
+  readonly outcomes: Extract<
+    BattleFill,
+    { readonly kind: "savingThrowOutcome" }
+  >["value"]["outcomes"];
+}) {
+  const targetIds = [spellTargetId] as const;
+  return {
+    kind: "tableWitnessedGlyphExplosiveRuneRelease" as const,
+    triggerOccurrence: glyphTriggerOccurrenceWitness(),
+    coveredAreaId: glyphCoveredAreaId,
+    areaMembership: {
+      kind: "creaturesInArea" as const,
+      affectedTargetIds: targetIds,
+      savingThrowOutcomes: [
+        glyphSavingThrowOutcomeFillForTargets({
+          state: input.state,
+          effect: input.effect,
+          targetIds,
+          outcomes: input.outcomes,
+        }),
+      ],
+      damageRoll: glyphDamageRollFill(
+        glyphExplosiveRuneDamageRollHole({
+          profile: input.profile,
+          effect: input.effect,
+        }),
+        [[5, 5, 5, 5, 5]],
+      ),
+      spellDamageReductionRolls: [],
+      concentrationSavingThrows: [],
+      damageDispositions: [],
+      hideousLaughterDamageRepeatSaves: [],
+    },
+  };
+}
+
+function requireGlyphSavingThrowOutcomeHole(input: {
+  readonly state: BattleState;
+  readonly effect: GlyphDurableOccurrenceEffect;
+  readonly targetIds: readonly [CombatantId, ...CombatantId[]];
+}): NonNullable<ReturnType<typeof glyphExplosiveRuneSavingThrowOutcomeHole>> {
+  const hole = glyphExplosiveRuneSavingThrowOutcomeHole(input);
+  if (hole === null) {
+    throw new Error("Expected Glyph explosive rune Saving Throw outcome hole.");
+  }
+  return hole;
+}
+
+function glyphSavingThrowOutcomeFill(
+  hole: NonNullable<ReturnType<typeof glyphExplosiveRuneSavingThrowOutcomeHole>>,
+  outcomes: Extract<
+    BattleFill,
+    { readonly kind: "savingThrowOutcome" }
+  >["value"]["outcomes"],
+): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {
+  return {
+    kind: "savingThrowOutcome",
+    holeId: hole.holeId,
+    value: { outcomes },
+  };
+}
+
+function repeatSavingThrowOutcomeFill(
+  hole: Extract<BattleHole, { readonly kind: "savingThrowOutcome" }>,
+  outcomes: Extract<
+    BattleFill,
+    { readonly kind: "savingThrowOutcome" }
+  >["value"]["outcomes"],
+): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {
+  return {
+    kind: "savingThrowOutcome",
+    holeId: hole.holeId,
+    value: { outcomes },
+  };
+}
+
+function glyphDamageRollFill(
+  hole: Extract<BattleHole, { readonly kind: "rolledDice" }>,
+  groups: readonly [NonEmptyDamageDice, ...ReadonlyArray<NonEmptyDamageDice>],
+): Extract<BattleFill, { readonly kind: "rolledDice" }> {
+  const [firstGroup, ...remainingGroups] = groups;
+  return {
+    kind: "rolledDice",
+    holeId: hole.holeId,
+    value: [
+      rolledDiceGroupFromNumbers(firstGroup),
+      ...remainingGroups.map(rolledDiceGroupFromNumbers),
+    ],
+  };
+}
+
+function rolledDiceGroupFromNumbers(group: NonEmptyDamageDice): RolledDiceGroup {
+  const [first, ...rest] = group;
+  return {
+    results: [DieRollResult(first), ...rest.map(DieRollResult)],
+  };
 }
 
 function requireGlyphMechanics(spell: SpellRecord): GlyphWardingMechanics {

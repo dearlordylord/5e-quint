@@ -12,6 +12,8 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.HASTE_LETHARGY_LIFECYCLE
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-glyph-durable-occurrence
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.GLYPH_DURABLE_OCCURRENCE_LIFECYCLE
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-glyph-explosive-rune-release
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.GLYPH_EXPLOSIVE_RUNE_RELEASE
 import type { ArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
 import type { ElapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import type { AttackRollMode } from "@dnd/shared-algebras/runtime-hole-algebra";
@@ -320,10 +322,15 @@ export type GlyphDurableOccurrenceAnchor =
       readonly kind: "closeableObject";
       readonly objectId: BattleObjectId;
     };
+export type GlyphDurableOccurrenceRelease = {
+  readonly kind: "explosiveRune";
+  readonly damageType: DamageType;
+};
 export type GlyphDurableOccurrenceActiveEffect = BattleSpellEffectBase & {
   readonly kind: "glyphDurableOccurrence";
   readonly sourceEffectId: BattleSpellEffectOccurrenceId;
   readonly sourceSpellLevel: BattleSpellEffectLevel;
+  readonly release: GlyphDurableOccurrenceRelease;
   readonly anchor: GlyphDurableOccurrenceAnchor;
   readonly coveredAreaId: BattleAreaId;
   readonly castLocationId: BattleTablePositionId;

@@ -159,3 +159,4 @@
 {"profileId":"spell.invocation-acid-arrow-attack-timing","obligationIds":["BATTLE.SPELL.ACID_ARROW_ATTACK_TIMING","BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES"]}
 {"profileId":"spell.invocation-haste-positive","obligationIds":["BATTLE.SPELL.HASTE_POSITIVE_EFFECTS","BATTLE.SPELL.HASTE_LETHARGY_LIFECYCLE","BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS"]}
 {"profileId":"spell.invocation-glyph-durable-occurrence","obligationIds":["BATTLE.SPELL.GLYPH_DURABLE_OCCURRENCE_LIFECYCLE"]}
+{"profileId":"spell.invocation-glyph-explosive-rune-release","obligationIds":["BATTLE.SPELL.GLYPH_EXPLOSIVE_RUNE_RELEASE"]}

@@ -1,18 +1,18 @@
 {
   "summary": {
-    "total": 125,
-    "covered": 119,
+    "total": 126,
+    "covered": 120,
     "open": 0,
     "nonSemantic": 6,
     "byRuntime": {
       "shared-algebras": 1,
-      "battle": 94,
+      "battle": 95,
       "character-creation": 14,
       "character-sheet": 12,
       "character-battle": 4
     },
     "byStatus": {
-      "covered": 119,
+      "covered": 120,
       "needs-qnt-owner": 0,
       "needs-parity-witness": 0,
       "needs-surface-evidence": 0,
@@ -27,14 +27,14 @@
     "qntRegistry[]": "Derived from packages/**/*.qnt excluding .mbt.qnt drivers and *-tests.qnt files, qnt-owner-roles.jsonl, and checker-owned qntRegistryExemptions."
   },
   "battleHoleFrontierSummary": {
-    "total": 157,
+    "total": 159,
     "bySubject": {
-      "battle-hole-family": 75,
+      "battle-hole-family": 77,
       "battle-fill-kind": 46,
       "battle-subject-kind": 36
     },
     "byClassification": {
-      "semantic-frontier": 128,
+      "semantic-frontier": 130,
       "deterministic-boundary-projection": 0,
       "table-owned-fact": 29,
       "unsupported-dead-branch": 0
@@ -4411,7 +4411,7 @@
       "qntOwners": [
         "packages/battle-runtime/battle-runtime-glyph-durable-occurrence.qnt"
       ],
-      "reason": "This Task 26 slice covers only the completed one-hour Glyph inscription boundary: the runtime admits the Surface glyph shape without authored identity dispatch, records the durable Spell Effect occurrence from table-supplied anchor, covered area, cast location, notice, trigger, and movement-invalidation facts, keeps ordinary Magic Action spell invocation from treating creation as an immediate release, and consumes table trigger or moved-more-than-10-feet witnesses to end the occurrence. Explosive rune release, stored spell release, stored Concentration override, component expenditure, geometry derivation, and generic Dispel Magic ending remain deferred to their existing follow-up owners.",
+      "reason": "This Task 26 slice covers only the completed one-hour Glyph inscription boundary: the runtime admits the Surface glyph shape without authored identity dispatch, records the durable Spell Effect occurrence from table-supplied anchor, covered area, cast location, notice, trigger, movement-invalidation, and supported release-profile facts, keeps ordinary Magic Action spell invocation from treating creation as an immediate release, consumes moved-more-than-10-feet witnesses to end the occurrence without triggering, and rejects trigger-only cleanup for release-bearing explosive-rune occurrences. Explosive rune release, stored spell release, stored Concentration override, component expenditure, geometry derivation, and generic Dispel Magic ending remain deferred to their existing follow-up owners.",
       "runtime": "battle",
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer/glyph-durable-occurrence.ts",
@@ -4423,7 +4423,37 @@
         "UBIQUITOUS_LANGUAGE.md#Spell Effect",
         "UBIQUITOUS_LANGUAGE.md#Ability Check"
       ],
-      "title": "Battle Glyph of Warding completed inscription stores a durable occurrence and ends it on trigger or movement invalidation witnesses"
+      "title": "Battle Glyph of Warding completed inscription stores a durable occurrence and ends it on movement invalidation witnesses"
+    },
+    {
+      "id": "BATTLE.SPELL.GLYPH_EXPLOSIVE_RUNE_RELEASE",
+      "kind": "state-transition",
+      "parityWitnesses": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-glyph-of-warding.test.ts"
+        }
+      ],
+      "profiles": [
+        "spell.invocation-glyph-explosive-rune-release"
+      ],
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime-glyph-durable-occurrence.qnt"
+      ],
+      "reason": "This Task 27 slice starts from an existing glyphDurableOccurrence active effect whose completed-inscription witness stored the explosive-rune release branch and Acid/Cold/Fire/Lightning/Thunder damage type chosen at creation. Release validates a tableWitnessedGlyphExplosiveRuneRelease witness for the represented covered area, 20-foot Sphere radius, area membership, a glyph savingThrowOutcome hole/fill carrying Dexterity, the caster spell-save DC, target ids, roll-mode projections, and flat-bonus projections, slot-scaled d8 damage roll, save-half rounding, shared spell-damage reduction roll holes/fills before target damage adjustments, shared Concentration and zero-Hit-Point damage lifecycle holes, Hit Point damage application, and durable occurrence cleanup. It does not own map geometry derivation, component spend, spell-glyph stored spell release, stored Concentration override, or generic Dispel Magic ending.",
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer/glyph-durable-occurrence.ts",
+        "packages/battle-runtime/src/active-effect/types.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Spells/Descriptions-E-L.md#Glyph of Warding",
+        "UBIQUITOUS_LANGUAGE.md#Saving Throw",
+        "UBIQUITOUS_LANGUAGE.md#Damage Type",
+        "UBIQUITOUS_LANGUAGE.md#Area of Effect"
+      ],
+      "title": "Battle Glyph of Warding explosive rune releases save-for-half damage from a durable occurrence"
     }
   ],
   "battleHoleFrontier": [
@@ -4660,6 +4690,20 @@
     {
       "classification": "semantic-frontier",
       "coveredByObligationIds": [
+        "BATTLE.SPELL.GLYPH_EXPLOSIVE_RUNE_RELEASE",
+        "SHARED.HIT_POINTS.POSITIVE_DAMAGE",
+        "BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION",
+        "BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP"
+      ],
+      "followUpTaskIds": [],
+      "holeKind": "rolledDice",
+      "id": "BattleGlyphExplosiveRuneDamageRollHole",
+      "reason": "Glyph explosive-rune damage rolls provide the slot-scaled damage total after triggered area membership and Dexterity save outcomes; the Glyph explosive-rune release obligation owns the rolled-dice hole, save-for-half application, spell-damage reduction roll fills, normal damage lifecycle fills, and occurrence cleanup.",
+      "subject": "battle-hole-family"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
         "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
         "BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION"
       ],
@@ -4865,6 +4909,18 @@
       "holeKind": "savingThrowOutcome",
       "id": "BattleDragonsBreathSavingThrowOutcomeHole",
       "reason": "Dragon's Breath exhale Saving Throw outcomes pair caller/table Cone membership facts with reducer-visible Dexterity save success or failure; table geometry stays boundary-owned while the granted-action obligation owns action spend and save-for-half damage resolution.",
+      "subject": "battle-hole-family"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.SPELL.GLYPH_EXPLOSIVE_RUNE_RELEASE",
+        "BATTLE.TABLE.HOLE_FACT_BOUNDARIES"
+      ],
+      "followUpTaskIds": [],
+      "holeKind": "savingThrowOutcome",
+      "id": "BattleGlyphExplosiveRuneSavingThrowOutcomeHole",
+      "reason": "Glyph explosive-rune Saving Throw outcomes pair caller/table Sphere membership facts with reducer-visible Dexterity save success or failure; table geometry stays boundary-owned while the Glyph explosive-rune release obligation owns caster DC projection, save-for-half damage resolution, and occurrence cleanup.",
       "subject": "battle-hole-family"
     },
     {
@@ -7288,6 +7344,12 @@
         "BATTLE.SPELL.GLYPH_DURABLE_OCCURRENCE_LIFECYCLE"
       ],
       "profileId": "spell.invocation-glyph-durable-occurrence"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.SPELL.GLYPH_EXPLOSIVE_RUNE_RELEASE"
+      ],
+      "profileId": "spell.invocation-glyph-explosive-rune-release"
     }
   ],
   "qntOwnerRoles": [
@@ -9504,9 +9566,10 @@
       "role": "proof-only"
     },
     {
-      "evidence": "packages/battle-runtime/battle-runtime-glyph-durable-occurrence.qnt is proof-only evidence for the Glyph durable occurrence completed-inscription, trigger cleanup, and movement-invalidation boundary.",
+      "evidence": "packages/battle-runtime/battle-runtime-glyph-durable-occurrence.qnt is proof-only evidence for the Glyph durable occurrence completed-inscription, trigger-only cleanup rejection for explosive runes, movement-invalidation, and explosive-rune release boundaries.",
       "obligationIds": [
-        "BATTLE.SPELL.GLYPH_DURABLE_OCCURRENCE_LIFECYCLE"
+        "BATTLE.SPELL.GLYPH_DURABLE_OCCURRENCE_LIFECYCLE",
+        "BATTLE.SPELL.GLYPH_EXPLOSIVE_RUNE_RELEASE"
       ],
       "ownerPath": "packages/battle-runtime/battle-runtime-glyph-durable-occurrence.qnt",
       "role": "proof-only"
@@ -14305,6 +14368,7 @@
     "spell.invocation-fog-cloud-obscurement",
     "spell.invocation-forced-reaction-movement",
     "spell.invocation-glyph-durable-occurrence",
+    "spell.invocation-glyph-explosive-rune-release",
     "spell.invocation-grease-ground-hazard",
     "spell.invocation-gust-of-wind-line",
     "spell.invocation-haste-positive",
