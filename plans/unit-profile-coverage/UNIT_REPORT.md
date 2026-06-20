@@ -1949,6 +1949,7 @@ These profile-subset rows have no selected-identity replay witness, but the decl
 | L3-FOLLOWUP-GLYPH-STORED-SUMMON-OBJECT-PLACEMENT | qnt-proof | `spell.invocation-glyph-stored-summon-object-placement` |
 | L3-FOLLOWUP-GLYPH-STORED-HOSTILE-SUMMON-PLACEMENT | accepted-runtime-closure | _none_ |
 | L3-FOLLOWUP-GLYPH-STORED-HOSTILE-CREATURE-SUMMON-LIFECYCLE | accepted-runtime-closure | _none_ |
+| L3-FOLLOWUP-GLYPH-STORED-HARMFUL-OBJECT-OCCURRENCE-ROUTING | accepted-runtime-closure | _none_ |
 | L3-FOLLOWUP-GLYPH-STORED-SINGLE-CREATURE-ACTIVE-EFFECT-CONCENTRATION | completed-runtime-parity | `spell.invocation-glyph-stored-concentration-full-duration` |
 | L3-FOLLOWUP-GLYPH-STORED-SINGLE-CREATURE-ACTIVE-EFFECT-CONCENTRATION | qnt-proof | `spell.invocation-glyph-stored-concentration-full-duration` |
 

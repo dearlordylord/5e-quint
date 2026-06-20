@@ -17151,6 +17151,12 @@
       "taskId": "L3-FOLLOWUP-GLYPH-STORED-HOSTILE-CREATURE-SUMMON-LIFECYCLE"
     },
     {
+      "claimKind": "accepted-runtime-closure",
+      "note": "Task 37 researched concrete non-Spiritual-Weapon harmful-object stored Glyph releases and records no new runtime profile claim. The hostile-placement classifier still admits only Grease as the represented trap branch and Spiritual Weapon as the represented harmful-object branch. Flaming Sphere and the other represented area ongoing procedures release through centered area witnesses, not a procedure-owned close-placement object/proxy occurrence with attack-route fixation to the triggering creature. Future promotion should start in a concrete harmful-object owner that carries stable object/proxy identity, close-as-possible placement, attack/routing facts, lifecycle, and cleanup before Glyph consumes it.",
+      "profileIds": [],
+      "taskId": "L3-FOLLOWUP-GLYPH-STORED-HARMFUL-OBJECT-OCCURRENCE-ROUTING"
+    },
+    {
       "claimKind": "completed-runtime-parity",
       "note": "Focused battle-runtime tests cover the promoted Glyph stored single-creature active-effect Concentration subset from typed Surface spell_glyph and stored invocation procedure facts without authored-identity dispatch: Shield of Faith, Enlarge, Levitate, Invisibility, Haste, Protection from Evil and Good, and Heroism release against the triggering creature through existing procedure fills, avoid trigger-time spell-slot spend and ordinary caster or triggering-creature Concentration ownership, rewrite created active effects to the stored spell full duration, preserve unrelated readied-spell Concentration/readied spell state, remove the durable occurrence after successful release, and reject non-exact single-creature roll modifiers such as Bless.",
       "profileIds": [

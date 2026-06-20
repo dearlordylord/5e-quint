@@ -223,7 +223,7 @@
     {
       "number": 37,
       "id": "L3-FOLLOWUP-GLYPH-STORED-HARMFUL-OBJECT-OCCURRENCE-ROUTING",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Glyph Stored Harmful Object Occurrence Routing"
     },
     {
@@ -324,7 +324,7 @@ missing-record spells unless a RAW dependency is unavoidable and documented.
 | 34 | L3-FOLLOWUP-GLYPH-STORED-AREA-CONTROL-CONCENTRATION - Glyph Stored Area Control Concentration | done | L3-FOLLOWUP-GLYPH-STORED-REMAINING-CONCENTRATION | Promoted the represented Hypnotic Pattern area-control Concentration release with table Cube affected-creature and sight witnesses centered on the triggering creature, full-duration cleanup, no trigger-time Spell Slot spend, no ordinary Concentration owner, and glyph replay preservation across save-failed interrupts. |
 | 35 | L3-FOLLOWUP-GLYPH-STORED-SINGLE-CREATURE-ACTIVE-EFFECT-CONCENTRATION - Glyph Stored Single-Creature Active-Effect Concentration | done | L3-FOLLOWUP-GLYPH-STORED-REMAINING-CONCENTRATION | Promoted exact single-creature active-effect stored Concentration releases for typed scalar buffs, roll modifiers, size changes, levitation, direct conditions, Haste positive effects, creature-type protection, and condition-immunity plus turn-start Temporary Hit Points; self-transformation retargeting is split to Task 38. |
 | 36 | L3-FOLLOWUP-GLYPH-STORED-HOSTILE-CREATURE-SUMMON-LIFECYCLE - Glyph Stored Hostile Creature Summon Lifecycle | done | L3-FOLLOWUP-GLYPH-STORED-HOSTILE-SUMMON-PLACEMENT | Closed as research/runtime closure: no current SRD stored spell-glyph family creates Hostile battle creatures with an existing summon occurrence owner; no Glyph-local placement registry or support claim is added. |
-| 37 | L3-FOLLOWUP-GLYPH-STORED-HARMFUL-OBJECT-OCCURRENCE-ROUTING - Glyph Stored Harmful Object Occurrence Routing | ready-for-research | L3-FOLLOWUP-GLYPH-STORED-HOSTILE-SUMMON-PLACEMENT | Promote stored spell-glyph releases for non-Spiritual-Weapon harmful object procedures once those procedures own stable occurrence identity, placement, attack/routing, lifecycle, and cleanup facts. |
+| 37 | L3-FOLLOWUP-GLYPH-STORED-HARMFUL-OBJECT-OCCURRENCE-ROUTING - Glyph Stored Harmful Object Occurrence Routing | done | L3-FOLLOWUP-GLYPH-STORED-HOSTILE-SUMMON-PLACEMENT | Closed as research/runtime closure: no current non-Spiritual-Weapon harmful-object stored release is promotable from existing typed procedure owner facts; no Glyph-local object registry or broader support claim is added. |
 | 38 | L3-FOLLOWUP-GLYPH-STORED-SELF-TRANSFORMATION-CONCENTRATION - Glyph Stored Self-Transformation Concentration | ready-for-research | L3-FOLLOWUP-GLYPH-STORED-SINGLE-CREATURE-ACTIVE-EFFECT-CONCENTRATION | Research and either promote or explicitly close stored spell-glyph release for self-transformation Concentration procedures whose existing invocation shape is self-targeted rather than a safe triggering-creature target. |
 
 ## Shared Verification
@@ -2417,7 +2417,7 @@ Plan Impact:
 
 ### Task 37 - L3-FOLLOWUP-GLYPH-STORED-HARMFUL-OBJECT-OCCURRENCE-ROUTING
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -2466,6 +2466,21 @@ Verification:
 - Shared lane verification.
 - Focused owner-package tests, and if battle-runtime behavior changes, update
   the relevant QNT/spec first and run focused MBT per `AGENTS.md`.
+
+Plan Impact:
+
+- Task 37 is complete as a research/runtime-closure task. The hostile-placement
+  classifier still admits only Grease as the represented trap branch and
+  Spiritual Weapon as the represented harmful-object branch.
+- Flaming Sphere and the other represented area ongoing procedures remain owned
+  by Task 33's centered-area stored Concentration release path. They do not
+  carry a procedure-owned close-placement object or proxy occurrence with
+  attack-route fixation to the triggering creature.
+- No still-desired concrete non-Spiritual-Weapon harmful-object release is
+  excluded from this task. A future promotion must start in a concrete
+  harmful-object procedure owner that carries stable object or proxy identity,
+  close-as-possible placement, attack or routing facts, lifecycle, and cleanup
+  before Glyph consumes those facts.
 
 ### Task 38 - L3-FOLLOWUP-GLYPH-STORED-SELF-TRANSFORMATION-CONCENTRATION
 
