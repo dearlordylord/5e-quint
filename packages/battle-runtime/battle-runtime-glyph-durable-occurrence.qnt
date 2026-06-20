@@ -1,7 +1,7 @@
 // -*- mode: Bluespec; -*-
 // KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.GLYPH_DURABLE_OCCURRENCE_LIFECYCLE BATTLE.SPELL.GLYPH_EXPLOSIVE_RUNE_RELEASE BATTLE.SPELL.GLYPH_STORED_SPELL_RELEASE BATTLE.SPELL.GLYPH_STORED_CONCENTRATION_FULL_DURATION
-// UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-glyph-durable-occurrence spell.invocation-glyph-explosive-rune-release spell.invocation-glyph-stored-spell-release spell.invocation-glyph-stored-concentration-full-duration
-// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-glyph-durable-occurrence spell.invocation-glyph-explosive-rune-release spell.invocation-glyph-stored-spell-release spell.invocation-glyph-stored-concentration-full-duration
+// UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-glyph-durable-occurrence spell.invocation-glyph-explosive-rune-release spell.invocation-glyph-stored-spell-release spell.invocation-glyph-stored-concentration-full-duration spell.invocation-glyph-stored-summon-object-placement
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-glyph-durable-occurrence spell.invocation-glyph-explosive-rune-release spell.invocation-glyph-stored-spell-release spell.invocation-glyph-stored-concentration-full-duration spell.invocation-glyph-stored-summon-object-placement
 //
 // RAW trace:
 // - .references/srd-5.2.1/Spells/Descriptions-E-L.md#Glyph of Warding:
@@ -14,9 +14,11 @@
 //   saves, and adds 1d8 per slot level above 3. The spell glyph branch stores
 //   a prepared spell of no higher level than the glyph slot, has no immediate
 //   effect at storage time, and releases the stored spell against or centered
-//   on the triggering creature. The represented hostile trap branch consumes a
-//   close-as-possible placement witness. If the stored spell requires
-//   Concentration, the released spell lasts until the end of its full duration.
+//   on the triggering creature. The represented hostile trap and Spiritual
+//   Weapon harmful-object branches consume close-as-possible placement
+//   witnesses, with Spiritual Weapon repeat targeting fixed to the triggering
+//   creature. If the stored spell requires Concentration, the released spell
+//   lasts until the end of its full duration.
 // - UBIQUITOUS_LANGUAGE.md: Spell Effect, Saving Throw, Area of Effect,
 //   Spell Invocation, Damage Type, and table-owned spatial facts.
 
@@ -36,6 +38,7 @@ module battleRuntimeGlyphDurableOccurrence {
     | StoredSingleCreatureSpell(GlyphStoredSpellReleaseFacts)
     | StoredAreaSpell(GlyphStoredSpellReleaseFacts)
     | StoredHostileTrapSpell(GlyphStoredSpellReleaseFacts)
+    | StoredHarmfulObjectSpell(GlyphStoredSpellReleaseFacts)
 
   type GlyphRelease =
     | ExplosiveRuneRelease(GlyphExplosiveRuneRelease)
@@ -68,11 +71,20 @@ module battleRuntimeGlyphDurableOccurrence {
     savingThrowOutcomeCount: int,
   }
 
-  type GlyphStoredSpellHostilePlacementWitness = {
+  type GlyphStoredSpellHostileTrapPlacementWitness = {
     subject: str,
     areaId: int,
     placement: str,
     attackTargetId: int,
+  }
+
+  type GlyphStoredSpellHarmfulObjectPlacementWitness = {
+    subject: str,
+    positionId: int,
+    placement: str,
+    attackTargetId: int,
+    targetReachPositionId: int,
+    forceReachFeet: int,
   }
 
   type GlyphStoredSpellReleaseWitness =
@@ -90,7 +102,13 @@ module battleRuntimeGlyphDurableOccurrence {
         triggerOccurrence: GlyphTriggerOccurrenceWitness,
         triggeringCreatureId: int,
         areaOriginAnchorId: int,
-        hostilePlacement: GlyphStoredSpellHostilePlacementWitness,
+        hostilePlacement: GlyphStoredSpellHostileTrapPlacementWitness,
+      })
+    | StoredHarmfulObjectReleaseWitness({
+        triggerOccurrence: GlyphTriggerOccurrenceWitness,
+        triggeringCreatureId: int,
+        targetId: int,
+        hostilePlacement: GlyphStoredSpellHarmfulObjectPlacementWitness,
       })
 
   pure val glyphMinimumSpellLevel = 3
@@ -107,7 +125,7 @@ module battleRuntimeGlyphDurableOccurrence {
     Set("acid", "cold", "fire", "lightning", "thunder")
 
   pure val glyphStoredSpellReleaseKinds: Set[str] =
-    Set("singleCreature", "area", "hostileTrap")
+    Set("singleCreature", "area", "hostileTrap", "harmfulObject")
 
   pure val glyphStoredSpellReadiedReleaseProcedure = "readiedSpellRelease"
 
@@ -117,12 +135,16 @@ module battleRuntimeGlyphDurableOccurrence {
 
   pure val glyphStoredSpellGreaseGroundHazardProcedure = "greaseGroundHazard"
 
+  pure val glyphStoredSpellSpiritualWeaponAttackProxyProcedure =
+    "spiritualWeaponAttackProxy"
+
   pure val glyphStoredSpellProcedures: Set[str] =
     Set(
       glyphStoredSpellReadiedReleaseProcedure,
       glyphStoredSpellSaveGatedConditionProcedure,
       glyphStoredSpellSaveGatedDamageProcedure,
       glyphStoredSpellGreaseGroundHazardProcedure,
+      glyphStoredSpellSpiritualWeaponAttackProxyProcedure,
     )
 
   pure val glyphStoredSpellHostilePlacementSubjects: Set[str] =
@@ -130,8 +152,12 @@ module battleRuntimeGlyphDurableOccurrence {
 
   pure val glyphStoredSpellHostileTrapSubject = "traps"
 
+  pure val glyphStoredSpellHarmfulObjectSubject = "harmful_objects"
+
   pure val glyphStoredSpellHostilePlacementRule =
     "as_close_as_possible_to_triggering_creature"
+
+  pure val glyphStoredSpellSpiritualWeaponForceReachFeet = 5
 
   pure val glyphStoredSpellNoImmediateEffect = "none"
 
@@ -143,6 +169,9 @@ module battleRuntimeGlyphDurableOccurrence {
     if (storedSpellProcedure == glyphStoredSpellSaveGatedConditionProcedure)
     storedSpellRequiresConcentration and
       storedReleaseKind == "singleCreature"
+    else if (storedSpellProcedure == glyphStoredSpellSpiritualWeaponAttackProxyProcedure)
+    storedSpellRequiresConcentration and
+      storedReleaseKind == "harmfulObject"
     else not(storedSpellRequiresConcentration)
 
   pure def storedSpellReleaseFacts(
@@ -165,6 +194,8 @@ module battleRuntimeGlyphDurableOccurrence {
     StoredSingleCreatureSpell(facts)
     else if (storedReleaseKind == "hostileTrap")
     StoredHostileTrapSpell(facts)
+    else if (storedReleaseKind == "harmfulObject")
+    StoredHarmfulObjectSpell(facts)
     else StoredAreaSpell(facts)
 
   pure def storedSpellReleaseKind(
@@ -174,6 +205,7 @@ module battleRuntimeGlyphDurableOccurrence {
       | StoredSingleCreatureSpell(_) => "singleCreature"
       | StoredAreaSpell(_) => "area"
       | StoredHostileTrapSpell(_) => "hostileTrap"
+      | StoredHarmfulObjectSpell(_) => "harmfulObject"
     }
 
   pure def storedSpellReleaseFactsFrom(
@@ -183,6 +215,7 @@ module battleRuntimeGlyphDurableOccurrence {
       | StoredSingleCreatureSpell(facts) => facts
       | StoredAreaSpell(facts) => facts
       | StoredHostileTrapSpell(facts) => facts
+      | StoredHarmfulObjectSpell(facts) => facts
     }
 
   pure def completedGlyphInscriptionAccepted(
@@ -390,7 +423,7 @@ module battleRuntimeGlyphDurableOccurrence {
   }
 
   pure def hostileTrapPlacementWitnessAccepted(
-    witness: GlyphStoredSpellHostilePlacementWitness,
+    witness: GlyphStoredSpellHostileTrapPlacementWitness,
     triggeringCreatureId: int,
   ): bool =
     witness.subject.in(glyphStoredSpellHostilePlacementSubjects) and
@@ -398,6 +431,18 @@ module battleRuntimeGlyphDurableOccurrence {
     witness.areaId > 0 and
     witness.placement == glyphStoredSpellHostilePlacementRule and
     witness.attackTargetId == triggeringCreatureId
+
+  pure def harmfulObjectPlacementWitnessAccepted(
+    witness: GlyphStoredSpellHarmfulObjectPlacementWitness,
+    triggeringCreatureId: int,
+  ): bool =
+    witness.subject.in(glyphStoredSpellHostilePlacementSubjects) and
+    witness.subject == glyphStoredSpellHarmfulObjectSubject and
+    witness.positionId > 0 and
+    witness.placement == glyphStoredSpellHostilePlacementRule and
+    witness.attackTargetId == triggeringCreatureId and
+    witness.targetReachPositionId == witness.positionId and
+    witness.forceReachFeet == glyphStoredSpellSpiritualWeaponForceReachFeet
 
   pure def storedSpellReleaseWitnessAcceptedFor(
     occurrence: GlyphOccurrence,
@@ -437,6 +482,21 @@ module battleRuntimeGlyphDurableOccurrence {
                 ) and
                 w.areaOriginAnchorId == w.triggeringCreatureId and
                 hostileTrapPlacementWitnessAccepted(
+                  w.hostilePlacement,
+                  w.triggeringCreatureId,
+                )
+            | _ => false
+          }
+      | StoredHarmfulObjectSpell(_) =>
+          match witness {
+            | StoredHarmfulObjectReleaseWitness(w) =>
+                storedSpellReleaseBaseAccepted(
+                  occurrence,
+                  release,
+                  w.triggerOccurrence.effectId,
+                ) and
+                w.targetId == w.triggeringCreatureId and
+                harmfulObjectPlacementWitnessAccepted(
                   w.hostilePlacement,
                   w.triggeringCreatureId,
                 )
@@ -519,6 +579,14 @@ module battleRuntimeGlyphDurableOccurrence {
         "none",
         false,
         glyphStoredSpellGreaseGroundHazardProcedure,
+      )),
+      assert(completedStoredSpellGlyphInscriptionAccepted(
+        3,
+        2,
+        "harmfulObject",
+        "none",
+        true,
+        glyphStoredSpellSpiritualWeaponAttackProxyProcedure,
       )),
       assert(completedStoredSpellGlyphInscriptionAccepted(
         3,
@@ -621,6 +689,22 @@ module battleRuntimeGlyphDurableOccurrence {
         true,
         glyphStoredSpellSaveGatedConditionProcedure,
       ))),
+      assert(not(completedStoredSpellGlyphInscriptionAccepted(
+        3,
+        2,
+        "harmfulObject",
+        "none",
+        false,
+        glyphStoredSpellSpiritualWeaponAttackProxyProcedure,
+      ))),
+      assert(not(completedStoredSpellGlyphInscriptionAccepted(
+        3,
+        2,
+        "singleCreature",
+        "none",
+        true,
+        glyphStoredSpellSpiritualWeaponAttackProxyProcedure,
+      ))),
     }
   }
 
@@ -654,6 +738,83 @@ module battleRuntimeGlyphDurableOccurrence {
       )),
       assert(glyphStoredSpellReleaseWitnessAccepted(occurrence, acceptedWitness)),
       assert(glyphStoredSpellReleaseOwner(occurrence) == FullDurationStoredConcentrationOwner),
+      assert(not(ended.active)),
+    }
+  }
+
+  run test_stored_harmful_object_release_requires_close_force_witness_and_fixed_target = {
+    val occurrence =
+      completedStoredSpellGlyphOccurrence(
+        1,
+        3,
+        2,
+        "harmfulObject",
+        "none",
+        true,
+        glyphStoredSpellSpiritualWeaponAttackProxyProcedure,
+        200,
+        100,
+      )
+    val placement = {
+      subject: "harmful_objects",
+      positionId: 300,
+      placement: "as_close_as_possible_to_triggering_creature",
+      attackTargetId: 10,
+      targetReachPositionId: 300,
+      forceReachFeet: glyphStoredSpellSpiritualWeaponForceReachFeet,
+    }
+    val acceptedWitness = StoredHarmfulObjectReleaseWitness({
+      triggerOccurrence: { effectId: 1 },
+      triggeringCreatureId: 10,
+      targetId: 10,
+      hostilePlacement: placement,
+    })
+    val ordinarySingleCreatureWitness = StoredSingleCreatureReleaseWitness({
+      triggerOccurrence: { effectId: 1 },
+      triggeringCreatureId: 10,
+      targetId: 10,
+    })
+    val wrongTargetWitness = StoredHarmfulObjectReleaseWitness({
+      triggerOccurrence: { effectId: 1 },
+      triggeringCreatureId: 10,
+      targetId: 11,
+      hostilePlacement: placement,
+    })
+    val wrongPlacementTargetWitness = StoredHarmfulObjectReleaseWitness({
+      triggerOccurrence: { effectId: 1 },
+      triggeringCreatureId: 10,
+      targetId: 10,
+      hostilePlacement: { ...placement, attackTargetId: 11 },
+    })
+    val wrongPlacementSubjectWitness = StoredHarmfulObjectReleaseWitness({
+      triggerOccurrence: { effectId: 1 },
+      triggeringCreatureId: 10,
+      targetId: 10,
+      hostilePlacement: { ...placement, subject: "traps" },
+    })
+    val wrongReachPositionWitness = StoredHarmfulObjectReleaseWitness({
+      triggerOccurrence: { effectId: 1 },
+      triggeringCreatureId: 10,
+      targetId: 10,
+      hostilePlacement: { ...placement, targetReachPositionId: 301 },
+    })
+    val ended = glyphAfterStoredSpellRelease(occurrence, acceptedWitness)
+    all {
+      assert(glyphOccurrenceHasStoredSpellRelease(
+        occurrence,
+        2,
+        "harmfulObject",
+        "none",
+        true,
+        glyphStoredSpellSpiritualWeaponAttackProxyProcedure,
+      )),
+      assert(glyphStoredSpellReleaseWitnessAccepted(occurrence, acceptedWitness)),
+      assert(glyphStoredSpellReleaseOwner(occurrence) == FullDurationStoredConcentrationOwner),
+      assert(not(glyphStoredSpellReleaseWitnessAccepted(occurrence, ordinarySingleCreatureWitness))),
+      assert(not(glyphStoredSpellReleaseWitnessAccepted(occurrence, wrongTargetWitness))),
+      assert(not(glyphStoredSpellReleaseWitnessAccepted(occurrence, wrongPlacementTargetWitness))),
+      assert(not(glyphStoredSpellReleaseWitnessAccepted(occurrence, wrongPlacementSubjectWitness))),
+      assert(not(glyphStoredSpellReleaseWitnessAccepted(occurrence, wrongReachPositionWitness))),
       assert(not(ended.active)),
     }
   }

@@ -1,5 +1,5 @@
 // Held-light, rider, ready, and release spell resolution extracted from spells-resolve.ts.
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spell-created-held-object
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spell-created-held-object spell.invocation-glyph-stored-summon-object-placement
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.remarkable-athlete
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.d20-test-natural-one-reroll
@@ -27,11 +27,13 @@ import {
   type BattleState,
   type BonusActionSpellBattleResolutionInput,
   type ReadiedSpellInvocation,
+  type SpiritualWeaponRepeatTargeting,
+  type SupportedDamageSpellInvocation,
   type SpellMarkedDamageRider,
   type SupportedSpellInvocation,
 } from "../battle-reducer.ts";
 import type { BattleSubject } from "../battle-subjects.ts";
-import type { CombatantId } from "../identity.ts";
+import type { BattleTablePositionId, CombatantId } from "../identity.ts";
 import {
   damageDispositionFillFor,
   damageDispositionFillsValidation,
@@ -88,6 +90,7 @@ import {
   spellTargetIsLegal,
   validateSpellDamageFill,
 } from "./spells-holes-fills.ts";
+import { applySpiritualWeaponAttackProxyEffect } from "./spells-active-effects.ts";
 import { markSpellSlotExpendedThisTurn } from "./spell-turn-resources.ts";
 import { spellRequiresVerbal } from "./spells-discovery.ts";
 import {
@@ -107,7 +110,18 @@ import {
   type SpellFillSet,
 } from "./spells-resolve-fill-set.ts";
 import { concentrationSavingThrowFillFor } from "./spells-resolve-fill-helpers.ts";
-import { spellDancingLightsPlacementHole } from "./spells-targeting.ts";
+import {
+  spellDancingLightsPlacementHole,
+  spiritualWeaponForcePositionHole,
+  spiritualWeaponForcePositionInvalidReason,
+} from "./spells-targeting.ts";
+
+type ReleasableSpellInvocation =
+  | ReadiedSpellInvocation
+  | Extract<
+      SupportedDamageSpellInvocation,
+      { readonly procedure: "spiritualWeaponAttackProxy" }
+    >;
 
 export function resolveReleaseSpellCreatedHeldObjectCommand(
   input: BattleResolutionInputForSubject<
@@ -630,7 +644,7 @@ export function resolveReadySpellAct(
 
 export function resolveSpellRelease(
   input: ActionSpellBattleResolutionInput,
-  invocation: ReadiedSpellInvocation,
+  invocation: ReleasableSpellInvocation,
   options: {
     readonly selfOriginAreaAnchorId?: CombatantId;
     readonly opensSpellCastReactionWindow?: boolean;
@@ -649,6 +663,25 @@ export function resolveSpellRelease(
   const fillSet = spellFillSet(input.fills, invocation);
   if (fillSet.tag === "invalid") {
     return invalidResult(input.state, "invalidFill", fillSet.message);
+  }
+  if (invocation.procedure === "spiritualWeaponAttackProxy") {
+    if (fillSet.spiritualWeaponForcePosition === undefined) {
+      return needsHolesResult(input.state, input.subject, [
+        spiritualWeaponForcePositionHole(invocation),
+      ]);
+    }
+    const spiritualWeaponPlacementError =
+      spiritualWeaponForcePositionInvalidReason(
+        fillSet.spiritualWeaponForcePosition,
+        invocation,
+      );
+    if (spiritualWeaponPlacementError !== null) {
+      return invalidResult(
+        input.state,
+        "invalidFill",
+        spiritualWeaponPlacementError,
+      );
+    }
   }
   if (invocation.procedure === "saveGatedDamage") {
     return resolveSaveGateDamageSpellRelease({
@@ -703,7 +736,10 @@ export function resolveSpellRelease(
   }
   let spellMarkedDamageRiders: readonly SpellMarkedDamageRider[] = [];
   let releaseResolutionStateAfterCriticalMovement: BattleState | null = null;
-  if (invocation.procedure === "spellAttackDamage") {
+  if (
+    invocation.procedure === "spellAttackDamage" ||
+    invocation.procedure === "spiritualWeaponAttackProxy"
+  ) {
     const requiredRollMode = requiredSpellAttackRollMode(
       input.state,
       input.subject.actorId,
@@ -845,8 +881,29 @@ export function resolveSpellRelease(
     if (remarkableAthleteMovement.tag === "result") {
       return remarkableAthleteMovement.result;
     }
+    const spiritualWeaponRepeatTargeting = {
+      kind: "fixedCombatant" as const,
+      combatantId: target.combatantId,
+    };
     releaseResolutionStateAfterCriticalMovement =
-      remarkableAthleteMovement.state;
+      invocation.procedure === "spiritualWeaponAttackProxy" &&
+      fillSet.spiritualWeaponForcePosition !== undefined
+        ? spiritualWeaponReleaseEffectAlreadyApplied({
+            state: remarkableAthleteMovement.state,
+            actorId: input.subject.actorId,
+            invocation,
+            forcePositionId: fillSet.spiritualWeaponForcePosition.positionId,
+            repeatTargeting: spiritualWeaponRepeatTargeting,
+          })
+          ? remarkableAthleteMovement.state
+          : applySpiritualWeaponAttackProxyEffect({
+              state: remarkableAthleteMovement.state,
+              actorId: input.subject.actorId,
+              forcePositionId: fillSet.spiritualWeaponForcePosition.positionId,
+              repeatTargeting: spiritualWeaponRepeatTargeting,
+              invocation,
+            })
+        : remarkableAthleteMovement.state;
     if (hit && fillSet.damageRoll == null) {
       if (fillSet.sourceDamageRollPenaltyRolls.length > 0) {
         return invalidResult(
@@ -903,7 +960,9 @@ export function resolveSpellRelease(
   const releaseDamageBaseState =
     releaseResolutionStateAfterCriticalMovement ?? input.state;
   const effectiveReleaseAttackRoll =
-    invocation.procedure === "spellAttackDamage" && fillSet.attackRoll != null
+    (invocation.procedure === "spellAttackDamage" ||
+      invocation.procedure === "spiritualWeaponAttackProxy") &&
+    fillSet.attackRoll != null
       ? effectiveD20TestNaturalOneRerollAttackRoll(fillSet.attackRoll)
       : undefined;
   const critical =
@@ -1147,4 +1206,45 @@ export function resolveSpellRelease(
     state: resolvedState,
     snapshot: snapshotBattle(resolvedState),
   };
+}
+
+function spiritualWeaponReleaseEffectAlreadyApplied(input: {
+  readonly state: BattleState;
+  readonly actorId: CombatantId;
+  readonly invocation: Extract<
+    SupportedDamageSpellInvocation,
+    { readonly procedure: "spiritualWeaponAttackProxy" }
+  >;
+  readonly forcePositionId: BattleTablePositionId;
+  readonly repeatTargeting: SpiritualWeaponRepeatTargeting;
+}): boolean {
+  return (
+    input.state.combatants.get(input.actorId)?.activeEffects.some(
+      (effect) =>
+        effect.kind === "spiritualWeapon" &&
+        effect.sourceSpellId === input.invocation.spell.id &&
+        effect.sourceCombatantId === input.actorId &&
+        effect.forcePositionId === input.forcePositionId &&
+        spiritualWeaponRepeatTargetingEquals(
+          effect.repeatTargeting,
+          input.repeatTargeting,
+        ),
+    ) ?? false
+  );
+}
+
+function spiritualWeaponRepeatTargetingEquals(
+  left: SpiritualWeaponRepeatTargeting,
+  right: SpiritualWeaponRepeatTargeting,
+): boolean {
+  if (left.kind !== right.kind) {
+    return false;
+  }
+  if (left.kind === "unrestricted") {
+    return true;
+  }
+  return (
+    right.kind === "fixedCombatant" &&
+    left.combatantId === right.combatantId
+  );
 }

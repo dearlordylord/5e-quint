@@ -181,7 +181,7 @@
     {
       "number": 30,
       "id": "L3-FOLLOWUP-GLYPH-STORED-SUMMON-OBJECT-PLACEMENT",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Glyph Stored Summon/Object Placement"
     },
     {
@@ -189,6 +189,12 @@
       "id": "L3-FOLLOWUP-GLYPH-STORED-REMAINING-CONCENTRATION",
       "status": "ready-for-research",
       "title": "Glyph Stored Remaining Concentration Procedures"
+    },
+    {
+      "number": 32,
+      "id": "L3-FOLLOWUP-GLYPH-STORED-HOSTILE-SUMMON-PLACEMENT",
+      "status": "ready-for-research",
+      "title": "Glyph Stored Remaining Summon/Object Placement"
     }
   ]
 }
@@ -271,12 +277,13 @@ missing-record spells unless a RAW dependency is unavoidable and documented.
 | 23 | L3-FOLLOWUP-PHANTOM-STEED-MOUNT-LIFECYCLE - Phantom Steed Mount Lifecycle Runtime | deferred | L5-C21-PHANTOM-STEED-MOUNT-LIFECYCLE | Owner deferred on 2026-06-20 after task-23 review showed this needs mounted/riding control and long-cast owners first; see `plans/ralph-artifacts/phantom-steed-runtime-wip/`. |
 | 24 | L3-FOLLOWUP-PHANTOM-STEED-CREATED-EQUIPMENT - Phantom Steed Created Equipment Cleanup | deferred | L5-C21-PHANTOM-STEED-MOUNT-LIFECYCLE | Owner deferred on 2026-06-20 with the rest of Phantom Steed runtime backlog; requires a generic created object/equipment occurrence owner. |
 | 25 | L3-FOLLOWUP-PHANTOM-STEED-TRAVEL-PACE - Phantom Steed Table Travel Pace | deferred | L5-C21-PHANTOM-STEED-MOUNT-LIFECYCLE | Owner deferred on 2026-06-20 with the rest of Phantom Steed runtime backlog; requires a table travel owner, not battle-map travel state. |
-| 26 | L3-FOLLOWUP-GLYPH-DURABLE-OCCURRENCE - Glyph Durable Occurrence | done | L5-C22-GLYPH-OF-WARDING-RUNTIME | Promoted the completed-inscription durable occurrence owner with trigger cleanup and movement invalidation witnesses; release work is split across Tasks 27-31. |
+| 26 | L3-FOLLOWUP-GLYPH-DURABLE-OCCURRENCE - Glyph Durable Occurrence | done | L5-C22-GLYPH-OF-WARDING-RUNTIME | Promoted the completed-inscription durable occurrence owner with trigger cleanup and movement invalidation witnesses; release work is split across Tasks 27-32. |
 | 27 | L3-FOLLOWUP-GLYPH-EXPLOSIVE-RUNE-RELEASE - Glyph Explosive Rune Release | done | L3-FOLLOWUP-GLYPH-DURABLE-OCCURRENCE | Promoted non-immediate explosive-rune release with area-membership witnesses, damage-type choice, Dexterity Saving Throw half damage, slot scaling, cleanup, and duplicate fill rejection. |
 | 28 | L3-FOLLOWUP-GLYPH-STORED-SPELL-RELEASE - Glyph Stored Spell Release | done | L3-FOLLOWUP-GLYPH-DURABLE-OCCURRENCE | Promoted the non-Concentration stored-spell release subset: stored invocation state, no-immediate-effect storage, trigger retargeting, area centering, represented Grease trap placement, no trigger-time slot spend, and durable occurrence cleanup. |
 | 29 | L3-FOLLOWUP-GLYPH-STORED-CONCENTRATION - Glyph Stored Concentration Override | done | L3-FOLLOWUP-GLYPH-STORED-SPELL-RELEASE | Promoted the supported single-creature save-gated-condition stored Concentration subset to full duration without ordinary caster, triggering-creature, or readied-spell Concentration ownership. |
-| 30 | L3-FOLLOWUP-GLYPH-STORED-SUMMON-OBJECT-PLACEMENT - Glyph Stored Summon/Object Placement | ready-for-research | L3-FOLLOWUP-GLYPH-STORED-SPELL-RELEASE | Promote stored spell-glyph releases whose stored invocation summons Hostile creatures or creates harmful objects, preserving the same close-as-possible placement witness boundary and stored-Concentration full-duration rule when applicable. |
-| 31 | L3-FOLLOWUP-GLYPH-STORED-REMAINING-CONCENTRATION - Glyph Stored Remaining Concentration Procedures | ready-for-research | L3-FOLLOWUP-GLYPH-STORED-CONCENTRATION | Research and promote remaining stored Concentration procedure families outside Task 29's save-gated-condition subset and Task 30's summon/object placement scope. |
+| 30 | L3-FOLLOWUP-GLYPH-STORED-SUMMON-OBJECT-PLACEMENT - Glyph Stored Summon/Object Placement | done | L3-FOLLOWUP-GLYPH-STORED-SPELL-RELEASE | Promoted the represented harmful-object subset: stored Spiritual Weapon attack proxy release consumes close-as-possible placement, fixes repeat attacks to the triggering creature, preserves full-duration expiration, and leaves broader hostile summon/object families to Task 32. |
+| 31 | L3-FOLLOWUP-GLYPH-STORED-REMAINING-CONCENTRATION - Glyph Stored Remaining Concentration Procedures | ready-for-research | L3-FOLLOWUP-GLYPH-STORED-CONCENTRATION | Research and promote remaining stored Concentration procedure families outside Task 29's save-gated-condition subset and the summon/object placement scope owned by Tasks 30 and 32. |
+| 32 | L3-FOLLOWUP-GLYPH-STORED-HOSTILE-SUMMON-PLACEMENT - Glyph Stored Remaining Summon/Object Placement | ready-for-research | L3-FOLLOWUP-GLYPH-STORED-SUMMON-OBJECT-PLACEMENT | Research and promote or split remaining stored spell-glyph releases that summon Hostile creatures or create harmful objects outside Task 30's Spiritual Weapon harmful-object subset. |
 
 ## Shared Verification
 
@@ -1816,10 +1823,10 @@ Plan Impact:
 - Task 29 completes the supported single-creature save-gated-condition stored
   Concentration subset.
 - Stored spell-glyph releases that summon Hostile creatures or create harmful
-  objects remain visible in Task 30 so the full hostile-placement appliesTo set
-  has executable follow-up coverage.
-- Remaining stored Concentration procedure families outside Tasks 29-30 remain
-  visible in Task 31.
+  objects remain visible in Tasks 30 and 32 so the full hostile-placement
+  appliesTo set has executable follow-up coverage.
+- Remaining stored Concentration procedure families outside Tasks 29, 30, and
+  32 remain visible in Task 31.
 
 ### Task 29 - L3-FOLLOWUP-GLYPH-STORED-CONCENTRATION
 
@@ -1876,11 +1883,12 @@ Plan Impact:
 - Task 29 is complete for the supported save-gated-condition stored
   Concentration subset.
 - Stored Concentration procedures outside that subset remain visible in Task 31,
-  except summon/object placement releases, which remain visible in Task 30.
+  except summon/object placement releases, which remain visible in Tasks 30 and
+  32.
 
 ### Task 30 - L3-FOLLOWUP-GLYPH-STORED-SUMMON-OBJECT-PLACEMENT
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -1941,6 +1949,17 @@ Verification:
 - Focused owner-package tests, and if battle-runtime behavior changes, update
   the relevant QNT/spec first and run focused MBT per `AGENTS.md`.
 
+Plan Impact:
+
+- Task 30 is complete for the represented harmful-object subset: stored
+  Spiritual Weapon attack proxy release consumes a close-as-possible force
+  placement witness, fixes the attack and repeat-attack target to the
+  triggering creature, preserves no trigger-time slot spend, and rewrites the
+  resulting Spiritual Weapon effect to full-duration expiration instead of
+  ordinary Concentration ownership.
+- Remaining stored spell-glyph releases that summon Hostile creatures or create
+  non-Spiritual-Weapon harmful objects remain visible in Task 32.
+
 ### Task 31 - L3-FOLLOWUP-GLYPH-STORED-REMAINING-CONCENTRATION
 
 Status: `ready-for-research`
@@ -1965,7 +1984,9 @@ Current state:
 - Task 29 promotes only the supported single-creature save-gated-condition
   stored Concentration subset.
 - The runtime still rejects stored readied-spell Concentration procedures and
-  area Concentration releases outside Task 30's summon/object placement scope.
+  area Concentration releases outside Task 29's save-gated-condition subset,
+  Task 30's Spiritual Weapon harmful-object subset, and Task 32's remaining
+  summon/object placement scope.
 
 Output:
 
@@ -1983,6 +2004,67 @@ Acceptance:
   owner boundaries and task IDs.
 - The owner preserves full-duration cleanup without ordinary caster,
   triggering-creature, or readied-spell Concentration shortcuts.
+
+Verification:
+
+- Shared lane verification.
+- Focused owner-package tests, and if battle-runtime behavior changes, update
+  the relevant QNT/spec first and run focused MBT per `AGENTS.md`.
+
+### Task 32 - L3-FOLLOWUP-GLYPH-STORED-HOSTILE-SUMMON-PLACEMENT
+
+Status: `ready-for-research`
+
+Depends on:
+
+- L3-FOLLOWUP-GLYPH-STORED-SUMMON-OBJECT-PLACEMENT
+
+Unit:
+
+- `glyph_of_warding`
+
+SRD anchors:
+
+- `.references/srd-5.2.1/Spells/Descriptions-E-L.md:842`
+- `.references/srd-5.2.1/Classes/Bard.md:221`
+- `.references/srd-5.2.1/Classes/Cleric.md:211`
+- `.references/srd-5.2.1/Classes/Wizard.md:247`
+
+Current state:
+
+- Task 30 promotes the represented harmful-object subset through stored
+  Spiritual Weapon attack proxy release.
+- Glyph of Warding's typed Surface spell-glyph facts still retain the hostile
+  close-as-possible placement appliesTo set for summoned Hostile creatures and
+  harmful objects beyond that subset.
+- No promoted runtime owner maps stored spell procedures that summon Hostile
+  creatures, or non-Spiritual-Weapon harmful-object procedures, to executable
+  close-as-possible placement witnesses.
+
+Output:
+
+- Research the remaining stored spell-glyph invocation procedures admitted by
+  Surface facts that summon Hostile creatures or create harmful objects outside
+  Task 30's Spiritual Weapon subset.
+- Promote any concrete procedure family that can consume existing typed
+  invocation, targeting, duration, and table-placement facts without
+  authored-identity dispatch.
+- If the remaining families require new summon/object occurrence state,
+  placement facts, companion control, object lifecycle, or attack routing,
+  split them into concrete owner tasks with task IDs instead of broad support
+  claims.
+- Preserve the Glyph full-duration rule for any Concentration family without
+  ordinary caster, triggering-creature, or readied-spell Concentration
+  ownership.
+
+Acceptance:
+
+- Remaining summoned Hostile creature and harmful-object placement families
+  either have supported or profile-subset-supported runtime owners with focused
+  tests and QNT/runtime parity when battle behavior changes, or have concrete
+  follow-up splits with owner boundaries and task IDs.
+- No broader stored summon/object placement claim is made from Task 30's
+  Spiritual Weapon harmful-object subset alone.
 
 Verification:
 

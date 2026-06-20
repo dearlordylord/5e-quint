@@ -4,7 +4,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-web-restraint-hazard
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spike-growth-movement-hazard
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magical-darkness-point-origin
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spiritual-weapon-attack-proxy
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spiritual-weapon-attack-proxy spell.invocation-glyph-stored-summon-object-placement
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-antimagic-field-ongoing-spell-suppression
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.paladin-sacred-weapon
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-acid-arrow-attack-timing
@@ -74,6 +74,7 @@ import {
   type BattleSpellAreaChoice,
   type BattleState,
   type BattleStoredLightEmitter,
+  type SpiritualWeaponRepeatTargeting,
   type SpellCreatedHeldObjectActiveEffect,
   type SpellCreatedHeldObjectState,
   type BattleSpecialSpeedKind,
@@ -1926,6 +1927,7 @@ export function applySpiritualWeaponAttackProxyEffect(input: {
   readonly state: BattleState;
   readonly actorId: CombatantId;
   readonly forcePositionId: BattleTablePositionId;
+  readonly repeatTargeting: SpiritualWeaponRepeatTargeting;
   readonly invocation: Extract<
     SupportedSpellInvocation,
     { readonly procedure: "spiritualWeaponAttackProxy" }
@@ -1958,6 +1960,7 @@ export function applySpiritualWeaponAttackProxyEffect(input: {
       forcePositionId: input.forcePositionId,
       forceReachFeet: input.invocation.forceReachFeet,
       repeatMoveMaxFeet: input.invocation.repeatMoveMaxFeet,
+      repeatTargeting: input.repeatTargeting,
       startedOn: {
         actorId: input.actorId,
         round: input.state.initiative.round,

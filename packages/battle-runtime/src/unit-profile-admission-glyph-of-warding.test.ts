@@ -2,7 +2,8 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3-FOLLOWUP-GLYPH-EXPLOSIVE-RUNE-RELEASE glyph_of_warding
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3-FOLLOWUP-GLYPH-STORED-SPELL-RELEASE glyph_of_warding
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3-FOLLOWUP-GLYPH-STORED-CONCENTRATION glyph_of_warding
-// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-glyph-durable-occurrence spell.invocation-glyph-explosive-rune-release spell.invocation-glyph-stored-spell-release spell.invocation-glyph-stored-concentration-full-duration
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3-FOLLOWUP-GLYPH-STORED-SUMMON-OBJECT-PLACEMENT glyph_of_warding
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-glyph-durable-occurrence spell.invocation-glyph-explosive-rune-release spell.invocation-glyph-stored-spell-release spell.invocation-glyph-stored-concentration-full-duration spell.invocation-glyph-stored-summon-object-placement
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.GLYPH_DURABLE_OCCURRENCE_LIFECYCLE BATTLE.SPELL.GLYPH_EXPLOSIVE_RUNE_RELEASE BATTLE.SPELL.GLYPH_STORED_SPELL_RELEASE BATTLE.SPELL.GLYPH_STORED_CONCENTRATION_FULL_DURATION
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { abilityModifier } from "@dnd/shared-algebras/armor-class-algebra";
@@ -63,6 +64,7 @@ import {
   speciesHalflingLuckUnitId,
   spellCasterId,
   spellTargetId,
+  spiritualWeaponUnitId,
   thunderwaveSecondTargetId,
   thunderwaveUnitId,
   unitLibrary,
@@ -71,10 +73,12 @@ import { attackRollFill } from "./unit-profile-admission-creature-fixture-suppor
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
 import {
   maybeSpellAct,
+  maybeBonusSpellAct,
   greaseSavingThrowOutcomeFill,
   savingThrowOutcomeFill,
-  spellAct,
   spellTargetFill,
+  spiritualWeaponTargetFill,
+  spiritualWeaponForcePositionFill,
   thunderwaveArea,
 } from "./unit-profile-admission-spell-fill-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
@@ -83,6 +87,8 @@ import {
   battleObjectId,
   battleTablePositionId,
   battleD20TestNaturalOneRerollSupportForUnit,
+  discoverBattleActs,
+  endTurn,
   type BattleActiveEffect,
   type BattleFill,
   type BattleHole,
@@ -111,6 +117,9 @@ const glyphCoveredAreaId = battleAreaId("glyph-covered-area");
 const glyphSurfaceAnchorAreaId = battleAreaId("glyph-surface-anchor");
 const glyphCloseableObjectId = battleObjectId("glyph-closeable-object");
 const glyphCastLocationId = battleTablePositionId("glyph-cast-location");
+const glyphHarmfulObjectPositionId = battleTablePositionId(
+  "glyph-harmful-object-position",
+);
 
 describe("SRD Glyph of Warding durable occurrence admission", () => {
   test("admits the durable occurrence profile by Surface shape, not authored identity", () => {
@@ -1067,6 +1076,279 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
     ]);
   });
 
+  test("stored harmful-object release consumes close-placement force witness and lasts full duration", () => {
+    const storedInvocation = storedSpellInvocation(spiritualWeaponUnitId, 2);
+    expect(storedInvocation.procedure).toBe("spiritualWeaponAttackProxy");
+    expect(storedInvocation.spell.mechanics.duration.kind).toBe(
+      "concentration",
+    );
+    const state = stateWithUnrelatedReadiedSpell(
+      stateWithPriorCasterSpellSlotUse(
+        stateWithGlyphEffect(
+          requireCompletedGlyphEffect({
+            anchor: { kind: "surface", areaId: glyphSurfaceAnchorAreaId },
+            release: { kind: "spellGlyph", storedInvocation },
+          }),
+          glyphBattle({
+            preparedSpells: [
+              spellRecord(guidingBoltUnitId),
+              spellRecord(spiritualWeaponUnitId),
+            ],
+            spellSlots: [
+              { spellLevel: 1, count: 1 },
+              { spellLevel: 2, count: 2 },
+            ],
+            targetHp: 20,
+            targetMaxHp: 20,
+          }),
+        ),
+        2,
+      ),
+    );
+    expect(casterSpellSlotExpended(state, 2)).toBe(1);
+    const priorTurnSpellSlotUses =
+      state.currentTurnResources.spellSlotUsesThisTurn;
+    const readiedBefore = state.readiedSpells.get(spellCasterId);
+    const readiedConcentration = {
+      sourceSpellId: guidingBoltUnitId,
+      effectKind: "readiedSpell" as const,
+    };
+
+    expect(
+      releaseGlyphStoredSpell({
+        state,
+        profile: requireGlyphStoredSpellProfile(),
+        witness: storedSingleCreatureReleaseWitness(
+          [],
+          spellTargetId,
+          storedSpiritualWeaponTargetFacts(spellTargetId),
+          storedHostilePlacementNotApplicable(),
+        ),
+      }),
+    ).toMatchObject({
+      tag: "invalidWitness",
+      reason: "hostilePlacementRequired",
+    });
+    expect(
+      releaseGlyphStoredSpell({
+        state,
+        profile: requireGlyphStoredSpellProfile(),
+        witness: storedSingleCreatureReleaseWitness(
+          [],
+          spellCasterId,
+          storedSpiritualWeaponTargetFacts(spellCasterId),
+          storedHarmfulObjectPlacementWitness(),
+        ),
+      }),
+    ).toMatchObject({
+      tag: "invalidWitness",
+      reason: "triggerCreatureTargetMismatch",
+    });
+
+    const needsForcePosition = releaseGlyphStoredSpell({
+      state,
+      profile: requireGlyphStoredSpellProfile(),
+      witness: storedSingleCreatureReleaseWitness(
+        [],
+        spellTargetId,
+        storedSpiritualWeaponTargetFacts(spellTargetId),
+        storedHarmfulObjectPlacementWitness(),
+      ),
+    });
+
+    expect(needsForcePosition.tag).toBe("needsHoles");
+    if (needsForcePosition.tag !== "needsHoles") return;
+    const forcePosition = requireReleaseHole(
+      needsForcePosition.holes,
+      "spiritualWeaponForcePosition",
+    );
+    const forcePositionFill = spiritualWeaponForcePositionFill({
+      hole: forcePosition,
+      positionId: glyphHarmfulObjectPositionId,
+    });
+    const wrongForcePositionFill = spiritualWeaponForcePositionFill({
+      hole: forcePosition,
+      positionId: battleTablePositionId("wrong-glyph-harmful-object"),
+    });
+
+    expect(
+      releaseGlyphStoredSpell({
+        state,
+        profile: requireGlyphStoredSpellProfile(),
+        witness: storedSingleCreatureReleaseWitness(
+          [wrongForcePositionFill],
+          spellTargetId,
+          storedSpiritualWeaponTargetFacts(spellTargetId),
+          storedHarmfulObjectPlacementWitness(),
+        ),
+      }),
+    ).toMatchObject({
+      tag: "invalidWitness",
+      reason: "hostilePlacementPositionMismatch",
+    });
+    expect(
+      releaseGlyphStoredSpell({
+        state,
+        profile: requireGlyphStoredSpellProfile(),
+        witness: storedSingleCreatureReleaseWitness(
+          [forcePositionFill],
+          spellTargetId,
+          storedSpiritualWeaponTargetFacts(
+            spellTargetId,
+            battleTablePositionId("wrong-glyph-harmful-object"),
+          ),
+          storedHarmfulObjectPlacementWitness(),
+        ),
+      }),
+    ).toMatchObject({
+      tag: "invalidWitness",
+      reason: "hostilePlacementReachMismatch",
+    });
+
+    const needsAttackRoll = releaseGlyphStoredSpell({
+      state,
+      profile: requireGlyphStoredSpellProfile(),
+      witness: storedSingleCreatureReleaseWitness(
+        [forcePositionFill],
+        spellTargetId,
+        storedSpiritualWeaponTargetFacts(spellTargetId),
+        storedHarmfulObjectPlacementWitness(),
+      ),
+    });
+
+    expect(needsAttackRoll.tag).toBe("needsHoles");
+    if (needsAttackRoll.tag !== "needsHoles") return;
+    const attackRoll = requireReleaseHole(needsAttackRoll.holes, "attackRoll");
+    expect(attackRoll).toMatchObject({
+      spell: expect.objectContaining({
+        procedure: "spiritualWeaponAttackProxy",
+        spell: expect.objectContaining({ id: spiritualWeaponUnitId }),
+      }),
+    });
+    const needsDamageRoll = releaseGlyphStoredSpell({
+      state,
+      profile: requireGlyphStoredSpellProfile(),
+      witness: storedSingleCreatureReleaseWitness(
+        [
+          forcePositionFill,
+          attackRollFill(attackRoll, { total: 18, naturalD20: 12 }),
+        ],
+        spellTargetId,
+        storedSpiritualWeaponTargetFacts(spellTargetId),
+        storedHarmfulObjectPlacementWitness(),
+      ),
+    });
+
+    expect(needsDamageRoll.tag).toBe("needsHoles");
+    if (needsDamageRoll.tag !== "needsHoles") return;
+    const damageRoll = requireReleaseHole(needsDamageRoll.holes, "rolledDice");
+    const released = releaseGlyphStoredSpell({
+      state,
+      profile: requireGlyphStoredSpellProfile(),
+      witness: storedSingleCreatureReleaseWitness(
+        [
+          forcePositionFill,
+          attackRollFill(attackRoll, { total: 18, naturalD20: 12 }),
+          glyphDamageRollFill(damageRoll, [[5]]),
+        ],
+        spellTargetId,
+        storedSpiritualWeaponTargetFacts(spellTargetId),
+        storedHarmfulObjectPlacementWitness(),
+      ),
+    });
+
+    expect(released.tag).toBe("released");
+    if (released.tag !== "released") return;
+    expect(glyphEffects(released.state)).toEqual([]);
+    expect(Number(released.state.combatants.get(spellTargetId)?.hp)).toBe(12);
+    expect(casterSpellSlotExpended(released.state, 2)).toBe(1);
+    expect(released.state.currentTurnResources.spellSlotUsesThisTurn).toEqual(
+      priorTurnSpellSlotUses,
+    );
+    expect(
+      requireCombatant(released.state, spellCasterId).concentration,
+    ).toEqual(readiedConcentration);
+    expect(released.state.readiedSpells.get(spellCasterId)).toEqual(
+      readiedBefore,
+    );
+    expect(
+      requireCombatant(released.state, spellCasterId).activeEffects,
+    ).toEqual([
+      expect.objectContaining({
+        kind: "spiritualWeapon",
+        sourceSpellId: spiritualWeaponUnitId,
+        sourceCombatantId: spellCasterId,
+        forcePositionId: glyphHarmfulObjectPositionId,
+        forceReachFeet: movementFeet(5),
+        repeatMoveMaxFeet: movementFeet(20),
+        repeatTargeting: {
+          kind: "fixedCombatant",
+          combatantId: spellTargetId,
+        },
+        expiresAt: {
+          kind: "duration",
+          durationTicks: elapsedTimeTicks(10),
+        },
+      }),
+    ]);
+
+    const targetTurn = endTurn({
+      state: released.state,
+      actorId: spellCasterId,
+    });
+    expect(targetTurn.tag).toBe("resolved");
+    if (targetTurn.tag !== "resolved") return;
+    const casterTurn = endTurn({
+      state: targetTurn.state,
+      actorId: spellTargetId,
+    });
+    expect(casterTurn.tag).toBe("resolved");
+    if (casterTurn.tag !== "resolved") return;
+    const repeatAct = discoverBattleActs(casterTurn.state).find(
+      (candidate) =>
+        candidate.subject.tag === "bonusActionSpell" &&
+        candidate.subject.invocation.spellId === spiritualWeaponUnitId &&
+        candidate.subject.invocation.procedure ===
+          "spiritualWeaponRepeatAttack",
+    );
+    expect(repeatAct).toBeDefined();
+    if (repeatAct === undefined) return;
+    const repeatTarget = requireReleaseHole(
+      repeatAct.initialHoles,
+      "targetChoice",
+    );
+    expect(repeatTarget.choices).toEqual([spellTargetId]);
+    const repeatForce = requireReleaseHole(
+      repeatAct.initialHoles,
+      "spiritualWeaponForcePosition",
+    );
+    const repeatForceFill = spiritualWeaponForcePositionFill({
+      hole: repeatForce,
+      positionId: glyphHarmfulObjectPositionId,
+      moveDistanceFeet: 0,
+    });
+    const wrongRepeatTargetFill = spiritualWeaponTargetFill(
+      repeatTarget,
+      spiritualWeaponUnitId,
+      spellCasterId,
+      spellCasterId,
+      glyphHarmfulObjectPositionId,
+    );
+
+    expect(
+      resolveBattleSubject({
+        state: casterTurn.state,
+        subject: repeatAct.subject,
+        fills: [repeatForceFill, wrongRepeatTargetFill],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+      message:
+        "Glyph-stored Spiritual Weapon repeat attacks must target the triggering creature.",
+    });
+  });
+
   test("stored area release requires the area origin to be centered on the triggering creature", () => {
     const state = stateWithGlyphEffect(
       requireCompletedGlyphEffect({
@@ -2018,11 +2300,20 @@ function storedSpellInvocation(
     preparedSpells: [spellRecord(storedSpellId)],
     spellSlots: [{ spellLevel: slotLevel, count: 1 }],
   });
-  const act = spellAct({
-    state,
-    spellId: storedSpellId,
-    slotLevel,
-  });
+  const act =
+    maybeSpellAct({
+      state,
+      spellId: storedSpellId,
+      slotLevel,
+    }) ??
+    maybeBonusSpellAct({
+      state,
+      spellId: storedSpellId,
+      slotLevel,
+    });
+  if (act === undefined) {
+    throw new Error(`Expected ${storedSpellId} stored spell act.`);
+  }
   const spellHole =
     storedSpellInvocationHole(act.initialHoles) ??
     storedSpellInvocationHole(
@@ -2095,6 +2386,11 @@ function storedSingleCreatureReleaseWitness(
   targetSpatialFacts: readonly BattleTargetSpatialFact[] = storedSingleCreatureSpellTargetFacts(
     targetId,
   ),
+  hostilePlacement:
+    | ReturnType<typeof storedHostilePlacementNotApplicable>
+    | ReturnType<
+        typeof storedHarmfulObjectPlacementWitness
+      > = storedHostilePlacementNotApplicable(),
 ) {
   return {
     kind: "tableWitnessedGlyphStoredSpellRelease" as const,
@@ -2105,7 +2401,7 @@ function storedSingleCreatureReleaseWitness(
       targetId,
       targetSpatialFacts,
     },
-    hostilePlacement: storedHostilePlacementNotApplicable(),
+    hostilePlacement,
     fills,
   };
 }
@@ -2120,6 +2416,24 @@ function storedSingleCreatureSpellTargetFacts(
       casterId: spellCasterId,
       targetId,
       spellId,
+    },
+  ];
+}
+
+function storedSpiritualWeaponTargetFacts(
+  targetId: CombatantId,
+  forcePositionId: ReturnType<
+    typeof battleTablePositionId
+  > = glyphHarmfulObjectPositionId,
+): readonly BattleTargetSpatialFact[] {
+  return [
+    {
+      kind: "spiritualWeaponTargetWithinForceReach",
+      casterId: spellCasterId,
+      targetId,
+      spellId: spiritualWeaponUnitId,
+      forcePositionId,
+      reachFeet: movementFeet(5),
     },
   ];
 }
@@ -2155,7 +2469,8 @@ function requireReadiedSpellInvocation(
 ): ReadiedSpellInvocation {
   if (
     invocation.procedure === "greaseGroundHazard" ||
-    invocation.procedure === "saveGatedCondition"
+    invocation.procedure === "saveGatedCondition" ||
+    invocation.procedure === "spiritualWeaponAttackProxy"
   ) {
     throw new Error("Expected a Readied Spell-compatible invocation.");
   }
@@ -2206,6 +2521,7 @@ function storedAreaReleaseWitness(input: {
   readonly hostilePlacement?: ReturnType<
     | typeof storedHostilePlacementNotApplicable
     | typeof storedTrapPlacementWitness
+    | typeof storedHarmfulObjectPlacementWitness
   >;
 }) {
   return {
@@ -2233,6 +2549,16 @@ function storedTrapPlacementWitness() {
     kind: "storedSpellHostilePlacement" as const,
     subject: "traps" as const,
     areaId: greaseAreaId,
+    placement: "as_close_as_possible_to_triggering_creature" as const,
+    attackTargetId: spellTargetId,
+  };
+}
+
+function storedHarmfulObjectPlacementWitness() {
+  return {
+    kind: "storedSpellHostilePlacement" as const,
+    subject: "harmful_objects" as const,
+    positionId: glyphHarmfulObjectPositionId,
     placement: "as_close_as_possible_to_triggering_creature" as const,
     attackTargetId: spellTargetId,
   };

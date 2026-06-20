@@ -1,4 +1,4 @@
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-glyph-durable-occurrence spell.invocation-glyph-explosive-rune-release spell.invocation-glyph-stored-spell-release spell.invocation-glyph-stored-concentration-full-duration
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-glyph-durable-occurrence spell.invocation-glyph-explosive-rune-release spell.invocation-glyph-stored-spell-release spell.invocation-glyph-stored-concentration-full-duration spell.invocation-glyph-stored-summon-object-placement
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.GLYPH_DURABLE_OCCURRENCE_LIFECYCLE BATTLE.SPELL.GLYPH_EXPLOSIVE_RUNE_RELEASE BATTLE.SPELL.GLYPH_STORED_SPELL_RELEASE BATTLE.SPELL.GLYPH_STORED_CONCENTRATION_FULL_DURATION
 //
 // Glyph of Warding durable occurrence boundary.
@@ -154,6 +154,10 @@ type GlyphStoredSpellTargetShape =
   (typeof GLYPH_STORED_SPELL_TARGET_SHAPES)[number];
 type GlyphStoredSpellHostilePlacementSubject =
   (typeof GLYPH_STORED_SPELL_HOSTILE_PLACEMENT_SUBJECTS)[number];
+type GlyphStoredSpellRuntimeHostilePlacementSubject = Extract<
+  GlyphStoredSpellHostilePlacementSubject,
+  "harmful_objects" | "traps"
+>;
 type GlyphDurableOccurrenceStoredSpellRelease = Extract<
   GlyphDurableOccurrenceActiveEffect["release"],
   { readonly kind: "spellGlyph" }
@@ -316,8 +320,15 @@ export type GlyphStoredSpellHostilePlacementWitness =
     }
   | {
       readonly kind: "storedSpellHostilePlacement";
-      readonly subject: GlyphStoredSpellHostilePlacementSubject;
+      readonly subject: "traps";
       readonly areaId: BattleAreaId;
+      readonly placement: "as_close_as_possible_to_triggering_creature";
+      readonly attackTargetId: CombatantId;
+    }
+  | {
+      readonly kind: "storedSpellHostilePlacement";
+      readonly subject: "harmful_objects";
+      readonly positionId: BattleTablePositionId;
       readonly placement: "as_close_as_possible_to_triggering_creature";
       readonly attackTargetId: CombatantId;
     };
@@ -593,6 +604,8 @@ type GlyphStoredSpellReleaseWitnessValidationFailure =
   | "hostilePlacementSubjectMismatch"
   | "hostilePlacementTargetMismatch"
   | "hostilePlacementAreaMismatch"
+  | "hostilePlacementPositionMismatch"
+  | "hostilePlacementReachMismatch"
   | "storedSpellResolutionInvalid";
 
 export function glyphDurableOccurrenceProfileForSpell(
@@ -1386,7 +1399,8 @@ function glyphStoredSpellInvocationSupportsFullDurationOwner(
   invocation: GlyphStoredSpellInvocationCandidate,
 ): boolean {
   return (
-    invocation.procedure === "saveGatedCondition" &&
+    (invocation.procedure === "saveGatedCondition" ||
+      invocation.procedure === "spiritualWeaponAttackProxy") &&
     glyphStoredSpellInvocationRequiresFullDurationOwner(invocation)
   );
 }
@@ -1431,8 +1445,15 @@ function glyphExplosiveRuneDamageTypeSupported(
 function glyphStoredSpellInvocationTargetShape(
   invocation: GlyphStoredSpellInvocation,
 ): GlyphStoredSpellTargetShape | null {
+  const hostilePlacementSubject =
+    glyphStoredSpellInvocationHostilePlacementSubject(invocation);
+  if (hostilePlacementSubject === "harmful_objects") {
+    return invocation.targeting.kind === "singleCombatant"
+      ? "singleCreature"
+      : null;
+  }
   if (
-    !glyphStoredSpellInvocationRequiresHostilePlacementWitness(invocation) &&
+    hostilePlacementSubject === null &&
     (invocation.targeting.kind === "singleCombatant" ||
       invocation.targeting.kind === "singleCreatureOrObject" ||
       glyphStoredSpellInvocationHasExactlyOneTargetListTarget(invocation))
@@ -1489,16 +1510,25 @@ function glyphStoredSpellInvocationHasExactlyOneTargetListTarget(
   );
 }
 
-function glyphStoredSpellInvocationRequiresHostilePlacementWitness(
-  invocation: GlyphStoredSpellInvocation,
-): boolean {
-  return glyphStoredSpellInvocationHostilePlacementSubject(invocation) !== null;
-}
-
 function glyphStoredSpellInvocationHostilePlacementSubject(
   invocation: GlyphStoredSpellInvocation,
-): GlyphStoredSpellHostilePlacementSubject | null {
-  return invocation.procedure === "greaseGroundHazard" ? "traps" : null;
+): GlyphStoredSpellRuntimeHostilePlacementSubject | null {
+  if (invocation.procedure === "greaseGroundHazard") {
+    return "traps";
+  }
+  if (invocation.procedure === "spiritualWeaponAttackProxy") {
+    return "harmful_objects";
+  }
+  return null;
+}
+
+function isGlyphStoredSpiritualWeaponInvocation(
+  invocation: GlyphStoredSpellInvocation,
+): invocation is Extract<
+  GlyphStoredSpellInvocation,
+  { readonly procedure: "spiritualWeaponAttackProxy" }
+> {
+  return invocation.procedure === "spiritualWeaponAttackProxy";
 }
 
 function glyphStoredSpellReleaseWitnessValidation(input: {
@@ -1542,6 +1572,7 @@ function glyphStoredSpellReleaseWitnessValidation(input: {
     {
       profile: input.profile,
       invocation: input.effect.release.storedInvocation,
+      sourceCombatantId: input.effect.sourceCombatantId,
       witness: input.witness,
     },
   );
@@ -1586,6 +1617,7 @@ function isGlyphStoredSpellOccurrence(
 function glyphStoredSpellHostilePlacementValidation(input: {
   readonly profile: GlyphStoredSpellReleaseProfile;
   readonly invocation: GlyphStoredSpellInvocation;
+  readonly sourceCombatantId: CombatantId;
   readonly witness: GlyphStoredSpellReleaseWitness;
 }): GlyphStoredSpellReleaseWitnessValidationFailure | null {
   const expectedSubject = glyphStoredSpellInvocationHostilePlacementSubject(
@@ -1610,6 +1642,44 @@ function glyphStoredSpellHostilePlacementValidation(input: {
   }
   if (hostilePlacement.attackTargetId !== input.witness.triggeringCreatureId) {
     return "hostilePlacementTargetMismatch";
+  }
+  if (hostilePlacement.subject === "harmful_objects") {
+    if (!isGlyphStoredSpiritualWeaponInvocation(input.invocation)) {
+      return "hostilePlacementSubjectMismatch";
+    }
+    const invocation = input.invocation;
+    if (
+      input.witness.targeting.kind !== "storedSpellTargetsTriggeringCreature"
+    ) {
+      return "storedSpellTargetShapeMismatch";
+    }
+    const forcePosition = input.witness.fills.find(
+      (
+        fill,
+      ): fill is Extract<
+        BattleFill,
+        { readonly kind: "spiritualWeaponForcePosition" }
+      > => fill.kind === "spiritualWeaponForcePosition",
+    );
+    if (forcePosition === undefined) {
+      return null;
+    }
+    if (forcePosition.value.positionId !== hostilePlacement.positionId) {
+      return "hostilePlacementPositionMismatch";
+    }
+    const targetWithinPlacedForceReach =
+      input.witness.targeting.targetSpatialFacts.some(
+        (fact) =>
+          fact.kind === "spiritualWeaponTargetWithinForceReach" &&
+          fact.casterId === input.sourceCombatantId &&
+          fact.targetId === input.witness.triggeringCreatureId &&
+          fact.spellId === invocation.spell.id &&
+          fact.forcePositionId === hostilePlacement.positionId &&
+          fact.reachFeet === invocation.forceReachFeet,
+      );
+    return targetWithinPlacedForceReach
+      ? null
+      : "hostilePlacementReachMismatch";
   }
   const areaSave = input.witness.fills.find(
     (
@@ -1768,7 +1838,8 @@ type GlyphStoredSpellFullDurationEffect = Extract<
     readonly kind:
       | "spellCondition"
       | "spellConditionRepeatSave"
-      | "spellConditionEndTurnSave";
+      | "spellConditionEndTurnSave"
+      | "spiritualWeapon";
   }
 >;
 
@@ -1846,7 +1917,8 @@ function glyphStoredSpellFullDurationEffectSupportsExpiration(
   return (
     effect.kind === "spellCondition" ||
     effect.kind === "spellConditionRepeatSave" ||
-    effect.kind === "spellConditionEndTurnSave"
+    effect.kind === "spellConditionEndTurnSave" ||
+    effect.kind === "spiritualWeapon"
   );
 }
 

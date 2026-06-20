@@ -72,24 +72,24 @@
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 126,
-      "numerator": 126,
+      "denominator": 127,
+      "numerator": 127,
       "percent": "100%"
     },
     "qntProofCoverage": {
-      "denominator": 126,
-      "numerator": 123,
+      "denominator": 127,
+      "numerator": 124,
       "percent": "97.6%"
     },
     "rulesKernelCoveredProfileCoverage": {
-      "denominator": 164,
+      "denominator": 165,
       "numerator": 164,
-      "percent": "100%"
+      "percent": "99.4%"
     },
     "rulesKernelProfileJoinCoverage": {
-      "denominator": 164,
+      "denominator": 165,
       "numerator": 164,
-      "percent": "100%"
+      "percent": "99.4%"
     },
     "rulesKernelSupportedUnitCoverage": {
       "denominator": 175,
@@ -97,13 +97,13 @@
       "percent": "100%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 126,
-      "numerator": 126,
+      "denominator": 127,
+      "numerator": 127,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 126,
-      "numerator": 126,
+      "denominator": 127,
+      "numerator": 127,
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
@@ -5532,20 +5532,51 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-glyph-of-warding.test.ts"
         }
       ]
+    },
+    {
+      "id": "spell.invocation-glyph-stored-summon-object-placement",
+      "profileKind": "spell-invocation",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime-glyph-durable-occurrence.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer/glyph-durable-occurrence.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-release.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-targeting.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts",
+        "packages/battle-runtime/src/active-effect/types.ts",
+        "packages/battle-runtime/src/battle-reducer.ts"
+      ],
+      "sourceBoundary": "Battle runtime consumes Glyph of Warding spell-glyph hostile-placement facts and the stored invocation shape without Glyph or stored-spell authored-identity dispatch. The promoted subset is the concrete harmful-object procedure represented by Spiritual Weapon attack-proxy: the completed inscription may store a Concentration spiritualWeaponAttackProxy invocation as a harmful-object release, the release witness must target the triggering creature, consume a close-as-possible harmful-object force-position witness, cross-check force reach for the placed spectral force, resolve the immediate melee Spell Attack without trigger-time spell-slot spend, create a spell-owned Spiritual Weapon active effect whose later repeat targeting is fixed to the triggering creature, rewrite its Concentration expiration to the stored spell full duration, and remove the durable occurrence after successful release. Broader stored Hostile creature summons and other harmful-object procedures remain future concrete procedure follow-ups until they have executable placement, control, target, and duration owners.",
+      "taskRefs": [
+        "L3-FOLLOWUP-GLYPH-STORED-SUMMON-OBJECT-PLACEMENT"
+      ],
+      "title": "Spell invocation releases Glyph stored harmful-object placement from a triggered durable occurrence",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-glyph-durable-occurrence.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-glyph-of-warding.test.ts"
+        }
+      ]
     }
   ],
   "rulesKernelProfileJoin": {
     "denominatorRule": "profile records with rules-kernel profile kinds and either QNT owners or explicit profile-obligation mappings",
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
-        "denominator": 164,
+        "denominator": 165,
         "numerator": 164,
-        "percent": "100%"
+        "percent": "99.4%"
       },
       "rulesKernelProfileJoinCoverage": {
-        "denominator": 164,
+        "denominator": 165,
         "numerator": 164,
-        "percent": "100%"
+        "percent": "99.4%"
       }
     },
     "profileKinds": [
@@ -8359,6 +8390,15 @@
           }
         ],
         "profileId": "spell.invocation-glyph-stored-concentration-full-duration",
+        "profileKind": "spell-invocation",
+        "qntOwners": [
+          "packages/battle-runtime/battle-runtime-glyph-durable-occurrence.qnt"
+        ]
+      },
+      {
+        "joinStatus": "unmapped",
+        "obligations": [],
+        "profileId": "spell.invocation-glyph-stored-summon-object-placement",
         "profileKind": "spell-invocation",
         "qntOwners": [
           "packages/battle-runtime/battle-runtime-glyph-durable-occurrence.qnt"
@@ -13322,7 +13362,8 @@
             "spell.invocation-glyph-durable-occurrence",
             "spell.invocation-glyph-explosive-rune-release",
             "spell.invocation-glyph-stored-spell-release",
-            "spell.invocation-glyph-stored-concentration-full-duration"
+            "spell.invocation-glyph-stored-concentration-full-duration",
+            "spell.invocation-glyph-stored-summon-object-placement"
           ],
           "tag": "profile-subset-supported"
         },
@@ -17019,6 +17060,22 @@
         "spell.invocation-glyph-stored-concentration-full-duration"
       ],
       "taskId": "L3-FOLLOWUP-GLYPH-STORED-CONCENTRATION"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime tests cover the represented Glyph stored harmful-object subset using a stored Spiritual Weapon attack-proxy invocation: no authored-identity dispatch, close-as-possible harmful-object force-position witness, triggering-creature target fixation, force-reach cross-check, no trigger-time spell-slot spend, immediate melee Spell Attack resolution, stored full-duration proxy expiration, preservation of unrelated caster Concentration, durable occurrence cleanup, and later-repeat target lock enforcement.",
+      "profileIds": [
+        "spell.invocation-glyph-stored-summon-object-placement"
+      ],
+      "taskId": "L3-FOLLOWUP-GLYPH-STORED-SUMMON-OBJECT-PLACEMENT"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Leaf package-local Quint proof extends battle-runtime-glyph-durable-occurrence.qnt with a harmfulObject stored release branch for the Spiritual Weapon attack-proxy procedure, requiring Concentration, no immediate storage effect, close-as-possible harmful-object placement, triggering-creature attack target, force-position reach witness, full-duration owner selection, rejection of wrong target/subject/reach witnesses, and durable occurrence cleanup after release.",
+      "profileIds": [
+        "spell.invocation-glyph-stored-summon-object-placement"
+      ],
+      "taskId": "L3-FOLLOWUP-GLYPH-STORED-SUMMON-OBJECT-PLACEMENT"
     }
   ],
   "unitGroupDenominatorAudit": {
@@ -17077,7 +17134,7 @@
         "installedUnitDenominator": 142,
         "kind": "spell",
         "label": "Spell Units",
-        "profileFactDenominator": 141,
+        "profileFactDenominator": 142,
         "profileSubsetSupportedUnits": 19,
         "selectedIdentityDeferredNonApplicableUnits": 0,
         "selectedIdentityReplayDenominator": 112,
@@ -36039,11 +36096,11 @@
           {
             "battleReadinessClosure": {
               "kind": "table-spatial-derivation",
-              "owner": "stored summon/object placement owner",
-              "reason": "Task 30 owns stored spell procedures that summon Hostile creatures or create harmful objects. Those releases must consume the existing close-as-possible placement witness boundary and, when the stored invocation requires Concentration, preserve Glyph full-duration ownership without adding a Glyph-specific placement bypass."
+              "owner": "future concrete stored summon/object procedure owners",
+              "reason": "Task 30 promotes only the represented Spiritual Weapon harmful-object procedure because it already has executable force placement, force reach, attack, repeat, occurrence identity, and duration cleanup owners. Broader Hostile creature summons and other harmful-object procedures still need concrete procedure owners for placement, control/turn protocol, target fixation, and duration cleanup before Glyph can claim them without inventing duplicate summon/object state."
             },
-            "followUpTaskId": "L3-FOLLOWUP-GLYPH-STORED-SUMMON-OBJECT-PLACEMENT",
-            "mechanic": "stored spell-glyph summon/object placement releases, including stored Concentration full-duration handling when applicable"
+            "followUpTaskId": "L3-FOLLOWUP-GLYPH-STORED-HOSTILE-SUMMON-PLACEMENT",
+            "mechanic": "stored spell-glyph Hostile creature summon placement releases and harmful-object procedures beyond the represented Spiritual Weapon attack-proxy subset"
           },
           {
             "battleReadinessClosure": {
@@ -36066,11 +36123,11 @@
         ],
         "followUpTasks": [
           {
-            "id": "L3-FOLLOWUP-GLYPH-STORED-SUMMON-OBJECT-PLACEMENT",
-            "mechanic": "Promote stored spell-glyph releases whose stored invocation summons Hostile creatures or creates harmful objects, preserving the same close-as-possible placement witness boundary and stored-Concentration full-duration rule when applicable.",
-            "owner": "stored summon/object placement owner",
-            "requiredOutput": "Supported or profile-subset-supported stored summon/object placement claim with focused runtime tests and Quint/runtime parity when battle behavior changes; no Glyph authored-identity dispatch or duplicated map/object/summon state.",
-            "title": "Glyph Stored Summon/Object Placement"
+            "id": "L3-FOLLOWUP-GLYPH-STORED-HOSTILE-SUMMON-PLACEMENT",
+            "mechanic": "Promote stored spell-glyph releases whose stored invocation summons Hostile creatures or creates harmful objects beyond the represented Spiritual Weapon attack-proxy subset, preserving close-as-possible placement, attack targeting fixed to the triggering creature when required, and stored-Concentration full-duration ownership when applicable.",
+            "owner": "future concrete stored summon/object procedure owners",
+            "requiredOutput": "Supported or profile-subset-supported stored summon/object placement claim with focused runtime tests and Quint/runtime parity for each concrete procedure; no Glyph authored-identity dispatch, generic placement bypass, or duplicated summon/object state.",
+            "title": "Glyph Stored Hostile Summon Placement"
           },
           {
             "id": "L3-FOLLOWUP-GLYPH-STORED-REMAINING-CONCENTRATION",
@@ -36080,12 +36137,13 @@
             "title": "Glyph Stored Remaining Concentration Procedures"
           }
         ],
-        "futureProfileOwner": "stored summon/object placement, remaining stored Concentration procedures, broader ongoing Spell Effect dispel, and character inventory/equipment component legality owners",
+        "futureProfileOwner": "represented Spiritual Weapon harmful-object placement profile plus future concrete Hostile summon, remaining stored Concentration procedure, broader ongoing Spell Effect dispel, and character inventory/equipment component legality owners",
         "profileIds": [
           "spell.invocation-glyph-durable-occurrence",
           "spell.invocation-glyph-explosive-rune-release",
           "spell.invocation-glyph-stored-spell-release",
-          "spell.invocation-glyph-stored-concentration-full-duration"
+          "spell.invocation-glyph-stored-concentration-full-duration",
+          "spell.invocation-glyph-stored-summon-object-placement"
         ],
         "rawRequirementIds": [
           "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
@@ -36104,7 +36162,8 @@
           "Battle runtime stores an eligible prepared spell-slot invocation from a completedGlyphInscription witness with no immediate storage-time effect and rejects stored spell or selected slot levels above the Glyph source slot.",
           "Battle runtime releases a triggered spell glyph through a tableWitnessedGlyphStoredSpellRelease witness, retargeting single-creature stored spells to the triggering creature, requiring area origins centered on the triggering creature, delegating executable stored-spell holes and resolution including save-gated area damage fills, allowing stored self-origin save-gated areas to use the triggering creature as the release origin, consuming a close-as-possible hostile trap-placement witness for the represented stored Grease hazard branch, avoiding trigger-time spell-slot spend or slot-availability requirements, and removing the durable occurrence after successful release. Stored Concentration release is admitted only by the separate full-duration profile for its supported save-gated-condition subset.",
           "Battle runtime admits the stored Concentration full-duration profile for the supported single-creature save-gated-condition stored-spell subset by typed Surface spell_glyph concentration facts and stored invocation procedure facts rather than Glyph of Warding id, name, slug, provenance section, or spell-list identity.",
-          "Battle runtime releases a triggered stored Concentration save-gated-condition spell so failed-save condition effects last until the stored spell's full duration, without ordinary caster Concentration, triggering-creature Concentration, readied-spell cleanup semantics, trigger-time spell-slot spend, or slot-availability requirements, and preserves unrelated caster Concentration while removing the durable glyph occurrence after successful release."
+          "Battle runtime releases a triggered stored Concentration save-gated-condition spell so failed-save condition effects last until the stored spell's full duration, without ordinary caster Concentration, triggering-creature Concentration, readied-spell cleanup semantics, trigger-time spell-slot spend, or slot-availability requirements, and preserves unrelated caster Concentration while removing the durable glyph occurrence after successful release.",
+          "Battle runtime admits the stored summon/object placement profile for the represented harmful-object subset: a triggered spell glyph can release a stored Spiritual Weapon attack-proxy invocation against the triggering creature, consume a close-as-possible harmful-object force-position witness cross-checked against force reach, avoid trigger-time spell-slot spend, create a spell-owned Spiritual Weapon effect whose later repeat attacks stay fixed to the triggering creature, rewrite the Concentration-owned proxy to the stored spell full duration, preserve unrelated caster Concentration, and remove the durable glyph occurrence after successful release."
         ],
         "tag": "profile-subset-supported"
       },
@@ -36129,6 +36188,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-glyph-of-warding.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "L3-FOLLOWUP-GLYPH-STORED-CONCENTRATION"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-glyph-of-warding.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L3-FOLLOWUP-GLYPH-STORED-SUMMON-OBJECT-PLACEMENT"
         }
       ],
       "executableMechanics": true,
@@ -36227,6 +36291,37 @@
             "L3-FOLLOWUP-GLYPH-STORED-CONCENTRATION"
           ],
           "title": "Spell invocation releases supported Glyph stored Concentration to full duration",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-glyph-durable-occurrence.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-glyph-of-warding.test.ts"
+            }
+          ]
+        },
+        {
+          "id": "spell.invocation-glyph-stored-summon-object-placement",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime-glyph-durable-occurrence.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer/glyph-durable-occurrence.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-resolve-release.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-resolve.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-targeting.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts",
+            "packages/battle-runtime/src/active-effect/types.ts",
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "sourceBoundary": "Battle runtime consumes Glyph of Warding spell-glyph hostile-placement facts and the stored invocation shape without Glyph or stored-spell authored-identity dispatch. The promoted subset is the concrete harmful-object procedure represented by Spiritual Weapon attack-proxy: the completed inscription may store a Concentration spiritualWeaponAttackProxy invocation as a harmful-object release, the release witness must target the triggering creature, consume a close-as-possible harmful-object force-position witness, cross-check force reach for the placed spectral force, resolve the immediate melee Spell Attack without trigger-time spell-slot spend, create a spell-owned Spiritual Weapon active effect whose later repeat targeting is fixed to the triggering creature, rewrite its Concentration expiration to the stored spell full duration, and remove the durable occurrence after successful release. Broader stored Hostile creature summons and other harmful-object procedures remain future concrete procedure follow-ups until they have executable placement, control, target, and duration owners.",
+          "taskRefs": [
+            "L3-FOLLOWUP-GLYPH-STORED-SUMMON-OBJECT-PLACEMENT"
+          ],
+          "title": "Spell invocation releases Glyph stored harmful-object placement from a triggered durable occurrence",
           "verificationOwners": [
             {
               "kind": "qnt-proof",
