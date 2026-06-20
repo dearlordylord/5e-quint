@@ -1,4 +1,5 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-haste-positive
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-glyph-stored-concentration-full-duration
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.HASTE_POSITIVE_EFFECTS
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.HASTE_LETHARGY_LIFECYCLE
 //
@@ -54,6 +55,7 @@ import type {
   SpellAdmissionContext,
   SpellProcedureProfile,
   SpellProcedureProfileResolveInput,
+  SpellProcedureStoredGlyphReleaseOptions,
 } from "./profile.ts";
 import { spellProcedureInvocationSchema } from "./profile.ts";
 
@@ -327,7 +329,8 @@ function resolveHastePositive(
   input: SpellProcedureProfileResolveInput<
     HastePositiveSpellInvocation,
     ActionSpellBattleResolutionInput
-  >,
+  > &
+    SpellProcedureStoredGlyphReleaseOptions,
 ): BattleResolutionResult {
   if (hasNonHastePositiveFill(input.fillSet)) {
     return invalidResult(
@@ -351,40 +354,60 @@ function resolveHastePositive(
     );
   }
 
-  const spellCastReactionWindow = maybeOpenInterruptWindow(
-    input.input.state,
-    spellCastInterruptFrame({
-      casterId: input.actorId,
-      invocation: input.invocation,
-      targetIds: targetSelection.targetIds,
-      reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
-      castingResource: { kind: "magicAction" },
-      continuation: {
-        kind: "replay",
-        subject: input.input.subject,
-        fills: input.input.fills,
-      },
-    }),
-    input.input.handledInterruptTrigger,
-  );
-  if (spellCastReactionWindow !== null) {
-    return spellCastReactionWindow;
+  if (input.opensSpellCastReactionWindow !== false) {
+    const spellCastReactionWindow = maybeOpenInterruptWindow(
+      input.input.state,
+      spellCastInterruptFrame({
+        casterId: input.actorId,
+        invocation: input.invocation,
+        targetIds: targetSelection.targetIds,
+        reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
+        castingResource: { kind: "magicAction" },
+        continuation: {
+          kind: "replay",
+          subject: input.input.subject,
+          fills: input.input.fills,
+        },
+      }),
+      input.input.handledInterruptTrigger,
+    );
+    if (spellCastReactionWindow !== null) {
+      return spellCastReactionWindow;
+    }
   }
 
-  const concentrationBase = spellRequiresConcentration(input.invocation)
-    ? breakBattleConcentration(input.input.state, input.actorId)
-    : input.input.state;
+  const concentrationBase =
+    input.startsOrdinaryConcentration === false
+      ? input.input.state
+      : spellRequiresConcentration(input.invocation)
+        ? breakBattleConcentration(input.input.state, input.actorId)
+        : input.input.state;
   const effected = applyHastePositiveEffects(
     concentrationBase,
     input.actorId,
     targetSelection.targetIds,
     input.invocation,
   );
+  if (input.spendsCastResources === false) {
+    const resolvedState =
+      battleStateWithCurrentActorSpellGrantedActionResourcesForTargets(
+        effected,
+        targetSelection.targetIds,
+      );
+    return {
+      tag: "resolved",
+      state: resolvedState,
+      snapshot: snapshotBattle(resolvedState),
+    };
+  }
   const resourced = spendSpellCastResources({
     state: effected,
     actorId: input.actorId,
     invocation: input.invocation,
     errorState: input.input.state,
+    ...(input.startsOrdinaryConcentration === false
+      ? { startConcentration: false }
+      : {}),
   });
   if (resourced.tag === "invalid") {
     return resourced;

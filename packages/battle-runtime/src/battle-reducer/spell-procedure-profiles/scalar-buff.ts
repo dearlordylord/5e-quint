@@ -1,4 +1,5 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.scalar-buff
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-glyph-stored-concentration-full-duration
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS
 //
 // The scalarBuff Spell Procedure Profile: prepared spells that grant a scalar
@@ -92,6 +93,7 @@ import type {
   SpellAdmissionContext,
   SpellProcedureProfile,
   SpellProcedureProfileResolveInput,
+  SpellProcedureStoredGlyphReleaseOptions,
 } from "./profile.ts";
 import { Schema } from "effect";
 import { spellProcedureInvocationSchema } from "./profile.ts";
@@ -112,7 +114,7 @@ type ScalarBuffResolveInput = SpellProcedureProfileResolveInput<
 > & {
   readonly actionCostOverride?: "magicAction" | "bonusAction";
   readonly metamagicApplications?: readonly SpellMetamagicApplicationFact[];
-};
+} & SpellProcedureStoredGlyphReleaseOptions;
 
 function admitScalarBuff(
   spell: SpellRecord,
@@ -378,28 +380,30 @@ function resolveScalarBuff(
     );
   }
 
-  const spellCastReactionWindow = maybeOpenInterruptWindow(
-    input.input.state,
-    spellCastInterruptFrame({
-      casterId: input.actorId,
-      invocation: input.invocation,
-      targetIds: targetSelection.targetIds,
-      reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
-      castingResource:
-        input.actionCostOverride === "bonusAction" ||
-        input.input.subject.tag === "bonusActionSpell"
-          ? { kind: "bonusAction" }
-          : { kind: "magicAction" },
-      continuation: {
-        kind: "replay",
-        subject: input.input.subject,
-        fills: input.input.fills,
-      },
-    }),
-    input.input.handledInterruptTrigger,
-  );
-  if (spellCastReactionWindow !== null) {
-    return spellCastReactionWindow;
+  if (input.opensSpellCastReactionWindow !== false) {
+    const spellCastReactionWindow = maybeOpenInterruptWindow(
+      input.input.state,
+      spellCastInterruptFrame({
+        casterId: input.actorId,
+        invocation: input.invocation,
+        targetIds: targetSelection.targetIds,
+        reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
+        castingResource:
+          input.actionCostOverride === "bonusAction" ||
+          input.input.subject.tag === "bonusActionSpell"
+            ? { kind: "bonusAction" }
+            : { kind: "magicAction" },
+        continuation: {
+          kind: "replay",
+          subject: input.input.subject,
+          fills: input.input.fills,
+        },
+      }),
+      input.input.handledInterruptTrigger,
+    );
+    if (spellCastReactionWindow !== null) {
+      return spellCastReactionWindow;
+    }
   }
 
   if (
@@ -423,9 +427,12 @@ function resolveScalarBuff(
     }
   }
 
-  const concentrationBase = spellRequiresConcentration(input.invocation)
-    ? breakBattleConcentration(input.input.state, input.actorId)
-    : input.input.state;
+  const concentrationBase =
+    input.startsOrdinaryConcentration === false
+      ? input.input.state
+      : spellRequiresConcentration(input.invocation)
+        ? breakBattleConcentration(input.input.state, input.actorId)
+        : input.input.state;
   const effected = applyScalarBuffEffect(
     concentrationBase,
     input.actorId,
@@ -433,11 +440,21 @@ function resolveScalarBuff(
     input.invocation,
     input.fillSet.healingRoll,
   );
+  if (input.spendsCastResources === false) {
+    return {
+      tag: "resolved",
+      state: effected,
+      snapshot: snapshotBattle(effected),
+    };
+  }
   const resourced = spendSpellCastResources({
     state: effected,
     actorId: input.actorId,
     invocation: input.invocation,
     errorState: input.input.state,
+    ...(input.startsOrdinaryConcentration === false
+      ? { startConcentration: false }
+      : {}),
     ...(input.actionCostOverride === undefined
       ? {}
       : { actionCostOverride: input.actionCostOverride }),

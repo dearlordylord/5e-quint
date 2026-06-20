@@ -1,4 +1,5 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-condition-immunity-turn-start-temporary-hit-points
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-glyph-stored-concentration-full-duration
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS
 //
 // The conditionImmunityAndTurnStartTemporaryHitPoints Spell Procedure Profile:
@@ -45,6 +46,7 @@ import type {
   SpellAdmissionContext,
   SpellProcedureProfile,
   SpellProcedureProfileResolveInput,
+  SpellProcedureStoredGlyphReleaseOptions,
 } from "./profile.ts";
 import { Schema } from "effect";
 import { spellProcedureInvocationSchema } from "./profile.ts";
@@ -243,7 +245,8 @@ function resolveConditionImmunityAndTurnStartTemporaryHitPoints(
   input: SpellProcedureProfileResolveInput<
     ConditionImmunityAndTurnStartTemporaryHitPointsSpellInvocation,
     ActionSpellBattleResolutionInput
-  >,
+  > &
+    SpellProcedureStoredGlyphReleaseOptions,
 ): BattleResolutionResult {
   if (
     input.fillSet.objectTarget !== undefined ||
@@ -291,41 +294,53 @@ function resolveConditionImmunityAndTurnStartTemporaryHitPoints(
     );
   }
 
-  const spellCastReactionWindow = maybeOpenInterruptWindow(
-    input.input.state,
-    spellCastInterruptFrame({
-      casterId: input.actorId,
-      invocation: input.invocation,
-      targetIds: targetSelection.targetIds,
-      reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
-      castingResource: { kind: "magicAction" },
-      continuation: {
-        kind: "replay",
-        subject: input.input.subject,
-        fills: input.input.fills,
-      },
-    }),
-    input.input.handledInterruptTrigger,
-  );
-  if (spellCastReactionWindow !== null) {
-    return spellCastReactionWindow;
+  if (input.opensSpellCastReactionWindow !== false) {
+    const spellCastReactionWindow = maybeOpenInterruptWindow(
+      input.input.state,
+      spellCastInterruptFrame({
+        casterId: input.actorId,
+        invocation: input.invocation,
+        targetIds: targetSelection.targetIds,
+        reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
+        castingResource: { kind: "magicAction" },
+        continuation: {
+          kind: "replay",
+          subject: input.input.subject,
+          fills: input.input.fills,
+        },
+      }),
+      input.input.handledInterruptTrigger,
+    );
+    if (spellCastReactionWindow !== null) {
+      return spellCastReactionWindow;
+    }
   }
 
-  const concentrationBase = breakBattleConcentration(
-    input.input.state,
-    input.actorId,
-  );
+  const concentrationBase =
+    input.startsOrdinaryConcentration === false
+      ? input.input.state
+      : breakBattleConcentration(input.input.state, input.actorId);
   const effected = applyConditionImmunityAndTurnStartTemporaryHitPointsEffects(
     concentrationBase,
     input.actorId,
     targetSelection.targetIds,
     input.invocation,
   );
+  if (input.spendsCastResources === false) {
+    return {
+      tag: "resolved",
+      state: effected,
+      snapshot: snapshotBattle(effected),
+    };
+  }
   const resourced = spendSpellCastResources({
     state: effected,
     actorId: input.actorId,
     invocation: input.invocation,
     errorState: input.input.state,
+    ...(input.startsOrdinaryConcentration === false
+      ? { startConcentration: false }
+      : {}),
   });
   return resourced.tag === "invalid"
     ? resourced

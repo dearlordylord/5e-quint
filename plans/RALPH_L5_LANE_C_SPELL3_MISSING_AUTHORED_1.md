@@ -211,7 +211,7 @@
     {
       "number": 35,
       "id": "L3-FOLLOWUP-GLYPH-STORED-SINGLE-CREATURE-ACTIVE-EFFECT-CONCENTRATION",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Glyph Stored Single-Creature Active-Effect Concentration"
     },
     {
@@ -225,6 +225,12 @@
       "id": "L3-FOLLOWUP-GLYPH-STORED-HARMFUL-OBJECT-OCCURRENCE-ROUTING",
       "status": "ready-for-research",
       "title": "Glyph Stored Harmful Object Occurrence Routing"
+    },
+    {
+      "number": 38,
+      "id": "L3-FOLLOWUP-GLYPH-STORED-SELF-TRANSFORMATION-CONCENTRATION",
+      "status": "ready-for-research",
+      "title": "Glyph Stored Self-Transformation Concentration"
     }
   ]
 }
@@ -307,7 +313,7 @@ missing-record spells unless a RAW dependency is unavoidable and documented.
 | 23 | L3-FOLLOWUP-PHANTOM-STEED-MOUNT-LIFECYCLE - Phantom Steed Mount Lifecycle Runtime | deferred | L5-C21-PHANTOM-STEED-MOUNT-LIFECYCLE | Owner deferred on 2026-06-20 after task-23 review showed this needs mounted/riding control and long-cast owners first; see `plans/ralph-artifacts/phantom-steed-runtime-wip/`. |
 | 24 | L3-FOLLOWUP-PHANTOM-STEED-CREATED-EQUIPMENT - Phantom Steed Created Equipment Cleanup | deferred | L5-C21-PHANTOM-STEED-MOUNT-LIFECYCLE | Owner deferred on 2026-06-20 with the rest of Phantom Steed runtime backlog; requires a generic created object/equipment occurrence owner. |
 | 25 | L3-FOLLOWUP-PHANTOM-STEED-TRAVEL-PACE - Phantom Steed Table Travel Pace | deferred | L5-C21-PHANTOM-STEED-MOUNT-LIFECYCLE | Owner deferred on 2026-06-20 with the rest of Phantom Steed runtime backlog; requires a table travel owner, not battle-map travel state. |
-| 26 | L3-FOLLOWUP-GLYPH-DURABLE-OCCURRENCE - Glyph Durable Occurrence | done | L5-C22-GLYPH-OF-WARDING-RUNTIME | Promoted the completed-inscription durable occurrence owner with trigger cleanup and movement invalidation witnesses; release work is split across Tasks 27-37. |
+| 26 | L3-FOLLOWUP-GLYPH-DURABLE-OCCURRENCE - Glyph Durable Occurrence | done | L5-C22-GLYPH-OF-WARDING-RUNTIME | Promoted the completed-inscription durable occurrence owner with trigger cleanup and movement invalidation witnesses; release work is split across Tasks 27-38. |
 | 27 | L3-FOLLOWUP-GLYPH-EXPLOSIVE-RUNE-RELEASE - Glyph Explosive Rune Release | done | L3-FOLLOWUP-GLYPH-DURABLE-OCCURRENCE | Promoted non-immediate explosive-rune release with area-membership witnesses, damage-type choice, Dexterity Saving Throw half damage, slot scaling, cleanup, and duplicate fill rejection. |
 | 28 | L3-FOLLOWUP-GLYPH-STORED-SPELL-RELEASE - Glyph Stored Spell Release | done | L3-FOLLOWUP-GLYPH-DURABLE-OCCURRENCE | Promoted the non-Concentration stored-spell release subset: stored invocation state, no-immediate-effect storage, trigger retargeting, area centering, represented Grease trap placement, no trigger-time slot spend, and durable occurrence cleanup. |
 | 29 | L3-FOLLOWUP-GLYPH-STORED-CONCENTRATION - Glyph Stored Concentration Override | done | L3-FOLLOWUP-GLYPH-STORED-SPELL-RELEASE | Promoted the supported single-creature save-gated-condition stored Concentration subset to full duration without ordinary caster, triggering-creature, or readied-spell Concentration ownership. |
@@ -316,9 +322,10 @@ missing-record spells unless a RAW dependency is unavoidable and documented.
 | 32 | L3-FOLLOWUP-GLYPH-STORED-HOSTILE-SUMMON-PLACEMENT - Glyph Stored Remaining Summon/Object Placement | done | L3-FOLLOWUP-GLYPH-STORED-SUMMON-OBJECT-PLACEMENT | Closed as research/runtime closure: no additional stored summon/object procedure family is promotable from existing typed invocation and placement facts; remaining work is split into Tasks 36-37. |
 | 33 | L3-FOLLOWUP-GLYPH-STORED-AREA-ONGOING-CONCENTRATION - Glyph Stored Area Ongoing Concentration | done | L3-FOLLOWUP-GLYPH-STORED-REMAINING-CONCENTRATION | Promoted stored spell-glyph releases for represented Fog Cloud, Darkness, Flaming Sphere, Spike Growth, Moonbeam, Web, and Gust of Wind area ongoing Concentration effects. |
 | 34 | L3-FOLLOWUP-GLYPH-STORED-AREA-CONTROL-CONCENTRATION - Glyph Stored Area Control Concentration | done | L3-FOLLOWUP-GLYPH-STORED-REMAINING-CONCENTRATION | Promoted the represented Hypnotic Pattern area-control Concentration release with table Cube affected-creature and sight witnesses centered on the triggering creature, full-duration cleanup, no trigger-time Spell Slot spend, no ordinary Concentration owner, and glyph replay preservation across save-failed interrupts. |
-| 35 | L3-FOLLOWUP-GLYPH-STORED-SINGLE-CREATURE-ACTIVE-EFFECT-CONCENTRATION - Glyph Stored Single-Creature Active-Effect Concentration | ready-for-research | L3-FOLLOWUP-GLYPH-STORED-REMAINING-CONCENTRATION | Promote stored spell-glyph releases for non-damage single-creature Concentration active effects outside the save-gated-condition and save-gated-damage subsets. |
+| 35 | L3-FOLLOWUP-GLYPH-STORED-SINGLE-CREATURE-ACTIVE-EFFECT-CONCENTRATION - Glyph Stored Single-Creature Active-Effect Concentration | done | L3-FOLLOWUP-GLYPH-STORED-REMAINING-CONCENTRATION | Promoted exact single-creature active-effect stored Concentration releases for typed scalar buffs, roll modifiers, size changes, levitation, direct conditions, Haste positive effects, creature-type protection, and condition-immunity plus turn-start Temporary Hit Points; self-transformation retargeting is split to Task 38. |
 | 36 | L3-FOLLOWUP-GLYPH-STORED-HOSTILE-CREATURE-SUMMON-LIFECYCLE - Glyph Stored Hostile Creature Summon Lifecycle | ready-for-research | L3-FOLLOWUP-GLYPH-STORED-HOSTILE-SUMMON-PLACEMENT | Promote stored spell-glyph releases whose stored invocation creates Hostile battle creatures, with concrete summon occurrence, placement, control/turn protocol, attack-target, and full-duration cleanup ownership. |
 | 37 | L3-FOLLOWUP-GLYPH-STORED-HARMFUL-OBJECT-OCCURRENCE-ROUTING - Glyph Stored Harmful Object Occurrence Routing | ready-for-research | L3-FOLLOWUP-GLYPH-STORED-HOSTILE-SUMMON-PLACEMENT | Promote stored spell-glyph releases for non-Spiritual-Weapon harmful object procedures once those procedures own stable occurrence identity, placement, attack/routing, lifecycle, and cleanup facts. |
+| 38 | L3-FOLLOWUP-GLYPH-STORED-SELF-TRANSFORMATION-CONCENTRATION - Glyph Stored Self-Transformation Concentration | ready-for-research | L3-FOLLOWUP-GLYPH-STORED-SINGLE-CREATURE-ACTIVE-EFFECT-CONCENTRATION | Research and either promote or explicitly close stored spell-glyph release for self-transformation Concentration procedures whose existing invocation shape is self-targeted rather than a safe triggering-creature target. |
 
 ## Shared Verification
 
@@ -1736,7 +1743,7 @@ Verification:
 Plan Impact:
 
 - Task 26 is complete. Glyph of Warding can claim the durable occurrence subset
-  only; release work is split across Tasks 27-37 so later slices do not collapse
+  only; release work is split across Tasks 27-38 so later slices do not collapse
   table witnesses, stored invocation state, or stored Concentration ownership.
 - Generic Dispel Magic targeting of Glyph occurrences remains with the existing
   broader ongoing Spell Effect Dispel follow-up, not this Glyph occurrence
@@ -2266,7 +2273,7 @@ Plan Impact:
 
 ### Task 35 - L3-FOLLOWUP-GLYPH-STORED-SINGLE-CREATURE-ACTIVE-EFFECT-CONCENTRATION
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -2313,6 +2320,25 @@ Verification:
 - Shared lane verification.
 - Focused owner-package tests, and if battle-runtime behavior changes, update
   the relevant QNT/spec first and run focused MBT per `AGENTS.md`.
+
+Plan Impact:
+
+- Task 35 is complete for the exact single-creature active-effect stored
+  Concentration subset whose existing procedure profiles already expose safe
+  targeting, duration, and active-effect facts: scalar buffs, exact
+  single-creature roll modifiers, creature size changes, levitated-creature
+  effects, direct conditions, Haste positive effects, creature-type protection,
+  and condition-immunity plus turn-start Temporary Hit Points.
+- Triggered releases use typed spell-glyph and stored invocation facts, avoid
+  trigger-time Spell Slot spend and ordinary caster or triggering-creature
+  Concentration ownership, rewrite created active effects to the stored spell's
+  full duration, preserve unrelated caster/readied-spell Concentration state,
+  and remove the durable glyph occurrence after successful release.
+- Self-transformation-mode stored releases are not claimed here because the
+  existing procedure is self-targeted and its mode-choice/effect ownership does
+  not yet expose a safe triggering-creature retargeting boundary. That remaining
+  transformation question is split into
+  L3-FOLLOWUP-GLYPH-STORED-SELF-TRANSFORMATION-CONCENTRATION.
 
 ### Task 36 - L3-FOLLOWUP-GLYPH-STORED-HOSTILE-CREATURE-SUMMON-LIFECYCLE
 
@@ -2414,6 +2440,67 @@ Acceptance:
 - The owner proves placement, attack/routing, lifecycle, and cleanup facts
   through typed procedure state instead of authored identity or duplicated
   object state.
+
+Verification:
+
+- Shared lane verification.
+- Focused owner-package tests, and if battle-runtime behavior changes, update
+  the relevant QNT/spec first and run focused MBT per `AGENTS.md`.
+
+### Task 38 - L3-FOLLOWUP-GLYPH-STORED-SELF-TRANSFORMATION-CONCENTRATION
+
+Status: `ready-for-research`
+
+Depends on:
+
+- L3-FOLLOWUP-GLYPH-STORED-SINGLE-CREATURE-ACTIVE-EFFECT-CONCENTRATION
+
+Units:
+
+- `glyph_of_warding`
+- `alter_self`
+
+SRD anchors:
+
+- `.references/srd-5.2.1/Spells/Descriptions-E-L.md:842`
+- `.references/srd-5.2.1/Spells/Descriptions-A-D.md:66`
+- `.references/srd-5.2.1/Classes/Sorcerer.md:270`
+- `.references/srd-5.2.1/Classes/Warlock.md:252`
+- `.references/srd-5.2.1/Classes/Wizard.md:198`
+
+Current state:
+
+- Task 35 promotes exact single-creature active-effect stored Concentration
+  releases where existing typed procedure targeting and active-effect facts make
+  release safe.
+- The represented self-transformation procedure is a self-targeted spell
+  invocation with a mode-choice fill and self-owned active-effect replacement
+  protocol. Glyph's spell-glyph trigger retargeting to the triggering creature
+  is not represented as a safe target boundary for that procedure.
+
+Output:
+
+- Research whether SRD Glyph spell-glyph storage admits self-targeted
+  transformation spells under the "single creature or area" storage rule and
+  triggering-creature retargeting rule, using local RAW and `ASSUMPTIONS.md`
+  only.
+- If admissible and representable, promote a typed stored self-transformation
+  release path that consumes the procedure's mode-choice facts, applies the
+  transformation to the triggering creature with full-duration cleanup, skips
+  trigger-time Spell Slot spend, and avoids ordinary Concentration ownership.
+- If not admissible or not safely representable from existing typed facts,
+  close the boundary explicitly with coverage evidence instead of adding a
+  Glyph-local authored-identity exception or self-to-target convention.
+
+Acceptance:
+
+- Stored self-transformation Concentration releases either have a supported or
+  profile-subset-supported runtime owner with focused tests and QNT/runtime
+  parity when battle behavior changes, or have an explicit unsupported closure
+  tied to RAW/ASSUMPTIONS and the missing typed target boundary.
+- The owner does not retarget self-transformation effects by comment,
+  authored-identity dispatch, copied target state, or ordinary Concentration
+  ownership.
 
 Verification:
 

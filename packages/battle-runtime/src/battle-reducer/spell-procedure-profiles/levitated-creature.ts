@@ -1,4 +1,5 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-levitated-creature
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-glyph-stored-concentration-full-duration
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.LEVITATED_CREATURE_LIFECYCLE
 //
 // The levitatedCreature Spell Procedure Profile: a prepared Magic Action spell
@@ -49,6 +50,7 @@ import type {
   SpellAdmissionContext,
   SpellProcedureProfile,
   SpellProcedureProfileResolveInput,
+  SpellProcedureStoredGlyphReleaseOptions,
 } from "./profile.ts";
 import { Schema } from "effect";
 import { spellProcedureInvocationSchema } from "./profile.ts";
@@ -222,7 +224,8 @@ function resolveLevitatedCreature(
   input: SpellProcedureProfileResolveInput<
     LevitatedCreatureInvocation,
     ActionSpellBattleResolutionInput
-  >,
+  > &
+    SpellProcedureStoredGlyphReleaseOptions,
 ): BattleResolutionResult {
   if (
     input.fillSet.objectTarget !== undefined ||
@@ -286,24 +289,26 @@ function resolveLevitatedCreature(
     );
   }
 
-  const spellCastReactionWindow = maybeOpenInterruptWindow(
-    input.input.state,
-    spellCastInterruptFrame({
-      casterId: input.actorId,
-      invocation: input.invocation,
-      targetIds: [target.combatantId],
-      reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
-      castingResource: { kind: "magicAction" },
-      continuation: {
-        kind: "replay",
-        subject: input.input.subject,
-        fills: input.input.fills,
-      },
-    }),
-    input.input.handledInterruptTrigger,
-  );
-  if (spellCastReactionWindow !== null) {
-    return spellCastReactionWindow;
+  if (input.opensSpellCastReactionWindow !== false) {
+    const spellCastReactionWindow = maybeOpenInterruptWindow(
+      input.input.state,
+      spellCastInterruptFrame({
+        casterId: input.actorId,
+        invocation: input.invocation,
+        targetIds: [target.combatantId],
+        reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
+        castingResource: { kind: "magicAction" },
+        continuation: {
+          kind: "replay",
+          subject: input.input.subject,
+          fills: input.input.fills,
+        },
+      }),
+      input.input.handledInterruptTrigger,
+    );
+    if (spellCastReactionWindow !== null) {
+      return spellCastReactionWindow;
+    }
   }
 
   const targetIsWilling = spellTargetIsKnownWilling(
@@ -350,6 +355,13 @@ function resolveLevitatedCreature(
           "Successful Levitate creature saves are unaffected and do not use an initial-rise fill.",
         );
       }
+      if (input.spendsCastResources === false) {
+        return {
+          tag: "resolved",
+          state: input.input.state,
+          snapshot: snapshotBattle(input.input.state),
+        };
+      }
       const resourced = spendSpellCastResources({
         state: input.input.state,
         actorId: input.actorId,
@@ -377,9 +389,12 @@ function resolveLevitatedCreature(
     ]);
   }
 
-  const concentrationBase = spellRequiresConcentration(input.invocation)
-    ? breakBattleConcentration(input.input.state, input.actorId)
-    : input.input.state;
+  const concentrationBase =
+    input.startsOrdinaryConcentration === false
+      ? input.input.state
+      : spellRequiresConcentration(input.invocation)
+        ? breakBattleConcentration(input.input.state, input.actorId)
+        : input.input.state;
   const effected = applyLevitatedCreatureSpellEffect(
     concentrationBase,
     input.actorId,
@@ -387,11 +402,21 @@ function resolveLevitatedCreature(
     input.invocation,
     input.fillSet.levitateInitialRiseFeet,
   );
+  if (input.spendsCastResources === false) {
+    return {
+      tag: "resolved",
+      state: effected,
+      snapshot: snapshotBattle(effected),
+    };
+  }
   const resourced = spendSpellCastResources({
     state: effected,
     actorId: input.actorId,
     invocation: input.invocation,
     errorState: input.input.state,
+    ...(input.startsOrdinaryConcentration === false
+      ? { startConcentration: false }
+      : {}),
   });
   return resourced.tag === "invalid"
     ? resourced

@@ -38,7 +38,11 @@ import type {
   GlyphWardingTrigger,
   SpellRecord,
 } from "@dnd/surface/surface/types";
-import { Either } from "effect";
+import { Either, Match } from "effect";
+import {
+  GLYPH_STORED_SINGLE_CREATURE_ACTIVE_EFFECT_PROCEDURES,
+  type GlyphStoredConcentrationSingleCreatureActiveEffectInvocation,
+} from "../active-effect/types.ts";
 import type {
   BattleActiveEffect,
   BattleActiveEffectExpiration,
@@ -123,6 +127,17 @@ import {
   isGlyphStoredAreaControlSpellInvocation,
   resolveStoredGlyphAreaControlSpellRelease,
 } from "./spell-procedure-profiles/hypnotic-pattern.ts";
+import { conditionImmunityAndTurnStartTemporaryHitPointsProfile } from "./spell-procedure-profiles/condition-immunity-turn-start-temporary-hit-points.ts";
+import {
+  creatureSizeChangeProfile,
+  creatureSizeDecreaseProfile,
+} from "./spell-procedure-profiles/creature-size-change.ts";
+import { creatureTypeProtectionProfile } from "./spell-procedure-profiles/creature-type-protection.ts";
+import { directConditionProfile } from "./spell-procedure-profiles/direct-condition.ts";
+import { hastePositiveProfile } from "./spell-procedure-profiles/haste-positive.ts";
+import { levitatedCreatureProfile } from "./spell-procedure-profiles/levitated-creature.ts";
+import { rollModifierProfile } from "./spell-procedure-profiles/roll-modifier.ts";
+import { scalarBuffProfile } from "./spell-procedure-profiles/scalar-buff.ts";
 import { invalidResult } from "./result-helpers.ts";
 import {
   d20TestNaturalOneRerollOutcomeDecisionRequired,
@@ -160,6 +175,7 @@ const GLYPH_CLOSEABLE_OBJECT_COMMON_EVENTS = [
   "opening_object",
   "seeing_glyph",
 ] as const;
+const byStoredActiveEffectProcedure = Match.discriminator("procedure");
 type GlyphExplosiveRuneDamageType =
   (typeof GLYPH_EXPLOSIVE_RUNE_DAMAGE_TYPES)[number];
 type GlyphStoredSpellTargetShape =
@@ -1425,6 +1441,9 @@ function glyphStoredSpellInvocationSupportsFullDurationOwner(
   if (isGlyphStoredAreaControlSpellInvocation(invocation)) {
     return true;
   }
+  if (isGlyphStoredSingleCreatureActiveEffectSpellInvocation(invocation)) {
+    return true;
+  }
   return (
     invocation.procedure === "saveGatedCondition" ||
     invocation.procedure === "spiritualWeaponAttackProxy"
@@ -1540,6 +1559,18 @@ function glyphStoredSpellInvocationTargetsSingleCreature(
     invocation.targeting.kind === "singleCombatant" ||
     invocation.targeting.kind === "singleCreatureOrObject" ||
     glyphStoredSpellInvocationHasExactlyOneTargetListTarget(invocation)
+  );
+}
+
+function isGlyphStoredSingleCreatureActiveEffectSpellInvocation(
+  invocation: GlyphStoredSpellInvocationCandidate,
+): invocation is GlyphStoredConcentrationSingleCreatureActiveEffectInvocation {
+  return (
+    GLYPH_STORED_SINGLE_CREATURE_ACTIVE_EFFECT_PROCEDURES.some(
+      (procedure) => procedure === invocation.procedure,
+    ) &&
+    glyphStoredSpellInvocationRequiresFullDurationOwner(invocation) &&
+    glyphStoredSpellInvocationTargetsSingleCreature(invocation)
   );
 }
 
@@ -1854,6 +1885,15 @@ function resolveStoredSpellGlyphRelease(input: {
       startsOrdinaryConcentration: false,
     });
   }
+  if (isGlyphStoredSingleCreatureActiveEffectSpellInvocation(invocation)) {
+    return resolveStoredGlyphSingleCreatureActiveEffectSpellRelease({
+      state: input.state,
+      effect: input.effect,
+      witness: input.witness,
+      invocation,
+      handledInterruptTrigger: input.handledInterruptTrigger,
+    });
+  }
   return resolveSpellRelease(
     {
       state: input.state,
@@ -1873,6 +1913,74 @@ function resolveStoredSpellGlyphRelease(input: {
             input.witness.triggeringCreatureId,
           opensSpellCastReactionWindow: false,
         },
+  );
+}
+
+function resolveStoredGlyphSingleCreatureActiveEffectSpellRelease(input: {
+  readonly state: BattleState;
+  readonly effect: GlyphStoredSpellOccurrenceActiveEffect;
+  readonly witness: GlyphStoredSpellReleaseWitness;
+  readonly invocation: GlyphStoredConcentrationSingleCreatureActiveEffectInvocation;
+  readonly handledInterruptTrigger?: BattleInterruptTrigger | undefined;
+}): BattleResolutionResult {
+  const subject = {
+    tag: "actionSpell" as const,
+    actorId: input.effect.sourceCombatantId,
+    invocation: supportedSpellInvocationRef(input.invocation),
+    mode: { tag: "cast" as const },
+  };
+  const fills = glyphStoredSpellReleaseFills(input);
+  const fillSet = spellFillSet(fills, input.invocation);
+  if (fillSet.tag === "invalid") {
+    return invalidResult(input.state, "invalidFill", fillSet.message);
+  }
+  const releaseInput = {
+    input: {
+      state: input.state,
+      subject,
+      fills,
+      handledInterruptTrigger: input.handledInterruptTrigger,
+    },
+    actorId: input.effect.sourceCombatantId,
+    fillSet,
+    opensSpellCastReactionWindow: false,
+    spendsCastResources: false,
+    startsOrdinaryConcentration: false,
+  } as const;
+  return Match.value(input.invocation).pipe(
+    byStoredActiveEffectProcedure("scalarBuff", (invocation) =>
+      scalarBuffProfile.resolve({ ...releaseInput, invocation }),
+    ),
+    byStoredActiveEffectProcedure("rollModifier", (invocation) =>
+      rollModifierProfile.resolve({ ...releaseInput, invocation }),
+    ),
+    byStoredActiveEffectProcedure("creatureSizeIncrease", (invocation) =>
+      creatureSizeChangeProfile.resolve({ ...releaseInput, invocation }),
+    ),
+    byStoredActiveEffectProcedure("creatureSizeDecrease", (invocation) =>
+      creatureSizeDecreaseProfile.resolve({ ...releaseInput, invocation }),
+    ),
+    byStoredActiveEffectProcedure("levitatedCreature", (invocation) =>
+      levitatedCreatureProfile.resolve({ ...releaseInput, invocation }),
+    ),
+    byStoredActiveEffectProcedure("directCondition", (invocation) =>
+      directConditionProfile.resolve({ ...releaseInput, invocation }),
+    ),
+    byStoredActiveEffectProcedure("hastePositive", (invocation) =>
+      hastePositiveProfile.resolve({ ...releaseInput, invocation }),
+    ),
+    byStoredActiveEffectProcedure("creatureTypeProtection", (invocation) =>
+      creatureTypeProtectionProfile.resolve({ ...releaseInput, invocation }),
+    ),
+    byStoredActiveEffectProcedure(
+      "conditionImmunityAndTurnStartTemporaryHitPoints",
+      (invocation) =>
+        conditionImmunityAndTurnStartTemporaryHitPointsProfile.resolve({
+          ...releaseInput,
+          invocation,
+        }),
+    ),
+    Match.exhaustive,
   );
 }
 
@@ -1901,6 +2009,25 @@ function glyphStoredSpellReleaseFills(input: {
     return input.witness.fills;
   }
   if (input.witness.targeting.kind === "storedSpellTargetsTriggeringCreature") {
+    if (
+      glyphStoredSingleCreatureActiveEffectUsesTargetChoiceFill(
+        input.effect.release.storedInvocation,
+      )
+    ) {
+      return [
+        {
+          kind: "targetChoice",
+          holeId: spellTargetHole(
+            input.state,
+            input.effect.sourceCombatantId,
+            input.effect.release.storedInvocation,
+          ).holeId,
+          value: input.witness.targeting.targetId,
+          spatialFacts: input.witness.targeting.targetSpatialFacts,
+        },
+        ...input.witness.fills,
+      ];
+    }
     if (
       isTargetListSpellInvocation(input.effect.release.storedInvocation) &&
       input.effect.release.storedInvocation.targeting.kind === "targetList"
@@ -1939,6 +2066,15 @@ function glyphStoredSpellReleaseFills(input: {
   return input.witness.fills;
 }
 
+function glyphStoredSingleCreatureActiveEffectUsesTargetChoiceFill(
+  invocation: GlyphStoredSpellInvocation,
+): boolean {
+  return (
+    isGlyphStoredSingleCreatureActiveEffectSpellInvocation(invocation) &&
+    invocation.procedure !== "directCondition"
+  );
+}
+
 function glyphStoredSpellTargetListSpatialFacts(input: {
   readonly effect: GlyphStoredSpellOccurrenceActiveEffect;
   readonly targeting: GlyphStoredSpellSingleCreatureRetargetingWitness;
@@ -1972,7 +2108,24 @@ type GlyphStoredSpellFullDurationEffect = Extract<
       | "moonbeam"
       | "webRestraintHazard"
       | "gustOfWindLine"
-      | "hypnoticPatternControl";
+      | "hypnoticPatternControl"
+      | "speedDelta"
+      | "speedRatio"
+      | "specialSpeedGrant"
+      | "spellArmorClassBonus"
+      | "spellArmorClassFloor"
+      | "hitPointMaximumIncrease"
+      | "d20RollModifier"
+      | "abilityCheckRollMode"
+      | "spellCreatureSizeChange"
+      | "spellLevitatedCreature"
+      | "targetActionEndedSpellCondition"
+      | "creatureTypeProtection"
+      | "savingThrowRollMode"
+      | "spellGrantedActionResource"
+      | "spellEndTargetState"
+      | "conditionImmunity"
+      | "turnStartTemporaryHitPoints";
   }
 >;
 
@@ -2060,7 +2213,24 @@ function glyphStoredSpellFullDurationEffectSupportsExpiration(
     effect.kind === "moonbeam" ||
     effect.kind === "webRestraintHazard" ||
     effect.kind === "gustOfWindLine" ||
-    effect.kind === "hypnoticPatternControl"
+    effect.kind === "hypnoticPatternControl" ||
+    effect.kind === "speedDelta" ||
+    effect.kind === "speedRatio" ||
+    effect.kind === "specialSpeedGrant" ||
+    effect.kind === "spellArmorClassBonus" ||
+    effect.kind === "spellArmorClassFloor" ||
+    effect.kind === "hitPointMaximumIncrease" ||
+    effect.kind === "d20RollModifier" ||
+    effect.kind === "abilityCheckRollMode" ||
+    effect.kind === "spellCreatureSizeChange" ||
+    effect.kind === "spellLevitatedCreature" ||
+    effect.kind === "targetActionEndedSpellCondition" ||
+    effect.kind === "creatureTypeProtection" ||
+    effect.kind === "savingThrowRollMode" ||
+    effect.kind === "spellGrantedActionResource" ||
+    effect.kind === "spellEndTargetState" ||
+    effect.kind === "conditionImmunity" ||
+    effect.kind === "turnStartTemporaryHitPoints"
   );
 }
 

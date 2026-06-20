@@ -152,20 +152,14 @@ export type SpellCreatureSizeChangeDirection = "increase" | "decrease";
 export type SpellCreatureSizeChangeActiveEffect = BattleSpellEffectBase & {
   readonly kind: "spellCreatureSizeChange";
   readonly direction: SpellCreatureSizeChangeDirection;
-  readonly expiresAt: Extract<
-    BattleActiveEffectExpiration,
-    { readonly kind: "concentration" }
-  > & { readonly durationTicks: ElapsedTimeTicks };
+  readonly expiresAt: SpellConcentrationOrStoredDurationExpiration;
 };
 export type SpellLevitatedCreatureActiveEffect = BattleSpellEffectBase & {
   readonly kind: "spellLevitatedCreature";
   readonly altitudeFeet: MovementFeet;
   readonly maxAltitudeChangeFeet: MovementFeet;
   readonly rangeFeet: MovementFeet;
-  readonly expiresAt: Extract<
-    BattleActiveEffectExpiration,
-    { readonly kind: "concentration" }
-  > & { readonly durationTicks: ElapsedTimeTicks };
+  readonly expiresAt: SpellConcentrationOrStoredDurationExpiration;
 };
 export type BattleUnitFeatureEffectBase = {
   readonly sourceUnitId: UnitRecord["id"];
@@ -367,6 +361,7 @@ type GlyphStoredSingleCreatureTargeting =
   | Extract<SpellTargeting, { readonly kind: "singleCombatant" }>
   | Extract<SpellTargeting, { readonly kind: "singleCreatureOrObject" }>
   | (Extract<SpellTargeting, { readonly kind: "targetList" }> & {
+      readonly minTargets: 1;
       readonly maxTargets: 1;
     });
 type GlyphStoredConcentrationSaveGatedDamageInvocation = Extract<
@@ -418,6 +413,42 @@ export const GLYPH_STORED_AREA_CONTROL_PROCEDURES = [
 ] as const satisfies ReadonlyArray<SupportedSpellInvocation["procedure"]>;
 export type GlyphStoredAreaControlProcedure =
   (typeof GLYPH_STORED_AREA_CONTROL_PROCEDURES)[number];
+export const GLYPH_STORED_SINGLE_CREATURE_ACTIVE_EFFECT_PROCEDURES = [
+  "scalarBuff",
+  "rollModifier",
+  "creatureSizeIncrease",
+  "creatureSizeDecrease",
+  "levitatedCreature",
+  "directCondition",
+  "hastePositive",
+  "creatureTypeProtection",
+  "conditionImmunityAndTurnStartTemporaryHitPoints",
+] as const satisfies ReadonlyArray<SupportedSpellInvocation["procedure"]>;
+export type GlyphStoredSingleCreatureActiveEffectProcedure =
+  (typeof GLYPH_STORED_SINGLE_CREATURE_ACTIVE_EFFECT_PROCEDURES)[number];
+type SupportedSpellInvocationForProcedure<
+  P extends SupportedSpellInvocation["procedure"],
+  I extends SupportedSpellInvocation = SupportedSpellInvocation,
+> = I extends { readonly procedure: infer Procedure }
+  ? P extends Procedure
+    ? I & { readonly procedure: P }
+    : never
+  : never;
+type GlyphStoredConcentrationSingleCreatureActiveEffectInvocationFor<
+  P extends GlyphStoredSingleCreatureActiveEffectProcedure,
+> = SupportedSpellInvocationForProcedure<P> & {
+  readonly access: PreparedSpellAccess;
+  readonly resource: SpellSlotInvocationResource;
+  readonly spell: SpellRecord & {
+    readonly mechanics: SpellRecord["mechanics"] & {
+      readonly duration: Extract<
+        SpellRecord["mechanics"]["duration"],
+        { readonly kind: "concentration" }
+      >;
+    };
+  };
+  readonly targeting: GlyphStoredSingleCreatureTargeting;
+};
 type GlyphStoredAreaOngoingInvocation = Extract<
   SupportedSpellInvocation,
   { readonly procedure: GlyphStoredAreaOngoingProcedure }
@@ -444,7 +475,11 @@ export type GlyphStoredAreaControlInvocation = Extract<
     };
   };
 };
-export type GlyphStoredSpellInvocationCandidate = Extract<
+export type GlyphStoredConcentrationSingleCreatureActiveEffectInvocation =
+  {
+    readonly [P in GlyphStoredSingleCreatureActiveEffectProcedure]: GlyphStoredConcentrationSingleCreatureActiveEffectInvocationFor<P>;
+  }[GlyphStoredSingleCreatureActiveEffectProcedure];
+type GlyphStoredSpellInvocationCandidateWithSpellTargeting = Extract<
   | ReadiedSpellInvocation
   | Extract<
       SupportedSpellInvocation,
@@ -463,6 +498,9 @@ export type GlyphStoredSpellInvocationCandidate = Extract<
     readonly targeting: SpellTargeting;
   }
 >;
+export type GlyphStoredSpellInvocationCandidate =
+  | GlyphStoredSpellInvocationCandidateWithSpellTargeting
+  | GlyphStoredConcentrationSingleCreatureActiveEffectInvocation;
 export type GlyphStoredSpellInvocation = Extract<
   | GlyphStoredReadiedSpellInvocation
   | GlyphStoredGreaseGroundHazardInvocation
@@ -476,7 +514,7 @@ export type GlyphStoredSpellInvocation = Extract<
     readonly resource: SpellSlotInvocationResource;
     readonly targeting: SpellTargeting;
   }
->;
+> | GlyphStoredConcentrationSingleCreatureActiveEffectInvocation;
 export type GlyphDurableOccurrenceRelease =
   | {
       readonly kind: "explosiveRune";
@@ -655,10 +693,7 @@ export type BattleActiveEffect =
       readonly kind: "targetActionEndedSpellCondition";
       readonly condition: Condition;
       readonly conditionHadNonSpellSource: boolean;
-      readonly expiresAt: Extract<
-        BattleActiveEffectExpiration,
-        { readonly kind: "concentration" }
-      > & { readonly durationTicks: ElapsedTimeTicks };
+      readonly expiresAt: SpellConcentrationOrStoredDurationExpiration;
     })
   | (BattleSpellEffectBase & {
       readonly kind: "spellConditionRepeatSave";
@@ -975,10 +1010,7 @@ export type BattleActiveEffect =
   | (BattleSpellEffectBase & {
       readonly kind: "spellEndTargetState";
       readonly condition: "incapacitated";
-      readonly expiresAt: Extract<
-        BattleActiveEffectExpiration,
-        { readonly kind: "concentration" }
-      > & { readonly durationTicks: ElapsedTimeTicks };
+      readonly expiresAt: SpellConcentrationOrStoredDurationExpiration;
     })
   | (BattleSpellEffectBase & {
       readonly kind: "damageResistance";
