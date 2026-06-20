@@ -60,6 +60,7 @@ import {
   type BattleHole,
   type BattleMagicalDarknessZone,
   type BattleResolutionResult,
+  type BattleSpellAreaOriginAnchor,
   type BattleState,
   type BattleTrackedOngoingSpellLightEmitter,
 } from "./index.ts";
@@ -377,11 +378,17 @@ function magicalDarknessAreaFill(
     Extract<BattleFill, { readonly kind: "spellAreaChoice" }>["value"],
     { readonly kind: "magicalDarknessArea" }
   >["spellCreatedLightOverlaps"],
+  originAnchor: BattleSpellAreaOriginAnchor = { kind: "tableSelectedPoint" },
 ): Extract<BattleFill, { readonly kind: "spellAreaChoice" }> {
   return {
     kind: "spellAreaChoice",
     holeId: hole.holeId,
-    value: { kind: "magicalDarknessArea", areaId, spellCreatedLightOverlaps },
+    value: {
+      kind: "magicalDarknessArea",
+      areaId,
+      originAnchor,
+      spellCreatedLightOverlaps,
+    },
   };
 }
 

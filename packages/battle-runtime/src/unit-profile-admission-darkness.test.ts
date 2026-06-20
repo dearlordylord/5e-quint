@@ -12,6 +12,7 @@ import {
   type BattleHole,
   type BattleMagicalDarknessZone,
   type BattleObscurementZone,
+  type BattleSpellAreaOriginAnchor,
   type BattleTrackedOngoingSpellLightEmitter,
 } from "./index.ts";
 import {
@@ -331,6 +332,7 @@ function magicalDarknessAreaFill(
     Extract<BattleFill, { readonly kind: "spellAreaChoice" }>["value"],
     { readonly kind: "magicalDarknessArea" }
   >["spellCreatedLightOverlaps"] = [],
+  originAnchor: BattleSpellAreaOriginAnchor = { kind: "tableSelectedPoint" },
 ): Extract<BattleFill, { readonly kind: "spellAreaChoice" }> {
   if (hole.kind !== "spellAreaChoice") {
     throw new Error("Expected spellAreaChoice hole.");
@@ -338,7 +340,12 @@ function magicalDarknessAreaFill(
   return {
     kind: "spellAreaChoice",
     holeId: hole.holeId,
-    value: { kind: "magicalDarknessArea", areaId, spellCreatedLightOverlaps },
+    value: {
+      kind: "magicalDarknessArea",
+      areaId,
+      originAnchor,
+      spellCreatedLightOverlaps,
+    },
   };
 }
 

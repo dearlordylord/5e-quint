@@ -437,6 +437,16 @@ const BattleThunderwavePushDispositionSchema = Schema.Union(
 const BattleGustOfWindLinePushDispositionSchema =
   BattleThunderwavePushDispositionSchema;
 
+const BattleSpellAreaOriginAnchorSchema = Schema.Union(
+  Schema.Struct({
+    kind: Schema.Literal("tableSelectedPoint"),
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("combatant"),
+    combatantId: CombatantId,
+  }),
+);
+
 const BattleSpellAreaChoiceBaseSchema = {
   originAnchorId: CombatantId,
   affectedTargetIds: Schema.Array(CombatantId),
@@ -2704,10 +2714,16 @@ type BattleFillEncoded =
         | {
             readonly kind: "fogCloudArea";
             readonly areaId: string;
+            readonly originAnchor:
+              | { readonly kind: "tableSelectedPoint" }
+              | { readonly kind: "combatant"; readonly combatantId: string };
           }
         | {
             readonly kind: "magicalDarknessArea";
             readonly areaId: string;
+            readonly originAnchor:
+              | { readonly kind: "tableSelectedPoint" }
+              | { readonly kind: "combatant"; readonly combatantId: string };
             readonly spellCreatedLightOverlaps: readonly {
               readonly kind: "spellCreatedLightOverlapsArea";
               readonly sourceEffectId: string;
@@ -2741,6 +2757,9 @@ type BattleFillEncoded =
         | {
             readonly kind: "webCubeArea";
             readonly areaId: string;
+            readonly originAnchor:
+              | { readonly kind: "tableSelectedPoint" }
+              | { readonly kind: "combatant"; readonly combatantId: string };
           }
         | {
             readonly kind: "sleetStormCylinderArea";
@@ -2749,14 +2768,23 @@ type BattleFillEncoded =
         | {
             readonly kind: "flamingSphereArea";
             readonly areaId: string;
+            readonly originAnchor:
+              | { readonly kind: "tableSelectedPoint" }
+              | { readonly kind: "combatant"; readonly combatantId: string };
           }
         | {
             readonly kind: "spikeGrowthArea";
             readonly areaId: string;
+            readonly originAnchor:
+              | { readonly kind: "tableSelectedPoint" }
+              | { readonly kind: "combatant"; readonly combatantId: string };
           }
         | {
             readonly kind: "moonbeamCylinderArea";
             readonly areaId: string;
+            readonly originAnchor:
+              | { readonly kind: "tableSelectedPoint" }
+              | { readonly kind: "combatant"; readonly combatantId: string };
           }
         | {
             readonly kind: "gustOfWindLineArea";
@@ -3699,10 +3727,12 @@ export const BattleFillSchema: Schema.Schema<
         Schema.Struct({
           kind: Schema.Literal("fogCloudArea"),
           areaId: BattleAreaId,
+          originAnchor: BattleSpellAreaOriginAnchorSchema,
         }),
         Schema.Struct({
           kind: Schema.Literal("magicalDarknessArea"),
           areaId: BattleAreaId,
+          originAnchor: BattleSpellAreaOriginAnchorSchema,
           spellCreatedLightOverlaps: Schema.Array(
             Schema.Struct({
               kind: Schema.Literal("spellCreatedLightOverlapsArea"),
@@ -3731,6 +3761,7 @@ export const BattleFillSchema: Schema.Schema<
         Schema.Struct({
           kind: Schema.Literal("webCubeArea"),
           areaId: BattleAreaId,
+          originAnchor: BattleSpellAreaOriginAnchorSchema,
         }),
         Schema.Struct({
           kind: Schema.Literal("sleetStormCylinderArea"),
@@ -3739,14 +3770,17 @@ export const BattleFillSchema: Schema.Schema<
         Schema.Struct({
           kind: Schema.Literal("flamingSphereArea"),
           areaId: BattleAreaId,
+          originAnchor: BattleSpellAreaOriginAnchorSchema,
         }),
         Schema.Struct({
           kind: Schema.Literal("spikeGrowthArea"),
           areaId: BattleAreaId,
+          originAnchor: BattleSpellAreaOriginAnchorSchema,
         }),
         Schema.Struct({
           kind: Schema.Literal("moonbeamCylinderArea"),
           areaId: BattleAreaId,
+          originAnchor: BattleSpellAreaOriginAnchorSchema,
         }),
         Schema.Struct({
           kind: Schema.Literal("gustOfWindLineArea"),
@@ -4825,11 +4859,19 @@ const BattlePointOriginCylinderAreaSchema = Schema.Struct({
   heightFeet: MovementFeet,
 });
 
-const BattleConcentrationExpirationSchema = Schema.Struct({
+const BattleConcentrationWithDurationExpirationSchema = Schema.Struct({
   kind: Schema.Literal("concentration"),
   combatantId: CombatantId,
-  durationTicks: Schema.optionalWith(Schema.Number, { exact: true }),
+  durationTicks: Schema.Number,
 });
+const BattleDurationExpirationSchema = Schema.Struct({
+  kind: Schema.Literal("duration"),
+  durationTicks: Schema.Number,
+});
+const BattleConcentrationOrDurationExpirationSchema = Schema.Union(
+  BattleConcentrationWithDurationExpirationSchema,
+  BattleDurationExpirationSchema,
+);
 
 const BattleObscurementZoneSchema = Schema.Union(
   Schema.Struct({
@@ -4846,14 +4888,14 @@ const BattleObscurementZoneSchema = Schema.Union(
         sideFeet: MovementFeet,
       }),
     ),
-    expiresAt: BattleConcentrationExpirationSchema,
+    expiresAt: BattleConcentrationOrDurationExpirationSchema,
   }),
   Schema.Struct({
     kind: Schema.Literal("spellMagicalDarknessZone"),
     sourceSpellId: Schema.String,
     sourceCombatantId: CombatantId,
     area: BattlePointOriginSphereAreaSchema,
-    expiresAt: BattleConcentrationExpirationSchema,
+    expiresAt: BattleConcentrationOrDurationExpirationSchema,
   }),
 );
 

@@ -112,6 +112,10 @@ import {
   resolveSaveGateDamageSpellRelease,
   resolveSaveGateConditionSpellAct,
 } from "./spells-resolve-save-gates.ts";
+import {
+  isGlyphStoredAreaOngoingSpellInvocation,
+  resolveStoredGlyphAreaOngoingSpellRelease,
+} from "./spells-resolve-area-effects.ts";
 import { invalidResult } from "./result-helpers.ts";
 import {
   d20TestNaturalOneRerollOutcomeDecisionRequired,
@@ -1405,6 +1409,9 @@ function glyphStoredSpellInvocationSupportsFullDurationOwner(
   if (invocation.procedure === "saveGatedDamage") {
     return glyphStoredSpellInvocationTargetsSingleCreature(invocation);
   }
+  if (isGlyphStoredAreaOngoingSpellInvocation(invocation)) {
+    return true;
+  }
   return (
     invocation.procedure === "saveGatedCondition" ||
     invocation.procedure === "spiritualWeaponAttackProxy"
@@ -1472,12 +1479,10 @@ function glyphStoredSpellInvocationTargetShape(
 
 function glyphStoredSpellInvocationHasAreaRelease(
   invocation: GlyphStoredSpellInvocation,
-): invocation is Extract<
-  GlyphStoredSpellInvocation,
-  { readonly procedure: "saveGatedDamage" | "greaseGroundHazard" }
-> {
+): boolean {
   return (
     invocation.procedure === "greaseGroundHazard" ||
+    isGlyphStoredAreaOngoingSpellInvocation(invocation) ||
     glyphStoredSpellInvocationHasSaveGatedAreaRelease(invocation)
   );
 }
@@ -1736,6 +1741,23 @@ function resolveStoredSpellGlyphRelease(input: {
       "Stored Concentration spell glyph full-duration owner is unsupported.",
     );
   }
+  if (isGlyphStoredAreaOngoingSpellInvocation(invocation)) {
+    const fillSet = spellFillSet(fills, invocation);
+    if (fillSet.tag === "invalid") {
+      return invalidResult(input.state, "invalidFill", fillSet.message);
+    }
+    return resolveStoredGlyphAreaOngoingSpellRelease({
+      input: {
+        state: input.state,
+        subject,
+        fills,
+      },
+      actorId: input.effect.sourceCombatantId,
+      invocation,
+      fillSet,
+      selfOriginAreaAnchorId: input.witness.triggeringCreatureId,
+    });
+  }
   if (invocation.procedure === "greaseGroundHazard") {
     const fillSet = spellFillSet(fills, invocation);
     if (fillSet.tag === "invalid") {
@@ -1884,7 +1906,14 @@ type GlyphStoredSpellFullDurationEffect = Extract<
       | "spellConditionRepeatSave"
       | "spellConditionEndTurnSave"
       | "spellConcentrationDuration"
-      | "spiritualWeapon";
+      | "spiritualWeapon"
+      | "fogCloudObscurement"
+      | "magicalDarknessPointOrigin"
+      | "flamingSphere"
+      | "spikeGrowthHazard"
+      | "moonbeam"
+      | "webRestraintHazard"
+      | "gustOfWindLine";
   }
 >;
 
@@ -1964,7 +1993,14 @@ function glyphStoredSpellFullDurationEffectSupportsExpiration(
     effect.kind === "spellConditionRepeatSave" ||
     effect.kind === "spellConditionEndTurnSave" ||
     effect.kind === "spellConcentrationDuration" ||
-    effect.kind === "spiritualWeapon"
+    effect.kind === "spiritualWeapon" ||
+    effect.kind === "fogCloudObscurement" ||
+    effect.kind === "magicalDarknessPointOrigin" ||
+    effect.kind === "flamingSphere" ||
+    effect.kind === "spikeGrowthHazard" ||
+    effect.kind === "moonbeam" ||
+    effect.kind === "webRestraintHazard" ||
+    effect.kind === "gustOfWindLine"
   );
 }
 

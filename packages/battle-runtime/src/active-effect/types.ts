@@ -308,6 +308,12 @@ export type SpiritualWeaponRepeatTargeting =
       readonly kind: "fixedCombatant";
       readonly combatantId: CombatantId;
     };
+type SpellConcentrationOrStoredDurationExpiration =
+  | (Extract<
+      BattleActiveEffectExpiration,
+      { readonly kind: "concentration" }
+    > & { readonly durationTicks: ElapsedTimeTicks })
+  | Extract<BattleActiveEffectExpiration, { readonly kind: "duration" }>;
 export type SpiritualWeaponActiveEffect = BattleSpellEffectBase & {
   readonly kind: "spiritualWeapon";
   readonly sourceEffectId: BattleSpellEffectOccurrenceId;
@@ -324,12 +330,7 @@ export type SpiritualWeaponActiveEffect = BattleSpellEffectBase & {
   };
   readonly attackKind: Extract<SpellAttackKind, "melee_spell_attack">;
   readonly attackBonus: AttackBonus;
-  readonly expiresAt:
-    | (Extract<
-        BattleActiveEffectExpiration,
-        { readonly kind: "concentration" }
-      > & { readonly durationTicks: ElapsedTimeTicks })
-    | Extract<BattleActiveEffectExpiration, { readonly kind: "duration" }>;
+  readonly expiresAt: SpellConcentrationOrStoredDurationExpiration;
 };
 export type GlyphDurableOccurrenceAnchor =
   | {
@@ -403,6 +404,30 @@ type GlyphStoredConcentrationHarmfulObjectInvocation = Extract<
     };
   };
 };
+export const GLYPH_STORED_AREA_ONGOING_PROCEDURES = [
+  "fogCloudObscurement",
+  "magicalDarknessPointOrigin",
+  "flamingSphere",
+  "spikeGrowthMovementHazard",
+  "moonbeam",
+  "webRestraintHazard",
+  "gustOfWindLine",
+] as const satisfies ReadonlyArray<SupportedSpellInvocation["procedure"]>;
+export type GlyphStoredAreaOngoingProcedure =
+  (typeof GLYPH_STORED_AREA_ONGOING_PROCEDURES)[number];
+type GlyphStoredAreaOngoingInvocation = Extract<
+  SupportedSpellInvocation,
+  { readonly procedure: GlyphStoredAreaOngoingProcedure }
+> & {
+  readonly spell: SpellRecord & {
+    readonly mechanics: SpellRecord["mechanics"] & {
+      readonly duration: Extract<
+        SpellRecord["mechanics"]["duration"],
+        { readonly kind: "concentration" }
+      >;
+    };
+  };
+};
 export type GlyphStoredSpellInvocationCandidate = Extract<
   | ReadiedSpellInvocation
   | Extract<
@@ -411,7 +436,8 @@ export type GlyphStoredSpellInvocationCandidate = Extract<
         readonly procedure:
           | "greaseGroundHazard"
           | "saveGatedCondition"
-          | "spiritualWeaponAttackProxy";
+          | "spiritualWeaponAttackProxy"
+          | GlyphStoredAreaOngoingProcedure;
       }
     >,
   {
@@ -425,7 +451,8 @@ export type GlyphStoredSpellInvocation = Extract<
   | GlyphStoredGreaseGroundHazardInvocation
   | GlyphStoredConcentrationSaveGatedDamageInvocation
   | GlyphStoredConcentrationSaveGatedConditionInvocation
-  | GlyphStoredConcentrationHarmfulObjectInvocation,
+  | GlyphStoredConcentrationHarmfulObjectInvocation
+  | GlyphStoredAreaOngoingInvocation,
   {
     readonly access: PreparedSpellAccess;
     readonly resource: SpellSlotInvocationResource;
@@ -749,10 +776,7 @@ export type BattleActiveEffect =
       };
       readonly entrySavedThisTurn: readonly CombatantId[];
       readonly startTurnSavedThisTurn: readonly CombatantId[];
-      readonly expiresAt: Extract<
-        BattleActiveEffectExpiration,
-        { readonly kind: "concentration" }
-      > & { readonly durationTicks: ElapsedTimeTicks };
+      readonly expiresAt: SpellConcentrationOrStoredDurationExpiration;
     })
   | (BattleSpellEffectBase & {
       readonly kind: "sleetStormAreaHazard";
@@ -781,10 +805,7 @@ export type BattleActiveEffect =
         readonly damageType: Extract<DamageType, "fire">;
       };
       readonly ramMaxMoveFeet: MovementFeet;
-      readonly expiresAt: Extract<
-        BattleActiveEffectExpiration,
-        { readonly kind: "concentration" }
-      >;
+      readonly expiresAt: SpellConcentrationOrStoredDurationExpiration;
     })
   | (BattleSpellEffectBase & {
       readonly kind: "spikeGrowthHazard";
@@ -794,10 +815,7 @@ export type BattleActiveEffect =
         readonly damageType: Extract<DamageType, "piercing">;
       };
       readonly damagePerFeet: MovementFeet;
-      readonly expiresAt: Extract<
-        BattleActiveEffectExpiration,
-        { readonly kind: "concentration" }
-      > & { readonly durationTicks: ElapsedTimeTicks };
+      readonly expiresAt: SpellConcentrationOrStoredDurationExpiration;
     })
   | (BattleSpellEffectBase & {
       readonly kind: "moonbeam";
@@ -813,10 +831,7 @@ export type BattleActiveEffect =
       readonly repositionMaxMoveFeet: MovementFeet;
       readonly savedThisTurn: readonly CombatantId[];
       readonly shapeShiftSuppressed: readonly CombatantId[];
-      readonly expiresAt: Extract<
-        BattleActiveEffectExpiration,
-        { readonly kind: "concentration" }
-      >;
+      readonly expiresAt: SpellConcentrationOrStoredDurationExpiration;
     })
   | (BattleSpellEffectBase & {
       readonly kind: "gustOfWindLine";
@@ -837,28 +852,19 @@ export type BattleActiveEffect =
         readonly multiplier: 2;
         readonly appliesTo: "towardSource";
       };
-      readonly expiresAt: Extract<
-        BattleActiveEffectExpiration,
-        { readonly kind: "concentration" }
-      > & { readonly durationTicks: ElapsedTimeTicks };
+      readonly expiresAt: SpellConcentrationOrStoredDurationExpiration;
     })
   | (BattleSpellEffectBase & {
       readonly kind: "fogCloudObscurement";
       readonly areaId: BattleAreaId;
       readonly radiusFeet: MovementFeet;
-      readonly expiresAt: Extract<
-        BattleActiveEffectExpiration,
-        { readonly kind: "concentration" }
-      >;
+      readonly expiresAt: SpellConcentrationOrStoredDurationExpiration;
     })
   | (BattleSpellEffectBase & {
       readonly kind: "magicalDarknessPointOrigin";
       readonly areaId: BattleAreaId;
       readonly radiusFeet: MovementFeet;
-      readonly expiresAt: Extract<
-        BattleActiveEffectExpiration,
-        { readonly kind: "concentration" }
-      >;
+      readonly expiresAt: SpellConcentrationOrStoredDurationExpiration;
     })
   | (BattleSpellEffectBase & {
       readonly kind: "antimagicFieldOngoingSpellSuppression";

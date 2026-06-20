@@ -27,6 +27,7 @@ import {
   type BattleObjectDamageDisposition,
   type BattleObjectIgnitionDisposition,
   type BattleSpellAreaChoice,
+  type BattleSpellAreaOriginAnchor,
   type BattleSpellConditionChoiceHole,
   type BattleState,
   type BattleSubject,
@@ -61,6 +62,9 @@ type SleetStormAreaHazardEffect = Extract<
   BattleActiveEffect,
   { readonly kind: "sleetStormAreaHazard" }
 >;
+const tableSelectedPointAreaOriginAnchor = {
+  kind: "tableSelectedPoint",
+} as const satisfies BattleSpellAreaOriginAnchor;
 
 export function spellAct(input: {
   readonly state: BattleState;
@@ -979,33 +983,36 @@ export function gustOfWindLineDirectionChoiceFill(
 export function flamingSphereAreaFill(
   hole: Extract<BattleHole, { readonly kind: "spellAreaChoice" }>,
   areaId = flamingSphereAreaId,
+  originAnchor: BattleSpellAreaOriginAnchor = tableSelectedPointAreaOriginAnchor,
 ): Extract<BattleFill, { readonly kind: "spellAreaChoice" }> {
   return {
     kind: "spellAreaChoice",
     holeId: hole.holeId,
-    value: { kind: "flamingSphereArea", areaId },
+    value: { kind: "flamingSphereArea", areaId, originAnchor },
   };
 }
 
 export function spikeGrowthAreaFill(
   hole: Extract<BattleHole, { readonly kind: "spellAreaChoice" }>,
   areaId = spikeGrowthAreaId,
+  originAnchor: BattleSpellAreaOriginAnchor = tableSelectedPointAreaOriginAnchor,
 ): Extract<BattleFill, { readonly kind: "spellAreaChoice" }> {
   return {
     kind: "spellAreaChoice",
     holeId: hole.holeId,
-    value: { kind: "spikeGrowthArea", areaId },
+    value: { kind: "spikeGrowthArea", areaId, originAnchor },
   };
 }
 
 export function moonbeamAreaFill(
   hole: Extract<BattleHole, { readonly kind: "spellAreaChoice" }>,
   areaId = moonbeamAreaId,
+  originAnchor: BattleSpellAreaOriginAnchor = tableSelectedPointAreaOriginAnchor,
 ): Extract<BattleFill, { readonly kind: "spellAreaChoice" }> {
   return {
     kind: "spellAreaChoice",
     holeId: hole.holeId,
-    value: { kind: "moonbeamCylinderArea", areaId },
+    value: { kind: "moonbeamCylinderArea", areaId, originAnchor },
   };
 }
 
@@ -1023,11 +1030,12 @@ export function sleetStormAreaFill(
 export function webAreaFill(
   hole: Extract<BattleHole, { readonly kind: "spellAreaChoice" }>,
   areaId = webAreaId,
+  originAnchor: BattleSpellAreaOriginAnchor = tableSelectedPointAreaOriginAnchor,
 ): Extract<BattleFill, { readonly kind: "spellAreaChoice" }> {
   return {
     kind: "spellAreaChoice",
     holeId: hole.holeId,
-    value: { kind: "webCubeArea", areaId },
+    value: { kind: "webCubeArea", areaId, originAnchor },
   };
 }
 
