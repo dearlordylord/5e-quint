@@ -478,3 +478,4 @@
 {"unitId":"haste","evidence":{"tag":"deterministic-admission-projection","taskId":"L5-C18-HASTE-LETHARGY-RUNTIME","ownerPath":"packages/battle-runtime/src/unit-profile-admission-haste-positive.test.ts"}}
 {"unitId":"glyph_of_warding","evidence":{"tag":"deterministic-admission-projection","taskId":"L3-FOLLOWUP-GLYPH-DURABLE-OCCURRENCE","ownerPath":"packages/battle-runtime/src/unit-profile-admission-glyph-of-warding.test.ts"}}
 {"unitId":"glyph_of_warding","evidence":{"tag":"deterministic-admission-projection","taskId":"L3-FOLLOWUP-GLYPH-EXPLOSIVE-RUNE-RELEASE","ownerPath":"packages/battle-runtime/src/unit-profile-admission-glyph-of-warding.test.ts"}}
+{"unitId":"glyph_of_warding","evidence":{"tag":"deterministic-admission-projection","taskId":"L3-FOLLOWUP-GLYPH-STORED-SPELL-RELEASE","ownerPath":"packages/battle-runtime/src/unit-profile-admission-glyph-of-warding.test.ts"}}

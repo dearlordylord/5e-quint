@@ -14,6 +14,8 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.GLYPH_DURABLE_OCCURRENCE_LIFECYCLE
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-glyph-explosive-rune-release
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.GLYPH_EXPLOSIVE_RUNE_RELEASE
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-glyph-stored-spell-release
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.GLYPH_STORED_SPELL_RELEASE
 import type { ArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
 import type { ElapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import type { AttackRollMode } from "@dnd/shared-algebras/runtime-hole-algebra";
@@ -60,11 +62,16 @@ import type {
   BattleD20RollModifierKind,
   BattleDancingLight,
   BattleDancingLightList,
+  PreparedSpellAccess,
+  ReadiedSpellInvocation,
+  SupportedSpellInvocation,
   BattleSpecialSpeedKind,
   MagicWeaponEnhancementBonus,
   MarkedDamageRiderAbilityCheckBehavior,
   SpellAttackKind,
   SpellConditionRepeatSave,
+  SpellSlotInvocationResource,
+  SpellTargeting,
 } from "../battle-reducer.ts";
 import {
   PROTECTION_FROM_EVIL_AND_GOOD_PREVENTED_CONDITIONS,
@@ -322,10 +329,27 @@ export type GlyphDurableOccurrenceAnchor =
       readonly kind: "closeableObject";
       readonly objectId: BattleObjectId;
     };
-export type GlyphDurableOccurrenceRelease = {
-  readonly kind: "explosiveRune";
-  readonly damageType: DamageType;
-};
+export type GlyphStoredSpellInvocation = Extract<
+  | ReadiedSpellInvocation
+  | Extract<
+      SupportedSpellInvocation,
+      { readonly procedure: "greaseGroundHazard" }
+    >,
+  {
+    readonly access: PreparedSpellAccess;
+    readonly resource: SpellSlotInvocationResource;
+    readonly targeting: SpellTargeting;
+  }
+>;
+export type GlyphDurableOccurrenceRelease =
+  | {
+      readonly kind: "explosiveRune";
+      readonly damageType: DamageType;
+    }
+  | {
+      readonly kind: "spellGlyph";
+      readonly storedInvocation: GlyphStoredSpellInvocation;
+    };
 export type GlyphDurableOccurrenceActiveEffect = BattleSpellEffectBase & {
   readonly kind: "glyphDurableOccurrence";
   readonly sourceEffectId: BattleSpellEffectOccurrenceId;

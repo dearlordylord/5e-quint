@@ -169,7 +169,7 @@
     {
       "number": 28,
       "id": "L3-FOLLOWUP-GLYPH-STORED-SPELL-RELEASE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Glyph Stored Spell Release"
     },
     {
@@ -177,6 +177,12 @@
       "id": "L3-FOLLOWUP-GLYPH-STORED-CONCENTRATION",
       "status": "ready-for-research",
       "title": "Glyph Stored Concentration Override"
+    },
+    {
+      "number": 30,
+      "id": "L3-FOLLOWUP-GLYPH-STORED-SUMMON-OBJECT-PLACEMENT",
+      "status": "ready-for-research",
+      "title": "Glyph Stored Summon/Object Placement"
     }
   ]
 }
@@ -261,8 +267,9 @@ missing-record spells unless a RAW dependency is unavoidable and documented.
 | 25 | L3-FOLLOWUP-PHANTOM-STEED-TRAVEL-PACE - Phantom Steed Table Travel Pace | deferred | L5-C21-PHANTOM-STEED-MOUNT-LIFECYCLE | Owner deferred on 2026-06-20 with the rest of Phantom Steed runtime backlog; requires a table travel owner, not battle-map travel state. |
 | 26 | L3-FOLLOWUP-GLYPH-DURABLE-OCCURRENCE - Glyph Durable Occurrence | done | L5-C22-GLYPH-OF-WARDING-RUNTIME | Promoted the completed-inscription durable occurrence owner with trigger cleanup and movement invalidation witnesses; release work remains in Tasks 27-29. |
 | 27 | L3-FOLLOWUP-GLYPH-EXPLOSIVE-RUNE-RELEASE - Glyph Explosive Rune Release | done | L3-FOLLOWUP-GLYPH-DURABLE-OCCURRENCE | Promoted non-immediate explosive-rune release with area-membership witnesses, damage-type choice, Dexterity Saving Throw half damage, slot scaling, cleanup, and duplicate fill rejection. |
-| 28 | L3-FOLLOWUP-GLYPH-STORED-SPELL-RELEASE - Glyph Stored Spell Release | ready-for-research | L3-FOLLOWUP-GLYPH-DURABLE-OCCURRENCE | Promote stored spell invocation state, no-immediate-effect storage, trigger retargeting or area centering, and hostile close-as-possible placement witnesses. |
+| 28 | L3-FOLLOWUP-GLYPH-STORED-SPELL-RELEASE - Glyph Stored Spell Release | done | L3-FOLLOWUP-GLYPH-DURABLE-OCCURRENCE | Promoted the non-Concentration stored-spell release subset: stored invocation state, no-immediate-effect storage, trigger retargeting, area centering, represented Grease trap placement, no trigger-time slot spend, and durable occurrence cleanup. |
 | 29 | L3-FOLLOWUP-GLYPH-STORED-CONCENTRATION - Glyph Stored Concentration Override | ready-for-research | L3-FOLLOWUP-GLYPH-STORED-SPELL-RELEASE | Promote the stored Concentration full-duration override outside ordinary caster, triggering-creature, or readied-spell Concentration ownership. |
+| 30 | L3-FOLLOWUP-GLYPH-STORED-SUMMON-OBJECT-PLACEMENT - Glyph Stored Summon/Object Placement | ready-for-research | L3-FOLLOWUP-GLYPH-STORED-SPELL-RELEASE | Promote stored spell-glyph releases whose stored invocation summons Hostile creatures or creates harmful objects, preserving the same close-as-possible placement witness boundary instead of adding a Glyph-specific bypass. |
 
 ## Shared Verification
 
@@ -1740,7 +1747,7 @@ Plan Impact:
 
 ### Task 28 - L3-FOLLOWUP-GLYPH-STORED-SPELL-RELEASE
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -1791,6 +1798,17 @@ Verification:
 - Focused owner-package tests, and if battle-runtime behavior changes, update
   the relevant QNT/spec first and run focused MBT per `AGENTS.md`.
 
+Plan Impact:
+
+- Task 28 is complete for the promoted non-Concentration stored-spell subset:
+  stored prepared spell-slot invocation state, no immediate storage-time effect,
+  single-creature trigger retargeting, area centering, represented Grease trap
+  placement, no trigger-time current slot spend, and occurrence cleanup.
+- Stored Concentration remains visible in Task 29.
+- Stored spell-glyph releases that summon Hostile creatures or create harmful
+  objects remain visible in Task 30 so the full hostile-placement appliesTo set
+  has executable follow-up coverage.
+
 ### Task 29 - L3-FOLLOWUP-GLYPH-STORED-CONCENTRATION
 
 Status: `ready-for-research`
@@ -1832,6 +1850,63 @@ Acceptance:
   changes, promoted Quint/runtime parity.
 - The owner rejects ordinary caster Concentration, triggering-creature
   Concentration, and readied-spell cleanup semantics for this release path.
+
+Verification:
+
+- Shared lane verification.
+- Focused owner-package tests, and if battle-runtime behavior changes, update
+  the relevant QNT/spec first and run focused MBT per `AGENTS.md`.
+
+### Task 30 - L3-FOLLOWUP-GLYPH-STORED-SUMMON-OBJECT-PLACEMENT
+
+Status: `ready-for-research`
+
+Depends on:
+
+- L3-FOLLOWUP-GLYPH-STORED-SPELL-RELEASE
+
+Unit:
+
+- `glyph_of_warding`
+
+SRD anchors:
+
+- `.references/srd-5.2.1/Spells/Descriptions-E-L.md:842`
+- `.references/srd-5.2.1/Classes/Bard.md:221`
+- `.references/srd-5.2.1/Classes/Cleric.md:211`
+- `.references/srd-5.2.1/Classes/Wizard.md:247`
+
+Current state:
+
+- Task 28 promotes the stored-spell release owner for the current
+  non-Concentration executable stored invocation subset and the represented
+  Grease trap branch.
+- Glyph of Warding's typed Surface spell-glyph facts retain the hostile
+  close-as-possible placement appliesTo set for summoned Hostile creatures,
+  harmful objects, and traps.
+- No promoted runtime owner maps stored spell procedures that summon Hostile
+  creatures or create harmful objects to the close-as-possible placement
+  witness boundary.
+
+Output:
+
+- Promote stored spell-glyph release for stored invocations that summon Hostile
+  creatures or create harmful objects, using the same triggering-creature
+  retargeting or area-centering witness boundary as Task 28.
+- Consume close-as-possible placement witnesses for the summoned-creature and
+  harmful-object subjects, with attack target fixed to the triggering creature
+  when the stored spell's procedure needs that fact.
+- Do not add Glyph authored-identity dispatch, an inert generic placement
+  bypass, or duplicated map/object/summon state.
+
+Acceptance:
+
+- Glyph has a supported or profile-subset-supported stored summon/object
+  placement boundary with focused runtime tests and, if battle-runtime behavior
+  changes, promoted Quint/runtime parity.
+- Summoned Hostile creature and harmful-object placement facts are executable
+  or explicitly narrowed to concrete procedure follow-ups before any broader
+  stored-spell claim is made.
 
 Verification:
 

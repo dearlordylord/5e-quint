@@ -432,6 +432,7 @@ export function resolveGreaseGroundHazardSpellAct(input: {
   >;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
   readonly metamagicApplications?: readonly SpellMetamagicApplicationFact[];
+  readonly spendsCastResources?: boolean;
 }): BattleResolutionResult {
   if (
     input.fillSet.targetId !== undefined ||
@@ -546,15 +547,18 @@ export function resolveGreaseGroundHazardSpellAct(input: {
     }
   }
 
-  const resourced = spendSpellCastResources({
-    state: input.input.state,
-    actorId: input.actorId,
-    invocation: input.invocation,
-    errorState: input.input.state,
-    ...(input.metamagicApplications === undefined
-      ? {}
-      : { metamagicApplications: input.metamagicApplications }),
-  });
+  const resourced =
+    input.spendsCastResources === false
+      ? ({ tag: "resolved", state: input.input.state } as const)
+      : spendSpellCastResources({
+          state: input.input.state,
+          actorId: input.actorId,
+          invocation: input.invocation,
+          errorState: input.input.state,
+          ...(input.metamagicApplications === undefined
+            ? {}
+            : { metamagicApplications: input.metamagicApplications }),
+        });
   if (resourced.tag === "invalid") {
     return resourced;
   }
@@ -1020,8 +1024,13 @@ export function resolveSaveGateDamageSpellRelease(input: {
     { readonly procedure: "saveGatedDamage" }
   >;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
+  readonly selfOriginAreaAnchorId?: CombatantId;
+  readonly opensSpellCastReactionWindow?: boolean;
 }): BattleResolutionResult {
-  const beforeSpend = resolveSaveGateDamageSpellAct(input);
+  const beforeSpend = resolveSaveGateDamageSpellAct({
+    ...input,
+    spendsCastResources: false,
+  });
   if (beforeSpend.tag !== "resolved") {
     return beforeSpend;
   }
@@ -1050,6 +1059,9 @@ export function resolveSaveGateDamageSpellAct(input: {
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
   readonly actionCostOverride?: "magicAction" | "bonusAction";
   readonly metamagicApplications?: readonly SpellMetamagicApplicationFact[];
+  readonly spendsCastResources?: boolean;
+  readonly selfOriginAreaAnchorId?: CombatantId;
+  readonly opensSpellCastReactionWindow?: boolean;
 }): BattleResolutionResult {
   if (
     input.invocation.targeting.kind !== "singleCombatant" &&
@@ -1105,7 +1117,7 @@ export function resolveSaveGateDamageSpellAct(input: {
       );
     }
     if (sanctuaryCheck.tag === "lost") {
-      return spendSpellCastResources({
+      return resolveSaveGateDamageSpellCastResources(input, {
         state: input.input.state,
         actorId: input.actorId,
         invocation: input.invocation,
@@ -1213,28 +1225,30 @@ export function resolveSaveGateDamageSpellAct(input: {
       "Save-gate damage spells do not use an attack roll.",
     );
   }
-  const spellCastReactionWindow = maybeOpenInterruptWindow(
-    input.input.state,
-    spellCastInterruptFrame({
-      casterId: input.actorId,
-      invocation: input.invocation,
-      targetIds: saveGatedDamageSpellCastTargetIds(input.fillSet),
-      reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
-      castingResource:
-        input.actionCostOverride === "bonusAction" ||
-        input.input.subject.tag === "bonusActionSpell"
-          ? { kind: "bonusAction" }
-          : { kind: "magicAction" },
-      continuation: {
-        kind: "replay",
-        subject: input.input.subject,
-        fills: input.input.fills,
-      },
-    }),
-    input.input.handledInterruptTrigger,
-  );
-  if (spellCastReactionWindow !== null) {
-    return spellCastReactionWindow;
+  if (input.opensSpellCastReactionWindow !== false) {
+    const spellCastReactionWindow = maybeOpenInterruptWindow(
+      input.input.state,
+      spellCastInterruptFrame({
+        casterId: input.actorId,
+        invocation: input.invocation,
+        targetIds: saveGatedDamageSpellCastTargetIds(input.fillSet),
+        reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
+        castingResource:
+          input.actionCostOverride === "bonusAction" ||
+          input.input.subject.tag === "bonusActionSpell"
+            ? { kind: "bonusAction" }
+            : { kind: "magicAction" },
+        continuation: {
+          kind: "replay",
+          subject: input.input.subject,
+          fills: input.input.fills,
+        },
+      }),
+      input.input.handledInterruptTrigger,
+    );
+    if (spellCastReactionWindow !== null) {
+      return spellCastReactionWindow;
+    }
   }
   if (input.fillSet.savingThrowOutcomes === undefined) {
     return needsHolesResult(input.input.state, input.input.subject, [
@@ -1252,6 +1266,9 @@ export function resolveSaveGateDamageSpellAct(input: {
     input.fillSet.targetList?.targetIds,
     metamagicSelections.carefulSpellProtectedTargetIds,
     metamagicSelections.heightenedSpellTargetId,
+    input.selfOriginAreaAnchorId === undefined
+      ? {}
+      : { selfOriginAreaAnchorId: input.selfOriginAreaAnchorId },
   );
   if (savingThrowValidation !== null) {
     return invalidResult(
@@ -1378,7 +1395,7 @@ export function resolveSaveGateDamageSpellAct(input: {
       input.invocation,
     );
     const spentResources = withFailedSaveConcentrationDuration(
-      spendSpellCastResources({
+      resolveSaveGateDamageSpellCastResources(input, {
         state: extendSavingThrowOngoingFeatures(
           effected,
           input.actorId,
@@ -1883,7 +1900,7 @@ export function resolveSaveGateDamageSpellAct(input: {
     selectedTargetIds,
   );
   const spentResources = withFailedSaveConcentrationDuration(
-    spendSpellCastResources({
+    resolveSaveGateDamageSpellCastResources(input, {
       state: extended,
       actorId: input.actorId,
       invocation: input.invocation,
@@ -2075,6 +2092,20 @@ function withFailedSaveConcentrationDuration(
     }),
   };
   return { ...result, state, snapshot: snapshotBattle(state) };
+}
+
+function resolveSaveGateDamageSpellCastResources(
+  input: { readonly spendsCastResources?: boolean },
+  resourceInput: Parameters<typeof spendSpellCastResources>[0],
+): Extract<BattleResolutionResult, { readonly tag: "resolved" | "invalid" }> {
+  if (input.spendsCastResources === false) {
+    return {
+      tag: "resolved",
+      state: resourceInput.state,
+      snapshot: snapshotBattle(resourceInput.state),
+    };
+  }
+  return spendSpellCastResources(resourceInput);
 }
 
 function resolveFailedSaveForcedReactionMovement(input: {
@@ -2938,6 +2969,7 @@ export function validateSavingThrowOutcomes(
   targetListIds?: readonly CombatantId[],
   carefulSpellProtectedTargetIds: readonly CombatantId[] = [],
   heightenedSpellTargetId?: CombatantId,
+  options: { readonly selfOriginAreaAnchorId?: CombatantId } = {},
 ): string | null {
   const outcomes = value.outcomes;
   if (hole.spell.procedure === "rollModifier") {
@@ -3080,7 +3112,7 @@ export function validateSavingThrowOutcomes(
     (targeting.kind === "selfOriginCone" ||
       targeting.kind === "selfOriginCube" ||
       targeting.kind === "selfOriginLine") &&
-    value.area.originAnchorId !== actorId
+    value.area.originAnchorId !== (options.selfOriginAreaAnchorId ?? actorId)
   ) {
     return targeting.kind === "selfOriginCone"
       ? "Self-origin Cone save-gate spell area must originate from the caster."

@@ -1,5 +1,5 @@
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-glyph-durable-occurrence spell.invocation-glyph-explosive-rune-release
-// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.GLYPH_DURABLE_OCCURRENCE_LIFECYCLE BATTLE.SPELL.GLYPH_EXPLOSIVE_RUNE_RELEASE
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-glyph-durable-occurrence spell.invocation-glyph-explosive-rune-release spell.invocation-glyph-stored-spell-release
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.GLYPH_DURABLE_OCCURRENCE_LIFECYCLE BATTLE.SPELL.GLYPH_EXPLOSIVE_RUNE_RELEASE BATTLE.SPELL.GLYPH_STORED_SPELL_RELEASE
 //
 // Glyph of Warding durable occurrence boundary.
 //
@@ -33,6 +33,7 @@ import type {
   GlyphWardingExplosiveRuneBranch,
   GlyphWardingMechanics,
   GlyphWardingOccurrence,
+  GlyphWardingSpellGlyphBranch,
   GlyphWardingTrigger,
   SpellRecord,
 } from "@dnd/surface/surface/types";
@@ -44,11 +45,15 @@ import type {
   BattleFill,
   BattleGlyphExplosiveRuneDamageRollHole,
   BattleGlyphExplosiveRuneSavingThrowOutcomeHole,
+  BattleHole,
   BattleHideousLaughterRepeatSavingThrowOutcomeHole,
   BattleSpellDamageReductionRollHole,
   BattleState,
+  BattleTargetSpatialFact,
   GlyphDurableOccurrenceActiveEffect,
   GlyphDurableOccurrenceAnchor,
+  GlyphStoredSpellInvocation,
+  BattleResolutionResult,
 } from "../battle-reducer.ts";
 import type {
   BattleAreaId,
@@ -90,6 +95,14 @@ import {
 } from "./spells-damage-fills.ts";
 import { sameStringSet } from "./spells-profile-shared.ts";
 import {
+  spellTargetHole,
+  supportedSpellInvocationRef,
+} from "./spells-holes-fills.ts";
+import { resolveSpellRelease } from "./spells-resolve.ts";
+import { spellFillSet } from "./spells-resolve-fill-set.ts";
+import { resolveGreaseGroundHazardSpellAct } from "./spells-resolve-save-gates.ts";
+import { invalidResult } from "./result-helpers.ts";
+import {
   d20TestNaturalOneRerollOutcomeDecisionRequired,
   d20TestNaturalOneRerollOutcomeIssue,
   effectiveD20TestNaturalOneRerollSavingThrowOutcomes,
@@ -109,6 +122,12 @@ const GLYPH_EXPLOSIVE_RUNE_DAMAGE_TYPES = [
   "lightning",
   "thunder",
 ] as const satisfies ReadonlyArray<DamageType>;
+const GLYPH_STORED_SPELL_TARGET_SHAPES = ["singleCreature", "area"] as const;
+const GLYPH_STORED_SPELL_HOSTILE_PLACEMENT_SUBJECTS = [
+  "summoned_hostile_creatures",
+  "harmful_objects",
+  "traps",
+] as const;
 const GLYPH_SURFACE_COMMON_EVENTS = [
   "touching_glyph",
   "stepping_on_glyph",
@@ -121,10 +140,18 @@ const GLYPH_CLOSEABLE_OBJECT_COMMON_EVENTS = [
 ] as const;
 type GlyphExplosiveRuneDamageType =
   (typeof GLYPH_EXPLOSIVE_RUNE_DAMAGE_TYPES)[number];
-type GlyphDurableOccurrenceExplosiveRuneRelease = Extract<
+type GlyphStoredSpellTargetShape =
+  (typeof GLYPH_STORED_SPELL_TARGET_SHAPES)[number];
+type GlyphStoredSpellHostilePlacementSubject =
+  (typeof GLYPH_STORED_SPELL_HOSTILE_PLACEMENT_SUBJECTS)[number];
+type GlyphDurableOccurrenceStoredSpellRelease = Extract<
   GlyphDurableOccurrenceActiveEffect["release"],
-  { readonly kind: "explosiveRune" }
+  { readonly kind: "spellGlyph" }
 >;
+type GlyphStoredSpellOccurrenceActiveEffect =
+  GlyphDurableOccurrenceActiveEffect & {
+    readonly release: GlyphDurableOccurrenceStoredSpellRelease;
+  };
 type GlyphExplosiveRuneConcentrationSavingThrowFill = Extract<
   BattleFill,
   { readonly kind: "concentrationSavingThrow" }
@@ -170,7 +197,10 @@ export type GlyphDurableOccurrenceProfile = {
   readonly notice: GlyphDurableOccurrenceActiveEffect["notice"];
   readonly trigger: GlyphDurableOccurrenceActiveEffect["trigger"];
   readonly movementInvalidation: GlyphDurableOccurrenceActiveEffect["movementInvalidation"];
-  readonly release: GlyphExplosiveRuneReleaseProfile;
+  readonly release: {
+    readonly explosiveRune: GlyphExplosiveRuneReleaseProfile;
+    readonly spellGlyph: GlyphStoredSpellReleaseProfile;
+  };
 };
 
 export type GlyphExplosiveRuneReleaseProfile = {
@@ -197,6 +227,30 @@ export type GlyphExplosiveRuneReleaseProfile = {
   };
 };
 
+export type GlyphStoredSpellReleaseProfile = {
+  readonly kind: "glyphStoredSpellReleaseProfile";
+  readonly storage: {
+    readonly spellAccess: "prepared_spell";
+    readonly castAsPartOfCreatingGlyph: true;
+    readonly immediateEffect: "none";
+    readonly baseMaxStoredSpellLevel: typeof GLYPH_OF_WARDING_BASE_LEVEL;
+    readonly upcastMaxStoredSpellLevel: "same_as_cast_slot_level";
+    readonly targetShapes: typeof GLYPH_STORED_SPELL_TARGET_SHAPES;
+  };
+  readonly release: {
+    readonly when: "glyph_triggered";
+    readonly retargeting: {
+      readonly singleCreatureSpellTarget: "triggering_creature";
+      readonly areaSpellOrigin: "centered_on_triggering_creature";
+    };
+    readonly hostilePlacement: {
+      readonly appliesTo: typeof GLYPH_STORED_SPELL_HOSTILE_PLACEMENT_SUBJECTS;
+      readonly placement: "as_close_as_possible_to_triggering_creature";
+      readonly attackTarget: "triggering_creature";
+    };
+  };
+};
+
 export type GlyphExplosiveRuneDamageRollHole =
   BattleGlyphExplosiveRuneDamageRollHole;
 
@@ -206,7 +260,7 @@ export type CompletedGlyphInscriptionWitness = {
   readonly sourceSpellId: SpellRecord["id"];
   readonly sourceCombatantId: CombatantId;
   readonly sourceSpellLevel: BattleSpellEffectLevel;
-  readonly release: GlyphDurableOccurrenceExplosiveRuneRelease;
+  readonly release: GlyphDurableOccurrenceActiveEffect["release"];
   readonly anchor: GlyphDurableOccurrenceAnchor;
   readonly coveredAreaId: BattleAreaId;
   readonly castLocationId: BattleTablePositionId;
@@ -215,6 +269,42 @@ export type CompletedGlyphInscriptionWitness = {
 export type GlyphTriggerOccurrenceWitness = {
   readonly kind: "tableWitnessedGlyphTriggerOccurrence";
   readonly sourceEffectId: BattleSpellEffectOccurrenceId;
+};
+
+export type GlyphStoredSpellSingleCreatureRetargetingWitness = {
+  readonly kind: "storedSpellTargetsTriggeringCreature";
+  readonly targetId: CombatantId;
+  readonly targetSpatialFacts: readonly BattleTargetSpatialFact[];
+};
+
+export type GlyphStoredSpellAreaCenteringWitness = {
+  readonly kind: "storedSpellAreaCenteredOnTriggeringCreature";
+  readonly originAnchorId: CombatantId;
+};
+
+export type GlyphStoredSpellReleaseTargetingWitness =
+  | GlyphStoredSpellSingleCreatureRetargetingWitness
+  | GlyphStoredSpellAreaCenteringWitness;
+
+export type GlyphStoredSpellHostilePlacementWitness =
+  | {
+      readonly kind: "storedSpellHostilePlacementNotApplicable";
+    }
+  | {
+      readonly kind: "storedSpellHostilePlacement";
+      readonly subject: GlyphStoredSpellHostilePlacementSubject;
+      readonly areaId: BattleAreaId;
+      readonly placement: "as_close_as_possible_to_triggering_creature";
+      readonly attackTargetId: CombatantId;
+    };
+
+export type GlyphStoredSpellReleaseWitness = {
+  readonly kind: "tableWitnessedGlyphStoredSpellRelease";
+  readonly triggerOccurrence: GlyphTriggerOccurrenceWitness;
+  readonly triggeringCreatureId: CombatantId;
+  readonly targeting: GlyphStoredSpellReleaseTargetingWitness;
+  readonly hostilePlacement: GlyphStoredSpellHostilePlacementWitness;
+  readonly fills: readonly BattleFill[];
 };
 
 export type GlyphExplosiveRuneAreaMembership =
@@ -226,7 +316,10 @@ export type GlyphExplosiveRuneAreaMembership =
       readonly kind: "creaturesInArea";
       readonly affectedTargetIds: readonly [CombatantId, ...CombatantId[]];
       readonly savingThrowOutcomes: readonly GlyphExplosiveRuneSavingThrowOutcomeFill[];
-      readonly damageRoll?: Extract<BattleFill, { readonly kind: "rolledDice" }>;
+      readonly damageRoll?: Extract<
+        BattleFill,
+        { readonly kind: "rolledDice" }
+      >;
       readonly spellDamageReductionRolls: readonly GlyphExplosiveRuneSpellDamageReductionRollFill[];
       readonly concentrationSavingThrows: readonly GlyphExplosiveRuneConcentrationSavingThrowFill[];
       readonly damageDispositions: readonly GlyphExplosiveRuneDamageDispositionFill[];
@@ -267,6 +360,19 @@ export type GlyphDurableOccurrenceEffectFromCompletedInscriptionResult =
       readonly tag: "unsupportedExplosiveRuneDamageType";
       readonly damageType: DamageType;
       readonly supportedDamageTypes: typeof GLYPH_EXPLOSIVE_RUNE_DAMAGE_TYPES;
+    }
+  | {
+      readonly tag: "storedSpellLevelAboveGlyphSlot";
+      readonly storedSpellLevel: BattleSpellEffectLevel;
+      readonly sourceSpellLevel: BattleSpellEffectLevel;
+    }
+  | {
+      readonly tag: "storedSpellTargetShapeUnsupported";
+      readonly storedInvocation: GlyphStoredSpellInvocation;
+    }
+  | {
+      readonly tag: "storedSpellConcentrationUnsupported";
+      readonly storedInvocation: GlyphStoredSpellInvocation;
     };
 
 export type AddGlyphDurableOccurrenceResult =
@@ -349,6 +455,7 @@ export type ReleaseGlyphExplosiveRuneResult =
     };
 
 type GlyphExplosiveRuneReleaseWitnessValidationFailure =
+  | "releaseBranchMismatch"
   | "coveredAreaMismatch"
   | "duplicateAffectedTarget"
   | "affectedTargetNotFound"
@@ -402,12 +509,60 @@ type GlyphExplosiveRuneSavingThrowCheck =
       readonly reason: GlyphExplosiveRuneReleaseWitnessValidationFailure;
     };
 
+export type ReleaseGlyphStoredSpellResult =
+  | {
+      readonly tag: "released";
+      readonly state: BattleState;
+      readonly effect: GlyphDurableOccurrenceActiveEffect;
+      readonly triggeringCreatureId: CombatantId;
+      readonly storedInvocation: GlyphStoredSpellInvocation;
+    }
+  | {
+      readonly tag: "notFound";
+      readonly state: BattleState;
+      readonly sourceEffectId: BattleSpellEffectOccurrenceId;
+    }
+  | {
+      readonly tag: "ambiguousOccurrence";
+      readonly state: BattleState;
+      readonly sourceEffectId: BattleSpellEffectOccurrenceId;
+    }
+  | {
+      readonly tag: "invalidWitness";
+      readonly state: BattleState;
+      readonly sourceEffectId: BattleSpellEffectOccurrenceId;
+      readonly reason: GlyphStoredSpellReleaseWitnessValidationFailure;
+      readonly message?: string;
+    }
+  | {
+      readonly tag: "needsHoles";
+      readonly state: BattleState;
+      readonly sourceEffectId: BattleSpellEffectOccurrenceId;
+      readonly holes: readonly BattleHole[];
+    };
+
+type GlyphStoredSpellReleaseWitnessValidationFailure =
+  | "storedReleaseBranchMismatch"
+  | "triggeringCreatureNotFound"
+  | "storedSpellTargetShapeMismatch"
+  | "storedSpellConcentrationUnsupported"
+  | "triggerCreatureTargetMismatch"
+  | "areaCenterMismatch"
+  | "hostilePlacementRequired"
+  | "hostilePlacementNotApplicable"
+  | "hostilePlacementSubjectMismatch"
+  | "hostilePlacementTargetMismatch"
+  | "hostilePlacementAreaMismatch"
+  | "storedSpellResolutionInvalid";
+
 export function glyphDurableOccurrenceProfileForSpell(
   spell: SpellRecord,
 ): GlyphDurableOccurrenceProfile | null {
-  const release = glyphExplosiveRuneReleaseProfileForSpell(spell);
+  const explosiveRune = glyphExplosiveRuneReleaseProfileForSpell(spell);
+  const spellGlyph = glyphStoredSpellReleaseProfileForSpell(spell);
   if (
-    release === null ||
+    explosiveRune === null ||
+    spellGlyph === null ||
     spell.kind !== "spell" ||
     spell.mechanics.family !== "glyph_warding" ||
     !glyphWardingMechanicsSupportsDurableOccurrence(spell.mechanics)
@@ -447,7 +602,7 @@ export function glyphDurableOccurrenceProfileForSpell(
           ),
           outcome: "glyph_breaks_spell_ends_without_triggering",
         },
-        release,
+        release: { explosiveRune, spellGlyph },
       };
 }
 
@@ -489,6 +644,42 @@ export function glyphExplosiveRuneReleaseProfileForSpell(
   };
 }
 
+export function glyphStoredSpellReleaseProfileForSpell(
+  spell: SpellRecord,
+): GlyphStoredSpellReleaseProfile | null {
+  if (
+    spell.kind !== "spell" ||
+    spell.mechanics.family !== "glyph_warding" ||
+    !glyphWardingMechanicsSupportsDurableOccurrence(spell.mechanics) ||
+    !glyphWardingSpellGlyphSupported(spell.mechanics.release.spellGlyph)
+  ) {
+    return null;
+  }
+  return {
+    kind: "glyphStoredSpellReleaseProfile",
+    storage: {
+      spellAccess: "prepared_spell",
+      castAsPartOfCreatingGlyph: true,
+      immediateEffect: "none",
+      baseMaxStoredSpellLevel: GLYPH_OF_WARDING_BASE_LEVEL,
+      upcastMaxStoredSpellLevel: "same_as_cast_slot_level",
+      targetShapes: GLYPH_STORED_SPELL_TARGET_SHAPES,
+    },
+    release: {
+      when: "glyph_triggered",
+      retargeting: {
+        singleCreatureSpellTarget: "triggering_creature",
+        areaSpellOrigin: "centered_on_triggering_creature",
+      },
+      hostilePlacement: {
+        appliesTo: GLYPH_STORED_SPELL_HOSTILE_PLACEMENT_SUBJECTS,
+        placement: "as_close_as_possible_to_triggering_creature",
+        attackTarget: "triggering_creature",
+      },
+    },
+  };
+}
+
 export function glyphDurableOccurrenceEffectFromCompletedInscription(input: {
   readonly profile: GlyphDurableOccurrenceProfile;
   readonly witness: CompletedGlyphInscriptionWitness;
@@ -504,16 +695,28 @@ export function glyphDurableOccurrenceEffectFromCompletedInscription(input: {
     };
   }
   if (
+    input.witness.release.kind === "explosiveRune" &&
     !glyphExplosiveRuneDamageTypeSupported(
       input.witness.release.damageType,
-      input.profile.release,
+      input.profile.release.explosiveRune,
     )
   ) {
     return {
       tag: "unsupportedExplosiveRuneDamageType",
       damageType: input.witness.release.damageType,
-      supportedDamageTypes: input.profile.release.damage.damageTypes,
+      supportedDamageTypes:
+        input.profile.release.explosiveRune.damage.damageTypes,
     };
+  }
+  if (input.witness.release.kind === "spellGlyph") {
+    const storedSpell = glyphStoredSpellInvocationValidation({
+      profile: input.profile.release.spellGlyph,
+      release: input.witness.release,
+      sourceSpellLevel: input.witness.sourceSpellLevel,
+    });
+    if (storedSpell !== null) {
+      return storedSpell;
+    }
   }
   return {
     tag: "created",
@@ -707,11 +910,99 @@ export function releaseGlyphExplosiveRune(input: {
   };
 }
 
+export function releaseGlyphStoredSpell(input: {
+  readonly state: BattleState;
+  readonly profile: GlyphStoredSpellReleaseProfile;
+  readonly witness: GlyphStoredSpellReleaseWitness;
+}): ReleaseGlyphStoredSpellResult {
+  const sourceEffectId = input.witness.triggerOccurrence.sourceEffectId;
+  const refs = glyphOccurrenceRefs(input.state, sourceEffectId);
+  if (refs.length === 0) {
+    return {
+      tag: "notFound",
+      state: input.state,
+      sourceEffectId,
+    };
+  }
+  if (refs.length > 1) {
+    return {
+      tag: "ambiguousOccurrence",
+      state: input.state,
+      sourceEffectId,
+    };
+  }
+  const [ref] = refs;
+  if (ref === undefined) {
+    return {
+      tag: "notFound",
+      state: input.state,
+      sourceEffectId,
+    };
+  }
+  const validation = glyphStoredSpellReleaseWitnessValidation({
+    state: input.state,
+    profile: input.profile,
+    effect: ref.effect,
+    witness: input.witness,
+  });
+  if (validation !== null) {
+    return {
+      tag: "invalidWitness",
+      state: input.state,
+      sourceEffectId,
+      reason: validation,
+    };
+  }
+  if (!isGlyphStoredSpellOccurrence(ref.effect)) {
+    return {
+      tag: "invalidWitness",
+      state: input.state,
+      sourceEffectId,
+      reason: "storedReleaseBranchMismatch",
+    };
+  }
+  const resolved = resolveStoredSpellGlyphRelease({
+    state: input.state,
+    effect: ref.effect,
+    witness: input.witness,
+  });
+  if (resolved.tag === "needsHoles") {
+    return {
+      tag: "needsHoles",
+      state: input.state,
+      sourceEffectId,
+      holes: resolved.holes,
+    };
+  }
+  if (resolved.tag === "invalid") {
+    return {
+      tag: "invalidWitness",
+      state: input.state,
+      sourceEffectId,
+      reason: "storedSpellResolutionInvalid",
+      message: resolved.message,
+    };
+  }
+  const state = battleStateWithoutGlyphOccurrence(
+    resolved.state,
+    ref.effect.sourceEffectId,
+  );
+  return {
+    tag: "released",
+    state,
+    effect: ref.effect,
+    triggeringCreatureId: input.witness.triggeringCreatureId,
+    storedInvocation: ref.effect.release.storedInvocation,
+  };
+}
+
 export function addGlyphDurableOccurrence(input: {
   readonly state: BattleState;
   readonly effect: GlyphDurableOccurrenceActiveEffect;
 }): AddGlyphDurableOccurrenceResult {
-  if (glyphOccurrenceRefs(input.state, input.effect.sourceEffectId).length > 0) {
+  if (
+    glyphOccurrenceRefs(input.state, input.effect.sourceEffectId).length > 0
+  ) {
     return {
       tag: "duplicateOccurrence",
       state: input.state,
@@ -842,14 +1133,12 @@ function glyphWardingOccurrenceSupported(
     occurrence.inscriptionAnchor.chooser === "caster" &&
     occurrence.inscriptionAnchor.surface.kind === "surface" &&
     occurrence.inscriptionAnchor.surface.inscriptionSite === "on_surface" &&
-    occurrence.inscriptionAnchor.closeableObject.kind ===
-      "closeable_object" &&
+    occurrence.inscriptionAnchor.closeableObject.kind === "closeable_object" &&
     occurrence.inscriptionAnchor.closeableObject.inscriptionSite ===
       "within_object" &&
     occurrence.inscriptionAnchor.closeableObject.concealmentMethod ===
       "object_can_be_closed" &&
-    occurrence.coverage.maxDiameterFeet ===
-      GLYPH_MAX_COVERED_DIAMETER_FEET &&
+    occurrence.coverage.maxDiameterFeet === GLYPH_MAX_COVERED_DIAMETER_FEET &&
     occurrence.coverage.placement.kind ===
       "table_witnessed_covered_area_on_inscribed_anchor" &&
     occurrence.coverage.placement.constraint === "within_max_diameter" &&
@@ -922,6 +1211,92 @@ function glyphWardingExplosiveRuneSupported(
   );
 }
 
+function glyphWardingSpellGlyphSupported(
+  spellGlyph: GlyphWardingSpellGlyphBranch,
+): boolean {
+  return (
+    spellGlyph.kind === "spell_glyph" &&
+    spellGlyph.storage.spellAccess === "prepared_spell" &&
+    spellGlyph.storage.castAsPartOfCreatingGlyph === true &&
+    spellGlyph.storage.immediateEffect === "none" &&
+    spellGlyph.storage.maxStoredSpellLevel.baseMaxLevel ===
+      GLYPH_OF_WARDING_BASE_LEVEL &&
+    spellGlyph.storage.maxStoredSpellLevel.upcastMaxLevel ===
+      "same_as_cast_slot_level" &&
+    spellGlyph.storage.targetShape.length === 2 &&
+    spellGlyph.storage.targetShape[0]?.kind === "single_creature_target" &&
+    spellGlyph.storage.targetShape[1]?.kind === "area_target" &&
+    spellGlyph.release.when === "glyph_triggered" &&
+    spellGlyph.release.retargeting.singleCreatureSpellTarget ===
+      "triggering_creature" &&
+    spellGlyph.release.retargeting.areaSpellOrigin ===
+      "centered_on_triggering_creature" &&
+    sameStringSet(
+      spellGlyph.release.hostilePlacement.appliesTo,
+      GLYPH_STORED_SPELL_HOSTILE_PLACEMENT_SUBJECTS,
+    ) &&
+    spellGlyph.release.hostilePlacement.placement ===
+      "as_close_as_possible_to_triggering_creature" &&
+    spellGlyph.release.hostilePlacement.attackTarget === "triggering_creature"
+  );
+}
+
+function glyphStoredSpellInvocationValidation(input: {
+  readonly profile: GlyphStoredSpellReleaseProfile;
+  readonly release: GlyphDurableOccurrenceStoredSpellRelease;
+  readonly sourceSpellLevel: BattleSpellEffectLevel;
+}): Exclude<
+  GlyphDurableOccurrenceEffectFromCompletedInscriptionResult,
+  {
+    readonly tag:
+      | "created"
+      | "sourceSpellLevelBelowMinimum"
+      | "unsupportedExplosiveRuneDamageType";
+  }
+> | null {
+  const storedInvocation = input.release.storedInvocation;
+  const storedSpellLevel = parseBattleSpellEffectLevel(
+    storedInvocation.spell.mechanics.level,
+  );
+  const storedSlotLevel = parseBattleSpellEffectLevel(
+    Number(storedInvocation.resource.slotLevel),
+  );
+  if (
+    storedSpellLevel === null ||
+    storedSlotLevel === null ||
+    Number(storedSpellLevel) > Number(input.sourceSpellLevel) ||
+    Number(storedSlotLevel) > Number(input.sourceSpellLevel)
+  ) {
+    return {
+      tag: "storedSpellLevelAboveGlyphSlot",
+      storedSpellLevel: storedSpellLevel ?? input.sourceSpellLevel,
+      sourceSpellLevel: input.sourceSpellLevel,
+    };
+  }
+  if (
+    glyphStoredSpellInvocationRequiresStoredConcentrationOwner(storedInvocation)
+  ) {
+    return {
+      tag: "storedSpellConcentrationUnsupported",
+      storedInvocation,
+    };
+  }
+  const targetShape = glyphStoredSpellInvocationTargetShape(storedInvocation);
+  return targetShape === null ||
+    !input.profile.storage.targetShapes.includes(targetShape)
+    ? {
+        tag: "storedSpellTargetShapeUnsupported",
+        storedInvocation,
+      }
+    : null;
+}
+
+function glyphStoredSpellInvocationRequiresStoredConcentrationOwner(
+  invocation: GlyphStoredSpellInvocation,
+): boolean {
+  return invocation.spell.mechanics.duration.kind === "concentration";
+}
+
 function glyphExplosiveRuneDamageTypeSupported(
   damageType: DamageType,
   profile: GlyphExplosiveRuneReleaseProfile,
@@ -929,6 +1304,274 @@ function glyphExplosiveRuneDamageTypeSupported(
   return profile.damage.damageTypes.some(
     (candidate) => candidate === damageType,
   );
+}
+
+function glyphStoredSpellInvocationTargetShape(
+  invocation: GlyphStoredSpellInvocation,
+): GlyphStoredSpellTargetShape | null {
+  if (
+    !glyphStoredSpellInvocationRequiresHostilePlacementWitness(invocation) &&
+    (invocation.targeting.kind === "singleCombatant" ||
+      invocation.targeting.kind === "singleCreatureOrObject")
+  ) {
+    return "singleCreature";
+  }
+  if (glyphStoredSpellInvocationHasAreaRelease(invocation)) {
+    return "area";
+  }
+  return null;
+}
+
+function glyphStoredSpellInvocationHasAreaRelease(
+  invocation: GlyphStoredSpellInvocation,
+): invocation is Extract<
+  GlyphStoredSpellInvocation,
+  { readonly procedure: "saveGatedDamage" | "greaseGroundHazard" }
+> {
+  return (
+    invocation.procedure === "greaseGroundHazard" ||
+    glyphStoredSpellInvocationHasSaveGatedAreaRelease(invocation)
+  );
+}
+
+function glyphStoredSpellInvocationHasSaveGatedAreaRelease(
+  invocation: GlyphStoredSpellInvocation,
+): invocation is Extract<
+  GlyphStoredSpellInvocation,
+  { readonly procedure: "saveGatedDamage" }
+> {
+  return (
+    invocation.procedure === "saveGatedDamage" &&
+    (invocation.targeting.kind === "pointOriginSphere" ||
+      invocation.targeting.kind === "pointOriginSphereDiameter" ||
+      invocation.targeting.kind === "pointOriginCylinder" ||
+      invocation.targeting.kind === "pointOriginCubeExcludingCaster" ||
+      invocation.targeting.kind === "pointOriginCube" ||
+      invocation.targeting.kind === "selfOriginCube" ||
+      invocation.targeting.kind === "selfOriginCone" ||
+      invocation.targeting.kind === "selfOriginLine" ||
+      invocation.targeting.kind === "selfOriginEmanation" ||
+      invocation.targeting.kind === "primaryTargetOriginEmanation")
+  );
+}
+
+function glyphStoredSpellInvocationRequiresHostilePlacementWitness(
+  invocation: GlyphStoredSpellInvocation,
+): boolean {
+  return glyphStoredSpellInvocationHostilePlacementSubject(invocation) !== null;
+}
+
+function glyphStoredSpellInvocationHostilePlacementSubject(
+  invocation: GlyphStoredSpellInvocation,
+): GlyphStoredSpellHostilePlacementSubject | null {
+  return invocation.procedure === "greaseGroundHazard" ? "traps" : null;
+}
+
+function glyphStoredSpellReleaseWitnessValidation(input: {
+  readonly state: BattleState;
+  readonly profile: GlyphStoredSpellReleaseProfile;
+  readonly effect: GlyphDurableOccurrenceActiveEffect;
+  readonly witness: GlyphStoredSpellReleaseWitness;
+}): GlyphStoredSpellReleaseWitnessValidationFailure | null {
+  if (input.effect.release.kind !== "spellGlyph") {
+    return "storedReleaseBranchMismatch";
+  }
+  if (!input.state.combatants.has(input.witness.triggeringCreatureId)) {
+    return "triggeringCreatureNotFound";
+  }
+  if (
+    glyphStoredSpellInvocationRequiresStoredConcentrationOwner(
+      input.effect.release.storedInvocation,
+    )
+  ) {
+    return "storedSpellConcentrationUnsupported";
+  }
+  const targetShape = glyphStoredSpellInvocationTargetShape(
+    input.effect.release.storedInvocation,
+  );
+  if (targetShape === null) {
+    return "storedSpellTargetShapeMismatch";
+  }
+  if (
+    targetShape === "singleCreature" &&
+    input.witness.targeting.kind !== "storedSpellTargetsTriggeringCreature"
+  ) {
+    return "storedSpellTargetShapeMismatch";
+  }
+  if (
+    targetShape === "area" &&
+    input.witness.targeting.kind !==
+      "storedSpellAreaCenteredOnTriggeringCreature"
+  ) {
+    return "storedSpellTargetShapeMismatch";
+  }
+  const hostilePlacementValidation = glyphStoredSpellHostilePlacementValidation(
+    {
+      profile: input.profile,
+      invocation: input.effect.release.storedInvocation,
+      witness: input.witness,
+    },
+  );
+  if (hostilePlacementValidation !== null) {
+    return hostilePlacementValidation;
+  }
+  if (input.witness.targeting.kind === "storedSpellTargetsTriggeringCreature") {
+    return input.witness.targeting.targetId ===
+      input.witness.triggeringCreatureId
+      ? null
+      : "triggerCreatureTargetMismatch";
+  }
+  if (
+    input.witness.targeting.originAnchorId !==
+    input.witness.triggeringCreatureId
+  ) {
+    return "areaCenterMismatch";
+  }
+  const areaSave = input.witness.fills.find(
+    (
+      fill,
+    ): fill is Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> =>
+      fill.kind === "savingThrowOutcome" && "area" in fill.value,
+  );
+  if (
+    areaSave !== undefined &&
+    "area" in areaSave.value &&
+    "originAnchorId" in areaSave.value.area &&
+    areaSave.value.area.originAnchorId !== input.witness.triggeringCreatureId
+  ) {
+    return "areaCenterMismatch";
+  }
+  return null;
+}
+
+function isGlyphStoredSpellOccurrence(
+  effect: GlyphDurableOccurrenceActiveEffect,
+): effect is GlyphStoredSpellOccurrenceActiveEffect {
+  return effect.release.kind === "spellGlyph";
+}
+
+function glyphStoredSpellHostilePlacementValidation(input: {
+  readonly profile: GlyphStoredSpellReleaseProfile;
+  readonly invocation: GlyphStoredSpellInvocation;
+  readonly witness: GlyphStoredSpellReleaseWitness;
+}): GlyphStoredSpellReleaseWitnessValidationFailure | null {
+  const expectedSubject = glyphStoredSpellInvocationHostilePlacementSubject(
+    input.invocation,
+  );
+  const hostilePlacement = input.witness.hostilePlacement;
+  if (expectedSubject === null) {
+    return hostilePlacement.kind === "storedSpellHostilePlacementNotApplicable"
+      ? null
+      : "hostilePlacementNotApplicable";
+  }
+  if (hostilePlacement.kind !== "storedSpellHostilePlacement") {
+    return "hostilePlacementRequired";
+  }
+  if (
+    hostilePlacement.subject !== expectedSubject ||
+    !input.profile.release.hostilePlacement.appliesTo.includes(
+      hostilePlacement.subject,
+    )
+  ) {
+    return "hostilePlacementSubjectMismatch";
+  }
+  if (hostilePlacement.attackTargetId !== input.witness.triggeringCreatureId) {
+    return "hostilePlacementTargetMismatch";
+  }
+  const areaSave = input.witness.fills.find(
+    (
+      fill,
+    ): fill is Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> =>
+      fill.kind === "savingThrowOutcome" &&
+      "area" in fill.value &&
+      "areaId" in fill.value.area,
+  );
+  if (
+    areaSave !== undefined &&
+    "area" in areaSave.value &&
+    "areaId" in areaSave.value.area &&
+    areaSave.value.area.areaId !== hostilePlacement.areaId
+  ) {
+    return "hostilePlacementAreaMismatch";
+  }
+  return null;
+}
+
+function resolveStoredSpellGlyphRelease(input: {
+  readonly state: BattleState;
+  readonly effect: GlyphStoredSpellOccurrenceActiveEffect;
+  readonly witness: GlyphStoredSpellReleaseWitness;
+}): BattleResolutionResult {
+  const invocation = input.effect.release.storedInvocation;
+  const subject = {
+    tag: "actionSpell" as const,
+    actorId: input.effect.sourceCombatantId,
+    invocation: supportedSpellInvocationRef(invocation),
+    mode: { tag: "cast" as const },
+  };
+  const fills = glyphStoredSpellReleaseFills(input);
+  if (invocation.procedure === "greaseGroundHazard") {
+    const fillSet = spellFillSet(fills, invocation);
+    if (fillSet.tag === "invalid") {
+      return invalidResult(input.state, "invalidFill", fillSet.message);
+    }
+    return resolveGreaseGroundHazardSpellAct({
+      input: {
+        state: input.state,
+        subject,
+        fills,
+      },
+      actorId: input.effect.sourceCombatantId,
+      invocation,
+      fillSet,
+      spendsCastResources: false,
+    });
+  }
+  return resolveSpellRelease(
+    {
+      state: input.state,
+      subject,
+      fills,
+    },
+    invocation,
+    input.witness.targeting.kind ===
+      "storedSpellAreaCenteredOnTriggeringCreature"
+      ? {
+          selfOriginAreaAnchorId: input.witness.triggeringCreatureId,
+          opensSpellCastReactionWindow: false,
+        }
+      : {
+          storedGlyphTriggeringCreatureTargetId:
+            input.witness.triggeringCreatureId,
+          opensSpellCastReactionWindow: false,
+        },
+  );
+}
+
+function glyphStoredSpellReleaseFills(input: {
+  readonly state: BattleState;
+  readonly effect: GlyphDurableOccurrenceActiveEffect;
+  readonly witness: GlyphStoredSpellReleaseWitness;
+}): readonly BattleFill[] {
+  if (input.effect.release.kind !== "spellGlyph") {
+    return input.witness.fills;
+  }
+  if (input.witness.targeting.kind === "storedSpellTargetsTriggeringCreature") {
+    return [
+      {
+        kind: "targetChoice",
+        holeId: spellTargetHole(
+          input.state,
+          input.effect.sourceCombatantId,
+          input.effect.release.storedInvocation,
+        ).holeId,
+        value: input.witness.targeting.targetId,
+        spatialFacts: input.witness.targeting.targetSpatialFacts,
+      },
+      ...input.witness.fills,
+    ];
+  }
+  return input.witness.fills;
 }
 
 function glyphOccurrenceRefs(
@@ -984,6 +1627,9 @@ function glyphExplosiveRuneReleaseWitnessValidation(input: {
   readonly effect: GlyphDurableOccurrenceActiveEffect;
   readonly witness: GlyphExplosiveRuneReleaseWitness;
 }): GlyphExplosiveRuneReleaseWitnessValidationFailure | null {
+  if (input.effect.release.kind !== "explosiveRune") {
+    return "releaseBranchMismatch";
+  }
   if (input.witness.coveredAreaId !== input.effect.coveredAreaId) {
     return "coveredAreaMismatch";
   }
@@ -1000,9 +1646,7 @@ function glyphExplosiveRuneReleaseWitnessValidation(input: {
     return "duplicateAffectedTarget";
   }
   if (
-    affectedTargetIds.some(
-      (targetId) => !input.state.combatants.has(targetId),
-    )
+    affectedTargetIds.some((targetId) => !input.state.combatants.has(targetId))
   ) {
     return "affectedTargetNotFound";
   }
@@ -1058,7 +1702,9 @@ function glyphExplosiveRuneSavingThrowCheck(input: {
     return { tag: "invalid", reason: "spellSaveDcUnavailable" };
   }
   if (
-    hasUnexpectedOrDuplicateFills(areaMembership.savingThrowOutcomes, [saveHole])
+    hasUnexpectedOrDuplicateFills(areaMembership.savingThrowOutcomes, [
+      saveHole,
+    ])
   ) {
     return { tag: "invalid", reason: "savingThrowOutcomeMismatch" };
   }
@@ -1266,30 +1912,29 @@ function glyphExplosiveRuneDamageLifecycleCheck(input: {
             }),
           ];
     });
-  const invalidConcentrationCheck =
-    areaMembership.affectedTargetIds
-      .map((targetId) => {
-        const target = damageLifecycleTargetByTargetId.get(targetId);
-        const damageAmount = damageAmountByTargetId.get(targetId);
-        if (target === undefined || damageAmount === undefined) {
-          return { tag: "ok" as const, holes: [] };
-        }
-        const holes = damageLifecycleConcentrationSavingThrowHoles({
-          state: input.state,
-          target,
-          damageAmount,
-        });
-        return damageLifecycleConcentrationSavingThrowFillCheck({
-          state: input.state,
-          target,
-          damageAmount,
-          fills: fillsMatchingHoleIds(
-            areaMembership.concentrationSavingThrows,
-            holes,
-          ),
-        });
-      })
-      .find((check) => check.tag === "invalid");
+  const invalidConcentrationCheck = areaMembership.affectedTargetIds
+    .map((targetId) => {
+      const target = damageLifecycleTargetByTargetId.get(targetId);
+      const damageAmount = damageAmountByTargetId.get(targetId);
+      if (target === undefined || damageAmount === undefined) {
+        return { tag: "ok" as const, holes: [] };
+      }
+      const holes = damageLifecycleConcentrationSavingThrowHoles({
+        state: input.state,
+        target,
+        damageAmount,
+      });
+      return damageLifecycleConcentrationSavingThrowFillCheck({
+        state: input.state,
+        target,
+        damageAmount,
+        fills: fillsMatchingHoleIds(
+          areaMembership.concentrationSavingThrows,
+          holes,
+        ),
+      });
+    })
+    .find((check) => check.tag === "invalid");
   if (invalidConcentrationCheck?.tag === "invalid") {
     return { tag: "invalid", reason: "concentrationSavingThrowMismatch" };
   }
@@ -1302,8 +1947,8 @@ function glyphExplosiveRuneDamageLifecycleCheck(input: {
     return { tag: "invalid", reason: "concentrationSavingThrowMismatch" };
   }
 
-  const damageDispositionHoles =
-    areaMembership.affectedTargetIds.flatMap((targetId) => {
+  const damageDispositionHoles = areaMembership.affectedTargetIds.flatMap(
+    (targetId) => {
       const target = damageLifecycleTargetByTargetId.get(targetId);
       const damageAmount = damageAmountByTargetId.get(targetId);
       const hole =
@@ -1315,7 +1960,8 @@ function glyphExplosiveRuneDamageLifecycleCheck(input: {
               damageAmount,
             });
       return hole === null ? [] : [hole];
-    });
+    },
+  );
   const damageDispositionValidation = damageDispositionFillsValidation({
     holes: damageDispositionHoles,
     fills: areaMembership.damageDispositions,
@@ -1344,30 +1990,29 @@ function glyphExplosiveRuneDamageLifecycleCheck(input: {
             }),
           ];
     });
-  const invalidHideousLaughterRepeatSaveCheck =
-    areaMembership.affectedTargetIds
-      .map((targetId) => {
-        const target = damageLifecycleTargetByTargetId.get(targetId);
-        const damageAmount = damageAmountByTargetId.get(targetId);
-        if (target === undefined || damageAmount === undefined) {
-          return { tag: "ok" as const, holes: [] };
-        }
-        const holes = damageLifecycleHideousLaughterDamageRepeatSaveHoles({
-          state: input.state,
-          target,
-          damageAmount,
-        });
-        return damageLifecycleHideousLaughterDamageRepeatSaveFillCheck({
-          state: input.state,
-          target,
-          damageAmount,
-          fills: fillsMatchingHoleIds(
-            areaMembership.hideousLaughterDamageRepeatSaves,
-            holes,
-          ),
-        });
-      })
-      .find((check) => check.tag === "invalid");
+  const invalidHideousLaughterRepeatSaveCheck = areaMembership.affectedTargetIds
+    .map((targetId) => {
+      const target = damageLifecycleTargetByTargetId.get(targetId);
+      const damageAmount = damageAmountByTargetId.get(targetId);
+      if (target === undefined || damageAmount === undefined) {
+        return { tag: "ok" as const, holes: [] };
+      }
+      const holes = damageLifecycleHideousLaughterDamageRepeatSaveHoles({
+        state: input.state,
+        target,
+        damageAmount,
+      });
+      return damageLifecycleHideousLaughterDamageRepeatSaveFillCheck({
+        state: input.state,
+        target,
+        damageAmount,
+        fills: fillsMatchingHoleIds(
+          areaMembership.hideousLaughterDamageRepeatSaves,
+          holes,
+        ),
+      });
+    })
+    .find((check) => check.tag === "invalid");
   if (invalidHideousLaughterRepeatSaveCheck?.tag === "invalid") {
     return {
       tag: "invalid",
@@ -1395,10 +2040,8 @@ function glyphExplosiveRuneDamageLifecycleCheck(input: {
     ),
     ...damageDispositionHoles.filter(
       (hole) =>
-        damageDispositionFillFor(
-          areaMembership.damageDispositions,
-          hole,
-        ) === undefined,
+        damageDispositionFillFor(areaMembership.damageDispositions, hole) ===
+        undefined,
     ),
     ...hideousLaughterDamageRepeatSaveHoles.filter(
       (hole) =>
@@ -1434,6 +2077,10 @@ function glyphExplosiveRuneDamageByTypeByTargetId(input: {
   if (input.witness.areaMembership.kind === "noCreaturesInArea") {
     return new Map();
   }
+  if (input.effect.release.kind !== "explosiveRune") {
+    return new Map();
+  }
+  const release = input.effect.release;
   return new Map(
     input.witness.areaMembership.affectedTargetIds.flatMap((targetId) => {
       const target = input.state.combatants.get(targetId);
@@ -1446,7 +2093,7 @@ function glyphExplosiveRuneDamageByTypeByTargetId(input: {
       const saveDamageResult = savingThrowOutcome.succeeded ? "half" : "full";
       const damageByType = addDamageAmountForType(
         new Map(),
-        input.effect.release.damageType,
+        release.damageType,
         applySaveDamageResult(input.damageRollTotal, saveDamageResult),
       );
       return [[targetId, damageByType]];
@@ -1468,7 +2115,9 @@ function glyphExplosiveRuneSpellDamageReductionHoles(input: {
         return [];
       }
       const reduction = availableSpellDamageReduction(target, damageByType);
-      return reduction === null ? [] : [spellDamageReductionRollHole(reduction)];
+      return reduction === null
+        ? []
+        : [spellDamageReductionRollHole(reduction)];
     },
   );
 }
@@ -1611,8 +2260,7 @@ function glyphExplosiveRuneDamageExpr(
       profile.damage.dice.baseDice +
       Math.max(
         0,
-        Number(effect.sourceSpellLevel) -
-          Number(profile.damage.dice.baseLevel),
+        Number(effect.sourceSpellLevel) - Number(profile.damage.dice.baseLevel),
       ) *
         profile.damage.dice.perSlotAboveBaseDice,
     dieSize: profile.damage.dice.dieSize,
@@ -1637,7 +2285,7 @@ function glyphEndWitnessValidation(
   witness: GlyphDurableOccurrenceEndWitness,
 ): GlyphEndWitnessValidationFailure | null {
   if (witness.kind === "tableWitnessedGlyphTriggerOccurrence") {
-    return effect.release.kind === "explosiveRune" ? "releaseRequired" : null;
+    return "releaseRequired";
   }
   if (witness.castLocationId !== effect.castLocationId) {
     return "castLocationMismatch";

@@ -4,14 +4,14 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 
 ## Summary
 
-- Total obligations: 126
-- Covered obligations: 120
+- Total obligations: 127
+- Covered obligations: 121
 - Open transitional obligations: 0
 - Boundary or unsupported obligations: 6
 
 | Status | Count |
 | --- | ---: |
-| covered | 120 |
+| covered | 121 |
 | needs-qnt-owner | 0 |
 | needs-parity-witness | 0 |
 | needs-surface-evidence | 0 |
@@ -21,7 +21,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | Runtime | Count |
 | --- | ---: |
 | shared-algebras | 1 |
-| battle | 95 |
+| battle | 96 |
 | character-creation | 14 |
 | character-sheet | 12 |
 | character-battle | 4 |
@@ -156,6 +156,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `BATTLE.PROTOCOL.ZERO_HIT_POINT_MID_RESOLUTION` | battle | covered | _direct reducer entrypoint_ |
 | `BATTLE.SPELL.GLYPH_DURABLE_OCCURRENCE_LIFECYCLE` | battle | covered | `spell.invocation-glyph-durable-occurrence` |
 | `BATTLE.SPELL.GLYPH_EXPLOSIVE_RUNE_RELEASE` | battle | covered | `spell.invocation-glyph-explosive-rune-release` |
+| `BATTLE.SPELL.GLYPH_STORED_SPELL_RELEASE` | battle | covered | `spell.invocation-glyph-stored-spell-release` |
 
 ## Battle Hole Frontier
 
@@ -573,7 +574,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `packages/battle-runtime/battle-runtime-zero-hit-point-mid-resolution.mbt.qnt` | mbt-fixture | _none_ |
 | `packages/shared-algebras/proofs/rule-core/spell-haste-positive-effects-core.qnt` | semantic-core | `BATTLE.SPELL.HASTE_POSITIVE_EFFECTS` |
 | `packages/shared-algebras/proofs/rule-core/spell-haste-positive-effects-core-examples.qnt` | proof-only | `BATTLE.SPELL.HASTE_POSITIVE_EFFECTS` |
-| `packages/battle-runtime/battle-runtime-glyph-durable-occurrence.qnt` | proof-only | `BATTLE.SPELL.GLYPH_DURABLE_OCCURRENCE_LIFECYCLE`, `BATTLE.SPELL.GLYPH_EXPLOSIVE_RUNE_RELEASE` |
+| `packages/battle-runtime/battle-runtime-glyph-durable-occurrence.qnt` | proof-only | `BATTLE.SPELL.GLYPH_DURABLE_OCCURRENCE_LIFECYCLE`, `BATTLE.SPELL.GLYPH_EXPLOSIVE_RUNE_RELEASE`, `BATTLE.SPELL.GLYPH_STORED_SPELL_RELEASE` |
 
 ## QNT Registry
 

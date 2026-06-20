@@ -1,7 +1,7 @@
 // -*- mode: Bluespec; -*-
-// KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.GLYPH_DURABLE_OCCURRENCE_LIFECYCLE BATTLE.SPELL.GLYPH_EXPLOSIVE_RUNE_RELEASE
-// UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-glyph-durable-occurrence spell.invocation-glyph-explosive-rune-release
-// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-glyph-durable-occurrence spell.invocation-glyph-explosive-rune-release
+// KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.GLYPH_DURABLE_OCCURRENCE_LIFECYCLE BATTLE.SPELL.GLYPH_EXPLOSIVE_RUNE_RELEASE BATTLE.SPELL.GLYPH_STORED_SPELL_RELEASE
+// UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-glyph-durable-occurrence spell.invocation-glyph-explosive-rune-release spell.invocation-glyph-stored-spell-release
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-glyph-durable-occurrence spell.invocation-glyph-explosive-rune-release spell.invocation-glyph-stored-spell-release
 //
 // RAW trace:
 // - .references/srd-5.2.1/Spells/Descriptions-E-L.md#Glyph of Warding:
@@ -11,17 +11,40 @@
 //   triggering. The explosive rune branch releases a 20-foot-radius Sphere,
 //   requires Dexterity Saving Throws, deals 5d8 chosen Acid/Cold/Fire/
 //   Lightning/Thunder damage on failed saves, halves damage on successful
-//   saves, and adds 1d8 per slot level above 3.
+//   saves, and adds 1d8 per slot level above 3. The spell glyph branch stores
+//   a prepared spell of no higher level than the glyph slot, has no immediate
+//   effect at storage time, and releases the stored spell against or centered
+//   on the triggering creature. The represented hostile trap branch consumes a
+//   close-as-possible placement witness. Stored Concentration full-duration
+//   override remains a separate owner slice.
 // - UBIQUITOUS_LANGUAGE.md: Spell Effect, Saving Throw, Area of Effect,
-//   Damage Type, and table-owned spatial facts.
+//   Spell Invocation, Damage Type, and table-owned spatial facts.
 
 module battleRuntimeGlyphDurableOccurrence {
+  type GlyphExplosiveRuneRelease = {
+    damageType: str,
+  }
+
+  type GlyphStoredSpellReleaseFacts = {
+    storedSpellLevel: int,
+    storageImmediateEffect: str,
+    storedSpellRequiresConcentration: bool,
+  }
+
+  type GlyphStoredSpellRelease =
+    | StoredSingleCreatureSpell(GlyphStoredSpellReleaseFacts)
+    | StoredAreaSpell(GlyphStoredSpellReleaseFacts)
+    | StoredHostileTrapSpell(GlyphStoredSpellReleaseFacts)
+
+  type GlyphRelease =
+    | ExplosiveRuneRelease(GlyphExplosiveRuneRelease)
+    | SpellGlyphRelease(GlyphStoredSpellRelease)
+
   type GlyphOccurrence = {
     active: bool,
     effectId: int,
     sourceSpellLevel: int,
-    releaseBranch: str,
-    damageType: str,
+    release: GlyphRelease,
     coveredAreaId: int,
     castLocationId: int,
     movementInvalidationMoreThanFeet: int,
@@ -40,6 +63,31 @@ module battleRuntimeGlyphDurableOccurrence {
     savingThrowOutcomeCount: int,
   }
 
+  type GlyphStoredSpellHostilePlacementWitness = {
+    subject: str,
+    areaId: int,
+    placement: str,
+    attackTargetId: int,
+  }
+
+  type GlyphStoredSpellReleaseWitness =
+    | StoredSingleCreatureReleaseWitness({
+        triggerOccurrence: GlyphTriggerOccurrenceWitness,
+        triggeringCreatureId: int,
+        targetId: int,
+      })
+    | StoredAreaReleaseWitness({
+        triggerOccurrence: GlyphTriggerOccurrenceWitness,
+        triggeringCreatureId: int,
+        areaOriginAnchorId: int,
+      })
+    | StoredHostileTrapReleaseWitness({
+        triggerOccurrence: GlyphTriggerOccurrenceWitness,
+        triggeringCreatureId: int,
+        areaOriginAnchorId: int,
+        hostilePlacement: GlyphStoredSpellHostilePlacementWitness,
+      })
+
   pure val glyphMinimumSpellLevel = 3
 
   pure val glyphMovementInvalidationThresholdFeet = 10
@@ -53,19 +101,80 @@ module battleRuntimeGlyphDurableOccurrence {
   pure val glyphExplosiveRuneDamageTypes: Set[str] =
     Set("acid", "cold", "fire", "lightning", "thunder")
 
+  pure val glyphStoredSpellReleaseKinds: Set[str] =
+    Set("singleCreature", "area", "hostileTrap")
+
+  pure val glyphStoredSpellHostilePlacementSubjects: Set[str] =
+    Set("summoned_hostile_creatures", "harmful_objects", "traps")
+
+  pure val glyphStoredSpellHostileTrapSubject = "traps"
+
+  pure val glyphStoredSpellHostilePlacementRule =
+    "as_close_as_possible_to_triggering_creature"
+
+  pure val glyphStoredSpellNoImmediateEffect = "none"
+
+  pure def storedSpellReleaseFacts(
+    storedSpellLevel: int,
+    storageImmediateEffect: str,
+    storedSpellRequiresConcentration: bool,
+  ): GlyphStoredSpellReleaseFacts = {
+    storedSpellLevel: storedSpellLevel,
+    storageImmediateEffect: storageImmediateEffect,
+    storedSpellRequiresConcentration: storedSpellRequiresConcentration,
+  }
+
+  pure def storedSpellReleaseForKind(
+    storedReleaseKind: str,
+    facts: GlyphStoredSpellReleaseFacts,
+  ): GlyphStoredSpellRelease =
+    if (storedReleaseKind == "singleCreature")
+    StoredSingleCreatureSpell(facts)
+    else if (storedReleaseKind == "hostileTrap")
+    StoredHostileTrapSpell(facts)
+    else StoredAreaSpell(facts)
+
+  pure def storedSpellReleaseKind(
+    release: GlyphStoredSpellRelease,
+  ): str =
+    match release {
+      | StoredSingleCreatureSpell(_) => "singleCreature"
+      | StoredAreaSpell(_) => "area"
+      | StoredHostileTrapSpell(_) => "hostileTrap"
+    }
+
+  pure def storedSpellReleaseFactsFrom(
+    release: GlyphStoredSpellRelease,
+  ): GlyphStoredSpellReleaseFacts =
+    match release {
+      | StoredSingleCreatureSpell(facts) => facts
+      | StoredAreaSpell(facts) => facts
+      | StoredHostileTrapSpell(facts) => facts
+    }
+
   pure def completedGlyphInscriptionAccepted(
     sourceSpellLevel: int,
-    releaseBranch: str,
     damageType: str,
   ): bool =
     sourceSpellLevel >= glyphMinimumSpellLevel and
-    releaseBranch == "explosiveRune" and
     damageType.in(glyphExplosiveRuneDamageTypes)
+
+  pure def completedStoredSpellGlyphInscriptionAccepted(
+    sourceSpellLevel: int,
+    storedSpellLevel: int,
+    storedReleaseKind: str,
+    storageImmediateEffect: str,
+    storedSpellRequiresConcentration: bool,
+  ): bool =
+    sourceSpellLevel >= glyphMinimumSpellLevel and
+    storedSpellLevel <= sourceSpellLevel and
+    storedReleaseKind.in(glyphStoredSpellReleaseKinds) and
+    storageImmediateEffect == glyphStoredSpellNoImmediateEffect and
+    not(storedSpellRequiresConcentration)
 
   pure def completedGlyphOccurrence(
     effectId: int,
     sourceSpellLevel: int,
-    releaseBranch: str,
     damageType: str,
     coveredAreaId: int,
     castLocationId: int,
@@ -73,8 +182,33 @@ module battleRuntimeGlyphDurableOccurrence {
     active: true,
     effectId: effectId,
     sourceSpellLevel: sourceSpellLevel,
-    releaseBranch: releaseBranch,
-    damageType: damageType,
+    release: ExplosiveRuneRelease({ damageType: damageType }),
+    coveredAreaId: coveredAreaId,
+    castLocationId: castLocationId,
+    movementInvalidationMoreThanFeet: glyphMovementInvalidationThresholdFeet,
+  }
+
+  pure def completedStoredSpellGlyphOccurrence(
+    effectId: int,
+    sourceSpellLevel: int,
+    storedSpellLevel: int,
+    storedReleaseKind: str,
+    storageImmediateEffect: str,
+    storedSpellRequiresConcentration: bool,
+    coveredAreaId: int,
+    castLocationId: int,
+  ): GlyphOccurrence = {
+    active: true,
+    effectId: effectId,
+    sourceSpellLevel: sourceSpellLevel,
+    release: SpellGlyphRelease(storedSpellReleaseForKind(
+      storedReleaseKind,
+      storedSpellReleaseFacts(
+        storedSpellLevel,
+        storageImmediateEffect,
+        storedSpellRequiresConcentration,
+      ),
+    )),
     coveredAreaId: coveredAreaId,
     castLocationId: castLocationId,
     movementInvalidationMoreThanFeet: glyphMovementInvalidationThresholdFeet,
@@ -84,24 +218,41 @@ module battleRuntimeGlyphDurableOccurrence {
     active: false,
     effectId: occurrence.effectId,
     sourceSpellLevel: occurrence.sourceSpellLevel,
-    releaseBranch: occurrence.releaseBranch,
-    damageType: occurrence.damageType,
+    release: occurrence.release,
     coveredAreaId: occurrence.coveredAreaId,
     castLocationId: occurrence.castLocationId,
     movementInvalidationMoreThanFeet: occurrence.movementInvalidationMoreThanFeet,
   }
 
+  pure def glyphOccurrenceHasExplosiveRuneRelease(
+    occurrence: GlyphOccurrence,
+    damageType: str,
+  ): bool =
+    match occurrence.release {
+      | ExplosiveRuneRelease(release) => release.damageType == damageType
+      | _ => false
+    }
+
+  pure def glyphOccurrenceHasStoredSpellRelease(
+    occurrence: GlyphOccurrence,
+    storedSpellLevel: int,
+    storedReleaseKind: str,
+    storageImmediateEffect: str,
+  ): bool =
+    match occurrence.release {
+      | SpellGlyphRelease(release) =>
+          storedSpellReleaseFactsFrom(release).storedSpellLevel == storedSpellLevel and
+          storedSpellReleaseKind(release) == storedReleaseKind and
+          storedSpellReleaseFactsFrom(release).storageImmediateEffect == storageImmediateEffect and
+          not(storedSpellReleaseFactsFrom(release).storedSpellRequiresConcentration)
+      | _ => false
+    }
+
   pure def glyphAfterTriggerOccurrence(
     occurrence: GlyphOccurrence,
     witnessEffectId: int,
   ): GlyphOccurrence =
-    if (
-      occurrence.active and
-      occurrence.effectId == witnessEffectId and
-      occurrence.releaseBranch != "explosiveRune"
-    )
-    inactiveGlyphOccurrence(occurrence)
-    else occurrence
+    occurrence
 
   pure def glyphAfterMovementInvalidation(
     occurrence: GlyphOccurrence,
@@ -133,20 +284,109 @@ module battleRuntimeGlyphDurableOccurrence {
     occurrence: GlyphOccurrence,
     witness: GlyphExplosiveRuneReleaseWitness,
   ): bool =
+    match occurrence.release {
+      | ExplosiveRuneRelease(release) =>
+          occurrence.active and
+          occurrence.effectId == witness.triggerOccurrence.effectId and
+          release.damageType.in(glyphExplosiveRuneDamageTypes) and
+          occurrence.coveredAreaId == witness.coveredAreaId and
+          witness.affectedTargetCount >= 0 and
+          (
+            witness.affectedTargetCount == 0 or
+            (
+              witness.savingThrowOutcomeCount == witness.affectedTargetCount and
+              witness.savingThrowAbility == "dex" and
+              witness.savingThrowDcSource == "casterSpellSaveDc"
+            )
+          )
+      | _ => false
+    }
+
+  pure def glyphStoredSpellReleaseWitnessAccepted(
+    occurrence: GlyphOccurrence,
+    witness: GlyphStoredSpellReleaseWitness,
+  ): bool =
+    match occurrence.release {
+      | SpellGlyphRelease(release) =>
+          storedSpellReleaseWitnessAcceptedFor(
+            occurrence,
+            release,
+            witness,
+          )
+      | _ => false
+    }
+
+  pure def storedSpellReleaseBaseAccepted(
+    occurrence: GlyphOccurrence,
+    release: GlyphStoredSpellRelease,
+    witnessEffectId: int,
+  ): bool = {
+    val facts = storedSpellReleaseFactsFrom(release)
     occurrence.active and
-    occurrence.effectId == witness.triggerOccurrence.effectId and
-    occurrence.releaseBranch == "explosiveRune" and
-    occurrence.damageType.in(glyphExplosiveRuneDamageTypes) and
-    occurrence.coveredAreaId == witness.coveredAreaId and
-    witness.affectedTargetCount >= 0 and
-    (
-      witness.affectedTargetCount == 0 or
-      (
-        witness.savingThrowOutcomeCount == witness.affectedTargetCount and
-        witness.savingThrowAbility == "dex" and
-        witness.savingThrowDcSource == "casterSpellSaveDc"
-      )
+    occurrence.effectId == witnessEffectId and
+    completedStoredSpellGlyphInscriptionAccepted(
+      occurrence.sourceSpellLevel,
+      facts.storedSpellLevel,
+      storedSpellReleaseKind(release),
+      facts.storageImmediateEffect,
+      facts.storedSpellRequiresConcentration,
     )
+  }
+
+  pure def hostileTrapPlacementWitnessAccepted(
+    witness: GlyphStoredSpellHostilePlacementWitness,
+    triggeringCreatureId: int,
+  ): bool =
+    witness.subject.in(glyphStoredSpellHostilePlacementSubjects) and
+    witness.subject == glyphStoredSpellHostileTrapSubject and
+    witness.areaId > 0 and
+    witness.placement == glyphStoredSpellHostilePlacementRule and
+    witness.attackTargetId == triggeringCreatureId
+
+  pure def storedSpellReleaseWitnessAcceptedFor(
+    occurrence: GlyphOccurrence,
+    release: GlyphStoredSpellRelease,
+    witness: GlyphStoredSpellReleaseWitness,
+  ): bool =
+    match release {
+      | StoredSingleCreatureSpell(_) =>
+          match witness {
+            | StoredSingleCreatureReleaseWitness(w) =>
+                storedSpellReleaseBaseAccepted(
+                  occurrence,
+                  release,
+                  w.triggerOccurrence.effectId,
+                ) and
+                w.targetId == w.triggeringCreatureId
+            | _ => false
+          }
+      | StoredAreaSpell(_) =>
+          match witness {
+            | StoredAreaReleaseWitness(w) =>
+                storedSpellReleaseBaseAccepted(
+                  occurrence,
+                  release,
+                  w.triggerOccurrence.effectId,
+                ) and
+                w.areaOriginAnchorId == w.triggeringCreatureId
+            | _ => false
+          }
+      | StoredHostileTrapSpell(_) =>
+          match witness {
+            | StoredHostileTrapReleaseWitness(w) =>
+                storedSpellReleaseBaseAccepted(
+                  occurrence,
+                  release,
+                  w.triggerOccurrence.effectId,
+                ) and
+                w.areaOriginAnchorId == w.triggeringCreatureId and
+                hostileTrapPlacementWitnessAccepted(
+                  w.hostilePlacement,
+                  w.triggeringCreatureId,
+                )
+            | _ => false
+          }
+    }
 
   pure def glyphAfterExplosiveRuneRelease(
     occurrence: GlyphOccurrence,
@@ -156,43 +396,74 @@ module battleRuntimeGlyphDurableOccurrence {
     inactiveGlyphOccurrence(occurrence)
     else occurrence
 
+  pure def glyphAfterStoredSpellRelease(
+    occurrence: GlyphOccurrence,
+    witness: GlyphStoredSpellReleaseWitness,
+  ): GlyphOccurrence =
+    if (glyphStoredSpellReleaseWitnessAccepted(occurrence, witness))
+    inactiveGlyphOccurrence(occurrence)
+    else occurrence
+
   run test_completed_inscription_creates_active_glyph_occurrence = {
-    val occurrence = completedGlyphOccurrence(1, 3, "explosiveRune", "thunder", 200, 100)
+    val occurrence = completedGlyphOccurrence(1, 3, "thunder", 200, 100)
     all {
-      assert(completedGlyphInscriptionAccepted(3, "explosiveRune", "thunder")),
+      assert(completedGlyphInscriptionAccepted(3, "thunder")),
       assert(occurrence.active),
       assert(occurrence.effectId == 1),
       assert(occurrence.sourceSpellLevel == 3),
-      assert(occurrence.releaseBranch == "explosiveRune"),
-      assert(occurrence.damageType == "thunder"),
+      assert(glyphOccurrenceHasExplosiveRuneRelease(occurrence, "thunder")),
+      assert(not(glyphOccurrenceHasStoredSpellRelease(occurrence, 1, "singleCreature", "none"))),
       assert(occurrence.coveredAreaId == 200),
       assert(occurrence.castLocationId == 100),
       assert(occurrence.movementInvalidationMoreThanFeet == 10),
     }
   }
 
-  run test_completed_inscription_rejects_below_minimum_spell_level = {
+  run test_completed_inscription_stores_prepared_spell_without_immediate_effect = {
+    val occurrence =
+      completedStoredSpellGlyphOccurrence(1, 3, 1, "singleCreature", "none", false, 200, 100)
     all {
-      assert(not(completedGlyphInscriptionAccepted(2, "explosiveRune", "thunder"))),
-      assert(completedGlyphInscriptionAccepted(3, "explosiveRune", "thunder")),
-      assert(completedGlyphInscriptionAccepted(4, "explosiveRune", "thunder")),
-      assert(not(completedGlyphInscriptionAccepted(3, "spellGlyph", "thunder"))),
-      assert(not(completedGlyphInscriptionAccepted(3, "explosiveRune", "force"))),
+      assert(completedStoredSpellGlyphInscriptionAccepted(3, 1, "singleCreature", "none", false)),
+      assert(completedStoredSpellGlyphInscriptionAccepted(5, 5, "area", "none", false)),
+      assert(completedStoredSpellGlyphInscriptionAccepted(3, 1, "hostileTrap", "none", false)),
+      assert(occurrence.active),
+      assert(glyphOccurrenceHasStoredSpellRelease(occurrence, 1, "singleCreature", "none")),
+      assert(not(glyphOccurrenceHasExplosiveRuneRelease(occurrence, "thunder"))),
+      assert(occurrence.coveredAreaId == 200),
+      assert(occurrence.castLocationId == 100),
     }
   }
 
-  run test_trigger_occurrence_does_not_end_explosive_rune_without_release = {
-    val occurrence = completedGlyphOccurrence(1, 3, "explosiveRune", "thunder", 200, 100)
+  run test_completed_inscription_rejects_below_minimum_spell_level = {
+    all {
+      assert(not(completedGlyphInscriptionAccepted(2, "thunder"))),
+      assert(completedGlyphInscriptionAccepted(3, "thunder")),
+      assert(completedGlyphInscriptionAccepted(4, "thunder")),
+      assert(not(completedGlyphInscriptionAccepted(3, "force"))),
+      assert(not(completedStoredSpellGlyphInscriptionAccepted(2, 1, "singleCreature", "none", false))),
+      assert(not(completedStoredSpellGlyphInscriptionAccepted(3, 4, "singleCreature", "none", false))),
+      assert(not(completedStoredSpellGlyphInscriptionAccepted(3, 1, "selfOnly", "none", false))),
+      assert(not(completedStoredSpellGlyphInscriptionAccepted(3, 1, "singleCreature", "now", false))),
+      assert(not(completedStoredSpellGlyphInscriptionAccepted(3, 1, "singleCreature", "none", true))),
+    }
+  }
+
+  run test_trigger_occurrence_does_not_end_glyph_without_release = {
+    val occurrence = completedGlyphOccurrence(1, 3, "thunder", 200, 100)
+    val spellGlyph =
+      completedStoredSpellGlyphOccurrence(1, 3, 1, "singleCreature", "none", false, 200, 100)
     val ended = glyphAfterTriggerOccurrence(occurrence, 1)
+    val spellGlyphEnded = glyphAfterTriggerOccurrence(spellGlyph, 1)
     val unrelated = glyphAfterTriggerOccurrence(occurrence, 2)
     all {
       assert(ended.active),
+      assert(spellGlyphEnded.active),
       assert(unrelated.active),
     }
   }
 
   run test_movement_invalidation_requires_matching_cast_location_and_more_than_ten_feet = {
-    val occurrence = completedGlyphOccurrence(1, 3, "explosiveRune", "thunder", 200, 100)
+    val occurrence = completedGlyphOccurrence(1, 3, "thunder", 200, 100)
     val exactThreshold = glyphAfterMovementInvalidation(occurrence, 1, 100, 10)
     val wrongCastLocation = glyphAfterMovementInvalidation(occurrence, 1, 200, 11)
     val movedBeyondThreshold = glyphAfterMovementInvalidation(occurrence, 1, 100, 11)
@@ -204,7 +475,7 @@ module battleRuntimeGlyphDurableOccurrence {
   }
 
   run test_explosive_rune_release_requires_matching_area_witness_and_stored_release = {
-    val occurrence = completedGlyphOccurrence(1, 5, "explosiveRune", "thunder", 200, 100)
+    val occurrence = completedGlyphOccurrence(1, 5, "thunder", 200, 100)
     val acceptedWitness = {
       triggerOccurrence: { effectId: 1 },
       coveredAreaId: 200,
@@ -217,8 +488,9 @@ module battleRuntimeGlyphDurableOccurrence {
     val wrongSaveAbilityWitness = { ...acceptedWitness, savingThrowAbility: "con" }
     val wrongSaveDcWitness = { ...acceptedWitness, savingThrowDcSource: "fixed" }
     val wrongSaveCountWitness = { ...acceptedWitness, savingThrowOutcomeCount: 1 }
-    val wrongReleaseBranchOccurrence = { ...occurrence, releaseBranch: "spellGlyph" }
-    val wrongDamageTypeOccurrence = { ...occurrence, damageType: "force" }
+    val wrongReleaseBranchOccurrence =
+      completedStoredSpellGlyphOccurrence(1, 5, 3, "area", "none", false, 200, 100)
+    val wrongDamageTypeOccurrence = completedGlyphOccurrence(1, 5, "force", 200, 100)
     all {
       assert(glyphExplosiveRuneReleaseWitnessAccepted(occurrence, acceptedWitness)),
       assert(not(glyphExplosiveRuneReleaseWitnessAccepted(occurrence, wrongAreaWitness))),
@@ -231,7 +503,7 @@ module battleRuntimeGlyphDurableOccurrence {
   }
 
   run test_explosive_rune_release_scales_damage_and_halves_successful_saves = {
-    val occurrence = completedGlyphOccurrence(1, 5, "explosiveRune", "thunder", 200, 100)
+    val occurrence = completedGlyphOccurrence(1, 5, "thunder", 200, 100)
     all {
       assert(glyphExplosiveRuneDamageDice(3) == 5),
       assert(glyphExplosiveRuneDamageDice(5) == 7),
@@ -244,7 +516,7 @@ module battleRuntimeGlyphDurableOccurrence {
   }
 
   run test_explosive_rune_release_ends_matching_glyph_after_release = {
-    val occurrence = completedGlyphOccurrence(1, 3, "explosiveRune", "fire", 200, 100)
+    val occurrence = completedGlyphOccurrence(1, 3, "fire", 200, 100)
     val releaseWitness = {
       triggerOccurrence: { effectId: 1 },
       coveredAreaId: 200,
@@ -261,6 +533,103 @@ module battleRuntimeGlyphDurableOccurrence {
     all {
       assert(not(ended.active)),
       assert(unrelated.active),
+    }
+  }
+
+  run test_stored_spell_release_targets_triggering_creature_and_ends_glyph = {
+    val occurrence =
+      completedStoredSpellGlyphOccurrence(1, 3, 1, "singleCreature", "none", false, 200, 100)
+    val acceptedWitness = StoredSingleCreatureReleaseWitness({
+      triggerOccurrence: { effectId: 1 },
+      triggeringCreatureId: 10,
+      targetId: 10,
+    })
+    val wrongTargetWitness = StoredSingleCreatureReleaseWitness({
+      triggerOccurrence: { effectId: 1 },
+      triggeringCreatureId: 10,
+      targetId: 11,
+    })
+    val wrongShapeWitness = StoredAreaReleaseWitness({
+      triggerOccurrence: { effectId: 1 },
+      triggeringCreatureId: 10,
+      areaOriginAnchorId: 10,
+    })
+    val ended = glyphAfterStoredSpellRelease(occurrence, acceptedWitness)
+    all {
+      assert(glyphStoredSpellReleaseWitnessAccepted(occurrence, acceptedWitness)),
+      assert(not(glyphStoredSpellReleaseWitnessAccepted(occurrence, wrongTargetWitness))),
+      assert(not(glyphStoredSpellReleaseWitnessAccepted(occurrence, wrongShapeWitness))),
+      assert(not(ended.active)),
+    }
+  }
+
+  run test_stored_spell_area_release_centers_on_triggering_creature = {
+    val occurrence =
+      completedStoredSpellGlyphOccurrence(1, 3, 3, "area", "none", false, 200, 100)
+    val acceptedWitness = StoredAreaReleaseWitness({
+      triggerOccurrence: { effectId: 1 },
+      triggeringCreatureId: 10,
+      areaOriginAnchorId: 10,
+    })
+    val wrongAreaCenterWitness = StoredAreaReleaseWitness({
+      triggerOccurrence: { effectId: 1 },
+      triggeringCreatureId: 10,
+      areaOriginAnchorId: 11,
+    })
+    val ended = glyphAfterStoredSpellRelease(occurrence, acceptedWitness)
+    all {
+      assert(glyphStoredSpellReleaseWitnessAccepted(occurrence, acceptedWitness)),
+      assert(not(glyphStoredSpellReleaseWitnessAccepted(occurrence, wrongAreaCenterWitness))),
+      assert(not(ended.active)),
+    }
+  }
+
+  run test_stored_hostile_trap_release_requires_close_placement_witness = {
+    val occurrence =
+      completedStoredSpellGlyphOccurrence(1, 3, 1, "hostileTrap", "none", false, 200, 100)
+    val placement = {
+      subject: "traps",
+      areaId: 300,
+      placement: "as_close_as_possible_to_triggering_creature",
+      attackTargetId: 10,
+    }
+    val acceptedWitness = StoredHostileTrapReleaseWitness({
+      triggerOccurrence: { effectId: 1 },
+      triggeringCreatureId: 10,
+      areaOriginAnchorId: 10,
+      hostilePlacement: placement,
+    })
+    val ordinaryAreaWitness = StoredAreaReleaseWitness({
+      triggerOccurrence: { effectId: 1 },
+      triggeringCreatureId: 10,
+      areaOriginAnchorId: 10,
+    })
+    val wrongPlacementTargetWitness = StoredHostileTrapReleaseWitness({
+      triggerOccurrence: { effectId: 1 },
+      triggeringCreatureId: 10,
+      areaOriginAnchorId: 10,
+      hostilePlacement: { ...placement, attackTargetId: 11 },
+    })
+    val wrongPlacementSubjectWitness = StoredHostileTrapReleaseWitness({
+      triggerOccurrence: { effectId: 1 },
+      triggeringCreatureId: 10,
+      areaOriginAnchorId: 10,
+      hostilePlacement: { ...placement, subject: "harmful_objects" },
+    })
+    val wrongAreaCenterWitness = StoredHostileTrapReleaseWitness({
+      triggerOccurrence: { effectId: 1 },
+      triggeringCreatureId: 10,
+      areaOriginAnchorId: 11,
+      hostilePlacement: placement,
+    })
+    val ended = glyphAfterStoredSpellRelease(occurrence, acceptedWitness)
+    all {
+      assert(glyphStoredSpellReleaseWitnessAccepted(occurrence, acceptedWitness)),
+      assert(not(glyphStoredSpellReleaseWitnessAccepted(occurrence, ordinaryAreaWitness))),
+      assert(not(glyphStoredSpellReleaseWitnessAccepted(occurrence, wrongPlacementTargetWitness))),
+      assert(not(glyphStoredSpellReleaseWitnessAccepted(occurrence, wrongPlacementSubjectWitness))),
+      assert(not(glyphStoredSpellReleaseWitnessAccepted(occurrence, wrongAreaCenterWitness))),
+      assert(not(ended.active)),
     }
   }
 }

@@ -631,6 +631,11 @@ export function resolveReadySpellAct(
 export function resolveSpellRelease(
   input: ActionSpellBattleResolutionInput,
   invocation: ReadiedSpellInvocation,
+  options: {
+    readonly selfOriginAreaAnchorId?: CombatantId;
+    readonly opensSpellCastReactionWindow?: boolean;
+    readonly storedGlyphTriggeringCreatureTargetId?: CombatantId;
+  } = {},
 ): BattleResolutionResult {
   if (invocation.procedure === "chainedSpellAttackDamage") {
     return resolveChainedSpellAttackDamageAct({
@@ -651,6 +656,14 @@ export function resolveSpellRelease(
       actorId: input.subject.actorId,
       invocation,
       fillSet,
+      ...(options.selfOriginAreaAnchorId === undefined
+        ? {}
+        : { selfOriginAreaAnchorId: options.selfOriginAreaAnchorId }),
+      ...(options.opensSpellCastReactionWindow === undefined
+        ? {}
+        : {
+            opensSpellCastReactionWindow: options.opensSpellCastReactionWindow,
+          }),
     });
   }
   if (invocation.procedure === "repeatedDamageAllocation") {
@@ -668,15 +681,19 @@ export function resolveSpellRelease(
     ]);
   }
   const target = input.state.combatants.get(fillSet.targetId);
+  const storedGlyphRetargetingMatches =
+    options.storedGlyphTriggeringCreatureTargetId !== undefined &&
+    fillSet.targetId === options.storedGlyphTriggeringCreatureTargetId;
   if (
     target == null ||
-    !spellTargetIsLegal(
-      input.state,
-      input.subject.actorId,
-      target.combatantId,
-      invocation,
-      fillSet.targetSpatialFacts,
-    )
+    (!storedGlyphRetargetingMatches &&
+      !spellTargetIsLegal(
+        input.state,
+        input.subject.actorId,
+        target.combatantId,
+        invocation,
+        fillSet.targetSpatialFacts,
+      ))
   ) {
     return invalidResult(
       input.state,

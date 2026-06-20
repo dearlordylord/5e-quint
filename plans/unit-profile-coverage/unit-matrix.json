@@ -72,23 +72,23 @@
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 124,
-      "numerator": 124,
+      "denominator": 125,
+      "numerator": 125,
       "percent": "100%"
     },
     "qntProofCoverage": {
-      "denominator": 124,
-      "numerator": 121,
+      "denominator": 125,
+      "numerator": 122,
       "percent": "97.6%"
     },
     "rulesKernelCoveredProfileCoverage": {
-      "denominator": 162,
-      "numerator": 162,
+      "denominator": 163,
+      "numerator": 163,
       "percent": "100%"
     },
     "rulesKernelProfileJoinCoverage": {
-      "denominator": 162,
-      "numerator": 162,
+      "denominator": 163,
+      "numerator": 163,
       "percent": "100%"
     },
     "rulesKernelSupportedUnitCoverage": {
@@ -97,13 +97,13 @@
       "percent": "100%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 124,
-      "numerator": 124,
+      "denominator": 125,
+      "numerator": 125,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 124,
-      "numerator": 124,
+      "denominator": 125,
+      "numerator": 125,
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
@@ -5480,19 +5480,45 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-glyph-of-warding.test.ts"
         }
       ]
+    },
+    {
+      "id": "spell.invocation-glyph-stored-spell-release",
+      "profileKind": "spell-invocation",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime-glyph-durable-occurrence.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer/glyph-durable-occurrence.ts",
+        "packages/battle-runtime/src/active-effect/types.ts"
+      ],
+      "sourceBoundary": "Battle runtime consumes Glyph of Warding's typed spell_glyph Surface facts and an existing source-owned glyphDurableOccurrence active effect by shape rather than authored id, name, slug, provenance section, or spell-list identity. The owner represents only the non-immediate stored-spell release boundary: the completedGlyphInscription witness stores a prepared spell-slot invocation whose selected spell and slot level do not exceed the Glyph source spell level, applies no immediate storage-time spell effect, rejects stored Concentration invocations until the full-duration override owner exists, rejects trigger-only cleanup, and releases through a tableWitnessedGlyphStoredSpellRelease witness. Single-creature stored spells are retargeted to the triggering creature through a resolver targetChoice fill; area stored spells require a centered-on-triggering-creature witness; save-gated area releases consume the ordinary spell Saving Throw and damage fills without spending or requiring a current spell slot at trigger time. The represented hostile trap branch admits Grease's prepared greaseGroundHazard invocation, requires a close-as-possible trap-placement witness with the triggering creature as attack target, cross-checks that witness against the Grease ground-area Saving Throw fill, applies the Grease hazard through its procedure reducer without spending or requiring a current spell slot at trigger time, and removes the durable occurrence after successful release. The stored-spell profile carries Glyph's full Surface hostile-placement appliesTo set so later promoted summon or harmful-object procedures must map to the same required witness boundary rather than adding an inert generic bypass. Stored Concentration full-duration override, component legality, map geometry derivation, and generic Dispel Magic targeting remain separate owners.",
+      "taskRefs": [
+        "L3-FOLLOWUP-GLYPH-STORED-SPELL-RELEASE"
+      ],
+      "title": "Spell invocation releases Glyph stored spell from a triggered durable occurrence",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-glyph-durable-occurrence.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-glyph-of-warding.test.ts"
+        }
+      ]
     }
   ],
   "rulesKernelProfileJoin": {
     "denominatorRule": "profile records with rules-kernel profile kinds and either QNT owners or explicit profile-obligation mappings",
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
-        "denominator": 162,
-        "numerator": 162,
+        "denominator": 163,
+        "numerator": 163,
         "percent": "100%"
       },
       "rulesKernelProfileJoinCoverage": {
-        "denominator": 162,
-        "numerator": 162,
+        "denominator": 163,
+        "numerator": 163,
         "percent": "100%"
       }
     },
@@ -8275,6 +8301,22 @@
           }
         ],
         "profileId": "spell.invocation-glyph-explosive-rune-release",
+        "profileKind": "spell-invocation",
+        "qntOwners": [
+          "packages/battle-runtime/battle-runtime-glyph-durable-occurrence.qnt"
+        ]
+      },
+      {
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.SPELL.GLYPH_STORED_SPELL_RELEASE",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Glyph of Warding spell glyph releases a stored prepared spell from a durable occurrence"
+          }
+        ],
+        "profileId": "spell.invocation-glyph-stored-spell-release",
         "profileKind": "spell-invocation",
         "qntOwners": [
           "packages/battle-runtime/battle-runtime-glyph-durable-occurrence.qnt"
@@ -13236,7 +13278,8 @@
         "support": {
           "profileIds": [
             "spell.invocation-glyph-durable-occurrence",
-            "spell.invocation-glyph-explosive-rune-release"
+            "spell.invocation-glyph-explosive-rune-release",
+            "spell.invocation-glyph-stored-spell-release"
           ],
           "tag": "profile-subset-supported"
         },
@@ -16901,6 +16944,22 @@
         "spell.invocation-glyph-explosive-rune-release"
       ],
       "taskId": "L3-FOLLOWUP-GLYPH-EXPLOSIVE-RUNE-RELEASE"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime tests cover Glyph stored-spell release admission from typed Surface facts without authored-identity dispatch, completed-inscription storage of a prepared spell-slot invocation with no immediate storage-time effect, rejection of stored slots above the Glyph source slot, rejection of stored Concentration invocations until the full-duration override owner exists, trigger-only cleanup rejection, single-creature retargeting to the triggering creature through a targetChoice fill, area origin centering on the triggering creature, ordinary stored-spell resolver delegation, full save-gated area release with Saving Throw and damage fills, durable occurrence cleanup after release, no release-time current spell-slot expenditure or current-turn slot availability requirement, and the represented hostile trap branch via stored Grease release requiring a close-as-possible placement witness that matches the Grease ground-area fill. Stored Concentration full-duration override remains deferred to L3-FOLLOWUP-GLYPH-STORED-CONCENTRATION.",
+      "profileIds": [
+        "spell.invocation-glyph-stored-spell-release"
+      ],
+      "taskId": "L3-FOLLOWUP-GLYPH-STORED-SPELL-RELEASE"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Leaf package-local Quint proof covers completed spell-glyph inscription storing a prepared spell level and release kind with no immediate effect in branch-specific release variants, rejecting below-minimum Glyph levels, stored spells above the source slot, unsupported release kinds, immediate storage effects, and stored Concentration invocations for this Task 28 owner, requiring trigger occurrence to wait for explicit release, validating single-creature release against the triggering creature, validating centered area release, validating represented hostile trap release with close-as-possible placement and triggering-creature attack target, and durable occurrence cleanup after stored spell release.",
+      "profileIds": [
+        "spell.invocation-glyph-stored-spell-release"
+      ],
+      "taskId": "L3-FOLLOWUP-GLYPH-STORED-SPELL-RELEASE"
     }
   ],
   "unitGroupDenominatorAudit": {
@@ -16959,7 +17018,7 @@
         "installedUnitDenominator": 142,
         "kind": "spell",
         "label": "Spell Units",
-        "profileFactDenominator": 139,
+        "profileFactDenominator": 140,
         "profileSubsetSupportedUnits": 19,
         "selectedIdentityDeferredNonApplicableUnits": 0,
         "selectedIdentityReplayDenominator": 112,
@@ -35921,15 +35980,6 @@
           {
             "battleReadinessClosure": {
               "kind": "outside-battle-runtime",
-              "owner": "stored spell invocation release owner plus table hostile-placement and retargeting witness owner",
-              "reason": "The durable occurrence can identify a Glyph occurrence, but storing and later replaying a prepared spell invocation needs its own typed stored-invocation owner, release-time table witnesses, and trigger-time ending semantics."
-            },
-            "followUpTaskId": "L3-FOLLOWUP-GLYPH-STORED-SPELL-RELEASE",
-            "mechanic": "spell-glyph stored spell invocation, no immediate storage-time effect, trigger-creature retargeting, area centering, and hostile placement handling"
-          },
-          {
-            "battleReadinessClosure": {
-              "kind": "outside-battle-runtime",
               "owner": "stored Concentration full-duration Spell Effect owner",
               "reason": "Task 26 does not release stored spells. Full-duration stored Concentration needs a later owner that represents the released spell effect without ordinary caster, triggering-creature, or readied-spell Concentration ownership."
             },
@@ -35948,13 +35998,6 @@
         ],
         "followUpTasks": [
           {
-            "id": "L3-FOLLOWUP-GLYPH-STORED-SPELL-RELEASE",
-            "mechanic": "Promote spell-glyph storage and release by carrying an eligible prepared stored spell invocation from glyph creation, enforcing no immediate storage-time effect, retargeting single-creature and area spells to the triggering creature, and consuming hostile close-as-possible placement witnesses for summons, harmful objects, and traps.",
-            "owner": "stored spell invocation release owner plus table hostile-placement and retargeting witnesses",
-            "requiredOutput": "Supported or profile-subset-supported stored-spell release claim with focused runtime tests and Quint/runtime parity for stored invocation identity, trigger-creature retargeting, area centering, hostile placement witnesses, and no ordinary immediate-cast collapse.",
-            "title": "Glyph Stored Spell Release"
-          },
-          {
             "id": "L3-FOLLOWUP-GLYPH-STORED-CONCENTRATION",
             "mechanic": "Promote the spell-glyph Concentration override so a stored Concentration spell released by the glyph lasts to full duration without ordinary caster Concentration ownership, triggering-creature Concentration ownership, or readied-spell Concentration cleanup semantics.",
             "owner": "stored Concentration full-duration Spell Effect owner",
@@ -35962,10 +36005,11 @@
             "title": "Glyph Stored Concentration Override"
           }
         ],
-        "futureProfileOwner": "stored spell release, stored Concentration override, broader ongoing Spell Effect dispel, and character inventory/equipment component legality owners",
+        "futureProfileOwner": "stored Concentration override, broader ongoing Spell Effect dispel, and character inventory/equipment component legality owners",
         "profileIds": [
           "spell.invocation-glyph-durable-occurrence",
-          "spell.invocation-glyph-explosive-rune-release"
+          "spell.invocation-glyph-explosive-rune-release",
+          "spell.invocation-glyph-stored-spell-release"
         ],
         "rawRequirementIds": [
           "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
@@ -35979,7 +36023,10 @@
           "Table-witnessed movement invalidation cleanup validates the original cast-location identity and a distance greater than 10 feet before ending the occurrence without triggering it.",
           "Battle runtime admits the explosive-rune release profile by typed Surface shape rather than Glyph of Warding id, name, slug, provenance section, or spell-list identity.",
           "Battle runtime releases a triggered durable glyph occurrence through a table-witnessed explosive-rune release using the occurrence's stored explosive-rune branch and caster-chosen Acid/Cold/Fire/Lightning/Thunder damage type, represented covered-area identity, 20-foot Sphere radius witness, table area-membership witness, a glyph savingThrowOutcome fill whose hole carries Dexterity, the caster spell-save DC, target ids, roll-mode projections, and flat-bonus projections, slot-scaled d8 damage roll, half damage on successful saves, shared spell-damage reduction roll holes/fills before target damage adjustments, shared Concentration and zero-Hit-Point damage lifecycle holes, and durable occurrence cleanup without treating glyph creation as an immediate save-damage cast.",
-          "A triggered explosive rune with no creatures in its witnessed Sphere still ends the durable glyph occurrence without requiring damage or Saving Throw inputs."
+          "A triggered explosive rune with no creatures in its witnessed Sphere still ends the durable glyph occurrence without requiring damage or Saving Throw inputs.",
+          "Battle runtime admits the stored-spell release profile by typed Surface spell_glyph facts rather than Glyph of Warding id, name, slug, provenance section, or spell-list identity.",
+          "Battle runtime stores an eligible prepared spell-slot invocation from a completedGlyphInscription witness with no immediate storage-time effect and rejects stored spell or selected slot levels above the Glyph source slot.",
+          "Battle runtime releases a triggered spell glyph through a tableWitnessedGlyphStoredSpellRelease witness, retargeting single-creature stored spells to the triggering creature, requiring area origins centered on the triggering creature, rejecting stored Concentration invocations until the stored full-duration owner exists, delegating executable stored-spell holes and resolution including save-gated area damage fills, allowing stored self-origin save-gated areas to use the triggering creature as the release origin, consuming a close-as-possible hostile trap-placement witness for the represented stored Grease hazard branch, avoiding trigger-time spell-slot spend or slot-availability requirements, and removing the durable occurrence after successful release."
         ],
         "tag": "profile-subset-supported"
       },
@@ -35994,6 +36041,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-glyph-of-warding.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "L3-FOLLOWUP-GLYPH-EXPLOSIVE-RUNE-RELEASE"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-glyph-of-warding.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L3-FOLLOWUP-GLYPH-STORED-SPELL-RELEASE"
         }
       ],
       "executableMechanics": true,
@@ -36040,6 +36092,32 @@
             "L3-FOLLOWUP-GLYPH-EXPLOSIVE-RUNE-RELEASE"
           ],
           "title": "Spell invocation releases Glyph explosive-rune damage from a triggered durable occurrence",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-glyph-durable-occurrence.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-glyph-of-warding.test.ts"
+            }
+          ]
+        },
+        {
+          "id": "spell.invocation-glyph-stored-spell-release",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime-glyph-durable-occurrence.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer/glyph-durable-occurrence.ts",
+            "packages/battle-runtime/src/active-effect/types.ts"
+          ],
+          "sourceBoundary": "Battle runtime consumes Glyph of Warding's typed spell_glyph Surface facts and an existing source-owned glyphDurableOccurrence active effect by shape rather than authored id, name, slug, provenance section, or spell-list identity. The owner represents only the non-immediate stored-spell release boundary: the completedGlyphInscription witness stores a prepared spell-slot invocation whose selected spell and slot level do not exceed the Glyph source spell level, applies no immediate storage-time spell effect, rejects stored Concentration invocations until the full-duration override owner exists, rejects trigger-only cleanup, and releases through a tableWitnessedGlyphStoredSpellRelease witness. Single-creature stored spells are retargeted to the triggering creature through a resolver targetChoice fill; area stored spells require a centered-on-triggering-creature witness; save-gated area releases consume the ordinary spell Saving Throw and damage fills without spending or requiring a current spell slot at trigger time. The represented hostile trap branch admits Grease's prepared greaseGroundHazard invocation, requires a close-as-possible trap-placement witness with the triggering creature as attack target, cross-checks that witness against the Grease ground-area Saving Throw fill, applies the Grease hazard through its procedure reducer without spending or requiring a current spell slot at trigger time, and removes the durable occurrence after successful release. The stored-spell profile carries Glyph's full Surface hostile-placement appliesTo set so later promoted summon or harmful-object procedures must map to the same required witness boundary rather than adding an inert generic bypass. Stored Concentration full-duration override, component legality, map geometry derivation, and generic Dispel Magic targeting remain separate owners.",
+          "taskRefs": [
+            "L3-FOLLOWUP-GLYPH-STORED-SPELL-RELEASE"
+          ],
+          "title": "Spell invocation releases Glyph stored spell from a triggered durable occurrence",
           "verificationOwners": [
             {
               "kind": "qnt-proof",
