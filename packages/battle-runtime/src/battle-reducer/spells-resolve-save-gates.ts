@@ -1026,10 +1026,12 @@ export function resolveSaveGateDamageSpellRelease(input: {
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
   readonly selfOriginAreaAnchorId?: CombatantId;
   readonly opensSpellCastReactionWindow?: boolean;
+  readonly startsOrdinaryConcentration?: boolean;
 }): BattleResolutionResult {
   const beforeSpend = resolveSaveGateDamageSpellAct({
     ...input,
     spendsCastResources: false,
+    startsOrdinaryConcentration: input.startsOrdinaryConcentration ?? true,
   });
   if (beforeSpend.tag !== "resolved") {
     return beforeSpend;
@@ -1060,6 +1062,7 @@ export function resolveSaveGateDamageSpellAct(input: {
   readonly actionCostOverride?: "magicAction" | "bonusAction";
   readonly metamagicApplications?: readonly SpellMetamagicApplicationFact[];
   readonly spendsCastResources?: boolean;
+  readonly startsOrdinaryConcentration?: boolean;
   readonly selfOriginAreaAnchorId?: CombatantId;
   readonly opensSpellCastReactionWindow?: boolean;
 }): BattleResolutionResult {
@@ -1289,18 +1292,18 @@ export function resolveSaveGateDamageSpellAct(input: {
   const saveGatedDamageSpellRequiresConcentration = spellRequiresConcentration(
     input.invocation,
   );
-  const startFailedSaveConcentration =
+  const startsOrdinaryConcentration = input.startsOrdinaryConcentration ?? true;
+  const shouldCreateDurationEffect =
     saveGatedDamageSpellRequiresConcentration && failedTargets.length > 0;
-  const failedSaveConcentrationDuration = startFailedSaveConcentration
+  const startFailedSaveConcentration =
+    startsOrdinaryConcentration && shouldCreateDurationEffect;
+  const failedSaveConcentrationDuration = shouldCreateDurationEffect
     ? failedSaveConcentrationDurationEffect({
         actorId: input.actorId,
         invocation: input.invocation,
       })
     : null;
-  if (
-    startFailedSaveConcentration &&
-    failedSaveConcentrationDuration === null
-  ) {
+  if (shouldCreateDurationEffect && failedSaveConcentrationDuration === null) {
     return invalidResult(
       input.input.state,
       "unsupportedSubject",
@@ -1308,7 +1311,7 @@ export function resolveSaveGateDamageSpellAct(input: {
     );
   }
   const stateAfterCastConcentrationBreak =
-    saveGatedDamageSpellRequiresConcentration
+    startsOrdinaryConcentration && saveGatedDamageSpellRequiresConcentration
       ? breakBattleConcentration(input.input.state, input.actorId)
       : input.input.state;
   const objectIgnitions = postSaveAreaObjectIgnitions({
@@ -1414,6 +1417,7 @@ export function resolveSaveGateDamageSpellAct(input: {
       }),
       input.actorId,
       failedSaveConcentrationDuration,
+      { replaceExistingSameSpellDuration: startFailedSaveConcentration },
     );
     return withObjectIgnitions(spentResources, objectIgnitions);
   }
@@ -1915,6 +1919,7 @@ export function resolveSaveGateDamageSpellAct(input: {
     }),
     input.actorId,
     failedSaveConcentrationDuration,
+    { replaceExistingSameSpellDuration: startFailedSaveConcentration },
   );
   if (spentResources.tag !== "resolved") {
     return spentResources;
@@ -2068,6 +2073,9 @@ function withFailedSaveConcentrationDuration(
   result: BattleResolutionResult,
   actorId: CombatantId,
   effect: SpellConcentrationDurationEffect | null,
+  options: { readonly replaceExistingSameSpellDuration: boolean } = {
+    replaceExistingSameSpellDuration: true,
+  },
 ): BattleResolutionResult {
   if (result.tag !== "resolved" || effect === null) {
     return result;
@@ -2081,12 +2089,14 @@ function withFailedSaveConcentrationDuration(
     combatants: new Map(result.state.combatants).set(actorId, {
       ...actor,
       activeEffects: [
-        ...actor.activeEffects.filter(
-          (candidate) =>
-            candidate.kind !== "spellConcentrationDuration" ||
-            candidate.sourceSpellId !== effect.sourceSpellId ||
-            candidate.sourceCombatantId !== effect.sourceCombatantId,
-        ),
+        ...(options.replaceExistingSameSpellDuration
+          ? actor.activeEffects.filter(
+              (candidate) =>
+                candidate.kind !== "spellConcentrationDuration" ||
+                candidate.sourceSpellId !== effect.sourceSpellId ||
+                candidate.sourceCombatantId !== effect.sourceCombatantId,
+            )
+          : actor.activeEffects),
         effect,
       ],
     }),

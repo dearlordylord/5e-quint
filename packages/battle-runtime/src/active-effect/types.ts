@@ -362,6 +362,26 @@ type GlyphStoredNonConcentrationSpellRecord = SpellRecord & {
 type GlyphStoredReadiedSpellInvocation = ReadiedSpellInvocation & {
   readonly spell: GlyphStoredNonConcentrationSpellRecord;
 };
+type GlyphStoredSingleCreatureTargeting =
+  | Extract<SpellTargeting, { readonly kind: "singleCombatant" }>
+  | Extract<SpellTargeting, { readonly kind: "singleCreatureOrObject" }>
+  | (Extract<SpellTargeting, { readonly kind: "targetList" }> & {
+      readonly maxTargets: 1;
+    });
+type GlyphStoredConcentrationSaveGatedDamageInvocation = Extract<
+  ReadiedSpellInvocation,
+  { readonly procedure: "saveGatedDamage" }
+> & {
+  readonly spell: SpellRecord & {
+    readonly mechanics: SpellRecord["mechanics"] & {
+      readonly duration: Extract<
+        SpellRecord["mechanics"]["duration"],
+        { readonly kind: "concentration" }
+      >;
+    };
+  };
+  readonly targeting: GlyphStoredSingleCreatureTargeting;
+};
 type GlyphStoredGreaseGroundHazardInvocation = Extract<
   SupportedSpellInvocation,
   { readonly procedure: "greaseGroundHazard" }
@@ -401,6 +421,7 @@ export type GlyphStoredSpellInvocationCandidate = Extract<
 export type GlyphStoredSpellInvocation = Extract<
   | GlyphStoredReadiedSpellInvocation
   | GlyphStoredGreaseGroundHazardInvocation
+  | GlyphStoredConcentrationSaveGatedDamageInvocation
   | GlyphStoredConcentrationSaveGatedConditionInvocation
   | GlyphStoredConcentrationHarmfulObjectInvocation,
   {
@@ -870,10 +891,12 @@ export type BattleActiveEffect =
     })
   | (BattleSpellEffectBase & {
       readonly kind: "spellConcentrationDuration";
-      readonly expiresAt: Extract<
-        BattleActiveEffectExpiration,
-        { readonly kind: "concentration" }
-      > & { readonly durationTicks: ElapsedTimeTicks };
+      readonly expiresAt:
+        | (Extract<
+            BattleActiveEffectExpiration,
+            { readonly kind: "concentration" }
+          > & { readonly durationTicks: ElapsedTimeTicks })
+        | Extract<BattleActiveEffectExpiration, { readonly kind: "duration" }>;
     })
   | (BattleSpellEffectBase & {
       readonly kind: "d20RollModifier";

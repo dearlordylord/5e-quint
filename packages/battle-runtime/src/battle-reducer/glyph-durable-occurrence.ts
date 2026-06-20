@@ -109,6 +109,7 @@ import { resolveSpellRelease } from "./spells-resolve.ts";
 import { spellFillSet } from "./spells-resolve-fill-set.ts";
 import {
   resolveGreaseGroundHazardSpellAct,
+  resolveSaveGateDamageSpellRelease,
   resolveSaveGateConditionSpellAct,
 } from "./spells-resolve-save-gates.ts";
 import { invalidResult } from "./result-helpers.ts";
@@ -1398,10 +1399,15 @@ function glyphStoredSpellInvocationRequiresFullDurationOwner(
 function glyphStoredSpellInvocationSupportsFullDurationOwner(
   invocation: GlyphStoredSpellInvocationCandidate,
 ): boolean {
+  if (!glyphStoredSpellInvocationRequiresFullDurationOwner(invocation)) {
+    return false;
+  }
+  if (invocation.procedure === "saveGatedDamage") {
+    return glyphStoredSpellInvocationTargetsSingleCreature(invocation);
+  }
   return (
-    (invocation.procedure === "saveGatedCondition" ||
-      invocation.procedure === "spiritualWeaponAttackProxy") &&
-    glyphStoredSpellInvocationRequiresFullDurationOwner(invocation)
+    invocation.procedure === "saveGatedCondition" ||
+    invocation.procedure === "spiritualWeaponAttackProxy"
   );
 }
 
@@ -1454,9 +1460,7 @@ function glyphStoredSpellInvocationTargetShape(
   }
   if (
     hostilePlacementSubject === null &&
-    (invocation.targeting.kind === "singleCombatant" ||
-      invocation.targeting.kind === "singleCreatureOrObject" ||
-      glyphStoredSpellInvocationHasExactlyOneTargetListTarget(invocation))
+    glyphStoredSpellInvocationTargetsSingleCreature(invocation)
   ) {
     return "singleCreature";
   }
@@ -1500,13 +1504,22 @@ function glyphStoredSpellInvocationHasSaveGatedAreaRelease(
 }
 
 function glyphStoredSpellInvocationHasExactlyOneTargetListTarget(
-  invocation: GlyphStoredSpellInvocation,
+  invocation: GlyphStoredSpellInvocationCandidate,
 ): boolean {
   return (
-    isTargetListSpellInvocation(invocation) &&
     invocation.targeting.kind === "targetList" &&
     invocation.targeting.minTargets === 1 &&
     invocation.targeting.maxTargets === 1
+  );
+}
+
+function glyphStoredSpellInvocationTargetsSingleCreature(
+  invocation: GlyphStoredSpellInvocationCandidate,
+): boolean {
+  return (
+    invocation.targeting.kind === "singleCombatant" ||
+    invocation.targeting.kind === "singleCreatureOrObject" ||
+    glyphStoredSpellInvocationHasExactlyOneTargetListTarget(invocation)
   );
 }
 
@@ -1713,6 +1726,16 @@ function resolveStoredSpellGlyphRelease(input: {
     mode: { tag: "cast" as const },
   };
   const fills = glyphStoredSpellReleaseFills(input);
+  if (
+    glyphStoredSpellInvocationRequiresFullDurationOwner(invocation) &&
+    !glyphStoredSpellInvocationSupportsFullDurationOwner(invocation)
+  ) {
+    return invalidResult(
+      input.state,
+      "unsupportedSubject",
+      "Stored Concentration spell glyph full-duration owner is unsupported.",
+    );
+  }
   if (invocation.procedure === "greaseGroundHazard") {
     const fillSet = spellFillSet(fills, invocation);
     if (fillSet.tag === "invalid") {
@@ -1745,6 +1768,27 @@ function resolveStoredSpellGlyphRelease(input: {
       invocation,
       fillSet,
       spendsCastResources: false,
+    });
+  }
+  if (
+    invocation.procedure === "saveGatedDamage" &&
+    glyphStoredSpellInvocationRequiresFullDurationOwner(invocation)
+  ) {
+    const fillSet = spellFillSet(fills, invocation);
+    if (fillSet.tag === "invalid") {
+      return invalidResult(input.state, "invalidFill", fillSet.message);
+    }
+    return resolveSaveGateDamageSpellRelease({
+      input: {
+        state: input.state,
+        subject,
+        fills,
+      },
+      actorId: input.effect.sourceCombatantId,
+      invocation,
+      fillSet,
+      opensSpellCastReactionWindow: false,
+      startsOrdinaryConcentration: false,
     });
   }
   return resolveSpellRelease(
@@ -1839,6 +1883,7 @@ type GlyphStoredSpellFullDurationEffect = Extract<
       | "spellCondition"
       | "spellConditionRepeatSave"
       | "spellConditionEndTurnSave"
+      | "spellConcentrationDuration"
       | "spiritualWeapon";
   }
 >;
@@ -1918,6 +1963,7 @@ function glyphStoredSpellFullDurationEffectSupportsExpiration(
     effect.kind === "spellCondition" ||
     effect.kind === "spellConditionRepeatSave" ||
     effect.kind === "spellConditionEndTurnSave" ||
+    effect.kind === "spellConcentrationDuration" ||
     effect.kind === "spiritualWeapon"
   );
 }

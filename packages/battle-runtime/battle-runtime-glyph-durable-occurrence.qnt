@@ -169,6 +169,9 @@ module battleRuntimeGlyphDurableOccurrence {
     if (storedSpellProcedure == glyphStoredSpellSaveGatedConditionProcedure)
     storedSpellRequiresConcentration and
       storedReleaseKind == "singleCreature"
+    else if (storedSpellProcedure == glyphStoredSpellSaveGatedDamageProcedure)
+    not(storedSpellRequiresConcentration) or
+      storedReleaseKind == "singleCreature"
     else if (storedSpellProcedure == glyphStoredSpellSpiritualWeaponAttackProxyProcedure)
     storedSpellRequiresConcentration and
       storedReleaseKind == "harmfulObject"
@@ -738,6 +741,46 @@ module battleRuntimeGlyphDurableOccurrence {
       )),
       assert(glyphStoredSpellReleaseWitnessAccepted(occurrence, acceptedWitness)),
       assert(glyphStoredSpellReleaseOwner(occurrence) == FullDurationStoredConcentrationOwner),
+      assert(not(ended.active)),
+    }
+  }
+
+  run test_stored_concentration_save_gated_damage_release_uses_full_duration_owner = {
+    val occurrence =
+      completedStoredSpellGlyphOccurrence(
+        1,
+        3,
+        2,
+        "singleCreature",
+        "none",
+        true,
+        glyphStoredSpellSaveGatedDamageProcedure,
+        200,
+        100,
+      )
+    val acceptedWitness = StoredSingleCreatureReleaseWitness({
+      triggerOccurrence: { effectId: 1 },
+      triggeringCreatureId: 10,
+      targetId: 10,
+    })
+    val areaWitness = StoredAreaReleaseWitness({
+      triggerOccurrence: { effectId: 1 },
+      triggeringCreatureId: 10,
+      areaOriginAnchorId: 10,
+    })
+    val ended = glyphAfterStoredSpellRelease(occurrence, acceptedWitness)
+    all {
+      assert(glyphOccurrenceHasStoredSpellRelease(
+        occurrence,
+        2,
+        "singleCreature",
+        "none",
+        true,
+        glyphStoredSpellSaveGatedDamageProcedure,
+      )),
+      assert(glyphStoredSpellReleaseWitnessAccepted(occurrence, acceptedWitness)),
+      assert(glyphStoredSpellReleaseOwner(occurrence) == FullDurationStoredConcentrationOwner),
+      assert(not(glyphStoredSpellReleaseWitnessAccepted(occurrence, areaWitness))),
       assert(not(ended.active)),
     }
   }
