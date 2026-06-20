@@ -1,5 +1,6 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.druid-wild-shape-known-form unit-feature.grappler unit-feature.martial-arts-attack-projection unit-feature.stunning-strike
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-slow-active-penalties
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.druid-wild-shape-known-form unit-feature.grappler unit-feature.martial-arts-attack-projection spell.invocation-haste-positive
 // KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.WILD_SHAPE_FORM_LIFECYCLE
 // Movement-budget and speed helpers extracted from battle-reducer.ts.
 // Cluster S (movement_speed). Mechanical extraction — no behavior change.
@@ -7,6 +8,8 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SELF_TRANSFORMATION_MODE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.HASTE_POSITIVE_EFFECTS
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.HASTE_LETHARGY_LIFECYCLE
 
 import { Match } from "effect";
 import {
@@ -23,7 +26,6 @@ import {
   type CreatureSpeedFacts,
   type SpecialSpeedCandidate,
   type SpeedChange,
-  type SpeedRatioChange,
 } from "@dnd/shared-algebras/speed-algebra";
 import type { SpeedType } from "@dnd/shared/game-facts";
 import type { Size, StatBlockRecord } from "@dnd/surface/surface/types";
@@ -228,7 +230,6 @@ export function battleCreatureSpeedFacts(
   return {
     ordinarySpeedFeet: movementFeet(baseWalkSpeed(combatant)),
     speedChanges: battleSpeedChanges(combatant),
-    speedRatios: battleSpeedRatios(combatant),
     specialSpeeds: battleSpecialSpeedCandidates(combatant),
     terminalSpeedZero: battleTerminalSpeedZero(combatant, isGrappled),
   };
@@ -242,17 +243,34 @@ export function battleSpeedChanges(
     .filter((effect) => effect.kind === "speedDelta")
     .reduce((total, effect) => total + effect.deltaFeet, 0);
   return [
-    { deltaFeet: movementDeltaFeet(passiveFeatureDelta + activeEffectDelta) },
+    {
+      kind: "delta",
+      deltaFeet: movementDeltaFeet(passiveFeatureDelta + activeEffectDelta),
+    },
+    ...combatant.activeEffects
+      .filter((effect) => effect.kind === "speedRatio")
+      .map((effect) => ({
+        kind: "ratio" as const,
+        numerator: effect.numerator,
+        denominator: effect.denominator,
+      })),
+    ...battleSlowSpeedChanges(combatant),
   ];
 }
 
-export function battleSpeedRatios(
+function battleSlowSpeedChanges(
   combatant: BattleCreatureState,
-): readonly SpeedRatioChange[] {
+): readonly SpeedChange[] {
   return combatant.activeEffects.some(
     (effect) => effect.kind === "slowActivePenalties",
   )
-    ? [SLOW_ACTIVE_PENALTIES_SPEED_RATIO]
+    ? [
+        {
+          kind: "ratio",
+          numerator: SLOW_ACTIVE_PENALTIES_SPEED_RATIO.numerator,
+          denominator: SLOW_ACTIVE_PENALTIES_SPEED_RATIO.denominator,
+        },
+      ]
     : [];
 }
 
@@ -292,6 +310,9 @@ export function battleTerminalSpeedZero(
   return (
     isGrappled ||
     combatant.activeEffects.some((effect) => effect.kind === "selfSpeedZero") ||
+    combatant.activeEffects.some(
+      (effect) => effect.kind === "spellSpeedZero",
+    ) ||
     combatant.activeEffects.some(
       (effect) => effect.kind === "hypnoticPatternControl",
     ) ||

@@ -6,6 +6,7 @@ import type {
   SpellMechanics,
   SpellRecord,
 } from "../surface/types.ts";
+import { Match } from "effect";
 import type { Trace, TraceEdge, TraceNode } from "./tracer-model.ts";
 import {
   describeBonusActionTrigger,
@@ -22,6 +23,9 @@ import { traceAttachment } from "./tracer-attachments.ts";
 import { traceOngoingEffect } from "./tracer-spell-ongoing.ts";
 
 import {
+  traceGlyphWarding,
+  traceMagicCircleWard,
+  traceStoneMerge,
   traceAnchoredTrigger,
   traceTriggeredReaction,
 } from "./tracer-spell-reactions-anchors.ts";
@@ -40,6 +44,8 @@ import { traceEffectAtom } from "./tracer-effect-atom.ts";
 import { traceEffectAtomScaling } from "./tracer-effect-scaling.ts";
 
 import { traceTargetCountScaling } from "./tracer-scaling.ts";
+
+const byFamily = Match.discriminator("family");
 
 export function traceSpellUnit(spell: SpellRecord): Trace {
   const nodes: TraceNode[] = [];
@@ -100,39 +106,45 @@ export function traceSpellMechanics(
 
   const ctx: SpellCtx = { procId, slotId, range: m.range };
 
-  switch (m.family) {
-    case "ongoing_effect":
-      traceOngoingEffect(m, ctx, nodes, edges, ids);
-      break;
-    case "activation":
-      traceActivation(m, ctx, nodes, edges, ids);
-      break;
-    case "modal_activation":
-      traceModalActivation(m, ctx, nodes, edges, ids);
-      break;
-    case "triggered_reaction":
-      traceTriggeredReaction(m, ctx, nodes, edges, ids);
-      break;
-    case "passive_hit_intercept":
-      tracePassiveHitIntercept(m, ctx, nodes, edges, ids);
-      break;
-    case "anchored_trigger":
-      traceAnchoredTrigger(m, ctx, nodes, edges, ids);
-      break;
-    case "spawned_creature":
-      traceSpawnedCreature(m, ctx, nodes, edges, ids);
-      break;
-    case "reanimated_creature":
-      traceReanimatedCreature(m, ctx, nodes, edges, ids);
-      break;
-    case "templated_multi_spawn":
-      traceTemplatedMultiSpawn(m, ctx, nodes, edges, ids);
-      break;
-    default: {
-      const _exhaustive: never = m;
-      throw new Error(`unhandled spell family: ${String(_exhaustive)}`);
-    }
-  }
+  Match.value(m).pipe(
+    byFamily("ongoing_effect", (mechanics) =>
+      traceOngoingEffect(mechanics, ctx, nodes, edges, ids),
+    ),
+    byFamily("activation", (mechanics) =>
+      traceActivation(mechanics, ctx, nodes, edges, ids),
+    ),
+    byFamily("modal_activation", (mechanics) =>
+      traceModalActivation(mechanics, ctx, nodes, edges, ids),
+    ),
+    byFamily("triggered_reaction", (mechanics) =>
+      traceTriggeredReaction(mechanics, ctx, nodes, edges, ids),
+    ),
+    byFamily("passive_hit_intercept", (mechanics) =>
+      tracePassiveHitIntercept(mechanics, ctx, nodes, edges, ids),
+    ),
+    byFamily("anchored_trigger", (mechanics) =>
+      traceAnchoredTrigger(mechanics, ctx, nodes, edges, ids),
+    ),
+    byFamily("magic_circle_ward", (mechanics) =>
+      traceMagicCircleWard(mechanics, ctx, nodes, edges, ids),
+    ),
+    byFamily("stone_merge", (mechanics) =>
+      traceStoneMerge(mechanics, ctx, nodes, edges, ids),
+    ),
+    byFamily("glyph_warding", (mechanics) =>
+      traceGlyphWarding(mechanics, ctx, nodes, edges, ids),
+    ),
+    byFamily("spawned_creature", (mechanics) =>
+      traceSpawnedCreature(mechanics, ctx, nodes, edges, ids),
+    ),
+    byFamily("reanimated_creature", (mechanics) =>
+      traceReanimatedCreature(mechanics, ctx, nodes, edges, ids),
+    ),
+    byFamily("templated_multi_spawn", (mechanics) =>
+      traceTemplatedMultiSpawn(mechanics, ctx, nodes, edges, ids),
+    ),
+    Match.exhaustive,
+  );
 
   return procId;
 }

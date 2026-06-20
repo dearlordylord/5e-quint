@@ -2,6 +2,19 @@ import type { ActionRestriction } from "../surface/types.ts";
 import type { TraceEdge, TraceNode } from "./tracer-model.ts";
 import type { IdGen } from "./tracer-rule-labels.ts";
 
+type AllowedAction = Extract<
+  ActionRestriction,
+  { readonly kind: "allow_only" }
+>["actions"][number];
+
+function describeAllowedAction(action: AllowedAction): string {
+  if ("attackLimit" in action) {
+    return `${action.action} (one attack only)`;
+  }
+
+  return action.action;
+}
+
 export function traceActionRestriction(
   r: ActionRestriction,
   targetId: string,
@@ -19,6 +32,19 @@ export function traceActionRestriction(
         category: "effect",
         atomKind: "restrict_action_set",
         label: `restrict_action_set\nexclude: ${r.actions.join(", ")}`,
+      });
+      edges.push({ from: rid, to: targetId, relation: "modifies" });
+      return;
+    }
+    case "allow_only": {
+      const rid = ids("rst");
+      nodes.push({
+        id: rid,
+        category: "effect",
+        atomKind: "restrict_action_set",
+        label: `restrict_action_set\nallow only: ${r.actions
+          .map(describeAllowedAction)
+          .join(", ")}`,
       });
       edges.push({ from: rid, to: targetId, relation: "modifies" });
       return;

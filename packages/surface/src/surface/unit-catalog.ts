@@ -67,6 +67,7 @@ import clericPreserveLifeInput from "../../content/cleric_preserve_life.json";
 import colorSprayInput from "../../content/color_spray.json";
 import commandInput from "../../content/command.json";
 import continualFlameInput from "../../content/continual_flame.json";
+import conjureAnimalsInput from "../../content/conjure_animals.json";
 import counterspellInput from "../../content/counterspell.json";
 import cureWoundsInput from "../../content/cure_wounds.json";
 import dancingLightsInput from "../../content/dancing_lights.json";
@@ -128,10 +129,13 @@ import findFamiliarInput from "../../content/find_familiar.json";
 import findTrapsInput from "../../content/find_traps.json";
 import flamingSphereInput from "../../content/flaming_sphere.json";
 import fogCloudInput from "../../content/fog_cloud.json";
+import gaseousFormInput from "../../content/gaseous_form.json";
+import glyphOfWardingInput from "../../content/glyph_of_warding.json";
 import guidanceInput from "../../content/guidance.json";
 import greaseInput from "../../content/grease.json";
 import guidingBoltInput from "../../content/guiding_bolt.json";
 import gustOfWindInput from "../../content/gust_of_wind.json";
+import hasteInput from "../../content/haste.json";
 import heatMetalInput from "../../content/heat_metal.json";
 import healingWordInput from "../../content/healing_word.json";
 import hellishRebukeInput from "../../content/hellish_rebuke.json";
@@ -154,9 +158,11 @@ import locateAnimalsOrPlantsInput from "../../content/locate_animals_or_plants.j
 import locateObjectInput from "../../content/locate_object.json";
 import longstriderInput from "../../content/longstrider.json";
 import mageArmorInput from "../../content/mage_armor.json";
+import magicCircleInput from "../../content/magic_circle.json";
 import magicMissileInput from "../../content/magic_missile.json";
 import magicMouthInput from "../../content/magic_mouth.json";
 import magicWeaponInput from "../../content/magic_weapon.json";
+import meldIntoStoneInput from "../../content/meld_into_stone.json";
 import mindSpikeInput from "../../content/mind_spike.json";
 import massCureWoundsInput from "../../content/mass_cure_wounds.json";
 import massHealingWordInput from "../../content/mass_healing_word.json";
@@ -633,6 +639,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     colorSprayInput,
     commandInput,
     continualFlameInput,
+    conjureAnimalsInput,
     counterspellInput,
     cureWoundsInput,
     dancingLightsInput,
@@ -663,6 +670,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     greaseInput,
     guidingBoltInput,
     gustOfWindInput,
+    hasteInput,
     heatMetalInput,
     heroismInput,
     hexInput,
@@ -716,9 +724,11 @@ export const srdUnitCollection = defineSrdUnitCollection({
     detectPoisonAndDiseaseInput,
     detectThoughtsInput,
     mageArmorInput,
+    magicCircleInput,
     magicMissileInput,
     magicMouthInput,
     magicWeaponInput,
+    meldIntoStoneInput,
     mindSpikeInput,
     mirrorImageInput,
     moonbeamInput,
@@ -736,6 +746,8 @@ export const srdUnitCollection = defineSrdUnitCollection({
     sleetStormInput,
     slowInput,
     flyInput,
+    gaseousFormInput,
+    glyphOfWardingInput,
     spiderClimbInput,
     spikeGrowthInput,
     spiritualWeaponInput,

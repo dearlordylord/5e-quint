@@ -4,9 +4,11 @@ import animalMessengerInput from "../../content/animal_messenger.json";
 import arcanistsMagicAuraInput from "../../content/arcanists_magic_aura.json";
 import auguryInput from "../../content/augury.json";
 import classFighterInput from "../../content/class_fighter.json";
+import conjureAnimalsInput from "../../content/conjure_animals.json";
 import dragonsBreathInput from "../../content/dragons_breath.json";
 import flameBladeInput from "../../content/flame_blade.json";
 import fighterWeaponMasteryInput from "../../content/fighter_weapon_mastery.json";
+import hasteInput from "../../content/haste.json";
 import heatMetalInput from "../../content/heat_metal.json";
 import locateAnimalsOrPlantsInput from "../../content/locate_animals_or_plants.json";
 import locateObjectInput from "../../content/locate_object.json";
@@ -166,6 +168,36 @@ describe("Surface trace interpreter", () => {
           atomKind: "ongoing_predicate",
           label:
             "ongoing_predicate\ntable-witnessed attachment within spell range",
+        }),
+      ]),
+    );
+  });
+
+  test("renders Haste's restricted action set and lethargy rider as typed facts", () => {
+    const trace = traceUnit(decodeUnitRecordSync(hasteInput));
+
+    expect(trace.nodes).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          atomKind: "hole",
+          label: expect.stringContaining("visibility: caster_can_see"),
+        }),
+        expect.objectContaining({
+          atomKind: "restrict_action_set",
+          label:
+            "restrict_action_set\nallow only: attack (one attack only), dash, disengage, hide, utilize",
+        }),
+        expect.objectContaining({
+          atomKind: "effect_end_target_state",
+          label: "effect_end_target_state\nuntil: end_of_target_next_turn",
+        }),
+        expect.objectContaining({
+          atomKind: "apply_condition",
+          label: "apply_condition\nincapacitated",
+        }),
+        expect.objectContaining({
+          atomKind: "set_speed",
+          label: "set_speed\n= 0 ft",
         }),
       ]),
     );
@@ -442,6 +474,71 @@ describe("Surface trace interpreter", () => {
       (e) => e.to === "moonbeam_save_per_turn" && e.relation === "limits",
     );
     expect(limitsEdges).toHaveLength(4);
+  });
+
+  test("renders Conjure Animals pack occurrence, caster movement, visible-creature triggers, and shared per-turn fence", () => {
+    const trace = traceUnit(decodeUnitRecordSync(conjureAnimalsInput));
+
+    expect(trace.nodes).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          atomKind: "hole",
+          label: expect.stringContaining("spell_spatial_manifestation"),
+        }),
+        expect.objectContaining({
+          atomKind: "ongoing_predicate",
+          label: "ongoing_predicate\ncaster within 5 ft of attachment",
+        }),
+        expect.objectContaining({
+          atomKind: "movement_window",
+          label: "movement_window\n(caster moves on own turn)",
+        }),
+        expect.objectContaining({
+          atomKind: "reposition_attachment",
+          label: [
+            "reposition_attachment",
+            "max 30 ft",
+            "dest: caster visible unoccupied space",
+          ].join("\n"),
+        }),
+        expect.objectContaining({
+          atomKind: "post_action_window",
+          label:
+            "post_action_window\n(spatial manifestation moves within 10 ft of visible creature)",
+        }),
+        expect.objectContaining({
+          atomKind: "post_action_window",
+          label:
+            "post_action_window\n(visible creature enters within 10 ft of spatial manifestation)",
+        }),
+        expect.objectContaining({
+          atomKind: "post_action_window",
+          label:
+            "post_action_window\n(visible creature ends turn within 10 ft of spatial manifestation)",
+        }),
+        expect.objectContaining({
+          atomKind: "save_gate",
+          label: [
+            "save_gate",
+            "DEX vs caster spell save DC",
+            "application: caster may force target save",
+          ].join("\n"),
+        }),
+      ]),
+    );
+
+    const fenceNodes = trace.nodes.filter((n) => n.atomKind === "use_count");
+    expect(fenceNodes).toContainEqual(
+      expect.objectContaining({
+        id: "conjure_animals_save_per_turn",
+        label: "use_count\nonce per turn",
+      }),
+    );
+    const limitsEdges = trace.edges.filter(
+      (e) =>
+        e.to === "conjure_animals_save_per_turn" && e.relation === "limits",
+    );
+    expect(limitsEdges).toHaveLength(3);
   });
 
   test("renders Spiritual Weapon later movement and repeat attack behind one Bonus Action window", () => {

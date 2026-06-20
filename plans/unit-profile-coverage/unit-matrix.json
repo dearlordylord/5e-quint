@@ -43,14 +43,14 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
-      "denominator": 460,
-      "numerator": 275,
-      "percent": "59.8%"
+      "denominator": 466,
+      "numerator": 281,
+      "percent": "60.3%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 548,
-      "numerator": 325,
-      "percent": "59.3%"
+      "denominator": 554,
+      "numerator": 331,
+      "percent": "59.7%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,62 +59,62 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 326
+      "value": 332
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 190,
-      "numerator": 185,
+      "denominator": 191,
+      "numerator": 186,
       "percent": "97.4%"
     },
     "profileClassificationCoverage": {
-      "denominator": 326,
-      "numerator": 326,
+      "denominator": 332,
+      "numerator": 332,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 124,
-      "numerator": 124,
+      "denominator": 126,
+      "numerator": 126,
       "percent": "100%"
     },
     "qntProofCoverage": {
-      "denominator": 124,
-      "numerator": 120,
+      "denominator": 126,
+      "numerator": 122,
       "percent": "96.8%"
     },
     "rulesKernelCoveredProfileCoverage": {
-      "denominator": 162,
-      "numerator": 162,
+      "denominator": 164,
+      "numerator": 164,
       "percent": "100%"
     },
     "rulesKernelProfileJoinCoverage": {
-      "denominator": 162,
-      "numerator": 162,
+      "denominator": 164,
+      "numerator": 164,
       "percent": "100%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 176,
-      "numerator": 176,
+      "denominator": 177,
+      "numerator": 177,
       "percent": "100%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 124,
-      "numerator": 124,
+      "denominator": 126,
+      "numerator": 126,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 124,
-      "numerator": 124,
+      "denominator": 126,
+      "numerator": 126,
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 182,
+      "denominator": 183,
       "numerator": 178,
-      "percent": "97.8%"
+      "percent": "97.3%"
     },
     "supportedProfileCoverage": {
-      "denominator": 276,
-      "numerator": 190,
-      "percent": "68.8%"
+      "denominator": 282,
+      "numerator": 191,
+      "percent": "67.7%"
     }
   },
   "metricSemantics": [
@@ -5588,19 +5588,88 @@
           "ownerPath": "packages/battle-runtime/src/cunning-strike-selected-identity.mbt.test.ts"
         }
       ]
+    },
+    {
+      "id": "spell.invocation-haste-positive",
+      "profileKind": "spell-invocation",
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/spell-haste-positive-effects-core.qnt",
+        "packages/battle-runtime/battle-runtime-haste-lethargy-lifecycle.mbt.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/haste-positive.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-end-target-state.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-granted-action-resource.ts",
+        "packages/battle-runtime/src/battle-reducer/damage-apply.ts",
+        "packages/battle-runtime/src/battle-reducer/movement-speed.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-damage-fills.ts",
+        "packages/battle-runtime/src/battle-reducer/attack-resolution.ts",
+        "packages/battle-runtime/src/active-effect/types.ts",
+        "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts",
+        "packages/battle-runtime/src/battle-reducer/battle-codecs.ts",
+        "packages/shared-algebras/src/action-economy-algebra.ts",
+        "packages/shared-algebras/src/speed-algebra.ts"
+      ],
+      "sourceBoundary": "The runtime consumes Haste's typed Surface direct target-effect shape rather than authored spell identity: Magic Action and level-3-or-higher Spell Slot spend, caster-owned Concentration up to 1 minute, one visible willing creature target, doubled Speed ratio, +2 Armor Class, Dexterity Saving Throw Advantage, one target-turn spell-effect action resource restricted to Attack with one attack only, Dash, Disengage, Hide, or Utilize, and the spell-end target state. The profile carries the spell-end state as a source-owned active effect while Haste is active, then Concentration or duration cleanup promotes source-owned Incapacitated plus Speed 0 until the end of the target's next turn. Promoted Incapacitated uses the shared Concentration teardown path to end any target-owned Concentration. Incapacitated is not treated as a Speed shortcut; the Speed 0 effect has its own source-owned lifetime, and cleanup preserves unrelated Incapacitated sources. Automatic target choice and spatial visibility derivation remain caller/table facts.",
+      "taskRefs": [
+        "L5-C17-HASTE-POSITIVE-RUNTIME",
+        "L5-C18-HASTE-LETHARGY-RUNTIME"
+      ],
+      "title": "Spell invocation applies Haste's active positive target effects, restricted target-turn action, and spell-end lethargy",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-haste-positive-effects-core-examples.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-haste-positive.test.ts"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/haste-lethargy-lifecycle.mbt.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "spell.invocation-glyph-durable-occurrence",
+      "profileKind": "spell-invocation",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime-glyph-durable-occurrence.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer/glyph-durable-occurrence.ts",
+        "packages/battle-runtime/src/active-effect/types.ts"
+      ],
+      "sourceBoundary": "Battle runtime consumes Glyph of Warding's typed durable_glyph_occurrence and caster_defined_glyph_trigger Surface facts by shape rather than authored id, name, slug, provenance section, or spell-list identity. The owner represents only the completed-inscription durable occurrence boundary: a completedGlyphInscription witness creates a source-owned glyphDurableOccurrence active effect with stable occurrence id, source spell level, selected table anchor identity, covered-area identity, cast-location identity, maximum covered diameter, hidden-noticing DC source, trigger refinement/exclusion profile, movement-invalidation threshold, and until-dispelled expiration. Table-witnessed trigger occurrence and movement invalidation can end the occurrence without applying any release branch. The one-hour creation process is not discovered as a Magic Action spell invocation, and explosive-rune damage, stored spell release, stored Concentration override, component consumption, automatic map/object geometry, and generic Dispel Magic targeting of glyph occurrences remain separate owners.",
+      "taskRefs": [
+        "L3-FOLLOWUP-GLYPH-DURABLE-OCCURRENCE"
+      ],
+      "title": "Spell invocation admits and tracks Glyph durable occurrence boundary",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-glyph-durable-occurrence.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-glyph-of-warding.test.ts"
+        }
+      ]
     }
   ],
   "rulesKernelProfileJoin": {
     "denominatorRule": "profile records with rules-kernel profile kinds and either QNT owners or explicit profile-obligation mappings",
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
-        "denominator": 162,
-        "numerator": 162,
+        "denominator": 164,
+        "numerator": 164,
         "percent": "100%"
       },
       "rulesKernelProfileJoinCoverage": {
-        "denominator": 162,
-        "numerator": 162,
+        "denominator": 164,
+        "numerator": 164,
         "percent": "100%"
       }
     },
@@ -8374,6 +8443,51 @@
         "qntOwners": [
           "packages/shared-algebras/proofs/rule-core/unit-feature-hide-obscurement-permission-core.qnt"
         ]
+      },
+      {
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.SPELL.HASTE_LETHARGY_LIFECYCLE",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Haste spell-end lethargy applies Incapacitated plus separate Speed 0 until the target's next turn end"
+          },
+          {
+            "obligationId": "BATTLE.SPELL.HASTE_POSITIVE_EFFECTS",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Haste positive cast applies active target buffs and a restricted target-turn action"
+          },
+          {
+            "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
+          }
+        ],
+        "profileId": "spell.invocation-haste-positive",
+        "profileKind": "spell-invocation",
+        "qntOwners": [
+          "packages/battle-runtime/battle-runtime-haste-lethargy-lifecycle.mbt.qnt",
+          "packages/shared-algebras/proofs/rule-core/spell-haste-positive-effects-core.qnt"
+        ]
+      },
+      {
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.SPELL.GLYPH_DURABLE_OCCURRENCE_LIFECYCLE",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Glyph of Warding completed inscription stores a durable occurrence and ends it on trigger or movement invalidation witnesses"
+          }
+        ],
+        "profileId": "spell.invocation-glyph-durable-occurrence",
+        "profileKind": "spell-invocation",
+        "qntOwners": [
+          "packages/battle-runtime/battle-runtime-glyph-durable-occurrence.qnt"
+        ]
       }
     ],
     "sourceArtifacts": {
@@ -8384,8 +8498,8 @@
       "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
       "metrics": {
         "rulesKernelSupportedUnitCoverage": {
-          "denominator": 176,
-          "numerator": 176,
+          "denominator": 177,
+          "numerator": 177,
           "percent": "100%"
         }
       },
@@ -10409,6 +10523,41 @@
             }
           ],
           "unitId": "guiding_bolt"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.SPELL.HASTE_LETHARGY_LIFECYCLE",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Haste spell-end lethargy applies Incapacitated plus separate Speed 0 until the target's next turn end"
+                },
+                {
+                  "obligationId": "BATTLE.SPELL.HASTE_POSITIVE_EFFECTS",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Haste positive cast applies active target buffs and a restricted target-turn action"
+                },
+                {
+                  "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
+                }
+              ],
+              "profileId": "spell.invocation-haste-positive",
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/battle-runtime/battle-runtime-haste-lethargy-lifecycle.mbt.qnt",
+                "packages/shared-algebras/proofs/rule-core/spell-haste-positive-effects-core.qnt"
+              ]
+            }
+          ],
+          "unitId": "haste"
         },
         {
           "joinStatus": "covered",
@@ -13223,7 +13372,7 @@
       "evidenceTag": "selected-identity-mbt"
     },
     "deferredNonApplicableRows": [],
-    "rowCount": 9,
+    "rowCount": 11,
     "rows": [
       {
         "catalogAdmissionStatus": "installed",
@@ -13327,6 +13476,40 @@
           "tag": "profile-subset-supported"
         },
         "unitId": "species_halfling_naturally_stealthy"
+      },
+      {
+        "catalogAdmissionStatus": "installed",
+        "collectionId": "srd-5.2.1",
+        "kind": "spell",
+        "selectedIdentity": {
+          "reason": "The Unit has no selected-identity-mbt evidence.",
+          "status": "missing-witness"
+        },
+        "sourceRecordPath": "packages/surface/content/glyph_of_warding.json",
+        "support": {
+          "profileIds": [
+            "spell.invocation-glyph-durable-occurrence"
+          ],
+          "tag": "profile-subset-supported"
+        },
+        "unitId": "glyph_of_warding"
+      },
+      {
+        "catalogAdmissionStatus": "installed",
+        "collectionId": "srd-5.2.1",
+        "kind": "spell",
+        "selectedIdentity": {
+          "reason": "The Unit has no selected-identity-mbt evidence.",
+          "status": "missing-witness"
+        },
+        "sourceRecordPath": "packages/surface/content/haste.json",
+        "support": {
+          "profileIds": [
+            "spell.invocation-haste-positive"
+          ],
+          "tag": "supported-profile"
+        },
+        "unitId": "haste"
       },
       {
         "catalogAdmissionStatus": "installed",
@@ -16979,6 +17162,30 @@
       "taskId": "L3-FOLLOWUP-HALFLING-NATURALLY-STEALTHY-RUNTIME"
     },
     {
+      "claimKind": "qnt-proof",
+      "note": "Proof-only QNT example exercises identity-free Haste positive-effect facts and restricted additional-action semantics, including the one-attack-only Attack action, allowed Dash action, disallowed Dodge action, and rejection of additional Haste attacks.",
+      "profileIds": [
+        "spell.invocation-haste-positive"
+      ],
+      "taskId": "L5-C17-HASTE-POSITIVE-RUNTIME"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime and shared-algebra tests cover Haste positive spell admission from typed Surface facts, Magic Action and level-3 Spell Slot spending, caster-owned Concentration, visible willing target selection, Speed ratio projection, +2 Armor Class, Dexterity Saving Throw Advantage, target-turn and self-target current-turn spell-granted action resource derivation, same-turn Concentration-end resource cleanup, disallowed-action rejection, and preventing the restricted Haste action from opening class-feature Extra Attack.",
+      "profileIds": [
+        "spell.invocation-haste-positive"
+      ],
+      "taskId": "L5-C17-HASTE-POSITIVE-RUNTIME"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime tests cover Haste spell-end target-state admission from typed Surface facts, Concentration-break promotion to Incapacitated plus separate Speed 0, target-owned Concentration break from promoted Incapacitated, duration-expiry promotion, replacement/recast ordering, cleanup at the target's next turn end, self-cast current-turn action-resource cleanup, and preservation of independent Incapacitated sources.",
+      "profileIds": [
+        "spell.invocation-haste-positive"
+      ],
+      "taskId": "L5-C18-HASTE-LETHARGY-RUNTIME"
+    },
+    {
       "claimKind": "completed-runtime-parity",
       "note": "Focused Character Sheet runtime tests cover Resourceful Long Rest Heroic Inspiration grants from retained typed rest-trigger and heroic-inspiration Surface facts, duplicate grants remaining one available Heroic Inspiration state, and non-qualifying builds preserving current Heroic Inspiration state without species-owned rest or inspiration state.",
       "profileIds": [
@@ -17033,6 +17240,34 @@
         "unit-feature.cunning-strike"
       ],
       "taskId": "L5-A13-ROGUE-CUNNING-STRIKE-BATTLE-RUNTIME"
+    },
+    {
+      "claimKind": "accepted-runtime-closure",
+      "note": "Task 21 rechecked Phantom Steed RAW and Surface facts, added a typed spawned-creature-damage early spell-end trigger, and closed promoted support as an explicit owner split rather than a battle-runtime claim: spell-created mount lifecycle/control, created-equipment distance cleanup, and table travel pace each need their own follow-up owner before Phantom Steed can move beyond unsupported-profile.",
+      "profileIds": [],
+      "taskId": "L5-C21-PHANTOM-STEED-MOUNT-LIFECYCLE"
+    },
+    {
+      "claimKind": "accepted-follow-up-split",
+      "note": "Task 22 leaves Glyph of Warding unsupported because Surface-only catalog evidence is not runtime owner evidence. The durable glyph occurrence, explosive-rune release, stored-spell release, and stored Concentration override are split into narrower L3 follow-ups that must add executable owners and focused verification before Glyph can claim runtime support.",
+      "profileIds": [],
+      "taskId": "L5-C22-GLYPH-OF-WARDING-RUNTIME"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime tests cover Glyph durable occurrence admission from typed Surface facts without authored-identity dispatch, completed-inscription witness creation of a source-owned glyphDurableOccurrence active effect, rejection of below-minimum source spell levels and adjacent occurrence/trigger shapes, duplicate and missing-source add failures, no Magic Action discovery for the one-hour creation process, table-witnessed trigger cleanup, and movement invalidation with cast-location and greater-than-10-foot validation.",
+      "profileIds": [
+        "spell.invocation-glyph-durable-occurrence"
+      ],
+      "taskId": "L3-FOLLOWUP-GLYPH-DURABLE-OCCURRENCE"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Leaf package-local Quint proof covers completed Glyph occurrence creation, rejection below the minimum spell level, trigger cleanup, and movement invalidation requiring the same cast-location witness plus distance greater than 10 feet before ending without triggering.",
+      "profileIds": [
+        "spell.invocation-glyph-durable-occurrence"
+      ],
+      "taskId": "L3-FOLLOWUP-GLYPH-DURABLE-OCCURRENCE"
     }
   ],
   "unitGroupDenominatorAudit": {
@@ -17087,18 +17322,18 @@
         "unsupportedOrOtherUnits": 4
       },
       {
-        "executableUnitDenominator": 142,
-        "installedUnitDenominator": 142,
+        "executableUnitDenominator": 148,
+        "installedUnitDenominator": 148,
         "kind": "spell",
         "label": "Spell Units",
-        "profileFactDenominator": 139,
-        "profileSubsetSupportedUnits": 19,
+        "profileFactDenominator": 141,
+        "profileSubsetSupportedUnits": 20,
         "selectedIdentityDeferredNonApplicableUnits": 0,
-        "selectedIdentityReplayDenominator": 113,
-        "selectedIdentityReplayGapUnits": 3,
+        "selectedIdentityReplayDenominator": 115,
+        "selectedIdentityReplayGapUnits": 5,
         "selectedIdentityReplayWitnessUnits": 110,
-        "supportedProfileUnits": 94,
-        "unsupportedOrOtherUnits": 29
+        "supportedProfileUnits": 95,
+        "unsupportedOrOtherUnits": 33
       },
       {
         "executableUnitDenominator": 96,
@@ -29119,6 +29354,29 @@
         "status": "installed"
       },
       "claim": {
+        "battleReadinessClosure": {
+          "kind": "table-spatial-derivation",
+          "owner": "future pack Spell Effect owner plus table/spatial pack-position and visible-creature witness owner",
+          "reason": "Conjure Animals supplies typed Surface facts for the spectral pack occurrence, visible-unoccupied placement and reposition destination, caster-proximity Strength Saving Throw Advantage predicate, caster-movement reposition trigger, optional Dexterity Saving Throw damage application, caster-visible creature trigger eligibility, shared once-per-turn limit, and higher-slot damage scaling. Promoted battle runtime still needs a pack Spell Effect owner that consumes caller/table-spatial pack position, caster proximity, visible-creature membership, and per-turn per-creature trigger witnesses without adding companion-control state or dispatching on the authored spell id or name."
+        },
+        "reason": "Conjure Animals is authored and installed as an SRD Surface Spell Definition with Action Spell Slot casting, 60-foot point range, V/S components, Concentration up to 10 minutes, a Large spectral intangible animal-pack spatial manifestation placed in a caster-visible unoccupied space, caster-selected animal form, caster Strength Saving Throw Advantage while within 5 feet of the pack, caster-turn movement that repositions the pack up to 30 feet to a caster-visible unoccupied space, three caster-visible creature Dexterity Saving Throw trigger windows within 10 feet of the pack, optional caster-forced save application, shared once-per-turn trigger limiting, and slot-scaled Slashing damage. No promoted battle-runtime profile is claimed because promoted runtime still needs a pack Spell Effect/table-spatial owner for manifestation placement, proximity witnesses, caster movement timing, visible-creature eligibility, optional save prompting, and per-turn per-creature trigger state without dispatching on Conjure Animals authored identity.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/conjure_animals.json",
+      "unitId": "conjure_animals"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
         "profileIds": [
           "spell.reaction-counterspell"
         ],
@@ -31402,6 +31660,90 @@
       ],
       "sourceRecordPath": "packages/surface/content/gust_of_wind.json",
       "unitId": "gust_of_wind"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "profileIds": [
+          "spell.invocation-haste-positive"
+        ],
+        "supportedMechanics": [
+          "Surface authors Haste as an SRD Spell Definition with Magic Action Spell Slot casting, level 3, 30-foot visible willing-creature targeting, Concentration up to 1 minute, doubled Speed, +2 Armor Class, Dexterity Saving Throw Advantage, one restricted additional action, and a typed spell-end lethargy rider",
+          "Battle runtime admits the exact typed direct-effect shape without branching on Haste id, name, slug, provenance section, or spell list identity",
+          "Battle runtime spends the Magic Action and a level-3-or-higher Spell Slot, opens the normal spell-cast interrupt window, and owns caster Concentration for the Haste active effects",
+          "Battle runtime applies target active effects for doubled Speed, +2 Armor Class, and Dexterity Saving Throw Advantage from the admitted Surface facts",
+          "Battle runtime derives one target-turn spell-effect action resource from the active effect, restricts it to Attack with one attack only, Dash, Disengage, Hide, or Utilize, rejects disallowed spends, and prevents that restricted action from opening class-feature Extra Attack",
+          "Battle runtime promotes the spell-end lethargy rider on Concentration loss, duration expiration, or replacement/recast into source-owned Incapacitated plus a separate source-owned Speed 0 effect until the end of the target's next turn",
+          "Battle runtime cleans up the Haste lethargy condition and Speed 0 at the target-turn boundary while preserving independent Incapacitated sources and without treating Incapacitated itself as a Speed shortcut"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-haste-positive.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L5-C17-HASTE-POSITIVE-RUNTIME"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-haste-positive.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L5-C18-HASTE-LETHARGY-RUNTIME"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [
+        {
+          "id": "spell.invocation-haste-positive",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/spell-haste-positive-effects-core.qnt",
+            "packages/battle-runtime/battle-runtime-haste-lethargy-lifecycle.mbt.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts",
+            "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/haste-positive.ts",
+            "packages/battle-runtime/src/battle-reducer/spell-end-target-state.ts",
+            "packages/battle-runtime/src/battle-reducer/spell-granted-action-resource.ts",
+            "packages/battle-runtime/src/battle-reducer/damage-apply.ts",
+            "packages/battle-runtime/src/battle-reducer/movement-speed.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-damage-fills.ts",
+            "packages/battle-runtime/src/battle-reducer/attack-resolution.ts",
+            "packages/battle-runtime/src/active-effect/types.ts",
+            "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts",
+            "packages/battle-runtime/src/battle-reducer/battle-codecs.ts",
+            "packages/shared-algebras/src/action-economy-algebra.ts",
+            "packages/shared-algebras/src/speed-algebra.ts"
+          ],
+          "sourceBoundary": "The runtime consumes Haste's typed Surface direct target-effect shape rather than authored spell identity: Magic Action and level-3-or-higher Spell Slot spend, caster-owned Concentration up to 1 minute, one visible willing creature target, doubled Speed ratio, +2 Armor Class, Dexterity Saving Throw Advantage, one target-turn spell-effect action resource restricted to Attack with one attack only, Dash, Disengage, Hide, or Utilize, and the spell-end target state. The profile carries the spell-end state as a source-owned active effect while Haste is active, then Concentration or duration cleanup promotes source-owned Incapacitated plus Speed 0 until the end of the target's next turn. Promoted Incapacitated uses the shared Concentration teardown path to end any target-owned Concentration. Incapacitated is not treated as a Speed shortcut; the Speed 0 effect has its own source-owned lifetime, and cleanup preserves unrelated Incapacitated sources. Automatic target choice and spatial visibility derivation remain caller/table facts.",
+          "taskRefs": [
+            "L5-C17-HASTE-POSITIVE-RUNTIME",
+            "L5-C18-HASTE-LETHARGY-RUNTIME"
+          ],
+          "title": "Spell invocation applies Haste's active positive target effects, restricted target-turn action, and spell-end lethargy",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-haste-positive-effects-core-examples.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-haste-positive.test.ts"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/haste-lethargy-lifecycle.mbt.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/haste.json",
+      "unitId": "haste"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
@@ -34941,6 +35283,29 @@
         "status": "installed"
       },
       "claim": {
+        "battleReadinessClosure": {
+          "kind": "table-spatial-derivation",
+          "owner": "future warded-area Spell Effect owner plus table/spatial crossing and protected-target witness owner",
+          "reason": "Magic Circle supplies typed Surface facts for the warded Cylinder, affected creature type choice, direction branch, crossing gates, protected-target Attack Roll Disadvantage, and source-scoped possession/condition prevention. Promoted battle runtime still needs a warded-area effect owner that consumes table-supplied placement, area membership, protected-target location, willing nonmagical entry attempts, nonmagical exit attempts, teleportation or interplanar-travel crossing witnesses, and source-scoped possession/Charmed/Frightened prevention without duplicating battle map state or branching on authored spell id or name."
+        },
+        "reason": "Magic Circle is authored and installed as an SRD Surface Spell Definition with 1-minute Spell Slot casting, 10-foot point range, V/S/M consumed 100+ GP salt and powdered silver component, a 1-hour timed duration with +1 hour per slot above 3, a 10-foot-radius 20-foot-tall warded Cylinder centered on a visible ground point within spell range, cast-time one-or-more selection from Celestial, Elemental, Fey, Fiend, and Undead creature types, normal and reversed ward direction branches, willing nonmagical entry prevention and nonmagical exit prevention for affected creatures, Charisma Saving Throw gates for teleportation or interplanar-travel crossing, Attack Roll Disadvantage against protected targets, and source-scoped possession plus Charmed/Frightened prevention. No promoted battle-runtime profile is claimed because full support needs a warded-area Spell Effect and table/spatial owner for ground-point placement, Cylinder membership, inside/outside protected-target witnesses, willing entry attempts, exit attempts, magical-travel witnesses, and per-source condition/possession prevention without dispatching on Magic Circle authored identity.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/magic_circle.json",
+      "unitId": "magic_circle"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
         "profileIds": [
           "spell.invocation-damage-save-or-attack",
           "spell.readied-action-time-spell"
@@ -35138,6 +35503,29 @@
       ],
       "sourceRecordPath": "packages/surface/content/magic_weapon.json",
       "unitId": "magic_weapon"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "table-spatial-derivation",
+          "owner": "future merged-state Spell Effect owner plus table terrain/object occupancy witness owner",
+          "reason": "Meld into Stone supplies typed Surface facts for the stone object-or-surface containment target, hidden merged occupancy, outside-sense limits, time awareness, self-spell permission, Movement-limited voluntary exit, otherwise-no-movement restriction, harmless minor stone damage, destructive/transmuting expulsion damage, closest-unoccupied-space placement, and Prone rider. Promoted battle runtime still needs a merged-state effect owner that consumes table terrain/object witnesses for stone size, shape, material, entry location, damage/destruction/transmutation events, fit-after-shape-change predicates, and closest-unoccupied placement without duplicating battle map/object state or branching on authored spell id or name."
+        },
+        "reason": "Meld into Stone is authored and installed as an SRD Surface Spell Definition with Action-or-Ritual Spell Slot casting, Touch range, V/S components, an 8-hour timed duration, a caster-only stone object-or-surface merge target that requires caster touch and stone large enough to fully contain the caster's body and equipment, hidden merged occupancy with no visible presence or nonmagical-sense detectability, blocked outside sight, outside-sound Wisdom (Perception) Disadvantage, passage-of-time awareness, self-spellcasting permission while merged, a voluntary exit that spends 5 feet of Movement where the caster entered and ends the spell, and an otherwise-no-movement restriction. The record also carries table terrain/object witnesses for stone size, shape, material, entry location, damage/destruction/transmutation events, fit-after-shape-change predicates, and closest-unoccupied-space placement; minor physical damage is harmless, partial destruction or shape change that makes the caster no longer fit expels them with 6d6 Force damage, and complete destruction or transmutation expels them with 50 Force damage plus closest-unoccupied placement and the Prone condition. No promoted battle-runtime profile is claimed because full support needs a merged-state Spell Effect and table terrain/object owner without dispatching on Meld into Stone authored identity.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/meld_into_stone.json",
+      "unitId": "meld_into_stone"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
@@ -36401,6 +36789,167 @@
       ],
       "sourceRecordPath": "packages/surface/content/fly.json",
       "unitId": "fly"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "followUpTasks": [
+          {
+            "id": "L3-FOLLOWUP-GASEOUS-FORM-MIST-CLOUD-RUNTIME",
+            "mechanic": "Promote Gaseous Form's typed mist-cloud form as a spell effect with active form state, movement replacement in effective movement and Dash budgets, passive Resistance/Immunity/Saving Throw Advantage projections, attack/spellcasting/object/speech activity restrictions with Magic-action self-ending preserved, zero-Hit-Point and spell-end cleanup, and caller/table-spatial witnesses for creature-space occupancy, narrow-opening passage, and liquid-surface treatment.",
+            "owner": "future battle-runtime mist-cloud form Spell Effect plus table/spatial witness owner",
+            "requiredOutput": "Supported-profile or profile-subset-supported Gaseous Form claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the typed mist-cloud form effect without dispatching on spell id, name, or provenance.",
+            "title": "Gaseous Form Mist-Cloud Runtime"
+          }
+        ],
+        "reason": "Gaseous Form is authored and installed as an SRD Surface Spell Definition with Action Spell Slot casting, Touch range, V/S/M gauze components, Concentration up to 1 hour, willing touched creature targeting with one additional target per slot level above 3, and a typed spell-effect mist-cloud form for the target plus its worn and carried objects. The form facts include replacement movement as the target's only movement method: 10-foot Fly Speed with hover; table/spatial ownership for occupying another creature's space, passing through narrow openings, and treating liquids as solid surfaces; Bludgeoning, Piercing, and Slashing Resistance; Prone Immunity; Strength, Dexterity, and Constitution Saving Throw Advantage; no talking; no object manipulation, object dropping, use, or interaction; no attacks; no spellcasting; zero-Hit-Point ending; Magic-action self-ending; and normal spell-end cleanup. No promoted battle-runtime profile is claimed because these form facts require a future mist-cloud form Spell Effect owner and table/spatial witnesses rather than generic spell-id dispatch.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/gaseous_form.json",
+      "unitId": "gaseous_form"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "deferredMechanics": [
+          {
+            "battleReadinessClosure": {
+              "kind": "outside-battle-runtime",
+              "owner": "character inventory/equipment spell-component legality plus table-time long-cast owner",
+              "reason": "Task 26 promotes the durable occurrence after a completed inscription witness. Inventory stock, component substitution/hand access, costly consumed Material component spend, and elapsed downtime casting are not battle-runtime state and should be consumed from their owning component and table-time procedures rather than copied into Glyph occurrence state."
+            },
+            "mechanic": "powdered diamond worth 200+ GP Material component availability, hand/access legality, consumption, and the table-time one-hour creation process"
+          },
+          {
+            "battleReadinessClosure": {
+              "kind": "table-spatial-derivation",
+              "owner": "battle-runtime glyph explosive-rune release owner plus table area-membership witness owner",
+              "reason": "Task 26 stores and cleans up the durable occurrence only. The triggered save-damage release must consume the occurrence plus separate release-specific area-membership and damage-choice witnesses without collapsing creation into an immediate damage spell."
+            },
+            "followUpTaskId": "L3-FOLLOWUP-GLYPH-EXPLOSIVE-RUNE-RELEASE",
+            "mechanic": "explosive-rune triggered release damage, damage-type choice, slot scaling, saving throw, and 20-foot Sphere area-membership application"
+          },
+          {
+            "battleReadinessClosure": {
+              "kind": "outside-battle-runtime",
+              "owner": "stored spell invocation release owner plus table hostile-placement and retargeting witness owner",
+              "reason": "The durable occurrence can identify and end a Glyph occurrence, but storing and later replaying a prepared spell invocation needs its own typed stored-invocation owner and release-time table witnesses."
+            },
+            "followUpTaskId": "L3-FOLLOWUP-GLYPH-STORED-SPELL-RELEASE",
+            "mechanic": "spell-glyph stored spell invocation, no immediate storage-time effect, trigger-creature retargeting, area centering, and hostile placement handling"
+          },
+          {
+            "battleReadinessClosure": {
+              "kind": "outside-battle-runtime",
+              "owner": "stored Concentration full-duration Spell Effect owner",
+              "reason": "Task 26 does not release stored spells. Full-duration stored Concentration needs a later owner that represents the released spell effect without ordinary caster, triggering-creature, or readied-spell Concentration ownership."
+            },
+            "followUpTaskId": "L3-FOLLOWUP-GLYPH-STORED-CONCENTRATION",
+            "mechanic": "stored Concentration spell full-duration override after spell-glyph release"
+          },
+          {
+            "battleReadinessClosure": {
+              "kind": "outside-battle-runtime",
+              "owner": "future broader ongoing Spell Effect occurrence ending owner",
+              "reason": "Task 26 records the Glyph occurrence with an until-dispelled expiration and owns trigger plus movement-invalidation cleanup only. Extending Dispel Magic selected magical-effect/object targeting to Glyph is a separate generic ongoing Spell Effect widening and should update that owner and its QNT/MBT parity rather than adding a Glyph-specific remover registry here."
+            },
+            "followUpTaskId": "L12G-FOLLOWUP-BROADER-ONGOING-SPELL-EFFECT-DISPEL",
+            "mechanic": "generic Dispel Magic targeting and ending of represented glyph durable occurrences"
+          }
+        ],
+        "followUpTasks": [
+          {
+            "id": "L3-FOLLOWUP-GLYPH-EXPLOSIVE-RUNE-RELEASE",
+            "mechanic": "Promote explosive-rune release from a triggered glyph occurrence using typed 20-foot Sphere, Dexterity Saving Throw half damage, caster-chosen Acid/Cold/Fire/Lightning/Thunder damage type, slot scaling, and table-supplied area-membership witnesses without treating glyph creation as an immediate save-damage cast.",
+            "owner": "battle-runtime glyph release and save-damage owner plus table area-membership witness owner",
+            "requiredOutput": "Supported explosive-rune release profile with focused runtime tests and Quint/runtime parity for non-immediate glyph release damage, damage-type choice, slot scaling, area-membership witnesses, and spell-end cleanup.",
+            "title": "Glyph Explosive Rune Release"
+          },
+          {
+            "id": "L3-FOLLOWUP-GLYPH-STORED-SPELL-RELEASE",
+            "mechanic": "Promote spell-glyph storage and release by carrying an eligible prepared stored spell invocation from glyph creation, enforcing no immediate storage-time effect, retargeting single-creature and area spells to the triggering creature, and consuming hostile close-as-possible placement witnesses for summons, harmful objects, and traps.",
+            "owner": "stored spell invocation release owner plus table hostile-placement and retargeting witnesses",
+            "requiredOutput": "Supported or profile-subset-supported stored-spell release claim with focused runtime tests and Quint/runtime parity for stored invocation identity, trigger-creature retargeting, area centering, hostile placement witnesses, and no ordinary immediate-cast collapse.",
+            "title": "Glyph Stored Spell Release"
+          },
+          {
+            "id": "L3-FOLLOWUP-GLYPH-STORED-CONCENTRATION",
+            "mechanic": "Promote the spell-glyph Concentration override so a stored Concentration spell released by the glyph lasts to full duration without ordinary caster Concentration ownership, triggering-creature Concentration ownership, or readied-spell Concentration cleanup semantics.",
+            "owner": "stored Concentration full-duration Spell Effect owner",
+            "requiredOutput": "Supported or profile-subset-supported stored Concentration override claim with focused runtime tests and Quint/runtime parity for full-duration stored Concentration lifecycle, cleanup, and rejection of ordinary Concentration/readied-spell ownership shortcuts.",
+            "title": "Glyph Stored Concentration Override"
+          }
+        ],
+        "futureProfileOwner": "glyph explosive-rune release, stored spell release, stored Concentration override, broader ongoing Spell Effect dispel, and character inventory/equipment component legality owners",
+        "profileIds": [
+          "spell.invocation-glyph-durable-occurrence"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "Surface admits Glyph of Warding as an SRD Spell Definition with typed durable_glyph_occurrence and caster_defined_glyph_trigger facts for surface or closeable-object inscription, 10-foot maximum covered diameter, table-witnessed cast location, hidden-noticing Wisdom (Perception) DC source, trigger refinement/exclusion, trigger occurrence, and movement invalidation more than 10 feet from the cast location.",
+          "Battle runtime admits the durable occurrence profile by typed Surface shape rather than Glyph of Warding id, name, slug, provenance section, or spell-list identity.",
+          "Battle runtime creates a source-owned glyphDurableOccurrence active effect only from a completedGlyphInscription witness, carrying stable occurrence id, source spell level, selected table anchor identity, covered-area identity, cast-location identity, notice DC source, trigger profile, movement-invalidation threshold, and until-dispelled expiration without duplicating map geometry or object state.",
+          "Battle runtime does not discover the one-hour Glyph creation process as a Magic Action spell invocation or immediate release spell act.",
+          "Table-witnessed trigger occurrence cleanup ends the durable glyph occurrence without applying explosive-rune or stored-spell release semantics.",
+          "Table-witnessed movement invalidation cleanup validates the original cast-location identity and a distance greater than 10 feet before ending the occurrence without triggering it."
+        ],
+        "tag": "profile-subset-supported"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-glyph-of-warding.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L3-FOLLOWUP-GLYPH-DURABLE-OCCURRENCE"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [
+        {
+          "id": "spell.invocation-glyph-durable-occurrence",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime-glyph-durable-occurrence.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer/glyph-durable-occurrence.ts",
+            "packages/battle-runtime/src/active-effect/types.ts"
+          ],
+          "sourceBoundary": "Battle runtime consumes Glyph of Warding's typed durable_glyph_occurrence and caster_defined_glyph_trigger Surface facts by shape rather than authored id, name, slug, provenance section, or spell-list identity. The owner represents only the completed-inscription durable occurrence boundary: a completedGlyphInscription witness creates a source-owned glyphDurableOccurrence active effect with stable occurrence id, source spell level, selected table anchor identity, covered-area identity, cast-location identity, maximum covered diameter, hidden-noticing DC source, trigger refinement/exclusion profile, movement-invalidation threshold, and until-dispelled expiration. Table-witnessed trigger occurrence and movement invalidation can end the occurrence without applying any release branch. The one-hour creation process is not discovered as a Magic Action spell invocation, and explosive-rune damage, stored spell release, stored Concentration override, component consumption, automatic map/object geometry, and generic Dispel Magic targeting of glyph occurrences remain separate owners.",
+          "taskRefs": [
+            "L3-FOLLOWUP-GLYPH-DURABLE-OCCURRENCE"
+          ],
+          "title": "Spell invocation admits and tracks Glyph durable occurrence boundary",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-glyph-durable-occurrence.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-glyph-of-warding.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/glyph_of_warding.json",
+      "unitId": "glyph_of_warding"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
@@ -40973,10 +41522,34 @@
       "claim": {
         "battleReadinessClosure": {
           "kind": "companion-control-boundary",
-          "owner": "future spell-created mount lifecycle, rider/control, table travel, and fade/dismount owner",
-          "reason": "Phantom Steed is closed at the mount companion boundary: a future owner must model spell-created mount identity and placement, Riding Horse stat-block projection with the spell Speed override, rider selection/control, damage-triggered early spell end, one-minute fade and dismount grace, created equipment distance-vanish, and 13 miles/hour travel without duplicating stat-block data, table geometry, or authored-identity dispatch in generic runtime code."
+          "owner": "split spell-created mount lifecycle/control, created-equipment object cleanup, and table travel owners",
+          "reason": "Phantom Steed remains closed at an explicit split owner boundary: mount lifecycle/control must model spell-created mount identity, caller-supplied unoccupied placement, Riding Horse stat-block projection with the spell Speed override, caster-or-chosen rider permission, damage-triggered spell end, and one-minute fade/dismount grace; object cleanup must model saddle/bit/bridle distance-vanish; table travel must model the 13 miles/hour fact. These owners must consume typed Surface/profile facts and explicit table witnesses without duplicating Riding Horse data, table geometry, travel state, equipment state, or authored-identity dispatch in generic runtime code."
         },
-        "reason": "Phantom Steed's Surface record has SRD provenance and structured spawned-creature/mount facts for 1-minute-or-Ritual casting, 30-foot point range, V/S components, 1-hour timed duration, an existing Riding Horse catalog reference with a walk Speed 100 override, caster-or-chosen-creature rider permission, saddle/bit/bridle created equipment with a 10-foot vanish boundary, 13 miles/hour table travel, and a one-minute rider dismount grace while the steed fades at spell end. The source prose and closure retain the damage-triggered early spell end because Surface has no created-creature damage subject trigger. No promoted battle-runtime profile is claimed because these clauses require a mount lifecycle/travel owner rather than companion command placeholders.",
+        "followUpTasks": [
+          {
+            "id": "L3-FOLLOWUP-PHANTOM-STEED-MOUNT-LIFECYCLE",
+            "mechanic": "Promote spell-created mount occurrence creation from typed spawned-creature facts, caller-supplied unoccupied placement, Riding Horse catalog stat-block projection with the spell Speed override, caster-or-chosen rider permission, damage-triggered spell end, and one-minute fade/dismount grace on spell end.",
+            "owner": "future spell-created mount companion lifecycle/control owner plus stat-block projection owner",
+            "requiredOutput": "Supported-profile or profile-subset-supported Phantom Steed claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for mount lifecycle/control without copying Riding Horse stat-block data or dispatching on Phantom Steed identity.",
+            "title": "Phantom Steed Mount Lifecycle Runtime"
+          },
+          {
+            "id": "L3-FOLLOWUP-PHANTOM-STEED-CREATED-EQUIPMENT",
+            "mechanic": "Promote the saddle, bit, and bridle created by the spell as object/equipment occurrences that vanish when carried more than 10 feet from the steed, consuming explicit distance and carried-state witnesses.",
+            "owner": "future object/equipment occurrence and distance witness owner",
+            "requiredOutput": "Supported-profile or profile-subset-supported object/equipment cleanup claim with focused tests after an object/equipment occurrence owner exists; no Phantom Steed-local inventory ledger or duplicated equipment state.",
+            "title": "Phantom Steed Created Equipment Cleanup"
+          },
+          {
+            "id": "L3-FOLLOWUP-PHANTOM-STEED-TRAVEL-PACE",
+            "mechanic": "Promote the 13 miles/hour travel fact through a table travel owner that consumes the typed mount travel fact without deriving route, terrain, pace choice, or map distance in battle runtime.",
+            "owner": "future table travel pace owner",
+            "requiredOutput": "Runtime-detached or supported travel-owner claim with focused tests after table travel facts are represented; no battle-map travel state or authored spell identity dispatch.",
+            "title": "Phantom Steed Table Travel Pace"
+          }
+        ],
+        "futureProfileOwner": "split spell-created mount lifecycle/control, created-equipment object cleanup, and table travel owners",
+        "reason": "Phantom Steed's Surface record has SRD provenance and structured spawned-creature/mount facts for 1-minute-or-Ritual casting, 30-foot point range, V/S components, 1-hour timed duration, an existing Riding Horse catalog reference with a walk Speed 100 override, caster-or-chosen-creature rider permission, saddle/bit/bridle created equipment with a 10-foot vanish boundary, 13 miles/hour table travel, a typed spawned-creature-damage early spell-end trigger, and a one-minute rider dismount grace while the steed fades at spell end. No promoted battle-runtime profile is claimed because the represented clauses split across mount lifecycle/control, created-equipment object cleanup, and table travel owners rather than generic companion command placeholders. The damage trigger is not modeled as ordinary 0-HP disappearance; it must end the spell and then route through the gradual-fade spell-end cleanup.",
         "tag": "unsupported-profile"
       },
       "collectionId": "srd-5.2.1",

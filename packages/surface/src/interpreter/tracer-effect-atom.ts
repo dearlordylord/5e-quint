@@ -52,6 +52,7 @@ export function traceEffectAtom(
     case "conditional_by_current_hp":
     case "kill_target":
     case "end_current_effect":
+    case "effect_end_target_state":
     case "repeat_save_for_condition":
     case "repeat_save_counter":
     case "delayed_save":

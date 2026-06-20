@@ -413,11 +413,15 @@ export function traceAttachmentAndAreaEffectAtom(
       const id = ids("eff");
       const capTag =
         e.maxMoveFeet !== undefined ? `\nmax ${e.maxMoveFeet} ft` : "";
+      const destination =
+        e.destination === undefined
+          ? ""
+          : `\ndest: ${e.destination.chooser} visible unoccupied space`;
       nodes.push({
         id,
         category: "effect",
         atomKind: "reposition_attachment",
-        label: `reposition_attachment${capTag}`,
+        label: `reposition_attachment${capTag}${destination}`,
       });
       return id;
     }

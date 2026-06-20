@@ -31,11 +31,7 @@ import {
   hasCondition,
 } from "@dnd/shared-algebras/conditions-algebra";
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
-import {
-  movementFeet,
-  type DifficultyClass,
-  type Round as RoundType,
-} from "@dnd/shared/types";
+import { movementFeet, type DifficultyClass } from "@dnd/shared/types";
 import type { DamageType, SpellRecord } from "@dnd/surface/surface/types";
 import {
   battleDancingLightId,
@@ -47,7 +43,6 @@ import type {
   BattleTablePositionId,
   CombatantId,
 } from "../identity.ts";
-import { currentActorId } from "./creature-state-leaves.ts";
 import { battleCreatureStateWithKnockOutPreservedConditions } from "./creature-state.ts";
 import { breakBattleConcentration } from "./damage-apply.ts";
 import {
@@ -112,6 +107,10 @@ import {
   battleCreatureWithSpellActiveEffects,
   battleCreatureWithoutSpellCreatedHeldObjectHand,
 } from "../active-effect/lifecycle.ts";
+import {
+  endOfNextTurnExpiration,
+  END_OF_NEXT_TURN_DURING_TURN,
+} from "./spell-end-target-state.ts";
 import { spellInvocationEffectiveSpellLevel } from "./spells-effective-level.ts";
 
 export const FEATHER_FALL_DESCENT_RATE_CAP_FEET_PER_ROUND = 60;
@@ -262,7 +261,11 @@ export function applySpellActiveEffects(
             sourceSpellId: invocation.spell.id,
             sourceCombatantId: actorId,
             damage: invocation.laterDamage,
-            expiresAt: endOfNextTurnExpiration(state, targetId),
+            expiresAt: endOfNextTurnExpiration(
+              state,
+              targetId,
+              END_OF_NEXT_TURN_DURING_TURN,
+            ),
           },
         ];
   const activeEffects = invocation.postDamageRiders
@@ -1640,7 +1643,11 @@ export function applySleepPendingRepeatSaveEffects(
           ability: invocation.ability,
           dc: invocation.dc,
         },
-        repeatAt: endOfNextTurnExpiration(state, targetId),
+        repeatAt: endOfNextTurnExpiration(
+          state,
+          targetId,
+          END_OF_NEXT_TURN_DURING_TURN,
+        ),
         expiresAt: {
           kind: "concentration" as const,
           combatantId: actorId,
@@ -2675,7 +2682,11 @@ export function applyCommandPendingEffects(
           option,
           sourceSpellId: invocation.spell.id,
           sourceCombatantId: actorId,
-          expiresAt: endOfNextTurnExpiration(state, targetId),
+          expiresAt: endOfNextTurnExpiration(
+            state,
+            targetId,
+            END_OF_NEXT_TURN_DURING_TURN,
+          ),
         },
       ],
     });
@@ -2982,30 +2993,16 @@ export function activeEffectExpirationForPostDamageRider(
     return { kind: "startOfTurn", combatantId: targetId };
   }
   if (expiresAt === "endOfCasterNextTurn") {
-    return endOfNextTurnExpiration(state, casterId);
+    return endOfNextTurnExpiration(
+      state,
+      casterId,
+      END_OF_NEXT_TURN_DURING_TURN,
+    );
   }
   if (expiresAt === "concentration") {
     return { kind: "concentration", combatantId: casterId };
   }
-  return endOfNextTurnExpiration(state, targetId);
-}
-
-export function endOfNextTurnExpiration(
-  state: BattleState,
-  combatantId: CombatantId,
-): Extract<BattleActiveEffectExpiration, { readonly kind: "endOfTurn" }> {
-  const stillToAct = state.initiative.stillToAct.some(
-    (entry) => entry.creature === combatantId,
-  );
-  const round =
-    currentActorId(state) === combatantId || !stillToAct
-      ? ((state.initiative.round + 1) as RoundType)
-      : state.initiative.round;
-  return {
-    kind: "endOfTurn",
-    combatantId,
-    round,
-  };
+  return endOfNextTurnExpiration(state, targetId, END_OF_NEXT_TURN_DURING_TURN);
 }
 
 export function endHeldLightSpellEffect(

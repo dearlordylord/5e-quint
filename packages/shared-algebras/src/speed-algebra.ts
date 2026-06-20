@@ -1,3 +1,5 @@
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-slow-active-penalties spell.invocation-haste-positive
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE BATTLE.SPELL.HASTE_POSITIVE_EFFECTS
 import type { SpeedType } from "@dnd/shared/game-facts";
 import {
   movementDeltaFeet,
@@ -6,14 +8,16 @@ import {
   type MovementFeet,
 } from "@dnd/shared/types";
 
-export type SpeedChange = {
-  readonly deltaFeet: MovementDeltaFeet;
-};
-
-export type SpeedRatioChange = {
-  readonly numerator: 1;
-  readonly denominator: 2;
-};
+export type SpeedChange =
+  | {
+      readonly kind: "delta";
+      readonly deltaFeet: MovementDeltaFeet;
+    }
+  | {
+      readonly kind: "ratio";
+      readonly numerator: number;
+      readonly denominator: number;
+    };
 
 export type SpecialSpeedCandidate =
   | {
@@ -29,7 +33,6 @@ export type SpecialSpeedCandidate =
 export type CreatureSpeedFacts = {
   readonly ordinarySpeedFeet: MovementFeet;
   readonly speedChanges: readonly SpeedChange[];
-  readonly speedRatios: readonly SpeedRatioChange[];
   readonly specialSpeeds: readonly SpecialSpeedCandidate[];
   readonly terminalSpeedZero: boolean;
 };
@@ -43,22 +46,14 @@ export function effectiveSpeeds(
     return zeroSpeedTable(facts.specialSpeeds);
   }
 
-  const globalDelta = totalSpeedChangeFeet(facts.speedChanges);
-  const ordinarySpeedFeet = changedSpeedByRatios(
-    changedSpeed(facts.ordinarySpeedFeet, globalDelta),
-    facts.speedRatios,
-  );
+  const speedChange = combinedSpeedChange(facts.speedChanges);
+  const ordinarySpeedFeet = changedSpeed(facts.ordinarySpeedFeet, speedChange);
   const speeds = new Map<SpeedType, MovementFeet>([
     ["walk", ordinarySpeedFeet],
   ]);
 
   for (const candidate of facts.specialSpeeds) {
-    const speed = specialSpeed(
-      candidate,
-      ordinarySpeedFeet,
-      globalDelta,
-      facts.speedRatios,
-    );
+    const speed = specialSpeed(candidate, ordinarySpeedFeet, speedChange);
     const current = speeds.get(candidate.speedType);
     if (current === undefined || Number(speed) > Number(current)) {
       speeds.set(candidate.speedType, speed);
@@ -85,46 +80,62 @@ export function effectiveSpeed(
   return effectiveSpeeds(facts).get(speedType) ?? null;
 }
 
-function totalSpeedChangeFeet(
+type CombinedSpeedChange = {
+  readonly deltaFeet: MovementDeltaFeet;
+  readonly ratioNumerator: number;
+  readonly ratioDenominator: number;
+};
+
+function combinedSpeedChange(
   changes: readonly SpeedChange[],
-): MovementDeltaFeet {
-  return movementDeltaFeet(
-    changes.reduce((total, change) => total + Number(change.deltaFeet), 0),
+): CombinedSpeedChange {
+  return changes.reduce<CombinedSpeedChange>(
+    (combined, change) => {
+      if (change.kind === "delta") {
+        return {
+          ...combined,
+          deltaFeet: movementDeltaFeet(
+            Number(combined.deltaFeet) + Number(change.deltaFeet),
+          ),
+        };
+      }
+      return {
+        ...combined,
+        ratioNumerator: combined.ratioNumerator * change.numerator,
+        ratioDenominator: combined.ratioDenominator * change.denominator,
+      };
+    },
+    {
+      deltaFeet: movementDeltaFeet(0),
+      ratioNumerator: 1,
+      ratioDenominator: 1,
+    },
   );
 }
 
 function changedSpeed(
   speedFeet: MovementFeet,
-  deltaFeet: MovementDeltaFeet,
+  change: CombinedSpeedChange,
 ): MovementFeet {
-  return movementFeet(Number(speedFeet) + Number(deltaFeet));
-}
-
-function changedSpeedByRatios(
-  speedFeet: MovementFeet,
-  ratios: readonly SpeedRatioChange[],
-): MovementFeet {
-  return ratios.reduce(
-    (speed, ratio) =>
-      movementFeet((Number(speed) * ratio.numerator) / ratio.denominator),
-    speedFeet,
+  const deltaAdjustedSpeed = Number(speedFeet) + Number(change.deltaFeet);
+  return movementFeet(
+    Math.trunc(
+      (deltaAdjustedSpeed * change.ratioNumerator) /
+        change.ratioDenominator,
+    ),
   );
 }
 
 function specialSpeed(
   candidate: SpecialSpeedCandidate,
   ordinarySpeedFeet: MovementFeet,
-  globalDeltaFeet: MovementDeltaFeet,
-  speedRatios: readonly SpeedRatioChange[],
+  globalChange: CombinedSpeedChange,
 ): MovementFeet {
   if (candidate.kind === "equalToSpeed") {
     return ordinarySpeedFeet;
   }
   if (candidate.kind === "fixed") {
-    return changedSpeedByRatios(
-      changedSpeed(candidate.speedFeet, globalDeltaFeet),
-      speedRatios,
-    );
+    return changedSpeed(candidate.speedFeet, globalChange);
   }
   const exhaustive: never = candidate;
   return exhaustive;

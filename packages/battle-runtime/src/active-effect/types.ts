@@ -9,6 +9,11 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-gust-of-wind-line unit-feature.metamagic-heightened-save-disadvantage
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-sleet-storm-area-hazard
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-slow-active-penalties
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-haste-positive
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.HASTE_POSITIVE_EFFECTS
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.HASTE_LETHARGY_LIFECYCLE
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-glyph-durable-occurrence
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.GLYPH_DURABLE_OCCURRENCE_LIFECYCLE
 import type { ArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
 import type { ElapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import type { AttackRollMode } from "@dnd/shared-algebras/runtime-hole-algebra";
@@ -26,6 +31,7 @@ import type {
 } from "@dnd/shared/types";
 import type {
   Ability,
+  ActionRestriction,
   CreatureSense,
   DamageType,
   DcSource,
@@ -307,6 +313,46 @@ export type SpiritualWeaponActiveEffect = BattleSpellEffectBase & {
     { readonly kind: "concentration" }
   > & { readonly durationTicks: ElapsedTimeTicks };
 };
+export type GlyphDurableOccurrenceAnchor =
+  | {
+      readonly kind: "surface";
+      readonly areaId: BattleAreaId;
+    }
+  | {
+      readonly kind: "closeableObject";
+      readonly objectId: BattleObjectId;
+    };
+export type GlyphDurableOccurrenceActiveEffect = BattleSpellEffectBase & {
+  readonly kind: "glyphDurableOccurrence";
+  readonly sourceEffectId: BattleSpellEffectOccurrenceId;
+  readonly sourceSpellLevel: BattleSpellEffectLevel;
+  readonly anchor: GlyphDurableOccurrenceAnchor;
+  readonly coveredAreaId: BattleAreaId;
+  readonly castLocationId: BattleTablePositionId;
+  readonly maxCoveredDiameterFeet: MovementFeet;
+  readonly notice: {
+    readonly ability: Extract<Ability, "wis">;
+    readonly skill: Extract<Skill, "perception">;
+    readonly dc: Extract<DcSource, { readonly kind: "caster_spell_save_dc" }>;
+    readonly owner: "table_witnessed_glyph_notice";
+  };
+  readonly trigger: {
+    readonly occurrence: "table_witnessed_trigger_occurrence";
+    readonly activationFilter: "creature_type";
+    readonly nonTriggerExclusion: "password_or_other_condition";
+    readonly onTriggered: "spell_ends";
+  };
+  readonly movementInvalidation: {
+    readonly movedSubject: "inscribed_surface_or_object";
+    readonly distanceFrom: "cast_location";
+    readonly moreThanFeet: MovementFeet;
+    readonly outcome: "glyph_breaks_spell_ends_without_triggering";
+  };
+  readonly expiresAt: Extract<
+    BattleActiveEffectExpiration,
+    { readonly kind: "untilDispelled" }
+  >;
+};
 export type ObjectContactPenaltyActiveEffect = BattleSpellEffectBase & {
   readonly kind: "selfAttackRollAndAbilityCheckRollMode";
   readonly sourceEffectId: BattleSpellEffectOccurrenceId;
@@ -361,6 +407,19 @@ export type BattleActiveEffect =
       readonly expiresAt: Extract<
         BattleActiveEffectExpiration,
         { readonly kind: "startOfTurn" }
+      >;
+    })
+  | (BattleSpellEffectBase & {
+      readonly kind: "speedRatio";
+      readonly numerator: number;
+      readonly denominator: number;
+      readonly expiresAt: BattleActiveEffectExpiration;
+    })
+  | (BattleSpellEffectBase & {
+      readonly kind: "spellSpeedZero";
+      readonly expiresAt: Extract<
+        BattleActiveEffectExpiration,
+        { readonly kind: "endOfTurn" }
       >;
     })
   | (BattleSpellEffectBase & {
@@ -801,6 +860,25 @@ export type BattleActiveEffect =
       readonly expiresAt: BattleActiveEffectExpiration;
     })
   | (BattleSpellEffectBase & {
+      readonly kind: "savingThrowRollMode";
+      readonly ability: Ability;
+      readonly mode: "advantage";
+      readonly expiresAt: BattleActiveEffectExpiration;
+    })
+  | (BattleSpellEffectBase & {
+      readonly kind: "spellGrantedActionResource";
+      readonly restriction: ActionRestriction;
+      readonly expiresAt: BattleActiveEffectExpiration;
+    })
+  | (BattleSpellEffectBase & {
+      readonly kind: "spellEndTargetState";
+      readonly condition: "incapacitated";
+      readonly expiresAt: Extract<
+        BattleActiveEffectExpiration,
+        { readonly kind: "concentration" }
+      > & { readonly durationTicks: ElapsedTimeTicks };
+    })
+  | (BattleSpellEffectBase & {
       readonly kind: "damageResistance";
       readonly damageType: DamageType;
       readonly expiresAt: BattleActiveEffectExpiration;
@@ -949,6 +1027,7 @@ export type BattleActiveEffect =
   | SpellCreatedHeldObjectActiveEffect
   | SpellObjectContactDamageActiveEffect
   | SpiritualWeaponActiveEffect
+  | GlyphDurableOccurrenceActiveEffect
   | ObjectContactPenaltyActiveEffect
   | (BattleSpellEffectBase & {
       readonly kind: "dancingLights";

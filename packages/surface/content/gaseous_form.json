@@ -1,0 +1,115 @@
+{
+  "description": "A willing creature you touch and its worn and carried objects transform into a misty cloud for the duration. In this form, the target's only movement method is a Fly Speed of 10 feet with hover; it can occupy another creature's space, pass through narrow openings, and treats liquids as solid surfaces. The form grants Resistance to Bludgeoning, Piercing, and Slashing damage; Immunity to Prone; and Advantage on Strength, Dexterity, and Constitution saving throws. The target cannot talk, manipulate objects, drop/use/interact with carried or held objects, attack, or cast spells. The spell ends on a target that drops to 0 Hit Points or takes a Magic action to end the spell on itself. Using a Higher-Level Spell Slot targets one additional creature per slot level above 3.",
+  "id": "gaseous_form",
+  "kind": "spell",
+  "mechanics": {
+    "attachment": {
+      "holeId": "gaseous_form_target",
+      "kind": "hole",
+      "label": "target",
+      "value": {
+        "kind": "target",
+        "selection": {
+          "count": {
+            "base": 1,
+            "baseLevel": 3,
+            "kind": "linear",
+            "perSlotAboveBase": 1
+          },
+          "disposition": "willing",
+          "mode": "choose_up_to",
+          "targetKinds": [
+            "creature"
+          ]
+        }
+      }
+    },
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": "a bit of gauze",
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "concentration",
+      "upTo": {
+        "amount": 1,
+        "unit": "hour"
+      }
+    },
+    "family": "ongoing_effect",
+    "level": 3,
+    "operations": [
+      {
+        "effect": {
+          "kind": "transform_target",
+          "newForm": {
+            "activityLimits": {
+              "carriedOrHeldObjects": "cannot_be_dropped_used_or_interacted_with",
+              "communication": "cannot_talk",
+              "objectManipulation": "cannot_manipulate_objects",
+              "prohibitedActivities": [
+                "attack",
+                "spellcasting"
+              ]
+            },
+            "kind": "spell_effect_mist_cloud",
+            "movement": {
+              "feet": 10,
+              "hover": true,
+              "kind": "replace_all_movement_methods",
+              "speedKind": "fly"
+            },
+            "passive": {
+              "conditionImmunities": [
+                "prone"
+              ],
+              "damageResistances": [
+                "bludgeoning",
+                "piercing",
+                "slashing"
+              ],
+              "savingThrowAdvantage": [
+                "str",
+                "dex",
+                "con"
+              ]
+            },
+            "tableSpatial": {
+              "creatureSpace": "can_enter_and_occupy_other_creature_space",
+              "liquids": "treat_as_solid_surfaces",
+              "narrowOpenings": "can_pass_through"
+            },
+            "transformedObjects": "worn_and_carried"
+          },
+          "revertTriggers": [
+            {
+              "kind": "zero_hp"
+            },
+            {
+              "action": "magic_action",
+              "kind": "dismissed_by_target"
+            },
+            {
+              "kind": "spell_ends"
+            }
+          ]
+        },
+        "trigger": {
+          "kind": "passive"
+        }
+      }
+    ],
+    "range": {
+      "kind": "touch"
+    },
+    "school": "transmutation"
+  },
+  "name": "Gaseous Form",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-E-L#Gaseous Form"
+  }
+}

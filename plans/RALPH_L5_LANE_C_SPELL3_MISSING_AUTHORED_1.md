@@ -79,56 +79,104 @@
     {
       "number": 13,
       "id": "L5-C13-CONJURE-ANIMALS-SURFACE-WIDENING",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Widen Conjure Animals Surface Spell Definition"
     },
     {
       "number": 14,
       "id": "L5-C14-GASEOUS-FORM-SURFACE-WIDENING",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Widen Gaseous Form Surface Spell Definition"
     },
     {
       "number": 15,
       "id": "L5-C15-GLYPH-OF-WARDING-SURFACE-WIDENING",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Widen Glyph of Warding Surface Spell Definition"
     },
     {
       "number": 16,
       "id": "L5-C16-HASTE-SURFACE-WIDENING",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Widen Haste Surface Spell Definition"
     },
     {
       "number": 17,
       "id": "L5-C17-HASTE-POSITIVE-RUNTIME",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Promote Haste positive runtime effect"
     },
     {
       "number": 18,
       "id": "L5-C18-HASTE-LETHARGY-RUNTIME",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Promote Haste lethargy runtime cleanup"
     },
     {
       "number": 19,
       "id": "L5-C19-MAGIC-CIRCLE-SURFACE-WIDENING",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Widen Magic Circle Surface Spell Definition"
     },
     {
       "number": 20,
       "id": "L5-C20-MELD-INTO-STONE-SURFACE-WIDENING",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Widen Meld into Stone Surface Spell Definition"
     },
     {
       "number": 21,
       "id": "L5-C21-PHANTOM-STEED-MOUNT-LIFECYCLE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Promote Phantom Steed mount lifecycle owner"
+    },
+    {
+      "number": 22,
+      "id": "L5-C22-GLYPH-OF-WARDING-RUNTIME",
+      "status": "done",
+      "title": "Promote Glyph of Warding runtime release owner"
+    },
+    {
+      "number": 23,
+      "id": "L3-FOLLOWUP-PHANTOM-STEED-MOUNT-LIFECYCLE",
+      "status": "deferred",
+      "title": "Phantom Steed Mount Lifecycle Runtime"
+    },
+    {
+      "number": 24,
+      "id": "L3-FOLLOWUP-PHANTOM-STEED-CREATED-EQUIPMENT",
+      "status": "deferred",
+      "title": "Phantom Steed Created Equipment Cleanup"
+    },
+    {
+      "number": 25,
+      "id": "L3-FOLLOWUP-PHANTOM-STEED-TRAVEL-PACE",
+      "status": "deferred",
+      "title": "Phantom Steed Table Travel Pace"
+    },
+    {
+      "number": 26,
+      "id": "L3-FOLLOWUP-GLYPH-DURABLE-OCCURRENCE",
+      "status": "done",
+      "title": "Glyph Durable Occurrence"
+    },
+    {
+      "number": 27,
+      "id": "L3-FOLLOWUP-GLYPH-EXPLOSIVE-RUNE-RELEASE",
+      "status": "ready-for-research",
+      "title": "Glyph Explosive Rune Release"
+    },
+    {
+      "number": 28,
+      "id": "L3-FOLLOWUP-GLYPH-STORED-SPELL-RELEASE",
+      "status": "ready-for-research",
+      "title": "Glyph Stored Spell Release"
+    },
+    {
+      "number": 29,
+      "id": "L3-FOLLOWUP-GLYPH-STORED-CONCENTRATION",
+      "status": "ready-for-research",
+      "title": "Glyph Stored Concentration Override"
     }
   ]
 }
@@ -170,8 +218,10 @@ missing-record spells unless a RAW dependency is unavoidable and documented.
   `ASSUMPTIONS.md` or stop for owner direction.
 - Do not browse external rules sources.
 - Do not add PHB+ authored identity.
-- One task equals one unique spell Unit identity. Class-list rows are evidence
-  for that Unit, not separate implementation tasks.
+- Initial missing-authored tasks each own one unique spell Unit identity.
+  Follow-up owner splits may share that Unit when the executable owners are
+  genuinely distinct. Class-list rows remain evidence for the Unit, not
+  separate implementation tasks.
 - Keep provenance, structured input, and runtime projection separate.
 - Missing authored record closure requires resolving the Surface Spell
   Definition/provenance question first: author the SRD-provenance record when
@@ -196,15 +246,23 @@ missing-record spells unless a RAW dependency is unavoidable and documented.
 | 10 | L5-C10-PHANTOM-STEED - Close Phantom Steed missing authored record | done | none | Closed by an SRD-provenance Surface record plus unsupported-profile mount lifecycle/travel/fade owner boundary; follow-up is L5-C21. |
 | 11 | L5-C11-BESTOW-CURSE-SURFACE-WIDENING - Widen Bestow Curse Surface Spell Definition | done | L5-C01-BESTOW-CURSE | Add typed Surface facts for Bestow Curse curse-option selection, curse-removal targeting, and slot-dependent duration/Concentration before authoring/admitting the Spell Definition. |
 | 12 | L5-C12-BLINK-SURFACE-WIDENING - Widen Blink Surface Spell Definition | done | L5-C02-BLINK | Blink is authored/admitted as an SRD Surface Spell Definition with typed turn-end random-table and Ethereal phase facts; runtime remains closed at the planar lifecycle/table-spatial owner boundary. |
-| 13 | L5-C13-CONJURE-ANIMALS-SURFACE-WIDENING - Widen Conjure Animals Surface Spell Definition | ready-for-research | L5-C03-CONJURE-ANIMALS | Add typed Surface/table-spatial facts for Conjure Animals' spectral pack occurrence, pack reposition, Strength Saving Throw Advantage predicate, Dexterity Saving Throw trigger eligibility, and once-per-turn limit before authoring/admitting the Spell Definition. |
-| 14 | L5-C14-GASEOUS-FORM-SURFACE-WIDENING - Widen Gaseous Form Surface Spell Definition | ready-for-research | L5-C04-GASEOUS-FORM | Add typed Surface/table-spatial facts for Gaseous Form's mist-cloud form state, movement replacement, Magic-action self-ending, B/P/S Resistance, Prone Immunity, Strength/Dexterity/Constitution Saving Throw Advantage, action/object/speech limits, creature-space occupancy, narrow-opening passage, and liquid-surface treatment before authoring/admitting the Spell Definition. |
-| 15 | L5-C15-GLYPH-OF-WARDING-SURFACE-WIDENING - Widen Glyph of Warding Surface Spell Definition | ready-for-research | L5-C05-GLYPH-OF-WARDING | Add typed Surface/table object-location facts for Glyph of Warding's surface or closeable-object inscription anchor, maximum glyph-area constraint, caster-defined/refined trigger, movement invalidation, explosive rune, stored spell eligibility/release/retargeting, hostile placement, and stored Concentration duration override before authoring/admitting the Spell Definition. |
-| 16 | L5-C16-HASTE-SURFACE-WIDENING - Widen Haste Surface Spell Definition | ready-for-research | L5-C06-HASTE | Add typed Surface facts for Haste's restricted additional action and end-of-effect lethargy before authoring/admitting the Spell Definition. |
-| 17 | L5-C17-HASTE-POSITIVE-RUNTIME - Promote Haste positive runtime effect | ready-for-research | L5-C16-HASTE-SURFACE-WIDENING | Promote the active Haste effects: Speed ratio, +2 Armor Class, Dexterity Saving Throw Advantage, Concentration, and restricted spell-granted per-turn action resource. |
-| 18 | L5-C18-HASTE-LETHARGY-RUNTIME - Promote Haste lethargy runtime cleanup | ready-for-research | L5-C17-HASTE-POSITIVE-RUNTIME | Promote the spell-end lethargy rider: Incapacitated plus Speed 0 until the end of the target's next turn without treating Incapacitated as a Speed shortcut. |
-| 19 | L5-C19-MAGIC-CIRCLE-SURFACE-WIDENING - Widen Magic Circle Surface Spell Definition | ready-for-research | L5-C07-MAGIC-CIRCLE | Add typed Surface/table-spatial facts for Magic Circle's warded Cylinder, selected creature types, normal or reversed direction, nonmagical crossing prevention, teleportation or interplanar-travel Saving Throw gate, Attack Roll Disadvantage, and source-scoped possession plus Charmed/Frightened prevention before authoring/admitting the Spell Definition. |
-| 20 | L5-C20-MELD-INTO-STONE-SURFACE-WIDENING - Widen Meld into Stone Surface Spell Definition | ready-for-research | L5-C08-MELD-INTO-STONE | Add typed Surface/table terrain facts for Meld into Stone's stone object-or-surface containment target, hidden merged occupancy, outside-sense limits, self-spell and Movement-limited exit permissions, destructive expulsion damage, closest-unoccupied-space placement, and Prone rider before authoring/admitting the Spell Definition. |
-| 21 | L5-C21-PHANTOM-STEED-MOUNT-LIFECYCLE - Promote Phantom Steed mount lifecycle owner | ready-for-research | L5-C10-PHANTOM-STEED | Promote the spell-created mount lifecycle, Riding Horse Speed override, rider permission, damage-ended spell cleanup, fade/dismount grace, equipment vanish, and table travel boundary from the typed Surface record. |
+| 13 | L5-C13-CONJURE-ANIMALS-SURFACE-WIDENING - Widen Conjure Animals Surface Spell Definition | done | L5-C03-CONJURE-ANIMALS | Add typed Surface/table-spatial facts for Conjure Animals' spectral pack occurrence, pack reposition, Strength Saving Throw Advantage predicate, Dexterity Saving Throw trigger eligibility, and once-per-turn limit before authoring/admitting the Spell Definition. |
+| 14 | L5-C14-GASEOUS-FORM-SURFACE-WIDENING - Widen Gaseous Form Surface Spell Definition | done | L5-C04-GASEOUS-FORM | Add typed Surface/table-spatial facts for Gaseous Form's mist-cloud form state, movement replacement, Magic-action self-ending, B/P/S Resistance, Prone Immunity, Strength/Dexterity/Constitution Saving Throw Advantage, action/object/speech limits, creature-space occupancy, narrow-opening passage, and liquid-surface treatment before authoring/admitting the Spell Definition. |
+| 15 | L5-C15-GLYPH-OF-WARDING-SURFACE-WIDENING - Widen Glyph of Warding Surface Spell Definition | done | L5-C05-GLYPH-OF-WARDING | Glyph of Warding is authored/admitted as an SRD Surface Spell Definition with typed durable glyph occurrence, trigger, movement invalidation, explosive-rune, and spell-glyph facts; runtime follow-up is L5-C22. |
+| 16 | L5-C16-HASTE-SURFACE-WIDENING - Widen Haste Surface Spell Definition | done | L5-C06-HASTE | Haste is authored/admitted as an SRD Surface Spell Definition with typed restricted additional-action and spell-end lethargy facts; runtime follow-ups completed in L5-C17 and L5-C18. |
+| 17 | L5-C17-HASTE-POSITIVE-RUNTIME - Promote Haste positive runtime effect | done | L5-C16-HASTE-SURFACE-WIDENING | Haste positive runtime effects are promoted from typed Surface facts; spell-end lethargy cleanup completed in L5-C18. |
+| 18 | L5-C18-HASTE-LETHARGY-RUNTIME - Promote Haste lethargy runtime cleanup | done | L5-C17-HASTE-POSITIVE-RUNTIME | Promoted the spell-end lethargy rider: Incapacitated plus Speed 0 until the end of the target's next turn without treating Incapacitated as a Speed shortcut. |
+| 19 | L5-C19-MAGIC-CIRCLE-SURFACE-WIDENING - Widen Magic Circle Surface Spell Definition | done | L5-C07-MAGIC-CIRCLE | Magic Circle is authored/admitted as an SRD Surface Spell Definition with typed warded-cylinder, selected creature-type, direction, crossing-gate, and protected-target facts; promoted runtime remains unclaimed. |
+| 20 | L5-C20-MELD-INTO-STONE-SURFACE-WIDENING - Widen Meld into Stone Surface Spell Definition | done | L5-C08-MELD-INTO-STONE | Meld into Stone is authored/admitted as an SRD Surface Spell Definition with typed stone object-or-surface containment, hidden merged occupancy, outside-sense, self-spell, Movement-limited exit, destructive expulsion damage, closest-unoccupied-space placement, and Prone rider facts; promoted runtime remains unclaimed. |
+| 21 | L5-C21-PHANTOM-STEED-MOUNT-LIFECYCLE - Promote Phantom Steed mount lifecycle owner | done | L5-C10-PHANTOM-STEED | Added the typed spawned-creature-damage spell-end fact and split remaining runtime work into executable follow-ups L3-FOLLOWUP-PHANTOM-STEED-MOUNT-LIFECYCLE, L3-FOLLOWUP-PHANTOM-STEED-CREATED-EQUIPMENT, and L3-FOLLOWUP-PHANTOM-STEED-TRAVEL-PACE. |
+| 22 | L5-C22-GLYPH-OF-WARDING-RUNTIME - Promote Glyph of Warding runtime release owner | done | L5-C15-GLYPH-OF-WARDING-SURFACE-WIDENING | Closed as an owner split: Glyph remains unsupported-profile while durable occurrence, explosive-rune release, stored-spell release, and stored Concentration override are tracked as narrower follow-up owners. |
+| 23 | L3-FOLLOWUP-PHANTOM-STEED-MOUNT-LIFECYCLE - Phantom Steed Mount Lifecycle Runtime | deferred | L5-C21-PHANTOM-STEED-MOUNT-LIFECYCLE | Owner deferred on 2026-06-20 after task-23 review showed this needs mounted/riding control and long-cast owners first; see `plans/ralph-artifacts/phantom-steed-runtime-wip/`. |
+| 24 | L3-FOLLOWUP-PHANTOM-STEED-CREATED-EQUIPMENT - Phantom Steed Created Equipment Cleanup | deferred | L5-C21-PHANTOM-STEED-MOUNT-LIFECYCLE | Owner deferred on 2026-06-20 with the rest of Phantom Steed runtime backlog; requires a generic created object/equipment occurrence owner. |
+| 25 | L3-FOLLOWUP-PHANTOM-STEED-TRAVEL-PACE - Phantom Steed Table Travel Pace | deferred | L5-C21-PHANTOM-STEED-MOUNT-LIFECYCLE | Owner deferred on 2026-06-20 with the rest of Phantom Steed runtime backlog; requires a table travel owner, not battle-map travel state. |
+| 26 | L3-FOLLOWUP-GLYPH-DURABLE-OCCURRENCE - Glyph Durable Occurrence | done | L5-C22-GLYPH-OF-WARDING-RUNTIME | Promoted the completed-inscription durable occurrence owner with trigger cleanup and movement invalidation witnesses; release work remains in Tasks 27-29. |
+| 27 | L3-FOLLOWUP-GLYPH-EXPLOSIVE-RUNE-RELEASE - Glyph Explosive Rune Release | ready-for-research | L3-FOLLOWUP-GLYPH-DURABLE-OCCURRENCE | Promote non-immediate explosive-rune release with area-membership witnesses, damage-type choice, Dexterity Saving Throw half damage, slot scaling, and cleanup. |
+| 28 | L3-FOLLOWUP-GLYPH-STORED-SPELL-RELEASE - Glyph Stored Spell Release | ready-for-research | L3-FOLLOWUP-GLYPH-DURABLE-OCCURRENCE | Promote stored spell invocation state, no-immediate-effect storage, trigger retargeting or area centering, and hostile close-as-possible placement witnesses. |
+| 29 | L3-FOLLOWUP-GLYPH-STORED-CONCENTRATION - Glyph Stored Concentration Override | ready-for-research | L3-FOLLOWUP-GLYPH-STORED-SPELL-RELEASE | Promote the stored Concentration full-duration override outside ordinary caster, triggering-creature, or readied-spell Concentration ownership. |
 
 ## Shared Verification
 
@@ -481,7 +539,7 @@ Plan Impact:
 
 ### Task 13 - L5-C13-CONJURE-ANIMALS-SURFACE-WIDENING
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -585,7 +643,7 @@ Plan Impact:
 
 ### Task 14 - L5-C14-GASEOUS-FORM-SURFACE-WIDENING
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -696,7 +754,7 @@ Plan Impact:
 
 ### Task 15 - L5-C15-GLYPH-OF-WARDING-SURFACE-WIDENING
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -761,6 +819,13 @@ Verification:
 
 - Shared lane verification.
 
+Plan Impact:
+
+- Glyph of Warding is authored/admitted as an SRD-provenance Surface Spell
+  Definition. Remaining promoted runtime work is split into
+  L5-C22-GLYPH-OF-WARDING-RUNTIME before any supported Glyph runtime profile
+  claims the durable glyph occurrence/release workflow.
+
 ### Task 6 - L5-C06-HASTE
 
 Status: `done`
@@ -811,7 +876,7 @@ Plan Impact:
 
 ### Task 16 - L5-C16-HASTE-SURFACE-WIDENING
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -829,11 +894,11 @@ SRD anchors:
 
 Current state:
 
-- The generated inventory classifies the two Haste class-list rows as
-  `needs-surface-widening` / `surface-widening-required`.
-- Existing Surface spell atoms can express adjacent AC, Speed, roll-mode, and
-  extra-action facts, but cannot represent Haste's exact action allow-list with
-  Attack capped at one attack or its spell-end lethargy rider as typed facts.
+- Haste is authored/admitted as an SRD-provenance Surface Spell Definition.
+- The generated inventory classifies Haste as `supported-profile` after L5-C17
+  and L5-C18 promoted the runtime owners.
+- Surface now represents Haste's exact action allow-list with Attack capped at
+  one attack and the spell-end lethargy rider as typed facts.
 
 Output:
 
@@ -858,9 +923,14 @@ Verification:
 
 - Shared lane verification.
 
+Plan Impact:
+
+- L5-C17 promoted the positive runtime effects from the typed Surface record.
+- L5-C18 promoted spell-end lethargy runtime cleanup after L5-C17.
+
 ### Task 17 - L5-C17-HASTE-POSITIVE-RUNTIME
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -878,11 +948,14 @@ SRD anchors:
 
 Current state:
 
-- Haste positive runtime promotion requires a typed Surface record/profile from
-  L5-C16.
-- Battle runtime already has adjacent scalar AC and action-resource machinery,
-  but does not yet promote Haste's Speed ratio, Dexterity Saving Throw
-  Advantage, or restricted spell-granted per-turn action resource.
+- Haste positive runtime promotion consumes the typed SRD Surface profile from
+  L5-C16 without authored spell identity dispatch.
+- Battle runtime promotes Magic Action and level-3+ Spell Slot spend,
+  caster-owned Concentration, willing target admission, doubled Speed, +2 Armor
+  Class, Dexterity Saving Throw Advantage, and the restricted target-turn
+  spell-granted action resource.
+- Haste is `supported-profile` after L5-C18 promotes the spell-end lethargy
+  rider.
 
 Output:
 
@@ -908,9 +981,13 @@ Verification:
 - Shared lane verification.
 - Focused battle-runtime tests and MBT per `AGENTS.md` after QNT/spec updates.
 
+Plan Impact:
+
+- L5-C18 completed the dependency-ordered spell-end lethargy cleanup follow-up.
+
 ### Task 18 - L5-C18-HASTE-LETHARGY-RUNTIME
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -954,6 +1031,10 @@ Verification:
 
 - Shared lane verification.
 - Focused battle-runtime tests and MBT per `AGENTS.md` after QNT/spec updates.
+
+Plan Impact:
+
+- Haste no longer has an outstanding L5-C18 lethargy runtime cleanup follow-up.
 
 ### Task 7 - L5-C07-MAGIC-CIRCLE
 
@@ -1008,7 +1089,7 @@ Plan Impact:
 
 ### Task 19 - L5-C19-MAGIC-CIRCLE-SURFACE-WIDENING
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -1122,7 +1203,7 @@ Plan Impact:
 
 ### Task 20 - L5-C20-MELD-INTO-STONE-SURFACE-WIDENING
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -1179,6 +1260,13 @@ Acceptance:
 Verification:
 
 - Shared lane verification.
+
+Plan Impact:
+
+- Meld into Stone is authored/admitted as an SRD-provenance Surface Spell
+  Definition with typed stone-merge facts. Remaining merged-state and table
+  terrain/object runtime ownership is retained as an unsupported-profile
+  boundary, not a promoted runtime claim.
 
 ### Task 9 - L5-C09-NONDETECTION
 
@@ -1259,7 +1347,7 @@ Plan Impact:
 
 ### Task 21 - L5-C21-PHANTOM-STEED-MOUNT-LIFECYCLE
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -1279,33 +1367,465 @@ SRD anchors:
 Current state:
 
 - The SRD-provenance Phantom Steed Surface Spell Definition is authored.
+- Surface records the damage-triggered early spell end as
+  `dismissal.onSpawnedCreatureDamage = "spell_ends"` and keeps spell-end
+  cleanup as gradual fade with 1-minute rider dismount grace.
 - Generated coverage classifies the Unit as `unsupported-profile` /
-  `catalog-only/dead-for-now` with a `companion-control-boundary` owner.
-- No promoted runtime profile executes the spell-created mount lifecycle,
-  Riding Horse Speed override, rider state, damage-ended spell cleanup,
-  fade/dismount grace, created-equipment vanish boundary, or table travel fact.
+  `catalog-authored-executable-follow-up`, with explicit split follow-up
+  owners for mount lifecycle/control, created equipment cleanup, and table
+  travel pace.
 
 Output:
 
-- Promote or further split an executable owner for Phantom Steed's
-  spell-created mount occurrence, caller-supplied unoccupied placement, Riding
-  Horse stat-block projection with the spell Speed override, caster-or-chosen
-  rider permission, damage-triggered spell end, one-minute fade and dismount
-  grace, saddle/bit/bridle vanish boundary, and 13 miles/hour travel fact.
-- Reuse the existing stat-block catalog and Surface spawned-creature/mount
-  facts; do not copy Riding Horse data into a parallel Phantom Steed runtime
-  table or dispatch on spell id/name/provenance in generic runtime behavior.
-- If this remains larger than one runtime owner, split the remaining work into
-  concrete follow-up task IDs before closing the task.
+- Done by adding the missing typed Surface damage trigger and splitting the
+  remaining executable owners into:
+  L3-FOLLOWUP-PHANTOM-STEED-MOUNT-LIFECYCLE,
+  L3-FOLLOWUP-PHANTOM-STEED-CREATED-EQUIPMENT, and
+  L3-FOLLOWUP-PHANTOM-STEED-TRAVEL-PACE.
 
 Acceptance:
 
-- Phantom Steed has a supported or explicitly narrower profile/owner boundary
-  whose typed facts cover every represented Surface mount clause.
+- Phantom Steed has an explicitly narrower split owner boundary whose typed
+  facts cover represented Surface mount clauses without claiming promoted
+  battle-runtime support.
+- The damage-ended spell cleanup is not modeled as ordinary 0-HP disappearance;
+  it ends the spell and routes future runtime work through spell-end gradual
+  fade/dismount cleanup.
+
+Verification:
+
+- Shared lane verification.
+- Focused owner-package tests, and if battle-runtime behavior changes, update
+  the relevant QNT/spec first and run focused MBT per `AGENTS.md`.
+
+Plan Impact:
+
+- Remaining executable work is split into the three follow-up task details
+  below. Each follow-up must consume typed Surface/profile facts and explicit
+  witnesses without copying Riding Horse data, table geometry, travel state,
+  equipment state, or Phantom Steed authored identity into generic runtime
+  behavior.
+
+### Task 23 - L3-FOLLOWUP-PHANTOM-STEED-MOUNT-LIFECYCLE
+
+Status: `deferred`
+
+Deferred Detail: Owner instructed on 2026-06-20 to park Phantom Steed runtime
+work, keep the useful task-23 findings as backlog material, and continue other
+runnable tasks. Runtime promotion needs mounted/riding control and long-cast
+progress owners before this task should resume.
+
+Depends on:
+
+- L5-C21-PHANTOM-STEED-MOUNT-LIFECYCLE
+
+Unit:
+
+- `phantom_steed`
+
+SRD anchors:
+
+- `.references/srd-5.2.1/Spells/Descriptions-M-P.md:558`
+- `.references/srd-5.2.1/Classes/Wizard.md:254`
+- `.references/srd-5.2.1/Playing-the-Game.md:642`
+
+Current state:
+
+- Phantom Steed has typed Surface spawned-creature, mount, Riding Horse
+  catalog-ref, Speed override, rider permission, damage-triggered spell-end,
+  and gradual-fade facts.
+- No promoted runtime owner creates or controls the spell-created mount
+  occurrence.
+- Task-23 WIP/review artifacts are preserved under
+  `plans/ralph-artifacts/phantom-steed-runtime-wip/`.
+
+Output:
+
+- Promote spell-created mount occurrence creation from typed spawned-creature
+  facts, caller-supplied unoccupied placement, Riding Horse catalog stat-block
+  projection with the spell Speed override, caster-or-chosen rider permission,
+  damage-triggered spell end, and one-minute fade/dismount grace on spell end.
+
+Acceptance:
+
+- Phantom Steed has a supported or profile-subset-supported mount
+  lifecycle/control claim with deterministic admission/projection evidence.
+- Focused runtime tests and promoted Quint/runtime parity cover the mount
+  lifecycle/control behavior without copying Riding Horse stat-block data or
+  dispatching on Phantom Steed identity.
+
+Verification:
+
+- Shared lane verification.
+- Focused owner-package tests, and if battle-runtime behavior changes, update
+  the relevant QNT/spec first and run focused MBT per `AGENTS.md`.
+
+### Task 24 - L3-FOLLOWUP-PHANTOM-STEED-CREATED-EQUIPMENT
+
+Status: `deferred`
+
+Deferred Detail: Owner instructed on 2026-06-20 to park Phantom Steed runtime
+work with the rest of the mount backlog. This should resume only after a
+generic created object/equipment occurrence owner can represent saddle, bit,
+bridle, carried-state, distance, and vanish cleanup without a spell-local
+inventory ledger.
+
+Depends on:
+
+- L5-C21-PHANTOM-STEED-MOUNT-LIFECYCLE
+
+Unit:
+
+- `phantom_steed`
+
+SRD anchors:
+
+- `.references/srd-5.2.1/Spells/Descriptions-M-P.md:558`
+
+Current state:
+
+- Phantom Steed has typed Surface created-equipment facts for saddle, bit, and
+  bridle, including the 10-foot carried-distance vanish boundary.
+- No promoted object/equipment occurrence owner consumes these facts.
+
+Output:
+
+- Promote the saddle, bit, and bridle created by the spell as object/equipment
+  occurrences that vanish when carried more than 10 feet from the steed,
+  consuming explicit distance and carried-state witnesses.
+
+Acceptance:
+
+- Phantom Steed has a supported or profile-subset-supported object/equipment
+  cleanup claim with focused tests after an object/equipment occurrence owner
+  exists.
+- No Phantom Steed-local inventory ledger or duplicated equipment state is
+  added.
+
+Verification:
+
+- Shared lane verification.
+- Focused owner-package tests, and if battle-runtime behavior changes, update
+  the relevant QNT/spec first and run focused MBT per `AGENTS.md`.
+
+### Task 25 - L3-FOLLOWUP-PHANTOM-STEED-TRAVEL-PACE
+
+Status: `deferred`
+
+Deferred Detail: Owner instructed on 2026-06-20 to park Phantom Steed runtime
+work with the rest of the mount backlog. This should resume only after a table
+travel owner exists for route/travel-time facts outside battle-map runtime.
+
+Depends on:
+
+- L5-C21-PHANTOM-STEED-MOUNT-LIFECYCLE
+
+Unit:
+
+- `phantom_steed`
+
+SRD anchors:
+
+- `.references/srd-5.2.1/Spells/Descriptions-M-P.md:558`
+- `.references/srd-5.2.1/Playing-the-Game.md:445`
+
+Current state:
+
+- Phantom Steed has a typed Surface mount travel fact for 13 miles in an hour.
+- No promoted table travel owner consumes this fact.
+
+Output:
+
+- Promote the 13 miles/hour travel fact through a table travel owner that
+  consumes the typed mount travel fact without deriving route, terrain, pace
+  choice, or map distance in battle runtime.
+
+Acceptance:
+
+- Phantom Steed has a runtime-detached or supported travel-owner claim with
+  focused tests after table travel facts are represented.
+- No battle-map travel state or authored spell identity dispatch is added.
+
+Verification:
+
+- Shared lane verification.
+- Focused owner-package tests for any touched owner package.
+
+### Task 22 - L5-C22-GLYPH-OF-WARDING-RUNTIME
+
+Status: `done`
+
+Depends on:
+
+- L5-C15-GLYPH-OF-WARDING-SURFACE-WIDENING
+
+Unit:
+
+- `glyph_of_warding`
+
+SRD anchors:
+
+- `.references/srd-5.2.1/Spells/Descriptions-E-L.md:842`
+- `.references/srd-5.2.1/Classes/Bard.md:221`
+- `.references/srd-5.2.1/Classes/Cleric.md:211`
+- `.references/srd-5.2.1/Classes/Wizard.md:247`
+
+Current state:
+
+- Glyph of Warding is authored and installed as an SRD Surface Spell Definition
+  with typed facts for inscription anchor, maximum covered area, hidden-noticing
+  DC source, trigger refinement/exclusion, movement invalidation,
+  explosive-rune save/damage/scaling, stored prepared-spell eligibility,
+  stored-spell retargeting, hostile close-as-possible placement, and stored
+  Concentration full-duration override.
+- Generated coverage classifies the Unit as `unsupported-profile` with
+  `catalog-installed-owner-evidence-required` / `battle-runtime-required`.
+- No promoted runtime profile executes the durable glyph occurrence/release
+  workflow.
+
+Output:
+
+- Promote or further split an executable owner for Glyph of Warding's durable
+  glyph occurrence and release workflow.
+- Consume typed Surface facts for inscription anchor, maximum covered area,
+  hidden-noticing DC source, trigger refinement/exclusion, movement
+  invalidation, explosive-rune Dexterity Saving Throw half damage,
+  caster-chosen damage type and scaling, stored prepared-spell eligibility,
+  stored-spell retargeting, hostile close-as-possible placement, and stored
+  Concentration full-duration override.
+- Preserve table-owned object location, covered-area placement, trigger-event,
+  area-membership, hostile placement, stored spell invocation, and stored
+  Concentration witnesses instead of duplicating map, object, or stored-spell
+  state in a generic spell-id adapter.
+
+Acceptance:
+
+- Glyph of Warding has a supported or explicitly narrower profile/owner boundary
+  whose typed facts cover every represented Surface glyph clause.
 - Runtime support, if added, consumes typed Surface/profile facts and explicit
-  placement/rider/travel witnesses rather than authored spell identity.
-- The damage-ended spell cleanup and fade/dismount grace are not silently
-  treated as ordinary 0-HP disappearance or immediate spell-end disappearance.
+  table witnesses rather than authored spell identity.
+- Stored spell release and Concentration override are not collapsed into an
+  ordinary immediate spell cast or ordinary Concentration ownership rule.
+
+Verification:
+
+- Shared lane verification.
+- Focused owner-package tests, and if battle-runtime behavior changes, update
+  the relevant QNT/spec first and run focused MBT per `AGENTS.md`.
+
+Plan Impact:
+
+- Glyph of Warding is split across narrower executable owners: Task 26 now owns
+  the durable occurrence boundary, and Tasks 27-29 remain runnable for
+  explosive-rune release, stored-spell release, and stored Concentration.
+- Full Glyph release support is still not claimed by Task 22's broad owner
+  split; each remaining release owner must add its own focused verification.
+
+### Task 26 - L3-FOLLOWUP-GLYPH-DURABLE-OCCURRENCE
+
+Status: `done`
+
+Depends on:
+
+- L5-C22-GLYPH-OF-WARDING-RUNTIME
+
+Unit:
+
+- `glyph_of_warding`
+
+SRD anchors:
+
+- `.references/srd-5.2.1/Spells/Descriptions-E-L.md:842`
+- `.references/srd-5.2.1/Classes/Bard.md:221`
+- `.references/srd-5.2.1/Classes/Cleric.md:211`
+- `.references/srd-5.2.1/Classes/Wizard.md:247`
+
+Current state:
+
+- Glyph of Warding has typed Surface facts for inscription anchor, maximum
+  covered area, hidden-noticing DC source, trigger refinement/exclusion, and
+  movement invalidation.
+- Battle runtime now promotes a `spell.invocation-glyph-durable-occurrence`
+  profile-subset-supported owner for completed one-hour inscription,
+  table-witnessed anchor/covered-area/cast-location facts, hidden-noticing DC
+  source, trigger occurrence cleanup, and movement invalidation cleanup.
+
+Output:
+
+- Promote Glyph creation and cleanup as a durable Spell Effect occurrence that
+  consumes typed Surface facts and table witnesses for inscription anchor,
+  maximum covered area, cast location, hidden-noticing DC, trigger
+  refinement/exclusion, trigger occurrence, and movement invalidation.
+- Do not duplicate table map/object state or dispatch on Glyph authored
+  identity.
+
+Acceptance:
+
+- Glyph has a supported or profile-subset-supported occurrence boundary with
+  focused runtime tests and, if battle-runtime behavior changes, promoted
+  Quint/runtime parity.
+- Trigger cleanup and movement invalidation end the occurrence without treating
+  the one-hour creation cast as the runtime release.
+
+Verification:
+
+- Shared lane verification.
+- Focused owner-package tests, and if battle-runtime behavior changes, update
+  the relevant QNT/spec first and run focused MBT per `AGENTS.md`.
+
+Plan Impact:
+
+- Task 26 is complete. Glyph of Warding can claim the durable occurrence subset
+  only; explosive-rune release, stored-spell release, and stored Concentration
+  remain visible in Tasks 27-29.
+- Generic Dispel Magic targeting of Glyph occurrences remains with the existing
+  broader ongoing Spell Effect Dispel follow-up, not this Glyph occurrence
+  owner.
+
+### Task 27 - L3-FOLLOWUP-GLYPH-EXPLOSIVE-RUNE-RELEASE
+
+Status: `ready-for-research`
+
+Depends on:
+
+- L3-FOLLOWUP-GLYPH-DURABLE-OCCURRENCE
+
+Unit:
+
+- `glyph_of_warding`
+
+SRD anchors:
+
+- `.references/srd-5.2.1/Spells/Descriptions-E-L.md:842`
+- `.references/srd-5.2.1/Classes/Bard.md:221`
+- `.references/srd-5.2.1/Classes/Cleric.md:211`
+- `.references/srd-5.2.1/Classes/Wizard.md:247`
+
+Current state:
+
+- Task 26 promotes durable glyph occurrence creation and trigger/movement
+  cleanup; this task starts from that represented occurrence.
+- Glyph of Warding has typed Surface facts for the explosive-rune branch:
+  20-foot Sphere, Dexterity Saving Throw half damage, caster-chosen Acid, Cold,
+  Fire, Lightning, or Thunder damage, and higher-slot d8 scaling.
+- No promoted runtime owner releases that branch from a triggered durable glyph
+  occurrence.
+
+Output:
+
+- Promote explosive-rune release from a triggered glyph occurrence using typed
+  Surface facts and table-supplied area-membership witnesses.
+- Preserve non-immediate release timing; do not collapse the branch into an
+  ordinary save-damage spell cast at glyph creation.
+
+Acceptance:
+
+- Glyph has a supported or profile-subset-supported explosive-rune release
+  boundary with focused runtime tests and, if battle-runtime behavior changes,
+  promoted Quint/runtime parity.
+- Damage type choice, slot scaling, Saving Throw half damage, area-membership
+  witnesses, and spell-end cleanup are executable.
+
+Verification:
+
+- Shared lane verification.
+- Focused owner-package tests, and if battle-runtime behavior changes, update
+  the relevant QNT/spec first and run focused MBT per `AGENTS.md`.
+
+### Task 28 - L3-FOLLOWUP-GLYPH-STORED-SPELL-RELEASE
+
+Status: `ready-for-research`
+
+Depends on:
+
+- L3-FOLLOWUP-GLYPH-DURABLE-OCCURRENCE
+
+Unit:
+
+- `glyph_of_warding`
+
+SRD anchors:
+
+- `.references/srd-5.2.1/Spells/Descriptions-E-L.md:842`
+- `.references/srd-5.2.1/Classes/Bard.md:221`
+- `.references/srd-5.2.1/Classes/Cleric.md:211`
+- `.references/srd-5.2.1/Classes/Wizard.md:247`
+
+Current state:
+
+- Task 26 promotes durable glyph occurrence creation and trigger/movement
+  cleanup; this task starts from that represented occurrence.
+- Glyph of Warding has typed Surface facts for stored prepared-spell
+  eligibility, no immediate effect at storage time, trigger-creature
+  retargeting, area centering, and hostile close-as-possible placement.
+- No promoted runtime owner carries and releases a stored Spell Invocation from
+  a triggered durable glyph occurrence.
+
+Output:
+
+- Promote spell-glyph storage and release by carrying an eligible prepared
+  stored Spell Invocation from glyph creation to trigger release.
+- Consume table witnesses for trigger-creature retargeting, area centering, and
+  hostile close-as-possible placement for summons, harmful objects, and traps.
+- Do not collapse storage into an ordinary immediate cast or dispatch on Glyph
+  authored identity.
+
+Acceptance:
+
+- Glyph has a supported or profile-subset-supported stored-spell release
+  boundary with focused runtime tests and, if battle-runtime behavior changes,
+  promoted Quint/runtime parity.
+- The owner preserves stored invocation state, trigger retargeting, area
+  centering, hostile placement witnesses, and the no-immediate-effect storage
+  rule.
+
+Verification:
+
+- Shared lane verification.
+- Focused owner-package tests, and if battle-runtime behavior changes, update
+  the relevant QNT/spec first and run focused MBT per `AGENTS.md`.
+
+### Task 29 - L3-FOLLOWUP-GLYPH-STORED-CONCENTRATION
+
+Status: `ready-for-research`
+
+Depends on:
+
+- L3-FOLLOWUP-GLYPH-STORED-SPELL-RELEASE
+
+Unit:
+
+- `glyph_of_warding`
+
+SRD anchors:
+
+- `.references/srd-5.2.1/Spells/Descriptions-E-L.md:842`
+- `.references/srd-5.2.1/Classes/Bard.md:221`
+- `.references/srd-5.2.1/Classes/Cleric.md:211`
+- `.references/srd-5.2.1/Classes/Wizard.md:247`
+
+Current state:
+
+- Glyph of Warding has typed Surface facts for the stored Concentration
+  full-duration override.
+- No promoted runtime owner executes a released stored Concentration spell to
+  full duration outside ordinary caster, triggering-creature, or readied-spell
+  Concentration ownership.
+
+Output:
+
+- Promote the stored Concentration override for stored spells released by a
+  triggered glyph.
+- Preserve full-duration lifecycle and cleanup without ordinary Concentration
+  ownership shortcuts.
+
+Acceptance:
+
+- Glyph has a supported or profile-subset-supported stored Concentration
+  override boundary with focused runtime tests and, if battle-runtime behavior
+  changes, promoted Quint/runtime parity.
+- The owner rejects ordinary caster Concentration, triggering-creature
+  Concentration, and readied-spell cleanup semantics for this release path.
 
 Verification:
 

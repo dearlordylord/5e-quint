@@ -160,3 +160,5 @@
 {"profileId":"unit-feature.metamagic-missed-spell-attack-reroll","obligationIds":["BATTLE.FEATURE.METAMAGIC_SEEKING_SPELL_ATTACK_REROLL"]}
 {"profileId":"unit-feature.metamagic-damage-dice-reroll","obligationIds":["BATTLE.FEATURE.METAMAGIC_EMPOWERED_DAMAGE_DICE_REROLL"]}
 {"profileId":"spell.invocation-acid-arrow-attack-timing","obligationIds":["BATTLE.SPELL.ACID_ARROW_ATTACK_TIMING","BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES"]}
+{"profileId":"spell.invocation-haste-positive","obligationIds":["BATTLE.SPELL.HASTE_POSITIVE_EFFECTS","BATTLE.SPELL.HASTE_LETHARGY_LIFECYCLE","BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS"]}
+{"profileId":"spell.invocation-glyph-durable-occurrence","obligationIds":["BATTLE.SPELL.GLYPH_DURABLE_OCCURRENCE_LIFECYCLE"]}

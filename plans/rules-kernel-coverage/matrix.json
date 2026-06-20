@@ -1,18 +1,18 @@
 {
   "summary": {
-    "total": 124,
-    "covered": 118,
+    "total": 127,
+    "covered": 121,
     "open": 0,
     "nonSemantic": 6,
     "byRuntime": {
       "shared-algebras": 1,
-      "battle": 93,
+      "battle": 96,
       "character-creation": 14,
       "character-sheet": 12,
       "character-battle": 4
     },
     "byStatus": {
-      "covered": 118,
+      "covered": 121,
       "needs-qnt-owner": 0,
       "needs-parity-witness": 0,
       "needs-surface-evidence": 0,
@@ -330,6 +330,7 @@
       ],
       "profiles": [
         "spell.invocation-damage-save-or-attack",
+        "spell.invocation-haste-positive",
         "spell.invocation-see-invisible-observer-sight",
         "spell.invocation-spiritual-weapon-attack-proxy",
         "spell.reaction-shield",
@@ -4334,6 +4335,89 @@
       "title": "Battle turn-boundary effect lifecycle ordering across end-turn cleanup, initiative advancement, start-turn spell effects, ongoing-feature expiration, and weapon-hit turn effects"
     },
     {
+      "id": "BATTLE.SPELL.HASTE_POSITIVE_EFFECTS",
+      "kind": "active-effect-lifecycle",
+      "parityWitnesses": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-haste-positive.test.ts"
+        }
+      ],
+      "profiles": [
+        "spell.invocation-haste-positive"
+      ],
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/spell-haste-positive-effects-core.qnt",
+        "packages/shared-algebras/proofs/rule-core/spell-haste-positive-effects-core-examples.qnt"
+      ],
+      "reason": "The positive Haste slice admits the typed SRD Surface shape without authored spell identity dispatch, spends Magic Action plus a level-3-or-higher Spell Slot, owns caster Concentration, applies doubled Speed, +2 Armor Class, Dexterity Saving Throw Advantage, derives one target-turn spell-effect action resource restricted to Attack with one attack only, Dash, Disengage, Hide, or Utilize, and clears a current-turn Haste spell-effect action resource when the source Concentration effect ends. Spell-end lethargy cleanup is covered separately by BATTLE.SPELL.HASTE_LETHARGY_LIFECYCLE.",
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/haste-positive.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-granted-action-resource.ts",
+        "packages/battle-runtime/src/battle-reducer/damage-apply.ts",
+        "packages/battle-runtime/src/battle-reducer/movement-speed.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-damage-fills.ts",
+        "packages/battle-runtime/src/battle-reducer/attack-resolution.ts",
+        "packages/battle-runtime/src/active-effect/types.ts",
+        "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts",
+        "packages/battle-runtime/src/battle-reducer/battle-codecs.ts",
+        "packages/shared-algebras/src/action-economy-algebra.ts",
+        "packages/shared-algebras/src/speed-algebra.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Spells/Descriptions-E-L.md#Haste",
+        "UBIQUITOUS_LANGUAGE.md#Speed",
+        "UBIQUITOUS_LANGUAGE.md#Armor-Class-AC",
+        "UBIQUITOUS_LANGUAGE.md#Multiattack"
+      ],
+      "title": "Battle Haste positive cast applies active target buffs and a restricted target-turn action"
+    },
+    {
+      "id": "BATTLE.SPELL.HASTE_LETHARGY_LIFECYCLE",
+      "kind": "active-effect-lifecycle",
+      "parityWitnesses": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-haste-positive.test.ts"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/haste-lethargy-lifecycle.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-haste-lethargy-lifecycle.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profiles": [
+        "spell.invocation-haste-positive"
+      ],
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime-haste-lethargy-lifecycle.mbt.qnt"
+      ],
+      "reason": "The Haste profile stores the typed spell-end target state as a source-owned Concentration effect. Concentration break, duration expiry, and recast/replacement cleanup promote that monitor into source-owned Incapacitated and a separate source-owned Speed 0 effect expiring at the end of the target's next turn. Promoted Incapacitated then breaks the target's own Concentration using the shared Concentration teardown path. Target-turn cleanup removes only Haste-owned lethargy effects, preserving independent Incapacitated sources, and movement projection treats the Speed 0 effect as its own terminal-speed fact rather than deriving Speed 0 from Incapacitated.",
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts",
+        "packages/battle-runtime/src/active-effect/types.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/haste-positive.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-end-target-state.ts",
+        "packages/battle-runtime/src/battle-reducer/damage-apply.ts",
+        "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts",
+        "packages/battle-runtime/src/battle-reducer/movement-speed.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Spells/Descriptions-E-L.md#Haste",
+        "UBIQUITOUS_LANGUAGE.md#Concentration",
+        "UBIQUITOUS_LANGUAGE.md#Incapacitated",
+        "UBIQUITOUS_LANGUAGE.md#Speed",
+        "UBIQUITOUS_LANGUAGE.md#Spell Effect"
+      ],
+      "title": "Battle Haste spell-end lethargy applies Incapacitated plus separate Speed 0 until the target's next turn end"
+    },
+    {
       "id": "BATTLE.PROTOCOL.CONCENTRATION_BREAK_TEARDOWN",
       "kind": "composition",
       "parityWitnesses": [
@@ -4404,6 +4488,35 @@
         "UBIQUITOUS_LANGUAGE.md#Spellcasting"
       ],
       "title": "Battle protocol zero-Hit-Point mid-resolution teardown applies Unconscious, Incapacitated-driven Concentration break, dependent Spell Effect cleanup, and remaining attack sequence resolution against the post-teardown state"
+    },
+    {
+      "id": "BATTLE.SPELL.GLYPH_DURABLE_OCCURRENCE_LIFECYCLE",
+      "kind": "active-effect-lifecycle",
+      "parityWitnesses": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-glyph-of-warding.test.ts"
+        }
+      ],
+      "profiles": [
+        "spell.invocation-glyph-durable-occurrence"
+      ],
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime-glyph-durable-occurrence.qnt"
+      ],
+      "reason": "This Task 26 slice covers only the completed one-hour Glyph inscription boundary: the runtime admits the Surface glyph shape without authored identity dispatch, records the durable Spell Effect occurrence from table-supplied anchor, covered area, cast location, notice, trigger, and movement-invalidation facts, keeps ordinary Magic Action spell invocation from treating creation as an immediate release, and consumes table trigger or moved-more-than-10-feet witnesses to end the occurrence. Explosive rune release, stored spell release, stored Concentration override, component expenditure, geometry derivation, and generic Dispel Magic ending remain deferred to their existing follow-up owners.",
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer/glyph-durable-occurrence.ts",
+        "packages/battle-runtime/src/active-effect/types.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Spells/Descriptions-E-L.md#Glyph of Warding",
+        "UBIQUITOUS_LANGUAGE.md#Spell Effect",
+        "UBIQUITOUS_LANGUAGE.md#Ability Check"
+      ],
+      "title": "Battle Glyph of Warding completed inscription stores a durable occurrence and ends it on trigger or movement invalidation witnesses"
     }
   ],
   "battleHoleFrontier": [
@@ -7350,6 +7463,20 @@
         "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES"
       ],
       "profileId": "spell.invocation-acid-arrow-attack-timing"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.SPELL.HASTE_POSITIVE_EFFECTS",
+        "BATTLE.SPELL.HASTE_LETHARGY_LIFECYCLE",
+        "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "profileId": "spell.invocation-haste-positive"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.SPELL.GLYPH_DURABLE_OCCURRENCE_LIFECYCLE"
+      ],
+      "profileId": "spell.invocation-glyph-durable-occurrence"
     }
   ],
   "qntOwnerRoles": [
@@ -7639,6 +7766,14 @@
       ],
       "ownerPath": "packages/battle-runtime/battle-runtime-ground-command.qnt",
       "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-haste-lethargy-lifecycle.mbt.qnt is the focused Haste lethargy literal projection witness for Concentration-loss promotion, target-owned Concentration break from promoted Incapacitated, duration-expiry promotion, recast replacement ordering, and target-turn cleanup preserving unrelated Incapacitated. It is MBT-only parity evidence, not qnt-proof verification evidence.",
+      "obligationIds": [
+        "BATTLE.SPELL.HASTE_LETHARGY_LIFECYCLE"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-haste-lethargy-lifecycle.mbt.qnt",
+      "role": "mbt-fixture"
     },
     {
       "evidence": "packages/battle-runtime/battle-runtime-gust-of-wind.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
@@ -9566,6 +9701,30 @@
       "obligationIds": [],
       "ownerPath": "packages/battle-runtime/battle-runtime-zero-hit-point-mid-resolution.mbt.qnt",
       "role": "mbt-fixture"
+    },
+    {
+      "evidence": "packages/shared-algebras/proofs/rule-core/spell-haste-positive-effects-core.qnt carries identity-free Haste positive-effect semantics for doubled Speed, +2 Armor Class, Dexterity Saving Throw Advantage, and the restricted additional action with Attack capped to one attack.",
+      "obligationIds": [
+        "BATTLE.SPELL.HASTE_POSITIVE_EFFECTS"
+      ],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-haste-positive-effects-core.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/shared-algebras/proofs/rule-core/spell-haste-positive-effects-core-examples.qnt is proof-only example evidence for Haste positive-effect semantics and restricted additional-action facts.",
+      "obligationIds": [
+        "BATTLE.SPELL.HASTE_POSITIVE_EFFECTS"
+      ],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-haste-positive-effects-core-examples.qnt",
+      "role": "proof-only"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-glyph-durable-occurrence.qnt is proof-only evidence for the Glyph durable occurrence completed-inscription, trigger cleanup, and movement-invalidation boundary.",
+      "obligationIds": [
+        "BATTLE.SPELL.GLYPH_DURABLE_OCCURRENCE_LIFECYCLE"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-glyph-durable-occurrence.qnt",
+      "role": "proof-only"
     }
   ],
   "qntRegistry": [
@@ -9739,6 +9898,11 @@
       "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-flaming-sphere-hazard-ram.qnt",
       "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-glyph-durable-occurrence.qnt",
+      "role": "proof-only"
     },
     {
       "classification": "qnt-owner-role",
@@ -10335,6 +10499,16 @@
     {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-direct-damage-projection-core.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-haste-positive-effects-core-examples.qnt",
+      "role": "proof-only"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-haste-positive-effects-core.qnt",
       "role": "semantic-core"
     },
     {
@@ -14147,6 +14321,29 @@
         "packages/battle-runtime/battle-runtime-restoration-and-buffs.qnt"
       ],
       "status": "generation-subset-clean"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [
+        "variant",
+        "record",
+        "pure-def",
+        "constant-def",
+        "int",
+        "bool",
+        "if-expression",
+        "comparison",
+        "boolean-connective",
+        "all-block",
+        "set",
+        "membership"
+      ],
+      "obligationId": "BATTLE.SPELL.HASTE_POSITIVE_EFFECTS",
+      "proofOnly": [],
+      "semanticCore": [
+        "packages/shared-algebras/proofs/rule-core/spell-haste-positive-effects-core.qnt"
+      ],
+      "status": "generation-subset-clean"
     }
   ],
   "generatorReadinessBacklog": [],
@@ -14369,8 +14566,10 @@
     "spell.invocation-flaming-sphere-hazard-ram",
     "spell.invocation-fog-cloud-obscurement",
     "spell.invocation-forced-reaction-movement",
+    "spell.invocation-glyph-durable-occurrence",
     "spell.invocation-grease-ground-hazard",
     "spell.invocation-gust-of-wind-line",
+    "spell.invocation-haste-positive",
     "spell.invocation-held-light-emitter",
     "spell.invocation-hideous-laughter-repeat-save-lifecycle",
     "spell.invocation-hypnotic-pattern-control",

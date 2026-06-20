@@ -12,6 +12,7 @@ import {
   describeHeldWeaponAttachment,
   describeObjectFilter,
   describeRange,
+  describeSpellSpatialManifestationAttachment,
   describeTargetSelection,
   describeTransferEvent,
 } from "./tracer-rule-labels.ts";
@@ -109,6 +110,15 @@ export function traceAttachment(
         category: "attachment",
         atomKind: "location",
         label: `location\n${a.description}\nrange ${describeAttachmentRange(range, a.rangeOrigin)}`,
+      });
+      return id;
+    }
+    case "spell_spatial_manifestation": {
+      nodes.push({
+        id,
+        category: "attachment",
+        atomKind: "spell_spatial_manifestation",
+        label: describeSpellSpatialManifestationAttachment(a, range),
       });
       return id;
     }

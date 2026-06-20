@@ -195,6 +195,10 @@ export const expeditiousRetreatUnitId = "expeditious_retreat";
 
 export const dragonsBreathUnitId = "dragons_breath";
 
+export const glyphOfWardingUnitId = "glyph_of_warding";
+
+export const hasteUnitId = "haste";
+
 export const jumpUnitId = "jump";
 
 export const levitateUnitId = "levitate";

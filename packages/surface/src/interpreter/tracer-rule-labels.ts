@@ -59,24 +59,21 @@ import type {
 export function procedureForFamily(
   f: SpellMechanics["family"],
 ): "activate" | "respond" | "store" {
-  switch (f) {
-    case "triggered_reaction":
-      return "respond";
-    case "anchored_trigger":
-      return "store";
-    case "ongoing_effect":
-    case "activation":
-    case "modal_activation":
-    case "passive_hit_intercept":
-    case "spawned_creature":
-    case "reanimated_creature":
-    case "templated_multi_spawn":
-      return "activate";
-    default: {
-      const _: never = f;
-      throw new Error(`unhandled spell family for procedure: ${String(_)}`);
-    }
-  }
+  return Match.value(f).pipe(
+    Match.when("triggered_reaction", () => "respond" as const),
+    Match.when("anchored_trigger", () => "store" as const),
+    Match.when("glyph_warding", () => "store" as const),
+    Match.when("magic_circle_ward", () => "activate" as const),
+    Match.when("stone_merge", () => "activate" as const),
+    Match.when("ongoing_effect", () => "activate" as const),
+    Match.when("activation", () => "activate" as const),
+    Match.when("modal_activation", () => "activate" as const),
+    Match.when("passive_hit_intercept", () => "activate" as const),
+    Match.when("spawned_creature", () => "activate" as const),
+    Match.when("reanimated_creature", () => "activate" as const),
+    Match.when("templated_multi_spawn", () => "activate" as const),
+    Match.exhaustive,
+  );
 }
 
 export function procedurePrefix(k: "activate" | "respond" | "store"): string {
@@ -204,11 +201,33 @@ export function describeAttachmentHole(
       return `${labelPrefix}\nlocation\n${a.value.description}\nrange ${describeAttachmentRange(range, a.value.rangeOrigin)}`;
     case "caster_target_bond":
       return `${labelPrefix}\n${describeCasterTargetBondAttachment(a.value, range)}`;
+    case "spell_spatial_manifestation":
+      return `${labelPrefix}\n${describeSpellSpatialManifestationAttachment(a.value, range)}`;
     default: {
       const _: never = a.value;
       throw new Error(`unhandled attachment hole value: ${String(_)}`);
     }
   }
+}
+
+type SpellSpatialManifestationAttachmentDescriptionInput =
+  | Extract<Attachment, { readonly kind: "spell_spatial_manifestation" }>
+  | (Extract<Attachment, { readonly kind: "hole" }>["value"] & {
+      readonly kind: "spell_spatial_manifestation";
+    });
+
+export function describeSpellSpatialManifestationAttachment(
+  attachment: SpellSpatialManifestationAttachmentDescriptionInput,
+  range: Range,
+): string {
+  return [
+    "spell_spatial_manifestation",
+    `size: ${attachment.manifestation.creatureSize}`,
+    `appearance: ${attachment.manifestation.appearance}`,
+    `tangibility: ${attachment.manifestation.tangibility}`,
+    `form choice: ${attachment.manifestation.formChoice.chooser} ${attachment.manifestation.formChoice.domain}`,
+    `placement: ${attachment.placement.chooser} visible unoccupied space within ${describeAttachmentRange(range, attachment.rangeOrigin)}`,
+  ].join("\n");
 }
 
 export function describeCasterTargetBondAttachment(
@@ -336,13 +355,17 @@ export function describeTargetSelection(s: TargetSelection): string {
     "relativePosition" in s && s.relativePosition !== undefined
       ? `\nrelative: ${describeTargetRelativePosition(s.relativePosition)}`
       : "";
+  const visibility =
+    "visibility" in s && s.visibility !== undefined
+      ? `\nvisibility: ${s.visibility}`
+      : "";
   if (s.mode === "one") {
-    return `one${targetKinds}${typeFilter}${creatureSizeFilter}${objectFilter}${stateFilter}${disposition}${creatureDisposition}${objectOrLocationMaxDimension}${castingRequirement}${relativePosition}`;
+    return `one${targetKinds}${typeFilter}${creatureSizeFilter}${objectFilter}${stateFilter}${disposition}${creatureDisposition}${objectOrLocationMaxDimension}${castingRequirement}${relativePosition}${visibility}`;
   }
   if (s.mode === "any_number")
-    return `any_number${targetKinds}${typeFilter}${creatureSizeFilter}${objectFilter}${stateFilter}${disposition}${creatureDisposition}${objectOrLocationMaxDimension}${castingRequirement}${relativePosition}`;
+    return `any_number${targetKinds}${typeFilter}${creatureSizeFilter}${objectFilter}${stateFilter}${disposition}${creatureDisposition}${objectOrLocationMaxDimension}${castingRequirement}${relativePosition}${visibility}`;
   const repeats = s.repeatsAllowed === true ? " (repeats allowed)" : "";
-  return `choose_up_to: ${describeScaling(s.count)}${repeats}${targetKinds}${typeFilter}${creatureSizeFilter}${objectFilter}${stateFilter}${disposition}${creatureDisposition}${objectOrLocationMaxDimension}${castingRequirement}${relativePosition}`;
+  return `choose_up_to: ${describeScaling(s.count)}${repeats}${targetKinds}${typeFilter}${creatureSizeFilter}${objectFilter}${stateFilter}${disposition}${creatureDisposition}${objectOrLocationMaxDimension}${castingRequirement}${relativePosition}${visibility}`;
 }
 
 function describeTargetRelativePosition(r: TargetRelativePosition): string {
@@ -855,6 +878,8 @@ export function describeOngoingPredicate(
       return "spell-created held object active";
     case "table_witnessed_attachment_within_spell_range":
       return "table-witnessed attachment within spell range";
+    case "caster_within_feet_of_attachment":
+      return `caster within ${p.feet} ft of attachment`;
     default: {
       const _exhaustive: never = p;
       throw new Error(`unhandled ongoing predicate: ${String(_exhaustive)}`);

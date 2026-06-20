@@ -825,6 +825,7 @@ function resolveSpellActInternal(
       invocation.procedure === "spellCreatedHeldObjectReEvoke" ||
       invocation.procedure === "sanctuaryTargetingInterdiction" ||
       invocation.procedure === "dragonsBreathInitial" ||
+      invocation.procedure === "hastePositive" ||
       invocation.procedure === "directConditionRemoval" ||
       invocation.procedure === "directCondition" ||
       invocation.procedure === "spellAttackSequence")

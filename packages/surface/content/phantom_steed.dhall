@@ -54,6 +54,7 @@ let phantomSteed =
                   { kind = "gradual_fade"
                   , riderDismountGrace = { unit = "minute", amount = 1 }
                   }
+              , onSpawnedCreatureDamage = "spell_ends"
               }
           }
       }

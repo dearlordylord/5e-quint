@@ -1,0 +1,154 @@
+{
+  "description": "You step into a stone object or surface large enough to fully contain your body, merging yourself and your equipment with the stone for the duration. You must touch the stone to do so. Nothing of your presence remains visible or otherwise detectable by nonmagical senses. While merged, you can't see outside the stone, Wisdom (Perception) checks you make to hear sounds outside it have Disadvantage, you remain aware of time, and you can cast spells on yourself. You can use 5 feet of Movement to leave where you entered, ending the spell; otherwise, you can't move. Minor physical damage to the stone doesn't harm you. Partial destruction or a shape change that makes you no longer fit expels you and deals 6d6 Force damage. Complete destruction or transmutation into a different substance expels you and deals 50 Force damage. If expelled, you move into the closest unoccupied space to where you entered and have the Prone condition.",
+  "id": "meld_into_stone",
+  "kind": "spell",
+  "mechanics": {
+    "castingTime": {
+      "kind": "action",
+      "ritual": true
+    },
+    "components": {
+      "m": false,
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "timed",
+      "value": {
+        "amount": 8,
+        "unit": "hour"
+      }
+    },
+    "family": "stone_merge",
+    "level": 3,
+    "occupancy": {
+      "detection": {
+        "nonmagicalSenses": "not_detectable",
+        "visiblePresence": "none"
+      },
+      "kind": "hidden_merged_occupancy",
+      "movement": {
+        "otherwise": "cannot_move",
+        "voluntaryExit": {
+          "cost": {
+            "feet": 5,
+            "kind": "movement"
+          },
+          "location": "entry_location",
+          "outcome": "spell_ends"
+        }
+      },
+      "outsidePerception": {
+        "hearing": {
+          "ability": "wis",
+          "kind": "wisdom_perception_check_disadvantage",
+          "mode": "disadvantage",
+          "skill": "perception",
+          "stimulus": "sounds_outside_stone"
+        },
+        "sight": "cannot_see_outside_stone"
+      },
+      "selfSpellcasting": {
+        "permission": "can_cast_spells_on_self",
+        "target": "self"
+      },
+      "state": "merged_with_stone",
+      "subject": "caster_and_equipment",
+      "timeAwareness": "aware_of_passage_of_time"
+    },
+    "range": {
+      "kind": "touch"
+    },
+    "school": "transmutation",
+    "stoneEventResponses": {
+      "completeDestructionOrTransmutation": {
+        "damage": {
+          "amount": {
+            "expr": {
+              "dice": 0,
+              "dieSize": 1,
+              "flat": 50
+            },
+            "kind": "fixed"
+          },
+          "damageType": "force"
+        },
+        "expulsion": {
+          "condition": "prone",
+          "kind": "stone_merge_expulsion",
+          "placement": {
+            "kind": "closest_unoccupied_space_to_entry_location",
+            "owner": "table_witnessed_closest_unoccupied_space"
+          }
+        },
+        "triggers": [
+          "complete_destruction",
+          "transmutation_to_different_substance"
+        ]
+      },
+      "minorPhysicalDamage": {
+        "outcome": "no_harm_to_merged_creature",
+        "trigger": "minor_physical_damage"
+      },
+      "partialDestructionOrShapeChange": {
+        "damage": {
+          "amount": {
+            "expr": {
+              "dice": 6,
+              "dieSize": 6
+            },
+            "kind": "fixed"
+          },
+          "damageType": "force"
+        },
+        "expulsion": {
+          "condition": "prone",
+          "kind": "stone_merge_expulsion",
+          "placement": {
+            "kind": "closest_unoccupied_space_to_entry_location",
+            "owner": "table_witnessed_closest_unoccupied_space"
+          }
+        },
+        "triggers": [
+          "partial_destruction",
+          "shape_change_no_longer_fits"
+        ]
+      },
+      "tableTerrainObject": {
+        "closestUnoccupiedSpace": "table_witnessed_closest_unoccupied_space_to_entry_location",
+        "fitAfterShapeChange": "table_witnessed_fit_after_shape_change",
+        "stoneDamageEvents": "table_witnessed_stone_damage_destruction_transmutation_events"
+      }
+    },
+    "target": {
+      "anchor": {
+        "chooser": "caster",
+        "object": {
+          "kind": "stone_object",
+          "material": "stone"
+        },
+        "surface": {
+          "kind": "stone_surface",
+          "material": "stone"
+        }
+      },
+      "contact": "caster_must_touch_stone",
+      "containment": {
+        "requirement": "large_enough_to_fully_contain_subject",
+        "subject": "caster_body_and_equipment"
+      },
+      "kind": "stone_object_or_surface",
+      "tableTerrainObject": {
+        "entryLocation": "table_witnessed_entry_location",
+        "stoneMaterial": "table_witnessed_stone_material",
+        "stoneShape": "table_witnessed_stone_shape",
+        "stoneSize": "table_witnessed_stone_size"
+      }
+    }
+  },
+  "name": "Meld into Stone",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-M-P#Meld into Stone"
+  }
+}

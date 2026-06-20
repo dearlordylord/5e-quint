@@ -23,6 +23,7 @@ export type OutcomeEffectAtom = Extract<
       | "conditional_by_current_hp"
       | "kill_target"
       | "end_current_effect"
+      | "effect_end_target_state"
       | "repeat_save_for_condition"
       | "repeat_save_counter"
       | "delayed_save"
@@ -186,6 +187,35 @@ export function traceOutcomeEffectAtom(
         atomKind: "end_current_effect",
         label: "end_current_effect",
       });
+      return id;
+    }
+    case "effect_end_target_state": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "lifecycle",
+        atomKind: "effect_end_target_state",
+        label: `effect_end_target_state\nuntil: ${e.duration}`,
+      });
+      if (edges !== undefined) {
+        const conditionId = ids("eff");
+        nodes.push({
+          id: conditionId,
+          category: "effect",
+          atomKind: "apply_condition",
+          label: `apply_condition\n${describeConditionChoice(e.condition)}`,
+        });
+        edges.push({ from: id, to: conditionId, relation: "applies" });
+
+        const speedId = ids("eff");
+        nodes.push({
+          id: speedId,
+          category: "effect",
+          atomKind: "set_speed",
+          label: `set_speed\n= ${e.speed.feet} ft`,
+        });
+        edges.push({ from: id, to: speedId, relation: "applies" });
+      }
       return id;
     }
     case "repeat_save_for_condition": {

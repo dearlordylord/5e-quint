@@ -213,6 +213,7 @@ export const SPELL_SLOT_PROCEDURES = [
   "mirrorImageHitInterception",
   "conditionRemovalProtection",
   "chosenDamageResistance",
+  "hastePositive",
   "directConditionRemoval",
   "weaponDamageRider",
   "magicWeaponEnhancement",

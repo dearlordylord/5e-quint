@@ -1139,7 +1139,7 @@ export function spellInvocationRequiresKnownWillingTarget(
       "conditionImmunityAndTurnStartTemporaryHitPoints" ||
     invocation.procedure === "wardingBond" ||
     invocation.procedure === "dragonsBreathInitial" ||
-    spellTargetListRequiresKnownWillingTarget(invocation) ||
+    invocationHasWillingTargetList(invocation) ||
     (registeredSpellProcedureProfile(
       invocation.procedure,
     )?.knownWillingTargetSpellIds.includes(invocation.spell.id) ??
@@ -1147,7 +1147,7 @@ export function spellInvocationRequiresKnownWillingTarget(
   );
 }
 
-function spellTargetListRequiresKnownWillingTarget(
+function invocationHasWillingTargetList(
   invocation: SupportedSpellInvocation,
 ): boolean {
   return (

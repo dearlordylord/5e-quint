@@ -16,6 +16,9 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-gust-of-wind-line
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spiritual-weapon-attack-proxy
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-antimagic-field-action-interdiction
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-haste-positive
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.HASTE_POSITIVE_EFFECTS
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.HASTE_LETHARGY_LIFECYCLE
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magic-weapon-enhancement
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-web-restraint-hazard
@@ -219,6 +222,10 @@ import type {
   SpellTurnStartDamage,
   SpellTurnStartDamageSave,
   TurnAnchoredBattleActiveEffectExpiration,
+} from "./active-effect/types.ts";
+export type {
+  GlyphDurableOccurrenceActiveEffect,
+  GlyphDurableOccurrenceAnchor,
 } from "./active-effect/types.ts";
 import { type DamageAmountByTypeEntry } from "./battle-reducer/damage-helpers.ts";
 import type { BattleSpellEffectLevel } from "./battle-reducer/spells-effective-level.ts";
@@ -2416,6 +2423,7 @@ export type TargetListSpellInvocation =
       SupportedSpellInvocation,
       { readonly procedure: "dragonsBreathInitial" }
     >
+  | Extract<SupportedSpellInvocation, { readonly procedure: "hastePositive" }>
   | Extract<
       SupportedSpellInvocation,
       { readonly procedure: "featherFallMitigation" }
@@ -2745,6 +2753,40 @@ export type DragonsBreathInitialSpellInvocation = {
     "damageType" | "spellSaveDc"
   >;
   readonly damageTypeChoices: readonly DamageType[];
+  readonly rangeFeet: MovementFeet;
+};
+export type HastePositiveSpellInvocation = {
+  readonly access: PreparedSpellAccess;
+  readonly resource: SpellSlotInvocationResource;
+  readonly procedure: "hastePositive";
+  readonly spell: SpellRecord;
+  readonly actionCost: "magicAction";
+  readonly targeting: SpellTargetListTargeting & {
+    readonly maxTargets: 1;
+    readonly requiredTargetDisposition: "willing";
+  };
+  readonly activeEffects: {
+    readonly speedRatio: Extract<
+      BattleActiveEffect,
+      { readonly kind: "speedRatio" }
+    >;
+    readonly armorClassBonus: Extract<
+      BattleActiveEffect,
+      { readonly kind: "spellArmorClassBonus" }
+    >;
+    readonly dexteritySavingThrowAdvantage: Extract<
+      BattleActiveEffect,
+      { readonly kind: "savingThrowRollMode" }
+    >;
+    readonly grantedActionResource: Extract<
+      BattleActiveEffect,
+      { readonly kind: "spellGrantedActionResource" }
+    >;
+    readonly spellEndTargetState: Extract<
+      BattleActiveEffect,
+      { readonly kind: "spellEndTargetState" }
+    >;
+  };
   readonly rangeFeet: MovementFeet;
 };
 export type SelfTeleportSpellInvocation = {
@@ -3238,6 +3280,7 @@ export type SupportedSpellInvocation =
   | ThaumaturgyBoomingVoiceSpellInvocation
   | SeeInvisibleObserverSightSpellInvocation
   | DragonsBreathInitialSpellInvocation
+  | HastePositiveSpellInvocation
   | {
       readonly access: ClassCantripSpellAccess;
       readonly resource: NoSpellInvocationResource;
@@ -3803,6 +3846,7 @@ type AnySupportedDamageSpellInvocation = Exclude<
       | "expeditiousRetreatDash"
       | "jumpMovementReplacement"
       | "dragonsBreathInitial"
+      | "hastePositive"
       | "selfTeleport"
       | "sanctuaryTargetingInterdiction"
       | "directCondition"
@@ -4784,6 +4828,7 @@ export type BattleSpellTargetListHole = {
         | "conditionImmunityAndTurnStartTemporaryHitPoints"
         | "jumpMovementReplacement"
         | "dragonsBreathInitial"
+        | "hastePositive"
         | "featherFallMitigation"
         | "sanctuaryTargetingInterdiction"
         | "directCondition"

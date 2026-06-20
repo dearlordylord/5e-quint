@@ -11,14 +11,19 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.d20-test-natural-one-reroll
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-sleet-storm-area-hazard
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-slow-active-penalties
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-haste-positive
 // KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_SEEKING_SPELL_ATTACK_REROLL BATTLE.FEATURE.METAMAGIC_EMPOWERED_DAMAGE_DICE_REROLL
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.HASTE_POSITIVE_EFFECTS
 // Extracted from ../battle-reducer.ts; this module owns Effect Schema values,
 // while domain types remain exported by the reducer facade.
 
 import { ATTACK_ROLL_MODES } from "@dnd/shared-algebras/runtime-hole-algebra";
 import type { ArmorClass as BattleArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
 import { RETAINED_COMPANION_PROTOCOL_TAGS } from "@dnd/shared-algebras/companion-protocol-algebra";
-import { STANDARD_ACTION_KINDS } from "@dnd/shared/game-facts";
+import {
+  STANDARD_ACTION_KINDS,
+  type StandardActionKind,
+} from "@dnd/shared/game-facts";
 import {
   CONDITIONS as ALL_CONDITIONS,
   ArmorClass as SharedArmorClass,
@@ -4307,11 +4312,37 @@ const BattleCreatureZeroHpLifecycleSnapshotSchema = Schema.Union(
   }),
 );
 
+const ACTION_RESTRICTION_ACTIONS_WITHOUT_ATTACK_LIMIT = [
+  "dash",
+  "disengage",
+  "hide",
+  "utilize",
+] as const satisfies ReadonlyArray<StandardActionKind>;
+
 const BattleActionRestrictionSchema = Schema.Union(
   Schema.Struct({ kind: Schema.Literal("none") }),
   Schema.Struct({
     kind: Schema.Literal("exclude"),
     actions: Schema.NonEmptyArray(Schema.Literal(...STANDARD_ACTION_KINDS)),
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("allow_only"),
+    actions: Schema.NonEmptyArray(
+      Schema.Union(
+        Schema.Struct({
+          action: Schema.Literal("attack"),
+          attackLimit: Schema.Struct({
+            kind: Schema.Literal("attack_count"),
+            count: Schema.Literal(1),
+          }),
+        }),
+        Schema.Struct({
+          action: Schema.Literal(
+            ...ACTION_RESTRICTION_ACTIONS_WITHOUT_ATTACK_LIMIT,
+          ),
+        }),
+      ),
+    ),
   }),
 );
 
@@ -4325,6 +4356,13 @@ const RuntimeActionResourceSchema = Schema.Union(
     source: Schema.Literal("unit"),
     sourceOwnerId: Schema.String,
     sourceUnitId: Schema.String,
+    restriction: BattleActionRestrictionSchema,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("action"),
+    source: Schema.Literal("spellEffect"),
+    sourceOwnerId: Schema.String,
+    sourceSpellId: Schema.String,
     restriction: BattleActionRestrictionSchema,
   }),
   Schema.Struct({

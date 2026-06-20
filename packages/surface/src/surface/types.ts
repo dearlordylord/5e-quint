@@ -40,6 +40,7 @@ export const ILLUSION_SENSORY_CHANNELS = [
 export const OBJECT_MATERIALS = [
   "metal",
   "flammable",
+  "stone",
 ] as const satisfies ReadonlyArray<ObjectMaterial>;
 
 // Generic type-level utilities retained for authored-surface helper composition.
@@ -292,6 +293,9 @@ export type AreaDirectEffectAtom = Schema.Schema.Type<
 export type EffectAtom = Schema.Schema.Type<
   typeof SurfaceSchema.EffectAtomSchema
 >;
+export type EffectEndTargetState = Schema.Schema.Type<
+  typeof SurfaceSchema.EffectEndTargetStateSchema
+>;
 
 export function isAreaScopedEffectAtom(
   effect: AreaDirectEffectAtom,
@@ -350,6 +354,9 @@ export type TargetRelativePosition = Schema.Schema.Type<
 >;
 export type TargetSelection = Schema.Schema.Type<
   typeof SurfaceSchema.TargetSelectionSchema
+>;
+export type TargetVisibilityRequirement = Schema.Schema.Type<
+  typeof SurfaceSchema.TargetVisibilityRequirementSchema
 >;
 export type AreaOrigin = Schema.Schema.Type<
   typeof SurfaceSchema.AreaOriginSchema
@@ -418,6 +425,9 @@ export type PassiveOperation = Schema.Schema.Type<
 export type ActionRestriction = Schema.Schema.Type<
   typeof SurfaceSchema.ActionRestrictionSchema
 >;
+export type ActionRestrictionAllowedAction = Schema.Schema.Type<
+  typeof SurfaceSchema.ActionRestrictionAllowedActionSchema
+>;
 export type SaveSuccessOutcome = Schema.Schema.Type<
   typeof SurfaceSchema.SaveSuccessOutcomeSchema
 >;
@@ -468,6 +478,87 @@ export type AnchoredSignal = Schema.Schema.Type<
 >;
 export type AnchoredTriggerMechanics = Schema.Schema.Type<
   typeof SurfaceSchema.AnchoredTriggerMechanicsSchema
+>;
+export type MagicCircleAffectedCreatureType = Schema.Schema.Type<
+  typeof SurfaceSchema.MagicCircleAffectedCreatureTypeSchema
+>;
+export type MagicCircleAffectedCreatureTypeChoice = Schema.Schema.Type<
+  typeof SurfaceSchema.MagicCircleAffectedCreatureTypeChoiceSchema
+>;
+export type MagicCircleWardedCylinderOccurrence = Schema.Schema.Type<
+  typeof SurfaceSchema.MagicCircleWardedCylinderOccurrenceSchema
+>;
+export type MagicCircleMagicalCrossingGate = Schema.Schema.Type<
+  typeof SurfaceSchema.MagicCircleMagicalCrossingGateSchema
+>;
+export type MagicCircleProtectedTargetEffects = Schema.Schema.Type<
+  typeof SurfaceSchema.MagicCircleProtectedTargetEffectsSchema
+>;
+export type MagicCircleNormalWardDirection = Schema.Schema.Type<
+  typeof SurfaceSchema.MagicCircleNormalWardDirectionSchema
+>;
+export type MagicCircleReversedWardDirection = Schema.Schema.Type<
+  typeof SurfaceSchema.MagicCircleReversedWardDirectionSchema
+>;
+export type MagicCircleWardDirectionChoice = Schema.Schema.Type<
+  typeof SurfaceSchema.MagicCircleWardDirectionChoiceSchema
+>;
+export type MagicCircleWardMechanics = Schema.Schema.Type<
+  typeof SurfaceSchema.MagicCircleWardMechanicsSchema
+>;
+export type StoneMergeAnchorChoice = Schema.Schema.Type<
+  typeof SurfaceSchema.StoneMergeAnchorChoiceSchema
+>;
+export type StoneMergeTarget = Schema.Schema.Type<
+  typeof SurfaceSchema.StoneMergeTargetSchema
+>;
+export type StoneMergeOccupancy = Schema.Schema.Type<
+  typeof SurfaceSchema.StoneMergeOccupancySchema
+>;
+export type StoneMergeExpulsion = Schema.Schema.Type<
+  typeof SurfaceSchema.StoneMergeExpulsionSchema
+>;
+export type StoneMergePartialExpulsionDamage = Schema.Schema.Type<
+  typeof SurfaceSchema.StoneMergePartialExpulsionDamageSchema
+>;
+export type StoneMergeCompleteExpulsionDamage = Schema.Schema.Type<
+  typeof SurfaceSchema.StoneMergeCompleteExpulsionDamageSchema
+>;
+export type StoneMergeStoneEventResponses = Schema.Schema.Type<
+  typeof SurfaceSchema.StoneMergeStoneEventResponsesSchema
+>;
+export type StoneMergeMechanics = Schema.Schema.Type<
+  typeof SurfaceSchema.StoneMergeMechanicsSchema
+>;
+export type GlyphWardingInscriptionAnchorChoice = Schema.Schema.Type<
+  typeof SurfaceSchema.GlyphWardingInscriptionAnchorChoiceSchema
+>;
+export type GlyphWardingOccurrence = Schema.Schema.Type<
+  typeof SurfaceSchema.GlyphWardingOccurrenceSchema
+>;
+export type GlyphWardingTrigger = Schema.Schema.Type<
+  typeof SurfaceSchema.GlyphWardingTriggerSchema
+>;
+export type GlyphWardingExplosiveRuneDamageTypeRef = Schema.Schema.Type<
+  typeof SurfaceSchema.GlyphWardingExplosiveRuneDamageTypeRefSchema
+>;
+export type GlyphWardingExplosiveRuneDamageAmount = Schema.Schema.Type<
+  typeof SurfaceSchema.GlyphWardingExplosiveRuneDamageAmountSchema
+>;
+export type GlyphWardingExplosiveRuneBranch = Schema.Schema.Type<
+  typeof SurfaceSchema.GlyphWardingExplosiveRuneBranchSchema
+>;
+export type GlyphWardingStoredSpellEligibility = Schema.Schema.Type<
+  typeof SurfaceSchema.GlyphWardingStoredSpellEligibilitySchema
+>;
+export type GlyphWardingSpellGlyphBranch = Schema.Schema.Type<
+  typeof SurfaceSchema.GlyphWardingSpellGlyphBranchSchema
+>;
+export type GlyphWardingReleaseChoice = Schema.Schema.Type<
+  typeof SurfaceSchema.GlyphWardingReleaseChoiceSchema
+>;
+export type GlyphWardingMechanics = Schema.Schema.Type<
+  typeof SurfaceSchema.GlyphWardingMechanicsSchema
 >;
 export type StatBlockValue = Schema.Schema.Type<
   typeof SurfaceSchema.StatBlockValueSchema
@@ -545,6 +636,9 @@ export type CreatureDismissal = Schema.Schema.Type<
 export type ShapeShiftFormSource = Schema.Schema.Type<
   typeof SurfaceSchema.ShapeShiftFormSourceSchema
 >;
+export type ShapeShiftStatBlockFormSource = Schema.Schema.Type<
+  typeof SurfaceSchema.ShapeShiftStatBlockFormSourceSchema
+>;
 export type ShapeShiftRetainedField = Schema.Schema.Type<
   typeof SurfaceSchema.ShapeShiftRetainedFieldSchema
 >;
@@ -554,6 +648,23 @@ export type ShapeShiftActionRestriction = Schema.Schema.Type<
 export type ShapeShiftRevertTrigger = Schema.Schema.Type<
   typeof SurfaceSchema.ShapeShiftRevertTriggerSchema
 >;
+export type TransformTargetEffect = Schema.Schema.Type<
+  typeof SurfaceSchema.TransformTargetEffectSchema
+>;
+export type StatBlockTransformTargetEffect = Extract<
+  TransformTargetEffect,
+  { readonly newForm: ShapeShiftStatBlockFormSource }
+>;
+function isShapeShiftStatBlockFormSource(
+  form: ShapeShiftFormSource,
+): form is ShapeShiftStatBlockFormSource {
+  return form.kind === "catalog_ref" || form.kind === "known_forms_roster";
+}
+export function isStatBlockTransformTargetEffect(
+  effect: TransformTargetEffect,
+): effect is StatBlockTransformTargetEffect {
+  return isShapeShiftStatBlockFormSource(effect.newForm);
+}
 export type TemplatedCapacity = Schema.Schema.Type<
   typeof SurfaceSchema.TemplatedCapacitySchema
 >;

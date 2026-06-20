@@ -4,6 +4,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-cast-duration-and-concentration
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-warding-bond-linked-effect
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-object-contact-damage
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-haste-positive
 // battle-reducer.ts. Cluster M (damage_apply). Mechanical extraction — no
 // behavior change. Pass 9 also absorbs:
 //   - breakBattleConcentration, breakBattleConcentrationAfterDamage,
@@ -19,9 +20,12 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_EXTENDED_CAST_DURATION_CONCENTRATION
 // KERNEL-COVERAGE: runtime-owner BATTLE.PROTOCOL.CONCENTRATION_BREAK_TEARDOWN
 // KERNEL-COVERAGE: runtime-owner BATTLE.PROTOCOL.ZERO_HIT_POINT_MID_RESOLUTION
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.HASTE_POSITIVE_EFFECTS
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.HASTE_LETHARGY_LIFECYCLE
 
 import {
   applyCondition,
+  hasCondition,
   removeCondition,
 } from "@dnd/shared-algebras/conditions-algebra";
 import {
@@ -125,6 +129,12 @@ import {
   removeSleepEffectsFromTarget,
 } from "./spell-condition-effects-helpers.ts";
 import { battleCreatureWithSpellCreatedHeldObjectHandStateFromActiveEffects } from "./spell-created-held-object.ts";
+import {
+  battleCreatureWithSpellEndTargetStatePromotions,
+  END_OF_NEXT_TURN_DURING_TURN,
+  spellEndTargetStatePromotesIncapacitated,
+} from "./spell-end-target-state.ts";
+import { battleStateWithoutCurrentActorSpellGrantedActionResourcesForEffects } from "./spell-granted-action-resource.ts";
 import { enemyZeroHitPointTemporaryHitPointsAwards } from "./enemy-zero-hit-point-temporary-hit-points.ts";
 import {
   sameStatBlockPartKey,
@@ -161,6 +171,12 @@ export function breakBattleConcentration(
   combatantId: CombatantId,
 ): BattleState {
   const concentration = state.combatants.get(combatantId)?.concentration;
+  const currentActorExpiringEffects =
+    currentActorEffectsExpiringFromConcentrationBreak(
+      state,
+      combatantId,
+      concentration ?? null,
+    );
   let readiedSpells: ReadonlyMap<CombatantId, BattleReadiedSpell> =
     state.readiedSpells;
   if (concentration?.effectKind === "readiedSpell") {
@@ -168,8 +184,12 @@ export function breakBattleConcentration(
     remainingReadiedSpells.delete(combatantId);
     readiedSpells = remainingReadiedSpells;
   }
-  const broken = breakCombatantConcentration(state.combatants, combatantId);
-  return battleStateWithFlySpeedGrantEndFallCleanupFrames(
+  const broken = breakCombatantConcentration(
+    state,
+    state.combatants,
+    combatantId,
+  );
+  const brokenState = battleStateWithFlySpeedGrantEndFallCleanupFrames(
     {
       ...state,
       combatants: broken.value,
@@ -179,6 +199,15 @@ export function breakBattleConcentration(
       readiedSpells,
     },
     broken.flySpeedGrantEndFallCleanupFrames,
+  );
+  const cleanedState =
+    battleStateWithoutCurrentActorSpellGrantedActionResourcesForEffects(
+      brokenState,
+      currentActorExpiringEffects,
+    );
+  return battleStateAfterSpellEndTargetStatePromotionConcentrationBreaks(
+    cleanedState,
+    broken.spellEndTargetStatePromotionIds,
   );
 }
 
@@ -212,7 +241,22 @@ export function breakBattleConcentrationAfterDamage(input: {
 type BreakCombatantConcentrationResult = {
   readonly value: ReadonlyMap<CombatantId, BattleCreatureState>;
   readonly flySpeedGrantEndFallCleanupFrames: readonly BattleFlySpeedGrantEndFallCleanupFrame[];
+  readonly spellEndTargetStatePromotionIds: readonly CombatantId[];
 };
+
+export function battleStateAfterSpellEndTargetStatePromotionConcentrationBreaks(
+  state: BattleState,
+  combatantIds: readonly CombatantId[],
+): BattleState {
+  return [...new Set(combatantIds)].reduce((nextState, combatantId) => {
+    const combatant = nextState.combatants.get(combatantId);
+    return combatant !== undefined &&
+      combatant.concentration !== null &&
+      hasCondition(combatant.conditions, "incapacitated")
+      ? breakBattleConcentration(nextState, combatantId)
+      : nextState;
+  }, state);
+}
 
 function battleStateAfterCombatantConcentrationBreak(input: {
   readonly state: BattleState;
@@ -220,7 +264,14 @@ function battleStateAfterCombatantConcentrationBreak(input: {
   readonly priorConcentration: BattleConcentration;
   readonly priorCombatant: BattleCreatureState;
 }): BattleState {
+  const currentActorExpiringEffects =
+    currentActorEffectsExpiringFromConcentrationBreak(
+      input.state,
+      input.combatantId,
+      input.priorConcentration,
+    );
   const broken = breakCombatantConcentration(
+    input.state,
     input.state.combatants,
     input.combatantId,
     input.priorConcentration,
@@ -240,12 +291,21 @@ function battleStateAfterCombatantConcentrationBreak(input: {
         (candidate) => candidate.endedEffect === frame.endedEffect,
       ),
   );
-  return battleStateWithFlySpeedGrantEndFallCleanupFrames(
+  const brokenState = battleStateWithFlySpeedGrantEndFallCleanupFrames(
     {
       ...input.state,
       combatants: broken.value,
     },
     [...broken.flySpeedGrantEndFallCleanupFrames, ...priorFrames],
+  );
+  const cleanedState =
+    battleStateWithoutCurrentActorSpellGrantedActionResourcesForEffects(
+      brokenState,
+      currentActorExpiringEffects,
+    );
+  return battleStateAfterSpellEndTargetStatePromotionConcentrationBreaks(
+    cleanedState,
+    broken.spellEndTargetStatePromotionIds,
   );
 }
 
@@ -1695,6 +1755,7 @@ function withoutConcentration(
 }
 
 export function breakCombatantConcentration(
+  state: BattleState,
   combatants: ReadonlyMap<CombatantId, BattleCreatureState>,
   combatantId: CombatantId,
   priorConcentration?: BattleConcentration,
@@ -1702,15 +1763,23 @@ export function breakCombatantConcentration(
   const broken =
     combatants.get(combatantId)?.concentration ?? priorConcentration;
   if (broken === undefined) {
-    return { value: combatants, flySpeedGrantEndFallCleanupFrames: [] };
+    return {
+      value: combatants,
+      flySpeedGrantEndFallCleanupFrames: [],
+      spellEndTargetStatePromotionIds: [],
+    };
   }
   const flySpeedGrantEndFallCleanupFrames: BattleFlySpeedGrantEndFallCleanupFrame[] =
     [];
+  const spellEndTargetStatePromotionIds: CombatantId[] = [];
   const value = new Map(
     [...combatants].map(([id, combatant]) => {
       const expiring = combatant.activeEffects.filter((effect) =>
         concentrationBrokenEffectFrom(effect, combatantId, broken),
       );
+      if (expiring.some(spellEndTargetStatePromotesIncapacitated)) {
+        spellEndTargetStatePromotionIds.push(id);
+      }
       flySpeedGrantEndFallCleanupFrames.push(
         ...flySpeedGrantEndFallCleanupFramesForExpiredEffects(id, expiring),
       );
@@ -1736,16 +1805,28 @@ export function breakCombatantConcentration(
                 id === combatantId ? null : combatant.concentration,
               activeEffects,
             };
+      const nextCombatantWithEndState =
+        battleCreatureWithSpellEndTargetStatePromotions({
+          state,
+          combatant:
+            battleCreatureWithSpellCreatedHeldObjectHandStateFromActiveEffects(
+              nextCombatantBase,
+            ),
+          expiringEffects: expiring,
+          timing: END_OF_NEXT_TURN_DURING_TURN,
+        });
       const nextCombatant = applyHitPointMaximumIncreaseExpiration(
-        battleCreatureWithSpellCreatedHeldObjectHandStateFromActiveEffects(
-          nextCombatantBase,
-        ),
+        nextCombatantWithEndState,
         expiring,
       );
       return [id, nextCombatant];
     }),
   );
-  return { value, flySpeedGrantEndFallCleanupFrames };
+  return {
+    value,
+    flySpeedGrantEndFallCleanupFrames,
+    spellEndTargetStatePromotionIds,
+  };
 }
 
 function concentrationBrokenEffectFrom(
@@ -1778,6 +1859,19 @@ function concentrationBrokenEffectFrom(
     effect.kind === "spellBaseArmorClass" &&
     effect.earlyEnds.some((earlyEnd) => earlyEnd.kind === "concentrationBroken")
   );
+}
+
+function currentActorEffectsExpiringFromConcentrationBreak(
+  state: BattleState,
+  combatantId: CombatantId,
+  concentration: BattleConcentration | null,
+): readonly BattleActiveEffect[] {
+  const currentActor = state.combatants.get(currentActorId(state));
+  return currentActor === undefined
+    ? []
+    : currentActor.activeEffects.filter((effect) =>
+        concentrationBrokenEffectFrom(effect, combatantId, concentration),
+      );
 }
 
 function nonConcentrationEffectFromBrokenSpellConcentration(

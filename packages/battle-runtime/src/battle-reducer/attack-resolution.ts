@@ -11,6 +11,8 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.d20-test-natural-one-reroll
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-slow-active-penalties
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-haste-positive
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.HASTE_POSITIVE_EFFECTS
 import type {
   ActionEconomyState,
   RuntimeActionResource,
@@ -18,6 +20,7 @@ import type {
 import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
 
 import {
+  actionResourceAllowsAdditionalAttacks,
   actionResourceAllows,
   canSpendAction,
   spendActionResourceAtIndex,
@@ -2355,6 +2358,7 @@ export function openClassFeatureExtraAttackResource(input: {
 }): BattleTurnResources {
   if (
     input.spentResource.source === "classFeatureExtraAttack" ||
+    !actionResourceAllowsAdditionalAttacks(input.spentResource) ||
     actorHasClassFeatureExtraAttackActionResource(input.state, input.actorId) ||
     combatantHasSlowActivePenalties(input.state.combatants.get(input.actorId))
   ) {

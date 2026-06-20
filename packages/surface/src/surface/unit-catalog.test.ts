@@ -5,10 +5,15 @@ import { describe, expect, test } from "vitest";
 
 import findFamiliarInput from "../../content/find_familiar.json";
 import flyInput from "../../content/fly.json";
+import glyphOfWardingInput from "../../content/glyph_of_warding.json";
+import hasteInput from "../../content/haste.json";
 import hypnoticPatternInput from "../../content/hypnotic_pattern.json";
+import magicCircleInput from "../../content/magic_circle.json";
 import magicWeaponInput from "../../content/magic_weapon.json";
+import meldIntoStoneInput from "../../content/meld_into_stone.json";
 import moonbeamInput from "../../content/moonbeam.json";
 import phantomSteedInput from "../../content/phantom_steed.json";
+import conjureAnimalsInput from "../../content/conjure_animals.json";
 import sorcererFontOfMagicInput from "../../content/sorcerer_font_of_magic.json";
 import sorcererMetamagicInput from "../../content/sorcerer_metamagic.json";
 import {
@@ -20,8 +25,11 @@ import {
   decodeUnitRecordSync,
   EffectAtomSchema,
   FeatherFallMitigationSchema,
+  GlyphWardingMechanicsSchema,
   JumpMovementReplacementSchema,
+  MagicCircleWardMechanicsSchema,
   OnHitTriggerMechanicsSchema,
+  StoneMergeMechanicsSchema,
   TargetSelectionSchema,
 } from "./schema.ts";
 import {
@@ -30,6 +38,7 @@ import {
   defineSrdUnitCollection,
   srdUnitCollection,
 } from "./unit-catalog.ts";
+import { CREATURE_TYPES } from "./types.ts";
 import type { Srd521Unit, SrdUnitCollection } from "./unit-catalog.ts";
 import type { WeaponRecord } from "./types.ts";
 
@@ -218,6 +227,7 @@ const requiredFirstVerticalUnitIds = [
   "shining_smite",
   "see_invisibility",
   "sleep",
+  "gaseous_form",
   "spider_climb",
   "suggestion",
   "zone_of_truth",
@@ -237,6 +247,7 @@ const requiredFirstVerticalUnitIds = [
   "enthrall",
   "find_traps",
   "gust_of_wind",
+  "haste",
   "expeditious_retreat",
   "feather_fall",
   "jump",
@@ -271,6 +282,90 @@ describe("SRD Unit catalog boundary", () => {
         expect(result.catalog.requireUnit(unitId).id).toBe(unitId);
       }
     }
+  });
+
+  test("keeps Haste's restricted extra action and spell-end lethargy explicit", () => {
+    const decoded = decodeUnitRecordSync(hasteInput);
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag !== "ok") return;
+    expect(result.catalog.requireUnit("haste")).toEqual(decoded);
+
+    expect(decoded).toMatchObject({
+      id: "haste",
+      kind: "spell",
+      mechanics: {
+        castingTime: { kind: "action" },
+        duration: {
+          kind: "concentration",
+          upTo: { amount: 1, unit: "minute" },
+        },
+        family: "activation",
+        level: 3,
+        phases: [
+          {
+            attachment: {
+              value: {
+                kind: "target",
+                selection: {
+                  disposition: "willing",
+                  mode: "one",
+                  targetKinds: ["creature"],
+                  visibility: "caster_can_see",
+                },
+              },
+            },
+            effects: [
+              {
+                denominator: 1,
+                kind: "set_speed_ratio",
+                numerator: 2,
+              },
+              {
+                delta: { amount: 2, kind: "fixed_number", sign: "+" },
+                kind: "modify_ac",
+              },
+              {
+                kind: "modify_roll_advantage",
+                mode: "advantage",
+                on: ["saving_throw"],
+                saveAbilityFilter: ["dex"],
+              },
+              {
+                kind: "grant_extra_action",
+                restriction: {
+                  actions: [
+                    {
+                      action: "attack",
+                      attackLimit: { count: 1, kind: "attack_count" },
+                    },
+                    { action: "dash" },
+                    { action: "disengage" },
+                    { action: "hide" },
+                    { action: "utilize" },
+                  ],
+                  kind: "allow_only",
+                },
+              },
+              {
+                condition: "incapacitated",
+                duration: "end_of_target_next_turn",
+                kind: "effect_end_target_state",
+                speed: { feet: 0, kind: "set_speed" },
+              },
+            ],
+            kind: "direct",
+          },
+        ],
+        range: { feet: 30, kind: "point" },
+        school: "transmutation",
+      },
+      provenance: {
+        kind: "srd-5.2.1",
+        section: "Spells/Descriptions-E-L#Haste",
+      },
+    });
   });
 
   test("keeps Fireball's SRD object-ignition clause in the catalog projection", () => {
@@ -1246,6 +1341,803 @@ describe("SRD Unit catalog boundary", () => {
     }
   });
 
+  test("keeps Gaseous Form's mist-cloud form facts in the catalog projection", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag !== "ok") return;
+
+    const gaseousForm = result.catalog.requireUnit("gaseous_form");
+    expect(gaseousForm.kind).toBe("spell");
+    if (
+      gaseousForm.kind !== "spell" ||
+      gaseousForm.mechanics.family !== "ongoing_effect"
+    ) {
+      throw new Error("Expected Gaseous Form to be an ongoing-effect spell.");
+    }
+
+    expect(gaseousForm.provenance).toEqual({
+      kind: "srd-5.2.1",
+      section: "Spells/Descriptions-E-L#Gaseous Form",
+    });
+    expect(gaseousForm.mechanics).toMatchObject({
+      level: 3,
+      school: "transmutation",
+      castingTime: { kind: "action" },
+      range: { kind: "touch" },
+      components: { v: true, s: true, m: "a bit of gauze" },
+      duration: {
+        kind: "concentration",
+        upTo: { unit: "hour", amount: 1 },
+      },
+      attachment: {
+        kind: "hole",
+        holeId: "gaseous_form_target",
+        label: "target",
+        value: {
+          kind: "target",
+          selection: {
+            mode: "choose_up_to",
+            count: {
+              kind: "linear",
+              base: 1,
+              perSlotAboveBase: 1,
+              baseLevel: 3,
+            },
+            targetKinds: ["creature"],
+            disposition: "willing",
+          },
+        },
+      },
+      operations: [
+        {
+          trigger: { kind: "passive" },
+          effect: {
+            kind: "transform_target",
+            newForm: {
+              kind: "spell_effect_mist_cloud",
+              transformedObjects: "worn_and_carried",
+              movement: {
+                kind: "replace_all_movement_methods",
+                speedKind: "fly",
+                feet: 10,
+                hover: true,
+              },
+              tableSpatial: {
+                creatureSpace: "can_enter_and_occupy_other_creature_space",
+                narrowOpenings: "can_pass_through",
+                liquids: "treat_as_solid_surfaces",
+              },
+              passive: {
+                damageResistances: ["bludgeoning", "piercing", "slashing"],
+                conditionImmunities: ["prone"],
+                savingThrowAdvantage: ["str", "dex", "con"],
+              },
+              activityLimits: {
+                communication: "cannot_talk",
+                objectManipulation: "cannot_manipulate_objects",
+                carriedOrHeldObjects:
+                  "cannot_be_dropped_used_or_interacted_with",
+                prohibitedActivities: ["attack", "spellcasting"],
+              },
+            },
+            revertTriggers: [
+              { kind: "zero_hp" },
+              { kind: "dismissed_by_target", action: "magic_action" },
+              { kind: "spell_ends" },
+            ],
+          },
+        },
+      ],
+    });
+  });
+
+  test("decodes Glyph of Warding with durable inscription, trigger refinement, and both release branches", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag !== "ok") return;
+
+    const glyph = result.catalog.requireUnit("glyph_of_warding");
+    expect(glyph.kind).toBe("spell");
+    if (glyph.kind !== "spell") return;
+    expect(glyph.mechanics.family).toBe("glyph_warding");
+    if (glyph.mechanics.family !== "glyph_warding") return;
+
+    expect(glyph.provenance).toEqual({
+      kind: "srd-5.2.1",
+      section: "Spells/Descriptions-E-L#Glyph of Warding",
+    });
+    expect(glyph.mechanics).toMatchObject({
+      level: 3,
+      school: "abjuration",
+      castingTime: { kind: "hours", amount: 1, ritual: false },
+      range: { kind: "touch" },
+      components: {
+        v: true,
+        s: true,
+        m: "powdered diamond worth 200+ GP, which the spell consumes",
+        materialCostGp: 200,
+        materialConsumed: true,
+      },
+      duration: { kind: "permanent", endsOn: ["dispel"] },
+    });
+
+    expect(glyph.mechanics.occurrence).toEqual({
+      kind: "durable_glyph_occurrence",
+      inscriptionAnchor: {
+        chooser: "caster",
+        surface: { kind: "surface", inscriptionSite: "on_surface" },
+        closeableObject: {
+          kind: "closeable_object",
+          inscriptionSite: "within_object",
+          concealmentMethod: "object_can_be_closed",
+        },
+      },
+      coverage: {
+        maxDiameterFeet: 10,
+        placement: {
+          kind: "table_witnessed_covered_area_on_inscribed_anchor",
+          constraint: "within_max_diameter",
+        },
+      },
+      castLocation: { kind: "table_witnessed_cast_location" },
+      movementInvalidation: {
+        movedSubject: "inscribed_surface_or_object",
+        distanceFrom: "cast_location",
+        moreThanFeet: 10,
+        outcome: "glyph_breaks_spell_ends_without_triggering",
+      },
+      concealment: {
+        visibility: "nearly_imperceptible",
+        notice: {
+          kind: "wisdom_perception_check",
+          ability: "wis",
+          skill: "perception",
+          dc: { kind: "caster_spell_save_dc" },
+          owner: "table_witnessed_glyph_notice",
+        },
+      },
+    });
+
+    expect(glyph.mechanics.trigger).toMatchObject({
+      kind: "caster_defined_glyph_trigger",
+      setWhen: "glyph_inscribed",
+      triggerOccurrence: { kind: "table_witnessed_trigger_occurrence" },
+      commonEvents: {
+        surface: [
+          "touching_glyph",
+          "stepping_on_glyph",
+          "removing_covering_object",
+          "approaching_within_caster_set_distance",
+        ],
+        closeableObject: ["opening_object", "seeing_glyph"],
+      },
+      refinement: {
+        activationFilter: {
+          kind: "creature_type",
+          chooser: "caster",
+          typeChoice: {
+            kind: "choice",
+            label: "triggering creature types",
+            options: CREATURE_TYPES,
+          },
+        },
+        nonTriggerExclusion: {
+          kind: "password_or_other_condition",
+          chooser: "caster",
+        },
+      },
+      onTriggered: "spell_ends",
+    });
+
+    expect(glyph.mechanics.release.explosiveRune).toEqual({
+      kind: "explosive_rune",
+      area: { kind: "sphere", radiusFeet: 20, origin: "glyph" },
+      save: {
+        ability: "dex",
+        dc: { kind: "caster_spell_save_dc" },
+        onSuccess: { kind: "half_damage" },
+      },
+      damage: {
+        damageType: {
+          kind: "hole",
+          holeId: "glyph_of_warding_explosive_rune_damage_type",
+          label: "explosive rune damage type",
+          value: {
+            kind: "choice",
+            label: "explosive rune damage type",
+            options: ["acid", "cold", "fire", "lightning", "thunder"],
+          },
+        },
+        amount: {
+          kind: "linear_per_level",
+          axis: "slot",
+          base: { dice: 5, dieSize: 8 },
+          perLevel: { dice: 1 },
+          startingAtLevel: 3,
+        },
+      },
+    });
+    expect(glyph.mechanics.release.spellGlyph).toEqual({
+      kind: "spell_glyph",
+      storage: {
+        spellAccess: "prepared_spell",
+        castAsPartOfCreatingGlyph: true,
+        immediateEffect: "none",
+        maxStoredSpellLevel: {
+          baseMaxLevel: 3,
+          upcastMaxLevel: "same_as_cast_slot_level",
+        },
+        targetShape: [
+          { kind: "single_creature_target" },
+          { kind: "area_target" },
+        ],
+      },
+      release: {
+        when: "glyph_triggered",
+        retargeting: {
+          singleCreatureSpellTarget: "triggering_creature",
+          areaSpellOrigin: "centered_on_triggering_creature",
+        },
+        hostilePlacement: {
+          appliesTo: ["summoned_hostile_creatures", "harmful_objects", "traps"],
+          placement: "as_close_as_possible_to_triggering_creature",
+          attackTarget: "triggering_creature",
+        },
+        concentration: {
+          ifStoredSpellRequiresConcentration: "lasts_full_duration",
+        },
+      },
+    });
+  });
+
+  test("decodes Magic Circle with warded Cylinder, direction choice, crossing gates, and protected-target facts", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag !== "ok") return;
+
+    const magicCircle = result.catalog.requireUnit("magic_circle");
+    expect(magicCircle.kind).toBe("spell");
+    if (magicCircle.kind !== "spell") return;
+    expect(magicCircle.mechanics.family).toBe("magic_circle_ward");
+    if (magicCircle.mechanics.family !== "magic_circle_ward") return;
+
+    expect(magicCircle.provenance).toEqual({
+      kind: "srd-5.2.1",
+      section: "Spells/Descriptions-M-P#Magic Circle",
+    });
+    expect(magicCircle.mechanics).toMatchObject({
+      level: 3,
+      school: "abjuration",
+      castingTime: { kind: "minutes", amount: 1, ritual: false },
+      range: { kind: "point", feet: 10 },
+      components: {
+        v: true,
+        s: true,
+        m: "salt and powdered silver worth 100+ GP, which the spell consumes",
+        materialCostGp: 100,
+        materialConsumed: true,
+      },
+      duration: {
+        kind: "timed",
+        value: {
+          unit: "hour",
+          amount: 1,
+          upcastTiers: [
+            { atSlot: 4, amount: 2 },
+            { atSlot: 5, amount: 3 },
+            { atSlot: 6, amount: 4 },
+            { atSlot: 7, amount: 5 },
+            { atSlot: 8, amount: 6 },
+            { atSlot: 9, amount: 7 },
+          ],
+        },
+      },
+    });
+
+    expect(magicCircle.mechanics.occurrence).toEqual({
+      kind: "warded_cylinder_occurrence",
+      area: {
+        shape: { kind: "cylinder", radiusFeet: 10, heightFeet: 20 },
+        origin: {
+          kind: "visible_point_on_ground_within_spell_range",
+          chooser: "caster",
+        },
+      },
+      runes: {
+        appearWhere: "cylinder_intersects_floor_or_other_surface",
+      },
+      tableSpatial: {
+        placement: "table_witnessed_visible_ground_point",
+        cylinderMembership: "table_witnessed_cylinder_membership",
+        insideProtectedTargets: "table_witnessed_targets_inside_cylinder",
+        outsideProtectedTargets: "table_witnessed_targets_outside_cylinder",
+        willingNonmagicalEntryAttempt:
+          "table_witnessed_willing_nonmagical_entry_attempt",
+        nonmagicalExitAttempt: "table_witnessed_nonmagical_exit_attempt",
+        teleportationCrossing: "table_witnessed_teleportation_crossing",
+        interplanarTravelCrossing:
+          "table_witnessed_interplanar_travel_crossing",
+      },
+    });
+    expect(magicCircle.mechanics.affectedCreatureTypes).toEqual({
+      kind: "one_or_more_creature_type_choice",
+      chooser: "caster",
+      label: "affected creature types",
+      selection: "one_or_more",
+      options: ["celestial", "elemental", "fey", "fiend", "undead"],
+    });
+    expect(magicCircle.mechanics.direction).toEqual({
+      chooser: "caster",
+      defaultDirection: {
+        kind: "normal",
+        affectedCreatureCrossing: {
+          blockedCrossing: "willingly_enter_cylinder",
+          nonmagicalMeans: "prevented",
+          magicalMeans: {
+            methods: ["teleportation", "interplanar_travel"],
+            ability: "cha",
+            dc: { kind: "caster_spell_save_dc" },
+          },
+        },
+        protectedTargets: {
+          location: "inside_cylinder",
+          effects: {
+            attackRollDisadvantage: {
+              attacker: "affected_creature",
+              target: "protected_target",
+              on: ["attack_roll"],
+            },
+            sourceScopedPrevention: {
+              source: "affected_creature",
+              possession: "prevented",
+              conditions: ["charmed", "frightened"],
+            },
+          },
+        },
+      },
+      reversedDirection: {
+        kind: "reversed",
+        affectedCreatureCrossing: {
+          blockedCrossing: "leave_cylinder",
+          nonmagicalMeans: "prevented",
+          magicalMeans: {
+            methods: ["teleportation", "interplanar_travel"],
+            ability: "cha",
+            dc: { kind: "caster_spell_save_dc" },
+          },
+        },
+        protectedTargets: {
+          location: "outside_cylinder",
+          effects: {
+            attackRollDisadvantage: {
+              attacker: "affected_creature",
+              target: "protected_target",
+              on: ["attack_roll"],
+            },
+            sourceScopedPrevention: {
+              source: "affected_creature",
+              possession: "prevented",
+              conditions: ["charmed", "frightened"],
+            },
+          },
+        },
+      },
+    });
+  });
+
+  test("rejects Magic Circle shapes that lose fixed SRD ward facts", () => {
+    const magicCircle = decodeUnitRecordSync(magicCircleInput);
+    expect(magicCircle.kind).toBe("spell");
+    if (magicCircle.kind !== "spell") return;
+    expect(magicCircle.mechanics.family).toBe("magic_circle_ward");
+    if (magicCircle.mechanics.family !== "magic_circle_ward") return;
+
+    const decode = Schema.decodeUnknownEither(MagicCircleWardMechanicsSchema);
+    const mechanics = magicCircle.mechanics;
+
+    expect(
+      Either.isLeft(
+        decode({
+          ...mechanics,
+          affectedCreatureTypes: {
+            ...mechanics.affectedCreatureTypes,
+            options: ["fiend"],
+          },
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        decode({
+          ...mechanics,
+          affectedCreatureTypes: {
+            ...mechanics.affectedCreatureTypes,
+            options: ["celestial", "elemental", "fey", "fiend", "fiend"],
+          },
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        decode({
+          ...mechanics,
+          occurrence: {
+            ...mechanics.occurrence,
+            area: {
+              ...mechanics.occurrence.area,
+              shape: {
+                ...mechanics.occurrence.area.shape,
+                heightFeet: 10,
+              },
+            },
+          },
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        decode({
+          ...mechanics,
+          direction: {
+            ...mechanics.direction,
+            defaultDirection: {
+              ...mechanics.direction.defaultDirection,
+              affectedCreatureCrossing: {
+                ...mechanics.direction.defaultDirection
+                  .affectedCreatureCrossing,
+                blockedCrossing: "enter_cylinder",
+              },
+            },
+          },
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        decode({
+          ...mechanics,
+          direction: {
+            ...mechanics.direction,
+            defaultDirection: {
+              ...mechanics.direction.defaultDirection,
+              protectedTargets: {
+                ...mechanics.direction.defaultDirection.protectedTargets,
+                location: "outside_cylinder",
+              },
+            },
+          },
+        }),
+      ),
+    ).toBe(true);
+  });
+
+  test("decodes Meld into Stone with stone containment, hidden occupancy, and expulsion facts", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag !== "ok") return;
+
+    const meldIntoStone = result.catalog.requireUnit("meld_into_stone");
+    expect(meldIntoStone.kind).toBe("spell");
+    if (meldIntoStone.kind !== "spell") return;
+    expect(meldIntoStone.mechanics.family).toBe("stone_merge");
+    if (meldIntoStone.mechanics.family !== "stone_merge") return;
+
+    expect(meldIntoStone.provenance).toEqual({
+      kind: "srd-5.2.1",
+      section: "Spells/Descriptions-M-P#Meld into Stone",
+    });
+    expect(meldIntoStone.mechanics).toMatchObject({
+      level: 3,
+      school: "transmutation",
+      castingTime: { kind: "action", ritual: true },
+      range: { kind: "touch" },
+      components: { v: true, s: true, m: false },
+      duration: {
+        kind: "timed",
+        value: { unit: "hour", amount: 8 },
+      },
+    });
+    expect(meldIntoStone.mechanics.target).toEqual({
+      kind: "stone_object_or_surface",
+      anchor: {
+        chooser: "caster",
+        object: { kind: "stone_object", material: "stone" },
+        surface: { kind: "stone_surface", material: "stone" },
+      },
+      contact: "caster_must_touch_stone",
+      containment: {
+        subject: "caster_body_and_equipment",
+        requirement: "large_enough_to_fully_contain_subject",
+      },
+      tableTerrainObject: {
+        stoneSize: "table_witnessed_stone_size",
+        stoneShape: "table_witnessed_stone_shape",
+        stoneMaterial: "table_witnessed_stone_material",
+        entryLocation: "table_witnessed_entry_location",
+      },
+    });
+    expect(meldIntoStone.mechanics.occupancy).toEqual({
+      kind: "hidden_merged_occupancy",
+      subject: "caster_and_equipment",
+      state: "merged_with_stone",
+      detection: {
+        visiblePresence: "none",
+        nonmagicalSenses: "not_detectable",
+      },
+      outsidePerception: {
+        sight: "cannot_see_outside_stone",
+        hearing: {
+          kind: "wisdom_perception_check_disadvantage",
+          ability: "wis",
+          skill: "perception",
+          stimulus: "sounds_outside_stone",
+          mode: "disadvantage",
+        },
+      },
+      timeAwareness: "aware_of_passage_of_time",
+      selfSpellcasting: {
+        target: "self",
+        permission: "can_cast_spells_on_self",
+      },
+      movement: {
+        voluntaryExit: {
+          cost: { kind: "movement", feet: 5 },
+          location: "entry_location",
+          outcome: "spell_ends",
+        },
+        otherwise: "cannot_move",
+      },
+    });
+    expect(meldIntoStone.mechanics.stoneEventResponses).toEqual({
+      tableTerrainObject: {
+        stoneDamageEvents:
+          "table_witnessed_stone_damage_destruction_transmutation_events",
+        fitAfterShapeChange: "table_witnessed_fit_after_shape_change",
+        closestUnoccupiedSpace:
+          "table_witnessed_closest_unoccupied_space_to_entry_location",
+      },
+      minorPhysicalDamage: {
+        trigger: "minor_physical_damage",
+        outcome: "no_harm_to_merged_creature",
+      },
+      partialDestructionOrShapeChange: {
+        triggers: ["partial_destruction", "shape_change_no_longer_fits"],
+        damage: {
+          damageType: "force",
+          amount: { kind: "fixed", expr: { dice: 6, dieSize: 6 } },
+        },
+        expulsion: {
+          kind: "stone_merge_expulsion",
+          placement: {
+            kind: "closest_unoccupied_space_to_entry_location",
+            owner: "table_witnessed_closest_unoccupied_space",
+          },
+          condition: "prone",
+        },
+      },
+      completeDestructionOrTransmutation: {
+        triggers: [
+          "complete_destruction",
+          "transmutation_to_different_substance",
+        ],
+        damage: {
+          damageType: "force",
+          amount: {
+            kind: "fixed",
+            expr: { dice: 0, dieSize: 1, flat: 50 },
+          },
+        },
+        expulsion: {
+          kind: "stone_merge_expulsion",
+          placement: {
+            kind: "closest_unoccupied_space_to_entry_location",
+            owner: "table_witnessed_closest_unoccupied_space",
+          },
+          condition: "prone",
+        },
+      },
+    });
+  });
+
+  test("rejects Meld into Stone shapes that lose fixed SRD stone-merge facts", () => {
+    const meldIntoStone = decodeUnitRecordSync(meldIntoStoneInput);
+    expect(meldIntoStone.kind).toBe("spell");
+    if (meldIntoStone.kind !== "spell") return;
+    expect(meldIntoStone.mechanics.family).toBe("stone_merge");
+    if (meldIntoStone.mechanics.family !== "stone_merge") return;
+
+    const decode = Schema.decodeUnknownEither(StoneMergeMechanicsSchema);
+    const mechanics = meldIntoStone.mechanics;
+
+    expect(
+      Either.isLeft(
+        decode({
+          ...mechanics,
+          target: {
+            ...mechanics.target,
+            containment: {
+              ...mechanics.target.containment,
+              requirement: "large_enough_to_contain_creature",
+            },
+          },
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        decode({
+          ...mechanics,
+          occupancy: {
+            ...mechanics.occupancy,
+            outsidePerception: {
+              ...mechanics.occupancy.outsidePerception,
+              hearing: {
+                ...mechanics.occupancy.outsidePerception.hearing,
+                mode: "advantage",
+              },
+            },
+          },
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        decode({
+          ...mechanics,
+          occupancy: {
+            ...mechanics.occupancy,
+            movement: {
+              ...mechanics.occupancy.movement,
+              voluntaryExit: {
+                ...mechanics.occupancy.movement.voluntaryExit,
+                cost: {
+                  ...mechanics.occupancy.movement.voluntaryExit.cost,
+                  feet: 10,
+                },
+              },
+            },
+          },
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        decode({
+          ...mechanics,
+          stoneEventResponses: {
+            ...mechanics.stoneEventResponses,
+            partialDestructionOrShapeChange: {
+              ...mechanics.stoneEventResponses.partialDestructionOrShapeChange,
+              damage: {
+                ...mechanics.stoneEventResponses.partialDestructionOrShapeChange
+                  .damage,
+                amount: {
+                  ...mechanics.stoneEventResponses
+                    .partialDestructionOrShapeChange.damage.amount,
+                  expr: {
+                    ...mechanics.stoneEventResponses
+                      .partialDestructionOrShapeChange.damage.amount.expr,
+                    dieSize: 8,
+                  },
+                },
+              },
+            },
+          },
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        decode({
+          ...mechanics,
+          stoneEventResponses: {
+            ...mechanics.stoneEventResponses,
+            completeDestructionOrTransmutation: {
+              ...mechanics.stoneEventResponses
+                .completeDestructionOrTransmutation,
+              expulsion: {
+                ...mechanics.stoneEventResponses
+                  .completeDestructionOrTransmutation.expulsion,
+                condition: "restrained",
+              },
+            },
+          },
+        }),
+      ),
+    ).toBe(true);
+  });
+
+  test("rejects Glyph of Warding shapes that lose fixed SRD branch facts", () => {
+    const glyph = decodeUnitRecordSync(glyphOfWardingInput);
+    expect(glyph.kind).toBe("spell");
+    if (glyph.kind !== "spell") return;
+    expect(glyph.mechanics.family).toBe("glyph_warding");
+    if (glyph.mechanics.family !== "glyph_warding") return;
+
+    const decode = Schema.decodeUnknownEither(GlyphWardingMechanicsSchema);
+    const mechanics = glyph.mechanics;
+
+    expect(
+      Either.isLeft(
+        decode({
+          ...mechanics,
+          occurrence: {
+            ...mechanics.occurrence,
+            coverage: {
+              ...mechanics.occurrence.coverage,
+              maxDiameterFeet: 20,
+            },
+          },
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        decode({
+          ...mechanics,
+          release: {
+            ...mechanics.release,
+            explosiveRune: {
+              ...mechanics.release.explosiveRune,
+              damage: {
+                ...mechanics.release.explosiveRune.damage,
+                damageType: {
+                  kind: "choice",
+                  label: "explosive rune damage type",
+                  options: ["acid", "cold", "fire", "lightning", "thunder"],
+                },
+              },
+            },
+          },
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        decode({
+          ...mechanics,
+          release: {
+            ...mechanics.release,
+            explosiveRune: {
+              ...mechanics.release.explosiveRune,
+              damage: {
+                ...mechanics.release.explosiveRune.damage,
+                damageType: {
+                  ...mechanics.release.explosiveRune.damage.damageType,
+                  value: {
+                    ...mechanics.release.explosiveRune.damage.damageType.value,
+                    options: ["fire"],
+                  },
+                },
+              },
+            },
+          },
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        decode({
+          ...mechanics,
+          release: {
+            ...mechanics.release,
+            spellGlyph: {
+              ...mechanics.release.spellGlyph,
+              storage: {
+                ...mechanics.release.spellGlyph.storage,
+                immediateEffect: "stored_spell_takes_effect_now",
+              },
+            },
+          },
+        }),
+      ),
+    ).toBe(true);
+  });
+
   test("keeps Druid Wild Shape as catalog-only shape-shifting metadata", () => {
     const result = buildUnitCatalog({ collections: [srdUnitCollection] });
 
@@ -1774,6 +2666,102 @@ describe("SRD Unit catalog boundary", () => {
       expect(op.effect).toMatchObject({
         kind: "save_gate",
         onFail: shapeShiftOnFail,
+      });
+    }
+  });
+
+  test("decodes Conjure Animals with pack occurrence, movement, proximity, optional save, shared limiter, and slot scaling", () => {
+    const conjureAnimals = decodeUnitRecordSync(conjureAnimalsInput);
+    expect(conjureAnimals.kind).toBe("spell");
+    if (conjureAnimals.kind !== "spell") return;
+    expect(conjureAnimals.provenance).toEqual({
+      kind: "srd-5.2.1",
+      section: "Spells/Descriptions-A-D#Conjure Animals",
+    });
+    expect(conjureAnimals.mechanics.family).toBe("ongoing_effect");
+    if (conjureAnimals.mechanics.family !== "ongoing_effect") return;
+
+    expect(conjureAnimals.mechanics.attachment).toEqual({
+      kind: "hole",
+      holeId: "conjure_animals_pack",
+      label: "Large spectral intangible animal pack",
+      value: {
+        kind: "spell_spatial_manifestation",
+        manifestation: {
+          creatureSize: "large",
+          appearance: "spectral_animals_pack",
+          tangibility: "intangible",
+          formChoice: { chooser: "caster", domain: "animal_form" },
+        },
+        placement: {
+          kind: "visible_unoccupied_space_within_range",
+          chooser: "caster",
+        },
+      },
+    });
+
+    const [strengthAdvantage, reposition, ...saveOps] =
+      conjureAnimals.mechanics.operations;
+    expect(strengthAdvantage).toEqual({
+      trigger: { kind: "passive" },
+      predicate: { kind: "caster_within_feet_of_attachment", feet: 5 },
+      effect: {
+        kind: "modify_roll_advantage",
+        mode: "advantage",
+        affects: "self_roll",
+        on: ["saving_throw"],
+        saveAbilityFilter: ["str"],
+      },
+    });
+    expect(reposition).toEqual({
+      trigger: { kind: "on_caster_moves_on_turn" },
+      effect: {
+        kind: "reposition_attachment",
+        maxMoveFeet: 30,
+        destination: { kind: "visible_unoccupied_space", chooser: "caster" },
+      },
+    });
+
+    expect(saveOps.map((op) => op.trigger)).toEqual([
+      {
+        kind: "on_spatial_manifestation_moves_within_distance_of_creature",
+        distanceFeet: 10,
+        requiresVisibleCreature: true,
+      },
+      {
+        kind: "on_creature_enters_distance_of_spatial_manifestation",
+        distanceFeet: 10,
+        requiresVisibleCreature: true,
+      },
+      {
+        kind: "on_creature_ends_turn_within_distance_of_spatial_manifestation",
+        distanceFeet: 10,
+        requiresVisibleCreature: true,
+      },
+    ]);
+
+    for (const op of saveOps) {
+      expect(op.usageLimit).toEqual({
+        kind: "once_per_turn",
+        limitGroup: "conjure_animals_save_per_turn",
+      });
+      expect(op.effect).toMatchObject({
+        kind: "save_gate",
+        ability: "dex",
+        dc: { kind: "caster_spell_save_dc" },
+        onSuccess: { kind: "none" },
+        saveApplication: { kind: "caster_may_force_target_save" },
+        onFail: {
+          kind: "damage",
+          damageType: "slashing",
+          amount: {
+            kind: "linear_per_level",
+            axis: "slot",
+            base: { dice: 3, dieSize: 10 },
+            perLevel: { dice: 1 },
+            startingAtLevel: 3,
+          },
+        },
       });
     }
   });
@@ -6824,6 +7812,7 @@ describe("SRD Unit catalog boundary", () => {
       },
     });
     expect(phantomSteed.mechanics.dismissal).toEqual({
+      onSpawnedCreatureDamage: "spell_ends",
       onSpellEnd: {
         kind: "gradual_fade",
         riderDismountGrace: { unit: "minute", amount: 1 },

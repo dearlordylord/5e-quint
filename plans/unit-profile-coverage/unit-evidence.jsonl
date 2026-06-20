@@ -483,3 +483,6 @@
 {"unitId":"species_gnome_gnomish_lineage","evidence":{"tag":"deterministic-admission-projection","taskId":"LT4-B03-GNOME-LINEAGE-TRAIT-PROJECTION","ownerPath":"packages/character-creation-runtime/src/index.test.ts"}}
 {"unitId":"species_gnome","evidence":{"tag":"deterministic-admission-projection","taskId":"LT4-B04-GNOME-SPECIES-ADMISSION-EVIDENCE","ownerPath":"packages/character-creation-runtime/src/index.test.ts"}}
 {"unitId":"species_gnome_gnomish_lineage","evidence":{"tag":"deterministic-admission-projection","taskId":"LT4-B04-GNOME-SPECIES-ADMISSION-EVIDENCE","ownerPath":"packages/character-creation-runtime/src/index.test.ts"}}
+{"unitId":"haste","evidence":{"tag":"deterministic-admission-projection","taskId":"L5-C17-HASTE-POSITIVE-RUNTIME","ownerPath":"packages/battle-runtime/src/unit-profile-admission-haste-positive.test.ts"}}
+{"unitId":"haste","evidence":{"tag":"deterministic-admission-projection","taskId":"L5-C18-HASTE-LETHARGY-RUNTIME","ownerPath":"packages/battle-runtime/src/unit-profile-admission-haste-positive.test.ts"}}
+{"unitId":"glyph_of_warding","evidence":{"tag":"deterministic-admission-projection","taskId":"L3-FOLLOWUP-GLYPH-DURABLE-OCCURRENCE","ownerPath":"packages/battle-runtime/src/unit-profile-admission-glyph-of-warding.test.ts"}}
