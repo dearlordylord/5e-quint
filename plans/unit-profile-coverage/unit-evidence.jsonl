@@ -483,3 +483,4 @@
 {"unitId":"glyph_of_warding","evidence":{"tag":"deterministic-admission-projection","taskId":"L3-FOLLOWUP-GLYPH-STORED-REMAINING-CONCENTRATION","ownerPath":"packages/battle-runtime/src/unit-profile-admission-glyph-of-warding.test.ts"}}
 {"unitId":"glyph_of_warding","evidence":{"tag":"deterministic-admission-projection","taskId":"L3-FOLLOWUP-GLYPH-STORED-SUMMON-OBJECT-PLACEMENT","ownerPath":"packages/battle-runtime/src/unit-profile-admission-glyph-of-warding.test.ts"}}
 {"unitId":"glyph_of_warding","evidence":{"tag":"deterministic-admission-projection","taskId":"L3-FOLLOWUP-GLYPH-STORED-AREA-ONGOING-CONCENTRATION","ownerPath":"packages/battle-runtime/src/unit-profile-admission-glyph-of-warding.test.ts"}}
+{"unitId":"glyph_of_warding","evidence":{"tag":"deterministic-admission-projection","taskId":"L3-FOLLOWUP-GLYPH-STORED-AREA-CONTROL-CONCENTRATION","ownerPath":"packages/battle-runtime/src/unit-profile-admission-glyph-of-warding.test.ts"}}

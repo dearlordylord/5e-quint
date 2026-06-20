@@ -1,4 +1,4 @@
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-hypnotic-pattern-control
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-hypnotic-pattern-control spell.invocation-glyph-stored-concentration-full-duration
 //
 // Hypnotic Pattern control profile: action-time level-3+ Spell Slot casting,
 // table-supplied point-origin Cube affected targets with sight witnesses,
@@ -27,6 +27,11 @@ import type {
   BattleState,
   SupportedSpellInvocation,
 } from "../../battle-reducer.ts";
+import {
+  GLYPH_STORED_AREA_CONTROL_PROCEDURES,
+  type GlyphStoredAreaControlInvocation,
+  type GlyphStoredAreaControlProcedure,
+} from "../../active-effect/types.ts";
 import {
   maybeOpenInterruptWindow,
   snapshotBattle,
@@ -82,6 +87,7 @@ type HypnoticPatternSpellInvocation = Extract<
   SupportedSpellInvocation,
   { readonly procedure: "hypnoticPattern" }
 >;
+type StoredGlyphAreaControlSpellInvocation = GlyphStoredAreaControlInvocation;
 
 type HypnoticPatternPhase = Extract<
   ActivationPhase,
@@ -104,7 +110,58 @@ type HypnoticPatternResolveInput = SpellProcedureProfileResolveInput<
   ActionSpellBattleResolutionInput
 > & {
   readonly metamagicApplications?: readonly CharacterBattleMetamagicOptionFact[];
+  readonly releaseResource?: HypnoticPatternReleaseResource;
 };
+type HypnoticPatternReleaseResource =
+  | {
+      readonly kind: "ordinarySpellCast";
+      readonly metamagicApplications?: readonly CharacterBattleMetamagicOptionFact[];
+    }
+  | {
+      readonly kind: "storedGlyphSpellRelease";
+      readonly selfOriginAreaAnchorId: CombatantId;
+    };
+
+export function isGlyphStoredAreaControlSpellInvocation(
+  invocation: SupportedSpellInvocation,
+): invocation is StoredGlyphAreaControlSpellInvocation {
+  return (
+    isGlyphStoredAreaControlProcedure(invocation.procedure) &&
+    invocation.spell.mechanics.duration.kind === "concentration"
+  );
+}
+
+export function isGlyphStoredAreaControlProcedure(
+  procedure: SupportedSpellInvocation["procedure"],
+): procedure is GlyphStoredAreaControlProcedure {
+  return GLYPH_STORED_AREA_CONTROL_PROCEDURES.some(
+    (candidate) => candidate === procedure,
+  );
+}
+
+export function resolveStoredGlyphAreaControlSpellRelease(input: {
+  readonly input: ActionSpellBattleResolutionInput;
+  readonly actorId: CombatantId;
+  readonly invocation: StoredGlyphAreaControlSpellInvocation;
+  readonly fillSet: Extract<
+    SpellProcedureProfileResolveInput<
+      HypnoticPatternSpellInvocation
+    >["fillSet"],
+    { readonly tag: "ok" }
+  >;
+  readonly selfOriginAreaAnchorId: CombatantId;
+}): BattleResolutionResult {
+  return resolveHypnoticPattern({
+    input: input.input,
+    actorId: input.actorId,
+    invocation: input.invocation,
+    fillSet: input.fillSet,
+    releaseResource: {
+      kind: "storedGlyphSpellRelease",
+      selfOriginAreaAnchorId: input.selfOriginAreaAnchorId,
+    },
+  });
+}
 
 function admitHypnoticPattern(
   spell: HypnoticPatternSpellInvocation["spell"],
@@ -341,6 +398,70 @@ function hypnoticPatternCastSummaryWithSavingThrow(
   ).toUpperCase()} Saving Throws.`;
 }
 
+function ordinaryHypnoticPatternReleaseResource(
+  metamagicApplications:
+    | readonly CharacterBattleMetamagicOptionFact[]
+    | undefined = undefined,
+): HypnoticPatternReleaseResource {
+  return metamagicApplications === undefined
+    ? { kind: "ordinarySpellCast" }
+    : { kind: "ordinarySpellCast", metamagicApplications };
+}
+
+function hypnoticPatternReleaseResourceState(input: {
+  readonly state: BattleState;
+  readonly actorId: CombatantId;
+  readonly invocation: HypnoticPatternSpellInvocation;
+  readonly errorState: BattleState;
+  readonly resource: HypnoticPatternReleaseResource;
+}): Extract<BattleResolutionResult, { readonly tag: "resolved" | "invalid" }> {
+  if (input.resource.kind === "storedGlyphSpellRelease") {
+    return {
+      tag: "resolved",
+      state: input.state,
+      snapshot: snapshotBattle(input.state),
+    };
+  }
+  return spendSpellCastResources({
+    state: input.state,
+    actorId: input.actorId,
+    invocation: input.invocation,
+    errorState: input.errorState,
+    startConcentration: false,
+    ...(input.resource.metamagicApplications === undefined
+      ? {}
+      : { metamagicApplications: input.resource.metamagicApplications }),
+  });
+}
+
+function storedGlyphAreaControlReleaseUsesOrdinaryConcentration(
+  releaseResource: HypnoticPatternReleaseResource | undefined,
+): boolean {
+  return releaseResource?.kind !== "storedGlyphSpellRelease";
+}
+
+function invalidStoredGlyphAreaCenterResult(input: {
+  readonly state: BattleState;
+  readonly savingThrowOutcomes: BattleSpellSavingThrowOutcomeValue;
+  readonly releaseResource: HypnoticPatternReleaseResource | undefined;
+}): Extract<BattleResolutionResult, { readonly tag: "invalid" }> | null {
+  if (input.releaseResource?.kind !== "storedGlyphSpellRelease") {
+    return null;
+  }
+  if (
+    "area" in input.savingThrowOutcomes &&
+    input.savingThrowOutcomes.area.originAnchorId ===
+      input.releaseResource.selfOriginAreaAnchorId
+  ) {
+    return null;
+  }
+  return invalidResult(
+    input.state,
+    "invalidFill",
+    "Stored glyph area release must use a spell area centered on the triggering creature.",
+  );
+}
+
 function resolveHypnoticPattern(
   input: HypnoticPatternResolveInput,
 ): BattleResolutionResult {
@@ -418,6 +539,14 @@ function resolveHypnoticPattern(
       areaWitnessValidation,
     );
   }
+  const invalidStoredGlyphCenter = invalidStoredGlyphAreaCenterResult({
+    state: input.input.state,
+    savingThrowOutcomes: input.fillSet.savingThrowOutcomes,
+    releaseResource: input.releaseResource,
+  });
+  if (invalidStoredGlyphCenter !== null) {
+    return invalidStoredGlyphCenter;
+  }
   const affectedTargetIds = input.fillSet.savingThrowOutcomes.outcomes.map(
     (outcome) => outcome.targetId,
   );
@@ -436,6 +565,12 @@ function resolveHypnoticPattern(
           subject:
             input.input.reactionContinuationSubject ?? input.input.subject,
           fills: input.input.fills,
+          ...(input.input.glyphStoredSpellReleaseReplay === undefined
+            ? {}
+            : {
+                glyphStoredSpellReleaseReplay:
+                  input.input.glyphStoredSpellReleaseReplay,
+              }),
         },
       },
       input.input.handledInterruptTrigger,
@@ -444,15 +579,14 @@ function resolveHypnoticPattern(
       return saveFailedReactionWindow;
     }
   }
-  const resourced = spendSpellCastResources({
+  const resourced = hypnoticPatternReleaseResourceState({
     state: input.input.state,
     actorId: input.actorId,
     invocation: input.invocation,
     errorState: input.input.state,
-    startConcentration: false,
-    ...(input.metamagicApplications === undefined
-      ? {}
-      : { metamagicApplications: input.metamagicApplications }),
+    resource:
+      input.releaseResource ??
+      ordinaryHypnoticPatternReleaseResource(input.metamagicApplications),
   });
   if (resourced.tag === "invalid") {
     return resourced;
@@ -464,7 +598,10 @@ function resolveHypnoticPattern(
     input.invocation,
   );
   const concentrationState =
-    effected.appliedTargetIds.length === 0
+    effected.appliedTargetIds.length === 0 ||
+    !storedGlyphAreaControlReleaseUsesOrdinaryConcentration(
+      input.releaseResource,
+    )
       ? effected.state
       : startSpellEffectConcentration(
           effected.state,

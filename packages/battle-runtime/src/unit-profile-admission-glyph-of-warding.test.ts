@@ -5,6 +5,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3-FOLLOWUP-GLYPH-STORED-SUMMON-OBJECT-PLACEMENT glyph_of_warding
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3-FOLLOWUP-GLYPH-STORED-REMAINING-CONCENTRATION glyph_of_warding
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3-FOLLOWUP-GLYPH-STORED-AREA-ONGOING-CONCENTRATION glyph_of_warding
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3-FOLLOWUP-GLYPH-STORED-AREA-CONTROL-CONCENTRATION glyph_of_warding
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-glyph-durable-occurrence spell.invocation-glyph-explosive-rune-release spell.invocation-glyph-stored-spell-release spell.invocation-glyph-stored-concentration-full-duration spell.invocation-glyph-stored-summon-object-placement
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.GLYPH_DURABLE_OCCURRENCE_LIFECYCLE BATTLE.SPELL.GLYPH_EXPLOSIVE_RUNE_RELEASE BATTLE.SPELL.GLYPH_STORED_SPELL_RELEASE BATTLE.SPELL.GLYPH_STORED_CONCENTRATION_FULL_DURATION
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
@@ -40,6 +41,8 @@ import {
   type GlyphExplosiveRuneReleaseProfile,
   type GlyphStoredSpellReleaseProfile,
 } from "./battle-reducer/glyph-durable-occurrence.ts";
+import { effectiveWalkSpeed } from "./battle-reducer/movement-speed.ts";
+import { tickDurationEffects } from "./battle-reducer/turn-end-movement.ts";
 import {
   D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND,
   SPELL_CAST_REACTION_FACTS_HOLE_ID,
@@ -65,6 +68,8 @@ import {
   guidingBoltUnitId,
   glyphOfWardingUnitId,
   holdPersonUnitId,
+  hypnoticPatternDurationTicks,
+  hypnoticPatternUnitId,
   mindSpikeUnitId,
   moonbeamUnitId,
   orcRelentlessEnduranceUnitId,
@@ -78,7 +83,10 @@ import {
   unitLibrary,
   webUnitId,
 } from "./unit-profile-admission-catalog-support.ts";
-import { attackRollFill } from "./unit-profile-admission-creature-fixture-support.ts";
+import {
+  attackRollFill,
+  interruptDecisionFill,
+} from "./unit-profile-admission-creature-fixture-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
 import {
   maybeSpellAct,
@@ -112,7 +120,10 @@ import {
   type BattleTargetSpatialFact,
   type CombatantId,
   ZERO_HIT_POINT_REPLACEMENT_SUPPORT_PROFILE,
+  hasCondition,
+  resolveBattleInterrupt,
   resolveBattleSubject,
+  snapshotBattle,
   spellSaveDcForCaster,
 } from "./unit-profile-admission-test-support.ts";
 import { battleSpellEffectOccurrenceId } from "./identity.ts";
@@ -1296,6 +1307,330 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
       expect(glyphEffects(state)).toHaveLength(1);
     },
   );
+
+  test("stored area control Concentration release lasts full duration without slot spend or ordinary Concentration", () => {
+    const storedInvocation = storedSpellInvocation(hypnoticPatternUnitId, 3);
+    expect(storedInvocation.procedure).toBe("hypnoticPattern");
+    expect(storedInvocation.spell.mechanics.duration.kind).toBe(
+      "concentration",
+    );
+    const nonConcentrationStoredInvocation = {
+      ...storedInvocation,
+      spell: {
+        ...storedInvocation.spell,
+        mechanics: {
+          ...storedInvocation.spell.mechanics,
+          duration: { kind: "instantaneous" },
+        },
+      },
+    } satisfies GlyphStoredSpellInvocationCandidate;
+    expect(
+      glyphDurableOccurrenceEffectFromCompletedInscription({
+        profile: requireGlyphProfile(),
+        witness: completedGlyphInscriptionWitness({
+          anchor: { kind: "surface", areaId: glyphSurfaceAnchorAreaId },
+          release: {
+            kind: "spellGlyph",
+            storedInvocation: nonConcentrationStoredInvocation,
+          },
+        }),
+      }),
+    ).toEqual({
+      tag: "storedSpellProcedureUnsupported",
+      storedInvocation: nonConcentrationStoredInvocation,
+    });
+    const state = stateWithPriorCasterSpellSlotUse(
+      stateWithUnrelatedReadiedSpell(
+        stateWithGlyphEffect(
+          requireCompletedGlyphEffect({
+            anchor: { kind: "surface", areaId: glyphSurfaceAnchorAreaId },
+            release: { kind: "spellGlyph", storedInvocation },
+          }),
+          glyphBattle({
+            preparedSpells: [
+              spellRecord(guidingBoltUnitId),
+              spellRecord(hypnoticPatternUnitId),
+            ],
+            spellSlots: [
+              { spellLevel: 1, count: 1 },
+              { spellLevel: 3, count: 2 },
+            ],
+          }),
+        ),
+      ),
+      3,
+    );
+    const priorTurnSpellSlotUses =
+      state.currentTurnResources.spellSlotUsesThisTurn;
+    const priorExpended = casterSpellSlotExpended(state, 3);
+    const readiedBefore = state.readiedSpells.get(spellCasterId);
+    const readiedConcentration = {
+      sourceSpellId: guidingBoltUnitId,
+      effectKind: "readiedSpell" as const,
+    };
+    const needsAreaSave = releaseGlyphStoredSpell({
+      state,
+      profile: requireGlyphStoredSpellProfile(),
+      witness: storedAreaReleaseWitness({
+        originAnchorId: spellTargetId,
+        fills: [],
+      }),
+    });
+
+    expect(needsAreaSave.tag).toBe("needsHoles");
+    if (needsAreaSave.tag !== "needsHoles") return;
+    const savingThrow = requireReleaseHole(
+      needsAreaSave.holes,
+      "savingThrowOutcome",
+    );
+    expect(savingThrow).toMatchObject({
+      spell: expect.objectContaining({
+        procedure: "hypnoticPattern",
+        spell: expect.objectContaining({ id: hypnoticPatternUnitId }),
+      }),
+    });
+
+    expect(
+      releaseGlyphStoredSpell({
+        state,
+        profile: requireGlyphStoredSpellProfile(),
+        witness: storedAreaReleaseWitness({
+          originAnchorId: spellTargetId,
+          fills: [
+            glyphStoredHypnoticPatternSavingThrowOutcomeFill(
+              savingThrow,
+              [{ targetId: spellTargetId, succeeded: false }],
+              spellCasterId,
+            ),
+          ],
+        }),
+      }),
+    ).toMatchObject({
+      tag: "invalidWitness",
+      reason: "areaCenterMismatch",
+    });
+
+    const released = releaseGlyphStoredSpell({
+      state,
+      profile: requireGlyphStoredSpellProfile(),
+      witness: storedAreaReleaseWitness({
+        originAnchorId: spellTargetId,
+        fills: [
+          glyphStoredHypnoticPatternSavingThrowOutcomeFill(savingThrow, [
+            { targetId: spellTargetId, succeeded: false },
+          ]),
+        ],
+      }),
+    });
+
+    expect(released.tag).toBe("released");
+    if (released.tag !== "released") return;
+    const caster = requireCombatant(released.state, spellCasterId);
+    const target = requireCombatant(released.state, spellTargetId);
+    const control = target.activeEffects.find(
+      (
+        effect,
+      ): effect is Extract<
+        BattleActiveEffect,
+        { readonly kind: "hypnoticPatternControl" }
+      > => effect.kind === "hypnoticPatternControl",
+    );
+
+    expect(hasCondition(target.conditions, "charmed")).toBe(true);
+    expect(hasCondition(target.conditions, "incapacitated")).toBe(true);
+    expect(Number(effectiveWalkSpeed(target))).toBe(0);
+    expect(control).toMatchObject({
+      kind: "hypnoticPatternControl",
+      sourceSpellId: hypnoticPatternUnitId,
+      sourceCombatantId: spellCasterId,
+      expiresAt: {
+        kind: "duration",
+        durationTicks: hypnoticPatternDurationTicks,
+      },
+    });
+    expect(caster.concentration).toEqual(readiedConcentration);
+    expect(released.state.readiedSpells.get(spellCasterId)).toEqual(
+      readiedBefore,
+    );
+    expect(glyphEffects(released.state)).toEqual([]);
+    expect(casterSpellSlotExpended(released.state, 3)).toBe(priorExpended);
+    expect(released.state.currentTurnResources.spellSlotUsesThisTurn).toEqual(
+      priorTurnSpellSlotUses,
+    );
+    if (control === undefined) {
+      throw new Error("Expected Hypnotic Pattern control effect.");
+    }
+
+    const almostExpiredTarget = {
+      ...target,
+      activeEffects: target.activeEffects.map((effect) =>
+        effect === control
+          ? {
+              ...control,
+              expiresAt: {
+                kind: "duration" as const,
+                durationTicks: elapsedTimeTicks(1),
+              },
+            }
+          : effect,
+      ),
+    };
+    const expiredCombatants = tickDurationEffects(
+      new Map(released.state.combatants).set(
+        spellTargetId,
+        almostExpiredTarget,
+      ),
+    ).value;
+    const expiredTarget = expiredCombatants.get(spellTargetId);
+    if (expiredTarget === undefined) {
+      throw new Error("Expected target after duration cleanup.");
+    }
+    expect(
+      expiredTarget.activeEffects.some(
+        (effect) => effect.kind === "hypnoticPatternControl",
+      ),
+    ).toBe(false);
+    expect(hasCondition(expiredTarget.conditions, "charmed")).toBe(false);
+    expect(hasCondition(expiredTarget.conditions, "incapacitated")).toBe(
+      false,
+    );
+    expect(Number(effectiveWalkSpeed(expiredTarget))).toBeGreaterThan(0);
+    expect(expiredCombatants.get(spellCasterId)?.concentration).toEqual(
+      readiedConcentration,
+    );
+  });
+
+  test("stored area control Concentration release preserves glyph replay across save-failed interrupts", () => {
+    const storedInvocation = storedSpellInvocation(hypnoticPatternUnitId, 3);
+    expect(storedInvocation.procedure).toBe("hypnoticPattern");
+    const state = stateWithPriorCasterSpellSlotUse(
+      stateWithUnrelatedReadiedSpell(
+        stateWithGlyphEffect(
+          requireCompletedGlyphEffect({
+            anchor: { kind: "surface", areaId: glyphSurfaceAnchorAreaId },
+            release: { kind: "spellGlyph", storedInvocation },
+          }),
+          glyphBattle({
+            preparedSpells: [
+              spellRecord(guidingBoltUnitId),
+              spellRecord(hypnoticPatternUnitId),
+            ],
+            spellSlots: [
+              { spellLevel: 1, count: 1 },
+              { spellLevel: 3, count: 2 },
+            ],
+          }),
+        ),
+        "saveFailed",
+      ),
+      3,
+    );
+    const priorTurnSpellSlotUses =
+      state.currentTurnResources.spellSlotUsesThisTurn;
+    const priorExpended = casterSpellSlotExpended(state, 3);
+    const readiedBefore = state.readiedSpells.get(spellCasterId);
+    const readiedConcentration = {
+      sourceSpellId: guidingBoltUnitId,
+      effectKind: "readiedSpell" as const,
+    };
+    const needsAreaSave = releaseGlyphStoredSpell({
+      state,
+      profile: requireGlyphStoredSpellProfile(),
+      witness: storedAreaReleaseWitness({
+        originAnchorId: spellTargetId,
+        fills: [],
+      }),
+    });
+
+    expect(needsAreaSave.tag).toBe("needsHoles");
+    if (needsAreaSave.tag !== "needsHoles") return;
+    const savingThrow = requireReleaseHole(
+      needsAreaSave.holes,
+      "savingThrowOutcome",
+    );
+    const awaitingSaveFailedReaction = releaseGlyphStoredSpell({
+      state,
+      profile: requireGlyphStoredSpellProfile(),
+      witness: storedAreaReleaseWitness({
+        originAnchorId: spellTargetId,
+        fills: [
+          glyphStoredHypnoticPatternSavingThrowOutcomeFill(savingThrow, [
+            { targetId: spellTargetId, succeeded: false },
+          ]),
+        ],
+      }),
+    });
+
+    expect(awaitingSaveFailedReaction).toMatchObject({
+      tag: "needsHoles",
+      holes: [{ kind: "interruptDecision", trigger: "saveFailed" }],
+    });
+    if (awaitingSaveFailedReaction.tag !== "needsHoles") return;
+    expect(
+      snapshotBattle(awaitingSaveFailedReaction.state).pendingInterrupt
+        ?.choices,
+    ).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          kind: "releaseReadiedSpell",
+          readiedSpellCasterId: spellCasterId,
+        }),
+      ]),
+    );
+    const afterDecline = resolveBattleInterrupt({
+      state: awaitingSaveFailedReaction.state,
+      fill: interruptDecisionFill(
+        requireReleaseHole(
+          awaitingSaveFailedReaction.holes,
+          "interruptDecision",
+        ),
+        { kind: "decline", responderId: spellCasterId },
+      ),
+    });
+
+    expect(afterDecline.tag).toBe("resolved");
+    if (afterDecline.tag !== "resolved") return;
+    expect(afterDecline.snapshot.pendingInterrupt).toBeNull();
+    const caster = requireCombatant(afterDecline.state, spellCasterId);
+    const target = requireCombatant(afterDecline.state, spellTargetId);
+    const control = target.activeEffects.find(
+      (
+        effect,
+      ): effect is Extract<
+        BattleActiveEffect,
+        { readonly kind: "hypnoticPatternControl" }
+      > => effect.kind === "hypnoticPatternControl",
+    );
+
+    expect(hasCondition(target.conditions, "charmed")).toBe(true);
+    expect(hasCondition(target.conditions, "incapacitated")).toBe(true);
+    expect(Number(effectiveWalkSpeed(target))).toBe(0);
+    expect(control).toMatchObject({
+      kind: "hypnoticPatternControl",
+      sourceSpellId: hypnoticPatternUnitId,
+      sourceCombatantId: spellCasterId,
+      expiresAt: {
+        kind: "duration",
+        durationTicks: hypnoticPatternDurationTicks,
+      },
+    });
+    expect(caster.concentration).toEqual(readiedConcentration);
+    expect(
+      caster.activeEffects.some(
+        (effect) =>
+          effect.kind === "spellConcentrationDuration" &&
+          effect.sourceSpellId === hypnoticPatternUnitId,
+      ),
+    ).toBe(false);
+    expect(afterDecline.state.readiedSpells.get(spellCasterId)).toEqual(
+      readiedBefore,
+    );
+    expect(glyphEffects(afterDecline.state)).toEqual([]);
+    expect(casterSpellSlotExpended(afterDecline.state, 3)).toBe(priorExpended);
+    expect(
+      afterDecline.state.currentTurnResources.spellSlotUsesThisTurn,
+    ).toEqual(priorTurnSpellSlotUses);
+  });
 
   test("rejects non-Concentration save-gated condition stored spells outside Task 29 scope", () => {
     const storedInvocation = storedSpellInvocation(blindnessDeafnessUnitId, 2);
@@ -2975,7 +3310,10 @@ function storedSpiritualWeaponTargetFacts(
   ];
 }
 
-function stateWithUnrelatedReadiedSpell(state: BattleState): BattleState {
+function stateWithUnrelatedReadiedSpell(
+  state: BattleState,
+  trigger: "spellCast" | "saveFailed" = "spellCast",
+): BattleState {
   const caster = requireCombatant(state, spellCasterId);
   const readiedInvocation = requireReadiedSpellInvocation(
     storedSpellInvocation(guidingBoltUnitId, 1),
@@ -2991,7 +3329,7 @@ function stateWithUnrelatedReadiedSpell(state: BattleState): BattleState {
     }),
     readiedSpells: new Map(state.readiedSpells).set(spellCasterId, {
       invocation: readiedInvocation,
-      trigger: "spellCast",
+      trigger,
       expiresAt: {
         kind: "endOfTurn",
         combatantId: spellCasterId,
@@ -3038,6 +3376,7 @@ function requireReadiedSpellInvocation(
     invocation.procedure === "greaseGroundHazard" ||
     invocation.procedure === "saveGatedCondition" ||
     invocation.procedure === "spiritualWeaponAttackProxy" ||
+    invocation.procedure === "hypnoticPattern" ||
     isGlyphStoredAreaOngoingTestInvocation(invocation)
   ) {
     throw new Error("Expected a Readied Spell-compatible invocation.");
@@ -3148,6 +3487,34 @@ function gustOfWindGlyphSavingThrowOutcomeFill(
         ...value.area,
         originAnchorId: spellTargetId,
       },
+    },
+  };
+}
+
+function glyphStoredHypnoticPatternSavingThrowOutcomeFill(
+  hole: Extract<BattleHole, { readonly kind: "savingThrowOutcome" }>,
+  outcomes: readonly {
+    readonly targetId: CombatantId;
+    readonly succeeded: boolean;
+  }[],
+  originAnchorId: CombatantId = spellTargetId,
+): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {
+  return {
+    kind: "savingThrowOutcome",
+    holeId: hole.holeId,
+    value: {
+      area: {
+        kind: "hypnoticPatternArea",
+        originAnchorId,
+        affectedTargetIds: outcomes.map((outcome) => outcome.targetId),
+        cubeSideFeet: 30,
+        affectedCreatureWitnesses: outcomes.map((outcome) => ({
+          targetId: outcome.targetId,
+          inCube: true,
+          canSeePattern: true,
+        })),
+      },
+      outcomes,
     },
   };
 }

@@ -39,7 +39,6 @@ import type {
   SpellRecord,
 } from "@dnd/surface/surface/types";
 import { Either } from "effect";
-import { isTargetListSpellInvocation } from "../battle-reducer.ts";
 import type {
   BattleActiveEffect,
   BattleActiveEffectExpiration,
@@ -55,18 +54,21 @@ import type {
   BattleSpellTargetListSpatialFact,
   BattleState,
   BattleTargetSpatialFact,
+  GlyphStoredSpellReleaseReplayContext,
   GlyphDurableOccurrenceActiveEffect,
   GlyphDurableOccurrenceAnchor,
   GlyphStoredSpellInvocation,
   GlyphStoredSpellInvocationCandidate,
   BattleResolutionResult,
 } from "../battle-reducer.ts";
+import { isTargetListSpellInvocation } from "./spells-invocation-guards.ts";
 import type {
   BattleAreaId,
   BattleSpellEffectOccurrenceId,
   BattleTablePositionId,
   CombatantId,
 } from "../identity.ts";
+import type { BattleInterruptTrigger } from "../battle-interrupt-triggers.ts";
 import {
   parseBattleSpellEffectLevel,
   type BattleSpellEffectLevel,
@@ -116,6 +118,11 @@ import {
   isGlyphStoredAreaOngoingSpellInvocation,
   resolveStoredGlyphAreaOngoingSpellRelease,
 } from "./spells-resolve-area-effects.ts";
+import {
+  isGlyphStoredAreaControlProcedure,
+  isGlyphStoredAreaControlSpellInvocation,
+  resolveStoredGlyphAreaControlSpellRelease,
+} from "./spell-procedure-profiles/hypnotic-pattern.ts";
 import { invalidResult } from "./result-helpers.ts";
 import {
   d20TestNaturalOneRerollOutcomeDecisionRequired,
@@ -961,6 +968,7 @@ export function releaseGlyphStoredSpell(input: {
   readonly state: BattleState;
   readonly profile: GlyphStoredSpellReleaseProfile;
   readonly witness: GlyphStoredSpellReleaseWitness;
+  readonly handledInterruptTrigger?: BattleInterruptTrigger | undefined;
 }): ReleaseGlyphStoredSpellResult {
   const sourceEffectId = input.witness.triggerOccurrence.sourceEffectId;
   const refs = glyphOccurrenceRefs(input.state, sourceEffectId);
@@ -1010,13 +1018,15 @@ export function releaseGlyphStoredSpell(input: {
   }
   const resolved = resolveStoredSpellGlyphRelease({
     state: input.state,
+    profile: input.profile,
     effect: ref.effect,
     witness: input.witness,
+    handledInterruptTrigger: input.handledInterruptTrigger,
   });
   if (resolved.tag === "needsHoles") {
     return {
       tag: "needsHoles",
-      state: input.state,
+      state: resolved.state,
       sourceEffectId,
       holes: resolved.holes,
     };
@@ -1412,6 +1422,9 @@ function glyphStoredSpellInvocationSupportsFullDurationOwner(
   if (isGlyphStoredAreaOngoingSpellInvocation(invocation)) {
     return true;
   }
+  if (isGlyphStoredAreaControlSpellInvocation(invocation)) {
+    return true;
+  }
   return (
     invocation.procedure === "saveGatedCondition" ||
     invocation.procedure === "spiritualWeaponAttackProxy"
@@ -1441,7 +1454,8 @@ function glyphStoredSpellInvocationStorageUnsupportedReason(
     return "storedSpellConcentrationFullDurationUnsupported";
   }
   return !requiresFullDurationOwner &&
-    invocation.procedure === "saveGatedCondition"
+    (invocation.procedure === "saveGatedCondition" ||
+      isGlyphStoredAreaControlProcedure(invocation.procedure))
     ? "storedSpellProcedureUnsupported"
     : null;
 }
@@ -1483,6 +1497,7 @@ function glyphStoredSpellInvocationHasAreaRelease(
   return (
     invocation.procedure === "greaseGroundHazard" ||
     isGlyphStoredAreaOngoingSpellInvocation(invocation) ||
+    isGlyphStoredAreaControlSpellInvocation(invocation) ||
     glyphStoredSpellInvocationHasSaveGatedAreaRelease(invocation)
   );
 }
@@ -1720,8 +1735,10 @@ function glyphStoredSpellHostilePlacementValidation(input: {
 
 function resolveStoredSpellGlyphRelease(input: {
   readonly state: BattleState;
+  readonly profile: GlyphStoredSpellReleaseProfile;
   readonly effect: GlyphStoredSpellOccurrenceActiveEffect;
   readonly witness: GlyphStoredSpellReleaseWitness;
+  readonly handledInterruptTrigger?: BattleInterruptTrigger | undefined;
 }): BattleResolutionResult {
   const invocation = input.effect.release.storedInvocation;
   const subject = {
@@ -1751,6 +1768,27 @@ function resolveStoredSpellGlyphRelease(input: {
         state: input.state,
         subject,
         fills,
+        handledInterruptTrigger: input.handledInterruptTrigger,
+      },
+      actorId: input.effect.sourceCombatantId,
+      invocation,
+      fillSet,
+      selfOriginAreaAnchorId: input.witness.triggeringCreatureId,
+    });
+  }
+  if (isGlyphStoredAreaControlSpellInvocation(invocation)) {
+    const fillSet = spellFillSet(fills, invocation);
+    if (fillSet.tag === "invalid") {
+      return invalidResult(input.state, "invalidFill", fillSet.message);
+    }
+    return resolveStoredGlyphAreaControlSpellRelease({
+      input: {
+        state: input.state,
+        subject,
+        fills,
+        handledInterruptTrigger: input.handledInterruptTrigger,
+        glyphStoredSpellReleaseReplay:
+          glyphStoredSpellReleaseReplayContext(input),
       },
       actorId: input.effect.sourceCombatantId,
       invocation,
@@ -1768,6 +1806,7 @@ function resolveStoredSpellGlyphRelease(input: {
         state: input.state,
         subject,
         fills,
+        handledInterruptTrigger: input.handledInterruptTrigger,
       },
       actorId: input.effect.sourceCombatantId,
       invocation,
@@ -1785,6 +1824,7 @@ function resolveStoredSpellGlyphRelease(input: {
         state: input.state,
         subject,
         fills,
+        handledInterruptTrigger: input.handledInterruptTrigger,
       },
       actorId: input.effect.sourceCombatantId,
       invocation,
@@ -1805,6 +1845,7 @@ function resolveStoredSpellGlyphRelease(input: {
         state: input.state,
         subject,
         fills,
+        handledInterruptTrigger: input.handledInterruptTrigger,
       },
       actorId: input.effect.sourceCombatantId,
       invocation,
@@ -1818,6 +1859,7 @@ function resolveStoredSpellGlyphRelease(input: {
       state: input.state,
       subject,
       fills,
+      handledInterruptTrigger: input.handledInterruptTrigger,
     },
     invocation,
     input.witness.targeting.kind ===
@@ -1832,6 +1874,22 @@ function resolveStoredSpellGlyphRelease(input: {
           opensSpellCastReactionWindow: false,
         },
   );
+}
+
+function glyphStoredSpellReleaseReplayContext(input: {
+  readonly profile: GlyphStoredSpellReleaseProfile;
+  readonly witness: GlyphStoredSpellReleaseWitness;
+}): GlyphStoredSpellReleaseReplayContext {
+  return {
+    profile: input.profile,
+    witness: {
+      kind: input.witness.kind,
+      triggerOccurrence: input.witness.triggerOccurrence,
+      triggeringCreatureId: input.witness.triggeringCreatureId,
+      targeting: input.witness.targeting,
+      hostilePlacement: input.witness.hostilePlacement,
+    },
+  };
 }
 
 function glyphStoredSpellReleaseFills(input: {
@@ -1913,7 +1971,8 @@ type GlyphStoredSpellFullDurationEffect = Extract<
       | "spikeGrowthHazard"
       | "moonbeam"
       | "webRestraintHazard"
-      | "gustOfWindLine";
+      | "gustOfWindLine"
+      | "hypnoticPatternControl";
   }
 >;
 
@@ -2000,7 +2059,8 @@ function glyphStoredSpellFullDurationEffectSupportsExpiration(
     effect.kind === "spikeGrowthHazard" ||
     effect.kind === "moonbeam" ||
     effect.kind === "webRestraintHazard" ||
-    effect.kind === "gustOfWindLine"
+    effect.kind === "gustOfWindLine" ||
+    effect.kind === "hypnoticPatternControl"
   );
 }
 

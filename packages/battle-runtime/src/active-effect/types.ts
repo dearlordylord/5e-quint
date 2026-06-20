@@ -413,9 +413,27 @@ export const GLYPH_STORED_AREA_ONGOING_PROCEDURES = [
 ] as const satisfies ReadonlyArray<SupportedSpellInvocation["procedure"]>;
 export type GlyphStoredAreaOngoingProcedure =
   (typeof GLYPH_STORED_AREA_ONGOING_PROCEDURES)[number];
+export const GLYPH_STORED_AREA_CONTROL_PROCEDURES = [
+  "hypnoticPattern",
+] as const satisfies ReadonlyArray<SupportedSpellInvocation["procedure"]>;
+export type GlyphStoredAreaControlProcedure =
+  (typeof GLYPH_STORED_AREA_CONTROL_PROCEDURES)[number];
 type GlyphStoredAreaOngoingInvocation = Extract<
   SupportedSpellInvocation,
   { readonly procedure: GlyphStoredAreaOngoingProcedure }
+> & {
+  readonly spell: SpellRecord & {
+    readonly mechanics: SpellRecord["mechanics"] & {
+      readonly duration: Extract<
+        SpellRecord["mechanics"]["duration"],
+        { readonly kind: "concentration" }
+      >;
+    };
+  };
+};
+export type GlyphStoredAreaControlInvocation = Extract<
+  SupportedSpellInvocation,
+  { readonly procedure: GlyphStoredAreaControlProcedure }
 > & {
   readonly spell: SpellRecord & {
     readonly mechanics: SpellRecord["mechanics"] & {
@@ -435,7 +453,8 @@ export type GlyphStoredSpellInvocationCandidate = Extract<
           | "greaseGroundHazard"
           | "saveGatedCondition"
           | "spiritualWeaponAttackProxy"
-          | GlyphStoredAreaOngoingProcedure;
+          | GlyphStoredAreaOngoingProcedure
+          | GlyphStoredAreaControlProcedure;
       }
     >,
   {
@@ -450,7 +469,8 @@ export type GlyphStoredSpellInvocation = Extract<
   | GlyphStoredConcentrationSaveGatedDamageInvocation
   | GlyphStoredConcentrationSaveGatedConditionInvocation
   | GlyphStoredConcentrationHarmfulObjectInvocation
-  | GlyphStoredAreaOngoingInvocation,
+  | GlyphStoredAreaOngoingInvocation
+  | GlyphStoredAreaControlInvocation,
   {
     readonly access: PreparedSpellAccess;
     readonly resource: SpellSlotInvocationResource;
@@ -715,10 +735,12 @@ export type BattleActiveEffect =
       readonly kind: "hypnoticPatternControl";
       readonly conditionHadNonSpellCharmedSource: boolean;
       readonly conditionHadNonSpellIncapacitatedSource: boolean;
-      readonly expiresAt: Extract<
-        BattleActiveEffectExpiration,
-        { readonly kind: "concentration" }
-      > & { readonly durationTicks: ElapsedTimeTicks };
+      readonly expiresAt:
+        | (Extract<
+            BattleActiveEffectExpiration,
+            { readonly kind: "concentration" }
+          > & { readonly durationTicks: ElapsedTimeTicks })
+        | Extract<BattleActiveEffectExpiration, { readonly kind: "duration" }>;
     })
   | (BattleSpellEffectBase & {
       readonly kind: "greaseGroundHazard";

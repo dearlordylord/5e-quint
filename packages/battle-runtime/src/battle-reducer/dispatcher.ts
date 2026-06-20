@@ -157,6 +157,7 @@ import {
 import { invalidResult } from "./result-helpers.ts";
 import { battleStateAfterTargetActionEarlyEndForActor } from "./sanctuary-targeting-interdiction.ts";
 import { stateAfterSpellCastDeclared } from "./spell-cast-declaration.ts";
+import { releaseGlyphStoredSpell } from "./glyph-durable-occurrence.ts";
 import {
   antimagicFieldInterdictionMessage,
   battleSubjectInterdictedByAntimagicField,
@@ -4753,6 +4754,14 @@ export function resolveReplayContinuationFromState(
   handledInterruptTrigger: BattleInterruptTrigger,
   fills: readonly BattleFill[],
 ): BattleResolutionResult {
+  if (continuation.glyphStoredSpellReleaseReplay !== undefined) {
+    return resolveGlyphStoredSpellReplayContinuationFromState(
+      state,
+      continuation,
+      handledInterruptTrigger,
+      fills,
+    );
+  }
   const result = resolveBattleSubjectInternal(
     {
       state,
@@ -4810,6 +4819,74 @@ export function resolveReplayContinuationFromState(
     state: pendingState,
     snapshot: snapshotBattle(pendingState),
   };
+}
+
+function resolveGlyphStoredSpellReplayContinuationFromState(
+  state: BattleState,
+  continuation: Extract<
+    BattleInterruptedProcedure,
+    { readonly kind: "replay" }
+  >,
+  handledInterruptTrigger: BattleInterruptTrigger,
+  fills: readonly BattleFill[],
+): BattleResolutionResult {
+  const replay = continuation.glyphStoredSpellReleaseReplay;
+  if (replay === undefined) {
+    return invalidResult(
+      state,
+      "staleSubject",
+      "Glyph stored spell replay context is missing.",
+    );
+  }
+  const result = releaseGlyphStoredSpell({
+    state,
+    profile: replay.profile,
+    witness: {
+      ...replay.witness,
+      fills,
+    },
+    handledInterruptTrigger,
+  });
+  if (result.tag === "released") {
+    return {
+      tag: "resolved",
+      state: result.state,
+      snapshot: snapshotBattle(result.state),
+    };
+  }
+  if (result.tag === "needsHoles") {
+    if (result.state.interruptStack.length !== state.interruptStack.length) {
+      return needsHolesResult(result.state, continuation.subject, result.holes);
+    }
+    const pendingState = {
+      ...result.state,
+      interruptStack: [
+        ...result.state.interruptStack,
+        replayContinuationFrame(continuation, handledInterruptTrigger),
+      ],
+    };
+    return needsHolesResult(pendingState, continuation.subject, result.holes);
+  }
+  if (result.tag === "notFound") {
+    return invalidResult(
+      result.state,
+      "staleSubject",
+      "Glyph stored spell release replay no longer has a matching durable occurrence.",
+    );
+  }
+  if (result.tag === "ambiguousOccurrence") {
+    return invalidResult(
+      result.state,
+      "invalidFill",
+      "Glyph stored spell release replay matched multiple durable occurrences.",
+    );
+  }
+  return invalidResult(
+    result.state,
+    "invalidFill",
+    result.message ??
+      `Glyph stored spell release replay witness is invalid: ${result.reason}.`,
+  );
 }
 
 export function activeInterruptWithReplayContinuationAttackDamageChanges(
