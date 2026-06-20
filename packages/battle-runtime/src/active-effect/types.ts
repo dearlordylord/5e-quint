@@ -14,6 +14,10 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.HASTE_LETHARGY_LIFECYCLE
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-glyph-durable-occurrence
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.GLYPH_DURABLE_OCCURRENCE_LIFECYCLE
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-glyph-explosive-rune-release
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.GLYPH_EXPLOSIVE_RUNE_RELEASE
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-glyph-stored-spell-release spell.invocation-glyph-stored-concentration-full-duration spell.invocation-glyph-stored-summon-object-placement
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.GLYPH_STORED_SPELL_RELEASE BATTLE.SPELL.GLYPH_STORED_CONCENTRATION_FULL_DURATION
 import type { ArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
 import type { ElapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import type { AttackRollMode } from "@dnd/shared-algebras/runtime-hole-algebra";
@@ -60,11 +64,16 @@ import type {
   BattleD20RollModifierKind,
   BattleDancingLight,
   BattleDancingLightList,
+  PreparedSpellAccess,
+  ReadiedSpellInvocation,
+  SupportedSpellInvocation,
   BattleSpecialSpeedKind,
   MagicWeaponEnhancementBonus,
   MarkedDamageRiderAbilityCheckBehavior,
   SpellAttackKind,
   SpellConditionRepeatSave,
+  SpellSlotInvocationResource,
+  SpellTargeting,
 } from "../battle-reducer.ts";
 import {
   PROTECTION_FROM_EVIL_AND_GOOD_PREVENTED_CONDITIONS,
@@ -293,6 +302,12 @@ export type SpellObjectContactDamageActiveEffect = BattleSpellEffectBase & {
     { readonly kind: "concentration" }
   > & { readonly durationTicks: ElapsedTimeTicks };
 };
+export type SpiritualWeaponRepeatTargeting =
+  | { readonly kind: "unrestricted" }
+  | {
+      readonly kind: "fixedCombatant";
+      readonly combatantId: CombatantId;
+    };
 export type SpiritualWeaponActiveEffect = BattleSpellEffectBase & {
   readonly kind: "spiritualWeapon";
   readonly sourceEffectId: BattleSpellEffectOccurrenceId;
@@ -300,6 +315,7 @@ export type SpiritualWeaponActiveEffect = BattleSpellEffectBase & {
   readonly forcePositionId: BattleTablePositionId;
   readonly forceReachFeet: MovementFeet;
   readonly repeatMoveMaxFeet: MovementFeet;
+  readonly repeatTargeting: SpiritualWeaponRepeatTargeting;
   readonly startedOn: BattleTurnAnchor;
   readonly damage: {
     readonly kind: "fixedSpellAttackDamage";
@@ -308,10 +324,12 @@ export type SpiritualWeaponActiveEffect = BattleSpellEffectBase & {
   };
   readonly attackKind: Extract<SpellAttackKind, "melee_spell_attack">;
   readonly attackBonus: AttackBonus;
-  readonly expiresAt: Extract<
-    BattleActiveEffectExpiration,
-    { readonly kind: "concentration" }
-  > & { readonly durationTicks: ElapsedTimeTicks };
+  readonly expiresAt:
+    | (Extract<
+        BattleActiveEffectExpiration,
+        { readonly kind: "concentration" }
+      > & { readonly durationTicks: ElapsedTimeTicks })
+    | Extract<BattleActiveEffectExpiration, { readonly kind: "duration" }>;
 };
 export type GlyphDurableOccurrenceAnchor =
   | {
@@ -322,10 +340,112 @@ export type GlyphDurableOccurrenceAnchor =
       readonly kind: "closeableObject";
       readonly objectId: BattleObjectId;
     };
+type GlyphStoredConcentrationSaveGatedConditionInvocation = Extract<
+  SupportedSpellInvocation,
+  { readonly procedure: "saveGatedCondition" }
+> & {
+  readonly spell: SpellRecord & {
+    readonly mechanics: SpellRecord["mechanics"] & {
+      readonly duration: Extract<
+        SpellRecord["mechanics"]["duration"],
+        { readonly kind: "concentration" }
+      >;
+    };
+  };
+};
+type GlyphStoredNonConcentrationSpellRecord = SpellRecord & {
+  readonly mechanics: SpellRecord["mechanics"] & {
+    readonly duration: Exclude<
+      SpellRecord["mechanics"]["duration"],
+      { readonly kind: "concentration" }
+    >;
+  };
+};
+type GlyphStoredReadiedSpellInvocation = ReadiedSpellInvocation & {
+  readonly spell: GlyphStoredNonConcentrationSpellRecord;
+};
+type GlyphStoredSingleCreatureTargeting =
+  | Extract<SpellTargeting, { readonly kind: "singleCombatant" }>
+  | Extract<SpellTargeting, { readonly kind: "singleCreatureOrObject" }>
+  | (Extract<SpellTargeting, { readonly kind: "targetList" }> & {
+      readonly maxTargets: 1;
+    });
+type GlyphStoredConcentrationSaveGatedDamageInvocation = Extract<
+  ReadiedSpellInvocation,
+  { readonly procedure: "saveGatedDamage" }
+> & {
+  readonly spell: SpellRecord & {
+    readonly mechanics: SpellRecord["mechanics"] & {
+      readonly duration: Extract<
+        SpellRecord["mechanics"]["duration"],
+        { readonly kind: "concentration" }
+      >;
+    };
+  };
+  readonly targeting: GlyphStoredSingleCreatureTargeting;
+};
+type GlyphStoredGreaseGroundHazardInvocation = Extract<
+  SupportedSpellInvocation,
+  { readonly procedure: "greaseGroundHazard" }
+> & {
+  readonly spell: GlyphStoredNonConcentrationSpellRecord;
+};
+type GlyphStoredConcentrationHarmfulObjectInvocation = Extract<
+  SupportedSpellInvocation,
+  { readonly procedure: "spiritualWeaponAttackProxy" }
+> & {
+  readonly spell: SpellRecord & {
+    readonly mechanics: SpellRecord["mechanics"] & {
+      readonly duration: Extract<
+        SpellRecord["mechanics"]["duration"],
+        { readonly kind: "concentration" }
+      >;
+    };
+  };
+};
+export type GlyphStoredSpellInvocationCandidate = Extract<
+  | ReadiedSpellInvocation
+  | Extract<
+      SupportedSpellInvocation,
+      {
+        readonly procedure:
+          | "greaseGroundHazard"
+          | "saveGatedCondition"
+          | "spiritualWeaponAttackProxy";
+      }
+    >,
+  {
+    readonly access: PreparedSpellAccess;
+    readonly resource: SpellSlotInvocationResource;
+    readonly targeting: SpellTargeting;
+  }
+>;
+export type GlyphStoredSpellInvocation = Extract<
+  | GlyphStoredReadiedSpellInvocation
+  | GlyphStoredGreaseGroundHazardInvocation
+  | GlyphStoredConcentrationSaveGatedDamageInvocation
+  | GlyphStoredConcentrationSaveGatedConditionInvocation
+  | GlyphStoredConcentrationHarmfulObjectInvocation,
+  {
+    readonly access: PreparedSpellAccess;
+    readonly resource: SpellSlotInvocationResource;
+    readonly targeting: SpellTargeting;
+  }
+>;
+export type GlyphDurableOccurrenceRelease =
+  | {
+      readonly kind: "explosiveRune";
+      readonly damageType: DamageType;
+    }
+  | {
+      readonly kind: "spellGlyph";
+      readonly storedInvocation: GlyphStoredSpellInvocation;
+    };
 export type GlyphDurableOccurrenceActiveEffect = BattleSpellEffectBase & {
   readonly kind: "glyphDurableOccurrence";
   readonly sourceEffectId: BattleSpellEffectOccurrenceId;
   readonly sourceSpellLevel: BattleSpellEffectLevel;
+  readonly release: GlyphDurableOccurrenceRelease;
   readonly anchor: GlyphDurableOccurrenceAnchor;
   readonly coveredAreaId: BattleAreaId;
   readonly castLocationId: BattleTablePositionId;
@@ -819,10 +939,12 @@ export type BattleActiveEffect =
     })
   | (BattleSpellEffectBase & {
       readonly kind: "spellConcentrationDuration";
-      readonly expiresAt: Extract<
-        BattleActiveEffectExpiration,
-        { readonly kind: "concentration" }
-      > & { readonly durationTicks: ElapsedTimeTicks };
+      readonly expiresAt:
+        | (Extract<
+            BattleActiveEffectExpiration,
+            { readonly kind: "concentration" }
+          > & { readonly durationTicks: ElapsedTimeTicks })
+        | Extract<BattleActiveEffectExpiration, { readonly kind: "duration" }>;
     })
   | (BattleSpellEffectBase & {
       readonly kind: "d20RollModifier";

@@ -1,7 +1,7 @@
 // Spell target holes and target legality validation extracted from spells-holes-fills.ts.
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-warding-bond-linked-effect
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-object-contact-damage
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spiritual-weapon-attack-proxy
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spiritual-weapon-attack-proxy spell.invocation-glyph-stored-summon-object-placement
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-antimagic-field-magical-effect-interdiction
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-cast-range-increase
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.ANTIMAGIC_FIELD_MAGICAL_EFFECT_INTERDICTION BATTLE.FEATURE.METAMAGIC_DISTANT_CAST_RANGE_INCREASE
@@ -153,16 +153,30 @@ export function spellTargetHole(
   actorId: CombatantId,
   invocation: SupportedSpellInvocation,
 ): BattleTargetChoiceHole {
+  const choices = [...state.combatants.keys()].filter(
+    (id) =>
+      spellTargetHasNonSpatialPrerequisites(state, actorId, id, invocation) &&
+      spiritualWeaponRepeatTargetingAllows(invocation, id),
+  );
   return {
     kind: "targetChoice",
     holeId: ATTACK_TARGET_HOLE_ID,
     holeInstanceKey: ATTACK_TARGET_HOLE_INSTANCE,
     label: `${invocation.spell.name} target`,
     requiresTableSpatialFact: true,
-    choices: [...state.combatants.keys()].filter((id) =>
-      spellTargetHasNonSpatialPrerequisites(state, actorId, id, invocation),
-    ),
+    choices,
   };
+}
+
+function spiritualWeaponRepeatTargetingAllows(
+  invocation: SupportedSpellInvocation,
+  targetId: CombatantId,
+): boolean {
+  return (
+    invocation.procedure !== "spiritualWeaponRepeatAttack" ||
+    invocation.activeEffect.repeatTargeting.kind === "unrestricted" ||
+    invocation.activeEffect.repeatTargeting.combatantId === targetId
+  );
 }
 
 export function spiritualWeaponForcePositionHole(

@@ -10,7 +10,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.d20-test-natural-one-reroll
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.potent-cantrip
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spiritual-weapon-attack-proxy
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spiritual-weapon-attack-proxy spell.invocation-glyph-stored-summon-object-placement
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.remarkable-athlete
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-acid-arrow-attack-timing
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-slow-active-penalties
@@ -1082,8 +1082,26 @@ function resolveSpellActInternal(
     );
   }
   const target = input.state.combatants.get(fillSet.targetId);
+  if (target == null) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Spell target must be a combatant within the selected spell's supported range.",
+    );
+  }
+  const spiritualWeaponRepeatTargetingError =
+    spiritualWeaponRepeatTargetingInvalidReason(
+      invocationForResolution,
+      target.combatantId,
+    );
+  if (spiritualWeaponRepeatTargetingError !== null) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      spiritualWeaponRepeatTargetingError,
+    );
+  }
   if (
-    target == null ||
     !spellTargetIsLegal(
       input.state,
       subject.actorId,
@@ -2281,6 +2299,22 @@ function spiritualWeaponRepeatIsLaterTurn(input: {
   );
 }
 
+function spiritualWeaponRepeatTargetingInvalidReason(
+  invocation: SupportedSpellInvocation,
+  targetId: CombatantId,
+): string | null {
+  if (invocation.procedure !== "spiritualWeaponRepeatAttack") {
+    return null;
+  }
+  const repeatTargeting = invocation.activeEffect.repeatTargeting;
+  if (repeatTargeting.kind === "unrestricted") {
+    return null;
+  }
+  return repeatTargeting.combatantId === targetId
+    ? null
+    : "Glyph-stored Spiritual Weapon repeat attacks must target the triggering creature.";
+}
+
 function spendSpellActResolutionResources(input: {
   readonly state: BattleState;
   readonly actorId: CombatantId;
@@ -2337,6 +2371,7 @@ function spendSpellActResolutionResources(input: {
       state: spent.state,
       actorId: input.actorId,
       forcePositionId: input.spiritualWeaponForcePosition.positionId,
+      repeatTargeting: { kind: "unrestricted" },
       invocation: input.invocation,
     });
     return {

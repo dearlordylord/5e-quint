@@ -1145,6 +1145,7 @@ function spiritualWeaponEffect(input: {
     forcePositionId: battleTablePositionId("dispel-spiritual-weapon-force"),
     forceReachFeet: movementFeet(5),
     repeatMoveMaxFeet: movementFeet(20),
+    repeatTargeting: { kind: "unrestricted" },
     startedOn: { actorId: spellCasterId, round: Round(1) },
     damage: {
       kind: "fixedSpellAttackDamage",

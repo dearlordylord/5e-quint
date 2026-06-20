@@ -14,7 +14,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.monk-focus-battle-options
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spell-created-held-object
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-gust-of-wind-line
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spiritual-weapon-attack-proxy
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spiritual-weapon-attack-proxy spell.invocation-glyph-stored-summon-object-placement
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-antimagic-field-action-interdiction
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-haste-positive
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.HASTE_POSITIVE_EFFECTS
@@ -226,6 +226,8 @@ import type {
 export type {
   GlyphDurableOccurrenceActiveEffect,
   GlyphDurableOccurrenceAnchor,
+  GlyphStoredSpellInvocation,
+  GlyphStoredSpellInvocationCandidate,
 } from "./active-effect/types.ts";
 import { type DamageAmountByTypeEntry } from "./battle-reducer/damage-helpers.ts";
 import type { BattleSpellEffectLevel } from "./battle-reducer/spells-effective-level.ts";
@@ -660,6 +662,7 @@ export type {
   SpellCreatedHeldObjectActiveEffect,
   SpellCreatedHeldObjectState,
   SpellObjectContactDamageActiveEffect,
+  SpiritualWeaponRepeatTargeting,
   SpellTurnEndDamage,
   SpellTurnStartDamage,
   SpellTurnStartDamageSave,
@@ -5042,6 +5045,19 @@ export type BattleDragonsBreathDamageRollHole = Extract<
     readonly expr: DiceExpr;
   };
 };
+export type BattleGlyphExplosiveRuneDamageRollHole = Extract<
+  RuntimeHole,
+  { readonly kind: "rolledDice" }
+> & {
+  readonly glyphExplosiveRune: {
+    readonly sourceCombatantId: CombatantId;
+    readonly sourceSpellId: SpellRecord["id"];
+    readonly sourceEffectId: BattleSpellEffectOccurrenceId;
+    readonly damage: {
+      readonly expr: DiceExpr;
+    };
+  };
+};
 export type BattleSpellDamageReductionRollHole = Extract<
   RuntimeHole,
   { readonly kind: "rolledDice" }
@@ -5806,6 +5822,24 @@ export type BattleDragonsBreathSavingThrowOutcomeHole = {
   readonly targetFlatBonuses: readonly BattleSavingThrowFlatBonusProjection[];
   readonly d20TestNaturalOneRerolls?: readonly BattleD20TestNaturalOneRerollOption[];
 };
+export type BattleGlyphExplosiveRuneSavingThrowOutcomeHole = {
+  readonly holeInstanceKey: HoleInstanceKey;
+  readonly holeId: BattleHoleId;
+  readonly kind: "savingThrowOutcome";
+  readonly label: string;
+  readonly glyphExplosiveRune: {
+    readonly sourceCombatantId: CombatantId;
+    readonly sourceSpellId: SpellRecord["id"];
+    readonly sourceEffectId: BattleSpellEffectOccurrenceId;
+    readonly radiusFeet: 20;
+  };
+  readonly ability: Extract<Ability, "dex">;
+  readonly dc: DcSource;
+  readonly targetIds: readonly CombatantId[];
+  readonly targetRollModes: readonly BattleSavingThrowRollModeProjection[];
+  readonly targetFlatBonuses: readonly BattleSavingThrowFlatBonusProjection[];
+  readonly d20TestNaturalOneRerolls?: readonly BattleD20TestNaturalOneRerollOption[];
+};
 export type BattleUnitFeatureSavingThrowOutcomeHole = {
   readonly holeInstanceKey: HoleInstanceKey;
   readonly holeId: BattleHoleId;
@@ -6094,6 +6128,7 @@ export type BattleHole =
   | BattleDamageRollHole
   | BattleSpellDamageRollHole
   | BattleDragonsBreathDamageRollHole
+  | BattleGlyphExplosiveRuneDamageRollHole
   | BattleSpellDamageReductionRollHole
   | BattleSourceDamageRollPenaltyRollHole
   | BattleMirrorImageDuplicateRollHole
@@ -6112,6 +6147,7 @@ export type BattleHole =
   | BattleDancingLightsPlacementHole
   | BattleSpellSavingThrowOutcomeHole
   | BattleDragonsBreathSavingThrowOutcomeHole
+  | BattleGlyphExplosiveRuneSavingThrowOutcomeHole
   | BattleSpellTurnStartSavingThrowOutcomeHole
   | BattleSleepRepeatSavingThrowOutcomeHole
   | BattleHideousLaughterRepeatSavingThrowOutcomeHole

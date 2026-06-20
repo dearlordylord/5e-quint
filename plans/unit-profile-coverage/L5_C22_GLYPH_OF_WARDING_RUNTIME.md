@@ -18,11 +18,11 @@ No battle reducer behavior is promoted in this task. The current runtime spell p
 
 ## Follow-Up Split
 
-The remaining executable work is split into four owners:
+The remaining executable work is split into focused owners:
 
 - `L3-FOLLOWUP-GLYPH-DURABLE-OCCURRENCE` owns durable glyph occurrence creation, trigger/end cleanup, notice, movement invalidation, and table object/location witnesses.
 - `L3-FOLLOWUP-GLYPH-EXPLOSIVE-RUNE-RELEASE` owns the non-immediate explosive-rune release with area-membership witnesses, damage-type choice, save half damage, slot scaling, and cleanup.
-- `L3-FOLLOWUP-GLYPH-STORED-SPELL-RELEASE` owns stored spell invocation identity, no-immediate-effect storage, trigger retargeting or area centering, and hostile close-as-possible placement witnesses.
+- `L3-FOLLOWUP-GLYPH-STORED-SPELL-RELEASE` owns stored spell invocation identity for the executable non-Concentration subset, no-immediate-effect storage, trigger retargeting or area centering, save-gated release fills, represented hostile trap placement through stored Grease release, stored-Concentration rejection, and no trigger-time spell-slot spending.
 - `L3-FOLLOWUP-GLYPH-STORED-CONCENTRATION` owns the stored Concentration full-duration override outside ordinary caster, triggering-creature, or readied-spell Concentration ownership.
 
 ## Reviewer Loop

@@ -1443,6 +1443,18 @@ export const BattleHoleSchema = Schema.Union(
   Schema.Struct({
     ...BattleHoleBaseSchema,
     kind: Schema.Literal("rolledDice"),
+    glyphExplosiveRune: Schema.Struct({
+      sourceCombatantId: CombatantId,
+      sourceSpellId: Schema.String,
+      sourceEffectId: BattleSpellEffectOccurrenceId,
+      damage: Schema.Struct({
+        expr: BattleRuntimeObjectSchema,
+      }),
+    }),
+  }),
+  Schema.Struct({
+    ...BattleHoleBaseSchema,
+    kind: Schema.Literal("rolledDice"),
     spellDamageReduction: Schema.Struct({
       sourceSpellId: Schema.String,
       sourceCombatantId: CombatantId,
@@ -1831,6 +1843,23 @@ export const BattleHoleSchema = Schema.Union(
     ability: Schema.Literal("dex"),
     dc: DcSourceSchema,
     areaChoices: Schema.Array(BattleSpellAreaChoiceSchema),
+    targetRollModes: Schema.Array(BattleSavingThrowRollModeProjectionSchema),
+    targetFlatBonuses: Schema.Array(BattleSavingThrowFlatBonusProjectionSchema),
+    ...D20TestNaturalOneRerollHoleOptionsSchema,
+  }),
+  Schema.Struct({
+    ...BattleHoleBaseSchema,
+    kind: Schema.Literal("savingThrowOutcome"),
+    label: Schema.String,
+    glyphExplosiveRune: Schema.Struct({
+      sourceCombatantId: CombatantId,
+      sourceSpellId: Schema.String,
+      sourceEffectId: BattleSpellEffectOccurrenceId,
+      radiusFeet: Schema.Literal(20),
+    }),
+    ability: Schema.Literal("dex"),
+    dc: DcSourceSchema,
+    targetIds: Schema.Array(CombatantId),
     targetRollModes: Schema.Array(BattleSavingThrowRollModeProjectionSchema),
     targetFlatBonuses: Schema.Array(BattleSavingThrowFlatBonusProjectionSchema),
     ...D20TestNaturalOneRerollHoleOptionsSchema,

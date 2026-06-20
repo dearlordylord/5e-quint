@@ -708,6 +708,7 @@ function spiritualWeaponActiveEffect(input: {
     ),
     forceReachFeet: movementFeet(5),
     repeatMoveMaxFeet: movementFeet(20),
+    repeatTargeting: { kind: "unrestricted" },
     startedOn: {
       actorId: spellTargetId,
       round: Round(1),
