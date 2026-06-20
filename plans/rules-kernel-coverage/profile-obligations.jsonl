@@ -161,3 +161,4 @@
 {"profileId":"spell.invocation-glyph-durable-occurrence","obligationIds":["BATTLE.SPELL.GLYPH_DURABLE_OCCURRENCE_LIFECYCLE"]}
 {"profileId":"spell.invocation-glyph-explosive-rune-release","obligationIds":["BATTLE.SPELL.GLYPH_EXPLOSIVE_RUNE_RELEASE"]}
 {"profileId":"spell.invocation-glyph-stored-spell-release","obligationIds":["BATTLE.SPELL.GLYPH_STORED_SPELL_RELEASE"]}
+{"profileId":"spell.invocation-glyph-stored-concentration-full-duration","obligationIds":["BATTLE.SPELL.GLYPH_STORED_CONCENTRATION_FULL_DURATION"]}

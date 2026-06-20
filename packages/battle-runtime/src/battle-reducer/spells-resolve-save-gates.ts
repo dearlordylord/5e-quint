@@ -2260,6 +2260,7 @@ export function resolveSaveGateConditionSpellAct(input: {
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
   readonly actionCostOverride?: "magicAction" | "bonusAction";
   readonly metamagicApplications?: readonly SpellMetamagicApplicationFact[];
+  readonly spendsCastResources?: boolean;
 }): BattleResolutionResult {
   if (
     input.invocation.targeting.kind !== "singleCombatant" &&
@@ -2439,18 +2440,21 @@ export function resolveSaveGateConditionSpellAct(input: {
     }
   }
 
-  const resourced = spendSpellCastResources({
-    state: input.input.state,
-    actorId: input.actorId,
-    invocation: input.invocation,
-    errorState: input.input.state,
-    ...(input.actionCostOverride === undefined
-      ? {}
-      : { actionCostOverride: input.actionCostOverride }),
-    ...(input.metamagicApplications === undefined
-      ? {}
-      : { metamagicApplications: input.metamagicApplications }),
-  });
+  const resourced =
+    input.spendsCastResources === false
+      ? ({ tag: "resolved", state: input.input.state } as const)
+      : spendSpellCastResources({
+          state: input.input.state,
+          actorId: input.actorId,
+          invocation: input.invocation,
+          errorState: input.input.state,
+          ...(input.actionCostOverride === undefined
+            ? {}
+            : { actionCostOverride: input.actionCostOverride }),
+          ...(input.metamagicApplications === undefined
+            ? {}
+            : { metamagicApplications: input.metamagicApplications }),
+        });
   if (resourced.tag === "invalid") {
     return resourced;
   }

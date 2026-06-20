@@ -222,6 +222,7 @@ export type {
   GlyphDurableOccurrenceActiveEffect,
   GlyphDurableOccurrenceAnchor,
   GlyphStoredSpellInvocation,
+  GlyphStoredSpellInvocationCandidate,
 } from "./active-effect/types.ts";
 import { type DamageAmountByTypeEntry } from "./battle-reducer/damage-helpers.ts";
 import type { BattleSpellEffectLevel } from "./battle-reducer/spells-effective-level.ts";

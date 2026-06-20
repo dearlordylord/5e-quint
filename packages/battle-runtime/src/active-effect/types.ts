@@ -14,8 +14,8 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.GLYPH_DURABLE_OCCURRENCE_LIFECYCLE
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-glyph-explosive-rune-release
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.GLYPH_EXPLOSIVE_RUNE_RELEASE
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-glyph-stored-spell-release
-// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.GLYPH_STORED_SPELL_RELEASE
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-glyph-stored-spell-release spell.invocation-glyph-stored-concentration-full-duration
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.GLYPH_STORED_SPELL_RELEASE BATTLE.SPELL.GLYPH_STORED_CONCENTRATION_FULL_DURATION
 import type { ArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
 import type { ElapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import type { AttackRollMode } from "@dnd/shared-algebras/runtime-hole-algebra";
@@ -329,12 +329,52 @@ export type GlyphDurableOccurrenceAnchor =
       readonly kind: "closeableObject";
       readonly objectId: BattleObjectId;
     };
-export type GlyphStoredSpellInvocation = Extract<
+type GlyphStoredConcentrationSaveGatedConditionInvocation = Extract<
+  SupportedSpellInvocation,
+  { readonly procedure: "saveGatedCondition" }
+> & {
+  readonly spell: SpellRecord & {
+    readonly mechanics: SpellRecord["mechanics"] & {
+      readonly duration: Extract<
+        SpellRecord["mechanics"]["duration"],
+        { readonly kind: "concentration" }
+      >;
+    };
+  };
+};
+type GlyphStoredNonConcentrationSpellRecord = SpellRecord & {
+  readonly mechanics: SpellRecord["mechanics"] & {
+    readonly duration: Exclude<
+      SpellRecord["mechanics"]["duration"],
+      { readonly kind: "concentration" }
+    >;
+  };
+};
+type GlyphStoredReadiedSpellInvocation = ReadiedSpellInvocation & {
+  readonly spell: GlyphStoredNonConcentrationSpellRecord;
+};
+type GlyphStoredGreaseGroundHazardInvocation = Extract<
+  SupportedSpellInvocation,
+  { readonly procedure: "greaseGroundHazard" }
+> & {
+  readonly spell: GlyphStoredNonConcentrationSpellRecord;
+};
+export type GlyphStoredSpellInvocationCandidate = Extract<
   | ReadiedSpellInvocation
   | Extract<
       SupportedSpellInvocation,
-      { readonly procedure: "greaseGroundHazard" }
+      { readonly procedure: "greaseGroundHazard" | "saveGatedCondition" }
     >,
+  {
+    readonly access: PreparedSpellAccess;
+    readonly resource: SpellSlotInvocationResource;
+    readonly targeting: SpellTargeting;
+  }
+>;
+export type GlyphStoredSpellInvocation = Extract<
+  | GlyphStoredReadiedSpellInvocation
+  | GlyphStoredGreaseGroundHazardInvocation
+  | GlyphStoredConcentrationSaveGatedConditionInvocation,
   {
     readonly access: PreparedSpellAccess;
     readonly resource: SpellSlotInvocationResource;

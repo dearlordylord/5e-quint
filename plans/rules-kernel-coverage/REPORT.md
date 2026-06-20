@@ -4,14 +4,14 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 
 ## Summary
 
-- Total obligations: 127
-- Covered obligations: 121
+- Total obligations: 128
+- Covered obligations: 122
 - Open transitional obligations: 0
 - Boundary or unsupported obligations: 6
 
 | Status | Count |
 | --- | ---: |
-| covered | 121 |
+| covered | 122 |
 | needs-qnt-owner | 0 |
 | needs-parity-witness | 0 |
 | needs-surface-evidence | 0 |
@@ -21,7 +21,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | Runtime | Count |
 | --- | ---: |
 | shared-algebras | 1 |
-| battle | 96 |
+| battle | 97 |
 | character-creation | 14 |
 | character-sheet | 12 |
 | character-battle | 4 |
@@ -157,6 +157,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `BATTLE.SPELL.GLYPH_DURABLE_OCCURRENCE_LIFECYCLE` | battle | covered | `spell.invocation-glyph-durable-occurrence` |
 | `BATTLE.SPELL.GLYPH_EXPLOSIVE_RUNE_RELEASE` | battle | covered | `spell.invocation-glyph-explosive-rune-release` |
 | `BATTLE.SPELL.GLYPH_STORED_SPELL_RELEASE` | battle | covered | `spell.invocation-glyph-stored-spell-release` |
+| `BATTLE.SPELL.GLYPH_STORED_CONCENTRATION_FULL_DURATION` | battle | covered | `spell.invocation-glyph-stored-concentration-full-duration` |
 
 ## Battle Hole Frontier
 
@@ -574,7 +575,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `packages/battle-runtime/battle-runtime-zero-hit-point-mid-resolution.mbt.qnt` | mbt-fixture | _none_ |
 | `packages/shared-algebras/proofs/rule-core/spell-haste-positive-effects-core.qnt` | semantic-core | `BATTLE.SPELL.HASTE_POSITIVE_EFFECTS` |
 | `packages/shared-algebras/proofs/rule-core/spell-haste-positive-effects-core-examples.qnt` | proof-only | `BATTLE.SPELL.HASTE_POSITIVE_EFFECTS` |
-| `packages/battle-runtime/battle-runtime-glyph-durable-occurrence.qnt` | proof-only | `BATTLE.SPELL.GLYPH_DURABLE_OCCURRENCE_LIFECYCLE`, `BATTLE.SPELL.GLYPH_EXPLOSIVE_RUNE_RELEASE`, `BATTLE.SPELL.GLYPH_STORED_SPELL_RELEASE` |
+| `packages/battle-runtime/battle-runtime-glyph-durable-occurrence.qnt` | proof-only | `BATTLE.SPELL.GLYPH_DURABLE_OCCURRENCE_LIFECYCLE`, `BATTLE.SPELL.GLYPH_EXPLOSIVE_RUNE_RELEASE`, `BATTLE.SPELL.GLYPH_STORED_CONCENTRATION_FULL_DURATION`, `BATTLE.SPELL.GLYPH_STORED_SPELL_RELEASE` |
 
 ## QNT Registry
 

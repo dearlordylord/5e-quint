@@ -1,18 +1,18 @@
 {
   "summary": {
-    "total": 127,
-    "covered": 121,
+    "total": 128,
+    "covered": 122,
     "open": 0,
     "nonSemantic": 6,
     "byRuntime": {
       "shared-algebras": 1,
-      "battle": 96,
+      "battle": 97,
       "character-creation": 14,
       "character-sheet": 12,
       "character-battle": 4
     },
     "byStatus": {
-      "covered": 121,
+      "covered": 122,
       "needs-qnt-owner": 0,
       "needs-parity-witness": 0,
       "needs-surface-evidence": 0,
@@ -4470,7 +4470,7 @@
       "qntOwners": [
         "packages/battle-runtime/battle-runtime-glyph-durable-occurrence.qnt"
       ],
-      "reason": "This Task 28 slice starts from an existing glyphDurableOccurrence active effect whose completed-inscription witness stored the spell-glyph release branch and a prepared spell-slot invocation. Release validates that the stored spell level and selected slot level do not exceed the Glyph source spell level, that storage has no immediate effect, and that trigger-only cleanup cannot bypass release. A tableWitnessedGlyphStoredSpellRelease witness retargets single-creature stored spells to the triggering creature, validates area origins centered on the triggering creature, delegates remaining ordinary spell holes and resolution to existing spell reducers, completes save-gated area release without spending or requiring a current spell slot at trigger time, consumes the represented hostile trap placement witness for stored Grease release by requiring close-as-possible placement and matching Grease ground-area facts, and removes the durable occurrence after successful release. It does not own stored Concentration full-duration override, component spend, map geometry derivation, or generic Dispel Magic ending.",
+      "reason": "This Task 28 slice starts from an existing glyphDurableOccurrence active effect whose completed-inscription witness stored the spell-glyph release branch and a prepared spell-slot invocation. Release validates that the stored spell level and selected slot level do not exceed the Glyph source spell level, that storage has no immediate effect, and that trigger-only cleanup cannot bypass release. A tableWitnessedGlyphStoredSpellRelease witness retargets single-creature stored spells to the triggering creature, validates area origins centered on the triggering creature, delegates remaining ordinary spell holes and resolution to existing spell reducers, completes save-gated area release without spending or requiring a current spell slot at trigger time, consumes the represented hostile trap placement witness for stored Grease release by requiring close-as-possible placement and matching Grease ground-area facts, and removes the durable occurrence after successful release. Stored Concentration full-duration behavior is owned by BATTLE.SPELL.GLYPH_STORED_CONCENTRATION_FULL_DURATION; component spend, map geometry derivation, and generic Dispel Magic ending remain separate owners.",
       "runtime": "battle",
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer/glyph-durable-occurrence.ts",
@@ -4484,6 +4484,37 @@
         "UBIQUITOUS_LANGUAGE.md#Table Decision"
       ],
       "title": "Battle Glyph of Warding spell glyph releases a stored prepared spell from a durable occurrence"
+    },
+    {
+      "id": "BATTLE.SPELL.GLYPH_STORED_CONCENTRATION_FULL_DURATION",
+      "kind": "active-effect-lifecycle",
+      "parityWitnesses": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-glyph-of-warding.test.ts"
+        }
+      ],
+      "profiles": [
+        "spell.invocation-glyph-stored-concentration-full-duration"
+      ],
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime-glyph-durable-occurrence.qnt"
+      ],
+      "reason": "This Task 29 slice starts from an existing glyphDurableOccurrence active effect whose completed-inscription witness stored a supported single-creature save-gated-condition spell invocation that requires Concentration. Release validates the same stored-level, no-immediate-effect, trigger-target, and explicit-release boundaries as the stored-spell owner, resolves the stored spell without trigger-time slot spending or ordinary caster/triggering-creature Concentration ownership, rewrites the resulting spell condition active effects to a duration expiration equal to the stored spell full duration, preserves unrelated readied-spell Concentration and readied-spell state, and removes the durable occurrence after successful release. Single-creature readied-spell Concentration procedures, area Concentration releases, summon or harmful-object placement, component spend, map geometry derivation, and generic Dispel Magic ending remain separate owners.",
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer/glyph-durable-occurrence.ts",
+        "packages/battle-runtime/src/active-effect/types.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Spells/Descriptions-E-L.md#Glyph of Warding",
+        "UBIQUITOUS_LANGUAGE.md#Spell Effect",
+        "UBIQUITOUS_LANGUAGE.md#Concentration",
+        "UBIQUITOUS_LANGUAGE.md#Spell Invocation",
+        "UBIQUITOUS_LANGUAGE.md#Saving Throw"
+      ],
+      "title": "Battle Glyph of Warding spell glyph releases supported stored Concentration spells to full duration"
     }
   ],
   "battleHoleFrontier": [
@@ -7386,6 +7417,12 @@
         "BATTLE.SPELL.GLYPH_STORED_SPELL_RELEASE"
       ],
       "profileId": "spell.invocation-glyph-stored-spell-release"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.SPELL.GLYPH_STORED_CONCENTRATION_FULL_DURATION"
+      ],
+      "profileId": "spell.invocation-glyph-stored-concentration-full-duration"
     }
   ],
   "qntOwnerRoles": [
@@ -9606,6 +9643,7 @@
       "obligationIds": [
         "BATTLE.SPELL.GLYPH_DURABLE_OCCURRENCE_LIFECYCLE",
         "BATTLE.SPELL.GLYPH_EXPLOSIVE_RUNE_RELEASE",
+        "BATTLE.SPELL.GLYPH_STORED_CONCENTRATION_FULL_DURATION",
         "BATTLE.SPELL.GLYPH_STORED_SPELL_RELEASE"
       ],
       "ownerPath": "packages/battle-runtime/battle-runtime-glyph-durable-occurrence.qnt",
@@ -14406,6 +14444,7 @@
     "spell.invocation-forced-reaction-movement",
     "spell.invocation-glyph-durable-occurrence",
     "spell.invocation-glyph-explosive-rune-release",
+    "spell.invocation-glyph-stored-concentration-full-duration",
     "spell.invocation-glyph-stored-spell-release",
     "spell.invocation-grease-ground-hazard",
     "spell.invocation-gust-of-wind-line",
