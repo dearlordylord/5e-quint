@@ -139,19 +139,19 @@
     {
       "number": 23,
       "id": "L3-FOLLOWUP-PHANTOM-STEED-MOUNT-LIFECYCLE",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "Phantom Steed Mount Lifecycle Runtime"
     },
     {
       "number": 24,
       "id": "L3-FOLLOWUP-PHANTOM-STEED-CREATED-EQUIPMENT",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "Phantom Steed Created Equipment Cleanup"
     },
     {
       "number": 25,
       "id": "L3-FOLLOWUP-PHANTOM-STEED-TRAVEL-PACE",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "Phantom Steed Table Travel Pace"
     },
     {
@@ -256,9 +256,9 @@ missing-record spells unless a RAW dependency is unavoidable and documented.
 | 20 | L5-C20-MELD-INTO-STONE-SURFACE-WIDENING - Widen Meld into Stone Surface Spell Definition | done | L5-C08-MELD-INTO-STONE | Meld into Stone is authored/admitted as an SRD Surface Spell Definition with typed stone object-or-surface containment, hidden merged occupancy, outside-sense, self-spell, Movement-limited exit, destructive expulsion damage, closest-unoccupied-space placement, and Prone rider facts; promoted runtime remains unclaimed. |
 | 21 | L5-C21-PHANTOM-STEED-MOUNT-LIFECYCLE - Promote Phantom Steed mount lifecycle owner | done | L5-C10-PHANTOM-STEED | Added the typed spawned-creature-damage spell-end fact and split remaining runtime work into executable follow-ups L3-FOLLOWUP-PHANTOM-STEED-MOUNT-LIFECYCLE, L3-FOLLOWUP-PHANTOM-STEED-CREATED-EQUIPMENT, and L3-FOLLOWUP-PHANTOM-STEED-TRAVEL-PACE. |
 | 22 | L5-C22-GLYPH-OF-WARDING-RUNTIME - Promote Glyph of Warding runtime release owner | done | L5-C15-GLYPH-OF-WARDING-SURFACE-WIDENING | Closed as an owner split: Glyph remains unsupported-profile while durable occurrence, explosive-rune release, stored-spell release, and stored Concentration override are tracked as narrower follow-up owners. |
-| 23 | L3-FOLLOWUP-PHANTOM-STEED-MOUNT-LIFECYCLE - Phantom Steed Mount Lifecycle Runtime | ready-for-research | L5-C21-PHANTOM-STEED-MOUNT-LIFECYCLE | Promote spell-created mount occurrence creation, caller-supplied unoccupied placement, Riding Horse catalog projection with Speed override, rider permission, damage-triggered spell end, and gradual fade/dismount grace. |
-| 24 | L3-FOLLOWUP-PHANTOM-STEED-CREATED-EQUIPMENT - Phantom Steed Created Equipment Cleanup | ready-for-research | L5-C21-PHANTOM-STEED-MOUNT-LIFECYCLE | Promote saddle/bit/bridle object or equipment occurrences and the 10-foot carried-distance vanish boundary. |
-| 25 | L3-FOLLOWUP-PHANTOM-STEED-TRAVEL-PACE - Phantom Steed Table Travel Pace | ready-for-research | L5-C21-PHANTOM-STEED-MOUNT-LIFECYCLE | Promote the 13 miles/hour travel fact through a table travel owner without adding battle-map travel state. |
+| 23 | L3-FOLLOWUP-PHANTOM-STEED-MOUNT-LIFECYCLE - Phantom Steed Mount Lifecycle Runtime | deferred | L5-C21-PHANTOM-STEED-MOUNT-LIFECYCLE | Owner deferred on 2026-06-20 after task-23 review showed this needs mounted/riding control and long-cast owners first; see `plans/ralph-artifacts/phantom-steed-runtime-wip/`. |
+| 24 | L3-FOLLOWUP-PHANTOM-STEED-CREATED-EQUIPMENT - Phantom Steed Created Equipment Cleanup | deferred | L5-C21-PHANTOM-STEED-MOUNT-LIFECYCLE | Owner deferred on 2026-06-20 with the rest of Phantom Steed runtime backlog; requires a generic created object/equipment occurrence owner. |
+| 25 | L3-FOLLOWUP-PHANTOM-STEED-TRAVEL-PACE - Phantom Steed Table Travel Pace | deferred | L5-C21-PHANTOM-STEED-MOUNT-LIFECYCLE | Owner deferred on 2026-06-20 with the rest of Phantom Steed runtime backlog; requires a table travel owner, not battle-map travel state. |
 | 26 | L3-FOLLOWUP-GLYPH-DURABLE-OCCURRENCE - Glyph Durable Occurrence | ready-for-research | L5-C22-GLYPH-OF-WARDING-RUNTIME | Promote durable glyph occurrence creation, trigger/end cleanup, notice, movement invalidation, and table object/location witnesses. |
 | 27 | L3-FOLLOWUP-GLYPH-EXPLOSIVE-RUNE-RELEASE - Glyph Explosive Rune Release | ready-for-research | L3-FOLLOWUP-GLYPH-DURABLE-OCCURRENCE | Promote non-immediate explosive-rune release with area-membership witnesses, damage-type choice, Dexterity Saving Throw half damage, slot scaling, and cleanup. |
 | 28 | L3-FOLLOWUP-GLYPH-STORED-SPELL-RELEASE - Glyph Stored Spell Release | ready-for-research | L3-FOLLOWUP-GLYPH-DURABLE-OCCURRENCE | Promote stored spell invocation state, no-immediate-effect storage, trigger retargeting or area centering, and hostile close-as-possible placement witnesses. |
@@ -1408,7 +1408,12 @@ Plan Impact:
 
 ### Task 23 - L3-FOLLOWUP-PHANTOM-STEED-MOUNT-LIFECYCLE
 
-Status: `ready-for-research`
+Status: `deferred`
+
+Deferred Detail: Owner instructed on 2026-06-20 to park Phantom Steed runtime
+work, keep the useful task-23 findings as backlog material, and continue other
+runnable tasks. Runtime promotion needs mounted/riding control and long-cast
+progress owners before this task should resume.
 
 Depends on:
 
@@ -1431,6 +1436,8 @@ Current state:
   and gradual-fade facts.
 - No promoted runtime owner creates or controls the spell-created mount
   occurrence.
+- Task-23 WIP/review artifacts are preserved under
+  `plans/ralph-artifacts/phantom-steed-runtime-wip/`.
 
 Output:
 
@@ -1455,7 +1462,13 @@ Verification:
 
 ### Task 24 - L3-FOLLOWUP-PHANTOM-STEED-CREATED-EQUIPMENT
 
-Status: `ready-for-research`
+Status: `deferred`
+
+Deferred Detail: Owner instructed on 2026-06-20 to park Phantom Steed runtime
+work with the rest of the mount backlog. This should resume only after a
+generic created object/equipment occurrence owner can represent saddle, bit,
+bridle, carried-state, distance, and vanish cleanup without a spell-local
+inventory ledger.
 
 Depends on:
 
@@ -1497,7 +1510,11 @@ Verification:
 
 ### Task 25 - L3-FOLLOWUP-PHANTOM-STEED-TRAVEL-PACE
 
-Status: `ready-for-research`
+Status: `deferred`
+
+Deferred Detail: Owner instructed on 2026-06-20 to park Phantom Steed runtime
+work with the rest of the mount backlog. This should resume only after a table
+travel owner exists for route/travel-time facts outside battle-map runtime.
 
 Depends on:
 
