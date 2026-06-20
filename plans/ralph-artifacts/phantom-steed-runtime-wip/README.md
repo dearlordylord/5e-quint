@@ -36,6 +36,12 @@ this artifact as an apply-clean patch.
 
 ## Reusable Suggestions
 
+- Do not reduce Phantom Steed to a generic fighting summon. The SRD text says a
+  Large, quasi-real, horselike creature appears and can be ridden; it uses the
+  Riding Horse stat block with the spell's Speed/travel changes, but the spell
+  does not say it fights for the caster or behaves like a summoned ally. Any
+  partial runtime support should be an inert spell-created mount/lifecycle
+  slice until mounted-control rules are modeled.
 - A completed long-cast spell should be a subject emitted by a future long-cast
   progress owner, not an ordinary discovered spell act.
 - A spell-created mount must not automatically gain an independent initiative
