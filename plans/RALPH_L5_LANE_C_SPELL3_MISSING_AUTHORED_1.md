@@ -157,7 +157,7 @@
     {
       "number": 26,
       "id": "L3-FOLLOWUP-GLYPH-DURABLE-OCCURRENCE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Glyph Durable Occurrence"
     },
     {
@@ -259,7 +259,7 @@ missing-record spells unless a RAW dependency is unavoidable and documented.
 | 23 | L3-FOLLOWUP-PHANTOM-STEED-MOUNT-LIFECYCLE - Phantom Steed Mount Lifecycle Runtime | deferred | L5-C21-PHANTOM-STEED-MOUNT-LIFECYCLE | Owner deferred on 2026-06-20 after task-23 review showed this needs mounted/riding control and long-cast owners first; see `plans/ralph-artifacts/phantom-steed-runtime-wip/`. |
 | 24 | L3-FOLLOWUP-PHANTOM-STEED-CREATED-EQUIPMENT - Phantom Steed Created Equipment Cleanup | deferred | L5-C21-PHANTOM-STEED-MOUNT-LIFECYCLE | Owner deferred on 2026-06-20 with the rest of Phantom Steed runtime backlog; requires a generic created object/equipment occurrence owner. |
 | 25 | L3-FOLLOWUP-PHANTOM-STEED-TRAVEL-PACE - Phantom Steed Table Travel Pace | deferred | L5-C21-PHANTOM-STEED-MOUNT-LIFECYCLE | Owner deferred on 2026-06-20 with the rest of Phantom Steed runtime backlog; requires a table travel owner, not battle-map travel state. |
-| 26 | L3-FOLLOWUP-GLYPH-DURABLE-OCCURRENCE - Glyph Durable Occurrence | ready-for-research | L5-C22-GLYPH-OF-WARDING-RUNTIME | Promote durable glyph occurrence creation, trigger/end cleanup, notice, movement invalidation, and table object/location witnesses. |
+| 26 | L3-FOLLOWUP-GLYPH-DURABLE-OCCURRENCE - Glyph Durable Occurrence | done | L5-C22-GLYPH-OF-WARDING-RUNTIME | Promoted the completed-inscription durable occurrence owner with trigger cleanup and movement invalidation witnesses; release work remains in Tasks 27-29. |
 | 27 | L3-FOLLOWUP-GLYPH-EXPLOSIVE-RUNE-RELEASE - Glyph Explosive Rune Release | ready-for-research | L3-FOLLOWUP-GLYPH-DURABLE-OCCURRENCE | Promote non-immediate explosive-rune release with area-membership witnesses, damage-type choice, Dexterity Saving Throw half damage, slot scaling, and cleanup. |
 | 28 | L3-FOLLOWUP-GLYPH-STORED-SPELL-RELEASE - Glyph Stored Spell Release | ready-for-research | L3-FOLLOWUP-GLYPH-DURABLE-OCCURRENCE | Promote stored spell invocation state, no-immediate-effect storage, trigger retargeting or area centering, and hostile close-as-possible placement witnesses. |
 | 29 | L3-FOLLOWUP-GLYPH-STORED-CONCENTRATION - Glyph Stored Concentration Override | ready-for-research | L3-FOLLOWUP-GLYPH-STORED-SPELL-RELEASE | Promote the stored Concentration full-duration override outside ordinary caster, triggering-creature, or readied-spell Concentration ownership. |
@@ -1615,18 +1615,15 @@ Verification:
 
 Plan Impact:
 
-- Glyph of Warding remains `unsupported-profile`; Surface catalog admission is
-  not runtime owner evidence.
-- The broad durable glyph occurrence/release workflow is split into
-  L3-FOLLOWUP-GLYPH-DURABLE-OCCURRENCE,
-  L3-FOLLOWUP-GLYPH-EXPLOSIVE-RUNE-RELEASE,
-  L3-FOLLOWUP-GLYPH-STORED-SPELL-RELEASE, and
-  L3-FOLLOWUP-GLYPH-STORED-CONCENTRATION before any supported Glyph runtime
-  profile claims execution.
+- Glyph of Warding is split across narrower executable owners: Task 26 now owns
+  the durable occurrence boundary, and Tasks 27-29 remain runnable for
+  explosive-rune release, stored-spell release, and stored Concentration.
+- Full Glyph release support is still not claimed by Task 22's broad owner
+  split; each remaining release owner must add its own focused verification.
 
 ### Task 26 - L3-FOLLOWUP-GLYPH-DURABLE-OCCURRENCE
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -1648,9 +1645,10 @@ Current state:
 - Glyph of Warding has typed Surface facts for inscription anchor, maximum
   covered area, hidden-noticing DC source, trigger refinement/exclusion, and
   movement invalidation.
-- No promoted runtime owner creates or cleans up a durable glyph occurrence, and
-  no owner consumes table object/location, covered-area, notice,
-  trigger-event, or movement-invalidation witnesses.
+- Battle runtime now promotes a `spell.invocation-glyph-durable-occurrence`
+  profile-subset-supported owner for completed one-hour inscription,
+  table-witnessed anchor/covered-area/cast-location facts, hidden-noticing DC
+  source, trigger occurrence cleanup, and movement invalidation cleanup.
 
 Output:
 
@@ -1675,6 +1673,15 @@ Verification:
 - Focused owner-package tests, and if battle-runtime behavior changes, update
   the relevant QNT/spec first and run focused MBT per `AGENTS.md`.
 
+Plan Impact:
+
+- Task 26 is complete. Glyph of Warding can claim the durable occurrence subset
+  only; explosive-rune release, stored-spell release, and stored Concentration
+  remain visible in Tasks 27-29.
+- Generic Dispel Magic targeting of Glyph occurrences remains with the existing
+  broader ongoing Spell Effect Dispel follow-up, not this Glyph occurrence
+  owner.
+
 ### Task 27 - L3-FOLLOWUP-GLYPH-EXPLOSIVE-RUNE-RELEASE
 
 Status: `ready-for-research`
@@ -1696,6 +1703,8 @@ SRD anchors:
 
 Current state:
 
+- Task 26 promotes durable glyph occurrence creation and trigger/movement
+  cleanup; this task starts from that represented occurrence.
 - Glyph of Warding has typed Surface facts for the explosive-rune branch:
   20-foot Sphere, Dexterity Saving Throw half damage, caster-chosen Acid, Cold,
   Fire, Lightning, or Thunder damage, and higher-slot d8 scaling.
@@ -1744,6 +1753,8 @@ SRD anchors:
 
 Current state:
 
+- Task 26 promotes durable glyph occurrence creation and trigger/movement
+  cleanup; this task starts from that represented occurrence.
 - Glyph of Warding has typed Surface facts for stored prepared-spell
   eligibility, no immediate effect at storage time, trigger-creature
   retargeting, area centering, and hostile close-as-possible placement.

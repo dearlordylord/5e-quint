@@ -10,6 +10,8 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-haste-positive
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.HASTE_POSITIVE_EFFECTS
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.HASTE_LETHARGY_LIFECYCLE
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-glyph-durable-occurrence
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.GLYPH_DURABLE_OCCURRENCE_LIFECYCLE
 import type { ArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
 import type { ElapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import type { AttackRollMode } from "@dnd/shared-algebras/runtime-hole-algebra";
@@ -308,6 +310,46 @@ export type SpiritualWeaponActiveEffect = BattleSpellEffectBase & {
     BattleActiveEffectExpiration,
     { readonly kind: "concentration" }
   > & { readonly durationTicks: ElapsedTimeTicks };
+};
+export type GlyphDurableOccurrenceAnchor =
+  | {
+      readonly kind: "surface";
+      readonly areaId: BattleAreaId;
+    }
+  | {
+      readonly kind: "closeableObject";
+      readonly objectId: BattleObjectId;
+    };
+export type GlyphDurableOccurrenceActiveEffect = BattleSpellEffectBase & {
+  readonly kind: "glyphDurableOccurrence";
+  readonly sourceEffectId: BattleSpellEffectOccurrenceId;
+  readonly sourceSpellLevel: BattleSpellEffectLevel;
+  readonly anchor: GlyphDurableOccurrenceAnchor;
+  readonly coveredAreaId: BattleAreaId;
+  readonly castLocationId: BattleTablePositionId;
+  readonly maxCoveredDiameterFeet: MovementFeet;
+  readonly notice: {
+    readonly ability: Extract<Ability, "wis">;
+    readonly skill: Extract<Skill, "perception">;
+    readonly dc: Extract<DcSource, { readonly kind: "caster_spell_save_dc" }>;
+    readonly owner: "table_witnessed_glyph_notice";
+  };
+  readonly trigger: {
+    readonly occurrence: "table_witnessed_trigger_occurrence";
+    readonly activationFilter: "creature_type";
+    readonly nonTriggerExclusion: "password_or_other_condition";
+    readonly onTriggered: "spell_ends";
+  };
+  readonly movementInvalidation: {
+    readonly movedSubject: "inscribed_surface_or_object";
+    readonly distanceFrom: "cast_location";
+    readonly moreThanFeet: MovementFeet;
+    readonly outcome: "glyph_breaks_spell_ends_without_triggering";
+  };
+  readonly expiresAt: Extract<
+    BattleActiveEffectExpiration,
+    { readonly kind: "untilDispelled" }
+  >;
 };
 export type ObjectContactPenaltyActiveEffect = BattleSpellEffectBase & {
   readonly kind: "selfAttackRollAndAbilityCheckRollMode";
@@ -937,6 +979,7 @@ export type BattleActiveEffect =
   | SpellCreatedHeldObjectActiveEffect
   | SpellObjectContactDamageActiveEffect
   | SpiritualWeaponActiveEffect
+  | GlyphDurableOccurrenceActiveEffect
   | ObjectContactPenaltyActiveEffect
   | (BattleSpellEffectBase & {
       readonly kind: "dancingLights";

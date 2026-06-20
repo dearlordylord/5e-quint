@@ -4,14 +4,14 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 
 ## Summary
 
-- Total obligations: 124
-- Covered obligations: 118
+- Total obligations: 125
+- Covered obligations: 119
 - Open transitional obligations: 0
 - Boundary or unsupported obligations: 6
 
 | Status | Count |
 | --- | ---: |
-| covered | 118 |
+| covered | 119 |
 | needs-qnt-owner | 0 |
 | needs-parity-witness | 0 |
 | needs-surface-evidence | 0 |
@@ -21,7 +21,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | Runtime | Count |
 | --- | ---: |
 | shared-algebras | 1 |
-| battle | 93 |
+| battle | 94 |
 | character-creation | 14 |
 | character-sheet | 12 |
 | character-battle | 4 |
@@ -154,6 +154,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `BATTLE.SPELL.HASTE_LETHARGY_LIFECYCLE` | battle | covered | `spell.invocation-haste-positive` |
 | `BATTLE.PROTOCOL.CONCENTRATION_BREAK_TEARDOWN` | battle | covered | _direct reducer entrypoint_ |
 | `BATTLE.PROTOCOL.ZERO_HIT_POINT_MID_RESOLUTION` | battle | covered | _direct reducer entrypoint_ |
+| `BATTLE.SPELL.GLYPH_DURABLE_OCCURRENCE_LIFECYCLE` | battle | covered | `spell.invocation-glyph-durable-occurrence` |
 
 ## Battle Hole Frontier
 
@@ -569,6 +570,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `packages/battle-runtime/battle-runtime-zero-hit-point-mid-resolution.mbt.qnt` | mbt-fixture | _none_ |
 | `packages/shared-algebras/proofs/rule-core/spell-haste-positive-effects-core.qnt` | semantic-core | `BATTLE.SPELL.HASTE_POSITIVE_EFFECTS` |
 | `packages/shared-algebras/proofs/rule-core/spell-haste-positive-effects-core-examples.qnt` | proof-only | `BATTLE.SPELL.HASTE_POSITIVE_EFFECTS` |
+| `packages/battle-runtime/battle-runtime-glyph-durable-occurrence.qnt` | proof-only | `BATTLE.SPELL.GLYPH_DURABLE_OCCURRENCE_LIFECYCLE` |
 
 ## QNT Registry
 
@@ -608,6 +610,7 @@ Rows here inventory `packages/**/*.qnt` files excluding `.mbt.qnt` drivers and `
 | `packages/battle-runtime/battle-runtime-fill-kinds.qnt` | qnt-owner-role | semantic-core |
 | `packages/battle-runtime/battle-runtime-find-familiar.qnt` | qnt-owner-role | semantic-core |
 | `packages/battle-runtime/battle-runtime-flaming-sphere-hazard-ram.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-glyph-durable-occurrence.qnt` | qnt-owner-role | proof-only |
 | `packages/battle-runtime/battle-runtime-ground-command.qnt` | qnt-owner-role | semantic-core |
 | `packages/battle-runtime/battle-runtime-gust-of-wind.qnt` | qnt-owner-role | semantic-core |
 | `packages/battle-runtime/battle-runtime-hidden.qnt` | qnt-owner-role | proof-only |

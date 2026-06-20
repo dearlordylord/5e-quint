@@ -218,6 +218,10 @@ import type {
   SpellTurnStartDamageSave,
   TurnAnchoredBattleActiveEffectExpiration,
 } from "./active-effect/types.ts";
+export type {
+  GlyphDurableOccurrenceActiveEffect,
+  GlyphDurableOccurrenceAnchor,
+} from "./active-effect/types.ts";
 import { type DamageAmountByTypeEntry } from "./battle-reducer/damage-helpers.ts";
 import type { BattleSpellEffectLevel } from "./battle-reducer/spells-effective-level.ts";
 import type {
