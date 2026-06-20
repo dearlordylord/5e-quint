@@ -791,6 +791,11 @@ export type BattleOngoingSpellTargetWithinRangeFact = {
   readonly target: BattleOngoingSpellTarget;
   readonly rangeFeet: MovementFeet;
 };
+type BattleConcentrationOrDurationExpiration =
+  | (Extract<BattleActiveEffectExpiration, { readonly kind: "concentration" }> & {
+      readonly durationTicks: ElapsedTimeTicks;
+    })
+  | Extract<BattleActiveEffectExpiration, { readonly kind: "duration" }>;
 export type BattleSpellObscurementZone = {
   readonly kind: "spellObscurementZone";
   readonly sourceSpellId: SpellRecord["id"];
@@ -810,10 +815,7 @@ export type BattleSpellObscurementZone = {
         readonly areaId: BattleAreaId;
         readonly sideFeet: MovementFeet;
       };
-  readonly expiresAt: Extract<
-    BattleActiveEffectExpiration,
-    { readonly kind: "concentration" }
-  >;
+  readonly expiresAt: BattleConcentrationOrDurationExpiration;
 };
 export type BattleMagicalDarknessZone = {
   readonly kind: "spellMagicalDarknessZone";
@@ -824,10 +826,7 @@ export type BattleMagicalDarknessZone = {
     readonly areaId: BattleAreaId;
     readonly radiusFeet: MovementFeet;
   };
-  readonly expiresAt: Extract<
-    BattleActiveEffectExpiration,
-    { readonly kind: "concentration" }
-  >;
+  readonly expiresAt: BattleConcentrationOrDurationExpiration;
 };
 export type BattleObscurementZone =
   | BattleSpellObscurementZone
@@ -2064,6 +2063,14 @@ export type BattleSpellCreatedLightAreaOverlap = {
   readonly kind: "spellCreatedLightOverlapsArea";
   readonly sourceEffectId: BattleSpellEffectOccurrenceId;
 };
+export type BattleSpellAreaOriginAnchor =
+  | {
+      readonly kind: "tableSelectedPoint";
+    }
+  | {
+      readonly kind: "combatant";
+      readonly combatantId: CombatantId;
+    };
 export type BattleAntimagicFieldAffectedOngoingSpellEffect = {
   readonly kind: "antimagicFieldAffectedOngoingSpellEffect";
   readonly effect: BattleAntimagicFieldOngoingSpellEffectRef;
@@ -2109,10 +2116,12 @@ export type BattleSpellAreaIdentityChoice =
   | {
       readonly kind: "fogCloudArea";
       readonly areaId: BattleAreaId;
+      readonly originAnchor: BattleSpellAreaOriginAnchor;
     }
   | {
       readonly kind: "magicalDarknessArea";
       readonly areaId: BattleAreaId;
+      readonly originAnchor: BattleSpellAreaOriginAnchor;
       readonly spellCreatedLightOverlaps: readonly BattleSpellCreatedLightAreaOverlap[];
     }
   | {
@@ -2124,18 +2133,22 @@ export type BattleSpellAreaIdentityChoice =
   | {
       readonly kind: "webCubeArea";
       readonly areaId: BattleAreaId;
+      readonly originAnchor: BattleSpellAreaOriginAnchor;
     }
   | {
       readonly kind: "flamingSphereArea";
       readonly areaId: BattleAreaId;
+      readonly originAnchor: BattleSpellAreaOriginAnchor;
     }
   | {
       readonly kind: "spikeGrowthArea";
       readonly areaId: BattleAreaId;
+      readonly originAnchor: BattleSpellAreaOriginAnchor;
     }
   | {
       readonly kind: "moonbeamCylinderArea";
       readonly areaId: BattleAreaId;
+      readonly originAnchor: BattleSpellAreaOriginAnchor;
     }
   | {
       readonly kind: "gustOfWindLineArea";

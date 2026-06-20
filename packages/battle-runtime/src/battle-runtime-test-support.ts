@@ -76,6 +76,7 @@ import {
   type BattleHidePrerequisite,
   type BattleInterruptCheckpoint,
   type BattleReadiedSpellTrigger,
+  type BattleSpellAreaOriginAnchor,
   type BattleState,
   type BattleSubject,
   type BattleCreatureState,
@@ -1885,6 +1886,7 @@ export function castFogCloud(
 export function fogCloudAreaFill(
   hole: BattleHole,
   areaId: BattleAreaId,
+  originAnchor: BattleSpellAreaOriginAnchor = { kind: "tableSelectedPoint" },
 ): Extract<BattleFill, { readonly kind: "spellAreaChoice" }> {
   if (hole.kind !== "spellAreaChoice") {
     throw new Error("Expected spellAreaChoice hole.");
@@ -1892,7 +1894,7 @@ export function fogCloudAreaFill(
   return {
     kind: "spellAreaChoice",
     holeId: hole.holeId,
-    value: { kind: "fogCloudArea", areaId },
+    value: { kind: "fogCloudArea", areaId, originAnchor },
   };
 }
 

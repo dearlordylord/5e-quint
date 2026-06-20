@@ -4,6 +4,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3-FOLLOWUP-GLYPH-STORED-CONCENTRATION glyph_of_warding
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3-FOLLOWUP-GLYPH-STORED-SUMMON-OBJECT-PLACEMENT glyph_of_warding
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3-FOLLOWUP-GLYPH-STORED-REMAINING-CONCENTRATION glyph_of_warding
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3-FOLLOWUP-GLYPH-STORED-AREA-ONGOING-CONCENTRATION glyph_of_warding
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-glyph-durable-occurrence spell.invocation-glyph-explosive-rune-release spell.invocation-glyph-stored-spell-release spell.invocation-glyph-stored-concentration-full-duration spell.invocation-glyph-stored-summon-object-placement
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.GLYPH_DURABLE_OCCURRENCE_LIFECYCLE BATTLE.SPELL.GLYPH_EXPLOSIVE_RUNE_RELEASE BATTLE.SPELL.GLYPH_STORED_SPELL_RELEASE BATTLE.SPELL.GLYPH_STORED_CONCENTRATION_FULL_DURATION
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
@@ -46,6 +47,7 @@ import {
   type GlyphStoredSpellInvocationCandidate,
   type ReadiedSpellInvocation,
 } from "./battle-reducer.ts";
+import { GLYPH_STORED_AREA_ONGOING_PROCEDURES } from "./active-effect/types.ts";
 import {
   parseBattleSpellEffectLevel,
   type BattleSpellEffectLevel,
@@ -53,9 +55,12 @@ import {
 import {
   blindnessDeafnessUnitId,
   counterspellUnitId,
+  darknessUnitId,
   fireballUnitId,
+  flamingSphereUnitId,
   greaseAreaId,
   greaseUnitId,
+  gustOfWindUnitId,
   holdPersonDurationTicks,
   guidingBoltUnitId,
   glyphOfWardingUnitId,
@@ -67,21 +72,28 @@ import {
   spellCasterId,
   spellTargetId,
   spiritualWeaponUnitId,
+  spikeGrowthUnitId,
   thunderwaveSecondTargetId,
   thunderwaveUnitId,
   unitLibrary,
+  webUnitId,
 } from "./unit-profile-admission-catalog-support.ts";
 import { attackRollFill } from "./unit-profile-admission-creature-fixture-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
 import {
   maybeSpellAct,
   maybeBonusSpellAct,
+  flamingSphereAreaFill,
   greaseSavingThrowOutcomeFill,
+  gustOfWindLineSavingThrowOutcomeFill,
+  moonbeamAreaFill,
   savingThrowOutcomeFill,
   spellTargetFill,
+  spikeGrowthAreaFill,
   spiritualWeaponTargetFill,
   spiritualWeaponForcePositionFill,
   thunderwaveArea,
+  webAreaFill,
 } from "./unit-profile-admission-spell-fill-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
 import {
@@ -95,6 +107,7 @@ import {
   type BattleFill,
   type BattleHole,
   type BattleObjectIgnitionDisposition,
+  type BattleSpellAreaOriginAnchor,
   type BattleState,
   type BattleTargetSpatialFact,
   type CombatantId,
@@ -122,6 +135,160 @@ const glyphCastLocationId = battleTablePositionId("glyph-cast-location");
 const glyphHarmfulObjectPositionId = battleTablePositionId(
   "glyph-harmful-object-position",
 );
+const fogCloudUnitId = "fog_cloud";
+const glyphStoredFogCloudAreaId = battleAreaId("glyph-stored-fog-cloud-area");
+const glyphStoredDarknessAreaId = battleAreaId("glyph-stored-darkness-area");
+const glyphStoredFlamingSphereAreaId = battleAreaId(
+  "glyph-stored-flaming-sphere-area",
+);
+const glyphStoredSpikeGrowthAreaId = battleAreaId(
+  "glyph-stored-spike-growth-area",
+);
+const glyphStoredMoonbeamAreaId = battleAreaId("glyph-stored-moonbeam-area");
+const glyphStoredWebAreaId = battleAreaId("glyph-stored-web-area");
+const glyphStoredGustOfWindAreaId = battleAreaId(
+  "glyph-stored-gust-of-wind-area",
+);
+const glyphStoredAreaOriginAnchor = {
+  kind: "combatant",
+  combatantId: spellTargetId,
+} as const satisfies BattleSpellAreaOriginAnchor;
+const glyphStoredWrongAreaOriginAnchor = {
+  kind: "combatant",
+  combatantId: spellCasterId,
+} as const satisfies BattleSpellAreaOriginAnchor;
+const glyphStoredUnanchoredAreaOrigin = {
+  kind: "tableSelectedPoint",
+} as const satisfies BattleSpellAreaOriginAnchor;
+
+type GlyphStoredAreaOngoingReleaseCase = {
+  readonly label: string;
+  readonly spellId: string;
+  readonly slotLevel: TestSpellSlotLevel;
+  readonly procedure: GlyphStoredSpellInvocationCandidate["procedure"];
+  readonly effectKind: BattleActiveEffect["kind"];
+  readonly areaId: ReturnType<typeof battleAreaId>;
+  readonly fillsFromHoles: (
+    holes: readonly BattleHole[],
+    originAnchor?: BattleSpellAreaOriginAnchor,
+  ) => readonly BattleFill[];
+};
+const GLYPH_STORED_AREA_ONGOING_RELEASE_CASES = [
+  {
+    label: "Fog Cloud",
+    spellId: fogCloudUnitId,
+    slotLevel: 1,
+    procedure: "fogCloudObscurement",
+    effectKind: "fogCloudObscurement",
+    areaId: glyphStoredFogCloudAreaId,
+    fillsFromHoles: (holes, originAnchor = glyphStoredAreaOriginAnchor) => [
+      glyphStoredAreaChoiceFill(
+        requireReleaseHole(holes, "spellAreaChoice"),
+        {
+          kind: "fogCloudArea",
+          areaId: glyphStoredFogCloudAreaId,
+          originAnchor,
+        },
+      ),
+    ],
+  },
+  {
+    label: "Darkness",
+    spellId: darknessUnitId,
+    slotLevel: 2,
+    procedure: "magicalDarknessPointOrigin",
+    effectKind: "magicalDarknessPointOrigin",
+    areaId: glyphStoredDarknessAreaId,
+    fillsFromHoles: (holes, originAnchor = glyphStoredAreaOriginAnchor) => [
+      glyphStoredAreaChoiceFill(
+        requireReleaseHole(holes, "spellAreaChoice"),
+        {
+          kind: "magicalDarknessArea",
+          areaId: glyphStoredDarknessAreaId,
+          originAnchor,
+          spellCreatedLightOverlaps: [],
+        },
+      ),
+    ],
+  },
+  {
+    label: "Flaming Sphere",
+    spellId: flamingSphereUnitId,
+    slotLevel: 2,
+    procedure: "flamingSphere",
+    effectKind: "flamingSphere",
+    areaId: glyphStoredFlamingSphereAreaId,
+    fillsFromHoles: (holes, originAnchor = glyphStoredAreaOriginAnchor) => [
+      flamingSphereAreaFill(
+        requireReleaseHole(holes, "spellAreaChoice"),
+        glyphStoredFlamingSphereAreaId,
+        originAnchor,
+      ),
+    ],
+  },
+  {
+    label: "Spike Growth",
+    spellId: spikeGrowthUnitId,
+    slotLevel: 2,
+    procedure: "spikeGrowthMovementHazard",
+    effectKind: "spikeGrowthHazard",
+    areaId: glyphStoredSpikeGrowthAreaId,
+    fillsFromHoles: (holes, originAnchor = glyphStoredAreaOriginAnchor) => [
+      spikeGrowthAreaFill(
+        requireReleaseHole(holes, "spellAreaChoice"),
+        glyphStoredSpikeGrowthAreaId,
+        originAnchor,
+      ),
+    ],
+  },
+  {
+    label: "Moonbeam",
+    spellId: moonbeamUnitId,
+    slotLevel: 2,
+    procedure: "moonbeam",
+    effectKind: "moonbeam",
+    areaId: glyphStoredMoonbeamAreaId,
+    fillsFromHoles: (holes, originAnchor = glyphStoredAreaOriginAnchor) => [
+      moonbeamAreaFill(
+        requireReleaseHole(holes, "spellAreaChoice"),
+        glyphStoredMoonbeamAreaId,
+        originAnchor,
+      ),
+    ],
+  },
+  {
+    label: "Web",
+    spellId: webUnitId,
+    slotLevel: 2,
+    procedure: "webRestraintHazard",
+    effectKind: "webRestraintHazard",
+    areaId: glyphStoredWebAreaId,
+    fillsFromHoles: (holes, originAnchor = glyphStoredAreaOriginAnchor) => [
+      webAreaFill(
+        requireReleaseHole(holes, "spellAreaChoice"),
+        glyphStoredWebAreaId,
+        originAnchor,
+      ),
+    ],
+  },
+  {
+    label: "Gust of Wind",
+    spellId: gustOfWindUnitId,
+    slotLevel: 2,
+    procedure: "gustOfWindLine",
+    effectKind: "gustOfWindLine",
+    areaId: glyphStoredGustOfWindAreaId,
+    fillsFromHoles: (holes) => [
+      gustOfWindGlyphSavingThrowOutcomeFill(
+        requireReleaseHole(holes, "savingThrowOutcome"),
+      ),
+    ],
+  },
+] as const satisfies ReadonlyArray<GlyphStoredAreaOngoingReleaseCase>;
+const GLYPH_STORED_SPELL_AREA_CHOICE_RELEASE_CASES =
+  GLYPH_STORED_AREA_ONGOING_RELEASE_CASES.filter(
+    (releaseCase) => releaseCase.procedure !== "gustOfWindLine",
+  );
 
 describe("SRD Glyph of Warding durable occurrence admission", () => {
   test("admits the durable occurrence profile by Surface shape, not authored identity", () => {
@@ -985,26 +1152,150 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
     });
   });
 
-  test("rejects stored Concentration procedures outside the full-duration subset", () => {
-    const storedInvocation = storedSpellInvocation(moonbeamUnitId, 2);
+  test.each(GLYPH_STORED_AREA_ONGOING_RELEASE_CASES)(
+    "stored area ongoing Concentration release for $label lasts full duration without slot spend or ordinary Concentration",
+    (releaseCase) => {
+      const storedInvocation = storedSpellInvocation(
+        releaseCase.spellId,
+        releaseCase.slotLevel,
+      );
+      expect(storedInvocation.procedure).toBe(releaseCase.procedure);
+      expect(storedInvocation.spell.mechanics.duration.kind).toBe(
+        "concentration",
+      );
+      if (!("durationTicks" in storedInvocation)) {
+        throw new Error("Expected stored area ongoing duration ticks.");
+      }
+      const state = stateWithPriorCasterSpellSlotUse(
+        stateWithUnrelatedReadiedSpell(
+          stateWithGlyphEffect(
+            requireCompletedGlyphEffect({
+              anchor: { kind: "surface", areaId: glyphSurfaceAnchorAreaId },
+              release: { kind: "spellGlyph", storedInvocation },
+            }),
+            glyphBattle({
+              preparedSpells: [spellRecord(releaseCase.spellId)],
+              spellSlots: [
+                { spellLevel: releaseCase.slotLevel, count: 1 },
+              ],
+            }),
+          ),
+        ),
+        releaseCase.slotLevel,
+      );
+      const priorTurnSpellSlotUses =
+        state.currentTurnResources.spellSlotUsesThisTurn;
+      const priorExpended = casterSpellSlotExpended(
+        state,
+        releaseCase.slotLevel,
+      );
+      const needsAreaWitness = releaseGlyphStoredSpell({
+        state,
+        profile: requireGlyphStoredSpellProfile(),
+        witness: storedAreaReleaseWitness({
+          originAnchorId: spellTargetId,
+          fills: [],
+        }),
+      });
 
-    expect(storedInvocation.spell.mechanics.duration.kind).toBe(
-      "concentration",
-    );
-    expect(storedInvocation.procedure).not.toBe("saveGatedCondition");
-    expect(
-      glyphDurableOccurrenceEffectFromCompletedInscription({
-        profile: requireGlyphProfile(),
-        witness: completedGlyphInscriptionWitness({
+      expect(needsAreaWitness.tag).toBe("needsHoles");
+      if (needsAreaWitness.tag !== "needsHoles") return;
+      const released = releaseGlyphStoredSpell({
+        state,
+        profile: requireGlyphStoredSpellProfile(),
+        witness: storedAreaReleaseWitness({
+          originAnchorId: spellTargetId,
+          fills: releaseCase.fillsFromHoles(needsAreaWitness.holes),
+        }),
+      });
+
+      expect(released.tag).toBe("released");
+      if (released.tag !== "released") return;
+      const caster = requireCombatant(released.state, spellCasterId);
+      const storedAreaEffect = caster.activeEffects.find(
+        (effect) =>
+          effect.kind === releaseCase.effectKind &&
+          "areaId" in effect &&
+          effect.areaId === releaseCase.areaId,
+      );
+      expect(storedAreaEffect).toMatchObject({
+        kind: releaseCase.effectKind,
+        sourceSpellId: releaseCase.spellId,
+        sourceCombatantId: spellCasterId,
+        areaId: releaseCase.areaId,
+        expiresAt: {
+          kind: "duration",
+          durationTicks: storedInvocation.durationTicks,
+        },
+      });
+      expect(caster.concentration).toEqual({
+        sourceSpellId: guidingBoltUnitId,
+        effectKind: "readiedSpell",
+      });
+      expect(glyphEffects(released.state)).toEqual([]);
+      expect(casterSpellSlotExpended(released.state, releaseCase.slotLevel)).toBe(
+        priorExpended,
+      );
+      expect(released.state.currentTurnResources.spellSlotUsesThisTurn).toEqual(
+        priorTurnSpellSlotUses,
+      );
+    },
+  );
+
+  test.each(GLYPH_STORED_SPELL_AREA_CHOICE_RELEASE_CASES)(
+    "stored area ongoing Concentration release for $label rejects area fills not centered on the triggering creature",
+    (releaseCase) => {
+      const storedInvocation = storedSpellInvocation(
+        releaseCase.spellId,
+        releaseCase.slotLevel,
+      );
+      const state = stateWithGlyphEffect(
+        requireCompletedGlyphEffect({
           anchor: { kind: "surface", areaId: glyphSurfaceAnchorAreaId },
           release: { kind: "spellGlyph", storedInvocation },
         }),
-      }),
-    ).toEqual({
-      tag: "storedSpellConcentrationFullDurationUnsupported",
-      storedInvocation,
-    });
-  });
+        glyphBattle({
+          preparedSpells: [spellRecord(releaseCase.spellId)],
+          spellSlots: [{ spellLevel: releaseCase.slotLevel, count: 1 }],
+        }),
+      );
+      const needsAreaWitness = releaseGlyphStoredSpell({
+        state,
+        profile: requireGlyphStoredSpellProfile(),
+        witness: storedAreaReleaseWitness({
+          originAnchorId: spellTargetId,
+          fills: [],
+        }),
+      });
+
+      expect(needsAreaWitness.tag).toBe("needsHoles");
+      if (needsAreaWitness.tag !== "needsHoles") return;
+      for (const originAnchor of [
+        glyphStoredUnanchoredAreaOrigin,
+        glyphStoredWrongAreaOriginAnchor,
+      ] as const) {
+        const rejected = releaseGlyphStoredSpell({
+          state,
+          profile: requireGlyphStoredSpellProfile(),
+          witness: storedAreaReleaseWitness({
+            originAnchorId: spellTargetId,
+            fills: releaseCase.fillsFromHoles(
+              needsAreaWitness.holes,
+              originAnchor,
+            ),
+          }),
+        });
+
+        expect(rejected).toMatchObject({
+          tag: "invalidWitness",
+          reason: "storedSpellResolutionInvalid",
+          message:
+            "Stored glyph area release must use a spell area centered on the triggering creature.",
+        });
+      }
+      expect(glyphEffects(state)).toHaveLength(1);
+    },
+  );
 
   test("rejects non-Concentration save-gated condition stored spells outside Task 29 scope", () => {
     const storedInvocation = storedSpellInvocation(blindnessDeafnessUnitId, 2);
@@ -2746,11 +3037,23 @@ function requireReadiedSpellInvocation(
   if (
     invocation.procedure === "greaseGroundHazard" ||
     invocation.procedure === "saveGatedCondition" ||
-    invocation.procedure === "spiritualWeaponAttackProxy"
+    invocation.procedure === "spiritualWeaponAttackProxy" ||
+    isGlyphStoredAreaOngoingTestInvocation(invocation)
   ) {
     throw new Error("Expected a Readied Spell-compatible invocation.");
   }
   return invocation;
+}
+
+function isGlyphStoredAreaOngoingTestInvocation(
+  invocation: GlyphStoredSpellInvocationCandidate,
+): invocation is Extract<
+  GlyphStoredSpellInvocationCandidate,
+  { readonly procedure: (typeof GLYPH_STORED_AREA_ONGOING_PROCEDURES)[number] }
+> {
+  return GLYPH_STORED_AREA_ONGOING_PROCEDURES.some(
+    (procedure) => procedure === invocation.procedure,
+  );
 }
 
 function counterspellSpellcasting() {
@@ -2811,6 +3114,41 @@ function storedAreaReleaseWitness(input: {
     hostilePlacement:
       input.hostilePlacement ?? storedHostilePlacementNotApplicable(),
     fills: input.fills,
+  };
+}
+
+function glyphStoredAreaChoiceFill(
+  hole: Extract<BattleHole, { readonly kind: "spellAreaChoice" }>,
+  value: Extract<BattleFill, { readonly kind: "spellAreaChoice" }>["value"],
+): Extract<BattleFill, { readonly kind: "spellAreaChoice" }> {
+  return {
+    kind: "spellAreaChoice",
+    holeId: hole.holeId,
+    value,
+  };
+}
+
+function gustOfWindGlyphSavingThrowOutcomeFill(
+  hole: Extract<BattleHole, { readonly kind: "savingThrowOutcome" }>,
+): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {
+  const fill = gustOfWindLineSavingThrowOutcomeFill(
+    hole,
+    [{ targetId: spellTargetId, succeeded: true }],
+    { areaId: glyphStoredGustOfWindAreaId },
+  );
+  const value = fill.value;
+  if (!("area" in value) || value.area.kind !== "gustOfWindLineArea") {
+    throw new Error("Expected Gust of Wind to produce a Line area fill.");
+  }
+  return {
+    ...fill,
+    value: {
+      ...value,
+      area: {
+        ...value.area,
+        originAnchorId: spellTargetId,
+      },
+    },
   };
 }
 

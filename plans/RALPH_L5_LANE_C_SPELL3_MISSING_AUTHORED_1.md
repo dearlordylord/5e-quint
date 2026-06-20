@@ -199,7 +199,7 @@
     {
       "number": 33,
       "id": "L3-FOLLOWUP-GLYPH-STORED-AREA-ONGOING-CONCENTRATION",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Glyph Stored Area Ongoing Concentration"
     },
     {
@@ -314,7 +314,7 @@ missing-record spells unless a RAW dependency is unavoidable and documented.
 | 30 | L3-FOLLOWUP-GLYPH-STORED-SUMMON-OBJECT-PLACEMENT - Glyph Stored Summon/Object Placement | done | L3-FOLLOWUP-GLYPH-STORED-SPELL-RELEASE | Promoted the represented harmful-object subset: stored Spiritual Weapon attack proxy release consumes close-as-possible placement, fixes repeat attacks to the triggering creature, preserves full-duration expiration, and leaves broader hostile summon/object families to Task 32. |
 | 31 | L3-FOLLOWUP-GLYPH-STORED-REMAINING-CONCENTRATION - Glyph Stored Remaining Concentration Procedures | done | L3-FOLLOWUP-GLYPH-STORED-CONCENTRATION | Promoted the single-creature save-gated-damage stored Concentration subset and split the remaining area ongoing, area control, and single-creature active-effect families into Tasks 33-35. |
 | 32 | L3-FOLLOWUP-GLYPH-STORED-HOSTILE-SUMMON-PLACEMENT - Glyph Stored Remaining Summon/Object Placement | done | L3-FOLLOWUP-GLYPH-STORED-SUMMON-OBJECT-PLACEMENT | Closed as research/runtime closure: no additional stored summon/object procedure family is promotable from existing typed invocation and placement facts; remaining work is split into Tasks 36-37. |
-| 33 | L3-FOLLOWUP-GLYPH-STORED-AREA-ONGOING-CONCENTRATION - Glyph Stored Area Ongoing Concentration | ready-for-research | L3-FOLLOWUP-GLYPH-STORED-REMAINING-CONCENTRATION | Promote stored spell-glyph releases for area ongoing Concentration effects such as represented fog, darkness, movable/ongoing damage zones, Web restraints, Spike Growth movement hazards, and Gust of Wind line effects. |
+| 33 | L3-FOLLOWUP-GLYPH-STORED-AREA-ONGOING-CONCENTRATION - Glyph Stored Area Ongoing Concentration | done | L3-FOLLOWUP-GLYPH-STORED-REMAINING-CONCENTRATION | Promoted stored spell-glyph releases for represented Fog Cloud, Darkness, Flaming Sphere, Spike Growth, Moonbeam, Web, and Gust of Wind area ongoing Concentration effects. |
 | 34 | L3-FOLLOWUP-GLYPH-STORED-AREA-CONTROL-CONCENTRATION - Glyph Stored Area Control Concentration | ready-for-research | L3-FOLLOWUP-GLYPH-STORED-REMAINING-CONCENTRATION | Promote stored spell-glyph releases for area control Concentration effects that apply creature condition or control state at release time, with explicit area-membership and full-duration cleanup semantics. |
 | 35 | L3-FOLLOWUP-GLYPH-STORED-SINGLE-CREATURE-ACTIVE-EFFECT-CONCENTRATION - Glyph Stored Single-Creature Active-Effect Concentration | ready-for-research | L3-FOLLOWUP-GLYPH-STORED-REMAINING-CONCENTRATION | Promote stored spell-glyph releases for non-damage single-creature Concentration active effects outside the save-gated-condition and save-gated-damage subsets. |
 | 36 | L3-FOLLOWUP-GLYPH-STORED-HOSTILE-CREATURE-SUMMON-LIFECYCLE - Glyph Stored Hostile Creature Summon Lifecycle | ready-for-research | L3-FOLLOWUP-GLYPH-STORED-HOSTILE-SUMMON-PLACEMENT | Promote stored spell-glyph releases whose stored invocation creates Hostile battle creatures, with concrete summon occurrence, placement, control/turn protocol, attack-target, and full-duration cleanup ownership. |
@@ -2142,7 +2142,7 @@ Plan Impact:
 
 ### Task 33 - L3-FOLLOWUP-GLYPH-STORED-AREA-ONGOING-CONCENTRATION
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -2189,6 +2189,18 @@ Verification:
 - Shared lane verification.
 - Focused owner-package tests, and if battle-runtime behavior changes, update
   the relevant QNT/spec first and run focused MBT per `AGENTS.md`.
+
+Plan Impact:
+
+- Task 33 is complete for represented Fog Cloud, Darkness, Flaming Sphere, Spike
+  Growth, Moonbeam, Web, and Gust of Wind stored spell-glyph area ongoing
+  Concentration releases: release consumes each procedure family's existing
+  table area or Line witnesses centered on the triggering creature, skips
+  trigger-time Spell Slot spending and ordinary Concentration setup, rewrites the
+  created area or Line Spell Effect to the stored spell's full duration, preserves
+  unrelated caster Concentration, and removes the durable glyph occurrence.
+- Area control Concentration and non-damage single-creature active-effect
+  Concentration families remain executable follow-ups in Tasks 34 and 35.
 
 ### Task 34 - L3-FOLLOWUP-GLYPH-STORED-AREA-CONTROL-CONCENTRATION
 

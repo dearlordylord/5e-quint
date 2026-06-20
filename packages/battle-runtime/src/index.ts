@@ -382,6 +382,7 @@ export {
   type BattleSnapshot,
   type BattleStoredLightEmitter,
   type BattleSpellAreaChoice,
+  type BattleSpellAreaOriginAnchor,
   type BattleSpellAttackRollHole,
   type BattleSpellConditionChoiceHole,
   type BattleSpellConditionEndTurnSavingThrowOutcomeHole,

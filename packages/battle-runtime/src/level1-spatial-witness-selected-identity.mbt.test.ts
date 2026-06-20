@@ -82,6 +82,7 @@ import {
   type BattleRolledDiceFill,
   type BattleSightObscurement,
   type BattleSpellAreaChoice,
+  type BattleSpellAreaOriginAnchor,
   type BattleState,
   type BattleSubject,
   type BattleTargetSpatialFact,
@@ -3117,11 +3118,12 @@ function featherFallTargetListFill(
 
 function fogCloudAreaFill(
   hole: Extract<BattleHole, { readonly kind: "spellAreaChoice" }>,
+  originAnchor: BattleSpellAreaOriginAnchor = { kind: "tableSelectedPoint" },
 ): Extract<BattleFill, { readonly kind: "spellAreaChoice" }> {
   return {
     kind: "spellAreaChoice",
     holeId: hole.holeId,
-    value: { kind: "fogCloudArea", areaId: fogCloudAreaId },
+    value: { kind: "fogCloudArea", areaId: fogCloudAreaId, originAnchor },
   };
 }
 
@@ -3470,6 +3472,8 @@ function fogCloudMatchingDurationTicks(
   if (
     activeEffect === undefined ||
     activeZone === undefined ||
+    activeEffect.expiresAt.kind !== "concentration" ||
+    activeZone.expiresAt.kind !== "concentration" ||
     activeEffect.expiresAt.combatantId !== casterId ||
     activeZone.expiresAt.combatantId !== casterId ||
     activeEffect.expiresAt.durationTicks !== fogCloudOneHourDurationTicks ||

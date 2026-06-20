@@ -8,14 +8,21 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.MAGICAL_DARKNESS_POINT_ORIGIN_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE BATTLE.SPELL.GUST_OF_WIND_LINE_LIFECYCLE BATTLE.SPELL.SPIKE_GROWTH_MOVEMENT_HAZARD
+import { Match } from "effect";
 import type {
   ActionSpellBattleResolutionInput,
   BattleMagicalDarknessAreaChoice,
+  BattleSpellAreaIdentityChoice,
   BattleSpellAreaChoice,
   BattleResolutionResult,
+  BattleState,
   BattleTrackedOngoingSpellLightEmitter,
   SupportedSpellInvocation,
 } from "../battle-reducer.ts";
+import {
+  GLYPH_STORED_AREA_ONGOING_PROCEDURES,
+  type GlyphStoredAreaOngoingProcedure,
+} from "../active-effect/types.ts";
 import type { CombatantId } from "../identity.ts";
 import { needsHolesResult } from "./hole-helpers.ts";
 import { invalidResult } from "./result-helpers.ts";
@@ -43,6 +50,164 @@ import {
 } from "./antimagic-field-suppression.ts";
 import type { CharacterBattleMetamagicOptionFact } from "../character-battle-resources.ts";
 
+const byProcedure = Match.discriminator("procedure");
+
+type StoredGlyphAreaOngoingSpellInvocation = Extract<
+  SupportedSpellInvocation,
+  { readonly procedure: GlyphStoredAreaOngoingProcedure }
+>;
+type StoredGlyphCenteredSpellAreaChoice = Extract<
+  BattleSpellAreaIdentityChoice,
+  {
+    readonly kind:
+      | "fogCloudArea"
+      | "magicalDarknessArea"
+      | "flamingSphereArea"
+      | "spikeGrowthArea"
+      | "moonbeamCylinderArea"
+      | "webCubeArea";
+  }
+>;
+type AreaOngoingSpellReleaseResource =
+  | {
+      readonly kind: "ordinarySpellCast";
+      readonly metamagicApplications?: readonly CharacterBattleMetamagicOptionFact[];
+    }
+  | {
+      readonly kind: "storedGlyphSpellRelease";
+      readonly selfOriginAreaAnchorId: CombatantId;
+    };
+
+export function isGlyphStoredAreaOngoingSpellInvocation(
+  invocation: SupportedSpellInvocation,
+): invocation is StoredGlyphAreaOngoingSpellInvocation {
+  return GLYPH_STORED_AREA_ONGOING_PROCEDURES.some(
+    (procedure) => procedure === invocation.procedure,
+  );
+}
+
+function ordinarySpellCastResource(
+  metamagicApplications:
+    | readonly CharacterBattleMetamagicOptionFact[]
+    | undefined = undefined,
+): AreaOngoingSpellReleaseResource {
+  return metamagicApplications === undefined
+    ? { kind: "ordinarySpellCast" }
+    : { kind: "ordinarySpellCast", metamagicApplications };
+}
+
+function areaOngoingSpellReleaseResourceState(input: {
+  readonly state: BattleState;
+  readonly actorId: CombatantId;
+  readonly invocation: SupportedSpellInvocation;
+  readonly errorState: BattleState;
+  readonly resource: AreaOngoingSpellReleaseResource;
+}): Extract<BattleResolutionResult, { readonly tag: "resolved" | "invalid" }> {
+  if (input.resource.kind === "storedGlyphSpellRelease") {
+    return {
+      tag: "resolved",
+      state: input.state,
+      snapshot: snapshotBattle(input.state),
+    };
+  }
+  return spendSpellCastResources({
+    state: input.state,
+    actorId: input.actorId,
+    invocation: input.invocation,
+    errorState: input.errorState,
+    ...(input.resource.metamagicApplications === undefined
+      ? {}
+      : { metamagicApplications: input.resource.metamagicApplications }),
+  });
+}
+
+function invalidStoredGlyphAreaCenterResult(input: {
+  readonly state: BattleState;
+  readonly areaChoice: StoredGlyphCenteredSpellAreaChoice;
+  readonly releaseResource: AreaOngoingSpellReleaseResource | undefined;
+}): Extract<BattleResolutionResult, { readonly tag: "invalid" }> | null {
+  if (input.releaseResource?.kind !== "storedGlyphSpellRelease") {
+    return null;
+  }
+  if (
+    input.areaChoice.originAnchor.kind === "combatant" &&
+    input.areaChoice.originAnchor.combatantId ===
+      input.releaseResource.selfOriginAreaAnchorId
+  ) {
+    return null;
+  }
+  return invalidResult(
+    input.state,
+    "invalidFill",
+    "Stored glyph area release must use a spell area centered on the triggering creature.",
+  );
+}
+
+export function resolveStoredGlyphAreaOngoingSpellRelease(input: {
+  readonly input: ActionSpellBattleResolutionInput;
+  readonly actorId: CombatantId;
+  readonly invocation: StoredGlyphAreaOngoingSpellInvocation;
+  readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
+  readonly selfOriginAreaAnchorId: CombatantId;
+}): BattleResolutionResult {
+  const releaseResource = {
+    kind: "storedGlyphSpellRelease",
+    selfOriginAreaAnchorId: input.selfOriginAreaAnchorId,
+  } as const;
+  return Match.value(input.invocation).pipe(
+    byProcedure("fogCloudObscurement", (invocation) =>
+      resolveFogCloudObscurementSpellAct({
+        ...input,
+        invocation,
+        releaseResource,
+      }),
+    ),
+    byProcedure("magicalDarknessPointOrigin", (invocation) =>
+      resolveMagicalDarknessPointOriginSpellAct({
+        ...input,
+        invocation,
+        releaseResource,
+      }),
+    ),
+    byProcedure("flamingSphere", (invocation) =>
+      resolveFlamingSphereSpellAct({
+        ...input,
+        invocation,
+        releaseResource,
+      }),
+    ),
+    byProcedure("spikeGrowthMovementHazard", (invocation) =>
+      resolveSpikeGrowthMovementHazardSpellAct({
+        ...input,
+        invocation,
+        releaseResource,
+      }),
+    ),
+    byProcedure("moonbeam", (invocation) =>
+      resolveMoonbeamSpellAct({
+        ...input,
+        invocation,
+        releaseResource,
+      }),
+    ),
+    byProcedure("webRestraintHazard", (invocation) =>
+      resolveWebRestraintHazardSpellAct({
+        ...input,
+        invocation,
+        releaseResource,
+      }),
+    ),
+    byProcedure("gustOfWindLine", (invocation) =>
+      resolveGustOfWindLineSpellAct({
+        ...input,
+        invocation,
+        releaseResource,
+      }),
+    ),
+    Match.exhaustive,
+  );
+}
+
 export function resolveFogCloudObscurementSpellAct(input: {
   readonly input: ActionSpellBattleResolutionInput;
   readonly actorId: CombatantId;
@@ -51,6 +216,7 @@ export function resolveFogCloudObscurementSpellAct(input: {
     { readonly procedure: "fogCloudObscurement" }
   >;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
+  readonly releaseResource?: AreaOngoingSpellReleaseResource;
 }): BattleResolutionResult {
   if (
     input.fillSet.targetId !== undefined ||
@@ -93,12 +259,21 @@ export function resolveFogCloudObscurementSpellAct(input: {
       "Fog Cloud area id must be a non-empty fog area.",
     );
   }
+  const invalidStoredGlyphCenter = invalidStoredGlyphAreaCenterResult({
+    state: input.input.state,
+    areaChoice: input.fillSet.areaChoice,
+    releaseResource: input.releaseResource,
+  });
+  if (invalidStoredGlyphCenter !== null) {
+    return invalidStoredGlyphCenter;
+  }
 
-  const resourced = spendSpellCastResources({
+  const resourced = areaOngoingSpellReleaseResourceState({
     state: input.input.state,
     actorId: input.actorId,
     invocation: input.invocation,
     errorState: input.input.state,
+    resource: input.releaseResource ?? ordinarySpellCastResource(),
   });
   if (resourced.tag === "invalid") {
     return resourced;
@@ -124,6 +299,7 @@ export function resolveMagicalDarknessPointOriginSpellAct(input: {
     { readonly procedure: "magicalDarknessPointOrigin" }
   >;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
+  readonly releaseResource?: AreaOngoingSpellReleaseResource;
 }): BattleResolutionResult {
   if (
     input.fillSet.targetId !== undefined ||
@@ -166,6 +342,14 @@ export function resolveMagicalDarknessPointOriginSpellAct(input: {
       "Darkness area id must be a non-empty magical Darkness area.",
     );
   }
+  const invalidStoredGlyphCenter = invalidStoredGlyphAreaCenterResult({
+    state: input.input.state,
+    areaChoice: input.fillSet.areaChoice,
+    releaseResource: input.releaseResource,
+  });
+  if (invalidStoredGlyphCenter !== null) {
+    return invalidStoredGlyphCenter;
+  }
   const invalidOverlap = magicalDarknessAreaChoiceInvalidReason(
     input.input.state,
     input.fillSet.areaChoice,
@@ -175,11 +359,12 @@ export function resolveMagicalDarknessPointOriginSpellAct(input: {
     return invalidResult(input.input.state, "invalidFill", invalidOverlap);
   }
 
-  const resourced = spendSpellCastResources({
+  const resourced = areaOngoingSpellReleaseResourceState({
     state: input.input.state,
     actorId: input.actorId,
     invocation: input.invocation,
     errorState: input.input.state,
+    resource: input.releaseResource ?? ordinarySpellCastResource(),
   });
   if (resourced.tag === "invalid") {
     return resourced;
@@ -244,6 +429,7 @@ export function resolveFlamingSphereSpellAct(input: {
     { readonly procedure: "flamingSphere" }
   >;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
+  readonly releaseResource?: AreaOngoingSpellReleaseResource;
 }): BattleResolutionResult {
   if (
     input.fillSet.targetId !== undefined ||
@@ -286,12 +472,21 @@ export function resolveFlamingSphereSpellAct(input: {
       "Movable sphere area id must be a non-empty sphere area.",
     );
   }
+  const invalidStoredGlyphCenter = invalidStoredGlyphAreaCenterResult({
+    state: input.input.state,
+    areaChoice: input.fillSet.areaChoice,
+    releaseResource: input.releaseResource,
+  });
+  if (invalidStoredGlyphCenter !== null) {
+    return invalidStoredGlyphCenter;
+  }
 
-  const resourced = spendSpellCastResources({
+  const resourced = areaOngoingSpellReleaseResourceState({
     state: input.input.state,
     actorId: input.actorId,
     invocation: input.invocation,
     errorState: input.input.state,
+    resource: input.releaseResource ?? ordinarySpellCastResource(),
   });
   if (resourced.tag === "invalid") {
     return resourced;
@@ -317,6 +512,7 @@ export function resolveSpikeGrowthMovementHazardSpellAct(input: {
     { readonly procedure: "spikeGrowthMovementHazard" }
   >;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
+  readonly releaseResource?: AreaOngoingSpellReleaseResource;
 }): BattleResolutionResult {
   if (
     input.fillSet.targetId !== undefined ||
@@ -359,12 +555,21 @@ export function resolveSpikeGrowthMovementHazardSpellAct(input: {
       "Spike Growth area id must be a non-empty sphere area.",
     );
   }
+  const invalidStoredGlyphCenter = invalidStoredGlyphAreaCenterResult({
+    state: input.input.state,
+    areaChoice: input.fillSet.areaChoice,
+    releaseResource: input.releaseResource,
+  });
+  if (invalidStoredGlyphCenter !== null) {
+    return invalidStoredGlyphCenter;
+  }
 
-  const resourced = spendSpellCastResources({
+  const resourced = areaOngoingSpellReleaseResourceState({
     state: input.input.state,
     actorId: input.actorId,
     invocation: input.invocation,
     errorState: input.input.state,
+    resource: input.releaseResource ?? ordinarySpellCastResource(),
   });
   if (resourced.tag === "invalid") {
     return resourced;
@@ -390,6 +595,7 @@ export function resolveMoonbeamSpellAct(input: {
     { readonly procedure: "moonbeam" }
   >;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
+  readonly releaseResource?: AreaOngoingSpellReleaseResource;
 }): BattleResolutionResult {
   if (
     input.fillSet.targetId !== undefined ||
@@ -432,12 +638,21 @@ export function resolveMoonbeamSpellAct(input: {
       "Movable cylinder area id must be a non-empty cylinder area.",
     );
   }
+  const invalidStoredGlyphCenter = invalidStoredGlyphAreaCenterResult({
+    state: input.input.state,
+    areaChoice: input.fillSet.areaChoice,
+    releaseResource: input.releaseResource,
+  });
+  if (invalidStoredGlyphCenter !== null) {
+    return invalidStoredGlyphCenter;
+  }
 
-  const resourced = spendSpellCastResources({
+  const resourced = areaOngoingSpellReleaseResourceState({
     state: input.input.state,
     actorId: input.actorId,
     invocation: input.invocation,
     errorState: input.input.state,
+    resource: input.releaseResource ?? ordinarySpellCastResource(),
   });
   if (resourced.tag === "invalid") {
     return resourced;
@@ -463,6 +678,7 @@ export function resolveWebRestraintHazardSpellAct(input: {
     { readonly procedure: "webRestraintHazard" }
   >;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
+  readonly releaseResource?: AreaOngoingSpellReleaseResource;
 }): BattleResolutionResult {
   if (
     input.fillSet.targetId !== undefined ||
@@ -505,12 +721,21 @@ export function resolveWebRestraintHazardSpellAct(input: {
       "Web area id must be a non-empty cube area.",
     );
   }
+  const invalidStoredGlyphCenter = invalidStoredGlyphAreaCenterResult({
+    state: input.input.state,
+    areaChoice: input.fillSet.areaChoice,
+    releaseResource: input.releaseResource,
+  });
+  if (invalidStoredGlyphCenter !== null) {
+    return invalidStoredGlyphCenter;
+  }
 
-  const resourced = spendSpellCastResources({
+  const resourced = areaOngoingSpellReleaseResourceState({
     state: input.input.state,
     actorId: input.actorId,
     invocation: input.invocation,
     errorState: input.input.state,
+    resource: input.releaseResource ?? ordinarySpellCastResource(),
   });
   if (resourced.tag === "invalid") {
     return resourced;
@@ -537,6 +762,7 @@ export function resolveGustOfWindLineSpellAct(input: {
   >;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
   readonly metamagicApplications?: readonly CharacterBattleMetamagicOptionFact[];
+  readonly releaseResource?: AreaOngoingSpellReleaseResource;
 }): BattleResolutionResult {
   if (
     input.fillSet.targetId !== undefined ||
@@ -608,6 +834,11 @@ export function resolveGustOfWindLineSpellAct(input: {
     undefined,
     metamagicSelections.carefulSpellProtectedTargetIds,
     metamagicSelections.heightenedSpellTargetId,
+    input.releaseResource?.kind === "storedGlyphSpellRelease"
+      ? {
+          selfOriginAreaAnchorId: input.releaseResource.selfOriginAreaAnchorId,
+        }
+      : {},
   );
   if (savingThrowValidation !== null) {
     return invalidResult(
@@ -662,14 +893,14 @@ export function resolveGustOfWindLineSpellAct(input: {
     }
   }
 
-  const resourced = spendSpellCastResources({
+  const resourced = areaOngoingSpellReleaseResourceState({
     state: input.input.state,
     actorId: input.actorId,
     invocation: input.invocation,
     errorState: input.input.state,
-    ...(input.metamagicApplications === undefined
-      ? {}
-      : { metamagicApplications: input.metamagicApplications }),
+    resource:
+      input.releaseResource ??
+      ordinarySpellCastResource(input.metamagicApplications),
   });
   if (resourced.tag === "invalid") {
     return resourced;
