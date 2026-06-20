@@ -58,5 +58,7 @@ condition-like profiles. These effects have procedure-specific active-effect
 cleanup and target-state promotion rules, so each family needs an executable
 full-duration rewrite before storage can be admitted.
 
-Summoned Hostile creatures and non-Spiritual-Weapon harmful object/trap
-procedures stay with `L3-FOLLOWUP-GLYPH-STORED-HOSTILE-SUMMON-PLACEMENT`.
+Summoned Hostile creature and non-Spiritual-Weapon harmful-object procedures
+are split by `L3-FOLLOWUP-GLYPH-STORED-HOSTILE-SUMMON-PLACEMENT` into
+`L3-FOLLOWUP-GLYPH-STORED-HOSTILE-CREATURE-SUMMON-LIFECYCLE` and
+`L3-FOLLOWUP-GLYPH-STORED-HARMFUL-OBJECT-OCCURRENCE-ROUTING`.

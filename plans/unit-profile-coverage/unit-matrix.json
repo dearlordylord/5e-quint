@@ -17093,6 +17093,12 @@
         "spell.invocation-glyph-stored-summon-object-placement"
       ],
       "taskId": "L3-FOLLOWUP-GLYPH-STORED-SUMMON-OBJECT-PLACEMENT"
+    },
+    {
+      "claimKind": "accepted-runtime-closure",
+      "note": "Task 32 researched the remaining Glyph stored summon/object placement scope and records no new runtime profile claim. The stored invocation candidate union admits no Hostile creature summon procedure, and the stored release witness has no summoned-Hostile-creature placement variant. Non-Spiritual-Weapon harmful-object procedures also lack stable object/proxy occurrence identity, close-placement facts, attack/routing target fixation, lifecycle, and cleanup state. Future work is split into L3-FOLLOWUP-GLYPH-STORED-HOSTILE-CREATURE-SUMMON-LIFECYCLE and L3-FOLLOWUP-GLYPH-STORED-HARMFUL-OBJECT-OCCURRENCE-ROUTING; Task 30 remains the only supported harmful-object subset through Spiritual Weapon.",
+      "profileIds": [],
+      "taskId": "L3-FOLLOWUP-GLYPH-STORED-HOSTILE-SUMMON-PLACEMENT"
     }
   ],
   "unitGroupDenominatorAudit": {
@@ -36112,12 +36118,21 @@
           },
           {
             "battleReadinessClosure": {
-              "kind": "table-spatial-derivation",
-              "owner": "future concrete stored summon/object procedure owners",
-              "reason": "Task 30 promotes only the represented Spiritual Weapon harmful-object procedure because it already has executable force placement, force reach, attack, repeat, occurrence identity, and duration cleanup owners. Broader Hostile creature summons and other harmful-object procedures still need concrete procedure owners for placement, control/turn protocol, target fixation, and duration cleanup before Glyph can claim them without inventing duplicate summon/object state."
+              "kind": "companion-control-boundary",
+              "owner": "future stored hostile creature summon lifecycle/control owner",
+              "reason": "Task 32 research found no stored runtime invocation procedure that summons Hostile creatures: the stored invocation candidate union has no summon procedure, the release witness has no summoned-Hostile-creature variant, and no existing owner carries summoned creature identity, placement, hostility relationship, attack targeting, control/turn protocol, or duration cleanup. Promote this only through a concrete summon lifecycle/control owner instead of adding Glyph-local summon state."
             },
-            "followUpTaskId": "L3-FOLLOWUP-GLYPH-STORED-HOSTILE-SUMMON-PLACEMENT",
-            "mechanic": "stored spell-glyph Hostile creature summon placement releases and harmful-object procedures beyond the represented Spiritual Weapon attack-proxy subset"
+            "followUpTaskId": "L3-FOLLOWUP-GLYPH-STORED-HOSTILE-CREATURE-SUMMON-LIFECYCLE",
+            "mechanic": "stored spell-glyph Hostile creature summon placement releases"
+          },
+          {
+            "battleReadinessClosure": {
+              "kind": "table-spatial-derivation",
+              "owner": "future non-Spiritual-Weapon harmful object occurrence and attack-routing owner",
+              "reason": "Task 32 research found no additional harmful-object procedure ready for stored close-placement release. Task 30 covers Spiritual Weapon because it already owns force position, force reach, attack routing, repeat target locking, occurrence identity, and duration cleanup. Other harmful-object procedures need their own occurrence identity, placement, attack/routing, lifecycle, and cleanup facts before Glyph can consume close-as-possible placement without duplicating object state."
+            },
+            "followUpTaskId": "L3-FOLLOWUP-GLYPH-STORED-HARMFUL-OBJECT-OCCURRENCE-ROUTING",
+            "mechanic": "stored spell-glyph non-Spiritual-Weapon harmful-object occurrence releases"
           },
           {
             "battleReadinessClosure": {
@@ -36158,11 +36173,18 @@
         ],
         "followUpTasks": [
           {
-            "id": "L3-FOLLOWUP-GLYPH-STORED-HOSTILE-SUMMON-PLACEMENT",
-            "mechanic": "Promote stored spell-glyph releases whose stored invocation summons Hostile creatures or creates harmful objects beyond the represented Spiritual Weapon attack-proxy subset, preserving close-as-possible placement, attack targeting fixed to the triggering creature when required, and stored-Concentration full-duration ownership when applicable.",
-            "owner": "future concrete stored summon/object procedure owners",
-            "requiredOutput": "Supported or profile-subset-supported stored summon/object placement claim with focused runtime tests and Quint/runtime parity for each concrete procedure; no Glyph authored-identity dispatch, generic placement bypass, or duplicated summon/object state.",
-            "title": "Glyph Stored Hostile Summon Placement"
+            "id": "L3-FOLLOWUP-GLYPH-STORED-HOSTILE-CREATURE-SUMMON-LIFECYCLE",
+            "mechanic": "Promote stored spell-glyph releases whose stored invocation creates Hostile battle creatures, preserving close-as-possible placement, triggering-creature attack targeting where RAW requires it, companion/control or turn protocol, and stored-Concentration full-duration cleanup without Glyph-local summon state.",
+            "owner": "future stored hostile creature summon lifecycle/control owner",
+            "requiredOutput": "Supported or profile-subset-supported stored Hostile creature summon release claim with focused runtime tests and QNT/runtime parity for each concrete summon procedure; no Glyph authored-identity dispatch, generic placement bypass, or duplicate summon occurrence state.",
+            "title": "Glyph Stored Hostile Creature Summon Lifecycle"
+          },
+          {
+            "id": "L3-FOLLOWUP-GLYPH-STORED-HARMFUL-OBJECT-OCCURRENCE-ROUTING",
+            "mechanic": "Promote stored spell-glyph releases for non-Spiritual-Weapon harmful object procedures once those procedures own stable object/proxy occurrence identity, close-as-possible placement, attack or routing facts against the triggering creature, object lifecycle, and duration cleanup.",
+            "owner": "future non-Spiritual-Weapon harmful object occurrence and attack-routing owner",
+            "requiredOutput": "Supported or profile-subset-supported stored harmful-object release claim with focused runtime tests and QNT/runtime parity for each concrete object procedure; no Glyph-local object registry and no broader claim from the Spiritual Weapon subset.",
+            "title": "Glyph Stored Harmful Object Occurrence Routing"
           },
           {
             "id": "L3-FOLLOWUP-GLYPH-STORED-AREA-ONGOING-CONCENTRATION",
@@ -36186,7 +36208,7 @@
             "title": "Glyph Stored Single-Creature Active-Effect Concentration"
           }
         ],
-        "futureProfileOwner": "represented Spiritual Weapon harmful-object placement profile plus future concrete Hostile summon, area ongoing Concentration, area control Concentration, single-creature active-effect Concentration, broader ongoing Spell Effect dispel, and character inventory/equipment component legality owners",
+        "futureProfileOwner": "represented Grease trap and Spiritual Weapon harmful-object placement profiles plus future hostile creature summon lifecycle, non-Spiritual-Weapon harmful object occurrence/routing, area ongoing Concentration, area control Concentration, single-creature active-effect Concentration, broader ongoing Spell Effect dispel, and character inventory/equipment component legality owners",
         "profileIds": [
           "spell.invocation-glyph-durable-occurrence",
           "spell.invocation-glyph-explosive-rune-release",
