@@ -17145,6 +17145,12 @@
       "taskId": "L3-FOLLOWUP-GLYPH-STORED-HOSTILE-SUMMON-PLACEMENT"
     },
     {
+      "claimKind": "accepted-runtime-closure",
+      "note": "Task 36 researched stored Glyph release families whose invocation creates battle creatures and records no new runtime profile claim. The current stored invocation candidate union has no Hostile creature summon procedure, the release witness has no summoned-Hostile-creature placement variant, and the SRD creature-creation candidates are allied/controlled companions, reanimated creatures, object-to-creature lifecycles, spatial manifestations, planar transport, or service-binding procedures that need concrete owners before Glyph can consume close-as-possible placement, Encounter Side or hostility, command/turn protocol, attack-target fixation, and full-duration cleanup. Future promotion must start in those summon lifecycle/control owners instead of adding Glyph authored-identity dispatch, a generic placement registry, or duplicate summon occurrence state.",
+      "profileIds": [],
+      "taskId": "L3-FOLLOWUP-GLYPH-STORED-HOSTILE-CREATURE-SUMMON-LIFECYCLE"
+    },
+    {
       "claimKind": "completed-runtime-parity",
       "note": "Focused battle-runtime tests cover the promoted Glyph stored single-creature active-effect Concentration subset from typed Surface spell_glyph and stored invocation procedure facts without authored-identity dispatch: Shield of Faith, Enlarge, Levitate, Invisibility, Haste, Protection from Evil and Good, and Heroism release against the triggering creature through existing procedure fills, avoid trigger-time spell-slot spend and ordinary caster or triggering-creature Concentration ownership, rewrite created active effects to the stored spell full duration, preserve unrelated readied-spell Concentration/readied spell state, remove the durable occurrence after successful release, and reject non-exact single-creature roll modifiers such as Bless.",
       "profileIds": [

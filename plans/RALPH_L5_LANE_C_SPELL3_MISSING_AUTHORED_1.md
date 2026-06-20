@@ -217,7 +217,7 @@
     {
       "number": 36,
       "id": "L3-FOLLOWUP-GLYPH-STORED-HOSTILE-CREATURE-SUMMON-LIFECYCLE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Glyph Stored Hostile Creature Summon Lifecycle"
     },
     {
@@ -323,7 +323,7 @@ missing-record spells unless a RAW dependency is unavoidable and documented.
 | 33 | L3-FOLLOWUP-GLYPH-STORED-AREA-ONGOING-CONCENTRATION - Glyph Stored Area Ongoing Concentration | done | L3-FOLLOWUP-GLYPH-STORED-REMAINING-CONCENTRATION | Promoted stored spell-glyph releases for represented Fog Cloud, Darkness, Flaming Sphere, Spike Growth, Moonbeam, Web, and Gust of Wind area ongoing Concentration effects. |
 | 34 | L3-FOLLOWUP-GLYPH-STORED-AREA-CONTROL-CONCENTRATION - Glyph Stored Area Control Concentration | done | L3-FOLLOWUP-GLYPH-STORED-REMAINING-CONCENTRATION | Promoted the represented Hypnotic Pattern area-control Concentration release with table Cube affected-creature and sight witnesses centered on the triggering creature, full-duration cleanup, no trigger-time Spell Slot spend, no ordinary Concentration owner, and glyph replay preservation across save-failed interrupts. |
 | 35 | L3-FOLLOWUP-GLYPH-STORED-SINGLE-CREATURE-ACTIVE-EFFECT-CONCENTRATION - Glyph Stored Single-Creature Active-Effect Concentration | done | L3-FOLLOWUP-GLYPH-STORED-REMAINING-CONCENTRATION | Promoted exact single-creature active-effect stored Concentration releases for typed scalar buffs, roll modifiers, size changes, levitation, direct conditions, Haste positive effects, creature-type protection, and condition-immunity plus turn-start Temporary Hit Points; self-transformation retargeting is split to Task 38. |
-| 36 | L3-FOLLOWUP-GLYPH-STORED-HOSTILE-CREATURE-SUMMON-LIFECYCLE - Glyph Stored Hostile Creature Summon Lifecycle | ready-for-research | L3-FOLLOWUP-GLYPH-STORED-HOSTILE-SUMMON-PLACEMENT | Promote stored spell-glyph releases whose stored invocation creates Hostile battle creatures, with concrete summon occurrence, placement, control/turn protocol, attack-target, and full-duration cleanup ownership. |
+| 36 | L3-FOLLOWUP-GLYPH-STORED-HOSTILE-CREATURE-SUMMON-LIFECYCLE - Glyph Stored Hostile Creature Summon Lifecycle | done | L3-FOLLOWUP-GLYPH-STORED-HOSTILE-SUMMON-PLACEMENT | Closed as research/runtime closure: no current SRD stored spell-glyph family creates Hostile battle creatures with an existing summon occurrence owner; no Glyph-local placement registry or support claim is added. |
 | 37 | L3-FOLLOWUP-GLYPH-STORED-HARMFUL-OBJECT-OCCURRENCE-ROUTING - Glyph Stored Harmful Object Occurrence Routing | ready-for-research | L3-FOLLOWUP-GLYPH-STORED-HOSTILE-SUMMON-PLACEMENT | Promote stored spell-glyph releases for non-Spiritual-Weapon harmful object procedures once those procedures own stable occurrence identity, placement, attack/routing, lifecycle, and cleanup facts. |
 | 38 | L3-FOLLOWUP-GLYPH-STORED-SELF-TRANSFORMATION-CONCENTRATION - Glyph Stored Self-Transformation Concentration | ready-for-research | L3-FOLLOWUP-GLYPH-STORED-SINGLE-CREATURE-ACTIVE-EFFECT-CONCENTRATION | Research and either promote or explicitly close stored spell-glyph release for self-transformation Concentration procedures whose existing invocation shape is self-targeted rather than a safe triggering-creature target. |
 
@@ -2342,7 +2342,7 @@ Plan Impact:
 
 ### Task 36 - L3-FOLLOWUP-GLYPH-STORED-HOSTILE-CREATURE-SUMMON-LIFECYCLE
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -2394,6 +2394,26 @@ Verification:
 - Shared lane verification.
 - Focused owner-package tests, and if battle-runtime behavior changes, update
   the relevant QNT/spec first and run focused MBT per `AGENTS.md`.
+
+Plan Impact:
+
+- Task 36 is complete as a research/runtime-closure task. No current stored
+  spell-glyph family is promotable as a Hostile creature summon release: the
+  stored invocation candidate union has no Hostile creature summon procedure,
+  and the stored release witness has no summoned-Hostile-creature placement
+  branch.
+- The researched SRD creature-creation candidates are source-owned families
+  rather than Glyph-owned Hostile summon releases: reanimated creatures,
+  object-to-creature lifecycles, allied mount or stat-block companions, spatial
+  manifestations, planar transport, and service binding each need their own
+  lifecycle/control owner before any future Glyph consumer could reuse typed
+  occurrence, placement, hostility, command/turn, target-fixation, or cleanup
+  facts.
+- No still-desired Glyph-hostile release family is excluded from this task:
+  current SRD candidates are not promotable Hostile stored summons, and adding a
+  broad Glyph claim now would duplicate summon occurrence and Companion Control
+  state. Future source-owner work remains with its concrete spell or creature
+  lifecycle lanes, not with a Glyph-local bypass.
 
 ### Task 37 - L3-FOLLOWUP-GLYPH-STORED-HARMFUL-OBJECT-OCCURRENCE-ROUTING
 
