@@ -37525,6 +37525,10 @@
       "category": "spell Unit pressure",
       "className": "Sorcerer",
       "concept": "Sorcerer spell list Ray of Frost",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Sorcerer and Wizard Ray of Frost cantrips resolve from level-1 sheets as ranged spell attacks with Cold damage and Speed reduction",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "spell-level-0",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -37532,7 +37536,7 @@
       "proposedOwnerBoundary": "character-battle-to-battle",
       "rowId": "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_ray_of_frost",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 235,
         "lineStart": 235,
@@ -45506,6 +45510,10 @@
       "category": "spell Unit pressure",
       "className": "Wizard",
       "concept": "Wizard spell list Ray of Frost",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Sorcerer and Wizard Ray of Frost cantrips resolve from level-1 sheets as ranged spell attacks with Cold damage and Speed reduction",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "spell-level-0",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -45513,7 +45521,7 @@
       "proposedOwnerBoundary": "character-battle-to-battle",
       "rowId": "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_ray_of_frost",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 154,
         "lineStart": 154,
@@ -56185,16 +56193,16 @@
       "closure-review-needed": 144,
       "explicit-closure-needed": 60,
       "future-owner-before-sdk": 45,
-      "sdk-scenario-needed": 484,
+      "sdk-scenario-needed": 482,
       "sdk-scenario-or-owner-closure-needed": 6,
-      "seed-scenario-present": 20,
+      "seed-scenario-present": 22,
       "table-only-closure-needed": 11
     },
     "levelOneFourRows": 632,
-    "scenarioGroups": 388,
+    "scenarioGroups": 389,
     "scenarioGroupsByLane": {
       "battle-feature-sdk": 21,
-      "battle-spell-sdk": 109,
+      "battle-spell-sdk": 108,
       "build-battle-sdk": 12,
       "build-sheet-sdk": 24,
       "character-creation-sdk": 29,
@@ -56204,13 +56212,13 @@
       "future-owner-before-sdk": 24,
       "multi-owner-feature-sdk": 10,
       "owner-review": 6,
-      "seed-present": 20,
+      "seed-present": 22,
       "sheet-spell-access-sdk": 12,
       "spell-effect-owner-review": 46,
       "table-only-closure": 4
     },
     "scenarioGroupsByTask": {
-      "L15-SDK-RAW-03": 151,
+      "L15-SDK-RAW-03": 152,
       "L15-SDK-RAW-04": 33,
       "L15-SDK-RAW-05": 107,
       "L15-SDK-RAW-06": 25,
@@ -59455,79 +59463,6 @@
         "Paladin spell list Protection from Evil and Good",
         "Warlock spell list Protection from Evil and Good",
         "Wizard spell list Protection from Evil and Good"
-      ],
-      "sdkInventoryDispositions": [
-        "sdk-scenario-needed"
-      ],
-      "suggestedScenario": "Create a level-appropriate caster for each listed access row or pair one spell execution with explicit class-access assertions, cast through battle discovery/resolution, and assert RAW-facing effects and resources.",
-      "taskId": "L15-SDK-RAW-03"
-    },
-    {
-      "candidateUnitIds": [
-        "ray_of_frost"
-      ],
-      "categories": [
-        "spell Unit pressure"
-      ],
-      "classNames": [
-        "Sorcerer",
-        "Wizard"
-      ],
-      "groupId": "l15-sdk-raw-03:battle-spell-sdk:ray-of-frost",
-      "lane": "battle-spell-sdk",
-      "levelBands": [
-        "spell-level-0"
-      ],
-      "ownerBoundaryStatuses": [
-        "resolved"
-      ],
-      "proposedOwnerBoundaries": [
-        "character-battle-to-battle"
-      ],
-      "rawGroupKey": "[\"L15-SDK-RAW-03\",\"battle-spell-sdk\",\"ray_of_frost\"]",
-      "rawSources": [
-        ".references/srd-5.2.1/Classes/Sorcerer.md:235",
-        ".references/srd-5.2.1/Classes/Wizard.md:154"
-      ],
-      "rowCount": 2,
-      "rowKinds": [
-        "spell-unit-pressure"
-      ],
-      "rows": [
-        {
-          "candidateUnitId": "ray_of_frost",
-          "className": "Sorcerer",
-          "concept": "Sorcerer spell list Ray of Frost",
-          "levelBand": "spell-level-0",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-battle-to-battle",
-          "rowId": "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_ray_of_frost",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 235,
-            "lineStart": 235,
-            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-          }
-        },
-        {
-          "candidateUnitId": "ray_of_frost",
-          "className": "Wizard",
-          "concept": "Wizard spell list Ray of Frost",
-          "levelBand": "spell-level-0",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-battle-to-battle",
-          "rowId": "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_ray_of_frost",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 154,
-            "lineStart": 154,
-            "path": ".references/srd-5.2.1/Classes/Wizard.md"
-          }
-        }
-      ],
-      "sampleConcepts": [
-        "Sorcerer spell list Ray of Frost",
-        "Wizard spell list Ray of Frost"
       ],
       "sdkInventoryDispositions": [
         "sdk-scenario-needed"
@@ -65560,6 +65495,61 @@
     },
     {
       "candidateUnitIds": [
+        "ray_of_frost"
+      ],
+      "categories": [
+        "spell Unit pressure"
+      ],
+      "classNames": [
+        "Sorcerer"
+      ],
+      "groupId": "l15-sdk-raw-03:seed-present:spell-level-0-sorcerer-ray-of-frost",
+      "lane": "seed-present",
+      "levelBands": [
+        "spell-level-0"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "character-battle-to-battle"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-03\",\"seed-present\",\"spell-level-0:Sorcerer:ray_of_frost\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Sorcerer.md:235"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "spell-unit-pressure"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "ray_of_frost",
+          "className": "Sorcerer",
+          "concept": "Sorcerer spell list Ray of Frost",
+          "levelBand": "spell-level-0",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-battle-to-battle",
+          "rowId": "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_ray_of_frost",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 235,
+            "lineStart": 235,
+            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Sorcerer spell list Ray of Frost"
+      ],
+      "sdkInventoryDispositions": [
+        "seed-scenario-present"
+      ],
+      "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
+      "taskId": "L15-SDK-RAW-03"
+    },
+    {
+      "candidateUnitIds": [
         "acid_splash"
       ],
       "categories": [
@@ -65661,6 +65651,61 @@
       ],
       "sampleConcepts": [
         "Wizard spell list Fire Bolt"
+      ],
+      "sdkInventoryDispositions": [
+        "seed-scenario-present"
+      ],
+      "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
+      "taskId": "L15-SDK-RAW-03"
+    },
+    {
+      "candidateUnitIds": [
+        "ray_of_frost"
+      ],
+      "categories": [
+        "spell Unit pressure"
+      ],
+      "classNames": [
+        "Wizard"
+      ],
+      "groupId": "l15-sdk-raw-03:seed-present:spell-level-0-wizard-ray-of-frost",
+      "lane": "seed-present",
+      "levelBands": [
+        "spell-level-0"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "character-battle-to-battle"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-03\",\"seed-present\",\"spell-level-0:Wizard:ray_of_frost\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Wizard.md:154"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "spell-unit-pressure"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "ray_of_frost",
+          "className": "Wizard",
+          "concept": "Wizard spell list Ray of Frost",
+          "levelBand": "spell-level-0",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-battle-to-battle",
+          "rowId": "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_ray_of_frost",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 154,
+            "lineStart": 154,
+            "path": ".references/srd-5.2.1/Classes/Wizard.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Wizard spell list Ray of Frost"
       ],
       "sdkInventoryDispositions": [
         "seed-scenario-present"
@@ -84614,6 +84659,146 @@
         "build: wizardBuild,",
         "casterId: acidSplashWizardId,",
         "expectedSpellSaveDc: 13,"
+      ]
+    },
+    {
+      "candidateUnitId": "ray_of_frost",
+      "className": "Sorcerer",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Sorcerer and Wizard Ray of Frost cantrips resolve from level-1 sheets as ranged spell attacks with Cold damage and Speed reduction",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "helperNeedles": [
+        {
+          "anchor": "function finalizedLevelOneSorcererRayOfFrostBuild(): CharacterBuild",
+          "needles": [
+            "finalizedLevelOneSorcererBuild({",
+            "draftIdText: \"draft:l1-sdk-sorcerer-ray-of-frost\"",
+            "expectedBuildLabel: \"Sorcerer Ray of Frost\"",
+            "rayOfFrostSpellId,"
+          ]
+        },
+        {
+          "anchor": "function finalizedLevelOneSorcererBuild(input:",
+          "needles": [
+            "const draft = createCharacterDraft({",
+            "fillCreationHoles({",
+            "const result = finalizeCharacterDraft({ draft: afterPurchase, unitLibrary });",
+            "return result.build;"
+          ]
+        },
+        {
+          "anchor": "function assertLevelOneRayOfFrost",
+          "needles": [
+            "cantripCastActionSpellAct(",
+            "rayOfFrostSpellId",
+            "spellTargetFill(",
+            "attackRollFill(attackRoll, { total: 14, naturalD20: 10 })",
+            "attackKind: \"ranged_spell_attack\"",
+            "targeting: { kind: \"singleCombatant\" }",
+            "damage: { expr: { dice: 1, dieSize: 8 }, damageType: \"cold\" }",
+            "rangeFeet: 60",
+            "label: \"Ray of Frost damage (1d8-cold)\"",
+            "damageRollFillWithGroups(damage, [[4]])",
+            "hp: Hp(9)",
+            "kind: \"speedDelta\"",
+            "sourceSpellId: rayOfFrostSpellId",
+            "deltaFeet: movementDeltaFeet(-10)",
+            "kind: \"startOfTurn\"",
+            "snapshotCombatant(resolved.state, monsterId).movement",
+            "speedFeet: movementFeet(20)",
+            "remainingFeet: movementFeet(20)",
+            "{ spellLevel: 1, count: 2, expended: 0 }",
+            "endTurn({ state: resolved.state, actorId: input.casterId })",
+            "snapshotCombatant(afterCasterTurn.state, monsterId).movement",
+            "endTurn({ state: afterCasterTurn.state, actorId: monsterId })",
+            "activeEffects",
+            "snapshotCombatant(afterSkeletonTurn.state, monsterId).movement",
+            "speedFeet: movementFeet(30)",
+            "remainingFeet: movementFeet(30)"
+          ]
+        }
+      ],
+      "levelBand": "spell-level-0",
+      "rowId": "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_ray_of_frost",
+      "rowKey": "spell-level-0:Sorcerer:ray_of_frost",
+      "tracerNeedles": [
+        "const sorcererBuild = finalizedLevelOneSorcererRayOfFrostBuild();",
+        "sourceUnitId: \"class_sorcerer\"",
+        "cantrips: expect.arrayContaining([rayOfFrostSpellId])",
+        "build: sorcererBuild,",
+        "casterId: rayOfFrostSorcererId,",
+        "expectedSpellAttackBonus: 4,"
+      ]
+    },
+    {
+      "candidateUnitId": "ray_of_frost",
+      "className": "Wizard",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Sorcerer and Wizard Ray of Frost cantrips resolve from level-1 sheets as ranged spell attacks with Cold damage and Speed reduction",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "helperNeedles": [
+        {
+          "anchor": "function finalizedLevelOneWizardRayOfFrostBuild(): CharacterBuild",
+          "needles": [
+            "finalizedLevelOneWizardBuild({",
+            "draftIdText: \"draft:l1-sdk-wizard-ray-of-frost\"",
+            "expectedBuildLabel: \"Wizard Ray of Frost\"",
+            "rayOfFrostSpellId"
+          ]
+        },
+        {
+          "anchor": "function finalizedLevelOneWizardBuild(input:",
+          "needles": [
+            "const draft = createCharacterDraft({",
+            "fillCreationHoles({",
+            "const result = finalizeCharacterDraft({ draft: afterPurchase, unitLibrary });",
+            "return result.build;"
+          ]
+        },
+        {
+          "anchor": "function assertLevelOneRayOfFrost",
+          "needles": [
+            "cantripCastActionSpellAct(",
+            "rayOfFrostSpellId",
+            "spellTargetFill(",
+            "attackRollFill(attackRoll, { total: 14, naturalD20: 10 })",
+            "attackKind: \"ranged_spell_attack\"",
+            "targeting: { kind: \"singleCombatant\" }",
+            "damage: { expr: { dice: 1, dieSize: 8 }, damageType: \"cold\" }",
+            "rangeFeet: 60",
+            "label: \"Ray of Frost damage (1d8-cold)\"",
+            "damageRollFillWithGroups(damage, [[4]])",
+            "hp: Hp(9)",
+            "kind: \"speedDelta\"",
+            "sourceSpellId: rayOfFrostSpellId",
+            "deltaFeet: movementDeltaFeet(-10)",
+            "kind: \"startOfTurn\"",
+            "snapshotCombatant(resolved.state, monsterId).movement",
+            "speedFeet: movementFeet(20)",
+            "remainingFeet: movementFeet(20)",
+            "{ spellLevel: 1, count: 2, expended: 0 }",
+            "endTurn({ state: resolved.state, actorId: input.casterId })",
+            "snapshotCombatant(afterCasterTurn.state, monsterId).movement",
+            "endTurn({ state: afterCasterTurn.state, actorId: monsterId })",
+            "activeEffects",
+            "snapshotCombatant(afterSkeletonTurn.state, monsterId).movement",
+            "speedFeet: movementFeet(30)",
+            "remainingFeet: movementFeet(30)"
+          ]
+        }
+      ],
+      "levelBand": "spell-level-0",
+      "rowId": "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_ray_of_frost",
+      "rowKey": "spell-level-0:Wizard:ray_of_frost",
+      "tracerNeedles": [
+        "const wizardBuild = finalizedLevelOneWizardRayOfFrostBuild();",
+        "sourceUnitId: \"class_wizard\"",
+        "cantrips: expect.arrayContaining([rayOfFrostSpellId])",
+        "build: wizardBuild,",
+        "casterId: rayOfFrostWizardId,",
+        "expectedSpellAttackBonus: 5,"
       ]
     },
     {

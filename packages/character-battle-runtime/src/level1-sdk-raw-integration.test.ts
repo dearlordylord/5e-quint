@@ -36,7 +36,7 @@ import {
   type CreationHoleIdText,
   type UnitChoiceKey,
 } from "@dnd/character-creation-runtime";
-import { Hp, movementFeet } from "@dnd/shared/types";
+import { Hp, movementDeltaFeet, movementFeet } from "@dnd/shared/types";
 import type { UnitRecord } from "@dnd/surface/surface/types";
 import { describe, expect, test } from "vitest";
 
@@ -76,6 +76,10 @@ const acidSplashSorcererId = combatantId(
 const acidSplashWizardId = combatantId("combatant:l1-sdk-acid-splash-wizard");
 const fireBoltSorcererId = combatantId("combatant:l1-sdk-fire-bolt-sorcerer");
 const fireBoltWizardId = combatantId("combatant:l1-sdk-fire-bolt-wizard");
+const rayOfFrostSorcererId = combatantId(
+  "combatant:l1-sdk-ray-of-frost-sorcerer",
+);
+const rayOfFrostWizardId = combatantId("combatant:l1-sdk-ray-of-frost-wizard");
 const magicMissileSorcererId = combatantId(
   "combatant:l1-sdk-magic-missile-sorcerer",
 );
@@ -100,6 +104,7 @@ const sorcerousBurstSpellId = "sorcerous_burst";
 const acidSplashSpellId = "acid_splash";
 const burningHandsSpellId = "burning_hands";
 const fireBoltSpellId = "fire_bolt";
+const rayOfFrostSpellId = "ray_of_frost";
 const magicMissileSpellId = "magic_missile";
 
 describe("level 1 SDK RAW integration", () => {
@@ -654,6 +659,43 @@ describe("level 1 SDK RAW integration", () => {
     });
   });
 
+  test("Sorcerer and Wizard Ray of Frost cantrips resolve from level-1 sheets as ranged spell attacks with Cold damage and Speed reduction", () => {
+    const sorcererBuild = finalizedLevelOneSorcererRayOfFrostBuild();
+    const wizardBuild = finalizedLevelOneWizardRayOfFrostBuild();
+
+    expect(sorcererBuild.spellcasting?.sources).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          sourceUnitId: "class_sorcerer",
+          cantrips: expect.arrayContaining([rayOfFrostSpellId]),
+        }),
+      ]),
+    );
+    expect(wizardBuild.spellcasting?.sources).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          sourceUnitId: "class_wizard",
+          cantrips: expect.arrayContaining([rayOfFrostSpellId]),
+        }),
+      ]),
+    );
+
+    assertLevelOneRayOfFrost({
+      battleIdText: "battle:l1-sdk-ray-of-frost-sorcerer",
+      characterIdText: "character:l1-sdk-ray-of-frost-sorcerer",
+      build: sorcererBuild,
+      casterId: rayOfFrostSorcererId,
+      expectedSpellAttackBonus: 4,
+    });
+    assertLevelOneRayOfFrost({
+      battleIdText: "battle:l1-sdk-ray-of-frost-wizard",
+      characterIdText: "character:l1-sdk-ray-of-frost-wizard",
+      build: wizardBuild,
+      casterId: rayOfFrostWizardId,
+      expectedSpellAttackBonus: 5,
+    });
+  });
+
   test("Sorcerer and Wizard Magic Missile resolve from level-1 spell access with split dart allocation", () => {
     const sorcererBuild = finalizedLevelOneSorcererMagicMissileBuild();
     const wizardBuild = finalizedLevelOneWizardMagicMissileBuild();
@@ -1028,6 +1070,141 @@ function assertLevelOneFireBolt(input: {
   ]);
 }
 
+function assertLevelOneRayOfFrost(input: {
+  readonly battleIdText: string;
+  readonly characterIdText: string;
+  readonly build: CharacterBuild;
+  readonly casterId: CombatantId;
+  readonly expectedSpellAttackBonus: number;
+}): void {
+  const state = battleFromSheets({
+    battleIdText: input.battleIdText,
+    characters: [
+      characterSheet({
+        characterIdText: input.characterIdText,
+        build: input.build,
+        combatantId: input.casterId,
+        initiative: 20,
+        maximumHp: 8,
+      }),
+    ],
+    monsters: [
+      monsterBattleInput(monsterId, 10, srdStatBlock("stat_block_skeleton")),
+    ],
+  });
+  const act = cantripCastActionSpellAct(
+    state,
+    input.casterId,
+    rayOfFrostSpellId,
+  );
+  const target = requireHoleFromList(act.initialHoles, "targetChoice");
+  const attackRoll = requireHole(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        spellTargetFill(target, rayOfFrostSpellId, input.casterId, monsterId),
+      ],
+    }),
+    "attackRoll",
+  );
+
+  expect(attackRoll).toMatchObject({
+    attackBonus: input.expectedSpellAttackBonus,
+    spell: {
+      attackKind: "ranged_spell_attack",
+      targeting: { kind: "singleCombatant" },
+      damage: { expr: { dice: 1, dieSize: 8 }, damageType: "cold" },
+      rangeFeet: 60,
+    },
+  });
+
+  const damage = requireHole(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        spellTargetFill(target, rayOfFrostSpellId, input.casterId, monsterId),
+        attackRollFill(attackRoll, { total: 14, naturalD20: 10 }),
+      ],
+    }),
+    "rolledDice",
+  );
+
+  expect(damage).toMatchObject({
+    label: "Ray of Frost damage (1d8-cold)",
+    critical: false,
+  });
+
+  const resolved = requireResolved(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        spellTargetFill(target, rayOfFrostSpellId, input.casterId, monsterId),
+        attackRollFill(attackRoll, { total: 14, naturalD20: 10 }),
+        damageRollFillWithGroups(damage, [[4]]),
+      ],
+    }),
+  );
+  const caster = requireCharacterCombatant(resolved.state, input.casterId);
+
+  expect(requireCombatant(resolved.state, monsterId)).toMatchObject({
+    hp: Hp(9),
+    activeEffects: [
+      {
+        kind: "speedDelta",
+        sourceSpellId: rayOfFrostSpellId,
+        sourceCombatantId: input.casterId,
+        deltaFeet: movementDeltaFeet(-10),
+        expiresAt: {
+          kind: "startOfTurn",
+          combatantId: input.casterId,
+        },
+      },
+    ],
+  });
+  expect(snapshotCombatant(resolved.state, monsterId).movement).toMatchObject({
+    speedFeet: movementFeet(20),
+    remainingFeet: movementFeet(20),
+  });
+  expect(snapshotBattle(resolved.state).turn.actionResources).toEqual([]);
+  expect(caster.origin.spellcasting?.spellSlots).toEqual([
+    { spellLevel: 1, count: 2, expended: 0 },
+  ]);
+
+  const afterCasterTurn = requireResolved(
+    endTurn({ state: resolved.state, actorId: input.casterId }),
+  );
+  expect(requireCombatant(afterCasterTurn.state, monsterId)).toMatchObject({
+    activeEffects: [
+      expect.objectContaining({
+        kind: "speedDelta",
+        sourceSpellId: rayOfFrostSpellId,
+      }),
+    ],
+  });
+  expect(
+    snapshotCombatant(afterCasterTurn.state, monsterId).movement,
+  ).toMatchObject({
+    speedFeet: movementFeet(20),
+    remainingFeet: movementFeet(20),
+  });
+
+  const afterSkeletonTurn = requireResolved(
+    endTurn({ state: afterCasterTurn.state, actorId: monsterId }),
+  );
+  expect(
+    afterSkeletonTurn.state.combatants.get(monsterId)?.activeEffects,
+  ).toEqual([]);
+  expect(
+    snapshotCombatant(afterSkeletonTurn.state, monsterId).movement,
+  ).toMatchObject({
+    speedFeet: movementFeet(30),
+    remainingFeet: movementFeet(30),
+  });
+}
+
 function assertLevelOneMagicMissile(input: {
   readonly battleIdText: string;
   readonly characterIdText: string;
@@ -1289,6 +1466,20 @@ function finalizedLevelOneSorcererAcidSplashBuild(): CharacterBuild {
   });
 }
 
+function finalizedLevelOneSorcererRayOfFrostBuild(): CharacterBuild {
+  return finalizedLevelOneSorcererBuild({
+    draftIdText: "draft:l1-sdk-sorcerer-ray-of-frost",
+    expectedBuildLabel: "Sorcerer Ray of Frost",
+    cantrips: [
+      fireBoltSpellId,
+      "light",
+      rayOfFrostSpellId,
+      sorcerousBurstSpellId,
+    ],
+    preparedSpells: [burningHandsSpellId, "detect_magic"],
+  });
+}
+
 function finalizedLevelOneSorcererMagicMissileBuild(): CharacterBuild {
   return finalizedLevelOneSorcererBuild({
     draftIdText: "draft:l1-sdk-sorcerer-magic-missile",
@@ -1461,6 +1652,23 @@ function finalizedLevelOneWizardAcidSplashBuild(): CharacterBuild {
     draftIdText: "draft:l1-sdk-wizard-acid-splash",
     expectedBuildLabel: "Wizard Acid Splash",
     cantrips: [acidSplashSpellId, fireBoltSpellId, "ray_of_frost"],
+    spellbook: [
+      "detect_magic",
+      "mage_armor",
+      "magic_missile",
+      "shield",
+      "sleep",
+      "thunderwave",
+    ],
+    preparedSpells: ["detect_magic", "mage_armor", "magic_missile", "shield"],
+  });
+}
+
+function finalizedLevelOneWizardRayOfFrostBuild(): CharacterBuild {
+  return finalizedLevelOneWizardBuild({
+    draftIdText: "draft:l1-sdk-wizard-ray-of-frost",
+    expectedBuildLabel: "Wizard Ray of Frost",
+    cantrips: ["light", fireBoltSpellId, rayOfFrostSpellId],
     spellbook: [
       "detect_magic",
       "mage_armor",
@@ -1762,6 +1970,19 @@ function spellTargetFill(
     value: targetId,
     spatialFacts: [{ kind: "spellTarget", casterId, targetId, spellId }],
   };
+}
+
+function snapshotCombatant(
+  state: BattleState,
+  combatantId: CombatantId,
+): ReturnType<typeof snapshotBattle>["combatants"][number] {
+  const combatant = snapshotBattle(state).combatants.find(
+    (candidate) => candidate.combatantId === combatantId,
+  );
+  if (combatant === undefined) {
+    throw new Error(`Expected snapshot for combatant ${combatantId}.`);
+  }
+  return combatant;
 }
 
 function bardicInspirationTargetFill(

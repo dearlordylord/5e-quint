@@ -72,7 +72,8 @@
         "shocking_grasp",
         "sorcerous_burst",
         "fire_bolt",
-        "acid_splash"
+        "acid_splash",
+        "ray_of_frost"
       ]
     },
     "featureLevel": 1,

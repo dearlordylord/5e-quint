@@ -782,6 +782,7 @@ describe("character-creation Surface records", () => {
               "sorcerous_burst",
               "fire_bolt",
               "acid_splash",
+              "ray_of_frost",
             ],
             cantripChoose: 4,
           }),
