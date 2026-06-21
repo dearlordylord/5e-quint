@@ -181,6 +181,9 @@ const huntersMarkRangerId = combatantId("combatant:l1-sdk-hunters-mark-ranger");
 const huntersMarkSpellSlotRangerId = combatantId(
   "combatant:l1-sdk-hunters-mark-spell-slot-ranger",
 );
+const cureWoundsBardId = combatantId("combatant:l1-sdk-cure-wounds-bard");
+const cureWoundsClericId = combatantId("combatant:l1-sdk-cure-wounds-cleric");
+const cureWoundsDruidId = combatantId("combatant:l1-sdk-cure-wounds-druid");
 const cureWoundsRangerId = combatantId("combatant:l1-sdk-cure-wounds-ranger");
 const cureWoundsTargetId = combatantId("combatant:l1-sdk-cure-wounds-target");
 const fireBoltSorcererId = combatantId("combatant:l1-sdk-fire-bolt-sorcerer");
@@ -1197,9 +1200,39 @@ describe("level 1 SDK RAW integration", () => {
     });
   });
 
-  test("Ranger Cure Wounds resolves from a level-1 prepared spell-list choice as Magic Action Hit Point restoration", () => {
+  test("Bard, Cleric, Druid, and Ranger Cure Wounds resolve from level-1 prepared spell-list choices as Magic Action Hit Point restoration", () => {
+    const bardBuild = finalizedLevelOneBardCureWoundsBuild();
+    const clericBuild = finalizedLevelOneClericCureWoundsBuild();
+    const druidBuild = finalizedLevelOneDruidCureWoundsBuild();
     const rangerBuild = finalizedLevelOneRangerCureWoundsBuild();
 
+    expect(bardBuild.spellcasting?.sources).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          sourceUnitId: "class_bard",
+          spellcastingAbility: "cha",
+          preparedSpells: expect.arrayContaining([cureWoundsSpellId]),
+        }),
+      ]),
+    );
+    expect(clericBuild.spellcasting?.sources).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          sourceUnitId: "class_cleric",
+          spellcastingAbility: "wis",
+          preparedSpells: expect.arrayContaining([cureWoundsSpellId]),
+        }),
+      ]),
+    );
+    expect(druidBuild.spellcasting?.sources).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          sourceUnitId: "class_druid",
+          spellcastingAbility: "wis",
+          preparedSpells: expect.arrayContaining([cureWoundsSpellId]),
+        }),
+      ]),
+    );
     expect(rangerBuild.spellcasting?.sources).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -1211,11 +1244,44 @@ describe("level 1 SDK RAW integration", () => {
     );
 
     assertLevelOneCureWounds({
+      battleIdText: "battle:l1-sdk-cure-wounds-bard",
+      characterIdText: "character:l1-sdk-cure-wounds-bard",
+      build: bardBuild,
+      casterId: cureWoundsBardId,
+      targetId: cureWoundsTargetId,
+      expectedSpellcastingAbilityModifier: 2,
+      targetCurrentHp: 4,
+      expectedResolvedHp: 11,
+    });
+    assertLevelOneCureWounds({
+      battleIdText: "battle:l1-sdk-cure-wounds-cleric",
+      characterIdText: "character:l1-sdk-cure-wounds-cleric",
+      build: clericBuild,
+      casterId: cureWoundsClericId,
+      targetId: cureWoundsTargetId,
+      expectedSpellcastingAbilityModifier: 2,
+      targetCurrentHp: 4,
+      expectedResolvedHp: 11,
+    });
+    assertLevelOneCureWounds({
+      battleIdText: "battle:l1-sdk-cure-wounds-druid",
+      characterIdText: "character:l1-sdk-cure-wounds-druid",
+      build: druidBuild,
+      casterId: cureWoundsDruidId,
+      targetId: cureWoundsTargetId,
+      expectedSpellcastingAbilityModifier: 2,
+      targetCurrentHp: 8,
+      expectedResolvedHp: 12,
+    });
+    assertLevelOneCureWounds({
       battleIdText: "battle:l1-sdk-cure-wounds-ranger",
       characterIdText: "character:l1-sdk-cure-wounds-ranger",
       build: rangerBuild,
       casterId: cureWoundsRangerId,
       targetId: cureWoundsTargetId,
+      expectedSpellcastingAbilityModifier: 1,
+      targetCurrentHp: 4,
+      expectedResolvedHp: 10,
     });
   });
 
@@ -3757,6 +3823,9 @@ function assertLevelOneCureWounds(input: {
   readonly build: CharacterBuild;
   readonly casterId: CombatantId;
   readonly targetId: CombatantId;
+  readonly expectedSpellcastingAbilityModifier: number;
+  readonly targetCurrentHp: number;
+  readonly expectedResolvedHp: number;
 }): void {
   const state = battleFromSheets({
     battleIdText: input.battleIdText,
@@ -3766,7 +3835,7 @@ function assertLevelOneCureWounds(input: {
         build: input.build,
         combatantId: input.casterId,
         initiative: 20,
-        maximumHp: 12,
+        maximumHp: 10,
       }),
       characterSheet({
         characterIdText: `${input.characterIdText}-target`,
@@ -3777,7 +3846,7 @@ function assertLevelOneCureWounds(input: {
         combatantId: input.targetId,
         initiative: 15,
         maximumHp: 12,
-        currentHp: 8,
+        currentHp: input.targetCurrentHp,
       }),
     ],
     monsters: [],
@@ -3822,13 +3891,19 @@ function assertLevelOneCureWounds(input: {
   );
 
   expect(healingRoll).toMatchObject({
-    label: "Cure Wounds healing (2d8+1)",
+    label: `Cure Wounds healing (2d8+${input.expectedSpellcastingAbilityModifier})`,
     spell: {
       procedure: "directHitPointRestoration",
       actionCost: "magicAction",
       resource: { tag: "spellSlot", slotLevel: 1 },
       targeting: { kind: "targetList", minTargets: 1, maxTargets: 1 },
-      healing: { expr: { dice: 2, dieSize: 8, flat: 1 } },
+      healing: {
+        expr: {
+          dice: 2,
+          dieSize: 8,
+          flat: input.expectedSpellcastingAbilityModifier,
+        },
+      },
       rangeFeet: 5,
     },
   });
@@ -3842,7 +3917,9 @@ function assertLevelOneCureWounds(input: {
   );
   const caster = requireCharacterCombatant(resolved.state, input.casterId);
 
-  expect(requireCombatant(resolved.state, input.targetId).hp).toBe(Hp(12));
+  expect(requireCombatant(resolved.state, input.targetId).hp).toBe(
+    Hp(input.expectedResolvedHp),
+  );
   expect(snapshotBattle(resolved.state).turn.actionResources).toEqual([]);
   expect(snapshotBattle(resolved.state).turn.bonusActionAvailable).toBe(true);
   expect(resolved.state.currentTurnResources.spellSlotUsesThisTurn).toEqual([
@@ -5981,6 +6058,20 @@ function finalizedLevelOneBardHealingWordBuild(): CharacterBuild {
   });
 }
 
+function finalizedLevelOneBardCureWoundsBuild(): CharacterBuild {
+  return finalizedLevelOneBardBuild({
+    draftIdText: "draft:l1-sdk-bard-cure-wounds",
+    expectedBuildLabel: "Bard Cure Wounds",
+    cantrips: ["dancing_lights", viciousMockerySpellId],
+    preparedSpells: [
+      "charm_person",
+      "color_spray",
+      cureWoundsSpellId,
+      healingWordSpellId,
+    ],
+  });
+}
+
 function finalizedLevelOneBardAnimalFriendshipBuild(): CharacterBuild {
   return finalizedLevelOneBardBuild({
     draftIdText: "draft:l1-sdk-bard-animal-friendship",
@@ -6184,6 +6275,20 @@ function finalizedLevelOneClericHealingWordBuild(): CharacterBuild {
   });
 }
 
+function finalizedLevelOneClericCureWoundsBuild(): CharacterBuild {
+  return finalizedLevelOneClericBuild({
+    draftIdText: "draft:l1-sdk-cleric-cure-wounds",
+    expectedBuildLabel: "Cleric Cure Wounds",
+    cantrips: ["guidance", sacredFlameSpellId, thaumaturgySpellId],
+    preparedSpells: [
+      "bless",
+      cureWoundsSpellId,
+      guidingBoltSpellId,
+      "shield_of_faith",
+    ],
+  });
+}
+
 function finalizedLevelOneClericBuild(input: {
   readonly draftIdText: string;
   readonly expectedBuildLabel: string;
@@ -6354,6 +6459,20 @@ function finalizedLevelOneDruidHealingWordBuild(): CharacterBuild {
       "animal_friendship",
       "cure_wounds",
       healingWordSpellId,
+      "faerie_fire",
+    ],
+  });
+}
+
+function finalizedLevelOneDruidCureWoundsBuild(): CharacterBuild {
+  return finalizedLevelOneDruidBuild({
+    draftIdText: "draft:l1-sdk-druid-cure-wounds",
+    expectedBuildLabel: "Druid Cure Wounds",
+    cantrips: [produceFlameSpellId, poisonSpraySpellId],
+    preparedSpells: [
+      "animal_friendship",
+      cureWoundsSpellId,
+      "entangle",
       "faerie_fire",
     ],
   });

@@ -91,6 +91,7 @@ let bard =
                 [ { spellId = "animal_friendship", spellLevel = 1 }
                 , { spellId = "charm_person", spellLevel = 1 }
                 , { spellId = "color_spray", spellLevel = 1 }
+                , { spellId = "cure_wounds", spellLevel = 1 }
                 , { spellId = "dissonant_whispers", spellLevel = 1 }
                 , { spellId = "healing_word", spellLevel = 1 }
                 , { spellId = "thunderwave", spellLevel = 1 }

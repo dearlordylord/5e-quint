@@ -1897,10 +1897,118 @@ const seededSdkScenarioRows = [
   },
   {
     candidateUnitId: "cure_wounds",
+    className: "Bard",
+    levelBand: "spell-level-1",
+    label:
+      "level1-sdk-raw-integration: Bard, Cleric, Druid, and Ranger Cure Wounds resolve from level-1 prepared spell-list choices as Magic Action Hit Point restoration",
+    path: paths.seedScenarioFiles.level1BattleFeatures,
+    rawSources: [
+      ".references/srd-5.2.1/Classes/Bard.md:34-36",
+      ".references/srd-5.2.1/Classes/Bard.md:69-89",
+      ".references/srd-5.2.1/Classes/Bard.md:158-168",
+      ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:44-50",
+      ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:90-96",
+      ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:108-116",
+      ".references/srd-5.2.1/Spells/Descriptions-A-D.md:1277-1288",
+      ".references/srd-5.2.1/Rules-Glossary.md:138-140",
+      ".references/srd-5.2.1/Rules-Glossary.md:562",
+      ".references/srd-5.2.1/Rules-Glossary.md:810-812",
+      ".references/srd-5.2.1/Rules-Glossary.md:698-700",
+    ],
+    rowId:
+      "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_cure_wounds",
+    tracerNeedles: [
+      "const bardBuild = finalizedLevelOneBardCureWoundsBuild();",
+      'sourceUnitId: "class_bard"',
+      'spellcastingAbility: "cha"',
+      "preparedSpells: expect.arrayContaining([cureWoundsSpellId])",
+      "build: bardBuild,",
+      "casterId: cureWoundsBardId,",
+      "targetId: cureWoundsTargetId,",
+      "expectedSpellcastingAbilityModifier: 2,",
+      "targetCurrentHp: 4,",
+      "expectedResolvedHp: 11,",
+    ],
+    helperNeedles: cureWoundsSdkHelperNeedles("Bard"),
+  },
+  {
+    candidateUnitId: "cure_wounds",
+    className: "Cleric",
+    levelBand: "spell-level-1",
+    label:
+      "level1-sdk-raw-integration: Bard, Cleric, Druid, and Ranger Cure Wounds resolve from level-1 prepared spell-list choices as Magic Action Hit Point restoration",
+    path: paths.seedScenarioFiles.level1BattleFeatures,
+    rawSources: [
+      ".references/srd-5.2.1/Classes/Cleric.md:33-35",
+      ".references/srd-5.2.1/Classes/Cleric.md:56-76",
+      ".references/srd-5.2.1/Classes/Cleric.md:160-166",
+      ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:44-50",
+      ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:90-96",
+      ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:108-116",
+      ".references/srd-5.2.1/Spells/Descriptions-A-D.md:1277-1288",
+      ".references/srd-5.2.1/Rules-Glossary.md:138-140",
+      ".references/srd-5.2.1/Rules-Glossary.md:562",
+      ".references/srd-5.2.1/Rules-Glossary.md:810-812",
+      ".references/srd-5.2.1/Rules-Glossary.md:698-700",
+    ],
+    rowId:
+      "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_cure_wounds",
+    tracerNeedles: [
+      "const clericBuild = finalizedLevelOneClericCureWoundsBuild();",
+      'sourceUnitId: "class_cleric"',
+      'spellcastingAbility: "wis"',
+      "preparedSpells: expect.arrayContaining([cureWoundsSpellId])",
+      "build: clericBuild,",
+      "casterId: cureWoundsClericId,",
+      "targetId: cureWoundsTargetId,",
+      "expectedSpellcastingAbilityModifier: 2,",
+      "targetCurrentHp: 4,",
+      "expectedResolvedHp: 11,",
+    ],
+    helperNeedles: cureWoundsSdkHelperNeedles("Cleric"),
+  },
+  {
+    candidateUnitId: "cure_wounds",
+    className: "Druid",
+    levelBand: "spell-level-1",
+    label:
+      "level1-sdk-raw-integration: Bard, Cleric, Druid, and Ranger Cure Wounds resolve from level-1 prepared spell-list choices as Magic Action Hit Point restoration",
+    path: paths.seedScenarioFiles.level1BattleFeatures,
+    rawSources: [
+      ".references/srd-5.2.1/Classes/Druid.md:30-32",
+      ".references/srd-5.2.1/Classes/Druid.md:57-77",
+      ".references/srd-5.2.1/Classes/Druid.md:200-207",
+      ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:44-50",
+      ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:90-96",
+      ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:108-116",
+      ".references/srd-5.2.1/Spells/Descriptions-A-D.md:1277-1288",
+      ".references/srd-5.2.1/Rules-Glossary.md:138-140",
+      ".references/srd-5.2.1/Rules-Glossary.md:562",
+      ".references/srd-5.2.1/Rules-Glossary.md:810-812",
+      ".references/srd-5.2.1/Rules-Glossary.md:698-700",
+    ],
+    rowId:
+      "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_cure_wounds",
+    tracerNeedles: [
+      "const druidBuild = finalizedLevelOneDruidCureWoundsBuild();",
+      'sourceUnitId: "class_druid"',
+      'spellcastingAbility: "wis"',
+      "preparedSpells: expect.arrayContaining([cureWoundsSpellId])",
+      "build: druidBuild,",
+      "casterId: cureWoundsDruidId,",
+      "targetId: cureWoundsTargetId,",
+      "expectedSpellcastingAbilityModifier: 2,",
+      "targetCurrentHp: 8,",
+      "expectedResolvedHp: 12,",
+    ],
+    helperNeedles: cureWoundsSdkHelperNeedles("Druid"),
+  },
+  {
+    candidateUnitId: "cure_wounds",
     className: "Ranger",
     levelBand: "spell-level-1",
     label:
-      "level1-sdk-raw-integration: Ranger Cure Wounds resolves from a level-1 prepared spell-list choice as Magic Action Hit Point restoration",
+      "level1-sdk-raw-integration: Bard, Cleric, Druid, and Ranger Cure Wounds resolve from level-1 prepared spell-list choices as Magic Action Hit Point restoration",
     path: paths.seedScenarioFiles.level1BattleFeatures,
     rawSources: [
       ".references/srd-5.2.1/Classes/Ranger.md:33-56",
@@ -1908,9 +2016,11 @@ const seededSdkScenarioRows = [
       ".references/srd-5.2.1/Classes/Ranger.md:160-176",
       ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:44-50",
       ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:90-96",
+      ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:108-116",
       ".references/srd-5.2.1/Spells/Descriptions-A-D.md:1277-1288",
       ".references/srd-5.2.1/Rules-Glossary.md:138-140",
       ".references/srd-5.2.1/Rules-Glossary.md:562",
+      ".references/srd-5.2.1/Rules-Glossary.md:810-812",
       ".references/srd-5.2.1/Rules-Glossary.md:698-700",
     ],
     rowId:
@@ -1923,8 +2033,11 @@ const seededSdkScenarioRows = [
       "build: rangerBuild,",
       "casterId: cureWoundsRangerId,",
       "targetId: cureWoundsTargetId,",
+      "expectedSpellcastingAbilityModifier: 1,",
+      "targetCurrentHp: 4,",
+      "expectedResolvedHp: 10,",
     ],
-    helperNeedles: rangerCureWoundsSdkHelperNeedles(),
+    helperNeedles: cureWoundsSdkHelperNeedles("Ranger"),
   },
   {
     candidateUnitId: "healing_word",
@@ -3564,40 +3677,86 @@ function evidenceRowsByRowId(filePath) {
   return new Map(Object.entries(readJson(filePath).rows ?? {}));
 }
 
-function rangerCureWoundsSdkHelperNeedles() {
+function cureWoundsSdkHelperNeedles(className) {
   return [
-    {
+    cureWoundsBuildHelperNeedle(className),
+    ...(className === "Ranger" ? [levelOneRangerBuildHelperNeedle()] : []),
+    cureWoundsResolutionHelperNeedle(),
+  ];
+}
+
+function cureWoundsBuildHelperNeedle(className) {
+  const specs = {
+    Bard: {
+      anchor: "function finalizedLevelOneBardCureWoundsBuild(): CharacterBuild",
+      buildHelper: "finalizedLevelOneBardBuild({",
+      draftIdText: "draft:l1-sdk-bard-cure-wounds",
+      expectedBuildLabel: "Bard Cure Wounds",
+      preparedNeedle: "cureWoundsSpellId",
+    },
+    Cleric: {
+      anchor:
+        "function finalizedLevelOneClericCureWoundsBuild(): CharacterBuild",
+      buildHelper: "finalizedLevelOneClericBuild({",
+      draftIdText: "draft:l1-sdk-cleric-cure-wounds",
+      expectedBuildLabel: "Cleric Cure Wounds",
+      preparedNeedle: "cureWoundsSpellId",
+    },
+    Druid: {
+      anchor:
+        "function finalizedLevelOneDruidCureWoundsBuild(): CharacterBuild",
+      buildHelper: "finalizedLevelOneDruidBuild({",
+      draftIdText: "draft:l1-sdk-druid-cure-wounds",
+      expectedBuildLabel: "Druid Cure Wounds",
+      preparedNeedle: "cureWoundsSpellId",
+    },
+    Ranger: {
       anchor:
         "function finalizedLevelOneRangerCureWoundsBuild(): CharacterBuild",
-      needles: [
-        "finalizedLevelOneRangerBuild({",
-        'draftIdText: "draft:l1-sdk-ranger-cure-wounds"',
-        'expectedBuildLabel: "Ranger Cure Wounds"',
-        "preparedSpells: [cureWoundsSpellId,",
-      ],
+      buildHelper: "finalizedLevelOneRangerBuild({",
+      draftIdText: "draft:l1-sdk-ranger-cure-wounds",
+      expectedBuildLabel: "Ranger Cure Wounds",
+      preparedNeedle: "preparedSpells: [cureWoundsSpellId,",
     },
-    levelOneRangerBuildHelperNeedle(),
-    {
-      anchor: "function assertLevelOneCureWounds",
-      needles: [
-        "spellSlotActForProcedure(",
-        "cureWoundsSpellId",
-        '"directHitPointRestoration"',
-        'tag: "actionSpell"',
-        "requiresTableSpatialFact: true",
-        'label: "Cure Wounds healing (2d8+1)"',
-        'actionCost: "magicAction"',
-        "healing: { expr: { dice: 2, dieSize: 8, flat: 1 } }",
-        "rangeFeet: 5",
-        "currentHp: 8",
-        "damageRollFillWithGroups(healingRoll,",
-        "expect(requireCombatant(resolved.state, input.targetId).hp).toBe(Hp(12));",
-        "expect(snapshotBattle(resolved.state).turn.actionResources).toEqual([]);",
-        "expect(snapshotBattle(resolved.state).turn.bonusActionAvailable).toBe(true);",
-        "{ spellLevel: 1, count: 2, expended: 1 }",
-      ],
-    },
-  ];
+  };
+  const spec = specs[className];
+  if (spec === undefined) {
+    throw new Error(`Unsupported Cure Wounds seed class ${className}.`);
+  }
+  return {
+    anchor: spec.anchor,
+    needles: [
+      spec.buildHelper,
+      `draftIdText: "${spec.draftIdText}"`,
+      `expectedBuildLabel: "${spec.expectedBuildLabel}"`,
+      spec.preparedNeedle,
+    ],
+  };
+}
+
+function cureWoundsResolutionHelperNeedle() {
+  return {
+    anchor: "function assertLevelOneCureWounds",
+    needles: [
+      "spellSlotActForProcedure(",
+      "cureWoundsSpellId",
+      '"directHitPointRestoration"',
+      'tag: "actionSpell"',
+      "requiresTableSpatialFact: true",
+      "expectedSpellcastingAbilityModifier",
+      'actionCost: "magicAction"',
+      "flat: input.expectedSpellcastingAbilityModifier",
+      "rangeFeet: 5",
+      "targetCurrentHp",
+      "expectedResolvedHp",
+      "damageRollFillWithGroups(healingRoll,",
+      "expect(requireCombatant(resolved.state, input.targetId).hp).toBe(",
+      "Hp(input.expectedResolvedHp)",
+      "expect(snapshotBattle(resolved.state).turn.actionResources).toEqual([]);",
+      "expect(snapshotBattle(resolved.state).turn.bonusActionAvailable).toBe(true);",
+      "{ spellLevel: 1, count: 2, expended: 1 }",
+    ],
+  };
 }
 
 function rangerFavoredEnemyHuntersMarkSdkTracerNeedles() {

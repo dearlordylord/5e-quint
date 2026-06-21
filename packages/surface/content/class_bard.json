@@ -201,6 +201,10 @@
           "spellLevel": 1
         },
         {
+          "spellId": "cure_wounds",
+          "spellLevel": 1
+        },
+        {
           "spellId": "dissonant_whispers",
           "spellLevel": 1
         },

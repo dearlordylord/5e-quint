@@ -553,6 +553,7 @@ describe("character-creation Surface records", () => {
               "animal_friendship",
               "charm_person",
               "color_spray",
+              "cure_wounds",
               "dissonant_whispers",
               "healing_word",
               "thunderwave",
