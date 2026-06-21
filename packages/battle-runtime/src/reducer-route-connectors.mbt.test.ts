@@ -1,14 +1,16 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR
 
-import { describe, it } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import {
   MBT_TEST_TIMEOUT_MS,
   createConcentrationBreakTeardownRouteDriver,
   createBattleRuntimeRouteDriver,
+  createCommandOrderingRouteDriver,
   createDeathSavingThrowRouteDriver,
   createHitPointRestorationOrderingRouteDriver,
   createMagicMissileRouteDriver,
+  createScalarBuffRouteDriver,
   createSaveGatedSpellOrderingRouteDriver,
   createSpellAttackOrderingRouteDriver,
   createWeaponAttackOrderingRouteDriver,
@@ -20,6 +22,8 @@ import {
   reducerRoutedDeathSavingThrowStateCheck,
   reducerRoutedHitPointRestorationOrderingStateCheck,
   reducerRoutedMagicMissileStateCheck,
+  reducerRoutedCommandOrderingStateCheck,
+  reducerRoutedScalarBuffStateCheck,
   reducerRoutedSaveGatedSpellOrderingStateCheck,
   reducerRoutedWeaponAttackOrderingStateCheck,
   reducerRoutedWeaponAttackSkeletonStateCheck,
@@ -152,6 +156,64 @@ describe("battle reducer route connector MBT", () => {
       nTraces: mbtTraceCount(),
       maxSteps: focusedMbtMaxSteps(3),
       stateCheck: reducerRoutedConcentrationBreakTeardownStateCheck,
+    });
+  }, MBT_TEST_TIMEOUT_MS);
+
+  it("routes Command effect ordering through the shared reducer surface", async () => {
+    await run({
+      spec: mbtSpecPath(
+        import.meta.dirname,
+        "battle-runtime-command-ordering.route.mbt.qnt",
+      ),
+      init: "init",
+      step: "step",
+      driver: createCommandOrderingRouteDriver(),
+      backend: "typescript",
+      nTraces: mbtTraceCount(),
+      maxSteps: focusedMbtMaxSteps(5),
+      stateCheck: reducerRoutedCommandOrderingStateCheck,
+    });
+  }, MBT_TEST_TIMEOUT_MS);
+
+  it("routes Command Flee opportunity windows to the interrupt stack owner", () => {
+    const driver = createCommandOrderingRouteDriver()();
+    driver.actions.init.handler({});
+    driver.actions.doFleeMovement.handler({});
+    driver.actions.doFleeOpportunityAttack.handler({});
+
+    if (driver.getState === undefined) {
+      throw new Error("Expected Command route driver state projection.");
+    }
+
+    const state = driver.getState();
+    expect(state).toMatchObject({
+      holes: ["interruptDecision"],
+      lastResult: "needsHoles",
+      pendingCommandOption: "flee",
+      reactionWindowOpen: true,
+    });
+    expect(state.route.at(-1)).toEqual({
+      kind: "resolveBattleSubject",
+      subject: "commandEffect",
+      fill: "movement",
+      holes: ["interruptDecision"],
+      owner: "battleInterruptStack",
+    });
+  });
+
+  it("routes scalar buff effects through the shared reducer surface", async () => {
+    await run({
+      spec: mbtSpecPath(
+        import.meta.dirname,
+        "battle-runtime-scalar-buff.route.mbt.qnt",
+      ),
+      init: "init",
+      step: "step",
+      driver: createScalarBuffRouteDriver(),
+      backend: "typescript",
+      nTraces: mbtTraceCount(),
+      maxSteps: focusedMbtMaxSteps(2),
+      stateCheck: reducerRoutedScalarBuffStateCheck,
     });
   }, MBT_TEST_TIMEOUT_MS);
 });

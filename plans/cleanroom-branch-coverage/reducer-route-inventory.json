@@ -237,8 +237,8 @@
         {
           "driverPath": "packages/battle-runtime/battle-runtime-ability-check-choice-search.mbt.qnt",
           "route": "substrate-first",
-          "routeTaskId": "L15-RR06-BATTLE-SPELL-EFFECT-ROUTES",
-          "subjectFamily": "battle spell, condition, active-effect, or restoration subject",
+          "routeTaskId": "L15-RR21-BATTLE-ABILITY-SEARCH-CHOICE-ROUTES",
+          "subjectFamily": "ability-check, Search, and choice spell-effect route",
           "branchObligations": 12,
           "currentOutOfScopeBranchObligations": 3,
           "derivability": {
@@ -335,40 +335,49 @@
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-command-option-next-turn.mbt.qnt",
-          "route": "substrate-first",
+          "route": "replay-refresh-only",
           "routeTaskId": "L15-RR06-BATTLE-SPELL-EFFECT-ROUTES",
-          "subjectFamily": "battle spell, condition, active-effect, or restoration subject",
+          "subjectFamily": "Command option next-turn active-effect replay",
           "branchObligations": 15,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
-              "packages/battle-runtime/battle-runtime-command-option-next-turn.mbt.qnt is present in source-branch-inventory.json with 15 branch obligation(s)."
+              "packages/battle-runtime/battle-runtime-command-option-next-turn.mbt.qnt is present in source-branch-inventory.json with 15 branch obligation(s).",
+              "packages/battle-runtime/battle-runtime-command-ordering.route.mbt.qnt records CommandEffectRouteSubject evidence for option choice, Saving Throw, next-turn command effects, movement fills, condition lifecycle, and interrupt-stack opening."
             ],
             "rawDomainFacts": [
-              "Local SRD spellcasting, saving throw, condition, duration, and Hit Point rules define the generic spell/effect shape."
+              ".references/srd-5.2.1/Spells/Descriptions-A-D.md#Command defines failed-save option consequences on the target's next turn.",
+              "UBIQUITOUS_LANGUAGE.md defines Spell Effect, Movement, Reaction, and Condition terms used by the Command route owner."
             ],
-            "blockers": [
-              "Route only after the relevant spell/effect owner exists on BattleState or at a table-supplied boundary fill."
-            ]
+            "blockers": []
           }
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-command-ordering.mbt.qnt",
-          "route": "substrate-first",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-command-ordering.route.mbt.qnt",
+          "route": "reducer-routed",
           "routeTaskId": "L15-RR06-BATTLE-SPELL-EFFECT-ROUTES",
-          "subjectFamily": "battle spell, condition, active-effect, or restoration subject",
+          "subjectFamily": "Command spell/effect frontier and next-turn option route",
+          "requiredReducerEntrypoints": [
+            "discover_battle_acts",
+            "resolve_battle_subject"
+          ],
+          "durableStateOwner": "BattleState owns Command pending active effects, Prone condition application, Movement spent on Approach/Flee, and interrupt-stack opening for Flee Opportunity Attack windows; held-object inventory and route geometry stay boundary fills.",
+          "acceptanceCondition": "Target replay evidence routes Command option selection, Saving Throw, next-turn Movement, condition, and interrupt-stack effects through shared reducer entrypoints without a local Command ledger.",
           "branchObligations": 19,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
-              "packages/battle-runtime/battle-runtime-command-ordering.mbt.qnt is present in source-branch-inventory.json with 19 branch obligation(s)."
+              "packages/battle-runtime/battle-runtime-command-ordering.mbt.qnt is present in source-branch-inventory.json with 19 branch obligation(s).",
+              "packages/battle-runtime/battle-runtime-command-ordering.route.mbt.qnt exposes qRoute for CommandEffectRouteSubject through spell-slot/action, hole-frontier, active-effect, condition-lifecycle, movement-resource, and interrupt-stack owners.",
+              "packages/battle-runtime/battle-runtime-command-ordering.qnt is the semantic core for Command frontier ordering."
             ],
             "rawDomainFacts": [
-              "Local SRD spellcasting, saving throw, condition, duration, and Hit Point rules define the generic spell/effect shape."
+              ".references/srd-5.2.1/Spells/Descriptions-A-D.md#Command defines option choice, Wisdom Saving Throw, failed-save next-turn consequences, and target Movement/Action suppression.",
+              ".references/srd-5.2.1/Rules-Glossary.md#Opportunity-Attacks and .references/srd-5.2.1/Playing-the-Game.md#Movement-and-Position define the Flee/Approach Movement and Reaction boundaries.",
+              "UBIQUITOUS_LANGUAGE.md defines Spell Invocation, Spell Effect, Movement, Reaction, and Condition terms used by the route owners."
             ],
-            "blockers": [
-              "Route only after the relevant spell/effect owner exists on BattleState or at a table-supplied boundary fill."
-            ]
+            "blockers": []
           }
         },
         {
@@ -507,8 +516,8 @@
         {
           "driverPath": "packages/battle-runtime/battle-runtime-eldritch-blast.mbt.qnt",
           "route": "substrate-first",
-          "routeTaskId": "L15-RR06-BATTLE-SPELL-EFFECT-ROUTES",
-          "subjectFamily": "battle spell, condition, active-effect, or restoration subject",
+          "routeTaskId": "L15-RR22-BATTLE-INDEPENDENT-SPELL-ATTACK-SEQUENCE-ROUTES",
+          "subjectFamily": "independent multi-beam spell attack sequence route",
           "branchObligations": 8,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
@@ -545,8 +554,8 @@
         {
           "driverPath": "packages/battle-runtime/battle-runtime-find-familiar-companion-lifecycle.mbt.qnt",
           "route": "substrate-first",
-          "routeTaskId": "L15-RR06-BATTLE-SPELL-EFFECT-ROUTES",
-          "subjectFamily": "battle spell, condition, active-effect, or restoration subject",
+          "routeTaskId": "L15-RR20-BATTLE-COMPANION-OBJECT-BOUNDARY-ROUTES",
+          "subjectFamily": "companion lifecycle spell-effect route",
           "branchObligations": 5,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
@@ -638,8 +647,8 @@
         {
           "driverPath": "packages/battle-runtime/battle-runtime-interrupt-stack-resume.mbt.qnt",
           "route": "substrate-first",
-          "routeTaskId": "L15-RR06-BATTLE-SPELL-EFFECT-ROUTES",
-          "subjectFamily": "battle spell, condition, active-effect, or restoration subject",
+          "routeTaskId": "L15-RR19-BATTLE-REACTION-INTERRUPT-ROUTES",
+          "subjectFamily": "reaction spell and interrupt-stack route",
           "branchObligations": 3,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
@@ -788,8 +797,8 @@
         {
           "driverPath": "packages/battle-runtime/battle-runtime-reaction-casting-time.mbt.qnt",
           "route": "substrate-first",
-          "routeTaskId": "L15-RR06-BATTLE-SPELL-EFFECT-ROUTES",
-          "subjectFamily": "battle spell, condition, active-effect, or restoration subject",
+          "routeTaskId": "L15-RR19-BATTLE-REACTION-INTERRUPT-ROUTES",
+          "subjectFamily": "reaction spell and interrupt-stack route",
           "branchObligations": 3,
           "currentOutOfScopeBranchObligations": 2,
           "derivability": {
@@ -845,8 +854,8 @@
         {
           "driverPath": "packages/battle-runtime/battle-runtime-roll-modifier-active-effects.mbt.qnt",
           "route": "substrate-first",
-          "routeTaskId": "L15-RR06-BATTLE-SPELL-EFFECT-ROUTES",
-          "subjectFamily": "battle spell, condition, active-effect, or restoration subject",
+          "routeTaskId": "L15-RR18-BATTLE-ACTIVE-EFFECT-LIFECYCLE-ROUTES",
+          "subjectFamily": "active spell-effect lifecycle route",
           "branchObligations": 16,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
@@ -919,8 +928,8 @@
         {
           "driverPath": "packages/battle-runtime/battle-runtime-scalar-buff-active-effects.mbt.qnt",
           "route": "substrate-first",
-          "routeTaskId": "L15-RR06-BATTLE-SPELL-EFFECT-ROUTES",
-          "subjectFamily": "battle spell, condition, active-effect, or restoration subject",
+          "routeTaskId": "L15-RR18-BATTLE-ACTIVE-EFFECT-LIFECYCLE-ROUTES",
+          "subjectFamily": "active spell-effect lifecycle route",
           "branchObligations": 6,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
@@ -937,28 +946,34 @@
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-scalar-buff.mbt.qnt",
-          "route": "substrate-first",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-scalar-buff.route.mbt.qnt",
+          "route": "reducer-routed",
           "routeTaskId": "L15-RR06-BATTLE-SPELL-EFFECT-ROUTES",
-          "subjectFamily": "battle spell, condition, active-effect, or restoration subject",
+          "subjectFamily": "scalar buff spell-effect target route",
+          "requiredReducerEntrypoints": [
+            "resolve_battle_subject"
+          ],
+          "durableStateOwner": "BattleState owns the target Speed projection and active Spell Effect instance; the route connector does not introduce a duplicate speed/effect ledger.",
+          "acceptanceCondition": "Target replay evidence routes target selection through the shared reducer subject resolution path and observes the resulting active-effect-owned Speed change.",
           "branchObligations": 2,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
-              "packages/battle-runtime/battle-runtime-scalar-buff.mbt.qnt is present in source-branch-inventory.json with 2 branch obligation(s)."
+              "packages/battle-runtime/battle-runtime-scalar-buff.mbt.qnt is present in source-branch-inventory.json with 2 branch obligation(s).",
+              "packages/battle-runtime/battle-runtime-scalar-buff.route.mbt.qnt exposes qRoute for ScalarBuffEffectRouteSubject through the active-effect owner."
             ],
             "rawDomainFacts": [
-              "Local SRD spellcasting, saving throw, condition, duration, and Hit Point rules define the generic spell/effect shape."
+              ".references/srd-5.2.1/Spells/Descriptions-E-L.md#Longstrider defines the target Speed increase.",
+              ".references/srd-5.2.1/Rules-Glossary.md#Speed and UBIQUITOUS_LANGUAGE.md define Speed and Spell Effect ownership."
             ],
-            "blockers": [
-              "Route only after the relevant spell/effect owner exists on BattleState or at a table-supplied boundary fill."
-            ]
+            "blockers": []
           }
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-sleep-repeat-save.mbt.qnt",
           "route": "substrate-first",
-          "routeTaskId": "L15-RR06-BATTLE-SPELL-EFFECT-ROUTES",
-          "subjectFamily": "battle spell, condition, active-effect, or restoration subject",
+          "routeTaskId": "L15-RR18-BATTLE-ACTIVE-EFFECT-LIFECYCLE-ROUTES",
+          "subjectFamily": "active spell-effect lifecycle route",
           "branchObligations": 8,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
@@ -1244,8 +1259,8 @@
         {
           "driverPath": "packages/battle-runtime/battle-runtime-starry-wisp-object.mbt.qnt",
           "route": "substrate-first",
-          "routeTaskId": "L15-RR06-BATTLE-SPELL-EFFECT-ROUTES",
-          "subjectFamily": "battle spell, condition, active-effect, or restoration subject",
+          "routeTaskId": "L15-RR20-BATTLE-COMPANION-OBJECT-BOUNDARY-ROUTES",
+          "subjectFamily": "object-target spell attack boundary route",
           "branchObligations": 7,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
@@ -1345,8 +1360,8 @@
         {
           "driverPath": "packages/battle-runtime/battle-runtime-turn-boundary-effect-lifecycle.mbt.qnt",
           "route": "substrate-first",
-          "routeTaskId": "L15-RR06-BATTLE-SPELL-EFFECT-ROUTES",
-          "subjectFamily": "battle spell, condition, active-effect, or restoration subject",
+          "routeTaskId": "L15-RR18-BATTLE-ACTIVE-EFFECT-LIFECYCLE-ROUTES",
+          "subjectFamily": "active spell-effect lifecycle route",
           "branchObligations": 2,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
@@ -1446,8 +1461,8 @@
         {
           "driverPath": "packages/battle-runtime/battle-runtime-zero-hit-point-mid-resolution.mbt.qnt",
           "route": "substrate-first",
-          "routeTaskId": "L15-RR06-BATTLE-SPELL-EFFECT-ROUTES",
-          "subjectFamily": "battle spell, condition, active-effect, or restoration subject",
+          "routeTaskId": "L15-RR18-BATTLE-ACTIVE-EFFECT-LIFECYCLE-ROUTES",
+          "subjectFamily": "active spell-effect lifecycle route",
           "branchObligations": 1,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {

@@ -37,13 +37,13 @@
     {
       "number": 6,
       "id": "L15-RR06-BATTLE-SPELL-EFFECT-ROUTES",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Route spell, condition, effect, and restoration battle subjects"
     },
     {
       "number": 7,
       "id": "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Route feature, species, metamagic, and mastery battle substrates"
     },
     {
@@ -91,13 +91,13 @@
     {
       "number": 15,
       "id": "L15-RR15-AFTER-HIT-RIDER-OWNER-SPLIT",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Split after-hit rider routes by durable battle owner"
     },
     {
       "number": 16,
       "id": "L15-RR16-CHAINED-ATTACK-PROCEDURE-ROUTES",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Route chained attack sequences through procedure owners"
     },
     {
@@ -105,6 +105,36 @@
       "id": "L15-RR17-WEAPON-HOSTED-RIDER-ROUTES",
       "status": "blocked",
       "title": "Split weapon-hosted attack and rider routes"
+    },
+    {
+      "number": 18,
+      "id": "L15-RR18-BATTLE-ACTIVE-EFFECT-LIFECYCLE-ROUTES",
+      "status": "ready-for-research",
+      "title": "Route remaining active spell-effect lifecycle drivers"
+    },
+    {
+      "number": 19,
+      "id": "L15-RR19-BATTLE-REACTION-INTERRUPT-ROUTES",
+      "status": "ready-for-research",
+      "title": "Route reaction spell and interrupt-stack resume drivers"
+    },
+    {
+      "number": 20,
+      "id": "L15-RR20-BATTLE-COMPANION-OBJECT-BOUNDARY-ROUTES",
+      "status": "ready-for-research",
+      "title": "Route companion lifecycle and object-target boundary drivers"
+    },
+    {
+      "number": 21,
+      "id": "L15-RR21-BATTLE-ABILITY-SEARCH-CHOICE-ROUTES",
+      "status": "ready-for-research",
+      "title": "Route ability-check, Search, and choice spell-effect drivers"
+    },
+    {
+      "number": 22,
+      "id": "L15-RR22-BATTLE-INDEPENDENT-SPELL-ATTACK-SEQUENCE-ROUTES",
+      "status": "blocked",
+      "title": "Route independent multi-beam spell attack sequence drivers"
     }
   ]
 }
@@ -243,18 +273,23 @@ The route classes are deliberately not all `reducer-routed`:
 |   3 | L15-RR03-FINISH-CURRENT-DIAGNOSTIC-QUEUE - Route the remaining current reducer-spine diagnostic drivers       | done               | L15-RR02-ROUTE-VOCABULARY-AND-GATES                                                                                                                      | Completed death-save and Concentration route connectors from the diagnostic queue.            |
 |   4 | L15-RR04-RULE-CORE-COMPONENT-CONNECTORS - Add component-first QNT connectors for rule-core drivers            | done               | L15-RR02-ROUTE-VOCABULARY-AND-GATES                                                                                                                      | Keeps reusable components out of battle-local replay islands.                                 |
 |   5 | L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES - Route action, attack, weapon, and stat-block battle subjects | done               | L15-RR03-FINISH-CURRENT-DIAGNOSTIC-QUEUE; L15-RR04-RULE-CORE-COMPONENT-CONNECTORS                                                                        | Routes generic attack/stat-block families; rider bundles split to Tasks 15-17.               |
-|   6 | L15-RR06-BATTLE-SPELL-EFFECT-ROUTES - Route spell, condition, effect, and restoration battle subjects         | ready-for-research | L15-RR03-FINISH-CURRENT-DIAGNOSTIC-QUEUE; L15-RR04-RULE-CORE-COMPONENT-CONNECTORS                                                                        | Extends routed spell/effect subjects without selected-identity dispatch.                      |
-|   7 | L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES - Route feature, species, metamagic, and mastery battle substrates   | blocked            | L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES; L15-RR06-BATTLE-SPELL-EFFECT-ROUTES                                                                      | Converts selected-identity battle pressure into shape/profile substrate.                      |
+|   6 | L15-RR06-BATTLE-SPELL-EFFECT-ROUTES - Route spell, condition, effect, and restoration battle subjects         | done               | L15-RR03-FINISH-CURRENT-DIAGNOSTIC-QUEUE; L15-RR04-RULE-CORE-COMPONENT-CONNECTORS                                                                        | Extends routed spell/effect subjects without selected-identity dispatch.                      |
+|   7 | L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES - Route feature, species, metamagic, and mastery battle substrates   | ready-for-research | L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES; L15-RR06-BATTLE-SPELL-EFFECT-ROUTES                                                                      | Converts selected-identity battle pressure into shape/profile substrate.                      |
 |   8 | L15-RR08-CHARACTER-CREATION-ROUTES - Add QNT route connectors for character creation drivers                  | ready-for-research | L15-RR02-ROUTE-VOCABULARY-AND-GATES                                                                                                                      | Adds route shape for Draft/Fill/finalization rather than battle subjects.                     |
 |   9 | L15-RR09-CHARACTER-SHEET-ROUTES - Add QNT route connectors for character sheet drivers                        | ready-for-research | L15-RR02-ROUTE-VOCABULARY-AND-GATES                                                                                                                      | Adds route shape for sheet resource/rest/projection state.                                    |
 |  10 | L15-RR10-CHARACTER-BATTLE-HANDOFF-ROUTES - Add QNT route connectors for character-battle handoff drivers      | blocked            | L15-RR08-CHARACTER-CREATION-ROUTES; L15-RR09-CHARACTER-SHEET-ROUTES; L15-RR03-FINISH-CURRENT-DIAGNOSTIC-QUEUE                                            | Handoff routes depend on both sheet and battle state owners.                                  |
 |  11 | L15-RR11-LEVEL3-4-SCOPE-PROMOTION - Promote level 3-4 branch scope into route connector tasks                 | blocked            | L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES; L15-RR06-BATTLE-SPELL-EFFECT-ROUTES; L15-RR08-CHARACTER-CREATION-ROUTES; L15-RR09-CHARACTER-SHEET-ROUTES | Widen current level-1/2 branch-scope rows only after generic route shapes exist.              |
 |  12 | L15-RR12-LEVEL5-SCOPE-PROMOTION - Promote level 5 class and spell-level-3 route connector tasks               | blocked            | L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES; L15-RR10-CHARACTER-BATTLE-HANDOFF-ROUTES; L15-RR11-LEVEL3-4-SCOPE-PROMOTION                                    | Handles level-5 features and spell-level-3 pressure; does not promote spell level 4/5.        |
-|  13 | L15-RR13-DIRTY-CLEANROOM-REHEARSAL - Run the level 1-5 route architecture on the dirty cleanroom              | blocked            | L15-RR12-LEVEL5-SCOPE-PROMOTION; L15-RR15-AFTER-HIT-RIDER-OWNER-SPLIT; L15-RR16-CHAINED-ATTACK-PROCEDURE-ROUTES; L15-RR17-WEAPON-HOSTED-RIDER-ROUTES     | Uses the existing dirty cleanroom as a diagnostic target with current source package.         |
+|  13 | L15-RR13-DIRTY-CLEANROOM-REHEARSAL - Run the level 1-5 route architecture on the dirty cleanroom              | blocked            | L15-RR12-LEVEL5-SCOPE-PROMOTION; L15-RR15-AFTER-HIT-RIDER-OWNER-SPLIT; L15-RR16-CHAINED-ATTACK-PROCEDURE-ROUTES; L15-RR17-WEAPON-HOSTED-RIDER-ROUTES; L15-RR18-BATTLE-ACTIVE-EFFECT-LIFECYCLE-ROUTES; L15-RR19-BATTLE-REACTION-INTERRUPT-ROUTES; L15-RR20-BATTLE-COMPANION-OBJECT-BOUNDARY-ROUTES; L15-RR21-BATTLE-ABILITY-SEARCH-CHOICE-ROUTES; L15-RR22-BATTLE-INDEPENDENT-SPELL-ATTACK-SEQUENCE-ROUTES | Uses the existing dirty cleanroom as a diagnostic target with current source package.         |
 |  14 | L15-RR14-FRESH-CLEANROOM-PACKAGE-GATE - Package a fresh cleanroom-ready level 1-5 route evidence gate         | blocked            | L15-RR13-DIRTY-CLEANROOM-REHEARSAL                                                                                                                       | Produces the fresh-run package and acceptance gate; does not depend on stale dirty artifacts. |
-|  15 | L15-RR15-AFTER-HIT-RIDER-OWNER-SPLIT - Split after-hit rider routes by durable battle owner                   | blocked            | L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES; L15-RR06-BATTLE-SPELL-EFFECT-ROUTES                                                                      | Prevents one route connector from accumulating interrupt, condition, Concentration, and HP owners. |
-|  16 | L15-RR16-CHAINED-ATTACK-PROCEDURE-ROUTES - Route chained attack sequences through procedure owners            | blocked            | L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES; L15-RR06-BATTLE-SPELL-EFFECT-ROUTES                                                                      | Requires the generic multi-step spell/attack procedure route owner before routing chain continuation. |
+|  15 | L15-RR15-AFTER-HIT-RIDER-OWNER-SPLIT - Split after-hit rider routes by durable battle owner                   | ready-for-research | L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES; L15-RR06-BATTLE-SPELL-EFFECT-ROUTES                                                                      | Prevents one route connector from accumulating interrupt, condition, Concentration, and HP owners. |
+|  16 | L15-RR16-CHAINED-ATTACK-PROCEDURE-ROUTES - Route chained attack sequences through procedure owners            | ready-for-research | L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES; L15-RR06-BATTLE-SPELL-EFFECT-ROUTES                                                                      | Requires the generic multi-step spell/attack procedure route owner before routing chain continuation. |
 |  17 | L15-RR17-WEAPON-HOSTED-RIDER-ROUTES - Split weapon-hosted attack and rider routes                             | blocked            | L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES; L15-RR06-BATTLE-SPELL-EFFECT-ROUTES; L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES                            | Splits hosted attacks, damage riders, active effects, item-target effects, and cleanup owners. |
+|  18 | L15-RR18-BATTLE-ACTIVE-EFFECT-LIFECYCLE-ROUTES - Route remaining active spell-effect lifecycle drivers        | ready-for-research | L15-RR06-BATTLE-SPELL-EFFECT-ROUTES                                                                                                                      | Keeps ongoing spell effects, turn-boundary effects, Concentration, HP, and condition owners split. |
+|  19 | L15-RR19-BATTLE-REACTION-INTERRUPT-ROUTES - Route reaction spell and interrupt-stack resume drivers           | ready-for-research | L15-RR06-BATTLE-SPELL-EFFECT-ROUTES                                                                                                                      | Routes reaction spending, interrupt-stack continuation, and spell-cast resume without replay islands. |
+|  20 | L15-RR20-BATTLE-COMPANION-OBJECT-BOUNDARY-ROUTES - Route companion lifecycle and object-target boundary drivers | ready-for-research | L15-RR06-BATTLE-SPELL-EFFECT-ROUTES                                                                                                                    | Keeps companion state in battle owners and table-owned object facts as boundary fills.        |
+|  21 | L15-RR21-BATTLE-ABILITY-SEARCH-CHOICE-ROUTES - Route ability-check, Search, and choice spell-effect drivers   | ready-for-research | L15-RR06-BATTLE-SPELL-EFFECT-ROUTES                                                                                                                      | Routes Search, skill, and ability-choice holes through reducer subjects and table-supplied facts. |
+|  22 | L15-RR22-BATTLE-INDEPENDENT-SPELL-ATTACK-SEQUENCE-ROUTES - Route independent multi-beam spell attack sequence drivers | blocked     | L15-RR16-CHAINED-ATTACK-PROCEDURE-ROUTES                                                                                                                 | Reuses the generic multi-step spell/attack procedure owner before routing independent beam sequences. |
 
 ## Shared Verification
 
@@ -534,7 +569,7 @@ Plan Impact:
 
 ### Task 6 - L15-RR06-BATTLE-SPELL-EFFECT-ROUTES
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -589,7 +624,7 @@ Plan Impact:
 
 ### Task 7 - L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on:
 
@@ -863,7 +898,7 @@ Plan Impact:
 
 ### Task 15 - L15-RR15-AFTER-HIT-RIDER-OWNER-SPLIT
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on:
 
@@ -905,7 +940,7 @@ Plan Impact:
 
 ### Task 16 - L15-RR16-CHAINED-ATTACK-PROCEDURE-ROUTES
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on:
 
@@ -990,6 +1025,228 @@ Plan Impact:
 
 - Add narrower tasks if a split still requires an independent durable owner.
 
+### Task 18 - L15-RR18-BATTLE-ACTIVE-EFFECT-LIFECYCLE-ROUTES
+
+Status: `ready-for-research`
+
+Depends on:
+
+- L15-RR06-BATTLE-SPELL-EFFECT-ROUTES
+
+Candidate drivers:
+
+- `battle-runtime-roll-modifier-active-effects.mbt.qnt`
+- `battle-runtime-scalar-buff-active-effects.mbt.qnt`
+- `battle-runtime-sleep-repeat-save.mbt.qnt`
+- `battle-runtime-turn-boundary-effect-lifecycle.mbt.qnt`
+- `battle-runtime-zero-hit-point-mid-resolution.mbt.qnt`
+
+Output:
+
+- Add focused route connectors for remaining active spell-effect lifecycle
+  drivers that were left `substrate-first` after the Command/scalar-buff Task 6
+  slice.
+- Keep active-effect, Concentration, condition, HP, turn-boundary, and
+  action-resource owners separate; split a candidate further before routing if
+  one connector would accumulate unrelated durable owners.
+- Preserve table ordering choices and same-timing choices as boundary fills or
+  source-QNT blockers rather than production state islands.
+
+Acceptance:
+
+- Each connector records reducer entrypoint path and durable owner group.
+- No connector stores derived spell-effect facts beside the BattleState owner
+  that already owns them.
+- `reducer-route-inventory.json` points each landed driver at its connector or
+  records a precise `source-qnt-corpus-blocker`.
+
+Verification:
+
+- Shared verification.
+- Focused MBT for each touched active-effect lifecycle source driver and route
+  connector.
+- `pnpm check:reducer-route-connectors`
+- `pnpm check:mbt-driver-closure`
+
+Plan Impact:
+
+- Add narrower tasks if one active-effect lifecycle driver still mixes
+  independent durable owner families.
+
+### Task 19 - L15-RR19-BATTLE-REACTION-INTERRUPT-ROUTES
+
+Status: `ready-for-research`
+
+Depends on:
+
+- L15-RR06-BATTLE-SPELL-EFFECT-ROUTES
+
+Candidate drivers:
+
+- `battle-runtime-interrupt-stack-resume.mbt.qnt`
+- `battle-runtime-reaction-casting-time.mbt.qnt`
+
+Output:
+
+- Add focused route connectors for reaction spell and interrupt-stack resume
+  drivers that were left `substrate-first` after the Command/scalar-buff Task 6
+  slice.
+- Route reaction availability, spell slot spend, interrupt-stack push/resume,
+  and continuation state through durable battle owners.
+- Keep table/chosen interruption decisions as boundary fills and avoid replay
+  islands that restate the interrupted procedure.
+
+Acceptance:
+
+- Each connector records reducer entrypoint path and durable owner group.
+- Interrupt stack continuation is represented by procedure state and owner
+  route events, not by authored spell identity or fixture action names.
+- `reducer-route-inventory.json` points each landed driver at its connector or
+  records a precise `source-qnt-corpus-blocker`.
+
+Verification:
+
+- Shared verification.
+- Focused MBT for each touched reaction/interrupt source driver and route
+  connector.
+- `pnpm check:reducer-route-connectors`
+- `pnpm check:mbt-driver-closure`
+
+Plan Impact:
+
+- Add narrower tasks if reaction casting and interrupt replay need separate
+  owner surfaces.
+
+### Task 20 - L15-RR20-BATTLE-COMPANION-OBJECT-BOUNDARY-ROUTES
+
+Status: `ready-for-research`
+
+Depends on:
+
+- L15-RR06-BATTLE-SPELL-EFFECT-ROUTES
+
+Candidate drivers:
+
+- `battle-runtime-find-familiar-companion-lifecycle.mbt.qnt`
+- `battle-runtime-starry-wisp-object.mbt.qnt`
+
+Output:
+
+- Add focused route connectors for companion lifecycle and object-target
+  boundary drivers that were left `substrate-first` after the Command/scalar-buff
+  Task 6 slice.
+- Route familiar presence, replacement, shared-sense resources, touch delivery,
+  and familiar Reaction spend through battle-owned companion/action owners.
+- Keep object target choice, object AC/HP facts, lighting placement, and spatial
+  placement as boundary fills unless source QNT establishes a target-independent
+  battle owner.
+
+Acceptance:
+
+- Companion state is owned by battle runtime state and is not duplicated in a
+  route-local ledger.
+- Object and spatial facts remain boundary fills or become explicit
+  `source-qnt-corpus-blocker` rows.
+- `reducer-route-inventory.json` points each landed driver at its connector or
+  records a precise blocker.
+
+Verification:
+
+- Shared verification.
+- Focused MBT for each touched companion/object source driver and route
+  connector.
+- `pnpm check:reducer-route-connectors`
+- `pnpm check:mbt-driver-closure`
+
+Plan Impact:
+
+- Split companion and object-target work further if their route owners cannot
+  stay independent in one task.
+
+### Task 21 - L15-RR21-BATTLE-ABILITY-SEARCH-CHOICE-ROUTES
+
+Status: `ready-for-research`
+
+Depends on:
+
+- L15-RR06-BATTLE-SPELL-EFFECT-ROUTES
+
+Candidate drivers:
+
+- `battle-runtime-ability-check-choice-search.mbt.qnt`
+
+Output:
+
+- Add a route connector for Search, ability-check, skill-choice, and
+  ability-choice spell-effect holes that were left `substrate-first` after the
+  Command/scalar-buff Task 6 slice.
+- Reuse rule-core ability/skill components and battle-owned action/effect
+  owners; keep hidden-candidate discovery and table target admission as boundary
+  fills.
+
+Acceptance:
+
+- Route evidence uses typed ability/skill/search facts, not spell or fixture
+  identity.
+- The connector records reducer entrypoint path and durable owner group for
+  each supported branch.
+- Out-of-denominator level-2 branches remain explicitly scoped out unless a
+  later promotion task admits them.
+
+Verification:
+
+- Shared verification.
+- Focused MBT for the ability-check/Search source driver and route connector.
+- `pnpm check:reducer-route-connectors`
+- `pnpm check:mbt-driver-closure`
+
+Plan Impact:
+
+- Add a component-first follow-up if the source driver needs more rule-core
+  ability/skill substrate before battle routing.
+
+### Task 22 - L15-RR22-BATTLE-INDEPENDENT-SPELL-ATTACK-SEQUENCE-ROUTES
+
+Status: `blocked`
+
+Depends on:
+
+- L15-RR16-CHAINED-ATTACK-PROCEDURE-ROUTES
+
+Candidate drivers:
+
+- `battle-runtime-eldritch-blast.mbt.qnt`
+
+Output:
+
+- Add a route connector for independent multi-beam spell attack sequence
+  evidence after the generic multi-step spell/attack procedure owner exists.
+- Route target choice, object-target boundary facts, attack rolls, damage rolls,
+  HP damage, and sequence continuation through procedure-shaped owners instead
+  of selected spell identity.
+
+Acceptance:
+
+- Route evidence uses spell/attack procedure shape and typed facts, not the
+  selected spell id or name.
+- Object target choice remains a table-owned boundary fill unless a
+  target-independent battle owner is added.
+- `reducer-route-inventory.json` points the landed driver at its connector or
+  records a precise blocker.
+
+Verification:
+
+- Shared verification.
+- Focused MBT for the independent spell attack source driver and route
+  connector.
+- `pnpm check:reducer-route-connectors`
+- `pnpm check:mbt-driver-closure`
+
+Plan Impact:
+
+- Add narrower tasks if beam sequence continuation and object-target boundary
+  routing need separate owner surfaces.
+
 ### Task 13 - L15-RR13-DIRTY-CLEANROOM-REHEARSAL
 
 Status: `blocked`
@@ -1000,6 +1257,11 @@ Depends on:
 - L15-RR15-AFTER-HIT-RIDER-OWNER-SPLIT
 - L15-RR16-CHAINED-ATTACK-PROCEDURE-ROUTES
 - L15-RR17-WEAPON-HOSTED-RIDER-ROUTES
+- L15-RR18-BATTLE-ACTIVE-EFFECT-LIFECYCLE-ROUTES
+- L15-RR19-BATTLE-REACTION-INTERRUPT-ROUTES
+- L15-RR20-BATTLE-COMPANION-OBJECT-BOUNDARY-ROUTES
+- L15-RR21-BATTLE-ABILITY-SEARCH-CHOICE-ROUTES
+- L15-RR22-BATTLE-INDEPENDENT-SPELL-ATTACK-SEQUENCE-ROUTES
 
 Output:
 

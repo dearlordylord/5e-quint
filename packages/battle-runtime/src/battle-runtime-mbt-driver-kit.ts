@@ -726,7 +726,8 @@ type CommandOrderingHole =
   | "spellTargetList"
   | "commandOptionChoice"
   | "savingThrowOutcome"
-  | "movement";
+  | "movement"
+  | "interruptDecision";
 type CommandOrderingPendingOption =
   | "none"
   | "grovel"
@@ -846,6 +847,8 @@ const REDUCER_ROUTE_SUBJECT_FAMILIES = [
   "creatureAttack",
   "deathSavingThrow",
   "concentrationTeardown",
+  "commandEffect",
+  "scalarBuffEffect",
 ] as const;
 type ReducerRouteSubjectFamily =
   (typeof REDUCER_ROUTE_SUBJECT_FAMILIES)[number];
@@ -860,36 +863,82 @@ const REDUCER_ROUTE_OWNER_GROUPS = [
   "battleConditionLifecycle",
   "battleStatBlockAction",
   "battleConcentration",
+  "battleActiveEffect",
+  "battleMovementResource",
+  "battleInterruptStack",
 ] as const;
 type ReducerRouteOwnerGroup = (typeof REDUCER_ROUTE_OWNER_GROUPS)[number];
 const REDUCER_ROUTE_HOLES = [
+  "abilityCheck",
+  "abilityChoice",
+  "attackDamageDisposition",
   "attackRoll",
+  "commandOptionChoice",
+  "companionReappearanceInitiative",
   "concentrationSavingThrow",
   "conditionChoice",
   "damageTypeChoice",
   "deathSavingThrow",
+  "grappleOutcome",
+  "gustOfWindLineDirectionChoice",
   "hitPointHealingDistribution",
+  "interruptDecision",
+  "levitateAltitudeChange",
+  "levitateInitialRise",
+  "movement",
+  "objectDropResolution",
+  "ongoingSpellTargetChoice",
   "rolledDice",
+  "sanctuaryInterdictionOutcome",
   "savingThrowOutcome",
+  "selfTransformationModeChoice",
+  "shoveOutcome",
+  "skillChoice",
+  "slowSomaticSpellFailureOutcome",
+  "spellcastingAbilityCheck",
   "spellTargetAllocation",
   "spellTargetList",
   "statBlockRechargeRoll",
+  "targetAbilityChoices",
   "targetChoice",
+  "unitFeatureDecision",
+  "wildShapeEquipmentDisposition",
 ] as const;
 type ReducerRouteHole = (typeof REDUCER_ROUTE_HOLES)[number];
 const REDUCER_ROUTE_FILLS = [
+  "abilityCheck",
+  "abilityChoice",
+  "attackDamageDisposition",
   "attackRoll",
+  "commandOptionChoice",
+  "companionReappearanceInitiative",
   "concentrationSavingThrow",
   "conditionChoice",
   "damageTypeChoice",
   "deathSavingThrow",
+  "grappleOutcome",
+  "gustOfWindLineDirectionChoice",
   "hitPointHealingDistribution",
+  "interruptDecision",
+  "levitateAltitudeChange",
+  "levitateInitialRise",
+  "movement",
+  "objectDropResolution",
+  "ongoingSpellTargetChoice",
   "rolledDice",
+  "sanctuaryInterdictionOutcome",
   "savingThrowOutcome",
+  "selfTransformationModeChoice",
+  "shoveOutcome",
+  "skillChoice",
+  "slowSomaticSpellFailureOutcome",
   "spellTargetAllocation",
   "spellTargetList",
   "statBlockRechargeRoll",
+  "targetAbilityChoices",
   "targetChoice",
+  "unitFeatureDecision",
+  "wildShapeEquipmentDisposition",
 ] as const;
 type ReducerRouteFill = (typeof REDUCER_ROUTE_FILLS)[number];
 type ReducerRouteEvent =
@@ -952,6 +1001,9 @@ type ReducerRoutedConcentrationBreakTeardownProjection =
   ConcentrationBreakTeardownProjection & {
     readonly route: readonly ReducerRouteEvent[];
   };
+type ReducerRoutedCommandOrderingProjection = CommandOrderingProjection & {
+  readonly route: readonly ReducerRouteEvent[];
+};
 type CommandOrderingProjection = {
   readonly stage: CommandOrderingStage;
   readonly holes: readonly CommandOrderingHole[];
@@ -1061,6 +1113,14 @@ type ScalarBuffMbtProjection = {
   readonly holes: readonly MbtHole[];
   readonly lastResult: MbtLastResult;
   readonly lastInvalidReason: MbtLastInvalidReason;
+};
+type ReducerRoutedScalarBuffProjection = Omit<
+  ScalarBuffMbtProjection,
+  "fighterSpeed" | "goblinSpeed"
+> & {
+  readonly casterSpeed: number;
+  readonly targetSpeed: number;
+  readonly route: readonly ReducerRouteEvent[];
 };
 
 const fighterId = combatantId("fighter");
@@ -3918,6 +3978,16 @@ export function createConcentrationBreakTeardownRouteDriver() {
 }
 
 export function createCommandOrderingDriver() {
+  return createCommandOrderingDriverWithRoute(false);
+}
+
+export function createCommandOrderingRouteDriver() {
+  return createCommandOrderingDriverWithRoute(true);
+}
+
+function createCommandOrderingDriverWithRoute<const IncludeRoute extends boolean>(
+  includeRoute: IncludeRoute,
+) {
   return defineDriver(commandOrderingDriverSchema, () => {
     let state = commandOrderingBattle();
     let subject: BattleSubject = commandOrderingCastSubject();
@@ -3928,6 +3998,9 @@ export function createCommandOrderingDriver() {
     let orderingError: CommandOrderingProjection["orderingError"] = "";
     let pendingCommandOption: CommandOrderingPendingOption = "none";
     let droppedObjectCount = 0;
+    let route: readonly ReducerRouteEvent[] = [
+      reducerRouteStartBattle("battleActionEconomy"),
+    ];
 
     function reset(): void {
       state = commandOrderingBattle();
@@ -3939,6 +4012,58 @@ export function createCommandOrderingDriver() {
       orderingError = "";
       pendingCommandOption = "none";
       droppedObjectCount = 0;
+      route = [reducerRouteStartBattle("battleActionEconomy")];
+    }
+
+    function routeHolesAfter(
+      result: BattleResolutionResult,
+    ): readonly BattleHole[] {
+      if (result.tag === "needsHoles") return result.holes;
+      if (result.tag === "resolved") return [];
+      return holes;
+    }
+
+    function recordRouteDiscover(owner: ReducerRouteOwnerGroup): void {
+      if (!includeRoute) return;
+      route = [
+        ...route,
+        reducerRouteDiscoverBattleActs({
+          subject: "commandEffect",
+          holes,
+          owner,
+        }),
+      ];
+    }
+
+    function recordRouteResolve(input: {
+      readonly result: BattleResolutionResult;
+      readonly fill: ReducerRouteFill;
+      readonly owner: ReducerRouteOwnerGroup;
+    }): void {
+      if (!includeRoute) return;
+      route = [
+        ...route,
+        reducerRouteResolveBattleSubject({
+          subject: "commandEffect",
+          fill: input.fill,
+          holes: routeHolesAfter(input.result),
+          owner: input.owner,
+        }),
+      ];
+    }
+
+    function recordRouteResolveWithoutFill(
+      owner: ReducerRouteOwnerGroup,
+    ): void {
+      if (!includeRoute) return;
+      route = [
+        ...route,
+        reducerRouteResolveBattleSubjectWithoutFill({
+          subject: "commandEffect",
+          holes: [],
+          owner,
+        }),
+      ];
     }
 
     function recordAccepted(
@@ -4015,6 +4140,7 @@ export function createCommandOrderingDriver() {
       orderingError = "";
       pendingCommandOption = "none";
       droppedObjectCount = 0;
+      recordRouteDiscover("battleSpellSlotAndActionEconomy");
     }
 
     function startRuntimeCommand(
@@ -4037,23 +4163,28 @@ export function createCommandOrderingDriver() {
       doDiscoverCommand: discoverCommand,
       doSubmitOptionBeforeTargetList: () => {
         const commandOption = requireHole(holes, "commandOptionChoice");
-        recordNeedsEarlierHole(
-          resolveBattleSubject({
-            state,
-            subject,
-            fills: [commandOptionFill(commandOption, "grovel")],
-          }),
-          "commandTargetListRequired",
-          "targetList",
-        );
+        const result = resolveBattleSubject({
+          state,
+          subject,
+          fills: [commandOptionFill(commandOption, "grovel")],
+        });
+        recordNeedsEarlierHole(result, "commandTargetListRequired", "targetList");
+        recordRouteResolve({
+          result,
+          fill: "commandOptionChoice",
+          owner: "battleHoleFrontier",
+        });
       },
       doFillTargetList: () => {
         const targetList = requireHole(holes, "spellTargetList");
         fills = [spellTargetListFill(targetList, "command", [skeletonId])];
-        recordAccepted(
-          resolveBattleSubject({ state, subject, fills }),
-          "optionChoice",
-        );
+        const result = resolveBattleSubject({ state, subject, fills });
+        recordAccepted(result, "optionChoice");
+        recordRouteResolve({
+          result,
+          fill: "spellTargetList",
+          owner: "battleHoleFrontier",
+        });
       },
       doSubmitSavingThrowBeforeOption: () => {
         const commandOption = requireHole(holes, "commandOptionChoice");
@@ -4067,28 +4198,37 @@ export function createCommandOrderingDriver() {
           ]),
           "savingThrowOutcome",
         );
+        const result = resolveBattleSubject({
+          state,
+          subject,
+          fills: [
+            ...fills,
+            saveGatedSpellSavingThrowOutcomeFill(savingThrow, [
+              { targetId: skeletonId, succeeded: false },
+            ]),
+          ],
+        });
         recordNeedsEarlierHole(
-          resolveBattleSubject({
-            state,
-            subject,
-            fills: [
-              ...fills,
-              saveGatedSpellSavingThrowOutcomeFill(savingThrow, [
-                { targetId: skeletonId, succeeded: false },
-              ]),
-            ],
-          }),
+          result,
           "commandOptionChoiceRequired",
           "optionChoice",
         );
+        recordRouteResolve({
+          result,
+          fill: "savingThrowOutcome",
+          owner: "battleHoleFrontier",
+        });
       },
       doFillGrovelOption: () => {
         const commandOption = requireHole(holes, "commandOptionChoice");
         fills = [...fills, commandOptionFill(commandOption, "grovel")];
-        recordAccepted(
-          resolveBattleSubject({ state, subject, fills }),
-          "savingThrowOutcome",
-        );
+        const result = resolveBattleSubject({ state, subject, fills });
+        recordAccepted(result, "savingThrowOutcome");
+        recordRouteResolve({
+          result,
+          fill: "commandOptionChoice",
+          owner: "battleHoleFrontier",
+        });
       },
       doFillFailedGrovelSavingThrow: () => {
         const savingThrow = requireHole(holes, "savingThrowOutcome");
@@ -4098,10 +4238,13 @@ export function createCommandOrderingDriver() {
             { targetId: skeletonId, succeeded: false },
           ]),
         ];
-        recordAccepted(
-          resolveBattleSubject({ state, subject, fills }),
-          "resolved",
-        );
+        const result = resolveBattleSubject({ state, subject, fills });
+        recordAccepted(result, "resolved");
+        recordRouteResolve({
+          result,
+          fill: "savingThrowOutcome",
+          owner: "battleActiveEffect",
+        });
       },
       doFollowGrovel: () => {
         const targetTurn = requireResolved(
@@ -4112,19 +4255,19 @@ export function createCommandOrderingDriver() {
           }),
         ).state;
         const command = commandRuntimeAct(targetTurn, "grovel");
-        recordAccepted(
-          resolveBattleSubject({
-            state: targetTurn,
-            subject: command.subject,
-            fills: [],
-          }),
-          "resolved",
-        );
+        const result = resolveBattleSubject({
+          state: targetTurn,
+          subject: command.subject,
+          fills: [],
+        });
+        recordAccepted(result, "resolved");
+        recordRouteResolveWithoutFill("battleConditionLifecycle");
       },
       doDropNeedsHeldObjectFacts: () => {
         startRuntimeCommand("drop");
         stage = "dropHeldObjectFacts";
         lastResult = "needsHoles";
+        recordRouteDiscover("battleActiveEffect");
       },
       doFillDropHeldObjectFacts: () => {
         const heldObjectFacts = requireHole(holes, "heldObjectFacts");
@@ -4140,10 +4283,9 @@ export function createCommandOrderingDriver() {
             },
           },
         ];
-        recordAccepted(
-          resolveBattleSubject({ state, subject, fills }),
-          "resolved",
-        );
+        const result = resolveBattleSubject({ state, subject, fills });
+        recordAccepted(result, "resolved");
+        recordRouteResolveWithoutFill("battleActiveEffect");
       },
       doHaltSuppresses: () => {
         state = commandTargetTurn("halt");
@@ -4155,10 +4297,12 @@ export function createCommandOrderingDriver() {
         orderingError = "";
         pendingCommandOption = commandPendingOption(state);
         droppedObjectCount = 0;
+        recordRouteResolveWithoutFill("battleActiveEffect");
       },
       doApproachMovementContinues: () => {
         startRuntimeCommand("approach");
         stage = "approachMovement";
+        recordRouteDiscover("battleActiveEffect");
       },
       doFillApproachMovementContinues: () => {
         const movement = requireHole(holes, "movement");
@@ -4168,10 +4312,13 @@ export function createCommandOrderingDriver() {
             movedWithinFiveFeetOfCaster: false,
           }),
         ];
-        recordAccepted(
-          resolveBattleSubject({ state, subject, fills }),
-          "resolved",
-        );
+        const result = resolveBattleSubject({ state, subject, fills });
+        recordAccepted(result, "resolved");
+        recordRouteResolve({
+          result,
+          fill: "movement",
+          owner: "battleMovementResource",
+        });
       },
       doFillApproachMovementWithinFive: () => {
         const movement = requireHole(holes, "movement");
@@ -4181,21 +4328,24 @@ export function createCommandOrderingDriver() {
             movedWithinFiveFeetOfCaster: true,
           }),
         ];
-        recordAccepted(
-          resolveBattleSubject({ state, subject, fills }),
-          "resolved",
-        );
+        const result = resolveBattleSubject({ state, subject, fills });
+        recordAccepted(result, "resolved");
+        recordRouteResolve({
+          result,
+          fill: "movement",
+          owner: "battleMovementResource",
+        });
       },
       doApproachNoMovement: () => {
         startRuntimeCommand("approach", { grappledByCaster: true });
-        recordAccepted(
-          resolveBattleSubject({ state, subject, fills: [] }),
-          "resolved",
-        );
+        const result = resolveBattleSubject({ state, subject, fills: [] });
+        recordAccepted(result, "resolved");
+        recordRouteResolveWithoutFill("battleMovementResource");
       },
       doFleeMovement: () => {
         startRuntimeCommand("flee");
         stage = "fleeMovement";
+        recordRouteDiscover("battleActiveEffect");
       },
       doFillFleeMovement: () => {
         const movement = requireHole(holes, "movement");
@@ -4205,33 +4355,38 @@ export function createCommandOrderingDriver() {
             provokedOpportunityAttacks: [],
           }),
         ];
-        recordAccepted(
-          resolveBattleSubject({ state, subject, fills }),
-          "resolved",
-        );
+        const result = resolveBattleSubject({ state, subject, fills });
+        recordAccepted(result, "resolved");
+        recordRouteResolve({
+          result,
+          fill: "movement",
+          owner: "battleMovementResource",
+        });
       },
       doRejectFleePartialMovement: () => {
         const movement = requireHole(holes, "movement");
-        recordInvalid(
-          resolveBattleSubject({
-            state,
-            subject,
-            fills: [
-              commandFleeMovementFill(movement, {
-                movementCostFeet: 10,
-                provokedOpportunityAttacks: [],
-              }),
-            ],
-          }),
-          "commandMovementRequired",
-        );
+        const result = resolveBattleSubject({
+          state,
+          subject,
+          fills: [
+            commandFleeMovementFill(movement, {
+              movementCostFeet: 10,
+              provokedOpportunityAttacks: [],
+            }),
+          ],
+        });
+        recordInvalid(result, "commandMovementRequired");
+        recordRouteResolve({
+          result,
+          fill: "movement",
+          owner: "battleHoleFrontier",
+        });
       },
       doFleeNoMovement: () => {
         startRuntimeCommand("flee", { grappledByCaster: true });
-        recordAccepted(
-          resolveBattleSubject({ state, subject, fills: [] }),
-          "resolved",
-        );
+        const result = resolveBattleSubject({ state, subject, fills: [] });
+        recordAccepted(result, "resolved");
+        recordRouteResolveWithoutFill("battleMovementResource");
       },
       doFleeOpportunityAttack: () => {
         const movement = requireHole(holes, "movement");
@@ -4243,14 +4398,20 @@ export function createCommandOrderingDriver() {
             ],
           }),
         ];
-        recordAccepted(
-          resolveBattleSubject({ state, subject, fills }),
-          "resolved",
-        );
+        const result = resolveBattleSubject({ state, subject, fills });
+        recordAccepted(result, "resolved");
+        recordRouteResolve({
+          result,
+          fill: "movement",
+          owner: "battleInterruptStack",
+        });
       },
       step: () => {},
-      getState: () =>
-        projectCommandOrderingState({
+      getState: ():
+        IncludeRoute extends true
+          ? ReducerRoutedCommandOrderingProjection
+          : CommandOrderingProjection => {
+        const projection = projectCommandOrderingState({
           state,
           holes,
           stage,
@@ -4258,7 +4419,15 @@ export function createCommandOrderingDriver() {
           orderingError,
           pendingCommandOption,
           droppedObjectCount,
-        }),
+        });
+        // IncludeRoute is a literal boolean chosen by the public factory, but
+        // TypeScript does not narrow conditional return types from this branch.
+        return (
+          includeRoute ? { ...projection, route } : projection
+        ) as IncludeRoute extends true
+          ? ReducerRoutedCommandOrderingProjection
+          : CommandOrderingProjection;
+      },
     };
   });
 }
@@ -4760,6 +4929,16 @@ function magicMissileDamageRollGroup(
 }
 
 export function createScalarBuffDriver() {
+  return createScalarBuffDriverWithRoute(false);
+}
+
+export function createScalarBuffRouteDriver() {
+  return createScalarBuffDriverWithRoute(true);
+}
+
+function createScalarBuffDriverWithRoute<const IncludeRoute extends boolean>(
+  includeRoute: IncludeRoute,
+) {
   return defineDriver(scalarBuffDriverSchema, () => {
     let state = scalarBuffBattle();
     let subject: BattleSubject = longstriderSubject();
@@ -4767,6 +4946,7 @@ export function createScalarBuffDriver() {
     let holes: readonly BattleHole[] = discoverLongstriderHoles(state, subject);
     let lastResult: ScalarBuffMbtProjection["lastResult"] = "init";
     let lastInvalidReason: ScalarBuffMbtProjection["lastInvalidReason"] = "";
+    let route: readonly ReducerRouteEvent[] = initialScalarBuffRoute(holes);
 
     function reset(): void {
       state = scalarBuffBattle();
@@ -4775,23 +4955,59 @@ export function createScalarBuffDriver() {
       holes = discoverLongstriderHoles(state, subject);
       lastResult = "init";
       lastInvalidReason = "";
+      route = initialScalarBuffRoute(holes);
     }
 
-    function recordResult(result: BattleResolutionResult): void {
+    function initialScalarBuffRoute(
+      initialHoles: readonly BattleHole[],
+    ): readonly ReducerRouteEvent[] {
+      return [
+        reducerRouteStartBattle("battleActionEconomy"),
+        reducerRouteDiscoverBattleActs({
+          subject: "scalarBuffEffect",
+          holes: initialHoles,
+          owner: "battleSpellSlotAndActionEconomy",
+        }),
+      ];
+    }
+
+    function recordResult(
+      result: BattleResolutionResult,
+      owner: ReducerRouteOwnerGroup,
+    ): void {
       lastResult = result.tag;
       if (result.tag === "resolved") {
         state = result.state;
         holes = [];
         lastInvalidReason = "";
+        recordRoute(result, owner);
         return;
       }
       if (result.tag === "needsHoles") {
         state = result.state;
         holes = result.holes;
         lastInvalidReason = "";
+        recordRoute(result, owner);
         return;
       }
       lastInvalidReason = mbtInvalidReason(result.reason);
+      recordRoute(result, owner);
+    }
+
+    function recordRoute(
+      result: BattleResolutionResult,
+      owner: ReducerRouteOwnerGroup,
+    ): void {
+      if (!includeRoute) return;
+      route = [
+        ...route,
+        reducerRouteResolveBattleSubject({
+          subject: "scalarBuffEffect",
+          fill: "targetChoice",
+          holes: result.tag === "needsHoles" ? result.holes : [],
+          owner,
+        }),
+      ];
     }
 
     return {
@@ -4799,19 +5015,45 @@ export function createScalarBuffDriver() {
       doFillLongstriderTarget: () => {
         const target = requireHole(holes, "targetChoice");
         fills = [spellTargetChoiceFill(target, skeletonId, "longstrider")];
-        recordResult(resolveBattleSubject({ state, subject, fills }));
+        recordResult(
+          resolveBattleSubject({ state, subject, fills }),
+          "battleActiveEffect",
+        );
       },
       doRejectStaleAfterResolved: () => {
-        recordResult(resolveBattleSubject({ state, subject, fills }));
+        recordResult(
+          resolveBattleSubject({ state, subject, fills }),
+          "battleHoleFrontier",
+        );
       },
       step: () => {},
-      getState: () =>
-        projectScalarBuffMbtState({
+      getState: ():
+        IncludeRoute extends true
+          ? ReducerRoutedScalarBuffProjection
+          : ScalarBuffMbtProjection => {
+        const projection = projectScalarBuffMbtState({
           state,
           holes,
           lastResult,
           lastInvalidReason,
-        }),
+        });
+        const routedProjection: ReducerRoutedScalarBuffProjection = {
+          casterSpeed: projection.fighterSpeed,
+          targetSpeed: projection.goblinSpeed,
+          actionAvailable: projection.actionAvailable,
+          holes: projection.holes,
+          lastResult: projection.lastResult,
+          lastInvalidReason: projection.lastInvalidReason,
+          route,
+        };
+        // IncludeRoute is a literal boolean chosen by the public factory, but
+        // TypeScript does not narrow conditional return types from this branch.
+        return (
+          includeRoute ? routedProjection : projection
+        ) as IncludeRoute extends true
+          ? ReducerRoutedScalarBuffProjection
+          : ScalarBuffMbtProjection;
+      },
     };
   });
 }
@@ -5007,6 +5249,8 @@ const REDUCER_ROUTE_SUBJECT_BY_VARIANT_TAG = {
   CreatureAttackRouteSubject: "creatureAttack",
   DeathSavingThrowRouteSubject: "deathSavingThrow",
   ConcentrationTeardownRouteSubject: "concentrationTeardown",
+  CommandEffectRouteSubject: "commandEffect",
+  ScalarBuffEffectRouteSubject: "scalarBuffEffect",
 } as const satisfies Readonly<Record<string, ReducerRouteSubjectFamily>>;
 
 const REDUCER_ROUTE_OWNER_BY_VARIANT_TAG = {
@@ -5020,36 +5264,82 @@ const REDUCER_ROUTE_OWNER_BY_VARIANT_TAG = {
   BattleConditionLifecycleOwner: "battleConditionLifecycle",
   BattleStatBlockActionOwner: "battleStatBlockAction",
   BattleConcentrationOwner: "battleConcentration",
+  BattleActiveEffectOwner: "battleActiveEffect",
+  BattleMovementResourceOwner: "battleMovementResource",
+  BattleInterruptStackOwner: "battleInterruptStack",
 } as const satisfies Readonly<Record<string, ReducerRouteOwnerGroup>>;
 
 const REDUCER_ROUTE_HOLE_BY_VARIANT_TAG = {
+  AbilityCheckHoleKind: "abilityCheck",
+  AbilityChoiceHoleKind: "abilityChoice",
+  AttackDamageDispositionHoleKind: "attackDamageDisposition",
   AttackRollHoleKind: "attackRoll",
+  CommandOptionChoiceHoleKind: "commandOptionChoice",
+  CompanionReappearanceInitiativeHoleKind: "companionReappearanceInitiative",
   ConcentrationSavingThrowHoleKind: "concentrationSavingThrow",
   ConditionChoiceHoleKind: "conditionChoice",
   DamageTypeChoiceHoleKind: "damageTypeChoice",
   DeathSavingThrowHoleKind: "deathSavingThrow",
+  GrappleOutcomeHoleKind: "grappleOutcome",
+  GustOfWindLineDirectionChoiceHoleKind: "gustOfWindLineDirectionChoice",
   HitPointHealingDistributionHoleKind: "hitPointHealingDistribution",
+  InterruptDecisionHoleKind: "interruptDecision",
+  LevitateAltitudeChangeHoleKind: "levitateAltitudeChange",
+  LevitateInitialRiseHoleKind: "levitateInitialRise",
+  MovementHoleKind: "movement",
+  ObjectDropResolutionHoleKind: "objectDropResolution",
+  OngoingSpellTargetChoiceHoleKind: "ongoingSpellTargetChoice",
   RolledDiceHoleKind: "rolledDice",
+  SanctuaryInterdictionOutcomeHoleKind: "sanctuaryInterdictionOutcome",
   SavingThrowOutcomeHoleKind: "savingThrowOutcome",
+  SelfTransformationModeChoiceHoleKind: "selfTransformationModeChoice",
+  ShoveOutcomeHoleKind: "shoveOutcome",
+  SkillChoiceHoleKind: "skillChoice",
+  SlowSomaticSpellFailureOutcomeHoleKind: "slowSomaticSpellFailureOutcome",
+  SpellcastingAbilityCheckHoleKind: "spellcastingAbilityCheck",
   SpellTargetAllocationHoleKind: "spellTargetAllocation",
   SpellTargetListHoleKind: "spellTargetList",
   StatBlockRechargeRollHoleKind: "statBlockRechargeRoll",
+  TargetAbilityChoicesHoleKind: "targetAbilityChoices",
   TargetChoiceHoleKind: "targetChoice",
+  UnitFeatureDecisionHoleKind: "unitFeatureDecision",
+  WildShapeEquipmentDispositionHoleKind: "wildShapeEquipmentDisposition",
 } as const satisfies Readonly<Record<string, ReducerRouteHole>>;
 
 const REDUCER_ROUTE_FILL_BY_VARIANT_TAG = {
+  AbilityCheckFillKind: "abilityCheck",
+  AbilityChoiceFillKind: "abilityChoice",
+  AttackDamageDispositionFillKind: "attackDamageDisposition",
   AttackRollFillKind: "attackRoll",
+  CommandOptionChoiceFillKind: "commandOptionChoice",
+  CompanionReappearanceInitiativeFillKind: "companionReappearanceInitiative",
   ConcentrationSavingThrowFillKind: "concentrationSavingThrow",
   ConditionChoiceFillKind: "conditionChoice",
   DamageTypeChoiceFillKind: "damageTypeChoice",
   DeathSavingThrowFillKind: "deathSavingThrow",
+  GrappleOutcomeFillKind: "grappleOutcome",
+  GustOfWindLineDirectionChoiceFillKind: "gustOfWindLineDirectionChoice",
   HitPointHealingDistributionFillKind: "hitPointHealingDistribution",
+  InterruptDecisionFillKind: "interruptDecision",
+  LevitateAltitudeChangeFillKind: "levitateAltitudeChange",
+  LevitateInitialRiseFillKind: "levitateInitialRise",
+  MovementFillKind: "movement",
+  ObjectDropResolutionFillKind: "objectDropResolution",
+  OngoingSpellTargetChoiceFillKind: "ongoingSpellTargetChoice",
   RolledDiceFillKind: "rolledDice",
+  SanctuaryInterdictionOutcomeFillKind: "sanctuaryInterdictionOutcome",
   SavingThrowOutcomeFillKind: "savingThrowOutcome",
+  SelfTransformationModeChoiceFillKind: "selfTransformationModeChoice",
+  ShoveOutcomeFillKind: "shoveOutcome",
+  SkillChoiceFillKind: "skillChoice",
+  SlowSomaticSpellFailureOutcomeFillKind: "slowSomaticSpellFailureOutcome",
   SpellTargetAllocationFillKind: "spellTargetAllocation",
   SpellTargetListFillKind: "spellTargetList",
   StatBlockRechargeRollFillKind: "statBlockRechargeRoll",
+  TargetAbilityChoicesFillKind: "targetAbilityChoices",
   TargetChoiceFillKind: "targetChoice",
+  UnitFeatureDecisionFillKind: "unitFeatureDecision",
+  WildShapeEquipmentDispositionFillKind: "wildShapeEquipmentDisposition",
 } as const satisfies Readonly<Record<string, ReducerRouteFill>>;
 
 export function decodeReducerRoute(raw: unknown): readonly ReducerRouteEvent[] {
@@ -5485,6 +5775,16 @@ function normalizeCommandOrderingQuintState(
   };
 }
 
+function normalizeReducerRoutedCommandOrderingQuintState(
+  raw: unknown,
+): ReducerRoutedCommandOrderingProjection {
+  const state = quintStateRecord(raw);
+  return {
+    ...normalizeCommandOrderingQuintState(raw),
+    route: decodeReducerRoute(quintField(state, "qRoute")),
+  };
+}
+
 function normalizeReducerSpineContractQuintState(
   raw: unknown,
 ): ReducerSpineContractProjection {
@@ -5651,6 +5951,35 @@ function normalizeScalarBuffQuintState(raw: unknown): ScalarBuffMbtProjection {
   };
 }
 
+function normalizeReducerRoutedScalarBuffQuintState(
+  raw: unknown,
+): ReducerRoutedScalarBuffProjection {
+  const state = quintRecordField(quintStateRecord(raw), "qState");
+  const protocol = decodeWitnessProtocolState({
+    state,
+    protocolField: "protocol",
+    noInvalidReason: "",
+    decodeHole: holeName,
+    compareHoles: (left, right) => left.localeCompare(right),
+  });
+
+  return {
+    casterSpeed: numberFromQuintInt(
+      state["casterSpeed"],
+      "qState.casterSpeed",
+    ),
+    targetSpeed: numberFromQuintInt(
+      state["targetSpeed"],
+      "qState.targetSpeed",
+    ),
+    actionAvailable: booleanField(state, "actionAvailable"),
+    holes: protocol.holes,
+    lastResult: mbtLastResult(protocol.lastResult),
+    lastInvalidReason: mbtLastInvalidReason(protocol.lastInvalidReason),
+    route: decodeReducerRoute(quintField(state, "qRoute")),
+  };
+}
+
 function compareState(spec: MbtProjection, impl: MbtProjection): boolean {
   expect(impl).toEqual(spec);
   return true;
@@ -5804,6 +6133,16 @@ export const commandOrderingStateCheck = stateCheck(
     return true;
   },
 );
+export const reducerRoutedCommandOrderingStateCheck = stateCheck(
+  normalizeReducerRoutedCommandOrderingQuintState,
+  (
+    spec: ReducerRoutedCommandOrderingProjection,
+    impl: ReducerRoutedCommandOrderingProjection,
+  ) => {
+    expect(impl).toEqual(spec);
+    return true;
+  },
+);
 export const reducerSpineContractStateCheck = stateCheck(
   normalizeReducerSpineContractQuintState,
   (
@@ -5838,6 +6177,16 @@ export const rogueSteadyAimStateCheck = stateCheck(
 export const scalarBuffStateCheck = stateCheck(
   normalizeScalarBuffQuintState,
   (spec: ScalarBuffMbtProjection, impl: ScalarBuffMbtProjection) => {
+    expect(impl).toEqual(spec);
+    return true;
+  },
+);
+export const reducerRoutedScalarBuffStateCheck = stateCheck(
+  normalizeReducerRoutedScalarBuffQuintState,
+  (
+    spec: ReducerRoutedScalarBuffProjection,
+    impl: ReducerRoutedScalarBuffProjection,
+  ) => {
     expect(impl).toEqual(spec);
     return true;
   },
@@ -8469,26 +8818,71 @@ function reducerRouteHolesFromRuntime(
 function reducerRouteHolesFromRuntimeHole(
   hole: Pick<BattleHole, "kind">,
 ): readonly ReducerRouteHole[] {
+  if (hole.kind === "abilityCheck") return ["abilityCheck"];
+  if (hole.kind === "abilityChoice") return ["abilityChoice"];
+  if (hole.kind === "attackDamageDisposition") {
+    return ["attackDamageDisposition"];
+  }
   if (hole.kind === "attackRoll") return ["attackRoll"];
+  if (hole.kind === "commandOptionChoice") return ["commandOptionChoice"];
+  if (hole.kind === "companionReappearanceInitiative") {
+    return ["companionReappearanceInitiative"];
+  }
   if (hole.kind === "concentrationSavingThrow") {
     return ["concentrationSavingThrow"];
   }
   if (hole.kind === "conditionChoice") return ["conditionChoice"];
   if (hole.kind === "damageTypeChoice") return ["damageTypeChoice"];
   if (hole.kind === "deathSavingThrow") return ["deathSavingThrow"];
+  if (hole.kind === "grappleOutcome") return ["grappleOutcome"];
+  if (hole.kind === "gustOfWindLineDirectionChoice") {
+    return ["gustOfWindLineDirectionChoice"];
+  }
+  // Held-object inventories are caller/table-supplied boundary facts, not a
+  // durable reducer-route frontier.
+  if (hole.kind === "heldObjectFacts") return [];
   if (hole.kind === "hitPointHealingDistribution") {
     return ["hitPointHealingDistribution"];
   }
+  if (hole.kind === "interruptDecision") return ["interruptDecision"];
+  if (hole.kind === "levitateAltitudeChange") {
+    return ["levitateAltitudeChange"];
+  }
+  if (hole.kind === "levitateInitialRise") return ["levitateInitialRise"];
+  if (hole.kind === "movement") return ["movement"];
+  if (hole.kind === "objectDropResolution") return ["objectDropResolution"];
   // Object target choice is a table-owned boundary fact, outside this route vocabulary.
   if (hole.kind === "objectTargetChoice") return [];
+  if (hole.kind === "ongoingSpellTargetChoice") {
+    return ["ongoingSpellTargetChoice"];
+  }
   if (hole.kind === "rolledDice") return ["rolledDice"];
+  if (hole.kind === "sanctuaryInterdictionOutcome") {
+    return ["sanctuaryInterdictionOutcome"];
+  }
   if (hole.kind === "savingThrowOutcome") return ["savingThrowOutcome"];
+  if (hole.kind === "selfTransformationModeChoice") {
+    return ["selfTransformationModeChoice"];
+  }
+  if (hole.kind === "shoveOutcome") return ["shoveOutcome"];
+  if (hole.kind === "skillChoice") return ["skillChoice"];
+  if (hole.kind === "slowSomaticSpellFailureOutcome") {
+    return ["slowSomaticSpellFailureOutcome"];
+  }
+  if (hole.kind === "spellcastingAbilityCheck") {
+    return ["spellcastingAbilityCheck"];
+  }
   if (hole.kind === "spellTargetAllocation") return ["spellTargetAllocation"];
   if (hole.kind === "spellTargetList") return ["spellTargetList"];
   if (hole.kind === "statBlockRechargeRoll") {
     return ["statBlockRechargeRoll"];
   }
+  if (hole.kind === "targetAbilityChoices") return ["targetAbilityChoices"];
   if (hole.kind === "targetChoice") return ["targetChoice"];
+  if (hole.kind === "unitFeatureDecision") return ["unitFeatureDecision"];
+  if (hole.kind === "wildShapeEquipmentDisposition") {
+    return ["wildShapeEquipmentDisposition"];
+  }
 
   throw new Error(`Unexpected reducer-route hole: ${hole.kind}.`);
 }
@@ -9037,6 +9431,7 @@ function commandOrderingHole(raw: unknown): CommandOrderingHole {
   if (tag === "CommandOptionChoiceHoleKind") return "commandOptionChoice";
   if (tag === "SavingThrowOutcomeHoleKind") return "savingThrowOutcome";
   if (tag === "MovementHoleKind") return "movement";
+  if (tag === "InterruptDecisionHoleKind") return "interruptDecision";
 
   throw new Error(`Unknown Command ordering hole: ${tag}`);
 }
@@ -9048,8 +9443,8 @@ function commandOrderingHoleFromRuntime(
   if (hole.kind === "commandOptionChoice") return ["commandOptionChoice"];
   if (hole.kind === "savingThrowOutcome") return ["savingThrowOutcome"];
   if (hole.kind === "movement") return ["movement"];
+  if (hole.kind === "interruptDecision") return ["interruptDecision"];
   if (hole.kind === "heldObjectFacts") return [];
-  if (hole.kind === "interruptDecision") return [];
 
   throw new Error(`Unexpected Command ordering hole: ${hole.kind}`);
 }

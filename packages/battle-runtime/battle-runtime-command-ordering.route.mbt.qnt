@@ -1,11 +1,22 @@
 // -*- mode: Bluespec; -*-
 
-// KERNEL-COVERAGE: parity-witness BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING
+// KERNEL-COVERAGE: qnt-owner BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR
+// KERNEL-COVERAGE: parity-witness BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR
 
-module battleRuntimeCommandOrderingMbt {
+// RAW trace:
+// - .references/srd-5.2.1/Spells/Descriptions-A-D.md#Command: the spell
+//   chooses an option, uses a Wisdom Saving Throw, and failed-save targets
+//   follow the option on their next turn.
+// - .references/srd-5.2.1/Playing-the-Game.md#Movement-and-Position and
+//   .references/srd-5.2.1/Rules-Glossary.md#Opportunity-Attacks define the
+//   Movement and Reaction consequences used by Approach and Flee.
+// - UBIQUITOUS_LANGUAGE.md: Spell Invocation, Spell Effect, Movement,
+//   Reaction, Condition, and Boundary Crossing.
+module battleRuntimeCommandOrderingRouteMbt {
   import battleRuntimeCommandOrdering.* from "./battle-runtime-command-ordering"
   import battleRuntimeHoleKinds.* from "./battle-runtime-hole-kinds"
   import battleRuntimeFillKinds.* from "./battle-runtime-fill-kinds"
+  import battleRuntimeReducerRoute.* from "./battle-runtime-reducer-route"
   import battleRuntimeWitnessProtocol.* from "./battle-runtime-witness-protocol"
 
   var qStage: CommandFrontierStage
@@ -19,6 +30,7 @@ module battleRuntimeCommandOrderingMbt {
   var qMovementSpentFeet: int
   var qCurrentActor: str
   var qReactionWindowOpen: bool
+  var qRoute: List[ReducerRouteEvent]
 
   pure def qHoles: Set[BattleHoleFamilyKind] = qProtocol.holes
 
@@ -70,6 +82,28 @@ module battleRuntimeCommandOrderingMbt {
       | CommandFillNotOrderingError(_) => ""
     }
 
+  pure def resolveRoute(
+    fill: BattleFillKind,
+    stage: CommandFrontierStage,
+    owner: ReducerRouteOwnerGroup,
+  ): ReducerRouteEvent =
+    routeResolveBattleSubject(
+      CommandEffectRouteSubject,
+      fill,
+      commandHoleFrontier(stage),
+      owner,
+    )
+
+  pure def runtimeCommandDiscoverRoute(
+    stage: CommandFrontierStage,
+    owner: ReducerRouteOwnerGroup,
+  ): ReducerRouteEvent =
+    routeDiscoverBattleActs(
+      CommandEffectRouteSubject,
+      commandHoleFrontier(stage),
+      owner,
+    )
+
   action recordProjectionWithHoles(
     holes: Set[BattleHoleFamilyKind],
     stage: CommandFrontierStage,
@@ -82,6 +116,7 @@ module battleRuntimeCommandOrderingMbt {
     movementSpentFeet: int,
     currentActor: str,
     reactionWindowOpen: bool,
+    route: List[ReducerRouteEvent],
   ): bool = all {
     qStage' = stage,
     qProtocol' = witnessProtocolForProjection(holes, lastResult),
@@ -94,6 +129,7 @@ module battleRuntimeCommandOrderingMbt {
     qMovementSpentFeet' = movementSpentFeet,
     qCurrentActor' = currentActor,
     qReactionWindowOpen' = reactionWindowOpen,
+    qRoute' = route,
   }
 
   action recordProjection(
@@ -107,6 +143,7 @@ module battleRuntimeCommandOrderingMbt {
     movementSpentFeet: int,
     currentActor: str,
     reactionWindowOpen: bool,
+    route: List[ReducerRouteEvent],
   ): bool = recordProjectionWithHoles(
     commandHoleFrontier(stage),
     stage,
@@ -119,6 +156,7 @@ module battleRuntimeCommandOrderingMbt {
     movementSpentFeet,
     currentActor,
     reactionWindowOpen,
+    route,
   )
 
   action init = recordProjection(
@@ -132,12 +170,14 @@ module battleRuntimeCommandOrderingMbt {
     0,
     "Caster",
     false,
+    List(routeStartBattle(BattleActionEconomyOwner)),
   )
 
   action doDiscoverCommand = all {
     qStage == CommandActSelectionStage,
+    val stage = CommandTargetListAndOptionChoiceStage
     recordProjection(
-      CommandTargetListAndOptionChoiceStage,
+      stage,
       "needsHoles",
       "",
       "none",
@@ -147,6 +187,13 @@ module battleRuntimeCommandOrderingMbt {
       0,
       "Caster",
       false,
+      qRoute.append(
+        routeDiscoverBattleActs(
+          CommandEffectRouteSubject,
+          commandHoleFrontier(stage),
+          BattleSpellSlotAndActionEconomyOwner,
+        )
+      ),
     ),
   }
 
@@ -162,8 +209,9 @@ module battleRuntimeCommandOrderingMbt {
       false,
       false,
     )
+    val stage = acceptedStage(result, qStage)
     recordProjection(
-      acceptedStage(result, qStage),
+      stage,
       acceptedRuntimeResult(result),
       orderingLabel(result),
       "none",
@@ -173,6 +221,7 @@ module battleRuntimeCommandOrderingMbt {
       0,
       "Caster",
       false,
+      qRoute.append(resolveRoute(CommandOptionChoiceFillKind, stage, BattleHoleFrontierOwner)),
     ),
   }
 
@@ -188,8 +237,9 @@ module battleRuntimeCommandOrderingMbt {
       false,
       false,
     )
+    val stage = acceptedStage(result, qStage)
     recordProjection(
-      acceptedStage(result, qStage),
+      stage,
       acceptedRuntimeResult(result),
       "",
       "none",
@@ -199,6 +249,7 @@ module battleRuntimeCommandOrderingMbt {
       0,
       "Caster",
       false,
+      qRoute.append(resolveRoute(SpellTargetListFillKind, stage, BattleHoleFrontierOwner)),
     ),
   }
 
@@ -214,8 +265,9 @@ module battleRuntimeCommandOrderingMbt {
       false,
       false,
     )
+    val stage = acceptedStage(result, qStage)
     recordProjection(
-      acceptedStage(result, qStage),
+      stage,
       acceptedRuntimeResult(result),
       orderingLabel(result),
       "none",
@@ -225,6 +277,7 @@ module battleRuntimeCommandOrderingMbt {
       0,
       "Caster",
       false,
+      qRoute.append(resolveRoute(SavingThrowOutcomeFillKind, stage, BattleHoleFrontierOwner)),
     ),
   }
 
@@ -240,8 +293,9 @@ module battleRuntimeCommandOrderingMbt {
       false,
       false,
     )
+    val stage = acceptedStage(result, qStage)
     recordProjection(
-      acceptedStage(result, qStage),
+      stage,
       acceptedRuntimeResult(result),
       "",
       "none",
@@ -251,6 +305,7 @@ module battleRuntimeCommandOrderingMbt {
       0,
       "Caster",
       false,
+      qRoute.append(resolveRoute(CommandOptionChoiceFillKind, stage, BattleHoleFrontierOwner)),
     ),
   }
 
@@ -266,8 +321,9 @@ module battleRuntimeCommandOrderingMbt {
       false,
       false,
     )
+    val stage = acceptedStage(result, qStage)
     recordProjection(
-      acceptedStage(result, qStage),
+      stage,
       acceptedRuntimeResult(result),
       "",
       "grovel",
@@ -277,6 +333,7 @@ module battleRuntimeCommandOrderingMbt {
       0,
       "Caster",
       false,
+      qRoute.append(resolveRoute(SavingThrowOutcomeFillKind, stage, BattleActiveEffectOwner)),
     ),
   }
 
@@ -294,13 +351,21 @@ module battleRuntimeCommandOrderingMbt {
       0,
       "Caster",
       false,
+      qRoute.append(
+        routeResolveBattleSubjectWithoutFill(
+          CommandEffectRouteSubject,
+          Set(),
+          BattleConditionLifecycleOwner,
+        )
+      ),
     ),
   }
 
   action doDropNeedsHeldObjectFacts = all {
     qStage == CommandActSelectionStage,
+    val stage = CommandDropHeldObjectFactsStage
     recordProjection(
-      CommandDropHeldObjectFactsStage,
+      stage,
       "needsHoles",
       "",
       "drop",
@@ -310,6 +375,7 @@ module battleRuntimeCommandOrderingMbt {
       0,
       "Target",
       false,
+      qRoute.append(runtimeCommandDiscoverRoute(stage, BattleActiveEffectOwner)),
     ),
   }
 
@@ -326,6 +392,13 @@ module battleRuntimeCommandOrderingMbt {
       0,
       "Caster",
       false,
+      qRoute.append(
+        routeResolveBattleSubjectWithoutFill(
+          CommandEffectRouteSubject,
+          Set(),
+          BattleActiveEffectOwner,
+        )
+      ),
     ),
   }
 
@@ -342,13 +415,21 @@ module battleRuntimeCommandOrderingMbt {
       30,
       "Target",
       false,
+      qRoute.append(
+        routeResolveBattleSubjectWithoutFill(
+          CommandEffectRouteSubject,
+          Set(),
+          BattleActiveEffectOwner,
+        )
+      ),
     ),
   }
 
   action doApproachMovementContinues = all {
     qStage == CommandActSelectionStage,
+    val stage = CommandApproachMovementStage
     recordProjection(
-      CommandApproachMovementStage,
+      stage,
       "needsHoles",
       "",
       "approach",
@@ -358,6 +439,7 @@ module battleRuntimeCommandOrderingMbt {
       0,
       "Target",
       false,
+      qRoute.append(runtimeCommandDiscoverRoute(stage, BattleActiveEffectOwner)),
     ),
   }
 
@@ -373,8 +455,9 @@ module battleRuntimeCommandOrderingMbt {
       false,
       false,
     )
+    val stage = acceptedStage(result, qStage)
     recordProjection(
-      acceptedStage(result, qStage),
+      stage,
       acceptedRuntimeResult(result),
       "",
       "none",
@@ -384,6 +467,7 @@ module battleRuntimeCommandOrderingMbt {
       10,
       "Target",
       false,
+      qRoute.append(resolveRoute(MovementFillKind, stage, BattleMovementResourceOwner)),
     ),
   }
 
@@ -399,8 +483,9 @@ module battleRuntimeCommandOrderingMbt {
       true,
       false,
     )
+    val stage = acceptedStage(result, qStage)
     recordProjection(
-      acceptedStage(result, qStage),
+      stage,
       acceptedRuntimeResult(result),
       "",
       "none",
@@ -410,6 +495,7 @@ module battleRuntimeCommandOrderingMbt {
       10,
       "Caster",
       false,
+      qRoute.append(resolveRoute(MovementFillKind, stage, BattleMovementResourceOwner)),
     ),
   }
 
@@ -426,13 +512,21 @@ module battleRuntimeCommandOrderingMbt {
       0,
       "Target",
       false,
+      qRoute.append(
+        routeResolveBattleSubjectWithoutFill(
+          CommandEffectRouteSubject,
+          Set(),
+          BattleMovementResourceOwner,
+        )
+      ),
     ),
   }
 
   action doFleeMovement = all {
     qStage == CommandActSelectionStage,
+    val stage = CommandFleeMovementStage
     recordProjection(
-      CommandFleeMovementStage,
+      stage,
       "needsHoles",
       "",
       "flee",
@@ -442,6 +536,7 @@ module battleRuntimeCommandOrderingMbt {
       0,
       "Target",
       false,
+      qRoute.append(runtimeCommandDiscoverRoute(stage, BattleActiveEffectOwner)),
     ),
   }
 
@@ -457,8 +552,9 @@ module battleRuntimeCommandOrderingMbt {
       false,
       false,
     )
+    val stage = acceptedStage(result, qStage)
     recordProjection(
-      acceptedStage(result, qStage),
+      stage,
       acceptedRuntimeResult(result),
       "",
       "none",
@@ -468,14 +564,16 @@ module battleRuntimeCommandOrderingMbt {
       30,
       "Caster",
       false,
+      qRoute.append(resolveRoute(MovementFillKind, stage, BattleMovementResourceOwner)),
     ),
   }
 
   action doRejectFleePartialMovement = all {
     qStage == CommandFleeMovementStage,
     val result = CommandFillRejected(CommandMovementRequired)
+    val stage = acceptedStage(result, qStage)
     recordProjection(
-      acceptedStage(result, qStage),
+      stage,
       acceptedRuntimeResult(result),
       orderingLabel(result),
       "flee",
@@ -485,6 +583,7 @@ module battleRuntimeCommandOrderingMbt {
       0,
       "Target",
       false,
+      qRoute.append(resolveRoute(MovementFillKind, stage, BattleHoleFrontierOwner)),
     ),
   }
 
@@ -501,6 +600,13 @@ module battleRuntimeCommandOrderingMbt {
       0,
       "Caster",
       false,
+      qRoute.append(
+        routeResolveBattleSubjectWithoutFill(
+          CommandEffectRouteSubject,
+          Set(),
+          BattleMovementResourceOwner,
+        )
+      ),
     ),
   }
 
@@ -516,9 +622,11 @@ module battleRuntimeCommandOrderingMbt {
       false,
       true,
     )
+    val stage = acceptedStage(result, qStage)
+    val interruptHoles = Set(InterruptDecisionHoleKind)
     recordProjectionWithHoles(
-      Set(InterruptDecisionHoleKind),
-      acceptedStage(result, qStage),
+      interruptHoles,
+      stage,
       "needsHoles",
       "",
       "flee",
@@ -528,6 +636,14 @@ module battleRuntimeCommandOrderingMbt {
       0,
       "Target",
       true,
+      qRoute.append(
+        routeResolveBattleSubject(
+          CommandEffectRouteSubject,
+          MovementFillKind,
+          interruptHoles,
+          BattleInterruptStackOwner,
+        )
+      ),
     ),
   }
 
