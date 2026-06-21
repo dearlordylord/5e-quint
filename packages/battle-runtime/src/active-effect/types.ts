@@ -426,6 +426,11 @@ export const GLYPH_STORED_SINGLE_CREATURE_ACTIVE_EFFECT_PROCEDURES = [
 ] as const satisfies ReadonlyArray<SupportedSpellInvocation["procedure"]>;
 export type GlyphStoredSingleCreatureActiveEffectProcedure =
   (typeof GLYPH_STORED_SINGLE_CREATURE_ACTIVE_EFFECT_PROCEDURES)[number];
+export const GLYPH_STORED_SELF_TRANSFORMATION_PROCEDURES = [
+  "selfTransformationMode",
+] as const satisfies ReadonlyArray<SupportedSpellInvocation["procedure"]>;
+export type GlyphStoredSelfTransformationProcedure =
+  (typeof GLYPH_STORED_SELF_TRANSFORMATION_PROCEDURES)[number];
 type SupportedSpellInvocationForProcedure<
   P extends SupportedSpellInvocation["procedure"],
   I extends SupportedSpellInvocation = SupportedSpellInvocation,
@@ -475,10 +480,22 @@ export type GlyphStoredAreaControlInvocation = Extract<
     };
   };
 };
-export type GlyphStoredConcentrationSingleCreatureActiveEffectInvocation =
-  {
-    readonly [P in GlyphStoredSingleCreatureActiveEffectProcedure]: GlyphStoredConcentrationSingleCreatureActiveEffectInvocationFor<P>;
-  }[GlyphStoredSingleCreatureActiveEffectProcedure];
+export type GlyphStoredConcentrationSingleCreatureActiveEffectInvocation = {
+  readonly [P in GlyphStoredSingleCreatureActiveEffectProcedure]: GlyphStoredConcentrationSingleCreatureActiveEffectInvocationFor<P>;
+}[GlyphStoredSingleCreatureActiveEffectProcedure];
+export type GlyphStoredConcentrationSelfTransformationInvocation =
+  SupportedSpellInvocationForProcedure<GlyphStoredSelfTransformationProcedure> & {
+    readonly access: PreparedSpellAccess;
+    readonly resource: SpellSlotInvocationResource;
+    readonly spell: SpellRecord & {
+      readonly mechanics: SpellRecord["mechanics"] & {
+        readonly duration: Extract<
+          SpellRecord["mechanics"]["duration"],
+          { readonly kind: "concentration" }
+        >;
+      };
+    };
+  };
 type GlyphStoredSpellInvocationCandidateWithSpellTargeting = Extract<
   | ReadiedSpellInvocation
   | Extract<
@@ -500,21 +517,25 @@ type GlyphStoredSpellInvocationCandidateWithSpellTargeting = Extract<
 >;
 export type GlyphStoredSpellInvocationCandidate =
   | GlyphStoredSpellInvocationCandidateWithSpellTargeting
-  | GlyphStoredConcentrationSingleCreatureActiveEffectInvocation;
-export type GlyphStoredSpellInvocation = Extract<
-  | GlyphStoredReadiedSpellInvocation
-  | GlyphStoredGreaseGroundHazardInvocation
-  | GlyphStoredConcentrationSaveGatedDamageInvocation
-  | GlyphStoredConcentrationSaveGatedConditionInvocation
-  | GlyphStoredConcentrationHarmfulObjectInvocation
-  | GlyphStoredAreaOngoingInvocation
-  | GlyphStoredAreaControlInvocation,
-  {
-    readonly access: PreparedSpellAccess;
-    readonly resource: SpellSlotInvocationResource;
-    readonly targeting: SpellTargeting;
-  }
-> | GlyphStoredConcentrationSingleCreatureActiveEffectInvocation;
+  | GlyphStoredConcentrationSingleCreatureActiveEffectInvocation
+  | GlyphStoredConcentrationSelfTransformationInvocation;
+export type GlyphStoredSpellInvocation =
+  | Extract<
+      | GlyphStoredReadiedSpellInvocation
+      | GlyphStoredGreaseGroundHazardInvocation
+      | GlyphStoredConcentrationSaveGatedDamageInvocation
+      | GlyphStoredConcentrationSaveGatedConditionInvocation
+      | GlyphStoredConcentrationHarmfulObjectInvocation
+      | GlyphStoredAreaOngoingInvocation
+      | GlyphStoredAreaControlInvocation,
+      {
+        readonly access: PreparedSpellAccess;
+        readonly resource: SpellSlotInvocationResource;
+        readonly targeting: SpellTargeting;
+      }
+    >
+  | GlyphStoredConcentrationSingleCreatureActiveEffectInvocation
+  | GlyphStoredConcentrationSelfTransformationInvocation;
 export type GlyphDurableOccurrenceRelease =
   | {
       readonly kind: "explosiveRune";
@@ -638,10 +659,7 @@ export type BattleActiveEffect =
       ))
   | (BattleSpellEffectBase & {
       readonly kind: "selfTransformation";
-      readonly expiresAt: Extract<
-        BattleActiveEffectExpiration,
-        { readonly kind: "concentration" }
-      > & { readonly durationTicks: ElapsedTimeTicks };
+      readonly expiresAt: SpellConcentrationOrStoredDurationExpiration;
     } & SelfTransformationModeEffectPayload)
   | SpellShapeShiftedFormActiveEffect
   | SpellLevitatedCreatureActiveEffect

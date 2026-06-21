@@ -325,7 +325,7 @@ missing-record spells unless a RAW dependency is unavoidable and documented.
 | 35 | L3-FOLLOWUP-GLYPH-STORED-SINGLE-CREATURE-ACTIVE-EFFECT-CONCENTRATION - Glyph Stored Single-Creature Active-Effect Concentration | done | L3-FOLLOWUP-GLYPH-STORED-REMAINING-CONCENTRATION | Promoted exact single-creature active-effect stored Concentration releases for typed scalar buffs, roll modifiers, size changes, levitation, direct conditions, Haste positive effects, creature-type protection, and condition-immunity plus turn-start Temporary Hit Points; self-transformation retargeting is split to Task 38. |
 | 36 | L3-FOLLOWUP-GLYPH-STORED-HOSTILE-CREATURE-SUMMON-LIFECYCLE - Glyph Stored Hostile Creature Summon Lifecycle | done | L3-FOLLOWUP-GLYPH-STORED-HOSTILE-SUMMON-PLACEMENT | Closed as research/runtime closure: no current SRD stored spell-glyph family creates Hostile battle creatures with an existing summon occurrence owner; no Glyph-local placement registry or support claim is added. |
 | 37 | L3-FOLLOWUP-GLYPH-STORED-HARMFUL-OBJECT-OCCURRENCE-ROUTING - Glyph Stored Harmful Object Occurrence Routing | done | L3-FOLLOWUP-GLYPH-STORED-HOSTILE-SUMMON-PLACEMENT | Closed as research/runtime closure: no current non-Spiritual-Weapon harmful-object stored release is promotable from existing typed procedure owner facts; no Glyph-local object registry or broader support claim is added. |
-| 38 | L3-FOLLOWUP-GLYPH-STORED-SELF-TRANSFORMATION-CONCENTRATION - Glyph Stored Self-Transformation Concentration | ready-for-research | L3-FOLLOWUP-GLYPH-STORED-SINGLE-CREATURE-ACTIVE-EFFECT-CONCENTRATION | Research and either promote or explicitly close stored spell-glyph release for self-transformation Concentration procedures whose existing invocation shape is self-targeted rather than a safe triggering-creature target. |
+| 38 | L3-FOLLOWUP-GLYPH-STORED-SELF-TRANSFORMATION-CONCENTRATION - Glyph Stored Self-Transformation Concentration | done | L3-FOLLOWUP-GLYPH-STORED-SINGLE-CREATURE-ACTIVE-EFFECT-CONCENTRATION | Promoted the represented self-transformation stored Concentration subset for Alter Self-style mode releases: typed procedure shape applies the transformation to the triggering creature, preserves full-duration cleanup, skips trigger-time Spell Slot spend, avoids ordinary Concentration ownership, and does not dispatch on authored identity. |
 
 ## Shared Verification
 
@@ -2484,7 +2484,7 @@ Plan Impact:
 
 ### Task 38 - L3-FOLLOWUP-GLYPH-STORED-SELF-TRANSFORMATION-CONCENTRATION
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 

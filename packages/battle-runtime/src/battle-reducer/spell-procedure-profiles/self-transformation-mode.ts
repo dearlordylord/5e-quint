@@ -1,5 +1,5 @@
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-self-transformation-mode
-// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SELF_TRANSFORMATION_MODE
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-self-transformation-mode spell.invocation-glyph-stored-concentration-full-duration
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SELF_TRANSFORMATION_MODE BATTLE.SPELL.GLYPH_STORED_CONCENTRATION_FULL_DURATION
 //
 // The selfTransformationMode Spell Procedure Profile: a prepared Magic Action
 // spell that lets the caster choose and later replace one active self
@@ -56,6 +56,7 @@ import {
 } from "../spells-resolve-resources.ts";
 import { selfTransformationModeChoiceHole } from "../spells-targeting.ts";
 import type {
+  OkSpellFillSet,
   SpellAdmissionContext,
   SpellProcedureProfile,
   SpellProcedureProfileResolveInput,
@@ -352,50 +353,21 @@ function selfTransformationModeCastSummary(
 function resolveSelfTransformationMode(
   input: SelfTransformationModeResolveInput,
 ): BattleResolutionResult {
-  if (
-    input.fillSet.targetId !== undefined ||
-    input.fillSet.objectTarget !== undefined ||
-    input.fillSet.targetSpatialFacts.length > 0 ||
-    input.fillSet.targetAllocation !== undefined ||
-    input.fillSet.targetList !== undefined ||
-    input.fillSet.attackSequencePartFills.length > 0 ||
-    input.fillSet.attackRoll !== undefined ||
-    input.fillSet.savingThrowOutcomes !== undefined ||
-    input.fillSet.skillChoice !== undefined ||
-    input.fillSet.targetAbilityChoices !== undefined ||
-    input.fillSet.abilityChoice !== undefined ||
-    input.fillSet.thaumaturgyActiveOneMinuteEffectCount !== undefined ||
-    input.fillSet.commandOptionChoice !== undefined ||
-    input.fillSet.conditionChoice !== undefined ||
-    input.fillSet.areaChoice !== undefined ||
-    input.fillSet.teleportDestination !== undefined ||
-    input.fillSet.dancingLightsPlacement !== undefined ||
-    input.fillSet.concentrationSavingThrows.length > 0 ||
-    input.fillSet.hideousLaughterDamageRepeatSaves.length > 0 ||
-    input.fillSet.damageDispositions.length > 0 ||
-    input.fillSet.damageRoll !== undefined ||
-    input.fillSet.mirrorImageDuplicateRoll !== undefined ||
-    input.fillSet.movement !== undefined ||
-    input.fillSet.spellDamageReductionRolls.length > 0 ||
-    input.fillSet.attackBurstDamageRoll !== undefined ||
-    input.fillSet.healingRoll !== undefined
-  ) {
-    return invalidResult(
-      input.input.state,
-      "invalidFill",
-      "Self-transformation mode spells use one mode choice fill and Natural Weapons damage type choice.",
-    );
+  const invalidFillMessage = selfTransformationModeInvalidFillMessage(
+    input.fillSet,
+  );
+  if (invalidFillMessage !== null) {
+    return invalidResult(input.input.state, "invalidFill", invalidFillMessage);
   }
-  if (input.fillSet.selfTransformationModeChoice === undefined) {
+  const modeEffect = selfTransformationModeEffectPayloadFromFillSet(
+    input.invocation,
+    input.fillSet,
+  );
+  if (modeEffect.tag === "needsModeChoice") {
     return needsHolesResult(input.input.state, input.input.subject, [
       selfTransformationModeChoiceHole(input.invocation),
     ]);
   }
-  const modeEffect = selfTransformationModeEffectPayload(
-    input.invocation,
-    input.fillSet.selfTransformationModeChoice,
-    input.fillSet.damageTypeChoice,
-  );
   if (modeEffect.tag === "needsDamageType") {
     return needsHolesResult(input.input.state, input.input.subject, [
       spellDamageTypeChoiceHole(input.invocation),
@@ -449,6 +421,108 @@ function resolveSelfTransformationMode(
         state: resourced.state,
         snapshot: snapshotBattle(resourced.state),
       };
+}
+
+export function resolveStoredGlyphSelfTransformationModeSpellRelease(input: {
+  readonly state: BattleState;
+  readonly subject: ActionSpellBattleResolutionInput["subject"];
+  readonly targetId: CombatantId;
+  readonly sourceCombatantId: CombatantId;
+  readonly invocation: SelfTransformationModeInvocation;
+  readonly fillSet: OkSpellFillSet;
+}): BattleResolutionResult {
+  const invalidFillMessage = selfTransformationModeInvalidFillMessage(
+    input.fillSet,
+  );
+  if (invalidFillMessage !== null) {
+    return invalidResult(input.state, "invalidFill", invalidFillMessage);
+  }
+  const modeEffect = selfTransformationModeEffectPayloadFromFillSet(
+    input.invocation,
+    input.fillSet,
+  );
+  if (modeEffect.tag === "needsModeChoice") {
+    return needsHolesResult(input.state, input.subject, [
+      selfTransformationModeChoiceHole(input.invocation),
+    ]);
+  }
+  if (modeEffect.tag === "needsDamageType") {
+    return needsHolesResult(input.state, input.subject, [
+      spellDamageTypeChoiceHole(input.invocation),
+    ]);
+  }
+  if (modeEffect.tag === "invalid") {
+    return invalidResult(input.state, "invalidFill", modeEffect.message);
+  }
+  const effected = applySelfTransformationModeEffect({
+    state: input.state,
+    actorId: input.targetId,
+    sourceCombatantId: input.sourceCombatantId,
+    sourceSpellId: input.invocation.spell.id,
+    modeEffect: modeEffect.modeEffect,
+    expiresAt: {
+      kind: "duration",
+      durationTicks: input.invocation.expiresAt.durationTicks,
+    },
+  });
+  return {
+    tag: "resolved",
+    state: effected,
+    snapshot: snapshotBattle(effected),
+  };
+}
+
+function selfTransformationModeInvalidFillMessage(
+  fillSet: OkSpellFillSet,
+): string | null {
+  return fillSet.targetId !== undefined ||
+    fillSet.objectTarget !== undefined ||
+    fillSet.targetSpatialFacts.length > 0 ||
+    fillSet.targetAllocation !== undefined ||
+    fillSet.targetList !== undefined ||
+    fillSet.attackSequencePartFills.length > 0 ||
+    fillSet.attackRoll !== undefined ||
+    fillSet.savingThrowOutcomes !== undefined ||
+    fillSet.skillChoice !== undefined ||
+    fillSet.targetAbilityChoices !== undefined ||
+    fillSet.abilityChoice !== undefined ||
+    fillSet.thaumaturgyActiveOneMinuteEffectCount !== undefined ||
+    fillSet.commandOptionChoice !== undefined ||
+    fillSet.conditionChoice !== undefined ||
+    fillSet.areaChoice !== undefined ||
+    fillSet.teleportDestination !== undefined ||
+    fillSet.dancingLightsPlacement !== undefined ||
+    fillSet.concentrationSavingThrows.length > 0 ||
+    fillSet.hideousLaughterDamageRepeatSaves.length > 0 ||
+    fillSet.damageDispositions.length > 0 ||
+    fillSet.damageRoll !== undefined ||
+    fillSet.mirrorImageDuplicateRoll !== undefined ||
+    fillSet.movement !== undefined ||
+    fillSet.spellDamageReductionRolls.length > 0 ||
+    fillSet.attackBurstDamageRoll !== undefined ||
+    fillSet.healingRoll !== undefined
+    ? "Self-transformation mode spells use one mode choice fill and Natural Weapons damage type choice."
+    : null;
+}
+
+function selfTransformationModeEffectPayloadFromFillSet(
+  invocation: SelfTransformationModeInvocation,
+  fillSet: OkSpellFillSet,
+):
+  | {
+      readonly tag: "ok";
+      readonly modeEffect: SelfTransformationModeEffectPayload;
+    }
+  | { readonly tag: "needsModeChoice" }
+  | { readonly tag: "needsDamageType" }
+  | { readonly tag: "invalid"; readonly message: string } {
+  return fillSet.selfTransformationModeChoice === undefined
+    ? { tag: "needsModeChoice" }
+    : selfTransformationModeEffectPayload(
+        invocation,
+        fillSet.selfTransformationModeChoice,
+        fillSet.damageTypeChoice,
+      );
 }
 
 function selfTransformationModeEffectPayload(

@@ -41,7 +41,9 @@ import type {
 import { Either, Match } from "effect";
 import {
   GLYPH_STORED_SINGLE_CREATURE_ACTIVE_EFFECT_PROCEDURES,
+  GLYPH_STORED_SELF_TRANSFORMATION_PROCEDURES,
   type GlyphStoredConcentrationSingleCreatureActiveEffectInvocation,
+  type GlyphStoredConcentrationSelfTransformationInvocation,
 } from "../active-effect/types.ts";
 import type {
   BattleActiveEffect,
@@ -138,6 +140,7 @@ import { hastePositiveProfile } from "./spell-procedure-profiles/haste-positive.
 import { levitatedCreatureProfile } from "./spell-procedure-profiles/levitated-creature.ts";
 import { rollModifierProfile } from "./spell-procedure-profiles/roll-modifier.ts";
 import { scalarBuffProfile } from "./spell-procedure-profiles/scalar-buff.ts";
+import { resolveStoredGlyphSelfTransformationModeSpellRelease } from "./spell-procedure-profiles/self-transformation-mode.ts";
 import { invalidResult } from "./result-helpers.ts";
 import {
   d20TestNaturalOneRerollOutcomeDecisionRequired,
@@ -1444,6 +1447,9 @@ function glyphStoredSpellInvocationSupportsFullDurationOwner(
   if (isGlyphStoredSingleCreatureActiveEffectSpellInvocation(invocation)) {
     return true;
   }
+  if (isGlyphStoredSelfTransformationModeSpellInvocation(invocation)) {
+    return true;
+  }
   return (
     invocation.procedure === "saveGatedCondition" ||
     invocation.procedure === "spiritualWeaponAttackProxy"
@@ -1491,6 +1497,9 @@ function glyphExplosiveRuneDamageTypeSupported(
 function glyphStoredSpellInvocationTargetShape(
   invocation: GlyphStoredSpellInvocation,
 ): GlyphStoredSpellTargetShape | null {
+  if (isGlyphStoredSelfTransformationModeSpellInvocation(invocation)) {
+    return "singleCreature";
+  }
   const hostilePlacementSubject =
     glyphStoredSpellInvocationHostilePlacementSubject(invocation);
   if (hostilePlacementSubject === "harmful_objects") {
@@ -1546,6 +1555,7 @@ function glyphStoredSpellInvocationHasExactlyOneTargetListTarget(
   invocation: GlyphStoredSpellInvocationCandidate,
 ): boolean {
   return (
+    "targeting" in invocation &&
     invocation.targeting.kind === "targetList" &&
     invocation.targeting.minTargets === 1 &&
     invocation.targeting.maxTargets === 1
@@ -1556,9 +1566,10 @@ function glyphStoredSpellInvocationTargetsSingleCreature(
   invocation: GlyphStoredSpellInvocationCandidate,
 ): boolean {
   return (
-    invocation.targeting.kind === "singleCombatant" ||
-    invocation.targeting.kind === "singleCreatureOrObject" ||
-    glyphStoredSpellInvocationHasExactlyOneTargetListTarget(invocation)
+    "targeting" in invocation &&
+    (invocation.targeting.kind === "singleCombatant" ||
+      invocation.targeting.kind === "singleCreatureOrObject" ||
+      glyphStoredSpellInvocationHasExactlyOneTargetListTarget(invocation))
   );
 }
 
@@ -1571,6 +1582,16 @@ function isGlyphStoredSingleCreatureActiveEffectSpellInvocation(
     ) &&
     glyphStoredSpellInvocationRequiresFullDurationOwner(invocation) &&
     glyphStoredSpellInvocationTargetsSingleCreature(invocation)
+  );
+}
+
+function isGlyphStoredSelfTransformationModeSpellInvocation(
+  invocation: GlyphStoredSpellInvocationCandidate,
+): invocation is GlyphStoredConcentrationSelfTransformationInvocation {
+  return (
+    GLYPH_STORED_SELF_TRANSFORMATION_PROCEDURES.some(
+      (procedure) => procedure === invocation.procedure,
+    ) && glyphStoredSpellInvocationRequiresFullDurationOwner(invocation)
   );
 }
 
@@ -1894,6 +1915,20 @@ function resolveStoredSpellGlyphRelease(input: {
       handledInterruptTrigger: input.handledInterruptTrigger,
     });
   }
+  if (isGlyphStoredSelfTransformationModeSpellInvocation(invocation)) {
+    const fillSet = spellFillSet(fills, invocation);
+    if (fillSet.tag === "invalid") {
+      return invalidResult(input.state, "invalidFill", fillSet.message);
+    }
+    return resolveStoredGlyphSelfTransformationModeSpellRelease({
+      state: input.state,
+      subject,
+      targetId: input.witness.triggeringCreatureId,
+      sourceCombatantId: input.effect.sourceCombatantId,
+      invocation,
+      fillSet,
+    });
+  }
   return resolveSpellRelease(
     {
       state: input.state,
@@ -2010,6 +2045,13 @@ function glyphStoredSpellReleaseFills(input: {
   }
   if (input.witness.targeting.kind === "storedSpellTargetsTriggeringCreature") {
     if (
+      isGlyphStoredSelfTransformationModeSpellInvocation(
+        input.effect.release.storedInvocation,
+      )
+    ) {
+      return input.witness.fills;
+    }
+    if (
       glyphStoredSingleCreatureActiveEffectUsesTargetChoiceFill(
         input.effect.release.storedInvocation,
       )
@@ -2125,7 +2167,8 @@ type GlyphStoredSpellFullDurationEffect = Extract<
       | "spellGrantedActionResource"
       | "spellEndTargetState"
       | "conditionImmunity"
-      | "turnStartTemporaryHitPoints";
+      | "turnStartTemporaryHitPoints"
+      | "selfTransformation";
   }
 >;
 
@@ -2230,7 +2273,8 @@ function glyphStoredSpellFullDurationEffectSupportsExpiration(
     effect.kind === "spellGrantedActionResource" ||
     effect.kind === "spellEndTargetState" ||
     effect.kind === "conditionImmunity" ||
-    effect.kind === "turnStartTemporaryHitPoints"
+    effect.kind === "turnStartTemporaryHitPoints" ||
+    effect.kind === "selfTransformation"
   );
 }
 

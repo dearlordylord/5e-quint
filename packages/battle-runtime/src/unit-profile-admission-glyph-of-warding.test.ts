@@ -7,6 +7,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3-FOLLOWUP-GLYPH-STORED-AREA-ONGOING-CONCENTRATION glyph_of_warding
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3-FOLLOWUP-GLYPH-STORED-AREA-CONTROL-CONCENTRATION glyph_of_warding
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3-FOLLOWUP-GLYPH-STORED-SINGLE-CREATURE-ACTIVE-EFFECT-CONCENTRATION glyph_of_warding
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3-FOLLOWUP-GLYPH-STORED-SELF-TRANSFORMATION-CONCENTRATION glyph_of_warding
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-glyph-durable-occurrence spell.invocation-glyph-explosive-rune-release spell.invocation-glyph-stored-spell-release spell.invocation-glyph-stored-concentration-full-duration spell.invocation-glyph-stored-summon-object-placement
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.GLYPH_DURABLE_OCCURRENCE_LIFECYCLE BATTLE.SPELL.GLYPH_EXPLOSIVE_RUNE_RELEASE BATTLE.SPELL.GLYPH_STORED_SPELL_RELEASE BATTLE.SPELL.GLYPH_STORED_CONCENTRATION_FULL_DURATION
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
@@ -60,6 +61,7 @@ import {
   type BattleSpellEffectLevel,
 } from "./battle-reducer/spells-effective-level.ts";
 import {
+  alterSelfUnitId,
   blindnessDeafnessUnitId,
   counterspellUnitId,
   darknessUnitId,
@@ -204,14 +206,11 @@ const GLYPH_STORED_AREA_ONGOING_RELEASE_CASES = [
     effectKind: "fogCloudObscurement",
     areaId: glyphStoredFogCloudAreaId,
     fillsFromHoles: (holes, originAnchor = glyphStoredAreaOriginAnchor) => [
-      glyphStoredAreaChoiceFill(
-        requireReleaseHole(holes, "spellAreaChoice"),
-        {
-          kind: "fogCloudArea",
-          areaId: glyphStoredFogCloudAreaId,
-          originAnchor,
-        },
-      ),
+      glyphStoredAreaChoiceFill(requireReleaseHole(holes, "spellAreaChoice"), {
+        kind: "fogCloudArea",
+        areaId: glyphStoredFogCloudAreaId,
+        originAnchor,
+      }),
     ],
   },
   {
@@ -222,15 +221,12 @@ const GLYPH_STORED_AREA_ONGOING_RELEASE_CASES = [
     effectKind: "magicalDarknessPointOrigin",
     areaId: glyphStoredDarknessAreaId,
     fillsFromHoles: (holes, originAnchor = glyphStoredAreaOriginAnchor) => [
-      glyphStoredAreaChoiceFill(
-        requireReleaseHole(holes, "spellAreaChoice"),
-        {
-          kind: "magicalDarknessArea",
-          areaId: glyphStoredDarknessAreaId,
-          originAnchor,
-          spellCreatedLightOverlaps: [],
-        },
-      ),
+      glyphStoredAreaChoiceFill(requireReleaseHole(holes, "spellAreaChoice"), {
+        kind: "magicalDarknessArea",
+        areaId: glyphStoredDarknessAreaId,
+        originAnchor,
+        spellCreatedLightOverlaps: [],
+      }),
     ],
   },
   {
@@ -318,79 +314,82 @@ type GlyphStoredSingleCreatureActiveEffectReleaseCase = {
   readonly slotLevel: TestSpellSlotLevel;
   readonly procedure: GlyphStoredSingleCreatureActiveEffectProcedure;
   readonly effectKinds: readonly BattleActiveEffect["kind"][];
-  readonly targetFacts: (
-    spellId: string,
-  ) => readonly BattleTargetSpatialFact[];
-  readonly fillsFromHoles?: (holes: readonly BattleHole[]) => readonly BattleFill[];
+  readonly targetFacts: (spellId: string) => readonly BattleTargetSpatialFact[];
+  readonly fillsFromHoles?: (
+    holes: readonly BattleHole[],
+  ) => readonly BattleFill[];
 };
-const GLYPH_STORED_SINGLE_CREATURE_ACTIVE_EFFECT_RELEASE_CASES: ReadonlyArray<GlyphStoredSingleCreatureActiveEffectReleaseCase> = [
-  {
-    label: "Shield of Faith scalar Armor Class bonus",
-    spellId: shieldOfFaithUnitId,
-    slotLevel: 1,
-    procedure: "scalarBuff",
-    effectKinds: ["spellArmorClassBonus"],
-    targetFacts: storedKnownWillingSingleCreatureSpellTargetFacts,
-  },
-  {
-    label: "Enlarge creature size increase",
-    spellId: enlargeReduceUnitId,
-    slotLevel: 2,
-    procedure: "creatureSizeIncrease",
-    effectKinds: ["spellCreatureSizeChange"],
-    targetFacts: storedKnownWillingSingleCreatureSpellTargetFacts,
-  },
-  {
-    label: "Levitate creature",
-    spellId: levitateUnitId,
-    slotLevel: 2,
-    procedure: "levitatedCreature",
-    effectKinds: ["spellLevitatedCreature"],
-    targetFacts: storedKnownWillingSingleCreatureSpellTargetFacts,
-    fillsFromHoles: (holes) => [
-      levitateInitialRiseFill(requireReleaseHole(holes, "levitateInitialRise")),
-    ],
-  },
-  {
-    label: "Invisibility direct condition",
-    spellId: invisibilityUnitId,
-    slotLevel: 2,
-    procedure: "directCondition",
-    effectKinds: ["targetActionEndedSpellCondition"],
-    targetFacts: (spellId) =>
-      storedSingleCreatureSpellTargetFacts(spellTargetId, spellId),
-  },
-  {
-    label: "Haste positive effects",
-    spellId: hasteUnitId,
-    slotLevel: 3,
-    procedure: "hastePositive",
-    effectKinds: [
-      "speedRatio",
-      "spellArmorClassBonus",
-      "savingThrowRollMode",
-      "spellGrantedActionResource",
-      "spellEndTargetState",
-    ],
-    targetFacts: storedKnownWillingSingleCreatureSpellTargetFacts,
-  },
-  {
-    label: "Protection from Evil and Good creature-type protection",
-    spellId: protectionFromEvilAndGoodUnitId,
-    slotLevel: 1,
-    procedure: "creatureTypeProtection",
-    effectKinds: ["creatureTypeProtection"],
-    targetFacts: storedKnownWillingSingleCreatureSpellTargetFacts,
-  },
-  {
-    label: "Heroism condition immunity and turn-start Temporary Hit Points",
-    spellId: heroismUnitId,
-    slotLevel: 1,
-    procedure: "conditionImmunityAndTurnStartTemporaryHitPoints",
-    effectKinds: ["conditionImmunity", "turnStartTemporaryHitPoints"],
-    targetFacts: storedKnownWillingSingleCreatureSpellTargetFacts,
-  },
-];
+const GLYPH_STORED_SINGLE_CREATURE_ACTIVE_EFFECT_RELEASE_CASES: ReadonlyArray<GlyphStoredSingleCreatureActiveEffectReleaseCase> =
+  [
+    {
+      label: "Shield of Faith scalar Armor Class bonus",
+      spellId: shieldOfFaithUnitId,
+      slotLevel: 1,
+      procedure: "scalarBuff",
+      effectKinds: ["spellArmorClassBonus"],
+      targetFacts: storedKnownWillingSingleCreatureSpellTargetFacts,
+    },
+    {
+      label: "Enlarge creature size increase",
+      spellId: enlargeReduceUnitId,
+      slotLevel: 2,
+      procedure: "creatureSizeIncrease",
+      effectKinds: ["spellCreatureSizeChange"],
+      targetFacts: storedKnownWillingSingleCreatureSpellTargetFacts,
+    },
+    {
+      label: "Levitate creature",
+      spellId: levitateUnitId,
+      slotLevel: 2,
+      procedure: "levitatedCreature",
+      effectKinds: ["spellLevitatedCreature"],
+      targetFacts: storedKnownWillingSingleCreatureSpellTargetFacts,
+      fillsFromHoles: (holes) => [
+        levitateInitialRiseFill(
+          requireReleaseHole(holes, "levitateInitialRise"),
+        ),
+      ],
+    },
+    {
+      label: "Invisibility direct condition",
+      spellId: invisibilityUnitId,
+      slotLevel: 2,
+      procedure: "directCondition",
+      effectKinds: ["targetActionEndedSpellCondition"],
+      targetFacts: (spellId) =>
+        storedSingleCreatureSpellTargetFacts(spellTargetId, spellId),
+    },
+    {
+      label: "Haste positive effects",
+      spellId: hasteUnitId,
+      slotLevel: 3,
+      procedure: "hastePositive",
+      effectKinds: [
+        "speedRatio",
+        "spellArmorClassBonus",
+        "savingThrowRollMode",
+        "spellGrantedActionResource",
+        "spellEndTargetState",
+      ],
+      targetFacts: storedKnownWillingSingleCreatureSpellTargetFacts,
+    },
+    {
+      label: "Protection from Evil and Good creature-type protection",
+      spellId: protectionFromEvilAndGoodUnitId,
+      slotLevel: 1,
+      procedure: "creatureTypeProtection",
+      effectKinds: ["creatureTypeProtection"],
+      targetFacts: storedKnownWillingSingleCreatureSpellTargetFacts,
+    },
+    {
+      label: "Heroism condition immunity and turn-start Temporary Hit Points",
+      spellId: heroismUnitId,
+      slotLevel: 1,
+      procedure: "conditionImmunityAndTurnStartTemporaryHitPoints",
+      effectKinds: ["conditionImmunity", "turnStartTemporaryHitPoints"],
+      targetFacts: storedKnownWillingSingleCreatureSpellTargetFacts,
+    },
+  ];
 
 describe("SRD Glyph of Warding durable occurrence admission", () => {
   test("admits the durable occurrence profile by Surface shape, not authored identity", () => {
@@ -1302,9 +1301,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
             }),
             glyphBattle({
               preparedSpells: [spellRecord(releaseCase.spellId)],
-              spellSlots: [
-                { spellLevel: releaseCase.slotLevel, count: 2 },
-              ],
+              spellSlots: [{ spellLevel: releaseCase.slotLevel, count: 2 }],
             }),
           ),
         ),
@@ -1356,12 +1353,12 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
       expect(
         requireCombatant(released.state, spellTargetId).concentration,
       ).toBeNull();
-      expect(casterSpellSlotExpended(released.state, releaseCase.slotLevel)).toBe(
-        priorExpended,
-      );
       expect(
-        released.state.currentTurnResources.spellSlotUsesThisTurn,
-      ).toEqual(priorTurnSpellSlotUses);
+        casterSpellSlotExpended(released.state, releaseCase.slotLevel),
+      ).toBe(priorExpended);
+      expect(released.state.currentTurnResources.spellSlotUsesThisTurn).toEqual(
+        priorTurnSpellSlotUses,
+      );
       const expectedEffectKinds = new Set<BattleActiveEffect["kind"]>(
         releaseCase.effectKinds,
       );
@@ -1389,6 +1386,200 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
     },
   );
 
+  test("stored self-transformation Concentration release applies the chosen mode to the triggering creature for full duration", () => {
+    const storedInvocation = storedSpellInvocation(
+      alterSelfUnitId,
+      2,
+      "selfTransformationMode",
+    );
+    expect(storedInvocation.procedure).toBe("selfTransformationMode");
+    expect(storedInvocation.spell.mechanics.range).toEqual({ kind: "self" });
+    expect(storedInvocation.spell.mechanics.duration.kind).toBe(
+      "concentration",
+    );
+    const state = stateWithPriorCasterSpellSlotUse(
+      stateWithUnrelatedReadiedSpell(
+        stateWithGlyphEffect(
+          requireCompletedGlyphEffect({
+            anchor: { kind: "surface", areaId: glyphSurfaceAnchorAreaId },
+            release: { kind: "spellGlyph", storedInvocation },
+          }),
+          glyphBattle({
+            preparedSpells: [spellRecord(alterSelfUnitId)],
+            spellSlots: [{ spellLevel: 2, count: 2 }],
+          }),
+        ),
+      ),
+      2,
+    );
+    const priorTurnSpellSlotUses =
+      state.currentTurnResources.spellSlotUsesThisTurn;
+    const priorExpended = casterSpellSlotExpended(state, 2);
+    const readiedBefore = state.readiedSpells.get(spellCasterId);
+    const initialRelease = releaseGlyphStoredSpell({
+      state,
+      profile: requireGlyphStoredSpellProfile(),
+      witness: storedSingleCreatureReleaseWitness([], spellTargetId, []),
+    });
+    const modeHole = requireReleaseHole(
+      expectNeedsReleaseHoles(initialRelease),
+      "selfTransformationModeChoice",
+    );
+
+    const released = releaseGlyphStoredSpell({
+      state,
+      profile: requireGlyphStoredSpellProfile(),
+      witness: storedSingleCreatureReleaseWitness(
+        [
+          {
+            kind: "selfTransformationModeChoice",
+            holeId: modeHole.holeId,
+            value: "aquaticAdaptation",
+          },
+        ],
+        spellTargetId,
+        [],
+      ),
+    });
+
+    expect(released.tag).toBe("released");
+    if (released.tag !== "released") return;
+    expect(glyphEffects(released.state)).toEqual([]);
+    expect(
+      requireCombatant(released.state, spellCasterId).concentration,
+    ).toEqual({
+      sourceSpellId: guidingBoltUnitId,
+      effectKind: "readiedSpell",
+    });
+    expect(released.state.readiedSpells.get(spellCasterId)).toEqual(
+      readiedBefore,
+    );
+    expect(
+      requireCombatant(released.state, spellTargetId).concentration,
+    ).toBeNull();
+    expect(casterSpellSlotExpended(released.state, 2)).toBe(priorExpended);
+    expect(released.state.currentTurnResources.spellSlotUsesThisTurn).toEqual(
+      priorTurnSpellSlotUses,
+    );
+    expect(
+      requireCombatant(released.state, spellTargetId).activeEffects,
+    ).toContainEqual(
+      expect.objectContaining({
+        kind: "selfTransformation",
+        sourceSpellId: alterSelfUnitId,
+        sourceCombatantId: spellCasterId,
+        mode: "aquaticAdaptation",
+        expiresAt: {
+          kind: "duration",
+          durationTicks: elapsedTimeTicks(600),
+        },
+      }),
+    );
+    const targetTurn = endTurn({
+      state: released.state,
+      actorId: spellCasterId,
+    });
+    expect(targetTurn.tag).toBe("resolved");
+    if (targetTurn.tag !== "resolved") return;
+    expect(
+      discoverBattleActs(targetTurn.state).some(
+        (candidate) =>
+          candidate.subject.tag === "runtimeCommand" &&
+          candidate.subject.command === "replaceSelfTransformationMode",
+      ),
+    ).toBe(false);
+  });
+
+  test("stored self-transformation Natural Weapons release consumes the procedure damage-type choice", () => {
+    const storedInvocation = storedSpellInvocation(
+      alterSelfUnitId,
+      2,
+      "selfTransformationMode",
+    );
+    const state = stateWithGlyphEffect(
+      requireCompletedGlyphEffect({
+        anchor: { kind: "surface", areaId: glyphSurfaceAnchorAreaId },
+        release: { kind: "spellGlyph", storedInvocation },
+      }),
+      glyphBattle({
+        preparedSpells: [spellRecord(alterSelfUnitId)],
+        spellSlots: [{ spellLevel: 2, count: 1 }],
+      }),
+    );
+    const initialRelease = releaseGlyphStoredSpell({
+      state,
+      profile: requireGlyphStoredSpellProfile(),
+      witness: storedSingleCreatureReleaseWitness([], spellTargetId, []),
+    });
+    const modeHole = requireReleaseHole(
+      expectNeedsReleaseHoles(initialRelease),
+      "selfTransformationModeChoice",
+    );
+    const modeOnly = releaseGlyphStoredSpell({
+      state,
+      profile: requireGlyphStoredSpellProfile(),
+      witness: storedSingleCreatureReleaseWitness(
+        [
+          {
+            kind: "selfTransformationModeChoice",
+            holeId: modeHole.holeId,
+            value: "naturalWeapons",
+          },
+        ],
+        spellTargetId,
+        [],
+      ),
+    });
+    const damageTypeHole = requireReleaseHole(
+      expectNeedsReleaseHoles(modeOnly),
+      "damageTypeChoice",
+    );
+    expect(damageTypeHole.choices).toEqual([
+      "slashing",
+      "piercing",
+      "bludgeoning",
+    ]);
+
+    const released = releaseGlyphStoredSpell({
+      state,
+      profile: requireGlyphStoredSpellProfile(),
+      witness: storedSingleCreatureReleaseWitness(
+        [
+          {
+            kind: "selfTransformationModeChoice",
+            holeId: modeHole.holeId,
+            value: "naturalWeapons",
+          },
+          {
+            kind: "damageTypeChoice",
+            holeId: damageTypeHole.holeId,
+            value: "piercing",
+          },
+        ],
+        spellTargetId,
+        [],
+      ),
+    });
+
+    expect(released.tag).toBe("released");
+    if (released.tag !== "released") return;
+    expect(
+      requireCombatant(released.state, spellTargetId).activeEffects,
+    ).toContainEqual(
+      expect.objectContaining({
+        kind: "selfTransformation",
+        sourceSpellId: alterSelfUnitId,
+        sourceCombatantId: spellCasterId,
+        mode: "naturalWeapons",
+        naturalWeaponDamageType: "piercing",
+        expiresAt: {
+          kind: "duration",
+          durationTicks: elapsedTimeTicks(600),
+        },
+      }),
+    );
+  });
+
   test.each(GLYPH_STORED_AREA_ONGOING_RELEASE_CASES)(
     "stored area ongoing Concentration release for $label lasts full duration without slot spend or ordinary Concentration",
     (releaseCase) => {
@@ -1412,9 +1603,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
             }),
             glyphBattle({
               preparedSpells: [spellRecord(releaseCase.spellId)],
-              spellSlots: [
-                { spellLevel: releaseCase.slotLevel, count: 1 },
-              ],
+              spellSlots: [{ spellLevel: releaseCase.slotLevel, count: 1 }],
             }),
           ),
         ),
@@ -1470,9 +1659,9 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
         effectKind: "readiedSpell",
       });
       expect(glyphEffects(released.state)).toEqual([]);
-      expect(casterSpellSlotExpended(released.state, releaseCase.slotLevel)).toBe(
-        priorExpended,
-      );
+      expect(
+        casterSpellSlotExpended(released.state, releaseCase.slotLevel),
+      ).toBe(priorExpended);
       expect(released.state.currentTurnResources.spellSlotUsesThisTurn).toEqual(
         priorTurnSpellSlotUses,
       );
@@ -1720,9 +1909,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
       ),
     ).toBe(false);
     expect(hasCondition(expiredTarget.conditions, "charmed")).toBe(false);
-    expect(hasCondition(expiredTarget.conditions, "incapacitated")).toBe(
-      false,
-    );
+    expect(hasCondition(expiredTarget.conditions, "incapacitated")).toBe(false);
     expect(Number(effectiveWalkSpeed(expiredTarget))).toBeGreaterThan(0);
     expect(expiredCombatants.get(spellCasterId)?.concentration).toEqual(
       readiedConcentration,
@@ -3412,13 +3599,14 @@ function storedSpellInvocation(
       candidate.access.tag === "prepared" &&
       candidate.resource.tag === "spellSlot" &&
       Number(candidate.resource.slotLevel) === slotLevel &&
-      "targeting" in candidate &&
+      ("targeting" in candidate ||
+        candidate.procedure === "selfTransformationMode") &&
       (expectedProcedure === undefined ||
         candidate.procedure === expectedProcedure),
   );
   if (invocation === undefined) {
     throw new Error(
-      `Expected prepared spell-slot invocation with targeting for ${storedSpellId}.`,
+      `Expected prepared spell-slot invocation for ${storedSpellId}.`,
     );
   }
   return invocation;
