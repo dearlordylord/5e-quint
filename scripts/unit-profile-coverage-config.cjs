@@ -140,6 +140,8 @@ const battleReadinessClosureKind = Object.freeze({
   tableSpatialDerivation: "table-spatial-derivation",
   socialKnowledgeEffect: "social-knowledge-effect",
   companionControlBoundary: "companion-control-boundary",
+  profileSubsetRemainingMechanicsClosed:
+    "profile-subset-remaining-mechanics-closed",
   outsideRuntimePresentationExploration:
     "outside-runtime-presentation-exploration",
   outsideBattleRuntime: "outside-battle-runtime",

@@ -57,6 +57,12 @@ function battleReadinessClosureSnapshot(battleReadinessClosure) {
     ? { state: "not-recorded" }
     : {
         state: "recorded",
+        ...(typeof battleReadinessClosure.source === "string"
+          ? { source: battleReadinessClosure.source }
+          : {}),
+        ...(typeof battleReadinessClosure.classificationKind === "string"
+          ? { classificationKind: battleReadinessClosure.classificationKind }
+          : {}),
         kind: battleReadinessClosure.kind,
         owner: battleReadinessClosure.owner,
         reason: battleReadinessClosure.reason,
@@ -111,10 +117,7 @@ function battleReadinessClosureSnapshotLabel(battleReadinessClosure) {
     : battleReadinessClosure.state;
 }
 
-const auditedSpellPressureLevelBands = [
-  "spell-level-3",
-  "spell-level-4",
-];
+const auditedSpellPressureLevelBands = ["spell-level-3", "spell-level-4"];
 const auditedSpellPressureLevelBandSet = new Set(
   auditedSpellPressureLevelBands,
 );
