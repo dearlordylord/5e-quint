@@ -5042,6 +5042,83 @@ function assertSeedScenarios(seedScenarioSources, rows) {
   );
 }
 
+function spellLevelFromLevelBand(levelBand) {
+  const match = /^spell-level-(\d+)$/.exec(levelBand);
+  return match == null ? undefined : Number(match[1]);
+}
+
+function classContentPath(className) {
+  return path.join(
+    root,
+    "packages/surface/content",
+    `class_${slug(className).replace(/-/g, "_")}.json`,
+  );
+}
+
+function spellAccessIncludesSpell(spells, spellId, spellLevel) {
+  return (spells ?? []).some(
+    (spell) => spell.spellId === spellId && spell.spellLevel === spellLevel,
+  );
+}
+
+function surfaceClassSpellAccessCoversRow(row) {
+  const spellLevel = spellLevelFromLevelBand(row.levelBand);
+  if (spellLevel == null) return true;
+
+  const className = String(row.className ?? "").toLowerCase();
+  const classRecord = readJson(classContentPath(className));
+  const spellcasting = classRecord.spellcasting;
+  if (spellcasting == null) return false;
+
+  if (spellLevel === 0) {
+    return (spellcasting.cantripAccess?.spellIds ?? []).includes(
+      row.candidateUnitId,
+    );
+  }
+
+  if (spellcasting.kind === "wizard_spellcasting_creation") {
+    return (
+      spellAccessIncludesSpell(
+        spellcasting.spellbookAccess?.spells,
+        row.candidateUnitId,
+        spellLevel,
+      ) &&
+      (spellcasting.preparedAccess?.spellIds ?? []).includes(
+        row.candidateUnitId,
+      )
+    );
+  }
+
+  return spellAccessIncludesSpell(
+    spellcasting.preparedAccess?.spells,
+    row.candidateUnitId,
+    spellLevel,
+  );
+}
+
+function assertSurfaceClassSpellAccessCoversMinedRows(rows) {
+  const missing = rows
+    .filter((row) => row.rowKind === "spell-unit-pressure")
+    .filter((row) => !surfaceClassSpellAccessCoversRow(row));
+
+  if (missing.length === 0) return;
+
+  throw new Error(
+    [
+      `Surface class spell access is missing ${missing.length} mined SRD level 1-5 spell-list rows.`,
+      ...missing
+        .slice(0, 40)
+        .map(
+          (row) =>
+            `- ${row.className} ${row.levelBand} ${row.candidateUnitId} (${row.rowId})`,
+        ),
+      ...(missing.length > 40
+        ? [`- ... ${missing.length - 40} more missing rows`]
+        : []),
+    ].join("\n"),
+  );
+}
+
 function escapeRegExp(value) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
@@ -5192,6 +5269,7 @@ function buildInventory() {
     .sort((left, right) => left.rowId.localeCompare(right.rowId));
   assertLocalRawSources(miningRows);
   assertSeedScenarios(seedScenarioSources, miningRows);
+  assertSurfaceClassSpellAccessCoversMinedRows(miningRows);
   const levelOneFourRows = miningRows.filter(
     (row) => row.levelBand !== "level-5" && row.levelBand !== "spell-level-3",
   );

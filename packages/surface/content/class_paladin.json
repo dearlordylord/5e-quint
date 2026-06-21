@@ -9,7 +9,7 @@
     "kind": "trained"
   },
   "className": "paladin",
-  "description": "SRD Paladin class creation, level-1 through level-3 Spellcasting facts, and the level-4 Ability Score Improvement feature grant.",
+  "description": "SRD Paladin class creation and level 1-5 Spellcasting facts, including class-list prepared Spell Access, Spell Slots, spellcasting focus facts, and the level 4 Ability Score Improvement feature grant.",
   "featureGrants": [
     {
       "level": 1,
@@ -70,7 +70,7 @@
   },
   "provenance": {
     "kind": "srd-5.2.1",
-    "section": "Classes/Paladin.md:3-24,33-38,66-124,168-188"
+    "section": "Classes/Paladin.md:3-24,33-43,66-124,172-204"
   },
   "savingThrowProficiencies": [
     "wis",
@@ -99,14 +99,6 @@
       "kind": "prepared_from_class_spell_list",
       "spells": [
         {
-          "spellId": "heroism",
-          "spellLevel": 1
-        },
-        {
-          "spellId": "searing_smite",
-          "spellLevel": 1
-        },
-        {
           "spellId": "bless",
           "spellLevel": 1
         },
@@ -119,8 +111,88 @@
           "spellLevel": 1
         },
         {
+          "spellId": "detect_evil_and_good",
+          "spellLevel": 1
+        },
+        {
+          "spellId": "detect_magic",
+          "spellLevel": 1
+        },
+        {
+          "spellId": "detect_poison_and_disease",
+          "spellLevel": 1
+        },
+        {
+          "spellId": "divine_favor",
+          "spellLevel": 1
+        },
+        {
+          "spellId": "divine_smite",
+          "spellLevel": 1
+        },
+        {
+          "spellId": "heroism",
+          "spellLevel": 1
+        },
+        {
+          "spellId": "protection_from_evil_and_good",
+          "spellLevel": 1
+        },
+        {
+          "spellId": "purify_food_and_drink",
+          "spellLevel": 1
+        },
+        {
+          "spellId": "searing_smite",
+          "spellLevel": 1
+        },
+        {
           "spellId": "shield_of_faith",
           "spellLevel": 1
+        },
+        {
+          "spellId": "aid",
+          "spellLevel": 2
+        },
+        {
+          "spellId": "find_steed",
+          "spellLevel": 2
+        },
+        {
+          "spellId": "gentle_repose",
+          "spellLevel": 2
+        },
+        {
+          "spellId": "lesser_restoration",
+          "spellLevel": 2
+        },
+        {
+          "spellId": "locate_object",
+          "spellLevel": 2
+        },
+        {
+          "spellId": "magic_weapon",
+          "spellLevel": 2
+        },
+        {
+          "spellId": "prayer_of_healing",
+          "spellLevel": 2
+        },
+        {
+          "spellId": "protection_from_poison",
+          "spellLevel": 2
+        },
+        {
+          "spellId": "shining_smite",
+          "spellLevel": 2
+        },
+        {
+          "spellId": "warding_bond",
+          "spellLevel": 2
+        },
+        {
+          "spellId": "zone_of_truth",
+          "spellLevel": 2
         }
       ]
     },
@@ -169,6 +241,32 @@
           {
             "count": 3,
             "spellLevel": 1
+          }
+        ]
+      },
+      {
+        "atLevel": 4,
+        "cantripCount": 0,
+        "preparedSpellCount": 5,
+        "spellSlots": [
+          {
+            "count": 3,
+            "spellLevel": 1
+          }
+        ]
+      },
+      {
+        "atLevel": 5,
+        "cantripCount": 0,
+        "preparedSpellCount": 6,
+        "spellSlots": [
+          {
+            "count": 4,
+            "spellLevel": 1
+          },
+          {
+            "count": 2,
+            "spellLevel": 2
           }
         ]
       }

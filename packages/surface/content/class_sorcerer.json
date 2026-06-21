@@ -3,7 +3,7 @@
     "kind": "none"
   },
   "className": "sorcerer",
-  "description": "SRD Sorcerer class creation and early progression facts, including class-list prepared Spell Access, Spell Slots, spellcasting focus facts, level-1 and level-2 class-feature grants, level-3 subclass selection, the level-4 Ability Score Improvement feature grant, and the level-5 Sorcerous Restoration feature grant.",
+  "description": "SRD Sorcerer class creation and level 1-5 progression facts, including class-list prepared Spell Access, Spell Slots, spellcasting focus facts, level-1 and level-2 class-feature grants, level-3 subclass selection, the level-4 Ability Score Improvement feature grant, and the level-5 Sorcerous Restoration feature grant.",
   "featureGrants": [
     {
       "level": 1,
@@ -41,7 +41,7 @@
   },
   "provenance": {
     "kind": "srd-5.2.1",
-    "section": "Classes/Sorcerer.md:3-24,33-76,123-129,219-259"
+    "section": "Classes/Sorcerer.md:3-24,33-45,56-76,123-129,219-319"
   },
   "savingThrowProficiencies": [
     "con",
@@ -67,15 +67,22 @@
       "choose": 4,
       "kind": "known_cantrips_from_class_spell_list",
       "spellIds": [
-        "light",
-        "prestidigitation",
-        "shocking_grasp",
-        "sorcerous_burst",
-        "fire_bolt",
         "acid_splash",
         "chill_touch",
+        "dancing_lights",
+        "elementalism",
+        "fire_bolt",
+        "light",
+        "mage_hand",
+        "mending",
+        "message",
+        "minor_illusion",
         "poison_spray",
-        "ray_of_frost"
+        "prestidigitation",
+        "ray_of_frost",
+        "shocking_grasp",
+        "sorcerous_burst",
+        "true_strike"
       ]
     },
     "featureLevel": 1,
@@ -93,7 +100,7 @@
           "spellLevel": 1
         },
         {
-          "spellId": "detect_magic",
+          "spellId": "charm_person",
           "spellLevel": 1
         },
         {
@@ -101,7 +108,47 @@
           "spellLevel": 1
         },
         {
+          "spellId": "color_spray",
+          "spellLevel": 1
+        },
+        {
+          "spellId": "comprehend_languages",
+          "spellLevel": 1
+        },
+        {
+          "spellId": "detect_magic",
+          "spellLevel": 1
+        },
+        {
+          "spellId": "disguise_self",
+          "spellLevel": 1
+        },
+        {
+          "spellId": "expeditious_retreat",
+          "spellLevel": 1
+        },
+        {
           "spellId": "false_life",
+          "spellLevel": 1
+        },
+        {
+          "spellId": "feather_fall",
+          "spellLevel": 1
+        },
+        {
+          "spellId": "fog_cloud",
+          "spellLevel": 1
+        },
+        {
+          "spellId": "grease",
+          "spellLevel": 1
+        },
+        {
+          "spellId": "ice_knife",
+          "spellLevel": 1
+        },
+        {
+          "spellId": "jump",
           "spellLevel": 1
         },
         {
@@ -117,6 +164,18 @@
           "spellLevel": 1
         },
         {
+          "spellId": "shield",
+          "spellLevel": 1
+        },
+        {
+          "spellId": "silent_image",
+          "spellLevel": 1
+        },
+        {
+          "spellId": "sleep",
+          "spellLevel": 1
+        },
+        {
           "spellId": "thunderwave",
           "spellLevel": 1
         },
@@ -125,8 +184,184 @@
           "spellLevel": 2
         },
         {
+          "spellId": "blindness_deafness",
+          "spellLevel": 2
+        },
+        {
+          "spellId": "blur",
+          "spellLevel": 2
+        },
+        {
+          "spellId": "darkness",
+          "spellLevel": 2
+        },
+        {
+          "spellId": "darkvision",
+          "spellLevel": 2
+        },
+        {
+          "spellId": "detect_thoughts",
+          "spellLevel": 2
+        },
+        {
+          "spellId": "dragons_breath",
+          "spellLevel": 2
+        },
+        {
+          "spellId": "enhance_ability",
+          "spellLevel": 2
+        },
+        {
+          "spellId": "enlarge_reduce",
+          "spellLevel": 2
+        },
+        {
+          "spellId": "flame_blade",
+          "spellLevel": 2
+        },
+        {
+          "spellId": "flaming_sphere",
+          "spellLevel": 2
+        },
+        {
+          "spellId": "gust_of_wind",
+          "spellLevel": 2
+        },
+        {
+          "spellId": "hold_person",
+          "spellLevel": 2
+        },
+        {
+          "spellId": "invisibility",
+          "spellLevel": 2
+        },
+        {
+          "spellId": "knock",
+          "spellLevel": 2
+        },
+        {
+          "spellId": "levitate",
+          "spellLevel": 2
+        },
+        {
+          "spellId": "magic_weapon",
+          "spellLevel": 2
+        },
+        {
+          "spellId": "mirror_image",
+          "spellLevel": 2
+        },
+        {
+          "spellId": "misty_step",
+          "spellLevel": 2
+        },
+        {
           "spellId": "scorching_ray",
           "spellLevel": 2
+        },
+        {
+          "spellId": "see_invisibility",
+          "spellLevel": 2
+        },
+        {
+          "spellId": "shatter",
+          "spellLevel": 2
+        },
+        {
+          "spellId": "spider_climb",
+          "spellLevel": 2
+        },
+        {
+          "spellId": "suggestion",
+          "spellLevel": 2
+        },
+        {
+          "spellId": "web",
+          "spellLevel": 2
+        },
+        {
+          "spellId": "blink",
+          "spellLevel": 3
+        },
+        {
+          "spellId": "clairvoyance",
+          "spellLevel": 3
+        },
+        {
+          "spellId": "counterspell",
+          "spellLevel": 3
+        },
+        {
+          "spellId": "daylight",
+          "spellLevel": 3
+        },
+        {
+          "spellId": "dispel_magic",
+          "spellLevel": 3
+        },
+        {
+          "spellId": "fear",
+          "spellLevel": 3
+        },
+        {
+          "spellId": "fireball",
+          "spellLevel": 3
+        },
+        {
+          "spellId": "fly",
+          "spellLevel": 3
+        },
+        {
+          "spellId": "gaseous_form",
+          "spellLevel": 3
+        },
+        {
+          "spellId": "haste",
+          "spellLevel": 3
+        },
+        {
+          "spellId": "hypnotic_pattern",
+          "spellLevel": 3
+        },
+        {
+          "spellId": "lightning_bolt",
+          "spellLevel": 3
+        },
+        {
+          "spellId": "major_image",
+          "spellLevel": 3
+        },
+        {
+          "spellId": "protection_from_energy",
+          "spellLevel": 3
+        },
+        {
+          "spellId": "sleet_storm",
+          "spellLevel": 3
+        },
+        {
+          "spellId": "slow",
+          "spellLevel": 3
+        },
+        {
+          "spellId": "stinking_cloud",
+          "spellLevel": 3
+        },
+        {
+          "spellId": "tongues",
+          "spellLevel": 3
+        },
+        {
+          "spellId": "vampiric_touch",
+          "spellLevel": 3
+        },
+        {
+          "spellId": "water_breathing",
+          "spellLevel": 3
+        },
+        {
+          "spellId": "water_walk",
+          "spellLevel": 3
         }
       ]
     },
@@ -179,6 +414,40 @@
           {
             "count": 2,
             "spellLevel": 2
+          }
+        ]
+      },
+      {
+        "atLevel": 4,
+        "cantripCount": 5,
+        "preparedSpellCount": 7,
+        "spellSlots": [
+          {
+            "count": 4,
+            "spellLevel": 1
+          },
+          {
+            "count": 3,
+            "spellLevel": 2
+          }
+        ]
+      },
+      {
+        "atLevel": 5,
+        "cantripCount": 5,
+        "preparedSpellCount": 9,
+        "spellSlots": [
+          {
+            "count": 4,
+            "spellLevel": 1
+          },
+          {
+            "count": 3,
+            "spellLevel": 2
+          },
+          {
+            "count": 2,
+            "spellLevel": 3
           }
         ]
       }

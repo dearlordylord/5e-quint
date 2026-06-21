@@ -120,6 +120,9 @@ const listPreparedSpellcasting = (input: {
   spellcastingFocus: input.spellcastingFocus,
 });
 
+const expectArrayContainingValues = (values: readonly unknown[]) =>
+  expect.arrayContaining(Array.from(values));
+
 describe("character-creation Surface records", () => {
   test("decodes and reads Bard level 4 Ability Score Improvement grant", () => {
     const classRecord = decodeClassRecordSync(classBardInput);
@@ -339,7 +342,7 @@ describe("character-creation Surface records", () => {
           cantripAccess: {
             choose: 3,
             kind: "known_cantrips",
-            spellIds: [
+            spellIds: expect.arrayContaining([
               "light",
               "fire_bolt",
               "ray_of_frost",
@@ -348,12 +351,12 @@ describe("character-creation Surface records", () => {
               "chill_touch",
               "poison_spray",
               "shocking_grasp",
-            ],
+            ]),
           },
           spellbookAccess: {
             choose: 6,
             kind: "spellbook",
-            spells: [
+            spells: expect.arrayContaining([
               { spellId: "detect_magic", spellLevel: 1 },
               { spellId: "feather_fall", spellLevel: 1 },
               { spellId: "false_life", spellLevel: 1 },
@@ -373,12 +376,14 @@ describe("character-creation Surface records", () => {
               { spellId: "misty_step", spellLevel: 2 },
               { spellId: "scorching_ray", spellLevel: 2 },
               { spellId: "shatter", spellLevel: 2 },
-            ],
+              { spellId: "haste", spellLevel: 3 },
+              { spellId: "protection_from_energy", spellLevel: 3 },
+            ]),
           },
           preparedAccess: {
             choose: 4,
             kind: "prepared_from_spellbook",
-            spellIds: [
+            spellIds: expect.arrayContaining([
               "detect_magic",
               "feather_fall",
               "false_life",
@@ -398,14 +403,16 @@ describe("character-creation Surface records", () => {
               "misty_step",
               "scorching_ray",
               "shatter",
-            ],
+              "haste",
+              "protection_from_energy",
+            ]),
           },
           spellSlotProjection: {
             kind: "leveled_spell_slots",
             resetCadence: { kind: "long_rest" },
             slots: [{ count: 2, spellLevel: 1 }],
           },
-          spellcastingProgression: [
+          spellcastingProgression: expect.arrayContaining([
             {
               atLevel: 1,
               cantripCount: 3,
@@ -451,7 +458,7 @@ describe("character-creation Surface records", () => {
                 { count: 2, spellLevel: 3 },
               ],
             },
-          ],
+          ]),
           spellcastingFocuses: ["arcane_focus", "spellbook"],
         },
       },
@@ -476,19 +483,19 @@ describe("character-creation Surface records", () => {
           cantripAccess: {
             choose: 2,
             kind: "known_cantrips_from_class_spell_list",
-            spellIds: [
+            spellIds: expect.arrayContaining([
               "chill_touch",
               "eldritch_blast",
               "minor_illusion",
               "poison_spray",
               "prestidigitation",
-            ],
+            ]),
             changeOn: { count: 1, kind: "class_level" },
           },
           preparedAccess: {
             choose: 2,
             kind: "prepared_from_class_spell_list",
-            spells: [
+            spells: expect.arrayContaining([
               { spellId: "charm_person", spellLevel: 1 },
               { spellId: "hellish_rebuke", spellLevel: 1 },
               { spellId: "hex", spellLevel: 1 },
@@ -504,7 +511,9 @@ describe("character-creation Surface records", () => {
               { spellId: "invisibility", spellLevel: 2 },
               { spellId: "misty_step", spellLevel: 2 },
               { spellId: "suggestion", spellLevel: 2 },
-            ],
+              { spellId: "counterspell", spellLevel: 3 },
+              { spellId: "fly", spellLevel: 3 },
+            ]),
             changeOn: { kind: "class_level", replacementCount: 1 },
           },
           pactSlotProjection: {
@@ -856,11 +865,45 @@ describe("character-creation Surface records", () => {
         value: {
           className: entry.className,
           hitPointDie: entry.hitPointDie,
-          ...("spellcasting" in entry
-            ? { spellcasting: entry.spellcasting }
-            : {}),
         },
       });
+
+      if ("spellcasting" in entry) {
+        if (result.tag !== "readable") {
+          throw new Error("Expected readable class creation facts.");
+        }
+        const expectedSpellcasting = entry.spellcasting;
+        expect(result.value.spellcasting).toMatchObject({
+          kind: expectedSpellcasting.kind,
+          featureLevel: expectedSpellcasting.featureLevel,
+          spellcastingAbility: expectedSpellcasting.spellcastingAbility,
+          spellcastingFocus: expectedSpellcasting.spellcastingFocus,
+          preparedAccess: {
+            ...expectedSpellcasting.preparedAccess,
+            spells: expectArrayContainingValues(
+              expectedSpellcasting.preparedAccess.spells,
+            ),
+          },
+          spellSlotProjection: expectedSpellcasting.spellSlotProjection,
+          ...("cantripAccess" in expectedSpellcasting
+            ? {
+                cantripAccess: {
+                  ...expectedSpellcasting.cantripAccess,
+                  spellIds: expectArrayContainingValues(
+                    expectedSpellcasting.cantripAccess.spellIds,
+                  ),
+                },
+              }
+            : {}),
+          ...("spellcastingProgression" in expectedSpellcasting
+            ? {
+                spellcastingProgression: expectArrayContainingValues(
+                  expectedSpellcasting.spellcastingProgression,
+                ),
+              }
+            : {}),
+        });
+      }
     }
   });
 

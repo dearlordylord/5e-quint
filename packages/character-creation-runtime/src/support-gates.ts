@@ -196,6 +196,7 @@ const SUPPORTED_PROGRESSIONS = [
   supportedSameClassSecondLevelProgression(SRD_SORCERER_CLASS_UNIT_ID),
   supportedSameClassSecondLevelProgression(WIDTH_CLASS_WIZARD_UNIT_ID),
   supportedSameClassProgression(WIDTH_CLASS_WIZARD_UNIT_ID, 4),
+  supportedSameClassProgression(WIDTH_CLASS_WIZARD_UNIT_ID, 5),
   supportedSameClassProgression(SRD_ROGUE_CLASS_UNIT_ID, 6),
   ...SRD_LEVEL_ONE_CLASS_UNIT_IDS.filter(
     (classUnitId) => classUnitId !== PHASE1_CLASS_FIGHTER_UNIT_ID,
@@ -406,58 +407,6 @@ export const CHARACTER_CREATION_SUPPORT_PROFILE = {
       creationChoiceOptionId,
     ),
     [WEAPON_MASTERY_OPTIONS_CHOICE_KEY]: SUPPORTED_WEAPON_MASTERY_OPTION_IDS,
-    [WIZARD_CANTRIP_CHOICE_KEY]: [
-      creationChoiceOptionId("light"),
-      creationChoiceOptionId("fire_bolt"),
-      creationChoiceOptionId("ray_of_frost"),
-      creationChoiceOptionId("minor_illusion"),
-      creationChoiceOptionId("acid_splash"),
-      creationChoiceOptionId("chill_touch"),
-      creationChoiceOptionId("poison_spray"),
-      creationChoiceOptionId("shocking_grasp"),
-    ],
-    [WIZARD_SPELLBOOK_CHOICE_KEY]: [
-      creationChoiceOptionId("detect_magic"),
-      creationChoiceOptionId("feather_fall"),
-      creationChoiceOptionId("false_life"),
-      creationChoiceOptionId("mage_armor"),
-      creationChoiceOptionId("magic_missile"),
-      creationChoiceOptionId("ray_of_sickness"),
-      creationChoiceOptionId("shield"),
-      creationChoiceOptionId("sleep"),
-      creationChoiceOptionId("thunderwave"),
-      creationChoiceOptionId("burning_hands"),
-      creationChoiceOptionId("chromatic_orb"),
-      creationChoiceOptionId("acid_arrow"),
-      creationChoiceOptionId("continual_flame"),
-      creationChoiceOptionId("darkness"),
-      creationChoiceOptionId("gust_of_wind"),
-      creationChoiceOptionId("mirror_image"),
-      creationChoiceOptionId("misty_step"),
-      creationChoiceOptionId("scorching_ray"),
-      creationChoiceOptionId("shatter"),
-    ],
-    [WIZARD_PREPARED_SPELL_CHOICE_KEY]: [
-      creationChoiceOptionId("detect_magic"),
-      creationChoiceOptionId("feather_fall"),
-      creationChoiceOptionId("false_life"),
-      creationChoiceOptionId("mage_armor"),
-      creationChoiceOptionId("magic_missile"),
-      creationChoiceOptionId("ray_of_sickness"),
-      creationChoiceOptionId("shield"),
-      creationChoiceOptionId("sleep"),
-      creationChoiceOptionId("thunderwave"),
-      creationChoiceOptionId("burning_hands"),
-      creationChoiceOptionId("chromatic_orb"),
-      creationChoiceOptionId("acid_arrow"),
-      creationChoiceOptionId("continual_flame"),
-      creationChoiceOptionId("darkness"),
-      creationChoiceOptionId("gust_of_wind"),
-      creationChoiceOptionId("mirror_image"),
-      creationChoiceOptionId("misty_step"),
-      creationChoiceOptionId("scorching_ray"),
-      creationChoiceOptionId("shatter"),
-    ],
     [EQUIPMENT_PURCHASE_CHOICE_KEY]: SUPPORTED_PURCHASE_OPTION_IDS,
   },
   backgroundUnitIds: SUPPORTED_BACKGROUND_UNIT_IDS,
@@ -554,7 +503,10 @@ export function supportedHoleOptionIds(
   if (
     hole.kind === "choice" &&
     (source.choiceKey === CLASS_CANTRIP_CHOICE_KEY ||
-      source.choiceKey === CLASS_PREPARED_SPELL_CHOICE_KEY)
+      source.choiceKey === CLASS_PREPARED_SPELL_CHOICE_KEY ||
+      source.choiceKey === WIZARD_CANTRIP_CHOICE_KEY ||
+      source.choiceKey === WIZARD_SPELLBOOK_CHOICE_KEY ||
+      source.choiceKey === WIZARD_PREPARED_SPELL_CHOICE_KEY)
   ) {
     return hole.options.map((option) => option.optionId);
   }

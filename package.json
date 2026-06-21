@@ -19,11 +19,12 @@
     "cleanroom-refresh:package": "node scripts/package-cleanroom-refresh.cjs",
     "cleanroom-harness:check": "node scripts/check-cleanroom-harness.cjs --self-test",
     "level-lt4-choice-closure:check": "node scripts/level-lt4-choice-closure-check.cjs",
+    "sdk-raw-integration-inventory:check": "node scripts/sdk-raw-integration-inventory.cjs",
     "unit-profile-coverage:check": "node scripts/unit-profile-coverage-check.cjs",
     "unit-profile-coverage:check:self-test": "node scripts/unit-profile-coverage-check.cjs --self-test",
     "lint": "pnpm --filter @dnd/mcp lint && pnpm --filter @dnd/app lint",
     "circular": "pnpm --filter @dnd/mcp circular && pnpm --filter @dnd/app circular",
-    "quality": "pnpm check:authored-id-dispatch && pnpm check:character-sheet-runtime-split && pnpm check:qa-generated-identity && pnpm check:mbt-driver-closure && pnpm rules-kernel-coverage:check && pnpm cleanroom-branch-coverage:check && pnpm cleanroom-sync:check && pnpm cleanroom-scaffold:check && pnpm cleanroom-harness:check && pnpm unit-profile-coverage:check && pnpm lint && pnpm circular && pnpm typecheck",
+    "quality": "pnpm check:authored-id-dispatch && pnpm check:character-sheet-runtime-split && pnpm check:qa-generated-identity && pnpm check:mbt-driver-closure && pnpm rules-kernel-coverage:check && pnpm cleanroom-branch-coverage:check && pnpm cleanroom-sync:check && pnpm cleanroom-scaffold:check && pnpm cleanroom-harness:check && pnpm unit-profile-coverage:check && pnpm sdk-raw-integration-inventory:check && pnpm lint && pnpm circular && pnpm typecheck",
     "typecheck": "turbo typecheck",
     "test": "turbo test"
   },

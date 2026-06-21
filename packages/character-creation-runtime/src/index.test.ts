@@ -284,6 +284,15 @@ function finalizedWarlockBuild(draftId: string): CharacterBuild {
     draft: completeSupportedProgressionDraft({
       draftId,
       progression: testProgression("class_warlock", 1),
+      preferredOptionIdsBySource: {
+        [testUnitChoiceSourceKey(
+          "class_warlock",
+          CLASS_PREPARED_SPELL_CHOICE_KEY,
+        )]: [
+          creationChoiceOptionId("charm_person"),
+          creationChoiceOptionId("hellish_rebuke"),
+        ],
+      },
     }),
     unitLibrary,
   });
@@ -867,6 +876,7 @@ describe("character creation hole discovery", () => {
           "12:class_wizard|12:class_wizard|12:class_wizard:level_3:fixed_hp_gain",
           "12:class_wizard|12:class_wizard:level_2:fixed_hp_gain",
           "12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard:level_4:fixed_hp_gain",
+          "12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard:level_5:fixed_hp_gain",
           "12:class_wizard|13:class_fighter:level_2:fixed_hp_gain",
         ],
       ],
@@ -1223,10 +1233,7 @@ describe("character creation hole discovery", () => {
       expect(
         characterBuildFeatureUnitIds(paladinFeatBuild.build, unitLibrary),
       ).toEqual(
-        expect.arrayContaining([
-          "paladin_fighting_style",
-          selectedFeatUnitId,
-        ]),
+        expect.arrayContaining(["paladin_fighting_style", selectedFeatUnitId]),
       );
       expect(
         selectedBuildClassChoiceUnitIds(
@@ -3550,7 +3557,10 @@ describe("character creation finalization", () => {
 
     expect(forestFinalization.tag).toBe("ready");
     expect(rockFinalization.tag).toBe("ready");
-    if (forestFinalization.tag !== "ready" || rockFinalization.tag !== "ready") {
+    if (
+      forestFinalization.tag !== "ready" ||
+      rockFinalization.tag !== "ready"
+    ) {
       return;
     }
 
@@ -3961,10 +3971,7 @@ describe("character creation finalization", () => {
           (ref) => ref.unitId,
         ),
       ).toEqual(
-        expect.arrayContaining([
-          "species_human_versatile",
-          featUnitId,
-        ]),
+        expect.arrayContaining(["species_human_versatile", featUnitId]),
       );
     },
   );
@@ -4277,6 +4284,11 @@ describe("character creation finalization", () => {
     const clericProtector = completeSupportedProgressionDraft({
       draftId: "draft:srd-level-1-cleric-protector-feature-choice",
       progression: testProgression("class_cleric", 1),
+      preferredOptionIdsBySource: {
+        [testUnitChoiceSourceKey("cleric_divine_order", "divine_order")]: [
+          creationChoiceOptionId("protector"),
+        ],
+      },
     });
     const clericThaumaturge = completeSupportedProgressionDraft({
       draftId: "draft:srd-level-1-cleric-thaumaturge-feature-choice",
@@ -4288,7 +4300,7 @@ describe("character creation finalization", () => {
         [testUnitChoiceSourceKey(
           "cleric_divine_order",
           CLASS_CANTRIP_CHOICE_KEY,
-        )]: [creationChoiceOptionId("light")],
+        )]: [creationChoiceOptionId("resistance")],
       },
     });
     const druidMagician = completeSupportedProgressionDraft({
@@ -4329,7 +4341,7 @@ describe("character creation finalization", () => {
         "cleric_divine_order",
         CLASS_CANTRIP_CHOICE_KEY,
       ),
-    ).toEqual(["light"]);
+    ).toEqual(["resistance"]);
     expect(
       selectedChoiceOptionIds(
         druidMagician,
@@ -4682,6 +4694,17 @@ describe("character creation finalization", () => {
     const paladinDraft = completeSupportedProgressionDraft({
       draftId: "draft:srd-level-3-class_paladin-spellcasting",
       progression: testProgression("class_paladin", 3),
+      preferredOptionIdsBySource: {
+        [testUnitChoiceSourceKey(
+          "class_paladin",
+          CLASS_PREPARED_SPELL_CHOICE_KEY,
+        )]: [
+          creationChoiceOptionId("heroism"),
+          creationChoiceOptionId("searing_smite"),
+          creationChoiceOptionId("bless"),
+          creationChoiceOptionId("command"),
+        ],
+      },
     });
     const paladinResult = finalizeCharacterDraft({
       draft: paladinDraft,
@@ -4710,6 +4733,17 @@ describe("character creation finalization", () => {
     const warlockDraft = completeSupportedProgressionDraft({
       draftId: "draft:srd-level-3-class_warlock-pact-magic",
       progression: testProgression("class_warlock", 3),
+      preferredOptionIdsBySource: {
+        [testUnitChoiceSourceKey(
+          "class_warlock",
+          CLASS_PREPARED_SPELL_CHOICE_KEY,
+        )]: [
+          creationChoiceOptionId("charm_person"),
+          creationChoiceOptionId("hellish_rebuke"),
+          creationChoiceOptionId("hex"),
+          creationChoiceOptionId("mirror_image"),
+        ],
+      },
     });
     const warlockResult = finalizeCharacterDraft({
       draft: warlockDraft,
@@ -6177,6 +6211,14 @@ describe("character creation finalization", () => {
           creationChoiceOptionId("guidance"),
           creationChoiceOptionId("sacred_flame"),
         ],
+        [testUnitChoiceSourceKey(
+          "class_paladin",
+          CLASS_PREPARED_SPELL_CHOICE_KEY,
+        )]: [
+          creationChoiceOptionId("heroism"),
+          creationChoiceOptionId("searing_smite"),
+          creationChoiceOptionId("bless"),
+        ],
       },
     });
     const finalized = finalizeCharacterDraft({ draft, unitLibrary });
@@ -6253,6 +6295,14 @@ describe("character creation finalization", () => {
         )]: [
           creationChoiceOptionId("guidance"),
           creationChoiceOptionId("starry_wisp"),
+        ],
+        [testUnitChoiceSourceKey(
+          "class_ranger",
+          CLASS_PREPARED_SPELL_CHOICE_KEY,
+        )]: [
+          creationChoiceOptionId("cure_wounds"),
+          creationChoiceOptionId("ensnaring_strike"),
+          creationChoiceOptionId("longstrider"),
         ],
       },
     });
@@ -6671,10 +6721,7 @@ describe("character creation finalization", () => {
           ),
         ),
       ),
-    ).toEqual([
-      "ability_score:str:+1:max20",
-      "ability_score:dex:+1:max20",
-    ]);
+    ).toEqual(["ability_score:str:+1:max20", "ability_score:dex:+1:max20"]);
   });
 
   test("rejects selected Grappler below Level 4", () => {
@@ -9587,7 +9634,11 @@ function supportedFillForHole(
     selectedOptionIds.length < choiceCardinalityBounds(hole.cardinality).max
   ) {
     throw new Error(
-      `Not enough supported options for discovered test hole: ${hole.holeId}`,
+      `Not enough supported options for discovered test hole: ${hole.holeId}; preferred=${JSON.stringify(
+        preferredOptionIds,
+      )}; supported=${JSON.stringify(supportedOptionIds)}; holeOptions=${JSON.stringify(
+        holeOptionIds,
+      )}`,
     );
   }
 

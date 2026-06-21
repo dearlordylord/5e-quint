@@ -9178,23 +9178,22 @@ describe("SRD Unit catalog boundary", () => {
     });
   });
 
-  test("rejects SRD collections with unresolved class spell Unit refs", () => {
-    const malformedCollection = defineSrdUnitCollection({
+  test("allows class spell access without admitting selected Spell Units", () => {
+    const collectionWithoutRayOfFrost = defineSrdUnitCollection({
       units: srdUnitCollection.units.filter(
         (unit) => unit.id !== "ray_of_frost",
       ),
     });
-
-    expect(buildUnitCatalog({ collections: [malformedCollection] })).toEqual({
-      tag: "invalid",
-      issues: [
-        {
-          code: "unknownUnitReference",
-          referringUnitId: "class_wizard",
-          referencedUnitId: "ray_of_frost",
-        },
-      ],
+    const result = buildUnitCatalog({
+      collections: [collectionWithoutRayOfFrost],
     });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag === "ok") {
+      expect(
+        result.catalog.listUnits().some((unit) => unit.id === "ray_of_frost"),
+      ).toBe(false);
+    }
   });
 
   test("rejects class subclass choices that point at a different class subclass", () => {

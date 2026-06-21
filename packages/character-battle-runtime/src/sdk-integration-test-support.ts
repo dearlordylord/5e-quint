@@ -19,11 +19,25 @@ import {
 } from "@dnd/battle-runtime";
 import {
   abilityScoreAssignment,
+  characterDraftId,
   characterEquipmentItemId,
   characterEquipmentItemUnitId,
+  choiceCardinalityBounds,
   classUnitId,
+  createCharacterDraft,
+  creationChoiceOptionId,
+  discoverCreationHoles,
+  fillCreationHoles,
+  finalizeCharacterDraft,
+  progressionOptionId,
   sorcererMetamagicOptionId,
   type CharacterBuild,
+  type CharacterDraft,
+  type CharacterProgression,
+  type CreationBatchFillResult,
+  type CreationChoiceOptionId,
+  type CreationFill,
+  type CreationHole,
 } from "@dnd/character-creation-runtime";
 import {
   characterSheetId,
@@ -213,32 +227,384 @@ export function levelFiveMartialBuild(input: {
 export function levelFiveWizardBuild(input: {
   readonly preparedSpells: readonly UnitRecord["id"][];
 }): CharacterBuild {
-  return levelFiveBaseBuild({
-    classUnitId: "class_wizard",
-    abilityScores: { str: 8, dex: 14, con: 14, int: 16, wis: 10, cha: 10 },
-    spellcasting: {
-      sources: [
-        {
-          sourceUnitId: "class_wizard",
-          spellcastingAbility: "int",
-          cantrips: [],
-          spellbook: input.preparedSpells,
-          preparedSpells: input.preparedSpells,
-          spellcastingFocuses: ["arcane_focus"],
-        },
-      ],
-      slotPools: {
-        spellcasting: {
-          kind: "spellcasting",
-          slots: [
-            { spellLevel: 1, count: 4 },
-            { spellLevel: 2, count: 3 },
-            { spellLevel: 3, count: 2 },
-          ],
-        },
-      },
-    },
+  const wizardChoices = levelFiveWizardChoices(input.preparedSpells);
+  let draft = createCharacterDraft({
+    unitLibrary,
+    draftId: characterDraftId(
+      `draft:l5-sdk-wizard-${input.preparedSpells.join("-")}`,
+    ),
   });
+
+  for (let pass = 0; pass < 8; pass += 1) {
+    const holes = discoverCreationHoles({ draft, unitLibrary });
+    if (holes.length === 0) {
+      const result = finalizeCharacterDraft({ draft, unitLibrary });
+      if (result.tag !== "ready") {
+        throw new Error(
+          `Expected finalized level-5 Wizard build, received ${creationFinalizationResultSummary(result)}`,
+        );
+      }
+      return result.build;
+    }
+
+    draft = requireAcceptedCreationBatch(
+      fillCreationHoles({
+        draft,
+        unitLibrary,
+        expectedRevision: draft.revision,
+        fills: holes.map((hole) =>
+          levelFiveWizardCreationFill(hole, wizardChoices),
+        ),
+      }),
+    );
+  }
+
+  throw new Error(
+    `Level-5 Wizard SDK fixture still has creation holes after iterative fills: ${JSON.stringify(
+      discoverCreationHoles({ draft, unitLibrary }).map((hole) => hole.holeId),
+    )}`,
+  );
+}
+
+type LevelFiveWizardChoices = {
+  readonly classSpellbook: readonly UnitRecord["id"][];
+  readonly featureSpellbook: readonly UnitRecord["id"][];
+  readonly preparedSpells: readonly UnitRecord["id"][];
+};
+
+const levelFiveWizardCantrips = [
+  "light",
+  "fire_bolt",
+  "ray_of_frost",
+  "minor_illusion",
+] as const satisfies ReadonlyArray<UnitRecord["id"]>;
+
+const levelFiveWizardBaseClassSpellbook = [
+  "detect_magic",
+  "feather_fall",
+  "false_life",
+  "mage_armor",
+  "magic_missile",
+  "ray_of_sickness",
+  "shield",
+  "sleep",
+  "thunderwave",
+  "burning_hands",
+  "chromatic_orb",
+  "acid_arrow",
+  "darkness",
+  "misty_step",
+] as const satisfies ReadonlyArray<UnitRecord["id"]>;
+
+const levelFiveWizardBasePreparedSpells = [
+  "detect_magic",
+  "feather_fall",
+  "false_life",
+  "mage_armor",
+  "magic_missile",
+  "ray_of_sickness",
+  "shield",
+  "thunderwave",
+  "burning_hands",
+] as const satisfies ReadonlyArray<UnitRecord["id"]>;
+
+const levelFiveWizardFeatureSpellbook = [
+  "continual_flame",
+  "shatter",
+] as const satisfies ReadonlyArray<UnitRecord["id"]>;
+const levelFiveWizardFeatureSpellbookIds: ReadonlySet<UnitRecord["id"]> =
+  new Set(levelFiveWizardFeatureSpellbook);
+
+function levelFiveWizardChoices(
+  requiredPreparedSpells: readonly UnitRecord["id"][],
+): LevelFiveWizardChoices {
+  if (
+    requiredPreparedSpells.some((spellId) =>
+      levelFiveWizardFeatureSpellbookIds.has(spellId),
+    )
+  ) {
+    throw new Error(
+      "Level-5 Wizard tracer fixture required spells must not overlap Evocation Savant feature spellbook choices.",
+    );
+  }
+  const classSpellbook = chooseDistinctOptions(
+    requiredPreparedSpells,
+    levelFiveWizardBaseClassSpellbook,
+    14,
+  );
+  return {
+    classSpellbook,
+    featureSpellbook: levelFiveWizardFeatureSpellbook,
+    preparedSpells: chooseDistinctOptions(
+      requiredPreparedSpells,
+      levelFiveWizardBasePreparedSpells.filter((spellId) =>
+        classSpellbook.includes(spellId),
+      ),
+      9,
+    ),
+  };
+}
+
+function chooseDistinctOptions<T>(
+  required: readonly T[],
+  fallback: readonly T[],
+  count: number,
+): readonly T[] {
+  const selected: T[] = [];
+  for (const option of [...required, ...fallback]) {
+    if (!selected.includes(option)) {
+      selected.push(option);
+    }
+    if (selected.length === count) return selected;
+  }
+  throw new Error(
+    `Expected ${count} distinct Wizard fixture options, found ${selected.length}.`,
+  );
+}
+
+function levelFiveWizardProgression(): CharacterProgression {
+  const wizardClassUnitId = classUnitId("class_wizard");
+  return {
+    startingClass: wizardClassUnitId,
+    advancements: Array.from({ length: 4 }, () => ({
+      classUnitId: wizardClassUnitId,
+      hitPointRule: { tag: "fixedHigherLevelGain" as const },
+    })),
+  };
+}
+
+function levelFiveWizardCreationFill(
+  hole: CreationHole,
+  choices: LevelFiveWizardChoices,
+): CreationFill {
+  if (hole.kind === "abilityScores") {
+    return {
+      kind: "abilityScores",
+      holeId: hole.holeId,
+      method: "standardArray",
+      value: requireRight(
+        abilityScoreAssignment({
+          str: 8,
+          dex: 14,
+          con: 13,
+          int: 15,
+          wis: 10,
+          cha: 12,
+        }),
+      ),
+    };
+  }
+
+  const optionIds = hole.options.map((option) => option.optionId);
+  const preference = levelFiveWizardChoicePreference(hole, choices);
+  if (preference === undefined) {
+    throw new Error(
+      `No level-5 Wizard fixture preference for hole ${hole.holeId}.`,
+    );
+  }
+  const preferredOptionIds =
+    preference.kind === "any" ? optionIds : preference.optionIds;
+  const holeOptionIds = new Set(optionIds);
+  const missingOptionIds = preferredOptionIds.filter(
+    (optionId) => !holeOptionIds.has(optionId),
+  );
+  if (missingOptionIds.length > 0) {
+    throw new Error(
+      `Level-5 Wizard fixture hole ${hole.holeId} is missing preferred options ${JSON.stringify(
+        missingOptionIds,
+      )}.`,
+    );
+  }
+
+  const maxChoices = choiceCardinalityBounds(hole.cardinality).max;
+  if (
+    preference.kind === "specific" &&
+    preferredOptionIds.length !== maxChoices
+  ) {
+    throw new Error(
+      `Level-5 Wizard fixture hole ${hole.holeId} expected ${maxChoices} preferred options, received ${preferredOptionIds.length}.`,
+    );
+  }
+  const selectedOptionIds = preferredOptionIds.slice(0, maxChoices);
+
+  if (selectedOptionIds.length !== maxChoices) {
+    throw new Error(
+      `Not enough options for level-5 Wizard fixture hole ${hole.holeId}.`,
+    );
+  }
+
+  return {
+    kind: "choice",
+    holeId: hole.holeId,
+    optionIds: selectedOptionIds,
+  };
+}
+
+type LevelFiveWizardChoicePreference =
+  | {
+      readonly kind: "specific";
+      readonly optionIds: readonly CreationChoiceOptionId[];
+    }
+  | { readonly kind: "any" };
+
+function levelFiveWizardChoicePreference(
+  hole: Extract<CreationHole, { readonly kind: "choice" }>,
+  choices: LevelFiveWizardChoices,
+): LevelFiveWizardChoicePreference | undefined {
+  const source = hole.source;
+  if (source.tag === "draft") {
+    if (source.path === "draft.progression.initial") {
+      return {
+        kind: "specific",
+        optionIds: [progressionOptionId(levelFiveWizardProgression())],
+      };
+    }
+    if (source.path === "draft.background") {
+      return {
+        kind: "specific",
+        optionIds: [creationChoiceOptionId("background_criminal")],
+      };
+    }
+    if (source.path === "draft.species") {
+      return {
+        kind: "specific",
+        optionIds: [creationChoiceOptionId("species_orc")],
+      };
+    }
+    if (source.path === "draft.languages") {
+      return {
+        kind: "specific",
+        optionIds: [
+          creationChoiceOptionId("Dwarvish"),
+          creationChoiceOptionId("Goblin"),
+        ],
+      };
+    }
+    if (source.path === "draft.alignment") {
+      return {
+        kind: "specific",
+        optionIds: [creationChoiceOptionId("lawful_good")],
+      };
+    }
+    return undefined;
+  }
+
+  if (source.tag === "loadout") {
+    return { kind: "any" };
+  }
+
+  if (source.tag !== "unitChoice") {
+    return undefined;
+  }
+
+  if (
+    source.unitId === "class_wizard" &&
+    source.choiceKey === "equipment_purchase"
+  ) {
+    return { kind: "any" };
+  }
+
+  const optionIds = levelFiveWizardUnitChoicePreferredOptionIds(
+    source.unitId,
+    source.choiceKey,
+    choices,
+  )?.map(creationChoiceOptionId);
+  return optionIds === undefined ? undefined : { kind: "specific", optionIds };
+}
+
+function levelFiveWizardUnitChoicePreferredOptionIds(
+  unitId: UnitRecord["id"],
+  choiceKey: string,
+  choices: LevelFiveWizardChoices,
+): readonly UnitRecord["id"][] | undefined {
+  if (unitId === "class_wizard") {
+    if (choiceKey === "class_skill_proficiency_choice") {
+      return ["arcana", "history"];
+    }
+    if (choiceKey === "wizard_cantrip_choices") {
+      return levelFiveWizardCantrips;
+    }
+    if (choiceKey === "wizard_spellbook_choices") {
+      return choices.classSpellbook;
+    }
+    if (choiceKey === "wizard_prepared_spell_choices") {
+      return choices.preparedSpells;
+    }
+    if (choiceKey === "class_subclass_choice") {
+      return ["subclass_wizard_evoker"];
+    }
+    if (choiceKey === "class_equipment_choice") {
+      return ["option_b"];
+    }
+  }
+
+  if (
+    unitId === "wizard_evocation_savant" &&
+    choiceKey === "wizard_spellbook_choices"
+  ) {
+    return choices.featureSpellbook;
+  }
+
+  if (
+    unitId === "wizard_scholar" &&
+    choiceKey === "class_feature_proficiency_choice"
+  ) {
+    return ["arcana"];
+  }
+
+  if (unitId === "background_criminal") {
+    if (choiceKey === "background_ability_score_increase") {
+      return ["two_and_one:int:con"];
+    }
+    if (choiceKey === "background_tool_choice") {
+      return ["thieves_tools"];
+    }
+    if (choiceKey === "background_equipment_choice") {
+      return ["option_b"];
+    }
+  }
+
+  if (unitId === "wizard_ability_score_improvement_l4") {
+    if (choiceKey === "class_feature_feat_choice") {
+      return ["feat_ability_score_improvement"];
+    }
+    if (choiceKey === "class_feature_ability_score_increase_choice") {
+      return ["ability_score:int:+2:max20"];
+    }
+  }
+
+  return undefined;
+}
+
+function requireAcceptedCreationBatch(
+  result: CreationBatchFillResult,
+): CharacterDraft {
+  if (result.tag !== "accepted") {
+    throw new Error(
+      `Expected character-creation fill batch to be accepted, received ${creationBatchResultSummary(result)}`,
+    );
+  }
+  return result.draft;
+}
+
+function creationBatchResultSummary(result: CreationBatchFillResult): string {
+  return result.tag === "accepted"
+    ? "accepted"
+    : `rejected with issues ${JSON.stringify(result.issues)}`;
+}
+
+function creationFinalizationResultSummary(
+  result: ReturnType<typeof finalizeCharacterDraft>,
+): string {
+  if (result.tag === "ready") {
+    return "ready";
+  }
+  if (result.tag === "incomplete") {
+    return `incomplete with holes ${JSON.stringify(
+      result.holes.map((hole) => hole.holeId),
+    )}`;
+  }
+  return `invalid with issues ${JSON.stringify(result.issues)}`;
 }
 
 export function levelFiveSorcererBuild(): CharacterBuild {
